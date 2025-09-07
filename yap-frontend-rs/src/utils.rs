@@ -1,5 +1,7 @@
 use opfs::{DirectoryHandle as _, FileHandle as _, WritableFileStream as _, persistent};
 
+use crate::Frequency;
+
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
     // `set_panic_hook` function at least once during initialization, and then
@@ -81,4 +83,10 @@ pub async fn hit_ai_server(
     }
     let response = request_builder.send().await?;
     Ok(response)
+}
+
+impl Frequency {
+    pub(crate) fn sqrt_frequency(&self) -> f64 {
+        (self.count as f64).sqrt()
+    }
 }

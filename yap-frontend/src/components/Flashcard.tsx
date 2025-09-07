@@ -171,11 +171,11 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
     }
 
     if (info.offset.x > threshold && info.velocity.x > 0) {
-      // Swiped right - Good
+      // Swiped right - Good/Easy
       await controls.start({ x: 300, opacity: 0, transition: { duration: 0.2 } })
       if (onRating) {
         window.scrollTo({ top: 0, behavior: 'smooth' })
-        onRating('good')
+        onRating(isNew ? 'easy' : 'good')
       }
     } else if (info.offset.x < -threshold && info.velocity.x < 0) {
       // Swiped left - Again
@@ -234,12 +234,12 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
         e.preventDefault();
         onToggle();
       }
-      // Mark as "good" when answer is shown: Space
+      // Mark as "good/easy" when answer is shown: Space
       else if (canGrade && e.key === 'ArrowRight' && !e.shiftKey) {
         e.preventDefault();
         if (onRating) {
           window.scrollTo({ top: 0, behavior: 'smooth' });
-          onRating('good');
+          onRating(isNew ? 'easy' : 'good');
         }
       }
       // Mark as "again": f or ←
@@ -254,7 +254,7 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showAnswer, canGrade, onToggle, onRating]);
+  }, [showAnswer, canGrade, onToggle, onRating, isNew]);
 
   const copyWord = () => {
     let word: string | undefined;
@@ -346,8 +346,8 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
                       <DropdownMenuItem onClick={() => onRating('hard')}>
                         Hard
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onRating('easy')}>
-                        Easy
+                      <DropdownMenuItem onClick={() => onRating(isNew ? 'good' : 'easy')}>
+                        {isNew ? 'Good' : 'Easy'}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setShowReportModal(true)}>
                         Report an Issue
@@ -415,7 +415,7 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
               onClick={() => {
                 if (!canGrade) return
                 window.scrollTo({ top: 0, behavior: 'smooth' })
-                onRating('good')
+                onRating(isNew ? 'easy' : 'good')
               }}
               variant="default"
               size="lg"

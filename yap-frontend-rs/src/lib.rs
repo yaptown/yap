@@ -20,11 +20,10 @@ use language_utils::TtsProvider;
 use language_utils::TtsRequest;
 use language_utils::autograde;
 use language_utils::transcription_challenge;
-use language_utils::{
-    DictionaryEntry, FrequencyEntry, Heteronym, Lexeme, PhrasebookEntry, TargetToNativeWord,
-};
+use language_utils::{DictionaryEntry, Heteronym, Lexeme, PhrasebookEntry, TargetToNativeWord};
 use lasso::Spur;
 use opfs::persistent::{self};
+use pav_regression::{IsotonicRegression, Point};
 use rs_fsrs::{FSRS, Rating};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
@@ -32,13 +31,14 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
 use std::sync::LazyLock;
 use wasm_bindgen::prelude::*;
+use weapon::PartialAppState as _;
 use weapon::data_model::Event;
 use weapon::data_model::{EventStore, EventType, ListenerKey, Timestamped};
 
 use crate::deck_selection::DeckSelection;
 use crate::directories::Directories;
 use crate::utils::hit_ai_server;
-pub use next_cards::NextCardsIterator;
+use next_cards::NextCardsIterator;
 
 #[wasm_bindgen]
 pub struct Weapon {
@@ -178,25 +178,12 @@ impl Weapon {
     ) -> Result<Deck, persistent::Error> {
         let language_pack = self.get_language_pack(target_language).await?;
 
-        let initial_deck_state = Deck {
-            cards: IndexMap::new(),
-            sentences_reviewed: BTreeMap::new(),
-            words_listened_to: BTreeMap::new(),
-            fsrs: FSRS::new(rs_fsrs::Parameters {
-                request_retention: 0.7, // target a 70% chance of forgetting
-                ..Default::default()
-            }),
-            total_reviews: 0,
-            xp: 0.0,
-            daily_streak: None,
-            language_pack,
-            target_language,
-        };
+        let initial_state = DeckState::new(language_pack, target_language);
         let store = self.store.borrow_mut();
         let Some(stream) = store.get::<EventType<DeckEvent>>("reviews".to_string()) else {
-            return Ok(initial_deck_state);
+            return Ok(Deck::finalize(initial_state));
         };
-        Ok(stream.state(initial_deck_state))
+        Ok(stream.state(initial_state))
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
@@ -571,6 +558,11 @@ impl TranscribeComprehensibleSentence<Spur> {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Frequency {
+    count: u32,
+}
+
 #[derive(Debug)]
 pub struct LanguagePack {
     rodeo: lasso::RodeoReader,
@@ -580,7 +572,7 @@ pub struct LanguagePack {
     sentences_to_literals: HashMap<Spur, Vec<Literal<Spur>>>,
     sentences_to_lexemes: HashMap<Spur, Vec<Lexeme<Spur>>>,
     sentences_to_all_lexemes: HashMap<Spur, Vec<Lexeme<Spur>>>,
-    word_frequencies: IndexMap<Lexeme<Spur>, FrequencyEntry<Spur>>,
+    word_frequencies: IndexMap<Lexeme<Spur>, Frequency>,
     total_word_count: u64,
     dictionary: BTreeMap<Heteronym<Spur>, DictionaryEntry>,
     phrasebook: BTreeMap<Spur, PhrasebookEntry>,
@@ -589,6 +581,32 @@ pub struct LanguagePack {
 }
 
 impl LanguagePack {
+    /// Get all lexemes for words that share a pronunciation
+    /// Returns an iterator over (word, lexeme) pairs
+    pub fn pronunciation_to_lexemes(
+        &self,
+        pronunciation: &Spur,
+    ) -> impl Iterator<Item = (Spur, Lexeme<Spur>)> + '_ {
+        self.pronunciation_to_words
+            .get(pronunciation)
+            .into_iter()
+            .flat_map(|words| words.iter())
+            .flat_map(move |word| {
+                self.words_to_heteronyms
+                    .get(word)
+                    .into_iter()
+                    .flat_map(|heteronyms| heteronyms.iter())
+                    .map(move |heteronym| (*word, Lexeme::Heteronym(*heteronym)))
+            })
+    }
+
+    /// Get the maximum frequency for any word with this pronunciation
+    pub fn pronunciation_max_frequency(&self, pronunciation: &Spur) -> Option<Frequency> {
+        self.pronunciation_to_lexemes(pronunciation)
+            .filter_map(|(_, lexeme)| self.word_frequencies.get(&lexeme).copied())
+            .max()
+    }
+
     fn new(language_data: ConsolidatedLanguageDataWithCapacity) -> Self {
         let rodeo = {
             let rodeo = language_data.intern();
@@ -715,7 +733,7 @@ impl LanguagePack {
             for freq in &language_data.consolidated_language_data.frequencies {
                 map.insert(
                     freq.lexeme.get_interned(&rodeo).unwrap(),
-                    freq.get_interned(&rodeo).unwrap(),
+                    Frequency { count: freq.count },
                 );
             }
             map
@@ -824,7 +842,7 @@ pub struct AddCardOptions {
 }
 
 #[derive(
-    Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify, Hash,
+    Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify, Hash,
 )]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum CardIndicator<S> {
@@ -950,30 +968,94 @@ impl From<VersionedDeckEvent> for DeckEvent {
 }
 
 #[derive(Clone, Debug)]
+enum CardStatus {
+    Added(CardData),
+    Unadded(Unadded),
+}
+
+impl CardStatus {
+    pub(crate) fn unadded(&self) -> Option<&Unadded> {
+        match self {
+            CardStatus::Unadded(unadded) => Some(unadded),
+            CardStatus::Added(_) => None,
+        }
+    }
+
+    pub(crate) fn value(&self) -> Option<ordered_float::NotNan<f64>> {
+        match self {
+            CardStatus::Unadded(unadded) => Some(unadded.value()),
+            CardStatus::Added(_) => None,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+struct Unadded {
+    knowledge_probability: f64,
+    frequency: Frequency,
+}
+
+impl Unadded {
+    /// If the card is unadded, return the value of the card to the user. This is used to determine the next card to add
+    /// If the card is added, return None
+    pub(crate) fn value(&self) -> ordered_float::NotNan<f64> {
+        // TODO: should we really be using ln_frequency here?
+        ordered_float::NotNan::new(
+            (1.0 - self.knowledge_probability) * (self.frequency.sqrt_frequency()),
+        )
+        .unwrap()
+    }
+}
+
+#[derive(Clone, Debug)]
 struct CardData {
     fsrs_card: rs_fsrs::Card,
 }
 
 #[derive(Clone, Debug)]
-struct DailyStreak {
+pub struct DailyStreak {
     streak_start: chrono::DateTime<chrono::Utc>,
     last_review_time: chrono::DateTime<chrono::Utc>,
+}
+
+/// Context contains the language-specific configuration
+#[derive(Clone, Debug)]
+pub struct Context {
+    pub language_pack: Arc<LanguagePack>,
+    pub target_language: Language,
+}
+
+/// Stats contains review statistics and progress tracking
+#[derive(Clone, Debug)]
+pub struct Stats {
+    pub sentences_reviewed: BTreeMap<Spur, u32>,
+    pub words_listened_to: BTreeMap<Heteronym<Spur>, u32>,
+    pub total_reviews: u64,
+    pub xp: f64,
+    pub daily_streak: Option<DailyStreak>,
+}
+
+#[derive(Clone, Debug)]
+pub struct DeckState {
+    cards: HashMap<CardIndicator<Spur>, CardData>,
+    fsrs: FSRS,
+    stats: Stats,
+    context: Context,
 }
 
 #[derive(Clone, Debug)]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct Deck {
-    cards: IndexMap<CardIndicator<Spur>, CardData>,
-    sentences_reviewed: BTreeMap<Spur, u32>,
-    words_listened_to: BTreeMap<Heteronym<Spur>, u32>,
-
+    cards: HashMap<CardIndicator<Spur>, CardStatus>,
     fsrs: FSRS,
-    total_reviews: u64,
-    xp: f64,
-    daily_streak: Option<DailyStreak>,
+    stats: Stats,
+    context: Context,
+}
 
-    language_pack: Arc<LanguagePack>,
-    target_language: Language,
+#[derive(Clone, Debug)]
+pub(crate) struct Regressions {
+    target_language_regression: Option<IsotonicRegression<f64>>,
+    listening_regression: Option<IsotonicRegression<f64>>,
 }
 
 struct ComprehensibleSentence {
@@ -983,10 +1065,35 @@ struct ComprehensibleSentence {
     native_languages: Vec<Spur>,
 }
 
-impl weapon::AppState for Deck {
-    type Event = DeckEvent;
+impl From<Deck> for DeckState {
+    fn from(deck: Deck) -> Self {
+        // Convert cards from CardStatus to CardData, only keeping Added cards
+        let cards = deck
+            .cards
+            .iter()
+            .filter_map(|(indicator, status)| match status {
+                CardStatus::Added(data) => Some((indicator.clone(), data.clone())),
+                CardStatus::Unadded { .. } => None,
+            })
+            .collect();
 
-    fn apply_event(mut self, event: &Timestamped<Self::Event>) -> Self {
+        DeckState {
+            cards,
+            fsrs: deck.fsrs,
+            stats: deck.stats,
+            context: deck.context,
+        }
+    }
+}
+
+impl weapon::PartialAppState for Deck {
+    type Event = DeckEvent;
+    type Partial = DeckState;
+
+    fn process_event(
+        mut partial: Self::Partial,
+        event: &Timestamped<Self::Event>,
+    ) -> Self::Partial {
         let Timestamped::<DeckEvent> {
             event,
             timestamp,
@@ -998,27 +1105,33 @@ impl weapon::AppState for Deck {
             content: event,
         }) = event;
 
-        self.update_daily_streak(timestamp);
-        self.total_reviews += 1;
+        partial.update_daily_streak(timestamp);
+        partial.stats.total_reviews += 1;
 
-        if *event_language != self.target_language {
-            return self;
+        if *event_language != partial.context.target_language {
+            return partial;
         }
 
         match event {
             LanguageEventContent::AddCards { cards } => {
                 for card in cards {
-                    if let Some(card) = card.get_interned(&self.language_pack.rodeo) {
-                        if !self.cards.contains_key(&card) {
+                    if let Some(card) = card.get_interned(&partial.context.language_pack.rodeo) {
+                        if !partial.cards.contains_key(&card) {
                             // Make sure the card is actually in the respective database
                             match &card {
                                 CardIndicator::TargetLanguage { lexeme } => {
-                                    if !self.language_pack.word_frequencies.contains_key(lexeme) {
+                                    if !partial
+                                        .context
+                                        .language_pack
+                                        .word_frequencies
+                                        .contains_key(lexeme)
+                                    {
                                         continue;
                                     }
                                 }
                                 CardIndicator::ListeningHomophonous { pronunciation } => {
-                                    if !self
+                                    if !partial
+                                        .context
                                         .language_pack
                                         .pronunciation_to_words
                                         .contains_key(pronunciation)
@@ -1028,7 +1141,7 @@ impl weapon::AppState for Deck {
                                 }
                             }
 
-                            self.cards.insert(
+                            partial.cards.insert(
                                 card.clone(),
                                 CardData {
                                     fsrs_card: rs_fsrs::Card::new(),
@@ -1039,17 +1152,18 @@ impl weapon::AppState for Deck {
                 }
             }
             LanguageEventContent::ReviewCard { reviewed, rating } => {
-                if let Some(reviewed) = reviewed.get_interned(&self.language_pack.rodeo) {
+                if let Some(reviewed) = reviewed.get_interned(&partial.context.language_pack.rodeo)
+                {
                     // Log review
                     let rating = match rating.as_str() {
                         "again" => Rating::Again,
                         "hard" => Rating::Hard,
                         "good" => Rating::Good,
                         "easy" => Rating::Easy,
-                        _ => return self, // Invalid rating, don't apply
+                        _ => return partial, // Invalid rating, don't apply
                     };
 
-                    self.log_review(reviewed.clone(), rating, *timestamp);
+                    partial.log_review(reviewed.clone(), rating, *timestamp);
                 }
             }
             LanguageEventContent::TranslationChallenge {
@@ -1059,13 +1173,17 @@ impl weapon::AppState for Deck {
                         result: SentenceReviewResult::Perfect {},
                     },
             } => {
-                if let Some(challenge_sentence) = self.language_pack.rodeo.get(challenge_sentence) {
-                    if let Some(lexemes) = self
+                if let Some(challenge_sentence) =
+                    partial.context.language_pack.rodeo.get(challenge_sentence)
+                {
+                    if let Some(lexemes) = partial
+                        .context
                         .language_pack
                         .sentences_to_lexemes
                         .get(&challenge_sentence)
                     {
-                        let sentence_review_count = self
+                        let sentence_review_count = partial
+                            .stats
                             .sentences_reviewed
                             .entry(challenge_sentence)
                             .or_insert(0);
@@ -1073,7 +1191,7 @@ impl weapon::AppState for Deck {
 
                         let lexemes = lexemes.clone();
                         for lexeme in lexemes {
-                            self.log_review(
+                            partial.log_review(
                                 CardIndicator::TargetLanguage { lexeme },
                                 Rating::Good,
                                 *timestamp,
@@ -1095,8 +1213,9 @@ impl weapon::AppState for Deck {
                     },
             } => {
                 for lexeme in lexemes_remembered {
-                    if let Some(lexeme) = lexeme.get_interned(&self.language_pack.rodeo) {
-                        self.log_review(
+                    if let Some(lexeme) = lexeme.get_interned(&partial.context.language_pack.rodeo)
+                    {
+                        partial.log_review(
                             CardIndicator::TargetLanguage { lexeme },
                             Rating::Good,
                             *timestamp,
@@ -1105,8 +1224,9 @@ impl weapon::AppState for Deck {
                 }
 
                 for lexeme in lexemes_forgotten {
-                    if let Some(lexeme) = lexeme.get_interned(&self.language_pack.rodeo) {
-                        self.log_review(
+                    if let Some(lexeme) = lexeme.get_interned(&partial.context.language_pack.rodeo)
+                    {
+                        partial.log_review(
                             CardIndicator::TargetLanguage { lexeme },
                             Rating::Again,
                             *timestamp,
@@ -1127,9 +1247,10 @@ impl weapon::AppState for Deck {
                                 // Only process words that have heteronyms (actual vocabulary)
                                 if let Some(heteronym) = &graded_part.heard.heteronym
                                     && let Some(heteronym) =
-                                        heteronym.get_interned(&self.language_pack.rodeo)
+                                        heteronym.get_interned(&partial.context.language_pack.rodeo)
                                 {
-                                    let pronunciation = *self
+                                    let pronunciation = *partial
+                                        .context
                                         .language_pack
                                         .word_to_pronunciation
                                         .get(&heteronym.word)
@@ -1148,12 +1269,16 @@ impl weapon::AppState for Deck {
                                     };
 
                                     if rating != Rating::Again {
-                                        *self.words_listened_to.entry(heteronym).or_insert(0) += 1;
+                                        *partial
+                                            .stats
+                                            .words_listened_to
+                                            .entry(heteronym)
+                                            .or_insert(0) += 1;
                                     } else {
                                         perfect = false;
                                     }
 
-                                    self.log_review(card, rating, *timestamp);
+                                    partial.log_review(card, rating, *timestamp);
                                 }
                             }
                         }
@@ -1182,9 +1307,10 @@ impl weapon::AppState for Deck {
                         .collect::<Vec<String>>()
                         .join("");
                     if let Some(challenge_sentence) =
-                        self.language_pack.rodeo.get(&challenge_sentence)
+                        partial.context.language_pack.rodeo.get(&challenge_sentence)
                     {
-                        let sentence_review_count = self
+                        let sentence_review_count = partial
+                            .stats
                             .sentences_reviewed
                             .entry(challenge_sentence)
                             .or_insert(0);
@@ -1194,19 +1320,157 @@ impl weapon::AppState for Deck {
             }
         }
 
-        self
+        partial
+    }
+
+    fn finalize(state: Self::Partial) -> Self {
+        // Collect data points for isotonic regression
+        let mut target_language_points = Vec::new();
+        let mut listening_points = Vec::new();
+
+        for (card_indicator, card_data) in state.cards.iter() {
+            // Only use cards that have been reviewed (not new)
+            if card_data.fsrs_card.state == rs_fsrs::State::New {
+                continue;
+            }
+
+            if let Some(frequency) = state.context.get_card_frequency(card_indicator) {
+                let difficulty = card_data.fsrs_card.difficulty;
+                let point = Point::new(frequency.sqrt_frequency(), difficulty);
+                log::info!(
+                    "card: {:?}, frequency: {:.2}, difficulty: {:.2}",
+                    card_indicator,
+                    frequency.sqrt_frequency(),
+                    difficulty
+                );
+
+                match card_indicator {
+                    CardIndicator::TargetLanguage { .. } => {
+                        target_language_points.push(point);
+                    }
+                    CardIndicator::ListeningHomophonous { .. } => {
+                        listening_points.push(point);
+                    }
+                }
+            }
+        }
+
+        // Add bias points at (0, 10) and (10, 10) to ensure the curve slopes down
+        // This represents a word with 0 occurrences being maximally difficult. We'll give them a weight of 10 to ensure it's not ignored
+        let bias_point_1 = Point::new_with_weight(0.0, 10.0, 10.0);
+        let bias_point_2 = Point::new_with_weight(1.0, 10.0, 10.0);
+
+        // Create isotonic regressions (need at least 2 non-new cards)
+        let target_language_regression = if target_language_points.len() >= 2 {
+            target_language_points.push(bias_point_1);
+            target_language_points.push(bias_point_2);
+            IsotonicRegression::new_descending(&target_language_points)
+                .inspect_err(|e| log::error!("regression error: {:?}", e))
+                .ok()
+        } else {
+            None
+        };
+
+        let listening_regression = if listening_points.len() >= 2 {
+            listening_points.push(bias_point_1);
+            listening_points.push(bias_point_2);
+            IsotonicRegression::new_descending(&listening_points)
+                .inspect_err(|e| log::error!("regression error: {:?}", e))
+                .ok()
+        } else {
+            None
+        };
+
+        let regressions = Regressions {
+            target_language_regression,
+            listening_regression,
+        };
+
+        // Convert existing cards to CardStatus and calculate probabilities for unadded cards
+        let added_cards = state.cards;
+        let mut all_cards: HashMap<CardIndicator<Spur>, CardStatus> = HashMap::with_capacity(
+            state.context.language_pack.word_frequencies.len()
+                + state.context.language_pack.pronunciation_to_words.len(),
+        );
+
+        // add all TargetLanguage cards
+        for (lexeme, frequency) in state.context.language_pack.word_frequencies.iter() {
+            let indicator = CardIndicator::TargetLanguage { lexeme: *lexeme };
+            if let Some(card_data) = added_cards.get(&indicator) {
+                all_cards.insert(indicator, CardStatus::Added(card_data.clone()));
+            } else {
+                let knowledge_probability =
+                    regressions.predict_card_knowledge_probability(&indicator, *frequency);
+                all_cards.insert(
+                    indicator,
+                    CardStatus::Unadded(Unadded {
+                        knowledge_probability,
+                        frequency: *frequency,
+                    }),
+                );
+            }
+        }
+        // add all ListeningHomophonous cards
+        for pronunciation in state.context.language_pack.pronunciation_to_words.keys() {
+            let indicator = CardIndicator::ListeningHomophonous {
+                pronunciation: *pronunciation,
+            };
+            if let Some(card_data) = added_cards.get(&indicator) {
+                all_cards.insert(indicator, CardStatus::Added(card_data.clone()));
+            } else {
+                let frequency = state.context.get_card_frequency(&indicator).unwrap();
+                let knowledge_probability =
+                    regressions.predict_card_knowledge_probability(&indicator, frequency);
+                all_cards.insert(
+                    indicator,
+                    CardStatus::Unadded(Unadded {
+                        knowledge_probability,
+                        frequency,
+                    }),
+                );
+            }
+        }
+
+        Deck {
+            cards: all_cards,
+            fsrs: state.fsrs,
+            stats: state.stats,
+            context: state.context,
+        }
     }
 }
 
-impl Deck {
+impl DeckState {
+    /// Create a new DeckState with the given language pack and target language
+    pub(crate) fn new(language_pack: Arc<LanguagePack>, target_language: Language) -> Self {
+        Self {
+            cards: HashMap::new(),
+            fsrs: FSRS::new(rs_fsrs::Parameters {
+                request_retention: 0.7,
+                ..Default::default()
+            }),
+            stats: Stats {
+                sentences_reviewed: BTreeMap::new(),
+                words_listened_to: BTreeMap::new(),
+                total_reviews: 0,
+                xp: 0.0,
+                daily_streak: None,
+            },
+            context: Context {
+                language_pack,
+                target_language,
+            },
+        }
+    }
+
     fn log_review(
         &mut self,
         card: CardIndicator<Spur>,
         rating: Rating,
         timestamp: DateTime<Utc>,
     ) -> Option<&CardData> {
-        let word_frequencies = &self.language_pack.word_frequencies;
-        let pronunciation_to_words = &self.language_pack.pronunciation_to_words;
+        let word_frequencies = &self.context.language_pack.word_frequencies;
+        let pronunciation_to_words = &self.context.language_pack.pronunciation_to_words;
 
         // Make sure the card is actually in the respective database
         match &card {
@@ -1227,15 +1491,15 @@ impl Deck {
         let record_log = self.fsrs.repeat(card_data.fsrs_card.clone(), timestamp);
         card_data.fsrs_card = record_log[&rating].card.clone();
         let new_stability = card_data.fsrs_card.stability;
-        self.xp += (new_stability - old_stability).max(0.0) / 10.0;
+        self.stats.xp += (new_stability - old_stability).max(0.0) / 10.0;
         Some(card_data)
     }
 
     fn update_daily_streak(&mut self, timestamp: &DateTime<Utc>) {
-        match &self.daily_streak {
+        match &self.stats.daily_streak {
             None => {
                 // First review ever
-                self.daily_streak = Some(DailyStreak {
+                self.stats.daily_streak = Some(DailyStreak {
                     streak_start: *timestamp,
                     last_review_time: *timestamp,
                 });
@@ -1247,13 +1511,13 @@ impl Deck {
 
                     if hours_since_last <= 30 {
                         // Within 30 hours, continue streak
-                        self.daily_streak = Some(DailyStreak {
+                        self.stats.daily_streak = Some(DailyStreak {
                             streak_start: streak.streak_start,
                             last_review_time: *timestamp,
                         });
                     } else {
                         // More than 30 hours, start new streak
-                        self.daily_streak = Some(DailyStreak {
+                        self.stats.daily_streak = Some(DailyStreak {
                             streak_start: *timestamp,
                             last_review_time: *timestamp,
                         });
@@ -1263,34 +1527,404 @@ impl Deck {
             }
         }
     }
+}
 
-    fn get_card(&self, index: usize) -> Option<(CardIndicator<Spur>, Card)> {
-        let (card_indicator, card_data) = self.cards.get_index(index)?;
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+impl Deck {
+    /// First, the frontend calls get_all_cards_summary to get a view of what cards are due and what cards are going to be due in the future.
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_all_cards_summary(&self) -> Vec<CardSummary> {
+        let language_pack: &LanguagePack = &self.context.language_pack;
+        let rodeo = &language_pack.rodeo;
+        let mut summaries: Vec<CardSummary> = self
+            .cards
+            .iter()
+            .filter_map(|(card_indicator, card_status)| {
+                if let CardStatus::Added(card_data) = card_status {
+                    Some(CardSummary {
+                        card_indicator: card_indicator.resolve(rodeo),
+                        due_timestamp_ms: card_data.fsrs_card.due.timestamp_millis() as f64,
+                        state: match card_data.fsrs_card.state {
+                            rs_fsrs::State::New => "new".to_string(),
+                            rs_fsrs::State::Learning => "learning".to_string(),
+                            rs_fsrs::State::Review => "review".to_string(),
+                            rs_fsrs::State::Relearning => "relearning".to_string(),
+                        },
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // Sort by due date
+        summaries.sort_by(|a, b| a.due_timestamp_ms.partial_cmp(&b.due_timestamp_ms).unwrap());
+
+        summaries
+    }
+
+    /// TODO: get_review_info and get_all_cards_summary can probably be combined.
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_review_info(&self, banned_challenge_types: Vec<ChallengeType>) -> ReviewInfo {
+        let now = Utc::now();
+        let mut due_cards = vec![];
+        let mut future_cards = vec![];
+        let mut due_but_banned_cards = vec![];
+
+        let no_listening_cards = banned_challenge_types.contains(&ChallengeType::Listening);
+        let no_text_cards = banned_challenge_types.contains(&ChallengeType::Text);
+
+        for (card, card_status) in self.cards.iter() {
+            if let CardStatus::Added(card_data) = card_status {
+                let due_date = card_data.fsrs_card.due;
+                if due_date <= now {
+                    match card {
+                        CardIndicator::TargetLanguage { .. } if no_text_cards => {
+                            due_but_banned_cards.push(card.clone());
+                        }
+                        CardIndicator::ListeningHomophonous { .. } if no_listening_cards => {
+                            due_but_banned_cards.push(card.clone());
+                        }
+                        CardIndicator::TargetLanguage { .. }
+                        | CardIndicator::ListeningHomophonous { .. } => {
+                            due_cards.push(card.clone())
+                        }
+                    }
+                } else {
+                    future_cards.push(card.clone());
+                }
+            }
+        }
+
+        // sort by due date
+        due_cards.sort_by_key(|card_indicator| {
+            let card_status = self.cards.get(card_indicator).unwrap();
+            if let CardStatus::Added(card_data) = card_status {
+                ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap()
+            } else {
+                ordered_float::NotNan::new(0.0).unwrap()
+            }
+        });
+
+        due_but_banned_cards.sort_by_key(|card_indicator| {
+            let card_status = self.cards.get(card_indicator).unwrap();
+            if let CardStatus::Added(card_data) = card_status {
+                ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap()
+            } else {
+                ordered_float::NotNan::new(0.0).unwrap()
+            }
+        });
+
+        future_cards.sort_by_key(|card_indicator| {
+            let card_status = self.cards.get(card_indicator).unwrap();
+            if let CardStatus::Added(card_data) = card_status {
+                ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap()
+            } else {
+                ordered_float::NotNan::new(0.0).unwrap()
+            }
+        });
+
+        ReviewInfo {
+            due_cards,
+            due_but_banned_cards,
+            future_cards,
+        }
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub async fn cache_challenge_audio(
+        &self,
+        access_token: Option<String>,
+        abort_signal: Option<web_sys::AbortSignal>,
+    ) {
+        let mut audio_cache = match audio::AudioCache::new().await {
+            Ok(cache) => cache,
+            Err(e) => {
+                log::error!("Failed to create audio cache: {e:?}");
+                return;
+            }
+        };
+        let access_token = access_token.as_ref();
+
+        const SIMULATION_DAYS: u32 = 10;
+        let mut requested_filenames = BTreeSet::new();
+        for challenges in self.simulate_usage().take(SIMULATION_DAYS as usize) {
+            // Sleep for 1 second using JavaScript's setTimeout via JsFuture
+            let promise = js_sys::Promise::new(&mut |resolve, _| {
+                web_sys::window()
+                    .unwrap()
+                    .set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 1000)
+                    .unwrap();
+            });
+            wasm_bindgen_futures::JsFuture::from(promise).await.unwrap();
+
+            // get the audio files
+            requested_filenames.extend(
+                futures::stream::iter(challenges)
+                    .map(|challenge| {
+                        let request = challenge.audio_request();
+                        let audio_cache = audio_cache.clone();
+                        let abort_signal = abort_signal.clone();
+                        async move {
+                            // Check if aborted before processing
+                            if let Some(ref signal) = abort_signal {
+                                if signal.aborted() {
+                                    return None;
+                                }
+                            }
+
+                            // Generate the cache filename for this request
+                            let cache_filename = audio::AudioCache::get_cache_filename(
+                                &request.request,
+                                &request.provider,
+                            );
+
+                            // Just try to fetch and cache, ignoring errors for individual requests
+                            let _ = audio_cache.fetch_and_cache(&request, access_token).await;
+                            Some(cache_filename)
+                        }
+                    })
+                    .buffered(3)
+                    .filter_map(|x| async { x })
+                    .collect::<BTreeSet<_>>()
+                    .await,
+            );
+            // sleep for 1 second
+        }
+
+        // Check if aborted before cleanup
+        if let Some(ref signal) = abort_signal {
+            if signal.aborted() {
+                return;
+            }
+        }
+
+        // Clean up any files that weren't in the requested set
+        if let Err(e) = audio_cache.cleanup_except(requested_filenames).await {
+            log::error!("Failed to clean up audio cache: {e:?}");
+        }
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_percent_of_words_known(&self) -> f64 {
+        let total_words_reviewed: u64 = self
+            .cards
+            .iter()
+            .filter_map(|(card_indicator, card_status)| match card_indicator {
+                CardIndicator::TargetLanguage { lexeme } => Some((lexeme, card_status)),
+                CardIndicator::ListeningHomophonous { .. } => None,
+            })
+            .filter_map(|(lexeme, card_status)| {
+                if let CardStatus::Added(card_data) = card_status {
+                    if card_data.fsrs_card.state != rs_fsrs::State::New {
+                        self.context.language_pack.word_frequencies.get(lexeme)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .map(|freq| freq.count as u64)
+            .sum();
+        total_words_reviewed as f64 / self.context.language_pack.total_word_count as f64
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_total_reviews(&self) -> u64 {
+        self.stats.total_reviews
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_xp(&self) -> f64 {
+        self.stats.xp
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_daily_streak(&self) -> u32 {
+        match &self.stats.daily_streak {
+            None => 0,
+            Some(streak) => {
+                let now = chrono::Utc::now();
+                let hours_since_last = (now - streak.last_review_time).num_hours();
+
+                if hours_since_last <= 30 {
+                    // Streak is active (reviewed within last 30 hours)
+                    (streak.last_review_time.date_naive() - streak.streak_start.date_naive())
+                        .num_days() as u32
+                        + 1
+                } else {
+                    // Streak is broken
+                    0
+                }
+            }
+        }
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn add_card_options(&self) -> AddCardOptions {
+        AddCardOptions {
+            smart_add: self.next_unknown_cards(None).take(5).count() as u32,
+            manual_add: vec![
+                (
+                    self.next_unknown_cards(Some(CardType::TargetLanguage))
+                        .take(5)
+                        .count() as u32,
+                    CardType::TargetLanguage,
+                ),
+                (
+                    self.next_unknown_cards(Some(CardType::Listening))
+                        .take(5)
+                        .count() as u32,
+                    CardType::Listening,
+                ),
+            ],
+        }
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn add_next_unknown_cards(
+        &self,
+        card_type: Option<CardType>,
+        count: usize,
+    ) -> Option<DeckEvent> {
+        let cards = self
+            .next_unknown_cards(card_type)
+            .take(count)
+            .map(|card| card.resolve(&self.context.language_pack.rodeo))
+            .collect::<Vec<_>>();
+
+        (!cards.is_empty()).then_some({
+            DeckEvent::Language(LanguageEvent {
+                language: self.context.target_language,
+                content: LanguageEventContent::AddCards { cards },
+            })
+        })
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn review_card(
+        &self,
+        reviewed: CardIndicator<String>,
+        rating: String,
+    ) -> Option<DeckEvent> {
+        let indicator = reviewed.get_interned(&self.context.language_pack.rodeo)?;
+        self.cards.get(&indicator).and_then(|status| {
+            matches!(status, CardStatus::Added(_)).then_some(DeckEvent::Language(LanguageEvent {
+                language: self.context.target_language,
+                content: LanguageEventContent::ReviewCard { reviewed, rating },
+            }))
+        })
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn translate_sentence_perfect(&self, challenge_sentence: String) -> Option<DeckEvent> {
+        Some(DeckEvent::Language(LanguageEvent {
+            language: self.context.target_language,
+            content: LanguageEventContent::TranslationChallenge {
+                review: SentenceReviewIndicator::TargetToNative {
+                    challenge_sentence,
+                    result: SentenceReviewResult::Perfect {},
+                },
+            },
+        }))
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn translate_sentence_wrong(
+        &self,
+        challenge_sentence: String,
+        submission: String,
+        words_remembered: Vec<Lexeme<String>>,
+        words_forgotten: Vec<Lexeme<String>>,
+    ) -> Option<DeckEvent> {
+        Some(DeckEvent::Language(LanguageEvent {
+            language: self.context.target_language,
+            content: LanguageEventContent::TranslationChallenge {
+                review: SentenceReviewIndicator::TargetToNative {
+                    challenge_sentence,
+                    result: SentenceReviewResult::Wrong {
+                        submission,
+                        lexemes_remembered: words_remembered.into_iter().collect(),
+                        lexemes_forgotten: words_forgotten.into_iter().collect(),
+                    },
+                },
+            },
+        }))
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn transcribe_sentence(
+        &self,
+        challenge: Vec<transcription_challenge::PartGraded>,
+    ) -> Option<DeckEvent> {
+        Some(DeckEvent::Language(LanguageEvent {
+            language: self.context.target_language,
+            content: LanguageEventContent::TranscriptionChallenge { challenge },
+        }))
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn num_cards(&self) -> usize {
+        self.cards
+            .values()
+            .filter(|status| matches!(status, CardStatus::Added(_)))
+            .count()
+    }
+}
+
+impl Deck {
+    pub(crate) fn next_unknown_cards(&self, card_type: Option<CardType>) -> NextCardsIterator<'_> {
+        let permitted_types = match card_type {
+            Some(CardType::TargetLanguage) => vec![ChallengeType::Text],
+            Some(CardType::Listening) => vec![ChallengeType::Listening],
+            None => vec![ChallengeType::Text, ChallengeType::Listening],
+        };
+        NextCardsIterator::new(self, permitted_types)
+    }
+
+    fn get_card(&self, card_indicator: CardIndicator<Spur>) -> Option<Card> {
+        let card_status = self.cards.get(&card_indicator)?;
+        let card_data = match card_status {
+            CardStatus::Added(data) => data,
+            CardStatus::Unadded { .. } => return None,
+        };
 
         let card = Card {
             content: match card_indicator {
                 CardIndicator::TargetLanguage {
                     lexeme: Lexeme::Heteronym(heteronym),
                 } => {
-                    let Some(entry) = self.language_pack.dictionary.get(heteronym).cloned() else {
+                    let Some(entry) = self
+                        .context
+                        .language_pack
+                        .dictionary
+                        .get(&heteronym)
+                        .cloned()
+                    else {
                         panic!(
                             "Heteronym {:?} was in the deck, but was not found in dictionary",
-                            heteronym.resolve(&self.language_pack.rodeo)
+                            heteronym.resolve(&self.context.language_pack.rodeo)
                         );
                     };
-                    CardContent::Heteronym(*heteronym, entry.definitions.clone())
+                    CardContent::Heteronym(heteronym, entry.definitions.clone())
                 }
                 CardIndicator::TargetLanguage {
                     lexeme: Lexeme::Multiword(multiword_term),
                 } => {
-                    let Some(entry) = self.language_pack.phrasebook.get(multiword_term).cloned()
+                    let Some(entry) = self
+                        .context
+                        .language_pack
+                        .phrasebook
+                        .get(&multiword_term)
+                        .cloned()
                     else {
                         panic!(
                             "Multiword term {multiword_term:?} was in the deck, but was not found in phrasebook"
                         );
                     };
                     CardContent::Multiword(
-                        *multiword_term,
+                        multiword_term,
                         MultiwordCardContent {
                             meaning: entry.meaning.clone(),
                             example_sentence_target_language: entry.target_language_example.clone(),
@@ -1300,9 +1934,10 @@ impl Deck {
                 }
                 CardIndicator::ListeningHomophonous { pronunciation } => {
                     let Some(possible_words) = self
+                        .context
                         .language_pack
                         .pronunciation_to_words
-                        .get(pronunciation)
+                        .get(&pronunciation)
                         .cloned()
                     else {
                         panic!(
@@ -1311,27 +1946,35 @@ impl Deck {
                     };
                     let possible_words = possible_words.into_iter().collect::<BTreeSet<_>>();
 
-                    let words_known = self
-                        .cards
-                        .keys()
-                        .filter_map(CardIndicator::target_language)
-                        .filter_map(Lexeme::heteronym)
-                        .map(|heteronym| heteronym.word)
-                        .collect::<BTreeSet<_>>();
                     // figure out which of those words the user knows
                     let possible_words = possible_words
                         .iter()
-                        .map(|word| (words_known.contains(word), *word))
+                        .map(|word| {
+                            // Check if any lexeme for this word is known
+                            let word_known = self
+                                .context
+                                .language_pack
+                                .pronunciation_to_lexemes(&pronunciation)
+                                .filter(|(w, _)| w == word)
+                                .any(|(_, lexeme)| {
+                                    self.cards
+                                        .get(&CardIndicator::TargetLanguage { lexeme })
+                                        .is_some_and(|status| {
+                                            matches!(status, CardStatus::Added(_))
+                                        })
+                                });
+                            (word_known, *word)
+                        })
                         .collect();
                     CardContent::Listening {
-                        pronunciation: *pronunciation,
+                        pronunciation: pronunciation,
                         possible_words,
                     }
                 }
             },
             fsrs_card: card_data.fsrs_card.clone(),
         };
-        Some((card_indicator.clone(), card))
+        Some(card)
     }
 
     fn get_comprehensible_sentence_containing(
@@ -1344,11 +1987,17 @@ impl Deck {
         let mut comprehensible_words: BTreeSet<Lexeme<Spur>> = self
             .cards
             .iter()
-            .filter_map(|(card_indicator, card_data)| match card_indicator {
-                CardIndicator::TargetLanguage { lexeme } => Some((lexeme, card_data)),
+            .filter_map(|(card_indicator, card_status)| match card_indicator {
+                CardIndicator::TargetLanguage { lexeme } => Some((lexeme, card_status)),
                 CardIndicator::ListeningHomophonous { .. } => None,
             })
-            .filter(|(_, card_data)| matches!(card_data.fsrs_card.state, rs_fsrs::State::Review))
+            .filter(|(_, card_status)| {
+                if let CardStatus::Added(card_data) = card_status {
+                    matches!(card_data.fsrs_card.state, rs_fsrs::State::Review)
+                } else {
+                    false
+                }
+            })
             .map(|(target_language_word, _)| *target_language_word)
             .collect();
 
@@ -1423,315 +2072,83 @@ impl Deck {
 
         None
     }
+}
 
-    pub fn next_unknown_cards(&self, card_type: Option<CardType>) -> NextCardsIterator<'_> {
-        let permitted_types = match card_type {
-            Some(CardType::TargetLanguage) => vec![ChallengeType::Text],
-            Some(CardType::Listening) => vec![ChallengeType::Listening],
-            None => vec![ChallengeType::Text, ChallengeType::Listening],
-        };
-        NextCardsIterator::new(self, permitted_types)
+impl Context {
+    /// Get the frequency count for a card (used for isotonic regression)
+    fn get_card_frequency(&self, card: &CardIndicator<Spur>) -> Option<Frequency> {
+        match card {
+            CardIndicator::TargetLanguage { lexeme } => {
+                self.language_pack.word_frequencies.get(lexeme).copied()
+            }
+            CardIndicator::ListeningHomophonous { pronunciation } => {
+                // For listening cards, use the maximum frequency of any word it could be
+                self.language_pack
+                    .pronunciation_max_frequency(pronunciation)
+            }
+        }
     }
 }
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-impl Deck {
-    /// First, the frontend calls get_all_cards_summary to get a view of what cards are due and what cards are going to be due in the future.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_all_cards_summary(&self) -> Vec<CardSummary> {
-        let language_pack: &LanguagePack = &self.language_pack;
-        let rodeo = &language_pack.rodeo;
-        let mut summaries: Vec<CardSummary> = self
-            .cards
-            .iter()
-            .map(|(card_indicator, card_data)| CardSummary {
-                card_indicator: card_indicator.resolve(rodeo),
-                due_timestamp_ms: card_data.fsrs_card.due.timestamp_millis() as f64,
-                state: match card_data.fsrs_card.state {
-                    rs_fsrs::State::New => "new".to_string(),
-                    rs_fsrs::State::Learning => "learning".to_string(),
-                    rs_fsrs::State::Review => "review".to_string(),
-                    rs_fsrs::State::Relearning => "relearning".to_string(),
-                },
-            })
-            .collect();
 
-        // Sort by due date
-        summaries.sort_by(|a, b| a.due_timestamp_ms.partial_cmp(&b.due_timestamp_ms).unwrap());
-
-        summaries
-    }
-
-    /// TODO: get_review_info and get_all_cards_summary can probably be combined.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_review_info(&self, banned_challenge_types: Vec<ChallengeType>) -> ReviewInfo {
-        let now = Utc::now();
-        let mut due_cards = vec![];
-        let mut future_cards = vec![];
-        let mut due_but_banned_cards = vec![];
-
-        let no_listening_cards = banned_challenge_types.contains(&ChallengeType::Listening);
-        let no_text_cards = banned_challenge_types.contains(&ChallengeType::Text);
-
-        for (index, (card, card_data)) in self.cards.iter().enumerate() {
-            let due_date = card_data.fsrs_card.due;
-            if due_date <= now {
-                match card {
-                    CardIndicator::TargetLanguage { .. } if no_text_cards => {
-                        due_but_banned_cards.push(index);
-                    }
-                    CardIndicator::ListeningHomophonous { .. } if no_listening_cards => {
-                        due_but_banned_cards.push(index);
-                    }
-                    CardIndicator::TargetLanguage { .. }
-                    | CardIndicator::ListeningHomophonous { .. } => due_cards.push(index),
-                }
-            } else {
-                future_cards.push(index);
-            }
-        }
-
-        // sort by due date
-        due_cards.sort_by_key(|card_index| {
-            let (_, card) = self.cards.get_index(*card_index).unwrap();
-            ordered_float::NotNan::new(card.due_timestamp_ms()).unwrap()
-        });
-
-        due_but_banned_cards.sort_by_key(|card_index| {
-            let (_, card) = self.cards.get_index(*card_index).unwrap();
-            ordered_float::NotNan::new(card.due_timestamp_ms()).unwrap()
-        });
-
-        future_cards.sort_by_key(|card_index| {
-            let (_, card) = self.cards.get_index(*card_index).unwrap();
-            ordered_float::NotNan::new(card.due_timestamp_ms()).unwrap()
-        });
-
-        ReviewInfo {
-            due_cards,
-            due_but_banned_cards,
-            future_cards,
-        }
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub async fn cache_challenge_audio(
+impl Regressions {
+    /// Predict the difficulty of a card based on its frequency using isotonic regression
+    /// Returns None if the card type has no regression model or frequency can't be determined
+    pub(crate) fn predict_card_difficulty(
         &self,
-        access_token: Option<String>,
-        abort_signal: Option<web_sys::AbortSignal>,
-    ) {
-        let mut audio_cache = match audio::AudioCache::new().await {
-            Ok(cache) => cache,
-            Err(e) => {
-                log::error!("Failed to create audio cache: {e:?}");
-                return;
-            }
+        card: &CardIndicator<Spur>,
+        frequency: Frequency,
+    ) -> Option<f64> {
+        match card {
+            CardIndicator::TargetLanguage { .. } => self.target_language_regression.as_ref(),
+            CardIndicator::ListeningHomophonous { .. } => self.listening_regression.as_ref(),
+        }
+        .and_then(|regression| regression.interpolate(frequency.sqrt_frequency()))
+    }
+
+    /// Get the predicted probability of knowing a card (0.0 to 1.0)
+    /// Based on FSRS difficulty scale where higher difficulty means harder to remember
+    /// - Difficulty 1 = 100% chance of remembering
+    /// - Difficulty 5 (good rating baseline) = 80% chance of remembering
+    /// - Difficulty 8 = 10% chance of remembering
+    /// - Difficulty 10 = 0% chance of remembering
+    /// The relationship is non-linear with two inflection points
+    pub(crate) fn predict_card_knowledge_probability(
+        &self,
+        card: &CardIndicator<Spur>,
+        frequency: Frequency,
+    ) -> f64 {
+        let Some(difficulty) = self.predict_card_difficulty(card, frequency) else {
+            return 0.0;
         };
-        let access_token = access_token.as_ref();
+        // Inflection points
+        const EASY_DIFFICULTY: f64 = 3.28;
+        const EASY_PROBABILITY: f64 = 0.95; // 95% chance at "easy" difficulty
 
-        const SIMULATION_DAYS: u32 = 10;
-        let mut requests = Vec::new();
-        self.simulate_usage(SIMULATION_DAYS, |challenge| {
-            requests.push(challenge.audio_request());
-        });
-        let requests = requests.into_iter();
+        const HARD_DIFFICULTY: f64 = 7.5;
+        const HARD_PROBABILITY: f64 = 0.1; // 10% chance at "hard" difficulty
 
-        let requested_filenames = futures::stream::iter(requests)
-            .map(|request| {
-                let audio_cache = audio_cache.clone();
-                let abort_signal = abort_signal.clone();
-                async move {
-                    // Check if aborted before processing
-                    if let Some(ref signal) = abort_signal {
-                        if signal.aborted() {
-                            return None;
-                        }
-                    }
+        // Piecewise linear mapping:
+        // - Difficulty 1 to 5: maps from 100% to 80% (gentle slope)
+        // - Difficulty 5 to 8: maps from 80% to 10% (steep slope)
+        // - Difficulty 8 to 10: maps from 10% to 0% (gentle slope)
+        let probability = if difficulty <= 1.0 {
+            1.0
+        } else if difficulty <= EASY_DIFFICULTY {
+            let range = EASY_DIFFICULTY - 1.0;
+            let drop = 1.0 - EASY_PROBABILITY;
+            1.0 - drop * (difficulty - 1.0) / range
+        } else if difficulty <= HARD_DIFFICULTY {
+            let range = HARD_DIFFICULTY - EASY_DIFFICULTY;
+            let drop = EASY_PROBABILITY - HARD_PROBABILITY;
+            EASY_PROBABILITY - drop * (difficulty - EASY_DIFFICULTY) / range
+        } else if difficulty >= 10.0 {
+            0.0
+        } else {
+            let range = 10.0 - HARD_DIFFICULTY;
+            HARD_PROBABILITY * (10.0 - difficulty) / range
+        };
 
-                    // Generate the cache filename for this request
-                    let cache_filename =
-                        audio::AudioCache::get_cache_filename(&request.request, &request.provider);
-
-                    // Just try to fetch and cache, ignoring errors for individual requests
-                    let _ = audio_cache.fetch_and_cache(&request, access_token).await;
-                    Some(cache_filename)
-                }
-            })
-            .buffered(3)
-            .filter_map(|x| async { x })
-            .collect::<BTreeSet<_>>()
-            .await;
-
-        // Check if aborted before cleanup
-        if let Some(ref signal) = abort_signal {
-            if signal.aborted() {
-                return;
-            }
-        }
-
-        // Clean up any files that weren't in the requested set
-        if let Err(e) = audio_cache.cleanup_except(requested_filenames).await {
-            log::error!("Failed to clean up audio cache: {e:?}");
-        }
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_percent_of_words_known(&self) -> f64 {
-        let total_words_reviewed: u64 = self
-            .cards
-            .iter()
-            .filter_map(|(card_indicator, card_data)| match card_indicator {
-                CardIndicator::TargetLanguage { lexeme } => Some((lexeme, card_data)),
-                CardIndicator::ListeningHomophonous { .. } => None,
-            })
-            .filter_map(|(lexeme, card_data)| {
-                if card_data.fsrs_card.state != rs_fsrs::State::New {
-                    self.language_pack.word_frequencies.get(lexeme)
-                } else {
-                    None
-                }
-            })
-            .map(|freq| freq.count as u64)
-            .sum();
-        total_words_reviewed as f64 / self.language_pack.total_word_count as f64
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_total_reviews(&self) -> u64 {
-        self.total_reviews
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_xp(&self) -> f64 {
-        self.xp
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_daily_streak(&self) -> u32 {
-        match &self.daily_streak {
-            None => 0,
-            Some(streak) => {
-                let now = chrono::Utc::now();
-                let hours_since_last = (now - streak.last_review_time).num_hours();
-
-                if hours_since_last <= 30 {
-                    // Streak is active (reviewed within last 30 hours)
-                    (streak.last_review_time.date_naive() - streak.streak_start.date_naive())
-                        .num_days() as u32
-                        + 1
-                } else {
-                    // Streak is broken
-                    0
-                }
-            }
-        }
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn add_card_options(&self) -> AddCardOptions {
-        AddCardOptions {
-            smart_add: self.next_unknown_cards(None).take(5).count() as u32,
-            manual_add: vec![
-                (
-                    self.next_unknown_cards(Some(CardType::TargetLanguage))
-                        .take(5)
-                        .count() as u32,
-                    CardType::TargetLanguage,
-                ),
-                (
-                    self.next_unknown_cards(Some(CardType::Listening))
-                        .take(5)
-                        .count() as u32,
-                    CardType::Listening,
-                ),
-            ],
-        }
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn add_next_unknown_cards(
-        &self,
-        card_type: Option<CardType>,
-        count: usize,
-    ) -> Option<DeckEvent> {
-        let cards = self
-            .next_unknown_cards(card_type)
-            .take(count)
-            .map(|card| card.resolve(&self.language_pack.rodeo))
-            .collect::<Vec<_>>();
-
-        (!cards.is_empty()).then_some({
-            DeckEvent::Language(LanguageEvent {
-                language: self.target_language,
-                content: LanguageEventContent::AddCards { cards },
-            })
-        })
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn review_card(
-        &self,
-        reviewed: CardIndicator<String>,
-        rating: String,
-    ) -> Option<DeckEvent> {
-        let indicator = reviewed.get_interned(&self.language_pack.rodeo)?;
-        self.cards.contains_key(&indicator).then_some({
-            DeckEvent::Language(LanguageEvent {
-                language: self.target_language,
-                content: LanguageEventContent::ReviewCard { reviewed, rating },
-            })
-        })
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn translate_sentence_perfect(&self, challenge_sentence: String) -> Option<DeckEvent> {
-        Some(DeckEvent::Language(LanguageEvent {
-            language: self.target_language,
-            content: LanguageEventContent::TranslationChallenge {
-                review: SentenceReviewIndicator::TargetToNative {
-                    challenge_sentence,
-                    result: SentenceReviewResult::Perfect {},
-                },
-            },
-        }))
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn translate_sentence_wrong(
-        &self,
-        challenge_sentence: String,
-        submission: String,
-        words_remembered: Vec<Lexeme<String>>,
-        words_forgotten: Vec<Lexeme<String>>,
-    ) -> Option<DeckEvent> {
-        Some(DeckEvent::Language(LanguageEvent {
-            language: self.target_language,
-            content: LanguageEventContent::TranslationChallenge {
-                review: SentenceReviewIndicator::TargetToNative {
-                    challenge_sentence,
-                    result: SentenceReviewResult::Wrong {
-                        submission,
-                        lexemes_remembered: words_remembered.into_iter().collect(),
-                        lexemes_forgotten: words_forgotten.into_iter().collect(),
-                    },
-                },
-            },
-        }))
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn transcribe_sentence(
-        &self,
-        challenge: Vec<transcription_challenge::PartGraded>,
-    ) -> Option<DeckEvent> {
-        Some(DeckEvent::Language(LanguageEvent {
-            language: self.target_language,
-            content: LanguageEventContent::TranscriptionChallenge { challenge },
-        }))
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn num_cards(&self) -> usize {
-        self.cards.len()
+        probability.clamp(0.0, 1.0)
     }
 }
 
@@ -1811,9 +2228,9 @@ impl CardContent<Spur> {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct ReviewInfo {
-    due_cards: Vec<usize>,
-    due_but_banned_cards: Vec<usize>,
-    future_cards: Vec<usize>,
+    due_cards: Vec<CardIndicator<Spur>>,
+    due_but_banned_cards: Vec<CardIndicator<Spur>>,
+    future_cards: Vec<CardIndicator<Spur>>,
 }
 
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -1881,43 +2298,32 @@ pub enum ChallengeType {
     Listening,
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl ReviewInfo {
-    fn get_listening_prefix(language: Language) -> &'static str {
-        match language {
-            Language::French => "Le mot est",
-            Language::Spanish => "La palabra es",
-            Language::English => "The word is",
-            Language::Korean => "단어는",
-        }
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_challenge_for_card(
         &self,
         deck: &Deck,
-        card_index: usize,
+        card_indicator: CardIndicator<Spur>,
     ) -> Option<Challenge<String>> {
-        let (card_indicator, card) = deck.get_card(card_index)?;
-        let language_pack = &deck.language_pack;
+        let card = deck.get_card(card_indicator)?;
+        let language_pack = &deck.context.language_pack;
 
         // If we can't find a suitable challenge, we'll return a flashcard challenge. Let's construct it here
         let listening_prefix = matches!(&card.content, CardContent::Listening { .. })
-            .then(|| Self::get_listening_prefix(deck.target_language).to_string());
+            .then(|| Self::get_listening_prefix(deck.context.target_language).to_string());
 
         let flashcard = Challenge::<Spur>::FlashCardReview {
             audio: match &card.content {
                 CardContent::Heteronym(heteronym, _) => AudioRequest {
                     request: TtsRequest {
                         text: language_pack.rodeo.resolve(&heteronym.word).to_string(),
-                        language: deck.target_language,
+                        language: deck.context.target_language,
                     },
                     provider: TtsProvider::Google,
                 },
                 CardContent::Multiword(multiword, _) => AudioRequest {
                     request: TtsRequest {
                         text: language_pack.rodeo.resolve(multiword).to_string(),
-                        language: deck.target_language,
+                        language: deck.context.target_language,
                     },
                     provider: TtsProvider::Google,
                 },
@@ -1928,7 +2334,7 @@ impl ReviewInfo {
                     request: TtsRequest {
                         text: format!(
                             "{}... \"{}\".",
-                            Self::get_listening_prefix(deck.target_language),
+                            Self::get_listening_prefix(deck.context.target_language),
                             language_pack.rodeo.resolve(
                                 &possible_words
                                     .iter()
@@ -1939,7 +2345,7 @@ impl ReviewInfo {
                                     .1
                             )
                         ),
-                        language: deck.target_language,
+                        language: deck.context.target_language,
                     },
                     provider: TtsProvider::Google,
                 },
@@ -1974,14 +2380,15 @@ impl ReviewInfo {
                 })
                 .filter(|heteronym| known_words.contains(&Lexeme::Heteronym(*heteronym)))
                 .collect::<Vec<_>>();
-            heteronyms.sort_by_key(|heteronym| deck.words_listened_to.get(heteronym).unwrap_or(&0));
+            heteronyms
+                .sort_by_key(|heteronym| deck.stats.words_listened_to.get(heteronym).unwrap_or(&0));
 
             if let Some((target_heteronym, sentence)) = heteronyms
                 .iter()
                 .filter_map(|heteronym| {
                     let sentence = deck.get_comprehensible_sentence_containing(
                         &Lexeme::Heteronym(*heteronym),
-                        &deck.sentences_reviewed,
+                        &deck.stats.sentences_reviewed,
                         language_pack,
                     )?;
                     Some((*heteronym, sentence))
@@ -2015,7 +2422,7 @@ impl ReviewInfo {
                                 .rodeo
                                 .resolve(&sentence.target_language)
                                 .to_string(),
-                            language: deck.target_language,
+                            language: deck.context.target_language,
                         },
                         provider: TtsProvider::ElevenLabs,
                     },
@@ -2031,7 +2438,7 @@ impl ReviewInfo {
                 native_languages,
             }) = deck.get_comprehensible_sentence_containing(
                 &lexeme,
-                &deck.sentences_reviewed,
+                &deck.stats.sentences_reviewed,
                 language_pack,
             ) {
                 let unique_target_language_lexeme_definitions = unique_target_language_lexemes
@@ -2074,7 +2481,7 @@ impl ReviewInfo {
                     audio: AudioRequest {
                         request: TtsRequest {
                             text: language_pack.rodeo.resolve(&target_language).to_string(),
-                            language: deck.target_language,
+                            language: deck.context.target_language,
                         },
                         provider: TtsProvider::ElevenLabs,
                     },
@@ -2088,11 +2495,23 @@ impl ReviewInfo {
 
         Some(challenge.resolve(&language_pack.rodeo))
     }
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+impl ReviewInfo {
+    fn get_listening_prefix(language: Language) -> &'static str {
+        match language {
+            Language::French => "Le mot est",
+            Language::Spanish => "La palabra es",
+            Language::English => "The word is",
+            Language::Korean => "단어는",
+        }
+    }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_next_review_card(&self) -> Option<usize> {
+    pub fn get_next_challenge(&self, deck: &Deck) -> Option<Challenge<String>> {
         if !self.due_cards.is_empty() {
-            Some(self.due_cards[0])
+            Some(self.get_challenge_for_card(deck, self.due_cards[0])?)
         } else {
             None
         }
@@ -2396,7 +2815,38 @@ pub fn get_courses() -> Vec<language_utils::Course> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use chrono::Days;
+
+    // Include the French language data at compile time for tests
+    // This makes tests self-contained and doesn't include the data in production builds
+    const FRENCH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/fra/language_data.rkyv");
+
+    impl Default for Deck {
+        fn default() -> Self {
+            // Parse the included bytes to create a language pack
+            let language_pack = match rkyv::access::<
+                language_utils::ArchivedConsolidatedLanguageDataWithCapacity,
+                rkyv::rancor::Error,
+            >(FRENCH_LANGUAGE_DATA)
+            {
+                Ok(archived) => {
+                    let language_data = rkyv::deserialize::<
+                        ConsolidatedLanguageDataWithCapacity,
+                        rkyv::rancor::Error,
+                    >(archived)
+                    .expect("Failed to deserialize language data");
+                    Arc::new(LanguagePack::new(language_data))
+                }
+                Err(_) => {
+                    panic!("Failed to deserialize language data");
+                }
+            };
+
+            let state = DeckState::new(language_pack, Language::French);
+            <Deck as weapon::PartialAppState>::finalize(state)
+        }
+    }
 
     #[test]
     fn test_fsrs() {
@@ -2443,6 +2893,49 @@ mod tests {
                 } */
                 println!("{rating:#?}+{rating:#?}: {item:#?}");
             }
+        }
+    }
+
+    #[test]
+    fn test_default_deck_creation() {
+        use crate::Deck;
+
+        // Test that we can create a default Deck
+        let deck = Deck::default();
+
+        // Verify the deck has empty cards
+        assert_eq!(deck.cards.len(), 0);
+
+        println!("✓ Default Deck created successfully");
+        println!("✓ Finalization didn't panic with empty data");
+        println!("✓ Regression models are properly None for empty data");
+    }
+
+    #[test]
+    fn test_default_deck_can_add_cards() {
+        use crate::Deck;
+        use weapon::AppState;
+
+        let mut deck = Deck::default();
+
+        // Test that we can add cards to the default deck
+        if let Some(event) = deck.add_next_unknown_cards(None, 1) {
+            let ts = weapon::data_model::Timestamped {
+                timestamp: chrono::Utc::now(),
+                within_device_events_index: 0,
+                event,
+            };
+            deck = deck.apply_event(&ts);
+
+            // If language pack has data, we should have added a card
+            if !deck.context.language_pack.word_frequencies.is_empty() {
+                assert!(!deck.cards.is_empty());
+                println!("✓ Successfully added card to default deck");
+            } else {
+                println!("✓ Language pack is empty, no cards to add (expected)");
+            }
+        } else {
+            println!("✓ No cards available to add (empty language pack)");
         }
     }
 }

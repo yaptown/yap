@@ -1,89 +1,107 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 use language_utils::Lexeme;
 use lasso::Spur;
 
-use crate::{CardIndicator, ChallengeType, Deck, LanguagePack};
+use crate::{CardIndicator, CardStatus, ChallengeType, Context, Deck};
 
-pub struct NextCardsIterator<'a> {
-    pub cards: Vec<CardIndicator<Spur>>,
-    pub permitted_types: Vec<ChallengeType>,
-    language_pack: &'a LanguagePack,
+pub(crate) struct NextCardsIterator<'a> {
+    pub(crate) cards: HashMap<CardIndicator<Spur>, CardStatus>,
+    pub(crate) permitted_types: Vec<ChallengeType>,
+    pub(crate) context: &'a Context,
 }
 
 impl<'a> NextCardsIterator<'a> {
-    pub fn new(state: &'a Deck, permitted_types: Vec<ChallengeType>) -> Self {
+    pub fn new(deck: &'a Deck, permitted_types: Vec<ChallengeType>) -> Self {
         Self {
-            cards: state.cards.keys().cloned().collect(),
+            cards: deck.cards.clone(),
             permitted_types,
-            language_pack: &state.language_pack,
+            context: &deck.context,
         }
     }
 
     fn next_text_card(&self) -> Option<CardIndicator<Spur>> {
-        let known_words: BTreeSet<Lexeme<Spur>> = self
+        // None of the first 20 cards can be multiword cards
+        let added_over_20_cards = self
             .cards
             .iter()
-            .filter_map(CardIndicator::target_language)
-            .cloned()
-            .collect();
-        for lexeme in self.language_pack.word_frequencies.keys() {
-            if known_words.contains(lexeme) {
-                continue;
-            }
-            if self.cards.len() < 20 && lexeme.multiword().is_some() {
-                continue;
-            }
-            return Some(CardIndicator::TargetLanguage { lexeme: *lexeme });
-        }
-        None
+            .filter(|(_, status)| matches!(status, CardStatus::Added(_)))
+            .skip(20)
+            .next()
+            .is_some();
+
+        self.cards
+            .iter()
+            .filter_map(|(card, status)| {
+                let CardIndicator::TargetLanguage { lexeme } = card else {
+                    return None;
+                };
+                if !added_over_20_cards && lexeme.multiword().is_some() {
+                    return None;
+                }
+
+                let Some(value) = status.value() else {
+                    return None;
+                };
+
+                Some((lexeme, value))
+            })
+            .max_by_key(|(_, value)| *value)
+            .map(|(card, _)| CardIndicator::TargetLanguage { lexeme: *card })
     }
 
     fn next_listening_card(&self) -> Option<CardIndicator<Spur>> {
-        let known_pronunciations: BTreeSet<Spur> = self
-            .cards
-            .iter()
-            .filter_map(CardIndicator::listening_homophonous)
-            .copied()
-            .collect();
+        // Get all known words (already added text cards)
         let known_words: BTreeSet<Lexeme<Spur>> = self
             .cards
             .iter()
-            .filter_map(CardIndicator::target_language)
-            .cloned()
+            .filter_map(|(card, status)| {
+                if let CardIndicator::TargetLanguage { lexeme } = card {
+                    if matches!(status, CardStatus::Added(_)) {
+                        Some(*lexeme)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
             .collect();
-        for lexeme in self.language_pack.word_frequencies.keys() {
-            if !known_words.contains(lexeme) {
-                continue;
-            }
-            let heteronym = match lexeme.heteronym() {
-                Some(h) => h,
-                None => continue,
-            };
-            let Some(&pronunciation) = self
-                .language_pack
-                .word_to_pronunciation
-                .get(&heteronym.word)
-            else {
-                log::error!(
-                    "Word {heteronym:?} was in the deck, but was not found in word_to_pronunciation",
-                    heteronym = heteronym.resolve(&self.language_pack.rodeo)
-                );
-                continue;
-            };
-            if known_pronunciations.contains(&pronunciation) {
-                continue;
-            }
-            return Some(CardIndicator::ListeningHomophonous { pronunciation });
-        }
-        None
+
+        self.cards
+            .iter()
+            .filter_map(|(card, status)| {
+                let CardIndicator::ListeningHomophonous { pronunciation } = card else {
+                    return None;
+                };
+
+                let Some(value) = status.value() else {
+                    return None;
+                };
+
+                // Check if we know at least one word with this pronunciation
+                let has_known_word = self
+                    .context
+                    .language_pack
+                    .pronunciation_to_lexemes(pronunciation)
+                    .any(|(_, lexeme)| known_words.contains(&lexeme));
+
+                // Only include if we know at least one word with this pronunciation
+                if !has_known_word {
+                    return None;
+                }
+
+                Some((pronunciation, value))
+            })
+            .max_by_key(|(_, value)| *value)
+            .map(|(pronunciation, _)| CardIndicator::ListeningHomophonous {
+                pronunciation: *pronunciation,
+            })
     }
 }
 
-impl Iterator for NextCardsIterator<'_> {
-    type Item = CardIndicator<Spur>;
-
-    fn next(&mut self) -> Option<Self::Item> {
+impl NextCardsIterator<'_> {
+    fn next_card(&self) -> Option<CardIndicator<Spur>> {
         if self.permitted_types.is_empty() {
             return None;
         }
@@ -93,25 +111,35 @@ impl Iterator for NextCardsIterator<'_> {
                 ChallengeType::Text => self.next_text_card(),
                 ChallengeType::Listening => self.next_listening_card(),
             }?;
-            self.cards.push(card.clone());
             return Some(card);
         }
 
-        if self.cards.len() < 20 {
+        let added_count = self
+            .cards
+            .iter()
+            .filter(|(_, status)| matches!(status, CardStatus::Added(_)))
+            .count();
+
+        if added_count < 20 {
             let card = self.next_text_card()?;
-            self.cards.push(card.clone());
             return Some(card);
         }
 
         let text_count = self
             .cards
             .iter()
-            .filter(|c| matches!(c, CardIndicator::TargetLanguage { .. }))
+            .filter(|(c, status)| {
+                matches!(c, CardIndicator::TargetLanguage { .. })
+                    && matches!(status, CardStatus::Added(_))
+            })
             .count();
         let listening_count = self
             .cards
             .iter()
-            .filter(|c| matches!(c, CardIndicator::ListeningHomophonous { .. }))
+            .filter(|(c, status)| {
+                matches!(c, CardIndicator::ListeningHomophonous { .. })
+                    && matches!(status, CardStatus::Added(_))
+            })
             .count();
 
         let desired = if listening_count < text_count / 2 {
@@ -132,10 +160,28 @@ impl Iterator for NextCardsIterator<'_> {
                 ChallengeType::Listening => self.next_listening_card(),
             };
             if let Some(card) = card {
-                self.cards.push(card.clone());
+                // Mark as added by creating a new CardData with default FSRS card
                 return Some(card);
             }
         }
         None
+    }
+}
+
+impl Iterator for NextCardsIterator<'_> {
+    type Item = CardIndicator<Spur>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(card) = self.next_card() {
+            self.cards.insert(
+                card.clone(),
+                CardStatus::Added(crate::CardData {
+                    fsrs_card: rs_fsrs::Card::new(),
+                }),
+            );
+            Some(card)
+        } else {
+            None
+        }
     }
 }

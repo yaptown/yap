@@ -149,19 +149,21 @@ impl<K: Eq + Hash + Clone, T: Ord + Clone> EventStreamStore<K, T> {
 impl<Device: Eq + Hash + Clone, Event: Ord + Clone + crate::Event>
     EventStreamStore<Device, Timestamped<EventType<Event>>>
 {
-    pub fn state<A: crate::AppState<Event = Event>>(&self, initial_state: A) -> A {
+    pub fn state<A>(&self, initial_state: A::Partial) -> A
+    where
+        A: crate::PartialAppState<Event = Event>,
+    {
         apply_events_and_metaevents(self.iter(), initial_state)
     }
 }
 
-pub(crate) fn apply_events_and_metaevents<
-    'a,
-    E: crate::data_model::Event + 'a,
-    A: crate::AppState<Event = E>,
->(
+pub(crate) fn apply_events_and_metaevents<'a, E: crate::data_model::Event + 'a, A>(
     events: impl Iterator<Item = &'a Timestamped<EventType<E>>>,
-    initial_state: A,
-) -> A {
+    initial_state: A::Partial,
+) -> A
+where
+    A: crate::PartialAppState<Event = E>,
+{
     let events = events
         .cloned()
         .filter_map(|event| match event {
@@ -181,15 +183,21 @@ pub(crate) fn apply_events_and_metaevents<
     apply_events(events.iter(), initial_state)
 }
 
-pub(crate) fn apply_events<'a, E: crate::data_model::Event + 'a, A: crate::AppState<Event = E>>(
+pub(crate) fn apply_events<'a, E: crate::data_model::Event + 'a, A>(
     events: impl Iterator<Item = &'a Timestamped<E>>,
-    initial_state: A,
-) -> A {
+    initial_state: A::Partial,
+) -> A
+where
+    A: crate::PartialAppState<Event = E>,
+{
     let mut state = initial_state;
+    // Process all events efficiently without finalizing
     for event in events {
-        state = state.apply_event(event);
+        state = A::process_event(state, event);
     }
-    state
+
+    // Finalize once at the end
+    A::finalize(state)
 }
 
 pub struct ValidToAddEvents<Event> {

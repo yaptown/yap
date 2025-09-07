@@ -48,12 +48,19 @@ The data in out/ is generated via the `generate-data` binary. Running it is some
 1. Install the spaCy French and Spanish NLP module: `cd ./generate-data/nlp && uv pip install https://github.com/explosion/spacy-models/releases/download/fr_dep_news_trf-3.8.0/fr_dep_news_trf-3.8.0-py3-none-any.whl && uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl && uv pip install https://github.com/explosion/spacy-models/releases/download/ko_core_news_lg-3.8.0/ko_core_news_lg-3.8.0-py3-none-any.whl`
 2. Generate the data
 
-### Data Sources special thanks
+## Supabase / Onesignal
+
+Accounts and cross-device sync uses supabase as a backend. Migrations are in the supabase/ folder. Onesignal is used for notifications.
+
+## Special thanks
+
+### Data
 
 1. neri's frequency lists
-2. wikipron for phonetics https://github.com/CUNY-CL/wikipron/tree/master 
-3. opensubtitles http://www.opensubtitles.org/ (downloaded via https://opus.nlpl.eu/OpenSubtitles/ko&en/v2024/OpenSubtitles)
+2. wiktionary/[wikipron](https://github.com/CUNY-CL/wikipron/tree/master) for phonetics  
+3. [opensubtitles](http://www.opensubtitles.org/) (downloaded via [opus](https://opus.nlpl.eu/OpenSubtitles/ko&en/v2024/OpenSubtitles))
 
-## Supabase
+### Libraries
 
-Accounts and cross-device sync uses supabase as a backend. Migrations are in the supabase/ folder.
+1. [Pair Adjacent Violators for Rust](https://github.com/sanity/)
+2. [The Open Spaced Repetition group](https://github.com/open-spaced-repetition)

@@ -365,11 +365,10 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     return deck.get_review_info(bannedChallengeTypes)
   }, [deck, bannedChallengeTypes, cardsBecameDue]);
 
-  const { currentChallenge, currentCardId, addCardOptions } = useMemo(() => {
-    const currentCardId = reviewInfo.get_next_review_card();
-    const currentChallenge: Challenge<string> | undefined = currentCardId !== undefined ? reviewInfo.get_challenge_for_card(deck, currentCardId) : undefined;
+  const { currentChallenge, addCardOptions } = useMemo(() => {
+    const currentChallenge: Challenge<string> | undefined = reviewInfo.get_next_challenge(deck);
     const addCardOptions = deck.add_card_options();
-    return { currentChallenge, currentCardId, addCardOptions };
+    return { currentChallenge, addCardOptions };
   }, [deck, reviewInfo])
 
   useEffect(() => {
@@ -543,7 +542,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
               totalCount={reviewInfo.total_count}
               onRating={handleRating}
               accessToken={accessToken}
-              key={currentCardId}
+              key={deck.get_total_reviews()}
               onCantListen={handleCantListen}
               targetLanguage={targetLanguage}
               listeningPrefix={currentChallenge.FlashCardReview.listening_prefix}
@@ -555,7 +554,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
               dueCount={reviewInfo.due_count || 0}
               totalCount={reviewInfo.total_count}
               accessToken={accessToken}
-              key={currentCardId}
+              key={deck.get_total_reviews()}
               unique_target_language_lexeme_definitions={currentChallenge.TranslateComprehensibleSentence.unique_target_language_lexeme_definitions}
               targetLanguage={targetLanguage}
             />
@@ -566,7 +565,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
               dueCount={reviewInfo.due_count || 0}
               totalCount={reviewInfo.total_count}
               accessToken={accessToken}
-              key={currentCardId}
+              key={deck.get_total_reviews()}
               onCantListen={handleCantListen}
               targetLanguage={targetLanguage}
             />
