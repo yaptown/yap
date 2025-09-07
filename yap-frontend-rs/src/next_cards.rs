@@ -25,9 +25,7 @@ impl<'a> NextCardsIterator<'a> {
         let added_over_20_cards = self
             .cards
             .iter()
-            .filter(|(_, status)| matches!(status, CardStatus::Added(_)))
-            .skip(20)
-            .next()
+            .filter(|(_, status)| matches!(status, CardStatus::Added(_))).nth(20)
             .is_some();
 
         self.cards
@@ -40,9 +38,7 @@ impl<'a> NextCardsIterator<'a> {
                     return None;
                 }
 
-                let Some(value) = status.value() else {
-                    return None;
-                };
+                let value = status.value()?;
 
                 Some((lexeme, value))
             })
@@ -75,9 +71,7 @@ impl<'a> NextCardsIterator<'a> {
                     return None;
                 };
 
-                let Some(value) = status.value() else {
-                    return None;
-                };
+                let value = status.value()?;
 
                 // Check if we know at least one word with this pronunciation
                 let has_known_word = self
@@ -174,7 +168,7 @@ impl Iterator for NextCardsIterator<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(card) = self.next_card() {
             self.cards.insert(
-                card.clone(),
+                card,
                 CardStatus::Added(crate::CardData {
                     fsrs_card: rs_fsrs::Card::new(),
                 }),
