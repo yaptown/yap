@@ -219,41 +219,94 @@ async fn autograde_translation(
         language,
     } = request;
 
-    let language = match language {
-        Language::French => "French",
-        Language::Spanish => "Spanish",
-        Language::English => "English",
-        Language::Korean => "Korean",
+    let (language_name, example) = match language {
+        Language::French => (
+            "French",
+            r#"Example
+Input: "Challenge sentence: Ça se passe bien.
+User response: It passes itself well.
+Primary expression: se passer
+Expressions: {{word: 'ça', lemma: 'ce', pos: 'PRON'}}, {{word: 'se', lemma: 'se', pos: 'PRON'}}, {{word: 'passe', lemma: 'passer', pos: 'VERB'}}, {{word: 'bien', lemma: 'bien', pos: 'ADV'}}, {{word: 'se passer', lemma: 'se passer', pos: 'VERB'}}"
+
+Output: {{
+"explanation": "The French expression 'se passer' means 'to happen.' You translated it literally as 'pass itself.' A correct translation is: 'It's going well.'",
+"primary_expression_status": "Forgot",
+"expressions_remembered": [{{"Heteronym": {{ "word": "se", "lemma": "se", "pos": "Pron" }}}}, {{"Heteronym": {{ "word": "passe", "lemma": "passer", "pos": "Verb" }}}}, {{"Heteronym": {{ "word": "bien", "lemma": "bien", "pos": "Adv" }}}}],
+"expressions_forgot": [{{"Heteronym": {{ "word": "se passer", "lemma": "se passer", "pos": "Verb" }}}}]
+}}
+"#,
+        ),
+        Language::Spanish => (
+            "Spanish",
+            r#"Example
+Input: "Challenge sentence: Me di cuenta del error.
+User response: I gave myself account of the error.
+Primary expression: darse cuenta
+Expressions: {{word: 'me', lemma: 'yo', pos: 'PRON'}}, {{word: 'di', lemma: 'dar', pos: 'VERB'}}, {{word: 'cuenta', lemma: 'cuenta', pos: 'NOUN'}}, {{word: 'del', lemma: 'de+el', pos: 'ADP'}}, {{word: 'error', lemma: 'error', pos: 'NOUN'}}, {{word: 'darse cuenta', lemma: 'darse cuenta', pos: 'VERB'}}"
+
+Output: {{
+"explanation": "In Spanish, 'darse cuenta' means 'to realize.' You translated it literally. A correct translation is: 'I realized the mistake.'",
+"primary_expression_status": "Forgot",
+"expressions_remembered": [{{"Heteronym": {{ "word": "me", "lemma": "yo", "pos": "Pron" }}}}, {{"Heteronym": {{ "word": "di", "lemma": "dar", "pos": "Verb" }}}}, {{"Heteronym": {{ "word": "cuenta", "lemma": "cuenta", "pos": "Noun" }}}}, {{"Heteronym": {{ "word": "error", "lemma": "error", "pos": "Noun" }}}}],
+"expressions_forgot": [{{"Heteronym": {{ "word": "darse cuenta", "lemma": "darse cuenta", "pos": "Verb" }}}}]
+}}
+"#,
+        ),
+        Language::English => (
+            "English",
+            r#"Example
+Input: "Challenge sentence: He gave up.
+User response: He quit.
+Primary expression: give up
+Expressions: {{word: 'he', lemma: 'he', pos: 'PRON'}}, {{word: 'gave', lemma: 'give', pos: 'VERB'}}, {{word: 'up', lemma: 'up', pos: 'PART'}}, {{word: 'give up', lemma: 'give up', pos: 'VERB'}}"
+
+Output: {{
+"explanation": "Great work! 'Give up' means 'to quit,' which you translated correctly.",
+"primary_expression_status": "Remembered",
+"expressions_remembered": [{{"Heteronym": {{ "word": "he", "lemma": "he", "pos": "Pron" }}}}, {{"Heteronym": {{ "word": "give up", "lemma": "give up", "pos": "Verb" }}}}],
+"expressions_forgot": []
+}}
+"#,
+        ),
+        Language::Korean => (
+            "Korean",
+            r#"Example
+Input: "Challenge sentence: 책을 읽고 있어요.
+User response: I read and am existing a book.
+Primary expression: 읽고 있다
+Expressions: {{word: '책을', lemma: '책', pos: 'NOUN'}}, {{word: '읽고', lemma: '읽다', pos: 'VERB'}}, {{word: '있어요', lemma: '있다', pos: 'VERB'}}, {{word: '읽고 있다', lemma: '읽고 있다', pos: 'VERB'}}"
+
+Output: {{
+"explanation": "The Korean expression '읽고 있다' means 'to be reading.' You treated it as separate verbs 'read' and 'exist.' A correct translation is: 'I am reading a book.'",
+"primary_expression_status": "Forgot",
+"expressions_remembered": [{{"Heteronym": {{ "word": "책을", "lemma": "책", "pos": "Noun" }}}}, {{"Heteronym": {{ "word": "읽다", "lemma": "읽다", "pos": "Verb" }}}}, {{"Heteronym": {{ "word": "있다", "lemma": "있다", "pos": "Verb" }}}}],
+"expressions_forgot": [{{"Heteronym": {{ "word": "읽고 있다", "lemma": "읽고 있다", "pos": "Verb" }}}}]
+}}
+"#,
+        ),
     };
 
     let system_prompt = format!(
-        r#"The user is learning {language}. They were challenged to translate a {language} sentence to English. Your goal is to identify which {language} words or phrases they remembered, and which ones they forgot. If they translated the sentence correctly, that means they remembered everything! But if they translated the sentence incorrectly, we need to figure out what words and phrases they seemed to have remembered correctly, and which ones they seem to have remembered incorrectly. This will be used as part of a spaced-repetition system, which will help users study the words they need to. The system can only incorporate this for the words that it knows are in the sentence, which will be provided to you. Words are provided with additional context about their part of speech and lemmatised form, to allow you to distinguish between different usages of the same word. The 'primary word' is also provided, which is the word that the sentence most needed to test. You will also have the opportunity to provide an explanation, which you should make use of to provide the user with additional info if their translation is incorrect.
+        r#"The user is learning {language_name}. They were challenged to translate a {language_name} sentence to English. Your goal is to identify which {language_name} words or phrases they remembered, and which ones they forgot. If they translated the sentence correctly, that means they remembered everything! But if they translated the sentence incorrectly, we need to figure out what words and phrases they seemed to have remembered correctly, and which ones they seem to have remembered incorrectly. This will be used as part of a spaced-repetition system, which will help users study the words they need to. The system can only incorporate this for the words that it knows are in the sentence, which will be provided to you. Words are provided with additional context about their part of speech and lemmatised form, to allow you to distinguish between different usages of the same word. The 'primary word' is also provided, which is the word that the sentence most needed to test. You will also have the opportunity to provide an explanation, which you should make use of to provide the user with additional info if their translation is incorrect.
 
-Many sentences will be "partial sentences," such as "Ne pas." meaning "Do not." These partial sentences are still useful as test sentences for the user, so you should still grade them. Respond with JSON.
+Many sentences will be "partial sentences," such as "Ne pas." meaning "Do not." These partial sentences are still useful as test sentences for the user, so you should still grade them.
 
-Example Input: "Challenge sentence: J'ai à faire.
-User response: I have to go.
-Primary expression: faire
-Expressions: {{word: 'je', lemma: 'je', pos: 'PRON'}}, {{word: 'ai', lemma: 'avoir', pos: 'VERB'}}, {{word: 'à', lemma: 'à', pos: 'ADP'}}, {{word: 'faire', lemma: 'faire', pos: 'VERB'}}"
+Do not grade individual words when they are part of a multi-word expression that can be definitively graded as remembered or forgotten. Grade the multi-word expression as a whole. Only grade the individual words separately if the user's translation clearly shows they specifically understood or failed to understand those words independently. For example, if the challenge sentence includes "se passer" and the user writes "pass itself," mark "se passer" as forgotten but mark "se" and "passe" as remembered.
 
-Example output: {{
-"explanation": "The {language} expression 'avoir à faire' means 'to have (something) to do,' implying you are busy. You rendered 'faire' as 'go,' but it should be 'do.'  A correct translation is: 'I have things to do.'"
-"primary_expression_status": "Forgot",  // The primary expression was "faire", and it looks like the user incorrectly translated it to "go". Therefore, we'll mark it as "forgot"
-"expressions_remembered": [{{"Heteronym": {{ "word": "je", "lemma": "je", "pos": "Pron" }}, {{"Heteronym": {{ "word": "ai", "lemma": "avoir", "pos": "Verb" }}, {{"Heteronym": {{ "word": "à", "lemma": "à", "pos": "Adp" }}}}],
-"expressions_forgot": [{{"Heteronym": {{ "word": "faire", "lemma": "faire", "pos": "Verb" }}}}],
-}}
+Respond with JSON.
 
+{example}
 If there are lexemes (particularly multiword terms) that are not in the challenge sentence, do not include them in the expressions_remembered or expressions_forgot arrays. (Since the user did not have a chance to try to translate them.) However, if the user forgot a word that is in the challenge sentence, include it in the expressions_forgot array. The conjugations used in the multiword terms might be different than how they appear in the challenge sentence.
 
-The explanation should be written as if speaking directly to the user. Markdown formatting is allowed. Try to keep the explanations short and concise. The user is still learning {language}, so respond in English!
-"#
+The explanation should be written as if speaking directly to the user. Markdown formatting is allowed. Try to keep the explanations short and concise. The user is still learning {language_name}, so respond in English!
+"#,
     );
 
     let autograde_response: autograde::AutoGradeTranslationResponse = CLIENT.chat_with_system_prompt(
         system_prompt,
         &{
             format!(
-            "{language} challenge sentence: {challenge_sentence}\nUser response: {user_sentence}\nPrimary expression: {primary_expression}\nExpressions: {expressions}",
+            "{language_name} challenge sentence: {challenge_sentence}\nUser response: {user_sentence}\nPrimary expression: {primary_expression}\nExpressions: {expressions}",
             challenge_sentence = challenge_sentence,
             user_sentence = user_sentence,
             primary_expression = serde_json::to_value(&primary_expression).unwrap(),
