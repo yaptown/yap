@@ -25,8 +25,38 @@ pub mod data_model;
 
 use crate::data_model::{Event, Timestamped};
 
-pub trait AppState: Sized {
+/// Core trait for partial event processing without derived state computation
+pub trait PartialAppState: Sized {
     type Event: Event;
 
+    /// The intermediate state type returned by process_event.
+    /// For simple cases, this can just be Self.
+    type Partial: Sized;
+
+    /// Process an event partially, without computing derived state.
+    /// This is called for each event when applying multiple events.
+    fn process_event(partial: Self::Partial, event: &Timestamped<Self::Event>) -> Self::Partial;
+
+    /// Finalize the state by computing any derived state (e.g., statistical models).
+    /// This is called once after all events have been processed.
+    fn finalize(partial: Self::Partial) -> Self;
+}
+
+/// Extension trait that provides apply_event for backward compatibility
+pub trait AppState: PartialAppState {
+    /// Apply a single event completely, including finalization.
     fn apply_event(self, event: &Timestamped<Self::Event>) -> Self;
+}
+
+/// Blanket implementation: anything that can convert Self -> Partial gets apply_event automatically
+impl<T> AppState for T
+where
+    T: PartialAppState,
+    T::Partial: From<T>,
+{
+    fn apply_event(self, event: &Timestamped<Self::Event>) -> Self {
+        let partial = T::Partial::from(self);
+        let partial = T::process_event(partial, event);
+        T::finalize(partial)
+    }
 }

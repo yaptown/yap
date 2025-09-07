@@ -15,7 +15,8 @@
       "Bash(cargo doc:*)",
       "Bash(cargo build:*)",
       "Bash(python3:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(cargo test:*)"
     ],
     "deny": []
   }

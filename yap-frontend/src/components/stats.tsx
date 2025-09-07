@@ -73,12 +73,19 @@ export function Stats({ deck }: StatsProps) {
           </thead>
           <tbody>
             {visibleCards.map((card, index) => {
-              const shortDescription =
-                "TargetLanguage" in card.card_indicator
-                  ? "Heteronym" in card.card_indicator.TargetLanguage.lexeme
-                    ? card.card_indicator.TargetLanguage.lexeme.Heteronym.word
-                    : card.card_indicator.TargetLanguage.lexeme.Multiword
-                  : `/${card.card_indicator.ListeningHomophonous.pronunciation}/`;
+              let shortDescription = "";
+              let pos = "";
+              
+              if ("TargetLanguage" in card.card_indicator) {
+                if ("Heteronym" in card.card_indicator.TargetLanguage.lexeme) {
+                  shortDescription = card.card_indicator.TargetLanguage.lexeme.Heteronym.word;
+                  pos = card.card_indicator.TargetLanguage.lexeme.Heteronym.pos;
+                } else {
+                  shortDescription = card.card_indicator.TargetLanguage.lexeme.Multiword;
+                }
+              } else {
+                shortDescription = `/${card.card_indicator.ListeningHomophonous.pronunciation}/`;
+              }
 
               const isDue = card.due_timestamp_ms <= now;
               return (
@@ -86,7 +93,14 @@ export function Stats({ deck }: StatsProps) {
                   key={index}
                   className={`border-b ${isDue ? "bg-green-500/10" : ""}`}
                 >
-                  <td className="p-3 font-medium">{shortDescription}</td>
+                  <td className="p-3 font-medium">
+                    {shortDescription}
+                    {pos && (
+                      <span className="ml-2 text-muted-foreground text-sm">
+                        ({pos.toLowerCase()})
+                      </span>
+                    )}
+                  </td>
                   <td className="p-3">
                     <Badge variant="outline">{card.state}</Badge>
                   </td>

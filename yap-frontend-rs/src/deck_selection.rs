@@ -9,13 +9,22 @@ pub enum DeckSelection {
     NoneSelected,
 }
 
-impl weapon::AppState for DeckSelection {
+impl weapon::PartialAppState for DeckSelection {
     type Event = DeckSelectionEvent;
+    type Partial = Self; // For now, partial state is the same as final state
 
-    fn apply_event(self, event: &weapon::data_model::Timestamped<Self::Event>) -> Self {
+    fn process_event(
+        _partial: Self::Partial,
+        event: &weapon::data_model::Timestamped<Self::Event>,
+    ) -> Self::Partial {
         match event.event {
             DeckSelectionEvent::SelectLanguage(language) => DeckSelection::Selected(language),
         }
+    }
+
+    fn finalize(partial: Self::Partial) -> Self {
+        // For now, finalization is a no-op since Partial = Self
+        partial
     }
 }
 
