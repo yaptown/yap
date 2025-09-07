@@ -974,13 +974,6 @@ enum CardStatus {
 }
 
 impl CardStatus {
-    pub(crate) fn unadded(&self) -> Option<&Unadded> {
-        match self {
-            CardStatus::Unadded(unadded) => Some(unadded),
-            CardStatus::Added(_) => None,
-        }
-    }
-
     pub(crate) fn value(&self) -> Option<ordered_float::NotNan<f64>> {
         match self {
             CardStatus::Unadded(unadded) => Some(unadded.value()),
@@ -1072,7 +1065,7 @@ impl From<Deck> for DeckState {
             .cards
             .iter()
             .filter_map(|(indicator, status)| match status {
-                CardStatus::Added(data) => Some((*indicator, data.clone())),
+                CardStatus::Added(data) => Some((indicator.clone(), data.clone())),
                 CardStatus::Unadded { .. } => None,
             })
             .collect();
@@ -1142,7 +1135,7 @@ impl weapon::PartialAppState for Deck {
                             }
 
                             partial.cards.insert(
-                                card,
+                                card.clone(),
                                 CardData {
                                     fsrs_card: rs_fsrs::Card::new(),
                                 },
@@ -1163,7 +1156,7 @@ impl weapon::PartialAppState for Deck {
                         _ => return partial, // Invalid rating, don't apply
                     };
 
-                    partial.log_review(reviewed, rating, *timestamp);
+                    partial.log_review(reviewed.clone(), rating, *timestamp);
                 }
             }
             LanguageEventContent::TranslationChallenge {
@@ -1365,7 +1358,7 @@ impl weapon::PartialAppState for Deck {
             target_language_points.push(bias_point_1);
             target_language_points.push(bias_point_2);
             IsotonicRegression::new_descending(&target_language_points)
-                .inspect_err(|e| log::error!("regression error: {e:?}"))
+                .inspect_err(|e| log::error!("regression error: {:?}", e))
                 .ok()
         } else {
             None
@@ -1375,7 +1368,7 @@ impl weapon::PartialAppState for Deck {
             listening_points.push(bias_point_1);
             listening_points.push(bias_point_2);
             IsotonicRegression::new_descending(&listening_points)
-                .inspect_err(|e| log::error!("regression error: {e:?}"))
+                .inspect_err(|e| log::error!("regression error: {:?}", e))
                 .ok()
         } else {
             None
@@ -1580,18 +1573,18 @@ impl Deck {
                 if due_date <= now {
                     match card {
                         CardIndicator::TargetLanguage { .. } if no_text_cards => {
-                            due_but_banned_cards.push(*card);
+                            due_but_banned_cards.push(card.clone());
                         }
                         CardIndicator::ListeningHomophonous { .. } if no_listening_cards => {
-                            due_but_banned_cards.push(*card);
+                            due_but_banned_cards.push(card.clone());
                         }
                         CardIndicator::TargetLanguage { .. }
                         | CardIndicator::ListeningHomophonous { .. } => {
-                            due_cards.push(*card)
+                            due_cards.push(card.clone())
                         }
                     }
                 } else {
-                    future_cards.push(*card);
+                    future_cards.push(card.clone());
                 }
             }
         }
@@ -1967,7 +1960,7 @@ impl Deck {
                         })
                         .collect();
                     CardContent::Listening {
-                        pronunciation,
+                        pronunciation: pronunciation,
                         possible_words,
                     }
                 }
@@ -2105,13 +2098,14 @@ impl Regressions {
         .and_then(|regression| regression.interpolate(frequency.sqrt_frequency()))
     }
 
-    /// Get the predicted probability of knowing a card (0.0 to 1.0)
-    /// Based on FSRS difficulty scale where higher difficulty means harder to remember
+    /// Get the predicted probability of knowing a card (0.0 to 1.0).
+    /// Based on FSRS difficulty scale where higher difficulty means harder to remember.
+    /// The relationship is non-linear with two inflection points.
+    ///
     /// - Difficulty 1 = 100% chance of remembering
     /// - Difficulty 5 (good rating baseline) = 80% chance of remembering
     /// - Difficulty 8 = 10% chance of remembering
     /// - Difficulty 10 = 0% chance of remembering
-    /// The relationship is non-linear with two inflection points
     pub(crate) fn predict_card_knowledge_probability(
         &self,
         card: &CardIndicator<Spur>,
