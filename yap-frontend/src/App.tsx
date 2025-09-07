@@ -1,6 +1,6 @@
 import { useState, useEffect, Profiler, useMemo, useCallback, useSyncExternalStore } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { CardSummary, Deck, type CardType, type Challenge, type ChallengeType, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded } from '../../yap-frontend-rs/pkg'
+import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeType, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded } from '../../yap-frontend-rs/pkg'
 import { Button } from "@/components/ui/button.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -368,6 +368,10 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   const { currentChallenge, addCardOptions } = useMemo(() => {
     const currentChallenge: Challenge<string> | undefined = reviewInfo.get_next_challenge(deck);
     const addCardOptions = deck.add_card_options();
+    if (userInfo === undefined) {
+      const options: AddCardOptions = { smart_add: 0, manual_add: addCardOptions.manual_add.map(([count, card_type]) => [card_type == "TargetLanguage" ? count : 0, card_type]) };
+      return { currentChallenge, addCardOptions: options };
+    }
     return { currentChallenge, addCardOptions };
   }, [deck, reviewInfo])
 
@@ -495,7 +499,16 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
           addNextCards(undefined, 1);
         } else if (reviewInfo.due_count === 0 && !currentChallenge) {
           event.preventDefault();
-          addNextCards(undefined, addCardOptions.smart_add);
+          if (addCardOptions.smart_add > 0) {
+            addNextCards(undefined, addCardOptions.smart_add);
+          } else {
+            for (const [count, card_type] of addCardOptions.manual_add) {
+              if (card_type === "TargetLanguage") {
+                addNextCards("TargetLanguage", count);
+                break;
+              }
+            }
+          }
         }
       }
     };
@@ -505,7 +518,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [addNextCards, deck, reviewInfo, currentChallenge, addCardOptions.smart_add]);
+  }, [addNextCards, deck, reviewInfo, currentChallenge, addCardOptions.smart_add, addCardOptions.manual_add]);
 
   return (
     <>

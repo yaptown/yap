@@ -24,6 +24,20 @@ export function NoCardsDue({ nextDueCard, showEngagementPrompts, addNextCards, a
   const numCanAddListening = addCardOptions.manual_add.find(([, card_type]) => card_type === 'Listening')?.[0] || 0
   const numCanSmartAdd = addCardOptions.smart_add
 
+  const add_cards: [number, CardType | undefined][] = []
+  if (numCanSmartAdd > 0) {
+    add_cards.push([numCanSmartAdd, undefined])
+  }
+  if (numCanAddTargetLanguage > 0) {
+    add_cards.push([numCanAddTargetLanguage, "TargetLanguage"])
+  }
+  if (numCanAddListening > 0) {
+    add_cards.push([numCanAddListening, "Listening"])
+  }
+
+  const targetLanguageSpan = <span style={{ fontWeight: "bold" }}>{targetLanguage} → English</span>
+  const listeningSpan = <span style={{ fontWeight: "bold" }}>{targetLanguage} listening</span>
+
   return (
     <div className="space-y-4">
       <AnimatedCard className="bg-card text-card-foreground rounded-lg p-12 gap-6 flex flex-col text-center border">
@@ -35,16 +49,16 @@ export function NoCardsDue({ nextDueCard, showEngagementPrompts, addNextCards, a
         </div>
 
         <div className="space-y-4">
-          {numCanSmartAdd > 0 ? (
+          {add_cards.length > 0 ? (
             <div className="flex justify-center">
               <Button
-                onClick={() => addNextCards(undefined, numCanSmartAdd)}
+                onClick={() => addNextCards(add_cards[0][1], add_cards[0][0])}
                 variant="default"
-                className={numCanAddTargetLanguage > 0 || numCanAddListening > 0 ? "rounded-r-none" : ""}
+                className={add_cards.length > 1 ? "rounded-r-none" : ""}
               >
-                Add {numCanSmartAdd} new cards to my deck
+                Add {add_cards[0][0]} new {add_cards[0][1] === undefined ? "" : add_cards[0][1] === "TargetLanguage" ? targetLanguageSpan : listeningSpan} cards to my deck
               </Button>
-              {(numCanAddTargetLanguage > 0 || numCanAddListening > 0) && (
+              {(add_cards.length > 1) && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -55,16 +69,11 @@ export function NoCardsDue({ nextDueCard, showEngagementPrompts, addNextCards, a
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {numCanAddTargetLanguage > 0 && (
-                      <DropdownMenuItem onClick={() => addNextCards("TargetLanguage", numCanAddTargetLanguage)}>
-                        Add {numCanAddTargetLanguage} <span style={{ fontWeight: "bold" }}>{targetLanguage} → English</span> cards
+                    {add_cards.slice(1).map(([count, card_type]) => (
+                      <DropdownMenuItem onClick={() => addNextCards(card_type, count)}>
+                        Add {count} {card_type === "TargetLanguage" ? targetLanguageSpan : listeningSpan} cards
                       </DropdownMenuItem>
-                    )}
-                    {numCanAddListening > 0 && (
-                      <DropdownMenuItem onClick={() => addNextCards("Listening", numCanAddListening)}>
-                        Add {numCanAddListening} <span style={{ fontWeight: "bold" }}>{targetLanguage} listening</span> cards
-                      </DropdownMenuItem>
-                    )}
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
