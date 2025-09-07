@@ -375,7 +375,11 @@ async fn main() -> anyhow::Result<()> {
                 "\nGenerating word and phrase frequencies from combined sources (Anki + OpenSubtitles)..."
             );
 
-            let frequencies = generate_data::frequencies::compute_frequencies(all_lexemes.clone());
+            let frequencies = generate_data::frequencies::compute_frequencies(
+                &nlp_sentences,
+                course.target_language,
+                &banned_words,
+            );
             println!("Computed {} frequencies", frequencies.len());
 
             generate_data::frequencies::write_frequencies_file(frequencies, &frequencies_file)?;
