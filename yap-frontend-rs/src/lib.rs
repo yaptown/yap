@@ -1065,7 +1065,7 @@ impl From<Deck> for DeckState {
             .cards
             .iter()
             .filter_map(|(indicator, status)| match status {
-                CardStatus::Added(data) => Some((indicator.clone(), data.clone())),
+                CardStatus::Added(data) => Some((*indicator, data.clone())),
                 CardStatus::Unadded { .. } => None,
             })
             .collect();
@@ -1135,7 +1135,7 @@ impl weapon::PartialAppState for Deck {
                             }
 
                             partial.cards.insert(
-                                card.clone(),
+                                card,
                                 CardData {
                                     fsrs_card: rs_fsrs::Card::new(),
                                 },
@@ -1156,7 +1156,7 @@ impl weapon::PartialAppState for Deck {
                         _ => return partial, // Invalid rating, don't apply
                     };
 
-                    partial.log_review(reviewed.clone(), rating, *timestamp);
+                    partial.log_review(reviewed, rating, *timestamp);
                 }
             }
             LanguageEventContent::TranslationChallenge {
@@ -1358,7 +1358,7 @@ impl weapon::PartialAppState for Deck {
             target_language_points.push(bias_point_1);
             target_language_points.push(bias_point_2);
             IsotonicRegression::new_descending(&target_language_points)
-                .inspect_err(|e| log::error!("regression error: {:?}", e))
+                .inspect_err(|e| log::error!("regression error: {e:?}"))
                 .ok()
         } else {
             None
@@ -1368,7 +1368,7 @@ impl weapon::PartialAppState for Deck {
             listening_points.push(bias_point_1);
             listening_points.push(bias_point_2);
             IsotonicRegression::new_descending(&listening_points)
-                .inspect_err(|e| log::error!("regression error: {:?}", e))
+                .inspect_err(|e| log::error!("regression error: {e:?}"))
                 .ok()
         } else {
             None
@@ -1573,18 +1573,16 @@ impl Deck {
                 if due_date <= now {
                     match card {
                         CardIndicator::TargetLanguage { .. } if no_text_cards => {
-                            due_but_banned_cards.push(card.clone());
+                            due_but_banned_cards.push(*card);
                         }
                         CardIndicator::ListeningHomophonous { .. } if no_listening_cards => {
-                            due_but_banned_cards.push(card.clone());
+                            due_but_banned_cards.push(*card);
                         }
                         CardIndicator::TargetLanguage { .. }
-                        | CardIndicator::ListeningHomophonous { .. } => {
-                            due_cards.push(card.clone())
-                        }
+                        | CardIndicator::ListeningHomophonous { .. } => due_cards.push(*card),
                     }
                 } else {
-                    future_cards.push(card.clone());
+                    future_cards.push(*card);
                 }
             }
         }
@@ -1960,7 +1958,7 @@ impl Deck {
                         })
                         .collect();
                     CardContent::Listening {
-                        pronunciation: pronunciation,
+                        pronunciation,
                         possible_words,
                     }
                 }
