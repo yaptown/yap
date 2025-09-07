@@ -25,7 +25,8 @@ impl<'a> NextCardsIterator<'a> {
         let added_over_20_cards = self
             .cards
             .iter()
-            .filter(|(_, status)| matches!(status, CardStatus::Added(_))).nth(20)
+            .filter(|(_, status)| matches!(status, CardStatus::Added(_)))
+            .nth(20)
             .is_some();
 
         self.cards

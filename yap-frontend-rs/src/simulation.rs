@@ -32,7 +32,7 @@ impl Iterator for DailySimulationIterator {
             let review_info = self.deck.get_review_info(vec![]);
             if let Some(challenge) = review_info.get_next_challenge(&self.deck) {
                 day_challenges.push(challenge.clone());
-                
+
                 // Answer the challenge perfectly to update deck state
                 let event = match challenge {
                     Challenge::FlashCardReview { indicator, .. } => {
@@ -61,7 +61,8 @@ impl Iterator for DailySimulationIterator {
                                             .into_iter()
                                             .map(|p| transcription_challenge::PartGradedPart {
                                                 heard: p,
-                                                grade: transcription_challenge::WordGrade::Perfect {},
+                                                grade:
+                                                    transcription_challenge::WordGrade::Perfect {},
                                             })
                                             .collect(),
                                     }
