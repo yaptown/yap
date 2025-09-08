@@ -1147,7 +1147,7 @@ impl weapon::PartialAppState for Deck {
                             let mut fsrs_card = rs_fsrs::Card::new();
                             fsrs_card.due = *timestamp;
 
-                        deck.cards.insert(
+                            deck.cards.insert(
                                 card,
                                 CardData {
                                     fsrs_card,
@@ -1445,12 +1445,7 @@ impl DeckState {
         }
     }
 
-    fn log_review(
-        &mut self,
-        card: CardIndicator<Spur>,
-        rating: Rating,
-        timestamp: DateTime<Utc>,
-    ) -> Option<&CardData> {
+    fn log_review(&mut self, card: CardIndicator<Spur>, rating: Rating, timestamp: DateTime<Utc>) {
         let word_frequencies = &self.context.language_pack.word_frequencies;
         let pronunciation_to_words = &self.context.language_pack.pronunciation_to_words;
 
@@ -1458,23 +1453,31 @@ impl DeckState {
         match &card {
             CardIndicator::TargetLanguage { lexeme } => {
                 if !word_frequencies.contains_key(lexeme) {
-                    return None;
+                    return;
                 }
             }
             CardIndicator::ListeningHomophonous { pronunciation } => {
                 if !pronunciation_to_words.contains_key(pronunciation) {
-                    return None;
+                    return;
                 }
             }
         }
 
-        let card_data = self.cards.get_mut(&card)?;
+        let card_data = self.cards.entry(card).or_insert(CardData {
+            fsrs_card: {
+                let mut fsrs_card = rs_fsrs::Card::new();
+                fsrs_card.due = timestamp;
+                fsrs_card
+            },
+
+            // log review doesn't add real cards to the deck, but if you managed to review something not in the deck, we might as well record that so that when you do add the card to your deck we can inherit the fsrs stats.
+            ghost: true,
+        });
         let old_stability = card_data.fsrs_card.stability;
         let record_log = self.fsrs.repeat(card_data.fsrs_card.clone(), timestamp);
         card_data.fsrs_card = record_log[&rating].card.clone();
         let new_stability = card_data.fsrs_card.stability;
         self.stats.xp += (new_stability - old_stability).max(0.0) / 10.0;
-        Some(card_data)
     }
 
     fn update_daily_streak(&mut self, timestamp: &DateTime<Utc>) {
@@ -1976,14 +1979,50 @@ impl Deck {
             .cards
             .iter()
             .filter_map(|(card_indicator, card_status)| match card_indicator {
-                CardIndicator::TargetLanguage { lexeme } => Some((lexeme, card_status)),
+                CardIndicator::TargetLanguage { lexeme } => Some((*lexeme, card_status)),
                 CardIndicator::ListeningHomophonous { .. } => None,
             })
-            .filter(|(_, card_status)| {
-                if let CardStatus::Added(card_data) = card_status {
-                    matches!(card_data.fsrs_card.state, rs_fsrs::State::Review)
-                } else {
-                    false
+            .filter(|(card_indicator, card_status)| {
+                match card_status {
+                    CardStatus::Added(CardData {
+                        fsrs_card:
+                            rs_fsrs::Card {
+                                state: rs_fsrs::State::Review,
+                                ..
+                            },
+                        ghost: false,
+                    }) => true,
+                    CardStatus::Added(CardData {
+                        fsrs_card:
+                            rs_fsrs::Card {
+                                state: rs_fsrs::State::Review,
+                                difficulty,
+                                ..
+                            },
+                        ghost: true,
+                    }) => {
+                        // compute probability of knowing the card based on diffuculty
+                        let known = Regressions::difficulty_to_probability(*difficulty);
+                        known >= 0.80
+                    }
+                    CardStatus::Added(CardData {
+                        fsrs_card: rs_fsrs::Card { state: _, .. },
+                        ghost: _,
+                    }) => false,
+                    CardStatus::Unadded { .. } => {
+                        if let Some((knowledge_probability, _)) =
+                            self.context.get_card_knowledge_probability(
+                                &CardIndicator::TargetLanguage {
+                                    lexeme: *card_indicator,
+                                },
+                                &self.regressions,
+                            )
+                        {
+                            knowledge_probability >= 0.80
+                        } else {
+                            false
+                        }
+                    }
                 }
             })
             .map(|(target_language_word, _)| *target_language_word)
@@ -2068,10 +2107,20 @@ impl Context {
         card: &CardIndicator<Spur>,
         regressions: &Regressions,
     ) -> Option<ordered_float::NotNan<f64>> {
-        let frequency = self.get_card_frequency(card)?;
-        let knowledge_probability = regressions.predict_card_knowledge_probability(card, frequency);
+        let (knowledge_probability, frequency) =
+            self.get_card_knowledge_probability(card, regressions)?;
         ordered_float::NotNan::new((1.0 - knowledge_probability) * (frequency.sqrt_frequency()))
             .ok()
+    }
+
+    fn get_card_knowledge_probability(
+        &self,
+        card: &CardIndicator<Spur>,
+        regressions: &Regressions,
+    ) -> Option<(f64, Frequency)> {
+        let frequency = self.get_card_frequency(card)?;
+        let knowledge_probability = regressions.predict_card_knowledge_probability(card, frequency);
+        Some((knowledge_probability, frequency))
     }
 
     /// Get the frequency count for a card (used for isotonic regression)
@@ -2120,6 +2169,10 @@ impl Regressions {
         let Some(difficulty) = self.predict_card_difficulty(card, frequency) else {
             return 0.0;
         };
+        Self::difficulty_to_probability(difficulty)
+    }
+
+    fn difficulty_to_probability(difficulty: f64) -> f64 {
         // Inflection points
         const EASY_DIFFICULTY: f64 = 3.28;
         const EASY_PROBABILITY: f64 = 0.95; // 95% chance at "easy" difficulty
