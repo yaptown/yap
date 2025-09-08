@@ -84,24 +84,24 @@ export function LanguageSelector({ onLanguageConfirmed, skipOnboarding }: Langua
 
   const introScreens = skipOnboarding ? [] : [
     {
-      title: "Yap works differently than other language learning apps.",
-      content: "Other apps break your learning down into discrete lessons, where you study topics like \"animals\" or \"body parts\"."
+      title: "Most language apps waste your time.",
+      content: "They make you learn \"animals\" and \"body parts\" when you really need everyday words that matter."
     },
     {
-      title: "In Yap, you'll learn the most common words first.",
-      content: "It might surprise you which words are the most common!"
+      title: "Yap teaches you the 1,000 most common words first.",
+      content: "These words make up 80% of everyday conversation."
     },
     {
-      title: "Other apps have a set lesson plan. They don't adapt to you.",
-      content: "This makes you waste time. Your learning needs are unique!"
+      title: "Your brain forgets on a schedule. Yap knows it.",
+      content: "We use spaced repetition—reviewing each word at the exact moment before you'd forget it."
     },
     {
-      title: "But Yap adapts your lessons to focus on the words you most need to study.",
-      content: "Yap's scheduler has you review each word right when you're about to forget it."
+      title: "Other apps follow their plan. Yap follows your brain.",
+      content: "Every lesson adapts to what YOU struggle with, not what lesson 47 says you should know."
     },
     {
-      title: "This is called \"spaced repetition\", and it's the most efficient way to learn.",
-      content: "Once you see how efficient it is, you'll never want to go back."
+      title: "It's science, and it works.",
+      content: "Once you feel the difference, you'll never want to go back."
     }
   ];
 
@@ -130,13 +130,13 @@ export function LanguageSelector({ onLanguageConfirmed, skipOnboarding }: Langua
                   whileTap={{ scale: 0.98 }}
                 >
                   <Card
-                    className="relative overflow-hidden p-8 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2"
+                    className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
                     onClick={() => {
                       setSelectedLanguage(lang.name);
                     }}
                   >
                     {lang.beta && (
-                      <Badge className="absolute top-2 right-2 z-20 gap-1">
+                      <Badge className="absolute bottom-1 right-1 z-20 gap-1">
                         Beta
                       </Badge>
                     )}
@@ -178,7 +178,7 @@ export function LanguageSelector({ onLanguageConfirmed, skipOnboarding }: Langua
               <CarouselContent>
                 {introScreens.map((screen, index) => (
                   <CarouselItem key={index}>
-                    <Card className="p-12">
+                    <Card className="p-4 pt-12 pb-12">
                       <div className="text-center">
                         <h2 className="text-3xl font-bold mb-6" style={{ textWrap: "balance" }}>
                           {screen.title}
