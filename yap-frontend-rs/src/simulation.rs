@@ -33,10 +33,13 @@ impl Iterator for DailySimulationIterator {
             if let Some(challenge) = review_info.get_next_challenge(&self.deck) {
                 day_challenges.push(challenge.clone());
 
-                // Answer the challenge perfectly to update deck state
+                // Answer the challenge, marking new flashcards as forgotten once
                 let event = match challenge {
-                    Challenge::FlashCardReview { indicator, .. } => {
-                        self.deck.review_card(indicator, "good".to_string())
+                    Challenge::FlashCardReview {
+                        indicator, is_new, ..
+                    } => {
+                        let rating = if is_new { "again" } else { "good" };
+                        self.deck.review_card(indicator, rating.to_string())
                     }
                     Challenge::TranslateComprehensibleSentence(
                         TranslateComprehensibleSentence {
