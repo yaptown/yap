@@ -7,8 +7,8 @@ use weapon::opfs::UserDirectory;
 #[derive(Debug)]
 pub(crate) struct Directories {
     pub data_directory_handle: DirectoryHandle,
-    #[cfg_attr(not(target_arch = "wasm32"), expect(unused))] // only used for wasm build
-    pub user_directory_handle: UserDirectory,
+    pub current_user_directory_handle: UserDirectory,
+    pub user_events_directory_handle: DirectoryHandle,
     pub weapon_directory_handle: DirectoryHandle,
 }
 
@@ -33,12 +33,13 @@ pub(crate) async fn get_directories(
     let user = if let Some(user_id) = user_id {
         UserDirectory::new(&user_events, user_id).await?
     } else {
-        UserDirectory::new(&weapon, "logged-out-unknown-user").await?
+        UserDirectory::new(&user_events, "logged-out-unknown-user").await?
     };
 
     Ok(Directories {
         data_directory_handle: data,
-        user_directory_handle: user,
+        user_events_directory_handle: user_events,
+        current_user_directory_handle: user,
         weapon_directory_handle: weapon,
     })
 }

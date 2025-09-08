@@ -80,6 +80,18 @@ impl Weapon {
                 log::error!("Error getting directories: {e:?}");
             })?;
 
+        if user_id.is_some() {
+            EventStore::<String, String>::import_logged_out_user_data(
+                directories.weapon_directory_handle.clone(),
+                directories.user_events_directory_handle.clone(),
+                &directories.current_user_directory_handle,
+            )
+            .await
+            .inspect_err(|e| {
+                log::error!("Error importing logged out data: {e:?}");
+            })?;
+        }
+
         let device_id =
             utils::get_or_create_device_id(&directories.weapon_directory_handle, &user_id)
                 .await
@@ -237,7 +249,7 @@ impl Weapon {
 
         EventStore::load_from_local_storage(
             &self.store,
-            &self.directories.user_directory_handle,
+            &self.directories.current_user_directory_handle,
             stream_id.clone(),
             modifier,
         )
@@ -266,7 +278,7 @@ impl Weapon {
 
         EventStore::save_to_local_storage(
             &self.store,
-            &self.directories.user_directory_handle,
+            &self.directories.current_user_directory_handle,
             stream_id.clone(),
         )
         .await?;
@@ -288,7 +300,7 @@ impl Weapon {
             if supabase_sync_result.downloaded_from_supabase > 0 {
                 EventStore::save_to_local_storage(
                     &self.store,
-                    &self.directories.user_directory_handle,
+                    &self.directories.current_user_directory_handle,
                     stream_id,
                 )
                 .await?;
@@ -319,7 +331,7 @@ impl Weapon {
 
         EventStore::load_from_local_storage(
             &self.store,
-            &self.directories.user_directory_handle,
+            &self.directories.current_user_directory_handle,
             stream_id.clone(),
             None,
         )
@@ -1337,12 +1349,6 @@ impl weapon::PartialAppState for Deck {
             if let Some(frequency) = state.context.get_card_frequency(card_indicator) {
                 let difficulty = card_data.fsrs_card.difficulty;
                 let point = Point::new(frequency.sqrt_frequency(), difficulty);
-                log::info!(
-                    "card: {:?}, frequency: {:.2}, difficulty: {:.2}",
-                    card_indicator,
-                    frequency.sqrt_frequency(),
-                    difficulty
-                );
 
                 match card_indicator {
                     CardIndicator::TargetLanguage { .. } => {
