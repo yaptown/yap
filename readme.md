@@ -12,6 +12,11 @@ Join the community on [Discord](https://discord.gg/mpgqfsH).
 2. Spanish (beta)
 3. Korean (alpha)
 
+## Supported learning modalities
+
+1. Reading
+2. Listening
+
 ## Why Yap?
 
 **Yap's goal is to be the #1 most effective language learning app on the planet.**
