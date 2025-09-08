@@ -39,9 +39,7 @@ Yap solves this problem by implementing spaced repetition through sentences cont
 The app does not do spaced repetition at the level of words. Instead, it works on the level of `(word, lemma, part of speech)` triples. This allows the spaced repetition system to more intelligently schedule sentences.
 
 1. For example, the word "le" in French can be used as an article or as a pronoun. When you mistranslate a sentence that uses "le" as a pronoun, we detect this and only mark that specific usage as needing repetition. You won't get followed up with sentences using "le" as an article, since that's not what you misunderstood.
-2. Another example is the word "suis," which can be a conjugation of "être" or "suivre" in French. Misunderstanding one of these should result in more sentences that use the specific conjugation you misunderstood, even though the word is spelled the same.
-
-To accomplish this, we use natural language processing on our dataset of sentences. For French, we use CamemBERT, named like the cheese but with BERT capitalized.
+2. Another example is the word "suis," which can be a conjugation of "être" or "suivre" in French. Misunderstanding one of these should result in more sentences that use the specific conjugation you misunderstood, even though the word is spelled the same. (To accomplish this, we use natural language processing on our dataset of sentences.) 
 
 In addition to words, YAP also has "multi-word terms" as part of its spaced repetition system. For example, the French term "se passer" means "to happen" or "to take place." You wouldn't understand this meaning by looking at the individual words alone. Therefore, we have separate SRS entries for such expressions. This ensures that you learn complete phrases and expression, in addition to individual words.
 
