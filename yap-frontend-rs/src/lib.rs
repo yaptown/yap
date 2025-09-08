@@ -1007,6 +1007,10 @@ struct Unadded {}
 #[derive(Clone, Debug)]
 struct CardData {
     fsrs_card: rs_fsrs::Card,
+
+    /// ghost cards are not formally part of the deck and therefore are not scheduled for review,
+    /// but nevertheless have been shown to the user, so we keep track of their fsrs stats to reuse once they are officially added.
+    ghost: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -1088,10 +1092,7 @@ impl weapon::PartialAppState for Deck {
     type Event = DeckEvent;
     type Partial = DeckState;
 
-    fn process_event(
-        mut partial: Self::Partial,
-        event: &Timestamped<Self::Event>,
-    ) -> Self::Partial {
+    fn process_event(mut deck: Self::Partial, event: &Timestamped<Self::Event>) -> Self::Partial {
         let Timestamped::<DeckEvent> {
             event,
             timestamp,
@@ -1103,46 +1104,54 @@ impl weapon::PartialAppState for Deck {
             content: event,
         }) = event;
 
-        partial.update_daily_streak(timestamp);
-        partial.stats.total_reviews += 1;
+        deck.update_daily_streak(timestamp);
+        deck.stats.total_reviews += 1;
 
-        if *event_language != partial.context.target_language {
-            return partial;
+        if *event_language != deck.context.target_language {
+            return deck;
         }
 
         match event {
             LanguageEventContent::AddCards { cards } => {
                 for card in cards {
-                    if let Some(card) = card.get_interned(&partial.context.language_pack.rodeo) {
-                        if !partial.cards.contains_key(&card) {
-                            // Make sure the card is actually in the respective database
-                            match &card {
-                                CardIndicator::TargetLanguage { lexeme } => {
-                                    if !partial
-                                        .context
-                                        .language_pack
-                                        .word_frequencies
-                                        .contains_key(lexeme)
-                                    {
-                                        continue;
-                                    }
-                                }
-                                CardIndicator::ListeningHomophonous { pronunciation } => {
-                                    if !partial
-                                        .context
-                                        .language_pack
-                                        .pronunciation_to_words
-                                        .contains_key(pronunciation)
-                                    {
-                                        continue;
-                                    }
+                    if let Some(card) = card.get_interned(&deck.context.language_pack.rodeo) {
+                        // Make sure the card is actually in the respective database
+                        match &card {
+                            CardIndicator::TargetLanguage { lexeme } => {
+                                if !deck
+                                    .context
+                                    .language_pack
+                                    .word_frequencies
+                                    .contains_key(lexeme)
+                                {
+                                    continue;
                                 }
                             }
+                            CardIndicator::ListeningHomophonous { pronunciation } => {
+                                if !deck
+                                    .context
+                                    .language_pack
+                                    .pronunciation_to_words
+                                    .contains_key(pronunciation)
+                                {
+                                    continue;
+                                }
+                            }
+                        }
 
-                            partial.cards.insert(
+                        // If the card is already in the deck, it may be a ghost card, so we need to unghost it
+                        if let Some(card) = deck.cards.get_mut(&card) {
+                            card.fsrs_card.due = *timestamp;
+                            card.ghost = false;
+                        } else {
+                            let mut fsrs_card = rs_fsrs::Card::new();
+                            fsrs_card.due = *timestamp;
+
+                        deck.cards.insert(
                                 card,
                                 CardData {
-                                    fsrs_card: rs_fsrs::Card::new(),
+                                    fsrs_card,
+                                    ghost: false,
                                 },
                             );
                         }
@@ -1150,18 +1159,17 @@ impl weapon::PartialAppState for Deck {
                 }
             }
             LanguageEventContent::ReviewCard { reviewed, rating } => {
-                if let Some(reviewed) = reviewed.get_interned(&partial.context.language_pack.rodeo)
-                {
+                if let Some(reviewed) = reviewed.get_interned(&deck.context.language_pack.rodeo) {
                     // Log review
                     let rating = match rating.as_str() {
                         "again" => Rating::Again,
                         "hard" => Rating::Hard,
                         "good" => Rating::Good,
                         "easy" => Rating::Easy,
-                        _ => return partial, // Invalid rating, don't apply
+                        _ => return deck, // Invalid rating, don't apply
                     };
 
-                    partial.log_review(reviewed, rating, *timestamp);
+                    deck.log_review(reviewed, rating, *timestamp);
                 }
             }
             LanguageEventContent::TranslationChallenge {
@@ -1172,15 +1180,15 @@ impl weapon::PartialAppState for Deck {
                     },
             } => {
                 if let Some(challenge_sentence) =
-                    partial.context.language_pack.rodeo.get(challenge_sentence)
+                    deck.context.language_pack.rodeo.get(challenge_sentence)
                 {
-                    if let Some(lexemes) = partial
+                    if let Some(lexemes) = deck
                         .context
                         .language_pack
                         .sentences_to_lexemes
                         .get(&challenge_sentence)
                     {
-                        let sentence_review_count = partial
+                        let sentence_review_count = deck
                             .stats
                             .sentences_reviewed
                             .entry(challenge_sentence)
@@ -1189,7 +1197,7 @@ impl weapon::PartialAppState for Deck {
 
                         let lexemes = lexemes.clone();
                         for lexeme in lexemes {
-                            partial.log_review(
+                            deck.log_review(
                                 CardIndicator::TargetLanguage { lexeme },
                                 Rating::Good,
                                 *timestamp,
@@ -1211,9 +1219,8 @@ impl weapon::PartialAppState for Deck {
                     },
             } => {
                 for lexeme in lexemes_remembered {
-                    if let Some(lexeme) = lexeme.get_interned(&partial.context.language_pack.rodeo)
-                    {
-                        partial.log_review(
+                    if let Some(lexeme) = lexeme.get_interned(&deck.context.language_pack.rodeo) {
+                        deck.log_review(
                             CardIndicator::TargetLanguage { lexeme },
                             Rating::Good,
                             *timestamp,
@@ -1222,9 +1229,8 @@ impl weapon::PartialAppState for Deck {
                 }
 
                 for lexeme in lexemes_forgotten {
-                    if let Some(lexeme) = lexeme.get_interned(&partial.context.language_pack.rodeo)
-                    {
-                        partial.log_review(
+                    if let Some(lexeme) = lexeme.get_interned(&deck.context.language_pack.rodeo) {
+                        deck.log_review(
                             CardIndicator::TargetLanguage { lexeme },
                             Rating::Again,
                             *timestamp,
@@ -1245,9 +1251,9 @@ impl weapon::PartialAppState for Deck {
                                 // Only process words that have heteronyms (actual vocabulary)
                                 if let Some(heteronym) = &graded_part.heard.heteronym
                                     && let Some(heteronym) =
-                                        heteronym.get_interned(&partial.context.language_pack.rodeo)
+                                        heteronym.get_interned(&deck.context.language_pack.rodeo)
                                 {
-                                    let pronunciation = *partial
+                                    let pronunciation = *deck
                                         .context
                                         .language_pack
                                         .word_to_pronunciation
@@ -1267,7 +1273,7 @@ impl weapon::PartialAppState for Deck {
                                     };
 
                                     if rating != Rating::Again {
-                                        *partial
+                                        *deck
                                             .stats
                                             .words_listened_to
                                             .entry(heteronym)
@@ -1276,7 +1282,7 @@ impl weapon::PartialAppState for Deck {
                                         perfect = false;
                                     }
 
-                                    partial.log_review(card, rating, *timestamp);
+                                    deck.log_review(card, rating, *timestamp);
                                 }
                             }
                         }
@@ -1305,9 +1311,9 @@ impl weapon::PartialAppState for Deck {
                         .collect::<Vec<String>>()
                         .join("");
                     if let Some(challenge_sentence) =
-                        partial.context.language_pack.rodeo.get(&challenge_sentence)
+                        deck.context.language_pack.rodeo.get(&challenge_sentence)
                     {
-                        let sentence_review_count = partial
+                        let sentence_review_count = deck
                             .stats
                             .sentences_reviewed
                             .entry(challenge_sentence)
@@ -1318,7 +1324,7 @@ impl weapon::PartialAppState for Deck {
             }
         }
 
-        partial
+        deck
     }
 
     fn finalize(state: Self::Partial) -> Self {
@@ -1402,10 +1408,7 @@ impl weapon::PartialAppState for Deck {
             if let Some(card_data) = added_cards.get(&indicator) {
                 all_cards.insert(indicator, CardStatus::Added(card_data.clone()));
             } else {
-                all_cards.insert(
-                    indicator,
-                    CardStatus::Unadded(Unadded {}),
-                );
+                all_cards.insert(indicator, CardStatus::Unadded(Unadded {}));
             }
         }
 
@@ -2060,10 +2063,15 @@ impl Deck {
 }
 
 impl Context {
-    fn get_card_value(&self, card: &CardIndicator<Spur>, regressions: &Regressions) -> Option<ordered_float::NotNan<f64>> {
+    fn get_card_value(
+        &self,
+        card: &CardIndicator<Spur>,
+        regressions: &Regressions,
+    ) -> Option<ordered_float::NotNan<f64>> {
         let frequency = self.get_card_frequency(card)?;
         let knowledge_probability = regressions.predict_card_knowledge_probability(card, frequency);
-        ordered_float::NotNan::new((1.0 - knowledge_probability) * (frequency.sqrt_frequency())).ok()
+        ordered_float::NotNan::new((1.0 - knowledge_probability) * (frequency.sqrt_frequency()))
+            .ok()
     }
 
     /// Get the frequency count for a card (used for isotonic regression)

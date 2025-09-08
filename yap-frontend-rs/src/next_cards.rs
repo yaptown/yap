@@ -22,7 +22,7 @@ impl<'a> NextCardsIterator<'a> {
         }
     }
 
-    fn next_text_card(&self) -> Option<CardIndicator<Spur>> {
+    fn next_text_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
         // None of the first 20 cards can be multiword cards
         let added_over_20_cards = self
             .cards
@@ -40,18 +40,22 @@ impl<'a> NextCardsIterator<'a> {
                 if !added_over_20_cards && lexeme.multiword().is_some() {
                     return None;
                 }
-                
+
                 let Unadded {} = status.unadded()?;
 
                 let value = self.context.get_card_value(card, self.regressions)?;
 
-                Some((lexeme, value))
+                let fsrs_card = rs_fsrs::Card::new();
+
+                Some((lexeme, fsrs_card, value))
             })
-            .max_by_key(|(_, value)| *value)
-            .map(|(card, _)| CardIndicator::TargetLanguage { lexeme: *card })
+            .max_by_key(|(_, _, value)| *value)
+            .map(|(card, fsrs_card, _)| {
+                (CardIndicator::TargetLanguage { lexeme: *card }, fsrs_card)
+            })
     }
 
-    fn next_listening_card(&self) -> Option<CardIndicator<Spur>> {
+    fn next_listening_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
         // Get all known words (already added text cards)
         let known_words: BTreeSet<Lexeme<Spur>> = self
             .cards
@@ -92,17 +96,24 @@ impl<'a> NextCardsIterator<'a> {
                     return None;
                 }
 
-                Some((pronunciation, value))
+                let fsrs_card = rs_fsrs::Card::new();
+
+                Some((pronunciation, fsrs_card, value))
             })
-            .max_by_key(|(_, value)| *value)
-            .map(|(pronunciation, _)| CardIndicator::ListeningHomophonous {
-                pronunciation: *pronunciation,
+            .max_by_key(|(_, _, value)| *value)
+            .map(|(pronunciation, fsrs_card, _)| {
+                (
+                    CardIndicator::ListeningHomophonous {
+                        pronunciation: *pronunciation,
+                    },
+                    fsrs_card,
+                )
             })
     }
 }
 
 impl NextCardsIterator<'_> {
-    fn next_card(&self) -> Option<CardIndicator<Spur>> {
+    fn next_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
         if self.permitted_types.is_empty() {
             return None;
         }
@@ -173,11 +184,12 @@ impl Iterator for NextCardsIterator<'_> {
     type Item = CardIndicator<Spur>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(card) = self.next_card() {
+        if let Some((card, fsrs_card)) = self.next_card() {
             self.cards.insert(
                 card,
                 CardStatus::Added(crate::CardData {
-                    fsrs_card: rs_fsrs::Card::new(),
+                    fsrs_card,
+                    ghost: false,
                 }),
             );
             Some(card)
