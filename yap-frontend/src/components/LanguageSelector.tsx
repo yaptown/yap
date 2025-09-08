@@ -106,7 +106,7 @@ export function LanguageSelector({ onLanguageConfirmed, skipOnboarding }: Langua
   ];
 
   return (
-    <div className="flex items-center justify-center p-8">
+    <div className="flex items-center justify-center mt-8">
       <AnimatePresence mode="wait">
         {!selectedLanguage ? (
           <motion.div
