@@ -974,6 +974,13 @@ enum CardStatus {
 }
 
 impl CardStatus {
+    pub(crate) fn added(&self) -> Option<&CardData> {
+        match self {
+            CardStatus::Added(card_data) => Some(card_data),
+            CardStatus::Unadded(_) => None,
+        }
+    }
+
     pub(crate) fn value(&self) -> Option<ordered_float::NotNan<f64>> {
         match self {
             CardStatus::Unadded(unadded) => Some(unadded.value()),
@@ -1857,10 +1864,7 @@ impl Deck {
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn num_cards(&self) -> usize {
-        self.cards
-            .values()
-            .filter(|status| matches!(status, CardStatus::Added(_)))
-            .count()
+        self.cards.values().filter_map(CardStatus::added).count()
     }
 }
 
@@ -1966,6 +1970,17 @@ impl Deck {
             fsrs_card: card_data.fsrs_card.clone(),
         };
         Some(card)
+    }
+
+    fn card_known(&self, card_indicator: &CardIndicator<Spur>) -> bool {
+        self.cards
+            .get(card_indicator)
+            .and_then(|status| status.added())
+            .is_some()
+    }
+
+    fn lexeme_known(&self, lexeme: &Lexeme<Spur>) -> bool {
+        self.card_known(&CardIndicator::TargetLanguage { lexeme: *lexeme })
     }
 
     fn get_comprehensible_sentence_containing(
@@ -2351,12 +2366,6 @@ impl ReviewInfo {
         let challenge: Challenge<Spur> = if card.fsrs_card.state == rs_fsrs::State::New {
             flashcard
         } else if let Some(pronunciation) = card.content.pronunciation() {
-            let known_words: BTreeSet<Lexeme<Spur>> = deck
-                .cards
-                .keys()
-                .filter_map(CardIndicator::target_language)
-                .cloned()
-                .collect();
             let mut heteronyms = language_pack
                 .pronunciation_to_words
                 .get(&pronunciation)
@@ -2370,7 +2379,7 @@ impl ReviewInfo {
                         .unwrap()
                         .clone()
                 })
-                .filter(|heteronym| known_words.contains(&Lexeme::Heteronym(*heteronym)))
+                .filter(|heteronym| deck.lexeme_known(&Lexeme::Heteronym(*heteronym)))
                 .collect::<Vec<_>>();
             heteronyms
                 .sort_by_key(|heteronym| deck.stats.words_listened_to.get(heteronym).unwrap_or(&0));
