@@ -213,6 +213,7 @@ function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined,
                     setRequestedLanguageChange(true)
                   } : undefined}
                   showSignupNag={deck?.type === 'deck' && deck.deck !== null}
+                  language={deck?.type === 'deck' ? deck.language : undefined}
                 />
                 {
                   match(deck)

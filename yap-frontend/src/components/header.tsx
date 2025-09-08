@@ -8,16 +8,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { NotificationSettings } from '@/components/notification-settings'
-import { LogOut, AlertTriangle, Languages } from 'lucide-react'
+import { LogOut, AlertTriangle } from 'lucide-react'
 import { SyncStatusDialog } from '@/components/sync-status-dialog'
 import type { UserInfo } from '@/App'
 import { AuthDialog } from '@/components/auth-dialog'
+import type { Language } from '../../../yap-frontend-rs/pkg'
 
 interface HeaderProps {
   userInfo: UserInfo | undefined
   onSignOut: () => void
   onChangeLanguage?: () => void
   showSignupNag?: boolean
+  language?: Language
+}
+
+function getLanguageEmoji(language: Language | undefined): string {
+  switch (language) {
+    case 'French': return '🇫🇷'
+    case 'Spanish': return '🇪🇸'
+    case 'Korean': return '🇰🇷'
+    case 'English': return '🇬🇧'
+    default: return '🌍'
+  }
 }
 
 export function Header({
@@ -25,6 +37,7 @@ export function Header({
   onSignOut,
   onChangeLanguage,
   showSignupNag = false,
+  language,
 }: HeaderProps) {
   const [authOpen, setAuthOpen] = useState(false)
   const [defaultView, setDefaultView] = useState<'signin' | 'signup'>('signin')
@@ -34,7 +47,21 @@ export function Header({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <img src="/yap.svg" alt="Yap.Town logo" className="h-8 w-8 rounded-md" />
+            {onChangeLanguage ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onChangeLanguage}
+                className="h-8 w-8 p-0 text-2xl"
+                title="Change language"
+              >
+                {getLanguageEmoji(language)}
+              </Button>
+            ) : (
+              <div className="h-8 w-8 flex items-center justify-center text-2xl">
+                {getLanguageEmoji(language)}
+              </div>
+            )}
             <h1 className="text-2xl font-bold">
               <span className="hidden sm:inline">Yap.Town</span>
               <span className="sm:hidden">Yap</span>
@@ -54,12 +81,6 @@ export function Header({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <NotificationSettings />
-                {onChangeLanguage && (
-                  <DropdownMenuItem onClick={onChangeLanguage}>
-                    <Languages className="mr-2 h-4 w-4" />
-                    Language
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem onClick={onSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
