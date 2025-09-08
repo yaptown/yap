@@ -993,31 +993,16 @@ impl CardStatus {
         }
     }
 
-    pub(crate) fn value(&self) -> Option<ordered_float::NotNan<f64>> {
+    pub(crate) fn unadded(&self) -> Option<&Unadded> {
         match self {
-            CardStatus::Unadded(unadded) => Some(unadded.value()),
+            CardStatus::Unadded(unadded) => Some(unadded),
             CardStatus::Added(_) => None,
         }
     }
 }
 
 #[derive(Clone, Debug)]
-struct Unadded {
-    knowledge_probability: f64,
-    frequency: Frequency,
-}
-
-impl Unadded {
-    /// If the card is unadded, return the value of the card to the user. This is used to determine the next card to add
-    /// If the card is added, return None
-    pub(crate) fn value(&self) -> ordered_float::NotNan<f64> {
-        // TODO: should we really be using ln_frequency here?
-        ordered_float::NotNan::new(
-            (1.0 - self.knowledge_probability) * (self.frequency.sqrt_frequency()),
-        )
-        .unwrap()
-    }
-}
+struct Unadded {}
 
 #[derive(Clone, Debug)]
 struct CardData {
@@ -1062,6 +1047,7 @@ pub struct Deck {
     fsrs: FSRS,
     stats: Stats,
     context: Context,
+    regressions: Regressions,
 }
 
 #[derive(Clone, Debug)]
@@ -1400,20 +1386,12 @@ impl weapon::PartialAppState for Deck {
         );
 
         // add all TargetLanguage cards
-        for (lexeme, frequency) in state.context.language_pack.word_frequencies.iter() {
+        for lexeme in state.context.language_pack.word_frequencies.keys() {
             let indicator = CardIndicator::TargetLanguage { lexeme: *lexeme };
             if let Some(card_data) = added_cards.get(&indicator) {
                 all_cards.insert(indicator, CardStatus::Added(card_data.clone()));
             } else {
-                let knowledge_probability =
-                    regressions.predict_card_knowledge_probability(&indicator, *frequency);
-                all_cards.insert(
-                    indicator,
-                    CardStatus::Unadded(Unadded {
-                        knowledge_probability,
-                        frequency: *frequency,
-                    }),
-                );
+                all_cards.insert(indicator, CardStatus::Unadded(Unadded {}));
             }
         }
         // add all ListeningHomophonous cards
@@ -1424,15 +1402,9 @@ impl weapon::PartialAppState for Deck {
             if let Some(card_data) = added_cards.get(&indicator) {
                 all_cards.insert(indicator, CardStatus::Added(card_data.clone()));
             } else {
-                let frequency = state.context.get_card_frequency(&indicator).unwrap();
-                let knowledge_probability =
-                    regressions.predict_card_knowledge_probability(&indicator, frequency);
                 all_cards.insert(
                     indicator,
-                    CardStatus::Unadded(Unadded {
-                        knowledge_probability,
-                        frequency,
-                    }),
+                    CardStatus::Unadded(Unadded {}),
                 );
             }
         }
@@ -1442,6 +1414,7 @@ impl weapon::PartialAppState for Deck {
             fsrs: state.fsrs,
             stats: state.stats,
             context: state.context,
+            regressions,
         }
     }
 }
@@ -2087,6 +2060,12 @@ impl Deck {
 }
 
 impl Context {
+    fn get_card_value(&self, card: &CardIndicator<Spur>, regressions: &Regressions) -> Option<ordered_float::NotNan<f64>> {
+        let frequency = self.get_card_frequency(card)?;
+        let knowledge_probability = regressions.predict_card_knowledge_probability(card, frequency);
+        ordered_float::NotNan::new((1.0 - knowledge_probability) * (frequency.sqrt_frequency())).ok()
+    }
+
     /// Get the frequency count for a card (used for isotonic regression)
     fn get_card_frequency(&self, card: &CardIndicator<Spur>) -> Option<Frequency> {
         match card {
