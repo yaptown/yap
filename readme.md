@@ -10,17 +10,47 @@ Join the community on [Discord](https://discord.gg/mpgqfsH).
 
 1. French
 2. Spanish (beta)
+3. Korean (alpha)
 
 ## Why Yap?
 
-Other language learning apps I tried are very ineffective for language learning. They have two main flaws. 
+**Yap's goal is to be the #1 most effective language learning app on the planet.**
+
+This is a low standard because most apps are optimized for engagement or are otherwise poorly designed, making them very ineffective. Language learning apps typically have two main flaws. 
 
 1. They do not effectively utilize spaced repetition. 
-2. They teach words in an ineffective order.
+2. They teach words and grammatical concepts in an ineffective order.
 
-Spaced repetition is the #1 most important thing a language learning app could possibly provide. It is the foundation of time-efficient focused study. 
+Spaced repetition is the #1 most important thing a language learning app could possibly provide. It is the foundation of time-efficient focused study. Yet most language-learning tools relegate it to a curiosity in an out-of-the-way section of the app, if they make use of it at all!
 
-The order that words are taught in is also very inefficient. The most common words like "to", "from", "of", "I", "who", "that", and so on are the most common, so they should be learned first. But apps spend time teaching you how to say sentences like "the man is eating an apple", even though words like "man" and "apple" are incredibly rare by comparison.
+In other apps, the order that words are taught in is also very inefficient. The most common words like "to", "from", "of", "I", "who", "that", and so on are the most common, so they should be learned first. But apps spend time teaching you how to say sentences like "the man is eating an apple", even though words like "man" and "apple" are incredibly rare by comparison.
+
+You can do better than most by creating Anki decks with vocabulary words, but the issue is that you won't encounter words in their natural sentence context. Without this context, it becomes much harder to recall words when seeing them in sentences rather than isolated in an Anki deck.
+
+Yap solves this problem by implementing spaced repetition through sentences containing the target word, and asking users to translate the entire sentence. A side-benefit is that upon successful translation, we can mark every word in the sentence as having been successfully repeated. (Even if you mistranslate a word that wasn't the intended focus of the repetition, we can still log that data, ultimately providing much more data to the SRS and much better practice than a typical Anki session would.)
+
+## Spaced repetition features
+
+The app does not do spaced repetition at the level of words. Instead, it works on the level of `(word, lemma, part of speech)` triples. This allows the spaced repetition system to more intelligently schedule sentences.
+
+1. For example, the word "le" in French can be used as an article or as a pronoun. When you mistranslate a sentence that uses "le" as a pronoun, we detect this and only mark that specific usage as needing repetition. You won't get followed up with sentences using "le" as an article, since that's not what you misunderstood.
+2. Another example is the word "suis," which can be a conjugation of "être" or "suivre" in French. Misunderstanding one of these should result in more sentences that use the specific conjugation you misunderstood, even though the word is spelled the same.
+
+To accomplish this, we use natural language processing on our dataset of sentences. For French, we use CamemBERT, named like the cheese but with BERT capitalized.
+
+In addition to words, YAP also has "multi-word terms" as part of its spaced repetition system. For example, the French term "se passer" means "to happen" or "to take place." You wouldn't understand this meaning by looking at the individual words alone. Therefore, we have separate SRS entries for such expressions. This ensures that you learn complete phrases and expression, in addition to individual words.
+
+The words that Yap chooses to introduce are initially based on which words are most common. As you use Yap, we build a model using isotonic regression to assess how difficult you find words based on their frequency. If you consistently find the shown words easy, Yap will begin introducing rarer words to identify vocabulary you don't already know. This approach allows Yap to quickly adapt to your existing skill level and reduces time wasted on reviewing words you know from outside of Yap.
+
+## Other features of Yap I'm proud of
+
+Of course, in addition to being the most effective language learning app, I couldn't live with myself if I didn't think that YAP was also just a generally pleasant app to use. To that end, there are some features of YAP that I'm proud of that set it apart from most other apps on the internet.
+
+1. Instant sync across all your devices.
+2. You can use Yap while logged out, and it functions almost exactly the same as when you're logged in. (The exception is features that fundamentally require an account, like cross-device sync.) As soon as you do log in, all of your data is migrated to your account, and you can pick up exactly where you left off.
+3. Yap works seamlessly offline once installed as a Progressive Web App. All of the language data is downloaded to your device and challenge selection etc. is all done locally.
+4. Yap is quite fast, with most operations taking less than the time to render one frame, despite processing large amounts of sentences. Yap's performance benefits from being primarily written in Rust (and compiled to WebAssembly to run in the browser). We also implement various optimizations, including string interning, which allows most operations to work with objects that fit entirely in the stack (removing the need for most heap access or allocations). 
+
 
 ## Build Process
 
