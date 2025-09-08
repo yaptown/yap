@@ -196,6 +196,66 @@ impl EventStore<String, String> {
 
         Ok(total_written)
     }
+
+    /// Import events from the logged-out user directory into the current user's directory.
+    /// This is used when a user first logs in so their offline data is preserved.
+    pub async fn import_logged_out_user_data(
+        mut weapon_directory: DirectoryHandle,
+        mut user_events_directory: DirectoryHandle,
+        current_user_directory: &UserDirectory,
+    ) -> Result<(), persistent::Error> {
+        // Attempt to get the logged-out directory. If it doesn't exist, there's nothing to do.
+        let logged_out_directory = match user_events_directory
+            .get_directory_handle_with_options(
+                "user__logged-out-unknown-user",
+                &opfs::GetDirectoryHandleOptions { create: false },
+            )
+            .await
+        {
+            Ok(dir) => UserDirectory {
+                directory_handle: dir,
+            },
+            Err(_) => return Ok(()),
+        };
+
+        // If the current user directory already has data, skip the import.
+        let mut existing_streams = current_user_directory.event_stream_directories().await?;
+        if existing_streams.next().await.is_some() {
+            return Ok(());
+        }
+
+        // Move all streams/devices/events from the logged-out directory.
+        let mut streams = logged_out_directory.event_stream_directories().await?;
+        while let Some((stream_id, stream_dir)) = streams.next().await {
+            let target_stream_dir = current_user_directory
+                .get_stream_directory(&stream_id)
+                .await?;
+            let mut devices = stream_dir.device_directories().await?;
+            while let Some((device_id, device_dir)) = devices.next().await {
+                let target_device_dir = target_stream_dir.get_device_directory(&device_id).await?;
+                let events = device_dir
+                    .read_device_events(0)
+                    .await
+                    .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?
+                    .collect::<Vec<_>>()
+                    .await;
+                for event in events {
+                    // Write event to target directory
+                    target_device_dir.write_event_file(&event).await?;
+                }
+            }
+        }
+
+        let _ = weapon_directory.remove_entry("device-id-logged-out").await;
+
+        // Remove the logged-out user directory itself now that everything is moved.
+        let _ = user_events_directory
+            .remove_entry_with_options("user__logged-out-unknown-user", &opfs::FileSystemRemoveOptions { recursive: true })
+            .await
+            .inspect_err(|e| log::error!("Failed to remove logged-out user directory: {e:?}"));
+
+        Ok(())
+    }
 }
 #[derive(Debug, Clone)]
 pub struct UserDirectory {
