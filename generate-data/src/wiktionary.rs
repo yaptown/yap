@@ -92,7 +92,8 @@ async fn download_multiword_terms(language: Language) -> anyhow::Result<Vec<Stri
 
     let terms = download_category(category)
         .await
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
+        .map_err(|e| anyhow::anyhow!("{}", e))
+        .context(format!("Failed to download {category}"))?;
 
     println!("Downloaded {} terms", terms.len());
 
@@ -100,7 +101,10 @@ async fn download_multiword_terms(language: Language) -> anyhow::Result<Vec<Stri
 }
 
 async fn download_category(category_name: &str) -> anyhow::Result<Vec<String>> {
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .user_agent("YapBot/1.0 (https://yap.town) reqwest/0.11")
+        .build()
+        .context("Failed to build HTTP client")?;
     let base_url = "https://en.wiktionary.org/w/api.php";
     let mut all_pages = Vec::new();
     let mut cmcontinue: Option<String> = None;
@@ -128,11 +132,11 @@ async fn download_category(category_name: &str) -> anyhow::Result<Vec<String>> {
         }
 
         // Send request
-        let response = request.send().await?;
-        let text = response.text().await?;
+        let response = request.send().await.context("Failed to send request")?;
+        let text = response.text().await.context("Failed to get response text")?;
 
         // Parse JSON
-        let data: Value = serde_json::from_str(&text)?;
+        let data: Value = serde_json::from_str(&text).context(format!("Failed to parse `{text}` into JSON"))?;
 
         // Extract page titles
         if let Some(members) = data["query"]["categorymembers"].as_array() {
