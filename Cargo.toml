@@ -28,7 +28,7 @@ tokio = { version = "1.45.1", features = ["full"] }
 opfs = { version = "0.1.4" }
 idb = { version = "0.6.3" }
 rkyv = { version = "0.8.10" }
-fetch-happen = { version = "0.2.0" }
+fetch-happen = { version = "0.3.0" }
 # { version = "0.1.1" }
 xxhash-rust = { version = "0.8.15", features = ["xxh3", "const_xxh3"] }
 indexmap = { version = "2" }

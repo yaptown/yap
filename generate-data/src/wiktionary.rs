@@ -30,7 +30,7 @@ pub async fn ensure_multiword_terms_file(
         .await
         .context("Failed to get extra multiword terms")?;
     let banned_terms = match target_language {
-        Language::French => vec!["de le", "de les", "à le", "à les"],
+        Language::French => vec!["de le", "de les", "à le", "à les", "fait que"],
         Language::Spanish => vec!["de el", "a el"], // Spanish contractions that become "del" and "al"
         Language::English => vec![],
         Language::Korean => vec![],

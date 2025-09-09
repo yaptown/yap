@@ -184,11 +184,11 @@ impl Weapon {
             .map(|s| s.state(DeckSelection::NoneSelected))
     }
 
-    pub async fn get_deck_state(
-        &self,
-        target_language: Language,
-    ) -> Result<Deck, persistent::Error> {
-        let language_pack = self.get_language_pack(target_language).await?;
+    pub async fn get_deck_state(&self, target_language: Language) -> Result<Deck, JsValue> {
+        let language_pack = self
+            .get_language_pack(target_language)
+            .await
+            .map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
 
         let initial_state = DeckState::new(language_pack, target_language);
         let store = self.store.borrow_mut();
@@ -457,10 +457,10 @@ impl Weapon {
 }
 
 impl Weapon {
-    pub async fn get_language_pack(
+    pub(crate) async fn get_language_pack(
         &self,
         language: Language,
-    ) -> Result<Arc<LanguagePack>, persistent::Error> {
+    ) -> Result<Arc<LanguagePack>, language_pack::LanguageDataError> {
         let language_pack = if let Some(language_pack) = self.language_pack.borrow().get(&language)
         {
             language_pack.clone()
@@ -1982,7 +1982,7 @@ impl Deck {
                 CardIndicator::TargetLanguage { lexeme } => Some((*lexeme, card_status)),
                 CardIndicator::ListeningHomophonous { .. } => None,
             })
-            .filter(|(card_indicator, card_status)| {
+            .filter(|(lexeme, card_status)| {
                 match card_status {
                     CardStatus::Added(CardData {
                         fsrs_card:
@@ -2012,9 +2012,7 @@ impl Deck {
                     CardStatus::Unadded { .. } => {
                         if let Some((knowledge_probability, _)) =
                             self.context.get_card_knowledge_probability(
-                                &CardIndicator::TargetLanguage {
-                                    lexeme: *card_indicator,
-                                },
+                                &CardIndicator::TargetLanguage { lexeme: *lexeme },
                                 &self.regressions,
                             )
                         {
@@ -2025,7 +2023,7 @@ impl Deck {
                     }
                 }
             })
-            .map(|(target_language_word, _)| *target_language_word)
+            .map(|(target_language_word, _)| target_language_word)
             .collect();
 
         // Add the target word to comprehensible words
