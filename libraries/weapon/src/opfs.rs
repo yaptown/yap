@@ -250,7 +250,10 @@ impl EventStore<String, String> {
 
         // Remove the logged-out user directory itself now that everything is moved.
         let _ = user_events_directory
-            .remove_entry_with_options("user__logged-out-unknown-user", &opfs::FileSystemRemoveOptions { recursive: true })
+            .remove_entry_with_options(
+                "user__logged-out-unknown-user",
+                &opfs::FileSystemRemoveOptions { recursive: true },
+            )
             .await
             .inspect_err(|e| log::error!("Failed to remove logged-out user directory: {e:?}"));
 

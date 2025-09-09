@@ -133,10 +133,14 @@ async fn download_category(category_name: &str) -> anyhow::Result<Vec<String>> {
 
         // Send request
         let response = request.send().await.context("Failed to send request")?;
-        let text = response.text().await.context("Failed to get response text")?;
+        let text = response
+            .text()
+            .await
+            .context("Failed to get response text")?;
 
         // Parse JSON
-        let data: Value = serde_json::from_str(&text).context(format!("Failed to parse `{text}` into JSON"))?;
+        let data: Value =
+            serde_json::from_str(&text).context(format!("Failed to parse `{text}` into JSON"))?;
 
         // Extract page titles
         if let Some(members) = data["query"]["categorymembers"].as_array() {
