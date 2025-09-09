@@ -3,12 +3,13 @@ use std::collections::{BTreeSet, HashMap};
 use language_utils::Lexeme;
 use lasso::Spur;
 
-use crate::{CardIndicator, CardStatus, ChallengeType, Context, Deck};
+use crate::{CardIndicator, CardStatus, ChallengeType, Context, Deck, Regressions, Unadded};
 
 pub(crate) struct NextCardsIterator<'a> {
     pub(crate) cards: HashMap<CardIndicator<Spur>, CardStatus>,
     pub(crate) permitted_types: Vec<ChallengeType>,
     pub(crate) context: &'a Context,
+    pub(crate) regressions: &'a Regressions,
 }
 
 impl<'a> NextCardsIterator<'a> {
@@ -17,10 +18,11 @@ impl<'a> NextCardsIterator<'a> {
             cards: deck.cards.clone(),
             permitted_types,
             context: &deck.context,
+            regressions: &deck.regressions,
         }
     }
 
-    fn next_text_card(&self) -> Option<CardIndicator<Spur>> {
+    fn next_text_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
         // None of the first 20 cards can be multiword cards
         let added_over_20_cards = self
             .cards
@@ -39,15 +41,21 @@ impl<'a> NextCardsIterator<'a> {
                     return None;
                 }
 
-                let value = status.value()?;
+                let Unadded {} = status.unadded()?;
 
-                Some((lexeme, value))
+                let value = self.context.get_card_value(card, self.regressions)?;
+
+                let fsrs_card = rs_fsrs::Card::new();
+
+                Some((lexeme, fsrs_card, value))
             })
-            .max_by_key(|(_, value)| *value)
-            .map(|(card, _)| CardIndicator::TargetLanguage { lexeme: *card })
+            .max_by_key(|(_, _, value)| *value)
+            .map(|(card, fsrs_card, _)| {
+                (CardIndicator::TargetLanguage { lexeme: *card }, fsrs_card)
+            })
     }
 
-    fn next_listening_card(&self) -> Option<CardIndicator<Spur>> {
+    fn next_listening_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
         // Get all known words (already added text cards)
         let known_words: BTreeSet<Lexeme<Spur>> = self
             .cards
@@ -72,7 +80,9 @@ impl<'a> NextCardsIterator<'a> {
                     return None;
                 };
 
-                let value = status.value()?;
+                let Unadded {} = status.unadded()?;
+
+                let value = self.context.get_card_value(card, self.regressions)?;
 
                 // Check if we know at least one word with this pronunciation
                 let has_known_word = self
@@ -86,17 +96,24 @@ impl<'a> NextCardsIterator<'a> {
                     return None;
                 }
 
-                Some((pronunciation, value))
+                let fsrs_card = rs_fsrs::Card::new();
+
+                Some((pronunciation, fsrs_card, value))
             })
-            .max_by_key(|(_, value)| *value)
-            .map(|(pronunciation, _)| CardIndicator::ListeningHomophonous {
-                pronunciation: *pronunciation,
+            .max_by_key(|(_, _, value)| *value)
+            .map(|(pronunciation, fsrs_card, _)| {
+                (
+                    CardIndicator::ListeningHomophonous {
+                        pronunciation: *pronunciation,
+                    },
+                    fsrs_card,
+                )
             })
     }
 }
 
 impl NextCardsIterator<'_> {
-    fn next_card(&self) -> Option<CardIndicator<Spur>> {
+    fn next_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
         if self.permitted_types.is_empty() {
             return None;
         }
@@ -167,13 +184,9 @@ impl Iterator for NextCardsIterator<'_> {
     type Item = CardIndicator<Spur>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(card) = self.next_card() {
-            self.cards.insert(
-                card,
-                CardStatus::Added(crate::CardData {
-                    fsrs_card: rs_fsrs::Card::new(),
-                }),
-            );
+        if let Some((card, fsrs_card)) = self.next_card() {
+            self.cards
+                .insert(card, CardStatus::Added(crate::CardData { fsrs_card }));
             Some(card)
         } else {
             None

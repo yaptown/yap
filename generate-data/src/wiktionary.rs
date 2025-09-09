@@ -30,7 +30,7 @@ pub async fn ensure_multiword_terms_file(
         .await
         .context("Failed to get extra multiword terms")?;
     let banned_terms = match target_language {
-        Language::French => vec!["de le", "de les", "à le", "à les"],
+        Language::French => vec!["de le", "de les", "à le", "à les", "fait que"],
         Language::Spanish => vec!["de el", "a el"], // Spanish contractions that become "del" and "al"
         Language::English => vec![],
         Language::Korean => vec![],
@@ -133,10 +133,14 @@ async fn download_category(category_name: &str) -> anyhow::Result<Vec<String>> {
 
         // Send request
         let response = request.send().await.context("Failed to send request")?;
-        let text = response.text().await.context("Failed to get response text")?;
+        let text = response
+            .text()
+            .await
+            .context("Failed to get response text")?;
 
         // Parse JSON
-        let data: Value = serde_json::from_str(&text).context(format!("Failed to parse `{text}` into JSON"))?;
+        let data: Value =
+            serde_json::from_str(&text).context(format!("Failed to parse `{text}` into JSON"))?;
 
         // Extract page titles
         if let Some(members) = data["query"]["categorymembers"].as_array() {
