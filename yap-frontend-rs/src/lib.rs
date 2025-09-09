@@ -1134,6 +1134,13 @@ impl weapon::PartialAppState for Deck {
                                 }
                             }
                         }
+                        // Add the card to the deck if it's not already in it
+                        if !deck.cards.contains_key(&card) {
+                            let mut fsrs_card = rs_fsrs::Card::new();
+                            fsrs_card.due = *timestamp;
+
+                            deck.cards.insert(card, CardData { fsrs_card });
+                        }
                     }
                 }
             }
