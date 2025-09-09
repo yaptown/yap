@@ -118,8 +118,8 @@ pub(crate) async fn get_language_pack(
 
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum LanguageDataError {
-    #[error("OPFS error")]
-    PersistentError(#[source] persistent::Error),
+    #[error("OPFS error: {0:?}")]
+    PersistentError(persistent::Error),
 
     #[error("Rkyv error")]
     RkyvError(#[source] rkyv::rancor::Error),

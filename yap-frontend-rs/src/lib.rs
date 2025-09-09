@@ -1007,10 +1007,6 @@ struct Unadded {}
 #[derive(Clone, Debug)]
 struct CardData {
     fsrs_card: rs_fsrs::Card,
-
-    /// ghost cards are not formally part of the deck and therefore are not scheduled for review,
-    /// but nevertheless have been shown to the user, so we keep track of their fsrs stats to reuse once they are officially added.
-    ghost: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -1137,23 +1133,6 @@ impl weapon::PartialAppState for Deck {
                                     continue;
                                 }
                             }
-                        }
-
-                        // If the card is already in the deck, it may be a ghost card, so we need to unghost it
-                        if let Some(card) = deck.cards.get_mut(&card) {
-                            card.fsrs_card.due = *timestamp;
-                            card.ghost = false;
-                        } else {
-                            let mut fsrs_card = rs_fsrs::Card::new();
-                            fsrs_card.due = *timestamp;
-
-                            deck.cards.insert(
-                                card,
-                                CardData {
-                                    fsrs_card,
-                                    ghost: false,
-                                },
-                            );
                         }
                     }
                 }
@@ -1463,16 +1442,9 @@ impl DeckState {
             }
         }
 
-        let card_data = self.cards.entry(card).or_insert(CardData {
-            fsrs_card: {
-                let mut fsrs_card = rs_fsrs::Card::new();
-                fsrs_card.due = timestamp;
-                fsrs_card
-            },
-
-            // log review doesn't add real cards to the deck, but if you managed to review something not in the deck, we might as well record that so that when you do add the card to your deck we can inherit the fsrs stats.
-            ghost: true,
-        });
+        let Some(card_data) = self.cards.get_mut(&card) else {
+            return;
+        };
         let old_stability = card_data.fsrs_card.stability;
         let record_log = self.fsrs.repeat(card_data.fsrs_card.clone(), timestamp);
         card_data.fsrs_card = record_log[&rating].card.clone();
@@ -1982,7 +1954,7 @@ impl Deck {
                 CardIndicator::TargetLanguage { lexeme } => Some((*lexeme, card_status)),
                 CardIndicator::ListeningHomophonous { .. } => None,
             })
-            .filter(|(lexeme, card_status)| {
+            .filter(|(_lexeme, card_status)| {
                 match card_status {
                     CardStatus::Added(CardData {
                         fsrs_card:
@@ -1990,37 +1962,8 @@ impl Deck {
                                 state: rs_fsrs::State::Review,
                                 ..
                             },
-                        ghost: false,
                     }) => true,
-                    CardStatus::Added(CardData {
-                        fsrs_card:
-                            rs_fsrs::Card {
-                                state: rs_fsrs::State::Review,
-                                difficulty,
-                                ..
-                            },
-                        ghost: true,
-                    }) => {
-                        // compute probability of knowing the card based on diffuculty
-                        let known = Regressions::difficulty_to_probability(*difficulty);
-                        known >= 0.80
-                    }
-                    CardStatus::Added(CardData {
-                        fsrs_card: rs_fsrs::Card { state: _, .. },
-                        ghost: _,
-                    }) => false,
-                    CardStatus::Unadded { .. } => {
-                        if let Some((knowledge_probability, _)) =
-                            self.context.get_card_knowledge_probability(
-                                &CardIndicator::TargetLanguage { lexeme: *lexeme },
-                                &self.regressions,
-                            )
-                        {
-                            knowledge_probability >= 0.80
-                        } else {
-                            false
-                        }
-                    }
+                    _ => false,
                 }
             })
             .map(|(target_language_word, _)| target_language_word)

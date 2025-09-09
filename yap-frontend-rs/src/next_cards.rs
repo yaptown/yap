@@ -189,7 +189,6 @@ impl Iterator for NextCardsIterator<'_> {
                 card,
                 CardStatus::Added(crate::CardData {
                     fsrs_card,
-                    ghost: false,
                 }),
             );
             Some(card)
