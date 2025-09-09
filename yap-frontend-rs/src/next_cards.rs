@@ -185,12 +185,8 @@ impl Iterator for NextCardsIterator<'_> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some((card, fsrs_card)) = self.next_card() {
-            self.cards.insert(
-                card,
-                CardStatus::Added(crate::CardData {
-                    fsrs_card,
-                }),
-            );
+            self.cards
+                .insert(card, CardStatus::Added(crate::CardData { fsrs_card }));
             Some(card)
         } else {
             None
