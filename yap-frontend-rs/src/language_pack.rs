@@ -21,7 +21,7 @@ pub(crate) async fn get_language_pack(
             &opfs::GetDirectoryHandleOptions { create: true },
         )
         .await
-        .map_err(LanguageDataError::PersistentError)?;
+        .map_err(LanguageDataError::Persistent)?;
 
     let language_data_hash = match language {
         Language::French => include_str!("../../out/fra/language_data.hash"),
@@ -43,7 +43,7 @@ pub(crate) async fn get_language_pack(
         let bytes = language_data_hash_file
             .read()
             .await
-            .map_err(LanguageDataError::PersistentError)?;
+            .map_err(LanguageDataError::Persistent)?;
         let computed_hash = const_xxh3(&bytes);
         let expected_hash: u64 = language_data_hash.parse().unwrap();
         if computed_hash != expected_hash {
@@ -101,12 +101,12 @@ pub(crate) async fn get_language_pack(
             .inspect_err(|e| {
                 log::error!("2nd error accessing language data: {e:?}");
             })
-            .map_err(LanguageDataError::RkyvError)?;
+            .map_err(LanguageDataError::Rkyv)?;
             rkyv::deserialize::<ConsolidatedLanguageDataWithCapacity, rkyv::rancor::Error>(archived)
                 .inspect_err(|e| {
                     log::error!("Error deserializing language data: {e:?}");
                 })
-                .map_err(LanguageDataError::RkyvError)?
+                .map_err(LanguageDataError::Rkyv)?
         }
     };
 
@@ -119,13 +119,13 @@ pub(crate) async fn get_language_pack(
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum LanguageDataError {
     #[error("OPFS error: {0:?}")]
-    PersistentError(persistent::Error),
+    Persistent(persistent::Error),
 
     #[error("Rkyv error")]
-    RkyvError(#[source] rkyv::rancor::Error),
+    Rkyv(#[source] rkyv::rancor::Error),
 
     #[error("AI server error:")]
-    AiServerError(#[source] fetch_happen::Error),
+    AiServer(#[source] fetch_happen::Error),
 }
 
 async fn download_and_cache_language_data(
@@ -142,7 +142,7 @@ async fn download_and_cache_language_data(
         None,
     )
     .await
-    .map_err(LanguageDataError::AiServerError)?;
+    .map_err(LanguageDataError::AiServer)?;
 
     if !response.ok() {
         log::info!("Server returned error: {}", response.status());
@@ -151,7 +151,7 @@ async fn download_and_cache_language_data(
     let bytes = response
         .bytes()
         .await
-        .map_err(LanguageDataError::AiServerError)?;
+        .map_err(LanguageDataError::AiServer)?;
 
     set_loading_state("Verifying language data");
     let language_data_hash = {
@@ -173,21 +173,21 @@ async fn download_and_cache_language_data(
             &opfs::GetFileHandleOptions { create: true },
         )
         .await
-        .map_err(LanguageDataError::PersistentError)?;
+        .map_err(LanguageDataError::Persistent)?;
     let mut writable = language_data_file
         .create_writable_with_options(&opfs::CreateWritableOptions {
             keep_existing_data: false,
         })
         .await
-        .map_err(LanguageDataError::PersistentError)?;
+        .map_err(LanguageDataError::Persistent)?;
     writable
         .write_at_cursor_pos(bytes.clone())
         .await
-        .map_err(LanguageDataError::PersistentError)?;
+        .map_err(LanguageDataError::Persistent)?;
     writable
         .close()
         .await
-        .map_err(LanguageDataError::PersistentError)?;
+        .map_err(LanguageDataError::Persistent)?;
 
     set_loading_state("Cleaning up old language data files");
     // Clean up old language data files
@@ -196,7 +196,7 @@ async fn download_and_cache_language_data(
         let mut entries = language_directory_handle
             .entries()
             .await
-            .map_err(LanguageDataError::PersistentError)?;
+            .map_err(LanguageDataError::Persistent)?;
         let mut files_to_delete = Vec::new();
 
         // Collect filenames to delete first

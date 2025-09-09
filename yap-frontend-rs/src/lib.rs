@@ -1954,15 +1954,16 @@ impl Deck {
                 CardIndicator::TargetLanguage { lexeme } => Some((*lexeme, card_status)),
                 CardIndicator::ListeningHomophonous { .. } => None,
             })
-            .filter(|(_lexeme, card_status)| match card_status {
-                CardStatus::Added(CardData {
-                    fsrs_card:
-                        rs_fsrs::Card {
+            .filter(|(_lexeme, card_status)| {
+                matches!(
+                    card_status,
+                    CardStatus::Added(CardData {
+                        fsrs_card: rs_fsrs::Card {
                             state: rs_fsrs::State::Review,
                             ..
                         },
-                }) => true,
-                _ => false,
+                    })
+                )
             })
             .map(|(target_language_word, _)| target_language_word)
             .collect();
