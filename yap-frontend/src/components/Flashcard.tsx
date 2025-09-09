@@ -1,4 +1,4 @@
-import { type AudioRequest, type CardContent, type Language } from '../../../yap-frontend-rs/pkg'
+import { type AudioRequest, type CardContent, type Language, type Rating } from '../../../yap-frontend-rs/pkg'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +25,7 @@ interface FlashcardProps {
   onToggle: () => void
   dueCount: number
   totalCount: number
-  onRating?: (rating: 'again' | 'hard' | 'good' | 'easy') => void
+  onRating?: (rating: Rating) => void
   accessToken: string | undefined
   onCantListen?: () => void
   isNew: boolean
@@ -171,11 +171,11 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
     }
 
     if (info.offset.x > threshold && info.velocity.x > 0) {
-      // Swiped right - Good/Easy
+      // Swiped right - "remembered"
       await controls.start({ x: 300, opacity: 0, transition: { duration: 0.2 } })
       if (onRating) {
         window.scrollTo({ top: 0, behavior: 'smooth' })
-        onRating(isNew ? 'easy' : 'good')
+        onRating('remembered')
       }
     } else if (info.offset.x < -threshold && info.velocity.x < 0) {
       // Swiped left - Again
@@ -234,16 +234,16 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
         e.preventDefault();
         onToggle();
       }
-      // Mark as "good/easy" when answer is shown: Space
+      // Mark as remembered: →
       else if (canGrade && e.key === 'ArrowRight' && !e.shiftKey) {
         e.preventDefault();
         if (onRating) {
           window.scrollTo({ top: 0, behavior: 'smooth' });
-          onRating(isNew ? 'easy' : 'good');
+          onRating('remembered');
         }
       }
-      // Mark as "again": f or ←
-      else if (canGrade && (e.key === 'f' || e.key === 'ArrowLeft')) {
+      // Mark as "again": ←
+      else if (canGrade && (e.key === 'ArrowLeft')) {
         e.preventDefault();
         if (onRating) {
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -340,14 +340,17 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={copyWord}>
-                        Copy word
+                      <DropdownMenuItem onClick={() => onRating('easy')}>
+                        Easy
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onRating('good')}>
+                        Good
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onRating('hard')}>
                         Hard
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onRating(isNew ? 'good' : 'easy')}>
-                        {isNew ? 'Good' : 'Easy'}
+                      <DropdownMenuItem onClick={copyWord}>
+                        Copy word
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setShowReportModal(true)}>
                         Report an Issue
@@ -415,7 +418,7 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
               onClick={() => {
                 if (!canGrade) return
                 window.scrollTo({ top: 0, behavior: 'smooth' })
-                onRating(isNew ? 'easy' : 'good')
+                onRating('remembered')
               }}
               variant="default"
               size="lg"

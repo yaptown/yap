@@ -1,6 +1,6 @@
 import { useState, useEffect, Profiler, useMemo, useCallback, useSyncExternalStore } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeType, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded } from '../../yap-frontend-rs/pkg'
+import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeType, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
 import { Button } from "@/components/ui/button.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -394,7 +394,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
   }, [deck, weapon])
 
-  const handleRating = async (rating: 'again' | 'hard' | 'good' | 'easy') => {
+  const handleRating = async (rating: Rating) => {
     if (!currentChallenge || !('FlashCardReview' in currentChallenge)) {
       console.error("handleRating called with no current challenge or no FlashCardReview in current challenge");
       return

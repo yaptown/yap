@@ -1,3 +1,4 @@
+use crate::Rating;
 use crate::{Challenge, Deck, TranscribeComprehensibleSentence, TranslateComprehensibleSentence};
 use chrono::{DateTime, Duration, Utc};
 use language_utils::transcription_challenge;
@@ -38,8 +39,12 @@ impl Iterator for DailySimulationIterator {
                     Challenge::FlashCardReview {
                         indicator, is_new, ..
                     } => {
-                        let rating = if is_new { "again" } else { "good" };
-                        self.deck.review_card(indicator, rating.to_string())
+                        let rating = if is_new {
+                            Rating::Again
+                        } else {
+                            Rating::Remembered
+                        };
+                        self.deck.review_card(indicator, rating)
                     }
                     Challenge::TranslateComprehensibleSentence(
                         TranslateComprehensibleSentence {

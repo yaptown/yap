@@ -24,7 +24,7 @@ use language_utils::{DictionaryEntry, Heteronym, Lexeme, PhrasebookEntry, Target
 use lasso::Spur;
 use opfs::persistent::{self};
 use pav_regression::{IsotonicRegression, Point};
-use rs_fsrs::{FSRS, Rating};
+use rs_fsrs::FSRS;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -924,6 +924,20 @@ pub struct LanguageEvent {
     pub content: LanguageEventContent,
 }
 
+#[derive(
+    Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(rename_all = "lowercase")]
+pub enum Rating {
+    Again,
+    Remembered, // generic rating for when the user picked "remembered" without choosing a specific rating
+
+    Hard,
+    Good,
+    Easy,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum LanguageEventContent {
@@ -932,7 +946,7 @@ pub enum LanguageEventContent {
     },
     ReviewCard {
         reviewed: CardIndicator<String>,
-        rating: String,
+        rating: Rating,
     },
     #[serde(rename = "ReviewSentence")]
     TranslationChallenge {
@@ -1135,27 +1149,18 @@ impl weapon::PartialAppState for Deck {
                             }
                         }
                         // Add the card to the deck if it's not already in it
-                        if !deck.cards.contains_key(&card) {
+                        deck.cards.entry(card).or_insert_with(|| {
                             let mut fsrs_card = rs_fsrs::Card::new();
                             fsrs_card.due = *timestamp;
 
-                            deck.cards.insert(card, CardData { fsrs_card });
-                        }
+                            CardData { fsrs_card }
+                        });
                     }
                 }
             }
             LanguageEventContent::ReviewCard { reviewed, rating } => {
                 if let Some(reviewed) = reviewed.get_interned(&deck.context.language_pack.rodeo) {
-                    // Log review
-                    let rating = match rating.as_str() {
-                        "again" => Rating::Again,
-                        "hard" => Rating::Hard,
-                        "good" => Rating::Good,
-                        "easy" => Rating::Easy,
-                        _ => return deck, // Invalid rating, don't apply
-                    };
-
-                    deck.log_review(reviewed, rating, *timestamp);
+                    deck.log_review(reviewed, *rating, *timestamp);
                 }
             }
             LanguageEventContent::TranslationChallenge {
@@ -1185,7 +1190,7 @@ impl weapon::PartialAppState for Deck {
                         for lexeme in lexemes {
                             deck.log_review(
                                 CardIndicator::TargetLanguage { lexeme },
-                                Rating::Good,
+                                Rating::Remembered,
                                 *timestamp,
                             );
                         }
@@ -1208,7 +1213,7 @@ impl weapon::PartialAppState for Deck {
                     if let Some(lexeme) = lexeme.get_interned(&deck.context.language_pack.rodeo) {
                         deck.log_review(
                             CardIndicator::TargetLanguage { lexeme },
-                            Rating::Good,
+                            Rating::Remembered,
                             *timestamp,
                         );
                     }
@@ -1250,8 +1255,8 @@ impl weapon::PartialAppState for Deck {
 
                                     // Map the grade to a FSRS rating
                                     let rating = match &graded_part.grade {
-                                        transcription_challenge::WordGrade::Perfect {} => Rating::Good,
-                                        transcription_challenge::WordGrade::CorrectWithTypo {} => Rating::Good,
+                                        transcription_challenge::WordGrade::Perfect {} => Rating::Remembered,
+                                        transcription_challenge::WordGrade::CorrectWithTypo {} => Rating::Remembered,
                                         transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect {} => Rating::Hard,
                                         transcription_challenge::WordGrade::PhoneticallySimilarButContextuallyIncorrect {} => Rating::Again,
                                         transcription_challenge::WordGrade::Incorrect {} => Rating::Again,
@@ -1452,6 +1457,23 @@ impl DeckState {
         let Some(card_data) = self.cards.get_mut(&card) else {
             return;
         };
+        let rating = match rating {
+            Rating::Again => rs_fsrs::Rating::Again,
+            Rating::Remembered =>
+            // for new cards, we use Easy. Otherwise, we use Good
+            {
+                if card_data.fsrs_card.state == rs_fsrs::State::New {
+                    rs_fsrs::Rating::Easy
+                } else {
+                    rs_fsrs::Rating::Good
+                }
+            }
+
+            Rating::Hard => rs_fsrs::Rating::Hard,
+            Rating::Good => rs_fsrs::Rating::Good,
+            Rating::Easy => rs_fsrs::Rating::Easy,
+        };
+
         let old_stability = card_data.fsrs_card.stability;
         let record_log = self.fsrs.repeat(card_data.fsrs_card.clone(), timestamp);
         card_data.fsrs_card = record_log[&rating].card.clone();
@@ -1768,7 +1790,7 @@ impl Deck {
     pub fn review_card(
         &self,
         reviewed: CardIndicator<String>,
-        rating: String,
+        rating: Rating,
     ) -> Option<DeckEvent> {
         let indicator = reviewed.get_interned(&self.context.language_pack.rodeo)?;
         self.cards.get(&indicator).and_then(|status| {
