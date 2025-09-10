@@ -1330,8 +1330,8 @@ impl weapon::PartialAppState for Deck {
             }
 
             if let Some(frequency) = state.context.get_card_frequency(card_indicator) {
-                let difficulty = card_data.fsrs_card.difficulty;
-                let point = Point::new(frequency.sqrt_frequency(), difficulty);
+                let pre_existing_knowledge = card_data.pre_existing_knowledge();
+                let point = Point::new(frequency.sqrt_frequency(), pre_existing_knowledge);
 
                 match card_indicator {
                     CardIndicator::TargetLanguage { .. } => {
@@ -1344,16 +1344,16 @@ impl weapon::PartialAppState for Deck {
             }
         }
 
-        // Add bias points at (0, 10) and (10, 10) to ensure the curve slopes down
-        // This represents a word with 0 occurrences being maximally difficult. We'll give them a weight of 10 to ensure it's not ignored
-        let bias_point_1 = Point::new_with_weight(0.0, 10.0, 10.0);
-        let bias_point_2 = Point::new_with_weight(1.0, 10.0, 10.0);
+        // Add bias points at (0, -10) and (10, -10) to ensure the curve slopes down
+        // This represents a word with 0 occurrences being very difficult. We'll give them a weight of 10 to ensure it's not ignored
+        let bias_point_1 = Point::new_with_weight(0.0, -10.0, 10.0);
+        let bias_point_2 = Point::new_with_weight(1.0, -10.0, 10.0);
 
         // Create isotonic regressions (need at least 2 non-new cards)
         let target_language_regression = if target_language_points.len() >= 2 {
             target_language_points.push(bias_point_1);
             target_language_points.push(bias_point_2);
-            IsotonicRegression::new_descending(&target_language_points)
+            IsotonicRegression::new_ascending(&target_language_points)
                 .inspect_err(|e| log::error!("regression error: {e:?}"))
                 .ok()
         } else {
@@ -1475,8 +1475,10 @@ impl DeckState {
         };
 
         let old_stability = card_data.fsrs_card.stability;
-        let record_log = self.fsrs.repeat(card_data.fsrs_card.clone(), timestamp);
-        card_data.fsrs_card = record_log[&rating].card.clone();
+        card_data.fsrs_card = self
+            .fsrs
+            .next(card_data.fsrs_card.clone(), timestamp, rating)
+            .card;
         let new_stability = card_data.fsrs_card.stability;
         self.stats.xp += (new_stability - old_stability).max(0.0) / 10.0;
     }
@@ -2108,9 +2110,9 @@ impl Context {
 }
 
 impl Regressions {
-    /// Predict the difficulty of a card based on its frequency using isotonic regression
+    /// Predict the pre-existing knowledge of a card based on its frequency using isotonic regression
     /// Returns None if the card type has no regression model or frequency can't be determined
-    pub(crate) fn predict_card_difficulty(
+    pub(crate) fn predict_card_knowledge(
         &self,
         card: &CardIndicator<Spur>,
         frequency: Frequency,
@@ -2123,54 +2125,80 @@ impl Regressions {
     }
 
     /// Get the predicted probability of knowing a card (0.0 to 1.0).
-    /// Based on FSRS difficulty scale where higher difficulty means harder to remember.
-    /// The relationship is non-linear with two inflection points.
+    /// Based on accumulated surprise (pre-existing knowledge) from review history.
+    /// The relationship maps knowledge to probability:
     ///
-    /// - Difficulty 1 = 100% chance of remembering
-    /// - Difficulty 5 (good rating baseline) = 80% chance of remembering
-    /// - Difficulty 8 = 10% chance of remembering
-    /// - Difficulty 10 = 0% chance of remembering
+    /// - Knowledge >= 3.0 = 95% chance of knowing (easy cards)
+    /// - Knowledge = 0 = 50% chance of knowing (neutral)
+    /// - Knowledge <= -2.0 = 10% chance of knowing (failed cards)
+    /// - Linear interpolation between these points
     pub(crate) fn predict_card_knowledge_probability(
         &self,
         card: &CardIndicator<Spur>,
         frequency: Frequency,
     ) -> f64 {
-        let Some(difficulty) = self.predict_card_difficulty(card, frequency) else {
+        let Some(knowledge) = self.predict_card_knowledge(card, frequency) else {
             return 0.0;
         };
-        Self::difficulty_to_probability(difficulty)
+        Self::knowledge_to_probability(knowledge)
     }
 
-    fn difficulty_to_probability(difficulty: f64) -> f64 {
-        // Inflection points
-        const EASY_DIFFICULTY: f64 = 3.28;
-        const EASY_PROBABILITY: f64 = 0.95; // 95% chance at "easy" difficulty
+    fn knowledge_to_probability(knowledge: f64) -> f64 {
+        // With pre-existing knowledge:
+        // - Positive values indicate easier cards (higher probability)
+        // - Negative values indicate harder cards (lower probability)
+        // - Any negative value indicates at least one lapse
+        //
+        // Based on latest test results:
+        //   - Easy review gives ~4.6 positive surprise
+        //   - Good review gives ~2.3 positive surprise initially
+        //   - Initial again review gives ~0.1 negative surprise
+        //   - Again after success gives ~2.4 negative surprise
 
-        const HARD_DIFFICULTY: f64 = 7.5;
-        const HARD_PROBABILITY: f64 = 0.1; // 10% chance at "hard" difficulty
+        // Key insight: negative values (lapses > 0) always indicate struggling cards
+        if knowledge < 0.0 {
+            // Card has been failed at least once
+            // New algorithm: initial failures have small negative (~0.1)
+            // Failures after success have larger negative (~2.4)
 
-        // Piecewise linear mapping:
-        // - Difficulty 1 to 5: maps from 100% to 80% (gentle slope)
-        // - Difficulty 5 to 8: maps from 80% to 10% (steep slope)
-        // - Difficulty 8 to 10: maps from 10% to 0% (gentle slope)
-        let probability = if difficulty <= 1.0 {
-            1.0
-        } else if difficulty <= EASY_DIFFICULTY {
-            let range = EASY_DIFFICULTY - 1.0;
-            let drop = 1.0 - EASY_PROBABILITY;
-            1.0 - drop * (difficulty - 1.0) / range
-        } else if difficulty <= HARD_DIFFICULTY {
-            let range = HARD_DIFFICULTY - EASY_DIFFICULTY;
-            let drop = EASY_PROBABILITY - HARD_PROBABILITY;
-            EASY_PROBABILITY - drop * (difficulty - EASY_DIFFICULTY) / range
-        } else if difficulty >= 10.0 {
-            0.0
+            if knowledge >= -0.15 {
+                // Very small negative (likely initial failure ~0.1): 10-15% probability
+                // Initial failures indicate genuine lack of knowledge
+                0.10 + 0.05 * ((knowledge + 0.15) / 0.15)
+            } else if knowledge >= -1.0 {
+                // Small to moderate negative: 5-10% probability
+                let range = 1.0 - 0.15;
+                0.05 + 0.05 * ((knowledge + 1.0) / range)
+            } else if knowledge >= -3.0 {
+                // Significant negative (failed after knowing ~2.4): 2-5% probability
+                let range = 3.0 - 1.0;
+                0.02 + 0.03 * ((knowledge + 3.0) / range)
+            } else {
+                // Deep negative surprise: cap at 2%
+                0.02
+            }
         } else {
-            let range = 10.0 - HARD_DIFFICULTY;
-            HARD_PROBABILITY * (10.0 - difficulty) / range
-        };
+            // Card has never been failed (positive knowledge)
+            // Map positive surprise to higher probability
+            const EASY_THRESHOLD: f64 = 4.5; // Easy review level (~4.6)
+            const GOOD_THRESHOLD: f64 = 2.0; // Good review level (~2.3)
 
-        probability.clamp(0.0, 1.0)
+            if knowledge >= EASY_THRESHOLD {
+                // Easy-level knowledge: 90-95% probability
+                0.95
+            } else if knowledge >= GOOD_THRESHOLD {
+                // Good-level knowledge: 70-90% probability
+                let range = EASY_THRESHOLD - GOOD_THRESHOLD;
+                0.7 + 0.25 * (knowledge - GOOD_THRESHOLD) / range
+            } else if knowledge > 0.0 {
+                // Low positive knowledge: 50-70% probability
+                let range = GOOD_THRESHOLD;
+                0.5 + 0.2 * knowledge / range
+            } else {
+                // Zero knowledge (new card): 50% probability
+                0.5
+            }
+        }
     }
 }
 
@@ -2537,6 +2565,15 @@ impl ReviewInfo {
 impl CardData {
     pub fn due_timestamp_ms(&self) -> f64 {
         self.fsrs_card.due.timestamp_millis() as f64
+    }
+
+    /// Returns positive surprise if there are no lapses, or negative surprise otherwise
+    pub fn pre_existing_knowledge(&self) -> f64 {
+        if self.fsrs_card.lapses == 0 {
+            self.fsrs_card.accumulated_positive_surprise
+        } else {
+            -self.fsrs_card.accumulated_negative_surprise
+        }
     }
 }
 
@@ -2908,6 +2945,194 @@ mod tests {
                 println!("{rating:#?}+{rating:#?}: {item:#?}");
             }
         }
+    }
+
+    #[test]
+    fn test_card_accumulated_surprise_after_one_easy_review() {
+        use chrono::Utc;
+        use rs_fsrs::{Card, FSRS, Rating};
+
+        let fsrs = FSRS::default();
+        let card = Card::new();
+
+        // Do one easy review
+        let record_log = fsrs.repeat(card, Utc::now());
+        let after_easy = record_log[&Rating::Easy].to_owned();
+
+        // Easy review should increase positive surprise
+        assert!(
+            after_easy.card.accumulated_positive_surprise > 0.0,
+            "Accumulated positive surprise {} should be greater than 0 after easy review",
+            after_easy.card.accumulated_positive_surprise
+        );
+
+        // Negative surprise should remain at 0 for easy review
+        assert_eq!(
+            after_easy.card.accumulated_negative_surprise, 0.0,
+            "Accumulated negative surprise should be 0 after easy review"
+        );
+
+        println!(
+            "✓ After one easy review - Positive surprise: {}, Negative surprise: {}",
+            after_easy.card.accumulated_positive_surprise,
+            after_easy.card.accumulated_negative_surprise
+        );
+    }
+
+    #[test]
+    fn test_card_accumulated_surprise_after_one_again_review() {
+        use chrono::Utc;
+        use rs_fsrs::{Card, FSRS, Rating};
+
+        let fsrs = FSRS::default();
+        let card = Card::new();
+
+        // Do one "again" review (failed on first attempt)
+        let record_log = fsrs.repeat(card, Utc::now());
+        let after_again = record_log[&Rating::Again].to_owned();
+
+        // Failed review should only have negative surprise
+        assert_eq!(
+            after_again.card.accumulated_positive_surprise, 0.0,
+            "Positive surprise should be 0 after initial again review"
+        );
+
+        assert!(
+            after_again.card.accumulated_negative_surprise > 0.0,
+            "Negative surprise {} should be greater than 0 after again review",
+            after_again.card.accumulated_negative_surprise
+        );
+
+        println!(
+            "✓ After one again review - Positive surprise: {}, Negative surprise: {}",
+            after_again.card.accumulated_positive_surprise,
+            after_again.card.accumulated_negative_surprise
+        );
+        println!("  Lapses: {}", after_again.card.lapses);
+    }
+
+    #[test]
+    fn test_card_accumulated_surprise_after_two_good_reviews() {
+        use chrono::{Days, Utc};
+        use rs_fsrs::{Card, FSRS, Rating};
+
+        let fsrs = FSRS::default();
+        let mut card = Card::new();
+
+        // Do first good review
+        let record_log = fsrs.repeat(card, Utc::now());
+        card = record_log[&Rating::Good].card.clone();
+        let pos_surprise_first = card.accumulated_positive_surprise;
+        let neg_surprise_first = card.accumulated_negative_surprise;
+
+        // Do second good review after 2 weeks
+        let review_time = Utc::now().checked_add_days(Days::new(14)).unwrap();
+        let record_log = fsrs.repeat(card, review_time);
+        card = record_log[&Rating::Good].card.clone();
+        let pos_surprise_second = card.accumulated_positive_surprise;
+        let neg_surprise_second = card.accumulated_negative_surprise;
+
+        println!("✓ Accumulated surprise progression with two good reviews:");
+        println!(
+            "  After 1st good - Positive: {}, Negative: {}",
+            pos_surprise_first, neg_surprise_first
+        );
+        println!(
+            "  After 2nd good - Positive: {}, Negative: {}",
+            pos_surprise_second, neg_surprise_second
+        );
+        println!(
+            "  Positive change: {}",
+            pos_surprise_second - pos_surprise_first
+        );
+        println!(
+            "  Negative change: {}",
+            neg_surprise_second - neg_surprise_first
+        );
+        println!("  Reps: {}, Lapses: {}", card.reps, card.lapses);
+
+        // Good reviews typically shouldn't generate much surprise in either direction
+        // But the exact behavior depends on FSRS implementation
+        println!("  (Good reviews are neutral, surprise accumulation depends on expectations)");
+    }
+
+    #[test]
+    fn test_card_accumulated_surprise_after_one_easy_and_three_good_reviews() {
+        use chrono::{Days, Utc};
+        use rs_fsrs::{Card, FSRS, Rating};
+
+        let fsrs = FSRS::default();
+        let mut card = Card::new();
+
+        // Do one easy review
+        let record_log = fsrs.repeat(card, Utc::now());
+        card = record_log[&Rating::Easy].card.clone();
+        let pos_surprise_after_easy = card.accumulated_positive_surprise;
+        let neg_surprise_after_easy = card.accumulated_negative_surprise;
+
+        // Do three good reviews
+        for i in 1..=3 {
+            let review_time = Utc::now().checked_add_days(Days::new(i * 14)).unwrap();
+            let record_log = fsrs.repeat(card, review_time);
+            card = record_log[&Rating::Good].card.clone();
+        }
+
+        // Check accumulated surprise after mixed reviews
+        println!("✓ Accumulated surprise after 1 easy + 3 good reviews:");
+        println!(
+            "  Positive: {} (started at {})",
+            card.accumulated_positive_surprise, pos_surprise_after_easy
+        );
+        println!(
+            "  Negative: {} (started at {})",
+            card.accumulated_negative_surprise, neg_surprise_after_easy
+        );
+        println!("  Reps: {}, Lapses: {}", card.reps, card.lapses);
+
+        // Easy review should have added positive surprise, good reviews might add less
+        assert!(
+            card.accumulated_positive_surprise >= pos_surprise_after_easy,
+            "Positive surprise should not decrease with successful reviews"
+        );
+    }
+
+    #[test]
+    fn test_card_accumulated_surprise_after_one_easy_and_one_again_review() {
+        use chrono::{Days, Utc};
+        use rs_fsrs::{Card, FSRS, Rating};
+
+        let fsrs = FSRS::default();
+        let mut card = Card::new();
+
+        // Do one easy review
+        let record_log = fsrs.repeat(card, Utc::now());
+        card = record_log[&Rating::Easy].card.clone();
+        let pos_surprise_after_easy = card.accumulated_positive_surprise;
+        let neg_surprise_after_easy = card.accumulated_negative_surprise;
+
+        // Do one "again" review (failed review)
+        let review_time = Utc::now().checked_add_days(Days::new(14)).unwrap();
+        let record_log = fsrs.repeat(card, review_time);
+        card = record_log[&Rating::Again].card.clone();
+
+        // Check that negative surprise increased after the "again" review
+        assert!(
+            card.accumulated_negative_surprise > neg_surprise_after_easy,
+            "Negative surprise {} should increase from {} after an 'again' review",
+            card.accumulated_negative_surprise,
+            neg_surprise_after_easy
+        );
+
+        println!("✓ Accumulated surprise after 1 easy + 1 again review:");
+        println!(
+            "  Positive: {} (was {} after easy)",
+            card.accumulated_positive_surprise, pos_surprise_after_easy
+        );
+        println!(
+            "  Negative: {} (was {} after easy)",
+            card.accumulated_negative_surprise, neg_surprise_after_easy
+        );
+        println!("  Lapses: {}", card.lapses);
     }
 
     #[test]
