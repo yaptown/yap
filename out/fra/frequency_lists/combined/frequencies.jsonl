@@ -191,7 +191,7 @@
 {"lexeme":{"Heteronym":{"word":"cette","lemma":"ce","pos":"DET"}},"count":72}
 {"lexeme":{"Heteronym":{"word":"deux","lemma":"deux","pos":"NUM"}},"count":72}
 {"lexeme":{"Heteronym":{"word":"bonsoir","lemma":"bonsoir","pos":"INTJ"}},"count":71}
-{"lexeme":{"Heteronym":{"word":"m","lemma":"m","pos":"NOUN"}},"count":70}
+{"lexeme":{"Heteronym":{"word":"monsieur","lemma":"monsieur","pos":"NOUN"}},"count":70}
 {"lexeme":{"Heteronym":{"word":"peu","lemma":"peu","pos":"ADV"}},"count":70}
 {"lexeme":{"Heteronym":{"word":"question","lemma":"question","pos":"NOUN"}},"count":70}
 {"lexeme":{"Heteronym":{"word":"sans","lemma":"sans","pos":"ADP"}},"count":70}
@@ -561,8 +561,8 @@
 {"lexeme":{"Heteronym":{"word":"heures","lemma":"heure","pos":"NOUN"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"joue","lemma":"joue","pos":"VERB"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"jusque","lemma":"jusque","pos":"ADP"}},"count":22}
+{"lexeme":{"Heteronym":{"word":"madame","lemma":"madame","pos":"NOUN"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"mets","lemma":"mettre","pos":"VERB"}},"count":22}
-{"lexeme":{"Heteronym":{"word":"mme","lemma":"mme","pos":"NOUN"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"mr","lemma":"mr","pos":"NOUN"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"pareil","lemma":"pareil","pos":"ADJ"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"place","lemma":"place","pos":"NOUN"}},"count":22}
@@ -632,6 +632,7 @@
 {"lexeme":{"Heteronym":{"word":"dollars","lemma":"dollar","pos":"NOUN"}},"count":19}
 {"lexeme":{"Heteronym":{"word":"lequel","lemma":"lequel","pos":"PRON"}},"count":19}
 {"lexeme":{"Heteronym":{"word":"libre","lemma":"libre","pos":"ADJ"}},"count":19}
+{"lexeme":{"Heteronym":{"word":"mademoiselle","lemma":"mademoiselle","pos":"NOUN"}},"count":19}
 {"lexeme":{"Heteronym":{"word":"matin","lemma":"matin","pos":"NOUN"}},"count":19}
 {"lexeme":{"Heteronym":{"word":"peut","lemma":"pouvoir","pos":"ADV"}},"count":19}
 {"lexeme":{"Heteronym":{"word":"pose","lemma":"pose","pos":"VERB"}},"count":19}
@@ -1084,7 +1085,6 @@
 {"lexeme":{"Heteronym":{"word":"joyeux","lemma":"joyeux","pos":"ADJ"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"laquelle","lemma":"lequel","pos":"PRON"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"ligne","lemma":"ligne","pos":"NOUN"}},"count":10}
-{"lexeme":{"Heteronym":{"word":"mademoiselle","lemma":"mademoiselle","pos":"NOUN"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"mangez","lemma":"manger","pos":"VERB"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"match","lemma":"match","pos":"NOUN"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"montre","lemma":"montre","pos":"NOUN"}},"count":10}
@@ -1190,7 +1190,6 @@
 {"lexeme":{"Heteronym":{"word":"mieux","lemma":"mieux","pos":"NOUN"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"mignonne","lemma":"mignon","pos":"ADJ"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"mission","lemma":"mission","pos":"NOUN"}},"count":9}
-{"lexeme":{"Heteronym":{"word":"mlle","lemma":"mlle","pos":"NOUN"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"neuf","lemma":"neuf","pos":"ADJ"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"nouvelles","lemma":"nouvelle","pos":"NOUN"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"obligé","lemma":"obliger","pos":"VERB"}},"count":9}

@@ -75,13 +75,39 @@ pub fn expand_french_word(
     morph: &BTreeMap<String, String>,
 ) -> Option<(String, Option<String>, Option<PartOfSpeech>)> {
     Some({
-        let text = strip_punctuation(text);
+        // Handle common French abbreviations before stripping punctuation
+        let normalized_text = match text {
+            "M." | "m." => {
+                return Some((
+                    "monsieur".to_string(),
+                    Some("monsieur".to_string()),
+                    Some(PartOfSpeech::Noun),
+                ));
+            }
+            "Mme" | "Mme." | "mme" | "mme." => {
+                return Some((
+                    "madame".to_string(),
+                    Some("madame".to_string()),
+                    Some(PartOfSpeech::Noun),
+                ));
+            }
+            "Mlle" | "Mlle." | "mlle" | "mlle." => {
+                return Some((
+                    "mademoiselle".to_string(),
+                    Some("mademoiselle".to_string()),
+                    Some(PartOfSpeech::Noun),
+                ));
+            }
+            _ => text,
+        };
+
+        let text = strip_punctuation(normalized_text);
 
         if text.is_empty() {
             return None;
         }
 
-        if ["'", "-", "—", "–", "’", "‘"].contains(&text) {
+        if ["'", "-", "—", "–", "'", "'"].contains(&text) {
             return None;
         }
         if text.chars().all(|c| c.is_numeric()) {
