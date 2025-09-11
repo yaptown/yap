@@ -1126,14 +1126,20 @@ impl weapon::PartialAppState for Deck {
 
         // Track challenge completions for workload statistics
         match event {
-            LanguageEventContent::TranslationChallenge { .. } | 
-            LanguageEventContent::TranscriptionChallenge { .. } => {
+            LanguageEventContent::TranslationChallenge { .. }
+            | LanguageEventContent::TranscriptionChallenge { .. } => {
                 let days_since_epoch = timestamp.timestamp() / 86400;
-                *deck.stats.past_week_challenges.entry(days_since_epoch).or_insert(0) += 1;
-                
+                *deck
+                    .stats
+                    .past_week_challenges
+                    .entry(days_since_epoch)
+                    .or_insert(0) += 1;
+
                 // Clean up old entries (keep only last 7 days)
                 let seven_days_ago = days_since_epoch - 7;
-                deck.stats.past_week_challenges.retain(|&day, _| day > seven_days_ago);
+                deck.stats
+                    .past_week_challenges
+                    .retain(|&day, _| day > seven_days_ago);
             }
             _ => {}
         }
@@ -1394,29 +1400,33 @@ impl weapon::PartialAppState for Deck {
 
         // Convert existing cards to CardStatus and calculate probabilities for unadded cards
         let added_cards: HashMap<CardIndicator<Spur>, CardData> = state.cards;
-        
+
         // Create all cards as Unadded first, then update with Added status
         let mut all_cards: HashMap<CardIndicator<Spur>, CardStatus> = state
             .context
             .language_pack
             .word_frequencies
             .keys()
-            .map(|lexeme| (
-                CardIndicator::TargetLanguage { lexeme: *lexeme },
-                CardStatus::Unadded(Unadded {})
-            ))
+            .map(|lexeme| {
+                (
+                    CardIndicator::TargetLanguage { lexeme: *lexeme },
+                    CardStatus::Unadded(Unadded {}),
+                )
+            })
             .chain(
                 state
                     .context
                     .language_pack
                     .pronunciation_to_words
                     .keys()
-                    .map(|pronunciation| (
-                        CardIndicator::ListeningHomophonous {
-                            pronunciation: *pronunciation,
-                        },
-                        CardStatus::Unadded(Unadded {})
-                    ))
+                    .map(|pronunciation| {
+                        (
+                            CardIndicator::ListeningHomophonous {
+                                pronunciation: *pronunciation,
+                            },
+                            CardStatus::Unadded(Unadded {}),
+                        )
+                    }),
             )
             .collect();
 
@@ -1907,32 +1917,32 @@ impl Deck {
     pub fn get_upcoming_week_review_stats(&self) -> UpcomingReviewStats {
         let now = Utc::now();
         let one_week_later = now + chrono::Duration::days(7);
-        
+
         let mut daily_counts: HashMap<i64, u32> = HashMap::new();
         let mut total_reviews = 0u32;
-        
+
         for (_, card_status) in self.cards.iter() {
             if let CardStatus::Added(card_data) = card_status {
                 // Skip new cards (they haven't been reviewed yet)
                 if card_data.fsrs_card.state == rs_fsrs::State::New {
                     continue;
                 }
-                
+
                 let due_date = card_data.fsrs_card.due;
-                
+
                 // Check if due within the next week
                 if due_date > now && due_date <= one_week_later {
                     total_reviews += 1;
-                    
+
                     // Get the day offset from today (0 = today, 1 = tomorrow, etc.)
                     let days_from_now = (due_date - now).num_days();
                     *daily_counts.entry(days_from_now).or_insert(0) += 1;
                 }
             }
         }
-        
+
         let max_per_day = daily_counts.values().max().copied().unwrap_or(0);
-        
+
         UpcomingReviewStats {
             total_reviews,
             max_per_day,
