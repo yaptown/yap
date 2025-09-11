@@ -1670,7 +1670,7 @@ impl Deck {
         const SIMULATION_DAYS: u32 = 10;
         let mut requested_filenames = BTreeSet::new();
         let mut simulation_iterator = self.simulate_usage();
-        for i in 0..SIMULATION_DAYS {
+        for _ in 0..SIMULATION_DAYS {
             // Sleep for 1 second using JavaScript's setTimeout via JsFuture
             let promise = js_sys::Promise::new(&mut |resolve, _| {
                 web_sys::window()
