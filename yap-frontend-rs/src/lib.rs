@@ -1687,8 +1687,6 @@ impl Deck {
                 }
             }
 
-            log::info!("Simulating day {}...", i);
-
             let challenges;
             (simulation_iterator, challenges) = simulation_iterator.next();
 
