@@ -213,7 +213,6 @@ impl Weapon {
                 &access_token,
                 supabase::supabase_config(),
                 user_id,
-                &self.device_id,
                 None,
                 modifier,
             )
@@ -292,7 +291,6 @@ impl Weapon {
                 &access_token,
                 supabase::supabase_config(),
                 user_id,
-                &self.device_id,
                 Some(stream_id.clone()),
                 modifier,
             )
