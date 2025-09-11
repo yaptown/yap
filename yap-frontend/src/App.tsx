@@ -16,7 +16,7 @@ import { AcceptInvite } from '@/pages/accept-invite'
 import { ForgotPassword } from '@/pages/forgot-password'
 import { playSoundEffect } from '@/lib/sound-effects'
 import { registerSW } from 'virtual:pwa-register'
-import { NoCardsDue } from '@/components/no-cards-due'
+import { NoCardsReady } from '@/components/no-cards-ready'
 
 import type { Dispatch, SetStateAction } from 'react'
 import type { RegisterSWOptions } from 'vite-plugin-pwa/types'
@@ -537,7 +537,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
             </Button>
           </div>
         ) : reviewInfo.due_count === 0 && !currentChallenge ? (
-          <NoCardsDue
+          <NoCardsReady
             nextDueCard={nextDueCard}
             addNextCards={addNextCards}
             showEngagementPrompts={reviewInfo.total_count > 5 && network.online === true && userInfo !== undefined}

@@ -12,7 +12,7 @@ import { ChevronDown, AlertCircle } from "lucide-react"
 import { AnimatedCard } from "./AnimatedCard"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
-interface NoCardsDueProps {
+interface NoCardsReadyProps {
   nextDueCard: CardSummary | null
   showEngagementPrompts: boolean
   addNextCards: (card_type: CardType | undefined, count: number) => void
@@ -21,7 +21,7 @@ interface NoCardsDueProps {
   deck: Deck
 }
 
-export function NoCardsDue({ nextDueCard, showEngagementPrompts, addNextCards, addCardOptions, targetLanguage, deck }: NoCardsDueProps) {
+export function NoCardsReady({ nextDueCard, showEngagementPrompts, addNextCards, addCardOptions, targetLanguage, deck }: NoCardsReadyProps) {
   const numCanAddTargetLanguage = addCardOptions.manual_add.find(([, card_type]) => card_type === 'TargetLanguage')?.[0] || 0
   const numCanAddListening = addCardOptions.manual_add.find(([, card_type]) => card_type === 'Listening')?.[0] || 0
   const numCanSmartAdd = addCardOptions.smart_add
@@ -62,9 +62,9 @@ export function NoCardsDue({ nextDueCard, showEngagementPrompts, addNextCards, a
           </Alert>
         )}
         <div className="flex flex-col gap-2">
-          <p className="text-lg">No cards due for review!</p>
+          <p className="text-lg">No cards ready for review!</p>
           <p className="text-muted-foreground">
-            Great job! Your next review is due {nextDueCard ? <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} /> : 'soon'}.
+            Great job! Your next review is {nextDueCard ? <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} /> : 'soon'}.
           </p>
         </div>
 
