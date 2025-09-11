@@ -20,6 +20,7 @@ export function Stats({ deck }: StatsProps) {
   );
 
   const [visibleCount, setVisibleCount] = useState(10);
+  const [nextBatchSize, setNextBatchSize] = useState(10);
   const visibleCards = [...readyCards, ...notReadyCards.slice(0, visibleCount)];
 
   return (
@@ -121,10 +122,13 @@ export function Stats({ deck }: StatsProps) {
         {notReadyCards.length > visibleCount && (
           <div className="border-t">
             <button
-              onClick={() => setVisibleCount((c) => c + 10)}
+              onClick={() => {
+                setVisibleCount((c) => c + nextBatchSize);
+                setNextBatchSize((s) => s * 10);
+              }}
               className="w-full py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 font-medium"
             >
-              Show {Math.min(10, notReadyCards.length - visibleCount)} more cards
+              Show {Math.min(nextBatchSize, notReadyCards.length - visibleCount)} more cards
             </button>
           </div>
         )}
