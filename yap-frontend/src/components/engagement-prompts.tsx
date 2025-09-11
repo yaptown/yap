@@ -74,7 +74,7 @@ export function EngagementPrompts() {
   }
 
   return (
-    <AnimatedCard className="bg-card text-card-foreground rounded-lg p-6 border">
+    <AnimatedCard className="bg-card text-card-foreground rounded-lg p-6">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="h-5 w-5 text-primary" />
         <h3 className="font-semibold">Stay on track with your French learning</h3>

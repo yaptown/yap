@@ -12,16 +12,16 @@ export function Stats({ deck }: StatsProps) {
   const allCardsSummary = deck.get_all_cards_summary();
 
   const now = Date.now();
-  const dueCards = allCardsSummary.filter(
+  const readyCards = allCardsSummary.filter(
     (card) => card.due_timestamp_ms <= now,
   );
-  const notDueCards = allCardsSummary.filter(
+  const notReadyCards = allCardsSummary.filter(
     (card) => card.due_timestamp_ms > now,
   );
 
   const [visibleCount, setVisibleCount] = useState(10);
   const [nextBatchSize, setNextBatchSize] = useState(10);
-  const visibleCards = [...dueCards, ...notDueCards.slice(0, visibleCount)];
+  const visibleCards = [...readyCards, ...notReadyCards.slice(0, visibleCount)];
 
   return (
     <div className="mt-4">
@@ -41,7 +41,7 @@ export function Stats({ deck }: StatsProps) {
             <p className="text-sm text-muted-foreground mb-1">Total Cards</p>
             <p className="text-2xl font-bold">{allCardsSummary.length}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {reviewInfo.due_count || 0} due now
+              {reviewInfo.due_count || 0} ready now
             </p>
           </div>
           <div className="bg-card border rounded-lg p-4">
@@ -69,7 +69,7 @@ export function Stats({ deck }: StatsProps) {
             <tr className="border-b bg-muted/50">
               <th className="text-left p-3 font-medium w-1/4">Word</th>
               <th className="text-left p-3 font-medium w-1/4">State</th>
-              <th className="text-left p-3 font-medium w-1/2">Due</th>
+              <th className="text-left p-3 font-medium w-1/2">Ready</th>
             </tr>
           </thead>
           <tbody>
@@ -88,11 +88,11 @@ export function Stats({ deck }: StatsProps) {
                 shortDescription = `/${card.card_indicator.ListeningHomophonous.pronunciation}/`;
               }
 
-              const isDue = card.due_timestamp_ms <= now;
+              const isReady = card.due_timestamp_ms <= now;
               return (
                 <tr
                   key={index}
-                  className={`border-b ${isDue ? "bg-green-500/10" : ""}`}
+                  className={`border-b ${isReady ? "bg-green-500/10" : ""}`}
                 >
                   <td className="p-3 font-medium">
                     {shortDescription}
@@ -106,9 +106,9 @@ export function Stats({ deck }: StatsProps) {
                     <Badge variant="outline">{card.state}</Badge>
                   </td>
                   <td className="p-3 text-sm text-muted-foreground">
-                    {isDue ? (
+                    {isReady ? (
                       <span className="text-green-500 font-medium">
-                        Due now
+                        Ready now
                       </span>
                     ) : (
                       <TimeAgo date={new Date(card.due_timestamp_ms)} />
@@ -119,7 +119,7 @@ export function Stats({ deck }: StatsProps) {
             })}
           </tbody>
         </table>
-        {notDueCards.length > visibleCount && (
+        {notReadyCards.length > visibleCount && (
           <div className="border-t">
             <button
               onClick={() => {
@@ -128,7 +128,7 @@ export function Stats({ deck }: StatsProps) {
               }}
               className="w-full py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 font-medium"
             >
-              Show {Math.min(nextBatchSize, notDueCards.length - visibleCount)} more cards
+              Show {Math.min(nextBatchSize, notReadyCards.length - visibleCount)} more cards
             </button>
           </div>
         )}

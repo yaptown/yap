@@ -48,7 +48,7 @@ console_error_panic_hook = { version = "0.1.7", optional = true }
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
-rs-fsrs = "1.2.1"
+rs-fsrs = { git = "https://github.com/open-spaced-repetition/rs-fsrs.git", rev = "91af62ea52ceb788dd3a3f67716ce8858a816c42" }
 language-utils = { path = "../language-utils" }
 ordered-float = "5.0.0"
 serde-wasm-bindgen = "0.6"
@@ -61,7 +61,7 @@ lasso = { workspace = true }
 unicode-normalization = "0.1.24"
 wasm-logger.workspace = true
 log.workspace = true
-pav_regression = { git = "https://github.com/anchpop/pav.rs.git", rev="f882f4f0e953750258ebd79297ff8a8492595317"}
+pav_regression = { git = "https://github.com/anchpop/pav.rs.git", rev = "d7b822098728ba76d0c74dfdf8a77232b0d4489a" }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
