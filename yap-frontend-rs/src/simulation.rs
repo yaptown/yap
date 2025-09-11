@@ -22,10 +22,8 @@ impl DailySimulationIterator {
     }
 }
 
-impl Iterator for DailySimulationIterator {
-    type Item = Vec<Challenge<String>>;
-
-    fn next(&mut self) -> Option<Self::Item> {
+impl DailySimulationIterator {
+    pub(crate) fn next(mut self) -> (Self, Vec<Challenge<String>>) {
         let mut day_challenges = Vec::new();
 
         // Process all due reviews for the day
@@ -90,7 +88,7 @@ impl Iterator for DailySimulationIterator {
                         within_device_events_index: self.event_index,
                         event,
                     };
-                    self.deck = self.deck.clone().apply_event(&ts);
+                    self.deck = self.deck.apply_event(&ts);
                     self.event_index += 1;
                 }
             } else {
@@ -105,20 +103,14 @@ impl Iterator for DailySimulationIterator {
                 within_device_events_index: self.event_index,
                 event,
             };
-            self.deck = self.deck.clone().apply_event(&ts);
+            self.deck = self.deck.apply_event(&ts);
             self.event_index += 1;
         }
 
         // Advance to next day
         self.current_time += Duration::days(1);
 
-        // Return the challenges if there were any, or None to signal end
-        if day_challenges.is_empty() && self.event_index > 0 {
-            // No more challenges, simulation complete
-            None
-        } else {
-            Some(day_challenges)
-        }
+        (self, day_challenges)
     }
 }
 
