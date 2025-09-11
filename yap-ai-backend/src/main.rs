@@ -291,7 +291,7 @@ Output: {{
 
 Many sentences will be "partial sentences," such as "Ne pas." meaning "Do not." These partial sentences are still useful as test sentences for the user, so you should still grade them.
 
-Do not grade individual words when they are part of a multi-word expression that can be definitively graded as remembered or forgotten. Grade the multi-word expression as a whole. Only grade the individual words separately if the user's translation clearly shows they specifically understood or failed to understand those words independently. For example, if the challenge sentence includes "se passer" and the user writes "pass itself," mark "se passer" as forgotten but mark "se" and "passe" as remembered.
+Do not grade individual words when they are part of a multi-word expression that can be definitively graded as remembered or forgotten. Grade the multi-word expression as a whole. Only grade the individual words separately if the user's translation clearly shows they specifically understood or failed to understand those words independently. For example, if the challenge sentence includes "se passer" and the user writes "pass itself," mark "se passer" as forgotten but mark "se" and "passe" as remembered. On the other hand, do not punish leaners for translating a sentence or phrase or word idiomatically, if the meaning has been fully preserved.
 
 Respond with JSON.
 
