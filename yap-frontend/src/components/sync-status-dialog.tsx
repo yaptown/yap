@@ -43,6 +43,7 @@ export function SyncStatusDialog() {
         }
       } catch (e) {
         // ignore polling errors
+        console.error('Error polling sync status:', e)
       }
     }
     update()

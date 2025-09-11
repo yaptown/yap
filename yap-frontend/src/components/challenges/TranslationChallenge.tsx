@@ -599,7 +599,7 @@ export function TranslationChallenge({ sentence, onComplete, dueCount, totalCoun
         setGrade({ graded: { wordStatuses: fallbackStatuses, autogradingError: error instanceof Error ? error.message : 'Failed to grade automatically' } })
       }
     }
-  }, [sentence, userTranslation, accessToken, tappedWords])
+  }, [sentence, userTranslation, accessToken, tappedWords, targetLanguage])
 
   const handleContinue = useCallback(() => {
     if (canContinue) {

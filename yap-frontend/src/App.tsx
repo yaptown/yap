@@ -360,7 +360,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
         }
       }
     }
-  }, [bannedChallengeTypes]);
+  }, [bannedChallengeTypes, CANT_LISTEN_DURATION_MS]);
 
   const reviewInfo = useMemo(() => {
     return deck.get_review_info(bannedChallengeTypes)
@@ -374,7 +374,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
       return { currentChallenge, addCardOptions: options };
     }
     return { currentChallenge, addCardOptions };
-  }, [deck, reviewInfo])
+  }, [deck, reviewInfo, userInfo])
 
   useEffect(() => {
     const abortController = new AbortController();
