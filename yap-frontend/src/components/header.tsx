@@ -13,6 +13,7 @@ import { SyncStatusDialog } from '@/components/sync-status-dialog'
 import type { UserInfo } from '@/App'
 import { AuthDialog } from '@/components/auth-dialog'
 import type { Language } from '../../../yap-frontend-rs/pkg'
+import { match } from 'ts-pattern'
 
 interface HeaderProps {
   userInfo: UserInfo | undefined
@@ -23,13 +24,13 @@ interface HeaderProps {
 }
 
 function getLanguageEmoji(language: Language | undefined): string {
-  switch (language) {
-    case 'French': return '🇫🇷'
-    case 'Spanish': return '🇪🇸'
-    case 'Korean': return '🇰🇷'
-    case 'English': return '🇬🇧'
-    default: return '🌍'
-  }
+  return match(language)
+    .with('French', () => '🇫🇷')
+    .with('Spanish', () => '🇪🇸')
+    .with('Korean', () => '🇰🇷')
+    .with('English', () => '🇬🇧')
+    .with(undefined, () => '🌍')
+    .exhaustive()
 }
 
 export function Header({

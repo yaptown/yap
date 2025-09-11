@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { type Language } from '../../../yap-frontend-rs/pkg/yap_frontend_rs'
+import { match } from 'ts-pattern'
 
 interface AccentedCharacterKeyboardProps {
   onCharacterInsert: (char: string) => void
@@ -7,17 +8,17 @@ interface AccentedCharacterKeyboardProps {
   className?: string
 }
 
-const accentedCharacters: Record<string, string[]> = {
-  French: ['à', 'â', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'ù', 'û', 'ü', 'ÿ', 'ç', 'œ', 'æ'],
-  Spanish: ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ', '¿', '¡'],
-}
-
 export function AccentedCharacterKeyboard({ 
   onCharacterInsert, 
   language,
   className = ""
 }: AccentedCharacterKeyboardProps) {
-  const characters = accentedCharacters[language] || []
+  const characters = match(language)
+    .with('French', () => ['à', 'â', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'ù', 'û', 'ü', 'ÿ', 'ç', 'œ', 'æ'])
+    .with('Spanish', () => ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ', '¿', '¡'])
+    .with('Korean', () => [])
+    .with('English', () => [])
+    .exhaustive()
 
   // Split characters into rows of at most 8 characters each
   const rows: string[][] = []

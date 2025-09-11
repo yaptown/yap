@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { type Language } from '../../../yap-frontend-rs/pkg/yap_frontend_rs'
+import { match } from 'ts-pattern'
 
 interface MobileKeyboardTipProps {
   language: Language
@@ -32,12 +33,22 @@ export function MobileKeyboardTip({
     return null
   }
 
-  console.assert(language === 'French' || language === 'Spanish' || language === 'Korean')
+  const characterType = match(language)
+    .with('French', () => 'accented')
+    .with('Spanish', () => 'accented')
+    .with('Korean', () => 'hangul')
+    .with('English', () => null)
+    .exhaustive()
+
+  // Don't show tip for English
+  if (!characterType) {
+    return null
+  }
 
   return (
     <div className={`md:hidden flex items-center justify-between gap-2 p-3 mt-3 border rounded-lg bg-muted/30 ${className}`}>
       <p className="text-sm text-muted-foreground flex-1">
-        <span className="font-medium">Tip:</span> Enable the {language} keyboard on your device to easily type {language === 'French' || language === 'Spanish' ? 'accented' : 'hangul'} characters
+        <span className="font-medium">Tip:</span> Enable the {language} keyboard on your device to easily type {characterType} characters
       </p>
       <Button
         variant="ghost"
