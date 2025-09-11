@@ -1376,30 +1376,37 @@ impl weapon::PartialAppState for Deck {
         };
 
         // Convert existing cards to CardStatus and calculate probabilities for unadded cards
-        let added_cards = state.cards;
-        let mut all_cards: HashMap<CardIndicator<Spur>, CardStatus> = HashMap::with_capacity(
-            state.context.language_pack.word_frequencies.len()
-                + state.context.language_pack.pronunciation_to_words.len(),
-        );
+        let added_cards: HashMap<CardIndicator<Spur>, CardData> = state.cards;
+        
+        // Create all cards as Unadded first, then update with Added status
+        let mut all_cards: HashMap<CardIndicator<Spur>, CardStatus> = state
+            .context
+            .language_pack
+            .word_frequencies
+            .keys()
+            .map(|lexeme| (
+                CardIndicator::TargetLanguage { lexeme: *lexeme },
+                CardStatus::Unadded(Unadded {})
+            ))
+            .chain(
+                state
+                    .context
+                    .language_pack
+                    .pronunciation_to_words
+                    .keys()
+                    .map(|pronunciation| (
+                        CardIndicator::ListeningHomophonous {
+                            pronunciation: *pronunciation,
+                        },
+                        CardStatus::Unadded(Unadded {})
+                    ))
+            )
+            .collect();
 
-        // add all TargetLanguage cards
-        for lexeme in state.context.language_pack.word_frequencies.keys() {
-            let indicator = CardIndicator::TargetLanguage { lexeme: *lexeme };
-            if let Some(card_data) = added_cards.get(&indicator) {
-                all_cards.insert(indicator, CardStatus::Added(card_data.clone()));
-            } else {
-                all_cards.insert(indicator, CardStatus::Unadded(Unadded {}));
-            }
-        }
-        // add all ListeningHomophonous cards
-        for pronunciation in state.context.language_pack.pronunciation_to_words.keys() {
-            let indicator = CardIndicator::ListeningHomophonous {
-                pronunciation: *pronunciation,
-            };
-            if let Some(card_data) = added_cards.get(&indicator) {
-                all_cards.insert(indicator, CardStatus::Added(card_data.clone()));
-            } else {
-                all_cards.insert(indicator, CardStatus::Unadded(Unadded {}));
+        // Update only the cards that have been added
+        for (indicator, card_data) in added_cards {
+            if let Some(status) = all_cards.get_mut(&indicator) {
+                *status = CardStatus::Added(card_data);
             }
         }
 
@@ -1634,7 +1641,8 @@ impl Deck {
 
         const SIMULATION_DAYS: u32 = 10;
         let mut requested_filenames = BTreeSet::new();
-        for challenges in self.simulate_usage().take(SIMULATION_DAYS as usize) {
+        let mut simulation_iterator = self.simulate_usage();
+        for i in 0..SIMULATION_DAYS {
             // Sleep for 1 second using JavaScript's setTimeout via JsFuture
             let promise = js_sys::Promise::new(&mut |resolve, _| {
                 web_sys::window()
@@ -1643,6 +1651,18 @@ impl Deck {
                     .unwrap();
             });
             wasm_bindgen_futures::JsFuture::from(promise).await.unwrap();
+
+            // Check if aborted before progressing
+            if let Some(ref signal) = abort_signal {
+                if signal.aborted() {
+                    return;
+                }
+            }
+
+            log::info!("Simulating day {}...", i);
+
+            let challenges;
+            (simulation_iterator, challenges) = simulation_iterator.next();
 
             // get the audio files
             requested_filenames.extend(
