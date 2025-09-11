@@ -1,15 +1,16 @@
 import { Button } from "@/components/ui/button"
 import TimeAgo from 'react-timeago'
 import { EngagementPrompts } from '@/components/engagement-prompts'
-import type { AddCardOptions, CardSummary, CardType, Language } from '../../../yap-frontend-rs/pkg'
+import type { AddCardOptions, CardSummary, CardType, Deck, Language } from '../../../yap-frontend-rs/pkg'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, AlertCircle } from "lucide-react"
 import { AnimatedCard } from "./AnimatedCard"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface NoCardsDueProps {
   nextDueCard: CardSummary | null
@@ -17,12 +18,22 @@ interface NoCardsDueProps {
   addNextCards: (card_type: CardType | undefined, count: number) => void
   addCardOptions: AddCardOptions
   targetLanguage: Language
+  deck: Deck
 }
 
-export function NoCardsDue({ nextDueCard, showEngagementPrompts, addNextCards, addCardOptions, targetLanguage }: NoCardsDueProps) {
+export function NoCardsDue({ nextDueCard, showEngagementPrompts, addNextCards, addCardOptions, targetLanguage, deck }: NoCardsDueProps) {
   const numCanAddTargetLanguage = addCardOptions.manual_add.find(([, card_type]) => card_type === 'TargetLanguage')?.[0] || 0
   const numCanAddListening = addCardOptions.manual_add.find(([, card_type]) => card_type === 'Listening')?.[0] || 0
   const numCanSmartAdd = addCardOptions.smart_add
+
+  // Calculate if workload looks light
+  const pastWeekAverage = deck.get_past_week_challenge_average()
+  const upcomingStats = deck.get_upcoming_week_review_stats()
+  const showLightWorkloadNotification =
+    (upcomingStats.total_reviews < pastWeekAverage * 7 || upcomingStats.total_reviews < 10) && // Less upcoming reviews than past week average
+    upcomingStats.max_per_day <= 100 && // No single day has more than 100 reviews
+    (numCanSmartAdd > 0 || numCanAddTargetLanguage > 0 || numCanAddListening > 0) && // Can add cards
+    deck.num_cards() > 30 // has used yap a bit
 
   const add_cards: [number, CardType | undefined][] = []
   if (numCanSmartAdd > 0) {
@@ -40,7 +51,16 @@ export function NoCardsDue({ nextDueCard, showEngagementPrompts, addNextCards, a
 
   return (
     <div className="space-y-4">
-      <AnimatedCard className="bg-card text-card-foreground rounded-lg p-12 gap-6 flex flex-col text-center border">
+      <AnimatedCard className="bg-card text-card-foreground rounded-lg p-6 gap-6 flex flex-col text-center border">
+
+        {showLightWorkloadNotification && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Your upcoming workload looks a little light. Consider adding new cards to maintain your learning momentum!
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="flex flex-col gap-2">
           <p className="text-lg">No cards due for review!</p>
           <p className="text-muted-foreground">

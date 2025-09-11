@@ -543,6 +543,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
             showEngagementPrompts={reviewInfo.total_count > 5 && network.online === true && userInfo !== undefined}
             addCardOptions={addCardOptions}
             targetLanguage={targetLanguage}
+            deck={deck}
           />
         ) : currentChallenge ? (
           ('FlashCardReview' in currentChallenge) ? (

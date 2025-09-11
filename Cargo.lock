@@ -2515,7 +2515,7 @@ dependencies = [
 [[package]]
 name = "rs-fsrs"
 version = "1.2.1"
-source = "git+https://github.com/open-spaced-repetition/rs-fsrs.git?rev=4089df799208d0183c98a7f2dd086e2d0a6dd80a#4089df799208d0183c98a7f2dd086e2d0a6dd80a"
+source = "git+https://github.com/open-spaced-repetition/rs-fsrs.git?rev=91af62ea52ceb788dd3a3f67716ce8858a816c42#91af62ea52ceb788dd3a3f67716ce8858a816c42"
 dependencies = [
  "chrono",
 ]

@@ -1044,6 +1044,9 @@ pub struct Stats {
     pub total_reviews: u64,
     pub xp: f64,
     pub daily_streak: Option<DailyStreak>,
+    /// Track daily challenge completions for the past week
+    /// Key is days since epoch, value is number of challenges completed
+    pub past_week_challenges: BTreeMap<i64, u32>,
 }
 
 #[derive(Clone, Debug)]
@@ -1119,6 +1122,20 @@ impl weapon::PartialAppState for Deck {
 
         if *event_language != deck.context.target_language {
             return deck;
+        }
+
+        // Track challenge completions for workload statistics
+        match event {
+            LanguageEventContent::TranslationChallenge { .. } | 
+            LanguageEventContent::TranscriptionChallenge { .. } => {
+                let days_since_epoch = timestamp.timestamp() / 86400;
+                *deck.stats.past_week_challenges.entry(days_since_epoch).or_insert(0) += 1;
+                
+                // Clean up old entries (keep only last 7 days)
+                let seven_days_ago = days_since_epoch - 7;
+                deck.stats.past_week_challenges.retain(|&day, _| day > seven_days_ago);
+            }
+            _ => {}
         }
 
         match event {
@@ -1435,6 +1452,7 @@ impl DeckState {
                 total_reviews: 0,
                 xp: 0.0,
                 daily_streak: None,
+                past_week_challenges: BTreeMap::new(),
             },
             context: Context {
                 language_pack,
@@ -1874,6 +1892,59 @@ impl Deck {
     pub fn num_cards(&self) -> usize {
         self.cards.values().filter_map(CardStatus::added).count()
     }
+
+    /// Get the average number of challenges completed per day in the past week
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_past_week_challenge_average(&self) -> f64 {
+        let total_challenges: u32 = self.stats.past_week_challenges.values().sum();
+        // Average over 7 days
+        total_challenges as f64 / 7.0
+    }
+
+    /// Calculate upcoming review statistics for the next week
+    /// Returns total reviews and max reviews on any single day
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_upcoming_week_review_stats(&self) -> UpcomingReviewStats {
+        let now = Utc::now();
+        let one_week_later = now + chrono::Duration::days(7);
+        
+        let mut daily_counts: HashMap<i64, u32> = HashMap::new();
+        let mut total_reviews = 0u32;
+        
+        for (_, card_status) in self.cards.iter() {
+            if let CardStatus::Added(card_data) = card_status {
+                // Skip new cards (they haven't been reviewed yet)
+                if card_data.fsrs_card.state == rs_fsrs::State::New {
+                    continue;
+                }
+                
+                let due_date = card_data.fsrs_card.due;
+                
+                // Check if due within the next week
+                if due_date > now && due_date <= one_week_later {
+                    total_reviews += 1;
+                    
+                    // Get the day offset from today (0 = today, 1 = tomorrow, etc.)
+                    let days_from_now = (due_date - now).num_days();
+                    *daily_counts.entry(days_from_now).or_insert(0) += 1;
+                }
+            }
+        }
+        
+        let max_per_day = daily_counts.values().max().copied().unwrap_or(0);
+        
+        UpcomingReviewStats {
+            total_reviews,
+            max_per_day,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+pub struct UpcomingReviewStats {
+    pub total_reviews: u32,
+    pub max_per_day: u32,
 }
 
 impl Deck {
