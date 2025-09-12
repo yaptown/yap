@@ -16,7 +16,7 @@ pub fn compute_frequencies(
 ) -> BTreeMap<Lexeme<String>, u32> {
     let mut frequencies: BTreeMap<Lexeme<String>, f32> = BTreeMap::new();
 
-    for (_, sentence) in sentences {
+    for (_sentence_str, sentence) in sentences {
         // Count individual words
         for word in &sentence.words {
             if let Some(heteronym) = &word.heteronym {

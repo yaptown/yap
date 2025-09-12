@@ -30,10 +30,10 @@ export function NoCardsReady({ nextDueCard, showEngagementPrompts, addNextCards,
   const pastWeekAverage = deck.get_past_week_challenge_average()
   const upcomingStats = deck.get_upcoming_week_review_stats()
   const showLightWorkloadNotification =
-    (upcomingStats.total_reviews < pastWeekAverage * 7 || upcomingStats.total_reviews < 10) && // Less upcoming reviews than past week average
-    upcomingStats.max_per_day <= 100 && // No single day has more than 100 reviews
+    (upcomingStats.total_reviews < pastWeekAverage * 7 || upcomingStats.max_per_day < 10) && // Less upcoming reviews than past week average
+    upcomingStats.max_per_day <= 50 && // No single day has more than 50 reviews
     (numCanSmartAdd > 0 || numCanAddTargetLanguage > 0 || numCanAddListening > 0) && // Can add cards
-    deck.num_cards() > 30 // has used yap a bit
+    (deck.num_cards() > 40) // has used yap a bit
 
   const add_cards: [number, CardType | undefined][] = []
   if (numCanSmartAdd > 0) {

@@ -722,14 +722,14 @@ impl Heteronym<String> {
 
         let heteronym = if let Some(heteronym) = proper_nouns.get(&doc_token.text.to_lowercase()) {
             let (word, lemma, pos) = expand_word(&heteronym.word, None, &BTreeMap::new())?;
-            let lemma = lemma.unwrap_or(heteronym.lemma.clone());
+            let lemma = lemma.unwrap_or(heteronym.lemma.clone()).to_lowercase();
             let pos = pos.unwrap_or(heteronym.pos);
             Self { word, lemma, pos }
         } else {
             let (word, lemma, pos) =
                 expand_word(&doc_token.text, Some(doc_token.pos), &doc_token.morph)?;
             let lemma = lemma.unwrap_or(doc_token.lemma.clone());
-            let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_string();
+            let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
             let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
             let pos = pos.unwrap_or(doc_token.pos);
             Self { word, lemma, pos }
