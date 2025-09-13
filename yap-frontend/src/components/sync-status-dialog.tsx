@@ -37,7 +37,9 @@ export function SyncStatusDialog() {
 
         const earliest: EarliestUnsyncedEvent | undefined = weapon.get_timestamp_of_earliest_unsynced_event("supabase")
         if (earliest && earliest.timestamp) {
-          setEarliestUnsyncedAt(earliest.timestamp.getTime())
+          // Handle timestamp - it comes as an ISO string from WASM
+          const timestampMs = new Date(earliest.timestamp).getTime()
+          setEarliestUnsyncedAt(timestampMs)
         } else {
           setEarliestUnsyncedAt(null)
         }
