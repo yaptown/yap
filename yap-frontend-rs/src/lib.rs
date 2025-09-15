@@ -1411,13 +1411,16 @@ impl weapon::PartialAppState for Deck {
 
         // Add bias points at (0, -10) and (10, -10) to ensure the curve slopes down
         // This represents a word with 0 occurrences being very difficult. We'll give them a weight of 10 to ensure it's not ignored
-        let bias_point_1 = Point::new_with_weight(0.0, -10.0, 10.0);
-        let bias_point_2 = Point::new_with_weight(1.0, -10.0, 10.0);
+        let bias_points = [
+            Point::new_with_weight(0.0, -10.0, 10.0),
+            Point::new_with_weight(1.0, -10.0, 5.0),
+            Point::new_with_weight(5.0, 0.0, 5.0),
+            Point::new_with_weight(8.0, 0.0, 1.0),
+        ];
 
         // Create isotonic regressions (need at least 2 non-new cards)
         let target_language_regression = if target_language_points.len() >= 2 {
-            target_language_points.push(bias_point_1);
-            target_language_points.push(bias_point_2);
+            target_language_points.extend_from_slice(&bias_points);
             IsotonicRegression::new_ascending(&target_language_points)
                 .inspect_err(|e| log::error!("regression error: {e:?}"))
                 .ok()
@@ -1426,8 +1429,7 @@ impl weapon::PartialAppState for Deck {
         };
 
         let listening_regression = if listening_points.len() >= 2 {
-            listening_points.push(bias_point_1);
-            listening_points.push(bias_point_2);
+            listening_points.extend_from_slice(&bias_points);
             IsotonicRegression::new_descending(&listening_points)
                 .inspect_err(|e| log::error!("regression error: {e:?}"))
                 .ok()
@@ -2000,6 +2002,79 @@ impl Deck {
             max_per_day,
         }
     }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_frequency_knowledge_chart_data(&self) -> Vec<FrequencyKnowledgePoint> {
+        // Sample frequencies from 1 to 10000 on a logarithmic scale
+        let target_frequencies: Vec<f64> = vec![
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 15.0, 20.0, 30.0, 40.0, 50.0, 60.0,
+            70.0, 80.0, 90.0, 100.0, 150.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0,
+            1000.0, 1500.0, 2000.0, 3000.0, 4000.0, 5000.0, 6000.0, 7000.0, 8000.0, 9000.0,
+            10000.0,
+        ];
+
+        // Create a map to collect data for each frequency bucket
+        let mut frequency_buckets: std::collections::HashMap<String, (Vec<f64>, Vec<String>)> =
+            std::collections::HashMap::new();
+
+        // Iterate through actual lexemes in the language pack and find ones matching our target frequencies
+        for (lexeme, frequency) in self.context.language_pack.word_frequencies.iter() {
+            let freq_value = frequency.count as f64;
+
+            // Check if this frequency is close to one of our target frequencies
+            for &target_freq in &target_frequencies {
+                if (freq_value - target_freq).abs() < target_freq * 0.1 {
+                    // Within 10% of target
+                    let card_indicator = CardIndicator::TargetLanguage {
+                        lexeme: lexeme.clone(),
+                    };
+
+                    // Use the regression to predict knowledge at this frequency
+                    let knowledge_probability = self
+                        .regressions
+                        .predict_card_knowledge_probability(&card_indicator, *frequency);
+
+                    // Get the word string for display
+                    let word_str = match lexeme {
+                        Lexeme::Heteronym(h) => self.context.language_pack.rodeo.resolve(&h.word),
+                        Lexeme::Multiword(s) => self.context.language_pack.rodeo.resolve(s),
+                    };
+
+                    let bucket_key = format!("{}", target_freq);
+                    let entry = frequency_buckets
+                        .entry(bucket_key)
+                        .or_insert((vec![], vec![]));
+                    entry.0.push(knowledge_probability);
+                    if entry.1.len() < 5 {
+                        // Limit to 5 example words per bucket
+                        entry.1.push(word_str.to_string());
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        // Convert buckets to final chart data
+        let mut chart_data = Vec::new();
+        for &target_freq in &target_frequencies {
+            let bucket_key = format!("{}", target_freq);
+            if let Some((probabilities, words)) = frequency_buckets.get(&bucket_key) {
+                if !probabilities.is_empty() {
+                    let avg_probability =
+                        probabilities.iter().sum::<f64>() / probabilities.len() as f64;
+                    chart_data.push(FrequencyKnowledgePoint {
+                        frequency: target_freq,
+                        predicted_knowledge: avg_probability,
+                        word_count: probabilities.len() as u32,
+                        example_words: words.join(", "),
+                    });
+                }
+            }
+        }
+
+        chart_data
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -2007,6 +2082,16 @@ impl Deck {
 pub struct UpcomingReviewStats {
     pub total_reviews: u32,
     pub max_per_day: u32,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify))]
+#[cfg_attr(target_arch = "wasm32", tsify(into_wasm_abi))]
+pub struct FrequencyKnowledgePoint {
+    pub frequency: f64,
+    pub predicted_knowledge: f64,
+    pub word_count: u32,
+    pub example_words: String,
 }
 
 impl Deck {
@@ -2358,11 +2443,30 @@ impl Regressions {
         card: &CardIndicator<Spur>,
         frequency: Frequency,
     ) -> Option<f64> {
-        match card {
+        let regression = match card {
             CardIndicator::TargetLanguage { .. } => self.target_language_regression.as_ref(),
             CardIndicator::ListeningHomophonous { .. } => self.listening_regression.as_ref(),
+        }?;
+
+        // Compute smoothed prediction by averaging at frequency ±20%
+        let base_freq = frequency.sqrt_frequency();
+        let lower_freq = base_freq * 0.8;
+        let upper_freq = base_freq * 1.2;
+
+        // Get predictions at all three points
+        let predictions = [
+            regression.interpolate(lower_freq),
+            regression.interpolate(base_freq),
+            regression.interpolate(upper_freq),
+        ];
+
+        // Average the available predictions
+        let valid_predictions: Vec<f64> = predictions.into_iter().flatten().collect();
+        if valid_predictions.is_empty() {
+            None
+        } else {
+            Some(valid_predictions.iter().sum::<f64>() / valid_predictions.len() as f64)
         }
-        .and_then(|regression| regression.interpolate(frequency.sqrt_frequency()))
     }
 
     /// Get the predicted probability of knowing a card (0.0 to 1.0).
