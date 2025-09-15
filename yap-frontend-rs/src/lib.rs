@@ -2025,9 +2025,7 @@ impl Deck {
             for &target_freq in &target_frequencies {
                 if (freq_value - target_freq).abs() < target_freq * 0.1 {
                     // Within 10% of target
-                    let card_indicator = CardIndicator::TargetLanguage {
-                        lexeme: lexeme.clone(),
-                    };
+                    let card_indicator = CardIndicator::TargetLanguage { lexeme: *lexeme };
 
                     // Use the regression to predict knowledge at this frequency
                     let knowledge_probability = self
@@ -2040,7 +2038,7 @@ impl Deck {
                         Lexeme::Multiword(s) => self.context.language_pack.rodeo.resolve(s),
                     };
 
-                    let bucket_key = format!("{}", target_freq);
+                    let bucket_key = format!("{target_freq}");
                     let entry = frequency_buckets
                         .entry(bucket_key)
                         .or_insert((vec![], vec![]));
@@ -2058,7 +2056,7 @@ impl Deck {
         // Convert buckets to final chart data
         let mut chart_data = Vec::new();
         for &target_freq in &target_frequencies {
-            let bucket_key = format!("{}", target_freq);
+            let bucket_key = format!("{target_freq}");
             if let Some((probabilities, words)) = frequency_buckets.get(&bucket_key) {
                 if !probabilities.is_empty() {
                     let avg_probability =
@@ -3364,12 +3362,10 @@ mod tests {
 
         println!("✓ Accumulated surprise progression with two good reviews:");
         println!(
-            "  After 1st good - Positive: {}, Negative: {}",
-            pos_surprise_first, neg_surprise_first
+            "  After 1st good - Positive: {pos_surprise_first}, Negative: {neg_surprise_first}"
         );
         println!(
-            "  After 2nd good - Positive: {}, Negative: {}",
-            pos_surprise_second, neg_surprise_second
+            "  After 2nd good - Positive: {pos_surprise_second}, Negative: {neg_surprise_second}"
         );
         println!(
             "  Positive change: {}",

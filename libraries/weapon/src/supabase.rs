@@ -157,18 +157,21 @@ impl EventStore<String, String> {
             .flat_map(|(stream_id, stream_events)| {
                 // Get all devices with events in this stream
                 let device_event_counts = stream_events.num_events_per_device();
-                
+
                 // For each device, upload any events not yet on the server
                 device_event_counts
                     .into_iter()
                     .flat_map(|(local_device_id, _local_count)| {
                         let device_events_on_db: usize = remote_clock
                             .get(stream_id)
-                            .and_then(|device_map| device_map.get(&local_device_id.to_string()).copied())
+                            .and_then(|device_map| {
+                                device_map.get(&local_device_id.to_string()).copied()
+                            })
                             .unwrap_or(0);
-                        
-                        let events_to_upload = stream_events.jsons(local_device_id, device_events_on_db);
-                        
+
+                        let events_to_upload =
+                            stream_events.jsons(local_device_id, device_events_on_db);
+
                         events_to_upload
                             .into_iter()
                             .map(|event| SyncableEvent {
@@ -192,7 +195,7 @@ impl EventStore<String, String> {
                 .map(|e| e.device_id.as_str())
                 .collect();
             log::info!(
-                "Uploading {} events from {} device(s)", 
+                "Uploading {} events from {} device(s)",
                 events_to_upload.len(),
                 unique_devices.len()
             );
