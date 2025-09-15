@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap};
 use language_utils::Lexeme;
 use lasso::Spur;
 
-use crate::{CardIndicator, CardStatus, ChallengeType, Context, Deck, Regressions, Unadded};
+use crate::{CardIndicator, CardStatus, ChallengeType, Context, Deck, Regressions};
 
 pub(crate) struct NextCardsIterator<'a> {
     pub(crate) cards: HashMap<CardIndicator<Spur>, CardStatus>,
@@ -27,7 +27,7 @@ impl<'a> NextCardsIterator<'a> {
         let added_over_20_cards = self
             .cards
             .iter()
-            .filter(|(_, status)| matches!(status, CardStatus::Added(_)))
+            .filter(|(_, status)| matches!(status, CardStatus::Tracked(_)))
             .nth(20)
             .is_some();
 
@@ -41,9 +41,11 @@ impl<'a> NextCardsIterator<'a> {
                     return None;
                 }
 
-                let Unadded {} = status.unadded()?;
+                status.unadded()?;
 
-                let value = self.context.get_card_value(card, self.regressions)?;
+                let value =
+                    self.context
+                        .get_card_value_with_status(card, status, self.regressions)?;
 
                 let fsrs_card = rs_fsrs::Card::new();
 
@@ -62,7 +64,7 @@ impl<'a> NextCardsIterator<'a> {
             .iter()
             .filter_map(|(card, status)| {
                 if let CardIndicator::TargetLanguage { lexeme } = card {
-                    if matches!(status, CardStatus::Added(_)) {
+                    if matches!(status, CardStatus::Tracked(_)) {
                         Some(*lexeme)
                     } else {
                         None
@@ -80,9 +82,11 @@ impl<'a> NextCardsIterator<'a> {
                     return None;
                 };
 
-                let Unadded {} = status.unadded()?;
+                status.unadded()?;
 
-                let value = self.context.get_card_value(card, self.regressions)?;
+                let value =
+                    self.context
+                        .get_card_value_with_status(card, status, self.regressions)?;
 
                 // Check if we know at least one word with this pronunciation
                 let has_known_word = self
@@ -129,7 +133,7 @@ impl NextCardsIterator<'_> {
         let added_count = self
             .cards
             .iter()
-            .filter(|(_, status)| matches!(status, CardStatus::Added(_)))
+            .filter(|(_, status)| matches!(status, CardStatus::Tracked(_)))
             .count();
 
         if added_count < 20 {
@@ -142,7 +146,7 @@ impl NextCardsIterator<'_> {
             .iter()
             .filter(|(c, status)| {
                 matches!(c, CardIndicator::TargetLanguage { .. })
-                    && matches!(status, CardStatus::Added(_))
+                    && matches!(status, CardStatus::Tracked(_))
             })
             .count();
         let listening_count = self
@@ -150,7 +154,7 @@ impl NextCardsIterator<'_> {
             .iter()
             .filter(|(c, status)| {
                 matches!(c, CardIndicator::ListeningHomophonous { .. })
-                    && matches!(status, CardStatus::Added(_))
+                    && matches!(status, CardStatus::Tracked(_))
             })
             .count();
 
@@ -185,8 +189,10 @@ impl Iterator for NextCardsIterator<'_> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some((card, fsrs_card)) = self.next_card() {
-            self.cards
-                .insert(card, CardStatus::Added(crate::CardData { fsrs_card }));
+            self.cards.insert(
+                card,
+                CardStatus::Tracked(crate::CardData::Added { fsrs_card }),
+            );
             Some(card)
         } else {
             None

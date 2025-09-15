@@ -993,14 +993,14 @@ impl From<VersionedDeckEvent> for DeckEvent {
 
 #[derive(Clone, Debug)]
 enum CardStatus {
-    Added(CardData),
+    Tracked(CardData),
     Unadded(Unadded),
 }
 
 impl CardStatus {
-    pub(crate) fn added(&self) -> Option<&CardData> {
+    pub(crate) fn reviewed(&self) -> Option<&CardData> {
         match self {
-            CardStatus::Added(card_data) => Some(card_data),
+            CardStatus::Tracked(card_data) => Some(card_data),
             CardStatus::Unadded(_) => None,
         }
     }
@@ -1008,7 +1008,7 @@ impl CardStatus {
     pub(crate) fn unadded(&self) -> Option<&Unadded> {
         match self {
             CardStatus::Unadded(unadded) => Some(unadded),
-            CardStatus::Added(_) => None,
+            CardStatus::Tracked(_) => None,
         }
     }
 }
@@ -1017,8 +1017,34 @@ impl CardStatus {
 struct Unadded {}
 
 #[derive(Clone, Debug)]
-struct CardData {
-    fsrs_card: rs_fsrs::Card,
+enum CardData {
+    /// Card that has been formally added to the deck
+    Added { fsrs_card: rs_fsrs::Card },
+    /// Ghost card - not formally added but has been reviewed through comprehensible sentences
+    Ghost { fsrs_card: rs_fsrs::Card },
+}
+
+impl CardData {
+    /// Returns positive surprise if there are no lapses, or negative surprise otherwise
+    pub fn pre_existing_knowledge(&self) -> f64 {
+        match self {
+            CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => {
+                if fsrs_card.lapses == 0 {
+                    fsrs_card.accumulated_positive_surprise
+                } else {
+                    -fsrs_card.accumulated_negative_surprise
+                }
+            }
+        }
+    }
+
+    pub fn due_timestamp_ms(&self) -> f64 {
+        match self {
+            CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => {
+                fsrs_card.due.timestamp_millis() as f64
+            }
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -1085,7 +1111,7 @@ impl From<Deck> for DeckState {
             .cards
             .iter()
             .filter_map(|(indicator, status)| match status {
-                CardStatus::Added(data) => Some((*indicator, data.clone())),
+                CardStatus::Tracked(data) => Some((*indicator, data.clone())),
                 CardStatus::Unadded { .. } => None,
             })
             .collect();
@@ -1169,13 +1195,25 @@ impl weapon::PartialAppState for Deck {
                                 }
                             }
                         }
-                        // Add the card to the deck if it's not already in it
-                        deck.cards.entry(card).or_insert_with(|| {
-                            let mut fsrs_card = rs_fsrs::Card::new();
-                            fsrs_card.due = *timestamp;
-
-                            CardData { fsrs_card }
-                        });
+                        // Add the card to the deck if it's not already in it, or transition ghost to added
+                        deck.cards
+                            .entry(card)
+                            .and_modify(|existing| {
+                                // If it's a ghost card, transition it to added
+                                if let CardData::Ghost { fsrs_card } = existing {
+                                    let mut new_fsrs_card = fsrs_card.clone();
+                                    // Reset the due date to now when formally adding
+                                    new_fsrs_card.due = *timestamp;
+                                    *existing = CardData::Added {
+                                        fsrs_card: new_fsrs_card,
+                                    };
+                                }
+                            })
+                            .or_insert_with(|| {
+                                let mut fsrs_card = rs_fsrs::Card::new();
+                                fsrs_card.due = *timestamp;
+                                CardData::Added { fsrs_card }
+                            });
                     }
                 }
             }
@@ -1346,8 +1384,14 @@ impl weapon::PartialAppState for Deck {
 
         for (card_indicator, card_data) in state.cards.iter() {
             // Only use cards that have been reviewed (not new)
-            if card_data.fsrs_card.state == rs_fsrs::State::New {
-                continue;
+            // For regression, only use Added cards that aren't new
+            match card_data {
+                CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card }
+                    if fsrs_card.state == rs_fsrs::State::New =>
+                {
+                    continue;
+                }
+                _ => {}
             }
 
             if let Some(frequency) = state.context.get_card_frequency(card_indicator) {
@@ -1431,7 +1475,7 @@ impl weapon::PartialAppState for Deck {
         // Update only the cards that have been added
         for (indicator, card_data) in added_cards {
             if let Some(status) = all_cards.get_mut(&indicator) {
-                *status = CardStatus::Added(card_data);
+                *status = CardStatus::Tracked(card_data);
             }
         }
 
@@ -1487,32 +1531,38 @@ impl DeckState {
             }
         }
 
-        let Some(card_data) = self.cards.get_mut(&card) else {
-            return;
+        let card_data = self.cards.entry(card).or_insert_with(|| {
+            // Create a ghost card if it doesn't exist
+            let mut fsrs_card = rs_fsrs::Card::new();
+            fsrs_card.due = timestamp;
+            CardData::Ghost { fsrs_card }
+        });
+
+        // Update the card data
+        let fsrs_card = match card_data {
+            CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => fsrs_card,
         };
-        let rating = match rating {
+        let fsrs_rating = match rating {
             Rating::Again => rs_fsrs::Rating::Again,
-            Rating::Remembered =>
-            // for new cards, we use Easy. Otherwise, we use Good
-            {
-                if card_data.fsrs_card.state == rs_fsrs::State::New {
+            Rating::Remembered => {
+                // for new cards, we use Easy. Otherwise, we use Good
+                if fsrs_card.state == rs_fsrs::State::New {
                     rs_fsrs::Rating::Easy
                 } else {
                     rs_fsrs::Rating::Good
                 }
             }
-
             Rating::Hard => rs_fsrs::Rating::Hard,
             Rating::Good => rs_fsrs::Rating::Good,
             Rating::Easy => rs_fsrs::Rating::Easy,
         };
 
-        let old_stability = card_data.fsrs_card.stability;
-        card_data.fsrs_card = self
+        let old_stability = fsrs_card.stability;
+        *fsrs_card = self
             .fsrs
-            .next(card_data.fsrs_card.clone(), timestamp, rating)
+            .next(fsrs_card.clone(), timestamp, fsrs_rating)
             .card;
-        let new_stability = card_data.fsrs_card.stability;
+        let new_stability = fsrs_card.stability;
         self.stats.xp += (new_stability - old_stability).max(0.0) / 10.0;
     }
 
@@ -1561,16 +1611,17 @@ impl Deck {
             .cards
             .iter()
             .filter_map(|(card_indicator, card_status)| {
-                if let CardStatus::Added(card_data) = card_status {
+                if let CardStatus::Tracked(CardData::Added { fsrs_card }) = card_status {
+                    let state = match fsrs_card.state {
+                        rs_fsrs::State::New => "new".to_string(),
+                        rs_fsrs::State::Learning => "learning".to_string(),
+                        rs_fsrs::State::Review => "review".to_string(),
+                        rs_fsrs::State::Relearning => "relearning".to_string(),
+                    };
                     Some(CardSummary {
                         card_indicator: card_indicator.resolve(rodeo),
-                        due_timestamp_ms: card_data.fsrs_card.due.timestamp_millis() as f64,
-                        state: match card_data.fsrs_card.state {
-                            rs_fsrs::State::New => "new".to_string(),
-                            rs_fsrs::State::Learning => "learning".to_string(),
-                            rs_fsrs::State::Review => "review".to_string(),
-                            rs_fsrs::State::Relearning => "relearning".to_string(),
-                        },
+                        due_timestamp_ms: fsrs_card.due.timestamp_millis() as f64,
+                        state,
                     })
                 } else {
                     None
@@ -1596,8 +1647,9 @@ impl Deck {
         let no_text_cards = banned_challenge_types.contains(&ChallengeType::Text);
 
         for (card, card_status) in self.cards.iter() {
-            if let CardStatus::Added(card_data) = card_status {
-                let due_date = card_data.fsrs_card.due;
+            if let CardStatus::Tracked(CardData::Added { fsrs_card }) = card_status {
+                let due_date = fsrs_card.due;
+
                 if due_date <= now {
                     match card {
                         CardIndicator::TargetLanguage { .. } if no_text_cards => {
@@ -1618,7 +1670,7 @@ impl Deck {
         // sort by due date
         due_cards.sort_by_key(|card_indicator| {
             let card_status = self.cards.get(card_indicator).unwrap();
-            if let CardStatus::Added(card_data) = card_status {
+            if let CardStatus::Tracked(card_data) = card_status {
                 ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap()
             } else {
                 ordered_float::NotNan::new(0.0).unwrap()
@@ -1627,7 +1679,7 @@ impl Deck {
 
         due_but_banned_cards.sort_by_key(|card_indicator| {
             let card_status = self.cards.get(card_indicator).unwrap();
-            if let CardStatus::Added(card_data) = card_status {
+            if let CardStatus::Tracked(card_data) = card_status {
                 ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap()
             } else {
                 ordered_float::NotNan::new(0.0).unwrap()
@@ -1636,7 +1688,7 @@ impl Deck {
 
         future_cards.sort_by_key(|card_indicator| {
             let card_status = self.cards.get(card_indicator).unwrap();
-            if let CardStatus::Added(card_data) = card_status {
+            if let CardStatus::Tracked(card_data) = card_status {
                 ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap()
             } else {
                 ordered_float::NotNan::new(0.0).unwrap()
@@ -1745,8 +1797,12 @@ impl Deck {
                 CardIndicator::ListeningHomophonous { .. } => None,
             })
             .filter_map(|(lexeme, card_status)| {
-                if let CardStatus::Added(card_data) = card_status {
-                    if card_data.fsrs_card.state != rs_fsrs::State::New {
+                if let CardStatus::Tracked(card_data) = card_status {
+                    let is_reviewed = match card_data {
+                        CardData::Added { fsrs_card } => fsrs_card.state != rs_fsrs::State::New,
+                        CardData::Ghost { fsrs_card } => fsrs_card.state != rs_fsrs::State::New,
+                    };
+                    if is_reviewed {
                         self.context.language_pack.word_frequencies.get(lexeme)
                     } else {
                         None
@@ -1840,7 +1896,7 @@ impl Deck {
     ) -> Option<DeckEvent> {
         let indicator = reviewed.get_interned(&self.context.language_pack.rodeo)?;
         self.cards.get(&indicator).and_then(|status| {
-            matches!(status, CardStatus::Added(_)).then_some(DeckEvent::Language(LanguageEvent {
+            matches!(status, CardStatus::Tracked(_)).then_some(DeckEvent::Language(LanguageEvent {
                 language: self.context.target_language,
                 content: LanguageEventContent::ReviewCard { reviewed, rating },
             }))
@@ -1896,7 +1952,7 @@ impl Deck {
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn num_cards(&self) -> usize {
-        self.cards.values().filter_map(CardStatus::added).count()
+        self.cards.values().filter_map(CardStatus::reviewed).count()
     }
 
     /// Get the average number of challenges completed per day in the past week
@@ -1918,13 +1974,13 @@ impl Deck {
         let mut total_reviews = 0u32;
 
         for (_, card_status) in self.cards.iter() {
-            if let CardStatus::Added(card_data) = card_status {
+            if let CardStatus::Tracked(CardData::Added { fsrs_card }) = card_status {
+                let due_date = fsrs_card.due;
+
                 // Skip new cards (they haven't been reviewed yet)
-                if card_data.fsrs_card.state == rs_fsrs::State::New {
+                if fsrs_card.state == rs_fsrs::State::New {
                     continue;
                 }
-
-                let due_date = card_data.fsrs_card.due;
 
                 // Check if due within the next week
                 if due_date > now && due_date <= one_week_later {
@@ -1966,7 +2022,7 @@ impl Deck {
     fn get_card(&self, card_indicator: CardIndicator<Spur>) -> Option<Card> {
         let card_status = self.cards.get(&card_indicator)?;
         let card_data = match card_status {
-            CardStatus::Added(data) => data,
+            CardStatus::Tracked(data) => data,
             CardStatus::Unadded { .. } => return None,
         };
 
@@ -2040,7 +2096,7 @@ impl Deck {
                                     self.cards
                                         .get(&CardIndicator::TargetLanguage { lexeme })
                                         .is_some_and(|status| {
-                                            matches!(status, CardStatus::Added(_))
+                                            matches!(status, CardStatus::Tracked(_))
                                         })
                                 });
                             (word_known, *word)
@@ -2052,7 +2108,10 @@ impl Deck {
                     }
                 }
             },
-            fsrs_card: card_data.fsrs_card.clone(),
+            fsrs_card: match card_data {
+                CardData::Added { fsrs_card } => fsrs_card.clone(),
+                CardData::Ghost { fsrs_card } => fsrs_card.clone(),
+            },
         };
         Some(card)
     }
@@ -2060,7 +2119,7 @@ impl Deck {
     fn card_known(&self, card_indicator: &CardIndicator<Spur>) -> bool {
         self.cards
             .get(card_indicator)
-            .and_then(|status| status.added())
+            .and_then(|status| status.reviewed())
             .is_some()
     }
 
@@ -2079,21 +2138,16 @@ impl Deck {
             .cards
             .iter()
             .filter_map(|(card_indicator, card_status)| match card_indicator {
-                CardIndicator::TargetLanguage { lexeme } => Some((*lexeme, card_status)),
+                CardIndicator::TargetLanguage { lexeme } => {
+                    Some((card_indicator, *lexeme, card_status))
+                }
                 CardIndicator::ListeningHomophonous { .. } => None,
             })
-            .filter(|(_lexeme, card_status)| {
-                matches!(
-                    card_status,
-                    CardStatus::Added(CardData {
-                        fsrs_card: rs_fsrs::Card {
-                            state: rs_fsrs::State::Review,
-                            ..
-                        },
-                    })
-                )
+            .filter(|(card_indicator, _lexeme, card_status)| {
+                self.context
+                    .is_comprehensible(card_indicator, card_status, &self.regressions)
             })
-            .map(|(target_language_word, _)| target_language_word)
+            .map(|(_card_indicator, lexeme, _card_status)| lexeme)
             .collect();
 
         // Add the target word to comprehensible words
@@ -2170,6 +2224,38 @@ impl Deck {
 }
 
 impl Context {
+    fn is_comprehensible(
+        &self,
+        card_indicator: &CardIndicator<Spur>,
+        card_status: &CardStatus,
+        regressions: &Regressions,
+    ) -> bool {
+        match card_status {
+            // For tracked cards (both Added and Ghost), check if they're in review state
+            CardStatus::Tracked(card_data) => {
+                match card_data {
+                    CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => {
+                        // Card is comprehensible if it's in review state (not new, learning, or relearning)
+                        fsrs_card.state == rs_fsrs::State::Review
+                    }
+                }
+            }
+            // For unadded cards, use regression predictions
+            CardStatus::Unadded(_) => {
+                // Check if we have high confidence they would be known
+                // Use 80% probability threshold for considering a card comprehensible
+                // 80% was not chosen in a super scientific way, it's just a number that seemed to work well
+                if let Some((knowledge_probability, _)) =
+                    self.get_card_knowledge_probability(card_indicator, regressions)
+                {
+                    knowledge_probability >= 0.80
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
     fn get_card_value(
         &self,
         card: &CardIndicator<Spur>,
@@ -2179,6 +2265,64 @@ impl Context {
             self.get_card_knowledge_probability(card, regressions)?;
         ordered_float::NotNan::new((1.0 - knowledge_probability) * (frequency.sqrt_frequency()))
             .ok()
+    }
+
+    fn get_card_value_with_status(
+        &self,
+        card: &CardIndicator<Spur>,
+        status: &CardStatus,
+        regressions: &Regressions,
+    ) -> Option<ordered_float::NotNan<f64>> {
+        let frequency = self.get_card_frequency(card)?;
+
+        // Check if we have a reviewed card (ghost or added)
+        if let CardStatus::Tracked(card_data) = status {
+            // Get the FSRS card using explicit pattern match
+            let fsrs_card = match card_data {
+                CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => fsrs_card,
+            };
+
+            // If it's been reviewed (not new), use the actual knowledge from FSRS
+            if fsrs_card.state != rs_fsrs::State::New {
+                // Get the predicted knowledge
+                let predicted_knowledge = regressions.predict_card_knowledge(card, frequency)?;
+
+                // Calculate observed knowledge from FSRS data
+                let observed_knowledge = if fsrs_card.lapses == 0 {
+                    fsrs_card.accumulated_positive_surprise
+                } else {
+                    -fsrs_card.accumulated_negative_surprise
+                };
+
+                // For ghost cards, combine observed and predicted
+                // For added cards, just use observed
+                let combined_knowledge = match card_data {
+                    CardData::Ghost { .. } => {
+                        if observed_knowledge < 0.0 {
+                            // Has lapses: use whichever is lower (more pessimistic)
+                            observed_knowledge.min(predicted_knowledge)
+                        } else {
+                            // No lapses: add positive surprisal to prediction
+                            observed_knowledge + predicted_knowledge
+                        }
+                    }
+                    CardData::Added { .. } => {
+                        // Added card - use actual knowledge
+                        observed_knowledge
+                    }
+                };
+
+                // Convert knowledge to probability and then to value
+                let probability = Regressions::knowledge_to_probability(combined_knowledge);
+                return ordered_float::NotNan::new(
+                    (1.0 - probability) * frequency.sqrt_frequency(),
+                )
+                .ok();
+            }
+        }
+
+        // Fall back to regular prediction-based value for new or unadded cards
+        self.get_card_value(card, regressions)
     }
 
     fn get_card_knowledge_probability(
@@ -2655,21 +2799,6 @@ impl ReviewInfo {
             Some(self.get_challenge_for_card(deck, self.due_cards[0])?)
         } else {
             None
-        }
-    }
-}
-
-impl CardData {
-    pub fn due_timestamp_ms(&self) -> f64 {
-        self.fsrs_card.due.timestamp_millis() as f64
-    }
-
-    /// Returns positive surprise if there are no lapses, or negative surprise otherwise
-    pub fn pre_existing_knowledge(&self) -> f64 {
-        if self.fsrs_card.lapses == 0 {
-            self.fsrs_card.accumulated_positive_surprise
-        } else {
-            -self.fsrs_card.accumulated_negative_surprise
         }
     }
 }
