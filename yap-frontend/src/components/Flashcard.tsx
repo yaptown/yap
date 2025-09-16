@@ -9,7 +9,7 @@ import { MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from "framer-motion"
 import { AnimatedCard } from "./AnimatedCard"
-import { useEffect, useState, memo } from "react"
+import { useEffect, useState } from "react"
 import "./Flashcard.css"
 import { AudioButton } from "./AudioButton"
 import { ReportIssueModal } from "./challenges/ReportIssueModal"
@@ -142,7 +142,7 @@ const CardBack = ({ content }: { content: CardContent<string> }) => {
   }
 }
 
-export const Flashcard = memo(function Flashcard({ audioRequest, content, showAnswer, onToggle, dueCount, totalCount, onRating, accessToken, onCantListen, isNew, targetLanguage, listeningPrefix }: FlashcardProps) {
+export const Flashcard = function Flashcard({ audioRequest, content, showAnswer, onToggle, dueCount, totalCount, onRating, accessToken, onCantListen, isNew, targetLanguage, listeningPrefix }: FlashcardProps) {
   const x = useMotionValue(0)
   const controls = useAnimation()
   const [isDragging, setIsDragging] = useState(false)
@@ -439,4 +439,4 @@ export const Flashcard = memo(function Flashcard({ audioRequest, content, showAn
       />
     </div>
   )
-})
+}
