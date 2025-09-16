@@ -258,8 +258,8 @@ async fn main() -> anyhow::Result<()> {
                 )
                 .collect::<Vec<_>>();
 
-            // For Korean, filter out sentences with proper nouns
-            if course.target_language == language_utils::Language::Korean {
+            // If the course teaches a new writing system, filter out proper nouns
+            if course.teaches_new_writing_system() {
                 let before_count = nlp_sentences.len();
                 nlp_sentences.retain(|sentence| {
                     !sentence
@@ -269,7 +269,7 @@ async fn main() -> anyhow::Result<()> {
                 });
                 let after_count = nlp_sentences.len();
                 println!(
-                    "Filtered out {} Korean sentences containing proper nouns",
+                    "Filtered out {} sentences containing proper nouns",
                     before_count - after_count
                 );
             }

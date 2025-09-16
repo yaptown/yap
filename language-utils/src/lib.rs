@@ -1192,6 +1192,23 @@ pub enum Language {
     Korean,
 }
 
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Eq,
+    tsify::Tsify,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum WritingSystem {
+    Latin,
+    Hangul,
+}
+
 impl Language {
     pub fn iso_639_3(&self) -> &str {
         match self {
@@ -1208,6 +1225,13 @@ impl Language {
             Language::English => "en",
             Language::Spanish => "es",
             Language::Korean => "ko",
+        }
+    }
+
+    pub fn writing_system(&self) -> WritingSystem {
+        match self {
+            Language::French | Language::English | Language::Spanish => WritingSystem::Latin,
+            Language::Korean => WritingSystem::Hangul,
         }
     }
 }
@@ -1228,6 +1252,12 @@ impl std::fmt::Display for Language {
 pub struct Course {
     pub native_language: Language,
     pub target_language: Language,
+}
+
+impl Course {
+    pub fn teaches_new_writing_system(&self) -> bool {
+        self.native_language.writing_system() != self.target_language.writing_system()
+    }
 }
 
 pub const COURSES: &[Course] = &[
