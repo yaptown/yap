@@ -63,7 +63,16 @@ export default defineConfig({
         ]
       }
     }),
-    react(), 
+    react({
+      babel: {
+        plugins: [
+          ["babel-plugin-react-compiler", {
+            compilationMode: "infer", // Only compile components that would benefit
+            runtimeModule: "react"
+          }]
+        ]
+      }
+    }), 
     wasm(), 
     topLevelAwait(), 
     tailwindcss(),
