@@ -3210,7 +3210,7 @@ mod tests {
 
     // Include the French language data at compile time for tests
     // This makes tests self-contained and doesn't include the data in production builds
-    const FRENCH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/fra/language_data.rkyv");
+    const FRENCH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/fra_for_eng/language_data.rkyv");
 
     impl Default for Deck {
         fn default() -> Self {
