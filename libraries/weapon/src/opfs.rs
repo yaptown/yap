@@ -536,112 +536,144 @@ fn encode_event_log_record(record: &EventLogRecord) -> Option<Vec<u8>> {
     Some(buffer)
 }
 
+struct RawEventLogRecord<'a> {
+    within_device_events_index: u64,
+    device_id_bytes: &'a [u8],
+    payload_bytes: &'a [u8],
+}
+
+fn event_log_records_iter(bytes: &[u8]) -> impl Iterator<Item = RawEventLogRecord<'_>> {
+    struct EventLogIterator<'a> {
+        bytes: &'a [u8],
+        offset: usize,
+        validated: bool,
+    }
+
+    impl<'a> Iterator for EventLogIterator<'a> {
+        type Item = RawEventLogRecord<'a>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if !self.validated {
+                if self.bytes.is_empty() {
+                    return None;
+                }
+                if self.bytes.len() < EVENT_LOG_HEADER_LEN {
+                    log::warn!("Event log header too small ({} bytes)", self.bytes.len());
+                    return None;
+                }
+                if !self.bytes.starts_with(EVENT_LOG_MAGIC) {
+                    log::warn!("Event log magic bytes did not match");
+                    return None;
+                }
+                let version_offset = EVENT_LOG_MAGIC.len();
+                let version = u32::from_le_bytes(
+                    self.bytes[version_offset..version_offset + 4]
+                        .try_into()
+                        .unwrap(),
+                );
+                if version != EVENT_LOG_VERSION {
+                    log::warn!("Unsupported event log version {version}");
+                    return None;
+                }
+                self.offset = EVENT_LOG_HEADER_LEN;
+                self.validated = true;
+            }
+
+            if self.offset + std::mem::size_of::<u32>() > self.bytes.len() {
+                return None;
+            }
+
+            let record_len = u32::from_le_bytes(
+                self.bytes[self.offset..self.offset + std::mem::size_of::<u32>()]
+                    .try_into()
+                    .unwrap(),
+            ) as usize;
+            self.offset += std::mem::size_of::<u32>();
+
+            if self.offset + record_len > self.bytes.len() {
+                log::warn!(
+                    "Event log record length {} exceeds remaining bytes {}",
+                    record_len,
+                    self.bytes.len() - self.offset
+                );
+                return None;
+            }
+
+            let record_end = self.offset + record_len;
+            if record_len < std::mem::size_of::<u64>() + 2 * std::mem::size_of::<u32>() {
+                log::warn!("Event log record too small ({record_len} bytes)");
+                self.offset = record_end;
+                return self.next();
+            }
+
+            let within_device = u64::from_le_bytes(
+                self.bytes[self.offset..self.offset + std::mem::size_of::<u64>()]
+                    .try_into()
+                    .unwrap(),
+            );
+            self.offset += std::mem::size_of::<u64>();
+
+            let device_len = u32::from_le_bytes(
+                self.bytes[self.offset..self.offset + std::mem::size_of::<u32>()]
+                    .try_into()
+                    .unwrap(),
+            ) as usize;
+            self.offset += std::mem::size_of::<u32>();
+
+            if self.offset + device_len > record_end {
+                log::warn!("Device ID length {device_len} exceeds record bounds");
+                self.offset = record_end;
+                return self.next();
+            }
+            let device_id_bytes = &self.bytes[self.offset..self.offset + device_len];
+            self.offset += device_len;
+
+            let payload_len = u32::from_le_bytes(
+                self.bytes[self.offset..self.offset + std::mem::size_of::<u32>()]
+                    .try_into()
+                    .unwrap(),
+            ) as usize;
+            self.offset += std::mem::size_of::<u32>();
+
+            if self.offset + payload_len > record_end {
+                log::warn!("Payload length {payload_len} exceeds record bounds");
+                self.offset = record_end;
+                return self.next();
+            }
+            let payload_bytes = &self.bytes[self.offset..self.offset + payload_len];
+            self.offset = record_end;
+
+            Some(RawEventLogRecord {
+                within_device_events_index: within_device,
+                device_id_bytes,
+                payload_bytes,
+            })
+        }
+    }
+
+    EventLogIterator {
+        bytes,
+        offset: 0,
+        validated: false,
+    }
+}
+
 fn parse_event_log_records(bytes: &[u8]) -> Vec<EventLogRecord> {
-    if bytes.is_empty() {
-        return Vec::new();
-    }
-
-    if bytes.len() < EVENT_LOG_HEADER_LEN {
-        log::warn!("Event log header too small ({} bytes)", bytes.len());
-        return Vec::new();
-    }
-
-    if !bytes.starts_with(EVENT_LOG_MAGIC) {
-        log::warn!("Event log magic bytes did not match");
-        return Vec::new();
-    }
-
-    let version_offset = EVENT_LOG_MAGIC.len();
-    let version = u32::from_le_bytes(
-        bytes[version_offset..version_offset + 4]
-            .try_into()
-            .unwrap(),
-    );
-    if version != EVENT_LOG_VERSION {
-        log::warn!("Unsupported event log version {version}");
-        return Vec::new();
-    }
-
-    let mut offset = EVENT_LOG_HEADER_LEN;
     let mut records = Vec::new();
 
-    while offset + std::mem::size_of::<u32>() <= bytes.len() {
-        let record_len = u32::from_le_bytes(
-            bytes[offset..offset + std::mem::size_of::<u32>()]
-                .try_into()
-                .unwrap(),
-        ) as usize;
-        offset += std::mem::size_of::<u32>();
-
-        if offset + record_len > bytes.len() {
-            log::warn!(
-                "Event log record length {} exceeds remaining bytes {}",
-                record_len,
-                bytes.len() - offset
-            );
-            break;
-        }
-
-        let record_end = offset + record_len;
-        if record_len < std::mem::size_of::<u64>() + 2 * std::mem::size_of::<u32>() {
-            log::warn!("Event log record too small ({record_len} bytes)");
-            offset = record_end;
-            continue;
-        }
-
-        let within_device = u64::from_le_bytes(
-            bytes[offset..offset + std::mem::size_of::<u64>()]
-                .try_into()
-                .unwrap(),
-        );
-        offset += std::mem::size_of::<u64>();
-
-        let device_len = u32::from_le_bytes(
-            bytes[offset..offset + std::mem::size_of::<u32>()]
-                .try_into()
-                .unwrap(),
-        ) as usize;
-        offset += std::mem::size_of::<u32>();
-
-        if offset + device_len > record_end {
-            log::warn!("Device ID length {device_len} exceeds record bounds");
-            offset = record_end;
-            continue;
-        }
-
-        let device_id_bytes = &bytes[offset..offset + device_len];
-        offset += device_len;
-
-        let payload_len = u32::from_le_bytes(
-            bytes[offset..offset + std::mem::size_of::<u32>()]
-                .try_into()
-                .unwrap(),
-        ) as usize;
-        offset += std::mem::size_of::<u32>();
-
-        if offset + payload_len > record_end {
-            log::warn!("Payload length {payload_len} exceeds record bounds");
-            offset = record_end;
-            continue;
-        }
-
-        let payload_bytes = &bytes[offset..offset + payload_len];
-        offset += payload_len;
-
-        if offset < record_end {
-            // Skip any unknown trailing bytes for forward compatibility
-            offset = record_end;
-        }
-
-        let within_device_index = match usize::try_from(within_device) {
+    for raw_record in event_log_records_iter(bytes) {
+        let within_device_index = match usize::try_from(raw_record.within_device_events_index) {
             Ok(index) => index,
             Err(_) => {
-                log::warn!("within_device_events_index {within_device} overflowed usize");
+                log::warn!(
+                    "within_device_events_index {} overflowed usize",
+                    raw_record.within_device_events_index
+                );
                 continue;
             }
         };
 
-        let device_id = match String::from_utf8(device_id_bytes.to_vec()) {
+        let device_id = match String::from_utf8(raw_record.device_id_bytes.to_vec()) {
             Ok(id) => id,
             Err(e) => {
                 log::warn!("Device ID was not valid UTF-8: {e:?}");
@@ -649,7 +681,7 @@ fn parse_event_log_records(bytes: &[u8]) -> Vec<EventLogRecord> {
             }
         };
 
-        match serde_json::from_slice::<Timestamped<serde_json::Value>>(payload_bytes) {
+        match serde_json::from_slice::<Timestamped<serde_json::Value>>(raw_record.payload_bytes) {
             Ok(event) => records.push(EventLogRecord {
                 device_id,
                 within_device_events_index: within_device_index,
@@ -665,105 +697,21 @@ fn parse_event_log_records(bytes: &[u8]) -> Vec<EventLogRecord> {
 }
 
 fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
-    if bytes.is_empty() {
-        return BTreeMap::new();
-    }
-
-    if bytes.len() < EVENT_LOG_HEADER_LEN {
-        log::warn!("Event log header too small ({} bytes)", bytes.len());
-        return BTreeMap::new();
-    }
-
-    if !bytes.starts_with(EVENT_LOG_MAGIC) {
-        log::warn!("Event log magic bytes did not match");
-        return BTreeMap::new();
-    }
-
-    let version_offset = EVENT_LOG_MAGIC.len();
-    let version = u32::from_le_bytes(
-        bytes[version_offset..version_offset + 4]
-            .try_into()
-            .unwrap(),
-    );
-    if version != EVENT_LOG_VERSION {
-        log::warn!("Unsupported event log version {version}");
-        return BTreeMap::new();
-    }
-
-    let mut offset = EVENT_LOG_HEADER_LEN;
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
 
-    while offset + std::mem::size_of::<u32>() <= bytes.len() {
-        let record_len = u32::from_le_bytes(
-            bytes[offset..offset + std::mem::size_of::<u32>()]
-                .try_into()
-                .unwrap(),
-        ) as usize;
-        offset += std::mem::size_of::<u32>();
-
-        if offset + record_len > bytes.len() {
-            log::warn!(
-                "Event log record length {} exceeds remaining bytes {}",
-                record_len,
-                bytes.len() - offset
-            );
-            break;
-        }
-
-        let record_end = offset + record_len;
-        if record_len < std::mem::size_of::<u64>() + 2 * std::mem::size_of::<u32>() {
-            log::warn!("Event log record too small ({record_len} bytes)");
-            offset = record_end;
-            continue;
-        }
-
-        let within_device = u64::from_le_bytes(
-            bytes[offset..offset + std::mem::size_of::<u64>()]
-                .try_into()
-                .unwrap(),
-        );
-        offset += std::mem::size_of::<u64>();
-
-        let device_len = u32::from_le_bytes(
-            bytes[offset..offset + std::mem::size_of::<u32>()]
-                .try_into()
-                .unwrap(),
-        ) as usize;
-        offset += std::mem::size_of::<u32>();
-
-        if offset + device_len > record_end {
-            log::warn!("Device ID length {device_len} exceeds record bounds");
-            offset = record_end;
-            continue;
-        }
-
-        let device_id_bytes = &bytes[offset..offset + device_len];
-        offset += device_len;
-
-        let payload_len = u32::from_le_bytes(
-            bytes[offset..offset + std::mem::size_of::<u32>()]
-                .try_into()
-                .unwrap(),
-        ) as usize;
-        offset += std::mem::size_of::<u32>();
-
-        if offset + payload_len > record_end {
-            log::warn!("Payload length {payload_len} exceeds record bounds");
-            offset = record_end;
-            continue;
-        }
-
-        offset = record_end;
-
-        let within_device_index = match usize::try_from(within_device) {
+    for raw_record in event_log_records_iter(bytes) {
+        let within_device_index = match usize::try_from(raw_record.within_device_events_index) {
             Ok(index) => index,
             Err(_) => {
-                log::warn!("within_device_events_index {within_device} overflowed usize");
+                log::warn!(
+                    "within_device_events_index {} overflowed usize",
+                    raw_record.within_device_events_index
+                );
                 continue;
             }
         };
 
-        let device_id = match String::from_utf8(device_id_bytes.to_vec()) {
+        let device_id = match String::from_utf8(raw_record.device_id_bytes.to_vec()) {
             Ok(id) => id,
             Err(e) => {
                 log::warn!("Device ID was not valid UTF-8: {e:?}");
