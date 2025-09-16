@@ -292,8 +292,36 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
 
   const [showAnswer, setShowAnswer] = useState(false)
   const network = useNetworkState()
-  
-  // bannedChallengeTypes needs to be declared before it's used
+  const [cardsBecameDue, setCardsBecameDue] = useState<number>(0)
+
+  const nextDueCard = findNextDueCard(deck)
+
+  // Update scheduled push notifications when the deck state changes
+  useEffect(() => {
+    try {
+      if (accessToken && userInfo?.id) { deck.submit_push_notifications(accessToken, userInfo?.id) }
+    }
+    catch {
+      console.error("An error occured when trying to update the notification schedule");
+    }
+  }, [deck, userInfo?.id, accessToken])
+
+  // Schedule re-render when next card becomes due
+  useEffect(() => {
+    const next_due_timestamp_ms = nextDueCard?.due_timestamp_ms;
+    if (next_due_timestamp_ms) {
+      const timeUntilDueMs = next_due_timestamp_ms - Date.now();
+
+      if (timeUntilDueMs > 0 && timeUntilDueMs < 24 * 60 * 60 * 1000) { // Only schedule if within 24 hours
+        const timeout = setTimeout(() => {
+          setCardsBecameDue(cardsBecameDue => cardsBecameDue + 1000)
+        }, timeUntilDueMs + 1)
+
+        return () => clearTimeout(timeout)
+      }
+    }
+  }, [nextDueCard?.due_timestamp_ms])
+
   const [bannedChallengeTypes, setBannedChallengeTypes] = useState<ChallengeType[]>(() => {
     const cantListenTimestamp = localStorage.getItem('yap-cant-listen-timestamp');
     if (cantListenTimestamp) {
@@ -309,37 +337,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
     return [];
   });
-
-  const nextDueCard = findNextDueCard(deck)
-
-  // Update scheduled push notifications when the deck state changes
-  useEffect(() => {
-    try {
-      if (accessToken && userInfo?.id) { deck.submit_push_notifications(accessToken, userInfo?.id) }
-    }
-    catch {
-      console.error("An error occurred when trying to update the notification schedule");
-    }
-  }, [deck, userInfo?.id, accessToken])
-
-  const [, forceUpdate] = useState({});
-  
-  // Schedule re-render when next card becomes due
-  useEffect(() => {
-    const next_due_timestamp_ms = nextDueCard?.due_timestamp_ms;
-    if (next_due_timestamp_ms) {
-      const timeUntilDueMs = next_due_timestamp_ms - Date.now();
-      if (timeUntilDueMs > 0 && timeUntilDueMs < 24 * 60 * 60 * 1000) { // Only schedule if within 24 hours
-
-        const timeout = setTimeout(() => {
-          // Force re-render which will recalculate reviewInfo with new time
-          forceUpdate({})
-        }, timeUntilDueMs + 1)
-
-        return () => clearTimeout(timeout)
-      }
-    }
-  }, [nextDueCard?.due_timestamp_ms])
 
   useEffect(() => {
     if (bannedChallengeTypes.includes('Listening')) {
@@ -364,14 +361,13 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
   }, [bannedChallengeTypes, CANT_LISTEN_DURATION_MS]);
 
-  const reviewInfo = useMemo(() => 
-    deck.get_review_info(bannedChallengeTypes, Date.now()),
-    [deck, bannedChallengeTypes]
-  );
+  const reviewInfo = useMemo(() => {
+    return deck.get_review_info(bannedChallengeTypes, Date.now())
+  }, [deck, bannedChallengeTypes, cardsBecameDue]);
 
   const currentChallenge: Challenge<string> | undefined = reviewInfo.get_next_challenge(deck);
   const addCardOptionsRaw = deck.add_card_options();
-  const addCardOptions: AddCardOptions = userInfo === undefined 
+  const addCardOptions: AddCardOptions = userInfo === undefined
     ? { smart_add: 0, manual_add: addCardOptionsRaw.manual_add.map(([count, card_type]) => [card_type == "TargetLanguage" ? count : 0, card_type] as [number, CardType]) }
     : addCardOptionsRaw;
 
@@ -386,12 +382,12 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   }, [deck, accessToken, reviewInfo])
 
 
-  const addNextCards = async (card_type: CardType | undefined, count: number) => {
+  const addNextCards = useCallback(async (card_type: CardType | undefined, count: number) => {
     const event = deck.add_next_unknown_cards(card_type, count);
     if (event) {
       weapon.add_deck_event(event);
     }
-  }
+  }, [deck, weapon])
 
   const handleRating = async (rating: Rating) => {
     if (!currentChallenge || !('FlashCardReview' in currentChallenge)) {
@@ -457,7 +453,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
   }
 
-  const handleTranscriptionComplete = (grade: /* comes from TranscriptionChallenge*/ PartGraded[]) => {
+  const handleTranscriptionComplete = useCallback((grade: /* comes from TranscriptionChallenge*/ PartGraded[]) => {
     if (!currentChallenge || !('TranscribeComprehensibleSentence' in currentChallenge)) {
       console.error("handleTranscriptionComplete called with no current challenge or no TranscribeComprehensibleSentence in current challenge");
       return
@@ -472,7 +468,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
       weapon.add_deck_event(event);
     }
     setShowAnswer(false)
-  }
+  }, [deck, currentChallenge, weapon])
 
   const toggleAnswer = () => {
     setShowAnswer(!showAnswer)
