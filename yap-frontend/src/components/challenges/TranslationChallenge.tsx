@@ -223,7 +223,7 @@ interface WordStatusesProps {
   sentence: TranslateComprehensibleSentence<string>;
   setSelectedWordIndex: (index: number) => void;
   wordStatuses: [Lexeme<string>, boolean | null][];
-  wordRefs: React.RefObject<(SwipeableWordHandle | null)[]>;
+  wordRefs: React.RefObject<Map<number, SwipeableWordHandle>>;
   handleWordSwipe: (lexeme: Lexeme<string>, remembered: boolean) => void;
   definitions: [Lexeme<string>, TargetToNativeWord[]][];
 }
@@ -305,7 +305,13 @@ function WordStatuses({
         {wordStatuses.map(([lexeme, status], index) => (
           <div key={index}>
             <SwipeableWord
-              ref={(el) => { wordRefs.current[index] = el }}
+              ref={(el) => { 
+                if (el) {
+                  wordRefs.current.set(index, el)
+                } else {
+                  wordRefs.current.delete(index)
+                }
+              }}
               lexeme={lexeme}
               aliased={false} // TODO: need to fix this
               onSwipe={handleWordSwipe}
@@ -397,7 +403,7 @@ export function TranslationChallenge({ sentence, onComplete, dueCount, totalCoun
     | null
   >(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const wordRefs = useRef<(SwipeableWordHandle | null)[]>([])
+  const wordRefs = useRef<Map<number, SwipeableWordHandle>>(new Map())
 
   // Reset tapped words and definition display when the sentence changes
   useEffect(() => {
@@ -436,11 +442,11 @@ export function TranslationChallenge({ sentence, onComplete, dueCount, totalCoun
     // Normalize text by removing punctuation, converting to lowercase, and expanding contractions
     const normalizeText = (text: string): string => {
       // First normalize all apostrophes to straight apostrophes
-      text = text.replace(/'/g, "'")
-      text = text.replace(/’/g, "'")
-      text = text.replace(/‘/g, "'")
-      text = text.replace(/“/g, '"')
-      text = text.replace(/”/g, '"')
+      let normalizedText = text.replace(/'/g, "'")
+      normalizedText = normalizedText.replace(/'/g, "'")
+      normalizedText = normalizedText.replace(/'/g, "'")
+      normalizedText = normalizedText.replace(/"/g, '"')
+      normalizedText = normalizedText.replace(/"/g, '"')
 
       // Common contractions mapping
       const contractions: { [key: string]: string } = {
@@ -490,7 +496,7 @@ export function TranslationChallenge({ sentence, onComplete, dueCount, totalCoun
         "hadn't": "had not",
       }
 
-      let normalized = text.toLowerCase()
+      let normalized = normalizedText.toLowerCase()
 
       // Replace contractions
       Object.entries(contractions).forEach(([contraction, expansion]) => {
@@ -674,7 +680,7 @@ export function TranslationChallenge({ sentence, onComplete, dueCount, totalCoun
           case 'ArrowLeft':
             e.preventDefault()
             if (selectedWordIndex >= 0 && selectedWordIndex < lexemeCount) {
-              const wordRef = wordRefs.current[selectedWordIndex]
+              const wordRef = wordRefs.current.get(selectedWordIndex)
               wordRef?.handleButtonClick(false)
             }
             break
@@ -682,7 +688,7 @@ export function TranslationChallenge({ sentence, onComplete, dueCount, totalCoun
           case 'ArrowRight':
             e.preventDefault()
             if (selectedWordIndex >= 0 && selectedWordIndex < lexemeCount) {
-              const wordRef = wordRefs.current[selectedWordIndex]
+              const wordRef = wordRefs.current.get(selectedWordIndex)
               wordRef?.handleButtonClick(true)
             }
             break

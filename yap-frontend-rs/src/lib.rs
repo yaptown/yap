@@ -1416,6 +1416,9 @@ impl weapon::PartialAppState for Deck {
             Point::new_with_weight(1.0, -10.0, 5.0),
             Point::new_with_weight(5.0, 0.0, 5.0),
             Point::new_with_weight(8.0, 0.0, 1.0),
+            Point::new_with_weight(20.0, 0.0, 1.0),
+            Point::new_with_weight(100.0, 0.0, 2.0),
+            Point::new_with_weight(200.0, 0.0, 1.0),
         ];
 
         // Create isotonic regressions (need at least 2 non-new cards)
@@ -1639,8 +1642,13 @@ impl Deck {
 
     /// TODO: get_review_info and get_all_cards_summary can probably be combined.
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_review_info(&self, banned_challenge_types: Vec<ChallengeType>) -> ReviewInfo {
-        let now = Utc::now();
+    pub fn get_review_info(
+        &self,
+        banned_challenge_types: Vec<ChallengeType>,
+        timestamp_ms: f64,
+    ) -> ReviewInfo {
+        let now =
+            DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64).unwrap_or_else(Utc::now);
         let mut due_cards = vec![];
         let mut future_cards = vec![];
         let mut due_but_banned_cards = vec![];
@@ -1719,7 +1727,7 @@ impl Deck {
         };
         let access_token = access_token.as_ref();
 
-        const SIMULATION_DAYS: u32 = 10;
+        const SIMULATION_DAYS: u32 = 2;
         let mut requested_filenames = BTreeSet::new();
         let mut simulation_iterator = self.simulate_usage();
         for _ in 0..SIMULATION_DAYS {
@@ -2534,12 +2542,12 @@ impl Regressions {
                 let range = EASY_THRESHOLD - GOOD_THRESHOLD;
                 0.7 + 0.25 * (knowledge - GOOD_THRESHOLD) / range
             } else if knowledge > 0.0 {
-                // Low positive knowledge: 50-70% probability
+                // Low positive knowledge: 10-70% probability
                 let range = GOOD_THRESHOLD;
-                0.5 + 0.2 * knowledge / range
+                0.1 + 0.6 * knowledge / range
             } else {
-                // Zero knowledge (new card): 50% probability
-                0.5
+                // Zero knowledge (new card): 10% probability
+                0.1
             }
         }
     }

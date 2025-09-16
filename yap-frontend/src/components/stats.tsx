@@ -21,10 +21,9 @@ interface StatsProps {
 }
 
 export function Stats({ deck }: StatsProps) {
-  const reviewInfo = deck.get_review_info([]);
-  const allCardsSummary = deck.get_all_cards_summary();
-
   const now = Date.now();
+  const reviewInfo = deck.get_review_info([], now);
+  const allCardsSummary = deck.get_all_cards_summary();
   const readyCards = allCardsSummary.filter(
     (card) => card.due_timestamp_ms <= now,
   );

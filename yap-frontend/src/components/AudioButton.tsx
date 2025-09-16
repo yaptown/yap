@@ -63,7 +63,7 @@ export function AudioButton({
     } finally {
       setIsPlaying(false);
     }
-  }, [JSON.stringify(audioRequest), accessToken]);
+  }, [audioRequest, accessToken]);
 
   // Auto-play audio when text changes (if autoPlay is enabled)
   useEffect(() => {

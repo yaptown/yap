@@ -1,4 +1,4 @@
-import { useState, useEffect, Profiler, useMemo, useCallback, useSyncExternalStore } from 'react'
+import { useState, useEffect, Profiler, useSyncExternalStore, useMemo, useCallback } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeType, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
 import { Button } from "@/components/ui/button.tsx"
@@ -322,7 +322,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
   }, [nextDueCard?.due_timestamp_ms])
 
-  // reviewInfo.get_next_challenge can sometimes be slow, so we memoize it
   const [bannedChallengeTypes, setBannedChallengeTypes] = useState<ChallengeType[]>(() => {
     const cantListenTimestamp = localStorage.getItem('yap-cant-listen-timestamp');
     if (cantListenTimestamp) {
@@ -363,18 +362,14 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   }, [bannedChallengeTypes, CANT_LISTEN_DURATION_MS]);
 
   const reviewInfo = useMemo(() => {
-    return deck.get_review_info(bannedChallengeTypes)
+    return deck.get_review_info(bannedChallengeTypes, Date.now())
   }, [deck, bannedChallengeTypes, cardsBecameDue]);
 
-  const { currentChallenge, addCardOptions } = useMemo(() => {
-    const currentChallenge: Challenge<string> | undefined = reviewInfo.get_next_challenge(deck);
-    const addCardOptions = deck.add_card_options();
-    if (userInfo === undefined) {
-      const options: AddCardOptions = { smart_add: 0, manual_add: addCardOptions.manual_add.map(([count, card_type]) => [card_type == "TargetLanguage" ? count : 0, card_type]) };
-      return { currentChallenge, addCardOptions: options };
-    }
-    return { currentChallenge, addCardOptions };
-  }, [deck, reviewInfo, userInfo])
+  const currentChallenge: Challenge<string> | undefined = reviewInfo.get_next_challenge(deck);
+  const addCardOptionsRaw = deck.add_card_options();
+  const addCardOptions: AddCardOptions = userInfo === undefined
+    ? { smart_add: 0, manual_add: addCardOptionsRaw.manual_add.map(([count, card_type]) => [card_type == "TargetLanguage" ? count : 0, card_type] as [number, CardType]) }
+    : addCardOptionsRaw;
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -505,7 +500,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
           } else {
             for (const [count, card_type] of addCardOptions.manual_add) {
               if (card_type === "TargetLanguage") {
-                addNextCards("TargetLanguage", count);
+                addNextCards(card_type, count);
                 break;
               }
             }
