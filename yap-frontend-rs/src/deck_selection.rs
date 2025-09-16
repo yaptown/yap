@@ -4,9 +4,9 @@ use weapon::data_model::Event;
 #[derive(Clone, Debug, tsify::Tsify, serde::Serialize, serde::Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[serde(rename_all = "camelCase")]
-pub enum DeckSelection {
-    Selected(Language),
-    NoneSelected,
+pub struct DeckSelection {
+    pub target_language: Option<Language>,
+    pub native_language: Option<Language>,
 }
 
 impl weapon::PartialAppState for DeckSelection {
@@ -14,11 +14,19 @@ impl weapon::PartialAppState for DeckSelection {
     type Partial = Self; // For now, partial state is the same as final state
 
     fn process_event(
-        _partial: Self::Partial,
+        mut partial: Self::Partial,
         event: &weapon::data_model::Timestamped<Self::Event>,
     ) -> Self::Partial {
         match event.event {
-            DeckSelectionEvent::SelectLanguage(language) => DeckSelection::Selected(language),
+            DeckSelectionEvent::SelectTargetLanguage(language) => {
+                partial.target_language = Some(language);
+                partial
+            }
+            DeckSelectionEvent::SelectBothLanguages { native, target } => {
+                partial.native_language = Some(native);
+                partial.target_language = Some(target);
+                partial
+            }
         }
     }
 
@@ -33,7 +41,12 @@ impl weapon::PartialAppState for DeckSelection {
 )]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum DeckSelectionEvent {
-    SelectLanguage(Language),
+    #[serde(alias = "SelectLanguage")]
+    SelectTargetLanguage(Language),
+    SelectBothLanguages {
+        native: Language,
+        target: Language,
+    },
 }
 #[derive(
     Clone, Debug, serde::Serialize, serde::Deserialize, Ord, PartialOrd, Eq, PartialEq, tsify::Tsify,

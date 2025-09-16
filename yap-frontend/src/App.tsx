@@ -213,7 +213,7 @@ function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined,
                     setRequestedLanguageChange(true)
                   } : undefined}
                   showSignupNag={deck?.type === 'deck' && deck.deck !== null}
-                  language={deck?.type === 'deck' ? deck.language : undefined}
+                  language={deck?.type === 'deck' ? deck.targetLanguage : undefined}
                 />
                 {
                   match(deck)
@@ -221,19 +221,20 @@ function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined,
                       <div className="flex-1 bg-background flex items-center justify-center">
                         <p className="text-muted-foreground">Loading...</p>
                       </div>)
-                    .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, language }) => (
+                    .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage }) => (
                       !requestedLanguageChange ?
                         <Review
                           userInfo={userInfo}
                           accessToken={accessToken}
                           deck={deck}
-                          targetLanguage={language}
+                          targetLanguage={targetLanguage}
                         /> :
                         <LanguageSelector
                           skipOnboarding={true}
-                          onLanguageConfirmed={(language) => {
-                            console.log(`Language selected: ${language}`)
-                            weapon.add_deck_selection_event({ SelectLanguage: language })
+                          currentTargetLanguage={targetLanguage}
+                          onLanguagesConfirmed={(native, target) => {
+                            // Languages selected - Native and Target
+                            weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
                             setRequestedLanguageChange(false)
                           }} />
 
@@ -241,9 +242,9 @@ function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined,
                     .with({ type: "noLanguageSelected" }, () => (
                       <LanguageSelector
                         skipOnboarding={false}
-                        onLanguageConfirmed={(language) => {
-                          console.log(`Language selected: ${language}`)
-                          weapon.add_deck_selection_event({ SelectLanguage: language })
+                        onLanguagesConfirmed={(native, target) => {
+                          // Languages selected - Native and Target
+                          weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
                         }} />
                     ))
                     .with(null, () =>
@@ -602,7 +603,7 @@ function App() {
 }
 
 
-function useDeck(): { type: "deck", language: Language, deck: Deck | null } | { type: "noLanguageSelected" } | null {
+function useDeck(): { type: "deck", nativeLanguage: Language, targetLanguage: Language, deck: Deck | null } | { type: "noLanguageSelected" } | null {
   const weapon = useWeapon()
 
   useEffect(() => {
@@ -644,10 +645,10 @@ function useDeck(): { type: "deck", language: Language, deck: Deck | null } | { 
     if (deck_selection === undefined || deck_selection === null) {
       return null
     }
-    if (deck_selection == "noneSelected") {
+    if (deck_selection.targetLanguage === undefined || deck_selection.targetLanguage === null || deck_selection.nativeLanguage === undefined || deck_selection.nativeLanguage === null) {
       return { type: "noLanguageSelected" } as { type: "noLanguageSelected" }
     } else {
-      return { type: "deck", language: deck_selection.selected, deck: await weapon.get_deck_state(deck_selection.selected) } as { type: "deck", language: Language, deck: Deck | null }
+      return { type: "deck", nativeLanguage: deck_selection.nativeLanguage, targetLanguage: deck_selection.targetLanguage, deck: await weapon.get_deck_state(deck_selection.targetLanguage) } as { type: "deck", nativeLanguage: Language, targetLanguage: Language, deck: Deck | null }
     }
   }, [weapon, numEvents])
 

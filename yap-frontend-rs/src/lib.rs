@@ -40,6 +40,11 @@ use crate::directories::Directories;
 use crate::utils::hit_ai_server;
 use next_cards::NextCardsIterator;
 
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+pub fn get_available_courses() -> Vec<language_utils::Course> {
+    language_utils::COURSES.to_vec()
+}
+
 #[wasm_bindgen]
 pub struct Weapon {
     // todo: move these into a type in `weapon`
@@ -181,7 +186,12 @@ impl Weapon {
         let store = self.store.borrow();
         store
             .get::<EventType<DeckSelectionEvent>>("deck_selection".to_string())
-            .map(|s| s.state(DeckSelection::NoneSelected))
+            .map(|s| {
+                s.state(DeckSelection {
+                    target_language: None,
+                    native_language: None,
+                })
+            })
     }
 
     pub async fn get_deck_state(&self, target_language: Language) -> Result<Deck, JsValue> {
@@ -190,7 +200,13 @@ impl Weapon {
             .await
             .map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
 
-        let initial_state = DeckState::new(language_pack, target_language);
+        // Get native language from deck selection, default to English if not set
+        let native_language = self
+            .get_deck_selection_state()
+            .and_then(|s| s.native_language)
+            .unwrap_or(Language::English);
+
+        let initial_state = DeckState::new(language_pack, target_language, native_language);
         let store = self.store.borrow_mut();
         let Some(stream) = store.get::<EventType<DeckEvent>>("reviews".to_string()) else {
             return Ok(Deck::finalize(initial_state));
@@ -918,8 +934,15 @@ pub enum SentenceReviewIndicator {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct LanguageEvent {
-    pub language: Language,
+    #[serde(alias = "language")]
+    pub target_language: Language,
+    #[serde(default = "default_native_language")]
+    pub native_language: Language,
     pub content: LanguageEventContent,
+}
+
+fn default_native_language() -> Language {
+    Language::English
 }
 
 #[derive(
@@ -1058,6 +1081,7 @@ pub struct DailyStreak {
 pub struct Context {
     pub language_pack: Arc<LanguagePack>,
     pub target_language: Language,
+    pub native_language: Language,
 }
 
 /// Stats contains review statistics and progress tracking
@@ -1137,7 +1161,8 @@ impl weapon::PartialAppState for Deck {
         } = event;
 
         let DeckEvent::Language(LanguageEvent {
-            language: event_language,
+            target_language: event_language,
+            native_language: _, // TODO: specify native_language
             content: event,
         }) = event;
 
@@ -1496,7 +1521,11 @@ impl weapon::PartialAppState for Deck {
 
 impl DeckState {
     /// Create a new DeckState with the given language pack and target language
-    pub(crate) fn new(language_pack: Arc<LanguagePack>, target_language: Language) -> Self {
+    pub(crate) fn new(
+        language_pack: Arc<LanguagePack>,
+        target_language: Language,
+        native_language: Language,
+    ) -> Self {
         Self {
             cards: HashMap::new(),
             fsrs: FSRS::new(rs_fsrs::Parameters {
@@ -1514,6 +1543,7 @@ impl DeckState {
             context: Context {
                 language_pack,
                 target_language,
+                native_language,
             },
         }
     }
@@ -1892,7 +1922,8 @@ impl Deck {
 
         (!cards.is_empty()).then_some({
             DeckEvent::Language(LanguageEvent {
-                language: self.context.target_language,
+                target_language: self.context.target_language,
+                native_language: self.context.native_language,
                 content: LanguageEventContent::AddCards { cards },
             })
         })
@@ -1907,7 +1938,8 @@ impl Deck {
         let indicator = reviewed.get_interned(&self.context.language_pack.rodeo)?;
         self.cards.get(&indicator).and_then(|status| {
             matches!(status, CardStatus::Tracked(_)).then_some(DeckEvent::Language(LanguageEvent {
-                language: self.context.target_language,
+                target_language: self.context.target_language,
+                native_language: self.context.native_language,
                 content: LanguageEventContent::ReviewCard { reviewed, rating },
             }))
         })
@@ -1916,7 +1948,8 @@ impl Deck {
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn translate_sentence_perfect(&self, challenge_sentence: String) -> Option<DeckEvent> {
         Some(DeckEvent::Language(LanguageEvent {
-            language: self.context.target_language,
+            target_language: self.context.target_language,
+            native_language: self.context.native_language,
             content: LanguageEventContent::TranslationChallenge {
                 review: SentenceReviewIndicator::TargetToNative {
                     challenge_sentence,
@@ -1935,7 +1968,8 @@ impl Deck {
         words_forgotten: Vec<Lexeme<String>>,
     ) -> Option<DeckEvent> {
         Some(DeckEvent::Language(LanguageEvent {
-            language: self.context.target_language,
+            target_language: self.context.target_language,
+            native_language: self.context.native_language,
             content: LanguageEventContent::TranslationChallenge {
                 review: SentenceReviewIndicator::TargetToNative {
                     challenge_sentence,
@@ -1955,7 +1989,8 @@ impl Deck {
         challenge: Vec<transcription_challenge::PartGraded>,
     ) -> Option<DeckEvent> {
         Some(DeckEvent::Language(LanguageEvent {
-            language: self.context.target_language,
+            target_language: self.context.target_language,
+            native_language: self.context.native_language,
             content: LanguageEventContent::TranscriptionChallenge { challenge },
         }))
     }
@@ -3230,7 +3265,7 @@ mod tests {
 
             let language_pack = Arc::new(LanguagePack::new(deserialized));
 
-            let state = DeckState::new(language_pack, Language::French);
+            let state = DeckState::new(language_pack, Language::French, Language::English);
             <Deck as weapon::PartialAppState>::finalize(state)
         }
     }
