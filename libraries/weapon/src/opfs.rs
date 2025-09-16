@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
+    convert::{TryFrom, TryInto},
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -16,13 +17,10 @@ use opfs::{
 use crate::data_model::{Clock, EventStore, IndexedEvent, ListenerKey, SyncTarget, Timestamped};
 use futures::{Stream, StreamExt};
 
-#[allow(dead_code)]
-#[derive(Debug)]
-enum EventReadError {
-    Opfs(persistent::Error),
-    InvalidJson(serde_json::Error),
-    Serde(serde_json::Error),
-}
+const EVENTS_FILE_NAME: &str = "events.blob";
+const EVENT_LOG_MAGIC: &[u8] = b"WEAPONLG";
+const EVENT_LOG_VERSION: u32 = 1;
+const EVENT_LOG_HEADER_LEN: usize = EVENT_LOG_MAGIC.len() + 4;
 
 impl EventStore<String, String> {
     /// Full OPFS sync wrapper: marks lifecycle, runs inner sync, records result.
@@ -99,29 +97,63 @@ impl EventStore<String, String> {
         modifier: Option<ListenerKey>,
     ) -> Result<(), persistent::Error> {
         let stream_directory = user_directory.get_stream_directory(&stream_id).await?;
-        let mut device_directories = stream_directory.device_directories().await?;
-        while let Some((device_id, device_directory)) = device_directories.next().await {
-            let current_num_events = store
-                .borrow()
+        let event_log_file = stream_directory.get_event_log_file().await?;
+
+        let mut counts: BTreeMap<String, usize> = {
+            let store_ref = store.borrow();
+            store_ref
                 .get_raw(stream_id.clone())
-                .and_then(|s| s.num_events_per_device().get(&device_id).copied())
-                .unwrap_or(0);
+                .map(|s| {
+                    s.num_events_per_device()
+                        .into_iter()
+                        .map(|(device, count)| (device.clone(), count))
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
 
-            // Load fresh events from storage
-            let fresh_events = device_directory
-                .read_device_events(current_num_events)
-                .await
-                .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?
-                .collect::<Vec<_>>()
-                .await;
+        let stored_events = event_log_file
+            .read_records()
+            .await
+            .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?;
 
-            // Add fresh events to current state
-            store.borrow_mut().add_device_events_jsons(
-                stream_id.clone(),
-                device_id.to_string(),
-                fresh_events,
-                modifier,
-            );
+        let mut events_to_add: BTreeMap<String, Vec<Timestamped<serde_json::Value>>> =
+            BTreeMap::new();
+
+        for record in stored_events {
+            let device_id = record.device_id;
+            let event_index = record.within_device_events_index;
+            let event = record.event;
+
+            let entry = counts.entry(device_id.clone()).or_insert(0);
+            let expected_index = *entry;
+            if event_index < expected_index {
+                log::error!(
+                    "OPFS log backtrack detected for stream {stream_id} device {device_id}: expected index {expected_index}, found {event_index}",
+                );
+                continue;
+            }
+
+            if event_index > expected_index {
+                log::error!(
+                    "OPFS log gap detected for stream {stream_id} device {device_id}: expected index {expected_index}, found {event_index}",
+                );
+            }
+
+            events_to_add
+                .entry(device_id.clone())
+                .or_default()
+                .push(event);
+            *entry = event_index + 1;
+        }
+
+        if events_to_add.is_empty() {
+            return Ok(());
+        }
+
+        let mut store_mut = store.borrow_mut();
+        for (device_id, events) in events_to_add {
+            store_mut.add_device_events_jsons(stream_id.clone(), device_id, events, modifier);
         }
 
         Ok(())
@@ -143,20 +175,20 @@ impl EventStore<String, String> {
         };
 
         let stream_directory = user_directory.get_stream_directory(&stream_id).await?;
+        let event_log_file = stream_directory.get_event_log_file().await?;
 
         // On-disk clock for this stream (asserts contiguity of indices 0..=n-1)
         let opfs_clock = get_opfs_clock(user_directory, Some(&stream_id)).await?;
         let device_counts_on_disk = opfs_clock.get(&stream_id).cloned().unwrap_or_default();
 
+        let mut records_to_append: Vec<EventLogRecord> = Vec::new();
+
         for (device_id, _num_events) in device_events {
-            let device_directory = stream_directory.get_device_directory(&device_id).await?;
             let device_events_on_disk = device_counts_on_disk.get(&device_id).copied().unwrap_or(0);
 
-            // Collect events with index >= device_events_on_disk (contiguous range guaranteed)
             let events_to_write: Vec<Timestamped<serde_json::Value>> = {
-                // contortions to avoid holding the lock across an .await
-                let store = store.borrow();
-                let Some(stream) = store.get_raw(stream_id.clone()) else {
+                let store_ref = store.borrow();
+                let Some(stream) = store_ref.get_raw(stream_id.clone()) else {
                     log::error!(
                         "Stream {stream_id} not found in store, which should be impossible as we already checked for it"
                     );
@@ -166,9 +198,17 @@ impl EventStore<String, String> {
             };
 
             for event in events_to_write {
-                device_directory.write_event_file(&event).await?;
-                total_written += 1;
+                records_to_append.push(EventLogRecord {
+                    device_id: device_id.clone(),
+                    within_device_events_index: event.within_device_events_index(),
+                    event,
+                });
             }
+        }
+
+        if !records_to_append.is_empty() {
+            event_log_file.append_records(&records_to_append).await?;
+            total_written += records_to_append.len();
         }
 
         // If we wrote anything, broadcast a message to other tabs
@@ -230,20 +270,18 @@ impl EventStore<String, String> {
             let target_stream_dir = current_user_directory
                 .get_stream_directory(&stream_id)
                 .await?;
-            let mut devices = stream_dir.device_directories().await?;
-            while let Some((device_id, device_dir)) = devices.next().await {
-                let target_device_dir = target_stream_dir.get_device_directory(&device_id).await?;
-                let events = device_dir
-                    .read_device_events(0)
-                    .await
-                    .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?
-                    .collect::<Vec<_>>()
-                    .await;
-                for event in events {
-                    // Write event to target directory
-                    target_device_dir.write_event_file(&event).await?;
-                }
+            let source_log = stream_dir.get_event_log_file().await?;
+            let events = source_log
+                .read_records()
+                .await
+                .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?;
+
+            if events.is_empty() {
+                continue;
             }
+
+            let target_log = target_stream_dir.get_event_log_file().await?;
+            target_log.append_records(&events).await?;
         }
 
         let _ = weapon_directory.remove_entry("device-id-logged-out").await;
@@ -271,13 +309,15 @@ pub struct StreamDirectory {
 }
 
 #[derive(Debug, Clone)]
-pub struct DeviceDirectory {
-    directory_handle: DirectoryHandle,
+pub struct EventLogFile {
+    file_handle: FileHandle,
 }
 
 #[derive(Debug, Clone)]
-pub struct EventFile {
-    file_handle: FileHandle,
+struct EventLogRecord {
+    device_id: String,
+    within_device_events_index: usize,
+    event: Timestamped<serde_json::Value>,
 }
 
 impl UserDirectory {
@@ -334,142 +374,61 @@ impl UserDirectory {
 }
 
 impl StreamDirectory {
-    async fn device_directories(
-        &self,
-    ) -> Result<impl Stream<Item = (String, DeviceDirectory)>, persistent::Error> {
-        Ok(self.directory_handle.entries().await?.filter_map(|entry| {
-            let (directory_name, device_directory) = match entry {
-                Ok(res) => res,
-                Err(e) => {
-                    log::error!("Failed to get device directory: {e:?}");
-                    return futures::future::ready(None);
-                }
-            };
-            let DirectoryEntry::Directory(device_directory) = device_directory else {
-                return futures::future::ready(None);
-            };
-            let Some(device_id) = directory_name.strip_prefix("device__") else {
-                return futures::future::ready(None);
-            };
-            let device_directory = DeviceDirectory {
-                directory_handle: device_directory,
-            };
-            futures::future::ready(Some((device_id.to_string(), device_directory)))
-        }))
-    }
-
-    async fn get_device_directory(
-        &self,
-        device_id: &str,
-    ) -> Result<DeviceDirectory, persistent::Error> {
-        Ok(DeviceDirectory {
-            directory_handle: self
+    async fn get_event_log_file(&self) -> Result<EventLogFile, persistent::Error> {
+        Ok(EventLogFile {
+            file_handle: self
                 .directory_handle
-                .get_directory_handle_with_options(
-                    &format!("device__{device_id}"),
-                    &opfs::GetDirectoryHandleOptions { create: true },
+                .get_file_handle_with_options(
+                    EVENTS_FILE_NAME,
+                    &opfs::GetFileHandleOptions { create: true },
                 )
                 .await?,
         })
     }
 }
 
-impl DeviceDirectory {
-    async fn read_device_events(
-        &self,
-        at_or_above: usize,
-    ) -> Result<impl Stream<Item = Timestamped<serde_json::Value>>, persistent::Error> {
-        Ok(self.events().await?.filter_map(move |result| async move {
-            let (event_index, event_file) = result;
-            if event_index < at_or_above {
-                return None;
-            }
-            event_file.read().await.ok()
-        }))
+impl EventLogFile {
+    async fn read_records(&self) -> Result<Vec<EventLogRecord>, persistent::Error> {
+        let bytes = self.file_handle.read().await?;
+        Ok(parse_event_log_records(&bytes))
     }
 
-    async fn events(&self) -> Result<impl Stream<Item = (usize, EventFile)>, persistent::Error> {
-        Ok(self.directory_handle.entries().await?.filter_map(|entry| {
-            let (file_name, file) = match entry {
-                Ok(res) => res,
-                Err(e) => {
-                    log::error!("Failed to get event file: {e:?}");
-                    return futures::future::ready(None);
-                }
-            };
-            let DirectoryEntry::File(file) = file else {
-                return futures::future::ready(None);
-            };
-            let Some(event_index) = file_name.strip_suffix(".json") else {
-                return futures::future::ready(None);
-            };
-            let Ok(event_index) = event_index.parse::<usize>() else {
-                return futures::future::ready(None);
-            };
-            let event_file = EventFile { file_handle: file };
-            futures::future::ready(Some((event_index, event_file)))
-        }))
-    }
+    async fn append_records(&self, records: &[EventLogRecord]) -> Result<(), persistent::Error> {
+        if records.is_empty() {
+            return Ok(());
+        }
 
-    async fn get_existing_event_indices(&self) -> Result<BTreeSet<usize>, persistent::Error> {
-        Ok(self
-            .events()
-            .await?
-            .map(|(index, _)| index)
-            .collect::<BTreeSet<_>>()
-            .await)
-    }
-
-    async fn write_event_file(
-        &self,
-        event: &Timestamped<serde_json::Value>,
-    ) -> Result<(), persistent::Error> {
-        let filename = format!(
-            "{:0width$}.json",
-            event.within_device_events_index(),
-            width = 10
-        );
-        let event_json = serde_json::to_value(event).unwrap();
-        let json_str = serde_json::to_string(&event_json).unwrap(); // will not panic
-
-        // Create the file
-        let mut file_handle = self
-            .directory_handle
-            .get_file_handle_with_options(&filename, &opfs::GetFileHandleOptions { create: true })
-            .await?;
-
-        // Write the data
+        let existing_size = self.file_handle.size().await?;
+        let mut file_handle = self.file_handle.clone();
         let mut writable = file_handle
             .create_writable_with_options(&opfs::CreateWritableOptions {
-                keep_existing_data: false,
+                keep_existing_data: true,
             })
             .await?;
 
-        let bytes = json_str.as_bytes();
+        if existing_size < EVENT_LOG_HEADER_LEN {
+            writable.truncate(0).await?;
+            let header = event_log_header_bytes();
+            writable.write_at_cursor_pos(header).await?;
+            writable.seek(EVENT_LOG_HEADER_LEN).await?;
+        } else {
+            writable.seek(existing_size).await?;
+        }
 
-        writable.write_at_cursor_pos(bytes.to_vec()).await?;
+        for record in records {
+            if let Some(bytes) = encode_event_log_record(record) {
+                writable.write_at_cursor_pos(bytes).await?;
+            }
+        }
+
         writable.close().await?;
 
         Ok(())
     }
-}
 
-impl EventFile {
-    async fn read(&self) -> Result<Timestamped<serde_json::Value>, EventReadError> {
-        let bytes: Vec<u8> = self
-            .file_handle
-            .read()
-            .await
-            .map_err(EventReadError::Opfs)?;
-
-        let value = match serde_json::from_slice::<Timestamped<serde_json::Value>>(&bytes) {
-            Ok(value) => value,
-            Err(e) => {
-                log::warn!("Event file was not valid JSON: {e:?}");
-                return Err(EventReadError::InvalidJson(e));
-            }
-        };
-        Ok(value)
+    async fn device_counts(&self) -> Result<BTreeMap<String, usize>, persistent::Error> {
+        let bytes = self.file_handle.read().await?;
+        Ok(parse_device_counts(&bytes))
     }
 }
 
@@ -482,44 +441,346 @@ async fn get_opfs_clock(
 
     if let Some(stream_id) = only_stream {
         let stream_dir = user_directory.get_stream_directory(stream_id).await?;
-        let mut devices = stream_dir.device_directories().await?;
-        let mut device_counts: BTreeMap<String, usize> = BTreeMap::new();
-        while let Some((device_id, device_dir)) = devices.next().await {
-            let indices = device_dir.get_existing_event_indices().await?;
-            // Assert contiguity: must be exactly 0..len-1
-            for (expected, idx) in indices.iter().enumerate() {
-                if *idx != expected {
-                    log::error!(
-                        "OPFS index gap for stream {stream_id} device {device_id}: expected {expected}, found {idx}",
-                    );
-                    panic!("OPFS device indices not contiguous");
-                }
-            }
-            device_counts.insert(device_id, indices.len());
-        }
+        let device_counts = stream_dir
+            .get_event_log_file()
+            .await?
+            .device_counts()
+            .await?;
         clock.insert(stream_id.to_string(), device_counts);
         return Ok(clock);
     }
 
     let mut streams = user_directory.event_stream_directories().await?;
     while let Some((stream_id, stream_dir)) = streams.next().await {
-        let mut devices = stream_dir.device_directories().await?;
-        let mut device_counts: BTreeMap<String, usize> = BTreeMap::new();
-        while let Some((device_id, device_dir)) = devices.next().await {
-            let indices = device_dir.get_existing_event_indices().await?;
-            // Assert contiguity: must be exactly 0..len-1
-            for (expected, idx) in indices.iter().enumerate() {
-                if *idx != expected {
-                    log::error!(
-                        "OPFS index gap for stream {stream_id} device {device_id}: expected {expected}, found {idx}",
-                    );
-                    panic!("OPFS device indices not contiguous");
-                }
-            }
-            device_counts.insert(device_id, indices.len());
-        }
+        let device_counts = stream_dir
+            .get_event_log_file()
+            .await?
+            .device_counts()
+            .await?;
         clock.insert(stream_id, device_counts);
     }
 
     Ok(clock)
+}
+
+fn event_log_header_bytes() -> Vec<u8> {
+    let mut header = Vec::with_capacity(EVENT_LOG_HEADER_LEN);
+    header.extend_from_slice(EVENT_LOG_MAGIC);
+    header.extend_from_slice(&EVENT_LOG_VERSION.to_le_bytes());
+    header
+}
+
+fn encode_event_log_record(record: &EventLogRecord) -> Option<Vec<u8>> {
+    let payload = match serde_json::to_vec(&record.event) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            log::error!(
+                "Failed to serialize event for device {}: {e:?}",
+                record.device_id
+            );
+            return None;
+        }
+    };
+
+    let device_id_bytes = record.device_id.as_bytes();
+    let device_id_len: u32 = match device_id_bytes.len().try_into() {
+        Ok(len) => len,
+        Err(_) => {
+            log::error!(
+                "Device ID too long to encode for device {} ({} bytes)",
+                record.device_id,
+                device_id_bytes.len()
+            );
+            return None;
+        }
+    };
+
+    let payload_len: u32 = match payload.len().try_into() {
+        Ok(len) => len,
+        Err(_) => {
+            log::error!(
+                "Event payload too large to encode for device {} ({} bytes)",
+                record.device_id,
+                payload.len()
+            );
+            return None;
+        }
+    };
+
+    let body_len = std::mem::size_of::<u64>()
+        + std::mem::size_of::<u32>()
+        + device_id_bytes.len()
+        + std::mem::size_of::<u32>()
+        + payload.len();
+
+    let record_len: u32 = match body_len.try_into() {
+        Ok(len) => len,
+        Err(_) => {
+            log::error!(
+                "Record too large to encode for device {} ({} bytes)",
+                record.device_id,
+                body_len
+            );
+            return None;
+        }
+    };
+
+    let mut buffer = Vec::with_capacity(std::mem::size_of::<u32>() + body_len);
+    buffer.extend_from_slice(&record_len.to_le_bytes());
+    buffer.extend_from_slice(&(record.within_device_events_index as u64).to_le_bytes());
+    buffer.extend_from_slice(&device_id_len.to_le_bytes());
+    buffer.extend_from_slice(device_id_bytes);
+    buffer.extend_from_slice(&payload_len.to_le_bytes());
+    buffer.extend_from_slice(&payload);
+
+    Some(buffer)
+}
+
+fn parse_event_log_records(bytes: &[u8]) -> Vec<EventLogRecord> {
+    if bytes.is_empty() {
+        return Vec::new();
+    }
+
+    if bytes.len() < EVENT_LOG_HEADER_LEN {
+        log::warn!("Event log header too small ({} bytes)", bytes.len());
+        return Vec::new();
+    }
+
+    if !bytes.starts_with(EVENT_LOG_MAGIC) {
+        log::warn!("Event log magic bytes did not match");
+        return Vec::new();
+    }
+
+    let version_offset = EVENT_LOG_MAGIC.len();
+    let version = u32::from_le_bytes(
+        bytes[version_offset..version_offset + 4]
+            .try_into()
+            .unwrap(),
+    );
+    if version != EVENT_LOG_VERSION {
+        log::warn!("Unsupported event log version {version}");
+        return Vec::new();
+    }
+
+    let mut offset = EVENT_LOG_HEADER_LEN;
+    let mut records = Vec::new();
+
+    while offset + std::mem::size_of::<u32>() <= bytes.len() {
+        let record_len = u32::from_le_bytes(
+            bytes[offset..offset + std::mem::size_of::<u32>()]
+                .try_into()
+                .unwrap(),
+        ) as usize;
+        offset += std::mem::size_of::<u32>();
+
+        if offset + record_len > bytes.len() {
+            log::warn!(
+                "Event log record length {} exceeds remaining bytes {}",
+                record_len,
+                bytes.len() - offset
+            );
+            break;
+        }
+
+        let record_end = offset + record_len;
+        if record_len < std::mem::size_of::<u64>() + 2 * std::mem::size_of::<u32>() {
+            log::warn!("Event log record too small ({record_len} bytes)");
+            offset = record_end;
+            continue;
+        }
+
+        let within_device = u64::from_le_bytes(
+            bytes[offset..offset + std::mem::size_of::<u64>()]
+                .try_into()
+                .unwrap(),
+        );
+        offset += std::mem::size_of::<u64>();
+
+        let device_len = u32::from_le_bytes(
+            bytes[offset..offset + std::mem::size_of::<u32>()]
+                .try_into()
+                .unwrap(),
+        ) as usize;
+        offset += std::mem::size_of::<u32>();
+
+        if offset + device_len > record_end {
+            log::warn!("Device ID length {device_len} exceeds record bounds");
+            offset = record_end;
+            continue;
+        }
+
+        let device_id_bytes = &bytes[offset..offset + device_len];
+        offset += device_len;
+
+        let payload_len = u32::from_le_bytes(
+            bytes[offset..offset + std::mem::size_of::<u32>()]
+                .try_into()
+                .unwrap(),
+        ) as usize;
+        offset += std::mem::size_of::<u32>();
+
+        if offset + payload_len > record_end {
+            log::warn!("Payload length {payload_len} exceeds record bounds");
+            offset = record_end;
+            continue;
+        }
+
+        let payload_bytes = &bytes[offset..offset + payload_len];
+        offset += payload_len;
+
+        if offset < record_end {
+            // Skip any unknown trailing bytes for forward compatibility
+            offset = record_end;
+        }
+
+        let within_device_index = match usize::try_from(within_device) {
+            Ok(index) => index,
+            Err(_) => {
+                log::warn!("within_device_events_index {within_device} overflowed usize");
+                continue;
+            }
+        };
+
+        let device_id = match String::from_utf8(device_id_bytes.to_vec()) {
+            Ok(id) => id,
+            Err(e) => {
+                log::warn!("Device ID was not valid UTF-8: {e:?}");
+                continue;
+            }
+        };
+
+        match serde_json::from_slice::<Timestamped<serde_json::Value>>(payload_bytes) {
+            Ok(event) => records.push(EventLogRecord {
+                device_id,
+                within_device_events_index: within_device_index,
+                event,
+            }),
+            Err(e) => {
+                log::warn!("Failed to deserialize event payload: {e:?}");
+            }
+        }
+    }
+
+    records
+}
+
+fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
+    if bytes.is_empty() {
+        return BTreeMap::new();
+    }
+
+    if bytes.len() < EVENT_LOG_HEADER_LEN {
+        log::warn!("Event log header too small ({} bytes)", bytes.len());
+        return BTreeMap::new();
+    }
+
+    if !bytes.starts_with(EVENT_LOG_MAGIC) {
+        log::warn!("Event log magic bytes did not match");
+        return BTreeMap::new();
+    }
+
+    let version_offset = EVENT_LOG_MAGIC.len();
+    let version = u32::from_le_bytes(
+        bytes[version_offset..version_offset + 4]
+            .try_into()
+            .unwrap(),
+    );
+    if version != EVENT_LOG_VERSION {
+        log::warn!("Unsupported event log version {version}");
+        return BTreeMap::new();
+    }
+
+    let mut offset = EVENT_LOG_HEADER_LEN;
+    let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+
+    while offset + std::mem::size_of::<u32>() <= bytes.len() {
+        let record_len = u32::from_le_bytes(
+            bytes[offset..offset + std::mem::size_of::<u32>()]
+                .try_into()
+                .unwrap(),
+        ) as usize;
+        offset += std::mem::size_of::<u32>();
+
+        if offset + record_len > bytes.len() {
+            log::warn!(
+                "Event log record length {} exceeds remaining bytes {}",
+                record_len,
+                bytes.len() - offset
+            );
+            break;
+        }
+
+        let record_end = offset + record_len;
+        if record_len < std::mem::size_of::<u64>() + 2 * std::mem::size_of::<u32>() {
+            log::warn!("Event log record too small ({record_len} bytes)");
+            offset = record_end;
+            continue;
+        }
+
+        let within_device = u64::from_le_bytes(
+            bytes[offset..offset + std::mem::size_of::<u64>()]
+                .try_into()
+                .unwrap(),
+        );
+        offset += std::mem::size_of::<u64>();
+
+        let device_len = u32::from_le_bytes(
+            bytes[offset..offset + std::mem::size_of::<u32>()]
+                .try_into()
+                .unwrap(),
+        ) as usize;
+        offset += std::mem::size_of::<u32>();
+
+        if offset + device_len > record_end {
+            log::warn!("Device ID length {device_len} exceeds record bounds");
+            offset = record_end;
+            continue;
+        }
+
+        let device_id_bytes = &bytes[offset..offset + device_len];
+        offset += device_len;
+
+        let payload_len = u32::from_le_bytes(
+            bytes[offset..offset + std::mem::size_of::<u32>()]
+                .try_into()
+                .unwrap(),
+        ) as usize;
+        offset += std::mem::size_of::<u32>();
+
+        if offset + payload_len > record_end {
+            log::warn!("Payload length {payload_len} exceeds record bounds");
+            offset = record_end;
+            continue;
+        }
+
+        offset = record_end;
+
+        let within_device_index = match usize::try_from(within_device) {
+            Ok(index) => index,
+            Err(_) => {
+                log::warn!("within_device_events_index {within_device} overflowed usize");
+                continue;
+            }
+        };
+
+        let device_id = match String::from_utf8(device_id_bytes.to_vec()) {
+            Ok(id) => id,
+            Err(e) => {
+                log::warn!("Device ID was not valid UTF-8: {e:?}");
+                continue;
+            }
+        };
+
+        let entry = counts.entry(device_id.clone()).or_insert(0);
+        let expected = *entry;
+        if within_device_index != expected {
+            log::error!(
+                "OPFS index gap for device {device_id}: expected {expected}, found {within_device_index}"
+            );
+            panic!("OPFS device indices not contiguous");
+        }
+        *entry += 1;
+    }
+
+    counts
 }
