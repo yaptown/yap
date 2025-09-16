@@ -24,9 +24,9 @@ pub(crate) async fn get_language_pack(
         .map_err(LanguageDataError::Persistent)?;
 
     let language_data_hash = match language {
-        Language::French => include_str!("../../out/fra/language_data.hash"),
-        Language::Spanish => include_str!("../../out/spa/language_data.hash"),
-        Language::Korean => include_str!("../../out/kor/language_data.hash"),
+        Language::French => include_str!("../../out/fra_for_eng/language_data.hash"),
+        Language::Spanish => include_str!("../../out/spa_for_eng/language_data.hash"),
+        Language::Korean => include_str!("../../out/kor_for_eng/language_data.hash"),
         Language::English => panic!("Unsupported language: {language:?}"),
     };
     log::info!("expected language_data_hash for {language:?}: {language_data_hash}");
