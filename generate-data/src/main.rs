@@ -2,7 +2,7 @@ use anyhow::Context;
 use futures::StreamExt;
 use indexmap::IndexSet;
 use itertools::Itertools;
-use language_utils::{COURSES, NlpAnalyzedSentence, SentenceInfo, strip_punctuation};
+use language_utils::{COURSES, Language, NlpAnalyzedSentence, SentenceInfo, strip_punctuation};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
@@ -108,15 +108,38 @@ async fn main() -> anyhow::Result<()> {
                 generate_data::opensubtitles::get_subtitle_pairs(source_data_path, *course);
 
             // Combine Anki cards and OpenSubtitles data
+            let use_native_card_side = course.native_language == Language::English;
             let anki_sentences = all_cards.iter().flat_map(|card| {
                 card.target.iter().map(|target_language_sentence| {
-                    (target_language_sentence.clone(), card.native.clone())
+                    let native_sentence = if use_native_card_side {
+                        let trimmed_native = card.native.trim();
+                        if trimmed_native.is_empty() {
+                            None
+                        } else {
+                            Some(trimmed_native.to_string())
+                        }
+                    } else {
+                        None
+                    };
+
+                    (target_language_sentence.clone(), native_sentence)
                 })
             });
 
-            let subtitle_sentences = subtitle_pairs
-                .iter()
-                .map(|pair| (pair.target.clone(), pair.native.clone()));
+            let subtitle_sentences = subtitle_pairs.iter().map(|pair| {
+                let native_sentence = if course.native_language == Language::English {
+                    let trimmed_native = pair.native.trim();
+                    if trimmed_native.is_empty() {
+                        None
+                    } else {
+                        Some(trimmed_native.to_string())
+                    }
+                } else {
+                    None
+                };
+
+                (pair.target.clone(), native_sentence)
+            });
 
             let mut all_sentences = futures::stream::iter(
                 anki_sentences
@@ -145,7 +168,9 @@ async fn main() -> anyhow::Result<()> {
                                 );
                             }
                         };
-                        translation_set.insert(native_sentence);
+                        if let Some(native_sentence) = native_sentence {
+                            translation_set.insert(native_sentence);
+                        }
                         (target_language_sentence, translation_set)
                     }),
             )
