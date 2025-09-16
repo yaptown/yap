@@ -21,12 +21,22 @@ async fn main() -> anyhow::Result<()> {
         println!("Processing course: {}", course.target_language);
         println!("======================");
 
-        let output_dir = format!("./out/{}", course.target_language.iso_639_3());
-        let output_dir = Path::new(output_dir.as_str())
+        let target_language_dir =
+            PathBuf::from(format!("./out/{}", course.target_language.iso_639_3()));
+        std::fs::create_dir_all(&target_language_dir)?;
+        let target_language_dir = target_language_dir
             .canonicalize()
-            .context("Failed to canonicalize output directory")?;
-        // ensure output_dir exists
-        std::fs::create_dir_all(output_dir.clone())?;
+            .context("Failed to canonicalize target language output directory")?;
+
+        let native_specific_dir = PathBuf::from(format!(
+            "./out/{}_to_{}",
+            course.target_language.iso_639_3(),
+            course.native_language.iso_639_3()
+        ));
+        std::fs::create_dir_all(&native_specific_dir)?;
+        let native_specific_dir = native_specific_dir
+            .canonicalize()
+            .context("Failed to canonicalize native-specific output directory")?;
 
         let source_data_path = format!(
             "./generate-data/data/{}",
@@ -75,8 +85,10 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // write sentences
-        let target_language_sentences_file = output_dir.join("target_language_sentences.jsonl");
-        let translations_file = output_dir.join("target_language_to_native_translations.jsonl");
+        let target_language_sentences_file =
+            target_language_dir.join("target_language_sentences.jsonl");
+        let translations_file =
+            native_specific_dir.join("target_language_to_native_translations.jsonl");
         if target_language_sentences_file.exists() && translations_file.exists() {
             println!("Skipping sentence writing because files already exist");
         } else {
@@ -213,7 +225,8 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // Process sentences with Python NLP to detect multiword terms;
-        let target_language_nlp_file = output_dir.join("target_language_sentences_nlp.jsonl");
+        let target_language_nlp_file =
+            target_language_dir.join("target_language_sentences_nlp.jsonl");
         if target_language_nlp_file.exists() {
             println!("Skipping Python NLP because file already exists");
         } else {
@@ -222,9 +235,11 @@ async fn main() -> anyhow::Result<()> {
                 println!("\nProcessing sentences with Python NLP...");
 
                 // Ensure multiword terms file exists, download if needed
-                let multiword_terms_file =
-                    generate_data::wiktionary::ensure_multiword_terms_file(course, &output_dir)
-                        .await?;
+                let multiword_terms_file = generate_data::wiktionary::ensure_multiword_terms_file(
+                    course,
+                    &target_language_dir,
+                )
+                .await?;
 
                 // Run the Python script
                 let script: &str = "main.py";
@@ -302,7 +317,7 @@ async fn main() -> anyhow::Result<()> {
             nlp_sentences
         };
 
-        let proper_nouns_file = output_dir.join("corrected_proper_nouns.jsonl");
+        let proper_nouns_file = target_language_dir.join("corrected_proper_nouns.jsonl");
         if proper_nouns_file.exists() {
             println!("Skipping proper nouns filter because file already exists");
         } else {
@@ -390,7 +405,7 @@ async fn main() -> anyhow::Result<()> {
             .collect();
 
         // Generate frequencies file for combined sources
-        let combined_freq_dir = output_dir.join("frequency_lists/combined");
+        let combined_freq_dir = target_language_dir.join("frequency_lists/combined");
         std::fs::create_dir_all(&combined_freq_dir)?;
         let frequencies_file = combined_freq_dir.join("frequencies.jsonl");
         if frequencies_file.exists() {
@@ -415,7 +430,8 @@ async fn main() -> anyhow::Result<()> {
         println!("Loading frequencies...");
         let frequencies = {
             // Load from the combined frequency file
-            let combined_freq_file = output_dir.join("frequency_lists/combined/frequencies.jsonl");
+            let combined_freq_file =
+                target_language_dir.join("frequency_lists/combined/frequencies.jsonl");
             let file = File::open(&combined_freq_file)?;
             let reader = BufReader::new(file);
             let frequencies = reader
@@ -429,7 +445,7 @@ async fn main() -> anyhow::Result<()> {
         };
 
         // create and write dictionary
-        let dict_file = output_dir.join("dictionary.jsonl");
+        let dict_file = native_specific_dir.join("dictionary.jsonl");
         if dict_file.exists() {
             println!("Skipping dictionary creation because file already exists");
         } else {
@@ -467,7 +483,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // create and write phrasebook
-        let phrasebook_file = output_dir.join("phrasebook.jsonl");
+        let phrasebook_file = native_specific_dir.join("phrasebook.jsonl");
         if phrasebook_file.exists() {
             println!("Skipping phrasebook creation because file already exists");
         } else {
@@ -483,8 +499,8 @@ async fn main() -> anyhow::Result<()> {
         let extra_pronunciations_path = source_data_path
             .join("extra_pronunciations.tsv")
             .canonicalize()?;
-        let word_to_pronunciation_file = output_dir.join("word_to_pronunciation.jsonl");
-        let pronunciation_to_word_file = output_dir.join("pronunciation_to_words.jsonl");
+        let word_to_pronunciation_file = target_language_dir.join("word_to_pronunciation.jsonl");
+        let pronunciation_to_word_file = target_language_dir.join("pronunciation_to_words.jsonl");
         if word_to_pronunciation_file.exists() && pronunciation_to_word_file.exists() {
             println!(
                 "Skipping word to pronunciation and pronunciation to word creation because files already exist"
@@ -560,13 +576,13 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // Consolidate all JSON files into a single rkyv file
-        let rkyv_file = output_dir.join("language_data.rkyv");
+        let rkyv_file = native_specific_dir.join("language_data.rkyv");
         println!("\nConsolidating all data into rkyv format...");
 
         // Load all the JSON files
         println!("Loading target_language sentences...");
         let target_language_sentences = {
-            let file = File::open(output_dir.join("target_language_sentences.jsonl"))?;
+            let file = File::open(target_language_dir.join("target_language_sentences.jsonl"))?;
             let reader = BufReader::new(file);
             reader
                 .lines()
@@ -576,7 +592,9 @@ async fn main() -> anyhow::Result<()> {
 
         println!("Loading translations...");
         let translations = {
-            let file = File::open(output_dir.join("target_language_to_native_translations.jsonl"))?;
+            let file = File::open(
+                native_specific_dir.join("target_language_to_native_translations.jsonl"),
+            )?;
             let reader = BufReader::new(file);
             reader
                 .lines()
@@ -586,7 +604,7 @@ async fn main() -> anyhow::Result<()> {
 
         println!("Loading dictionary...");
         let dictionary = {
-            let file = File::open(output_dir.join("dictionary.jsonl"))?;
+            let file = File::open(native_specific_dir.join("dictionary.jsonl"))?;
             let reader = BufReader::new(file);
             reader
                 .lines()
@@ -607,7 +625,7 @@ async fn main() -> anyhow::Result<()> {
 
         println!("Loading phrasebook...");
         let phrasebook = {
-            let file = File::open(output_dir.join("phrasebook.jsonl"))?;
+            let file = File::open(native_specific_dir.join("phrasebook.jsonl"))?;
             let reader = BufReader::new(file);
             reader
                 .lines()
@@ -622,7 +640,7 @@ async fn main() -> anyhow::Result<()> {
         // Load and process phonetics data
         println!("Loading phonetics data...");
         let word_to_pronunciation = {
-            let file = File::open(output_dir.join("word_to_pronunciation.jsonl"))?;
+            let file = File::open(target_language_dir.join("word_to_pronunciation.jsonl"))?;
             let reader = BufReader::new(file);
             reader
                 .lines()
@@ -630,7 +648,7 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Result<Vec<(String, String)>, _>>()?
         };
         let pronunciation_to_words = {
-            let file = File::open(output_dir.join("pronunciation_to_words.jsonl"))?;
+            let file = File::open(target_language_dir.join("pronunciation_to_words.jsonl"))?;
             let reader = BufReader::new(file);
             reader
                 .lines()
@@ -786,7 +804,7 @@ async fn main() -> anyhow::Result<()> {
         println!("File size: {} bytes", std::fs::metadata(&rkyv_file)?.len());
 
         // Generate hash of the rkyv file
-        let hash_file = output_dir.join("language_data.hash");
+        let hash_file = native_specific_dir.join("language_data.hash");
         println!("Generating hash of rkyv file...");
 
         // Read the rkyv file and compute hash
