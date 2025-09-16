@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
             .context("Failed to canonicalize target language output directory")?;
 
         let native_specific_dir = PathBuf::from(format!(
-            "./out/{}_to_{}",
+            "./out/{}_for_{}",
             course.target_language.iso_639_3(),
             course.native_language.iso_639_3()
         ));

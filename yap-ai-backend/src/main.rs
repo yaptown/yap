@@ -25,9 +25,9 @@ static CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
 });
 
 // Include the language data rkyv file at compile time
-static FRENCH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/fra/language_data.rkyv");
-static SPANISH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/spa/language_data.rkyv");
-static KOREAN_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/kor/language_data.rkyv");
+static FRENCH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/fra_for_eng/language_data.rkyv");
+static SPANISH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/spa_for_eng/language_data.rkyv");
+static KOREAN_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/kor_for_eng/language_data.rkyv");
 
 #[derive(Serialize)]
 struct ElevenLabsRequest {
