@@ -1,4 +1,4 @@
-import { useState, useEffect, Profiler, useSyncExternalStore, useMemo } from 'react'
+import { useState, useEffect, Profiler, useSyncExternalStore, useMemo, useCallback } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeType, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
 import { Button } from "@/components/ui/button.tsx"
