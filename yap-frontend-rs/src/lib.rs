@@ -1639,8 +1639,8 @@ impl Deck {
 
     /// TODO: get_review_info and get_all_cards_summary can probably be combined.
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_review_info(&self, banned_challenge_types: Vec<ChallengeType>) -> ReviewInfo {
-        let now = Utc::now();
+    pub fn get_review_info(&self, banned_challenge_types: Vec<ChallengeType>, timestamp_ms: f64) -> ReviewInfo {
+        let now = DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64).unwrap_or_else(Utc::now);
         let mut due_cards = vec![];
         let mut future_cards = vec![];
         let mut due_but_banned_cards = vec![];

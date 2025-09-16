@@ -292,37 +292,8 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
 
   const [showAnswer, setShowAnswer] = useState(false)
   const network = useNetworkState()
-  const [cardsBecameDue, setCardsBecameDue] = useState<number>(0)
-
-  const nextDueCard = findNextDueCard(deck)
-
-  // Update scheduled push notifications when the deck state changes
-  useEffect(() => {
-    try {
-      if (accessToken && userInfo?.id) { deck.submit_push_notifications(accessToken, userInfo?.id) }
-    }
-    catch {
-      console.error("An error occured when trying to update the notification schedule");
-    }
-  }, [deck, userInfo?.id, accessToken])
-
-  // Schedule re-render when next card becomes due
-  useEffect(() => {
-    const next_due_timestamp_ms = nextDueCard?.due_timestamp_ms;
-    if (next_due_timestamp_ms) {
-      const timeUntilDueMs = next_due_timestamp_ms - Date.now();
-
-      if (timeUntilDueMs > 0 && timeUntilDueMs < 24 * 60 * 60 * 1000) { // Only schedule if within 24 hours
-        const timeout = setTimeout(() => {
-          setCardsBecameDue(cardsBecameDue => cardsBecameDue + 1000)
-        }, timeUntilDueMs + 1)
-
-        return () => clearTimeout(timeout)
-      }
-    }
-  }, [nextDueCard?.due_timestamp_ms])
-
-  // reviewInfo.get_next_challenge can sometimes be slow, so we memoize it
+  
+  // bannedChallengeTypes needs to be declared before it's used
   const [bannedChallengeTypes, setBannedChallengeTypes] = useState<ChallengeType[]>(() => {
     const cantListenTimestamp = localStorage.getItem('yap-cant-listen-timestamp');
     if (cantListenTimestamp) {
@@ -338,6 +309,35 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
     return [];
   });
+
+  const nextDueCard = findNextDueCard(deck)
+
+  // Update scheduled push notifications when the deck state changes
+  useEffect(() => {
+    try {
+      if (accessToken && userInfo?.id) { deck.submit_push_notifications(accessToken, userInfo?.id) }
+    }
+    catch {
+      console.error("An error occurred when trying to update the notification schedule");
+    }
+  }, [deck, userInfo?.id, accessToken])
+
+  // Schedule re-render when next card becomes due
+  useEffect(() => {
+    const next_due_timestamp_ms = nextDueCard?.due_timestamp_ms;
+    if (next_due_timestamp_ms) {
+      const timeUntilDueMs = next_due_timestamp_ms - Date.now();
+
+      if (timeUntilDueMs > 0 && timeUntilDueMs < 24 * 60 * 60 * 1000) { // Only schedule if within 24 hours
+        const timeout = setTimeout(() => {
+          // Update reviewInfo when a card becomes due
+          setReviewInfo(deck.get_review_info(bannedChallengeTypes, Date.now()))
+        }, timeUntilDueMs + 1)
+
+        return () => clearTimeout(timeout)
+      }
+    }
+  }, [nextDueCard?.due_timestamp_ms, deck, bannedChallengeTypes])
 
   useEffect(() => {
     if (bannedChallengeTypes.includes('Listening')) {
@@ -362,9 +362,13 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
   }, [bannedChallengeTypes, CANT_LISTEN_DURATION_MS]);
 
-  const reviewInfo = useMemo(() => {
-    return deck.get_review_info(bannedChallengeTypes)
-  }, [deck, bannedChallengeTypes, cardsBecameDue]);
+  const [reviewInfo, setReviewInfo] = useState(() => 
+    deck.get_review_info(bannedChallengeTypes, Date.now())
+  );
+
+  useEffect(() => {
+    setReviewInfo(deck.get_review_info(bannedChallengeTypes, Date.now()));
+  }, [deck, bannedChallengeTypes]);
 
   const { currentChallenge, addCardOptions } = useMemo(() => {
     const currentChallenge: Challenge<string> | undefined = reviewInfo.get_next_challenge(deck);

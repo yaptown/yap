@@ -28,7 +28,7 @@ impl DailySimulationIterator {
 
         // Process all due reviews for the day
         loop {
-            let review_info = self.deck.get_review_info(vec![]);
+            let review_info = self.deck.get_review_info(vec![], self.current_time.timestamp_millis() as f64);
             if let Some(challenge) = review_info.get_next_challenge(&self.deck) {
                 day_challenges.push(challenge.clone());
 

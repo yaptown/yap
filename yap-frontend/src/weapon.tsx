@@ -40,7 +40,7 @@ export function WeaponProvider({ userId, accessToken, children }: PropsWithChild
                 await stateRef.current.weapon.sync(
                     stream_id,
                     accessTokenRef.current,
-                    networkState.online ? true : false,
+                    networkStateRef.current.online ? true : false,
                     listenerId ?? undefined,
                 )
             } catch (e: any) {
@@ -77,7 +77,7 @@ export function WeaponProvider({ userId, accessToken, children }: PropsWithChild
         if (stateRef.current.type !== 'ready') return;
         if (accessTokenRef.current === undefined) return;
         try {
-            if (networkState.online) {
+            if (networkStateRef.current.online) {
                 await stateRef.current.weapon.sync_with_supabase(accessTokenRef.current, undefined);
             }
         } catch (e: any) {
