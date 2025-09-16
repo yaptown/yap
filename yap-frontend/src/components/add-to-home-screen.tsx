@@ -1,34 +1,39 @@
-import { useState, useEffect } from 'react'
-import { Button } from "@/components/ui/button"
-import { Home, Share, Plus, MoreVertical } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Home, Share, Plus, MoreVertical } from "lucide-react";
 
 interface AddToHomeScreenProps {
-  onDismiss?: () => void
+  onDismiss?: () => void;
 }
 
 export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
-  const [platform, setPlatform] = useState<'ios' | 'android' | 'desktop' | 'unknown'>('unknown')
-  const [showInstructions, setShowInstructions] = useState(false)
+  const [platform, setPlatform] = useState<
+    "ios" | "android" | "desktop" | "unknown"
+  >("unknown");
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
-    const userAgent = navigator.userAgent.toLowerCase()
+    const userAgent = navigator.userAgent.toLowerCase();
     if (/iphone|ipad|ipod/.test(userAgent)) {
-      setPlatform('ios')
+      setPlatform("ios");
     } else if (/android/.test(userAgent)) {
-      setPlatform('android')
-    } else if (/windows|mac|linux/.test(userAgent) && !(/mobile/.test(userAgent))) {
-      setPlatform('desktop')
+      setPlatform("android");
+    } else if (
+      /windows|mac|linux/.test(userAgent) &&
+      !/mobile/.test(userAgent)
+    ) {
+      setPlatform("desktop");
     }
-  }, [])
+  }, []);
 
   const handleShowInstructions = () => {
-    setShowInstructions(true)
-  }
+    setShowInstructions(true);
+  };
 
   const handleDismiss = () => {
-    setShowInstructions(false)
-    onDismiss?.()
-  }
+    setShowInstructions(false);
+    onDismiss?.();
+  };
 
   if (!showInstructions) {
     return (
@@ -43,7 +48,7 @@ export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
           Add to Home Screen
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -53,7 +58,7 @@ export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
         Add Yap.Town to Home Screen
       </h3>
 
-      {platform === 'ios' && (
+      {platform === "ios" && (
         <div className="space-y-3 text-sm">
           <p>To add this app to your home screen:</p>
           <ol className="space-y-2 ml-4">
@@ -73,7 +78,7 @@ export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
         </div>
       )}
 
-      {platform === 'android' && (
+      {platform === "android" && (
         <div className="space-y-3 text-sm">
           <p>To add this app to your home screen:</p>
           <ol className="space-y-2 ml-4">
@@ -93,7 +98,7 @@ export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
         </div>
       )}
 
-      {platform === 'desktop' && (
+      {platform === "desktop" && (
         <div className="space-y-3 text-sm">
           <p>To install this app on your computer:</p>
           <ol className="space-y-2 ml-4">
@@ -105,14 +110,10 @@ export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
       )}
 
       <div className="flex gap-2 pt-2">
-        <Button
-          onClick={handleDismiss}
-          variant="outline"
-          size="sm"
-        >
+        <Button onClick={handleDismiss} variant="outline" size="sm">
           Maybe later
         </Button>
       </div>
     </div>
-  )
+  );
 }

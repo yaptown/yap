@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button"
-import { VolumeX } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { VolumeX } from "lucide-react";
 
 interface CantListenButtonProps {
-  onClick: () => void
+  onClick: () => void;
 }
 
 export function CantListenButton({ onClick }: CantListenButtonProps) {
@@ -15,5 +15,5 @@ export function CantListenButton({ onClick }: CantListenButtonProps) {
       <VolumeX className="mr-2 h-5 w-5" />
       Can't listen now
     </Button>
-  )
+  );
 }

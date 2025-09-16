@@ -361,9 +361,10 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   }, [bannedChallengeTypes, CANT_LISTEN_DURATION_MS]);
 
   const reviewInfo = useMemo(() => {
+    // eslint-disable-next-line no-console
+    console.log("cardsBecameDue", cardsBecameDue)
     return deck.get_review_info(bannedChallengeTypes, Date.now())
     // cardsBecameDue is intentionally included to trigger recalculation when cards become due
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deck, bannedChallengeTypes, cardsBecameDue]);
 
   const currentChallenge: Challenge<string> | undefined = reviewInfo.get_next_challenge(deck);

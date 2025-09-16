@@ -1,36 +1,36 @@
-import { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { ModeToggle } from "@/components/mode-toggle"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/mode-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { NotificationSettings } from '@/components/notification-settings'
-import { LogOut, AlertTriangle } from 'lucide-react'
-import { SyncStatusDialog } from '@/components/sync-status-dialog'
-import type { UserInfo } from '@/App'
-import { AuthDialog } from '@/components/auth-dialog'
-import type { Language } from '../../../yap-frontend-rs/pkg'
-import { match } from 'ts-pattern'
+} from "@/components/ui/dropdown-menu";
+import { NotificationSettings } from "@/components/notification-settings";
+import { LogOut, AlertTriangle } from "lucide-react";
+import { SyncStatusDialog } from "@/components/sync-status-dialog";
+import type { UserInfo } from "@/App";
+import { AuthDialog } from "@/components/auth-dialog";
+import type { Language } from "../../../yap-frontend-rs/pkg";
+import { match } from "ts-pattern";
 
 interface HeaderProps {
-  userInfo: UserInfo | undefined
-  onSignOut: () => void
-  onChangeLanguage?: () => void
-  showSignupNag?: boolean
-  language?: Language
+  userInfo: UserInfo | undefined;
+  onSignOut: () => void;
+  onChangeLanguage?: () => void;
+  showSignupNag?: boolean;
+  language?: Language;
 }
 
 function getLanguageEmoji(language: Language | undefined): string {
   return match(language)
-    .with('French', () => '🇫🇷')
-    .with('Spanish', () => '🇪🇸')
-    .with('Korean', () => '🇰🇷')
-    .with('English', () => '🇬🇧')
-    .with(undefined, () => '🌍')
-    .exhaustive()
+    .with("French", () => "🇫🇷")
+    .with("Spanish", () => "🇪🇸")
+    .with("Korean", () => "🇰🇷")
+    .with("English", () => "🇬🇧")
+    .with(undefined, () => "🌍")
+    .exhaustive();
 }
 
 export function Header({
@@ -40,8 +40,8 @@ export function Header({
   showSignupNag = false,
   language,
 }: HeaderProps) {
-  const [authOpen, setAuthOpen] = useState(false)
-  const [defaultView, setDefaultView] = useState<'signin' | 'signup'>('signin')
+  const [authOpen, setAuthOpen] = useState(false);
+  const [defaultView, setDefaultView] = useState<"signin" | "signup">("signin");
 
   return (
     <div className="space-y-2">
@@ -68,15 +68,16 @@ export function Header({
               <span className="sm:hidden">Yap</span>
             </h1>
           </div>
-          {userInfo && (
-            <SyncStatusDialog />
-          )}
+          {userInfo && <SyncStatusDialog />}
         </div>
         <div className="flex items-center gap-2">
           {userInfo ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-sm text-muted-foreground hover:text-foreground">
+                <Button
+                  variant="ghost"
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
                   {userInfo.email}
                 </Button>
               </DropdownMenuTrigger>
@@ -94,8 +95,8 @@ export function Header({
                 variant="default"
                 size="sm"
                 onClick={() => {
-                  setDefaultView('signin')
-                  setAuthOpen(true)
+                  setDefaultView("signin");
+                  setAuthOpen(true);
                 }}
               >
                 Sign In
@@ -116,7 +117,8 @@ export function Header({
           <AlertTriangle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium">
-              Log in or create an account to make sure you don't lose your progress!
+              Log in or create an account to make sure you don't lose your
+              progress!
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               Your learning data is currently only stored on this device.
@@ -124,8 +126,8 @@ export function Header({
           </div>
           <Button
             onClick={() => {
-              setDefaultView('signup')
-              setAuthOpen(true)
+              setDefaultView("signup");
+              setAuthOpen(true);
             }}
             variant="outline"
             size="sm"
@@ -136,5 +138,5 @@ export function Header({
         </div>
       )}
     </div>
-  )
+  );
 }

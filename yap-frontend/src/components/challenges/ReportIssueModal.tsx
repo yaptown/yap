@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,60 +6,65 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { supabase } from "@/lib/supabase"
-import type { Language } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/lib/supabase";
+import type { Language } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 
 interface ReportIssueModalProps {
-  context: string
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  targetLanguage: Language
+  context: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  targetLanguage: Language;
 }
 
-export function ReportIssueModal({ context, open, onOpenChange, targetLanguage }: ReportIssueModalProps) {
-  const [issueText, setIssueText] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+export function ReportIssueModal({
+  context,
+  open,
+  onOpenChange,
+  targetLanguage,
+}: ReportIssueModalProps) {
+  const [issueText, setIssueText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!issueText.trim()) {
-      return
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
-        throw new Error("Must be logged in to report issues")
+        throw new Error("Must be logged in to report issues");
       }
 
-      const { error } = await supabase
-        .from('issues')
-        .insert({
-          user_id: user.id,
-          issue_text: `Language: ${targetLanguage}\n\nContext: ${context}\n\nIssue: ${issueText.trim()}`
-        })
+      const { error } = await supabase.from("issues").insert({
+        user_id: user.id,
+        issue_text: `Language: ${targetLanguage}\n\nContext: ${context}\n\nIssue: ${issueText.trim()}`,
+      });
 
       if (error) {
-        console.error('Error submitting issue:', error)
-        throw error
+        console.error("Error submitting issue:", error);
+        throw error;
       }
 
-      setIssueText("")
-      onOpenChange(false)
+      setIssueText("");
+      onOpenChange(false);
     } catch (error) {
-      console.error('Failed to submit issue:', error)
+      console.error("Failed to submit issue:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -67,7 +72,8 @@ export function ReportIssueModal({ context, open, onOpenChange, targetLanguage }
         <DialogHeader>
           <DialogTitle>Report an Issue</DialogTitle>
           <DialogDescription>
-            Describe the issue you're experiencing. We'll look into it as soon as possible.
+            Describe the issue you're experiencing. We'll look into it as soon
+            as possible.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -100,5 +106,5 @@ export function ReportIssueModal({ context, open, onOpenChange, targetLanguage }
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

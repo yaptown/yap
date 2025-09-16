@@ -24,7 +24,8 @@ export function BrowserNotSupported() {
             </div>
             <h1 className="text-2xl font-semibold">Browser Not Supported</h1>
             <p className="text-muted-foreground">
-              Yap requires modern browser features that aren't available in your current browser.
+              Yap requires modern browser features that aren't available in your
+              current browser.
             </p>
           </div>
 
@@ -34,16 +35,20 @@ export function BrowserNotSupported() {
                 Apple Users: Update Required
               </p>
               <p className="text-sm">
-                On Safari, Yap.Town requires iOS 26 or macOS 26. (These versions are currently in beta.)
+                On Safari, Yap.Town requires iOS 26 or macOS 26. (These versions
+                are currently in beta.)
               </p>
               <p className="text-sm ">
-                If you're on a desktop platform, you can also use Chrome or Firefox.
+                If you're on a desktop platform, you can also use Chrome or
+                Firefox.
               </p>
             </div>
           )}
 
           <div className="bg-muted/50 rounded-lg p-4 text-left space-y-3">
-            <p className="text-sm font-medium">Please use one of these browsers:</p>
+            <p className="text-sm font-medium">
+              Please use one of these browsers:
+            </p>
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2">
                 <span className="text-green-500">✓</span>
@@ -55,7 +60,10 @@ export function BrowserNotSupported() {
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-green-500">✓</span>
-                <span>Safari (version 26.0+ - requires iOS/macOS 18, currently in beta)</span>
+                <span>
+                  Safari (version 26.0+ - requires iOS/macOS 18, currently in
+                  beta)
+                </span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-green-500">✓</span>
@@ -65,10 +73,21 @@ export function BrowserNotSupported() {
           </div>
 
           <div className="text-xs text-muted-foreground">
-            <p>Yap uses the Origin Private File System (OPFS) API to store your learning data and work offline, some parts of which have <a href="https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream" target="_blank" rel="noopener noreferrer">only recently been implemented in Safari</a>.</p>
+            <p>
+              Yap uses the Origin Private File System (OPFS) API to store your
+              learning data and work offline, some parts of which have{" "}
+              <a
+                href="https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                only recently been implemented in Safari
+              </a>
+              .
+            </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

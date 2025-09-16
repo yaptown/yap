@@ -1,259 +1,349 @@
-import { type AudioRequest, type CardContent, type Language, type Rating } from '../../../yap-frontend-rs/pkg'
+import {
+  type AudioRequest,
+  type CardContent,
+  type Language,
+  type Rating,
+} from "../../../yap-frontend-rs/pkg";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreVertical } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from "framer-motion"
-import { AnimatedCard } from "./AnimatedCard"
-import { useEffect, useState } from "react"
-import "./Flashcard.css"
-import { AudioButton } from "./AudioButton"
-import { ReportIssueModal } from "./challenges/ReportIssueModal"
-import { CantListenButton } from "./CantListenButton"
-import { AudioVisualizer } from "./AudioVisualizer"
-import { CardsRemaining } from "./CardsRemaining"
-import { toast } from 'sonner'
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  useAnimation,
+  type PanInfo,
+} from "framer-motion";
+import { AnimatedCard } from "./AnimatedCard";
+import { useEffect, useState } from "react";
+import "./Flashcard.css";
+import { AudioButton } from "./AudioButton";
+import { ReportIssueModal } from "./challenges/ReportIssueModal";
+import { CantListenButton } from "./CantListenButton";
+import { AudioVisualizer } from "./AudioVisualizer";
+import { CardsRemaining } from "./CardsRemaining";
+import { toast } from "sonner";
 
 interface FlashcardProps {
-  audioRequest: AudioRequest
-  content: CardContent<string>
-  showAnswer: boolean
-  onToggle: () => void
-  dueCount: number
-  totalCount: number
-  onRating?: (rating: Rating) => void
-  accessToken: string | undefined
-  onCantListen?: () => void
-  isNew: boolean
-  targetLanguage: Language
-  listeningPrefix?: string
+  audioRequest: AudioRequest;
+  content: CardContent<string>;
+  showAnswer: boolean;
+  onToggle: () => void;
+  dueCount: number;
+  totalCount: number;
+  onRating?: (rating: Rating) => void;
+  accessToken: string | undefined;
+  onCantListen?: () => void;
+  isNew: boolean;
+  targetLanguage: Language;
+  listeningPrefix?: string;
 }
 
-const CardFront = ({ content, listeningPrefix }: { content: CardContent<string>, listeningPrefix?: string }) => {
+const CardFront = ({
+  content,
+  listeningPrefix,
+}: {
+  content: CardContent<string>;
+  listeningPrefix?: string;
+}) => {
   if ("Listening" in content) {
-    const prefix = listeningPrefix || "Le mot est"
+    const prefix = listeningPrefix || "Le mot est";
     return (
       <h2 className="text-3xl font-semibold flex items-center gap-3 flex-wrap justify-center text-center">
         <span>{prefix}...</span>
         <AudioVisualizer />
       </h2>
-    )
+    );
+  } else if ("Heteronym" in content) {
+    return (
+      <h2 className="text-3xl font-semibold">{content.Heteronym[0].word}</h2>
+    );
+  } else {
+    return <h2 className="text-3xl font-semibold">{content.Multiword[0]}</h2>;
   }
-  else if ("Heteronym" in content) {
-    return (<h2 className="text-3xl font-semibold">{content.Heteronym[0].word}</h2>)
-  }
-  else {
-    return (<h2 className="text-3xl font-semibold">{content.Multiword[0]}</h2>)
-  }
-}
+};
 
 const CardFrontSubtitle = ({ content }: { content: CardContent<string> }) => {
   if ("Listening" in content) {
-    return <span className="text-sm text-muted-foreground"> Fill in the blank!</span>
+    return (
+      <span className="text-sm text-muted-foreground"> Fill in the blank!</span>
+    );
   }
 
-  const partOfSpeech = "Heteronym" in content ?
-    (content.Heteronym[0].pos == "ADJ" ? "Adjective" :
-      content.Heteronym[0].pos == "ADP" ? "Adposition" :
-        content.Heteronym[0].pos == "ADV" ? "Adverb" :
-          content.Heteronym[0].pos == "AUX" ? "Auxiliary" :
-            content.Heteronym[0].pos == "CCONJ" ? "Conjunction" :
-              content.Heteronym[0].pos == "DET" ? "Determiner" :
-                content.Heteronym[0].pos == "INTJ" ? "Interjection" :
-                  content.Heteronym[0].pos == "NOUN" ? "Noun" :
-                    content.Heteronym[0].pos == "NUM" ? "Number" :
-                      content.Heteronym[0].pos == "PART" ? "Particle" :
-                        content.Heteronym[0].pos == "PRON" ? "Pronoun" :
-                          content.Heteronym[0].pos == "PROPN" ? "Proper Noun" :
-                            content.Heteronym[0].pos == "PUNCT" ? "Punctuation" :
-                              content.Heteronym[0].pos == "SCONJ" ? "Subordinating Conjunction" :
-                                content.Heteronym[0].pos == "SYM" ? "Symbol" :
-                                  content.Heteronym[0].pos == "VERB" ? "Verb" :
-                                    content.Heteronym[0].pos == "X" ? "Unknown" : "Unknown")
-    : "Multiword";
-  return <span className="text-sm text-muted-foreground">({partOfSpeech})</span>
-}
+  const partOfSpeech =
+    "Heteronym" in content
+      ? content.Heteronym[0].pos == "ADJ"
+        ? "Adjective"
+        : content.Heteronym[0].pos == "ADP"
+        ? "Adposition"
+        : content.Heteronym[0].pos == "ADV"
+        ? "Adverb"
+        : content.Heteronym[0].pos == "AUX"
+        ? "Auxiliary"
+        : content.Heteronym[0].pos == "CCONJ"
+        ? "Conjunction"
+        : content.Heteronym[0].pos == "DET"
+        ? "Determiner"
+        : content.Heteronym[0].pos == "INTJ"
+        ? "Interjection"
+        : content.Heteronym[0].pos == "NOUN"
+        ? "Noun"
+        : content.Heteronym[0].pos == "NUM"
+        ? "Number"
+        : content.Heteronym[0].pos == "PART"
+        ? "Particle"
+        : content.Heteronym[0].pos == "PRON"
+        ? "Pronoun"
+        : content.Heteronym[0].pos == "PROPN"
+        ? "Proper Noun"
+        : content.Heteronym[0].pos == "PUNCT"
+        ? "Punctuation"
+        : content.Heteronym[0].pos == "SCONJ"
+        ? "Subordinating Conjunction"
+        : content.Heteronym[0].pos == "SYM"
+        ? "Symbol"
+        : content.Heteronym[0].pos == "VERB"
+        ? "Verb"
+        : content.Heteronym[0].pos == "X"
+        ? "Unknown"
+        : "Unknown"
+      : "Multiword";
+  return (
+    <span className="text-sm text-muted-foreground">({partOfSpeech})</span>
+  );
+};
 
 const CardBack = ({ content }: { content: CardContent<string> }) => {
   if ("Listening" in content) {
-    const possible_words: [boolean, string][] = content.Listening.possible_words;
+    const possible_words: [boolean, string][] =
+      content.Listening.possible_words;
 
     if (possible_words.length === 1) {
-      return (
-        <div className="text-3xl font-medium">{possible_words[0][1]}</div>
-      )
+      return <div className="text-3xl font-medium">{possible_words[0][1]}</div>;
     }
 
     return (
       <div className="space-y-4">
-        <div className="text-sm text-muted-foreground">It could have been any of these words:</div>
+        <div className="text-sm text-muted-foreground">
+          It could have been any of these words:
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {possible_words.map(([isKnown, word], index) => (
             <div
               key={index}
-              className={`text-left p-2 rounded-md ${isKnown
-                ? 'bg-green-500/10 border border-green-500/20'
-                : 'bg-muted/30 border border-muted/20'
-                }`}
+              className={`text-left p-2 rounded-md ${
+                isKnown
+                  ? "bg-green-500/10 border border-green-500/20"
+                  : "bg-muted/30 border border-muted/20"
+              }`}
             >
               <span className="text-lg">{word}</span>
-              {isKnown && <span className="text-sm text-green-600 ml-2">(known)</span>}
+              {isKnown && (
+                <span className="text-sm text-green-600 ml-2">(known)</span>
+              )}
             </div>
           ))}
         </div>
       </div>
-    )
-  }
-  else if ("Heteronym" in content) {
+    );
+  } else if ("Heteronym" in content) {
     return content.Heteronym[1].map((def, index) => (
-      <div key={index} className="text-left bg-muted/30 rounded-lg p-4 space-y-2">
+      <div
+        key={index}
+        className="text-left bg-muted/30 rounded-lg p-4 space-y-2"
+      >
         <div className="flex items-baseline gap-2">
           <span className="text-xl font-medium">{def.native}</span>
         </div>
 
         {def.example_sentence_target_language && (
           <div className="space-y-1 text-sm">
-            <p className="text-muted-foreground italic">"{def.example_sentence_target_language}"</p>
-            <p className="text-muted-foreground">"{def.example_sentence_native_language}"</p>
+            <p className="text-muted-foreground italic">
+              "{def.example_sentence_target_language}"
+            </p>
+            <p className="text-muted-foreground">
+              "{def.example_sentence_native_language}"
+            </p>
           </div>
         )}
       </div>
-    ))
-  }
-  else {
+    ));
+  } else {
     return (
       <div className="text-left bg-muted/30 rounded-lg p-4 space-y-2">
         <div className="flex items-baseline gap-2">
-          <span className="text-xl font-medium">{content.Multiword[1].meaning}</span>
+          <span className="text-xl font-medium">
+            {content.Multiword[1].meaning}
+          </span>
         </div>
 
         {content.Multiword[1].example_sentence_target_language && (
           <div className="space-y-1 text-sm">
-            <p className="text-muted-foreground italic">"{content.Multiword[1].example_sentence_target_language}"</p>
-            <p className="text-muted-foreground">"{content.Multiword[1].example_sentence_native_language}"</p>
+            <p className="text-muted-foreground italic">
+              "{content.Multiword[1].example_sentence_target_language}"
+            </p>
+            <p className="text-muted-foreground">
+              "{content.Multiword[1].example_sentence_native_language}"
+            </p>
           </div>
         )}
       </div>
-    )
+    );
   }
-}
+};
 
-export const Flashcard = function Flashcard({ audioRequest, content, showAnswer, onToggle, dueCount, totalCount, onRating, accessToken, onCantListen, isNew, targetLanguage, listeningPrefix }: FlashcardProps) {
-  const x = useMotionValue(0)
-  const controls = useAnimation()
-  const [isDragging, setIsDragging] = useState(false)
-  const [showReportModal, setShowReportModal] = useState(false)
+export const Flashcard = function Flashcard({
+  audioRequest,
+  content,
+  showAnswer,
+  onToggle,
+  dueCount,
+  totalCount,
+  onRating,
+  accessToken,
+  onCantListen,
+  isNew,
+  targetLanguage,
+  listeningPrefix,
+}: FlashcardProps) {
+  const x = useMotionValue(0);
+  const controls = useAnimation();
+  const [isDragging, setIsDragging] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
-  const leftLabel = isNew ? "Didn't know" : "Forgot"
-  const rightLabel = isNew ? "Already knew" : "Good"
+  const leftLabel = isNew ? "Didn't know" : "Forgot";
+  const rightLabel = isNew ? "Already knew" : "Good";
 
-  const requireShowAnswer = totalCount < 30
-  const canGrade = showAnswer || !requireShowAnswer
+  const requireShowAnswer = totalCount < 30;
+  const canGrade = showAnswer || !requireShowAnswer;
 
-  const rotate = useTransform(x, [-200, 200], [-30, 30])
-  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0])
+  const rotate = useTransform(x, [-200, 200], [-30, 30]);
+  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
 
   // Color overlay for visual feedback
-  const leftOverlayOpacity = useTransform(x, [-200, 0], [1, 0])
-  const rightOverlayOpacity = useTransform(x, [0, 200], [0, 1])
+  const leftOverlayOpacity = useTransform(x, [-200, 0], [1, 0]);
+  const rightOverlayOpacity = useTransform(x, [0, 200], [0, 1]);
 
-  const handleDragEnd = async (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    setIsDragging(false)
-    const threshold = 100
+  const handleDragEnd = async (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    setIsDragging(false);
+    const threshold = 100;
 
     if (!canGrade) {
-      controls.start({ x: 0, transition: { type: "spring", stiffness: 300, damping: 20 } })
-      return
+      controls.start({
+        x: 0,
+        transition: { type: "spring", stiffness: 300, damping: 20 },
+      });
+      return;
     }
 
     if (info.offset.x > threshold && info.velocity.x > 0) {
       // Swiped right - "remembered"
-      await controls.start({ x: 300, opacity: 0, transition: { duration: 0.2 } })
+      await controls.start({
+        x: 300,
+        opacity: 0,
+        transition: { duration: 0.2 },
+      });
       if (onRating) {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-        onRating('remembered')
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        onRating("remembered");
       }
     } else if (info.offset.x < -threshold && info.velocity.x < 0) {
       // Swiped left - Again
-      await controls.start({ x: -300, opacity: 0, transition: { duration: 0.2 } })
+      await controls.start({
+        x: -300,
+        opacity: 0,
+        transition: { duration: 0.2 },
+      });
       if (onRating) {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-        onRating('again')
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        onRating("again");
       }
     } else {
       // Not enough swipe - snap back
-      controls.start({ x: 0, transition: { type: "spring", stiffness: 300, damping: 20 } })
+      controls.start({
+        x: 0,
+        transition: { type: "spring", stiffness: 300, damping: 20 },
+      });
     }
-  }
+  };
 
   // Reset position and animate in
   useEffect(() => {
     // Reset to initial state instantly, then animate in
-    controls.set({ x: 0, opacity: 0, scale: 0.95 })
+    controls.set({ x: 0, opacity: 0, scale: 0.95 });
     controls.start({
       x: 0,
       opacity: 1,
       scale: 1,
       transition: {
         duration: 0.3,
-        ease: "easeOut"
-      }
-    })
-  }, [controls])
-
+        ease: "easeOut",
+      },
+    });
+  }, [controls]);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
         return;
       }
 
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         e.preventDefault();
-        toast('Use the arrow keys');
+        toast("Use the arrow keys");
         return;
       }
 
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
       }
 
       // Show answer: Space / ↓ / j (when answer is hidden)
-      if (!showAnswer && (e.key === ' ' || e.key === 'ArrowDown' || e.key === 'j')) {
+      if (
+        !showAnswer &&
+        (e.key === " " || e.key === "ArrowDown" || e.key === "j")
+      ) {
         e.preventDefault();
         onToggle();
       }
       // Hide answer: ↑ / k
-      else if (showAnswer && (e.key === 'ArrowUp' || e.key === 'k')) {
+      else if (showAnswer && (e.key === "ArrowUp" || e.key === "k")) {
         e.preventDefault();
         onToggle();
       }
       // Mark as remembered: →
-      else if (canGrade && e.key === 'ArrowRight' && !e.shiftKey) {
+      else if (canGrade && e.key === "ArrowRight" && !e.shiftKey) {
         e.preventDefault();
         if (onRating) {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          onRating('remembered');
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          onRating("remembered");
         }
       }
       // Mark as "again": ←
-      else if (canGrade && (e.key === 'ArrowLeft')) {
+      else if (canGrade && e.key === "ArrowLeft") {
         e.preventDefault();
         if (onRating) {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          onRating('again');
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          onRating("again");
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showAnswer, canGrade, onToggle, onRating, isNew]);
 
   const copyWord = () => {
@@ -270,11 +360,12 @@ export const Flashcard = function Flashcard({ audioRequest, content, showAnswer,
     }
 
     if (word) {
-      navigator.clipboard.writeText(word)
-        .then(() => toast('Copied to clipboard'))
-        .catch(() => toast('Failed to copy'));
+      navigator.clipboard
+        .writeText(word)
+        .then(() => toast("Copied to clipboard"))
+        .catch(() => toast("Failed to copy"));
     } else {
-      toast('No word to copy');
+      toast("No word to copy");
     }
   };
 
@@ -290,10 +381,12 @@ export const Flashcard = function Flashcard({ audioRequest, content, showAnswer,
         style={{ x, rotate, opacity }}
       >
         <div
-          className={`bg-card text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg border flex flex-col relative overflow-hidden flashcard h-full ${!showAnswer ? "spin-on-hover" : ""}`}
+          className={`bg-card text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg border flex flex-col relative overflow-hidden flashcard h-full ${
+            !showAnswer ? "spin-on-hover" : ""
+          }`}
           onClick={() => {
             if (!isDragging) {
-              onToggle()
+              onToggle();
             }
           }}
         >
@@ -323,14 +416,20 @@ export const Flashcard = function Flashcard({ audioRequest, content, showAnswer,
 
           <div className="text-center relative z-10">
             <div className="mb-4 justify-center gap-2 flex flex-col items-center w-full">
-              <div className="flex items-center justify-between w-full" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="flex items-center justify-between w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <AudioButton
                   audioRequest={audioRequest}
                   accessToken={accessToken}
                   autoPlay={true}
                 />
 
-                <CardFront content={content} listeningPrefix={listeningPrefix} />
+                <CardFront
+                  content={content}
+                  listeningPrefix={listeningPrefix}
+                />
 
                 {onRating ? (
                   <DropdownMenu>
@@ -340,19 +439,21 @@ export const Flashcard = function Flashcard({ audioRequest, content, showAnswer,
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onRating('easy')}>
+                      <DropdownMenuItem onClick={() => onRating("easy")}>
                         Easy
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onRating('good')}>
+                      <DropdownMenuItem onClick={() => onRating("good")}>
                         Good
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onRating('hard')}>
+                      <DropdownMenuItem onClick={() => onRating("hard")}>
                         Hard
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={copyWord}>
                         Copy word
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setShowReportModal(true)}>
+                      <DropdownMenuItem
+                        onClick={() => setShowReportModal(true)}
+                      >
                         Report an Issue
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -374,17 +475,19 @@ export const Flashcard = function Flashcard({ audioRequest, content, showAnswer,
                 transition={{ duration: 0.2 }}
               >
                 <CardBack content={content} />
-              </motion.div>)
-              : (
-                <div>
-                  <div className={`text-muted-foreground ${requireShowAnswer ? 'font-bold' : ''}`}>
-                    Show Answer
-                  </div>
-                  <div className="text-muted-foreground">
-                    ↓
-                  </div>
-                </div>)
-            }
+              </motion.div>
+            ) : (
+              <div>
+                <div
+                  className={`text-muted-foreground ${
+                    requireShowAnswer ? "font-bold" : ""
+                  }`}
+                >
+                  Show Answer
+                </div>
+                <div className="text-muted-foreground">↓</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -403,9 +506,9 @@ export const Flashcard = function Flashcard({ audioRequest, content, showAnswer,
           <div className="grid grid-cols-2 gap-2">
             <Button
               onClick={() => {
-                if (!canGrade) return
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-                onRating('again')
+                if (!canGrade) return;
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                onRating("again");
               }}
               variant="destructive"
               size="lg"
@@ -416,9 +519,9 @@ export const Flashcard = function Flashcard({ audioRequest, content, showAnswer,
             </Button>
             <Button
               onClick={() => {
-                if (!canGrade) return
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-                onRating('remembered')
+                if (!canGrade) return;
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                onRating("remembered");
               }}
               variant="default"
               size="lg"
@@ -438,5 +541,5 @@ export const Flashcard = function Flashcard({ audioRequest, content, showAnswer,
         targetLanguage={targetLanguage}
       />
     </div>
-  )
-}
+  );
+};

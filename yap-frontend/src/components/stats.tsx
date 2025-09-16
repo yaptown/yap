@@ -10,9 +10,9 @@ import {
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 // Lazy load the chart component - only loads when needed
-const FrequencyKnowledgeChart = lazy(() => 
-  import('./FrequencyKnowledgeChart').then(module => ({
-    default: module.FrequencyKnowledgeChart
+const FrequencyKnowledgeChart = lazy(() =>
+  import("./FrequencyKnowledgeChart").then((module) => ({
+    default: module.FrequencyKnowledgeChart,
   }))
 );
 
@@ -25,16 +25,16 @@ export function Stats({ deck }: StatsProps) {
   const reviewInfo = deck.get_review_info([], now);
   const allCardsSummary = deck.get_all_cards_summary();
   const readyCards = allCardsSummary.filter(
-    (card) => card.due_timestamp_ms <= now,
+    (card) => card.due_timestamp_ms <= now
   );
   const notReadyCards = allCardsSummary.filter(
-    (card) => card.due_timestamp_ms > now,
+    (card) => card.due_timestamp_ms > now
   );
 
   const [visibleCount, setVisibleCount] = useState(10);
   const [nextBatchSize, setNextBatchSize] = useState(10);
   const visibleCards = [...readyCards, ...notReadyCards.slice(0, visibleCount)];
-  
+
   const [isGraphsOpen, setIsGraphsOpen] = useState(false);
 
   return (
@@ -90,13 +90,15 @@ export function Stats({ deck }: StatsProps) {
             {visibleCards.map((card, index) => {
               let shortDescription = "";
               let pos = "";
-              
+
               if ("TargetLanguage" in card.card_indicator) {
                 if ("Heteronym" in card.card_indicator.TargetLanguage.lexeme) {
-                  shortDescription = card.card_indicator.TargetLanguage.lexeme.Heteronym.word;
+                  shortDescription =
+                    card.card_indicator.TargetLanguage.lexeme.Heteronym.word;
                   pos = card.card_indicator.TargetLanguage.lexeme.Heteronym.pos;
                 } else {
-                  shortDescription = card.card_indicator.TargetLanguage.lexeme.Multiword;
+                  shortDescription =
+                    card.card_indicator.TargetLanguage.lexeme.Multiword;
                 }
               } else {
                 shortDescription = `/${card.card_indicator.ListeningHomophonous.pronunciation}/`;
@@ -142,29 +144,44 @@ export function Stats({ deck }: StatsProps) {
               }}
               className="w-full py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 font-medium"
             >
-              Show {Math.min(nextBatchSize, notReadyCards.length - visibleCount)} more cards
+              Show{" "}
+              {Math.min(nextBatchSize, notReadyCards.length - visibleCount)}{" "}
+              more cards
             </button>
           </div>
         )}
       </div>
-      
+
       {/* Collapsible Graphs Section */}
-      <Collapsible open={isGraphsOpen} onOpenChange={setIsGraphsOpen} className="mt-6">
+      <Collapsible
+        open={isGraphsOpen}
+        onOpenChange={setIsGraphsOpen}
+        className="mt-6"
+      >
         <CollapsibleTrigger className="flex items-center gap-2 text-lg font-semibold hover:text-muted-foreground transition-colors">
-          {isGraphsOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+          {isGraphsOpen ? (
+            <ChevronDown className="h-5 w-5" />
+          ) : (
+            <ChevronRight className="h-5 w-5" />
+          )}
           Graphs
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-4">
           <div className="bg-card border rounded-lg p-6">
-            <h3 className="text-base font-semibold mb-4">Predicted Knowledge by Word Frequency</h3>
+            <h3 className="text-base font-semibold mb-4">
+              Predicted Knowledge by Word Frequency
+            </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              This chart shows how well you're predicted to know words based on their frequency in the language.
+              This chart shows how well you're predicted to know words based on
+              their frequency in the language.
             </p>
-            <Suspense fallback={
-              <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-                <p>Loading chart...</p>
-              </div>
-            }>
+            <Suspense
+              fallback={
+                <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+                  <p>Loading chart...</p>
+                </div>
+              }
+            >
               <FrequencyKnowledgeChart deck={deck} />
             </Suspense>
           </div>

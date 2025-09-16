@@ -1,54 +1,57 @@
-import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { type Language } from '../../../yap-frontend-rs/pkg/yap_frontend_rs'
-import { match } from 'ts-pattern'
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { type Language } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
+import { match } from "ts-pattern";
 
 interface MobileKeyboardTipProps {
-  language: Language
-  totalCount: number
-  className?: string
+  language: Language;
+  totalCount: number;
+  className?: string;
 }
 
-const DISMISS_KEY = 'mobile-keyboard-tip-dismissed'
+const DISMISS_KEY = "mobile-keyboard-tip-dismissed";
 
 export function MobileKeyboardTip({
   language,
-  className = ""
+  className = "",
 }: MobileKeyboardTipProps) {
-  const [isDismissed, setIsDismissed] = useState(false)
+  const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
     // Check if tip has been dismissed before
-    const dismissed = localStorage.getItem(DISMISS_KEY) === 'true'
-    setIsDismissed(dismissed)
-  }, [])
+    const dismissed = localStorage.getItem(DISMISS_KEY) === "true";
+    setIsDismissed(dismissed);
+  }, []);
 
   const handleDismiss = () => {
-    setIsDismissed(true)
-    localStorage.setItem(DISMISS_KEY, 'true')
-  }
+    setIsDismissed(true);
+    localStorage.setItem(DISMISS_KEY, "true");
+  };
 
   if (isDismissed) {
-    return null
+    return null;
   }
 
   const characterType = match(language)
-    .with('French', () => 'accented')
-    .with('Spanish', () => 'accented')
-    .with('Korean', () => 'hangul')
-    .with('English', () => null)
-    .exhaustive()
+    .with("French", () => "accented")
+    .with("Spanish", () => "accented")
+    .with("Korean", () => "hangul")
+    .with("English", () => null)
+    .exhaustive();
 
   // Don't show tip for English
   if (!characterType) {
-    return null
+    return null;
   }
 
   return (
-    <div className={`md:hidden flex items-center justify-between gap-2 p-3 mt-3 border rounded-lg bg-muted/30 ${className}`}>
+    <div
+      className={`md:hidden flex items-center justify-between gap-2 p-3 mt-3 border rounded-lg bg-muted/30 ${className}`}
+    >
       <p className="text-sm text-muted-foreground flex-1">
-        <span className="font-medium">Tip:</span> Enable the {language} keyboard on your device to easily type {characterType} characters
+        <span className="font-medium">Tip:</span> Enable the {language} keyboard
+        on your device to easily type {characterType} characters
       </p>
       <Button
         variant="ghost"
@@ -59,5 +62,5 @@ export function MobileKeyboardTip({
         <X className="h-4 w-4" />
       </Button>
     </div>
-  )
+  );
 }
