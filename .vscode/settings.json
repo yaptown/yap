@@ -1,4 +1,5 @@
 {
+  "deno.enable": false,
   "deno.enablePaths": [
     "supabase/functions"
   ],
@@ -19,8 +20,15 @@
     "net"
   ],
   "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "typescript.tsdk": "./yap-frontend/node_modules/typescript/lib",
+  "eslint.workingDirectories": [
+    "./yap-frontend"
+  ],
   "cSpell.words": [
     "adposition",
     "Anki",

@@ -302,7 +302,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
       if (accessToken && userInfo?.id) { deck.submit_push_notifications(accessToken, userInfo?.id) }
     }
     catch {
-      console.error("An error occured when trying to update the notification schedule");
+      console.error("An error occurred when trying to update the notification schedule");
     }
   }, [deck, userInfo?.id, accessToken])
 
@@ -329,7 +329,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
       const elapsed = Date.now() - timestamp;
 
       if (elapsed < CANT_LISTEN_DURATION_MS) {
-        console.log(`Can't listen mode active (${(elapsed / (1000 * 60)).toFixed(1)} minutes ago)`);
         return ['Listening'];
       } else {
         localStorage.removeItem('yap-cant-listen-timestamp');
@@ -350,7 +349,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
           const timeout = setTimeout(() => {
             setBannedChallengeTypes(banned => banned.filter(t => t !== 'Listening'));
             localStorage.removeItem('yap-cant-listen-timestamp');
-            console.log("Can't listen mode expired after 15 minutes");
           }, remaining);
           return () => clearTimeout(timeout);
         } else {
@@ -363,6 +361,8 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
 
   const reviewInfo = useMemo(() => {
     return deck.get_review_info(bannedChallengeTypes, Date.now())
+    // cardsBecameDue is intentionally included to trigger recalculation when cards become due
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deck, bannedChallengeTypes, cardsBecameDue]);
 
   const currentChallenge: Challenge<string> | undefined = reviewInfo.get_next_challenge(deck);
@@ -462,7 +462,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     // Play success sound in background for sentence completion (regardless of perfect or errors)
     playSoundEffect('success'); // Don't await - play in background
 
-    console.log('Transcription challenge completed:', grade)
     const event = deck.transcribe_sentence(grade);
     if (event) {
       weapon.add_deck_event(event);
@@ -478,7 +477,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     const timestamp = Date.now();
     localStorage.setItem('yap-cant-listen-timestamp', timestamp.toString());
     setBannedChallengeTypes(banned => banned.includes('Listening') ? banned : [...banned, 'Listening']);
-    console.log('Can\'t listen mode activated at:', new Date(timestamp).toISOString());
   }
 
   useEffect(() => {
