@@ -50,7 +50,9 @@ impl DailySimulationIterator {
                         TranslateComprehensibleSentence {
                             target_language, ..
                         },
-                    ) => self.deck.translate_sentence_perfect(target_language),
+                    ) => self
+                        .deck
+                        .translate_sentence_perfect(vec![], target_language),
                     Challenge::TranscribeComprehensibleSentence(
                         TranscribeComprehensibleSentence { parts, .. },
                     ) => {

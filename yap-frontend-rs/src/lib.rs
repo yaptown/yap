@@ -845,11 +845,16 @@ impl LanguagePack {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum SentenceReviewResult {
-    Perfect {},
+    Perfect {
+        #[serde(default)]
+        lexemes_needed_hint: BTreeSet<Lexeme<String>>,
+    },
     Wrong {
         submission: String,
         lexemes_remembered: BTreeSet<Lexeme<String>>,
         lexemes_forgotten: BTreeSet<Lexeme<String>>,
+        #[serde(default)]
+        lexemes_needed_hint: BTreeSet<Lexeme<String>>,
     },
 }
 
@@ -1251,7 +1256,10 @@ impl weapon::PartialAppState for Deck {
                 review:
                     SentenceReviewIndicator::TargetToNative {
                         challenge_sentence,
-                        result: SentenceReviewResult::Perfect {},
+                        result:
+                            SentenceReviewResult::Perfect {
+                                lexemes_needed_hint,
+                            },
                     },
             } => {
                 if let Some(challenge_sentence) =
@@ -1270,11 +1278,25 @@ impl weapon::PartialAppState for Deck {
                             .or_insert(0);
                         *sentence_review_count += 1;
 
-                        let lexemes = lexemes.clone();
-                        for lexeme in lexemes {
+                        let lexemes = lexemes.clone().into_iter().collect::<BTreeSet<_>>();
+                        let lexemes_needed_hint = lexemes_needed_hint
+                            .clone()
+                            .into_iter()
+                            .flat_map(|lexeme| {
+                                lexeme.get_interned(&deck.context.language_pack.rodeo)
+                            })
+                            .collect::<BTreeSet<_>>();
+                        for lexeme in lexemes.difference(&lexemes_needed_hint) {
+                            deck.log_review(
+                                CardIndicator::TargetLanguage { lexeme: *lexeme },
+                                Rating::Remembered,
+                                *timestamp,
+                            );
+                        }
+                        for lexeme in lexemes_needed_hint {
                             deck.log_review(
                                 CardIndicator::TargetLanguage { lexeme },
-                                Rating::Remembered,
+                                Rating::Again,
                                 *timestamp,
                             );
                         }
@@ -1290,10 +1312,11 @@ impl weapon::PartialAppState for Deck {
                                 submission: _,
                                 lexemes_remembered,
                                 lexemes_forgotten,
+                                lexemes_needed_hint,
                             },
                     },
             } => {
-                for lexeme in lexemes_remembered {
+                for lexeme in lexemes_remembered.difference(lexemes_needed_hint) {
                     if let Some(lexeme) = lexeme.get_interned(&deck.context.language_pack.rodeo) {
                         deck.log_review(
                             CardIndicator::TargetLanguage { lexeme },
@@ -1303,7 +1326,7 @@ impl weapon::PartialAppState for Deck {
                     }
                 }
 
-                for lexeme in lexemes_forgotten {
+                for lexeme in lexemes_forgotten.union(lexemes_needed_hint) {
                     if let Some(lexeme) = lexeme.get_interned(&deck.context.language_pack.rodeo) {
                         deck.log_review(
                             CardIndicator::TargetLanguage { lexeme },
@@ -1946,14 +1969,20 @@ impl Deck {
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn translate_sentence_perfect(&self, challenge_sentence: String) -> Option<DeckEvent> {
+    pub fn translate_sentence_perfect(
+        &self,
+        words_tapped: Vec<Lexeme<String>>,
+        challenge_sentence: String,
+    ) -> Option<DeckEvent> {
         Some(DeckEvent::Language(LanguageEvent {
             target_language: self.context.target_language,
             native_language: self.context.native_language,
             content: LanguageEventContent::TranslationChallenge {
                 review: SentenceReviewIndicator::TargetToNative {
                     challenge_sentence,
-                    result: SentenceReviewResult::Perfect {},
+                    result: SentenceReviewResult::Perfect {
+                        lexemes_needed_hint: words_tapped.into_iter().collect(),
+                    },
                 },
             },
         }))
@@ -1966,6 +1995,7 @@ impl Deck {
         submission: String,
         words_remembered: Vec<Lexeme<String>>,
         words_forgotten: Vec<Lexeme<String>>,
+        words_tapped: Vec<Lexeme<String>>,
     ) -> Option<DeckEvent> {
         Some(DeckEvent::Language(LanguageEvent {
             target_language: self.context.target_language,
@@ -1977,6 +2007,7 @@ impl Deck {
                         submission,
                         lexemes_remembered: words_remembered.into_iter().collect(),
                         lexemes_forgotten: words_forgotten.into_iter().collect(),
+                        lexemes_needed_hint: words_tapped.into_iter().collect(),
                     },
                 },
             },

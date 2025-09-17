@@ -420,7 +420,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
   }
 
-  const handleTranslationComplete = useCallback(async (grade: { wordStatuses: [Lexeme<string>, boolean | null][] } | { perfect: string | null }, submission: string) => {
+  const handleTranslationComplete = useCallback(async (grade: { wordStatuses: [Lexeme<string>, boolean | null][] } | { perfect: string | null }, wordsTapped: Lexeme<string>[], submission: string) => {
     if (!currentChallenge || !('TranslateComprehensibleSentence' in currentChallenge)) {
       console.error("handleTranslationComplete called with no current challenge or no TranslateComprehensibleSentence in current challenge");
       return
@@ -433,7 +433,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
 
     if ("perfect" in grade) {
       // Perfect sentence review
-      const event = deck.translate_sentence_perfect(sentence.target_language);
+      const event = deck.translate_sentence_perfect(wordsTapped, sentence.target_language);
       if (event) {
         weapon.add_deck_event(event);
       }
@@ -455,7 +455,8 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
         sentence.target_language,
         submission,
         wordsRemembered,
-        wordsForgotten
+        wordsForgotten,
+        wordsTapped
       );
       if (event) {
         weapon.add_deck_event(event);
