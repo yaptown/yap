@@ -16,7 +16,7 @@ import {
   motion,
   useMotionValue,
   useTransform,
-  useAnimation,
+  useAnimation as animationControls,
   type PanInfo,
 } from "framer-motion";
 import { AnimatedCard } from "./AnimatedCard";
@@ -212,7 +212,7 @@ export const Flashcard = function Flashcard({
   listeningPrefix,
 }: FlashcardProps) {
   const x = useMotionValue(0);
-  const controls = useAnimation();
+  const controls = animationControls();
   const [isDragging, setIsDragging] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 

@@ -29,6 +29,7 @@ export function AudioButton({
   size = "icon",
   variant = "ghost",
 }: AudioButtonProps) {
+  "use memo";
   const [isPlaying, setIsPlaying] = useState(false);
   const [needsAuth, setNeedsAuth] = useState(false);
   const isPlayingRef = useRef(isPlaying);

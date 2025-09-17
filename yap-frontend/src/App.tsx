@@ -49,7 +49,6 @@ function AppMain() {
   const updateIntervalMS = 60 * 5 * 1000; // every 5 minutes
   useEffect(() => {
     registerSW({ immediate: true })
-    console.log("service worker hopefully registered");
   }, [])
 
   useRegisterSW({
@@ -130,7 +129,6 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
 
         setSession(null)
         setSignedOut(true)
-        console.log("Signed out")
       }
     })
     
@@ -378,7 +376,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     // cardsBecameDue is intentionally included to trigger recalculation when cards become due
   }, [deck, bannedChallengeTypes, cardsBecameDue]);
 
-  const currentChallenge: Challenge<string> | undefined = reviewInfo.get_next_challenge(deck);
+  const currentChallenge: Challenge<string> | undefined = useMemo(() => reviewInfo.get_next_challenge(deck), [reviewInfo, deck]);
   const addCardOptionsRaw = deck.add_card_options();
   const addCardOptions: AddCardOptions = userInfo === undefined
     ? { smart_add: 0, manual_add: addCardOptionsRaw.manual_add.map(([count, card_type]) => [card_type == "TargetLanguage" ? count : 0, card_type] as [number, CardType]) }
@@ -422,7 +420,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
   }
 
-  const handleTranslationComplete = async (grade: { wordStatuses: [Lexeme<string>, boolean | null][] } | { perfect: string | null }, submission: string) => {
+  const handleTranslationComplete = useCallback(async (grade: { wordStatuses: [Lexeme<string>, boolean | null][] } | { perfect: string | null }, submission: string) => {
     if (!currentChallenge || !('TranslateComprehensibleSentence' in currentChallenge)) {
       console.error("handleTranslationComplete called with no current challenge or no TranslateComprehensibleSentence in current challenge");
       return
@@ -464,7 +462,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
       }
       setShowAnswer(false);
     }
-  }
+  }, [deck, currentChallenge, weapon])
 
   const handleTranscriptionComplete = useCallback((grade: /* comes from TranscriptionChallenge*/ PartGraded[]) => {
     if (!currentChallenge || !('TranscribeComprehensibleSentence' in currentChallenge)) {

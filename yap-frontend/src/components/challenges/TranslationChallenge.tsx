@@ -33,7 +33,7 @@ import {
   motion,
   useMotionValue,
   useTransform,
-  useAnimation,
+  useAnimation as animationControls,
   type PanInfo,
 } from "framer-motion";
 import { Check, X, MoreVertical } from "lucide-react";
@@ -86,7 +86,7 @@ export interface SwipeableWordHandle {
 const SwipeableWord = forwardRef<SwipeableWordHandle, SwipeableWordProps>(
   ({ lexeme, aliased, onSwipe, isSelected = false, status = null }, ref) => {
     const x = useMotionValue(0);
-    const controls = useAnimation();
+    const controls = animationControls();
 
     const background = useTransform(
       x,
@@ -323,37 +323,6 @@ function WordDefinition({
   );
 }
 
-function WordDefinitions({
-  wordStatuses,
-  definitions,
-}: {
-  wordStatuses: [Lexeme<string>, boolean | null][];
-  definitions: [Lexeme<string>, TargetToNativeWord[]][];
-}) {
-  const getDefinitionsForLexeme = (
-    lexeme: Lexeme<string>
-  ): TargetToNativeWord[] => {
-    const found = definitions.find(
-      ([l]) => JSON.stringify(l) === JSON.stringify(lexeme)
-    );
-    return found ? found[1] : [];
-  };
-
-  return (
-    <div>
-      {wordStatuses.map(
-        ([lexeme, status], index) =>
-          status === false && (
-            <WordDefinition
-              key={index}
-              lexeme={lexeme}
-              definitions={getDefinitionsForLexeme(lexeme)}
-            />
-          )
-      )}
-    </div>
-  );
-}
 
 function WordStatuses({
   selectedWordIndex,
@@ -496,6 +465,7 @@ export function TranslationChallenge({
   accessToken,
   targetLanguage,
 }: SentenceChallengeProps) {
+  "use memo";
   const [userTranslation, setUserTranslation] = useState("");
   const [correctTranslation, setCorrectTranslation] = useState(
     sentence.native_translations[0]
@@ -521,12 +491,8 @@ export function TranslationChallenge({
   const inputRef = useRef<HTMLInputElement>(null);
   const wordRefs = useRef<Map<number, SwipeableWordHandle>>(new Map());
 
-  // Reset tapped words and definition display when the sentence changes
-  useEffect(() => {
-    setTappedWords(new Set());
-    setShowDefinitionFor(null);
-    setCorrectTranslation(sentence.native_translations[0]);
-  }, [sentence.target_language, sentence.native_translations]);
+  // No need for useEffect to reset state - the component gets a new key when the challenge changes,
+  // causing React to unmount and remount it with fresh state
 
   const handleWordTap = (heteronym: Heteronym<string>) => {
     setTappedWords((prev) => new Set(prev).add(JSON.stringify(heteronym)));
@@ -535,13 +501,6 @@ export function TranslationChallenge({
     // This part will be handled more thoroughly in the grading logic modification step
   };
 
-  // Clear tapped words when moving to manual grading or if a perfect grade was achieved and then a word is tapped.
-  // This is to ensure that the yellow highlight is removed once the grading state is active.
-  useEffect(() => {
-    if (grade && "graded" in grade) {
-      setShowDefinitionFor(null); // Hide definition when grading starts or is complete
-    }
-  }, [grade]);
 
   const canContinue =
     grade &&
@@ -1014,13 +973,6 @@ export function TranslationChallenge({
                       selectedWordIndex={selectedWordIndex}
                       sentence={sentence}
                       setSelectedWordIndex={setSelectedWordIndex}
-                      definitions={
-                        sentence.unique_target_language_lexeme_definitions
-                      }
-                    />
-
-                    <WordDefinitions
-                      wordStatuses={grade.graded.wordStatuses}
                       definitions={
                         sentence.unique_target_language_lexeme_definitions
                       }
