@@ -106,26 +106,37 @@ function AppCheckBrowserSupport() {
 function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
   void weaponToken
   const [session, setSession] = useState<SupabaseSession | null>(null)
+  const [signedOut, setSignedOut] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
     })
-    supabase.auth.onAuthStateChange((event, session) => {
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       if (event === 'SIGNED_IN') {
         localStorage.setItem('yap-user-info', JSON.stringify({
           id: session?.user.id,
           email: session?.user.email
         }))
+        setSignedOut(false)
       } else if (event === 'SIGNED_OUT') {
         localStorage.removeItem('yap-user-info')
 
         if (window.OneSignal) {
           window.OneSignal.logout()
         }
+
+        setSession(null)
+        setSignedOut(true)
+        console.log("Signed out")
       }
     })
+    
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
   }, [])
 
   let userInfo: UserInfo | undefined;
@@ -135,7 +146,7 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
       id: session.user.id,
       email: session.user.email!
     }
-  } else {
+  } else if (!signedOut) {
     const cachedUserInfo = localStorage.getItem('yap-user-info')
     if (cachedUserInfo) {
       try {
@@ -612,7 +623,7 @@ function useDeck(): { type: "deck", nativeLanguage: Language, targetLanguage: La
     weapon.request_reviews()
   }, [weapon])
 
-  const getSnapshot = () => {
+  const getSnapshot = useCallback(() => {
     try {
       const num_reviews = weapon.get_stream_num_events("reviews")
       const num_deck_selection = weapon.get_stream_num_events("deck_selection")
@@ -623,9 +634,9 @@ function useDeck(): { type: "deck", nativeLanguage: Language, targetLanguage: La
     } catch {
       return null
     }
-  }
+  }, [weapon])
 
-  const subscribe = (callback: () => void) => {
+  const subscribe = useCallback((callback: () => void) => {
     const handle_reviews = weapon.subscribe_to_stream("reviews", () => { callback() })
     const handle_deck_selection = weapon.subscribe_to_stream("deck_selection", () => { callback() })
 
@@ -633,7 +644,7 @@ function useDeck(): { type: "deck", nativeLanguage: Language, targetLanguage: La
       weapon.unsubscribe(handle_reviews)
       weapon.unsubscribe(handle_deck_selection)
     }
-  }
+  }, [weapon])
 
   const numEvents = useSyncExternalStore(subscribe, getSnapshot)
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Home, Share, Plus, MoreVertical } from "lucide-react";
 
@@ -7,24 +7,22 @@ interface AddToHomeScreenProps {
 }
 
 export function AddToHomeScreen({ onDismiss }: AddToHomeScreenProps) {
-  const [platform, setPlatform] = useState<
-    "ios" | "android" | "desktop" | "unknown"
-  >("unknown");
   const [showInstructions, setShowInstructions] = useState(false);
 
-  useEffect(() => {
-    const userAgent = navigator.userAgent.toLowerCase();
-    if (/iphone|ipad|ipod/.test(userAgent)) {
-      setPlatform("ios");
-    } else if (/android/.test(userAgent)) {
-      setPlatform("android");
-    } else if (
-      /windows|mac|linux/.test(userAgent) &&
-      !/mobile/.test(userAgent)
-    ) {
-      setPlatform("desktop");
-    }
-  }, []);
+  const userAgent = navigator.userAgent.toLowerCase();
+  let platform: "ios" | "android" | "desktop" | "unknown";
+  if (/iphone|ipad|ipod/.test(userAgent)) {
+    platform = "ios";
+  } else if (/android/.test(userAgent)) {
+    platform = "android";
+  } else if (
+    /windows|mac|linux/.test(userAgent) &&
+    !/mobile/.test(userAgent)
+  ) {
+    platform = "desktop";
+  } else {
+    platform = "unknown";
+  }
 
   const handleShowInstructions = () => {
     setShowInstructions(true);

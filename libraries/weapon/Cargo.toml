@@ -6,6 +6,10 @@ description = "Cross-device sync engine"
 license = "MIT"
 authors = ["Andre Popovitch <andre@popovit.ch>"]
 
+[[bin]]
+name = "weapon-scope"
+path = "src/bin/weapon-scope.rs"
+
 [dependencies]
 chrono = { workspace = true, features = ["serde"] }
 im.workspace = true

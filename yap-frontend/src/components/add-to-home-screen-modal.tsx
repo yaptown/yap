@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,26 +17,21 @@ export function AddToHomeScreenModal({
   open,
   onOpenChange,
 }: AddToHomeScreenModalProps) {
-  const [platform, setPlatform] = useState<
-    "ios" | "android" | "desktop" | "unknown"
-  >("unknown");
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isSafari = /safari/.test(userAgent) && !/chrome/.test(userAgent);
+  const isMacOS = /macintosh|mac os x/.test(userAgent);
 
-  useEffect(() => {
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isSafari = /safari/.test(userAgent) && !/chrome/.test(userAgent);
-    const isMacOS = /macintosh|mac os x/.test(userAgent);
-
-    if (/iphone|ipad|ipod/.test(userAgent)) {
-      setPlatform("ios");
-    } else if (/android/.test(userAgent)) {
-      setPlatform("android");
-    } else if (isSafari && isMacOS) {
-      // Desktop Safari doesn't support PWA installation
-      setPlatform("ios"); // Show iOS-like instructions for Safari desktop
-    } else {
-      setPlatform("desktop");
-    }
-  }, []);
+  let platform: "ios" | "android" | "desktop" | "unknown";
+  if (/iphone|ipad|ipod/.test(userAgent)) {
+    platform = "ios";
+  } else if (/android/.test(userAgent)) {
+    platform = "android";
+  } else if (isSafari && isMacOS) {
+    // Desktop Safari doesn't support PWA installation
+    platform = "ios"; // Show iOS-like instructions for Safari desktop
+  } else {
+    platform = "desktop";
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -42,7 +42,6 @@ export function AudioButton({
   // Show toast when authentication is needed
   useEffect(() => {
     if (needsAuth && clickedRef.current) {
-      console.log("Showing toast");
       toast.error("Please log in to play audio", {
         description:
           "Audio playback requires an account to access the text-to-speech service.",
@@ -108,7 +107,7 @@ export function AudioButton({
     audioRequest.provider,
     autoPlay,
     handlePlayAudio,
-  ]); // Removed isPlaying and handlePlayAudio from deps
+  ]);
 
   return (
     <Button
@@ -116,7 +115,6 @@ export function AudioButton({
       size={size}
       className={className}
       onClick={() => {
-        console.log("Setting clickedRef.current to true");
         clickedRef.current = true;
         handlePlayAudio();
       }}

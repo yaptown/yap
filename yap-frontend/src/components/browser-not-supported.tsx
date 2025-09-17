@@ -35,8 +35,7 @@ export function BrowserNotSupported() {
                 Apple Users: Update Required
               </p>
               <p className="text-sm">
-                On Safari, Yap.Town requires iOS 26 or macOS 26. (These versions
-                are currently in beta.)
+                On Safari, Yap.Town requires iOS 26 or macOS 26. Please view your device settings to update.
               </p>
               <p className="text-sm ">
                 If you're on a desktop platform, you can also use Chrome or

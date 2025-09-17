@@ -113,7 +113,7 @@ impl EventStore<String, String> {
         };
 
         let stored_events = event_log_file
-            .read_records()
+            .read_records(&counts)
             .await
             .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?;
 
@@ -183,7 +183,7 @@ impl EventStore<String, String> {
 
         let mut records_to_append: Vec<EventLogRecord> = Vec::new();
 
-        for (device_id, _num_events) in device_events {
+        for (device_id, _num_events_in_memory) in device_events {
             let device_events_on_disk = device_counts_on_disk.get(&device_id).copied().unwrap_or(0);
 
             let events_to_write: Vec<Timestamped<serde_json::Value>> = {
@@ -272,7 +272,7 @@ impl EventStore<String, String> {
                 .await?;
             let source_log = stream_dir.get_event_log_file().await?;
             let events = source_log
-                .read_records()
+                .read_records(&BTreeMap::new())
                 .await
                 .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?;
 
@@ -314,10 +314,10 @@ pub struct EventLogFile {
 }
 
 #[derive(Debug, Clone)]
-struct EventLogRecord {
-    device_id: String,
-    within_device_events_index: usize,
-    event: Timestamped<serde_json::Value>,
+pub struct EventLogRecord {
+    pub device_id: String,
+    pub within_device_events_index: usize,
+    pub event: Timestamped<serde_json::Value>,
 }
 
 impl UserDirectory {
@@ -388,9 +388,12 @@ impl StreamDirectory {
 }
 
 impl EventLogFile {
-    async fn read_records(&self) -> Result<Vec<EventLogRecord>, persistent::Error> {
+    async fn read_records(
+        &self,
+        skip_counts: &BTreeMap<String, usize>,
+    ) -> Result<Vec<EventLogRecord>, persistent::Error> {
         let bytes = self.file_handle.read().await?;
-        Ok(parse_event_log_records(&bytes))
+        Ok(parse_event_log_records_with_skip(&bytes, skip_counts))
     }
 
     async fn append_records(&self, records: &[EventLogRecord]) -> Result<(), persistent::Error> {
@@ -658,7 +661,14 @@ fn event_log_records_iter(bytes: &[u8]) -> impl Iterator<Item = RawEventLogRecor
     }
 }
 
-fn parse_event_log_records(bytes: &[u8]) -> Vec<EventLogRecord> {
+pub fn parse_event_log_records(bytes: &[u8]) -> Vec<EventLogRecord> {
+    parse_event_log_records_with_skip(bytes, &BTreeMap::new())
+}
+
+fn parse_event_log_records_with_skip(
+    bytes: &[u8],
+    skip_counts: &BTreeMap<String, usize>,
+) -> Vec<EventLogRecord> {
     let mut records = Vec::new();
 
     for raw_record in event_log_records_iter(bytes) {
@@ -681,6 +691,13 @@ fn parse_event_log_records(bytes: &[u8]) -> Vec<EventLogRecord> {
             }
         };
 
+        // Skip events we already have
+        let skip_count = skip_counts.get(&device_id).copied().unwrap_or(0);
+        if within_device_index < skip_count {
+            // This event is already known, skip parsing the payload
+            continue;
+        }
+
         match serde_json::from_slice::<Timestamped<serde_json::Value>>(raw_record.payload_bytes) {
             Ok(event) => records.push(EventLogRecord {
                 device_id,
@@ -696,10 +713,26 @@ fn parse_event_log_records(bytes: &[u8]) -> Vec<EventLogRecord> {
     records
 }
 
-fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
+pub fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
+    // Start performance measurement
+    #[cfg(target_arch = "wasm32")]
+    let start_time = web_sys::window()
+        .and_then(|w| w.performance())
+        .map(|p| p.now());
+
+    #[cfg(target_arch = "wasm32")]
+    let bytes_len = bytes.len();
+
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+    #[cfg(target_arch = "wasm32")]
+    let mut record_count = 0usize;
 
     for raw_record in event_log_records_iter(bytes) {
+        #[cfg(target_arch = "wasm32")]
+        {
+            record_count += 1;
+        }
+
         let within_device_index = match usize::try_from(raw_record.within_device_events_index) {
             Ok(index) => index,
             Err(_) => {
@@ -728,6 +761,27 @@ fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
             panic!("OPFS device indices not contiguous");
         }
         *entry += 1;
+    }
+
+    // Log performance metrics
+    #[cfg(target_arch = "wasm32")]
+    if let Some(start) = start_time {
+        if let Some(perf) = web_sys::window().and_then(|w| w.performance()) {
+            let duration = perf.now() - start;
+            let throughput = if duration > 0.0 {
+                bytes_len as f64 / duration / 1024.0 // KB/ms
+            } else {
+                0.0
+            };
+            log::info!(
+                "parse_device_counts: processed {} records from {} bytes in {:.2}ms ({:.2} KB/ms, {:.2} records/ms)",
+                record_count,
+                bytes_len,
+                duration,
+                throughput,
+                record_count as f64 / duration
+            );
+        }
     }
 
     counts
