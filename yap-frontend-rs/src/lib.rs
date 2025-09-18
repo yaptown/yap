@@ -1481,7 +1481,7 @@ impl weapon::PartialAppState for Deck {
 
         let listening_regression = if listening_points.len() >= 2 {
             listening_points.extend_from_slice(&bias_points);
-            IsotonicRegression::new_descending(&listening_points)
+            IsotonicRegression::new_ascending(&listening_points)
                 .inspect_err(|e| log::error!("regression error: {e:?}"))
                 .ok()
         } else {
