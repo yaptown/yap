@@ -293,8 +293,6 @@ interface ReviewProps {
   targetLanguage: Language
 }
 
-
-
 function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   const weapon = useWeapon()
 

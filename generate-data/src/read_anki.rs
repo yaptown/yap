@@ -12,7 +12,7 @@ use zip::ZipArchive;
 #[derive(serde::Serialize, serde::Deserialize, Hash, Eq, PartialEq)]
 pub struct CardOutput {
     pub target: Vec<String>,
-    pub native: String,
+    pub english: String,
 }
 
 #[derive(Debug)]
@@ -416,7 +416,7 @@ pub fn get_all_cards(source_data_path: &Path) -> IndexSet<CardOutput> {
                                                 .split("\n")
                                                 .map(|s| s.to_string())
                                                 .collect(),
-                                            native: card.answer.trim().to_string(),
+                                            english: card.answer.trim().to_string(),
                                         };
 
                                         found_cards.push(card_output);

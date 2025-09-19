@@ -29,6 +29,10 @@ MODEL_MAPPING = {
     "kor": {
         "small": "ko_core_news_sm",
         "large": "ko_core_news_lg"
+    },
+    "eng": {
+        "small": "en_core_web_sm",
+        "large": "en_core_web_trf"
     }
 }
 

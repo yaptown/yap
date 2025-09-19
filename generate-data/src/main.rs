@@ -124,7 +124,7 @@ async fn main() -> anyhow::Result<()> {
             let anki_sentences = all_cards.iter().flat_map(|card| {
                 card.target.iter().map(|target_language_sentence| {
                     let native_sentence = if use_native_card_side {
-                        let trimmed_native = card.native.trim();
+                        let trimmed_native = card.english.trim();
                         if trimmed_native.is_empty() {
                             None
                         } else {
