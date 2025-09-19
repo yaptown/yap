@@ -3,16 +3,35 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, Check, ChevronsUpDown } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import type { Language } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { useWeapon } from "@/weapon";
 import { get_available_courses } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
+
+type LanguageSelectionState =
+  | { stage: "selectingNative" }
+  | { stage: "selectingTarget"; nativeLanguage: Language }
+  | { stage: "onboarding"; nativeLanguage: Language; targetLanguage: Language };
 
 interface LanguageSelectorProps {
   onLanguagesConfirmed: (native: Language, target: Language) => void;
@@ -25,10 +44,12 @@ export function LanguageSelector({
   skipOnboarding,
   currentTargetLanguage,
 }: LanguageSelectorProps) {
-  const [nativeLanguage, setNativeLanguage] = useState<Language | null>(null);
-  const [targetLanguage, setTargetLanguage] = useState<Language | null>(null);
+  const [selectionState, setSelectionState] = useState<LanguageSelectionState>({
+    stage: "selectingNative",
+  });
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [comboboxOpen, setComboboxOpen] = useState(false);
   const weapon = useWeapon();
 
   // Get available courses
@@ -41,12 +62,50 @@ export function LanguageSelector({
   });
   const nativeLanguages = Array.from(uniqueNative);
 
+  // Detect browser language on mount and auto-select if supported
+  useEffect(() => {
+    // Only run on initial mount
+    if (selectionState.stage !== "selectingNative") return;
+
+    // Get browser language
+    const browserLang = navigator.language || navigator.languages?.[0];
+
+    // Map browser language codes to our Language types
+    const languageMap: Record<string, Language> = {
+      en: "English",
+      "en-US": "English",
+      "en-GB": "English",
+      fr: "French",
+      "fr-FR": "French",
+      es: "Spanish",
+      "es-ES": "Spanish",
+      ko: "Korean",
+      "ko-KR": "Korean",
+    };
+
+    // Check if browser language is supported
+    const detectedLang = browserLang
+      ? languageMap[browserLang] || languageMap[browserLang.split("-")[0]]
+      : null;
+
+    if (detectedLang && nativeLanguages.includes(detectedLang)) {
+      setSelectionState({
+        stage: "selectingTarget",
+        nativeLanguage: detectedLang,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
+
   // Get target languages available for selected native language
-  const targetLanguages = !nativeLanguage
-    ? []
-    : availableCourses
-        .filter((course) => course.native_language === nativeLanguage)
-        .map((course) => course.target_language);
+  const targetLanguages =
+    selectionState.stage === "selectingNative"
+      ? []
+      : availableCourses
+          .filter(
+            (course) => course.native_language === selectionState.nativeLanguage
+          )
+          .map((course) => course.target_language);
 
   useEffect(() => {
     if (!api) {
@@ -130,10 +189,10 @@ export function LanguageSelector({
   };
 
   useEffect(() => {
-    if (targetLanguage) {
-      weapon.cache_language_pack(targetLanguage);
+    if (selectionState.stage === "onboarding") {
+      weapon.cache_language_pack(selectionState.targetLanguage);
     }
-  }, [targetLanguage, weapon]);
+  }, [selectionState, weapon]);
 
   const introScreens = skipOnboarding
     ? []
@@ -167,7 +226,8 @@ export function LanguageSelector({
   return (
     <div className="flex items-center justify-center mt-8">
       <AnimatePresence mode="wait">
-        {!nativeLanguage ? (
+        {selectionState.stage === "selectingNative" &&
+        nativeLanguages.length > 1 ? (
           // Step 1: Select native language
           <motion.div
             key="native-selection"
@@ -198,7 +258,10 @@ export function LanguageSelector({
                   <Card
                     className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
                     onClick={() => {
-                      setNativeLanguage(lang);
+                      setSelectionState({
+                        stage: "selectingTarget",
+                        nativeLanguage: lang,
+                      });
                     }}
                   >
                     <div
@@ -219,7 +282,7 @@ export function LanguageSelector({
               ))}
             </div>
           </motion.div>
-        ) : !targetLanguage ? (
+        ) : selectionState.stage === "selectingTarget" ? (
           // Step 2: Select target language
           <motion.div
             key="target-selection"
@@ -235,6 +298,65 @@ export function LanguageSelector({
               >
                 What do you want to learn?
               </h1>
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <span className="text-lg text-muted-foreground">
+                  Native language:
+                </span>
+                <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={comboboxOpen}
+                      className="w-[180px] justify-between"
+                    >
+                      <>
+                        <span className="mr-2">
+                          {languageFlags[selectionState.nativeLanguage]}
+                        </span>
+                        {selectionState.nativeLanguage}
+                      </>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[180px] p-0">
+                    <Command>
+                      <CommandInput placeholder="Search language..." />
+                      <CommandList>
+                        <CommandEmpty>No language found.</CommandEmpty>
+                        <CommandGroup>
+                          {nativeLanguages.map((lang) => (
+                            <CommandItem
+                              key={lang}
+                              value={lang}
+                              onSelect={() => {
+                                setSelectionState({
+                                  stage: "selectingTarget",
+                                  nativeLanguage: lang,
+                                });
+                                setComboboxOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectionState.nativeLanguage === lang
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              <span className="mr-2">
+                                {languageFlags[lang]}
+                              </span>
+                              {lang}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 w-full">
@@ -247,7 +369,18 @@ export function LanguageSelector({
                   <Card
                     className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
                     onClick={() => {
-                      setTargetLanguage(lang);
+                      if (skipOnboarding) {
+                        onLanguagesConfirmed(
+                          selectionState.nativeLanguage,
+                          lang
+                        );
+                      } else {
+                        setSelectionState({
+                          stage: "onboarding",
+                          nativeLanguage: selectionState.nativeLanguage,
+                          targetLanguage: lang,
+                        });
+                      }
                     }}
                   >
                     {isBeta(lang) && (
@@ -270,27 +403,13 @@ export function LanguageSelector({
               ))}
             </div>
 
-            <div className="flex gap-4 justify-center mt-6">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  setNativeLanguage(null);
-                }}
-                className="min-w-[120px] flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-            </div>
-
             <div className="text-center mb-12">
               <p className="text-xl">
                 (Yap.Town is great for beginner and intermediate students.)
               </p>
             </div>
           </motion.div>
-        ) : targetLanguage ? (
+        ) : selectionState.stage === "onboarding" ? (
           // Step 3: Onboarding screens (if not skipping)
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -330,7 +449,11 @@ export function LanguageSelector({
                   <Card
                     className="p-12"
                     style={{
-                      background: `linear-gradient(135deg, ${languageColors[targetLanguage]?.primary}10, ${languageColors[targetLanguage]?.accent}10)`,
+                      background: `linear-gradient(135deg, ${
+                        languageColors[selectionState.targetLanguage]?.primary
+                      }10, ${
+                        languageColors[selectionState.targetLanguage]?.accent
+                      }10)`,
                     }}
                   >
                     <div className="text-center">
@@ -344,12 +467,16 @@ export function LanguageSelector({
                         }}
                         className="text-9xl mb-6"
                       >
-                        {languageFlags[targetLanguage]}
+                        {languageFlags[selectionState.targetLanguage]}
                       </motion.div>
                       <h2 className="text-3xl font-bold mb-6">
-                        {targetLanguage === currentTargetLanguage
-                          ? `Ready to continue learning ${nativeLanguageNames[targetLanguage]}?`
-                          : `Ready to start learning ${nativeLanguageNames[targetLanguage]}?`}
+                        {selectionState.targetLanguage === currentTargetLanguage
+                          ? `Ready to continue learning ${
+                              nativeLanguageNames[selectionState.targetLanguage]
+                            }?`
+                          : `Ready to start learning ${
+                              nativeLanguageNames[selectionState.targetLanguage]
+                            }?`}
                       </h2>
                     </div>
                   </Card>
@@ -362,7 +489,10 @@ export function LanguageSelector({
                 size="lg"
                 onClick={() => {
                   if (current === 0) {
-                    setTargetLanguage(null);
+                    setSelectionState({
+                      stage: "selectingTarget",
+                      nativeLanguage: selectionState.nativeLanguage,
+                    });
                   } else {
                     api?.scrollPrev();
                   }
@@ -375,7 +505,10 @@ export function LanguageSelector({
                 size="lg"
                 onClick={() => {
                   if (current === introScreens.length) {
-                    onLanguagesConfirmed(nativeLanguage, targetLanguage);
+                    onLanguagesConfirmed(
+                      selectionState.nativeLanguage,
+                      selectionState.targetLanguage
+                    );
                   } else {
                     api?.scrollNext();
                   }
@@ -388,13 +521,17 @@ export function LanguageSelector({
                 style={{
                   ...(current === introScreens.length
                     ? {
-                        background: `linear-gradient(135deg, ${languageColors[targetLanguage]?.primary}, ${languageColors[targetLanguage]?.accent})`,
+                        background: `linear-gradient(135deg, ${
+                          languageColors[selectionState.targetLanguage]?.primary
+                        }, ${
+                          languageColors[selectionState.targetLanguage]?.accent
+                        })`,
                       }
                     : {}),
                 }}
               >
                 {current === introScreens.length
-                  ? languageConfirmTexts[targetLanguage]
+                  ? languageConfirmTexts[selectionState.targetLanguage]
                   : "Next"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
