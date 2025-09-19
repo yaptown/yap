@@ -1247,8 +1247,20 @@ impl std::fmt::Display for Language {
     }
 }
 
-#[derive(Copy, Clone, Debug, serde::Serialize, serde::Deserialize, tsify::Tsify)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    tsify::Tsify,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(rename_all = "camelCase")]
 pub struct Course {
     pub native_language: Language,
     pub target_language: Language,
@@ -1264,6 +1276,10 @@ pub const COURSES: &[Course] = &[
     Course {
         native_language: Language::English,
         target_language: Language::French,
+    },
+    Course {
+        native_language: Language::French,
+        target_language: Language::English,
     },
     Course {
         native_language: Language::English,

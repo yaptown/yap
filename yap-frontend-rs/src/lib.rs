@@ -14,12 +14,12 @@ use deck_selection::DeckSelectionEvent;
 use futures::StreamExt;
 use imdex_map::IndexMap;
 use language_utils::ConsolidatedLanguageDataWithCapacity;
-use language_utils::Language;
 use language_utils::Literal;
 use language_utils::TtsProvider;
 use language_utils::TtsRequest;
 use language_utils::autograde;
 use language_utils::transcription_challenge;
+use language_utils::{Course, Language};
 use language_utils::{DictionaryEntry, Heteronym, Lexeme, PhrasebookEntry, TargetToNativeWord};
 use lasso::Spur;
 use opfs::persistent::{self};
@@ -54,7 +54,7 @@ pub struct Weapon {
     device_id: String,
 
     // not this ofc
-    language_pack: RefCell<BTreeMap<Language, Arc<LanguagePack>>>,
+    language_pack: RefCell<BTreeMap<Course, Arc<LanguagePack>>>,
     directories: Directories,
 }
 
@@ -194,17 +194,17 @@ impl Weapon {
             })
     }
 
-    pub async fn get_deck_state(&self, target_language: Language) -> Result<Deck, JsValue> {
+    pub async fn get_deck_state(&self, course: Course) -> Result<Deck, JsValue> {
         let language_pack = self
-            .get_language_pack(target_language)
+            .get_language_pack(course)
             .await
             .map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
 
-        // Get native language from deck selection, default to English if not set
+        let target_language = course.target_language;
         let native_language = self
             .get_deck_selection_state()
             .and_then(|s| s.native_language)
-            .unwrap_or(Language::English);
+            .unwrap_or(course.native_language);
 
         let initial_state = DeckState::new(language_pack, target_language, native_language);
         let store = self.store.borrow_mut();
@@ -465,33 +465,32 @@ impl Weapon {
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub async fn cache_language_pack(&self, language: Language) {
-        let _ = self.get_language_pack(language).await;
+    pub async fn cache_language_pack(&self, course: Course) {
+        let _ = self.get_language_pack(course).await;
     }
 }
 
 impl Weapon {
     pub(crate) async fn get_language_pack(
         &self,
-        language: Language,
+        course: Course,
     ) -> Result<Arc<LanguagePack>, language_pack::LanguageDataError> {
-        let language_pack = if let Some(language_pack) = self.language_pack.borrow().get(&language)
-        {
+        let language_pack = if let Some(language_pack) = self.language_pack.borrow().get(&course) {
             language_pack.clone()
         } else {
             let language_pack = language_pack::get_language_pack(
                 &self.directories.data_directory_handle,
-                language,
+                course,
                 &|_| {},
             )
             .await?;
             self.language_pack
                 .borrow_mut()
-                .insert(language, Arc::new(language_pack));
+                .insert(course, Arc::new(language_pack));
 
             self.language_pack
                 .borrow()
-                .get(&language)
+                .get(&course)
                 .expect("language pack must exist as we just added it")
                 .clone()
         };

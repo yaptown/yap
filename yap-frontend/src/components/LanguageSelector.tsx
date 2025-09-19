@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -53,12 +53,12 @@ export function LanguageSelector({
   const weapon = useWeapon();
 
   // Get available courses
-  const availableCourses = get_available_courses();
+  const availableCourses = useMemo(() => get_available_courses(), []);
 
   // Get unique native languages
   const uniqueNative = new Set<Language>();
   availableCourses.forEach((course) => {
-    uniqueNative.add(course.native_language);
+    uniqueNative.add(course.nativeLanguage);
   });
   const nativeLanguages = Array.from(uniqueNative);
 
@@ -103,9 +103,9 @@ export function LanguageSelector({
       ? []
       : availableCourses
           .filter(
-            (course) => course.native_language === selectionState.nativeLanguage
+            (course) => course.nativeLanguage === selectionState.nativeLanguage
           )
-          .map((course) => course.target_language);
+          .map((course) => course.targetLanguage);
 
   useEffect(() => {
     if (!api) {
@@ -190,7 +190,10 @@ export function LanguageSelector({
 
   useEffect(() => {
     if (selectionState.stage === "onboarding") {
-      weapon.cache_language_pack(selectionState.targetLanguage);
+      weapon.cache_language_pack({
+        nativeLanguage: selectionState.nativeLanguage,
+        targetLanguage: selectionState.targetLanguage,
+      });
     }
   }, [selectionState, weapon]);
 
@@ -226,8 +229,7 @@ export function LanguageSelector({
   return (
     <div className="flex items-center justify-center mt-8">
       <AnimatePresence mode="wait">
-        {selectionState.stage === "selectingNative" &&
-        nativeLanguages.length > 1 ? (
+        {selectionState.stage === "selectingNative" ? (
           // Step 1: Select native language
           <motion.div
             key="native-selection"

@@ -1,35 +1,76 @@
 use futures::StreamExt as _;
 use language_utils::{
-    ArchivedConsolidatedLanguageDataWithCapacity, ConsolidatedLanguageDataWithCapacity, Language,
+    ArchivedConsolidatedLanguageDataWithCapacity, ConsolidatedLanguageDataWithCapacity, Course,
+    Language,
 };
 use opfs::{
     DirectoryHandle as _, FileHandle as _, WritableFileStream as _,
     persistent::{self, DirectoryHandle},
 };
+use std::{collections::BTreeMap, sync::LazyLock};
 use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 
 use crate::{LanguagePack, utils::hit_ai_server};
 
+static LANGUAGE_DATA_HASHES: LazyLock<BTreeMap<Course, &'static str>> = LazyLock::new(|| {
+    let mut hashes = BTreeMap::new();
+    hashes.insert(
+        Course {
+            native_language: Language::English,
+            target_language: Language::French,
+        },
+        include_str!("../../out/fra_for_eng/language_data.hash"),
+    );
+    hashes.insert(
+        Course {
+            native_language: Language::English,
+            target_language: Language::Spanish,
+        },
+        include_str!("../../out/spa_for_eng/language_data.hash"),
+    );
+    hashes.insert(
+        Course {
+            native_language: Language::English,
+            target_language: Language::Korean,
+        },
+        include_str!("../../out/kor_for_eng/language_data.hash"),
+    );
+    hashes
+});
+
+fn language_data_hash_for_course(course: Course) -> Option<&'static str> {
+    LANGUAGE_DATA_HASHES.get(&course).copied()
+}
+
+fn course_directory_slug(course: Course) -> String {
+    format!(
+        "{}_for_{}",
+        course.target_language.iso_639_3(),
+        course.native_language.iso_639_3()
+    )
+}
+
 pub(crate) async fn get_language_pack(
     data_directory_handle: &DirectoryHandle,
-    language: Language,
+    course: Course,
     set_loading_state: &impl Fn(&str),
 ) -> Result<LanguagePack, LanguageDataError> {
+    let course_directory = course_directory_slug(course);
     let mut language_directory = data_directory_handle
         .get_directory_handle_with_options(
-            language.iso_639_3(),
+            &course_directory,
             &opfs::GetDirectoryHandleOptions { create: true },
         )
         .await
         .map_err(LanguageDataError::Persistent)?;
 
-    let language_data_hash = match language {
-        Language::French => include_str!("../../out/fra_for_eng/language_data.hash"),
-        Language::Spanish => include_str!("../../out/spa_for_eng/language_data.hash"),
-        Language::Korean => include_str!("../../out/kor_for_eng/language_data.hash"),
-        Language::English => panic!("Unsupported language: {language:?}"),
-    };
-    log::info!("expected language_data_hash for {language:?}: {language_data_hash}");
+    let language_data_hash = language_data_hash_for_course(course)
+        .ok_or(LanguageDataError::UnsupportedCourse(course))?;
+    log::info!(
+        "expected language_data_hash for {:?}->{:?}: {language_data_hash}",
+        course.native_language,
+        course.target_language
+    );
     let language_data_hash_file = language_directory
         .get_file_handle_with_options(
             &format!("language_data_{language_data_hash}.rkyv"),
@@ -52,7 +93,7 @@ pub(crate) async fn get_language_pack(
             );
             download_and_cache_language_data(
                 &mut language_directory,
-                language,
+                course,
                 language_data_hash,
                 set_loading_state,
             )
@@ -64,7 +105,7 @@ pub(crate) async fn get_language_pack(
     } else {
         download_and_cache_language_data(
             &mut language_directory,
-            language,
+            course,
             language_data_hash,
             set_loading_state,
         )
@@ -89,7 +130,7 @@ pub(crate) async fn get_language_pack(
             log::error!("Error when accessing language data: {e}\nre-downloading language data");
             let bytes = download_and_cache_language_data(
                 &mut language_directory,
-                language,
+                course,
                 language_data_hash,
                 set_loading_state,
             )
@@ -126,23 +167,29 @@ pub(crate) enum LanguageDataError {
 
     #[error("AI server error:")]
     AiServer(#[source] fetch_happen::Error),
+
+    #[error("Unsupported course: {0:?}")]
+    UnsupportedCourse(Course),
 }
 
 async fn download_and_cache_language_data(
     language_directory_handle: &mut DirectoryHandle,
-    language: Language,
+    course: Course,
     language_data_hash: &'static str,
     set_loading_state: &impl Fn(&str),
 ) -> Result<Vec<u8>, LanguageDataError> {
-    set_loading_state(&format!("Downloading {language:?} language data"));
-    log::info!("Language data cache miss for {language:?}, fetching from server...");
-    let response = hit_ai_server(
-        &format!("/language-data/{}", language.iso_639_3()),
-        (),
-        None,
-    )
-    .await
-    .map_err(LanguageDataError::AiServer)?;
+    set_loading_state(&format!(
+        "Downloading {:?}->{:?} language data",
+        course.native_language, course.target_language
+    ));
+    log::info!(
+        "Language data cache miss for {:?}->{:?}, fetching from server...",
+        course.native_language,
+        course.target_language
+    );
+    let response = hit_ai_server("/language-data", course, None)
+        .await
+        .map_err(LanguageDataError::AiServer)?;
 
     if !response.ok() {
         log::info!("Server returned error: {}", response.status());
