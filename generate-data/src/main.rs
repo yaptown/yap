@@ -157,23 +157,22 @@ async fn main() -> anyhow::Result<()> {
             let raw_english_sentences = if course.target_language == Language::English {
                 let raw_sentences_file = source_data_path.join("sentence-sources/raw/list.jsonl");
                 if raw_sentences_file.exists() {
-                    println!("Reading raw English sentences from {:?}", raw_sentences_file);
+                    println!("Reading raw English sentences from {raw_sentences_file:?}");
                     let file = File::open(&raw_sentences_file)
                         .context("Failed to open raw English sentences file")?;
                     let reader = BufReader::new(file);
-                    
+
                     // Use IndexSet to deduplicate while preserving order
                     let sentences: IndexSet<String> = reader
                         .lines()
                         .filter_map(|line| {
-                            line.ok().and_then(|l| {
-                                serde_json::from_str::<String>(&l).ok()
-                            })
+                            line.ok()
+                                .and_then(|l| serde_json::from_str::<String>(&l).ok())
                         })
                         .map(|s| s.trim().to_string())
                         .filter(|s| !s.is_empty())
                         .collect();
-                    
+
                     println!("Loaded {} unique raw English sentences", sentences.len());
                     sentences.into_iter().map(|s| (s, None)).collect::<Vec<_>>()
                 } else {

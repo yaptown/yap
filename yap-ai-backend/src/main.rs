@@ -1,6 +1,6 @@
 use axum::{
     Router,
-    extract::{Json, Path},
+    extract::Json,
     http::{StatusCode, header},
     response::Response,
     routing::{get, post},
@@ -11,9 +11,9 @@ use axum_extra::{
 };
 use base64::Engine;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
-use language_utils::{Language, TtsRequest, autograde, transcription_challenge};
+use language_utils::{Course, Language, TtsRequest, autograde, transcription_challenge};
 use serde::{Deserialize, Serialize};
-use std::sync::LazyLock;
+use std::{collections::BTreeMap, sync::LazyLock};
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
 use tysm::chat_completions::ChatClient;
@@ -24,10 +24,36 @@ static CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("o3").unwrap().with_url(my_api)
 });
 
+fn language_data_for_course(course: &Course) -> Option<&'static [u8]> {
+    LANGUAGE_DATA.get(course).copied()
+}
+
 // Include the language data rkyv file at compile time
-static FRENCH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/fra_for_eng/language_data.rkyv");
-static SPANISH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/spa_for_eng/language_data.rkyv");
-static KOREAN_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/kor_for_eng/language_data.rkyv");
+static LANGUAGE_DATA: LazyLock<BTreeMap<Course, &'static [u8]>> = LazyLock::new(|| {
+    let mut data = BTreeMap::new();
+    data.insert(
+        Course {
+            native_language: Language::English,
+            target_language: Language::French,
+        },
+        include_bytes!("../../out/fra_for_eng/language_data.rkyv") as &'static [u8],
+    );
+    data.insert(
+        Course {
+            native_language: Language::English,
+            target_language: Language::Spanish,
+        },
+        include_bytes!("../../out/spa_for_eng/language_data.rkyv") as &'static [u8],
+    );
+    data.insert(
+        Course {
+            native_language: Language::English,
+            target_language: Language::Korean,
+        },
+        include_bytes!("../../out/kor_for_eng/language_data.rkyv") as &'static [u8],
+    );
+    data
+});
 
 #[derive(Serialize)]
 struct ElevenLabsRequest {
@@ -516,27 +542,13 @@ Words that need grading:
     Ok(Json(grade))
 }
 
-async fn serve_language_data(Path(language): Path<String>) -> Response {
-    if language == "fra" {
+async fn serve_language_data(Json(course): Json<Course>) -> Response {
+    if let Some(language_data) = language_data_for_course(&course) {
         Response::builder()
             .status(StatusCode::OK)
             .header(header::CONTENT_TYPE, "application/octet-stream")
-            .header(header::CONTENT_LENGTH, FRENCH_LANGUAGE_DATA.len())
-            .body(axum::body::Body::from(FRENCH_LANGUAGE_DATA))
-            .unwrap()
-    } else if language == "spa" {
-        Response::builder()
-            .status(StatusCode::OK)
-            .header(header::CONTENT_TYPE, "application/octet-stream")
-            .header(header::CONTENT_LENGTH, SPANISH_LANGUAGE_DATA.len())
-            .body(axum::body::Body::from(SPANISH_LANGUAGE_DATA))
-            .unwrap()
-    } else if language == "kor" {
-        Response::builder()
-            .status(StatusCode::OK)
-            .header(header::CONTENT_TYPE, "application/octet-stream")
-            .header(header::CONTENT_LENGTH, KOREAN_LANGUAGE_DATA.len())
-            .body(axum::body::Body::from(KOREAN_LANGUAGE_DATA))
+            .header(header::CONTENT_LENGTH, language_data.len())
+            .body(axum::body::Body::from(language_data))
             .unwrap()
     } else {
         Response::builder()
@@ -562,7 +574,7 @@ async fn main() {
         .route("/tts/google", post(google_text_to_speech))
         .route("/autograde-translation", post(autograde_translation))
         .route("/autograde-transcription", post(autograde_transcription))
-        .route("/language-data/{language}", post(serve_language_data))
+        .route("/language-data", post(serve_language_data))
         .layer(CompressionLayer::new())
         .layer(cors);
 
