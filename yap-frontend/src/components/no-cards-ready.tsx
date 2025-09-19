@@ -151,7 +151,9 @@ export function NoCardsReady({
         </div>
       </AnimatedCard>
 
-      {showEngagementPrompts && <EngagementPrompts />}
+      {showEngagementPrompts && (
+        <EngagementPrompts language={targetLanguage} />
+      )}
     </div>
   );
 }

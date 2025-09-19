@@ -5,8 +5,14 @@ import { useOneSignalNotifications } from "@/hooks/use-onesignal-notifications";
 import { useIsInstalled } from "@/hooks/use-is-installed";
 import { AddToHomeScreenModal } from "@/components/add-to-home-screen-modal";
 import { AnimatedCard } from "./AnimatedCard";
+import { match } from "ts-pattern";
+import type { Language } from "../../../yap-frontend-rs/pkg";
 
-export function EngagementPrompts() {
+interface EngagementPromptsProps {
+  language: Language;
+}
+
+export function EngagementPrompts({ language }: EngagementPromptsProps) {
   const {
     isSupported,
     isSubscribed,
@@ -87,13 +93,18 @@ export function EngagementPrompts() {
     return null;
   }
 
+  const headingText = match(language)
+    .with("French", () => "Stay on track with your French learning")
+    .with("Spanish", () => "Stay on track with your Spanish learning")
+    .with("Korean", () => "Stay on track with your Korean learning")
+    .with("English", () => "Stay on track with your English learning")
+    .exhaustive();
+
   return (
     <AnimatedCard className="bg-card text-card-foreground rounded-lg p-6">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="h-5 w-5 text-primary" />
-        <h3 className="font-semibold">
-          Stay on track with your French learning
-        </h3>
+        <h3 className="font-semibold">{headingText}</h3>
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">
