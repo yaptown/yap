@@ -226,8 +226,7 @@ export function LanguageSelector({
   return (
     <div className="flex items-center justify-center mt-8">
       <AnimatePresence mode="wait">
-        {selectionState.stage === "selectingNative" &&
-        nativeLanguages.length > 1 ? (
+        {selectionState.stage === "selectingNative" ? (
           // Step 1: Select native language
           <motion.div
             key="native-selection"
