@@ -606,6 +606,79 @@ async fn main() -> anyhow::Result<()> {
             }
         }
 
+        // Generate pronunciation sounds and guides
+        let sounds_file = target_language_dir.join("pronunciation_sounds.jsonl");
+        let guides_file = native_specific_dir.join("pronunciation_guides.jsonl");
+
+        // Generate or load language sounds
+        let sounds = if sounds_file.exists() {
+            println!("Loading existing pronunciation sounds...");
+            let file = File::open(&sounds_file)?;
+            let reader = BufReader::new(file);
+            let line = reader
+                .lines()
+                .next()
+                .ok_or_else(|| anyhow::anyhow!("Empty sounds file"))??;
+            serde_json::from_str(&line)?
+        } else {
+            println!(
+                "Generating pronunciation sounds for {:?}...",
+                course.target_language
+            );
+            let sounds = generate_data::pronunciation_patterns::generate_language_sounds(
+                course.target_language,
+            )
+            .await?;
+
+            // Save to file
+            let mut file = File::create(&sounds_file)?;
+            let json = serde_json::to_string(&sounds)?;
+            writeln!(file, "{json}")?;
+            println!("Sounds saved to: {}", sounds_file.display());
+
+            sounds
+        };
+
+        // Generate or load pronunciation guides
+        let guides = if guides_file.exists() {
+            println!("Loading existing pronunciation guides...");
+            let file = File::open(&guides_file)?;
+            let reader = BufReader::new(file);
+            reader
+                .lines()
+                .map(|line| {
+                    let line = line?;
+                    Ok(serde_json::from_str(&line)?)
+                })
+                .collect::<Result<Vec<_>, anyhow::Error>>()?
+        } else {
+            println!("Generating pronunciation guides...");
+            let guides_with_thoughts =
+                generate_data::pronunciation_patterns::generate_pronunciation_guides(
+                    *course, &sounds,
+                )
+                .await?;
+
+            // Save to file
+            let mut file = File::create(&guides_file)?;
+            for (sound, guide_thoughts) in &guides_with_thoughts {
+                let json = serde_json::to_string(&(sound, guide_thoughts))?;
+                writeln!(file, "{json}")?;
+            }
+            println!("Guides saved to: {}", guides_file.display());
+
+            guides_with_thoughts
+        };
+
+        // Convert to PronunciationData structure
+        let pronunciation_data = language_utils::PronunciationData {
+            sounds: sounds.clone(),
+            guides: guides
+                .into_iter()
+                .map(|(_, guide_thoughts)| guide_thoughts.into())
+                .collect(),
+        };
+
         // Consolidate all JSON files into a single rkyv file
         let rkyv_file = native_specific_dir.join("language_data.rkyv");
         println!("\nConsolidating all data into rkyv format...");
@@ -803,6 +876,7 @@ async fn main() -> anyhow::Result<()> {
             frequencies,
             word_to_pronunciation,
             pronunciation_to_words,
+            pronunciation_data,
         };
 
         let mut rodeo = lasso::Rodeo::new();

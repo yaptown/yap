@@ -1077,6 +1077,8 @@ pub struct ConsolidatedLanguageData {
     pub word_to_pronunciation: Vec<(String, Pronunciation)>,
     /// Mapping from IPA pronunciations to lists of words
     pub pronunciation_to_words: Vec<(Pronunciation, Vec<String>)>,
+    /// Pronunciation patterns and guides for the course
+    pub pronunciation_data: PronunciationData,
 }
 
 #[derive(
@@ -1132,6 +1134,20 @@ impl ConsolidatedLanguageData {
         for (_word, pronunciation) in &self.word_to_pronunciation {
             rodeo.get_or_intern(pronunciation);
         }
+
+        // intern pronunciation data
+        for sound in &self.pronunciation_data.sounds {
+            rodeo.get_or_intern(sound);
+        }
+        for guide in &self.pronunciation_data.guides {
+            rodeo.get_or_intern(&guide.pattern);
+            rodeo.get_or_intern(&guide.description);
+            for word_pair in &guide.example_words {
+                rodeo.get_or_intern(&word_pair.target);
+                rodeo.get_or_intern(&word_pair.native);
+                rodeo.get_or_intern(&word_pair.cultural_context);
+            }
+        }
     }
 }
 
@@ -1170,6 +1186,213 @@ pub enum TtsProvider {
 }
 
 pub type Pronunciation = String;
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    tsify::Tsify,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[rkyv(compare(PartialEq))]
+pub enum PronunciationDifficulty {
+    Easy,
+    Medium,
+    Hard,
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    tsify::Tsify,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[rkyv(compare(PartialEq))]
+pub enum PronunciationFamiliarity {
+    LikelyAlreadyKnows,
+    MaybeAlreadyKnows,
+    ProbablyDoesNotKnow,
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    tsify::Tsify,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[rkyv(compare(PartialEq))]
+pub struct LanguageSoundPattern {
+    pub pattern: String, // e.g. "ch", "ent$", "^h"
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    tsify::Tsify,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[rkyv(compare(PartialEq))]
+pub enum SoundPosition {
+    Beginning,
+    Middle,
+    End,
+    Multiple,
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    tsify::Tsify,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[rkyv(compare(PartialEq))]
+pub struct WordPair {
+    pub target: String,
+    pub native: String,
+    pub position: SoundPosition,  // Where the sound appears in the word
+    pub cultural_context: String, // Cultural reference or familiarity note (in native language)
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    tsify::Tsify,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[rkyv(compare(PartialEq))]
+pub struct PronunciationGuideThoughts {
+    pub thoughts: String,
+    pub pattern: String,
+    pub description: String,
+    pub familiarity: PronunciationFamiliarity,
+    pub difficulty: PronunciationDifficulty,
+    pub example_words: Vec<WordPair>,
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    tsify::Tsify,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[rkyv(compare(PartialEq))]
+pub struct PronunciationGuide {
+    pub pattern: String,
+    pub description: String,
+    pub familiarity: PronunciationFamiliarity,
+    pub difficulty: PronunciationDifficulty,
+    pub example_words: Vec<WordPair>,
+}
+
+impl From<PronunciationGuideThoughts> for PronunciationGuide {
+    fn from(thoughts: PronunciationGuideThoughts) -> Self {
+        Self {
+            pattern: thoughts.pattern,
+            description: thoughts.description,
+            familiarity: thoughts.familiarity,
+            difficulty: thoughts.difficulty,
+            example_words: thoughts.example_words,
+        }
+    }
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    tsify::Tsify,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[rkyv(compare(PartialEq))]
+pub struct PronunciationData {
+    pub sounds: Vec<String>, // List of characteristic sounds/patterns for the language
+    pub guides: Vec<PronunciationGuide>, // Detailed guides for each sound
+}
 
 #[derive(
     Copy,
