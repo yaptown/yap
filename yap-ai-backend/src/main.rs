@@ -113,6 +113,7 @@ struct Claims {
     exp: usize,      // expiry
 }
 
+#[allow(dead_code)]
 async fn verify_jwt(token: &str) -> Result<Claims, StatusCode> {
     let jwt_secret =
         std::env::var("SUPABASE_JWT_SECRET").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -133,7 +134,8 @@ async fn text_to_speech(
     Json(request): Json<TtsRequest>,
 ) -> Result<String, StatusCode> {
     // Verify JWT token
-    let _claims = verify_jwt(auth.token()).await?;
+    // actually, disable authentication for now until people start abusing it:
+    let _claims = verify_jwt(auth.token()).await;
 
     let client = reqwest::Client::new();
 
@@ -187,7 +189,8 @@ async fn google_text_to_speech(
     Json(request): Json<TtsRequest>,
 ) -> Result<String, StatusCode> {
     // Verify JWT token
-    let _claims = verify_jwt(auth.token()).await?;
+    // actually, disable authentication for now until people start abusing it:
+    let _claims = verify_jwt(auth.token()).await;
 
     let client = reqwest::Client::new();
 
@@ -242,7 +245,8 @@ async fn autograde_translation(
     Json(request): Json<autograde::AutoGradeTranslationRequest>,
 ) -> Result<Json<autograde::AutoGradeTranslationResponse>, StatusCode> {
     // Verify JWT token
-    let _claims = verify_jwt(auth.token()).await?;
+    // actually, disable authentication for now until people start abusing it:
+    let _claims = verify_jwt(auth.token()).await;
 
     let autograde::AutoGradeTranslationRequest {
         challenge_sentence,
@@ -359,7 +363,8 @@ async fn autograde_transcription(
     Json(request): Json<autograde::AutoGradeTranscriptionRequest>,
 ) -> Result<Json<transcription_challenge::Grade>, StatusCode> {
     // Verify JWT token
-    let _claims = verify_jwt(auth.token()).await?;
+    // actually, disable authentication for now until people start abusing it:
+    let _claims = verify_jwt(auth.token()).await;
 
     let language_name = match request.language {
         Language::French => "French",
