@@ -55,22 +55,18 @@ export function LanguageSelector({
   // Get available courses
   const availableCourses = useMemo(() => get_available_courses(), []);
 
-  // Get unique native languages
-  const uniqueNative = new Set<Language>();
-  availableCourses.forEach((course) => {
-    uniqueNative.add(course.nativeLanguage);
-  });
-  const nativeLanguages = Array.from(uniqueNative);
+  // Get unique native languages - memoized for stability
+  const nativeLanguages = useMemo(() => {
+    const uniqueNative = new Set<Language>();
+    availableCourses.forEach((course) => {
+      uniqueNative.add(course.nativeLanguage);
+    });
+    return Array.from(uniqueNative);
+  }, [availableCourses]);
 
-  // Detect browser language on mount and auto-select if supported
-  useEffect(() => {
-    // Only run on initial mount
-    if (selectionState.stage !== "selectingNative") return;
-
-    // Get browser language
-    const browserLang = navigator.language || navigator.languages?.[0];
-
-    // Map browser language codes to our Language types
+  // Map browser language codes to our Language types and detect browser language
+  // NOTE: This language map must be updated whenever a new language is added to the Language enum
+  const detectedLanguage = useMemo(() => {
     const languageMap: Record<string, Language> = {
       en: "English",
       "en-US": "English",
@@ -83,18 +79,30 @@ export function LanguageSelector({
       "ko-KR": "Korean",
     };
 
+    // Get browser language
+    const browserLang = navigator.language || navigator.languages?.[0];
+
     // Check if browser language is supported
     const detectedLang = browserLang
       ? languageMap[browserLang] || languageMap[browserLang.split("-")[0]]
       : null;
 
-    if (detectedLang && nativeLanguages.includes(detectedLang)) {
+    return detectedLang && nativeLanguages.includes(detectedLang)
+      ? detectedLang
+      : null;
+  }, [nativeLanguages]);
+
+  // Auto-select detected language on mount
+  useEffect(() => {
+    // Only run on initial mount when in native selection stage
+    if (selectionState.stage !== "selectingNative") return;
+    
+    if (detectedLanguage) {
       setSelectionState({
         stage: "selectingTarget",
-        nativeLanguage: detectedLang,
+        nativeLanguage: detectedLanguage,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
   // Get target languages available for selected native language
