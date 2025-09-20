@@ -9,3 +9,4 @@ out/language_data.rkyv filter=lfs diff=lfs merge=lfs -text
 out/corrected_proper_nouns.jsonl filter=lfs diff=lfs merge=lfs -text
 generate-data/data/fra_latn_broad_filtered.tsv filter=lfs diff=lfs merge=lfs -text
 out/frequency_lists/anki/frequencies.jsonl filter=lfs diff=lfs merge=lfs -text
+out/eng/target_language_sentences_nlp.jsonl filter=lfs diff=lfs merge=lfs -text

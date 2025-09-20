@@ -5,7 +5,7 @@
 {"lexeme":{"Heteronym":{"word":"vous","lemma":"vous","pos":"PRON"}},"count":2330}
 {"lexeme":{"Heteronym":{"word":"tu","lemma":"tu","pos":"PRON"}},"count":2214}
 {"lexeme":{"Multiword":"c'est"},"count":1797}
-{"lexeme":{"Multiword":"être à"},"count":1702}
+{"lexeme":{"Multiword":"être à"},"count":1703}
 {"lexeme":{"Heteronym":{"word":"de","lemma":"de","pos":"ADP"}},"count":1637}
 {"lexeme":{"Heteronym":{"word":"le","lemma":"le","pos":"DET"}},"count":1575}
 {"lexeme":{"Heteronym":{"word":"il","lemma":"il","pos":"PRON"}},"count":1440}
@@ -22,7 +22,7 @@
 {"lexeme":{"Heteronym":{"word":"me","lemma":"me","pos":"PRON"}},"count":703}
 {"lexeme":{"Heteronym":{"word":"à","lemma":"à","pos":"ADP"}},"count":701}
 {"lexeme":{"Heteronym":{"word":"moi","lemma":"moi","pos":"PRON"}},"count":699}
-{"lexeme":{"Multiword":"ce que"},"count":680}
+{"lexeme":{"Multiword":"ce que"},"count":681}
 {"lexeme":{"Multiword":"qu'est-ce que"},"count":677}
 {"lexeme":{"Heteronym":{"word":"elle","lemma":"lui","pos":"PRON"}},"count":659}
 {"lexeme":{"Heteronym":{"word":"ne","lemma":"ne","pos":"ADV"}},"count":639}
@@ -97,7 +97,7 @@
 {"lexeme":{"Heteronym":{"word":"bonne","lemma":"bon","pos":"ADJ"}},"count":173}
 {"lexeme":{"Heteronym":{"word":"avec","lemma":"avec","pos":"ADP"}},"count":172}
 {"lexeme":{"Heteronym":{"word":"du","lemma":"de","pos":"DET"}},"count":172}
-{"lexeme":{"Multiword":"bien à vous"},"count":167}
+{"lexeme":{"Multiword":"bien à vous"},"count":168}
 {"lexeme":{"Multiword":"quelque chose"},"count":167}
 {"lexeme":{"Heteronym":{"word":"avez","lemma":"avoir","pos":"AUX"}},"count":162}
 {"lexeme":{"Heteronym":{"word":"regarde","lemma":"regarder","pos":"VERB"}},"count":160}
@@ -108,8 +108,8 @@
 {"lexeme":{"Heteronym":{"word":"encore","lemma":"encore","pos":"ADV"}},"count":150}
 {"lexeme":{"Heteronym":{"word":"viens","lemma":"venir","pos":"VERB"}},"count":150}
 {"lexeme":{"Heteronym":{"word":"voir","lemma":"voir","pos":"VERB"}},"count":144}
+{"lexeme":{"Multiword":"tu sais"},"count":143}
 {"lexeme":{"Heteronym":{"word":"as","lemma":"avoir","pos":"VERB"}},"count":142}
-{"lexeme":{"Multiword":"tu sais"},"count":142}
 {"lexeme":{"Heteronym":{"word":"rien","lemma":"rien","pos":"PRON"}},"count":140}
 {"lexeme":{"Heteronym":{"word":"ta","lemma":"ton","pos":"DET"}},"count":139}
 {"lexeme":{"Heteronym":{"word":"la","lemma":"le","pos":"PRON"}},"count":136}
@@ -129,7 +129,7 @@
 {"lexeme":{"Multiword":"il faut"},"count":116}
 {"lexeme":{"Heteronym":{"word":"les","lemma":"le","pos":"PRON"}},"count":115}
 {"lexeme":{"Heteronym":{"word":"prends","lemma":"prendre","pos":"VERB"}},"count":114}
-{"lexeme":{"Multiword":"la faire"},"count":113}
+{"lexeme":{"Multiword":"la faire"},"count":114}
 {"lexeme":{"Multiword":"se passer"},"count":112}
 {"lexeme":{"Heteronym":{"word":"juste","lemma":"juste","pos":"ADV"}},"count":111}
 {"lexeme":{"Heteronym":{"word":"ce","lemma":"ce","pos":"DET"}},"count":110}
@@ -147,8 +147,8 @@
 {"lexeme":{"Heteronym":{"word":"regardez","lemma":"regarder","pos":"VERB"}},"count":95}
 {"lexeme":{"Heteronym":{"word":"temps","lemma":"temps","pos":"NOUN"}},"count":95}
 {"lexeme":{"Heteronym":{"word":"maman","lemma":"maman","pos":"NOUN"}},"count":94}
+{"lexeme":{"Multiword":"c'est tout"},"count":94}
 {"lexeme":{"Heteronym":{"word":"laisse","lemma":"laisse","pos":"VERB"}},"count":93}
-{"lexeme":{"Multiword":"c'est tout"},"count":93}
 {"lexeme":{"Heteronym":{"word":"passe","lemma":"passer","pos":"VERB"}},"count":92}
 {"lexeme":{"Heteronym":{"word":"son","lemma":"son","pos":"DET"}},"count":91}
 {"lexeme":{"Heteronym":{"word":"passé","lemma":"passer","pos":"VERB"}},"count":90}
@@ -161,8 +161,8 @@
 {"lexeme":{"Heteronym":{"word":"ou","lemma":"ou","pos":"CCONJ"}},"count":84}
 {"lexeme":{"Heteronym":{"word":"vraiment","lemma":"vraiment","pos":"ADV"}},"count":84}
 {"lexeme":{"Multiword":"ce qui"},"count":84}
+{"lexeme":{"Multiword":"vous savez"},"count":84}
 {"lexeme":{"Heteronym":{"word":"savez","lemma":"savoir","pos":"VERB"}},"count":83}
-{"lexeme":{"Multiword":"vous savez"},"count":83}
 {"lexeme":{"Heteronym":{"word":"papa","lemma":"papa","pos":"NOUN"}},"count":82}
 {"lexeme":{"Heteronym":{"word":"fois","lemma":"fois","pos":"NOUN"}},"count":81}
 {"lexeme":{"Heteronym":{"word":"reste","lemma":"reste","pos":"VERB"}},"count":81}
@@ -174,8 +174,8 @@
 {"lexeme":{"Heteronym":{"word":"prenez","lemma":"prendre","pos":"VERB"}},"count":80}
 {"lexeme":{"Heteronym":{"word":"sûr","lemma":"sûr","pos":"ADJ"}},"count":80}
 {"lexeme":{"Heteronym":{"word":"vu","lemma":"voir","pos":"VERB"}},"count":80}
-{"lexeme":{"Multiword":"ça ira"},"count":79}
-{"lexeme":{"Multiword":"ça va"},"count":79}
+{"lexeme":{"Multiword":"ça ira"},"count":80}
+{"lexeme":{"Multiword":"ça va"},"count":80}
 {"lexeme":{"Heteronym":{"word":"parle","lemma":"parler","pos":"VERB"}},"count":77}
 {"lexeme":{"Heteronym":{"word":"désolé","lemma":"désolé","pos":"ADJ"}},"count":76}
 {"lexeme":{"Heteronym":{"word":"entendu","lemma":"entendre","pos":"VERB"}},"count":76}
@@ -206,12 +206,12 @@
 {"lexeme":{"Heteronym":{"word":"ami","lemma":"ami","pos":"NOUN"}},"count":67}
 {"lexeme":{"Heteronym":{"word":"arrive","lemma":"arriver","pos":"VERB"}},"count":67}
 {"lexeme":{"Heteronym":{"word":"veut","lemma":"vouloir","pos":"VERB"}},"count":67}
+{"lexeme":{"Multiword":"être là"},"count":67}
 {"lexeme":{"Heteronym":{"word":"beaucoup","lemma":"beaucoup","pos":"ADV"}},"count":66}
 {"lexeme":{"Heteronym":{"word":"chance","lemma":"chance","pos":"NOUN"}},"count":66}
 {"lexeme":{"Heteronym":{"word":"laissez","lemma":"laisser","pos":"VERB"}},"count":66}
 {"lexeme":{"Multiword":"comme ça"},"count":66}
-{"lexeme":{"Multiword":"être là"},"count":66}
-{"lexeme":{"Multiword":"de quoi"},"count":65}
+{"lexeme":{"Multiword":"de quoi"},"count":66}
 {"lexeme":{"Heteronym":{"word":"chérie","lemma":"chéri","pos":"ADJ"}},"count":64}
 {"lexeme":{"Heteronym":{"word":"comprends","lemma":"comprendre","pos":"VERB"}},"count":64}
 {"lexeme":{"Heteronym":{"word":"nuit","lemma":"nuit","pos":"NOUN"}},"count":64}
@@ -236,8 +236,8 @@
 {"lexeme":{"Heteronym":{"word":"raison","lemma":"raison","pos":"NOUN"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"sera","lemma":"être","pos":"AUX"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"super","lemma":"super","pos":"ADJ"}},"count":59}
+{"lexeme":{"Multiword":"très bien"},"count":59}
 {"lexeme":{"Heteronym":{"word":"tous","lemma":"tout","pos":"ADJ"}},"count":58}
-{"lexeme":{"Multiword":"très bien"},"count":58}
 {"lexeme":{"Heteronym":{"word":"écoute","lemma":"écoute","pos":"VERB"}},"count":57}
 {"lexeme":{"Multiword":"je vois"},"count":57}
 {"lexeme":{"Heteronym":{"word":"main","lemma":"main","pos":"NOUN"}},"count":56}
@@ -251,10 +251,10 @@
 {"lexeme":{"Heteronym":{"word":"gars","lemma":"gars","pos":"NOUN"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"sait","lemma":"savoir","pos":"VERB"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"tard","lemma":"tard","pos":"ADV"}},"count":54}
+{"lexeme":{"Multiword":"que je sache"},"count":54}
 {"lexeme":{"Heteronym":{"word":"sa","lemma":"son","pos":"DET"}},"count":53}
 {"lexeme":{"Heteronym":{"word":"t","lemma":"t","pos":"PART"}},"count":53}
 {"lexeme":{"Heteronym":{"word":"venez","lemma":"venir","pos":"VERB"}},"count":53}
-{"lexeme":{"Multiword":"que je sache"},"count":53}
 {"lexeme":{"Multiword":"un peu"},"count":53}
 {"lexeme":{"Heteronym":{"word":"restez","lemma":"rester","pos":"VERB"}},"count":52}
 {"lexeme":{"Heteronym":{"word":"coup","lemma":"coup","pos":"NOUN"}},"count":51}
@@ -262,13 +262,13 @@
 {"lexeme":{"Heteronym":{"word":"passer","lemma":"passer","pos":"VERB"}},"count":51}
 {"lexeme":{"Heteronym":{"word":"revoir","lemma":"revoir","pos":"NOUN"}},"count":51}
 {"lexeme":{"Multiword":"au revoir"},"count":51}
+{"lexeme":{"Multiword":"ce faisant"},"count":51}
 {"lexeme":{"Multiword":"est-il"},"count":51}
 {"lexeme":{"Multiword":"ne rien"},"count":51}
 {"lexeme":{"Heteronym":{"word":"continue","lemma":"continuer","pos":"VERB"}},"count":50}
 {"lexeme":{"Heteronym":{"word":"déjà","lemma":"déjà","pos":"ADV"}},"count":50}
 {"lexeme":{"Heteronym":{"word":"père","lemma":"père","pos":"NOUN"}},"count":50}
 {"lexeme":{"Heteronym":{"word":"trouvé","lemma":"trouver","pos":"VERB"}},"count":50}
-{"lexeme":{"Multiword":"ce faisant"},"count":50}
 {"lexeme":{"Multiword":"ne jamais"},"count":50}
 {"lexeme":{"Heteronym":{"word":"amis","lemma":"ami","pos":"NOUN"}},"count":49}
 {"lexeme":{"Heteronym":{"word":"fille","lemma":"fille","pos":"NOUN"}},"count":49}
@@ -318,6 +318,8 @@
 {"lexeme":{"Heteronym":{"word":"enfants","lemma":"enfant","pos":"NOUN"}},"count":41}
 {"lexeme":{"Heteronym":{"word":"joli","lemma":"joli","pos":"ADJ"}},"count":41}
 {"lexeme":{"Heteronym":{"word":"moment","lemma":"moment","pos":"NOUN"}},"count":41}
+{"lexeme":{"Multiword":"c'est ça"},"count":41}
+{"lexeme":{"Multiword":"qu'est-ce que c'est"},"count":41}
 {"lexeme":{"Heteronym":{"word":"assez","lemma":"assez","pos":"ADV"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"bienvenue","lemma":"bienvenue","pos":"NOUN"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"donc","lemma":"donc","pos":"ADV"}},"count":40}
@@ -325,8 +327,6 @@
 {"lexeme":{"Heteronym":{"word":"famille","lemma":"famille","pos":"NOUN"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"nouveau","lemma":"nouveau","pos":"ADJ"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"quelques","lemma":"quelque","pos":"DET"}},"count":40}
-{"lexeme":{"Multiword":"c'est ça"},"count":40}
-{"lexeme":{"Multiword":"qu'est-ce que c'est"},"count":40}
 {"lexeme":{"Heteronym":{"word":"ans","lemma":"an","pos":"NOUN"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"après","lemma":"après","pos":"ADP"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"attendez","lemma":"attendre","pos":"VERB"}},"count":39}
@@ -335,17 +335,20 @@
 {"lexeme":{"Heteronym":{"word":"messieurs","lemma":"monsieur","pos":"NOUN"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"si","lemma":"si","pos":"ADV"}},"count":39}
 {"lexeme":{"Multiword":"puis-je"},"count":39}
+{"lexeme":{"Multiword":"venir de"},"count":39}
 {"lexeme":{"Heteronym":{"word":"confiance","lemma":"confiance","pos":"NOUN"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"essayer","lemma":"essayer","pos":"VERB"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"fils","lemma":"fils","pos":"NOUN"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"jour","lemma":"jour","pos":"NOUN"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"nom","lemma":"nom","pos":"NOUN"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"parlez","lemma":"parler","pos":"VERB"}},"count":38}
-{"lexeme":{"Multiword":"venir de"},"count":38}
 {"lexeme":{"Heteronym":{"word":"devrais","lemma":"devoir","pos":"VERB"}},"count":37}
 {"lexeme":{"Heteronym":{"word":"entrer","lemma":"entrer","pos":"VERB"}},"count":37}
 {"lexeme":{"Heteronym":{"word":"journée","lemma":"journée","pos":"NOUN"}},"count":37}
 {"lexeme":{"Heteronym":{"word":"quels","lemma":"quel","pos":"DET"}},"count":37}
+{"lexeme":{"Multiword":"bonne nuit"},"count":37}
+{"lexeme":{"Multiword":"de un"},"count":37}
+{"lexeme":{"Multiword":"de ça"},"count":37}
 {"lexeme":{"Multiword":"là-bas"},"count":37}
 {"lexeme":{"Heteronym":{"word":"cinq","lemma":"cinq","pos":"NUM"}},"count":36}
 {"lexeme":{"Heteronym":{"word":"essaie","lemma":"essayer","pos":"VERB"}},"count":36}
@@ -357,10 +360,7 @@
 {"lexeme":{"Heteronym":{"word":"verre","lemma":"verre","pos":"NOUN"}},"count":36}
 {"lexeme":{"Heteronym":{"word":"écoutez","lemma":"écouter","pos":"VERB"}},"count":36}
 {"lexeme":{"Multiword":"avoir raison"},"count":36}
-{"lexeme":{"Multiword":"bonne nuit"},"count":36}
 {"lexeme":{"Multiword":"celui-là"},"count":36}
-{"lexeme":{"Multiword":"de un"},"count":36}
-{"lexeme":{"Multiword":"de ça"},"count":36}
 {"lexeme":{"Heteronym":{"word":"accord","lemma":"accord","pos":"NOUN"}},"count":35}
 {"lexeme":{"Heteronym":{"word":"boulot","lemma":"boulot","pos":"NOUN"}},"count":35}
 {"lexeme":{"Heteronym":{"word":"choix","lemma":"choix","pos":"NOUN"}},"count":35}
@@ -371,6 +371,7 @@
 {"lexeme":{"Heteronym":{"word":"même","lemma":"même","pos":"ADV"}},"count":35}
 {"lexeme":{"Heteronym":{"word":"plaît","lemma":"plaire","pos":"VERB"}},"count":35}
 {"lexeme":{"Multiword":"parle de"},"count":35}
+{"lexeme":{"Multiword":"un coup"},"count":35}
 {"lexeme":{"Heteronym":{"word":"adore","lemma":"adorer","pos":"VERB"}},"count":34}
 {"lexeme":{"Heteronym":{"word":"avais","lemma":"avoir","pos":"AUX"}},"count":34}
 {"lexeme":{"Heteronym":{"word":"chercher","lemma":"chercher","pos":"VERB"}},"count":34}
@@ -379,7 +380,6 @@
 {"lexeme":{"Heteronym":{"word":"prêt","lemma":"prêt","pos":"ADJ"}},"count":34}
 {"lexeme":{"Heteronym":{"word":"pu","lemma":"pouvoir","pos":"VERB"}},"count":34}
 {"lexeme":{"Heteronym":{"word":"savais","lemma":"savoir","pos":"VERB"}},"count":34}
-{"lexeme":{"Multiword":"un coup"},"count":34}
 {"lexeme":{"Heteronym":{"word":"bois","lemma":"bois","pos":"NOUN"}},"count":33}
 {"lexeme":{"Heteronym":{"word":"demander","lemma":"demander","pos":"VERB"}},"count":33}
 {"lexeme":{"Heteronym":{"word":"devant","lemma":"devant","pos":"ADP"}},"count":33}
@@ -402,6 +402,7 @@
 {"lexeme":{"Heteronym":{"word":"pars","lemma":"partir","pos":"VERB"}},"count":32}
 {"lexeme":{"Heteronym":{"word":"souviens","lemma":"souvenir","pos":"VERB"}},"count":32}
 {"lexeme":{"Multiword":"dire quoi"},"count":32}
+{"lexeme":{"Multiword":"qu'est-ce qu'il y a"},"count":32}
 {"lexeme":{"Heteronym":{"word":"attendre","lemma":"attendre","pos":"VERB"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"autres","lemma":"autre","pos":"ADJ"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"bientôt","lemma":"bientôt","pos":"ADV"}},"count":31}
@@ -413,8 +414,10 @@
 {"lexeme":{"Heteronym":{"word":"quatre","lemma":"quatre","pos":"NUM"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"suis","lemma":"suivre","pos":"VERB"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"yeux","lemma":"oeil","pos":"NOUN"}},"count":31}
+{"lexeme":{"Multiword":"autre chose"},"count":31}
 {"lexeme":{"Multiword":"bien sûr"},"count":31}
-{"lexeme":{"Multiword":"qu'est-ce qu'il y a"},"count":31}
+{"lexeme":{"Multiword":"en être"},"count":31}
+{"lexeme":{"Multiword":"faire aller"},"count":31}
 {"lexeme":{"Heteronym":{"word":"avant","lemma":"avant","pos":"ADP"}},"count":30}
 {"lexeme":{"Heteronym":{"word":"entends","lemma":"entendre","pos":"VERB"}},"count":30}
 {"lexeme":{"Heteronym":{"word":"ont","lemma":"avoir","pos":"AUX"}},"count":30}
@@ -422,9 +425,6 @@
 {"lexeme":{"Heteronym":{"word":"pensais","lemma":"penser","pos":"VERB"}},"count":30}
 {"lexeme":{"Heteronym":{"word":"police","lemma":"police","pos":"NOUN"}},"count":30}
 {"lexeme":{"Heteronym":{"word":"serait","lemma":"être","pos":"AUX"}},"count":30}
-{"lexeme":{"Multiword":"autre chose"},"count":30}
-{"lexeme":{"Multiword":"en être"},"count":30}
-{"lexeme":{"Multiword":"faire aller"},"count":30}
 {"lexeme":{"Heteronym":{"word":"affaires","lemma":"affaire","pos":"NOUN"}},"count":29}
 {"lexeme":{"Heteronym":{"word":"amour","lemma":"amour","pos":"NOUN"}},"count":29}
 {"lexeme":{"Heteronym":{"word":"appelez","lemma":"appeler","pos":"VERB"}},"count":29}
@@ -487,6 +487,7 @@
 {"lexeme":{"Heteronym":{"word":"vont","lemma":"aller","pos":"VERB"}},"count":26}
 {"lexeme":{"Multiword":"le mien"},"count":26}
 {"lexeme":{"Multiword":"tout ça"},"count":26}
+{"lexeme":{"Multiword":"tu parles"},"count":26}
 {"lexeme":{"Multiword":"à toute"},"count":26}
 {"lexeme":{"Heteronym":{"word":"cet","lemma":"ce","pos":"DET"}},"count":25}
 {"lexeme":{"Heteronym":{"word":"croyez","lemma":"croire","pos":"VERB"}},"count":25}
@@ -502,7 +503,6 @@
 {"lexeme":{"Heteronym":{"word":"service","lemma":"service","pos":"NOUN"}},"count":25}
 {"lexeme":{"Multiword":"je t'aime"},"count":25}
 {"lexeme":{"Multiword":"tout le monde"},"count":25}
-{"lexeme":{"Multiword":"tu parles"},"count":25}
 {"lexeme":{"Heteronym":{"word":"compte","lemma":"compte","pos":"VERB"}},"count":24}
 {"lexeme":{"Heteronym":{"word":"désolée","lemma":"désolé","pos":"ADJ"}},"count":24}
 {"lexeme":{"Heteronym":{"word":"eh","lemma":"eh","pos":"INTJ"}},"count":24}
@@ -524,6 +524,7 @@
 {"lexeme":{"Heteronym":{"word":"voyons","lemma":"voir","pos":"VERB"}},"count":24}
 {"lexeme":{"Heteronym":{"word":"vérité","lemma":"vérité","pos":"NOUN"}},"count":24}
 {"lexeme":{"Multiword":"dire quelque chose"},"count":24}
+{"lexeme":{"Multiword":"à moi"},"count":24}
 {"lexeme":{"Heteronym":{"word":"absolument","lemma":"absolument","pos":"ADV"}},"count":23}
 {"lexeme":{"Heteronym":{"word":"aimes","lemma":"aimer","pos":"VERB"}},"count":23}
 {"lexeme":{"Heteronym":{"word":"air","lemma":"air","pos":"NOUN"}},"count":23}
@@ -547,8 +548,8 @@
 {"lexeme":{"Heteronym":{"word":"si","lemma":"si","pos":"X"}},"count":23}
 {"lexeme":{"Heteronym":{"word":"sont","lemma":"être","pos":"VERB"}},"count":23}
 {"lexeme":{"Heteronym":{"word":"sérieux","lemma":"sérieux","pos":"ADJ"}},"count":23}
+{"lexeme":{"Multiword":"du tout"},"count":23}
 {"lexeme":{"Multiword":"que voulez-vous"},"count":23}
-{"lexeme":{"Multiword":"à moi"},"count":23}
 {"lexeme":{"Heteronym":{"word":"aurais","lemma":"avoir","pos":"AUX"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"bras","lemma":"bras","pos":"NOUN"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"celui","lemma":"celui","pos":"PRON"}},"count":22}
@@ -570,8 +571,8 @@
 {"lexeme":{"Heteronym":{"word":"toute","lemma":"tout","pos":"ADJ"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"visage","lemma":"visage","pos":"NOUN"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"êtes","lemma":"être","pos":"VERB"}},"count":22}
+{"lexeme":{"Multiword":"avoir l'air"},"count":22}
 {"lexeme":{"Multiword":"de plus"},"count":22}
-{"lexeme":{"Multiword":"du tout"},"count":22}
 {"lexeme":{"Multiword":"ça marche"},"count":22}
 {"lexeme":{"Heteronym":{"word":"amie","lemma":"amie","pos":"NOUN"}},"count":21}
 {"lexeme":{"Heteronym":{"word":"anniversaire","lemma":"anniversaire","pos":"NOUN"}},"count":21}
@@ -595,9 +596,9 @@
 {"lexeme":{"Heteronym":{"word":"respire","lemma":"respirer","pos":"VERB"}},"count":21}
 {"lexeme":{"Heteronym":{"word":"suffit","lemma":"suffire","pos":"VERB"}},"count":21}
 {"lexeme":{"Heteronym":{"word":"étais","lemma":"être","pos":"VERB"}},"count":21}
-{"lexeme":{"Multiword":"avoir l'air"},"count":21}
 {"lexeme":{"Multiword":"bonne chance"},"count":21}
 {"lexeme":{"Multiword":"faire savoir"},"count":21}
+{"lexeme":{"Multiword":"je ne sais pas"},"count":21}
 {"lexeme":{"Multiword":"le chercher"},"count":21}
 {"lexeme":{"Heteronym":{"word":"avais","lemma":"avoir","pos":"VERB"}},"count":20}
 {"lexeme":{"Heteronym":{"word":"change","lemma":"changer","pos":"VERB"}},"count":20}
@@ -618,8 +619,8 @@
 {"lexeme":{"Heteronym":{"word":"réponse","lemma":"réponse","pos":"NOUN"}},"count":20}
 {"lexeme":{"Heteronym":{"word":"toutes","lemma":"tout","pos":"ADJ"}},"count":20}
 {"lexeme":{"Heteronym":{"word":"type","lemma":"type","pos":"NOUN"}},"count":20}
+{"lexeme":{"Multiword":"en vouloir"},"count":20}
 {"lexeme":{"Multiword":"faire pour"},"count":20}
-{"lexeme":{"Multiword":"je ne sais pas"},"count":20}
 {"lexeme":{"Multiword":"là-dedans"},"count":20}
 {"lexeme":{"Multiword":"penser à"},"count":20}
 {"lexeme":{"Multiword":"vu que"},"count":20}
@@ -641,7 +642,6 @@
 {"lexeme":{"Heteronym":{"word":"tourne","lemma":"tourne","pos":"VERB"}},"count":19}
 {"lexeme":{"Heteronym":{"word":"vivre","lemma":"vivre","pos":"VERB"}},"count":19}
 {"lexeme":{"Heteronym":{"word":"être","lemma":"être","pos":"ADV"}},"count":19}
-{"lexeme":{"Multiword":"en vouloir"},"count":19}
 {"lexeme":{"Multiword":"qui sait"},"count":19}
 {"lexeme":{"Heteronym":{"word":"aimerais","lemma":"aimer","pos":"VERB"}},"count":18}
 {"lexeme":{"Heteronym":{"word":"avait","lemma":"avoir","pos":"VERB"}},"count":18}
@@ -677,7 +677,10 @@
 {"lexeme":{"Heteronym":{"word":"âge","lemma":"âge","pos":"NOUN"}},"count":18}
 {"lexeme":{"Heteronym":{"word":"étaient","lemma":"être","pos":"AUX"}},"count":18}
 {"lexeme":{"Multiword":"au courant"},"count":18}
+{"lexeme":{"Multiword":"de rien"},"count":18}
+{"lexeme":{"Multiword":"du bon"},"count":18}
 {"lexeme":{"Multiword":"ne plus"},"count":18}
+{"lexeme":{"Multiword":"que de"},"count":18}
 {"lexeme":{"Heteronym":{"word":"appel","lemma":"appel","pos":"NOUN"}},"count":17}
 {"lexeme":{"Heteronym":{"word":"appelé","lemma":"appeler","pos":"VERB"}},"count":17}
 {"lexeme":{"Heteronym":{"word":"bien","lemma":"bien","pos":"NOUN"}},"count":17}
@@ -712,9 +715,8 @@
 {"lexeme":{"Heteronym":{"word":"trouve","lemma":"trouver","pos":"VERB"}},"count":17}
 {"lexeme":{"Heteronym":{"word":"voix","lemma":"voix","pos":"NOUN"}},"count":17}
 {"lexeme":{"Multiword":"celui-ci"},"count":17}
-{"lexeme":{"Multiword":"de rien"},"count":17}
-{"lexeme":{"Multiword":"du bon"},"count":17}
-{"lexeme":{"Multiword":"que de"},"count":17}
+{"lexeme":{"Multiword":"faire confiance"},"count":17}
+{"lexeme":{"Multiword":"s'il vous plaît"},"count":17}
 {"lexeme":{"Multiword":"à la maison"},"count":17}
 {"lexeme":{"Heteronym":{"word":"année","lemma":"année","pos":"NOUN"}},"count":16}
 {"lexeme":{"Heteronym":{"word":"avance","lemma":"avancer","pos":"VERB"}},"count":16}
@@ -744,15 +746,18 @@
 {"lexeme":{"Heteronym":{"word":"superbe","lemma":"superbe","pos":"ADJ"}},"count":16}
 {"lexeme":{"Heteronym":{"word":"taxi","lemma":"taxi","pos":"NOUN"}},"count":16}
 {"lexeme":{"Heteronym":{"word":"tôt","lemma":"tôt","pos":"ADV"}},"count":16}
+{"lexeme":{"Multiword":"bien joué"},"count":16}
 {"lexeme":{"Multiword":"coup de main"},"count":16}
+{"lexeme":{"Multiword":"des fois"},"count":16}
 {"lexeme":{"Multiword":"en retard"},"count":16}
 {"lexeme":{"Multiword":"et des"},"count":16}
 {"lexeme":{"Multiword":"et si"},"count":16}
-{"lexeme":{"Multiword":"faire confiance"},"count":16}
+{"lexeme":{"Multiword":"faire attention"},"count":16}
 {"lexeme":{"Multiword":"il y en a"},"count":16}
 {"lexeme":{"Multiword":"merci beaucoup"},"count":16}
 {"lexeme":{"Multiword":"que tu crois"},"count":16}
-{"lexeme":{"Multiword":"s'il vous plaît"},"count":16}
+{"lexeme":{"Multiword":"une fois"},"count":16}
+{"lexeme":{"Multiword":"ça suffit"},"count":16}
 {"lexeme":{"Heteronym":{"word":"appeler","lemma":"appeler","pos":"VERB"}},"count":15}
 {"lexeme":{"Heteronym":{"word":"arrivent","lemma":"arriver","pos":"VERB"}},"count":15}
 {"lexeme":{"Heteronym":{"word":"attendais","lemma":"attendre","pos":"VERB"}},"count":15}
@@ -792,15 +797,11 @@
 {"lexeme":{"Heteronym":{"word":"écoute","lemma":"écoute","pos":"NOUN"}},"count":15}
 {"lexeme":{"Multiword":"aimer bien"},"count":15}
 {"lexeme":{"Multiword":"avoir de la chance"},"count":15}
-{"lexeme":{"Multiword":"bien joué"},"count":15}
-{"lexeme":{"Multiword":"des fois"},"count":15}
+{"lexeme":{"Multiword":"d'un coup"},"count":15}
 {"lexeme":{"Multiword":"en faire"},"count":15}
-{"lexeme":{"Multiword":"faire attention"},"count":15}
 {"lexeme":{"Multiword":"faire avec"},"count":15}
 {"lexeme":{"Multiword":"première fois"},"count":15}
 {"lexeme":{"Multiword":"qu'eûtes-vous"},"count":15}
-{"lexeme":{"Multiword":"une fois"},"count":15}
-{"lexeme":{"Multiword":"ça suffit"},"count":15}
 {"lexeme":{"Multiword":"être le cas"},"count":15}
 {"lexeme":{"Heteronym":{"word":"adresse","lemma":"adresse","pos":"NOUN"}},"count":14}
 {"lexeme":{"Heteronym":{"word":"apprécie","lemma":"apprécier","pos":"VERB"}},"count":14}
@@ -850,7 +851,6 @@
 {"lexeme":{"Heteronym":{"word":"étage","lemma":"étage","pos":"NOUN"}},"count":14}
 {"lexeme":{"Heteronym":{"word":"été","lemma":"être","pos":"AUX"}},"count":14}
 {"lexeme":{"Multiword":"avoir faim"},"count":14}
-{"lexeme":{"Multiword":"d'un coup"},"count":14}
 {"lexeme":{"Multiword":"du temps de"},"count":14}
 {"lexeme":{"Multiword":"n'est-ce pas"},"count":14}
 {"lexeme":{"Multiword":"par ici"},"count":14}
@@ -898,6 +898,7 @@
 {"lexeme":{"Heteronym":{"word":"trouvez","lemma":"trouver","pos":"VERB"}},"count":13}
 {"lexeme":{"Heteronym":{"word":"trésor","lemma":"trésor","pos":"NOUN"}},"count":13}
 {"lexeme":{"Heteronym":{"word":"école","lemma":"école","pos":"NOUN"}},"count":13}
+{"lexeme":{"Multiword":"c'est moi"},"count":13}
 {"lexeme":{"Multiword":"entendre parler"},"count":13}
 {"lexeme":{"Multiword":"faire plaisir"},"count":13}
 {"lexeme":{"Multiword":"j'sais pas"},"count":13}
@@ -947,7 +948,6 @@
 {"lexeme":{"Heteronym":{"word":"surtout","lemma":"surtout","pos":"ADV"}},"count":12}
 {"lexeme":{"Heteronym":{"word":"vue","lemma":"voir","pos":"VERB"}},"count":12}
 {"lexeme":{"Multiword":"avoir confiance"},"count":12}
-{"lexeme":{"Multiword":"c'est moi"},"count":12}
 {"lexeme":{"Multiword":"de nouveau"},"count":12}
 {"lexeme":{"Multiword":"du coup"},"count":12}
 {"lexeme":{"Multiword":"le vôtre"},"count":12}
@@ -1036,9 +1036,11 @@
 {"lexeme":{"Multiword":"arriver à"},"count":11}
 {"lexeme":{"Multiword":"au lit"},"count":11}
 {"lexeme":{"Multiword":"ce dont"},"count":11}
+{"lexeme":{"Multiword":"ce fut un plaisir"},"count":11}
 {"lexeme":{"Multiword":"je fais aller"},"count":11}
 {"lexeme":{"Multiword":"le tien"},"count":11}
 {"lexeme":{"Multiword":"pas que"},"count":11}
+{"lexeme":{"Multiword":"s'il te plaît"},"count":11}
 {"lexeme":{"Multiword":"sais-tu"},"count":11}
 {"lexeme":{"Multiword":"sortir de"},"count":11}
 {"lexeme":{"Multiword":"être humain"},"count":11}
@@ -1128,13 +1130,13 @@
 {"lexeme":{"Heteronym":{"word":"vue","lemma":"vue","pos":"NOUN"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"état","lemma":"état","pos":"NOUN"}},"count":10}
 {"lexeme":{"Multiword":"bonne nouvelle"},"count":10}
-{"lexeme":{"Multiword":"ce fut un plaisir"},"count":10}
 {"lexeme":{"Multiword":"comme si"},"count":10}
 {"lexeme":{"Multiword":"faire bien"},"count":10}
+{"lexeme":{"Multiword":"j'ai à faire"},"count":10}
 {"lexeme":{"Multiword":"petit ami"},"count":10}
 {"lexeme":{"Multiword":"que veux-tu"},"count":10}
-{"lexeme":{"Multiword":"s'il te plaît"},"count":10}
 {"lexeme":{"Multiword":"tout à fait"},"count":10}
+{"lexeme":{"Multiword":"valoir mieux"},"count":10}
 {"lexeme":{"Multiword":"vous-même"},"count":10}
 {"lexeme":{"Multiword":"vous-mêmes"},"count":10}
 {"lexeme":{"Heteronym":{"word":"accepté","lemma":"accepter","pos":"VERB"}},"count":9}
@@ -1235,6 +1237,7 @@
 {"lexeme":{"Heteronym":{"word":"vôtre","lemma":"vôtre","pos":"PRON"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"écoutes","lemma":"écouter","pos":"VERB"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"énorme","lemma":"énorme","pos":"ADJ"}},"count":9}
+{"lexeme":{"Multiword":"bien que"},"count":9}
 {"lexeme":{"Multiword":"bonne journée"},"count":9}
 {"lexeme":{"Multiword":"de suite"},"count":9}
 {"lexeme":{"Multiword":"du monde"},"count":9}
@@ -1242,12 +1245,15 @@
 {"lexeme":{"Multiword":"en fait"},"count":9}
 {"lexeme":{"Multiword":"en haut"},"count":9}
 {"lexeme":{"Multiword":"faire gaffe"},"count":9}
-{"lexeme":{"Multiword":"j'ai à faire"},"count":9}
 {"lexeme":{"Multiword":"la ramener"},"count":9}
 {"lexeme":{"Multiword":"là-haut"},"count":9}
+{"lexeme":{"Multiword":"qu'aurez-vous"},"count":9}
+{"lexeme":{"Multiword":"qu'auriez-vous"},"count":9}
+{"lexeme":{"Multiword":"qu'aviez-vous"},"count":9}
+{"lexeme":{"Multiword":"rien que"},"count":9}
 {"lexeme":{"Multiword":"ta mère"},"count":9}
 {"lexeme":{"Multiword":"tant mieux"},"count":9}
-{"lexeme":{"Multiword":"valoir mieux"},"count":9}
+{"lexeme":{"Multiword":"à demain"},"count":9}
 {"lexeme":{"Multiword":"à droite"},"count":9}
 {"lexeme":{"Heteronym":{"word":"abord","lemma":"abord","pos":"NOUN"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"accepte","lemma":"accepter","pos":"VERB"}},"count":8}
@@ -1361,19 +1367,16 @@
 {"lexeme":{"Heteronym":{"word":"étaient","lemma":"être","pos":"VERB"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"évidemment","lemma":"évidemment","pos":"ADV"}},"count":8}
 {"lexeme":{"Multiword":"aller chercher"},"count":8}
-{"lexeme":{"Multiword":"bien que"},"count":8}
+{"lexeme":{"Multiword":"avoir envie"},"count":8}
+{"lexeme":{"Multiword":"du calme"},"count":8}
 {"lexeme":{"Multiword":"excusez-moi"},"count":8}
 {"lexeme":{"Multiword":"faire bon"},"count":8}
+{"lexeme":{"Multiword":"je ne pense pas"},"count":8}
 {"lexeme":{"Multiword":"par exemple"},"count":8}
-{"lexeme":{"Multiword":"qu'aurez-vous"},"count":8}
-{"lexeme":{"Multiword":"qu'auriez-vous"},"count":8}
-{"lexeme":{"Multiword":"qu'aviez-vous"},"count":8}
 {"lexeme":{"Multiword":"qui parle"},"count":8}
-{"lexeme":{"Multiword":"rien que"},"count":8}
 {"lexeme":{"Multiword":"tout ce qui"},"count":8}
 {"lexeme":{"Multiword":"tout le temps"},"count":8}
 {"lexeme":{"Multiword":"voyons voir"},"count":8}
-{"lexeme":{"Multiword":"à demain"},"count":8}
 {"lexeme":{"Heteronym":{"word":"a","lemma":"a","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"ainsi","lemma":"ainsi","pos":"ADV"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"amenez","lemma":"amener","pos":"VERB"}},"count":7}
@@ -1518,20 +1521,20 @@
 {"lexeme":{"Heteronym":{"word":"étiez","lemma":"être","pos":"AUX"}},"count":7}
 {"lexeme":{"Multiword":"alors que"},"count":7}
 {"lexeme":{"Multiword":"après-midi"},"count":7}
+{"lexeme":{"Multiword":"au début"},"count":7}
 {"lexeme":{"Multiword":"au travail"},"count":7}
 {"lexeme":{"Multiword":"avec plaisir"},"count":7}
-{"lexeme":{"Multiword":"avoir envie"},"count":7}
 {"lexeme":{"Multiword":"avoir intérêt"},"count":7}
 {"lexeme":{"Multiword":"bien fait"},"count":7}
 {"lexeme":{"Multiword":"bon voyage"},"count":7}
-{"lexeme":{"Multiword":"du calme"},"count":7}
+{"lexeme":{"Multiword":"de deux"},"count":7}
 {"lexeme":{"Multiword":"entendre parler de"},"count":7}
 {"lexeme":{"Multiword":"grand-mère"},"count":7}
 {"lexeme":{"Multiword":"grâce à"},"count":7}
 {"lexeme":{"Multiword":"il le faut"},"count":7}
 {"lexeme":{"Multiword":"je ne comprends pas"},"count":7}
 {"lexeme":{"Multiword":"je ne dis pas"},"count":7}
-{"lexeme":{"Multiword":"je ne pense pas"},"count":7}
+{"lexeme":{"Multiword":"je vais aller"},"count":7}
 {"lexeme":{"Multiword":"le nôtre"},"count":7}
 {"lexeme":{"Multiword":"m'en aller"},"count":7}
 {"lexeme":{"Multiword":"meilleur ami"},"count":7}
@@ -1540,6 +1543,7 @@
 {"lexeme":{"Multiword":"ne jamais dire jamais"},"count":7}
 {"lexeme":{"Multiword":"pas du tout"},"count":7}
 {"lexeme":{"Multiword":"pas encore"},"count":7}
+{"lexeme":{"Multiword":"penser de"},"count":7}
 {"lexeme":{"Multiword":"que dis-je"},"count":7}
 {"lexeme":{"Multiword":"toi-même"},"count":7}
 {"lexeme":{"Multiword":"tu l'as dit"},"count":7}
@@ -1731,12 +1735,12 @@
 {"lexeme":{"Heteronym":{"word":"étions","lemma":"être","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"être","lemma":"être","pos":"VERB"}},"count":6}
 {"lexeme":{"Multiword":"Dieu sait"},"count":6}
-{"lexeme":{"Multiword":"au début"},"count":6}
 {"lexeme":{"Multiword":"avoir soif"},"count":6}
 {"lexeme":{"Multiword":"bien vu"},"count":6}
 {"lexeme":{"Multiword":"compter sur"},"count":6}
 {"lexeme":{"Multiword":"coup de fil"},"count":6}
-{"lexeme":{"Multiword":"de deux"},"count":6}
+{"lexeme":{"Multiword":"de retour"},"count":6}
+{"lexeme":{"Multiword":"des familles"},"count":6}
 {"lexeme":{"Multiword":"devine quoi"},"count":6}
 {"lexeme":{"Multiword":"dire au revoir"},"count":6}
 {"lexeme":{"Multiword":"déjà vu"},"count":6}
@@ -1744,18 +1748,21 @@
 {"lexeme":{"Multiword":"en bas"},"count":6}
 {"lexeme":{"Multiword":"en effet"},"count":6}
 {"lexeme":{"Multiword":"en train de"},"count":6}
+{"lexeme":{"Multiword":"en tête"},"count":6}
 {"lexeme":{"Multiword":"entendre dire"},"count":6}
 {"lexeme":{"Multiword":"excuse-moi"},"count":6}
 {"lexeme":{"Multiword":"faire mieux de"},"count":6}
 {"lexeme":{"Multiword":"grand-père"},"count":6}
 {"lexeme":{"Multiword":"j'ai une question"},"count":6}
-{"lexeme":{"Multiword":"je vais aller"},"count":6}
 {"lexeme":{"Multiword":"laisser tomber"},"count":6}
 {"lexeme":{"Multiword":"mon vieux"},"count":6}
-{"lexeme":{"Multiword":"penser de"},"count":6}
 {"lexeme":{"Multiword":"petite amie"},"count":6}
+{"lexeme":{"Multiword":"quand même"},"count":6}
+{"lexeme":{"Multiword":"quoi faire"},"count":6}
 {"lexeme":{"Multiword":"rendez-vous"},"count":6}
 {"lexeme":{"Multiword":"tout comme"},"count":6}
+{"lexeme":{"Multiword":"tout droit"},"count":6}
+{"lexeme":{"Multiword":"tout à l'heure"},"count":6}
 {"lexeme":{"Multiword":"vouloir bien"},"count":6}
 {"lexeme":{"Multiword":"y compris"},"count":6}
 {"lexeme":{"Multiword":"à bientôt"},"count":6}
@@ -2014,20 +2021,19 @@
 {"lexeme":{"Heteronym":{"word":"île","lemma":"île","pos":"NOUN"}},"count":5}
 {"lexeme":{"Multiword":"Dieu merci"},"count":5}
 {"lexeme":{"Multiword":"Votre Altesse"},"count":5}
+{"lexeme":{"Multiword":"allez savoir"},"count":5}
 {"lexeme":{"Multiword":"attendu que"},"count":5}
 {"lexeme":{"Multiword":"au contraire"},"count":5}
 {"lexeme":{"Multiword":"au fait"},"count":5}
 {"lexeme":{"Multiword":"autant que"},"count":5}
 {"lexeme":{"Multiword":"beau gosse"},"count":5}
+{"lexeme":{"Multiword":"bien plus"},"count":5}
 {"lexeme":{"Multiword":"bon anniversaire"},"count":5}
 {"lexeme":{"Multiword":"chose faite"},"count":5}
 {"lexeme":{"Multiword":"coup de feu"},"count":5}
-{"lexeme":{"Multiword":"de retour"},"count":5}
-{"lexeme":{"Multiword":"des familles"},"count":5}
 {"lexeme":{"Multiword":"en cours"},"count":5}
 {"lexeme":{"Multiword":"en forme"},"count":5}
 {"lexeme":{"Multiword":"en jeu"},"count":5}
-{"lexeme":{"Multiword":"en tête"},"count":5}
 {"lexeme":{"Multiword":"faire bon voyage"},"count":5}
 {"lexeme":{"Multiword":"faire du bien"},"count":5}
 {"lexeme":{"Multiword":"grand jour"},"count":5}
@@ -2039,18 +2045,16 @@
 {"lexeme":{"Multiword":"ne personne"},"count":5}
 {"lexeme":{"Multiword":"non plus"},"count":5}
 {"lexeme":{"Multiword":"pas de ça"},"count":5}
-{"lexeme":{"Multiword":"quand même"},"count":5}
-{"lexeme":{"Multiword":"quoi faire"},"count":5}
 {"lexeme":{"Multiword":"rendre compte"},"count":5}
 {"lexeme":{"Multiword":"rien à voir"},"count":5}
 {"lexeme":{"Multiword":"s'en aller"},"count":5}
 {"lexeme":{"Multiword":"sa mère"},"count":5}
+{"lexeme":{"Multiword":"se faire"},"count":5}
 {"lexeme":{"Multiword":"tenir au courant"},"count":5}
-{"lexeme":{"Multiword":"tout droit"},"count":5}
-{"lexeme":{"Multiword":"tout à l'heure"},"count":5}
 {"lexeme":{"Multiword":"trop de"},"count":5}
 {"lexeme":{"Multiword":"un jour"},"count":5}
 {"lexeme":{"Multiword":"un peu de"},"count":5}
+{"lexeme":{"Multiword":"va savoir"},"count":5}
 {"lexeme":{"Multiword":"à fond"},"count":5}
 {"lexeme":{"Multiword":"à propos"},"count":5}
 {"lexeme":{"Multiword":"ça roule"},"count":5}
@@ -2444,27 +2448,36 @@
 {"lexeme":{"Heteronym":{"word":"été","lemma":"être","pos":"VERB"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"évident","lemma":"évident","pos":"ADJ"}},"count":4}
 {"lexeme":{"Multiword":"Votre Majesté"},"count":4}
-{"lexeme":{"Multiword":"allez savoir"},"count":4}
+{"lexeme":{"Multiword":"aller au lit"},"count":4}
 {"lexeme":{"Multiword":"après tout"},"count":4}
 {"lexeme":{"Multiword":"au chaud"},"count":4}
 {"lexeme":{"Multiword":"autre à"},"count":4}
 {"lexeme":{"Multiword":"avant tout"},"count":4}
 {"lexeme":{"Multiword":"avoir bon"},"count":4}
+{"lexeme":{"Multiword":"avoir droit"},"count":4}
+{"lexeme":{"Multiword":"avoir en tête"},"count":4}
 {"lexeme":{"Multiword":"avoir à voir"},"count":4}
+{"lexeme":{"Multiword":"ayant droit"},"count":4}
 {"lexeme":{"Multiword":"bien dit"},"count":4}
 {"lexeme":{"Multiword":"bien entendu"},"count":4}
-{"lexeme":{"Multiword":"bien plus"},"count":4}
 {"lexeme":{"Multiword":"bon vieux temps"},"count":4}
 {"lexeme":{"Multiword":"bonne soirée"},"count":4}
 {"lexeme":{"Multiword":"c'est la meilleure"},"count":4}
 {"lexeme":{"Multiword":"combien ça coûte"},"count":4}
+{"lexeme":{"Multiword":"compter faire"},"count":4}
 {"lexeme":{"Multiword":"contrairement à"},"count":4}
 {"lexeme":{"Multiword":"d'une minute à l'autre"},"count":4}
+{"lexeme":{"Multiword":"de jour"},"count":4}
 {"lexeme":{"Multiword":"de nuit"},"count":4}
+{"lexeme":{"Multiword":"du côté de"},"count":4}
 {"lexeme":{"Multiword":"en avoir assez"},"count":4}
+{"lexeme":{"Multiword":"en finir"},"count":4}
 {"lexeme":{"Multiword":"en route"},"count":4}
+{"lexeme":{"Multiword":"en tout"},"count":4}
 {"lexeme":{"Multiword":"en échange"},"count":4}
+{"lexeme":{"Multiword":"et alors"},"count":4}
 {"lexeme":{"Multiword":"ex-femme"},"count":4}
+{"lexeme":{"Multiword":"faire comme si"},"count":4}
 {"lexeme":{"Multiword":"faire diversion"},"count":4}
 {"lexeme":{"Multiword":"faire semblant"},"count":4}
 {"lexeme":{"Multiword":"faire un tour"},"count":4}
@@ -2478,6 +2491,7 @@
 {"lexeme":{"Multiword":"là-dessus"},"count":4}
 {"lexeme":{"Multiword":"n'importe où"},"count":4}
 {"lexeme":{"Multiword":"ne savoir que faire"},"count":4}
+{"lexeme":{"Multiword":"nouveau départ"},"count":4}
 {"lexeme":{"Multiword":"ouvrir les yeux"},"count":4}
 {"lexeme":{"Multiword":"peu importe"},"count":4}
 {"lexeme":{"Multiword":"peu importer"},"count":4}
@@ -2489,16 +2503,16 @@
 {"lexeme":{"Multiword":"quelque part"},"count":4}
 {"lexeme":{"Multiword":"qui voilà"},"count":4}
 {"lexeme":{"Multiword":"quoi de neuf"},"count":4}
-{"lexeme":{"Multiword":"se faire"},"count":4}
 {"lexeme":{"Multiword":"si ce n'est"},"count":4}
+{"lexeme":{"Multiword":"si fait"},"count":4}
 {"lexeme":{"Multiword":"sortir ensemble"},"count":4}
 {"lexeme":{"Multiword":"tenir le coup"},"count":4}
 {"lexeme":{"Multiword":"tous les deux"},"count":4}
 {"lexeme":{"Multiword":"tout de suite"},"count":4}
-{"lexeme":{"Multiword":"va savoir"},"count":4}
 {"lexeme":{"Multiword":"vite fait"},"count":4}
 {"lexeme":{"Multiword":"voir venir"},"count":4}
 {"lexeme":{"Multiword":"à bord"},"count":4}
+{"lexeme":{"Multiword":"à côté"},"count":4}
 {"lexeme":{"Multiword":"à l'intérieur"},"count":4}
 {"lexeme":{"Multiword":"à part"},"count":4}
 {"lexeme":{"Multiword":"à propos de"},"count":4}
@@ -3087,7 +3101,6 @@
 {"lexeme":{"Heteronym":{"word":"étudiez","lemma":"étudier","pos":"VERB"}},"count":3}
 {"lexeme":{"Multiword":"Mesdames et Messieurs"},"count":3}
 {"lexeme":{"Multiword":"Votre Excellence"},"count":3}
-{"lexeme":{"Multiword":"aller au lit"},"count":3}
 {"lexeme":{"Multiword":"aller loin"},"count":3}
 {"lexeme":{"Multiword":"appareil photo"},"count":3}
 {"lexeme":{"Multiword":"après toi"},"count":3}
@@ -3096,52 +3109,53 @@
 {"lexeme":{"Multiword":"au moins"},"count":3}
 {"lexeme":{"Multiword":"au monde"},"count":3}
 {"lexeme":{"Multiword":"avoir chaud"},"count":3}
-{"lexeme":{"Multiword":"avoir droit"},"count":3}
-{"lexeme":{"Multiword":"avoir en tête"},"count":3}
-{"lexeme":{"Multiword":"ayant droit"},"count":3}
 {"lexeme":{"Multiword":"bon plan"},"count":3}
 {"lexeme":{"Multiword":"c'est parti"},"count":3}
 {"lexeme":{"Multiword":"comme tu veux"},"count":3}
-{"lexeme":{"Multiword":"compter faire"},"count":3}
 {"lexeme":{"Multiword":"dans le coin"},"count":3}
 {"lexeme":{"Multiword":"de garde"},"count":3}
-{"lexeme":{"Multiword":"de jour"},"count":3}
 {"lexeme":{"Multiword":"de la part de"},"count":3}
+{"lexeme":{"Multiword":"de loin"},"count":3}
 {"lexeme":{"Multiword":"de même"},"count":3}
 {"lexeme":{"Multiword":"demi-tour"},"count":3}
-{"lexeme":{"Multiword":"du côté de"},"count":3}
 {"lexeme":{"Multiword":"du moins"},"count":3}
 {"lexeme":{"Multiword":"en avance"},"count":3}
 {"lexeme":{"Multiword":"en ce moment"},"count":3}
-{"lexeme":{"Multiword":"en finir"},"count":3}
 {"lexeme":{"Multiword":"en gros"},"count":3}
 {"lexeme":{"Multiword":"en général"},"count":3}
 {"lexeme":{"Multiword":"en ligne"},"count":3}
 {"lexeme":{"Multiword":"en particulier"},"count":3}
+{"lexeme":{"Multiword":"en partie"},"count":3}
 {"lexeme":{"Multiword":"en place"},"count":3}
 {"lexeme":{"Multiword":"en théorie"},"count":3}
-{"lexeme":{"Multiword":"en tout"},"count":3}
 {"lexeme":{"Multiword":"en vue"},"count":3}
 {"lexeme":{"Multiword":"entre autres"},"count":3}
-{"lexeme":{"Multiword":"et alors"},"count":3}
 {"lexeme":{"Multiword":"et comment"},"count":3}
 {"lexeme":{"Multiword":"et encore"},"count":3}
+{"lexeme":{"Multiword":"faire beau"},"count":3}
 {"lexeme":{"Multiword":"faire bien de"},"count":3}
 {"lexeme":{"Multiword":"faire chaud"},"count":3}
-{"lexeme":{"Multiword":"faire comme si"},"count":3}
 {"lexeme":{"Multiword":"faire demi-tour"},"count":3}
 {"lexeme":{"Multiword":"faire le point"},"count":3}
+{"lexeme":{"Multiword":"faire noir"},"count":3}
+{"lexeme":{"Multiword":"faire nuit"},"count":3}
+{"lexeme":{"Multiword":"il reste que"},"count":3}
 {"lexeme":{"Multiword":"je vous aime"},"count":3}
 {"lexeme":{"Multiword":"jeter un œil"},"count":3}
 {"lexeme":{"Multiword":"jeune fille"},"count":3}
 {"lexeme":{"Multiword":"joyeux Noël"},"count":3}
+{"lexeme":{"Multiword":"l'un l'autre"},"count":3}
+{"lexeme":{"Multiword":"la fermer"},"count":3}
+{"lexeme":{"Multiword":"laisser faire"},"count":3}
+{"lexeme":{"Multiword":"laissez faire"},"count":3}
 {"lexeme":{"Multiword":"marche arrière"},"count":3}
 {"lexeme":{"Multiword":"meilleure amie"},"count":3}
 {"lexeme":{"Multiword":"merci bien"},"count":3}
 {"lexeme":{"Multiword":"mesdames et messieurs"},"count":3}
 {"lexeme":{"Multiword":"n'importe qui"},"count":3}
-{"lexeme":{"Multiword":"nouveau départ"},"count":3}
+{"lexeme":{"Multiword":"non que"},"count":3}
 {"lexeme":{"Multiword":"nulle part"},"count":3}
+{"lexeme":{"Multiword":"pas question"},"count":3}
 {"lexeme":{"Multiword":"pour l'instant"},"count":3}
 {"lexeme":{"Multiword":"pour toujours"},"count":3}
 {"lexeme":{"Multiword":"prendre l'air"},"count":3}
@@ -3155,15 +3169,14 @@
 {"lexeme":{"Multiword":"salle de bains"},"count":3}
 {"lexeme":{"Multiword":"sans façon"},"count":3}
 {"lexeme":{"Multiword":"se pouvoir"},"count":3}
-{"lexeme":{"Multiword":"si fait"},"count":3}
 {"lexeme":{"Multiword":"sous-sol"},"count":3}
 {"lexeme":{"Multiword":"tenir bon"},"count":3}
 {"lexeme":{"Multiword":"tu sais quoi"},"count":3}
 {"lexeme":{"Multiword":"un peu de temps"},"count":3}
 {"lexeme":{"Multiword":"vois-tu"},"count":3}
 {"lexeme":{"Multiword":"week-end"},"count":3}
-{"lexeme":{"Multiword":"à côté"},"count":3}
 {"lexeme":{"Multiword":"à l'aise"},"count":3}
+{"lexeme":{"Multiword":"à la fin"},"count":3}
 {"lexeme":{"Multiword":"à peu près"},"count":3}
 {"lexeme":{"Multiword":"à savoir"},"count":3}
 {"lexeme":{"Multiword":"à suivre"},"count":3}
@@ -4286,6 +4299,7 @@
 {"lexeme":{"Multiword":"aller voir ailleurs"},"count":2}
 {"lexeme":{"Multiword":"après vous"},"count":2}
 {"lexeme":{"Multiword":"au boulot"},"count":2}
+{"lexeme":{"Multiword":"au bout de"},"count":2}
 {"lexeme":{"Multiword":"au coin"},"count":2}
 {"lexeme":{"Multiword":"au dodo"},"count":2}
 {"lexeme":{"Multiword":"au juste"},"count":2}
@@ -4293,6 +4307,7 @@
 {"lexeme":{"Multiword":"au plus"},"count":2}
 {"lexeme":{"Multiword":"au-dessus"},"count":2}
 {"lexeme":{"Multiword":"autour de"},"count":2}
+{"lexeme":{"Multiword":"avant-hier"},"count":2}
 {"lexeme":{"Multiword":"avoir bonne mine"},"count":2}
 {"lexeme":{"Multiword":"avoir sommeil"},"count":2}
 {"lexeme":{"Multiword":"beau-père"},"count":2}
@@ -4301,32 +4316,48 @@
 {"lexeme":{"Multiword":"bonne année"},"count":2}
 {"lexeme":{"Multiword":"bonne après-midi"},"count":2}
 {"lexeme":{"Multiword":"bonne fête"},"count":2}
+{"lexeme":{"Multiword":"c'est comme si c'était fait"},"count":2}
 {"lexeme":{"Multiword":"c'est dire"},"count":2}
 {"lexeme":{"Multiword":"c'est pourquoi"},"count":2}
+{"lexeme":{"Multiword":"c'était le bon temps"},"count":2}
 {"lexeme":{"Multiword":"café noir"},"count":2}
 {"lexeme":{"Multiword":"ce à quoi"},"count":2}
 {"lexeme":{"Multiword":"ceci étant"},"count":2}
+{"lexeme":{"Multiword":"cela dit"},"count":2}
+{"lexeme":{"Multiword":"cela étant"},"count":2}
 {"lexeme":{"Multiword":"centre-ville"},"count":2}
 {"lexeme":{"Multiword":"chair de poule"},"count":2}
+{"lexeme":{"Multiword":"chais pas"},"count":2}
 {"lexeme":{"Multiword":"changer d'avis"},"count":2}
 {"lexeme":{"Multiword":"chocolat chaud"},"count":2}
+{"lexeme":{"Multiword":"comme quoi"},"count":2}
 {"lexeme":{"Multiword":"comme si c'était hier"},"count":2}
 {"lexeme":{"Multiword":"comme si de rien"},"count":2}
 {"lexeme":{"Multiword":"comme si de rien n'était"},"count":2}
+{"lexeme":{"Multiword":"comme tout"},"count":2}
 {"lexeme":{"Multiword":"comment donc"},"count":2}
 {"lexeme":{"Multiword":"comment ça va"},"count":2}
 {"lexeme":{"Multiword":"coup d'oeil"},"count":2}
 {"lexeme":{"Multiword":"coup d'œil"},"count":2}
 {"lexeme":{"Multiword":"croiser les doigts"},"count":2}
+{"lexeme":{"Multiword":"d'une façon ou d'une autre"},"count":2}
+{"lexeme":{"Multiword":"d'une manière ou d'une autre"},"count":2}
 {"lexeme":{"Multiword":"dans le sac"},"count":2}
 {"lexeme":{"Multiword":"de cette façon"},"count":2}
 {"lexeme":{"Multiword":"de droit"},"count":2}
 {"lexeme":{"Multiword":"de face"},"count":2}
-{"lexeme":{"Multiword":"de loin"},"count":2}
+{"lexeme":{"Multiword":"de force"},"count":2}
+{"lexeme":{"Multiword":"de mémoire"},"count":2}
+{"lexeme":{"Multiword":"de mémoire d'homme"},"count":2}
 {"lexeme":{"Multiword":"de naissance"},"count":2}
 {"lexeme":{"Multiword":"de près"},"count":2}
 {"lexeme":{"Multiword":"de trop"},"count":2}
+{"lexeme":{"Multiword":"de tête"},"count":2}
+{"lexeme":{"Multiword":"des hauts et des bas"},"count":2}
 {"lexeme":{"Multiword":"deux cents"},"count":2}
+{"lexeme":{"Multiword":"dix-huit"},"count":2}
+{"lexeme":{"Multiword":"dix-neuf"},"count":2}
+{"lexeme":{"Multiword":"dix-sept"},"count":2}
 {"lexeme":{"Multiword":"droit au but"},"count":2}
 {"lexeme":{"Multiword":"du reste"},"count":2}
 {"lexeme":{"Multiword":"détective privé"},"count":2}
@@ -4339,16 +4370,17 @@
 {"lexeme":{"Multiword":"en douceur"},"count":2}
 {"lexeme":{"Multiword":"en face"},"count":2}
 {"lexeme":{"Multiword":"en mouvement"},"count":2}
-{"lexeme":{"Multiword":"en partie"},"count":2}
+{"lexeme":{"Multiword":"en passant"},"count":2}
+{"lexeme":{"Multiword":"en personne"},"count":2}
 {"lexeme":{"Multiword":"en principe"},"count":2}
 {"lexeme":{"Multiword":"en public"},"count":2}
 {"lexeme":{"Multiword":"en quelque sorte"},"count":2}
 {"lexeme":{"Multiword":"en revenir"},"count":2}
 {"lexeme":{"Multiword":"en tout cas"},"count":2}
 {"lexeme":{"Multiword":"entre nous"},"count":2}
+{"lexeme":{"Multiword":"ex-mari"},"count":2}
 {"lexeme":{"Multiword":"face à"},"count":2}
 {"lexeme":{"Multiword":"faire au mieux"},"count":2}
-{"lexeme":{"Multiword":"faire beau"},"count":2}
 {"lexeme":{"Multiword":"faire l'amour"},"count":2}
 {"lexeme":{"Multiword":"faire la fête"},"count":2}
 {"lexeme":{"Multiword":"faire la paix"},"count":2}
@@ -4357,8 +4389,6 @@
 {"lexeme":{"Multiword":"faire le plein"},"count":2}
 {"lexeme":{"Multiword":"faire marche"},"count":2}
 {"lexeme":{"Multiword":"faire marche arrière"},"count":2}
-{"lexeme":{"Multiword":"faire noir"},"count":2}
-{"lexeme":{"Multiword":"faire nuit"},"count":2}
 {"lexeme":{"Multiword":"faire partie"},"count":2}
 {"lexeme":{"Multiword":"faire peur"},"count":2}
 {"lexeme":{"Multiword":"faire sans"},"count":2}
@@ -4374,18 +4404,16 @@
 {"lexeme":{"Multiword":"histoire de"},"count":2}
 {"lexeme":{"Multiword":"hors de question"},"count":2}
 {"lexeme":{"Multiword":"hors service"},"count":2}
-{"lexeme":{"Multiword":"il reste que"},"count":2}
+{"lexeme":{"Multiword":"il est quelle heure"},"count":2}
+{"lexeme":{"Multiword":"il faut ce qu'il faut"},"count":2}
 {"lexeme":{"Multiword":"j'ai faim"},"count":2}
 {"lexeme":{"Multiword":"je pense bien"},"count":2}
 {"lexeme":{"Multiword":"je suis enceinte"},"count":2}
 {"lexeme":{"Multiword":"jeter un coup d'œil"},"count":2}
+{"lexeme":{"Multiword":"jour et nuit"},"count":2}
 {"lexeme":{"Multiword":"journal de bord"},"count":2}
-{"lexeme":{"Multiword":"l'un l'autre"},"count":2}
-{"lexeme":{"Multiword":"la fermer"},"count":2}
 {"lexeme":{"Multiword":"laisser aller"},"count":2}
-{"lexeme":{"Multiword":"laisser faire"},"count":2}
 {"lexeme":{"Multiword":"laisser passer"},"count":2}
-{"lexeme":{"Multiword":"laissez faire"},"count":2}
 {"lexeme":{"Multiword":"le temps de"},"count":2}
 {"lexeme":{"Multiword":"le temps que"},"count":2}
 {"lexeme":{"Multiword":"lui-même"},"count":2}
@@ -4396,12 +4424,13 @@
 {"lexeme":{"Multiword":"marché conclu"},"count":2}
 {"lexeme":{"Multiword":"me diras-tu"},"count":2}
 {"lexeme":{"Multiword":"n'avoir rien à voir avec"},"count":2}
+{"lexeme":{"Multiword":"n'eût été"},"count":2}
 {"lexeme":{"Multiword":"n'importe laquelle"},"count":2}
 {"lexeme":{"Multiword":"n'importe lequel"},"count":2}
 {"lexeme":{"Multiword":"n'importe lesquelles"},"count":2}
 {"lexeme":{"Multiword":"n'importe lesquels"},"count":2}
 {"lexeme":{"Multiword":"ne pas dire non"},"count":2}
-{"lexeme":{"Multiword":"non que"},"count":2}
+{"lexeme":{"Multiword":"non merci"},"count":2}
 {"lexeme":{"Multiword":"on ne sait jamais"},"count":2}
 {"lexeme":{"Multiword":"ou bien"},"count":2}
 {"lexeme":{"Multiword":"ou sinon"},"count":2}
@@ -4411,7 +4440,7 @@
 {"lexeme":{"Multiword":"par hasard"},"count":2}
 {"lexeme":{"Multiword":"par terre"},"count":2}
 {"lexeme":{"Multiword":"par-dessus"},"count":2}
-{"lexeme":{"Multiword":"pas question"},"count":2}
+{"lexeme":{"Multiword":"parlez-vous anglais"},"count":2}
 {"lexeme":{"Multiword":"passer le mot"},"count":2}
 {"lexeme":{"Multiword":"passer à autre chose"},"count":2}
 {"lexeme":{"Multiword":"penser faire"},"count":2}
@@ -4423,6 +4452,7 @@
 {"lexeme":{"Multiword":"plusieurs fois"},"count":2}
 {"lexeme":{"Multiword":"porte-bonheur"},"count":2}
 {"lexeme":{"Multiword":"pour info"},"count":2}
+{"lexeme":{"Multiword":"pour rien"},"count":2}
 {"lexeme":{"Multiword":"pour une fois"},"count":2}
 {"lexeme":{"Multiword":"pourvu que"},"count":2}
 {"lexeme":{"Multiword":"première classe"},"count":2}
@@ -4430,9 +4460,11 @@
 {"lexeme":{"Multiword":"prendre le relais"},"count":2}
 {"lexeme":{"Multiword":"prendre le volant"},"count":2}
 {"lexeme":{"Multiword":"prendre les commandes"},"count":2}
+{"lexeme":{"Multiword":"prendre position"},"count":2}
 {"lexeme":{"Multiword":"propriété privée"},"count":2}
 {"lexeme":{"Multiword":"père Noël"},"count":2}
 {"lexeme":{"Multiword":"qu'est-ce que j'en sais"},"count":2}
+{"lexeme":{"Multiword":"que faites-vous dans la vie"},"count":2}
 {"lexeme":{"Multiword":"quoi encore"},"count":2}
 {"lexeme":{"Multiword":"repose en paix"},"count":2}
 {"lexeme":{"Multiword":"rien à faire"},"count":2}
@@ -4443,37 +4475,57 @@
 {"lexeme":{"Multiword":"sans commentaires"},"count":2}
 {"lexeme":{"Multiword":"sans exception"},"count":2}
 {"lexeme":{"Multiword":"sauf que"},"count":2}
+{"lexeme":{"Multiword":"se souvenir"},"count":2}
 {"lexeme":{"Multiword":"service secret"},"count":2}
 {"lexeme":{"Multiword":"sortir avec"},"count":2}
 {"lexeme":{"Multiword":"sous peu"},"count":2}
+{"lexeme":{"Multiword":"suivant que"},"count":2}
+{"lexeme":{"Multiword":"sur ce"},"count":2}
 {"lexeme":{"Multiword":"sur mesure"},"count":2}
 {"lexeme":{"Multiword":"sûr et certain"},"count":2}
 {"lexeme":{"Multiword":"tant de choses"},"count":2}
+{"lexeme":{"Multiword":"tel père, tel fils"},"count":2}
 {"lexeme":{"Multiword":"tel que"},"count":2}
 {"lexeme":{"Multiword":"tendre la main"},"count":2}
 {"lexeme":{"Multiword":"tenir parole"},"count":2}
+{"lexeme":{"Multiword":"tout le plaisir est pour moi"},"count":2}
 {"lexeme":{"Multiword":"tu parles de"},"count":2}
+{"lexeme":{"Multiword":"tu vas voir ce que tu vas voir"},"count":2}
 {"lexeme":{"Multiword":"un par un"},"count":2}
 {"lexeme":{"Multiword":"va savoir pourquoi"},"count":2}
 {"lexeme":{"Multiword":"valoir la peine"},"count":2}
 {"lexeme":{"Multiword":"valoir le coup"},"count":2}
 {"lexeme":{"Multiword":"vieille école"},"count":2}
+{"lexeme":{"Multiword":"vingt-cinq"},"count":2}
+{"lexeme":{"Multiword":"vingt-deux"},"count":2}
+{"lexeme":{"Multiword":"vingt-huit"},"count":2}
+{"lexeme":{"Multiword":"vingt-six"},"count":2}
+{"lexeme":{"Multiword":"vingt-trois"},"count":2}
 {"lexeme":{"Multiword":"y a que ça"},"count":2}
 {"lexeme":{"Multiword":"États-Unis"},"count":2}
+{"lexeme":{"Multiword":"à bout"},"count":2}
 {"lexeme":{"Multiword":"à cause de"},"count":2}
+{"lexeme":{"Multiword":"à ce propos"},"count":2}
+{"lexeme":{"Multiword":"à ce sujet"},"count":2}
 {"lexeme":{"Multiword":"à cette heure"},"count":2}
+{"lexeme":{"Multiword":"à distance"},"count":2}
+{"lexeme":{"Multiword":"à haute voix"},"count":2}
 {"lexeme":{"Multiword":"à jamais"},"count":2}
-{"lexeme":{"Multiword":"à la fin"},"count":2}
 {"lexeme":{"Multiword":"à la main"},"count":2}
+{"lexeme":{"Multiword":"à la minute"},"count":2}
 {"lexeme":{"Multiword":"à point"},"count":2}
+{"lexeme":{"Multiword":"à prendre ou à laisser"},"count":2}
 {"lexeme":{"Multiword":"à présent"},"count":2}
 {"lexeme":{"Multiword":"à raison"},"count":2}
 {"lexeme":{"Multiword":"à table"},"count":2}
+{"lexeme":{"Multiword":"à temps"},"count":2}
 {"lexeme":{"Multiword":"à toi de jouer"},"count":2}
 {"lexeme":{"Multiword":"à toi de me le dire"},"count":2}
 {"lexeme":{"Multiword":"à tout à l'heure"},"count":2}
 {"lexeme":{"Multiword":"à vie"},"count":2}
+{"lexeme":{"Multiword":"à voix haute"},"count":2}
 {"lexeme":{"Multiword":"ça a été"},"count":2}
+{"lexeme":{"Multiword":"ça se saurait"},"count":2}
 {"lexeme":{"Heteronym":{"word":"abeilles","lemma":"abeille","pos":"NOUN"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"abri","lemma":"abri","pos":"NOUN"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"absente","lemma":"absent","pos":"ADJ"}},"count":1}
@@ -7143,10 +7195,10 @@
 {"lexeme":{"Multiword":"ange gardien"},"count":1}
 {"lexeme":{"Multiword":"annoncer la couleur"},"count":1}
 {"lexeme":{"Multiword":"après-demain"},"count":1}
-{"lexeme":{"Multiword":"au bout de"},"count":1}
 {"lexeme":{"Multiword":"au cas où"},"count":1}
 {"lexeme":{"Multiword":"au choix"},"count":1}
 {"lexeme":{"Multiword":"au complet"},"count":1}
+{"lexeme":{"Multiword":"au dire de"},"count":1}
 {"lexeme":{"Multiword":"au départ"},"count":1}
 {"lexeme":{"Multiword":"au final"},"count":1}
 {"lexeme":{"Multiword":"au grand jour"},"count":1}
@@ -7161,14 +7213,16 @@
 {"lexeme":{"Multiword":"au total"},"count":1}
 {"lexeme":{"Multiword":"au volant"},"count":1}
 {"lexeme":{"Multiword":"au-delà"},"count":1}
+{"lexeme":{"Multiword":"au-delà de"},"count":1}
 {"lexeme":{"Multiword":"au-dessus de"},"count":1}
 {"lexeme":{"Multiword":"auprès de"},"count":1}
+{"lexeme":{"Multiword":"autant dire"},"count":1}
 {"lexeme":{"Multiword":"autant pour moi"},"count":1}
 {"lexeme":{"Multiword":"autant que possible"},"count":1}
 {"lexeme":{"Multiword":"autre part"},"count":1}
 {"lexeme":{"Multiword":"aux dernières nouvelles"},"count":1}
 {"lexeme":{"Multiword":"avant longtemps"},"count":1}
-{"lexeme":{"Multiword":"avant-hier"},"count":1}
+{"lexeme":{"Multiword":"avant que"},"count":1}
 {"lexeme":{"Multiword":"avec le temps"},"count":1}
 {"lexeme":{"Multiword":"avoir accès"},"count":1}
 {"lexeme":{"Multiword":"avoir affaire à"},"count":1}
@@ -7179,6 +7233,8 @@
 {"lexeme":{"Multiword":"avoir froid"},"count":1}
 {"lexeme":{"Multiword":"avoir hâte"},"count":1}
 {"lexeme":{"Multiword":"avoir la tête qui tourne"},"count":1}
+{"lexeme":{"Multiword":"avoir part"},"count":1}
+{"lexeme":{"Multiword":"avoir rendez-vous"},"count":1}
 {"lexeme":{"Multiword":"baisser les bras"},"count":1}
 {"lexeme":{"Multiword":"balle de match"},"count":1}
 {"lexeme":{"Multiword":"bande de"},"count":1}
@@ -7204,26 +7260,22 @@
 {"lexeme":{"Multiword":"bonté divine"},"count":1}
 {"lexeme":{"Multiword":"bras droit"},"count":1}
 {"lexeme":{"Multiword":"c'est combien"},"count":1}
-{"lexeme":{"Multiword":"c'est comme si c'était fait"},"count":1}
 {"lexeme":{"Multiword":"c'est la moindre des choses"},"count":1}
 {"lexeme":{"Multiword":"c'est le cas de le dire"},"count":1}
 {"lexeme":{"Multiword":"c'est le moins qu'on puisse dire"},"count":1}
 {"lexeme":{"Multiword":"c'est le moment ou jamais"},"count":1}
 {"lexeme":{"Multiword":"c'est plus fort que moi"},"count":1}
-{"lexeme":{"Multiword":"c'était le bon temps"},"count":1}
 {"lexeme":{"Multiword":"cache-cache"},"count":1}
 {"lexeme":{"Multiword":"carte blanche"},"count":1}
 {"lexeme":{"Multiword":"carte d'identité"},"count":1}
 {"lexeme":{"Multiword":"carte de crédit"},"count":1}
 {"lexeme":{"Multiword":"cause toujours"},"count":1}
+{"lexeme":{"Multiword":"ce pourquoi"},"count":1}
 {"lexeme":{"Multiword":"ce qui est fait est fait"},"count":1}
 {"lexeme":{"Multiword":"ce à quoi je pense"},"count":1}
-{"lexeme":{"Multiword":"cela dit"},"count":1}
-{"lexeme":{"Multiword":"cela étant"},"count":1}
 {"lexeme":{"Multiword":"cent pour cent"},"count":1}
 {"lexeme":{"Multiword":"centre commercial"},"count":1}
 {"lexeme":{"Multiword":"chacun pour soi"},"count":1}
-{"lexeme":{"Multiword":"chais pas"},"count":1}
 {"lexeme":{"Multiword":"changer de disque"},"count":1}
 {"lexeme":{"Multiword":"chapeau bas"},"count":1}
 {"lexeme":{"Multiword":"chaque chose en son temps"},"count":1}
@@ -7237,13 +7289,13 @@
 {"lexeme":{"Multiword":"clair et net"},"count":1}
 {"lexeme":{"Multiword":"comme il faut"},"count":1}
 {"lexeme":{"Multiword":"comme jamais"},"count":1}
+{"lexeme":{"Multiword":"comme on fait son lit on se couche"},"count":1}
 {"lexeme":{"Multiword":"comme on fait son lit, on se couche"},"count":1}
 {"lexeme":{"Multiword":"comme par hasard"},"count":1}
 {"lexeme":{"Multiword":"comme par magie"},"count":1}
 {"lexeme":{"Multiword":"comme pour"},"count":1}
 {"lexeme":{"Multiword":"comme prévu"},"count":1}
-{"lexeme":{"Multiword":"comme quoi"},"count":1}
-{"lexeme":{"Multiword":"comme tout"},"count":1}
+{"lexeme":{"Multiword":"comment allez-vous"},"count":1}
 {"lexeme":{"Multiword":"compte à rebours"},"count":1}
 {"lexeme":{"Multiword":"conseil d'ami"},"count":1}
 {"lexeme":{"Multiword":"contact visuel"},"count":1}
@@ -7260,8 +7312,6 @@
 {"lexeme":{"Multiword":"crever de faim"},"count":1}
 {"lexeme":{"Multiword":"côte à côte"},"count":1}
 {"lexeme":{"Multiword":"d'ici peu"},"count":1}
-{"lexeme":{"Multiword":"d'une façon ou d'une autre"},"count":1}
-{"lexeme":{"Multiword":"d'une manière ou d'une autre"},"count":1}
 {"lexeme":{"Multiword":"dans ce cas"},"count":1}
 {"lexeme":{"Multiword":"dans l'air"},"count":1}
 {"lexeme":{"Multiword":"dans la nature"},"count":1}
@@ -7276,16 +7326,15 @@
 {"lexeme":{"Multiword":"dans tes rêves"},"count":1}
 {"lexeme":{"Multiword":"dans un sens"},"count":1}
 {"lexeme":{"Multiword":"date de naissance"},"count":1}
+{"lexeme":{"Multiword":"de choix"},"count":1}
 {"lexeme":{"Multiword":"de confiance"},"count":1}
+{"lexeme":{"Multiword":"de couleur"},"count":1}
 {"lexeme":{"Multiword":"de fer"},"count":1}
-{"lexeme":{"Multiword":"de force"},"count":1}
 {"lexeme":{"Multiword":"de fou"},"count":1}
 {"lexeme":{"Multiword":"de justesse"},"count":1}
 {"lexeme":{"Multiword":"de l'autre côté de"},"count":1}
 {"lexeme":{"Multiword":"de l'eau a coulé sous les ponts"},"count":1}
 {"lexeme":{"Multiword":"de luxe"},"count":1}
-{"lexeme":{"Multiword":"de mémoire"},"count":1}
-{"lexeme":{"Multiword":"de mémoire d'homme"},"count":1}
 {"lexeme":{"Multiword":"de nos jours"},"count":1}
 {"lexeme":{"Multiword":"de parole"},"count":1}
 {"lexeme":{"Multiword":"de passage"},"count":1}
@@ -7294,14 +7343,15 @@
 {"lexeme":{"Multiword":"de préférence"},"count":1}
 {"lexeme":{"Multiword":"de quel droit"},"count":1}
 {"lexeme":{"Multiword":"de quoi je me mêle"},"count":1}
+{"lexeme":{"Multiword":"de rien du tout"},"count":1}
 {"lexeme":{"Multiword":"de règle"},"count":1}
 {"lexeme":{"Multiword":"de rêve"},"count":1}
 {"lexeme":{"Multiword":"de service"},"count":1}
 {"lexeme":{"Multiword":"de stock"},"count":1}
+{"lexeme":{"Multiword":"de taille"},"count":1}
 {"lexeme":{"Multiword":"de toute beauté"},"count":1}
 {"lexeme":{"Multiword":"de toute façon"},"count":1}
 {"lexeme":{"Multiword":"de toute évidence"},"count":1}
-{"lexeme":{"Multiword":"de tête"},"count":1}
 {"lexeme":{"Multiword":"demain est un autre jour"},"count":1}
 {"lexeme":{"Multiword":"demi-douzaine"},"count":1}
 {"lexeme":{"Multiword":"demi-frère"},"count":1}
@@ -7314,12 +7364,11 @@
 {"lexeme":{"Multiword":"dernier cri"},"count":1}
 {"lexeme":{"Multiword":"dernier mot"},"count":1}
 {"lexeme":{"Multiword":"dernière ligne droite"},"count":1}
-{"lexeme":{"Multiword":"des hauts et des bas"},"count":1}
 {"lexeme":{"Multiword":"des masses"},"count":1}
 {"lexeme":{"Multiword":"deux ou trois"},"count":1}
-{"lexeme":{"Multiword":"dix-huit"},"count":1}
-{"lexeme":{"Multiword":"dix-neuf"},"count":1}
-{"lexeme":{"Multiword":"dix-sept"},"count":1}
+{"lexeme":{"Multiword":"donnant donnant"},"count":1}
+{"lexeme":{"Multiword":"donner la main"},"count":1}
+{"lexeme":{"Multiword":"donner raison"},"count":1}
 {"lexeme":{"Multiword":"doux Jésus"},"count":1}
 {"lexeme":{"Multiword":"dès que possible"},"count":1}
 {"lexeme":{"Multiword":"décalage horaire"},"count":1}
@@ -7342,14 +7391,13 @@
 {"lexeme":{"Multiword":"en entier"},"count":1}
 {"lexeme":{"Multiword":"en famille"},"count":1}
 {"lexeme":{"Multiword":"en jeter"},"count":1}
+{"lexeme":{"Multiword":"en l'air"},"count":1}
 {"lexeme":{"Multiword":"en lieu sûr"},"count":1}
 {"lexeme":{"Multiword":"en mettre plein la vue"},"count":1}
 {"lexeme":{"Multiword":"en même temps"},"count":1}
 {"lexeme":{"Multiword":"en or"},"count":1}
 {"lexeme":{"Multiword":"en ordre"},"count":1}
-{"lexeme":{"Multiword":"en passant"},"count":1}
 {"lexeme":{"Multiword":"en permanence"},"count":1}
-{"lexeme":{"Multiword":"en personne"},"count":1}
 {"lexeme":{"Multiword":"en plus"},"count":1}
 {"lexeme":{"Multiword":"en privé"},"count":1}
 {"lexeme":{"Multiword":"en profondeur"},"count":1}
@@ -7357,6 +7405,7 @@
 {"lexeme":{"Multiword":"en présence de"},"count":1}
 {"lexeme":{"Multiword":"en quantité"},"count":1}
 {"lexeme":{"Multiword":"en quel honneur"},"count":1}
+{"lexeme":{"Multiword":"en question"},"count":1}
 {"lexeme":{"Multiword":"en retour"},"count":1}
 {"lexeme":{"Multiword":"en retraite"},"count":1}
 {"lexeme":{"Multiword":"en rien"},"count":1}
@@ -7375,16 +7424,19 @@
 {"lexeme":{"Multiword":"encore et toujours"},"count":1}
 {"lexeme":{"Multiword":"encore heureux"},"count":1}
 {"lexeme":{"Multiword":"encore moins"},"count":1}
+{"lexeme":{"Multiword":"encore une fois"},"count":1}
 {"lexeme":{"Multiword":"enfant unique"},"count":1}
 {"lexeme":{"Multiword":"entrer en jeu"},"count":1}
 {"lexeme":{"Multiword":"et pour cause"},"count":1}
 {"lexeme":{"Multiword":"et puis quoi encore"},"count":1}
 {"lexeme":{"Multiword":"eux-mêmes"},"count":1}
-{"lexeme":{"Multiword":"ex-mari"},"count":1}
+{"lexeme":{"Multiword":"faire appel"},"count":1}
 {"lexeme":{"Multiword":"faire connaissance"},"count":1}
+{"lexeme":{"Multiword":"faire corps"},"count":1}
 {"lexeme":{"Multiword":"faire du bruit"},"count":1}
 {"lexeme":{"Multiword":"faire frais"},"count":1}
 {"lexeme":{"Multiword":"faire fête"},"count":1}
+{"lexeme":{"Multiword":"faire genre"},"count":1}
 {"lexeme":{"Multiword":"faire jour"},"count":1}
 {"lexeme":{"Multiword":"faire justice"},"count":1}
 {"lexeme":{"Multiword":"faire l'affaire"},"count":1}
@@ -7393,10 +7445,13 @@
 {"lexeme":{"Multiword":"faire les affaires"},"count":1}
 {"lexeme":{"Multiword":"faire les courses"},"count":1}
 {"lexeme":{"Multiword":"faire loi"},"count":1}
+{"lexeme":{"Multiword":"faire place"},"count":1}
 {"lexeme":{"Multiword":"faire péter"},"count":1}
 {"lexeme":{"Multiword":"faire sauter"},"count":1}
 {"lexeme":{"Multiword":"faire signe"},"count":1}
 {"lexeme":{"Multiword":"faire son lit"},"count":1}
+{"lexeme":{"Multiword":"faire tête"},"count":1}
+{"lexeme":{"Multiword":"faire un enfant dans le dos"},"count":1}
 {"lexeme":{"Multiword":"faire vœu"},"count":1}
 {"lexeme":{"Multiword":"faites vos jeux"},"count":1}
 {"lexeme":{"Multiword":"femme de chambre"},"count":1}
@@ -7409,6 +7464,7 @@
 {"lexeme":{"Multiword":"fin prêt"},"count":1}
 {"lexeme":{"Multiword":"forces spéciales"},"count":1}
 {"lexeme":{"Multiword":"garde du corps"},"count":1}
+{"lexeme":{"Multiword":"garder contact"},"count":1}
 {"lexeme":{"Multiword":"garder espoir"},"count":1}
 {"lexeme":{"Multiword":"garder le cap"},"count":1}
 {"lexeme":{"Multiword":"grand Dieu"},"count":1}
@@ -7428,9 +7484,8 @@
 {"lexeme":{"Multiword":"hors sujet"},"count":1}
 {"lexeme":{"Multiword":"hot-dog"},"count":1}
 {"lexeme":{"Multiword":"ici et là"},"count":1}
-{"lexeme":{"Multiword":"il est quelle heure"},"count":1}
-{"lexeme":{"Multiword":"il faut ce qu'il faut"},"count":1}
 {"lexeme":{"Multiword":"il faut de tout pour faire un monde"},"count":1}
+{"lexeme":{"Multiword":"il faut le faire"},"count":1}
 {"lexeme":{"Multiword":"il faut le voir pour le croire"},"count":1}
 {"lexeme":{"Multiword":"il n'en est pas question"},"count":1}
 {"lexeme":{"Multiword":"il n'y a pas de quoi"},"count":1}
@@ -7439,6 +7494,7 @@
 {"lexeme":{"Multiword":"immunité diplomatique"},"count":1}
 {"lexeme":{"Multiword":"intoxication alimentaire"},"count":1}
 {"lexeme":{"Multiword":"je m'appelle"},"count":1}
+{"lexeme":{"Multiword":"je ne sais quoi"},"count":1}
 {"lexeme":{"Multiword":"je ne te le fais pas dire"},"count":1}
 {"lexeme":{"Multiword":"je ne vous dis pas"},"count":1}
 {"lexeme":{"Multiword":"je suis français"},"count":1}
@@ -7448,12 +7504,12 @@
 {"lexeme":{"Multiword":"jeune femme"},"count":1}
 {"lexeme":{"Multiword":"jouer le jeu"},"count":1}
 {"lexeme":{"Multiword":"jour après jour"},"count":1}
-{"lexeme":{"Multiword":"jour et nuit"},"count":1}
 {"lexeme":{"Multiword":"joyeuses fêtes"},"count":1}
 {"lexeme":{"Multiword":"jugement dernier"},"count":1}
 {"lexeme":{"Multiword":"jusqu'au bout"},"count":1}
 {"lexeme":{"Multiword":"jusqu'à présent"},"count":1}
 {"lexeme":{"Multiword":"l'autre jour"},"count":1}
+{"lexeme":{"Multiword":"l'espace de"},"count":1}
 {"lexeme":{"Multiword":"la boucler"},"count":1}
 {"lexeme":{"Multiword":"la plupart du temps"},"count":1}
 {"lexeme":{"Multiword":"la roue tourne"},"count":1}
@@ -7480,12 +7536,14 @@
 {"lexeme":{"Multiword":"match nul"},"count":1}
 {"lexeme":{"Multiword":"meilleurs vœux"},"count":1}
 {"lexeme":{"Multiword":"merci mille fois"},"count":1}
+{"lexeme":{"Multiword":"mettre au point"},"count":1}
 {"lexeme":{"Multiword":"mettre d'accord"},"count":1}
 {"lexeme":{"Multiword":"mettre dedans"},"count":1}
 {"lexeme":{"Multiword":"mettre fin"},"count":1}
 {"lexeme":{"Multiword":"mettre le paquet"},"count":1}
 {"lexeme":{"Multiword":"mi-temps"},"count":1}
 {"lexeme":{"Multiword":"mieux vaut tard que jamais"},"count":1}
+{"lexeme":{"Multiword":"mille mercis"},"count":1}
 {"lexeme":{"Multiword":"mise à feu"},"count":1}
 {"lexeme":{"Multiword":"mission accomplie"},"count":1}
 {"lexeme":{"Multiword":"mode opératoire"},"count":1}
@@ -7498,16 +7556,15 @@
 {"lexeme":{"Multiword":"musique classique"},"count":1}
 {"lexeme":{"Multiword":"mère-grand"},"count":1}
 {"lexeme":{"Multiword":"même pas en rêve"},"count":1}
+{"lexeme":{"Multiword":"n'avoir que faire"},"count":1}
 {"lexeme":{"Multiword":"n'en faire qu'à sa tête"},"count":1}
 {"lexeme":{"Multiword":"n'est plus là"},"count":1}
-{"lexeme":{"Multiword":"n'eût été"},"count":1}
 {"lexeme":{"Multiword":"n'importe quand"},"count":1}
 {"lexeme":{"Multiword":"n'importe quel"},"count":1}
 {"lexeme":{"Multiword":"noir et blanc"},"count":1}
 {"lexeme":{"Multiword":"noix de coco"},"count":1}
 {"lexeme":{"Multiword":"nom de famille"},"count":1}
 {"lexeme":{"Multiword":"non mais"},"count":1}
-{"lexeme":{"Multiword":"non merci"},"count":1}
 {"lexeme":{"Multiword":"non-lieu"},"count":1}
 {"lexeme":{"Multiword":"nous-mêmes"},"count":1}
 {"lexeme":{"Multiword":"nouvelle donne"},"count":1}
@@ -7522,10 +7579,11 @@
 {"lexeme":{"Multiword":"par amour"},"count":1}
 {"lexeme":{"Multiword":"par chance"},"count":1}
 {"lexeme":{"Multiword":"par cœur"},"count":1}
+{"lexeme":{"Multiword":"par miracle"},"count":1}
 {"lexeme":{"Multiword":"par moments"},"count":1}
 {"lexeme":{"Multiword":"par écrit"},"count":1}
 {"lexeme":{"Multiword":"parlez pour vous"},"count":1}
-{"lexeme":{"Multiword":"parlez-vous anglais"},"count":1}
+{"lexeme":{"Multiword":"parlez-vous français"},"count":1}
 {"lexeme":{"Multiword":"parole d'honneur"},"count":1}
 {"lexeme":{"Multiword":"parole de scout"},"count":1}
 {"lexeme":{"Multiword":"pas de quoi"},"count":1}
@@ -7555,13 +7613,13 @@
 {"lexeme":{"Multiword":"police secrète"},"count":1}
 {"lexeme":{"Multiword":"pop-corn"},"count":1}
 {"lexeme":{"Multiword":"pour ainsi dire"},"count":1}
+{"lexeme":{"Multiword":"pour ce faire"},"count":1}
 {"lexeme":{"Multiword":"pour la plupart"},"count":1}
 {"lexeme":{"Multiword":"pour la vie"},"count":1}
 {"lexeme":{"Multiword":"pour le coup"},"count":1}
 {"lexeme":{"Multiword":"pour le moins"},"count":1}
 {"lexeme":{"Multiword":"pour le moment"},"count":1}
 {"lexeme":{"Multiword":"pour quoi faire"},"count":1}
-{"lexeme":{"Multiword":"pour rien"},"count":1}
 {"lexeme":{"Multiword":"pour vous servir"},"count":1}
 {"lexeme":{"Multiword":"pourquoi non"},"count":1}
 {"lexeme":{"Multiword":"premier amour"},"count":1}
@@ -7569,7 +7627,6 @@
 {"lexeme":{"Multiword":"première ministre"},"count":1}
 {"lexeme":{"Multiword":"prendre congé"},"count":1}
 {"lexeme":{"Multiword":"prendre forme"},"count":1}
-{"lexeme":{"Multiword":"prendre position"},"count":1}
 {"lexeme":{"Multiword":"prix d'ami"},"count":1}
 {"lexeme":{"Multiword":"promis juré"},"count":1}
 {"lexeme":{"Multiword":"purement et simplement"},"count":1}
@@ -7581,7 +7638,6 @@
 {"lexeme":{"Multiword":"quarante-trois"},"count":1}
 {"lexeme":{"Multiword":"quartier général"},"count":1}
 {"lexeme":{"Multiword":"quatrième dimension"},"count":1}
-{"lexeme":{"Multiword":"que faites-vous dans la vie"},"count":1}
 {"lexeme":{"Multiword":"quel âge as-tu"},"count":1}
 {"lexeme":{"Multiword":"quelle heure est-il"},"count":1}
 {"lexeme":{"Multiword":"quelques-uns"},"count":1}
@@ -7618,15 +7674,18 @@
 {"lexeme":{"Multiword":"sans fin"},"count":1}
 {"lexeme":{"Multiword":"sans intérêt"},"count":1}
 {"lexeme":{"Multiword":"sans intérêts"},"count":1}
+{"lexeme":{"Multiword":"sans merci"},"count":1}
 {"lexeme":{"Multiword":"sans plus"},"count":1}
 {"lexeme":{"Multiword":"sans un"},"count":1}
 {"lexeme":{"Multiword":"sauf si"},"count":1}
 {"lexeme":{"Multiword":"sauf votre respect"},"count":1}
 {"lexeme":{"Multiword":"se faire tard"},"count":1}
+{"lexeme":{"Multiword":"se mettre"},"count":1}
 {"lexeme":{"Multiword":"se passer de"},"count":1}
+{"lexeme":{"Multiword":"se prendre"},"count":1}
 {"lexeme":{"Multiword":"se rappeler"},"count":1}
 {"lexeme":{"Multiword":"se rendre"},"count":1}
-{"lexeme":{"Multiword":"se souvenir"},"count":1}
+{"lexeme":{"Multiword":"se tirer une balle"},"count":1}
 {"lexeme":{"Multiword":"se trouver"},"count":1}
 {"lexeme":{"Multiword":"secret professionnel"},"count":1}
 {"lexeme":{"Multiword":"sergent-major"},"count":1}
@@ -7634,26 +7693,27 @@
 {"lexeme":{"Multiword":"si nécessaire"},"count":1}
 {"lexeme":{"Multiword":"si possible"},"count":1}
 {"lexeme":{"Multiword":"si tu le dis"},"count":1}
+{"lexeme":{"Multiword":"si vous le dites"},"count":1}
 {"lexeme":{"Multiword":"simple comme bonjour"},"count":1}
 {"lexeme":{"Multiword":"soi-disant"},"count":1}
 {"lexeme":{"Multiword":"soins intensifs"},"count":1}
 {"lexeme":{"Multiword":"soixante-dix"},"count":1}
 {"lexeme":{"Multiword":"soixante-quinze"},"count":1}
 {"lexeme":{"Multiword":"sous-entendre"},"count":1}
+{"lexeme":{"Multiword":"sous-entendu"},"count":1}
 {"lexeme":{"Multiword":"sous-marin"},"count":1}
 {"lexeme":{"Multiword":"sud-est"},"count":1}
 {"lexeme":{"Multiword":"sud-ouest"},"count":1}
-{"lexeme":{"Multiword":"suivant que"},"count":1}
-{"lexeme":{"Multiword":"sur ce"},"count":1}
 {"lexeme":{"Multiword":"sur le bout de la langue"},"count":1}
 {"lexeme":{"Multiword":"sur le coup"},"count":1}
 {"lexeme":{"Multiword":"sur le papier"},"count":1}
 {"lexeme":{"Multiword":"sur le pont"},"count":1}
 {"lexeme":{"Multiword":"sur le terrain"},"count":1}
 {"lexeme":{"Multiword":"sur place"},"count":1}
+{"lexeme":{"Multiword":"sur-le-champ"},"count":1}
 {"lexeme":{"Multiword":"tant pis"},"count":1}
 {"lexeme":{"Multiword":"tant que"},"count":1}
-{"lexeme":{"Multiword":"tel père, tel fils"},"count":1}
+{"lexeme":{"Multiword":"tenir compagnie"},"count":1}
 {"lexeme":{"Multiword":"tenir debout"},"count":1}
 {"lexeme":{"Multiword":"tenir tête"},"count":1}
 {"lexeme":{"Multiword":"tour de contrôle"},"count":1}
@@ -7662,7 +7722,7 @@
 {"lexeme":{"Multiword":"tout d'abord"},"count":1}
 {"lexeme":{"Multiword":"tout est bien qui finit bien"},"count":1}
 {"lexeme":{"Multiword":"tout est dit"},"count":1}
-{"lexeme":{"Multiword":"tout le plaisir est pour moi"},"count":1}
+{"lexeme":{"Multiword":"tout haut"},"count":1}
 {"lexeme":{"Multiword":"tout ou rien"},"count":1}
 {"lexeme":{"Multiword":"tout vient à point à qui sait attendre"},"count":1}
 {"lexeme":{"Multiword":"travail d'équipe"},"count":1}
@@ -7678,24 +7738,20 @@
 {"lexeme":{"Multiword":"trêve de plaisanteries"},"count":1}
 {"lexeme":{"Multiword":"tu m'en diras tant"},"count":1}
 {"lexeme":{"Multiword":"tu m'étonnes"},"count":1}
-{"lexeme":{"Multiword":"tu vas voir ce que tu vas voir"},"count":1}
 {"lexeme":{"Multiword":"tôt ou tard"},"count":1}
 {"lexeme":{"Multiword":"un contre un"},"count":1}
 {"lexeme":{"Multiword":"un de ces jours"},"count":1}
 {"lexeme":{"Multiword":"un grand merci"},"count":1}
 {"lexeme":{"Multiword":"un tel"},"count":1}
+{"lexeme":{"Multiword":"une fois pour toutes"},"count":1}
 {"lexeme":{"Multiword":"vaisseau spatial"},"count":1}
 {"lexeme":{"Multiword":"vin blanc"},"count":1}
 {"lexeme":{"Multiword":"vin rouge"},"count":1}
 {"lexeme":{"Multiword":"vingt et un"},"count":1}
-{"lexeme":{"Multiword":"vingt-cinq"},"count":1}
-{"lexeme":{"Multiword":"vingt-deux"},"count":1}
-{"lexeme":{"Multiword":"vingt-huit"},"count":1}
 {"lexeme":{"Multiword":"vingt-neuf"},"count":1}
 {"lexeme":{"Multiword":"vingt-quatre"},"count":1}
 {"lexeme":{"Multiword":"vingt-sept"},"count":1}
-{"lexeme":{"Multiword":"vingt-six"},"count":1}
-{"lexeme":{"Multiword":"vingt-trois"},"count":1}
+{"lexeme":{"Multiword":"voici que"},"count":1}
 {"lexeme":{"Multiword":"voir clair"},"count":1}
 {"lexeme":{"Multiword":"vol qualifié"},"count":1}
 {"lexeme":{"Multiword":"vous autres"},"count":1}
@@ -7703,17 +7759,13 @@
 {"lexeme":{"Multiword":"vrai de vrai"},"count":1}
 {"lexeme":{"Multiword":"vraie vie"},"count":1}
 {"lexeme":{"Multiword":"y avoir de l'eau dans le gaz"},"count":1}
-{"lexeme":{"Multiword":"à bout"},"count":1}
+{"lexeme":{"Multiword":"y passer"},"count":1}
 {"lexeme":{"Multiword":"à bout portant"},"count":1}
-{"lexeme":{"Multiword":"à ce propos"},"count":1}
-{"lexeme":{"Multiword":"à ce sujet"},"count":1}
 {"lexeme":{"Multiword":"à coup de"},"count":1}
 {"lexeme":{"Multiword":"à coup sûr"},"count":1}
 {"lexeme":{"Multiword":"à coups de"},"count":1}
 {"lexeme":{"Multiword":"à d'autres"},"count":1}
 {"lexeme":{"Multiword":"à disposition"},"count":1}
-{"lexeme":{"Multiword":"à distance"},"count":1}
-{"lexeme":{"Multiword":"à haute voix"},"count":1}
 {"lexeme":{"Multiword":"à juste titre"},"count":1}
 {"lexeme":{"Multiword":"à l'abri"},"count":1}
 {"lexeme":{"Multiword":"à l'ancienne"},"count":1}
@@ -7726,7 +7778,6 @@
 {"lexeme":{"Multiword":"à l'étranger"},"count":1}
 {"lexeme":{"Multiword":"à la fois"},"count":1}
 {"lexeme":{"Multiword":"à la hauteur"},"count":1}
-{"lexeme":{"Multiword":"à la minute"},"count":1}
 {"lexeme":{"Multiword":"à la prochaine"},"count":1}
 {"lexeme":{"Multiword":"à la retraite"},"count":1}
 {"lexeme":{"Multiword":"à la tienne"},"count":1}
@@ -7735,9 +7786,9 @@
 {"lexeme":{"Multiword":"à merveille"},"count":1}
 {"lexeme":{"Multiword":"à moins que"},"count":1}
 {"lexeme":{"Multiword":"à mon avis"},"count":1}
+{"lexeme":{"Multiword":"à niveau"},"count":1}
 {"lexeme":{"Multiword":"à peine"},"count":1}
 {"lexeme":{"Multiword":"à pied"},"count":1}
-{"lexeme":{"Multiword":"à prendre ou à laisser"},"count":1}
 {"lexeme":{"Multiword":"à priori"},"count":1}
 {"lexeme":{"Multiword":"à quel point"},"count":1}
 {"lexeme":{"Multiword":"à quelle fin"},"count":1}
@@ -7747,7 +7798,7 @@
 {"lexeme":{"Multiword":"à souhait"},"count":1}
 {"lexeme":{"Multiword":"à ta santé"},"count":1}
 {"lexeme":{"Multiword":"à tantôt"},"count":1}
-{"lexeme":{"Multiword":"à temps"},"count":1}
+{"lexeme":{"Multiword":"à temps plein"},"count":1}
 {"lexeme":{"Multiword":"à terre"},"count":1}
 {"lexeme":{"Multiword":"à tes ordres"},"count":1}
 {"lexeme":{"Multiword":"à tes souhaits"},"count":1}
@@ -7762,7 +7813,7 @@
 {"lexeme":{"Multiword":"à très vite"},"count":1}
 {"lexeme":{"Multiword":"à vendre"},"count":1}
 {"lexeme":{"Multiword":"à venir"},"count":1}
-{"lexeme":{"Multiword":"à voix haute"},"count":1}
+{"lexeme":{"Multiword":"à volonté"},"count":1}
 {"lexeme":{"Multiword":"à vos ordres"},"count":1}
 {"lexeme":{"Multiword":"à vos souhaits"},"count":1}
 {"lexeme":{"Multiword":"à votre avis"},"count":1}
@@ -7773,7 +7824,7 @@
 {"lexeme":{"Multiword":"ça alors"},"count":1}
 {"lexeme":{"Multiword":"ça baigne"},"count":1}
 {"lexeme":{"Multiword":"ça promet"},"count":1}
-{"lexeme":{"Multiword":"ça se saurait"},"count":1}
+{"lexeme":{"Multiword":"ça te va bien"},"count":1}
 {"lexeme":{"Multiword":"ça tourne"},"count":1}
 {"lexeme":{"Multiword":"ça y est"},"count":1}
 {"lexeme":{"Multiword":"échec et mat"},"count":1}
@@ -7782,54 +7833,3 @@
 {"lexeme":{"Multiword":"être du gâteau"},"count":1}
 {"lexeme":{"Multiword":"être en train de"},"count":1}
 {"lexeme":{"Multiword":"œil pour œil"},"count":1}
-{"lexeme":{"Multiword":"au dire de"},"count":0}
-{"lexeme":{"Multiword":"au-delà de"},"count":0}
-{"lexeme":{"Multiword":"autant dire"},"count":0}
-{"lexeme":{"Multiword":"avant que"},"count":0}
-{"lexeme":{"Multiword":"avoir part"},"count":0}
-{"lexeme":{"Multiword":"avoir rendez-vous"},"count":0}
-{"lexeme":{"Multiword":"ce pourquoi"},"count":0}
-{"lexeme":{"Multiword":"comme on fait son lit on se couche"},"count":0}
-{"lexeme":{"Multiword":"comment allez-vous"},"count":0}
-{"lexeme":{"Multiword":"de choix"},"count":0}
-{"lexeme":{"Multiword":"de couleur"},"count":0}
-{"lexeme":{"Multiword":"de rien du tout"},"count":0}
-{"lexeme":{"Multiword":"de taille"},"count":0}
-{"lexeme":{"Multiword":"donnant donnant"},"count":0}
-{"lexeme":{"Multiword":"donner la main"},"count":0}
-{"lexeme":{"Multiword":"donner raison"},"count":0}
-{"lexeme":{"Multiword":"en l'air"},"count":0}
-{"lexeme":{"Multiword":"en question"},"count":0}
-{"lexeme":{"Multiword":"encore une fois"},"count":0}
-{"lexeme":{"Multiword":"faire appel"},"count":0}
-{"lexeme":{"Multiword":"faire corps"},"count":0}
-{"lexeme":{"Multiword":"faire genre"},"count":0}
-{"lexeme":{"Multiword":"faire place"},"count":0}
-{"lexeme":{"Multiword":"faire tête"},"count":0}
-{"lexeme":{"Multiword":"faire un enfant dans le dos"},"count":0}
-{"lexeme":{"Multiword":"garder contact"},"count":0}
-{"lexeme":{"Multiword":"il faut le faire"},"count":0}
-{"lexeme":{"Multiword":"je ne sais quoi"},"count":0}
-{"lexeme":{"Multiword":"l'espace de"},"count":0}
-{"lexeme":{"Multiword":"mettre au point"},"count":0}
-{"lexeme":{"Multiword":"mille mercis"},"count":0}
-{"lexeme":{"Multiword":"n'avoir que faire"},"count":0}
-{"lexeme":{"Multiword":"par miracle"},"count":0}
-{"lexeme":{"Multiword":"parlez-vous français"},"count":0}
-{"lexeme":{"Multiword":"pour ce faire"},"count":0}
-{"lexeme":{"Multiword":"sans merci"},"count":0}
-{"lexeme":{"Multiword":"se mettre"},"count":0}
-{"lexeme":{"Multiword":"se prendre"},"count":0}
-{"lexeme":{"Multiword":"se tirer une balle"},"count":0}
-{"lexeme":{"Multiword":"si vous le dites"},"count":0}
-{"lexeme":{"Multiword":"sous-entendu"},"count":0}
-{"lexeme":{"Multiword":"sur-le-champ"},"count":0}
-{"lexeme":{"Multiword":"tenir compagnie"},"count":0}
-{"lexeme":{"Multiword":"tout haut"},"count":0}
-{"lexeme":{"Multiword":"une fois pour toutes"},"count":0}
-{"lexeme":{"Multiword":"voici que"},"count":0}
-{"lexeme":{"Multiword":"y passer"},"count":0}
-{"lexeme":{"Multiword":"à niveau"},"count":0}
-{"lexeme":{"Multiword":"à temps plein"},"count":0}
-{"lexeme":{"Multiword":"à volonté"},"count":0}
-{"lexeme":{"Multiword":"ça te va bien"},"count":0}

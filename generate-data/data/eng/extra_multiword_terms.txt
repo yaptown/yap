@@ -1,0 +1,540 @@
+get up
+get down
+get out
+get in
+get on
+get off
+get over
+get through
+get by
+get along
+get away
+get back
+get together
+get rid of
+give up
+give in
+give out
+give away
+give back
+take off
+take on
+take up
+take out
+take over
+take down
+take back
+take after
+take in
+take apart
+put on
+put off
+put up
+put down
+put away
+put together
+put up with
+put through
+put out
+look up
+look down
+look out
+look for
+look after
+look into
+look forward to
+look up to
+look down on
+look through
+look over
+turn on
+turn off
+turn up
+turn down
+turn out
+turn in
+turn over
+turn around
+come up
+come down
+come out
+come in
+come back
+come over
+come along
+come across
+come through
+come up with
+go up
+go down
+go out
+go in
+go back
+go over
+go through
+go along
+go away
+go off
+go on
+make up
+make out
+make off
+make do
+make for
+break up
+break down
+break out
+break in
+break off
+break through
+bring up
+bring down
+bring out
+bring back
+bring about
+call up
+call off
+call out
+call back
+call for
+pick up
+pick out
+pick on
+set up
+set out
+set off
+set down
+run out
+run into
+run over
+run through
+run away
+work out
+work up
+figure out
+find out
+point out
+carry out
+carry on
+hold up
+hold on
+hold out
+hold back
+keep up
+keep on
+keep out
+keep off
+show up
+show off
+blow up
+blow out
+blow over
+fill up
+fill out
+fill in
+pass out
+pass up
+pass away
+pass by
+let down
+let out
+let up
+let in
+let off
+cut off
+cut out
+cut down
+cut up
+cut back
+pull up
+pull out
+pull over
+pull through
+hang up
+hang out
+hang on
+hang around
+fall down
+fall out
+fall off
+fall behind
+fall apart
+fall through
+drop off
+drop out
+drop by
+drop in
+throw away
+throw out
+throw up
+catch up
+catch on
+stand up
+stand out
+stand by
+stand for
+sit down
+sit up
+sit out
+lie down
+slow down
+speed up
+wake up
+grow up
+blow up
+clean up
+mess up
+mix up
+screw up
+back up
+back down
+back out
+used to
+be used to
+get used to
+have to
+have got to
+ought to
+had better
+would rather
+would like
+be going to
+be about to
+be supposed to
+be able to
+be likely to
+be bound to
+be due to
+be meant to
+there is
+there are
+there was
+there were
+there will be
+there has been
+there have been
+here we go
+here you go
+there you go
+here we are
+there we are
+it seems
+it appears
+it looks like
+it sounds like
+it feels like
+it turns out
+what about
+how about
+what if
+how come
+what for
+what's up
+what's going on
+what's the matter
+what do you think
+what do you mean
+how do you do
+how are you
+how's it going
+where are you from
+as well as
+as long as
+as soon as
+as far as
+as if
+as though
+even though
+even if
+in order to
+so that
+such that
+now that
+given that
+provided that
+assuming that
+in case
+in case of
+whether or not
+no matter what
+no matter how
+no matter when
+no matter where
+no matter who
+because of
+instead of
+in spite of
+despite of
+in front of
+in back of
+on top of
+at the bottom of
+in the middle of
+at the end of
+at the beginning of
+on behalf of
+in favor of
+in terms of
+in light of
+in view of
+with regard to
+with respect to
+according to
+due to
+owing to
+thanks to
+next to
+close to
+far from
+apart from
+aside from
+except for
+but for
+as for
+as to
+at once
+at first
+at last
+at least
+at most
+at times
+all the time
+from time to time
+once in a while
+every now and then
+now and then
+sooner or later
+little by little
+bit by bit
+step by step
+day by day
+one by one
+all of a sudden
+all at once
+right away
+right now
+just now
+for now
+by now
+up to now
+so far
+as yet
+not yet
+a lot of
+lots of
+a bit of
+a piece of
+a couple of
+a number of
+a great deal of
+a good deal of
+plenty of
+kind of
+sort of
+all kinds of
+all sorts of
+by the way
+on the way
+in the way
+out of the way
+under way
+no way
+in a way
+by all means
+by no means
+make sense
+make sure
+make believe
+make do
+take place
+take care
+take turns
+take advantage of
+take into account
+take for granted
+pay attention
+pay a visit
+lose track of
+keep track of
+make friends
+make fun of
+make a living
+make ends meet
+make up one's mind
+change one's mind
+have in mind
+bear in mind
+keep in mind
+come to mind
+on purpose
+by accident
+by mistake
+on time
+in time
+ahead of time
+at the same time
+for the time being
+in the long run
+in the short run
+in general
+in particular
+in fact
+in reality
+in theory
+in practice
+in common
+in public
+in private
+in person
+in advance
+in vain
+in detail
+at stake
+at risk
+at fault
+at hand
+at large
+on average
+on purpose
+on sale
+on fire
+on duty
+off duty
+for sure
+for good
+for real
+for example
+for instance
+so far
+by far
+as usual
+than usual
+you know
+I mean
+you see
+let's see
+I see
+well then
+all right
+that's right
+that's it
+that is
+or something
+or whatever
+and so on
+and so forth
+and all
+and everything
+and stuff
+after all
+first of all
+most of all
+above all
+all in all
+on the whole
+for the most part
+more or less
+by and large
+to be honest
+to be fair
+to tell the truth
+as a matter of fact
+as a result
+in other words
+on the other hand
+on the contrary
+for one thing
+no longer
+not anymore
+not yet
+not at all
+not really
+not quite
+not exactly
+hardly ever
+hardly any
+barely any
+nothing but
+none other than
+no one else
+nothing else
+nowhere else
+no matter
+no wonder
+no doubt
+too much
+too many
+so much
+so many
+as much as
+as many as
+how much
+how many
+a few
+a little
+quite a few
+quite a bit
+more than
+less than
+rather than
+other than
+be born
+be worth
+be aware of
+be afraid of
+be fond of
+be proud of
+be tired of
+be sick of
+be full of
+be short of
+be capable of
+be guilty of
+be interested in
+be involved in
+be good at
+be bad at
+get married
+get divorced
+get tired
+get sick
+get angry
+get upset
+get excited
+get confused
+get lost
+get ready
+get dressed
+become aware
+go wrong
+go crazy
+go bad
+go broke
+come true
+come alive
+fall asleep
+fall ill
+fall in love
+run short
+run low
+run late
+excuse me
+pardon me
+I'm sorry
+never mind
+no problem
+you're welcome
+thank you
+thanks a lot
+nice to meet you
+pleased to meet you
+how do you do
+take care
+see you
+see you later
+talk to you later
+speak of the devil
+long time no see
+guess what
+you know what
+believe it or not

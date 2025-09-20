@@ -23,6 +23,13 @@ static LANGUAGE_DATA_HASHES: LazyLock<BTreeMap<Course, &'static str>> = LazyLock
     );
     hashes.insert(
         Course {
+            native_language: Language::French,
+            target_language: Language::English,
+        },
+        include_str!("../../out/eng_for_fra/language_data.hash"),
+    );
+    hashes.insert(
+        Course {
             native_language: Language::English,
             target_language: Language::Spanish,
         },

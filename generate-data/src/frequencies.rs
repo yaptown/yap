@@ -51,7 +51,7 @@ pub fn compute_frequencies(
     // Round fractional counts to integers for output
     frequencies
         .into_iter()
-        .map(|(lexeme, count)| (lexeme, count.round() as u32))
+        .map(|(lexeme, count)| (lexeme, count.ceil() as u32))
         .collect()
 }
 

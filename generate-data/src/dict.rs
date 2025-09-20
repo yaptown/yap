@@ -39,7 +39,7 @@ pub async fn create_phrasebook(
     let phrasebook = futures::stream::iter(target_language_multi_word_terms.iter()).enumerate().map(|(i, (multiword_term, &freq))| async move {
         let chat_client = if freq > 500 { &*CHAT_CLIENT_O3 } else { &*CHAT_CLIENT_4O };
         let response: Result<PhrasebookEntryThoughts, _> = chat_client.chat_with_system_prompt(
-            format!(r#"The input is a {target_language} multi-word term. Generate a phrasebook entry for it, to be used in an app for beginner  {target_language} learners (whose native language is {native_language}). First, think about the word and its meaning, and what is likely to be relevant to a beginner learner. Your thoughts will not be shown to the user. Then, write the word, then provide the meaning in a concise way. (Skip any preamble like "the {target_language} term [term] is often used to indicate that...", or "a question phrase equivalent to..." and just get straight to the meaning.) Then, provide additional context for how the term is used in the "additional_notes" field. Finally, provide an example of the term's usage in a natural sentence.
+            format!(r#"The input is a {target_language} multi-word term. Generate a phrasebook entry for it, to be used in an app for beginner {target_language} learners (whose native language is {native_language}). First, think about the word and its meaning, and what is likely to be relevant to a beginner learner. Your thoughts will not be shown to the user. Then, write the word, then provide the meaning in a concise way. (Skip any preamble like "the {target_language} term [term] is often used to indicate that...", or "a question phrase equivalent to..." and just get straight to the meaning.) Then, provide additional context for how the term is used in the "additional_notes" field. Finally, provide an example of the term's usage in a natural sentence.
 
 Example:
 Input: multiword term: `ce que`
@@ -51,6 +51,8 @@ Output: {{
     "target_language_example":"Dis-moi ce que tu veux.",
     "native_language_example":"Tell me what you want."
 }}
+
+Of course, their native language is {native_language}, so you should write the meaning and additional notes in {native_language}.
             "#),
             format!("multiword term: `{multiword_term}`"),
         ).await.inspect_err(|e| {
@@ -119,7 +121,7 @@ However:
 
 Each definition must correspond to exactly the word that is given. Do not define related forms or alternate spellings. If the word is ambiguous between forms (e.g. "avocat"), return all common meanings, but **do not speculate**.
 
-Output the result as a JSON object containing an array of one or more definition objects."#),
+Output the result as a JSON object containing an array of one or more definition objects. Of course, their native language is {native_language}, so you should write the notes in {native_language}."#),
             format!("word: `{word}`\nlemma: `{lemma}`,\npos: {pos}", word=heteronym.word, lemma=heteronym.lemma, pos=heteronym.pos),
         ).await.inspect_err(|e| {
             println!("error: {e:#?}");

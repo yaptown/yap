@@ -7680,6 +7680,7 @@ Carle Sunday
 Carleton County
 Carleton-in-Craven
 Carley float
+Carlin How
 Carlin pea
 Carling Sunday
 Carlisle County
@@ -46885,6 +46886,7 @@ a bird in the hand
 a bird in the hand is worth two in the bush
 a bit
 a bit much
+a bit of
 a blessing and a curse
 a bob each way
 a boon and a bane
@@ -46919,6 +46921,7 @@ a closed mouth doesn't get fed
 a closed mouth gathers no feet
 a cold day in July
 a contented mind is a perpetual feast
+a couple of
 a creaking door hangs long on its hinges
 a creaking door hangs longest
 a damn sight
@@ -46953,11 +46956,13 @@ a golden key can open any door
 a good beginning makes a good ending
 a good conscience is a soft pillow
 a good deal
+a good deal of
 a good deed is its own reward
 a good few
 a good look
 a good many
 a great deal
+a great deal of
 a great many
 a hair past a freckle
 a hanger and a flogger
@@ -47001,6 +47006,7 @@ a long time coming
 a long time in coming
 a lot
 a lot a bit
+a lot of
 a lot of bit
 a lottle
 a magician never reveals his secrets
@@ -47030,6 +47036,7 @@ a penny saved is a penny gained
 a piacere
 a picture is worth a thousand words
 a picture paints a thousand words
+a piece of
 a plague o' both your houses
 a plague on both your houses
 a posteriori
@@ -49636,6 +49643,7 @@ all sixes and sevens
 all sizzle and no steak
 all skin and bones
 all smiles
+all sorts of
 all square
 all standing
 all students take calculus
@@ -52929,6 +52937,7 @@ as long as
 as luck may have it
 as luck would have it
 as mad as a cut snake
+as many as
 as memory serves
 as much
 as much again
@@ -53296,6 +53305,7 @@ assume room temperature
 assume the mantle
 assume the position
 assumed name
+assuming that
 assuming the mantle
 assumption of risk
 astasia-abasia
@@ -53518,6 +53528,7 @@ at ten and two
 at that
 at that time
 at the bank
+at the beginning of
 at the best
 at the best of times
 at the bottom of
@@ -53532,6 +53543,7 @@ at the double
 at the drop of a hat
 at the earliest
 at the elbow
+at the end of
 at the end of one's tether
 at the end of the day
 at the expense of
@@ -54314,6 +54326,7 @@ b-hop
 b-hopping
 b-school
 b-sharp
+b-tree
 b-word
 ba construction
 ba da bing ba da boom
@@ -55991,6 +56004,7 @@ barefaced lie
 barefoot and pregnant
 barefoot doctor
 barefoot shoe
+barely any
 barf bag
 barf out
 barfly jumping
@@ -56779,6 +56793,8 @@ be a thing
 be able to
 be able to count on one's fingers
 be about
+be about to
+be afraid of
 be ages with
 be all about
 be along
@@ -56788,6 +56804,8 @@ be ashamed
 be at
 be at the plague
 be awake
+be aware of
+be bad at
 be based on
 be big on
 be bored
@@ -56795,7 +56813,9 @@ be born
 be born last week
 be born yesterday
 be bothered
+be bound to
 be called
+be capable of
 be careful
 be careful what you wish for
 be cool
@@ -56803,9 +56823,15 @@ be cruel to be kind
 be damned
 be done with
 be down with
+be due to
+be fond of
+be full of
 be gathered to one's fathers
+be going to
 be gone
+be good at
 be good for
+be guilty of
 be here for
 be in and out
 be in each other's pockets
@@ -56813,6 +56839,8 @@ be in for
 be in luck
 be in orders
 be in the pocket of someone
+be interested in
+be involved in
 be it as it may
 be it so
 be it what it would
@@ -56822,7 +56850,9 @@ be left at the post
 be left holding the baby
 be left kicking
 be like
+be likely to
 be lost to the four winds
+be meant to
 be mother
 be mum
 be my guest
@@ -56853,6 +56883,7 @@ be out for
 be part of life's rich pageant
 be part of life's rich pattern
 be part of life's rich tapestry
+be proud of
 be quiet
 be rid of
 be riding for a fall
@@ -56861,11 +56892,14 @@ be right back
 be seeing ya
 be seeing you
 be seized of
+be short of
 be sick
+be sick of
 be silent
 be someone's to lose
 be still my beating heart
 be still my heart
+be supposed to
 be taken bad
 be taken ill
 be taken sick
@@ -56877,9 +56911,11 @@ be the worse for drink
 be there
 be there and be square
 be there or be square
+be tired of
 be used to
 be with
 be worried
+be worth
 be wrong
 be-Stetsoned
 be-all
@@ -57357,6 +57393,7 @@ beckon call
 beckons wanted
 beclometasone dipropionate
 beclomethasone dipropionate
+become aware
 become of
 become one flesh
 become one with one's inner self
@@ -60082,6 +60119,7 @@ black-pill
 black-pilled
 black-sant
 black-sick
+black-spotted
 black-striped wallaby
 black-swan event
 black-tailed deer
@@ -61194,6 +61232,7 @@ blue-skies
 blue-sky
 blue-sky law
 blue-sky thinking
+blue-spotted
 blue-stocking
 blue-throated goldentail
 blue-throated sapphire
@@ -64067,6 +64106,7 @@ bromophenol blue
 bromopyruvic acid
 bromothymol blue
 bromous acid
+bronchial tree
 bronchial tube
 bronchiolitis obliterans
 broncho-esophagologic
@@ -64294,6 +64334,7 @@ brown-noser
 brown-out
 brown-point shield skin longirostris
 brown-rumped minivet
+brown-spotted
 brown-sugared
 brown-sugary
 brown-tail moth
@@ -65860,6 +65901,7 @@ buttoned up
 buttoned-down
 buttoned-up
 buttonhole stitch
+buttress root
 buttress-root
 butts in seats
 butts on seats
@@ -88426,6 +88468,7 @@ earth-shattering
 earth-shine
 earth-ship
 earth-side
+earth-stopper
 earth-stopping
 earth-tilth
 earth-tongue
@@ -90107,6 +90150,7 @@ engine block
 engine braking
 engine cleaner
 engine compartment
+engine diaper
 engine displacement
 engine driver
 engine generator
@@ -96862,6 +96906,7 @@ food-to-go
 food-truck
 food-writing
 foodborne illness
+foodie call
 foodie-ism
 fool about
 fool along
@@ -101188,6 +101233,7 @@ get ahold of oneself
 get along
 get along with you
 get amongst it
+get angry
 get around
 get around to
 get at
@@ -101215,7 +101261,9 @@ get by the balls
 get by with
 get changed
 get cold feet
+get confused
 get cracking
+get divorced
 get down
 get down on
 get down to
@@ -101226,6 +101274,7 @@ get down to cases
 get dressed
 get drunk
 get even
+get excited
 get eyes on
 get freaky
 get fresh
@@ -101521,6 +101570,7 @@ get this
 get through
 get through one's head
 get through one's thick skull
+get tired
 get to
 get to first base
 get to fuck
@@ -101550,7 +101600,9 @@ get up someone's nose
 get up the yard
 get up to
 get up with the chickens
+get upset
 get used
+get used to
 get well
 get well soon
 get wet
@@ -102829,6 +102881,7 @@ go big or go home
 go bitchcakes
 go bonkers
 go both ways
+go broke
 go brrr
 go bush
 go bust
@@ -103462,6 +103515,7 @@ gold-bright
 gold-bronze
 gold-collar
 gold-copper ore
+gold-dig
 gold-digger
 gold-digging
 gold-dust
@@ -105484,6 +105538,7 @@ green-shaving
 green-sickness
 green-sicknessed
 green-soil
+green-spotted
 green-staff
 green-stain
 green-stall
@@ -107941,6 +107996,8 @@ harder nut to crack
 harder than Chinese math
 hardest nut to crack
 hardie hole
+hardly any
+hardly ever
 hardness of hearing
 hardo bread
 hardship post
@@ -117279,11 +117336,13 @@ it ain't over till the fat lady sings
 it ain't over until the fat lady sings
 it ain't the meat, it's the motion
 it ain't the whistle that pulls the train
+it appears
 it bag
 it can't be helped
 it depends
 it doesn't matter
 it doesn't matter what they say about you as long as they spell your name right
+it feels like
 it figures
 it girl
 it goes without saying
@@ -117315,11 +117374,14 @@ it isn't over 'til the fat lady sings
 it isn't over till the fat lady sings
 it isn't over until the fat lady sings
 it isn't the whistle that pulls the train
+it looks like
 it me
 it never rains but it pours
 it never rains but that it pours
 it pays to advertise
+it seems
 it self
+it sounds like
 it takes a heap o' livin' to make a house a home
 it takes a heap of living to make a house a home
 it takes a lot of living to make a house a home
@@ -117335,6 +117397,7 @@ it takes two to quarrel
 it takes two to tangle
 it takes two to tango
 it took Nixon to go to China
+it turns out
 it was a joke, Joyce
 it was delicious
 it was like this
@@ -119015,6 +119078,7 @@ keep to one's own knitting
 keep to oneself
 keep together
 keep track
+keep track of
 keep tryst
 keep under
 keep up
@@ -119348,6 +119412,7 @@ kick to the kerb
 kick to touch
 kick up
 kick up a fuss
+kick up a stew
 kick up dust
 kick up one's heels
 kick up the arse
@@ -120233,7 +120298,6 @@ know the drill
 know the ropes
 know the score
 know the shit
-know the truth of all things
 know thyself
 know what
 know what I'm saying
@@ -126047,6 +126111,7 @@ lose their head
 lose time
 lose touch
 lose track
+lose track of
 lose weight
 lose-lose
 loser back home
@@ -126109,6 +126174,7 @@ lot-cloth split
 lote tree
 lotion up
 lotos-eater
+lots of
 lots of love
 lottery ticket
 lotus birth
@@ -132955,6 +133021,7 @@ more sauce than meat
 more so
 more suo
 more tea, vicar
+more than
 more than eleven
 more than friends
 more than likely
@@ -136839,6 +136906,7 @@ no man is an island
 no man's land
 no mark
 no matter
+no matter how
 no matter how much milk you put in coffee, it's still coffee
 no matter how much milk you put in tea, it's still tea
 no matter how one slices it
@@ -136847,6 +136915,9 @@ no matter how thin you slice it, it's still boloney
 no matter how you slice it, it's still the same old baloney
 no matter that
 no matter what
+no matter when
+no matter where
+no matter who
 no mean feat
 no means no
 no mill, no meal
@@ -136863,6 +136934,7 @@ no notes
 no offence
 no offense
 no one
+no one else
 no one ever went broke underestimating the intelligence of the American public
 no one ever went broke underestimating the taste of the American people
 no one ever went broke underestimating the taste of the American public
@@ -137393,6 +137465,7 @@ non-backtracking
 non-barbaric
 non-baryonic dark matter
 non-believer
+non-believing
 non-belligerent
 non-benchmark
 non-binariness
@@ -138708,6 +138781,7 @@ nothing burger
 nothing but
 nothing but net
 nothing doing
+nothing else
 nothing else for it
 nothing for it
 nothing gold can stay
@@ -140081,6 +140155,7 @@ oil cake
 oil can
 oil change
 oil company
+oil diaper
 oil down
 oil drum
 oil field
@@ -142113,6 +142188,7 @@ or should I say
 or so
 or something
 or what
+or whatever
 or words to that effect
 or-molu
 ora serrata
@@ -142211,6 +142287,7 @@ orange-juice
 orange-peel bucket
 orange-peel fungus
 orange-peely
+orange-spotted
 orange-spotted bulbul
 orange-spotted drone fly
 orange-spotted roach
@@ -148482,6 +148559,7 @@ pink-eyed
 pink-footed goose
 pink-handed
 pink-slime journalism
+pink-spotted
 pinkie finger
 pinking iron
 pinking shears
@@ -149634,6 +149712,7 @@ plenary session
 plenary speaker
 plenary talk
 plenty as blackberries
+plenty of
 plenty to go around
 plenty's horn
 plenum chamber
@@ -154697,6 +154776,7 @@ pug-nosed
 pug-ugly
 pugil stick
 puh-lease
+puh-leez
 puh-leeze
 puke for brains
 puke one's brains out
@@ -155242,6 +155322,7 @@ purple-crowned fairywren
 purple-fish
 purple-glossed snake
 purple-headed yogurt slinger
+purple-spotted
 purpletop vervain
 purpose statement
 purpose-built
@@ -158457,8 +158538,10 @@ rebound resilience
 rebound tenderness
 rebound therapy
 rebound tumbler
+rebound tumbling
 rebound volleyball
 rebound-tumbler
+rebound-tumbling
 rebounding lock
 rebus principle
 rec hall
@@ -159110,6 +159193,7 @@ red-shirt
 red-short
 red-shortness
 red-shouldered hawk
+red-spotted
 red-spotted purple
 red-start
 red-tagging
@@ -162302,6 +162386,7 @@ rotten egg
 rotten egg gas
 rotten stone
 rotten to the core
+rotten wood
 rotten-egg gas
 rouge et noir
 rouge-plant
@@ -172039,6 +172124,7 @@ skin someone alive
 skin tag
 skin the cat
 skin the lamb
+skin trade
 skin up
 skin virgin
 skin wool
@@ -183904,6 +183990,7 @@ talk to a brick wall
 talk to oneself
 talk to the hand
 talk to the hand 'cause the face ain't listening
+talk to you later
 talk trash
 talk truth to power
 talk turkey
@@ -185520,6 +185607,7 @@ thalidomide baby
 thalidomide child
 thamnolic acid
 than a bygod
+than usual
 thank Fuck
 thank God
 thank God it's Friday
@@ -186208,6 +186296,9 @@ there exist
 there for everyone to see
 there goes the neighborhood
 there goes the neighbourhood
+there has been
+there have been
+there is
 there is a lid for every pot
 there is a new sheriff in town
 there is a place and time for everything
@@ -186246,7 +186337,11 @@ there ought to be a law
 there oughta be a law
 there oughtta be a law
 there she blows
+there was
+there we are
 there we go
+there were
+there will be
 there ya go
 there you are
 there you go
@@ -190340,6 +190435,7 @@ trade war
 trade wind
 trade-in
 trade-last
+trade-mark
 trade-off
 trade-show
 trade-unionize
@@ -197618,6 +197714,7 @@ wayback machine
 wayfaring tree
 wayfaring-tree
 ways and means
+wayside cross
 wayside pulpit
 waz up
 waza-ari
@@ -198005,6 +198102,7 @@ weight weenie
 weight-bear
 weight-bearing
 weight-lift
+weight-lifting
 weight-saving
 weight-train
 weight-watcher
@@ -198111,6 +198209,7 @@ well room
 well said
 well sinker
 well spotted
+well then
 well up
 well versed
 well wagon
@@ -198579,6 +198678,7 @@ what do you know
 what do you make the time
 what do you mean
 what do you say
+what do you think
 what do you want
 what do you want, a biscuit
 what do you want, a cookie
@@ -199018,6 +199118,7 @@ where's the lie tho
 wherever you go, there you are
 whet slate
 whet someone's appetite
+whether or not
 whew duck
 whey aye
 whey-faced
@@ -199647,6 +199748,7 @@ white-sick
 white-sided dolphin
 white-slaving
 white-spot disease
+white-spotted
 white-supremacist
 white-tailed blue flycatcher
 white-tailed deer
@@ -201990,6 +202092,7 @@ would lose one's head if it wasn't screwed on
 would lose one's head if it wasn't stuck on
 would lose one's head if it wasn't tied on
 would lose one's head if it weren't attached
+would rather
 would the real someone please stand up
 would you be so kind as to
 would you believe
@@ -202532,6 +202635,7 @@ yellow copper
 yellow copperas
 yellow crazy ant
 yellow cross liquid
+yellow dock
 yellow dog
 yellow dog Democrat
 yellow dog contract
@@ -202712,6 +202816,7 @@ yellow-shafted flicker
 yellow-shouldered ladybird
 yellow-skinned
 yellow-spot cadlina
+yellow-spotted
 yellow-tailed black cockatoo
 yellow-throated
 yellow-throated marten
