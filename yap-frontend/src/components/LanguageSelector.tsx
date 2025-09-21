@@ -237,15 +237,15 @@ export function LanguageSelector({
         },
         userKnowsLanguage === "knows_some"
           ? {
-            title: "Yap adapts to your skill level.",
-            content:
-              "So you don't waste time reviewing what you already learned on Duolingo.",
-          }
+              title: "Yap adapts to your skill level.",
+              content:
+                "So you don't waste time reviewing what you already learned on Duolingo.",
+            }
           : {
-            title: "Yap teaches you the most common words first.",
-            content:
-              "It'll surprise you how much you can say with just a few words.",
-          },
+              title: "Yap teaches you the most common words first.",
+              content:
+                "It'll surprise you how much you can say with just a few words.",
+            },
         {
           title: "Yap has no lesson plan.",
           content:
@@ -258,386 +258,484 @@ export function LanguageSelector({
         },
       ];
 
+  // Background floating elements with deterministic pseudo-random values
+  const floatingWords = useMemo(
+    () => [
+      { text: "Bonjour", lang: "French", seed: 0.2 },
+      { text: "Hola", lang: "Spanish", seed: 0.7 },
+      { text: "안녕", lang: "Korean", seed: 0.4 },
+      { text: "Hello", lang: "English", seed: 0.9 },
+      { text: "Merci", lang: "French", seed: 0.3 },
+      { text: "Gracias", lang: "Spanish", seed: 0.6 },
+      { text: "감사", lang: "Korean", seed: 0.8 },
+      { text: "Thanks", lang: "English", seed: 0.1 },
+      { text: "Oui", lang: "French", seed: 0.5 },
+      { text: "Sí", lang: "Spanish", seed: 0.35 },
+      { text: "네", lang: "Korean", seed: 0.75 },
+      { text: "Yes", lang: "English", seed: 0.45 },
+    ],
+    []
+  );
+
   return (
-    <div className="flex items-center justify-center mt-8">
-      <AnimatePresence mode="wait">
-        {selectionState.stage === "selectingNative" ? (
-          // Step 1: Select native language
+    <>
+      {/* Full-page animated background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {floatingWords.map((word, index) => (
           <motion.div
-            key="native-selection"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="w-full max-w-4xl gap-4 flex flex-col items-center"
+            key={`${word.text}-${index}`}
+            className="absolute text-4xl md:text-6xl font-bold opacity-[0.06] select-none"
+            style={{
+              left: `${10 + ((index * 25) % 80)}%`,
+              top: `${10 + ((index * 15) % 70)}%`,
+              color: languageColors[word.lang]?.primary || "#000",
+            }}
+            initial={{
+              x: 0,
+              y: 0,
+              rotate: word.seed * 30 - 15,
+            }}
+            animate={{
+              x: [0, 30, -20, 0],
+              y: [0, -40, 20, 0],
+              rotate: [
+                word.seed * 30 - 15,
+                ((word.seed * 2) % 1) * 30 - 15,
+                ((word.seed * 3) % 1) * 30 - 15,
+                ((word.seed * 4) % 1) * 30 - 15,
+              ],
+            }}
+            transition={{
+              duration: 20 + index * 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
           >
-            <div className="text-center">
-              <h1
-                className="text-5xl font-bold mb-4"
-                style={{ textWrap: "balance" }}
-              >
-                What's your native language?
-              </h1>
-              <p className="text-xl text-muted-foreground mb-8">
-                So we can talk to you!
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8 w-full max-w-2xl">
-              {nativeLanguages.map((lang) => (
-                <motion.div
-                  key={lang}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Card
-                    className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
-                    onClick={() => {
-                      setSelectionState({
-                        stage: "selectingTarget",
-                        nativeLanguage: lang,
-                      });
-                    }}
-                  >
-                    <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
-                      style={{ background: languageColors[lang]?.gradient }}
-                    />
-                    <div className="relative z-10">
-                      <div className="text-8xl mb-4">{languageFlags[lang]}</div>
-                      <h2 className="text-2xl font-bold mb-1">
-                        {iSpeakPhrases[lang]}
-                      </h2>
-                      <p className="text-lg text-muted-foreground">
-                        {nativeLanguageNames[lang]}
-                      </p>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
+            {word.text}
           </motion.div>
-        ) : selectionState.stage === "selectingTarget" ? (
-          // Step 2: Select target language
+        ))}
+
+        {/* Gradient orbs */}
+        {["French", "Spanish", "Korean", "English"].map((lang, index) => (
           <motion.div
-            key="target-selection"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="w-full max-w-4xl gap-4 flex flex-col items-center"
-          >
-            <div className="text-center">
-              <h1
-                className="text-5xl font-bold mb-4"
-                style={{ textWrap: "balance" }}
-              >
-                What do you want to learn?
-              </h1>
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <span className="text-lg text-muted-foreground">
-                  Native language:
-                </span>
-                <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={comboboxOpen}
-                      className="w-[180px] justify-between"
-                    >
-                      <>
-                        <span className="mr-2">
-                          {languageFlags[selectionState.nativeLanguage]}
-                        </span>
-                        {selectionState.nativeLanguage}
-                      </>
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[180px] p-0">
-                    <Command>
-                      <CommandInput placeholder="Search language..." />
-                      <CommandList>
-                        <CommandEmpty>No language found.</CommandEmpty>
-                        <CommandGroup>
-                          {nativeLanguages.map((lang) => (
-                            <CommandItem
-                              key={lang}
-                              value={lang}
-                              onSelect={() => {
-                                setSelectionState({
-                                  stage: "selectingTarget",
-                                  nativeLanguage: lang,
-                                });
-                                setComboboxOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectionState.nativeLanguage === lang
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              <span className="mr-2">
-                                {languageFlags[lang]}
-                              </span>
-                              {lang}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+            key={`orb-${lang}`}
+            className="absolute rounded-full blur-3xl"
+            style={{
+              width: "500px",
+              height: "500px",
+              background: `radial-gradient(circle, ${
+                languageColors[lang]?.primary + "20"
+              }, transparent)`,
+              left: `${index * 25}%`,
+              top: `${index % 2 === 0 ? -10 : 60}%`,
+            }}
+            animate={{
+              x: [0, 100, -50, 0],
+              y: [0, -50, 100, 0],
+              scale: [1, 1.2, 0.8, 1],
+            }}
+            transition={{
+              duration: 30 + index * 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Main content */}
+      <div className="relative z-10 flex items-center justify-center mt-8">
+        <AnimatePresence mode="wait">
+          {selectionState.stage === "selectingNative" ? (
+            // Step 1: Select native language
+            <motion.div
+              key="native-selection"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="w-full max-w-4xl gap-4 flex flex-col items-center"
+            >
+              <div className="text-center">
+                <h1
+                  className="text-5xl font-bold mb-4"
+                  style={{ textWrap: "balance" }}
+                >
+                  What's your native language?
+                </h1>
+                <p className="text-xl text-muted-foreground mb-8">
+                  So we can talk to you!
+                </p>
               </div>
-            </div>
 
-            <div className="grid md:grid-cols-3 gap-8 w-full">
-              {targetLanguages.map((lang) => (
-                <motion.div
-                  key={lang}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Card
-                    className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
-                    onClick={() => {
-                      if (skipOnboarding) {
-                        onLanguagesConfirmed(
-                          selectionState.nativeLanguage,
-                          lang
-                        );
-                      } else {
-                        setSelectionState({
-                          stage: "askingExperience",
-                          nativeLanguage: selectionState.nativeLanguage,
-                          targetLanguage: lang,
-                        });
-                      }
-                    }}
+              <div className="grid md:grid-cols-2 gap-8 w-full max-w-2xl">
+                {nativeLanguages.map((lang) => (
+                  <motion.div
+                    key={lang}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {isBeta(lang) && (
-                      <Badge className="absolute bottom-1 right-1 z-20 gap-1">
-                        Beta
-                      </Badge>
-                    )}
-                    <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
-                      style={{ background: languageColors[lang]?.gradient }}
-                    />
-                    <div className="relative z-10">
-                      <div className="text-8xl mb-4">{languageFlags[lang]}</div>
-                      <h2 className="text-3xl font-bold mb-2">
-                        {nativeLanguageNames[lang]}
-                      </h2>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="text-center mb-12">
-              <p className="text-xl">
-                (Yap.Town is great for beginner and intermediate students.)
-              </p>
-            </div>
-          </motion.div>
-        ) : selectionState.stage === "askingExperience" ? (
-          // Step 3: Ask about experience level
-          <motion.div
-            key="experience-question"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="w-full max-w-2xl gap-4 flex flex-col items-center"
-          >
-            <div className="text-center mb-8">
-              <h1
-                className="text-5xl font-bold mb-4"
-                style={{ textWrap: "balance" }}
-              >
-                Do you already know some{" "}
-                {nativeLanguageNames[selectionState.targetLanguage]}?
-              </h1>
-            </div>
-
-            <div className="flex flex-col gap-4 w-full max-w-md">
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => {
-                  setUserKnowsLanguage("knows_some");
-                  setSelectionState({
-                    stage: "onboarding",
-                    nativeLanguage: selectionState.nativeLanguage,
-                    targetLanguage: selectionState.targetLanguage,
-                  });
-                }}
-                className="text-lg py-8 hover:scale-105 transition-transform"
-              >
-                Yes, I know some
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => {
-                  setUserKnowsLanguage("beginner");
-                  setSelectionState({
-                    stage: "onboarding",
-                    nativeLanguage: selectionState.nativeLanguage,
-                    targetLanguage: selectionState.targetLanguage,
-                  });
-                }}
-                className="text-lg py-8 hover:scale-105 transition-transform"
-              >
-                No, I'm starting fresh
-              </Button>
-            </div>
-
-            <Button
-              variant="ghost"
-              className="mt-6"
-              onClick={() => {
-                setSelectionState({
-                  stage: "selectingTarget",
-                  nativeLanguage: selectionState.nativeLanguage,
-                });
-              }}
-            >
-              Back
-            </Button>
-          </motion.div>
-        ) : selectionState.stage === "onboarding" ? (
-          // Step 4: Onboarding screens (if not skipping)
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-4xl"
-          >
-            <Carousel
-              setApi={setApi}
-              className="w-full"
-              opts={{
-                align: "start",
-              }}
-            >
-              <CarouselContent>
-                {introScreens.map((screen, index) => (
-                  <CarouselItem key={index}>
-                    <Card className="p-4 pt-12 pb-12">
-                      <div className="text-center">
-                        <h2
-                          className="text-3xl font-bold mb-6"
-                          style={{ textWrap: "balance" }}
-                        >
-                          {screen.title}
+                    <Card
+                      className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
+                      onClick={() => {
+                        setSelectionState({
+                          stage: "selectingTarget",
+                          nativeLanguage: lang,
+                        });
+                      }}
+                    >
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
+                        style={{ background: languageColors[lang]?.gradient }}
+                      />
+                      <div className="relative z-10">
+                        <div className="text-8xl mb-4">
+                          {languageFlags[lang]}
+                        </div>
+                        <h2 className="text-2xl font-bold mb-1">
+                          {iSpeakPhrases[lang]}
                         </h2>
-                        <p
-                          className="text-lg mb-8"
-                          style={{ textWrap: "balance" }}
-                        >
-                          {screen.content}
+                        <p className="text-lg text-muted-foreground">
+                          {nativeLanguageNames[lang]}
                         </p>
                       </div>
                     </Card>
-                  </CarouselItem>
+                  </motion.div>
                 ))}
-                <CarouselItem>
-                  <Card
-                    className="p-12"
-                    style={{
-                      background: `linear-gradient(135deg, ${
-                        languageColors[selectionState.targetLanguage]?.primary
-                      }10, ${
-                        languageColors[selectionState.targetLanguage]?.accent
-                      }10)`,
-                    }}
-                  >
-                    <div className="text-center">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 200,
-                          damping: 15,
-                        }}
-                        className="text-9xl mb-6"
+              </div>
+            </motion.div>
+          ) : selectionState.stage === "selectingTarget" ? (
+            // Step 2: Select target language
+            <motion.div
+              key="target-selection"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="w-full max-w-4xl gap-4 flex flex-col items-center"
+            >
+              <div className="text-center">
+                <h1
+                  className="text-5xl font-bold mb-4"
+                  style={{ textWrap: "balance" }}
+                >
+                  What language will you speak next?
+                </h1>
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <span className="text-lg text-muted-foreground">
+                    Native language:
+                  </span>
+                  <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={comboboxOpen}
+                        className="w-[180px] justify-between"
                       >
-                        {languageFlags[selectionState.targetLanguage]}
-                      </motion.div>
-                      <h2 className="text-3xl font-bold mb-6">
-                        {selectionState.targetLanguage === currentTargetLanguage || userKnowsLanguage == "knows_some"
-                          ? `Ready to continue learning ${
-                              nativeLanguageNames[selectionState.targetLanguage]
-                            }?`
-                          : `Ready to start learning ${
-                              nativeLanguageNames[selectionState.targetLanguage]
-                            }?`}
-                      </h2>
-                    </div>
-                  </Card>
-                </CarouselItem>
-              </CarouselContent>
-            </Carousel>
-            <div className="flex gap-4 justify-center mt-6">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  if (current === 0) {
+                        <>
+                          <span className="mr-2">
+                            {languageFlags[selectionState.nativeLanguage]}
+                          </span>
+                          {selectionState.nativeLanguage}
+                        </>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[180px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search language..." />
+                        <CommandList>
+                          <CommandEmpty>No language found.</CommandEmpty>
+                          <CommandGroup>
+                            {nativeLanguages.map((lang) => (
+                              <CommandItem
+                                key={lang}
+                                value={lang}
+                                onSelect={() => {
+                                  setSelectionState({
+                                    stage: "selectingTarget",
+                                    nativeLanguage: lang,
+                                  });
+                                  setComboboxOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectionState.nativeLanguage === lang
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                <span className="mr-2">
+                                  {languageFlags[lang]}
+                                </span>
+                                {lang}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-3 grid-cols-2 gap-8 w-full">
+                {targetLanguages.map((lang) => (
+                  <motion.div
+                    key={lang}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Card
+                      className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
+                      onClick={() => {
+                        if (skipOnboarding) {
+                          onLanguagesConfirmed(
+                            selectionState.nativeLanguage,
+                            lang
+                          );
+                        } else {
+                          setSelectionState({
+                            stage: "askingExperience",
+                            nativeLanguage: selectionState.nativeLanguage,
+                            targetLanguage: lang,
+                          });
+                        }
+                      }}
+                    >
+                      {isBeta(lang) && (
+                        <Badge className="absolute bottom-1 right-1 z-20 gap-1">
+                          Beta
+                        </Badge>
+                      )}
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
+                        style={{ background: languageColors[lang]?.gradient }}
+                      />
+                      <div className="relative z-10">
+                        <div className="md:text-8xl text-6xl mb-4">
+                          {languageFlags[lang]}
+                        </div>
+                        <h2 className="md:text-3xl text-2xl font-bold mb-2">
+                          {nativeLanguageNames[lang]}
+                        </h2>
+                      </div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="text-center mb-12">
+                <p className="text-xl">
+                  (Yap.Town is great for beginner and intermediate students.)
+                </p>
+              </div>
+            </motion.div>
+          ) : selectionState.stage === "askingExperience" ? (
+            // Step 3: Ask about experience level
+            <motion.div
+              key="experience-question"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="w-full max-w-2xl gap-4 flex flex-col items-center"
+            >
+              <div className="text-center mb-8">
+                <h1
+                  className="text-5xl font-bold mb-4"
+                  style={{ textWrap: "balance" }}
+                >
+                  Do you already know some{" "}
+                  {nativeLanguageNames[selectionState.targetLanguage]}?
+                </h1>
+              </div>
+
+              <div className="flex flex-col gap-4 w-full max-w-md">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => {
+                    setUserKnowsLanguage("knows_some");
                     setSelectionState({
-                      stage: "selectingTarget",
+                      stage: "onboarding",
                       nativeLanguage: selectionState.nativeLanguage,
+                      targetLanguage: selectionState.targetLanguage,
                     });
-                  } else {
-                    api?.scrollPrev();
-                  }
+                  }}
+                  className="text-lg py-8 hover:scale-105 transition-transform"
+                >
+                  Yes, I know some
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => {
+                    setUserKnowsLanguage("beginner");
+                    setSelectionState({
+                      stage: "onboarding",
+                      nativeLanguage: selectionState.nativeLanguage,
+                      targetLanguage: selectionState.targetLanguage,
+                    });
+                  }}
+                  className="text-lg py-8 hover:scale-105 transition-transform"
+                >
+                  No, I'm starting fresh
+                </Button>
+              </div>
+
+              <Button
+                variant="ghost"
+                className="mt-6"
+                onClick={() => {
+                  setSelectionState({
+                    stage: "selectingTarget",
+                    nativeLanguage: selectionState.nativeLanguage,
+                  });
                 }}
-                className="min-w-[120px]"
               >
                 Back
               </Button>
-              <Button
-                size="lg"
-                onClick={() => {
-                  if (current === introScreens.length) {
-                    onLanguagesConfirmed(
-                      selectionState.nativeLanguage,
-                      selectionState.targetLanguage
-                    );
-                  } else {
-                    api?.scrollNext();
-                  }
-                }}
-                className={`min-w-[120px] flex items-center gap-2 ${
-                  current === introScreens.length
-                    ? "text-white hover:opacity-90 active:scale-95 transition-all"
-                    : ""
-                }`}
-                style={{
-                  ...(current === introScreens.length
-                    ? {
-                        background: `linear-gradient(135deg, ${
-                          languageColors[selectionState.targetLanguage]?.primary
-                        }, ${
-                          languageColors[selectionState.targetLanguage]?.accent
-                        })`,
-                      }
-                    : {}),
+            </motion.div>
+          ) : selectionState.stage === "onboarding" ? (
+            // Step 4: Onboarding screens (if not skipping)
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-4xl"
+            >
+              <Carousel
+                setApi={setApi}
+                className="w-full"
+                opts={{
+                  align: "start",
                 }}
               >
-                {current === introScreens.length
-                  ? languageConfirmTexts[selectionState.targetLanguage]
-                  : "Next"}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </div>
+                <CarouselContent>
+                  {introScreens.map((screen, index) => (
+                    <CarouselItem key={index}>
+                      <Card className="p-4 pt-12 pb-12">
+                        <div className="text-center">
+                          <h2
+                            className="text-3xl font-bold mb-6"
+                            style={{ textWrap: "balance" }}
+                          >
+                            {screen.title}
+                          </h2>
+                          <p
+                            className="text-lg mb-8"
+                            style={{ textWrap: "balance" }}
+                          >
+                            {screen.content}
+                          </p>
+                        </div>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                  <CarouselItem>
+                    <Card
+                      className="p-12"
+                      style={{
+                        background: `linear-gradient(135deg, ${
+                          languageColors[selectionState.targetLanguage]?.primary
+                        }80, ${
+                          languageColors[selectionState.targetLanguage]?.accent
+                        }80)`,
+                      }}
+                    >
+                      <div className="text-center">
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 200,
+                            damping: 15,
+                          }}
+                          className="text-9xl mb-6"
+                        >
+                          {languageFlags[selectionState.targetLanguage]}
+                        </motion.div>
+                        <h2 className="text-3xl font-bold mb-6">
+                          {selectionState.targetLanguage ===
+                            currentTargetLanguage ||
+                          userKnowsLanguage == "knows_some"
+                            ? `Ready to continue learning ${
+                                nativeLanguageNames[
+                                  selectionState.targetLanguage
+                                ]
+                              }?`
+                            : `Ready to start learning ${
+                                nativeLanguageNames[
+                                  selectionState.targetLanguage
+                                ]
+                              }?`}
+                        </h2>
+                      </div>
+                    </Card>
+                  </CarouselItem>
+                </CarouselContent>
+              </Carousel>
+              <div className="flex gap-4 justify-center mt-6">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => {
+                    if (current === 0) {
+                      setSelectionState({
+                        stage: "selectingTarget",
+                        nativeLanguage: selectionState.nativeLanguage,
+                      });
+                    } else {
+                      api?.scrollPrev();
+                    }
+                  }}
+                  className="min-w-[120px]"
+                >
+                  Back
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    if (current === introScreens.length) {
+                      onLanguagesConfirmed(
+                        selectionState.nativeLanguage,
+                        selectionState.targetLanguage
+                      );
+                    } else {
+                      api?.scrollNext();
+                    }
+                  }}
+                  className={`min-w-[120px] flex items-center gap-2 ${
+                    current === introScreens.length
+                      ? "text-white hover:opacity-90 active:scale-95 transition-all"
+                      : ""
+                  }`}
+                  style={{
+                    ...(current === introScreens.length
+                      ? {
+                          background: `linear-gradient(135deg, ${
+                            languageColors[selectionState.targetLanguage]
+                              ?.primary
+                          }, ${
+                            languageColors[selectionState.targetLanguage]
+                              ?.accent
+                          })`,
+                        }
+                      : {}),
+                  }}
+                >
+                  {current === introScreens.length
+                    ? languageConfirmTexts[selectionState.targetLanguage]
+                    : "Next"}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
+    </>
   );
 }
