@@ -308,6 +308,7 @@ export function LanguageSelector({
             transition={{
               duration: 20 + index * 2,
               repeat: Infinity,
+              repeatType: "reverse",
               ease: "easeInOut",
             }}
           >
@@ -337,6 +338,7 @@ export function LanguageSelector({
             transition={{
               duration: 30 + index * 5,
               repeat: Infinity,
+              repeatType: "reverse",
               ease: "easeInOut",
             }}
           />
