@@ -1,5 +1,6 @@
 use std::collections::{BTreeSet, HashMap};
 
+use chrono::Utc;
 use language_utils::Lexeme;
 use lasso::Spur;
 
@@ -47,7 +48,7 @@ impl<'a> NextCardsIterator<'a> {
                     self.context
                         .get_card_value_with_status(card, status, self.regressions)?;
 
-                let fsrs_card = rs_fsrs::Card::new();
+                let fsrs_card = rs_fsrs::Card::new(Utc::now());
 
                 Some((lexeme, fsrs_card, value))
             })
@@ -72,7 +73,7 @@ impl<'a> NextCardsIterator<'a> {
                     self.context
                         .get_card_value_with_status(card, status, self.regressions)?;
 
-                let fsrs_card = rs_fsrs::Card::new();
+                let fsrs_card = rs_fsrs::Card::new(Utc::now());
 
                 Some((pattern, position, fsrs_card, value))
             })
@@ -131,7 +132,7 @@ impl<'a> NextCardsIterator<'a> {
                     return None;
                 }
 
-                let fsrs_card = rs_fsrs::Card::new();
+                let fsrs_card = rs_fsrs::Card::new(Utc::now());
 
                 Some((pronunciation, fsrs_card, value))
             })

@@ -1278,7 +1278,7 @@ impl weapon::PartialAppState for Deck {
                                 }
                             })
                             .or_insert_with(|| {
-                                let mut fsrs_card = rs_fsrs::Card::new();
+                                let mut fsrs_card = rs_fsrs::Card::new(*timestamp);
                                 fsrs_card.due = *timestamp;
                                 CardData::Added { fsrs_card }
                             });
@@ -1515,7 +1515,7 @@ impl weapon::PartialAppState for Deck {
         let target_language_regression = if target_language_points.len() >= 2 {
             target_language_points.extend_from_slice(&bias_points);
             IsotonicRegression::new_ascending(&target_language_points)
-                .inspect_err(|e| log::error!("regression error: {e:?}"))cargp
+                .inspect_err(|e| log::error!("regression error: {e:?}"))
                 .ok()
         } else {
             None
@@ -1665,7 +1665,7 @@ impl DeckState {
 
         let card_data = self.cards.entry(card).or_insert_with(|| {
             // Create a ghost card if it doesn't exist
-            let mut fsrs_card = rs_fsrs::Card::new();
+            let mut fsrs_card = rs_fsrs::Card::new(timestamp);
             fsrs_card.due = timestamp;
             CardData::Ghost { fsrs_card }
         });
@@ -3496,7 +3496,7 @@ mod tests {
         use rs_fsrs::{Card, FSRS, Rating};
 
         let fsrs = FSRS::default();
-        let card = Card::new();
+        let card = Card::new(Utc::now());
 
         let record_log = fsrs.repeat(card, Utc::now());
         for rating in Rating::iter() {
@@ -3544,7 +3544,7 @@ mod tests {
         use rs_fsrs::{Card, FSRS, Rating};
 
         let fsrs = FSRS::default();
-        let card = Card::new();
+        let card = Card::new(Utc::now());
 
         // Do one easy review
         let record_log = fsrs.repeat(card, Utc::now());
@@ -3576,7 +3576,7 @@ mod tests {
         use rs_fsrs::{Card, FSRS, Rating};
 
         let fsrs = FSRS::default();
-        let card = Card::new();
+        let card = Card::new(Utc::now());
 
         // Do one "again" review (failed on first attempt)
         let record_log = fsrs.repeat(card, Utc::now());
@@ -3608,7 +3608,7 @@ mod tests {
         use rs_fsrs::{Card, FSRS, Rating};
 
         let fsrs = FSRS::default();
-        let mut card = Card::new();
+        let mut card = Card::new(Utc::now());
 
         // Do first good review
         let record_log = fsrs.repeat(card, Utc::now());
@@ -3651,7 +3651,7 @@ mod tests {
         use rs_fsrs::{Card, FSRS, Rating};
 
         let fsrs = FSRS::default();
-        let mut card = Card::new();
+        let mut card = Card::new(Utc::now());
 
         // Do one easy review
         let record_log = fsrs.repeat(card, Utc::now());
@@ -3691,7 +3691,7 @@ mod tests {
         use rs_fsrs::{Card, FSRS, Rating};
 
         let fsrs = FSRS::default();
-        let mut card = Card::new();
+        let mut card = Card::new(Utc::now());
 
         // Do one easy review
         let record_log = fsrs.repeat(card, Utc::now());
