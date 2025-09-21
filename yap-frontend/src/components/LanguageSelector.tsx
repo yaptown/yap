@@ -522,7 +522,7 @@ export function LanguageSelector({
               </div>
 
               <div className="text-center mb-12">
-                <p className="text-xl">
+                <p className="text-xl text-muted-foreground/70">
                   (Yap.Town is great for beginner and intermediate students.)
                 </p>
               </div>
