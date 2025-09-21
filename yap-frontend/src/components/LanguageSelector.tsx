@@ -569,7 +569,7 @@ export function LanguageSelector({
                         {languageFlags[selectionState.targetLanguage]}
                       </motion.div>
                       <h2 className="text-3xl font-bold mb-6">
-                        {selectionState.targetLanguage === currentTargetLanguage
+                        {selectionState.targetLanguage === currentTargetLanguage || userKnowsLanguage == "knows_some"
                           ? `Ready to continue learning ${
                               nativeLanguageNames[selectionState.targetLanguage]
                             }?`
