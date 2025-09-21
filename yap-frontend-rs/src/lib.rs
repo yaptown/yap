@@ -1990,16 +1990,30 @@ impl Deck {
         }
     }
 
+    fn max_cards_to_add(&self) -> usize {
+        let current_cards = self.num_cards();
+
+        if current_cards < 5 {
+            1
+        } else if current_cards < 11 {
+            2
+        } else {
+            5
+        }
+    }
+
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn add_card_options(&self, banned_challenge_types: Vec<ChallengeType>) -> AddCardOptions {
         let banned_types_set = banned_challenge_types
             .into_iter()
             .collect::<std::collections::HashSet<_>>();
 
+        let max_cards_to_add = self.max_cards_to_add();
+
         AddCardOptions {
             smart_add: self
                 .next_unknown_cards_with_banned(None, &banned_types_set)
-                .take(5)
+                .take(max_cards_to_add)
                 .count() as u32,
             manual_add: vec![
                 (
@@ -2007,7 +2021,7 @@ impl Deck {
                         0
                     } else {
                         self.next_unknown_cards(Some(CardType::TargetLanguage))
-                            .take(5)
+                            .take(max_cards_to_add)
                             .count() as u32
                     },
                     CardType::TargetLanguage,
@@ -2017,7 +2031,7 @@ impl Deck {
                         0
                     } else {
                         self.next_unknown_cards(Some(CardType::Listening))
-                            .take(5)
+                            .take(max_cards_to_add)
                             .count() as u32
                     },
                     CardType::Listening,
@@ -2027,7 +2041,7 @@ impl Deck {
                         0
                     } else {
                         self.next_unknown_cards(Some(CardType::LetterPronunciation))
-                            .take(5)
+                            .take(max_cards_to_add)
                             .count() as u32
                     },
                     CardType::LetterPronunciation,
@@ -2046,6 +2060,10 @@ impl Deck {
         let banned_types_set = banned_challenge_types
             .into_iter()
             .collect::<std::collections::HashSet<_>>();
+
+        if count == 0 {
+            return None;
+        }
         let cards = self
             .next_unknown_cards_with_banned(card_type, &banned_types_set)
             .take(count)
@@ -3759,6 +3777,57 @@ mod tests {
             }
         } else {
             println!("✓ No cards available to add (empty language pack)");
+        }
+    }
+
+    #[test]
+    fn test_add_card_limits_scale_with_deck_size() {
+        use crate::Deck;
+        use weapon::AppState;
+        use weapon::data_model::Timestamped;
+
+        let mut deck = Deck::default();
+
+        let assert_limits = |deck: &Deck| {
+            let options = deck.add_card_options(Vec::new());
+            let expected_max = if deck.num_cards() < 5 {
+                1
+            } else if deck.num_cards() < 11 {
+                2
+            } else {
+                5
+            } as u32;
+
+            assert!(options.smart_add <= expected_max);
+            assert!(
+                options
+                    .manual_add
+                    .iter()
+                    .all(|(count, _)| *count <= expected_max)
+            );
+        };
+
+        assert_limits(&deck);
+
+        while deck.num_cards() < 12 {
+            let Some(event) = deck.add_next_unknown_cards(None, 5, Vec::new()) else {
+                break;
+            };
+
+            let timestamped = Timestamped {
+                timestamp: chrono::Utc::now(),
+                within_device_events_index: 0,
+                event,
+            };
+
+            let previous_cards = deck.num_cards();
+            deck = deck.apply_event(&timestamped);
+            assert!(
+                deck.num_cards() <= previous_cards + 5,
+                "deck should not grow by more than the requested amount"
+            );
+
+            assert_limits(&deck);
         }
     }
 }
