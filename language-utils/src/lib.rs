@@ -1136,7 +1136,7 @@ impl ConsolidatedLanguageData {
         }
 
         // intern pronunciation data
-        for sound in &self.pronunciation_data.sounds {
+        for (sound, _) in &self.pronunciation_data.sounds {
             rodeo.get_or_intern(sound);
         }
         for guide in &self.pronunciation_data.guides {
@@ -1283,6 +1283,31 @@ pub enum SoundPosition {
 }
 
 #[derive(
+    Copy,
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    tsify::Tsify,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[rkyv(compare(PartialEq))]
+pub enum PatternPosition {
+    Beginning,
+    End,
+    Anywhere,
+}
+
+#[derive(
     Clone,
     Debug,
     serde::Serialize,
@@ -1328,6 +1353,7 @@ pub struct WordPair {
 pub struct PronunciationGuideThoughts {
     pub thoughts: String,
     pub pattern: String,
+    pub position: PatternPosition,
     pub description: String,
     pub familiarity: PronunciationFamiliarity,
     pub difficulty: PronunciationDifficulty,
@@ -1354,6 +1380,7 @@ pub struct PronunciationGuideThoughts {
 #[rkyv(compare(PartialEq))]
 pub struct PronunciationGuide {
     pub pattern: String,
+    pub position: PatternPosition,
     pub description: String,
     pub familiarity: PronunciationFamiliarity,
     pub difficulty: PronunciationDifficulty,
@@ -1364,6 +1391,7 @@ impl From<PronunciationGuideThoughts> for PronunciationGuide {
     fn from(thoughts: PronunciationGuideThoughts) -> Self {
         Self {
             pattern: thoughts.pattern,
+            position: thoughts.position,
             description: thoughts.description,
             familiarity: thoughts.familiarity,
             difficulty: thoughts.difficulty,
@@ -1390,8 +1418,8 @@ impl From<PronunciationGuideThoughts> for PronunciationGuide {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[rkyv(compare(PartialEq))]
 pub struct PronunciationData {
-    pub sounds: Vec<String>, // List of characteristic sounds/patterns for the language
-    pub guides: Vec<PronunciationGuide>, // Detailed guides for each sound
+    pub sounds: Vec<(String, PatternPosition)>, // List of characteristic sounds/patterns for the language
+    pub guides: Vec<PronunciationGuide>,        // Detailed guides for each sound
 }
 
 #[derive(

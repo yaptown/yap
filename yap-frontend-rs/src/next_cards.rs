@@ -62,7 +62,7 @@ impl<'a> NextCardsIterator<'a> {
         self.cards
             .iter()
             .filter_map(|(card, status)| {
-                let CardIndicator::LetterPronunciation { pattern } = card else {
+                let CardIndicator::LetterPronunciation { pattern, position } = card else {
                     return None;
                 };
 
@@ -74,12 +74,15 @@ impl<'a> NextCardsIterator<'a> {
 
                 let fsrs_card = rs_fsrs::Card::new();
 
-                Some((pattern, fsrs_card, value))
+                Some((pattern, position, fsrs_card, value))
             })
-            .max_by_key(|(_, _, value)| *value)
-            .map(|(pattern, fsrs_card, _)| {
+            .max_by_key(|(_, _, _, value)| *value)
+            .map(|(pattern, position, fsrs_card, _)| {
                 (
-                    CardIndicator::LetterPronunciation { pattern: *pattern },
+                    CardIndicator::LetterPronunciation {
+                        pattern: *pattern,
+                        position: *position,
+                    },
                     fsrs_card,
                 )
             })

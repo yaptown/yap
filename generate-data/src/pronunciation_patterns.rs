@@ -1,5 +1,5 @@
 use futures::StreamExt;
-use language_utils::{Course, Language, PronunciationGuideThoughts};
+use language_utils::{Course, Language, PatternPosition, PronunciationGuideThoughts};
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
@@ -17,19 +17,23 @@ struct SoundsListResponse {
 }
 
 /// Generate characteristic sounds/patterns for a language
-pub async fn generate_language_sounds(language: Language) -> anyhow::Result<Vec<String>> {
+/// Returns tuples of (clean_pattern, position)
+pub async fn generate_language_sounds(
+    language: Language,
+) -> anyhow::Result<Vec<(String, PatternPosition)>> {
     println!("Generating characteristic sounds for {language:?}...");
 
     let response: SoundsListResponse = CHAT_CLIENT.chat_with_system_prompt(
         format!(r#"You are creating a comprehensive list of characteristic sounds and letter patterns for {language:?}.
 
 Generate a list of the most important letter patterns and sounds that learners need to know. Include:
-- Individual letters with special pronunciations
+- All individual letters
+- For languages that use accents (or similar), all accented letter forms
 - Letter combinations (digraphs, trigraphs)
 - Position-dependent pronunciations (use $ for end of word, ^ for beginning)
 - Silent letters and their patterns
 
-For {language:?}, generate 30-50 characteristic patterns. Use standard notation:
+Use standard notation:
 - $ means end of word (e.g., "ent$" for French -ent ending)
 - ^ means beginning of word (e.g., "^kn" for English kn- beginning)
 - Otherwise just the letters/pattern itself.
@@ -39,7 +43,6 @@ Focus on patterns that are:
 1. Common and frequently encountered
 2. Different from how they might be pronounced in other languages
 3. Important for correct pronunciation
-4. If the target language is very different from the native language, you might just want to include every letter and relevant pattern!
 
 Return a JSON object with:
 {{
@@ -56,17 +59,32 @@ Examples of patterns:
         format!("Generate sounds for {language:?}"),
     ).await?;
 
+    // Process patterns to extract position information
+    let processed_sounds: Vec<(String, PatternPosition)> = response
+        .sounds
+        .into_iter()
+        .map(|sound| {
+            if let Some(stripped) = sound.strip_prefix('^') {
+                (stripped.to_string(), PatternPosition::Beginning)
+            } else if let Some(stripped) = sound.strip_suffix('$') {
+                (stripped.to_string(), PatternPosition::End)
+            } else {
+                (sound, PatternPosition::Anywhere)
+            }
+        })
+        .collect();
+
     println!(
         "Generated {} sounds for {language:?}",
-        response.sounds.len()
+        processed_sounds.len()
     );
-    Ok(response.sounds)
+    Ok(processed_sounds)
 }
 
 /// Generate pronunciation guides for each sound in a course
 pub async fn generate_pronunciation_guides(
     course: Course,
-    sounds: &[String],
+    sounds: &[(String, PatternPosition)],
 ) -> anyhow::Result<Vec<(String, PronunciationGuideThoughts)>> {
     println!(
         "Generating pronunciation guides for {:?} speakers learning {:?}...",
@@ -74,13 +92,21 @@ pub async fn generate_pronunciation_guides(
     );
 
     let guides = futures::stream::iter(sounds)
-        .map(|sound| {
-            let sound = sound.clone();
+        .map(|(clean_pattern, position)| {
+            let clean_pattern = clean_pattern.clone();
+            let position = *position;
             async move {
+                let position_note = match position {
+                    PatternPosition::Beginning => "This pattern appears at the beginning of words.",
+                    PatternPosition::End => "This pattern appears at the end of words.",
+                    PatternPosition::Anywhere => "This pattern can appear anywhere in words.",
+                };
+
                 let response: Result<PronunciationGuideThoughts, _> = CHAT_CLIENT.chat_with_system_prompt(
                     format!(r#"You are creating a pronunciation guide for {native:?} speakers learning {target:?}.
 
-Analyze the {target:?} sound/pattern: "{sound}"
+Analyze the {target:?} sound/pattern: "{clean_pattern}"
+{position_note}
 
 IMPORTANT: Write the description and notes in {native:?} (the learner's native language), not in {target:?}.
 
@@ -102,7 +128,7 @@ For each word, specify:
 Return a JSON object with this structure:
 {{
   "thoughts": "Brief analysis of this sound for {native:?} speakers",
-  "pattern": "{sound}",
+  "pattern": "{clean_pattern}",
   "description": "Clear description IN {native:?} of how to pronounce this",
   "familiarity": "LikelyAlreadyKnows" | "MaybeAlreadyKnows" | "ProbablyDoesNotKnow",
   "difficulty": "Easy" | "Medium" | "Hard",
@@ -132,15 +158,21 @@ Good examples for French "ch" and English speakers:
 "#,
                         native = course.native_language,
                         target = course.target_language,
-                        sound = sound
+                        clean_pattern = clean_pattern,
+                        position_note = position_note
                     ),
-                    format!("Analyze sound: {sound}"),
+                    format!("Analyze sound: {clean_pattern}"),
                 ).await;
 
                 match response {
-                    Ok(guide) => Some((sound.clone(), guide)),
+                    Ok(mut guide) => {
+                        // Override the pattern with the clean version and set the position
+                        guide.pattern = clean_pattern.clone();
+                        guide.position = position;
+                        Some((clean_pattern.clone(), guide))
+                    },
                     Err(e) => {
-                        eprintln!("Error generating guide for '{sound}': {e:?}");
+                        eprintln!("Error generating guide for '{clean_pattern}': {e:?}");
                         None
                     }
                 }

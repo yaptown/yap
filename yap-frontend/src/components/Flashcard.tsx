@@ -87,8 +87,22 @@ const CardFrontSubtitle = ({ content }: { content: CardContent<string> }) => {
   }
 
   if ("LetterPronunciation" in content) {
+    const guide = content.LetterPronunciation.guide;
+    const positionText = match(guide.position)
+      .with("Beginning", () => "Appears at the beginning of words")
+      .with("End", () => "Appears at the end of words")
+      .with("Anywhere", () => null)
+      .exhaustive();
+    
     return (
-      <span className="text-sm text-muted-foreground">Say it out loud!</span>
+      <div className="flex flex-col gap-1 items-center">
+        <span className="text-sm text-muted-foreground">Say it out loud!</span>
+        {positionText && (
+          <span className="text-xs text-muted-foreground/80">
+            {positionText}
+          </span>
+        )}
+      </div>
     );
   }
 
@@ -218,25 +232,42 @@ const CardBack = ({
               <div className="text-sm text-muted-foreground">Examples:</div>
               <div className="grid gap-3">
                 {guide.example_words.slice(0, 3).map((example, index) => {
-                  // Find and highlight the pattern in the word
+                  // Find and highlight the pattern in the word based on position
                   const lowerPattern = pattern.toLowerCase();
                   const lowerWord = example.target.toLowerCase();
-                  const patternIndex = lowerWord.indexOf(lowerPattern);
+                  
+                  let patternIndex = -1;
+                  const matchLength = pattern.length;
+                  
+                  if (guide.position === "Beginning") {
+                    // Only highlight if pattern is at the beginning
+                    if (lowerWord.startsWith(lowerPattern)) {
+                      patternIndex = 0;
+                    }
+                  } else if (guide.position === "End") {
+                    // Only highlight if pattern is at the end
+                    if (lowerWord.endsWith(lowerPattern)) {
+                      patternIndex = example.target.length - pattern.length;
+                    }
+                  } else {
+                    // Highlight anywhere in the word
+                    patternIndex = lowerWord.indexOf(lowerPattern);
+                  }
 
                   let highlightedWord;
                   if (patternIndex !== -1) {
                     const before = example.target.slice(0, patternIndex);
                     const matched = example.target.slice(
                       patternIndex,
-                      patternIndex + pattern.length
+                      patternIndex + matchLength
                     );
                     const after = example.target.slice(
-                      patternIndex + pattern.length
+                      patternIndex + matchLength
                     );
                     highlightedWord = (
                       <>
                         {before}
-                        <span className="bg-yellow-500/30 rounded">
+                        <span className="bg-yellow-500/30 rounded px-0.5">
                           {matched}
                         </span>
                         {after}

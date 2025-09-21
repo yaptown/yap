@@ -21,7 +21,8 @@ use language_utils::autograde;
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
-    DictionaryEntry, Heteronym, Lexeme, PhrasebookEntry, PronunciationGuide, TargetToNativeWord,
+    DictionaryEntry, Heteronym, Lexeme, PatternPosition, PhrasebookEntry, PronunciationGuide,
+    TargetToNativeWord,
 };
 use lasso::Spur;
 use opfs::persistent::{self};
@@ -881,9 +882,16 @@ pub struct AddCardOptions {
 )]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum CardIndicator<S> {
-    TargetLanguage { lexeme: Lexeme<S> },
-    ListeningHomophonous { pronunciation: S },
-    LetterPronunciation { pattern: S },
+    TargetLanguage {
+        lexeme: Lexeme<S>,
+    },
+    ListeningHomophonous {
+        pronunciation: S,
+    },
+    LetterPronunciation {
+        pattern: S,
+        position: PatternPosition,
+    },
 }
 
 impl<S> CardIndicator<S> {
@@ -903,7 +911,7 @@ impl<S> CardIndicator<S> {
 
     pub fn letter_pronunciation(&self) -> Option<&S> {
         match self {
-            CardIndicator::LetterPronunciation { pattern } => Some(pattern),
+            CardIndicator::LetterPronunciation { pattern, .. } => Some(pattern),
             _ => None,
         }
     }
@@ -920,9 +928,12 @@ impl CardIndicator<String> {
                     pronunciation: rodeo.get(pronunciation)?,
                 }
             }
-            CardIndicator::LetterPronunciation { pattern } => CardIndicator::LetterPronunciation {
-                pattern: rodeo.get(pattern)?,
-            },
+            CardIndicator::LetterPronunciation { pattern, position } => {
+                CardIndicator::LetterPronunciation {
+                    pattern: rodeo.get(pattern)?,
+                    position: *position,
+                }
+            }
         })
     }
 }
@@ -938,9 +949,12 @@ impl CardIndicator<Spur> {
                     pronunciation: rodeo.resolve(pronunciation).to_string(),
                 }
             }
-            CardIndicator::LetterPronunciation { pattern } => CardIndicator::LetterPronunciation {
-                pattern: rodeo.resolve(pattern).to_string(),
-            },
+            CardIndicator::LetterPronunciation { pattern, position } => {
+                CardIndicator::LetterPronunciation {
+                    pattern: rodeo.resolve(pattern).to_string(),
+                    position: *position,
+                }
+            }
         }
     }
 }
@@ -1242,7 +1256,7 @@ impl weapon::PartialAppState for Deck {
                                     continue;
                                 }
                             }
-                            CardIndicator::LetterPronunciation { pattern } => {
+                            CardIndicator::LetterPronunciation { pattern, .. } => {
                                 // Check if pattern exists in the rodeo
                                 if deck.context.language_pack.rodeo.resolve(pattern).is_empty() {
                                     continue;
@@ -1568,7 +1582,10 @@ impl weapon::PartialAppState for Deck {
                             .get(&guide.pattern)
                             .map(|pattern| {
                                 (
-                                    CardIndicator::LetterPronunciation { pattern },
+                                    CardIndicator::LetterPronunciation {
+                                        pattern,
+                                        position: guide.position,
+                                    },
                                     CardStatus::Unadded(Unadded {}),
                                 )
                             })
@@ -1638,7 +1655,7 @@ impl DeckState {
                     return;
                 }
             }
-            CardIndicator::LetterPronunciation { pattern } => {
+            CardIndicator::LetterPronunciation { pattern, .. } => {
                 // Check if pattern exists in the rodeo
                 if self.context.language_pack.rodeo.resolve(pattern).is_empty() {
                     return;
@@ -2384,7 +2401,7 @@ impl Deck {
                         possible_words,
                     }
                 }
-                CardIndicator::LetterPronunciation { pattern } => {
+                CardIndicator::LetterPronunciation { pattern, position } => {
                     let pattern_str = self.context.language_pack.rodeo.resolve(&pattern);
                     let Some(guide) = self
                         .context
@@ -2392,11 +2409,11 @@ impl Deck {
                         .pronunciation_data
                         .guides
                         .iter()
-                        .find(|g| g.pattern == pattern_str)
+                        .find(|g| g.pattern == pattern_str && g.position == position)
                         .cloned()
                     else {
                         panic!(
-                            "Pattern {pattern_str} was in the deck, but was not found in pronunciation guides"
+                            "Pattern {pattern_str} with position {position:?} was in the deck, but was not found in pronunciation guides"
                         );
                     };
                     CardContent::LetterPronunciation { pattern, guide }
