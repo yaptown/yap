@@ -1507,15 +1507,15 @@ impl weapon::PartialAppState for Deck {
             Point::new_with_weight(5.0, 0.0, 5.0),
             Point::new_with_weight(8.0, 0.0, 1.0),
             Point::new_with_weight(20.0, 0.0, 1.0),
-            Point::new_with_weight(100.0, 0.0, 2.0),
-            Point::new_with_weight(200.0, 0.0, 1.0),
+            Point::new_with_weight(100.0, 0.0, 0.5),
+            Point::new_with_weight(200.0, 0.0, 0.5),
         ];
 
         // Create isotonic regressions (need at least 2 non-new cards)
         let target_language_regression = if target_language_points.len() >= 2 {
             target_language_points.extend_from_slice(&bias_points);
             IsotonicRegression::new_ascending(&target_language_points)
-                .inspect_err(|e| log::error!("regression error: {e:?}"))
+                .inspect_err(|e| log::error!("regression error: {e:?}"))cargp
                 .ok()
         } else {
             None

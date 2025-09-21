@@ -111,19 +111,19 @@ Analyze the {target:?} sound/pattern: "{clean_pattern}"
 IMPORTANT: Write the description and notes in {native:?} (the learner's native language), not in {target:?}.
 
 Create a guide that includes:
-1. A clear description IN {native:?} of how this sound is pronounced
+1. A clear description IN {native:?} of the ways this pattern is pronounced, maybe analogizing it to words in {native:?} or explaining the difference from similar {native:?} sounds. Keep this part brief. For tricky sounds, you can include some pronunciation advice.
 2. How familiar a {native:?} speaker would be with this sound
 3. How difficult it is for a {native:?} speaker to pronounce
 4. Example words that demonstrate this sound
 
-For the example words, choose 2-3 words that:
+For the example words, choose 1-4 words that:
 - Are VERY likely to be familiar to {native:?} speakers (brand names, food items, place names, cultural references, loan words)
-- Clearly demonstrate the sound pattern
-- Help the learner recognize sounds they might already know
+- Clearly demonstrate the pattern, in all the ways it can be pronounced
+- Contain the actual pattern (e.g. for the pattern "yn", "sphinx" would not be a good example as it does not contain "yn")
 
 For each word, specify:
 - position: Where the sound appears ("Beginning", "Middle", "End", or "Multiple" if it appears more than once)
-- cultural_context: Write IN {native:?} - concisely explain why they know this word.
+- cultural_context: Write IN {native:?} - concisely explain why they know this word. This should just be a short hint that the word means what they user probably thinks it might mean. Keep this part brief.
 
 Return a JSON object with this structure:
 {{
