@@ -284,12 +284,11 @@ export function LanguageSelector({
         {floatingWords.map((word, index) => (
           <motion.div
             key={`${word.text}-${index}`}
-            className="absolute text-4xl md:text-6xl font-bold opacity-[0.06] dark:opacity-[0.1] select-none dark:mix-blend-plus-lighter"
+            className="absolute text-4xl md:text-6xl font-bold opacity-[0.06] dark:opacity-[0.1] select-none dark:mix-blend-plus-lighter brightness-100 dark:brightness-500"
             style={{
               left: `${10 + ((index * 25) % 80)}%`,
               top: `${10 + ((index * 15) % 70)}%`,
               color: languageColors[word.lang]?.primary || "#000",
-              filter: "brightness(1.2)",
             }}
             initial={{
               x: 0,
