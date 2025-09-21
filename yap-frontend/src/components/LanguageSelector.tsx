@@ -284,11 +284,12 @@ export function LanguageSelector({
         {floatingWords.map((word, index) => (
           <motion.div
             key={`${word.text}-${index}`}
-            className="absolute text-4xl md:text-6xl font-bold opacity-[0.06] select-none"
+            className="absolute text-4xl md:text-6xl font-bold opacity-[0.06] dark:opacity-[0.1] select-none dark:mix-blend-plus-lighter"
             style={{
               left: `${10 + ((index * 25) % 80)}%`,
               top: `${10 + ((index * 15) % 70)}%`,
               color: languageColors[word.lang]?.primary || "#000",
+              filter: "brightness(1.2)",
             }}
             initial={{
               x: 0,
@@ -319,12 +320,12 @@ export function LanguageSelector({
         {["French", "Spanish", "Korean", "English"].map((lang, index) => (
           <motion.div
             key={`orb-${lang}`}
-            className="absolute rounded-full blur-3xl"
+            className="absolute rounded-full blur-3xl opacity-30 dark:opacity-50"
             style={{
               width: "500px",
               height: "500px",
               background: `radial-gradient(circle, ${
-                languageColors[lang]?.primary + "20"
+                languageColors[lang]?.primary + "40"
               }, transparent)`,
               left: `${index * 25}%`,
               top: `${index % 2 === 0 ? -10 : 60}%`,
@@ -490,18 +491,11 @@ export function LanguageSelector({
                     <Card
                       className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
                       onClick={() => {
-                        if (skipOnboarding) {
-                          onLanguagesConfirmed(
-                            selectionState.nativeLanguage,
-                            lang
-                          );
-                        } else {
-                          setSelectionState({
-                            stage: "askingExperience",
-                            nativeLanguage: selectionState.nativeLanguage,
-                            targetLanguage: lang,
-                          });
-                        }
+                        setSelectionState({
+                          stage: "askingExperience",
+                          nativeLanguage: selectionState.nativeLanguage,
+                          targetLanguage: lang,
+                        });
                       }}
                     >
                       {isBeta(lang) && (
