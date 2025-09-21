@@ -301,6 +301,11 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   const [showAnswer, setShowAnswer] = useState(false)
   const network = useNetworkState()
   const [cardsBecameDue, setCardsBecameDue] = useState<number>(0)
+  const [lastAutoPlayReviewCount, setLastAutoPlayReviewCount] = useState<bigint | null>(null)
+
+  const totalReviewsCompleted = deck.get_total_reviews()
+  const autoplayed = lastAutoPlayReviewCount == totalReviewsCompleted
+  const setAutoplayed = useCallback(() => setLastAutoPlayReviewCount(totalReviewsCompleted), [totalReviewsCompleted])
 
   const nextDueCard = findNextDueCard(deck)
 
@@ -605,11 +610,13 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
               totalCount={reviewInfo.total_count}
               onRating={handleRating}
               accessToken={accessToken}
-              key={deck.get_total_reviews()}
+              key={totalReviewsCompleted}
               onCantListen={handleCantListen}
               onCantSpeak={handleCantSpeak}
               targetLanguage={targetLanguage}
               listeningPrefix={currentChallenge.listening_prefix}
+              autoplayed={autoplayed}
+              setAutoplayed={setAutoplayed}
             />
           ) : (currentChallenge.type === 'TranslateComprehensibleSentence') ? (
             <TranslationChallenge
@@ -618,9 +625,11 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
               dueCount={reviewInfo.due_count || 0}
               totalCount={reviewInfo.total_count}
               accessToken={accessToken}
-              key={deck.get_total_reviews()}
+              key={totalReviewsCompleted}
               unique_target_language_lexeme_definitions={currentChallenge.unique_target_language_lexeme_definitions}
               targetLanguage={targetLanguage}
+              autoplayed={autoplayed}
+              setAutoplayed={setAutoplayed}
             />
           ) : (
             <TranscriptionChallenge
@@ -629,9 +638,11 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
               dueCount={reviewInfo.due_count || 0}
               totalCount={reviewInfo.total_count}
               accessToken={accessToken}
-              key={deck.get_total_reviews()}
+              key={totalReviewsCompleted}
               onCantListen={handleCantListen}
               targetLanguage={targetLanguage}
+              autoplayed={autoplayed}
+              setAutoplayed={setAutoplayed}
             />
           )
         ) : <div>Unexpected challenge state. This is a bug. currentChallenge: {JSON.stringify(currentChallenge)}</div>}

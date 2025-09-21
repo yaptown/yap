@@ -38,6 +38,7 @@ Use standard notation:
 - ^ means beginning of word (e.g., "^kn" for English kn- beginning)
 - Otherwise just the letters/pattern itself.
 - If there are multiple common patterns, include them all separately. (e.g. "ch", "sh", "th", "ph".) Don't write "[c,s,t,p]h".
+- Don't use any other syntax besides $, ^, and the literal letters as they would appear in the word.
 
 Focus on patterns that are:
 1. Common and frequently encountered

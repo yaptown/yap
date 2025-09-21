@@ -48,6 +48,8 @@ interface TranscriptionChallengeProps {
   accessToken: string | undefined;
   onCantListen?: () => void;
   targetLanguage: Language;
+  autoplayed: boolean;
+  setAutoplayed: () => void;
 }
 
 function AutogradeError() {
@@ -85,6 +87,8 @@ export function TranscriptionChallenge({
   accessToken,
   onCantListen,
   targetLanguage,
+  autoplayed,
+  setAutoplayed,
 }: TranscriptionChallengeProps) {
   const [userInputs, setUserInputs] = useState<Map<number, string>>(new Map());
   const [gradingState, setGradingState] = useState<GradingState>(null);
@@ -352,6 +356,8 @@ export function TranscriptionChallenge({
                   audioRequest={challenge.audio}
                   accessToken={accessToken}
                   autoPlay={true}
+                  autoplayed={autoplayed}
+                  setAutoplayed={setAutoplayed}
                 />
 
                 <AudioVisualizer />

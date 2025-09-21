@@ -45,6 +45,8 @@ interface FlashcardProps {
   isNew: boolean;
   targetLanguage: Language;
   listeningPrefix?: string;
+  autoplayed: boolean;
+  setAutoplayed: () => void;
 }
 
 const CardFront = ({
@@ -93,7 +95,7 @@ const CardFrontSubtitle = ({ content }: { content: CardContent<string> }) => {
       .with("End", () => "Appears at the end of words")
       .with("Anywhere", () => null)
       .exhaustive();
-    
+
     return (
       <div className="flex flex-col gap-1 items-center">
         <span className="text-sm text-muted-foreground">Say it out loud!</span>
@@ -235,10 +237,10 @@ const CardBack = ({
                   // Find and highlight the pattern in the word based on position
                   const lowerPattern = pattern.toLowerCase();
                   const lowerWord = example.target.toLowerCase();
-                  
+
                   let patternIndex = -1;
                   const matchLength = pattern.length;
-                  
+
                   if (guide.position === "Beginning") {
                     // Only highlight if pattern is at the beginning
                     if (lowerWord.startsWith(lowerPattern)) {
@@ -367,6 +369,8 @@ export const Flashcard = function Flashcard({
   isNew,
   targetLanguage,
   listeningPrefix,
+  autoplayed,
+  setAutoplayed,
 }: FlashcardProps) {
   const x = useMotionValue(0);
   const controls = animationControls();

@@ -19,6 +19,8 @@ interface AudioButtonProps {
     | "secondary"
     | "ghost"
     | "link";
+  autoplayed?: boolean;
+  setAutoplayed?: () => void;
 }
 
 export function AudioButton({
@@ -28,6 +30,8 @@ export function AudioButton({
   className = "h-10 w-10 shrink-0",
   size = "icon",
   variant = "ghost",
+  autoplayed,
+  setAutoplayed,
 }: AudioButtonProps) {
   "use memo";
   const [isPlaying, setIsPlaying] = useState(false);
@@ -81,6 +85,9 @@ export function AudioButton({
   // Auto-play audio when text changes (if autoPlay is enabled)
   useEffect(() => {
     if (!autoPlay) return;
+    if (autoplayed) {
+      return;
+    }
 
     let cancelled = false;
 
@@ -92,6 +99,9 @@ export function AudioButton({
 
       // Check if we should still play and we're not already playing
       if (!cancelled && !isPlayingRef.current) {
+        if (setAutoplayed) {
+          setAutoplayed();
+        }
         handlePlayAudio();
       }
     };
@@ -108,6 +118,8 @@ export function AudioButton({
     audioRequest.provider,
     autoPlay,
     handlePlayAudio,
+    autoplayed,
+    setAutoplayed,
   ]);
 
   return (
