@@ -57,6 +57,34 @@ impl<'a> NextCardsIterator<'a> {
             })
     }
 
+    fn next_letter_pronunciation_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
+        // Find pronunciation patterns that haven't been added yet
+        self.cards
+            .iter()
+            .filter_map(|(card, status)| {
+                let CardIndicator::LetterPronunciation { pattern } = card else {
+                    return None;
+                };
+
+                status.unadded()?;
+
+                let value =
+                    self.context
+                        .get_card_value_with_status(card, status, self.regressions)?;
+
+                let fsrs_card = rs_fsrs::Card::new();
+
+                Some((pattern, fsrs_card, value))
+            })
+            .max_by_key(|(_, _, value)| *value)
+            .map(|(pattern, fsrs_card, _)| {
+                (
+                    CardIndicator::LetterPronunciation { pattern: *pattern },
+                    fsrs_card,
+                )
+            })
+    }
+
     fn next_listening_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
         // Get all known words (already added text cards)
         let known_words: BTreeSet<Lexeme<Spur>> = self
@@ -126,6 +154,7 @@ impl NextCardsIterator<'_> {
             let card = match self.permitted_types[0] {
                 ChallengeType::Text => self.next_text_card(),
                 ChallengeType::Listening => self.next_listening_card(),
+                ChallengeType::Speaking => self.next_letter_pronunciation_card(),
             }?;
             return Some(card);
         }
@@ -141,42 +170,87 @@ impl NextCardsIterator<'_> {
             return Some(card);
         }
 
-        let text_count = self
-            .cards
-            .iter()
-            .filter(|(c, status)| {
-                matches!(c, CardIndicator::TargetLanguage { .. })
-                    && matches!(status, CardStatus::Tracked(_))
-            })
-            .count();
-        let listening_count = self
-            .cards
-            .iter()
-            .filter(|(c, status)| {
-                matches!(c, CardIndicator::ListeningHomophonous { .. })
-                    && matches!(status, CardStatus::Tracked(_))
-            })
-            .count();
+        // Count cards by type
+        let mut type_counts = HashMap::new();
+        for challenge_type in &self.permitted_types {
+            type_counts.insert(*challenge_type, 0);
+        }
 
-        let desired = if listening_count < text_count / 2 {
-            ChallengeType::Listening
-        } else {
-            ChallengeType::Text
-        };
+        for (card, status) in &self.cards {
+            if matches!(status, CardStatus::Tracked(_)) {
+                let card_type = match card {
+                    CardIndicator::TargetLanguage { .. } => ChallengeType::Text,
+                    CardIndicator::ListeningHomophonous { .. } => ChallengeType::Listening,
+                    CardIndicator::LetterPronunciation { .. } => ChallengeType::Speaking,
+                };
+                if let Some(count) = type_counts.get_mut(&card_type) {
+                    *count += 1;
+                }
+            }
+        }
 
-        let other = if desired == ChallengeType::Text {
-            ChallengeType::Listening
-        } else {
-            ChallengeType::Text
-        };
+        // Determine desired ratios for card types
+        // Text: 60%, Listening: 30%, LetterPronunciation: 10%
+        let text_count = type_counts.get(&ChallengeType::Text).copied().unwrap_or(0);
+        let listening_count = type_counts
+            .get(&ChallengeType::Listening)
+            .copied()
+            .unwrap_or(0);
+        let pronunciation_count = type_counts
+            .get(&ChallengeType::Speaking)
+            .copied()
+            .unwrap_or(0);
 
-        for ty in [desired, other] {
-            let card = match ty {
+        // Calculate which type is most underrepresented based on target ratios
+        let total_tracked = text_count + listening_count + pronunciation_count;
+
+        let mut candidates = vec![];
+
+        // Check each permitted type and calculate its priority
+        if self.permitted_types.contains(&ChallengeType::Text) {
+            let target_ratio = 0.6;
+            let current_ratio = if total_tracked > 0 {
+                text_count as f64 / total_tracked as f64
+            } else {
+                0.0
+            };
+            let priority = target_ratio - current_ratio;
+            candidates.push((ChallengeType::Text, priority));
+        }
+
+        if self.permitted_types.contains(&ChallengeType::Listening) {
+            let target_ratio = 0.3;
+            let current_ratio = if total_tracked > 0 {
+                listening_count as f64 / total_tracked as f64
+            } else {
+                0.0
+            };
+            let priority = target_ratio - current_ratio;
+            candidates.push((ChallengeType::Listening, priority));
+        }
+
+        if self.permitted_types.contains(&ChallengeType::Speaking) {
+            let target_ratio = 0.1;
+            let current_ratio = if total_tracked > 0 {
+                pronunciation_count as f64 / total_tracked as f64
+            } else {
+                0.0
+            };
+            let priority = target_ratio - current_ratio;
+            candidates.push((ChallengeType::Speaking, priority));
+        }
+
+        // Sort by priority (highest first)
+        candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Try to get a card of each type in priority order
+        for (challenge_type, _) in candidates {
+            let card = match challenge_type {
                 ChallengeType::Text => self.next_text_card(),
                 ChallengeType::Listening => self.next_listening_card(),
+                ChallengeType::Speaking => self.next_letter_pronunciation_card(),
             };
             if let Some(card) = card {
-                // Mark as added by creating a new CardData with default FSRS card
                 return Some(card);
             }
         }

@@ -77,11 +77,14 @@ pub async fn hit_ai_server(
     } else {
         "https://yap-ai-backend.fly.dev"
     };
-    let mut request_builder = client.post(format!("{url}{path}")).json(&request)?;
-    if let Some(token) = access_token {
-        request_builder = request_builder.header("Authorization", format!("Bearer {token}"));
-    }
-    let response = request_builder.send().await?;
+    // Always include an Authorization header - use "anonymous" as dummy token when not logged in
+    let token = access_token.map(|t| t.as_str()).unwrap_or("anonymous");
+    let response = client
+        .post(format!("{url}{path}"))
+        .json(&request)?
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await?;
     Ok(response)
 }
 

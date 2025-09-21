@@ -20,7 +20,9 @@ use language_utils::TtsRequest;
 use language_utils::autograde;
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
-use language_utils::{DictionaryEntry, Heteronym, Lexeme, PhrasebookEntry, TargetToNativeWord};
+use language_utils::{
+    DictionaryEntry, Heteronym, Lexeme, PhrasebookEntry, PronunciationGuide, TargetToNativeWord,
+};
 use lasso::Spur;
 use opfs::persistent::{self};
 use pav_regression::{IsotonicRegression, Point};
@@ -603,6 +605,7 @@ pub struct LanguagePack {
     phrasebook: BTreeMap<Spur, PhrasebookEntry>,
     word_to_pronunciation: HashMap<Spur, Spur>,
     pronunciation_to_words: HashMap<Spur, Vec<Spur>>,
+    pronunciation_data: language_utils::PronunciationData,
 }
 
 impl LanguagePack {
@@ -837,6 +840,7 @@ impl LanguagePack {
             phrasebook,
             word_to_pronunciation,
             pronunciation_to_words,
+            pronunciation_data: language_data.consolidated_language_data.pronunciation_data,
         }
     }
 }
@@ -862,6 +866,7 @@ pub enum SentenceReviewResult {
 pub enum CardType {
     TargetLanguage,
     Listening,
+    LetterPronunciation,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify)]
@@ -878,6 +883,7 @@ pub struct AddCardOptions {
 pub enum CardIndicator<S> {
     TargetLanguage { lexeme: Lexeme<S> },
     ListeningHomophonous { pronunciation: S },
+    LetterPronunciation { pattern: S },
 }
 
 impl<S> CardIndicator<S> {
@@ -894,6 +900,13 @@ impl<S> CardIndicator<S> {
             _ => None,
         }
     }
+
+    pub fn letter_pronunciation(&self) -> Option<&S> {
+        match self {
+            CardIndicator::LetterPronunciation { pattern } => Some(pattern),
+            _ => None,
+        }
+    }
 }
 
 impl CardIndicator<String> {
@@ -907,6 +920,9 @@ impl CardIndicator<String> {
                     pronunciation: rodeo.get(pronunciation)?,
                 }
             }
+            CardIndicator::LetterPronunciation { pattern } => CardIndicator::LetterPronunciation {
+                pattern: rodeo.get(pattern)?,
+            },
         })
     }
 }
@@ -922,6 +938,9 @@ impl CardIndicator<Spur> {
                     pronunciation: rodeo.resolve(pronunciation).to_string(),
                 }
             }
+            CardIndicator::LetterPronunciation { pattern } => CardIndicator::LetterPronunciation {
+                pattern: rodeo.resolve(pattern).to_string(),
+            },
         }
     }
 }
@@ -1223,6 +1242,12 @@ impl weapon::PartialAppState for Deck {
                                     continue;
                                 }
                             }
+                            CardIndicator::LetterPronunciation { pattern } => {
+                                // Check if pattern exists in the rodeo
+                                if deck.context.language_pack.rodeo.resolve(pattern).is_empty() {
+                                    continue;
+                                }
+                            }
                         }
                         // Add the card to the deck if it's not already in it, or transition ghost to added
                         deck.cards
@@ -1452,6 +1477,10 @@ impl weapon::PartialAppState for Deck {
                     CardIndicator::ListeningHomophonous { .. } => {
                         listening_points.push(point);
                     }
+                    CardIndicator::LetterPronunciation { .. } => {
+                        // For pronunciation patterns, include them with target language cards
+                        target_language_points.push(point);
+                    }
                 }
             }
         }
@@ -1522,6 +1551,29 @@ impl weapon::PartialAppState for Deck {
                         )
                     }),
             )
+            .chain(
+                // Add pronunciation pattern cards
+                state
+                    .context
+                    .language_pack
+                    .pronunciation_data
+                    .guides
+                    .iter()
+                    .filter_map(|guide| {
+                        // Only create cards for patterns that exist in the rodeo
+                        state
+                            .context
+                            .language_pack
+                            .rodeo
+                            .get(&guide.pattern)
+                            .map(|pattern| {
+                                (
+                                    CardIndicator::LetterPronunciation { pattern },
+                                    CardStatus::Unadded(Unadded {}),
+                                )
+                            })
+                    }),
+            )
             .collect();
 
         // Update only the cards that have been added
@@ -1583,6 +1635,12 @@ impl DeckState {
             }
             CardIndicator::ListeningHomophonous { pronunciation } => {
                 if !pronunciation_to_words.contains_key(pronunciation) {
+                    return;
+                }
+            }
+            CardIndicator::LetterPronunciation { pattern } => {
+                // Check if pattern exists in the rodeo
+                if self.context.language_pack.rodeo.resolve(pattern).is_empty() {
                     return;
                 }
             }
@@ -1707,6 +1765,7 @@ impl Deck {
 
         let no_listening_cards = banned_challenge_types.contains(&ChallengeType::Listening);
         let no_text_cards = banned_challenge_types.contains(&ChallengeType::Text);
+        let no_speaking_cards = banned_challenge_types.contains(&ChallengeType::Speaking);
 
         for (card, card_status) in self.cards.iter() {
             if let CardStatus::Tracked(CardData::Added { fsrs_card }) = card_status {
@@ -1720,8 +1779,12 @@ impl Deck {
                         CardIndicator::ListeningHomophonous { .. } if no_listening_cards => {
                             due_but_banned_cards.push(*card);
                         }
+                        CardIndicator::LetterPronunciation { .. } if no_speaking_cards => {
+                            due_but_banned_cards.push(*card);
+                        }
                         CardIndicator::TargetLanguage { .. }
-                        | CardIndicator::ListeningHomophonous { .. } => due_cards.push(*card),
+                        | CardIndicator::ListeningHomophonous { .. }
+                        | CardIndicator::LetterPronunciation { .. } => due_cards.push(*card),
                     }
                 } else {
                     future_cards.push(*card);
@@ -1857,6 +1920,7 @@ impl Deck {
             .filter_map(|(card_indicator, card_status)| match card_indicator {
                 CardIndicator::TargetLanguage { lexeme } => Some((lexeme, card_status)),
                 CardIndicator::ListeningHomophonous { .. } => None,
+                CardIndicator::LetterPronunciation { .. } => None,
             })
             .filter_map(|(lexeme, card_status)| {
                 if let CardStatus::Tracked(card_data) = card_status {
@@ -1910,21 +1974,46 @@ impl Deck {
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn add_card_options(&self) -> AddCardOptions {
+    pub fn add_card_options(&self, banned_challenge_types: Vec<ChallengeType>) -> AddCardOptions {
+        let banned_types_set = banned_challenge_types
+            .into_iter()
+            .collect::<std::collections::HashSet<_>>();
+
         AddCardOptions {
-            smart_add: self.next_unknown_cards(None).take(5).count() as u32,
+            smart_add: self
+                .next_unknown_cards_with_banned(None, &banned_types_set)
+                .take(5)
+                .count() as u32,
             manual_add: vec![
                 (
-                    self.next_unknown_cards(Some(CardType::TargetLanguage))
-                        .take(5)
-                        .count() as u32,
+                    if banned_types_set.contains(&ChallengeType::Text) {
+                        0
+                    } else {
+                        self.next_unknown_cards(Some(CardType::TargetLanguage))
+                            .take(5)
+                            .count() as u32
+                    },
                     CardType::TargetLanguage,
                 ),
                 (
-                    self.next_unknown_cards(Some(CardType::Listening))
-                        .take(5)
-                        .count() as u32,
+                    if banned_types_set.contains(&ChallengeType::Listening) {
+                        0
+                    } else {
+                        self.next_unknown_cards(Some(CardType::Listening))
+                            .take(5)
+                            .count() as u32
+                    },
                     CardType::Listening,
+                ),
+                (
+                    if banned_types_set.contains(&ChallengeType::Speaking) {
+                        0
+                    } else {
+                        self.next_unknown_cards(Some(CardType::LetterPronunciation))
+                            .take(5)
+                            .count() as u32
+                    },
+                    CardType::LetterPronunciation,
                 ),
             ],
         }
@@ -1935,9 +2024,13 @@ impl Deck {
         &self,
         card_type: Option<CardType>,
         count: usize,
+        banned_challenge_types: Vec<ChallengeType>,
     ) -> Option<DeckEvent> {
+        let banned_types_set = banned_challenge_types
+            .into_iter()
+            .collect::<std::collections::HashSet<_>>();
         let cards = self
-            .next_unknown_cards(card_type)
+            .next_unknown_cards_with_banned(card_type, &banned_types_set)
             .take(count)
             .map(|card| card.resolve(&self.context.language_pack.rodeo))
             .collect::<Vec<_>>();
@@ -2170,8 +2263,36 @@ impl Deck {
         let permitted_types = match card_type {
             Some(CardType::TargetLanguage) => vec![ChallengeType::Text],
             Some(CardType::Listening) => vec![ChallengeType::Listening],
-            None => vec![ChallengeType::Text, ChallengeType::Listening],
+            Some(CardType::LetterPronunciation) => vec![ChallengeType::Speaking],
+            None => vec![
+                ChallengeType::Text,
+                ChallengeType::Listening,
+                ChallengeType::Speaking,
+            ],
         };
+        NextCardsIterator::new(self, permitted_types)
+    }
+
+    pub(crate) fn next_unknown_cards_with_banned(
+        &self,
+        card_type: Option<CardType>,
+        banned_types: &std::collections::HashSet<ChallengeType>,
+    ) -> NextCardsIterator<'_> {
+        let all_types = match card_type {
+            Some(CardType::TargetLanguage) => vec![ChallengeType::Text],
+            Some(CardType::Listening) => vec![ChallengeType::Listening],
+            Some(CardType::LetterPronunciation) => vec![ChallengeType::Speaking],
+            None => vec![
+                ChallengeType::Text,
+                ChallengeType::Listening,
+                ChallengeType::Speaking,
+            ],
+        };
+
+        let permitted_types = all_types
+            .into_iter()
+            .filter(|t| !banned_types.contains(t))
+            .collect();
         NextCardsIterator::new(self, permitted_types)
     }
 
@@ -2263,6 +2384,23 @@ impl Deck {
                         possible_words,
                     }
                 }
+                CardIndicator::LetterPronunciation { pattern } => {
+                    let pattern_str = self.context.language_pack.rodeo.resolve(&pattern);
+                    let Some(guide) = self
+                        .context
+                        .language_pack
+                        .pronunciation_data
+                        .guides
+                        .iter()
+                        .find(|g| g.pattern == pattern_str)
+                        .cloned()
+                    else {
+                        panic!(
+                            "Pattern {pattern_str} was in the deck, but was not found in pronunciation guides"
+                        );
+                    };
+                    CardContent::LetterPronunciation { pattern, guide }
+                }
             },
             fsrs_card: match card_data {
                 CardData::Added { fsrs_card } => fsrs_card.clone(),
@@ -2298,6 +2436,7 @@ impl Deck {
                     Some((card_indicator, *lexeme, card_status))
                 }
                 CardIndicator::ListeningHomophonous { .. } => None,
+                CardIndicator::LetterPronunciation { .. } => None,
             })
             .filter(|(card_indicator, _lexeme, card_status)| {
                 self.context
@@ -2502,6 +2641,11 @@ impl Context {
                 self.language_pack
                     .pronunciation_max_frequency(pronunciation)
             }
+            CardIndicator::LetterPronunciation { .. } => {
+                // For pronunciation patterns, use a fixed high frequency to ensure they're accessible
+                // This gives them similar priority to common words
+                Some(Frequency { count: 1000 })
+            }
         }
     }
 }
@@ -2517,6 +2661,10 @@ impl Regressions {
         let regression = match card {
             CardIndicator::TargetLanguage { .. } => self.target_language_regression.as_ref(),
             CardIndicator::ListeningHomophonous { .. } => self.listening_regression.as_ref(),
+            CardIndicator::LetterPronunciation { .. } => {
+                // For pronunciation patterns, use target language regression as a reasonable approximation
+                self.target_language_regression.as_ref()
+            }
         }?;
 
         // Compute smoothed prediction by averaging at frequency ±20%
@@ -2641,6 +2789,10 @@ pub enum CardContent<S> {
         pronunciation: S,
         possible_words: Vec<(bool, S)>,
     },
+    LetterPronunciation {
+        pattern: S,
+        guide: PronunciationGuide,
+    },
 }
 
 impl<S> CardContent<S> {
@@ -2654,6 +2806,7 @@ impl<S> CardContent<S> {
                 Some(Lexeme::Multiword(multiword_term.clone()))
             }
             CardContent::Listening { .. } => None,
+            CardContent::LetterPronunciation { .. } => None,
         }
     }
 
@@ -2687,6 +2840,12 @@ impl CardContent<Spur> {
                     .map(|(known, word)| (*known, rodeo.resolve(word).to_string()))
                     .collect(),
             },
+            CardContent::LetterPronunciation { pattern, guide } => {
+                CardContent::LetterPronunciation {
+                    pattern: rodeo.resolve(pattern).to_string(),
+                    guide: guide.clone(),
+                }
+            }
         }
     }
 }
@@ -2701,6 +2860,7 @@ pub struct ReviewInfo {
 
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(tag = "type")]
 pub enum Challenge<S> {
     FlashCardReview {
         indicator: CardIndicator<S>,
@@ -2757,11 +2917,14 @@ impl Challenge<Spur> {
     }
 }
 
-#[derive(tsify::Tsify, Eq, PartialEq, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[derive(
+    tsify::Tsify, Eq, PartialEq, Hash, serde::Serialize, serde::Deserialize, Debug, Clone, Copy,
+)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ChallengeType {
     Text,
     Listening,
+    Speaking,
 }
 
 impl ReviewInfo {
@@ -2815,6 +2978,16 @@ impl ReviewInfo {
                     },
                     provider: TtsProvider::Google,
                 },
+                CardContent::LetterPronunciation { pattern, .. } => {
+                    // For pronunciation patterns, read the pattern itself
+                    AudioRequest {
+                        request: TtsRequest {
+                            text: language_pack.rodeo.resolve(pattern).to_string(),
+                            language: deck.context.target_language,
+                        },
+                        provider: TtsProvider::Google,
+                    }
+                }
             },
             indicator: card_indicator,
             content: card.content.clone(),
@@ -3552,7 +3725,7 @@ mod tests {
         let mut deck = Deck::default();
 
         // Test that we can add cards to the default deck
-        if let Some(event) = deck.add_next_unknown_cards(None, 1) {
+        if let Some(event) = deck.add_next_unknown_cards(None, 1, Vec::new()) {
             let ts = weapon::data_model::Timestamped {
                 timestamp: chrono::Utc::now(),
                 within_device_events_index: 0,

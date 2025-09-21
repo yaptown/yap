@@ -43,6 +43,10 @@ export function NoCardsReady({
     addCardOptions.manual_add.find(
       ([, card_type]) => card_type === "Listening"
     )?.[0] || 0;
+  const numCanAddLetterPronunciation =
+    addCardOptions.manual_add.find(
+      ([, card_type]) => card_type === "LetterPronunciation"
+    )?.[0] || 0;
   const numCanSmartAdd = addCardOptions.smart_add;
 
   // Calculate if workload looks light
@@ -54,7 +58,8 @@ export function NoCardsReady({
     upcomingStats.max_per_day <= 50 && // No single day has more than 50 reviews
     (numCanSmartAdd > 0 ||
       numCanAddTargetLanguage > 0 ||
-      numCanAddListening > 0) && // Can add cards
+      numCanAddListening > 0 ||
+      numCanAddLetterPronunciation > 0) && // Can add cards
     deck.num_cards() > 40; // has used yap a bit
 
   const add_cards: [number, CardType | undefined][] = [];
@@ -67,12 +72,18 @@ export function NoCardsReady({
   if (numCanAddListening > 0) {
     add_cards.push([numCanAddListening, "Listening"]);
   }
+  if (numCanAddLetterPronunciation > 0) {
+    add_cards.push([numCanAddLetterPronunciation, "LetterPronunciation"]);
+  }
 
   const targetLanguageSpan = (
     <span style={{ fontWeight: "bold" }}>{targetLanguage} → English</span>
   );
   const listeningSpan = (
     <span style={{ fontWeight: "bold" }}>{targetLanguage} listening</span>
+  );
+  const pronunciationSpan = (
+    <span style={{ fontWeight: "bold" }}>{targetLanguage} pronunciation</span>
   );
 
   return (
@@ -113,7 +124,9 @@ export function NoCardsReady({
                   ? ""
                   : add_cards[0][1] === "TargetLanguage"
                   ? targetLanguageSpan
-                  : listeningSpan}{" "}
+                  : add_cards[0][1] === "Listening"
+                  ? listeningSpan
+                  : pronunciationSpan}{" "}
                 cards to my deck
               </Button>
               {add_cards.length > 1 && (
@@ -129,12 +142,17 @@ export function NoCardsReady({
                   <DropdownMenuContent align="end">
                     {add_cards.slice(1).map(([count, card_type]) => (
                       <DropdownMenuItem
+                        key={card_type || "smart"}
                         onClick={() => addNextCards(card_type, count)}
                       >
                         Add {count}{" "}
                         {card_type === "TargetLanguage"
                           ? targetLanguageSpan
-                          : listeningSpan}{" "}
+                          : card_type === "Listening"
+                          ? listeningSpan
+                          : card_type === "LetterPronunciation"
+                          ? pronunciationSpan
+                          : ""}{" "}
                         cards
                       </DropdownMenuItem>
                     ))}

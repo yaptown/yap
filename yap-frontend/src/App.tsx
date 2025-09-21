@@ -331,21 +331,38 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   }, [nextDueCard?.due_timestamp_ms])
 
   const [bannedChallengeTypes, setBannedChallengeTypes] = useState<ChallengeType[]>(() => {
+    const banned: ChallengeType[] = [];
+    
     const cantListenTimestamp = localStorage.getItem('yap-cant-listen-timestamp');
     if (cantListenTimestamp) {
       const timestamp = parseInt(cantListenTimestamp);
       const elapsed = Date.now() - timestamp;
 
       if (elapsed < CANT_LISTEN_DURATION_MS) {
-        return ['Listening'];
+        banned.push('Listening');
       } else {
         localStorage.removeItem('yap-cant-listen-timestamp');
       }
     }
-    return [];
+    
+    const cantSpeakTimestamp = localStorage.getItem('yap-cant-speak-timestamp');
+    if (cantSpeakTimestamp) {
+      const timestamp = parseInt(cantSpeakTimestamp);
+      const elapsed = Date.now() - timestamp;
+
+      if (elapsed < CANT_LISTEN_DURATION_MS) {
+        banned.push('Speaking');
+      } else {
+        localStorage.removeItem('yap-cant-speak-timestamp');
+      }
+    }
+    
+    return banned;
   });
 
   useEffect(() => {
+    const timeouts: NodeJS.Timeout[] = [];
+    
     if (bannedChallengeTypes.includes('Listening')) {
       const cantListenTimestamp = localStorage.getItem('yap-cant-listen-timestamp');
       if (cantListenTimestamp) {
@@ -358,26 +375,50 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
             setBannedChallengeTypes(banned => banned.filter(t => t !== 'Listening'));
             localStorage.removeItem('yap-cant-listen-timestamp');
           }, remaining);
-          return () => clearTimeout(timeout);
+          timeouts.push(timeout);
         } else {
           setBannedChallengeTypes(banned => banned.filter(t => t !== 'Listening'));
           localStorage.removeItem('yap-cant-listen-timestamp');
         }
       }
     }
+    
+    if (bannedChallengeTypes.includes('Speaking')) {
+      const cantSpeakTimestamp = localStorage.getItem('yap-cant-speak-timestamp');
+      if (cantSpeakTimestamp) {
+        const timestamp = parseInt(cantSpeakTimestamp);
+        const elapsed = Date.now() - timestamp;
+        const remaining = CANT_LISTEN_DURATION_MS - elapsed;
+
+        if (remaining > 0) {
+          const timeout = setTimeout(() => {
+            setBannedChallengeTypes(banned => banned.filter(t => t !== 'Speaking'));
+            localStorage.removeItem('yap-cant-speak-timestamp');
+          }, remaining);
+          timeouts.push(timeout);
+        } else {
+          setBannedChallengeTypes(banned => banned.filter(t => t !== ('Speaking' as any)));
+          localStorage.removeItem('yap-cant-speak-timestamp');
+        }
+      }
+    }
+    
+    return () => timeouts.forEach(timeout => clearTimeout(timeout));
   }, [bannedChallengeTypes, CANT_LISTEN_DURATION_MS]);
 
   const reviewInfo = useMemo(() => {
     // eslint-disable-next-line no-console
     console.log("cardsBecameDue", cardsBecameDue)
-    return deck.get_review_info(bannedChallengeTypes, Date.now())
+    console.log("bannedChallengeTypes", bannedChallengeTypes)
+    const now = Date.now();
+    return deck.get_review_info(bannedChallengeTypes, now)
     // cardsBecameDue is intentionally included to trigger recalculation when cards become due
   }, [deck, bannedChallengeTypes, cardsBecameDue]);
 
   const currentChallenge: Challenge<string> | undefined = useMemo(() => reviewInfo.get_next_challenge(deck), [reviewInfo, deck]);
-  const addCardOptionsRaw = deck.add_card_options();
+  const addCardOptionsRaw = deck.add_card_options(bannedChallengeTypes);
   const addCardOptions: AddCardOptions = userInfo === undefined
-    ? { smart_add: 0, manual_add: addCardOptionsRaw.manual_add.map(([count, card_type]) => [card_type == "TargetLanguage" ? count : 0, card_type] as [number, CardType]) }
+    ? { smart_add: 0, manual_add: addCardOptionsRaw.manual_add.map(([count, card_type]) => [card_type == "TargetLanguage" || card_type == "LetterPronunciation" ? count : 0, card_type] as [number, CardType]) }
     : addCardOptionsRaw;
 
   useEffect(() => {
@@ -392,14 +433,14 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
 
 
   const addNextCards = useCallback(async (card_type: CardType | undefined, count: number) => {
-    const event = deck.add_next_unknown_cards(card_type, count);
+    const event = deck.add_next_unknown_cards(card_type, count, bannedChallengeTypes);
     if (event) {
       weapon.add_deck_event(event);
     }
-  }, [deck, weapon])
+  }, [deck, weapon, bannedChallengeTypes])
 
   const handleRating = async (rating: Rating) => {
-    if (!currentChallenge || !('FlashCardReview' in currentChallenge)) {
+    if (!currentChallenge || currentChallenge.type !== 'FlashCardReview') {
       console.error("handleRating called with no current challenge or no FlashCardReview in current challenge");
       return
     };
@@ -411,7 +452,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
       playSoundEffect('success'); // Don't await - play in background
     }
 
-    const event = deck.review_card(currentChallenge.FlashCardReview.indicator, rating);
+    const event = deck.review_card(currentChallenge.indicator, rating);
     if (event) {
       weapon.add_deck_event(event);
       setShowAnswer(false);
@@ -419,7 +460,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   }
 
   const handleTranslationComplete = useCallback(async (grade: { wordStatuses: [Lexeme<string>, boolean | null][] } | { perfect: string | null }, wordsTapped: Lexeme<string>[], submission: string) => {
-    if (!currentChallenge || !('TranslateComprehensibleSentence' in currentChallenge)) {
+    if (!currentChallenge || currentChallenge.type !== 'TranslateComprehensibleSentence') {
       console.error("handleTranslationComplete called with no current challenge or no TranslateComprehensibleSentence in current challenge");
       return
     };
@@ -427,11 +468,9 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     // Play success sound in background for sentence completion (regardless of perfect or errors)
     playSoundEffect('success'); // Don't await - play in background
 
-    const sentence = currentChallenge.TranslateComprehensibleSentence;
-
     if ("perfect" in grade) {
       // Perfect sentence review
-      const event = deck.translate_sentence_perfect(wordsTapped, sentence.target_language);
+      const event = deck.translate_sentence_perfect(wordsTapped, currentChallenge.target_language);
       if (event) {
         weapon.add_deck_event(event);
       }
@@ -450,7 +489,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
       });
 
       const event = deck.translate_sentence_wrong(
-        sentence.target_language,
+        currentChallenge.target_language,
         submission,
         wordsRemembered,
         wordsForgotten,
@@ -487,6 +526,12 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     const timestamp = Date.now();
     localStorage.setItem('yap-cant-listen-timestamp', timestamp.toString());
     setBannedChallengeTypes(banned => banned.includes('Listening') ? banned : [...banned, 'Listening']);
+  }
+  
+  const handleCantSpeak = () => {
+    const timestamp = Date.now();
+    localStorage.setItem('yap-cant-speak-timestamp', timestamp.toString());
+    setBannedChallengeTypes(banned => banned.includes('Speaking') ? banned : [...banned, 'Speaking']);
   }
 
   useEffect(() => {
@@ -549,11 +594,11 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
             deck={deck}
           />
         ) : currentChallenge ? (
-          ('FlashCardReview' in currentChallenge) ? (
+          (currentChallenge.type === 'FlashCardReview') ? (
             <Flashcard
-              audioRequest={currentChallenge.FlashCardReview.audio}
-              content={currentChallenge.FlashCardReview.content}
-              isNew={currentChallenge.FlashCardReview.is_new}
+              audioRequest={currentChallenge.audio}
+              content={currentChallenge.content}
+              isNew={currentChallenge.is_new}
               showAnswer={showAnswer}
               onToggle={toggleAnswer}
               dueCount={reviewInfo.due_count || 0}
@@ -562,23 +607,24 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
               accessToken={accessToken}
               key={deck.get_total_reviews()}
               onCantListen={handleCantListen}
+              onCantSpeak={handleCantSpeak}
               targetLanguage={targetLanguage}
-              listeningPrefix={currentChallenge.FlashCardReview.listening_prefix}
+              listeningPrefix={currentChallenge.listening_prefix}
             />
-          ) : ('TranslateComprehensibleSentence' in currentChallenge) ? (
+          ) : (currentChallenge.type === 'TranslateComprehensibleSentence') ? (
             <TranslationChallenge
-              sentence={currentChallenge.TranslateComprehensibleSentence}
+              sentence={currentChallenge}
               onComplete={handleTranslationComplete}
               dueCount={reviewInfo.due_count || 0}
               totalCount={reviewInfo.total_count}
               accessToken={accessToken}
               key={deck.get_total_reviews()}
-              unique_target_language_lexeme_definitions={currentChallenge.TranslateComprehensibleSentence.unique_target_language_lexeme_definitions}
+              unique_target_language_lexeme_definitions={currentChallenge.unique_target_language_lexeme_definitions}
               targetLanguage={targetLanguage}
             />
           ) : (
             <TranscriptionChallenge
-              challenge={currentChallenge.TranscribeComprehensibleSentence}
+              challenge={currentChallenge}
               onComplete={handleTranscriptionComplete}
               dueCount={reviewInfo.due_count || 0}
               totalCount={reviewInfo.total_count}

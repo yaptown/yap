@@ -101,7 +101,7 @@ impl DailySimulationIterator {
         }
 
         // Add 10 new cards at the end of the day
-        if let Some(event) = self.deck.add_next_unknown_cards(None, 10) {
+        if let Some(event) = self.deck.add_next_unknown_cards(None, 10, vec![]) {
             let ts = Timestamped {
                 timestamp: self.current_time,
                 within_device_events_index: self.event_index,

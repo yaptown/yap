@@ -100,8 +100,10 @@ export function Stats({ deck }: StatsProps) {
                   shortDescription =
                     card.card_indicator.TargetLanguage.lexeme.Multiword;
                 }
-              } else {
+              } else if ("ListeningHomophonous" in card.card_indicator) {
                 shortDescription = `/${card.card_indicator.ListeningHomophonous.pronunciation}/`;
+              } else if ("LetterPronunciation" in card.card_indicator) {
+                shortDescription = `[${card.card_indicator.LetterPronunciation.pattern}]`;
               }
 
               const isReady = card.due_timestamp_ms <= now;

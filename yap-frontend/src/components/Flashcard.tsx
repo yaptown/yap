@@ -25,9 +25,11 @@ import "./Flashcard.css";
 import { AudioButton } from "./AudioButton";
 import { ReportIssueModal } from "./challenges/ReportIssueModal";
 import { CantListenButton } from "./CantListenButton";
+import { CantSpeakButton } from "./CantSpeakButton";
 import { AudioVisualizer } from "./AudioVisualizer";
 import { CardsRemaining } from "./CardsRemaining";
 import { toast } from "sonner";
+import { match } from "ts-pattern";
 
 interface FlashcardProps {
   audioRequest: AudioRequest;
@@ -39,6 +41,7 @@ interface FlashcardProps {
   onRating?: (rating: Rating) => void;
   accessToken: string | undefined;
   onCantListen?: () => void;
+  onCantSpeak?: () => void;
   isNew: boolean;
   targetLanguage: Language;
   listeningPrefix?: string;
@@ -63,8 +66,16 @@ const CardFront = ({
     return (
       <h2 className="text-3xl font-semibold">{content.Heteronym[0].word}</h2>
     );
-  } else {
+  } else if ("Multiword" in content) {
     return <h2 className="text-3xl font-semibold">{content.Multiword[0]}</h2>;
+  } else if ("LetterPronunciation" in content) {
+    return (
+      <h2 className="text-4xl font-bold">
+        🗣️ "{content.LetterPronunciation.pattern}"
+      </h2>
+    );
+  } else {
+    return <h2 className="text-3xl font-semibold">Unknown card type</h2>;
   }
 };
 
@@ -72,6 +83,12 @@ const CardFrontSubtitle = ({ content }: { content: CardContent<string> }) => {
   if ("Listening" in content) {
     return (
       <span className="text-sm text-muted-foreground"> Fill in the blank!</span>
+    );
+  }
+
+  if ("LetterPronunciation" in content) {
+    return (
+      <span className="text-sm text-muted-foreground">Say it out loud!</span>
     );
   }
 
@@ -118,7 +135,15 @@ const CardFrontSubtitle = ({ content }: { content: CardContent<string> }) => {
   );
 };
 
-const CardBack = ({ content }: { content: CardContent<string> }) => {
+const CardBack = ({
+  content,
+  targetLanguage,
+  accessToken,
+}: {
+  content: CardContent<string>;
+  targetLanguage: Language;
+  accessToken: string | undefined;
+}) => {
   if ("Listening" in content) {
     const possible_words: [boolean, string][] =
       content.Listening.possible_words;
@@ -173,7 +198,105 @@ const CardBack = ({ content }: { content: CardContent<string> }) => {
         )}
       </div>
     ));
-  } else {
+  } else if ("LetterPronunciation" in content) {
+    const guide = content.LetterPronunciation.guide;
+    const pattern = content.LetterPronunciation.pattern;
+
+    // Get the appropriate connector phrase based on the target language
+    const connector = match(targetLanguage)
+      .with("French", () => "comme dans")
+      .with("Spanish", () => "como en")
+      .with("Korean", () => "처럼") // cheoreom (like/as in)
+      .with("English", () => "as in")
+      .exhaustive();
+
+    return (
+      <div className="space-y-4">
+        <div className="text-left bg-muted/30 rounded-lg p-4 space-y-4">
+          {guide.example_words && guide.example_words.length > 0 && (
+            <div className="space-y-3">
+              <div className="text-sm text-muted-foreground">Examples:</div>
+              <div className="grid gap-3">
+                {guide.example_words.slice(0, 3).map((example, index) => {
+                  // Find and highlight the pattern in the word
+                  const lowerPattern = pattern.toLowerCase();
+                  const lowerWord = example.target.toLowerCase();
+                  const patternIndex = lowerWord.indexOf(lowerPattern);
+
+                  let highlightedWord;
+                  if (patternIndex !== -1) {
+                    const before = example.target.slice(0, patternIndex);
+                    const matched = example.target.slice(
+                      patternIndex,
+                      patternIndex + pattern.length
+                    );
+                    const after = example.target.slice(
+                      patternIndex + pattern.length
+                    );
+                    highlightedWord = (
+                      <>
+                        {before}
+                        <span className="bg-yellow-500/30 rounded">
+                          {matched}
+                        </span>
+                        {after}
+                      </>
+                    );
+                  } else {
+                    highlightedWord = example.target;
+                  }
+
+                  return (
+                    <div
+                      key={index}
+                      className="bg-background/50 rounded p-3 flex items-center justify-between"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex-1">
+                        <div className="text-base">
+                          <span className="font-medium">{pattern}</span>
+                          <span className="text-muted-foreground mx-2">
+                            {connector}
+                          </span>
+                          <span className="font-semibold">
+                            {highlightedWord}
+                          </span>
+                        </div>
+                        {example.cultural_context && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {example.cultural_context}
+                          </div>
+                        )}
+                      </div>
+                      <AudioButton
+                        audioRequest={{
+                          request: {
+                            text: `"${pattern}" ${connector} "${example.target}"`,
+                            language: targetLanguage,
+                          },
+                          provider: "Google",
+                        }}
+                        accessToken={accessToken}
+                        autoPlay={false}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {guide.description && (
+            <div className="pt-3 border-t border-muted/20">
+              <div className="text-sm text-muted-foreground">
+                {guide.description}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  } else if ("Multiword" in content) {
     return (
       <div className="text-left bg-muted/30 rounded-lg p-4 space-y-2">
         <div className="flex items-baseline gap-2">
@@ -194,6 +317,8 @@ const CardBack = ({ content }: { content: CardContent<string> }) => {
         )}
       </div>
     );
+  } else {
+    return <div>Unknown card type</div>;
   }
 };
 
@@ -207,6 +332,7 @@ export const Flashcard = function Flashcard({
   onRating,
   accessToken,
   onCantListen,
+  onCantSpeak,
   isNew,
   targetLanguage,
   listeningPrefix,
@@ -357,6 +483,8 @@ export const Flashcard = function Flashcard({
       if (possible.length > 0) {
         word = possible[0][1];
       }
+    } else if ("LetterPronunciation" in content) {
+      word = content.LetterPronunciation.pattern;
     }
 
     if (word) {
@@ -420,11 +548,15 @@ export const Flashcard = function Flashcard({
                 className="flex items-center justify-between w-full"
                 onClick={(e) => e.stopPropagation()}
               >
-                <AudioButton
-                  audioRequest={audioRequest}
-                  accessToken={accessToken}
-                  autoPlay={true}
-                />
+                {!("LetterPronunciation" in content) ? (
+                  <AudioButton
+                    audioRequest={audioRequest}
+                    accessToken={accessToken}
+                    autoPlay={true}
+                  />
+                ) : (
+                  <div className="w-10" /> /* Spacer to keep content centered */
+                )}
 
                 <CardFront
                   content={content}
@@ -474,7 +606,11 @@ export const Flashcard = function Flashcard({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <CardBack content={content} />
+                <CardBack
+                  content={content}
+                  targetLanguage={targetLanguage}
+                  accessToken={accessToken}
+                />
               </motion.div>
             ) : (
               <div>
@@ -502,6 +638,9 @@ export const Flashcard = function Flashcard({
         <div className="mt-4 flex flex-col gap-2">
           {onCantListen && "Listening" in content && (
             <CantListenButton onClick={onCantListen} />
+          )}
+          {onCantSpeak && "LetterPronunciation" in content && (
+            <CantSpeakButton onClick={onCantSpeak} />
           )}
           <div className="grid grid-cols-2 gap-2">
             <Button
