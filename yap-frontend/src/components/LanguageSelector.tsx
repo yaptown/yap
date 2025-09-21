@@ -31,6 +31,11 @@ import { get_available_courses } from "../../../yap-frontend-rs/pkg/yap_frontend
 type LanguageSelectionState =
   | { stage: "selectingNative" }
   | { stage: "selectingTarget"; nativeLanguage: Language }
+  | {
+      stage: "askingExperience";
+      nativeLanguage: Language;
+      targetLanguage: Language;
+    }
   | { stage: "onboarding"; nativeLanguage: Language; targetLanguage: Language };
 
 interface LanguageSelectorProps {
@@ -50,6 +55,9 @@ export function LanguageSelector({
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [comboboxOpen, setComboboxOpen] = useState(false);
+  const [userKnowsLanguage, setUserKnowsLanguage] = useState<
+    "knows_some" | "beginner" | null
+  >(null);
   const weapon = useWeapon();
 
   // Get available courses
@@ -96,7 +104,7 @@ export function LanguageSelector({
   useEffect(() => {
     // Only run on initial mount when in native selection stage
     if (selectionState.stage !== "selectingNative") return;
-    
+
     if (detectedLanguage) {
       setSelectionState({
         stage: "selectingTarget",
@@ -205,32 +213,48 @@ export function LanguageSelector({
     }
   }, [selectionState, weapon]);
 
+  const acknowledgeExperience =
+    userKnowsLanguage === "knows_some"
+      ? {
+          title: "Great! We'll find your level.",
+          content:
+            "The first few challenges will serve as a placement test. The difficulty will ramp up quickly to find where you're at.",
+        }
+      : {
+          title: "Perfect! Welcome aboard.",
+          content:
+            "We'll start you at the very beginning and build your foundation step by step.",
+        };
+
   const introScreens = skipOnboarding
-    ? []
+    ? [acknowledgeExperience]
     : [
+        acknowledgeExperience,
         {
-          title: "Most language apps waste your time.",
+          title: "Yap values your time.",
           content:
-            'They make you learn "animals" and "body parts" when you really need everyday words that matter.',
+            "Every design decision in Yap is based on helping you learn the most in the time you spend.",
         },
+        userKnowsLanguage === "knows_some"
+          ? {
+            title: "Yap adapts to your skill level.",
+            content:
+              "So you don't waste time reviewing what you already learned on Duolingo.",
+          }
+          : {
+            title: "Yap teaches you the most common words first.",
+            content:
+              "It'll surprise you how much you can say with just a few words.",
+          },
         {
-          title: "Yap teaches you the 1,000 most common words first.",
-          content: "These words make up 80% of everyday conversation.",
-        },
-        {
-          title: "Your brain forgets on a schedule. Yap knows it.",
-          content:
-            "We use spaced repetition—reviewing each word at the exact moment before you'd forget it.",
-        },
-        {
-          title: "Other apps follow their plan. Yap follows your brain.",
+          title: "Yap has no lesson plan.",
           content:
             "Every lesson adapts to what YOU struggle with, not what lesson 47 says you should know.",
         },
         {
-          title: "It's science, and it works.",
+          title: "Yap reminds you of words just before you forget them.",
           content:
-            "Once you feel the difference, you'll never want to go back.",
+            "We use spaced repetition to review each word at the perfect time.",
         },
       ];
 
@@ -386,7 +410,7 @@ export function LanguageSelector({
                         );
                       } else {
                         setSelectionState({
-                          stage: "onboarding",
+                          stage: "askingExperience",
                           nativeLanguage: selectionState.nativeLanguage,
                           targetLanguage: lang,
                         });
@@ -419,8 +443,73 @@ export function LanguageSelector({
               </p>
             </div>
           </motion.div>
+        ) : selectionState.stage === "askingExperience" ? (
+          // Step 3: Ask about experience level
+          <motion.div
+            key="experience-question"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="w-full max-w-2xl gap-4 flex flex-col items-center"
+          >
+            <div className="text-center mb-8">
+              <h1
+                className="text-5xl font-bold mb-4"
+                style={{ textWrap: "balance" }}
+              >
+                Do you already know some{" "}
+                {nativeLanguageNames[selectionState.targetLanguage]}?
+              </h1>
+            </div>
+
+            <div className="flex flex-col gap-4 w-full max-w-md">
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => {
+                  setUserKnowsLanguage("knows_some");
+                  setSelectionState({
+                    stage: "onboarding",
+                    nativeLanguage: selectionState.nativeLanguage,
+                    targetLanguage: selectionState.targetLanguage,
+                  });
+                }}
+                className="text-lg py-8 hover:scale-105 transition-transform"
+              >
+                Yes, I know some
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => {
+                  setUserKnowsLanguage("beginner");
+                  setSelectionState({
+                    stage: "onboarding",
+                    nativeLanguage: selectionState.nativeLanguage,
+                    targetLanguage: selectionState.targetLanguage,
+                  });
+                }}
+                className="text-lg py-8 hover:scale-105 transition-transform"
+              >
+                No, I'm starting fresh
+              </Button>
+            </div>
+
+            <Button
+              variant="ghost"
+              className="mt-6"
+              onClick={() => {
+                setSelectionState({
+                  stage: "selectingTarget",
+                  nativeLanguage: selectionState.nativeLanguage,
+                });
+              }}
+            >
+              Back
+            </Button>
+          </motion.div>
         ) : selectionState.stage === "onboarding" ? (
-          // Step 3: Onboarding screens (if not skipping)
+          // Step 4: Onboarding screens (if not skipping)
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
