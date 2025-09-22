@@ -76,9 +76,10 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
 
     // Only set the timestamp if we haven't hit the permanent dismissal threshold
     if (newCount < 3) {
+      const now = Date.now();
       localStorage.setItem(
         "engagement-prompts-dismissed",
-        Date.now().toString()
+        now.toString()
       );
     }
   };

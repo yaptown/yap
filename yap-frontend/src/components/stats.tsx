@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import TimeAgo from "react-timeago";
 import type { Deck } from "../../../yap-frontend-rs/pkg";
@@ -8,6 +8,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useInterval } from "react-use";
 
 // Lazy load the chart component - only loads when needed
 const FrequencyKnowledgeChart = lazy(() =>
@@ -21,14 +22,26 @@ interface StatsProps {
 }
 
 export function Stats({ deck }: StatsProps) {
-  const now = Date.now();
-  const reviewInfo = deck.get_review_info([], now);
-  const allCardsSummary = deck.get_all_cards_summary();
-  const readyCards = allCardsSummary.filter(
-    (card) => card.due_timestamp_ms <= now
+  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
+  
+  // Update timestamp periodically to keep stats fresh
+  useInterval(
+    () => {
+      setCurrentTimestamp(Date.now());
+    },
+    10000 // Update every 10 seconds
   );
+  
+  const { reviewInfo, readyCards, allCardsSummary } = useMemo(() => {
+    const reviewInfo = deck.get_review_info([], currentTimestamp);
+    const allCardsSummary = deck.get_all_cards_summary();
+    const readyCards = allCardsSummary.filter(
+      (card) => card.due_timestamp_ms <= currentTimestamp
+    );
+    return { reviewInfo, readyCards, allCardsSummary };
+  }, [deck, currentTimestamp]);
   const notReadyCards = allCardsSummary.filter(
-    (card) => card.due_timestamp_ms > now
+    (card) => card.due_timestamp_ms > currentTimestamp
   );
 
   const [visibleCount, setVisibleCount] = useState(10);
@@ -106,7 +119,7 @@ export function Stats({ deck }: StatsProps) {
                 shortDescription = `[${card.card_indicator.LetterPronunciation.pattern}]`;
               }
 
-              const isReady = card.due_timestamp_ms <= now;
+              const isReady = card.due_timestamp_ms <= currentTimestamp;
               return (
                 <tr
                   key={index}

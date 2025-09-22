@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress.tsx"
 import { ThemeProvider } from "@/components/theme-provider"
 import { supabase } from '@/lib/supabase'
 import type { Session as SupabaseSession } from '@supabase/supabase-js'
-import { useNetworkState } from 'react-use';
+import { useInterval, useNetworkState } from 'react-use';
 import { Flashcard } from '@/components/Flashcard'
 import { TranslationChallenge } from '@/components/challenges/TranslationChallenge'
 import { profilerOnRender } from './lib/utils'
@@ -412,13 +412,12 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   }, [bannedChallengeTypes, CANT_LISTEN_DURATION_MS]);
 
   const reviewInfo = useMemo(() => {
-    // eslint-disable-next-line no-console
-    console.log("cardsBecameDue", cardsBecameDue)
-    console.log("bannedChallengeTypes", bannedChallengeTypes)
     const now = Date.now();
     return deck.get_review_info(bannedChallengeTypes, now)
     // cardsBecameDue is intentionally included to trigger recalculation when cards become due
   }, [deck, bannedChallengeTypes, cardsBecameDue]);
+
+  useInterval(() => setCardsBecameDue(cardsBecameDue => cardsBecameDue + 1), reviewInfo.due_count === 0 ? 1000 : 60000);
 
   const currentChallenge: Challenge<string> | undefined = useMemo(() => reviewInfo.get_next_challenge(deck), [reviewInfo, deck]);
   const addCardOptionsRaw = deck.add_card_options(bannedChallengeTypes);

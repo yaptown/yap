@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useInterval } from "react-use";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,15 @@ export function SyncStatusDialog() {
     null
   );
   const [syncInProgress, setSyncInProgress] = useState<boolean>(false);
+  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
+
+  // Update timestamp periodically for responsive UI
+  useInterval(
+    () => {
+      setCurrentTimestamp(Date.now());
+    },
+    1000 // Update every second
+  );
 
   useEffect(() => {
     const update = () => {
@@ -82,13 +92,13 @@ export function SyncStatusDialog() {
     weapon.num_events_on_remote_as_of_last_sync("supabase");
 
   // Determine sync status
+  const unsyncedStale = useMemo(() => {
+    return earliestUnsyncedAt != null && currentTimestamp - earliestUnsyncedAt > 5000;
+  }, [earliestUnsyncedAt, currentTimestamp]);
+
   let statusIcon;
   let statusText;
   let statusColor;
-
-  const now = Date.now();
-  const unsyncedStale =
-    earliestUnsyncedAt != null && now - earliestUnsyncedAt > 5000;
 
   if (!isOnline) {
     statusIcon = <Cloud className="w-2 h-2" />;
