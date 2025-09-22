@@ -28,3 +28,4 @@ itertools = "0.14.0"
 lasso.workspace = true
 reqwest.workspace = true
 html-escape.workspace = true
+unicode-normalization.workspace = true

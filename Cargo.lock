@@ -886,6 +886,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "tysm",
+ "unicode-normalization",
  "xxhash-rust",
  "zip",
 ]

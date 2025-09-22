@@ -607,7 +607,7 @@ pub struct LanguagePack {
     word_to_pronunciation: HashMap<Spur, Spur>,
     pronunciation_to_words: HashMap<Spur, Vec<Spur>>,
     pronunciation_data: language_utils::PronunciationData,
-    pattern_frequency_map: HashMap<String, u32>,
+    pattern_frequency_map: HashMap<(Spur, language_utils::PatternPosition), u32>,
 }
 
 impl LanguagePack {
@@ -828,6 +828,21 @@ impl LanguagePack {
                 .collect()
         };
 
+        let pronunciation_data = language_data
+            .consolidated_language_data
+            .pronunciation_data
+            .clone();
+
+        let pattern_frequency_map = {
+            pronunciation_data
+                .pattern_frequencies
+                .iter()
+                .map(|((pattern, position), freq)| {
+                    ((rodeo.get(pattern).unwrap(), *position), *freq)
+                })
+                .collect()
+        };
+
         Self {
             rodeo,
             translations,
@@ -842,16 +857,8 @@ impl LanguagePack {
             phrasebook,
             word_to_pronunciation,
             pronunciation_to_words,
-            pronunciation_data: language_data
-                .consolidated_language_data
-                .pronunciation_data
-                .clone(),
-            pattern_frequency_map: language_data
-                .consolidated_language_data
-                .pronunciation_data
-                .pattern_frequencies
-                .into_iter()
-                .collect(),
+            pronunciation_data,
+            pattern_frequency_map,
         }
     }
 }
@@ -1244,34 +1251,9 @@ impl weapon::PartialAppState for Deck {
             LanguageEventContent::AddCards { cards } => {
                 for card in cards {
                     if let Some(card) = card.get_interned(&deck.context.language_pack.rodeo) {
-                        // Make sure the card is actually in the respective database
-                        match &card {
-                            CardIndicator::TargetLanguage { lexeme } => {
-                                if !deck
-                                    .context
-                                    .language_pack
-                                    .word_frequencies
-                                    .contains_key(lexeme)
-                                {
-                                    continue;
-                                }
-                            }
-                            CardIndicator::ListeningHomophonous { pronunciation } => {
-                                if !deck
-                                    .context
-                                    .language_pack
-                                    .pronunciation_to_words
-                                    .contains_key(pronunciation)
-                                {
-                                    continue;
-                                }
-                            }
-                            CardIndicator::LetterPronunciation { pattern, .. } => {
-                                // Check if pattern exists in the rodeo
-                                if deck.context.language_pack.rodeo.resolve(pattern).is_empty() {
-                                    continue;
-                                }
-                            }
+                        // Make sure the card is valid and can be added
+                        if !deck.context.is_card_valid(&card) {
+                            continue;
                         }
                         // Add the card to the deck if it's not already in it, or transition ghost to added
                         deck.cards
@@ -1512,13 +1494,12 @@ impl weapon::PartialAppState for Deck {
         // Add bias points at (0, -10) and (10, -10) to ensure the curve slopes down
         // This represents a word with 0 occurrences being very difficult. We'll give them a weight of 10 to ensure it's not ignored
         let bias_points = [
-            Point::new_with_weight(0.0, -10.0, 10.0),
-            Point::new_with_weight(1.0, -10.0, 5.0),
-            Point::new_with_weight(5.0, 0.0, 5.0),
-            Point::new_with_weight(8.0, 0.0, 1.0),
-            Point::new_with_weight(20.0, 0.0, 1.0),
-            Point::new_with_weight(100.0, 0.0, 0.5),
-            Point::new_with_weight(200.0, 0.0, 0.5),
+            Point::new_with_weight(Frequency { count: 1 }.sqrt_frequency(), -10.0, 5.0),
+            Point::new_with_weight(Frequency { count: 25 }.sqrt_frequency(), 0.0, 5.0),
+            Point::new_with_weight(Frequency { count: 64 }.sqrt_frequency(), 0.0, 1.0),
+            Point::new_with_weight(Frequency { count: 400 }.sqrt_frequency(), 0.0, 1.0),
+            Point::new_with_weight(Frequency { count: 1000 }.sqrt_frequency(), 0.0, 0.5),
+            Point::new_with_weight(Frequency { count: 4000 }.sqrt_frequency(), 0.0, 0.5),
         ];
 
         // Create isotonic regressions (need at least 2 non-new cards)
@@ -1650,27 +1631,9 @@ impl DeckState {
     }
 
     fn log_review(&mut self, card: CardIndicator<Spur>, rating: Rating, timestamp: DateTime<Utc>) {
-        let word_frequencies = &self.context.language_pack.word_frequencies;
-        let pronunciation_to_words = &self.context.language_pack.pronunciation_to_words;
-
-        // Make sure the card is actually in the respective database
-        match &card {
-            CardIndicator::TargetLanguage { lexeme } => {
-                if !word_frequencies.contains_key(lexeme) {
-                    return;
-                }
-            }
-            CardIndicator::ListeningHomophonous { pronunciation } => {
-                if !pronunciation_to_words.contains_key(pronunciation) {
-                    return;
-                }
-            }
-            CardIndicator::LetterPronunciation { pattern, .. } => {
-                // Check if pattern exists in the rodeo
-                if self.context.language_pack.rodeo.resolve(pattern).is_empty() {
-                    return;
-                }
-            }
+        // Make sure the card is valid before logging a review
+        if !self.context.is_card_valid(&card) {
+            return;
         }
 
         let card_data = self.cards.entry(card).or_insert_with(|| {
@@ -2399,7 +2362,8 @@ impl Deck {
                         .cloned()
                     else {
                         panic!(
-                            "Multiword term {multiword_term:?} was in the deck, but was not found in phrasebook"
+                            "Multiword term {:?} was in the deck, but was not found in phrasebook",
+                            self.context.language_pack.rodeo.resolve(&multiword_term)
                         );
                     };
                     CardContent::Multiword(
@@ -2420,7 +2384,8 @@ impl Deck {
                         .cloned()
                     else {
                         panic!(
-                            "Pronunciation {pronunciation:?} was in the deck, but was not found in pronunciation_to_words"
+                            "Pronunciation {:?} was in the deck, but was not found in pronunciation_to_words",
+                            self.context.language_pack.rodeo.resolve(&pronunciation)
                         );
                     };
                     let possible_words = possible_words.into_iter().collect::<BTreeSet<_>>();
@@ -2585,6 +2550,27 @@ impl Deck {
 }
 
 impl Context {
+    /// Check if a card is valid and can be added to the deck
+    /// For lexeme cards: checks if they exist in word_frequencies (which guarantees they have definitions)
+    /// For listening cards: checks if the pronunciation exists
+    /// For letter pronunciation cards: checks if the pattern exists in the frequency map
+    pub fn is_card_valid(&self, card: &CardIndicator<Spur>) -> bool {
+        match card {
+            CardIndicator::TargetLanguage { lexeme } => {
+                // Check if lexeme exists in word_frequencies (which guarantees it has a definition)
+                self.language_pack.word_frequencies.contains_key(lexeme)
+            }
+            CardIndicator::ListeningHomophonous { pronunciation } => self
+                .language_pack
+                .pronunciation_to_words
+                .contains_key(pronunciation),
+            CardIndicator::LetterPronunciation { pattern, position } => self
+                .language_pack
+                .pattern_frequency_map
+                .contains_key(&(*pattern, *position)),
+        }
+    }
+
     fn is_comprehensible(
         &self,
         card_indicator: &CardIndicator<Spur>,
@@ -2728,13 +2714,12 @@ impl Context {
                 self.language_pack
                     .pronunciation_max_frequency(pronunciation)
             }
-            CardIndicator::LetterPronunciation { pattern, .. } => {
+            CardIndicator::LetterPronunciation { pattern, position } => {
                 // Look up the actual frequency of this pattern from our calculated data
-                let pattern_str = self.language_pack.rodeo.resolve(pattern);
                 let count = self
                     .language_pack
                     .pattern_frequency_map
-                    .get(pattern_str)
+                    .get(&(*pattern, *position))
                     .copied()
                     .unwrap_or(0);
                 Some(Frequency { count })

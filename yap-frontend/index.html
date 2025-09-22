@@ -54,9 +54,115 @@
     <meta name="description" content="Language learning made easy">
 
     <!-- pwa -->
+
+    <!-- loading screen styles -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      
+      #loading-text {
+        font-size: 24px;
+        margin-bottom: 20px;
+        opacity: 0;
+        animation: fadeIn 0.3s ease forwards;
+        animation-delay: 0.5s;
+      }
+      
+      #loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #fff;
+        border-radius: 50%;
+        opacity: 0;
+        animation: fadeIn 0.3s ease forwards, spin 1s linear infinite;
+        animation-delay: 1s, 0s;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      @keyframes fadeIn {
+        to { opacity: 0.9; }
+      }
+      
+      #reload-button {
+        margin-top: 30px;
+        padding: 12px 24px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, background-color 0.2s ease;
+      }
+      
+      #reload-button.show {
+        opacity: 1;
+        visibility: visible;
+      }
+      
+      #reload-button:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      
+      #reload-button:active {
+        background-color: rgba(255, 255, 255, 0.3);
+      }
+    </style>
   </head>
   <body>
+    <!-- Loading screen -->
+    <div id="loading-screen">
+      <div id="loading-text">Loading Yap.Town...</div>
+      <div id="loading-spinner"></div>
+      <button id="reload-button" onclick="location.reload(true)">Reload Page</button>
+    </div>
+    
     <div id="root"></div>
+    
+    <script>
+      // Show reload button after 7 seconds
+      setTimeout(function() {
+        var button = document.getElementById('reload-button');
+        if (button && document.getElementById('loading-screen')) {
+          button.classList.add('show');
+        }
+      }, 7000);
+      
+      // Hide loading screen when React app mounts
+      // React will call this when it's ready
+      window.hideLoadingScreen = function() {
+        var loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.style.display = 'none';
+        }
+      };
+    </script>
+    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

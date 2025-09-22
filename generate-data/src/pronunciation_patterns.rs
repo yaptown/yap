@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
+use unicode_normalization::UnicodeNormalization;
 
 static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("o3")
@@ -110,7 +111,7 @@ pub async fn generate_pronunciation_guides(
 Analyze the {target:?} sound/pattern: "{clean_pattern}"
 {position_note}
 
-IMPORTANT: Write the description and notes in {native:?} (the learner's native language), not in {target:?}.
+IMPORTANT: Write the description and notes in {native:?} (the learner's native language), not in {target:?}. The words you choose for the example words should be in {target:?}, using the {target_alphabet:?} writing system.
 
 Create a guide that includes:
 1. A clear description IN {native:?} of the ways this pattern is pronounced, maybe analogizing it to words in {native:?} or explaining the difference from similar {native:?} sounds. Keep this part brief. For tricky sounds, you can include some pronunciation advice.
@@ -118,10 +119,10 @@ Create a guide that includes:
 3. How difficult it is for a {native:?} speaker to pronounce
 4. Example words that demonstrate this sound
 
-For the example words, choose 1-4 words that:
+For the example words, choose 1-4 {target:?} words that:
 - Are VERY likely to be familiar to {native:?} speakers (brand names, food items, place names, cultural references, loan words)
 - Clearly demonstrate the pattern, in all the ways it can be pronounced
-- Contain the actual pattern (e.g. for the pattern "yn", "sphinx" would not be a good example as it does not contain "yn")
+- Contain the actual pattern (e.g. for the pattern "yn", "sphinx" would not be a good example as it does not contain "yn". You may want to spell out candidate words letter by letter while you're thinking, to help make sure they contain the pattern.)
 
 For each word, specify:
 - position: Where the sound appears ("Beginning", "Middle", "End", or "Multiple" if it appears more than once)
@@ -160,6 +161,7 @@ Good examples for French "ch" and English speakers:
 "#,
                         native = course.native_language,
                         target = course.target_language,
+                        target_alphabet = course.target_language.writing_system(),
                         clean_pattern = clean_pattern,
                         position_note = position_note
                     ),
@@ -194,15 +196,42 @@ Good examples for French "ch" and English speakers:
 pub fn calculate_pattern_frequencies<S: AsRef<str>>(
     sounds: &[(String, PatternPosition)],
     word_frequencies: &[language_utils::FrequencyEntry<S>],
-) -> HashMap<String, u32> {
+) -> HashMap<(String, PatternPosition), u32> {
     let mut frequencies = HashMap::new();
 
     // Initialize all patterns with 0
-    for (pattern, _) in sounds {
-        frequencies.insert(pattern.clone(), 0);
+    for (pattern, position) in sounds {
+        frequencies.insert((pattern.clone(), *position), 0);
+    }
+
+    // Check if we're dealing with Korean by looking at the patterns
+    let is_korean = sounds.iter().any(|(pattern, _)| {
+        pattern.chars().any(|c| {
+            // Check if character is in Hangul Jamo ranges (including compatibility jamo)
+            ('\u{1100}'..='\u{11FF}').contains(&c) || // Hangul Jamo
+            ('\u{3130}'..='\u{318F}').contains(&c) || // Hangul Compatibility Jamo
+            ('\u{A960}'..='\u{A97F}').contains(&c) || // Hangul Jamo Extended-A
+            ('\u{D7B0}'..='\u{D7FF}').contains(&c) || // Hangul Jamo Extended-B
+            ('\u{3131}'..='\u{314E}').contains(&c) || // Hangul compatibility consonants
+            ('\u{314F}'..='\u{3163}').contains(&c) // Hangul compatibility vowels
+        })
+    });
+
+    if is_korean {
+        eprintln!("Detected Korean patterns - will use NFD normalization");
+        // Debug: show first pattern
+        if let Some((pattern, _)) = sounds.first() {
+            eprintln!(
+                "First pattern: '{}' (bytes: {:?}, chars: {:?})",
+                pattern,
+                pattern.bytes().collect::<Vec<_>>(),
+                pattern.chars().collect::<Vec<_>>()
+            );
+        }
     }
 
     // Sum up frequencies for each pattern based on word occurrences
+    let mut debug_count = 0;
     for freq_entry in word_frequencies {
         // Get the actual word string from the lexeme
         let word = match &freq_entry.lexeme {
@@ -210,20 +239,167 @@ pub fn calculate_pattern_frequencies<S: AsRef<str>>(
             language_utils::Lexeme::Multiword(s) => s.as_ref(),
         };
 
-        let word_lower = word.to_lowercase();
+        // For Korean, use NFKD (compatibility decomposition) to handle jamo
+        // For other languages, just use lowercase
+        let word_normalized = if is_korean {
+            // NFKD performs compatibility decomposition followed by canonical composition
+            // This properly handles Korean text decomposition
+            let nfkd = word.nfkd().collect::<String>();
+            if debug_count < 5 {
+                eprintln!(
+                    "Korean word '{}' -> NFKD: '{}' (chars: {:?})",
+                    word,
+                    nfkd,
+                    nfkd.chars().collect::<Vec<_>>()
+                );
+                debug_count += 1;
+            }
+            nfkd
+        } else {
+            word.to_lowercase()
+        };
 
         for (pattern, position) in sounds {
-            let pattern_lower = pattern.to_lowercase();
+            // For Korean patterns, use position-aware jamo conversion
+            // For others, lowercase
+            let pattern_normalized = if is_korean {
+                // Korean compatibility jamo need position-based conversion
+                // since they map to different combining jamo based on syllable position
+                let mut normalized = String::new();
+                for ch in pattern.chars() {
+                    // Check if this is a compatibility jamo (U+3131..U+318E)
+                    if ('\u{3131}'..='\u{318E}').contains(&ch) {
+                        // Convert based on position in syllable
+                        if *position == PatternPosition::End {
+                            // Convert to final jamo for End position
+                            let final_jamo = match ch {
+                                'ㄱ' => 'ᆨ',
+                                'ㄲ' => 'ᆩ',
+                                'ㄳ' => 'ᆪ',
+                                'ㄴ' => 'ᆫ',
+                                'ㄵ' => 'ᆬ',
+                                'ㄶ' => 'ᆭ',
+                                'ㄷ' => 'ᆮ',
+                                'ㄹ' => 'ᆯ',
+                                'ㄺ' => 'ᆰ',
+                                'ㄻ' => 'ᆱ',
+                                'ㄼ' => 'ᆲ',
+                                'ㄽ' => 'ᆳ',
+                                'ㄾ' => 'ᆴ',
+                                'ㄿ' => 'ᆵ',
+                                'ㅀ' => 'ᆶ',
+                                'ㅁ' => 'ᆷ',
+                                'ㅂ' => 'ᆸ',
+                                'ㅄ' => 'ᆹ',
+                                'ㅅ' => 'ᆺ',
+                                'ㅆ' => 'ᆻ',
+                                'ㅇ' => 'ᆼ',
+                                'ㅈ' => 'ᆽ',
+                                'ㅊ' => 'ᆾ',
+                                'ㅋ' => 'ᆿ',
+                                'ㅌ' => 'ᇀ',
+                                'ㅍ' => 'ᇁ',
+                                'ㅎ' => 'ᇂ',
+                                // Vowels (medial jamo) - same in all positions
+                                'ㅏ' => 'ᅡ',
+                                'ㅐ' => 'ᅢ',
+                                'ㅑ' => 'ᅣ',
+                                'ㅒ' => 'ᅤ',
+                                'ㅓ' => 'ᅥ',
+                                'ㅔ' => 'ᅦ',
+                                'ㅕ' => 'ᅧ',
+                                'ㅖ' => 'ᅨ',
+                                'ㅗ' => 'ᅩ',
+                                'ㅘ' => 'ᅪ',
+                                'ㅙ' => 'ᅫ',
+                                'ㅚ' => 'ᅬ',
+                                'ㅛ' => 'ᅭ',
+                                'ㅜ' => 'ᅮ',
+                                'ㅝ' => 'ᅯ',
+                                'ㅞ' => 'ᅰ',
+                                'ㅟ' => 'ᅱ',
+                                'ㅠ' => 'ᅲ',
+                                'ㅡ' => 'ᅳ',
+                                'ㅢ' => 'ᅴ',
+                                'ㅣ' => 'ᅵ',
+                                _ => ch,
+                            };
+                            normalized.push(final_jamo);
+                        } else {
+                            // Convert to initial jamo for Beginning/Anywhere
+                            let initial_jamo = match ch {
+                                'ㄱ' => 'ᄀ',
+                                'ㄲ' => 'ᄁ',
+                                'ㄴ' => 'ᄂ',
+                                'ㄷ' => 'ᄃ',
+                                'ㄸ' => 'ᄄ',
+                                'ㄹ' => 'ᄅ',
+                                'ㅁ' => 'ᄆ',
+                                'ㅂ' => 'ᄇ',
+                                'ㅃ' => 'ᄈ',
+                                'ㅅ' => 'ᄉ',
+                                'ㅆ' => 'ᄊ',
+                                'ㅇ' => 'ᄋ',
+                                'ㅈ' => 'ᄌ',
+                                'ㅉ' => 'ᄍ',
+                                'ㅊ' => 'ᄎ',
+                                'ㅋ' => 'ᄏ',
+                                'ㅌ' => 'ᄐ',
+                                'ㅍ' => 'ᄑ',
+                                'ㅎ' => 'ᄒ',
+                                // Vowels (medial jamo) - same in all positions
+                                'ㅏ' => 'ᅡ',
+                                'ㅐ' => 'ᅢ',
+                                'ㅑ' => 'ᅣ',
+                                'ㅒ' => 'ᅤ',
+                                'ㅓ' => 'ᅥ',
+                                'ㅔ' => 'ᅦ',
+                                'ㅕ' => 'ᅧ',
+                                'ㅖ' => 'ᅨ',
+                                'ㅗ' => 'ᅩ',
+                                'ㅘ' => 'ᅪ',
+                                'ㅙ' => 'ᅫ',
+                                'ㅚ' => 'ᅬ',
+                                'ㅛ' => 'ᅭ',
+                                'ㅜ' => 'ᅮ',
+                                'ㅝ' => 'ᅯ',
+                                'ㅞ' => 'ᅰ',
+                                'ㅟ' => 'ᅱ',
+                                'ㅠ' => 'ᅲ',
+                                'ㅡ' => 'ᅳ',
+                                'ㅢ' => 'ᅴ',
+                                'ㅣ' => 'ᅵ',
+                                _ => ch,
+                            };
+                            normalized.push(initial_jamo);
+                        }
+                    } else {
+                        // Not a compatibility jamo, keep as-is
+                        normalized.push(ch);
+                    }
+                }
+                normalized
+            } else {
+                pattern.to_lowercase()
+            };
 
             let contains_pattern = match position {
-                PatternPosition::Beginning => word_lower.starts_with(&pattern_lower),
-                PatternPosition::End => word_lower.ends_with(&pattern_lower),
-                PatternPosition::Anywhere => word_lower.contains(&pattern_lower),
+                PatternPosition::Beginning => word_normalized.starts_with(&pattern_normalized),
+                PatternPosition::End => word_normalized.ends_with(&pattern_normalized),
+                PatternPosition::Anywhere => word_normalized.contains(&pattern_normalized),
             };
 
             if contains_pattern {
                 // Add the word's frequency count to the pattern's total
-                *frequencies.get_mut(pattern).unwrap() += freq_entry.count;
+                let current = frequencies.get_mut(&(pattern.clone(), *position)).unwrap();
+                *current += freq_entry.count;
+
+                // Debug: show first match for each pattern
+                if is_korean && *current == freq_entry.count {
+                    eprintln!(
+                        "Found pattern '{pattern}' in word '{word}' (NFD: '{word_normalized}') at position {position:?}"
+                    );
+                }
             }
         }
     }

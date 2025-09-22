@@ -144,6 +144,11 @@ ol {
   animation: fade-in 0.6s ease-out;
 }
 
+.animate-fade-in-delayed {
+  opacity: 0;
+  animation: fade-in 0.3s ease-out 0.5s forwards;
+}
+
 .animate-fade-in-delay-1 {
   animation: fade-in 0.6s ease-out 0.1s both;
 }

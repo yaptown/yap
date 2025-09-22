@@ -141,7 +141,7 @@
 {"lexeme":{"Heteronym":{"word":"like","lemma":"like","pos":"VERB"}},"count":854}
 {"lexeme":{"Heteronym":{"word":"day","lemma":"day","pos":"NOUN"}},"count":851}
 {"lexeme":{"Multiword":"you think"},"count":851}
-{"lexeme":{"Heteronym":{"word":"life","lemma":"life","pos":"NOUN"}},"count":845}
+{"lexeme":{"Heteronym":{"word":"life","lemma":"life","pos":"NOUN"}},"count":849}
 {"lexeme":{"Heteronym":{"word":"our","lemma":"our","pos":"PRON"}},"count":843}
 {"lexeme":{"Multiword":"for you"},"count":840}
 {"lexeme":{"Heteronym":{"word":"please","lemma":"please","pos":"INTJ"}},"count":837}
@@ -841,6 +841,7 @@
 {"lexeme":{"Heteronym":{"word":"bit","lemma":"bit","pos":"NOUN"}},"count":99}
 {"lexeme":{"Heteronym":{"word":"deal","lemma":"deal","pos":"NOUN"}},"count":99}
 {"lexeme":{"Heteronym":{"word":"front","lemma":"front","pos":"NOUN"}},"count":99}
+{"lexeme":{"Heteronym":{"word":"ten","lemma":"ten","pos":"NUM"}},"count":99}
 {"lexeme":{"Multiword":"I'm fine"},"count":99}
 {"lexeme":{"Heteronym":{"word":"inside","lemma":"inside","pos":"ADV"}},"count":98}
 {"lexeme":{"Heteronym":{"word":"movie","lemma":"movie","pos":"NOUN"}},"count":98}
@@ -853,7 +854,6 @@
 {"lexeme":{"Heteronym":{"word":"bag","lemma":"bag","pos":"NOUN"}},"count":97}
 {"lexeme":{"Heteronym":{"word":"birthday","lemma":"birthday","pos":"NOUN"}},"count":97}
 {"lexeme":{"Heteronym":{"word":"owe","lemma":"owe","pos":"VERB"}},"count":97}
-{"lexeme":{"Heteronym":{"word":"ten","lemma":"ten","pos":"NUM"}},"count":97}
 {"lexeme":{"Multiword":"because of"},"count":97}
 {"lexeme":{"Heteronym":{"word":"attention","lemma":"attention","pos":"NOUN"}},"count":96}
 {"lexeme":{"Heteronym":{"word":"trying","lemma":"try","pos":"VERB"}},"count":96}
@@ -2847,6 +2847,7 @@
 {"lexeme":{"Heteronym":{"word":"distance","lemma":"distance","pos":"NOUN"}},"count":16}
 {"lexeme":{"Heteronym":{"word":"double","lemma":"double","pos":"ADJ"}},"count":16}
 {"lexeme":{"Heteronym":{"word":"east","lemma":"east","pos":"NOUN"}},"count":16}
+{"lexeme":{"Heteronym":{"word":"emperor","lemma":"emperor","pos":"NOUN"}},"count":16}
 {"lexeme":{"Heteronym":{"word":"english","lemma":"english","pos":"ADJ"}},"count":16}
 {"lexeme":{"Heteronym":{"word":"excited","lemma":"excited","pos":"ADJ"}},"count":16}
 {"lexeme":{"Heteronym":{"word":"fabulous","lemma":"fabulous","pos":"ADJ"}},"count":16}
@@ -4687,7 +4688,6 @@
 {"lexeme":{"Heteronym":{"word":"dwarf","lemma":"dwarf","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"economy","lemma":"economy","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"emergency","lemma":"emergency","pos":"NOUN"}},"count":7}
-{"lexeme":{"Heteronym":{"word":"emperor","lemma":"emperor","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"employees","lemma":"employee","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"ending","lemma":"ending","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"enjoyed","lemma":"enjoy","pos":"VERB"}},"count":7}
@@ -6536,6 +6536,7 @@
 {"lexeme":{"Heteronym":{"word":"nothingness","lemma":"nothingness","pos":"NOUN"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"occur","lemma":"occur","pos":"VERB"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"offense","lemma":"offense","pos":"NOUN"}},"count":4}
+{"lexeme":{"Heteronym":{"word":"ogre","lemma":"ogre","pos":"NOUN"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"opening","lemma":"opening","pos":"NOUN"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"operate","lemma":"operate","pos":"VERB"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"orange","lemma":"orange","pos":"ADJ"}},"count":4}
@@ -9421,7 +9422,6 @@
 {"lexeme":{"Heteronym":{"word":"offering","lemma":"offering","pos":"NOUN"}},"count":2}
 {"lexeme":{"Heteronym":{"word":"official","lemma":"official","pos":"NOUN"}},"count":2}
 {"lexeme":{"Heteronym":{"word":"offline","lemma":"offline","pos":"ADV"}},"count":2}
-{"lexeme":{"Heteronym":{"word":"ogre","lemma":"ogre","pos":"NOUN"}},"count":2}
 {"lexeme":{"Heteronym":{"word":"olives","lemma":"olive","pos":"NOUN"}},"count":2}
 {"lexeme":{"Heteronym":{"word":"once","lemma":"once","pos":"NOUN"}},"count":2}
 {"lexeme":{"Heteronym":{"word":"oneself","lemma":"oneself","pos":"PRON"}},"count":2}
@@ -14097,7 +14097,6 @@
 {"lexeme":{"Heteronym":{"word":"temporarily","lemma":"temporarily","pos":"ADV"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"temptation","lemma":"temptation","pos":"NOUN"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"tempts","lemma":"tempt","pos":"VERB"}},"count":1}
-{"lexeme":{"Heteronym":{"word":"ten","lemma":"ten","pos":"NOUN"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"tendance","lemma":"tendance","pos":"X"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"tennis","lemma":"tennis","pos":"NOUN"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"tense","lemma":"tense","pos":"ADJ"}},"count":1}

@@ -753,12 +753,13 @@ async fn main() -> anyhow::Result<()> {
         };
 
         // Sort patterns by frequency (descending)
-        let mut pattern_frequencies: Vec<(String, u32)> = pattern_freq_map.into_iter().collect();
+        let mut pattern_frequencies: Vec<((String, language_utils::PatternPosition), u32)> =
+            pattern_freq_map.into_iter().collect();
         pattern_frequencies.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
 
         println!("Pattern frequencies (top 10):");
-        for (pattern, freq) in pattern_frequencies.iter().take(10) {
-            println!("  {pattern}: {freq} occurrences");
+        for ((pattern, position), freq) in pattern_frequencies.iter().take(10) {
+            println!("  {pattern} ({position:?}): {freq} occurrences");
         }
 
         // Create PronunciationData with frequencies
@@ -791,10 +792,33 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Vec<_>>()
         };
 
-        // Trimming pass: Remove infrequent words (appearing 3 times or fewer)
-        println!("\nPerforming trimming pass to remove infrequent words and sentences...");
+        // Filter frequencies to only include lexemes that have definitions in dictionary/phrasebook
+        let dictionary_set: std::collections::HashSet<_> = dictionary
+            .iter()
+            .map(|(heteronym, _)| heteronym.clone())
+            .collect();
+        let phrasebook_set: std::collections::HashSet<_> = phrasebook
+            .iter()
+            .map(|(phrase, _)| phrase.clone())
+            .collect();
 
-        // Filter sentences that contain infrequent words
+        let frequencies = frequencies
+            .into_iter()
+            .filter(|frequency| match &frequency.lexeme {
+                language_utils::Lexeme::Heteronym(h) => dictionary_set.contains(h),
+                language_utils::Lexeme::Multiword(m) => phrasebook_set.contains(m),
+            })
+            .collect::<Vec<_>>();
+
+        println!(
+            "After filtering to entries with definitions: {} frequency entries",
+            frequencies.len()
+        );
+
+        // Trimming pass: Remove infrequent words (appearing 3 times or fewer)
+        println!("\nPerforming trimming pass to remove useless words and sentences...");
+
+        // Filter sentences that contain words not in the frequency list
         let (nlp_sentences, removed_sentences): (Vec<_>, Vec<_>) = {
             let lexeme_set = frequencies
                 .iter()
@@ -835,30 +859,53 @@ async fn main() -> anyhow::Result<()> {
             frequencies.len()
         );
 
-        // ensure the dictionary and phrasebook don't contain any words that are not in the frequencies list
+        // Validate that all multiword terms and heteronyms in nlp_sentences exist in the phrasebook/dictionary
+        {
+            let mut missing_multiwords = std::collections::HashSet::new();
+            for (_sentence, info) in &nlp_sentences {
+                for lexeme in info.lexemes() {
+                    if let Some(multiword) = lexeme.multiword() {
+                        if !phrasebook_set.contains(multiword) {
+                            missing_multiwords.insert(multiword.clone());
+                        }
+                    }
+                }
+            }
 
-        let dictionary = {
-            let words_set = frequencies
-                .iter()
-                .filter_map(|frequency| frequency.lexeme.heteronym())
-                .collect::<std::collections::HashSet<_>>();
-            dictionary
-                .into_iter()
-                .filter(|(heteronym, _)| words_set.contains(heteronym))
-                .collect::<BTreeMap<_, _>>()
-                .into_iter()
-                .collect()
-        };
-        let phrasebook = {
-            let phrase_set = frequencies
-                .iter()
-                .filter_map(|frequency| frequency.lexeme.multiword())
-                .collect::<std::collections::HashSet<_>>();
-            phrasebook
-                .into_iter()
-                .filter(|(phrase, _)| phrase_set.contains(phrase))
-                .collect::<Vec<_>>()
-        };
+            if !missing_multiwords.is_empty() {
+                let mut missing_sorted: Vec<_> = missing_multiwords.into_iter().collect();
+                missing_sorted.sort();
+                panic!(
+                    "Found {} multiword terms in NLP sentences that don't have phrasebook entries:\n{}",
+                    missing_sorted.len(),
+                    missing_sorted.join("\n")
+                );
+            }
+        }
+
+        {
+            let mut missing_heteronyms = std::collections::HashSet::new();
+            for (_sentence, info) in &nlp_sentences {
+                for lexeme in info.lexemes() {
+                    if let Some(heteronym) = lexeme.heteronym() {
+                        if !dictionary_set.contains(heteronym) {
+                            missing_heteronyms.insert(heteronym.clone());
+                        }
+                    }
+                }
+            }
+
+            if !missing_heteronyms.is_empty() {
+                let mut missing_sorted: Vec<_> = missing_heteronyms.into_iter().collect();
+                missing_sorted.sort();
+                panic!(
+                    "Found {} heteronyms in NLP sentences that don't have dictionary entries:\n{:?}",
+                    missing_sorted.len(),
+                    missing_sorted
+                );
+            }
+        }
+
         let (pronunciation_to_words, word_to_pronunciation) = {
             let words_set = frequencies
                 .iter()

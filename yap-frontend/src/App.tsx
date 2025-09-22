@@ -89,8 +89,8 @@ function AppCheckBrowserSupport() {
   if (supported === null) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
-        <p className="text-muted-foreground">Checking device compatibility...</p>
-        <Progress value={progress} className="w-64" />
+        <p className="text-muted-foreground animate-fade-in-delayed">Checking device compatibility...</p>
+        <Progress value={progress} className="w-64 animate-fade-in-delayed" />
       </div>
     )
   }
@@ -171,7 +171,7 @@ function AppTestWeapon({ userInfo, accessToken }: { userInfo: UserInfo | undefin
     return (
       <div>
         <div className="min-h-screen bg-background flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
         </div>
       </div>
     )
@@ -228,7 +228,7 @@ function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined,
                   match(deck)
                     .with({ type: "deck", deck: null }, () =>
                       <div className="flex-1 bg-background flex items-center justify-center">
-                        <p className="text-muted-foreground">Loading...</p>
+                        <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
                       </div>)
                     .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage }) => (
                       !requestedLanguageChange ?
@@ -258,7 +258,7 @@ function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined,
                     ))
                     .with(null, () =>
                       <div className="bg-background flex items-center justify-center">
-                        <p className="text-muted-foreground">Loading...</p>
+                        <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
                       </div>)
                     .exhaustive()
                 }

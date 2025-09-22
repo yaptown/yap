@@ -1420,7 +1420,7 @@ impl From<PronunciationGuideThoughts> for PronunciationGuide {
 pub struct PronunciationData {
     pub sounds: Vec<(String, PatternPosition)>, // List of characteristic sounds/patterns for the language
     pub guides: Vec<PronunciationGuide>,        // Detailed guides for each sound
-    pub pattern_frequencies: Vec<(String, u32)>, // Pattern frequencies sorted by frequency (descending)
+    pub pattern_frequencies: Vec<((String, PatternPosition), u32)>, // Pattern frequencies sorted by frequency (descending)
 }
 
 #[derive(
