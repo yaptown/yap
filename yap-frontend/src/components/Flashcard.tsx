@@ -588,6 +588,8 @@ export const Flashcard = function Flashcard({
                     audioRequest={audioRequest}
                     accessToken={accessToken}
                     autoPlay={true}
+                    autoplayed={autoplayed}
+                    setAutoplayed={setAutoplayed}
                   />
                 ) : (
                   <div className="w-10" /> /* Spacer to keep content centered */
