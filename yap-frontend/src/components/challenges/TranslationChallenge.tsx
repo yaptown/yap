@@ -61,6 +61,8 @@ interface SentenceChallengeProps {
   ][];
   accessToken: string | undefined;
   targetLanguage: Language;
+  autoplayed: boolean;
+  setAutoplayed: () => void;
 }
 
 interface ChallengeSentenceProps {
@@ -464,6 +466,8 @@ export function TranslationChallenge({
   unique_target_language_lexeme_definitions,
   accessToken,
   targetLanguage,
+  autoplayed,
+  setAutoplayed,
 }: SentenceChallengeProps) {
   "use memo";
   const [userTranslation, setUserTranslation] = useState("");
@@ -861,6 +865,8 @@ export function TranslationChallenge({
                   audioRequest={sentence.audio}
                   accessToken={accessToken}
                   autoPlay={true}
+                  autoplayed={autoplayed}
+                  setAutoplayed={setAutoplayed}
                 />
 
                 <ChallengeSentence
