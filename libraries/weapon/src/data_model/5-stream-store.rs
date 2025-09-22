@@ -71,9 +71,11 @@ impl<Device: Ord + Eq + Clone + Hash + 'static, Event: crate::Event + 'static> S
         device: Device,
         events: ValidToAddEvents<Timestamped<serde_json::Value>>,
     ) -> Result<usize, serde_json::Error> {
-        let events = events.try_map(|event| Event::from_json(&event).inspect_err(|e| {
-            log::error!("Error deserializing event JSON into event type: {e:?} in `{event}`");
-        }))?;
+        let events = events.try_map(|event| {
+            Event::from_json(&event).inspect_err(|e| {
+                log::error!("Error deserializing event JSON into event type: {e:?} in `{event}`");
+            })
+        })?;
         Ok(self.add_device_events(device, events))
     }
 

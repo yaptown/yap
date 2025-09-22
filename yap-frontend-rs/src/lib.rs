@@ -607,6 +607,7 @@ pub struct LanguagePack {
     word_to_pronunciation: HashMap<Spur, Spur>,
     pronunciation_to_words: HashMap<Spur, Vec<Spur>>,
     pronunciation_data: language_utils::PronunciationData,
+    pattern_frequency_map: HashMap<String, u32>,
 }
 
 impl LanguagePack {
@@ -841,7 +842,16 @@ impl LanguagePack {
             phrasebook,
             word_to_pronunciation,
             pronunciation_to_words,
-            pronunciation_data: language_data.consolidated_language_data.pronunciation_data,
+            pronunciation_data: language_data
+                .consolidated_language_data
+                .pronunciation_data
+                .clone(),
+            pattern_frequency_map: language_data
+                .consolidated_language_data
+                .pronunciation_data
+                .pattern_frequencies
+                .into_iter()
+                .collect(),
         }
     }
 }
@@ -2682,7 +2692,28 @@ impl Context {
         regressions: &Regressions,
     ) -> Option<(f64, Frequency)> {
         let frequency = self.get_card_frequency(card)?;
-        let knowledge_probability = regressions.predict_card_knowledge_probability(card, frequency);
+
+        let knowledge_probability = match card {
+            CardIndicator::LetterPronunciation { pattern, position } => {
+                // For pronunciation patterns, use the LLM's familiarity assessment
+                let pattern_str = self.language_pack.rodeo.resolve(pattern);
+                let guide = self
+                    .language_pack
+                    .pronunciation_data
+                    .guides
+                    .iter()
+                    .find(|g| g.pattern == pattern_str && g.position == *position)?;
+
+                // Convert familiarity to probability
+                match guide.familiarity {
+                    language_utils::PronunciationFamiliarity::LikelyAlreadyKnows => 0.85,
+                    language_utils::PronunciationFamiliarity::MaybeAlreadyKnows => 0.50,
+                    language_utils::PronunciationFamiliarity::ProbablyDoesNotKnow => 0.15,
+                }
+            }
+            _ => regressions.predict_card_knowledge_probability(card, frequency),
+        };
+
         Some((knowledge_probability, frequency))
     }
 
@@ -2697,10 +2728,16 @@ impl Context {
                 self.language_pack
                     .pronunciation_max_frequency(pronunciation)
             }
-            CardIndicator::LetterPronunciation { .. } => {
-                // For pronunciation patterns, use a fixed high frequency to ensure they're accessible
-                // This gives them similar priority to common words
-                Some(Frequency { count: 1000 })
+            CardIndicator::LetterPronunciation { pattern, .. } => {
+                // Look up the actual frequency of this pattern from our calculated data
+                let pattern_str = self.language_pack.rodeo.resolve(pattern);
+                let count = self
+                    .language_pack
+                    .pattern_frequency_map
+                    .get(pattern_str)
+                    .copied()
+                    .unwrap_or(0);
+                Some(Frequency { count })
             }
         }
     }
@@ -2718,8 +2755,9 @@ impl Regressions {
             CardIndicator::TargetLanguage { .. } => self.target_language_regression.as_ref(),
             CardIndicator::ListeningHomophonous { .. } => self.listening_regression.as_ref(),
             CardIndicator::LetterPronunciation { .. } => {
-                // For pronunciation patterns, use target language regression as a reasonable approximation
-                self.target_language_regression.as_ref()
+                // For pronunciation patterns, we don't use regression
+                // Instead we use the LLM's familiarity assessment in predict_card_knowledge_probability
+                return None;
             }
         }?;
 

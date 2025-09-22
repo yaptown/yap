@@ -1,6 +1,7 @@
 use futures::StreamExt;
 use language_utils::{Course, Language, PatternPosition, PronunciationGuideThoughts};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 
@@ -186,4 +187,46 @@ Good examples for French "ch" and English speakers:
 
     println!("Generated {} guides", guides.len());
     Ok(guides)
+}
+
+/// Calculate the frequency of each pronunciation pattern based on word frequency data
+/// Returns a HashMap mapping each pattern to its total frequency across all words containing it
+pub fn calculate_pattern_frequencies<S: AsRef<str>>(
+    sounds: &[(String, PatternPosition)],
+    word_frequencies: &[language_utils::FrequencyEntry<S>],
+) -> HashMap<String, u32> {
+    let mut frequencies = HashMap::new();
+
+    // Initialize all patterns with 0
+    for (pattern, _) in sounds {
+        frequencies.insert(pattern.clone(), 0);
+    }
+
+    // Sum up frequencies for each pattern based on word occurrences
+    for freq_entry in word_frequencies {
+        // Get the actual word string from the lexeme
+        let word = match &freq_entry.lexeme {
+            language_utils::Lexeme::Heteronym(h) => h.word.as_ref(),
+            language_utils::Lexeme::Multiword(s) => s.as_ref(),
+        };
+
+        let word_lower = word.to_lowercase();
+
+        for (pattern, position) in sounds {
+            let pattern_lower = pattern.to_lowercase();
+
+            let contains_pattern = match position {
+                PatternPosition::Beginning => word_lower.starts_with(&pattern_lower),
+                PatternPosition::End => word_lower.ends_with(&pattern_lower),
+                PatternPosition::Anywhere => word_lower.contains(&pattern_lower),
+            };
+
+            if contains_pattern {
+                // Add the word's frequency count to the pattern's total
+                *frequencies.get_mut(pattern).unwrap() += freq_entry.count;
+            }
+        }
+    }
+
+    frequencies
 }

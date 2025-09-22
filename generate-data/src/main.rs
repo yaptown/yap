@@ -670,14 +670,7 @@ async fn main() -> anyhow::Result<()> {
             guides_with_thoughts
         };
 
-        // Convert to PronunciationData structure
-        let pronunciation_data = language_utils::PronunciationData {
-            sounds: sounds.clone(),
-            guides: guides
-                .into_iter()
-                .map(|(_, guide_thoughts)| guide_thoughts.into())
-                .collect(),
-        };
+        // We'll calculate pattern frequencies after loading word_to_pronunciation data later
 
         // Consolidate all JSON files into a single rkyv file
         let rkyv_file = native_specific_dir.join("language_data.rkyv");
@@ -741,6 +734,13 @@ async fn main() -> anyhow::Result<()> {
                 )
                 .collect::<Result<Vec<(String, language_utils::PhrasebookEntry)>, _>>()?
         };
+        // Calculate pattern frequencies using the word frequency data
+        println!("Calculating pattern frequencies from word frequency data...");
+        let pattern_freq_map = generate_data::pronunciation_patterns::calculate_pattern_frequencies(
+            &sounds,
+            &frequencies,
+        );
+
         // Load and process phonetics data
         println!("Loading phonetics data...");
         let word_to_pronunciation = {
@@ -750,6 +750,25 @@ async fn main() -> anyhow::Result<()> {
                 .lines()
                 .map(|line| serde_json::from_str(&line.unwrap()))
                 .collect::<Result<Vec<(String, String)>, _>>()?
+        };
+
+        // Sort patterns by frequency (descending)
+        let mut pattern_frequencies: Vec<(String, u32)> = pattern_freq_map.into_iter().collect();
+        pattern_frequencies.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+
+        println!("Pattern frequencies (top 10):");
+        for (pattern, freq) in pattern_frequencies.iter().take(10) {
+            println!("  {pattern}: {freq} occurrences");
+        }
+
+        // Create PronunciationData with frequencies
+        let pronunciation_data = language_utils::PronunciationData {
+            sounds: sounds.clone(),
+            guides: guides
+                .into_iter()
+                .map(|(_, guide_thoughts)| guide_thoughts.into())
+                .collect(),
+            pattern_frequencies: pattern_frequencies.clone(),
         };
         let pronunciation_to_words = {
             let file = File::open(target_language_dir.join("pronunciation_to_words.jsonl"))?;
