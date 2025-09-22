@@ -52,7 +52,9 @@ export function NoCardsReady({
   // Calculate if workload looks light
   const pastWeekAverage = deck.get_past_week_challenge_average();
   const upcomingStats = deck.get_upcoming_week_review_stats();
+  const cardsAddedPast16Hours = deck.get_cards_added_in_past_hours(16);
   const showLightWorkloadNotification =
+    cardsAddedPast16Hours < 20 &&
     (upcomingStats.total_reviews < pastWeekAverage * 7 ||
       upcomingStats.max_per_day < 10) && // Less upcoming reviews than past week average
     upcomingStats.max_per_day <= 50 && // No single day has more than 50 reviews

@@ -2204,6 +2204,27 @@ impl Deck {
         }
     }
 
+    /// Count the number of cards created within the past `hours` hours.
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_cards_added_in_past_hours(&self, hours: f64) -> u32 {
+        if !hours.is_finite() || hours <= 0.0 {
+            return 0;
+        }
+
+        let clamped_hours = hours.min((i64::MAX as f64) / 3600.0);
+        let cutoff =
+            Utc::now() - chrono::Duration::seconds((clamped_hours * 3600.0).round() as i64);
+
+        self.cards
+            .values()
+            .filter_map(|card_status| match card_status {
+                CardStatus::Tracked(CardData::Added { fsrs_card }) => Some(fsrs_card),
+                _ => None,
+            })
+            .filter(|fsrs_card| fsrs_card.created_at >= cutoff)
+            .count() as u32
+    }
+
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_frequency_knowledge_chart_data(&self) -> Vec<FrequencyKnowledgePoint> {
         // Sample frequencies from 1 to 10000 on a logarithmic scale
