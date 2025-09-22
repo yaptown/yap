@@ -508,7 +508,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   }, [deck, currentChallenge, weapon])
 
   const handleTranscriptionComplete = useCallback((grade: /* comes from TranscriptionChallenge*/ PartGraded[]) => {
-    if (!currentChallenge || !('TranscribeComprehensibleSentence' in currentChallenge)) {
+    if (!currentChallenge || currentChallenge.type !== 'TranscribeComprehensibleSentence') {
       console.error("handleTranscriptionComplete called with no current challenge or no TranscribeComprehensibleSentence in current challenge");
       return
     };
