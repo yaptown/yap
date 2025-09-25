@@ -1,0 +1,40 @@
+{"sentence":"Los EE.","issues":["Incomplete abbreviation ('EE.' instead of 'EE. UU.')","Fragment that does not convey meaning on its own","Potential subtitle/artifact-like truncation"],"corrected_sentence":"Los EE. UU."}
+{"sentence":"Yo, yo.","issues":["Fragment; not a complete sentence","Ambiguous meaning (could be English interjection vs. Spanish pronoun)","Unnatural punctuation for Spanish; should use exclamation marks if it’s an interjection"],"corrected_sentence":"¡Yo! ¡Yo!"}
+{"sentence":"Y eso.","issues":["Sentence fragment that relies on prior context","Vague pronoun reference (“eso”) without antecedent","Colloquial filler that may be confusing for learners"],"corrected_sentence":null}
+{"sentence":"El Cap.","issues":["Fragment/incomplete thought; not a full sentence","Ambiguous abbreviation “Cap.” (could be “capitán” or “capítulo”)","Confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"Y Roma.","issues":["Sentence fragment (no verb or complete clause)","Begins with coordinating conjunction “Y”, implying missing prior context","Requires context to be meaningful for learners"],"corrected_sentence":null}
+{"sentence":"Todo no.","issues":["Unnatural/incorrect word order for negation (“Todo no” instead of “No todo”).","Elliptical without a verb, causing ambiguity.","Punctuation likely missing if intended as a corrective reply (would be “Todo, no.”).","Confusing for learners."],"corrected_sentence":null}
+{"sentence":"No yo.","issues":["Unnatural/incorrect word order for negation","Incomplete fragment lacking a verb or proper structure","If intended as 'Not me,' Spanish uses 'Yo no' (elliptical) or 'No fui yo'","If intended as an interjection ('No, I...'), a comma is missing: 'No, yo...'"],"corrected_sentence":null}
+{"sentence":"Y más.","issues":["Sentence fragment dependent on prior context (begins with a coordinating conjunction)"],"corrected_sentence":null}
+{"sentence":"Lo que?","issues":["Missing inverted question mark (¿ ... ?)","Missing accent on 'qué'","Incorrect structure: 'lo que' is not used as a standalone question; use '¿Qué?' (or context-dependent '¿El qué?'/'¿Cómo?')"],"corrected_sentence":null}
+{"sentence":"Hacer que?","issues":["Missing inverted opening question mark","Missing accent on \"qué\""],"corrected_sentence":"¿Hacer qué?"}
+{"sentence":"Tengo que.","issues":["Incomplete sentence","Missing infinitive after 'que'","Fragment could mislead learners"],"corrected_sentence":null}
+{"sentence":"Le tengo.","issues":["Leísmo: uses ‘le’ as a direct object; standard is ‘lo/la’.","If ‘le’ is indirect object, the direct object is missing (e.g., should be “Le tengo un regalo”).","Confusing for learners due to regional variation and ambiguity."],"corrected_sentence":null}
+{"sentence":"Y bien?","issues":["Missing initial inverted question mark (¿) for a question in Spanish"],"corrected_sentence":"¿Y bien?"}
+{"sentence":"Él es.","issues":["Elliptical/incomplete: lacks a predicate complement after 'es'","Does not make sense without context and may confuse learners"],"corrected_sentence":null}
+{"sentence":"De mi?","issues":["Missing accent on 'mí'","Missing opening inverted question mark '¿'"],"corrected_sentence":"¿De mí?"}
+{"sentence":"Está todo.","issues":["Elliptical/incomplete predicate after the copulative verb 'estar'","Ambiguous meaning without context (could mean 'everything is ready/there/done')","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Tú eres.","issues":["Sentence fragment (missing predicate/complement)","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Que tienes?","issues":["Missing accent on 'Qué'","Missing opening inverted question mark '¿'"],"corrected_sentence":"¿Qué tienes?"}
+{"sentence":"Sí sé.","issues":["Missing comma after the interjection 'Sí'","Slightly unnatural without object pronoun; more natural is 'Sí, lo sé.'"],"corrected_sentence":"Sí, sé."}
+{"sentence":"Si quiero.","issues":["Missing accent on “Sí” (should be ‘sí’ meaning ‘yes’)","As written, it forms an incomplete conditional clause (‘Si…’)","Missing comma after the interjection ‘Sí’"],"corrected_sentence":"Sí, quiero."}
+{"sentence":"Tengo que hacer.","issues":["Incomplete clause: 'tener que' needs a specific action or object (e.g., 'hacer la tarea')","Semantically too vague; does not stand on its own","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"El Ladrillo.","issues":["Unnecessary capitalization of common noun (“Ladrillo”)","Fragment (acceptable as a title/label)"],"corrected_sentence":"El ladrillo."}
+{"sentence":"Pero que?","issues":["Missing accent on 'qué'","Missing opening inverted question mark '¿'"],"corrected_sentence":"¿Pero qué?"}
+{"sentence":"De Justicia.","issues":["Fragment/incomplete thought","Likely subtitle or title artifact","Potentially odd capitalization of “Justicia” unless part of a proper name","If referring to the concept generically, it would usually be “de la justicia”"],"corrected_sentence":null}
+{"sentence":"Costa Este.","issues":["Capitalization: 'Este' should be lowercase in Spanish when used directionally.","Fragment without article if intended as a normal sentence (would be 'La costa este' in running text)."],"corrected_sentence":"Costa este."}
+{"sentence":"Si tienes tiempo.","issues":["Incomplete sentence (subordinate clause without a main clause)","Potentially confusing for learners as a standalone sentence"],"corrected_sentence":null}
+{"sentence":"Qué, qué?","issues":["Missing opening inverted question mark (¿) for questions in Spanish"],"corrected_sentence":"¿Qué, qué?"}
+{"sentence":"Qué puedo hacer?","issues":["Missing initial inverted question mark (¿) for a question in Spanish."],"corrected_sentence":"¿Qué puedo hacer?"}
+{"sentence":"Puedo ir?","issues":["Missing inverted opening question mark (¿) required in Spanish questions"],"corrected_sentence":"¿Puedo ir?"}
+{"sentence":"Siempre hay.","issues":["Elliptical/incomplete; lacks explicit complement","Meaning is ambiguous without context; may confuse learners"],"corrected_sentence":null}
+{"sentence":"Ahora qué?","issues":["Missing initial inverted question mark (¿) in a Spanish question"],"corrected_sentence":"¿Ahora qué?"}
+{"sentence":"Qué hace?","issues":["Missing inverted opening question mark (¿) for Spanish questions."],"corrected_sentence":"¿Qué hace?"}
+{"sentence":"Qué día.","issues":["Missing initial inverted exclamation mark","Incorrect terminal punctuation (should be exclamation mark, not a period)","Potential ambiguity between question and exclamation"],"corrected_sentence":"¡Qué día!"}
+{"sentence":"Qué buena.","issues":["Missing opening and closing exclamation marks for an exclamation in Spanish","Elliptical referent (buena) is implied, which can be ambiguous for learners"],"corrected_sentence":"¡Qué buena!"}
+{"sentence":"Tan bueno.","issues":["Sentence fragment; missing verb (copula)","‘tan’ used without required structure or continuation","No explicit subject; incomplete thought"],"corrected_sentence":null}
+{"sentence":"Decir qué?","issues":["Missing opening inverted question mark in Spanish punctuation"],"corrected_sentence":"¿Decir qué?"}
+{"sentence":"Qué hombre.","issues":["Missing opening and closing exclamation marks for an exclamation in Spanish","Punctuation inconsistency: exclamative “qué” used with a period","Could confuse learners due to missing exclamation punctuation"],"corrected_sentence":"¡Qué hombre!"}
+{"sentence":"Qué vida.","issues":["Missing exclamation marks (Spanish requires opening and closing exclamation for exclamatives)"],"corrected_sentence":"¡Qué vida!"}
+{"sentence":"Qué puedo decir?","issues":["Missing opening inverted question mark (¿) for a Spanish question"],"corrected_sentence":"¿Qué puedo decir?"}
+{"sentence":"Como vamos?","issues":["Missing inverted question mark at the beginning","Missing accent on 'Cómo'","Potential ambiguity (could mean 'How are we doing?' or 'How do we get there?')"],"corrected_sentence":"¿Cómo vamos?"}

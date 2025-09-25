@@ -60,21 +60,38 @@ pub async fn ensure_multiword_terms_file(
 
 async fn extra_multiword_terms(language: Language) -> anyhow::Result<Vec<String>> {
     let language_code = language.iso_639_3();
-    let file_path = format!("./generate-data/data/{language_code}/extra_multiword_terms.txt");
-    let file = File::open(Path::new(&file_path)).context(format!(
-        "Failed to open extra multiword terms file at {file_path}"
-    ))?;
-    let reader = BufReader::new(file);
     let mut terms = Vec::new();
-    for line in reader.lines() {
-        let line = line?.trim().to_string();
-        let line = line
-            .replace("...", "")
-            .replace("  ", " ")
-            .trim()
-            .to_string();
-        terms.push(line);
+
+    // Read manually curated extra multiword terms
+    let manual_path = format!("./generate-data/data/{language_code}/extra_multiword_terms.txt");
+    if let Ok(file) = File::open(Path::new(&manual_path)) {
+        let reader = BufReader::new(file);
+        for line in reader.lines() {
+            let line = line?.trim().to_string();
+            let line = line
+                .replace("...", "")
+                .replace("  ", " ")
+                .trim()
+                .to_string();
+            terms.push(line);
+        }
     }
+
+    // Read AI-generated extra multiword terms
+    let ai_path = format!("./generate-data/data/{language_code}/extra_multiword_terms_ai.txt");
+    if let Ok(file) = File::open(Path::new(&ai_path)) {
+        let reader = BufReader::new(file);
+        for line in reader.lines() {
+            let line = line?.trim().to_string();
+            let line = line
+                .replace("...", "")
+                .replace("  ", " ")
+                .trim()
+                .to_string();
+            terms.push(line);
+        }
+    }
+
     Ok(terms)
 }
 

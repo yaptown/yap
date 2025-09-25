@@ -5,9 +5,11 @@ mod language_pack;
 mod next_cards;
 mod notifications;
 pub mod opfs_test;
-mod simulation;
+pub mod simulation;
 mod supabase;
 mod utils;
+
+pub use simulation::DailySimulationIterator;
 
 use chrono::{DateTime, Utc};
 use deck_selection::DeckSelectionEvent;
@@ -527,13 +529,13 @@ impl<'a> Drop for FlushLater<'a> {
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct TranslateComprehensibleSentence<S> {
-    audio: AudioRequest,
-    target_language: S,
-    target_language_literals: Vec<Literal<S>>,
-    primary_expression: Lexeme<S>,
-    unique_target_language_lexemes: Vec<Lexeme<S>>,
-    unique_target_language_lexeme_definitions: Vec<(Lexeme<S>, Vec<TargetToNativeWord>)>,
-    native_translations: Vec<S>,
+    pub audio: AudioRequest,
+    pub target_language: S,
+    pub target_language_literals: Vec<Literal<S>>,
+    pub primary_expression: Lexeme<S>,
+    pub unique_target_language_lexemes: Vec<Lexeme<S>>,
+    pub unique_target_language_lexeme_definitions: Vec<(Lexeme<S>, Vec<TargetToNativeWord>)>,
+    pub native_translations: Vec<S>,
 }
 
 impl TranslateComprehensibleSentence<Spur> {
@@ -569,10 +571,10 @@ impl TranslateComprehensibleSentence<Spur> {
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct TranscribeComprehensibleSentence<S> {
-    target_language: S,
-    audio: AudioRequest,
-    native_language: S,
-    parts: Vec<transcription_challenge::Part>,
+    pub target_language: S,
+    pub audio: AudioRequest,
+    pub native_language: S,
+    pub parts: Vec<transcription_challenge::Part>,
 }
 
 impl TranscribeComprehensibleSentence<Spur> {
@@ -637,7 +639,7 @@ impl LanguagePack {
             .max()
     }
 
-    fn new(language_data: ConsolidatedLanguageDataWithCapacity) -> Self {
+    pub fn new(language_data: ConsolidatedLanguageDataWithCapacity) -> Self {
         let rodeo = {
             let rodeo = language_data.intern();
             rodeo.into_reader()
@@ -1603,7 +1605,7 @@ impl weapon::PartialAppState for Deck {
 
 impl DeckState {
     /// Create a new DeckState with the given language pack and target language
-    pub(crate) fn new(
+    pub fn new(
         language_pack: Arc<LanguagePack>,
         target_language: Language,
         native_language: Language,
@@ -1782,32 +1784,35 @@ impl Deck {
             }
         }
 
-        // sort by due date
+        // sort by due date, then by card indicator for deterministic ordering
         due_cards.sort_by_key(|card_indicator| {
             let card_status = self.cards.get(card_indicator).unwrap();
-            if let CardStatus::Tracked(card_data) = card_status {
+            let due_timestamp = if let CardStatus::Tracked(card_data) = card_status {
                 ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap()
             } else {
                 ordered_float::NotNan::new(0.0).unwrap()
-            }
+            };
+            (due_timestamp, *card_indicator)
         });
 
         due_but_banned_cards.sort_by_key(|card_indicator| {
             let card_status = self.cards.get(card_indicator).unwrap();
-            if let CardStatus::Tracked(card_data) = card_status {
+            let due_timestamp = if let CardStatus::Tracked(card_data) = card_status {
                 ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap()
             } else {
                 ordered_float::NotNan::new(0.0).unwrap()
-            }
+            };
+            (due_timestamp, *card_indicator)
         });
 
         future_cards.sort_by_key(|card_indicator| {
             let card_status = self.cards.get(card_indicator).unwrap();
-            if let CardStatus::Tracked(card_data) = card_status {
+            let due_timestamp = if let CardStatus::Tracked(card_data) = card_status {
                 ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap()
             } else {
                 ordered_float::NotNan::new(0.0).unwrap()
-            }
+            };
+            (due_timestamp, *card_indicator)
         });
 
         ReviewInfo {
@@ -1834,7 +1839,7 @@ impl Deck {
 
         const SIMULATION_DAYS: u32 = 2;
         let mut requested_filenames = BTreeSet::new();
-        let mut simulation_iterator = self.simulate_usage();
+        let mut simulation_iterator = self.simulate_usage(chrono::Utc::now());
         for _ in 0..SIMULATION_DAYS {
             // Sleep for 1 second using JavaScript's setTimeout via JsFuture
             let promise = js_sys::Promise::new(&mut |resolve, _| {

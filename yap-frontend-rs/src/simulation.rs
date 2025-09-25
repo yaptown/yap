@@ -13,17 +13,17 @@ pub struct DailySimulationIterator {
 }
 
 impl DailySimulationIterator {
-    pub fn new(deck: Deck) -> Self {
+    pub fn new(deck: Deck, current_time: DateTime<Utc>) -> Self {
         Self {
             deck,
-            current_time: Utc::now(),
+            current_time,
             event_index: 0,
         }
     }
 }
 
 impl DailySimulationIterator {
-    pub(crate) fn next(mut self) -> (Self, Vec<Challenge<String>>) {
+    pub fn next(mut self) -> (Self, Vec<Challenge<String>>) {
         let mut day_challenges = Vec::new();
 
         // Process all due reviews for the day
@@ -119,11 +119,68 @@ impl DailySimulationIterator {
 }
 
 impl Deck {
-    /// Create an iterator that simulates daily usage.
+    /// Create an iterator that simulates daily usage starting from a specific time.
     /// The iterator yields all challenges for each day as a Vec, answering them perfectly,
     /// and adds 10 new cards at the end of each day.
     /// Use .take(n) to limit to n days.
-    pub fn simulate_usage(&self) -> DailySimulationIterator {
-        DailySimulationIterator::new(self.clone())
+    ///
+    /// The start_time parameter ensures deterministic simulation -
+    /// callers must be explicit about their time choice.
+    pub fn simulate_usage(&self, start_time: DateTime<Utc>) -> DailySimulationIterator {
+        DailySimulationIterator::new(self.clone(), start_time)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    #[test]
+    fn test_simulator_is_deterministic() {
+        // Create a fixed start time
+        let fixed_time = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
+
+        // Run simulation 3 times and collect results
+        let mut results = Vec::new();
+
+        for _ in 0..3 {
+            let deck = Deck::default();
+            let mut simulator = deck.simulate_usage(fixed_time);
+
+            // Collect challenges for first 5 days
+            let mut challenges_per_day = Vec::new();
+            for _ in 0..5 {
+                let (next_sim, challenges) = simulator.next();
+                simulator = next_sim;
+
+                // Convert challenges to a comparable format (just count by type for simplicity)
+                let mut flash_count = 0;
+                let mut translate_count = 0;
+                let mut transcribe_count = 0;
+
+                for challenge in challenges {
+                    match challenge {
+                        Challenge::FlashCardReview { .. } => flash_count += 1,
+                        Challenge::TranslateComprehensibleSentence(_) => translate_count += 1,
+                        Challenge::TranscribeComprehensibleSentence(_) => transcribe_count += 1,
+                    }
+                }
+
+                challenges_per_day.push((flash_count, translate_count, transcribe_count));
+            }
+
+            results.push(challenges_per_day);
+        }
+
+        // Verify all three runs produced identical results
+        assert_eq!(
+            results[0], results[1],
+            "First and second simulation runs differ"
+        );
+        assert_eq!(
+            results[1], results[2],
+            "Second and third simulation runs differ"
+        );
     }
 }
