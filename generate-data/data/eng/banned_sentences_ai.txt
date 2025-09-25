@@ -37,3 +37,44 @@
 {"sentence":"Had.","issues":["Sentence fragment","Lacks subject and object","Unclear meaning without context"],"corrected_sentence":null}
 {"sentence":"Like Jesus.","issues":["Sentence fragment (no main clause)","Requires context to be fully clear","Could be confusing for learners due to ellipsis"],"corrected_sentence":null}
 {"sentence":"Just like us.","issues":["Sentence fragment","Lacks a clear referent; meaning depends on prior context"],"corrected_sentence":null}
+{"sentence":"Who, she?","issues":["Missing auxiliary verb (“is”)","Unnatural/incorrect punctuation (comma)","Not an idiomatic or plausible conversational fragment","Ambiguous meaning without context"],"corrected_sentence":null}
+{"sentence":"With who?","issues":["Pronoun case error: uses “who” instead of “whom” after the preposition “with”","Colloquial form that may confuse learners about who/whom usage"],"corrected_sentence":null}
+{"sentence":"Where there?","issues":["Sentence fragment","Missing verb/auxiliary (e.g., 'Where is it?' or 'Were they there?')","Ambiguous/unclear meaning","Potential subtitle artifact"],"corrected_sentence":null}
+{"sentence":"This man.","issues":["Sentence fragment (no verb/predicate)","Does not make sense on its own without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"His life.","issues":["Sentence fragment (no verb/predicate)","Unclear pronoun reference (‘his’)","Does not convey a complete thought; requires context"],"corrected_sentence":null}
+{"sentence":"Back there.","issues":["Sentence fragment (elliptical; missing subject and verb)"],"corrected_sentence":null}
+{"sentence":"Just like them.","issues":["Sentence fragment (missing subject/verb)","Ambiguous pronoun “them” without antecedent; unclear without context"],"corrected_sentence":null}
+{"sentence":"Not like us.","issues":["Sentence fragment (missing explicit subject and verb)","Elliptical structure may be confusing for some learners"],"corrected_sentence":null}
+{"sentence":"Our life.","issues":["Sentence fragment (no verb/predicate)","Unclear without context; reads like a title/caption","Not suitable as a standalone example for learners"],"corrected_sentence":null}
+{"sentence":"From Texas.","issues":["Sentence fragment (missing subject and verb)"],"corrected_sentence":null}
+{"sentence":"One thing.","issues":["Sentence fragment (incomplete thought)","Requires context to be meaningful","May confuse learners"],"corrected_sentence":null}
+{"sentence":"All his life.","issues":["Sentence fragment (no subject/verb)","Needs context to be meaningful","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Always say.","issues":["sentence fragment","missing object/complement for 'say'","unclear meaning without context"],"corrected_sentence":null}
+{"sentence":"That day.","issues":["Sentence fragment (incomplete thought)","Deictic reference ('that') requires prior context","Potentially confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"Things.","issues":["Sentence fragment (no verb or predicate)","Overly vague; lacks context or meaning","Not a complete thought for standalone use"],"corrected_sentence":null}
+{"sentence":"From Paris.","issues":["Sentence fragment (missing subject and verb)","May be confusing for learners when presented without context"],"corrected_sentence":null}
+{"sentence":"Like everything.","issues":["Sentence fragment","Ambiguous use of 'like' (verb vs preposition)","Incomplete thought; missing subject or main clause","Confusing without context"],"corrected_sentence":null}
+{"sentence":"No English.","issues":["Sentence fragment (missing verb)","Ambiguous meaning: could mean “I don’t speak English” or “There is no English.”","May be confusing for learners"],"corrected_sentence":null}
+{"sentence":"Yes, well?","issues":["Unclear meaning without context","Unnatural combination of discourse markers (“Yes,” + “well?”)","Punctuation suggests a question but the intent is ambiguous and confusing for learners"],"corrected_sentence":null}
+{"sentence":"Other things.","issues":["Sentence fragment (no verb)","Very vague; meaning depends on context"],"corrected_sentence":null}
+{"sentence":"Always more.","issues":["Sentence fragment (no subject or verb)","Ambiguous/vague meaning (‘more’ of what?)","Potentially confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"People.","issues":["Sentence fragment (no verb/predicate)","Ambiguous meaning; requires context"],"corrected_sentence":null}
+{"sentence":"Some things.","issues":["Sentence fragment (no verb/predicate)","Too vague without context"],"corrected_sentence":null}
+{"sentence":"So little.","issues":["Elliptical fragment","Lacks referent for 'little'","Potentially confusing without context"],"corrected_sentence":null}
+{"sentence":"Just like home.","issues":["Sentence fragment (missing explicit subject and verb)"],"corrected_sentence":null}
+{"sentence":"Back.","issues":["Sentence fragment (not a complete sentence)","Ambiguous meaning without context (could mean 'I'm back,' a body part, or an imperative 'Back!')","Punctuation may be unnatural depending on intent (often an exclamation for a command)"],"corrected_sentence":null}
+{"sentence":"His father.","issues":["Sentence fragment (no predicate)","Ambiguous pronoun reference ('his' has no antecedent)","Insufficient context to convey meaning"],"corrected_sentence":null}
+{"sentence":"Yes done.","issues":["Missing comma after 'Yes'","Elliptical/fragment; omitted 'it’s'","May sound unnatural or confusing for learners"],"corrected_sentence":"Yes, done."}
+{"sentence":"Or two.","issues":["Sentence fragment lacking a main clause","Relies on prior context to be meaningful","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Our friend.","issues":["Sentence fragment (no verb/predicate)","Unclear referent without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Everyone has them.","issues":["Unclear pronoun reference ('them') without context"],"corrected_sentence":null}
+{"sentence":"Alicia's father told her.","issues":["Incomplete clause: missing the content of what was told","Elliptical usage that relies on prior context, which is confusing for learners"],"corrected_sentence":null}
+{"sentence":"Or other.","issues":["Sentence fragment","Incomplete thought","Confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"Not seen.","issues":["Sentence fragment (incomplete)","Missing subject","Missing object/referent","Ambiguous meaning; requires context"],"corrected_sentence":null}
+{"sentence":"This life.","issues":["Sentence fragment (no verb/predicate)","Ambiguous meaning without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Or someone.","issues":["Sentence fragment","Introduced by coordinating conjunction without preceding clause","Incomplete thought; requires prior context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Little, little.","issues":["Incomplete fragment with no subject or verb","Repetition without clear function","Unclear meaning without context","Punctuation (comma) suggests a pause but doesn’t resolve the ambiguity","Possible subtitle artifact (stutter/repetition)"],"corrected_sentence":null}
+{"sentence":"Everyone home.","issues":["Sentence fragment (missing verb)","Ambiguous intent (statement vs. question vs. command)","Punctuation does not clarify meaning"],"corrected_sentence":null}
+{"sentence":"Our father.","issues":["Sentence fragment (missing verb/predicate)","Potentially confusing for learners due to incompleteness"],"corrected_sentence":null}
+{"sentence":"One night.","issues":["Sentence fragment; lacks a verb/predicate","Incomplete thought without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"More than anything.","issues":["Sentence fragment/incomplete thought","Lacks subject and verb","Ambiguous without context"],"corrected_sentence":null}

@@ -20,7 +20,7 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_cache_directory("./.cache")
 });
 
-const SENTENCES_TO_ANALYZE: usize = 100;
+const SENTENCES_TO_ANALYZE: usize = 200;
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct SentenceQualityResponse {
@@ -130,7 +130,7 @@ You will receive:
 1. A sentence in {language}
 2. A list of already-identified multiword terms in the sentence
 
-Your task is to identify any ADDITIONAL multiword terms that should be learned as units but are NOT already in the provided list.
+Your task is to identify any ADDITIONAL multiword terms that should be learned as units but are NOT already in the provided list. Terms involving verbs should be returned im their "infinitive form". So "se passe" should be returned as "passer".
 
 Output format:
 {{

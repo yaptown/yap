@@ -38,3 +38,13 @@
 {"sentence":"Qué vida.","issues":["Missing exclamation marks (Spanish requires opening and closing exclamation for exclamatives)"],"corrected_sentence":"¡Qué vida!"}
 {"sentence":"Qué puedo decir?","issues":["Missing opening inverted question mark (¿) for a Spanish question"],"corrected_sentence":"¿Qué puedo decir?"}
 {"sentence":"Como vamos?","issues":["Missing inverted question mark at the beginning","Missing accent on 'Cómo'","Potential ambiguity (could mean 'How are we doing?' or 'How do we get there?')"],"corrected_sentence":"¿Cómo vamos?"}
+{"sentence":"Has visto?","issues":["Missing opening inverted question mark (¿) for a Spanish question","Elliptical object (what was seen) could be confusing for learners, though acceptable in context"],"corrected_sentence":"¿Has visto?"}
+{"sentence":"Como qué?","issues":["Missing opening inverted question mark (¿)","Potential ambiguity for learners between ‘como’ (like/as) and ‘cómo’ (how)"],"corrected_sentence":"¿Como qué?"}
+{"sentence":"Como sabes?","issues":["Missing accent on 'Cómo' for interrogative","Missing initial inverted question mark '¿'"],"corrected_sentence":"¿Cómo sabes?"}
+{"sentence":"Qué noche.","issues":["Missing opening and closing exclamation marks in an exclamatory sentence","Punctuation uses a period instead of exclamation marks"],"corrected_sentence":"¡Qué noche!"}
+{"sentence":"Sobre qué?","issues":["Missing initial inverted question mark (¿)"],"corrected_sentence":"¿Sobre qué?"}
+{"sentence":"Como va?","issues":["Missing accent on 'Cómo'","Missing inverted opening question mark (¿)"],"corrected_sentence":"¿Cómo va?"}
+{"sentence":"Qué lugar.","issues":["Missing opening and closing exclamation marks for exclamation","Nonstandard punctuation: uses a period instead of exclamation mark"],"corrected_sentence":"¡Qué lugar!"}
+{"sentence":"Buen Dios.","issues":["Missing inverted and closing exclamation marks","Ends with a period instead of exclamation"],"corrected_sentence":"¡Buen Dios!"}
+{"sentence":"Qué quiere?","issues":["Missing opening inverted question mark (¿) at the start of the question"],"corrected_sentence":"¿Qué quiere?"}
+{"sentence":"Les diré qué.","issues":["Incomplete thought/fragment","Misuse of “qué” without a complement","Likely calque from English (“I’ll tell you what”) leading to unnatural phrasing"],"corrected_sentence":null}
