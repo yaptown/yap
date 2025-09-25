@@ -1,0 +1,39 @@
+{"sentence":"My Reverend.","issues":["Sentence fragment","Nonstandard/incorrect use of the title “Reverend” with a possessive (“my”)","Ambiguous meaning without context","If intended as a title, it lacks a name or the article “the”","Potential capitalization mismatch depending on intended use"],"corrected_sentence":null}
+{"sentence":"But Mr.","issues":["Sentence fragment/incomplete thought","'But' lacks a contrasting clause","'Mr.' used without a following name or complete form of address","Confusing for learners"],"corrected_sentence":null}
+{"sentence":"But I...","issues":["Incomplete sentence/fragment","Ellipsis indicates an unfinished thought","Insufficient context to understand meaning"],"corrected_sentence":null}
+{"sentence":"To that.","issues":["Sentence fragment (no subject or verb)","Unclear/undefined referent for “that”","Ambiguous without context"],"corrected_sentence":null}
+{"sentence":"For Christmas.","issues":["Sentence fragment (elliptical prepositional phrase)","Incomplete thought; requires context to be meaningful"],"corrected_sentence":null}
+{"sentence":"Know it.","issues":["Vague pronoun without antecedent (“it”)","Uncommon/unnatural imperative use of the stative verb “know,” which may confuse learners"],"corrected_sentence":null}
+{"sentence":"This is how.","issues":["Sentence fragment/incomplete thought","Missing complement after “how” (e.g., what or how to do what)","Confusing without context"],"corrected_sentence":null}
+{"sentence":"With you.","issues":["Sentence fragment; depends on prior context, which may confuse learners"],"corrected_sentence":null}
+{"sentence":"To know.","issues":["Sentence fragment (bare infinitive)","Lacks subject and finite verb","Unclear meaning without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"I have.","issues":["Elliptical/fragmentary; missing object or complement","Ambiguous use of 'have' (main verb vs auxiliary)","Potentially confusing without context"],"corrected_sentence":null}
+{"sentence":"To think.","issues":["Sentence fragment (bare infinitive)","Incomplete thought without context","Unnatural punctuation for this usage"],"corrected_sentence":null}
+{"sentence":"And this?","issues":["Fragment that relies on prior context","Initial coordinating conjunction 'And' signals continuation","Potentially confusing without context"],"corrected_sentence":null}
+{"sentence":"In Mexico.","issues":["Sentence fragment (prepositional phrase only)","Depends on context to be meaningful"],"corrected_sentence":null}
+{"sentence":"For America.","issues":["Sentence fragment (no subject/verb)","May be ambiguous without context"],"corrected_sentence":null}
+{"sentence":"You here?","issues":["Elliptical/incomplete clause","Missing auxiliary verb 'are'","Very informal; may confuse learners"],"corrected_sentence":null}
+{"sentence":"But it is.","issues":["Pronoun 'it' lacks an antecedent (requires context)","Contrastive 'But' implies prior statement"],"corrected_sentence":null}
+{"sentence":"You want?","issues":["Sentence fragment (missing auxiliary verb)","Missing object; unclear what is wanted","Colloquial/elliptical form may confuse learners"],"corrected_sentence":null}
+{"sentence":"With him.","issues":["Sentence fragment (prepositional phrase)","Needs context to be meaningful; referent of 'him' is unspecified","May confuse learners without surrounding dialogue"],"corrected_sentence":null}
+{"sentence":"And it is.","issues":["Requires prior context; ‘it’ has no antecedent","Begins with a coordinating conjunction (‘And’), implying continuation","Too vague to be meaningful on its own"],"corrected_sentence":null}
+{"sentence":"A Russian.","issues":["Sentence fragment (no verb or predicate)","Lacks context; meaning depends on a prior question or situation"],"corrected_sentence":null}
+{"sentence":"They do.","issues":["Elliptical/context-dependent; missing antecedent for 'do'","Ambiguous meaning without prior context"],"corrected_sentence":null}
+{"sentence":"With Mr.","issues":["Fragment/incomplete thought","Preposition 'with' lacks its complement","'Mr.' should be followed by a surname or name","Likely truncated text"],"corrected_sentence":null}
+{"sentence":"On you.","issues":["Sentence fragment/elliptical response","Ambiguous without context; meaning depends on prior question"],"corrected_sentence":null}
+{"sentence":"Just you and me.","issues":["Sentence fragment (no verb)","Informal; relies on implied context"],"corrected_sentence":null}
+{"sentence":"It's good, it's good.","issues":["Comma splice: two independent clauses joined by a comma"],"corrected_sentence":"It's good. It's good."}
+{"sentence":"Can.","issues":["Sentence fragment (no subject or predicate)","Ambiguous meaning (could be modal verb, noun, or abbreviation)","Not a plausible standalone response for learners"],"corrected_sentence":null}
+{"sentence":"Not.","issues":["Sentence fragment","Requires prior context to be meaningful","Nonstandard as a standalone response; may confuse learners"],"corrected_sentence":null}
+{"sentence":"Here, here.","issues":["Wrong word choice: likely intended “Hear, hear!” not “Here, here.”","Ambiguous/unclear meaning","Punctuation: an exclamation mark is standard for the interjection"],"corrected_sentence":"Hear, hear!"}
+{"sentence":"Not who.","issues":["Sentence fragment (no subject or verb)","Requires context to be meaningful","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"So, Mr.","issues":["Incomplete fragment","'Mr.' used without a following name","Unclear meaning without additional context"],"corrected_sentence":null}
+{"sentence":"Can come.","issues":["Sentence fragment (missing subject)","Ambiguous subject (who can come?)","Informal ellipsis may confuse learners"],"corrected_sentence":null}
+{"sentence":"About us.","issues":["Sentence fragment (no verb/predicate)","Context-dependent heading/label rather than a sentence","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"With them.","issues":["Sentence fragment (no subject or verb)","Unclear pronoun reference (“them”)","Depends on prior context to be meaningful"],"corrected_sentence":null}
+{"sentence":"She, yes.","issues":["Fragment/elliptical structure with no verb","Unnatural/awkward phrasing for English","Odd comma placement","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"From there.","issues":["Sentence fragment (incomplete thought)","Deictic reference 'there' lacks context"],"corrected_sentence":null}
+{"sentence":"From time?","issues":["Sentence fragment","Unclear/ambiguous meaning","Missing interrogative word (e.g., should be “From what time?” or “From when?”)","Not idiomatic as a standalone question"],"corrected_sentence":null}
+{"sentence":"Had.","issues":["Sentence fragment","Lacks subject and object","Unclear meaning without context"],"corrected_sentence":null}
+{"sentence":"Like Jesus.","issues":["Sentence fragment (no main clause)","Requires context to be fully clear","Could be confusing for learners due to ellipsis"],"corrected_sentence":null}
+{"sentence":"Just like us.","issues":["Sentence fragment","Lacks a clear referent; meaning depends on prior context"],"corrected_sentence":null}

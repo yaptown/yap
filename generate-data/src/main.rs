@@ -45,22 +45,51 @@ async fn main() -> anyhow::Result<()> {
         let source_data_path = Path::new(source_data_path.as_str());
 
         // Load banned sentences
+        let mut banned_sentences = std::collections::HashSet::new();
+
+        // Load manually created banned sentences
         let banned_sentences_file = source_data_path.join("banned_sentences.txt");
-        let banned_sentences = if banned_sentences_file.exists() {
-            let content = std::fs::read_to_string(banned_sentences_file)
+        if banned_sentences_file.exists() {
+            let content = std::fs::read_to_string(&banned_sentences_file)
                 .context("Failed to read banned sentences file")?;
-            content
-                .lines()
-                .map(|line| line.trim().to_lowercase())
-                .filter(|line| !line.is_empty())
-                .collect::<std::collections::HashSet<_>>()
+            for line in content.lines() {
+                let line = line.trim().to_lowercase();
+                if !line.is_empty() {
+                    banned_sentences.insert(line);
+                }
+            }
+            println!(
+                "Loaded {} manually banned sentences",
+                banned_sentences.len()
+            );
         } else {
-            println!("No banned sentences file found, proceeding without filtering");
-            std::collections::HashSet::new()
-        };
+            println!("No manual banned sentences file found");
+        }
+
+        // Load AI-generated banned sentences
+        let ai_banned_file = source_data_path.join("banned_sentences_ai.txt");
+        if ai_banned_file.exists() {
+            let content = std::fs::read_to_string(&ai_banned_file)
+                .context("Failed to read AI banned sentences file")?;
+            let initial_count = banned_sentences.len();
+            for line in content.lines() {
+                // Parse JSON to extract just the sentence
+                if let Ok(banned_entry) = serde_json::from_str::<serde_json::Value>(line) {
+                    if let Some(sentence) = banned_entry.get("sentence").and_then(|s| s.as_str()) {
+                        banned_sentences.insert(sentence.to_lowercase());
+                    }
+                }
+            }
+            println!(
+                "Loaded {} AI-generated banned sentences",
+                banned_sentences.len() - initial_count
+            );
+        } else {
+            println!("No AI-generated banned sentences file found");
+        }
 
         if !banned_sentences.is_empty() {
-            println!("Loaded {} banned sentences", banned_sentences.len());
+            println!("Total banned sentences: {}", banned_sentences.len());
         }
 
         let banned_words_file = source_data_path.join("banned_words.jsonl");
