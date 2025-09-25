@@ -243,7 +243,7 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
         all_sentences.len()
     );
 
-    println!("all_sentences: {:?}", all_sentences);
+    println!("all_sentences: {all_sentences:?}");
 
     // Analyze each sentence
     let mut sentences_with_quality_issues = 0;
@@ -406,10 +406,10 @@ fn write_results_to_files(analyses: &[CourseAnalysis]) -> Result<()> {
 
         let lang_dir = analysis.course.target_language.iso_639_3();
         // Use absolute path from current working directory
-        let data_dir = PathBuf::from(format!("./generate-data/data/{}", lang_dir));
+        let data_dir = PathBuf::from(format!("./generate-data/data/{lang_dir}"));
 
         // Create directory if it doesn't exist
-        println!("Creating/ensuring directory exists: {:?}", data_dir);
+        println!("Creating/ensuring directory exists: {data_dir:?}");
         fs::create_dir_all(&data_dir)?;
 
         // Read existing banned sentences
@@ -463,7 +463,7 @@ fn write_results_to_files(analyses: &[CourseAnalysis]) -> Result<()> {
                 banned_path
             );
         } else {
-            println!("No new banned sentences to add for {}", lang_dir);
+            println!("No new banned sentences to add for {lang_dir}");
         }
 
         // Read existing multiword terms
@@ -511,7 +511,7 @@ fn write_results_to_files(analyses: &[CourseAnalysis]) -> Result<()> {
                 mwt_path
             );
         } else {
-            println!("No new multiword terms to add for {}", lang_dir);
+            println!("No new multiword terms to add for {lang_dir}");
         }
     }
 
@@ -552,7 +552,7 @@ fn print_summary(analyses: Vec<CourseAnalysis>) {
                 if issue.has_quality_issues {
                     println!("       Quality issues: {:?}", issue.quality_issues);
                     if let Some(ref corrected) = issue.corrected_sentence {
-                        println!("       Suggested correction: \"{}\"", corrected);
+                        println!("       Suggested correction: \"{corrected}\"");
                     }
                 }
                 if !issue.missing_multiword_terms.is_empty() {
