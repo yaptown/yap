@@ -255,7 +255,10 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
         .enumerate()
         .map(|(i, (sentence, language, multiword_terms))| async move {
             if i % 100 == 0 {
-                println!("Progress: {i}/{total_count} $({cost:.2})", cost=CHAT_CLIENT.cost().unwrap());
+                println!(
+                    "Progress: {i}/{total_count} $({cost:.2})",
+                    cost = CHAT_CLIENT.cost().unwrap()
+                );
             }
 
             // Check sentence quality

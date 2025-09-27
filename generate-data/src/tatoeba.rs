@@ -173,7 +173,6 @@ pub fn get_tatoeba_pairs(data_path: &Path, course: Course) -> Vec<TatoebaPair> {
     );
 
     // Apply random sampling if we have more sentences than the target
-    
 
     if unique_pairs.len() > TARGET_SENTENCE_COUNT {
         println!(
