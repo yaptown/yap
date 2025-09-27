@@ -135,38 +135,43 @@ export function LanguageSelector({
     });
   }, [api]);
 
-  const languageFlags: Record<string, string> = {
+  // Type-safe language configuration - TypeScript will error if a language is missing
+  const languageFlags: Record<Language, string> = {
     French: "🇫🇷",
     Spanish: "🇪🇸",
     Korean: "🇰🇷",
     English: "🇬🇧",
+    German: "🇩🇪",
   };
 
-  const languageConfirmTexts: Record<string, string> = {
+  const languageConfirmTexts: Record<Language, string> = {
     French: "Allons-y",
     Spanish: "Vamos",
     Korean: "가자",
     English: "Let's go",
+    German: "Los geht's",
   };
 
   // Native names of languages
-  const nativeLanguageNames: Record<string, string> = {
+  const nativeLanguageNames: Record<Language, string> = {
     English: "English",
     French: "Français",
     Spanish: "Español",
     Korean: "한국어",
+    German: "Deutsch",
   };
 
   // "I speak [language]" in each language
-  const iSpeakPhrases: Record<string, string> = {
+  const iSpeakPhrases: Record<Language, string> = {
     English: "I speak English",
     French: "Je parle français",
     Spanish: "Hablo español",
     Korean: "한국어를 합니다",
+    German: "Ich spreche Deutsch",
   };
 
   const languageColors: Record<
-    string,
+    Language,
     { primary: string; secondary: string; accent: string; gradient: string }
   > = {
     French: {
@@ -195,6 +200,13 @@ export function LanguageSelector({
       accent: "#C8102E",
       gradient:
         "linear-gradient(90deg, #012169 33%, #FFFFFF 33% 66%, #C8102E 66%)",
+    },
+    German: {
+      primary: "#000000",
+      secondary: "#DD0000",
+      accent: "#FFCE00",
+      gradient:
+        "linear-gradient(180deg, #000000 33%, #DD0000 33% 66%, #FFCE00 66%)",
     },
   };
 
@@ -260,19 +272,22 @@ export function LanguageSelector({
 
   // Background floating elements with deterministic pseudo-random values
   const floatingWords = useMemo(
-    () => [
+    (): Array<{ text: string; lang: Language; seed: number }> => [
       { text: "Bonjour", lang: "French", seed: 0.2 },
       { text: "Hola", lang: "Spanish", seed: 0.7 },
       { text: "안녕", lang: "Korean", seed: 0.4 },
       { text: "Hello", lang: "English", seed: 0.9 },
+      { text: "Guten Tag", lang: "German", seed: 0.15 },
       { text: "Merci", lang: "French", seed: 0.3 },
       { text: "Gracias", lang: "Spanish", seed: 0.6 },
       { text: "감사", lang: "Korean", seed: 0.8 },
       { text: "Thanks", lang: "English", seed: 0.1 },
+      { text: "Danke", lang: "German", seed: 0.25 },
       { text: "Oui", lang: "French", seed: 0.5 },
       { text: "Sí", lang: "Spanish", seed: 0.35 },
       { text: "네", lang: "Korean", seed: 0.75 },
       { text: "Yes", lang: "English", seed: 0.45 },
+      { text: "Ja", lang: "German", seed: 0.85 },
     ],
     []
   );
@@ -317,7 +332,7 @@ export function LanguageSelector({
         ))}
 
         {/* Gradient orbs */}
-        {["French", "Spanish", "Korean", "English"].map((lang, index) => (
+        {(["French", "Spanish", "Korean", "English", "German"] as const).map((lang, index) => (
           <motion.div
             key={`orb-${lang}`}
             className="absolute rounded-full blur-3xl opacity-30 dark:opacity-50"
@@ -325,9 +340,9 @@ export function LanguageSelector({
               width: "500px",
               height: "500px",
               background: `radial-gradient(circle, ${
-                languageColors[lang]?.primary + "40"
+                languageColors[lang].primary + "40"
               }, transparent)`,
-              left: `${index * 25}%`,
+              left: `${index * 20}%`,
               top: `${index % 2 === 0 ? -10 : 60}%`,
             }}
             animate={{

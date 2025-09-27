@@ -473,7 +473,7 @@ export function TranscriptionChallenge({
 
         {/* Accented character keyboard - show when not graded, language supports it, and not on small screens */}
         {gradingState === null &&
-          (targetLanguage === "French" || targetLanguage === "Spanish") && (
+          (targetLanguage === "French" || targetLanguage === "Spanish" || targetLanguage === "German") && (
             <AccentedCharacterKeyboard
               onCharacterInsert={handleCharacterInsert}
               language={targetLanguage}

@@ -34,6 +34,7 @@ pub async fn ensure_multiword_terms_file(
         Language::Spanish => vec!["de el", "a el"], // Spanish contractions that become "del" and "al"
         Language::English => vec![],
         Language::Korean => vec![],
+        Language::German => vec![], // No banned terms for German yet
     };
     let banned_terms = banned_terms
         .into_iter()
@@ -104,6 +105,7 @@ async fn download_multiword_terms(language: Language) -> anyhow::Result<Vec<Stri
             // Korean multiword terms are not supported yet. The wiktionary page seems very barebones.
             return Ok(vec![]);
         }
+        Language::German => "German_multiword_terms",
     };
     println!("Downloading category: {category}");
 

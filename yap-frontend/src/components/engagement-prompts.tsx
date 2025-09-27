@@ -99,6 +99,7 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
     .with("Spanish", () => "Stay on track with your Spanish learning")
     .with("Korean", () => "Stay on track with your Korean learning")
     .with("English", () => "Stay on track with your English learning")
+    .with("German", () => "Stay on track with your German learning")
     .exhaustive();
 
   return (

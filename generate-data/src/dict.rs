@@ -60,7 +60,7 @@ Of course, their native language is {native_language}, so you should write the m
         });
 
         if i % 200 == 0 {
-            println!("{i} / {count}");
+            println!("{i} / {count} $({cost:.2})", cost=chat_client.cost().unwrap());
             println!("multiword_term: {multiword_term:?}");
             println!("{response:#?}");
         }
@@ -127,7 +127,7 @@ Output the result as a JSON object containing an array of one or more definition
             println!("error: {e:#?}");
         });
         if i % 200 == 0 {
-            println!("{i} / {count}");
+            println!("{i} / {count} $({cost:.2})", cost=chat_client.cost().unwrap());
             println!("Heteronym: {heteronym:?}");
             println!("{response:#?}");
         }

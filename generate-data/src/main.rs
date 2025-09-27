@@ -148,7 +148,11 @@ async fn main() -> anyhow::Result<()> {
             let subtitle_pairs =
                 generate_data::opensubtitles::get_subtitle_pairs(source_data_path, *course);
 
-            // Combine Anki cards and OpenSubtitles data
+            // Also get Tatoeba data
+            let tatoeba_pairs =
+                generate_data::tatoeba::get_tatoeba_pairs(source_data_path, *course);
+
+            // Combine Anki cards, OpenSubtitles data, and Tatoeba data
             let use_native_card_side = course.native_language == Language::English;
             let anki_sentences = all_cards.iter().flat_map(|card| {
                 card.target.iter().map(|target_language_sentence| {
@@ -168,6 +172,21 @@ async fn main() -> anyhow::Result<()> {
             });
 
             let subtitle_sentences = subtitle_pairs.iter().map(|pair| {
+                let native_sentence = if course.native_language == Language::English {
+                    let trimmed_native = pair.native.trim();
+                    if trimmed_native.is_empty() {
+                        None
+                    } else {
+                        Some(trimmed_native.to_string())
+                    }
+                } else {
+                    None
+                };
+
+                (pair.target.clone(), native_sentence)
+            });
+
+            let tatoeba_sentences = tatoeba_pairs.iter().map(|pair| {
                 let native_sentence = if course.native_language == Language::English {
                     let trimmed_native = pair.native.trim();
                     if trimmed_native.is_empty() {
@@ -215,6 +234,7 @@ async fn main() -> anyhow::Result<()> {
             let mut all_sentences = futures::stream::iter(
                 anki_sentences
                     .chain(subtitle_sentences)
+                    .chain(tatoeba_sentences)
                     .chain(raw_english_sentences.into_iter())
                     .filter(|(target_language_sentence, _)| {
                         !banned_sentences.contains(&target_language_sentence.to_lowercase())
@@ -472,7 +492,7 @@ async fn main() -> anyhow::Result<()> {
             println!("Skipping frequencies creation because file already exists");
         } else {
             println!(
-                "\nGenerating word and phrase frequencies from combined sources (Anki + OpenSubtitles)..."
+                "\nGenerating word and phrase frequencies from combined sources (Anki + OpenSubtitles + Tatoeba)..."
             );
 
             let frequencies = generate_data::frequencies::compute_frequencies(

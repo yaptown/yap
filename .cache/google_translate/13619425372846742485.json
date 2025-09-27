@@ -1,0 +1,1 @@
+I can resist everything except temptation.

@@ -255,7 +255,7 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
         .enumerate()
         .map(|(i, (sentence, language, multiword_terms))| async move {
             if i % 100 == 0 {
-                println!("Progress: {i}/{total_count}");
+                println!("Progress: {i}/{total_count} $({cost:.2})", cost=CHAT_CLIENT.cost().unwrap());
             }
 
             // Check sentence quality
@@ -349,6 +349,9 @@ fn create_deck_for_course(course: Course) -> Result<Deck> {
         }
         (Language::English, Language::Korean) => {
             include_bytes!("../../../out/kor_for_eng/language_data.rkyv").to_vec()
+        }
+        (Language::English, Language::German) => {
+            include_bytes!("../../../out/deu_for_eng/language_data.rkyv").to_vec()
         }
         _ => {
             return Err(anyhow::anyhow!(

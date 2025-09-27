@@ -51,7 +51,7 @@ Output JSON format:
             ).await.ok()?;
 
             if i % 50 == 0 || !response.is_proper_noun {
-                println!("{i} / {count}");
+                println!("{i} / {count} $({cost:.2})", cost=CHAT_CLIENT.cost().unwrap());
                 println!("Analyzing word: {word}");
                 println!("Result: {response:?}");
             }

@@ -3222,6 +3222,7 @@ impl ReviewInfo {
             Language::Spanish => "La palabra es",
             Language::English => "The word is",
             Language::Korean => "단어는",
+            Language::German => "Das Wort ist",
         }
     }
 
