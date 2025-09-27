@@ -83,8 +83,8 @@ pub fn get_tatoeba_pairs(data_path: &Path, course: Course) -> Vec<TatoebaPair> {
         };
 
         // Skip BOM if present
-        let line = if line.starts_with('\u{feff}') {
-            &line[3..]
+        let line = if let Some(line) = line.strip_prefix('\u{feff}') {
+            line
         } else {
             &line
         };
