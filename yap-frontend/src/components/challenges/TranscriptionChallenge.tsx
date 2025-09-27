@@ -288,9 +288,12 @@ export function TranscriptionChallenge({
                 // The accent keyboard will refocus when clicked
               }}
               disabled={gradingState !== null}
-              className={`inline-block w-32 mx-1 text-center text-2xl font-semibold ${getInputClassName(
+              className={`inline-block min-w-32 mx-1 text-center text-2xl font-semibold ${getInputClassName(
                 index
               )}`}
+              style={{
+                width: `${Math.max(8, (userInputs.get(index) || "").length) * 0.75}rem`
+              }}
               placeholder=""
             />
             <span>{end_whitespace}</span>
