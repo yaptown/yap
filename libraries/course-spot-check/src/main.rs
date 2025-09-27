@@ -20,7 +20,7 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_cache_directory("./.cache")
 });
 
-const SENTENCES_TO_ANALYZE: usize = 200;
+const SENTENCES_TO_ANALYZE: usize = 400;
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct SentenceQualityResponse {

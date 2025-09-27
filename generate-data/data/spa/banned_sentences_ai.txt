@@ -48,3 +48,21 @@
 {"sentence":"Buen Dios.","issues":["Missing inverted and closing exclamation marks","Ends with a period instead of exclamation"],"corrected_sentence":"¡Buen Dios!"}
 {"sentence":"Qué quiere?","issues":["Missing opening inverted question mark (¿) at the start of the question"],"corrected_sentence":"¿Qué quiere?"}
 {"sentence":"Les diré qué.","issues":["Incomplete thought/fragment","Misuse of “qué” without a complement","Likely calque from English (“I’ll tell you what”) leading to unnatural phrasing"],"corrected_sentence":null}
+{"sentence":"O qué?","issues":["Missing opening inverted question mark (¿)"],"corrected_sentence":"¿O qué?"}
+{"sentence":"Esa noche.","issues":["Sentence fragment (no verb)","Requires context to be meaningful"],"corrected_sentence":null}
+{"sentence":"Hay una.","issues":["Incomplete sentence lacking a noun after the article 'una'","Elliptical/ambiguous; requires context to be understood"],"corrected_sentence":null}
+{"sentence":"Qué hice?","issues":["Missing opening inverted question mark (¿) required in Spanish direct questions"],"corrected_sentence":"¿Qué hice?"}
+{"sentence":"Señor Secretario.","issues":["Nonstandard capitalization of the title 'Secretario' (should be lowercase in Spanish when used as a common noun in direct address)."],"corrected_sentence":"Señor secretario."}
+{"sentence":"O mujer.","issues":["Ambiguity between conjunction “o” (or) and interjection “oh”.","If read as conjunction, it’s an incomplete fragment lacking the first alternative.","If intended as interjection, it’s misspelled (missing h).","Comma after the interjection is missing; exclamation marks are typically used in exclamations."],"corrected_sentence":"Oh, mujer."}
+{"sentence":"Quieres uno?","issues":["Missing opening inverted question mark (¿) for a Spanish question"],"corrected_sentence":"¿Quieres uno?"}
+{"sentence":"Hola, todos.","issues":["Missing preposition “a” in the set phrase (preferred: “Hola a todos.”)","Unnatural/less idiomatic phrasing for a greeting","Comma is unnecessary in the common version"],"corrected_sentence":null}
+{"sentence":"Oh, amigo.","issues":["Uses a period where an exclamation is expected","Missing inverted and closing exclamation marks per Spanish punctuation"],"corrected_sentence":"¡Oh, amigo!"}
+{"sentence":"Quieres venir?","issues":["Missing opening inverted question mark (¿) required in Spanish questions"],"corrected_sentence":"¿Quieres venir?"}
+{"sentence":"Donde vamos?","issues":["Missing accent on 'Dónde'","Missing opening inverted question mark ¿"],"corrected_sentence":"¿Dónde vamos?"}
+{"sentence":"Qué pregunta.","issues":["Incorrect punctuation: period used instead of exclamation or question marks","Missing inverted exclamation/question mark at the start","Ambiguity between exclamation and question"],"corrected_sentence":"¡Qué pregunta!"}
+{"sentence":"Haciendo qué?","issues":["Missing initial inverted question mark (¿)"],"corrected_sentence":"¿Haciendo qué?"}
+{"sentence":"Qué dice?","issues":["Missing opening inverted question mark (¿) in Spanish interrogative"],"corrected_sentence":"¿Qué dice?"}
+{"sentence":"Qué historia.","issues":["Missing opening and closing exclamation marks","Uses a period with an exclamative phrase"],"corrected_sentence":"¡Qué historia!"}
+{"sentence":"Puedo hablar contigo?","issues":["Missing opening inverted question mark (¿) for a question in Spanish"],"corrected_sentence":"¿Puedo hablar contigo?"}
+{"sentence":"Entonces qué?","issues":["Missing opening inverted question mark (¿).","Optional comma after 'Entonces' could improve naturalness: 'Entonces, ¿qué?'"],"corrected_sentence":"¿Entonces qué?"}
+{"sentence":"Qué hago?","issues":["Missing opening inverted question mark (¿)"],"corrected_sentence":"¿Qué hago?"}

@@ -78,3 +78,76 @@
 {"sentence":"Our father.","issues":["Sentence fragment (missing verb/predicate)","Potentially confusing for learners due to incompleteness"],"corrected_sentence":null}
 {"sentence":"One night.","issues":["Sentence fragment; lacks a verb/predicate","Incomplete thought without context","Potentially confusing for learners"],"corrected_sentence":null}
 {"sentence":"More than anything.","issues":["Sentence fragment/incomplete thought","Lacks subject and verb","Ambiguous without context"],"corrected_sentence":null}
+{"sentence":"Yes, she.","issues":["Sentence fragment","Missing verb/auxiliary","Incomplete thought","Confusing without context"],"corrected_sentence":null}
+{"sentence":"All life.","issues":["sentence fragment (no verb/predicate)","incomplete thought","unclear meaning without context"],"corrected_sentence":null}
+{"sentence":"From France.","issues":["Sentence fragment (missing subject and verb)","Not a full sentence; could confuse learners if presented as a complete sentence"],"corrected_sentence":null}
+{"sentence":"Life.","issues":["Sentence fragment (no verb or predicate)","May be confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"Little things.","issues":["Sentence fragment (no verb or predicate)"],"corrected_sentence":null}
+{"sentence":"Like his father.","issues":["Sentence fragment (no subject or finite verb)","Incomplete thought requiring context","Ambiguous pronoun reference ('his')"],"corrected_sentence":null}
+{"sentence":"Or more.","issues":["Sentence fragment/incomplete thought","Requires prior context to identify what 'more' refers to","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"His friend.","issues":["Sentence fragment (no verb/clause)","Pronoun “his” has no antecedent; reference is unclear","May be confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"Everyone has one.","issues":["Ambiguous pronoun “one” with no antecedent/context"],"corrected_sentence":null}
+{"sentence":"Never seen.","issues":["Sentence fragment","Missing subject","Missing auxiliary verb (e.g., 'have')","Likely missing object (e.g., 'it')","Ambiguous without context"],"corrected_sentence":null}
+{"sentence":"Not someone.","issues":["Sentence fragment (no verb or complete thought)","Unnatural phrasing for the intended meaning","Likely to confuse learners; 'No one.' or 'Not anyone.' would be clearer"],"corrected_sentence":null}
+{"sentence":"Little time.","issues":["Sentence fragment; lacks a verb (elliptical form of 'There is little time')","May be confusing without context"],"corrected_sentence":null}
+{"sentence":"Just like his father.","issues":["Sentence fragment/incomplete thought","Context-dependent; lacks explicit subject or verb","May be confusing to learners without context"],"corrected_sentence":null}
+{"sentence":"Or her.","issues":["Sentence fragment that relies on prior context","Pronoun “her” lacks an antecedent, making it unclear standalone"],"corrected_sentence":null}
+{"sentence":"Yes friend.","issues":["Missing comma for direct address (should be 'Yes, friend.')"],"corrected_sentence":"Yes, friend."}
+{"sentence":"Like everyone.","issues":["Sentence fragment (no main clause)","Unclear meaning without context","Potentially missing 'else' for naturalness (e.g., 'like everyone else')"],"corrected_sentence":null}
+{"sentence":"First.","issues":["Sentence fragment","Suggests enumeration without continuation","Ambiguous/unclear meaning for learners"],"corrected_sentence":null}
+{"sentence":"Still.","issues":["Sentence fragment (no subject or verb)","Ambiguous meaning without context","Potentially requires different punctuation if intended as an imperative (e.g., “Still!”)"],"corrected_sentence":null}
+{"sentence":"Already seen.","issues":["Sentence fragment (elliptical)","Missing subject and auxiliary verb","Unspecified/ambiguous object","May be confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"More than fine.","issues":["Elliptical fragment without explicit subject or verb; acceptable informally but not a complete sentence in formal contexts","Use of 'more than' as an intensifier may be mildly confusing to beginners"],"corrected_sentence":null}
+{"sentence":"Where always.","issues":["Sentence fragment with no subject or verb","‘Where’ cannot be directly followed by ‘always’ to form a valid clause","Unclear meaning; not a plausible elliptical utterance","Punctuation suggests a statement, but if intended as a question it still wouldn’t be grammatical"],"corrected_sentence":null}
+{"sentence":"Already said.","issues":["Sentence fragment (missing subject/auxiliary)","Informal ellipsis may confuse learners"],"corrected_sentence":null}
+{"sentence":"Now too.","issues":["Sentence fragment/elliptical","Meaning unclear without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"This world.","issues":["Sentence fragment (no verb/predicate)","Incomplete thought","Potentially confusing without context"],"corrected_sentence":null}
+{"sentence":"His mother.","issues":["Sentence fragment (no verb)","Pronoun “his” lacks antecedent; unclear reference","Requires context to be meaningful for learners"],"corrected_sentence":null}
+{"sentence":"On her.","issues":["Sentence fragment (no subject/verb)","Requires prior context/antecedent","Ambiguous meaning; potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"By us.","issues":["Fragment/incomplete sentence","Requires context to be meaningful","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Never heard that name.","issues":["Sentence fragment (missing subject and auxiliary: 'I have')","Informal ellipsis that may confuse learners","Possible missing preposition 'of' depending on meaning ('never heard of that name')","Slightly unnatural without 'before' in many contexts"],"corrected_sentence":null}
+{"sentence":"This place.","issues":["Sentence fragment (no verb/predicate)","Unclear meaning without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"At his mother's house.","issues":["Sentence fragment (not a complete clause)","Requires an implied context/question to be a full sentence"],"corrected_sentence":null}
+{"sentence":"His father's son.","issues":["Not a complete sentence (noun-phrase fragment; missing verb/predicate)","Ambiguous pronoun “his” without an antecedent","Meaning is unclear/tautological without context, which may confuse learners"],"corrected_sentence":null}
+{"sentence":"Hello Mrs.","issues":["Title “Mrs.” used without a surname/name","Missing comma after the greeting (“Hello,”)","Unnatural/ambiguous as a standalone address"],"corrected_sentence":null}
+{"sentence":"Or if?","issues":["Fragment/incomplete clause","Subordinating conjunction 'if' without a clause","Confusing without context"],"corrected_sentence":null}
+{"sentence":"Understand well.","issues":["Transitive verb “understand” lacks an object or clause (e.g., “Understand this well,” “Understand that…”).","Imperative usage here is unnatural/rare.","Meaning is too vague without context, which can confuse learners."],"corrected_sentence":null}
+{"sentence":"Everyone leave.","issues":["Missing comma after vocative ('Everyone')","Possible subject–verb agreement confusion ('everyone' + 'leave')"],"corrected_sentence":"Everyone, leave."}
+{"sentence":"Everyone heard?","issues":["Elliptical/missing auxiliary verb","Ambiguous tense/aspect (Has everyone heard? vs. Did everyone hear?)","Informal phrasing may confuse learners"],"corrected_sentence":null}
+{"sentence":"How already?","issues":["Fragment/missing main verb","Non-idiomatic phrasing","Unclear meaning without context","Incorrect word order for intended ideas like 'How is it already [time]?'"],"corrected_sentence":null}
+{"sentence":"Not great.","issues":["Sentence fragment (missing subject and verb)"],"corrected_sentence":null}
+{"sentence":"From Latin.","issues":["Sentence fragment (missing subject and verb)","Context-dependent meaning"],"corrected_sentence":null}
+{"sentence":"From everyone.","issues":["Sentence fragment (no subject or verb)","Elliptical usage—fine conversationally but not in formal writing"],"corrected_sentence":null}
+{"sentence":"More than us.","issues":["Sentence fragment/incomplete thought","Ambiguous referent for “more” (unclear what is being compared)","Potential pronoun-case concern: informal “than us” vs. more formal “than we (do)”","May confuse learners without context"],"corrected_sentence":null}
+{"sentence":"Yes, us too.","issues":["Nonstandard pronoun case: 'us' instead of subject form 'we'","Elliptical/conversational fragment that depends on prior context","Informal register may be confusing for learners seeking standard forms"],"corrected_sentence":null}
+{"sentence":"Like his mother.","issues":["Sentence fragment (no subject or finite verb)","Requires prior context to be meaningful","Ambiguous referent ('his')"],"corrected_sentence":null}
+{"sentence":"Well seen.","issues":["Unidiomatic expression","Fragment that lacks a clear subject/verb","Meaning unclear without context","Likely calque from another language (e.g., French ‘Bien vu’)"],"corrected_sentence":null}
+{"sentence":"Not sure.","issues":["Sentence fragment (missing subject and auxiliary)","Very informal/elliptical form","May be confusing for learners who expect full sentences"],"corrected_sentence":null}
+{"sentence":"That night.","issues":["Sentence fragment","No verb/predicate","Depends on prior context; deictic reference is unclear"],"corrected_sentence":null}
+{"sentence":"Her again.","issues":["Sentence fragment (missing verb/copula)","Object pronoun 'her' without explicit antecedent","Informal/elliptical usage may confuse learners"],"corrected_sentence":null}
+{"sentence":"Only us.","issues":["Sentence fragment/elliptical (missing verb)","Informal usage; in full form: “It’s only us.” (more formal: “It is only we.”)"],"corrected_sentence":null}
+{"sentence":"Our family.","issues":["Sentence fragment (not a complete sentence)","If intended as a heading, the period is stylistically unnecessary"],"corrected_sentence":null}
+{"sentence":"Everyone understand?","issues":["Subject–verb agreement error: “everyone” is singular, so verb should be “understands.”","Missing auxiliary for a yes/no question (standard form: “Does everyone understand?”).","Non-standard/elliptical phrasing that may confuse learners."],"corrected_sentence":null}
+{"sentence":"Still as beautiful.","issues":["Incomplete 'as ... as' construction","Sentence fragment (missing comparison target)","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Never happened.","issues":["Sentence fragment (missing subject and auxiliary: should be “It never happened.” in full form)"],"corrected_sentence":null}
+{"sentence":"Our job.","issues":["Sentence fragment","Incomplete thought; may be confusing without context"],"corrected_sentence":null}
+{"sentence":"So beautiful.","issues":["Sentence fragment (missing subject and verb)","Unspecified referent (what is beautiful?)"],"corrected_sentence":null}
+{"sentence":"Very beautiful.","issues":["Sentence fragment (missing subject and verb)","Ambiguous referent (what is beautiful is unspecified)"],"corrected_sentence":null}
+{"sentence":"His friends.","issues":["Sentence fragment (no verb/predicate)","Pronoun “his” lacks antecedent/context","May be confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"As friends.","issues":["Sentence fragment (no subject or verb)","Unclear without context; does not specify what is \"as friends\""],"corrected_sentence":null}
+{"sentence":"Or us.","issues":["Sentence fragment (incomplete thought)","Requires prior context to be understood","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Like many.","issues":["Sentence fragment","Unclear referent for “many”","Requires context to interpret"],"corrected_sentence":null}
+{"sentence":"Everything else.","issues":["Sentence fragment; incomplete thought without context","Potentially confusing for learners due to ambiguity"],"corrected_sentence":null}
+{"sentence":"Like everything else.","issues":["Sentence fragment (elliptical; missing subject and verb)","Vague without context; potential for confusion"],"corrected_sentence":null}
+{"sentence":"Not only.","issues":["Sentence fragment","Missing required complement/contrast (e.g., “but also …”)","Confusing for learners"],"corrected_sentence":null}
+{"sentence":"Years.","issues":["Sentence fragment/incomplete thought","Missing subject/verb","Lacks context to convey meaning","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Nice girl.","issues":["Sentence fragment (no subject or verb)","Missing article before a singular countable noun ('a nice girl')","Elliptical/informal usage may be confusing for learners"],"corrected_sentence":null}
+{"sentence":"His name, already?","issues":["Unnecessary comma","Elliptical conversational form may be slightly confusing for learners"],"corrected_sentence":"His name already?"}
+{"sentence":"Us too.","issues":["Nonstandard pronoun case: 'us' used where 'we' would be standard","Elliptical fragment (acceptable in conversation but not formal writing)"],"corrected_sentence":null}
+{"sentence":"Very old.","issues":["Sentence fragment (missing subject and verb)","Ellipsis may confuse some learners expecting a full sentence"],"corrected_sentence":null}
+{"sentence":"Very happy.","issues":["Sentence fragment (missing subject and verb)"],"corrected_sentence":null}
+{"sentence":"Very important.","issues":["Sentence fragment (missing subject and verb)","Meaning depends on context to know what is important"],"corrected_sentence":null}
+{"sentence":"Another life.","issues":["Sentence fragment (no verb)","Potentially ambiguous without context"],"corrected_sentence":null}
+{"sentence":"Same thing again.","issues":["Sentence fragment (missing explicit subject and verb)","Vague without context"],"corrected_sentence":null}
+{"sentence":"Still happy.","issues":["Sentence fragment (elliptical; lacks explicit subject/verb)"],"corrected_sentence":null}
+{"sentence":"Much more.","issues":["Sentence fragment; missing context for 'more'","May be confusing without prior discourse"],"corrected_sentence":null}
