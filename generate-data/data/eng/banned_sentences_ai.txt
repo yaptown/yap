@@ -164,3 +164,14 @@
 {"sentence":"Like friends.","issues":["Sentence fragment (no subject or verb)","Ambiguous without context; unclear what is 'like friends'","Potentially confusing for learners"],"corrected_sentence":null}
 {"sentence":"Not sure?","issues":["Sentence fragment (missing subject and auxiliary)","Elliptical form may confuse learners"],"corrected_sentence":null}
 {"sentence":"From England.","issues":["Sentence fragment (missing subject and verb)","Not a complete thought without context"],"corrected_sentence":null}
+{"sentence":"Yes, but..","issues":["Nonstandard ellipsis ('..'); should be '...' or '…'"],"corrected_sentence":"Yes, but..."}
+{"sentence":"Us.","issues":["Sentence fragment (no verb or complete clause)","Too context-dependent to be clear for learners","Ambiguous pronoun reference"],"corrected_sentence":null}
+{"sentence":"No, Mr.","issues":["Incomplete sentence/fragment","'Mr.' used without a following name","Likely subtitle cutoff or truncated speech","Confusing without additional context"],"corrected_sentence":null}
+{"sentence":"She, no.","issues":["Unnatural punctuation (comma instead of a question mark or dash)","Fragmentary utterance may confuse learners"],"corrected_sentence":"She? No."}
+{"sentence":"Here Control.","issues":["Fragment lacking a verb","Unclear meaning without context","Unnatural word order for radio-style identification","Missing comma if intended as direct address"],"corrected_sentence":null}
+{"sentence":"About anything.","issues":["Sentence fragment/incomplete thought","Requires context to be understood","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Our house.","issues":["Sentence fragment (no verb/predicate)","May be confusing for learners as a standalone sentence"],"corrected_sentence":null}
+{"sentence":"Come everyone.","issues":["Missing comma for direct address (should be 'Come, everyone.')"],"corrected_sentence":"Come, everyone."}
+{"sentence":"Very sure.","issues":["Sentence fragment (missing subject and verb)","More suitable as a conversational reply than a standalone full sentence"],"corrected_sentence":null}
+{"sentence":"Yes, us.","issues":["Sentence fragment (elliptical; lacks explicit subject and verb).","Relies on context and may confuse learners.","Informal usage; a clearer full form would be “Yes, it’s us.”"],"corrected_sentence":null}
+{"sentence":"Red his mother.","issues":["Missing verb","Fragment/incomplete thought","Unclear meaning","Possible missing punctuation (e.g., appositive)","Capitalization suggests a name but structure remains incorrect"],"corrected_sentence":null}

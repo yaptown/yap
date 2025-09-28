@@ -47,3 +47,5 @@
 {"sentence":"Plus beaucoup.","issues":["Elliptical fragment (missing subject and verb)","Colloquial negation with ne omitted","Potential ambiguity of plus (more vs no longer), which may confuse learners"],"corrected_sentence":null}
 {"sentence":"Juste amis.","issues":["Elliptical fragment (no verb)","Missing article in full form (would be “des”)","Could be confusing for learners without context"],"corrected_sentence":null}
 {"sentence":"Depuis tout petit.","issues":["Sentence fragment (no subject or verb)","Relies on context to be understood","Gender agreement depends on speaker (tout petit/toute petite)"],"corrected_sentence":null}
+{"sentence":"Y a mieux.","issues":["Colloquial omission of “il” in “Y a”","Nonstandard form may confuse learners"],"corrected_sentence":"Il y a mieux."}
+{"sentence":"Alors, comment va?","issues":["Missing subject pronoun (e.g., “ça”, “tu”, “il/elle”)","Colloquial formula should be “comment ça va”","Missing (narrow) space before “?” in French typography"],"corrected_sentence":null}

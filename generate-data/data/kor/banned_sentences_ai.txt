@@ -110,3 +110,4 @@
 {"sentence":"안돼, 기다려!","issues":["Incorrect spacing: '안돼' should be '안 돼'"],"corrected_sentence":"안 돼, 기다려!"}
 {"sentence":"모두가!","issues":["Incomplete sentence lacking a predicate","Subject particle '가' used without a following verb/adjective","Unnatural as an exclamation; for vocative use '모두!' instead","Could be a truncated subtitle fragment"],"corrected_sentence":null}
 {"sentence":"말 해봐.","issues":["Incorrect spacing between ‘말’ and ‘해봐’ (should be ‘말해’ since it’s the verb ‘말하다’)","Preferred spacing for the auxiliary is ‘해 봐’ (붙여 씀 ‘해봐’ also acceptable)"],"corrected_sentence":"말해 봐."}
+{"sentence":"아니, 지금.","issues":["Incomplete sentence lacking a predicate","Unnatural punctuation (period) for this interjectional use","Potentially confusing without context"],"corrected_sentence":"아니, 지금?"}
