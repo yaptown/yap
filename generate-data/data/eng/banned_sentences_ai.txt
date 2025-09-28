@@ -151,3 +151,16 @@
 {"sentence":"Same thing again.","issues":["Sentence fragment (missing explicit subject and verb)","Vague without context"],"corrected_sentence":null}
 {"sentence":"Still happy.","issues":["Sentence fragment (elliptical; lacks explicit subject/verb)"],"corrected_sentence":null}
 {"sentence":"Much more.","issues":["Sentence fragment; missing context for 'more'","May be confusing without prior discourse"],"corrected_sentence":null}
+{"sentence":"From Chicago.","issues":["Sentence fragment (no subject/verb)","Requires context to identify what is from Chicago"],"corrected_sentence":null}
+{"sentence":"From California.","issues":["Sentence fragment (elliptical)","Missing subject and verb; not a complete sentence","May be confusing without context"],"corrected_sentence":null}
+{"sentence":"Beautiful place.","issues":["Sentence fragment (no subject/verb)","Elliptical/informal style may confuse learners expecting a full sentence"],"corrected_sentence":null}
+{"sentence":"Not so sure.","issues":["Sentence fragment (missing subject and auxiliary verb)","Informal/elliptical usage"],"corrected_sentence":null}
+{"sentence":"Everything else, there.","issues":["Sentence fragment/elliptical imperative missing a verb","Unnecessary/awkward comma","Potentially confusing for learners due to incompleteness"],"corrected_sentence":null}
+{"sentence":"This girl.","issues":["Sentence fragment (no verb/predicate)","Deictic “this” requires context to identify the referent"],"corrected_sentence":null}
+{"sentence":"Our friends.","issues":["Sentence fragment (no verb/predicate)","Might confuse learners due to lack of context"],"corrected_sentence":null}
+{"sentence":"Still not.","issues":["Sentence fragment (elliptical) lacking explicit subject/verb","Requires context to know what is 'not'"],"corrected_sentence":null}
+{"sentence":"Really everything.","issues":["Sentence fragment (no verb or full clause)","Relies on implied context to be fully clear","Colloquial use of 'really' with 'everything' may confuse learners"],"corrected_sentence":null}
+{"sentence":"Like many people.","issues":["Sentence fragment; no main clause","Requires context to be meaningful","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Like friends.","issues":["Sentence fragment (no subject or verb)","Ambiguous without context; unclear what is 'like friends'","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Not sure?","issues":["Sentence fragment (missing subject and auxiliary)","Elliptical form may confuse learners"],"corrected_sentence":null}
+{"sentence":"From England.","issues":["Sentence fragment (missing subject and verb)","Not a complete thought without context"],"corrected_sentence":null}

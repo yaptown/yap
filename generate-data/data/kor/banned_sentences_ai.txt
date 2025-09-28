@@ -99,3 +99,14 @@
 {"sentence":"가서 얘기 해봐.","issues":["Incorrect spacing between ‘얘기’ and ‘해봐’ (should be ‘얘기해’)","Prefer spacing before the auxiliary ‘봐’ as ‘해 봐’"],"corrected_sentence":"가서 얘기해 봐."}
 {"sentence":"이런 씨발!","issues":["Contains strong profanity (may be unsuitable for learners)","Part-of-speech mismatch: '이런' typically modifies a noun; '씨발' is an interjection","Punctuation: should separate the two interjections"],"corrected_sentence":"이런, 씨발!"}
 {"sentence":"그래 여자.","issues":["Incomplete/fragmentary sentence with no predicate","Depends on prior context to be meaningful","Unnatural to use 여자 as direct address; would use 여자야 or another vocative form","Missing comma after the interjection: should be 그래, ..."],"corrected_sentence":null}
+{"sentence":"말도 안돼.","issues":["Incorrect spacing: should be “안 돼,” not “안돼”"],"corrected_sentence":"말도 안 돼."}
+{"sentence":"이건 말도 안돼.","issues":["Spacing error: ‘안돼’ should be written as ‘안 돼’"],"corrected_sentence":"이건 말도 안 돼."}
+{"sentence":"아무 것도 아니에요.","issues":["Incorrect spacing: '아무 것도' should be '아무것도'"],"corrected_sentence":"아무것도 아니에요."}
+{"sentence":"안돼 젠장!","issues":["Incorrect spacing: '안돼' should be '안 돼'.","Optional missing comma between interjections.","Contains mild profanity ('젠장'), informal register."],"corrected_sentence":"안 돼, 젠장!"}
+{"sentence":"? 잠깐!","issues":["Leading stray question mark before the sentence","Possible subtitle artifact","Punctuation spacing issue"],"corrected_sentence":"잠깐!"}
+{"sentence":"얘기 해봐!","issues":["Incorrect spacing between '얘기' and '해봐' (should be '얘기해 …').","Auxiliary verb spacing: '해 봐' (separate) is standard; '해봐' (together) is also acceptable."],"corrected_sentence":"얘기해 봐!"}
+{"sentence":"안돼, 잠깐!","issues":["Spacing error: ‘안돼’ should be ‘안 돼’"],"corrected_sentence":"안 돼, 잠깐!"}
+{"sentence":"/ 나가!","issues":["Leading slash '/' appears to be a subtitle or typographical artifact"],"corrected_sentence":"나가!"}
+{"sentence":"안돼, 기다려!","issues":["Incorrect spacing: '안돼' should be '안 돼'"],"corrected_sentence":"안 돼, 기다려!"}
+{"sentence":"모두가!","issues":["Incomplete sentence lacking a predicate","Subject particle '가' used without a following verb/adjective","Unnatural as an exclamation; for vocative use '모두!' instead","Could be a truncated subtitle fragment"],"corrected_sentence":null}
+{"sentence":"말 해봐.","issues":["Incorrect spacing between ‘말’ and ‘해봐’ (should be ‘말해’ since it’s the verb ‘말하다’)","Preferred spacing for the auxiliary is ‘해 봐’ (붙여 씀 ‘해봐’ also acceptable)"],"corrected_sentence":"말해 봐."}

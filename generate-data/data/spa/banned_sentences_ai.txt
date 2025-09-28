@@ -66,3 +66,8 @@
 {"sentence":"Puedo hablar contigo?","issues":["Missing opening inverted question mark (¿) for a question in Spanish"],"corrected_sentence":"¿Puedo hablar contigo?"}
 {"sentence":"Entonces qué?","issues":["Missing opening inverted question mark (¿).","Optional comma after 'Entonces' could improve naturalness: 'Entonces, ¿qué?'"],"corrected_sentence":"¿Entonces qué?"}
 {"sentence":"Qué hago?","issues":["Missing opening inverted question mark (¿)"],"corrected_sentence":"¿Qué hago?"}
+{"sentence":"Qué tipo.","issues":["Missing Spanish opening and closing question or exclamation marks","Incorrect terminal punctuation (period used instead of ? or !)","Ambiguous intent (question vs. exclamation)"],"corrected_sentence":"¿Qué tipo?"}
+{"sentence":"Qué buena pregunta.","issues":["Missing opening inverted exclamation mark","Missing closing exclamation mark"],"corrected_sentence":"¡Qué buena pregunta!"}
+{"sentence":"Qué quieres?","issues":["Missing opening inverted question mark (¿) for Spanish questions"],"corrected_sentence":"¿Qué quieres?"}
+{"sentence":"Qué gusto.","issues":["Missing opening/closing exclamation marks in Spanish punctuation"],"corrected_sentence":"¡Qué gusto!"}
+{"sentence":"Qué mujer.","issues":["Missing initial and final exclamation marks for an exclamative sentence in Spanish","Ends with a period instead of exclamation marks"],"corrected_sentence":"¡Qué mujer!"}

@@ -577,30 +577,10 @@ fn print_summary(analyses: Vec<CourseAnalysis>) {
 async fn main() -> Result<()> {
     env_logger::init();
 
-    // Define all available courses
-    let courses = vec![
-        Course {
-            native_language: Language::English,
-            target_language: Language::French,
-        },
-        Course {
-            native_language: Language::French,
-            target_language: Language::English,
-        },
-        Course {
-            native_language: Language::English,
-            target_language: Language::Spanish,
-        },
-        Course {
-            native_language: Language::English,
-            target_language: Language::Korean,
-        },
-    ];
-
     let mut analyses = Vec::new();
 
-    for course in courses {
-        match analyze_course(course).await {
+    for course in language_utils::COURSES {
+        match analyze_course(*course).await {
             Ok(analysis) => analyses.push(analysis),
             Err(e) => eprintln!("Failed to analyze course {course:?}: {e}"),
         }

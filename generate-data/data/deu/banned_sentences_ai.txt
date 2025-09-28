@@ -1,0 +1,4 @@
+
+{"sentence":"Sehr!","issues":["Incomplete fragment; 'sehr' needs something to modify (e.g., 'sehr gut', 'sehr schön')","Unnatural as a standalone exclamation","Not a complete sentence"],"corrected_sentence":null}
+{"sentence":"Um drei geht.","issues":["Missing subject pronoun in impersonal construction; standard is “Um drei geht es.” or the contraction “Um drei geht’s.”","If the intended meaning is “He leaves at three,” it should be “Um drei geht er.”","As written, it’s an incomplete fragment that may confuse learners."],"corrected_sentence":null}
+{"sentence":"Warum nehmen die Tom?","issues":["Non-standard/pronoun choice: uses die instead of standard sie for “they.”","Verb choice is ambiguous: nehmen + person is unclear without context; could be mitnehmen, festnehmen, or auswählen.","Potential confusion for learners between die as article vs pronoun."],"corrected_sentence":null}
