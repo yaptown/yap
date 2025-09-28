@@ -1,0 +1,1 @@
+Quito is the capital of Ecuador.

@@ -33,6 +33,10 @@ MODEL_MAPPING = {
     "eng": {
         "small": "en_core_web_sm",
         "large": "en_core_web_trf"
+    },
+    "deu": {
+        "small": "de_core_news_sm",
+        "large": "de_dep_news_trf"
     }
 }
 
@@ -142,6 +146,11 @@ class MultiwordTermDetector:
         elif self.language_code == "spa":
             # Spanish-specific patterns can be added here if needed
             # For now, Spanish doesn't have the same split negation pattern as French
+            pass
+        elif self.language_code == "deu":
+            # German-specific patterns can be added here if needed
+            # German has separable verbs and other compound structures that might need special handling
+            # For now, we'll use the default pattern matching
             pass
 
         # -------- early exits & c'est branch ----------

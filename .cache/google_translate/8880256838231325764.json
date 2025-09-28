@@ -1,0 +1,1 @@
+Translate this sentence into French.

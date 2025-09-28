@@ -224,6 +224,7 @@ const CardBack = ({
       .with("Spanish", () => "como en")
       .with("Korean", () => "처럼") // cheoreom (like/as in)
       .with("English", () => "as in")
+      .with("German", () => "wie in")
       .exhaustive();
 
     return (

@@ -59,6 +59,13 @@ static LANGUAGE_DATA: LazyLock<BTreeMap<Course, &'static [u8]>> = LazyLock::new(
         },
         include_bytes!("../../out/kor_for_eng/language_data.rkyv") as &'static [u8],
     );
+    data.insert(
+        Course {
+            native_language: Language::English,
+            target_language: Language::German,
+        },
+        include_bytes!("../../out/deu_for_eng/language_data.rkyv") as &'static [u8],
+    );
     data
 });
 
@@ -157,6 +164,7 @@ async fn text_to_speech(
         Language::Spanish => "zl1Ut8dvwcVSuQSB9XkG", // Ninoska - Spanish voice
         Language::English => "ohItIVrXTBI80RrUECOD", // Default to French voice for now
         Language::Korean => "nbrxrAz3eYm9NgojrmFK", // Korean
+        Language::German => "IWm8DnJ4NGjFI7QAM5lM", // Stephan - German voice
     };
     let url = format!("https://api.elevenlabs.io/v1/text-to-speech/{voice_id}");
 
@@ -203,6 +211,7 @@ async fn google_text_to_speech(
         Language::Spanish => ("es-ES", "es-ES-Chirp3-HD-Achernar"),
         Language::English => ("en-US", "en-US-Chirp3-HD-Achernar"),
         Language::Korean => ("ko-KR", "ko-KR-Chirp3-HD-Achernar"),
+        Language::German => ("de-DE", "de-DE-Chirp3-HD-Achernar"),
     };
 
     let google_request = GoogleTtsRequest {
@@ -321,6 +330,22 @@ Output: {{
 }}
 "#,
         ),
+        Language::German => (
+            "German",
+            r#"Example
+Input: "Challenge sentence: Ich gehe zur Schule.
+User response: I go to the school.
+Primary expression: zur
+Expressions: {{word: 'ich', lemma: 'ich', pos: 'PRON'}}, {{word: 'gehe', lemma: 'gehen', pos: 'VERB'}}, {{word: 'zur', lemma: 'zu', pos: 'ADP'}}, {{word: 'Schule', lemma: 'Schule', pos: 'NOUN'}}"
+
+Output: {{
+"explanation": "Your translation is correct! 'Ich gehe zur Schule' means 'I go to school.'",
+"primary_expression_status": "Remembered",
+"expressions_remembered": [{{"Heteronym": {{ "word": "ich", "lemma": "ich", "pos": "Pron" }}}}, {{"Heteronym": {{ "word": "gehe", "lemma": "gehen", "pos": "Verb" }}}}, {{"Heteronym": {{ "word": "zur", "lemma": "zu", "pos": "Adp" }}}}, {{"Heteronym": {{ "word": "Schule", "lemma": "Schule", "pos": "Noun" }}}}],
+"expressions_forgot": []
+}}
+"#,
+        ),
     };
 
     let system_prompt = format!(
@@ -371,6 +396,7 @@ async fn autograde_transcription(
         Language::Spanish => "Spanish",
         Language::English => "English",
         Language::Korean => "Korean",
+        Language::German => "German",
     };
 
     let system_prompt = format!(
@@ -406,6 +432,8 @@ The explanation should be in English and help the user learn from their mistakes
                 r#"For example, if the user confused "then" and "than", you could generate ["then", "than"] in the compare array."#,
             Language::Korean =>
                 r#"For example, if the user confused "어떻게" and "어떡해", you could generate ["어떻게", "어떡해"] in the compare array."#,
+            Language::German =>
+                r#"For example, if the user confused "der" and "die", you could generate ["der", "die"] in the compare array."#,
         }
     );
 

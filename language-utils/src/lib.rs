@@ -718,6 +718,7 @@ impl Heteronym<String> {
             Language::Spanish => expand_spanish_word,
             Language::English => expand_english_word,
             Language::Korean => expand_korean_word,
+            Language::German => expand_english_word, // German uses similar expansion as English for now
         };
 
         let heteronym = if let Some(heteronym) = proper_nouns.get(&doc_token.text.to_lowercase()) {
@@ -1442,6 +1443,7 @@ pub enum Language {
     English,
     Spanish,
     Korean,
+    German,
 }
 
 #[derive(
@@ -1468,6 +1470,7 @@ impl Language {
             Language::English => "eng",
             Language::Spanish => "spa",
             Language::Korean => "kor",
+            Language::German => "deu",
         }
     }
 
@@ -1477,12 +1480,15 @@ impl Language {
             Language::English => "en",
             Language::Spanish => "es",
             Language::Korean => "ko",
+            Language::German => "de",
         }
     }
 
     pub fn writing_system(&self) -> WritingSystem {
         match self {
-            Language::French | Language::English | Language::Spanish => WritingSystem::Latin,
+            Language::French | Language::English | Language::Spanish | Language::German => {
+                WritingSystem::Latin
+            }
             Language::Korean => WritingSystem::Hangul,
         }
     }
@@ -1495,6 +1501,7 @@ impl std::fmt::Display for Language {
             Language::English => write!(f, "English"),
             Language::Spanish => write!(f, "Spanish"),
             Language::Korean => write!(f, "Korean"),
+            Language::German => write!(f, "German"),
         }
     }
 }
@@ -1540,6 +1547,10 @@ pub const COURSES: &[Course] = &[
     Course {
         native_language: Language::English,
         target_language: Language::Korean,
+    },
+    Course {
+        native_language: Language::English,
+        target_language: Language::German,
     },
 ];
 

@@ -33,6 +33,7 @@ export function AccentedCharacterKeyboard({
       "æ",
     ])
     .with("Spanish", () => ["á", "é", "í", "ó", "ú", "ü", "ñ", "¿", "¡"])
+    .with("German", () => ["ä", "ö", "ü", "ß", "Ä", "Ö", "Ü"])
     .with("Korean", () => [])
     .with("English", () => [])
     .exhaustive();

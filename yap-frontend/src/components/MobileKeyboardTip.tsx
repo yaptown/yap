@@ -36,6 +36,7 @@ export function MobileKeyboardTip({
   const characterType = match(language)
     .with("French", () => "accented")
     .with("Spanish", () => "accented")
+    .with("German", () => "accented")
     .with("Korean", () => "hangul")
     .with("English", () => null)
     .exhaustive();
