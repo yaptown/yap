@@ -92,6 +92,7 @@ Accounts and cross-device sync uses supabase as a backend. Migrations are in the
 1. neri's frequency lists
 2. wiktionary/[wikipron](https://github.com/CUNY-CL/wikipron/tree/master) for phonetics  
 3. [opensubtitles](http://www.opensubtitles.org/) (downloaded via [opus](https://opus.nlpl.eu/OpenSubtitles/ko&en/v2024/OpenSubtitles))
+4. Tatoeba
 
 ### Libraries
 
