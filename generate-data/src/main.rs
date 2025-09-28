@@ -983,19 +983,19 @@ async fn main() -> anyhow::Result<()> {
 
         // Sort sentences by the frequency of their least common word
         println!("\nSorting sentences by least common word frequency...");
-        
+
         // Create a frequency map for quick lookup
         let frequency_map: BTreeMap<_, _> = frequencies
             .iter()
             .map(|entry| (entry.lexeme.clone(), entry.count))
             .collect();
-        
+
         // Create a map from sentence to its NLP info for quick lookup
         let sentence_to_info: BTreeMap<_, _> = nlp_sentences
             .iter()
             .map(|(sentence, info)| (sentence.clone(), info.clone()))
             .collect();
-        
+
         // Sort target_language_sentences by the frequency of their least common word
         target_language_sentences.sort_by_key(|sentence| {
             // Look up the NLP info for this sentence
