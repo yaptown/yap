@@ -892,7 +892,7 @@ async fn main() -> anyhow::Result<()> {
             .map(|(sentence, _)| sentence.clone())
             .collect();
 
-        let target_language_sentences = target_language_sentences
+        let mut target_language_sentences = target_language_sentences
             .into_iter()
             .filter(|sentence| kept_sentences.contains(sentence))
             .collect::<Vec<_>>();
@@ -980,6 +980,41 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Vec<_>>();
             (pronunciation_to_words, word_to_pronunciation)
         };
+
+        // Sort sentences by the frequency of their least common word
+        println!("\nSorting sentences by least common word frequency...");
+        
+        // Create a frequency map for quick lookup
+        let frequency_map: BTreeMap<_, _> = frequencies
+            .iter()
+            .map(|entry| (entry.lexeme.clone(), entry.count))
+            .collect();
+        
+        // Create a map from sentence to its NLP info for quick lookup
+        let sentence_to_info: BTreeMap<_, _> = nlp_sentences
+            .iter()
+            .map(|(sentence, info)| (sentence.clone(), info.clone()))
+            .collect();
+        
+        // Sort target_language_sentences by the frequency of their least common word
+        target_language_sentences.sort_by_key(|sentence| {
+            // Look up the NLP info for this sentence
+            if let Some(info) = sentence_to_info.get(sentence) {
+                // Find the minimum frequency among all lexemes in the sentence
+                let min_freq = info
+                    .all_lexemes()
+                    .filter_map(|lexeme| frequency_map.get(&lexeme))
+                    .min()
+                    .copied()
+                    .unwrap_or(0);
+                // Return reversed to sort descending (highest frequency first)
+                std::cmp::Reverse(min_freq)
+            } else {
+                // If no NLP info found, put at the end
+                eprintln!("No NLP info found for sentence: {sentence}");
+                std::cmp::Reverse(0)
+            }
+        });
 
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {
