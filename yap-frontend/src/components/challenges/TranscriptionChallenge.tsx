@@ -8,7 +8,7 @@ import {
   type Language,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { Button } from "@/components/ui/button";
-import { Input, InputFieldSizingContent, InputDottedUnderline } from "@/components/ui/input";
+import { InputFieldSizingContent, InputDottedUnderline } from "@/components/ui/input";
 import { AudioButton } from "../AudioButton";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { motion } from "framer-motion";
