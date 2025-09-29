@@ -292,7 +292,9 @@ export function TranscriptionChallenge({
                 index
               )}`}
               style={{
-                width: `${Math.max(8, (userInputs.get(index) || "").length) * 0.75}rem`
+                width: `${
+                  Math.max(8, (userInputs.get(index) || "").length) * 0.75
+                }rem`,
               }}
               placeholder=""
             />
@@ -313,19 +315,37 @@ export function TranscriptionChallenge({
 
   const getInputClassName = (index: number) => {
     if (gradingState && "graded" in gradingState) {
-      const blankPosition = blankIndices.findIndex(
-        (blankIndex) => blankIndex === index
-      );
-      const result = gradingState.graded.results[blankPosition];
+      const result = gradingState.graded.results[index];
 
-      if ("Perfect" in result) {
-        return "border-green-500 bg-green-50 dark:bg-green-950";
-      } else if ("PhoneticallyIdenticalButContextuallyIncorrect" in result) {
-        return "border-yellow-500 bg-yellow-50 dark:bg-yellow-950";
-      } else if ("PhoneticallySimilarButContextuallyIncorrect" in result) {
-        return "border-orange-500 bg-orange-50 dark:bg-orange-950";
-      } else if ("Incorrect" in result) {
-        return "border-red-500 bg-red-50 dark:bg-red-950";
+      if (result && "AskedToTranscribe" in result) {
+        // Check if all words are perfect
+        const allPerfect = result.AskedToTranscribe.parts.every(
+          (part) => "Perfect" in part.grade
+        );
+        // Check for other grades
+        const hasMissed = result.AskedToTranscribe.parts.some(
+          (part) => "Missed" in part.grade
+        );
+        const hasIncorrect = result.AskedToTranscribe.parts.some(
+          (part) => "Incorrect" in part.grade
+        );
+        const hasPhoneticallySimilar = result.AskedToTranscribe.parts.some(
+          (part) => "PhoneticallySimilarButContextuallyIncorrect" in part.grade
+        );
+        const hasPhoneticallyIdentical = result.AskedToTranscribe.parts.some(
+          (part) =>
+            "PhoneticallyIdenticalButContextuallyIncorrect" in part.grade
+        );
+
+        if (allPerfect) {
+          return "border-green-500 bg-green-50 dark:bg-green-950";
+        } else if (hasPhoneticallyIdentical) {
+          return "border-yellow-500 bg-yellow-50 dark:bg-yellow-950";
+        } else if (hasPhoneticallySimilar) {
+          return "border-orange-500 bg-orange-50 dark:bg-orange-950";
+        } else if (hasIncorrect || hasMissed) {
+          return "border-red-500 bg-red-50 dark:bg-red-950";
+        }
       }
     }
     return "border-muted-foreground/30";
@@ -379,13 +399,14 @@ export function TranscriptionChallenge({
             </div>
 
             {/* Result feedback */}
-            {gradingState && "graded" in gradingState && (
+            {gradingState && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
                 className="space-y-2"
               >
+                {/* Show correct answer immediately when grading starts */}
                 <div className="rounded-lg p-4 border bg-green-500/10 border-green-500/20">
                   <p className="text-sm font-medium mb-1 text-green-600 dark:text-green-400">
                     Correct answer:
@@ -395,77 +416,87 @@ export function TranscriptionChallenge({
                   </p>
                 </div>
 
-                {"autograding_error" in gradingState.graded &&
-                  gradingState.graded.autograding_error && <AutogradeError />}
+                {/* Only show these when grading is complete */}
+                {"graded" in gradingState && (
+                  <>
+                    {"autograding_error" in gradingState.graded &&
+                      gradingState.graded.autograding_error && (
+                        <AutogradeError />
+                      )}
 
-                <WordGrades
-                  wordGrades={gradingState.graded.results}
-                  setGrade={(results) => {
-                    setGradingState({
-                      ...gradingState,
-                      graded: { ...gradingState.graded, results: results },
-                    });
-                  }}
-                  open_by_default={
-                    "autograding_error" in gradingState.graded &&
-                    gradingState.graded.autograding_error !== undefined
-                  }
-                />
+                    <WordGrades
+                      wordGrades={gradingState.graded.results}
+                      setGrade={(results) => {
+                        setGradingState({
+                          ...gradingState,
+                          graded: { ...gradingState.graded, results: results },
+                        });
+                      }}
+                      open_by_default={
+                        "autograding_error" in gradingState.graded &&
+                        gradingState.graded.autograding_error !== undefined
+                      }
+                    />
 
-                {gradingState.graded.explanation && (
-                  <div className="rounded-lg p-4 border bg-blue-500/10 border-blue-500/20">
-                    <p className="text-sm font-medium mb-1 text-blue-600 dark:text-blue-400">
-                      Feedback:
-                    </p>
-                    <Markdown>{gradingState.graded.explanation}</Markdown>
-                  </div>
-                )}
-
-                {Array.isArray(gradingState.graded.compare) &&
-                  gradingState.graded.compare.length > 0 && (
-                    <div className="rounded-lg p-4 border">
-                      <div className="flex flex-row items-center gap-3">
-                        <p className="text-sm font-medium">Listen:</p>
-                        <div className="flex flex-row justify-around items-center gap-3">
-                          {gradingState.graded.compare.map((item, idx) => (
-                            <div key={idx} className="flex items-center gap-1">
-                              <span className="font-medium">{item}</span>
-                              <AudioButton
-                                audioRequest={{
-                                  request: {
-                                    text: item,
-                                    language: targetLanguage,
-                                  },
-                                  provider: "Google",
-                                }}
-                                accessToken={accessToken}
-                                size="icon"
-                                variant="ghost"
-                              />
-                            </div>
-                          ))}
-                        </div>
+                    {gradingState.graded.explanation && (
+                      <div className="rounded-lg p-4 border bg-blue-500/10 border-blue-500/20">
+                        <p className="text-sm font-medium mb-1 text-blue-600 dark:text-blue-400">
+                          Feedback:
+                        </p>
+                        <Markdown>{gradingState.graded.explanation}</Markdown>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                <div
-                  className="rounded-lg p-4 border cursor-pointer select-none"
-                  onClick={() =>
-                    setIsTranslationRevealed(!isTranslationRevealed)
-                  }
-                >
-                  <p className="text-sm font-medium mb-1 text-muted-foreground">
-                    English translation (click to reveal):
-                  </p>
-                  <p
-                    className={`text-lg font-medium transition-all duration-100 ${
-                      isTranslationRevealed ? "" : "blur-md"
-                    }`}
-                  >
-                    {challenge.native_language}
-                  </p>
-                </div>
+                    {Array.isArray(gradingState.graded.compare) &&
+                      gradingState.graded.compare.length > 0 && (
+                        <div className="rounded-lg p-4 border">
+                          <div className="flex flex-row items-center gap-3">
+                            <p className="text-sm font-medium">Listen:</p>
+                            <div className="flex flex-row justify-around items-center gap-3">
+                              {gradingState.graded.compare.map((item, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center gap-1"
+                                >
+                                  <span className="font-medium">{item}</span>
+                                  <AudioButton
+                                    audioRequest={{
+                                      request: {
+                                        text: item,
+                                        language: targetLanguage,
+                                      },
+                                      provider: "Google",
+                                    }}
+                                    accessToken={accessToken}
+                                    size="icon"
+                                    variant="ghost"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                    <div
+                      className="rounded-lg p-4 border cursor-pointer select-none"
+                      onClick={() =>
+                        setIsTranslationRevealed(!isTranslationRevealed)
+                      }
+                    >
+                      <p className="text-sm font-medium mb-1 text-muted-foreground">
+                        English translation (click to reveal):
+                      </p>
+                      <p
+                        className={`text-lg font-medium transition-all duration-100 ${
+                          isTranslationRevealed ? "" : "blur-md"
+                        }`}
+                      >
+                        {challenge.native_language}
+                      </p>
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
           </div>
@@ -473,7 +504,9 @@ export function TranscriptionChallenge({
 
         {/* Accented character keyboard - show when not graded, language supports it, and not on small screens */}
         {gradingState === null &&
-          (targetLanguage === "French" || targetLanguage === "Spanish" || targetLanguage === "German") && (
+          (targetLanguage === "French" ||
+            targetLanguage === "Spanish" ||
+            targetLanguage === "German") && (
             <AccentedCharacterKeyboard
               onCharacterInsert={handleCharacterInsert}
               language={targetLanguage}
@@ -576,6 +609,7 @@ function WordGrades({
       label: "Phonetically Similar",
     },
     { value: "Incorrect", label: "Incorrect" },
+    { value: "Missed", label: "Missed" },
   ];
 
   const getGradeKey = (grade: WordGrade): string => {

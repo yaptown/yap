@@ -184,7 +184,8 @@ impl NextCardsIterator<'_> {
             if matches!(status, CardStatus::Tracked(_)) {
                 let card_type = match card {
                     CardIndicator::TargetLanguage { .. } => ChallengeType::Text,
-                    CardIndicator::ListeningHomophonous { .. } => ChallengeType::Listening,
+                    CardIndicator::ListeningHomophonous { .. }
+                    | CardIndicator::ListeningLexeme { .. } => ChallengeType::Listening,
                     CardIndicator::LetterPronunciation { .. } => ChallengeType::Speaking,
                 };
                 if let Some(count) = type_counts.get_mut(&card_type) {

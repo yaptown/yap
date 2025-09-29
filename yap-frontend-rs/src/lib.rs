@@ -907,6 +907,9 @@ pub enum CardIndicator<S> {
     ListeningHomophonous {
         pronunciation: S,
     },
+    ListeningLexeme {
+        lexeme: Lexeme<S>,
+    },
     LetterPronunciation {
         pattern: S,
         position: PatternPosition,
@@ -924,6 +927,13 @@ impl<S> CardIndicator<S> {
     pub fn listening_homophonous(&self) -> Option<&S> {
         match self {
             CardIndicator::ListeningHomophonous { pronunciation } => Some(pronunciation),
+            _ => None,
+        }
+    }
+
+    pub fn listening_lexeme(&self) -> Option<&Lexeme<S>> {
+        match self {
+            CardIndicator::ListeningLexeme { lexeme } => Some(lexeme),
             _ => None,
         }
     }
@@ -947,6 +957,9 @@ impl CardIndicator<String> {
                     pronunciation: rodeo.get(pronunciation)?,
                 }
             }
+            CardIndicator::ListeningLexeme { lexeme } => CardIndicator::ListeningLexeme {
+                lexeme: lexeme.get_interned(rodeo)?,
+            },
             CardIndicator::LetterPronunciation { pattern, position } => {
                 CardIndicator::LetterPronunciation {
                     pattern: rodeo.get(pattern)?,
@@ -968,6 +981,9 @@ impl CardIndicator<Spur> {
                     pronunciation: rodeo.resolve(pronunciation).to_string(),
                 }
             }
+            CardIndicator::ListeningLexeme { lexeme } => CardIndicator::ListeningLexeme {
+                lexeme: lexeme.resolve(rodeo),
+            },
             CardIndicator::LetterPronunciation { pattern, position } => {
                 CardIndicator::LetterPronunciation {
                     pattern: rodeo.resolve(pattern).to_string(),
@@ -1370,6 +1386,13 @@ impl weapon::PartialAppState for Deck {
             }
             LanguageEventContent::TranscriptionChallenge { challenge } => {
                 let mut perfect = true;
+
+                // Check if this is a full sentence transcription
+                // (no Provided parts with heteronyms - only punctuation is provided)
+                let is_full_sentence_transcription = !challenge.iter().any(|part| {
+                    matches!(part, transcription_challenge::PartGraded::Provided { part } if part.heteronym.is_some())
+                });
+
                 // Process each part of the transcription challenge
                 for part in challenge {
                     match part {
@@ -1389,8 +1412,11 @@ impl weapon::PartialAppState for Deck {
                                         .word_to_pronunciation
                                         .get(&heteronym.word)
                                         .unwrap();
-                                    let card =
+                                    let listening_homophonous_card =
                                         CardIndicator::ListeningHomophonous { pronunciation };
+                                    let listening_lexeme_card = CardIndicator::ListeningLexeme {
+                                        lexeme: Lexeme::Heteronym(heteronym),
+                                    };
 
                                     // Map the grade to a FSRS rating
                                     let rating = match &graded_part.grade {
@@ -1412,7 +1438,26 @@ impl weapon::PartialAppState for Deck {
                                         perfect = false;
                                     }
 
-                                    deck.log_review(card, rating, *timestamp);
+                                    // Always log review for ListeningHomophonous card
+                                    deck.log_review(listening_homophonous_card, rating, *timestamp);
+
+                                    if rating == Rating::Remembered {
+                                        if let std::collections::hash_map::Entry::Vacant(e) =
+                                            deck.cards.entry(listening_lexeme_card)
+                                        {
+                                            // Add the card as a new card
+                                            let mut fsrs_card = rs_fsrs::Card::new(*timestamp);
+                                            fsrs_card.due = *timestamp;
+                                            e.insert(CardData::Added { fsrs_card });
+                                        }
+                                    }
+
+                                    // For full sentence transcriptions with successful transcription,
+                                    // add or review the ListeningLexeme card
+                                    if is_full_sentence_transcription {
+                                        // Log a review for the existing card
+                                        deck.log_review(listening_lexeme_card, rating, *timestamp);
+                                    }
                                 }
                             }
                         }
@@ -1421,6 +1466,7 @@ impl weapon::PartialAppState for Deck {
                         }
                     }
                 }
+
                 if perfect {
                     let challenge_sentence = challenge
                         .iter()
@@ -1482,13 +1528,11 @@ impl weapon::PartialAppState for Deck {
                     CardIndicator::TargetLanguage { .. } => {
                         target_language_points.push(point);
                     }
-                    CardIndicator::ListeningHomophonous { .. } => {
+                    CardIndicator::ListeningHomophonous { .. }
+                    | CardIndicator::ListeningLexeme { .. } => {
                         listening_points.push(point);
                     }
-                    CardIndicator::LetterPronunciation { .. } => {
-                        // For pronunciation patterns, include them with target language cards
-                        target_language_points.push(point);
-                    }
+                    CardIndicator::LetterPronunciation { .. } => {}
                 }
             }
         }
@@ -1559,6 +1603,20 @@ impl weapon::PartialAppState for Deck {
                     }),
             )
             .chain(
+                // Add ListeningLexeme cards for all words
+                state
+                    .context
+                    .language_pack
+                    .word_frequencies
+                    .keys()
+                    .map(|lexeme| {
+                        (
+                            CardIndicator::ListeningLexeme { lexeme: *lexeme },
+                            CardStatus::Unadded(Unadded {}),
+                        )
+                    }),
+            )
+            .chain(
                 // Add pronunciation pattern cards
                 state
                     .context
@@ -1590,6 +1648,8 @@ impl weapon::PartialAppState for Deck {
         for (indicator, card_data) in added_cards {
             if let Some(status) = all_cards.get_mut(&indicator) {
                 *status = CardStatus::Tracked(card_data);
+            } else {
+                log::error!("Card {indicator:?} not found in all_cards");
             }
         }
 
@@ -1768,7 +1828,10 @@ impl Deck {
                         CardIndicator::TargetLanguage { .. } if no_text_cards => {
                             due_but_banned_cards.push(*card);
                         }
-                        CardIndicator::ListeningHomophonous { .. } if no_listening_cards => {
+                        CardIndicator::ListeningHomophonous { .. }
+                        | CardIndicator::ListeningLexeme { .. }
+                            if no_listening_cards =>
+                        {
                             due_but_banned_cards.push(*card);
                         }
                         CardIndicator::LetterPronunciation { .. } if no_speaking_cards => {
@@ -1776,6 +1839,7 @@ impl Deck {
                         }
                         CardIndicator::TargetLanguage { .. }
                         | CardIndicator::ListeningHomophonous { .. }
+                        | CardIndicator::ListeningLexeme { .. }
                         | CardIndicator::LetterPronunciation { .. } => due_cards.push(*card),
                     }
                 } else {
@@ -1915,6 +1979,7 @@ impl Deck {
             .filter_map(|(card_indicator, card_status)| match card_indicator {
                 CardIndicator::TargetLanguage { lexeme } => Some((lexeme, card_status)),
                 CardIndicator::ListeningHomophonous { .. } => None,
+                CardIndicator::ListeningLexeme { .. } => None,
                 CardIndicator::LetterPronunciation { .. } => None,
             })
             .filter_map(|(lexeme, card_status)| {
@@ -2420,6 +2485,34 @@ impl Deck {
                         possible_words,
                     }
                 }
+                CardIndicator::ListeningLexeme { lexeme } => {
+                    // For ListeningLexeme, we create a listening card content similar to homophonous
+                    // but specifically for the lexeme
+                    match lexeme {
+                        Lexeme::Heteronym(heteronym) => {
+                            // Get the pronunciation from the pronunciation map if available
+                            let pronunciation = self
+                                .context
+                                .language_pack
+                                .word_to_pronunciation
+                                .get(&heteronym.word)
+                                .cloned()
+                                .unwrap_or(heteronym.word);
+
+                            CardContent::Listening {
+                                pronunciation,
+                                possible_words: vec![(true, heteronym.word)],
+                            }
+                        }
+                        Lexeme::Multiword(word) => {
+                            // For multiword, just use the word itself as pronunciation
+                            CardContent::Listening {
+                                pronunciation: word,
+                                possible_words: vec![(true, word)],
+                            }
+                        }
+                    }
+                }
                 CardIndicator::LetterPronunciation { pattern, position } => {
                     let pattern_str = self.context.language_pack.rodeo.resolve(&pattern);
                     let Some(guide) = self
@@ -2459,40 +2552,31 @@ impl Deck {
 
     fn get_comprehensible_sentence_containing(
         &self,
-        required_lexeme: &Lexeme<Spur>,
+        required_lexeme: Option<&Lexeme<Spur>>,
+        mut comprehensible_words: BTreeSet<Lexeme<Spur>>,
         sentences_reviewed: &BTreeMap<Spur, u32>,
         language_pack: &LanguagePack,
     ) -> Option<ComprehensibleSentence> {
-        // Get all words that are in "review" state or the target word
-        let mut comprehensible_words: BTreeSet<Lexeme<Spur>> = self
-            .cards
-            .iter()
-            .filter_map(|(card_indicator, card_status)| match card_indicator {
-                CardIndicator::TargetLanguage { lexeme } => {
-                    Some((card_indicator, *lexeme, card_status))
-                }
-                CardIndicator::ListeningHomophonous { .. } => None,
-                CardIndicator::LetterPronunciation { .. } => None,
-            })
-            .filter(|(card_indicator, _lexeme, card_status)| {
-                self.context
-                    .is_comprehensible(card_indicator, card_status, &self.regressions)
-            })
-            .map(|(_card_indicator, lexeme, _card_status)| lexeme)
-            .collect();
+        // Add the target word to comprehensible words if provided
+        if let Some(required_lexeme) = required_lexeme {
+            comprehensible_words.insert(*required_lexeme);
+        }
 
-        // Add the target word to comprehensible words
-        comprehensible_words.insert(*required_lexeme);
-
-        // Search through all sentences
-        let candidate_sentences = language_pack
-            .sentences_containing_lexeme_index
-            .get(required_lexeme)?;
+        // Search through all sentences - if we have a required lexeme, only look at sentences containing it
+        let candidate_sentences: Vec<Spur> = if let Some(required_lexeme) = required_lexeme {
+            language_pack
+                .sentences_containing_lexeme_index
+                .get(required_lexeme)?
+                .clone()
+        } else {
+            // If no required lexeme, consider all sentences
+            language_pack.translations.keys().cloned().collect()
+        };
 
         let mut possible_sentences = Vec::new();
 
         // Warning: this loop is HOT!
-        'checkSentences: for sentence in candidate_sentences {
+        'checkSentences: for sentence in &candidate_sentences {
             let Some(lexemes) = language_pack.sentences_to_all_lexemes.get(sentence) else {
                 continue;
             };
@@ -2569,6 +2653,10 @@ impl Context {
                 .language_pack
                 .pronunciation_to_words
                 .contains_key(pronunciation),
+            CardIndicator::ListeningLexeme { lexeme } => {
+                // Check if lexeme exists in word_frequencies (which guarantees it has a definition)
+                self.language_pack.word_frequencies.contains_key(lexeme)
+            }
             CardIndicator::LetterPronunciation { pattern, position } => self
                 .language_pack
                 .pattern_frequency_map
@@ -2719,6 +2807,10 @@ impl Context {
                 self.language_pack
                     .pronunciation_max_frequency(pronunciation)
             }
+            CardIndicator::ListeningLexeme { lexeme } => {
+                // For listening lexeme cards, use the same frequency as the target language card
+                self.language_pack.word_frequencies.get(lexeme).copied()
+            }
             CardIndicator::LetterPronunciation { pattern, position } => {
                 // Look up the actual frequency of this pattern from our calculated data
                 let count = self
@@ -2743,7 +2835,9 @@ impl Regressions {
     ) -> Option<f64> {
         let regression = match card {
             CardIndicator::TargetLanguage { .. } => self.target_language_regression.as_ref(),
-            CardIndicator::ListeningHomophonous { .. } => self.listening_regression.as_ref(),
+            CardIndicator::ListeningHomophonous { .. } | CardIndicator::ListeningLexeme { .. } => {
+                self.listening_regression.as_ref()
+            }
             CardIndicator::LetterPronunciation { .. } => {
                 // For pronunciation patterns, we don't use regression
                 // Instead we use the LLM's familiarity assessment in predict_card_knowledge_probability
@@ -3012,6 +3106,56 @@ pub enum ChallengeType {
 }
 
 impl ReviewInfo {
+    /// Get the set of comprehensible lexemes (words that are known/in review state)
+    fn get_comprehensible_written_lexemes(&self, deck: &Deck) -> BTreeSet<Lexeme<Spur>> {
+        deck.cards
+            .iter()
+            .filter_map(|(card_indicator, card_status)| match card_indicator {
+                CardIndicator::TargetLanguage { lexeme } => {
+                    Some((card_indicator, *lexeme, card_status))
+                }
+                _ => None,
+            })
+            .filter(|(card_indicator, _lexeme, card_status)| {
+                deck.context
+                    .is_comprehensible(card_indicator, card_status, &deck.regressions)
+            })
+            .map(|(_card_indicator, lexeme, _card_status)| lexeme)
+            .collect()
+    }
+
+    /// Find a sentence where all lexemes have ListeningLexeme cards
+    fn find_listening_lexeme_sentence(
+        &self,
+        required_lexeme: &Lexeme<Spur>,
+        deck: &Deck,
+    ) -> Option<ComprehensibleSentence> {
+        let language_pack = &deck.context.language_pack;
+        // Get all lexemes that have ListeningLexeme cards
+        let listening_lexeme_set: BTreeSet<Lexeme<Spur>> = deck
+            .cards
+            .keys()
+            .filter_map(|card| match card {
+                CardIndicator::ListeningLexeme { lexeme } => Some(*lexeme),
+                _ => None,
+            })
+            .collect();
+
+        // If no ListeningLexeme cards exist, return None
+        if listening_lexeme_set.is_empty() {
+            return None;
+        }
+
+        // Use the refactored function to find a sentence containing the required lexeme
+        // where all lexemes are in the ListeningLexeme set
+        deck.get_comprehensible_sentence_containing(
+            Some(required_lexeme), // Pass the specific lexeme we're testing
+            listening_lexeme_set,
+            &deck.stats.sentences_reviewed,
+            language_pack,
+        )
+    }
+
     pub fn get_challenge_for_card(
         &self,
         deck: &Deck,
@@ -3079,8 +3223,62 @@ impl ReviewInfo {
             listening_prefix: listening_prefix.clone(),
         };
 
-        let challenge: Challenge<Spur> = if card.fsrs_card.state == rs_fsrs::State::New {
+        let challenge: Challenge<Spur> = if card.fsrs_card.state == rs_fsrs::State::New
+            && !matches!(card_indicator, CardIndicator::ListeningLexeme { .. })
+        {
             flashcard
+        } else if let CardIndicator::ListeningLexeme { lexeme } = card_indicator {
+            // For ListeningLexeme cards, find a sentence containing this specific lexeme
+            if let Some(sentence) = self.find_listening_lexeme_sentence(&lexeme, deck) {
+                // Create a transcription challenge where only words are transcribed, punctuation is provided
+                // Group consecutive words together and consecutive punctuation together
+                let mut parts: Vec<transcription_challenge::Part> = Vec::new();
+                let mut current_words: Vec<language_utils::Literal<String>> = Vec::new();
+
+                for literal in &sentence.target_language_literals {
+                    let resolved = literal.resolve(&language_pack.rodeo);
+
+                    if resolved.heteronym.is_some() {
+                        // This is a word - add to current words group
+                        current_words.push(resolved);
+                    } else {
+                        // This is punctuation - flush any accumulated words first
+                        if !current_words.is_empty() {
+                            parts.push(transcription_challenge::Part::AskedToTranscribe {
+                                parts: current_words.clone(),
+                            });
+                            current_words.clear();
+                        }
+                        // Add the punctuation as provided
+                        parts.push(transcription_challenge::Part::Provided { part: resolved });
+                    }
+                }
+
+                // Flush any remaining words
+                if !current_words.is_empty() {
+                    parts.push(transcription_challenge::Part::AskedToTranscribe {
+                        parts: current_words,
+                    });
+                }
+
+                Challenge::TranscribeComprehensibleSentence(TranscribeComprehensibleSentence {
+                    target_language: sentence.target_language,
+                    native_language: *sentence.native_languages.first().unwrap(),
+                    parts,
+                    audio: AudioRequest {
+                        request: TtsRequest {
+                            text: language_pack
+                                .rodeo
+                                .resolve(&sentence.target_language)
+                                .to_string(),
+                            language: deck.context.target_language,
+                        },
+                        provider: TtsProvider::ElevenLabs,
+                    },
+                })
+            } else {
+                flashcard
+            }
         } else if let Some(pronunciation) = card.content.pronunciation() {
             let mut heteronyms = language_pack
                 .pronunciation_to_words
@@ -3103,8 +3301,10 @@ impl ReviewInfo {
             if let Some((target_heteronym, sentence)) = heteronyms
                 .iter()
                 .filter_map(|heteronym| {
+                    let comprehensible_lexemes = self.get_comprehensible_written_lexemes(deck);
                     let sentence = deck.get_comprehensible_sentence_containing(
-                        &Lexeme::Heteronym(*heteronym),
+                        Some(&Lexeme::Heteronym(*heteronym)),
+                        comprehensible_lexemes,
                         &deck.stats.sentences_reviewed,
                         language_pack,
                     )?;
@@ -3153,11 +3353,15 @@ impl ReviewInfo {
                 target_language_literals,
                 unique_target_language_lexemes,
                 native_languages,
-            }) = deck.get_comprehensible_sentence_containing(
-                &lexeme,
-                &deck.stats.sentences_reviewed,
-                language_pack,
-            ) {
+            }) = {
+                let comprehensible_lexemes = self.get_comprehensible_written_lexemes(deck);
+                deck.get_comprehensible_sentence_containing(
+                    Some(&lexeme),
+                    comprehensible_lexemes,
+                    &deck.stats.sentences_reviewed,
+                    language_pack,
+                )
+            } {
                 let unique_target_language_lexeme_definitions = unique_target_language_lexemes
                     .iter()
                     .map(|lexeme| {
