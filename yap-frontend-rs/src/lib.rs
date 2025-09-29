@@ -1406,57 +1406,67 @@ impl weapon::PartialAppState for Deck {
                                     && let Some(heteronym) =
                                         heteronym.get_interned(&deck.context.language_pack.rodeo)
                                 {
-                                    let pronunciation = *deck
+                                    if let Some(&pronunciation) = deck
                                         .context
                                         .language_pack
                                         .word_to_pronunciation
                                         .get(&heteronym.word)
-                                        .unwrap();
-                                    let listening_homophonous_card =
-                                        CardIndicator::ListeningHomophonous { pronunciation };
-                                    let listening_lexeme_card = CardIndicator::ListeningLexeme {
-                                        lexeme: Lexeme::Heteronym(heteronym),
-                                    };
+                                    {
+                                        let listening_homophonous_card =
+                                            CardIndicator::ListeningHomophonous { pronunciation };
+                                        let listening_lexeme_card =
+                                            CardIndicator::ListeningLexeme {
+                                                lexeme: Lexeme::Heteronym(heteronym),
+                                            };
 
-                                    // Map the grade to a FSRS rating
-                                    let rating = match &graded_part.grade {
-                                        transcription_challenge::WordGrade::Perfect {} => Rating::Remembered,
-                                        transcription_challenge::WordGrade::CorrectWithTypo {} => Rating::Remembered,
-                                        transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect {} => Rating::Hard,
-                                        transcription_challenge::WordGrade::PhoneticallySimilarButContextuallyIncorrect {} => Rating::Again,
-                                        transcription_challenge::WordGrade::Incorrect {} => Rating::Again,
-                                        transcription_challenge::WordGrade::Missed {} => Rating::Again,
-                                    };
+                                        // Map the grade to a FSRS rating
+                                        let rating = match &graded_part.grade {
+                                            transcription_challenge::WordGrade::Perfect {} => Rating::Remembered,
+                                            transcription_challenge::WordGrade::CorrectWithTypo {} => Rating::Remembered,
+                                            transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect {} => Rating::Hard,
+                                            transcription_challenge::WordGrade::PhoneticallySimilarButContextuallyIncorrect {} => Rating::Again,
+                                            transcription_challenge::WordGrade::Incorrect {} => Rating::Again,
+                                            transcription_challenge::WordGrade::Missed {} => Rating::Again,
+                                        };
 
-                                    if rating != Rating::Again {
-                                        *deck
-                                            .stats
-                                            .words_listened_to
-                                            .entry(heteronym)
-                                            .or_insert(0) += 1;
-                                    } else {
-                                        perfect = false;
-                                    }
-
-                                    // Always log review for ListeningHomophonous card
-                                    deck.log_review(listening_homophonous_card, rating, *timestamp);
-
-                                    if rating == Rating::Remembered {
-                                        if let std::collections::hash_map::Entry::Vacant(e) =
-                                            deck.cards.entry(listening_lexeme_card)
-                                        {
-                                            // Add the card as a new card
-                                            let mut fsrs_card = rs_fsrs::Card::new(*timestamp);
-                                            fsrs_card.due = *timestamp;
-                                            e.insert(CardData::Added { fsrs_card });
+                                        if rating != Rating::Again {
+                                            *deck
+                                                .stats
+                                                .words_listened_to
+                                                .entry(heteronym)
+                                                .or_insert(0) += 1;
+                                        } else {
+                                            perfect = false;
                                         }
-                                    }
 
-                                    // For full sentence transcriptions with successful transcription,
-                                    // add or review the ListeningLexeme card
-                                    if is_full_sentence_transcription {
-                                        // Log a review for the existing card
-                                        deck.log_review(listening_lexeme_card, rating, *timestamp);
+                                        // Always log review for ListeningHomophonous card
+                                        deck.log_review(
+                                            listening_homophonous_card,
+                                            rating,
+                                            *timestamp,
+                                        );
+
+                                        if rating == Rating::Remembered {
+                                            if let std::collections::hash_map::Entry::Vacant(e) =
+                                                deck.cards.entry(listening_lexeme_card)
+                                            {
+                                                // Add the card as a new card
+                                                let mut fsrs_card = rs_fsrs::Card::new(*timestamp);
+                                                fsrs_card.due = *timestamp;
+                                                e.insert(CardData::Added { fsrs_card });
+                                            }
+                                        }
+
+                                        // For full sentence transcriptions with successful transcription,
+                                        // add or review the ListeningLexeme card
+                                        if is_full_sentence_transcription {
+                                            // Log a review for the existing card
+                                            deck.log_review(
+                                                listening_lexeme_card,
+                                                rating,
+                                                *timestamp,
+                                            );
+                                        }
                                     }
                                 }
                             }

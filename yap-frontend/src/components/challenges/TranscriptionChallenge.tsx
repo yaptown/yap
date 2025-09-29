@@ -8,7 +8,7 @@ import {
   type Language,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, InputFieldSizingContent, InputDottedUnderline } from "@/components/ui/input";
 import { AudioButton } from "../AudioButton";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { motion } from "framer-motion";
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { ReportIssueModal } from "./ReportIssueModal";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence<string>;
@@ -64,6 +65,23 @@ function AutogradeError() {
         words manually below.
       </p>
     </div>
+  );
+}
+
+function FeedbackSkeleton() {
+  return (
+    <motion.div
+      className="space-y-4"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+    </motion.div>
   );
 }
 
@@ -264,6 +282,12 @@ export function TranscriptionChallenge({
   ]);
 
   const renderSentenceWithBlanks = () => {
+    // Check if it's a single AskedToTranscribe part (full sentence transcription)
+    const askedToTranscribeParts = challenge.parts.filter(part => "AskedToTranscribe" in part);
+    const isSinglePartTranscription = askedToTranscribeParts.length === 1 && challenge.parts.every(part => 
+      "AskedToTranscribe" in part || ("Provided" in part && !part.Provided.part.heteronym)
+    );
+
     return challenge.parts.map((item, index) => {
       if ("AskedToTranscribe" in item) {
         const asked_to_transcribe = item.AskedToTranscribe;
@@ -273,9 +297,13 @@ export function TranscriptionChallenge({
         const end_whitespace =
           asked_to_transcribe.parts[asked_to_transcribe.parts.length - 1]
             .whitespace;
+        
+        // Use dotted underline for single-part transcriptions, regular input otherwise
+        const InputComponent = isSinglePartTranscription ? InputDottedUnderline : InputFieldSizingContent;
+        
         return (
-          <span key={index}>
-            <Input
+          <span key={index} className="w-full">
+            <InputComponent
               ref={(el) => {
                 inputRefs.current[index] = el;
               }}
@@ -288,15 +316,10 @@ export function TranscriptionChallenge({
                 // The accent keyboard will refocus when clicked
               }}
               disabled={gradingState !== null}
-              className={`inline-block min-w-32 mx-1 text-center text-2xl font-semibold ${getInputClassName(
+              className={`inline-block ${isSinglePartTranscription ? 'min-w-64' : 'min-w-32'} mx-1 text-center text-2xl font-semibold ${getInputClassName(
                 index
               )}`}
-              style={{
-                width: `${
-                  Math.max(8, (userInputs.get(index) || "").length) * 0.75
-                }rem`,
-              }}
-              placeholder=""
+              placeholder="Write what you hear"
             />
             <span>{end_whitespace}</span>
           </span>
@@ -415,6 +438,9 @@ export function TranscriptionChallenge({
                     {challenge.target_language}
                   </p>
                 </div>
+
+                {/* Show skeleton while grading */}
+                {"grading" in gradingState && <FeedbackSkeleton />}
 
                 {/* Only show these when grading is complete */}
                 {"graded" in gradingState && (
