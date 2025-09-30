@@ -103,6 +103,7 @@ export function Stats({ deck }: StatsProps) {
             {visibleCards.map((card, index) => {
               let shortDescription = "";
               let pos = "";
+              const tags: string[] = [];
 
               if ("TargetLanguage" in card.card_indicator) {
                 if ("Heteronym" in card.card_indicator.TargetLanguage.lexeme) {
@@ -115,6 +116,15 @@ export function Stats({ deck }: StatsProps) {
                 }
               } else if ("ListeningHomophonous" in card.card_indicator) {
                 shortDescription = `/${card.card_indicator.ListeningHomophonous.pronunciation}/`;
+              } else if ("ListeningLexeme" in card.card_indicator) {
+                if ("Heteronym" in card.card_indicator.ListeningLexeme.lexeme) {
+                  shortDescription =
+                    card.card_indicator.ListeningLexeme.lexeme.Heteronym.word;
+                } else {
+                  shortDescription =
+                    card.card_indicator.ListeningLexeme.lexeme.Multiword;
+                }
+                tags.push("listening");
               } else if ("LetterPronunciation" in card.card_indicator) {
                 shortDescription = `[${card.card_indicator.LetterPronunciation.pattern}]`;
               }
@@ -127,11 +137,16 @@ export function Stats({ deck }: StatsProps) {
                 >
                   <td className="p-3 font-medium">
                     {shortDescription}
-                    {pos && (
-                      <span className="ml-2 text-muted-foreground text-sm">
-                        ({pos.toLowerCase()})
-                      </span>
-                    )}
+                    {[pos && pos.toLowerCase(), ...tags]
+                      .filter(Boolean)
+                      .map((tag, idx) => (
+                        <span
+                          key={`${shortDescription}-${tag}-${idx}`}
+                          className="ml-2 text-muted-foreground text-sm"
+                        >
+                          ({tag})
+                        </span>
+                      ))}
                   </td>
                   <td className="p-3">
                     <Badge variant="outline">{card.state}</Badge>
