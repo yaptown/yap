@@ -48,6 +48,22 @@ export function Stats({ deck }: StatsProps) {
   const [nextBatchSize, setNextBatchSize] = useState(10);
   const visibleCards = [...readyCards, ...notReadyCards.slice(0, visibleCount)];
 
+  const [revealedListeningCards, setRevealedListeningCards] = useState<
+    Set<string>
+  >(() => new Set());
+
+  const handleRevealListeningCard = (key: string) => {
+    setRevealedListeningCards((prev) => {
+      if (prev.has(key)) {
+        return prev;
+      }
+
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  };
+
   const [isGraphsOpen, setIsGraphsOpen] = useState(false);
 
   return (
@@ -105,6 +121,10 @@ export function Stats({ deck }: StatsProps) {
               let pos = "";
               const tags: string[] = [];
 
+              const isListeningLexeme =
+                "ListeningLexeme" in card.card_indicator;
+              let listeningCardKey: string | null = null;
+
               if ("TargetLanguage" in card.card_indicator) {
                 if ("Heteronym" in card.card_indicator.TargetLanguage.lexeme) {
                   shortDescription =
@@ -116,7 +136,7 @@ export function Stats({ deck }: StatsProps) {
                 }
               } else if ("ListeningHomophonous" in card.card_indicator) {
                 shortDescription = `/${card.card_indicator.ListeningHomophonous.pronunciation}/`;
-              } else if ("ListeningLexeme" in card.card_indicator) {
+              } else if (isListeningLexeme) {
                 if ("Heteronym" in card.card_indicator.ListeningLexeme.lexeme) {
                   shortDescription =
                     card.card_indicator.ListeningLexeme.lexeme.Heteronym.word;
@@ -125,18 +145,45 @@ export function Stats({ deck }: StatsProps) {
                     card.card_indicator.ListeningLexeme.lexeme.Multiword;
                 }
                 tags.push("listening");
+                listeningCardKey = JSON.stringify(card.card_indicator);
               } else if ("LetterPronunciation" in card.card_indicator) {
                 shortDescription = `[${card.card_indicator.LetterPronunciation.pattern}]`;
               }
 
               const isReady = card.due_timestamp_ms <= currentTimestamp;
+              const isListeningCardRevealed = listeningCardKey
+                ? revealedListeningCards.has(listeningCardKey)
+                : false;
+
+              const wordCellContent = isListeningLexeme ? (
+                isListeningCardRevealed ? (
+                  shortDescription
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      listeningCardKey &&
+                      handleRevealListeningCard(listeningCardKey)
+                    }
+                    className="inline-flex items-center gap-2 rounded-sm bg-transparent p-0 text-left text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                    aria-label="Reveal listening lexeme"
+                  >
+                    <span className="select-none blur-sm">{shortDescription}</span>
+                    <span className="text-xs italic text-muted-foreground">
+                      Tap to reveal
+                    </span>
+                  </button>
+                )
+              ) : (
+                shortDescription
+              );
               return (
                 <tr
                   key={index}
                   className={`border-b ${isReady ? "bg-green-500/10" : ""}`}
                 >
                   <td className="p-3 font-medium">
-                    {shortDescription}
+                    {wordCellContent}
                     {[pos && pos.toLowerCase(), ...tags]
                       .filter(Boolean)
                       .map((tag, idx) => (
