@@ -1000,19 +1000,24 @@ async fn main() -> anyhow::Result<()> {
         target_language_sentences.sort_by_key(|sentence| {
             // Look up the NLP info for this sentence
             if let Some(info) = sentence_to_info.get(sentence) {
-                // Find the minimum frequency among all lexemes in the sentence
-                let min_freq = info
+                // Find the three least common lexeme frequencies in the sentence
+                let mut frequencies: Vec<_> = info
                     .all_lexemes()
-                    .filter_map(|lexeme| frequency_map.get(&lexeme))
-                    .min()
-                    .copied()
-                    .unwrap_or(0);
+                    .filter_map(|lexeme| frequency_map.get(&lexeme).copied())
+                    .collect();
+                frequencies.sort_unstable();
+
+                let mut frequency_iter = frequencies.into_iter();
+                let least_common = frequency_iter.next().unwrap_or(0);
+                let second_least_common = frequency_iter.next().unwrap_or(0);
+                let third_least_common = frequency_iter.next().unwrap_or(0);
+
                 // Return reversed to sort descending (highest frequency first)
-                std::cmp::Reverse(min_freq)
+                std::cmp::Reverse((least_common, second_least_common, third_least_common))
             } else {
                 // If no NLP info found, put at the end
                 eprintln!("No NLP info found for sentence: {sentence}");
-                std::cmp::Reverse(0)
+                std::cmp::Reverse((0, 0, 0))
             }
         });
 
