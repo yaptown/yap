@@ -20,7 +20,7 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_cache_directory("./.cache")
 });
 
-const SENTENCES_TO_ANALYZE: usize = 400;
+const SENTENCES_TO_ANALYZE: usize = 500;
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct SentenceQualityResponse {
@@ -256,7 +256,7 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
         .map(|(i, (sentence, language, multiword_terms))| async move {
             if i % 100 == 0 {
                 println!(
-                    "Progress: {i}/{total_count} $({cost:.2})",
+                    "Progress: {i}/{total_count} (${cost:.2})",
                     cost = CHAT_CLIENT.cost().unwrap()
                 );
             }

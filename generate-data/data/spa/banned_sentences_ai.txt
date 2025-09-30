@@ -71,3 +71,20 @@
 {"sentence":"Qué quieres?","issues":["Missing opening inverted question mark (¿) for Spanish questions"],"corrected_sentence":"¿Qué quieres?"}
 {"sentence":"Qué gusto.","issues":["Missing opening/closing exclamation marks in Spanish punctuation"],"corrected_sentence":"¡Qué gusto!"}
 {"sentence":"Qué mujer.","issues":["Missing initial and final exclamation marks for an exclamative sentence in Spanish","Ends with a period instead of exclamation marks"],"corrected_sentence":"¡Qué mujer!"}
+{"sentence":"Alguien más?","issues":["Missing opening inverted question mark (¿) in Spanish"],"corrected_sentence":"¿Alguien más?"}
+{"sentence":"O algo.","issues":["Elliptical fragment that depends on prior context","Potentially confusing as a standalone example for learners"],"corrected_sentence":null}
+{"sentence":"Y después?","issues":["Missing opening inverted question mark (¿) for a question in Spanish"],"corrected_sentence":"¿Y después?"}
+{"sentence":"Última vez.","issues":["Fragment without verb","Missing article “La” before “última vez” in typical usage","Ambiguous/unclear without context; reads like a heading"],"corrected_sentence":null}
+{"sentence":"Cada noche.","issues":["Sentence fragment (no verb/subject)","Not a complete proposition; needs context to stand alone"],"corrected_sentence":null}
+{"sentence":"Hace bien.","issues":["Elliptical/omits expected object or complement","Ambiguous subject (he/she/it/usted)","Potentially confusing meaning without context"],"corrected_sentence":null}
+{"sentence":"Qué hizo?","issues":["Missing opening inverted question mark '¿'"],"corrected_sentence":"¿Qué hizo?"}
+{"sentence":"Venir aquí.","issues":["Uses infinitive instead of imperative for a command","Functions as a fragment (no finite verb/subject)","Potentially confusing for learners regarding correct imperative forms"],"corrected_sentence":null}
+{"sentence":"Qué listo.","issues":["Missing opening and closing exclamation marks for an exclamative sentence"],"corrected_sentence":"¡Qué listo!"}
+{"sentence":"No para mí, gracias.","issues":["Unnatural/unidiomatic word order ('No para mí')","If 'No' is an interjection, a comma after 'No' is expected","Potentially confusing for learners; standard is 'Para mí no, gracias.'"],"corrected_sentence":null}
+{"sentence":"Qué dijo?","issues":["Missing initial inverted question mark (¿) required in Spanish questions"],"corrected_sentence":"¿Qué dijo?"}
+{"sentence":"Qué placer.","issues":["Missing inverted opening exclamation mark","Should end with an exclamation mark instead of a period"],"corrected_sentence":"¡Qué placer!"}
+{"sentence":"Qué hiciste?","issues":["Missing initial inverted question mark (¿)"],"corrected_sentence":"¿Qué hiciste?"}
+{"sentence":"Dónde voy?","issues":["Missing opening question mark (¿) required in Spanish questions","With the motion verb 'ir', 'adónde' is the more precise form than 'dónde'"],"corrected_sentence":"¿Dónde voy?"}
+{"sentence":"Por dónde?","issues":["Missing initial inverted question mark (¿)"],"corrected_sentence":"¿Por dónde?"}
+{"sentence":"Chico listo.","issues":["Missing article/determiner before the noun","Sentence fragment (not a full sentence)","Potentially confusing for learners due to article omission"],"corrected_sentence":null}
+{"sentence":"Buena noches.","issues":["Adjective–noun agreement error: should be feminine plural to match ‘noches’.","Standard greeting is “Buenas noches.”"],"corrected_sentence":null}

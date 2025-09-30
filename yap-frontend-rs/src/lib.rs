@@ -1393,86 +1393,92 @@ impl weapon::PartialAppState for Deck {
                     matches!(part, transcription_challenge::PartGraded::Provided { part } if part.heteronym.is_some())
                 });
 
-                // Process each part of the transcription challenge
+                // First pass: collect worst grade for each heteronym (word with its specific meaning)
+                // Using HashMap to track worst grade per heteronym
+                let mut worst_grades: std::collections::HashMap<
+                    Heteronym<lasso::Spur>,
+                    transcription_challenge::WordGrade,
+                > = std::collections::HashMap::new();
+
                 for part in challenge {
-                    match part {
-                        transcription_challenge::PartGraded::AskedToTranscribe {
-                            parts, ..
-                        } => {
-                            // Grade each word that was transcribed
-                            for graded_part in parts {
-                                // Only process words that have heteronyms (actual vocabulary)
-                                if let Some(heteronym) = &graded_part.heard.heteronym
-                                    && let Some(heteronym) =
-                                        heteronym.get_interned(&deck.context.language_pack.rodeo)
-                                {
-                                    if let Some(&pronunciation) = deck
-                                        .context
-                                        .language_pack
-                                        .word_to_pronunciation
-                                        .get(&heteronym.word)
-                                    {
-                                        let listening_homophonous_card =
-                                            CardIndicator::ListeningHomophonous { pronunciation };
-                                        let listening_lexeme_card =
-                                            CardIndicator::ListeningLexeme {
-                                                lexeme: Lexeme::Heteronym(heteronym),
-                                            };
-
-                                        // Map the grade to a FSRS rating
-                                        let rating = match &graded_part.grade {
-                                            transcription_challenge::WordGrade::Perfect {} => Rating::Remembered,
-                                            transcription_challenge::WordGrade::CorrectWithTypo {} => Rating::Remembered,
-                                            transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect {} => Rating::Hard,
-                                            transcription_challenge::WordGrade::PhoneticallySimilarButContextuallyIncorrect {} => Rating::Again,
-                                            transcription_challenge::WordGrade::Incorrect {} => Rating::Again,
-                                            transcription_challenge::WordGrade::Missed {} => Rating::Again,
-                                        };
-
-                                        if rating != Rating::Again {
-                                            *deck
-                                                .stats
-                                                .words_listened_to
-                                                .entry(heteronym)
-                                                .or_insert(0) += 1;
-                                        } else {
-                                            perfect = false;
+                    if let transcription_challenge::PartGraded::AskedToTranscribe {
+                        parts, ..
+                    } = part
+                    {
+                        for graded_part in parts {
+                            if let Some(heteronym) = &graded_part.heard.heteronym
+                                && let Some(heteronym) =
+                                    heteronym.get_interned(&deck.context.language_pack.rodeo)
+                            {
+                                // Update with worse grade (remember: worse grade > better grade in Ord)
+                                worst_grades
+                                    .entry(heteronym)
+                                    .and_modify(|existing_grade| {
+                                        if graded_part.grade > *existing_grade {
+                                            *existing_grade = graded_part.grade.clone();
                                         }
-
-                                        // Always log review for ListeningHomophonous card
-                                        deck.log_review(
-                                            listening_homophonous_card,
-                                            rating,
-                                            *timestamp,
-                                        );
-
-                                        if rating == Rating::Remembered {
-                                            if let std::collections::hash_map::Entry::Vacant(e) =
-                                                deck.cards.entry(listening_lexeme_card)
-                                            {
-                                                // Add the card as a new card
-                                                let mut fsrs_card = rs_fsrs::Card::new(*timestamp);
-                                                fsrs_card.due = *timestamp;
-                                                e.insert(CardData::Added { fsrs_card });
-                                            }
-                                        }
-
-                                        // For full sentence transcriptions with successful transcription,
-                                        // add or review the ListeningLexeme card
-                                        if is_full_sentence_transcription {
-                                            // Log a review for the existing card
-                                            deck.log_review(
-                                                listening_lexeme_card,
-                                                rating,
-                                                *timestamp,
-                                            );
-                                        }
-                                    }
-                                }
+                                    })
+                                    .or_insert_with(|| graded_part.grade.clone());
                             }
                         }
-                        transcription_challenge::PartGraded::Provided { .. } => {
-                            // Provided parts don't need grading
+                    }
+                }
+
+                // Process each heteronym with its worst grade
+                for (heteronym, grade) in worst_grades {
+                    if let Some(&pronunciation) = deck
+                        .context
+                        .language_pack
+                        .word_to_pronunciation
+                        .get(&heteronym.word)
+                    {
+                        let listening_homophonous_card =
+                            CardIndicator::ListeningHomophonous { pronunciation };
+                        let listening_lexeme_card = CardIndicator::ListeningLexeme {
+                            lexeme: Lexeme::Heteronym(heteronym),
+                        };
+
+                        // Map the grade to a FSRS rating
+                        let rating = match grade {
+                            transcription_challenge::WordGrade::Perfect {} => Rating::Remembered,
+                            transcription_challenge::WordGrade::CorrectWithTypo {} => {
+                                Rating::Remembered
+                            }
+                            transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect {} => {
+                                Rating::Hard
+                            }
+                            transcription_challenge::WordGrade::PhoneticallySimilarButContextuallyIncorrect {} => {
+                                Rating::Again
+                            }
+                            transcription_challenge::WordGrade::Incorrect {} => Rating::Again,
+                            transcription_challenge::WordGrade::Missed {} => Rating::Again,
+                        };
+
+                        if rating != Rating::Again {
+                            *deck.stats.words_listened_to.entry(heteronym).or_insert(0) += 1;
+                        } else {
+                            perfect = false;
+                        }
+
+                        // Always log review for ListeningHomophonous card
+                        deck.log_review(listening_homophonous_card, rating, *timestamp);
+
+                        if rating == Rating::Remembered {
+                            if let std::collections::hash_map::Entry::Vacant(e) =
+                                deck.cards.entry(listening_lexeme_card)
+                            {
+                                // Add the card as a new card
+                                let mut fsrs_card = rs_fsrs::Card::new(*timestamp);
+                                fsrs_card.due = *timestamp;
+                                e.insert(CardData::Added { fsrs_card });
+                            }
+                        }
+
+                        // For full sentence transcriptions with successful transcription,
+                        // add or review the ListeningLexeme card
+                        if is_full_sentence_transcription {
+                            // Log a review for the existing card
+                            deck.log_review(listening_lexeme_card, rating, *timestamp);
                         }
                     }
                 }

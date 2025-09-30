@@ -175,3 +175,41 @@
 {"sentence":"Very sure.","issues":["Sentence fragment (missing subject and verb)","More suitable as a conversational reply than a standalone full sentence"],"corrected_sentence":null}
 {"sentence":"Yes, us.","issues":["Sentence fragment (elliptical; lacks explicit subject and verb).","Relies on context and may confuse learners.","Informal usage; a clearer full form would be “Yes, it’s us.”"],"corrected_sentence":null}
 {"sentence":"Red his mother.","issues":["Missing verb","Fragment/incomplete thought","Unclear meaning","Possible missing punctuation (e.g., appositive)","Capitalization suggests a name but structure remains incorrect"],"corrected_sentence":null}
+{"sentence":"Him, there.","issues":["Sentence fragment; lacks a verb","Unnatural/odd comma punctuation","Elliptical use of objective pronoun ('him') as a standalone utterance","Potentially confusing without context"],"corrected_sentence":null}
+{"sentence":"Your friend.","issues":["Sentence fragment (no verb or predicate)","Incomplete thought; requires context","Potentially confusing for learners when presented alone"],"corrected_sentence":null}
+{"sentence":"This house.","issues":["Sentence fragment (incomplete)","Lacks verb/predicate","Depends on context to be meaningful"],"corrected_sentence":null}
+{"sentence":"Not in my care.","issues":["Sentence fragment (missing subject and verb)","Elliptical/ambiguous referent, which may confuse learners"],"corrected_sentence":null}
+{"sentence":"No, she.","issues":["Sentence fragment","Missing main verb/predicate","Unnatural/overly elliptical phrasing","Requires additional context to interpret"],"corrected_sentence":null}
+{"sentence":"And with that?","issues":["Sentence fragment/incomplete thought","Ambiguous meaning without context","Relies on prior discourse, which may confuse learners"],"corrected_sentence":null}
+{"sentence":"What's left of it.","issues":["Punctuation error: interrogative form ends with a period","Sentence fragment that relies on context"],"corrected_sentence":"What's left of it?"}
+{"sentence":"Looks great.","issues":["Sentence fragment (missing explicit subject, e.g., 'It')"],"corrected_sentence":null}
+{"sentence":"This door.","issues":["Sentence fragment (no verb/predicate)"],"corrected_sentence":null}
+{"sentence":"These people.","issues":["Sentence fragment (no verb or predicate)","Deictic term 'these' requires contextual reference","Incomplete thought may confuse learners"],"corrected_sentence":null}
+{"sentence":"Very big.","issues":["Sentence fragment (missing subject and verb)","Ambiguous referent (unclear what is big), which may confuse learners"],"corrected_sentence":null}
+{"sentence":"Not together.","issues":["Sentence fragment (missing subject and verb)","Ambiguous without context; could confuse learners"],"corrected_sentence":null}
+{"sentence":"Years ago.","issues":["Sentence fragment (no subject or verb)","Incomplete thought; depends on implied context"],"corrected_sentence":null}
+{"sentence":"I never have been.","issues":["Incomplete/elliptical; missing complement after 'been' (e.g., 'to Spain', 'there', or an adjective)","Unusual adverb placement for learners; more common is 'I have never been ...' (still needs a complement)","Relies on prior context to be meaningful"],"corrected_sentence":null}
+{"sentence":"I had.","issues":["Sentence fragment (missing object/complement)","Requires context to be understood","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"This woman.","issues":["Sentence fragment (no verb/predicate)","Context-dependent use of 'This' without a referent","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"His brother.","issues":["Sentence fragment (not a complete sentence)","Lacks context, potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Even more.","issues":["Sentence fragment/incomplete thought","Unclear referent for “more”","Requires context; potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Each day.","issues":["Sentence fragment (no subject/verb)","Needs context to be meaningful for learners"],"corrected_sentence":null}
+{"sentence":"Myself.","issues":["Sentence fragment (no verb or predicate)","Nonstandard use of reflexive pronoun 'myself' as a standalone answer","Requires context to be interpretable","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"These Americans.","issues":["Sentence fragment (no verb or predicate)","Ambiguous reference without context; may be confusing for learners"],"corrected_sentence":null}
+{"sentence":"His eyes.","issues":["Sentence fragment (incomplete thought)","Lacks verb/predicate","Pronoun reference (“his”) is unclear without context"],"corrected_sentence":null}
+{"sentence":"Our children.","issues":["Sentence fragment (no verb/predicate)","Unclear meaning without context; could confuse learners"],"corrected_sentence":null}
+{"sentence":"At her house.","issues":["Sentence fragment (no subject/verb)"],"corrected_sentence":null}
+{"sentence":"Beautiful woman.","issues":["Fragment (not a complete sentence)","Missing article before 'beautiful woman'","Could be confusing for learners due to telegraphic/headline style"],"corrected_sentence":null}
+{"sentence":"Not found.","issues":["Sentence fragment (missing subject and finite verb)","Ambiguous referent (what was not found?)","Likely to confuse learners without context"],"corrected_sentence":null}
+{"sentence":"Listen everyone.","issues":["Missing comma for direct address after \"Listen\""],"corrected_sentence":"Listen, everyone."}
+{"sentence":"Even now.","issues":["Sentence fragment with no subject/predicate","Not meaningful without additional context"],"corrected_sentence":null}
+{"sentence":"Two men.","issues":["Sentence fragment (no verb/predicate)","May be confusing for learners expecting a complete sentence"],"corrected_sentence":null}
+{"sentence":"Yourself.","issues":["Sentence fragment (no verb or complete clause)","Reflexive pronoun used without an antecedent or verb","Unclear meaning without context","Punctuation implies a statement; only a question form (e.g., “Yourself?”) might be natural in conversation"],"corrected_sentence":null}
+{"sentence":"From myself.","issues":["Sentence fragment (no subject/verb)","Unnatural/incorrect use of reflexive pronoun 'myself' after 'from' (standard would be 'me')","Confusing without context"],"corrected_sentence":null}
+{"sentence":"His own.","issues":["Sentence fragment","Pronoun lacks antecedent, ambiguous reference"],"corrected_sentence":null}
+{"sentence":"What end?","issues":["Elliptical fragment lacking necessary preposition/verb","Ambiguous meaning (could mean purpose or a physical end)","Non-idiomatic choice of “what” instead of “which” when selecting between ends; better: “Which end?”","If asking about purpose, idiomatic form is “To what end?”"],"corrected_sentence":null}
+{"sentence":"Her first.","issues":["Sentence fragment/incomplete thought","Missing verb or head noun","Ambiguous meaning; requires context"],"corrected_sentence":null}
+{"sentence":"After work.","issues":["Sentence fragment (no subject or finite verb)","Not a full sentence; may be slightly confusing to beginners"],"corrected_sentence":null}
+{"sentence":"His phone.","issues":["Sentence fragment (no verb/predicate)","Incomplete thought; needs context","May be confusing for learners expecting full sentences"],"corrected_sentence":null}
+{"sentence":"Happy end.","issues":["Fragment (no verb)","Non-idiomatic collocation; should be “happy ending” in standard English"],"corrected_sentence":null}
+{"sentence":"Another man.","issues":["Sentence fragment (incomplete thought)","Unclear without context; may confuse learners"],"corrected_sentence":null}

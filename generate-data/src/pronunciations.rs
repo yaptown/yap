@@ -61,7 +61,7 @@ Output format:
             ).await;
 
             if i % 100 == 0 {
-                println!("{i} / {count} $({cost:.2})", cost=CHAT_CLIENT.cost().unwrap());
+                println!("{i} / {count} (${cost:.2})", cost=CHAT_CLIENT.cost().unwrap());
                 println!("Word: {word}");
                 println!("Pronunciations: {pronunciations:?}");
                 println!("Response: {response:#?}");
