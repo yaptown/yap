@@ -996,6 +996,12 @@ async fn main() -> anyhow::Result<()> {
             .map(|(sentence, info)| (sentence.clone(), info.clone()))
             .collect();
 
+        #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+        enum SentenceWordFreq {
+            Present(u32),
+            NotPresent,
+        }
+
         // Sort target_language_sentences by the frequency of their least common word
         target_language_sentences.sort_by_key(|sentence| {
             // Look up the NLP info for this sentence
@@ -1008,16 +1014,29 @@ async fn main() -> anyhow::Result<()> {
                 frequencies.sort_unstable();
 
                 let mut frequency_iter = frequencies.into_iter();
-                let least_common = frequency_iter.next().unwrap_or(0);
-                let second_least_common = frequency_iter.next().unwrap_or(0);
-                let third_least_common = frequency_iter.next().unwrap_or(0);
+                let least_common = frequency_iter
+                    .next()
+                    .map(SentenceWordFreq::Present)
+                    .unwrap_or(SentenceWordFreq::NotPresent);
+                let second_least_common = frequency_iter
+                    .next()
+                    .map(SentenceWordFreq::Present)
+                    .unwrap_or(SentenceWordFreq::NotPresent);
+                let third_least_common = frequency_iter
+                    .next()
+                    .map(SentenceWordFreq::Present)
+                    .unwrap_or(SentenceWordFreq::NotPresent);
 
                 // Return reversed to sort descending (highest frequency first)
                 std::cmp::Reverse((least_common, second_least_common, third_least_common))
             } else {
                 // If no NLP info found, put at the end
                 eprintln!("No NLP info found for sentence: {sentence}");
-                std::cmp::Reverse((0, 0, 0))
+                std::cmp::Reverse((
+                    SentenceWordFreq::NotPresent,
+                    SentenceWordFreq::NotPresent,
+                    SentenceWordFreq::NotPresent,
+                ))
             }
         });
 
