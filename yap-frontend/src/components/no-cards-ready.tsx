@@ -35,6 +35,15 @@ export function NoCardsReady({
   targetLanguage,
   deck,
 }: NoCardsReadyProps) {
+  let nextTargetLanguageWord: string | null = null;
+  if (nextDueCard && "TargetLanguage" in nextDueCard.card_indicator) {
+    const lexeme = nextDueCard.card_indicator.TargetLanguage.lexeme;
+    nextTargetLanguageWord =
+      "Heteronym" in lexeme
+        ? lexeme.Heteronym.word
+        : lexeme.Multiword;
+  }
+
   const numCanAddTargetLanguage =
     addCardOptions.manual_add.find(
       ([, card_type]) => card_type === "TargetLanguage"
@@ -103,13 +112,29 @@ export function NoCardsReady({
         <div className="flex flex-col gap-2">
           <p className="text-lg">No cards ready for review!</p>
           <p className="text-muted-foreground">
-            Great job! Your next review is{" "}
-            {nextDueCard ? (
-              <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
+            {nextTargetLanguageWord ? (
+              <>
+                You'll review <span className="font-semibold">
+                  {nextTargetLanguageWord}
+                </span>
+                {nextDueCard ? (
+                  <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
+                ) : (
+                  "soon"
+                )}
+                .
+              </>
             ) : (
-              "soon"
+              <>
+                Great job! Your next review is{" "}
+                {nextDueCard ? (
+                  <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
+                ) : (
+                  "soon"
+                )}
+                .
+              </>
             )}
-            .
           </p>
         </div>
 
