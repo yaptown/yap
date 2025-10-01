@@ -117,6 +117,7 @@ export function NoCardsReady({
                 You'll review <span className="font-semibold">
                   {nextTargetLanguageWord}
                 </span>
+                {' '}
                 {nextDueCard ? (
                   <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
                 ) : (
