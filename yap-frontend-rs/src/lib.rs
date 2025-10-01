@@ -2938,12 +2938,12 @@ impl Regressions {
         } else {
             // Card has never been failed (positive knowledge)
             // Map positive surprise to higher probability
-            const EASY_THRESHOLD: f64 = 4.5; // Easy review level (~4.6)
+            const EASY_THRESHOLD: f64 = 4.4; // Easy review level (~4.6)
             const GOOD_THRESHOLD: f64 = 2.0; // Good review level (~2.3)
 
             if knowledge >= EASY_THRESHOLD {
                 // Easy-level knowledge: 90-95% probability
-                0.95
+                0.99
             } else if knowledge >= GOOD_THRESHOLD {
                 // Good-level knowledge: 70-90% probability
                 let range = EASY_THRESHOLD - GOOD_THRESHOLD;
