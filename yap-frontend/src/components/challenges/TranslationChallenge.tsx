@@ -41,6 +41,7 @@ import { AudioButton } from "../AudioButton";
 import { ReportIssueModal } from "./ReportIssueModal";
 import Markdown from "react-markdown";
 import { playSoundEffect } from "@/lib/sound-effects";
+import { normalizeSpecialCharacters } from "@/lib/utils";
 import { CardsRemaining } from "../CardsRemaining";
 import { AnimatedCard } from "../AnimatedCard";
 
@@ -523,12 +524,7 @@ export function TranslationChallenge({
   const handleCheckAnswer = useCallback(async () => {
     // Normalize text by removing punctuation, converting to lowercase, and expanding contractions
     const normalizeText = (text: string): string => {
-      // First normalize all apostrophes to straight apostrophes
-      let normalizedText = text.replace(/'/g, "'");
-      normalizedText = normalizedText.replace(/'/g, "'");
-      normalizedText = normalizedText.replace(/'/g, "'");
-      normalizedText = normalizedText.replace(/"/g, '"');
-      normalizedText = normalizedText.replace(/"/g, '"');
+      const normalizedText = normalizeSpecialCharacters(text);
 
       // Common contractions mapping
       const contractions: { [key: string]: string } = {
