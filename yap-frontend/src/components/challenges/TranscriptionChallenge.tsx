@@ -40,6 +40,7 @@ import {
 import { MoreVertical } from "lucide-react";
 import { ReportIssueModal } from "./ReportIssueModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { normalizeSpecialCharacters } from "@/lib/utils";
 
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence<string>;
@@ -192,10 +193,14 @@ export function TranscriptionChallenge({
 
     const request: PartSubmitted[] = challenge.parts.map((part, index) => {
       if ("AskedToTranscribe" in part) {
+        const submission = normalizeSpecialCharacters(
+          userInputs.get(index) ?? ""
+        ).trim();
+
         return {
           AskedToTranscribe: {
             parts: part.AskedToTranscribe.parts,
-            submission: userInputs.get(index)?.trim() || "",
+            submission,
           },
         };
       } else {
