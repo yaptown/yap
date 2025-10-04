@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { get_audio, type AudioRequest } from '../../../yap-frontend-rs/pkg'
+import { get_audio, invalidate_audio_cache, type AudioRequest } from '../../../yap-frontend-rs/pkg'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -46,17 +46,40 @@ export async function playAudio(audioRequest: AudioRequest, accessToken: string 
     const audio = new Audio(audioUrl);
     
     return new Promise((resolve, reject) => {
+      const invalidateCache = () => {
+        void (async () => {
+          try {
+            await invalidate_audio_cache(audioRequest);
+          } catch (invalidateError) {
+            console.error('Failed to invalidate audio cache:', invalidateError);
+          }
+        })();
+      };
+
+      const handlePlaybackFailure = (error: unknown) => {
+        URL.revokeObjectURL(audioUrl);
+        invalidateCache();
+        if (error instanceof Error) {
+          reject(error);
+        } else {
+          reject(new Error(String(error)));
+        }
+      };
+
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
         resolve();
       };
-      
+
       audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        reject(new Error('Audio playback failed'));
+        handlePlaybackFailure(new Error('Audio playback failed'));
       };
-      
-      audio.play().catch(reject);
+
+      audio
+        .play()
+        .catch((error) => {
+          handlePlaybackFailure(error);
+        });
     });
   } catch (error) {
     if (typeof error === 'string' && error.includes('400')) {
