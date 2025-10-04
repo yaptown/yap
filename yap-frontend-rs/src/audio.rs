@@ -55,14 +55,43 @@ impl AudioCache {
         {
             match file_handle.read().await {
                 Ok(cached_bytes) => {
-                    return Some(cached_bytes);
+                    if is_valid_mp3_data(&cached_bytes) {
+                        return Some(cached_bytes);
+                    }
+
+                    log::warn!("Invalid audio cache detected for {cache_filename}, refetching");
+                    let mut audio_dir = self.audio_dir.clone();
+                    if let Err(e) = audio_dir.remove_entry(&cache_filename).await {
+                        log::warn!("Failed to remove invalid audio cache {cache_filename}: {e:?}");
+                    }
                 }
                 Err(_) => {
                     // File exists but couldn't read
+                    let mut audio_dir = self.audio_dir.clone();
+                    if let Err(e) = audio_dir.remove_entry(&cache_filename).await {
+                        log::warn!(
+                            "Failed to remove unreadable audio cache {cache_filename}: {e:?}"
+                        );
+                    }
                 }
             }
         }
         None
+    }
+
+    pub async fn remove_cached(
+        &self,
+        request: &TtsRequest,
+        provider: &TtsProvider,
+    ) -> Result<(), JsValue> {
+        let cache_filename = Self::get_cache_filename(request, provider);
+
+        let mut audio_dir = self.audio_dir.clone();
+        if let Err(e) = audio_dir.remove_entry(&cache_filename).await {
+            log::warn!("Failed to remove audio cache {cache_filename}: {e:?}");
+        }
+
+        Ok(())
     }
 
     pub async fn cache_audio(&self, request: &TtsRequest, provider: &TtsProvider, bytes: Vec<u8>) {
@@ -164,4 +193,13 @@ impl AudioCache {
 
         Ok(())
     }
+}
+
+fn is_valid_mp3_data(bytes: &[u8]) -> bool {
+    if bytes.len() < 2 {
+        return false;
+    }
+
+    // Valid MP3 files either start with an ID3 tag or an MPEG frame sync (0xFFF)
+    bytes.starts_with(b"ID3") || (bytes[0] == 0xFF && bytes[1] & 0xE0 == 0xE0)
 }

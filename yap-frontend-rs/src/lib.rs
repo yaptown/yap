@@ -3529,6 +3529,14 @@ pub async fn get_audio(
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+pub async fn invalidate_audio_cache(request: AudioRequest) -> Result<(), JsValue> {
+    let audio_cache = audio::AudioCache::new().await?;
+    audio_cache
+        .remove_cached(&request.request, &request.provider)
+        .await
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub async fn autograde_translation(
     challenge_sentence: String,
     user_sentence: String,
