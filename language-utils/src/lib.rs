@@ -10,9 +10,10 @@ pub fn strip_punctuation(text: &str) -> &str {
 /// Normalizes Spanish words by removing punctuation and converting to lowercase
 pub fn expand_spanish_word(
     text: &str,
+    lemma: &str,
     pos: Option<PartOfSpeech>,
     _morph: &BTreeMap<String, String>,
-) -> Option<(String, Option<String>, Option<PartOfSpeech>)> {
+) -> Option<(String, String, Option<PartOfSpeech>)> {
     Some({
         let text = strip_punctuation(text);
 
@@ -28,26 +29,29 @@ pub fn expand_spanish_word(
         }
 
         let text = text.to_lowercase();
+        let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
+        let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
 
         if text == "lo" && pos == Some(PartOfSpeech::Pron) {
             return Some((
                 "lo".to_string(),
-                Some("lo".to_string()),
+                "lo".to_string(),
                 Some(PartOfSpeech::Pron),
             ));
         }
 
         // expand Spanish contractions
-        (text, None, None)
+        (text, lemma, pos)
     })
 }
 
 /// Normalizes english words
 pub fn expand_english_word(
     text: &str,
-    _pos: Option<PartOfSpeech>,
+    lemma: &str,
+    pos: Option<PartOfSpeech>,
     _morph: &BTreeMap<String, String>,
-) -> Option<(String, Option<String>, Option<PartOfSpeech>)> {
+) -> Option<(String, String, Option<PartOfSpeech>)> {
     Some({
         let text = strip_punctuation(text);
 
@@ -63,38 +67,78 @@ pub fn expand_english_word(
         }
 
         let text = text.to_lowercase();
+        let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
+        let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
 
-        (text, None, None)
+        (text, lemma, pos)
+    })
+}
+
+/// Normalizes german words
+pub fn expand_german_word(
+    text: &str,
+    lemma: &str,
+    pos: Option<PartOfSpeech>,
+    _morph: &BTreeMap<String, String>,
+) -> Option<(String, String, Option<PartOfSpeech>)> {
+    Some({
+        let text = strip_punctuation(text);
+
+        if text.is_empty() {
+            return None;
+        }
+
+        if ["'", "-", "—", "–", "'", "'"].contains(&text) {
+            return None;
+        }
+        if text.chars().all(|c| c.is_numeric()) {
+            return None;
+        }
+
+        let polite_forms = ["Sie"];
+        if polite_forms.contains(&text) && polite_forms.contains(&lemma) {
+            return Some((text.to_string(), lemma.to_string(), pos));
+        }
+        if pos == Some(PartOfSpeech::Noun) {
+            return Some((text.to_string(), lemma.to_string(), pos));
+        }
+
+        let text = text.to_lowercase();
+        let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
+        let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
+
+        (text, lemma, pos)
     })
 }
 
 /// Expands French contractions to their full forms and normalizes words
 pub fn expand_french_word(
     text: &str,
+    lemma: &str,
     pos: Option<PartOfSpeech>,
     morph: &BTreeMap<String, String>,
-) -> Option<(String, Option<String>, Option<PartOfSpeech>)> {
+) -> Option<(String, String, Option<PartOfSpeech>)> {
     Some({
         // Handle common French abbreviations before stripping punctuation
         let normalized_text = match text {
             "M." | "m." => {
                 return Some((
                     "monsieur".to_string(),
-                    Some("monsieur".to_string()),
+                    "monsieur".to_string(),
                     Some(PartOfSpeech::Noun),
                 ));
             }
             "Mme" | "Mme." | "mme" | "mme." => {
                 return Some((
                     "madame".to_string(),
-                    Some("madame".to_string()),
+                    "madame".to_string(),
                     Some(PartOfSpeech::Noun),
                 ));
             }
             "Mlle" | "Mlle." | "mlle" | "mlle." => {
                 return Some((
                     "mademoiselle".to_string(),
-                    Some("mademoiselle".to_string()),
+                    "mademoiselle".to_string(),
                     Some(PartOfSpeech::Noun),
                 ));
             }
@@ -115,48 +159,50 @@ pub fn expand_french_word(
         }
 
         let text = text.to_lowercase();
+        let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
+        let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
 
         // expand contractions
         match &text[..] {
             "j'" => (
                 "je".to_string(),
-                Some("je".to_string()),
+                "je".to_string(),
                 Some(PartOfSpeech::Pron),
             ),
             "m'" => (
                 "me".to_string(),
-                Some("me".to_string()),
+                "me".to_string(),
                 Some(PartOfSpeech::Pron),
             ),
             "t'" => (
                 "te".to_string(),
-                Some("te".to_string()),
+                "te".to_string(),
                 Some(PartOfSpeech::Pron),
             ),
             "t" => (
                 "t".to_string(),
-                Some("t".to_string()),
+                "t".to_string(),
                 Some(PartOfSpeech::Part),
             ),
             "s'" => {
                 if pos == Some(PartOfSpeech::Sconj) {
                     (
                         "si".to_string(),
-                        Some("si".to_string()),
+                        "si".to_string(),
                         Some(PartOfSpeech::Sconj),
                     )
                 } else {
                     (
                         "se".to_string(),
-                        Some("se".to_string()),
+                        "se".to_string(),
                         Some(PartOfSpeech::Pron),
                     )
                 }
             }
-            "c'" => ("ce".to_string(), Some("ce".to_string()), None), // either DET or PRON depending on context
+            "c'" => ("ce".to_string(), "ce".to_string(), None), // either DET or PRON depending on context
             "n'" => (
                 "ne".to_string(),
-                Some("ne".to_string()),
+                "ne".to_string(),
                 Some(PartOfSpeech::Adv),
             ),
             "l'" => {
@@ -167,59 +213,60 @@ pub fn expand_french_word(
                     .unwrap_or("Masculin")
                     == "Feminin"
                 {
-                    ("la".to_string(), Some("la".to_string()), None) // either DET or PRON depending on context
+                    ("la".to_string(), "la".to_string(), None) // either DET or PRON depending on context
                 } else {
-                    ("le".to_string(), Some("le".to_string()), None) // either DET or PRON depending on context
+                    ("le".to_string(), "le".to_string(), None) // either DET or PRON depending on context
                 }
             }
             "de" => (
                 "de".to_string(),
-                Some("de".to_string()),
+                "de".to_string(),
                 Some(PartOfSpeech::Adp),
             ),
             "d'" => (
                 "de".to_string(),
-                Some("de".to_string()),
+                "de".to_string(),
                 Some(PartOfSpeech::Adp),
             ),
-            "qu'" => ("que".to_string(), Some("que".to_string()), None),
-            "quelqu'" => ("quelque".to_string(), Some("quelque".to_string()), None),
+            "qu'" => ("que".to_string(), "que".to_string(), None),
+            "quelqu'" => ("quelque".to_string(), "quelque".to_string(), None),
             "jusqu'" => (
                 "jusque".to_string(),
-                Some("jusque".to_string()),
+                "jusque".to_string(),
                 Some(PartOfSpeech::Adp),
             ),
             "lorsqu'" => (
                 "lorsque".to_string(),
-                Some("lorsque".to_string()),
+                "lorsque".to_string(),
                 Some(PartOfSpeech::Sconj),
             ),
             "puisqu'" => (
                 "puisque".to_string(),
-                Some("puisque".to_string()),
+                "puisque".to_string(),
                 Some(PartOfSpeech::Sconj),
             ),
             "quoiqu'" => (
                 "quoique".to_string(),
-                Some("quoique".to_string()),
+                "quoique".to_string(),
                 Some(PartOfSpeech::Sconj),
             ),
             "presqu'" => (
                 "presque".to_string(),
-                Some("presque".to_string()),
+                "presque".to_string(),
                 Some(PartOfSpeech::Adv),
             ),
-            _ => (text, None, None),
+            _ => (text, lemma, None),
         }
     })
 }
 
-/// Expands English contractions to their full forms and normalizes words
+/// Expands Korean contractions to their full forms and normalizes words
 pub fn expand_korean_word(
     text: &str,
+    lemma: &str,
     _pos: Option<PartOfSpeech>,
     _morph: &BTreeMap<String, String>,
-) -> Option<(String, Option<String>, Option<PartOfSpeech>)> {
+) -> Option<(String, String, Option<PartOfSpeech>)> {
     let text = strip_punctuation(text);
 
     if text.is_empty() {
@@ -234,8 +281,10 @@ pub fn expand_korean_word(
     }
 
     let text = text.to_lowercase();
+    let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
+    let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
 
-    Some((text, None, None))
+    Some((text, lemma, None))
 }
 
 #[derive(
@@ -718,20 +767,21 @@ impl Heteronym<String> {
             Language::Spanish => expand_spanish_word,
             Language::English => expand_english_word,
             Language::Korean => expand_korean_word,
-            Language::German => expand_english_word, // German uses similar expansion as English for now
+            Language::German => expand_german_word, // German uses similar expansion as English for now
         };
 
         let heteronym = if let Some(heteronym) = proper_nouns.get(&doc_token.text.to_lowercase()) {
-            let (word, lemma, pos) = expand_word(&heteronym.word, None, &BTreeMap::new())?;
-            let lemma = lemma.unwrap_or(heteronym.lemma.clone()).to_lowercase();
+            let (word, lemma, pos) =
+                expand_word(&heteronym.word, &heteronym.lemma, None, &BTreeMap::new())?;
             let pos = pos.unwrap_or(heteronym.pos);
             Self { word, lemma, pos }
         } else {
-            let (word, lemma, pos) =
-                expand_word(&doc_token.text, Some(doc_token.pos), &doc_token.morph)?;
-            let lemma = lemma.unwrap_or(doc_token.lemma.clone());
-            let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
-            let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
+            let (word, lemma, pos) = expand_word(
+                &doc_token.text,
+                &doc_token.lemma,
+                Some(doc_token.pos),
+                &doc_token.morph,
+            )?;
             let pos = pos.unwrap_or(doc_token.pos);
             Self { word, lemma, pos }
         };
