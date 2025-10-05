@@ -2945,9 +2945,9 @@ impl Regressions {
                 // Easy-level knowledge: 90-95% probability
                 0.99
             } else if knowledge >= GOOD_THRESHOLD {
-                // Good-level knowledge: 70-90% probability
+                // Good-level knowledge: 70-99% probability
                 let range = EASY_THRESHOLD - GOOD_THRESHOLD;
-                0.7 + 0.25 * (knowledge - GOOD_THRESHOLD) / range
+                0.7 + 0.29 * (knowledge - GOOD_THRESHOLD) / range
             } else if knowledge > 0.0 {
                 // Low positive knowledge: 10-70% probability
                 let range = GOOD_THRESHOLD;
