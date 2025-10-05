@@ -2225,12 +2225,12 @@ impl Deck {
         total_challenges as f64 / 7.0
     }
 
-    /// Calculate upcoming review statistics for the next week
+    /// Calculate upcoming review statistics for the next three weeks
     /// Returns total reviews and max reviews on any single day
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_upcoming_week_review_stats(&self) -> UpcomingReviewStats {
         let now = Utc::now();
-        let one_week_later = now + chrono::Duration::days(7);
+        let three_weeks_later = now + chrono::Duration::days(21);
 
         let mut daily_counts: HashMap<i64, u32> = HashMap::new();
         let mut total_reviews = 0u32;
@@ -2244,8 +2244,8 @@ impl Deck {
                     continue;
                 }
 
-                // Check if due within the next week
-                if due_date > now && due_date <= one_week_later {
+                // Check if due within the next three weeks
+                if due_date > now && due_date <= three_weeks_later {
                     total_reviews += 1;
 
                     // Get the day offset from today (0 = today, 1 = tomorrow, etc.)

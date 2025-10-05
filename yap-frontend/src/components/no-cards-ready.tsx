@@ -64,8 +64,8 @@ export function NoCardsReady({
   const cardsAddedPast16Hours = deck.get_cards_added_in_past_hours(16);
   const showLightWorkloadNotification =
     cardsAddedPast16Hours < 20 &&
-    (upcomingStats.total_reviews < pastWeekAverage * 7 ||
-      upcomingStats.max_per_day < 10) && // Less upcoming reviews than past week average
+    (upcomingStats.total_reviews < pastWeekAverage * 21 ||
+      upcomingStats.max_per_day < 10) && // Less upcoming reviews than past 3 weeks average
     upcomingStats.max_per_day <= 50 && // No single day has more than 50 reviews
     (numCanSmartAdd > 0 ||
       numCanAddTargetLanguage > 0 ||
@@ -113,8 +113,12 @@ export function NoCardsReady({
           </Alert>
         )}
         <div className="flex flex-col gap-2">
-          <p className="text-lg">{isEmptyDeck ? "Ready to start learning?" : "No cards ready for review!"}</p>
-          {!isEmptyDeck && (
+          <p className="text-lg">{isEmptyDeck ? "Ready to start learning?" : "Nothing ready for review!"}</p>
+          {isEmptyDeck ? (
+            <p className="text-muted-foreground">
+              We'll start with the most important words.
+            </p>
+          ) : (
             <p className="text-muted-foreground">
               {nextTargetLanguageWord ? (
                 <>
