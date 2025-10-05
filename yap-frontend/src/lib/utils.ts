@@ -46,6 +46,8 @@ export async function playAudio(audioRequest: AudioRequest, accessToken: string 
     const audio = new Audio(audioUrl);
     
     return new Promise((resolve, reject) => {
+      let errorHandled = false;
+
       const invalidateCache = () => {
         void (async () => {
           try {
@@ -57,8 +59,15 @@ export async function playAudio(audioRequest: AudioRequest, accessToken: string 
       };
 
       const handlePlaybackFailure = (error: unknown) => {
+        if (errorHandled) return;
+        errorHandled = true;
+
         URL.revokeObjectURL(audioUrl);
-        invalidateCache();
+        // Only invalidate cache for actual audio file errors, not autoplay restrictions
+        const isNotAllowedError = error instanceof Error && error.name === 'NotAllowedError';
+        if (!isNotAllowedError) {
+          invalidateCache();
+        }
         if (error instanceof Error) {
           reject(error);
         } else {
