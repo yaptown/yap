@@ -62,12 +62,13 @@ export async function playAudio(audioRequest: AudioRequest, accessToken: string 
         if (errorHandled) return;
         errorHandled = true;
 
-        URL.revokeObjectURL(audioUrl);
         // Only invalidate cache for actual audio file errors, not autoplay restrictions
         const isNotAllowedError = error instanceof Error && error.name === 'NotAllowedError';
         if (!isNotAllowedError) {
           invalidateCache();
         }
+        // Don't revoke URL on error - let it be garbage collected naturally
+        // Revoking here can trigger audio.onerror cascade
         if (error instanceof Error) {
           reject(error);
         } else {
