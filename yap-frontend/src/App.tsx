@@ -578,17 +578,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
       {/* main content */}
       <div className="flex flex-col flex-1">
 
-        {deck.num_cards() === 0 ? (
-          <div className="bg-card text-card-foreground rounded-lg p-12 text-center border">
-            <p className="text-lg mb-2">You don't have any flashcards yet!</p>
-            <Button
-              onClick={() => addNextCards(undefined, 1)}
-              variant="default"
-            >
-              Add a word to my deck
-            </Button>
-          </div>
-        ) : reviewInfo.due_count === 0 && !currentChallenge ? (
+        {reviewInfo.due_count === 0 && !currentChallenge ? (
           <NoCardsReady
             nextDueCard={nextDueCard}
             addNextCards={addNextCards}

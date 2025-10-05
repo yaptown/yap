@@ -225,6 +225,8 @@ export function TranscriptionChallenge({
       graded,
     });
 
+    playSoundEffect("aiDoneGrading");
+
     if (isAllCorrect) {
       playSoundEffect("perfect");
     }

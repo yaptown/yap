@@ -647,6 +647,8 @@ export function TranslationChallenge({
         const explanation = response.explanation;
         let finalWordStatuses: [Lexeme<string>, boolean | null][] = [];
 
+        playSoundEffect("aiDoneGrading");
+
         if (response.expressions_forgot.length === 0) {
           setGrade({ graded: { perfect: null, explanation } });
           playSoundEffect("perfect");
@@ -681,6 +683,7 @@ export function TranslationChallenge({
           sentence.unique_target_language_lexemes.map((lexeme) => {
             return [lexeme, null];
           });
+        playSoundEffect("aiDoneGrading");
         setGrade({
           graded: {
             wordStatuses: fallbackStatuses,

@@ -16,13 +16,18 @@ const sounds = {
     src: ['/success-3.mp3'],
     volume: 0.5,
     preload: true
+  }),
+  aiDoneGrading: new Howl({
+    src: ['/ai-done-grading.mp3'],
+    volume: 0.5,
+    preload: true
   })
 }
 
 // Keep track of currently playing sound effects
 let currentSoundEffect: Howl | null = null
 
-export const playSoundEffect = (type: 'perfect' | 'success' | 'fail'): Promise<void> => {
+export const playSoundEffect = (type: 'perfect' | 'success' | 'fail' | 'aiDoneGrading'): Promise<void> => {
   return new Promise((resolve) => {
     const sound = sounds[type]
     

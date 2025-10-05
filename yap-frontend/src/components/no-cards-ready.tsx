@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, AlertCircle } from "lucide-react";
+import { ChevronDown, AlertCircle, Sparkles } from "lucide-react";
 import { AnimatedCard } from "./AnimatedCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -97,6 +97,9 @@ export function NoCardsReady({
     <span style={{ fontWeight: "bold" }}>{targetLanguage} pronunciation</span>
   );
 
+  // Handle empty deck case
+  const isEmptyDeck = deck.num_cards() === 0;
+
   return (
     <div className="space-y-4">
       <AnimatedCard className="bg-card text-card-foreground rounded-lg p-6 gap-6 flex flex-col text-center border">
@@ -110,33 +113,35 @@ export function NoCardsReady({
           </Alert>
         )}
         <div className="flex flex-col gap-2">
-          <p className="text-lg">No cards ready for review!</p>
-          <p className="text-muted-foreground">
-            {nextTargetLanguageWord ? (
-              <>
-                You'll review <span className="font-semibold">
-                  {nextTargetLanguageWord}
-                </span>
-                {' '}
-                {nextDueCard ? (
-                  <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
-                ) : (
-                  "soon"
-                )}
-                .
-              </>
-            ) : (
-              <>
-                Great job! Your next review is{" "}
-                {nextDueCard ? (
-                  <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
-                ) : (
-                  "soon"
-                )}
-                .
-              </>
-            )}
-          </p>
+          <p className="text-lg">{isEmptyDeck ? "Ready to start learning?" : "No cards ready for review!"}</p>
+          {!isEmptyDeck && (
+            <p className="text-muted-foreground">
+              {nextTargetLanguageWord ? (
+                <>
+                  You'll review <span className="font-semibold">
+                    {nextTargetLanguageWord}
+                  </span>
+                  {' '}
+                  {nextDueCard ? (
+                    <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
+                  ) : (
+                    "soon"
+                  )}
+                  .
+                </>
+              ) : (
+                <>
+                  Great job! Your next review is{" "}
+                  {nextDueCard ? (
+                    <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
+                  ) : (
+                    "soon"
+                  )}
+                  .
+                </>
+              )}
+            </p>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -145,9 +150,12 @@ export function NoCardsReady({
               <Button
                 onClick={() => addNextCards(add_cards[0][1], add_cards[0][0])}
                 variant="default"
-                className={add_cards.length > 1 ? "rounded-r-none" : ""}
+                size="lg"
+                className={`group relative overflow-hidden transition-all hover:scale-105 hover:shadow-lg ${add_cards.length > 1 ? "rounded-r-none" : ""}`}
               >
-                Add {add_cards[0][0]} new{" "}
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
+                <Sparkles className="h-5 w-5 mr-2 animate-pulse" />
+                Learn {add_cards[0][0]} new{" "}
                 {add_cards[0][1] === undefined
                   ? ""
                   : add_cards[0][1] === "TargetLanguage"
@@ -155,13 +163,14 @@ export function NoCardsReady({
                   : add_cards[0][1] === "Listening"
                   ? listeningSpan
                   : pronunciationSpan}{" "}
-                cards to my deck
+                {add_cards[0][0] === 1 ? "card" : "cards"}
               </Button>
               {add_cards.length > 1 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="default"
+                      size="lg"
                       className="rounded-l-none border-l border-l-primary-foreground/20 px-2"
                     >
                       <ChevronDown className="h-4 w-4" />
@@ -172,8 +181,10 @@ export function NoCardsReady({
                       <DropdownMenuItem
                         key={card_type || "smart"}
                         onClick={() => addNextCards(card_type, count)}
+                        className="cursor-pointer"
                       >
-                        Add {count}{" "}
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Learn {count}{" "}
                         {card_type === "TargetLanguage"
                           ? targetLanguageSpan
                           : card_type === "Listening"
@@ -181,7 +192,7 @@ export function NoCardsReady({
                           : card_type === "LetterPronunciation"
                           ? pronunciationSpan
                           : ""}{" "}
-                        cards
+                        {count === 1 ? "card" : "cards"}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
