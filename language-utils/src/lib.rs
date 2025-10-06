@@ -1,3 +1,5 @@
+pub mod features;
+
 use std::{collections::BTreeMap, num::NonZeroUsize};
 
 #[cfg(target_arch = "wasm32")]
@@ -29,15 +31,11 @@ pub fn expand_spanish_word(
         }
 
         let text = text.to_lowercase();
-        let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
-        let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
+        let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
+        let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
 
         if text == "lo" && pos == Some(PartOfSpeech::Pron) {
-            return Some((
-                "lo".to_string(),
-                "lo".to_string(),
-                Some(PartOfSpeech::Pron),
-            ));
+            return Some(("lo".to_string(), "lo".to_string(), Some(PartOfSpeech::Pron)));
         }
 
         // expand Spanish contractions
@@ -67,8 +65,8 @@ pub fn expand_english_word(
         }
 
         let text = text.to_lowercase();
-        let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
-        let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
+        let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
+        let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
 
         (text, lemma, pos)
     })
@@ -104,8 +102,8 @@ pub fn expand_german_word(
         }
 
         let text = text.to_lowercase();
-        let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
-        let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
+        let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
+        let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
 
         (text, lemma, pos)
     })
@@ -159,31 +157,15 @@ pub fn expand_french_word(
         }
 
         let text = text.to_lowercase();
-        let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
-        let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
+        let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
+        let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
 
         // expand contractions
         match &text[..] {
-            "j'" => (
-                "je".to_string(),
-                "je".to_string(),
-                Some(PartOfSpeech::Pron),
-            ),
-            "m'" => (
-                "me".to_string(),
-                "me".to_string(),
-                Some(PartOfSpeech::Pron),
-            ),
-            "t'" => (
-                "te".to_string(),
-                "te".to_string(),
-                Some(PartOfSpeech::Pron),
-            ),
-            "t" => (
-                "t".to_string(),
-                "t".to_string(),
-                Some(PartOfSpeech::Part),
-            ),
+            "j'" => ("je".to_string(), "je".to_string(), Some(PartOfSpeech::Pron)),
+            "m'" => ("me".to_string(), "me".to_string(), Some(PartOfSpeech::Pron)),
+            "t'" => ("te".to_string(), "te".to_string(), Some(PartOfSpeech::Pron)),
+            "t" => ("t".to_string(), "t".to_string(), Some(PartOfSpeech::Part)),
             "s'" => {
                 if pos == Some(PartOfSpeech::Sconj) {
                     (
@@ -192,19 +174,11 @@ pub fn expand_french_word(
                         Some(PartOfSpeech::Sconj),
                     )
                 } else {
-                    (
-                        "se".to_string(),
-                        "se".to_string(),
-                        Some(PartOfSpeech::Pron),
-                    )
+                    ("se".to_string(), "se".to_string(), Some(PartOfSpeech::Pron))
                 }
             }
             "c'" => ("ce".to_string(), "ce".to_string(), None), // either DET or PRON depending on context
-            "n'" => (
-                "ne".to_string(),
-                "ne".to_string(),
-                Some(PartOfSpeech::Adv),
-            ),
+            "n'" => ("ne".to_string(), "ne".to_string(), Some(PartOfSpeech::Adv)),
             "l'" => {
                 // if we know the gender, use that
                 if morph
@@ -218,16 +192,8 @@ pub fn expand_french_word(
                     ("le".to_string(), "le".to_string(), None) // either DET or PRON depending on context
                 }
             }
-            "de" => (
-                "de".to_string(),
-                "de".to_string(),
-                Some(PartOfSpeech::Adp),
-            ),
-            "d'" => (
-                "de".to_string(),
-                "de".to_string(),
-                Some(PartOfSpeech::Adp),
-            ),
+            "de" => ("de".to_string(), "de".to_string(), Some(PartOfSpeech::Adp)),
+            "d'" => ("de".to_string(), "de".to_string(), Some(PartOfSpeech::Adp)),
             "qu'" => ("que".to_string(), "que".to_string(), None),
             "quelqu'" => ("quelque".to_string(), "quelque".to_string(), None),
             "jusqu'" => (
@@ -281,8 +247,8 @@ pub fn expand_korean_word(
     }
 
     let text = text.to_lowercase();
-    let lemma = lemma.strip_prefix("-").unwrap_or(&lemma).to_lowercase();
-    let lemma = lemma.strip_suffix(".").unwrap_or(&lemma).to_string();
+    let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
+    let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
 
     Some((text, lemma, None))
 }
