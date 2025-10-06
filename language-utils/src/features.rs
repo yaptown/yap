@@ -1,4 +1,5 @@
 /// Universal Dependencies morphological features
+/// Categorization of features & descriptions come from https://universaldependencies.org/u/feat/
 use crate::{Language, PartOfSpeech};
 use schemars::JsonSchema;
 
@@ -8,7 +9,9 @@ pub trait FeatureSet {
 }
 
 /// This feature typically applies to pronouns, pronominal adjectives (determiners), pronominal numerals (quantifiers) and pronominal adverbs.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum PronType {}
 
 /// Some languages (especially Slavic) have a complex system of numerals. For example, in the school grammar of Czech, the main part of speech is “numeral”, it includes almost everything where counting is involved and there are various subtypes. It also includes interrogative, relative, indefinite and demonstrative words referring to numbers (words like kolik / how many, tolik / so many, několik / some, a few), so at the same time we may have a non-empty value of PronType. (In English, these words are called quantifiers and they are considered a subgroup of determiners.)
@@ -19,13 +22,17 @@ pub enum PronType {}
 /// DET: quantifiers
 /// ADJ: definite adjectival, e.g. ordinal numerals
 /// ADV: adverbial (e.g. ordinal and multiplicative) numerals, both definite and pronominal
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum NumType {}
 
 /// Boolean feature of pronouns, determiners or adjectives. It tells whether the word is possessive.
 ///
 /// While many tagsets would have “possessive” as one of the various pronoun types, this feature is intentionally separate from PronType, as it is orthogonal to pronominal types. Several of the pronominal types can be optionally possessive, and adjectives can too.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum Poss {
     Yes,
 }
@@ -39,11 +46,15 @@ pub enum Poss {
 /// For example, reflexive clitics in European languages often have a wide array of possible functions (middle, passive, inchoative, impersonal, or even as a lexical morpheme). Besides that, reflexives in some languages are also used for emphasis (while other languages have separate emphatic pronouns), and in some languages they signal reciprocity (while other languages have separate reciprocal pronouns). Using Reflex=Yes with all of them has the benefit that they can be easily identified (however, if it is possible for the annotators to distinguish contexts where a reflexive pronoun is used reciprocally or emphatically, it is possible to combine Reflex=Yes with PronType=Rcp or PronType=Emp, instead of PronType=Prs).
 ///
 /// Note that while some languages also have reflexive verbs, these are in fact fused verbs with reflexive pronouns, as in Spanish despertarse or Russian проснуться (both meaning “to wake up”). Thus in these cases the fused token will be split to two syntactic words, one of them being a reflexive pronoun. In languages where the reflexive pronoun is not split, it may be more appropriate to mark the verb as the middle Voice than using Reflex=Yes with the verb.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum Reflex {}
 
 /// Clusivity is a feature of first-person plural personal pronouns. As such, it can also be reflected by inflection of verbs, e.g. in Plains Cree (Wolvengrey 2011 p. 66).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum Clusivity {}
 
 /// Gender is usually a lexical feature of nouns and inflectional feature of other parts of speech (pronouns, adjectives, determiners, numerals, verbs) that mark agreement with nouns. In English gender affects only the choice of the personal pronoun (he / she / it) and the feature is usually not encoded in English tagsets.
@@ -51,8 +62,31 @@ pub enum Clusivity {}
 /// See also the related feature of Animacy.
 ///
 /// African languages have an analogous feature of noun classes: there might be separate grammatical categories for flat objects, long thin objects etc.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
-pub enum Gender {}
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    JsonSchema,
+    serde::Deserialize,
+    serde::Serialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+pub enum Gender {
+    /// Nouns denoting male persons are masculine. Other nouns may be also grammatically masculine, without any relation to sex.
+    Masculine,
+    /// Nouns denoting female persons are feminine. Other nouns may be also grammatically feminine, without any relation to sex.
+    Feminine,
+    /// Some languages have only the masculine/feminine distinction while others also have this third gender for nouns that are neither masculine nor feminine (grammatically).
+    Neuter,
+    /// Some languages do not distinguish masculine/feminine most of the time but they do distinguish neuter vs. non-neuter (Swedish neutrum / utrum). The non-neuter is called common gender.
+    /// Note further that the Com value is not intended for cases where we just cannot derive the gender from the word itself (without seeing the context), while the language actually distinguishes Masc and Fem. For example, in Spanish, nouns distinguish two genders, masculine and feminine, and every noun can be classified as either Masc or Fem. Adjectives are supposed to agree with nouns in gender (and number), which they typically achieve by alternating -o / -a. But then there are adjectives such as grande or feliz that have only one form for both genders. So we cannot tell whether they are masculine or feminine unless we see the context. Yet they are either masculine or feminine (feminine in una ciudad grande, masculine in un puerto grande). Therefore in Spanish we should not tag grande with Gender=Com. Instead, we should either drop the gender feature entirely (suggesting that this word does not inflect for gender) or tag individual instances of grande as either masculine or feminine, depending on context.
+    Common,
+}
 
 /// Similarly to Gender (and to the African noun classes), animacy is usually a lexical feature of nouns and inflectional feature of other parts of speech (pronouns, adjectives, determiners, numerals, verbs) that mark agreement with nouns. Some languages distinguish only gender, some only animacy, and in some languages both gender and animacy play a role in the grammar. (Some non-UD tagsets then combine the two features into an extended system of genders; however, in UD the two features are annotated separately.)
 ///
@@ -70,7 +104,9 @@ pub enum Gender {}
 /// animate     který     kterého     kterému     kterého     kterým     kterém     kteří     kterých     kterým     které     kterými     kterých
 /// inanimate     který     kterého     kterému     který     kterým     kterém     které     kterých     kterým     které     kterými     kterých
 /// More generally: Some languages distinguish animate vs. inanimate (e.g. Czech masculines), some languages distinguish human vs. non-human (e.g. Yuwan, a Ryukyuan language), and others distinguish three values, human vs. non-human animate vs. inanimate (e.g. Polish masculines).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum Animacy {}
 
 /// NounClass is similar to Gender and Animacy because it is to a large part a lexical category of nouns and other parts of speech inflect for it to show agreement (pronouns, adjectives, determiners, numerals, verbs).
@@ -80,13 +116,17 @@ pub enum Animacy {}
 /// In Bantu languages, the noun class also encodes Number; therefore it is a lexical-inflectional feature of nouns. The words should be annotated with the Number feature in addition to NounClass, despite the fact that people who know Bantu could infer the number from the noun class. The lemma of the noun should be its singular form.
 ///
 /// The set of values of this feature is specific for a language family or group. Within the group, it is possible to identify classes that have similar meaning across languages (although some classes may have merged or disappeared in some languages in the group). The value of the NounClass feature consists of a short identifier of the language group (e.g., Bantu), and the number of the class (there is a standardized class numbering system accepted by scholars of the various Bantu languages; similar numbering systems should be created for the other families that have noun classes).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum NounClass {}
 
 /// Number is usually an inflectional feature of nouns and, depending on language, other parts of speech (pronouns, adjectives, determiners, numerals, verbs) that mark agreement with nouns.
 ///
 /// In languages where noun phrases are pluralized using a specific function word (pluralizer), this function word is tagged DET and Number=Plur is its lexical feature.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum Number {}
 
 /// Case is usually an inflectional feature of nouns and, depending on language, other parts of speech (pronouns, adjectives, determiners, numerals, verbs) that mark agreement with nouns.
@@ -104,11 +144,15 @@ pub enum Number {}
 /// The descriptions of the individual case values below include semantic hints about the prototypical meaning of the case. Bear in mind that quite often a case will be used for a meaning that is totally unrelated to the meaning mentioned here. Valency of verbs, adpositions and other words will determine that the noun phrase must be in a particular grammatical case to fill a particular valency slot (semantic role). It is much the same as trying to explain the meaning of prepositions: most people would agree that the central meaning of English in is location in space or time but there are phrases where the meaning is less locational: In God we trust. Say it in English.
 ///
 /// Note that Indian corpora based on the so-called Paninian model use a related feature called vibhakti. It is a merger of the Case feature described here and of various postpositions. Values of the feature are language-dependent because they are copies of the relevant morphemes (either bound morphemes or postpositions). Vibhakti can be mapped on the Case values described here if we know 1. which source values are bound morphemes (postpositions are separate nodes for us) and 2. what is their meaning. For instance, the genitive case (Gen) in Bengali is marked using the suffix -ra (-র), i.e. vib=era. In Hindi, the suffix has been split off the noun and it is now written as a separate word – the postposition kā/kī/ke (का/की/के). Even if the postpositional phrase can be understood as a genitive noun phrase, the noun is not in genitive. Instead, the postposition requires that it takes one of three case forms that are marked directly on the noun: the oblique case (Acc).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum Case {}
 
-/// Definiteness is typically a feature of nouns, adjectives and articles. Its value distinguishes whether we are talking about something known and concrete, or something general or unknown. It can be marked on definite and indefinite articles, or directly on nouns, adjectives etc. In Arabic, definiteness is also called the “state”.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
+/// Definiteness is typically a feature of nouns, adjectives and articles. Its value distinguishes whether we are talking about something known and concrete, or something general or unknown. It can be marked on definite and indefinite articles, or directly on nouns, adjectives etc. In Arabic, definiteness is also called the "state".
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+)]
 pub enum Definite {}
 
 /// Deixis is typically a feature of demonstrative pronouns, determiners, and adverbs. Its value classifies the location of the referred entity with respect to the location of the speaker or of the hearer. The common distinction is distance (proximate vs. remote entities); in some languages, elevation is distinguished as well (e.g., the entity is located higher or lower than the speaker).
@@ -196,8 +240,17 @@ pub enum Person {}
 /// In German, Spanish or Hindi, both number and person are changed (informal third person is used as formal second person) and in addition, special pronouns are used that only occur in the formal register ([de] Sie; [es] usted, ustedes; [hi] आप āpa).
 ///
 /// In Japanese, verbs and other words have polite and informal forms but the polite forms are not referring to the addressee (they are not in second person). They are just used because of who the addressee is, even if the topic does not involve the addressee at all. This kind of polite language is called teineigo (丁寧語) and belongs to the speaker-addressee axis. Nevertheless, we currently use the same values for both axes, i.e. Polite=Form can be used for teineigo too. This approach may be refined in future.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
-pub enum Polite {}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,)]
+pub enum Polite {
+    /// Usage varies but if the language distinguishes levels of politeness, then the informal register is usually meant for communication with family members and close friends.
+    Informal,
+    /// Usage varies but if the language distinguishes levels of politeness, then the polite register is usually meant for communication with strangers and people of higher social status than the one of the speaker.
+    Formal,
+    /// Usage varies but if the language distinguishes levels of politeness, then the elevated register is usually meant for communication with people of higher social status than the one of the speaker.
+    Elev,
+    /// Usage varies but if the language distinguishes levels of politeness, then the humble register is usually meant for communication with people of lower social status than the one of the speaker.
+    Humb,
+}
 
 impl FeatureSet for PronType {
     fn name() -> &'static str {
@@ -699,22 +752,32 @@ impl FeatureSet for Polite {
         "Polite"
     }
     fn applies_to(language: Language, pos: PartOfSpeech) -> bool {
-        // Politeness marking on pronouns and verbs
-        // Mentioned specifically for German, Spanish, Korean
         match language {
-            Language::German | Language::Spanish | Language::Korean => {
+            // T-V distinction languages (tu/vous, du/Sie, tú/usted)
+            Language::German | Language::Spanish | Language::French => {
                 matches!(
                     pos,
                     PartOfSpeech::Pron | PartOfSpeech::Det | PartOfSpeech::Verb | PartOfSpeech::Aux
                 )
             }
-            Language::French | Language::English => {
-                // French and English can have polite forms but less morphologically marked
+            // Honorific system with verb marking
+            Language::Korean => {
                 matches!(
                     pos,
-                    PartOfSpeech::Pron | PartOfSpeech::Det | PartOfSpeech::Verb | PartOfSpeech::Aux
+                    PartOfSpeech::Verb | PartOfSpeech::Aux | PartOfSpeech::Pron
                 )
             }
+            // English lacks morphological politeness
+            Language::English => false,
         }
     }
+}
+
+// Just gender and politeness for now
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,
+)]
+pub struct Morph {
+    pub gender: Option<Gender>,
+    pub politeness: Option<Polite>,
 }
