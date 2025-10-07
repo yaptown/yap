@@ -34,7 +34,7 @@ pub async fn ensure_multiword_terms_file(
         Language::Spanish => vec!["de el", "a el"], // Spanish contractions that become "del" and "al"
         Language::English => vec![],
         Language::Korean => vec![],
-        Language::German => vec![], // No banned terms for German yet
+        Language::German => vec!["daß"],
     };
     let banned_terms = banned_terms
         .into_iter()

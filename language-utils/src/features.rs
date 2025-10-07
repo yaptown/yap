@@ -182,8 +182,36 @@ pub enum Mood {}
 /// Tense is a feature that specifies the time when the action took / takes / will take place, in relation to a reference point. The reference is often the moment of producing the sentence, but it can be also another event in the context. In some languages (e.g. English), some tenses are actually combinations of tense and aspect. In other languages (e.g. Czech), aspect and tense are separate, although not completely independent of each other.
 ///
 /// Note that we are defining features that apply to a single word. If a tense is constructed periphrastically (two or more words, e.g. auxiliary verb indicative + participle of the main verb) and none of the participating words are specific to this tense, then the features will probably not directly reveal the tense. For instance, [en] I had been there is past perfect (pluperfect) tense, formed periphrastically by the simple past tense of the auxiliary to have and the past participle of the main verb to be. The auxiliary will be tagged VerbForm=Fin|Mood=Ind|Tense=Past and the participle will have VerbForm=Part|Tense=Past; none of the two will have Tense=Pqp. On the other hand, Portuguese can form the pluperfect morphologically as just one word, such as estivera, which will thus be tagged VerbForm=Fin|Mood=Ind|Tense=Pqp.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
-pub enum Tense {}
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    JsonSchema,
+    serde::Deserialize,
+    serde::Serialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+pub enum Tense {
+    /// The past tense denotes actions that happened before a reference point. In the prototypical case, the reference point is the moment of producing the sentence and the past event happened before the speaker speaks about it. However, Tense=Past is also used to distinguish past participles from other kinds of participles, and past converbs from other kinds of converbs; in these cases, the reference point may itself be in past or future, when compared to the moment of speaking. For instance, the Czech converb spatřivše “having seen” in the sentence spatřivše vojáky, velmi se ulekli “having seen the soldiers, they got very scared” describes an event that is anterior to the event of getting scared. It also happens to be anterior to the moment of speaking, but that fact is not encoded in the converb itself, it is rather a consequence of “getting scared” being in the past tense.
+    ///
+    /// Among finite forms, the simple past in English is an example of Tense=Past. In German, this is the Präteritum. In Turkish, this is the non-narrative past. In Bulgarian, this is aorist, the aspect-neutral past tense that can be used freely with both imperfective and perfective verbs (see also imperfect).
+    Past,
+    /// The present tense denotes actions that are in progress (or states that are valid) in a reference point; it may also describe events that usually happen. In the prototypical case, the reference point is the moment of producing the sentence; however, Tense=Pres is also used to distinguish present participles from other kinds of participles, and present converbs from other kinds of converbs. In these cases, the reference point may be in past or future when compared to the moment of speaking. For instance, the English present participle may be used to form a past progressive tense: he was watching TV when I arrived.
+    ///
+    /// Some languages (e.g. Uralic) only distinguish past vs. non-past morphologically, and then Tense=Pres can be used to represent the non-past form. (In some grammar descriptions, e.g. Turkic or Mongolic, this non-past form may be termed aorist, but note that in other languages the term is actually used for a past tense, as noted above. Therefore the term is better avoided in UD annotation.) Similarly, some Slavic languages (e.g. Czech), although they do distinguish the future tense, nevertheless have a subset of verbs where the morphologically present form has actually a future meaning.
+    Present,
+    /// The future tense denotes actions that will happen after a reference point; in the prototypical case, the reference point is the moment of producing the sentence.
+    Future,
+    /// Used in e.g. Bulgarian and Croatian, imperfect is a special case of the past tense. Note that, unfortunately, imperfect tense is not always the same as past tense + imperfective aspect. For instance, in Bulgarian, there is lexical aspect, inherent in verb meaning, and grammatical aspect, which does not necessarily always match the lexical one. In main clauses, imperfective verbs can have imperfect tense and perfective verbs have perfect tense. However, both rules can be violated in embedded clauses.
+    Imperfect,
+    /// The pluperfect denotes action that happened before another action in past. This value does not apply to English where the pluperfect (past perfect) is constructed analytically. It applies e.g. to Portuguese.
+    Pluperfect,
+}
 
 /// Aspect is typically a feature of verbs. It may also occur with other parts of speech (nouns, adjectives, adverbs), depending on whether borderline word forms such as gerunds and participles are classified as verbs or as the other category.
 ///
@@ -226,8 +254,32 @@ pub enum Evident {}
 pub enum Polarity {}
 
 /// Person is typically feature of personal and possessive pronouns / determiners, and of verbs. On verbs it is in fact an agreement feature that marks the person of the verb’s subject (some languages, e.g. Basque, can also mark person of objects). Person marked on verbs makes it unnecessary to always add a personal pronoun as subject and thus subjects are sometimes dropped (pro-drop languages).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
-pub enum Person {}
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    JsonSchema,
+    serde::Deserialize,
+    serde::Serialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+pub enum Person {
+    /// Zero person is for impersonal statements, appears in Finnish as well as in Santa Ana Pueblo Keres. (The construction is distinctive in Finnish but it does not use unique morphology that would necessarily require a feature. However, it is morphologically distinct in Keres (Davis 1964:75): The fourth (zero) person is used “when the subject of the action is obscure, as when the speaker is telling of something that he himself did not observe. It is also used when the subject of the action is inferior to the object, as when an animal is the subject and a human being the object.”
+    Zero,
+    /// In singular, the first person refers just to the speaker / author. In plural, it must include the speaker and one or more additional persons. Some languages (e.g. Taiwanese) distinguish inclusive and exclusive 1st person plural pronouns: the former include the addressee of the utterance (i.e. I + you), the latter exclude them (i.e. I + they).
+    First,
+    /// In singular, the second person refers to the addressee of the utterance / text. In plural, it may mean several addressees and optionally some third persons too.
+    Second,
+    /// The third person refers to one or more persons that are neither speakers nor addressees.
+    Third,
+    /// The fourth person can be understood as a third person argument morphologically distinguished from another third person argument, e.g. in Navajo.
+    Fourth,
+}
 
 /// Various languages have various means to express politeness or respect; some of the means are morphological. Three to four dimensions of politeness are distinguished in linguistic literature. The Polite feature currently covers (and mixes) two of them; a more elaborate system of feature values may be devised in future versions of UD if needed. The two axes covered are:
 ///
@@ -240,7 +292,20 @@ pub enum Person {}
 /// In German, Spanish or Hindi, both number and person are changed (informal third person is used as formal second person) and in addition, special pronouns are used that only occur in the formal register ([de] Sie; [es] usted, ustedes; [hi] आप āpa).
 ///
 /// In Japanese, verbs and other words have polite and informal forms but the polite forms are not referring to the addressee (they are not in second person). They are just used because of who the addressee is, even if the topic does not involve the addressee at all. This kind of polite language is called teineigo (丁寧語) and belongs to the speaker-addressee axis. Nevertheless, we currently use the same values for both axes, i.e. Polite=Form can be used for teineigo too. This approach may be refined in future.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    JsonSchema,
+    serde::Deserialize,
+    serde::Serialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
 pub enum Polite {
     /// Usage varies but if the language distinguishes levels of politeness, then the informal register is usually meant for communication with family members and close friends.
     Informal,
@@ -355,11 +420,9 @@ impl FeatureSet for Gender {
         "Gender"
     }
     fn applies_to(language: Language, pos: PartOfSpeech) -> bool {
-        // Lexical feature of nouns and inflectional feature of pronouns, adjectives, determiners, numerals, verbs
-        // In English, only affects pronouns
         match language {
             Language::English => matches!(pos, PartOfSpeech::Pron),
-            Language::French | Language::Spanish | Language::German | Language::Korean => {
+            Language::French | Language::Spanish => {
                 matches!(
                     pos,
                     PartOfSpeech::Noun
@@ -367,11 +430,23 @@ impl FeatureSet for Gender {
                         | PartOfSpeech::Pron
                         | PartOfSpeech::Adj
                         | PartOfSpeech::Det
-                        | PartOfSpeech::Num
-                        | PartOfSpeech::Verb
-                        | PartOfSpeech::Aux
+                        | PartOfSpeech::Num  // Limited to certain numerals
+                        | PartOfSpeech::Verb // Only past participles in certain constructions
                 )
             }
+            Language::German => {
+                matches!(
+                    pos,
+                    PartOfSpeech::Noun
+                        | PartOfSpeech::Propn
+                        | PartOfSpeech::Pron
+                        | PartOfSpeech::Adj
+                        | PartOfSpeech::Det
+                        | PartOfSpeech::Num // Limited (ein/eine/ein)
+                )
+            }
+
+            Language::Korean => false, // Korean has no grammatical gender
         }
     }
 }
@@ -414,24 +489,42 @@ impl FeatureSet for Number {
         "Number"
     }
     fn applies_to(language: Language, pos: PartOfSpeech) -> bool {
-        // Inflectional feature of nouns and other parts of speech (pronouns, adjectives, determiners, numerals, verbs)
         match language {
-            Language::French
-            | Language::English
-            | Language::Spanish
-            | Language::German
-            | Language::Korean => {
+            Language::English => {
                 matches!(
                     pos,
                     PartOfSpeech::Noun
-                        | PartOfSpeech::Propn
                         | PartOfSpeech::Pron
-                        | PartOfSpeech::Adj
-                        | PartOfSpeech::Det
-                        | PartOfSpeech::Num
+                        | PartOfSpeech::Det  // this/these, that/those
                         | PartOfSpeech::Verb
                         | PartOfSpeech::Aux
                 )
+            }
+            Language::French | Language::Spanish => {
+                matches!(
+                    pos,
+                    PartOfSpeech::Noun
+                        | PartOfSpeech::Pron
+                        | PartOfSpeech::Adj  // Agreement
+                        | PartOfSpeech::Det
+                        | PartOfSpeech::Verb
+                        | PartOfSpeech::Aux
+                )
+            }
+            Language::German => {
+                matches!(
+                    pos,
+                    PartOfSpeech::Noun
+                        | PartOfSpeech::Pron
+                        | PartOfSpeech::Adj  // Complex with case system
+                        | PartOfSpeech::Det
+                        | PartOfSpeech::Verb
+                        | PartOfSpeech::Aux
+                )
+            }
+            Language::Korean => {
+                // Optional plural marking, no verb agreement
+                matches!(pos, PartOfSpeech::Noun | PartOfSpeech::Pron)
             }
         }
     }
@@ -442,14 +535,11 @@ impl FeatureSet for Case {
         "Case"
     }
     fn applies_to(language: Language, pos: PartOfSpeech) -> bool {
-        // Inflectional feature of nouns and other parts of speech; can also be lexical feature of adpositions
         match language {
             Language::English => {
-                // English has minimal case, mainly in pronouns
                 matches!(pos, PartOfSpeech::Pron)
             }
             Language::German => {
-                // German has case on nouns, pronouns, adjectives, determiners, adpositions
                 matches!(
                     pos,
                     PartOfSpeech::Noun
@@ -457,22 +547,15 @@ impl FeatureSet for Case {
                         | PartOfSpeech::Pron
                         | PartOfSpeech::Adj
                         | PartOfSpeech::Det
-                        | PartOfSpeech::Adp
                 )
             }
             Language::Korean => {
-                // Korean has case particles
-                matches!(
-                    pos,
-                    PartOfSpeech::Noun
-                        | PartOfSpeech::Propn
-                        | PartOfSpeech::Pron
-                        | PartOfSpeech::Adp
-                )
+                // Case particles (이/가, 을/를, 에, 에서, etc.) are tagged as Part
+                matches!(pos, PartOfSpeech::Part)
             }
             Language::French | Language::Spanish => {
-                // French and Spanish don't have morphological case
-                false
+                // Limited case in pronouns only
+                matches!(pos, PartOfSpeech::Pron)
             }
         }
     }
@@ -612,7 +695,6 @@ impl FeatureSet for Tense {
         "Tense"
     }
     fn applies_to(language: Language, pos: PartOfSpeech) -> bool {
-        // Feature of verbs; may occur with participles classified as other parts of speech
         match language {
             Language::French
             | Language::English
@@ -621,11 +703,7 @@ impl FeatureSet for Tense {
             | Language::Korean => {
                 matches!(
                     pos,
-                    PartOfSpeech::Verb
-                        | PartOfSpeech::Aux
-                        | PartOfSpeech::Adj
-                        | PartOfSpeech::Noun
-                        | PartOfSpeech::Adv
+                    PartOfSpeech::Verb | PartOfSpeech::Aux | PartOfSpeech::Adj // For participles tagged as adjectives
                 )
             }
         }
@@ -731,17 +809,28 @@ impl FeatureSet for Person {
         "Person"
     }
     fn applies_to(language: Language, pos: PartOfSpeech) -> bool {
-        // Feature of personal and possessive pronouns/determiners, and of verbs
         match language {
-            Language::French
-            | Language::English
-            | Language::Spanish
-            | Language::German
-            | Language::Korean => {
+            Language::English => {
                 matches!(
                     pos,
-                    PartOfSpeech::Pron | PartOfSpeech::Det | PartOfSpeech::Verb | PartOfSpeech::Aux
+                    PartOfSpeech::Pron
+                        | PartOfSpeech::Det  // my/your/their
+                        | PartOfSpeech::Verb // limited: -s for 3sg
+                        | PartOfSpeech::Aux // am/is/are, have/has
                 )
+            }
+            Language::French | Language::Spanish | Language::German => {
+                matches!(
+                    pos,
+                    PartOfSpeech::Pron
+                        | PartOfSpeech::Det  // Possessive determiners
+                        | PartOfSpeech::Verb
+                        | PartOfSpeech::Aux
+                )
+            }
+            Language::Korean => {
+                // Korean pronouns exist but verbs don't inflect for person
+                matches!(pos, PartOfSpeech::Pron)
             }
         }
     }
@@ -773,11 +862,13 @@ impl FeatureSet for Polite {
     }
 }
 
-// Just gender and politeness for now
+// Just gender, politeness, tense and person for now
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Hash, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,
 )]
 pub struct Morph {
     pub gender: Option<Gender>,
     pub politeness: Option<Polite>,
+    pub tense: Option<Tense>,
+    pub person: Option<Person>,
 }
