@@ -297,15 +297,16 @@ function Tools() {
 
   return (
     <div className="bg-card rounded-lg border p-4 mb-4">
-      <h2 className="text-lg font-semibold mb-3">Tools</h2>
-      <div className="space-y-2">
-        <button
-          onClick={() => navigate('/dictionary')}
-          className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors text-sm"
-        >
-          📖 Dictionary
-        </button>
-      </div>
+      <button
+        onClick={() => {
+          navigate('/dictionary');
+          window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors"
+      >
+        <span>📖 Dictionary</span>
+        <span className="text-muted-foreground">→</span>
+      </button>
     </div>
   )
 }

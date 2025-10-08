@@ -1,6 +1,7 @@
 use futures::StreamExt;
 use language_utils::{
-    features::Morphology, Course, DictionaryEntryThoughts, Heteronym, Language, PhrasebookEntryThoughts
+    Course, DictionaryEntryThoughts, Heteronym, Language, PhrasebookEntryThoughts,
+    features::Morphology,
 };
 use std::{collections::BTreeMap, sync::LazyLock};
 use tysm::chat_completions::ChatClient;
@@ -162,25 +163,33 @@ Output the result as a JSON object containing an array of one or more definition
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct GenderResponse {
-    // thoughts: String, // commented out to save money
+    #[serde(rename = "1. thoughts")]
+    thoughts: String,
+    #[serde(rename = "2. gender")]
     gender: Option<language_utils::features::Gender>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct PoliteResponse {
-    // thoughts: String, // commented out to save money
+    #[serde(rename = "1. thoughts")]
+    thoughts: String,
+    #[serde(rename = "2. politeness")]
     politeness: Option<language_utils::features::Polite>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct TenseResponse {
-    // thoughts: String, // commented out to save money
+    #[serde(rename = "1. thoughts")]
+    thoughts: String,
+    #[serde(rename = "2. tense")]
     tense: Option<language_utils::features::Tense>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct PersonResponse {
-    // thoughts: String, // commented out to save money
+    #[serde(rename = "1. thoughts")]
+    thoughts: String,
+    #[serde(rename = "2. person")]
     person: Option<language_utils::features::Person>,
 }
 
@@ -204,7 +213,7 @@ pub async fn get_morphology(
         if gender_applies {
             let result: Result<GenderResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    "Determine the grammatical gender of the provided {language} word
+                    r#"Determine the grammatical gender of the provided {language} word
 Think about whether this word has a fixed grammatical gender. 
 If it does, provide it. If the gender varies or is not applicable, return null.
 Options are:
@@ -215,9 +224,8 @@ Options are:
 Additionally, some languages do not distinguish masculine/feminine most of the time but they do distinguish neuter vs. non-neuter (Swedish neutrum / utrum). The non-neuter is called common gender. This is only applicable in languages that do not distinguish masculine/feminine.
 - Common
 
-If the gender of the word is not uniquely determined, return null. Neuter is only applicable in languages that have a neuter gender. Like Common, it is not a placeholder for when the gender is not known. If the grammatical gender is ambiguous or not specified, use `gender: null`. (Respond with JSON)
-"                ),
-                format!("word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+If the gender of the word is not uniquely determined, return null. Neuter is only applicable in languages that have a neuter gender. Like Common, it is not a placeholder for when the gender is not known. If the grammatical gender is ambiguous or not specified, use `"2. gender": null`. (Respond with JSON, using "1. thoughts" then "2. gender".)"# ),
+                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
             result.ok().and_then(|r| r.gender)
         } else {
@@ -229,11 +237,11 @@ If the gender of the word is not uniquely determined, return null. Neuter is onl
         if politeness_applies {
             let result: Result<PoliteResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    "Determine the morphological politeness of the provided {language} word.
+                    r#"Determine the morphological politeness of the provided {language} word.
 Think about whether this word is morphologically formal, informal, elevated, or humble.
-If it has a specific morphological politeness level, provide it. Otherwise, use `politeness: null`. (Respond with JSON)",
+If it has a specific morphological politeness level, provide it. Otherwise, use `"2. politeness": null`. (Respond with JSON, using "1. thoughts" then "2. politeness".)"#,
                 ),
-                format!("word: {}", heteronym.word)
+                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
             result.ok().and_then(|r| r.politeness)
         } else {
@@ -245,7 +253,7 @@ If it has a specific morphological politeness level, provide it. Otherwise, use 
         if tense_applies {
             let result: Result<TenseResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    "Determine the tense of the provided {language} word.
+                    r#"Determine the tense of the provided {language} word.
 Think about whether this word has a fixed tense. Options are:
 - Past
 - Present
@@ -253,9 +261,9 @@ Think about whether this word has a fixed tense. Options are:
 - Imperfect
 - Pluperfect
 
-If one of these options is applicable, provide it. If the tense varies or is not applicable, use `tense: null`. (Respond with JSON)",
+If one of these options is applicable, provide it. If the tense varies or is not applicable, use `"2. tense": null`. (Respond with JSON, using "1. thoughts" then "2. tense".)"#,
                 ),
-                format!("word: {}", heteronym.word)
+                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
             result.ok().and_then(|r| r.tense)
         } else {
@@ -267,7 +275,7 @@ If one of these options is applicable, provide it. If the tense varies or is not
         if person_applies {
             let result: Result<PersonResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    "Determine the grammatical person of the provided {language} word.
+                    r#"Determine the grammatical person of the provided {language} word.
 Think about whether this word has a fixed person (e.g., first person pronoun, third person verb).
 If it does, provide it. If the person varies or is not applicable, return null.
 
@@ -277,9 +285,9 @@ Options are:
 - Third
 Additionally, some language have more than three persons. So Zeroth and Fourth are also allowed. Most languages only have the three standard persons.
 
-If one of these options is applicable, provide it. If the person varies or is not applicable, use `person: null`. (Respond with JSON)",
+If one of these options is applicable, provide it. If the person varies or is not applicable, use `"2. person": null`. (Respond with JSON, using "1. thoughts" then "2. person".)"#,
                 ),
-                format!("word: {}", heteronym.word)
+                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
             result.ok().and_then(|r| r.person)
         } else {

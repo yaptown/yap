@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { type Deck, type Morphology } from '../../../yap-frontend-rs/pkg'
 import { ArrowLeft } from 'lucide-react'
@@ -58,7 +58,7 @@ export function Dictionary({ deck }: { deck: Deck }) {
   const entries = deck.get_dictionary_entries()
 
   const filteredEntries = (() => {
-    if (!searchQuery.trim()) return entries
+    if (!searchQuery.trim()) return entries.slice(0, 100) // Only show top 100 when not searching
 
     const query = searchQuery.toLowerCase()
     return entries.filter(entry => {
@@ -69,7 +69,7 @@ export function Dictionary({ deck }: { deck: Deck }) {
       return entry.entry.definitions.some(def =>
         def.native.toLowerCase().includes(query)
       )
-    })
+    }).slice(0, 100) // Limit search results to 100 as well
   })()
 
   return (
@@ -93,7 +93,7 @@ export function Dictionary({ deck }: { deck: Deck }) {
           className="w-full px-4 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <p className="text-sm text-muted-foreground mt-2">
-          {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'}
+          Showing {filteredEntries.length} of {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
           {searchQuery && ` matching "${searchQuery}"`}
         </p>
       </div>
