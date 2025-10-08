@@ -366,7 +366,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   });
 
   useEffect(() => {
-    const timeouts: NodeJS.Timeout[] = [];
+    const timeouts: any = [];
     
     if (bannedChallengeTypes.includes('Listening')) {
       const cantListenTimestamp = localStorage.getItem('yap-cant-listen-timestamp');
@@ -408,7 +408,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
       }
     }
     
-    return () => timeouts.forEach(timeout => clearTimeout(timeout));
+    return () => timeouts.forEach((timeout: any) => clearTimeout(timeout));
   }, [bannedChallengeTypes, CANT_LISTEN_DURATION_MS]);
 
   const reviewInfo = useMemo(() => {
