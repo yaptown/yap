@@ -162,25 +162,25 @@ Output the result as a JSON object containing an array of one or more definition
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct GenderResponse {
-    thoughts: String,
+    // thoughts: String, // commented out to save money
     gender: Option<language_utils::features::Gender>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct PoliteResponse {
-    thoughts: String,
+    // thoughts: String, // commented out to save money
     politeness: Option<language_utils::features::Polite>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct TenseResponse {
-    thoughts: String,
+    // thoughts: String, // commented out to save money
     tense: Option<language_utils::features::Tense>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct PersonResponse {
-    thoughts: String,
+    // thoughts: String, // commented out to save money
     person: Option<language_utils::features::Person>,
 }
 
@@ -189,7 +189,7 @@ pub async fn get_morphology(
     heteronym: Heteronym<String>,
     chat_client: &ChatClient,
 ) -> anyhow::Result<Morphology> {
-    use language_utils::features::{Gender, Person, Polite, Tense, FeatureSet};
+    use language_utils::features::{FeatureSet, Gender, Person, Polite, Tense};
 
     let pos = heteronym.pos;
 
@@ -210,12 +210,12 @@ If it does, provide it. If the gender varies or is not applicable, return null.
 Options are:
 - Masculine
 - Feminine
-- Neuter
+- Neuter (only applicable in languages that do have a neuter gender.)
 
 Additionally, some languages do not distinguish masculine/feminine most of the time but they do distinguish neuter vs. non-neuter (Swedish neutrum / utrum). The non-neuter is called common gender. This is only applicable in languages that do not distinguish masculine/feminine.
 - Common
 
-If the gender of the word is not uniquely determined, return null.
+If the gender of the word is not uniquely determined, return null. Neuter is only applicable in languages that have a neuter gender. Like Common, it is not a placeholder for when the gender is not known. If the grammatical gender is ambiguous or not specified, use `gender: null`. (Respond with JSON)
 "                ),
                 format!("word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
@@ -231,7 +231,7 @@ If the gender of the word is not uniquely determined, return null.
                 format!(
                     "Determine the morphological politeness of the provided {language} word.
 Think about whether this word is morphologically formal, informal, elevated, or humble.
-If it has a specific morphological politeness level, provide it. Otherwise, return null.",
+If it has a specific morphological politeness level, provide it. Otherwise, use `politeness: null`. (Respond with JSON)",
                 ),
                 format!("word: {}", heteronym.word)
             ).await;
@@ -253,7 +253,7 @@ Think about whether this word has a fixed tense. Options are:
 - Imperfect
 - Pluperfect
 
-If one of these options is applicable, provide it. If the tense varies or is not applicable, return null.",
+If one of these options is applicable, provide it. If the tense varies or is not applicable, use `tense: null`. (Respond with JSON)",
                 ),
                 format!("word: {}", heteronym.word)
             ).await;
@@ -277,7 +277,7 @@ Options are:
 - Third
 Additionally, some language have more than three persons. So Zeroth and Fourth are also allowed. Most languages only have the three standard persons.
 
-If one of these options is applicable, provide it. If the person varies or is not applicable, return null.",
+If one of these options is applicable, provide it. If the person varies or is not applicable, use `person: null`. (Respond with JSON)",
                 ),
                 format!("word: {}", heteronym.word)
             ).await;

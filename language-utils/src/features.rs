@@ -77,8 +77,10 @@ pub enum Clusivity {}
     rkyv::Archive,
     rkyv::Serialize,
     rkyv::Deserialize,
+    tsify::Tsify,
 )]
 #[rkyv(compare(PartialEq), derive(Debug))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Gender {
     /// Nouns denoting male persons are masculine. Other nouns may be also grammatically masculine, without any relation to sex.
     Masculine,
@@ -200,8 +202,10 @@ pub enum Mood {}
     rkyv::Archive,
     rkyv::Serialize,
     rkyv::Deserialize,
+    tsify::Tsify,
 )]
 #[rkyv(compare(PartialEq), derive(Debug))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Tense {
     /// The past tense denotes actions that happened before a reference point. In the prototypical case, the reference point is the moment of producing the sentence and the past event happened before the speaker speaks about it. However, Tense=Past is also used to distinguish past participles from other kinds of participles, and past converbs from other kinds of converbs; in these cases, the reference point may itself be in past or future, when compared to the moment of speaking. For instance, the Czech converb spatřivše “having seen” in the sentence spatřivše vojáky, velmi se ulekli “having seen the soldiers, they got very scared” describes an event that is anterior to the event of getting scared. It also happens to be anterior to the moment of speaking, but that fact is not encoded in the converb itself, it is rather a consequence of “getting scared” being in the past tense.
     ///
@@ -275,8 +279,10 @@ pub enum Polarity {}
     rkyv::Archive,
     rkyv::Serialize,
     rkyv::Deserialize,
+    tsify::Tsify,
 )]
 #[rkyv(compare(PartialEq), derive(Debug))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Person {
     /// Zero person is for impersonal statements, appears in Finnish as well as in Santa Ana Pueblo Keres. (The construction is distinctive in Finnish but it does not use unique morphology that would necessarily require a feature. However, it is morphologically distinct in Keres (Davis 1964:75): The fourth (zero) person is used “when the subject of the action is obscure, as when the speaker is telling of something that he himself did not observe. It is also used when the subject of the action is inferior to the object, as when an animal is the subject and a human being the object.”
     Zeroth,
@@ -316,8 +322,10 @@ pub enum Person {
     rkyv::Archive,
     rkyv::Serialize,
     rkyv::Deserialize,
+    tsify::Tsify,
 )]
 #[rkyv(compare(PartialEq), derive(Debug))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Polite {
     /// Usage varies but if the language distinguishes levels of politeness, then the informal register is usually meant for communication with family members and close friends.
     Informal,
@@ -881,7 +889,6 @@ impl FeatureSet for Polite {
     serde::Deserialize,
     schemars::JsonSchema,
     serde::Serialize,
-    tsify::Tsify,
     Eq,
     PartialEq,
     Ord,
@@ -889,8 +896,10 @@ impl FeatureSet for Polite {
     rkyv::Archive,
     rkyv::Serialize,
     rkyv::Deserialize,
+    tsify::Tsify,
 )]
 #[rkyv(compare(PartialEq), derive(Debug))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Morphology {
     pub gender: Option<Gender>,
     pub politeness: Option<Polite>,

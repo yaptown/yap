@@ -2354,6 +2354,39 @@ impl Deck {
 
         chart_data
     }
+
+    /// Get all dictionary entries ordered by frequency (most common first)
+    /// Returns entries in frequency order (already sorted in word_frequencies)
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_dictionary_entries(&self) -> Vec<DictionaryEntryResolved> {
+        let language_pack = &self.context.language_pack;
+        let rodeo = &language_pack.rodeo;
+
+        // word_frequencies is already sorted by frequency, so iterate in order
+        language_pack
+            .word_frequencies
+            .keys()
+            .filter_map(|lexeme| {
+                if let Lexeme::Heteronym(heteronym) = lexeme {
+                    let entry = language_pack.dictionary.get(heteronym)?;
+                    Some(DictionaryEntryResolved {
+                        word: rodeo.resolve(&heteronym.word).to_string(),
+                        entry: entry.clone(),
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify))]
+#[cfg_attr(target_arch = "wasm32", tsify(into_wasm_abi))]
+pub struct DictionaryEntryResolved {
+    pub word: String,
+    pub entry: DictionaryEntry,
 }
 
 #[derive(Debug, Clone)]

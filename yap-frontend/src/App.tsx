@@ -1,5 +1,5 @@
 import { useState, useEffect, Profiler, useSyncExternalStore, useMemo, useCallback } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet, useNavigate, useOutletContext } from 'react-router-dom'
 import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeType, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
 import { Button } from "@/components/ui/button.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
@@ -36,6 +36,7 @@ import { Toaster } from 'sonner'
 import { BrowserNotSupported } from '@/components/browser-not-supported'
 import { Stats } from '@/components/stats'
 import { About } from '@/components/about'
+import { Dictionary } from '@/components/Dictionary'
 import { match, P } from 'ts-pattern';
 
 // Essential user info to persist for offline functionality
@@ -202,71 +203,40 @@ function AppTestWeapon({ userInfo, accessToken }: { userInfo: UserInfo | undefin
   }
 }
 
-function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined, accessToken: string | undefined }) {
-  const weapon = useWeapon()
-  const deck = useDeck()
+type OutletContextType = {
+  userInfo: UserInfo | undefined
+  accessToken: string | undefined
+}
 
-  const [requestedLanguageChange, setRequestedLanguageChange] = useState(false);
+function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined, accessToken: string | undefined }) {
+  const deck = useDeck()
+  const navigate = useNavigate()
 
   return (
     <Profiler id="App" onRender={profilerOnRender}>
       <div>
         <div className="min-h-screen bg-background text-foreground">
           <div className="max-w-2xl mx-auto">
-            <Profiler id="Review" onRender={profilerOnRender}>
+            <Profiler id="Content" onRender={profilerOnRender}>
               <div className="flex flex-col p-2" style={{ minHeight: 'calc(100dvh)' }}>
                 <Header
                   userInfo={userInfo}
                   onSignOut={() => supabase.auth.signOut()}
                   onChangeLanguage={deck?.type === 'deck' ? () => {
-                    setRequestedLanguageChange(true)
+                    navigate('/select-language')
                   } : undefined}
                   showSignupNag={deck?.type === 'deck' && deck.deck !== null}
                   language={deck?.type === 'deck' ? deck.targetLanguage : undefined}
                 />
-                {
-                  match(deck)
-                    .with({ type: "deck", deck: null }, () =>
-                      <div className="flex-1 bg-background flex items-center justify-center">
-                        <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
-                      </div>)
-                    .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage }) => (
-                      !requestedLanguageChange ?
-                        <Review
-                          userInfo={userInfo}
-                          accessToken={accessToken}
-                          deck={deck}
-                          targetLanguage={targetLanguage}
-                        /> :
-                        <LanguageSelector
-                          skipOnboarding={true}
-                          currentTargetLanguage={targetLanguage}
-                          onLanguagesConfirmed={(native, target) => {
-                            // Languages selected - Native and Target
-                            weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
-                            setRequestedLanguageChange(false)
-                          }} />
-
-                    ))
-                    .with({ type: "noLanguageSelected" }, () => (
-                      <LanguageSelector
-                        skipOnboarding={false}
-                        onLanguagesConfirmed={(native, target) => {
-                          // Languages selected - Native and Target
-                          weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
-                        }} />
-                    ))
-                    .with(null, () =>
-                      <div className="bg-background flex items-center justify-center">
-                        <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
-                      </div>)
-                    .exhaustive()
-                }
+                <Outlet context={{ userInfo, accessToken }} />
               </div>
               {deck ? (
-                deck.type === "deck" && !requestedLanguageChange ? (
+                deck.type === "deck" ? (
                   deck.deck ? (
-                    <Stats deck={deck.deck} />
+                    <>
+                      <Tools />
+                      <Stats deck={deck.deck} />
+                    </>
                   ) : <></>
                 ) : <></>
               ) : <></>}
@@ -279,6 +249,89 @@ function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined,
     </Profiler>
   )
 }
+
+function ReviewPage() {
+  const { userInfo, accessToken } = useOutletContext<OutletContextType>()
+  const deck = useDeck()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (deck?.type === 'noLanguageSelected') {
+      navigate('/select-language')
+    }
+  }, [deck, navigate])
+
+  return (
+    <>
+      {
+        match(deck)
+          .with({ type: "deck", deck: null }, () =>
+            <div className="flex-1 bg-background flex items-center justify-center">
+              <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+            </div>)
+          .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage }) => (
+            <Review
+              userInfo={userInfo}
+              accessToken={accessToken}
+              deck={deck}
+              targetLanguage={targetLanguage}
+            />
+          ))
+          .with({ type: "noLanguageSelected" }, () => (
+            <div className="flex-1 bg-background flex items-center justify-center">
+              <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+            </div>
+          ))
+          .with(null, () =>
+            <div className="bg-background flex items-center justify-center">
+              <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+            </div>)
+          .exhaustive()
+      }
+    </>
+  )
+}
+
+function Tools() {
+  const navigate = useNavigate()
+
+  return (
+    <div className="bg-card rounded-lg border p-4 mb-4">
+      <h2 className="text-lg font-semibold mb-3">Tools</h2>
+      <div className="space-y-2">
+        <button
+          onClick={() => navigate('/dictionary')}
+          className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors text-sm"
+        >
+          📖 Dictionary
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function DictionaryPage() {
+  const deck = useDeck()
+
+  if (deck?.type !== 'deck') {
+    return (
+      <div className="flex-1 bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
+  if (!deck.deck) {
+    return (
+      <div className="flex-1 bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading dictionary...</p>
+      </div>
+    )
+  }
+
+  return <Dictionary deck={deck.deck} />
+}
+
 function findNextDueCard(deck: Deck): CardSummary | null {
   const allCards = deck.get_all_cards_summary()
   const now = Date.now()
@@ -651,9 +704,48 @@ function App() {
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/accept-invite" element={<AcceptInvite />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/*" element={<AppMain />} />
+        <Route path="/*" element={<AppMain />}>
+          <Route index element={<ReviewPage />} />
+          <Route path="dictionary" element={<DictionaryPage />} />
+          <Route path="select-language" element={<SelectLanguagePage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
+  )
+}
+
+function SelectLanguagePage() {
+  const weapon = useWeapon()
+  const deck = useDeck()
+  const navigate = useNavigate()
+
+  return (
+    <>
+      {
+        match(deck)
+          .with({ type: "deck", deck: P.not(P.nullish) }, ({ targetLanguage }) => (
+            <LanguageSelector
+              skipOnboarding={true}
+              currentTargetLanguage={targetLanguage}
+              onLanguagesConfirmed={(native, target) => {
+                weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
+                navigate('/')
+              }} />
+          ))
+          .with({ type: "noLanguageSelected" }, () => (
+            <LanguageSelector
+              skipOnboarding={false}
+              onLanguagesConfirmed={(native, target) => {
+                weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
+                navigate('/')
+              }} />
+          ))
+          .otherwise(() =>
+            <div className="flex-1 bg-background flex items-center justify-center">
+              <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+            </div>)
+      }
+    </>
   )
 }
 
