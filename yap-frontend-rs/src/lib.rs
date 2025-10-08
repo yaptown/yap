@@ -2372,6 +2372,7 @@ impl Deck {
                     Some(DictionaryEntryResolved {
                         word: rodeo.resolve(&heteronym.word).to_string(),
                         entry: entry.clone(),
+                        heteronym: heteronym.resolve(rodeo),
                     })
                 } else {
                     None
@@ -2387,6 +2388,7 @@ impl Deck {
 pub struct DictionaryEntryResolved {
     pub word: String,
     pub entry: DictionaryEntry,
+    pub heteronym: Heteronym<String>,
 }
 
 #[derive(Debug, Clone)]

@@ -760,7 +760,16 @@ async fn main() -> anyhow::Result<()> {
                 .lines()
                 .map(|line| serde_json::from_str(&line.unwrap()))
                 .map(
-                    |result: Result<(_, (language_utils::DictionaryEntryThoughts, language_utils::features::Morphology)), _>| {
+                    |result: Result<
+                        (
+                            _,
+                            (
+                                language_utils::DictionaryEntryThoughts,
+                                language_utils::features::Morphology,
+                            ),
+                        ),
+                        _,
+                    >| {
                         result.map(|(heteronym, thoughts)| (heteronym, thoughts.into()))
                     },
                 )

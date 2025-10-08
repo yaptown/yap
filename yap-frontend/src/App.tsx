@@ -313,6 +313,7 @@ function Tools() {
 
 function DictionaryPage() {
   const deck = useDeck()
+  const weapon = useWeapon()
 
   if (deck?.type !== 'deck') {
     return (
@@ -330,7 +331,7 @@ function DictionaryPage() {
     )
   }
 
-  return <Dictionary deck={deck.deck} />
+  return <Dictionary deck={deck.deck} weapon={weapon} targetLanguage={deck.targetLanguage} />
 }
 
 function findNextDueCard(deck: Deck): CardSummary | null {
