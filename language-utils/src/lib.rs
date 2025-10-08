@@ -5,6 +5,8 @@ use std::{collections::BTreeMap, num::NonZeroUsize};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
+use crate::features::Morphology;
+
 pub fn strip_punctuation(text: &str) -> &str {
     text.trim_matches(|c| matches!(c, '.' | ',' | '!' | '?' | ':' | ';' | '-'))
 }
@@ -467,13 +469,16 @@ pub struct DictionaryEntryThoughts {
 pub struct DictionaryEntry {
     pub target_language_word: String,
     pub definitions: Vec<TargetToNativeWord>,
+    pub morphology: Morphology,
 }
 
-impl From<DictionaryEntryThoughts> for DictionaryEntry {
-    fn from(entry: DictionaryEntryThoughts) -> Self {
+impl From<(DictionaryEntryThoughts, Morphology)> for DictionaryEntry {
+    fn from(entry: (DictionaryEntryThoughts, Morphology)) -> Self {
+        let (entry, morphology) = entry;
         Self {
             target_language_word: entry.target_language_word,
             definitions: entry.definitions,
+            morphology,
         }
     }
 }

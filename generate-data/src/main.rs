@@ -529,8 +529,6 @@ async fn main() -> anyhow::Result<()> {
         if dict_file.exists() {
             println!("Skipping dictionary creation because file already exists");
         } else {
-            let dictionary = generate_data::dict::create_dictionary(*course, &frequencies).await?;
-
             let custom_definitions = {
                 let file = File::open(source_data_path.join("custom_definitions.jsonl"))?;
                 let reader = BufReader::new(file);
@@ -540,19 +538,25 @@ async fn main() -> anyhow::Result<()> {
                     .filter(|line| !line.is_empty())
                     .map(|line| serde_json::from_str(&line))
                     .collect::<Result<
-                        Vec<(
+                        BTreeMap<
                             language_utils::Heteronym<String>,
                             language_utils::DictionaryEntryThoughts,
-                        )>,
+                        >,
                         serde_json::Error,
                     >>()?
             };
+
+            let dictionary = generate_data::dict::create_dictionary(*course, &frequencies).await?;
             let dictionary = dictionary
                 .into_iter()
-                .chain(custom_definitions.into_iter())
-                .collect::<BTreeMap<_, _>>()
-                .into_iter()
-                .collect::<Vec<_>>();
+                .map(|(heteronym, (def, morphology))| {
+                    if let Some(def) = custom_definitions.get(&heteronym) {
+                        (heteronym, (def.clone(), morphology))
+                    } else {
+                        (heteronym, (def, morphology))
+                    }
+                })
+                .collect::<BTreeMap<_, _>>();
 
             // Write the dictionary to a jsonl file
             let mut file = File::create(dict_file)?;
@@ -756,7 +760,7 @@ async fn main() -> anyhow::Result<()> {
                 .lines()
                 .map(|line| serde_json::from_str(&line.unwrap()))
                 .map(
-                    |result: Result<(_, language_utils::DictionaryEntryThoughts), _>| {
+                    |result: Result<(_, (language_utils::DictionaryEntryThoughts, language_utils::features::Morphology)), _>| {
                         result.map(|(heteronym, thoughts)| (heteronym, thoughts.into()))
                     },
                 )
