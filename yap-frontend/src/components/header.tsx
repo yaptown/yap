@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationSettings } from "@/components/notification-settings";
-import { LogOut, AlertTriangle } from "lucide-react";
+import { LogOut, AlertTriangle, ArrowLeft } from "lucide-react";
 import { SyncStatusDialog } from "@/components/sync-status-dialog";
 import type { UserInfo } from "@/App";
 import { AuthDialog } from "@/components/auth-dialog";
@@ -21,6 +21,10 @@ interface HeaderProps {
   onChangeLanguage?: () => void;
   showSignupNag?: boolean;
   language?: Language;
+  backButton?: {
+    label: string;
+    onBack: () => void;
+  };
 }
 
 function getLanguageEmoji(language: Language | undefined): string {
@@ -40,6 +44,7 @@ export function Header({
   onChangeLanguage,
   showSignupNag = false,
   language,
+  backButton,
 }: HeaderProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [defaultView, setDefaultView] = useState<"signin" | "signup">("signin");
@@ -48,28 +53,45 @@ export function Header({
     <div className="space-y-2">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            {onChangeLanguage ? (
+          {backButton ? (
+            <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={onChangeLanguage}
-                className="h-8 w-8 p-0 text-2xl"
-                title="Change language"
+                onClick={backButton.onBack}
+                className="h-8 w-8"
+                title="Go back"
               >
-                {getLanguageEmoji(language)}
+                <ArrowLeft className="w-5 h-5" />
               </Button>
-            ) : (
-              <div className="h-8 w-8 flex items-center justify-center text-2xl">
-                {getLanguageEmoji(language)}
+              <h1 className="text-2xl font-bold">{backButton.label}</h1>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                {onChangeLanguage ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onChangeLanguage}
+                    className="h-8 w-8 p-0 text-2xl"
+                    title="Change language"
+                  >
+                    {getLanguageEmoji(language)}
+                  </Button>
+                ) : (
+                  <div className="h-8 w-8 flex items-center justify-center text-2xl">
+                    {getLanguageEmoji(language)}
+                  </div>
+                )}
+                <h1 className="text-2xl font-bold">
+                  <span className="hidden sm:inline">Yap.Town</span>
+                  <span className="sm:hidden">Yap</span>
+                </h1>
               </div>
-            )}
-            <h1 className="text-2xl font-bold">
-              <span className="hidden sm:inline">Yap.Town</span>
-              <span className="sm:hidden">Yap</span>
-            </h1>
-          </div>
-          {userInfo && <SyncStatusDialog />}
+              {userInfo && <SyncStatusDialog />}
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {userInfo ? (

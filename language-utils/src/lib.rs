@@ -17,6 +17,7 @@ pub fn expand_spanish_word(
     lemma: &str,
     pos: Option<PartOfSpeech>,
     _morph: &BTreeMap<String, String>,
+    _is_first_word: bool,
 ) -> Option<(String, String, Option<PartOfSpeech>)> {
     Some({
         let text = strip_punctuation(text);
@@ -51,6 +52,7 @@ pub fn expand_english_word(
     lemma: &str,
     pos: Option<PartOfSpeech>,
     _morph: &BTreeMap<String, String>,
+    _is_first_word: bool,
 ) -> Option<(String, String, Option<PartOfSpeech>)> {
     Some({
         let text = strip_punctuation(text);
@@ -80,6 +82,7 @@ pub fn expand_german_word(
     lemma: &str,
     pos: Option<PartOfSpeech>,
     _morph: &BTreeMap<String, String>,
+    is_first_word: bool,
 ) -> Option<(String, String, Option<PartOfSpeech>)> {
     Some({
         let text = strip_punctuation(text);
@@ -95,6 +98,19 @@ pub fn expand_german_word(
             return None;
         }
 
+        // Special handling for "Sie"
+        // If it's not at the beginning of the sentence and it's capitalized,
+        // we know it's the polite pronoun form
+        // The Spacey Library should really do this for us, but they don't, so we have to.
+        if !is_first_word && text == "Sie" {
+            return Some((
+                "Sie".to_string(),
+                "Sie".to_string(),
+                Some(PartOfSpeech::Pron),
+            ));
+        }
+
+        // If it's at the beginning of the sentence, trust the NLP system
         let polite_forms = ["Sie"];
         if polite_forms.contains(&text) && polite_forms.contains(&lemma) {
             return Some((text.to_string(), lemma.to_string(), pos));
@@ -117,6 +133,7 @@ pub fn expand_french_word(
     lemma: &str,
     pos: Option<PartOfSpeech>,
     morph: &BTreeMap<String, String>,
+    _is_first_word: bool,
 ) -> Option<(String, String, Option<PartOfSpeech>)> {
     Some({
         // Handle common French abbreviations before stripping punctuation
@@ -234,6 +251,7 @@ pub fn expand_korean_word(
     lemma: &str,
     _pos: Option<PartOfSpeech>,
     _morph: &BTreeMap<String, String>,
+    _is_first_word: bool,
 ) -> Option<(String, String, Option<PartOfSpeech>)> {
     let text = strip_punctuation(text);
 
@@ -576,7 +594,11 @@ impl SentenceInfo {
             words: analysis
                 .doc
                 .into_iter()
-                .map(|doc_token| Literal::from_doc_token(doc_token, proper_nouns, language))
+                .enumerate()
+                .map(|(i, doc_token)| {
+                    let is_first_word = i == 0;
+                    Literal::from_doc_token(doc_token, proper_nouns, language, is_first_word)
+                })
                 .collect(),
             multiword_terms: analysis.multiword_terms,
         }
@@ -688,11 +710,12 @@ impl Literal<String> {
         doc_token: DocToken,
         proper_nouns: &BTreeMap<String, Heteronym<String>>,
         language: Language,
+        is_first_word: bool,
     ) -> Self {
         Self {
             text: doc_token.text.clone(),
             whitespace: doc_token.whitespace.clone(),
-            heteronym: Heteronym::from_doc_token(doc_token, proper_nouns, language),
+            heteronym: Heteronym::from_doc_token(doc_token, proper_nouns, language, is_first_word),
         }
     }
 
@@ -732,18 +755,24 @@ impl Heteronym<String> {
         doc_token: DocToken,
         proper_nouns: &BTreeMap<String, Heteronym<String>>,
         language: Language,
+        is_first_word: bool,
     ) -> Option<Self> {
         let expand_word = match language {
             Language::French => expand_french_word,
             Language::Spanish => expand_spanish_word,
             Language::English => expand_english_word,
             Language::Korean => expand_korean_word,
-            Language::German => expand_german_word, // German uses similar expansion as English for now
+            Language::German => expand_german_word,
         };
 
         let heteronym = if let Some(heteronym) = proper_nouns.get(&doc_token.text.to_lowercase()) {
-            let (word, lemma, pos) =
-                expand_word(&heteronym.word, &heteronym.lemma, None, &BTreeMap::new())?;
+            let (word, lemma, pos) = expand_word(
+                &heteronym.word,
+                &heteronym.lemma,
+                None,
+                &BTreeMap::new(),
+                is_first_word,
+            )?;
             let pos = pos.unwrap_or(heteronym.pos);
             Self { word, lemma, pos }
         } else {
@@ -752,6 +781,7 @@ impl Heteronym<String> {
                 &doc_token.lemma,
                 Some(doc_token.pos),
                 &doc_token.morph,
+                is_first_word,
             )?;
             let pos = pos.unwrap_or(doc_token.pos);
             Self { word, lemma, pos }

@@ -31,12 +31,12 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import { TranscriptionChallenge } from './components/challenges/TranscriptionChallenge'
 import { LanguageSelector } from './components/LanguageSelector'
 import { WeaponProvider, useAsyncMemo, useWeapon, useWeaponState, useWeaponSupport, type WeaponToken } from './weapon'
-import { Header } from '@/components/header'
 import { Toaster } from 'sonner'
 import { BrowserNotSupported } from '@/components/browser-not-supported'
 import { Stats } from '@/components/stats'
 import { About } from '@/components/about'
 import { Dictionary } from '@/components/Dictionary'
+import { PageLayout } from '@/components/PageLayout'
 import { match, P } from 'ts-pattern';
 
 // Essential user info to persist for offline functionality
@@ -209,37 +209,13 @@ type OutletContextType = {
 }
 
 function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined, accessToken: string | undefined }) {
-  const deck = useDeck()
-  const navigate = useNavigate()
-
   return (
     <Profiler id="App" onRender={profilerOnRender}>
       <div>
         <div className="min-h-screen bg-background text-foreground">
           <div className="max-w-2xl mx-auto">
             <Profiler id="Content" onRender={profilerOnRender}>
-              <div className="flex flex-col p-2" style={{ minHeight: 'calc(100dvh)' }}>
-                <Header
-                  userInfo={userInfo}
-                  onSignOut={() => supabase.auth.signOut()}
-                  onChangeLanguage={deck?.type === 'deck' ? () => {
-                    navigate('/select-language')
-                  } : undefined}
-                  showSignupNag={deck?.type === 'deck' && deck.deck !== null}
-                  language={deck?.type === 'deck' ? deck.targetLanguage : undefined}
-                />
-                <Outlet context={{ userInfo, accessToken }} />
-              </div>
-              {deck ? (
-                deck.type === "deck" ? (
-                  deck.deck ? (
-                    <>
-                      <Tools />
-                      <Stats deck={deck.deck} />
-                    </>
-                  ) : <></>
-                ) : <></>
-              ) : <></>}
+              <Outlet context={{ userInfo, accessToken }} />
               <About />
             </Profiler>
             <div className="p-2"></div>
@@ -265,27 +241,60 @@ function ReviewPage() {
     <>
       {
         match(deck)
-          .with({ type: "deck", deck: null }, () =>
-            <div className="flex-1 bg-background flex items-center justify-center">
-              <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
-            </div>)
-          .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage }) => (
-            <Review
+          .with({ type: "deck", deck: null }, () => (
+            <PageLayout
               userInfo={userInfo}
-              accessToken={accessToken}
-              deck={deck}
-              targetLanguage={targetLanguage}
-            />
+              headerProps={{
+                onChangeLanguage: () => navigate('/select-language'),
+                showSignupNag: false
+              }}
+            >
+              <div className="flex-1 bg-background flex items-center justify-center">
+                <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+              </div>
+            </PageLayout>
           ))
-          .with({ type: "noLanguageSelected" }, () => (
-            <div className="flex-1 bg-background flex items-center justify-center">
-              <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+          .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage }) => (
+            <div className="flex flex-col gap-6">
+              <PageLayout
+                userInfo={userInfo}
+                headerProps={{
+                  onChangeLanguage: () => navigate('/select-language'),
+                  showSignupNag: deck !== null,
+                  language: targetLanguage
+                }}
+              >
+                <Review
+                  userInfo={userInfo}
+                  accessToken={accessToken}
+                  deck={deck}
+                  targetLanguage={targetLanguage}
+                />
+              </PageLayout>
+              <Tools />
+              <Stats deck={deck} />
             </div>
           ))
-          .with(null, () =>
-            <div className="bg-background flex items-center justify-center">
-              <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
-            </div>)
+          .with({ type: "noLanguageSelected" }, () => (
+            <PageLayout
+              userInfo={userInfo}
+              headerProps={{ showSignupNag: false }}
+            >
+              <div className="flex-1 bg-background flex items-center justify-center">
+                <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+              </div>
+            </PageLayout>
+          ))
+          .with(null, () => (
+            <PageLayout
+              userInfo={userInfo}
+              headerProps={{ showSignupNag: false }}
+            >
+              <div className="bg-background flex items-center justify-center">
+                <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+              </div>
+            </PageLayout>
+          ))
           .exhaustive()
       }
     </>
@@ -296,42 +305,70 @@ function Tools() {
   const navigate = useNavigate()
 
   return (
-    <div className="bg-card rounded-lg border p-4 mb-4">
-      <button
-        onClick={() => {
-          navigate('/dictionary');
-          window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-        }}
-        className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors"
-      >
-        <span>📖 Dictionary</span>
-        <span className="text-muted-foreground">→</span>
-      </button>
+    <div className="">
+      <h2 className="text-2xl font-semibold">Tools</h2>
+      <div className="bg-card border rounded-lg p-4 mt-3">
+        <button
+          onClick={() => {
+            navigate('/dictionary');
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+          }}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors"
+        >
+          <span>📖 Dictionary</span>
+          <span className="text-muted-foreground">→</span>
+        </button>
+      </div>
     </div>
   )
 }
 
 function DictionaryPage() {
+  const { userInfo } = useOutletContext<OutletContextType>()
   const deck = useDeck()
   const weapon = useWeapon()
+  const navigate = useNavigate()
 
   if (deck?.type !== 'deck') {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
+      <PageLayout
+        userInfo={userInfo}
+        headerProps={{
+          backButton: { label: 'Dictionary', onBack: () => navigate('/') }
+        }}
+      >
+        <div className="flex-1 bg-background flex items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </PageLayout>
     )
   }
 
   if (!deck.deck) {
     return (
-      <div className="flex-1 bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading dictionary...</p>
-      </div>
+      <PageLayout
+        userInfo={userInfo}
+        headerProps={{
+          backButton: { label: 'Dictionary', onBack: () => navigate('/') }
+        }}
+      >
+        <div className="flex-1 bg-background flex items-center justify-center">
+          <p className="text-muted-foreground">Loading dictionary...</p>
+        </div>
+      </PageLayout>
     )
   }
 
-  return <Dictionary deck={deck.deck} weapon={weapon} targetLanguage={deck.targetLanguage} />
+  return (
+    <PageLayout
+      userInfo={userInfo}
+      headerProps={{
+        backButton: { label: 'Dictionary', onBack: () => navigate('/') }
+      }}
+    >
+      <Dictionary deck={deck.deck} weapon={weapon} targetLanguage={deck.targetLanguage} nativeLanguage={deck.nativeLanguage} />
+    </PageLayout>
+  )
 }
 
 function findNextDueCard(deck: Deck): CardSummary | null {

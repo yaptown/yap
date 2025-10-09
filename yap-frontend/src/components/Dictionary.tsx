@@ -1,8 +1,48 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { type Deck, type Morphology, type Weapon, type Language } from '../../../yap-frontend-rs/pkg'
-import { ArrowLeft, CirclePlus, CircleCheckBig } from 'lucide-react'
+import { CirclePlus, CircleCheckBig } from 'lucide-react'
 import { toast } from 'sonner'
+
+// Helper function to get language display name (exhaustive)
+function getLanguageDisplayName(language: Language): string {
+  switch (language) {
+    case 'French':
+      return 'French'
+    case 'English':
+      return 'English'
+    case 'Spanish':
+      return 'Spanish'
+    case 'Korean':
+      return 'Korean'
+    case 'German':
+      return 'German'
+    default: {
+      // TypeScript will error if we add a new language and don't handle it
+      const exhaustiveCheck: never = language
+      throw new Error(`Unhandled language: ${exhaustiveCheck}`)
+    }
+  }
+}
+
+// Helper function to get language code (exhaustive)
+function getLanguageCode(language: Language): string {
+  switch (language) {
+    case 'French':
+      return 'FR'
+    case 'English':
+      return 'EN'
+    case 'Spanish':
+      return 'ES'
+    case 'Korean':
+      return 'KO'
+    case 'German':
+      return 'DE'
+    default: {
+      const exhaustiveCheck: never = language
+      throw new Error(`Unhandled language: ${exhaustiveCheck}`)
+    }
+  }
+}
 
 function formatMorphology(morphology: Morphology): string {
   const parts: string[] = []
@@ -52,12 +92,17 @@ function formatMorphology(morphology: Morphology): string {
   return parts.length > 0 ? parts.join(', ') : ''
 }
 
-export function Dictionary({ deck, weapon, targetLanguage }: { deck: Deck, weapon: Weapon, targetLanguage: Language }) {
-  const navigate = useNavigate()
+export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { deck: Deck, weapon: Weapon, targetLanguage: Language, nativeLanguage: Language }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [addedCards, setAddedCards] = useState<Set<string>>(new Set())
 
   const entries = deck.get_dictionary_entries()
+
+  // Get language codes and display names for UI
+  const targetLangCode = getLanguageCode(targetLanguage)
+  const nativeLangCode = getLanguageCode(nativeLanguage)
+  const targetLangName = getLanguageDisplayName(targetLanguage)
+  const nativeLangName = getLanguageDisplayName(nativeLanguage)
 
   // Check which cards are already added
   useEffect(() => {
@@ -128,20 +173,10 @@ export function Dictionary({ deck, weapon, targetLanguage }: { deck: Deck, weapo
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
-      <div className="p-4 border-b">
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => navigate('/')}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-            aria-label="Back to home"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-2xl font-bold">Dictionary</h1>
-        </div>
+      <div className="border-b pb-4 mb-4">
         <input
           type="text"
-          placeholder="Search in French or English..."
+          placeholder={`Search in ${targetLangName} or ${nativeLangName}...`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-4 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -152,7 +187,7 @@ export function Dictionary({ deck, weapon, targetLanguage }: { deck: Deck, weapo
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto">
         <div className="space-y-4">
           {filteredEntries.map((entry, index) => (
             <div key={`${entry.word}-${index}`} className="border rounded-lg p-4 bg-card relative">
@@ -179,10 +214,10 @@ export function Dictionary({ deck, weapon, targetLanguage }: { deck: Deck, weapo
                     )}
                     <div className="mt-2 text-sm space-y-1">
                       <div className="text-foreground">
-                        <span className="text-muted-foreground">FR:</span> {def.example_sentence_target_language}
+                        <span className="text-muted-foreground">{targetLangCode}:</span> {def.example_sentence_target_language}
                       </div>
                       <div className="text-muted-foreground">
-                        <span>EN:</span> {def.example_sentence_native_language}
+                        <span>{nativeLangCode}:</span> {def.example_sentence_native_language}
                       </div>
                     </div>
                   </div>
