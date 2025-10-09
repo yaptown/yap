@@ -149,10 +149,114 @@ pub enum Number {}
 /// The descriptions of the individual case values below include semantic hints about the prototypical meaning of the case. Bear in mind that quite often a case will be used for a meaning that is totally unrelated to the meaning mentioned here. Valency of verbs, adpositions and other words will determine that the noun phrase must be in a particular grammatical case to fill a particular valency slot (semantic role). It is much the same as trying to explain the meaning of prepositions: most people would agree that the central meaning of English in is location in space or time but there are phrases where the meaning is less locational: In God we trust. Say it in English.
 ///
 /// Note that Indian corpora based on the so-called Paninian model use a related feature called vibhakti. It is a merger of the Case feature described here and of various postpositions. Values of the feature are language-dependent because they are copies of the relevant morphemes (either bound morphemes or postpositions). Vibhakti can be mapped on the Case values described here if we know 1. which source values are bound morphemes (postpositions are separate nodes for us) and 2. what is their meaning. For instance, the genitive case (Gen) in Bengali is marked using the suffix -ra (-র), i.e. vib=era. In Hindi, the suffix has been split off the noun and it is now written as a separate word – the postposition kā/kī/ke (का/की/के). Even if the postpositional phrase can be understood as a genitive noun phrase, the noun is not in genitive. Instead, the postposition requires that it takes one of three case forms that are marked directly on the noun: the oblique case (Acc).
+
+/// Person is typically feature of personal and possessive pronouns / determiners, and of verbs. On verbs it is in fact an agreement feature that marks the person of the verb’s subject (some languages, e.g. Basque, can also mark person of objects). Person marked on verbs makes it unnecessary to always add a personal pronoun as subject and thus subjects are sometimes dropped (pro-drop languages).
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    JsonSchema,
+    Ord,
+    PartialOrd,
+    serde::Deserialize,
+    serde::Serialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    tsify::Tsify,
 )]
-pub enum Case {}
+#[rkyv(compare(PartialEq), derive(Debug))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum Case {
+    /// The base form of the noun, typically used as citation form (lemma). In many languages this is the word form used for subjects of clauses. If the language has only two cases, which are called “direct” and “oblique”, the direct case will be marked Nom.
+    Nominative,
+    /// Perhaps the second most widely spread morphological case. In many languages this is the word form used for direct objects of verbs. If the language has only two cases, which are called “direct” and “oblique”, the oblique case will be marked Acc.
+    Accusative,
+    /// Some languages (e.g. Basque) do not use nominative-accusative to distinguish subjects and objects. Instead, they use the contrast of absolutive-ergative.
+    ///
+    /// The absolutive case marks subject of intransitive verb and direct object of transitive verb.
+    Absolutive,
+    /// Some languages (e.g. Basque) do not use nominative-accusative to distinguish subjects and objects. Instead, they use the contrast of absolutive-ergative.
+    ///
+    /// The ergative case marks subject of transitive verb.
+    Ergative,
+    /// In many languages this is the word form used for indirect objects of verbs.
+    Dative,
+    /// Prototypical meaning of genitive is that the noun phrase somehow belongs to its governor; it would often be translated by the English preposition of. English has the “saxon genitive” formed by the suffix ‘s; but we will normally not need the feature in English because the suffix gets separated from the noun during tokenization.
+    /// 
+    /// Note that despite considerable semantic overlap, the genitive case is not the same as the feature of possessivity (Poss). Possessivity is a lexical feature, i.e. it applies to lemma and its whole paradigm. Genitive is a feature of just a subset of word forms of the lemma. Semantics of possessivity is much more clearly defined while the genitive (as many other cases) may be required in situations that have nothing to do with possessing. For example, [cs] bez prezidentovy dcery “without the president’s daughter” is a prepositional phrase containing the preposition bez “without”, the possessive adjective prezidentovy “president’s” and the noun dcery “daughter”. The possessive adjective is derived from the noun prezident but it is really an adjective (with separate lemma and paradigm), not just a form of the noun. In addition, both the adjective and the noun are in their genitive forms (the nominative would be prezidentova dcera). There is nothing possessive about this particular occurrence of the genitive. It is there because the preposition bez always requires its argument to be in genitive.
+    Genitive,
+    /// The vocative case is a special form of noun used to address someone. Thus it predominantly appears with animate nouns (see the feature of Animacy). Nevertheless this is not a grammatical restriction and inanimate things can be addressed as well.
+    Vocative,
+    /// The role from which the name of the instrumental case is derived is that the noun is used as instrument to do something (as in [cs] psát perem “to write using a pen”). Many other meanings are possible, e.g. in Czech the instrumental is required by the preposition s “with” and thus it includes the meaning expressed in other languages by the comitative case.
+    Instrumental,
+    /// In Finnish the partitive case expresses indefinite identity and unfinished actions without result.
+    Partitive,
+    /// The distributive case conveys that something happened to every member of a set, one in a time. Or it may express frequency.
+    Distributive,
+    /// The essive case expresses a temporary state, often it corresponds to English “as a …” A similar case in Basque is called prolative and it should be tagged Ess too.
+    Essive,
+    /// The translative case expresses a change of state (“it becomes X”, “it changes to X”). Also used for the phrase “in language X”. In the Szeged Treebank, this case is called factive.
+    Translative,
+    /// The comitative (also called associative) case corresponds to English “together with …”
+    Comitative,
+    /// The abessive case (also called caritive or privative) corresponds to the English preposition without.
+    Abessive,
+    /// Noun in this case is the cause or purpose of something. In Hungarian it also seems to be used frequently with currency (“to buy something for the money”) and it also can mean the goal of something.
+    Causative,
+    /// The benefactive case corresponds to the English preposition for.
+    Benefactive,
+    /// The considerative case denotes something that is given in exchange for something else. It is used in Warlpiri (Andrews 2007, p.164).
+    Considerative,
+    /// The comparative case means “than X”. It marks the standard of comparison and it differs from the comparative Degree, which marks the property being compared. It occurs in Dravidian and Northeast-Caucasian languages.
+    Comparative,
+    /// The equative case means “X-like”, “similar to X”, “same as X”. It marks the standard of comparison and it differs from the equative Degree, which marks the property being compared. It occurs in Turkish.
+    Equative,
+    /// The locative case often expresses location in space or time, which gave it its name. As elsewhere, non-locational meanings also exist and they are not rare. Uralic languages have a complex set of fine-grained locational and directional cases (see below) instead of the locative. Even in languages that have locative, some location roles may be expressed using other cases (e.g. because those cases are required by a preposition).
+    Locative,
+    /// The lative case denotes movement towards/to/into/onto something. Similar case in Basque is called directional allative (Spanish adlativo direccional). However, lative is typically thought of as a union of allative, illative and sublative, while in Basque it is derived from allative, which also exists independently.
+    Lative,
+    /// The terminative case specifies where something ends in space or time. Similar case in Basque is called terminal allative (Spanish adlativo terminal). While the lative (or directional allative) specifies only the general direction, the terminative (terminal allative) also says that the destination is reached.
+    Terminative,
+    /// The inessive case expresses location inside of something.
+    Inessive,
+    /// The illative case expresses direction into something.
+    Illative,
+    /// The elative case expresses direction out of something.
+    Elative,
+    /// Distinguished by some scholars in Estonian, not recognized by traditional grammar, exists in the Multext-East Estonian tagset and in the Eesti keele puudepank. It Has the meaning of illative, and some grammars will thus consider the additive just an alternative form of illative. Forms of this case exist only in singular and not For all nouns.
+    Additive,
+    /// The adessive case expresses location at, on the surface, or near something. The corresponding directional cases are allative (towards something) and ablative (from Something).
+    Adessive,
+    /// The allative case expresses direction to something (destination is adessive, i.e. at or on that something).
+    Allative,
+    /// Prototypical meaning: direction from some point. In systems that distinguish different source locatins (e.g. in Uralic languages), this case corresponds to the “adelative”, that is, the source is adessive.
+    Ablative,
+    /// Used to express location higher than a reference point (atop something or above something). Attested in Nakh-Dagestanian languages and also in Hungarian (while Other Uralic languages express this location with the adessive case, Hungarian has both adessive and superessive).
+    Superessive,
+    /// The superlative case is used in Nakh-Dagestanian languages to express the destination of movement, originally to the top of something, and, by extension, in other Figurative meanings as well.
+    /// Note that Hungarian assigns this meaning to the sublative case, which otherwise indicates that the destination is below (not above) something.
+    Superlative,
+    /// Used in Hungarian and in Nakh-Dagestanian languages to express the movement from the surface of something (like “moved off the table”).
+    ///
+    /// Other meanings are possible as well, e.g. “about something”.
+    Delative,
+    /// Used to express location lower than a reference point (under something or below something). Attested in Nakh-Dagestanian languages.
+    Subessive,
+    /// The original meaning of the sublative case is movement towards a place under or lower than something, that is, the destination is subessive. It is attested in Nakh-Dagestanian languages. Note however that like many other cases, it is now used in abstract senses that are not apparently connected to the spatial meaning: for Example, in Lezgian it may indicate the cause of something.
+    /// 
+    /// Hungarian uses the sublative label for what would be better categorized as superlative, as it expresses the movement to the surface of something (e.g. “to climb a Tree”), and, by extension, other figurative meanings as well (e.g. “to university”).
+    Sublative,
+    /// Used to express movement or direction from under something.
+    Subelative,
+    /// The perlative case denotes movement along something. It is used in Warlpiri (Andrews 2007, p.162). Note that Unimorph mentions the English preposition “along” in Connection with what they call prolative/translative; but we have different definitions of those two cases.
+    Perlative,
+    /// The temporal case is used to indicate time.
+    Temporal
+}
 
 /// Definiteness is typically a feature of nouns, adjectives and articles. Its value distinguishes whether we are talking about something known and concrete, or something general or unknown. It can be marked on definite and indefinite articles, or directly on nouns, adjectives etc. In Arabic, definiteness is also called the "state".
 #[derive(
@@ -905,4 +1009,5 @@ pub struct Morphology {
     pub politeness: Option<Polite>,
     pub tense: Option<Tense>,
     pub person: Option<Person>,
+    pub case: Option<Case>,
 }

@@ -45,5 +45,48 @@ export function formatMorphology(morphology: Morphology): string {
     parts.push(politeMap[morphology.politeness])
   }
 
+  if (morphology.case) {
+    const caseMap = {
+      Nominative: 'nominative',
+      Accusative: 'accusative',
+      Absolutive: 'absolutive',
+      Ergative: 'ergative',
+      Dative: 'dative',
+      Genitive: 'genitive',
+      Vocative: 'vocative',
+      Instrumental: 'instrumental',
+      Partitive: 'partitive',
+      Distributive: 'distributive',
+      Essive: 'essive',
+      Translative: 'translative',
+      Comitative: 'comitative',
+      Abessive: 'abessive',
+      Causative: 'causative',
+      Benefactive: 'benefactive',
+      Considerative: 'considerative',
+      Comparative: 'comparative',
+      Equative: 'equative',
+      Locative: 'locative',
+      Lative: 'lative',
+      Terminative: 'terminative',
+      Inessive: 'inessive',
+      Illative: 'illative',
+      Elative: 'elative',
+      Additive: 'additive',
+      Adessive: 'adessive',
+      Allative: 'allative',
+      Ablative: 'ablative',
+      Superessive: 'superessive',
+      Superlative: 'superlative',
+      Delative: 'delative',
+      Subessive: 'subessive',
+      Sublative: 'sublative',
+      Subelative: 'subelative',
+      Perlative: 'perlative',
+      Temporal: 'temporal'
+    } as const
+    parts.push(caseMap[morphology.case])
+  }
+
   return parts.length > 0 ? parts.join(', ') : ''
 }

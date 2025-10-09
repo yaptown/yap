@@ -193,12 +193,20 @@ struct PersonResponse {
     person: Option<language_utils::features::Person>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+struct CaseResponse {
+    #[serde(rename = "1. thoughts")]
+    thoughts: String,
+    #[serde(rename = "2. case")]
+    case: Option<language_utils::features::Case>,
+}
+
 pub async fn get_morphology(
     language: Language,
     heteronym: Heteronym<String>,
     chat_client: &ChatClient,
 ) -> anyhow::Result<Morphology> {
-    use language_utils::features::{FeatureSet, Gender, Person, Polite, Tense};
+    use language_utils::features::{Case, FeatureSet, Gender, Person, Polite, Tense};
 
     let pos = heteronym.pos;
 
@@ -207,6 +215,7 @@ pub async fn get_morphology(
     let politeness_applies = Polite::applies_to(language, pos);
     let tense_applies = Tense::applies_to(language, pos);
     let person_applies = Person::applies_to(language, pos);
+    let case_applies = Case::applies_to(language, pos);
 
     // Issue concurrent requests for all applicable features
     let gender_future = async {
@@ -295,12 +304,49 @@ If one of these options is applicable, provide it. If the person varies or is no
         }
     };
 
+    let case_future = async {
+        if case_applies {
+            let result: Result<CaseResponse, _> = chat_client.chat_with_system_prompt(
+                format!(
+                    r#"Determine the grammatical case of the provided {language} word.
+Think about whether this word has a fixed case marking. Case helps specify the role of a noun phrase in the sentence.
+
+Common cases include:
+- Nominative: subject form (base form)
+- Accusative: direct object form
+- Dative: indirect object form
+- Genitive: possessive form ("of" or "'s")
+- Vocative: form used for direct address
+- Instrumental: means or instrument ("with/by means of")
+- Locative: location in space or time ("in/at/on")
+- Ablative: movement from/away ("from")
+
+Other cases (mainly in specific language families):
+- Absolutive, Ergative (Basque and others)
+- Partitive (Finnish: indefinite/unfinished actions)
+- Comitative (together with), Abessive (without)
+- Causative (cause/purpose), Benefactive (for)
+- Essive (temporary state), Translative (change of state)
+- Various locational cases (Adessive, Allative, Elative, Illative, Inessive, etc.)
+- And more specialized cases as needed
+
+If this word has a fixed grammatical case, provide it. If case is not applicable or varies, use `"2. case": null`. (Respond with JSON, using "1. thoughts" then "2. case".)"#,
+                ),
+                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+            ).await;
+            result.ok().and_then(|r| r.case)
+        } else {
+            None
+        }
+    };
+
     // Execute all futures concurrently
-    let (gender, politeness, tense, person) = futures::join!(
+    let (gender, politeness, tense, person, case) = futures::join!(
         gender_future,
         politeness_future,
         tense_future,
-        person_future
+        person_future,
+        case_future
     );
 
     Ok(Morphology {
@@ -308,5 +354,6 @@ If one of these options is applicable, provide it. If the person varies or is no
         politeness,
         tense,
         person,
+        case,
     })
 }
