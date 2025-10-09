@@ -20,6 +20,7 @@ use language_utils::Literal;
 use language_utils::TtsProvider;
 use language_utils::TtsRequest;
 use language_utils::autograde;
+use language_utils::features::Morphology;
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
@@ -2470,7 +2471,11 @@ impl Deck {
                             heteronym.resolve(&self.context.language_pack.rodeo)
                         );
                     };
-                    CardContent::Heteronym(heteronym, entry.definitions.clone())
+                    CardContent::Heteronym {
+                        heteronym,
+                        definitions: entry.definitions.clone(),
+                        morphology: entry.morphology,
+                    }
                 }
                 CardIndicator::TargetLanguage {
                     lexeme: Lexeme::Multiword(multiword_term),
@@ -3012,7 +3017,11 @@ pub struct MultiwordCardContent {
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum CardContent<S> {
-    Heteronym(Heteronym<S>, Vec<TargetToNativeWord>),
+    Heteronym {
+        heteronym: Heteronym<S>,
+        definitions: Vec<TargetToNativeWord>,
+        morphology: Morphology,
+    },
     Multiword(S, MultiwordCardContent),
     Listening {
         pronunciation: S,
@@ -3030,7 +3039,7 @@ impl<S> CardContent<S> {
         S: Clone,
     {
         match self {
-            CardContent::Heteronym(heteronym, _) => Some(Lexeme::Heteronym(heteronym.clone())),
+            CardContent::Heteronym { heteronym, .. } => Some(Lexeme::Heteronym(heteronym.clone())),
             CardContent::Multiword(multiword_term, _) => {
                 Some(Lexeme::Multiword(multiword_term.clone()))
             }
@@ -3053,9 +3062,15 @@ impl<S> CardContent<S> {
 impl CardContent<Spur> {
     fn resolve(&self, rodeo: &lasso::RodeoReader) -> CardContent<String> {
         match self {
-            CardContent::Heteronym(heteronym, definitions) => {
-                CardContent::Heteronym(heteronym.resolve(rodeo), definitions.clone())
-            }
+            CardContent::Heteronym {
+                heteronym,
+                definitions,
+                morphology,
+            } => CardContent::Heteronym {
+                heteronym: heteronym.resolve(rodeo),
+                definitions: definitions.clone(),
+                morphology: morphology.clone(),
+            },
             CardContent::Multiword(multiword, content) => {
                 CardContent::Multiword(rodeo.resolve(multiword).to_string(), content.clone())
             }
@@ -3221,7 +3236,7 @@ impl ReviewInfo {
 
         let flashcard = Challenge::<Spur>::FlashCardReview {
             audio: match &card.content {
-                CardContent::Heteronym(heteronym, _) => AudioRequest {
+                CardContent::Heteronym { heteronym, .. } => AudioRequest {
                     request: TtsRequest {
                         text: language_pack.rodeo.resolve(&heteronym.word).to_string(),
                         language: deck.context.target_language,

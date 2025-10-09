@@ -30,6 +30,7 @@ import { AudioVisualizer } from "./AudioVisualizer";
 import { CardsRemaining } from "./CardsRemaining";
 import { toast } from "sonner";
 import { match } from "ts-pattern";
+import { formatMorphology } from "@/utils/formatMorphology";
 
 interface FlashcardProps {
   audioRequest: AudioRequest;
@@ -66,7 +67,7 @@ const CardFront = ({
     );
   } else if ("Heteronym" in content) {
     return (
-      <h2 className="text-3xl font-semibold">{content.Heteronym[0].word}</h2>
+      <h2 className="text-3xl font-semibold">{content.Heteronym.heteronym.word}</h2>
     );
   } else if ("Multiword" in content) {
     return <h2 className="text-3xl font-semibold">{content.Multiword[0]}</h2>;
@@ -110,39 +111,39 @@ const CardFrontSubtitle = ({ content }: { content: CardContent<string> }) => {
 
   const partOfSpeech =
     "Heteronym" in content
-      ? content.Heteronym[0].pos == "ADJ"
+      ? content.Heteronym.heteronym.pos == "ADJ"
         ? "Adjective"
-        : content.Heteronym[0].pos == "ADP"
+        : content.Heteronym.heteronym.pos == "ADP"
         ? "Adposition"
-        : content.Heteronym[0].pos == "ADV"
+        : content.Heteronym.heteronym.pos == "ADV"
         ? "Adverb"
-        : content.Heteronym[0].pos == "AUX"
+        : content.Heteronym.heteronym.pos == "AUX"
         ? "Auxiliary"
-        : content.Heteronym[0].pos == "CCONJ"
+        : content.Heteronym.heteronym.pos == "CCONJ"
         ? "Conjunction"
-        : content.Heteronym[0].pos == "DET"
+        : content.Heteronym.heteronym.pos == "DET"
         ? "Determiner"
-        : content.Heteronym[0].pos == "INTJ"
+        : content.Heteronym.heteronym.pos == "INTJ"
         ? "Interjection"
-        : content.Heteronym[0].pos == "NOUN"
+        : content.Heteronym.heteronym.pos == "NOUN"
         ? "Noun"
-        : content.Heteronym[0].pos == "NUM"
+        : content.Heteronym.heteronym.pos == "NUM"
         ? "Number"
-        : content.Heteronym[0].pos == "PART"
+        : content.Heteronym.heteronym.pos == "PART"
         ? "Particle"
-        : content.Heteronym[0].pos == "PRON"
+        : content.Heteronym.heteronym.pos == "PRON"
         ? "Pronoun"
-        : content.Heteronym[0].pos == "PROPN"
+        : content.Heteronym.heteronym.pos == "PROPN"
         ? "Proper Noun"
-        : content.Heteronym[0].pos == "PUNCT"
+        : content.Heteronym.heteronym.pos == "PUNCT"
         ? "Punctuation"
-        : content.Heteronym[0].pos == "SCONJ"
+        : content.Heteronym.heteronym.pos == "SCONJ"
         ? "Subordinating Conjunction"
-        : content.Heteronym[0].pos == "SYM"
+        : content.Heteronym.heteronym.pos == "SYM"
         ? "Symbol"
-        : content.Heteronym[0].pos == "VERB"
+        : content.Heteronym.heteronym.pos == "VERB"
         ? "Verb"
-        : content.Heteronym[0].pos == "X"
+        : content.Heteronym.heteronym.pos == "X"
         ? "Unknown"
         : "Unknown"
       : "Multiword";
@@ -193,13 +194,19 @@ const CardBack = ({
       </div>
     );
   } else if ("Heteronym" in content) {
-    return content.Heteronym[1].map((def, index) => (
+    const morphologyText = formatMorphology(content.Heteronym.morphology);
+    return content.Heteronym.definitions.map((def, index) => (
       <div
         key={index}
         className="text-left bg-muted/30 rounded-lg p-4 space-y-2"
       >
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline justify-between gap-2">
           <span className="text-xl font-medium">{def.native}</span>
+          {morphologyText && (
+            <span className="text-sm text-muted-foreground italic">
+              {morphologyText}
+            </span>
+          )}
         </div>
 
         {def.example_sentence_target_language && (
@@ -511,7 +518,7 @@ export const Flashcard = function Flashcard({
   const copyWord = () => {
     let word: string | undefined;
     if ("Heteronym" in content) {
-      word = content.Heteronym[0].word;
+      word = content.Heteronym.heteronym.word;
     } else if ("Multiword" in content) {
       word = content.Multiword[0];
     } else if ("Listening" in content) {
