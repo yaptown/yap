@@ -1078,11 +1078,26 @@ pub mod transcription_challenge {
     )]
     #[tsify(namespace, into_wasm_abi, from_wasm_abi)]
     pub enum WordGrade {
-        Perfect {},
-        CorrectWithTypo {},
-        PhoneticallyIdenticalButContextuallyIncorrect {},
-        PhoneticallySimilarButContextuallyIncorrect {},
-        Incorrect {},
+        Perfect {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
+        CorrectWithTypo {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
+        PhoneticallyIdenticalButContextuallyIncorrect {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
+        PhoneticallySimilarButContextuallyIncorrect {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
+        Incorrect {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
         Missed {},
     }
 

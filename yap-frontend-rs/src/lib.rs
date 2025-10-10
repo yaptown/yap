@@ -1440,18 +1440,20 @@ impl weapon::PartialAppState for Deck {
                         };
 
                         // Map the grade to a FSRS rating
-                        let rating = match grade {
-                            transcription_challenge::WordGrade::Perfect {} => Rating::Remembered,
-                            transcription_challenge::WordGrade::CorrectWithTypo {} => {
+                        // We should make use of the wrote and should_have_written fields, e.g. to give the user disambiguation practice
+                        // but we don't do anything with them for now
+                        let rating = match grade.clone() {
+                            transcription_challenge::WordGrade::Perfect { wrote: _ } => Rating::Remembered,
+                            transcription_challenge::WordGrade::CorrectWithTypo { wrote: _ } => {
                                 Rating::Remembered
                             }
-                            transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect {} => {
+                            transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect { wrote: _ } => {
                                 Rating::Hard
                             }
-                            transcription_challenge::WordGrade::PhoneticallySimilarButContextuallyIncorrect {} => {
+                            transcription_challenge::WordGrade::PhoneticallySimilarButContextuallyIncorrect { wrote: _ } => {
                                 Rating::Again
                             }
-                            transcription_challenge::WordGrade::Incorrect {} => Rating::Again,
+                            transcription_challenge::WordGrade::Incorrect { wrote: _ } => Rating::Again,
                             transcription_challenge::WordGrade::Missed {} => Rating::Again,
                         };
 
@@ -3678,19 +3680,25 @@ pub async fn autograde_transcription(
                             if part_text == submission {
                                 transcription_challenge::PartGradedPart {
                                     heard: part.clone(),
-                                    grade: transcription_challenge::WordGrade::Perfect {},
+                                    grade: transcription_challenge::WordGrade::Perfect {
+                                        wrote: Some(submission.to_string()),
+                                    },
                                 }
                             } else if remove_accents(&part_text) == remove_accents(&submission) {
                                 transcription_challenge::PartGradedPart {
                                     heard: part.clone(),
-                                    grade: transcription_challenge::WordGrade::CorrectWithTypo {},
+                                    grade: transcription_challenge::WordGrade::CorrectWithTypo {
+                                        wrote: Some(submission.to_string()),
+                                    },
                                 }
                             // todo: check if word entered is in the set of homophones
                             // and if so, grade is as correct PhoneticallyIdenticalButContextuallyIncorrect
                             } else {
                                 transcription_challenge::PartGradedPart {
                                     heard: part.clone(),
-                                    grade: transcription_challenge::WordGrade::Incorrect {},
+                                    grade: transcription_challenge::WordGrade::Incorrect {
+                                        wrote: Some(submission.to_string()),
+                                    },
                                 }
                             }
                         })
@@ -3746,7 +3754,9 @@ pub async fn autograde_transcription_llm(
                         .iter()
                         .map(|part| transcription_challenge::PartGradedPart {
                             heard: part.clone(),
-                            grade: transcription_challenge::WordGrade::Perfect {},
+                            grade: transcription_challenge::WordGrade::Perfect {
+                                wrote: Some(part.text.clone()),
+                            },
                         })
                         .collect();
                     transcription_challenge::PartGraded::AskedToTranscribe {

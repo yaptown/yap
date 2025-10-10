@@ -66,8 +66,10 @@ dependencies = [
  "tokio",
  "tower",
  "tower-http",
+ "tsify",
  "tysm",
  "uuid",
+ "wasm-bindgen",
 ]
 
 [[package]]

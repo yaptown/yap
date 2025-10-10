@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { type Deck, type Weapon, type Language } from '../../../yap-frontend-rs/pkg'
+import { type Deck, type Weapon, type Language, type Heteronym } from '../../../yap-frontend-rs/pkg'
 import { CirclePlus, CircleCheckBig } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatMorphology } from '@/utils/formatMorphology'
@@ -73,7 +73,7 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
     setAddedCards(added)
   }, [deck])
 
-  const handleAddCard = (word: string, heteronym: any) => {
+  const handleAddCard = (word: string, heteronym: Heteronym<string>) => {
     // Create the card indicator
     const cardIndicator = {
       TargetLanguage: {
@@ -126,7 +126,7 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
-      <div className="border-b pb-4 mb-4">
+      <div className="border-b pb-4 mb-4 p-2">
         <input
           type="text"
           placeholder={`Search in ${targetLangName} or ${nativeLangName}...`}
@@ -140,7 +140,7 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-2">
         <div className="space-y-4">
           {filteredEntries.map((entry, index) => (
             <div key={`${entry.word}-${index}`} className="border rounded-lg p-4 bg-card relative">

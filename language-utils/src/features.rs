@@ -149,7 +149,7 @@ pub enum Number {}
 /// The descriptions of the individual case values below include semantic hints about the prototypical meaning of the case. Bear in mind that quite often a case will be used for a meaning that is totally unrelated to the meaning mentioned here. Valency of verbs, adpositions and other words will determine that the noun phrase must be in a particular grammatical case to fill a particular valency slot (semantic role). It is much the same as trying to explain the meaning of prepositions: most people would agree that the central meaning of English in is location in space or time but there are phrases where the meaning is less locational: In God we trust. Say it in English.
 ///
 /// Note that Indian corpora based on the so-called Paninian model use a related feature called vibhakti. It is a merger of the Case feature described here and of various postpositions. Values of the feature are language-dependent because they are copies of the relevant morphemes (either bound morphemes or postpositions). Vibhakti can be mapped on the Case values described here if we know 1. which source values are bound morphemes (postpositions are separate nodes for us) and 2. what is their meaning. For instance, the genitive case (Gen) in Bengali is marked using the suffix -ra (-র), i.e. vib=era. In Hindi, the suffix has been split off the noun and it is now written as a separate word – the postposition kā/kī/ke (का/की/के). Even if the postpositional phrase can be understood as a genitive noun phrase, the noun is not in genitive. Instead, the postposition requires that it takes one of three case forms that are marked directly on the noun: the oblique case (Acc).
-
+///
 /// Person is typically feature of personal and possessive pronouns / determiners, and of verbs. On verbs it is in fact an agreement feature that marks the person of the verb’s subject (some languages, e.g. Basque, can also mark person of objects). Person marked on verbs makes it unnecessary to always add a personal pronoun as subject and thus subjects are sometimes dropped (pro-drop languages).
 #[derive(
     Debug,
@@ -186,7 +186,7 @@ pub enum Case {
     /// In many languages this is the word form used for indirect objects of verbs.
     Dative,
     /// Prototypical meaning of genitive is that the noun phrase somehow belongs to its governor; it would often be translated by the English preposition of. English has the “saxon genitive” formed by the suffix ‘s; but we will normally not need the feature in English because the suffix gets separated from the noun during tokenization.
-    /// 
+    ///
     /// Note that despite considerable semantic overlap, the genitive case is not the same as the feature of possessivity (Poss). Possessivity is a lexical feature, i.e. it applies to lemma and its whole paradigm. Genitive is a feature of just a subset of word forms of the lemma. Semantics of possessivity is much more clearly defined while the genitive (as many other cases) may be required in situations that have nothing to do with possessing. For example, [cs] bez prezidentovy dcery “without the president’s daughter” is a prepositional phrase containing the preposition bez “without”, the possessive adjective prezidentovy “president’s” and the noun dcery “daughter”. The possessive adjective is derived from the noun prezident but it is really an adjective (with separate lemma and paradigm), not just a form of the noun. In addition, both the adjective and the noun are in their genitive forms (the nominative would be prezidentova dcera). There is nothing possessive about this particular occurrence of the genitive. It is there because the preposition bez always requires its argument to be in genitive.
     Genitive,
     /// The vocative case is a special form of noun used to address someone. Thus it predominantly appears with animate nouns (see the feature of Animacy). Nevertheless this is not a grammatical restriction and inanimate things can be addressed as well.
@@ -247,7 +247,7 @@ pub enum Case {
     /// Used to express location lower than a reference point (under something or below something). Attested in Nakh-Dagestanian languages.
     Subessive,
     /// The original meaning of the sublative case is movement towards a place under or lower than something, that is, the destination is subessive. It is attested in Nakh-Dagestanian languages. Note however that like many other cases, it is now used in abstract senses that are not apparently connected to the spatial meaning: for Example, in Lezgian it may indicate the cause of something.
-    /// 
+    ///
     /// Hungarian uses the sublative label for what would be better categorized as superlative, as it expresses the movement to the surface of something (e.g. “to climb a Tree”), and, by extension, other figurative meanings as well (e.g. “to university”).
     Sublative,
     /// Used to express movement or direction from under something.
@@ -255,7 +255,7 @@ pub enum Case {
     /// The perlative case denotes movement along something. It is used in Warlpiri (Andrews 2007, p.162). Note that Unimorph mentions the English preposition “along” in Connection with what they call prolative/translative; but we have different definitions of those two cases.
     Perlative,
     /// The temporal case is used to indicate time.
-    Temporal
+    Temporal,
 }
 
 /// Definiteness is typically a feature of nouns, adjectives and articles. Its value distinguishes whether we are talking about something known and concrete, or something general or unknown. It can be marked on definite and indefinite articles, or directly on nouns, adjectives etc. In Arabic, definiteness is also called the "state".

@@ -36,7 +36,7 @@ import { BrowserNotSupported } from '@/components/browser-not-supported'
 import { Stats } from '@/components/stats'
 import { About } from '@/components/about'
 import { Dictionary } from '@/components/Dictionary'
-import { PageLayout } from '@/components/PageLayout'
+import { TopPageLayout } from '@/components/TopPageLayout'
 import { match, P } from 'ts-pattern';
 
 // Essential user info to persist for offline functionality
@@ -242,7 +242,7 @@ function ReviewPage() {
       {
         match(deck)
           .with({ type: "deck", deck: null }, () => (
-            <PageLayout
+            <TopPageLayout
               userInfo={userInfo}
               headerProps={{
                 onChangeLanguage: () => navigate('/select-language'),
@@ -252,11 +252,11 @@ function ReviewPage() {
               <div className="flex-1 bg-background flex items-center justify-center">
                 <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
               </div>
-            </PageLayout>
+            </TopPageLayout>
           ))
           .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage }) => (
             <div className="flex flex-col gap-6">
-              <PageLayout
+              <TopPageLayout
                 userInfo={userInfo}
                 headerProps={{
                   onChangeLanguage: () => navigate('/select-language'),
@@ -270,30 +270,30 @@ function ReviewPage() {
                   deck={deck}
                   targetLanguage={targetLanguage}
                 />
-              </PageLayout>
+              </TopPageLayout>
               <Tools />
               <Stats deck={deck} />
             </div>
           ))
           .with({ type: "noLanguageSelected" }, () => (
-            <PageLayout
+            <TopPageLayout
               userInfo={userInfo}
               headerProps={{ showSignupNag: false }}
             >
               <div className="flex-1 bg-background flex items-center justify-center">
                 <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
               </div>
-            </PageLayout>
+            </TopPageLayout>
           ))
           .with(null, () => (
-            <PageLayout
+            <TopPageLayout
               userInfo={userInfo}
               headerProps={{ showSignupNag: false }}
             >
               <div className="bg-background flex items-center justify-center">
                 <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
               </div>
-            </PageLayout>
+            </TopPageLayout>
           ))
           .exhaustive()
       }
@@ -331,7 +331,7 @@ function DictionaryPage() {
 
   if (deck?.type !== 'deck') {
     return (
-      <PageLayout
+      <TopPageLayout
         userInfo={userInfo}
         headerProps={{
           backButton: { label: 'Dictionary', onBack: () => navigate('/') }
@@ -340,13 +340,13 @@ function DictionaryPage() {
         <div className="flex-1 bg-background flex items-center justify-center">
           <p className="text-muted-foreground">Loading...</p>
         </div>
-      </PageLayout>
+      </TopPageLayout>
     )
   }
 
   if (!deck.deck) {
     return (
-      <PageLayout
+      <TopPageLayout
         userInfo={userInfo}
         headerProps={{
           backButton: { label: 'Dictionary', onBack: () => navigate('/') }
@@ -355,19 +355,19 @@ function DictionaryPage() {
         <div className="flex-1 bg-background flex items-center justify-center">
           <p className="text-muted-foreground">Loading dictionary...</p>
         </div>
-      </PageLayout>
+      </TopPageLayout>
     )
   }
 
   return (
-    <PageLayout
+    <TopPageLayout
       userInfo={userInfo}
       headerProps={{
         backButton: { label: 'Dictionary', onBack: () => navigate('/') }
       }}
     >
       <Dictionary deck={deck.deck} weapon={weapon} targetLanguage={deck.targetLanguage} nativeLanguage={deck.nativeLanguage} />
-    </PageLayout>
+    </TopPageLayout>
   )
 }
 

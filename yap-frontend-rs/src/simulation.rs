@@ -70,9 +70,11 @@ impl DailySimulationIterator {
                                         parts: parts
                                             .into_iter()
                                             .map(|p| transcription_challenge::PartGradedPart {
-                                                heard: p,
                                                 grade:
-                                                    transcription_challenge::WordGrade::Perfect {},
+                                                    transcription_challenge::WordGrade::Perfect {
+                                                        wrote: Some(p.text.clone()),
+                                                    },
+                                                heard: p,
                                             })
                                             .collect(),
                                     }

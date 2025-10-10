@@ -417,7 +417,7 @@ You should also provide a brief explanation if there are any errors, helping the
 Respond with JSON in this format:
 {{
   "explanation": "Brief explanation of any errors, and how the user can improve.",
-  "grades": ["Perfect", "PhoneticallyIdenticalButContextuallyIncorrect", "Missed", ...]
+  "grades": [{{"Perfect": {{"wrote": "the word the user wrote"}}}}, {{"PhoneticallyIdenticalButContextuallyIncorrect": {{"wrote": "the word the user wrote"}}}}, {{"Missed": {{}}}}, ...]
 }}
 
 The grades array should have one grade for each word the user was asked to transcribe, in the order they appear.
@@ -510,11 +510,63 @@ Words that need grading:
         words_to_grade_list.join("\n")
     );
 
+    #[derive(
+        Clone,
+        Debug,
+        serde::Serialize,
+        serde::Deserialize,
+        schemars::JsonSchema,
+        tsify::Tsify,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        Hash,
+    )]
+    #[serde(tag = "type")]
+    #[tsify(namespace, into_wasm_abi, from_wasm_abi)]
+    pub enum WordGradeResponse {
+        Perfect {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
+        CorrectWithTypo {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
+        PhoneticallyIdenticalButContextuallyIncorrect {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
+        PhoneticallySimilarButContextuallyIncorrect {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
+        Incorrect {
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            wrote: Option<String>,
+        },
+        Missed,
+    }
+
+    impl From<WordGradeResponse> for transcription_challenge::WordGrade {
+        fn from(response: WordGradeResponse) -> Self {
+            match response {
+                WordGradeResponse::Perfect { wrote } => transcription_challenge::WordGrade::Perfect { wrote },
+                WordGradeResponse::CorrectWithTypo { wrote } => transcription_challenge::WordGrade::CorrectWithTypo { wrote },
+                WordGradeResponse::PhoneticallyIdenticalButContextuallyIncorrect { wrote } => transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect { wrote },
+                WordGradeResponse::PhoneticallySimilarButContextuallyIncorrect { wrote } => transcription_challenge::WordGrade::PhoneticallySimilarButContextuallyIncorrect { wrote },
+                WordGradeResponse::Incorrect { wrote } => transcription_challenge::WordGrade::Incorrect { wrote },
+                WordGradeResponse::Missed => transcription_challenge::WordGrade::Missed {},
+            }
+        }
+    }
+
     // Get response from LLM
     #[derive(Deserialize, schemars::JsonSchema)]
     struct LlmResponse {
         explanation: Option<String>,
-        grades: Vec<String>,
+        grades: Vec<WordGradeResponse>,
         compare: Vec<String>,
     }
 
@@ -534,24 +586,12 @@ Words that need grading:
                 let mut graded_words = Vec::new();
 
                 for literal in parts {
-                    let grade = if let Some(grade_str) = llm_response.grades.get(grade_idx) {
-                        match grade_str.as_str() {
-                            "Perfect" => transcription_challenge::WordGrade::Perfect {},
-                            "CorrectWithTypo" => {
-                                transcription_challenge::WordGrade::CorrectWithTypo {}
-                            },
-                            "PhoneticallyIdenticalButContextuallyIncorrect" => {
-                                transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect {}
-                            }
-                            "PhoneticallySimilarButContextuallyIncorrect" => {
-                                transcription_challenge::WordGrade::PhoneticallySimilarButContextuallyIncorrect {}
-                            }
-                            "Missed" => transcription_challenge::WordGrade::Missed {},
-                            _ => transcription_challenge::WordGrade::Incorrect {},
-                        }
-                    } else {
-                        transcription_challenge::WordGrade::Missed {}
-                    };
+                    let grade: transcription_challenge::WordGrade =
+                        if let Some(grade) = llm_response.grades.get(grade_idx) {
+                            grade.clone().into()
+                        } else {
+                            transcription_challenge::WordGrade::Missed {}
+                        };
 
                     graded_words.push(transcription_challenge::PartGradedPart {
                         heard: literal,

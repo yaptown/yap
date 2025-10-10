@@ -28,3 +28,5 @@ axum-extra = { version = "0.10.1", features = ["typed-header"] }
 dotenvy = "0.15.7"
 uuid = { version = "1.17", features = ["serde", "v4"] }
 language-utils = { path = "../language-utils" }
+tsify.workspace = true
+wasm-bindgen.workspace = true   
