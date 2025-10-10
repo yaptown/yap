@@ -659,6 +659,7 @@ impl FeatureSet for Number {
                     PartOfSpeech::Noun
                         | PartOfSpeech::Pron
                         | PartOfSpeech::Det  // this/these, that/those
+                        | PartOfSpeech::Verb
                         | PartOfSpeech::Aux
                 )
             }
