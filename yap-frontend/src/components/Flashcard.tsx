@@ -3,6 +3,7 @@ import {
   type CardContent,
   type Language,
   type Rating,
+  get_word_prefix,
 } from "../../../yap-frontend-rs/pkg";
 import {
   DropdownMenu,
@@ -53,9 +54,11 @@ interface FlashcardProps {
 const CardFront = ({
   content,
   listeningPrefix,
+  targetLanguage,
 }: {
   content: CardContent<string>;
   listeningPrefix?: string;
+  targetLanguage: Language;
 }) => {
   if ("Listening" in content) {
     const prefix = listeningPrefix || "Le mot est";
@@ -66,8 +69,21 @@ const CardFront = ({
       </h2>
     );
   } else if ("Heteronym" in content) {
+    const wordPrefix = get_word_prefix(
+      content.Heteronym.morphology,
+      content.Heteronym.heteronym.word,
+      content.Heteronym.heteronym.pos,
+      targetLanguage
+    );
     return (
-      <h2 className="text-3xl font-semibold">{content.Heteronym.heteronym.word}</h2>
+      <h2 className="text-3xl font-semibold">
+        {wordPrefix && (
+          <span className="text-muted-foreground/60">
+            {wordPrefix.prefix}{wordPrefix.separator}
+          </span>
+        )}
+        {content.Heteronym.heteronym.word}
+      </h2>
     );
   } else if ("Multiword" in content) {
     return <h2 className="text-3xl font-semibold">{content.Multiword[0]}</h2>;
@@ -606,6 +622,7 @@ export const Flashcard = function Flashcard({
                 <CardFront
                   content={content}
                   listeningPrefix={listeningPrefix}
+                  targetLanguage={targetLanguage}
                 />
 
                 {onRating ? (

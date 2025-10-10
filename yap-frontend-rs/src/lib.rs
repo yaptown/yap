@@ -17,10 +17,11 @@ use futures::StreamExt;
 use imdex_map::IndexMap;
 use language_utils::ConsolidatedLanguageDataWithCapacity;
 use language_utils::Literal;
+use language_utils::PartOfSpeech;
 use language_utils::TtsProvider;
 use language_utils::TtsRequest;
 use language_utils::autograde;
-use language_utils::features::Morphology;
+use language_utils::features::{Morphology, WordPrefix};
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
@@ -3559,6 +3560,18 @@ impl CardSummary {
 #[wasm_bindgen]
 pub fn test_fn(f: js_sys::Function) {
     f.call0(&JsValue::NULL).unwrap();
+}
+
+/// Generates a grammatical prefix for a word based on its morphology and part of speech.
+/// Returns the prefix and separator, or null if no prefix is appropriate.
+#[wasm_bindgen]
+pub fn get_word_prefix(
+    morphology: &Morphology,
+    word: &str,
+    pos: PartOfSpeech,
+    language: Language,
+) -> Option<WordPrefix> {
+    morphology.get_prefix(word, pos, language)
 }
 
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]

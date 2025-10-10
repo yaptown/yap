@@ -130,9 +130,48 @@ pub enum NounClass {}
 ///
 /// In languages where noun phrases are pluralized using a specific function word (pluralizer), this function word is tagged DET and Number=Plur is its lexical feature.
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema, serde::Deserialize, serde::Serialize,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    JsonSchema,
+    Ord,
+    PartialOrd,
+    serde::Deserialize,
+    serde::Serialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    tsify::Tsify,
 )]
-pub enum Number {}
+#[rkyv(compare(PartialEq), derive(Debug))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum Number {
+    /// Singular number: denotes one person, animal or thing
+    Singular,
+    /// Plural number: denotes several persons, animals or things
+    Plural,
+    /// Dual number: denotes two persons, animals or things
+    Dual,
+    /// Trial number: denotes three persons, animals or things (occurs in pronouns of several Austronesian languages)
+    Trial,
+    /// Paucal number: denotes "a few" persons, animals or things
+    Paucal,
+    /// Greater paucal number: denotes "more than several but not many" persons, animals or things (occurs in Sursurunga)
+    GreaterPaucal,
+    /// Greater plural number: denotes "many, all possible" persons, animals or things
+    GreaterPlural,
+    /// Inverse number: non-default for that particular noun (occurs in Kiowa)
+    Inverse,
+    /// Count plural: special plural form used after numerals (e.g., Bulgarian, Russian)
+    Count,
+    /// Plurale tantum: appears only in plural form even though it denotes one thing (e.g., scissors, pants)
+    PluraleTantum,
+    /// Collective / mass / singulare tantum: grammatical singular describing sets of objects (semantic plural)
+    Collective,
+}
 
 /// Case is usually an inflectional feature of nouns and, depending on language, other parts of speech (pronouns, adjectives, determiners, numerals, verbs) that mark agreement with nouns.
 ///
@@ -620,7 +659,6 @@ impl FeatureSet for Number {
                     PartOfSpeech::Noun
                         | PartOfSpeech::Pron
                         | PartOfSpeech::Det  // this/these, that/those
-                        | PartOfSpeech::Verb
                         | PartOfSpeech::Aux
                 )
             }
@@ -1006,8 +1044,97 @@ impl FeatureSet for Polite {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Morphology {
     pub gender: Option<Gender>,
+    pub number: Option<Number>,
     pub politeness: Option<Polite>,
     pub tense: Option<Tense>,
     pub person: Option<Person>,
     pub case: Option<Case>,
+}
+
+/// Represents a grammatical prefix for a word (like articles in French)
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    schemars::JsonSchema,
+    serde::Serialize,
+    serde::Deserialize,
+    tsify::Tsify,
+)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct WordPrefix {
+    /// The prefix text (e.g., "le", "la", "les", "l'")
+    pub prefix: String,
+    /// The separator between prefix and word (e.g., " " for "le chat", "" for "l'arbre")
+    pub separator: String,
+}
+
+impl Morphology {
+    /// Generates a grammatical prefix for a word based on its morphology and part of speech.
+    ///
+    /// For French nouns, this returns the appropriate definite article:
+    /// - Masculine singular: "le" (or "l'" before vowels)
+    /// - Feminine singular: "la" (or "l'" before vowels)
+    /// - Plural: "les"
+    ///
+    /// # Arguments
+    /// * `word` - The word to generate a prefix for (used to check for elision)
+    /// * `pos` - The part of speech
+    /// * `language` - The language
+    ///
+    /// # Returns
+    /// * `Some(WordPrefix)` if a prefix is appropriate for this word
+    /// * `None` if no prefix should be used
+    pub fn get_prefix(
+        &self,
+        word: &str,
+        pos: PartOfSpeech,
+        language: Language,
+    ) -> Option<WordPrefix> {
+        match (language, pos) {
+            (Language::French, PartOfSpeech::Noun) => {
+                // Check if the word starts with a vowel sound for elision
+                // In French, elision occurs before vowels and silent h
+                let starts_with_vowel = word
+                    .chars()
+                    .next()
+                    .map(|c| {
+                        matches!(
+                            c.to_ascii_lowercase(),
+                            'a' | 'e' | 'i' | 'o' | 'u' | 'y' | 'h'
+                        )
+                    })
+                    .unwrap_or(false);
+
+                if starts_with_vowel {
+                    // Use elided form regardless of gender/number
+                    Some(WordPrefix {
+                        prefix: "l'".to_string(),
+                        separator: "".to_string(),
+                    })
+                } else {
+                    // Plural takes precedence over gender
+                    if let Some(Number::Plural) = self.number {
+                        Some(WordPrefix {
+                            prefix: "les".to_string(),
+                            separator: " ".to_string(),
+                        })
+                    } else {
+                        // Singular: use gender to determine article
+                        let prefix = match self.gender {
+                            Some(Gender::Feminine) => "la",
+                            Some(Gender::Masculine) | None => "le",
+                            _ => "le", // Default to masculine for neuter/common
+                        };
+                        Some(WordPrefix {
+                            prefix: prefix.to_string(),
+                            separator: " ".to_string(),
+                        })
+                    }
+                }
+            }
+            _ => None,
+        }
+    }
 }

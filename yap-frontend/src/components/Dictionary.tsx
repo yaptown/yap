@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { type Deck, type Weapon, type Language, type Heteronym } from '../../../yap-frontend-rs/pkg'
+import { type Deck, type Weapon, type Language, type Heteronym, get_word_prefix } from '../../../yap-frontend-rs/pkg'
 import { CirclePlus, CircleCheckBig } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatMorphology } from '@/utils/formatMorphology'
@@ -142,10 +142,25 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
 
       <div className="flex-1 overflow-y-auto p-2">
         <div className="space-y-4">
-          {filteredEntries.map((entry, index) => (
+          {filteredEntries.map((entry, index) => {
+            const prefix = get_word_prefix(
+              entry.entry.morphology,
+              entry.word,
+              entry.heteronym.pos,
+              targetLanguage
+            )
+
+            return (
             <div key={`${entry.word}-${index}`} className="border rounded-lg p-4 bg-card relative">
               <div className="flex items-baseline justify-between gap-4 mb-2">
-                <h2 className="text-xl font-semibold">{entry.word}</h2>
+                <h2 className="text-xl font-semibold">
+                  {prefix && (
+                    <span className="text-muted-foreground/60">
+                      {prefix.prefix}{prefix.separator}
+                    </span>
+                  )}
+                  {entry.word}
+                </h2>
                 {(() => {
                   const morphologyText = formatMorphology(entry.entry.morphology)
                   return morphologyText && (
@@ -197,7 +212,8 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
                 )}
               </div>
             </div>
-          ))}
+            )
+          })}
 
           {filteredEntries.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">

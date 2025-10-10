@@ -201,17 +201,26 @@ struct CaseResponse {
     case: Option<language_utils::features::Case>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+struct NumberResponse {
+    #[serde(rename = "1. thoughts")]
+    thoughts: String,
+    #[serde(rename = "2. number")]
+    number: Option<language_utils::features::Number>,
+}
+
 pub async fn get_morphology(
     language: Language,
     heteronym: Heteronym<String>,
     chat_client: &ChatClient,
 ) -> anyhow::Result<Morphology> {
-    use language_utils::features::{Case, FeatureSet, Gender, Person, Polite, Tense};
+    use language_utils::features::{Case, FeatureSet, Gender, Number, Person, Polite, Tense};
 
     let pos = heteronym.pos;
 
     // Determine which features apply to this word
     let gender_applies = Gender::applies_to(language, pos);
+    let number_applies = Number::applies_to(language, pos);
     let politeness_applies = Polite::applies_to(language, pos);
     let tense_applies = Tense::applies_to(language, pos);
     let person_applies = Person::applies_to(language, pos);
@@ -340,9 +349,42 @@ If this word has a fixed grammatical case, provide it. If case is not applicable
         }
     };
 
+    let number_future = async {
+        if number_applies {
+            let result: Result<NumberResponse, _> = chat_client.chat_with_system_prompt(
+                format!(
+                    r#"Determine the grammatical number of the provided {language} word.
+Think about whether this word has a fixed number marking.
+
+Common number values:
+- Singular: one person, animal or thing
+- Plural: several persons, animals or things
+
+Less common number values (use only if applicable):
+- Dual: exactly two items
+- Trial: exactly three items
+- Paucal: a few items
+- GreaterPaucal: more than several but not many
+- GreaterPlural: many/all possible items
+- Inverse: non-default for that particular noun
+- Count: special plural form used after numerals
+- PluraleTantum: only appears in plural form but denotes one thing (like "scissors", "pants")
+- Collective: grammatical singular describing sets of objects (like "mankind", "furniture")
+
+If this word has a fixed grammatical number, provide it. If number is not applicable or varies, use `"2. number": null`. (Respond with JSON, using "1. thoughts" then "2. number".)"#,
+                ),
+                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+            ).await;
+            result.ok().and_then(|r| r.number)
+        } else {
+            None
+        }
+    };
+
     // Execute all futures concurrently
-    let (gender, politeness, tense, person, case) = futures::join!(
+    let (gender, number, politeness, tense, person, case) = futures::join!(
         gender_future,
+        number_future,
         politeness_future,
         tense_future,
         person_future,
@@ -351,6 +393,7 @@ If this word has a fixed grammatical case, provide it. If case is not applicable
 
     Ok(Morphology {
         gender,
+        number,
         politeness,
         tense,
         person,
