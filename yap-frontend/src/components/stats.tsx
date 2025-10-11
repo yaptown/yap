@@ -70,7 +70,6 @@ export function Stats({ deck }: StatsProps) {
   return (
     <div className="mt-4">
       <NumericStats
-        title="Stats"
         xp={deck.get_xp()}
         totalCards={allCardsSummary.length}
         cardsReady={reviewInfo.due_count || 0}

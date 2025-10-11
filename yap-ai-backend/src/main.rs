@@ -13,7 +13,10 @@ use base64::Engine;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use language_utils::{
     Course, Language, TtsRequest, autograde,
-    profile::{GetProfileQuery, Profile, UpdateProfileRequest, UpdateProfileResponse},
+    profile::{
+        GetProfileQuery, Profile, UpdateLanguageStatsRequest, UpdateLanguageStatsResponse,
+        UpdateProfileRequest, UpdateProfileResponse,
+    },
     transcription_challenge,
 };
 use postgrest::Postgrest;
@@ -756,6 +759,86 @@ async fn update_profile(
     }
 }
 
+async fn update_language_stats(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    Json(request): Json<UpdateLanguageStatsRequest>,
+) -> Result<Json<UpdateLanguageStatsResponse>, StatusCode> {
+    // Verify JWT token to get the user's ID
+    let claims = verify_jwt(auth.token()).await?;
+    let user_id = claims.sub;
+
+    // Get Supabase credentials from environment
+    let supabase_url =
+        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Create Supabase client
+    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
+        .insert_header("apikey", service_role_key.clone())
+        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+
+    // Serialize the language to a string for the database
+    let language_str = request.language.iso_639_3().to_string();
+
+    // Build the upsert payload
+    let mut upsert_data = serde_json::Map::new();
+    upsert_data.insert(
+        "user_id".to_string(),
+        serde_json::Value::String(user_id.to_string()),
+    );
+    upsert_data.insert(
+        "language".to_string(),
+        serde_json::Value::String(language_str),
+    );
+    upsert_data.insert(
+        "total_count".to_string(),
+        serde_json::Value::Number(request.total_count.into()),
+    );
+    upsert_data.insert(
+        "daily_streak".to_string(),
+        serde_json::Value::Number(request.daily_streak.into()),
+    );
+    upsert_data.insert("xp".to_string(), serde_json::json!(request.xp));
+    upsert_data.insert(
+        "percent_known".to_string(),
+        serde_json::json!(request.percent_known),
+    );
+
+    if let Some(expiry) = request.daily_streak_expiry {
+        upsert_data.insert(
+            "daily_streak_expiry".to_string(),
+            serde_json::Value::String(expiry),
+        );
+    }
+
+    upsert_data.insert(
+        "last_updated".to_string(),
+        serde_json::Value::String("now()".to_string()),
+    );
+
+    // Upsert the language stats
+    let response = client
+        .from("user_language_stats")
+        .upsert(serde_json::Value::Object(upsert_data).to_string())
+        .execute()
+        .await
+        .map_err(|e| {
+            eprintln!("Error upserting language stats: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if response.status().is_success() {
+        Ok(Json(UpdateLanguageStatsResponse { success: true }))
+    } else {
+        eprintln!(
+            "Failed to upsert language stats: {:?}",
+            response.text().await
+        );
+        Err(StatusCode::INTERNAL_SERVER_ERROR)
+    }
+}
+
 async fn serve_language_data(Json(course): Json<Course>) -> Response {
     if let Some(language_data) = language_data_for_course(&course) {
         Response::builder()
@@ -790,6 +873,7 @@ async fn main() {
         .route("/autograde-transcription", post(autograde_transcription))
         .route("/language-data", post(serve_language_data))
         .route("/profile", get(get_profile).patch(update_profile))
+        .route("/language-stats", post(update_language_stats))
         .layer(CompressionLayer::new())
         .layer(cors);
 

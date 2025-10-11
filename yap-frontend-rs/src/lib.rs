@@ -1148,7 +1148,7 @@ impl CardData {
 #[derive(Clone, Debug)]
 pub struct DailyStreak {
     streak_start: chrono::DateTime<chrono::Utc>,
-    last_review_time: chrono::DateTime<chrono::Utc>,
+    streak_expiry: chrono::DateTime<chrono::Utc>,
 }
 
 /// Context contains the language-specific configuration
@@ -1185,8 +1185,8 @@ pub struct DeckState {
 pub struct Deck {
     cards: HashMap<CardIndicator<Spur>, CardStatus>,
     fsrs: FSRS,
-    stats: Stats,
-    context: Context,
+    pub(crate) stats: Stats,
+    pub(crate) context: Context,
     regressions: Regressions,
 }
 
@@ -1760,32 +1760,28 @@ impl DeckState {
     fn update_daily_streak(&mut self, timestamp: &DateTime<Utc>) {
         match &self.stats.daily_streak {
             None => {
-                // First review ever
+                // First review ever - streak expires 30 hours from now
                 self.stats.daily_streak = Some(DailyStreak {
                     streak_start: *timestamp,
-                    last_review_time: *timestamp,
+                    streak_expiry: *timestamp + chrono::Duration::hours(30),
                 });
             }
             Some(streak) => {
-                if timestamp > &streak.last_review_time {
-                    // This is a newer review
-                    let hours_since_last = (*timestamp - streak.last_review_time).num_hours();
-
-                    if hours_since_last <= 30 {
-                        // Within 30 hours, continue streak
-                        self.stats.daily_streak = Some(DailyStreak {
-                            streak_start: streak.streak_start,
-                            last_review_time: *timestamp,
-                        });
-                    } else {
-                        // More than 30 hours, start new streak
-                        self.stats.daily_streak = Some(DailyStreak {
-                            streak_start: *timestamp,
-                            last_review_time: *timestamp,
-                        });
-                    }
+                if timestamp < &streak.streak_expiry {
+                    // Within expiry window, continue streak and extend expiry
+                    self.stats.daily_streak = Some(DailyStreak {
+                        streak_start: streak.streak_start,
+                        streak_expiry: *timestamp + chrono::Duration::hours(30),
+                    });
+                } else {
+                    // Past expiry, start new streak
+                    self.stats.daily_streak = Some(DailyStreak {
+                        streak_start: *timestamp,
+                        streak_expiry: *timestamp + chrono::Duration::hours(30),
+                    });
                 }
-                // If timestamp <= last_review_time, it's an old event being processed, ignore
+                // Note: if timestamp is before streak_expiry but in the past relative to
+                // streak_expiry calculation time, we still update. This handles out-of-order events.
             }
         }
     }
@@ -2042,15 +2038,12 @@ impl Deck {
             None => 0,
             Some(streak) => {
                 let now = chrono::Utc::now();
-                let hours_since_last = (now - streak.last_review_time).num_hours();
 
-                if hours_since_last <= 30 {
-                    // Streak is active (reviewed within last 30 hours)
-                    (streak.last_review_time.date_naive() - streak.streak_start.date_naive())
-                        .num_days() as u32
-                        + 1
+                if now < streak.streak_expiry {
+                    // Streak is active (hasn't expired yet)
+                    (now.date_naive() - streak.streak_start.date_naive()).num_days() as u32 + 1
                 } else {
-                    // Streak is broken
+                    // Streak is broken (expired)
                     0
                 }
             }

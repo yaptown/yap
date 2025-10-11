@@ -307,4 +307,58 @@ impl Deck {
 
         Ok(())
     }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub async fn submit_language_stats(&self, access_token: &str) -> Result<(), JsValue> {
+        use language_utils::profile::UpdateLanguageStatsRequest;
+
+        // Get current stats from the deck
+        let now = js_sys::Date::now();
+        let review_info = self.get_review_info(vec![], now);
+
+        let total_count = review_info.total_count() as i64;
+
+        // Get daily streak information
+        let daily_streak = self.get_daily_streak() as i64;
+        let daily_streak_expiry = self
+            .stats
+            .daily_streak
+            .as_ref()
+            .map(|streak| streak.streak_expiry.to_rfc3339());
+
+        let xp = self.stats.xp;
+
+        // Get percent_known from the existing method (weighted by word frequency)
+        let percent_known = self.get_percent_of_words_known() * 100.0;
+
+        let language = self.context.target_language;
+
+        let request = UpdateLanguageStatsRequest {
+            language,
+            total_count,
+            daily_streak,
+            daily_streak_expiry,
+            xp,
+            percent_known,
+        };
+
+        let response = crate::utils::hit_ai_server(
+            "/language-stats",
+            &request,
+            Some(&access_token.to_string()),
+        )
+        .await
+        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
+
+        if !response.ok() {
+            log::warn!("Failed to update language stats: {}", response.status());
+            return Err(JsValue::from_str(&format!(
+                "Failed to update language stats: {}",
+                response.status()
+            )));
+        }
+
+        log::info!("Successfully updated language stats");
+        Ok(())
+    }
 }

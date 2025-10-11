@@ -412,13 +412,16 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
 
   const nextDueCard = findNextDueCard(deck)
 
-  // Update scheduled push notifications when the deck state changes
+  // Update scheduled push notifications and language stats when the deck state changes
   useEffect(() => {
     try {
-      if (accessToken && userInfo?.id) { deck.submit_push_notifications(accessToken, userInfo?.id) }
+      if (accessToken && userInfo?.id) {
+        deck.submit_push_notifications(accessToken, userInfo?.id)
+        deck.submit_language_stats(accessToken)
+      }
     }
     catch {
-      console.error("An error occurred when trying to update the notification schedule");
+      console.error("An error occurred when trying to update the notification schedule or language stats");
     }
   }, [deck, userInfo?.id, accessToken])
 
