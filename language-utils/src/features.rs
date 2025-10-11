@@ -1074,13 +1074,19 @@ pub struct WordPrefix {
 impl Morphology {
     /// Generates a grammatical prefix for a word based on its morphology and part of speech.
     ///
-    /// For French nouns, this returns the appropriate definite article:
-    /// - Masculine singular: "le" (or "l'" before vowels)
-    /// - Feminine singular: "la" (or "l'" before vowels)
-    /// - Plural: "les"
+    /// Returns the appropriate prefix for:
+    /// - **Nouns**: Definite articles
+    ///   - French: "le", "la", "les", or "l'" (with elision)
+    ///   - Spanish: "el", "la", "los", "las"
+    ///   - German: "der", "die", "das", etc. (case-aware)
+    /// - **Verbs**: Subject pronouns for conjugated forms, or "to" for English infinitives
+    ///   - French: "je", "tu", "il", "nous", "vous", "ils"
+    ///   - Spanish: "yo", "tú", "él", "nosotros", "vosotros", "ellos" (politeness-aware)
+    ///   - German: "ich", "du", "er", "wir", "ihr", "sie" (politeness-aware)
+    ///   - English: "I", "you", "he", "we", "they", or "to" for infinitives
     ///
     /// # Arguments
-    /// * `word` - The word to generate a prefix for (used to check for elision)
+    /// * `word` - The word to generate a prefix for (used to check for elision in French)
     /// * `pos` - The part of speech
     /// * `language` - The language
     ///
@@ -1094,48 +1100,243 @@ impl Morphology {
         language: Language,
     ) -> Option<WordPrefix> {
         match (language, pos) {
-            (Language::French, PartOfSpeech::Noun) => {
-                // Check if the word starts with a vowel sound for elision
-                // In French, elision occurs before vowels and silent h
-                let starts_with_vowel = word
-                    .chars()
-                    .next()
-                    .map(|c| {
-                        matches!(
-                            c.to_ascii_lowercase(),
-                            'a' | 'e' | 'i' | 'o' | 'u' | 'y' | 'h'
-                        )
-                    })
-                    .unwrap_or(false);
+            (Language::French, PartOfSpeech::Noun) => self.get_french_noun_prefix(word),
+            (Language::French, PartOfSpeech::Verb) => self.get_french_verb_prefix(),
+            (Language::French, _) => None,
+            (Language::Spanish, PartOfSpeech::Noun) => self.get_spanish_noun_prefix(),
+            (Language::Spanish, PartOfSpeech::Verb) => self.get_spanish_verb_prefix(),
+            (Language::Spanish, _) => None,
+            (Language::German, PartOfSpeech::Noun) => self.get_german_noun_prefix(),
+            (Language::German, PartOfSpeech::Verb) => self.get_german_verb_prefix(),
+            (Language::German, _) => None,
+            (Language::English, PartOfSpeech::Verb) => self.get_english_verb_prefix(),
+            (Language::Korean | Language::English, _) => None,
+        }
+    }
 
-                if starts_with_vowel {
-                    // Use elided form regardless of gender/number
-                    Some(WordPrefix {
-                        prefix: "l'".to_string(),
-                        separator: "".to_string(),
-                    })
-                } else {
-                    // Plural takes precedence over gender
-                    if let Some(Number::Plural) = self.number {
-                        Some(WordPrefix {
-                            prefix: "les".to_string(),
-                            separator: " ".to_string(),
-                        })
-                    } else {
-                        // Singular: use gender to determine article
-                        let prefix = match self.gender {
-                            Some(Gender::Feminine) => "la",
-                            Some(Gender::Masculine) | None => "le",
-                            _ => "le", // Default to masculine for neuter/common
-                        };
-                        Some(WordPrefix {
-                            prefix: prefix.to_string(),
-                            separator: " ".to_string(),
-                        })
-                    }
+    fn get_french_noun_prefix(&self, word: &str) -> Option<WordPrefix> {
+        // Check if the word starts with a vowel sound for elision
+        // In French, elision occurs before vowels and silent h
+        let starts_with_vowel = word
+            .chars()
+            .next()
+            .map(|c| {
+                matches!(
+                    c.to_ascii_lowercase(),
+                    'a' | 'e' | 'i' | 'o' | 'u' | 'y' | 'h'
+                )
+            })
+            .unwrap_or(false);
+
+        if starts_with_vowel {
+            // Use elided form regardless of gender/number
+            Some(WordPrefix {
+                prefix: "l'".to_string(),
+                separator: "".to_string(),
+            })
+        } else {
+            // Plural takes precedence over gender
+            if let Some(Number::Plural) = self.number {
+                Some(WordPrefix {
+                    prefix: "les".to_string(),
+                    separator: " ".to_string(),
+                })
+            } else {
+                // Singular: use gender to determine article
+                let prefix = match self.gender {
+                    Some(Gender::Feminine) => "la",
+                    Some(Gender::Masculine) | None => "le",
+                    _ => "le", // Default to masculine for neuter/common
+                };
+                Some(WordPrefix {
+                    prefix: prefix.to_string(),
+                    separator: " ".to_string(),
+                })
+            }
+        }
+    }
+
+    fn get_spanish_noun_prefix(&self) -> Option<WordPrefix> {
+        let prefix = match self.number {
+            Some(Number::Plural) => {
+                // Plural articles
+                match self.gender {
+                    Some(Gender::Feminine) => "las",
+                    Some(Gender::Masculine) | None => "los",
+                    _ => "los", // Default to masculine
                 }
             }
-            _ => None,
+            _ => {
+                // Singular articles (including None, which defaults to singular)
+                match self.gender {
+                    Some(Gender::Feminine) => "la",
+                    Some(Gender::Masculine) | None => "el",
+                    _ => "el", // Default to masculine
+                }
+            }
+        };
+
+        Some(WordPrefix {
+            prefix: prefix.to_string(),
+            separator: " ".to_string(),
+        })
+    }
+
+    fn get_german_noun_prefix(&self) -> Option<WordPrefix> {
+        // German articles depend on gender, number, and case
+        // Default to nominative case if not specified
+        let case = self.case.unwrap_or(Case::Nominative);
+
+        let prefix = match self.number {
+            Some(Number::Plural) => {
+                // Plural articles (same for all genders)
+                match case {
+                    Case::Nominative | Case::Accusative | Case::Genitive => "d",
+                    Case::Dative => "den",
+                    _ => "die", // Default to nominative
+                }
+            }
+            _ => {
+                // Singular articles
+                match (case, self.gender) {
+                    // Nominative case
+                    (Case::Nominative, Some(Gender::Masculine)) => "der",
+                    (Case::Nominative, Some(Gender::Feminine)) => "die",
+                    (Case::Nominative, Some(Gender::Neuter)) => "das",
+                    (Case::Nominative, _) => return None,
+
+                    // Accusative case
+                    (Case::Accusative, Some(Gender::Masculine)) => "den",
+                    (Case::Accusative, Some(Gender::Feminine)) => "die",
+                    (Case::Accusative, Some(Gender::Neuter)) => "das",
+                    (Case::Accusative, _) => return None,
+
+                    // Dative case
+                    (Case::Dative, Some(Gender::Masculine)) => "dem",
+                    (Case::Dative, Some(Gender::Feminine)) => "der",
+                    (Case::Dative, Some(Gender::Neuter)) => "dem",
+                    (Case::Dative, _) => return None, // Default to masculine
+
+                    // Genitive case
+                    (Case::Genitive, Some(Gender::Masculine)) => "des",
+                    (Case::Genitive, Some(Gender::Feminine)) => "der",
+                    (Case::Genitive, Some(Gender::Neuter)) => "des",
+                    (Case::Genitive, _) => "des", // Default to masculine
+
+                    // For other cases, default to nominative
+                    (_, Some(Gender::Masculine)) => "der",
+                    (_, Some(Gender::Feminine)) => "die",
+                    (_, Some(Gender::Neuter)) => "das",
+                    (_, _) => return None, // Default to masculine nominative
+                }
+            }
+        };
+
+        Some(WordPrefix {
+            prefix: prefix.to_string(),
+            separator: " ".to_string(),
+        })
+    }
+
+    fn get_french_verb_prefix(&self) -> Option<WordPrefix> {
+        // For conjugated verbs, add subject pronouns based on person/number
+        // For infinitives (no person), no prefix
+        let person = self.person?;
+        let number = self.number.unwrap_or(Number::Singular);
+        let politeness = self.politeness;
+
+        let prefix = match (person, number, politeness) {
+            (Person::First, Number::Singular, _) => "je",
+            (Person::First, Number::Plural, _) => "nous",
+            (Person::Second, Number::Singular, Some(Polite::Formal)) => "vous",
+            (Person::Second, Number::Singular, _) => "tu",
+            (Person::Second, Number::Plural, _) => "vous",
+            (Person::Third, Number::Singular, _) => "il",
+            (Person::Third, Number::Plural, _) => "ils",
+            _ => return None,
+        };
+
+        Some(WordPrefix {
+            prefix: prefix.to_string(),
+            separator: " ".to_string(),
+        })
+    }
+
+    fn get_spanish_verb_prefix(&self) -> Option<WordPrefix> {
+        // For conjugated verbs, add subject pronouns based on person/number
+        // For infinitives (no person), no prefix
+        let person = self.person?;
+        let number = self.number.unwrap_or(Number::Singular);
+        let politeness = self.politeness;
+
+        let prefix = match (person, number, politeness) {
+            (Person::First, Number::Singular, _) => "yo",
+            (Person::First, Number::Plural, _) => "nosotros",
+            (Person::Second, Number::Singular, Some(Polite::Formal)) => "usted",
+            (Person::Second, Number::Singular, _) => "tú",
+            (Person::Second, Number::Plural, Some(Polite::Formal)) => "ustedes",
+            (Person::Second, Number::Plural, _) => "vosotros",
+            (Person::Third, Number::Singular, _) => "él",
+            (Person::Third, Number::Plural, _) => "ellos",
+            _ => return None,
+        };
+
+        Some(WordPrefix {
+            prefix: prefix.to_string(),
+            separator: " ".to_string(),
+        })
+    }
+
+    fn get_german_verb_prefix(&self) -> Option<WordPrefix> {
+        // For conjugated verbs, add subject pronouns based on person/number
+        // For infinitives (no person), no prefix
+        let person = self.person?;
+        let number = self.number.unwrap_or(Number::Singular);
+        let politeness = self.politeness;
+
+        let prefix = match (person, number, politeness) {
+            (Person::First, Number::Singular, _) => "ich",
+            (Person::First, Number::Plural, _) => "wir",
+            (Person::Second, Number::Singular, Some(Polite::Formal)) => "Sie",
+            (Person::Second, Number::Singular, _) => "du",
+            (Person::Second, Number::Plural, Some(Polite::Formal)) => "Sie",
+            (Person::Second, Number::Plural, _) => "ihr",
+            (Person::Third, Number::Singular, _) => "er",
+            (Person::Third, Number::Plural, _) => "sie",
+            _ => return None,
+        };
+
+        Some(WordPrefix {
+            prefix: prefix.to_string(),
+            separator: " ".to_string(),
+        })
+    }
+
+    fn get_english_verb_prefix(&self) -> Option<WordPrefix> {
+        // For infinitives (no person), add "to"
+        // For conjugated verbs, add subject pronouns
+        if let Some(person) = self.person {
+            let number = self.number.unwrap_or(Number::Singular);
+
+            let prefix = match (person, number) {
+                (Person::First, Number::Singular) => "I",
+                (Person::First, Number::Plural) => "we",
+                (Person::Second, _) => "you",
+                (Person::Third, Number::Singular) => "he",
+                (Person::Third, Number::Plural) => "they",
+                _ => return None,
+            };
+
+            Some(WordPrefix {
+                prefix: prefix.to_string(),
+                separator: " ".to_string(),
+            })
+        } else {
+            // Infinitive: add "to"
+            Some(WordPrefix {
+                prefix: "to".to_string(),
+                separator: " ".to_string(),
+            })
         }
     }
 }
