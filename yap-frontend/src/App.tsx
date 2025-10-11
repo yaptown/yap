@@ -754,37 +754,41 @@ function App() {
 }
 
 function SelectLanguagePage() {
+  const { userInfo } = useOutletContext<OutletContextType>()
   const weapon = useWeapon()
   const deck = useDeck()
   const navigate = useNavigate()
 
+  const content = match(deck)
+    .with({ type: "deck", deck: P.not(P.nullish) }, ({ targetLanguage }) => (
+      <LanguageSelector
+        skipOnboarding={true}
+        currentTargetLanguage={targetLanguage}
+        onLanguagesConfirmed={(native, target) => {
+          weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
+          navigate('/')
+        }}
+      />
+    ))
+    .with({ type: "noLanguageSelected" }, () => (
+      <LanguageSelector
+        skipOnboarding={false}
+        onLanguagesConfirmed={(native, target) => {
+          weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
+          navigate('/')
+        }}
+      />
+    ))
+    .otherwise(() => (
+      <div className="flex-1 bg-background flex items-center justify-center">
+        <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+      </div>
+    ))
+
   return (
-    <>
-      {
-        match(deck)
-          .with({ type: "deck", deck: P.not(P.nullish) }, ({ targetLanguage }) => (
-            <LanguageSelector
-              skipOnboarding={true}
-              currentTargetLanguage={targetLanguage}
-              onLanguagesConfirmed={(native, target) => {
-                weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
-                navigate('/')
-              }} />
-          ))
-          .with({ type: "noLanguageSelected" }, () => (
-            <LanguageSelector
-              skipOnboarding={false}
-              onLanguagesConfirmed={(native, target) => {
-                weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
-                navigate('/')
-              }} />
-          ))
-          .otherwise(() =>
-            <div className="flex-1 bg-background flex items-center justify-center">
-              <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
-            </div>)
-      }
-    </>
+    <TopPageLayout userInfo={userInfo} headerProps={{ showSignupNag: false }}>
+      {content}
+    </TopPageLayout>
   )
 }
 
