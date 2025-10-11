@@ -23,7 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { cn, languageFlags, nativeLanguageNames } from "@/lib/utils";
 import type { Language } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { useWeapon } from "@/weapon";
 import { get_available_courses } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
@@ -136,29 +136,12 @@ export function LanguageSelector({
   }, [api]);
 
   // Type-safe language configuration - TypeScript will error if a language is missing
-  const languageFlags: Record<Language, string> = {
-    French: "🇫🇷",
-    Spanish: "🇪🇸",
-    Korean: "🇰🇷",
-    English: "🇬🇧",
-    German: "🇩🇪",
-  };
-
   const languageConfirmTexts: Record<Language, string> = {
     French: "Allons-y",
     Spanish: "Vamos",
     Korean: "가자",
     English: "Let's go",
     German: "Los geht's",
-  };
-
-  // Native names of languages
-  const nativeLanguageNames: Record<Language, string> = {
-    English: "English",
-    French: "Français",
-    Spanish: "Español",
-    Korean: "한국어",
-    German: "Deutsch",
   };
 
   // "I speak [language]" in each language

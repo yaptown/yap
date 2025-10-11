@@ -1,9 +1,57 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { get_audio, invalidate_audio_cache, type AudioRequest } from '../../../yap-frontend-rs/pkg'
+import { get_audio, invalidate_audio_cache, type AudioRequest, type Language } from '../../../yap-frontend-rs/pkg'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+// Language utility functions
+export const languageFlags: Record<Language, string> = {
+  French: "🇫🇷",
+  Spanish: "🇪🇸",
+  Korean: "🇰🇷",
+  English: "🇬🇧",
+  German: "🇩🇪",
+}
+
+export const nativeLanguageNames: Record<Language, string> = {
+  English: "English",
+  French: "Français",
+  Spanish: "Español",
+  Korean: "한국어",
+  German: "Deutsch",
+}
+
+export function isoCodeToLanguage(isoCode: string): Language | null {
+  const isoToLanguage: Record<string, Language> = {
+    'fra': 'French',
+    'eng': 'English',
+    'spa': 'Spanish',
+    'kor': 'Korean',
+    'deu': 'German',
+  }
+  return isoToLanguage[isoCode] || null
+}
+
+export function getLanguageFlag(isoCodeOrLanguage: string): string {
+  // Check if it's already a Language type
+  if (isoCodeOrLanguage in languageFlags) {
+    return languageFlags[isoCodeOrLanguage as Language]
+  }
+  // Otherwise convert from ISO code
+  const language = isoCodeToLanguage(isoCodeOrLanguage)
+  return language ? languageFlags[language] : '🌐'
+}
+
+export function getLanguageName(isoCodeOrLanguage: string): string {
+  // Check if it's already a Language type
+  if (isoCodeOrLanguage in nativeLanguageNames) {
+    return nativeLanguageNames[isoCodeOrLanguage as Language]
+  }
+  // Otherwise convert from ISO code
+  const language = isoCodeToLanguage(isoCodeOrLanguage)
+  return language ? nativeLanguageNames[language] : isoCodeOrLanguage
 }
 
 const SINGLE_QUOTE_VARIANTS = /[‘’‚‛′‵❛❜＇ʻʼʽʹ`´]/g

@@ -695,6 +695,82 @@ async fn get_profile(Query(params): Query<GetProfileQuery>) -> Result<Json<Profi
     }
 }
 
+async fn get_language_stats(
+    Query(params): Query<GetProfileQuery>,
+) -> Result<Json<Vec<language_utils::profile::UserLanguageStats>>, StatusCode> {
+    // Get Supabase credentials from environment
+    let supabase_url =
+        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Create Supabase client
+    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
+        .insert_header("apikey", service_role_key.clone())
+        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+
+    // Build query based on provided parameter - we need to get user_id first
+    let user_id = if let Some(id) = params.id {
+        id
+    } else if let Some(slug) = params.slug {
+        // First get the user_id from the profile
+        let profile_response = client
+            .from("profiles")
+            .select("id")
+            .eq("display_name_slug", slug)
+            .single()
+            .execute()
+            .await
+            .map_err(|e| {
+                eprintln!("Error fetching profile for slug: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?;
+
+        if !profile_response.status().is_success() {
+            return Err(StatusCode::NOT_FOUND);
+        }
+
+        let profile: serde_json::Value = profile_response
+            .json()
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        profile["id"]
+            .as_str()
+            .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
+            .to_string()
+    } else {
+        return Err(StatusCode::BAD_REQUEST);
+    };
+
+    // Fetch language stats for this user
+    let response = client
+        .from("user_language_stats")
+        .select("*")
+        .eq("user_id", user_id)
+        .execute()
+        .await
+        .map_err(|e| {
+            eprintln!("Error fetching language stats: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if response.status().is_success() {
+        let stats: Vec<language_utils::profile::UserLanguageStats> = response
+            .json()
+            .await
+            .inspect_err(|e| eprintln!("Error fetching language stats: {e:?}"))
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        Ok(Json(stats))
+    } else {
+        eprintln!(
+            "Failed to fetch language stats: {:?}",
+            response.text().await
+        );
+        Err(StatusCode::INTERNAL_SERVER_ERROR)
+    }
+}
+
 async fn update_profile(
     TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
     Json(request): Json<UpdateProfileRequest>,
@@ -779,7 +855,7 @@ async fn update_language_stats(
         .insert_header("Authorization", format!("Bearer {service_role_key}"));
 
     // Serialize the language to a string for the database
-    let language_str = request.language.iso_639_3().to_string();
+    let language_str = request.language.to_string();
 
     // Build the upsert payload
     let mut upsert_data = serde_json::Map::new();
@@ -874,6 +950,7 @@ async fn main() {
         .route("/language-data", post(serve_language_data))
         .route("/profile", get(get_profile).patch(update_profile))
         .route("/language-stats", post(update_language_stats))
+        .route("/user-language-stats", get(get_language_stats))
         .layer(CompressionLayer::new())
         .layer(cors);
 

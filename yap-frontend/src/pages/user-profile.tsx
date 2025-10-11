@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { get_profile_by_id, update_profile } from '../../../yap-frontend-rs/pkg'
+import { get_profile_by_id, get_user_language_stats_by_id, update_profile } from '../../../yap-frontend-rs/pkg'
 import { Pencil, X, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { getLanguageFlag, getLanguageName } from '@/lib/utils'
 
 interface Profile {
   id: string
@@ -20,6 +21,18 @@ interface Profile {
   notifications_enabled: boolean
   created_at: string
   updated_at: string
+}
+
+interface LanguageStats {
+  user_id: string
+  language: string
+  total_count: number
+  daily_streak: number
+  daily_streak_expiry: string | null
+  xp: number
+  percent_known: number
+  started: string
+  last_updated: string
 }
 
 type OutletContextType = {
@@ -32,7 +45,9 @@ export function UserProfilePage() {
   const { userInfo, accessToken } = useOutletContext<OutletContextType>()
   const navigate = useNavigate()
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [languageStats, setLanguageStats] = useState<LanguageStats[]>([])
   const [loading, setLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editDisplayName, setEditDisplayName] = useState('')
@@ -65,6 +80,29 @@ export function UserProfilePage() {
     }
 
     loadProfile()
+  }, [id])
+
+  useEffect(() => {
+    async function loadLanguageStats() {
+      if (!id) {
+        setStatsLoading(false)
+        return
+      }
+
+      try {
+        setStatsLoading(true)
+        const stats = await get_user_language_stats_by_id(id)
+        setLanguageStats(stats as LanguageStats[])
+      } catch (err) {
+        console.error('Error loading language stats:', err)
+        // Don't set error state - stats are optional
+        setLanguageStats([])
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    loadLanguageStats()
   }, [id])
 
   const handleSave = async () => {
@@ -249,6 +287,61 @@ export function UserProfilePage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Language Stats Card */}
+        {statsLoading ? (
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-40" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-20 w-full" />
+            </CardContent>
+          </Card>
+        ) : languageStats.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <h3 className="text-xl font-semibold">Languages</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {languageStats.map((stats) => (
+                  <div key={stats.language} className="border rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-2xl">{getLanguageFlag(stats.language)}</span>
+                      <h4 className="text-lg font-semibold">{getLanguageName(stats.language)}</h4>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Words</p>
+                        <p className="text-2xl font-bold">{stats.total_count}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Daily Streak</p>
+                        <p className="text-2xl font-bold">{stats.daily_streak} 🔥</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">XP</p>
+                        <p className="text-2xl font-bold">{Math.round(stats.xp)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Mastery</p>
+                        <p className="text-2xl font-bold">{stats.percent_known.toFixed(1)}%</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
+                      Learning since {new Date(stats.started).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </TopPageLayout>
   )
