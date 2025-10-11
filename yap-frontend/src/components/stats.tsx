@@ -73,9 +73,9 @@ export function Stats({ deck }: StatsProps) {
         <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-3">
           <div className="bg-card border rounded-lg p-4">
             <p className="text-sm text-muted-foreground mb-1">XP</p>
-            <p className="text-2xl font-bold">{deck.get_xp().toFixed(2)}</p>
+            <p className="text-2xl font-bold">{deck.get_xp()}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              total stability gained
+              You get more XP for words you didn't remember.
             </p>
           </div>
         </div>

@@ -1745,13 +1745,16 @@ impl DeckState {
             Rating::Easy => rs_fsrs::Rating::Easy,
         };
 
-        let old_stability = fsrs_card.stability;
         *fsrs_card = self
             .fsrs
             .next(fsrs_card.clone(), timestamp, fsrs_rating)
             .card;
-        let new_stability = fsrs_card.stability;
-        self.stats.xp += (new_stability - old_stability).max(0.0) / 10.0;
+
+        // Award XP based on review outcome
+        self.stats.xp += match rating {
+            Rating::Again => 5.0,
+            _ => 1.0,
+        };
     }
 
     fn update_daily_streak(&mut self, timestamp: &DateTime<Utc>) {

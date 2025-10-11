@@ -169,11 +169,11 @@ export function UserProfilePage() {
                   </div>
                 ) : (
                   <>
-                    <CardTitle>
+                    <h2 className="text-3xl font-bold">
                       {profile.display_name || 'Anonymous User'}
-                    </CardTitle>
+                    </h2>
                     {profile.display_name_slug && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground mt-1">
                         @{profile.display_name_slug}
                       </p>
                     )}
@@ -213,45 +213,40 @@ export function UserProfilePage() {
             </div>
           </CardHeader>
           <CardContent>
-            {isEditing ? (
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value)}
-                  placeholder="Tell us about yourself"
-                  rows={4}
-                  maxLength={500}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {editBio.length}/500 characters
-                </p>
-              </div>
-            ) : (
-              <>
-                {profile.bio ? (
-                  <p className="text-foreground whitespace-pre-wrap">{profile.bio}</p>
-                ) : (
-                  <p className="text-muted-foreground italic">No bio yet</p>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+            <div className="space-y-3">
+              {isEditing ? (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    value={editBio}
+                    onChange={(e) => setEditBio(e.target.value)}
+                    placeholder="Tell us about yourself"
+                    rows={4}
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {editBio.length}/500 characters
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {profile.bio ? (
+                    <p className="text-foreground whitespace-pre-wrap">{profile.bio}</p>
+                  ) : (
+                    <p className="text-muted-foreground italic">No bio yet</p>
+                  )}
+                </>
+              )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Member Since</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              {new Date(profile.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
+              <p className="text-xs text-muted-foreground pt-2 border-t">
+                Member since {new Date(profile.created_at).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
