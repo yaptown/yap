@@ -12,7 +12,7 @@ Whenever possible, I want you to use `cargo fix`, `cargo clippy --fix`, and `car
 
 ## Project Architecture
 
-Yap.Town is a French language learning application with a Rust-based backend and React frontend architecture:
+Yap.Town is a language learning application with a Rust-based backend and React frontend architecture:
 
 ### Core Components
 
@@ -88,7 +88,7 @@ cd supabase && supabase start
 
 - The build process is complex and requires multiple tools: Rust, wasm-pack, uv (Python), and pnpm
 - WASM module must be rebuilt after changes to `yap-frontend-rs`
-- Dictionary data generation requires the French spaCy transformer model
+- Dictionary data generation requires spaCy transformer models
 - Frontend depends on the local WASM package at `../yap-frontend-rs/pkg`
 - Use `uv` for Python dependency management in NLP components
 - Use `pnpm` for JavaScript/TypeScript dependencies
