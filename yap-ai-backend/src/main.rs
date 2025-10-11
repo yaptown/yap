@@ -656,9 +656,9 @@ async fn get_profile(Query(params): Query<GetProfileQuery>) -> Result<Json<Profi
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Create Supabase client
-    let client = Postgrest::new(format!("{}/rest/v1", supabase_url))
+    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
         .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {}", service_role_key));
+        .insert_header("Authorization", format!("Bearer {service_role_key}"));
 
     // Build query based on provided parameter
     let mut query = client.from("profiles").select("*");
@@ -707,9 +707,9 @@ async fn update_profile(
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Create Supabase client
-    let client = Postgrest::new(format!("{}/rest/v1", supabase_url))
+    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
         .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {}", service_role_key));
+        .insert_header("Authorization", format!("Bearer {service_role_key}"));
 
     // Build the update payload
     let mut update_data = serde_json::Map::new();
