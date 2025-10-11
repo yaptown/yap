@@ -329,6 +329,16 @@ function DictionaryPage() {
   const weapon = useWeapon()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    if (!userInfo || deck?.type === 'noLanguageSelected') {
+      navigate('/', { replace: true })
+    }
+  }, [userInfo, deck, navigate])
+
+  if (!userInfo || deck?.type === 'noLanguageSelected') {
+    return null
+  }
+
   if (deck?.type !== 'deck') {
     return (
       <TopPageLayout
