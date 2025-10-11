@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useOutletContext } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { TopPageLayout } from '@/components/TopPageLayout'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'

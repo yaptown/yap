@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useInterval } from "react-use";
+import { NumericStats } from "./numeric-stats";
 
 // Lazy load the chart component - only loads when needed
 const FrequencyKnowledgeChart = lazy(() =>
@@ -68,44 +69,15 @@ export function Stats({ deck }: StatsProps) {
 
   return (
     <div className="mt-4">
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold">Stats</h2>
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-3">
-          <div className="bg-card border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">XP</p>
-            <p className="text-2xl font-bold">{deck.get_xp()}</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              You get more XP for words you didn't remember.
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
-          <div className="bg-card border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Total Cards</p>
-            <p className="text-2xl font-bold">{allCardsSummary.length}</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {reviewInfo.due_count || 0} ready now
-            </p>
-          </div>
-          <div className="bg-card border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Words Known</p>
-            <p className="text-2xl font-bold">
-              {(deck.get_percent_of_words_known() * 100).toFixed(2)}%
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">of total</p>
-          </div>
-          <div className="bg-card border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Daily Streak</p>
-            <p className="text-2xl font-bold">{deck.get_daily_streak()}</p>
-            <p className="text-sm text-muted-foreground mt-1">days</p>
-          </div>
-          <div className="bg-card border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Total Reviews</p>
-            <p className="text-2xl font-bold">{deck.get_total_reviews()}</p>
-            <p className="text-sm text-muted-foreground mt-1">all time</p>
-          </div>
-        </div>
-      </div>
+      <NumericStats
+        title="Stats"
+        xp={deck.get_xp()}
+        totalCards={allCardsSummary.length}
+        cardsReady={reviewInfo.due_count || 0}
+        percentKnown={deck.get_percent_of_words_known() * 100}
+        dailyStreak={deck.get_daily_streak()}
+        totalReviews={deck.get_total_reviews()}
+      />
       <div className="bg-card border rounded-lg overflow-hidden">
         <table className="w-full table-fixed">
           <thead>
