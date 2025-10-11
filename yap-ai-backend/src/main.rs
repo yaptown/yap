@@ -11,7 +11,12 @@ use axum_extra::{
 };
 use base64::Engine;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
-use language_utils::{Course, Language, TtsRequest, autograde, transcription_challenge};
+use language_utils::{
+    Course, Language, TtsRequest, autograde,
+    profile::{GetProfileQuery, Profile, UpdateProfileRequest, UpdateProfileResponse},
+    transcription_challenge,
+};
+use postgrest::Postgrest;
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, sync::LazyLock};
 use tower_http::compression::CompressionLayer;
@@ -516,7 +521,6 @@ Words that need grading:
         serde::Serialize,
         serde::Deserialize,
         schemars::JsonSchema,
-        tsify::Tsify,
         PartialEq,
         Eq,
         PartialOrd,
@@ -524,7 +528,6 @@ Words that need grading:
         Hash,
     )]
     #[serde(tag = "type")]
-    #[tsify(namespace, into_wasm_abi, from_wasm_abi)]
     pub enum WordGradeResponse {
         Perfect {
             #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -622,6 +625,137 @@ Words that need grading:
     Ok(Json(grade))
 }
 
+fn slugify(text: &str) -> String {
+    text.to_lowercase()
+        .chars()
+        .map(|c| {
+            if c.is_alphanumeric() {
+                c
+            } else if c.is_whitespace() || c == '-' || c == '_' {
+                '-'
+            } else {
+                // Remove other characters
+                '\0'
+            }
+        })
+        .filter(|&c| c != '\0')
+        .collect::<String>()
+        .split('-')
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("-")
+}
+
+use axum::extract::Query;
+
+async fn get_profile(Query(params): Query<GetProfileQuery>) -> Result<Json<Profile>, StatusCode> {
+    // Get Supabase credentials from environment
+    let supabase_url =
+        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Create Supabase client
+    let client = Postgrest::new(format!("{}/rest/v1", supabase_url))
+        .insert_header("apikey", service_role_key.clone())
+        .insert_header("Authorization", format!("Bearer {}", service_role_key));
+
+    // Build query based on provided parameter
+    let mut query = client.from("profiles").select("*");
+
+    if let Some(id) = params.id {
+        query = query.eq("id", id);
+    } else if let Some(slug) = params.slug {
+        query = query.eq("display_name_slug", slug);
+    } else {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Fetch the profile
+    let response = query.single().execute().await.map_err(|e| {
+        eprintln!("Error fetching profile: {e:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    if response.status().is_success() {
+        let profile: Profile = response
+            .json()
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        Ok(Json(profile))
+    } else if response.status() == 406 {
+        // 406 is what Supabase returns when no rows match
+        Err(StatusCode::NOT_FOUND)
+    } else {
+        eprintln!("Failed to fetch profile: {:?}", response.text().await);
+        Err(StatusCode::INTERNAL_SERVER_ERROR)
+    }
+}
+
+async fn update_profile(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    Json(request): Json<UpdateProfileRequest>,
+) -> Result<Json<UpdateProfileResponse>, StatusCode> {
+    // Verify JWT token to get the user's ID
+    let claims = verify_jwt(auth.token()).await?;
+    let user_id = claims.sub;
+
+    // Get Supabase credentials from environment
+    let supabase_url =
+        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Create Supabase client
+    let client = Postgrest::new(format!("{}/rest/v1", supabase_url))
+        .insert_header("apikey", service_role_key.clone())
+        .insert_header("Authorization", format!("Bearer {}", service_role_key));
+
+    // Build the update payload
+    let mut update_data = serde_json::Map::new();
+
+    if let Some(display_name) = request.display_name {
+        // Generate slug from display name
+        let slug = slugify(&display_name);
+        update_data.insert(
+            "display_name".to_string(),
+            serde_json::Value::String(display_name),
+        );
+        update_data.insert(
+            "display_name_slug".to_string(),
+            serde_json::Value::String(slug),
+        );
+    }
+
+    if let Some(bio) = request.bio {
+        update_data.insert("bio".to_string(), serde_json::Value::String(bio));
+    }
+
+    // If no fields to update, return early
+    if update_data.is_empty() {
+        return Ok(Json(UpdateProfileResponse { success: true }));
+    }
+
+    // Update the profile in Supabase
+    let response = client
+        .from("profiles")
+        .eq("id", user_id.to_string())
+        .update(serde_json::Value::Object(update_data).to_string())
+        .execute()
+        .await
+        .map_err(|e| {
+            eprintln!("Error updating profile: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if response.status().is_success() {
+        Ok(Json(UpdateProfileResponse { success: true }))
+    } else {
+        eprintln!("Failed to update profile: {:?}", response.text().await);
+        Err(StatusCode::INTERNAL_SERVER_ERROR)
+    }
+}
+
 async fn serve_language_data(Json(course): Json<Course>) -> Response {
     if let Some(language_data) = language_data_for_course(&course) {
         Response::builder()
@@ -655,6 +789,7 @@ async fn main() {
         .route("/autograde-translation", post(autograde_translation))
         .route("/autograde-transcription", post(autograde_transcription))
         .route("/language-data", post(serve_language_data))
+        .route("/profile", get(get_profile).patch(update_profile))
         .layer(CompressionLayer::new())
         .layer(cors);
 

@@ -22,6 +22,7 @@ use language_utils::TtsProvider;
 use language_utils::TtsRequest;
 use language_utils::autograde;
 use language_utils::features::{Morphology, WordPrefix};
+use language_utils::profile::{Profile, UpdateProfileRequest, UpdateProfileResponse};
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
@@ -4181,4 +4182,105 @@ mod tests {
             assert_limits(&deck);
         }
     }
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+pub async fn get_profile_by_id(user_id: String) -> Result<JsValue, JsValue> {
+    let client = fetch_happen::Client;
+    let url = if cfg!(feature = "local-backend") {
+        "http://localhost:8080"
+    } else {
+        "https://yap-ai-backend.fly.dev"
+    };
+
+    let response = client
+        .get(format!("{url}/profile?id={user_id}"))
+        .send()
+        .await
+        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
+
+    if !response.ok() {
+        return Err(JsValue::from_str(&format!(
+            "HTTP error: {}",
+            response.status()
+        )));
+    }
+
+    let profile: Profile = response
+        .json()
+        .await
+        .map_err(|e| JsValue::from_str(&format!("Response parsing error: {e:?}")))?;
+
+    serde_wasm_bindgen::to_value(&profile)
+        .map_err(|e| JsValue::from_str(&format!("Serialization error: {e:?}")))
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+pub async fn get_profile_by_slug(slug: String) -> Result<JsValue, JsValue> {
+    let client = fetch_happen::Client;
+    let url = if cfg!(feature = "local-backend") {
+        "http://localhost:8080"
+    } else {
+        "https://yap-ai-backend.fly.dev"
+    };
+
+    let response = client
+        .get(format!("{url}/profile?slug={slug}"))
+        .send()
+        .await
+        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
+
+    if !response.ok() {
+        return Err(JsValue::from_str(&format!(
+            "HTTP error: {}",
+            response.status()
+        )));
+    }
+
+    let profile: Profile = response
+        .json()
+        .await
+        .map_err(|e| JsValue::from_str(&format!("Response parsing error: {e:?}")))?;
+
+    serde_wasm_bindgen::to_value(&profile)
+        .map_err(|e| JsValue::from_str(&format!("Serialization error: {e:?}")))
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+pub async fn update_profile(
+    display_name: Option<String>,
+    bio: Option<String>,
+    access_token: String,
+) -> Result<UpdateProfileResponse, JsValue> {
+    let request = UpdateProfileRequest { display_name, bio };
+
+    let client = fetch_happen::Client;
+    let url = if cfg!(feature = "local-backend") {
+        "http://localhost:8080"
+    } else {
+        "https://yap-ai-backend.fly.dev"
+    };
+
+    let response = client
+        .patch(format!("{url}/profile"))
+        .json(&request)
+        .map_err(|e| JsValue::from_str(&format!("JSON serialization error: {e:?}")))?
+        .header("Authorization", format!("Bearer {access_token}"))
+        .send()
+        .await
+        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
+
+    if !response.ok() {
+        return Err(JsValue::from_str(&format!(
+            "HTTP error: {}",
+            response.status()
+        )));
+    }
+
+    let result: UpdateProfileResponse = response
+        .json()
+        .await
+        .map_err(|e| JsValue::from_str(&format!("Response parsing error: {e:?}")))?;
+
+    Ok(result)
 }

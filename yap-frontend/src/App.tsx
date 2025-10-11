@@ -14,6 +14,7 @@ import { ResetPassword } from '@/pages/reset-password'
 import { ConfirmEmail } from '@/pages/confirm-email'
 import { AcceptInvite } from '@/pages/accept-invite'
 import { ForgotPassword } from '@/pages/forgot-password'
+import { UserProfilePage } from '@/pages/user-profile'
 import { playSoundEffect } from '@/lib/sound-effects'
 import { registerSW } from 'virtual:pwa-register'
 import { NoCardsReady } from '@/components/no-cards-ready'
@@ -747,6 +748,7 @@ function App() {
           <Route index element={<ReviewPage />} />
           <Route path="dictionary" element={<DictionaryPage />} />
           <Route path="select-language" element={<SelectLanguagePage />} />
+          <Route path="user/id/:id" element={<UserProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

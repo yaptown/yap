@@ -1,4 +1,5 @@
 pub mod features;
+pub mod profile;
 
 use std::{collections::BTreeMap, num::NonZeroUsize};
 

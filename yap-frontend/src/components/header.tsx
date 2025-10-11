@@ -8,7 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationSettings } from "@/components/notification-settings";
-import { LogOut, AlertTriangle, ArrowLeft } from "lucide-react";
+import { LogOut, AlertTriangle, ArrowLeft, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { SyncStatusDialog } from "@/components/sync-status-dialog";
 import type { UserInfo } from "@/App";
 import { AuthDialog } from "@/components/auth-dialog";
@@ -48,6 +49,7 @@ export function Header({
 }: HeaderProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [defaultView, setDefaultView] = useState<"signin" | "signup">("signin");
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-2">
@@ -106,6 +108,10 @@ export function Header({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <NotificationSettings />
+                <DropdownMenuItem onClick={() => navigate(`/user/id/${userInfo.id}`)}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={onSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out

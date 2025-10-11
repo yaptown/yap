@@ -29,4 +29,5 @@ dotenvy = "0.15.7"
 uuid = { version = "1.17", features = ["serde", "v4"] }
 language-utils = { path = "../language-utils" }
 tsify.workspace = true
-wasm-bindgen.workspace = true   
+wasm-bindgen.workspace = true
+postgrest = "1.0"   
