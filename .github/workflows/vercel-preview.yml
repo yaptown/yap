@@ -9,6 +9,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  pull-requests: write
+
 concurrency:
   group: vercel-preview-${{ github.ref }}
   cancel-in-progress: true
@@ -50,11 +54,6 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 8
-
-      - name: Generate data
-        run: cargo run --bin generate-data
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Build WASM module
         run: wasm-pack build --release
