@@ -24,6 +24,8 @@ Yap.Town is a language learning application with a Rust-based backend and React 
 - **modal-llm-server**: Python FastAPI service for LLM inference using Modal. (Not currently used.)
 - **supabase/**: Database and authentication configuration
 
+Vercel for hosting.
+
 ### Data Flow
 
 1. Anki decks are processed by `generate-data` using Python spaCy NLP for French multiword term detection

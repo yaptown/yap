@@ -18,3 +18,4 @@ target
 out.txt
 
 yap-frontend/dev-dist
+.vercel
