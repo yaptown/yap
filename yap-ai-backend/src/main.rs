@@ -673,10 +673,10 @@ async fn send_follow_notification(
         .insert_header("apikey", service_role_key)
         .insert_header("Authorization", format!("Bearer {service_role_key}"));
 
-    // Get the following user's profile to check if notifications are enabled
+    // Get the following user's profile to check if email notifications are enabled
     let following_profile_response = client
         .from("profiles")
-        .select("id,display_name,notifications_enabled")
+        .select("id,display_name,email_notifications_enabled")
         .eq("id", following_id)
         .single()
         .execute()
@@ -688,13 +688,13 @@ async fn send_follow_notification(
 
     let following_profile: serde_json::Value = following_profile_response.json().await?;
 
-    // Check if notifications are enabled
-    let notifications_enabled = following_profile["notifications_enabled"]
+    // Check if email notifications are enabled
+    let email_notifications_enabled = following_profile["email_notifications_enabled"]
         .as_bool()
-        .unwrap_or(false);
+        .unwrap_or(true); // Default to true if field is missing
 
-    if !notifications_enabled {
-        // User has disabled notifications, don't send email
+    if !email_notifications_enabled {
+        // User has disabled email notifications, don't send email
         return Ok(());
     }
 

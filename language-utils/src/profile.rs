@@ -36,6 +36,7 @@ pub struct Profile {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub display_name_slug: Option<String>,
     pub notifications_enabled: bool,
+    pub email_notifications_enabled: bool,
     pub created_at: String,
     pub updated_at: String,
 }
