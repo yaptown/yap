@@ -103,20 +103,20 @@ export function SyncStatusDialog() {
   if (!isOnline) {
     statusIcon = <Cloud className="w-2 h-2" />;
     statusText = "Offline";
-    statusColor = "text-gray-500";
+    statusColor = "text-gray-600 dark:text-gray-400";
   } else if (lastSyncError) {
     statusIcon = <X className="w-2 h-2" />;
     statusText = "Sync error";
-    statusColor = "text-red-500";
+    statusColor = "text-red-600 dark:text-red-400";
   } else if (isOnline) {
     if (unsyncedStale) {
       statusIcon = <RefreshCw className="w-2 h-2" />;
       statusText = "Unsynced";
-      statusColor = "text-yellow-500";
+      statusColor = "text-yellow-700 dark:text-yellow-400";
     } else {
       statusIcon = <Check className="w-2 h-2" />;
       statusText = "Synced";
-      statusColor = "text-green-500";
+      statusColor = "text-green-600 dark:text-green-400";
     }
   }
 
@@ -127,12 +127,12 @@ export function SyncStatusDialog() {
           <span
             className={`w-2 h-2 rounded-full ${
               !isOnline
-                ? "bg-gray-500"
+                ? "bg-gray-500 dark:bg-gray-400"
                 : lastSyncError
-                ? "bg-red-500"
+                ? "bg-red-500 dark:bg-red-400"
                 : unsyncedStale
-                ? "bg-yellow-500"
-                : "bg-green-500"
+                ? "bg-yellow-600 dark:bg-yellow-400"
+                : "bg-green-500 dark:bg-green-400"
             } transition-colors duration-300`}
           ></span>
           <span className={`hidden sm:inline text-sm ${statusColor} transition-colors duration-300`}>
@@ -198,7 +198,7 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Local Events</span>
+                <span className="text-sm font-medium text-foreground">Local Events</span>
               </div>
               <span className="text-sm text-muted-foreground">
                 {localEventCount}
@@ -207,7 +207,7 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Server Events</span>
+                <span className="text-sm font-medium text-foreground">Server Events</span>
               </div>
               <span className="text-sm text-muted-foreground">
                 {remoteEventCount}
@@ -219,7 +219,7 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CupSoda className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">User ID</span>
+                <span className="text-sm font-medium text-foreground">User ID</span>
               </div>
               <span className="text-sm text-muted-foreground font-mono">
                 {weapon.user_id
@@ -231,7 +231,7 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CupSoda className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Device ID</span>
+                <span className="text-sm font-medium text-foreground">Device ID</span>
               </div>
               <span className="text-sm text-muted-foreground font-mono">
                 {weapon.device_id.substring(0, 16)}...
@@ -240,7 +240,7 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Baby className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Yap.Town version</span>
+                <span className="text-sm font-medium text-foreground">Yap.Town version</span>
               </div>
               <span className="text-sm text-muted-foreground font-mono">
                 {get_app_version()}

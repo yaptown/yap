@@ -107,3 +107,17 @@
 {"sentence":"No conmigo.","issues":["Unnatural/incorrect negation placement; expected order is “Conmigo no.”","Potentially confusing for learners due to English-influenced structure"],"corrected_sentence":null}
 {"sentence":"Tan fuerte.","issues":["Sentence fragment; lacks verb or complement","Using 'tan' typically requires a comparison (tan... como) or a result clause (tan... que) unless used in a fuller exclamation","If intended as an exclamation, missing Spanish exclamation marks","Unnatural for learners; alternatives like 'Es tan fuerte.', 'Está muy fuerte.', or '¡Qué fuerte!' are clearer"],"corrected_sentence":null}
 {"sentence":"Mira este tipo.","issues":["Missing personal 'a' before a human direct object ('Mira a este tipo').","Ambiguity: 'tipo' can mean 'guy' or 'type'; without 'a' it may be read as 'type', which feels incomplete without 'de ...'."],"corrected_sentence":null}
+{"sentence":"Que cosas?","issues":["Missing accent on 'Qué'","Missing opening inverted question mark '¿' for questions in Spanish"],"corrected_sentence":"¿Qué cosas?"}
+{"sentence":"Qué suerte.","issues":["Missing opening exclamation mark","Uses a period instead of an exclamation mark for an exclamative sentence"],"corrected_sentence":"¡Qué suerte!"}
+{"sentence":"Cómo es?","issues":["Missing opening inverted question mark (¿) in Spanish questions"],"corrected_sentence":"¿Cómo es?"}
+{"sentence":"Él lo es.","issues":["Requires prior context; 'lo' lacks an antecedent","Potentially confusing for learners due to neuter 'lo' with 'ser'"],"corrected_sentence":null}
+{"sentence":"Ella es.","issues":["Incomplete sentence: missing predicate complement after 'es'","Does not convey a complete idea on its own","Not idiomatic as a standalone answer (would expect 'Ella lo es' or a full predicate)"],"corrected_sentence":null}
+{"sentence":"Puedo entrar?","issues":["Missing opening inverted question mark (¿) required in Spanish questions"],"corrected_sentence":"¿Puedo entrar?"}
+{"sentence":"De qué?","issues":["Missing inverted opening question mark (¿) in Spanish questions"],"corrected_sentence":"¿De qué?"}
+{"sentence":"Este es.","issues":["Incomplete sentence (missing complement after 'es')","Does not convey a complete idea without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"De vida.","issues":["Fragment/incomplete sentence","Ambiguous meaning without context","Potentially confusing for learners; often 'de la vida' or 'sobre la vida' would be expected in many contexts"],"corrected_sentence":null}
+{"sentence":"Y uno.","issues":["Sentence fragment with no main clause","Begins with coordinating conjunction implying missing prior context","Ambiguous meaning ('uno' lacks a clear referent)","Likely confusing for learners"],"corrected_sentence":null}
+{"sentence":"Qué dijiste?","issues":["Missing opening inverted question mark (¿)"],"corrected_sentence":"¿Qué dijiste?"}
+{"sentence":"La ves?","issues":["Missing opening inverted question mark (¿)"],"corrected_sentence":"¿La ves?"}
+{"sentence":"Esta es.","issues":["Elliptical/incomplete predicate; relies on context to be meaningful for learners"],"corrected_sentence":null}
+{"sentence":"Qué hacen?","issues":["Missing opening inverted question mark (¿) for questions in Spanish"],"corrected_sentence":"¿Qué hacen?"}

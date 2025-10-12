@@ -11,3 +11,4 @@
 {"sentence":"Tom ist so.","issues":["Deictic ‘so’ requires contextual reference; sentence is vague on its own","Potentially confusing for learners due to missing referent for ‘so’"],"corrected_sentence":null}
 {"sentence":"Ziri hörte.","issues":["Elliptical/incomplete idea","Likely missing an object (e.g., Ziri hörte etwas.) or particle for zuhören (e.g., Ziri hörte zu.)","Potentially confusing for learners"],"corrected_sentence":null}
 {"sentence":"Ohne dich kann Ich nicht sein.","issues":["Incorrect capitalization: 'Ich' should be 'ich' in mid-sentence."],"corrected_sentence":"Ohne dich kann ich nicht sein."}
+{"sentence":"Finde jemand anderen.","issues":["Accusative case error: should be „jemanden“ after „finden“","Minor style: otherwise fine as a standalone imperative"],"corrected_sentence":"Finde jemanden anderen."}
