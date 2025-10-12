@@ -1172,6 +1172,8 @@ pub struct Stats {
     /// Track daily challenge completions for the past week
     /// Key is days since epoch, value is number of challenges completed
     pub past_week_challenges: BTreeMap<i64, u32>,
+    /// Timestamp of the first event processed (when the user started using the app)
+    pub start_time: Option<DateTime<Utc>>,
 }
 
 #[derive(Clone, Debug)]
@@ -1242,6 +1244,11 @@ impl weapon::PartialAppState for Deck {
             native_language: _, // TODO: specify native_language
             content: event,
         }) = event;
+
+        // Set start_time on first event
+        if deck.stats.start_time.is_none() {
+            deck.stats.start_time = Some(*timestamp);
+        }
 
         deck.update_daily_streak(timestamp);
         deck.stats.total_reviews += 1;
@@ -1706,6 +1713,7 @@ impl DeckState {
                 xp: 0.0,
                 daily_streak: None,
                 past_week_challenges: BTreeMap::new(),
+                start_time: None,
             },
             context: Context {
                 language_pack,

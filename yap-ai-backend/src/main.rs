@@ -888,6 +888,10 @@ async fn update_language_stats(
         );
     }
 
+    if let Some(start_time) = request.start_time {
+        upsert_data.insert("started".to_string(), serde_json::Value::String(start_time));
+    }
+
     upsert_data.insert(
         "last_updated".to_string(),
         serde_json::Value::String("now()".to_string()),

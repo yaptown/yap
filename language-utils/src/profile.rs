@@ -65,6 +65,7 @@ pub struct UpdateLanguageStatsRequest {
     pub daily_streak_expiry: Option<String>,
     pub xp: f64,
     pub percent_known: f64,
+    pub start_time: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, schemars::JsonSchema, tsify::Tsify)]

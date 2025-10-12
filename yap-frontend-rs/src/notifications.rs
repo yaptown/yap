@@ -333,6 +333,9 @@ impl Deck {
 
         let language = self.context.target_language;
 
+        // Get start_time from stats
+        let start_time = self.stats.start_time.map(|time| time.to_rfc3339());
+
         let request = UpdateLanguageStatsRequest {
             language,
             total_count,
@@ -340,6 +343,7 @@ impl Deck {
             daily_streak_expiry,
             xp,
             percent_known,
+            start_time,
         };
 
         let response = crate::utils::hit_ai_server(
