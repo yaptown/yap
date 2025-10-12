@@ -91,7 +91,7 @@ export function Header({
                   <span className="sm:hidden">Yap</span>
                 </h1>
               </div>
-              {userInfo && <SyncStatusDialog />}
+              {userInfo && <div className="animate-fade-in-delayed"><SyncStatusDialog /></div>}
             </>
           )}
         </div>
@@ -101,7 +101,7 @@ export function Header({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="text-sm text-muted-foreground hover:text-foreground"
+                  className="text-sm text-muted-foreground hover:text-foreground animate-fade-in-delayed"
                 >
                   {userInfo.displayName || userInfo.email}
                 </Button>

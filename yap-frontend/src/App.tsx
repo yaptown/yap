@@ -44,7 +44,7 @@ import { match, P } from 'ts-pattern';
 export interface UserInfo {
   id: string
   email: string
-  displayName: string | null
+  displayName: string | null | undefined
 }
 
 export type AppContextType = {
@@ -114,7 +114,7 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
   void weaponToken
   const [session, setSession] = useState<SupabaseSession | null>(null)
   const [signedOut, setSignedOut] = useState(false)
-  const [displayName, setDisplayName] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState<string | null | undefined>(undefined)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -127,7 +127,7 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
         localStorage.setItem('yap-user-info', JSON.stringify({
           id: session?.user.id,
           email: session?.user.email,
-          displayName: null // Will be fetched from profiles table
+          displayName: undefined // Will be fetched from profiles table
         }))
         setSignedOut(false)
       } else if (event === 'SIGNED_OUT') {
@@ -138,7 +138,7 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
         }
 
         setSession(null)
-        setDisplayName(null)
+        setDisplayName(undefined)
         setSignedOut(true)
       }
     })
@@ -151,7 +151,7 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
   // Fetch display name from Supabase when logged in
   useEffect(() => {
     if (!session?.user.id) {
-      setDisplayName(null)
+      setDisplayName(undefined)
       return
     }
 
@@ -194,9 +194,9 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
     }
   }, [session?.user.id])
 
-  // Update localStorage when displayName changes
+  // Update localStorage when displayName changes (only when it's been fetched)
   useEffect(() => {
-    if (session?.user.id && session?.user.email) {
+    if (session?.user.id && session?.user.email && displayName !== undefined) {
       localStorage.setItem('yap-user-info', JSON.stringify({
         id: session.user.id,
         email: session.user.email,

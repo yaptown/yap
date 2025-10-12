@@ -133,9 +133,9 @@ export function SyncStatusDialog() {
                 : unsyncedStale
                 ? "bg-yellow-500"
                 : "bg-green-500"
-            }`}
+            } transition-colors duration-300`}
           ></span>
-          <span className={`hidden sm:inline text-sm ${statusColor}`}>
+          <span className={`hidden sm:inline text-sm ${statusColor} transition-colors duration-300`}>
             {statusText}
           </span>
         </button>
