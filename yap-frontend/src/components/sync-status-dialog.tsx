@@ -163,18 +163,13 @@ export function SyncStatusDialog() {
           {lastSyncError && (
             <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-sm text-red-600 dark:text-red-400 flex-1">
-                  Error:{" "}
-                  {lastSyncError.length > 200
-                    ? `${lastSyncError.substring(0, 200)}... (${
-                        lastSyncError.length
-                      } chars total)`
-                    : lastSyncError}
+                <p className="text-sm text-red-600 dark:text-red-400 flex-1 overflow-hidden line-clamp-3">
+                  Error: {lastSyncError}
                 </p>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0"
+                  className="h-6 w-6 p-0 flex-shrink-0"
                   onClick={() => {
                     navigator.clipboard
                       .writeText(lastSyncError)
