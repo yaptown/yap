@@ -30,4 +30,5 @@ uuid = { version = "1.17", features = ["serde", "v4"] }
 language-utils = { path = "../language-utils" }
 tsify.workspace = true
 wasm-bindgen.workspace = true
-postgrest = "1.0"   
+postgrest = "1.0"
+resend-rs = "0.18"   

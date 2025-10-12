@@ -21,6 +21,7 @@ use language_utils::{
     transcription_challenge,
 };
 use postgrest::Postgrest;
+use resend_rs::{Resend, types::CreateEmailBaseOptions};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, sync::LazyLock};
 use tower_http::compression::CompressionLayer;
@@ -650,6 +651,130 @@ fn slugify(text: &str) -> String {
         .join("-")
 }
 
+const NEW_FOLLOWER_EMAIL_TEMPLATE_TEXT: &str = include_str!("email_templates/new_follower.txt");
+const NEW_FOLLOWER_EMAIL_TEMPLATE_HTML: &str = include_str!("email_templates/new_follower.html");
+
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#x27;")
+}
+
+async fn send_follow_notification(
+    follower_id: uuid::Uuid,
+    following_id: &str,
+    supabase_url: &str,
+    service_role_key: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Create Supabase client
+    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
+        .insert_header("apikey", service_role_key)
+        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+
+    // Get the following user's profile to check if notifications are enabled
+    let following_profile_response = client
+        .from("profiles")
+        .select("id,display_name,notifications_enabled")
+        .eq("id", following_id)
+        .single()
+        .execute()
+        .await?;
+
+    if !following_profile_response.status().is_success() {
+        return Err("Failed to fetch following user's profile".into());
+    }
+
+    let following_profile: serde_json::Value = following_profile_response.json().await?;
+
+    // Check if notifications are enabled
+    let notifications_enabled = following_profile["notifications_enabled"]
+        .as_bool()
+        .unwrap_or(false);
+
+    if !notifications_enabled {
+        // User has disabled notifications, don't send email
+        return Ok(());
+    }
+
+    let following_display_name = following_profile["display_name"]
+        .as_str()
+        .unwrap_or("there");
+
+    // Get follower's display name
+    let follower_profile_response = client
+        .from("profiles")
+        .select("display_name,display_name_slug")
+        .eq("id", follower_id.to_string())
+        .single()
+        .execute()
+        .await?;
+
+    if !follower_profile_response.status().is_success() {
+        return Err("Failed to fetch follower's profile".into());
+    }
+
+    let follower_profile: serde_json::Value = follower_profile_response.json().await?;
+    let follower_display_name = follower_profile["display_name"]
+        .as_str()
+        .unwrap_or("Someone");
+
+    // Get the email from auth.users table using Supabase REST API
+    let auth_client = reqwest::Client::new();
+    let auth_response = auth_client
+        .get(format!("{supabase_url}/auth/v1/admin/users/{following_id}"))
+        .header("apikey", service_role_key)
+        .header("Authorization", format!("Bearer {service_role_key}"))
+        .send()
+        .await?;
+
+    if !auth_response.status().is_success() {
+        return Err("Failed to fetch user email from auth".into());
+    }
+
+    let auth_user: serde_json::Value = auth_response.json().await?;
+    let email = auth_user["email"]
+        .as_str()
+        .ok_or("No email found for user")?;
+
+    // Build the profile link with the correct format
+    let profile_link = format!("https://yap.town/user/id/{follower_id}");
+
+    // Escape user-provided content for HTML
+    // following_display_name = person receiving the email (the one being followed)
+    // follower_display_name = person who clicked follow
+    let recipient_name_escaped = html_escape(following_display_name);
+    let follower_name_escaped = html_escape(follower_display_name);
+
+    // Replace template variables in HTML version
+    let email_body_html = NEW_FOLLOWER_EMAIL_TEMPLATE_HTML
+        .replace("{{recipient_name}}", &recipient_name_escaped)
+        .replace("{{follower_name}}", &follower_name_escaped)
+        .replace("{{profile_link}}", &profile_link);
+
+    // Replace template variables in text version (no HTML escaping needed for plain text)
+    let email_body_text = NEW_FOLLOWER_EMAIL_TEMPLATE_TEXT
+        .replace("{{recipient_name}}", following_display_name)
+        .replace("{{follower_name}}", follower_display_name);
+
+    // Send email using Resend
+    let resend_api_key = std::env::var("RESEND_API_KEY")?;
+    let resend = Resend::new(&resend_api_key);
+
+    // Use plain text for the subject (escape for safety)
+    let subject = format!("{follower_display_name} just followed you on Yap Town!");
+
+    let email_request =
+        CreateEmailBaseOptions::new("Yap Town <noreply@yap.town>", [email], subject)
+            .with_html(&email_body_html)
+            .with_text(&email_body_text);
+
+    resend.emails.send(email_request).await?;
+
+    Ok(())
+}
+
 use axum::extract::Query;
 
 async fn get_profile(Query(params): Query<GetProfileQuery>) -> Result<Json<Profile>, StatusCode> {
@@ -960,6 +1085,9 @@ async fn follow_user(
         return Err(StatusCode::BAD_REQUEST);
     }
 
+    // Clone user_id for email notification before it's moved
+    let following_user_id = request.user_id.clone();
+
     // Insert the follow relationship
     let mut insert_data = serde_json::Map::new();
     insert_data.insert(
@@ -982,6 +1110,22 @@ async fn follow_user(
         })?;
 
     if response.status().is_success() {
+        // Send email notification (non-blocking, errors are logged but don't fail the request)
+        let supabase_url_clone = supabase_url.clone();
+        let service_role_key_clone = service_role_key.clone();
+        tokio::spawn(async move {
+            if let Err(e) = send_follow_notification(
+                follower_id,
+                &following_user_id,
+                &supabase_url_clone,
+                &service_role_key_clone,
+            )
+            .await
+            {
+                eprintln!("Failed to send follow notification email: {e:?}");
+            }
+        });
+
         Ok(Json(FollowResponse { success: true }))
     } else {
         eprintln!("Failed to insert follow: {:?}", response.text().await);

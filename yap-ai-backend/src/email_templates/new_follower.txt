@@ -1,0 +1,9 @@
+Hi {{recipient_name}},
+
+Great news! "{{follower_name}}" just started following you on Yap Town!
+
+Keep up the great work learning languages!
+
+---
+Yap Town
+https://yap.town
