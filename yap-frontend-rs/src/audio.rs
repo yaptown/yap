@@ -134,9 +134,14 @@ impl AudioCache {
             TtsProvider::ElevenLabs => "/tts",
         };
 
-        let response = hit_ai_server(endpoint, request, access_token)
-            .await
-            .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
+        let response = hit_ai_server(
+            fetch_happen::Method::POST,
+            endpoint,
+            Some(request),
+            access_token,
+        )
+        .await
+        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
 
         if !response.ok() {
             return Err(JsValue::from_str(&format!(

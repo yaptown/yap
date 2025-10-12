@@ -169,7 +169,7 @@ pub enum Number {
     Count,
     /// Plurale tantum: appears only in plural form even though it denotes one thing (e.g., scissors, pants)
     PluraleTantum,
-    /// Collective / mass / singulare tantum: grammatical singular describing sets of objects (semantic plural)
+    /// A special case of singular. It applies to words that use grammatical singular to describe sets of objects, i.e. semantic plural. Although in theory they might be able to form plural, in practice it would be rarely semantically plausible. Sometimes, the plural form exists and means “several sorts of” or “several packages of”.
     Collective,
 }
 

@@ -201,9 +201,14 @@ async fn download_and_cache_language_data(
         course.native_language,
         course.target_language
     );
-    let response = hit_ai_server("/language-data", course, None)
-        .await
-        .map_err(LanguageDataError::AiServer)?;
+    let response = hit_ai_server(
+        fetch_happen::Method::POST,
+        "/language-data",
+        Some(course),
+        None,
+    )
+    .await
+    .map_err(LanguageDataError::AiServer)?;
 
     if !response.ok() {
         log::info!("Server returned error: {}", response.status());

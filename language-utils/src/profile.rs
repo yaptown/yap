@@ -73,3 +73,23 @@ pub struct UpdateLanguageStatsRequest {
 pub struct UpdateLanguageStatsResponse {
     pub success: bool,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone, schemars::JsonSchema, tsify::Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct FollowRequest {
+    pub user_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, schemars::JsonSchema, tsify::Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct FollowResponse {
+    pub success: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, schemars::JsonSchema, tsify::Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct FollowStatus {
+    pub is_following: bool,
+    pub follower_count: i64,
+    pub following_count: i64,
+}

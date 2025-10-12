@@ -347,8 +347,9 @@ impl Deck {
         };
 
         let response = crate::utils::hit_ai_server(
+            fetch_happen::Method::POST,
             "/language-stats",
-            &request,
+            Some(&request),
             Some(&access_token.to_string()),
         )
         .await

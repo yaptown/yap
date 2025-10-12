@@ -14,8 +14,9 @@ use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use language_utils::{
     Course, Language, TtsRequest, autograde,
     profile::{
-        GetProfileQuery, Profile, UpdateLanguageStatsRequest, UpdateLanguageStatsResponse,
-        UpdateProfileRequest, UpdateProfileResponse,
+        FollowRequest, FollowResponse, FollowStatus, GetProfileQuery, Profile,
+        UpdateLanguageStatsRequest, UpdateLanguageStatsResponse, UpdateProfileRequest,
+        UpdateProfileResponse,
     },
     transcription_challenge,
 };
@@ -935,6 +936,226 @@ async fn serve_language_data(Json(course): Json<Course>) -> Response {
     }
 }
 
+async fn follow_user(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    Json(request): Json<FollowRequest>,
+) -> Result<Json<FollowResponse>, StatusCode> {
+    // Verify JWT token to get the user's ID
+    let claims = verify_jwt(auth.token()).await?;
+    let follower_id = claims.sub;
+
+    // Get Supabase credentials from environment
+    let supabase_url =
+        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Create Supabase client
+    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
+        .insert_header("apikey", service_role_key.clone())
+        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+
+    // Prevent users from following themselves
+    if follower_id.to_string() == request.user_id {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Insert the follow relationship
+    let mut insert_data = serde_json::Map::new();
+    insert_data.insert(
+        "follower_id".to_string(),
+        serde_json::Value::String(follower_id.to_string()),
+    );
+    insert_data.insert(
+        "following_id".to_string(),
+        serde_json::Value::String(request.user_id),
+    );
+
+    let response = client
+        .from("follows")
+        .insert(serde_json::Value::Object(insert_data).to_string())
+        .execute()
+        .await
+        .map_err(|e| {
+            eprintln!("Error inserting follow: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if response.status().is_success() {
+        Ok(Json(FollowResponse { success: true }))
+    } else {
+        eprintln!("Failed to insert follow: {:?}", response.text().await);
+        Err(StatusCode::INTERNAL_SERVER_ERROR)
+    }
+}
+
+async fn unfollow_user(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    Json(request): Json<FollowRequest>,
+) -> Result<Json<FollowResponse>, StatusCode> {
+    // Verify JWT token to get the user's ID
+    let claims = verify_jwt(auth.token()).await?;
+    let follower_id = claims.sub;
+
+    // Get Supabase credentials from environment
+    let supabase_url =
+        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Create Supabase client
+    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
+        .insert_header("apikey", service_role_key.clone())
+        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+
+    // Delete the follow relationship
+    let response = client
+        .from("follows")
+        .eq("follower_id", follower_id.to_string())
+        .eq("following_id", request.user_id)
+        .delete()
+        .execute()
+        .await
+        .map_err(|e| {
+            eprintln!("Error deleting follow: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    if response.status().is_success() {
+        Ok(Json(FollowResponse { success: true }))
+    } else {
+        eprintln!("Failed to delete follow: {:?}", response.text().await);
+        Err(StatusCode::INTERNAL_SERVER_ERROR)
+    }
+}
+
+async fn get_follow_status(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    Query(params): Query<GetProfileQuery>,
+) -> Result<Json<FollowStatus>, StatusCode> {
+    // Verify JWT token to get the current user's ID
+    let claims = verify_jwt(auth.token()).await?;
+    let current_user_id = claims.sub;
+
+    // Get Supabase credentials from environment
+    let supabase_url =
+        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Create Supabase client
+    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
+        .insert_header("apikey", service_role_key.clone())
+        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+
+    // Get the target user's ID
+    let target_user_id = if let Some(id) = params.id {
+        id
+    } else if let Some(slug) = params.slug {
+        // First get the user_id from the profile
+        let profile_response = client
+            .from("profiles")
+            .select("id")
+            .eq("display_name_slug", slug)
+            .single()
+            .execute()
+            .await
+            .map_err(|e| {
+                eprintln!("Error fetching profile for slug: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?;
+
+        if !profile_response.status().is_success() {
+            return Err(StatusCode::NOT_FOUND);
+        }
+
+        let profile: serde_json::Value = profile_response
+            .json()
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        profile["id"]
+            .as_str()
+            .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
+            .to_string()
+    } else {
+        return Err(StatusCode::BAD_REQUEST);
+    };
+
+    // Check if current user follows target user
+    let is_following_response = client
+        .from("follows")
+        .select("*")
+        .eq("follower_id", current_user_id.to_string())
+        .eq("following_id", &target_user_id)
+        .execute()
+        .await
+        .map_err(|e| {
+            eprintln!("Error checking follow status: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    let is_following = if is_following_response.status().is_success() {
+        let data: Vec<serde_json::Value> = is_following_response
+            .json()
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        !data.is_empty()
+    } else {
+        false
+    };
+
+    // Get follower count (how many people follow the target user)
+    let follower_count_response = client
+        .from("follows")
+        .select("*")
+        .eq("following_id", &target_user_id)
+        .execute()
+        .await
+        .map_err(|e| {
+            eprintln!("Error fetching follower count: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    let follower_count = if follower_count_response.status().is_success() {
+        let data: Vec<serde_json::Value> = follower_count_response
+            .json()
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        data.len() as i64
+    } else {
+        0
+    };
+
+    // Get following count (how many people the target user follows)
+    let following_count_response = client
+        .from("follows")
+        .select("*")
+        .eq("follower_id", &target_user_id)
+        .execute()
+        .await
+        .map_err(|e| {
+            eprintln!("Error fetching following count: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    let following_count = if following_count_response.status().is_success() {
+        let data: Vec<serde_json::Value> = following_count_response
+            .json()
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        data.len() as i64
+    } else {
+        0
+    };
+
+    Ok(Json(FollowStatus {
+        is_following,
+        follower_count,
+        following_count,
+    }))
+}
+
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
@@ -955,6 +1176,9 @@ async fn main() {
         .route("/profile", get(get_profile).patch(update_profile))
         .route("/language-stats", post(update_language_stats))
         .route("/user-language-stats", get(get_language_stats))
+        .route("/follow", post(follow_user))
+        .route("/unfollow", post(unfollow_user))
+        .route("/follow-status", get(get_follow_status))
         .layer(CompressionLayer::new())
         .layer(cors);
 

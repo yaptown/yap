@@ -67,8 +67,9 @@ pub(crate) async fn get_or_create_device_id(
 }
 
 pub async fn hit_ai_server(
+    method: fetch_happen::Method,
     path: &str,
-    request: impl serde::Serialize,
+    request: Option<impl serde::Serialize>,
     access_token: Option<&String>,
 ) -> Result<fetch_happen::Response, fetch_happen::Error> {
     let client = fetch_happen::Client;
@@ -79,12 +80,25 @@ pub async fn hit_ai_server(
     };
     // Always include an Authorization header - use "anonymous" as dummy token when not logged in
     let token = access_token.map(|t| t.as_str()).unwrap_or("anonymous");
-    let response = client
-        .post(format!("{url}{path}"))
-        .json(&request)?
-        .header("Authorization", format!("Bearer {token}"))
-        .send()
-        .await?;
+
+    let full_url = format!("{url}{path}");
+
+    let mut req = match method {
+        fetch_happen::Method::GET => client.get(&full_url),
+        fetch_happen::Method::POST => client.post(&full_url),
+        fetch_happen::Method::PATCH => client.patch(&full_url),
+        fetch_happen::Method::PUT => client.put(&full_url),
+        fetch_happen::Method::DELETE => client.delete(&full_url),
+        _ => panic!("Unsupported HTTP method"),
+    };
+
+    req = req.header("Authorization", format!("Bearer {token}"));
+
+    if let Some(body) = request {
+        req = req.json(&body)?;
+    }
+
+    let response = req.send().await?;
     Ok(response)
 }
 

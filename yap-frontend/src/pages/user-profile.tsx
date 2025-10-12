@@ -1,145 +1,229 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useOutletContext } from 'react-router-dom'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { TopPageLayout } from '@/components/TopPageLayout'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { get_profile_by_id, get_user_language_stats_by_id, update_profile } from '../../../yap-frontend-rs/pkg'
-import { Pencil, X, Check } from 'lucide-react'
-import { toast } from 'sonner'
-import { getLanguageFlag, getLanguageName } from '@/lib/utils'
-import type { AppContextType } from '@/App'
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { TopPageLayout } from "@/components/TopPageLayout";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  get_profile_by_id,
+  get_user_language_stats_by_id,
+  update_profile,
+  get_follow_status,
+  follow_user,
+  unfollow_user,
+} from "../../../yap-frontend-rs/pkg";
+import { Pencil, X, Check } from "lucide-react";
+import { toast } from "sonner";
+import { getLanguageFlag, getLanguageName } from "@/lib/utils";
+import type { AppContextType } from "@/App";
 
 interface Profile {
-  id: string
-  display_name: string | null
-  bio: string | null
-  display_name_slug: string | null
-  notifications_enabled: boolean
-  created_at: string
-  updated_at: string
+  id: string;
+  display_name: string | null;
+  bio: string | null;
+  display_name_slug: string | null;
+  notifications_enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface LanguageStats {
-  user_id: string
-  language: string
-  total_count: number
-  daily_streak: number
-  daily_streak_expiry: string | null
-  xp: number
-  percent_known: number
-  started: string
-  last_updated: string
+  user_id: string;
+  language: string;
+  total_count: number;
+  daily_streak: number;
+  daily_streak_expiry: string | null;
+  xp: number;
+  percent_known: number;
+  started: string;
+  last_updated: string;
 }
 
 export function UserProfilePage() {
-  const { id } = useParams<{ id: string }>()
-  const { userInfo, accessToken } = useOutletContext<AppContextType>()
-  const navigate = useNavigate()
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [languageStats, setLanguageStats] = useState<LanguageStats[]>([])
-  const [loading, setLoading] = useState(true)
-  const [statsLoading, setStatsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [editDisplayName, setEditDisplayName] = useState('')
-  const [editBio, setEditBio] = useState('')
-  const [saving, setSaving] = useState(false)
+  const { id } = useParams<{ id: string }>();
+  const { userInfo, accessToken } = useOutletContext<AppContextType>();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [languageStats, setLanguageStats] = useState<LanguageStats[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDisplayName, setEditDisplayName] = useState("");
+  const [editBio, setEditBio] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [followStatus, setFollowStatus] = useState<{
+    is_following: boolean;
+    follower_count: number;
+    following_count: number;
+  } | null>(null);
+  const [followLoading, setFollowLoading] = useState(false);
 
-  const isOwnProfile = userInfo?.id === id
+  const isOwnProfile = userInfo?.id === id;
 
   useEffect(() => {
     async function loadProfile() {
       if (!id) {
-        setError('No user ID provided')
-        setLoading(false)
-        return
+        setError("No user ID provided");
+        setLoading(false);
+        return;
       }
 
       try {
-        setLoading(true)
-        const profileData = await get_profile_by_id(id)
-        setProfile(profileData as Profile)
-        setEditDisplayName(profileData.display_name || '')
-        setEditBio(profileData.bio || '')
-        setError(null)
+        setLoading(true);
+        const profileData = await get_profile_by_id(id);
+        setProfile(profileData as Profile);
+        setEditDisplayName(profileData.display_name || "");
+        setEditBio(profileData.bio || "");
+        setError(null);
       } catch (err) {
-        console.error('Error loading profile:', err)
-        setError('Failed to load profile')
+        console.error("Error loading profile:", err);
+        setError("Failed to load profile");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    loadProfile()
-  }, [id])
+    loadProfile();
+  }, [id]);
 
   useEffect(() => {
     async function loadLanguageStats() {
       if (!id) {
-        setStatsLoading(false)
-        return
+        setStatsLoading(false);
+        return;
       }
 
       try {
-        setStatsLoading(true)
-        const stats = await get_user_language_stats_by_id(id)
-        setLanguageStats(stats as LanguageStats[])
+        setStatsLoading(true);
+        const stats = await get_user_language_stats_by_id(id);
+        setLanguageStats(stats as LanguageStats[]);
       } catch (err) {
-        console.error('Error loading language stats:', err)
+        console.error("Error loading language stats:", err);
         // Don't set error state - stats are optional
-        setLanguageStats([])
+        setLanguageStats([]);
       } finally {
-        setStatsLoading(false)
+        setStatsLoading(false);
       }
     }
 
-    loadLanguageStats()
-  }, [id])
+    loadLanguageStats();
+  }, [id]);
+
+  useEffect(() => {
+    async function loadFollowStatus() {
+      if (!id || !accessToken) {
+        return;
+      }
+
+      try {
+        const status = await get_follow_status(id, null, accessToken);
+        setFollowStatus(status as any);
+      } catch (err) {
+        console.error("Error loading follow status:", err);
+      }
+    }
+
+    loadFollowStatus();
+  }, [id, accessToken]);
 
   const handleSave = async () => {
     if (!accessToken) {
-      toast.error('You must be logged in to edit your profile')
-      return
+      toast.error("You must be logged in to edit your profile");
+      return;
     }
 
     try {
-      setSaving(true)
+      setSaving(true);
       await update_profile(
         editDisplayName || null,
         editBio || null,
         accessToken
-      )
+      );
 
       // Reload profile to get updated data including slug
-      const profileData = await get_profile_by_id(id!)
-      setProfile(profileData as Profile)
-      setIsEditing(false)
-      toast.success('Profile updated successfully')
+      const profileData = await get_profile_by_id(id!);
+      setProfile(profileData as Profile);
+      setIsEditing(false);
+      toast.success("Profile updated successfully");
     } catch (err) {
-      console.error('Error updating profile:', err)
-      toast.error('Failed to update profile')
+      console.error("Error updating profile:", err);
+      toast.error("Failed to update profile");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setEditDisplayName(profile?.display_name || '')
-    setEditBio(profile?.bio || '')
-    setIsEditing(false)
-  }
+    setEditDisplayName(profile?.display_name || "");
+    setEditBio(profile?.bio || "");
+    setIsEditing(false);
+  };
+
+  const handleFollow = async () => {
+    if (!accessToken || !id) {
+      toast.error("You must be logged in to follow users");
+      return;
+    }
+
+    try {
+      setFollowLoading(true);
+      await follow_user(id, accessToken);
+      setFollowStatus((prev) =>
+        prev
+          ? {
+              ...prev,
+              is_following: true,
+              follower_count: prev.follower_count + 1,
+            }
+          : null
+      );
+      toast.success("Followed successfully");
+    } catch (err) {
+      console.error("Error following user:", err);
+      toast.error("Failed to follow user");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!accessToken || !id) {
+      toast.error("You must be logged in to unfollow users");
+      return;
+    }
+
+    try {
+      setFollowLoading(true);
+      await unfollow_user(id, accessToken);
+      setFollowStatus((prev) =>
+        prev
+          ? {
+              ...prev,
+              is_following: false,
+              follower_count: prev.follower_count - 1,
+            }
+          : null
+      );
+      toast.success("Unfollowed successfully");
+    } catch (err) {
+      console.error("Error unfollowing user:", err);
+      toast.error("Failed to unfollow user");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   if (loading) {
     return (
       <TopPageLayout
         userInfo={userInfo}
         headerProps={{
-          backButton: { label: 'Profile', onBack: () => navigate('/') }
+          backButton: { label: "Profile", onBack: () => navigate("/") },
         }}
       >
         <div className="space-y-4">
@@ -154,7 +238,7 @@ export function UserProfilePage() {
           </Card>
         </div>
       </TopPageLayout>
-    )
+    );
   }
 
   if (error || !profile) {
@@ -162,25 +246,25 @@ export function UserProfilePage() {
       <TopPageLayout
         userInfo={userInfo}
         headerProps={{
-          backButton: { label: 'Profile', onBack: () => navigate('/') }
+          backButton: { label: "Profile", onBack: () => navigate("/") },
         }}
       >
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-muted-foreground">
-              {error || 'Profile not found'}
+              {error || "Profile not found"}
             </div>
           </CardContent>
         </Card>
       </TopPageLayout>
-    )
+    );
   }
 
   return (
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
-        backButton: { label: 'Profile', onBack: () => navigate('/') }
+        backButton: { label: "Profile", onBack: () => navigate("/") },
       }}
     >
       <div className="space-y-4">
@@ -204,16 +288,50 @@ export function UserProfilePage() {
                 ) : (
                   <>
                     <h2 className="text-3xl font-bold">
-                      {profile.display_name || 'Anonymous User'}
+                      {profile.display_name || "Anonymous User"}
                     </h2>
                     {profile.display_name_slug && (
                       <p className="text-sm text-muted-foreground mt-1">
                         @{profile.display_name_slug}
                       </p>
                     )}
+                    <div className="flex gap-4 mt-2 text-sm animate-fade-in-delayed">
+                      <span>
+                        {followStatus ? (
+                          <>
+                            <strong>{followStatus.follower_count}</strong>{" "}
+                            followers
+                          </>
+                        ) : (
+                          <span className="invisible">0 followers</span>
+                        )}
+                      </span>
+                      <span>
+                        {followStatus ? (
+                          <>
+                            <strong>{followStatus.following_count}</strong>{" "}
+                            following
+                          </>
+                        ) : (
+                          <span className="invisible">0 following</span>
+                        )}
+                      </span>
+                    </div>
                   </>
                 )}
               </div>
+              {!isOwnProfile && !isEditing && followStatus && (
+                <Button
+                  variant={followStatus.is_following ? "outline" : "default"}
+                  onClick={
+                    followStatus.is_following ? handleUnfollow : handleFollow
+                  }
+                  disabled={followLoading}
+                  className="ml-2"
+                >
+                  {followStatus.is_following ? "Unfollow" : "Follow"}
+                </Button>
+              )}
               {isOwnProfile && !isEditing && (
                 <Button
                   variant="ghost"
@@ -266,7 +384,9 @@ export function UserProfilePage() {
               ) : (
                 <>
                   {profile.bio ? (
-                    <p className="text-foreground whitespace-pre-wrap">{profile.bio}</p>
+                    <p className="text-foreground whitespace-pre-wrap">
+                      {profile.bio}
+                    </p>
                   ) : (
                     <p className="text-muted-foreground italic">No bio yet</p>
                   )}
@@ -274,10 +394,11 @@ export function UserProfilePage() {
               )}
 
               <p className="text-xs text-muted-foreground pt-2 border-t">
-                Member since {new Date(profile.created_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
+                Member since{" "}
+                {new Date(profile.created_at).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </p>
             </div>
@@ -304,32 +425,47 @@ export function UserProfilePage() {
                 {languageStats.map((stats) => (
                   <div key={stats.language} className="border rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-2xl">{getLanguageFlag(stats.language)}</span>
-                      <h4 className="text-lg font-semibold">{getLanguageName(stats.language)}</h4>
+                      <span className="text-2xl">
+                        {getLanguageFlag(stats.language)}
+                      </span>
+                      <h4 className="text-lg font-semibold">
+                        {getLanguageName(stats.language)}
+                      </h4>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
                         <p className="text-sm text-muted-foreground">Cards</p>
-                        <p className="text-2xl font-bold">{stats.total_count}</p>
+                        <p className="text-2xl font-bold">
+                          {stats.total_count}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Daily Streak</p>
-                        <p className="text-2xl font-bold">{stats.daily_streak} 🔥</p>
+                        <p className="text-sm text-muted-foreground">
+                          Daily Streak
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {stats.daily_streak} 🔥
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">XP</p>
-                        <p className="text-2xl font-bold">{Math.round(stats.xp)}</p>
+                        <p className="text-2xl font-bold">
+                          {Math.round(stats.xp)}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Mastery</p>
-                        <p className="text-2xl font-bold">{stats.percent_known.toFixed(1)}%</p>
+                        <p className="text-2xl font-bold">
+                          {stats.percent_known.toFixed(1)}%
+                        </p>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
-                      Learning since {new Date(stats.started).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
+                      Learning since{" "}
+                      {new Date(stats.started).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
                       })}
                     </p>
                   </div>
@@ -340,5 +476,5 @@ export function UserProfilePage() {
         ) : null}
       </div>
     </TopPageLayout>
-  )
+  );
 }

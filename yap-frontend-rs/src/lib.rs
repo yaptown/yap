@@ -5,6 +5,7 @@ mod language_pack;
 mod next_cards;
 mod notifications;
 pub mod opfs_test;
+pub mod profile;
 pub mod simulation;
 mod supabase;
 mod utils;
@@ -22,9 +23,6 @@ use language_utils::TtsProvider;
 use language_utils::TtsRequest;
 use language_utils::autograde;
 use language_utils::features::{Morphology, WordPrefix};
-use language_utils::profile::{
-    Profile, UpdateProfileRequest, UpdateProfileResponse, UserLanguageStats,
-};
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
@@ -3625,9 +3623,14 @@ pub async fn autograde_translation(
         language,
     };
 
-    let response = hit_ai_server("/autograde-translation", request, access_token.as_ref())
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
+    let response = hit_ai_server(
+        fetch_happen::Method::POST,
+        "/autograde-translation",
+        Some(request),
+        access_token.as_ref(),
+    )
+    .await
+    .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
 
     if !response.ok() {
         return Err(JsValue::from_str(&format!(
@@ -3803,9 +3806,14 @@ pub async fn autograde_transcription_llm(
         language,
     };
 
-    let response = hit_ai_server("/autograde-transcription", &request, access_token.as_ref())
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
+    let response = hit_ai_server(
+        fetch_happen::Method::POST,
+        "/autograde-transcription",
+        Some(&request),
+        access_token.as_ref(),
+    )
+    .await
+    .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
 
     let response: transcription_challenge::Grade = response
         .json()
@@ -3831,169 +3839,6 @@ pub fn get_app_version() -> String {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub fn get_courses() -> Vec<language_utils::Course> {
     language_utils::COURSES.to_vec()
-}
-
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-pub async fn get_profile_by_id(user_id: String) -> Result<JsValue, JsValue> {
-    let client = fetch_happen::Client;
-    let url = if cfg!(feature = "local-backend") {
-        "http://localhost:8080"
-    } else {
-        "https://yap-ai-backend.fly.dev"
-    };
-
-    let response = client
-        .get(format!("{url}/profile?id={user_id}"))
-        .send()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
-
-    if !response.ok() {
-        return Err(JsValue::from_str(&format!(
-            "HTTP error: {}",
-            response.status()
-        )));
-    }
-
-    let profile: Profile = response
-        .json()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Response parsing error: {e:?}")))?;
-
-    serde_wasm_bindgen::to_value(&profile)
-        .map_err(|e| JsValue::from_str(&format!("Serialization error: {e:?}")))
-}
-
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-pub async fn get_profile_by_slug(slug: String) -> Result<JsValue, JsValue> {
-    let client = fetch_happen::Client;
-    let url = if cfg!(feature = "local-backend") {
-        "http://localhost:8080"
-    } else {
-        "https://yap-ai-backend.fly.dev"
-    };
-
-    let response = client
-        .get(format!("{url}/profile?slug={slug}"))
-        .send()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
-
-    if !response.ok() {
-        return Err(JsValue::from_str(&format!(
-            "HTTP error: {}",
-            response.status()
-        )));
-    }
-
-    let profile: Profile = response
-        .json()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Response parsing error: {e:?}")))?;
-
-    serde_wasm_bindgen::to_value(&profile)
-        .map_err(|e| JsValue::from_str(&format!("Serialization error: {e:?}")))
-}
-
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-pub async fn update_profile(
-    display_name: Option<String>,
-    bio: Option<String>,
-    access_token: String,
-) -> Result<UpdateProfileResponse, JsValue> {
-    let request = UpdateProfileRequest { display_name, bio };
-
-    let client = fetch_happen::Client;
-    let url = if cfg!(feature = "local-backend") {
-        "http://localhost:8080"
-    } else {
-        "https://yap-ai-backend.fly.dev"
-    };
-
-    let response = client
-        .patch(format!("{url}/profile"))
-        .json(&request)
-        .map_err(|e| JsValue::from_str(&format!("JSON serialization error: {e:?}")))?
-        .header("Authorization", format!("Bearer {access_token}"))
-        .send()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
-
-    if !response.ok() {
-        return Err(JsValue::from_str(&format!(
-            "HTTP error: {}",
-            response.status()
-        )));
-    }
-
-    let result: UpdateProfileResponse = response
-        .json()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Response parsing error: {e:?}")))?;
-
-    Ok(result)
-}
-
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-pub async fn get_user_language_stats_by_id(user_id: String) -> Result<JsValue, JsValue> {
-    let client = fetch_happen::Client;
-    let url = if cfg!(feature = "local-backend") {
-        "http://localhost:8080"
-    } else {
-        "https://yap-ai-backend.fly.dev"
-    };
-
-    let response = client
-        .get(format!("{url}/user-language-stats?id={user_id}"))
-        .send()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
-
-    if !response.ok() {
-        return Err(JsValue::from_str(&format!(
-            "HTTP error: {}",
-            response.status()
-        )));
-    }
-
-    let stats: Vec<UserLanguageStats> = response
-        .json()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Response parsing error: {e:?}")))?;
-
-    serde_wasm_bindgen::to_value(&stats)
-        .map_err(|e| JsValue::from_str(&format!("Serialization error: {e:?}")))
-}
-
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-pub async fn get_user_language_stats_by_slug(slug: String) -> Result<JsValue, JsValue> {
-    let client = fetch_happen::Client;
-    let url = if cfg!(feature = "local-backend") {
-        "http://localhost:8080"
-    } else {
-        "https://yap-ai-backend.fly.dev"
-    };
-
-    let response = client
-        .get(format!("{url}/user-language-stats?slug={slug}"))
-        .send()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
-
-    if !response.ok() {
-        return Err(JsValue::from_str(&format!(
-            "HTTP error: {}",
-            response.status()
-        )));
-    }
-
-    let stats: Vec<UserLanguageStats> = response
-        .json()
-        .await
-        .map_err(|e| JsValue::from_str(&format!("Response parsing error: {e:?}")))?;
-
-    serde_wasm_bindgen::to_value(&stats)
-        .map_err(|e| JsValue::from_str(&format!("Serialization error: {e:?}")))
 }
 
 #[cfg(test)]

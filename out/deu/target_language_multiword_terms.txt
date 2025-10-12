@@ -1,3 +1,4 @@
+
 'n Appel und 'n Ei
 17. Bundesland
 A und O
@@ -21,6 +22,8 @@ Ajax Amsterdam
 Aktivierungs- und Vermittlungsgutschein
 Alarm schlagen
 Alarmstufe Rot
+Alles gut
+Alles wird gut
 Allgemeine Geschäftsbedingungen
 Alma Mater
 Aloe vera
@@ -33,6 +36,7 @@ Alter Markt
 Alter schützt vor Torheit nicht
 Altes Testament
 Altmarkkreis Salzwedel
+Alvar Aalto
 Alzheimer Krankheit
 Alzheimersche Krankheit
 American Football
@@ -45,6 +49,7 @@ Angst machen
 Anmaßung der Autorenschaft
 Anteil nehmen
 Antigua und Barbuda
+Antwort geben
 Appenzell Ausserrhoden
 Appenzell Innerrhoden
 April, April
@@ -235,6 +240,7 @@ Bescheid wissen
 Bescheidenheit ist eine Zier, doch weiter kommt man ohne ihr
 Best Practice
 Bethlehemitischer Kindermord
+Bett machen
 Bettler fasten selten
 Bewegung 2. Juni
 Big Ben
@@ -251,6 +257,7 @@ Blaue Stadt
 Blauer Nachzügler
 Blauflügelige Ödlandschrecke
 Blech reden
+Bloody Mary
 Blut ist dicker als Wasser
 Blut lecken
 Blut und Boden
@@ -403,6 +410,7 @@ Europäische Union
 Europäische Äsche
 Europäischer Stabilitätsmechanismus
 Ewige Stadt
+Fahrrad fahren
 Fahrt aufnehmen
 Fait accompli
 Fake News
@@ -411,6 +419,7 @@ Farbe bekennen
 Fass ohne Boden
 Fata Morgana
 Fehl und Tadel
+Fehler machen
 Feld-, Wald- und Wiesen-
 Fersengeld geben
 Fett schwimmt oben
@@ -425,6 +434,7 @@ Fleisch und Blut
 Flucht nach vorn
 Formel 1
 Fragen kostet nichts
+Fragen zu etwas haben
 Fraktur reden
 Frankf. a. d. O.
 Frankfurt a. O.
@@ -432,6 +442,7 @@ Frankfurt a. d. O.
 Frankfurt a/O.
 Frankfurt am Main
 Frankfurt an der Oder
+Französisch können
 Französische Revolution
 Freiburg im Breisgau
 Freiburg im Üechtland
@@ -469,6 +480,7 @@ Gelber Fleck
 Gelbes Meer
 Geld stinkt nicht
 Geld wie Heu haben
+Geld zurück
 Gelobtes Land
 Gemeine Fichte
 Generation Golf
@@ -590,6 +602,7 @@ Herz aus Gold
 Herz aus Stein
 Herzogtum Lauenburg
 Heulen und Zähneklappern
+Heute hier, morgen dort
 High Snobiety
 High Society
 Himmel und Hölle in Bewegung setzen
@@ -629,8 +642,10 @@ Höhen und Tiefen
 Höhle der Löwen
 Höhle des Löwen
 Ihre Majestät
+Ihren Namen, bitte
 Indischer Ozean
 Insel Man
+Inter Mailand
 Interesse haben
 Interesse wecken
 Interesse zeigen
@@ -756,6 +771,7 @@ Lügen haben schöne Beine
 Lügen strafen
 Machu Picchu
 Mammoth Mountain
+Manchester United
 Mann im Mond
 Mann mit dem Hammer
 Maria Magdalena
@@ -1061,6 +1077,7 @@ Schweiß spart Blut
 Schwäbisch Gmünd
 Schwäbisch Hall
 Schäfchen zählen
+Scotland Yard
 Seele von Mensch
 Segel des Schiffs
 Seine Majestät
@@ -1213,6 +1230,7 @@ Vereinigtes Königreich Großbritannien und Nordirland
 Vereinte Nationen
 Verfügung von Todes wegen
 Vertrauen ist gut, Kontrolle ist besser
+Viel Spaß
 Viertes Reich
 Vitamin B
 Vogel, friss oder stirb
@@ -1226,6 +1244,7 @@ Vorsicht ist besser als Nachsicht
 Vorsicht ist die Mutter der Porzellankiste
 Waidhofen an der Thaya
 Warschauer Pakt
+Was ist mit dir?
 Wasser auf jemandes Mühle leiten
 Wasser ins Meer tragen
 Wasser predigen und Wein trinken
@@ -1315,6 +1334,8 @@ ab und zu
 ab übermorgen
 aber
 aber hallo
+aber sicher
+aber sicher doch
 aber, aber
 abgehender Flug
 abgekartete Sache
@@ -1323,7 +1344,9 @@ abgereichertes Uran
 abgeschirmtes Kabel
 abgeschrägtes Dodekaeder
 abhaben können
+abnehmen
 abnormal
+absagen
 abschließend
 abstrakte Algebra
 abstrakte Fabrik
@@ -1388,9 +1411,11 @@ alles paletti
 alles und nichts
 alles zu seiner Zeit
 alles zusammengenommen
+alles über jdn/etw wissen
 allgemeine Chemie
 allgemeine Hochschulreife
 alltäglich
+als Baustein betrachtet
 als U-Boot
 als dass
 als erstes
@@ -1481,6 +1506,7 @@ analytische Chemie
 andere Länder, andere Sitten
 anderer Art
 anderes Ufer
+angeben
 angelaufen kommen
 angemessen
 angenommen
@@ -1499,8 +1525,10 @@ ans Tageslicht bringen
 ans Tageslicht kommen
 ans Ziel
 anschließend
+ansehen
 antifaschistischer Schutzwall
 arabische Ziffer
+arbeiten gehen
 archimedischer Körper
 arglistige Täuschung
 arm machen
@@ -1515,6 +1543,7 @@ asymptotischer Riesenast
 au weia
 auch andere Mütter haben schöne Töchter
 auch ein blindes Huhn findet mal ein Korn
+auch gut
 auch nur mit Wasser kochen
 auch so
 auf 180
@@ -1686,6 +1715,7 @@ auf halbem Weg
 auf jeden
 auf jeden Fall
 auf jeden Topf passt ein Deckel
+auf jemanden zukommen
 auf jemandes Nacken
 auf keine Kuhhaut gehen
 auf keine Kuhhaut passen
@@ -1786,6 +1816,7 @@ aus wie weit
 aus zweiter Hand
 auseinander
 ausfindig machen
+ausgehen
 ausnahmslos
 ausschneiden und einfügen
 aussichtslos
@@ -1844,9 +1875,12 @@ bei der Wahrheit bleiben
 bei drei auf dem Baum
 bei drei auf den Bäumen
 bei jemandem sein
+bei jemandem wohnen
 bei lebendigem Leib
 bei sich
 bei sich sein
+bei uns
+bei uns sein
 bei weitem
 beide Augen zudrücken
 beide zusammen
@@ -1890,6 +1924,7 @@ bin ich Jesus
 bioanorganische Chemie
 bioorganische Chemie
 biophysikalische Chemie
+bis Montag
 bis auf Weiteres
 bis bald
 bis dahin
@@ -1925,6 +1960,7 @@ bisweilen
 bitte schoen
 bitte schön
 bitte, das Spiel zu machen
+bitten um
 blau machen
 blau sein
 blau wie ein Veilchen
@@ -1994,6 +2030,7 @@ daher
 dahin
 dahin gehend
 dahinter her
+dalassen
 damit anfangen
 damit aufhören
 damit klarkommen
@@ -2042,6 +2079,7 @@ das Bessere ist der Feind des Guten
 das Beste ist der Feind des Guten
 das Beste von der Welt
 das Bett hüten
+das Bett machen
 das Blatt hat sich gewendet
 das Blatt wenden
 das Blaue vom Himmel versprechen
@@ -2135,10 +2173,14 @@ das x-te Mal
 davon abhängen
 davon ausgehen
 davon erzählen
+davon haben
 davon halten
+davon hören
 davon profitieren
 davon sprechen
 davon träumen
+davon wissen
+davongehen
 davor weg
 dazu bringen
 dazu führen
@@ -2146,6 +2188,8 @@ dazu gehören
 dazu kommen
 dazu neigen
 dazu sagen
+dazugeben
+dazutun
 dazwischen durch
 de jure
 de luxe
@@ -2585,7 +2629,9 @@ einen Braten in der Röhre haben
 einen Bären aufbinden
 einen Dachschaden haben
 einen Eindruck haben
+einen Fehler machen
 einen Fick geben
+einen Freund haben
 einen Frosch im Hals haben
 einen Korb bekommen
 einen Korb geben
@@ -2623,6 +2669,7 @@ einer Sache Rechnung tragen
 einer Sache auf den Grund gehen
 einer für alle
 einer für alle, alle für einen
+einer gegen alle
 einer nach dem anderen
 einer wie der andere
 einerseits andererseits
@@ -2630,6 +2677,7 @@ eines Nachts
 eines Tages
 einfach so
 einfaches Anführungszeichen
+einfangen
 eingehender Flug
 eingetragene Partnerschaft
 einmal
@@ -2640,7 +2688,9 @@ eins gemerkt
 eins im Sinn
 eins weiter
 einsame Klasse
+einsehen
 einwärts
+einziehen
 eiserne Disziplin
 eiserne Hand
 eiserne Lunge
@@ -2703,6 +2753,7 @@ es fehlt an
 es fühlt sich an
 es führt zu
 es gab
+es gefallen
 es geht um
 es gehört dazu
 es gehört zu
@@ -2761,6 +2812,7 @@ es sieht aus
 es sieht danach aus
 es sieht so aus
 es stellt sich heraus
+es tun
 es tut leid
 es tut mir leid
 es tut weh
@@ -2771,6 +2823,7 @@ es wird geben
 es wäre besser
 es wäre schön
 es zeigt sich
+essen gehen
 essentielle Aminosäure
 etc. pp.
 ethnische Säuberung
@@ -2784,6 +2837,7 @@ etwas auf die hohe Kante legen
 etwas auf die lange Bank schieben
 etwas auf seine Kappe nehmen
 etwas aus der Luft greifen
+etwas davon haben
 etwas durch die rosarote Brille sehen
 etwas einreißen lassen
 etwas für bare Münze nehmen
@@ -2819,6 +2873,7 @@ ex tunc
 exakt
 extrasolarer Planet
 fahrbarer Untersatz
+fahren lassen
 fallen lassen
 falls
 falls doch
@@ -2827,6 +2882,7 @@ falls nein
 falls nicht
 falsch positiv
 falscher Freund
+fast kein
 fehl am Platz
 fehl am Platze
 fein geschliffen
@@ -2929,17 +2985,21 @@ gedenken zu
 geeignet
 gefallener Engel
 geflügeltes Wort
+gefunden werden
 gefundenes Fressen
 gefährliches Halbwissen
 gegen den Willen
 gegen die Uhr
+gegen sein
 gegeneinander
 gegeneinander ausspielen
 geh bitte
 geh nur
+gehen müssen
 gehobenen Hauptes
 geht klar
 geht's noch
+gehören zu
 gehüpft wie gesprungen
 geistiges Eigentum
 geistiges Kind
@@ -2973,13 +3033,19 @@ geometrischer Körper
 geplante Obsoleszenz
 gepunktete Linie
 gerade Zahl
+gerade als
 gerade noch
+gerade sagen wollen
+gerade wollen + Infinitiv
 gerade zur Nase
 geradeaus
 gerades r
 gering schätzen
+gern arbeiten
 gern geschehen
 gern haben
+gern machen
+gern sprechen
 gesagt, getan
 geschehen ist geschehen
 geschenkt ist geschenkt, wiederholen ist gestohlen
@@ -3011,6 +3077,7 @@ gleichmäßig
 gleichseitiges Dreieck
 gleichwohl
 globale Erwärmung
+glücklich machen
 glückliche Fügung
 goldene Hochzeit
 goldene Mitte
@@ -3058,7 +3125,10 @@ gut Nacht
 gut Wetter machen
 gut durch
 gut gebrüllt, Löwe
+gut gehen
 gut gekaut ist halb verdaut
+gut gemacht
+gut gesagt
 gut im Futter
 gut situiert
 gute Absichten
@@ -3113,6 +3183,7 @@ heißes Höschen
 her und hin
 hernach
 herzlichen Glückwunsch
+heute Abend
 heute Nacht
 hie und da
 hieb- und stichfest
@@ -3131,8 +3202,11 @@ hin und zurück
 hin- und hergerissen
 hin- und hergeworfen
 hingegen
+hingehen
 hingehen, wo der Pfeffer wächst
 hinkendes Rechtsverhältnis
+hinkommen
+hinsehen
 hinsichtlich
 hinter Gitter
 hinter dem Horizont
@@ -3549,6 +3623,7 @@ in einem fort
 in einen Sack stecken und draufhauen
 in erster Linie
 in etwa
+in etwas aufgehen
 in ferner Zukunft
 in flagranti
 in gewisser Weise
@@ -3675,6 +3750,7 @@ jedem Tierchen sein Pläsierchen
 jedem das Seine
 jeden Augenblick
 jeden Moment
+jeden Tag
 jeden Wunsch erfüllen
 jeden dritten
 jeden zweiten
@@ -3712,7 +3788,9 @@ jemandem etwas in die Schuhe schieben
 jemandem etwas zur Last legen
 jemandem fehlen die Worte
 jemandem fällt ein Stein vom Herzen
+jemandem gefallen
 jemandem geht der Arsch auf Grundeis
+jemandem gehören
 jemandem in Fleisch und Blut übergehen
 jemandem in den Arsch kriechen
 jemandem in den Hintern kriechen
@@ -3720,6 +3798,7 @@ jemandem in den Kram passen
 jemandem in die Suppe spucken
 jemandem ist eine Laus über die Leber gelaufen
 jemandem nicht das Wasser reichen können
+jemandem nicht wohl sein
 jemandem stehen die Haare zu Berge
 jemandem zu nahe treten
 jemandem zu schaffen machen
@@ -3730,6 +3809,7 @@ jemanden am Arsch lecken
 jemanden kreuzweise können
 jemanden mal können
 jemanden sticht der Hafer
+jemanden warten lassen
 jemandes Speichel lecken
 jetzt schlägt's dreizehn
 jetzt schlägts dreizehn
@@ -3750,6 +3830,7 @@ kategorischer Imperativ
 katholisch machen
 kein Auge zutun
 kein Blatt vor den Mund nehmen
+kein Geld mehr
 kein Gewissen haben
 kein Jota
 kein Kommentar
@@ -3757,6 +3838,7 @@ kein Pardon kennen
 kein Plan
 kein Problem
 kein Schwein
+kein Wort mehr
 kein Wunder
 kein Wässerchen trüben können
 kein Zufall
@@ -3766,6 +3848,7 @@ keine Ahnung
 keine Ahnung haben
 keine Angabe
 keine Antwort ist auch eine Antwort
+keine Frage
 keine Geduld haben
 keine Hand rühren
 keine Rolle spielen
@@ -3821,6 +3904,8 @@ koste es was es wolle
 koste es, was es wolle
 kovalente Bindung
 krank machen
+krank sein
+krank werden
 krause Haare, krauser Sinn
 kreuz und quer
 krieg ich hin
@@ -3859,6 +3944,8 @@ langes Gesicht
 lapsus linguae
 lass es dir schmecken
 lassen Sie es sich schmecken
+lassen uns
+lassen uns gehen
 lasst es euch schmecken
 latente Wärme
 laufen lassen
@@ -3875,6 +3962,7 @@ leicht reden haben
 leichter gesagt als getan
 leid sein
 leid tun
+lesen lernen
 letzte Meile
 letzten Endes
 letztendlich
@@ -3891,6 +3979,7 @@ lieber eine Stumme im Bett als eine Taube auf dem Dach
 lieber spät als gar nie
 lieber tot als rot
 lieferbar
+liegen an
 liegen bleiben
 liegen lassen
 lineare Algebra
@@ -3915,6 +4004,7 @@ made in Germany
 magisches Denken
 magna cum laude
 mal mal
+mal sehen
 man hat schon Pferde kotzen sehen
 man ist, was man isst
 man muss das Eisen schmieden, solange es heiß ist
@@ -3922,6 +4012,7 @@ man muss mit den Wölfen heulen
 man muss nur wollen
 man soll den Tag nicht vor dem Abend loben
 man tut, was man kann
+man weiß nie
 manchmal
 maschinelles Lernen
 matt setzen
@@ -3931,6 +4022,7 @@ mehr als genug
 mehr oder minder
 mehr oder weniger
 mehr schlecht als recht
+mehr … als
 mehrmals
 mein Gott
 mein Kondom ist gerissen
@@ -4056,9 +4148,12 @@ mit gutem Gewissen
 mit halbem Herzen
 mit heißer Nadel gestrickt
 mit jemandem Schlitten fahren
+mit jemandem gehen
 mit jemandem gut Freund sein
 mit jemandem ins Gericht gehen
 mit jemandem ist nicht gut Kirschen essen
+mit jemandem zusammen sein
+mit jemandem/etwas zu tun haben
 mit leeren Händen
 mit offenen Augen
 mit offenen Augen schlafen
@@ -4083,6 +4178,8 @@ morgen, morgen, nur nicht heute, sagen alle faulen Leute
 mundtot machen
 my English is not the yellow from the egg
 my English is not the yellow from the egg, but it goes
+möchte gern
+müssen müssen
 n. Chr.
 n. u. Z.
 na also
@@ -4096,6 +4193,7 @@ nach Christus
 nach Gutdünken
 nach Hause
 nach Herzenslust
+nach Ihnen
 nach Lust und Laune
 nach Maß
 nach Wunsch
@@ -4400,6 +4498,7 @@ recht haben
 rechte Hand
 rechts ist, wo der Daumen links ist
 rechts und links
+reden über
 reelle Zahl
 regelmäßig
 reim dich oder ich fress dich
@@ -4450,6 +4549,8 @@ s. u.
 s. unten
 sag schnell
 sage und schreibe
+sagen schon
+sagen wollen
 samt und sonders
 sang- und klanglos
 sauberes Fleisch
@@ -4460,8 +4561,10 @@ schaff ich
 schaff ich nicht
 scharfes S
 schauen wie der Ochs vorm Berg
+scheinen zu sein
 scheiß drauf
 schief zur Nase
+schlafen gehen
 schlapp machen
 schlecht gelaunt
 schlecht und recht
@@ -4474,6 +4577,7 @@ schlussendlich
 schmutzige Bombe
 schmutzige Wäsche waschen
 schnelle Nummer
+schon gut
 schon immer
 schon lange
 schon lange her
@@ -4512,14 +4616,18 @@ schwer in Mode
 schwere Not
 schwere andere seelische Abartigkeit
 schwerer Kerker
+schwimmen gehen
 schwitzen wie ein Schwein
 schön Wetter machen
+schön für euch
 schönen Feierabend
 sechster Fall
 sechster Sinn
 sehr gut
 sei es
+sein Bett machen
 sein Damaskus erleben
+sein Glück versuchen
 sein Licht unter den Scheffel stellen
 sein Versprechen halten
 sein Wort brechen
@@ -4614,10 +4722,12 @@ sich mit Ruhm bekleckern
 sich nicht vom Fleck rühren
 sich schuldig fühlen
 sich schuldig machen
+sich sehen
 sich selbst
 sich selbst überlassen
 sich vom Acker machen
 sich wacker schlagen
+sicher doch
 sie alle haben
 sieben Todsünden
 siehe auch
@@ -4650,6 +4760,7 @@ so oder so
 so oft wie möglich
 so schlecht wie
 so schnell wie möglich
+so sei es
 so sicher wie das Amen in der Kirche
 so spielt man mit Studenten
 so tun als ob
@@ -4782,6 +4893,7 @@ u. Z.
 u. a.
 u. ö.
 um Gottes willen
+um Hilfe bitten
 um Himmels Willen
 um Ihretwillen
 um Rat fragen
@@ -4816,10 +4928,12 @@ um so mehr
 um so schlimmer
 um so weniger
 um und um
+um welche Zeit
 um wie viel
 um wie viel Uhr
 um … willen
 umgekehrt wird ein Schuh daraus
+umkommen
 ums Arschlecken
 ums Leben kommen
 umsonst
@@ -4864,6 +4978,7 @@ unter Schmerzen
 unter Tage
 unter Tränen
 unter Umständen
+unter Wasser stehen
 unter allen Umständen
 unter aller Kanone
 unter aller Sau
@@ -4893,11 +5008,13 @@ unter ferner liefen
 unter freiem Himmel
 unter großen Mühen
 unter keinen Umständen
+unter sich sein
 unter uns
 unter vier Augen
 unterbrechungsfreie Stromversorgung
 unterdessen
 untereinander
+untergehen
 unterm Strich
 unters Messer
 unters Ziel
@@ -5031,6 +5148,8 @@ von dort aus
 von einem Ohr zum anderen
 von einem Tag auf den anderen
 von etwas Wind bekommen
+von etwas hören
+von etwas wissen
 von ganzem Herzen
 von gestern
 von heute an
@@ -5160,8 +5279,13 @@ wechselseitiger Ausschluss
 weder Fisch noch Fleisch
 weder Hand noch Fuß
 weder noch
+weg sein
 weggegangen, Platz vergangen
+weggehen
 weggehen wie warme Semmeln
+weglassen
+wegnehmen
+wegsehen
 weh mir
 weh tun
 wehrhafte Demokratie
@@ -5177,7 +5301,9 @@ weit und breit
 weit weg
 weiter bestehen
 weiter so
+weitergehen
 weiß der Geier
+weiß werden
 weiße Fahne
 weiße Flecken
 weiße Weste
@@ -5224,11 +5350,13 @@ wer nie sein Brot im Bette aß, weiß nicht, wie Krümel piken
 wer rastet, der rostet
 wer sich zum Schaf macht, wird von den Wölfen gefressen
 wer solche Freunde hat, braucht keine Feinde
+wer weiß
 wer will, findet Wege, wer nicht will, findet Gründe
 wer zu spät kommt, den bestraft das Leben
 wer zuerst kommt, mahlt zuerst
 wer's glaubt
 wer's glaubt, wird selig
+werden + Infinitiv
 werdende Mutter
 wes Brot ich ess, des Lied ich sing
 weshalb denn
@@ -5301,6 +5429,7 @@ wie man sich bettet, so schläft man
 wie man's macht, macht man's falsch
 wie meinen
 wie oft
+wie so sein
 wie spät
 wie spät ist es
 wie viel
@@ -5315,6 +5444,7 @@ wie wäre es
 wie wäre es mit
 wie zufällig
 wieder da
+wiederkommen
 wieso denn
 wilde Ehe
 willkommen heißen
@@ -5350,6 +5480,7 @@ wohin fährt dieser Zug
 wohin gehen
 wohl eher
 wohl oder übel
+wohnen bei
 womit beschäftigen
 woran denken
 worauf warten
@@ -5425,6 +5556,7 @@ zu dieser Zeit
 zu dritt
 zu einem Ende kommen
 zu etwas kommen wie die Jungfrau zum Kind
+zu etwas übergehen
 zu eurer Zeit
 zu früh kommen
 zu gut, um wahr zu sein
@@ -5456,8 +5588,10 @@ zueinander
 zuerst
 zugrunde richten
 zuhause
+zum Abendessen
 zum Anfang
 zum Anlass nehmen
+zum Arzt gehen
 zum Ausdruck kommen
 zum Beispiel
 zum Besten geben
@@ -5515,6 +5649,7 @@ zur Salzsäule erstarren
 zur Schau stellen
 zur Schau tragen
 zur Schule
+zur Schule gehen
 zur Seite
 zur Seite stehen
 zur Seite treten
@@ -5531,7 +5666,13 @@ zur Wirklichkeit werden
 zur Zeit
 zur gleichen Zeit
 zur rechten Zeit
+zurück sein
+zurückgehen
+zurückkommen
+zurücklassen
 zusammen
+zusammen sein
+zusammenarbeiten
 zusammenfassend
 zusammengenommen
 zustande kommen
@@ -5621,12 +5762,16 @@ zwischen den Zeilen lesen
 über die Ufer treten
 über die Wupper gehen
 über einen Kamm scheren
+über etwas sprechen
+über etwas wissen
+über jemandem stehen
 über seine Verhältnisse leben
 über sich hinaus
 überallhin
 übereinander
 überhaupt kein
 überhaupt nicht
+überhaupt nichts
 überprüfte Ausnahme
 übers Ohr hauen
 übers Ziel
