@@ -20,7 +20,7 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_cache_directory("./.cache")
 });
 
-const SENTENCES_TO_ANALYZE: usize = 500;
+const SENTENCES_TO_ANALYZE: usize = 600;
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct SentenceQualityResponse {
@@ -299,7 +299,7 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
                 missing_multiword_terms,
             }
         })
-        .buffered(50) // Process 50 sentences concurrently
+        .buffer_unordered(50) // Process 50 sentences concurrently
         .collect::<Vec<_>>()
         .await;
 

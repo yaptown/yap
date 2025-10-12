@@ -248,3 +248,17 @@
 {"sentence":"No woman.","issues":["Sentence fragment (no verb/predicate)","Ambiguous without context","Potential confusion with the vocative form \"No, woman.\" due to punctuation"],"corrected_sentence":null}
 {"sentence":"His room.","issues":["Sentence fragment (not a complete clause)","Pronoun 'his' lacks an antecedent, which may confuse learners"],"corrected_sentence":null}
 {"sentence":"Like her mother.","issues":["sentence fragment","missing subject and verb","requires context to interpret"],"corrected_sentence":null}
+{"sentence":"He wants.","issues":["Sentence fragment","Transitive verb 'wants' missing object or complement","Ambiguous/unclear meaning without context"],"corrected_sentence":null}
+{"sentence":"Everyone stay still.","issues":["Missing comma for direct address","Potential ambiguity with subject-verb agreement if read as declarative"],"corrected_sentence":"Everyone, stay still."}
+{"sentence":"And soon.","issues":["Sentence fragment","No main clause","Begins with coordinating conjunction without preceding clause","Requires context to be meaningful"],"corrected_sentence":null}
+{"sentence":"He still is.","issues":["Elliptical/copular verb without a complement; relies on prior context","Meaning is ambiguous without context and could confuse learners"],"corrected_sentence":null}
+{"sentence":"You must.","issues":["Fragment/ellipsis without a main verb","Unclear meaning without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"More, even.","issues":["Sentence fragment","Unclear meaning without context","Unnatural word order (people would say “even more”)","Unusual/comma misuse"],"corrected_sentence":null}
+{"sentence":"Why you?","issues":["Elliptical/fragment; lacks a verb or auxiliary.","Ambiguous without context (likely means “Why are you the one?”).","Less suitable as a model sentence for learners."],"corrected_sentence":null}
+{"sentence":"More than ever.","issues":["Sentence fragment (no subject/verb)","Relies on context to specify what is 'more'","Potentially confusing for learners when isolated"],"corrected_sentence":null}
+{"sentence":"S.A.R.A.H., the door.","issues":["Sentence fragment (no main verb)","Ambiguous meaning (missing action such as open/close)","Relies on specific context (AI/voice assistant) which is not provided"],"corrected_sentence":null}
+{"sentence":"All these years.","issues":["Sentence fragment (no subject/verb)","Relies on context; elliptical meaning may confuse learners"],"corrected_sentence":null}
+{"sentence":"The children.","issues":["Sentence fragment (no verb/predicate)","Requires context to be meaningful"],"corrected_sentence":null}
+{"sentence":"The wife.","issues":["Sentence fragment (noun phrase only)","Definite article requires context; unclear referent","Potentially confusing for learners due to lack of context and colloquial register"],"corrected_sentence":null}
+{"sentence":"Then after three years, another three years.","issues":["Sentence fragment (no explicit subject or finite verb)","Ambiguous referent for what lasts \"another three years\"","Minor punctuation: a comma after \"Then\" could improve readability"],"corrected_sentence":null}
+{"sentence":"Maybe, yes.","issues":["Unnecessary comma creates awkward punctuation"],"corrected_sentence":"Maybe yes."}

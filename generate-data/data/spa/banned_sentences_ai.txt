@@ -102,3 +102,8 @@
 {"sentence":"Que sigue?","issues":["Missing opening inverted question mark (¿)","Missing accent on 'Qué'"],"corrected_sentence":"¿Qué sigue?"}
 {"sentence":"Aún mejor.","issues":["Incorrect accent on 'aún'—should be 'aun' when it means 'incluso/even'"],"corrected_sentence":"Aun mejor."}
 {"sentence":"Qué fuerte.","issues":["Missing exclamation marks (¡ … !).","Idiomatic usage may confuse learners (often means “Wow/That’s intense,” not literally “How strong”)."],"corrected_sentence":"¡Qué fuerte!"}
+{"sentence":"Y luego?","issues":["Missing initial inverted question mark (¿) for Spanish questions"],"corrected_sentence":"¿Y luego?"}
+{"sentence":"Lo ven?","issues":["Missing opening inverted question mark (¿)"],"corrected_sentence":"¿Lo ven?"}
+{"sentence":"No conmigo.","issues":["Unnatural/incorrect negation placement; expected order is “Conmigo no.”","Potentially confusing for learners due to English-influenced structure"],"corrected_sentence":null}
+{"sentence":"Tan fuerte.","issues":["Sentence fragment; lacks verb or complement","Using 'tan' typically requires a comparison (tan... como) or a result clause (tan... que) unless used in a fuller exclamation","If intended as an exclamation, missing Spanish exclamation marks","Unnatural for learners; alternatives like 'Es tan fuerte.', 'Está muy fuerte.', or '¡Qué fuerte!' are clearer"],"corrected_sentence":null}
+{"sentence":"Mira este tipo.","issues":["Missing personal 'a' before a human direct object ('Mira a este tipo').","Ambiguity: 'tipo' can mean 'guy' or 'type'; without 'a' it may be read as 'type', which feels incomplete without 'de ...'."],"corrected_sentence":null}

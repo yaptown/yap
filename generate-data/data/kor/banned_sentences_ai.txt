@@ -144,3 +144,9 @@
 {"sentence":"그럼, 안돼요.","issues":["Incorrect spacing: '안돼요' should be '안 돼요'."],"corrected_sentence":"그럼, 안 돼요."}
 {"sentence":"절대 안돼.","issues":["Incorrect spacing: should be ‘안 돼’, not ‘안돼’"],"corrected_sentence":"절대 안 돼."}
 {"sentence":"그를 가자.","issues":["Incorrect case/particle: 를 used with intransitive verb 가다","Verb valency mismatch (가다 cannot take a direct object)","Ambiguous intended meaning"],"corrected_sentence":null}
+{"sentence":"아빠 안돼요!","issues":["Incorrect spacing: should be '안 돼요' not '안돼요'","Optional missing comma after vocative '아빠'"],"corrected_sentence":"아빠, 안 돼요!"}
+{"sentence":"아니, 안돼.","issues":["Incorrect spacing: '안돼' should be written as '안 돼' (안 + 되다)."],"corrected_sentence":"아니, 안 돼."}
+{"sentence":"어서, 문!","issues":["Incomplete sentence; missing verb","Unnatural to address ‘문’ (door) as a vocative","If addressing a person named 문, missing vocative marker (e.g., ‘문아’) or title (e.g., ‘문 씨’)","Comma use is awkward here"],"corrected_sentence":null}
+{"sentence":"아빠,안돼요.","issues":["Incorrect spacing: should be ‘안 돼요’, not ‘안돼요’.","Missing space after comma: ‘아빠, 안 돼요.’"],"corrected_sentence":"아빠, 안 돼요."}
+{"sentence":"안돼, 안돼.","issues":["Incorrect spacing: should be ‘안 돼’ not ‘안돼’"],"corrected_sentence":"안 돼, 안 돼."}
+{"sentence":"사람을 가자!","issues":["Incorrect case particle: 을 used with 가다; should use -에게/-한테 if meaning is ‘go to [someone]’.","Semantic mismatch: ‘사람을 가다’ is not a valid collocation in Korean.","Ambiguous intent; could mean ‘go to the person’ (사람에게/한테 가자) or ‘go get the person’ (사람을 데리러 가자/찾으러 가자)."],"corrected_sentence":null}

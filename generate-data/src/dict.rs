@@ -360,6 +360,8 @@ Common number values:
 - Singular: one person, animal or thing
 - Plural: several persons, animals or things
 
+(For verbs, it should reflect whether the verb is clearly conjugated for a particular number. For example, some verbs are only used for the plural "they", and some are only conjugated for the singular "he". For nouns, it should reflect whether the noun is clearly plural or singular.)
+
 Less common number values (use only if applicable):
 - Dual: exactly two items
 - Trial: exactly three items
@@ -371,7 +373,7 @@ Less common number values (use only if applicable):
 - PluraleTantum: only appears in plural form but denotes one thing (like "scissors", "pants")
 - Collective: grammatical singular describing sets of objects (like "mankind", "furniture")
 
-If this word has a fixed grammatical number, provide it. If number is not applicable or varies, use `"2. number": null`. (Respond with JSON, using "1. thoughts" then "2. number".)"#,
+If this word has a fixed grammatical number, provide it. If number is not applicable, is ambiguous, or varies, use `"2. number": null`. (Respond with JSON, using "1. thoughts" then "2. number".)"#,
                 ),
                 format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
