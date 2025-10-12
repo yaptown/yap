@@ -103,7 +103,7 @@ export function Header({
                   variant="ghost"
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
-                  {userInfo.email}
+                  {userInfo.displayName || userInfo.email}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

@@ -12,6 +12,7 @@ import { get_profile_by_id, get_user_language_stats_by_id, update_profile } from
 import { Pencil, X, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { getLanguageFlag, getLanguageName } from '@/lib/utils'
+import type { AppContextType } from '@/App'
 
 interface Profile {
   id: string
@@ -35,14 +36,9 @@ interface LanguageStats {
   last_updated: string
 }
 
-type OutletContextType = {
-  userInfo: { id: string; email: string } | undefined
-  accessToken: string | undefined
-}
-
 export function UserProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { userInfo, accessToken } = useOutletContext<OutletContextType>()
+  const { userInfo, accessToken } = useOutletContext<AppContextType>()
   const navigate = useNavigate()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [languageStats, setLanguageStats] = useState<LanguageStats[]>([])

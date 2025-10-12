@@ -44,6 +44,12 @@ import { match, P } from 'ts-pattern';
 export interface UserInfo {
   id: string
   email: string
+  displayName: string | null
+}
+
+export type AppContextType = {
+  userInfo: UserInfo | undefined
+  accessToken: string | undefined
 }
 
 function AppMain() {
@@ -108,18 +114,20 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
   void weaponToken
   const [session, setSession] = useState<SupabaseSession | null>(null)
   const [signedOut, setSignedOut] = useState(false)
+  const [displayName, setDisplayName] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
     })
-    
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       if (event === 'SIGNED_IN') {
         localStorage.setItem('yap-user-info', JSON.stringify({
           id: session?.user.id,
-          email: session?.user.email
+          email: session?.user.email,
+          displayName: null // Will be fetched from profiles table
         }))
         setSignedOut(false)
       } else if (event === 'SIGNED_OUT') {
@@ -130,21 +138,80 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
         }
 
         setSession(null)
+        setDisplayName(null)
         setSignedOut(true)
       }
     })
-    
+
     return () => {
       authListener.subscription.unsubscribe()
     }
   }, [])
+
+  // Fetch display name from Supabase when logged in
+  useEffect(() => {
+    if (!session?.user.id) {
+      setDisplayName(null)
+      return
+    }
+
+    // Fetch initial display name
+    const fetchDisplayName = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', session.user.id)
+        .single()
+
+      if (!error && data) {
+        setDisplayName(data.display_name)
+      }
+    }
+
+    fetchDisplayName()
+
+    // Set up realtime subscription for display_name changes
+    const channel = supabase
+      .channel(`profile_${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${session.user.id}`
+        },
+        (payload) => {
+          if (payload.new && 'display_name' in payload.new) {
+            setDisplayName(payload.new.display_name as string | null)
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [session?.user.id])
+
+  // Update localStorage when displayName changes
+  useEffect(() => {
+    if (session?.user.id && session?.user.email) {
+      localStorage.setItem('yap-user-info', JSON.stringify({
+        id: session.user.id,
+        email: session.user.email,
+        displayName: displayName
+      }))
+    }
+  }, [session?.user.id, session?.user.email, displayName])
 
   let userInfo: UserInfo | undefined;
 
   if (session) {
     userInfo = {
       id: session.user.id,
-      email: session.user.email!
+      email: session.user.email!,
+      displayName: displayName
     }
   } else if (!signedOut) {
     const cachedUserInfo = localStorage.getItem('yap-user-info')
@@ -166,7 +233,7 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
   )
 }
 
-function AppTestWeapon({ userInfo, accessToken }: { userInfo: UserInfo | undefined, accessToken: string | undefined }) {
+function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
   const weaponState = useWeaponState()
 
   if (weaponState.type === 'loading') {
@@ -204,12 +271,7 @@ function AppTestWeapon({ userInfo, accessToken }: { userInfo: UserInfo | undefin
   }
 }
 
-type OutletContextType = {
-  userInfo: UserInfo | undefined
-  accessToken: string | undefined
-}
-
-function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined, accessToken: string | undefined }) {
+function AppContent({ userInfo, accessToken }: AppContextType) {
   return (
     <Profiler id="App" onRender={profilerOnRender}>
       <div>
@@ -228,7 +290,7 @@ function AppContent({ userInfo, accessToken }: { userInfo: UserInfo | undefined,
 }
 
 function ReviewPage() {
-  const { userInfo, accessToken } = useOutletContext<OutletContextType>()
+  const { userInfo, accessToken } = useOutletContext<AppContextType>()
   const deck = useDeck()
   const navigate = useNavigate()
 
@@ -325,7 +387,7 @@ function Tools() {
 }
 
 function DictionaryPage() {
-  const { userInfo } = useOutletContext<OutletContextType>()
+  const { userInfo } = useOutletContext<AppContextType>()
   const deck = useDeck()
   const weapon = useWeapon()
   const navigate = useNavigate()
@@ -769,7 +831,7 @@ function App() {
 }
 
 function SelectLanguagePage() {
-  const { userInfo } = useOutletContext<OutletContextType>()
+  const { userInfo } = useOutletContext<AppContextType>()
   const weapon = useWeapon()
   const deck = useDeck()
   const navigate = useNavigate()
