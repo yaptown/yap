@@ -213,3 +213,38 @@
 {"sentence":"His phone.","issues":["Sentence fragment (no verb/predicate)","Incomplete thought; needs context","May be confusing for learners expecting full sentences"],"corrected_sentence":null}
 {"sentence":"Happy end.","issues":["Fragment (no verb)","Non-idiomatic collocation; should be “happy ending” in standard English"],"corrected_sentence":null}
 {"sentence":"Another man.","issues":["Sentence fragment (incomplete thought)","Unclear without context; may confuse learners"],"corrected_sentence":null}
+{"sentence":"Of them.","issues":["Sentence fragment (only a prepositional phrase)","Incomplete thought; lacks subject and verb","Not meaningful without context"],"corrected_sentence":null}
+{"sentence":"So.","issues":["Sentence fragment requiring context","Extremely vague/ambiguous meaning","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Fox Two.","issues":["Highly context-dependent/jargon; meaning not clear to learners without context","Not a full sentence in general English (radio callout/fragment)","Nonstandard capitalization of “Two”"],"corrected_sentence":"Fox two."}
+{"sentence":"And things.","issues":["Sentence fragment","Starts with a coordinating conjunction without prior clause","Incomplete thought; lacks context","Vague and potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Not maybe.","issues":["Sentence fragment (no subject or verb)","Unidiomatic wording; typical form is \"Maybe not.\"","Requires context to be interpreted and may confuse learners"],"corrected_sentence":null}
+{"sentence":"Or yes?","issues":["Fragment/incomplete thought","Requires prior context to be meaningful","Starts with coordinating conjunction \"or\" without a preceding alternative","Likely confusing for learners"],"corrected_sentence":null}
+{"sentence":"I find.","issues":["Sentence fragment: missing object or complement after 'find'.","Transitive verb used without an object in modern usage.","Too elliptical to understand without context; confusing for learners."],"corrected_sentence":null}
+{"sentence":"What, there?","issues":["Unclear meaning without context","Unnatural punctuation (comma creates confusion)","Fragment that doesn’t stand well on its own"],"corrected_sentence":"What? There?"}
+{"sentence":"Nice of you.","issues":["Elliptical sentence fragment (missing subject and verb)","More complete form would be: “That’s nice of you.”"],"corrected_sentence":null}
+{"sentence":"Yes, mother.","issues":["Capitalize familial title used as a form of address: 'Mother' should be capitalized."],"corrected_sentence":"Yes, Mother."}
+{"sentence":"His house.","issues":["Sentence fragment (no verb)","Pronoun reference is unclear without context"],"corrected_sentence":null}
+{"sentence":"Place.","issues":["Sentence fragment","Ambiguous meaning (noun vs. imperative verb)","Missing object if interpreted as an imperative","Lacks context"],"corrected_sentence":null}
+{"sentence":"Then.","issues":["Sentence fragment/incomplete thought","Unclear meaning without context","Punctuation likely mismatched with intent (could be a question or continuation)"],"corrected_sentence":null}
+{"sentence":"The mother.","issues":["Sentence fragment (no verb/predicate)","Not self-contained; unclear referent without context","Potentially confusing for learners as an isolated sentence"],"corrected_sentence":null}
+{"sentence":"By you.","issues":["Sentence fragment (only a prepositional phrase)","Unclear without context; ambiguous meaning","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"I want.","issues":["Fragment/incomplete thought","Transitive verb 'want' missing object or complement","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Hello, Mr.","issues":["Title 'Mr.' used without a following name","Incomplete fragment","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"This family.","issues":["Sentence fragment (no verb)","Relies on unstated context for meaning","May confuse learners due to incompleteness"],"corrected_sentence":null}
+{"sentence":"This car.","issues":["Sentence fragment/incomplete thought","Lacks verb/predicate; not a full sentence without context"],"corrected_sentence":null}
+{"sentence":"The son.","issues":["Sentence fragment (no verb or predicate)","Definite article without an established referent; unclear without context"],"corrected_sentence":null}
+{"sentence":"Then you?","issues":["Sentence fragment (missing verb/predicate)","Ambiguous meaning without context","Likely confusing for learners"],"corrected_sentence":null}
+{"sentence":"Not nothing.","issues":["Sentence fragment (no subject/verb)","Double negation may confuse learners","Informal/colloquial usage"],"corrected_sentence":null}
+{"sentence":"The family.","issues":["Sentence fragment (no verb/predicate)","Insufficient context to convey meaning on its own"],"corrected_sentence":null}
+{"sentence":"Ever.","issues":["Sentence fragment/incomplete thought","Punctuation inappropriate for intended use; if meant as an echo question, it should be a question mark","Confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"These things.","issues":["Sentence fragment (no verb/predicate)","Deictic determiner 'these' requires context for reference","Potentially confusing for learners due to lack of content"],"corrected_sentence":null}
+{"sentence":"And beautiful.","issues":["Sentence fragment (missing subject/verb)","Relies on prior context; unclear standalone","Begins with a coordinating conjunction that signals continuation, increasing confusion for learners"],"corrected_sentence":null}
+{"sentence":"That woman.","issues":["Sentence fragment (no verb/predicate)","Incomplete thought; requires context to be meaningful"],"corrected_sentence":null}
+{"sentence":"The job.","issues":["Sentence fragment (not a complete clause)","Lacks context; definite article implies shared reference which may confuse learners"],"corrected_sentence":null}
+{"sentence":"This room.","issues":["Sentence fragment (no verb/predicate)","Incomplete thought; ambiguous without context"],"corrected_sentence":null}
+{"sentence":"Even two.","issues":["Sentence fragment requiring context","Lacks subject/verb; incomplete thought","Ambiguous referent, potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"No family.","issues":["Sentence fragment (no subject/verb)","Ambiguous without context"],"corrected_sentence":null}
+{"sentence":"Her.","issues":["Sentence fragment with no verb or clear referent","Unclear meaning without context","Potentially confusing for learners when isolated"],"corrected_sentence":null}
+{"sentence":"No woman.","issues":["Sentence fragment (no verb/predicate)","Ambiguous without context","Potential confusion with the vocative form \"No, woman.\" due to punctuation"],"corrected_sentence":null}
+{"sentence":"His room.","issues":["Sentence fragment (not a complete clause)","Pronoun 'his' lacks an antecedent, which may confuse learners"],"corrected_sentence":null}
+{"sentence":"Like her mother.","issues":["sentence fragment","missing subject and verb","requires context to interpret"],"corrected_sentence":null}

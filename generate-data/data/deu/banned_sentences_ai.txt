@@ -6,3 +6,7 @@
 {"sentence":"Kommt man leicht dort hin?","issues":["Nonstandard/incorrect splitting of the adverb: should be ‘dorthin’ instead of ‘dort hin’"],"corrected_sentence":"Kommt man leicht dorthin?"}
 {"sentence":"Sag „bitte“.","issues":["Missing colon before direct speech","Quoted word should be capitalized if treated as a full sentence","Terminal period should be inside the quotation marks in this usage"],"corrected_sentence":"Sag: „Bitte.“"}
 {"sentence":"Keine Nachricht, gute Nachricht.","issues":["Missing verb 'ist' (elliptical construction)","Not a full sentence; headline style may confuse learners","Comma separates two noun phrases rather than forming a clause"],"corrected_sentence":null}
+{"sentence":"Tom könnte es.","issues":["Modal verb used without an infinitive/main verb","Incomplete thought; requires context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Dort ist Tokyo.","issues":["Nonstandard spelling of the city name in German: “Tokyo” → “Tokio”"],"corrected_sentence":"Dort ist Tokio."}
+{"sentence":"Tom ist so.","issues":["Deictic ‘so’ requires contextual reference; sentence is vague on its own","Potentially confusing for learners due to missing referent for ‘so’"],"corrected_sentence":null}
+{"sentence":"Ziri hörte.","issues":["Elliptical/incomplete idea","Likely missing an object (e.g., Ziri hörte etwas.) or particle for zuhören (e.g., Ziri hörte zu.)","Potentially confusing for learners"],"corrected_sentence":null}

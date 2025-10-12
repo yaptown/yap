@@ -130,3 +130,17 @@
 {"sentence":"이리 온!","issues":["Incorrect verb form: ‘온’ is not an imperative of 오다; should be ‘와’ (casual) or another imperative form.","Potentially perceived as a dialectal or truncated fragment, which is confusing for learners."],"corrected_sentence":null}
 {"sentence":"없지? .","issues":["Extraneous period after question mark","Unnecessary space before the period"],"corrected_sentence":"없지?"}
 {"sentence":"그녀를 가져와.","issues":["Inappropriate verb choice: '가져오다' is used for objects; for people use '데려오다'","Unnatural/objectifying when referring to a person","'그녀' is uncommon in spoken Korean; more natural would be a name, '그 여자를', or '걔'","Casual imperative '-와' may be impolite depending on context"],"corrected_sentence":null}
+{"sentence":"오! .","issues":["Redundant period after exclamation mark","Unnecessary space before the period"],"corrected_sentence":"오!"}
+{"sentence":"그래, 뭘.","issues":["Punctuation: uses a period where a question mark would be expected if asking “what?”","Potential word choice: for a casual filler meaning, “뭐” is more natural than “뭘.”","Elliptical/fragment in a way that’s confusing for learners"],"corrected_sentence":"그래, 뭘?"}
+{"sentence":"모든 게 다!","issues":["Elliptical fragment with no predicate","Meaning is unclear without context and may confuse learners"],"corrected_sentence":null}
+{"sentence":"그렇게.","issues":["Sentence fragment (no predicate or sentence-ending)","Potentially confusing for learners","Missing sentence-ending particle or verb (e.g., 요/해/하세요)"],"corrected_sentence":null}
+{"sentence":". 오!","issues":["Leading stray period before the interjection","Unnecessary space after the stray period"],"corrected_sentence":"오!"}
+{"sentence":"이 씨발!","issues":["Strong profanity (not suitable for many learners)","Unnatural/incorrect use of determiner ‘이’ before ‘씨발’ (which isn’t a noun)","Ambiguous intent; unclear whether it’s an expletive or an address","Does not function well as a standalone utterance"],"corrected_sentence":null}
+{"sentence":"아니, 안돼!","issues":["Spacing error: '안돼' should be written as '안 돼' (adverb '안' + verb '되다')."],"corrected_sentence":"아니, 안 돼!"}
+{"sentence":"워,워.","issues":["Missing space after the comma","Very colloquial/interjectional expression (acceptable but informal)"],"corrected_sentence":"워, 워."}
+{"sentence":"안돼, 안돼!","issues":["Incorrect spacing: should be ‘안 돼’, not ‘안돼’.","Missing space after comma."],"corrected_sentence":"안 돼, 안 돼!"}
+{"sentence":"안돼요.","issues":["Incorrect spacing: should be '안 돼요', not '안돼요'."],"corrected_sentence":"안 돼요."}
+{"sentence":"절대 안돼!","issues":["Spacing error: ‘안돼’ should be ‘안 돼’"],"corrected_sentence":"절대 안 돼!"}
+{"sentence":"그럼, 안돼요.","issues":["Incorrect spacing: '안돼요' should be '안 돼요'."],"corrected_sentence":"그럼, 안 돼요."}
+{"sentence":"절대 안돼.","issues":["Incorrect spacing: should be ‘안 돼’, not ‘안돼’"],"corrected_sentence":"절대 안 돼."}
+{"sentence":"그를 가자.","issues":["Incorrect case/particle: 를 used with intransitive verb 가다","Verb valency mismatch (가다 cannot take a direct object)","Ambiguous intended meaning"],"corrected_sentence":null}
