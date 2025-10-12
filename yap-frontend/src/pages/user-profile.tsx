@@ -309,7 +309,7 @@ export function UserProfilePage() {
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground">Words</p>
+                        <p className="text-sm text-muted-foreground">Cards</p>
                         <p className="text-2xl font-bold">{stats.total_count}</p>
                       </div>
                       <div>
