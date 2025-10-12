@@ -18,6 +18,7 @@ import { UserProfilePage } from '@/pages/user-profile'
 import { playSoundEffect } from '@/lib/sound-effects'
 import { registerSW } from 'virtual:pwa-register'
 import { NoCardsReady } from '@/components/no-cards-ready'
+import { SetDisplayName } from '@/components/SetDisplayName'
 
 import type { Dispatch, SetStateAction } from 'react'
 import type { RegisterSWOptions } from 'vite-plugin-pwa/types'
@@ -467,6 +468,9 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
   const network = useNetworkState()
   const [cardsBecameDue, setCardsBecameDue] = useState<number>(0)
   const [lastAutoPlayReviewCount, setLastAutoPlayReviewCount] = useState<bigint | null>(null)
+  const [dismissedSetDisplayName, setDismissedSetDisplayName] = useState(() => {
+    return localStorage.getItem('yap-skipped-set-display-name') === 'true'
+  })
 
   const totalReviewsCompleted = deck.get_total_reviews()
   const autoplayed = lastAutoPlayReviewCount == totalReviewsCompleted
@@ -741,12 +745,31 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     };
   }, [addNextCards, deck, reviewInfo, currentChallenge, addCardOptions.smart_add, addCardOptions.manual_add]);
 
+  // Check if we should show the SetDisplayName prompt
+  const shouldShowSetDisplayName =
+    reviewInfo.due_count === 0 &&
+    !currentChallenge &&
+    totalReviewsCompleted >= 25n &&
+    userInfo?.displayName === null &&
+    network.online === true &&
+    !dismissedSetDisplayName &&
+    accessToken !== undefined;
+
   return (
     <>
       {/* main content */}
-      <div className="flex flex-col flex-1">
-
-        {reviewInfo.due_count === 0 && !currentChallenge ? (
+      <div className="flex flex-col flex-1 gap-2">
+        {shouldShowSetDisplayName ? (
+          <SetDisplayName
+            accessToken={accessToken!}
+            totalReviewsCompleted={totalReviewsCompleted}
+            onComplete={() => setDismissedSetDisplayName(true)}
+            onSkip={() => {
+              localStorage.setItem('yap-skipped-set-display-name', 'true')
+              setDismissedSetDisplayName(true)
+            }}
+          />
+        ) : reviewInfo.due_count === 0 && !currentChallenge ? (
           <NoCardsReady
             nextDueCard={nextDueCard}
             addNextCards={addNextCards}
