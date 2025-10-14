@@ -180,8 +180,13 @@ pub fn expand_french_word(
         let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
         let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
 
-        // expand contractions
+        if text == "lui" && pos == Some(PartOfSpeech::Pron) {
+            return Some((text.to_string(), text.to_string(), pos));
+        }
+
         match &text[..] {
+            "elle" => ("elle".to_string(), "elle".to_string(), Some(PartOfSpeech::Pron)),
+            // expand contractions
             "j'" => ("je".to_string(), "je".to_string(), Some(PartOfSpeech::Pron)),
             "m'" => ("me".to_string(), "me".to_string(), Some(PartOfSpeech::Pron)),
             "t'" => ("te".to_string(), "te".to_string(), Some(PartOfSpeech::Pron)),
