@@ -1,6 +1,6 @@
 [package]
 name = "yap-frontend-rs"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Andre Popovitch <andre@popovit.ch>"]
 edition = "2024"
 

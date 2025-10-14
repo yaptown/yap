@@ -195,8 +195,8 @@ export function LanguageSelector({
 
   // Determine if languages are beta
   const isBeta = (lang: Language) => {
-    // French is stable, others are beta for now
-    return lang !== "French";
+    // French and German are stable, others are beta for now
+    return lang !== "French" && lang !== "German";
   };
 
   useEffect(() => {

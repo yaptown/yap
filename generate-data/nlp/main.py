@@ -420,7 +420,8 @@ def process_sentences(sentences_file: str, terms_file: str, output_file: str, la
                             "lemma": token.lemma_, 
                             "pos": token.pos_,
                             "morph": token.morph.to_dict(),
-                            "dep": token.dep_} for token in doc],
+                            "dep": token.dep_,
+                            "head": token.head.i} for token in doc],
                     "entities": [(ent.text, ent.label_) for ent in doc.ents],
                 }
 
