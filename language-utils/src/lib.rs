@@ -185,7 +185,11 @@ pub fn expand_french_word(
         }
 
         match &text[..] {
-            "elle" => ("elle".to_string(), "elle".to_string(), Some(PartOfSpeech::Pron)),
+            "elle" => (
+                "elle".to_string(),
+                "elle".to_string(),
+                Some(PartOfSpeech::Pron),
+            ),
             // expand contractions
             "j'" => ("je".to_string(), "je".to_string(), Some(PartOfSpeech::Pron)),
             "m'" => ("me".to_string(), "me".to_string(), Some(PartOfSpeech::Pron)),

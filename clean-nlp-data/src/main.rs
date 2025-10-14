@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use language_utils::{Language, NlpAnalyzedSentence};
 use rand::prelude::IndexedRandom;
 use std::fs::File;
@@ -31,15 +31,15 @@ fn main() -> anyhow::Result<()> {
 
             let language = parse_language_code(language_code)?;
 
-            println!("Loading NLP data for {:?}...", language);
+            println!("Loading NLP data for {language:?}...");
             let nlp_sentences = load_nlp_sentences(language)?;
             println!("Loaded {} sentences", nlp_sentences.len());
-            println!("\nShowing {} random sentences:\n", count);
+            println!("\nShowing {count} random sentences:\n");
 
             print_random_sentences(&nlp_sentences, count);
         }
         _ => {
-            eprintln!("Error: Unknown command '{}'", command);
+            eprintln!("Error: Unknown command '{command}'");
             print_usage();
             return Err(anyhow!("Unknown command"));
         }
@@ -87,16 +87,16 @@ fn load_nlp_sentences(language: Language) -> anyhow::Result<Vec<NlpAnalyzedSente
     ));
 
     let file = File::open(&nlp_file_path)
-        .context(format!("Failed to open NLP file: {:?}", nlp_file_path))?;
+        .context(format!("Failed to open NLP file: {nlp_file_path:?}"))?;
     let reader = BufReader::new(file);
 
     let sentences: Vec<NlpAnalyzedSentence> = reader
         .lines()
         .enumerate()
         .map(|(idx, line)| {
-            let line = line.context(format!("Failed to read line {}", idx))?;
+            let line = line.context(format!("Failed to read line {idx}"))?;
             serde_json::from_str::<NlpAnalyzedSentence>(&line)
-                .context(format!("Failed to deserialize line {}: {}", idx, line))
+                .context(format!("Failed to deserialize line {idx}: {line}"))
         })
         .collect::<anyhow::Result<Vec<_>>>()?;
 
@@ -119,13 +119,7 @@ fn print_random_sentences(sentences: &[NlpAnalyzedSentence], count: usize) {
         println!("Output:");
 
         for (idx, token) in sentence.doc.iter().enumerate() {
-            println!(
-                "{}\t{}\t{:?}\t{}",
-                idx,
-                token.text,
-                token.pos,
-                token.lemma
-            );
+            println!("{}\t{}\t{:?}\t{}", idx, token.text, token.pos, token.lemma);
         }
     }
 }

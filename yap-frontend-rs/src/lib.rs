@@ -1475,16 +1475,16 @@ impl weapon::PartialAppState for Deck {
                         // Always log review for ListeningHomophonous card
                         deck.log_review(listening_homophonous_card, rating, *timestamp);
 
-                        if rating == Rating::Remembered {
-                            if deck.context.is_card_valid(&listening_lexeme_card) {
-                                if let std::collections::hash_map::Entry::Vacant(e) =
-                                    deck.cards.entry(listening_lexeme_card)
-                                {
-                                    // Add the card as a new card
-                                    let mut fsrs_card = rs_fsrs::Card::new(*timestamp);
-                                    fsrs_card.due = *timestamp;
-                                    e.insert(CardData::Added { fsrs_card });
-                                }
+                        if rating == Rating::Remembered
+                            && deck.context.is_card_valid(&listening_lexeme_card)
+                        {
+                            if let std::collections::hash_map::Entry::Vacant(e) =
+                                deck.cards.entry(listening_lexeme_card)
+                            {
+                                // Add the card as a new card
+                                let mut fsrs_card = rs_fsrs::Card::new(*timestamp);
+                                fsrs_card.due = *timestamp;
+                                e.insert(CardData::Added { fsrs_card });
                             }
                         }
 
@@ -1679,7 +1679,10 @@ impl weapon::PartialAppState for Deck {
             if let Some(status) = all_cards.get_mut(&indicator) {
                 *status = CardStatus::Tracked(card_data);
             } else {
-                log::error!("Card {:?} not found in all_cards", indicator.resolve(&state.context.language_pack.rodeo));
+                log::error!(
+                    "Card {:?} not found in all_cards",
+                    indicator.resolve(&state.context.language_pack.rodeo)
+                );
             }
         }
 

@@ -297,7 +297,7 @@ async fn main() -> anyhow::Result<()> {
             }
 
             if total_sentences < 10 {
-                panic!("Too few sentences written: {}", total_sentences);
+                panic!("Too few sentences written: {total_sentences}");
             }
 
             println!(
