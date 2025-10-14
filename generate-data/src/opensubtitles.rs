@@ -14,7 +14,7 @@ pub fn get_subtitle_pairs(data_path: &Path, course: Course) -> Vec<SubtitlePair>
     let mut pairs = Vec::new();
 
     // Look for OpenSubtitles files in the data directory
-    let opensubtitles_dir = data_path.join("opensubtitles");
+    let opensubtitles_dir = data_path.join("sentence-sources/opensubtitles");
     if !opensubtitles_dir.exists() {
         eprintln!(
             "OpenSubtitles directory not found at: {}",

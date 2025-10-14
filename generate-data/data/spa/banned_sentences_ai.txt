@@ -121,3 +121,7 @@
 {"sentence":"La ves?","issues":["Missing opening inverted question mark (¿)"],"corrected_sentence":"¿La ves?"}
 {"sentence":"Esta es.","issues":["Elliptical/incomplete predicate; relies on context to be meaningful for learners"],"corrected_sentence":null}
 {"sentence":"Qué hacen?","issues":["Missing opening inverted question mark (¿) for questions in Spanish"],"corrected_sentence":"¿Qué hacen?"}
+{"sentence":"En tres.","issues":["Sentence fragment lacking context; meaning unclear on its own"],"corrected_sentence":null}
+{"sentence":"Y fuera.","issues":["Fragment dependent on prior context","Starts with coordinating conjunction (“Y”) suggesting continuation","Ambiguous meaning of “fuera” (adverb vs. verb form)"],"corrected_sentence":null}
+{"sentence":"Y cinco.","issues":["Fragment/incomplete thought requiring prior context","Starts with coordinating conjunction 'Y' implying an omitted previous element","Potentially confusing for learners as a standalone sentence"],"corrected_sentence":null}
+{"sentence":"A donde?","issues":["Missing inverted opening question mark (¿)","Missing accent on “dónde”","Preferred single-word form is “adónde” (though “a dónde” is acceptable)"],"corrected_sentence":"¿Adónde?"}

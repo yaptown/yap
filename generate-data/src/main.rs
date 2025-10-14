@@ -231,7 +231,7 @@ async fn main() -> anyhow::Result<()> {
                 vec![]
             };
 
-            let mut all_sentences = futures::stream::iter(
+            let all_sentences = futures::stream::iter(
                 anki_sentences
                     .chain(subtitle_sentences)
                     .chain(tatoeba_sentences)
@@ -266,11 +266,11 @@ async fn main() -> anyhow::Result<()> {
                         (target_language_sentence, translation_set)
                     }),
             )
-            .buffered(100);
+            .buffered(100)
+            .collect::<BTreeMap<_, _>>()
+            .await;
 
-            while let Some((target_language_sentence, native_translations)) =
-                all_sentences.next().await
-            {
+            for (target_language_sentence, native_translations) in all_sentences {
                 // Write individual target language sentence
                 let target_language_json = serde_json::to_string(&target_language_sentence)?;
                 if let Err(e) = writeln!(target_language_writer, "{target_language_json}") {
@@ -294,6 +294,10 @@ async fn main() -> anyhow::Result<()> {
             }
             if let Err(e) = translations_writer.flush() {
                 eprintln!("Error flushing translations file: {e}");
+            }
+
+            if total_sentences < 10 {
+                panic!("Too few sentences written: {}", total_sentences);
             }
 
             println!(

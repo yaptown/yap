@@ -22,7 +22,7 @@ pub fn get_tatoeba_pairs(data_path: &Path, course: Course) -> Vec<TatoebaPair> {
     let mut pairs = Vec::new();
 
     // Look for Tatoeba files in the data directory
-    let tatoeba_dir = data_path.join("sentence_sources/tatoeba");
+    let tatoeba_dir = data_path.join("sentence-sources/tatoeba");
     if !tatoeba_dir.exists() {
         eprintln!("Tatoeba directory not found at: {}", tatoeba_dir.display());
         return pairs;

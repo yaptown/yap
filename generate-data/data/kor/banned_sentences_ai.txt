@@ -170,3 +170,16 @@
 {"sentence":"생각.","issues":["Sentence fragment (only a noun)","Missing predicate/verb or particles","Ambiguous without context; reads like a title rather than a sentence"],"corrected_sentence":null}
 {"sentence":"봐 친구.","issues":["Missing comma after the interjection ('봐, ...')","Vocative form is odd: '친구' should be '친구야' when addressing someone directly","Potential register/pragmatic mismatch: '봐' is casual and calling someone '친구' can sound rude if not actually a friend"],"corrected_sentence":"봐, 친구."}
 {"sentence":"총 가지고 있고.","issues":["Incomplete clause with conjunctive ending -고","Missing object particle (을) after 총","Sentence does not stand alone without context"],"corrected_sentence":null}
+{"sentence":"제발, 안돼.","issues":["Incorrect spacing: ‘안돼’ should be written as ‘안 돼’ (negative adverb ‘안’ + verb ‘되다’)."],"corrected_sentence":"제발, 안 돼."}
+{"sentence":"지금은 안돼요.","issues":["Spacing error: ‘안돼요’ should be written as ‘안 돼요’"],"corrected_sentence":"지금은 안 돼요."}
+{"sentence":"말도 안돼요.","issues":["띄어쓰기 오류: '안돼요'는 '안 돼요'로 띄어 써야 합니다."],"corrected_sentence":"말도 안 돼요."}
+{"sentence":"어, 안돼!","issues":["Spacing error: ‘안돼’ should be written as ‘안 돼’ in standard Korean."],"corrected_sentence":"어, 안 돼!"}
+{"sentence":"젠장, 안돼!","issues":["Incorrect spacing: '안돼' should be '안 돼'","Informal/mild profanity ('젠장')"],"corrected_sentence":"젠장, 안 돼!"}
+{"sentence":"그래서 바보.","issues":["Missing copular ending/predicate (e.g., -야, -이다, -지) after 바보","Overly elliptical/incomplete sentence","Ambiguous subject due to ellipsis, increasing confusion for learners"],"corrected_sentence":null}
+{"sentence":"안돼, 안돼, 안돼, 안돼.","issues":["Incorrect spacing: '안돼' should be written as '안 돼' (negation adverb 안 + 되다)."],"corrected_sentence":"안 돼, 안 돼, 안 돼, 안 돼."}
+{"sentence":"안돼, 안돼, 안돼, 안돼!","issues":["Incorrect spacing: should be ‘안 돼’, not ‘안돼’"],"corrected_sentence":"안 돼, 안 돼, 안 돼, 안 돼!"}
+{"sentence":"안돼, 멈춰.","issues":["Spacing error: ‘안돼’ should be written as ‘안 돼’.","Very casual/imperative tone (not an error, just register)."],"corrected_sentence":"안 돼, 멈춰."}
+{"sentence":"무슨 말씀!","issues":["Elliptical fragment with no verb/copula","Unnatural without the object particle (을) or a predicate","Ambiguous intent (denial vs. question)","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"안, 안돼!","issues":["Incorrect spacing: should be ‘안 돼’ not ‘안돼’"],"corrected_sentence":"안, 안 돼!"}
+{"sentence":"하지 않습니다 다시.","issues":["Unnatural word order: ‘다시’ should come before the verb phrase","May confuse learners due to marked/afterthought-like placement"],"corrected_sentence":null}
+{"sentence":"아주 확실히.","issues":["Sentence fragment (no predicate)","Ends with adverb (-히) which cannot stand alone","Unnatural/awkward phrasing for learners"],"corrected_sentence":null}

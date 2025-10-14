@@ -280,3 +280,21 @@
 {"sentence":"Who, you?","issues":["Elliptical fragment with no verb (nonstandard for learners)","Nonstandard punctuation for a question (comma instead of a clearer structure)","Ambiguous meaning without context; potentially confusing"],"corrected_sentence":null}
 {"sentence":"One hand.","issues":["Sentence fragment (no subject/verb)","Ambiguous without context"],"corrected_sentence":null}
 {"sentence":"His idea.","issues":["Sentence fragment (no verb/predicate)","Pronoun 'his' lacks an antecedent, causing ambiguity"],"corrected_sentence":null}
+{"sentence":"All up.","issues":["Sentence fragment/incomplete clause","Ambiguous meaning without context","Potentially intended as a command but punctuation doesn’t reflect that (would more likely be “All up!”)"],"corrected_sentence":null}
+{"sentence":"From Rome?","issues":["Sentence fragment (elliptical; missing subject and verb)"],"corrected_sentence":null}
+{"sentence":"Like all men.","issues":["Sentence fragment (no main clause)","Requires context to interpret","Ambiguous reference (who/what is being compared)"],"corrected_sentence":null}
+{"sentence":"Like mine.","issues":["Sentence fragment (elliptical), missing main clause","Depends on prior context to identify what is being compared","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"I just...","issues":["Sentence fragment/trailing off","Unfinished thought; lacks information","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Or even two.","issues":["Sentence fragment (no subject/verb)","Begins with a coordinating conjunction indicating continuation","Unclear referent for “two”; requires prior context"],"corrected_sentence":null}
+{"sentence":"Of everything.","issues":["Sentence fragment (not a complete clause)","Meaning unclear without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"From America.","issues":["Sentence fragment (missing subject and verb)","Elliptical answer may be slightly confusing for learners expecting a full sentence"],"corrected_sentence":null}
+{"sentence":"Everyone is.","issues":["Elliptical/clipped sentence lacking a complement for 'is'","May be confusing without context"],"corrected_sentence":null}
+{"sentence":"The friend.","issues":["Sentence fragment (no verb/predicate)","Requires context due to definite article (“the”), which implies shared reference","Likely confusing without context"],"corrected_sentence":null}
+{"sentence":"The money.","issues":["Sentence fragment (no verb)","Not a complete thought","Ambiguous without context; potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Just money.","issues":["Sentence fragment (not a complete clause)","Requires context to be fully understood","Potentially confusing for learners as a standalone example"],"corrected_sentence":null}
+{"sentence":"Like you.","issues":["Sentence fragment (no subject/verb)","Ambiguous meaning without context","May confuse learners due to incompleteness"],"corrected_sentence":null}
+{"sentence":"Last.","issues":["Sentence fragment with no clear subject or context","Ambiguous meaning likely to confuse learners"],"corrected_sentence":null}
+{"sentence":"Now nothing.","issues":["Sentence fragment (no verb)","Potential ambiguity without context","Could benefit from punctuation or expansion (e.g., “There is nothing now.”)"],"corrected_sentence":null}
+{"sentence":"It must.","issues":["Elliptical fragment that requires prior context","May confuse learners since 'must' typically takes a main verb (e.g., 'It must be ...')"],"corrected_sentence":null}
+{"sentence":"Who what?","issues":["Missing punctuation between two questions","Unnatural phrasing for English learners","Potentially confusing without separation into two questions"],"corrected_sentence":"Who? What?"}
+{"sentence":"Just an idea.","issues":["Sentence fragment (elliptical/telegraphic)","Doesn’t specify the idea; relies on implied context"],"corrected_sentence":null}
