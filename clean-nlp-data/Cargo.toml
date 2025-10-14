@@ -1,0 +1,11 @@
+[package]
+name = "clean-nlp-data"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+language-utils = { path = "../language-utils" }
+anyhow = "1.0.98"
+rand = "0.9.1"

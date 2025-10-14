@@ -7,7 +7,7 @@ members = [
     "libraries/weapon",
     "libraries/imdex_map",
     "libraries/eyedee",
-    "libraries/course-spot-check",
+    "libraries/course-spot-check", "clean-nlp-data",
 ]
 resolver = "3"
 
