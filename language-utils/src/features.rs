@@ -1191,8 +1191,9 @@ impl Morphology {
             Some(Number::Plural) => {
                 // Plural articles (same for all genders)
                 match case {
-                    Case::Nominative | Case::Accusative | Case::Genitive => "d",
+                    Case::Nominative | Case::Accusative => "die",
                     Case::Dative => "den",
+                    Case::Genitive => "der",
                     _ => "die", // Default to nominative
                 }
             }
@@ -1215,19 +1216,19 @@ impl Morphology {
                     (Case::Dative, Some(Gender::Masculine)) => "dem",
                     (Case::Dative, Some(Gender::Feminine)) => "der",
                     (Case::Dative, Some(Gender::Neuter)) => "dem",
-                    (Case::Dative, _) => return None, // Default to masculine
+                    (Case::Dative, _) => return None,
 
                     // Genitive case
                     (Case::Genitive, Some(Gender::Masculine)) => "des",
                     (Case::Genitive, Some(Gender::Feminine)) => "der",
                     (Case::Genitive, Some(Gender::Neuter)) => "des",
-                    (Case::Genitive, _) => "des", // Default to masculine
+                    (Case::Genitive, _) => return None,
 
                     // For other cases, default to nominative
                     (_, Some(Gender::Masculine)) => "der",
                     (_, Some(Gender::Feminine)) => "die",
                     (_, Some(Gender::Neuter)) => "das",
-                    (_, _) => return None, // Default to masculine nominative
+                    (_, _) => return None,
                 }
             }
         };
