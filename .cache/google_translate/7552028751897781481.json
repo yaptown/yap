@@ -1,0 +1,1 @@
+A lion is an animal.

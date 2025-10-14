@@ -1,0 +1,1 @@
+Lord Jesus Christ, Son of God, have mercy on me, a sinner.
