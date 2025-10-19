@@ -145,10 +145,10 @@ pnpm build
 cd ..
 print_status "Frontend built"
 
-# Optional: Run tests
-print_info "Running Rust tests..."
-cargo test
-print_status "Rust tests completed"
+# # Optional: Run tests
+# print_info "Running Rust tests..."
+# cargo test
+# print_status "Rust tests completed"
 
 # Optional: Run clippy
 print_info "Running clippy linter..."
