@@ -1,1 +1,0 @@
-Blessed are the meek, for they shall inherit the earth.

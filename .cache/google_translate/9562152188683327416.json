@@ -1,1 +1,0 @@
-Is this legal?

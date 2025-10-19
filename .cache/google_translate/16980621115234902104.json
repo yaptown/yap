@@ -1,1 +1,0 @@
-Repent, for the kingdom of heaven is at hand.

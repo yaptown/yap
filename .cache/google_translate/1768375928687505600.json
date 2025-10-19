@@ -1,1 +1,0 @@
-What are we doing?

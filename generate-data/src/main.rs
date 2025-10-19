@@ -8,6 +8,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 
 mod google_translate;
@@ -112,6 +114,16 @@ async fn main() -> anyhow::Result<()> {
         if !banned_words.is_empty() {
             println!("Loaded {} banned words", banned_words.len());
         }
+
+        // Create the translator once and share it across all async tasks
+        let translator = Arc::new(Mutex::new(
+            GoogleTranslator::new(
+                course.target_language, // translate from target to native
+                course.native_language,
+                PathBuf::from(".cache/google_translate/"),
+            )
+            .unwrap(),
+        ));
 
         // write sentences
         let target_language_sentences_file =
@@ -239,36 +251,40 @@ async fn main() -> anyhow::Result<()> {
                     .filter(|(target_language_sentence, _)| {
                         !banned_sentences.contains(&target_language_sentence.to_lowercase())
                     })
-                    .map(async move |(target_language_sentence, native_sentence)| {
-                        let mut translator = GoogleTranslator::new(
-                            course.target_language, // translate from target to native
-                            course.native_language,
-                            PathBuf::from(".cache/google_translate"),
-                        )
-                        .unwrap();
-
-                        let mut translation_set = IndexSet::new();
-                        match translator.translate(&target_language_sentence).await {
-                            Ok(t) => {
-                                if !t.trim().is_empty() {
-                                    translation_set.insert(t);
+                    .map(|(target_language_sentence, native_sentence)| {
+                        let translator = Arc::clone(&translator);
+                        async move {
+                            let mut translation_set = IndexSet::new();
+                            match translator
+                                .lock()
+                                .await
+                                .translate(&target_language_sentence)
+                                .await
+                            {
+                                Ok(t) => {
+                                    if !t.trim().is_empty() {
+                                        translation_set.insert(t);
+                                    }
                                 }
+                                Err(e) => {
+                                    eprintln!(
+                                        "Error translating sentence '{target_language_sentence}': {e}"
+                                    );
+                                }
+                            };
+                            if let Some(native_sentence) = native_sentence {
+                                translation_set.insert(native_sentence);
                             }
-                            Err(e) => {
-                                eprintln!(
-                                    "Error translating sentence '{target_language_sentence}': {e}"
-                                );
-                            }
-                        };
-                        if let Some(native_sentence) = native_sentence {
-                            translation_set.insert(native_sentence);
+                            (target_language_sentence, translation_set)
                         }
-                        (target_language_sentence, translation_set)
                     }),
             )
             .buffered(100)
             .collect::<BTreeMap<_, _>>()
             .await;
+
+            // Drop the translator to trigger the Drop implementation
+            drop(translator);
 
             for (target_language_sentence, native_translations) in all_sentences {
                 // Write individual target language sentence

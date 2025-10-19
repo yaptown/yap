@@ -1,1 +1,0 @@
-Quel est le sens de la vie ?

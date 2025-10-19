@@ -1,1 +1,0 @@
-For many are called, but few are chosen.

@@ -1,1 +1,0 @@
-Who let the dogs out?
