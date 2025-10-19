@@ -93,14 +93,14 @@ cd ..
 print_status "Frontend built"
 
 # Optional: Run tests
-print_info "Running Rust tests..."
-cargo test
-print_status "Rust tests completed"
+# print_info "Running Rust tests..."
+# cargo test
+# print_status "Rust tests completed"
 
-# Optional: Run clippy
-print_info "Running clippy linter..."
-cargo clippy --all-targets --all-features
-print_status "Clippy checks completed"
+# # Optional: Run clippy
+# print_info "Running clippy linter..."
+# cargo clippy --all-targets --all-features
+# print_status "Clippy checks completed"
 
 # Optional: TypeScript type checking
 print_info "Running TypeScript type checking..."

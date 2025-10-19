@@ -3608,15 +3608,13 @@ mod tests {
     use super::*;
     use chrono::Days;
 
-    // Include the French language data at compile time for tests
-    // This makes tests self-contained and doesn't include the data in production builds
-    const FRENCH_LANGUAGE_DATA: &[u8] = include_bytes!("../../out/fra_for_eng/language_data.rkyv");
-
     impl Default for Deck {
         fn default() -> Self {
-            // Parse the included bytes to create a language pack
-            // Copy to an aligned vector to avoid alignment issues
-            let bytes = FRENCH_LANGUAGE_DATA.to_vec();
+            // Read the French language data from file for tests
+            // Vec<u8> provides proper alignment for rkyv deserialization
+            let bytes = std::fs::read("../out/fra_for_eng/language_data.rkyv")
+                .expect("Failed to read test language data");
+
             let archived = rkyv::access::<
                 language_utils::language_pack::ArchivedLanguagePack,
                 rkyv::rancor::Error,
