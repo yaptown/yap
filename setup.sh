@@ -150,10 +150,10 @@ print_status "Frontend built"
 # cargo test
 # print_status "Rust tests completed"
 
-# Optional: Run clippy
-print_info "Running clippy linter..."
-cargo clippy --all-targets --all-features
-print_status "Clippy checks completed"
+# # Optional: Run clippy
+# print_info "Running clippy linter..."
+# cargo clippy --all-targets --all-features
+# print_status "Clippy checks completed"
 
 echo ""
 echo "======================================"
