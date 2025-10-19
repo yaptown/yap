@@ -367,16 +367,16 @@ fn create_deck_for_course(course: Course) -> Result<Deck> {
 
     // Deserialize the language data
     let archived = rkyv::access::<
-        language_utils::ArchivedConsolidatedLanguageDataWithCapacity,
+        language_utils::language_pack::ArchivedLanguagePack,
         rkyv::rancor::Error,
     >(&language_data)?;
 
-    let deserialized = rkyv::deserialize::<
-        language_utils::ConsolidatedLanguageDataWithCapacity,
+    let language_pack: language_utils::language_pack::LanguagePack = rkyv::deserialize::<
+        language_utils::language_pack::LanguagePack,
         rkyv::rancor::Error,
     >(archived)?;
 
-    let language_pack = std::sync::Arc::new(yap_frontend_rs::LanguagePack::new(deserialized));
+    let language_pack = std::sync::Arc::new(language_pack);
 
     // Create deck state and finalize to get a Deck
     let state = DeckState::new(

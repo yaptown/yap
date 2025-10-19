@@ -1,7 +1,9 @@
 use futures::StreamExt;
+use language_utils::Lexeme;
 use language_utils::{Course, Language, PatternPosition, PronunciationGuideThoughts};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::hash::Hash;
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 use unicode_normalization::UnicodeNormalization;
@@ -193,10 +195,16 @@ Good examples for French "ch" and English speakers:
 
 /// Calculate the frequency of each pronunciation pattern based on word frequency data
 /// Returns a HashMap mapping each pattern to its total frequency across all words containing it
-pub fn calculate_pattern_frequencies<S: AsRef<str>>(
+pub fn calculate_pattern_frequencies<S>(
     sounds: &[(String, PatternPosition)],
     word_frequencies: &[language_utils::FrequencyEntry<S>],
-) -> HashMap<(String, PatternPosition), u32> {
+) -> HashMap<(String, PatternPosition), u32>
+where
+    S: AsRef<str>,
+    S: rkyv::Archive + PartialEq + PartialOrd + Eq + Ord + Hash,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Lexeme<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     let mut frequencies = HashMap::new();
 
     // Initialize all patterns with 0

@@ -1,7 +1,10 @@
 pub mod features;
+pub mod indexmap;
+pub mod language_pack;
 pub mod profile;
 
-use std::{collections::BTreeMap, num::NonZeroUsize};
+use std::collections::BTreeMap;
+use std::hash::Hash;
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -301,7 +304,10 @@ pub fn expand_korean_word(
     schemars::JsonSchema,
 )]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-#[rkyv(compare(PartialEq), derive(Debug))]
+#[rkyv(
+    compare(PartialEq, PartialOrd),
+    derive(Debug, PartialEq, PartialOrd, Eq, Ord, Hash)
+)]
 pub enum PartOfSpeech {
     #[serde(rename = "ADJ")]
     Adj, // adjective
@@ -683,9 +689,16 @@ pub struct DocToken {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
-#[rkyv(compare(PartialEq))]
+#[rkyv(
+    compare(PartialEq, PartialOrd),
+    derive(PartialEq, PartialOrd, Eq, Ord, Hash)
+)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Heteronym<S> {
+pub struct Heteronym<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     pub word: S,
     pub lemma: S,
     pub pos: PartOfSpeech,
@@ -707,9 +720,14 @@ pub struct Heteronym<S> {
     rkyv::Serialize,
     rkyv::Deserialize,
 )]
-#[rkyv(compare(PartialEq))]
+#[rkyv(compare(PartialEq), derive(PartialEq, PartialOrd, Eq, Ord, Hash))]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Literal<S> {
+pub struct Literal<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Option<Heteronym<S>> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     pub text: S,
     pub whitespace: S,
     pub heteronym: Option<Heteronym<S>>,
@@ -855,14 +873,24 @@ impl Heteronym<lasso::Spur> {
     rkyv::Deserialize,
     schemars::JsonSchema,
 )]
-#[rkyv(compare(PartialEq))]
+#[rkyv(compare(PartialEq), derive(PartialEq, PartialOrd, Eq, Ord, Hash))]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum Lexeme<S> {
+pub enum Lexeme<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     Heteronym(Heteronym<S>),
     Multiword(S),
 }
 
-impl<S> Lexeme<S> {
+impl<S> Lexeme<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     pub fn heteronym(&self) -> Option<&Heteronym<S>> {
         match self {
             Lexeme::Heteronym(heteronym) => Some(heteronym),
@@ -916,10 +944,40 @@ impl Lexeme<lasso::Spur> {
     rkyv::Serialize,
     rkyv::Deserialize,
 )]
-#[rkyv(compare(PartialEq))]
-pub struct FrequencyEntry<S> {
+#[rkyv(compare(PartialEq), derive(PartialEq, PartialOrd, Eq, Ord, Hash))]
+pub struct FrequencyEntry<S>
+where
+    S: rkyv::Archive + PartialEq + PartialOrd + Eq + Ord + Hash,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Lexeme<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     pub lexeme: Lexeme<S>,
     pub count: u32,
+}
+
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    serde::Serialize,
+    serde::Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq), derive(PartialEq, PartialOrd, Eq, Ord, Hash))]
+pub struct Frequency {
+    pub count: u32,
+}
+
+impl Frequency {
+    pub fn sqrt_frequency(&self) -> f64 {
+        (self.count as f64).sqrt()
+    }
 }
 
 impl FrequencyEntry<String> {
@@ -1158,16 +1216,6 @@ pub struct ConsolidatedLanguageData {
     pub pronunciation_data: PronunciationData,
 }
 
-#[derive(
-    Debug, Clone, Eq, PartialEq, Ord, PartialOrd, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,
-)]
-#[rkyv(compare(PartialEq))]
-pub struct ConsolidatedLanguageDataWithCapacity {
-    pub consolidated_language_data: ConsolidatedLanguageData,
-    pub num_strings: u32,
-    pub num_string_bytes: u32,
-}
-
 impl ConsolidatedLanguageData {
     pub fn intern(&self, rodeo: &mut lasso::Rodeo) {
         // Intern empty string and space, just to make sure it's in there
@@ -1199,6 +1247,13 @@ impl ConsolidatedLanguageData {
                 }
             }
         }
+        for (heteronym, _entry) in &self.dictionary {
+            rodeo.get_or_intern(&heteronym.word);
+            rodeo.get_or_intern(&heteronym.lemma);
+        }
+        for (multiword, _entry) in &self.phrasebook {
+            rodeo.get_or_intern(multiword);
+        }
 
         // Intern words used in sentences (includes proper nouns, plus capitalization might differ)
         for (_, sentence_info) in &self.nlp_sentences {
@@ -1225,18 +1280,6 @@ impl ConsolidatedLanguageData {
                 rodeo.get_or_intern(&word_pair.cultural_context);
             }
         }
-    }
-}
-
-impl ConsolidatedLanguageDataWithCapacity {
-    pub fn intern(&self) -> lasso::Rodeo {
-        let mut rodeo = lasso::Rodeo::with_capacity(lasso::Capacity::new(
-            self.num_strings as usize,
-            NonZeroUsize::new(self.num_string_bytes as usize).unwrap(),
-        ));
-
-        self.consolidated_language_data.intern(&mut rodeo);
-        rodeo
     }
 }
 
@@ -1377,7 +1420,7 @@ pub enum SoundPosition {
     schemars::JsonSchema,
 )]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-#[rkyv(compare(PartialEq))]
+#[rkyv(compare(PartialEq), derive(PartialEq, PartialOrd, Eq, Ord, Hash))]
 pub enum PatternPosition {
     Beginning,
     End,

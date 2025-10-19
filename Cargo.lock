@@ -1670,10 +1670,11 @@ dependencies = [
 [[package]]
 name = "lasso"
 version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e14eda50a3494b3bf7b9ce51c52434a761e383d7238ce1dd5dcec2fbc13e9fb"
+source = "git+https://github.com/anchpop/lasso.git?rev=1e6acbbcf74a8ff7af9df29ccaee1bef9d14297c#1e6acbbcf74a8ff7af9df29ccaee1bef9d14297c"
 dependencies = [
+ "bytecheck",
  "hashbrown 0.14.5",
+ "rkyv",
 ]
 
 [[package]]
@@ -2663,9 +2664,8 @@ dependencies = [
 
 [[package]]
 name = "rkyv"
-version = "0.8.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19f5c3e5da784cd8c69d32cdc84673f3204536ca56e1fa01be31a74b92c932ac"
+version = "0.8.12"
+source = "git+https://github.com/anchpop/rkyv.git?rev=8a558ca3e043432dc55b0fc7bcce1068f9777ac8#8a558ca3e043432dc55b0fc7bcce1068f9777ac8"
 dependencies = [
  "bytecheck",
  "bytes",
@@ -2682,9 +2682,8 @@ dependencies = [
 
 [[package]]
 name = "rkyv_derive"
-version = "0.8.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4270433626cffc9c4c1d3707dd681f2a2718d3d7b09ad754bec137acecda8d22"
+version = "0.8.12"
+source = "git+https://github.com/anchpop/rkyv.git?rev=8a558ca3e043432dc55b0fc7bcce1068f9777ac8#8a558ca3e043432dc55b0fc7bcce1068f9777ac8"
 dependencies = [
  "proc-macro2",
  "quote",

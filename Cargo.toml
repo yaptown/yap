@@ -7,7 +7,8 @@ members = [
     "libraries/weapon",
     "libraries/imdex_map",
     "libraries/eyedee",
-    "libraries/course-spot-check", "clean-nlp-data",
+    "libraries/course-spot-check",
+    "clean-nlp-data",
 ]
 resolver = "3"
 
@@ -28,7 +29,6 @@ reqwest = { version = "0.12", features = ["json"] }
 tokio = { version = "1.45.1", features = ["full"] }
 opfs = { version = "0.1.4" }
 idb = { version = "0.6.3" }
-rkyv = { version = "0.8.10" }
 fetch-happen = { version = "0.3.0" }
 # { version = "0.1.1" }
 xxhash-rust = { version = "0.8.15", features = ["xxh3", "const_xxh3"] }
@@ -36,17 +36,23 @@ indexmap = { version = "2" }
 chrono = "0.4.41"
 im = { version = "15.1.0", features = ["serde"] }
 log = "0.4"
-lasso = "0.7.3"
 wasm-bindgen = "0.2.84"
 thiserror = "2"
 slotmap = { version = "1.0", features = ["serde"] }
 wasm-logger = "0.2.0"
 unicode-normalization = "0.1.24"
 
+[workspace.dependencies.rkyv]
+git = "https://github.com/anchpop/rkyv.git"
+rev = "8a558ca3e043432dc55b0fc7bcce1068f9777ac8"
+
+[workspace.dependencies.lasso]
+git = "https://github.com/anchpop/lasso.git"
+rev = "1e6acbbcf74a8ff7af9df29ccaee1bef9d14297c"
+
 [workspace.dependencies.serde]
 version = "1.0"
 features = ["derive"]
-
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

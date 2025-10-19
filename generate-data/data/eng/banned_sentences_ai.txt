@@ -298,3 +298,32 @@
 {"sentence":"It must.","issues":["Elliptical fragment that requires prior context","May confuse learners since 'must' typically takes a main verb (e.g., 'It must be ...')"],"corrected_sentence":null}
 {"sentence":"Who what?","issues":["Missing punctuation between two questions","Unnatural phrasing for English learners","Potentially confusing without separation into two questions"],"corrected_sentence":"Who? What?"}
 {"sentence":"Just an idea.","issues":["Sentence fragment (elliptical/telegraphic)","Doesn’t specify the idea; relies on implied context"],"corrected_sentence":null}
+{"sentence":"But you.","issues":["Sentence fragment (no verb or predicate)","Incomplete thought","Confusing without context"],"corrected_sentence":null}
+{"sentence":"All what?","issues":["Nonstandard phrasing (missing preposition: should be “of” before “what”)","Fragment that relies on prior context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"The name.","issues":["Sentence fragment (no verb)","Definite article implies a known referent but none is provided","Not self-contained; unclear meaning for learners"],"corrected_sentence":null}
+{"sentence":"Maybe not everything.","issues":["Sentence fragment (no explicit subject or verb)","Relies on prior context and may be confusing for learners"],"corrected_sentence":null}
+{"sentence":"The car.","issues":["Sentence fragment (noun phrase only)","Not a complete clause","May be confusing without context"],"corrected_sentence":null}
+{"sentence":"You still are.","issues":["Elliptical/incomplete predicate (missing complement)","Not self-contained; relies on prior context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"From Australia.","issues":["Sentence fragment (missing subject and verb)","May be confusing for learners when presented as a standalone sentence"],"corrected_sentence":null}
+{"sentence":"The guy.","issues":["Sentence fragment (no verb/predicate)","Definite article implies a known referent but none is given","Too context-dependent for learners"],"corrected_sentence":null}
+{"sentence":"The father.","issues":["Sentence fragment (no verb)","Lacks context/referent"],"corrected_sentence":null}
+{"sentence":"Many things.","issues":["Sentence fragment (no verb)","Very vague/unclear referent"],"corrected_sentence":null}
+{"sentence":"What things.","issues":["Sentence fragment","Incorrect punctuation (should be a question)","Potentially confusing for learners"],"corrected_sentence":"What things?"}
+{"sentence":"The girl.","issues":["Sentence fragment (no verb/predicate)","Incomplete thought; relies on context","May confuse learners expecting a full sentence"],"corrected_sentence":null}
+{"sentence":"No money.","issues":["Sentence fragment (missing subject and verb)"],"corrected_sentence":null}
+{"sentence":"I have many.","issues":["Elliptical/needs context to know what “many” refers to","Potentially confusing due to vagueness"],"corrected_sentence":null}
+{"sentence":"Or even more.","issues":["Sentence fragment/incomplete thought","Relies on prior context","Begins with a coordinating conjunction without an earlier clause","Meaning ambiguous without context"],"corrected_sentence":null}
+{"sentence":"And there.","issues":["Sentence fragment (no subject or verb)","Begins with coordinating conjunction implying prior context","Deictic 'there' is ambiguous without context"],"corrected_sentence":null}
+{"sentence":"You, me, everyone.","issues":["Sentence fragment lacking a verb","Asyndetic list (missing 'and' before the last item), which may confuse learners","If expanded into a full sentence as a subject, 'me' would change to 'I' (e.g., 'You, I, and everyone are ...')"],"corrected_sentence":null}
+{"sentence":"This big.","issues":["Sentence fragment","Missing subject and verb","Unclear referent; requires context/gesture","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"For years.","issues":["Sentence fragment (no subject or verb)","Requires context to be meaningful for learners"],"corrected_sentence":null}
+{"sentence":"He must.","issues":["Sentence fragment (missing main verb after modal 'must')","Depends on prior context to be understood"],"corrected_sentence":null}
+{"sentence":"All this.","issues":["Sentence fragment (not a complete clause)","Requires context; 'this' has no referent","Potentially confusing for learners without context"],"corrected_sentence":null}
+{"sentence":"Really big.","issues":["Sentence fragment (no explicit subject or verb)","Relies on context to identify what is big"],"corrected_sentence":null}
+{"sentence":"The time.","issues":["Sentence fragment (no verb)","Incomplete thought; unclear without context","Punctuation suggests a full sentence despite being a fragment"],"corrected_sentence":null}
+{"sentence":"The story.","issues":["Sentence fragment (no verb or complete thought)"],"corrected_sentence":null}
+{"sentence":"A part.","issues":["Sentence fragment (not a complete sentence)","Lacks context/meaning on its own","Could be confused with the homophone “apart”"],"corrected_sentence":null}
+{"sentence":"His hand.","issues":["Sentence fragment (no verb/predicate)","Requires context to understand","May confuse learners expecting a full sentence"],"corrected_sentence":null}
+{"sentence":"Anything, whatever.","issues":["Nonstandard/awkward punctuation (comma) between two standalone interjections","Fragment that relies on conversational context","Redundant pairing may be confusing for learners"],"corrected_sentence":"Anything. Whatever."}
+{"sentence":"Maybe more.","issues":["Elliptical/fragmentary sentence","No explicit referent for 'more'","Requires prior context to be meaningful","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"My idea.","issues":["Sentence fragment (no verb/predicate)"],"corrected_sentence":null}

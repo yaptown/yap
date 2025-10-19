@@ -125,3 +125,13 @@
 {"sentence":"Y fuera.","issues":["Fragment dependent on prior context","Starts with coordinating conjunction (“Y”) suggesting continuation","Ambiguous meaning of “fuera” (adverb vs. verb form)"],"corrected_sentence":null}
 {"sentence":"Y cinco.","issues":["Fragment/incomplete thought requiring prior context","Starts with coordinating conjunction 'Y' implying an omitted previous element","Potentially confusing for learners as a standalone sentence"],"corrected_sentence":null}
 {"sentence":"A donde?","issues":["Missing inverted opening question mark (¿)","Missing accent on “dónde”","Preferred single-word form is “adónde” (though “a dónde” is acceptable)"],"corrected_sentence":"¿Adónde?"}
+{"sentence":"Qué quieres hacer?","issues":["Missing opening inverted question mark (¿)"],"corrected_sentence":"¿Qué quieres hacer?"}
+{"sentence":"Qué grande.","issues":["Missing initial inverted exclamation mark","Uses a period instead of an exclamation mark"],"corrected_sentence":"¡Qué grande!"}
+{"sentence":"A lugar.","issues":["Fragment/incomplete thought","Preposition ‘a’ used without necessary article (‘al’)","Likely confusion with ‘al lugar’ or ‘ha lugar’","Ambiguous meaning"],"corrected_sentence":null}
+{"sentence":"Ella lo es.","issues":["The pronoun 'lo' lacks an antecedent and requires prior context","Meaning is ambiguous without context","Potentially confusing for learners despite being grammatical"],"corrected_sentence":null}
+{"sentence":"Yo menos.","issues":["Elliptical fragment that requires prior context","Ambiguous without context","Potentially confusing for learners"],"corrected_sentence":null}
+{"sentence":"Y cómo.","issues":["Missing opening ¿ or ¡","Incorrect terminal punctuation (should be ? or !, not .)","Fragment that only works as a conversational question/exclamation"],"corrected_sentence":"¿Y cómo?"}
+{"sentence":"Y este?","issues":["Missing inverted question mark (¿) at the beginning"],"corrected_sentence":"¿Y este?"}
+{"sentence":"Buenos días, Sr.","issues":["Uses the abbreviation “Sr.” without a surname, which reads incomplete","For standalone address, write “señor” in full","Potentially confusing for learners"],"corrected_sentence":"Buenos días, señor."}
+{"sentence":"Lo que tengo que hacer.","issues":["Sentence fragment (subordinate clause without a main clause)","Punctuation: period suggests a full statement; exclamation marks fit the standalone exclamative use","May be confusing for learners due to incompleteness"],"corrected_sentence":"¡Lo que tengo que hacer!"}
+{"sentence":"Qué haremos?","issues":["Missing opening inverted question mark (¿)"],"corrected_sentence":"¿Qué haremos?"}
