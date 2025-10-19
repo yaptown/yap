@@ -1,6 +1,37 @@
 use opfs::{DirectoryHandle as _, FileHandle as _, WritableFileStream as _, persistent};
 
-use crate::Frequency;
+/// Performance instrumentation helper that measures time from creation to drop.
+/// Logs the duration to the console when dropped.
+pub struct PerfTimer {
+    label: String,
+    start_time: f64,
+}
+
+impl PerfTimer {
+    /// Create a new performance timer with the given label.
+    pub fn new(label: impl Into<String>) -> Self {
+        let start_time = web_sys::window()
+            .and_then(|w| w.performance())
+            .map(|p| p.now())
+            .unwrap_or(0.0);
+
+        Self {
+            label: label.into(),
+            start_time,
+        }
+    }
+}
+
+impl Drop for PerfTimer {
+    fn drop(&mut self) {
+        if let Some(window) = web_sys::window() {
+            if let Some(performance) = window.performance() {
+                let duration = performance.now() - self.start_time;
+                log::info!("[PERF] {}: {:.2}ms", self.label, duration);
+            }
+        }
+    }
+}
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -100,10 +131,4 @@ pub async fn hit_ai_server(
 
     let response = req.send().await?;
     Ok(response)
-}
-
-impl Frequency {
-    pub(crate) fn sqrt_frequency(&self) -> f64 {
-        (self.count as f64).sqrt()
-    }
 }

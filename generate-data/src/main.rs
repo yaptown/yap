@@ -1070,30 +1070,13 @@ async fn main() -> anyhow::Result<()> {
             pronunciation_data,
         };
 
-        let mut rodeo = lasso::Rodeo::new();
-        consolidated_data.intern(&mut rodeo);
-
-        println!(
-            "Rodeo memory usage WITHOUT setting capacity: {} bytes",
-            rodeo.current_memory_usage()
-        );
-        let num_strings = rodeo.strings().len() as u32;
-        let num_string_bytes = rodeo.strings().map(|s| s.len()).sum::<usize>() as u32;
-        let consolidated_data_with_capacity =
-            language_utils::ConsolidatedLanguageDataWithCapacity {
-                consolidated_language_data: consolidated_data,
-                num_strings,
-                num_string_bytes,
-            };
-        let rodeo = consolidated_data_with_capacity.intern();
-        println!(
-            "Rodeo memory usage WITH setting capacity: {} bytes",
-            rodeo.current_memory_usage()
-        );
-        println!("(Interned {num_strings} strings, {num_string_bytes} bytes)");
+        println!("Creating language pack...");
+        let language_pack = language_utils::language_pack::LanguagePack::new(consolidated_data);
 
         // Serialize with rkyv
-        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&consolidated_data_with_capacity)?;
+        println!("Serializing language pack...");
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&language_pack)?;
+        println!("Writing language pack to file...");
         std::fs::write(&rkyv_file, bytes)?;
 
         println!("Consolidated data written to: {}", rkyv_file.display());

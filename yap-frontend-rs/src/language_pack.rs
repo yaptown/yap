@@ -1,7 +1,7 @@
 use futures::StreamExt as _;
 use language_utils::{
-    ArchivedConsolidatedLanguageDataWithCapacity, ConsolidatedLanguageDataWithCapacity, Course,
-    Language,
+    Course, Language,
+    language_pack::{ArchivedLanguagePack, LanguagePack},
 };
 use opfs::{
     DirectoryHandle as _, FileHandle as _, WritableFileStream as _,
@@ -10,7 +10,7 @@ use opfs::{
 use std::{collections::BTreeMap, sync::LazyLock};
 use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 
-use crate::{LanguagePack, utils::hit_ai_server};
+use crate::utils::{self, hit_ai_server};
 
 static LANGUAGE_DATA_HASHES: LazyLock<BTreeMap<Course, &'static str>> = LazyLock::new(|| {
     let mut hashes = BTreeMap::new();
@@ -69,6 +69,7 @@ pub(crate) async fn get_language_pack(
     course: Course,
     set_loading_state: &impl Fn(&str),
 ) -> Result<LanguagePack, LanguageDataError> {
+    let _perf_timer = utils::PerfTimer::new("get_language_pack");
     let course_directory = course_directory_slug(course);
     let mut language_directory = data_directory_handle
         .get_directory_handle_with_options(
@@ -94,7 +95,7 @@ pub(crate) async fn get_language_pack(
 
     let bytes = if let Ok(language_data_hash_file) = language_data_hash_file {
         // Cache hit - read from local storage
-        log::info!("reading language data from local storage");
+        let _perf_timer = utils::PerfTimer::new("reading language data from local storage");
         let bytes = language_data_hash_file
             .read()
             .await
@@ -117,6 +118,7 @@ pub(crate) async fn get_language_pack(
             bytes
         }
     } else {
+        let _perf_timer = utils::PerfTimer::new("downloading and caching language data");
         download_and_cache_language_data(
             &mut language_directory,
             course,
@@ -127,19 +129,16 @@ pub(crate) async fn get_language_pack(
     };
 
     set_loading_state("Deserializing language data");
+    let loading_perf_timer = utils::PerfTimer::new("Deserializing language data");
     // Common deserialization logic for both cache hit and miss
-    let archived = rkyv::access::<ArchivedConsolidatedLanguageDataWithCapacity, rkyv::rancor::Error>(
-        &bytes[..],
-    );
+    let archived = rkyv::access::<ArchivedLanguagePack, rkyv::rancor::Error>(&bytes[..]);
 
     let deserialized = match archived {
-        Ok(archived) => {
-            rkyv::deserialize::<ConsolidatedLanguageDataWithCapacity, rkyv::rancor::Error>(archived)
-                .inspect_err(|e| {
-                    log::error!("Error deserializing language data: {e:?}");
-                })
-                .unwrap()
-        }
+        Ok(archived) => rkyv::deserialize::<LanguagePack, rkyv::rancor::Error>(archived)
+            .inspect_err(|e| {
+                log::error!("Error deserializing language data: {e:?}");
+            })
+            .unwrap(),
         Err(e) => {
             log::error!("Error when accessing language data: {e}\nre-downloading language data");
             let bytes = download_and_cache_language_data(
@@ -149,15 +148,12 @@ pub(crate) async fn get_language_pack(
                 set_loading_state,
             )
             .await?;
-            let archived = rkyv::access::<
-                ArchivedConsolidatedLanguageDataWithCapacity,
-                rkyv::rancor::Error,
-            >(&bytes[..])
-            .inspect_err(|e| {
-                log::error!("2nd error accessing language data: {e:?}");
-            })
-            .map_err(LanguageDataError::Rkyv)?;
-            rkyv::deserialize::<ConsolidatedLanguageDataWithCapacity, rkyv::rancor::Error>(archived)
+            let archived = rkyv::access::<ArchivedLanguagePack, rkyv::rancor::Error>(&bytes[..])
+                .inspect_err(|e| {
+                    log::error!("2nd error accessing language data: {e:?}");
+                })
+                .map_err(LanguageDataError::Rkyv)?;
+            rkyv::deserialize::<LanguagePack, rkyv::rancor::Error>(archived)
                 .inspect_err(|e| {
                     log::error!("Error deserializing language data: {e:?}");
                 })
@@ -165,10 +161,9 @@ pub(crate) async fn get_language_pack(
         }
     };
 
-    set_loading_state("Storing language data in memory");
-    let language_pack = LanguagePack::new(deserialized);
+    drop(loading_perf_timer);
 
-    Ok(language_pack)
+    Ok(deserialized)
 }
 
 #[derive(Debug, thiserror::Error)]

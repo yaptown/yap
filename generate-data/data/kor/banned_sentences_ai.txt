@@ -183,3 +183,13 @@
 {"sentence":"안, 안돼!","issues":["Incorrect spacing: should be ‘안 돼’ not ‘안돼’"],"corrected_sentence":"안, 안 돼!"}
 {"sentence":"하지 않습니다 다시.","issues":["Unnatural word order: ‘다시’ should come before the verb phrase","May confuse learners due to marked/afterthought-like placement"],"corrected_sentence":null}
 {"sentence":"아주 확실히.","issues":["Sentence fragment (no predicate)","Ends with adverb (-히) which cannot stand alone","Unnatural/awkward phrasing for learners"],"corrected_sentence":null}
+{"sentence":"/ 알아요.","issues":["Extraneous leading '/' character (likely an artifact)"],"corrected_sentence":"알아요."}
+{"sentence":"이건 말도 안돼요.","issues":["Incorrect spacing: '안돼요' should be '안 돼요'"],"corrected_sentence":"이건 말도 안 돼요."}
+{"sentence":"/ 알았어.","issues":["Extraneous leading slash (likely a subtitle artifact)","Unnecessary leading space after the slash"],"corrected_sentence":"알았어."}
+{"sentence":"오 이런 안돼!","issues":["Incorrect spacing: '안돼' should be '안 돼'.","Missing comma/clear separation after the interjection: '오, 이런'.","Punctuation could be improved to reflect exclamation."],"corrected_sentence":"오, 이런! 안 돼!"}
+{"sentence":"아, 안돼!","issues":["Spacing error: '안돼' should be written as '안 돼'"],"corrected_sentence":"아, 안 돼!"}
+{"sentence":"이런, 안돼!","issues":["Spacing error: '안돼' should be written as '안 돼' in standard Korean orthography."],"corrected_sentence":"이런, 안 돼!"}
+{"sentence":"우리 함께 말이야.","issues":["Incomplete thought with no predicate","Unnatural structure: 말이야 typically follows a noun phrase, but '우리 함께' uses the adverb 함께","Potentially confusing discourse marker for learners"],"corrected_sentence":null}
+{"sentence":"그래서 앉아.","issues":["Requires prior context due to '그래서' (therefore/so)","Feels incomplete as a standalone sentence","Potential confusion with '그래, 앉아.' which is a more natural standalone imperative"],"corrected_sentence":null}
+{"sentence":"여자 : 아니, 안돼!","issues":["Subtitle artifact: speaker label","Incorrect spacing: '안돼' should be '안 돼'","Extraneous space before colon"],"corrected_sentence":"여자: 아니, 안 돼!"}
+{"sentence":"정말 그렇게 될 걸!","issues":["Incorrect spacing: the sentence-final ending “-ㄹ걸” should be attached to the verb (write “될걸” without a space).","With the current spacing, “걸” can be misread as the object form of “것(을)”, creating ambiguity."],"corrected_sentence":"정말 그렇게 될걸!"}

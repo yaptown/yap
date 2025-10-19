@@ -52,11 +52,6 @@ jobs:
         with:
           version: 8
 
-      - name: Generate data
-        run: cargo run --bin generate-data
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
       - name: Build WASM module
         run: wasm-pack build --release
         working-directory: yap-frontend-rs

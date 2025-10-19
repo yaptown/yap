@@ -435,6 +435,7 @@ Fleisch und Blut
 Flucht nach vorn
 Formel 1
 Fragen kostet nichts
+Fragen stellen
 Fragen zu etwas haben
 Fraktur reden
 Frankf. a. d. O.
@@ -521,6 +522,7 @@ Gott hab sie selig
 Gott im Himmel
 Gott mit uns
 Gott sei Dank
+Gott weiß
 Gottes Mühlen mahlen langsam
 Grad Celsius
 Grafschaft Bentheim
@@ -1913,6 +1915,7 @@ bestehen bleiben
 bester Freund des Menschen
 bestes Wissen und Gewissen
 bestimmter Artikel
+besuchen gehen
 betreffend
 betreffs
 betriebsbedingte Kündigung
@@ -2017,6 +2020,7 @@ da unten
 da vorne
 da war
 da waren
+da will ich hin
 dabei bleiben
 dabei haben
 dabei sein
@@ -2512,6 +2516,7 @@ dran glauben müssen
 drauf und dran
 drei Kreuze machen
 drei Kreuze schlagen
+drei Tage später
 dreimal
 drittens
 dritter Fall
@@ -2691,6 +2696,7 @@ eins im Sinn
 eins weiter
 einsame Klasse
 einsehen
+einstellen
 einwärts
 einziehen
 eiserne Disziplin
@@ -2854,6 +2860,7 @@ etwas in den Wind schlagen
 etwas in die Schanze schlagen
 etwas ist faul im Staate Dänemark
 etwas nicht auf sich sitzen lassen
+etwas richtig machen
 etwas satt haben
 etwas unter den Teppich kehren
 etwas von wegen
@@ -2882,7 +2889,9 @@ falls doch
 falls ja
 falls nein
 falls nicht
+falsch liegen
 falsch positiv
+falsch schreiben
 falscher Freund
 fast kein
 fehl am Platz
@@ -2997,6 +3006,7 @@ gegeneinander
 gegeneinander ausspielen
 geh bitte
 geh nur
+gehen lassen
 gehen müssen
 gehobenen Hauptes
 geht klar
@@ -3048,6 +3058,7 @@ gern geschehen
 gern haben
 gern machen
 gern sprechen
+gern trinken
 gesagt, getan
 geschehen ist geschehen
 geschenkt ist geschenkt, wiederholen ist gestohlen
@@ -3183,6 +3194,7 @@ heißer Herbst
 heißes Eisen
 heißes Höschen
 her und hin
+herkommen
 hernach
 herzlichen Glückwunsch
 heute Abend
@@ -3330,6 +3342,7 @@ ich liebe dich
 ich mag dich
 ich schaffe das
 ich sehe was, was du nicht siehst
+ich selbst sein
 ich spreche kein Deutsch
 ich spreche kein Englisch
 ich suche einen Lebensmittelladen
@@ -4291,6 +4304,7 @@ nichts anbrennen lassen
 nichts anderes
 nichts auf etwas geben
 nichts da
+nichts dafür können
 nichts dem Zufall überlassen
 nichts für ungut
 nichts geht mehr
@@ -4819,6 +4833,7 @@ spazieren gehen
 speicherprogrammierbare Steuerung
 sprechen Sie Deutsch
 sprechen Sie Englisch
+sprechen über
 sprichst du Deutsch
 sprichst du Englisch
 springender Punkt
@@ -5222,6 +5237,7 @@ vorausgesetzt
 vorbehaltlos
 voreinander
 vorerst
+vorhaben
 vorhaben zu
 vorher
 vorhin
@@ -5244,6 +5260,7 @@ warm essen
 warmer Bruder
 warmer Regen
 warten auf
+warten lassen
 warum auch immer
 warum denn
 was Hänschen nicht lernt, lernt Hans nimmermehr
@@ -5609,6 +5626,7 @@ zum Glück
 zum Greifen nah
 zum Himmel stinken
 zum Horizont
+zum Kaffee
 zum Narren halten
 zum Punkt kommen
 zum Ritter schlagen
@@ -5680,6 +5698,7 @@ zurücklassen
 zusammen
 zusammen sein
 zusammenarbeiten
+zusammenfahren
 zusammenfassend
 zusammengenommen
 zustande kommen

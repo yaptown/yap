@@ -15,19 +15,18 @@ pub use simulation::DailySimulationIterator;
 use chrono::{DateTime, Utc};
 use deck_selection::DeckSelectionEvent;
 use futures::StreamExt;
-use imdex_map::IndexMap;
-use language_utils::ConsolidatedLanguageDataWithCapacity;
+use language_utils::Frequency;
 use language_utils::Literal;
 use language_utils::PartOfSpeech;
 use language_utils::TtsProvider;
 use language_utils::TtsRequest;
 use language_utils::autograde;
 use language_utils::features::{Morphology, WordPrefix};
+use language_utils::language_pack::LanguagePack;
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
-    DictionaryEntry, Heteronym, Lexeme, PatternPosition, PhrasebookEntry, PronunciationGuide,
-    TargetToNativeWord,
+    DictionaryEntry, Heteronym, Lexeme, PatternPosition, PronunciationGuide, TargetToNativeWord,
 };
 use lasso::Spur;
 use opfs::persistent::{self};
@@ -36,6 +35,7 @@ use rs_fsrs::FSRS;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::hash::Hash;
 use std::sync::Arc;
 use std::sync::LazyLock;
 use wasm_bindgen::prelude::*;
@@ -531,7 +531,13 @@ impl<'a> Drop for FlushLater<'a> {
 
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct TranslateComprehensibleSentence<S> {
+pub struct TranslateComprehensibleSentence<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Option<Heteronym<S>> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     pub audio: AudioRequest,
     pub target_language: S,
     pub target_language_literals: Vec<Literal<S>>,
@@ -590,284 +596,6 @@ impl TranscribeComprehensibleSentence<Spur> {
         }
     }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Frequency {
-    count: u32,
-}
-
-#[derive(Debug)]
-pub struct LanguagePack {
-    rodeo: lasso::RodeoReader,
-    translations: HashMap<Spur, Vec<Spur>>,
-    words_to_heteronyms: HashMap<Spur, BTreeSet<Heteronym<Spur>>>,
-    sentences_containing_lexeme_index: HashMap<Lexeme<Spur>, Vec<Spur>>,
-    sentences_to_literals: HashMap<Spur, Vec<Literal<Spur>>>,
-    sentences_to_lexemes: HashMap<Spur, Vec<Lexeme<Spur>>>,
-    sentences_to_all_lexemes: HashMap<Spur, Vec<Lexeme<Spur>>>,
-    word_frequencies: IndexMap<Lexeme<Spur>, Frequency>,
-    total_word_count: u64,
-    dictionary: BTreeMap<Heteronym<Spur>, DictionaryEntry>,
-    phrasebook: BTreeMap<Spur, PhrasebookEntry>,
-    word_to_pronunciation: HashMap<Spur, Spur>,
-    pronunciation_to_words: HashMap<Spur, Vec<Spur>>,
-    pronunciation_data: language_utils::PronunciationData,
-    pattern_frequency_map: HashMap<(Spur, language_utils::PatternPosition), u32>,
-}
-
-impl LanguagePack {
-    /// Get all lexemes for words that share a pronunciation
-    /// Returns an iterator over (word, lexeme) pairs
-    pub fn pronunciation_to_lexemes(
-        &self,
-        pronunciation: &Spur,
-    ) -> impl Iterator<Item = (Spur, Lexeme<Spur>)> + '_ {
-        self.pronunciation_to_words
-            .get(pronunciation)
-            .into_iter()
-            .flat_map(|words| words.iter())
-            .flat_map(move |word| {
-                self.words_to_heteronyms
-                    .get(word)
-                    .into_iter()
-                    .flat_map(|heteronyms| heteronyms.iter())
-                    .map(move |heteronym| (*word, Lexeme::Heteronym(*heteronym)))
-            })
-    }
-
-    /// Get the maximum frequency for any word with this pronunciation
-    pub fn pronunciation_max_frequency(&self, pronunciation: &Spur) -> Option<Frequency> {
-        self.pronunciation_to_lexemes(pronunciation)
-            .filter_map(|(_, lexeme)| self.word_frequencies.get(&lexeme).copied())
-            .max()
-    }
-
-    pub fn new(language_data: ConsolidatedLanguageDataWithCapacity) -> Self {
-        let rodeo = {
-            let rodeo = language_data.intern();
-            rodeo.into_reader()
-        };
-
-        let sentences: Vec<Spur> = {
-            language_data
-                .consolidated_language_data
-                .target_language_sentences
-                .iter()
-                .map(|s| rodeo.get(s).unwrap())
-                .collect()
-        };
-
-        let translations = {
-            language_data
-                .consolidated_language_data
-                .translations
-                .iter()
-                .map(|(target_language, native_languages)| {
-                    (
-                        rodeo.get(target_language).unwrap(),
-                        native_languages
-                            .iter()
-                            .map(|n| rodeo.get(n).unwrap())
-                            .collect(),
-                    )
-                })
-                .collect()
-        };
-
-        let words_to_heteronyms = {
-            let mut map: HashMap<Spur, BTreeSet<Heteronym<Spur>>> = HashMap::new();
-
-            for freq in &language_data.consolidated_language_data.frequencies {
-                if let Lexeme::Heteronym(heteronym) = &freq.lexeme {
-                    let word_spur = rodeo.get(&heteronym.word).unwrap();
-                    map.entry(word_spur).or_default().insert({
-                        Heteronym {
-                            word: rodeo.get(&heteronym.word).unwrap(),
-                            lemma: rodeo.get(&heteronym.lemma).unwrap(),
-                            pos: heteronym.pos,
-                        }
-                    });
-                }
-            }
-
-            map
-        };
-
-        let sentences_to_literals = {
-            language_data
-                .consolidated_language_data
-                .nlp_sentences
-                .iter()
-                .map(|(sentence, analysis)| {
-                    (
-                        rodeo.get(sentence).unwrap(),
-                        analysis
-                            .words
-                            .iter()
-                            .map(|word| {
-                                word.get_interned(&rodeo).unwrap_or_else(|| {
-                                    panic!("word not in rodeo: {word:?} in sentence: {sentence:?}")
-                                })
-                            })
-                            .collect(),
-                    )
-                })
-                .collect()
-        };
-
-        let sentences_to_lexemes: HashMap<Spur, Vec<Lexeme<Spur>>> = {
-            language_data
-                .consolidated_language_data
-                .nlp_sentences
-                .iter()
-                .map(|(sentence, analysis)| {
-                    (
-                        rodeo.get(sentence).unwrap(),
-                        analysis
-                            .lexemes()
-                            .map(|l| l.get_interned(&rodeo).unwrap())
-                            .collect(),
-                    )
-                })
-                .collect()
-        };
-
-        let sentences_containing_lexeme_index = {
-            let mut map = HashMap::new();
-            for (i, sentence_spur) in sentences.iter().enumerate() {
-                let _sentence = rodeo.resolve(sentence_spur);
-                let Some(lexemes) = sentences_to_lexemes.get(sentence_spur) else {
-                    continue;
-                };
-                for lexeme in lexemes.iter().cloned() {
-                    map.entry(lexeme).or_insert(vec![]).push(sentences[i]);
-                }
-            }
-            map
-        };
-
-        let sentences_to_all_lexemes = {
-            language_data
-                .consolidated_language_data
-                .nlp_sentences
-                .iter()
-                .map(|(sentence, analysis)| {
-                    (
-                        rodeo.get(sentence).unwrap(),
-                        analysis
-                            .all_lexemes()
-                            .map(|l| l.get_interned(&rodeo).unwrap())
-                            .collect(),
-                    )
-                })
-                .collect()
-        };
-
-        let word_frequencies = {
-            let mut map = IndexMap::new();
-            for freq in &language_data.consolidated_language_data.frequencies {
-                map.insert(
-                    freq.lexeme.get_interned(&rodeo).unwrap(),
-                    Frequency { count: freq.count },
-                );
-            }
-            map
-        };
-
-        let total_word_count = {
-            language_data
-                .consolidated_language_data
-                .frequencies
-                .iter()
-                .map(|freq| freq.count as u64)
-                .sum()
-        };
-
-        let dictionary = {
-            language_data
-                .consolidated_language_data
-                .dictionary
-                .iter()
-                .map(|(heteronym, entry)| (heteronym.get_interned(&rodeo).unwrap(), entry.clone()))
-                .collect()
-        };
-
-        let phrasebook = {
-            language_data
-                .consolidated_language_data
-                .phrasebook
-                .iter()
-                .map(|(multiword_term, entry)| (rodeo.get(multiword_term).unwrap(), entry.clone()))
-                .collect()
-        };
-
-        let word_to_pronunciation = {
-            language_data
-                .consolidated_language_data
-                .word_to_pronunciation
-                .iter()
-                .map(|(word, pronunciation)| {
-                    (
-                        rodeo
-                            .get(word)
-                            .unwrap_or_else(|| panic!("word not in rodeo: {word:?}")),
-                        rodeo.get(pronunciation).unwrap_or_else(|| {
-                            panic!("pronunciation not in rodeo: {pronunciation:?}")
-                        }),
-                    )
-                })
-                .collect()
-        };
-
-        let pronunciation_to_words = {
-            language_data
-                .consolidated_language_data
-                .pronunciation_to_words
-                .iter()
-                .map(|(pronunciation, words)| {
-                    (
-                        rodeo.get(pronunciation).unwrap(),
-                        words.iter().map(|word| rodeo.get(word).unwrap()).collect(),
-                    )
-                })
-                .collect()
-        };
-
-        let pronunciation_data = language_data
-            .consolidated_language_data
-            .pronunciation_data
-            .clone();
-
-        let pattern_frequency_map = {
-            pronunciation_data
-                .pattern_frequencies
-                .iter()
-                .map(|((pattern, position), freq)| {
-                    ((rodeo.get(pattern).unwrap(), *position), *freq)
-                })
-                .collect()
-        };
-
-        Self {
-            rodeo,
-            translations,
-            words_to_heteronyms,
-            sentences_containing_lexeme_index,
-            sentences_to_literals,
-            sentences_to_lexemes,
-            sentences_to_all_lexemes,
-            word_frequencies,
-            total_word_count,
-            dictionary,
-            phrasebook,
-            word_to_pronunciation,
-            pronunciation_to_words,
-            pronunciation_data,
-            pattern_frequency_map,
-        }
-    }
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum SentenceReviewResult {
@@ -903,7 +631,12 @@ pub struct AddCardOptions {
     Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify, Hash,
 )]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum CardIndicator<S> {
+pub enum CardIndicator<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     TargetLanguage {
         lexeme: Lexeme<S>,
     },
@@ -919,7 +652,12 @@ pub enum CardIndicator<S> {
     },
 }
 
-impl<S> CardIndicator<S> {
+impl<S> CardIndicator<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     pub fn target_language(&self) -> Option<&Lexeme<S>> {
         match self {
             CardIndicator::TargetLanguage { lexeme } => Some(lexeme),
@@ -3029,7 +2767,11 @@ pub struct MultiwordCardContent {
 
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum CardContent<S> {
+pub enum CardContent<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     Heteronym {
         heteronym: Heteronym<S>,
         definitions: Vec<TargetToNativeWord>,
@@ -3046,7 +2788,12 @@ pub enum CardContent<S> {
     },
 }
 
-impl<S> CardContent<S> {
+impl<S> CardContent<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     fn lexeme(&self) -> Option<Lexeme<S>>
     where
         S: Clone,
@@ -3118,7 +2865,12 @@ pub struct ReviewInfo {
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[serde(tag = "type")]
-pub enum Challenge<S> {
+pub enum Challenge<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     FlashCardReview {
         indicator: CardIndicator<S>,
         content: CardContent<S>,
@@ -3130,7 +2882,12 @@ pub enum Challenge<S> {
     TranscribeComprehensibleSentence(TranscribeComprehensibleSentence<S>),
 }
 
-impl<S> Challenge<S> {
+impl<S> Challenge<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+    <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
     fn audio_request(&self) -> AudioRequest {
         match self {
             Challenge::FlashCardReview { audio, .. } => audio.clone(),
@@ -3511,8 +3268,8 @@ impl ReviewInfo {
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_next_challenge(&self, deck: &Deck) -> Option<Challenge<String>> {
-        if !self.due_cards.is_empty() {
-            Some(self.get_challenge_for_card(deck, self.due_cards[0])?)
+        if let Some(due_card) = self.due_cards.first() {
+            Some(self.get_challenge_for_card(deck, *due_card)?)
         } else {
             None
         }
@@ -3850,7 +3607,6 @@ pub fn get_courses() -> Vec<language_utils::Course> {
 mod tests {
     use super::*;
     use chrono::Days;
-    use language_utils::ArchivedConsolidatedLanguageDataWithCapacity;
 
     // Include the French language data at compile time for tests
     // This makes tests self-contained and doesn't include the data in production builds
@@ -3862,17 +3618,14 @@ mod tests {
             // Copy to an aligned vector to avoid alignment issues
             let bytes = FRENCH_LANGUAGE_DATA.to_vec();
             let archived = rkyv::access::<
-                ArchivedConsolidatedLanguageDataWithCapacity,
+                language_utils::language_pack::ArchivedLanguagePack,
                 rkyv::rancor::Error,
             >(&bytes)
             .unwrap();
-            let deserialized = rkyv::deserialize::<
-                ConsolidatedLanguageDataWithCapacity,
-                rkyv::rancor::Error,
-            >(archived)
-            .unwrap();
+            let language_pack: LanguagePack =
+                rkyv::deserialize::<LanguagePack, rkyv::rancor::Error>(archived).unwrap();
 
-            let language_pack = Arc::new(LanguagePack::new(deserialized));
+            let language_pack = Arc::new(language_pack);
 
             let state = DeckState::new(language_pack, Language::French, Language::English);
             <Deck as weapon::PartialAppState>::finalize(state)
