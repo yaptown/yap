@@ -115,16 +115,6 @@ async fn main() -> anyhow::Result<()> {
             println!("Loaded {} banned words", banned_words.len());
         }
 
-        // Create the translator once and share it across all async tasks
-        let translator = Arc::new(Mutex::new(
-            GoogleTranslator::new(
-                course.target_language, // translate from target to native
-                course.native_language,
-                PathBuf::from(".cache/google_translate/"),
-            )
-            .unwrap(),
-        ));
-
         // write sentences
         let target_language_sentences_file =
             target_language_dir.join("target_language_sentences.jsonl");
@@ -242,6 +232,16 @@ async fn main() -> anyhow::Result<()> {
             } else {
                 vec![]
             };
+
+            // Create the translator once and share it across all async tasks
+            let translator = Arc::new(Mutex::new(
+                GoogleTranslator::new(
+                    course.target_language, // translate from target to native
+                    course.native_language,
+                    PathBuf::from(".cache/google_translate/"),
+                )
+                .unwrap(),
+            ));
 
             let all_sentences = futures::stream::iter(
                 anki_sentences
