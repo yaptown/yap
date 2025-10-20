@@ -918,6 +918,8 @@ pub struct DeckState {
     fsrs: FSRS,
     stats: Stats,
     context: Context,
+    /// Maps cards that have been detected as leeches to the total_reviews count when detected
+    leeches: BTreeMap<CardIndicator<Spur>, u64>,
 }
 
 #[derive(Clone, Debug)]
@@ -928,6 +930,8 @@ pub struct Deck {
     pub(crate) stats: Stats,
     pub(crate) context: Context,
     regressions: Regressions,
+    /// Maps cards that have been detected as leeches to the total_reviews count when detected
+    leeches: BTreeMap<CardIndicator<Spur>, u64>,
 }
 
 #[derive(Clone, Debug)]
@@ -960,6 +964,7 @@ impl From<Deck> for DeckState {
             fsrs: deck.fsrs,
             stats: deck.stats,
             context: deck.context,
+            leeches: deck.leeches,
         }
     }
 }
@@ -988,6 +993,11 @@ impl weapon::PartialAppState for Deck {
 
         deck.update_daily_streak(timestamp);
         deck.stats.total_reviews += 1;
+
+        // Clean up leeches that are more than 250 reviews old
+        let current_reviews = deck.stats.total_reviews;
+        deck.leeches
+            .retain(|_, detected_at| current_reviews - *detected_at <= 250);
 
         if *event_language != deck.context.target_language {
             return deck;
@@ -1430,6 +1440,7 @@ impl weapon::PartialAppState for Deck {
             stats: state.stats,
             context: state.context,
             regressions,
+            leeches: state.leeches,
         }
     }
 }
@@ -1461,6 +1472,7 @@ impl DeckState {
                 target_language,
                 native_language,
             },
+            leeches: BTreeMap::new(),
         }
     }
 
@@ -1501,6 +1513,19 @@ impl DeckState {
             .next(fsrs_card.clone(), timestamp, fsrs_rating)
             .card;
 
+        // Detect leeches: cards with high lapse rate
+        // Require at least 8 reviews to avoid false positives early on
+        // A card is a leech if 40% or more of its reviews are lapses
+        if fsrs_card.lapses >= 12 && fsrs_card.lapses % 4 == 0 {
+            let lapse_ratio = fsrs_card.lapses as f64 / fsrs_card.reps as f64;
+            if lapse_ratio >= 0.3 {
+                // Mark as leech and reset to New state
+                // This prevents it from being considered known for the purposes of challenge sentence selection
+                self.leeches.insert(card, self.stats.total_reviews);
+                fsrs_card.state = rs_fsrs::State::New;
+            }
+        }
+
         // Award XP based on review outcome
         self.stats.xp += match rating {
             Rating::Again => 5.0,
@@ -1540,30 +1565,43 @@ impl DeckState {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl Deck {
+    /// Helper function to create a CardSummary from a card indicator and status
+    fn card_to_summary(
+        &self,
+        card_indicator: &CardIndicator<Spur>,
+        card_status: &CardStatus,
+    ) -> Option<CardSummary> {
+        if let CardStatus::Tracked(CardData::Added { fsrs_card }) = card_status {
+            let state = match fsrs_card.state {
+                rs_fsrs::State::New => "new".to_string(),
+                rs_fsrs::State::Learning => "learning".to_string(),
+                rs_fsrs::State::Review => "review".to_string(),
+                rs_fsrs::State::Relearning => "relearning".to_string(),
+            };
+            Some(CardSummary {
+                card_indicator: card_indicator.resolve(&self.context.language_pack.rodeo),
+                due_timestamp_ms: fsrs_card.due.timestamp_millis() as f64,
+                state,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Returns an iterator over cards (excluding leeches)
+    fn cards_excluding_leeches(&self) -> impl Iterator<Item = (&CardIndicator<Spur>, &CardStatus)> {
+        self.cards
+            .iter()
+            .filter(|(card_indicator, _)| !self.leeches.contains_key(card_indicator))
+    }
+
     /// First, the frontend calls get_all_cards_summary to get a view of what cards are due and what cards are going to be due in the future.
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_all_cards_summary(&self) -> Vec<CardSummary> {
-        let language_pack: &LanguagePack = &self.context.language_pack;
-        let rodeo = &language_pack.rodeo;
         let mut summaries: Vec<CardSummary> = self
-            .cards
-            .iter()
+            .cards_excluding_leeches()
             .filter_map(|(card_indicator, card_status)| {
-                if let CardStatus::Tracked(CardData::Added { fsrs_card }) = card_status {
-                    let state = match fsrs_card.state {
-                        rs_fsrs::State::New => "new".to_string(),
-                        rs_fsrs::State::Learning => "learning".to_string(),
-                        rs_fsrs::State::Review => "review".to_string(),
-                        rs_fsrs::State::Relearning => "relearning".to_string(),
-                    };
-                    Some(CardSummary {
-                        card_indicator: card_indicator.resolve(rodeo),
-                        due_timestamp_ms: fsrs_card.due.timestamp_millis() as f64,
-                        state,
-                    })
-                } else {
-                    None
-                }
+                self.card_to_summary(card_indicator, card_status)
             })
             .collect();
 
@@ -1571,6 +1609,19 @@ impl Deck {
         summaries.sort_by(|a, b| a.due_timestamp_ms.partial_cmp(&b.due_timestamp_ms).unwrap());
 
         summaries
+    }
+
+    /// Get all cards that have been detected as leeches (12+ lapses)
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_leeches(&self) -> Vec<CardSummary> {
+        self.leeches
+            .keys()
+            .filter_map(|card_indicator| {
+                self.cards
+                    .get(card_indicator)
+                    .and_then(|card_status| self.card_to_summary(card_indicator, card_status))
+            })
+            .collect()
     }
 
     /// TODO: get_review_info and get_all_cards_summary can probably be combined.
@@ -1590,7 +1641,7 @@ impl Deck {
         let no_text_cards = banned_challenge_types.contains(&ChallengeType::Text);
         let no_speaking_cards = banned_challenge_types.contains(&ChallengeType::Speaking);
 
-        for (card, card_status) in self.cards.iter() {
+        for (card, card_status) in self.cards_excluding_leeches() {
             if let CardStatus::Tracked(CardData::Added { fsrs_card }) = card_status {
                 let due_date = fsrs_card.due;
 
@@ -1745,8 +1796,7 @@ impl Deck {
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_percent_of_words_known(&self) -> f64 {
         let total_words_reviewed: u64 = self
-            .cards
-            .iter()
+            .cards_excluding_leeches()
             .filter_map(|(card_indicator, card_status)| match card_indicator {
                 CardIndicator::TargetLanguage { lexeme } => Some((lexeme, card_status)),
                 CardIndicator::ListeningHomophonous { .. } => None,

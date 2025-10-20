@@ -66,8 +66,8 @@ fn main() -> anyhow::Result<()> {
                 })
                 .collect();
 
-            println!("Applied {} corrections", corrections_count);
-            println!("Filtered out {} suspicious sentences", suspicious_count);
+            println!("Applied {corrections_count} corrections");
+            println!("Filtered out {suspicious_count} suspicious sentences");
             println!("\nShowing {count} random sentences:\n");
 
             print_random_sentences(&unknown_sentences, count);

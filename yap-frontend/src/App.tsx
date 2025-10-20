@@ -38,6 +38,7 @@ import { BrowserNotSupported } from '@/components/browser-not-supported'
 import { Stats } from '@/components/stats'
 import { About } from '@/components/about'
 import { Dictionary } from '@/components/Dictionary'
+import { Leeches } from '@/components/Leeches'
 import { TopPageLayout } from '@/components/TopPageLayout'
 import { match, P } from 'ts-pattern';
 
@@ -371,7 +372,7 @@ function Tools() {
   return (
     <div className="">
       <h2 className="text-2xl font-semibold">Tools</h2>
-      <div className="bg-card border rounded-lg p-4 mt-3">
+      <div className="bg-card border rounded-lg p-4 mt-3 space-y-2">
         <button
           onClick={() => {
             navigate('/dictionary');
@@ -380,6 +381,16 @@ function Tools() {
           className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors"
         >
           <span>📖 Dictionary</span>
+          <span className="text-muted-foreground">→</span>
+        </button>
+        <button
+          onClick={() => {
+            navigate('/leeches');
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+          }}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors"
+        >
+          <span>🩹 Leeches</span>
           <span className="text-muted-foreground">→</span>
         </button>
       </div>
@@ -441,6 +452,63 @@ function DictionaryPage() {
       }}
     >
       <Dictionary deck={deck.deck} weapon={weapon} targetLanguage={deck.targetLanguage} nativeLanguage={deck.nativeLanguage} />
+    </TopPageLayout>
+  )
+}
+
+function LeechesPage() {
+  const { userInfo } = useOutletContext<AppContextType>()
+  const deck = useDeck()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!userInfo || deck?.type === 'noLanguageSelected') {
+      navigate('/', { replace: true })
+    }
+  }, [userInfo, deck, navigate])
+
+  if (!userInfo || deck?.type === 'noLanguageSelected') {
+    return null
+  }
+
+  if (deck?.type !== 'deck') {
+    return (
+      <TopPageLayout
+        userInfo={userInfo}
+        headerProps={{
+          backButton: { label: 'Leeches', onBack: () => navigate('/') }
+        }}
+      >
+        <div className="flex-1 bg-background flex items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </TopPageLayout>
+    )
+  }
+
+  if (!deck.deck) {
+    return (
+      <TopPageLayout
+        userInfo={userInfo}
+        headerProps={{
+          backButton: { label: 'Leeches', onBack: () => navigate('/') }
+        }}
+      >
+        <div className="flex-1 bg-background flex items-center justify-center">
+          <p className="text-muted-foreground">Loading leeches...</p>
+        </div>
+      </TopPageLayout>
+    )
+  }
+
+  return (
+    <TopPageLayout
+      userInfo={userInfo}
+      headerProps={{
+        backButton: { label: 'Leeches', onBack: () => navigate('/') }
+      }}
+    >
+      <Leeches deck={deck.deck} />
     </TopPageLayout>
   )
 }
@@ -845,6 +913,7 @@ function App() {
         <Route path="/*" element={<AppMain />}>
           <Route index element={<ReviewPage />} />
           <Route path="dictionary" element={<DictionaryPage />} />
+          <Route path="leeches" element={<LeechesPage />} />
           <Route path="select-language" element={<SelectLanguagePage />} />
           <Route path="user/id/:id" element={<UserProfilePage />} />
         </Route>

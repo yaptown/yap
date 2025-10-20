@@ -100,6 +100,7 @@ impl SentenceClassifier for SpanishClassifier {
                 || (text_lower == "te" && token.lemma == "tú")
                 || (text_lower == "lo" && token.lemma == "él")
                 || (text_lower == "la" && token.lemma == "él")
+                || (text_lower == "le" && token.lemma == "él")
                 || (text_lower == "se" && token.lemma == "él")
                 || (text_lower == "nos" && token.lemma == "yo")
                 || (text_lower == "nosotros" && token.lemma == "yo")
@@ -131,10 +132,7 @@ impl WordCorrector for SpanishCorrector {
 
             // Fix "ella" lemma - should always be "ella", not "él"
             if text_lower == "ella" && token.lemma == "él" {
-                corrections.push(format!(
-                    "Fixed '{}' lemma from 'él' to 'ella'",
-                    token.text
-                ));
+                corrections.push(format!("Fixed '{}' lemma from 'él' to 'ella'", token.text));
                 token.lemma = "ella".to_string();
                 corrected = true;
             }
@@ -163,7 +161,9 @@ impl SentenceClassifier for FrenchClassifier {
             let text_lower = token.text.to_lowercase();
 
             // Check for hyphen being parsed incorrectly (indicates parsing error)
-            if text_lower == "-" && (token.pos == PartOfSpeech::Pron || token.pos == PartOfSpeech::X) {
+            if text_lower == "-"
+                && (token.pos == PartOfSpeech::Pron || token.pos == PartOfSpeech::X)
+            {
                 return SentenceClassification::Suspicious {
                     reason: format!("Hyphen parsed as {:?}", token.pos),
                 };
@@ -172,14 +172,14 @@ impl SentenceClassifier for FrenchClassifier {
             // Check for "lui" pronoun with lemma "luire"
             if text_lower == "lui" && token.lemma == "luire" && token.pos == PartOfSpeech::Pron {
                 return SentenceClassification::Suspicious {
-                    reason: format!("'lui' pronoun has lemma 'luire'"),
+                    reason: "'lui' pronoun has lemma 'luire'".to_string(),
                 };
             }
 
             // Check for "eux" with lemma "lui"
             if text_lower == "eux" && token.lemma == "lui" {
                 return SentenceClassification::Suspicious {
-                    reason: format!("'eux' has lemma 'lui'"),
+                    reason: "'eux' has lemma 'lui'".to_string(),
                 };
             }
         }
@@ -300,40 +300,28 @@ impl WordCorrector for FrenchCorrector {
 
             // Fix contractions with themselves as lemma
             if text_lower == "j'" && token.lemma == "j'" {
-                corrections.push(format!(
-                    "Fixed '{}' lemma from 'j'' to 'je'",
-                    token.text
-                ));
+                corrections.push(format!("Fixed '{}' lemma from 'j'' to 'je'", token.text));
                 token.lemma = "je".to_string();
                 corrected = true;
             }
 
             if text_lower == "l'" && token.lemma == "l'" {
                 // Default to "le" if we can't determine gender
-                corrections.push(format!(
-                    "Fixed '{}' lemma from 'l'' to 'le'",
-                    token.text
-                ));
+                corrections.push(format!("Fixed '{}' lemma from 'l'' to 'le'", token.text));
                 token.lemma = "le".to_string();
                 corrected = true;
             }
 
             // Fix "-ce" (in "qu'est-ce que" etc.) with itself as lemma
             if text_lower == "-ce" && token.lemma == "-ce" {
-                corrections.push(format!(
-                    "Fixed '{}' lemma from '-ce' to 'ce'",
-                    token.text
-                ));
+                corrections.push(format!("Fixed '{}' lemma from '-ce' to 'ce'", token.text));
                 token.lemma = "ce".to_string();
                 corrected = true;
             }
 
             // Fix "-là" (in "celles-là", "celui-là", etc.) with itself as lemma
             if text_lower == "-là" && token.lemma == "-là" {
-                corrections.push(format!(
-                    "Fixed '{}' lemma from '-là' to 'là'",
-                    token.text
-                ));
+                corrections.push(format!("Fixed '{}' lemma from '-là' to 'là'", token.text));
                 token.lemma = "là".to_string();
                 corrected = true;
             }
