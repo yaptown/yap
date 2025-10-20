@@ -68,7 +68,7 @@ export function Stats({ deck }: StatsProps) {
   const [isGraphsOpen, setIsGraphsOpen] = useState(false);
 
   return (
-    <div className="mt-4">
+    <div className="mt-4 animate-fade-in-delayed">
       <NumericStats
         xp={deck.get_xp()}
         totalCards={allCardsSummary.length}
