@@ -9,3 +9,8 @@ serde_json.workspace = true
 language-utils = { path = "../language-utils" }
 anyhow = "1.0.98"
 rand = "0.9.1"
+tysm.workspace = true
+schemars.workspace = true
+sentence-sampler = { path = "../libraries/sentence-sampler" }
+tokio.workspace = true
+futures.workspace = true

@@ -8,6 +8,7 @@ members = [
     "libraries/imdex_map",
     "libraries/eyedee",
     "libraries/course-spot-check",
+    "libraries/sentence-sampler",
     "clean-nlp-data",
 ]
 resolver = "3"

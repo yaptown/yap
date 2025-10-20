@@ -1,4 +1,5 @@
 use language_utils::{Language, NlpAnalyzedSentence, PartOfSpeech};
+use tysm::chat_completions::ChatClient;
 
 /// Classification result for a sentence
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -394,4 +395,81 @@ mod tests {
 
         assert_eq!(result, SentenceClassification::Unknown);
     }
+}
+
+/// Simplified token representation for LLM correction (without morphology)
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+pub struct SimplifiedToken {
+    pub text: String,
+    pub whitespace: String,
+    pub pos: PartOfSpeech,
+    pub lemma: String,
+}
+
+/// Response from the LLM for NLP sentence correction
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+pub struct NlpCorrectionResponse {
+    #[serde(rename = "1. thoughts")]
+    pub thoughts: String,
+    #[serde(rename = "2. corrected_tokens")]
+    pub corrected_tokens: Vec<SimplifiedToken>,
+}
+
+/// Use GPT to clean/correct an NLP analyzed sentence
+pub async fn clean_sentence_with_llm(
+    language: Language,
+    sentence: &NlpAnalyzedSentence,
+    suspicious_reason: Option<String>,
+    chat_client: &ChatClient,
+) -> anyhow::Result<NlpCorrectionResponse> {
+    let suspicion_context = if let Some(reason) = suspicious_reason {
+        format!("\n\nWe flagged this sentence as potentially suspicious because: {reason}")
+    } else {
+        String::new()
+    };
+
+    let system_prompt = format!(
+        r#"You are an expert in {language} NLP analysis. Your task is to review and potentially correct an automatically-generated NLP analysis of a {language} sentence.
+
+The analysis consists of tokens, where each token has:
+- text: the word as it appears
+- whitespace: any whitespace after the word
+- pos: part of speech (e.g., Noun, Verb, Adj, Adv, Det, Pron, Propn, etc.)
+- lemma: the dictionary/base form of the word
+
+Common issues to look for:
+- Lemmas that are incorrect (e.g., pronouns with wrong base forms)
+- Part of speech tags that don't match the word
+- Capitalization issues in lemmas (especially for German nouns)
+- Lemmas that contain spaces (usually errors)
+- Contractions with themselves as lemmas (e.g., "l'" with lemma "l'" instead of "le")
+
+Review the analysis carefully. If you find errors, correct them. If the analysis is already correct, return it unchanged.{suspicion_context}
+
+Think through your analysis, then indicate whether you made corrections, and finally provide the corrected token list."#
+    );
+
+    // Convert DocTokens to SimplifiedTokens for the prompt
+    let simplified_tokens: Vec<SimplifiedToken> = sentence
+        .doc
+        .iter()
+        .map(|token| SimplifiedToken {
+            text: token.text.clone(),
+            whitespace: token.whitespace.clone(),
+            pos: token.pos,
+            lemma: token.lemma.clone(),
+        })
+        .collect();
+
+    let user_prompt = format!(
+        "Sentence: \"{}\"\n\nCurrent NLP analysis:\n{}",
+        sentence.sentence,
+        serde_json::to_string_pretty(&simplified_tokens)?
+    );
+
+    let response: NlpCorrectionResponse = chat_client
+        .chat_with_system_prompt(system_prompt, user_prompt)
+        .await?;
+
+    Ok(response)
 }

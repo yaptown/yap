@@ -152,7 +152,7 @@ async fn main() -> anyhow::Result<()> {
 
             // Also get Tatoeba data
             let tatoeba_pairs =
-                generate_data::tatoeba::get_tatoeba_pairs(source_data_path, *course);
+                generate_data::tatoeba::get_tatoeba_pairs(source_data_path, *course, None);
 
             // Combine Anki cards, OpenSubtitles data, and Tatoeba data
             let use_native_card_side = course.native_language == Language::English;

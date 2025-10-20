@@ -1,16 +1,12 @@
-use std::collections::hash_map::DefaultHasher;
 use std::fs::File;
-use std::hash::{Hash, Hasher};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 use language_utils::{Course, Language};
-use rand::Rng;
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
+use sentence_sampler::sample_to_target_with_stats;
 
-/// Target maximum number of sentences to import from Tatoeba
-const TARGET_SENTENCE_COUNT: usize = 200_000;
+/// Default target maximum number of sentences to import from Tatoeba
+const DEFAULT_TARGET_SENTENCE_COUNT: usize = 200_000;
 
 pub struct TatoebaPair {
     pub target: String,
@@ -18,7 +14,19 @@ pub struct TatoebaPair {
 }
 
 /// Read Tatoeba TSV files and filter for proper sentences
-pub fn get_tatoeba_pairs(data_path: &Path, course: Course) -> Vec<TatoebaPair> {
+///
+/// # Arguments
+///
+/// * `data_path` - Path to the data directory containing Tatoeba files
+/// * `course` - The language course to process
+/// * `target_count` - Optional maximum number of sentences to return. If None, uses DEFAULT_TARGET_SENTENCE_COUNT.
+///
+pub fn get_tatoeba_pairs(
+    data_path: &Path,
+    course: Course,
+    target_count: Option<usize>,
+) -> Vec<TatoebaPair> {
+    let target_count = target_count.unwrap_or(DEFAULT_TARGET_SENTENCE_COUNT);
     let mut pairs = Vec::new();
 
     // Look for Tatoeba files in the data directory
@@ -173,43 +181,18 @@ pub fn get_tatoeba_pairs(data_path: &Path, course: Course) -> Vec<TatoebaPair> {
     );
 
     // Apply random sampling if we have more sentences than the target
+    let (sampled_pairs, stats) = sample_to_target_with_stats(unique_pairs, target_count, |pair| {
+        (pair.target.clone(), pair.native.clone())
+    });
 
-    if unique_pairs.len() > TARGET_SENTENCE_COUNT {
+    if stats.was_sampled {
         println!(
-            "Applying random sampling to reduce from {} to approximately {} sentences",
-            unique_pairs.len(),
-            TARGET_SENTENCE_COUNT
+            "Applied random sampling: {} -> {} sentence pairs (target: {})",
+            stats.original_count, stats.final_count, stats.target_count
         );
-
-        // Calculate the probability of keeping each sentence
-        let keep_probability = TARGET_SENTENCE_COUNT as f64 / unique_pairs.len() as f64;
-
-        let sampled_pairs: Vec<TatoebaPair> = unique_pairs
-            .into_iter()
-            .filter(|pair| {
-                // Create a deterministic seed based on the sentence content
-                let mut hasher = DefaultHasher::new();
-                pair.target.hash(&mut hasher);
-                pair.native.hash(&mut hasher);
-                let seed = hasher.finish();
-
-                // Create RNG with this seed
-                let mut rng = ChaCha8Rng::seed_from_u64(seed);
-
-                // Keep this sentence with probability keep_probability
-                rng.random::<f64>() < keep_probability
-            })
-            .collect();
-
-        println!(
-            "After random sampling: {} sentence pairs",
-            sampled_pairs.len()
-        );
-
-        sampled_pairs
-    } else {
-        unique_pairs
     }
+
+    sampled_pairs
 }
 
 /// Check if a sentence is "proper" - language-specific validation

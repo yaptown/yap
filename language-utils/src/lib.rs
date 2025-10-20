@@ -663,6 +663,7 @@ impl SentenceInfo {
     rkyv::Archive,
     rkyv::Serialize,
     rkyv::Deserialize,
+    schemars::JsonSchema,
 )]
 #[rkyv(compare(PartialEq), derive(Debug))]
 pub struct DocToken {
