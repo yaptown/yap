@@ -93,7 +93,9 @@ export function SyncStatusDialog() {
 
   // Determine sync status
   const unsyncedStale = useMemo(() => {
-    return earliestUnsyncedAt != null && currentTimestamp - earliestUnsyncedAt > 5000;
+    return (
+      earliestUnsyncedAt != null && currentTimestamp - earliestUnsyncedAt > 5000
+    );
   }, [earliestUnsyncedAt, currentTimestamp]);
 
   let statusIcon;
@@ -116,7 +118,7 @@ export function SyncStatusDialog() {
     } else {
       statusIcon = <Check className="w-2 h-2" />;
       statusText = "Synced";
-      statusColor = "text-green-600 dark:text-green-400";
+      statusColor = "text-muted-foreground";
     }
   }
 
@@ -125,6 +127,11 @@ export function SyncStatusDialog() {
       <DialogTrigger asChild>
         <button className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
           <span
+            className={`hidden sm:inline text-sm ${statusColor} transition-colors duration-300`}
+          >
+            {statusText}
+          </span>
+          <span
             className={`w-2 h-2 rounded-full ${
               !isOnline
                 ? "bg-gray-500 dark:bg-gray-400"
@@ -132,12 +139,9 @@ export function SyncStatusDialog() {
                 ? "bg-red-500 dark:bg-red-400"
                 : unsyncedStale
                 ? "bg-yellow-600 dark:bg-yellow-400"
-                : "bg-green-500 dark:bg-green-400"
+                : ""
             } transition-colors duration-300`}
           ></span>
-          <span className={`hidden sm:inline text-sm ${statusColor} transition-colors duration-300`}>
-            {statusText}
-          </span>
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -193,7 +197,9 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Local Events</span>
+                <span className="text-sm font-medium text-foreground">
+                  Local Events
+                </span>
               </div>
               <span className="text-sm text-muted-foreground">
                 {localEventCount}
@@ -202,7 +208,9 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Server Events</span>
+                <span className="text-sm font-medium text-foreground">
+                  Server Events
+                </span>
               </div>
               <span className="text-sm text-muted-foreground">
                 {remoteEventCount}
@@ -214,7 +222,9 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CupSoda className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">User ID</span>
+                <span className="text-sm font-medium text-foreground">
+                  User ID
+                </span>
               </div>
               <span className="text-sm text-muted-foreground font-mono">
                 {weapon.user_id
@@ -226,7 +236,9 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CupSoda className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Device ID</span>
+                <span className="text-sm font-medium text-foreground">
+                  Device ID
+                </span>
               </div>
               <span className="text-sm text-muted-foreground font-mono">
                 {weapon.device_id.substring(0, 16)}...
@@ -235,7 +247,9 @@ export function SyncStatusDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Baby className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Yap.Town version</span>
+                <span className="text-sm font-medium text-foreground">
+                  Yap.Town version
+                </span>
               </div>
               <span className="text-sm text-muted-foreground font-mono">
                 {get_app_version()}
