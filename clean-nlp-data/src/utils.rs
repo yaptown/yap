@@ -31,10 +31,15 @@ pub fn validate_and_fix_whitespace(
 
     // Check if the difference is exactly one whitespace character (space, nbsp, etc.)
     let orig_no_spaces: String = original.chars().filter(|c| !c.is_whitespace()).collect();
-    let recon_no_spaces: String = reconstructed.chars().filter(|c| !c.is_whitespace()).collect();
+    let recon_no_spaces: String = reconstructed
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect();
 
     // Use character count instead of byte length (important for UTF-8)
-    if orig_no_spaces == recon_no_spaces && original.chars().count() == reconstructed.chars().count() + 1 {
+    if orig_no_spaces == recon_no_spaces
+        && original.chars().count() == reconstructed.chars().count() + 1
+    {
         // Find where the whitespace is missing and what character it is
         let orig_chars: Vec<char> = original.chars().collect();
         let recon_chars: Vec<char> = reconstructed.chars().collect();

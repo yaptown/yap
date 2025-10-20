@@ -2,7 +2,10 @@ mod classify;
 mod utils;
 
 use anyhow::{Context, anyhow};
-use classify::{SentenceClassification, clean_sentence_with_llm, get_classifier, get_corrector};
+use classify::{
+    SentenceClassification, clean_sentence_with_llm, get_classifier, get_corrector,
+    parse_dependencies_with_llm,
+};
 use futures::StreamExt;
 use language_utils::{Language, NlpAnalyzedSentence};
 use rand::prelude::IndexedRandom;
@@ -194,7 +197,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 }
 
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
-    const SAMPLE_SIZE: usize = 25;
+    const SAMPLE_SIZE: usize = 50;
 
     println!("Loading NLP data for {language:?}...");
     let sentences = load_nlp_sentences(language)?;
@@ -215,7 +218,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         .map(|mut sentence| {
             let classification = classifier.classify(&sentence);
             let suspicious_reason = match classification {
-                SentenceClassification::Suspicious { reason } => Some(reason),
+                SentenceClassification::Suspicious { reasons } => Some(reasons.join("; ")),
                 SentenceClassification::Unknown => None,
             };
             corrector.correct(&mut sentence);
@@ -226,7 +229,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // Clean each sentence with LLM
     let cleaned_results = futures::stream::iter(classified_sentences.into_iter().enumerate())
         .map(|(i, (sentence, suspicious_reason))| async move {
-            if i % 10 == 0 {
+            if i % 25 == 0 {
                 match &suspicious_reason {
                     Some(reason) => println!(
                         "  [{}/{}] Suspicious: {} (${cost:.2})",
@@ -248,7 +251,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                 clean_sentence_with_llm(language, &sentence, suspicious_reason, &CHAT_CLIENT).await;
             (sentence, result)
         })
-        .buffered(10)
+        .buffered(50)
         .collect::<Vec<_>>()
         .await;
 
@@ -264,16 +267,19 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     let mut skipped_count = 0;
     let mut auto_fixed_count = 0;
 
+    // Validate and collect successfully cleaned sentences
+    let mut validated_results = Vec::new();
+
     for (original_sentence, mut result) in cleaned_results {
         // Validate that the LLM response matches the original text
         if let Ok(ref mut correction_response) = result {
             match validate_and_fix_whitespace(&original_sentence.sentence, correction_response) {
                 ValidationResult::Valid => {
-                    // No issues, continue to write
+                    // No issues, continue
                 }
                 ValidationResult::AutoFixed => {
                     auto_fixed_count += 1;
-                    // Continue to write the auto-fixed version
+                    // Continue with the auto-fixed version
                 }
                 ValidationResult::Invalid {
                     original,
@@ -286,12 +292,89 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                     continue;
                 }
             }
+            validated_results.push((original_sentence, result.unwrap()));
         }
+    }
+
+    println!("\n=== Pass 2: Adding dependency information ===");
+
+    // Second pass: Add dependency information
+    let results_with_deps = futures::stream::iter(validated_results.into_iter().enumerate())
+        .map(|(i, (original_sentence, correction_response))| async move {
+            if i % 25 == 0 {
+                println!(
+                    "  [{}/{}] Parsing dependencies (${cost:.2})",
+                    i,
+                    SAMPLE_SIZE,
+                    cost = CHAT_CLIENT.cost().unwrap()
+                );
+            }
+
+            let dep_result = parse_dependencies_with_llm(
+                language,
+                &original_sentence.sentence,
+                &correction_response.corrected_tokens,
+                &CHAT_CLIENT,
+            )
+            .await;
+
+            (original_sentence, correction_response, dep_result)
+        })
+        .buffered(50)
+        .collect::<Vec<_>>()
+        .await;
+
+    // Write results to file
+    for (original_sentence, correction_response, dep_result) in results_with_deps {
+        // Combine token info with dependency info
+        let tokens: Vec<_> = if let Ok(dep_response) = dep_result {
+            correction_response
+                .corrected_tokens
+                .into_iter()
+                .enumerate()
+                .map(|(i, token)| {
+                    // Find matching dependency info
+                    let dep_info = dep_response.dependencies.iter().find(|d| d.index == i + 1);
+
+                    if let Some(dep) = dep_info {
+                        serde_json::json!({
+                            "text": token.text,
+                            "whitespace": token.whitespace,
+                            "pos": token.pos,
+                            "lemma": token.lemma,
+                            "dep": dep.dependency,
+                            "head": dep.head,
+                        })
+                    } else {
+                        // Dependency info missing, just include token info
+                        serde_json::json!({
+                            "text": token.text,
+                            "whitespace": token.whitespace,
+                            "pos": token.pos,
+                            "lemma": token.lemma,
+                        })
+                    }
+                })
+                .collect()
+        } else {
+            // Dependency parsing failed, just include token info
+            correction_response
+                .corrected_tokens
+                .into_iter()
+                .map(|token| {
+                    serde_json::json!({
+                        "text": token.text,
+                        "whitespace": token.whitespace,
+                        "pos": token.pos,
+                        "lemma": token.lemma,
+                    })
+                })
+                .collect()
+        };
 
         let output = serde_json::json!({
-            "original_sentence": original_sentence.sentence,
-            "original_tokens": original_sentence.doc,
-            "cleaned": result.ok(),
+            "sentence": original_sentence.sentence,
+            "tokens": tokens,
         });
         writeln!(writer, "{}", serde_json::to_string(&output)?)
             .context("Failed to write to output file")?;
