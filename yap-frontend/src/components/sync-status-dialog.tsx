@@ -161,7 +161,7 @@ export function SyncStatusDialog() {
           </div>
 
           {lastSyncError && (
-            <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg overflow-hidden">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm text-red-600 dark:text-red-400 flex-1 overflow-hidden line-clamp-3">
                   Error: {lastSyncError}
