@@ -39,6 +39,7 @@ pub fn get_classifier(language: Language) -> Box<dyn SentenceClassifier> {
         Language::French => Box::new(FrenchClassifier),
         Language::German => Box::new(GermanClassifier),
         Language::Spanish => Box::new(SpanishClassifier),
+        Language::Korean => Box::new(KoreanClassifier),
         _ => Box::new(DefaultClassifier),
     }
 }
@@ -49,6 +50,7 @@ pub fn get_corrector(language: Language) -> Box<dyn WordCorrector> {
         Language::French => Box::new(FrenchCorrector),
         Language::German => Box::new(GermanCorrector),
         Language::Spanish => Box::new(SpanishCorrector),
+        Language::Korean => Box::new(KoreanCorrector),
         _ => Box::new(DefaultCorrector),
     }
 }
@@ -142,6 +144,57 @@ impl WordCorrector for SpanishCorrector {
         CorrectionResult {
             corrected,
             corrections,
+        }
+    }
+}
+
+/// Korean-specific classifier
+struct KoreanClassifier;
+
+impl SentenceClassifier for KoreanClassifier {
+    fn classify(&self, sentence: &NlpAnalyzedSentence) -> SentenceClassification {
+        // Check for Space tokens which indicate NLP parsing issues
+        for token in &sentence.doc {
+            if token.pos == PartOfSpeech::Space {
+                return SentenceClassification::Suspicious {
+                    reason: format!("Contains Space token: '{}'", sentence.sentence),
+                };
+            }
+
+            // Check for X (unknown) POS tags
+            if token.pos == PartOfSpeech::X {
+                return SentenceClassification::Suspicious {
+                    reason: format!("Token '{}' has unknown POS (X)", token.text),
+                };
+            }
+
+            // Check for verbs/auxiliaries with themselves as lemma (no morphological analysis)
+            // Properly analyzed Korean should have lemmas with "+" morpheme boundaries
+            if (token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux)
+                && token.text == token.lemma
+                && !token.lemma.contains('+')
+            {
+                return SentenceClassification::Suspicious {
+                    reason: format!(
+                        "Verb/Aux '{}' has itself as lemma (no morphological analysis)",
+                        token.text
+                    ),
+                };
+            }
+        }
+
+        SentenceClassification::Unknown
+    }
+}
+
+/// Korean-specific corrector
+struct KoreanCorrector;
+
+impl WordCorrector for KoreanCorrector {
+    fn correct(&self, _sentence: &mut NlpAnalyzedSentence) -> CorrectionResult {
+        CorrectionResult {
+            corrected: false,
+            corrections: vec![],
         }
     }
 }
@@ -411,7 +464,7 @@ pub struct SimplifiedToken {
 pub struct NlpCorrectionResponse {
     #[serde(rename = "1. thoughts")]
     pub thoughts: String,
-    #[serde(rename = "2. corrected_tokens")]
+    #[serde(rename = "2. tokens")]
     pub corrected_tokens: Vec<SimplifiedToken>,
 }
 
@@ -444,9 +497,9 @@ Common issues to look for:
 - Lemmas that contain spaces (usually errors)
 - Contractions with themselves as lemmas (e.g., "l'" with lemma "l'" instead of "le")
 
-Review the analysis carefully. If you find errors, correct them. If the analysis is already correct, return it unchanged.{suspicion_context}
+Review the analysis carefully. If you find errors, correct them. If the analysis is already correct, return it unchanged. In either case, you will return all tokens in the sentence. You are the ultimate authority on the correct analysis of the sentence, and your response should stand alone.{suspicion_context} 
 
-Think through your analysis, then indicate whether you made corrections, and finally provide the corrected token list."#
+Think through your analysis, and finally provide the corrected token list."#
     );
 
     // Convert DocTokens to SimplifiedTokens for the prompt

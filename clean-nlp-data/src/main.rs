@@ -180,6 +180,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
         Language::German,
         Language::Spanish,
         Language::English,
+        Language::Korean,
     ];
 
     for language in languages {
