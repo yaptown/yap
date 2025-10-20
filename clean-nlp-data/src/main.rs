@@ -1,4 +1,5 @@
 mod classify;
+mod utils;
 
 use anyhow::{Context, anyhow};
 use classify::{SentenceClassification, clean_sentence_with_llm, get_classifier, get_corrector};
@@ -11,6 +12,7 @@ use std::io::{BufRead, BufReader, BufWriter, Write as _};
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
+use utils::{ValidationResult, validate_and_fix_whitespace};
 
 static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("gpt-4o")
@@ -259,7 +261,33 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         .context(format!("Failed to create output file: {output_file:?}"))?;
     let mut writer = BufWriter::new(file);
 
-    for (original_sentence, result) in cleaned_results {
+    let mut skipped_count = 0;
+    let mut auto_fixed_count = 0;
+
+    for (original_sentence, mut result) in cleaned_results {
+        // Validate that the LLM response matches the original text
+        if let Ok(ref mut correction_response) = result {
+            match validate_and_fix_whitespace(&original_sentence.sentence, correction_response) {
+                ValidationResult::Valid => {
+                    // No issues, continue to write
+                }
+                ValidationResult::AutoFixed => {
+                    auto_fixed_count += 1;
+                    // Continue to write the auto-fixed version
+                }
+                ValidationResult::Invalid {
+                    original,
+                    reconstructed,
+                } => {
+                    println!(
+                        "WARNING: Skipping sentence due to text mismatch:\n  Original: '{original}'\n  Reconstructed: '{reconstructed}'"
+                    );
+                    skipped_count += 1;
+                    continue;
+                }
+            }
+        }
+
         let output = serde_json::json!({
             "original_sentence": original_sentence.sentence,
             "original_tokens": original_sentence.doc,
@@ -272,6 +300,12 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     writer.flush().context("Failed to flush writer")?;
 
     println!("Results written to: {}", output_file.display());
+    if auto_fixed_count > 0 {
+        println!("Auto-fixed {auto_fixed_count} sentences with single-space mismatches");
+    }
+    if skipped_count > 0 {
+        println!("Skipped {skipped_count} sentences due to text mismatches");
+    }
 
     Ok(())
 }
