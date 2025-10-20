@@ -561,6 +561,7 @@ pub struct MultiwordTerms {
 #[derive(
     Clone,
     Debug,
+    serde::Serialize,
     serde::Deserialize,
     Eq,
     PartialEq,
