@@ -54,7 +54,7 @@ use rand_chacha::ChaCha8Rng;
 ///     SentencePair { target: "Goodbye".to_string(), native: "Au revoir".to_string() },
 /// ];
 ///
-/// let sampled = sample_to_target(pairs, 1, |pair| (&pair.target, &pair.native));
+/// let sampled = sample_to_target(pairs, 1, |pair| (pair.target.clone(), pair.native.clone()));
 /// ```
 pub fn sample_to_target<T, K, F>(items: Vec<T>, target_count: usize, key_fn: F) -> Vec<T>
 where

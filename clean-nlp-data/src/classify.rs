@@ -1795,7 +1795,11 @@ Think through your analysis, and finally provide the corrected token list. Remem
             } else {
                 token.whitespace
             },
-            pos: if token.text == "-" {PartOfSpeech::Punct} else {token.pos},
+            pos: if token.text == "-" {
+                PartOfSpeech::Punct
+            } else {
+                token.pos
+            },
             text: token.text,
             lemma: token.lemma,
         })
