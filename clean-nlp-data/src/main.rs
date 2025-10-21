@@ -18,7 +18,7 @@ use tysm::chat_completions::ChatClient;
 use utils::{ValidationResult, validate_and_fix_whitespace};
 
 static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
-    ChatClient::from_env("gpt-4o")
+    ChatClient::from_env("gpt-5")
         .unwrap()
         .with_cache_directory("./.cache")
 });
@@ -197,7 +197,9 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 }
 
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
-    const SAMPLE_SIZE: usize = 50;
+    // We probably should get at least 10_000 samples per language to get good coverage.
+    // Bare minimum to get a usable result is probably around 1_500.
+    const SAMPLE_SIZE: usize = 500;
 
     println!("Loading NLP data for {language:?}...");
     let sentences = load_nlp_sentences(language)?;
@@ -218,8 +220,8 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         .map(|mut sentence| {
             let classification = classifier.classify(&sentence);
             let suspicious_reason = match classification {
-                SentenceClassification::Suspicious { reasons } => Some(reasons.join("; ")),
-                SentenceClassification::Unknown => None,
+                SentenceClassification::Suspicious { reasons } => reasons,
+                SentenceClassification::Unknown => vec![],
             };
             corrector.correct(&mut sentence);
             (sentence, suspicious_reason)
@@ -228,27 +230,19 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
 
     // Clean each sentence with LLM
     let cleaned_results = futures::stream::iter(classified_sentences.into_iter().enumerate())
-        .map(|(i, (sentence, suspicious_reason))| async move {
+        .map(|(i, (sentence, suspicious_reasons))| async move {
             if i % 25 == 0 {
-                match &suspicious_reason {
-                    Some(reason) => println!(
-                        "  [{}/{}] Suspicious: {} (${cost:.2})",
-                        i,
-                        SAMPLE_SIZE,
-                        reason,
-                        cost = CHAT_CLIENT.cost().unwrap()
-                    ),
-                    None => println!(
-                        "  [{}/{}] Clean (${cost:.2})",
-                        i,
-                        SAMPLE_SIZE,
-                        cost = CHAT_CLIENT.cost().unwrap()
-                    ),
-                }
+                println!(
+                    "  [{}/{}] (${cost:.2})",
+                    i,
+                    SAMPLE_SIZE,
+                    cost = CHAT_CLIENT.cost().unwrap()
+                );
             }
 
             let result =
-                clean_sentence_with_llm(language, &sentence, suspicious_reason, &CHAT_CLIENT).await;
+                clean_sentence_with_llm(language, &sentence, suspicious_reasons, &CHAT_CLIENT)
+                    .await;
             (sentence, result)
         })
         .buffered(50)
@@ -272,8 +266,8 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
 
     for (original_sentence, mut result) in cleaned_results {
         // Validate that the LLM response matches the original text
-        if let Ok(ref mut correction_response) = result {
-            match validate_and_fix_whitespace(&original_sentence.sentence, correction_response) {
+        if let Ok(ref mut corrected_tokens) = result {
+            match validate_and_fix_whitespace(&original_sentence.sentence, corrected_tokens) {
                 ValidationResult::Valid => {
                     // No issues, continue
                 }
@@ -286,7 +280,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                     reconstructed,
                 } => {
                     println!(
-                        "WARNING: Skipping sentence due to text mismatch:\n  Original: '{original}'\n  Reconstructed: '{reconstructed}'"
+                        "WARNING: Skipping sentence due to text mismatch:\n  Original:      '{original}'\n  Reconstructed: '{reconstructed}'"
                     );
                     skipped_count += 1;
                     continue;
@@ -300,7 +294,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
 
     // Second pass: Add dependency information
     let results_with_deps = futures::stream::iter(validated_results.into_iter().enumerate())
-        .map(|(i, (original_sentence, correction_response))| async move {
+        .map(|(i, (original_sentence, corrected_tokens))| async move {
             if i % 25 == 0 {
                 println!(
                     "  [{}/{}] Parsing dependencies (${cost:.2})",
@@ -313,23 +307,22 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
             let dep_result = parse_dependencies_with_llm(
                 language,
                 &original_sentence.sentence,
-                &correction_response.corrected_tokens,
+                &corrected_tokens,
                 &CHAT_CLIENT,
             )
             .await;
 
-            (original_sentence, correction_response, dep_result)
+            (original_sentence, corrected_tokens, dep_result)
         })
         .buffered(50)
         .collect::<Vec<_>>()
         .await;
 
     // Write results to file
-    for (original_sentence, correction_response, dep_result) in results_with_deps {
+    for (original_sentence, corrected_tokens, dep_result) in results_with_deps {
         // Combine token info with dependency info
         let tokens: Vec<_> = if let Ok(dep_response) = dep_result {
-            correction_response
-                .corrected_tokens
+            corrected_tokens
                 .into_iter()
                 .enumerate()
                 .map(|(i, token)| {
@@ -358,8 +351,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                 .collect()
         } else {
             // Dependency parsing failed, just include token info
-            correction_response
-                .corrected_tokens
+            corrected_tokens
                 .into_iter()
                 .map(|token| {
                     serde_json::json!({

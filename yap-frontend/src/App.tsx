@@ -276,7 +276,7 @@ function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
 function AppContent({ userInfo, accessToken }: AppContextType) {
   return (
     <Profiler id="App" onRender={profilerOnRender}>
-      <div>
+      <div className="px-2">
         <div className="min-h-screen bg-background text-foreground">
           <div className="max-w-2xl mx-auto">
             <Profiler id="Content" onRender={profilerOnRender}>

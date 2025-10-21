@@ -1,4 +1,4 @@
-use crate::classify::NlpCorrectionResponse;
+use crate::classify::SimplifiedTokenPrime;
 
 #[derive(Debug)]
 pub enum ValidationResult {
@@ -17,10 +17,9 @@ pub enum ValidationResult {
 /// If there's a single-space difference, automatically fix it.
 pub fn validate_and_fix_whitespace(
     original: &str,
-    correction: &mut NlpCorrectionResponse,
+    corrected_tokens: &mut [SimplifiedTokenPrime],
 ) -> ValidationResult {
-    let reconstructed: String = correction
-        .corrected_tokens
+    let reconstructed: String = corrected_tokens
         .iter()
         .map(|token| format!("{}{}", token.text, token.whitespace))
         .collect();
@@ -29,7 +28,45 @@ pub fn validate_and_fix_whitespace(
         return ValidationResult::Valid;
     }
 
-    // Check if the difference is exactly one whitespace character (space, nbsp, etc.)
+    // Normalize whitespace: replace all whitespace chars with regular space
+    let normalize_whitespace = |s: &str| -> String {
+        s.chars()
+            .map(|c| if c.is_whitespace() { ' ' } else { c })
+            .collect()
+    };
+
+    let orig_normalized = normalize_whitespace(original);
+    let recon_normalized = normalize_whitespace(&reconstructed);
+
+    // Check if the only difference is whitespace character types (e.g., nbsp vs space)
+    if orig_normalized == recon_normalized {
+        // Fix whitespace characters to match the original
+        let orig_chars: Vec<char> = original.chars().collect();
+
+        // Build a mapping of positions where whitespace differs
+        let mut pos = 0;
+        for token in corrected_tokens.iter_mut() {
+            // Update whitespace characters to match original
+            let whitespace_start = pos + token.text.len();
+            let mut new_whitespace = String::new();
+
+            for i in 0..token.whitespace.len() {
+                let char_pos = whitespace_start + i;
+                if char_pos < orig_chars.len() && orig_chars[char_pos].is_whitespace() {
+                    new_whitespace.push(orig_chars[char_pos]);
+                } else {
+                    new_whitespace.push(token.whitespace.chars().nth(i).unwrap_or(' '));
+                }
+            }
+
+            token.whitespace = new_whitespace;
+            pos = whitespace_start + token.whitespace.len();
+        }
+
+        return ValidationResult::AutoFixed;
+    }
+
+    // Check if the difference is exactly one missing whitespace character
     let orig_no_spaces: String = original.chars().filter(|c| !c.is_whitespace()).collect();
     let recon_no_spaces: String = reconstructed
         .chars()
@@ -56,7 +93,7 @@ pub fn validate_and_fix_whitespace(
 
         // Find which token this position falls into and add the whitespace
         let mut pos = 0;
-        for token in correction.corrected_tokens.iter_mut() {
+        for token in corrected_tokens.iter_mut() {
             let token_end = pos + token.text.len();
 
             if missing_space_pos >= pos && missing_space_pos <= token_end {
