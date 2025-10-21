@@ -199,7 +199,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // We probably should get at least 10_000 samples per language to get good coverage.
     // Bare minimum to get a usable result is probably around 1_500.
-    const SAMPLE_SIZE: usize = 500;
+    const SAMPLE_SIZE: usize = 700;
 
     println!("Loading NLP data for {language:?}...");
     let sentences = load_nlp_sentences(language)?;
@@ -245,7 +245,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                     .await;
             (sentence, result)
         })
-        .buffered(50)
+        .buffer_unordered(50)
         .collect::<Vec<_>>()
         .await;
 
@@ -314,7 +314,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
 
             (original_sentence, corrected_tokens, dep_result)
         })
-        .buffered(50)
+        .buffer_unordered(50)
         .collect::<Vec<_>>()
         .await;
 
