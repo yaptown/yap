@@ -18,7 +18,6 @@ import {
   Cloud,
   Baby,
   CupSoda,
-  Copy,
 } from "lucide-react";
 import {
   get_app_version,
@@ -27,6 +26,7 @@ import {
 } from "../../../yap-frontend-rs/pkg";
 import { useWeapon, useSyncActions } from "@/weapon";
 import { useNetworkState } from "react-use";
+import { ErrorMessage } from "@/components/ui/error-message";
 
 export function SyncStatusDialog() {
   const weapon = useWeapon();
@@ -165,32 +165,7 @@ export function SyncStatusDialog() {
           </div>
 
           {lastSyncError && (
-            <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg overflow-hidden">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm text-red-600 dark:text-red-400 flex-1 overflow-hidden line-clamp-3">
-                  Error: {lastSyncError}
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 flex-shrink-0"
-                  onClick={() => {
-                    navigator.clipboard
-                      .writeText(lastSyncError)
-                      .then(() => {
-                        // You could add a toast notification here if you have a toast system
-                        console.log("Error copied to clipboard");
-                      })
-                      .catch((err) => {
-                        console.error("Failed to copy error:", err);
-                      });
-                  }}
-                  title="Copy full error message"
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
+            <ErrorMessage message={lastSyncError} variant="compact" />
           )}
 
           <div className="space-y-3">

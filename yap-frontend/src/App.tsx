@@ -41,6 +41,7 @@ import { Dictionary } from '@/components/Dictionary'
 import { Leeches } from '@/components/Leeches'
 import { TopPageLayout } from '@/components/TopPageLayout'
 import { match, P } from 'ts-pattern';
+import { ErrorMessage } from '@/components/ui/error-message'
 
 // Essential user info to persist for offline functionality
 export interface UserInfo {
@@ -347,6 +348,31 @@ function ReviewPage() {
             >
               <div className="flex-1 bg-background flex items-center justify-center">
                 <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+              </div>
+            </TopPageLayout>
+          ))
+          .with({ type: "error" }, ({ message, retry }) => (
+            <TopPageLayout
+              userInfo={userInfo}
+              headerProps={{
+                onChangeLanguage: () => navigate('/select-language'),
+                showSignupNag: false
+              }}
+            >
+              <div className="flex-1 bg-background flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-card border rounded-lg p-6">
+                  <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-red-600 dark:text-red-400 text-xl">⚠</span>
+                  </div>
+                  <h2 className="text-lg font-semibold mb-2 text-center">Failed to Load Language Data</h2>
+                  <p className="text-muted-foreground mb-4 text-center">
+                    Unable to download the language pack. Please check your internet connection.
+                  </p>
+                  <ErrorMessage message={message} className="mb-4" />
+                  <Button onClick={retry} variant="outline" className="w-full">
+                    Try Again
+                  </Button>
+                </div>
               </div>
             </TopPageLayout>
           ))
@@ -962,8 +988,9 @@ function SelectLanguagePage() {
 }
 
 
-function useDeck(): { type: "deck", nativeLanguage: Language, targetLanguage: Language, deck: Deck | null } | { type: "noLanguageSelected" } | null {
+function useDeck(): { type: "deck", nativeLanguage: Language, targetLanguage: Language, deck: Deck | null } | { type: "noLanguageSelected" } | { type: "error", message: string, retry: () => void, retryCount: number } | null {
   const weapon = useWeapon()
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     weapon.request_deck_selection()
@@ -995,6 +1022,10 @@ function useDeck(): { type: "deck", nativeLanguage: Language, targetLanguage: La
 
   const numEvents = useSyncExternalStore(subscribe, getSnapshot)
 
+  const retry = useCallback(() => {
+    setRetryCount(count => count + 1)
+  }, [])
+
   const state = useAsyncMemo(async () => {
     if (numEvents === null) {
       return null
@@ -1011,15 +1042,31 @@ function useDeck(): { type: "deck", nativeLanguage: Language, targetLanguage: La
         nativeLanguage: deck_selection.nativeLanguage,
         targetLanguage: deck_selection.targetLanguage,
       }
-      const languagePack = await weapon.get_language_pack(course)
-      return {
-        type: "deck",
-        nativeLanguage: deck_selection.nativeLanguage,
-        targetLanguage: deck_selection.targetLanguage,
-        deck: await weapon.get_deck_state(languagePack, course),
-      } as { type: "deck", nativeLanguage: Language, targetLanguage: Language, deck: Deck | null }
+
+      try {
+        const languagePack = await weapon.get_language_pack(course)
+        return {
+          type: "deck",
+          nativeLanguage: deck_selection.nativeLanguage,
+          targetLanguage: deck_selection.targetLanguage,
+          deck: await weapon.get_deck_state(languagePack, course),
+        } as { type: "deck", nativeLanguage: Language, targetLanguage: Language, deck: Deck | null }
+      } catch (error) {
+        console.error("Failed to fetch language pack:", error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        return {
+          type: "error",
+          message: errorMessage,
+          retry,
+          retryCount,
+        } as { type: "error", message: string, retry: () => void, retryCount: number }
+      }
     }
-  }, [weapon, numEvents])
+  }, [weapon, numEvents, retryCount])
+
+  if (state?.type === "error" && state.retryCount < retryCount) {
+    return null
+  }
 
   return state ?? null
 }
