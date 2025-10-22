@@ -202,12 +202,8 @@ impl Weapon {
             })
     }
 
-    pub async fn get_deck_state(&self, course: Course) -> Result<Deck, JsValue> {
-        let language_pack = self
-            .get_language_pack(course)
-            .await
-            .map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
-
+    pub async fn get_deck_state(&self, language_pack: FetchedLanguagePack, course: Course) -> Result<Deck, JsValue> {
+        let language_pack = Arc::clone(&language_pack.pack);
         let target_language = course.target_language;
         let native_language = self
             .get_deck_selection_state()
@@ -478,11 +474,18 @@ impl Weapon {
     }
 }
 
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+pub struct FetchedLanguagePack {
+    pack: Arc<LanguagePack>,
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl Weapon {
-    pub(crate) async fn get_language_pack(
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub async fn get_language_pack(
         &self,
         course: Course,
-    ) -> Result<Arc<LanguagePack>, language_pack::LanguageDataError> {
+    ) -> Result<FetchedLanguagePack, language_pack::LanguageDataError> {
         let language_pack = if let Some(language_pack) = self.language_pack.borrow().get(&course) {
             language_pack.clone()
         } else {
@@ -502,7 +505,7 @@ impl Weapon {
                 .expect("language pack must exist as we just added it")
                 .clone()
         };
-        Ok(language_pack)
+        Ok(FetchedLanguagePack { pack: language_pack })
     }
 }
 

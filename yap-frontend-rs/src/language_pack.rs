@@ -86,17 +86,17 @@ pub(crate) async fn get_language_pack(
         course.native_language,
         course.target_language
     );
-    let language_data_hash_file = language_directory
+    let language_data_file = language_directory
         .get_file_handle_with_options(
             &format!("language_data_{language_data_hash}.rkyv"),
             &opfs::GetFileHandleOptions { create: false },
         )
         .await;
 
-    let bytes = if let Ok(language_data_hash_file) = language_data_hash_file {
+    let bytes = if let Ok(language_data_file) = language_data_file {
         // Cache hit - read from local storage
         let _perf_timer = utils::PerfTimer::new("reading language data from local storage");
-        let bytes = language_data_hash_file
+        let bytes = language_data_file
             .read()
             .await
             .map_err(LanguageDataError::Persistent)?;
@@ -119,6 +119,7 @@ pub(crate) async fn get_language_pack(
         }
     } else {
         let _perf_timer = utils::PerfTimer::new("downloading and caching language data");
+        log::info!("Downloading and caching language data because the language data file was not found");
         download_and_cache_language_data(
             &mut language_directory,
             course,
@@ -167,7 +168,7 @@ pub(crate) async fn get_language_pack(
 }
 
 #[derive(Debug, thiserror::Error)]
-pub(crate) enum LanguageDataError {
+pub enum LanguageDataError {
     #[error("OPFS error: {0:?}")]
     Persistent(persistent::Error),
 
@@ -179,6 +180,25 @@ pub(crate) enum LanguageDataError {
 
     #[error("Unsupported course: {0:?}")]
     UnsupportedCourse(Course),
+}
+
+impl From<LanguageDataError> for wasm_bindgen::JsValue {
+    fn from(error: LanguageDataError) -> Self {
+        match error {
+            LanguageDataError::Persistent(error) => {
+                wasm_bindgen::JsValue::from_str(&format!("OPFS error: {error:?}"))
+            },
+            LanguageDataError::Rkyv(error) => {
+                wasm_bindgen::JsValue::from_str(&format!("Rkyv error: {error:?}"))
+            },
+            LanguageDataError::AiServer(error) => {
+                wasm_bindgen::JsValue::from_str(&format!("AI server error: {error:?}"))
+            },
+            LanguageDataError::UnsupportedCourse(course) => {
+                wasm_bindgen::JsValue::from_str(&format!("Unsupported course: {course:?}"))
+            }
+        }
+    }
 }
 
 async fn download_and_cache_language_data(

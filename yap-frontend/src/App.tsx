@@ -1,6 +1,6 @@
 import { useState, useEffect, Profiler, useSyncExternalStore, useMemo, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Outlet, useNavigate, useOutletContext } from 'react-router-dom'
-import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeType, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
+import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeType, type Course, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
 import { Button } from "@/components/ui/button.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -1007,14 +1007,16 @@ function useDeck(): { type: "deck", nativeLanguage: Language, targetLanguage: La
     if (deck_selection.targetLanguage === undefined || deck_selection.targetLanguage === null || deck_selection.nativeLanguage === undefined || deck_selection.nativeLanguage === null) {
       return { type: "noLanguageSelected" } as { type: "noLanguageSelected" }
     } else {
+      const course: Course = {
+        nativeLanguage: deck_selection.nativeLanguage,
+        targetLanguage: deck_selection.targetLanguage,
+      }
+      const languagePack = await weapon.get_language_pack(course)
       return {
         type: "deck",
         nativeLanguage: deck_selection.nativeLanguage,
         targetLanguage: deck_selection.targetLanguage,
-        deck: await weapon.get_deck_state({
-          nativeLanguage: deck_selection.nativeLanguage,
-          targetLanguage: deck_selection.targetLanguage,
-        }),
+        deck: await weapon.get_deck_state(languagePack, course),
       } as { type: "deck", nativeLanguage: Language, targetLanguage: Language, deck: Deck | null }
     }
   }, [weapon, numEvents])
