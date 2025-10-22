@@ -368,7 +368,7 @@ function ReviewPage() {
                   <p className="text-muted-foreground mb-4 text-center">
                     Unable to download the language pack. Please check your internet connection.
                   </p>
-                  <ErrorMessage message={message} className="mb-4" />
+                  <ErrorMessage message={message} title="Failed to load language data" className="mb-4" />
                   <Button onClick={retry} variant="outline" className="w-full">
                     Try Again
                   </Button>

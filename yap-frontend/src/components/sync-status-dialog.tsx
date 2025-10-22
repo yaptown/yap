@@ -165,7 +165,7 @@ export function SyncStatusDialog() {
           </div>
 
           {lastSyncError && (
-            <ErrorMessage message={lastSyncError} variant="compact" />
+            <ErrorMessage title="Sync Error" message={lastSyncError} variant="compact" />
           )}
 
           <div className="space-y-3">
