@@ -9,6 +9,7 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("o3")
         .unwrap()
         .with_cache_directory("./.cache")
+        .with_service_tier("flex")
 });
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]

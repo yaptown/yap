@@ -25,6 +25,7 @@ idb = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 thiserror = { workspace = true, optional = true }
 slotmap = { workspace = true }
+weblocks = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { workspace = true }

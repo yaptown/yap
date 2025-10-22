@@ -166,6 +166,12 @@ impl EventStore<String, String> {
         user_directory: &UserDirectory,
         stream_id: String,
     ) -> Result<usize, persistent::Error> {
+        let _guard = weblocks::acquire(
+            &format!("opfs-save-to-local-storage-{stream_id}"),
+            weblocks::AcquireOptions::exclusive(),
+        )
+        .await
+        .unwrap();
         let mut total_written: usize = 0;
 
         // Local desired counts per device for this stream

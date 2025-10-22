@@ -3558,9 +3558,9 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "tysm"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "553c591570e090b3d3bb1b316703657377132c39b161fbe479e64aa180db5b7d"
+checksum = "4925dd60b8e2d23f5972a75ac7f3bc1ef436090efbd8536567ce285166f2334c"
 dependencies = [
  "dotenvy",
  "itertools",
@@ -3846,6 +3846,7 @@ dependencies = [
  "tsify",
  "wasm-bindgen",
  "web-sys",
+ "weblocks",
 ]
 
 [[package]]
@@ -3878,6 +3879,18 @@ dependencies = [
  "phf_codegen",
  "string_cache",
  "string_cache_codegen",
+]
+
+[[package]]
+name = "weblocks"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e770224d4d61ccfd8ecc036d8f109e30d48827aafa9b2f192ebe4958391487f"
+dependencies = [
+ "futures-channel",
+ "js-sys",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

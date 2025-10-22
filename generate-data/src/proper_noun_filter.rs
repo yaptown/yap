@@ -10,6 +10,7 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("gpt-4o")
         .unwrap()
         .with_cache_directory("./.cache")
+        .with_service_tier("flex")
 });
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, schemars::JsonSchema)]

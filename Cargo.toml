@@ -25,7 +25,7 @@ schemars = "1"
 futures = "0.3.31"
 env_logger = "0.11.8"
 tsify = { version = "0.5.5", features = ["js"], default-features = false }
-tysm = { version = "0.12.0" }
+tysm = { version = "0.13.0" }
 reqwest = { version = "0.12", features = ["json"] }
 tokio = { version = "1.45.1", features = ["full"] }
 opfs = { version = "0.1.4" }
@@ -42,6 +42,7 @@ thiserror = "2"
 slotmap = { version = "1.0", features = ["serde"] }
 wasm-logger = "0.2.0"
 unicode-normalization = "0.1.24"
+weblocks = { version = "0.1.0" }
 
 [workspace.dependencies.rkyv]
 git = "https://github.com/anchpop/rkyv.git"
