@@ -20,6 +20,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,wav,mp3}'],
         importScripts: [],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB (WASM file is ~2.1 MB)
       },
       manifest: {
         name: 'Yap.Town',
