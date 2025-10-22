@@ -119,7 +119,9 @@ pub(crate) async fn get_language_pack(
         }
     } else {
         let _perf_timer = utils::PerfTimer::new("downloading and caching language data");
-        log::info!("Downloading and caching language data because the language data file was not found");
+        log::info!(
+            "Downloading and caching language data because the language data file was not found"
+        );
         download_and_cache_language_data(
             &mut language_directory,
             course,
@@ -187,13 +189,13 @@ impl From<LanguageDataError> for wasm_bindgen::JsValue {
         match error {
             LanguageDataError::Persistent(error) => {
                 wasm_bindgen::JsValue::from_str(&format!("OPFS error: {error:?}"))
-            },
+            }
             LanguageDataError::Rkyv(error) => {
                 wasm_bindgen::JsValue::from_str(&format!("Rkyv error: {error:?}"))
-            },
+            }
             LanguageDataError::AiServer(error) => {
                 wasm_bindgen::JsValue::from_str(&format!("AI server error: {error:?}"))
-            },
+            }
             LanguageDataError::UnsupportedCourse(course) => {
                 wasm_bindgen::JsValue::from_str(&format!("Unsupported course: {course:?}"))
             }

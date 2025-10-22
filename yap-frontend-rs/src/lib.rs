@@ -202,7 +202,11 @@ impl Weapon {
             })
     }
 
-    pub async fn get_deck_state(&self, language_pack: FetchedLanguagePack, course: Course) -> Result<Deck, JsValue> {
+    pub async fn get_deck_state(
+        &self,
+        language_pack: FetchedLanguagePack,
+        course: Course,
+    ) -> Result<Deck, JsValue> {
         let language_pack = Arc::clone(&language_pack.pack);
         let target_language = course.target_language;
         let native_language = self
@@ -505,7 +509,9 @@ impl Weapon {
                 .expect("language pack must exist as we just added it")
                 .clone()
         };
-        Ok(FetchedLanguagePack { pack: language_pack })
+        Ok(FetchedLanguagePack {
+            pack: language_pack,
+        })
     }
 }
 
