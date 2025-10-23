@@ -1836,7 +1836,7 @@ Think through the sentence structure, then provide the dependency analysis for e
     // Build the indexed token list
     let mut indexed_tokens = String::new();
     for (i, token) in tokens.iter().enumerate() {
-        indexed_tokens.push_str(&format!("{}. {}\n", i + 1, token.text));
+        indexed_tokens.push_str(&format!("{}. {} ({}) ({})\n", i + 1, token.text, token.lemma, token.pos));
     }
 
     let user_prompt = format!(

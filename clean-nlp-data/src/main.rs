@@ -24,6 +24,13 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_service_tier("flex")
 });
 
+static CHAT_CLIENT_MINI: LazyLock<ChatClient> = LazyLock::new(|| {
+    ChatClient::from_env("gpt-5-mini")
+        .unwrap()
+        .with_cache_directory("./.cache")
+        .with_service_tier("flex")
+});
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
@@ -200,7 +207,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // We probably should get at least 10_000 samples per language to get good coverage.
     // Bare minimum to get a usable result is probably around 1_500.
-    const SAMPLE_SIZE: usize = 1_000;
+    const SAMPLE_SIZE: usize = 1_500;
 
     println!("Loading NLP data for {language:?}...");
     let sentences = load_nlp_sentences(language)?;
@@ -300,7 +307,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                     "  [{}/{}] Parsing dependencies (${cost:.2})",
                     i,
                     SAMPLE_SIZE,
-                    cost = CHAT_CLIENT.cost().unwrap()
+                    cost = CHAT_CLIENT_MINI.cost().unwrap()
                 );
             }
 
@@ -308,7 +315,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                 language,
                 &original_sentence.sentence,
                 &corrected_tokens,
-                &CHAT_CLIENT,
+                &CHAT_CLIENT_MINI,
             )
             .await;
 
