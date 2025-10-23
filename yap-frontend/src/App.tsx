@@ -954,14 +954,7 @@ function SelectLanguagePage() {
   const deck = useDeck()
   const navigate = useNavigate()
 
-  const headerProps = match(deck)
-    .with({ type: "deck", deck: P.not(P.nullish) }, () => ({
-      showSignupNag: false,
-      backButton: { label: 'Change Language', onBack: () => navigate('/') }
-    }))
-    .otherwise(() => ({ showSignupNag: false }))
-
-  const content = match(deck)
+  return match(deck)
     .with({ type: "deck", deck: P.not(P.nullish) }, ({ targetLanguage }) => (
       <LanguageSelector
         skipOnboarding={true}
@@ -972,6 +965,8 @@ function SelectLanguagePage() {
           weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
           navigate('/')
         }}
+        userInfo={userInfo}
+        onBack={() => navigate('/')}
       />
     ))
     .with({ type: "noLanguageSelected" }, () => (
@@ -981,6 +976,7 @@ function SelectLanguagePage() {
           weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
           navigate('/')
         }}
+        userInfo={userInfo}
       />
     ))
     .otherwise(() => (
@@ -988,12 +984,6 @@ function SelectLanguagePage() {
         <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
       </div>
     ))
-
-  return (
-    <TopPageLayout userInfo={userInfo} headerProps={headerProps}>
-      {content}
-    </TopPageLayout>
-  )
 }
 
 

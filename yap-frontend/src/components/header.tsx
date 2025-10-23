@@ -26,6 +26,7 @@ interface HeaderProps {
     label: string;
     onBack: () => void;
   };
+  title?: string;
 }
 
 function getLanguageEmoji(language: Language | undefined): string {
@@ -46,6 +47,7 @@ export function Header({
   showSignupNag = false,
   language,
   backButton,
+  title = "Yap.Town",
 }: HeaderProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [defaultView, setDefaultView] = useState<"signin" | "signup">("signin");
@@ -87,8 +89,8 @@ export function Header({
                   </div>
                 )}
                 <h1 className="text-2xl font-bold">
-                  <span className="hidden sm:inline">Yap.Town</span>
-                  <span className="sm:hidden">Yap</span>
+                  <span className="hidden sm:inline">{title}</span>
+                  <span className="sm:hidden">{title.split('.')[0]}</span>
                 </h1>
               </div>
               {userInfo && <div className="animate-fade-in-delayed"><SyncStatusDialog /></div>}

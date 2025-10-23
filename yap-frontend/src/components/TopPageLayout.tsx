@@ -15,6 +15,7 @@ interface TopPageLayoutProps {
       label: string;
       onBack: () => void;
     };
+    title?: string;
   };
 }
 

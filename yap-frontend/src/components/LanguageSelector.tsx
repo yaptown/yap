@@ -27,6 +27,8 @@ import { cn, languageFlags, nativeLanguageNames } from "@/lib/utils";
 import type { Language } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { useWeapon } from "@/weapon";
 import { get_available_courses } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
+import { TopPageLayout } from "@/components/TopPageLayout";
+import type { UserInfo } from "@/App";
 
 type LanguageSelectionState =
   | { stage: "selectingNative" }
@@ -44,6 +46,8 @@ interface LanguageSelectorProps {
   currentTargetLanguage?: Language;
   showResumeButton?: boolean;
   onResume?: () => void;
+  userInfo?: UserInfo;
+  onBack: () => void;
 }
 
 export function LanguageSelector({
@@ -52,6 +56,8 @@ export function LanguageSelector({
   currentTargetLanguage,
   showResumeButton,
   onResume,
+  userInfo,
+  onBack,
 }: LanguageSelectorProps) {
   const [selectionState, setSelectionState] = useState<LanguageSelectionState>({
     stage: "selectingNative",
@@ -155,6 +161,15 @@ export function LanguageSelector({
     Spanish: "Hablo español",
     Korean: "한국어를 합니다",
     German: "Ich spreche Deutsch",
+  };
+
+  // "Yap.Town" in each language
+  const yaptownNames: Record<Language, string> = {
+    English: "Yap.Town",
+    French: "Yap.Ville",
+    Spanish: "Yap.Ciudad",
+    Korean: "얍.타운",
+    German: "Yap.Stadt",
   };
 
   const languageColors: Record<
@@ -279,8 +294,22 @@ export function LanguageSelector({
     []
   );
 
+  // Determine the Yaptown title to display based on selection state
+  const yaptownTitle =
+    selectionState.stage === "askingExperience" ||
+    selectionState.stage === "onboarding"
+      ? yaptownNames[selectionState.targetLanguage]
+      : "Yap.Town";
+
   return (
-    <>
+    <TopPageLayout
+      userInfo={userInfo}
+      headerProps={{
+        showSignupNag: false,
+        title: yaptownTitle,
+        backButton: { label: yaptownTitle, onBack },
+      }}
+    >
       {/* Full-page animated background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {floatingWords.map((word, index) => (
@@ -784,6 +813,6 @@ export function LanguageSelector({
           ) : null}
         </AnimatePresence>
       </div>
-    </>
+    </TopPageLayout>
   );
 }
