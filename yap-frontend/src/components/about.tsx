@@ -1,7 +1,7 @@
 export function About() {
   return (
     <div className="text-center text-xs text-muted-foreground mt-4">
-      yap is created by{" "}
+      yap.town is created by{" "}
       <a href="https://twitter.com/chadnauseam" className="underline">
         Andre Popovitch
       </a>

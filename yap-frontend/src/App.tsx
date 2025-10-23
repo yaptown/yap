@@ -980,9 +980,16 @@ function SelectLanguagePage() {
       />
     ))
     .otherwise(() => (
-      <div className="flex-1 bg-background flex items-center justify-center">
-        <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
-      </div>
+      <TopPageLayout
+        userInfo={userInfo}
+        headerProps={{
+          backButton: { label: 'Yap.Town', onBack: () => navigate('/') }
+        }}
+      >
+        <div className="flex-1 bg-background flex items-center justify-center">
+          <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
+        </div>
+      </TopPageLayout>
     ))
 }
 

@@ -58,12 +58,12 @@ export function Header({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-4">
           {backButton ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={backButton.onBack}
-                className="h-8 w-8"
+                className="h-8 w-10"
                 title="Go back"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -78,13 +78,13 @@ export function Header({
                     variant="ghost"
                     size="icon"
                     onClick={onChangeLanguage}
-                    className="h-8 w-8 p-0 text-2xl"
+                    className="h-8 w-10 text-2xl"
                     title="Change language"
                   >
                     {getLanguageEmoji(language)}
                   </Button>
                 ) : (
-                  <div className="h-8 w-8 flex items-center justify-center text-2xl">
+                  <div className="h-8 w-10 flex items-center justify-center text-2xl">
                     {getLanguageEmoji(language)}
                   </div>
                 )}
