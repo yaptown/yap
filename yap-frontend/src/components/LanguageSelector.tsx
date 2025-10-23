@@ -42,12 +42,16 @@ interface LanguageSelectorProps {
   onLanguagesConfirmed: (native: Language, target: Language) => void;
   skipOnboarding: boolean;
   currentTargetLanguage?: Language;
+  showResumeButton?: boolean;
+  onResume?: () => void;
 }
 
 export function LanguageSelector({
   onLanguagesConfirmed,
   skipOnboarding,
   currentTargetLanguage,
+  showResumeButton,
+  onResume,
 }: LanguageSelectorProps) {
   const [selectionState, setSelectionState] = useState<LanguageSelectionState>({
     stage: "selectingNative",
@@ -479,6 +483,57 @@ export function LanguageSelector({
                   </Popover>
                 </div>
               </div>
+
+              {/* Resume button if already learning a language */}
+              {showResumeButton && currentTargetLanguage && onResume && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-full max-w-md mb-4"
+                >
+                  <Card
+                    className="relative overflow-hidden p-6 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-4"
+                    style={{
+                      borderColor: languageColors[currentTargetLanguage]?.primary,
+                    }}
+                    onClick={onResume}
+                  >
+                    <div
+                      className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300"
+                      style={{ background: languageColors[currentTargetLanguage]?.gradient }}
+                    />
+                    <div className="relative z-10 flex items-center justify-center gap-4">
+                      <div className="text-5xl">
+                        {languageFlags[currentTargetLanguage]}
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-2xl font-bold mb-1">
+                          Resume {nativeLanguageNames[currentTargetLanguage]}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Continue where you left off
+                        </p>
+                      </div>
+                      <ArrowRight className="h-6 w-6 ml-auto" />
+                    </div>
+                  </Card>
+                </motion.div>
+              )}
+
+              {showResumeButton && currentTargetLanguage && (
+                <div className="w-full max-w-md mb-2">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or choose a different language
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid md:grid-cols-3 grid-cols-2 gap-8 w-full">
                 {targetLanguages.map((lang) => (

@@ -954,11 +954,20 @@ function SelectLanguagePage() {
   const deck = useDeck()
   const navigate = useNavigate()
 
+  const headerProps = match(deck)
+    .with({ type: "deck", deck: P.not(P.nullish) }, () => ({
+      showSignupNag: false,
+      backButton: { label: 'Change Language', onBack: () => navigate('/') }
+    }))
+    .otherwise(() => ({ showSignupNag: false }))
+
   const content = match(deck)
     .with({ type: "deck", deck: P.not(P.nullish) }, ({ targetLanguage }) => (
       <LanguageSelector
         skipOnboarding={true}
         currentTargetLanguage={targetLanguage}
+        showResumeButton={true}
+        onResume={() => navigate('/')}
         onLanguagesConfirmed={(native, target) => {
           weapon.add_deck_selection_event({ SelectBothLanguages: { native, target } })
           navigate('/')
@@ -981,7 +990,7 @@ function SelectLanguagePage() {
     ))
 
   return (
-    <TopPageLayout userInfo={userInfo} headerProps={{ showSignupNag: false }}>
+    <TopPageLayout userInfo={userInfo} headerProps={headerProps}>
       {content}
     </TopPageLayout>
   )
