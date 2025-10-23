@@ -411,6 +411,7 @@ export function TranscriptionChallenge({
                   autoPlay={true}
                   autoplayed={autoplayed}
                   setAutoplayed={setAutoplayed}
+                  playPreAudio={true}
                 />
 
                 <AudioVisualizer />

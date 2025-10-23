@@ -21,6 +21,7 @@ interface AudioButtonProps {
     | "link";
   autoplayed?: boolean;
   setAutoplayed?: () => void;
+  playPreAudio?: boolean;
 }
 
 export function AudioButton({
@@ -32,6 +33,7 @@ export function AudioButton({
   variant = "ghost",
   autoplayed,
   setAutoplayed,
+  playPreAudio = false,
 }: AudioButtonProps) {
   "use memo";
   const [isPlaying, setIsPlaying] = useState(false);
@@ -68,6 +70,16 @@ export function AudioButton({
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
 
+        // Play pre-audio if enabled (to wake up Bluetooth headphones in low power mode)
+        if (playPreAudio) {
+          const preAudio = new Audio("/pre-audio.mp3");
+          await new Promise<void>((resolve, reject) => {
+            preAudio.onended = () => resolve();
+            preAudio.onerror = () => reject(new Error("Failed to play pre-audio"));
+            preAudio.play().catch(reject);
+          });
+        }
+
         await playAudio(audioRequest, accessToken, () => {
           if (clickedRef.current) {
             setNeedsAuth(true);
@@ -79,7 +91,7 @@ export function AudioButton({
         setIsPlaying(false);
       }
     },
-    [audioRequest, accessToken]
+    [audioRequest, accessToken, playPreAudio]
   );
 
   // Auto-play audio when text changes (if autoPlay is enabled)

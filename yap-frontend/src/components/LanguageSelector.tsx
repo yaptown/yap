@@ -47,7 +47,7 @@ interface LanguageSelectorProps {
   showResumeButton?: boolean;
   onResume?: () => void;
   userInfo?: UserInfo;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export function LanguageSelector({
@@ -307,7 +307,7 @@ export function LanguageSelector({
       headerProps={{
         showSignupNag: false,
         title: yaptownTitle,
-        backButton: { label: yaptownTitle, onBack },
+        backButton: onBack ? { label: yaptownTitle, onBack } : undefined,
       }}
     >
       {/* Full-page animated background */}
