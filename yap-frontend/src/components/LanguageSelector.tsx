@@ -311,7 +311,12 @@ export function LanguageSelector({
       }}
     >
       {/* Full-page animated background */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      <motion.div
+        className="fixed inset-0 pointer-events-none overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         {floatingWords.map((word, index) => (
           <motion.div
             key={`${word.text}-${index}`}
@@ -374,7 +379,7 @@ export function LanguageSelector({
             }}
           />
         ))}
-      </div>
+      </motion.div>
 
       {/* Main content */}
       <div className="relative z-10 flex items-center justify-center mt-8">
