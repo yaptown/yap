@@ -1101,15 +1101,23 @@ impl Morphology {
     ) -> Option<WordPrefix> {
         match (language, pos) {
             (Language::French, PartOfSpeech::Noun) => self.get_french_noun_prefix(word),
-            (Language::French, PartOfSpeech::Verb) => self.get_french_verb_prefix(),
+            (Language::French, PartOfSpeech::Verb | PartOfSpeech::Aux) => {
+                self.get_french_verb_prefix()
+            }
             (Language::French, _) => None,
             (Language::Spanish, PartOfSpeech::Noun) => self.get_spanish_noun_prefix(),
-            (Language::Spanish, PartOfSpeech::Verb) => self.get_spanish_verb_prefix(),
+            (Language::Spanish, PartOfSpeech::Verb | PartOfSpeech::Aux) => {
+                self.get_spanish_verb_prefix()
+            }
             (Language::Spanish, _) => None,
             (Language::German, PartOfSpeech::Noun) => self.get_german_noun_prefix(),
-            (Language::German, PartOfSpeech::Verb) => self.get_german_verb_prefix(),
+            (Language::German, PartOfSpeech::Verb | PartOfSpeech::Aux) => {
+                self.get_german_verb_prefix()
+            }
             (Language::German, _) => None,
-            (Language::English, PartOfSpeech::Verb) => self.get_english_verb_prefix(),
+            (Language::English, PartOfSpeech::Verb | PartOfSpeech::Aux) => {
+                self.get_english_verb_prefix()
+            }
             (Language::Korean | Language::English, _) => None,
         }
     }

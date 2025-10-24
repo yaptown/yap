@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import {
   Dialog,
@@ -131,12 +132,13 @@ export function AuthDialog({
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
               <div className="text-center">
-                <a
-                  href="/forgot-password"
+                <Link
+                  to="/forgot-password"
+                  onClick={() => onOpenChange(false)}
                   className="text-sm text-muted-foreground hover:text-foreground underline"
                 >
                   Forgot your password?
-                </a>
+                </Link>
               </div>
             </form>
           </TabsContent>

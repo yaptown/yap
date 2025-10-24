@@ -742,6 +742,20 @@ impl Literal<String> {
         language: Language,
         is_first_word: bool,
     ) -> Self {
+        if doc_token.pos == PartOfSpeech::Space {
+            let whitespace = match (doc_token.text.as_str(), doc_token.whitespace.as_str()) {
+                ("", "") => " ".to_string(),
+                ("", whitespace) => whitespace.to_string(),
+                (text, "") => text.to_string(),
+                (text, whitespace) => format!("{text}{whitespace}"),
+            };
+            return Self {
+                text: "".to_string(),
+                whitespace,
+                heteronym: None,
+            };
+        }
+
         Self {
             text: doc_token.text.clone(),
             whitespace: doc_token.whitespace.clone(),
@@ -1261,6 +1275,7 @@ impl ConsolidatedLanguageData {
         for (_, sentence_info) in &self.nlp_sentences {
             for word in &sentence_info.words {
                 rodeo.get_or_intern(&word.text);
+                rodeo.get_or_intern(&word.whitespace);
             }
         }
 

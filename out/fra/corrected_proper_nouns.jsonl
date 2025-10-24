@@ -477,6 +477,7 @@
 ["y",{"Heteronym":{"word":"y","lemma":"y","pos":"PRON"}}]
 ["yo",{"Heteronym":{"word":"yo","lemma":"yo","pos":"INTJ"}}]
 ["yodle",{"Heteronym":{"word":"yodle","lemma":"yodle","pos":"NOUN"}}]
+["zen",{"Heteronym":{"word":"zen","lemma":"zen","pos":"ADJ"}}]
 ["zoo",{"Heteronym":{"word":"zoo","lemma":"zoo","pos":"NOUN"}}]
 ["zou",{"Heteronym":{"word":"zou","lemma":"zou","pos":"INTJ"}}]
 ["zozote",{"Heteronym":{"word":"zozote","lemma":"zozoter","pos":"VERB"}}]
@@ -489,4 +490,5 @@
 ["éclipse",{"Heteronym":{"word":"éclipse","lemma":"éclipse","pos":"NOUN"}}]
 ["épouse",{"Heteronym":{"word":"épouse","lemma":"épouse","pos":"NOUN"}}]
 ["éructa",{"Heteronym":{"word":"éructa","lemma":"éructer","pos":"VERB"}}]
+["île",{"Heteronym":{"word":"île","lemma":"île","pos":"NOUN"}}]
 ["оn",{"Heteronym":{"word":"on","lemma":"on","pos":"PRON"}}]

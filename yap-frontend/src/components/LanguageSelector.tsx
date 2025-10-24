@@ -365,6 +365,7 @@ export function LanguageSelector({
               }, transparent)`,
               left: `${index * 20}%`,
               top: `${index % 2 === 0 ? -10 : 60}%`,
+              willChange: "transform",
             }}
             animate={{
               x: [0, 100, -50, 0],

@@ -34,10 +34,8 @@
 {"lexeme":{"Heteronym":{"word":"on","lemma":"on","pos":"PRON"}},"count":7041}
 {"lexeme":{"Multiword":"ne pas"},"count":6929}
 {"lexeme":{"Heteronym":{"word":"qui","lemma":"qui","pos":"PRON"}},"count":6807}
-{"lexeme":{"Heteronym":{"word":" ","lemma":" ","pos":"SPACE"}},"count":6769}
 {"lexeme":{"Heteronym":{"word":"y","lemma":"y","pos":"PRON"}},"count":6666}
 {"lexeme":{"Multiword":"est-ce"},"count":6433}
-{"lexeme":{"Heteronym":{"word":" ","lemma":" ","pos":"SPACE"}},"count":6233}
 {"lexeme":{"Heteronym":{"word":"faire","lemma":"faire","pos":"VERB"}},"count":6108}
 {"lexeme":{"Heteronym":{"word":"sont","lemma":"être","pos":"AUX"}},"count":6079}
 {"lexeme":{"Heteronym":{"word":"veux","lemma":"vouloir","pos":"VERB"}},"count":5917}
@@ -2094,6 +2092,7 @@
 {"lexeme":{"Heteronym":{"word":"test","lemma":"test","pos":"NOUN"}},"count":69}
 {"lexeme":{"Heteronym":{"word":"vendu","lemma":"vendre","pos":"VERB"}},"count":69}
 {"lexeme":{"Heteronym":{"word":"écrivez","lemma":"écrire","pos":"VERB"}},"count":69}
+{"lexeme":{"Heteronym":{"word":"île","lemma":"île","pos":"NOUN"}},"count":69}
 {"lexeme":{"Multiword":"tenir de"},"count":69}
 {"lexeme":{"Heteronym":{"word":"aimer","lemma":"aimer","pos":"VERB"}},"count":68}
 {"lexeme":{"Heteronym":{"word":"billet","lemma":"billet","pos":"NOUN"}},"count":68}
@@ -2114,8 +2113,6 @@
 {"lexeme":{"Heteronym":{"word":"rouge","lemma":"rouge","pos":"NOUN"}},"count":68}
 {"lexeme":{"Heteronym":{"word":"rues","lemma":"rue","pos":"NOUN"}},"count":68}
 {"lexeme":{"Heteronym":{"word":"salaire","lemma":"salaire","pos":"NOUN"}},"count":68}
-{"lexeme":{"Heteronym":{"word":"île","lemma":"île","pos":"NOUN"}},"count":68}
-{"lexeme":{"Heteronym":{"word":" ","lemma":" ","pos":"SPACE"}},"count":68}
 {"lexeme":{"Multiword":"faire peur"},"count":68}
 {"lexeme":{"Multiword":"numéro de téléphone"},"count":68}
 {"lexeme":{"Heteronym":{"word":"amené","lemma":"amener","pos":"VERB"}},"count":67}
@@ -8963,7 +8960,6 @@
 {"lexeme":{"Heteronym":{"word":"évanoui","lemma":"évanouir","pos":"VERB"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"évolué","lemma":"évoluer","pos":"VERB"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"ôté","lemma":"ôter","pos":"VERB"}},"count":9}
-{"lexeme":{"Heteronym":{"word":"  ","lemma":"  ","pos":"SPACE"}},"count":9}
 {"lexeme":{"Multiword":"Seconde Guerre mondiale"},"count":9}
 {"lexeme":{"Multiword":"aller tout seul"},"count":9}
 {"lexeme":{"Multiword":"aller-retour"},"count":9}
@@ -13254,6 +13250,7 @@
 {"lexeme":{"Heteronym":{"word":"vulgaire","lemma":"vulgaire","pos":"ADJ"}},"count":5}
 {"lexeme":{"Heteronym":{"word":"végétalien","lemma":"végétalien","pos":"ADJ"}},"count":5}
 {"lexeme":{"Heteronym":{"word":"vêtu","lemma":"vêtir","pos":"VERB"}},"count":5}
+{"lexeme":{"Heteronym":{"word":"zen","lemma":"zen","pos":"ADJ"}},"count":5}
 {"lexeme":{"Heteronym":{"word":"zombis","lemma":"zombi","pos":"NOUN"}},"count":5}
 {"lexeme":{"Heteronym":{"word":"échangions","lemma":"échanger","pos":"VERB"}},"count":5}
 {"lexeme":{"Heteronym":{"word":"échoua","lemma":"échouer","pos":"VERB"}},"count":5}
@@ -18508,7 +18505,6 @@
 {"lexeme":{"Heteronym":{"word":"x","lemma":"x","pos":"NOUN"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"y'","lemma":"y'","pos":"PRON"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"yachts","lemma":"yacht","pos":"NOUN"}},"count":3}
-{"lexeme":{"Heteronym":{"word":"zen","lemma":"zen","pos":"ADJ"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"zinc","lemma":"zinc","pos":"NOUN"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"zombie","lemma":"zombie","pos":"NOUN"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"zoologie","lemma":"zoologie","pos":"NOUN"}},"count":3}
@@ -24071,7 +24067,6 @@
 {"lexeme":{"Heteronym":{"word":"évêque","lemma":"évêque","pos":"NOUN"}},"count":2}
 {"lexeme":{"Heteronym":{"word":"œuvrer","lemma":"œuvrer","pos":"VERB"}},"count":2}
 {"lexeme":{"Heteronym":{"word":"​​la","lemma":"​​la","pos":"DET"}},"count":2}
-{"lexeme":{"Heteronym":{"word":"  ","lemma":"  ","pos":"SPACE"}},"count":2}
 {"lexeme":{"Multiword":"Afrique du Sud"},"count":2}
 {"lexeme":{"Multiword":"C'est toi qui vois"},"count":2}
 {"lexeme":{"Multiword":"Caroline du Nord"},"count":2}
@@ -37564,8 +37559,6 @@
 {"lexeme":{"Heteronym":{"word":"​​cachent","lemma":"​​cacher","pos":"VERB"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"​​mon","lemma":"​​mon","pos":"DET"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"’","lemma":"’","pos":"DET"}},"count":1}
-{"lexeme":{"Heteronym":{"word":"  ","lemma":"  ","pos":"SPACE"}},"count":1}
-{"lexeme":{"Heteronym":{"word":"  ","lemma":"  ","pos":"SPACE"}},"count":1}
 {"lexeme":{"Multiword":"Alexandre le Grand"},"count":1}
 {"lexeme":{"Multiword":"Amérique latine"},"count":1}
 {"lexeme":{"Multiword":"Antigua-et-Barbuda"},"count":1}

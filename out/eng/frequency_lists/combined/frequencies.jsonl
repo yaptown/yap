@@ -1,325 +1,328 @@
-{"lexeme":{"Heteronym":{"word":"i","lemma":"i","pos":"PRON"}},"count":32841}
-{"lexeme":{"Heteronym":{"word":"you","lemma":"you","pos":"PRON"}},"count":31114}
-{"lexeme":{"Heteronym":{"word":"the","lemma":"the","pos":"DET"}},"count":20814}
-{"lexeme":{"Heteronym":{"word":"it","lemma":"it","pos":"PRON"}},"count":17974}
-{"lexeme":{"Heteronym":{"word":"a","lemma":"a","pos":"DET"}},"count":13740}
-{"lexeme":{"Heteronym":{"word":"to","lemma":"to","pos":"PART"}},"count":13551}
-{"lexeme":{"Heteronym":{"word":"'s","lemma":"be","pos":"AUX"}},"count":11347}
-{"lexeme":{"Heteronym":{"word":"is","lemma":"be","pos":"AUX"}},"count":10031}
-{"lexeme":{"Heteronym":{"word":"what","lemma":"what","pos":"PRON"}},"count":8815}
-{"lexeme":{"Heteronym":{"word":"that","lemma":"that","pos":"PRON"}},"count":6802}
-{"lexeme":{"Heteronym":{"word":"of","lemma":"of","pos":"ADP"}},"count":6725}
-{"lexeme":{"Heteronym":{"word":"have","lemma":"have","pos":"VERB"}},"count":6412}
+{"lexeme":{"Heteronym":{"word":"i","lemma":"i","pos":"PRON"}},"count":32834}
+{"lexeme":{"Heteronym":{"word":"you","lemma":"you","pos":"PRON"}},"count":31102}
+{"lexeme":{"Heteronym":{"word":"the","lemma":"the","pos":"DET"}},"count":20804}
+{"lexeme":{"Heteronym":{"word":"it","lemma":"it","pos":"PRON"}},"count":17967}
+{"lexeme":{"Heteronym":{"word":"a","lemma":"a","pos":"DET"}},"count":13739}
+{"lexeme":{"Heteronym":{"word":"to","lemma":"to","pos":"PART"}},"count":13548}
+{"lexeme":{"Heteronym":{"word":"'s","lemma":"be","pos":"AUX"}},"count":11344}
+{"lexeme":{"Heteronym":{"word":"is","lemma":"be","pos":"AUX"}},"count":10026}
+{"lexeme":{"Heteronym":{"word":"what","lemma":"what","pos":"PRON"}},"count":8811}
+{"lexeme":{"Heteronym":{"word":"that","lemma":"that","pos":"PRON"}},"count":6800}
+{"lexeme":{"Heteronym":{"word":"of","lemma":"of","pos":"ADP"}},"count":6721}
+{"lexeme":{"Heteronym":{"word":"have","lemma":"have","pos":"VERB"}},"count":6411}
 {"lexeme":{"Multiword":"I am"},"count":6380}
 {"lexeme":{"Heteronym":{"word":"we","lemma":"we","pos":"PRON"}},"count":6378}
-{"lexeme":{"Heteronym":{"word":"he","lemma":"he","pos":"PRON"}},"count":6061}
-{"lexeme":{"Heteronym":{"word":"me","lemma":"i","pos":"PRON"}},"count":5865}
-{"lexeme":{"Heteronym":{"word":"in","lemma":"in","pos":"ADP"}},"count":5699}
-{"lexeme":{"Heteronym":{"word":"and","lemma":"and","pos":"CCONJ"}},"count":5633}
-{"lexeme":{"Heteronym":{"word":"to","lemma":"to","pos":"ADP"}},"count":5617}
-{"lexeme":{"Heteronym":{"word":"my","lemma":"my","pos":"PRON"}},"count":5376}
+{"lexeme":{"Heteronym":{"word":"he","lemma":"he","pos":"PRON"}},"count":6059}
+{"lexeme":{"Heteronym":{"word":"me","lemma":"i","pos":"PRON"}},"count":5864}
+{"lexeme":{"Heteronym":{"word":"in","lemma":"in","pos":"ADP"}},"count":5697}
+{"lexeme":{"Heteronym":{"word":"and","lemma":"and","pos":"CCONJ"}},"count":5626}
+{"lexeme":{"Heteronym":{"word":"to","lemma":"to","pos":"ADP"}},"count":5616}
+{"lexeme":{"Heteronym":{"word":"my","lemma":"my","pos":"PRON"}},"count":5374}
 {"lexeme":{"Heteronym":{"word":"are","lemma":"be","pos":"AUX"}},"count":5355}
-{"lexeme":{"Heteronym":{"word":"for","lemma":"for","pos":"ADP"}},"count":5355}
+{"lexeme":{"Heteronym":{"word":"for","lemma":"for","pos":"ADP"}},"count":5353}
 {"lexeme":{"Heteronym":{"word":"do","lemma":"do","pos":"AUX"}},"count":5262}
-{"lexeme":{"Heteronym":{"word":"your","lemma":"your","pos":"PRON"}},"count":4865}
-{"lexeme":{"Heteronym":{"word":"this","lemma":"this","pos":"PRON"}},"count":4741}
+{"lexeme":{"Heteronym":{"word":"your","lemma":"your","pos":"PRON"}},"count":4864}
+{"lexeme":{"Heteronym":{"word":"this","lemma":"this","pos":"PRON"}},"count":4739}
 {"lexeme":{"Heteronym":{"word":"n't","lemma":"not","pos":"PART"}},"count":4673}
 {"lexeme":{"Heteronym":{"word":"be","lemma":"be","pos":"AUX"}},"count":4205}
 {"lexeme":{"Heteronym":{"word":"was","lemma":"be","pos":"AUX"}},"count":4122}
-{"lexeme":{"Heteronym":{"word":"do","lemma":"do","pos":"VERB"}},"count":4093}
+{"lexeme":{"Heteronym":{"word":"do","lemma":"do","pos":"VERB"}},"count":4092}
 {"lexeme":{"Multiword":"do you"},"count":4012}
 {"lexeme":{"Multiword":"that is"},"count":3876}
-{"lexeme":{"Heteronym":{"word":"know","lemma":"know","pos":"VERB"}},"count":3782}
+{"lexeme":{"Heteronym":{"word":"know","lemma":"know","pos":"VERB"}},"count":3780}
 {"lexeme":{"Heteronym":{"word":"'ll","lemma":"will","pos":"AUX"}},"count":3687}
 {"lexeme":{"Heteronym":{"word":"will","lemma":"will","pos":"AUX"}},"count":3378}
-{"lexeme":{"Heteronym":{"word":"him","lemma":"he","pos":"PRON"}},"count":3342}
+{"lexeme":{"Heteronym":{"word":"him","lemma":"he","pos":"PRON"}},"count":3340}
 {"lexeme":{"Heteronym":{"word":"'m","lemma":"be","pos":"AUX"}},"count":3338}
-{"lexeme":{"Heteronym":{"word":"they","lemma":"they","pos":"PRON"}},"count":3291}
-{"lexeme":{"Heteronym":{"word":"want","lemma":"want","pos":"VERB"}},"count":3268}
-{"lexeme":{"Multiword":"is it"},"count":3168}
-{"lexeme":{"Heteronym":{"word":"can","lemma":"can","pos":"AUX"}},"count":3155}
-{"lexeme":{"Heteronym":{"word":"on","lemma":"on","pos":"ADP"}},"count":2964}
-{"lexeme":{"Heteronym":{"word":"she","lemma":"she","pos":"PRON"}},"count":2934}
+{"lexeme":{"Heteronym":{"word":"they","lemma":"they","pos":"PRON"}},"count":3290}
+{"lexeme":{"Heteronym":{"word":"want","lemma":"want","pos":"VERB"}},"count":3266}
+{"lexeme":{"Multiword":"is it"},"count":3167}
+{"lexeme":{"Heteronym":{"word":"can","lemma":"can","pos":"AUX"}},"count":3153}
+{"lexeme":{"Heteronym":{"word":"on","lemma":"on","pos":"ADP"}},"count":2962}
+{"lexeme":{"Heteronym":{"word":"she","lemma":"she","pos":"PRON"}},"count":2929}
 {"lexeme":{"Multiword":"have to"},"count":2892}
-{"lexeme":{"Heteronym":{"word":"with","lemma":"with","pos":"ADP"}},"count":2841}
+{"lexeme":{"Heteronym":{"word":"with","lemma":"with","pos":"ADP"}},"count":2835}
 {"lexeme":{"Multiword":"go to"},"count":2818}
 {"lexeme":{"Multiword":"going to"},"count":2818}
 {"lexeme":{"Heteronym":{"word":"see","lemma":"see","pos":"VERB"}},"count":2757}
-{"lexeme":{"Heteronym":{"word":"here","lemma":"here","pos":"ADV"}},"count":2739}
+{"lexeme":{"Heteronym":{"word":"here","lemma":"here","pos":"ADV"}},"count":2735}
 {"lexeme":{"Heteronym":{"word":"go","lemma":"go","pos":"VERB"}},"count":2709}
 {"lexeme":{"Heteronym":{"word":"going","lemma":"go","pos":"VERB"}},"count":2638}
-{"lexeme":{"Heteronym":{"word":"good","lemma":"good","pos":"ADJ"}},"count":2518}
-{"lexeme":{"Heteronym":{"word":"think","lemma":"think","pos":"VERB"}},"count":2416}
+{"lexeme":{"Heteronym":{"word":"good","lemma":"good","pos":"ADJ"}},"count":2516}
+{"lexeme":{"Multiword":"want to"},"count":2444}
+{"lexeme":{"Heteronym":{"word":"think","lemma":"think","pos":"VERB"}},"count":2415}
 {"lexeme":{"Multiword":"be gone"},"count":2394}
 {"lexeme":{"Heteronym":{"word":"'re","lemma":"be","pos":"AUX"}},"count":2331}
-{"lexeme":{"Heteronym":{"word":"about","lemma":"about","pos":"ADP"}},"count":2275}
-{"lexeme":{"Heteronym":{"word":"but","lemma":"but","pos":"CCONJ"}},"count":2272}
+{"lexeme":{"Heteronym":{"word":"about","lemma":"about","pos":"ADP"}},"count":2273}
+{"lexeme":{"Heteronym":{"word":"but","lemma":"but","pos":"CCONJ"}},"count":2268}
 {"lexeme":{"Heteronym":{"word":"did","lemma":"do","pos":"AUX"}},"count":2159}
 {"lexeme":{"Heteronym":{"word":"there","lemma":"there","pos":"PRON"}},"count":2114}
-{"lexeme":{"Heteronym":{"word":"how","lemma":"how","pos":"SCONJ"}},"count":2051}
+{"lexeme":{"Heteronym":{"word":"how","lemma":"how","pos":"SCONJ"}},"count":2049}
 {"lexeme":{"Multiword":"I do"},"count":2047}
 {"lexeme":{"Multiword":"there are"},"count":2047}
 {"lexeme":{"Multiword":"there be"},"count":2047}
 {"lexeme":{"Multiword":"there is"},"count":2047}
 {"lexeme":{"Multiword":"there was"},"count":2047}
 {"lexeme":{"Multiword":"there were"},"count":2047}
-{"lexeme":{"Heteronym":{"word":"not","lemma":"not","pos":"PART"}},"count":2009}
-{"lexeme":{"Heteronym":{"word":"have","lemma":"have","pos":"AUX"}},"count":2004}
-{"lexeme":{"Heteronym":{"word":"one","lemma":"one","pos":"NUM"}},"count":1947}
-{"lexeme":{"Heteronym":{"word":"this","lemma":"this","pos":"DET"}},"count":1913}
-{"lexeme":{"Heteronym":{"word":"time","lemma":"time","pos":"NOUN"}},"count":1882}
-{"lexeme":{"Heteronym":{"word":"tell","lemma":"tell","pos":"VERB"}},"count":1878}
+{"lexeme":{"Heteronym":{"word":"have","lemma":"have","pos":"AUX"}},"count":2003}
+{"lexeme":{"Heteronym":{"word":"not","lemma":"not","pos":"PART"}},"count":1993}
+{"lexeme":{"Heteronym":{"word":"one","lemma":"one","pos":"NUM"}},"count":1943}
+{"lexeme":{"Heteronym":{"word":"this","lemma":"this","pos":"DET"}},"count":1902}
+{"lexeme":{"Heteronym":{"word":"time","lemma":"time","pos":"NOUN"}},"count":1880}
+{"lexeme":{"Heteronym":{"word":"tell","lemma":"tell","pos":"VERB"}},"count":1877}
 {"lexeme":{"Multiword":"be going to"},"count":1857}
-{"lexeme":{"Heteronym":{"word":"at","lemma":"at","pos":"ADP"}},"count":1854}
+{"lexeme":{"Heteronym":{"word":"at","lemma":"at","pos":"ADP"}},"count":1851}
 {"lexeme":{"Heteronym":{"word":"something","lemma":"something","pos":"PRON"}},"count":1839}
-{"lexeme":{"Heteronym":{"word":"come","lemma":"come","pos":"VERB"}},"count":1797}
-{"lexeme":{"Heteronym":{"word":"who","lemma":"who","pos":"PRON"}},"count":1797}
+{"lexeme":{"Heteronym":{"word":"come","lemma":"come","pos":"VERB"}},"count":1795}
+{"lexeme":{"Heteronym":{"word":"who","lemma":"who","pos":"PRON"}},"count":1792}
 {"lexeme":{"Heteronym":{"word":"take","lemma":"take","pos":"VERB"}},"count":1786}
-{"lexeme":{"Heteronym":{"word":"just","lemma":"just","pos":"ADV"}},"count":1784}
-{"lexeme":{"Heteronym":{"word":"yes","lemma":"yes","pos":"INTJ"}},"count":1772}
+{"lexeme":{"Heteronym":{"word":"just","lemma":"just","pos":"ADV"}},"count":1776}
+{"lexeme":{"Heteronym":{"word":"yes","lemma":"yes","pos":"INTJ"}},"count":1759}
 {"lexeme":{"Multiword":"being that"},"count":1751}
-{"lexeme":{"Heteronym":{"word":"very","lemma":"very","pos":"ADV"}},"count":1741}
+{"lexeme":{"Heteronym":{"word":"very","lemma":"very","pos":"ADV"}},"count":1735}
 {"lexeme":{"Multiword":"I know"},"count":1691}
-{"lexeme":{"Heteronym":{"word":"so","lemma":"so","pos":"ADV"}},"count":1684}
+{"lexeme":{"Heteronym":{"word":"so","lemma":"so","pos":"ADV"}},"count":1678}
 {"lexeme":{"Multiword":"to go"},"count":1628}
-{"lexeme":{"Heteronym":{"word":"there","lemma":"there","pos":"ADV"}},"count":1616}
-{"lexeme":{"Heteronym":{"word":"us","lemma":"we","pos":"PRON"}},"count":1612}
+{"lexeme":{"Heteronym":{"word":"there","lemma":"there","pos":"ADV"}},"count":1610}
 {"lexeme":{"Multiword":"you know"},"count":1608}
-{"lexeme":{"Heteronym":{"word":"them","lemma":"they","pos":"PRON"}},"count":1576}
-{"lexeme":{"Heteronym":{"word":"if","lemma":"if","pos":"SCONJ"}},"count":1575}
-{"lexeme":{"Heteronym":{"word":"now","lemma":"now","pos":"ADV"}},"count":1567}
+{"lexeme":{"Heteronym":{"word":"us","lemma":"we","pos":"PRON"}},"count":1601}
+{"lexeme":{"Heteronym":{"word":"if","lemma":"if","pos":"SCONJ"}},"count":1574}
+{"lexeme":{"Heteronym":{"word":"them","lemma":"they","pos":"PRON"}},"count":1572}
+{"lexeme":{"Heteronym":{"word":"now","lemma":"now","pos":"ADV"}},"count":1564}
 {"lexeme":{"Heteronym":{"word":"'ve","lemma":"have","pos":"AUX"}},"count":1546}
-{"lexeme":{"Heteronym":{"word":"where","lemma":"where","pos":"SCONJ"}},"count":1515}
-{"lexeme":{"Heteronym":{"word":"say","lemma":"say","pos":"VERB"}},"count":1491}
-{"lexeme":{"Heteronym":{"word":"his","lemma":"his","pos":"PRON"}},"count":1490}
+{"lexeme":{"Heteronym":{"word":"where","lemma":"where","pos":"SCONJ"}},"count":1513}
+{"lexeme":{"Heteronym":{"word":"say","lemma":"say","pos":"VERB"}},"count":1490}
+{"lexeme":{"Heteronym":{"word":"his","lemma":"his","pos":"PRON"}},"count":1469}
 {"lexeme":{"Multiword":"that's that"},"count":1439}
 {"lexeme":{"Heteronym":{"word":"let","lemma":"let","pos":"VERB"}},"count":1435}
 {"lexeme":{"Heteronym":{"word":"get","lemma":"get","pos":"VERB"}},"count":1410}
 {"lexeme":{"Heteronym":{"word":"need","lemma":"need","pos":"VERB"}},"count":1390}
-{"lexeme":{"Heteronym":{"word":"her","lemma":"she","pos":"PRON"}},"count":1389}
-{"lexeme":{"Heteronym":{"word":"an","lemma":"an","pos":"DET"}},"count":1371}
-{"lexeme":{"Heteronym":{"word":"like","lemma":"like","pos":"ADP"}},"count":1340}
+{"lexeme":{"Heteronym":{"word":"her","lemma":"she","pos":"PRON"}},"count":1385}
+{"lexeme":{"Heteronym":{"word":"an","lemma":"an","pos":"DET"}},"count":1370}
 {"lexeme":{"Multiword":"do it"},"count":1333}
 {"lexeme":{"Multiword":"told you"},"count":1326}
-{"lexeme":{"Heteronym":{"word":"from","lemma":"from","pos":"ADP"}},"count":1307}
-{"lexeme":{"Heteronym":{"word":"everything","lemma":"everything","pos":"PRON"}},"count":1258}
+{"lexeme":{"Heteronym":{"word":"like","lemma":"like","pos":"ADP"}},"count":1322}
+{"lexeme":{"Heteronym":{"word":"from","lemma":"from","pos":"ADP"}},"count":1294}
+{"lexeme":{"Heteronym":{"word":"everything","lemma":"everything","pos":"PRON"}},"count":1252}
 {"lexeme":{"Multiword":"be there"},"count":1235}
 {"lexeme":{"Heteronym":{"word":"would","lemma":"would","pos":"AUX"}},"count":1234}
 {"lexeme":{"Heteronym":{"word":"all","lemma":"all","pos":"PRON"}},"count":1184}
+{"lexeme":{"Multiword":"be to"},"count":1157}
 {"lexeme":{"Multiword":"to the"},"count":1156}
 {"lexeme":{"Heteronym":{"word":"out","lemma":"out","pos":"ADP"}},"count":1137}
-{"lexeme":{"Heteronym":{"word":"no","lemma":"no","pos":"INTJ"}},"count":1126}
+{"lexeme":{"Heteronym":{"word":"no","lemma":"no","pos":"INTJ"}},"count":1123}
 {"lexeme":{"Heteronym":{"word":"am","lemma":"be","pos":"AUX"}},"count":1093}
 {"lexeme":{"Heteronym":{"word":"were","lemma":"be","pos":"AUX"}},"count":1092}
-{"lexeme":{"Heteronym":{"word":"all","lemma":"all","pos":"DET"}},"count":1074}
+{"lexeme":{"Heteronym":{"word":"all","lemma":"all","pos":"DET"}},"count":1069}
 {"lexeme":{"Heteronym":{"word":"up","lemma":"up","pos":"ADP"}},"count":1059}
 {"lexeme":{"Heteronym":{"word":"talk","lemma":"talk","pos":"VERB"}},"count":1044}
 {"lexeme":{"Multiword":"see you"},"count":1039}
 {"lexeme":{"Multiword":"I see"},"count":1025}
-{"lexeme":{"Heteronym":{"word":"never","lemma":"never","pos":"ADV"}},"count":1017}
+{"lexeme":{"Heteronym":{"word":"never","lemma":"never","pos":"ADV"}},"count":1013}
 {"lexeme":{"Heteronym":{"word":"give","lemma":"give","pos":"VERB"}},"count":1007}
-{"lexeme":{"Heteronym":{"word":"must","lemma":"must","pos":"AUX"}},"count":1004}
 {"lexeme":{"Multiword":"know what"},"count":1003}
-{"lexeme":{"Heteronym":{"word":"back","lemma":"back","pos":"ADV"}},"count":995}
-{"lexeme":{"Heteronym":{"word":"been","lemma":"be","pos":"AUX"}},"count":993}
-{"lexeme":{"Heteronym":{"word":"had","lemma":"have","pos":"VERB"}},"count":993}
+{"lexeme":{"Heteronym":{"word":"must","lemma":"must","pos":"AUX"}},"count":1002}
+{"lexeme":{"Heteronym":{"word":"back","lemma":"back","pos":"ADV"}},"count":993}
 {"lexeme":{"Heteronym":{"word":"thank","lemma":"thank","pos":"VERB"}},"count":993}
+{"lexeme":{"Heteronym":{"word":"been","lemma":"be","pos":"AUX"}},"count":992}
+{"lexeme":{"Heteronym":{"word":"had","lemma":"have","pos":"VERB"}},"count":991}
 {"lexeme":{"Heteronym":{"word":"should","lemma":"should","pos":"AUX"}},"count":985}
 {"lexeme":{"Heteronym":{"word":"look","lemma":"look","pos":"VERB"}},"count":974}
 {"lexeme":{"Multiword":"on the"},"count":960}
-{"lexeme":{"Heteronym":{"word":"told","lemma":"tell","pos":"VERB"}},"count":950}
+{"lexeme":{"Heteronym":{"word":"told","lemma":"tell","pos":"VERB"}},"count":949}
 {"lexeme":{"Heteronym":{"word":"when","lemma":"when","pos":"SCONJ"}},"count":933}
 {"lexeme":{"Multiword":"thank you"},"count":931}
 {"lexeme":{"Heteronym":{"word":"did","lemma":"do","pos":"VERB"}},"count":924}
-{"lexeme":{"Heteronym":{"word":"'s","lemma":"'s","pos":"PART"}},"count":911}
+{"lexeme":{"Heteronym":{"word":"'s","lemma":"'s","pos":"PART"}},"count":908}
 {"lexeme":{"Heteronym":{"word":"'s","lemma":"us","pos":"PRON"}},"count":901}
 {"lexeme":{"Multiword":"do what"},"count":899}
-{"lexeme":{"Heteronym":{"word":"man","lemma":"man","pos":"NOUN"}},"count":896}
+{"lexeme":{"Heteronym":{"word":"man","lemma":"man","pos":"NOUN"}},"count":894}
 {"lexeme":{"Multiword":"what is what"},"count":875}
 {"lexeme":{"Multiword":"what's what"},"count":875}
 {"lexeme":{"Heteronym":{"word":"make","lemma":"make","pos":"VERB"}},"count":855}
 {"lexeme":{"Heteronym":{"word":"like","lemma":"like","pos":"VERB"}},"count":854}
-{"lexeme":{"Heteronym":{"word":"day","lemma":"day","pos":"NOUN"}},"count":851}
 {"lexeme":{"Multiword":"you think"},"count":851}
-{"lexeme":{"Heteronym":{"word":"life","lemma":"life","pos":"NOUN"}},"count":849}
-{"lexeme":{"Heteronym":{"word":"our","lemma":"our","pos":"PRON"}},"count":843}
+{"lexeme":{"Heteronym":{"word":"day","lemma":"day","pos":"NOUN"}},"count":849}
+{"lexeme":{"Heteronym":{"word":"life","lemma":"life","pos":"NOUN"}},"count":841}
 {"lexeme":{"Multiword":"for you"},"count":840}
 {"lexeme":{"Heteronym":{"word":"please","lemma":"please","pos":"INTJ"}},"count":837}
+{"lexeme":{"Heteronym":{"word":"our","lemma":"our","pos":"PRON"}},"count":834}
 {"lexeme":{"Multiword":"talk to"},"count":824}
 {"lexeme":{"Multiword":"talking to"},"count":824}
 {"lexeme":{"Heteronym":{"word":"way","lemma":"way","pos":"NOUN"}},"count":820}
 {"lexeme":{"Multiword":"you see"},"count":819}
-{"lexeme":{"Heteronym":{"word":"always","lemma":"always","pos":"ADV"}},"count":817}
-{"lexeme":{"Heteronym":{"word":"anything","lemma":"anything","pos":"PRON"}},"count":808}
+{"lexeme":{"Heteronym":{"word":"always","lemma":"always","pos":"ADV"}},"count":814}
+{"lexeme":{"Heteronym":{"word":"anything","lemma":"anything","pos":"PRON"}},"count":806}
 {"lexeme":{"Multiword":"is all"},"count":805}
-{"lexeme":{"Heteronym":{"word":"said","lemma":"say","pos":"VERB"}},"count":796}
-{"lexeme":{"Heteronym":{"word":"thing","lemma":"thing","pos":"NOUN"}},"count":793}
+{"lexeme":{"Heteronym":{"word":"said","lemma":"say","pos":"VERB"}},"count":795}
+{"lexeme":{"Heteronym":{"word":"thing","lemma":"thing","pos":"NOUN"}},"count":791}
 {"lexeme":{"Heteronym":{"word":"right","lemma":"right","pos":"ADJ"}},"count":782}
-{"lexeme":{"Heteronym":{"word":"things","lemma":"thing","pos":"NOUN"}},"count":771}
-{"lexeme":{"Heteronym":{"word":"two","lemma":"two","pos":"NUM"}},"count":769}
 {"lexeme":{"Heteronym":{"word":"thought","lemma":"think","pos":"VERB"}},"count":768}
 {"lexeme":{"Heteronym":{"word":"doing","lemma":"do","pos":"VERB"}},"count":765}
-{"lexeme":{"Heteronym":{"word":"that","lemma":"that","pos":"DET"}},"count":764}
+{"lexeme":{"Heteronym":{"word":"things","lemma":"thing","pos":"NOUN"}},"count":765}
+{"lexeme":{"Heteronym":{"word":"two","lemma":"two","pos":"NUM"}},"count":764}
 {"lexeme":{"Heteronym":{"word":"one","lemma":"one","pos":"NOUN"}},"count":760}
+{"lexeme":{"Heteronym":{"word":"that","lemma":"that","pos":"DET"}},"count":760}
 {"lexeme":{"Heteronym":{"word":"love","lemma":"love","pos":"VERB"}},"count":753}
-{"lexeme":{"Heteronym":{"word":"has","lemma":"have","pos":"VERB"}},"count":749}
-{"lexeme":{"Heteronym":{"word":"more","lemma":"more","pos":"ADJ"}},"count":741}
+{"lexeme":{"Heteronym":{"word":"has","lemma":"have","pos":"VERB"}},"count":747}
 {"lexeme":{"Heteronym":{"word":"that","lemma":"that","pos":"SCONJ"}},"count":739}
 {"lexeme":{"Heteronym":{"word":"could","lemma":"could","pos":"AUX"}},"count":738}
 {"lexeme":{"Heteronym":{"word":"is","lemma":"be","pos":"VERB"}},"count":732}
-{"lexeme":{"Heteronym":{"word":"find","lemma":"find","pos":"VERB"}},"count":731}
-{"lexeme":{"Heteronym":{"word":"well","lemma":"well","pos":"ADV"}},"count":725}
+{"lexeme":{"Heteronym":{"word":"more","lemma":"more","pos":"ADJ"}},"count":731}
+{"lexeme":{"Heteronym":{"word":"find","lemma":"find","pos":"VERB"}},"count":730}
 {"lexeme":{"Heteronym":{"word":"wanted","lemma":"want","pos":"VERB"}},"count":723}
-{"lexeme":{"Heteronym":{"word":"no","lemma":"no","pos":"DET"}},"count":709}
-{"lexeme":{"Heteronym":{"word":"other","lemma":"other","pos":"ADJ"}},"count":708}
+{"lexeme":{"Heteronym":{"word":"well","lemma":"well","pos":"ADV"}},"count":723}
+{"lexeme":{"Heteronym":{"word":"other","lemma":"other","pos":"ADJ"}},"count":706}
+{"lexeme":{"Heteronym":{"word":"no","lemma":"no","pos":"DET"}},"count":705}
 {"lexeme":{"Heteronym":{"word":"call","lemma":"call","pos":"VERB"}},"count":700}
-{"lexeme":{"Heteronym":{"word":"people","lemma":"people","pos":"NOUN"}},"count":691}
-{"lexeme":{"Heteronym":{"word":"some","lemma":"some","pos":"DET"}},"count":671}
-{"lexeme":{"Heteronym":{"word":"someone","lemma":"someone","pos":"PRON"}},"count":666}
-{"lexeme":{"Heteronym":{"word":"little","lemma":"little","pos":"ADJ"}},"count":664}
-{"lexeme":{"Heteronym":{"word":"home","lemma":"home","pos":"NOUN"}},"count":653}
+{"lexeme":{"Heteronym":{"word":"people","lemma":"people","pos":"NOUN"}},"count":687}
+{"lexeme":{"Heteronym":{"word":"some","lemma":"some","pos":"DET"}},"count":670}
+{"lexeme":{"Heteronym":{"word":"someone","lemma":"someone","pos":"PRON"}},"count":664}
+{"lexeme":{"Heteronym":{"word":"little","lemma":"little","pos":"ADJ"}},"count":659}
 {"lexeme":{"Multiword":"need to"},"count":653}
+{"lexeme":{"Heteronym":{"word":"home","lemma":"home","pos":"NOUN"}},"count":651}
 {"lexeme":{"Heteronym":{"word":"because","lemma":"because","pos":"SCONJ"}},"count":650}
 {"lexeme":{"Multiword":"I tell you"},"count":645}
 {"lexeme":{"Multiword":"I told you"},"count":645}
-{"lexeme":{"Heteronym":{"word":"father","lemma":"father","pos":"NOUN"}},"count":640}
-{"lexeme":{"Heteronym":{"word":"done","lemma":"do","pos":"VERB"}},"count":634}
-{"lexeme":{"Heteronym":{"word":"last","lemma":"last","pos":"ADJ"}},"count":631}
-{"lexeme":{"Heteronym":{"word":"maybe","lemma":"maybe","pos":"ADV"}},"count":630}
-{"lexeme":{"Heteronym":{"word":"or","lemma":"or","pos":"CCONJ"}},"count":619}
-{"lexeme":{"Heteronym":{"word":"again","lemma":"again","pos":"ADV"}},"count":608}
-{"lexeme":{"Heteronym":{"word":"friend","lemma":"friend","pos":"NOUN"}},"count":603}
-{"lexeme":{"Heteronym":{"word":"everyone","lemma":"everyone","pos":"PRON"}},"count":600}
+{"lexeme":{"Heteronym":{"word":"father","lemma":"father","pos":"NOUN"}},"count":634}
+{"lexeme":{"Heteronym":{"word":"done","lemma":"do","pos":"VERB"}},"count":633}
+{"lexeme":{"Heteronym":{"word":"last","lemma":"last","pos":"ADJ"}},"count":630}
+{"lexeme":{"Heteronym":{"word":"maybe","lemma":"maybe","pos":"ADV"}},"count":627}
+{"lexeme":{"Heteronym":{"word":"or","lemma":"or","pos":"CCONJ"}},"count":609}
+{"lexeme":{"Heteronym":{"word":"again","lemma":"again","pos":"ADV"}},"count":606}
+{"lexeme":{"Heteronym":{"word":"friend","lemma":"friend","pos":"NOUN"}},"count":598}
 {"lexeme":{"Heteronym":{"word":"saw","lemma":"see","pos":"VERB"}},"count":598}
 {"lexeme":{"Heteronym":{"word":"best","lemma":"good","pos":"ADJ"}},"count":596}
 {"lexeme":{"Heteronym":{"word":"ask","lemma":"ask","pos":"VERB"}},"count":595}
 {"lexeme":{"Multiword":"can not"},"count":589}
-{"lexeme":{"Heteronym":{"word":"seen","lemma":"see","pos":"VERB"}},"count":587}
-{"lexeme":{"Heteronym":{"word":"name","lemma":"name","pos":"NOUN"}},"count":585}
+{"lexeme":{"Heteronym":{"word":"everyone","lemma":"everyone","pos":"PRON"}},"count":588}
+{"lexeme":{"Heteronym":{"word":"name","lemma":"name","pos":"NOUN"}},"count":583}
+{"lexeme":{"Heteronym":{"word":"seen","lemma":"see","pos":"VERB"}},"count":583}
 {"lexeme":{"Multiword":"do you know"},"count":583}
 {"lexeme":{"Heteronym":{"word":"as","lemma":"as","pos":"SCONJ"}},"count":569}
 {"lexeme":{"Heteronym":{"word":"ca","lemma":"can","pos":"AUX"}},"count":565}
 {"lexeme":{"Heteronym":{"word":"has","lemma":"have","pos":"AUX"}},"count":561}
 {"lexeme":{"Multiword":"I would"},"count":561}
 {"lexeme":{"Heteronym":{"word":"does","lemma":"do","pos":"AUX"}},"count":557}
-{"lexeme":{"Heteronym":{"word":"night","lemma":"night","pos":"NOUN"}},"count":554}
-{"lexeme":{"Heteronym":{"word":"than","lemma":"than","pos":"ADP"}},"count":554}
-{"lexeme":{"Heteronym":{"word":"stay","lemma":"stay","pos":"VERB"}},"count":552}
-{"lexeme":{"Heteronym":{"word":"only","lemma":"only","pos":"ADV"}},"count":547}
+{"lexeme":{"Heteronym":{"word":"night","lemma":"night","pos":"NOUN"}},"count":552}
+{"lexeme":{"Heteronym":{"word":"stay","lemma":"stay","pos":"VERB"}},"count":551}
+{"lexeme":{"Heteronym":{"word":"than","lemma":"than","pos":"ADP"}},"count":550}
 {"lexeme":{"Multiword":"you do you"},"count":546}
-{"lexeme":{"Heteronym":{"word":"happened","lemma":"happen","pos":"VERB"}},"count":539}
-{"lexeme":{"Heteronym":{"word":"too","lemma":"too","pos":"ADV"}},"count":534}
-{"lexeme":{"Heteronym":{"word":"first","lemma":"first","pos":"ADJ"}},"count":532}
-{"lexeme":{"Heteronym":{"word":"same","lemma":"same","pos":"ADJ"}},"count":526}
-{"lexeme":{"Heteronym":{"word":"still","lemma":"still","pos":"ADV"}},"count":525}
+{"lexeme":{"Heteronym":{"word":"only","lemma":"only","pos":"ADV"}},"count":545}
+{"lexeme":{"Heteronym":{"word":"happened","lemma":"happen","pos":"VERB"}},"count":538}
+{"lexeme":{"Heteronym":{"word":"too","lemma":"too","pos":"ADV"}},"count":531}
+{"lexeme":{"Heteronym":{"word":"first","lemma":"first","pos":"ADJ"}},"count":530}
+{"lexeme":{"Heteronym":{"word":"same","lemma":"same","pos":"ADJ"}},"count":525}
 {"lexeme":{"Multiword":"be on"},"count":525}
-{"lexeme":{"Multiword":"if that"},"count":523}
-{"lexeme":{"Heteronym":{"word":"great","lemma":"great","pos":"ADJ"}},"count":514}
-{"lexeme":{"Heteronym":{"word":"else","lemma":"else","pos":"ADV"}},"count":510}
-{"lexeme":{"Heteronym":{"word":"why","lemma":"why","pos":"SCONJ"}},"count":508}
-{"lexeme":{"Heteronym":{"word":"leave","lemma":"leave","pos":"VERB"}},"count":503}
+{"lexeme":{"Multiword":"if that"},"count":522}
+{"lexeme":{"Heteronym":{"word":"still","lemma":"still","pos":"ADV"}},"count":519}
+{"lexeme":{"Heteronym":{"word":"great","lemma":"great","pos":"ADJ"}},"count":512}
+{"lexeme":{"Heteronym":{"word":"else","lemma":"else","pos":"ADV"}},"count":507}
+{"lexeme":{"Heteronym":{"word":"why","lemma":"why","pos":"SCONJ"}},"count":507}
 {"lexeme":{"Heteronym":{"word":"lot","lemma":"lot","pos":"NOUN"}},"count":503}
 {"lexeme":{"Multiword":"talk about"},"count":503}
 {"lexeme":{"Multiword":"talked about"},"count":503}
-{"lexeme":{"Heteronym":{"word":"fine","lemma":"fine","pos":"ADJ"}},"count":502}
-{"lexeme":{"Heteronym":{"word":"well","lemma":"well","pos":"INTJ"}},"count":500}
+{"lexeme":{"Heteronym":{"word":"leave","lemma":"leave","pos":"VERB"}},"count":502}
+{"lexeme":{"Heteronym":{"word":"fine","lemma":"fine","pos":"ADJ"}},"count":501}
 {"lexeme":{"Multiword":"come to"},"count":500}
-{"lexeme":{"Heteronym":{"word":"already","lemma":"already","pos":"ADV"}},"count":499}
+{"lexeme":{"Heteronym":{"word":"well","lemma":"well","pos":"INTJ"}},"count":499}
 {"lexeme":{"Multiword":"the one"},"count":499}
-{"lexeme":{"Heteronym":{"word":"nice","lemma":"nice","pos":"ADJ"}},"count":495}
+{"lexeme":{"Heteronym":{"word":"already","lemma":"already","pos":"ADV"}},"count":495}
 {"lexeme":{"Heteronym":{"word":"right","lemma":"right","pos":"ADV"}},"count":494}
+{"lexeme":{"Heteronym":{"word":"nice","lemma":"nice","pos":"ADJ"}},"count":493}
 {"lexeme":{"Multiword":"a lot"},"count":492}
 {"lexeme":{"Heteronym":{"word":"came","lemma":"come","pos":"VERB"}},"count":490}
 {"lexeme":{"Heteronym":{"word":"god","lemma":"god","pos":"NOUN"}},"count":490}
 {"lexeme":{"Heteronym":{"word":"put","lemma":"put","pos":"VERB"}},"count":487}
 {"lexeme":{"Multiword":"the same"},"count":485}
-{"lexeme":{"Heteronym":{"word":"really","lemma":"really","pos":"ADV"}},"count":483}
 {"lexeme":{"Multiword":"you know what"},"count":483}
+{"lexeme":{"Heteronym":{"word":"really","lemma":"really","pos":"ADV"}},"count":482}
 {"lexeme":{"Multiword":"for me"},"count":482}
-{"lexeme":{"Heteronym":{"word":"world","lemma":"world","pos":"NOUN"}},"count":477}
-{"lexeme":{"Multiword":"if not"},"count":477}
-{"lexeme":{"Multiword":"if anything"},"count":475}
+{"lexeme":{"Heteronym":{"word":"world","lemma":"world","pos":"NOUN"}},"count":476}
+{"lexeme":{"Multiword":"if not"},"count":476}
+{"lexeme":{"Multiword":"if anything"},"count":474}
 {"lexeme":{"Heteronym":{"word":"better","lemma":"well","pos":"ADJ"}},"count":469}
-{"lexeme":{"Heteronym":{"word":"mother","lemma":"mother","pos":"NOUN"}},"count":468}
 {"lexeme":{"Multiword":"give me"},"count":467}
 {"lexeme":{"Multiword":"be right"},"count":465}
-{"lexeme":{"Heteronym":{"word":"all","lemma":"all","pos":"ADV"}},"count":461}
+{"lexeme":{"Heteronym":{"word":"mother","lemma":"mother","pos":"NOUN"}},"count":461}
+{"lexeme":{"Heteronym":{"word":"all","lemma":"all","pos":"ADV"}},"count":460}
 {"lexeme":{"Multiword":"I say"},"count":460}
-{"lexeme":{"Heteronym":{"word":"by","lemma":"by","pos":"ADP"}},"count":457}
-{"lexeme":{"Heteronym":{"word":"house","lemma":"house","pos":"NOUN"}},"count":452}
-{"lexeme":{"Heteronym":{"word":"heard","lemma":"hear","pos":"VERB"}},"count":448}
+{"lexeme":{"Heteronym":{"word":"by","lemma":"by","pos":"ADP"}},"count":455}
 {"lexeme":{"Multiword":"a little"},"count":447}
-{"lexeme":{"Heteronym":{"word":"place","lemma":"place","pos":"NOUN"}},"count":445}
+{"lexeme":{"Heteronym":{"word":"heard","lemma":"hear","pos":"VERB"}},"count":446}
+{"lexeme":{"Heteronym":{"word":"house","lemma":"house","pos":"NOUN"}},"count":446}
 {"lexeme":{"Multiword":"you tell me"},"count":444}
+{"lexeme":{"Heteronym":{"word":"place","lemma":"place","pos":"NOUN"}},"count":442}
 {"lexeme":{"Multiword":"think about"},"count":439}
 {"lexeme":{"Heteronym":{"word":"keep","lemma":"keep","pos":"VERB"}},"count":438}
 {"lexeme":{"Heteronym":{"word":"hope","lemma":"hope","pos":"VERB"}},"count":436}
-{"lexeme":{"Heteronym":{"word":"care","lemma":"care","pos":"NOUN"}},"count":434}
-{"lexeme":{"Heteronym":{"word":"son","lemma":"son","pos":"NOUN"}},"count":434}
+{"lexeme":{"Heteronym":{"word":"care","lemma":"care","pos":"NOUN"}},"count":433}
+{"lexeme":{"Heteronym":{"word":"son","lemma":"son","pos":"NOUN"}},"count":432}
 {"lexeme":{"Heteronym":{"word":"feel","lemma":"feel","pos":"VERB"}},"count":430}
 {"lexeme":{"Multiword":"out of"},"count":429}
-{"lexeme":{"Heteronym":{"word":"then","lemma":"then","pos":"ADV"}},"count":428}
 {"lexeme":{"Heteronym":{"word":"knew","lemma":"know","pos":"VERB"}},"count":425}
+{"lexeme":{"Heteronym":{"word":"then","lemma":"then","pos":"ADV"}},"count":425}
 {"lexeme":{"Heteronym":{"word":"made","lemma":"make","pos":"VERB"}},"count":422}
-{"lexeme":{"Heteronym":{"word":"hello","lemma":"hello","pos":"INTJ"}},"count":421}
+{"lexeme":{"Heteronym":{"word":"hello","lemma":"hello","pos":"INTJ"}},"count":419}
 {"lexeme":{"Multiword":"be like"},"count":418}
 {"lexeme":{"Multiword":"how do"},"count":416}
 {"lexeme":{"Multiword":"care of"},"count":413}
-{"lexeme":{"Heteronym":{"word":"family","lemma":"family","pos":"NOUN"}},"count":412}
-{"lexeme":{"Heteronym":{"word":"understand","lemma":"understand","pos":"VERB"}},"count":411}
+{"lexeme":{"Heteronym":{"word":"understand","lemma":"understand","pos":"VERB"}},"count":409}
 {"lexeme":{"Multiword":"take care"},"count":409}
 {"lexeme":{"Multiword":"to come"},"count":409}
+{"lexeme":{"Heteronym":{"word":"family","lemma":"family","pos":"NOUN"}},"count":408}
 {"lexeme":{"Multiword":"don't know"},"count":408}
-{"lexeme":{"Heteronym":{"word":"beautiful","lemma":"beautiful","pos":"ADJ"}},"count":405}
+{"lexeme":{"Multiword":"have to go"},"count":408}
 {"lexeme":{"Heteronym":{"word":"are","lemma":"be","pos":"VERB"}},"count":404}
-{"lexeme":{"Heteronym":{"word":"job","lemma":"job","pos":"NOUN"}},"count":404}
 {"lexeme":{"Heteronym":{"word":"remember","lemma":"remember","pos":"VERB"}},"count":404}
 {"lexeme":{"Heteronym":{"word":"as","lemma":"as","pos":"ADV"}},"count":402}
-{"lexeme":{"Heteronym":{"word":"sure","lemma":"sure","pos":"ADJ"}},"count":402}
+{"lexeme":{"Heteronym":{"word":"job","lemma":"job","pos":"NOUN"}},"count":402}
 {"lexeme":{"Multiword":"take care of"},"count":402}
+{"lexeme":{"Heteronym":{"word":"beautiful","lemma":"beautiful","pos":"ADJ"}},"count":399}
 {"lexeme":{"Heteronym":{"word":"coming","lemma":"come","pos":"VERB"}},"count":398}
-{"lexeme":{"Heteronym":{"word":"left","lemma":"leave","pos":"VERB"}},"count":395}
+{"lexeme":{"Heteronym":{"word":"sure","lemma":"sure","pos":"ADJ"}},"count":398}
 {"lexeme":{"Heteronym":{"word":"hi","lemma":"hi","pos":"INTJ"}},"count":394}
+{"lexeme":{"Heteronym":{"word":"left","lemma":"leave","pos":"VERB"}},"count":394}
 {"lexeme":{"Heteronym":{"word":"new","lemma":"new","pos":"ADJ"}},"count":392}
-{"lexeme":{"Heteronym":{"word":"money","lemma":"money","pos":"NOUN"}},"count":390}
+{"lexeme":{"Heteronym":{"word":"money","lemma":"money","pos":"NOUN"}},"count":388}
 {"lexeme":{"Heteronym":{"word":"knows","lemma":"know","pos":"VERB"}},"count":385}
-{"lexeme":{"Heteronym":{"word":"found","lemma":"find","pos":"VERB"}},"count":383}
-{"lexeme":{"Heteronym":{"word":"another","lemma":"another","pos":"DET"}},"count":382}
+{"lexeme":{"Heteronym":{"word":"found","lemma":"find","pos":"VERB"}},"count":382}
 {"lexeme":{"Multiword":"will do"},"count":381}
 {"lexeme":{"Heteronym":{"word":"love","lemma":"love","pos":"NOUN"}},"count":380}
 {"lexeme":{"Multiword":"I'll be"},"count":380}
-{"lexeme":{"Heteronym":{"word":"as","lemma":"as","pos":"ADP"}},"count":379}
+{"lexeme":{"Heteronym":{"word":"another","lemma":"another","pos":"DET"}},"count":379}
+{"lexeme":{"Heteronym":{"word":"as","lemma":"as","pos":"ADP"}},"count":377}
 {"lexeme":{"Heteronym":{"word":"tomorrow","lemma":"tomorrow","pos":"NOUN"}},"count":376}
 {"lexeme":{"Heteronym":{"word":"believe","lemma":"believe","pos":"VERB"}},"count":375}
 {"lexeme":{"Multiword":"be with"},"count":375}
-{"lexeme":{"Heteronym":{"word":"work","lemma":"work","pos":"NOUN"}},"count":373}
-{"lexeme":{"Heteronym":{"word":"friends","lemma":"friend","pos":"NOUN"}},"count":372}
+{"lexeme":{"Heteronym":{"word":"work","lemma":"work","pos":"NOUN"}},"count":372}
 {"lexeme":{"Multiword":"what is that"},"count":372}
 {"lexeme":{"Multiword":"what was that"},"count":372}
 {"lexeme":{"Multiword":"what's that"},"count":372}
-{"lexeme":{"Heteronym":{"word":"three","lemma":"three","pos":"NUM"}},"count":371}
 {"lexeme":{"Heteronym":{"word":"looking","lemma":"look","pos":"VERB"}},"count":370}
-{"lexeme":{"Heteronym":{"word":"nothing","lemma":"nothing","pos":"PRON"}},"count":370}
-{"lexeme":{"Heteronym":{"word":"many","lemma":"many","pos":"ADJ"}},"count":369}
 {"lexeme":{"Heteronym":{"word":"their","lemma":"their","pos":"PRON"}},"count":369}
+{"lexeme":{"Heteronym":{"word":"three","lemma":"three","pos":"NUM"}},"count":369}
 {"lexeme":{"Heteronym":{"word":"guy","lemma":"guy","pos":"NOUN"}},"count":368}
 {"lexeme":{"Multiword":"that's all"},"count":368}
-{"lexeme":{"Heteronym":{"word":"car","lemma":"car","pos":"NOUN"}},"count":364}
-{"lexeme":{"Heteronym":{"word":"years","lemma":"year","pos":"NOUN"}},"count":364}
+{"lexeme":{"Heteronym":{"word":"friends","lemma":"friend","pos":"NOUN"}},"count":367}
+{"lexeme":{"Heteronym":{"word":"many","lemma":"many","pos":"ADJ"}},"count":367}
+{"lexeme":{"Heteronym":{"word":"nothing","lemma":"nothing","pos":"PRON"}},"count":367}
 {"lexeme":{"Heteronym":{"word":"work","lemma":"work","pos":"VERB"}},"count":363}
-{"lexeme":{"Heteronym":{"word":"girl","lemma":"girl","pos":"NOUN"}},"count":360}
+{"lexeme":{"Heteronym":{"word":"car","lemma":"car","pos":"NOUN"}},"count":362}
 {"lexeme":{"Multiword":"had it"},"count":360}
 {"lexeme":{"Multiword":"have it"},"count":360}
 {"lexeme":{"Multiword":"having it"},"count":360}
+{"lexeme":{"Heteronym":{"word":"years","lemma":"year","pos":"NOUN"}},"count":359}
 {"lexeme":{"Multiword":"do want"},"count":359}
 {"lexeme":{"Heteronym":{"word":"'s","lemma":"be","pos":"VERB"}},"count":358}
-{"lexeme":{"Heteronym":{"word":"old","lemma":"old","pos":"ADJ"}},"count":358}
-{"lexeme":{"Heteronym":{"word":"happy","lemma":"happy","pos":"ADJ"}},"count":354}
-{"lexeme":{"Heteronym":{"word":"important","lemma":"important","pos":"ADJ"}},"count":354}
-{"lexeme":{"Heteronym":{"word":"much","lemma":"much","pos":"ADV"}},"count":351}
+{"lexeme":{"Heteronym":{"word":"girl","lemma":"girl","pos":"NOUN"}},"count":358}
+{"lexeme":{"Heteronym":{"word":"old","lemma":"old","pos":"ADJ"}},"count":357}
+{"lexeme":{"Heteronym":{"word":"important","lemma":"important","pos":"ADJ"}},"count":353}
+{"lexeme":{"Heteronym":{"word":"happy","lemma":"happy","pos":"ADJ"}},"count":351}
+{"lexeme":{"Heteronym":{"word":"much","lemma":"much","pos":"ADV"}},"count":350}
 {"lexeme":{"Heteronym":{"word":"any","lemma":"any","pos":"DET"}},"count":349}
 {"lexeme":{"Multiword":"look at"},"count":349}
-{"lexeme":{"Heteronym":{"word":"big","lemma":"big","pos":"ADJ"}},"count":348}
+{"lexeme":{"Heteronym":{"word":"big","lemma":"big","pos":"ADJ"}},"count":347}
 {"lexeme":{"Heteronym":{"word":"got","lemma":"get","pos":"VERB"}},"count":346}
 {"lexeme":{"Heteronym":{"word":"wait","lemma":"wait","pos":"VERB"}},"count":346}
 {"lexeme":{"Multiword":"love you"},"count":346}
@@ -327,104 +330,104 @@
 {"lexeme":{"Multiword":"have not"},"count":345}
 {"lexeme":{"Multiword":"have nots"},"count":345}
 {"lexeme":{"Heteronym":{"word":"talking","lemma":"talk","pos":"VERB"}},"count":344}
-{"lexeme":{"Heteronym":{"word":"ago","lemma":"ago","pos":"ADV"}},"count":333}
 {"lexeme":{"Multiword":"look for"},"count":333}
+{"lexeme":{"Heteronym":{"word":"ago","lemma":"ago","pos":"ADV"}},"count":332}
 {"lexeme":{"Heteronym":{"word":"oh","lemma":"oh","pos":"INTJ"}},"count":332}
-{"lexeme":{"Heteronym":{"word":"wants","lemma":"want","pos":"VERB"}},"count":331}
 {"lexeme":{"Multiword":"that is it"},"count":331}
 {"lexeme":{"Multiword":"that was it"},"count":331}
 {"lexeme":{"Multiword":"that's it"},"count":331}
 {"lexeme":{"Heteronym":{"word":"better","lemma":"well","pos":"ADV"}},"count":330}
-{"lexeme":{"Heteronym":{"word":"soon","lemma":"soon","pos":"ADV"}},"count":328}
+{"lexeme":{"Heteronym":{"word":"wants","lemma":"want","pos":"VERB"}},"count":330}
+{"lexeme":{"Heteronym":{"word":"soon","lemma":"soon","pos":"ADV"}},"count":327}
 {"lexeme":{"Heteronym":{"word":"thanks","lemma":"thank","pos":"NOUN"}},"count":327}
 {"lexeme":{"Multiword":"says you"},"count":327}
 {"lexeme":{"Heteronym":{"word":"live","lemma":"live","pos":"VERB"}},"count":318}
-{"lexeme":{"Heteronym":{"word":"looks","lemma":"look","pos":"VERB"}},"count":315}
+{"lexeme":{"Heteronym":{"word":"looks","lemma":"look","pos":"VERB"}},"count":314}
 {"lexeme":{"Multiword":"have done"},"count":314}
-{"lexeme":{"Heteronym":{"word":"door","lemma":"door","pos":"NOUN"}},"count":312}
 {"lexeme":{"Heteronym":{"word":"true","lemma":"true","pos":"ADJ"}},"count":311}
+{"lexeme":{"Heteronym":{"word":"door","lemma":"door","pos":"NOUN"}},"count":310}
 {"lexeme":{"Multiword":"be at"},"count":310}
-{"lexeme":{"Heteronym":{"word":"what","lemma":"what","pos":"DET"}},"count":308}
-{"lexeme":{"Heteronym":{"word":"ever","lemma":"ever","pos":"ADV"}},"count":306}
-{"lexeme":{"Heteronym":{"word":"these","lemma":"these","pos":"DET"}},"count":303}
-{"lexeme":{"Heteronym":{"word":"wife","lemma":"wife","pos":"NOUN"}},"count":303}
+{"lexeme":{"Heteronym":{"word":"what","lemma":"what","pos":"DET"}},"count":307}
+{"lexeme":{"Heteronym":{"word":"ever","lemma":"ever","pos":"ADV"}},"count":304}
 {"lexeme":{"Multiword":"of course"},"count":303}
-{"lexeme":{"Heteronym":{"word":"children","lemma":"child","pos":"NOUN"}},"count":302}
 {"lexeme":{"Heteronym":{"word":"over","lemma":"over","pos":"ADV"}},"count":302}
-{"lexeme":{"Heteronym":{"word":"together","lemma":"together","pos":"ADV"}},"count":302}
 {"lexeme":{"Heteronym":{"word":"took","lemma":"take","pos":"VERB"}},"count":302}
+{"lexeme":{"Heteronym":{"word":"wife","lemma":"wife","pos":"NOUN"}},"count":302}
 {"lexeme":{"Heteronym":{"word":"police","lemma":"police","pos":"NOUN"}},"count":301}
+{"lexeme":{"Heteronym":{"word":"together","lemma":"together","pos":"ADV"}},"count":301}
+{"lexeme":{"Heteronym":{"word":"children","lemma":"child","pos":"NOUN"}},"count":300}
 {"lexeme":{"Heteronym":{"word":"question","lemma":"question","pos":"NOUN"}},"count":300}
+{"lexeme":{"Heteronym":{"word":"these","lemma":"these","pos":"DET"}},"count":298}
 {"lexeme":{"Heteronym":{"word":"more","lemma":"more","pos":"ADV"}},"count":297}
-{"lexeme":{"Heteronym":{"word":"woman","lemma":"woman","pos":"NOUN"}},"count":297}
-{"lexeme":{"Heteronym":{"word":"brother","lemma":"brother","pos":"NOUN"}},"count":296}
-{"lexeme":{"Heteronym":{"word":"room","lemma":"room","pos":"NOUN"}},"count":294}
+{"lexeme":{"Heteronym":{"word":"brother","lemma":"brother","pos":"NOUN"}},"count":295}
 {"lexeme":{"Multiword":"liked to"},"count":293}
-{"lexeme":{"Heteronym":{"word":"even","lemma":"even","pos":"ADV"}},"count":289}
-{"lexeme":{"Heteronym":{"word":"men","lemma":"man","pos":"NOUN"}},"count":289}
+{"lexeme":{"Heteronym":{"word":"room","lemma":"room","pos":"NOUN"}},"count":292}
+{"lexeme":{"Heteronym":{"word":"woman","lemma":"woman","pos":"NOUN"}},"count":292}
 {"lexeme":{"Multiword":"be about"},"count":289}
 {"lexeme":{"Heteronym":{"word":"moment","lemma":"moment","pos":"NOUN"}},"count":288}
-{"lexeme":{"Heteronym":{"word":"yourself","lemma":"yourself","pos":"PRON"}},"count":288}
+{"lexeme":{"Heteronym":{"word":"men","lemma":"man","pos":"NOUN"}},"count":287}
+{"lexeme":{"Heteronym":{"word":"yourself","lemma":"yourself","pos":"PRON"}},"count":287}
 {"lexeme":{"Multiword":"says me"},"count":287}
-{"lexeme":{"Heteronym":{"word":"each","lemma":"each","pos":"DET"}},"count":285}
 {"lexeme":{"Heteronym":{"word":"morning","lemma":"morning","pos":"NOUN"}},"count":285}
-{"lexeme":{"Heteronym":{"word":"myself","lemma":"myself","pos":"PRON"}},"count":282}
+{"lexeme":{"Heteronym":{"word":"each","lemma":"each","pos":"DET"}},"count":284}
+{"lexeme":{"Heteronym":{"word":"even","lemma":"even","pos":"ADV"}},"count":283}
 {"lexeme":{"Heteronym":{"word":"try","lemma":"try","pos":"VERB"}},"count":282}
 {"lexeme":{"Multiword":"I have never"},"count":282}
 {"lexeme":{"Multiword":"like that"},"count":281}
 {"lexeme":{"Multiword":"take it"},"count":281}
+{"lexeme":{"Heteronym":{"word":"myself","lemma":"myself","pos":"PRON"}},"count":280}
 {"lexeme":{"Multiword":"look like"},"count":279}
 {"lexeme":{"Heteronym":{"word":"boy","lemma":"boy","pos":"NOUN"}},"count":278}
-{"lexeme":{"Heteronym":{"word":"eyes","lemma":"eye","pos":"NOUN"}},"count":277}
 {"lexeme":{"Heteronym":{"word":"long","lemma":"long","pos":"ADJ"}},"count":277}
+{"lexeme":{"Heteronym":{"word":"eyes","lemma":"eye","pos":"NOUN"}},"count":276}
 {"lexeme":{"Heteronym":{"word":"truth","lemma":"truth","pos":"NOUN"}},"count":276}
 {"lexeme":{"Heteronym":{"word":"every","lemma":"every","pos":"DET"}},"count":275}
-{"lexeme":{"Heteronym":{"word":"her","lemma":"her","pos":"PRON"}},"count":272}
 {"lexeme":{"Heteronym":{"word":"exactly","lemma":"exactly","pos":"ADV"}},"count":271}
+{"lexeme":{"Multiword":"go on"},"count":271}
+{"lexeme":{"Multiword":"going on"},"count":271}
 {"lexeme":{"Heteronym":{"word":"happen","lemma":"happen","pos":"VERB"}},"count":270}
-{"lexeme":{"Multiword":"go on"},"count":270}
-{"lexeme":{"Multiword":"going on"},"count":270}
 {"lexeme":{"Heteronym":{"word":"may","lemma":"may","pos":"AUX"}},"count":269}
+{"lexeme":{"Heteronym":{"word":"her","lemma":"her","pos":"PRON"}},"count":268}
 {"lexeme":{"Multiword":"come back"},"count":268}
-{"lexeme":{"Heteronym":{"word":"listen","lemma":"listen","pos":"VERB"}},"count":265}
 {"lexeme":{"Multiword":"Who's Who"},"count":265}
 {"lexeme":{"Multiword":"what it be"},"count":265}
 {"lexeme":{"Multiword":"what it is"},"count":265}
 {"lexeme":{"Multiword":"who's who"},"count":265}
 {"lexeme":{"Heteronym":{"word":"'d","lemma":"would","pos":"AUX"}},"count":264}
+{"lexeme":{"Heteronym":{"word":"listen","lemma":"listen","pos":"VERB"}},"count":264}
 {"lexeme":{"Multiword":"like to"},"count":264}
 {"lexeme":{"Multiword":"time being"},"count":264}
 {"lexeme":{"Multiword":"time was"},"count":264}
-{"lexeme":{"Heteronym":{"word":"own","lemma":"own","pos":"ADJ"}},"count":263}
+{"lexeme":{"Heteronym":{"word":"own","lemma":"own","pos":"ADJ"}},"count":262}
 {"lexeme":{"Heteronym":{"word":"like","lemma":"like","pos":"SCONJ"}},"count":261}
 {"lexeme":{"Multiword":"wait for"},"count":261}
-{"lexeme":{"Heteronym":{"word":"end","lemma":"end","pos":"NOUN"}},"count":259}
 {"lexeme":{"Multiword":"come on"},"count":259}
 {"lexeme":{"Multiword":"coming on"},"count":259}
 {"lexeme":{"Multiword":"say what"},"count":259}
-{"lexeme":{"Heteronym":{"word":"eat","lemma":"eat","pos":"VERB"}},"count":258}
+{"lexeme":{"Heteronym":{"word":"eat","lemma":"eat","pos":"VERB"}},"count":257}
+{"lexeme":{"Heteronym":{"word":"end","lemma":"end","pos":"NOUN"}},"count":257}
 {"lexeme":{"Heteronym":{"word":"of","lemma":"of","pos":"ADV"}},"count":257}
 {"lexeme":{"Multiword":"say that"},"count":257}
-{"lexeme":{"Heteronym":{"word":"mine","lemma":"mine","pos":"PRON"}},"count":255}
 {"lexeme":{"Heteronym":{"word":"only","lemma":"only","pos":"ADJ"}},"count":255}
 {"lexeme":{"Multiword":"see to"},"count":255}
 {"lexeme":{"Multiword":"seeing to"},"count":255}
 {"lexeme":{"Heteronym":{"word":"down","lemma":"down","pos":"ADP"}},"count":254}
 {"lexeme":{"Heteronym":{"word":"later","lemma":"later","pos":"ADV"}},"count":254}
+{"lexeme":{"Heteronym":{"word":"mine","lemma":"mine","pos":"PRON"}},"count":254}
 {"lexeme":{"Multiword":"I can't"},"count":253}
 {"lexeme":{"Multiword":"not done"},"count":253}
 {"lexeme":{"Heteronym":{"word":"read","lemma":"read","pos":"VERB"}},"count":252}
 {"lexeme":{"Multiword":"do with"},"count":252}
 {"lexeme":{"Heteronym":{"word":"few","lemma":"few","pos":"ADJ"}},"count":250}
 {"lexeme":{"Heteronym":{"word":"ready","lemma":"ready","pos":"ADJ"}},"count":250}
-{"lexeme":{"Heteronym":{"word":"after","lemma":"after","pos":"ADP"}},"count":249}
 {"lexeme":{"Multiword":"the way"},"count":249}
 {"lexeme":{"Heteronym":{"word":"bring","lemma":"bring","pos":"VERB"}},"count":248}
+{"lexeme":{"Heteronym":{"word":"after","lemma":"after","pos":"ADP"}},"count":247}
 {"lexeme":{"Heteronym":{"word":"into","lemma":"into","pos":"ADP"}},"count":247}
 {"lexeme":{"Heteronym":{"word":"nobody","lemma":"nobody","pos":"PRON"}},"count":247}
-{"lexeme":{"Heteronym":{"word":"phone","lemma":"phone","pos":"NOUN"}},"count":247}
 {"lexeme":{"Heteronym":{"word":"show","lemma":"show","pos":"VERB"}},"count":247}
 {"lexeme":{"Heteronym":{"word":"days","lemma":"day","pos":"NOUN"}},"count":245}
+{"lexeme":{"Heteronym":{"word":"phone","lemma":"phone","pos":"NOUN"}},"count":245}
 {"lexeme":{"Multiword":"lots of"},"count":245}
 {"lexeme":{"Multiword":"thing is"},"count":244}
 {"lexeme":{"Heteronym":{"word":"water","lemma":"water","pos":"NOUN"}},"count":243}
@@ -437,8 +440,7 @@
 {"lexeme":{"Heteronym":{"word":"whatever","lemma":"whatever","pos":"PRON"}},"count":240}
 {"lexeme":{"Multiword":"is it me"},"count":240}
 {"lexeme":{"Heteronym":{"word":"sir","lemma":"sir","pos":"NOUN"}},"count":238}
-{"lexeme":{"Heteronym":{"word":"story","lemma":"story","pos":"NOUN"}},"count":238}
-{"lexeme":{"Heteronym":{"word":"up","lemma":"up","pos":"ADV"}},"count":237}
+{"lexeme":{"Heteronym":{"word":"story","lemma":"story","pos":"NOUN"}},"count":237}
 {"lexeme":{"Multiword":"I see you"},"count":237}
 {"lexeme":{"Heteronym":{"word":"course","lemma":"course","pos":"ADV"}},"count":236}
 {"lexeme":{"Heteronym":{"word":"side","lemma":"side","pos":"NOUN"}},"count":236}
@@ -446,6 +448,7 @@
 {"lexeme":{"Multiword":"let's go"},"count":236}
 {"lexeme":{"Heteronym":{"word":"meet","lemma":"meet","pos":"VERB"}},"count":235}
 {"lexeme":{"Heteronym":{"word":"waiting","lemma":"wait","pos":"VERB"}},"count":235}
+{"lexeme":{"Heteronym":{"word":"up","lemma":"up","pos":"ADV"}},"count":234}
 {"lexeme":{"Heteronym":{"word":"much","lemma":"much","pos":"ADJ"}},"count":233}
 {"lexeme":{"Multiword":"get out"},"count":233}
 {"lexeme":{"Multiword":"something to"},"count":232}
@@ -453,17 +456,17 @@
 {"lexeme":{"Multiword":"I love you"},"count":230}
 {"lexeme":{"Multiword":"no one"},"count":229}
 {"lexeme":{"Heteronym":{"word":"had","lemma":"have","pos":"AUX"}},"count":227}
-{"lexeme":{"Heteronym":{"word":"idea","lemma":"idea","pos":"NOUN"}},"count":227}
-{"lexeme":{"Heteronym":{"word":"mind","lemma":"mind","pos":"NOUN"}},"count":226}
 {"lexeme":{"Multiword":"very well"},"count":226}
+{"lexeme":{"Heteronym":{"word":"idea","lemma":"idea","pos":"NOUN"}},"count":225}
+{"lexeme":{"Heteronym":{"word":"mind","lemma":"mind","pos":"NOUN"}},"count":225}
 {"lexeme":{"Heteronym":{"word":"okay","lemma":"okay","pos":"ADJ"}},"count":225}
 {"lexeme":{"Multiword":"I don't know"},"count":225}
-{"lexeme":{"Heteronym":{"word":"anyone","lemma":"anyone","pos":"PRON"}},"count":223}
 {"lexeme":{"Heteronym":{"word":"school","lemma":"school","pos":"NOUN"}},"count":223}
 {"lexeme":{"Heteronym":{"word":"speak","lemma":"speak","pos":"VERB"}},"count":223}
+{"lexeme":{"Heteronym":{"word":"anyone","lemma":"anyone","pos":"PRON"}},"count":222}
 {"lexeme":{"Heteronym":{"word":"play","lemma":"play","pos":"VERB"}},"count":222}
 {"lexeme":{"Heteronym":{"word":"start","lemma":"start","pos":"VERB"}},"count":222}
-{"lexeme":{"Heteronym":{"word":"hand","lemma":"hand","pos":"NOUN"}},"count":221}
+{"lexeme":{"Heteronym":{"word":"hand","lemma":"hand","pos":"NOUN"}},"count":220}
 {"lexeme":{"Multiword":"what is it"},"count":220}
 {"lexeme":{"Heteronym":{"word":"anymore","lemma":"anymore","pos":"ADV"}},"count":219}
 {"lexeme":{"Heteronym":{"word":"called","lemma":"call","pos":"VERB"}},"count":219}
@@ -504,6 +507,7 @@
 {"lexeme":{"Heteronym":{"word":"both","lemma":"both","pos":"PRON"}},"count":197}
 {"lexeme":{"Heteronym":{"word":"over","lemma":"over","pos":"ADP"}},"count":197}
 {"lexeme":{"Multiword":"and that"},"count":197}
+{"lexeme":{"Multiword":"be up"},"count":196}
 {"lexeme":{"Multiword":"take to"},"count":196}
 {"lexeme":{"Heteronym":{"word":"since","lemma":"since","pos":"SCONJ"}},"count":195}
 {"lexeme":{"Heteronym":{"word":"says","lemma":"say","pos":"VERB"}},"count":194}
@@ -515,6 +519,7 @@
 {"lexeme":{"Heteronym":{"word":"before","lemma":"before","pos":"ADV"}},"count":191}
 {"lexeme":{"Heteronym":{"word":"through","lemma":"through","pos":"ADP"}},"count":191}
 {"lexeme":{"Heteronym":{"word":"trust","lemma":"trust","pos":"VERB"}},"count":191}
+{"lexeme":{"Multiword":"listen to"},"count":190}
 {"lexeme":{"Multiword":"make me"},"count":190}
 {"lexeme":{"Heteronym":{"word":"hey","lemma":"hey","pos":"INTJ"}},"count":189}
 {"lexeme":{"Multiword":"would like"},"count":189}
@@ -701,6 +706,7 @@
 {"lexeme":{"Heteronym":{"word":"known","lemma":"know","pos":"VERB"}},"count":126}
 {"lexeme":{"Heteronym":{"word":"order","lemma":"order","pos":"NOUN"}},"count":126}
 {"lexeme":{"Multiword":"all rights"},"count":126}
+{"lexeme":{"Multiword":"be out"},"count":126}
 {"lexeme":{"Multiword":"go ahead"},"count":126}
 {"lexeme":{"Heteronym":{"word":"against","lemma":"against","pos":"ADP"}},"count":125}
 {"lexeme":{"Heteronym":{"word":"also","lemma":"also","pos":"ADV"}},"count":125}
@@ -713,6 +719,7 @@
 {"lexeme":{"Heteronym":{"word":"promise","lemma":"promise","pos":"VERB"}},"count":124}
 {"lexeme":{"Multiword":"see that"},"count":124}
 {"lexeme":{"Multiword":"seeing that"},"count":124}
+{"lexeme":{"Multiword":"we'll see"},"count":124}
 {"lexeme":{"Heteronym":{"word":"get","lemma":"get","pos":"AUX"}},"count":123}
 {"lexeme":{"Heteronym":{"word":"tonight","lemma":"tonight","pos":"NOUN"}},"count":123}
 {"lexeme":{"Multiword":"go for"},"count":123}
@@ -803,7 +810,6 @@
 {"lexeme":{"Multiword":"everything is everything"},"count":106}
 {"lexeme":{"Heteronym":{"word":"dear","lemma":"dear","pos":"ADJ"}},"count":105}
 {"lexeme":{"Heteronym":{"word":"until","lemma":"until","pos":"ADP"}},"count":105}
-{"lexeme":{"Multiword":"I wish"},"count":105}
 {"lexeme":{"Multiword":"for it"},"count":105}
 {"lexeme":{"Heteronym":{"word":"cut","lemma":"cut","pos":"VERB"}},"count":104}
 {"lexeme":{"Heteronym":{"word":"liked","lemma":"like","pos":"VERB"}},"count":104}
@@ -811,6 +817,7 @@
 {"lexeme":{"Heteronym":{"word":"music","lemma":"music","pos":"NOUN"}},"count":104}
 {"lexeme":{"Heteronym":{"word":"yet","lemma":"yet","pos":"ADV"}},"count":104}
 {"lexeme":{"Multiword":"I mean"},"count":104}
+{"lexeme":{"Multiword":"I wish"},"count":104}
 {"lexeme":{"Multiword":"do tell"},"count":104}
 {"lexeme":{"Multiword":"good night"},"count":104}
 {"lexeme":{"Multiword":"well done"},"count":104}
@@ -832,6 +839,7 @@
 {"lexeme":{"Heteronym":{"word":"voice","lemma":"voice","pos":"NOUN"}},"count":101}
 {"lexeme":{"Heteronym":{"word":"wonder","lemma":"wonder","pos":"VERB"}},"count":101}
 {"lexeme":{"Multiword":"be worth"},"count":101}
+{"lexeme":{"Multiword":"go well"},"count":101}
 {"lexeme":{"Multiword":"so what"},"count":101}
 {"lexeme":{"Heteronym":{"word":"careful","lemma":"careful","pos":"ADJ"}},"count":100}
 {"lexeme":{"Heteronym":{"word":"return","lemma":"return","pos":"VERB"}},"count":100}
@@ -921,7 +929,6 @@
 {"lexeme":{"Multiword":"as was"},"count":87}
 {"lexeme":{"Multiword":"at all"},"count":87}
 {"lexeme":{"Multiword":"be late"},"count":87}
-{"lexeme":{"Multiword":"be proud of"},"count":87}
 {"lexeme":{"Multiword":"believe me"},"count":87}
 {"lexeme":{"Multiword":"that way"},"count":87}
 {"lexeme":{"Heteronym":{"word":"agree","lemma":"agree","pos":"VERB"}},"count":86}
@@ -931,7 +938,9 @@
 {"lexeme":{"Heteronym":{"word":"second","lemma":"second","pos":"NOUN"}},"count":86}
 {"lexeme":{"Multiword":"'d best"},"count":86}
 {"lexeme":{"Multiword":"'d better"},"count":86}
+{"lexeme":{"Multiword":"be proud of"},"count":86}
 {"lexeme":{"Multiword":"good luck"},"count":86}
+{"lexeme":{"Multiword":"have you ever"},"count":86}
 {"lexeme":{"Multiword":"supposed to"},"count":86}
 {"lexeme":{"Multiword":"the thing is"},"count":86}
 {"lexeme":{"Multiword":"you're telling me"},"count":86}
@@ -980,6 +989,7 @@
 {"lexeme":{"Multiword":"in front"},"count":81}
 {"lexeme":{"Multiword":"live in"},"count":81}
 {"lexeme":{"Multiword":"this morning"},"count":81}
+{"lexeme":{"Multiword":"you again"},"count":81}
 {"lexeme":{"Heteronym":{"word":"change","lemma":"change","pos":"NOUN"}},"count":80}
 {"lexeme":{"Heteronym":{"word":"food","lemma":"food","pos":"NOUN"}},"count":80}
 {"lexeme":{"Heteronym":{"word":"forgot","lemma":"forgot","pos":"VERB"}},"count":80}
@@ -1057,12 +1067,14 @@
 {"lexeme":{"Heteronym":{"word":"wake","lemma":"wake","pos":"VERB"}},"count":72}
 {"lexeme":{"Multiword":"other side"},"count":72}
 {"lexeme":{"Multiword":"what kind of"},"count":72}
+{"lexeme":{"Multiword":"you too"},"count":72}
 {"lexeme":{"Heteronym":{"word":"dance","lemma":"dance","pos":"VERB"}},"count":71}
 {"lexeme":{"Heteronym":{"word":"enough","lemma":"enough","pos":"ADV"}},"count":71}
 {"lexeme":{"Heteronym":{"word":"likes","lemma":"like","pos":"VERB"}},"count":71}
 {"lexeme":{"Heteronym":{"word":"probably","lemma":"probably","pos":"ADV"}},"count":71}
 {"lexeme":{"Heteronym":{"word":"the","lemma":"the","pos":"PRON"}},"count":71}
 {"lexeme":{"Heteronym":{"word":"touch","lemma":"touch","pos":"VERB"}},"count":71}
+{"lexeme":{"Multiword":"I'm sorry"},"count":71}
 {"lexeme":{"Multiword":"done thing"},"count":71}
 {"lexeme":{"Multiword":"for a while"},"count":71}
 {"lexeme":{"Heteronym":{"word":"beer","lemma":"beer","pos":"NOUN"}},"count":70}
@@ -1074,7 +1086,6 @@
 {"lexeme":{"Heteronym":{"word":"mind","lemma":"mind","pos":"VERB"}},"count":70}
 {"lexeme":{"Heteronym":{"word":"opinion","lemma":"opinion","pos":"NOUN"}},"count":70}
 {"lexeme":{"Heteronym":{"word":"sent","lemma":"send","pos":"VERB"}},"count":70}
-{"lexeme":{"Multiword":"I'm sorry"},"count":70}
 {"lexeme":{"Multiword":"come out"},"count":70}
 {"lexeme":{"Multiword":"get some"},"count":70}
 {"lexeme":{"Multiword":"look it"},"count":70}
@@ -1157,6 +1168,7 @@
 {"lexeme":{"Heteronym":{"word":"lives","lemma":"live","pos":"VERB"}},"count":62}
 {"lexeme":{"Heteronym":{"word":"matters","lemma":"matter","pos":"VERB"}},"count":62}
 {"lexeme":{"Heteronym":{"word":"situation","lemma":"situation","pos":"NOUN"}},"count":62}
+{"lexeme":{"Multiword":"be together"},"count":62}
 {"lexeme":{"Heteronym":{"word":"calling","lemma":"call","pos":"VERB"}},"count":61}
 {"lexeme":{"Heteronym":{"word":"dollars","lemma":"dollar","pos":"NOUN"}},"count":61}
 {"lexeme":{"Heteronym":{"word":"hiding","lemma":"hide","pos":"VERB"}},"count":61}
@@ -1327,6 +1339,7 @@
 {"lexeme":{"Multiword":"grown up"},"count":52}
 {"lexeme":{"Multiword":"know what is what"},"count":52}
 {"lexeme":{"Multiword":"know what's what"},"count":52}
+{"lexeme":{"Multiword":"say so"},"count":52}
 {"lexeme":{"Multiword":"that's enough"},"count":52}
 {"lexeme":{"Multiword":"what's happening"},"count":52}
 {"lexeme":{"Multiword":"you said it"},"count":52}
@@ -1471,6 +1484,7 @@
 {"lexeme":{"Heteronym":{"word":"sleep","lemma":"sleep","pos":"VERB"}},"count":44}
 {"lexeme":{"Heteronym":{"word":"taxi","lemma":"taxi","pos":"NOUN"}},"count":44}
 {"lexeme":{"Heteronym":{"word":"wine","lemma":"wine","pos":"NOUN"}},"count":44}
+{"lexeme":{"Multiword":"all done"},"count":44}
 {"lexeme":{"Multiword":"be seeing you"},"count":44}
 {"lexeme":{"Multiword":"by the way"},"count":44}
 {"lexeme":{"Multiword":"let me see"},"count":44}
@@ -1672,6 +1686,7 @@
 {"lexeme":{"Multiword":"in mind"},"count":37}
 {"lexeme":{"Multiword":"in place"},"count":37}
 {"lexeme":{"Multiword":"in places"},"count":37}
+{"lexeme":{"Multiword":"right there"},"count":37}
 {"lexeme":{"Multiword":"sit down"},"count":37}
 {"lexeme":{"Multiword":"tell me about it"},"count":37}
 {"lexeme":{"Multiword":"that's the thing"},"count":37}
@@ -1786,6 +1801,7 @@
 {"lexeme":{"Multiword":"had like"},"count":34}
 {"lexeme":{"Multiword":"hear from"},"count":34}
 {"lexeme":{"Multiword":"in one"},"count":34}
+{"lexeme":{"Multiword":"look who"},"count":34}
 {"lexeme":{"Multiword":"me time"},"count":34}
 {"lexeme":{"Multiword":"on the way"},"count":34}
 {"lexeme":{"Multiword":"so far"},"count":34}
@@ -1830,6 +1846,7 @@
 {"lexeme":{"Multiword":"make love"},"count":33}
 {"lexeme":{"Multiword":"on to"},"count":33}
 {"lexeme":{"Multiword":"so long"},"count":33}
+{"lexeme":{"Multiword":"we been knew"},"count":33}
 {"lexeme":{"Multiword":"what it do"},"count":33}
 {"lexeme":{"Heteronym":{"word":"animals","lemma":"animal","pos":"NOUN"}},"count":32}
 {"lexeme":{"Heteronym":{"word":"books","lemma":"book","pos":"NOUN"}},"count":32}
@@ -1870,6 +1887,7 @@
 {"lexeme":{"Multiword":"let go"},"count":32}
 {"lexeme":{"Multiword":"make sense"},"count":32}
 {"lexeme":{"Multiword":"marry me"},"count":32}
+{"lexeme":{"Multiword":"may I"},"count":32}
 {"lexeme":{"Multiword":"on the ground"},"count":32}
 {"lexeme":{"Multiword":"one of us"},"count":32}
 {"lexeme":{"Multiword":"or not"},"count":32}
@@ -2039,6 +2057,7 @@
 {"lexeme":{"Multiword":"come of"},"count":28}
 {"lexeme":{"Multiword":"good guy"},"count":28}
 {"lexeme":{"Multiword":"in all"},"count":28}
+{"lexeme":{"Multiword":"in with"},"count":28}
 {"lexeme":{"Multiword":"just in"},"count":28}
 {"lexeme":{"Multiword":"kiss me"},"count":28}
 {"lexeme":{"Multiword":"me too"},"count":28}
@@ -2265,6 +2284,7 @@
 {"lexeme":{"Multiword":"iced cream"},"count":24}
 {"lexeme":{"Multiword":"in house"},"count":24}
 {"lexeme":{"Multiword":"in peace"},"count":24}
+{"lexeme":{"Multiword":"just think"},"count":24}
 {"lexeme":{"Multiword":"let's say"},"count":24}
 {"lexeme":{"Multiword":"make a decision"},"count":24}
 {"lexeme":{"Multiword":"my word"},"count":24}
@@ -2314,6 +2334,7 @@
 {"lexeme":{"Multiword":"get through"},"count":23}
 {"lexeme":{"Multiword":"here we go"},"count":23}
 {"lexeme":{"Multiword":"how about"},"count":23}
+{"lexeme":{"Multiword":"how you doing"},"count":23}
 {"lexeme":{"Multiword":"hurry up"},"count":23}
 {"lexeme":{"Multiword":"if it isn't"},"count":23}
 {"lexeme":{"Multiword":"if it wasn't"},"count":23}
@@ -2366,9 +2387,11 @@
 {"lexeme":{"Heteronym":{"word":"train","lemma":"train","pos":"VERB"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"universe","lemma":"universe","pos":"NOUN"}},"count":22}
 {"lexeme":{"Heteronym":{"word":"whose","lemma":"whose","pos":"DET"}},"count":22}
+{"lexeme":{"Multiword":"another time"},"count":22}
 {"lexeme":{"Multiword":"at the time"},"count":22}
 {"lexeme":{"Multiword":"at work"},"count":22}
 {"lexeme":{"Multiword":"be done with"},"count":22}
+{"lexeme":{"Multiword":"come get"},"count":22}
 {"lexeme":{"Multiword":"for days"},"count":22}
 {"lexeme":{"Multiword":"for life"},"count":22}
 {"lexeme":{"Multiword":"go around"},"count":22}
@@ -2526,6 +2549,8 @@
 {"lexeme":{"Multiword":"a thousand"},"count":20}
 {"lexeme":{"Multiword":"be quiet"},"count":20}
 {"lexeme":{"Multiword":"can wait"},"count":20}
+{"lexeme":{"Multiword":"go at"},"count":20}
+{"lexeme":{"Multiword":"hope so"},"count":20}
 {"lexeme":{"Multiword":"in half"},"count":20}
 {"lexeme":{"Multiword":"in the name of"},"count":20}
 {"lexeme":{"Multiword":"in touch"},"count":20}
@@ -2536,7 +2561,9 @@
 {"lexeme":{"Multiword":"once again"},"count":20}
 {"lexeme":{"Multiword":"see you soon"},"count":20}
 {"lexeme":{"Multiword":"take in"},"count":20}
+{"lexeme":{"Multiword":"than ever"},"count":20}
 {"lexeme":{"Multiword":"the time has come"},"count":20}
+{"lexeme":{"Multiword":"well seen"},"count":20}
 {"lexeme":{"Multiword":"work out"},"count":20}
 {"lexeme":{"Multiword":"you got it"},"count":20}
 {"lexeme":{"Multiword":"you're fine"},"count":20}
@@ -2603,7 +2630,6 @@
 {"lexeme":{"Multiword":"every time"},"count":19}
 {"lexeme":{"Multiword":"get ready"},"count":19}
 {"lexeme":{"Multiword":"given that"},"count":19}
-{"lexeme":{"Multiword":"go at"},"count":19}
 {"lexeme":{"Multiword":"good work"},"count":19}
 {"lexeme":{"Multiword":"have way"},"count":19}
 {"lexeme":{"Multiword":"how goes it"},"count":19}
@@ -2797,6 +2823,7 @@
 {"lexeme":{"Multiword":"come up with"},"count":17}
 {"lexeme":{"Multiword":"cup of tea"},"count":17}
 {"lexeme":{"Multiword":"do you mind"},"count":17}
+{"lexeme":{"Multiword":"find a way"},"count":17}
 {"lexeme":{"Multiword":"for the rest"},"count":17}
 {"lexeme":{"Multiword":"for to"},"count":17}
 {"lexeme":{"Multiword":"go after"},"count":17}
@@ -2821,7 +2848,6 @@
 {"lexeme":{"Multiword":"this afternoon"},"count":17}
 {"lexeme":{"Multiword":"true that"},"count":17}
 {"lexeme":{"Multiword":"turn off"},"count":17}
-{"lexeme":{"Multiword":"what should I do"},"count":17}
 {"lexeme":{"Multiword":"work at"},"count":17}
 {"lexeme":{"Multiword":"would rather"},"count":17}
 {"lexeme":{"Heteronym":{"word":"affair","lemma":"affair","pos":"NOUN"}},"count":16}
@@ -2935,6 +2961,7 @@
 {"lexeme":{"Multiword":"more and more"},"count":16}
 {"lexeme":{"Multiword":"next year"},"count":16}
 {"lexeme":{"Multiword":"no go"},"count":16}
+{"lexeme":{"Multiword":"oh yes"},"count":16}
 {"lexeme":{"Multiword":"one more time"},"count":16}
 {"lexeme":{"Multiword":"put an end to"},"count":16}
 {"lexeme":{"Multiword":"rules are rules"},"count":16}
@@ -2942,6 +2969,7 @@
 {"lexeme":{"Multiword":"that's me told"},"count":16}
 {"lexeme":{"Multiword":"the other day"},"count":16}
 {"lexeme":{"Multiword":"up on"},"count":16}
+{"lexeme":{"Multiword":"what should I do"},"count":16}
 {"lexeme":{"Multiword":"with pleasure"},"count":16}
 {"lexeme":{"Multiword":"would have liked to"},"count":16}
 {"lexeme":{"Multiword":"you know something"},"count":16}
@@ -3030,6 +3058,7 @@
 {"lexeme":{"Multiword":"best girl"},"count":15}
 {"lexeme":{"Multiword":"catch me"},"count":15}
 {"lexeme":{"Multiword":"catch up"},"count":15}
+{"lexeme":{"Multiword":"come now"},"count":15}
 {"lexeme":{"Multiword":"cup of coffee"},"count":15}
 {"lexeme":{"Multiword":"day after"},"count":15}
 {"lexeme":{"Multiword":"day off"},"count":15}
@@ -3340,6 +3369,7 @@
 {"lexeme":{"Multiword":"be aware of"},"count":13}
 {"lexeme":{"Multiword":"big boy"},"count":13}
 {"lexeme":{"Multiword":"big boys"},"count":13}
+{"lexeme":{"Multiword":"but yes"},"count":13}
 {"lexeme":{"Multiword":"come at"},"count":13}
 {"lexeme":{"Multiword":"come right"},"count":13}
 {"lexeme":{"Multiword":"done and done"},"count":13}
@@ -3372,7 +3402,9 @@
 {"lexeme":{"Multiword":"never say never"},"count":13}
 {"lexeme":{"Multiword":"not anymore"},"count":13}
 {"lexeme":{"Multiword":"not to say"},"count":13}
+{"lexeme":{"Multiword":"now look"},"count":13}
 {"lexeme":{"Multiword":"on the beach"},"count":13}
+{"lexeme":{"Multiword":"one more thing"},"count":13}
 {"lexeme":{"Multiword":"piece of cake"},"count":13}
 {"lexeme":{"Multiword":"search for"},"count":13}
 {"lexeme":{"Multiword":"see about"},"count":13}
@@ -3381,6 +3413,7 @@
 {"lexeme":{"Multiword":"sounds good"},"count":13}
 {"lexeme":{"Multiword":"spend time"},"count":13}
 {"lexeme":{"Multiword":"take place"},"count":13}
+{"lexeme":{"Multiword":"take two"},"count":13}
 {"lexeme":{"Multiword":"that there"},"count":13}
 {"lexeme":{"Multiword":"the next day"},"count":13}
 {"lexeme":{"Multiword":"want out"},"count":13}
@@ -3710,10 +3743,12 @@
 {"lexeme":{"Multiword":"as you wish"},"count":11}
 {"lexeme":{"Multiword":"at the bottom of"},"count":11}
 {"lexeme":{"Multiword":"back off"},"count":11}
+{"lexeme":{"Multiword":"bring in"},"count":11}
 {"lexeme":{"Multiword":"by now"},"count":11}
 {"lexeme":{"Multiword":"call in"},"count":11}
 {"lexeme":{"Multiword":"change the subject"},"count":11}
 {"lexeme":{"Multiword":"come and go"},"count":11}
+{"lexeme":{"Multiword":"come, come"},"count":11}
 {"lexeme":{"Multiword":"coming and going"},"count":11}
 {"lexeme":{"Multiword":"do it yourself"},"count":11}
 {"lexeme":{"Multiword":"figure out"},"count":11}
@@ -3941,7 +3976,6 @@
 {"lexeme":{"Multiword":"ask me anything"},"count":10}
 {"lexeme":{"Multiword":"be tired of"},"count":10}
 {"lexeme":{"Multiword":"best wishes"},"count":10}
-{"lexeme":{"Multiword":"bring in"},"count":10}
 {"lexeme":{"Multiword":"can you tell us"},"count":10}
 {"lexeme":{"Multiword":"come before"},"count":10}
 {"lexeme":{"Multiword":"come forward"},"count":10}
@@ -3978,6 +4012,7 @@
 {"lexeme":{"Multiword":"make an effort"},"count":10}
 {"lexeme":{"Multiword":"my foot"},"count":10}
 {"lexeme":{"Multiword":"now what"},"count":10}
+{"lexeme":{"Multiword":"of course not"},"count":10}
 {"lexeme":{"Multiword":"old school"},"count":10}
 {"lexeme":{"Multiword":"on the door"},"count":10}
 {"lexeme":{"Multiword":"on the right track"},"count":10}
@@ -3995,7 +4030,6 @@
 {"lexeme":{"Multiword":"this week"},"count":10}
 {"lexeme":{"Multiword":"time about"},"count":10}
 {"lexeme":{"Multiword":"truth be told"},"count":10}
-{"lexeme":{"Multiword":"you get that"},"count":10}
 {"lexeme":{"Multiword":"you lot"},"count":10}
 {"lexeme":{"Heteronym":{"word":"ability","lemma":"ability","pos":"NOUN"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"accent","lemma":"accent","pos":"NOUN"}},"count":9}
@@ -4201,7 +4235,6 @@
 {"lexeme":{"Multiword":"but if"},"count":9}
 {"lexeme":{"Multiword":"by chance"},"count":9}
 {"lexeme":{"Multiword":"call on"},"count":9}
-{"lexeme":{"Multiword":"can do with"},"count":9}
 {"lexeme":{"Multiword":"can you not"},"count":9}
 {"lexeme":{"Multiword":"can't wait"},"count":9}
 {"lexeme":{"Multiword":"check on"},"count":9}
@@ -4241,6 +4274,7 @@
 {"lexeme":{"Multiword":"make friends"},"count":9}
 {"lexeme":{"Multiword":"make noise"},"count":9}
 {"lexeme":{"Multiword":"make noises"},"count":9}
+{"lexeme":{"Multiword":"more than one"},"count":9}
 {"lexeme":{"Multiword":"no idea"},"count":9}
 {"lexeme":{"Multiword":"no way"},"count":9}
 {"lexeme":{"Multiword":"no ways"},"count":9}
@@ -4276,6 +4310,7 @@
 {"lexeme":{"Multiword":"with all due respect"},"count":9}
 {"lexeme":{"Multiword":"with child"},"count":9}
 {"lexeme":{"Multiword":"yeah, yeah"},"count":9}
+{"lexeme":{"Multiword":"you get that"},"count":9}
 {"lexeme":{"Heteronym":{"word":"abandoned","lemma":"abandon","pos":"VERB"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"advise","lemma":"advise","pos":"VERB"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"airplane","lemma":"airplane","pos":"NOUN"}},"count":8}
@@ -4497,6 +4532,7 @@
 {"lexeme":{"Multiword":"big fish"},"count":8}
 {"lexeme":{"Multiword":"bright side"},"count":8}
 {"lexeme":{"Multiword":"by heart"},"count":8}
+{"lexeme":{"Multiword":"can do with"},"count":8}
 {"lexeme":{"Multiword":"can it"},"count":8}
 {"lexeme":{"Multiword":"car key"},"count":8}
 {"lexeme":{"Multiword":"catch it"},"count":8}
@@ -4534,6 +4570,7 @@
 {"lexeme":{"Multiword":"in particular"},"count":8}
 {"lexeme":{"Multiword":"is that the time"},"count":8}
 {"lexeme":{"Multiword":"it sounds like"},"count":8}
+{"lexeme":{"Multiword":"just fine"},"count":8}
 {"lexeme":{"Multiword":"just friends"},"count":8}
 {"lexeme":{"Multiword":"like like"},"count":8}
 {"lexeme":{"Multiword":"lock up"},"count":8}
@@ -4591,6 +4628,7 @@
 {"lexeme":{"Multiword":"the sticks"},"count":8}
 {"lexeme":{"Multiword":"there we go"},"count":8}
 {"lexeme":{"Multiword":"think up"},"count":8}
+{"lexeme":{"Multiword":"three years ago"},"count":8}
 {"lexeme":{"Multiword":"time machine"},"count":8}
 {"lexeme":{"Multiword":"to tell you the truth"},"count":8}
 {"lexeme":{"Multiword":"turn the page"},"count":8}
@@ -4929,8 +4967,10 @@
 {"lexeme":{"Multiword":"just a second"},"count":7}
 {"lexeme":{"Multiword":"just so"},"count":7}
 {"lexeme":{"Multiword":"last minute"},"count":7}
+{"lexeme":{"Multiword":"leave on"},"count":7}
 {"lexeme":{"Multiword":"leave the door open"},"count":7}
 {"lexeme":{"Multiword":"like anything"},"count":7}
+{"lexeme":{"Multiword":"like water"},"count":7}
 {"lexeme":{"Multiword":"little guy"},"count":7}
 {"lexeme":{"Multiword":"live up"},"count":7}
 {"lexeme":{"Multiword":"look alike"},"count":7}
@@ -4939,6 +4979,7 @@
 {"lexeme":{"Multiword":"love story"},"count":7}
 {"lexeme":{"Multiword":"make right"},"count":7}
 {"lexeme":{"Multiword":"new man"},"count":7}
+{"lexeme":{"Multiword":"nice work"},"count":7}
 {"lexeme":{"Multiword":"no matter"},"count":7}
 {"lexeme":{"Multiword":"no, thank you"},"count":7}
 {"lexeme":{"Multiword":"not a word"},"count":7}
@@ -4984,6 +5025,7 @@
 {"lexeme":{"Multiword":"under control"},"count":7}
 {"lexeme":{"Multiword":"way back"},"count":7}
 {"lexeme":{"Multiword":"way to go"},"count":7}
+{"lexeme":{"Multiword":"well played"},"count":7}
 {"lexeme":{"Multiword":"what are you waiting for"},"count":7}
 {"lexeme":{"Multiword":"what can I tell you"},"count":7}
 {"lexeme":{"Multiword":"what does it matter"},"count":7}
@@ -5414,11 +5456,9 @@
 {"lexeme":{"Multiword":"kick out"},"count":6}
 {"lexeme":{"Multiword":"knock on"},"count":6}
 {"lexeme":{"Multiword":"law of nature"},"count":6}
-{"lexeme":{"Multiword":"leave on"},"count":6}
 {"lexeme":{"Multiword":"let down"},"count":6}
 {"lexeme":{"Multiword":"let's play"},"count":6}
 {"lexeme":{"Multiword":"lie down"},"count":6}
-{"lexeme":{"Multiword":"like water"},"count":6}
 {"lexeme":{"Multiword":"little go"},"count":6}
 {"lexeme":{"Multiword":"little sister"},"count":6}
 {"lexeme":{"Multiword":"lock in"},"count":6}
@@ -5512,7 +5552,6 @@
 {"lexeme":{"Multiword":"way of life"},"count":6}
 {"lexeme":{"Multiword":"wedding ring"},"count":6}
 {"lexeme":{"Multiword":"well liked"},"count":6}
-{"lexeme":{"Multiword":"well played"},"count":6}
 {"lexeme":{"Multiword":"what is her name"},"count":6}
 {"lexeme":{"Multiword":"what would you like"},"count":6}
 {"lexeme":{"Multiword":"when the time comes"},"count":6}
@@ -5520,7 +5559,6 @@
 {"lexeme":{"Multiword":"who's calling"},"count":6}
 {"lexeme":{"Multiword":"wide open"},"count":6}
 {"lexeme":{"Multiword":"yes and"},"count":6}
-{"lexeme":{"Multiword":"you call this"},"count":6}
 {"lexeme":{"Multiword":"you people"},"count":6}
 {"lexeme":{"Multiword":"you're the boss"},"count":6}
 {"lexeme":{"Heteronym":{"word":"'s","lemma":"'","pos":"VERB"}},"count":5}
@@ -6099,6 +6137,7 @@
 {"lexeme":{"Multiword":"make up to"},"count":5}
 {"lexeme":{"Multiword":"man look"},"count":5}
 {"lexeme":{"Multiword":"man talk"},"count":5}
+{"lexeme":{"Multiword":"maybe so"},"count":5}
 {"lexeme":{"Multiword":"mentally ill"},"count":5}
 {"lexeme":{"Multiword":"might is right"},"count":5}
 {"lexeme":{"Multiword":"mind read"},"count":5}
@@ -6114,6 +6153,7 @@
 {"lexeme":{"Multiword":"not quite"},"count":5}
 {"lexeme":{"Multiword":"not so fast"},"count":5}
 {"lexeme":{"Multiword":"nothing doing"},"count":5}
+{"lexeme":{"Multiword":"now listen"},"count":5}
 {"lexeme":{"Multiword":"of a lifetime"},"count":5}
 {"lexeme":{"Multiword":"of ours"},"count":5}
 {"lexeme":{"Multiword":"of the moment"},"count":5}
@@ -6198,6 +6238,7 @@
 {"lexeme":{"Multiword":"with God"},"count":5}
 {"lexeme":{"Multiword":"with respect"},"count":5}
 {"lexeme":{"Multiword":"world peace"},"count":5}
+{"lexeme":{"Multiword":"you call this"},"count":5}
 {"lexeme":{"Multiword":"you can't talk"},"count":5}
 {"lexeme":{"Multiword":"you had to be there"},"count":5}
 {"lexeme":{"Multiword":"you'll never guess"},"count":5}
@@ -6771,6 +6812,7 @@
 {"lexeme":{"Multiword":"A road"},"count":4}
 {"lexeme":{"Multiword":"A wave"},"count":4}
 {"lexeme":{"Multiword":"Black man"},"count":4}
+{"lexeme":{"Multiword":"Castle Black"},"count":4}
 {"lexeme":{"Multiword":"Holy Grail"},"count":4}
 {"lexeme":{"Multiword":"Holy Spirit"},"count":4}
 {"lexeme":{"Multiword":"I am thirsty"},"count":4}
@@ -7044,6 +7086,7 @@
 {"lexeme":{"Multiword":"sign up"},"count":4}
 {"lexeme":{"Multiword":"sleep together"},"count":4}
 {"lexeme":{"Multiword":"so it goes"},"count":4}
+{"lexeme":{"Multiword":"so true"},"count":4}
 {"lexeme":{"Multiword":"soon enough"},"count":4}
 {"lexeme":{"Multiword":"spill the beans"},"count":4}
 {"lexeme":{"Multiword":"square one"},"count":4}
@@ -7073,6 +7116,7 @@
 {"lexeme":{"Multiword":"the night before last"},"count":4}
 {"lexeme":{"Multiword":"the pleasure is all mine"},"count":4}
 {"lexeme":{"Multiword":"them there"},"count":4}
+{"lexeme":{"Multiword":"things were said"},"count":4}
 {"lexeme":{"Multiword":"think big"},"count":4}
 {"lexeme":{"Multiword":"this you"},"count":4}
 {"lexeme":{"Multiword":"time work"},"count":4}
@@ -8016,6 +8060,7 @@
 {"lexeme":{"Multiword":"at the first"},"count":3}
 {"lexeme":{"Multiword":"at the last minute"},"count":3}
 {"lexeme":{"Multiword":"at the latest"},"count":3}
+{"lexeme":{"Multiword":"at this moment"},"count":3}
 {"lexeme":{"Multiword":"back and forth"},"count":3}
 {"lexeme":{"Multiword":"back in the day"},"count":3}
 {"lexeme":{"Multiword":"back pay"},"count":3}
@@ -8111,6 +8156,7 @@
 {"lexeme":{"Multiword":"double agent"},"count":3}
 {"lexeme":{"Multiword":"draw lots"},"count":3}
 {"lexeme":{"Multiword":"draw straws"},"count":3}
+{"lexeme":{"Multiword":"dream true"},"count":3}
 {"lexeme":{"Multiword":"dress up"},"count":3}
 {"lexeme":{"Multiword":"dressed up"},"count":3}
 {"lexeme":{"Multiword":"driving license"},"count":3}
@@ -8159,6 +8205,7 @@
 {"lexeme":{"Multiword":"get got"},"count":3}
 {"lexeme":{"Multiword":"get high"},"count":3}
 {"lexeme":{"Multiword":"get in there"},"count":3}
+{"lexeme":{"Multiword":"get it in"},"count":3}
 {"lexeme":{"Multiword":"get it on"},"count":3}
 {"lexeme":{"Multiword":"get late"},"count":3}
 {"lexeme":{"Multiword":"get on to"},"count":3}
@@ -8565,6 +8612,7 @@
 {"lexeme":{"Multiword":"x-ray"},"count":3}
 {"lexeme":{"Multiword":"yeah, right"},"count":3}
 {"lexeme":{"Multiword":"yell at"},"count":3}
+{"lexeme":{"Multiword":"yes sir"},"count":3}
 {"lexeme":{"Multiword":"you don't want to know"},"count":3}
 {"lexeme":{"Multiword":"you get what you pay for"},"count":3}
 {"lexeme":{"Multiword":"you have beautiful eyes"},"count":3}
@@ -9987,7 +10035,9 @@
 {"lexeme":{"Multiword":"A plus"},"count":2}
 {"lexeme":{"Multiword":"Beverly Hills"},"count":2}
 {"lexeme":{"Multiword":"Cape Town"},"count":2}
+{"lexeme":{"Multiword":"Captain's Log"},"count":2}
 {"lexeme":{"Multiword":"Coast Guard"},"count":2}
+{"lexeme":{"Multiword":"Eagle One"},"count":2}
 {"lexeme":{"Multiword":"Eiffel Tower"},"count":2}
 {"lexeme":{"Multiword":"End Times"},"count":2}
 {"lexeme":{"Multiword":"Garden of Eden"},"count":2}
@@ -10041,7 +10091,6 @@
 {"lexeme":{"Multiword":"Soviet Union"},"count":2}
 {"lexeme":{"Multiword":"TV show"},"count":2}
 {"lexeme":{"Multiword":"The Bahamas"},"count":2}
-{"lexeme":{"Multiword":"The Island"},"count":2}
 {"lexeme":{"Multiword":"The Sea"},"count":2}
 {"lexeme":{"Multiword":"Very light"},"count":2}
 {"lexeme":{"Multiword":"World War II"},"count":2}
@@ -10139,6 +10188,7 @@
 {"lexeme":{"Multiword":"better known as"},"count":2}
 {"lexeme":{"Multiword":"better late than never"},"count":2}
 {"lexeme":{"Multiword":"better off"},"count":2}
+{"lexeme":{"Multiword":"better than ever"},"count":2}
 {"lexeme":{"Multiword":"big picture"},"count":2}
 {"lexeme":{"Multiword":"big screen"},"count":2}
 {"lexeme":{"Multiword":"big shot"},"count":2}
@@ -10182,6 +10232,7 @@
 {"lexeme":{"Multiword":"can I use your phone"},"count":2}
 {"lexeme":{"Multiword":"can do this all day"},"count":2}
 {"lexeme":{"Multiword":"can you help me"},"count":2}
+{"lexeme":{"Multiword":"captain's log"},"count":2}
 {"lexeme":{"Multiword":"car wash"},"count":2}
 {"lexeme":{"Multiword":"carried away"},"count":2}
 {"lexeme":{"Multiword":"carry away"},"count":2}
@@ -10339,6 +10390,7 @@
 {"lexeme":{"Multiword":"free up"},"count":2}
 {"lexeme":{"Multiword":"from away"},"count":2}
 {"lexeme":{"Multiword":"from one day to the next"},"count":2}
+{"lexeme":{"Multiword":"from one end to the other"},"count":2}
 {"lexeme":{"Multiword":"from start to finish"},"count":2}
 {"lexeme":{"Multiword":"from the first"},"count":2}
 {"lexeme":{"Multiword":"from the heart"},"count":2}
@@ -10416,6 +10468,7 @@
 {"lexeme":{"Multiword":"group leader"},"count":2}
 {"lexeme":{"Multiword":"grow on"},"count":2}
 {"lexeme":{"Multiword":"guardian angel"},"count":2}
+{"lexeme":{"Multiword":"guest list"},"count":2}
 {"lexeme":{"Multiword":"guest room"},"count":2}
 {"lexeme":{"Multiword":"half day"},"count":2}
 {"lexeme":{"Multiword":"half full"},"count":2}
@@ -10425,6 +10478,7 @@
 {"lexeme":{"Multiword":"hang with"},"count":2}
 {"lexeme":{"Multiword":"happy Valentine's Day"},"count":2}
 {"lexeme":{"Multiword":"happy holidays"},"count":2}
+{"lexeme":{"Multiword":"happy now"},"count":2}
 {"lexeme":{"Multiword":"hard on"},"count":2}
 {"lexeme":{"Multiword":"hard work"},"count":2}
 {"lexeme":{"Multiword":"hats off"},"count":2}
@@ -10506,6 +10560,7 @@
 {"lexeme":{"Multiword":"in operation"},"count":2}
 {"lexeme":{"Multiword":"in passing"},"count":2}
 {"lexeme":{"Multiword":"in power"},"count":2}
+{"lexeme":{"Multiword":"in real life"},"count":2}
 {"lexeme":{"Multiword":"in sequence"},"count":2}
 {"lexeme":{"Multiword":"in style"},"count":2}
 {"lexeme":{"Multiword":"in tears"},"count":2}
@@ -10564,6 +10619,7 @@
 {"lexeme":{"Multiword":"let someone go"},"count":2}
 {"lexeme":{"Multiword":"let there be light"},"count":2}
 {"lexeme":{"Multiword":"let through"},"count":2}
+{"lexeme":{"Multiword":"let's hope so"},"count":2}
 {"lexeme":{"Multiword":"lie in"},"count":2}
 {"lexeme":{"Multiword":"life cycle"},"count":2}
 {"lexeme":{"Multiword":"life force"},"count":2}
@@ -10592,6 +10648,7 @@
 {"lexeme":{"Multiword":"living legend"},"count":2}
 {"lexeme":{"Multiword":"long hour"},"count":2}
 {"lexeme":{"Multiword":"long-term"},"count":2}
+{"lexeme":{"Multiword":"look at it this way"},"count":2}
 {"lexeme":{"Multiword":"look away"},"count":2}
 {"lexeme":{"Multiword":"love song"},"count":2}
 {"lexeme":{"Multiword":"lunch in"},"count":2}
@@ -10616,6 +10673,7 @@
 {"lexeme":{"Multiword":"many thanks"},"count":2}
 {"lexeme":{"Multiword":"marriage certificate"},"count":2}
 {"lexeme":{"Multiword":"marry in"},"count":2}
+{"lexeme":{"Multiword":"maybe another time"},"count":2}
 {"lexeme":{"Multiword":"me neither"},"count":2}
 {"lexeme":{"Multiword":"mean everything to"},"count":2}
 {"lexeme":{"Multiword":"meaning of life"},"count":2}
@@ -10642,6 +10700,7 @@
 {"lexeme":{"Multiword":"nail it"},"count":2}
 {"lexeme":{"Multiword":"name after"},"count":2}
 {"lexeme":{"Multiword":"name names"},"count":2}
+{"lexeme":{"Multiword":"never better"},"count":2}
 {"lexeme":{"Multiword":"new broom"},"count":2}
 {"lexeme":{"Multiword":"next life"},"count":2}
 {"lexeme":{"Multiword":"night and day"},"count":2}
@@ -10796,6 +10855,7 @@
 {"lexeme":{"Multiword":"rest assured"},"count":2}
 {"lexeme":{"Multiword":"return the favor"},"count":2}
 {"lexeme":{"Multiword":"rich kid"},"count":2}
+{"lexeme":{"Multiword":"right place, right time"},"count":2}
 {"lexeme":{"Multiword":"right-hand"},"count":2}
 {"lexeme":{"Multiword":"right-hand man"},"count":2}
 {"lexeme":{"Multiword":"rock water"},"count":2}
@@ -10893,6 +10953,7 @@
 {"lexeme":{"Multiword":"stable boy"},"count":2}
 {"lexeme":{"Multiword":"stage name"},"count":2}
 {"lexeme":{"Multiword":"starting five"},"count":2}
+{"lexeme":{"Multiword":"stay down"},"count":2}
 {"lexeme":{"Multiword":"stay the course"},"count":2}
 {"lexeme":{"Multiword":"stay tuned"},"count":2}
 {"lexeme":{"Multiword":"step by step"},"count":2}
@@ -11006,6 +11067,7 @@
 {"lexeme":{"Multiword":"turn the table"},"count":2}
 {"lexeme":{"Multiword":"turn the tables"},"count":2}
 {"lexeme":{"Multiword":"twelve o'clock"},"count":2}
+{"lexeme":{"Multiword":"twenty five"},"count":2}
 {"lexeme":{"Multiword":"twenty-eight"},"count":2}
 {"lexeme":{"Multiword":"twenty-six"},"count":2}
 {"lexeme":{"Multiword":"twenty-three"},"count":2}
@@ -11019,6 +11081,7 @@
 {"lexeme":{"Multiword":"up the river"},"count":2}
 {"lexeme":{"Multiword":"use your words"},"count":2}
 {"lexeme":{"Multiword":"vacuum cleaner"},"count":2}
+{"lexeme":{"Multiword":"ventilation shaft"},"count":2}
 {"lexeme":{"Multiword":"very light"},"count":2}
 {"lexeme":{"Multiword":"vouch for"},"count":2}
 {"lexeme":{"Multiword":"waiting list"},"count":2}
@@ -11032,6 +11095,7 @@
 {"lexeme":{"Multiword":"water bottle"},"count":2}
 {"lexeme":{"Multiword":"water pump"},"count":2}
 {"lexeme":{"Multiword":"water under the bridge"},"count":2}
+{"lexeme":{"Multiword":"we'll see what we'll see"},"count":2}
 {"lexeme":{"Multiword":"weight gain"},"count":2}
 {"lexeme":{"Multiword":"weight training"},"count":2}
 {"lexeme":{"Multiword":"well aware"},"count":2}
@@ -11044,6 +11108,7 @@
 {"lexeme":{"Multiword":"what's eating"},"count":2}
 {"lexeme":{"Multiword":"what's the difference"},"count":2}
 {"lexeme":{"Multiword":"what's the time"},"count":2}
+{"lexeme":{"Multiword":"when you have to go, you have to go"},"count":2}
 {"lexeme":{"Multiword":"where are the toilets"},"count":2}
 {"lexeme":{"Multiword":"where is the toilet"},"count":2}
 {"lexeme":{"Multiword":"where there is a will"},"count":2}
@@ -11054,6 +11119,7 @@
 {"lexeme":{"Multiword":"white rabbits"},"count":2}
 {"lexeme":{"Multiword":"white wine"},"count":2}
 {"lexeme":{"Multiword":"who goes there"},"count":2}
+{"lexeme":{"Multiword":"who would have thought"},"count":2}
 {"lexeme":{"Multiword":"win big"},"count":2}
 {"lexeme":{"Multiword":"win the lottery"},"count":2}
 {"lexeme":{"Multiword":"win-win"},"count":2}
@@ -14676,6 +14742,7 @@
 {"lexeme":{"Multiword":"West Bank"},"count":1}
 {"lexeme":{"Multiword":"West Coast"},"count":1}
 {"lexeme":{"Multiword":"White City"},"count":1}
+{"lexeme":{"Multiword":"Who, us?"},"count":1}
 {"lexeme":{"Multiword":"Wizard of Oz"},"count":1}
 {"lexeme":{"Multiword":"World Cup"},"count":1}
 {"lexeme":{"Multiword":"Your Lordship"},"count":1}
@@ -14808,6 +14875,7 @@
 {"lexeme":{"Multiword":"ask back"},"count":1}
 {"lexeme":{"Multiword":"asked and answered"},"count":1}
 {"lexeme":{"Multiword":"assuming that"},"count":1}
+{"lexeme":{"Multiword":"at Christmas"},"count":1}
 {"lexeme":{"Multiword":"at a price"},"count":1}
 {"lexeme":{"Multiword":"at any rate"},"count":1}
 {"lexeme":{"Multiword":"at heart"},"count":1}
@@ -15339,6 +15407,7 @@
 {"lexeme":{"Multiword":"draw right"},"count":1}
 {"lexeme":{"Multiword":"draw the short straw"},"count":1}
 {"lexeme":{"Multiword":"draw together"},"count":1}
+{"lexeme":{"Multiword":"dream home"},"count":1}
 {"lexeme":{"Multiword":"dream life"},"count":1}
 {"lexeme":{"Multiword":"dream up"},"count":1}
 {"lexeme":{"Multiword":"dream world"},"count":1}
@@ -15472,6 +15541,9 @@
 {"lexeme":{"Multiword":"feel around"},"count":1}
 {"lexeme":{"Multiword":"feel free"},"count":1}
 {"lexeme":{"Multiword":"field work"},"count":1}
+{"lexeme":{"Multiword":"fifty five"},"count":1}
+{"lexeme":{"Multiword":"fifty one"},"count":1}
+{"lexeme":{"Multiword":"fifty two"},"count":1}
 {"lexeme":{"Multiword":"fifty-fifty"},"count":1}
 {"lexeme":{"Multiword":"fifty-five"},"count":1}
 {"lexeme":{"Multiword":"fifty-one"},"count":1}
@@ -15563,6 +15635,12 @@
 {"lexeme":{"Multiword":"forensic science"},"count":1}
 {"lexeme":{"Multiword":"forewarned is forearmed"},"count":1}
 {"lexeme":{"Multiword":"form of government"},"count":1}
+{"lexeme":{"Multiword":"forty eight"},"count":1}
+{"lexeme":{"Multiword":"forty five"},"count":1}
+{"lexeme":{"Multiword":"forty four"},"count":1}
+{"lexeme":{"Multiword":"forty nine"},"count":1}
+{"lexeme":{"Multiword":"forty three"},"count":1}
+{"lexeme":{"Multiword":"forty two"},"count":1}
 {"lexeme":{"Multiword":"forty-four"},"count":1}
 {"lexeme":{"Multiword":"forty-nine"},"count":1}
 {"lexeme":{"Multiword":"forty-seven"},"count":1}
@@ -15814,6 +15892,7 @@
 {"lexeme":{"Multiword":"half-sister"},"count":1}
 {"lexeme":{"Multiword":"half-time"},"count":1}
 {"lexeme":{"Multiword":"hand away"},"count":1}
+{"lexeme":{"Multiword":"hand back"},"count":1}
 {"lexeme":{"Multiword":"hand carry"},"count":1}
 {"lexeme":{"Multiword":"hand cream"},"count":1}
 {"lexeme":{"Multiword":"hand down"},"count":1}
@@ -15883,6 +15962,7 @@
 {"lexeme":{"Multiword":"heavy artillery"},"count":1}
 {"lexeme":{"Multiword":"heavy-handed"},"count":1}
 {"lexeme":{"Multiword":"hello again"},"count":1}
+{"lexeme":{"Multiword":"hello yourself"},"count":1}
 {"lexeme":{"Multiword":"help wanted"},"count":1}
 {"lexeme":{"Multiword":"here and there"},"count":1}
 {"lexeme":{"Multiword":"here below"},"count":1}
@@ -16241,6 +16321,7 @@
 {"lexeme":{"Multiword":"like so"},"count":1}
 {"lexeme":{"Multiword":"like talking to a wall"},"count":1}
 {"lexeme":{"Multiword":"like two peas in a pod"},"count":1}
+{"lexeme":{"Multiword":"like you can talk"},"count":1}
 {"lexeme":{"Multiword":"line break"},"count":1}
 {"lexeme":{"Multiword":"line drop"},"count":1}
 {"lexeme":{"Multiword":"line of sight"},"count":1}
@@ -16447,6 +16528,7 @@
 {"lexeme":{"Multiword":"moral certainty"},"count":1}
 {"lexeme":{"Multiword":"moral sense"},"count":1}
 {"lexeme":{"Multiword":"more like it"},"count":1}
+{"lexeme":{"Multiword":"more please"},"count":1}
 {"lexeme":{"Multiword":"morning, noon and night"},"count":1}
 {"lexeme":{"Multiword":"most of all"},"count":1}
 {"lexeme":{"Multiword":"most of the time"},"count":1}
@@ -16506,6 +16588,7 @@
 {"lexeme":{"Multiword":"next next"},"count":1}
 {"lexeme":{"Multiword":"next up"},"count":1}
 {"lexeme":{"Multiword":"next world"},"count":1}
+{"lexeme":{"Multiword":"nice job"},"count":1}
 {"lexeme":{"Multiword":"nice one"},"count":1}
 {"lexeme":{"Multiword":"night after night"},"count":1}
 {"lexeme":{"Multiword":"night owl"},"count":1}
@@ -16513,6 +16596,8 @@
 {"lexeme":{"Multiword":"night time"},"count":1}
 {"lexeme":{"Multiword":"night watchman"},"count":1}
 {"lexeme":{"Multiword":"night-night"},"count":1}
+{"lexeme":{"Multiword":"ninety one"},"count":1}
+{"lexeme":{"Multiword":"ninety six"},"count":1}
 {"lexeme":{"Multiword":"ninety-one"},"count":1}
 {"lexeme":{"Multiword":"no ball"},"count":1}
 {"lexeme":{"Multiword":"no because"},"count":1}
@@ -16523,6 +16608,7 @@
 {"lexeme":{"Multiword":"no less"},"count":1}
 {"lexeme":{"Multiword":"no matter how"},"count":1}
 {"lexeme":{"Multiword":"no news is good news"},"count":1}
+{"lexeme":{"Multiword":"no nothing"},"count":1}
 {"lexeme":{"Multiword":"no pressure"},"count":1}
 {"lexeme":{"Multiword":"no pun intended"},"count":1}
 {"lexeme":{"Multiword":"no questions asked"},"count":1}
@@ -16603,6 +16689,7 @@
 {"lexeme":{"Multiword":"oh oh"},"count":1}
 {"lexeme":{"Multiword":"oh, brother"},"count":1}
 {"lexeme":{"Multiword":"oh, my God"},"count":1}
+{"lexeme":{"Multiword":"oil bath"},"count":1}
 {"lexeme":{"Multiword":"oil change"},"count":1}
 {"lexeme":{"Multiword":"oil company"},"count":1}
 {"lexeme":{"Multiword":"old as the hills"},"count":1}
@@ -17010,6 +17097,7 @@
 {"lexeme":{"Multiword":"roll over"},"count":1}
 {"lexeme":{"Multiword":"roll the dice"},"count":1}
 {"lexeme":{"Multiword":"roll up"},"count":1}
+{"lexeme":{"Multiword":"roof over"},"count":1}
 {"lexeme":{"Multiword":"rooming house"},"count":1}
 {"lexeme":{"Multiword":"rose red"},"count":1}
 {"lexeme":{"Multiword":"royal family"},"count":1}
@@ -17043,6 +17131,7 @@
 {"lexeme":{"Multiword":"salt of the earth"},"count":1}
 {"lexeme":{"Multiword":"salt water"},"count":1}
 {"lexeme":{"Multiword":"same old stuff"},"count":1}
+{"lexeme":{"Multiword":"same time tomorrow"},"count":1}
 {"lexeme":{"Multiword":"satellite TV"},"count":1}
 {"lexeme":{"Multiword":"savings account"},"count":1}
 {"lexeme":{"Multiword":"saw off"},"count":1}
@@ -17108,6 +17197,8 @@
 {"lexeme":{"Multiword":"settle into"},"count":1}
 {"lexeme":{"Multiword":"seven and a half"},"count":1}
 {"lexeme":{"Multiword":"seven thousand"},"count":1}
+{"lexeme":{"Multiword":"seventy five"},"count":1}
+{"lexeme":{"Multiword":"seventy nine"},"count":1}
 {"lexeme":{"Multiword":"seventy-nine"},"count":1}
 {"lexeme":{"Multiword":"sewing needle"},"count":1}
 {"lexeme":{"Multiword":"sex change"},"count":1}
@@ -17178,6 +17269,7 @@
 {"lexeme":{"Multiword":"six of the best"},"count":1}
 {"lexeme":{"Multiword":"six pack"},"count":1}
 {"lexeme":{"Multiword":"six thousand"},"count":1}
+{"lexeme":{"Multiword":"sixty five"},"count":1}
 {"lexeme":{"Multiword":"skip school"},"count":1}
 {"lexeme":{"Multiword":"sleep in with"},"count":1}
 {"lexeme":{"Multiword":"sleeping giant"},"count":1}
@@ -17483,6 +17575,15 @@
 {"lexeme":{"Multiword":"third place"},"count":1}
 {"lexeme":{"Multiword":"third time is the charm"},"count":1}
 {"lexeme":{"Multiword":"third time's the charm"},"count":1}
+{"lexeme":{"Multiword":"thirty eight"},"count":1}
+{"lexeme":{"Multiword":"thirty five"},"count":1}
+{"lexeme":{"Multiword":"thirty four"},"count":1}
+{"lexeme":{"Multiword":"thirty nine"},"count":1}
+{"lexeme":{"Multiword":"thirty one"},"count":1}
+{"lexeme":{"Multiword":"thirty seven"},"count":1}
+{"lexeme":{"Multiword":"thirty six"},"count":1}
+{"lexeme":{"Multiword":"thirty three"},"count":1}
+{"lexeme":{"Multiword":"thirty two"},"count":1}
 {"lexeme":{"Multiword":"thirty-eight"},"count":1}
 {"lexeme":{"Multiword":"thirty-four"},"count":1}
 {"lexeme":{"Multiword":"thirty-one"},"count":1}
@@ -17492,6 +17593,7 @@
 {"lexeme":{"Multiword":"this and that and the other"},"count":1}
 {"lexeme":{"Multiword":"this is a book"},"count":1}
 {"lexeme":{"Multiword":"this just in"},"count":1}
+{"lexeme":{"Multiword":"this old thing"},"count":1}
 {"lexeme":{"Multiword":"thousand one"},"count":1}
 {"lexeme":{"Multiword":"three hundred"},"count":1}
 {"lexeme":{"Multiword":"three quarters"},"count":1}
@@ -17574,6 +17676,7 @@
 {"lexeme":{"Multiword":"tool shed"},"count":1}
 {"lexeme":{"Multiword":"tooth comb"},"count":1}
 {"lexeme":{"Multiword":"top drop"},"count":1}
+{"lexeme":{"Multiword":"top of class"},"count":1}
 {"lexeme":{"Multiword":"top ten"},"count":1}
 {"lexeme":{"Multiword":"touch a nerve"},"count":1}
 {"lexeme":{"Multiword":"touch down"},"count":1}
@@ -17618,8 +17721,13 @@
 {"lexeme":{"Multiword":"turning away"},"count":1}
 {"lexeme":{"Multiword":"turning point"},"count":1}
 {"lexeme":{"Multiword":"twenty dollars is twenty dollars"},"count":1}
+{"lexeme":{"Multiword":"twenty eight"},"count":1}
 {"lexeme":{"Multiword":"twenty four"},"count":1}
+{"lexeme":{"Multiword":"twenty nine"},"count":1}
 {"lexeme":{"Multiword":"twenty one"},"count":1}
+{"lexeme":{"Multiword":"twenty seven"},"count":1}
+{"lexeme":{"Multiword":"twenty six"},"count":1}
+{"lexeme":{"Multiword":"twenty three"},"count":1}
 {"lexeme":{"Multiword":"twenty two"},"count":1}
 {"lexeme":{"Multiword":"twenty-four hours a day"},"count":1}
 {"lexeme":{"Multiword":"twenty-nine"},"count":1}
@@ -17872,12 +17980,14 @@
 {"lexeme":{"Multiword":"wrong take"},"count":1}
 {"lexeme":{"Multiword":"y'all means all"},"count":1}
 {"lexeme":{"Multiword":"yeah right"},"count":1}
+{"lexeme":{"Multiword":"yeah whatever"},"count":1}
 {"lexeme":{"Multiword":"year out"},"count":1}
 {"lexeme":{"Multiword":"year-old"},"count":1}
 {"lexeme":{"Multiword":"yellow brick road"},"count":1}
 {"lexeme":{"Multiword":"yellow pages"},"count":1}
 {"lexeme":{"Multiword":"yes ma'am"},"count":1}
 {"lexeme":{"Multiword":"yes man"},"count":1}
+{"lexeme":{"Multiword":"yes please"},"count":1}
 {"lexeme":{"Multiword":"yes way"},"count":1}
 {"lexeme":{"Multiword":"you and yours"},"count":1}
 {"lexeme":{"Multiword":"you better believe it"},"count":1}

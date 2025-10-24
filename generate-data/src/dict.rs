@@ -10,7 +10,6 @@ static CHAT_CLIENT_4O: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("gpt-4o")
         .unwrap()
         .with_cache_directory("./.cache")
-        .with_service_tier("flex")
 });
 
 static CHAT_CLIENT_O3: LazyLock<ChatClient> = LazyLock::new(|| {
