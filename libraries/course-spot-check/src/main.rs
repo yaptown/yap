@@ -172,7 +172,7 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
     let mut unique_sentences = HashSet::new();
 
     // Collect up to SENTENCES_TO_ANALYZE unique sentences from the simulator
-    for _day in 0..100 {
+    for _day in 0..200 {
         let (next_simulator, challenges) = simulator.next();
         simulator = next_simulator;
 
