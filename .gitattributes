@@ -42,3 +42,6 @@ out/kor/target_language_sentences_nlp.jsonl filter=lfs diff=lfs merge=lfs -text
 out/spa/target_language_sentences_nlp.jsonl filter=lfs diff=lfs merge=lfs -text
 generate-data/data/tatoeba/sentences.csv filter=lfs diff=lfs merge=lfs -text
 generate-data/data/tatoeba/links.csv filter=lfs diff=lfs merge=lfs -text
+out/eng_for_fra/language_data.rkyv filter=lfs diff=lfs merge=lfs -text
+out/kor_for_eng/language_data.rkyv filter=lfs diff=lfs merge=lfs -text
+out/spa_for_eng/language_data.rkyv filter=lfs diff=lfs merge=lfs -text
