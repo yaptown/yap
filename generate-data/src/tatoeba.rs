@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -13,81 +14,64 @@ pub struct TatoebaPair {
     pub native: String,
 }
 
-/// Read Tatoeba TSV files and filter for proper sentences
+#[derive(Debug)]
+struct Sentence {
+    lang: String,
+    text: String,
+}
+
+/// Read Tatoeba master dump and extract sentence pairs matching the course languages
 ///
 /// # Arguments
 ///
-/// * `data_path` - Path to the data directory containing Tatoeba files
 /// * `course` - The language course to process
 /// * `target_count` - Optional maximum number of sentences to return. If None, uses DEFAULT_TARGET_SENTENCE_COUNT.
 ///
 pub fn get_tatoeba_pairs(
-    data_path: &Path,
+    _data_path: &Path,
     course: Course,
     target_count: Option<usize>,
 ) -> Vec<TatoebaPair> {
     let target_count = target_count.unwrap_or(DEFAULT_TARGET_SENTENCE_COUNT);
-    let mut pairs = Vec::new();
 
-    // Look for Tatoeba files in the data directory
-    let tatoeba_dir = data_path.join("sentence-sources/tatoeba");
-    if !tatoeba_dir.exists() {
-        eprintln!("Tatoeba directory not found at: {}", tatoeba_dir.display());
-        return pairs;
+    // Use the master Tatoeba dump location
+    let tatoeba_dir = Path::new("./generate-data/data/tatoeba");
+    let sentences_file = tatoeba_dir.join("sentences.csv");
+    let links_file = tatoeba_dir.join("links.csv");
+
+    if !sentences_file.exists() {
+        eprintln!("Tatoeba sentences file not found at: {}", sentences_file.display());
+        return vec![];
     }
 
-    // Find the most recent TSV file (format: YYYY-MM-DD.tsv)
-    let entries = match std::fs::read_dir(&tatoeba_dir) {
-        Ok(entries) => entries,
-        Err(e) => {
-            eprintln!("Failed to read Tatoeba directory: {e}");
-            return pairs;
-        }
-    };
-
-    let mut tsv_files = Vec::new();
-    for entry in entries {
-        let entry = match entry {
-            Ok(e) => e,
-            Err(_) => continue,
-        };
-
-        let path = entry.path();
-        if path.extension() == Some(std::ffi::OsStr::new("tsv")) {
-            tsv_files.push(path);
-        }
+    if !links_file.exists() {
+        eprintln!("Tatoeba links file not found at: {}", links_file.display());
+        return vec![];
     }
 
-    if tsv_files.is_empty() {
-        eprintln!("No TSV files found in Tatoeba directory");
-        return pairs;
-    }
+    println!("Reading Tatoeba sentences from master dump...");
 
-    // Sort files by name to get the most recent one
-    tsv_files.sort();
-    let tsv_file = tsv_files.last().unwrap();
+    // Get language codes
+    let target_lang_code = course.target_language.iso_639_1();
+    let native_lang_code = course.native_language.iso_639_1();
 
-    println!("Reading Tatoeba file: {}", tsv_file.display());
+    // First pass: read all sentences and build a map by ID and language
+    let mut sentences_by_id: HashMap<u64, Sentence> = HashMap::new();
+    let mut target_sentence_ids: Vec<u64> = Vec::new();
 
-    // Open and read the TSV file
-    let file = match File::open(tsv_file) {
+    let file = match File::open(&sentences_file) {
         Ok(f) => f,
         Err(e) => {
-            eprintln!("Failed to open Tatoeba file: {e}");
-            return pairs;
+            eprintln!("Failed to open sentences file: {e}");
+            return vec![];
         }
     };
 
     let reader = BufReader::new(file);
-
-    // Process each line - format: target_id\ttarget_sentence\tnative_id\tnative_sentence
     for line in reader.lines() {
         let line = match line {
             Ok(l) => l,
-            Err(e) => {
-                eprintln!("Error reading line: {e}");
-                continue;
-            }
+            Err(_) => continue,
         };
 
         // Skip BOM if present
@@ -97,70 +81,118 @@ pub fn get_tatoeba_pairs(
             &line
         };
 
-        // Parse TSV: columns are separated by tabs
+        // Parse: id [tab] lang [tab] text
         let parts: Vec<&str> = line.split('\t').collect();
-        if parts.len() != 4 {
-            continue; // Skip malformed lines
-        }
-
-        let target_sentence = parts[1].trim();
-        let native_sentence = parts[3].trim();
-
-        // Apply filtering criteria
-
-        // 1. Skip sentences that are too short or too long
-        if target_sentence.len() < 5 || target_sentence.len() > 80 {
-            continue;
-        }
-        if native_sentence.len() < 5 || native_sentence.len() > 80 {
+        if parts.len() < 3 {
             continue;
         }
 
-        // 2. Skip sentences ending with ellipsis
-        if target_sentence.ends_with("...") || native_sentence.ends_with("...") {
+        let id = match parts[0].parse::<u64>() {
+            Ok(id) => id,
+            Err(_) => continue,
+        };
+
+        let lang = parts[1].trim().to_string();
+        let text = parts[2].trim().to_string();
+
+        // Only store sentences in our target or native language
+        if lang == target_lang_code || lang == native_lang_code {
+            if lang == target_lang_code {
+                target_sentence_ids.push(id);
+            }
+            sentences_by_id.insert(
+                id,
+                Sentence {
+                    lang,
+                    text,
+                },
+            );
+        }
+    }
+
+    println!("Found {} target language sentences in Tatoeba", target_sentence_ids.len());
+    println!("Loaded {} total sentences in both languages", sentences_by_id.len());
+
+    // Second pass: read links and build translation pairs
+    println!("Reading Tatoeba translation links...");
+
+    let file = match File::open(&links_file) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("Failed to open links file: {e}");
+            return vec![];
+        }
+    };
+
+    // Build a map of target_id -> vec of linked sentence IDs
+    let mut links_map: HashMap<u64, Vec<u64>> = HashMap::new();
+    let reader = BufReader::new(file);
+    for line in reader.lines() {
+        let line = match line {
+            Ok(l) => l,
+            Err(_) => continue,
+        };
+
+        // Skip BOM if present
+        let line = if let Some(line) = line.strip_prefix('\u{feff}') {
+            line
+        } else {
+            &line
+        };
+
+        // Parse: id1 [tab] id2
+        let parts: Vec<&str> = line.split('\t').collect();
+        if parts.len() < 2 {
             continue;
         }
 
-        // 3. Skip sentences containing ellipsis anywhere
-        if target_sentence.contains("...") || native_sentence.contains("...") {
-            continue;
+        let id1 = match parts[0].parse::<u64>() {
+            Ok(id) => id,
+            Err(_) => continue,
+        };
+
+        let id2 = match parts[1].parse::<u64>() {
+            Ok(id) => id,
+            Err(_) => continue,
+        };
+
+        links_map.entry(id1).or_insert_with(Vec::new).push(id2);
+    }
+
+    println!("Loaded {} translation links", links_map.len());
+
+    // Third pass: create pairs from target sentences that have native translations
+    let mut pairs = Vec::new();
+
+    for target_id in target_sentence_ids {
+        let target_sentence = match sentences_by_id.get(&target_id) {
+            Some(s) => s,
+            None => continue,
+        };
+
+        // Find linked sentences
+        let linked_ids = match links_map.get(&target_id) {
+            Some(ids) => ids,
+            None => continue,
+        };
+
+        // Look for a native language translation
+        for linked_id in linked_ids {
+            if let Some(native_sentence) = sentences_by_id.get(linked_id) {
+                if native_sentence.lang == native_lang_code {
+                    // Apply filtering criteria
+                    if !should_include_pair(&target_sentence.text, &native_sentence.text, course) {
+                        continue;
+                    }
+
+                    pairs.push(TatoebaPair {
+                        target: target_sentence.text.clone(),
+                        native: native_sentence.text.clone(),
+                    });
+                    break; // Only take the first native translation
+                }
+            }
         }
-
-        // 4. Check if sentences are "proper" according to language rules
-        if !is_proper_sentence(target_sentence, course.target_language) {
-            continue;
-        }
-
-        // Only check native sentence if it's the language we're teaching from
-        if course.native_language == Language::English
-            && !is_proper_sentence(native_sentence, course.native_language)
-        {
-            continue;
-        }
-
-        // 5. Skip sentences with multiple punctuation marks
-        let target_punct_count = target_sentence.matches('.').count()
-            + target_sentence.matches('!').count()
-            + target_sentence.matches('?').count();
-        let native_punct_count = native_sentence.matches('.').count()
-            + native_sentence.matches('!').count()
-            + native_sentence.matches('?').count();
-
-        if target_punct_count > 1 || native_punct_count > 1 {
-            continue;
-        }
-
-        // 6. Skip sentences with numbers
-        if target_sentence.chars().any(|c| c.is_numeric())
-            || native_sentence.chars().any(|c| c.is_numeric())
-        {
-            continue;
-        }
-
-        pairs.push(TatoebaPair {
-            target: target_sentence.to_string(),
-            native: native_sentence.to_string(),
-        });
     }
 
     println!(
@@ -193,6 +225,57 @@ pub fn get_tatoeba_pairs(
     }
 
     sampled_pairs
+}
+
+/// Check if a sentence pair should be included based on filtering criteria
+fn should_include_pair(target_sentence: &str, native_sentence: &str, course: Course) -> bool {
+    // 1. Skip sentences that are too short or too long
+    if target_sentence.len() < 5 || target_sentence.len() > 80 {
+        return false;
+    }
+    if native_sentence.len() < 5 || native_sentence.len() > 80 {
+        return false;
+    }
+
+    // 2. Skip sentences ending with ellipsis
+    if target_sentence.ends_with("...") || native_sentence.ends_with("...") {
+        return false;
+    }
+
+    // 3. Skip sentences containing ellipsis anywhere
+    if target_sentence.contains("...") || native_sentence.contains("...") {
+        return false;
+    }
+
+    // 4. Check if sentences are "proper" according to language rules
+    if !is_proper_sentence(target_sentence, course.target_language) {
+        return false;
+    }
+
+    if !is_proper_sentence(native_sentence, course.native_language) {
+        return false;
+    }
+
+    // 5. Skip sentences with multiple punctuation marks
+    let target_punct_count = target_sentence.matches('.').count()
+        + target_sentence.matches('!').count()
+        + target_sentence.matches('?').count();
+    let native_punct_count = native_sentence.matches('.').count()
+        + native_sentence.matches('!').count()
+        + native_sentence.matches('?').count();
+
+    if target_punct_count > 1 || native_punct_count > 1 {
+        return false;
+    }
+
+    // 6. Skip sentences with numbers
+    if target_sentence.chars().any(|c| c.is_numeric())
+        || native_sentence.chars().any(|c| c.is_numeric())
+    {
+        return false;
+    }
+
+    true
 }
 
 /// Check if a sentence is "proper" - language-specific validation
