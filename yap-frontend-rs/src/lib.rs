@@ -3322,6 +3322,11 @@ impl ReviewInfo {
             Language::English => "The word is",
             Language::Korean => "단어는",
             Language::German => "Das Wort ist",
+            Language::Chinese => "单词是",
+            Language::Japanese => "単語は",
+            Language::Russian => "слово",
+            Language::Portuguese => "A palavra é",
+            Language::Italian => "La parola è",
         }
     }
 

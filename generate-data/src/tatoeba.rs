@@ -211,7 +211,8 @@ fn is_proper_sentence(text: &str, language: Language) -> bool {
 
     // Language-specific checks
     match language {
-        Language::English | Language::French | Language::Spanish | Language::German => {
+        Language::English | Language::French | Language::Spanish | Language::German
+        | Language::Portuguese | Language::Italian => {
             // Must start with uppercase letter
             if !first_char.is_uppercase() || !first_char.is_alphabetic() {
                 return false;
@@ -219,6 +220,59 @@ fn is_proper_sentence(text: &str, language: Language) -> bool {
 
             // Must end with period, exclamation mark, or question mark
             if last_char != '.' && last_char != '!' && last_char != '?' {
+                return false;
+            }
+        }
+        Language::Russian => {
+            // Russian sentences should not contain Latin letters
+            if text
+                .chars()
+                .any(|c| c.is_ascii_lowercase() || c.is_ascii_uppercase())
+            {
+                return false;
+            }
+
+            // Must start with uppercase Cyrillic letter
+            if !first_char.is_uppercase() {
+                return false;
+            }
+
+            // Must end with period, exclamation mark, or question mark
+            if last_char != '.' && last_char != '!' && last_char != '?' {
+                return false;
+            }
+        }
+        Language::Chinese => {
+            // Chinese sentences should not contain Latin letters (except maybe proper nouns)
+            // But we'll be strict and reject any with Latin letters
+            if text
+                .chars()
+                .any(|c| c.is_ascii_lowercase() || c.is_ascii_uppercase())
+            {
+                return false;
+            }
+
+            // Must end with Chinese or Western punctuation
+            if last_char != '。' && last_char != '！' && last_char != '？'
+                && last_char != '.' && last_char != '!' && last_char != '?'
+            {
+                return false;
+            }
+        }
+        Language::Japanese => {
+            // Japanese sentences should not contain Latin letters (except maybe proper nouns)
+            // But we'll be strict and reject any with Latin letters
+            if text
+                .chars()
+                .any(|c| c.is_ascii_lowercase() || c.is_ascii_uppercase())
+            {
+                return false;
+            }
+
+            // Must end with Japanese or Western punctuation
+            if last_char != '。' && last_char != '！' && last_char != '？'
+                && last_char != '.' && last_char != '!' && last_char != '?'
+            {
                 return false;
             }
         }

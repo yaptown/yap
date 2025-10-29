@@ -2,7 +2,9 @@ use anyhow::Context;
 use futures::StreamExt;
 use indexmap::IndexSet;
 use itertools::Itertools;
-use language_utils::{COURSES, Language, NlpAnalyzedSentence, SentenceInfo, strip_punctuation};
+use language_utils::{
+    COURSES, Language, NlpAnalyzedSentence, SentenceInfo, strip_punctuation,
+};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};

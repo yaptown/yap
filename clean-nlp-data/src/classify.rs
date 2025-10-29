@@ -31,6 +31,11 @@ pub trait SentenceClassifier {
 pub trait WordCorrector {
     /// Correct tokens in a sentence, returning whether any corrections were made
     fn correct(&self, sentence: &mut NlpAnalyzedSentence) -> CorrectionResult;
+
+    /// Apply post-processing corrections to simplified tokens
+    fn post_corrections(&self, _tokens: &mut Vec<SimplifiedTokenPrime>) {
+        // Default implementation does nothing
+    }
 }
 
 /// Get the classifier for a given language
@@ -1237,6 +1242,15 @@ impl WordCorrector for GermanCorrector {
 struct FrenchCorrector;
 
 impl WordCorrector for FrenchCorrector {
+    fn post_corrections(&self, tokens: &mut Vec<SimplifiedTokenPrime>) {
+        for token in tokens {
+            let text_lower = token.text.to_lowercase();
+            if text_lower == "ça" && token.lemma != "cela" {
+                token.lemma = "cela".to_string();
+            }
+        }
+    }
+
     fn correct(&self, sentence: &mut NlpAnalyzedSentence) -> CorrectionResult {
         let mut corrected = false;
         let mut corrections = Vec::new();
@@ -1537,7 +1551,6 @@ pub struct NlpCorrectionResponse {
 
 /// Dependency relation types (Universal Dependencies)
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "lowercase")]
 pub enum DependencyRelation {
     #[serde(rename = "acl")]
     Acl,

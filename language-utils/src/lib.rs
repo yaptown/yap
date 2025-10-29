@@ -286,6 +286,61 @@ pub fn expand_korean_word(
     Some((text, lemma, None))
 }
 
+/// Placeholder for Italian word expansion
+pub fn expand_italian_word(
+    _text: &str,
+    _lemma: &str,
+    _pos: Option<PartOfSpeech>,
+    _morph: &BTreeMap<String, String>,
+    _is_first_word: bool,
+) -> Option<(String, String, Option<PartOfSpeech>)> {
+    todo!()
+}
+
+/// Placeholder for Portuguese word expansion
+pub fn expand_portuguese_word(
+    _text: &str,
+    _lemma: &str,
+    _pos: Option<PartOfSpeech>,
+    _morph: &BTreeMap<String, String>,
+    _is_first_word: bool,
+) -> Option<(String, String, Option<PartOfSpeech>)> {
+    todo!()
+}
+
+/// Placeholder for Russian word expansion
+pub fn expand_russian_word(
+    _text: &str,
+    _lemma: &str,
+    _pos: Option<PartOfSpeech>,
+    _morph: &BTreeMap<String, String>,
+    _is_first_word: bool,
+) -> Option<(String, String, Option<PartOfSpeech>)> {
+    todo!()
+}
+
+/// Placeholder for Chinese word expansion
+pub fn expand_chinese_word(
+    _text: &str,
+    _lemma: &str,
+    _pos: Option<PartOfSpeech>,
+    _morph: &BTreeMap<String, String>,
+    _is_first_word: bool,
+) -> Option<(String, String, Option<PartOfSpeech>)> {
+    todo!()
+}
+
+/// Placeholder for Japanese word expansion
+pub fn expand_japanese_word(
+    _text: &str,
+    _lemma: &str,
+    _pos: Option<PartOfSpeech>,
+    _morph: &BTreeMap<String, String>,
+    _is_first_word: bool,
+) -> Option<(String, String, Option<PartOfSpeech>)> {
+    todo!()
+}
+
 #[derive(
     Clone,
     Debug,
@@ -807,6 +862,11 @@ impl Heteronym<String> {
             Language::English => expand_english_word,
             Language::Korean => expand_korean_word,
             Language::German => expand_german_word,
+            Language::Italian => expand_italian_word,
+            Language::Portuguese => expand_portuguese_word,
+            Language::Russian => expand_russian_word,
+            Language::Chinese => expand_chinese_word,
+            Language::Japanese => expand_japanese_word,
         };
 
         let heteronym = if let Some(heteronym) = proper_nouns.get(&doc_token.text.to_lowercase()) {
@@ -1580,6 +1640,11 @@ pub enum Language {
     Spanish,
     Korean,
     German,
+    Chinese,
+    Japanese,
+    Russian,
+    Portuguese,
+    Italian,
 }
 
 #[derive(
@@ -1607,6 +1672,11 @@ impl Language {
             Language::Spanish => "spa",
             Language::Korean => "kor",
             Language::German => "deu",
+            Language::Chinese => "zho",
+            Language::Japanese => "jpn",
+            Language::Russian => "rus",
+            Language::Portuguese => "por",
+            Language::Italian => "ita",
         }
     }
 
@@ -1617,15 +1687,28 @@ impl Language {
             Language::Spanish => "es",
             Language::Korean => "ko",
             Language::German => "de",
+            Language::Chinese => "zh",
+            Language::Japanese => "ja",
+            Language::Russian => "ru",
+            Language::Portuguese => "pt",
+            Language::Italian => "it",
         }
     }
 
     pub fn writing_system(&self) -> WritingSystem {
         match self {
-            Language::French | Language::English | Language::Spanish | Language::German => {
+            Language::French
+            | Language::English
+            | Language::Spanish
+            | Language::German
+            | Language::Portuguese
+            | Language::Italian => WritingSystem::Latin,
+            Language::Korean => WritingSystem::Hangul,
+            Language::Chinese | Language::Japanese | Language::Russian => {
+                // Chinese uses Han characters, Japanese uses multiple scripts, Russian uses Cyrillic
+                // For now, we'll use Latin as a placeholder - this may need its own variants
                 WritingSystem::Latin
             }
-            Language::Korean => WritingSystem::Hangul,
         }
     }
 }
@@ -1638,6 +1721,11 @@ impl std::fmt::Display for Language {
             Language::Spanish => write!(f, "Spanish"),
             Language::Korean => write!(f, "Korean"),
             Language::German => write!(f, "German"),
+            Language::Chinese => write!(f, "Chinese"),
+            Language::Japanese => write!(f, "Japanese"),
+            Language::Russian => write!(f, "Russian"),
+            Language::Portuguese => write!(f, "Portuguese"),
+            Language::Italian => write!(f, "Italian"),
         }
     }
 }
@@ -1688,6 +1776,19 @@ pub const COURSES: &[Course] = &[
         native_language: Language::English,
         target_language: Language::German,
     },
+];
+
+pub const LANGUAGES: &[Language] = &[
+    Language::French,
+    Language::Spanish,
+    Language::English,
+    Language::Korean,
+    Language::German,
+    Language::Chinese,
+    Language::Japanese,
+    Language::Russian,
+    Language::Portuguese,
+    Language::Italian,
 ];
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, tsify::Tsify)]

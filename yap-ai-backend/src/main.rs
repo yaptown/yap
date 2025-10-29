@@ -175,6 +175,12 @@ async fn text_to_speech(
         Language::English => "ohItIVrXTBI80RrUECOD", // Default to French voice for now
         Language::Korean => "nbrxrAz3eYm9NgojrmFK", // Korean
         Language::German => "IWm8DnJ4NGjFI7QAM5lM", // Stephan - German voice
+
+        Language::Chinese
+        | Language::Japanese
+        | Language::Russian
+        | Language::Portuguese
+        | Language::Italian => todo!(),
     };
     let url = format!("https://api.elevenlabs.io/v1/text-to-speech/{voice_id}");
 
@@ -222,6 +228,12 @@ async fn google_text_to_speech(
         Language::English => ("en-US", "en-US-Chirp3-HD-Achernar"),
         Language::Korean => ("ko-KR", "ko-KR-Chirp3-HD-Achernar"),
         Language::German => ("de-DE", "de-DE-Chirp3-HD-Achernar"),
+
+        Language::Chinese
+        | Language::Japanese
+        | Language::Russian
+        | Language::Portuguese
+        | Language::Italian => todo!(),
     };
 
     let google_request = GoogleTtsRequest {
@@ -356,6 +368,11 @@ Output: {{
 }}
 "#,
         ),
+        Language::Chinese
+        | Language::Japanese
+        | Language::Russian
+        | Language::Portuguese
+        | Language::Italian => return Err(StatusCode::NOT_IMPLEMENTED),
     };
 
     let system_prompt = format!(
@@ -401,13 +418,7 @@ async fn autograde_transcription(
     // actually, disable authentication for now until people start abusing it:
     let _claims = verify_jwt(auth.token()).await;
 
-    let language_name = match request.language {
-        Language::French => "French",
-        Language::Spanish => "Spanish",
-        Language::English => "English",
-        Language::Korean => "Korean",
-        Language::German => "German",
-    };
+    let language_name = format!("{}", request.language);
 
     let system_prompt = format!(
         r#"The user is learning {language_name} through transcription exercises. They listened to {language_name} audio and were asked to transcribe certain parts of the sentence while other parts were provided to them. Your job is to grade their transcription by comparing what they heard with what they wrote.
@@ -444,6 +455,12 @@ The explanation should be in English and help the user learn from their mistakes
                 r#"For example, if the user confused "어떻게" and "어떡해", you could generate ["어떻게", "어떡해"] in the compare array."#,
             Language::German =>
                 r#"For example, if the user confused "der" and "die", you could generate ["der", "die"] in the compare array."#,
+
+            Language::Chinese
+            | Language::Japanese
+            | Language::Russian
+            | Language::Portuguese
+            | Language::Italian => return Err(StatusCode::NOT_IMPLEMENTED),
         }
     );
 

@@ -207,7 +207,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // We probably should get at least 10_000 samples per language to get good coverage.
     // Bare minimum to get a usable result is probably around 1_500.
-    const SAMPLE_SIZE: usize = 2_000;
+    const SAMPLE_SIZE: usize = 3_000;
 
     println!("Loading NLP data for {language:?}...");
     let sentences = load_nlp_sentences(language)?;
@@ -238,7 +238,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // Clean each sentence with LLM
     let cleaned_results = futures::stream::iter(classified_sentences.into_iter().enumerate())
         .map(|(i, (sentence, suspicious_reasons))| async move {
-            if i % 25 == 0 {
+            if i % 100 == 0 {
                 println!(
                     "  [{}/{}] (${cost:.2})",
                     i,
@@ -247,9 +247,14 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                 );
             }
 
+            let corrector = get_corrector(language);
             let result =
                 clean_sentence_with_llm(language, &sentence, suspicious_reasons, &CHAT_CLIENT)
-                    .await;
+                    .await
+                    .map(|mut tokens| {
+                        corrector.post_corrections(&mut tokens);
+                        tokens
+                    });
             (sentence, result)
         })
         .buffer_unordered(50)
@@ -302,7 +307,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // Second pass: Add dependency information
     let results_with_deps = futures::stream::iter(validated_results.into_iter().enumerate())
         .map(|(i, (original_sentence, corrected_tokens))| async move {
-            if i % 25 == 0 {
+            if i % 100 == 0 {
                 println!(
                     "  [{}/{}] Parsing dependencies (${cost:.2})",
                     i,
@@ -327,49 +332,53 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
 
     // Write results to file
     for (original_sentence, corrected_tokens, dep_result) in results_with_deps {
-        // Combine token info with dependency info
-        let tokens: Vec<_> = if let Ok(dep_response) = dep_result {
-            corrected_tokens
-                .into_iter()
-                .enumerate()
-                .map(|(i, token)| {
-                    // Find matching dependency info
-                    let dep_info = dep_response.dependencies.iter().find(|d| d.index == i + 1);
-
-                    if let Some(dep) = dep_info {
-                        serde_json::json!({
-                            "text": token.text,
-                            "whitespace": token.whitespace,
-                            "pos": token.pos,
-                            "lemma": token.lemma,
-                            "dep": dep.dependency,
-                            "head": dep.head,
-                        })
-                    } else {
-                        // Dependency info missing, just include token info
-                        serde_json::json!({
-                            "text": token.text,
-                            "whitespace": token.whitespace,
-                            "pos": token.pos,
-                            "lemma": token.lemma,
-                        })
-                    }
-                })
-                .collect()
-        } else {
-            // Dependency parsing failed, just include token info
-            corrected_tokens
-                .into_iter()
-                .map(|token| {
-                    serde_json::json!({
-                        "text": token.text,
-                        "whitespace": token.whitespace,
-                        "pos": token.pos,
-                        "lemma": token.lemma,
-                    })
-                })
-                .collect()
+        let Ok(dep_response) = dep_result else {
+            println!(
+                "WARNING: Dependency parsing failed for sentence: {}",
+                original_sentence.sentence
+            );
+            continue;
         };
+        if corrected_tokens.len() != dep_response.dependencies.len() {
+            println!(
+                "WARNING: Token/dependency count mismatch for sentence: {}",
+                original_sentence.sentence
+            );
+            continue;
+        }
+
+        let tokens = corrected_tokens
+            .into_iter()
+            .zip(dep_response.dependencies.into_iter())
+            .collect::<Vec<_>>();
+        if tokens.iter().any(|(token, dep)| token.text != dep.word) {
+            println!(
+                "WARNING: Token/dependency text mismatch for sentence: {}",
+                original_sentence.sentence
+            );
+            continue;
+        }
+        if tokens.iter().enumerate().any(|(i, (_token, dep))| i  + 1 != dep.index) {
+            println!(
+                "WARNING: Token/dependency index mismatch for sentence: {}",
+                original_sentence.sentence
+            );
+            continue;
+        }
+
+        let tokens: Vec<_> = tokens
+            .into_iter()
+            .map(|(token, dep)| {
+                serde_json::json!({
+                    "text": token.text,
+                    "whitespace": token.whitespace,
+                    "pos": token.pos,
+                    "lemma": token.lemma,
+                    "dep": dep.dependency,
+                    "head": dep.head,
+                })
+            })
+            .collect();
 
         let output = serde_json::json!({
             "sentence": original_sentence.sentence,

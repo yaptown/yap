@@ -35,6 +35,12 @@ pub async fn ensure_multiword_terms_file(
         Language::English => vec![],
         Language::Korean => vec![],
         Language::German => vec!["daß"],
+
+        Language::Chinese
+        | Language::Japanese
+        | Language::Russian
+        | Language::Portuguese
+        | Language::Italian => vec![],
     };
     let banned_terms = banned_terms
         .into_iter()
@@ -106,6 +112,21 @@ async fn download_multiword_terms(language: Language) -> anyhow::Result<Vec<Stri
             return Ok(vec![]);
         }
         Language::German => "German_multiword_terms",
+        Language::Chinese => {
+            return Ok(vec![]);
+        }
+        Language::Japanese => {
+            return Ok(vec![]);
+        }
+        Language::Russian => {
+            return Ok(vec![]);
+        }
+        Language::Portuguese => {
+            return Ok(vec![]);
+        }
+        Language::Italian => {
+            return Ok(vec![]);
+        }
     };
     println!("Downloading category: {category}");
 

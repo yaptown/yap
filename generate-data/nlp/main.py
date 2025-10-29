@@ -37,6 +37,26 @@ MODEL_MAPPING = {
     "deu": {
         "small": "de_core_news_sm",
         "large": "de_dep_news_trf"
+    },
+    "zho": {
+        "small": "zh_core_web_trf",
+        "large": "zh_core_web_trf"
+    },
+    "ita": {
+        "small": "it_core_news_lg",
+        "large": "it_core_news_lg"
+    },
+    "por": {
+        "small": "pt_core_news_lg",
+        "large": "pt_core_news_lg"
+    },
+    "jpn": {
+        "small": "ja_core_news_trf",
+        "large": "ja_core_news_trf"
+    },
+    "rus": {
+        "small": "ru_core_news_lg",
+        "large": "ru_core_news_lg"
     }
 }
 
