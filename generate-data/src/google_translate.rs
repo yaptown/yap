@@ -1,7 +1,7 @@
 use anyhow::Context;
+use dashmap::DashMap;
 use html_escape::decode_html_entities;
 use language_utils::Language;
-use std::collections::HashMap;
 use std::path::PathBuf;
 use xxhash_rust::xxh3::xxh3_64;
 
@@ -10,7 +10,7 @@ pub struct GoogleTranslator {
     source_language: String,
     target_language: String,
     api_key: String,
-    cache: HashMap<u64, String>, // hash -> translation
+    cache: DashMap<u64, String>, // hash -> translation
     cache_dir: PathBuf,
     master_cache_file: PathBuf,
 }
@@ -26,14 +26,14 @@ impl GoogleTranslator {
         std::fs::create_dir_all(&cache_dir)?;
 
         let master_cache_file = cache_dir.join("master_cache.json");
-        let cache = if master_cache_file.exists() {
+        let cache: DashMap<u64, String> = if master_cache_file.exists() {
             let master_content = std::fs::read_to_string(&master_cache_file)?;
             serde_json::from_str(&master_content).unwrap_or_default()
         } else {
-            HashMap::new()
+            DashMap::new()
         };
 
-        Ok(Self {
+        let res = Self {
             client: reqwest::Client::new(),
             source_language: source_language.iso_639_1().to_string(),
             target_language: target_language.iso_639_1().to_string(),
@@ -41,10 +41,12 @@ impl GoogleTranslator {
             cache,
             cache_dir,
             master_cache_file,
-        })
+        };
+        res.consolidate_cache();
+        Ok(res)
     }
 
-    pub async fn translate(&mut self, text: &str) -> anyhow::Result<String> {
+    pub async fn translate(&self, text: &str) -> anyhow::Result<String> {
         // Compute hash for this text
         let hash_input = format!("{}::{}::{text}", self.source_language, self.target_language);
         let hash = xxh3_64(hash_input.as_bytes());
@@ -88,13 +90,8 @@ impl GoogleTranslator {
         std::fs::write(&cache_file, &translated)?;
         Ok(translated)
     }
-}
 
-impl Drop for GoogleTranslator {
-    fn drop(&mut self) {
-        // Start with the in-memory cache
-        let mut consolidated_cache = self.cache.clone();
-
+    fn consolidate_cache(&self) {
         // Collect individual cache files to delete after consolidation
         let mut files_to_delete = Vec::new();
 
@@ -116,9 +113,7 @@ impl Drop for GoogleTranslator {
                         // Read the translation from the file
                         if let Ok(translation) = std::fs::read_to_string(&path) {
                             // Add to consolidated cache if not already present
-                            consolidated_cache
-                                .entry(hash)
-                                .or_insert_with(|| translation);
+                            self.cache.entry(hash).or_insert_with(|| translation);
                             // Mark this file for deletion
                             files_to_delete.push(path);
                         }
@@ -128,7 +123,7 @@ impl Drop for GoogleTranslator {
         }
 
         // Write the consolidated cache to the master file
-        if let Ok(json) = serde_json::to_string_pretty(&consolidated_cache) {
+        if let Ok(json) = serde_json::to_string_pretty(&self.cache) {
             if std::fs::write(&self.master_cache_file, json).is_ok() {
                 // Only delete individual files if the master cache was written successfully
                 for file in files_to_delete {
@@ -136,5 +131,11 @@ impl Drop for GoogleTranslator {
                 }
             }
         }
+    }
+}
+
+impl Drop for GoogleTranslator {
+    fn drop(&mut self) {
+        self.consolidate_cache();
     }
 }

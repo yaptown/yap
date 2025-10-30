@@ -100,6 +100,11 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
     .with("Korean", () => "Stay on track with your Korean learning")
     .with("English", () => "Stay on track with your English learning")
     .with("German", () => "Stay on track with your German learning")
+    .with("Chinese", () => "Stay on track with your Chinese learning")
+    .with("Japanese", () => "Stay on track with your Japanese learning")
+    .with("Russian", () => "Stay on track with your Russian learning")
+    .with("Portuguese", () => "Stay on track with your Portuguese learning")
+    .with("Italian", () => "Stay on track with your Italian learning")
     .exhaustive();
 
   return (

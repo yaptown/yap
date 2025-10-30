@@ -2,16 +2,12 @@ use anyhow::Context;
 use futures::StreamExt;
 use indexmap::IndexSet;
 use itertools::Itertools;
-use language_utils::{
-    COURSES, Language, NlpAnalyzedSentence, SentenceInfo, strip_punctuation,
-};
+use language_utils::{COURSES, NlpAnalyzedSentence, SentenceInfo, strip_punctuation};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::Arc;
-use tokio::sync::Mutex;
 use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 
 mod google_translate;
@@ -48,54 +44,6 @@ async fn main() -> anyhow::Result<()> {
         );
         let source_data_path = Path::new(source_data_path.as_str());
 
-        // Load banned sentences
-        let mut banned_sentences = std::collections::HashSet::new();
-
-        // Load manually created banned sentences
-        let banned_sentences_file = source_data_path.join("banned_sentences.txt");
-        if banned_sentences_file.exists() {
-            let content = std::fs::read_to_string(&banned_sentences_file)
-                .context("Failed to read banned sentences file")?;
-            for line in content.lines() {
-                let line = line.trim().to_lowercase();
-                if !line.is_empty() {
-                    banned_sentences.insert(line);
-                }
-            }
-            println!(
-                "Loaded {} manually banned sentences",
-                banned_sentences.len()
-            );
-        } else {
-            println!("No manual banned sentences file found");
-        }
-
-        // Load AI-generated banned sentences
-        let ai_banned_file = source_data_path.join("banned_sentences_ai.txt");
-        if ai_banned_file.exists() {
-            let content = std::fs::read_to_string(&ai_banned_file)
-                .context("Failed to read AI banned sentences file")?;
-            let initial_count = banned_sentences.len();
-            for line in content.lines() {
-                // Parse JSON to extract just the sentence
-                if let Ok(banned_entry) = serde_json::from_str::<serde_json::Value>(line) {
-                    if let Some(sentence) = banned_entry.get("sentence").and_then(|s| s.as_str()) {
-                        banned_sentences.insert(sentence.to_lowercase());
-                    }
-                }
-            }
-            println!(
-                "Loaded {} AI-generated banned sentences",
-                banned_sentences.len() - initial_count
-            );
-        } else {
-            println!("No AI-generated banned sentences file found");
-        }
-
-        if !banned_sentences.is_empty() {
-            println!("Total banned sentences: {}", banned_sentences.len());
-        }
-
         let banned_words_file = source_data_path.join("banned_words.jsonl");
         let banned_words = if banned_words_file.exists() {
             let content = std::fs::read_to_string(banned_words_file)
@@ -127,6 +75,51 @@ async fn main() -> anyhow::Result<()> {
         } else {
             let mut total_sentences = 0;
 
+            // Get target sentences with their existing translations (from Anki and Tatoeba)
+            let sentences_with_translations =
+                generate_data::target_sentences::get_target_sentences(*course)?;
+
+            println!(
+                "Loaded {} sentences from Anki and Tatoeba",
+                sentences_with_translations.len()
+            );
+
+            // Create the translator once and share it across all async tasks
+            let translator = GoogleTranslator::new(
+                course.target_language, // translate from target to native
+                course.native_language,
+                PathBuf::from(".cache/google_translate/"),
+            )
+            .unwrap();
+
+            let all_sentences = futures::stream::iter(sentences_with_translations.into_iter().map(
+                |(target_language_sentence, native_sentence)| async {
+                    let mut translation_set = IndexSet::new();
+                    match translator.translate(&target_language_sentence).await {
+                        Ok(t) => {
+                            if !t.trim().is_empty() {
+                                translation_set.insert(t);
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!(
+                                "Error translating sentence '{target_language_sentence}': {e}"
+                            );
+                        }
+                    };
+                    if let Some(native_sentence) = native_sentence {
+                        translation_set.insert(native_sentence);
+                    }
+                    (target_language_sentence, translation_set)
+                },
+            ))
+            .buffered(100)
+            .collect::<BTreeMap<_, _>>()
+            .await;
+
+            // Drop the translator to trigger the Drop implementation
+            drop(translator);
+
             let target_language_file = match File::create(target_language_sentences_file.clone()) {
                 Ok(f) => f,
                 Err(e) => {
@@ -145,148 +138,6 @@ async fn main() -> anyhow::Result<()> {
                 }
             };
             let mut translations_writer = BufWriter::new(translations_file_handle);
-
-            let all_cards = generate_data::read_anki::get_all_cards(source_data_path);
-
-            // Also get OpenSubtitles data
-            let subtitle_pairs =
-                generate_data::opensubtitles::get_subtitle_pairs(source_data_path, *course);
-
-            // Also get Tatoeba data
-            let tatoeba_pairs =
-                generate_data::tatoeba::get_tatoeba_pairs(source_data_path, *course, None);
-
-            // Combine Anki cards, OpenSubtitles data, and Tatoeba data
-            let use_native_card_side = course.native_language == Language::English;
-            let anki_sentences = all_cards.iter().flat_map(|card| {
-                card.target.iter().map(|target_language_sentence| {
-                    let native_sentence = if use_native_card_side {
-                        let trimmed_native = card.english.trim();
-                        if trimmed_native.is_empty() {
-                            None
-                        } else {
-                            Some(trimmed_native.to_string())
-                        }
-                    } else {
-                        None
-                    };
-
-                    (target_language_sentence.clone(), native_sentence)
-                })
-            });
-
-            let subtitle_sentences = subtitle_pairs.iter().map(|pair| {
-                let native_sentence = if course.native_language == Language::English {
-                    let trimmed_native = pair.native.trim();
-                    if trimmed_native.is_empty() {
-                        None
-                    } else {
-                        Some(trimmed_native.to_string())
-                    }
-                } else {
-                    None
-                };
-
-                (pair.target.clone(), native_sentence)
-            });
-
-            let tatoeba_sentences = tatoeba_pairs.iter().map(|pair| {
-                let native_sentence = if course.native_language == Language::English {
-                    let trimmed_native = pair.native.trim();
-                    if trimmed_native.is_empty() {
-                        None
-                    } else {
-                        Some(trimmed_native.to_string())
-                    }
-                } else {
-                    None
-                };
-
-                (pair.target.clone(), native_sentence)
-            });
-
-            // For English target language, also read raw English sentences
-            let raw_english_sentences = if course.target_language == Language::English {
-                let raw_sentences_file = source_data_path.join("sentence-sources/raw/list.jsonl");
-                if raw_sentences_file.exists() {
-                    println!("Reading raw English sentences from {raw_sentences_file:?}");
-                    let file = File::open(&raw_sentences_file)
-                        .context("Failed to open raw English sentences file")?;
-                    let reader = BufReader::new(file);
-
-                    // Use IndexSet to deduplicate while preserving order
-                    let sentences: IndexSet<String> = reader
-                        .lines()
-                        .filter_map(|line| {
-                            line.ok()
-                                .and_then(|l| serde_json::from_str::<String>(&l).ok())
-                        })
-                        .map(|s| s.trim().to_string())
-                        .filter(|s| !s.is_empty())
-                        .collect();
-
-                    println!("Loaded {} unique raw English sentences", sentences.len());
-                    sentences.into_iter().map(|s| (s, None)).collect::<Vec<_>>()
-                } else {
-                    println!("No raw English sentences file found");
-                    vec![]
-                }
-            } else {
-                vec![]
-            };
-
-            // Create the translator once and share it across all async tasks
-            let translator = Arc::new(Mutex::new(
-                GoogleTranslator::new(
-                    course.target_language, // translate from target to native
-                    course.native_language,
-                    PathBuf::from(".cache/google_translate/"),
-                )
-                .unwrap(),
-            ));
-
-            let all_sentences = futures::stream::iter(
-                anki_sentences
-                    .chain(subtitle_sentences)
-                    .chain(tatoeba_sentences)
-                    .chain(raw_english_sentences.into_iter())
-                    .filter(|(target_language_sentence, _)| {
-                        !banned_sentences.contains(&target_language_sentence.to_lowercase())
-                    })
-                    .map(|(target_language_sentence, native_sentence)| {
-                        let translator = Arc::clone(&translator);
-                        async move {
-                            let mut translation_set = IndexSet::new();
-                            match translator
-                                .lock()
-                                .await
-                                .translate(&target_language_sentence)
-                                .await
-                            {
-                                Ok(t) => {
-                                    if !t.trim().is_empty() {
-                                        translation_set.insert(t);
-                                    }
-                                }
-                                Err(e) => {
-                                    eprintln!(
-                                        "Error translating sentence '{target_language_sentence}': {e}"
-                                    );
-                                }
-                            };
-                            if let Some(native_sentence) = native_sentence {
-                                translation_set.insert(native_sentence);
-                            }
-                            (target_language_sentence, translation_set)
-                        }
-                    }),
-            )
-            .buffered(100)
-            .collect::<BTreeMap<_, _>>()
-            .await;
-
-            // Drop the translator to trigger the Drop implementation
-            drop(translator);
 
             for (target_language_sentence, native_translations) in all_sentences {
                 // Write individual target language sentence
@@ -514,7 +365,7 @@ async fn main() -> anyhow::Result<()> {
             println!("Skipping frequencies creation because file already exists");
         } else {
             println!(
-                "\nGenerating word and phrase frequencies from combined sources (Anki + OpenSubtitles + Tatoeba)..."
+                "\nGenerating word and phrase frequencies from combined sources (Anki + Tatoeba)..."
             );
 
             let frequencies = generate_data::frequencies::compute_frequencies(

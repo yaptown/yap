@@ -36,6 +36,11 @@ export function AccentedCharacterKeyboard({
     .with("German", () => ["ä", "ö", "ü", "ß", "Ä", "Ö", "Ü"])
     .with("Korean", () => [])
     .with("English", () => [])
+    .with("Chinese", () => [])
+    .with("Japanese", () => [])
+    .with("Russian", () => [])
+    .with("Portuguese", () => ["á", "é", "í", "ó", "ú", "â", "ê", "ô", "ã", "õ", "ç"])
+    .with("Italian", () => ["à", "è", "é", "ì", "ò", "ù"])
     .exhaustive();
 
   // Split characters into rows of at most 8 characters each

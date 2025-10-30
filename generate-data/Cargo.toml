@@ -30,3 +30,4 @@ lasso.workspace = true
 reqwest.workspace = true
 html-escape.workspace = true
 unicode-normalization.workspace = true
+dashmap = { version = "6.1.0", features = ["serde"] }

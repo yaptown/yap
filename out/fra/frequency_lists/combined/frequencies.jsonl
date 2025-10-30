@@ -1,106 +1,106 @@
-{"lexeme":{"Heteronym":{"word":"je","lemma":"je","pos":"PRON"}},"count":49650}
-{"lexeme":{"Heteronym":{"word":"de","lemma":"de","pos":"ADP"}},"count":46093}
-{"lexeme":{"Heteronym":{"word":"est","lemma":"être","pos":"AUX"}},"count":40284}
+{"lexeme":{"Heteronym":{"word":"je","lemma":"je","pos":"PRON"}},"count":49646}
+{"lexeme":{"Heteronym":{"word":"de","lemma":"de","pos":"ADP"}},"count":46094}
+{"lexeme":{"Heteronym":{"word":"est","lemma":"être","pos":"AUX"}},"count":40289}
 {"lexeme":{"Heteronym":{"word":"vous","lemma":"vous","pos":"PRON"}},"count":31936}
-{"lexeme":{"Heteronym":{"word":"la","lemma":"le","pos":"DET"}},"count":31512}
-{"lexeme":{"Heteronym":{"word":"le","lemma":"le","pos":"DET"}},"count":29721}
-{"lexeme":{"Heteronym":{"word":"tu","lemma":"tu","pos":"PRON"}},"count":28321}
-{"lexeme":{"Heteronym":{"word":"il","lemma":"il","pos":"PRON"}},"count":28086}
+{"lexeme":{"Heteronym":{"word":"la","lemma":"le","pos":"DET"}},"count":31513}
+{"lexeme":{"Heteronym":{"word":"le","lemma":"le","pos":"DET"}},"count":29726}
+{"lexeme":{"Heteronym":{"word":"tu","lemma":"tu","pos":"PRON"}},"count":28324}
+{"lexeme":{"Heteronym":{"word":"il","lemma":"il","pos":"PRON"}},"count":28091}
 {"lexeme":{"Heteronym":{"word":"ce","lemma":"ce","pos":"PRON"}},"count":26262}
-{"lexeme":{"Multiword":"être à"},"count":25609}
-{"lexeme":{"Heteronym":{"word":"a","lemma":"avoir","pos":"VERB"}},"count":25314}
-{"lexeme":{"Heteronym":{"word":"à","lemma":"à","pos":"ADP"}},"count":22586}
-{"lexeme":{"Heteronym":{"word":"un","lemma":"un","pos":"DET"}},"count":20457}
-{"lexeme":{"Heteronym":{"word":"que","lemma":"que","pos":"SCONJ"}},"count":18948}
+{"lexeme":{"Multiword":"être à"},"count":25611}
+{"lexeme":{"Heteronym":{"word":"a","lemma":"avoir","pos":"VERB"}},"count":25318}
+{"lexeme":{"Heteronym":{"word":"à","lemma":"à","pos":"ADP"}},"count":22588}
+{"lexeme":{"Heteronym":{"word":"un","lemma":"un","pos":"DET"}},"count":20461}
+{"lexeme":{"Heteronym":{"word":"que","lemma":"que","pos":"SCONJ"}},"count":18949}
 {"lexeme":{"Heteronym":{"word":"les","lemma":"le","pos":"DET"}},"count":16743}
-{"lexeme":{"Heteronym":{"word":"que","lemma":"que","pos":"PRON"}},"count":14754}
-{"lexeme":{"Heteronym":{"word":"une","lemma":"un","pos":"DET"}},"count":14607}
-{"lexeme":{"Multiword":"c'est"},"count":13099}
-{"lexeme":{"Heteronym":{"word":"nous","lemma":"nous","pos":"PRON"}},"count":12854}
-{"lexeme":{"Heteronym":{"word":"ne","lemma":"ne","pos":"ADV"}},"count":12570}
-{"lexeme":{"Heteronym":{"word":"me","lemma":"me","pos":"PRON"}},"count":11410}
-{"lexeme":{"Heteronym":{"word":"elle","lemma":"elle","pos":"PRON"}},"count":11001}
-{"lexeme":{"Heteronym":{"word":"ça","lemma":"ça","pos":"PRON"}},"count":10696}
+{"lexeme":{"Heteronym":{"word":"que","lemma":"que","pos":"PRON"}},"count":14752}
+{"lexeme":{"Heteronym":{"word":"une","lemma":"un","pos":"DET"}},"count":14611}
+{"lexeme":{"Multiword":"c'est"},"count":13098}
+{"lexeme":{"Heteronym":{"word":"nous","lemma":"nous","pos":"PRON"}},"count":12859}
+{"lexeme":{"Heteronym":{"word":"ne","lemma":"ne","pos":"ADV"}},"count":12574}
+{"lexeme":{"Heteronym":{"word":"me","lemma":"me","pos":"PRON"}},"count":11414}
+{"lexeme":{"Heteronym":{"word":"elle","lemma":"elle","pos":"PRON"}},"count":11003}
+{"lexeme":{"Heteronym":{"word":"ça","lemma":"ça","pos":"PRON"}},"count":10697}
 {"lexeme":{"Heteronym":{"word":"en","lemma":"en","pos":"ADP"}},"count":10649}
-{"lexeme":{"Heteronym":{"word":"le","lemma":"le","pos":"PRON"}},"count":9839}
-{"lexeme":{"Heteronym":{"word":"pour","lemma":"pour","pos":"ADP"}},"count":9497}
+{"lexeme":{"Heteronym":{"word":"le","lemma":"le","pos":"PRON"}},"count":9838}
+{"lexeme":{"Heteronym":{"word":"pour","lemma":"pour","pos":"ADP"}},"count":9498}
 {"lexeme":{"Heteronym":{"word":"pas","lemma":"pas","pos":"ADV"}},"count":9489}
-{"lexeme":{"Heteronym":{"word":"te","lemma":"te","pos":"PRON"}},"count":9379}
+{"lexeme":{"Heteronym":{"word":"te","lemma":"te","pos":"PRON"}},"count":9375}
 {"lexeme":{"Heteronym":{"word":"et","lemma":"et","pos":"CCONJ"}},"count":8393}
 {"lexeme":{"Heteronym":{"word":"dans","lemma":"dans","pos":"ADP"}},"count":8179}
-{"lexeme":{"Heteronym":{"word":"moi","lemma":"moi","pos":"PRON"}},"count":7541}
-{"lexeme":{"Heteronym":{"word":"se","lemma":"se","pos":"PRON"}},"count":7472}
-{"lexeme":{"Heteronym":{"word":"des","lemma":"un","pos":"DET"}},"count":7455}
-{"lexeme":{"Heteronym":{"word":"on","lemma":"on","pos":"PRON"}},"count":7041}
-{"lexeme":{"Multiword":"ne pas"},"count":6929}
-{"lexeme":{"Heteronym":{"word":"qui","lemma":"qui","pos":"PRON"}},"count":6807}
-{"lexeme":{"Heteronym":{"word":"y","lemma":"y","pos":"PRON"}},"count":6666}
+{"lexeme":{"Heteronym":{"word":"moi","lemma":"moi","pos":"PRON"}},"count":7543}
+{"lexeme":{"Heteronym":{"word":"se","lemma":"se","pos":"PRON"}},"count":7474}
+{"lexeme":{"Heteronym":{"word":"des","lemma":"un","pos":"DET"}},"count":7457}
+{"lexeme":{"Heteronym":{"word":"on","lemma":"on","pos":"PRON"}},"count":7043}
+{"lexeme":{"Multiword":"ne pas"},"count":6930}
+{"lexeme":{"Heteronym":{"word":"qui","lemma":"qui","pos":"PRON"}},"count":6809}
+{"lexeme":{"Heteronym":{"word":"y","lemma":"y","pos":"PRON"}},"count":6665}
 {"lexeme":{"Multiword":"est-ce"},"count":6433}
-{"lexeme":{"Heteronym":{"word":"faire","lemma":"faire","pos":"VERB"}},"count":6108}
-{"lexeme":{"Heteronym":{"word":"sont","lemma":"être","pos":"AUX"}},"count":6079}
+{"lexeme":{"Heteronym":{"word":"faire","lemma":"faire","pos":"VERB"}},"count":6109}
+{"lexeme":{"Heteronym":{"word":"sont","lemma":"être","pos":"AUX"}},"count":6081}
 {"lexeme":{"Heteronym":{"word":"veux","lemma":"vouloir","pos":"VERB"}},"count":5917}
-{"lexeme":{"Heteronym":{"word":"mon","lemma":"mon","pos":"DET"}},"count":5833}
+{"lexeme":{"Heteronym":{"word":"mon","lemma":"mon","pos":"DET"}},"count":5834}
 {"lexeme":{"Heteronym":{"word":"ai","lemma":"avoir","pos":"AUX"}},"count":5792}
-{"lexeme":{"Heteronym":{"word":"au","lemma":"au","pos":"ADP"}},"count":5754}
-{"lexeme":{"Heteronym":{"word":"suis","lemma":"être","pos":"AUX"}},"count":5716}
-{"lexeme":{"Heteronym":{"word":"plus","lemma":"plus","pos":"ADV"}},"count":5599}
+{"lexeme":{"Heteronym":{"word":"au","lemma":"au","pos":"ADP"}},"count":5757}
+{"lexeme":{"Heteronym":{"word":"suis","lemma":"être","pos":"AUX"}},"count":5717}
+{"lexeme":{"Heteronym":{"word":"plus","lemma":"plus","pos":"ADV"}},"count":5598}
 {"lexeme":{"Heteronym":{"word":"était","lemma":"être","pos":"AUX"}},"count":5426}
 {"lexeme":{"Heteronym":{"word":"ils","lemma":"il","pos":"PRON"}},"count":5376}
-{"lexeme":{"Heteronym":{"word":"ce","lemma":"ce","pos":"DET"}},"count":5360}
+{"lexeme":{"Heteronym":{"word":"ce","lemma":"ce","pos":"DET"}},"count":5359}
 {"lexeme":{"Multiword":"ce que"},"count":5250}
 {"lexeme":{"Heteronym":{"word":"avec","lemma":"avec","pos":"ADP"}},"count":5086}
 {"lexeme":{"Heteronym":{"word":"son","lemma":"son","pos":"DET"}},"count":5052}
-{"lexeme":{"Multiword":"est-ce que"},"count":4896}
+{"lexeme":{"Multiword":"est-ce que"},"count":4897}
 {"lexeme":{"Heteronym":{"word":"lui","lemma":"lui","pos":"PRON"}},"count":4889}
-{"lexeme":{"Heteronym":{"word":"as","lemma":"avoir","pos":"AUX"}},"count":4817}
-{"lexeme":{"Heteronym":{"word":"fait","lemma":"faire","pos":"VERB"}},"count":4754}
-{"lexeme":{"Heteronym":{"word":"en","lemma":"en","pos":"PRON"}},"count":4661}
-{"lexeme":{"Heteronym":{"word":"bien","lemma":"bien","pos":"ADV"}},"count":4576}
+{"lexeme":{"Heteronym":{"word":"as","lemma":"avoir","pos":"AUX"}},"count":4820}
+{"lexeme":{"Heteronym":{"word":"fait","lemma":"faire","pos":"VERB"}},"count":4755}
+{"lexeme":{"Heteronym":{"word":"en","lemma":"en","pos":"PRON"}},"count":4660}
+{"lexeme":{"Heteronym":{"word":"bien","lemma":"bien","pos":"ADV"}},"count":4577}
 {"lexeme":{"Heteronym":{"word":"cette","lemma":"ce","pos":"DET"}},"count":4322}
 {"lexeme":{"Heteronym":{"word":"sur","lemma":"sur","pos":"ADP"}},"count":4197}
 {"lexeme":{"Multiword":"y avoir"},"count":4118}
-{"lexeme":{"Heteronym":{"word":"toi","lemma":"toi","pos":"PRON"}},"count":3996}
+{"lexeme":{"Heteronym":{"word":"toi","lemma":"toi","pos":"PRON"}},"count":3994}
 {"lexeme":{"Heteronym":{"word":"où","lemma":"où","pos":"ADV"}},"count":3825}
-{"lexeme":{"Heteronym":{"word":"ma","lemma":"mon","pos":"DET"}},"count":3795}
-{"lexeme":{"Heteronym":{"word":"comment","lemma":"comment","pos":"ADV"}},"count":3765}
-{"lexeme":{"Heteronym":{"word":"du","lemma":"de","pos":"ADP"}},"count":3756}
-{"lexeme":{"Heteronym":{"word":"votre","lemma":"votre","pos":"DET"}},"count":3687}
-{"lexeme":{"Heteronym":{"word":"très","lemma":"très","pos":"ADV"}},"count":3678}
-{"lexeme":{"Heteronym":{"word":"chose","lemma":"chose","pos":"NOUN"}},"count":3537}
-{"lexeme":{"Heteronym":{"word":"peux","lemma":"pouvoir","pos":"VERB"}},"count":3465}
+{"lexeme":{"Heteronym":{"word":"ma","lemma":"mon","pos":"DET"}},"count":3796}
+{"lexeme":{"Heteronym":{"word":"comment","lemma":"comment","pos":"ADV"}},"count":3762}
+{"lexeme":{"Heteronym":{"word":"du","lemma":"de","pos":"ADP"}},"count":3753}
+{"lexeme":{"Heteronym":{"word":"votre","lemma":"votre","pos":"DET"}},"count":3689}
+{"lexeme":{"Heteronym":{"word":"très","lemma":"très","pos":"ADV"}},"count":3677}
+{"lexeme":{"Heteronym":{"word":"chose","lemma":"chose","pos":"NOUN"}},"count":3536}
+{"lexeme":{"Heteronym":{"word":"peux","lemma":"pouvoir","pos":"VERB"}},"count":3466}
 {"lexeme":{"Heteronym":{"word":"tout","lemma":"tout","pos":"ADJ"}},"count":3405}
 {"lexeme":{"Heteronym":{"word":"être","lemma":"être","pos":"AUX"}},"count":3390}
-{"lexeme":{"Heteronym":{"word":"sa","lemma":"son","pos":"DET"}},"count":3353}
+{"lexeme":{"Heteronym":{"word":"sa","lemma":"son","pos":"DET"}},"count":3355}
 {"lexeme":{"Heteronym":{"word":"es","lemma":"être","pos":"AUX"}},"count":3257}
-{"lexeme":{"Heteronym":{"word":"avez","lemma":"avoir","pos":"AUX"}},"count":3219}
-{"lexeme":{"Heteronym":{"word":"quelque","lemma":"quelque","pos":"DET"}},"count":3215}
-{"lexeme":{"Heteronym":{"word":"ici","lemma":"ici","pos":"ADV"}},"count":3198}
+{"lexeme":{"Heteronym":{"word":"avez","lemma":"avoir","pos":"AUX"}},"count":3220}
+{"lexeme":{"Heteronym":{"word":"quelque","lemma":"quelque","pos":"DET"}},"count":3216}
+{"lexeme":{"Heteronym":{"word":"ici","lemma":"ici","pos":"ADV"}},"count":3197}
 {"lexeme":{"Heteronym":{"word":"êtes","lemma":"être","pos":"AUX"}},"count":3161}
-{"lexeme":{"Heteronym":{"word":"sais","lemma":"savoir","pos":"VERB"}},"count":3160}
-{"lexeme":{"Heteronym":{"word":"va","lemma":"aller","pos":"VERB"}},"count":3116}
+{"lexeme":{"Heteronym":{"word":"sais","lemma":"savoir","pos":"VERB"}},"count":3159}
+{"lexeme":{"Heteronym":{"word":"va","lemma":"aller","pos":"VERB"}},"count":3117}
 {"lexeme":{"Heteronym":{"word":"dit","lemma":"dire","pos":"VERB"}},"count":3078}
-{"lexeme":{"Heteronym":{"word":"temps","lemma":"temps","pos":"NOUN"}},"count":3007}
-{"lexeme":{"Heteronym":{"word":"si","lemma":"si","pos":"SCONJ"}},"count":2978}
-{"lexeme":{"Heteronym":{"word":"par","lemma":"par","pos":"ADP"}},"count":2956}
-{"lexeme":{"Heteronym":{"word":"là","lemma":"là","pos":"ADV"}},"count":2905}
-{"lexeme":{"Multiword":"falloir"},"count":2888}
+{"lexeme":{"Heteronym":{"word":"temps","lemma":"temps","pos":"NOUN"}},"count":3006}
+{"lexeme":{"Heteronym":{"word":"si","lemma":"si","pos":"SCONJ"}},"count":2973}
+{"lexeme":{"Heteronym":{"word":"par","lemma":"par","pos":"ADP"}},"count":2957}
+{"lexeme":{"Heteronym":{"word":"là","lemma":"là","pos":"ADV"}},"count":2904}
+{"lexeme":{"Multiword":"falloir"},"count":2887}
 {"lexeme":{"Heteronym":{"word":"été","lemma":"être","pos":"AUX"}},"count":2878}
-{"lexeme":{"Heteronym":{"word":"ton","lemma":"ton","pos":"DET"}},"count":2858}
-{"lexeme":{"Heteronym":{"word":"dire","lemma":"dire","pos":"VERB"}},"count":2847}
+{"lexeme":{"Heteronym":{"word":"ton","lemma":"ton","pos":"DET"}},"count":2857}
+{"lexeme":{"Heteronym":{"word":"dire","lemma":"dire","pos":"VERB"}},"count":2846}
 {"lexeme":{"Multiword":"il y a"},"count":2815}
 {"lexeme":{"Heteronym":{"word":"tous","lemma":"tout","pos":"ADJ"}},"count":2768}
-{"lexeme":{"Heteronym":{"word":"quoi","lemma":"quoi","pos":"PRON"}},"count":2766}
 {"lexeme":{"Heteronym":{"word":"ont","lemma":"avoir","pos":"AUX"}},"count":2760}
-{"lexeme":{"Heteronym":{"word":"du","lemma":"de","pos":"DET"}},"count":2682}
+{"lexeme":{"Heteronym":{"word":"quoi","lemma":"quoi","pos":"PRON"}},"count":2745}
+{"lexeme":{"Heteronym":{"word":"du","lemma":"de","pos":"DET"}},"count":2681}
 {"lexeme":{"Heteronym":{"word":"est","lemma":"être","pos":"VERB"}},"count":2661}
 {"lexeme":{"Heteronym":{"word":"ai","lemma":"avoir","pos":"VERB"}},"count":2592}
 {"lexeme":{"Heteronym":{"word":"pourquoi","lemma":"pourquoi","pos":"ADV"}},"count":2562}
-{"lexeme":{"Heteronym":{"word":"faut","lemma":"falloir","pos":"VERB"}},"count":2550}
-{"lexeme":{"Multiword":"quelque chose"},"count":2542}
-{"lexeme":{"Heteronym":{"word":"t","lemma":"t","pos":"PART"}},"count":2486}
-{"lexeme":{"Heteronym":{"word":"dois","lemma":"devoir","pos":"VERB"}},"count":2422}
+{"lexeme":{"Heteronym":{"word":"faut","lemma":"falloir","pos":"VERB"}},"count":2549}
+{"lexeme":{"Multiword":"quelque chose"},"count":2543}
+{"lexeme":{"Heteronym":{"word":"t","lemma":"t","pos":"PART"}},"count":2488}
+{"lexeme":{"Heteronym":{"word":"dois","lemma":"devoir","pos":"VERB"}},"count":2421}
 {"lexeme":{"Multiword":"qu'est-ce que"},"count":2379}
-{"lexeme":{"Multiword":"la faire"},"count":2323}
+{"lexeme":{"Multiword":"la faire"},"count":2324}
 {"lexeme":{"Heteronym":{"word":"ses","lemma":"son","pos":"DET"}},"count":2286}
 {"lexeme":{"Heteronym":{"word":"comme","lemma":"comme","pos":"ADP"}},"count":2243}
 {"lexeme":{"Heteronym":{"word":"cela","lemma":"celer","pos":"PRON"}},"count":2223}
@@ -109,69 +109,69 @@
 {"lexeme":{"Heteronym":{"word":"jamais","lemma":"jamais","pos":"ADV"}},"count":2193}
 {"lexeme":{"Heteronym":{"word":"mais","lemma":"mais","pos":"CCONJ"}},"count":2149}
 {"lexeme":{"Heteronym":{"word":"vais","lemma":"aller","pos":"VERB"}},"count":2126}
-{"lexeme":{"Heteronym":{"word":"parler","lemma":"parler","pos":"VERB"}},"count":2109}
+{"lexeme":{"Heteronym":{"word":"parler","lemma":"parler","pos":"VERB"}},"count":2108}
 {"lexeme":{"Heteronym":{"word":"monde","lemma":"monde","pos":"NOUN"}},"count":2084}
-{"lexeme":{"Heteronym":{"word":"beaucoup","lemma":"beaucoup","pos":"ADV"}},"count":2076}
+{"lexeme":{"Heteronym":{"word":"beaucoup","lemma":"beaucoup","pos":"ADV"}},"count":2075}
 {"lexeme":{"Heteronym":{"word":"peut","lemma":"pouvoir","pos":"VERB"}},"count":2057}
-{"lexeme":{"Heteronym":{"word":"non","lemma":"non","pos":"ADV"}},"count":2028}
+{"lexeme":{"Heteronym":{"word":"non","lemma":"non","pos":"ADV"}},"count":2025}
 {"lexeme":{"Heteronym":{"word":"as","lemma":"avoir","pos":"VERB"}},"count":1995}
 {"lexeme":{"Heteronym":{"word":"maison","lemma":"maison","pos":"NOUN"}},"count":1965}
-{"lexeme":{"Heteronym":{"word":"fais","lemma":"faire","pos":"VERB"}},"count":1956}
-{"lexeme":{"Heteronym":{"word":"bon","lemma":"bon","pos":"ADJ"}},"count":1939}
-{"lexeme":{"Heteronym":{"word":"elles","lemma":"lui","pos":"PRON"}},"count":1877}
+{"lexeme":{"Heteronym":{"word":"fais","lemma":"faire","pos":"VERB"}},"count":1955}
+{"lexeme":{"Heteronym":{"word":"bon","lemma":"bon","pos":"ADJ"}},"count":1938}
+{"lexeme":{"Heteronym":{"word":"elles","lemma":"lui","pos":"PRON"}},"count":1878}
 {"lexeme":{"Multiword":"il faut"},"count":1870}
 {"lexeme":{"Heteronym":{"word":"ta","lemma":"ton","pos":"DET"}},"count":1869}
+{"lexeme":{"Heteronym":{"word":"des","lemma":"de","pos":"ADP"}},"count":1829}
 {"lexeme":{"Heteronym":{"word":"tout","lemma":"tout","pos":"PRON"}},"count":1829}
-{"lexeme":{"Heteronym":{"word":"des","lemma":"de","pos":"ADP"}},"count":1828}
 {"lexeme":{"Heteronym":{"word":"mes","lemma":"mon","pos":"DET"}},"count":1775}
 {"lexeme":{"Heteronym":{"word":"deux","lemma":"deux","pos":"NUM"}},"count":1760}
-{"lexeme":{"Heteronym":{"word":"aller","lemma":"aller","pos":"VERB"}},"count":1671}
-{"lexeme":{"Heteronym":{"word":"vraiment","lemma":"vraiment","pos":"ADV"}},"count":1650}
-{"lexeme":{"Heteronym":{"word":"pense","lemma":"penser","pos":"VERB"}},"count":1647}
-{"lexeme":{"Multiword":"ne jamais"},"count":1643}
+{"lexeme":{"Heteronym":{"word":"aller","lemma":"aller","pos":"VERB"}},"count":1669}
+{"lexeme":{"Heteronym":{"word":"vraiment","lemma":"vraiment","pos":"ADV"}},"count":1651}
+{"lexeme":{"Heteronym":{"word":"pense","lemma":"penser","pos":"VERB"}},"count":1646}
+{"lexeme":{"Multiword":"ne jamais"},"count":1644}
 {"lexeme":{"Multiword":"dire que"},"count":1634}
-{"lexeme":{"Heteronym":{"word":"combien","lemma":"combien","pos":"ADV"}},"count":1631}
+{"lexeme":{"Heteronym":{"word":"combien","lemma":"combien","pos":"ADV"}},"count":1630}
 {"lexeme":{"Heteronym":{"word":"besoin","lemma":"besoin","pos":"NOUN"}},"count":1625}
-{"lexeme":{"Heteronym":{"word":"notre","lemma":"notre","pos":"DET"}},"count":1568}
+{"lexeme":{"Heteronym":{"word":"notre","lemma":"notre","pos":"DET"}},"count":1569}
 {"lexeme":{"Heteronym":{"word":"déjà","lemma":"déjà","pos":"ADV"}},"count":1565}
 {"lexeme":{"Heteronym":{"word":"vie","lemma":"vie","pos":"NOUN"}},"count":1534}
-{"lexeme":{"Heteronym":{"word":"maintenant","lemma":"maintenant","pos":"ADV"}},"count":1526}
-{"lexeme":{"Heteronym":{"word":"encore","lemma":"encore","pos":"ADV"}},"count":1506}
+{"lexeme":{"Heteronym":{"word":"maintenant","lemma":"maintenant","pos":"ADV"}},"count":1525}
+{"lexeme":{"Heteronym":{"word":"encore","lemma":"encore","pos":"ADV"}},"count":1507}
 {"lexeme":{"Heteronym":{"word":"avez","lemma":"avoir","pos":"VERB"}},"count":1500}
 {"lexeme":{"Heteronym":{"word":"ces","lemma":"ce","pos":"DET"}},"count":1492}
 {"lexeme":{"Heteronym":{"word":"peu","lemma":"peu","pos":"ADV"}},"count":1474}
 {"lexeme":{"Heteronym":{"word":"fois","lemma":"fois","pos":"NOUN"}},"count":1458}
-{"lexeme":{"Heteronym":{"word":"oui","lemma":"oui","pos":"INTJ"}},"count":1455}
+{"lexeme":{"Heteronym":{"word":"oui","lemma":"oui","pos":"INTJ"}},"count":1451}
 {"lexeme":{"Heteronym":{"word":"voulez","lemma":"vouloir","pos":"VERB"}},"count":1449}
 {"lexeme":{"Heteronym":{"word":"personne","lemma":"personne","pos":"NOUN"}},"count":1441}
-{"lexeme":{"Heteronym":{"word":"avons","lemma":"avoir","pos":"AUX"}},"count":1435}
+{"lexeme":{"Heteronym":{"word":"avons","lemma":"avoir","pos":"AUX"}},"count":1436}
 {"lexeme":{"Heteronym":{"word":"aime","lemma":"aimer","pos":"VERB"}},"count":1429}
 {"lexeme":{"Heteronym":{"word":"voiture","lemma":"voiture","pos":"NOUN"}},"count":1428}
 {"lexeme":{"Multiword":"bien à vous"},"count":1428}
 {"lexeme":{"Heteronym":{"word":"vu","lemma":"voir","pos":"VERB"}},"count":1400}
-{"lexeme":{"Heteronym":{"word":"merci","lemma":"merci","pos":"INTJ"}},"count":1393}
+{"lexeme":{"Heteronym":{"word":"merci","lemma":"merci","pos":"INTJ"}},"count":1391}
 {"lexeme":{"Multiword":"demander"},"count":1362}
 {"lexeme":{"Heteronym":{"word":"quelle","lemma":"quel","pos":"DET"}},"count":1361}
 {"lexeme":{"Heteronym":{"word":"père","lemma":"père","pos":"NOUN"}},"count":1356}
 {"lexeme":{"Heteronym":{"word":"bonne","lemma":"bon","pos":"ADJ"}},"count":1343}
-{"lexeme":{"Heteronym":{"word":"rien","lemma":"rien","pos":"PRON"}},"count":1332}
-{"lexeme":{"Heteronym":{"word":"aussi","lemma":"aussi","pos":"ADV"}},"count":1324}
+{"lexeme":{"Heteronym":{"word":"rien","lemma":"rien","pos":"PRON"}},"count":1331}
+{"lexeme":{"Heteronym":{"word":"aussi","lemma":"aussi","pos":"ADV"}},"count":1323}
 {"lexeme":{"Multiword":"tout le monde"},"count":1315}
 {"lexeme":{"Multiword":"tu sais"},"count":1308}
-{"lexeme":{"Heteronym":{"word":"juste","lemma":"juste","pos":"ADV"}},"count":1306}
+{"lexeme":{"Heteronym":{"word":"juste","lemma":"juste","pos":"ADV"}},"count":1305}
 {"lexeme":{"Heteronym":{"word":"les","lemma":"le","pos":"PRON"}},"count":1289}
-{"lexeme":{"Heteronym":{"word":"un","lemma":"un","pos":"PRON"}},"count":1279}
-{"lexeme":{"Heteronym":{"word":"quel","lemma":"quel","pos":"DET"}},"count":1276}
-{"lexeme":{"Heteronym":{"word":"ou","lemma":"ou","pos":"CCONJ"}},"count":1273}
+{"lexeme":{"Heteronym":{"word":"un","lemma":"un","pos":"PRON"}},"count":1280}
+{"lexeme":{"Heteronym":{"word":"quel","lemma":"quel","pos":"DET"}},"count":1277}
+{"lexeme":{"Heteronym":{"word":"ou","lemma":"ou","pos":"CCONJ"}},"count":1268}
 {"lexeme":{"Multiword":"ne que"},"count":1268}
 {"lexeme":{"Heteronym":{"word":"dis","lemma":"dire","pos":"VERB"}},"count":1253}
-{"lexeme":{"Heteronym":{"word":"autre","lemma":"autre","pos":"ADJ"}},"count":1250}
-{"lexeme":{"Heteronym":{"word":"pouvez","lemma":"pouvoir","pos":"VERB"}},"count":1238}
+{"lexeme":{"Heteronym":{"word":"autre","lemma":"autre","pos":"ADJ"}},"count":1251}
+{"lexeme":{"Heteronym":{"word":"pouvez","lemma":"pouvoir","pos":"VERB"}},"count":1239}
 {"lexeme":{"Heteronym":{"word":"trop","lemma":"trop","pos":"ADV"}},"count":1237}
-{"lexeme":{"Multiword":"puis-je"},"count":1230}
-{"lexeme":{"Heteronym":{"word":"veut","lemma":"vouloir","pos":"VERB"}},"count":1226}
-{"lexeme":{"Heteronym":{"word":"quand","lemma":"quand","pos":"SCONJ"}},"count":1225}
-{"lexeme":{"Heteronym":{"word":"train","lemma":"train","pos":"NOUN"}},"count":1221}
+{"lexeme":{"Multiword":"puis-je"},"count":1229}
+{"lexeme":{"Heteronym":{"word":"quand","lemma":"quand","pos":"SCONJ"}},"count":1226}
+{"lexeme":{"Heteronym":{"word":"veut","lemma":"vouloir","pos":"VERB"}},"count":1224}
+{"lexeme":{"Heteronym":{"word":"train","lemma":"train","pos":"NOUN"}},"count":1220}
 {"lexeme":{"Heteronym":{"word":"crois","lemma":"croire","pos":"VERB"}},"count":1216}
 {"lexeme":{"Heteronym":{"word":"travail","lemma":"travail","pos":"NOUN"}},"count":1216}
 {"lexeme":{"Multiword":"un peu"},"count":1179}
@@ -179,21 +179,21 @@
 {"lexeme":{"Heteronym":{"word":"tes","lemma":"ton","pos":"DET"}},"count":1160}
 {"lexeme":{"Heteronym":{"word":"sommes","lemma":"être","pos":"AUX"}},"count":1154}
 {"lexeme":{"Heteronym":{"word":"chez","lemma":"chez","pos":"ADP"}},"count":1153}
-{"lexeme":{"Heteronym":{"word":"enfants","lemma":"enfant","pos":"NOUN"}},"count":1152}
 {"lexeme":{"Heteronym":{"word":"parle","lemma":"parler","pos":"VERB"}},"count":1152}
 {"lexeme":{"Heteronym":{"word":"prendre","lemma":"prendre","pos":"VERB"}},"count":1152}
-{"lexeme":{"Heteronym":{"word":"aux","lemma":"à","pos":"ADP"}},"count":1136}
-{"lexeme":{"Heteronym":{"word":"sans","lemma":"sans","pos":"ADP"}},"count":1134}
-{"lexeme":{"Heteronym":{"word":"vos","lemma":"votre","pos":"DET"}},"count":1129}
-{"lexeme":{"Heteronym":{"word":"eu","lemma":"avoir","pos":"VERB"}},"count":1122}
-{"lexeme":{"Heteronym":{"word":"puis","lemma":"pouvoir","pos":"VERB"}},"count":1110}
-{"lexeme":{"Heteronym":{"word":"français","lemma":"français","pos":"NOUN"}},"count":1105}
-{"lexeme":{"Multiword":"est-il"},"count":1098}
-{"lexeme":{"Heteronym":{"word":"mieux","lemma":"mieux","pos":"ADV"}},"count":1090}
+{"lexeme":{"Heteronym":{"word":"enfants","lemma":"enfant","pos":"NOUN"}},"count":1151}
+{"lexeme":{"Heteronym":{"word":"sans","lemma":"sans","pos":"ADP"}},"count":1136}
+{"lexeme":{"Heteronym":{"word":"aux","lemma":"à","pos":"ADP"}},"count":1134}
+{"lexeme":{"Heteronym":{"word":"vos","lemma":"votre","pos":"DET"}},"count":1128}
+{"lexeme":{"Heteronym":{"word":"eu","lemma":"avoir","pos":"VERB"}},"count":1121}
+{"lexeme":{"Heteronym":{"word":"puis","lemma":"pouvoir","pos":"VERB"}},"count":1109}
+{"lexeme":{"Heteronym":{"word":"français","lemma":"français","pos":"NOUN"}},"count":1103}
+{"lexeme":{"Multiword":"est-il"},"count":1099}
+{"lexeme":{"Heteronym":{"word":"mieux","lemma":"mieux","pos":"ADV"}},"count":1089}
 {"lexeme":{"Multiword":"avoir besoin de"},"count":1084}
-{"lexeme":{"Heteronym":{"word":"cet","lemma":"ce","pos":"DET"}},"count":1083}
-{"lexeme":{"Heteronym":{"word":"mère","lemma":"mère","pos":"NOUN"}},"count":1079}
-{"lexeme":{"Heteronym":{"word":"femme","lemma":"femme","pos":"NOUN"}},"count":1077}
+{"lexeme":{"Heteronym":{"word":"cet","lemma":"ce","pos":"DET"}},"count":1082}
+{"lexeme":{"Heteronym":{"word":"mère","lemma":"mère","pos":"NOUN"}},"count":1080}
+{"lexeme":{"Heteronym":{"word":"femme","lemma":"femme","pos":"NOUN"}},"count":1078}
 {"lexeme":{"Heteronym":{"word":"doit","lemma":"devoir","pos":"VERB"}},"count":1060}
 {"lexeme":{"Heteronym":{"word":"jour","lemma":"jour","pos":"NOUN"}},"count":1057}
 {"lexeme":{"Heteronym":{"word":"quand","lemma":"quand","pos":"ADV"}},"count":1048}
@@ -204,62 +204,62 @@
 {"lexeme":{"Heteronym":{"word":"gens","lemma":"gens","pos":"NOUN"}},"count":1031}
 {"lexeme":{"Heteronym":{"word":"tout","lemma":"tout","pos":"ADV"}},"count":1029}
 {"lexeme":{"Heteronym":{"word":"fille","lemma":"fille","pos":"NOUN"}},"count":1013}
-{"lexeme":{"Heteronym":{"word":"homme","lemma":"homme","pos":"NOUN"}},"count":1005}
-{"lexeme":{"Multiword":"ce qui"},"count":1005}
+{"lexeme":{"Multiword":"ce qui"},"count":1006}
+{"lexeme":{"Heteronym":{"word":"homme","lemma":"homme","pos":"NOUN"}},"count":1004}
 {"lexeme":{"Heteronym":{"word":"avoir","lemma":"avoir","pos":"VERB"}},"count":998}
 {"lexeme":{"Heteronym":{"word":"nuit","lemma":"nuit","pos":"NOUN"}},"count":976}
 {"lexeme":{"Heteronym":{"word":"choses","lemma":"chose","pos":"NOUN"}},"count":968}
 {"lexeme":{"Multiword":"falloir que"},"count":950}
 {"lexeme":{"Heteronym":{"word":"toutes","lemma":"tout","pos":"ADJ"}},"count":944}
-{"lexeme":{"Heteronym":{"word":"demain","lemma":"demain","pos":"ADV"}},"count":941}
-{"lexeme":{"Heteronym":{"word":"vas","lemma":"aller","pos":"VERB"}},"count":937}
+{"lexeme":{"Heteronym":{"word":"demain","lemma":"demain","pos":"ADV"}},"count":942}
+{"lexeme":{"Heteronym":{"word":"vas","lemma":"aller","pos":"VERB"}},"count":936}
 {"lexeme":{"Heteronym":{"word":"savoir","lemma":"savoir","pos":"VERB"}},"count":935}
-{"lexeme":{"Heteronym":{"word":"ceci","lemma":"ceci","pos":"PRON"}},"count":933}
+{"lexeme":{"Heteronym":{"word":"ceci","lemma":"ceci","pos":"PRON"}},"count":932}
 {"lexeme":{"Heteronym":{"word":"que","lemma":"que","pos":"ADV"}},"count":928}
-{"lexeme":{"Heteronym":{"word":"chien","lemma":"chien","pos":"NOUN"}},"count":920}
+{"lexeme":{"Heteronym":{"word":"chien","lemma":"chien","pos":"NOUN"}},"count":921}
 {"lexeme":{"Heteronym":{"word":"viens","lemma":"venir","pos":"VERB"}},"count":909}
 {"lexeme":{"Multiword":"être là"},"count":906}
-{"lexeme":{"Heteronym":{"word":"allez","lemma":"aller","pos":"VERB"}},"count":904}
+{"lexeme":{"Heteronym":{"word":"allez","lemma":"aller","pos":"VERB"}},"count":901}
 {"lexeme":{"Heteronym":{"word":"heure","lemma":"heure","pos":"NOUN"}},"count":893}
 {"lexeme":{"Heteronym":{"word":"petit","lemma":"petit","pos":"ADJ"}},"count":878}
-{"lexeme":{"Heteronym":{"word":"passé","lemma":"passer","pos":"VERB"}},"count":871}
-{"lexeme":{"Heteronym":{"word":"faites","lemma":"faire","pos":"VERB"}},"count":868}
+{"lexeme":{"Heteronym":{"word":"passé","lemma":"passer","pos":"VERB"}},"count":872}
+{"lexeme":{"Heteronym":{"word":"faites","lemma":"faire","pos":"VERB"}},"count":867}
 {"lexeme":{"Multiword":"venir de"},"count":864}
-{"lexeme":{"Heteronym":{"word":"hier","lemma":"hier","pos":"ADV"}},"count":861}
+{"lexeme":{"Heteronym":{"word":"hier","lemma":"hier","pos":"ADV"}},"count":862}
 {"lexeme":{"Heteronym":{"word":"pris","lemma":"prendre","pos":"VERB"}},"count":861}
 {"lexeme":{"Heteronym":{"word":"voulais","lemma":"vouloir","pos":"VERB"}},"count":861}
+{"lexeme":{"Heteronym":{"word":"jours","lemma":"jour","pos":"NOUN"}},"count":853}
 {"lexeme":{"Multiword":"pas de"},"count":853}
-{"lexeme":{"Heteronym":{"word":"jours","lemma":"jour","pos":"NOUN"}},"count":852}
 {"lexeme":{"Heteronym":{"word":"nom","lemma":"nom","pos":"NOUN"}},"count":852}
 {"lexeme":{"Heteronym":{"word":"savez","lemma":"savoir","pos":"VERB"}},"count":852}
 {"lexeme":{"Multiword":"parle de"},"count":847}
-{"lexeme":{"Heteronym":{"word":"fut","lemma":"être","pos":"AUX"}},"count":845}
-{"lexeme":{"Heteronym":{"word":"sait","lemma":"savoir","pos":"VERB"}},"count":842}
-{"lexeme":{"Heteronym":{"word":"depuis","lemma":"depuis","pos":"ADP"}},"count":838}
+{"lexeme":{"Heteronym":{"word":"fut","lemma":"être","pos":"AUX"}},"count":846}
+{"lexeme":{"Heteronym":{"word":"sait","lemma":"savoir","pos":"VERB"}},"count":841}
+{"lexeme":{"Heteronym":{"word":"depuis","lemma":"depuis","pos":"ADP"}},"count":837}
 {"lexeme":{"Multiword":"comme cela"},"count":830}
 {"lexeme":{"Heteronym":{"word":"porte","lemma":"porte","pos":"NOUN"}},"count":827}
-{"lexeme":{"Heteronym":{"word":"soir","lemma":"soir","pos":"NOUN"}},"count":825}
 {"lexeme":{"Heteronym":{"word":"après","lemma":"après","pos":"ADP"}},"count":824}
+{"lexeme":{"Heteronym":{"word":"soir","lemma":"soir","pos":"NOUN"}},"count":824}
 {"lexeme":{"Multiword":"ne rien"},"count":823}
 {"lexeme":{"Multiword":"y aller"},"count":822}
 {"lexeme":{"Multiword":"je vois"},"count":820}
 {"lexeme":{"Heteronym":{"word":"alors","lemma":"alors","pos":"ADV"}},"count":812}
 {"lexeme":{"Heteronym":{"word":"partir","lemma":"partir","pos":"VERB"}},"count":811}
-{"lexeme":{"Heteronym":{"word":"grand","lemma":"grand","pos":"ADJ"}},"count":807}
+{"lexeme":{"Heteronym":{"word":"grand","lemma":"grand","pos":"ADJ"}},"count":806}
 {"lexeme":{"Heteronym":{"word":"moment","lemma":"moment","pos":"NOUN"}},"count":805}
 {"lexeme":{"Heteronym":{"word":"ville","lemma":"ville","pos":"NOUN"}},"count":787}
-{"lexeme":{"Heteronym":{"word":"amis","lemma":"ami","pos":"NOUN"}},"count":783}
+{"lexeme":{"Heteronym":{"word":"amis","lemma":"ami","pos":"NOUN"}},"count":785}
 {"lexeme":{"Heteronym":{"word":"venir","lemma":"venir","pos":"VERB"}},"count":780}
 {"lexeme":{"Multiword":"ne plus"},"count":776}
 {"lexeme":{"Heteronym":{"word":"avant","lemma":"avant","pos":"ADP"}},"count":769}
 {"lexeme":{"Heteronym":{"word":"ami","lemma":"ami","pos":"NOUN"}},"count":767}
 {"lexeme":{"Multiword":"se passer"},"count":766}
-{"lexeme":{"Heteronym":{"word":"arrivé","lemma":"arriver","pos":"VERB"}},"count":764}
+{"lexeme":{"Heteronym":{"word":"arrivé","lemma":"arriver","pos":"VERB"}},"count":765}
 {"lexeme":{"Heteronym":{"word":"sens","lemma":"sens","pos":"NOUN"}},"count":763}
 {"lexeme":{"Heteronym":{"word":"quelques","lemma":"quelque","pos":"DET"}},"count":761}
 {"lexeme":{"Heteronym":{"word":"vois","lemma":"voir","pos":"VERB"}},"count":760}
 {"lexeme":{"Multiword":"vous savez"},"count":757}
-{"lexeme":{"Heteronym":{"word":"toute","lemma":"tout","pos":"ADJ"}},"count":755}
+{"lexeme":{"Heteronym":{"word":"toute","lemma":"tout","pos":"ADJ"}},"count":756}
 {"lexeme":{"Heteronym":{"word":"seul","lemma":"seul","pos":"ADJ"}},"count":754}
 {"lexeme":{"Heteronym":{"word":"connais","lemma":"connaître","pos":"VERB"}},"count":753}
 {"lexeme":{"Heteronym":{"word":"avons","lemma":"avoir","pos":"VERB"}},"count":751}
@@ -274,22 +274,22 @@
 {"lexeme":{"Heteronym":{"word":"question","lemma":"question","pos":"NOUN"}},"count":737}
 {"lexeme":{"Heteronym":{"word":"pensais","lemma":"penser","pos":"VERB"}},"count":735}
 {"lexeme":{"Heteronym":{"word":"raison","lemma":"raison","pos":"NOUN"}},"count":731}
-{"lexeme":{"Heteronym":{"word":"sûr","lemma":"sûr","pos":"ADJ"}},"count":724}
 {"lexeme":{"Multiword":"en train de"},"count":724}
+{"lexeme":{"Heteronym":{"word":"sûr","lemma":"sûr","pos":"ADJ"}},"count":723}
 {"lexeme":{"Heteronym":{"word":"étaient","lemma":"être","pos":"AUX"}},"count":722}
 {"lexeme":{"Heteronym":{"word":"nouveau","lemma":"nouveau","pos":"ADJ"}},"count":721}
-{"lexeme":{"Heteronym":{"word":"passe","lemma":"passer","pos":"VERB"}},"count":719}
+{"lexeme":{"Heteronym":{"word":"passe","lemma":"passer","pos":"VERB"}},"count":720}
 {"lexeme":{"Heteronym":{"word":"avoir","lemma":"avoir","pos":"AUX"}},"count":715}
-{"lexeme":{"Heteronym":{"word":"souvent","lemma":"souvent","pos":"ADV"}},"count":701}
-{"lexeme":{"Heteronym":{"word":"laisse","lemma":"laisse","pos":"VERB"}},"count":694}
-{"lexeme":{"Heteronym":{"word":"fils","lemma":"fils","pos":"NOUN"}},"count":690}
+{"lexeme":{"Heteronym":{"word":"souvent","lemma":"souvent","pos":"ADV"}},"count":702}
+{"lexeme":{"Heteronym":{"word":"laisse","lemma":"laisse","pos":"VERB"}},"count":693}
+{"lexeme":{"Heteronym":{"word":"fils","lemma":"fils","pos":"NOUN"}},"count":691}
 {"lexeme":{"Heteronym":{"word":"rester","lemma":"rester","pos":"VERB"}},"count":677}
-{"lexeme":{"Multiword":"un autre"},"count":658}
+{"lexeme":{"Multiword":"un autre"},"count":659}
 {"lexeme":{"Heteronym":{"word":"donne","lemma":"donne","pos":"VERB"}},"count":655}
 {"lexeme":{"Multiword":"en être"},"count":654}
 {"lexeme":{"Heteronym":{"word":"café","lemma":"café","pos":"NOUN"}},"count":652}
 {"lexeme":{"Heteronym":{"word":"devons","lemma":"devoir","pos":"VERB"}},"count":651}
-{"lexeme":{"Heteronym":{"word":"trouvé","lemma":"trouver","pos":"VERB"}},"count":651}
+{"lexeme":{"Heteronym":{"word":"trouvé","lemma":"trouver","pos":"VERB"}},"count":650}
 {"lexeme":{"Heteronym":{"word":"deux","lemma":"deux","pos":"PRON"}},"count":649}
 {"lexeme":{"Heteronym":{"word":"ans","lemma":"an","pos":"NOUN"}},"count":647}
 {"lexeme":{"Multiword":"ça ira"},"count":646}
@@ -298,130 +298,130 @@
 {"lexeme":{"Heteronym":{"word":"chaque","lemma":"chaque","pos":"DET"}},"count":640}
 {"lexeme":{"Multiword":"à la maison"},"count":640}
 {"lexeme":{"Heteronym":{"word":"plaît","lemma":"plaire","pos":"VERB"}},"count":639}
-{"lexeme":{"Heteronym":{"word":"reste","lemma":"reste","pos":"VERB"}},"count":634}
-{"lexeme":{"Heteronym":{"word":"regarde","lemma":"regarder","pos":"VERB"}},"count":632}
+{"lexeme":{"Heteronym":{"word":"reste","lemma":"reste","pos":"VERB"}},"count":635}
+{"lexeme":{"Heteronym":{"word":"regarde","lemma":"regarder","pos":"VERB"}},"count":633}
 {"lexeme":{"Heteronym":{"word":"semble","lemma":"sembler","pos":"VERB"}},"count":631}
 {"lexeme":{"Heteronym":{"word":"frère","lemma":"frère","pos":"NOUN"}},"count":629}
-{"lexeme":{"Heteronym":{"word":"tête","lemma":"tête","pos":"NOUN"}},"count":625}
+{"lexeme":{"Heteronym":{"word":"tête","lemma":"tête","pos":"NOUN"}},"count":624}
 {"lexeme":{"Multiword":"du tout"},"count":623}
 {"lexeme":{"Heteronym":{"word":"devez","lemma":"devoir","pos":"VERB"}},"count":621}
 {"lexeme":{"Heteronym":{"word":"main","lemma":"main","pos":"NOUN"}},"count":621}
 {"lexeme":{"Multiword":"comme ça"},"count":619}
 {"lexeme":{"Heteronym":{"word":"assez","lemma":"assez","pos":"ADV"}},"count":618}
-{"lexeme":{"Heteronym":{"word":"dû","lemma":"devoir","pos":"VERB"}},"count":615}
-{"lexeme":{"Heteronym":{"word":"entendu","lemma":"entendre","pos":"VERB"}},"count":606}
-{"lexeme":{"Heteronym":{"word":"nos","lemma":"notre","pos":"DET"}},"count":606}
+{"lexeme":{"Heteronym":{"word":"dû","lemma":"devoir","pos":"VERB"}},"count":614}
 {"lexeme":{"Heteronym":{"word":"tard","lemma":"tard","pos":"ADV"}},"count":606}
+{"lexeme":{"Heteronym":{"word":"entendu","lemma":"entendre","pos":"VERB"}},"count":605}
 {"lexeme":{"Heteronym":{"word":"j’","lemma":"j’","pos":"PRON"}},"count":605}
+{"lexeme":{"Heteronym":{"word":"nos","lemma":"notre","pos":"DET"}},"count":605}
 {"lexeme":{"Multiword":"de un"},"count":605}
-{"lexeme":{"Heteronym":{"word":"parents","lemma":"parent","pos":"NOUN"}},"count":601}
+{"lexeme":{"Heteronym":{"word":"parents","lemma":"parent","pos":"NOUN"}},"count":602}
 {"lexeme":{"Multiword":"quelqu'un"},"count":601}
-{"lexeme":{"Heteronym":{"word":"demande","lemma":"demande","pos":"VERB"}},"count":600}
 {"lexeme":{"Multiword":"que je sache"},"count":600}
-{"lexeme":{"Heteronym":{"word":"peut-être","lemma":"peut-être","pos":"ADV"}},"count":597}
-{"lexeme":{"Heteronym":{"word":"coup","lemma":"coup","pos":"NOUN"}},"count":596}
-{"lexeme":{"Multiword":"peut-être"},"count":596}
+{"lexeme":{"Heteronym":{"word":"demande","lemma":"demande","pos":"VERB"}},"count":597}
+{"lexeme":{"Heteronym":{"word":"peut-être","lemma":"peut-être","pos":"ADV"}},"count":596}
 {"lexeme":{"Heteronym":{"word":"belle","lemma":"bel","pos":"ADJ"}},"count":595}
+{"lexeme":{"Multiword":"peut-être"},"count":595}
+{"lexeme":{"Heteronym":{"word":"coup","lemma":"coup","pos":"NOUN"}},"count":594}
 {"lexeme":{"Heteronym":{"word":"idée","lemma":"idée","pos":"NOUN"}},"count":588}
 {"lexeme":{"Heteronym":{"word":"sois","lemma":"être","pos":"VERB"}},"count":586}
+{"lexeme":{"Heteronym":{"word":"l’","lemma":"l’","pos":"DET"}},"count":585}
 {"lexeme":{"Heteronym":{"word":"prie","lemma":"prier","pos":"VERB"}},"count":585}
-{"lexeme":{"Heteronym":{"word":"l’","lemma":"l’","pos":"DET"}},"count":584}
 {"lexeme":{"Heteronym":{"word":"sont","lemma":"être","pos":"VERB"}},"count":579}
-{"lexeme":{"Heteronym":{"word":"tôt","lemma":"tôt","pos":"ADV"}},"count":579}
+{"lexeme":{"Heteronym":{"word":"ensemble","lemma":"ensemble","pos":"ADV"}},"count":578}
+{"lexeme":{"Heteronym":{"word":"tôt","lemma":"tôt","pos":"ADV"}},"count":578}
 {"lexeme":{"Heteronym":{"word":"dernière","lemma":"dernier","pos":"ADJ"}},"count":577}
-{"lexeme":{"Heteronym":{"word":"ensemble","lemma":"ensemble","pos":"ADV"}},"count":577}
 {"lexeme":{"Heteronym":{"word":"pays","lemma":"pays","pos":"NOUN"}},"count":577}
-{"lexeme":{"Multiword":"de quoi"},"count":572}
 {"lexeme":{"Heteronym":{"word":"chance","lemma":"chance","pos":"NOUN"}},"count":571}
-{"lexeme":{"Heteronym":{"word":"étais","lemma":"être","pos":"AUX"}},"count":568}
+{"lexeme":{"Multiword":"de quoi"},"count":571}
+{"lexeme":{"Heteronym":{"word":"étais","lemma":"être","pos":"AUX"}},"count":567}
 {"lexeme":{"Heteronym":{"word":"venu","lemma":"venir","pos":"VERB"}},"count":566}
 {"lexeme":{"Heteronym":{"word":"vérité","lemma":"vérité","pos":"NOUN"}},"count":565}
 {"lexeme":{"Heteronym":{"word":"heures","lemma":"heure","pos":"NOUN"}},"count":564}
 {"lexeme":{"Heteronym":{"word":"jouer","lemma":"jouer","pos":"VERB"}},"count":564}
 {"lexeme":{"Heteronym":{"word":"allé","lemma":"aller","pos":"VERB"}},"count":561}
-{"lexeme":{"Heteronym":{"word":"problème","lemma":"problème","pos":"NOUN"}},"count":561}
+{"lexeme":{"Heteronym":{"word":"problème","lemma":"problème","pos":"NOUN"}},"count":560}
 {"lexeme":{"Heteronym":{"word":"semaine","lemma":"semaine","pos":"NOUN"}},"count":560}
-{"lexeme":{"Heteronym":{"word":"vite","lemma":"vite","pos":"ADV"}},"count":557}
+{"lexeme":{"Heteronym":{"word":"vite","lemma":"vite","pos":"ADV"}},"count":558}
 {"lexeme":{"Heteronym":{"word":"téléphone","lemma":"téléphone","pos":"NOUN"}},"count":556}
 {"lexeme":{"Heteronym":{"word":"pourrais","lemma":"pouvoir","pos":"VERB"}},"count":554}
 {"lexeme":{"Heteronym":{"word":"garçon","lemma":"garçon","pos":"NOUN"}},"count":553}
-{"lexeme":{"Heteronym":{"word":"matin","lemma":"matin","pos":"NOUN"}},"count":553}
+{"lexeme":{"Heteronym":{"word":"matin","lemma":"matin","pos":"NOUN"}},"count":552}
 {"lexeme":{"Heteronym":{"word":"passer","lemma":"passer","pos":"VERB"}},"count":552}
 {"lexeme":{"Heteronym":{"word":"parlé","lemma":"parler","pos":"VERB"}},"count":550}
 {"lexeme":{"Heteronym":{"word":"vrai","lemma":"vrai","pos":"ADJ"}},"count":548}
 {"lexeme":{"Heteronym":{"word":"dites","lemma":"dire","pos":"VERB"}},"count":546}
 {"lexeme":{"Heteronym":{"word":"trouve","lemma":"trouver","pos":"VERB"}},"count":544}
 {"lexeme":{"Heteronym":{"word":"petite","lemma":"petit","pos":"ADJ"}},"count":543}
-{"lexeme":{"Multiword":"est passé"},"count":542}
-{"lexeme":{"Heteronym":{"word":"grande","lemma":"grand","pos":"ADJ"}},"count":540}
+{"lexeme":{"Multiword":"est passé"},"count":543}
+{"lexeme":{"Heteronym":{"word":"grande","lemma":"grand","pos":"ADJ"}},"count":539}
 {"lexeme":{"Heteronym":{"word":"travaille","lemma":"travailler","pos":"VERB"}},"count":539}
 {"lexeme":{"Heteronym":{"word":"trouver","lemma":"trouver","pos":"VERB"}},"count":536}
 {"lexeme":{"Heteronym":{"word":"heureux","lemma":"heureux","pos":"ADJ"}},"count":535}
-{"lexeme":{"Heteronym":{"word":"lire","lemma":"lire","pos":"VERB"}},"count":528}
 {"lexeme":{"Heteronym":{"word":"pendant","lemma":"pendant","pos":"ADP"}},"count":528}
+{"lexeme":{"Heteronym":{"word":"lire","lemma":"lire","pos":"VERB"}},"count":527}
 {"lexeme":{"Heteronym":{"word":"bureau","lemma":"bureau","pos":"NOUN"}},"count":524}
 {"lexeme":{"Heteronym":{"word":"entre","lemma":"entrer","pos":"ADP"}},"count":513}
-{"lexeme":{"Heteronym":{"word":"vient","lemma":"venir","pos":"VERB"}},"count":512}
+{"lexeme":{"Heteronym":{"word":"vient","lemma":"venir","pos":"VERB"}},"count":511}
 {"lexeme":{"Heteronym":{"word":"chat","lemma":"chat","pos":"NOUN"}},"count":509}
-{"lexeme":{"Multiword":"vouloir dire"},"count":506}
-{"lexeme":{"Heteronym":{"word":"salut","lemma":"salut","pos":"INTJ"}},"count":504}
+{"lexeme":{"Multiword":"vouloir dire"},"count":505}
 {"lexeme":{"Heteronym":{"word":"part","lemma":"part","pos":"NOUN"}},"count":503}
+{"lexeme":{"Heteronym":{"word":"salut","lemma":"salut","pos":"INTJ"}},"count":503}
 {"lexeme":{"Heteronym":{"word":"argent","lemma":"argent","pos":"NOUN"}},"count":501}
-{"lexeme":{"Heteronym":{"word":"pourrait","lemma":"pouvoir","pos":"VERB"}},"count":500}
+{"lexeme":{"Heteronym":{"word":"pourrait","lemma":"pouvoir","pos":"VERB"}},"count":501}
 {"lexeme":{"Heteronym":{"word":"penses","lemma":"penser","pos":"VERB"}},"count":497}
-{"lexeme":{"Heteronym":{"word":"livres","lemma":"livre","pos":"NOUN"}},"count":496}
 {"lexeme":{"Heteronym":{"word":"confiance","lemma":"confiance","pos":"NOUN"}},"count":495}
+{"lexeme":{"Heteronym":{"word":"livres","lemma":"livre","pos":"NOUN"}},"count":495}
 {"lexeme":{"Heteronym":{"word":"voilà","lemma":"voilà","pos":"VERB"}},"count":495}
-{"lexeme":{"Heteronym":{"word":"moins","lemma":"moins","pos":"ADV"}},"count":494}
 {"lexeme":{"Heteronym":{"word":"pièce","lemma":"pièce","pos":"NOUN"}},"count":494}
+{"lexeme":{"Heteronym":{"word":"moins","lemma":"moins","pos":"ADV"}},"count":493}
 {"lexeme":{"Heteronym":{"word":"fait","lemma":"faire","pos":"AUX"}},"count":491}
 {"lexeme":{"Heteronym":{"word":"leurs","lemma":"leur","pos":"DET"}},"count":491}
+{"lexeme":{"Heteronym":{"word":"acheté","lemma":"acheter","pos":"VERB"}},"count":490}
 {"lexeme":{"Multiword":"très bien"},"count":490}
-{"lexeme":{"Heteronym":{"word":"acheté","lemma":"acheter","pos":"VERB"}},"count":489}
 {"lexeme":{"Heteronym":{"word":"langue","lemma":"langue","pos":"NOUN"}},"count":489}
 {"lexeme":{"Heteronym":{"word":"table","lemma":"table","pos":"NOUN"}},"count":486}
-{"lexeme":{"Heteronym":{"word":"laissez","lemma":"laisser","pos":"VERB"}},"count":485}
 {"lexeme":{"Heteronym":{"word":"devrait","lemma":"devoir","pos":"VERB"}},"count":484}
+{"lexeme":{"Heteronym":{"word":"laissez","lemma":"laisser","pos":"VERB"}},"count":484}
 {"lexeme":{"Heteronym":{"word":"faire","lemma":"faire","pos":"AUX"}},"count":482}
 {"lexeme":{"Multiword":"plus de"},"count":482}
 {"lexeme":{"Heteronym":{"word":"leur","lemma":"son","pos":"PRON"}},"count":481}
 {"lexeme":{"Multiword":"qu'est-ce qui"},"count":480}
 {"lexeme":{"Heteronym":{"word":"longtemps","lemma":"longtemps","pos":"ADV"}},"count":478}
 {"lexeme":{"Heteronym":{"word":"où","lemma":"où","pos":"PRON"}},"count":478}
-{"lexeme":{"Heteronym":{"word":"demandé","lemma":"demander","pos":"VERB"}},"count":477}
 {"lexeme":{"Multiword":"du temps de"},"count":477}
+{"lexeme":{"Heteronym":{"word":"demandé","lemma":"demander","pos":"VERB"}},"count":476}
 {"lexeme":{"Multiword":"être en train de"},"count":476}
 {"lexeme":{"Heteronym":{"word":"veuillez","lemma":"vouloir","pos":"VERB"}},"count":473}
-{"lexeme":{"Heteronym":{"word":"bonjour","lemma":"bonjour","pos":"INTJ"}},"count":471}
+{"lexeme":{"Heteronym":{"word":"bonjour","lemma":"bonjour","pos":"INTJ"}},"count":470}
+{"lexeme":{"Heteronym":{"word":"déteste","lemma":"détester","pos":"VERB"}},"count":470}
 {"lexeme":{"Multiword":"à toute"},"count":470}
-{"lexeme":{"Heteronym":{"word":"déteste","lemma":"détester","pos":"VERB"}},"count":469}
 {"lexeme":{"Heteronym":{"word":"sœur","lemma":"sœur","pos":"NOUN"}},"count":469}
 {"lexeme":{"Heteronym":{"word":"police","lemma":"police","pos":"NOUN"}},"count":468}
 {"lexeme":{"Heteronym":{"word":"comme","lemma":"comme","pos":"SCONJ"}},"count":465}
 {"lexeme":{"Heteronym":{"word":"sous","lemma":"sou","pos":"ADP"}},"count":465}
 {"lexeme":{"Heteronym":{"word":"donner","lemma":"donner","pos":"VERB"}},"count":461}
-{"lexeme":{"Heteronym":{"word":"seule","lemma":"seul","pos":"ADJ"}},"count":460}
+{"lexeme":{"Heteronym":{"word":"seule","lemma":"seul","pos":"ADJ"}},"count":461}
 {"lexeme":{"Heteronym":{"word":"contre","lemma":"contre","pos":"ADP"}},"count":459}
-{"lexeme":{"Heteronym":{"word":"mis","lemma":"mettre","pos":"VERB"}},"count":459}
 {"lexeme":{"Multiword":"c'est tout"},"count":459}
-{"lexeme":{"Heteronym":{"word":"beau","lemma":"beau","pos":"ADJ"}},"count":458}
-{"lexeme":{"Heteronym":{"word":"même","lemma":"même","pos":"ADV"}},"count":456}
+{"lexeme":{"Heteronym":{"word":"mis","lemma":"mettre","pos":"VERB"}},"count":458}
+{"lexeme":{"Heteronym":{"word":"beau","lemma":"beau","pos":"ADJ"}},"count":457}
+{"lexeme":{"Heteronym":{"word":"même","lemma":"même","pos":"ADV"}},"count":457}
+{"lexeme":{"Heteronym":{"word":"demander","lemma":"demander","pos":"VERB"}},"count":452}
 {"lexeme":{"Multiword":"faire pour"},"count":452}
 {"lexeme":{"Heteronym":{"word":"anglais","lemma":"anglais","pos":"ADJ"}},"count":451}
-{"lexeme":{"Heteronym":{"word":"demander","lemma":"demander","pos":"VERB"}},"count":451}
 {"lexeme":{"Heteronym":{"word":"sortir","lemma":"sortir","pos":"VERB"}},"count":450}
 {"lexeme":{"Heteronym":{"word":"terre","lemma":"terre","pos":"NOUN"}},"count":449}
 {"lexeme":{"Heteronym":{"word":"place","lemma":"place","pos":"NOUN"}},"count":447}
 {"lexeme":{"Multiword":"penser à"},"count":447}
 {"lexeme":{"Heteronym":{"word":"aider","lemma":"aider","pos":"VERB"}},"count":446}
+{"lexeme":{"Heteronym":{"word":"commencé","lemma":"commencer","pos":"VERB"}},"count":444}
 {"lexeme":{"Heteronym":{"word":"peur","lemma":"peur","pos":"NOUN"}},"count":444}
 {"lexeme":{"Multiword":"de plus"},"count":443}
-{"lexeme":{"Heteronym":{"word":"commencé","lemma":"commencer","pos":"VERB"}},"count":442}
-{"lexeme":{"Heteronym":{"word":"premier","lemma":"premier","pos":"ADJ"}},"count":442}
 {"lexeme":{"Multiword":"sortir de"},"count":442}
 {"lexeme":{"Heteronym":{"word":"journée","lemma":"journée","pos":"NOUN"}},"count":441}
-{"lexeme":{"Heteronym":{"word":"vit","lemma":"voir","pos":"VERB"}},"count":441}
+{"lexeme":{"Heteronym":{"word":"premier","lemma":"premier","pos":"ADJ"}},"count":441}
 {"lexeme":{"Heteronym":{"word":"lit","lemma":"lit","pos":"NOUN"}},"count":440}
+{"lexeme":{"Heteronym":{"word":"vit","lemma":"voir","pos":"VERB"}},"count":440}
 {"lexeme":{"Multiword":"là-bas"},"count":440}
 {"lexeme":{"Heteronym":{"word":"mange","lemma":"manger","pos":"VERB"}},"count":438}
 {"lexeme":{"Multiword":"parler à"},"count":438}
@@ -430,8 +430,8 @@
 {"lexeme":{"Heteronym":{"word":"appelle","lemma":"appeler","pos":"VERB"}},"count":434}
 {"lexeme":{"Heteronym":{"word":"donné","lemma":"donner","pos":"VERB"}},"count":433}
 {"lexeme":{"Heteronym":{"word":"jeune","lemma":"jeune","pos":"ADJ"}},"count":432}
-{"lexeme":{"Heteronym":{"word":"savais","lemma":"savoir","pos":"VERB"}},"count":430}
-{"lexeme":{"Heteronym":{"word":"personnes","lemma":"personne","pos":"NOUN"}},"count":427}
+{"lexeme":{"Heteronym":{"word":"savais","lemma":"savoir","pos":"VERB"}},"count":429}
+{"lexeme":{"Heteronym":{"word":"personnes","lemma":"personne","pos":"NOUN"}},"count":428}
 {"lexeme":{"Heteronym":{"word":"verre","lemma":"verre","pos":"NOUN"}},"count":427}
 {"lexeme":{"Heteronym":{"word":"cheveux","lemma":"cheveu","pos":"NOUN"}},"count":426}
 {"lexeme":{"Heteronym":{"word":"mois","lemma":"mois","pos":"NOUN"}},"count":426}
@@ -441,24 +441,24 @@
 {"lexeme":{"Multiword":"ce soir"},"count":423}
 {"lexeme":{"Multiword":"y être"},"count":423}
 {"lexeme":{"Heteronym":{"word":"perdu","lemma":"perdre","pos":"VERB"}},"count":422}
+{"lexeme":{"Heteronym":{"word":"meilleur","lemma":"meilleur","pos":"ADJ"}},"count":419}
 {"lexeme":{"Heteronym":{"word":"quel","lemma":"quel","pos":"ADJ"}},"count":419}
-{"lexeme":{"Heteronym":{"word":"meilleur","lemma":"meilleur","pos":"ADJ"}},"count":418}
 {"lexeme":{"Heteronym":{"word":"soit","lemma":"être","pos":"AUX"}},"count":417}
-{"lexeme":{"Heteronym":{"word":"travailler","lemma":"travailler","pos":"VERB"}},"count":417}
 {"lexeme":{"Heteronym":{"word":"écrit","lemma":"écrire","pos":"VERB"}},"count":417}
-{"lexeme":{"Heteronym":{"word":"mot","lemma":"mot","pos":"NOUN"}},"count":416}
+{"lexeme":{"Heteronym":{"word":"travailler","lemma":"travailler","pos":"VERB"}},"count":416}
 {"lexeme":{"Heteronym":{"word":"chercher","lemma":"chercher","pos":"VERB"}},"count":415}
+{"lexeme":{"Heteronym":{"word":"mal","lemma":"mal","pos":"NOUN"}},"count":415}
+{"lexeme":{"Heteronym":{"word":"mot","lemma":"mot","pos":"NOUN"}},"count":415}
 {"lexeme":{"Heteronym":{"word":"arrive","lemma":"arriver","pos":"VERB"}},"count":413}
-{"lexeme":{"Heteronym":{"word":"mal","lemma":"mal","pos":"NOUN"}},"count":413}
-{"lexeme":{"Heteronym":{"word":"vivre","lemma":"vivre","pos":"VERB"}},"count":413}
+{"lexeme":{"Heteronym":{"word":"vivre","lemma":"vivre","pos":"VERB"}},"count":412}
 {"lexeme":{"Heteronym":{"word":"pensez","lemma":"penser","pos":"VERB"}},"count":410}
 {"lexeme":{"Heteronym":{"word":"prix","lemma":"prix","pos":"NOUN"}},"count":410}
 {"lexeme":{"Heteronym":{"word":"pu","lemma":"pouvoir","pos":"VERB"}},"count":410}
-{"lexeme":{"Multiword":"du bon"},"count":408}
 {"lexeme":{"Heteronym":{"word":"voulait","lemma":"vouloir","pos":"VERB"}},"count":407}
+{"lexeme":{"Multiword":"du bon"},"count":407}
 {"lexeme":{"Multiword":"que voulez-vous"},"count":406}
+{"lexeme":{"Heteronym":{"word":"histoire","lemma":"histoire","pos":"NOUN"}},"count":405}
 {"lexeme":{"Multiword":"merci de"},"count":405}
-{"lexeme":{"Heteronym":{"word":"histoire","lemma":"histoire","pos":"NOUN"}},"count":404}
 {"lexeme":{"Heteronym":{"word":"es","lemma":"être","pos":"VERB"}},"count":401}
 {"lexeme":{"Heteronym":{"word":"pouvons","lemma":"pouvoir","pos":"VERB"}},"count":401}
 {"lexeme":{"Heteronym":{"word":"musique","lemma":"musique","pos":"NOUN"}},"count":397}
@@ -470,12 +470,12 @@
 {"lexeme":{"Heteronym":{"word":"film","lemma":"film","pos":"NOUN"}},"count":390}
 {"lexeme":{"Heteronym":{"word":"acheter","lemma":"acheter","pos":"VERB"}},"count":389}
 {"lexeme":{"Heteronym":{"word":"fête","lemma":"fête","pos":"NOUN"}},"count":387}
+{"lexeme":{"Heteronym":{"word":"joue","lemma":"joue","pos":"VERB"}},"count":387}
 {"lexeme":{"Multiword":"arriver à"},"count":387}
 {"lexeme":{"Heteronym":{"word":"hommes","lemma":"homme","pos":"NOUN"}},"count":386}
-{"lexeme":{"Heteronym":{"word":"joue","lemma":"joue","pos":"VERB"}},"count":386}
 {"lexeme":{"Heteronym":{"word":"truc","lemma":"truc","pos":"NOUN"}},"count":385}
+{"lexeme":{"Heteronym":{"word":"difficile","lemma":"difficile","pos":"ADJ"}},"count":384}
 {"lexeme":{"Multiword":"aller y"},"count":384}
-{"lexeme":{"Heteronym":{"word":"difficile","lemma":"difficile","pos":"ADJ"}},"count":383}
 {"lexeme":{"Heteronym":{"word":"monsieur","lemma":"monsieur","pos":"NOUN"}},"count":383}
 {"lexeme":{"Heteronym":{"word":"lettre","lemma":"lettre","pos":"NOUN"}},"count":382}
 {"lexeme":{"Heteronym":{"word":"seulement","lemma":"seulement","pos":"ADV"}},"count":379}
@@ -511,21 +511,21 @@
 {"lexeme":{"Multiword":"sais pas"},"count":359}
 {"lexeme":{"Heteronym":{"word":"fait","lemma":"fait","pos":"NOUN"}},"count":358}
 {"lexeme":{"Heteronym":{"word":"parti","lemma":"partir","pos":"VERB"}},"count":358}
-{"lexeme":{"Heteronym":{"word":"première","lemma":"premier","pos":"ADJ"}},"count":358}
 {"lexeme":{"Heteronym":{"word":"thé","lemma":"thé","pos":"NOUN"}},"count":358}
 {"lexeme":{"Multiword":"c'est ça"},"count":358}
+{"lexeme":{"Heteronym":{"word":"première","lemma":"premier","pos":"ADJ"}},"count":357}
 {"lexeme":{"Heteronym":{"word":"bas","lemma":"bas","pos":"ADV"}},"count":355}
 {"lexeme":{"Multiword":"se trouver"},"count":355}
 {"lexeme":{"Heteronym":{"word":"dix","lemma":"dix","pos":"NUM"}},"count":354}
+{"lexeme":{"Heteronym":{"word":"eux","lemma":"lui","pos":"PRON"}},"count":354}
 {"lexeme":{"Heteronym":{"word":"retard","lemma":"retard","pos":"NOUN"}},"count":354}
 {"lexeme":{"Heteronym":{"word":"sujet","lemma":"sujet","pos":"NOUN"}},"count":354}
-{"lexeme":{"Heteronym":{"word":"aurais","lemma":"avoir","pos":"AUX"}},"count":353}
-{"lexeme":{"Heteronym":{"word":"eux","lemma":"lui","pos":"PRON"}},"count":353}
 {"lexeme":{"Heteronym":{"word":"feu","lemma":"feu","pos":"NOUN"}},"count":353}
+{"lexeme":{"Heteronym":{"word":"aurais","lemma":"avoir","pos":"AUX"}},"count":352}
+{"lexeme":{"Heteronym":{"word":"d’","lemma":"d’","pos":"ADP"}},"count":352}
 {"lexeme":{"Heteronym":{"word":"médecin","lemma":"médecin","pos":"NOUN"}},"count":352}
 {"lexeme":{"Heteronym":{"word":"réponse","lemma":"réponse","pos":"NOUN"}},"count":352}
 {"lexeme":{"Heteronym":{"word":"arrête","lemma":"arrêter","pos":"VERB"}},"count":351}
-{"lexeme":{"Heteronym":{"word":"d’","lemma":"d’","pos":"ADP"}},"count":351}
 {"lexeme":{"Heteronym":{"word":"avais","lemma":"avoir","pos":"VERB"}},"count":350}
 {"lexeme":{"Heteronym":{"word":"fini","lemma":"finir","pos":"VERB"}},"count":349}
 {"lexeme":{"Multiword":"et des"},"count":349}
@@ -539,8 +539,8 @@
 {"lexeme":{"Multiword":"tous les deux"},"count":347}
 {"lexeme":{"Heteronym":{"word":"dehors","lemma":"dehors","pos":"ADV"}},"count":346}
 {"lexeme":{"Heteronym":{"word":"plaisir","lemma":"plaisir","pos":"NOUN"}},"count":345}
-{"lexeme":{"Heteronym":{"word":"quelle","lemma":"quell","pos":"ADJ"}},"count":345}
 {"lexeme":{"Heteronym":{"word":"suis","lemma":"suivre","pos":"VERB"}},"count":345}
+{"lexeme":{"Heteronym":{"word":"quelle","lemma":"quell","pos":"ADJ"}},"count":344}
 {"lexeme":{"Heteronym":{"word":"bois","lemma":"bois","pos":"NOUN"}},"count":343}
 {"lexeme":{"Heteronym":{"word":"dernier","lemma":"dernier","pos":"ADJ"}},"count":343}
 {"lexeme":{"Heteronym":{"word":"arriver","lemma":"arriver","pos":"VERB"}},"count":342}
@@ -553,11 +553,11 @@
 {"lexeme":{"Heteronym":{"word":"vont","lemma":"aller","pos":"VERB"}},"count":339}
 {"lexeme":{"Heteronym":{"word":"cinq","lemma":"cinq","pos":"NUM"}},"count":337}
 {"lexeme":{"Heteronym":{"word":"minutes","lemma":"minute","pos":"NOUN"}},"count":337}
-{"lexeme":{"Heteronym":{"word":"regarder","lemma":"regarder","pos":"VERB"}},"count":337}
 {"lexeme":{"Heteronym":{"word":"endroit","lemma":"endroit","pos":"NOUN"}},"count":336}
+{"lexeme":{"Heteronym":{"word":"regarder","lemma":"regarder","pos":"VERB"}},"count":336}
+{"lexeme":{"Heteronym":{"word":"âge","lemma":"âge","pos":"NOUN"}},"count":336}
 {"lexeme":{"Heteronym":{"word":"route","lemma":"route","pos":"NOUN"}},"count":335}
-{"lexeme":{"Heteronym":{"word":"âge","lemma":"âge","pos":"NOUN"}},"count":335}
-{"lexeme":{"Heteronym":{"word":"appris","lemma":"apprendre","pos":"VERB"}},"count":334}
+{"lexeme":{"Heteronym":{"word":"appris","lemma":"apprendre","pos":"VERB"}},"count":333}
 {"lexeme":{"Heteronym":{"word":"maman","lemma":"maman","pos":"NOUN"}},"count":333}
 {"lexeme":{"Heteronym":{"word":"soit","lemma":"être","pos":"VERB"}},"count":333}
 {"lexeme":{"Multiword":"à moi"},"count":333}
@@ -566,29 +566,29 @@
 {"lexeme":{"Multiword":"un peu de"},"count":332}
 {"lexeme":{"Heteronym":{"word":"mots","lemma":"mot","pos":"NOUN"}},"count":331}
 {"lexeme":{"Heteronym":{"word":"entendre","lemma":"entendre","pos":"VERB"}},"count":329}
-{"lexeme":{"Heteronym":{"word":"avais","lemma":"avoir","pos":"AUX"}},"count":328}
-{"lexeme":{"Heteronym":{"word":"important","lemma":"important","pos":"ADJ"}},"count":326}
+{"lexeme":{"Heteronym":{"word":"avais","lemma":"avoir","pos":"AUX"}},"count":327}
+{"lexeme":{"Heteronym":{"word":"important","lemma":"important","pos":"ADJ"}},"count":325}
 {"lexeme":{"Multiword":"tu parles"},"count":325}
 {"lexeme":{"Heteronym":{"word":"gros","lemma":"gros","pos":"ADJ"}},"count":324}
+{"lexeme":{"Heteronym":{"word":"mets","lemma":"mettre","pos":"VERB"}},"count":322}
 {"lexeme":{"Heteronym":{"word":"vin","lemma":"vin","pos":"NOUN"}},"count":322}
-{"lexeme":{"Heteronym":{"word":"mets","lemma":"mettre","pos":"VERB"}},"count":321}
+{"lexeme":{"Heteronym":{"word":"celui","lemma":"celui","pos":"PRON"}},"count":321}
 {"lexeme":{"Heteronym":{"word":"souviens","lemma":"souvenir","pos":"VERB"}},"count":321}
 {"lexeme":{"Multiword":"plus que"},"count":321}
-{"lexeme":{"Heteronym":{"word":"celui","lemma":"celui","pos":"PRON"}},"count":320}
 {"lexeme":{"Heteronym":{"word":"parce","lemma":"parce","pos":"SCONJ"}},"count":320}
 {"lexeme":{"Multiword":"parce que"},"count":319}
 {"lexeme":{"Heteronym":{"word":"cadeau","lemma":"cadeau","pos":"NOUN"}},"count":317}
 {"lexeme":{"Heteronym":{"word":"vers","lemma":"vers","pos":"ADP"}},"count":317}
 {"lexeme":{"Heteronym":{"word":"attendre","lemma":"attendre","pos":"VERB"}},"count":316}
-{"lexeme":{"Heteronym":{"word":"devenir","lemma":"devenir","pos":"VERB"}},"count":316}
+{"lexeme":{"Heteronym":{"word":"devenir","lemma":"devenir","pos":"VERB"}},"count":315}
 {"lexeme":{"Heteronym":{"word":"devrions","lemma":"devoir","pos":"VERB"}},"count":315}
 {"lexeme":{"Heteronym":{"word":"fenêtre","lemma":"fenêtre","pos":"NOUN"}},"count":315}
 {"lexeme":{"Heteronym":{"word":"parles","lemma":"parler","pos":"VERB"}},"count":315}
 {"lexeme":{"Heteronym":{"word":"adore","lemma":"adorer","pos":"VERB"}},"count":314}
 {"lexeme":{"Heteronym":{"word":"propre","lemma":"propre","pos":"ADJ"}},"count":314}
 {"lexeme":{"Heteronym":{"word":"cours","lemma":"cours","pos":"NOUN"}},"count":313}
+{"lexeme":{"Heteronym":{"word":"faisait","lemma":"faire","pos":"VERB"}},"count":313}
 {"lexeme":{"Multiword":"comment va"},"count":313}
-{"lexeme":{"Heteronym":{"word":"faisait","lemma":"faire","pos":"VERB"}},"count":312}
 {"lexeme":{"Heteronym":{"word":"venez","lemma":"venir","pos":"VERB"}},"count":312}
 {"lexeme":{"Heteronym":{"word":"peuvent","lemma":"pouvoir","pos":"VERB"}},"count":311}
 {"lexeme":{"Multiword":"avoir l'air"},"count":311}
@@ -600,10 +600,10 @@
 {"lexeme":{"Heteronym":{"word":"tiens","lemma":"tiens","pos":"INTJ"}},"count":307}
 {"lexeme":{"Heteronym":{"word":"était","lemma":"être","pos":"VERB"}},"count":307}
 {"lexeme":{"Heteronym":{"word":"dont","lemma":"dont","pos":"PRON"}},"count":305}
+{"lexeme":{"Heteronym":{"word":"mains","lemma":"main","pos":"NOUN"}},"count":305}
 {"lexeme":{"Heteronym":{"word":"nourriture","lemma":"nourriture","pos":"NOUN"}},"count":305}
 {"lexeme":{"Heteronym":{"word":"oh","lemma":"oh","pos":"INTJ"}},"count":305}
-{"lexeme":{"Heteronym":{"word":"essayé","lemma":"essayer","pos":"VERB"}},"count":304}
-{"lexeme":{"Heteronym":{"word":"mains","lemma":"main","pos":"NOUN"}},"count":304}
+{"lexeme":{"Heteronym":{"word":"essayé","lemma":"essayer","pos":"VERB"}},"count":303}
 {"lexeme":{"Heteronym":{"word":"heureuse","lemma":"heureux","pos":"ADJ"}},"count":303}
 {"lexeme":{"Heteronym":{"word":"mauvais","lemma":"mauvais","pos":"ADJ"}},"count":303}
 {"lexeme":{"Heteronym":{"word":"rue","lemma":"rue","pos":"NOUN"}},"count":303}
@@ -613,15 +613,15 @@
 {"lexeme":{"Heteronym":{"word":"fleurs","lemma":"fleur","pos":"NOUN"}},"count":301}
 {"lexeme":{"Heteronym":{"word":"genre","lemma":"genre","pos":"NOUN"}},"count":301}
 {"lexeme":{"Multiword":"tout ça"},"count":300}
-{"lexeme":{"Heteronym":{"word":"chemin","lemma":"chemin","pos":"NOUN"}},"count":299}
 {"lexeme":{"Heteronym":{"word":"devant","lemma":"devant","pos":"ADP"}},"count":299}
-{"lexeme":{"Heteronym":{"word":"est-elle","lemma":"est-elle","pos":"PRON"}},"count":298}
+{"lexeme":{"Heteronym":{"word":"chemin","lemma":"chemin","pos":"NOUN"}},"count":298}
 {"lexeme":{"Heteronym":{"word":"ferais","lemma":"faire","pos":"VERB"}},"count":298}
 {"lexeme":{"Heteronym":{"word":"laissé","lemma":"laisser","pos":"VERB"}},"count":298}
 {"lexeme":{"Heteronym":{"word":"même","lemma":"même","pos":"PRON"}},"count":298}
 {"lexeme":{"Heteronym":{"word":"veulent","lemma":"vouloir","pos":"VERB"}},"count":298}
 {"lexeme":{"Heteronym":{"word":"étais","lemma":"être","pos":"VERB"}},"count":298}
-{"lexeme":{"Heteronym":{"word":"lait","lemma":"lait","pos":"NOUN"}},"count":296}
+{"lexeme":{"Heteronym":{"word":"est-elle","lemma":"est-elle","pos":"PRON"}},"count":297}
+{"lexeme":{"Heteronym":{"word":"lait","lemma":"lait","pos":"NOUN"}},"count":297}
 {"lexeme":{"Heteronym":{"word":"femmes","lemma":"femme","pos":"NOUN"}},"count":295}
 {"lexeme":{"Heteronym":{"word":"pourriez","lemma":"pouvoir","pos":"VERB"}},"count":295}
 {"lexeme":{"Heteronym":{"word":"école","lemma":"école","pos":"NOUN"}},"count":295}
@@ -631,8 +631,8 @@
 {"lexeme":{"Heteronym":{"word":"c’","lemma":"c’","pos":"PRON"}},"count":293}
 {"lexeme":{"Heteronym":{"word":"eau","lemma":"eau","pos":"NOUN"}},"count":292}
 {"lexeme":{"Heteronym":{"word":"appeler","lemma":"appeler","pos":"VERB"}},"count":291}
+{"lexeme":{"Heteronym":{"word":"autres","lemma":"autre","pos":"PRON"}},"count":291}
 {"lexeme":{"Heteronym":{"word":"n’","lemma":"n’","pos":"ADV"}},"count":291}
-{"lexeme":{"Heteronym":{"word":"autres","lemma":"autre","pos":"PRON"}},"count":290}
 {"lexeme":{"Heteronym":{"word":"préfère","lemma":"préférer","pos":"VERB"}},"count":290}
 {"lexeme":{"Multiword":"tous les jours"},"count":289}
 {"lexeme":{"Heteronym":{"word":"croyais","lemma":"croire","pos":"VERB"}},"count":288}
@@ -646,6 +646,7 @@
 {"lexeme":{"Heteronym":{"word":"avait","lemma":"avoir","pos":"AUX"}},"count":284}
 {"lexeme":{"Heteronym":{"word":"possible","lemma":"possible","pos":"ADJ"}},"count":284}
 {"lexeme":{"Heteronym":{"word":"sécurité","lemma":"sécurité","pos":"NOUN"}},"count":284}
+{"lexeme":{"Heteronym":{"word":"comprendre","lemma":"comprendre","pos":"VERB"}},"count":283}
 {"lexeme":{"Heteronym":{"word":"plusieurs","lemma":"plusieurs","pos":"DET"}},"count":283}
 {"lexeme":{"Multiword":"c'est moi"},"count":282}
 {"lexeme":{"Multiword":"s'il vous plaît"},"count":282}
@@ -653,7 +654,6 @@
 {"lexeme":{"Heteronym":{"word":"professeur","lemma":"professeur","pos":"NOUN"}},"count":281}
 {"lexeme":{"Heteronym":{"word":"voici","lemma":"voici","pos":"VERB"}},"count":281}
 {"lexeme":{"Heteronym":{"word":"autres","lemma":"autre","pos":"ADJ"}},"count":280}
-{"lexeme":{"Heteronym":{"word":"comprendre","lemma":"comprendre","pos":"VERB"}},"count":280}
 {"lexeme":{"Heteronym":{"word":"porte","lemma":"porte","pos":"VERB"}},"count":280}
 {"lexeme":{"Heteronym":{"word":"simplement","lemma":"simplement","pos":"ADV"}},"count":280}
 {"lexeme":{"Heteronym":{"word":"bras","lemma":"bras","pos":"NOUN"}},"count":279}
@@ -692,33 +692,33 @@
 {"lexeme":{"Heteronym":{"word":"lorsque","lemma":"lorsque","pos":"SCONJ"}},"count":265}
 {"lexeme":{"Heteronym":{"word":"vis","lemma":"voir","pos":"VERB"}},"count":264}
 {"lexeme":{"Multiword":"dire quelque chose"},"count":264}
+{"lexeme":{"Multiword":"se faire"},"count":264}
+{"lexeme":{"Heteronym":{"word":"laisser","lemma":"laisser","pos":"VERB"}},"count":263}
 {"lexeme":{"Multiword":"faire confiance"},"count":263}
-{"lexeme":{"Multiword":"se faire"},"count":263}
 {"lexeme":{"Heteronym":{"word":"boîte","lemma":"boîte","pos":"NOUN"}},"count":262}
 {"lexeme":{"Heteronym":{"word":"carte","lemma":"carte","pos":"NOUN"}},"count":262}
-{"lexeme":{"Heteronym":{"word":"laisser","lemma":"laisser","pos":"VERB"}},"count":262}
 {"lexeme":{"Heteronym":{"word":"neige","lemma":"neige","pos":"NOUN"}},"count":262}
-{"lexeme":{"Heteronym":{"word":"prend","lemma":"prendre","pos":"VERB"}},"count":262}
 {"lexeme":{"Multiword":"bien sûr"},"count":262}
 {"lexeme":{"Heteronym":{"word":"amour","lemma":"amour","pos":"NOUN"}},"count":261}
 {"lexeme":{"Heteronym":{"word":"donnez","lemma":"donner","pos":"VERB"}},"count":261}
 {"lexeme":{"Heteronym":{"word":"déjeuner","lemma":"déjeuner","pos":"NOUN"}},"count":261}
 {"lexeme":{"Heteronym":{"word":"penser","lemma":"penser","pos":"VERB"}},"count":261}
+{"lexeme":{"Heteronym":{"word":"prend","lemma":"prendre","pos":"VERB"}},"count":261}
 {"lexeme":{"Multiword":"aller voir"},"count":261}
 {"lexeme":{"Heteronym":{"word":"cuisine","lemma":"cuisine","pos":"NOUN"}},"count":260}
+{"lexeme":{"Heteronym":{"word":"facile","lemma":"facile","pos":"ADJ"}},"count":259}
 {"lexeme":{"Heteronym":{"word":"gâteau","lemma":"gâteau","pos":"NOUN"}},"count":259}
 {"lexeme":{"Heteronym":{"word":"japonais","lemma":"japonais","pos":"ADJ"}},"count":259}
 {"lexeme":{"Heteronym":{"word":"parfois","lemma":"parfois","pos":"ADV"}},"count":259}
 {"lexeme":{"Heteronym":{"word":"autant","lemma":"autant","pos":"ADV"}},"count":258}
 {"lexeme":{"Heteronym":{"word":"désolé","lemma":"désolé","pos":"ADJ"}},"count":258}
-{"lexeme":{"Heteronym":{"word":"facile","lemma":"facile","pos":"ADJ"}},"count":258}
 {"lexeme":{"Multiword":"que de"},"count":258}
 {"lexeme":{"Heteronym":{"word":"bière","lemma":"bière","pos":"NOUN"}},"count":257}
 {"lexeme":{"Heteronym":{"word":"cas","lemma":"cas","pos":"NOUN"}},"count":257}
+{"lexeme":{"Heteronym":{"word":"dîner","lemma":"dîner","pos":"NOUN"}},"count":257}
 {"lexeme":{"Heteronym":{"word":"essayer","lemma":"essayer","pos":"VERB"}},"count":257}
 {"lexeme":{"Heteronym":{"word":"gentil","lemma":"gentil","pos":"ADJ"}},"count":257}
 {"lexeme":{"Heteronym":{"word":"mal","lemma":"mal","pos":"ADV"}},"count":257}
-{"lexeme":{"Heteronym":{"word":"dîner","lemma":"dîner","pos":"NOUN"}},"count":256}
 {"lexeme":{"Heteronym":{"word":"mort","lemma":"mort","pos":"NOUN"}},"count":256}
 {"lexeme":{"Heteronym":{"word":"situation","lemma":"situation","pos":"NOUN"}},"count":256}
 {"lexeme":{"Heteronym":{"word":"étions","lemma":"être","pos":"AUX"}},"count":256}
@@ -726,9 +726,9 @@
 {"lexeme":{"Heteronym":{"word":"connaissez","lemma":"connaître","pos":"VERB"}},"count":255}
 {"lexeme":{"Heteronym":{"word":"pain","lemma":"pain","pos":"NOUN"}},"count":254}
 {"lexeme":{"Heteronym":{"word":"rencontrer","lemma":"rencontrer","pos":"VERB"}},"count":253}
+{"lexeme":{"Heteronym":{"word":"robe","lemma":"robe","pos":"NOUN"}},"count":252}
 {"lexeme":{"Heteronym":{"word":"chaussures","lemma":"chaussure","pos":"NOUN"}},"count":251}
 {"lexeme":{"Heteronym":{"word":"numéro","lemma":"numéro","pos":"NOUN"}},"count":251}
-{"lexeme":{"Heteronym":{"word":"robe","lemma":"robe","pos":"NOUN"}},"count":251}
 {"lexeme":{"Multiword":"de nouveau"},"count":251}
 {"lexeme":{"Heteronym":{"word":"affaire","lemma":"affaire","pos":"NOUN"}},"count":249}
 {"lexeme":{"Heteronym":{"word":"gare","lemma":"gare","pos":"NOUN"}},"count":249}
@@ -752,41 +752,41 @@
 {"lexeme":{"Heteronym":{"word":"écrire","lemma":"écrire","pos":"VERB"}},"count":242}
 {"lexeme":{"Multiword":"il y en a"},"count":242}
 {"lexeme":{"Heteronym":{"word":"ceux","lemma":"celui","pos":"PRON"}},"count":241}
+{"lexeme":{"Heteronym":{"word":"courant","lemma":"courant","pos":"NOUN"}},"count":241}
 {"lexeme":{"Heteronym":{"word":"nager","lemma":"nager","pos":"VERB"}},"count":241}
 {"lexeme":{"Heteronym":{"word":"télévision","lemma":"télévision","pos":"NOUN"}},"count":241}
-{"lexeme":{"Heteronym":{"word":"courant","lemma":"courant","pos":"NOUN"}},"count":240}
 {"lexeme":{"Heteronym":{"word":"rappelle","lemma":"rappeler","pos":"VERB"}},"count":240}
 {"lexeme":{"Heteronym":{"word":"salle","lemma":"salle","pos":"NOUN"}},"count":239}
 {"lexeme":{"Heteronym":{"word":"voix","lemma":"voix","pos":"NOUN"}},"count":239}
-{"lexeme":{"Heteronym":{"word":"attends","lemma":"attendre","pos":"VERB"}},"count":238}
+{"lexeme":{"Heteronym":{"word":"vélo","lemma":"vélo","pos":"NOUN"}},"count":239}
 {"lexeme":{"Heteronym":{"word":"chiens","lemma":"chien","pos":"NOUN"}},"count":238}
 {"lexeme":{"Heteronym":{"word":"façon","lemma":"façon","pos":"NOUN"}},"count":238}
-{"lexeme":{"Heteronym":{"word":"vélo","lemma":"vélo","pos":"NOUN"}},"count":238}
+{"lexeme":{"Heteronym":{"word":"attends","lemma":"attendre","pos":"VERB"}},"count":237}
 {"lexeme":{"Heteronym":{"word":"règles","lemma":"règle","pos":"NOUN"}},"count":237}
 {"lexeme":{"Multiword":"quoi que"},"count":237}
-{"lexeme":{"Heteronym":{"word":"faim","lemma":"faim","pos":"NOUN"}},"count":236}
 {"lexeme":{"Heteronym":{"word":"visite","lemma":"visite","pos":"NOUN"}},"count":236}
 {"lexeme":{"Multiword":"lui parler"},"count":236}
 {"lexeme":{"Heteronym":{"word":"bas","lemma":"bas","pos":"NOUN"}},"count":235}
+{"lexeme":{"Heteronym":{"word":"faim","lemma":"faim","pos":"NOUN"}},"count":235}
 {"lexeme":{"Heteronym":{"word":"habite","lemma":"habiter","pos":"VERB"}},"count":235}
 {"lexeme":{"Heteronym":{"word":"visage","lemma":"visage","pos":"NOUN"}},"count":235}
 {"lexeme":{"Heteronym":{"word":"lu","lemma":"lire","pos":"VERB"}},"count":234}
 {"lexeme":{"Heteronym":{"word":"problèmes","lemma":"problème","pos":"NOUN"}},"count":234}
-{"lexeme":{"Heteronym":{"word":"payer","lemma":"payer","pos":"VERB"}},"count":233}
 {"lexeme":{"Heteronym":{"word":"équipe","lemma":"équipe","pos":"NOUN"}},"count":233}
 {"lexeme":{"Heteronym":{"word":"aiment","lemma":"aimer","pos":"VERB"}},"count":232}
+{"lexeme":{"Heteronym":{"word":"payer","lemma":"payer","pos":"VERB"}},"count":232}
 {"lexeme":{"Heteronym":{"word":"corps","lemma":"corps","pos":"NOUN"}},"count":230}
 {"lexeme":{"Heteronym":{"word":"journal","lemma":"journal","pos":"NOUN"}},"count":230}
 {"lexeme":{"Heteronym":{"word":"mari","lemma":"mari","pos":"NOUN"}},"count":230}
 {"lexeme":{"Heteronym":{"word":"plutôt","lemma":"plutôt","pos":"ADV"}},"count":230}
 {"lexeme":{"Heteronym":{"word":"ainsi","lemma":"ainsi","pos":"ADV"}},"count":229}
 {"lexeme":{"Heteronym":{"word":"ouais","lemma":"ouais","pos":"INTJ"}},"count":229}
+{"lexeme":{"Heteronym":{"word":"croire","lemma":"croire","pos":"VERB"}},"count":228}
 {"lexeme":{"Heteronym":{"word":"envie","lemma":"envie","pos":"NOUN"}},"count":228}
 {"lexeme":{"Heteronym":{"word":"message","lemma":"message","pos":"NOUN"}},"count":228}
 {"lexeme":{"Heteronym":{"word":"peine","lemma":"peine","pos":"NOUN"}},"count":228}
 {"lexeme":{"Heteronym":{"word":"propos","lemma":"propos","pos":"NOUN"}},"count":228}
 {"lexeme":{"Heteronym":{"word":"soin","lemma":"soin","pos":"NOUN"}},"count":228}
-{"lexeme":{"Heteronym":{"word":"croire","lemma":"croire","pos":"VERB"}},"count":227}
 {"lexeme":{"Heteronym":{"word":"erreur","lemma":"erreur","pos":"NOUN"}},"count":226}
 {"lexeme":{"Heteronym":{"word":"restez","lemma":"rester","pos":"VERB"}},"count":226}
 {"lexeme":{"Heteronym":{"word":"service","lemma":"service","pos":"NOUN"}},"count":226}
@@ -799,10 +799,10 @@
 {"lexeme":{"Heteronym":{"word":"pensé","lemma":"penser","pos":"VERB"}},"count":224}
 {"lexeme":{"Heteronym":{"word":"utiliser","lemma":"utiliser","pos":"VERB"}},"count":224}
 {"lexeme":{"Heteronym":{"word":"fort","lemma":"fort","pos":"ADJ"}},"count":223}
+{"lexeme":{"Heteronym":{"word":"lumière","lemma":"lumière","pos":"NOUN"}},"count":223}
 {"lexeme":{"Heteronym":{"word":"voyez","lemma":"voir","pos":"VERB"}},"count":223}
 {"lexeme":{"Heteronym":{"word":"allée","lemma":"aller","pos":"VERB"}},"count":222}
 {"lexeme":{"Heteronym":{"word":"années","lemma":"année","pos":"NOUN"}},"count":222}
-{"lexeme":{"Heteronym":{"word":"lumière","lemma":"lumière","pos":"NOUN"}},"count":222}
 {"lexeme":{"Heteronym":{"word":"magasin","lemma":"magasin","pos":"NOUN"}},"count":222}
 {"lexeme":{"Heteronym":{"word":"retour","lemma":"retour","pos":"NOUN"}},"count":222}
 {"lexeme":{"Heteronym":{"word":"répondre","lemma":"répondre","pos":"VERB"}},"count":222}
@@ -827,25 +827,25 @@
 {"lexeme":{"Heteronym":{"word":"compris","lemma":"comprendre","pos":"VERB"}},"count":216}
 {"lexeme":{"Heteronym":{"word":"rend","lemma":"rendre","pos":"VERB"}},"count":216}
 {"lexeme":{"Multiword":"au lit"},"count":216}
+{"lexeme":{"Heteronym":{"word":"partout","lemma":"partout","pos":"ADV"}},"count":215}
 {"lexeme":{"Heteronym":{"word":"aimerais","lemma":"aimer","pos":"VERB"}},"count":214}
 {"lexeme":{"Heteronym":{"word":"parc","lemma":"parc","pos":"NOUN"}},"count":214}
-{"lexeme":{"Heteronym":{"word":"partout","lemma":"partout","pos":"ADV"}},"count":214}
 {"lexeme":{"Heteronym":{"word":"reçu","lemma":"recevoir","pos":"VERB"}},"count":214}
 {"lexeme":{"Heteronym":{"word":"dirait","lemma":"dire","pos":"VERB"}},"count":213}
+{"lexeme":{"Heteronym":{"word":"décision","lemma":"décision","pos":"NOUN"}},"count":213}
 {"lexeme":{"Heteronym":{"word":"manque","lemma":"manque","pos":"VERB"}},"count":213}
 {"lexeme":{"Heteronym":{"word":"rire","lemma":"rire","pos":"VERB"}},"count":213}
 {"lexeme":{"Multiword":"et si"},"count":213}
 {"lexeme":{"Multiword":"qui sait"},"count":213}
 {"lexeme":{"Heteronym":{"word":"ciel","lemma":"ciel","pos":"NOUN"}},"count":212}
 {"lexeme":{"Heteronym":{"word":"clé","lemma":"clé","pos":"NOUN"}},"count":212}
-{"lexeme":{"Heteronym":{"word":"décision","lemma":"décision","pos":"NOUN"}},"count":212}
+{"lexeme":{"Heteronym":{"word":"fumer","lemma":"fumer","pos":"VERB"}},"count":212}
 {"lexeme":{"Heteronym":{"word":"assis","lemma":"asseoir","pos":"VERB"}},"count":211}
 {"lexeme":{"Heteronym":{"word":"bruit","lemma":"bruit","pos":"NOUN"}},"count":211}
 {"lexeme":{"Heteronym":{"word":"chanter","lemma":"chanter","pos":"VERB"}},"count":211}
 {"lexeme":{"Heteronym":{"word":"poisson","lemma":"poisson","pos":"NOUN"}},"count":211}
 {"lexeme":{"Heteronym":{"word":"restaurant","lemma":"restaurant","pos":"NOUN"}},"count":211}
 {"lexeme":{"Heteronym":{"word":"animaux","lemma":"animal","pos":"NOUN"}},"count":210}
-{"lexeme":{"Heteronym":{"word":"fumer","lemma":"fumer","pos":"VERB"}},"count":210}
 {"lexeme":{"Heteronym":{"word":"prochain","lemma":"prochain","pos":"ADJ"}},"count":210}
 {"lexeme":{"Multiword":"sur ce"},"count":210}
 {"lexeme":{"Heteronym":{"word":"bateau","lemma":"bateau","pos":"NOUN"}},"count":208}
@@ -887,10 +887,10 @@
 {"lexeme":{"Heteronym":{"word":"droit","lemma":"droit","pos":"NOUN"}},"count":198}
 {"lexeme":{"Multiword":"ta mère"},"count":198}
 {"lexeme":{"Heteronym":{"word":"poste","lemma":"poste","pos":"NOUN"}},"count":197}
+{"lexeme":{"Heteronym":{"word":"secret","lemma":"secret","pos":"NOUN"}},"count":197}
 {"lexeme":{"Heteronym":{"word":"tomber","lemma":"tomber","pos":"VERB"}},"count":197}
 {"lexeme":{"Heteronym":{"word":"dents","lemma":"dent","pos":"NOUN"}},"count":196}
 {"lexeme":{"Heteronym":{"word":"peu","lemma":"peu","pos":"NOUN"}},"count":196}
-{"lexeme":{"Heteronym":{"word":"secret","lemma":"secret","pos":"NOUN"}},"count":196}
 {"lexeme":{"Heteronym":{"word":"tout","lemma":"tout","pos":"DET"}},"count":196}
 {"lexeme":{"Multiword":"faire attention"},"count":196}
 {"lexeme":{"Heteronym":{"word":"anniversaire","lemma":"anniversaire","pos":"NOUN"}},"count":195}
@@ -917,32 +917,32 @@
 {"lexeme":{"Heteronym":{"word":"né","lemma":"naître","pos":"VERB"}},"count":191}
 {"lexeme":{"Heteronym":{"word":"étudiants","lemma":"étudiant","pos":"NOUN"}},"count":191}
 {"lexeme":{"Heteronym":{"word":"face","lemma":"face","pos":"NOUN"}},"count":190}
+{"lexeme":{"Heteronym":{"word":"montre","lemma":"montre","pos":"NOUN"}},"count":190}
 {"lexeme":{"Heteronym":{"word":"parfait","lemma":"parfait","pos":"ADJ"}},"count":190}
 {"lexeme":{"Heteronym":{"word":"revoir","lemma":"revoir","pos":"VERB"}},"count":190}
 {"lexeme":{"Heteronym":{"word":"vent","lemma":"vent","pos":"NOUN"}},"count":190}
 {"lexeme":{"Heteronym":{"word":"viande","lemma":"viande","pos":"NOUN"}},"count":190}
 {"lexeme":{"Multiword":"dire quoi"},"count":190}
+{"lexeme":{"Multiword":"tout seul"},"count":190}
 {"lexeme":{"Heteronym":{"word":"accident","lemma":"accident","pos":"NOUN"}},"count":189}
 {"lexeme":{"Heteronym":{"word":"devoirs","lemma":"devoir","pos":"NOUN"}},"count":189}
 {"lexeme":{"Heteronym":{"word":"dos","lemma":"dos","pos":"NOUN"}},"count":189}
 {"lexeme":{"Heteronym":{"word":"lis","lemma":"lire","pos":"VERB"}},"count":189}
-{"lexeme":{"Heteronym":{"word":"montre","lemma":"montre","pos":"NOUN"}},"count":189}
 {"lexeme":{"Heteronym":{"word":"ni","lemma":"ni","pos":"CCONJ"}},"count":189}
 {"lexeme":{"Heteronym":{"word":"paix","lemma":"paix","pos":"NOUN"}},"count":189}
 {"lexeme":{"Multiword":"après-midi"},"count":189}
-{"lexeme":{"Multiword":"tout seul"},"count":189}
 {"lexeme":{"Heteronym":{"word":"compte","lemma":"compte","pos":"VERB"}},"count":188}
+{"lexeme":{"Heteronym":{"word":"conseil","lemma":"conseil","pos":"NOUN"}},"count":187}
 {"lexeme":{"Heteronym":{"word":"pied","lemma":"pied","pos":"NOUN"}},"count":187}
 {"lexeme":{"Heteronym":{"word":"sorti","lemma":"sortir","pos":"VERB"}},"count":187}
+{"lexeme":{"Multiword":"au courant"},"count":187}
 {"lexeme":{"Multiword":"de suite"},"count":187}
 {"lexeme":{"Multiword":"pas que"},"count":187}
 {"lexeme":{"Heteronym":{"word":"après-midi","lemma":"après-midi","pos":"NOUN"}},"count":186}
-{"lexeme":{"Heteronym":{"word":"conseil","lemma":"conseil","pos":"NOUN"}},"count":186}
 {"lexeme":{"Heteronym":{"word":"doivent","lemma":"devoir","pos":"VERB"}},"count":186}
 {"lexeme":{"Heteronym":{"word":"gagné","lemma":"gagner","pos":"VERB"}},"count":186}
 {"lexeme":{"Heteronym":{"word":"lunettes","lemma":"lunette","pos":"NOUN"}},"count":186}
 {"lexeme":{"Multiword":"aller avec"},"count":186}
-{"lexeme":{"Multiword":"au courant"},"count":186}
 {"lexeme":{"Multiword":"à propos"},"count":186}
 {"lexeme":{"Heteronym":{"word":"cher","lemma":"cher","pos":"ADJ"}},"count":185}
 {"lexeme":{"Heteronym":{"word":"importe","lemma":"importer","pos":"VERB"}},"count":185}
@@ -950,14 +950,14 @@
 {"lexeme":{"Heteronym":{"word":"roi","lemma":"roi","pos":"NOUN"}},"count":185}
 {"lexeme":{"Heteronym":{"word":"bord","lemma":"bord","pos":"NOUN"}},"count":184}
 {"lexeme":{"Heteronym":{"word":"celle","lemma":"celui","pos":"PRON"}},"count":184}
+{"lexeme":{"Heteronym":{"word":"couleur","lemma":"couleur","pos":"NOUN"}},"count":184}
 {"lexeme":{"Heteronym":{"word":"soirée","lemma":"soirée","pos":"NOUN"}},"count":184}
 {"lexeme":{"Heteronym":{"word":"télé","lemma":"télé","pos":"NOUN"}},"count":184}
 {"lexeme":{"Multiword":"à cause de"},"count":184}
-{"lexeme":{"Heteronym":{"word":"couleur","lemma":"couleur","pos":"NOUN"}},"count":183}
+{"lexeme":{"Heteronym":{"word":"autour","lemma":"autour","pos":"ADV"}},"count":183}
 {"lexeme":{"Heteronym":{"word":"coûte","lemma":"coûter","pos":"VERB"}},"count":183}
 {"lexeme":{"Heteronym":{"word":"voit","lemma":"voir","pos":"VERB"}},"count":183}
 {"lexeme":{"Heteronym":{"word":"écoute","lemma":"écoute","pos":"VERB"}},"count":183}
-{"lexeme":{"Heteronym":{"word":"autour","lemma":"autour","pos":"ADV"}},"count":182}
 {"lexeme":{"Heteronym":{"word":"chef","lemma":"chef","pos":"NOUN"}},"count":182}
 {"lexeme":{"Heteronym":{"word":"langues","lemma":"langue","pos":"NOUN"}},"count":182}
 {"lexeme":{"Heteronym":{"word":"entrer","lemma":"entrer","pos":"VERB"}},"count":181}
@@ -999,10 +999,10 @@
 {"lexeme":{"Heteronym":{"word":"froid","lemma":"froid","pos":"NOUN"}},"count":174}
 {"lexeme":{"Heteronym":{"word":"sors","lemma":"sortir","pos":"VERB"}},"count":174}
 {"lexeme":{"Heteronym":{"word":"terminé","lemma":"terminer","pos":"VERB"}},"count":174}
+{"lexeme":{"Multiword":"autour de"},"count":174}
 {"lexeme":{"Multiword":"se mettre"},"count":174}
 {"lexeme":{"Heteronym":{"word":"ouvrir","lemma":"ouvrir","pos":"VERB"}},"count":173}
 {"lexeme":{"Heteronym":{"word":"succès","lemma":"succès","pos":"NOUN"}},"count":173}
-{"lexeme":{"Multiword":"autour de"},"count":173}
 {"lexeme":{"Multiword":"ceci étant"},"count":173}
 {"lexeme":{"Multiword":"prendre soin"},"count":173}
 {"lexeme":{"Multiword":"s'il te plaît"},"count":173}
@@ -1013,10 +1013,10 @@
 {"lexeme":{"Heteronym":{"word":"piano","lemma":"piano","pos":"NOUN"}},"count":171}
 {"lexeme":{"Heteronym":{"word":"toute","lemma":"tout","pos":"DET"}},"count":171}
 {"lexeme":{"Multiword":"à propos de"},"count":171}
+{"lexeme":{"Heteronym":{"word":"dès","lemma":"dès","pos":"ADP"}},"count":170}
 {"lexeme":{"Heteronym":{"word":"envoyé","lemma":"envoyer","pos":"VERB"}},"count":170}
 {"lexeme":{"Heteronym":{"word":"finir","lemma":"finir","pos":"VERB"}},"count":170}
 {"lexeme":{"Heteronym":{"word":"loi","lemma":"loi","pos":"NOUN"}},"count":170}
-{"lexeme":{"Heteronym":{"word":"dès","lemma":"dès","pos":"ADP"}},"count":169}
 {"lexeme":{"Heteronym":{"word":"hé","lemma":"hé","pos":"INTJ"}},"count":169}
 {"lexeme":{"Heteronym":{"word":"pomme","lemma":"pomme","pos":"NOUN"}},"count":169}
 {"lexeme":{"Heteronym":{"word":"sorte","lemma":"sorte","pos":"NOUN"}},"count":169}
@@ -1059,20 +1059,20 @@
 {"lexeme":{"Heteronym":{"word":"prison","lemma":"prison","pos":"NOUN"}},"count":160}
 {"lexeme":{"Multiword":"au moins"},"count":160}
 {"lexeme":{"Multiword":"tout de suite"},"count":160}
-{"lexeme":{"Heteronym":{"word":"aucun","lemma":"aucun","pos":"DET"}},"count":159}
 {"lexeme":{"Heteronym":{"word":"banque","lemma":"banque","pos":"NOUN"}},"count":159}
 {"lexeme":{"Heteronym":{"word":"bout","lemma":"bout","pos":"NOUN"}},"count":159}
 {"lexeme":{"Heteronym":{"word":"mort","lemma":"mourir","pos":"VERB"}},"count":159}
 {"lexeme":{"Heteronym":{"word":"papier","lemma":"papier","pos":"NOUN"}},"count":159}
 {"lexeme":{"Heteronym":{"word":"parlent","lemma":"parler","pos":"VERB"}},"count":159}
 {"lexeme":{"Heteronym":{"word":"patron","lemma":"patron","pos":"NOUN"}},"count":159}
+{"lexeme":{"Multiword":"de jour"},"count":159}
+{"lexeme":{"Heteronym":{"word":"appelez","lemma":"appeler","pos":"VERB"}},"count":158}
+{"lexeme":{"Heteronym":{"word":"aucun","lemma":"aucun","pos":"DET"}},"count":158}
 {"lexeme":{"Heteronym":{"word":"bienvenue","lemma":"bienvenue","pos":"NOUN"}},"count":158}
-{"lexeme":{"Heteronym":{"word":"m’","lemma":"m’","pos":"PRON"}},"count":158}
-{"lexeme":{"Multiword":"de jour"},"count":158}
 {"lexeme":{"Multiword":"de peu"},"count":158}
-{"lexeme":{"Heteronym":{"word":"appelez","lemma":"appeler","pos":"VERB"}},"count":157}
 {"lexeme":{"Heteronym":{"word":"dimanche","lemma":"dimanche","pos":"NOUN"}},"count":157}
 {"lexeme":{"Heteronym":{"word":"hôtel","lemma":"hôtel","pos":"NOUN"}},"count":157}
+{"lexeme":{"Heteronym":{"word":"m’","lemma":"m’","pos":"PRON"}},"count":157}
 {"lexeme":{"Heteronym":{"word":"suivre","lemma":"suivre","pos":"VERB"}},"count":157}
 {"lexeme":{"Heteronym":{"word":"danser","lemma":"danser","pos":"VERB"}},"count":156}
 {"lexeme":{"Heteronym":{"word":"hors","lemma":"hors","pos":"ADP"}},"count":156}
@@ -1090,27 +1090,27 @@
 {"lexeme":{"Heteronym":{"word":"machine","lemma":"machine","pos":"NOUN"}},"count":153}
 {"lexeme":{"Heteronym":{"word":"porter","lemma":"porter","pos":"VERB"}},"count":153}
 {"lexeme":{"Heteronym":{"word":"discuter","lemma":"discuter","pos":"VERB"}},"count":152}
+{"lexeme":{"Heteronym":{"word":"goût","lemma":"goût","pos":"NOUN"}},"count":152}
 {"lexeme":{"Heteronym":{"word":"mur","lemma":"mur","pos":"NOUN"}},"count":152}
 {"lexeme":{"Heteronym":{"word":"suite","lemma":"suite","pos":"ADV"}},"count":152}
+{"lexeme":{"Heteronym":{"word":"blanc","lemma":"blanc","pos":"ADJ"}},"count":151}
 {"lexeme":{"Heteronym":{"word":"chante","lemma":"cher","pos":"VERB"}},"count":151}
 {"lexeme":{"Heteronym":{"word":"différence","lemma":"différence","pos":"NOUN"}},"count":151}
 {"lexeme":{"Heteronym":{"word":"fruits","lemma":"fruit","pos":"NOUN"}},"count":151}
-{"lexeme":{"Heteronym":{"word":"goût","lemma":"goût","pos":"NOUN"}},"count":151}
 {"lexeme":{"Heteronym":{"word":"long","lemma":"long","pos":"ADJ"}},"count":151}
 {"lexeme":{"Heteronym":{"word":"rencontré","lemma":"rencontrer","pos":"VERB"}},"count":151}
 {"lexeme":{"Heteronym":{"word":"arbres","lemma":"arbre","pos":"NOUN"}},"count":150}
-{"lexeme":{"Heteronym":{"word":"blanc","lemma":"blanc","pos":"ADJ"}},"count":150}
 {"lexeme":{"Heteronym":{"word":"eh","lemma":"eh","pos":"INTJ"}},"count":150}
 {"lexeme":{"Heteronym":{"word":"rarement","lemma":"rarement","pos":"ADV"}},"count":150}
 {"lexeme":{"Heteronym":{"word":"sucre","lemma":"sucre","pos":"NOUN"}},"count":150}
 {"lexeme":{"Multiword":"avoir envie"},"count":150}
+{"lexeme":{"Heteronym":{"word":"aucune","lemma":"aucun","pos":"DET"}},"count":149}
 {"lexeme":{"Heteronym":{"word":"ferait","lemma":"faire","pos":"VERB"}},"count":149}
 {"lexeme":{"Heteronym":{"word":"perdre","lemma":"perdre","pos":"VERB"}},"count":149}
 {"lexeme":{"Heteronym":{"word":"semblait","lemma":"sembler","pos":"VERB"}},"count":149}
 {"lexeme":{"Heteronym":{"word":"taille","lemma":"taille","pos":"NOUN"}},"count":149}
 {"lexeme":{"Multiword":"à nouveau"},"count":149}
 {"lexeme":{"Heteronym":{"word":"arrêter","lemma":"arrêter","pos":"VERB"}},"count":148}
-{"lexeme":{"Heteronym":{"word":"aucune","lemma":"aucun","pos":"DET"}},"count":148}
 {"lexeme":{"Heteronym":{"word":"connu","lemma":"connaître","pos":"VERB"}},"count":148}
 {"lexeme":{"Heteronym":{"word":"rentré","lemma":"rentrer","pos":"VERB"}},"count":148}
 {"lexeme":{"Heteronym":{"word":"semaines","lemma":"semaine","pos":"NOUN"}},"count":148}
@@ -1122,10 +1122,10 @@
 {"lexeme":{"Heteronym":{"word":"lentement","lemma":"lentement","pos":"ADV"}},"count":147}
 {"lexeme":{"Heteronym":{"word":"savent","lemma":"savoir","pos":"VERB"}},"count":147}
 {"lexeme":{"Heteronym":{"word":"serai","lemma":"être","pos":"AUX"}},"count":147}
+{"lexeme":{"Heteronym":{"word":"s’","lemma":"s’","pos":"PRON"}},"count":147}
+{"lexeme":{"Heteronym":{"word":"village","lemma":"village","pos":"NOUN"}},"count":147}
 {"lexeme":{"Heteronym":{"word":"aura","lemma":"avoir","pos":"VERB"}},"count":146}
 {"lexeme":{"Heteronym":{"word":"parole","lemma":"parole","pos":"NOUN"}},"count":146}
-{"lexeme":{"Heteronym":{"word":"s’","lemma":"s’","pos":"PRON"}},"count":146}
-{"lexeme":{"Heteronym":{"word":"village","lemma":"village","pos":"NOUN"}},"count":146}
 {"lexeme":{"Heteronym":{"word":"voitures","lemma":"voiture","pos":"NOUN"}},"count":146}
 {"lexeme":{"Multiword":"rendez-vous"},"count":146}
 {"lexeme":{"Multiword":"trop de"},"count":146}
@@ -1170,6 +1170,7 @@
 {"lexeme":{"Multiword":"rendre visite"},"count":140}
 {"lexeme":{"Multiword":"à venir"},"count":140}
 {"lexeme":{"Heteronym":{"word":"dort","lemma":"dormir","pos":"VERB"}},"count":139}
+{"lexeme":{"Heteronym":{"word":"l’","lemma":"l’","pos":"PRON"}},"count":139}
 {"lexeme":{"Heteronym":{"word":"mien","lemma":"mien","pos":"PRON"}},"count":139}
 {"lexeme":{"Heteronym":{"word":"pleine","lemma":"plein","pos":"ADJ"}},"count":139}
 {"lexeme":{"Heteronym":{"word":"travers","lemma":"travers","pos":"NOUN"}},"count":139}
@@ -1178,7 +1179,6 @@
 {"lexeme":{"Heteronym":{"word":"croit","lemma":"croire","pos":"VERB"}},"count":138}
 {"lexeme":{"Heteronym":{"word":"emploi","lemma":"emploi","pos":"NOUN"}},"count":138}
 {"lexeme":{"Heteronym":{"word":"ira","lemma":"aller","pos":"VERB"}},"count":138}
-{"lexeme":{"Heteronym":{"word":"l’","lemma":"l’","pos":"PRON"}},"count":138}
 {"lexeme":{"Heteronym":{"word":"sport","lemma":"sport","pos":"NOUN"}},"count":138}
 {"lexeme":{"Multiword":"petit-déjeuner"},"count":138}
 {"lexeme":{"Multiword":"première fois"},"count":138}
@@ -1193,6 +1193,7 @@
 {"lexeme":{"Heteronym":{"word":"aille","lemma":"aller","pos":"VERB"}},"count":136}
 {"lexeme":{"Heteronym":{"word":"an","lemma":"an","pos":"NOUN"}},"count":136}
 {"lexeme":{"Heteronym":{"word":"compter","lemma":"compter","pos":"VERB"}},"count":136}
+{"lexeme":{"Heteronym":{"word":"coucher","lemma":"coucher","pos":"VERB"}},"count":136}
 {"lexeme":{"Heteronym":{"word":"oncle","lemma":"oncle","pos":"NOUN"}},"count":136}
 {"lexeme":{"Multiword":"du coup"},"count":136}
 {"lexeme":{"Multiword":"faire avec"},"count":136}
@@ -1200,7 +1201,6 @@
 {"lexeme":{"Multiword":"hors de"},"count":136}
 {"lexeme":{"Multiword":"ne aucun"},"count":136}
 {"lexeme":{"Heteronym":{"word":"bouche","lemma":"bouche","pos":"NOUN"}},"count":135}
-{"lexeme":{"Heteronym":{"word":"coucher","lemma":"coucher","pos":"VERB"}},"count":135}
 {"lexeme":{"Heteronym":{"word":"essayez","lemma":"essayer","pos":"VERB"}},"count":135}
 {"lexeme":{"Heteronym":{"word":"grand-père","lemma":"grand-père","pos":"NOUN"}},"count":135}
 {"lexeme":{"Heteronym":{"word":"quelque","lemma":"quelque","pos":"PRON"}},"count":135}
@@ -1242,6 +1242,7 @@
 {"lexeme":{"Heteronym":{"word":"fonctionne","lemma":"fonctionner","pos":"VERB"}},"count":131}
 {"lexeme":{"Heteronym":{"word":"magnifique","lemma":"magnifique","pos":"ADJ"}},"count":131}
 {"lexeme":{"Heteronym":{"word":"petit-déjeuner","lemma":"petit-déjeuner","pos":"NOUN"}},"count":131}
+{"lexeme":{"Multiword":"dès que"},"count":131}
 {"lexeme":{"Multiword":"déjà vu"},"count":131}
 {"lexeme":{"Multiword":"vouloir bien"},"count":131}
 {"lexeme":{"Heteronym":{"word":"boit","lemma":"boire","pos":"VERB"}},"count":130}
@@ -1253,7 +1254,6 @@
 {"lexeme":{"Heteronym":{"word":"propres","lemma":"propre","pos":"ADJ"}},"count":130}
 {"lexeme":{"Heteronym":{"word":"société","lemma":"société","pos":"NOUN"}},"count":130}
 {"lexeme":{"Multiword":"avoir bon"},"count":130}
-{"lexeme":{"Multiword":"dès que"},"count":130}
 {"lexeme":{"Multiword":"ma petite"},"count":130}
 {"lexeme":{"Heteronym":{"word":"apporté","lemma":"apporter","pos":"VERB"}},"count":129}
 {"lexeme":{"Heteronym":{"word":"calme","lemma":"calme","pos":"ADJ"}},"count":129}
@@ -1278,6 +1278,7 @@
 {"lexeme":{"Heteronym":{"word":"trente","lemma":"trente","pos":"NUM"}},"count":128}
 {"lexeme":{"Multiword":"se pouvoir"},"count":128}
 {"lexeme":{"Heteronym":{"word":"bâtiment","lemma":"bâtiment","pos":"NOUN"}},"count":127}
+{"lexeme":{"Heteronym":{"word":"football","lemma":"football","pos":"NOUN"}},"count":127}
 {"lexeme":{"Heteronym":{"word":"mieux","lemma":"mieux","pos":"NOUN"}},"count":127}
 {"lexeme":{"Heteronym":{"word":"ouvert","lemma":"ouvrir","pos":"VERB"}},"count":127}
 {"lexeme":{"Heteronym":{"word":"qu’","lemma":"qu’","pos":"PRON"}},"count":127}
@@ -1290,7 +1291,6 @@
 {"lexeme":{"Heteronym":{"word":"capitaine","lemma":"capitaine","pos":"NOUN"}},"count":126}
 {"lexeme":{"Heteronym":{"word":"capitale","lemma":"capitale","pos":"NOUN"}},"count":126}
 {"lexeme":{"Heteronym":{"word":"discours","lemma":"discours","pos":"NOUN"}},"count":126}
-{"lexeme":{"Heteronym":{"word":"football","lemma":"football","pos":"NOUN"}},"count":126}
 {"lexeme":{"Heteronym":{"word":"importante","lemma":"important","pos":"ADJ"}},"count":126}
 {"lexeme":{"Heteronym":{"word":"mort","lemma":"mort","pos":"ADJ"}},"count":126}
 {"lexeme":{"Heteronym":{"word":"proche","lemma":"proche","pos":"ADJ"}},"count":126}
@@ -1303,6 +1303,7 @@
 {"lexeme":{"Multiword":"le chercher"},"count":125}
 {"lexeme":{"Heteronym":{"word":"cassé","lemma":"casser","pos":"VERB"}},"count":124}
 {"lexeme":{"Heteronym":{"word":"différent","lemma":"différent","pos":"ADJ"}},"count":124}
+{"lexeme":{"Heteronym":{"word":"disparu","lemma":"disparaître","pos":"VERB"}},"count":124}
 {"lexeme":{"Heteronym":{"word":"laver","lemma":"laver","pos":"VERB"}},"count":124}
 {"lexeme":{"Heteronym":{"word":"préparer","lemma":"préparer","pos":"VERB"}},"count":124}
 {"lexeme":{"Heteronym":{"word":"regarda","lemma":"regarder","pos":"VERB"}},"count":124}
@@ -1312,7 +1313,6 @@
 {"lexeme":{"Multiword":"se mettre à"},"count":124}
 {"lexeme":{"Heteronym":{"word":"arrivée","lemma":"arriver","pos":"VERB"}},"count":123}
 {"lexeme":{"Heteronym":{"word":"danger","lemma":"danger","pos":"NOUN"}},"count":123}
-{"lexeme":{"Heteronym":{"word":"disparu","lemma":"disparaître","pos":"VERB"}},"count":123}
 {"lexeme":{"Heteronym":{"word":"est-il","lemma":"est-il","pos":"PRON"}},"count":123}
 {"lexeme":{"Heteronym":{"word":"lave","lemma":"laver","pos":"VERB"}},"count":123}
 {"lexeme":{"Heteronym":{"word":"réussi","lemma":"réussir","pos":"VERB"}},"count":123}
@@ -1328,7 +1328,6 @@
 {"lexeme":{"Heteronym":{"word":"nature","lemma":"nature","pos":"NOUN"}},"count":122}
 {"lexeme":{"Heteronym":{"word":"ouvre","lemma":"ouvrir","pos":"VERB"}},"count":122}
 {"lexeme":{"Heteronym":{"word":"utile","lemma":"utile","pos":"ADJ"}},"count":122}
-{"lexeme":{"Heteronym":{"word":"vouloir","lemma":"vouloir","pos":"VERB"}},"count":122}
 {"lexeme":{"Multiword":"avoir faim"},"count":122}
 {"lexeme":{"Heteronym":{"word":"chaise","lemma":"chaise","pos":"NOUN"}},"count":121}
 {"lexeme":{"Heteronym":{"word":"erreurs","lemma":"erreur","pos":"NOUN"}},"count":121}
@@ -1337,6 +1336,7 @@
 {"lexeme":{"Heteronym":{"word":"opinion","lemma":"opinion","pos":"NOUN"}},"count":121}
 {"lexeme":{"Heteronym":{"word":"proposition","lemma":"proposition","pos":"NOUN"}},"count":121}
 {"lexeme":{"Heteronym":{"word":"quels","lemma":"quel","pos":"DET"}},"count":121}
+{"lexeme":{"Heteronym":{"word":"vouloir","lemma":"vouloir","pos":"VERB"}},"count":121}
 {"lexeme":{"Heteronym":{"word":"voyons","lemma":"voir","pos":"VERB"}},"count":121}
 {"lexeme":{"Heteronym":{"word":"vécu","lemma":"vivre","pos":"VERB"}},"count":121}
 {"lexeme":{"Heteronym":{"word":"arrivés","lemma":"arriver","pos":"VERB"}},"count":120}
@@ -1398,6 +1398,7 @@
 {"lexeme":{"Heteronym":{"word":"t’","lemma":"t’","pos":"PRON"}},"count":114}
 {"lexeme":{"Heteronym":{"word":"vol","lemma":"vol","pos":"NOUN"}},"count":114}
 {"lexeme":{"Multiword":"ouvrir la porte"},"count":114}
+{"lexeme":{"Multiword":"par ici"},"count":114}
 {"lexeme":{"Multiword":"à temps"},"count":114}
 {"lexeme":{"Heteronym":{"word":"certaines","lemma":"certain","pos":"DET"}},"count":113}
 {"lexeme":{"Heteronym":{"word":"comprend","lemma":"comprendre","pos":"VERB"}},"count":113}
@@ -1408,7 +1409,6 @@
 {"lexeme":{"Heteronym":{"word":"selon","lemma":"selon","pos":"ADP"}},"count":113}
 {"lexeme":{"Heteronym":{"word":"voyager","lemma":"voyager","pos":"VERB"}},"count":113}
 {"lexeme":{"Heteronym":{"word":"vraie","lemma":"vrai","pos":"ADJ"}},"count":113}
-{"lexeme":{"Multiword":"par ici"},"count":113}
 {"lexeme":{"Heteronym":{"word":"beaux","lemma":"beal","pos":"ADJ"}},"count":112}
 {"lexeme":{"Heteronym":{"word":"choisi","lemma":"choisir","pos":"VERB"}},"count":112}
 {"lexeme":{"Heteronym":{"word":"public","lemma":"public","pos":"NOUN"}},"count":112}
@@ -1465,6 +1465,7 @@
 {"lexeme":{"Heteronym":{"word":"élèves","lemma":"élève","pos":"NOUN"}},"count":108}
 {"lexeme":{"Multiword":"en fait"},"count":108}
 {"lexeme":{"Multiword":"ça marche"},"count":108}
+{"lexeme":{"Heteronym":{"word":"club","lemma":"club","pos":"NOUN"}},"count":107}
 {"lexeme":{"Heteronym":{"word":"conduit","lemma":"conduire","pos":"VERB"}},"count":107}
 {"lexeme":{"Heteronym":{"word":"emprunter","lemma":"emprunter","pos":"VERB"}},"count":107}
 {"lexeme":{"Heteronym":{"word":"fleur","lemma":"fleur","pos":"NOUN"}},"count":107}
@@ -1472,16 +1473,15 @@
 {"lexeme":{"Heteronym":{"word":"mémoire","lemma":"mémoire","pos":"NOUN"}},"count":107}
 {"lexeme":{"Heteronym":{"word":"part","lemma":"partir","pos":"VERB"}},"count":107}
 {"lexeme":{"Heteronym":{"word":"pauvre","lemma":"pauvre","pos":"ADJ"}},"count":107}
+{"lexeme":{"Heteronym":{"word":"prévu","lemma":"prévoir","pos":"VERB"}},"count":107}
 {"lexeme":{"Heteronym":{"word":"silence","lemma":"silence","pos":"NOUN"}},"count":107}
 {"lexeme":{"Heteronym":{"word":"sourire","lemma":"sourire","pos":"NOUN"}},"count":107}
 {"lexeme":{"Multiword":"à ce sujet"},"count":107}
 {"lexeme":{"Heteronym":{"word":"beauté","lemma":"beauté","pos":"NOUN"}},"count":106}
 {"lexeme":{"Heteronym":{"word":"change","lemma":"changer","pos":"VERB"}},"count":106}
-{"lexeme":{"Heteronym":{"word":"club","lemma":"club","pos":"NOUN"}},"count":106}
 {"lexeme":{"Heteronym":{"word":"fus","lemma":"être","pos":"AUX"}},"count":106}
 {"lexeme":{"Heteronym":{"word":"juste","lemma":"juste","pos":"ADJ"}},"count":106}
 {"lexeme":{"Heteronym":{"word":"met","lemma":"mettre","pos":"VERB"}},"count":106}
-{"lexeme":{"Heteronym":{"word":"prévu","lemma":"prévoir","pos":"VERB"}},"count":106}
 {"lexeme":{"Heteronym":{"word":"qu’","lemma":"qu’","pos":"SCONJ"}},"count":106}
 {"lexeme":{"Heteronym":{"word":"signe","lemma":"signe","pos":"NOUN"}},"count":106}
 {"lexeme":{"Heteronym":{"word":"stylo","lemma":"stylo","pos":"NOUN"}},"count":106}
@@ -1567,6 +1567,7 @@
 {"lexeme":{"Multiword":"qui que"},"count":100}
 {"lexeme":{"Multiword":"sortir avec"},"count":100}
 {"lexeme":{"Heteronym":{"word":"devenue","lemma":"devenir","pos":"VERB"}},"count":99}
+{"lexeme":{"Heteronym":{"word":"devient","lemma":"devenir","pos":"VERB"}},"count":99}
 {"lexeme":{"Heteronym":{"word":"devraient","lemma":"devoir","pos":"VERB"}},"count":99}
 {"lexeme":{"Heteronym":{"word":"dîner","lemma":"dîner","pos":"VERB"}},"count":99}
 {"lexeme":{"Heteronym":{"word":"espoir","lemma":"espoir","pos":"NOUN"}},"count":99}
@@ -1581,7 +1582,6 @@
 {"lexeme":{"Multiword":"de même"},"count":99}
 {"lexeme":{"Multiword":"petite amie"},"count":99}
 {"lexeme":{"Heteronym":{"word":"dame","lemma":"dame","pos":"NOUN"}},"count":98}
-{"lexeme":{"Heteronym":{"word":"devient","lemma":"devenir","pos":"VERB"}},"count":98}
 {"lexeme":{"Heteronym":{"word":"dépend","lemma":"dépendre","pos":"VERB"}},"count":98}
 {"lexeme":{"Heteronym":{"word":"meilleurs","lemma":"meilleur","pos":"ADJ"}},"count":98}
 {"lexeme":{"Heteronym":{"word":"poissons","lemma":"poisson","pos":"NOUN"}},"count":98}
@@ -1595,6 +1595,7 @@
 {"lexeme":{"Heteronym":{"word":"tuer","lemma":"tuer","pos":"VERB"}},"count":97}
 {"lexeme":{"Heteronym":{"word":"vide","lemma":"vide","pos":"ADJ"}},"count":97}
 {"lexeme":{"Heteronym":{"word":"vôtre","lemma":"vôtre","pos":"PRON"}},"count":97}
+{"lexeme":{"Heteronym":{"word":"étrange","lemma":"étrange","pos":"ADJ"}},"count":97}
 {"lexeme":{"Heteronym":{"word":"agréable","lemma":"agréable","pos":"ADJ"}},"count":96}
 {"lexeme":{"Heteronym":{"word":"dérange","lemma":"déranger","pos":"VERB"}},"count":96}
 {"lexeme":{"Heteronym":{"word":"nouveaux","lemma":"nouveau","pos":"ADJ"}},"count":96}
@@ -1615,7 +1616,6 @@
 {"lexeme":{"Heteronym":{"word":"réveillé","lemma":"réveiller","pos":"VERB"}},"count":95}
 {"lexeme":{"Heteronym":{"word":"serai","lemma":"être","pos":"VERB"}},"count":95}
 {"lexeme":{"Heteronym":{"word":"vitesse","lemma":"vitesse","pos":"NOUN"}},"count":95}
-{"lexeme":{"Heteronym":{"word":"étrange","lemma":"étrange","pos":"ADJ"}},"count":95}
 {"lexeme":{"Heteronym":{"word":"bizarre","lemma":"bizarre","pos":"ADJ"}},"count":94}
 {"lexeme":{"Heteronym":{"word":"contact","lemma":"contact","pos":"NOUN"}},"count":94}
 {"lexeme":{"Heteronym":{"word":"existe","lemma":"exister","pos":"VERB"}},"count":94}
@@ -1626,6 +1626,8 @@
 {"lexeme":{"Heteronym":{"word":"oeil","lemma":"oeil","pos":"NOUN"}},"count":94}
 {"lexeme":{"Heteronym":{"word":"toilettes","lemma":"toilette","pos":"NOUN"}},"count":94}
 {"lexeme":{"Heteronym":{"word":"tort","lemma":"tort","pos":"NOUN"}},"count":94}
+{"lexeme":{"Heteronym":{"word":"tourne","lemma":"tourne","pos":"VERB"}},"count":94}
+{"lexeme":{"Multiword":"ne jamais dire jamais"},"count":94}
 {"lexeme":{"Multiword":"qui que ce soit"},"count":94}
 {"lexeme":{"Multiword":"à gauche"},"count":94}
 {"lexeme":{"Heteronym":{"word":"devais","lemma":"devoir","pos":"VERB"}},"count":93}
@@ -1637,9 +1639,7 @@
 {"lexeme":{"Heteronym":{"word":"posé","lemma":"poser","pos":"VERB"}},"count":93}
 {"lexeme":{"Heteronym":{"word":"prudent","lemma":"prudent","pos":"ADJ"}},"count":93}
 {"lexeme":{"Heteronym":{"word":"quelles","lemma":"quelle","pos":"ADJ"}},"count":93}
-{"lexeme":{"Heteronym":{"word":"tourne","lemma":"tourne","pos":"VERB"}},"count":93}
 {"lexeme":{"Multiword":"faire attention à"},"count":93}
-{"lexeme":{"Multiword":"ne jamais dire jamais"},"count":93}
 {"lexeme":{"Multiword":"à droite"},"count":93}
 {"lexeme":{"Heteronym":{"word":"asseoir","lemma":"asseoir","pos":"VERB"}},"count":92}
 {"lexeme":{"Heteronym":{"word":"auriez","lemma":"avoir","pos":"AUX"}},"count":92}
@@ -1649,6 +1649,7 @@
 {"lexeme":{"Heteronym":{"word":"mignon","lemma":"mignon","pos":"ADJ"}},"count":92}
 {"lexeme":{"Heteronym":{"word":"occupée","lemma":"occuper","pos":"VERB"}},"count":92}
 {"lexeme":{"Heteronym":{"word":"passez","lemma":"passer","pos":"VERB"}},"count":92}
+{"lexeme":{"Heteronym":{"word":"planète","lemma":"planète","pos":"NOUN"}},"count":92}
 {"lexeme":{"Heteronym":{"word":"traduire","lemma":"traduire","pos":"VERB"}},"count":92}
 {"lexeme":{"Heteronym":{"word":"traverser","lemma":"traverser","pos":"VERB"}},"count":92}
 {"lexeme":{"Heteronym":{"word":"utilise","lemma":"utiliser","pos":"VERB"}},"count":92}
@@ -1675,7 +1676,6 @@
 {"lexeme":{"Heteronym":{"word":"leçon","lemma":"leçon","pos":"NOUN"}},"count":90}
 {"lexeme":{"Heteronym":{"word":"nouvelles","lemma":"nouveau","pos":"ADJ"}},"count":90}
 {"lexeme":{"Heteronym":{"word":"pantalon","lemma":"pantalon","pos":"NOUN"}},"count":90}
-{"lexeme":{"Heteronym":{"word":"planète","lemma":"planète","pos":"NOUN"}},"count":90}
 {"lexeme":{"Heteronym":{"word":"retraite","lemma":"retraite","pos":"NOUN"}},"count":90}
 {"lexeme":{"Heteronym":{"word":"réalité","lemma":"réalité","pos":"NOUN"}},"count":90}
 {"lexeme":{"Heteronym":{"word":"résultat","lemma":"résultat","pos":"NOUN"}},"count":90}
@@ -1833,6 +1833,7 @@
 {"lexeme":{"Heteronym":{"word":"page","lemma":"page","pos":"NOUN"}},"count":81}
 {"lexeme":{"Heteronym":{"word":"passé","lemma":"passé","pos":"NOUN"}},"count":81}
 {"lexeme":{"Heteronym":{"word":"pleuvoir","lemma":"pleuvoir","pos":"VERB"}},"count":81}
+{"lexeme":{"Heteronym":{"word":"préparé","lemma":"préparer","pos":"VERB"}},"count":81}
 {"lexeme":{"Heteronym":{"word":"ramener","lemma":"ramener","pos":"VERB"}},"count":81}
 {"lexeme":{"Heteronym":{"word":"remettre","lemma":"remettre","pos":"VERB"}},"count":81}
 {"lexeme":{"Heteronym":{"word":"respect","lemma":"respect","pos":"NOUN"}},"count":81}
@@ -1853,7 +1854,6 @@
 {"lexeme":{"Heteronym":{"word":"normal","lemma":"normal","pos":"ADJ"}},"count":80}
 {"lexeme":{"Heteronym":{"word":"note","lemma":"note","pos":"NOUN"}},"count":80}
 {"lexeme":{"Heteronym":{"word":"ouvrez","lemma":"ouvrir","pos":"VERB"}},"count":80}
-{"lexeme":{"Heteronym":{"word":"préparé","lemma":"préparer","pos":"VERB"}},"count":80}
 {"lexeme":{"Heteronym":{"word":"quels","lemma":"quel","pos":"ADJ"}},"count":80}
 {"lexeme":{"Heteronym":{"word":"responsable","lemma":"responsable","pos":"ADJ"}},"count":80}
 {"lexeme":{"Heteronym":{"word":"théorie","lemma":"théorie","pos":"NOUN"}},"count":80}
@@ -2133,6 +2133,7 @@
 {"lexeme":{"Heteronym":{"word":"réponses","lemma":"réponse","pos":"NOUN"}},"count":67}
 {"lexeme":{"Heteronym":{"word":"saison","lemma":"saison","pos":"NOUN"}},"count":67}
 {"lexeme":{"Heteronym":{"word":"scène","lemma":"scène","pos":"NOUN"}},"count":67}
+{"lexeme":{"Heteronym":{"word":"semblez","lemma":"sembler","pos":"VERB"}},"count":67}
 {"lexeme":{"Heteronym":{"word":"servi","lemma":"servir","pos":"VERB"}},"count":67}
 {"lexeme":{"Heteronym":{"word":"terrain","lemma":"terrain","pos":"NOUN"}},"count":67}
 {"lexeme":{"Heteronym":{"word":"tien","lemma":"tien","pos":"PRON"}},"count":67}
@@ -2157,7 +2158,6 @@
 {"lexeme":{"Heteronym":{"word":"or","lemma":"or","pos":"NOUN"}},"count":66}
 {"lexeme":{"Heteronym":{"word":"paquet","lemma":"paquet","pos":"NOUN"}},"count":66}
 {"lexeme":{"Heteronym":{"word":"sage","lemma":"sage","pos":"ADJ"}},"count":66}
-{"lexeme":{"Heteronym":{"word":"semblez","lemma":"sembler","pos":"VERB"}},"count":66}
 {"lexeme":{"Heteronym":{"word":"souffle","lemma":"souffle","pos":"NOUN"}},"count":66}
 {"lexeme":{"Heteronym":{"word":"âme","lemma":"âme","pos":"NOUN"}},"count":66}
 {"lexeme":{"Heteronym":{"word":"études","lemma":"étude","pos":"NOUN"}},"count":66}
@@ -2174,6 +2174,7 @@
 {"lexeme":{"Heteronym":{"word":"entièrement","lemma":"entièrement","pos":"ADV"}},"count":65}
 {"lexeme":{"Heteronym":{"word":"française","lemma":"français","pos":"ADJ"}},"count":65}
 {"lexeme":{"Heteronym":{"word":"intéresse","lemma":"intéresser","pos":"VERB"}},"count":65}
+{"lexeme":{"Heteronym":{"word":"jaloux","lemma":"jaloux","pos":"ADJ"}},"count":65}
 {"lexeme":{"Heteronym":{"word":"ministre","lemma":"ministre","pos":"NOUN"}},"count":65}
 {"lexeme":{"Heteronym":{"word":"papiers","lemma":"papier","pos":"NOUN"}},"count":65}
 {"lexeme":{"Heteronym":{"word":"patience","lemma":"patience","pos":"NOUN"}},"count":65}
@@ -2200,7 +2201,6 @@
 {"lexeme":{"Heteronym":{"word":"flic","lemma":"flic","pos":"NOUN"}},"count":64}
 {"lexeme":{"Heteronym":{"word":"futur","lemma":"futur","pos":"NOUN"}},"count":64}
 {"lexeme":{"Heteronym":{"word":"gamin","lemma":"gamin","pos":"NOUN"}},"count":64}
-{"lexeme":{"Heteronym":{"word":"jaloux","lemma":"jaloux","pos":"ADJ"}},"count":64}
 {"lexeme":{"Heteronym":{"word":"jouez","lemma":"jouer","pos":"VERB"}},"count":64}
 {"lexeme":{"Heteronym":{"word":"jus","lemma":"jus","pos":"NOUN"}},"count":64}
 {"lexeme":{"Heteronym":{"word":"longs","lemma":"long","pos":"ADJ"}},"count":64}
@@ -2265,6 +2265,7 @@
 {"lexeme":{"Heteronym":{"word":"malgré","lemma":"malgré","pos":"ADP"}},"count":62}
 {"lexeme":{"Heteronym":{"word":"mangea","lemma":"manger","pos":"VERB"}},"count":62}
 {"lexeme":{"Heteronym":{"word":"membres","lemma":"membre","pos":"NOUN"}},"count":62}
+{"lexeme":{"Heteronym":{"word":"nuages","lemma":"nuage","pos":"NOUN"}},"count":62}
 {"lexeme":{"Heteronym":{"word":"portefeuille","lemma":"portefeuille","pos":"NOUN"}},"count":62}
 {"lexeme":{"Heteronym":{"word":"rejoindre","lemma":"rejoindre","pos":"VERB"}},"count":62}
 {"lexeme":{"Heteronym":{"word":"revient","lemma":"revenir","pos":"VERB"}},"count":62}
@@ -2290,7 +2291,6 @@
 {"lexeme":{"Heteronym":{"word":"haute","lemma":"haut","pos":"ADJ"}},"count":61}
 {"lexeme":{"Heteronym":{"word":"intelligente","lemma":"intelligent","pos":"ADJ"}},"count":61}
 {"lexeme":{"Heteronym":{"word":"nerveux","lemma":"nerveux","pos":"ADJ"}},"count":61}
-{"lexeme":{"Heteronym":{"word":"nuages","lemma":"nuage","pos":"NOUN"}},"count":61}
 {"lexeme":{"Heteronym":{"word":"pensent","lemma":"penser","pos":"VERB"}},"count":61}
 {"lexeme":{"Heteronym":{"word":"plein","lemma":"plein","pos":"ADV"}},"count":61}
 {"lexeme":{"Heteronym":{"word":"pousser","lemma":"pousser","pos":"VERB"}},"count":61}
@@ -2314,7 +2314,6 @@
 {"lexeme":{"Heteronym":{"word":"directeur","lemma":"directeur","pos":"NOUN"}},"count":60}
 {"lexeme":{"Heteronym":{"word":"entrez","lemma":"entrer","pos":"VERB"}},"count":60}
 {"lexeme":{"Heteronym":{"word":"fit","lemma":"faire","pos":"AUX"}},"count":60}
-{"lexeme":{"Heteronym":{"word":"frappé","lemma":"frapper","pos":"VERB"}},"count":60}
 {"lexeme":{"Heteronym":{"word":"histoires","lemma":"histoire","pos":"NOUN"}},"count":60}
 {"lexeme":{"Heteronym":{"word":"meurtre","lemma":"meurtre","pos":"NOUN"}},"count":60}
 {"lexeme":{"Heteronym":{"word":"particulier","lemma":"particulier","pos":"ADJ"}},"count":60}
@@ -2344,9 +2343,11 @@
 {"lexeme":{"Heteronym":{"word":"commandé","lemma":"commander","pos":"VERB"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"courte","lemma":"court","pos":"ADJ"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"fous","lemma":"foutre","pos":"VERB"}},"count":59}
+{"lexeme":{"Heteronym":{"word":"frappé","lemma":"frapper","pos":"VERB"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"invités","lemma":"invité","pos":"NOUN"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"jeunes","lemma":"jeune","pos":"NOUN"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"mêmes","lemma":"même","pos":"PRON"}},"count":59}
+{"lexeme":{"Heteronym":{"word":"oublier","lemma":"oublier","pos":"VERB"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"parlais","lemma":"parler","pos":"VERB"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"parti","lemma":"parti","pos":"NOUN"}},"count":59}
 {"lexeme":{"Heteronym":{"word":"pause","lemma":"pause","pos":"NOUN"}},"count":59}
@@ -2375,7 +2376,6 @@
 {"lexeme":{"Heteronym":{"word":"humain","lemma":"humain","pos":"ADJ"}},"count":58}
 {"lexeme":{"Heteronym":{"word":"lumières","lemma":"lumière","pos":"NOUN"}},"count":58}
 {"lexeme":{"Heteronym":{"word":"milliers","lemma":"millier","pos":"NOUN"}},"count":58}
-{"lexeme":{"Heteronym":{"word":"oublier","lemma":"oublier","pos":"VERB"}},"count":58}
 {"lexeme":{"Heteronym":{"word":"permis","lemma":"permis","pos":"NOUN"}},"count":58}
 {"lexeme":{"Heteronym":{"word":"produire","lemma":"produire","pos":"VERB"}},"count":58}
 {"lexeme":{"Heteronym":{"word":"profondément","lemma":"profondément","pos":"ADV"}},"count":58}
@@ -2460,10 +2460,12 @@
 {"lexeme":{"Heteronym":{"word":"patient","lemma":"patient","pos":"NOUN"}},"count":55}
 {"lexeme":{"Heteronym":{"word":"poupée","lemma":"poupée","pos":"NOUN"}},"count":55}
 {"lexeme":{"Heteronym":{"word":"privé","lemma":"privé","pos":"NOUN"}},"count":55}
+{"lexeme":{"Heteronym":{"word":"proches","lemma":"proche","pos":"ADJ"}},"count":55}
 {"lexeme":{"Heteronym":{"word":"refuse","lemma":"refuser","pos":"VERB"}},"count":55}
 {"lexeme":{"Heteronym":{"word":"repose","lemma":"repose","pos":"VERB"}},"count":55}
 {"lexeme":{"Heteronym":{"word":"résolu","lemma":"résoudre","pos":"VERB"}},"count":55}
 {"lexeme":{"Heteronym":{"word":"sauté","lemma":"sauter","pos":"VERB"}},"count":55}
+{"lexeme":{"Heteronym":{"word":"sembles","lemma":"sembler","pos":"VERB"}},"count":55}
 {"lexeme":{"Heteronym":{"word":"soient","lemma":"être","pos":"AUX"}},"count":55}
 {"lexeme":{"Heteronym":{"word":"sortes","lemma":"sorte","pos":"NOUN"}},"count":55}
 {"lexeme":{"Heteronym":{"word":"surtout","lemma":"surtout","pos":"ADV"}},"count":55}
@@ -2475,6 +2477,7 @@
 {"lexeme":{"Heteronym":{"word":"écrivain","lemma":"écrivain","pos":"NOUN"}},"count":55}
 {"lexeme":{"Multiword":"au bout de"},"count":55}
 {"lexeme":{"Multiword":"ce fut un plaisir"},"count":55}
+{"lexeme":{"Multiword":"de couleur"},"count":55}
 {"lexeme":{"Multiword":"en privé"},"count":55}
 {"lexeme":{"Multiword":"s'agir de"},"count":55}
 {"lexeme":{"Multiword":"tremblement de terre"},"count":55}
@@ -2494,13 +2497,11 @@
 {"lexeme":{"Heteronym":{"word":"mètres","lemma":"mètre","pos":"NOUN"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"politique","lemma":"politique","pos":"NOUN"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"posa","lemma":"poser","pos":"VERB"}},"count":54}
-{"lexeme":{"Heteronym":{"word":"proches","lemma":"proche","pos":"ADJ"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"promener","lemma":"promener","pos":"VERB"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"reviendra","lemma":"revenir","pos":"VERB"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"risque","lemma":"risque","pos":"NOUN"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"réfléchis","lemma":"réfléchir","pos":"VERB"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"régime","lemma":"régime","pos":"NOUN"}},"count":54}
-{"lexeme":{"Heteronym":{"word":"sembles","lemma":"sembler","pos":"VERB"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"sombre","lemma":"sombre","pos":"ADJ"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"terme","lemma":"terme","pos":"NOUN"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"terminée","lemma":"terminer","pos":"VERB"}},"count":54}
@@ -2510,7 +2511,6 @@
 {"lexeme":{"Heteronym":{"word":"étaient","lemma":"être","pos":"VERB"}},"count":54}
 {"lexeme":{"Heteronym":{"word":"étrangères","lemma":"étranger","pos":"ADJ"}},"count":54}
 {"lexeme":{"Multiword":"avoir du bon"},"count":54}
-{"lexeme":{"Multiword":"de couleur"},"count":54}
 {"lexeme":{"Multiword":"de cœur"},"count":54}
 {"lexeme":{"Multiword":"et comment"},"count":54}
 {"lexeme":{"Multiword":"là-dessus"},"count":54}
@@ -2573,6 +2573,7 @@
 {"lexeme":{"Heteronym":{"word":"souffre","lemma":"souffrir","pos":"VERB"}},"count":52}
 {"lexeme":{"Heteronym":{"word":"suivant","lemma":"suivant","pos":"ADJ"}},"count":52}
 {"lexeme":{"Heteronym":{"word":"traduction","lemma":"traduction","pos":"NOUN"}},"count":52}
+{"lexeme":{"Heteronym":{"word":"vaisseau","lemma":"vaisseau","pos":"NOUN"}},"count":52}
 {"lexeme":{"Heteronym":{"word":"église","lemma":"église","pos":"NOUN"}},"count":52}
 {"lexeme":{"Heteronym":{"word":"étrangère","lemma":"étranger","pos":"ADJ"}},"count":52}
 {"lexeme":{"Multiword":"c'est la meilleure"},"count":52}
@@ -2613,7 +2614,6 @@
 {"lexeme":{"Heteronym":{"word":"secrets","lemma":"secret","pos":"NOUN"}},"count":51}
 {"lexeme":{"Heteronym":{"word":"sommet","lemma":"sommet","pos":"NOUN"}},"count":51}
 {"lexeme":{"Heteronym":{"word":"survécu","lemma":"survivre","pos":"VERB"}},"count":51}
-{"lexeme":{"Heteronym":{"word":"vaisseau","lemma":"vaisseau","pos":"NOUN"}},"count":51}
 {"lexeme":{"Heteronym":{"word":"écouté","lemma":"écouter","pos":"VERB"}},"count":51}
 {"lexeme":{"Heteronym":{"word":"époque","lemma":"époque","pos":"NOUN"}},"count":51}
 {"lexeme":{"Multiword":"avoir du mal"},"count":51}
@@ -2660,6 +2660,7 @@
 {"lexeme":{"Heteronym":{"word":"villes","lemma":"ville","pos":"NOUN"}},"count":50}
 {"lexeme":{"Heteronym":{"word":"vint","lemma":"venir","pos":"VERB"}},"count":50}
 {"lexeme":{"Heteronym":{"word":"volonté","lemma":"volonté","pos":"NOUN"}},"count":50}
+{"lexeme":{"Multiword":"au plus"},"count":50}
 {"lexeme":{"Multiword":"de trop"},"count":50}
 {"lexeme":{"Multiword":"du moins"},"count":50}
 {"lexeme":{"Multiword":"en finir"},"count":50}
@@ -2667,6 +2668,7 @@
 {"lexeme":{"Multiword":"temps libre"},"count":50}
 {"lexeme":{"Heteronym":{"word":"aidez","lemma":"aider","pos":"VERB"}},"count":49}
 {"lexeme":{"Heteronym":{"word":"américains","lemma":"américain","pos":"NOUN"}},"count":49}
+{"lexeme":{"Heteronym":{"word":"barbe","lemma":"barbe","pos":"NOUN"}},"count":49}
 {"lexeme":{"Heteronym":{"word":"biscuits","lemma":"biscuit","pos":"NOUN"}},"count":49}
 {"lexeme":{"Heteronym":{"word":"blague","lemma":"blague","pos":"NOUN"}},"count":49}
 {"lexeme":{"Heteronym":{"word":"celle-ci","lemma":"celui-ci","pos":"PRON"}},"count":49}
@@ -2698,7 +2700,6 @@
 {"lexeme":{"Heteronym":{"word":"voudrait","lemma":"vouloir","pos":"VERB"}},"count":49}
 {"lexeme":{"Heteronym":{"word":"êtres","lemma":"être","pos":"NOUN"}},"count":49}
 {"lexeme":{"Multiword":"au début"},"count":49}
-{"lexeme":{"Multiword":"au plus"},"count":49}
 {"lexeme":{"Multiword":"changer d'avis"},"count":49}
 {"lexeme":{"Multiword":"dire toujours"},"count":49}
 {"lexeme":{"Multiword":"mon vieux"},"count":49}
@@ -2708,7 +2709,6 @@
 {"lexeme":{"Heteronym":{"word":"allemand","lemma":"allemand","pos":"ADJ"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"attendent","lemma":"attendre","pos":"VERB"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"autrefois","lemma":"autrefois","pos":"ADV"}},"count":48}
-{"lexeme":{"Heteronym":{"word":"barbe","lemma":"barbe","pos":"NOUN"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"bas","lemma":"bas","pos":"ADJ"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"chanté","lemma":"chanter","pos":"VERB"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"cherchais","lemma":"chercher","pos":"VERB"}},"count":48}
@@ -2720,6 +2720,7 @@
 {"lexeme":{"Heteronym":{"word":"démissionner","lemma":"démissionner","pos":"VERB"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"embrassé","lemma":"embrasser","pos":"VERB"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"faits","lemma":"faire","pos":"VERB"}},"count":48}
+{"lexeme":{"Heteronym":{"word":"fermée","lemma":"fermé","pos":"ADJ"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"garage","lemma":"garage","pos":"NOUN"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"ivre","lemma":"ivre","pos":"ADJ"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"mangeait","lemma":"manger","pos":"VERB"}},"count":48}
@@ -2732,6 +2733,7 @@
 {"lexeme":{"Heteronym":{"word":"portes","lemma":"porter","pos":"VERB"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"remonte","lemma":"remonter","pos":"VERB"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"respire","lemma":"respirer","pos":"VERB"}},"count":48}
+{"lexeme":{"Heteronym":{"word":"serez","lemma":"être","pos":"AUX"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"seriez","lemma":"être","pos":"VERB"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"signé","lemma":"signer","pos":"VERB"}},"count":48}
 {"lexeme":{"Heteronym":{"word":"soudainement","lemma":"soudainement","pos":"ADV"}},"count":48}
@@ -2762,7 +2764,7 @@
 {"lexeme":{"Heteronym":{"word":"crème","lemma":"crème","pos":"NOUN"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"danse","lemma":"danse","pos":"NOUN"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"enseigne","lemma":"enseigne","pos":"VERB"}},"count":47}
-{"lexeme":{"Heteronym":{"word":"fermée","lemma":"fermé","pos":"ADJ"}},"count":47}
+{"lexeme":{"Heteronym":{"word":"est-elle","lemma":"est-elle","pos":"AUX"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"idiot","lemma":"idiot","pos":"NOUN"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"insectes","lemma":"insecte","pos":"NOUN"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"japonaise","lemma":"japonais","pos":"ADJ"}},"count":47}
@@ -2780,7 +2782,6 @@
 {"lexeme":{"Heteronym":{"word":"russe","lemma":"russe","pos":"NOUN"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"rêve","lemma":"rêve","pos":"VERB"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"secondes","lemma":"seconde","pos":"NOUN"}},"count":47}
-{"lexeme":{"Heteronym":{"word":"serez","lemma":"être","pos":"AUX"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"sexe","lemma":"sexe","pos":"NOUN"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"souci","lemma":"souci","pos":"NOUN"}},"count":47}
 {"lexeme":{"Heteronym":{"word":"source","lemma":"source","pos":"NOUN"}},"count":47}
@@ -2808,7 +2809,6 @@
 {"lexeme":{"Heteronym":{"word":"construction","lemma":"construction","pos":"NOUN"}},"count":46}
 {"lexeme":{"Heteronym":{"word":"cuillère","lemma":"cuillère","pos":"NOUN"}},"count":46}
 {"lexeme":{"Heteronym":{"word":"décida","lemma":"décider","pos":"VERB"}},"count":46}
-{"lexeme":{"Heteronym":{"word":"est-elle","lemma":"est-elle","pos":"AUX"}},"count":46}
 {"lexeme":{"Heteronym":{"word":"fumée","lemma":"fumée","pos":"NOUN"}},"count":46}
 {"lexeme":{"Heteronym":{"word":"gentillesse","lemma":"gentillesse","pos":"NOUN"}},"count":46}
 {"lexeme":{"Heteronym":{"word":"il","lemma":"il","pos":"ADP"}},"count":46}
@@ -2906,6 +2906,7 @@
 {"lexeme":{"Heteronym":{"word":"fallu","lemma":"falloir","pos":"VERB"}},"count":44}
 {"lexeme":{"Heteronym":{"word":"gorge","lemma":"gorge","pos":"NOUN"}},"count":44}
 {"lexeme":{"Heteronym":{"word":"grec","lemma":"grec","pos":"ADJ"}},"count":44}
+{"lexeme":{"Heteronym":{"word":"heureuses","lemma":"heureux","pos":"ADJ"}},"count":44}
 {"lexeme":{"Heteronym":{"word":"imaginer","lemma":"imaginer","pos":"VERB"}},"count":44}
 {"lexeme":{"Heteronym":{"word":"linge","lemma":"linge","pos":"NOUN"}},"count":44}
 {"lexeme":{"Heteronym":{"word":"madame","lemma":"madame","pos":"NOUN"}},"count":44}
@@ -2947,6 +2948,7 @@
 {"lexeme":{"Heteronym":{"word":"augmenté","lemma":"augmenter","pos":"VERB"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"calme","lemma":"calme","pos":"VERB"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"chances","lemma":"chance","pos":"NOUN"}},"count":43}
+{"lexeme":{"Heteronym":{"word":"cherché","lemma":"chercher","pos":"VERB"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"commun","lemma":"commun","pos":"ADJ"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"conduite","lemma":"conduite","pos":"NOUN"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"coupe","lemma":"coupe","pos":"VERB"}},"count":43}
@@ -2959,7 +2961,6 @@
 {"lexeme":{"Heteronym":{"word":"fatigué","lemma":"fatiguer","pos":"VERB"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"finit","lemma":"finir","pos":"VERB"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"heureusement","lemma":"heureusement","pos":"ADV"}},"count":43}
-{"lexeme":{"Heteronym":{"word":"heureuses","lemma":"heureux","pos":"ADJ"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"inquiet","lemma":"inquiet","pos":"ADJ"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"loup","lemma":"loup","pos":"NOUN"}},"count":43}
 {"lexeme":{"Heteronym":{"word":"malheureusement","lemma":"malheureusement","pos":"ADV"}},"count":43}
@@ -2991,7 +2992,6 @@
 {"lexeme":{"Heteronym":{"word":"auprès","lemma":"auprès","pos":"ADV"}},"count":42}
 {"lexeme":{"Heteronym":{"word":"bicyclette","lemma":"bicyclette","pos":"NOUN"}},"count":42}
 {"lexeme":{"Heteronym":{"word":"brûlé","lemma":"brûler","pos":"VERB"}},"count":42}
-{"lexeme":{"Heteronym":{"word":"cherché","lemma":"chercher","pos":"VERB"}},"count":42}
 {"lexeme":{"Heteronym":{"word":"cigarettes","lemma":"cigarette","pos":"NOUN"}},"count":42}
 {"lexeme":{"Heteronym":{"word":"climat","lemma":"climat","pos":"NOUN"}},"count":42}
 {"lexeme":{"Heteronym":{"word":"commun","lemma":"commun","pos":"NOUN"}},"count":42}
@@ -3072,6 +3072,7 @@
 {"lexeme":{"Heteronym":{"word":"poitrine","lemma":"poitrine","pos":"NOUN"}},"count":41}
 {"lexeme":{"Heteronym":{"word":"pull","lemma":"pull","pos":"NOUN"}},"count":41}
 {"lexeme":{"Heteronym":{"word":"pétrole","lemma":"pétrole","pos":"NOUN"}},"count":41}
+{"lexeme":{"Heteronym":{"word":"remède","lemma":"remède","pos":"NOUN"}},"count":41}
 {"lexeme":{"Heteronym":{"word":"reprendre","lemma":"reprendre","pos":"VERB"}},"count":41}
 {"lexeme":{"Heteronym":{"word":"sexy","lemma":"sexy","pos":"ADJ"}},"count":41}
 {"lexeme":{"Heteronym":{"word":"suspect","lemma":"suspect","pos":"NOUN"}},"count":41}
@@ -3127,7 +3128,6 @@
 {"lexeme":{"Heteronym":{"word":"pire","lemma":"pire","pos":"ADV"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"prenons","lemma":"prendre","pos":"VERB"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"qui","lemma":"qui","pos":"ADV"}},"count":40}
-{"lexeme":{"Heteronym":{"word":"remède","lemma":"remède","pos":"NOUN"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"réel","lemma":"réel","pos":"ADJ"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"sain","lemma":"sain","pos":"ADJ"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"surveille","lemma":"surveiller","pos":"VERB"}},"count":40}
@@ -3150,6 +3150,7 @@
 {"lexeme":{"Heteronym":{"word":"comptez","lemma":"compter","pos":"VERB"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"conseille","lemma":"conseiller","pos":"VERB"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"continua","lemma":"continuer","pos":"VERB"}},"count":39}
+{"lexeme":{"Heteronym":{"word":"correcte","lemma":"correct","pos":"ADJ"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"croyait","lemma":"croire","pos":"VERB"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"dent","lemma":"dent","pos":"NOUN"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"décédé","lemma":"décéder","pos":"VERB"}},"count":39}
@@ -3211,7 +3212,6 @@
 {"lexeme":{"Heteronym":{"word":"citron","lemma":"citron","pos":"NOUN"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"communauté","lemma":"communauté","pos":"NOUN"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"convaincre","lemma":"convaincre","pos":"VERB"}},"count":38}
-{"lexeme":{"Heteronym":{"word":"correcte","lemma":"correct","pos":"ADJ"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"descends","lemma":"descendre","pos":"VERB"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"devenus","lemma":"devenir","pos":"VERB"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"douze","lemma":"douze","pos":"NUM"}},"count":38}
@@ -3482,7 +3482,6 @@
 {"lexeme":{"Heteronym":{"word":"guide","lemma":"guide","pos":"NOUN"}},"count":34}
 {"lexeme":{"Heteronym":{"word":"importantes","lemma":"important","pos":"ADJ"}},"count":34}
 {"lexeme":{"Heteronym":{"word":"impôts","lemma":"impôt","pos":"NOUN"}},"count":34}
-{"lexeme":{"Heteronym":{"word":"ingénieur","lemma":"ingénieur","pos":"NOUN"}},"count":34}
 {"lexeme":{"Heteronym":{"word":"jazz","lemma":"jazz","pos":"NOUN"}},"count":34}
 {"lexeme":{"Heteronym":{"word":"job","lemma":"job","pos":"NOUN"}},"count":34}
 {"lexeme":{"Heteronym":{"word":"lance","lemma":"lance","pos":"NOUN"}},"count":34}
@@ -3564,6 +3563,7 @@
 {"lexeme":{"Heteronym":{"word":"folle","lemma":"fou","pos":"ADJ"}},"count":33}
 {"lexeme":{"Heteronym":{"word":"foudre","lemma":"foudre","pos":"NOUN"}},"count":33}
 {"lexeme":{"Heteronym":{"word":"gardes","lemma":"garde","pos":"NOUN"}},"count":33}
+{"lexeme":{"Heteronym":{"word":"ingénieur","lemma":"ingénieur","pos":"NOUN"}},"count":33}
 {"lexeme":{"Heteronym":{"word":"inutile","lemma":"inutile","pos":"ADJ"}},"count":33}
 {"lexeme":{"Heteronym":{"word":"joueurs","lemma":"joueur","pos":"NOUN"}},"count":33}
 {"lexeme":{"Heteronym":{"word":"kilomètres","lemma":"kilomètre","pos":"NOUN"}},"count":33}
@@ -3647,6 +3647,7 @@
 {"lexeme":{"Heteronym":{"word":"lapins","lemma":"lapin","pos":"NOUN"}},"count":32}
 {"lexeme":{"Heteronym":{"word":"longueur","lemma":"longueur","pos":"NOUN"}},"count":32}
 {"lexeme":{"Heteronym":{"word":"mercredi","lemma":"mercredi","pos":"NOUN"}},"count":32}
+{"lexeme":{"Heteronym":{"word":"miracle","lemma":"miracle","pos":"NOUN"}},"count":32}
 {"lexeme":{"Heteronym":{"word":"mordu","lemma":"mordre","pos":"VERB"}},"count":32}
 {"lexeme":{"Heteronym":{"word":"musicien","lemma":"musicien","pos":"NOUN"}},"count":32}
 {"lexeme":{"Heteronym":{"word":"musulman","lemma":"musulman","pos":"ADJ"}},"count":32}
@@ -3741,7 +3742,6 @@
 {"lexeme":{"Heteronym":{"word":"loups","lemma":"loup","pos":"NOUN"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"mensonges","lemma":"mensonge","pos":"NOUN"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"messages","lemma":"message","pos":"NOUN"}},"count":31}
-{"lexeme":{"Heteronym":{"word":"miracle","lemma":"miracle","pos":"NOUN"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"ménage","lemma":"ménage","pos":"NOUN"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"métal","lemma":"métal","pos":"NOUN"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"occupés","lemma":"occuper","pos":"VERB"}},"count":31}
@@ -4101,6 +4101,7 @@
 {"lexeme":{"Multiword":"comme tout"},"count":28}
 {"lexeme":{"Multiword":"coup de pied"},"count":28}
 {"lexeme":{"Multiword":"de règle"},"count":28}
+{"lexeme":{"Multiword":"demander conseil"},"count":28}
 {"lexeme":{"Multiword":"demi-tour"},"count":28}
 {"lexeme":{"Multiword":"en marche"},"count":28}
 {"lexeme":{"Multiword":"en particulier"},"count":28}
@@ -4181,6 +4182,7 @@
 {"lexeme":{"Heteronym":{"word":"pape","lemma":"pape","pos":"NOUN"}},"count":27}
 {"lexeme":{"Heteronym":{"word":"papillon","lemma":"papillon","pos":"NOUN"}},"count":27}
 {"lexeme":{"Heteronym":{"word":"pardonnez","lemma":"pardonner","pos":"VERB"}},"count":27}
+{"lexeme":{"Heteronym":{"word":"partagé","lemma":"partager","pos":"VERB"}},"count":27}
 {"lexeme":{"Heteronym":{"word":"payez","lemma":"payer","pos":"VERB"}},"count":27}
 {"lexeme":{"Heteronym":{"word":"pelouse","lemma":"pelouse","pos":"NOUN"}},"count":27}
 {"lexeme":{"Heteronym":{"word":"personnel","lemma":"personnel","pos":"NOUN"}},"count":27}
@@ -4217,7 +4219,6 @@
 {"lexeme":{"Multiword":"avoir intérêt"},"count":27}
 {"lexeme":{"Multiword":"base-ball"},"count":27}
 {"lexeme":{"Multiword":"c'est parti"},"count":27}
-{"lexeme":{"Multiword":"demander conseil"},"count":27}
 {"lexeme":{"Multiword":"du vent"},"count":27}
 {"lexeme":{"Multiword":"en chemin"},"count":27}
 {"lexeme":{"Multiword":"et encore"},"count":27}
@@ -4283,7 +4284,6 @@
 {"lexeme":{"Heteronym":{"word":"mérites","lemma":"mériter","pos":"VERB"}},"count":26}
 {"lexeme":{"Heteronym":{"word":"nul","lemma":"nul","pos":"PRON"}},"count":26}
 {"lexeme":{"Heteronym":{"word":"parking","lemma":"parking","pos":"NOUN"}},"count":26}
-{"lexeme":{"Heteronym":{"word":"partagé","lemma":"partager","pos":"VERB"}},"count":26}
 {"lexeme":{"Heteronym":{"word":"parvenu","lemma":"parvenir","pos":"VERB"}},"count":26}
 {"lexeme":{"Heteronym":{"word":"pauvres","lemma":"pauvre","pos":"ADJ"}},"count":26}
 {"lexeme":{"Heteronym":{"word":"physique","lemma":"physique","pos":"NOUN"}},"count":26}
@@ -4491,6 +4491,7 @@
 {"lexeme":{"Heteronym":{"word":"dépasse","lemma":"dépasser","pos":"VERB"}},"count":24}
 {"lexeme":{"Heteronym":{"word":"dépassé","lemma":"dépasser","pos":"VERB"}},"count":24}
 {"lexeme":{"Heteronym":{"word":"désolé","lemma":"désolé","pos":"ADV"}},"count":24}
+{"lexeme":{"Heteronym":{"word":"ennuyeuse","lemma":"ennuyeux","pos":"ADJ"}},"count":24}
 {"lexeme":{"Heteronym":{"word":"essence","lemma":"essence","pos":"NOUN"}},"count":24}
 {"lexeme":{"Heteronym":{"word":"explosé","lemma":"exploser","pos":"VERB"}},"count":24}
 {"lexeme":{"Heteronym":{"word":"fac","lemma":"fac","pos":"NOUN"}},"count":24}
@@ -4610,7 +4611,6 @@
 {"lexeme":{"Heteronym":{"word":"délai","lemma":"délai","pos":"NOUN"}},"count":23}
 {"lexeme":{"Heteronym":{"word":"dîné","lemma":"dîner","pos":"VERB"}},"count":23}
 {"lexeme":{"Heteronym":{"word":"endormie","lemma":"endormir","pos":"VERB"}},"count":23}
-{"lexeme":{"Heteronym":{"word":"ennuyeuse","lemma":"ennuyeux","pos":"ADJ"}},"count":23}
 {"lexeme":{"Heteronym":{"word":"essai","lemma":"essai","pos":"NOUN"}},"count":23}
 {"lexeme":{"Heteronym":{"word":"estomac","lemma":"estomac","pos":"NOUN"}},"count":23}
 {"lexeme":{"Heteronym":{"word":"excitant","lemma":"excitant","pos":"ADJ"}},"count":23}
@@ -5604,6 +5604,7 @@
 {"lexeme":{"Heteronym":{"word":"tortues","lemma":"tortue","pos":"NOUN"}},"count":18}
 {"lexeme":{"Heteronym":{"word":"tournée","lemma":"tournée","pos":"NOUN"}},"count":18}
 {"lexeme":{"Heteronym":{"word":"toutes","lemma":"tout","pos":"PRON"}},"count":18}
+{"lexeme":{"Heteronym":{"word":"trace","lemma":"trace","pos":"NOUN"}},"count":18}
 {"lexeme":{"Heteronym":{"word":"trahie","lemma":"trahir","pos":"VERB"}},"count":18}
 {"lexeme":{"Heteronym":{"word":"travailla","lemma":"travailler","pos":"VERB"}},"count":18}
 {"lexeme":{"Heteronym":{"word":"traversant","lemma":"traverser","pos":"VERB"}},"count":18}
@@ -5649,6 +5650,7 @@
 {"lexeme":{"Multiword":"prendre congé"},"count":18}
 {"lexeme":{"Multiword":"prendre fin"},"count":18}
 {"lexeme":{"Multiword":"prendre garde"},"count":18}
+{"lexeme":{"Multiword":"quel âge as-tu"},"count":18}
 {"lexeme":{"Multiword":"rêve américain"},"count":18}
 {"lexeme":{"Multiword":"sans arrêt"},"count":18}
 {"lexeme":{"Multiword":"tour Eiffel"},"count":18}
@@ -5838,7 +5840,6 @@
 {"lexeme":{"Heteronym":{"word":"testament","lemma":"testament","pos":"NOUN"}},"count":17}
 {"lexeme":{"Heteronym":{"word":"tickets","lemma":"ticket","pos":"NOUN"}},"count":17}
 {"lexeme":{"Heteronym":{"word":"tortue","lemma":"tortue","pos":"NOUN"}},"count":17}
-{"lexeme":{"Heteronym":{"word":"trace","lemma":"trace","pos":"NOUN"}},"count":17}
 {"lexeme":{"Heteronym":{"word":"tranche","lemma":"tranche","pos":"NOUN"}},"count":17}
 {"lexeme":{"Heteronym":{"word":"trouvées","lemma":"trouver","pos":"VERB"}},"count":17}
 {"lexeme":{"Heteronym":{"word":"tulipes","lemma":"tulipe","pos":"NOUN"}},"count":17}
@@ -5875,6 +5876,7 @@
 {"lexeme":{"Multiword":"de passage"},"count":17}
 {"lexeme":{"Multiword":"de secours"},"count":17}
 {"lexeme":{"Multiword":"deux ou trois"},"count":17}
+{"lexeme":{"Multiword":"dire du mal"},"count":17}
 {"lexeme":{"Multiword":"du fait de"},"count":17}
 {"lexeme":{"Multiword":"du fond du cœur"},"count":17}
 {"lexeme":{"Multiword":"en réalité"},"count":17}
@@ -5892,7 +5894,6 @@
 {"lexeme":{"Multiword":"prendre au sérieux"},"count":17}
 {"lexeme":{"Multiword":"prendre conscience"},"count":17}
 {"lexeme":{"Multiword":"prêter attention"},"count":17}
-{"lexeme":{"Multiword":"quel âge as-tu"},"count":17}
 {"lexeme":{"Multiword":"si peu"},"count":17}
 {"lexeme":{"Multiword":"téléphoner à"},"count":17}
 {"lexeme":{"Multiword":"une fois pour toutes"},"count":17}
@@ -6121,7 +6122,6 @@
 {"lexeme":{"Multiword":"coup de foudre"},"count":16}
 {"lexeme":{"Multiword":"couper le souffle"},"count":16}
 {"lexeme":{"Multiword":"dans ce cas"},"count":16}
-{"lexeme":{"Multiword":"dire du mal"},"count":16}
 {"lexeme":{"Multiword":"en état de"},"count":16}
 {"lexeme":{"Multiword":"entendre des voix"},"count":16}
 {"lexeme":{"Multiword":"faire chier"},"count":16}
@@ -6636,6 +6636,7 @@
 {"lexeme":{"Heteronym":{"word":"soudaine","lemma":"soudain","pos":"ADJ"}},"count":14}
 {"lexeme":{"Heteronym":{"word":"souliers","lemma":"soulier","pos":"NOUN"}},"count":14}
 {"lexeme":{"Heteronym":{"word":"spaghettis","lemma":"spaghetti","pos":"NOUN"}},"count":14}
+{"lexeme":{"Heteronym":{"word":"spatial","lemma":"spatial","pos":"ADJ"}},"count":14}
 {"lexeme":{"Heteronym":{"word":"spécifique","lemma":"spécifique","pos":"ADJ"}},"count":14}
 {"lexeme":{"Heteronym":{"word":"stationnement","lemma":"stationnement","pos":"NOUN"}},"count":14}
 {"lexeme":{"Heteronym":{"word":"strict","lemma":"strict","pos":"ADJ"}},"count":14}
@@ -6959,7 +6960,6 @@
 {"lexeme":{"Heteronym":{"word":"souffrance","lemma":"souffrance","pos":"NOUN"}},"count":13}
 {"lexeme":{"Heteronym":{"word":"souhaits","lemma":"souhait","pos":"NOUN"}},"count":13}
 {"lexeme":{"Heteronym":{"word":"sourient","lemma":"sourire","pos":"VERB"}},"count":13}
-{"lexeme":{"Heteronym":{"word":"spatial","lemma":"spatial","pos":"ADJ"}},"count":13}
 {"lexeme":{"Heteronym":{"word":"spectateurs","lemma":"spectateur","pos":"NOUN"}},"count":13}
 {"lexeme":{"Heteronym":{"word":"spécialiste","lemma":"spécialiste","pos":"NOUN"}},"count":13}
 {"lexeme":{"Heteronym":{"word":"stock","lemma":"stock","pos":"NOUN"}},"count":13}
@@ -7342,6 +7342,7 @@
 {"lexeme":{"Heteronym":{"word":"soupir","lemma":"soupir","pos":"NOUN"}},"count":12}
 {"lexeme":{"Heteronym":{"word":"soupçonne","lemma":"soupçonner","pos":"VERB"}},"count":12}
 {"lexeme":{"Heteronym":{"word":"soupçons","lemma":"soupçon","pos":"NOUN"}},"count":12}
+{"lexeme":{"Heteronym":{"word":"soutient","lemma":"soutenir","pos":"VERB"}},"count":12}
 {"lexeme":{"Heteronym":{"word":"souviendrai","lemma":"souvenir","pos":"VERB"}},"count":12}
 {"lexeme":{"Heteronym":{"word":"stable","lemma":"stable","pos":"ADJ"}},"count":12}
 {"lexeme":{"Heteronym":{"word":"sublime","lemma":"sublime","pos":"ADJ"}},"count":12}
@@ -7760,7 +7761,7 @@
 {"lexeme":{"Heteronym":{"word":"soulevé","lemma":"soulever","pos":"VERB"}},"count":11}
 {"lexeme":{"Heteronym":{"word":"sourde","lemma":"sourd","pos":"ADJ"}},"count":11}
 {"lexeme":{"Heteronym":{"word":"soutenu","lemma":"soutenir","pos":"VERB"}},"count":11}
-{"lexeme":{"Heteronym":{"word":"soutient","lemma":"soutenir","pos":"VERB"}},"count":11}
+{"lexeme":{"Heteronym":{"word":"sportif","lemma":"sportif","pos":"ADJ"}},"count":11}
 {"lexeme":{"Heteronym":{"word":"sports","lemma":"sport","pos":"NOUN"}},"count":11}
 {"lexeme":{"Heteronym":{"word":"statistiques","lemma":"statistique","pos":"NOUN"}},"count":11}
 {"lexeme":{"Heteronym":{"word":"subvenir","lemma":"subvenir","pos":"VERB"}},"count":11}
@@ -7826,6 +7827,7 @@
 {"lexeme":{"Multiword":"Les Milles"},"count":11}
 {"lexeme":{"Multiword":"affaires étrangères"},"count":11}
 {"lexeme":{"Multiword":"au chômage"},"count":11}
+{"lexeme":{"Multiword":"au plus vite"},"count":11}
 {"lexeme":{"Multiword":"au prix de"},"count":11}
 {"lexeme":{"Multiword":"au secours"},"count":11}
 {"lexeme":{"Multiword":"avoir du chien"},"count":11}
@@ -8208,6 +8210,7 @@
 {"lexeme":{"Heteronym":{"word":"préparait","lemma":"préparer","pos":"VERB"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"prévoyons","lemma":"prévoir","pos":"VERB"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"pâlit","lemma":"pâlir","pos":"VERB"}},"count":10}
+{"lexeme":{"Heteronym":{"word":"pâtisserie","lemma":"pâtisserie","pos":"NOUN"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"quatorze","lemma":"quatorze","pos":"NUM"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"ralentir","lemma":"ralentir","pos":"VERB"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"ramasser","lemma":"ramasser","pos":"VERB"}},"count":10}
@@ -8288,7 +8291,6 @@
 {"lexeme":{"Heteronym":{"word":"sous","lemma":"sou","pos":"NOUN"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"soutiennent","lemma":"soutenir","pos":"VERB"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"souvienne","lemma":"souvenir","pos":"VERB"}},"count":10}
-{"lexeme":{"Heteronym":{"word":"sportif","lemma":"sportif","pos":"ADJ"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"subitement","lemma":"subitement","pos":"ADV"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"suggestions","lemma":"suggestion","pos":"NOUN"}},"count":10}
 {"lexeme":{"Heteronym":{"word":"suivie","lemma":"suivre","pos":"VERB"}},"count":10}
@@ -8351,7 +8353,6 @@
 {"lexeme":{"Multiword":"Votre Altesse"},"count":10}
 {"lexeme":{"Multiword":"aller donc"},"count":10}
 {"lexeme":{"Multiword":"arc-en-ciel"},"count":10}
-{"lexeme":{"Multiword":"au plus vite"},"count":10}
 {"lexeme":{"Multiword":"avoir conscience"},"count":10}
 {"lexeme":{"Multiword":"avoir la dent"},"count":10}
 {"lexeme":{"Multiword":"briser le cœur"},"count":10}
@@ -8454,6 +8455,7 @@
 {"lexeme":{"Heteronym":{"word":"attachée","lemma":"attacher","pos":"VERB"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"attentifs","lemma":"attentif","pos":"ADJ"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"attentionné","lemma":"attentionné","pos":"ADJ"}},"count":9}
+{"lexeme":{"Heteronym":{"word":"atterrir","lemma":"atterrir","pos":"VERB"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"auteurs","lemma":"auteur","pos":"NOUN"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"autobus","lemma":"autobus","pos":"NOUN"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"automatiquement","lemma":"automatiquement","pos":"ADV"}},"count":9}
@@ -8823,7 +8825,6 @@
 {"lexeme":{"Heteronym":{"word":"présentez","lemma":"présenter","pos":"VERB"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"psychologie","lemma":"psychologie","pos":"NOUN"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"puissent","lemma":"pouvoir","pos":"VERB"}},"count":9}
-{"lexeme":{"Heteronym":{"word":"pâtisserie","lemma":"pâtisserie","pos":"NOUN"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"péchés","lemma":"péché","pos":"NOUN"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"quand","lemma":"quand","pos":"PRON"}},"count":9}
 {"lexeme":{"Heteronym":{"word":"raccrocher","lemma":"raccrocher","pos":"VERB"}},"count":9}
@@ -9051,6 +9052,7 @@
 {"lexeme":{"Multiword":"tirer la langue"},"count":9}
 {"lexeme":{"Multiword":"tomber du ciel"},"count":9}
 {"lexeme":{"Multiword":"un de ces quatre"},"count":9}
+{"lexeme":{"Multiword":"vaisseau spatial"},"count":9}
 {"lexeme":{"Multiword":"venir en aide"},"count":9}
 {"lexeme":{"Multiword":"vingt-cinq"},"count":9}
 {"lexeme":{"Multiword":"vingt-quatre"},"count":9}
@@ -9120,7 +9122,6 @@
 {"lexeme":{"Heteronym":{"word":"atelier","lemma":"atelier","pos":"NOUN"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"athlètes","lemma":"athlète","pos":"NOUN"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"attendra","lemma":"attendre","pos":"VERB"}},"count":8}
-{"lexeme":{"Heteronym":{"word":"atterrir","lemma":"atterrir","pos":"VERB"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"attirant","lemma":"attirant","pos":"ADJ"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"audacieux","lemma":"audacieux","pos":"ADJ"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"augmentent","lemma":"augmenter","pos":"VERB"}},"count":8}
@@ -9837,7 +9838,6 @@
 {"lexeme":{"Multiword":"trou de cul"},"count":8}
 {"lexeme":{"Multiword":"trou du cul"},"count":8}
 {"lexeme":{"Multiword":"un rien"},"count":8}
-{"lexeme":{"Multiword":"vaisseau spatial"},"count":8}
 {"lexeme":{"Multiword":"vieille ville"},"count":8}
 {"lexeme":{"Multiword":"vis-à-vis"},"count":8}
 {"lexeme":{"Multiword":"vis-à-vis de"},"count":8}
@@ -9929,6 +9929,7 @@
 {"lexeme":{"Heteronym":{"word":"atterrit","lemma":"atterrir","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"auditif","lemma":"auditif","pos":"ADJ"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"auxquels","lemma":"auxquels","pos":"PRON"}},"count":7}
+{"lexeme":{"Heteronym":{"word":"avertis","lemma":"avertir","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"avisé","lemma":"avisé","pos":"ADJ"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"baby","lemma":"baby","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"baguette","lemma":"baguette","pos":"NOUN"}},"count":7}
@@ -9975,6 +9976,7 @@
 {"lexeme":{"Heteronym":{"word":"capitalisme","lemma":"capitalisme","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"caporal","lemma":"caporal","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"capturer","lemma":"capturer","pos":"VERB"}},"count":7}
+{"lexeme":{"Heteronym":{"word":"caresse","lemma":"caresse","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"carotte","lemma":"carotte","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"cartons","lemma":"carton","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"cascade","lemma":"cascade","pos":"NOUN"}},"count":7}
@@ -10122,6 +10124,7 @@
 {"lexeme":{"Heteronym":{"word":"découragé","lemma":"décourager","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"décrivez","lemma":"décrire","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"décrocher","lemma":"décrocher","pos":"VERB"}},"count":7}
+{"lexeme":{"Heteronym":{"word":"déesse","lemma":"déesse","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"définition","lemma":"définition","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"dégoûtante","lemma":"dégoûtant","pos":"ADJ"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"déguisé","lemma":"déguiser","pos":"VERB"}},"count":7}
@@ -10579,6 +10582,7 @@
 {"lexeme":{"Heteronym":{"word":"sous-vêtements","lemma":"sous-vêtement","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"soutenez","lemma":"soutenir","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"statut","lemma":"statut","pos":"NOUN"}},"count":7}
+{"lexeme":{"Heteronym":{"word":"stop","lemma":"stop","pos":"NOUN"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"stricte","lemma":"strict","pos":"ADJ"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"submergé","lemma":"submerger","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"substances","lemma":"substance","pos":"NOUN"}},"count":7}
@@ -10629,6 +10633,7 @@
 {"lexeme":{"Heteronym":{"word":"transpirer","lemma":"transpirer","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"traverses","lemma":"traverser","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"traîtres","lemma":"traître","pos":"NOUN"}},"count":7}
+{"lexeme":{"Heteronym":{"word":"tremblaient","lemma":"trembler","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"tricoté","lemma":"tricoter","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"troublé","lemma":"troubler","pos":"VERB"}},"count":7}
 {"lexeme":{"Heteronym":{"word":"trouille","lemma":"trouille","pos":"NOUN"}},"count":7}
@@ -10729,6 +10734,7 @@
 {"lexeme":{"Multiword":"en plein air"},"count":7}
 {"lexeme":{"Multiword":"en rien"},"count":7}
 {"lexeme":{"Multiword":"en résumé"},"count":7}
+{"lexeme":{"Multiword":"en secret"},"count":7}
 {"lexeme":{"Multiword":"en signe de"},"count":7}
 {"lexeme":{"Multiword":"enfant unique"},"count":7}
 {"lexeme":{"Multiword":"essayer voir"},"count":7}
@@ -10932,7 +10938,6 @@
 {"lexeme":{"Heteronym":{"word":"avancé","lemma":"avancé","pos":"ADJ"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"avare","lemma":"avare","pos":"ADJ"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"averti","lemma":"avertir","pos":"VERB"}},"count":6}
-{"lexeme":{"Heteronym":{"word":"avertis","lemma":"avertir","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"avertissements","lemma":"avertissement","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"avisé","lemma":"aviser","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"ayant","lemma":"avoir","pos":"VERB"}},"count":6}
@@ -10984,7 +10989,6 @@
 {"lexeme":{"Heteronym":{"word":"canette","lemma":"canette","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"canoë","lemma":"canoë","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"capot","lemma":"capot","pos":"NOUN"}},"count":6}
-{"lexeme":{"Heteronym":{"word":"caresse","lemma":"caresse","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"catholiques","lemma":"catholique","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"catégories","lemma":"catégorie","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"caverne","lemma":"caverne","pos":"NOUN"}},"count":6}
@@ -11126,7 +11130,6 @@
 {"lexeme":{"Heteronym":{"word":"déclin","lemma":"déclin","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"décliné","lemma":"décliner","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"découper","lemma":"découper","pos":"VERB"}},"count":6}
-{"lexeme":{"Heteronym":{"word":"déesse","lemma":"déesse","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"défaits","lemma":"défaire","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"défend","lemma":"défendre","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"défendez","lemma":"défendre","pos":"VERB"}},"count":6}
@@ -11704,7 +11707,6 @@
 {"lexeme":{"Heteronym":{"word":"spatule","lemma":"spatule","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"spectaculaire","lemma":"spectaculaire","pos":"ADJ"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"squelette","lemma":"squelette","pos":"NOUN"}},"count":6}
-{"lexeme":{"Heteronym":{"word":"stop","lemma":"stop","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"stores","lemma":"store","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"stressé","lemma":"stresser","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"strictes","lemma":"strict","pos":"ADJ"}},"count":6}
@@ -11754,7 +11756,6 @@
 {"lexeme":{"Heteronym":{"word":"transmettez","lemma":"transmettre","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"travaillerai","lemma":"travailler","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"travaillions","lemma":"travailler","pos":"VERB"}},"count":6}
-{"lexeme":{"Heteronym":{"word":"tremblaient","lemma":"trembler","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"tremblé","lemma":"trembler","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"trompez","lemma":"tromper","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"trousse","lemma":"trousse","pos":"NOUN"}},"count":6}
@@ -11903,7 +11904,6 @@
 {"lexeme":{"Multiword":"en mal"},"count":6}
 {"lexeme":{"Multiword":"en rester là"},"count":6}
 {"lexeme":{"Multiword":"en règle"},"count":6}
-{"lexeme":{"Multiword":"en secret"},"count":6}
 {"lexeme":{"Multiword":"en théorie"},"count":6}
 {"lexeme":{"Multiword":"en travaux"},"count":6}
 {"lexeme":{"Multiword":"en vouloir à"},"count":6}
@@ -13645,6 +13645,7 @@
 {"lexeme":{"Heteronym":{"word":"avançait","lemma":"avancer","pos":"VERB"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"avatar","lemma":"avatar","pos":"NOUN"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"ave","lemma":"ave","pos":"NOUN"}},"count":4}
+{"lexeme":{"Heteronym":{"word":"averties","lemma":"avertir","pos":"VERB"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"aveugles","lemma":"aveugle","pos":"ADJ"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"avisée","lemma":"avisé","pos":"ADJ"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"avouez","lemma":"avouer","pos":"VERB"}},"count":4}
@@ -15519,6 +15520,7 @@
 {"lexeme":{"Multiword":"faire la gueule"},"count":4}
 {"lexeme":{"Multiword":"faire la paire"},"count":4}
 {"lexeme":{"Multiword":"faire le coup"},"count":4}
+{"lexeme":{"Multiword":"faire le mal"},"count":4}
 {"lexeme":{"Multiword":"faire pièce"},"count":4}
 {"lexeme":{"Multiword":"faire son apparition"},"count":4}
 {"lexeme":{"Multiword":"faire son lit"},"count":4}
@@ -15985,7 +15987,6 @@
 {"lexeme":{"Heteronym":{"word":"avancées","lemma":"avancée","pos":"NOUN"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"avariée","lemma":"avarier","pos":"VERB"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"avenue","lemma":"avenu","pos":"ADJ"}},"count":3}
-{"lexeme":{"Heteronym":{"word":"averties","lemma":"avertir","pos":"VERB"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"aveux","lemma":"aveu","pos":"NOUN"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"avides","lemma":"avide","pos":"ADJ"}},"count":3}
 {"lexeme":{"Heteronym":{"word":"avortement","lemma":"avortement","pos":"NOUN"}},"count":3}
@@ -18647,6 +18648,7 @@
 {"lexeme":{"Multiword":"bain de sang"},"count":3}
 {"lexeme":{"Multiword":"bain de soleil"},"count":3}
 {"lexeme":{"Multiword":"balle perdue"},"count":3}
+{"lexeme":{"Multiword":"barbe de trois jours"},"count":3}
 {"lexeme":{"Multiword":"barre transversale"},"count":3}
 {"lexeme":{"Multiword":"bateau à vapeur"},"count":3}
 {"lexeme":{"Multiword":"battre en retraite"},"count":3}
@@ -18793,7 +18795,6 @@
 {"lexeme":{"Multiword":"faire illusion"},"count":3}
 {"lexeme":{"Multiword":"faire la java"},"count":3}
 {"lexeme":{"Multiword":"faire le bonheur"},"count":3}
-{"lexeme":{"Multiword":"faire le mal"},"count":3}
 {"lexeme":{"Multiword":"faire le mur"},"count":3}
 {"lexeme":{"Multiword":"faire le poids"},"count":3}
 {"lexeme":{"Multiword":"faire loi"},"count":3}
@@ -24152,7 +24153,6 @@
 {"lexeme":{"Multiword":"banque centrale"},"count":2}
 {"lexeme":{"Multiword":"banque du sang"},"count":2}
 {"lexeme":{"Multiword":"baptême du feu"},"count":2}
-{"lexeme":{"Multiword":"barbe de trois jours"},"count":2}
 {"lexeme":{"Multiword":"baron de la drogue"},"count":2}
 {"lexeme":{"Multiword":"barre verticale"},"count":2}
 {"lexeme":{"Multiword":"beau parleur"},"count":2}
@@ -32752,6 +32752,7 @@
 {"lexeme":{"Heteronym":{"word":"négligeables","lemma":"négligeable","pos":"ADJ"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"négligeaient","lemma":"négliger","pos":"VERB"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"négligeais","lemma":"négliger","pos":"VERB"}},"count":1}
+{"lexeme":{"Heteronym":{"word":"négligeait","lemma":"négliger","pos":"VERB"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"négligente","lemma":"négligent","pos":"ADJ"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"négligents","lemma":"négligent","pos":"ADJ"}},"count":1}
 {"lexeme":{"Heteronym":{"word":"négligiez","lemma":"négliger","pos":"VERB"}},"count":1}

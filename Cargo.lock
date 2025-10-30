@@ -587,6 +587,7 @@ dependencies = [
  "lock_api",
  "once_cell",
  "parking_lot_core",
+ "serde",
 ]
 
 [[package]]
@@ -940,6 +941,7 @@ name = "generate-data"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "dashmap",
  "env_logger",
  "futures",
  "html-escape",

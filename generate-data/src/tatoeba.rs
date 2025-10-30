@@ -6,9 +6,6 @@ use std::path::Path;
 use language_utils::{Course, Language};
 use sentence_sampler::sample_to_target_with_stats;
 
-/// Default target maximum number of sentences to import from Tatoeba
-const DEFAULT_TARGET_SENTENCE_COUNT: usize = 200_000;
-
 pub struct TatoebaPair {
     pub target: String,
     pub native: String,
@@ -30,17 +27,18 @@ struct Sentence {
 pub fn get_tatoeba_pairs(
     _data_path: &Path,
     course: Course,
-    target_count: Option<usize>,
+    target_count: usize,
 ) -> Vec<TatoebaPair> {
-    let target_count = target_count.unwrap_or(DEFAULT_TARGET_SENTENCE_COUNT);
-
     // Use the master Tatoeba dump location
     let tatoeba_dir = Path::new("./generate-data/data/tatoeba");
     let sentences_file = tatoeba_dir.join("sentences.csv");
     let links_file = tatoeba_dir.join("links.csv");
 
     if !sentences_file.exists() {
-        eprintln!("Tatoeba sentences file not found at: {}", sentences_file.display());
+        eprintln!(
+            "Tatoeba sentences file not found at: {}",
+            sentences_file.display()
+        );
         return vec![];
     }
 
@@ -52,8 +50,8 @@ pub fn get_tatoeba_pairs(
     println!("Reading Tatoeba sentences from master dump...");
 
     // Get language codes
-    let target_lang_code = course.target_language.iso_639_1();
-    let native_lang_code = course.native_language.iso_639_1();
+    let target_lang_code = course.target_language.iso_639_3();
+    let native_lang_code = course.native_language.iso_639_3();
 
     // First pass: read all sentences and build a map by ID and language
     let mut sentences_by_id: HashMap<u64, Sentence> = HashMap::new();
@@ -100,18 +98,18 @@ pub fn get_tatoeba_pairs(
             if lang == target_lang_code {
                 target_sentence_ids.push(id);
             }
-            sentences_by_id.insert(
-                id,
-                Sentence {
-                    lang,
-                    text,
-                },
-            );
+            sentences_by_id.insert(id, Sentence { lang, text });
         }
     }
 
-    println!("Found {} target language sentences in Tatoeba", target_sentence_ids.len());
-    println!("Loaded {} total sentences in both languages", sentences_by_id.len());
+    println!(
+        "Found {} target language sentences in Tatoeba",
+        target_sentence_ids.len()
+    );
+    println!(
+        "Loaded {} total sentences in both languages",
+        sentences_by_id.len()
+    );
 
     // Second pass: read links and build translation pairs
     println!("Reading Tatoeba translation links...");
@@ -156,7 +154,7 @@ pub fn get_tatoeba_pairs(
             Err(_) => continue,
         };
 
-        links_map.entry(id1).or_insert_with(Vec::new).push(id2);
+        links_map.entry(id1).or_default().push(id2);
     }
 
     println!("Loaded {} translation links", links_map.len());
@@ -208,7 +206,7 @@ pub fn get_tatoeba_pairs(
         .collect();
 
     println!(
-        "After deduplication: {} unique sentence pairs",
+        "After deduplication: {} unique tatoeba sentence pairs",
         unique_pairs.len()
     );
 
@@ -294,8 +292,12 @@ fn is_proper_sentence(text: &str, language: Language) -> bool {
 
     // Language-specific checks
     match language {
-        Language::English | Language::French | Language::Spanish | Language::German
-        | Language::Portuguese | Language::Italian => {
+        Language::English
+        | Language::French
+        | Language::Spanish
+        | Language::German
+        | Language::Portuguese
+        | Language::Italian => {
             // Must start with uppercase letter
             if !first_char.is_uppercase() || !first_char.is_alphabetic() {
                 return false;
@@ -336,8 +338,12 @@ fn is_proper_sentence(text: &str, language: Language) -> bool {
             }
 
             // Must end with Chinese or Western punctuation
-            if last_char != '。' && last_char != '！' && last_char != '？'
-                && last_char != '.' && last_char != '!' && last_char != '?'
+            if last_char != '。'
+                && last_char != '！'
+                && last_char != '？'
+                && last_char != '.'
+                && last_char != '!'
+                && last_char != '?'
             {
                 return false;
             }
@@ -353,8 +359,12 @@ fn is_proper_sentence(text: &str, language: Language) -> bool {
             }
 
             // Must end with Japanese or Western punctuation
-            if last_char != '。' && last_char != '！' && last_char != '？'
-                && last_char != '.' && last_char != '!' && last_char != '?'
+            if last_char != '。'
+                && last_char != '！'
+                && last_char != '？'
+                && last_char != '.'
+                && last_char != '!'
+                && last_char != '?'
             {
                 return false;
             }

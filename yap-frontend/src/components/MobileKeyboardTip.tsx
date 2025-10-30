@@ -39,6 +39,11 @@ export function MobileKeyboardTip({
     .with("German", () => "accented")
     .with("Korean", () => "hangul")
     .with("English", () => null)
+    .with("Chinese", () => "Chinese")
+    .with("Japanese", () => "Japanese")
+    .with("Russian", () => "Cyrillic")
+    .with("Portuguese", () => "accented")
+    .with("Italian", () => "accented")
     .exhaustive();
 
   // Don't show tip for English

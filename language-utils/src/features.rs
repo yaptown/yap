@@ -1232,11 +1232,14 @@ impl Morphology {
             }
             (Language::Korean | Language::English, _) => None,
 
-            (Language::Chinese
-            | Language::Japanese
-            | Language::Russian
-            | Language::Portuguese
-            | Language::Italian, _) => todo!(),
+            (
+                Language::Chinese
+                | Language::Japanese
+                | Language::Russian
+                | Language::Portuguese
+                | Language::Italian,
+                _,
+            ) => todo!(),
         }
     }
 

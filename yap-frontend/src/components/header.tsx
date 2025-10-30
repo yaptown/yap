@@ -36,6 +36,11 @@ function getLanguageEmoji(language: Language | undefined): string {
     .with("Korean", () => "🇰🇷")
     .with("English", () => "🇬🇧")
     .with("German", () => "🇩🇪")
+    .with("Chinese", () => "🇨🇳")
+    .with("Japanese", () => "🇯🇵")
+    .with("Russian", () => "🇷🇺")
+    .with("Portuguese", () => "🇵🇹")
+    .with("Italian", () => "🇮🇹")
     .with(undefined, () => "🌍")
     .exhaustive();
 }

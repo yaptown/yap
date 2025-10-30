@@ -61,6 +61,13 @@ export default defineConfig({
             type: "image/gif",
             label: "Application"
           }
+        ],
+        shortcuts: [
+          {
+            name: "Dictionary",
+            url: "/dictionary",
+            description: "Look up words and add new words to your deck"
+          }
         ]
       }
     }),

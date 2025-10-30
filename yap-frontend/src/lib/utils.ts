@@ -13,6 +13,11 @@ export const languageFlags: Record<Language, string> = {
   Korean: "🇰🇷",
   English: "🇬🇧",
   German: "🇩🇪",
+  Chinese: "🇨🇳",
+  Japanese: "🇯🇵",
+  Russian: "🇷🇺",
+  Portuguese: "🇵🇹",
+  Italian: "🇮🇹",
 }
 
 export const nativeLanguageNames: Record<Language, string> = {
@@ -21,6 +26,11 @@ export const nativeLanguageNames: Record<Language, string> = {
   Spanish: "Español",
   Korean: "한국어",
   German: "Deutsch",
+  Chinese: "中文",
+  Japanese: "日本語",
+  Russian: "Русский",
+  Portuguese: "Português",
+  Italian: "Italiano",
 }
 
 export function isoCodeToLanguage(isoCode: string): Language | null {

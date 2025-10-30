@@ -1034,7 +1034,7 @@ impl weapon::PartialAppState for Deck {
 
         match event {
             LanguageEventContent::AddCards { cards } => {
-                for card in cards {
+                for (index, card) in cards.iter().enumerate() {
                     if let Some(card) = card.get_interned(&deck.context.language_pack.rodeo) {
                         // Make sure the card is valid and can be added
                         if !deck.context.is_card_valid(&card) {
@@ -1055,8 +1055,9 @@ impl weapon::PartialAppState for Deck {
                                 }
                             })
                             .or_insert_with(|| {
-                                let mut fsrs_card = rs_fsrs::Card::new(*timestamp);
-                                fsrs_card.due = *timestamp;
+                                let fsrs_card = rs_fsrs::Card::new(
+                                    *timestamp + chrono::Duration::milliseconds(index as i64),
+                                );
                                 CardData::Added { fsrs_card }
                             });
                     }

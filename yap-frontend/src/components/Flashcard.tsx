@@ -248,6 +248,11 @@ const CardBack = ({
       .with("Korean", () => "처럼") // cheoreom (like/as in)
       .with("English", () => "as in")
       .with("German", () => "wie in")
+      .with("Chinese", () => "如") // rú (like/as)
+      .with("Japanese", () => "のように") // no you ni (like/as in)
+      .with("Russian", () => "как в") // kak v (as in)
+      .with("Portuguese", () => "como em")
+      .with("Italian", () => "come in")
       .exhaustive();
 
     return (

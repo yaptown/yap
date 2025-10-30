@@ -1660,8 +1660,16 @@ pub enum Language {
 )]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum WritingSystem {
+    /// Latin alphabet (Romance languages, Germanic languages, etc.)
     Latin,
+    /// Korean Hangul script
     Hangul,
+    /// Cyrillic alphabet (Russian, etc.)
+    Cyrillic,
+    /// Chinese Han characters (simplified and traditional)
+    Han,
+    /// Japanese writing system (combines Kanji, Hiragana, and Katakana)
+    Japanese,
 }
 
 impl Language {
@@ -1704,11 +1712,9 @@ impl Language {
             | Language::Portuguese
             | Language::Italian => WritingSystem::Latin,
             Language::Korean => WritingSystem::Hangul,
-            Language::Chinese | Language::Japanese | Language::Russian => {
-                // Chinese uses Han characters, Japanese uses multiple scripts, Russian uses Cyrillic
-                // For now, we'll use Latin as a placeholder - this may need its own variants
-                WritingSystem::Latin
-            }
+            Language::Russian => WritingSystem::Cyrillic,
+            Language::Chinese => WritingSystem::Han,
+            Language::Japanese => WritingSystem::Japanese,
         }
     }
 }

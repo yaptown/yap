@@ -152,6 +152,11 @@ export function LanguageSelector({
     Korean: "가자",
     English: "Let's go",
     German: "Los geht's",
+    Chinese: "走吧",
+    Japanese: "行こう",
+    Russian: "Пойдем",
+    Portuguese: "Vamos lá",
+    Italian: "Andiamo",
   };
 
   // "I speak [language]" in each language
@@ -161,6 +166,11 @@ export function LanguageSelector({
     Spanish: "Hablo español",
     Korean: "한국어를 합니다",
     German: "Ich spreche Deutsch",
+    Chinese: "我说中文",
+    Japanese: "日本語を話します",
+    Russian: "Я говорю по-русски",
+    Portuguese: "Eu falo português",
+    Italian: "Parlo italiano",
   };
 
   // "Yap.Town" in each language
@@ -170,6 +180,11 @@ export function LanguageSelector({
     Spanish: "Yap.Ciudad",
     Korean: "얍.타운",
     German: "Yap.Stadt",
+    Chinese: "Yap.城",
+    Japanese: "Yap.町",
+    Russian: "Yap.Город",
+    Portuguese: "Yap.Cidade",
+    Italian: "Yap.Città",
   };
 
   const languageColors: Record<
@@ -209,6 +224,40 @@ export function LanguageSelector({
       accent: "#FFCE00",
       gradient:
         "linear-gradient(180deg, #000000 33%, #DD0000 33% 66%, #FFCE00 66%)",
+    },
+    Chinese: {
+      primary: "#DE2910",
+      secondary: "#FFDE00",
+      accent: "#DE2910",
+      gradient:
+        "linear-gradient(135deg, #DE2910 50%, #FFDE00 50%)",
+    },
+    Japanese: {
+      primary: "#FFFFFF",
+      secondary: "#BC002D",
+      accent: "#BC002D",
+      gradient: "linear-gradient(180deg, #FFFFFF 50%, #BC002D 50%)",
+    },
+    Russian: {
+      primary: "#FFFFFF",
+      secondary: "#0039A6",
+      accent: "#D52B1E",
+      gradient:
+        "linear-gradient(180deg, #FFFFFF 33%, #0039A6 33% 66%, #D52B1E 66%)",
+    },
+    Portuguese: {
+      primary: "#006600",
+      secondary: "#FFCC00",
+      accent: "#009900",
+      gradient:
+        "linear-gradient(135deg, #006600 33%, #FFCC00 33% 66%, #009900 66%)",
+    },
+    Italian: {
+      primary: "#009246",
+      secondary: "#FFFFFF",
+      accent: "#CE2B37",
+      gradient:
+        "linear-gradient(90deg, #009246 33%, #FFFFFF 33% 66%, #CE2B37 66%)",
     },
   };
 

@@ -207,7 +207,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // We probably should get at least 10_000 samples per language to get good coverage.
     // Bare minimum to get a usable result is probably around 1_500.
-    const SAMPLE_SIZE: usize = 3_000;
+    const SAMPLE_SIZE: usize = 4_000;
 
     println!("Loading NLP data for {language:?}...");
     let sentences = load_nlp_sentences(language)?;
@@ -358,7 +358,11 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
             );
             continue;
         }
-        if tokens.iter().enumerate().any(|(i, (_token, dep))| i  + 1 != dep.index) {
+        if tokens
+            .iter()
+            .enumerate()
+            .any(|(i, (_token, dep))| i + 1 != dep.index)
+        {
             println!(
                 "WARNING: Token/dependency index mismatch for sentence: {}",
                 original_sentence.sentence

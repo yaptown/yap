@@ -71,13 +71,18 @@ export function AudioButton({
         }
 
         // Play pre-audio if enabled (to wake up Bluetooth headphones in low power mode)
-        if (playPreAudio) {
-          const preAudio = new Audio("/pre-audio.mp3");
-          await new Promise<void>((resolve, reject) => {
-            preAudio.onended = () => resolve();
-            preAudio.onerror = () => reject(new Error("Failed to play pre-audio"));
-            preAudio.play().catch(reject);
-          });
+        try {
+          if (playPreAudio) {
+            const preAudio = new Audio("/pre-audio.mp3");
+            await new Promise<void>((resolve, reject) => {
+              preAudio.onended = () => resolve();
+              preAudio.onerror = () =>
+                reject(new Error("Failed to play pre-audio"));
+              preAudio.play().catch(reject);
+            });
+          }
+        } catch (error) {
+          console.error("Failed to play pre-audio:", error);
         }
 
         await playAudio(audioRequest, accessToken, () => {

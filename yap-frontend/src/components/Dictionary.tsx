@@ -17,6 +17,16 @@ function getLanguageDisplayName(language: Language): string {
       return 'Korean'
     case 'German':
       return 'German'
+    case 'Chinese':
+      return 'Chinese'
+    case 'Japanese':
+      return 'Japanese'
+    case 'Russian':
+      return 'Russian'
+    case 'Portuguese':
+      return 'Portuguese'
+    case 'Italian':
+      return 'Italian'
     default: {
       // TypeScript will error if we add a new language and don't handle it
       const exhaustiveCheck: never = language
@@ -38,6 +48,16 @@ function getLanguageCode(language: Language): string {
       return 'KO'
     case 'German':
       return 'DE'
+    case 'Chinese':
+      return 'ZH'
+    case 'Japanese':
+      return 'JA'
+    case 'Russian':
+      return 'RU'
+    case 'Portuguese':
+      return 'PT'
+    case 'Italian':
+      return 'IT'
     default: {
       const exhaustiveCheck: never = language
       throw new Error(`Unhandled language: ${exhaustiveCheck}`)

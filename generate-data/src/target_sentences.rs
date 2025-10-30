@@ -5,6 +5,9 @@ use anyhow::Context;
 use indexmap::IndexSet;
 use language_utils::Course;
 
+/// Default target maximum number of sentences to import from Tatoeba
+const DEFAULT_TARGET_SENTENCE_COUNT: usize = 200_000;
+
 /// Get target language sentences with optional translations.
 ///
 /// This function collects sentences from all available sources (Anki and Tatoeba)
@@ -29,7 +32,12 @@ pub fn get_target_sentences(course: Course) -> anyhow::Result<Vec<(String, Optio
 
     // Get all data sources
     let all_cards = crate::read_anki::get_all_cards(&source_data_path);
-    let tatoeba_pairs = crate::tatoeba::get_tatoeba_pairs(&source_data_path, course, None);
+    let target_sentence_count = match course.target_language.writing_system() {
+        language_utils::WritingSystem::Latin => DEFAULT_TARGET_SENTENCE_COUNT,
+        _ => DEFAULT_TARGET_SENTENCE_COUNT / 8, // these courses are low-quality anyway, so let's save money
+    };
+    let tatoeba_pairs =
+        crate::tatoeba::get_tatoeba_pairs(&source_data_path, course, target_sentence_count);
 
     // Extract target sentences from Anki cards with their native translations
     let use_native_card_side = course.native_language == language_utils::Language::English;
