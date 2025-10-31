@@ -28,7 +28,6 @@ static CHAT_CLIENT_MINI: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("gpt-5-mini")
         .unwrap()
         .with_cache_directory("./.cache")
-        .with_service_tier("flex")
 });
 
 #[tokio::main]
@@ -207,7 +206,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // We probably should get at least 10_000 samples per language to get good coverage.
     // Bare minimum to get a usable result is probably around 1_500.
-    const SAMPLE_SIZE: usize = 4_000;
+    const SAMPLE_SIZE: usize = 6_000;
 
     println!("Loading NLP data for {language:?}...");
     let sentences = load_nlp_sentences(language)?;
@@ -278,27 +277,37 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
 
     for (original_sentence, mut result) in cleaned_results {
         // Validate that the LLM response matches the original text
-        if let Ok(ref mut corrected_tokens) = result {
-            match validate_and_fix_whitespace(&original_sentence.sentence, corrected_tokens) {
-                ValidationResult::Valid => {
-                    // No issues, continue
+        match result {
+            Ok(ref mut corrected_tokens) => {
+                match validate_and_fix_whitespace(&original_sentence.sentence, corrected_tokens) {
+                    ValidationResult::Valid => {
+                        // No issues, continue
+                    }
+                    ValidationResult::AutoFixed => {
+                        auto_fixed_count += 1;
+                        // Continue with the auto-fixed version
+                    }
+                    ValidationResult::Invalid {
+                        original,
+                        reconstructed,
+                    } => {
+                        println!(
+                            "WARNING: Skipping sentence due to text mismatch:\n  Original:      '{original}'\n  Reconstructed: '{reconstructed}'"
+                        );
+                        skipped_count += 1;
+                        continue;
+                    }
                 }
-                ValidationResult::AutoFixed => {
-                    auto_fixed_count += 1;
-                    // Continue with the auto-fixed version
-                }
-                ValidationResult::Invalid {
-                    original,
-                    reconstructed,
-                } => {
-                    println!(
-                        "WARNING: Skipping sentence due to text mismatch:\n  Original:      '{original}'\n  Reconstructed: '{reconstructed}'"
-                    );
-                    skipped_count += 1;
-                    continue;
-                }
+                validated_results.push((original_sentence, result.unwrap()));
             }
-            validated_results.push((original_sentence, result.unwrap()));
+            Err(e) => {
+                println!(
+                    "WARNING: Skipping sentence due to LLM response error {e}: (Sentence: '{}')",
+                    original_sentence.sentence
+                );
+                skipped_count += 1;
+                continue;
+            }
         }
     }
 
@@ -332,12 +341,15 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
 
     // Write results to file
     for (original_sentence, corrected_tokens, dep_result) in results_with_deps {
-        let Ok(dep_response) = dep_result else {
-            println!(
-                "WARNING: Dependency parsing failed for sentence: {}",
-                original_sentence.sentence
-            );
-            continue;
+        let dep_response = match dep_result {
+            Ok(dep_response) => dep_response,
+            Err(e) => {
+                println!(
+                    "WARNING: Dependency parsing failed for sentence: {}: {}",
+                    original_sentence.sentence, e
+                );
+                continue;
+            }
         };
         if corrected_tokens.len() != dep_response.dependencies.len() {
             println!(

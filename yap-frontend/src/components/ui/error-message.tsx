@@ -82,7 +82,7 @@ export function ErrorMessage({
       <div className="flex items-start justify-between gap-2">
         <p
           className={cn(
-            "text-sm text-red-600 dark:text-red-400 flex-1 overflow-hidden",
+            "text-sm text-red-600 dark:text-red-400 flex-1 line-clamp-3 break-all min-w-0",
             variant === "compact" ? "line-clamp-3" : "line-clamp-5"
           )}
         >
