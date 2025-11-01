@@ -17,6 +17,11 @@ const FrequencyKnowledgeChart = lazy(() =>
     default: module.FrequencyKnowledgeChart,
   }))
 );
+const TargetLanguageKnowledgeTreemap = lazy(() =>
+  import("./TargetLanguageKnowledgeTreemap").then((module) => ({
+    default: module.TargetLanguageKnowledgeTreemap,
+  }))
+);
 
 interface StatsProps {
   deck: Deck;
@@ -217,6 +222,25 @@ export function Stats({ deck }: StatsProps) {
           Graphs
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-4">
+          <div className="bg-card border rounded-lg p-6 mb-6">
+            <h3 className="text-base font-semibold mb-4">
+              Known vs Unknown Written Words
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Each block represents a high-frequency word. Size reflects how
+              often it appears in native material, and color indicates whether
+              you currently have the written card in your deck.
+            </p>
+            <Suspense
+              fallback={
+                <div className="h-[360px] flex items-center justify-center text-muted-foreground">
+                  <p>Loading treemap...</p>
+                </div>
+              }
+            >
+              <TargetLanguageKnowledgeTreemap deck={deck} />
+            </Suspense>
+          </div>
           <div className="bg-card border rounded-lg p-6">
             <h3 className="text-base font-semibold mb-4">
               Pre-existing Knowledge by Word Frequency

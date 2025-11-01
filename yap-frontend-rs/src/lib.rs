@@ -2167,6 +2167,44 @@ impl Deck {
         chart_data
     }
 
+    /// Return the user's knowledge of the top target language lexemes.
+    ///
+    /// The result contains the most common lexemes in the language pack along with
+    /// whether the user currently has a tracked card for the written form.
+    /// This is limited to a fixed number of lexemes to keep the payload small for
+    /// the frontend visualizations.
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_target_language_knowledge(&self) -> Vec<TargetLanguageKnowledge> {
+        const MAX_LEXEMES: usize = 500;
+
+        let language_pack = &self.context.language_pack;
+        let rodeo = &language_pack.rodeo;
+
+        language_pack
+            .word_frequencies
+            .iter()
+            .take(MAX_LEXEMES)
+            .filter_map(|(lexeme, frequency)| {
+                let word = match lexeme {
+                    Lexeme::Heteronym(heteronym) => rodeo.resolve(&heteronym.word).to_string(),
+                    Lexeme::Multiword(multiword) => rodeo.resolve(multiword).to_string(),
+                };
+
+                // Skip entries without any measured frequency to avoid creating
+                // visually tiny blocks that add little value to the treemap.
+                if frequency.count == 0 {
+                    return None;
+                }
+
+                Some(TargetLanguageKnowledge {
+                    word,
+                    frequency: frequency.count,
+                    known: self.lexeme_known(lexeme),
+                })
+            })
+            .collect()
+    }
+
     /// Get all dictionary entries ordered by frequency (most common first)
     /// Returns entries in frequency order (already sorted in word_frequencies)
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
@@ -2218,6 +2256,15 @@ pub struct FrequencyKnowledgePoint {
     pub predicted_knowledge: f64,
     pub word_count: u32,
     pub example_words: String,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify))]
+#[cfg_attr(target_arch = "wasm32", tsify(into_wasm_abi))]
+pub struct TargetLanguageKnowledge {
+    pub word: String,
+    pub frequency: u32,
+    pub known: bool,
 }
 
 impl Deck {
