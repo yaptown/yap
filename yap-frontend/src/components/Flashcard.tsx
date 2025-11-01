@@ -497,6 +497,12 @@ export const Flashcard = function Flashcard({
         return;
       }
 
+      if (["1", "2", "3", "4"].includes(e.key)) {
+        e.preventDefault();
+        toast("Use the arrow keys");
+        return;
+      }
+
       if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
       }
