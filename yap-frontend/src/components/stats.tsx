@@ -24,7 +24,7 @@ interface StatsProps {
 
 export function Stats({ deck }: StatsProps) {
   const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
-  
+
   // Update timestamp periodically to keep stats fresh
   useInterval(
     () => {
@@ -32,7 +32,7 @@ export function Stats({ deck }: StatsProps) {
     },
     10000 // Update every 10 seconds
   );
-  
+
   const { reviewInfo, readyCards, allCardsSummary } = useMemo(() => {
     const reviewInfo = deck.get_review_info([], currentTimestamp);
     const allCardsSummary = deck.get_all_cards_summary();
@@ -139,7 +139,9 @@ export function Stats({ deck }: StatsProps) {
                     className="inline-flex items-center gap-2 rounded-sm bg-transparent p-0 text-left text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                     aria-label="Reveal listening lexeme"
                   >
-                    <span className="select-none blur-sm">{shortDescription}</span>
+                    <span className="select-none blur-sm">
+                      {shortDescription}
+                    </span>
                     <span className="text-xs italic text-muted-foreground">
                       Tap to reveal
                     </span>
@@ -217,11 +219,11 @@ export function Stats({ deck }: StatsProps) {
         <CollapsibleContent className="mt-4">
           <div className="bg-card border rounded-lg p-6">
             <h3 className="text-base font-semibold mb-4">
-              Predicted Knowledge by Word Frequency
+              Pre-existing Knowledge by Word Frequency
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              This chart shows how well you're predicted to know words based on
-              their frequency in the language.
+              This is used to help Yap decide which words to teach first. (There
+              is no point in Yap teaching you words you already know).
             </p>
             <Suspense
               fallback={

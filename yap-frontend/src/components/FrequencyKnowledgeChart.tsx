@@ -83,17 +83,12 @@ export function FrequencyKnowledgeChart({
         <Line
           type="monotone"
           dataKey="knowledge"
-          stroke="var(--color-knowledge)"
           strokeWidth={2}
           dot={{
             r: 4,
-            stroke: "var(--color-knowledge)",
-            fill: "var(--color-knowledge)",
           }}
           activeDot={{
             r: 6,
-            stroke: "var(--color-knowledge)",
-            fill: "var(--color-knowledge)",
           }}
         />
       </LineChart>
