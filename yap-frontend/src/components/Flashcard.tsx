@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, ArrowLeft, ArrowRight, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   motion,
@@ -686,7 +686,7 @@ export const Flashcard = function Flashcard({
                 />
               </motion.div>
             ) : (
-              <div>
+              <div className="flex flex-col items-center gap-2">
                 <div
                   className={`text-muted-foreground ${
                     requireShowAnswer ? "font-bold" : ""
@@ -694,7 +694,9 @@ export const Flashcard = function Flashcard({
                 >
                   Show Answer
                 </div>
-                <div className="text-muted-foreground">↓</div>
+                <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-muted/20 border flex items-center justify-center">
+                  <ArrowDown className="h-3 w-3 text-muted-foreground" />
+                </kbd>
               </div>
             )}
           </div>
@@ -727,7 +729,12 @@ export const Flashcard = function Flashcard({
               className="h-14"
               disabled={!canGrade}
             >
-              {leftLabel}
+              <span className="flex items-center gap-2">
+                <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center">
+                  <ArrowLeft className="h-3 w-3" />
+                </kbd>
+                {leftLabel}
+              </span>
             </Button>
             <Button
               onClick={() => {
@@ -740,7 +747,12 @@ export const Flashcard = function Flashcard({
               className="h-14"
               disabled={!canGrade}
             >
-              {rightLabel}
+              <span className="flex items-center gap-2">
+                {rightLabel}
+                <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center">
+                  <ArrowRight className="h-3 w-3" />
+                </kbd>
+              </span>
             </Button>
           </div>
         </div>
