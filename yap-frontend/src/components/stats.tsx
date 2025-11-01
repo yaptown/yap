@@ -227,9 +227,8 @@ export function Stats({ deck }: StatsProps) {
               Known vs Unknown Written Words
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Each block represents a high-frequency word. Size reflects how
-              often it appears in native material, and color indicates whether
-              you currently have the written card in your deck.
+              Each block represents a word. Size reflects how often it appears
+              in native material, and color indicates whether you have learned it.
             </p>
             <Suspense
               fallback={

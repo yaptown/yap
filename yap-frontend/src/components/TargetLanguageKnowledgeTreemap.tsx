@@ -23,26 +23,31 @@ type TreemapDatum = {
   name: string;
   value: number;
   known: boolean;
+  stability?: number;
   children?: TreemapDatum[];
 };
 
 type TreemapNodeProps = {
-  depth: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  name: string;
-  payload: TreemapDatum;
-};
-
-type TreemapTooltipPayload = {
-  payload: TreemapDatum;
+  depth?: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  name?: string;
+  value?: number;
+  known?: boolean;
+  stability?: number;
+  children?: TreemapDatum[];
+  [key: string]: unknown;
 };
 
 type TreemapTooltipProps = {
   active?: boolean;
-  payload?: TreemapTooltipPayload[];
+  payload?: Array<{
+    payload?: TreemapDatum;
+    [key: string]: unknown;
+  }>;
+  [key: string]: unknown;
 };
 
 const NODE_TEXT_PADDING = 6;
@@ -60,16 +65,16 @@ function buildTreemapData(
   };
 } {
   const sorted = [...entries].sort((a, b) => b.frequency - a.frequency);
-  const limited = sorted.slice(0, 300);
 
   const knownChildren: TreemapDatum[] = [];
   const unknownChildren: TreemapDatum[] = [];
 
-  for (const entry of limited) {
+  for (const entry of sorted) {
     const node = {
       name: entry.word,
       value: entry.frequency,
       known: entry.known,
+      stability: entry.stability,
     } satisfies TreemapDatum;
 
     if (entry.known) {
@@ -110,29 +115,41 @@ function buildTreemapData(
     totals: {
       known: knownChildren.length,
       unknown: unknownChildren.length,
-      total: limited.length,
+      total: sorted.length,
       knownFrequency,
       unknownFrequency,
     },
   };
 }
 
-function renderTreemapNode({
-  depth,
-  x,
-  y,
-  width,
-  height,
-  name,
-  payload,
-}: TreemapNodeProps) {
-  if (!width || !height) {
+function renderTreemapNode(props: TreemapNodeProps) {
+  const { depth, x, y, width, height, name, known, stability } = props;
+
+  // Only filter out nodes with no dimensions or completely missing data
+  if (width === undefined || height === undefined || width <= 0 || height <= 0) {
     return null;
   }
 
-  const groupColor = payload.known
-    ? "hsl(var(--chart-1))"
-    : "hsl(var(--chart-2))";
+  if (x === undefined || y === undefined) {
+    return null;
+  }
+
+  // Access known directly from props (recharts spreads the data properties)
+  const isKnown = known ?? false;
+
+  // Use CSS variables directly (they're already complete oklch() values)
+  const groupColor = isKnown
+    ? "var(--chart-1)"
+    : "var(--chart-2)";
+
+  // Calculate opacity based on stability for known words
+  // Stability typically ranges from 1 to 100+ days
+  // We'll use logarithmic scale: log2(stability + 1) normalized to 0.3-0.8 range
+  let fillOpacity = 0.5;
+  if (depth === 2 && isKnown && stability !== undefined && stability > 0) {
+    const normalizedStability = Math.log2(stability + 1) / 10; // log2(1024) = 10
+    fillOpacity = 0.3 + Math.min(normalizedStability, 1) * 0.5; // Range: 0.3 to 0.8
+  }
 
   if (depth === 1) {
     return (
@@ -143,22 +160,10 @@ function renderTreemapNode({
           width={width}
           height={height}
           fill={groupColor}
-          fillOpacity={0.12}
+          fillOpacity={0.2}
           stroke="hsl(var(--border))"
           strokeWidth={1}
-          rx={6}
         />
-        {width > 80 && height > 24 ? (
-          <text
-            x={x + NODE_TEXT_PADDING}
-            y={y + 20}
-            fill="hsl(var(--foreground))"
-            fontSize={14}
-            fontWeight={600}
-          >
-            {name}
-          </text>
-        ) : null}
       </g>
     );
   }
@@ -173,10 +178,9 @@ function renderTreemapNode({
         width={width}
         height={height}
         fill={groupColor}
-        fillOpacity={0.4}
+        fillOpacity={fillOpacity}
         stroke="hsl(var(--border))"
         strokeWidth={0.5}
-        rx={4}
       />
       {textVisible ? (
         <text
@@ -243,12 +247,13 @@ export function TargetLanguageKnowledgeTreemap({
           dataKey="value"
           isAnimationActive={false}
           stroke="hsl(var(--border))"
-          content={renderTreemapNode}
+          content={renderTreemapNode as any}
         >
           <ChartTooltip
             cursor={false}
             wrapperStyle={{ outline: "none" }}
-            content={({ active, payload }: TreemapTooltipProps) => {
+            content={((props: TreemapTooltipProps) => {
+              const { active, payload } = props;
               if (!active || !payload || payload.length === 0) {
                 return null;
               }
@@ -260,15 +265,14 @@ export function TargetLanguageKnowledgeTreemap({
               }
 
               return (
-                <div className="border border-border bg-background rounded-md p-3 shadow-lg text-xs space-y-1">
+                <div className="border border-border bg-background rounded-md p-3 shadow-lg text-xs">
                   <p className="font-semibold text-sm text-foreground">{node.name}</p>
                   <p className="text-muted-foreground">
-                    {node.known ? "Known" : "Unknown"} ·{" "}
-                    {node.value.toLocaleString()} frequency
+                    {node.known ? "Known" : "Unknown"}
                   </p>
                 </div>
               );
-            }}
+            }) as any}
           />
         </Treemap>
       </ChartContainer>

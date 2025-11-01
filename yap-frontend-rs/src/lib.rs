@@ -2175,7 +2175,7 @@ impl Deck {
     /// the frontend visualizations.
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_target_language_knowledge(&self) -> Vec<TargetLanguageKnowledge> {
-        const MAX_LEXEMES: usize = 500;
+        const MAX_LEXEMES: usize = 5000;
 
         let language_pack = &self.context.language_pack;
         let rodeo = &language_pack.rodeo;
@@ -2196,10 +2196,23 @@ impl Deck {
                     return None;
                 }
 
+                // Get stability from the card if it exists
+                let card_indicator = CardIndicator::TargetLanguage {
+                    lexeme: lexeme.clone(),
+                };
+                let stability = self.cards.get(&card_indicator).and_then(|card_status| {
+                    card_status.reviewed().map(|card_data| match card_data {
+                        CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => {
+                            fsrs_card.stability
+                        }
+                    })
+                });
+
                 Some(TargetLanguageKnowledge {
                     word,
                     frequency: frequency.count,
                     known: self.lexeme_known(lexeme),
+                    stability,
                 })
             })
             .collect()
@@ -2265,6 +2278,7 @@ pub struct TargetLanguageKnowledge {
     pub word: String,
     pub frequency: u32,
     pub known: bool,
+    pub stability: Option<f64>,
 }
 
 impl Deck {
