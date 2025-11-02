@@ -177,6 +177,9 @@ name = "anyhow"
 version = "1.0.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0674a1ddeecb70197781e945de4b3b8ffb61fa939a5597bcf48503737663100"
+dependencies = [
+ "backtrace",
+]
 
 [[package]]
 name = "apodize"
@@ -364,6 +367,27 @@ name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
+name = "bindgen_cuda"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f8489af5b7d17a81bffe37e0f4d6e1e4de87c87329d05447f22c35d95a1227d"
+dependencies = [
+ "glob",
+ "num_cpus",
+ "rayon",
+]
+
+[[package]]
+name = "bindgen_cuda"
+version = "0.1.7"
+source = "git+https://github.com/guoqingbao/bindgen_cuda.git#19e33d0e55fec148f53aaed144de401ff1fd9a6a"
+dependencies = [
+ "glob",
+ "num_cpus",
+ "rayon",
+]
 
 [[package]]
 name = "bit-set"
@@ -566,6 +590,8 @@ version = "0.9.1"
 source = "git+https://github.com/EricLBuehler/candle.git?rev=7511e510#7511e510054973ea4e2043f6d2da14409c195baf"
 dependencies = [
  "byteorder",
+ "candle-kernels",
+ "cudarc 0.17.7",
  "float8",
  "gemm 0.17.1",
  "half",
@@ -578,8 +604,28 @@ dependencies = [
  "safetensors 0.6.2",
  "thiserror 1.0.69",
  "ug",
+ "ug-cuda",
  "yoke 0.7.5",
  "zip 1.1.4",
+]
+
+[[package]]
+name = "candle-flash-attn"
+version = "0.9.1"
+source = "git+https://github.com/EricLBuehler/candle.git?rev=7511e510#7511e510054973ea4e2043f6d2da14409c195baf"
+dependencies = [
+ "anyhow",
+ "bindgen_cuda 0.1.5",
+ "candle-core",
+ "half",
+]
+
+[[package]]
+name = "candle-kernels"
+version = "0.9.1"
+source = "git+https://github.com/EricLBuehler/candle.git?rev=7511e510#7511e510054973ea4e2043f6d2da14409c195baf"
+dependencies = [
+ "bindgen_cuda 0.1.5",
 ]
 
 [[package]]
@@ -964,6 +1010,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "704a3c26996a80471189265814dbc2c257598b96b8a7feae2d31ace646bb9782"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "cudarc"
+version = "0.16.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17200eb07e7d85a243aa1bf4569a7aa998385ba98d14833973a817a63cc86e92"
+dependencies = [
+ "half",
+ "libloading",
+]
+
+[[package]]
+name = "cudarc"
+version = "0.17.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff0da1a70ec91e66731c1752deb9fda3044f1154fe4ceb5873e3f96ed34cafa3"
+dependencies = [
+ "half",
+ "libloading",
 ]
 
 [[package]]
@@ -1544,6 +1610,7 @@ version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4203231de188ebbdfb85c11f3c20ca2b063945710de04e7b59268731e728b462"
 dependencies = [
+ "cudarc 0.17.7",
  "half",
  "num-traits",
 ]
@@ -2041,6 +2108,12 @@ name = "gimli"
 version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
+
+[[package]]
+name = "glob"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 
 [[package]]
 name = "governor"
@@ -2887,6 +2960,7 @@ checksum = "7a79a3332a6609480d7d0c9eab957bca6b455b91bb84e66d19f5ff66294b85b8"
 [[package]]
 name = "lexide"
 version = "0.1.0"
+source = "git+https://github.com/anchpop/lexide.git?rev=e2ef96ea9cb5f39de40ec592411fbf0c65508b69#e2ef96ea9cb5f39de40ec592411fbf0c65508b69"
 dependencies = [
  "anyhow",
  "futures",
@@ -3271,6 +3345,7 @@ dependencies = [
 [[package]]
 name = "mistralrs"
 version = "0.6.0"
+source = "git+https://github.com/anchpop/mistral.rs.git?rev=3c296725d1c8604f0954e3b7453abec0ce09a536#3c296725d1c8604f0954e3b7453abec0ce09a536"
 dependencies = [
  "anyhow",
  "candle-core",
@@ -3292,6 +3367,7 @@ dependencies = [
 [[package]]
 name = "mistralrs-audio"
 version = "0.6.0"
+source = "git+https://github.com/anchpop/mistral.rs.git?rev=3c296725d1c8604f0954e3b7453abec0ce09a536#3c296725d1c8604f0954e3b7453abec0ce09a536"
 dependencies = [
  "anyhow",
  "apodize",
@@ -3302,6 +3378,7 @@ dependencies = [
 [[package]]
 name = "mistralrs-core"
 version = "0.6.0"
+source = "git+https://github.com/anchpop/mistral.rs.git?rev=3c296725d1c8604f0954e3b7453abec0ce09a536#3c296725d1c8604f0954e3b7453abec0ce09a536"
 dependencies = [
  "ahash",
  "akin",
@@ -3310,10 +3387,12 @@ dependencies = [
  "as-any",
  "async-trait",
  "base64 0.22.1",
+ "bindgen_cuda 0.1.7",
  "bm25",
  "bytemuck",
  "bytemuck_derive",
  "candle-core",
+ "candle-flash-attn",
  "candle-nn",
  "cfgrammar",
  "chrono",
@@ -3344,6 +3423,7 @@ dependencies = [
  "minijinja-contrib",
  "mistralrs-audio",
  "mistralrs-mcp",
+ "mistralrs-paged-attn",
  "mistralrs-quant",
  "mistralrs-vision",
  "num-traits",
@@ -3393,6 +3473,7 @@ dependencies = [
 [[package]]
 name = "mistralrs-mcp"
 version = "0.6.0"
+source = "git+https://github.com/anchpop/mistral.rs.git?rev=3c296725d1c8604f0954e3b7453abec0ce09a536#3c296725d1c8604f0954e3b7453abec0ce09a536"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3410,9 +3491,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "mistralrs-paged-attn"
+version = "0.6.0"
+source = "git+https://github.com/anchpop/mistral.rs.git?rev=3c296725d1c8604f0954e3b7453abec0ce09a536#3c296725d1c8604f0954e3b7453abec0ce09a536"
+dependencies = [
+ "anyhow",
+ "bindgen_cuda 0.1.7",
+ "candle-core",
+ "float8",
+ "half",
+ "once_cell",
+ "thiserror 2.0.16",
+]
+
+[[package]]
 name = "mistralrs-quant"
 version = "0.6.0"
+source = "git+https://github.com/anchpop/mistral.rs.git?rev=3c296725d1c8604f0954e3b7453abec0ce09a536#3c296725d1c8604f0954e3b7453abec0ce09a536"
 dependencies = [
+ "bindgen_cuda 0.1.7",
  "byteorder",
  "candle-core",
  "candle-nn",
@@ -3437,6 +3534,7 @@ dependencies = [
 [[package]]
 name = "mistralrs-vision"
 version = "0.6.0"
+source = "git+https://github.com/anchpop/mistral.rs.git?rev=3c296725d1c8604f0954e3b7453abec0ce09a536#3c296725d1c8604f0954e3b7453abec0ce09a536"
 dependencies = [
  "candle-core",
  "image",
@@ -6325,6 +6423,19 @@ dependencies = [
  "thiserror 1.0.69",
  "tracing",
  "yoke 0.7.5",
+]
+
+[[package]]
+name = "ug-cuda"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14053653d0b7fa7b21015aa9a62edc8af2f60aa6f9c54e66386ecce55f22ed29"
+dependencies = [
+ "cudarc 0.16.6",
+ "half",
+ "serde",
+ "thiserror 1.0.69",
+ "ug",
 ]
 
 [[package]]

@@ -137,7 +137,7 @@ impl MultiwordTermDetector {
             to_lexide_language(language).ok_or_else(|| anyhow::anyhow!("Unsupported language"))?;
 
         // Process terms in batches for efficiency
-        let batch_size = 1000;
+        let batch_size = 10;
         let num_batches = (multiword_terms.len() + batch_size - 1) / batch_size;
 
         let pb = ProgressBar::new(num_batches as u64);
@@ -150,29 +150,49 @@ impl MultiwordTermDetector {
 
         for chunk in multiword_terms.chunks(batch_size) {
             // Analyze all terms in the chunk
-            let mut analyses = Vec::new();
-            for term in chunk {
-                let tokenization = lexide.analyze(term, lexide_language).await?;
-                analyses.push((term.clone(), tokenization));
-            }
+            let analyses = futures::stream::iter(chunk.iter())
+                .map(|term| async move {
+                    println!("Analyzing term: {term}");
+                    match lexide.analyze(term, lexide_language).await {
+                        Ok(tokenization) => Some((term.clone(), tokenization)),
+                        Err(e) => {
+                            eprintln!("Warning: Failed to analyze term '{}': {}", term, e);
+                            None
+                        }
+                    }
+                })
+                .buffer_unordered(4)
+                .collect::<Vec<_>>()
+                .await;
 
-            for (term, tokenization) in analyses {
-                // Create lemma mapping
-                let lemmas: Vec<String> = tokenization
-                    .tokens
-                    .iter()
-                    .map(|t| t.lemma.lemma.clone())
-                    .collect();
+            for result in analyses {
+                if let Some((term, tokenization)) = result {
+                    // Create lemma mapping
+                    let lemmas: Vec<String> = tokenization
+                        .tokens
+                        .iter()
+                        .map(|t| t.lemma.lemma.clone())
+                        .collect();
 
-                lemma_to_terms
-                    .entry(lemmas.clone())
-                    .or_insert_with(Vec::new)
-                    .push(term.clone());
+                    lemma_to_terms
+                        .entry(lemmas.clone())
+                        .or_insert_with(Vec::new)
+                        .push(term.clone());
 
-                // Create dependency pattern if needed
-                if Self::should_create_dependency_pattern(&tokenization, language) {
-                    let tree = TreeNode::from(tokenization);
-                    dependency_patterns.push((term, tree));
+                    // Create dependency pattern if needed
+                    if Self::should_create_dependency_pattern(&tokenization, language) {
+                        match TreeNode::try_from(tokenization) {
+                            Ok(tree) => {
+                                dependency_patterns.push((term, tree));
+                            }
+                            Err(e) => {
+                                eprintln!(
+                                    "Warning: Failed to create dependency tree for term '{}': {}",
+                                    term, e
+                                );
+                            }
+                        }
+                    }
                 }
             }
 
@@ -208,28 +228,35 @@ impl MultiwordTermDetector {
     pub async fn find_multiword_terms_batch(
         &self,
         sentences: &[String],
-    ) -> Result<Vec<(lexide::Tokenization, MultiwordTerms)>> {
+    ) -> Result<Vec<Option<(lexide::Tokenization, MultiwordTerms)>>> {
         let lexide_language = to_lexide_language(self.language)
             .ok_or_else(|| anyhow::anyhow!("Unsupported language"))?;
 
         // Analyze all sentences
-        let tokenizations: Vec<lexide::Tokenization> = {
-            let results: Vec<Result<_, _>> = futures::stream::iter(sentences.iter())
-                .map(|sentence| async move { self.lexide.analyze(sentence, lexide_language).await })
-                .buffer_unordered(100)
+        let tokenizations: Vec<Option<lexide::Tokenization>> = {
+            futures::stream::iter(sentences.iter())
+                .map(|sentence| async move {
+                    match self.lexide.analyze(sentence, lexide_language).await {
+                        Ok(tokenization) => Some(tokenization),
+                        Err(e) => {
+                            eprintln!("Warning: Failed to analyze sentence '{}': {}", sentence, e);
+                            None
+                        }
+                    }
+                })
+                .buffer_unordered(8)
                 .collect()
-                .await;
-
-            // Convert Vec<Result<T, E>> to Result<Vec<T>, E>
-            results.into_iter().collect::<Result<Vec<_>, _>>()?
+                .await
         };
 
         // Process each tokenization
         let results = tokenizations
             .into_iter()
-            .map(|tokenization| {
-                let multiword_terms = self.find_terms_in_tokenization(&tokenization);
-                (tokenization, multiword_terms)
+            .map(|tokenization_opt| {
+                tokenization_opt.map(|tokenization| {
+                    let multiword_terms = self.find_terms_in_tokenization(&tokenization);
+                    (tokenization, multiword_terms)
+                })
             })
             .collect();
 
@@ -270,14 +297,20 @@ impl MultiwordTermDetector {
 
         // Low confidence: Dependency tree matching
         if !self.dependency_patterns.is_empty() {
-            let sentence_tree = TreeNode::from(tokenization.clone());
+            match TreeNode::try_from(tokenization.clone()) {
+                Ok(sentence_tree) => {
+                    for (term, pattern) in &self.dependency_patterns {
+                        let matcher = DependencyMatcher::new(&[pattern.clone()]);
+                        let matches = matcher.find_all(&sentence_tree);
 
-            for (term, pattern) in &self.dependency_patterns {
-                let matcher = DependencyMatcher::new(&[pattern.clone()]);
-                let matches = matcher.find_all(&sentence_tree);
-
-                if !matches.is_empty() && !high_confidence.contains(term) {
-                    low_confidence.insert(term.clone());
+                        if !matches.is_empty() && !high_confidence.contains(term) {
+                            low_confidence.insert(term.clone());
+                        }
+                    }
+                }
+                Err(_e) => {
+                    // Skip dependency matching for this sentence if tree creation fails
+                    // (error not logged to avoid spam - these are usually legitimate parsing edge cases)
                 }
             }
         }
@@ -371,19 +404,22 @@ async fn process_batch(
 ) -> Result<()> {
     let results = detector.find_multiword_terms_batch(sentences).await?;
 
-    for (sentence, (tokenization, multiword_terms)) in sentences.iter().zip(results.into_iter()) {
-        // Convert tokens to DocTokens
-        let doc: Vec<DocToken> = tokenization.tokens.iter().map(to_doc_token).collect();
+    for (sentence, result) in sentences.iter().zip(results.into_iter()) {
+        if let Some((tokenization, multiword_terms)) = result {
+            // Convert tokens to DocTokens
+            let doc: Vec<DocToken> = tokenization.tokens.iter().map(to_doc_token).collect();
 
-        let analyzed = NlpAnalyzedSentence {
-            sentence: sentence.clone(),
-            multiword_terms,
-            doc,
-        };
+            let analyzed = NlpAnalyzedSentence {
+                sentence: sentence.clone(),
+                multiword_terms,
+                doc,
+            };
 
-        // Write the enhanced data
-        let json = serde_json::to_string(&analyzed)?;
-        writeln!(writer, "{json}")?;
+            // Write the enhanced data
+            let json = serde_json::to_string(&analyzed)?;
+            writeln!(writer, "{json}")?;
+        }
+        // If result is None, we skip this sentence (error was already logged)
     }
 
     Ok(())
