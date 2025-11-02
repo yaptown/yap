@@ -145,7 +145,7 @@ impl MultiwordTermDetector {
         );
 
         // Process all terms with controlled concurrency
-        let analyses = futures::stream::iter(multiword_terms.iter())
+        let analyses = futures::stream::iter(multiword_terms.iter()).skip(500).take(100)
             .map(|term| {
                 let pb = pb.clone();
                 async move {
@@ -160,7 +160,7 @@ impl MultiwordTermDetector {
                     result
                 }
             })
-            .buffer_unordered(4)
+            .buffer_unordered(10)
             .collect::<Vec<_>>()
             .await;
 
@@ -240,7 +240,7 @@ impl MultiwordTermDetector {
                         }
                     }
                 })
-                .buffer_unordered(4)
+                .buffer_unordered(10)
                 .collect()
                 .await
         };

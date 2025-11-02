@@ -78,7 +78,7 @@ There is also a supporting backend, normally assumed to be at `https://yap-ai-ba
 The data in out/ is generated via the `generate-data` binary. 
 
 ```
-cargo run --bin generate-data
+cargo run --bin generate-data --release
 ```
 
 ## Data Cleaning
