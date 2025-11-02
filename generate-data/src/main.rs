@@ -17,7 +17,7 @@ fn main() -> anyhow::Result<()> {
 
     // Create a Tokio runtime with 16MB stack size (default is ~2MB)
     let runtime = tokio::runtime::Builder::new_multi_thread()
-        .thread_stack_size(16 * 1024 * 1024)
+        .thread_stack_size(32 * 1024 * 1024)
         .enable_all()
         .build()?;
 
