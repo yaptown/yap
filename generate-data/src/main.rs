@@ -7,7 +7,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 
 mod google_translate;
@@ -177,52 +176,35 @@ async fn main() -> anyhow::Result<()> {
             );
         }
 
-        // Process sentences with Python NLP to detect multiword terms;
+        // Process sentences with Rust NLP (lexide) to detect multiword terms
         let target_language_nlp_file =
             target_language_dir.join("target_language_sentences_nlp.jsonl");
         if target_language_nlp_file.exists() {
-            println!("Skipping Python NLP because file already exists");
+            println!("Skipping NLP processing because file already exists");
         } else {
-            // potentially skip this for now because it's slow
-            if true {
-                println!("\nProcessing sentences with Python NLP...");
+            println!("\nProcessing sentences with Rust NLP (lexide)...");
 
-                // Ensure multiword terms file exists, download if needed
-                let multiword_terms_file = generate_data::wiktionary::ensure_multiword_terms_file(
-                    course,
-                    &target_language_dir,
-                )
-                .await?;
+            // Ensure multiword terms file exists, download if needed
+            let multiword_terms_file = generate_data::wiktionary::ensure_multiword_terms_file(
+                course,
+                &target_language_dir,
+            )
+            .await?;
 
-                // Run the Python script
-                let script: &str = "main.py";
-                let script_path = Path::new("./generate-data/nlp/")
-                    .canonicalize()
-                    .context("Failed to canonicalize script path")?;
-                let status = Command::new("uv")
-                    .arg("run")
-                    .arg(script)
-                    .arg(course.target_language.iso_639_3())
-                    .arg(&target_language_sentences_file)
-                    .arg(&multiword_terms_file)
-                    .arg(&target_language_nlp_file)
-                    .current_dir(script_path)
-                    .status()
-                    .context(format!("Failed to run Python script {script}."))?;
+            // Process sentences using the new Rust implementation
+            generate_data::nlp::process_sentences(
+                &target_language_sentences_file,
+                &multiword_terms_file,
+                &target_language_nlp_file,
+                course.target_language,
+            )
+            .await?;
 
-                if status.success() {
-                    println!("Successfully processed sentences with multiword terms.");
-                    println!(
-                        "Multiword terms for sentences written to: {}",
-                        target_language_nlp_file.display()
-                    );
-                } else {
-                    return Err(anyhow::anyhow!(
-                        "Python script failed with exit code: {:?}",
-                        status.code()
-                    ));
-                }
-            }
+            println!("Successfully processed sentences with multiword terms.");
+            println!(
+                "Multiword terms for sentences written to: {}",
+                target_language_nlp_file.display()
+            );
         }
 
         let nlp_sentences = {

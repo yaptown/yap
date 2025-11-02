@@ -170,6 +170,86 @@ async fn load_nlp_sentences(language: Language) -> anyhow::Result<Vec<NlpAnalyze
     Ok(sentences)
 }
 
+async fn load_multiword_terms(language: Language) -> anyhow::Result<Vec<NlpAnalyzedSentence>> {
+    let base_dir = base_output_directory(language);
+    std::fs::create_dir_all(&base_dir).context("Failed to create output directory")?;
+    let base_dir = base_dir
+        .canonicalize()
+        .context("Failed to canonicalize output directory")?;
+
+    let course = Course {
+        native_language: default_native_language(language),
+        target_language: language,
+    };
+
+    // Ensure multiword terms file exists
+    let multiword_terms_file =
+        generate_data::wiktionary::ensure_multiword_terms_file(&course, &base_dir)
+            .await
+            .context("Failed to ensure multiword terms file")?;
+
+    // Create a file with the terms as sentences (one per line, JSON string format)
+    let terms_as_sentences_path = base_dir.join("multiword_terms_as_sentences.jsonl");
+    if !terms_as_sentences_path.exists() {
+        let terms_file =
+            File::open(&multiword_terms_file).context("Failed to open multiword terms file")?;
+        let reader = BufReader::new(terms_file);
+
+        let output_file = File::create(&terms_as_sentences_path)
+            .context("Failed to create terms as sentences file")?;
+        let mut writer = BufWriter::new(output_file);
+
+        for line in reader.lines() {
+            let term = line.context("Failed to read line from multiword terms")?;
+            let term = term.trim();
+            if !term.is_empty() {
+                writeln!(writer, "{}", serde_json::to_string(&term)?)
+                    .context("Failed to write term as sentence")?;
+            }
+        }
+        writer.flush().context("Failed to flush writer")?;
+    }
+
+    // Process the terms with NLP
+    let terms_nlp_path = base_dir.join("multiword_terms_nlp.jsonl");
+    if !terms_nlp_path.exists() {
+        println!(
+            "Running Python NLP on multiword terms for {:?}...",
+            language
+        );
+        // Create an empty multiword terms file for the NLP (since we're analyzing the terms themselves)
+        let empty_terms_file = base_dir.join("empty_multiword_terms.txt");
+        if !empty_terms_file.exists() {
+            File::create(&empty_terms_file)
+                .context("Failed to create empty multiword terms file")?;
+        }
+
+        run_python_nlp(
+            language,
+            &terms_as_sentences_path,
+            &empty_terms_file,
+            &terms_nlp_path,
+        )?;
+    }
+
+    // Load the analyzed terms
+    let file = File::open(&terms_nlp_path)
+        .context(format!("Failed to open terms NLP file: {terms_nlp_path:?}"))?;
+    let reader = BufReader::new(file);
+
+    let terms: Vec<NlpAnalyzedSentence> = reader
+        .lines()
+        .enumerate()
+        .map(|(idx, line)| {
+            let line = line.context(format!("Failed to read line {idx}"))?;
+            serde_json::from_str::<NlpAnalyzedSentence>(&line)
+                .context(format!("Failed to deserialize line {idx}: {line}"))
+        })
+        .collect::<anyhow::Result<Vec<_>>>()?;
+
+    Ok(terms)
+}
+
 fn print_random_sentences(sentences: &[NlpAnalyzedSentence], count: usize) {
     let mut rng = rand::rng();
     let sample_size = count.min(sentences.len());
@@ -332,24 +412,41 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 }
 
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
-    // We probably should get at least 10_000 samples per language to get good coverage.
-    // Bare minimum to get a usable result is probably around 1_500.
-    const SAMPLE_SIZE: usize = 6_000;
+    let samples = {
+        // We probably should get at least 10_000 samples per language to get good coverage.
+        // Bare minimum to get a usable result is probably around 1_500.
+        const SAMPLE_SIZE: usize = 6_000;
+        const TERM_SAMPLE_SIZE: usize = 1_000;
 
-    println!("Loading NLP data for {language:?}...");
-    let sentences = load_nlp_sentences(language).await?;
-    println!("Loaded {} sentences", sentences.len());
+        println!("Loading NLP data for {language:?}...");
+        let sentences = load_nlp_sentences(language).await?;
+        println!("Loaded {} sentences", sentences.len());
 
-    let sampled_sentences = sample_to_target(sentences, SAMPLE_SIZE, |s: &NlpAnalyzedSentence| {
-        s.sentence.clone()
-    });
+        let terms = load_multiword_terms(language).await?;
+        println!("Loaded {} multiword terms", terms.len());
 
-    println!("Sampled {} sentences", sampled_sentences.len());
+        let sampled_sentences =
+            sample_to_target(sentences, SAMPLE_SIZE, |s: &NlpAnalyzedSentence| {
+                s.sentence.clone()
+            });
+
+        let sampled_terms = sample_to_target(terms, TERM_SAMPLE_SIZE, |t: &NlpAnalyzedSentence| {
+            t.sentence.clone()
+        });
+
+        println!("Sampled {} sentences", sampled_sentences.len());
+        println!("Sampled {} multiword terms", sampled_terms.len());
+        sampled_sentences
+            .into_iter()
+            .chain(sampled_terms.into_iter())
+            .collect::<Vec<_>>()
+    };
+    let sample_count = samples.len();
 
     // Classify each sentence to get suspicious reasons
     let classifier = get_classifier(language);
     let corrector = get_corrector(language);
-    let classified_sentences: Vec<_> = sampled_sentences
+    let classified_sentences: Vec<_> = samples
         .into_iter()
         .map(|mut sentence| {
             let classification = classifier.classify(&sentence);
@@ -369,7 +466,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                 println!(
                     "  [{}/{}] (${cost:.2})",
                     i,
-                    SAMPLE_SIZE,
+                    sample_count,
                     cost = CHAT_CLIENT.cost().unwrap()
                 );
             }
@@ -442,13 +539,14 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     println!("\n=== Pass 2: Adding dependency information ===");
 
     // Second pass: Add dependency information
+
     let results_with_deps = futures::stream::iter(validated_results.into_iter().enumerate())
         .map(|(i, (original_sentence, corrected_tokens))| async move {
             if i % 100 == 0 {
                 println!(
                     "  [{}/{}] Parsing dependencies (${cost:.2})",
                     i,
-                    SAMPLE_SIZE,
+                    sample_count,
                     cost = CHAT_CLIENT_MINI.cost().unwrap()
                 );
             }
