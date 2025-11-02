@@ -7,12 +7,14 @@ use classify::{
     parse_dependencies_with_llm,
 };
 use futures::StreamExt;
-use language_utils::{Language, NlpAnalyzedSentence};
+use generate_data::target_sentences;
+use language_utils::{Course, Language, NlpAnalyzedSentence};
 use rand::prelude::IndexedRandom;
 use sentence_sampler::sample_to_target;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write as _};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 use utils::{ValidationResult, validate_and_fix_whitespace};
@@ -58,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
             let language = parse_language_code(language_code)?;
 
             println!("Loading NLP data for {language:?}...");
-            let mut nlp_sentences = load_nlp_sentences(language)?;
+            let mut nlp_sentences = load_nlp_sentences(language).await?;
             println!("Loaded {} sentences", nlp_sentences.len());
 
             // Apply corrections and filter out suspicious sentences
@@ -121,6 +123,11 @@ fn print_usage() {
     eprintln!("  spa - Spanish");
     eprintln!("  eng - English");
     eprintln!("  kor - Korean");
+    eprintln!("  por - Portuguese");
+    eprintln!("  ita - Italian");
+    eprintln!("  jpn - Japanese");
+    eprintln!("  rus - Russian");
+    eprintln!("  zho - Chinese");
     eprintln!();
     eprintln!("Examples:");
     eprintln!("  clean-nlp-data print fra 40    # Print 40 random French sentences");
@@ -135,6 +142,7 @@ fn parse_language_code(code: &str) -> anyhow::Result<Language> {
         "spa" => Ok(Language::Spanish),
         "eng" => Ok(Language::English),
         "kor" => Ok(Language::Korean),
+        "por" => Ok(Language::Portuguese),
         _ => Err(anyhow!(
             "Unknown language code '{}'. Supported codes: fra, deu, spa, eng, kor",
             code
@@ -142,11 +150,8 @@ fn parse_language_code(code: &str) -> anyhow::Result<Language> {
     }
 }
 
-fn load_nlp_sentences(language: Language) -> anyhow::Result<Vec<NlpAnalyzedSentence>> {
-    let nlp_file_path = PathBuf::from(format!(
-        "./out/{}/target_language_sentences_nlp.jsonl",
-        language.iso_639_3()
-    ));
+async fn load_nlp_sentences(language: Language) -> anyhow::Result<Vec<NlpAnalyzedSentence>> {
+    let nlp_file_path = ensure_nlp_file(language).await?;
 
     let file = File::open(&nlp_file_path)
         .context(format!("Failed to open NLP file: {nlp_file_path:?}"))?;
@@ -186,6 +191,128 @@ fn print_random_sentences(sentences: &[NlpAnalyzedSentence], count: usize) {
     }
 }
 
+fn default_native_language(language: Language) -> Language {
+    match language {
+        Language::English => Language::French,
+        _ => Language::English,
+    }
+}
+
+fn base_output_directory(language: Language) -> PathBuf {
+    PathBuf::from(format!("./out/clean-nlp-data/{}", language.iso_639_3()))
+}
+
+fn ensure_target_sentences_file(
+    course: Course,
+    target_sentences_path: &Path,
+) -> anyhow::Result<()> {
+    println!(
+        "Generating target language sentences for {:?}...",
+        course.target_language
+    );
+    let sentences = target_sentences::get_target_sentences(course)
+        .context("Failed to load target sentences")?;
+
+    if sentences.is_empty() {
+        return Err(anyhow!(
+            "No target sentences found for {:?}",
+            course.target_language
+        ));
+    }
+
+    let file = File::create(target_sentences_path).context(format!(
+        "Failed to create target sentences file: {target_sentences_path:?}"
+    ))?;
+    let mut writer = BufWriter::new(file);
+
+    for (sentence, _) in sentences {
+        writeln!(writer, "{}", serde_json::to_string(&sentence)?)
+            .context("Failed to write target sentence")?;
+    }
+
+    writer
+        .flush()
+        .context("Failed to flush target sentences writer")?;
+
+    Ok(())
+}
+
+async fn ensure_nlp_file(language: Language) -> anyhow::Result<PathBuf> {
+    let base_dir = base_output_directory(language);
+    std::fs::create_dir_all(&base_dir).context("Failed to create NLP output directory")?;
+    let base_dir = base_dir
+        .canonicalize()
+        .context("Failed to canonicalize NLP output directory")?;
+
+    let course = Course {
+        native_language: default_native_language(language),
+        target_language: language,
+    };
+
+    let target_sentences_path = base_dir.join("target_language_sentences.jsonl");
+    if !target_sentences_path.exists() {
+        ensure_target_sentences_file(course, &target_sentences_path)?;
+    }
+
+    let nlp_file_path = base_dir.join("target_language_sentences_nlp.jsonl");
+    if !nlp_file_path.exists() {
+        println!(
+            "Running Python NLP pipeline for {:?}...",
+            course.target_language
+        );
+        // Create an empty multiword terms file for now
+        let multiword_terms_file = base_dir.join("multiword_terms.jsonl");
+        if !multiword_terms_file.exists() {
+            File::create(&multiword_terms_file)
+                .context("Failed to create empty multiword terms file")?;
+        }
+        run_python_nlp(
+            course.target_language,
+            &target_sentences_path,
+            &multiword_terms_file,
+            &nlp_file_path,
+        )?;
+    }
+
+    Ok(nlp_file_path)
+}
+
+fn run_python_nlp(
+    language: Language,
+    target_sentences_path: &Path,
+    multiword_terms_file: &Path,
+    nlp_output_path: &Path,
+) -> anyhow::Result<()> {
+    let script_path = Path::new("./generate-data/nlp/")
+        .canonicalize()
+        .context("Failed to canonicalize script path")?;
+
+    let status = Command::new("uv")
+        .arg("run")
+        .arg("main.py")
+        .arg(language.iso_639_3())
+        .arg(target_sentences_path)
+        .arg(multiword_terms_file)
+        .arg(nlp_output_path)
+        .current_dir(script_path)
+        .status()
+        .context("Failed to run Python NLP script")?;
+
+    if !status.success() {
+        return Err(anyhow!(
+            "Python NLP script exited with status {:?}",
+            status.code()
+        ));
+    }
+
+    println!(
+        "Successfully generated NLP data at {}",
+        nlp_output_path.display()
+    );
+
+    Ok(())
+}
+
 async fn clean_all_languages() -> anyhow::Result<()> {
     let languages = vec![
         Language::French,
@@ -193,6 +320,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
         Language::Spanish,
         Language::English,
         Language::Korean,
+        Language::Portuguese,
     ];
 
     for language in languages {
@@ -209,7 +337,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     const SAMPLE_SIZE: usize = 6_000;
 
     println!("Loading NLP data for {language:?}...");
-    let sentences = load_nlp_sentences(language)?;
+    let sentences = load_nlp_sentences(language).await?;
     println!("Loaded {} sentences", sentences.len());
 
     let sampled_sentences = sample_to_target(sentences, SAMPLE_SIZE, |s: &NlpAnalyzedSentence| {
