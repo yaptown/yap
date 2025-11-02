@@ -12,10 +12,19 @@ use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 mod google_translate;
 use google_translate::GoogleTranslator;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     env_logger::init();
 
+    // Create a Tokio runtime with 16MB stack size (default is ~2MB)
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .thread_stack_size(16 * 1024 * 1024)
+        .enable_all()
+        .build()?;
+
+    runtime.block_on(async_main())
+}
+
+async fn async_main() -> anyhow::Result<()> {
     for course in COURSES {
         println!("Processing course: {}", course.target_language);
         println!("======================");

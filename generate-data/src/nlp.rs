@@ -241,7 +241,7 @@ impl MultiwordTermDetector {
                         }
                     }
                 })
-                .buffer_unordered(10)
+                .buffer_unordered(8)
                 .collect()
                 .await
         };
@@ -342,7 +342,7 @@ pub async fn process_sentences(
 
     // Process sentences in batches
     println!("\nProcessing sentences...");
-    let batch_size = 1000;
+    let batch_size = 500;
 
     let input_file = std::fs::File::open(sentences_file)?;
     let reader = BufReader::new(input_file);
