@@ -143,9 +143,10 @@ impl MultiwordTermDetector {
                 .unwrap()
                 .progress_chars("#>-"),
         );
+        pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
         // Process all terms with controlled concurrency
-        let analyses = futures::stream::iter(multiword_terms.iter()).skip(500).take(100)
+        let analyses = futures::stream::iter(multiword_terms.iter())
             .map(|term| {
                 let pb = pb.clone();
                 async move {
@@ -356,6 +357,7 @@ pub async fn process_sentences(
             .unwrap()
             .progress_chars("#>-"),
     );
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
     let mut batch_sentences = Vec::new();
 

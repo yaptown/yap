@@ -81,6 +81,10 @@ The data in out/ is generated via the `generate-data` binary.
 cargo run --bin generate-data --release
 ```
 
+Each individual step is cached inside a file in the out/ directory. To rerun a step, you need to delete the cache file. For example, if you want to rerun the dictionary generation for a language, you'll need to delete the dictionary file for that language. LLM calls are cached in the .cache directory. This allows you to rerun a step without spending a ton of money.
+
+The NLP is extremely slow. I rented a GH200 from Lambda Labs when I need to recalculate it.
+
 ## Data Cleaning
 
 The NLP model used by Yap (lexide) is trained from data in this repo. Generating that data requires python.
