@@ -44,8 +44,10 @@ pub fn get_classifier(language: Language) -> Box<dyn SentenceClassifier> {
         Language::French => Box::new(FrenchClassifier),
         Language::German => Box::new(GermanClassifier),
         Language::Spanish => Box::new(SpanishClassifier),
+        Language::Portuguese => Box::new(PortugueseClassifier),
         Language::Korean => Box::new(KoreanClassifier),
-        _ => Box::new(DefaultClassifier),
+        Language::English => Box::new(EnglishClassifier),
+        language => unimplemented!("No classifier for language: {}", language),
     }
 }
 
@@ -55,29 +57,10 @@ pub fn get_corrector(language: Language) -> Box<dyn WordCorrector> {
         Language::French => Box::new(FrenchCorrector),
         Language::German => Box::new(GermanCorrector),
         Language::Spanish => Box::new(SpanishCorrector),
+        Language::Portuguese => Box::new(PortugueseCorrector),
         Language::Korean => Box::new(KoreanCorrector),
-        _ => Box::new(DefaultCorrector),
-    }
-}
-
-/// Default classifier that marks everything as Unknown
-struct DefaultClassifier;
-
-impl SentenceClassifier for DefaultClassifier {
-    fn classify(&self, _sentence: &NlpAnalyzedSentence) -> SentenceClassification {
-        SentenceClassification::Unknown
-    }
-}
-
-/// Default corrector that makes no changes
-struct DefaultCorrector;
-
-impl WordCorrector for DefaultCorrector {
-    fn correct(&self, _sentence: &mut NlpAnalyzedSentence) -> CorrectionResult {
-        CorrectionResult {
-            corrected: false,
-            corrections: vec![],
-        }
+        Language::English => Box::new(EnglishCorrector),
+        language => unimplemented!("No corrector for language: {}", language),
     }
 }
 
@@ -390,6 +373,459 @@ impl WordCorrector for SpanishCorrector {
     }
 }
 
+/// Portuguese-specific classifier
+struct PortugueseClassifier;
+
+impl SentenceClassifier for PortugueseClassifier {
+    fn classify(&self, sentence: &NlpAnalyzedSentence) -> SentenceClassification {
+        let mut reasons = Vec::new();
+
+        // Check for Space tokens which indicate NLP parsing issues
+        for token in &sentence.doc {
+            if token.pos == PartOfSpeech::Space {
+                reasons.push(format!("Contains Space token: '{}'", sentence.sentence));
+            }
+
+            // Check for PROPN (proper noun) tags - often over-classified
+            if token.pos == PartOfSpeech::Propn {
+                reasons.push(format!(
+                    "Contains '{}' classified as a proper noun, but the legacy NLP pipeline often over-classifies things as proper nouns",
+                    token.text
+                ));
+            }
+
+            let text_lower = token.text.to_lowercase();
+
+            // Check for words containing hyphens that should be split
+            if token.text.contains('-') && token.text != "-" {
+                reasons.push(format!(
+                    "'{}' contains a hyphen and should likely be split into separate tokens (e.g., 'Deixe-me' → 'Deixe', '-', 'me')",
+                    token.text
+                ));
+            }
+
+            // Check for lemmas containing spaces (parsing error)
+            if token.lemma.contains(' ') {
+                reasons.push(format!(
+                    "'{}' has lemma with space: '{}'",
+                    token.text, token.lemma
+                ));
+            }
+
+            // Check for verbs/auxiliaries with themselves as lemma (no morphological analysis)
+            if (token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux)
+                && token.text.to_lowercase() == token.lemma.to_lowercase()
+            {
+                reasons.push(format!(
+                    "Verb/Aux '{}' should be lemmatized to infinitive",
+                    token.text,
+                ));
+            }
+
+            // Check for object/reflexive pronouns with subject pronoun lemmas
+            if (text_lower == "me" && token.lemma == "eu")
+                || (text_lower == "te" && token.lemma == "tu")
+                || (text_lower == "o" && token.lemma == "ele" && token.pos == PartOfSpeech::Pron)
+                || (text_lower == "a" && token.lemma == "ele" && token.pos == PartOfSpeech::Pron)
+                || (text_lower == "lhe" && token.lemma == "ele")
+                || (text_lower == "se" && token.lemma == "ele")
+                || (text_lower == "nos" && token.lemma == "eu")
+                || (text_lower == "vos" && token.lemma == "tu")
+            {
+                reasons.push(format!(
+                    "Pronoun '{}' has incorrect lemma '{}'",
+                    token.text, token.lemma
+                ));
+            }
+
+            // Check for "nos" with lemma "nós" - could be wrong if it's an object pronoun
+            if text_lower == "nos" && token.lemma == "nós" && token.pos == PartOfSpeech::Pron {
+                reasons.push(
+                    "'nos' has lemma 'nós' - check if this is correct. If 'nos' is an object pronoun (e.g., 'ele nos disse'), it should not have lemma 'nós' (subject pronoun)".to_string()
+                );
+            }
+
+            // Check for words that can be either DET or PRON depending on context
+            // Rule: If it modifies a noun directly → DET. If it stands alone replacing a noun → PRON.
+            let det_or_pron_words = [
+                // Demonstratives
+                "este", "esta", "estes", "estas", "esse", "essa", "esses", "essas", "aquele",
+                "aquela", "aqueles", "aquelas", "isto", "isso", "aquilo",
+                // Possessives
+                "meu", "minha", "meus", "minhas", "teu", "tua", "teus", "tuas", "seu", "sua",
+                "seus", "suas", "nosso", "nossa", "nossos", "nossas", "vosso", "vossa", "vossos",
+                "vossas", // Indefinites/Quantifiers
+                "um", "uma", "uns", "umas", "algum", "alguma", "alguns", "algumas", "nenhum",
+                "nenhuma", "todo", "toda", "todos", "todas", "outro", "outra", "outros", "outras",
+                "muito", "muita", "muitos", "muitas", "pouco", "pouca", "poucos", "poucas",
+                "vários", "várias", "certo", "certa", "certos", "certas", "mesmo", "mesma",
+                "mesmos", "mesmas", "tal", "tais",
+                // Articles (can sometimes be pronouns)
+                "o", "a", "os", "as",
+            ];
+
+            if det_or_pron_words.contains(&text_lower.as_str())
+                && (token.pos == PartOfSpeech::Det || token.pos == PartOfSpeech::Pron)
+            {
+                reasons.push(format!(
+                    "'{}' can be either DET or PRON depending on context (Rule: modifies noun → DET, stands alone → PRON)",
+                    token.text
+                ));
+            }
+
+            // Check common past-tense verbs are lemmatized to infinitive
+            if token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux {
+                let expected_lemmas: Vec<(&str, &str)> = vec![
+                    ("era", "ser"),
+                    ("eram", "ser"),
+                    ("estava", "estar"),
+                    ("estavam", "estar"),
+                    ("estávamos", "estar"),
+                    ("tinha", "ter"),
+                    ("tinham", "ter"),
+                    ("fazia", "fazer"),
+                    ("faziam", "fazer"),
+                    ("dizia", "dizer"),
+                    ("diziam", "dizer"),
+                    ("ia", "ir"),
+                    ("iam", "ir"),
+                    ("vinha", "vir"),
+                    ("vinham", "vir"),
+                    ("via", "ver"),
+                    ("viam", "ver"),
+                    ("podia", "poder"),
+                    ("podiam", "poder"),
+                    ("queria", "querer"),
+                    ("queriam", "querer"),
+                    ("sabia", "saber"),
+                    ("sabiam", "saber"),
+                ];
+
+                for (past_form, expected_infinitive) in expected_lemmas {
+                    if text_lower == past_form && token.lemma != expected_infinitive {
+                        reasons.push(format!(
+                            "Past-tense verb '{}' has lemma '{}', but the dictionary form is '{}', look at the context to determine which is right",
+                            token.text, token.lemma, expected_infinitive
+                        ));
+                    }
+                }
+            }
+
+            // Check for ter conjugations which can be either AUX or VERB depending on context
+            // Rule: AUX when forming compound tenses (e.g., "tenho comido")
+            //       VERB when expressing possession (e.g., "tenho um livro")
+            let ter_forms = [
+                // Present
+                "tenho",
+                "tens",
+                "tem",
+                "temos",
+                "tendes",
+                "têm", // Imperfect
+                "tinha",
+                "tinhas",
+                "tínhamos",
+                "tínheis",
+                "tinham", // Preterite
+                "tive",
+                "tiveste",
+                "teve",
+                "tivemos",
+                "tivestes",
+                "tiveram", // Future
+                "terei",
+                "terás",
+                "terá",
+                "teremos",
+                "tereis",
+                "terão", // Conditional
+                "teria",
+                "terias",
+                "teríamos",
+                "teríeis",
+                "teriam",
+            ];
+
+            let haver_forms = [
+                // Present
+                "hei",
+                "hás",
+                "há",
+                "havemos",
+                "haveis",
+                "hão",
+                "há", // Imperfect
+                "havia",
+                "havias",
+                "havíamos",
+                "havíeis",
+                "haviam", // Preterite
+                "houve",
+                "houveste",
+                "houvemos",
+                "houvestes",
+                "houveram", // Future
+                "haverei",
+                "haverás",
+                "haverá",
+                "haveremos",
+                "havereis",
+                "haverão", // Conditional
+                "haveria",
+                "haverias",
+                "haveríamos",
+                "haveríeis",
+                "haveriam",
+            ];
+
+            let dever_forms = [
+                // Present
+                "devo",
+                "deves",
+                "deve",
+                "devemos",
+                "deveis",
+                "devem", // Imperfect
+                "devia",
+                "devias",
+                "devíamos",
+                "devíeis",
+                "deviam", // Preterite
+                "devi",
+                "deveste",
+                "deveu",
+                "devemos",
+                "devestes",
+                "deveram", // Future
+                "deverei",
+                "deverás",
+                "deverá",
+                "deveremos",
+                "devereis",
+                "deverão", // Conditional
+                "deveria",
+                "deverias",
+                "deveríamos",
+                "deveríeis",
+                "deveriam",
+            ];
+
+            let poder_forms = [
+                // Present
+                "posso",
+                "podes",
+                "pode",
+                "podemos",
+                "podeis",
+                "podem", // Imperfect
+                "podia",
+                "podias",
+                "podíamos",
+                "podíeis",
+                "podiam", // Preterite
+                "pude",
+                "pudeste",
+                "pôde",
+                "pudemos",
+                "pudestes",
+                "puderam", // Future
+                "poderei",
+                "poderás",
+                "poderá",
+                "poderemos",
+                "podereis",
+                "poderão", // Conditional
+                "poderia",
+                "poderias",
+                "poderíamos",
+                "poderíeis",
+                "poderiam",
+            ];
+
+            let saber_forms = [
+                // Present
+                "sei",
+                "sabes",
+                "sabe",
+                "sabemos",
+                "sabeis",
+                "sabem", // Imperfect
+                "sabia",
+                "sabias",
+                "sabíamos",
+                "sabíeis",
+                "sabiam", // Preterite
+                "soube",
+                "soubeste",
+                "soube",
+                "soubemos",
+                "soubestes",
+                "souberam", // Future
+                "saberei",
+                "saberás",
+                "saberá",
+                "saberemos",
+                "sabereis",
+                "saberão", // Conditional
+                "saberia",
+                "saberias",
+                "saberíamos",
+                "saberíeis",
+                "saberiam",
+            ];
+
+            if ter_forms.contains(&text_lower.as_str())
+                && (token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux)
+                && token.lemma == "ter"
+            {
+                reasons.push(format!(
+                    "'{}' (ter) can be either AUX or VERB depending on context. Rule: AUX when forming compound tenses (e.g., 'tenho comido'), VERB when expressing possession (e.g., 'tenho um livro', 'tem fome')",
+                    token.text
+                ));
+            }
+
+            if haver_forms.contains(&text_lower.as_str())
+                && (token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux)
+                && token.lemma == "haver"
+            {
+                reasons.push(format!(
+                    "'{}' (haver) can be either AUX or VERB depending on context. Rule: AUX when forming compound tenses (e.g., 'hei de fazer'), VERB in impersonal constructions (e.g., 'há pessoas', 'havia tempo')",
+                    token.text
+                ));
+            }
+
+            if dever_forms.contains(&text_lower.as_str())
+                && (token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux)
+                && token.lemma == "dever"
+            {
+                reasons.push(format!(
+                    "'{}' (dever) can be either AUX or VERB depending on context. Rule: AUX when expressing obligation with infinitive (e.g., 'devo ir'), VERB when expressing owing (e.g., 'devo dinheiro')",
+                    token.text
+                ));
+            }
+
+            if poder_forms.contains(&text_lower.as_str())
+                && (token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux)
+                && token.lemma == "poder"
+            {
+                reasons.push(format!(
+                    "'{}' (poder) can be either AUX or VERB depending on context. Rule: AUX when expressing ability/possibility with infinitive (e.g., 'posso fazê-lo'), VERB when used standalone or as a noun",
+                    token.text
+                ));
+            }
+
+            if saber_forms.contains(&text_lower.as_str())
+                && (token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux)
+                && token.lemma == "saber"
+            {
+                reasons.push(format!(
+                    "'{}' (saber) can be either AUX or VERB depending on context. Rule: AUX when expressing ability with infinitive (e.g., 'sei nadar'), VERB when expressing knowledge of facts (e.g., 'sei a resposta')",
+                    token.text
+                ));
+            }
+        }
+
+        if reasons.is_empty() {
+            SentenceClassification::Unknown
+        } else {
+            SentenceClassification::Suspicious { reasons }
+        }
+    }
+}
+
+/// Portuguese-specific corrector
+struct PortugueseCorrector;
+
+impl WordCorrector for PortugueseCorrector {
+    fn correct(&self, sentence: &mut NlpAnalyzedSentence) -> CorrectionResult {
+        let mut corrected = false;
+        let mut corrections = Vec::new();
+
+        // Use fold to build new token list, splitting hyphens as we go
+        let original_tokens = std::mem::take(&mut sentence.doc);
+        sentence.doc = original_tokens
+            .into_iter()
+            .fold(Vec::new(), |mut acc, mut token| {
+                let text_lower = token.text.to_lowercase();
+
+                // Fix "ela" lemma - should always be "ela", not "ele"
+                if text_lower == "ela" && token.lemma != "ela" {
+                    corrections.push(format!(
+                        "Fixed '{}' lemma from '{}' to 'ela'",
+                        token.text, token.lemma
+                    ));
+                    token.lemma = "ela".to_string();
+                    corrected = true;
+                }
+
+                // Split words starting with hyphen (e.g., "-me" from "Deixe-me")
+                if token.text.starts_with('-')
+                    && token.text.len() > 1
+                    && !acc.is_empty()
+                    && acc.last().unwrap().whitespace.is_empty()
+                {
+                    // Remove hyphen from beginning of token
+                    let original_text = token.text.clone();
+                    token.text = token.text[1..].to_string();
+
+                    corrections.push(format!(
+                        "Split hyphen from beginning of '{original_text}' into separate token"
+                    ));
+
+                    // Create separate hyphen token
+                    let hyphen_token = language_utils::DocToken {
+                        text: "-".to_string(),
+                        whitespace: String::new(), // No whitespace after hyphen
+                        pos: PartOfSpeech::Punct,
+                        lemma: "-".to_string(),
+                        morph: std::collections::BTreeMap::new(),
+                    };
+
+                    acc.push(hyphen_token);
+                    acc.push(token);
+                    corrected = true;
+                }
+                // Split words ending in hyphen with no whitespace after (e.g., "Deixe-" from "Deixe-me")
+                else if token.text.ends_with('-')
+                    && token.whitespace.is_empty()
+                    && token.text.len() > 1
+                {
+                    // Remove hyphen from original token
+                    let original_text = token.text.clone();
+                    let original_whitespace = token.whitespace.clone();
+                    token.text.pop();
+                    token.whitespace = String::new(); // No whitespace after word part
+
+                    corrections.push(format!(
+                        "Split hyphen from end of '{original_text}' into separate token"
+                    ));
+
+                    // Create separate hyphen token with the original whitespace
+                    let hyphen_token = language_utils::DocToken {
+                        text: "-".to_string(),
+                        whitespace: original_whitespace,
+                        pos: PartOfSpeech::Punct,
+                        lemma: "-".to_string(),
+                        morph: std::collections::BTreeMap::new(),
+                    };
+
+                    acc.push(token);
+                    acc.push(hyphen_token);
+                    corrected = true;
+                } else {
+                    acc.push(token);
+                }
+
+                acc
+            });
+
+        CorrectionResult {
+            corrected,
+            corrections,
+        }
+    }
+}
+
 /// Korean-specific classifier
 struct KoreanClassifier;
 
@@ -433,6 +869,27 @@ impl SentenceClassifier for KoreanClassifier {
 struct KoreanCorrector;
 
 impl WordCorrector for KoreanCorrector {
+    fn correct(&self, _sentence: &mut NlpAnalyzedSentence) -> CorrectionResult {
+        CorrectionResult {
+            corrected: false,
+            corrections: vec![],
+        }
+    }
+}
+
+/// English-specific classifier
+struct EnglishClassifier;
+
+impl SentenceClassifier for EnglishClassifier {
+    fn classify(&self, _sentence: &NlpAnalyzedSentence) -> SentenceClassification {
+        SentenceClassification::Unknown
+    }
+}
+
+/// English-specific corrector
+struct EnglishCorrector;
+
+impl WordCorrector for EnglishCorrector {
     fn correct(&self, _sentence: &mut NlpAnalyzedSentence) -> CorrectionResult {
         CorrectionResult {
             corrected: false,
@@ -1487,25 +1944,6 @@ mod tests {
         assert!(result.corrected);
         assert_eq!(result.corrections.len(), 1);
         assert_eq!(sentence.doc[0].lemma, "elle");
-    }
-
-    #[test]
-    fn test_default_classifier() {
-        use language_utils::MultiwordTerms;
-
-        let sentence = NlpAnalyzedSentence {
-            sentence: "Test".to_string(),
-            multiword_terms: MultiwordTerms {
-                high_confidence: vec![],
-                low_confidence: vec![],
-            },
-            doc: vec![],
-        };
-
-        let classifier = DefaultClassifier;
-        let result = classifier.classify(&sentence);
-
-        assert_eq!(result, SentenceClassification::Unknown);
     }
 }
 
