@@ -31,5 +31,10 @@ reqwest.workspace = true
 html-escape.workspace = true
 unicode-normalization.workspace = true
 dashmap = { version = "6.1.0", features = ["serde"] }
-lexide.workspace = true
 indicatif.workspace = true
+
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+lexide.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+lexide = { workspace = true, features = ["cuda", "cudnn", "flash-attn"] }
