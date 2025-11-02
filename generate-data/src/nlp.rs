@@ -136,67 +136,63 @@ impl MultiwordTermDetector {
         let lexide_language =
             to_lexide_language(language).ok_or_else(|| anyhow::anyhow!("Unsupported language"))?;
 
-        // Process terms in batches for efficiency
-        let batch_size = 1000;
-        let num_batches = (multiword_terms.len() + batch_size - 1) / batch_size;
-
-        let pb = ProgressBar::new(num_batches as u64);
+        let pb = ProgressBar::new(multiword_terms.len() as u64);
         pb.set_style(
             ProgressStyle::default_bar()
-                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} batches ({eta})")
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} terms ({per_sec}, {eta})")
                 .unwrap()
                 .progress_chars("#>-"),
         );
 
-        for chunk in multiword_terms.chunks(batch_size) {
-            // Analyze all terms in the chunk
-            let analyses = futures::stream::iter(chunk.iter())
-                .map(|term| async move {
-                    println!("Analyzing term: {term}");
-                    match lexide.analyze(term, lexide_language).await {
+        // Process all terms with controlled concurrency
+        let analyses = futures::stream::iter(multiword_terms.iter())
+            .map(|term| {
+                let pb = pb.clone();
+                async move {
+                    let result = match lexide.analyze(term, lexide_language).await {
                         Ok(tokenization) => Some((term.clone(), tokenization)),
                         Err(e) => {
                             eprintln!("Warning: Failed to analyze term '{}': {}", term, e);
                             None
                         }
-                    }
-                })
-                .buffer_unordered(100)
-                .collect::<Vec<_>>()
-                .await;
+                    };
+                    pb.inc(1);
+                    result
+                }
+            })
+            .buffer_unordered(4)
+            .collect::<Vec<_>>()
+            .await;
 
-            for result in analyses {
-                if let Some((term, tokenization)) = result {
-                    // Create lemma mapping
-                    let lemmas: Vec<String> = tokenization
-                        .tokens
-                        .iter()
-                        .map(|t| t.lemma.lemma.clone())
-                        .collect();
+        for result in analyses {
+            if let Some((term, tokenization)) = result {
+                // Create lemma mapping
+                let lemmas: Vec<String> = tokenization
+                    .tokens
+                    .iter()
+                    .map(|t| t.lemma.lemma.clone())
+                    .collect();
 
-                    lemma_to_terms
-                        .entry(lemmas.clone())
-                        .or_insert_with(Vec::new)
-                        .push(term.clone());
+                lemma_to_terms
+                    .entry(lemmas.clone())
+                    .or_insert_with(Vec::new)
+                    .push(term.clone());
 
-                    // Create dependency pattern if needed
-                    if Self::should_create_dependency_pattern(&tokenization, language) {
-                        match TreeNode::try_from(tokenization) {
-                            Ok(tree) => {
-                                dependency_patterns.push((term, tree));
-                            }
-                            Err(e) => {
-                                eprintln!(
-                                    "Warning: Failed to create dependency tree for term '{}': {}",
-                                    term, e
-                                );
-                            }
+                // Create dependency pattern if needed
+                if Self::should_create_dependency_pattern(&tokenization, language) {
+                    match TreeNode::try_from(tokenization) {
+                        Ok(tree) => {
+                            dependency_patterns.push((term, tree));
+                        }
+                        Err(e) => {
+                            eprintln!(
+                                "Warning: Failed to create dependency tree for term '{}': {}",
+                                term, e
+                            );
                         }
                     }
                 }
             }
-
-            pb.inc(1);
         }
 
         pb.finish_with_message("Patterns created");
@@ -244,7 +240,7 @@ impl MultiwordTermDetector {
                         }
                     }
                 })
-                .buffer_unordered(100)
+                .buffer_unordered(4)
                 .collect()
                 .await
         };
