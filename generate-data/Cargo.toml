@@ -37,4 +37,4 @@ indicatif.workspace = true
 lexide.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
-lexide = { workspace = true, features = ["cuda", "cudnn", "flash-attn"] }
+lexide = { workspace = true, features = ["cuda", "flash-attn"] }

@@ -137,7 +137,7 @@ impl MultiwordTermDetector {
             to_lexide_language(language).ok_or_else(|| anyhow::anyhow!("Unsupported language"))?;
 
         // Process terms in batches for efficiency
-        let batch_size = 10;
+        let batch_size = 1000;
         let num_batches = (multiword_terms.len() + batch_size - 1) / batch_size;
 
         let pb = ProgressBar::new(num_batches as u64);
@@ -161,7 +161,7 @@ impl MultiwordTermDetector {
                         }
                     }
                 })
-                .buffer_unordered(4)
+                .buffer_unordered(100)
                 .collect::<Vec<_>>()
                 .await;
 
@@ -244,7 +244,7 @@ impl MultiwordTermDetector {
                         }
                     }
                 })
-                .buffer_unordered(8)
+                .buffer_unordered(100)
                 .collect()
                 .await
         };
