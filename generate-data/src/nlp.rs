@@ -146,7 +146,7 @@ impl MultiwordTermDetector {
         pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
         // Process all terms with controlled concurrency
-        let analyses = futures::stream::iter(multiword_terms.iter()).take(100)
+        let analyses = futures::stream::iter(multiword_terms.iter())
             .map(|term| {
                 let pb = pb.clone();
                 async move {
@@ -371,16 +371,14 @@ pub async fn process_sentences(
 
         // Process batch when full
         if batch_sentences.len() >= batch_size {
-            process_batch(&detector, &batch_sentences, &mut writer).await?;
-            pb.inc(batch_sentences.len() as u64);
+            process_batch(&detector, &batch_sentences, &mut writer, &pb).await?;
             batch_sentences.clear();
         }
     }
 
     // Process remaining sentences
     if !batch_sentences.is_empty() {
-        process_batch(&detector, &batch_sentences, &mut writer).await?;
-        pb.inc(batch_sentences.len() as u64);
+        process_batch(&detector, &batch_sentences, &mut writer, &pb).await?;
     }
 
     pb.finish_with_message("Processing complete");
@@ -398,6 +396,7 @@ async fn process_batch(
     detector: &MultiwordTermDetector,
     sentences: &[String],
     writer: &mut dyn Write,
+    pb: &ProgressBar,
 ) -> Result<()> {
     let results = detector.find_multiword_terms_batch(sentences).await?;
 
@@ -417,6 +416,9 @@ async fn process_batch(
             writeln!(writer, "{json}")?;
         }
         // If result is None, we skip this sentence (error was already logged)
+
+        // Update progress bar after each sentence
+        pb.inc(1);
     }
 
     Ok(())
