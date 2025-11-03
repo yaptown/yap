@@ -191,17 +191,12 @@ impl MultiwordTermDetector {
                             );
                         }
                     }
-                } else {
-                    // Explicitly drop tokenization if we don't use it for TreeNode
-                    drop(tokenization);
                 }
             }
         }
 
-        eprintln!("DEBUG: Loop finished, about to finish progress bar");
         pb.finish_with_message("Patterns created");
 
-        eprintln!("DEBUG: About to return from create_patterns_and_mappings");
         Ok((lemma_to_terms, dependency_patterns))
     }
 
