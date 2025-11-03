@@ -150,6 +150,30 @@ fn parse_language_code(code: &str) -> anyhow::Result<Language> {
     }
 }
 
+/// Load manual sentences for a language (these should never be filtered)
+fn load_manual_sentences(language: Language) -> anyhow::Result<std::collections::HashSet<String>> {
+    let manual_file = PathBuf::from(format!(
+        "./generate-data/data/{}/sentence-sources/extra/manual.txt",
+        language.iso_639_3()
+    ));
+
+    let mut manual_sentences = std::collections::HashSet::new();
+
+    if manual_file.exists() {
+        let content = std::fs::read_to_string(&manual_file)
+            .context("Failed to read manual sentences file")?;
+        for line in content.lines() {
+            let line = line.trim().to_string();
+            if !line.is_empty() {
+                manual_sentences.insert(line);
+            }
+        }
+        println!("Loaded {} manual sentences", manual_sentences.len());
+    }
+
+    Ok(manual_sentences)
+}
+
 async fn load_nlp_sentences(language: Language) -> anyhow::Result<Vec<NlpAnalyzedSentence>> {
     let nlp_file_path = ensure_nlp_file(language).await?;
 
@@ -214,8 +238,7 @@ async fn load_multiword_terms(language: Language) -> anyhow::Result<Vec<NlpAnaly
     let terms_nlp_path = base_dir.join("multiword_terms_nlp.jsonl");
     if !terms_nlp_path.exists() {
         println!(
-            "Running Python NLP on multiword terms for {:?}...",
-            language
+            "Running Python NLP on multiword terms for {language:?}..."
         );
         // Create an empty multiword terms file for the NLP (since we're analyzing the terms themselves)
         let empty_terms_file = base_dir.join("empty_multiword_terms.txt");
@@ -305,7 +328,7 @@ fn ensure_target_sentences_file(
     ))?;
     let mut writer = BufWriter::new(file);
 
-    for (sentence, _) in sentences {
+    for (sentence, _, _source) in sentences {
         writeln!(writer, "{}", serde_json::to_string(&sentence)?)
             .context("Failed to write target sentence")?;
     }
@@ -412,15 +435,32 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 }
 
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
+    // Load manual sentences that should never be filtered
+    let manual_sentences = load_manual_sentences(language)?;
+
     let samples = {
         // We probably should get at least 10_000 samples per language to get good coverage.
         // Bare minimum to get a usable result is probably around 1_500.
         const SAMPLE_SIZE: usize = 6_000;
-        const TERM_SAMPLE_SIZE: usize = 1_000;
+        const TERM_SAMPLE_SIZE: usize = 3_000;
 
         println!("Loading NLP data for {language:?}...");
-        let sentences = load_nlp_sentences(language).await?;
+        let mut sentences = load_nlp_sentences(language).await?;
         println!("Loaded {} sentences", sentences.len());
+
+        // Separate manual sentences from other sentences
+        let (manual_nlp_sentences, other_sentences): (Vec<_>, Vec<_>) = sentences
+            .into_iter()
+            .partition(|s| manual_sentences.contains(&s.sentence));
+
+        println!(
+            "Found {} manual sentences, {} other sentences",
+            manual_nlp_sentences.len(),
+            other_sentences.len()
+        );
+
+        // Use other sentences for sampling, then add ALL manual sentences back
+        sentences = other_sentences;
 
         let terms = load_multiword_terms(language).await?;
         println!("Loaded {} multiword terms", terms.len());
@@ -436,12 +476,19 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
 
         println!("Sampled {} sentences", sampled_sentences.len());
         println!("Sampled {} multiword terms", sampled_terms.len());
+
+        // Add ALL manual sentences back (they should always be included)
         sampled_sentences
             .into_iter()
             .chain(sampled_terms.into_iter())
+            .chain(manual_nlp_sentences.into_iter())
             .collect::<Vec<_>>()
     };
     let sample_count = samples.len();
+
+    println!(
+        "Total samples for cleaning: {sample_count} (including all manual sentences)"
+    );
 
     // Classify each sentence to get suspicious reasons
     let classifier = get_classifier(language);

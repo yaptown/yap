@@ -83,13 +83,13 @@ async fn async_main() -> anyhow::Result<()> {
         } else {
             let mut total_sentences = 0;
 
-            // Get target sentences with their existing translations (from Anki and Tatoeba)
-            let sentences_with_translations =
+            // Get target sentences with their existing translations (from Anki, Tatoeba, and manual sources)
+            let sentences_with_translations_and_sources =
                 generate_data::target_sentences::get_target_sentences(*course)?;
 
             println!(
-                "Loaded {} sentences from Anki and Tatoeba",
-                sentences_with_translations.len()
+                "Loaded {} sentences from all sources (Anki, Tatoeba, manual)",
+                sentences_with_translations_and_sources.len()
             );
 
             // Create the translator once and share it across all async tasks
@@ -100,30 +100,31 @@ async fn async_main() -> anyhow::Result<()> {
             )
             .unwrap();
 
-            let all_sentences = futures::stream::iter(sentences_with_translations.into_iter().map(
-                |(target_language_sentence, native_sentence)| async {
-                    let mut translation_set = IndexSet::new();
-                    match translator.translate(&target_language_sentence).await {
-                        Ok(t) => {
-                            if !t.trim().is_empty() {
-                                translation_set.insert(t);
+            let all_sentences =
+                futures::stream::iter(sentences_with_translations_and_sources.into_iter().map(
+                    |(target_language_sentence, native_sentence, _source)| async {
+                        let mut translation_set = IndexSet::new();
+                        match translator.translate(&target_language_sentence).await {
+                            Ok(t) => {
+                                if !t.trim().is_empty() {
+                                    translation_set.insert(t);
+                                }
                             }
+                            Err(e) => {
+                                eprintln!(
+                                    "Error translating sentence '{target_language_sentence}': {e}"
+                                );
+                            }
+                        };
+                        if let Some(native_sentence) = native_sentence {
+                            translation_set.insert(native_sentence);
                         }
-                        Err(e) => {
-                            eprintln!(
-                                "Error translating sentence '{target_language_sentence}': {e}"
-                            );
-                        }
-                    };
-                    if let Some(native_sentence) = native_sentence {
-                        translation_set.insert(native_sentence);
-                    }
-                    (target_language_sentence, translation_set)
-                },
-            ))
-            .buffered(100)
-            .collect::<BTreeMap<_, _>>()
-            .await;
+                        (target_language_sentence, translation_set)
+                    },
+                ))
+                .buffered(100)
+                .collect::<BTreeMap<_, _>>()
+                .await;
 
             // Drop the translator to trigger the Drop implementation
             drop(translator);

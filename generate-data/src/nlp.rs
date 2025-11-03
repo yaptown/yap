@@ -153,7 +153,7 @@ impl MultiwordTermDetector {
                     let result = match lexide.analyze(term, lexide_language).await {
                         Ok(tokenization) => Some((term.clone(), tokenization)),
                         Err(e) => {
-                            eprintln!("Warning: Failed to analyze term '{}': {}", term, e);
+                            eprintln!("Warning: Failed to analyze term '{term}': {e}");
                             None
                         }
                     };
@@ -187,8 +187,7 @@ impl MultiwordTermDetector {
                         }
                         Err(e) => {
                             eprintln!(
-                                "Warning: Failed to create dependency tree for term '{}': {}",
-                                term, e
+                                "Warning: Failed to create dependency tree for term '{term}': {e}"
                             );
                         }
                     }
@@ -236,7 +235,7 @@ impl MultiwordTermDetector {
                     match self.lexide.analyze(sentence, lexide_language).await {
                         Ok(tokenization) => Some(tokenization),
                         Err(e) => {
-                            eprintln!("Warning: Failed to analyze sentence '{}': {}", sentence, e);
+                            eprintln!("Warning: Failed to analyze sentence '{sentence}': {e}");
                             None
                         }
                     }

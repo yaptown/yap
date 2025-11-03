@@ -572,6 +572,58 @@ impl From<(DictionaryEntryThoughts, Morphology)> for DictionaryEntry {
     }
 }
 
+/// Tracks the source(s) of a sentence. Since a sentence can appear in multiple sources,
+/// we use boolean fields for each source type.
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq), derive(Debug))]
+pub struct SentenceSource {
+    /// Sentence came from an Anki deck
+    pub from_anki: bool,
+    /// Sentence came from Tatoeba
+    pub from_tatoeba: bool,
+    /// Sentence was manually added to extra/manual.txt
+    pub from_manual: bool,
+    /// Sentence came from a song in sentence-sources/songs/
+    pub from_song: bool,
+}
+
+impl SentenceSource {
+    /// Create a new source with all fields set to false
+    pub fn none() -> Self {
+        Self {
+            from_anki: false,
+            from_tatoeba: false,
+            from_manual: false,
+            from_song: false,
+        }
+    }
+
+    /// Returns true if the sentence came from a manual source (should never be filtered)
+    pub fn is_manual(&self) -> bool {
+        self.from_manual
+    }
+
+    /// Merge two sources together (OR operation on all fields)
+    pub fn merge(&mut self, other: &Self) {
+        self.from_anki |= other.from_anki;
+        self.from_tatoeba |= other.from_tatoeba;
+        self.from_manual |= other.from_manual;
+        self.from_song |= other.from_song;
+    }
+}
+
 #[derive(
     Clone,
     Debug,
