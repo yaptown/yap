@@ -43,7 +43,7 @@ slotmap = { version = "1.0", features = ["serde"] }
 wasm-logger = "0.2.0"
 unicode-normalization = "0.1.24"
 weblocks = { version = "0.1.0" }
-lexide = { git = "https://github.com/anchpop/lexide.git", rev = "cb9905ee249b0a9a4f81665efbd6a5a497e04b83" }
+lexide = { git = "https://github.com/anchpop/lexide.git", rev = "20ee11fe627fb57e76b4d675cdb715b9a798a6ee" }
 indicatif = "0.17"
 
 [workspace.dependencies.rkyv]

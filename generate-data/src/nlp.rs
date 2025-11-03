@@ -161,7 +161,7 @@ impl MultiwordTermDetector {
                     result
                 }
             })
-            .buffer_unordered(20)
+            .buffer_unordered(10)
             .collect::<Vec<_>>()
             .await;
 
@@ -241,7 +241,7 @@ impl MultiwordTermDetector {
                         }
                     }
                 })
-                .buffer_unordered(20)
+                .buffer_unordered(10)
                 .collect()
                 .await
         };
