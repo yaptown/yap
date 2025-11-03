@@ -2960,7 +2960,7 @@ checksum = "7a79a3332a6609480d7d0c9eab957bca6b455b91bb84e66d19f5ff66294b85b8"
 [[package]]
 name = "lexide"
 version = "0.1.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=20ee11fe627fb57e76b4d675cdb715b9a798a6ee#20ee11fe627fb57e76b4d675cdb715b9a798a6ee"
+source = "git+https://github.com/anchpop/lexide.git?rev=39f4daf494d305001274ae8208198a6e635fc317#39f4daf494d305001274ae8208198a6e635fc317"
 dependencies = [
  "anyhow",
  "futures",
