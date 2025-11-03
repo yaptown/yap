@@ -146,7 +146,7 @@ impl MultiwordTermDetector {
         pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
         // Process all terms with controlled concurrency
-        let analyses = futures::stream::iter(multiword_terms.iter())
+        let analyses = futures::stream::iter(multiword_terms.iter()).take(100)
             .map(|term| {
                 let pb = pb.clone();
                 async move {
@@ -191,9 +191,10 @@ impl MultiwordTermDetector {
                             );
                         }
                     }
+                } else {
+                    // Explicitly drop tokenization if we don't use it for TreeNode
+                    drop(tokenization);
                 }
-                // Explicitly drop tokenization to avoid accumulation
-                drop(tokenization);
             }
         }
 
