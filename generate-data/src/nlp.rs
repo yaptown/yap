@@ -4,7 +4,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{DocToken, Language, MultiwordTerms, NlpAnalyzedSentence, PartOfSpeech};
 use lexide::matching::{DependencyMatcher, TreeNode};
 use lexide::{Lexide, LexideConfig, Token};
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
@@ -72,7 +72,7 @@ pub struct MultiwordTermDetector {
     lexide: Lexide,
     language: Language,
     // Pre-computed lemma mappings
-    lemma_to_terms: BTreeMap<Vec<String>, Vec<String>>,
+    lemma_to_terms: HashMap<Vec<String>, Vec<String>>,
     // Pre-computed dependency patterns
     dependency_patterns: Vec<(String, TreeNode)>,
 }
@@ -129,8 +129,8 @@ impl MultiwordTermDetector {
         lexide: &Lexide,
         multiword_terms: &[String],
         language: Language,
-    ) -> Result<(BTreeMap<Vec<String>, Vec<String>>, Vec<(String, TreeNode)>)> {
-        let mut lemma_to_terms = BTreeMap::new();
+    ) -> Result<(HashMap<Vec<String>, Vec<String>>, Vec<(String, TreeNode)>)> {
+        let mut lemma_to_terms = HashMap::new();
         let mut dependency_patterns = Vec::new();
 
         let lexide_language =
@@ -192,11 +192,15 @@ impl MultiwordTermDetector {
                         }
                     }
                 }
+                // Explicitly drop tokenization to avoid accumulation
+                drop(tokenization);
             }
         }
 
+        eprintln!("DEBUG: Loop finished, about to finish progress bar");
         pb.finish_with_message("Patterns created");
 
+        eprintln!("DEBUG: About to return from create_patterns_and_mappings");
         Ok((lemma_to_terms, dependency_patterns))
     }
 

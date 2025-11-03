@@ -237,9 +237,7 @@ async fn load_multiword_terms(language: Language) -> anyhow::Result<Vec<NlpAnaly
     // Process the terms with NLP
     let terms_nlp_path = base_dir.join("multiword_terms_nlp.jsonl");
     if !terms_nlp_path.exists() {
-        println!(
-            "Running Python NLP on multiword terms for {language:?}..."
-        );
+        println!("Running Python NLP on multiword terms for {language:?}...");
         // Create an empty multiword terms file for the NLP (since we're analyzing the terms themselves)
         let empty_terms_file = base_dir.join("empty_multiword_terms.txt");
         if !empty_terms_file.exists() {
@@ -486,9 +484,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     };
     let sample_count = samples.len();
 
-    println!(
-        "Total samples for cleaning: {sample_count} (including all manual sentences)"
-    );
+    println!("Total samples for cleaning: {sample_count} (including all manual sentences)");
 
     // Classify each sentence to get suspicious reasons
     let classifier = get_classifier(language);
