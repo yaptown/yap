@@ -8,6 +8,7 @@ use classify::{
 };
 use futures::StreamExt;
 use generate_data::target_sentences;
+use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{Course, Language, NlpAnalyzedSentence};
 use rand::prelude::IndexedRandom;
 use sentence_sampler::sample_to_target;
@@ -503,17 +504,19 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         .collect();
 
     // Clean each sentence with LLM
-    let cleaned_results = futures::stream::iter(classified_sentences.into_iter().enumerate())
-        .map(|(i, (sentence, suspicious_reasons))| async move {
-            if i % 100 == 0 {
-                println!(
-                    "  [{}/{}] (${cost:.2})",
-                    i,
-                    sample_count,
-                    cost = CHAT_CLIENT.cost().unwrap()
-                );
-            }
+    let pb = ProgressBar::new(sample_count as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} sentences cleaned ({per_sec}, ${msg}, {eta})")
+            .unwrap()
+            .progress_chars("#>-"),
+    );
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
+    let cleaned_results = futures::stream::iter(classified_sentences.into_iter())
+        .map(|(sentence, suspicious_reasons)| {
+            let pb = pb.clone();
+            async move {
             let corrector = get_corrector(language);
             let result =
                 clean_sentence_with_llm(language, &sentence, suspicious_reasons, &CHAT_CLIENT)
@@ -522,11 +525,17 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                         corrector.post_corrections(&mut tokens);
                         tokens
                     });
+
+            pb.set_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
+            pb.inc(1);
+
             (sentence, result)
-        })
+        }})
         .buffer_unordered(50)
         .collect::<Vec<_>>()
         .await;
+
+    pb.finish_with_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
 
     // Write results to file
     let output_dir = PathBuf::from("./out");
@@ -582,18 +591,21 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     println!("\n=== Pass 2: Adding dependency information ===");
 
     // Second pass: Add dependency information
+    let validated_count = validated_results.len();
 
-    let results_with_deps = futures::stream::iter(validated_results.into_iter().enumerate())
-        .map(|(i, (original_sentence, corrected_tokens))| async move {
-            if i % 100 == 0 {
-                println!(
-                    "  [{}/{}] Parsing dependencies (${cost:.2})",
-                    i,
-                    sample_count,
-                    cost = CHAT_CLIENT_MINI.cost().unwrap()
-                );
-            }
+    let pb2 = ProgressBar::new(validated_count as u64);
+    pb2.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} dependencies parsed ({per_sec}, ${msg}, {eta})")
+            .unwrap()
+            .progress_chars("#>-"),
+    );
+    pb2.enable_steady_tick(std::time::Duration::from_millis(100));
 
+    let results_with_deps = futures::stream::iter(validated_results.into_iter())
+        .map(|(original_sentence, corrected_tokens)| {
+            let pb2 = pb2.clone();
+            async move {
             let dep_result = parse_dependencies_with_llm(
                 language,
                 &original_sentence.sentence,
@@ -602,11 +614,16 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
             )
             .await;
 
+            pb2.set_message(format!("{:.2}", CHAT_CLIENT_MINI.cost().unwrap_or(0.0)));
+            pb2.inc(1);
+
             (original_sentence, corrected_tokens, dep_result)
-        })
+        }})
         .buffer_unordered(50)
         .collect::<Vec<_>>()
         .await;
+
+    pb2.finish_with_message(format!("{:.2}", CHAT_CLIENT_MINI.cost().unwrap_or(0.0)));
 
     // Write results to file
     for (original_sentence, corrected_tokens, dep_result) in results_with_deps {

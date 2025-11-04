@@ -1,4 +1,5 @@
 use futures::StreamExt;
+use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{Course, Pronunciation};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap};
@@ -31,12 +32,23 @@ pub async fn select_common_pronunciations(
 
     let count = words_with_pronunciations.len();
 
+    let pb = ProgressBar::new(count as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} pronunciations ({per_sec}, ${msg}, {eta})")
+            .unwrap()
+            .progress_chars("#>-"),
+    );
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
+
     let pronunciations = futures::stream::iter(&words_with_pronunciations)
-        .enumerate()
-        .map(async |(i, (word, pronunciations))| -> Result<_, tysm::chat_completions::ChatError>{
+        .map(|(word, pronunciations)| {
+            let pb = pb.clone();
+            async move {
             // Skip if there's only one pronunciation
             if pronunciations.len() == 1 {
-                return Ok((word.clone(), pronunciations.first().unwrap().clone()));
+                pb.inc(1);
+                return Ok::<_, tysm::chat_completions::ChatError>((word.clone(), pronunciations.first().unwrap().clone()));
             }
 
             let response: Result<PronunciationResponse, _> = CHAT_CLIENT.chat_with_system_prompt(
@@ -61,12 +73,9 @@ Output format:
                 ),
             ).await;
 
-            if i % 100 == 0 {
-                println!("{i} / {count} (${cost:.2})", cost=CHAT_CLIENT.cost().unwrap());
-                println!("Word: {word}");
-                println!("Pronunciations: {pronunciations:?}");
-                println!("Response: {response:#?}");
-            }
+            // Update progress bar with cost
+            pb.set_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
+            pb.inc(1);
 
             match response {
                 Ok(resp) => {
@@ -93,10 +102,13 @@ Output format:
                     Ok((word.clone(), pronunciations.first().unwrap().clone()))
                 }
             }
+        }
         })
         .buffered(500)
         .collect::<Vec<_>>()
         .await;
+
+    pb.finish_with_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
 
     Ok(pronunciations.into_iter().filter_map(|r| r.ok()).collect())
 }
