@@ -161,7 +161,7 @@ impl MultiwordTermDetector {
                     result
                 }
             })
-            .buffer_unordered(10)
+            .buffer_unordered(100)
             .collect::<Vec<_>>()
             .await;
 
@@ -240,7 +240,7 @@ impl MultiwordTermDetector {
                         }
                     }
                 })
-                .buffer_unordered(10)
+                .buffered(100)
                 .collect()
                 .await
         };
@@ -420,6 +420,9 @@ async fn process_batch(
         // Update progress bar after each sentence
         pb.inc(1);
     }
+
+    // Flush after each batch to ensure data is written to disk
+    writer.flush()?;
 
     Ok(())
 }

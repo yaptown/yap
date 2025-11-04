@@ -189,7 +189,12 @@ async fn async_main() -> anyhow::Result<()> {
         // Process sentences with Rust NLP (lexide) to detect multiword terms
         let target_language_nlp_file =
             target_language_dir.join("target_language_sentences_nlp.jsonl");
-        if target_language_nlp_file.exists() {
+        let should_process_nlp = !target_language_nlp_file.exists()
+            || std::fs::metadata(&target_language_nlp_file)
+                .map(|m| m.len() == 0)
+                .unwrap_or(true);
+
+        if !should_process_nlp {
             println!("Skipping NLP processing because file already exists");
         } else {
             println!("\nProcessing sentences with Rust NLP (lexide)...");
