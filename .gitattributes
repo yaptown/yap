@@ -69,3 +69,4 @@ out/clean-nlp-data/fra/multiword_terms.jsonl filter=lfs diff=lfs merge=lfs -text
 out/clean-nlp-data/eng/multiword_terms.jsonl filter=lfs diff=lfs merge=lfs -text
 out/clean-nlp-data/eng/target_language_sentences.jsonl filter=lfs diff=lfs merge=lfs -text
 out/clean-nlp-data/fra/target_language_sentences.jsonl filter=lfs diff=lfs merge=lfs -text
+.cache/google_translate/master_cache.json filter=lfs diff=lfs merge=lfs -text
