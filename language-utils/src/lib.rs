@@ -2,6 +2,7 @@ pub mod features;
 pub mod indexmap;
 pub mod language_pack;
 pub mod profile;
+pub mod text_cleanup;
 
 use std::collections::BTreeMap;
 use std::hash::Hash;
