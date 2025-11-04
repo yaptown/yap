@@ -95,7 +95,10 @@ Of course, their native language is {native_language}, so you should write the m
     })
     .collect::<Vec<_>>();
 
-    pb.finish_with_message(format!("{:.2}", CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0)));
+    pb.finish_with_message(format!(
+        "{:.2}",
+        CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0)
+    ));
 
     Ok(phrasebook)
 }
@@ -191,7 +194,10 @@ Output the result as a JSON object containing an array of one or more definition
     })
     .collect::<Vec<_>>();
 
-    pb.finish_with_message(format!("{:.2}", CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0)));
+    pb.finish_with_message(format!(
+        "{:.2}",
+        CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0)
+    ));
 
     Ok(dictionary)
 }

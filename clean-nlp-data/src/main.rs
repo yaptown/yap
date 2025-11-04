@@ -517,20 +517,21 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         .map(|(sentence, suspicious_reasons)| {
             let pb = pb.clone();
             async move {
-            let corrector = get_corrector(language);
-            let result =
-                clean_sentence_with_llm(language, &sentence, suspicious_reasons, &CHAT_CLIENT)
-                    .await
-                    .map(|mut tokens| {
-                        corrector.post_corrections(&mut tokens);
-                        tokens
-                    });
+                let corrector = get_corrector(language);
+                let result =
+                    clean_sentence_with_llm(language, &sentence, suspicious_reasons, &CHAT_CLIENT)
+                        .await
+                        .map(|mut tokens| {
+                            corrector.post_corrections(&mut tokens);
+                            tokens
+                        });
 
-            pb.set_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
-            pb.inc(1);
+                pb.set_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
+                pb.inc(1);
 
-            (sentence, result)
-        }})
+                (sentence, result)
+            }
+        })
         .buffer_unordered(50)
         .collect::<Vec<_>>()
         .await;
@@ -606,19 +607,20 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         .map(|(original_sentence, corrected_tokens)| {
             let pb2 = pb2.clone();
             async move {
-            let dep_result = parse_dependencies_with_llm(
-                language,
-                &original_sentence.sentence,
-                &corrected_tokens,
-                &CHAT_CLIENT_MINI,
-            )
-            .await;
+                let dep_result = parse_dependencies_with_llm(
+                    language,
+                    &original_sentence.sentence,
+                    &corrected_tokens,
+                    &CHAT_CLIENT_MINI,
+                )
+                .await;
 
-            pb2.set_message(format!("{:.2}", CHAT_CLIENT_MINI.cost().unwrap_or(0.0)));
-            pb2.inc(1);
+                pb2.set_message(format!("{:.2}", CHAT_CLIENT_MINI.cost().unwrap_or(0.0)));
+                pb2.inc(1);
 
-            (original_sentence, corrected_tokens, dep_result)
-        }})
+                (original_sentence, corrected_tokens, dep_result)
+            }
+        })
         .buffer_unordered(50)
         .collect::<Vec<_>>()
         .await;
