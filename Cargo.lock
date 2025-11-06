@@ -2961,13 +2961,13 @@ checksum = "7a79a3332a6609480d7d0c9eab957bca6b455b91bb84e66d19f5ff66294b85b8"
 [[package]]
 name = "lexide"
 version = "0.1.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=ef592fd2a4a581917f74037b08d1230190ee1950#ef592fd2a4a581917f74037b08d1230190ee1950"
 dependencies = [
  "anyhow",
  "futures",
  "mistralrs",
  "mistralrs-core",
  "regex",
+ "reqwest 0.12.23",
  "serde",
  "serde_json",
  "serde_plain",

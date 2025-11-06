@@ -86,9 +86,9 @@ impl MultiwordTermDetector {
 
         // Initialize lexide
         println!("Initializing lexide NLP model...");
-        let lexide = Lexide::from_pretrained(LexideConfig::default())
-            .await
-            .context("Failed to initialize lexide")?;
+        let lexide =
+            Lexide::from_server("https://anchpop--lexide-gemma-3-27b-vllm-serve.modal.run")
+                .context("Failed to initialize lexide")?;
 
         // Load multiword terms
         println!("Loading multiword terms from {}...", terms_file.display());
@@ -147,13 +147,14 @@ impl MultiwordTermDetector {
 
         // Process all terms with controlled concurrency
         let analyses = futures::stream::iter(multiword_terms.iter())
+            .take(10)
             .map(|term| {
                 let pb = pb.clone();
                 async move {
                     let result = match lexide.analyze(term, lexide_language).await {
                         Ok(tokenization) => Some((term.clone(), tokenization)),
                         Err(e) => {
-                            eprintln!("Warning: Failed to analyze term '{term}': {e}");
+                            eprintln!("Warning: Failed to analyze term '{term}': {e:?}");
                             None
                         }
                     };
