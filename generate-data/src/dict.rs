@@ -81,7 +81,7 @@ Of course, their native language is {native_language}, so you should write the m
         } else {
             CHAT_CLIENT_4O.cost().unwrap_or(0.0)
         };
-        pb.set_message(format!("{:.2}", cost));
+        pb.set_message(format!("{cost:.2}"));
         pb.inc(1);
 
         (response, multiword_term)
@@ -177,7 +177,7 @@ Output the result as a JSON object containing an array of one or more definition
         } else {
             CHAT_CLIENT_4O.cost().unwrap_or(0.0)
         };
-        pb.set_message(format!("{:.2}", cost));
+        pb.set_message(format!("{cost:.2}"));
         pb.inc(1);
 
         (dict_response, morphology_result, heteronym)

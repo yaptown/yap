@@ -441,7 +441,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         // We probably should get at least 10_000 samples per language to get good coverage.
         // Bare minimum to get a usable result is probably around 1_500.
         const SAMPLE_SIZE: usize = 6_000;
-        const TERM_SAMPLE_SIZE: usize = 3_000;
+        const TERM_SAMPLE_SIZE: usize = 5_000;
 
         println!("Loading NLP data for {language:?}...");
         let mut sentences = load_nlp_sentences(language).await?;

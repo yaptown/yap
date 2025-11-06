@@ -12,19 +12,10 @@ use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 mod google_translate;
 use google_translate::GoogleTranslator;
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
-    // Create a Tokio runtime with 16MB stack size (default is ~2MB)
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .thread_stack_size(32 * 1024 * 1024)
-        .enable_all()
-        .build()?;
-
-    runtime.block_on(async_main())
-}
-
-async fn async_main() -> anyhow::Result<()> {
     for course in COURSES {
         println!("Processing course: {}", course.target_language);
         println!("======================");
@@ -186,45 +177,76 @@ async fn async_main() -> anyhow::Result<()> {
             );
         }
 
-        // Process sentences with Rust NLP (lexide) to detect multiword terms
-        let target_language_nlp_file =
-            target_language_dir.join("target_language_sentences_nlp.jsonl");
-        let should_process_nlp = !target_language_nlp_file.exists()
-            || std::fs::metadata(&target_language_nlp_file)
-                .map(|m| m.len() == 0)
-                .unwrap_or(true);
+        // Ensure multiword terms file exists
+        let multiword_terms_file =
+            generate_data::wiktionary::ensure_multiword_terms_file(course, &target_language_dir)
+                .await?;
 
-        if !should_process_nlp {
-            println!("Skipping NLP processing because file already exists");
-        } else {
-            println!("\nProcessing sentences with Rust NLP (lexide)...");
+        // Process multiword terms with Rust NLP (lexide)
+        let multiword_terms_tokenization_file =
+            target_language_dir.join("target_language_multiword_terms_tokenization.jsonl");
 
-            // Ensure multiword terms file exists, download if needed
-            let multiword_terms_file = generate_data::wiktionary::ensure_multiword_terms_file(
-                course,
-                &target_language_dir,
-            )
-            .await?;
+        println!("\nProcessing multiword terms with Rust NLP (lexide)...");
 
-            // Process sentences using the new Rust implementation
-            generate_data::nlp::process_sentences(
-                &target_language_sentences_file,
-                &multiword_terms_file,
-                &target_language_nlp_file,
-                course.target_language,
-            )
-            .await?;
+        // Read multiword terms from file
+        let multiword_terms = {
+            let file = File::open(&multiword_terms_file)?;
+            let reader = BufReader::new(file);
+            reader
+                .lines()
+                .map_while(Result::ok)
+                .filter(|line| !line.trim().is_empty())
+                .collect::<Vec<String>>()
+        };
 
-            println!("Successfully processed sentences with multiword terms.");
-            println!(
-                "Multiword terms for sentences written to: {}",
-                target_language_nlp_file.display()
-            );
-        }
+        // Process multiword terms
+        generate_data::nlp::process_sentences(
+            multiword_terms,
+            &multiword_terms_tokenization_file,
+            course.target_language,
+        )
+        .await?;
+
+        println!("Successfully processed multiword terms.");
+        println!(
+            "Tokenized multiword terms written to: {}",
+            multiword_terms_tokenization_file.display()
+        );
+
+        // Process sentences with Rust NLP (lexide)
+        let target_language_tokenization_file =
+            target_language_dir.join("target_language_sentences_tokenization.jsonl");
+
+        println!("\nProcessing sentences with Rust NLP (lexide)...");
+
+        // Read sentences from file
+        let sentences = {
+            let file = File::open(&target_language_sentences_file)?;
+            let reader = BufReader::new(file);
+            reader
+                .lines()
+                .map(|line| serde_json::from_str(&line.unwrap()))
+                .collect::<Result<Vec<String>, _>>()?
+        };
+
+        // Process sentences using the new Rust implementation
+        // (incremental processing will skip already-processed sentences)
+        generate_data::nlp::process_sentences(
+            sentences,
+            &target_language_tokenization_file,
+            course.target_language,
+        )
+        .await?;
+
+        println!("Successfully processed sentences.");
+        println!(
+            "Tokenized sentences written to: {}",
+            target_language_tokenization_file.display()
+        );
 
         let nlp_sentences = {
             // read the nlp file
-            let nlp_file = File::open(target_language_nlp_file)?;
+            let nlp_file = File::open(target_language_tokenization_file)?;
             let reader = BufReader::new(nlp_file);
             let mut nlp_sentences: Vec<language_utils::NlpAnalyzedSentence> = reader
                 .lines()
