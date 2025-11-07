@@ -47,6 +47,7 @@ pub fn get_classifier(language: Language) -> Box<dyn SentenceClassifier> {
         Language::Portuguese => Box::new(PortugueseClassifier),
         Language::Korean => Box::new(KoreanClassifier),
         Language::English => Box::new(EnglishClassifier),
+        Language::Italian => Box::new(ItalianClassifier),
         language => unimplemented!("No classifier for language: {}", language),
     }
 }
@@ -60,6 +61,7 @@ pub fn get_corrector(language: Language) -> Box<dyn WordCorrector> {
         Language::Portuguese => Box::new(PortugueseCorrector),
         Language::Korean => Box::new(KoreanCorrector),
         Language::English => Box::new(EnglishCorrector),
+        Language::Italian => Box::new(ItalianCorrector),
         language => unimplemented!("No corrector for language: {}", language),
     }
 }
@@ -1896,6 +1898,265 @@ impl WordCorrector for FrenchCorrector {
 
                 acc
             });
+
+        CorrectionResult {
+            corrected,
+            corrections,
+        }
+    }
+}
+
+/// Italian-specific classifier
+struct ItalianClassifier;
+
+impl SentenceClassifier for ItalianClassifier {
+    fn classify(&self, sentence: &NlpAnalyzedSentence) -> SentenceClassification {
+        let mut reasons = Vec::new();
+
+        // Check for Space tokens which indicate NLP parsing issues
+        for token in &sentence.doc {
+            if token.pos == PartOfSpeech::Space {
+                reasons.push(format!("Contains Space token: '{}'", sentence.sentence));
+            }
+
+            // Check for PROPN (proper noun) tags - often over-classified
+            if token.pos == PartOfSpeech::Propn {
+                reasons.push(format!(
+                    "Contains '{}' classified as a proper noun, but the legacy NLP pipeline often over-classifies things as proper nouns",
+                    token.text
+                ));
+            }
+
+            let text_lower = token.text.to_lowercase();
+
+            // Check for lemmas containing spaces (parsing error)
+            if token.lemma.contains(' ') {
+                reasons.push(format!(
+                    "'{}' has lemma with space: '{}'",
+                    token.text, token.lemma
+                ));
+            }
+
+            // Check for verbs/auxiliaries with themselves as lemma (no morphological analysis)
+            if (token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux)
+                && token.text.to_lowercase() == token.lemma.to_lowercase()
+            {
+                reasons.push(format!(
+                    "Check whether Verb/Aux '{}' should be lemmatized to an infinitive",
+                    token.text,
+                ));
+            }
+
+            // Check for object/reflexive pronouns with subject pronoun lemmas
+            // Italian: io (I), tu (you), lui/lei (he/she), noi (we), voi (you pl), loro (they)
+            // Object pronouns: mi, ti, lo, la, ci, vi, li, le
+            if (text_lower == "mi" && token.lemma == "io")
+                || (text_lower == "ti" && token.lemma == "tu")
+                || (text_lower == "lo" && token.lemma == "lui")
+                || (text_lower == "la" && token.lemma == "lei" && token.pos == PartOfSpeech::Pron)
+                || (text_lower == "ci" && token.lemma == "noi")
+                || (text_lower == "vi" && token.lemma == "voi")
+                || (text_lower == "li" && token.lemma == "loro")
+                || (text_lower == "le" && token.lemma == "loro" && token.pos == PartOfSpeech::Pron)
+            {
+                reasons.push(format!(
+                    "Check whether object/reflexive pronoun '{}' should have lemma '{}' (currently has subject pronoun lemma)",
+                    token.text, token.lemma
+                ));
+            }
+
+            // Check for specific Italian pronoun lemmatization issues
+            // "gli" (to him/to them) should not be lemmatized to "il" (the)
+            if text_lower == "gli" && token.lemma == "il" && token.pos == PartOfSpeech::Pron {
+                reasons.push(
+                    "Check whether pronoun 'gli' should be lemmatized to 'il' (article lemma)"
+                        .to_string(),
+                );
+            }
+
+            // "ne" (of it/of them) is a pronoun, not a conjunction
+            if text_lower == "ne"
+                && token.pos != PartOfSpeech::Pron
+                && token.pos != PartOfSpeech::Adv
+            {
+                reasons.push(format!(
+                    "Check whether 'ne' is really {:?} (often a pronoun or adverb)",
+                    token.pos
+                ));
+            }
+
+            // Check for compound verb forms with clitics misclassified as nouns
+            // Examples: dacci (dare + ci), dammi (dare + mi), dimmi (dire + mi)
+            // These imperative + clitic combinations are often misclassified
+            let common_clitic_endings = ["ci", "mi", "ti", "lo", "la", "vi", "li", "le", "ne"];
+            if token.pos == PartOfSpeech::Noun {
+                // Check if word ends with a common clitic and has verb lemma
+                let ends_with_clitic = common_clitic_endings
+                    .iter()
+                    .any(|&ending| text_lower.ends_with(ending) && text_lower.len() > ending.len());
+
+                // Also check if lemma is same as text (no morphological analysis)
+                let lemma_matches_text = token.lemma.to_lowercase() == text_lower;
+
+                if ends_with_clitic && lemma_matches_text {
+                    reasons.push(format!(
+                        "Check whether '{}' is really a NOUN (could be a verb with clitic pronoun, e.g., 'dacci' = dare + ci)",
+                        token.text
+                    ));
+                }
+            }
+
+            // Check for participles/adjectives ending in -ato/-ato/-ito/-ito/-uto/-uto misclassified as nouns
+            // These endings are common for past participles used as adjectives
+            let participle_endings = [
+                "ato", "ata", "ati", "ate", "ito", "ita", "iti", "ite", "uto", "uta", "uti", "ute",
+            ];
+            if token.pos == PartOfSpeech::Noun
+                && participle_endings
+                    .iter()
+                    .any(|&ending| text_lower.ends_with(ending))
+            {
+                // Check if the lemma looks like an infinitive verb (ends in -are, -ere, -ire)
+                let lemma_lower = token.lemma.to_lowercase();
+                if lemma_lower.ends_with("are")
+                    || lemma_lower.ends_with("ere")
+                    || lemma_lower.ends_with("ire")
+                {
+                    reasons.push(format!(
+                        "Check whether '{}' is really a NOUN (has verb lemma '{}' and participle ending)",
+                        token.text, token.lemma
+                    ));
+                }
+            }
+
+            // Check for adjectives like "arrabbiati" being misclassified
+            // Words ending in -ato/-ito/-uto plural forms often misclassified
+            if token.pos == PartOfSpeech::Noun
+                && (text_lower.ends_with("ati")
+                    || text_lower.ends_with("iti")
+                    || text_lower.ends_with("uti"))
+            {
+                reasons.push(format!(
+                    "Check whether '{}' is really a NOUN (ends in -ati/-iti/-uti, which are common adjective/participle endings)",
+                    token.text
+                ));
+            }
+
+            // Check for malformed verb infinitives (not ending in -are/-ere/-ire)
+            if (token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux)
+                && !token.lemma.ends_with("are")
+                && !token.lemma.ends_with("ere")
+                && !token.lemma.ends_with("ire")
+                && !token.lemma.ends_with("rre") // irregular verbs like "porre"
+                && token.lemma.len() > 3
+            {
+                reasons.push(format!(
+                    "Check whether Verb/Aux '{}' has correct lemma '{}' (doesn't end in -are/-ere/-ire/-rre)",
+                    token.text, token.lemma
+                ));
+            }
+
+            // Check for adjectives with plural forms as lemmas (should be singular)
+            if token.pos == PartOfSpeech::Adj {
+                let lemma_lower = token.lemma.to_lowercase();
+                if lemma_lower.ends_with("i") && lemma_lower.len() > 2 {
+                    // Common plural endings
+                    reasons.push(format!(
+                        "Check whether adjective '{}' should have lemma '{}' (appears to be plural)",
+                        token.text, token.lemma
+                    ));
+                }
+            }
+
+            // Check for words that look like verbs but are misclassified as adverbs
+            // Common misclassification: "vivo" (I live) tagged as Adv instead of Verb
+            if token.pos == PartOfSpeech::Adv {
+                // Common verb forms that might be misclassified as adverbs
+                // These are first-person singular present tense forms
+                let common_verb_forms = [
+                    "vivo", "parlo", "mangio", "bevo", "scrivo", "leggo", "corro", "salto",
+                ];
+                if common_verb_forms.contains(&text_lower.as_str()) {
+                    reasons.push(format!(
+                        "Check whether '{}' is really an ADV (could be a verb, e.g., 'vivo' = I live)",
+                        token.text
+                    ));
+                }
+            }
+        }
+
+        if reasons.is_empty() {
+            SentenceClassification::Unknown
+        } else {
+            SentenceClassification::Suspicious { reasons }
+        }
+    }
+}
+
+/// Italian-specific corrector
+struct ItalianCorrector;
+
+impl WordCorrector for ItalianCorrector {
+    fn correct(&self, sentence: &mut NlpAnalyzedSentence) -> CorrectionResult {
+        let mut corrected = false;
+        let mut corrections = Vec::new();
+
+        for token in &mut sentence.doc {
+            let text_lower = token.text.to_lowercase();
+
+            // Fix "lei" (she) lemma - should be "lei", not "lui" (he)
+            if text_lower == "lei" && token.lemma == "lui" && token.pos == PartOfSpeech::Pron {
+                corrections.push(format!(
+                    "Fixed '{}' lemma from '{}' to 'lei'",
+                    token.text, token.lemma
+                ));
+                token.lemma = "lei".to_string();
+                corrected = true;
+            }
+
+            // Fix "essa" (she/it) lemma - should be "essa", not "esso" (he/it)
+            if text_lower == "essa" && token.lemma == "esso" {
+                corrections.push(format!(
+                    "Fixed '{}' lemma from '{}' to 'essa'",
+                    token.text, token.lemma
+                ));
+                token.lemma = "essa".to_string();
+                corrected = true;
+            }
+
+            // Fix feminine plural pronouns
+            if text_lower == "esse" && token.lemma == "esso" {
+                corrections.push(format!(
+                    "Fixed '{}' lemma from '{}' to 'essa'",
+                    token.text, token.lemma
+                ));
+                token.lemma = "essa".to_string();
+                corrected = true;
+            }
+
+            // Fix "gli" when used as pronoun (not article)
+            if text_lower == "gli" && token.lemma == "il" && token.pos == PartOfSpeech::Pron {
+                corrections.push(format!(
+                    "Fixed pronoun '{}' lemma from 'il' to 'gli'",
+                    token.text
+                ));
+                token.lemma = "gli".to_string();
+                corrected = true;
+            }
+
+            // Fix capitalized lemmas (only for non-proper nouns)
+            if token.pos != PartOfSpeech::Propn
+                && token.lemma.chars().next().is_some_and(|c| c.is_uppercase())
+            {
+                let lowercase_lemma = token.lemma.to_lowercase();
+                corrections.push(format!(
+                    "Fixed capitalized lemma '{}' to lowercase '{}'",
+                    token.lemma, lowercase_lemma
+                ));
+                token.lemma = lowercase_lemma;
+                corrected = true;
+            }
+        }
 
         CorrectionResult {
             corrected,

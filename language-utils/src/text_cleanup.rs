@@ -83,16 +83,16 @@ mod tests {
     #[test]
     fn test_french_cleanup_already_correct() {
         // Already correct thin nbsp should remain unchanged
-        let input = format!("Bonjour\u{202F}!");
-        let expected = format!("Bonjour\u{202F}!");
+        let input = "Bonjour\u{202F}!".to_string();
+        let expected = "Bonjour\u{202F}!".to_string();
         assert_eq!(cleanup_french_sentence(input), expected);
     }
 
     #[test]
     fn test_french_cleanup_regular_nbsp() {
         // Regular nbsp should be converted to thin nbsp
-        let input = format!("Bonjour\u{00A0}!");
-        let expected = format!("Bonjour\u{202F}!");
+        let input = "Bonjour\u{00A0}!".to_string();
+        let expected = "Bonjour\u{202F}!".to_string();
         assert_eq!(cleanup_french_sentence(input), expected);
     }
 

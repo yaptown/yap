@@ -144,8 +144,9 @@ fn parse_language_code(code: &str) -> anyhow::Result<Language> {
         "eng" => Ok(Language::English),
         "kor" => Ok(Language::Korean),
         "por" => Ok(Language::Portuguese),
+        "ita" => Ok(Language::Italian),
         _ => Err(anyhow!(
-            "Unknown language code '{}'. Supported codes: fra, deu, spa, eng, kor",
+            "Unknown language code '{}'. Supported codes: fra, deu, spa, eng, kor, por, ita",
             code
         )),
     }
@@ -240,7 +241,7 @@ async fn load_multiword_terms(language: Language) -> anyhow::Result<Vec<NlpAnaly
     if !terms_nlp_path.exists() {
         println!("Running Python NLP on multiword terms for {language:?}...");
         // Create an empty multiword terms file for the NLP (since we're analyzing the terms themselves)
-        let empty_terms_file = base_dir.join("empty_multiword_terms.txt");
+        let empty_terms_file = base_dir.join("empty_multiword_terms.jsonl");
         if !empty_terms_file.exists() {
             File::create(&empty_terms_file)
                 .context("Failed to create empty multiword terms file")?;
@@ -423,6 +424,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
         Language::English,
         Language::Korean,
         Language::Portuguese,
+        Language::Italian,
     ];
 
     for language in languages {
