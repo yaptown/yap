@@ -2,8 +2,8 @@ use anyhow::Context;
 use futures::StreamExt;
 use indexmap::IndexSet;
 use itertools::Itertools;
-use language_utils::{COURSES, NlpAnalyzedSentence, SentenceInfo, strip_punctuation};
-use std::collections::{BTreeMap, BTreeSet};
+use language_utils::{COURSES, SentenceInfo};
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -199,21 +199,24 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Vec<String>>()
         };
 
-        // Process multiword terms
-        generate_data::nlp::process_sentences(
+        // Process multiword terms and get tokenizations
+        let multiword_terms_tokenizations = generate_data::nlp::process_sentences(
             multiword_terms,
             &multiword_terms_tokenization_file,
             course.target_language,
         )
         .await?;
 
-        println!("Successfully processed multiword terms.");
+        println!(
+            "Successfully processed {} multiword terms.",
+            multiword_terms_tokenizations.len()
+        );
         println!(
             "Tokenized multiword terms written to: {}",
             multiword_terms_tokenization_file.display()
         );
 
-        // Process sentences with Rust NLP (lexide)
+        // Process sentences with lexide
         let target_language_tokenization_file =
             target_language_dir.join("target_language_sentences_tokenization.jsonl");
 
@@ -229,55 +232,66 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Result<Vec<String>, _>>()?
         };
 
-        // Process sentences using the new Rust implementation
+        // Process sentences using the new Rust implementation and get tokenizations
         // (incremental processing will skip already-processed sentences)
-        generate_data::nlp::process_sentences(
+        let sentences_tokenizations = generate_data::nlp::process_sentences(
             sentences,
             &target_language_tokenization_file,
             course.target_language,
         )
         .await?;
 
-        println!("Successfully processed sentences.");
+        println!(
+            "Successfully processed {} sentences.",
+            sentences_tokenizations.len()
+        );
         println!(
             "Tokenized sentences written to: {}",
             target_language_tokenization_file.display()
         );
 
+        // now add multiword terms to the tokenized sentences
+        let target_language_nlp_file =
+            target_language_dir.join("target_language_sentences_nlp.jsonl");
+        if target_language_nlp_file.exists() {
+            println!("Skipping multiword term addition because file already exists");
+        } else {
+            println!("\nGenerating NLP analyzed sentences with multiword terms...");
+            generate_data::nlp::generate_nlp_sentences(
+                sentences_tokenizations,
+                multiword_terms_tokenizations,
+                &target_language_nlp_file,
+                course.target_language,
+            )
+            .await?;
+            println!(
+                "NLP analyzed sentences written to: {}",
+                target_language_nlp_file.display()
+            );
+        }
+
         let nlp_sentences = {
             // read the nlp file
-            let nlp_file = File::open(target_language_tokenization_file)?;
+            let nlp_file = File::open(&target_language_nlp_file)?;
             let reader = BufReader::new(nlp_file);
-            let mut nlp_sentences: Vec<language_utils::NlpAnalyzedSentence> = reader
+            let mut nlp_sentences: Vec<(String, SentenceInfo)> = reader
                 .lines()
                 .map(|line| {
                     let line = line.unwrap();
-                    serde_json::from_str::<language_utils::NlpAnalyzedSentence>(&line)
-                        .unwrap_or_else(|e| {
-                            panic!("Could not deserialize to NlpAnalyzedSentence: `{line}` {e:?}")
-                        })
+                    serde_json::from_str::<(String, SentenceInfo)>(&line).unwrap_or_else(|e| {
+                        panic!("Could not deserialize to (String, SentenceInfo): `{line}` {e:?}")
+                    })
                 })
-                .map(
-                    |NlpAnalyzedSentence {
-                         sentence,
-                         doc,
-                         multiword_terms,
-                     }| NlpAnalyzedSentence {
-                        sentence,
-                        doc,
-                        multiword_terms,
-                    },
-                )
                 .collect::<Vec<_>>();
 
             // If the course teaches a new writing system, filter out proper nouns
             if course.teaches_new_writing_system() {
                 let before_count = nlp_sentences.len();
-                nlp_sentences.retain(|sentence| {
-                    !sentence
-                        .doc
-                        .iter()
-                        .any(|token| token.pos == language_utils::PartOfSpeech::Propn)
+                nlp_sentences.retain(|(_sentence, info)| {
+                    !info.words.iter().any(|literal| {
+                        literal.heteronym.as_ref().map(|h| h.pos)
+                            == Some(language_utils::PartOfSpeech::Propn)
+                    })
                 });
                 let after_count = nlp_sentences.len();
                 println!(
@@ -289,83 +303,8 @@ async fn main() -> anyhow::Result<()> {
             nlp_sentences
         };
 
-        let proper_nouns_file = target_language_dir.join("corrected_proper_nouns.jsonl");
-        if proper_nouns_file.exists() {
-            println!("Skipping proper nouns filter because file already exists");
-        } else {
-            let known_never_proper_nouns = source_data_path.join("never-proper-nouns.txt");
-            let known_never_proper_nouns = BufReader::new(File::open(known_never_proper_nouns)?)
-                .lines()
-                .map(|line| line.unwrap())
-                .filter(|line| !line.is_empty())
-                .map(|word| {
-                    serde_json::from_str::<(String, language_utils::Heteronym<String>)>(&word).map(
-                        |(word, heteronym)| (word, language_utils::Lexeme::Heteronym(heteronym)),
-                    )
-                })
-                .collect::<Result<BTreeMap<_, _>, _>>()?;
-
-            let proper_nouns = {
-                let mut proper_nouns = BTreeMap::new();
-                for sentence in nlp_sentences.iter() {
-                    for token in sentence.doc.iter() {
-                        if token.pos == language_utils::PartOfSpeech::Propn {
-                            proper_nouns
-                                .entry(strip_punctuation(&token.text).to_string())
-                                .or_insert(BTreeSet::new())
-                                .insert(sentence.sentence.clone());
-                        }
-                    }
-                }
-                proper_nouns
-            };
-            let proper_nouns: BTreeMap<String, language_utils::Lexeme<String>> =
-                generate_data::proper_noun_filter::correct_proper_nouns(*course, proper_nouns)
-                    .await?
-                    .into_iter()
-                    .chain(known_never_proper_nouns.into_iter())
-                    .collect();
-            let mut file = File::create(&proper_nouns_file)?;
-            for (word, lexeme) in proper_nouns {
-                let json = serde_json::to_string(&(word, lexeme))?;
-                writeln!(file, "{json}")?;
-            }
-        }
-        let proper_nouns = {
-            let file = File::open(&proper_nouns_file)?;
-            let reader = BufReader::new(file);
-            let lexemes = reader
-                .lines()
-                .map(|line| {
-                    serde_json::from_str::<(String, language_utils::Lexeme<String>)>(&line.unwrap())
-                })
-                .collect::<Result<Vec<(String, language_utils::Lexeme<String>)>, _>>()?;
-
-            lexemes
-                .into_iter()
-                .filter_map(|(word, lexeme)| {
-                    if let language_utils::Lexeme::Heteronym(heteronym) = lexeme {
-                        Some((word, heteronym))
-                    } else {
-                        None
-                    }
-                })
-                .collect::<BTreeMap<_, _>>()
-        };
-
-        let nlp_sentences: Vec<(String, SentenceInfo)> = nlp_sentences
-            .into_iter()
-            .map(|analysis| {
-                (
-                    analysis.sentence.clone(),
-                    SentenceInfo::from_nlp_analyzed_sentence(
-                        analysis,
-                        &proper_nouns,
-                        course.target_language,
-                    ),
-                )
-            })
-            .collect();
+        // nlp_sentences already contains (String, SentenceInfo) tuples from the file
+        // No additional processing needed here
 
         let all_lexemes: Vec<language_utils::Lexeme<String>> = nlp_sentences
             .iter()
