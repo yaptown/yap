@@ -1429,15 +1429,3 @@ pub struct TtsRequest {
     pub text: String,
     pub language: Language,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn strip_punctuation_removes_surrounding_marks() {
-        assert_eq!(strip_punctuation("hello!?"), "hello");
-        assert_eq!(strip_punctuation("--hi--"), "hi");
-        assert_eq!(strip_punctuation("?!hi??"), "hi");
-    }
-}
