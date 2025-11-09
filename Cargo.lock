@@ -972,6 +972,7 @@ dependencies = [
  "itertools",
  "language-utils",
  "lasso",
+ "lexide",
  "log",
  "markdown-tables",
  "rand 0.9.2",
@@ -1718,6 +1719,22 @@ dependencies = [
  "bytecheck",
  "hashbrown 0.14.5",
  "rkyv",
+]
+
+[[package]]
+name = "lexide"
+version = "0.1.0"
+source = "git+https://github.com/anchpop/lexide.git?rev=7f86d2277afa228030c08f5c7823be5e6d098f98#7f86d2277afa228030c08f5c7823be5e6d098f98"
+dependencies = [
+ "anyhow",
+ "futures",
+ "regex",
+ "reqwest 0.12.23",
+ "serde",
+ "serde_json",
+ "serde_plain",
+ "tokio",
+ "unicode-normalization",
 ]
 
 [[package]]
@@ -3042,6 +3059,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59fab13f937fa393d08645bf3a84bdfe86e296747b506ada67bb15f10f218b2a"
 dependencies = [
  "itoa",
+ "serde",
+]
+
+[[package]]
+name = "serde_plain"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ce1fc6db65a611022b23a0dec6975d63fb80a302cb3388835ff02c097258d50"
+dependencies = [
  "serde",
 ]
 
