@@ -694,7 +694,7 @@ export const Flashcard = function Flashcard({
                 >
                   Show Answer
                 </div>
-                <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-muted/20 border flex items-center justify-center">
+                <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-muted/20 border flex items-center justify-center hide-kbd-border-mobile">
                   <ArrowDown className="h-3 w-3 text-muted-foreground" />
                 </kbd>
               </div>
@@ -726,11 +726,11 @@ export const Flashcard = function Flashcard({
               }}
               variant="destructive"
               size="lg"
-              className="h-14"
+              className="h-14 group"
               disabled={!canGrade}
             >
               <span className="flex items-center gap-2">
-                <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center">
+                <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
                   <ArrowLeft className="h-3 w-3" />
                 </kbd>
                 {leftLabel}
@@ -744,12 +744,12 @@ export const Flashcard = function Flashcard({
               }}
               variant="default"
               size="lg"
-              className="h-14"
+              className="h-14 group"
               disabled={!canGrade}
             >
               <span className="flex items-center gap-2">
                 {rightLabel}
-                <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center">
+                <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
                   <ArrowRight className="h-3 w-3" />
                 </kbd>
               </span>

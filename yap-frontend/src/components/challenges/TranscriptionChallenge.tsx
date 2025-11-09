@@ -585,7 +585,7 @@ export function TranscriptionChallenge({
           {gradingState === null ? (
             <>
               Check Answer
-              <span className="ml-2 text-sm text-muted-foreground">(⏎)</span>
+              <span className="ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">(⏎)</span>
             </>
           ) : "grading" in gradingState ? (
             "AI is grading..."
@@ -602,7 +602,7 @@ export function TranscriptionChallenge({
               )
                 ? "Nailed it!"
                 : "Continue"}
-              <span className="ml-2 text-sm text-muted-foreground">(⏎)</span>
+              <span className="ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">(⏎)</span>
             </>
           )}
         </Button>

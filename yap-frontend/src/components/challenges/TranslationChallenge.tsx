@@ -1009,7 +1009,7 @@ export function TranslationChallenge({
           ) : (
             <>
               {"perfect" in grade.graded ? "Nailed it!" : "Continue"}
-              <span className="ml-2 text-sm text-muted-foreground">(⏎)</span>
+              <span className="ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">(⏎)</span>
             </>
           )}
         </Button>
