@@ -340,10 +340,7 @@ async fn main() -> anyhow::Result<()> {
 
         println!("Loading frequencies...");
         let frequencies = {
-            // Load from the combined frequency file
-            let combined_freq_file =
-                target_language_dir.join("frequency_lists/combined/frequencies.jsonl");
-            let file = File::open(&combined_freq_file)?;
+            let file = File::open(&frequencies_file)?;
             let reader = BufReader::new(file);
             let frequencies = reader
                 .lines()

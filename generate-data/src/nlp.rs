@@ -4,9 +4,9 @@ use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::Language;
 use lexide::Lexide;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{BufRead, BufReader, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Convert language_utils::Language to lexide::Language
 /// Returns None if the language is not supported by lexide
@@ -31,6 +31,70 @@ fn to_lexide_language(lang: Language) -> Option<lexide::Language> {
 struct TokenizedSentence {
     sentence: String,
     tokens: Vec<lexide::Token>,
+}
+
+/// Track sentences that have failed tokenization
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct FailureRecord {
+    sentence: String,
+    failure_count: u32,
+}
+
+/// Get the path to the failure tracking file for a given output file
+fn get_failure_file_path(output_file: &Path) -> PathBuf {
+    let mut failure_path = output_file.to_path_buf();
+    let filename = failure_path
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
+    failure_path.set_file_name(format!("{filename}.failures.jsonl"));
+    failure_path
+}
+
+/// Load failure records from the failure tracking file
+fn load_failures(failure_file: &Path) -> Result<HashMap<String, u32>> {
+    let mut failures = HashMap::new();
+
+    if failure_file.exists() {
+        let file = std::fs::File::open(failure_file)?;
+        let reader = BufReader::new(file);
+
+        for line in reader.lines().map_while(Result::ok) {
+            if let Ok(record) = serde_json::from_str::<FailureRecord>(&line) {
+                failures.insert(record.sentence, record.failure_count);
+            }
+        }
+    }
+
+    Ok(failures)
+}
+
+/// Update the failure count for a sentence
+fn record_failure(
+    sentence: String,
+    failures: &mut HashMap<String, u32>,
+    failure_file: &Path,
+) -> Result<()> {
+    // Increment failure count
+    let count = failures.entry(sentence.clone()).or_insert(0);
+    *count += 1;
+
+    // Rewrite the entire failure file with updated counts
+    let file = std::fs::File::create(failure_file)?;
+    let mut writer = std::io::BufWriter::new(file);
+
+    for (sent, &failure_count) in failures.iter() {
+        let record = FailureRecord {
+            sentence: sent.clone(),
+            failure_count,
+        };
+        let json = serde_json::to_string(&record)?;
+        writeln!(writer, "{json}")?;
+    }
+
+    writer.flush()?;
+    Ok(())
 }
 
 /// Tokenize a list of sentences and write results to an output file
@@ -70,18 +134,30 @@ pub async fn process_sentences(
         );
     }
 
-    // Filter out already processed sentences
+    // Load failure tracking
+    let failure_file = get_failure_file_path(output_file);
+    let mut failures = load_failures(&failure_file)?;
+    let initial_failure_count = failures.len();
+    if !failures.is_empty() {
+        println!(
+            "Found {} sentences that previously failed tokenization",
+            failures.len()
+        );
+    }
+
+    // Filter out already processed sentences AND previously failed sentences
     let sentences_to_process: HashSet<String> = sentences
         .iter()
-        .filter(|s| !already_processed.contains_key(*s))
+        .filter(|s| !already_processed.contains_key(*s) && !failures.contains_key(*s))
         .cloned()
         .collect();
 
     println!(
         "Total sentences: {}",
-        sentences_to_process.len() + already_processed.len()
+        sentences_to_process.len() + already_processed.len() + failures.len()
     );
     println!("Already processed: {}", already_processed.len());
+    println!("Previously failed: {}", failures.len());
     println!("To process: {}", sentences_to_process.len());
 
     if sentences_to_process.is_empty() {
@@ -121,13 +197,13 @@ pub async fn process_sentences(
             let pb = pb.clone();
             async move {
                 let result = match lexide.analyze(&sentence, lexide_language).await {
-                    Ok(tokenization) => Some(TokenizedSentence {
+                    Ok(tokenization) => Ok(TokenizedSentence {
                         sentence,
                         tokens: tokenization.tokens,
                     }),
                     Err(e) => {
-                        eprintln!("Warning: Failed to analyze sentence '{sentence}': {e}");
-                        None
+                        eprintln!("Warning: Failed to analyze sentence '{sentence}': {e:?}");
+                        Err(sentence)
                     }
                 };
 
@@ -135,24 +211,45 @@ pub async fn process_sentences(
                 result
             }
         })
-        .buffer_unordered(1200);
+        .buffer_unordered(900);
 
     // Write results as they come in and collect them in memory
-    while let Some(tokenized_opt) = results.next().await {
-        if let Some(tokenized) = tokenized_opt {
-            let json = serde_json::to_string(&tokenized)?;
-            writeln!(writer, "{json}")?;
-            newly_processed.insert(tokenized.sentence, tokenized.tokens);
+    while let Some(result) = results.next().await {
+        match result {
+            Ok(tokenized) => {
+                let json = serde_json::to_string(&tokenized)?;
+                writeln!(writer, "{json}")?;
+                newly_processed.insert(tokenized.sentence, tokenized.tokens);
+            }
+            Err(failed_sentence) => {
+                // Record the failure
+                record_failure(failed_sentence, &mut failures, &failure_file)?;
+            }
         }
     }
 
     pb.finish_with_message("Tokenization complete");
 
     writer.flush()?;
+
+    let newly_failed = failures.len() - initial_failure_count;
+
     println!(
         "\nTokenization complete! Output written to {}",
         output_file.display()
     );
+    if !failures.is_empty() {
+        println!("Failed sentences tracked in: {}", failure_file.display());
+        if newly_failed > 0 {
+            println!(
+                "Total failed sentences: {} (including {} new failures)",
+                failures.len(),
+                newly_failed
+            );
+        } else {
+            println!("Total failed sentences: {}", failures.len());
+        }
+    }
 
     // Build result map containing only the requested sentences
     // Merge newly processed sentences with already processed ones
@@ -173,9 +270,9 @@ pub async fn generate_nlp_sentences(
     sentences_tokenizations: BTreeMap<String, Vec<lexide::Token>>,
     multiword_terms_tokenizations: BTreeMap<String, Vec<lexide::Token>>,
     output_file: &Path,
-    _language: Language,
+    language: Language,
 ) -> Result<()> {
-    use language_utils::{Heteronym, Literal, MultiwordTerms, PartOfSpeech, SentenceInfo};
+    use language_utils::{Literal, MultiwordTerms, SentenceInfo};
     use lexide::matching::{DependencyMatcher, LemmaMatcher, TreeNode};
 
     println!(
@@ -233,39 +330,8 @@ pub async fn generate_nlp_sentences(
     let output_file_handle = std::fs::File::create(output_file)?;
     let mut writer = std::io::BufWriter::new(output_file_handle);
 
-    // Helper function to convert lexide::PartOfSpeech to language_utils::PartOfSpeech
-    let convert_pos = |pos: lexide::pos::PartOfSpeech| -> PartOfSpeech {
-        // Both enums have identical variants with the same serde renames,
-        // so we can convert by serializing and deserializing
-        let json = serde_json::to_string(&pos).unwrap();
-        serde_json::from_str(&json).unwrap()
-    };
-
-    // Helper function to convert lexide token to Literal
-    let token_to_literal = |token: &lexide::Token| -> Literal<String> {
-        // Create a heteronym from the token if it's not punctuation or space
-        let heteronym = if matches!(
-            token.pos,
-            lexide::pos::PartOfSpeech::Punct
-                | lexide::pos::PartOfSpeech::Space
-                | lexide::pos::PartOfSpeech::X
-                | lexide::pos::PartOfSpeech::Propn
-        ) {
-            None
-        } else {
-            Some(Heteronym {
-                word: token.text.text.clone(),
-                lemma: token.lemma.lemma.clone(),
-                pos: convert_pos(token.pos),
-            })
-        };
-
-        Literal {
-            text: token.text.text.clone(),
-            whitespace: token.whitespace.clone(),
-            heteronym,
-        }
-    };
+    // Empty proper nouns map (for now, proper noun handling can be added later if needed)
+    let proper_nouns = BTreeMap::new();
 
     for (sent_idx, (sentence_str, tokens)) in sentences_tokenizations.iter().enumerate() {
         let tokenization = lexide::Tokenization {
@@ -303,7 +369,13 @@ pub async fn generate_nlp_sentences(
         };
 
         // Convert lexide tokens to Literals
-        let words: Vec<Literal<String>> = tokens.iter().map(token_to_literal).collect();
+        let words: Vec<Literal<String>> = tokens
+            .iter()
+            .enumerate()
+            .map(|(i, token)| {
+                crate::lexide_token::lexide_token_to_literal(token, &proper_nouns, language, i == 0)
+            })
+            .collect();
 
         let sentence_info = SentenceInfo {
             words,

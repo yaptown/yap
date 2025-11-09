@@ -3,6 +3,7 @@ mod db_info;
 
 pub mod dict;
 pub mod frequencies;
+pub mod lexide_token;
 pub mod nlp;
 pub mod pronunciation_patterns;
 pub mod pronunciations;

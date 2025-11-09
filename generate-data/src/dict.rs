@@ -17,7 +17,7 @@ static CHAT_CLIENT_O3: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("o3")
         .unwrap()
         .with_cache_directory("./.cache")
-        .with_service_tier("flex")
+    //.with_service_tier("flex")
 });
 
 pub async fn create_phrasebook(
@@ -52,6 +52,8 @@ pub async fn create_phrasebook(
 
     let phrasebook = futures::stream::iter(target_language_multi_word_terms.iter()).map(|(multiword_term, &freq)| {
         let pb = pb.clone();
+        let cost = CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0);
+        pb.set_message(format!("{cost:.2} ({multiword_term})"));
         async move {
         let chat_client = if freq > 500 { &*CHAT_CLIENT_O3 } else { &*CHAT_CLIENT_4O };
         let response: Result<PhrasebookEntryThoughts, _> = chat_client.chat_with_system_prompt(
@@ -75,18 +77,11 @@ Of course, their native language is {native_language}, so you should write the m
             println!("error: {e:#?}");
         });
 
-        // Update progress bar with cost from the appropriate client
-        let cost = if freq > 500 {
-            CHAT_CLIENT_O3.cost().unwrap_or(0.0)
-        } else {
-            CHAT_CLIENT_4O.cost().unwrap_or(0.0)
-        };
-        pb.set_message(format!("{cost:.2}"));
         pb.inc(1);
 
         (response, multiword_term)
     }})
-    .buffered(50)
+    .buffer_unordered(50)
     .collect::<Vec<_>>()
     .await
     .into_iter()
@@ -134,6 +129,9 @@ pub async fn create_dictionary(
 
     let dictionary = futures::stream::iter(target_language_heteronyms.iter()).map(|(heteronym, &freq)| {
         let pb = pb.clone();
+        let cost = CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0);
+        pb.set_message(format!("{cost:.2} ({},{},{})", heteronym.word, heteronym.lemma, heteronym.pos));
+
         async move {
         if heteronym.word == "t" && heteronym.lemma == "tu" {
             panic!("heteronym: {heteronym:?}");
@@ -171,18 +169,11 @@ Output the result as a JSON object containing an array of one or more definition
 
         let (dict_response, morphology_result) = futures::join!(dict_entry_future, morphology_future);
 
-        // Update progress bar with cost from the appropriate client
-        let cost = if freq > 500 {
-            CHAT_CLIENT_O3.cost().unwrap_or(0.0)
-        } else {
-            CHAT_CLIENT_4O.cost().unwrap_or(0.0)
-        };
-        pb.set_message(format!("{cost:.2}"));
         pb.inc(1);
 
         (dict_response, morphology_result, heteronym)
     }})
-    .buffered(50)
+    .buffer_unordered(50)
     .collect::<Vec<_>>()
     .await
     .into_iter()
