@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use chrono::{TimeZone, Utc};
 use futures::StreamExt;
 use language_utils::{Course, Language};
@@ -110,7 +110,8 @@ Output format:
     CHAT_CLIENT
         .chat_with_system_prompt(system_prompt, user_prompt)
         .await
-        .map_err(|e| anyhow::anyhow!("Failed to analyze sentence quality: {}", e))
+        .map_err(|e| anyhow::anyhow!(e))
+        .context("Failed to analyze sentence quality")
 }
 
 async fn analyze_multiword_terms(
@@ -153,7 +154,8 @@ Output format:
     CHAT_CLIENT
         .chat_with_system_prompt(system_prompt, user_prompt)
         .await
-        .map_err(|e| anyhow::anyhow!("Failed to analyze multiword terms: {}", e))
+        .map_err(|e| anyhow::anyhow!(e))
+        .context("Failed to analyze multiword terms")
 }
 
 async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
@@ -272,7 +274,7 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
                     (has_issues, response.issues, response.corrected_sentence)
                 }
                 Err(e) => {
-                    eprintln!("Error analyzing quality for sentence '{sentence}': {e}");
+                    eprintln!("Error analyzing quality for sentence '{sentence}': {e:?}");
                     (false, Vec::new(), None)
                 }
             };
@@ -282,7 +284,9 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
                 match analyze_multiword_terms(sentence, *language, multiword_terms).await {
                     Ok(response) => response.missing_multiword_terms,
                     Err(e) => {
-                        eprintln!("Error analyzing multiword terms for sentence '{sentence}': {e}");
+                        eprintln!(
+                            "Error analyzing multiword terms for sentence '{sentence}': {e:?}"
+                        );
                         Vec::new()
                     }
                 }

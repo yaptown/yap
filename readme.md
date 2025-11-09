@@ -1,4 +1,4 @@
-# Yap.Town 
+# Yap.Town
 
 **A Modern, Spaced-Repetition Language Learning App**
 
@@ -21,9 +21,9 @@ Join the community on [Discord](https://discord.gg/mpgqfsH).
 
 **Yap's goal is to be the #1 most effective language learning app on the planet.**
 
-This is a low standard because most apps are optimized for engagement or are otherwise poorly designed, making them very ineffective. Language learning apps typically have two main flaws. 
+This is a low standard because most apps are optimized for engagement or are otherwise poorly designed, making them very ineffective. Language learning apps typically have two main flaws.
 
-1. They do not effectively utilize spaced repetition. 
+1. They do not effectively utilize spaced repetition.
 2. They teach words and grammatical concepts in an ineffective order.
 
 Spaced repetition is the #1 most important thing a language learning app could possibly provide. It is the foundation of time-efficient focused study. Yet most language-learning tools relegate it to a curiosity in an out-of-the-way section of the app, if they make use of it at all!
@@ -39,7 +39,7 @@ Yap solves this problem by implementing spaced repetition through sentences cont
 The app does not do spaced repetition at the level of words. Instead, it works on the level of `(word, lemma, part of speech)` triples. This allows the spaced repetition system to more intelligently schedule sentences.
 
 1. For example, the word "le" in French can be used as an article or as a pronoun. When you mistranslate a sentence that uses "le" as a pronoun, we detect this and only mark that specific usage as needing repetition. You won't get followed up with sentences using "le" as an article, since that's not what you misunderstood.
-2. Another example is the word "suis," which can be a conjugation of "être" or "suivre" in French. Misunderstanding one of these should result in more sentences that use the specific conjugation you misunderstood, even though the word is spelled the same. (To accomplish this, we use natural language processing on our dataset of sentences.) 
+2. Another example is the word "suis," which can be a conjugation of "être" or "suivre" in French. Misunderstanding one of these should result in more sentences that use the specific conjugation you misunderstood, even though the word is spelled the same. (To accomplish this, we use natural language processing on our dataset of sentences.)
 
 In addition to words, YAP also has "multi-word terms" as part of its spaced repetition system. For example, the French term "se passer" means "to happen" or "to take place." You wouldn't understand this meaning by looking at the individual words alone. Therefore, we have separate SRS entries for such expressions. This ensures that you learn complete phrases and expression, in addition to individual words.
 
@@ -52,8 +52,7 @@ Of course, in addition to being the most effective language learning app, I coul
 1. Instant sync across all your devices.
 2. You can use Yap while logged out, and it functions almost exactly the same as when you're logged in. (The exception is features that fundamentally require an account, like cross-device sync.) As soon as you do log in, all of your data is migrated to your account, and you can pick up exactly where you left off.
 3. Yap works seamlessly offline once installed as a Progressive Web App. All of the language data is downloaded to your device and challenge selection etc. is all done locally.
-4. Yap is quite fast, with most operations taking less than the time to render one frame, despite processing large amounts of sentences. Yap's performance benefits from being primarily written in Rust (and compiled to WebAssembly to run in the browser). We also implement various optimizations, including string interning, which allows most operations to work with objects that fit entirely in the stack (removing the need for most heap access or allocations). 
-
+4. Yap is quite fast, with most operations taking less than the time to render one frame, despite processing large amounts of sentences. Yap's performance benefits from being primarily written in Rust (and compiled to WebAssembly to run in the browser). We also implement various optimizations, including string interning, which allows most operations to work with objects that fit entirely in the stack (removing the need for most heap access or allocations).
 
 ## Build Process
 
@@ -68,17 +67,30 @@ Then, run the page
 
 ```bash
 cd yap-frontend
-pnpm i 
+pnpm i
 pnpm dev
 ```
 
-There is also a supporting backend, normally assumed to be at `https://yap-ai-backend.fly.io`. But If you build the rust library with `wasm-pack build --features "local-backend`, it will look for the server on `localhost:8080`. You can then run the server locally with `cd yap-ai-backend && cargo run`. 
+There is also a supporting backend, normally assumed to be at `https://yap-ai-backend.fly.io`. But If you build the rust library with `wasm-pack build --features "local-backend`, it will look for the server on `localhost:8080`. You can then run the server locally with `cd yap-ai-backend && cargo run`.
 
 ## Data Generation
 
-The data in out/ is generated via the `generate-data` binary. Running it is somewhat convoluted. It requires python as well. 
+The data in out/ is generated via the `generate-data` binary. 
 
-1. Install the spaCy French and Spanish NLP module: 
+```
+cargo run --bin generate-data --release
+```
+
+Each individual step is cached inside a file in the out/ directory. To rerun a step, you need to delete the cache file. For example, if you want to rerun the dictionary generation for a language, you'll need to delete the dictionary file for that language. LLM calls are cached in the .cache directory. This allows you to rerun a step without spending a ton of money.
+
+The NLP is extremely slow. I rented a GH200 from Lambda Labs when I need to recalculate it.
+
+## Data Cleaning (for custom NLP training data)
+
+The NLP model used by Yap (lexide) is trained from data in this repo. Generating that data requires python.
+
+1. Install the spaCy NLP module:
+
 ```bash
 cd ./generate-data/nlp && \
   uv pip install https://github.com/explosion/spacy-models/releases/download/fr_dep_news_trf-3.8.0/fr_dep_news_trf-3.8.0-py3-none-any.whl && \
@@ -92,7 +104,12 @@ cd ./generate-data/nlp && \
   uv pip install https://github.com/explosion/spacy-models/releases/download/ja_core_news_trf-3.8.0/ja_core_news_trf-3.8.0-py3-none-any.whl && \
   uv pip install https://github.com/explosion/spacy-models/releases/download/ru_core_news_lg-3.8.0/ru_core_news_lg-3.8.0-py3-none-any.whl
 ```
-1. Generate the data
+
+2. Generate the data
+
+```
+cargo run --bin clean-nlp-data clean
+```
 
 ## Supabase / Onesignal
 
@@ -104,7 +121,7 @@ Accounts and cross-device sync uses supabase as a backend. Migrations are in the
 
 1. Tatoeba
 2. neri's frequency lists (a bit redundant because they're sourced from tatoeba, but they're convenient to have)
-3. wiktionary/[wikipron](https://github.com/CUNY-CL/wikipron/tree/master) for phonetics  
+3. wiktionary/[wikipron](https://github.com/CUNY-CL/wikipron/tree/master) for phonetics
 4. [opensubtitles](http://www.opensubtitles.org/) (actually not used yet but it will be)
 
 ### Libraries

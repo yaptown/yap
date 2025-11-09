@@ -1,3 +1,4 @@
+
 "R" slur
 "homework" folder
 $1,000,000 question
@@ -33,6 +34,7 @@ $20 is $20
 'kin 'ell
 'kin' 'ell
 'nuff said
+'phone number
 'r' slur
 'roid rage
 'roided out
@@ -91,6 +93,7 @@ $20 is $20
 0-dark-hundred
 0-dark-thirty
 0-day
+0.5 selfie
 007 knife
 0800 number
 0th grade
@@ -397,6 +400,7 @@ $20 is $20
 25I-NBOMe
 27 Club
 2C-B
+2C-X
 2d Cir.
 2d party
 2nd Amendment
@@ -417,6 +421,7 @@ $20 is $20
 3-2-1
 3-3-3 rule
 3-D
+3-D printer
 3-Lisp
 3-MBT
 3-card monte
@@ -893,6 +898,7 @@ AFL-CIO
 AGA cooker
 AGA saga
 AGP smirk
+AI psychosis
 AI slop
 AI washing
 AI whisperer
@@ -969,6 +975,7 @@ Ab Kettleby
 Ab-Ex
 Aba North
 Aba South
+Abaco Islands
 Abai Sungai
 Abalakov thread
 Abanao - Zandueta - Chugum - Kayang - Otek
@@ -1454,6 +1461,7 @@ Age of Sail
 Agent Orange
 Ages of Man
 Agia Napa
+Agidel River
 Agin-Buryat Autonomous Okrug
 Agin-Buryat Okrug
 Agios Theologos
@@ -1627,6 +1635,7 @@ Alamosa County
 Alan Smithee
 Alan Whicker
 Alan Whickers
+Aland Islands
 Alang-alang
 Alano Español
 Alaotra grebe
@@ -1957,6 +1966,7 @@ Alt-F4
 Alt-Lit
 Alt-Tab
 Alta California
+Alta Lake
 Alta Sierra
 Alta Vista
 Altai Krai
@@ -2337,6 +2347,7 @@ Andrews County
 Andromeda Galaxy
 Andromeda strain
 Androscoggin County
+Andy Jackson
 Andy McNab
 Anegada Passage
 Aneme Wake
@@ -2352,6 +2363,7 @@ Angeles Zone II
 Angeles Zone III
 Angeles Zone IV
 Angelina County
+Angelina Jolie gene
 Angelino Heights
 Angelman syndrome
 Angels Camp
@@ -2384,6 +2396,7 @@ Anglo-Frisian
 Anglo-Frisian brightening
 Anglo-Indian
 Anglo-Indian English
+Anglo-Irish
 Anglo-Israelism
 Anglo-Israelite
 Anglo-Latin
@@ -2645,6 +2658,7 @@ Arborio rice
 Arbuzov reaction
 Arbëreshë Albanian
 Arc de Triomphe
+Arc de Trump
 Arc-et-Senans
 Arcado-Cypriot
 Arcadocypriot Greek
@@ -2826,6 +2840,7 @@ Arnold-Chiari malformation
 Arnos Grove
 Arnos Vale
 Arnoux's beaked whale
+Aron Kodesh
 Aronhold set
 Aroostook County
 Aroostook War
@@ -3038,6 +3053,7 @@ Asperger's syndrome
 Asphodel-Norwood
 Aspley Guise
 Assad curse
+Assad must go curse
 Assassins of Alamut
 Assateague horse
 Assemblies of God
@@ -3375,6 +3391,7 @@ Aventine Hill
 Averch-Johnson effect
 Avery County
 Aveton Gifford
+Aviation English
 Avignon berry
 Avila Beach
 Avocado Heights
@@ -3411,6 +3428,7 @@ Ayot St Lawrence
 Ayot St Peter
 Ayrton Senna
 Ayrton shunt
+Ayton Castle
 Ayurveda Day
 Ayurvedic medicine
 Ayya Vaikundar
@@ -3436,6 +3454,7 @@ Aztec marigold
 Aztec rail
 Aztec tobacco
 Aztec two-step
+Azuma's inequality
 Azumaya algebra
 B & B
 B & D
@@ -3513,6 +3532,7 @@ B-story
 B-town
 B-tree
 B-unit
+B-word
 B. A.
 B. A. S.
 B. A. Sc.
@@ -3585,8 +3605,10 @@ Bab el-Mandeb
 Bab-e-Khyber
 Bab-el-Mandeb
 Baba Ana
+Baba Iaga
 Baba Jaga
 Baba Yaga
+Baba-Iaga
 Babar Islands
 Babbitt metal
 Babbitt's metal
@@ -3750,6 +3772,7 @@ Bahá'í Faith
 Baháí Faith
 Baháʼí Faith
 Bahía Blanca
+Bahía de Caráquez
 Baia Mare
 Baia Sprie
 Baia de Aramă
@@ -3778,6 +3801,7 @@ Baiyun Ebo
 Baja California
 Baja California Norte
 Baja California Sur
+Baja Californian
 Baja Midnight
 Baja Norte
 Baja Sur
@@ -3937,6 +3961,7 @@ Bandar-e Emam Khomeyni
 Bandar-e Khomeyni
 Bandarban District
 Bandera County
+Bandera smoothie
 Banff Springs physa
 Bang Khae
 Bang That Was Promised
@@ -4093,6 +4118,7 @@ Barnard's Star
 Barnardo's boy
 Barnby Dun
 Barnby Dun with Kirk Sandall
+Barnby Moor
 Barnegat Bay
 Barnes County
 Barnes Opening
@@ -4617,6 +4643,7 @@ Belphegor's prime
 Belsize Park
 Belt and Road
 Belted Galloway
+Belter Creole
 Beltian body
 Belton and Manthorpe
 Belton with Browston
@@ -4661,6 +4688,7 @@ Bengal fox
 Bengal gram
 Bengal isinglass
 Bengal light
+Bengal match
 Bengal monitor
 Bengal potatoes
 Bengal quince
@@ -4823,6 +4851,7 @@ Bertillon system
 Bertoloni's pansy
 Bertrand's paradox
 Bertrand's postulate
+Bertrand's reagent
 Bertrand-Chebyshev theorem
 Bertrand-Edgeworth model
 Bertsch-Oceanview
@@ -4912,6 +4941,7 @@ Bhagavad Gita
 Bhagavad-gita
 Bhagavad-gītā
 Bhagavata Purana
+Bhai Dooj
 Bhalavali Bhasha
 Bharat Army
 Bharati Braille
@@ -4936,6 +4966,7 @@ Bible Belt
 Bible Belter
 Bible Hill
 Bible School
+Bible Students
 Bible banger
 Bible basher
 Bible beater
@@ -4966,6 +4997,7 @@ Bicknell's thrush
 Bicol Peninsula
 Bicol Region
 Bicol River
+Bicycle Irish
 Bida-Bida
 Bidder's organ
 Biddery ware
@@ -5124,6 +5156,7 @@ Billy Wigglestick
 Billy Williams' Cabbage Patch
 Billy Wix
 Billy Yank
+Billy bollocks
 Billy no mates
 Billy the Kid
 Billy-be-damned
@@ -5179,6 +5212,7 @@ Birt-Hogg-Dubé syndrome
 Bisbee blue
 Bisbee turquoise
 Biscayan right whale
+Biscayne Bay
 Bishnupriya Manipuri
 Bishop Auckland
 Bishop Barker
@@ -5364,6 +5398,7 @@ Blackhall Colliery
 Blackhall Rocks
 Blackmoor Gate
 Blackmore Vale
+Blackmore, Hook End and Wyatts Green
 Blacks Harbour
 Blackstone River
 Blackwall hitch
@@ -5457,6 +5492,7 @@ Blu-ray
 Blu-ray Disc
 Blu-ray burner
 Blu-ray drive
+Blu-ray player
 Blub paradox
 Blue Anchor
 Blue Andalusian
@@ -5535,6 +5571,7 @@ Bnei Brak
 Bo Derek
 Bo Diddley beat
 Bo Hai
+Bo Hai Bay
 Bo Peep dress
 Bo-Bo
 Bo-ot
@@ -6112,9 +6149,11 @@ Brazilian butt
 Brazilian butt lift
 Brazilian cherry
 Brazilian duck
+Brazilian electric shower
 Brazilian emerald
 Brazilian firetree
 Brazilian ginseng
+Brazilian grapetree
 Brazilian jiu-jitsu
 Brazilian lemonade
 Brazilian logic
@@ -6619,6 +6658,7 @@ Builth Wells
 Buir Lake
 Bukal Ibaba
 Bukal Ilaya
+Bukhara fleeceflower
 Bukit Aman
 Bukit Merah
 Bukit Mertajam
@@ -6652,6 +6692,7 @@ Bumfuck Nowhere
 Bumfuck, Egypt
 Bumfuck, Idaho
 Bumfuck, Iowa
+Bumfuck, Kansas
 Bumfuck, Minnesota
 Bumfuck, Nowhere
 Bumfuck, Ohio
@@ -6826,6 +6867,8 @@ Byelorussian Soviet Socialist Republic
 Byland Abbey
 Byland with Wass
 Byron Bay
+Byronic hero
+Byronic heroine
 Bywaters' syndrome
 Byzantine Empire
 Byzantine Greek
@@ -7209,6 +7252,7 @@ California Current
 California Hot Springs
 California Jack
 California Pines
+California Republic
 California Sound
 California Spangled Cat
 California State
@@ -7542,6 +7586,7 @@ Cap Blanc-Nez
 Cap Bon
 Cap Haitien
 Cap Hill
+Cap'n Obvious
 Cap-Haïtien
 Cap-de-la-Madeleine
 Cap-enese
@@ -7802,6 +7847,7 @@ Carolina metallic tiger beetle
 Carolina parakeet
 Carolina pink
 Carolina rig
+Carolina rose
 Carolina style
 Carolina tiger beetle
 Carolina wren
@@ -7954,6 +8000,7 @@ Castle Bolton
 Castle Bromwich
 Castle Bytham
 Castle Caereinion
+Castle Carrock
 Castle Cary
 Castle Combe
 Castle Dale
@@ -8118,6 +8165,8 @@ Cedar Ridge
 Cedar Slope
 Ceded Districts
 Cefn Cribwr
+Cefn-coed-y-cymmer
+Cefn-y-bedd
 Cehu Silvaniei
 Ceiriog Ucha
 Celebes Sea
@@ -8152,6 +8201,7 @@ Center City
 Center Game
 Center of the Universe
 Center-West Region
+Center-West region
 Centor criteria
 Central Africa
 Central Africa Time
@@ -8200,6 +8250,7 @@ Central Franconian
 Central Frontenac
 Central German
 Central Germany
+Central Goldfields
 Central Greece
 Central Highlands
 Central Huron
@@ -8210,6 +8261,7 @@ Central Kings
 Central Kootenay
 Central Kurdish
 Central Labas
+Central Limit Theorem
 Central Luzon
 Central Macedonia
 Central Manitoulin
@@ -8240,10 +8292,13 @@ Central Yupik
 Central and Western
 Central-Eastern Malayo-Polynesian
 Central-West Region
+Central-West region
 Centre County
 Centre Hastings
 Centre of the Universe
 Centre-Val de Loire
+Centre-West Region
+Centre-West region
 Centre-du-Québec
 Centreville-Wareham-Trinity
 Centro 1
@@ -8286,6 +8341,7 @@ Cerro Largo
 Cerro Punta
 Cerro de Pasco
 Cerro de Punta
+Cert. Hon.
 Certeju de Sus
 Certificate of Need
 Ceru-Băcăinți
@@ -8300,6 +8356,7 @@ Ceylon gooseberry
 Ceylon ironwood
 Ceylon lac
 Ceylon moss
+Ceylon tea
 Ceylonese English
 Ch Supt
 Ch'ang Chiang
@@ -8699,8 +8756,10 @@ Chidham and Hambrook
 Chief Baron
 Chien ware
 Chiheru de Jos
+Chihuahua flower
 Chihuahua pine
 Chihuahuan Desert
+Chihuahuan raven
 Chik Hom
 Chilaiditi sign
 Chilaiditi syndrome
@@ -8869,6 +8928,8 @@ Chinese finger puzzle
 Chinese finger trap
 Chinese fire drill
 Chinese firewall
+Chinese fleece vine
+Chinese fleecevine
 Chinese folk religion
 Chinese food syndrome
 Chinese foot
@@ -8907,6 +8968,7 @@ Chinese landing
 Chinese lantern
 Chinese leaf
 Chinese leaves
+Chinese lettuce
 Chinese lilac
 Chinese macaroni
 Chinese magic mirror
@@ -9056,9 +9118,11 @@ Chiu Chow
 Chladni figure
 Chladni pattern
 Chladni plate
+Chladni's figure
 Chladni's plate
 Cho Oyu
 Choa Chu Kang
+Choclo virus
 Choco tinamou
 Chocolate City
 Chocolate Factory
@@ -9131,6 +9195,7 @@ Christian Scientist
 Christian Universalism
 Christian Village
 Christian Zionism
+Christian cross
 Christian democracy
 Christian democrat
 Christian hardcore
@@ -9145,6 +9210,7 @@ Christian syndrome
 Christian year
 Christian-like
 Christian-name
+Christian-nameless
 Christiansborg Palace
 Christiansen effect
 Christiansen filter
@@ -9242,6 +9308,7 @@ Chrysanthemum Throne
 Chu-Harrington limit
 Chu-hai
 Chuadanga District
+Chuck Cunningham syndrome
 Chuck E. Cheese
 Chugach Census Area
 Chukchi Peninsula
@@ -9366,6 +9433,7 @@ Citrus Heights
 City Camp Central
 City Camp Proper
 City Dulas
+City Hall
 City High
 City Park
 City Road African
@@ -9622,6 +9690,7 @@ Coase theorem
 Coast Guard
 Coast Miwok
 Coast Salish
+Coast Tsimshian
 Coast of B. C.
 Coast of B.C.
 Coast of BC
@@ -9721,6 +9790,7 @@ Cold Lake
 Cold Meece
 Cold Norton
 Cold Spring
+Cold Spring Harbor
 Cold Springs
 Cold Sunday
 Cold War
@@ -9757,6 +9827,8 @@ Collier Street
 Colliers Wood
 Colliery Row
 Collin County
+Collingbourne Ducis
+Collingbourne Kingston
 Collingsworth County
 Collins Green
 Collins glass
@@ -9915,6 +9987,7 @@ Community of Madrid
 Comodoro Rivadavia
 Comoro Islands
 Comox Valley
+Comox-Sliammon
 Compact Audio Cassette
 Companies Act
 Company of Jesus
@@ -9969,6 +10042,7 @@ Confederate States of America
 Confederate flag
 Confederation of the Rhine
 Confessing Church
+Configuration Alpha
 Conflans-Sainte-Honorine
 Congazcicul de Sus
 Congis-sur-Thérouanne
@@ -10183,6 +10257,7 @@ Cornwall Island
 Cornwallis Square
 Cornwells Heights
 Corny keg
+Coromandel Peninsula
 Coromandel gooseberry
 Corona Australis
 Corona Austrina
@@ -10616,6 +10691,7 @@ Cuban warbler
 Cubzac-les-Ponts
 Cuckmere Valley
 Cuddesdon and Denton
+Cuddy's beads
 Cuhureștii de Sus
 Cuisenaire rod
 Culberson County
@@ -11032,6 +11108,7 @@ Dane gun
 Dane's blood
 Dane-hole
 Dane-zaa
+Dane-ẕaa
 Danger Island
 Dangerous Corner
 Dania Beach
@@ -11176,6 +11253,7 @@ Daubechies wavelet
 Daubenton's bat
 Daubert motion
 Daubert standard
+Daubert trilogy
 Daughter of Mary
 Dauphin County
 Daurian jackdaw
@@ -11214,6 +11292,8 @@ Davis Strait
 Davis-Barnes effect
 Davis-Putnam algorithm
 Davison County
+Davos Man
+Davos man
 Davy Crockett
 Davy Crockett cap
 Davy Crockett hat
@@ -11223,6 +11303,7 @@ Davy Jones's locker
 Davy lamp
 Davy's locker
 Davydov procedure
+Davydov soliton
 Dawes County
 Dawley Hamlets
 Dawlish Warren
@@ -11257,6 +11338,7 @@ De Barsy syndrome
 De Barsy-Moens-Diercks syndrome
 De Bilt
 De Carlo
+De Entremont
 De Fonblanque
 De Forest
 De Fryske Marren
@@ -11496,7 +11578,9 @@ Den Bosch
 Den Helder
 Denali Borough
 Denby Dale
+Dene Kǝdǝ́
 Dene Valley
+Dene Zhatıé
 Dene-Caucasian
 Dene-Yeniseian
 Deneb Kaitos
@@ -11761,6 +11845,7 @@ Ding Dong Ditch
 Dingaan's Day
 Dingane's Day
 Dingle Bay
+Dinjii Zhuʼ Ginjik
 Dinnebito Wash
 Dinnington St John's
 Dinton with Ford and Upton
@@ -11896,6 +11981,7 @@ Doctor Frankenstein
 Doctor Google
 Doctor Pepper
 Doctor Watsonish
+Doctor Who
 Doctor Whovian
 Doctor Yellow
 Doctor of Arts
@@ -11927,7 +12013,6 @@ Dogger Bank
 Dogger Bank itch
 Dogo Argentino
 Dol-de-Bretagne
-Dolby Atmos
 Dole effect
 Dollar Diplomacy
 Dollar Point
@@ -11942,6 +12027,7 @@ Dolly Varden crab
 Dolly Varden trout
 Dolni Lipovikj
 Dolomite Mountains
+Dolomitic Ladin
 Dolores County
 Dom João
 Dom Pedro
@@ -12253,6 +12339,7 @@ Dubrovačko Primorje
 Dubrovačko-neretvanska
 Dubrovnik-Neretva
 Dubuque County
+Ducci sequence
 Duchenne muscular dystrophy
 Duchenne smile
 Duchenne-Aran disease
@@ -12331,6 +12418,7 @@ Dunham-on-the-Hill
 Dunham-on-the-Hill and Hapsford
 Dunhuang studies
 Dunkerton and Tunley
+Dunkin' Doughnuts
 Dunkirk spirit
 Dunkl operator
 Dunklin County
@@ -12405,6 +12493,7 @@ Dutch bob
 Dutch book
 Dutch boy
 Dutch braid
+Dutch brass
 Dutch bulldog
 Dutch cap
 Dutch carpet
@@ -12506,6 +12595,8 @@ Dzungarian hamster
 Dzungarian horse
 Dáil Éireann
 Dâmbovița River
+Délı̨nę Got'ı̨nę Government
+Dëne Sųłıné
 Döbereiner's lamp
 Döderlein's bacillus
 Döhle body
@@ -12666,6 +12757,7 @@ Earth-pointing
 Earth-ship
 Earth-sized
 Eartha Kitt
+Easington Colliery
 Easington Village
 East Acton
 East Africa
@@ -13117,6 +13209,7 @@ Edot HaMizrach
 Edward Snowden
 Edwards AFB
 Edwards County
+Edwards Plateau
 Edwards curve
 Edwards syndrome
 Eel Pie Island
@@ -13298,6 +13391,7 @@ Elam ending
 Elamo-Dravidian
 Elandsberg dwarf chameleon
 Elbert County
+Elbow Cay
 Elbow Lake
 Eld's deer
 Elder Futhark
@@ -13521,11 +13615,13 @@ English disease
 English elm
 English fever
 English flute
+English foxhound
 English garden
 English green
 English holly
 English horn
 English hornist
+English ivy
 English knot
 English landscape garden
 English landscape park
@@ -13609,6 +13705,7 @@ Epsom and Ewell
 Epsom salt
 Epsom salts
 Epstein Island
+Epstein ballroom
 Epstein-Barr virus
 Eq. Guinea
 Equality State
@@ -13648,6 +13745,7 @@ Erythræan Sea
 Esc key
 Escambia County
 Escape key
+Escarpment Dogon
 Esch-sur-Alzette
 Eschel blue
 Eschenmoser fragmentation
@@ -13706,6 +13804,7 @@ Etch-A-Sketch
 Etch-a-Sketch
 Eternal City
 Eternal September
+Ethernet card
 Ethical Decalogue
 Ethio-jazz
 Ethiopian Catholic
@@ -14010,7 +14109,9 @@ Ewing's sarcoma
 Ewood Bridge
 Ewyas Harold
 Ex Works
+Ex ray
 Ex-Im
+Ex-ray
 Exacto knife
 Excelsior Springs
 Exchequer of the Jews
@@ -14442,6 +14543,7 @@ Ferro meridian
 Ferroe Islands
 Ferry County
 Ferryhill Station
+Fertile Belt
 Fertile Crescent
 Fertile Valley
 Fes-Meknes
@@ -14563,6 +14665,7 @@ First Amendment audit
 First Amendment auditor
 First Australian
 First Bloke
+First Cat
 First Cause
 First Coast
 First Communion
@@ -14592,6 +14695,7 @@ First Nationer
 First Nations
 First New England School
 First People
+First Pooch
 First Presidency
 First Red Scare
 First Reich
@@ -14718,7 +14822,6 @@ Flieringa ring
 Flin Flon
 Flinders Ranges
 Flitton and Greenfield
-Flock camera
 Floer homology
 Flogny-la-Chapelle
 Flood Rock
@@ -14888,6 +14991,7 @@ Forster's tern
 Forstner bit
 Forsyth County
 Fort Ancient
+Fort Archambault
 Fort Augustus
 Fort Bend County
 Fort Benton
@@ -14931,6 +15035,7 @@ Fort Pierce
 Fort Pierre
 Fort Scott
 Fort Smith
+Fort St. John
 Fort Stockton
 Fort Sumner
 Fort Sumter
@@ -14961,6 +15066,7 @@ Forty-Eighter
 Forty-five
 Fosbury flop
 Foss Cross
+Fosse Road
 Fosse Way
 Foster City
 Foster County
@@ -15050,6 +15156,7 @@ Fox-Fordyce disease
 Foxe Basin
 Foxhole Circuit
 Foyot sauce
+Frag movie
 Framingham Pigot
 Frampton Cotterell
 Frampton Mansell
@@ -15060,8 +15167,10 @@ Franche-Comté
 Francis Joseph's Land
 Francis turbine
 Francisco Morazán
+Francisco de Orellana
 Franck-Condon principle
 Franco-American
+Franco-Arabic
 Franco-Levantine
 Franco-Manitoban
 Franco-Ontarian
@@ -15223,6 +15332,7 @@ French chop
 French cleat
 French coffee
 French colonial empire
+French cotton
 French cream
 French cricket
 French cuff
@@ -15271,6 +15381,7 @@ French loaf
 French macaroon
 French maid
 French manicure
+French marigold
 French measles
 French meringue
 French merino
@@ -15302,6 +15413,7 @@ French ruff
 French safe
 French sash
 French seam
+French seventy-five
 French skipping
 French sole
 French spacing
@@ -15474,6 +15586,7 @@ Fungus Rock
 Furnace Creek
 Furnas County
 Furness Vale
+Furry Creek
 Furth im Wald
 Furthest Mosque
 Furukawa modification
@@ -15636,7 +15749,10 @@ Gainsborough hat
 Gaisböck syndrome
 Gala Water
 Galactic Center
+Galactic Centre
 Galactic Ghoul
+Galactic center
+Galactic centre
 Galapago Islands
 Galapagos Islands
 Galapagos giant tortoise
@@ -16055,6 +16171,7 @@ German augmented sixth chord
 German bearded iris
 German biscuit
 German bit
+German brass
 German camomile
 German carp
 German chamomile
@@ -16925,6 +17042,7 @@ Great Assize
 Great Attractor
 Great Australian Bight
 Great Awakening
+Great Awokening
 Great Aycliffe
 Great Ayton
 Great Bardfield
@@ -16971,6 +17089,7 @@ Great Church
 Great Comberton
 Great Commission
 Great Coxwell
+Great Croatia
 Great Dalby
 Great Dane
 Great Dawley
@@ -17040,6 +17159,8 @@ Great Ocean
 Great Orme
 Great Osage
 Great Ouse
+Great Oxygenation
+Great Oxygenation Event
 Great Pacific Garbage Patch
 Great Patriotic War
 Great Paxton
@@ -17421,6 +17542,7 @@ Grove of the Evangelist
 Grover Beach
 Grover's algorithm
 Groves' dwarf lemur
+Grovesend and Waungron
 Groß-Gerau
 Grub Street
 Grubbs' catalyst
@@ -17582,6 +17704,7 @@ Gunpowder Treason Day
 Gunter's Chain
 Gunter's chain
 Gunter's line
+Gunter's quadrant
 Gunter's scale
 Gupta Empire
 Gura Caliței
@@ -17617,6 +17740,7 @@ Guy and Pip
 Guyana spotted roach
 Guyanese Creole
 Guysborough County
+Gwa'sala-'Nakwaxda'xw
 Gwaun-Cae-Gurwen
 Gwern-y-domen
 Gwernaffield with Pantymwyn
@@ -17708,6 +17832,7 @@ HO scale
 HOOD syndrome
 HOPP syndrome
 HOV lane
+HP-UX
 HR diagram
 HS-DSCH
 HS-PDSCH
@@ -18000,7 +18125,6 @@ Happy Meal
 Happy Merchant
 Happy Monday
 Happy New Year's
-Happy Ramadan
 Happy Time
 Happy Valley
 Happy Valley-Goose Bay
@@ -18170,6 +18294,7 @@ Hassel Island
 Hasselback potatoes
 Hastert rule
 Hastings County
+Hasya yoga
 Hat Creek
 Hat Yai
 Hatan Torah
@@ -18196,6 +18321,8 @@ Hausdorff distance
 Hausdorff gap
 Hausdorff metric
 Hausdorff space
+Haut-Katanga
+Haut-Lomami
 Haut-Rhin
 Haute-Corse
 Haute-Garonne
@@ -18296,6 +18423,7 @@ Hazara Pakistan
 Hazel Dell
 Hazel Grove
 Hazelbury Bryan
+Hazlewood with Storiths
 He Devil
 He Frowned
 He dating
@@ -18586,6 +18714,7 @@ Heusler compound
 Hewelsfield and Brockweir
 Hexi Corridor
 Heyde's syndrome
+Heyford Park
 Heyting algebra
 Heywood Jablome
 Hi-Fi
@@ -18618,6 +18747,7 @@ Higgs mechanism
 Higgs particle
 Higgs-like
 High Abbotside
+High Alemannic
 High Bailiff
 High Barnet
 High Beach
@@ -18717,6 +18847,7 @@ Hill Chorlton
 Hill City
 Hill Country
 Hill County
+Hill End
 Hill Mari
 Hill River poison
 Hill Town
@@ -18745,6 +18876,7 @@ Himalayan black-lored tit
 Himalayan blackberry
 Himalayan blue poppy
 Himalayan brown bear
+Himalayan cat
 Himalayan cypress
 Himalayan field rat
 Himalayan griffon vulture
@@ -18768,6 +18900,7 @@ Hindoo-Kho
 Hindoo-Koosh
 Hindoo-Kush
 Hinds County
+Hindu Koh
 Hindu Kush
 Hindu Rashtra
 Hindu numeral
@@ -18844,6 +18977,7 @@ Hitler-y
 Hittorf tube
 Hittorf's phosphorus
 Hiva Oa
+Hizb Allah
 Hjelmslev transformation
 Hjelmslev's theorem
 Hmong Daw
@@ -18928,6 +19062,7 @@ Holcombe Brook
 Hold 'em
 Holdfast Bay
 Holevo's theorem
+Holiness-Pentecostal
 Holland Arms
 Holland Park
 Hollander beater
@@ -18999,6 +19134,7 @@ Holy Cross
 Holy Cross Voivodeship
 Holy Family
 Holy Father
+Holy Foreskin
 Holy Friday
 Holy Ghost
 Holy Ghost Extension
@@ -19124,6 +19260,7 @@ Hood River
 Hood River County
 Hooghly-Chinsurah
 Hoogsteen base pair
+Hook End
 Hook Norton
 Hook Point poison
 Hook of Holland
@@ -19154,6 +19291,7 @@ Hop Pole
 Hop-tu-naa
 Hopcroft's algorithm
 Hope Cay
+Hope Town
 Hope Woodlands
 Hope under Dinmore
 Hopey McChange
@@ -19209,6 +19347,7 @@ Horse Latitudes
 Horse and Jockey
 Horsehead Nebula
 Horsemen of the Apocalypse
+Horseshoe Bay
 Horseshoe Falls
 Horsfield's bat
 Horsfield's tarsier
@@ -19296,6 +19435,7 @@ Hovmöller diagram
 Howard County
 Howard's battlers
 Howden Clough
+Howe Sound
 Howe truss
 Howel-Evans syndrome
 Howell County
@@ -19465,6 +19605,7 @@ Hunter syndrome
 Hunter's Hill
 Hunter's bend
 Hunter's organ
+Hunter's screw
 Hunter-Russell syndrome
 Hunterdon County
 Hunters Hill
@@ -19480,6 +19621,7 @@ Huntington's disease
 Huntington's disease-like syndrome
 Hunton Bridge
 Hunts Grove
+Hunts Point
 Huntwick with Foulby and Nostell
 Hunza water
 Hunza-Nagar District
@@ -19931,6 +20073,7 @@ IKEA effect
 IMPRS-LS
 INCO term
 INSET day
+IOM soybean
 IP SAN
 IP address
 IP camera
@@ -20018,6 +20161,7 @@ Iga ware
 Ignatius bean
 Iitaka dimension
 Ike jacket
+Ikey Mo
 Ikisugi chord
 Il Duce
 Il Papa
@@ -20121,6 +20265,7 @@ Indian Ocean
 Indian Orthodox Church
 Indian Peninsula
 Indian Pond
+Indian Reserve No. 23
 Indian River
 Indian River County
 Indian Rummy
@@ -20183,6 +20328,7 @@ Indian lilac
 Indian liquorice
 Indian madder
 Indian mahogany
+Indian mallow
 Indian meal moth
 Indian millet
 Indian mulberry
@@ -20217,6 +20363,7 @@ Indian ricegrass
 Indian rojak
 Indian roller
 Indian rope trick
+Indian rose chestnut
 Indian rugburn
 Indian rummy
 Indian saffron
@@ -20239,6 +20386,7 @@ Indian thistle
 Indian tick typhus
 Indian time
 Indian tin
+Indian tobacco
 Indian turnip
 Indian warrior
 Indian wax scale
@@ -20347,6 +20495,7 @@ Inner Tibet
 Inner West
 Innocents' Day
 Innu-aimun
+Inquilab Zindabad
 Inscriptional Pahlavi
 Inside Passage
 Inskip-with-Sowerby
@@ -20374,8 +20523,8 @@ Internal Revenue Code
 International Atomic Time
 International Auxiliary Language Association
 International Baccalaureate
+International Bible Students
 International Court of Justice
-International Cricket Council
 International Criminal Court
 International Date Line
 International Day of the Girl
@@ -20384,6 +20533,7 @@ International Falls
 International Grandmaster
 International Klein Blue
 International Load Line
+International Maritime Organisation
 International Maritime Organization
 International Master
 International Men's Day
@@ -20420,6 +20570,7 @@ Internet of things
 Internet presence
 Internet radio
 Internet service provider
+Inuit Dog
 Inuit Nunangat
 Invasion Day
 Invention of the Cross
@@ -20546,6 +20697,7 @@ Irishman's hurricane
 Irishtown-Summerside
 Irlams o' th' Height
 Irlen syndrome
+Iron Acton
 Iron Age
 Iron County
 Iron Cross
@@ -20656,6 +20808,7 @@ Israeli Diaper Force
 Israeli Diaper Forces
 Israeli Occupation Forces
 Israeli Sign Language
+Israeli Wire
 Israeli couscous
 Israeli salad
 Issaquena County
@@ -20922,6 +21075,7 @@ Jacky Hanger
 Jacky Hangman
 Jacky Howe
 Jacob Marley
+Jacob sheep
 Jacob's Ladder
 Jacob's Pillow
 Jacob's coat
@@ -20983,6 +21137,7 @@ Jamaican Maroon Spirit Possession Language
 Jamaican Patois
 Jamaican apple
 Jamaican blind snake
+Jamaican ebony
 Jamaican patty
 Jamaican time
 Jamaican vomiting sickness
@@ -21168,6 +21323,7 @@ Japanese theorem
 Japanese tissue
 Japanese tit
 Japanese tree lilac
+Japanese umbrella pine
 Japanese wagtail
 Japanese wax
 Japanese weasel
@@ -21233,6 +21389,8 @@ Jeddart staff
 Jeddito Wash
 Jedi Knight
 Jedi Master
+Jedi flip
+Jedi flipping
 Jedi mind trick
 Jedwood justice
 Jeet Kune Do
@@ -21250,10 +21408,19 @@ Jefferson disk
 Jefferson method
 Jefferson-Jackson dinner
 Jeffreys prior
+Jehovah Witness
+Jehovah witness
 Jehovah's Witness
 Jehovah's Witnesses
+Jehovah's Witnessism
 Jehovah's witness
+Jehovah's witnesses
 Jehovah's-Witness
+Jehovah’s Witness
+Jehovah’s Witnesses
+Jehovah’s Witnessism
+Jehovah’s witness
+Jehovah’s witnesses
 Jeju dog
 Jeju-do
 Jekyll and Hyde
@@ -21314,6 +21481,7 @@ Jersey girl
 Jersey justice
 Jersey lightning
 Jersey lily
+Jersey salute
 Jersey sound
 Jersey toadflax
 Jersey wall
@@ -21401,6 +21569,8 @@ Jew Yorker
 Jew bail
 Jew crew
 Jew down
+Jew hate
+Jew hatred
 Jew lizard
 Jew nose
 Jew up
@@ -21522,6 +21692,7 @@ Jo block
 Jo-Ann
 Jo-Anne
 Jo-Jo book
+Joan Croft
 Joan of Arc
 Joan of Arcian
 Joan's as good as my lady in the dark
@@ -21677,6 +21848,7 @@ Johnson noise
 Johnson polyhedron
 Johnson solid
 Johnson's algorithm
+Johnson's rule
 Johnson-McMillin syndrome
 Johnson-Munson syndrome
 Johnson-Nyquist noise
@@ -21686,6 +21858,7 @@ Johnston's organ
 Johor Baharu
 Johor Bahru
 Joint Academic Network
+Jolie gene
 Jolly Roger
 Jolly balance
 Jomo Lhari
@@ -21920,6 +22093,7 @@ K-9
 K-9 unit
 K-Country
 K-Drama
+K-Hell
 K-Mag
 K-Mid
 K-Pg
@@ -21936,9 +22110,11 @@ K-beauty
 K-bentonite
 K-cell
 K-complex
+K-culture
 K-drama
 K-factor
 K-feldspar
+K-food
 K-function
 K-gun
 K-hed
@@ -22013,6 +22189,8 @@ Kai Tak
 Kaibab squirrel
 Kailua-Kona
 Kaimanawa horse
+Kainantu language
+Kainantu–Goroka language
 Kaiser Wilhelm II Land
 Kaiser blade
 Kaiser roll
@@ -22131,6 +22309,7 @@ Kara Gates
 Kara Khitai
 Kara Sea
 Kara Strait
+Kara-Bogaz Gol
 Kara-Bogaz-Gol
 Kara-tau
 Karachay-Balkar
@@ -22185,6 +22364,7 @@ Kartagener's syndrome
 Kartli-Kakheti
 Kartvelian studies
 Kasabach-Merritt syndrome
+Kasaï-Oriental
 Kasha's rule
 Kashin-Beck disease
 Kashin-Bek disease
@@ -22401,6 +22581,7 @@ Kerry Blue
 Kerry Blue Terrier
 Kerry Hill
 Kerry Packered
+Kerry blue terrier
 Kerryman joke
 Kersey Upland
 Kershaw County
@@ -22610,6 +22791,7 @@ King's English
 King's Gambit
 King's Hall
 King's Heath
+King's Inch
 King's Indian Defence
 King's Lynn
 King's Lynn and West Norfolk
@@ -23007,6 +23189,7 @@ Komi-Yazva
 Komi-Yodzyak
 Komi-Zyrian
 Komodo dragon
+Kompetenz-Kompetenz
 Komsomol'sk-na-Amure
 Komsomolsk-na-Amure
 Komsomolsk-on-Amur
@@ -23568,6 +23751,7 @@ Lac La Biche
 Lac La Biche County
 Lac Ste. Anne
 Lac Ste. Anne County
+Lac la Hache
 Lac qui Parle County
 Lac-Delage
 Laccadive Islands
@@ -23887,6 +24071,7 @@ Lane Cove
 Lane End
 Lane Ends
 Lane cake
+Lang Belta
 Lang-Exster
 Lang-ju
 Langar cum Barnstone
@@ -24050,6 +24235,7 @@ Latino Sine Flexione
 Latino sine Flexione
 Latino-Faliscan
 Latino-Punic
+Latte Town
 Latter Day Saint
 Latter-day Saint
 Latvian Gambit
@@ -24436,6 +24622,7 @@ Lewin's equation
 Lewis Center
 Lewis Cliff
 Lewis County
+Lewis Run
 Lewis acid
 Lewis and Clark County
 Lewis and Harris
@@ -24528,8 +24715,10 @@ Liddel Water
 Liddle syndrome
 Liddle's syndrome
 Lie algebra
+Lie algebroid
 Lie bracket
 Lie group
+Lie groupoid
 Liebenberg syndrome
 Liebermann reagent
 Liebig condenser
@@ -24827,6 +25016,7 @@ Little Somerford
 Little Steeping
 Little Stoke
 Little Stour
+Little Strickland
 Little Stukeley
 Little Sutton
 Little Tew
@@ -25059,6 +25249,7 @@ London to a brick
 London tuft
 London weighting
 London-centric
+Lone Butte
 Lone Pine
 Lone Ranger
 Lone Scout
@@ -25284,6 +25475,7 @@ Louis-heeled
 Louisa County
 Louisiana Creole
 Louisiana Creole French
+Louisiana French
 Louisiana Purchase
 Louisiana Regional English
 Louisiana Territory
@@ -25440,6 +25632,7 @@ Lucas polynomial
 Lucas-Penrose argument
 Lucayan Archipelago
 Luce County
+Luce's choice axiom
 Lucerne Valley
 Lucerne hammer
 Lucey-Driscoll syndrome
@@ -25633,6 +25826,7 @@ M62 corridor
 M74 syndrome
 MAC address
 MAC-48
+MAGA Mike
 MAGA-land
 MAGIC syndrome
 MALT lymphoma
@@ -25779,11 +25973,13 @@ Madagascar sea-eagle
 Madagascar tortoise
 Madagascar wood rail
 Madagascar yellowbrow
+Madam President
 Madam and Eve
 Madame Berthe's mouse lemur
 Madame Bishop
 Madame Jeanette
 Madame Mao
+Madame President
 Madame Tussaud's
 Madaraka Day
 Madaripur District
@@ -25910,6 +26106,7 @@ Mahā bhārata
 Mahā-Bhārata
 Mahā-bhārata
 Mai Tai
+Mai-Tini
 Maid Marian
 Maid of Honour tart
 Maida Vale
@@ -25930,6 +26127,7 @@ Main Standard Time
 Main Street
 Maine Coon
 Maine Coon cat
+Maine coon
 Maine law
 Maine lobster
 Maine-et-Loire
@@ -26117,6 +26315,7 @@ Manchester coding
 Manchester encoding
 Manchester pudding
 Manchester tart
+Manchester terrier
 Manchester-by-the-Sea
 Manchu chess
 Manchurian Plain
@@ -26149,6 +26348,7 @@ Mango Island
 Mango Mussolini
 Mangrove Cay
 Manhattan Beach
+Manhattan Bridge
 Manhattan Project
 Manhattan clam chowder
 Manhattan distance
@@ -26569,6 +26769,7 @@ Matan Torah
 Matandang Balara
 Matanuska-Susitna Borough
 Matanzas Province
+Match Demo
 Matfield Green
 Mathematics A
 Mathematics B
@@ -26592,6 +26793,7 @@ Matrix defense
 Matter of Britain
 Matthew effect
 Matthew principle
+Matthew's pill
 Matura diamond
 Mau Mau
 Maui County
@@ -26644,6 +26846,7 @@ May Queen
 May Week
 May and December
 May apple
+May beetle
 May blossom
 May bug
 May game
@@ -26873,6 +27076,7 @@ Mediterranean lymphoma
 Mediterranean medlar
 Mediterranean monk seal
 Mediterranean outflow
+Mediterranean parrotfish
 Mediterranean pine
 Mediterranean race
 Mediterranean recluse spider
@@ -26986,6 +27190,7 @@ Mendocino County
 Mendoza line
 Menelaus' theorem
 Menelaus's theorem
+Menelik's bushbuck
 Menger sponge
 Menger's theorem
 Menifee County
@@ -27159,6 +27364,7 @@ Mexican west coast rattlesnake
 Mexican white pine
 Mexican wolf
 Mexican wrestling
+Mexican yam
 Mexican-American
 Mexican-American War
 Mexico Beach
@@ -27240,6 +27446,7 @@ Microsoft minute
 Microsoft tax
 Mid Beds
 Mid Calder
+Mid City
 Mid Clyth
 Mid Devon
 Mid East
@@ -27426,6 +27633,7 @@ Military Cut-Off
 Military Cut-off
 Military Demarcation Line
 Military Frontier
+Milk Snatcher
 Milk Tea Alliance
 Milky Way
 Milky Way Galaxy
@@ -27519,6 +27727,7 @@ Minica Huitoto
 Minidoka County
 Minié ball
 Minié rifle
+Minkowski diagram
 Minkowski dimension
 Minkowski inequality
 Minkowski space
@@ -27776,10 +27985,12 @@ Molly Mormon
 Molly house
 Molniya orbit
 Moloney's mimic bat
+Molotoff cocktail
 Molotov bread basket
 Molotov breadbasket
 Molotov cocktail
 Molotov's bread basket
+Molotov's cocktail
 Molson muscle
 Molten Sea
 Molteno disease
@@ -27813,6 +28024,7 @@ Monday Club
 Monday fever
 Monday morning disease
 Monday morning quarterback
+Monday night
 Monday-morning
 Monday-morning quarterback
 Mondeo Man
@@ -27843,6 +28055,7 @@ Monk Bretton
 Monk Fryston
 Monk Hesleden
 Monk's Tale stanza
+Monkey King
 Monkey Ward's
 Monkland and Stretford
 Monks Horton
@@ -27940,6 +28153,7 @@ Montpellier maple
 Montreal Island
 Montreal Metropolitan Community
 Montreal Protocol
+Montreal bagel
 Montreal melon
 Montreal nutmeg melon
 Montreal procedure
@@ -28095,6 +28309,7 @@ Morse alphabet
 Morse code
 Morse function
 Morse key
+Morse taper
 Morse theory
 Morteau sausage
 Mortimer's Cross
@@ -28139,6 +28354,7 @@ Moss Vale
 Mossley Hill
 Mossos d'Esquadra
 Most High
+Most Reverend
 Most Serene Republic of Venice
 Mother Carey
 Mother Carey's chicken
@@ -28237,6 +28453,7 @@ Mount Hope Bay
 Mount Hubbard
 Mount Ida
 Mount Isa
+Mount Jewett
 Mount Joy
 Mount Katahdin
 Mount Kellett
@@ -28369,6 +28586,7 @@ Mr. & Mrs.
 Mr. Big
 Mr. Claus
 Mr. Clean
+Mr. FAFO
 Mr. Irrelevant
 Mr. Magoo glasses
 Mr. Nice Guy
@@ -28524,6 +28742,7 @@ Murray Hill
 Murray River
 Murray Valley encephalitis
 Murray bridge
+Murray cod
 Murray code
 Murray lily
 Murray loop bridge
@@ -28607,6 +28826,7 @@ Mé-Zóchi
 Ménière's disease
 Ménière's syndrome
 Méricourt-l'Abbé
+Métis French
 Mézidon Vallée d'Auge
 Möbius band
 Möbius function
@@ -28825,6 +29045,7 @@ Nanty Glo
 Nantyglo and Blaina
 Naogaon District
 Napa County
+Napa Valley
 Naperian logarithm
 Napier grass
 Napier's bones
@@ -28835,6 +29056,7 @@ Napili-Honokowai
 Naples biscuit
 Naples yellow
 Napoleon complex
+Napoleon gun
 Napoleon point
 Napoleon slice
 Napoleon syndrome
@@ -28871,6 +29093,7 @@ Nasirabad Division
 Nasmyth telescope
 Nasonov gland
 Nasonov pheromone
+Nasonov's gland
 Nasreddin Crater
 Nassau County
 Nassau grouper
@@ -28930,6 +29153,7 @@ Native Canadian
 Native Hawaiian
 Natore District
 Natrona County
+Natterer's bat
 Natterer's slaty antshrike
 Nattier blue
 Natty Bo
@@ -29082,6 +29306,7 @@ Neo-Hebraic
 Neo-Hebrew
 Neo-Hellenic
 Neo-Hellenism
+Neo-Hittite
 Neo-Kantian
 Neo-Kantianism
 Neo-Lamarckism
@@ -29571,6 +29796,7 @@ New Year's resolution
 New York
 New York City
 New York County
+New York English
 New York Shitty
 New York State
 New York System
@@ -30065,6 +30291,7 @@ North Atlantic
 North Atlantic Ocean
 North Atlantic Oscillation
 North Atlantic Terrorist Organization
+North Atlantic Treaty Organisation
 North Atlantic Treaty Organization
 North Atlantican
 North Atlanticism
@@ -30498,11 +30725,13 @@ Norwegian Lundehund
 Norwegian Nynorsk
 Norwegian Sea
 Norwegian coupling
+Norwegian elkhound
 Norwegian forest cat
 Norwegian rat
 Norwegian whist
 Norwich Pharmacal order
 Norwich Terrier
+Norwich terrier
 Norwood Green
 Norwood Payneham and St Peters
 Norwood Reaper
@@ -30535,10 +30764,12 @@ Nova Rača
 Nova Scotia
 Nova Scotia Duck Tolling Retriever
 Nova Scotia peninsula
+Nova Scotia salmon
 Nova Scotian
 Nova Scotian Sign Language
 Nova Sintra
 Nova Zembla
+Novaia Zemlia
 Novaliches Proper
 Novaya Zemlya
 Novaya Zemlya effect
@@ -30822,6 +31053,7 @@ Oconto County
 Octave Day of Easter
 Octave of Easter
 October 7
+October 8 Jew
 October 8th Jew
 October Revolution
 October Revolution Island
@@ -30981,6 +31213,7 @@ Old Egyptian
 Old Elvish
 Old English
 Old English Sheepdog
+Old English sheepdog
 Old Etonian
 Old Faithful
 Old Father Thames
@@ -31148,6 +31381,7 @@ Old Welsh
 Old West
 Old West Norse
 Old Windsor
+Old Woking
 Old Wolverton
 Old Woodhall
 Old World
@@ -31336,6 +31570,7 @@ Oregon fir
 Oregon grape
 Oregon maple
 Oregon myrtle
+Oregon pine
 Oregon plum
 Oregon white oak
 Orenburg gum
@@ -31565,6 +31800,7 @@ Oxford glasses
 Oxford ivy
 Oxford movement
 Oxford of the East
+Oxford philosophy
 Oxford pillowcase
 Oxford scholar
 Oxford shoe
@@ -31572,7 +31808,14 @@ Oxford spelling
 Oxford study
 Oxford tie
 Oxo cube
+Oxygen Catastrophe
+Oxygen Crisis
+Oxygen Holocaust
 Oxygen Revolution
+Oxygenation Catastrophe
+Oxygenation Crisis
+Oxygenation Event
+Oxygenation Holocaust
 Oya Shio
 Oya Siwo
 Oyashio Current
@@ -31616,6 +31859,7 @@ P-cola
 P-complete
 P-factor
 P-frame
+P-hacking
 P-in-V
 P-plate
 P-plater
@@ -31636,6 +31880,7 @@ P.O.W. camp
 P/2 orbit
 P/E ratio
 P/F ratio
+PA cage
 PA speaker
 PA system
 PAPA syndrome
@@ -31647,6 +31892,7 @@ PC Card
 PC Plod
 PC bang
 PC communication
+PC shaming
 PC speaker
 PC-BSD
 PC-compatible
@@ -31984,8 +32230,11 @@ Panama City Beach
 Panama Papers
 Panama Red
 Panama disease
+Panama fever
 Panama hat
 Panama hat palm
+Panama rubber
+Panama rubber tree
 Panama sole
 Panama weave
 Panamanian white-faced capuchin
@@ -32157,6 +32406,7 @@ Parsley Hay
 Parson Drove
 Parson Russell
 Parson Trulliber
+Parson magneton
 Parson's Heath
 Parson's Pleasure
 Parson's Pond
@@ -32609,10 +32859,13 @@ Persian insect powder
 Persian lamb
 Persian lilac
 Persian love
+Persian lynx
+Persian melon
 Persian morocco
 Persian orange
 Persian powder
 Persian relapsing fever
+Persian rug
 Persian rummy
 Persian shallot
 Persian violet
@@ -32649,6 +32902,7 @@ Pesaro e Urbino
 Peshawar Division
 Peshwari naan
 Peshwari nan
+Peskotomuhkati-Wolastoqey
 Peso da Régua
 Pesquet's parrot
 Pestișu Mic
@@ -33277,6 +33531,7 @@ Poe's law
 Poetic Edda
 Poggendorff illusion
 Pogosta disease
+Pohai Bay
 Pohai Sea
 Pohela Boishakh
 Poiana Blenchii
@@ -33348,6 +33603,7 @@ Poland China
 Poland Is Not Yet Lost
 Poland syndrome
 Polar Inuit
+Polchinski's paradox
 Pole Star
 Polenske number
 Polenske value
@@ -33356,6 +33612,7 @@ Police nad Metují
 Polignac's conjecture
 Polish Corridor
 Polish Lowland Sheepdog
+Polish Messianism
 Polish Orthodox Church
 Polish People's Republic
 Polish bed
@@ -33607,6 +33864,7 @@ Port aux Basques
 Port du Salut
 Port of Menteith
 Port of Spain
+Port-Francqui
 Port-Gentil
 Port-Royal
 Port-Royalist
@@ -33675,6 +33933,7 @@ Portuguese sauce
 Portuguese squill
 Portus Cale
 Portus Julius
+Portus Magnus
 Porumbacu de Jos
 Posey County
 Posey vest
@@ -33871,6 +34130,7 @@ Primrose League
 Primrose syndrome
 Primus stove
 Prince Albert
+Prince Albert cage
 Prince Albert coat
 Prince Albert's yew
 Prince Albert-coated
@@ -33902,6 +34162,7 @@ Prince of Wales
 Prince of Wales check
 Prince of Wales spur
 Prince's Flag
+Prince's metal
 Princes End
 Princes Risborough
 Princes Town
@@ -34142,7 +34403,9 @@ Puente Alto
 Puerco River
 Puerto Barrios
 Puerto Blest
+Puerto Bolívar
 Puerto El Triunfo
+Puerto Francisco de Orellana
 Puerto Galera
 Puerto La Cruz
 Puerto Montt
@@ -34345,6 +34608,7 @@ Q-spoiling
 Q-switch
 Q-switching
 Q-tip
+Q-tips
 Q-value
 Q-wave
 Q-word
@@ -34915,9 +35179,11 @@ Red Dragon Book
 Red Dragons
 Red Eye
 Red Finland
+Red Flag
 Red Flames
 Red Forest
 Red Gelao
+Red Guard
 Red Harbour
 Red Hatter
 Red Hawke
@@ -34977,6 +35243,7 @@ Red Summer
 Red Terror
 Red Tribe
 Red Ukrainian
+Red Vienna
 Red Volta
 Red Wall
 Red Wharf Bay
@@ -35024,6 +35291,7 @@ Refugee Regatta
 Refugio County
 Reg Grundies
 Reg Grundys
+Reg. Prof.
 Regatta Point
 Regent's Park
 Regge theory
@@ -35187,6 +35455,7 @@ Republic of Niger
 Republic of North Macedonia
 Republic of Northern Macedonia
 Republic of Palau
+Republic of Panama
 Republic of Paraguay
 Republic of Peru
 Republic of Poland
@@ -35260,6 +35529,7 @@ Revenge of the Fifth
 Revenge of the Sixth
 Revenue Canada
 Revere Beach
+Reverend Gentleman
 Revesz syndrome
 Revigny-sur-Ornain
 Revised Romanization of Korean
@@ -35319,6 +35589,7 @@ Rhodesian Ridgeback
 Rhodesian fever
 Rhodesian man
 Rhodesian redwater fever
+Rhodesian ridgeback
 Rhodesian teak
 Rhondda Cynon Taf
 Rhondda Cynon Taff
@@ -35327,6 +35598,7 @@ Rhubarb Triangle
 Rhumel River
 Rhyd-ddu
 Rhyd-y-foel
+Rhyd-y-fro
 Rhyd-yr-onen
 Rhymney Bridge
 Rhône-Alpes
@@ -35425,6 +35697,7 @@ Right Arm of the Free World
 Right Honorable
 Right Honourable
 Right Man
+Right Reverend
 Righteous Among the Nations
 Rigil Kent
 Rijssen-Holten
@@ -35619,6 +35892,7 @@ Rocky Mountain
 Rocky Mountain Kool-Aid
 Rocky Mountain canary
 Rocky Mountain fever
+Rocky Mountain goat
 Rocky Mountain oyster
 Rocky Mountain spotted fever
 Rocky Mountain toast
@@ -35639,6 +35913,8 @@ Rodriguez Camp
 Roe Green
 Roe's poison
 Roemheld syndrome
+Roentgen radiation
+Roentgen ray
 Roentgen-ray
 Rogallo wing
 Rogate Sunday
@@ -35777,6 +36053,8 @@ Romney Marsh
 Romney hut
 Romsey Extra
 Ronco Scrivia
+Rontgen radiation
+Rontgen ray
 Rood End
 Roof of the World
 Rooftop of the World
@@ -35795,6 +36073,7 @@ Rorate Sunday
 Rorschach inkblot test
 Rorschach test
 Rosa Americana
+Rosai-Dorfman disease
 Rosario de Mora
 Rosary Heights I
 Rosary Heights II
@@ -36158,6 +36437,7 @@ Russian violet
 Russian wheat aphid
 Russian whist
 Russian winter white dwarf hamster
+Russian wolfhound
 Russian world
 Russian wormwood
 Russian-American
@@ -36220,7 +36500,9 @@ Río Piedras
 Río San Juan
 Río de Oro
 Río de la Plata
+Röntgen radiation
 Röntgen ray
+Röntgen-ray
 Rüdesheim am Rhein
 Rüppell's fox
 Rüppell's sand fox
@@ -36249,6 +36531,7 @@ S-Video
 S-bend
 S-bomb
 S-box
+S-bucks
 S-commerce
 S-curve
 S-expression
@@ -36302,6 +36585,7 @@ SATA cable
 SCARF syndrome
 SD card
 SD-WAN
+SDHC card
 SDR RAM
 SDR SDRAM
 SE SN
@@ -36335,6 +36619,7 @@ SPINA-GR
 SPINA-GT
 SPUA-A
 SPUA-B
+SR-IOV
 SRS BSNS
 SSI income
 ST elevation
@@ -36549,6 +36834,7 @@ Saint Nicholas' clerk
 Saint Nick
 Saint Onge
 Saint Paddy's
+Saint Pancras
 Saint Patrick
 Saint Patrick's Day
 Saint Paul
@@ -37674,6 +37960,7 @@ Scots whist
 Scots' Gap
 Scots-Irish
 Scotsman's rattle
+Scott Base
 Scott City
 Scott County
 Scott connection
@@ -37694,6 +37981,7 @@ Scottish Rite
 Scottish acre
 Scottish bluebell
 Scottish crossbill
+Scottish deerhound
 Scottish law
 Scottish pint
 Scottish play
@@ -37789,6 +38077,7 @@ Sechura desert fox
 Sechura fox
 Sechuran fox
 Sechuran zorro
+Seckel pear
 Seckel syndrome
 Second Adventist
 Second Amendment
@@ -37888,6 +38177,7 @@ Semont maneuver
 Semper Gumbi
 Semper Gumby
 Sen-Sen
+Senate bean soup
 Sendai River
 Sendai virus
 Sendov's conjecture
@@ -37902,6 +38192,7 @@ Senegal jack
 Senegalese twist
 Seneley Green
 Sengstaken-Blakemore tube
+Senhaja de Srair
 Senior Circuit
 Senior Counsel
 Senior-Løken syndrome
@@ -37993,7 +38284,6 @@ Seven Wonders of the Ancient World
 Seven Wonders of the World
 Seven Years' War
 Seventh Day
-Seventh World
 Seventh-day Adventism
 Seventh-day Adventist
 Seventh-day Adventist Church
@@ -38111,6 +38401,7 @@ Sharkey County
 Sharkovskii's theorem
 Sharm el-Sheikh
 Sharnal Street
+Sharon Hill
 Sharon Springs
 Sharon fruit
 Sharon plain
@@ -38278,6 +38569,8 @@ Shirley Temple
 Shirley card
 Shirley poppy
 Shirley sauce
+Shit Trek
+Shit Wars
 Shitland Islands
 Shitty Kitty
 Shivalik Hills
@@ -38833,6 +39126,7 @@ Snickers salad
 Snob Hill
 Snohomish County
 Snoopers' Charter
+Snoopy cap
 Snorri's Edda
 Snow Hill
 Snow Queen
@@ -38842,6 +39136,7 @@ Snowball Earth
 Snowflake Generation
 Snowmass Creek
 Snowmass Village
+Snowy Monaro
 Snowy Mountains
 Snowy Valleys
 Snyder County
@@ -38881,6 +39176,7 @@ Socratic method
 Sod's Law
 Sod's law
 Soda Bay
+Soda Creek
 Soda Springs
 Sodom and Gomorrah
 Sodom apple
@@ -38940,6 +39236,7 @@ Somali giraffe
 Somali myrrhor
 Somali ostrich
 Somali peninsula
+Somalia syndrome
 Sombrero Channel
 Some Old Hippie Caught Another Hippie Tripping On Acid
 Somerleyton, Ashby and Herringfleet
@@ -38976,6 +39273,7 @@ Song of the Three Holy Children
 Songdo Point
 Songhai Empire
 Sonic 2sday
+Sonnenschein's reagent
 Sonning Common
 Sonogashira coupling
 Sonogashira reaction
@@ -39038,6 +39336,7 @@ South America
 South American
 South American bollworm moth
 South American coati
+South American fox
 South American gray fox
 South American grey fox
 South American sea lion
@@ -39152,6 +39451,7 @@ South Harefield
 South Harris
 South Harrison
 South Harrow
+South Hatfield
 South Haven
 South Hayling
 South Heath
@@ -39459,6 +39759,8 @@ Space Launch System
 Space Launcher System
 Space Race
 Space Shuttle
+Space Station Alpha
+Space Station Freedom
 Spacecraft Event Time
 Spaceship Earth
 Spaghetti Western
@@ -39805,6 +40107,7 @@ St Fagans
 St Fillans
 St Florence
 St Fort
+St Gennys
 St George
 St George's
 St George's Channel
@@ -39914,6 +40217,7 @@ St Petersburg
 St Philip's Marsh
 St Pinnock
 St Sampson
+St Serf's Island
 St Stephen
 St Stephen-in-Brannel
 St Stephens
@@ -39922,6 +40226,7 @@ St Teath
 St Thomas
 St Totteringham's Day
 St Tudy
+St Vigeans
 St-Charles
 St-Louis
 St-Petersburg
@@ -40215,6 +40520,7 @@ Starr County
 Starr Gate
 Stars and Bars
 Stars and Stripes
+Starshit Troopers
 Start Point
 Start button
 Start menu
@@ -40261,6 +40567,7 @@ Staunton in the Vale
 Staunton piece
 Staveley-in-Cartmel
 Stavropol Krai
+Ste. Genevievan
 Ste. Genevieve
 Ste. Genevieve County
 Ste. Genevievian
@@ -40284,6 +40591,7 @@ Steeton with Eastburn
 Stefan-Boltzmann constant
 Stefan-Boltzmann law
 Stein-Leventhal syndrome
+Steinach am Brenner
 Steinbach's crown cactus
 Steinborn squat
 Steiner education
@@ -40572,6 +40880,7 @@ Sturm-Liouville theory
 Sturminster Marshall
 Sturminster Newton
 Sturt's desert pea
+Sturt's desert rose
 Sturton by Stow
 Sturton le Steeple
 Stutsman County
@@ -40590,6 +40899,7 @@ Suba Poblacion
 Subcarpathian Rus
 Subcarpathian Voivodeship
 Subh-i-Azal
+Subic Bay
 Sublette County
 Sublime Porte
 Subsaharan Africa
@@ -40605,6 +40915,7 @@ Sudan brown
 Sudanese Arabic
 Sudbury District
 Sudbury Hill
+Sudirman Range
 Sudlon I
 Sudlon II
 Sudova Vyshnia
@@ -40718,6 +41029,7 @@ Sun Wukong
 Sun Yat-senism
 Sun Yat-senist
 Sun-like
+Sun-synchronous orbit
 Sunamganj District
 Sunapee trout
 Sunbury County
@@ -40733,6 +41045,7 @@ Sunda islands
 Sunda pangolin
 Sundanese script
 Sunday Christian
+Sunday beer
 Sunday best
 Sunday board
 Sunday dinner
@@ -41156,10 +41469,12 @@ T perm
 T pose
 T tubule
 T wave
+T'ai-lu-ko
 T'ai-yeh Lake
 T'ai-yeh Pond
 T'aiyeh Lake
 T'aiyeh Pond
+T'ien-an-men Square
 T'ien-ching
 T'ien-mên
 T-Boy
@@ -41443,7 +41758,6 @@ Tamaskan Dog
 Tamerton Foliot
 Tamil Eelam
 Tamil Nadu
-Tamil Pokkisham
 Tamil Tiger
 Tamil Tigers
 Tammelin's esters
@@ -41669,10 +41983,12 @@ Teichmüller space
 Teichmüller-Tukey lemma
 Tel Al-Rabi'
 Tel Aviv
+Tel Aviv District
 Tel Aviv-Jaffa
 Tel Aviv-Yafo
 Tel Avivan
 Tel al-Rabi'
+Tel-Aviv
 Tele-snap
 Telegraph Hill
 Teles Pires
@@ -41813,6 +42129,7 @@ Texas Tommy
 Texas Triangle
 Texas bankroll
 Texas blind snake
+Texas bluebonnet
 Texas blues
 Texas cattle fever
 Texas caviar
@@ -41879,6 +42196,7 @@ Thames Ditton
 Thames Haven
 Thames barge
 Thames sailing barge
+Thames-Coromandel
 Thang Ta
 Thang-Ta
 Thanh Hoá
@@ -41888,8 +42206,6 @@ Thanksgiving Thursday
 Thanksgiving break
 Thanos-snap
 Tharston and Hapton
-That was then. This is now
-That was then. This is now.
 Thatch Cay
 Thatcher effect
 Thatcher illusion
@@ -42064,6 +42380,7 @@ Thorpe St Peter
 Thorpe Thewles
 Thorpe Tilney
 Thorpe Waterville
+Thorpe in Balne
 Thorpe on the Hill
 Thorpe-Ingold effect
 Thorpe-le-Soken
@@ -42114,6 +42431,7 @@ Thunder Bay District
 Thunderbolt chassis
 Thurber's needlegrass
 Thurnby and Bushby
+Thurneysen's law
 Thursday Island
 Thurston County
 Thurston's geometrization conjecture
@@ -42168,6 +42486,7 @@ Tienanmen Square
 Tierra Amarilla
 Tierra Firme
 Tierra del Fuego
+Tiers Cross
 Tietz albinism-deafness syndrome
 Tietz syndrome
 Tietze syndrome
@@ -42515,6 +42834,7 @@ Traian Vuia
 Trail of Tears
 Traill County
 Traill's flycatcher
+Tralalero Tralala
 Tram Inn
 Tramping Lake
 Tranmere Park
@@ -42730,6 +43050,7 @@ Trump-mania
 Trump-phobia
 Trump-proof
 Trump-tastic
+Trumpstein files
 Trumpster diving
 Trumpster fire
 Trunk Cay
@@ -42756,6 +43077,7 @@ Tsat Tsz Mui
 Tschirnhaus transformation
 Tschirnhausen cubic
 Tschirnhausen transformation
+Tse Keh Nay
 Tseitin transformation
 Tseung Kwan O
 Tseytin transformation
@@ -42942,6 +43264,7 @@ Tuscarawas County
 Tuscola County
 Tuskegee Airman
 Tuskegee airman
+Tutelo-Saponi
 Tutnall and Cobley
 Tutt Hill
 Tutte matrix
@@ -43662,6 +43985,7 @@ V-cut
 V-fib
 V-form
 V-girl
+V-level
 V-line
 V-lip redhorse
 V-log
@@ -43753,6 +44077,7 @@ Valea Ursului
 Valea Vinului
 Valencia County
 Valencia de Alcántara
+Valencia orange
 Valencian Community
 Valencian Country
 Valenciennes lace
@@ -44000,6 +44325,7 @@ Venus's flower basket
 Venus's girdle
 Venus's hair stone
 Venus's hairstone
+Venus's looking-glass
 Vera Cruz
 Verbano-Cusio-Ossola
 Verde Island
@@ -44031,6 +44357,7 @@ Veronese green
 Veronica bucket
 Verreaux's eagle
 Verrey-sous-Salmaise
+Very Reverend
 Very light
 Very pistol
 Vest-Agder
@@ -44503,6 +44830,7 @@ Wallington Demesne
 Wallis Island
 Wallis and Futuna
 Wallis and Futuna Islander
+Wallis and Futuna Islands
 Wallis product
 Wallis-Zieff-Goldblatt syndrome
 Walloon Brabant
@@ -44685,6 +45013,7 @@ Watkins Glen
 Watling Street
 Watling Street thistle
 Watonwan County
+Watson Island
 Watson syndrome
 Watson's hairstreak
 Watson's plum
@@ -44702,6 +45031,7 @@ Way of St. James
 Way of the Cross
 Wayanad bowtail
 Wayne County
+We Wai Kai
 Weaire-Phelan structure
 Weakley County
 Weasel Boy
@@ -44851,6 +45181,8 @@ Wem Rural
 Wemba Wemba
 Wemba-Wemba
 Wembley Park
+Wemotaci 23
+Wemotaci Indian Reserve No. 23
 Wemyss Bay
 Wen-Chou
 Wen-su
@@ -45173,6 +45505,7 @@ West Union
 West Vale
 West Valley City
 West Van
+West Vancouver
 West Virginia
 West Virginian
 West Warwick
@@ -45341,6 +45674,10 @@ Weyl fermion
 Weyl group
 Weyl tensor
 Weyl's paradox
+Weymontachie 23
+Weymontachie Indian Reserve No. 23
+Weymontachingue 23
+Weymontachingue Indian Reserve No. 23
 Weymouth and Portland
 Whac-A-Mole
 Whaley Bridge
@@ -45401,6 +45738,7 @@ White Cloud Mountain minnow
 White Colne
 White County
 White Crane
+White Croatia
 White Crown
 White Day
 White Deer
@@ -45443,6 +45781,7 @@ White Russian
 White Ruthenia
 White Sands
 White Sea
+White Serbia
 White Sister
 White Sox
 White Sulphur Springs
@@ -45452,6 +45791,7 @@ White Thursday
 White Wall
 White man
 White man's grave
+White supremacist
 White émigré
 White's illusion
 White's thrush
@@ -45604,6 +45944,7 @@ Willie wagtail
 Willingdon and Jevington
 Willington Quay
 Willington Square
+Willington Worthenbury
 Willis circle
 Willis-Ekbom disease
 Willmore energy
@@ -45901,6 +46242,7 @@ World English
 World Exposition
 World Freedom Day
 World Health Assembly
+World Health Organisation
 World Health Organization
 World Heritage Site
 World Heritage site
@@ -45909,6 +46251,7 @@ World Ocean
 World Series
 World Soul
 World Trade Center
+World Trade Organisation
 World Trade Organization
 World Turtle
 World War
@@ -45991,6 +46334,7 @@ Wyandot County
 Wyandot Point
 Wyandot Ridge
 Wyandotte County
+Wyatts Green
 Wyboston, Chawston and Colesden
 Wyburn-Mason syndrome
 Wycherley comb
@@ -46075,6 +46419,7 @@ X-ray spectacles
 X-ray spectrometer
 X-ray spectrometry
 X-ray spectroscopy
+X-ray spectrum
 X-ray telescope
 X-ray tetra
 X-ray therapy
@@ -46296,6 +46641,7 @@ Yesterday Island
 Yezo spruce
 Yi Jing
 Yi-hsing ware
+Yiddish Alps
 Yiddish-like
 Yilan Creole
 Yim-Ebbin syndrome
@@ -46662,6 +47008,7 @@ Zobrist hashing
 Zoellner illusion
 Zoji Pass
 Zollinger-Ellison syndrome
+Zombie Formalism
 Zombie Jesus
 Zombie Simpsons
 Zona Norte
@@ -46780,6 +47127,7 @@ a closed mouth doesn't get fed
 a closed mouth gathers no feet
 a cold day in July
 a contented mind is a perpetual feast
+a couple
 a couple of
 a creaking door hangs long on its hinges
 a creaking door hangs longest
@@ -46833,6 +47181,7 @@ a healthy body is a healthy mind
 a hit dog hollers
 a hit dog will holler
 a hoot and a holler
+a horse apiece
 a house divided against itself cannot stand
 a house is not a home
 a hundred and ten percent
@@ -46949,6 +47298,7 @@ a touch
 a treat
 a trifle
 a trouble shared is a trouble halved
+a turkey voting for Christmas
 a twig in a bundle cannot be broken
 a twig in a bundle is unbreakable
 a vinculo matrimonii
@@ -46976,6 +47326,7 @@ a-a
 a-aa
 a-alike
 a-back
+a-bling
 a-building
 a-burton
 a-buzz
@@ -47001,6 +47352,7 @@ a-life
 a-mornings
 a-mothering
 a-nightertime
+a-okay
 a-plenty
 a-row
 a-schwa
@@ -47124,7 +47476,9 @@ abide by
 abiding place
 abiding-place
 abietic acid
+abietinic acid
 ability grouping
+ability point
 ability to pay
 abjuration oath
 abjuration of the realm
@@ -47724,6 +48078,7 @@ acid snow
 acid test
 acid value
 acid weed
+acid-ash
 acid-base
 acid-base equilibrium
 acid-base indicator
@@ -47977,6 +48332,7 @@ active service
 active shooter
 active solar
 active sonar
+active time battle
 active timing
 active transport
 active travel
@@ -48145,6 +48501,7 @@ added time
 added value
 adder bead
 adder fly
+adder mouth
 adder stone
 adder's fern
 adder's grass
@@ -48252,7 +48609,6 @@ adjutant general
 adjutant stork
 adjutant-general
 adjuvant therapy
-admin command
 admin vortex
 administration of the fulness of times
 administrative court
@@ -48525,6 +48881,7 @@ after length
 after me the deluge
 after one's own heart
 after one's own soul
+after school
 after school special
 after taste
 after the Lord Mayor's show
@@ -48818,12 +49175,14 @@ aim for the stars
 aim high
 aim-crier
 ain't no shame in my game
+ain't no telling
 ain't nothing but a thang
 ain't nuthin' but a thang
 ain't that the truth
 ain't what it used to was
 air admittance vent
 air ambulance
+air ambulance helicopter
 air bag
 air ball
 air bangs
@@ -48855,6 +49214,7 @@ air commodore
 air compressor
 air conditioner
 air conditioning
+air cone
 air cooler
 air corridor
 air cover
@@ -48873,6 +49233,7 @@ air draft
 air drain
 air drainage
 air drill
+air dry
 air du temps
 air duct
 air duster
@@ -48972,6 +49333,7 @@ air shot
 air show
 air shower
 air sign
+air sleeve
 air sock
 air space
 air speed
@@ -49169,6 +49531,7 @@ alcohol abuse
 alcohol addiction
 alcohol burner
 alcohol by volume
+alcohol clamp
 alcohol dehydrogenase
 alcohol enema
 alcohol flush reaction
@@ -49390,6 +49753,7 @@ all elbows
 all else being equal
 all else the same
 all ends up
+all even
 all expenses paid
 all eyes
 all eyes and ears
@@ -49468,6 +49832,7 @@ all one's eggs in one basket
 all one's life is worth
 all one's life's worth
 all one's taste is in one's mouth
+all or nothing
 all other things being equal
 all out
 all over
@@ -49494,6 +49859,7 @@ all politics are local
 all politics is local
 all publicity is good publicity
 all quiet on the Western Front
+all ready
 all retch and no vomit
 all right
 all rightie
@@ -49579,6 +49945,7 @@ all too
 all up with
 all very well
 all wax and no wick
+all week
 all wet
 all whithers
 all wool and a yard wide
@@ -49888,6 +50255,7 @@ alpha geek
 alpha globin
 alpha helix
 alpha hinge
+alpha layer
 alpha level
 alpha linolenic acid
 alpha male
@@ -49914,6 +50282,7 @@ alpha widow
 alpha wrap
 alpha-GAL
 alpha-PVP
+alpha-adrenergic blocking agent
 alpha-adrenoreceptor
 alpha-amino acid
 alpha-antithrombin
@@ -49935,6 +50304,7 @@ alpha-lactam
 alpha-methylphenethylamine
 alpha-methyltryptamine
 alpha-naphthylthiourea
+alpha-pinene
 alpha-pyrrolidinopentiophenone
 alpha-quartz
 alpha-receptor
@@ -50078,6 +50448,7 @@ alternation of generations
 alternative RNA splicing
 alternative algebra
 alternative archaeology
+alternative beta
 alternative brit
 alternative cannabinoid
 alternative country
@@ -50436,6 +50807,7 @@ anal glaucoma
 anal hook
 anal intercourse
 anal marriage
+anal plug
 anal pore
 anal retentive
 anal sac
@@ -50479,12 +50851,14 @@ analytic mechanics
 analytic number theory
 analytic philosopher
 analytic philosophy
+analytic psychology
 analytic tradecraft
 analytical chemistry
 analytical editing
 analytical engine
 analytical entry
 analytical geometry
+analytical psychology
 analytical table of contents
 anaphase-promoting complex
 anaphoric macro
@@ -50647,6 +51021,7 @@ and the like
 and then everyone clapped
 and then everyone on the bus clapped
 and then some
+and what-not
 and whatnot
 and your little dog too
 andante moderato
@@ -50731,6 +51106,7 @@ angelin wood
 angels dancing on the head of a pin
 angels moving the furniture
 angels on horseback
+angels' dram
 angels' share
 angels-dancing-on-the-head-of-a-pin
 angely wood
@@ -51067,6 +51443,7 @@ anterior spinal artery
 anterior superior alveolar artery
 anterior superior iliac spine
 anterior triangle
+anterior wall
 antero-internal
 antero-ventro-lateral
 antero-ventro-laterally
@@ -51260,6 +51637,7 @@ anti-cheat
 anti-chip
 anti-choice
 anti-choicer
+anti-christ
 anti-circ
 anti-circer
 anti-circumcisionist
@@ -51304,6 +51682,7 @@ anti-discriminator
 anti-dogger
 anti-doping
 anti-down quark
+anti-drug
 anti-earth
 anti-earthquake
 anti-eavesdropping
@@ -51317,6 +51696,7 @@ anti-establishment
 anti-establishmentarian
 anti-establishmentarianism
 anti-exploit
+anti-facist
 anti-fact
 anti-fade
 anti-faggot
@@ -51622,6 +52002,7 @@ antihemophilic factor A
 antihemophilic factor B
 antihyperbolic function
 antilock brake
+antilogous pole
 antilopine kangaroo
 antilopine wallaby
 antilopine wallaroo
@@ -51653,6 +52034,8 @@ antique white
 antiques market
 antiques shop
 antiques store
+antisense oligonucleotide
+antisense therapy
 antiship missile
 antisocial behaviour order
 antisocial personality disorder
@@ -51682,9 +52065,12 @@ any day of the week and twice on Sunday
 any day of the week and twice on Sundays
 any exposure is good exposure
 any fule kno
+any given Sunday
 any good
 any hole's a goal
+any idea
 any longer
+any luck
 any minute now
 any moment now
 any more
@@ -51723,6 +52109,7 @@ anybody who's anyone
 anybody's guess
 anyhow whack
 anyone else
+anyone home
 anyone who is anybody
 anyone who is anyone
 anyone who's anybody
@@ -51759,6 +52146,7 @@ apartment-sit
 apartments to let
 ape girl
 ape hanger
+ape in
 ape leader
 ape shit
 ape-bearer
@@ -51997,7 +52385,6 @@ approximation error
 approximation theory
 apres ski
 apres-ski
-apricot blossom
 apricot tree
 apron dance
 apron flashing
@@ -52180,7 +52567,7 @@ ardent spirits
 ardi gasna
 are bears Catholic
 are the Kennedies gun-shy
-are we deadass?
+are we deadass
 are we there yet
 are you OK
 are you a man or a mouse
@@ -52448,6 +52835,7 @@ around the traps
 around the way
 around the wicket
 around the world
+around there
 around-the-clock
 arrange someone's funeral
 arranged marriage
@@ -52484,15 +52872,18 @@ arrow key
 arrow of love
 arrow of time
 arrow paradox
+arrow point
 arrow poison
 arrow prayer
 arrow slit
+arrow snake
 arrow switch
 arrow worm
 arrow-finger
 arrow-head
 arrow-hole
 arrow-poison frog
+arrow-proof
 arrow-root
 arrow-straight
 arrow-wood
@@ -52823,6 +53214,7 @@ as it were
 as large as life
 as like as not
 as likely as not
+as little as possible
 as long as
 as luck may have it
 as luck would have it
@@ -52938,6 +53330,7 @@ ascorbic acid
 ascot tie
 ascribed status
 aseptic meningitis
+aseptic necrosis
 aseptic technique
 asexual division
 asexual reproduction
@@ -52973,6 +53366,7 @@ ash-heap-cake
 ash-hole
 ash-hopper
 ash-leaf
+ash-leaved maple
 ash-red
 ash-throated crake
 ash-tray
@@ -53482,6 +53876,7 @@ at the very least
 at the very most
 at the wheel
 at the worst
+at this hour
 at this juncture
 at this moment
 at this moment in time
@@ -53570,6 +53965,7 @@ atomic mass number
 atomic mass unit
 atomic nucleus
 atomic number
+atomic operating system
 atomic orbital
 atomic physics
 atomic pile
@@ -53718,6 +54114,7 @@ audio clip
 audio coil
 audio commentary
 audio description
+audio file
 audio frequency
 audio guide
 audio mastering
@@ -53873,7 +54270,9 @@ auto shop
 auto show
 auto transport truck
 auto-Orientalism
+auto-anti-Semite
 auto-anti-semitism
+auto-antisemite
 auto-antisemitism
 auto-antonym
 auto-away
@@ -53900,6 +54299,7 @@ auto-lube
 auto-mimicry
 auto-off
 auto-oxidation
+auto-pen
 auto-plagiarism
 auto-redirect
 auto-redirection
@@ -54244,6 +54644,7 @@ baal keriah
 baal kore
 baal koreh
 baal korei
+baal mofet
 baal-ha-bos
 baba au rhum
 baba ganouj
@@ -54271,6 +54672,7 @@ babushka doll
 baby T
 baby alarm
 baby and bathwater
+baby back rib
 baby bag
 baby bangs
 baby bank
@@ -54410,7 +54812,6 @@ baby-boomer
 baby-brained
 baby-care
 baby-catcher
-baby-changing
 baby-cut
 baby-cut carrot
 baby-daddy
@@ -54504,6 +54905,7 @@ back cover
 back crawl
 back cross
 back day
+back dirt
 back dive
 back door
 back door slider
@@ -55205,6 +55607,7 @@ ball boy
 ball cactus
 ball cap
 ball carrier
+ball carry
 ball chain
 ball change
 ball clay
@@ -55292,6 +55695,7 @@ ballad-monger
 ballade royal
 ballan wrasse
 ballast car
+ballast master
 ballast resistor
 ballast tank
 ballast up
@@ -55511,6 +55915,7 @@ band government
 band kid
 band leader
 band plan
+band printer
 band rotunda
 band saw
 band skyphos
@@ -55676,6 +56081,7 @@ banked slalom
 banker lamp
 banker's acceptance
 banker's bill
+banker's box
 banker's clip
 banker's dozen
 banker's draft
@@ -55712,6 +56118,7 @@ banquet burger
 banquet roll
 banquet trolley
 banqueting roll
+banshee-like
 bantersaurus rex
 banyan day
 banyan fight
@@ -56023,6 +56430,7 @@ barn star
 barn swallow
 barn-burning
 barn-door
+barn-raising
 barn-star
 barnacle goose
 barndoor skate
@@ -56247,6 +56655,7 @@ basement dweller
 basement membrane
 basement-dweller
 basement-dwelling
+bases juiced
 bases loaded
 bash about
 bash and grab
@@ -56312,6 +56721,7 @@ basket days
 basket dinner
 basket fern
 basket hilt
+basket hold
 basket house
 basket of currencies
 basket of gold
@@ -56719,6 +57129,7 @@ be at
 be at the plague
 be awake
 be aware of
+be back
 be bad at
 be based on
 be big on
@@ -56747,6 +57158,7 @@ be good at
 be good for
 be guilty of
 be here for
+be in
 be in and out
 be in each other's pockets
 be in for
@@ -57087,22 +57499,31 @@ bear-paw poppy
 bear-trap dam
 bear-ward
 bear-whelp
+beard balm
+beard brush
 beard bug
 beard burn
+beard comb
+beard cream
 beard cut
 beard hair
 beard itch
+beard kit
 beard lichen
 beard louse
+beard mask
 beard moss
 beard net
 beard oil
 beard pen
 beard pencil
 beard rash
+beard roller
 beard the lion
 beard the lion in his den
 beard tree
+beard trimmer
+beard wax
 beard worm
 beard-second
 beard-stroking
@@ -57125,6 +57546,7 @@ bearded tit
 bearded vulture
 beardie-weirdie
 bearer bond
+bearer note
 bearer of bad news
 bearing rein
 bearing sword
@@ -57541,6 +57963,7 @@ beer baby
 beer bar
 beer baron
 beer bash
+beer before liquor, never been sicker; liquor before beer, you're in the clear
 beer belly
 beer bike
 beer blast
@@ -57761,6 +58184,8 @@ beit olam
 bel canto
 bel esprit
 bel-accoyle
+belabor the point
+belabour the point
 belantamab mafodotin
 belated happy birthday
 belay device
@@ -57815,6 +58240,7 @@ bell register
 bell ringer
 bell rope
 bell sleeve
+bell sniff
 bell tent
 bell the cat
 bell tower
@@ -57853,10 +58279,12 @@ belle laide
 belle of the ball
 belle sabreuse
 belle époque
+belle-lettre
 belle-lettrist
 belled buzzard
 belleric myrobalan
 belles lettres
+belles-letters
 belles-lettres
 belles-lettristic
 bellow out
@@ -57943,6 +58371,7 @@ belt loop
 belt of Venus
 belt of the crozier
 belt out
+belt printer
 belt purse
 belt sander
 belt squat
@@ -57950,6 +58379,7 @@ belt tightening
 belt track
 belt up
 belt-drive
+belt-driven
 belt-fed
 belt-sand
 belt-tighten
@@ -58123,6 +58553,7 @@ berith milah
 berlock dermatitis
 berloque dermatitis
 berry blue
+berry catchfly
 berry poison
 berry sugar
 berry-cone
@@ -58267,6 +58698,7 @@ beta-lipoprotein
 beta-naphthol
 beta-oxidation
 beta-peptide
+beta-pinene
 beta-pleated sheet
 beta-quartz
 beta-read
@@ -58304,6 +58736,7 @@ better late than never
 better light
 better luck next time
 better nature
+better not
 better off
 better one word in time than two afterwards
 better part of
@@ -58354,6 +58787,7 @@ between the sticks
 between time
 between times
 between two stools
+between us
 between wind and water
 between you and I
 between you and me
@@ -58976,6 +59410,7 @@ binary planet
 binary point
 binary pulsar
 binary quasar
+binary question
 binary relation
 binary search
 binary star
@@ -59193,6 +59628,7 @@ bird's-foot
 bird's-foot trefoil
 bird's-nest fern
 bird's-nest orchid
+bird's-nest soup
 bird's-tongue
 bird-alane
 bird-brained
@@ -59235,6 +59671,7 @@ birth control glasses
 birth date
 birth defect
 birth father
+birth hour
 birth mother
 birth name
 birth pang
@@ -59277,6 +59714,7 @@ birthday suited
 birthday suiter
 birthday-suit
 birthday-suited
+birthday-suiter
 birthing ball
 birthing chair
 birthing father
@@ -59505,6 +59943,7 @@ bituminous coal
 bituminous sand
 bituminous shale
 biur chametz
+bivariate normal distribution
 bivi bag
 bivouac sack
 bivouac sheet
@@ -59587,6 +60026,7 @@ black bitch
 black bloc
 black body
 black bomber
+black book
 black bottom
 black bottom pie
 black box
@@ -60102,6 +60542,7 @@ blackish-gray antshrike
 blackity-black
 blackjack oak
 blackline tilefish
+blacknose shark
 blackout bag
 blackout bomb
 blackout cake
@@ -60153,6 +60594,7 @@ blanch holding
 blanch up
 blanched almond
 blancmange curve
+blank bullet
 blank canvas
 blank cartridge
 blank check
@@ -60344,6 +60786,7 @@ blind massage
 blind mole rat
 blind mole-rat
 blind nailing
+blind passenger
 blind person
 blind pig
 blind pigger
@@ -60378,6 +60821,7 @@ blindman's holiday
 blindside flanker
 bling bling
 bling out
+bling up
 bling-bling
 bling-less
 blinged out
@@ -60496,6 +60940,7 @@ blocking patent
 blocking unit
 blog carnival
 blog post
+blog rock
 blog roll
 blond lace
 blond metal
@@ -60646,6 +61091,7 @@ bloodied-up
 bloodless surgery
 bloody 'ell
 bloody Nora
+bloody Norah
 bloody William
 bloody back
 bloody dock
@@ -60716,6 +61162,7 @@ blow forward
 blow from a gun
 blow high, blow low
 blow horn
+blow hot air
 blow hot and cold
 blow in
 blow in the bag
@@ -61311,6 +61758,7 @@ boat-hook
 boat-in
 boat-in theater
 boat-in theatre
+boat-man
 boat-puller
 boat-race
 boat-shaped abdomen
@@ -61403,6 +61851,7 @@ body cord
 body corporate
 body count
 body double
+body dysmorphia
 body dysmorphic disorder
 body farm
 body fascism
@@ -61602,6 +62051,7 @@ boiling-house
 boiling-point elevation
 bois bande
 bois d'arc
+bois d'olive
 bois durci
 bok choi
 bok choy
@@ -61851,6 +62301,7 @@ bonum magnum
 bonus baby
 bonus genius
 bonus hole
+bonus mom
 bonus mother
 bonus point
 bonus question
@@ -62196,6 +62647,7 @@ bop the bishop
 bora ground
 boracic acid
 boracic lint
+boracous acid
 borax bead test
 bord halfpenny
 bord service
@@ -62218,6 +62670,7 @@ border state
 border stone
 border-gore
 border-land
+border-line
 borderline personality disorder
 borderline-personality disorder
 bore draw
@@ -62261,6 +62714,7 @@ born to the purple
 born with a silver spoon in one's mouth
 born-again
 born-again virgin
+born-again virginity
 born-alive
 born-free
 boroamino acid
@@ -62291,6 +62745,7 @@ borough seat
 borrow a leaf out of someone's book
 borrow from Peter to pay Paul
 borrow pit
+borrow roll
 borrow trouble
 borrowed days
 borrowed light
@@ -62298,6 +62753,7 @@ borrowed scenery
 borrowed time
 borrowing card
 borrowing days
+borscht belt
 borstal training
 bosom buddy
 bosom friend
@@ -62452,6 +62908,8 @@ bottom dollar
 bottom drawer
 bottom drawer syndrome
 bottom drop
+bottom dweller
+bottom dwelling
 bottom edge
 bottom fall out
 bottom feeder
@@ -62468,6 +62926,7 @@ bottom heat
 bottom kill
 bottom line
 bottom liner
+bottom liver
 bottom man
 bottom of the barrel
 bottom of the harbour
@@ -62503,6 +62962,7 @@ bottom-of-the-line
 bottom-post
 bottom-poster
 bottom-shelf
+bottom-tier
 bottom-up
 bottom-upwards
 bottomless pit
@@ -62519,6 +62979,8 @@ boudoir piano
 bouffant cap
 bouffant gown
 bouffée délirante
+bougar-stakes
+bougar-stick
 bough pot
 bought and paid for
 bought priesthood
@@ -62777,6 +63239,7 @@ box lunch
 box man
 box meal
 box model
+box money
 box nasty
 box no.
 box number
@@ -63043,6 +63506,8 @@ brain-numbing
 brain-pan
 brain-picking
 brain-rot
+brain-rotted
+brain-rotting
 brain-scanner
 brain-stabbing
 brain-storm
@@ -63423,6 +63888,7 @@ break wedlock
 break wind
 break with
 break with tradition
+break-ax
 break-axe
 break-bones
 break-building
@@ -63535,6 +64001,7 @@ breast-stroke
 breast-work
 breath and britches
 breath check
+breath control
 breath guard
 breath mint
 breath of fresh air
@@ -63878,6 +64345,7 @@ brise soleil
 brise-bise
 brisk up
 brisket disease
+bristle brush
 bristle moss
 bristle snail
 bristle up
@@ -63887,6 +64355,7 @@ bristlecone fir
 bristlecone pine
 bristly Matilija poppy
 bristly bellflower
+bristly foxtail
 bristly hawksbeard
 bristly mouse
 brit ben
@@ -63923,6 +64392,7 @@ broad arrow
 broad arrowhead
 broad awake
 broad bean
+broad brush
 broad church
 broad cooper
 broad daylight
@@ -64940,6 +65410,7 @@ bum bum
 bum burp
 bum calf
 bum cheeks
+bum chin
 bum chum
 bum cleavage
 bum crack
@@ -64987,6 +65458,7 @@ bumelia borer
 bumfreezer jacket
 bumfuck middle of nowhere
 bumfuck nowhere
+bumfuck-nowhere
 bummed out
 bump across
 bump and grind
@@ -65372,9 +65844,11 @@ bush cricket
 bush dog
 bush fire
 bush fly
+bush flying
 bush frog
 bush goat
 bush hammer
+bush helicopter
 bush hog
 bush honeysuckle
 bush jacket
@@ -65562,6 +66036,7 @@ busy as a bee
 busy as a dyke in a hardware store
 busy as a nailer
 busy as a one-armed paper hanger
+busy as a one-armed paperhanger
 busy beaver
 busy beaver function
 busy bee
@@ -65822,6 +66297,7 @@ butterspoon tree
 buttery bar
 buttery hatch
 buttery smooth
+buttfuck nowhere
 buttock cleavage
 buttock line
 buttock mail
@@ -66072,6 +66548,7 @@ by one's lonesome
 by one's own hand
 by oneself
 by owner
+by phone
 by rail
 by reason of
 by return
@@ -66346,6 +66823,7 @@ cable-car
 cable-knit
 cable-laid
 cable-laid rope
+cable-ready
 cable-stayed bridge
 cacao butter
 cache buster
@@ -66793,6 +67271,7 @@ call-with-current-continuation
 calla lily
 callable bond
 callback hell
+called to straw
 caller I.D.
 caller ID
 caller-ID
@@ -66963,6 +67442,7 @@ can a duck swim
 can belto
 can buoy
 can but hope
+can deposit
 can do this all day
 can do with
 can haz
@@ -67493,6 +67973,7 @@ car-sharing
 car-sick
 car-sleeper
 car-sticker
+car-surf
 carabao English
 carambole billiards
 caramel apple
@@ -67604,6 +68085,7 @@ carbon trading
 carbon transmitter
 carbon-12
 carbon-13
+carbon-13 NMR
 carbon-14
 carbon-based
 carbon-carbon bond
@@ -67657,6 +68139,7 @@ card key
 card mechanic
 card of introduction
 card of ten
+card phone
 card punch
 card reader
 card removal
@@ -67671,6 +68154,7 @@ card tart
 card trick
 card-carrying
 card-clothing
+card-dead
 card-house
 card-index
 card-reader
@@ -67728,6 +68212,8 @@ care a fig
 care a jackstraw
 care a monkey's
 care a pin
+care a rat's arse
+care a rat's ass
 care a whit
 care and attention
 care and feeding
@@ -67997,6 +68483,7 @@ cartoon character
 cartoon physics
 cartridge belt
 cartridge box
+cartridge case
 cartridge ejector
 cartridge paper
 cartridge pen
@@ -68133,6 +68620,7 @@ cash-drag
 cash-fag
 cash-flow
 cash-grab
+cash-grabby
 cash-in
 cash-in-hand
 cash-out
@@ -68500,6 +68988,7 @@ catch in 4k
 catch in possession
 catch it
 catch it in the neck
+catch lacking
 catch me
 catch napping
 catch no ball
@@ -68819,6 +69308,7 @@ celebrity obsession disorder
 celebrity worship syndrome
 celebrity-worship syndrome
 celery cabbage
+celery lettuce
 celery pine
 celery root
 celery salt
@@ -68886,6 +69376,7 @@ cellphone lot
 cellular automaton
 cellular debris
 cellular glass insulation
+cellular internet
 cellular kite
 cellular mobile
 cellular phone
@@ -69162,6 +69653,7 @@ chadon bene
 chadon beni
 chaetomellic acid
 chafe at the bit
+chaff cutter
 chaff engine
 chaffing dish
 chaffing-dish
@@ -69251,6 +69743,7 @@ chainsaw consultant
 chair bed
 chair conformation
 chair days
+chair force
 chair lift
 chair mat
 chair organ
@@ -69401,6 +69894,7 @@ change a word, get a third
 change agent
 change aversion
 change bag
+change bowler
 change course
 change down
 change hand
@@ -69442,6 +69936,7 @@ change sides
 change sides, change signs
 change someone's mind
 change someone's tune
+change table
 change tack
 change the channel
 change the game
@@ -70619,6 +71114,7 @@ chimpanzee fire
 chin cactus
 chin chin
 chin chow
+chin cleft
 chin cough
 chin curtain
 chin diaper
@@ -70679,8 +71175,10 @@ chip and charge
 chip and gather
 chip at
 chip away
+chip bap
 chip barm
 chip basket
+chip bun
 chip butty
 chip card
 chip chart
@@ -70698,6 +71196,7 @@ chip off the old block
 chip off the same block
 chip on one's shoulder
 chip pan
+chip sandwich
 chip scanner
 chip shooter
 chip shop
@@ -70719,6 +71218,7 @@ chipping bird
 chipping sparrow
 chipping squirrel
 chippy chaser
+chippy sandwich
 chippy sauce
 chippy-chaser
 chips and cheese
@@ -70813,6 +71313,7 @@ chocolate bomb
 chocolate boobook
 chocolate box
 chocolate boxy
+chocolate brownie
 chocolate cake
 chocolate channel
 chocolate chip
@@ -70987,6 +71488,7 @@ chorionic gonadotropin
 chorionic villus sampling
 chorismic acid
 choroid coat
+choroid plexus
 choroidal effusion
 choropleth map
 chorus frog
@@ -71703,6 +72205,7 @@ clap in
 clap in, clap out
 clap net
 clap on
+clap one's hands red
 clap out
 clap skate
 clap someone's cheeks
@@ -71938,6 +72441,7 @@ clear as the sun at noonday
 clear away
 clear blue water
 clear cut
+clear game
 clear ice
 clear off
 clear one's lines
@@ -72386,6 +72890,7 @@ close-coupled
 close-cropped
 close-ear
 close-eared
+close-ended question
 close-fights
 close-fisted
 close-fitting
@@ -72467,6 +72972,7 @@ closed-ear
 closed-eared
 closed-earedness
 closed-end fund
+closed-ended question
 closed-minded
 closed-mindedly
 closed-mindedness
@@ -72536,6 +73042,7 @@ clothes shop
 clothes stand
 clothes tree
 clothes valet
+clothes washer
 clothes-bag
 clothes-brush
 clothes-horse
@@ -72766,6 +73273,7 @@ co-act
 co-adaptation
 co-adjutrix
 co-administration
+co-administrator
 co-affine
 co-agonist
 co-amilofruse
@@ -72833,6 +73341,7 @@ co-employment
 co-endure
 co-enduring
 co-enrollment
+co-equal
 co-evolution
 co-evolve
 co-exist
@@ -72867,6 +73376,7 @@ co-incineration
 co-induction
 co-infuse
 co-inherit
+co-intelligence
 co-legislate
 co-linguist
 co-locate
@@ -72894,6 +73404,7 @@ co-optation
 co-optative
 co-opter
 co-option
+co-optive
 co-ordinate
 co-ordinate axis
 co-ordinately
@@ -73073,6 +73584,7 @@ coast to coast
 coast waiter
 coast-to-coast
 coastal chinchilla
+coastal elite
 coastal grandma
 coastal grandmother
 coastal motor boat
@@ -73136,6 +73648,7 @@ cobra de capello
 cobra effect
 cobra lily
 cobra pose
+cobra saffron
 cobweb brush
 cobweb chart
 cobweb model
@@ -73375,6 +73888,7 @@ cod's wallop
 cod-banger
 cod-liver
 cod-liver oil
+cod-piece
 coddled egg
 code base
 code block
@@ -74064,6 +74578,7 @@ colour revolution
 colour scheme
 colour screw
 colour sergeant
+colour space
 colour story
 colour supplement
 colour television
@@ -74084,6 +74599,7 @@ coloured revolution
 colourful bluetail
 colouring book
 colouring pencil
+colourless green ideas sleep furiously
 colpeo zorro
 colt evil
 colt's evil
@@ -74336,6 +74852,7 @@ come to Papa
 come to a boil
 come to a close
 come to a head
+come to a stand
 come to a sticky end
 come to a stop
 come to an end
@@ -74375,6 +74892,7 @@ come to the scratch
 come to think of it
 come to time
 come together
+come tomorrow
 come true
 come under
 come undone
@@ -74479,6 +74997,7 @@ coming into the world
 coming of age
 coming on
 coming out of someone's ears
+coming right up
 coming through
 coming together
 coming-of-age
@@ -74519,10 +75038,12 @@ commander-in-chiefship
 commanding general
 commanding heights
 commanding officer
+commando cloth
 comme ci comme ça
 comme il faut
 commedia dell'arte
 comment out
+comment section
 commentary box
 commentator's curse
 commerce destroyer
@@ -74692,6 +75213,7 @@ common iliac vein
 common informer
 common ion effect
 common ivy
+common jellyfish
 common juniper
 common kestrel
 common kingfisher
@@ -74734,6 +75256,7 @@ common or garden
 common or garden variety
 common palm civet
 common pheasant
+common pillbug
 common place
 common pochard
 common polypody
@@ -74788,6 +75311,7 @@ common snapping turtle
 common snipe
 common sorrel
 common sow thistle
+common spikeweed
 common spotted orchid
 common squid
 common squirrel monkey
@@ -74796,6 +75320,7 @@ common stock
 common substantive noun
 common succory
 common swift
+common tarweed
 common teal
 common term
 common tern
@@ -75020,6 +75545,7 @@ compensatorily lengthen
 compensatory lengthening
 compensatory time
 competence porn
+competence-competence
 competition caution
 competition wallah
 competition-based learning
@@ -75471,6 +75997,7 @@ cone of death
 cone of power
 cone of shame
 cone of silence
+cone of uncertainty
 cone off
 cone pepper
 cone plant
@@ -76071,6 +76598,7 @@ control of conception
 control order
 control pad
 control panel
+control plane
 control point
 control rod
 control room
@@ -76518,6 +77046,7 @@ coral rag
 coral reef
 coral snake
 coral stitch
+coral swirl
 coral tree
 coral trout
 coral vine
@@ -76685,6 +77214,7 @@ corneal-cerebellar syndrome
 corned beef
 corned-out
 cornelian cherry
+corneo-calcareous
 corner bath
 corner boy
 corner bracket
@@ -77503,6 +78033,7 @@ court of regard
 court of second instance
 court of world opinion
 court order
+court packing
 court piece
 court plaster
 court poor box
@@ -77689,6 +78220,7 @@ cow shot
 cow sociology
 cow stall
 cow sucker
+cow tipper
 cow tipping
 cow town
 cow tree
@@ -77824,6 +78356,7 @@ crack a book
 crack a crib
 crack a crust
 crack a fat
+crack a rat
 crack a smile
 crack along
 crack baby
@@ -77951,6 +78484,7 @@ crane locomotive
 crane operator
 cranial base
 cranial index
+cranial kinesis
 cranial nerve
 cranial orbit
 cranio-vertebral
@@ -77990,6 +78524,7 @@ crap shoot
 crap ton
 crap up
 crap-shoot
+crape jasmine
 crape myrtle
 crapless craps
 crappit-head
@@ -78080,6 +78615,7 @@ crazy cake
 crazy carpet
 crazy eight
 crazy eights
+crazy enough to work
 crazy glue
 crazy golf
 crazy golfer
@@ -78117,6 +78653,7 @@ cream horn
 cream in one's coffee
 cream in one's jeans
 cream line
+cream liqueur
 cream nut
 cream of coconut
 cream of lime
@@ -78428,6 +78965,7 @@ criminal scientist
 criminal tool
 criminal tribe
 criminal-like
+crimp house
 crimping house
 crimping pin
 crimping pliers
@@ -78449,6 +78987,7 @@ cringe-worthy
 cringe-y
 cringey-ness
 cringle-crangle
+crinkle critter
 crinkle-crankle
 crinkle-cut
 crinkle-leaved poison
@@ -78465,7 +79004,10 @@ crisis management
 crisis response team
 crisis-ridden
 crisp bread
+crisp butty
 crisp mint
+crisp sandwich
+crisp sarnie
 crisped mint
 crisping iron
 crisping pin
@@ -78554,6 +79096,7 @@ crook one's elbow
 crooked as a barrel of fish hooks
 crooked as a barrel of snakes
 crooked as a dog's hind leg
+crooked number
 crooked tune
 crop circle
 crop duster
@@ -78738,6 +79281,8 @@ cross-culturally
 cross-curricular
 cross-cut
 cross-cut saw
+cross-departmental
+cross-departmentally
 cross-desensitisation
 cross-desensitization
 cross-disciplinarity
@@ -78798,6 +79343,7 @@ cross-link
 cross-linkage
 cross-linked
 cross-linked polyethylene
+cross-list
 cross-live
 cross-liver
 cross-member
@@ -78854,6 +79400,7 @@ cross-sectionally
 cross-sell
 cross-sensitisation
 cross-sensitization
+cross-server
 cross-sex
 cross-shaped
 cross-shot
@@ -78912,6 +79459,7 @@ crossed ladders problem
 crossed line
 crossed loop sensor
 crossed wires
+crossed-eyed
 crossing guard
 crossing keeper
 crossing loop
@@ -79443,6 +79991,7 @@ cuff link
 cuff on the ear
 cuff out
 cuff up
+cuff-link
 cuffing season
 cui bono
 cui prodest
@@ -79470,6 +80019,7 @@ cult hero
 cult hit
 cult of personality
 cult stock
+cult-like
 culte du moi
 cultivation theory
 cultural Bolshevism
@@ -79689,6 +80239,7 @@ curl bar
 curl grub
 curl one off
 curl one out
+curl snake
 curl someone's hair
 curl up
 curl-paper
@@ -79821,6 +80372,7 @@ curtal-axe
 curtle-axe
 curve deficiency
 curve flattening
+curve of pursuit
 curve-billed thrasher
 curve-billed tinamou
 curved edge
@@ -80617,6 +81169,7 @@ dare-saying
 dark Ages
 dark academia
 dark academic
+dark advertising
 dark age
 dark ages
 dark ambient
@@ -80680,6 +81233,7 @@ dark pool
 dark post
 dark red
 dark ride
+dark romance
 dark room
 dark satanic mill
 dark sector
@@ -81134,6 +81688,7 @@ de Búrca
 de Campian
 de Candollean
 de Clérambault's syndrome
+de Entremont
 de Forest
 de Grasse
 de Groot
@@ -81227,6 +81782,7 @@ de-Palestinianise
 de-Palestinianize
 de-Rozier
 de-Rozier balloon
+de-Sovietisation
 de-Sovietization
 de-Stalinization
 de-Sukarnoization
@@ -81593,6 +82149,7 @@ deal-maker
 deal-withable
 dealer board
 dealer's choice
+dealer's den
 dean and chapter
 dean's list
 dear God
@@ -82027,9 +82584,11 @@ deep-frier
 deep-frozen
 deep-fry
 deep-frying
+deep-grounded
 deep-laid
 deep-level
 deep-lying
+deep-lying midfielder
 deep-mouthed
 deep-pocketed
 deep-rooted
@@ -82072,6 +82631,7 @@ deer stalker
 deer stalking
 deer tick
 deer tiger
+deer yard
 deer's grass
 deer's hair
 deer's tongue
@@ -82104,6 +82664,7 @@ defence diplomacy
 defence in depth
 defence lawyer
 defence mechanism
+defence-splitting
 defending zone
 defense attorney
 defense in abatement
@@ -82215,6 +82776,7 @@ del credere
 del. trem.
 delative case
 delay differential equation
+delay line
 delay no more
 delay slot
 delay tactic
@@ -82609,6 +83171,7 @@ desert rat
 desert rheumatism
 desert rock
 desert rose
+desert rue
 desert sand
 desert soil
 desert sore
@@ -82782,6 +83345,7 @@ deverbal noun
 deviation ratio
 device driver
 device file
+device tree
 device under test
 devil a bit
 devil bird
@@ -83071,6 +83635,7 @@ diamondback rattler
 diamondback rattlesnake
 diamondback terrapin
 diamonds are a girl's best friend
+diaper area
 diaper baby
 diaper bag
 diaper bank
@@ -83083,6 +83648,8 @@ diaper check
 diaper corset
 diaper cover
 diaper cream
+diaper creature
+diaper critter
 diaper deck
 diaper disposal
 diaper doubler
@@ -83097,6 +83664,7 @@ diaper pail
 diaper pants
 diaper party
 diaper pin
+diaper play
 diaper pod
 diaper position
 diaper rash
@@ -83104,15 +83672,20 @@ diaper service
 diaper shirt
 diaper sniffer
 diaper sniper
+diaper sprayer
 diaper stacker
 diaper stuffing
 diaper table
+diaper vore
 diaper warmer
 diaper wrap
 diaper-baby
 diaper-brained
+diaper-corset
 diaper-head
 diaper-lover
+diaper-play
+diaper-sniffer
 diaphragm cell
 diaphragm wall
 diaphragma pelvis
@@ -84155,11 +84728,13 @@ dishonorably discharged
 dishonourable discharge
 dishonoured bill
 dishpan hands
+dishwasher detergent
 dishwasher proof
 dishwasher safe
 dishwasher salt
 dishwasher-safe
 dishwashing liquid
+dishwashing machine
 dishwater blond
 dishwater blonde
 disilicic acid
@@ -84175,6 +84750,7 @@ disjunctive normal form
 disjunctive syllogism
 disk access time
 disk brake
+disk buffer
 disk drive
 disk horse
 disk image
@@ -84193,6 +84769,7 @@ disodium guanylate
 disodium hydrogen phosphate
 disodium inosinate
 disorder of sex development
+disordered money behavior
 disorderly conduct
 disorderly house
 disorganized schizophrenia
@@ -84266,6 +84843,7 @@ distillation chaser
 distilled verdigris
 distilled water
 distilled wine
+distillery fungus
 distinction without a difference
 distinctive paper
 distinguished open set
@@ -84352,6 +84930,7 @@ divan bed
 divaricatic acid
 dive bar
 dive boat
+dive bomb
 dive bomber
 dive brick
 dive computer
@@ -84425,6 +85004,7 @@ division of labor
 division of labour
 division ring
 division sign
+division table
 division viol
 division violist
 division-viol
@@ -84629,12 +85209,14 @@ do you know what I'm saying
 do you know who I am
 do you love me
 do you mind
+do you need an invitation
 do you need help
 do you need to use the bathroom
 do you speak English
 do you think you can walk
 do's and don't's
 do's and don'ts
+do-able
 do-acracy
 do-all
 do-badder
@@ -84688,6 +85270,7 @@ dock warrant
 dock worker
 docker hole
 docketing software
+docking port
 docking station
 docky time
 docosadienoic acid
@@ -84791,6 +85374,7 @@ dog egg
 dog fancier
 dog fennel
 dog fight
+dog fighting
 dog flap
 dog food
 dog fox
@@ -84815,6 +85399,7 @@ dog man
 dog meat
 dog milk
 dog musher
+dog mustard
 dog my cats
 dog nap
 dog napper
@@ -85014,6 +85599,7 @@ doll's pram
 doll-less
 doll-like
 dollar auction
+dollar bean
 dollar bill
 dollar cost averaging
 dollar dance
@@ -85201,7 +85787,9 @@ don't mention it
 don't mess with success
 don't mind if I do
 don't pass go
+don't pee in the wind and tell me it's raining
 don't pee on my leg and tell me it's raining
+don't piss in the wind and tell me it's raining
 don't piss on my leg and tell me it's raining
 don't put all your eggs in one basket
 don't quit your day job
@@ -85758,6 +86346,7 @@ double reed
 double refraction
 double replacement reaction
 double room
+double rotation
 double salt
 double sawbuck
 double science
@@ -86195,6 +86784,7 @@ dozens offer
 dr. wt.
 drabble-tail
 draco lizard
+draconic chart
 draconic month
 draconitic month
 draft animal
@@ -86483,6 +87073,7 @@ dream life
 dream list
 dream on
 dream pop
+dream room
 dream sequence
 dream team
 dream trance
@@ -86490,6 +87081,7 @@ dream true
 dream up
 dream world
 dream yoga
+dream-job
 dream-world
 dreaming life
 dreaming site
@@ -86675,6 +87267,7 @@ drip coffee
 drip edge
 drip feed
 drip gas
+drip irrigation
 drip line
 drip marketing
 drip painting
@@ -86723,6 +87316,8 @@ drive someone to the wall
 drive someone up the wall
 drive stick
 drive the porcelain bus
+drive through
+drive thru
 drive time
 drive to distraction
 drive to drink
@@ -86812,6 +87407,7 @@ drongo-cuckoo
 drool bucket
 drool-proof
 droop snoot
+drooping saxifrage
 drop D
 drop a bollock
 drop a bomb
@@ -86830,6 +87426,7 @@ drop acid
 drop acid, not bombs
 drop anchor
 drop astern
+drop at comb
 drop attack
 drop away
 drop back
@@ -87159,6 +87756,7 @@ dry film thickness
 dry fire
 dry fly
 dry fog
+dry food
 dry ginger
 dry goods
 dry guillotine
@@ -87255,6 +87853,7 @@ dry-eyed
 dry-fire
 dry-fisted
 dry-foot
+dry-fry
 dry-gulch
 dry-handed
 dry-heave
@@ -87272,6 +87871,7 @@ dry-stone
 dry-stone dyke
 dry-tool
 dryer ball
+dryer buzzer
 dryer sheet
 drying agent
 drying green
@@ -87405,6 +88005,7 @@ duck's-bill limpet
 duck's-foot
 duck's-meat
 duck, duck, goose
+duck, duck, gray duck
 duck, duck, grey duck
 duck-arsed
 duck-bill
@@ -87464,6 +88065,7 @@ due and payable
 due course
 due date
 due diligence
+due place
 due process
 due process of law
 due to
@@ -87772,6 +88374,7 @@ dust-brand
 dust-collector
 dust-colored
 dust-coloured
+dust-devil
 dust-free
 dust-off
 dust-out
@@ -87863,6 +88466,7 @@ dwyle flunking
 dy-no-mite
 dyadic fraction
 dyadic operation
+dyakis dodecahedron
 dye in the wool
 dye job
 dye pack
@@ -88206,6 +88810,7 @@ e-mobility
 e-moderation
 e-module
 e-money
+e-moped
 e-motorbike
 e-movie
 e-network
@@ -88498,6 +89103,7 @@ early voter
 early voting
 early warning system
 early-bound
+early-day motion
 early-purple orchid
 early-to-bedder
 early-type star
@@ -88516,6 +89122,8 @@ earned run average
 earnest money
 earnest-money
 earning power
+earnings beat
+earnings miss
 earnings power
 earnings season
 ears are burning
@@ -88545,6 +89153,7 @@ earth pyramid
 earth science
 earth scraper
 earth sign
+earth smoke
 earth snake
 earth station
 earth surface person
@@ -88553,6 +89162,7 @@ earth tremor
 earth up
 earth wire
 earth-apple
+earth-bathing
 earth-berry
 earth-born
 earth-bound
@@ -88562,6 +89172,7 @@ earth-drake
 earth-fast
 earth-floor
 earth-hog
+earth-like
 earth-motherly
 earth-moving
 earth-nut
@@ -88837,6 +89448,7 @@ echo state network
 echo subject
 echo time
 echo vowel
+echo word
 echoic memory
 ecks dee
 ecky thump
@@ -88900,7 +89512,6 @@ ecology block
 economic capital
 economic corridor
 economic crisis
-economic cybernetics
 economic determinism
 economic emigrant
 economic equilibrium
@@ -89109,6 +89720,7 @@ egg on horseback
 egg on one's face
 egg pasta
 egg pod
+egg punk
 egg replacer
 egg ring
 egg roll
@@ -89364,6 +89976,7 @@ elbow mentality
 elbow pit
 elbow plant
 elbow relation
+elbow rim
 elbow room
 elbow scissors
 elbow shake
@@ -89730,11 +90343,14 @@ elf-bolt
 elf-cap moss
 elf-child
 elf-cup
+elf-damsel
 elf-dance
+elf-dock
 elf-folk
 elf-girl
 elf-king
 elf-knight
+elf-lady
 elf-light
 elf-maid
 elf-maiden
@@ -89750,6 +90366,7 @@ elimination reaction
 elimination round
 eliminative materialism
 eliminatory system
+elite ball knowledge
 elite capture
 elite overproduction
 elixir of life
@@ -89811,6 +90428,7 @@ emblem book
 emblem-book
 emboliform nucleus
 embonic acid
+embrace the Penguin
 embrace the penguin
 embrace the suck
 embrace, extend and extinguish
@@ -89883,6 +90501,7 @@ emission theory
 emissions test
 emissions trading
 emitter-coupled logic
+emmer-goose
 emo bangs
 emo metal
 emo rap
@@ -90001,6 +90620,7 @@ empty-handedly
 empty-handedness
 empty-headed
 empty-headedness
+empty-hearted
 empty-hoofed
 empty-nest syndrome
 empty-nester
@@ -90312,6 +90932,7 @@ enjoy your meal
 enlarge oneself
 enlarge up
 enlightened absolutism
+enlightened centrism
 enlightened despotism
 enlightened self-interest
 enoic acid
@@ -90324,6 +90945,7 @@ enough is too much
 enough said
 enough sense to pound sand into a rathole
 enough to choke a horse
+enough to choke a snake
 enough to go around
 enough to make a cat laugh
 enough to make the angels weep
@@ -90525,6 +91147,7 @@ equal-area
 equal-interval chord
 equal-opportunity
 equal-tempered
+equal-to-apostles
 equalising beam
 equality money
 equality of arms
@@ -90565,6 +91188,7 @@ equinoctial colure
 equinoctial line
 equinoctial time
 equinoctial year
+equinox flower
 equipotential surface
 equisetic acid
 equitable tolling
@@ -91109,6 +91733,7 @@ every which way
 every which where
 every woman Jill
 every woman for herself
+every year
 every-day
 everybody and his brother
 everybody and his cousin
@@ -91235,6 +91860,7 @@ ex post facto
 ex professo
 ex proprio motu
 ex proprio vigore
+ex ray
 ex rerum natura
 ex situ
 ex stock
@@ -91273,6 +91899,7 @@ ex-partner
 ex-pat
 ex-post
 ex-president
+ex-ray
 ex-service
 ex-serviceman
 ex-servicewoman
@@ -91537,6 +92164,7 @@ expiration date
 expiration time
 expiry date
 explain away
+explain oneself
 explanatory dictionary
 explanatory fiction
 explanatory style
@@ -91853,6 +92481,7 @@ eye to eye
 eye tooth
 eye tracking
 eye up
+eye washer
 eye witness
 eye-Q
 eye-apple
@@ -91926,6 +92555,7 @@ eyelash mite
 eyelash viper
 eyelash yarn
 eyelash-curler
+eyes down
 eyes on the ground
 eyes on the prize
 eyes right
@@ -92015,6 +92645,7 @@ face piece
 face plate
 face powder
 face pubes
+face reading
 face reveal
 face shield
 face swap
@@ -92075,6 +92706,7 @@ facial hair
 facial mask
 facial nerve
 facial profiling
+facial pubes
 facial soap
 facial tissue
 facial yoga
@@ -92083,6 +92715,7 @@ facilitated communication
 facilities maintenance
 facility fee
 facility maintenance
+facility management
 facility time
 facility trip
 facing points
@@ -92735,6 +93368,7 @@ family Bible
 family allowance
 family annihilation
 family annihilator
+family bed
 family business
 family car
 family celebrant
@@ -92756,6 +93390,7 @@ family meal
 family medicine
 family member
 family name
+family newspaper
 family of orientation
 family of procreation
 family pajamas
@@ -92835,6 +93470,7 @@ fan-foot
 fan-fucking-tastic
 fan-in
 fan-in-fin
+fan-made
 fan-nerved
 fan-servicey
 fan-shaped
@@ -93097,6 +93733,7 @@ fast friend
 fast ice
 fast lane
 fast leg theory
+fast money
 fast mover
 fast one
 fast radio burst
@@ -93305,6 +93942,7 @@ fax number
 fax, no printer
 faxed star
 faxed-star
+fay gurry
 faying surface
 façade pattern
 feal and divot
@@ -93399,6 +94037,7 @@ federal subject
 federal territory
 federal yellow
 federated learning
+federated state
 federation furniture
 federative unit
 fee fees
@@ -93743,6 +94382,7 @@ ferry car
 ferry van
 ferry wagon
 ferry-boat
+ferry-man
 fertaric acid
 fertile as a turtle
 fertility clinic
@@ -93782,11 +94422,13 @@ fetch-and-carry
 fetish bean
 fetish mining
 fetish priest
+fetish-adjacent
 fetish-man
 feto-maternal
 fetor oris
 fetta cheese
 fettuccine Alfredo
+fetus deletus
 fetus fetishist
 fetus in fetu
 fetus papyraceus
@@ -93997,6 +94639,7 @@ field seam
 field shift
 field slave
 field sobriety test
+field soybean
 field sport
 field star
 field stop
@@ -94423,6 +95066,7 @@ final sigma
 final solution
 final stand
 final straw
+final stretch
 final topology
 final whistle
 final words
@@ -94460,6 +95104,7 @@ find a friendly bush
 find a new gear
 find a way
 find another gear
+find another way
 find as you type
 find fault
 find favour
@@ -94471,6 +95116,7 @@ find one's account
 find one's ass with both hands and a flashlight
 find one's feet
 find one's legs
+find one's own way
 find one's place
 find one's tongue
 find one's voice
@@ -94494,6 +95140,7 @@ finder of fact
 finder's fee
 finders, keepers
 finders, keepers; losers, weepers
+finding aid
 fine adjustment tool
 fine and dandy
 fine and dandy like sour candy
@@ -94586,6 +95233,7 @@ finger pointing
 finger pointing at the moon
 finger pointy
 finger post
+finger prick
 finger puppet
 finger purse
 finger ring
@@ -94607,6 +95255,7 @@ finger work
 finger wrestling
 finger-and-toe
 finger-bowl
+finger-comb
 finger-counting
 finger-four
 finger-friendly
@@ -94785,7 +95434,6 @@ fire inspection
 fire inspector
 fire insurance
 fire iron
-fire is a good servant but a bad master
 fire lance
 fire lane
 fire lily
@@ -94948,7 +95596,6 @@ firing party
 firing pin
 firing point
 firing range
-firing seat
 firing squad
 firm error
 firm hand
@@ -94969,7 +95616,6 @@ first and last
 first angle projection
 first annual
 first arch syndrome
-first art
 first article
 first base
 first baseman
@@ -95137,6 +95783,7 @@ first-in-first-out
 first-line
 first-mover disadvantage
 first-name
+first-nameless
 first-nighter
 first-of-its-kind
 first-order
@@ -95145,6 +95792,7 @@ first-order logic
 first-order question
 first-order spectrum
 first-party
+first-party cookie
 first-party logistics
 first-passage time
 first-person
@@ -95579,6 +96227,7 @@ fizzy drink
 fizzy water
 fjord horse
 fjord lake
+fjord-like
 fl. oz.
 flack catcher
 flack-catcher
@@ -95665,6 +96314,7 @@ flame structure
 flame test
 flame thrower
 flame tree
+flame trench
 flame up
 flame violet
 flame war
@@ -95779,6 +96429,7 @@ flash the cash
 flash up
 flash-ball
 flash-bang
+flash-burn
 flash-forward
 flash-freeze
 flash-fry
@@ -96119,6 +96770,7 @@ flint paper
 flint-eyed
 flint-hearted
 flintlock mechanism
+flinty-eyed
 flip a bitch
 flip book
 flip burgers
@@ -96184,6 +96836,7 @@ float glass
 float like a butterfly
 float someone's boat
 float switch
+float tank
 float tube
 float with the stream
 float-on float-off
@@ -96221,7 +96874,6 @@ floating-point operation
 floating-point unit
 flocculent spiral galaxy
 flocculonodular lobe
-flock camera
 flock paper
 flock together
 flock worker's lung
@@ -96329,7 +96981,6 @@ flotation cost
 flotation tank
 flotation therapy
 flotsam and jetsam
-flounce out
 flounce post
 flour beetle
 flour corn
@@ -96337,6 +96988,7 @@ flour gold
 flour mill
 flour mite
 flour moth
+flour paste
 flour treatment agent
 flour-delice
 flour-monger
@@ -96395,6 +97047,7 @@ flower petal
 flower pot
 flower power
 flower service
+flower stem
 flower sticks
 flower wall
 flower water
@@ -96551,6 +97204,7 @@ fly belt
 fly biscuit
 fly blind
 fly bomb
+fly bottle
 fly box
 fly by
 fly by the seat of one's pants
@@ -96566,6 +97220,7 @@ fly in the ointment
 fly into
 fly into a rage
 fly killer
+fly like a bird
 fly like a rock
 fly line
 fly loft
@@ -96613,6 +97268,7 @@ fly-bitten
 fly-blown
 fly-boat
 fly-bombed
+fly-bottle
 fly-box
 fly-boy
 fly-by
@@ -96621,6 +97277,7 @@ fly-by-night
 fly-by-nighter
 fly-by-wire
 fly-catcher
+fly-eyed
 fly-fish
 fly-fisher
 fly-fishing
@@ -96680,6 +97337,7 @@ flying disc golf
 flying disk
 flying doctor
 flying dragon
+flying eaves
 flying fig
 flying fish
 flying fox
@@ -96803,6 +97461,7 @@ fog layer
 fog light
 fog line
 fog machine
+fog mull
 fog of war
 fog oil
 fog out
@@ -96836,6 +97495,7 @@ fold one's tent
 fold out
 fold sphere
 fold up
+fold-down
 fold-out
 fold-over
 fold-up
@@ -97062,7 +97722,9 @@ food-borne disease
 food-derived illness
 food-fall
 food-grade
+food-insecure
 food-literate
+food-secure
 food-to-go
 food-truck
 food-writing
@@ -97127,6 +97789,7 @@ foot passenger
 foot patrol
 foot peg
 foot per second
+foot pursuit
 foot race
 foot rest
 foot roller
@@ -97154,6 +97817,7 @@ foot-candle
 foot-dragger
 foot-dragging
 foot-fall
+foot-flagging
 foot-ganger
 foot-goer
 foot-in-mouth disease
@@ -97224,6 +97888,7 @@ for a song
 for a song and a dance
 for a song and dance
 for a start
+for a time
 for a while
 for all
 for all intended purposes
@@ -97604,6 +98269,7 @@ forensic accountancy
 forensic accountant
 forensic accounting
 forensic biology
+forensic engineering
 forensic linguistics
 forensic medicine
 forensic science
@@ -97865,6 +98531,7 @@ forward-looking
 forward-lookingness
 forward-thinking
 forwarding address
+forwarding plane
 forwards and backwards
 forwards compatibility
 forwards compatible
@@ -98105,6 +98772,7 @@ four-wheeler
 four-wheeling
 fourhorn sculpin
 fourpenny nail
+fourscore and seven years ago
 foursome reel
 fourspine sculpin
 fourspot flounder
@@ -98174,6 +98842,7 @@ fox hunter
 fox hunting
 fox in the box
 fox in the henhouse
+fox kestrel
 fox maggot
 fox mark
 fox message
@@ -98212,8 +98881,10 @@ foxglove pug
 foxglove tree
 foxhole radio
 foxtail barley
+foxtail cactus
 foxtail clubmoss
 foxtail millet
+foxtail palm
 foxtail pine
 foxtail saw
 foxtrot oscar
@@ -98316,6 +98987,7 @@ frank-marriage
 frank-pledge
 franking machine
 frat boy
+frat flick
 frat house
 frat lit
 frat man
@@ -99007,6 +99679,7 @@ from time to time
 from top to bottom
 from top to toe
 from week to week
+from when
 from where one is sitting
 from where one sits
 from womb to tomb
@@ -99118,6 +99791,7 @@ frontal plane
 frontal point
 frontal process
 frontal sinus
+frontal suture
 frontal wedgie
 frontier AI
 frontier artificial intelligence
@@ -99593,6 +100267,7 @@ full-bound
 full-brother
 full-burn
 full-butt
+full-choke
 full-course dinner
 full-course meal
 full-course yellow
@@ -99823,6 +100498,7 @@ fung shui
 fung-hwang
 fungi imperfecti
 fungible token
+fungic acid
 fungo bat
 fungus beetle
 fungus comb
@@ -100108,6 +100784,7 @@ galactaric acid
 galactic bulge
 galactic cannibalism
 galactic center
+galactic centre
 galactic disc
 galactic habitable zone
 galactic halo
@@ -100380,6 +101057,7 @@ ganzfeld effect
 ganzfeld experiment
 gao dim
 gao lak
+gao luk
 gaol fever
 gaol-bird
 gap buffer
@@ -100472,6 +101150,7 @@ garden centipede
 garden centre
 garden chervil
 garden city
+garden close
 garden cress
 garden croton
 garden dormouse
@@ -100574,6 +101253,7 @@ gas bracket
 gas burner
 gas can
 gas cap
+gas car
 gas centrifuge
 gas chamber
 gas chromatograph
@@ -100738,9 +101418,12 @@ gather wool
 gathering board
 gathering coal
 gathering hoop
+gathering place
 gator gar
 gatten tree
 gau dim
+gau lak
+gau luk
 gauche caviar
 gauche effect
 gaucho-esque
@@ -101281,6 +101964,7 @@ geo-spatial
 geodesic dome
 geodetic effect
 geographic North Pole
+geographic atrophy
 geographic bachelor
 geographic information science
 geographic information system
@@ -101328,6 +102012,7 @@ geopolitical zone
 geopotential height
 geostatic arch
 geostrophic wind
+geosynchronous orbit
 geothermal energy
 geranic acid
 geri chair
@@ -101335,7 +102020,6 @@ geri-psych
 geriatric chair
 geriatric millennial
 germ cell
-germ fear
 germ history
 germ layer
 germ line
@@ -101345,7 +102029,6 @@ germ theory
 germ theory of disease
 germ tube
 germ warfare
-germ-fear
 germ-free
 germ-history
 germ-plasm
@@ -101748,6 +102431,7 @@ get the noggin joggin'
 get the picture
 get the point
 get the push
+get the runaround
 get the sack
 get the show on the road
 get the thumb
@@ -102321,6 +103005,7 @@ girth-galled
 git along
 git gud
 git-go
+give (someone) time
 give 110%
 give a bad name
 give a bugger
@@ -102340,6 +103025,7 @@ give a gun
 give a hang
 give a hoot
 give a hundred percent
+give a jackstraw
 give a knee
 give a light
 give a loose
@@ -102363,6 +103049,7 @@ give against
 give ale
 give an eye-tooth
 give an inch
+give an order
 give and take
 give as good as one gets
 give away
@@ -102424,6 +103111,7 @@ give one's notice
 give one's right arm
 give one's word
 give oneself airs
+give oneself time
 give or take
 give out
 give out stink
@@ -102557,6 +103245,7 @@ given name
 given that
 given time
 given to
+given-nameless
 giver-upper
 giving birth
 gizzard shad
@@ -103216,6 +103905,7 @@ go it, ye cripples
 go it, you cripples
 go juice
 go jump in the lake
+go jump off a bridge
 go jump off a building
 go jump off a cliff
 go kaflooey
@@ -103290,6 +103980,7 @@ go pearshaped
 go pedal
 go phut
 go pill
+go piss girl
 go places
 go platinum
 go play in the traffic
@@ -103509,6 +104200,7 @@ goal attack
 goal average
 goal cage
 goal celebration
+goal contribution
 goal defence
 goal difference
 goal judge
@@ -103603,6 +104295,7 @@ god-fearing
 god-forsaken
 god-grandmother
 god-king
+god-less
 god-like
 god-modding
 god-saeng
@@ -103925,6 +104618,7 @@ golf pencil
 golf pro
 golf shirt
 golf towel
+golf umbrella
 golf widow
 golf-club
 golfer's elbow
@@ -104032,6 +104726,7 @@ good form
 good fortune
 good game
 good girl
+good girl art
 good going
 good golly
 good good
@@ -104801,6 +105496,7 @@ grape therapy
 grape tomato
 grape vine
 grape wine
+grape-ade
 grape-louse
 grape-stone
 grape-vine
@@ -104896,6 +105592,7 @@ grass rat
 grass rooter
 grass roots
 grass script
+grass seed
 grass shrimp
 grass sickness
 grass skirt
@@ -105030,6 +105727,7 @@ gravity-brightening
 gravity-darkened
 gravity-darkening
 gravo-acute accent
+gravure idol
 gravy boat
 gravy train
 gravy-eyed
@@ -105051,6 +105749,7 @@ gray cuscus
 gray divorce
 gray dogwood
 gray eminence
+gray energy
 gray ephedra
 gray fox
 gray friar
@@ -105063,6 +105762,7 @@ gray hen
 gray hydrogen
 gray iron
 gray jay
+gray knight
 gray langur
 gray literature
 gray magic
@@ -105151,6 +105851,7 @@ great Scott
 great albatross
 great antshrike
 great ape
+great artery
 great auk
 great aunt
 great balls of fire
@@ -105501,6 +106202,7 @@ green fire
 green flag
 green flash
 green fluorescent protein
+green foxtail
 green fringelip labeo
 green frog
 green fruit beetle
@@ -105655,6 +106357,7 @@ green snake
 green snow
 green soap
 green soil
+green soybean
 green space
 green spot
 green spruce
@@ -105833,6 +106536,7 @@ grey crow
 grey crowned crane
 grey divorce
 grey eminence
+grey energy
 grey folk
 grey fox
 grey francolin
@@ -105847,6 +106551,7 @@ grey heron
 grey hydrogen
 grey jay
 grey junglefowl
+grey knight
 grey line
 grey literature
 grey magic
@@ -105917,6 +106622,7 @@ grey-throated rail
 grey-winged trumpeter
 greyhound racing
 greylag goose
+grid butt
 grid cell
 grid electricity
 grid girl
@@ -106406,6 +107112,7 @@ guide book
 guide dog
 guide line
 guide on the side
+guide price
 guide rail
 guide rope
 guide shoe
@@ -106456,6 +107163,7 @@ guitar cello
 guitar fiddle
 guitar pick
 guitar pop
+guitar string
 guitar-cello
 guitar-player
 gul mohur
@@ -106798,6 +107506,7 @@ hab or nab
 hab. corp.
 habal-habal
 habeas corpus
+habel-habel
 habemus papam
 haberdasher of pronouns
 habit and repute
@@ -106932,7 +107641,6 @@ hair plug
 hair powder
 hair raiser
 hair raising
-hair remover
 hair restorer
 hair rig
 hair roller
@@ -107033,6 +107741,7 @@ half a head
 half a loaf is better than no bread
 half a loaf is better than no loaf
 half a loaf is better than none
+half a mile
 half a mind
 half a mo
 half adder
@@ -107326,6 +108035,7 @@ half-tone
 half-track
 half-tracker
 half-truth
+half-turn
 half-uncle
 half-unicorn
 half-up half-down
@@ -107630,6 +108340,7 @@ hand-carry
 hand-cart
 hand-code
 hand-cooked
+hand-cranked
 hand-deliver
 hand-drawn
 hand-egg
@@ -107650,6 +108361,7 @@ hand-hole
 hand-in-cap
 hand-in-glove
 hand-in-hand
+hand-kercher
 hand-kiss
 hand-knit
 hand-laid
@@ -107743,6 +108455,7 @@ hands down
 hands off
 hands on
 hands up
+hands-down
 hands-free
 hands-in
 hands-off
@@ -107878,6 +108591,7 @@ hanky panky
 hanky-pank
 hanky-panky
 hanky-twist
+hansom cab
 hao siao
 haole time
 hap-harlot
@@ -107904,6 +108618,7 @@ happy Kwanzaa
 happy Near Year
 happy New Year
 happy New Year's
+happy Ramadan
 happy Thanksgiving
 happy Valentine's Day
 happy as Larry
@@ -108322,8 +109037,10 @@ harmonic tremor
 harmonica bug
 harmonically bound
 harmony of the spheres
+harmony of vowels
 harn-pan
 harness bend
+harness bull
 harness cask
 harness hang syndrome
 harness loop
@@ -108394,6 +109111,7 @@ harvest-ready
 harvester ant
 harvester butterfly
 harvester-thresher
+has been
 has left the building
 has-a
 has-been
@@ -108643,6 +109361,7 @@ have another thing coming
 have another think
 have another think coming
 have another thought coming
+have any luck
 have at
 have at you
 have bats in one's belfry
@@ -108886,6 +109605,7 @@ have truck with
 have two strings to one's bow
 have up
 have way
+have wind in one's jaw
 have words
 have work done
 have you eaten
@@ -108980,6 +109700,7 @@ hazel grouse
 hazel hen
 hazel nut
 hazel pine
+hazel pomaderris
 hazel-eyed
 hazel-hen
 hazelnut milk
@@ -109049,6 +109770,7 @@ head crash
 head doctor
 head down, bum up
 head dress
+head earing
 head fake
 head first
 head for the hills
@@ -109168,6 +109890,7 @@ head-to-toe
 head-trip
 head-turner
 head-up display
+headache tree
 headache vine
 headbolt heater
 headbutt with
@@ -109618,6 +110341,7 @@ hedge apple
 hedge around
 hedge bindweed
 hedge cactus
+hedge clippers
 hedge creeper
 hedge fund
 hedge garlic
@@ -109642,6 +110366,7 @@ hedge whore
 hedge witch
 hedge wizard
 hedge-breaking
+hedge-clippers
 hedge-diving
 hedge-hog
 hedge-hop
@@ -109650,6 +110375,7 @@ hedge-note
 hedge-row
 hedge-trimmer
 hedgehog cactus
+hedgehog highway
 hedgehog plant
 hedgehog seahorse
 hedgehog signalling pathway
@@ -109679,6 +110405,7 @@ heeby jeebies
 heeby jeebys
 heeby-jeebies
 heeby-jeebys
+heel bar
 heel bone
 heel flip
 heel hook
@@ -109831,6 +110558,7 @@ helmet shell
 helmet shrike
 helmet snail
 helmet streamer
+helmet vanga
 helmet-shrike
 helmeted friarbird
 helmeted guinea fowl
@@ -110323,6 +111051,7 @@ hig-taper
 higgle-haggle
 higgledy-piggledy
 high C
+high Earth orbit
 high Fowler's
 high adventure
 high altar
@@ -110583,6 +111312,7 @@ high-level
 high-level language
 high-level synthesis
 high-lift device
+high-living
 high-low
 high-low split
 high-lying
@@ -110628,6 +111358,7 @@ high-riser
 high-risk
 high-risk, high-reward
 high-roller
+high-school
 high-score table
 high-seeded
 high-side
@@ -110663,6 +111394,7 @@ high-tension
 high-test
 high-test peroxide
 high-ticket
+high-tide
 high-time
 high-toned
 high-top
@@ -110670,6 +111402,7 @@ high-touch
 high-up
 high-value
 high-value target
+high-velocity
 high-vis
 high-visibility
 high-voltage
@@ -110768,10 +111501,12 @@ hind claw
 hind foot
 hind leg
 hind limb
+hind quarter
 hind quarters
 hind teat
 hind tit
 hind wing
+hind-quarter
 hindering impediment
 hindsight is 20/20
 hinge joint
@@ -110841,6 +111576,8 @@ hippety-hop
 hippety-hoppety
 hippie chimp
 hippie clinic
+hippie flip
+hippie flipping
 hippie punching
 hippie trail
 hippie-dippie
@@ -110854,6 +111591,8 @@ hippo grass
 hipposudoric acid
 hippuric acid
 hippy crack
+hippy flip
+hippy flipping
 hippy jump
 hippy-dippy
 hipster effect
@@ -111254,6 +111993,7 @@ hog wallow
 hog's bane
 hog's bed
 hog's bread
+hog's eye
 hog's face
 hog's garlic
 hog's leg
@@ -111277,6 +112017,7 @@ hog-faced ape
 hog-fever
 hog-gum
 hog-loom
+hog-mace
 hog-maned
 hog-monkey
 hog-nosed skunk
@@ -111390,6 +112131,7 @@ hold one's head high
 hold one's horses
 hold one's jaw
 hold one's liquor
+hold one's mouth right
 hold one's nerve
 hold one's nose
 hold one's nose up
@@ -111658,6 +112400,8 @@ home education
 home equity
 home farm
 home field advantage
+home for the aged
+home forty
 home free
 home from home
 home front
@@ -111752,6 +112496,8 @@ home-schooler
 home-set
 home-sewn
 home-sickness
+home-sit
+home-sitting
 home-speaking
 homeland security
 homeless dumping
@@ -111915,6 +112661,7 @@ honey-butter
 honey-colored
 honey-dipper
 honey-do list
+honey-lipped
 honey-lotus
 honey-month
 honey-mouthed
@@ -112207,6 +112954,7 @@ hoppus ton
 hoppy glop
 hopscotch hashing
 hor fun
+horary astrology
 horde mode
 hordeic acid
 horf down
@@ -112219,6 +112967,7 @@ horizon problem
 horizontal bar
 horizontal categorification
 horizontal dancing
+horizontal divestiture
 horizontal escalation
 horizontal gene transfer
 horizontal hostility
@@ -112241,6 +112990,7 @@ horizontal stabilizer
 horizontal standard
 horizontal tango
 horizontally challenged
+horizontally integrated
 horizontally-challenged
 hormone replacement therapy
 hormone therapy
@@ -112251,6 +113001,7 @@ horn book
 horn coral
 horn dog
 horn drum
+horn fair
 horn fly
 horn guide
 horn in
@@ -112371,6 +113122,8 @@ horse dick
 horse doctor
 horse engine
 horse fair
+horse fame
+horse famous
 horse ferry
 horse fly
 horse gentian
@@ -112514,6 +113267,7 @@ hose down
 hose jacket
 hose off
 hose reel
+hose suit
 hose tower
 hose-in-hose
 hose-whip
@@ -112581,6 +113335,7 @@ hot as a pistol
 hot as blazes
 hot as fire
 hot as hell
+hot as hell's hinges
 hot bag
 hot band
 hot bar
@@ -112715,6 +113470,7 @@ hot potato
 hot press
 hot property
 hot pursuit
+hot rack
 hot rail
 hot reactor
 hot refuel
@@ -113310,6 +114066,7 @@ human sacrifice
 human safari
 human seminal plasma protein hypersensitivity
 human services
+human settlement
 human shield
 human smuggling
 human statue
@@ -113402,8 +114159,10 @@ hundreds of thousands
 hundredth monkey
 hung beef
 hung jury
+hung like a bull
 hung like a donkey
 hung like a horse
+hung like a mule
 hung over
 hung parliament
 hung up
@@ -113455,6 +114214,8 @@ hunter green
 hunter's chicken
 hunter's cup
 hunter's moon
+hunter's pot
+hunter's stew
 hunter-gather
 hunter-gatherer
 hunter-gathering
@@ -113500,6 +114261,7 @@ hurricane glass
 hurricane hunter
 hurricane lamp
 hurricane lantern
+hurricane lily
 hurricane party
 hurricane tide
 hurricane-proof
@@ -113858,6 +114620,10 @@ hyperpycnal flow
 hyperreal number
 hyperreal religion
 hypersensitive avoidant
+hypersonic bomb
+hypersonic glide vehicle
+hypersonic missile
+hypersonic weapon
 hyperspace drive
 hyperthymestic syndrome
 hypertrichosis cubiti
@@ -113882,6 +114648,7 @@ hypodermic syringe
 hypoelliptic operator
 hypofluorous acid
 hypogaeic acid
+hypogastric nerve
 hypogeic acid
 hypoglossal nerve
 hypoglycemic diet
@@ -114103,7 +114870,6 @@ ice scooter
 ice scour
 ice scramble
 ice scraper
-ice sculpture
 ice sheet
 ice shelf
 ice shove
@@ -114341,6 +115107,7 @@ idle time
 idle wheel
 idling speed
 idol shepherd
+idol-worthy
 idonic acid
 iduronic acid
 idée fixe
@@ -114517,6 +115284,8 @@ ignotum per ignotius
 igpay atinlay
 ihlang-ihlang
 iid-ness
+ikey mo
+ikey-mo
 il. col.
 ilang-ilang
 ileac passion
@@ -114981,6 +115750,7 @@ in another world
 in antis
 in any case
 in any event
+in any shape or form
 in any way, shape or form
 in any way, shape, or form
 in anyone's book
@@ -115357,6 +116127,7 @@ in ordinary
 in other news
 in other words
 in pairs
+in pampers
 in parallel
 in pari materia
 in part
@@ -115866,6 +116637,7 @@ in-law
 in-law suite
 in-law unit
 in-lawhood
+in-lawry
 in-line
 in-line engine
 in-line expansion
@@ -115889,6 +116661,7 @@ in-state
 in-store picking
 in-swinger
 in-toeing
+in-town
 in-tray
 in-tray exercise
 in-tree
@@ -116338,6 +117111,7 @@ information market
 information model
 information modeling
 information overload
+information processing
 information retrieval
 information scent
 information science
@@ -116366,6 +117140,7 @@ infraorbital artery
 infraorbital foramen
 infraorbital groove
 infraorbital nerve
+infraorbital vein
 infrared astronomy
 infrared lamp
 infrared radiation
@@ -116514,6 +117289,7 @@ inner workings
 inner-city
 inner-directed
 inner-platform effect
+inner-source
 innermost stable circular orbit
 innkeeper worm
 innocent agent
@@ -117507,6 +118283,7 @@ isabelline wheatear
 isatic acid
 isatinic acid
 isatropic acid
+ischemic bone necrosis
 ischiadic passion
 ischial callosity
 ischial tuberosity
@@ -117620,6 +118397,7 @@ isru chag
 issue date
 issue pea
 issue tracking system
+isthmus of fauces
 it ain't over 'til the fat lady sings
 it ain't over till it's over
 it ain't over till the fat lady sings
@@ -117723,6 +118501,7 @@ it's an ill wind
 it's an ill wind that blows no good
 it's an ill wind that blows no one any good
 it's an ill wind that blows nobody any good
+it's an ill wind that blows nobody good
 it's as simple as that
 it's been a slice
 it's been real
@@ -117822,6 +118601,7 @@ ivy-leaved
 ivy-leaved toadflax
 ix-nay
 izzle fo shizzle
+iç oğlan
 j-blog
 j-blogger
 j-blogging
@@ -117857,8 +118637,6 @@ jack nut
 jack o'lantern
 jack of all trades
 jack of all trades, master of none
-jack of all trades-master of none
-jack of all trades—master of none
 jack of clubs
 jack of diamonds
 jack of hearts
@@ -118043,6 +118821,7 @@ jaundice root
 jaunting car
 jaunty car
 javelin dart
+javelin sand boa
 javelin throw
 javelin thrower
 jaw away
@@ -118231,6 +119010,7 @@ jet siphon
 jet ski
 jet stream
 jet sweep
+jet syndrome
 jet-black
 jet-borne
 jet-lagged
@@ -118412,6 +119192,7 @@ job searching
 job security
 job shop
 job site
+job splitting
 job stopper
 job title
 job's a good 'un
@@ -118795,6 +119576,7 @@ junction point
 junction table
 junction transistor
 jungle babbler
+jungle bear
 jungle bendy
 jungle boot
 jungle bunny
@@ -118850,11 +119632,13 @@ juniper worm
 juniper-wood
 juniperic acid
 junk DNA
+junk beverage
 junk bond
 junk bottle
 junk conference
 junk dollar
 junk drawer
+junk drink
 junk email
 junk fee
 junk food
@@ -118930,10 +119714,12 @@ just a sec
 just a second
 just about
 just another pretty face
+just anyone
 just as soon as
 just as well
 just assume
 just because
+just before
 just cause
 just compensation
 just deserts
@@ -118948,6 +119734,7 @@ just in case
 just in time
 just intonation
 just kidding
+just like
 just like that
 just my luck
 just now
@@ -119129,6 +119916,8 @@ kanya tree
 kao peh kao bu
 kao pei kao bu
 kaolin clotting time
+kaolin-cephalin clotting time
+kaolinic acid
 kaonic hydrogen
 kapa haka
 kapok bush
@@ -119153,7 +119942,9 @@ karma farmer
 karma is a bitch
 karma whore
 karma's a bitch
+karma-marga
 karma-whore
+karma-yoga
 karmic blowback
 karmic debt
 karst spring
@@ -119272,6 +120063,7 @@ keep it real
 keep it simple, stupid
 keep it together
 keep it up
+keep looking
 keep measures
 keep off
 keep off the street
@@ -119392,6 +120184,7 @@ keep up with the times
 keep vigil
 keep watch
 keep wicket
+keep working
 keep your friends close, and your enemies closer
 keep yourself safe
 keep-away
@@ -119526,6 +120319,7 @@ key defender
 key desk
 key down
 key drive
+key encapsulation mechanism
 key exchange
 key finder
 key fob
@@ -119576,6 +120370,7 @@ key word
 key worker
 key wrench
 key-bugle
+key-chain
 key-cold
 key-fruit
 key-keeper
@@ -120170,6 +120965,7 @@ kitchen cake
 kitchen drawer
 kitchen dresser
 kitchen garden
+kitchen hand
 kitchen hood
 kitchen island
 kitchen knife
@@ -120186,8 +120982,8 @@ kitchen sinking
 kitchen sinky
 kitchen stuff
 kitchen supper
+kitchen table
 kitchen table issue
-kitchen table polyamory
 kitchen table software
 kitchen tea
 kitchen timer
@@ -120198,6 +120994,7 @@ kitchen witch
 kitchen-boy
 kitchen-fee
 kitchen-garden
+kitchen-hand
 kitchen-sinkery
 kitchen-sinking
 kitchen-sinky
@@ -120220,6 +121017,7 @@ kitten factory
 kitten farm
 kitten heel
 kitten mill
+kitten-hearted
 kittle cattle
 kittle of fish
 kittly-benders
@@ -120228,6 +121026,8 @@ kitty cat
 kitty corner
 kitty crack
 kitty cruise
+kitty flip
+kitty flipping
 kitty kiss
 kitty litter
 kitty party
@@ -120330,9 +121130,11 @@ knick-knack
 knick-knack drawer
 knick-knackery
 knick-knacky
+knick-knock
 knicker drawer
 knickerbocker glory
 knicky-knocky-nine-doors
+knife and fork
 knife arch
 knife block
 knife control
@@ -120343,6 +121145,7 @@ knife fight
 knife fish
 knife game
 knife grinder
+knife handle
 knife money
 knife pleat
 knife rest
@@ -120486,6 +121289,7 @@ knock someone into the middle of next week
 knock someone off their perch
 knock someone over with a feather
 knock someone's block off
+knock someone's head off
 knock someone's lights out
 knock someone's socks off
 knock the ball out of the park
@@ -120544,6 +121348,7 @@ knot invariant
 knot off
 knot span
 knot theory
+knot-hole
 knot-horn
 knothole section
 knotted pile
@@ -120558,6 +121363,7 @@ know backwards
 know ball
 know beans about
 know better
+know each other
 know every trick in the book
 know everything
 know fine well
@@ -120698,6 +121504,7 @@ kola kanda
 kola nut
 kombo butter
 komenic acid
+kompetenz-kompetenz
 kong bak pau
 koningic acid
 koniocellular cell
@@ -121103,8 +121910,10 @@ laesio enormis
 laevulinic acid
 laffy taffy
 lag behind
+lag bolt
 lag machine
 lag off
+lag screw
 lag time
 lagenar macula
 lager lout
@@ -121175,6 +121984,7 @@ lamb's fry
 lamb's lettuce
 lamb's quarters
 lamb's succory
+lamb's tails
 lamb's tongue
 lamb's-quarter
 lamb's-quarters
@@ -121438,7 +122248,6 @@ language planning
 language police
 language proficiency
 language replacement
-language resource
 language school
 language script
 language server
@@ -121687,6 +122496,7 @@ lasso up
 last 16
 last I checked
 last I heard
+last Thursday
 last antecedent rule
 last big thing
 last burst of fire
@@ -121761,6 +122571,7 @@ last-mentioned
 last-minute
 last-name
 last-named
+last-nameless
 last-time
 last-wordism
 lat pulldown
@@ -121959,6 +122770,7 @@ laughter is the best medicine
 laughter lines
 laughter padding
 laughter track
+laughter yoga
 laughter-lines
 launch angle
 launch complex
@@ -122420,6 +123232,7 @@ leading-edge
 leading-string
 leadoff hitter
 leaf aphid
+leaf arrowhead
 leaf beetle
 leaf blower
 leaf bridge
@@ -122710,6 +123523,7 @@ leave with the one who brought ya
 leave with the one who brought you
 leave with the one who brung ya
 leave with the one who brung you
+leave without say anything
 leave-in
 leave-one-out
 leave-taking
@@ -122761,6 +123575,8 @@ left bower
 left bracket
 left brain
 left coast
+left communism
+left communist
 left coset
 left eigenvalue
 left eigenvector
@@ -122826,6 +123642,7 @@ left-hander
 left-handiness
 left-handwise
 left-justified
+left-leaning
 left-libertarian
 left-libertarianism
 left-luggage office
@@ -122898,6 +123715,7 @@ legacy Oscar
 legacy code
 legacy hunter
 legacy media
+legacy sequel
 legacy student
 legacy system
 legacy-free
@@ -123064,6 +123882,7 @@ lenticular nucleus
 lenticular printing
 lentiform nucleus
 lentil shell
+lentil soup
 lentil weaving
 lentil-weaver
 lentil-weaving
@@ -123189,6 +124008,7 @@ lesser-known
 lesson plan
 lessons learned
 lest we forget
+let
 let George do it
 let Nature take its course
 let a sleeping dog lie
@@ -123277,6 +124097,7 @@ let us
 let us count the ways
 let us go
 let us see
+let us talk
 let well alone
 let well enough alone
 let's be having you
@@ -123399,6 +124220,7 @@ letters patents
 letters requisitory
 letters rogatory
 letters testamentary
+lettice cap
 letting-in
 lettre de cachet
 lettuce keeper
@@ -123777,6 +124599,7 @@ life or death
 life partner
 life peer
 life plan
+life plant
 life preserver
 life pro tip
 life raft
@@ -123789,6 +124612,7 @@ life savings
 life school
 life science
 life sentence
+life settlement
 life sim
 life simulation
 life skill
@@ -124261,6 +125085,7 @@ like fits
 like flies on a rib roast
 like flies on pie
 like fuck
+like fudge
 like fun
 like fury
 like gangbusters
@@ -124364,6 +125189,7 @@ like-minded
 like-mindedness
 like-positioned
 liked to
+likely lad
 likely story
 likker up
 lil bro
@@ -124501,6 +125327,7 @@ limu kohu
 lin-log
 linalyl acetate
 linalyl isobutyrate
+linden-tree
 lindy hop
 lindy hopping
 lindy-hop
@@ -124844,6 +125671,7 @@ lip sync
 lip wisdom
 lip wrestle
 lip-deep
+lip-labor
 lip-labour
 lip-lock
 lip-locked
@@ -125298,6 +126126,7 @@ live with
 live with one's wife's family
 live with oneself
 live within oneself
+live-action
 live-and-let-live
 live-ball era
 live-chat
@@ -125348,6 +126177,9 @@ living conditions
 living constitution
 living dead
 living death
+living diaper
+living donation
+living donor
 living end
 living floor
 living fossil
@@ -125616,7 +126448,6 @@ lockdown drill
 locked and loaded
 locked fault
 locked groove
-locked merchandise
 locked nucleic acid
 locked rotor amp
 locked up
@@ -125688,6 +126519,7 @@ log scaler
 log slate
 log spam
 log splitter
+log table
 log washer
 log-book
 log-burner
@@ -125736,6 +126568,8 @@ logic programming
 logic-chopper
 logical address
 logical atomism
+logical block address
+logical block addressing
 logical calculus
 logical clock
 logical complement
@@ -126183,6 +127017,7 @@ look beyond
 look beyond the end of one's nose
 look beyond the tip of one's nose
 look book
+look both ways
 look daggers
 look down
 look down on
@@ -126249,6 +127084,7 @@ look upon
 look what the cat dragged in
 look what the cat drug in
 look what the cat's dragged in
+look what the wind blew in
 look who
 look who the cat dragged in
 look who's talking
@@ -126477,6 +127313,7 @@ loss prevention
 loss ratio
 loss-maker
 loss-making
+lossless junction
 lost and found
 lost articles
 lost cause
@@ -126659,6 +127496,7 @@ love scene
 love script
 love seat
 love slave
+love someone like a brother
 love song
 love spoon
 love spud
@@ -126750,6 +127588,7 @@ low churchman
 low context culture
 low cost carrier
 low decile
+low end
 low exercise price option
 low explosive
 low fantasy
@@ -126901,6 +127740,7 @@ low-tech
 low-thoughted
 low-toned
 low-value
+low-velocity
 low-water mark
 low-wine
 low-wire
@@ -127089,6 +127929,7 @@ lunar cataclysm
 lunar caustic
 lunar colony
 lunar cycle
+lunar deity
 lunar distance
 lunar eclipse
 lunar hay fever
@@ -127254,6 +128095,7 @@ lytic infection
 lytico-bodig
 lyxonic acid
 lèse majesté
+lèse-majesté
 m dash
 m'learned friends
 m-ary
@@ -127330,6 +128172,7 @@ machine politics
 machine room
 machine screw
 machine shop
+machine taper
 machine that goes "ping"
 machine tool
 machine translation
@@ -128341,6 +129184,8 @@ male-gazey
 male-identified
 male-pattern violence
 male-to-female
+male-to-male cable
+male-to-male cord
 maleamic acid
 maledicta balloon
 malefic planet
@@ -128845,6 +129690,7 @@ many such cases
 many thanks
 many time
 many times
+many years ago
 many-banded krait
 many-bodied
 many-body problem
@@ -128998,6 +129844,7 @@ margaritic acid
 margate fish
 margate grunt
 margherita pizza
+margin alert
 margin call
 margin debt
 margin of error
@@ -129377,6 +130224,7 @@ mass effect
 mass energy
 mass extinction
 mass extinction event
+mass favourite
 mass finishing
 mass flow
 mass fraction
@@ -129403,6 +130251,7 @@ mass report
 mass shift
 mass shooter
 mass shooting
+mass spam
 mass spec
 mass spectrograph
 mass spectrometer
@@ -129411,6 +130260,7 @@ mass spectrum
 mass start
 mass starvation
 mass storage
+mass suicide
 mass surveillance
 mass transit
 mass transportation
@@ -129712,6 +130562,7 @@ mauve box
 mauve stinger
 maverick brand
 mavis skate
+maw shot
 maw worm
 maw-gut
 maw-worm
@@ -129753,7 +130604,6 @@ maximum usable frequency
 maximum wage
 maximum-security
 may God be my witness
-may God damn you
 may God have mercy on your soul
 may I
 may I help you
@@ -129773,9 +130623,11 @@ may you live in interesting times
 may-pole
 maya bird
 mayapple rust
+maybe another day
 maybe another time
 maybe baby bias
 maybe baby effect
+maybe not
 maybe so
 maybe type
 mayonnaise face
@@ -129880,6 +130732,7 @@ mean free path
 mean free time
 mean girl
 mean hitting time
+mean it
 mean machine
 mean motion
 mean people suck
@@ -129912,6 +130765,8 @@ mean-mug
 mean-spirited
 meandric number
 meaning of life
+meaning-text model
+meaning-text theory
 means of exchange
 means of grace
 means of labor
@@ -130137,7 +130992,6 @@ medical cannabis
 medical center
 medical certificate
 medical condition
-medical cybernetics
 medical desert
 medical doctor
 medical ethics
@@ -130184,6 +131038,7 @@ medio-passive
 medio-passivization
 mediocrity principle
 mediterranean sea
+medium Earth orbit
 medium dead
 medium drink
 medium dry
@@ -130291,6 +131146,7 @@ mega-structure
 mega-synagogue
 mega-volt
 mega-watt
+megabase pair
 megaelectron volt
 megalight-year
 megamouth shark
@@ -130322,6 +131178,7 @@ mell of a hess
 mellic acid
 mellitic acid
 mellitic anhydride
+mellow bug
 mellow out
 mellow yellow
 melo-dramatic
@@ -130416,6 +131273,8 @@ memorial rose
 memorial service
 memory B cell
 memory T cell
+memory balloon
+memory ballooning
 memory bank
 memory barrier
 memory box
@@ -130498,6 +131357,7 @@ mental breakdown
 mental calculation
 mental calculator
 mental case
+mental cleft
 mental cruelty
 mental deficient
 mental disease
@@ -130563,6 +131423,7 @@ merchant banker
 merchant ensign
 merchant flag
 merchant fleet
+merchant iron
 merchant marine
 merchant mariner
 merchant navy
@@ -130976,6 +131837,7 @@ methylol urea
 methylrosaniline chloride
 methylstictic acid
 methylthioninium chloride
+metopic suture
 metre gauge
 metre per second
 metre stick
@@ -131342,12 +132204,16 @@ middle-grounder
 middle-income trap
 middle-man
 middle-market
+middle-nameless
 middle-of-the-road
 middle-of-the-roader
 middle-of-the-roadism
 middle-of-the-roadness
+middle-range
 middle-road
 middle-roader
+middle-school
+middle-schooler
 middle-sized
 middleweight spaceship
 middling sort
@@ -131661,6 +132527,8 @@ mill-wand
 millage tax
 mille graines
 milled peat
+millennial gray
+millennial grey
 millennial pause
 millennial pink
 millennial whoop
@@ -131865,6 +132733,7 @@ mini diskette
 mini ephedrine
 mini excavator
 mini floppy
+mini hi-fi
 mini hi-fi system
 mini job
 mini mastiff
@@ -131873,6 +132742,8 @@ mini roundabout
 mini rugby
 mini skip
 mini splints
+mini stereo
+mini stereo system
 mini stroke
 mini tower
 mini-Neptune
@@ -131917,6 +132788,7 @@ mini-page
 mini-putt
 mini-retirement
 mini-roundabout
+mini-series
 mini-shinkansen
 mini-skirt
 mini-stroke
@@ -132069,6 +132941,7 @@ mintleaf beebalm
 minus pool
 minus sign
 minus well
+minus-alpha-pinene
 minus-one
 minus-plus sign
 minuscule cursive
@@ -132121,6 +132994,7 @@ mirror life
 mirror match
 mirror matter
 mirror neuron
+mirror pronouns
 mirror punishment
 mirror server journal
 mirror site
@@ -132148,6 +133022,7 @@ mis-hit
 mis-housed
 mis-pass
 mis-sell
+mis-shapen
 mis-shoe
 mis-shunt
 mis-sing
@@ -132833,11 +133708,14 @@ money collection
 money cowry
 money crop
 money dance
+money disorder
 money does not smell
 money does not stink
 money doesn't grow on trees
 money dysmorphia
+money dysmorphic
 money dysphoria
+money dysphoric
 money economy
 money for jam
 money for old rope
@@ -133016,6 +133894,7 @@ monkey up
 monkey walk
 monkey wheel
 monkey wrench
+monkey wrench in the works
 monkey wrencher
 monkey wrenching
 monkey's allowance
@@ -133195,6 +134074,7 @@ moon carrot
 moon child
 moon cricket
 moon daisy
+moon deity
 moon dog
 moon eye
 moon face
@@ -133202,9 +134082,11 @@ moon facies
 moon flask
 moon garden
 moon gate
+moon god
 moon guitar
 moon illusion
 moon jelly
+moon jellyfish
 moon jump
 moon landing
 moon language
@@ -133378,6 +134260,7 @@ more and more
 more at eleven
 more betoken
 more by token
+more confusing than a Rubik's Cube
 more confusing than a Rubik's cube
 more cry than wool
 more cushion for the pushin'
@@ -133424,6 +134307,7 @@ more than one can shake a stick at
 more than one cares to mention
 more than someone has had cooked dinners
 more than someone has had hot dinners
+more than that
 more than you can shake a stick at
 more to the point
 more's the pity
@@ -133530,6 +134414,7 @@ mortgage deed
 mortgage lender
 mortgage lifter
 mortgage packager
+mortgage roll
 mortgage-backed
 mortgage-backed security
 mortification root
@@ -133608,6 +134493,7 @@ most like
 most muscular
 most of all
 most of the time
+most ricky-tick
 most significant bit
 most significant byte
 most valuable player
@@ -134141,10 +135027,13 @@ much as
 much good may it do someone
 much grass
 much less
+much needed
 much obliged
 much of a muchness
 much to be said
+much too
 much what
+much-needed
 much-what
 muchos gracias
 mucic acid
@@ -134401,6 +135290,7 @@ multi-license
 multi-masted
 multi-messenger astronomy
 multi-million
+multi-millionaire
 multi-modal
 multi-omic
 multi-omics
@@ -134428,6 +135318,7 @@ multi-purpose
 multi-racial
 multi-reference
 multi-resistant
+multi-shipper
 multi-skilled
 multi-sport
 multi-stakeholder
@@ -134447,6 +135338,7 @@ multi-user
 multi-user dungeon
 multi-valenced
 multi-vari chart
+multi-voltage
 multi-wavelength
 multi-word
 multi-word expression
@@ -134750,9 +135642,11 @@ mussel digger
 mussel shrimp
 mussel-crusher
 must get in front
+must have
 must have killed a Chinaman
 must needs
 must not
+must watch
 must weight
 must-buy
 must-have
@@ -134832,7 +135726,6 @@ mutton-fisted
 mutton-monger
 mutton-thumper
 mutual admiration society
-mutual aid
 mutual assured destruction
 mutual combat
 mutual friend
@@ -134940,6 +135833,7 @@ my watch has ended
 my way or the highway
 my word
 myalgic encephalomyelitis
+myall snake
 myasthenia gravis
 mycelia sterilia
 myco-heterotroph
@@ -135150,6 +136044,7 @@ naked as the day one was born
 naked broomrape
 naked catfish
 naked domain
+naked dress
 naked eye
 naked hawksbeard
 naked lady
@@ -135288,6 +136183,7 @@ napkin math
 napkin rash
 napkin ring
 nappa leather
+nappy area
 nappy bag
 nappy bank
 nappy bin
@@ -135309,6 +136205,7 @@ nappy pin
 nappy pod
 nappy rash
 nappy service
+nappy sprayer
 nappy stacker
 nappy table
 nappy warmer
@@ -135382,9 +136279,11 @@ nasal consonant
 nasal cycle
 nasal demon
 nasal discharge
+nasal douche
 nasal fossa
 nasal index
 nasal irrigation
+nasal lavage
 nasal mutation
 nasal nerve
 nasal obstruction
@@ -136045,6 +136944,7 @@ neo-Hegelian
 neo-Hegelianism
 neo-Hellenic
 neo-Hellenism
+neo-Hittite
 neo-Kantian
 neo-Kantianism
 neo-Lamarckian
@@ -136482,7 +137382,6 @@ neutron matter
 neutron number
 neutron optics
 neutron poison
-neutron radiation
 neutron scattering
 neutron spectrometry
 neutron star
@@ -136498,6 +137397,7 @@ never been kissed
 never better
 never change a running system
 never eat shredded wheat
+never eat soggy Weet-Bix
 never eat soggy waffles
 never eat soggy wheat
 never event
@@ -136524,6 +137424,7 @@ never trust me
 never waste a crisis
 never you mind
 never-Trumper
+never-be
 never-do-well
 never-dying
 never-ending
@@ -136577,8 +137478,10 @@ new duck disease
 new energy vehicle
 new entrant
 new fangled
+new game
 new game +
 new game plus
+new game+
 new ginger
 new guard
 new historicism
@@ -136632,6 +137535,7 @@ new starter
 new thinking
 new town
 new up
+new variant Creutzfeldt–Jakob disease
 new wave
 new waver
 new wavish
@@ -136706,6 +137610,7 @@ newton meter
 newton metre
 newton-meter
 newton-metre
+next Friday
 next big thing
 next door
 next friend
@@ -136734,6 +137639,9 @@ next-generation
 next-generation network
 next-level
 next-to-last
+next-to-ness
+nexus flip
+nexus flipping
 nga-pee
 ngaio weevil
 ngo hiang
@@ -136853,6 +137761,7 @@ nigga-nod
 nigger baby
 nigger chaser
 nigger choker
+nigger duck
 nigger gallery
 nigger head
 nigger heaven
@@ -136960,6 +137869,7 @@ night snake
 night soil
 night soil man
 night spot
+night stand
 night start
 night stick
 night sweats
@@ -137007,6 +137917,7 @@ night-riding
 night-sky
 night-soil
 night-stalker
+night-stand
 night-time
 night-tripping
 night-watch
@@ -137254,6 +138165,7 @@ no bigs
 no body
 no body, no crime
 no bones about it
+no borax, no glue
 no brainer
 no bucks, no Buck Rogers
 no bueno
@@ -137263,6 +138175,7 @@ no cap
 no chance
 no changer
 no chill
+no choice
 no claims bonus
 no clue
 no comment
@@ -137295,6 +138208,7 @@ no fish, no dinner
 no fixed abode
 no flies on
 no fly list
+no free lunch
 no free lunch theorem
 no frills
 no fun
@@ -137343,6 +138257,7 @@ no lone zone
 no longer
 no longer with us
 no love lost
+no luck
 no man
 no man is an island
 no man's land
@@ -137575,6 +138490,7 @@ no-roll
 no-scope
 no-score draw
 no-see-um
+no-self
 no-sell
 no-sew
 no-show
@@ -137619,6 +138535,7 @@ noble-minded
 noble-mindedness
 noblesse oblige
 nobody crab
+nobody else
 nobody ever went broke underestimating the good taste of the American people
 nobody ever went broke underestimating the good taste of the American public
 nobody ever went broke underestimating the intelligence of the American people
@@ -137649,6 +138566,7 @@ nodding acquaintance
 nodding blue lily
 nodding disease
 nodding donkey
+nodding onion
 nodding syndrome
 nodding thistle
 nodding trillium
@@ -137785,6 +138703,7 @@ non-24-hour sleep-wake disorder
 non-A, non-B hepatitis
 non-A-E hepatitis
 non-Abelian
+non-American
 non-Antipodean
 non-Arab
 non-Archimedean
@@ -137824,6 +138743,7 @@ non-Newtonian flow
 non-Newtonian fluid
 non-Newtonian liquid
 non-PC
+non-Pali
 non-Pama-Nyungan
 non-Roman
 non-Russian
@@ -137913,6 +138833,7 @@ non-believer
 non-believing
 non-belligerent
 non-benchmark
+non-biased
 non-binariness
 non-binarity
 non-binary
@@ -138163,6 +139084,7 @@ non-franchised
 non-free software
 non-freeware
 non-fren
+non-friability
 non-friend
 non-friendly
 non-fulfilment
@@ -138221,6 +139143,7 @@ non-incompetent
 non-increasing
 non-infected
 non-infectious
+non-infinite
 non-inflammability
 non-inflected
 non-infrastructure
@@ -138243,6 +139166,7 @@ non-issue
 non-ju
 non-judgemental
 non-judgementally
+non-judgmental
 non-judgmentally
 non-juring
 non-killing
@@ -138389,6 +139313,7 @@ non-practising
 non-precious
 non-precision approach
 non-predictable
+non-preemptable
 non-prefabricated
 non-prejudicial
 non-prerequisite
@@ -138431,6 +139356,7 @@ non-random
 non-randomized
 non-rational
 non-reading
+non-real
 non-realtime
 non-rebreather
 non-recent
@@ -138505,6 +139431,7 @@ non-selfdual
 non-sensational
 non-sense
 non-sensical
+non-sentient
 non-sequential
 non-sequitous
 non-sequitur
@@ -139008,6 +139935,11 @@ nosebleed section
 nosema disease
 nosey parker
 nosey-parker
+nosey-parkerdom
+nosey-parkering
+nosey-parkerishness
+nosey-parkerism
+nosey-parkery
 nosh off
 nosh-up
 nostalgia goggles
@@ -139042,10 +139974,12 @@ not as black as one is painted
 not as green as one is cabbage-looking
 not at all
 not at home to
+not at this hour
 not bad
 not be able to hit the broad side of a barn
 not be caught dead
 not bear thinking about
+not before
 not before time
 not but
 not by any manner of means
@@ -139100,8 +140034,10 @@ not in a million years
 not in the least
 not in the slightest
 not invented here
+not just
 not just a pretty face
 not just another pretty face
+not just anyone
 not know one is born
 not know what hit one
 not know what one is missing
@@ -139126,12 +140062,14 @@ not much of anything
 not much to look at
 not my circus, not my monkeys
 not necessarily
+not now
 not on
 not on your Nellie
 not on your life
 not on your nellie
 not on your nelly
 not on your tintype
+not once
 not one
 not one bit
 not one's first rodeo
@@ -139167,9 +140105,12 @@ not to put too fine a word on it
 not to say
 not to speak of
 not to worry
+not today
 not touch with a barge pole
 not touch with a ten-foot pole
 not up
+not very
+not very far
 not want to do that
 not wanted on voyage
 not while pussy's a cat
@@ -139310,6 +140251,7 @@ nouvelle cuisine
 nouvelle vague
 nova remnant
 nova trova
+nova-like
 novelty act
 novelty song
 novelty theory
@@ -139336,6 +140278,7 @@ now you mention it
 now you tell me
 now you're cooking
 now you're talking
+now, more than ever
 now, now
 now-a-days
 now-adays
@@ -139466,6 +140409,7 @@ nude beach
 nude number
 nude pact
 nude run
+nude-in
 nudge ahead
 nudge nudge wink wink
 nudge out
@@ -139554,7 +140498,6 @@ number five
 number four
 number game
 number girl
-number homophone
 number line
 number needed to harm
 number nine
@@ -139648,6 +140591,7 @@ nursing assistant
 nursing bottle
 nursing bra
 nursing chair
+nursing cover
 nursing father
 nursing home
 nursing informatics
@@ -139699,6 +140643,7 @@ nutcracker phenomenon
 nutcracker syndrome
 nutmeg geranium
 nutmeg liver
+nutmeg mannikin
 nutmeg pigeon
 nutmeg psychosis
 nutmeg yew
@@ -139940,6 +140885,7 @@ obstetrician-gynecologist
 obstipum abdomen
 obstruct the field
 obstruction of justice
+obturator foramen
 obtuse angle
 obtuse horn shell
 obtuse triangle
@@ -140570,6 +141516,7 @@ oh my Zeus
 oh my days
 oh my fuck
 oh my fucking God
+oh my fucking god
 oh my glob
 oh my god
 oh my god particle
@@ -140641,6 +141588,7 @@ oil filter
 oil firing
 oil gas
 oil green
+oil heater
 oil lamp
 oil mill
 oil of brick
@@ -140772,6 +141720,7 @@ old flame
 old fogey
 old fogy
 old folks
+old folks home
 old folks' home
 old franc
 old friend
@@ -141089,6 +142038,7 @@ on and off
 on and on
 on and poppin'
 on and popping
+on another note
 on any view
 on average
 on background
@@ -141636,6 +142586,7 @@ on-die
 on-duty
 on-field
 on-glide
+on-going
 on-guard
 on-hand
 on-hanger
@@ -141763,6 +142714,7 @@ one fat lady
 one fell swoop
 one fifth
 one finger salute
+one fingered salute
 one flesh
 one foot
 one for all, all for one
@@ -141804,6 +142756,7 @@ one man's terrorist is another man's freedom fighter
 one man's trash is another man's treasure
 one may as well hang for a sheep as a lamb
 one million
+one minute
 one minute man
 one moment
 one moment, please
@@ -141818,6 +142771,7 @@ one night with Venus, a lifetime with Mercury
 one ninth
 one o'clock
 one of His Majesty's bad bargains
+one of Jehovah's Witnesses
 one of a kind
 one of these days
 one of these odd-come-shortlies
@@ -141890,6 +142844,7 @@ one's back is up
 one's bark is worse than one's bite
 one's belly thinks one's throat has been cut
 one's blood is up
+one's blood runs cold
 one's born days
 one's cake is dough
 one's cotton socks off
@@ -141928,6 +142883,7 @@ one's time is one's own
 one's turn in the barrel
 one's way
 one's word is law
+one, two, three, up
 one-act
 one-acter
 one-ahead
@@ -141942,6 +142898,7 @@ one-armed
 one-armed bandit
 one-armed router
 one-banana problem
+one-blink town
 one-camel town
 one-celled
 one-child policy
@@ -141968,6 +142925,7 @@ one-eyed snake
 one-eyed trouser snake
 one-fifth
 one-finger salute
+one-fingered salute
 one-flowered wintergreen
 one-footed
 one-form
@@ -142087,7 +143045,6 @@ one-way street
 one-way ticket
 one-way ticket to Palookaville
 one-way time
-one-way traffic
 one-window
 one-woman
 one-woman band
@@ -142141,6 +143098,7 @@ onion thrips
 onion-skinned
 onion-y
 onionin A
+online advertising
 online banking
 online date
 online dating
@@ -142353,6 +143311,7 @@ open sores
 open source
 open sourceror
 open space
+open species
 open sunshine
 open syllable
 open system
@@ -142410,12 +143369,14 @@ open-earedness
 open-end fund
 open-ended
 open-ended contract
+open-ended question
 open-endedly
 open-endedness
 open-ender
 open-eyed
 open-face
 open-faced
+open-faced sandwich
 open-field
 open-field system
 open-field test
@@ -142473,9 +143434,11 @@ opening hours
 opening move
 opening night
 opening of an envelope
+opening sequence
 opening speech
 opening statement
 opening time
+opening titles
 openside flanker
 openwork stocking
 opera bouffe
@@ -142501,6 +143464,7 @@ operating depth
 operating expenditure
 operating expense
 operating income
+operating leverage
 operating loss
 operating room
 operating room table
@@ -142560,6 +143524,7 @@ opo squash
 oportuzumab monatox
 opossum shrimp
 oppo research
+oppo taco
 opportunistic infection
 opportunity class
 opportunity comes knocking
@@ -142731,6 +143696,7 @@ orange dwarf
 orange filefish
 orange flower water
 orange flowering jessamine
+orange foxtail
 orange goods
 orange grove
 orange gum
@@ -143197,6 +144163,7 @@ our asses
 our era
 our kid
 our lass
+our time come
 ourang outang
 ourang-outan
 ourang-outang
@@ -143222,6 +144189,7 @@ out hike
 out lap
 out like a light
 out loud
+out now
 out of
 out of a job
 out of a nightmare
@@ -143595,6 +144563,7 @@ oven-dodger
 oven-like
 oven-proof
 oven-ready
+over 'n' out
 over 9000
 over a barrel
 over again
@@ -143678,6 +144647,7 @@ over-cruel
 over-dimensional
 over-diversify
 over-dressed
+over-eat
 over-educate
 over-educated
 over-education
@@ -143727,8 +144697,10 @@ over-respect
 over-richness
 over-ridden
 over-ripe
+over-run
 over-secrete
 over-sensitive
+over-simplification
 over-stimulation
 over-supinate
 over-supination
@@ -143840,6 +144812,7 @@ own motion
 own time, own target
 own up
 own-account
+own-goal
 owner's equity
 owner-driver
 owner-occupier
@@ -143922,6 +144895,7 @@ oxygen holocaust
 oxygen lance
 oxygen mask
 oxygen pulse
+oxygen revolution
 oxygen saturation
 oxygen stone
 oxygen tank
@@ -143936,6 +144910,7 @@ oxygen-18
 oxygen-poor
 oxygenation catastrophe
 oxygenation crisis
+oxygenation event
 oxygenation holocaust
 oxyhydrogen light
 oxylium ion
@@ -144119,6 +145094,7 @@ packet station
 packet switching
 packet tracer
 packet-boat
+packet-switched
 packhorse bridge
 packing case
 packing for Perth
@@ -144597,6 +145573,7 @@ pampas deer
 pampas fox
 pampas grass
 pamper pack
+pamper packed
 pamper packer
 pamper packing
 pamper-packer
@@ -144876,6 +145853,7 @@ paper fight
 paper flier
 paper flower
 paper flyer
+paper fortune teller
 paper gauge
 paper general
 paper gold
@@ -145124,6 +146102,7 @@ parallel postulate
 parallel processing
 parallel ruler
 parallel slalom
+parallel society
 parallel text
 parallel transport
 parallel universe
@@ -145503,6 +146482,7 @@ particoloured bear
 particular Church
 particular average
 particular church
+particular council
 particular integral
 particulate inheritance
 particulate matter
@@ -145904,6 +146884,7 @@ pastry stout
 pastry wheel
 pasture day moth
 pasture out
+pasture rose
 pasture thistle
 pasture tick
 pastures new
@@ -145931,6 +146912,7 @@ patch test
 patch together
 patch up
 patch-box
+patch-clamp
 patch-ice
 patch-up
 patched-up
@@ -146387,6 +147369,7 @@ peanut ball
 peanut brittle
 peanut bunker
 peanut butter
+peanut butter and jam
 peanut butter and jelly
 peanut butter cup
 peanut buttery
@@ -146862,6 +147845,7 @@ penduline tit
 pendulous abdomen
 pendulum arbitration
 pendulum clock
+pendulum reading
 pendulum saw
 pendulum wire
 pene-enclave
@@ -146872,7 +147856,6 @@ penetration aid
 penetration line
 penetration pricing
 penetration test
-penetrative sex
 peng ting
 penguin diagram
 penguin suit
@@ -147049,6 +148032,7 @@ people-carrier
 people-first language
 people-person
 people-pleaser
+people-pleasing
 people-pod
 people-smuggler
 people-smuggling
@@ -147202,6 +148186,7 @@ perfect fourth
 perfect game
 perfect gold standard test
 perfect infinitive
+perfect information
 perfect interval
 perfect is the enemy of good
 perfect is the enemy of good enough
@@ -147312,6 +148297,7 @@ periodical comet
 periodontal ligament
 peripheral artery disease
 peripheral brain
+peripheral bus
 peripheral device
 peripheral membrane protein
 peripheral nervous system
@@ -147411,6 +148397,7 @@ perpetual motion machine of the first kind
 perpetual motion machine of the second kind
 perpetual pill
 perpetual revolution
+perpetual stew
 perpetuum mobile
 perplex number
 perrhenic acid
@@ -147425,6 +148412,7 @@ persistence hunter
 persistence hunting
 persistent adrenarche syndrome
 persistent cloaca
+persistent cookie
 persistent cross-site scripting
 persistent depressive disorder
 persistent genital arousal disorder
@@ -147730,7 +148718,10 @@ phantom word
 pharaoh ant
 pharaoh's chicken
 pharaonic circumcision
+pharmaceutical chemistry
 pharmaceutical grade
+pharmaceutical industry
+pharmaceutical sciences
 pharyngeal arch
 pharyngeal constrictor
 pharyngeal plexus
@@ -147799,6 +148790,7 @@ phenotypic suppression
 phenotypic switching
 phenotypic value
 phenoxymethyl penicillin
+phenpropionic acid
 phentermine-fenfluramine
 phenyl azide
 phenyl mercaptan
@@ -147812,6 +148804,7 @@ phenylethylbarbituric acid
 phenylglyoxylic acid
 phenyllactic acid
 phenylmagnesium bromide
+phenylpropionic acid
 pheophorbide A
 phi phenomenon
 phi-feature
@@ -147882,6 +148875,7 @@ phone up
 phone zombie
 phone-bank
 phone-box
+phone-free
 phone-in
 phone-in show
 phone-out
@@ -148045,6 +149039,8 @@ photosantonic acid
 photosensitive retinal ganglion cell
 photovoltaic cell
 photovoltaic effect
+phrasal adjective
+phrasal adverb
 phrasal noun
 phrasal preposition
 phrasal prepositional verb
@@ -148462,6 +149458,7 @@ pie-house
 pie-in-the-sky
 pie-wipe
 piebald dolphin
+piece and crisps
 piece bag
 piece broker
 piece by piece
@@ -149054,6 +150051,7 @@ pink up
 pink velvet cake
 pink water
 pink wave
+pink weed
 pink windmills
 pink-billed lark
 pink-collar
@@ -149089,9 +150087,11 @@ pint-sized
 pintail comb
 pintail duck
 pinto bean
+pinwheel flower
 pinwheel sandwich
 pinxterbloom azalea
 pinyon jay
+pinyon nut
 pion rocket
 pioneer axon
 pioneer scarf
@@ -149115,6 +150115,7 @@ pipe dope
 pipe down
 pipe dream
 pipe fitter
+pipe hawk
 pipe in
 pipe key
 pipe lighter
@@ -149141,6 +150142,7 @@ pipe-and-slippers
 pipe-bowl
 pipe-dream
 pipe-fish
+pipe-hawk
 pipe-hitter
 pipe-layer
 pipe-light
@@ -149217,7 +150219,9 @@ piss be upon him
 piss bottle
 piss clam
 piss down
+piss filter
 piss flap
+piss hot
 piss in a quill
 piss in someone's Cheerios
 piss in someone's chips
@@ -149236,6 +150240,7 @@ piss money up the wall
 piss more than one drinks
 piss off
 piss on
+piss on from a great height
 piss on someone's Cheerios
 piss on someone's bonfire
 piss on someone's campfire
@@ -149297,10 +150302,13 @@ pissy-eyed
 pissy-pants
 pistachio green
 pistachio nut
+pistol carbine
 pistol furniture
 pistol grip
+pistol pipe
 pistol shrimp
 pistol squat
+pistol-pipe
 pistol-whip
 pistols at dawn
 piston engine
@@ -149958,6 +150966,7 @@ play by the rules
 play catch-up
 play cheat
 play chicken
+play clock
 play club
 play date
 play dead
@@ -150117,6 +151126,7 @@ play-book
 play-by-email
 play-by-mail
 play-by-play
+play-by-snail-mail
 play-calling
 play-doh
 play-of-color
@@ -150214,6 +151224,7 @@ plectranthoic acid
 pledge of allegiance
 plein air
 plein-air
+plenary council
 plenary court
 plenary indulgence
 plenary session
@@ -150437,6 +151448,7 @@ plus or minus
 plus sign
 plus size
 plus ça change
+plus-alpha-pinene
 plus-minus
 plus-minus method
 plus-minus sign
@@ -150596,6 +151608,7 @@ point bar
 point blank
 point blanket
 point break
+point charge
 point cloud
 point d'appui
 point defence
@@ -150644,6 +151657,7 @@ point of vision
 point one's toes
 point out
 point paper
+point particle
 point penalty
 point person
 point presser
@@ -151068,6 +152082,7 @@ poly-wheel
 poly-yne
 polyacrylic acid
 polyadenylic acid
+polyalkenoic acid
 polyamide-imide
 polyamine oxidase
 polyaminopolycarboxylic acid
@@ -151447,12 +152462,14 @@ pop-rock
 pop-sci
 pop-science
 pop-skull
+pop-tart
 pop-top
 pop-under
 pop-up
 pop-up advertisement
 pop-up book
 pop-up menu
+pop-up shop
 pop-up store
 popcorn ceiling
 popcorn chicken
@@ -151621,6 +152638,7 @@ port knocking
 port of call
 port of entry
 port of registry
+port replicator
 port tong
 port triggering
 port wine
@@ -151638,7 +152656,9 @@ porta-puppy
 portable art
 portable computer
 portable executable
+portable phone
 portable stove
+portable telephone
 portable toilet
 portage pack
 portal hypertension
@@ -151673,6 +152693,7 @@ portland cement
 portmanteau agreement
 portmanteau film
 portmanteau word
+portrait painting
 pos pron
 poses plastiques
 posh nosh
@@ -151729,6 +152750,7 @@ positive neutrality
 positive number
 positive organ
 positive polarity item
+positive pole
 positive punk
 positive recurrence
 positive recurrent
@@ -151765,6 +152787,7 @@ possibility of reverter
 possible world
 possibles bag
 possibles sack
+possum apple
 possum belly
 possum pie
 post Covid
@@ -151859,6 +152882,8 @@ post-affiliation
 post-alveolar
 post-anarchism
 post-anarchist
+post-anthropocentric
+post-anthropocentrism
 post-apocalypse
 post-apocalyptic
 post-auction
@@ -151910,6 +152935,8 @@ post-doc
 post-donation
 post-dubstep
 post-dynastic
+post-election
+post-electoral
 post-entry
 post-epidemic
 post-exilic
@@ -151960,6 +152987,7 @@ post-liberal
 post-liberalism
 post-lingual deafness
 post-match
+post-meal
 post-mediaeval
 post-medieval
 post-metal
@@ -152679,6 +153707,7 @@ power series
 power set
 power sharing
 power shovel
+power shower
 power slide
 power snack
 power source
@@ -152850,6 +153879,7 @@ pray to the porcelain goddess
 prayer bead
 prayer beads
 prayer book
+prayer box
 prayer bump
 prayer card
 prayer circle
@@ -152924,7 +153954,9 @@ pre-anthropic
 pre-apologize
 pre-apology
 pre-apprenticeship
+pre-approval
 pre-approval letter
+pre-approve
 pre-arrange
 pre-aspiration
 pre-assembled
@@ -152940,6 +153972,7 @@ pre-campaign
 pre-cancerous
 pre-charge
 pre-charged
+pre-chorus
 pre-colonial
 pre-combat
 pre-combustion
@@ -152947,6 +153980,7 @@ pre-conciliar
 pre-conditional
 pre-cooked
 pre-cooler
+pre-covid
 pre-crastination
 pre-creative
 pre-crime
@@ -152979,6 +154013,7 @@ pre-ejaculate
 pre-ejaculatory
 pre-ejection
 pre-election
+pre-electoral
 pre-embryo
 pre-eminence
 pre-eminent
@@ -153024,7 +154059,9 @@ pre-interview
 pre-lash
 pre-launch
 pre-loved
+pre-made
 pre-main-sequence star
+pre-make
 pre-marriage
 pre-match
 pre-mechanization
@@ -153034,6 +154071,7 @@ pre-metro
 pre-millennial
 pre-mine
 pre-moderation
+pre-modern
 pre-mortem
 pre-mortuary science
 pre-notice
@@ -153125,6 +154163,7 @@ pre-trained
 pre-transmission
 pre-treat
 pre-trial
+pre-twist
 pre-vaccine
 pre-viewed
 pre-vis
@@ -153161,6 +154200,7 @@ precious few
 precious little
 precious metal
 precious stone
+precipice bond
 precipitable water
 precipitation hardening
 precipitation reaction
@@ -153174,6 +154214,7 @@ precision dice
 precision die
 precision medicine
 precocious pseudopuberty
+precocious puberty
 precursor enzyme
 precursor tip
 predator bug
@@ -153656,6 +154697,7 @@ prima donnaish
 prima faciality
 prima facie
 prima materia
+prima scriptura
 primacy effect
 primae noctis
 primaeval forest
@@ -153814,6 +154856,7 @@ princess carry
 princess consort
 princess cut
 princess dress
+princess flower
 princess parts
 princess regent
 princess sickness
@@ -154111,6 +155154,7 @@ pro-Semite
 pro-Slavic
 pro-Sunni
 pro-Western
+pro-Witness
 pro-Zionism
 pro-Zionist
 pro-Zionistic
@@ -154548,6 +155592,8 @@ proof reader
 proof sheet
 proof spirit
 proof system
+proof-listen
+proof-listener
 proof-of-concept
 proof-of-work
 proof-read
@@ -154827,6 +155873,7 @@ providing that
 province-level city
 province-level municipality
 provincial capital
+provincial council
 provincial park
 proving ground
 provisional government
@@ -155256,6 +156303,7 @@ puddle jump
 puddle jumper
 puddle pirate
 puddle up
+puddle-hound
 puddle-jump
 puddle-jumper
 puddled bar
@@ -155636,6 +156684,7 @@ punch-drunk
 punch-drunkenness
 punch-hole
 punch-out
+punch-press
 punch-up
 punch-up session
 punched card
@@ -155890,6 +156939,7 @@ purser's name
 purseweb spider
 purslane tree
 pursuit curve
+pursuit plane
 pursuivant at arms
 purulent bronchitis
 pus jewel
@@ -156579,6 +157629,7 @@ quadruple witching
 quadruple-click
 quadruple-header
 quadruple-masted
+quae erant demonstranda
 quaesitic acid
 quaffing wine
 quagga mussel
@@ -157375,6 +158426,7 @@ race traitor
 race walk
 race walker
 race walking
+race war
 race-bait
 race-baiter
 race-baity
@@ -157599,6 +158651,7 @@ radio tag
 radio tagging
 radio telegraphy
 radio telemetry
+radio telephone
 radio telephony
 radio telescope
 radio tower
@@ -157666,6 +158719,7 @@ radix tree
 radjah shelduck
 radon seed
 raffia palm
+raffle sale
 raft dog
 raft duck
 raft port
@@ -157760,6 +158814,7 @@ rail head
 rail joint
 rail line
 rail motor
+rail out
 rail replacement service
 rail roko
 rail saver
@@ -158430,6 +159485,7 @@ rattlesnake plantain
 rattlesnake root
 rattlesnake weed
 raunch out
+rave drug
 rave hook
 rave-up
 ravel bread
@@ -158524,9 +159580,11 @@ re-Latinise
 re-Latinize
 re-Mirandize
 re-Polonizing
+re-Sovietisation
 re-Sovietization
 re-Sovietize
 re-abuse
+re-accelerate
 re-acceptance
 re-accomplishment
 re-accredit
@@ -158553,6 +159611,7 @@ re-assure
 re-attach
 re-auction
 re-available
+re-awakening
 re-brand
 re-build
 re-bury
@@ -158564,12 +159623,14 @@ re-cite
 re-clone
 re-cognise
 re-cognize
+re-collect
 re-combine
 re-commission
 re-consider
 re-constrict
 re-constriction
 re-construct
+re-count
 re-cover
 re-covering
 re-create
@@ -158582,6 +159643,7 @@ re-deport
 re-design
 re-dip
 re-direct
+re-do
 re-dye
 re-earn
 re-echo
@@ -158606,6 +159668,7 @@ re-embroider
 re-embroidery
 re-emerge
 re-emergence
+re-emit
 re-emphasise
 re-employ
 re-enable
@@ -158617,16 +159680,20 @@ re-encode
 re-encoder
 re-encounter
 re-endorse
+re-endow
 re-energisation
+re-energize
 re-enforce
 re-engage
 re-engine
 re-engineer
 re-engineering
+re-engrave
 re-enlarge
 re-enlist
 re-enlistment
 re-enter
+re-enthrone
 re-entrable
 re-entrance
 re-entrant
@@ -158702,6 +159769,7 @@ re-occlude
 re-occur
 re-odorant
 re-oil
+re-open
 re-opening
 re-order
 re-org
@@ -158710,6 +159778,7 @@ re-organization
 re-organize
 re-parole
 re-partner
+re-post
 re-pot
 re-presentation
 re-print
@@ -158776,6 +159845,7 @@ re-user
 re-ventilate
 re-verify
 re-view
+re-watch
 re-wear
 re-word
 re-write
@@ -159062,6 +160132,8 @@ rear-vision mirror
 rear-wheel drive
 rearguard action
 rearing bit
+rearrange one's guts
+rearrange one's insides
 rearrange someone's face
 rearrange someone's guts
 rearrange the deck chairs on the Titanic
@@ -159123,6 +160195,7 @@ reception wiki
 receptive aphasia
 receptive language
 recess appointment
+recession hair
 recession pop
 recharge basin
 recharge one's batteries
@@ -159448,6 +160521,7 @@ red liquor
 red liquorice
 red lives matter
 red lynx
+red magic lily
 red maids
 red mamey
 red mammee
@@ -159572,7 +160646,9 @@ red snake
 red snapper
 red snow
 red sorrel
+red spider
 red spider lily
+red spider mite
 red spiral
 red spiral galaxy
 red sprite
@@ -159672,6 +160748,7 @@ red-card
 red-carpet
 red-carpetful
 red-chested cuckoo
+red-coat
 red-cockaded woodpecker
 red-collared lorikeet
 red-collared widowbird
@@ -159693,6 +160770,7 @@ red-faced cormorant
 red-fan parrot
 red-fin shark
 red-finned shark
+red-flag
 red-flaggy
 red-flanked bluetail
 red-footed falcon
@@ -159882,6 +160960,7 @@ reeducation camp
 reef and beef
 reef break
 reef crab
+reef earing
 reef knoll
 reef knot
 reef line
@@ -159958,6 +161037,8 @@ reflecting pool
 reflecting telescope
 reflection mapping
 reflection nebula
+reflection-in-action
+reflection-on-action
 reflet tile
 reflex angle
 reflex arc
@@ -160002,6 +161083,7 @@ refrigerator truck
 refrigerator-freezer
 refuge island
 refugee camp
+refuse bin
 refuse chute
 refuse collector
 refuse-collector
@@ -160049,6 +161131,7 @@ regional lockout
 regional metamorphism
 regional municipality
 regional power
+register file
 register grate
 register office
 register plate
@@ -160329,6 +161412,7 @@ rendez-vous
 rendle-balk
 renegade row
 renew acquaintances
+renew one's vows
 renewable energy
 renewal theory
 renin-angiotensin system
@@ -160414,6 +161498,7 @@ report card
 report for duty
 report out
 reported speech
+reporter's note
 reporting mark
 reporting point
 reporting verb
@@ -161057,6 +162142,7 @@ rhyming dictionary
 rhyming slang
 rhythm and blues
 rhythm and grime
+rhythm box
 rhythm game
 rhythm guitar
 rhythm method
@@ -161172,6 +162258,7 @@ rice stick
 rice stitch
 rice swift
 rice tenrec
+rice vermicelli
 rice vinegar
 rice water
 rice weevil
@@ -161724,6 +162811,7 @@ ringtail civet
 ringtail possum
 ringtailed cat
 ringtailed possum
+ringtone rap
 ringy dingy
 ringy-dingy
 rink rash
@@ -161767,6 +162855,7 @@ rip into
 rip it up
 rip off
 rip off the band-aid
+rip off the bandage
 rip on
 rip one
 rip out
@@ -161800,6 +162889,7 @@ ripgut fence
 ripgut grass
 rippa rugby
 ripping iron
+ripple box
 ripple carry
 ripple effect
 ripple mark
@@ -161849,6 +162939,7 @@ risk one's life
 risk one's life and limb
 risk one's neck
 risk premium
+risk production
 risk profile
 risk society
 risk universe
@@ -162010,6 +163101,7 @@ road shower
 road sign
 road slug
 road spikes
+road spray
 road steamer
 road switcher
 road tax
@@ -162692,6 +163784,7 @@ root user
 root vegetable
 root vole
 root word
+root zone
 root-and-branch
 root-and-brancher
 root-bound
@@ -163409,6 +164502,7 @@ rude boy
 rue anemone
 rue the day
 rue-bargain
+rue-leaved saxifrage
 ruel-bone
 ruffed grouse
 ruffed lemur
@@ -163814,6 +164908,7 @@ rune poem
 rune spread
 rune-rister
 rune-risting
+runic divination
 runner bean
 runner poison
 runner stone
@@ -163991,6 +165086,7 @@ rôle-player
 rôle-playing game
 rônier palm
 röck döts
+s'you later
 s---hole
 s--t
 s--thole
@@ -164207,6 +165303,7 @@ safari suit
 safari supper
 safari zoo
 safari-goer
+safe account scam
 safe and sound
 safe area
 safe as a kitten
@@ -164602,6 +165699,7 @@ salt spray test
 salt stick
 salt substitute
 salt tectonics
+salt the earth
 salt the mine
 salt tree
 salt truck
@@ -164672,6 +165770,8 @@ same same
 same same but different
 same sex
 same shit, different toilet
+same story
+same thing
 same time tomorrow
 same to you
 same, same, but different
@@ -165103,6 +166203,7 @@ sauce-alone
 sauce-y
 saucepan fish
 saucer eyes
+saucer jelly
 saucer pass
 saucer peach
 saucer-eyed
@@ -165228,6 +166329,7 @@ saw pit
 saw sam sai
 saw set
 saw shark
+saw stroke
 saw the baby in half
 saw tooth
 saw wood
@@ -165483,6 +166585,7 @@ scarlet letter
 scarlet lightning
 scarlet lily beetle
 scarlet macaw
+scarlet milkweed
 scarlet minivet
 scarlet oak
 scarlet percher
@@ -165653,6 +166756,7 @@ schoolboy error
 schoolboy knot
 schoolgirl pin
 schoolies week
+schooner bum
 schooner on the rocks
 schwa deletion
 schwa indogermanicum
@@ -165836,6 +166940,7 @@ scorpion volley
 scot and lot
 scot-free
 scotch egg
+scotch fillet
 scotch mint
 scotch-hoppers
 scotched collops
@@ -165897,6 +167002,7 @@ scratch an itch
 scratch and sniff
 scratch below the surface
 scratch beneath the surface
+scratch brush
 scratch by
 scratch card
 scratch comma
@@ -165921,6 +167027,7 @@ scratch together
 scratch up
 scratch wig
 scratch-and-dent
+scratch-brush
 scratch-built
 scratch-comma
 scratch-made
@@ -166855,6 +167962,8 @@ second party
 second person
 second position
 second preimage attack
+second puberty
+second quest
 second rate
 second reading
 second row
@@ -166880,6 +167989,7 @@ second uncle
 second unit
 second violin
 second violinist
+second virginity
 second wave
 second wind
 second year
@@ -167008,6 +168118,7 @@ secondary valence
 secondary vaping
 secondary victimisation
 secondary victimization
+secondary virginity
 secondary work
 secondary world
 secondhand embarrassment
@@ -167023,6 +168134,7 @@ secret government
 secret handshake
 secret history
 secret ink
+secret key
 secret menu
 secret of Polichinelle
 secret police
@@ -167395,6 +168507,7 @@ self control
 self defence
 self defense
 self discrimination
+self goal
 self harm
 self image
 self indulgence
@@ -167524,6 +168637,7 @@ self-characterisation
 self-characterization
 self-chastisement
 self-check out
+self-check-out
 self-checkout
 self-circumcision
 self-citation
@@ -167669,6 +168783,8 @@ self-distance
 self-distribute
 self-distrust
 self-documenting
+self-domesticate
+self-domestication
 self-doubt
 self-dried
 self-drilling
@@ -167733,6 +168849,9 @@ self-exile
 self-exiled
 self-existence
 self-existent
+self-experiment
+self-experimental
+self-experimentation
 self-explanatory
 self-expression
 self-extinguishing
@@ -167877,6 +168996,7 @@ self-liquidator
 self-loader
 self-loading
 self-loathing
+self-loathing Jew
 self-locking
 self-loop
 self-love
@@ -167944,6 +169064,7 @@ self-perception
 self-perfect
 self-perpetuating
 self-perpetuation
+self-persuasion
 self-pity
 self-pitying
 self-pityingly
@@ -167960,6 +169081,7 @@ self-pollute
 self-polluter
 self-pollution
 self-portrait
+self-portraitist
 self-possessed
 self-possessedly
 self-possession
@@ -168151,8 +169273,10 @@ self-taught
 self-terminate
 self-test
 self-thinking
+self-timer
 self-titled
 self-tormentor
+self-trapped
 self-treatment
 self-trigger
 self-trolling
@@ -168904,6 +170028,7 @@ session band
 session bean
 session beer
 session bitter
+session cookie
 session data
 session fixation
 session hijacking
@@ -169925,6 +171050,7 @@ shed roof
 shed skin
 shed tears
 sheda grass
+shedding game
 shee shee
 sheek kebab
 sheela-na-gig
@@ -170012,6 +171138,7 @@ shelf-stable
 shelf-talker
 shelf-wobbler
 shelf-worn
+shell bean
 shell bed
 shell casing
 shell company
@@ -170466,6 +171593,7 @@ shoe lift
 shoe money
 shoe polish
 shoe print
+shoe shine brush
 shoe shop
 shoe size
 shoe spoon
@@ -170491,6 +171619,7 @@ shoemaker's end
 shoemaker, stick to your last
 shoepeg corn
 shoeshine boy
+shoeshine brush
 shoeshine girl
 shoestring catch
 shoestring mushroom
@@ -170841,6 +171970,7 @@ short-run
 short-sea shipping
 short-sell
 short-sheet
+short-ship
 short-short story
 short-shorts
 short-sighted
@@ -171142,6 +172272,7 @@ show-stopping
 show-stoppingly
 show-through
 show-up
+shower attachment
 shower bath
 shower cap
 shower chair
@@ -171152,6 +172283,7 @@ shower head
 shower in a can
 shower of shit
 shower of shite
+shower rail
 shower rose
 shower seat
 shower shoe
@@ -171409,6 +172541,7 @@ side chair
 side chest
 side chick
 side dish
+side door
 side drum
 side effect
 side entrance
@@ -171468,6 +172601,7 @@ side wall
 side wheeler
 side whiskers
 side with
+side-bitch
 side-blotched lizard
 side-blown
 side-boob
@@ -171658,6 +172792,7 @@ signal post
 signal processing
 signal strength
 signal timing
+signal tower
 signal tracer
 signal transduction
 signal-noise ratio
@@ -171721,6 +172856,7 @@ silent mode
 silent mutation
 silent number
 silent partner
+silent picture
 silent policeman
 silent service
 silent treatment
@@ -171809,6 +172945,7 @@ silly point
 silly putty
 silly sausage
 silly season
+silly slicing
 silly straw
 silly string
 silly window syndrome
@@ -171866,6 +173003,7 @@ silver jubilee
 silver king
 silver knight
 silver lace
+silver lace vine
 silver lining
 silver mail
 silver maple
@@ -172023,6 +173161,7 @@ simplified sewerage
 simply connected
 simsun permutation
 simulated annealing
+simulated casualty
 simulation hypothesis
 simulator sickness
 simultaneous death
@@ -172185,6 +173324,7 @@ single-elimination tournament
 single-entry
 single-eyed
 single-figure
+single-fingered salute
 single-first cousin
 single-foot
 single-hand
@@ -172291,6 +173431,7 @@ sinus rhythm
 sinus tachy
 sinus tachycardia
 sinus venosus
+sinus-wise
 sinusitis-infertility syndrome
 sip and puff
 sip-and-see
@@ -172458,6 +173599,7 @@ six perfections
 six pointer
 six senses
 six thousand
+six to one, half dozen to another
 six ways for Sunday
 six ways from Sunday
 six ways till Sunday
@@ -172559,6 +173701,7 @@ sixty-three
 sixty-two
 size difference
 size down
+size effect
 size inflation
 size matters
 size queen
@@ -172639,6 +173782,7 @@ skew curve
 skew field
 skew gear
 skew hermitian
+skew normal distribution
 skew rolling mill
 skew surface
 skew symmetric
@@ -173332,6 +174476,7 @@ slick up
 slick-tech
 slicka pad
 slicked-back
+slicker brush
 slickseed fuzzybean
 slicky boy
 slicky slide
@@ -173351,13 +174496,13 @@ slide scanner
 slide show
 slide tackle
 slide trombone
+slide truck
 slide trumpet
 slide valve
 slide whistle
 slide-butt
 slide-show
 slide-tackle
-slide-talking
 slider phone
 slider pump
 sliding door
@@ -173891,10 +175036,12 @@ smart as a whip
 smart as paint
 smart ass
 smart band
+smart beta
 smart bomb
 smart card
 smart casual
 smart chance
+smart charging
 smart city
 smart contract
 smart cookie
@@ -174074,6 +175221,7 @@ smoke someone's pole
 smoke sponge
 smoke stand
 smoke test
+smoke the whole pack
 smoke tower
 smoke tree
 smoke up
@@ -174106,6 +175254,7 @@ smoked meat
 smoked salmon
 smoked salmon socialist
 smokeless powder
+smokeless zone
 smoker's bow
 smoker's chair
 smoker's cough
@@ -174729,6 +175878,7 @@ so and so
 so as
 so as to
 so be it
+so called
 so crazy it just might work
 so crazy it might just work
 so far
@@ -174773,6 +175923,7 @@ so to say
 so to speak
 so true
 so true, bestie
+so way
 so what
 so-and-so
 so-called
@@ -174898,6 +176049,7 @@ social credit
 social creditism
 social cue
 social death
+social deduction
 social democracy
 social democrat
 social democratic
@@ -175061,6 +176213,7 @@ sock link
 sock monkey
 sock puppet
 sock puppeteer
+sock puppetry
 sock yarn
 sock-knocking
 socked on the nose
@@ -175298,6 +176451,7 @@ soft pedal
 soft peddle
 soft photon
 soft pine
+soft ping
 soft play
 soft point
 soft porn
@@ -175306,6 +176460,7 @@ soft real-time
 soft reboot
 soft redirect
 soft reference
+soft release
 soft reset
 soft return
 soft robot
@@ -175460,12 +176615,15 @@ sol-faism
 sol-faist
 sol-gel
 sol-lunar
+sola ecclesia
 sola gratia
 sola scriptura
 sola topee
 sola topi
 solan goose
 solar apex
+solar barge
+solar barque
 solar battery
 solar boat
 solar calendar
@@ -175478,6 +176636,7 @@ solar corona
 solar cross
 solar cycle
 solar day
+solar deity
 solar eclipse
 solar energetic particle
 solar energy
@@ -175485,6 +176644,7 @@ solar engine
 solar filament
 solar flare
 solar gain
+solar god
 solar halo
 solar hero
 solar lamp
@@ -175635,6 +176795,7 @@ sombre rock chat
 sombre tit
 some body
 some day
+some days you eat the bear and some days the bear eats you
 some days you get the bear, other days the bear gets you
 some few
 some kind of
@@ -175667,9 +176828,9 @@ somehow or the other
 someone else
 someone's arse off
 someone's ass off
-someone's blood runs cold
 someone's butt off
 someone's cup of tea
+someone's doing
 someone's driveway doesn't go all the way to the road
 someone's goose is cooked
 someone's headlights are on
@@ -175712,6 +176873,8 @@ sometimes a cigar is just a cigar
 sometimes food
 sometimes you eat the bear and sometimes the bear eats you
 somewhere along the line
+somewhere around
+somewhere around there
 somewhere else
 somewhere over the rainbow
 son cubano
@@ -176026,6 +177189,7 @@ soup up
 soup-and-fish
 soup-and-fish suit
 soup-to-nuts
+soup-up
 soupe du jour
 soupe maigre
 soupe-maigre
@@ -176048,6 +177212,7 @@ sour honey
 sour krout
 sour mash
 sour milk
+sour mix
 sour note
 sour on
 sour puss
@@ -176193,6 +177358,7 @@ soy sauce
 soy yogurt
 soya bean
 soya sauce
+soyabean oil
 soybean oil
 soybean rust
 soylent green
@@ -176370,6 +177536,7 @@ spaghetti bolognaise
 spaghetti bolognese
 spaghetti bowl
 spaghetti bowl effect
+spaghetti box
 spaghetti chart
 spaghetti code
 spaghetti diagram
@@ -176633,6 +177800,7 @@ special ops
 special order sale
 special pleader
 special pleading
+special police
 special proceeding
 special prosecutor
 special rapporteur
@@ -176961,6 +178129,7 @@ spice box
 spice brown
 spice drop
 spice fiend
+spice finch
 spice rack
 spice up
 spice-box
@@ -176971,7 +178140,6 @@ spick-and-spanness
 spiculum amoris
 spicy cough
 spicy pillow
-spicy straight
 spicy tooth
 spider beetle
 spider box
@@ -176980,7 +178148,6 @@ spider cloth
 spider crab
 spider diagram
 spider diver
-spider fear
 spider flower
 spider fly
 spider gag
@@ -177018,7 +178185,6 @@ spider wrench
 spider's ankles
 spider's web
 spider-catcher
-spider-fear
 spider-hunting wasp
 spider-like
 spider-panic
@@ -177214,6 +178380,7 @@ spiny-cheeked honeyeater
 spiny-headed worm
 spiny-tailed lizard
 spinycheek sleeper
+spinycoat anglerfish
 spiraeic acid
 spiral DRAGN
 spiral arm
@@ -177237,6 +178404,7 @@ spirit bear
 spirit blue
 spirit board
 spirit cabinet
+spirit child
 spirit communication
 spirit doctor
 spirit duck
@@ -177785,6 +178953,7 @@ spotted whistling duck
 spotted wolffish
 spotted woodpecker
 spotted-tailed quoll
+spottedback coralblenny
 spotter plane
 spotting scope
 spousal support
@@ -178675,6 +179844,7 @@ standing seam
 standing start
 standing stock
 standing stone
+standing water
 standing wave
 standing-room
 standpoint epistemology
@@ -179148,6 +180318,7 @@ stave rhyme
 stave-acre
 stave-rhyme
 stay and play
+stay around
 stay at home
 stay away
 stay back
@@ -179164,6 +180335,7 @@ stay on
 stay out
 stay over
 stay put
+stay still
 stay tackle
 stay the course
 stay the distance
@@ -179275,6 +180447,7 @@ steam jack
 steam jacket
 steam loco
 steam locomotive
+steam lorry
 steam navvy
 steam off
 steam organ
@@ -179405,6 +180578,7 @@ stem family
 stem for stem
 stem ginger
 stem group
+stem lettuce
 stem mammal
 stem node
 stem siren
@@ -179487,6 +180661,7 @@ step-child
 step-climb
 step-country
 step-cousin
+step-dad
 step-dance
 step-daughter
 step-down
@@ -179542,7 +180717,6 @@ stepping-stone
 stepsister-in-law
 stercoral pocket
 sterculic acid
-stereo camera
 stereo cinematography
 stereo microscope
 stereo-cinematography
@@ -180288,6 +181462,7 @@ storm center
 storm chaser
 storm cloud
 storm cone
+storm crow
 storm door
 storm drain
 storm drum
@@ -180340,9 +181515,12 @@ story editor
 story line
 story of my life
 story of one's life
+story point
 story time
 story, bud
 story-poem
+story-teller
+story-telling
 stoss therapy
 stottie cake
 stotty cake
@@ -180754,6 +181932,7 @@ street worker
 street workout
 street-arab
 street-cleaner
+street-keeper
 street-lamp
 street-legal
 street-light
@@ -181352,6 +182531,7 @@ style brisé
 style guide
 style it out
 style manual
+style name
 style of cause
 style sheet
 style sheet language
@@ -181654,6 +182834,7 @@ such or such
 such that
 such-and-such
 such-like
+suck a bag of dicks
 suck a big one
 suck a lemon
 suck all the air out of
@@ -181919,6 +183100,7 @@ suicide burn
 suicide by cop
 suicide cable
 suicide club
+suicide cord
 suicide cult
 suicide disease
 suicide door
@@ -182243,11 +183425,13 @@ sumti tcita
 sun and planet gear
 sun anemone shrimp
 sun ball
+sun barge
 sun bath
 sun bear
 sun beetle
 sun bittern
 sun blind
+sun blocker
 sun bonnet
 sun bunny
 sun candle
@@ -182256,6 +183440,7 @@ sun cross
 sun cure
 sun dance
 sun deck
+sun deity
 sun disc
 sun dog
 sun fever
@@ -182317,6 +183502,7 @@ sun-fruit
 sun-glade
 sun-glassed
 sun-glasses
+sun-god
 sun-grebe
 sun-kissed
 sun-like
@@ -182325,7 +183511,6 @@ sun-shine
 sun-shot
 sun-splashed
 sun-stead
-sun-synchronous orbit
 sun-tight
 sun-up
 sun-worshiper
@@ -182473,6 +183658,7 @@ super-ager
 super-almighty
 super-ancient
 super-app
+super-blizzard
 super-centenarian
 super-clean
 super-combined
@@ -182561,6 +183747,7 @@ supergreenhouse effect
 superheavy element
 superheavy tank
 superheavy water
+superhero chin
 superhero insurance
 superhero landing
 superheterodyne receiver
@@ -182761,6 +183948,7 @@ surf clam
 surf duck
 surf kayaking
 surf lifesaving
+surf line
 surf mat
 surf punk
 surf rider
@@ -182880,6 +184068,7 @@ surrogate proxy
 surround and drown
 surround sound
 surround-sound
+surry fex
 sursum corda
 surveillance approach
 surveillance camera
@@ -182955,6 +184144,7 @@ swab jockey
 swack up
 swack-up
 swaddling clothes
+swaddling hypothesis
 swaddling-clothes
 swag bag
 swag it
@@ -183142,6 +184332,7 @@ sweat trousers
 sweat-cloth
 sweat-dappled
 sweat-house
+sweat-stained
 sweat-trousers
 sweater dress
 sweater girl
@@ -183423,6 +184614,7 @@ swine-hound
 swing and a miss
 swing at anchor
 swing away
+swing back
 swing bin
 swing both ways
 swing bridge
@@ -183726,6 +184918,7 @@ syrup of ipecac
 system administrator
 system architecture
 system bus
+system call
 system card
 system of equations
 system of numeration
@@ -183832,6 +185025,7 @@ table drink
 table football
 table game
 table grape
+table header
 table hockey
 table hymn
 table knife
@@ -183954,6 +185148,7 @@ tactical loading
 tactical pen
 tactical realism
 tactical role-playing game
+tactical urbanism
 tactical vote
 tactical voting
 tactical warning
@@ -183981,6 +185176,7 @@ taffy pull
 tag alder
 tag along
 tag and rag
+tag board
 tag cloud
 tag day
 tag end
@@ -184033,6 +185229,7 @@ tail event
 tail feather
 tail fin
 tail flap
+tail gate
 tail grape
 tail gunner
 tail gut
@@ -184066,6 +185263,7 @@ tail-beam
 tail-buzzer
 tail-end
 tail-ender
+tail-gate
 tail-gut
 tail-napkin
 tail-off
@@ -184270,6 +185468,7 @@ take huff
 take ill
 take in
 take in hand
+take in turn
 take in water
 take into account
 take into consideration
@@ -184523,6 +185722,7 @@ take the time
 take the trouble
 take the veil
 take the waters
+take the wax out of one's ears
 take the weight off
 take the weight off one's feet
 take the wheel
@@ -184623,6 +185823,7 @@ tale bearer
 tale of the tape
 tale of woe
 tale-bearer
+tale-bearing
 tale-book
 tale-teller
 talent community
@@ -184652,6 +185853,7 @@ talk at
 talk back
 talk big
 talk box
+talk business
 talk cock
 talk dirty
 talk down
@@ -184795,6 +185997,7 @@ tally up
 tally-ho
 tally-man
 tally-woman
+talm bout
 talonic acid
 tam o'shanter
 tam-o'-shanter
@@ -184931,6 +186134,7 @@ tape dispenser
 tape drive
 tape echo
 tape gag
+tape guard
 tape knot
 tape library
 tape machine
@@ -185024,6 +186228,7 @@ tarka dhal
 tarnished plant bug
 taro cake
 taro-patch fiddle
+tarot card
 tarsal bone
 tarsal gland
 tarsal tunnel syndrome
@@ -185069,6 +186274,7 @@ taste pore
 taste-off
 taste-test
 tasting menu
+tasting room
 tasty cheese
 tat up
 tata for now
@@ -185182,6 +186388,7 @@ tax value
 tax wedge
 tax wrapper
 tax year
+tax-deductibility
 tax-deductible
 tax-deferred
 tax-efficient
@@ -185193,7 +186400,9 @@ tax-sheltered
 tax-time
 taxable income
 taxi dance
+taxi dance hall
 taxi dancer
+taxi dancing
 taxi distance
 taxi driver
 taxi fare
@@ -185204,6 +186413,8 @@ taxi stand
 taxi uncle
 taxi yellow
 taxi-cabman
+taxi-dance
+taxi-dance hall
 taxi-dancer
 taxi-distance
 taxi-driver
@@ -185573,12 +186784,15 @@ tee-tee
 teed off
 teem down
 teem with
+teen baby
 teen drama
 teen patti
 teen-age
 teen-aged
 teen-ager
 teen-nap
+teen-sit
+teen-sitter
 teensy weensy
 teensy-tinsy
 teensy-weensy
@@ -186491,6 +187705,7 @@ that's what he said
 that's what she said
 that's what's up
 that's why
+that's why they play the game
 that's your lot
 that's your sort
 that-a-way
@@ -186576,7 +187791,6 @@ the bride at every wedding and the corpse at every funeral
 the buck stops here
 the burnt child dreads the fire
 the burnt child fears the fire
-the business
 the cake is a lie
 the call is coming from inside the house
 the camera never lies
@@ -186642,6 +187856,7 @@ the die is cast
 the dog ate my homework
 the dogs bark, but the caravan goes on
 the dogs bark, but the caravan moves on
+the dollar bean
 the dose makes the poison
 the double O
 the dress
@@ -186820,6 +188035,7 @@ the quality
 the quick brown fox jumps over the lazy dog
 the rabbit died
 the race that stops a nation
+the rest
 the rest is gravy
 the rest is history
 the revolution will not be televised
@@ -187027,7 +188243,9 @@ there are no stupid questions
 there are none so blind as those who will not see
 there are none so deaf as those who will not hear
 there are plenty more fish in the sea
+there are plenty more pebbles on the beach
 there are plenty of fish in the sea
+there are plenty of pebbles on the beach
 there are two sides to every question
 there are two sides to every story
 there away
@@ -187056,6 +188274,7 @@ there is no such thing as a free lunch
 there is no such thing as bad press
 there is no such thing as bad publicity
 there is no such thing as bad weather, only bad clothing
+there is no telling
 there is no there there
 there is no war in Ba Sing Se
 there is nothing more permanent than a temporary solution
@@ -187215,6 +188434,7 @@ theta wave
 theta-delta
 they hate us 'cause they ain't us
 they hit the Pentagon
+they said. It will be fun, they said
 they say
 they'll do it every time
 they're only after one thing
@@ -187238,6 +188458,7 @@ thick as two short planks
 thick client
 thick crust pizza
 thick ear
+thick end
 thick lip
 thick of things
 thick on the ground
@@ -187298,6 +188519,7 @@ thigh-shower
 thigh-slapper
 thigh-slapping
 thighed up
+thill-horse
 thimble connector
 thimble-rigger
 thin air
@@ -187532,12 +188754,14 @@ third-line forcing
 third-order
 third-party
 third-party claim
+third-party cookie
 third-person dual
 third-person effect
 third-person plural
 third-person shooter
 third-person singular
 third-personal
+third-pounder
 third-rate
 third-string
 third-stringer
@@ -187670,6 +188894,8 @@ thorn forest
 thorn in someone's side
 thorn in the flesh
 thorn tree
+thorn veld
+thorn veldt
 thorn-apple crystal
 thorn-tree
 thornless honey locust
@@ -187738,6 +188964,7 @@ thousand pardons
 thousand yard stare
 thousand-headed cabbage
 thousand-leaf
+thousand-legged worm
 thousand-legger
 thousand-legs
 thousand-mile stare
@@ -187837,6 +189064,7 @@ three years ago
 three's a crowd
 three-D
 three-and-out
+three-and-twenty
 three-bagger
 three-ball
 three-banded courser
@@ -187929,6 +189157,8 @@ three-quel
 three-revert rule
 three-ring
 three-ring circus
+three-score and ten
+three-score-and-ten
 three-second rule
 three-sheet
 three-shot
@@ -187962,6 +189192,8 @@ three-wheeler
 threefold law
 threepenny bit
 threepenny-bit
+threescore and ten
+threescore-and-ten
 threespine stickleback
 threetip sagebrush
 threetooth puffer
@@ -188040,6 +189272,8 @@ throne village
 throne-room
 throttle body
 throttle down
+throttle jockey
+throttle valve
 through and through
 through ball
 through bridge
@@ -188789,6 +190023,7 @@ timber rafting
 timber rattlesnake
 timber wolf
 timber yard
+timber-clad
 timber-land
 timber-toe
 timber-toes
@@ -188848,6 +190083,7 @@ time check
 time clause
 time clock
 time code
+time come
 time complexity
 time compression
 time constant
@@ -188898,6 +190134,7 @@ time famine
 time fault
 time first
 time flies
+time flies like an arrow; fruit flies like a banana
 time flies when you're having fun
 time for print
 time forgot
@@ -189309,6 +190546,9 @@ time-work
 time-worker
 time-worn
 time-zone
+time-zone arbitrage
+time-zone disease
+time-zone fatigue
 timed exclusive
 timed out
 timed text
@@ -189440,6 +190680,7 @@ tip back
 tip bait
 tip baiting
 tip credit
+tip creep
 tip cup
 tip down
 tip drill
@@ -189598,6 +190839,8 @@ title paramount
 title plan
 title policy
 title role
+title screen
+title sequence
 title track
 title-page
 tits and ass
@@ -190106,8 +191349,11 @@ tom-tom drum
 tom-tom drummer
 tom-tommer
 tomahawk chop
+tomahawk improvement
 tomahawk mark
+tomahawk settler
 tomahawk steak
+tomato cage
 tomato can
 tomato clownfish
 tomato concentrate
@@ -190130,6 +191376,7 @@ tomato sauce-y
 tomato saucey
 tomato saucy
 tomato soup
+tomato sphinx
 tomato surprise
 tomato water
 tomato worm
@@ -190217,6 +191464,7 @@ tongue drum
 tongue firmly in cheek
 tongue in cheek
 tongue in chic
+tongue job
 tongue kiss
 tongue lashing
 tongue map
@@ -190319,6 +191567,7 @@ too rich for one's blood
 too right
 too soon
 too too
+too true
 too-hard basket
 too-muchness
 toodle pip
@@ -190334,6 +191583,7 @@ tool of the trade
 tool of trade
 tool path
 tool post
+tool pusher
 tool room
 tool shed
 tool steel
@@ -190411,6 +191661,7 @@ top billing
 top bin
 top bollocks
 top boot
+top box
 top brass
 top cat
 top copy
@@ -190477,6 +191728,7 @@ top sheet
 top shelf
 top shell
 top snail
+top soil
 top speed
 top spot
 top surgeon
@@ -190537,6 +191789,7 @@ top-poster
 top-priority
 top-quality
 top-ranking
+top-rated
 top-rope
 top-roper
 top-secret
@@ -190600,6 +191853,7 @@ tore up
 toreador pants
 tori gate
 torikumi-hyo
+torn write
 tornadic waterspout
 tornado brain
 tornado chaser
@@ -190654,6 +191908,7 @@ torsion scale
 torsion subgroup
 torsion wrench
 torso tosser
+torso-tosser
 tort law
 torta ahogada
 torta pounder
@@ -190712,6 +191967,7 @@ tossed salad
 tosylic acid
 tot lot
 tot up
+tota scriptura
 total allergy syndrome
 total base number
 total bases
@@ -190735,10 +191991,12 @@ total ordering relation
 total package
 total quality management
 total recall
+total return
 total return swap
 total revenue
 total ring of fractions
 total running time
+total shareholder return
 total station
 total story time
 total synthesis
@@ -190748,6 +192006,7 @@ total-etch
 totality of the circumstances
 totally disconnected
 totally geodesic
+totally kind day
 totally ordered
 totally ordered set
 tote bag
@@ -190811,6 +192070,7 @@ touch the body
 touch the hem of someone's garment
 touch the hem of someone's robe
 touch tour
+touch typewriting
 touch typing
 touch up
 touch upon
@@ -190923,6 +192183,7 @@ tourist agency
 tourist area
 tourist attraction
 tourist card
+tourist class
 tourist court
 tourist destination
 tourist guide
@@ -191017,6 +192278,7 @@ town-and-gown
 town-building game
 town-clerk
 town-dweller
+townhall clock
 towns gas
 township music
 towzery gang
@@ -191033,6 +192295,7 @@ toxic positivity
 toxic shock syndrome
 toxic syndrome
 toxic waste
+toy block
 toy boy
 toy car
 toy collie
@@ -191082,6 +192345,7 @@ track and trace
 track bed
 track bike
 track brake
+track buffer
 track circuit
 track cycling
 track cyclist
@@ -191118,6 +192382,7 @@ track-road
 track-side
 track-to-track seek time
 trackage rights
+tracker dog
 tracker mortgage
 trackie bottoms
 trackie daks
@@ -191150,9 +192415,11 @@ trad bolted
 trad climber
 trad jazz
 trad pub
+trad wife
 trad-pub
 trade acceptance
 trade agreement
+trade association
 trade away
 trade balance
 trade barrier
@@ -191161,9 +192428,11 @@ trade blotter
 trade book
 trade card
 trade counter
+trade cycle
 trade date
 trade deal
 trade deficit
+trade discount
 trade dispute
 trade diversion
 trade dollar
@@ -191257,6 +192526,7 @@ traffic code
 traffic cone
 traffic conference area
 traffic cop
+traffic court
 traffic furniture
 traffic generator
 traffic island
@@ -191308,6 +192578,7 @@ trail net
 trail of tears
 trail off
 trail ridge scrub grasshopper
+trail rope
 trail-blazing
 trailer car
 trailer court
@@ -191371,6 +192642,7 @@ trainer sock
 training area
 training bib
 training bra
+training camp
 training collar
 training exercise
 training ground
@@ -191519,6 +192791,7 @@ transfer RNA
 transfer agent
 transfer earnings
 transfer exam
+transfer fee
 transfer function
 transfer list
 transfer market
@@ -191578,6 +192851,7 @@ transition zone
 transitional deacon
 transitional epithelium
 transitional jacket
+transitional justice
 transitional object
 transitional planet
 transitional provision
@@ -191803,6 +193077,7 @@ traverse sailing
 traverse table
 traversing platform
 travertine marble
+trawl net
 trawl whiting
 tray bon
 tray ceiling
@@ -191936,6 +193211,7 @@ tree sap
 tree seat
 tree shaking
 tree shrew
+tree snake
 tree sorrel
 tree sparrow
 tree spinach
@@ -191946,6 +193222,7 @@ tree surgery
 tree tent
 tree thinking
 tree toad
+tree tomato
 tree topper
 tree trunk
 tree tunnel
@@ -191964,6 +193241,7 @@ tree-kangaroo
 tree-line
 tree-lined
 tree-maker
+tree-of-heaven
 tree-ring
 tree-shrew
 tree-top
@@ -192293,6 +193571,9 @@ trip wire
 trip working
 trip-hammer
 trip-hop
+trip-sit
+trip-sitter
+trip-sitting
 trip-switch
 trip-trap
 trip-trapping
@@ -192640,6 +193921,7 @@ true leaf
 true lemur
 true love
 true lover's knot
+true lovers' knot
 true mahogany
 true melon
 true muonium
@@ -192732,6 +194014,7 @@ trundle-bed
 trunk breeches
 trunk briefs
 trunk call
+trunk hose
 trunk line
 trunk novel
 trunk or treat
@@ -192779,6 +194062,7 @@ trusty-dusty
 truth be told
 truth bomb
 truth book
+truth commission
 truth drug
 truth function
 truth is stranger than fiction
@@ -193015,6 +194299,7 @@ tuned in
 tung oil
 tung oil tree
 tung tree
+tung-oil tree
 tungsten carbide
 tungsten fluoride
 tungsten hexafluoride
@@ -193314,6 +194599,7 @@ turnip moth
 turnip sawfly
 turnip shell
 turnip tops
+turnip watch
 turnip-cabbage
 turnip-headed
 turnip-rooted parsley
@@ -193442,6 +194728,7 @@ twelve penny nail
 twelve stepper
 twelve-bar blues
 twelve-inch
+twelve-nine
 twelve-note
 twelve-ounce curls
 twelve-penny nail
@@ -193571,6 +194858,7 @@ twin prime pair
 twin quasar
 twin room
 twin screw
+twin set
 twin ship
 twin speech
 twin talk
@@ -193755,6 +195043,7 @@ two-dollar word
 two-double
 two-edged
 two-edged sword
+two-eyed
 two-eyed jack
 two-eyed steak
 two-faced
@@ -193842,6 +195131,7 @@ two-speed crossword
 two-spirit
 two-spirited
 two-spotted scoliid wasp
+two-spotted spider mite
 two-start
 two-state solution
 two-step
@@ -193883,6 +195173,7 @@ two-wheel drive
 two-wheel tractor
 two-wheeled
 two-wheeler
+twocoat coralblenny
 twopenny rope
 twopenny-ha'penny
 twopenny-halfpenny
@@ -194170,6 +195461,7 @@ umbrella organisation
 umbrella organization
 umbrella palm
 umbrella pine
+umbrella plant
 umbrella policy
 umbrella school
 umbrella stand
@@ -194372,6 +195664,7 @@ under the covers
 under the gun
 under the hammer
 under the hood
+under the illusion
 under the impression
 under the influence
 under the knife
@@ -194380,6 +195673,7 @@ under the loupe
 under the magnifying glass
 under the mahogany
 under the microscope
+under the name
 under the pump
 under the radar
 under the rose
@@ -194387,6 +195681,7 @@ under the rug
 under the rule
 under the saya
 under the sheets
+under the spotlight
 under the stars
 under the sun
 under the surface
@@ -194463,6 +195758,7 @@ underlying functor
 underlying set
 undern-bell
 undern-song
+undern-time
 underneath one's breath
 underpants gnome
 underpromise and overdeliver
@@ -195029,6 +196325,7 @@ upper camel case
 upper case
 upper case letter
 upper chamber
+upper circle
 upper class
 upper concave envelope
 upper crust
@@ -195141,6 +196438,7 @@ urad daal
 urad dahl
 urad dal
 urad dhal
+uraemic frost
 uramilic acid
 uran-ochre
 uran-utan
@@ -195203,7 +196501,9 @@ urea-formaldehyde
 uremic frost
 urethral bulb
 urethral fold
+urethral intercourse
 urethral meatus
+urethral sex
 urethral sphincter
 urethral syndrome
 urfa biber
@@ -195317,6 +196617,7 @@ user guide
 user interface
 user name
 user page
+user plane
 user story
 user time
 user's guide
@@ -195718,6 +197019,7 @@ variable star
 variable sweep
 variable tandem repeat locus
 variable valve timing
+variant Creutzfeldt–Jakob disease
 variant reading
 variation compass
 variation of the field
@@ -195845,6 +197147,7 @@ vegetable marrow
 vegetable mercury
 vegetable mucus
 vegetable oil
+vegetable oyster
 vegetable parchment
 vegetable rennet
 vegetable sheep
@@ -195981,6 +197284,7 @@ verb-framed
 verb-framing
 verb-object
 verb. sap.
+verbal adjective
 verbal assault
 verbal authority
 verbal communication
@@ -196085,6 +197389,7 @@ vertically-challenged
 vervain hummingbird
 vervain mallow
 vervet monkey
+very far
 very good
 very high frequency
 very important person
@@ -196165,6 +197470,7 @@ via media
 via munita
 via negativa
 via-satellite
+viatical settlement
 viatorial privilege
 vibe check
 vibe coder
@@ -196299,6 +197605,7 @@ video essayist
 video feedback
 video game
 video game console
+video game controller
 video gamer
 video games console
 video gaming
@@ -196372,6 +197679,7 @@ village fair
 village green
 village hall
 village idiot
+village panchayat
 village sign language
 village weaver
 villain of the week
@@ -196463,6 +197771,7 @@ violet snail
 violet tree
 violet wand
 violet-backed starling
+violet-bellied hummingbird
 violet-green swallow
 violet-tip
 violin maker
@@ -196828,6 +198137,7 @@ volatility buffer
 volcanic ash
 volcanic block
 volcanic bomb
+volcanic cone
 volcanic field
 volcanic glass
 volcanic lightning
@@ -197012,6 +198322,7 @@ w-buffering
 w-shingling
 w-w
 w-word
+wa-wa
 wabi-sabi
 waccy baccy
 wack out
@@ -197108,6 +198419,7 @@ wagoner's axe
 wagtail-tyrant
 wah lau
 wah pedal
+wah wah
 wah-wah
 wah-wah pedal
 waifs and strays
@@ -197256,6 +198568,7 @@ walk on air
 walk on broken glass
 walk on by
 walk on eggshells
+walk on one's lower lip
 walk on sunshine
 walk on the wild side
 walk on water
@@ -197487,10 +198800,12 @@ wanking sock
 wanky dots
 wanna bet
 wanna contraction
+wanna-be
 want ad
 want for nothing
 want in
 want list
+want must be one's master
 want no part of
 want one's bumps feeling
 want one's bumps felt
@@ -197501,6 +198816,7 @@ want to bet
 want to know
 want-away
 want-to
+want-to-be
 wanted cargo
 wanted list
 wanted notice
@@ -197558,6 +198874,7 @@ war leader
 war lord
 war machine
 war memorial
+war monger
 war movie
 war of aggression
 war of attrition
@@ -197620,6 +198937,7 @@ war-weariness
 war-weary
 war-work
 war-worker
+war-zone
 warble fly
 warbler-finch
 warbling vireo
@@ -197629,6 +198947,7 @@ ward off
 ward round
 warden of the mint
 warden system
+warding off
 wardrobe beetle
 wardrobe malfunction
 wardrobe malfunctioner
@@ -197687,7 +199006,9 @@ warming room
 warming up
 warming-room
 warmup jacket
+warn off
 warning bell
+warning card
 warning coloration
 warning shot
 warning sign
@@ -197840,6 +199161,7 @@ waste fellow
 waste gate
 waste good
 waste land
+waste no time
 waste not, want not
 waste of breath
 waste of existence
@@ -197938,6 +199260,8 @@ water adder
 water aerobics
 water allergy
 water anole
+water arum
+water ash
 water baby syndrome
 water bag
 water bailage
@@ -198005,6 +199329,7 @@ water chicken
 water chinquapin
 water clock
 water closet
+water clover
 water coconut
 water column
 water content
@@ -198042,6 +199367,7 @@ water fear
 water feature
 water fern
 water fight
+water filter
 water finds its level
 water finds its own level
 water fire
@@ -198148,6 +199474,7 @@ water park
 water parsnip
 water parting
 water penny
+water pennywort
 water pepper
 water pick
 water pie
@@ -198436,6 +199763,7 @@ wave train
 wave turn
 wave vector
 wave washing
+wave-like
 wave-mechanical
 wave-particle
 wave-particle duality
@@ -198448,6 +199776,7 @@ wavy-leaved eremophila
 wax and wane
 wax apple
 wax bean
+wax cap
 wax comb
 wax currant
 wax doll
@@ -198473,6 +199802,7 @@ wax someone's tail
 wax tablet
 wax the dolphin
 wax vesta
+wax vine
 wax wode
 wax-candle
 wax-colour
@@ -198576,6 +199906,7 @@ weak sore
 weak spot
 weak tea
 weak typing
+weak ulcer
 weak verb
 weak-bladdered
 weak-chinned
@@ -198846,6 +200177,8 @@ weeder course
 weedy hawksbeard
 weedy sea dragon
 week in, week out
+week of Saturdays
+week of Sundays
 week-day
 week-end
 week-long
@@ -198954,6 +200287,7 @@ wekiu bug
 welcome back
 welcome home
 welcome mat
+welcome page
 welcome pole
 welcome swallow
 welcome to my life
@@ -199037,7 +200371,9 @@ well up
 well versed
 well wagon
 well will
+well yes
 well, I never
+well, duh
 well, to be sure
 well, well
 well, well, well
@@ -199264,6 +200600,8 @@ western gorilla
 western gray kangaroo
 western grey kangaroo
 western hemisphere
+western hemlock
+western honey mesquite
 western marsh harrier
 western mastiff bat
 western olivaceous warbler
@@ -199276,6 +200614,7 @@ western poison oak
 western prickly juniper
 western pygmy blue
 western rat snake
+western red cedar
 western red lily
 western redbud
 western redcedar
@@ -199328,6 +200667,7 @@ wet feet, dry feet policy
 wet firecracker
 wet fish
 wet fly
+wet food
 wet gas
 wet goods
 wet haze
@@ -199341,6 +200681,7 @@ wet market
 wet mass
 wet meadow
 wet meter
+wet mop
 wet my lips
 wet nelly
 wet noodle
@@ -199431,6 +200772,7 @@ whacky tobacky
 whale away
 whale bacon
 whale barnacle
+whale catcher
 whale catfish
 whale fall
 whale fisher
@@ -199474,6 +200816,7 @@ what a tangled web we weave when first we practice to deceive
 what a way to go
 what about
 what about the children
+what already
 what am I, chopped liver
 what are friends for
 what are the odds
@@ -199515,9 +200858,11 @@ what does that have to do with the price of fish
 what does that have to do with the price of tea in China
 what does … mean
 what doesn't kill you makes you stronger
+what else
 what else is new
 what foot the shoe is on
 what for
+what fun
 what gives
 what go round come round
 what goes around comes around
@@ -199628,6 +200973,8 @@ what's bracking
 what's bred in the bone will come out in the flesh
 what's cooking
 what's cracking
+what's crappenin'
+what's crappening
 what's doing
 what's done cannot be undone
 what's done is done
@@ -199717,10 +201064,12 @@ whatever butters your muffin
 whatever butters your toast
 whatever creams your twinkie
 whatever floats your boat
+whatever happen
 whatever happens, happens
 whatever helps you sleep at night
 whatever humps your camel
 whatever it takes
+whatever man
 whatever melts your butter
 whatever next
 whatever sizzles your bacon
@@ -199730,6 +201079,7 @@ whatever will be, will be
 whatever winds your clock
 whatever you do
 whatever you say
+whatever, man
 wheal-worm
 wheat and chessboard problem
 wheat bag
@@ -200077,6 +201427,7 @@ whiskey stone
 whiskey tango foxtrot
 whiskey-jack
 whisky butter
+whisky fungus
 whisky jack
 whisky seat
 whisky tango foxtrot
@@ -200172,6 +201523,7 @@ white boy wasted
 white brass
 white bread
 white bream
+white bryony
 white cabbage
 white campion
 white cane
@@ -200452,6 +201804,7 @@ white truffle
 white turmeric
 white turpentine
 white turtlehead
+white underwing
 white up
 white van man
 white van speakers
@@ -200639,6 +201992,7 @@ whiting event
 whiting-mop
 whiting-time
 whitlow grass
+whittle away
 whittle down
 whittle down to size
 whittle the whalebone
@@ -200661,12 +202015,14 @@ who died and made you boss
 who died and made you king
 who died and made you president
 who died and made you queen
+who do you think you are
 who goes there
 who hurt you
 who keeps company with the wolf will learn to howl
 who keeps company with wolves, will learn to howl
 who knew
 who knows
+who me
 who pays the piper calls the tune
 who put a quarter in you
 who shot John
@@ -200700,6 +202056,7 @@ who's to say?
 who's who
 who's who in the zoo
 who's your daddy
+who, me
 who-dunnit
 who-hit-John
 who-knows-how-many
@@ -200953,7 +202310,6 @@ wienie roast
 wienie wagger
 wife acceptance factor
 wife beater
-wife brag
 wife carrying
 wife guy
 wife up
@@ -201427,6 +202783,7 @@ wine grape
 wine grower
 wine growing
 wine gum
+wine house
 wine key
 wine lake
 wine list
@@ -201438,7 +202795,9 @@ wine o'clock
 wine of opium
 wine palm
 wine rack
+wine rope
 wine route
+wine saver
 wine server
 wine shop
 wine steward
@@ -201467,9 +202826,11 @@ wine-cup
 wine-dark
 wine-glass
 wine-growing
+wine-house
 wine-key
 wine-ology
 wine-press
+wine-shop
 wine-tree
 wine-whine merger
 wing and prayer
@@ -201689,9 +203050,12 @@ wire-tap
 wire-to-wire
 wire-wheel
 wire-wove
+wireless Internet
 wireless adapter
+wireless broadband
 wireless cable
 wireless fidelity
+wireless internet
 wireless modem
 wireless network
 wireless operator
@@ -201761,6 +203125,8 @@ wit-wanton
 witch alder
 witch ball
 witch bottle
+witch craze
+witch cult
 witch doctor
 witch doctress
 witch elm
@@ -202006,10 +203372,12 @@ without prejudice
 without price
 without question
 without recourse
+without say anything
 without so much as a by your leave
 without so much as a by-your-leave
 without tea and biscuits
 without tears
+without think
 without trace
 without troubling the scorers
 without welt or guard
@@ -202066,6 +203434,7 @@ woke-washing
 wolf at the door
 wolf back
 wolf call
+wolf child
 wolf cub
 wolf cut
 wolf dog
@@ -202472,6 +203841,7 @@ word cloud
 word count
 word divider
 word family
+word finder
 word for word
 word formation
 word game
@@ -202670,6 +204040,7 @@ work-life balance
 work-master
 work-mistress
 work-place
+work-release
 work-safe
 work-shy
 work-stone
@@ -203054,6 +204425,7 @@ wrist spinner
 wrist strap
 wrist watch
 wrist wrap
+wrist-drop
 wrist-fall
 wrist-slap
 wrist-top
@@ -203179,6 +204551,7 @@ wye switch
 wylie-coat
 wyrd folk
 x factor
+x out
 x unit
 x video
 x-axis
@@ -203329,6 +204702,7 @@ yard of ale
 yard of clay
 yard of land
 yard of satin
+yard out
 yard pilot
 yard rope
 yard sale
@@ -203382,6 +204756,7 @@ yea-sayer
 yeah nah
 yeah no
 yeah right
+yeah same
 yeah whatever
 yeah, nah
 yeah, no
@@ -203416,6 +204791,7 @@ year-round
 year-rounder
 year-to-date
 year-to-year
+years ago
 years young
 years-long
 yeast bread
@@ -203450,6 +204826,7 @@ yellow baboon
 yellow back
 yellow badge
 yellow bark
+yellow bear
 yellow bedstraw
 yellow beet
 yellow bells
@@ -203550,6 +204927,7 @@ yellow peril
 yellow perilist
 yellow phosphorus
 yellow pine
+yellow plum
 yellow pocket
 yellow pond lily
 yellow pond-lily
@@ -203610,6 +204988,7 @@ yellow-bellied sea snake
 yellow-bellied slider
 yellow-bellied tit
 yellow-billed chough
+yellow-billed cuckoo
 yellow-billed duck
 yellow-billed egret
 yellow-billed grosbeak
@@ -203713,6 +205092,7 @@ yerba santa
 yes and
 yes and amen
 yes and no
+yes boss
 yes homo
 yes ma'am
 yes man
@@ -203720,6 +205100,7 @@ yes please
 yes sir
 yes to death
 yes way
+yes whatever
 yes woman
 yes, Virginia
 yes, and
@@ -203727,6 +205108,7 @@ yes-brainer
 yes-huh
 yes-man
 yes-no question
+yes-or-no question
 yes/no question
 yessiree Bob
 yester month
@@ -203771,6 +205153,7 @@ yin yang
 yin-yang
 ying yang
 ying-yang
+yippee creature
 yippee ki-yay
 yippee skippy
 yippy-kai-yay
@@ -203935,7 +205318,7 @@ you don't get owt for nowt
 you don't get something for nothing
 you don't get your nookie where you get your cookies
 you don't know what you're talking about
-you don't know what you’ve got till it's gone
+you don't know what you've got till it's gone
 you don't know where it's been
 you don't look at the mantelpiece when you poke the fire
 you don't look at the mantelpiece when you're poking the fire
@@ -203943,6 +205326,7 @@ you don't miss the water till the well runs dry
 you don't need a weatherman to know which way the wind blows
 you don't say
 you don't want to know
+you first
 you gals
 you get more with a kind word and a gun than you do with a kind word alone
 you get that
@@ -204000,6 +205384,7 @@ you pays your nickel and you takes your choice
 you people
 you problem
 you rang
+you said a mouthful
 you said it
 you scratch my back and I'll scratch yours
 you see
@@ -204011,6 +205396,7 @@ you snooze you lose
 you tell me
 you think
 you too
+you two
 you understood
 you want a cookie
 you want a piece of me
@@ -204052,6 +205438,7 @@ you've got to be kidding me
 you've got to crack a few eggs to make an omelette
 you've got to laugh
 you've gotta be kidding me
+you've said a mouthful
 you-all
 you-alls
 you-know-what
@@ -204073,6 +205460,7 @@ young donkey
 young earth creationism
 young fogey
 young fogy
+young fustic
 young ginger
 young gun
 young hand
@@ -204083,6 +205471,7 @@ young man
 young money
 young moon
 young offender
+young offender institution
 young pioneer
 young, dumb, and full of come
 young, dumb, and full of cum
@@ -204518,6 +205907,7 @@ zombie walk
 zombie world
 zombie worm
 zombie's cucumber
+zombie-like
 zombied out
 zombied-out
 zona glomerulosa
@@ -204614,6 +206004,7 @@ zymo-xyl
 Ægæan Sea
 Étard reaction
 Évian-les-Bains
+Îethka Nakoda
 Île Saint Jean
 Île de Ré
 Île de la Cité
@@ -204636,6 +206027,7 @@ zymo-xyl
 à la
 à la King
 à la carte
+à la king
 à la minute
 à la mode
 à la nage
@@ -204722,6 +206114,7 @@ zymo-xyl
 α-naphthol
 α-naphthylthiourea
 α-particle
+α-pinene
 α-pyrrolidinopentiophenone
 β error
 β-TrCP
@@ -204734,6 +206127,7 @@ zymo-xyl
 β-lactamase
 β-methasone
 β-particle
+β-pinene
 β-pleated sheet
 γ ray
 γ-globulin

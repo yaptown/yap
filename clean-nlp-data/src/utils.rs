@@ -47,10 +47,12 @@ pub fn validate_and_fix_whitespace(
         let mut pos = 0;
         for token in corrected_tokens.iter_mut() {
             // Update whitespace characters to match original
-            let whitespace_start = pos + token.text.len();
+            let whitespace_start = pos + token.text.chars().count();
             let mut new_whitespace = String::new();
 
-            for i in 0..token.whitespace.len() {
+            // Iterate over each CHARACTER in the whitespace, not each byte
+            let whitespace_char_count = token.whitespace.chars().count();
+            for i in 0..whitespace_char_count {
                 let char_pos = whitespace_start + i;
                 if char_pos < orig_chars.len() && orig_chars[char_pos].is_whitespace() {
                     new_whitespace.push(orig_chars[char_pos]);
@@ -60,7 +62,7 @@ pub fn validate_and_fix_whitespace(
             }
 
             token.whitespace = new_whitespace;
-            pos = whitespace_start + token.whitespace.len();
+            pos = whitespace_start + whitespace_char_count;
         }
 
         return ValidationResult::AutoFixed;
@@ -115,5 +117,231 @@ pub fn validate_and_fix_whitespace(
             original: original.to_string(),
             reconstructed,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use language_utils::PartOfSpeech;
+
+    fn make_token(text: &str, whitespace: &str) -> SimplifiedTokenPrime {
+        SimplifiedTokenPrime {
+            text: text.to_string(),
+            whitespace: whitespace.to_string(),
+            pos: PartOfSpeech::Noun,
+            lemma: text.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_narrow_nbsp_replaced_with_regular_space() {
+        // Original: "Hello" + narrow non-breaking space + "world"
+        let original = "Hello\u{202F}world";
+
+        // LLM output: "Hello" + regular space + "world"
+        let mut tokens = vec![make_token("Hello", " "), make_token("world", "")];
+
+        let result = validate_and_fix_whitespace(original, &mut tokens);
+
+        // Should auto-fix to use narrow non-breaking space
+        assert!(matches!(result, ValidationResult::AutoFixed));
+        assert_eq!(tokens[0].whitespace, "\u{202F}");
+
+        // Verify reconstruction matches original
+        let reconstructed: String = tokens
+            .iter()
+            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .collect();
+        assert_eq!(reconstructed, original);
+    }
+
+    #[test]
+    fn test_missing_narrow_nbsp() {
+        // Original: "Hello" + narrow non-breaking space + "world"
+        let original = "Hello\u{202F}world";
+
+        // LLM output: "Hello" + no space + "world"
+        let mut tokens = vec![make_token("Hello", ""), make_token("world", "")];
+
+        let result = validate_and_fix_whitespace(original, &mut tokens);
+
+        // Should auto-fix by adding the narrow non-breaking space
+        assert!(matches!(result, ValidationResult::AutoFixed));
+        assert_eq!(tokens[0].whitespace, "\u{202F}");
+
+        // Verify reconstruction matches original
+        let reconstructed: String = tokens
+            .iter()
+            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .collect();
+        assert_eq!(reconstructed, original);
+    }
+
+    #[test]
+    fn test_multiple_tokens_with_mixed_whitespace() {
+        // Original: "A" + nbsp + "B" + regular space + "C"
+        let original = "A\u{00A0}B C";
+
+        // LLM output: "A" + regular space + "B" + regular space + "C"
+        let mut tokens = vec![
+            make_token("A", " "),
+            make_token("B", " "),
+            make_token("C", ""),
+        ];
+
+        let result = validate_and_fix_whitespace(original, &mut tokens);
+
+        // Should auto-fix
+        assert!(matches!(result, ValidationResult::AutoFixed));
+        assert_eq!(tokens[0].whitespace, "\u{00A0}");
+        assert_eq!(tokens[1].whitespace, " ");
+
+        // Verify reconstruction matches original
+        let reconstructed: String = tokens
+            .iter()
+            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .collect();
+        assert_eq!(reconstructed, original);
+    }
+
+    #[test]
+    fn test_already_valid() {
+        let original = "Hello world";
+
+        let mut tokens = vec![make_token("Hello", " "), make_token("world", "")];
+
+        let result = validate_and_fix_whitespace(original, &mut tokens);
+
+        assert!(matches!(result, ValidationResult::Valid));
+    }
+
+    #[test]
+    fn test_narrow_nbsp_bug_reproduction() {
+        // Original: three tokens with narrow nbsp between first two
+        // "A" + narrow nbsp + "B" + regular space + "C"
+        let original = "A\u{202F}B C";
+
+        // LLM output: missing the narrow nbsp
+        let mut tokens = vec![
+            make_token("A", ""),
+            make_token("B", " "),
+            make_token("C", ""),
+        ];
+
+        let result = validate_and_fix_whitespace(original, &mut tokens);
+
+        // Should auto-fix
+        assert!(matches!(result, ValidationResult::AutoFixed));
+
+        // Check that we don't get narrow nbsp FOLLOWED by regular space
+        assert_eq!(tokens[0].whitespace, "\u{202F}");
+        assert_eq!(tokens[1].whitespace, " ");
+
+        // Verify reconstruction matches original exactly
+        let reconstructed: String = tokens
+            .iter()
+            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .collect();
+        assert_eq!(
+            reconstructed,
+            original,
+            "Reconstructed should match original. Got: {:?}, Expected: {:?}",
+            reconstructed.chars().collect::<Vec<_>>(),
+            original.chars().collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn test_real_world_bug_nbsp_becomes_narrow_nbsp_plus_space() {
+        // Real bug: Original has regular nbsp (\u{a0}), LLM returns regular space
+        // Original: "faire" + nbsp + "?"
+        let original = "faire\u{a0}?";
+
+        // LLM output: "faire" + regular space + "?"
+        let mut tokens = vec![make_token("faire", " "), make_token("?", "")];
+
+        let result = validate_and_fix_whitespace(original, &mut tokens);
+
+        // Should auto-fix
+        assert!(matches!(result, ValidationResult::AutoFixed));
+
+        // Should have nbsp, NOT narrow nbsp + space
+        assert_eq!(
+            tokens[0].whitespace,
+            "\u{a0}",
+            "Expected regular nbsp, got: {:?}",
+            tokens[0].whitespace.chars().collect::<Vec<_>>()
+        );
+
+        // Verify reconstruction matches original exactly
+        let reconstructed: String = tokens
+            .iter()
+            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .collect();
+        assert_eq!(
+            reconstructed,
+            original,
+            "Reconstructed should match original. Got: {:?}, Expected: {:?}",
+            reconstructed.chars().collect::<Vec<_>>(),
+            original.chars().collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn test_exact_bug_reproduction() {
+        // Exact bug from the error message
+        // Original sentence has narrow nbsp (\u{202f})
+        let original = "C'est pour quoi faire\u{202f}?";
+
+        // LLM returns WITH regular nbsp (\u{a0}) instead of narrow nbsp
+        let mut tokens = vec![
+            make_token("C'", ""),
+            make_token("est", " "),
+            make_token("pour", " "),
+            make_token("quoi", " "),
+            make_token("faire", "\u{a0}"), // Regular nbsp instead of narrow nbsp!
+            make_token("?", ""),
+        ];
+
+        println!(
+            "Before: {:?}",
+            tokens
+                .iter()
+                .map(|t| format!("{:?}", t.whitespace.chars().collect::<Vec<_>>()))
+                .collect::<Vec<_>>()
+        );
+        let result = validate_and_fix_whitespace(original, &mut tokens);
+        println!(
+            "After: {:?}",
+            tokens
+                .iter()
+                .map(|t| format!("{:?}", t.whitespace.chars().collect::<Vec<_>>()))
+                .collect::<Vec<_>>()
+        );
+
+        // Should auto-fix
+        assert!(matches!(result, ValidationResult::AutoFixed));
+
+        // Should have narrow nbsp, NOT narrow nbsp + space
+        assert_eq!(
+            tokens[4].whitespace,
+            "\u{202f}",
+            "Expected narrow nbsp only, got: {:?}",
+            tokens[4].whitespace.chars().collect::<Vec<_>>()
+        );
+
+        // Verify reconstruction matches original exactly
+        let reconstructed: String = tokens
+            .iter()
+            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .collect();
+        assert_eq!(
+            reconstructed,
+            original,
+            "Reconstructed should match original. Got: {:?}, Expected: {:?}",
+            reconstructed.chars().collect::<Vec<_>>(),
+            original.chars().collect::<Vec<_>>()
+        );
     }
 }

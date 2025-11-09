@@ -8,6 +8,7 @@ use classify::{
 };
 use futures::StreamExt;
 use generate_data::target_sentences;
+use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{Course, Language, NlpAnalyzedSentence};
 use rand::prelude::IndexedRandom;
 use sentence_sampler::sample_to_target;
@@ -143,11 +144,36 @@ fn parse_language_code(code: &str) -> anyhow::Result<Language> {
         "eng" => Ok(Language::English),
         "kor" => Ok(Language::Korean),
         "por" => Ok(Language::Portuguese),
+        "ita" => Ok(Language::Italian),
         _ => Err(anyhow!(
-            "Unknown language code '{}'. Supported codes: fra, deu, spa, eng, kor",
+            "Unknown language code '{}'. Supported codes: fra, deu, spa, eng, kor, por, ita",
             code
         )),
     }
+}
+
+/// Load manual sentences for a language (these should never be filtered)
+fn load_manual_sentences(language: Language) -> anyhow::Result<std::collections::HashSet<String>> {
+    let manual_file = PathBuf::from(format!(
+        "./generate-data/data/{}/sentence-sources/extra/manual.txt",
+        language.iso_639_3()
+    ));
+
+    let mut manual_sentences = std::collections::HashSet::new();
+
+    if manual_file.exists() {
+        let content = std::fs::read_to_string(&manual_file)
+            .context("Failed to read manual sentences file")?;
+        for line in content.lines() {
+            let line = line.trim().to_string();
+            if !line.is_empty() {
+                manual_sentences.insert(line);
+            }
+        }
+        println!("Loaded {} manual sentences", manual_sentences.len());
+    }
+
+    Ok(manual_sentences)
 }
 
 async fn load_nlp_sentences(language: Language) -> anyhow::Result<Vec<NlpAnalyzedSentence>> {
@@ -168,6 +194,83 @@ async fn load_nlp_sentences(language: Language) -> anyhow::Result<Vec<NlpAnalyze
         .collect::<anyhow::Result<Vec<_>>>()?;
 
     Ok(sentences)
+}
+
+async fn load_multiword_terms(language: Language) -> anyhow::Result<Vec<NlpAnalyzedSentence>> {
+    let base_dir = base_output_directory(language);
+    std::fs::create_dir_all(&base_dir).context("Failed to create output directory")?;
+    let base_dir = base_dir
+        .canonicalize()
+        .context("Failed to canonicalize output directory")?;
+
+    let course = Course {
+        native_language: default_native_language(language),
+        target_language: language,
+    };
+
+    // Ensure multiword terms file exists
+    let multiword_terms_file =
+        generate_data::wiktionary::ensure_multiword_terms_file(&course, &base_dir)
+            .await
+            .context("Failed to ensure multiword terms file")?;
+
+    // Create a file with the terms as sentences (one per line, JSON string format)
+    let terms_as_sentences_path = base_dir.join("multiword_terms_as_sentences.jsonl");
+    if !terms_as_sentences_path.exists() {
+        let terms_file =
+            File::open(&multiword_terms_file).context("Failed to open multiword terms file")?;
+        let reader = BufReader::new(terms_file);
+
+        let output_file = File::create(&terms_as_sentences_path)
+            .context("Failed to create terms as sentences file")?;
+        let mut writer = BufWriter::new(output_file);
+
+        for line in reader.lines() {
+            let term = line.context("Failed to read line from multiword terms")?;
+            let term = term.trim();
+            if !term.is_empty() {
+                writeln!(writer, "{}", serde_json::to_string(&term)?)
+                    .context("Failed to write term as sentence")?;
+            }
+        }
+        writer.flush().context("Failed to flush writer")?;
+    }
+
+    // Process the terms with NLP
+    let terms_nlp_path = base_dir.join("multiword_terms_nlp.jsonl");
+    if !terms_nlp_path.exists() {
+        println!("Running Python NLP on multiword terms for {language:?}...");
+        // Create an empty multiword terms file for the NLP (since we're analyzing the terms themselves)
+        let empty_terms_file = base_dir.join("empty_multiword_terms.jsonl");
+        if !empty_terms_file.exists() {
+            File::create(&empty_terms_file)
+                .context("Failed to create empty multiword terms file")?;
+        }
+
+        run_python_nlp(
+            language,
+            &terms_as_sentences_path,
+            &empty_terms_file,
+            &terms_nlp_path,
+        )?;
+    }
+
+    // Load the analyzed terms
+    let file = File::open(&terms_nlp_path)
+        .context(format!("Failed to open terms NLP file: {terms_nlp_path:?}"))?;
+    let reader = BufReader::new(file);
+
+    let terms: Vec<NlpAnalyzedSentence> = reader
+        .lines()
+        .enumerate()
+        .map(|(idx, line)| {
+            let line = line.context(format!("Failed to read line {idx}"))?;
+            serde_json::from_str::<NlpAnalyzedSentence>(&line)
+                .context(format!("Failed to deserialize line {idx}: {line}"))
+        })
+        .collect::<anyhow::Result<Vec<_>>>()?;
+
+    Ok(terms)
 }
 
 fn print_random_sentences(sentences: &[NlpAnalyzedSentence], count: usize) {
@@ -225,7 +328,7 @@ fn ensure_target_sentences_file(
     ))?;
     let mut writer = BufWriter::new(file);
 
-    for (sentence, _) in sentences {
+    for (sentence, _, _source) in sentences {
         writeln!(writer, "{}", serde_json::to_string(&sentence)?)
             .context("Failed to write target sentence")?;
     }
@@ -321,6 +424,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
         Language::English,
         Language::Korean,
         Language::Portuguese,
+        Language::Italian,
     ];
 
     for language in languages {
@@ -332,24 +436,63 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 }
 
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
-    // We probably should get at least 10_000 samples per language to get good coverage.
-    // Bare minimum to get a usable result is probably around 1_500.
-    const SAMPLE_SIZE: usize = 6_000;
+    // Load manual sentences that should never be filtered
+    let manual_sentences = load_manual_sentences(language)?;
 
-    println!("Loading NLP data for {language:?}...");
-    let sentences = load_nlp_sentences(language).await?;
-    println!("Loaded {} sentences", sentences.len());
+    let samples = {
+        // We probably should get at least 10_000 samples per language to get good coverage.
+        // Bare minimum to get a usable result is probably around 1_500.
+        const SAMPLE_SIZE: usize = 6_000;
+        const TERM_SAMPLE_SIZE: usize = 5_000;
 
-    let sampled_sentences = sample_to_target(sentences, SAMPLE_SIZE, |s: &NlpAnalyzedSentence| {
-        s.sentence.clone()
-    });
+        println!("Loading NLP data for {language:?}...");
+        let mut sentences = load_nlp_sentences(language).await?;
+        println!("Loaded {} sentences", sentences.len());
 
-    println!("Sampled {} sentences", sampled_sentences.len());
+        // Separate manual sentences from other sentences
+        let (manual_nlp_sentences, other_sentences): (Vec<_>, Vec<_>) = sentences
+            .into_iter()
+            .partition(|s| manual_sentences.contains(&s.sentence));
+
+        println!(
+            "Found {} manual sentences, {} other sentences",
+            manual_nlp_sentences.len(),
+            other_sentences.len()
+        );
+
+        // Use other sentences for sampling, then add ALL manual sentences back
+        sentences = other_sentences;
+
+        let terms = load_multiword_terms(language).await?;
+        println!("Loaded {} multiword terms", terms.len());
+
+        let sampled_sentences =
+            sample_to_target(sentences, SAMPLE_SIZE, |s: &NlpAnalyzedSentence| {
+                s.sentence.clone()
+            });
+
+        let sampled_terms = sample_to_target(terms, TERM_SAMPLE_SIZE, |t: &NlpAnalyzedSentence| {
+            t.sentence.clone()
+        });
+
+        println!("Sampled {} sentences", sampled_sentences.len());
+        println!("Sampled {} multiword terms", sampled_terms.len());
+
+        // Add ALL manual sentences back (they should always be included)
+        sampled_sentences
+            .into_iter()
+            .chain(sampled_terms.into_iter())
+            .chain(manual_nlp_sentences.into_iter())
+            .collect::<Vec<_>>()
+    };
+    let sample_count = samples.len();
+
+    println!("Total samples for cleaning: {sample_count} (including all manual sentences)");
 
     // Classify each sentence to get suspicious reasons
     let classifier = get_classifier(language);
     let corrector = get_corrector(language);
-    let classified_sentences: Vec<_> = sampled_sentences
+    let classified_sentences: Vec<_> = samples
         .into_iter()
         .map(|mut sentence| {
             let classification = classifier.classify(&sentence);
@@ -363,30 +506,39 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         .collect();
 
     // Clean each sentence with LLM
-    let cleaned_results = futures::stream::iter(classified_sentences.into_iter().enumerate())
-        .map(|(i, (sentence, suspicious_reasons))| async move {
-            if i % 100 == 0 {
-                println!(
-                    "  [{}/{}] (${cost:.2})",
-                    i,
-                    SAMPLE_SIZE,
-                    cost = CHAT_CLIENT.cost().unwrap()
-                );
-            }
+    let pb = ProgressBar::new(sample_count as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} sentences cleaned ({per_sec}, ${msg}, {eta})")
+            .unwrap()
+            .progress_chars("#>-"),
+    );
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-            let corrector = get_corrector(language);
-            let result =
-                clean_sentence_with_llm(language, &sentence, suspicious_reasons, &CHAT_CLIENT)
-                    .await
-                    .map(|mut tokens| {
-                        corrector.post_corrections(&mut tokens);
-                        tokens
-                    });
-            (sentence, result)
+    let cleaned_results = futures::stream::iter(classified_sentences.into_iter())
+        .map(|(sentence, suspicious_reasons)| {
+            let pb = pb.clone();
+            async move {
+                let corrector = get_corrector(language);
+                let result =
+                    clean_sentence_with_llm(language, &sentence, suspicious_reasons, &CHAT_CLIENT)
+                        .await
+                        .map(|mut tokens| {
+                            corrector.post_corrections(&mut tokens);
+                            tokens
+                        });
+
+                pb.set_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
+                pb.inc(1);
+
+                (sentence, result)
+            }
         })
         .buffer_unordered(50)
         .collect::<Vec<_>>()
         .await;
+
+    pb.finish_with_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
 
     // Write results to file
     let output_dir = PathBuf::from("./out");
@@ -442,30 +594,40 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     println!("\n=== Pass 2: Adding dependency information ===");
 
     // Second pass: Add dependency information
-    let results_with_deps = futures::stream::iter(validated_results.into_iter().enumerate())
-        .map(|(i, (original_sentence, corrected_tokens))| async move {
-            if i % 100 == 0 {
-                println!(
-                    "  [{}/{}] Parsing dependencies (${cost:.2})",
-                    i,
-                    SAMPLE_SIZE,
-                    cost = CHAT_CLIENT_MINI.cost().unwrap()
-                );
+    let validated_count = validated_results.len();
+
+    let pb2 = ProgressBar::new(validated_count as u64);
+    pb2.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} dependencies parsed ({per_sec}, ${msg}, {eta})")
+            .unwrap()
+            .progress_chars("#>-"),
+    );
+    pb2.enable_steady_tick(std::time::Duration::from_millis(100));
+
+    let results_with_deps = futures::stream::iter(validated_results.into_iter())
+        .map(|(original_sentence, corrected_tokens)| {
+            let pb2 = pb2.clone();
+            async move {
+                let dep_result = parse_dependencies_with_llm(
+                    language,
+                    &original_sentence.sentence,
+                    &corrected_tokens,
+                    &CHAT_CLIENT_MINI,
+                )
+                .await;
+
+                pb2.set_message(format!("{:.2}", CHAT_CLIENT_MINI.cost().unwrap_or(0.0)));
+                pb2.inc(1);
+
+                (original_sentence, corrected_tokens, dep_result)
             }
-
-            let dep_result = parse_dependencies_with_llm(
-                language,
-                &original_sentence.sentence,
-                &corrected_tokens,
-                &CHAT_CLIENT_MINI,
-            )
-            .await;
-
-            (original_sentence, corrected_tokens, dep_result)
         })
         .buffer_unordered(50)
         .collect::<Vec<_>>()
         .await;
+
+    pb2.finish_with_message(format!("{:.2}", CHAT_CLIENT_MINI.cost().unwrap_or(0.0)));
 
     // Write results to file
     for (original_sentence, corrected_tokens, dep_result) in results_with_deps {

@@ -1078,8 +1078,14 @@ impl weapon::PartialAppState for Deck {
                             },
                     },
             } => {
+                // Clean the sentence before lookup to ensure old sentences with incorrect spacing
+                // can be mapped to new sentences with correct spacing
+                let cleaned_sentence = language_utils::text_cleanup::cleanup_sentence(
+                    challenge_sentence.clone(),
+                    deck.context.target_language,
+                );
                 if let Some(challenge_sentence) =
-                    deck.context.language_pack.rodeo.get(challenge_sentence)
+                    deck.context.language_pack.rodeo.get(&cleaned_sentence)
                 {
                     if let Some(lexemes) = deck
                         .context

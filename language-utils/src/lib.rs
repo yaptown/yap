@@ -2,6 +2,7 @@ pub mod features;
 pub mod indexmap;
 pub mod language_pack;
 pub mod profile;
+pub mod text_cleanup;
 
 use std::collections::BTreeMap;
 use std::hash::Hash;
@@ -10,336 +11,6 @@ use std::hash::Hash;
 use wasm_bindgen::prelude::*;
 
 use crate::features::Morphology;
-
-pub fn strip_punctuation(text: &str) -> &str {
-    text.trim_matches(|c| matches!(c, '.' | ',' | '!' | '?' | ':' | ';' | '-'))
-}
-
-/// Normalizes Spanish words by removing punctuation and converting to lowercase
-pub fn expand_spanish_word(
-    text: &str,
-    lemma: &str,
-    pos: Option<PartOfSpeech>,
-    _morph: &BTreeMap<String, String>,
-    _is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    Some({
-        let text = strip_punctuation(text);
-
-        if text.is_empty() {
-            return None;
-        }
-
-        if ["'", "-", "—", "–", "'", "'"].contains(&text) {
-            return None;
-        }
-        if text.chars().all(|c| c.is_numeric()) {
-            return None;
-        }
-
-        let text = text.to_lowercase();
-        let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
-        let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
-
-        if text == "lo" && pos == Some(PartOfSpeech::Pron) {
-            return Some(("lo".to_string(), "lo".to_string(), Some(PartOfSpeech::Pron)));
-        }
-
-        // expand Spanish contractions
-        (text, lemma, pos)
-    })
-}
-
-/// Normalizes english words
-pub fn expand_english_word(
-    text: &str,
-    lemma: &str,
-    pos: Option<PartOfSpeech>,
-    _morph: &BTreeMap<String, String>,
-    _is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    Some({
-        let text = strip_punctuation(text);
-
-        if text.is_empty() {
-            return None;
-        }
-
-        if ["'", "-", "—", "–", "'", "'"].contains(&text) {
-            return None;
-        }
-        if text.chars().all(|c| c.is_numeric()) {
-            return None;
-        }
-
-        let text = text.to_lowercase();
-        let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
-        let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
-
-        (text, lemma, pos)
-    })
-}
-
-/// Normalizes german words
-pub fn expand_german_word(
-    text: &str,
-    lemma: &str,
-    pos: Option<PartOfSpeech>,
-    _morph: &BTreeMap<String, String>,
-    is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    Some({
-        let text = strip_punctuation(text);
-
-        if text.is_empty() {
-            return None;
-        }
-
-        if ["'", "-", "—", "–", "'", "'"].contains(&text) {
-            return None;
-        }
-        if text.chars().all(|c| c.is_numeric()) {
-            return None;
-        }
-
-        // Special handling for "Sie"
-        // If it's not at the beginning of the sentence and it's capitalized,
-        // we know it's the polite pronoun form
-        // The Spacey Library should really do this for us, but they don't, so we have to.
-        if !is_first_word && text == "Sie" {
-            return Some((
-                "Sie".to_string(),
-                "Sie".to_string(),
-                Some(PartOfSpeech::Pron),
-            ));
-        }
-
-        // If it's at the beginning of the sentence, trust the NLP system
-        let polite_forms = ["Sie"];
-        if polite_forms.contains(&text) && polite_forms.contains(&lemma) {
-            return Some((text.to_string(), lemma.to_string(), pos));
-        }
-        if pos == Some(PartOfSpeech::Noun) {
-            return Some((text.to_string(), lemma.to_string(), pos));
-        }
-
-        let text = text.to_lowercase();
-        let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
-        let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
-
-        (text, lemma, pos)
-    })
-}
-
-/// Expands French contractions to their full forms and normalizes words
-pub fn expand_french_word(
-    text: &str,
-    lemma: &str,
-    pos: Option<PartOfSpeech>,
-    morph: &BTreeMap<String, String>,
-    _is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    Some({
-        // Handle common French abbreviations before stripping punctuation
-        let normalized_text = match text {
-            "M." | "m." => {
-                return Some((
-                    "monsieur".to_string(),
-                    "monsieur".to_string(),
-                    Some(PartOfSpeech::Noun),
-                ));
-            }
-            "Mme" | "Mme." | "mme" | "mme." => {
-                return Some((
-                    "madame".to_string(),
-                    "madame".to_string(),
-                    Some(PartOfSpeech::Noun),
-                ));
-            }
-            "Mlle" | "Mlle." | "mlle" | "mlle." => {
-                return Some((
-                    "mademoiselle".to_string(),
-                    "mademoiselle".to_string(),
-                    Some(PartOfSpeech::Noun),
-                ));
-            }
-            _ => text,
-        };
-
-        let text = strip_punctuation(normalized_text);
-
-        if text.is_empty() {
-            return None;
-        }
-
-        if ["'", "-", "—", "–", "'", "'"].contains(&text) {
-            return None;
-        }
-        if text.chars().all(|c| c.is_numeric()) {
-            return None;
-        }
-
-        let text = text.to_lowercase();
-        let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
-        let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
-
-        if text == "lui" && pos == Some(PartOfSpeech::Pron) {
-            return Some((text.to_string(), text.to_string(), pos));
-        }
-
-        match &text[..] {
-            "elle" => (
-                "elle".to_string(),
-                "elle".to_string(),
-                Some(PartOfSpeech::Pron),
-            ),
-            // expand contractions
-            "j'" => ("je".to_string(), "je".to_string(), Some(PartOfSpeech::Pron)),
-            "m'" => ("me".to_string(), "me".to_string(), Some(PartOfSpeech::Pron)),
-            "t'" => ("te".to_string(), "te".to_string(), Some(PartOfSpeech::Pron)),
-            "t" => ("t".to_string(), "t".to_string(), Some(PartOfSpeech::Part)),
-            "s'" => {
-                if pos == Some(PartOfSpeech::Sconj) {
-                    (
-                        "si".to_string(),
-                        "si".to_string(),
-                        Some(PartOfSpeech::Sconj),
-                    )
-                } else {
-                    ("se".to_string(), "se".to_string(), Some(PartOfSpeech::Pron))
-                }
-            }
-            "c'" => ("ce".to_string(), "ce".to_string(), None), // either DET or PRON depending on context
-            "n'" => ("ne".to_string(), "ne".to_string(), Some(PartOfSpeech::Adv)),
-            "l'" => {
-                // if we know the gender, use that
-                if morph
-                    .get("Gender")
-                    .map(String::as_str)
-                    .unwrap_or("Masculin")
-                    == "Feminin"
-                {
-                    ("la".to_string(), "la".to_string(), None) // either DET or PRON depending on context
-                } else {
-                    ("le".to_string(), "le".to_string(), None) // either DET or PRON depending on context
-                }
-            }
-            "de" => ("de".to_string(), "de".to_string(), Some(PartOfSpeech::Adp)),
-            "d'" => ("de".to_string(), "de".to_string(), Some(PartOfSpeech::Adp)),
-            "qu'" => ("que".to_string(), "que".to_string(), None),
-            "quelqu'" => ("quelque".to_string(), "quelque".to_string(), None),
-            "jusqu'" => (
-                "jusque".to_string(),
-                "jusque".to_string(),
-                Some(PartOfSpeech::Adp),
-            ),
-            "lorsqu'" => (
-                "lorsque".to_string(),
-                "lorsque".to_string(),
-                Some(PartOfSpeech::Sconj),
-            ),
-            "puisqu'" => (
-                "puisque".to_string(),
-                "puisque".to_string(),
-                Some(PartOfSpeech::Sconj),
-            ),
-            "quoiqu'" => (
-                "quoique".to_string(),
-                "quoique".to_string(),
-                Some(PartOfSpeech::Sconj),
-            ),
-            "presqu'" => (
-                "presque".to_string(),
-                "presque".to_string(),
-                Some(PartOfSpeech::Adv),
-            ),
-            _ => (text, lemma, None),
-        }
-    })
-}
-
-/// Expands Korean contractions to their full forms and normalizes words
-pub fn expand_korean_word(
-    text: &str,
-    lemma: &str,
-    _pos: Option<PartOfSpeech>,
-    _morph: &BTreeMap<String, String>,
-    _is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    let text = strip_punctuation(text);
-
-    if text.is_empty() {
-        return None;
-    }
-
-    if ["'", "-", "—", "–", "’", "‘"].contains(&text) {
-        return None;
-    }
-    if text.chars().all(|c| c.is_numeric()) {
-        return None;
-    }
-
-    let text = text.to_lowercase();
-    let lemma = lemma.strip_prefix("-").unwrap_or(lemma);
-    let lemma = lemma.strip_suffix(".").unwrap_or(lemma).to_lowercase();
-
-    Some((text, lemma, None))
-}
-
-/// Placeholder for Italian word expansion
-pub fn expand_italian_word(
-    _text: &str,
-    _lemma: &str,
-    _pos: Option<PartOfSpeech>,
-    _morph: &BTreeMap<String, String>,
-    _is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    todo!()
-}
-
-/// Placeholder for Portuguese word expansion
-pub fn expand_portuguese_word(
-    _text: &str,
-    _lemma: &str,
-    _pos: Option<PartOfSpeech>,
-    _morph: &BTreeMap<String, String>,
-    _is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    todo!()
-}
-
-/// Placeholder for Russian word expansion
-pub fn expand_russian_word(
-    _text: &str,
-    _lemma: &str,
-    _pos: Option<PartOfSpeech>,
-    _morph: &BTreeMap<String, String>,
-    _is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    todo!()
-}
-
-/// Placeholder for Chinese word expansion
-pub fn expand_chinese_word(
-    _text: &str,
-    _lemma: &str,
-    _pos: Option<PartOfSpeech>,
-    _morph: &BTreeMap<String, String>,
-    _is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    todo!()
-}
-
-/// Placeholder for Japanese word expansion
-pub fn expand_japanese_word(
-    _text: &str,
-    _lemma: &str,
-    _pos: Option<PartOfSpeech>,
-    _morph: &BTreeMap<String, String>,
-    _is_first_word: bool,
-) -> Option<(String, String, Option<PartOfSpeech>)> {
-    todo!()
-}
 
 #[derive(
     Clone,
@@ -572,6 +243,58 @@ impl From<(DictionaryEntryThoughts, Morphology)> for DictionaryEntry {
     }
 }
 
+/// Tracks the source(s) of a sentence. Since a sentence can appear in multiple sources,
+/// we use boolean fields for each source type.
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq), derive(Debug))]
+pub struct SentenceSource {
+    /// Sentence came from an Anki deck
+    pub from_anki: bool,
+    /// Sentence came from Tatoeba
+    pub from_tatoeba: bool,
+    /// Sentence was manually added to extra/manual.txt
+    pub from_manual: bool,
+    /// Sentence came from a song in sentence-sources/songs/
+    pub from_song: bool,
+}
+
+impl SentenceSource {
+    /// Create a new source with all fields set to false
+    pub fn none() -> Self {
+        Self {
+            from_anki: false,
+            from_tatoeba: false,
+            from_manual: false,
+            from_song: false,
+        }
+    }
+
+    /// Returns true if the sentence came from a manual source (should never be filtered)
+    pub fn is_manual(&self) -> bool {
+        self.from_manual
+    }
+
+    /// Merge two sources together (OR operation on all fields)
+    pub fn merge(&mut self, other: &Self) {
+        self.from_anki |= other.from_anki;
+        self.from_tatoeba |= other.from_tatoeba;
+        self.from_manual |= other.from_manual;
+        self.from_song |= other.from_song;
+    }
+}
+
 #[derive(
     Clone,
     Debug,
@@ -657,25 +380,6 @@ pub struct SentenceInfo {
 }
 
 impl SentenceInfo {
-    pub fn from_nlp_analyzed_sentence(
-        analysis: NlpAnalyzedSentence,
-        proper_nouns: &BTreeMap<String, Heteronym<String>>,
-        language: Language,
-    ) -> Self {
-        Self {
-            words: analysis
-                .doc
-                .into_iter()
-                .enumerate()
-                .map(|(i, doc_token)| {
-                    let is_first_word = i == 0;
-                    Literal::from_doc_token(doc_token, proper_nouns, language, is_first_word)
-                })
-                .collect(),
-            multiword_terms: analysis.multiword_terms,
-        }
-    }
-
     /// The words and the high-confidence multiword terms
     pub fn lexemes(&self) -> impl Iterator<Item = Lexeme<String>> {
         self.words
@@ -791,33 +495,6 @@ where
 }
 
 impl Literal<String> {
-    fn from_doc_token(
-        doc_token: DocToken,
-        proper_nouns: &BTreeMap<String, Heteronym<String>>,
-        language: Language,
-        is_first_word: bool,
-    ) -> Self {
-        if doc_token.pos == PartOfSpeech::Space {
-            let whitespace = match (doc_token.text.as_str(), doc_token.whitespace.as_str()) {
-                ("", "") => " ".to_string(),
-                ("", whitespace) => whitespace.to_string(),
-                (text, "") => text.to_string(),
-                (text, whitespace) => format!("{text}{whitespace}"),
-            };
-            return Self {
-                text: "".to_string(),
-                whitespace,
-                heteronym: None,
-            };
-        }
-
-        Self {
-            text: doc_token.text.clone(),
-            whitespace: doc_token.whitespace.clone(),
-            heteronym: Heteronym::from_doc_token(doc_token, proper_nouns, language, is_first_word),
-        }
-    }
-
     pub fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> Literal<lasso::Spur> {
         Literal {
             text: rodeo.get_or_intern(&self.text),
@@ -850,57 +527,6 @@ impl Literal<lasso::Spur> {
 }
 
 impl Heteronym<String> {
-    fn from_doc_token(
-        doc_token: DocToken,
-        proper_nouns: &BTreeMap<String, Heteronym<String>>,
-        language: Language,
-        is_first_word: bool,
-    ) -> Option<Self> {
-        let expand_word = match language {
-            Language::French => expand_french_word,
-            Language::Spanish => expand_spanish_word,
-            Language::English => expand_english_word,
-            Language::Korean => expand_korean_word,
-            Language::German => expand_german_word,
-            Language::Italian => expand_italian_word,
-            Language::Portuguese => expand_portuguese_word,
-            Language::Russian => expand_russian_word,
-            Language::Chinese => expand_chinese_word,
-            Language::Japanese => expand_japanese_word,
-        };
-
-        let heteronym = if let Some(heteronym) = proper_nouns.get(&doc_token.text.to_lowercase()) {
-            let (word, lemma, pos) = expand_word(
-                &heteronym.word,
-                &heteronym.lemma,
-                None,
-                &BTreeMap::new(),
-                is_first_word,
-            )?;
-            let pos = pos.unwrap_or(heteronym.pos);
-            Self { word, lemma, pos }
-        } else {
-            let (word, lemma, pos) = expand_word(
-                &doc_token.text,
-                &doc_token.lemma,
-                Some(doc_token.pos),
-                &doc_token.morph,
-                is_first_word,
-            )?;
-            let pos = pos.unwrap_or(doc_token.pos);
-            Self { word, lemma, pos }
-        };
-
-        if heteronym.pos == PartOfSpeech::Punct {
-            return None;
-        }
-        if heteronym.pos == PartOfSpeech::Propn {
-            return None;
-        }
-
-        Some(heteronym)
-    }
-
     pub fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> Heteronym<lasso::Spur> {
         let word = rodeo.get_or_intern(&self.word);
         let lemma = rodeo.get_or_intern(&self.lemma);
@@ -1802,16 +1428,4 @@ pub const LANGUAGES: &[Language] = &[
 pub struct TtsRequest {
     pub text: String,
     pub language: Language,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn strip_punctuation_removes_surrounding_marks() {
-        assert_eq!(strip_punctuation("hello!?"), "hello");
-        assert_eq!(strip_punctuation("--hi--"), "hi");
-        assert_eq!(strip_punctuation("?!hi??"), "hi");
-    }
 }

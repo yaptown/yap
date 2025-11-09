@@ -67,6 +67,7 @@ Arsch der Welt
 Arsch in der Hose
 Arsch mit Ohren
 Art und Weise
+Arzt werden
 As der Asse
 Asche auf mein Haupt
 Ass im Ärmel
@@ -252,6 +253,8 @@ Bild ↑
 Bild ↓
 Bildende Kunst
 Bindfäden regnen
+Bis nächste Woche
+Bitte schön
 Bittersüßer Nachtschatten
 Black Box
 Blaue Stadt
@@ -287,6 +290,8 @@ Burkina Faso
 Butter bei die Fische
 Bände sprechen
 Büchse der Pandora
+Café Crèma
+Café Crème
 Casus Belli
 Casus knacksus
 Chicken Nugget
@@ -312,6 +317,7 @@ Dampf ablassen
 Dark Waver
 Darwin Award
 Das Reich
+Das weiß jedes Kind
 Daumen drücken
 Daumen mal Pi
 Deep Learning
@@ -389,6 +395,7 @@ Ende der Fahnenstange
 Ende gut alles gut
 Ende gut, alles gut
 Enfant terrible
+Englisch sprechen
 Epoche machend
 Erfolg bringen
 Erfolg haben
@@ -434,6 +441,7 @@ Flagge zeigen
 Fleisch und Blut
 Flucht nach vorn
 Formel 1
+Fragen haben
 Fragen kostet nichts
 Fragen stellen
 Fragen zu etwas haben
@@ -445,6 +453,7 @@ Frankfurt a/O.
 Frankfurt am Main
 Frankfurt an der Oder
 Französisch können
+Französisch sprechen
 Französische Revolution
 Freiburg im Breisgau
 Freiburg im Üechtland
@@ -470,6 +479,7 @@ Fürst der Finsternis
 Fürstentum Albanien
 Garbage Collector
 Garten Eden
+Garten- und Landschaftsbau
 Gas geben
 Geduld haben
 Geduld ist eine Tugend
@@ -582,6 +592,7 @@ Happy End
 Harn lassen
 Hartz IV
 Haus und Hof
+Hausaufgaben machen
 Head of
 Head of Department
 Heard und McDonaldinseln
@@ -608,6 +619,7 @@ Heulen und Zähneklappern
 Heute hier, morgen dort
 High Snobiety
 High Society
+Hilton Hotel
 Himmel und Hölle in Bewegung setzen
 Hin und Her
 Hin- und Rückfahrt
@@ -641,6 +653,7 @@ Hut ab
 Hydraulic Fracturing
 Hände hoch
 Hände schütteln
+Hände weg
 Höhen und Tiefen
 Höhle der Löwen
 Höhle des Löwen
@@ -908,6 +921,7 @@ Pi mal Daumen
 Pille danach
 Pinot noir
 Piz Bernina
+Platz brauchen
 Platz haben
 Platz machen
 Platz nehmen
@@ -969,6 +983,7 @@ Rhythmische Sportgymnastik
 Rich Internet Application
 Rio de Janeiro
 Roller Derby
+Rolls Royce
 Rom ist nicht an einem Tag erbaut worden
 Rosbach vor der Höhe
 Rosch ha-Schana
@@ -1066,6 +1081,7 @@ Schutt und Asche
 Schwarze Szene
 Schwarzer Block
 Schwarzer Peter
+Schwarzer Tod
 Schwarzes Brett
 Schwarzes Loch
 Schwarzes Meer
@@ -1123,6 +1139,7 @@ Spitze des Eisbergs
 Spondylitis ankylosans
 Sri Lanka
 St. Gallen
+St. Georg
 St. Kitts und Nevis
 St. Lucia
 St. Pauli
@@ -1182,11 +1199,13 @@ Tal der Tränen
 Tausend Nadeln
 Tausendjähriges Reich
 Tempi passati
+Tennis spielen
 Teufels Küche
 Tic Tac Toe
 Time box
 Tisch und Bett
 Toast Hawaii
+Tom Lehrer
 Top Ten
 Totes Meer
 Totgesagte leben länger
@@ -1211,8 +1230,10 @@ Trümpfe aus der Hand geben
 Tschechische Republik
 Tupamaros West-Berlin
 Tyrrhenisches Meer
+Uhr gehen
 Ultima Ratio
 Um und Auf
+Um wieviel Uhr
 Umgekehrte Polnische Notation
 Unbefleckte Empfängnis
 Undank ist der Welten Lohn
@@ -1340,6 +1361,7 @@ aber hallo
 aber sicher
 aber sicher doch
 aber, aber
+abfahren
 abgehender Flug
 abgekartete Sache
 abgekartetes Spiel
@@ -1351,6 +1373,7 @@ abnehmen
 abnormal
 absagen
 abschließend
+absetzen
 abstrakte Algebra
 abstrakte Fabrik
 abstrakte Klasse
@@ -1518,6 +1541,7 @@ angereichertes Uran
 angesichts
 angst und bang
 angst und bange
+anhaben
 anno dazumal
 anonyme Klasse
 anorganische Chemie
@@ -1528,6 +1552,7 @@ ans Tageslicht bringen
 ans Tageslicht kommen
 ans Ziel
 anschließend
+anschreiben
 ansehen
 antifaschistischer Schutzwall
 arabische Ziffer
@@ -1547,6 +1572,7 @@ au weia
 auch andere Mütter haben schöne Töchter
 auch ein blindes Huhn findet mal ein Korn
 auch gut
+auch nicht
 auch nur mit Wasser kochen
 auch so
 auf 180
@@ -1617,7 +1643,7 @@ auf dem Rückweg
 auf dem Schirm
 auf dem Schlauch stehen
 auf dem Silbertablett
-auf dem Spiel
+auf dem Spiel stehen
 auf dem Sterbebett
 auf dem Teppich bleiben
 auf dem Weg
@@ -1705,6 +1731,7 @@ auf einen Sprung vorbeikommen
 auf einmal
 auf etwas Gift nehmen können
 auf etwas wetten
+auf etwas übergehen
 auf ex trinken
 auf freiem Fuß sein
 auf frischer Tat
@@ -1820,6 +1847,7 @@ aus zweiter Hand
 auseinander
 ausfindig machen
 ausgehen
+ausmachen
 ausnahmslos
 ausschneiden und einfügen
 aussichtslos
@@ -1877,6 +1905,7 @@ bei der Sache sein
 bei der Wahrheit bleiben
 bei drei auf dem Baum
 bei drei auf den Bäumen
+bei jemandem leben
 bei jemandem sein
 bei jemandem wohnen
 bei lebendigem Leib
@@ -1910,6 +1939,8 @@ besser ein Spatz in der Hand als eine Taube auf dem Dach
 besser ein schreckliches Ende als ein Schrecken ohne Ende
 besser spät als nie
 besser stumm als dumm
+besser werden
+besser … als
 bessere Hälfte
 bestehen bleiben
 bester Freund des Menschen
@@ -1964,6 +1995,7 @@ bist du gläubig
 bisweilen
 bitte schoen
 bitte schön
+bitte warten
 bitte, das Spiel zu machen
 bitten um
 blau machen
@@ -2024,6 +2056,7 @@ da will ich hin
 dabei bleiben
 dabei haben
 dabei sein
+dabeihaben
 dadurch hindurch
 dafür nicht
 dafür sein
@@ -2511,9 +2544,11 @@ don't fuck in the factory
 doppelt gemoppelt
 doppeltes Perfekt
 dort drüben
+dort hin
 dorthin
 dran glauben müssen
 drauf und dran
+draußen warten
 drei Kreuze machen
 drei Kreuze schlagen
 drei Tage später
@@ -2706,6 +2741,7 @@ eiserne Regel
 eiserner Bestand
 eiserner Wille
 elektrische Zigarette
+elektrischer Insektenvernichter
 elektrischer Stuhl
 elektromagnetische Wechselwirkung
 elektronische Datenverarbeitung
@@ -2761,6 +2797,7 @@ es fehlt an
 es fühlt sich an
 es führt zu
 es gab
+es geben
 es gefallen
 es geht um
 es gehört dazu
@@ -2810,6 +2847,7 @@ es mangelt an
 es scheint
 es sei
 es sei denn
+es sein lassen
 es selber machen
 es sich bequem machen
 es sich gemütlich machen
@@ -2893,7 +2931,10 @@ falsch liegen
 falsch positiv
 falsch schreiben
 falscher Freund
+fast alles
+fast da
 fast kein
+fast nie
 fehl am Platz
 fehl am Platze
 fein geschliffen
@@ -2937,6 +2978,7 @@ fröhliche Urständ feiern
 fröhliche Weihnachten
 früher oder später
 früher war mehr Lametta
+frühstücken
 fundamentale Wechselwirkung
 funktionale Abhängigkeit
 funktionelle Gruppe
@@ -3006,11 +3048,14 @@ gegeneinander
 gegeneinander ausspielen
 geh bitte
 geh nur
+gehen arbeiten
 gehen lassen
 gehen müssen
+gehen schlafen
 gehobenen Hauptes
 geht klar
 geht's noch
+gehören
 gehören zu
 gehüpft wie gesprungen
 geistiges Eigentum
@@ -3136,6 +3181,7 @@ grüßen lassen
 gut Ding will Weile haben
 gut Nacht
 gut Wetter machen
+gut bestückt
 gut durch
 gut gebrüllt, Löwe
 gut gehen
@@ -3169,6 +3215,7 @@ ha noi
 habe die Ehre
 haben Sie Allergien gegen irgendwelche Medikamente
 haben können
+haben sollen
 haftbar machen
 halb so wild
 halb voll
@@ -3193,6 +3240,7 @@ heißer Feger
 heißer Herbst
 heißes Eisen
 heißes Höschen
+helfen wollen
 her und hin
 herkommen
 hernach
@@ -3227,6 +3275,7 @@ hinter dem Horizont
 hinter den Augen
 hinter den Kulissen
 hinter die Schule gehen
+hinter jemandem her sein
 hinter schwedischen Gardinen
 hinter verschlossenen Türen
 hinter vorgehaltener Hand
@@ -3243,6 +3292,7 @@ historische Sprachwissenschaft
 histrionische Persönlichkeitsstörung
 hoch im Kurs
 hoch und runter
+hochkommen
 hoffnungslos
 hohe Kante
 hohe See
@@ -3262,6 +3312,7 @@ hätte, hätte, Fahrradkette
 häusliche Gewalt
 höhere Gewalt
 höhere Tochter
+hören reden
 hüben wie drüben
 i. A.
 i. Allg.
@@ -3494,6 +3545,7 @@ in Empfang nehmen
 in Erfüllung gehen
 in Ermangelung
 in Faktoren zerlegbar
+in Flammen stehen
 in Frage kommen
 in Frage stellen
 in Frieden
@@ -3683,6 +3735,7 @@ ins Auge gehen
 ins Auge springen
 ins Auge stechen
 ins Bett
+ins Bett bringen
 ins Bett gehen
 ins Bild setzen
 ins Blaue
@@ -3800,13 +3853,16 @@ jemandem ein Kuckucksei ins Nest legen
 jemandem ein X für ein U vormachen
 jemandem eins auswischen
 jemandem etwas aus der Nase ziehen
+jemandem etwas erzählen
 jemandem etwas in die Schuhe schieben
+jemandem etwas sagen
 jemandem etwas zur Last legen
 jemandem fehlen die Worte
 jemandem fällt ein Stein vom Herzen
 jemandem gefallen
 jemandem geht der Arsch auf Grundeis
 jemandem gehören
+jemandem gut stehen
 jemandem in Fleisch und Blut übergehen
 jemandem in den Arsch kriechen
 jemandem in den Hintern kriechen
@@ -3822,6 +3878,7 @@ jemandem zur Seite stehen
 jemandem über den Weg laufen
 jemanden Bescheid geben
 jemanden am Arsch lecken
+jemanden gern mögen
 jemanden kreuzweise können
 jemanden mal können
 jemanden sticht der Hafer
@@ -3844,8 +3901,11 @@ kalter Kaffee
 kat' exochen
 kategorischer Imperativ
 katholisch machen
+kaum etwas
 kein Auge zutun
 kein Blatt vor den Mund nehmen
+kein Ding
+kein Geld haben
 kein Geld mehr
 kein Gewissen haben
 kein Jota
@@ -3909,6 +3969,7 @@ kombinatorische Chemie
 komme was wolle
 komme, was da wolle
 komme, was wolle
+kommen besuchen
 kommste heut nicht, kommste morgen
 kommt Zeit, kommt Rat
 komplett anders
@@ -3960,6 +4021,7 @@ langes Gesicht
 lapsus linguae
 lass es dir schmecken
 lassen Sie es sich schmecken
+lassen machen
 lassen uns
 lassen uns gehen
 lasst es euch schmecken
@@ -3985,6 +4047,7 @@ letztendlich
 letztens
 letzter Mohikaner
 letzter Strohhalm
+letztes Jahr
 letztes Mal
 letztlich
 lieb haben
@@ -4004,6 +4067,8 @@ links liegen lassen
 locker vom Hocker
 logisch
 logo
+los sein
+loswerden
 lustig machen
 lyrisches Ich
 längs der Nase
@@ -4196,6 +4261,8 @@ mundtot machen
 my English is not the yellow from the egg
 my English is not the yellow from the egg, but it goes
 möchte gern
+müssen gesehen haben
+müssen los
 müssen müssen
 n. Chr.
 n. u. Z.
@@ -4292,6 +4359,7 @@ nicht wahr
 nicht weit
 nicht weit entfernt
 nicht weiter als die Nase reicht
+nicht wohl sein
 nicht zu weit gehen
 nicht zufällig
 nicht zutreffend
@@ -4304,6 +4372,7 @@ nichts anbrennen lassen
 nichts anderes
 nichts auf etwas geben
 nichts da
+nichts dabei finden
 nichts dafür können
 nichts dem Zufall überlassen
 nichts für ungut
@@ -4319,9 +4388,12 @@ nie da gewesen
 nie genug
 nie im Leben
 nie mehr
+nie sagen
 nie und nimmer
 nie wieder
 niemals genug
+niemals nie sagen
+niemand anderes
 niemand anders
 niemand hat die Absicht
 niet- und nagelfest
@@ -4361,6 +4433,7 @@ nur die Harten kommen in den Garten
 nur für den Fall
 nur über meine Leiche
 nutzlos
+nächste Woche
 nächstens
 nächstes Mal
 nördlicher Wendekreis
@@ -4528,6 +4601,7 @@ reinen Wein einschenken
 relationales Datenbankmodell
 relationales Modell
 rhetorische Frage
+richtig gehen
 richtig und wichtig
 riemannsche Mannigfaltigkeit
 riemannsche ζ-Funktion
@@ -4548,6 +4622,7 @@ rubbel die Katz
 ruck, zuck
 rufen Sie die Polizei
 ruhig Blut bewahren
+rund machen
 rund um die Uhr
 runder Geburtstag
 runder Tisch
@@ -4594,6 +4669,7 @@ schließlich
 schlussendlich
 schmutzige Bombe
 schmutzige Wäsche waschen
+schnell machen
 schnelle Nummer
 schon gut
 schon immer
@@ -4635,6 +4711,7 @@ schwere Not
 schwere andere seelische Abartigkeit
 schwerer Kerker
 schwimmen gehen
+schwimmen können
 schwitzen wie ein Schwein
 schön Wetter machen
 schön für euch
@@ -4669,6 +4746,7 @@ seinen Weg gehen
 seinen Weg machen
 seiner Nase nach
 seines Zeichens
+seit einer Woche
 seit einiger Zeit
 seit geraumer Zeit
 seit gestern
@@ -4681,6 +4759,7 @@ seit morgen
 seit vorgestern
 seit wann
 seitwärts
+selbst denken
 selbsterfüllende Prophezeiung
 selbstverständlich
 seltene Erde
@@ -4701,6 +4780,7 @@ sich auf seinen Lorbeeren ausruhen
 sich aus dem Fenster lehnen
 sich aus dem Staub machen
 sich aus den Fingern saugen
+sich bereitmachen
 sich blicken lassen
 sich den Kopf zerbrechen
 sich den Magen verderben
@@ -4738,6 +4818,7 @@ sich keinen Kopf machen
 sich lieb Kind machen
 sich mit Ruhm bekleckern
 sich nicht vom Fleck rühren
+sich nicht wohl fühlen
 sich schuldig fühlen
 sich schuldig machen
 sich sehen
@@ -4745,7 +4826,9 @@ sich selbst
 sich selbst überlassen
 sich vom Acker machen
 sich wacker schlagen
+sich zu Schulden kommen lassen
 sicher doch
+sicher sein
 sie alle haben
 sieben Todsünden
 siehe auch
@@ -4802,6 +4885,7 @@ solange
 solange bis
 solange nicht
 solange wie
+sollen wohl
 somit
 sonst nichts
 sonst niemand
@@ -4851,6 +4935,7 @@ stehende Ovation
 stehenden Fußes
 stehendes Heer
 steif wie ein Stock
+sterben
 sterbender Schwan
 steter Tropfen höhlt den Stein
 stille Wasser sind tief
@@ -4858,6 +4943,7 @@ stilles Wasser
 stimmt genau
 stimmt's
 stinken wie ein Iltis
+stolz sein
 stolz wie Oskar
 streitbare Demokratie
 streng genommen
@@ -4935,6 +5021,7 @@ um diese Zeit
 um ehrlich zu sein
 um ein Haar
 um euretwillen
+um fünf Uhr
 um genau zu sein
 um herum
 um ihretwillen
@@ -5235,6 +5322,7 @@ vor verschlossenen Türen stehen
 vorauseilender Gehorsam
 vorausgesetzt
 vorbehaltlos
+vorbeigehen
 voreinander
 vorerst
 vorhaben
@@ -5252,6 +5340,7 @@ völlig anders
 w. z. b. w.
 wach liegen
 wahllos
+wahr oder falsch
 wahr werden
 wann anders
 wann auch immer
@@ -5261,6 +5350,7 @@ warmer Bruder
 warmer Regen
 warten auf
 warten lassen
+warten sehen
 warum auch immer
 warum denn
 was Hänschen nicht lernt, lernt Hans nimmermehr
@@ -5304,6 +5394,7 @@ weder Hand noch Fuß
 weder noch
 weg sein
 weg wollen
+wegfahren
 weggegangen, Platz vergangen
 weggehen
 weggehen wie warme Semmeln
@@ -5344,6 +5435,7 @@ wenn man vom Teufel spricht
 wenn man vom Teufel spricht, dann ist er nicht weit
 wenn man vom Teufel spricht, dann kommt er
 wenn man vom Teufel spricht, kommt er
+wenn möglich
 wenn nicht
 wenn schon, denn schon
 wenn überhaupt
@@ -5468,6 +5560,7 @@ wie wäre es
 wie wäre es mit
 wie zufällig
 wieder da
+wieder einfangen
 wiederkommen
 wieso denn
 wilde Ehe
@@ -5475,6 +5568,9 @@ willkommen heißen
 wir schaffen das
 wir sind wieder wer
 wird es regnen
+wissen von
+wissen wollen
+wissen über
 wissen, was man getan hat
 wissenschaftliche Methode
 wissenschaftliches Rechnen
@@ -5505,6 +5601,7 @@ wohin gehen
 wohl eher
 wohl oder übel
 wohnen bei
+wohnen neben
 womit beschäftigen
 woran denken
 worauf warten
@@ -5521,6 +5618,7 @@ you name it
 z. B.
 z. E.
 z. T.
+zartes Pflänzchen
 zeit jemandes Lebens
 ziellos
 zigmal
@@ -5580,6 +5678,7 @@ zu dieser Zeit
 zu dritt
 zu einem Ende kommen
 zu etwas kommen wie die Jungfrau zum Kind
+zu etwas kommen wie die Jungfrau zum Kinde
 zu etwas übergehen
 zu eurer Zeit
 zu früh kommen
@@ -5600,6 +5699,7 @@ zu spät kommen
 zu tief ins Glas blicken
 zu tief ins Glas gucken
 zu tief ins Glas schauen
+zu tun haben
 zu unserer Zeit
 zu viel
 zu viel des Guten
@@ -5635,6 +5735,7 @@ zum Schluss
 zum Schluss kommen
 zum Spaß
 zum Steinerweichen
+zum Strand hin
 zum Teil
 zum Teufel
 zum Teufel schicken
@@ -5668,12 +5769,14 @@ zur Hölle fahren
 zur Kasse bitten
 zur Kenntnis nehmen
 zur Nase
+zur Rede stellen
 zur Sache
 zur Sache kommen
 zur Salzsäule erstarren
 zur Schau stellen
 zur Schau tragen
 zur Schule
+zur Schule bringen
 zur Schule gehen
 zur Seite
 zur Seite stehen

@@ -1,4 +1,5 @@
 use futures::stream::StreamExt;
+use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{Course, Lexeme};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -28,7 +29,18 @@ pub async fn correct_proper_nouns(
 
     let count = proper_nouns.len();
 
-    let filtered_lexemes = futures::stream::iter(proper_nouns.iter()).enumerate().map(async |(i, (word, usages))| {
+    let pb = ProgressBar::new(count as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} proper nouns ({per_sec}, ${msg}, {eta})")
+            .unwrap()
+            .progress_chars("#>-"),
+    );
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
+
+    let filtered_lexemes = futures::stream::iter(proper_nouns.iter()).map(|(word, usages)| {
+        let pb = pb.clone();
+        async move {
         let assume_not_proper_noun = usages.iter().all(|usage| usage.ends_with("-le.") || usage.ends_with("-la.") || usage.ends_with("-les.")) || ["même", "alors"].contains(&word.as_str());
         let is_proper_noun = if assume_not_proper_noun {false} else {
         let response: ProperNounClassification = CHAT_CLIENT.chat_with_system_prompt(
@@ -50,13 +62,12 @@ Output JSON format:
                 format!("{target_language} word: `{word}`\n\nExample usages: {:?}", usages.iter().take(3).collect::<Vec<_>>()),
             ).await.ok()?;
 
-            if i % 50 == 0 || !response.is_proper_noun {
-                println!("{i} / {count} (${cost:.2})", cost=CHAT_CLIENT.cost().unwrap());
-                println!("Analyzing word: {word}");
-                println!("Result: {response:?}");
-            }
             response.is_proper_noun
         };
+
+        // Update progress bar
+        pb.set_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
+        pb.inc(1);
 
 
         if !is_proper_noun {
@@ -87,10 +98,13 @@ Examples:
         }
 
         None
+    }
     })
     .buffered(40)
     .collect::<Vec<_>>()
     .await.into_iter().flatten().collect::<BTreeMap<_, _>>();
+
+    pb.finish_with_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
 
     Ok(filtered_lexemes)
 }

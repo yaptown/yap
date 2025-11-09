@@ -3,15 +3,16 @@ use std::path::PathBuf;
 
 use anyhow::Context;
 use indexmap::IndexSet;
-use language_utils::Course;
+use language_utils::{Course, SentenceSource};
 
 /// Default target maximum number of sentences to import from Tatoeba
 const DEFAULT_TARGET_SENTENCE_COUNT: usize = 200_000;
 
-/// Get target language sentences with optional translations.
+/// Get target language sentences with optional translations and source information.
 ///
-/// This function collects sentences from all available sources (Anki and Tatoeba)
-/// for a given course. It returns sentences with their native language translations when available.
+/// This function collects sentences from all available sources (Anki, Tatoeba, manual, songs)
+/// for a given course. It returns sentences with their native language translations when available
+/// and tracks which sources each sentence came from.
 /// It does not perform Google Translate translations and does not write to cache files.
 ///
 /// # Arguments
@@ -20,8 +21,10 @@ const DEFAULT_TARGET_SENTENCE_COUNT: usize = 200_000;
 ///
 /// # Returns
 ///
-/// A vector of tuples: (target_sentence, optional_native_translation)
-pub fn get_target_sentences(course: Course) -> anyhow::Result<Vec<(String, Option<String>)>> {
+/// A vector of tuples: (target_sentence, optional_native_translation, source_info)
+pub fn get_target_sentences(
+    course: Course,
+) -> anyhow::Result<Vec<(String, Option<String>, SentenceSource)>> {
     let source_data_path = PathBuf::from(format!(
         "./generate-data/data/{}",
         course.target_language.iso_639_3()
@@ -29,6 +32,9 @@ pub fn get_target_sentences(course: Course) -> anyhow::Result<Vec<(String, Optio
 
     // Load banned sentences
     let banned_sentences = load_banned_sentences(&source_data_path)?;
+
+    // Load manual sentences (should NEVER be filtered)
+    let manual_sentences = load_manual_sentences(&source_data_path)?;
 
     // Get all data sources
     let all_cards = crate::read_anki::get_all_cards(&source_data_path);
@@ -53,7 +59,9 @@ pub fn get_target_sentences(course: Course) -> anyhow::Result<Vec<(String, Optio
             } else {
                 None
             };
-            (target_language_sentence.clone(), native_sentence)
+            let mut source = SentenceSource::none();
+            source.from_anki = true;
+            (target_language_sentence.clone(), native_sentence, source)
         })
     });
 
@@ -69,36 +77,64 @@ pub fn get_target_sentences(course: Course) -> anyhow::Result<Vec<(String, Optio
         } else {
             None
         };
-        (pair.target.clone(), native_sentence)
+        let mut source = SentenceSource::none();
+        source.from_tatoeba = true;
+        (pair.target.clone(), native_sentence, source)
     });
 
-    // Combine all sentences and filter banned ones
-    let all_sentences: Vec<(String, Option<String>)> = anki_sentences
+    // Add manual sentences with source tracking
+    let manual_sentences_iter = manual_sentences.into_iter().map(|sentence| {
+        let mut source = SentenceSource::none();
+        source.from_manual = true;
+        (sentence, None, source)
+    });
+
+    // Combine all sentences
+    // Manual sentences are NOT filtered by banned_sentences
+    let all_sentences: Vec<(String, Option<String>, SentenceSource)> = anki_sentences
         .chain(tatoeba_sentences)
-        .filter(|(sentence, _)| !banned_sentences.contains(&sentence.to_lowercase()))
+        .filter(|(sentence, _, source)| {
+            // Never filter manual sentences
+            source.is_manual() || !banned_sentences.contains(&sentence.to_lowercase())
+        })
+        .chain(manual_sentences_iter)
         .collect();
 
     // Use IndexSet to deduplicate by target sentence while preserving order
-    // When there are duplicates, prefer entries with translations
+    // When there are duplicates, prefer entries with translations and merge sources
     let mut seen_targets: IndexSet<String> = IndexSet::new();
-    let mut result: Vec<(String, Option<String>)> = Vec::new();
+    let mut result: Vec<(String, Option<String>, SentenceSource)> = Vec::new();
     let mut target_to_index: std::collections::HashMap<String, usize> =
         std::collections::HashMap::new();
 
-    for (target, native) in all_sentences {
+    for (target, native, source) in all_sentences {
         if let Some(&existing_index) = target_to_index.get(&target) {
-            // If we already have this target sentence, update it only if:
-            // 1. The existing entry has no translation, and this one does
+            // If we already have this target sentence:
+            // 1. Merge the sources
+            result[existing_index].2.merge(&source);
+            // 2. Update translation if the existing entry has no translation and this one does
             if result[existing_index].1.is_none() && native.is_some() {
                 result[existing_index].1 = native;
             }
         } else if seen_targets.insert(target.clone()) {
             // New target sentence
             let index = result.len();
-            result.push((target.clone(), native));
+            result.push((target.clone(), native, source));
             target_to_index.insert(target, index);
         }
     }
+
+    // Language-specific cleanup phase
+    let result = result
+        .into_iter()
+        .map(|(sentence, native, source)| {
+            (
+                language_utils::text_cleanup::cleanup_sentence(sentence, course.target_language),
+                native,
+                source,
+            )
+        })
+        .collect();
 
     Ok(result)
 }
@@ -136,4 +172,29 @@ fn load_banned_sentences(source_data_path: &std::path::Path) -> anyhow::Result<H
     }
 
     Ok(banned_sentences)
+}
+
+/// Load manual sentences from the extra/manual.txt file
+/// These sentences should NEVER be filtered out
+fn load_manual_sentences(source_data_path: &std::path::Path) -> anyhow::Result<Vec<String>> {
+    let mut manual_sentences = Vec::new();
+
+    let manual_file = source_data_path.join("sentence-sources/extra/manual.txt");
+    if manual_file.exists() {
+        let content = std::fs::read_to_string(&manual_file)
+            .context("Failed to read manual sentences file")?;
+        for line in content.lines() {
+            let line = line.trim().to_string();
+            if !line.is_empty() {
+                manual_sentences.push(line);
+            }
+        }
+        println!(
+            "Loaded {} manual sentences from {}",
+            manual_sentences.len(),
+            manual_file.display()
+        );
+    }
+
+    Ok(manual_sentences)
 }
