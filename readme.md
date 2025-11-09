@@ -85,7 +85,7 @@ Each individual step is cached inside a file in the out/ directory. To rerun a s
 
 The NLP is extremely slow. I rented a GH200 from Lambda Labs when I need to recalculate it.
 
-## Data Cleaning
+## Data Cleaning (for custom NLP training data)
 
 The NLP model used by Yap (lexide) is trained from data in this repo. Generating that data requires python.
 
