@@ -17,6 +17,12 @@ async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     for course in COURSES {
+        println!(
+            "Processing course: {} -> {}",
+            course.native_language.iso_639_3(),
+            course.target_language.iso_639_3()
+        );
+
         let target_language_dir =
             PathBuf::from(format!("./out/{}", course.target_language.iso_639_3()));
         std::fs::create_dir_all(&target_language_dir)?;
@@ -406,16 +412,32 @@ async fn main() -> anyhow::Result<()> {
                 .collect();
 
             let mut file = File::create(word_to_pronunciation_file)?;
-            for (word, pronunciation) in word_to_pronunciation {
+            for (word, pronunciation) in &word_to_pronunciation {
                 let json = serde_json::to_string(&(word, pronunciation))?;
                 writeln!(file, "{json}")?;
             }
             let mut file = File::create(pronunciation_to_word_file)?;
-            for (ipa, words) in pronunciation_to_words {
+            for (ipa, words) in &pronunciation_to_words {
                 let json = serde_json::to_string(&(ipa, words))?;
                 writeln!(file, "{json}")?;
             }
         }
+
+        // Generate disambiguation practice data
+        let homophones = generate_data::disambiguation_practice::generate_homophones(
+            *course,
+            &target_language_dir,
+            &frequencies,
+            1000,
+        )?;
+
+        // Generate homophone practice sentences
+        generate_data::disambiguation_practice::generate_homophone_practice(
+            *course,
+            &homophones,
+            &target_language_dir,
+        )
+        .await?;
 
         // Generate pronunciation sounds and guides
         let sounds_file = target_language_dir.join("pronunciation_sounds.jsonl");
@@ -772,6 +794,21 @@ async fn main() -> anyhow::Result<()> {
             }
         });
 
+        // Load homophone practice data
+        let homophone_practice = {
+            let practice_file = target_language_dir.join("homophone_practice.jsonl");
+            if practice_file.exists() {
+                let file = File::open(&practice_file)?;
+                let reader = BufReader::new(file);
+                reader
+                    .lines()
+                    .map(|line| serde_json::from_str(&line.unwrap()))
+                    .collect::<Result<BTreeMap<_, _>, _>>()?
+            } else {
+                BTreeMap::new()
+            }
+        };
+
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {
             target_language_sentences,
@@ -783,6 +820,7 @@ async fn main() -> anyhow::Result<()> {
             word_to_pronunciation,
             pronunciation_to_words,
             pronunciation_data,
+            homophone_practice,
         };
 
         let language_pack = language_utils::language_pack::LanguagePack::new(consolidated_data);

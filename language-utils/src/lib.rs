@@ -893,10 +893,7 @@ pub mod transcription_challenge {
 }
 
 /// Consolidated data structure containing all generated language data
-#[derive(
-    Debug, Clone, Eq, PartialEq, Ord, PartialOrd, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,
-)]
-#[rkyv(compare(PartialEq))]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ConsolidatedLanguageData {
     /// All target language sentences from Anki cards
     pub target_language_sentences: Vec<String>,
@@ -916,6 +913,8 @@ pub struct ConsolidatedLanguageData {
     pub pronunciation_to_words: Vec<(Pronunciation, Vec<String>)>,
     /// Pronunciation patterns and guides for the course
     pub pronunciation_data: PronunciationData,
+    /// Homophone disambiguation practice sentences
+    pub homophone_practice: BTreeMap<HomophoneWordPair<String>, HomophonePractice<String>>,
 }
 
 impl ConsolidatedLanguageData {
@@ -982,6 +981,12 @@ impl ConsolidatedLanguageData {
                 rodeo.get_or_intern(&word_pair.native);
                 rodeo.get_or_intern(&word_pair.cultural_context);
             }
+        }
+
+        // intern homophone practice data
+        for (word_pair, practice) in &self.homophone_practice {
+            word_pair.get_or_intern(rodeo);
+            practice.get_or_intern(rodeo);
         }
     }
 }
@@ -1423,6 +1428,250 @@ pub const LANGUAGES: &[Language] = &[
     Language::Italian,
 ];
 
+/// A pair of homophone words, lexicographically sorted to ensure consistency
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    schemars::JsonSchema,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq), derive(Hash), derive(PartialEq), derive(Eq))]
+pub struct HomophoneWordPair<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
+    pub word1: S,
+    pub word2: S,
+}
+
+impl HomophoneWordPair<String> {
+    /// Create a new word pair, ensuring lexicographic ordering.
+    /// Returns None if the words are the same.
+    pub fn new(word_a: String, word_b: String) -> Option<Self> {
+        if word_a == word_b {
+            return None;
+        }
+
+        let (word1, word2) = if word_a < word_b {
+            (word_a, word_b)
+        } else {
+            (word_b, word_a)
+        };
+
+        Some(Self { word1, word2 })
+    }
+
+    pub fn get_interned(
+        &self,
+        rodeo: &lasso::RodeoReader,
+    ) -> Option<HomophoneWordPair<lasso::Spur>> {
+        Some(HomophoneWordPair {
+            word1: rodeo.get(&self.word1)?,
+            word2: rodeo.get(&self.word2)?,
+        })
+    }
+
+    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophoneWordPair<lasso::Spur> {
+        HomophoneWordPair {
+            word1: rodeo.get_or_intern(&self.word1),
+            word2: rodeo.get_or_intern(&self.word2),
+        }
+    }
+}
+
+impl HomophoneWordPair<lasso::Spur> {
+    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophoneWordPair<String> {
+        HomophoneWordPair {
+            word1: rodeo.resolve(&self.word1).to_string(),
+            word2: rodeo.resolve(&self.word2).to_string(),
+        }
+    }
+}
+
+/// A single sentence with a word that should be underlined (marked by asterisks in LLM output)
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq))]
+pub struct HomophoneSentence<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
+    /// The part of the sentence before the underlined word
+    pub before: S,
+    /// The underlined word itself
+    pub word: S,
+    /// The part of the sentence after the underlined word
+    pub after: S,
+}
+
+impl HomophoneSentence<String> {
+    pub fn get_interned(
+        &self,
+        rodeo: &lasso::RodeoReader,
+    ) -> Option<HomophoneSentence<lasso::Spur>> {
+        Some(HomophoneSentence {
+            before: rodeo.get(&self.before)?,
+            word: rodeo.get(&self.word)?,
+            after: rodeo.get(&self.after)?,
+        })
+    }
+
+    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophoneSentence<lasso::Spur> {
+        HomophoneSentence {
+            before: rodeo.get_or_intern(&self.before),
+            word: rodeo.get_or_intern(&self.word),
+            after: rodeo.get_or_intern(&self.after),
+        }
+    }
+}
+
+impl HomophoneSentence<lasso::Spur> {
+    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophoneSentence<String> {
+        HomophoneSentence {
+            before: rodeo.resolve(&self.before).to_string(),
+            word: rodeo.resolve(&self.word).to_string(),
+            after: rodeo.resolve(&self.after).to_string(),
+        }
+    }
+}
+/// A pair of practice sentences for disambiguating two homophones
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq))]
+pub struct HomophoneSentencePair<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
+    /// Sentence using the first word (lexicographically)
+    pub sentence1: HomophoneSentence<S>,
+    /// Sentence using the second word (lexicographically)
+    pub sentence2: HomophoneSentence<S>,
+}
+
+impl HomophoneSentencePair<String> {
+    pub fn get_interned(
+        &self,
+        rodeo: &lasso::RodeoReader,
+    ) -> Option<HomophoneSentencePair<lasso::Spur>> {
+        Some(HomophoneSentencePair {
+            sentence1: self.sentence1.get_interned(rodeo)?,
+            sentence2: self.sentence2.get_interned(rodeo)?,
+        })
+    }
+
+    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophoneSentencePair<lasso::Spur> {
+        HomophoneSentencePair {
+            sentence1: self.sentence1.get_or_intern(rodeo),
+            sentence2: self.sentence2.get_or_intern(rodeo),
+        }
+    }
+}
+
+impl HomophoneSentencePair<lasso::Spur> {
+    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophoneSentencePair<String> {
+        HomophoneSentencePair {
+            sentence1: self.sentence1.resolve(rodeo),
+            sentence2: self.sentence2.resolve(rodeo),
+        }
+    }
+}
+/// Complete disambiguation practice data for a pair of homophones
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq))]
+pub struct HomophonePractice<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
+    pub sentence_pairs: Vec<HomophoneSentencePair<S>>,
+}
+
+impl HomophonePractice<String> {
+    pub fn get_interned(
+        &self,
+        rodeo: &lasso::RodeoReader,
+    ) -> Option<HomophonePractice<lasso::Spur>> {
+        Some(HomophonePractice {
+            sentence_pairs: self
+                .sentence_pairs
+                .iter()
+                .map(|s| s.get_interned(rodeo).unwrap())
+                .collect(),
+        })
+    }
+
+    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophonePractice<lasso::Spur> {
+        HomophonePractice {
+            sentence_pairs: self
+                .sentence_pairs
+                .iter()
+                .map(|s| s.get_or_intern(rodeo))
+                .collect(),
+        }
+    }
+}
+
+impl HomophonePractice<lasso::Spur> {
+    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophonePractice<String> {
+        HomophonePractice {
+            sentence_pairs: self
+                .sentence_pairs
+                .iter()
+                .map(|s| s.resolve(rodeo))
+                .collect(),
+        }
+    }
+}
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct TtsRequest {

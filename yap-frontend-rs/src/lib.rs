@@ -10,6 +10,8 @@ pub mod simulation;
 mod supabase;
 mod utils;
 
+use language_utils::HomophoneSentencePair;
+use language_utils::HomophoneWordPair;
 pub use simulation::DailySimulationIterator;
 
 use chrono::{DateTime, Utc};
@@ -659,6 +661,9 @@ where
         pattern: S,
         position: PatternPosition,
     },
+    HomophonePracticeText {
+        pair: HomophoneWordPair<S>,
+    },
 }
 
 impl<S> CardIndicator<S>
@@ -694,6 +699,18 @@ where
             _ => None,
         }
     }
+
+    pub fn challenge_type(&self) -> ChallengeType {
+        match self {
+            CardIndicator::TargetLanguage { .. } | CardIndicator::HomophonePracticeText { .. } => {
+                ChallengeType::Text
+            }
+            CardIndicator::ListeningHomophonous { .. } | CardIndicator::ListeningLexeme { .. } => {
+                ChallengeType::Listening
+            }
+            CardIndicator::LetterPronunciation { .. } => ChallengeType::Speaking,
+        }
+    }
 }
 
 impl CardIndicator<String> {
@@ -716,6 +733,9 @@ impl CardIndicator<String> {
                     position: *position,
                 }
             }
+            CardIndicator::HomophonePracticeText { pair } => CardIndicator::HomophonePracticeText {
+                pair: pair.get_interned(rodeo)?,
+            },
         })
     }
 }
@@ -740,6 +760,9 @@ impl CardIndicator<Spur> {
                     position: *position,
                 }
             }
+            CardIndicator::HomophonePracticeText { pair } => CardIndicator::HomophonePracticeText {
+                pair: pair.resolve(rodeo),
+            },
         }
     }
 }
@@ -843,6 +866,15 @@ enum CardStatus {
 }
 
 impl CardStatus {
+    pub(crate) fn is_new(&self) -> bool {
+        match self {
+            CardStatus::Tracked(CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card }) => {
+                fsrs_card.state == rs_fsrs::State::New
+            }
+            CardStatus::Unadded(_) => false,
+        }
+    }
+
     pub(crate) fn reviewed(&self) -> Option<&CardData> {
         match self {
             CardStatus::Tracked(card_data) => Some(card_data),
@@ -911,6 +943,7 @@ pub struct Context {
 pub struct Stats {
     pub sentences_reviewed: BTreeMap<Spur, u32>,
     pub words_listened_to: BTreeMap<Heteronym<Spur>, u32>,
+    pub sentence_pairs_reviewed: BTreeMap<HomophoneSentencePair<Spur>, u32>,
     pub total_reviews: u64,
     pub xp: f64,
     pub daily_streak: Option<DailyStreak>,
@@ -1326,7 +1359,8 @@ impl weapon::PartialAppState for Deck {
                     | CardIndicator::ListeningLexeme { .. } => {
                         listening_points.push(point);
                     }
-                    CardIndicator::LetterPronunciation { .. } => {}
+                    CardIndicator::LetterPronunciation { .. }
+                    | CardIndicator::HomophonePracticeText { .. } => {}
                 }
             }
         }
@@ -1477,6 +1511,7 @@ impl DeckState {
             stats: Stats {
                 sentences_reviewed: BTreeMap::new(),
                 words_listened_to: BTreeMap::new(),
+                sentence_pairs_reviewed: BTreeMap::new(),
                 total_reviews: 0,
                 xp: 0.0,
                 daily_streak: None,
@@ -1662,23 +1697,17 @@ impl Deck {
                 let due_date = fsrs_card.due;
 
                 if due_date <= now {
-                    match card {
-                        CardIndicator::TargetLanguage { .. } if no_text_cards => {
+                    match card.challenge_type() {
+                        ChallengeType::Text if no_text_cards => {
                             due_but_banned_cards.push(*card);
                         }
-                        CardIndicator::ListeningHomophonous { .. }
-                        | CardIndicator::ListeningLexeme { .. }
-                            if no_listening_cards =>
-                        {
+                        ChallengeType::Listening if no_listening_cards => {
                             due_but_banned_cards.push(*card);
                         }
-                        CardIndicator::LetterPronunciation { .. } if no_speaking_cards => {
+                        ChallengeType::Speaking if no_speaking_cards => {
                             due_but_banned_cards.push(*card);
                         }
-                        CardIndicator::TargetLanguage { .. }
-                        | CardIndicator::ListeningHomophonous { .. }
-                        | CardIndicator::ListeningLexeme { .. }
-                        | CardIndicator::LetterPronunciation { .. } => due_cards.push(*card),
+                        _ => due_cards.push(*card),
                     }
                 } else {
                     future_cards.push(*card);
@@ -1770,6 +1799,7 @@ impl Deck {
                         let audio_cache = audio_cache.clone();
                         let abort_signal = abort_signal.clone();
                         async move {
+                            let request = request?;
                             // Check if aborted before processing
                             if let Some(ref signal) = abort_signal {
                                 if signal.aborted() {
@@ -1818,6 +1848,7 @@ impl Deck {
                 CardIndicator::ListeningHomophonous { .. } => None,
                 CardIndicator::ListeningLexeme { .. } => None,
                 CardIndicator::LetterPronunciation { .. } => None,
+                CardIndicator::HomophonePracticeText { .. } => None,
             })
             .filter_map(|(lexeme, card_status)| {
                 if let CardStatus::Tracked(card_data) = card_status {
@@ -2264,154 +2295,6 @@ impl Deck {
         NextCardsIterator::new(self, permitted_types)
     }
 
-    fn get_card(&self, card_indicator: CardIndicator<Spur>) -> Option<Card> {
-        let card_status = self.cards.get(&card_indicator)?;
-        let card_data = match card_status {
-            CardStatus::Tracked(data) => data,
-            CardStatus::Unadded { .. } => return None,
-        };
-
-        let card = Card {
-            content: match card_indicator {
-                CardIndicator::TargetLanguage {
-                    lexeme: Lexeme::Heteronym(heteronym),
-                } => {
-                    let Some(entry) = self
-                        .context
-                        .language_pack
-                        .dictionary
-                        .get(&heteronym)
-                        .cloned()
-                    else {
-                        panic!(
-                            "Heteronym {:?} was in the deck, but was not found in dictionary",
-                            heteronym.resolve(&self.context.language_pack.rodeo)
-                        );
-                    };
-                    CardContent::Heteronym {
-                        heteronym,
-                        definitions: entry.definitions.clone(),
-                        morphology: entry.morphology,
-                    }
-                }
-                CardIndicator::TargetLanguage {
-                    lexeme: Lexeme::Multiword(multiword_term),
-                } => {
-                    let Some(entry) = self
-                        .context
-                        .language_pack
-                        .phrasebook
-                        .get(&multiword_term)
-                        .cloned()
-                    else {
-                        panic!(
-                            "Multiword term {:?} was in the deck, but was not found in phrasebook",
-                            self.context.language_pack.rodeo.resolve(&multiword_term)
-                        );
-                    };
-                    CardContent::Multiword(
-                        multiword_term,
-                        MultiwordCardContent {
-                            meaning: entry.meaning.clone(),
-                            example_sentence_target_language: entry.target_language_example.clone(),
-                            example_sentence_native_language: entry.native_language_example.clone(),
-                        },
-                    )
-                }
-                CardIndicator::ListeningHomophonous { pronunciation } => {
-                    let Some(possible_words) = self
-                        .context
-                        .language_pack
-                        .pronunciation_to_words
-                        .get(&pronunciation)
-                        .cloned()
-                    else {
-                        panic!(
-                            "Pronunciation {:?} was in the deck, but was not found in pronunciation_to_words",
-                            self.context.language_pack.rodeo.resolve(&pronunciation)
-                        );
-                    };
-                    let possible_words = possible_words.into_iter().collect::<BTreeSet<_>>();
-
-                    // figure out which of those words the user knows
-                    let possible_words = possible_words
-                        .iter()
-                        .map(|word| {
-                            // Check if any lexeme for this word is known
-                            let word_known = self
-                                .context
-                                .language_pack
-                                .pronunciation_to_lexemes(&pronunciation)
-                                .filter(|(w, _)| w == word)
-                                .any(|(_, lexeme)| {
-                                    self.cards
-                                        .get(&CardIndicator::TargetLanguage { lexeme })
-                                        .is_some_and(|status| {
-                                            matches!(status, CardStatus::Tracked(_))
-                                        })
-                                });
-                            (word_known, *word)
-                        })
-                        .collect();
-                    CardContent::Listening {
-                        pronunciation,
-                        possible_words,
-                    }
-                }
-                CardIndicator::ListeningLexeme { lexeme } => {
-                    // For ListeningLexeme, we create a listening card content similar to homophonous
-                    // but specifically for the lexeme
-                    match lexeme {
-                        Lexeme::Heteronym(heteronym) => {
-                            // Get the pronunciation from the pronunciation map if available
-                            let pronunciation = self
-                                .context
-                                .language_pack
-                                .word_to_pronunciation
-                                .get(&heteronym.word)
-                                .cloned()
-                                .unwrap_or(heteronym.word);
-
-                            CardContent::Listening {
-                                pronunciation,
-                                possible_words: vec![(true, heteronym.word)],
-                            }
-                        }
-                        Lexeme::Multiword(word) => {
-                            // For multiword, just use the word itself as pronunciation
-                            CardContent::Listening {
-                                pronunciation: word,
-                                possible_words: vec![(true, word)],
-                            }
-                        }
-                    }
-                }
-                CardIndicator::LetterPronunciation { pattern, position } => {
-                    let pattern_str = self.context.language_pack.rodeo.resolve(&pattern);
-                    let Some(guide) = self
-                        .context
-                        .language_pack
-                        .pronunciation_data
-                        .guides
-                        .iter()
-                        .find(|g| g.pattern == pattern_str && g.position == position)
-                        .cloned()
-                    else {
-                        panic!(
-                            "Pattern {pattern_str} with position {position:?} was in the deck, but was not found in pronunciation guides"
-                        );
-                    };
-                    CardContent::LetterPronunciation { pattern, guide }
-                }
-            },
-            fsrs_card: match card_data {
-                CardData::Added { fsrs_card } => fsrs_card.clone(),
-                CardData::Ghost { fsrs_card } => fsrs_card.clone(),
-            },
-        };
-        Some(card)
-    }
-
     fn card_known(&self, card_indicator: &CardIndicator<Spur>) -> bool {
         self.cards
             .get(card_indicator)
@@ -2534,6 +2417,11 @@ impl Context {
                 .language_pack
                 .pattern_frequency_map
                 .contains_key(&(*pattern, *position)),
+            CardIndicator::HomophonePracticeText { pair } => self
+                .language_pack
+                .homophone_practice
+                .get(&pair)
+                .is_some_and(|h| !h.sentence_pairs.is_empty()),
         }
     }
 
@@ -2694,6 +2582,23 @@ impl Context {
                     .unwrap_or(0);
                 Some(Frequency { count })
             }
+            CardIndicator::HomophonePracticeText { pair } => {
+                let max_frequency = |word: Spur| -> Option<Frequency> {
+                    self.language_pack
+                        .words_to_heteronyms
+                        .get(&word)
+                        .and_then(|heteronyms| {
+                            heteronyms
+                                .iter()
+                                .map(|h| Lexeme::Heteronym(*h))
+                                .filter_map(|l| {
+                                    self.language_pack.word_frequencies.get(&l).copied()
+                                })
+                                .max()
+                        })
+                };
+                max_frequency(pair.word1).min(max_frequency(pair.word2))
+            }
         }
     }
 }
@@ -2715,6 +2620,9 @@ impl Regressions {
                 // For pronunciation patterns, we don't use regression
                 // Instead we use the LLM's familiarity assessment in predict_card_knowledge_probability
                 return None;
+            }
+            CardIndicator::HomophonePracticeText { pair } => {
+                self.target_language_regression.as_ref()
             }
         }?;
 
@@ -2817,12 +2725,6 @@ impl Regressions {
     }
 }
 
-#[derive(Debug)]
-pub struct Card {
-    content: CardContent<Spur>,
-    fsrs_card: rs_fsrs::Card,
-}
-
 #[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MultiwordCardContent {
@@ -2852,6 +2754,10 @@ where
         pattern: S,
         guide: PronunciationGuide,
     },
+    HomophonePracticeText {
+        pair: HomophoneWordPair<S>,
+        sentence_pair: HomophoneSentencePair<S>,
+    },
 }
 
 impl<S> CardContent<S>
@@ -2871,6 +2777,7 @@ where
             }
             CardContent::Listening { .. } => None,
             CardContent::LetterPronunciation { .. } => None,
+            CardContent::HomophonePracticeText { .. } => None,
         }
     }
 
@@ -2916,6 +2823,13 @@ impl CardContent<Spur> {
                     guide: guide.clone(),
                 }
             }
+            CardContent::HomophonePracticeText {
+                pair,
+                sentence_pair,
+            } => CardContent::HomophonePracticeText {
+                pair: pair.resolve(rodeo),
+                sentence_pair: sentence_pair.resolve(rodeo),
+            },
         }
     }
 }
@@ -2940,9 +2854,9 @@ where
     FlashCardReview {
         indicator: CardIndicator<S>,
         content: CardContent<S>,
-        audio: AudioRequest,
+        audio: Option<AudioRequest>,
         is_new: bool,
-        listening_prefix: Option<String>,
+        listening_prefix: Option<String>, // TODO: move into content probably lol
     },
     TranslateComprehensibleSentence(TranslateComprehensibleSentence<S>),
     TranscribeComprehensibleSentence(TranscribeComprehensibleSentence<S>),
@@ -2954,14 +2868,14 @@ where
     <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
     <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
 {
-    fn audio_request(&self) -> AudioRequest {
+    fn audio_request(&self) -> Option<AudioRequest> {
         match self {
             Challenge::FlashCardReview { audio, .. } => audio.clone(),
             Challenge::TranslateComprehensibleSentence(translate_comprehensible_sentence) => {
-                translate_comprehensible_sentence.audio.clone()
+                Some(translate_comprehensible_sentence.audio.clone())
             }
             Challenge::TranscribeComprehensibleSentence(transcribe_comprehensible_sentence) => {
-                transcribe_comprehensible_sentence.audio.clone()
+                Some(transcribe_comprehensible_sentence.audio.clone())
             }
         }
     }
@@ -3063,257 +2977,384 @@ impl ReviewInfo {
         deck: &Deck,
         card_indicator: CardIndicator<Spur>,
     ) -> Option<Challenge<String>> {
-        let card = deck.get_card(card_indicator)?;
-        let language_pack = &deck.context.language_pack;
+        let is_new = deck.cards.get(&card_indicator)?.is_new();
+        let language_pack: &Arc<LanguagePack> = &deck.context.language_pack;
 
-        // If we can't find a suitable challenge, we'll return a flashcard challenge. Let's construct it here
-        let listening_prefix = matches!(&card.content, CardContent::Listening { .. })
-            .then(|| Self::get_listening_prefix(deck.context.target_language).to_string());
+        let challenge = match card_indicator {
+            CardIndicator::ListeningLexeme { lexeme } => {
+                // For ListeningLexeme cards, find a sentence containing this specific lexeme
+                if let Some(sentence) = self.find_listening_lexeme_sentence(&lexeme, deck) {
+                    // Create a transcription challenge where only words are transcribed, punctuation is provided
+                    // Group consecutive words together and consecutive punctuation together
+                    let mut parts: Vec<transcription_challenge::Part> = Vec::new();
+                    let mut current_words: Vec<language_utils::Literal<String>> = Vec::new();
 
-        let flashcard = Challenge::<Spur>::FlashCardReview {
-            audio: match &card.content {
-                CardContent::Heteronym { heteronym, .. } => AudioRequest {
-                    request: TtsRequest {
-                        text: language_pack.rodeo.resolve(&heteronym.word).to_string(),
-                        language: deck.context.target_language,
-                    },
-                    provider: TtsProvider::Google,
-                },
-                CardContent::Multiword(multiword, _) => AudioRequest {
-                    request: TtsRequest {
-                        text: language_pack.rodeo.resolve(multiword).to_string(),
-                        language: deck.context.target_language,
-                    },
-                    provider: TtsProvider::Google,
-                },
-                CardContent::Listening {
-                    pronunciation: _,
-                    possible_words,
-                } => AudioRequest {
-                    request: TtsRequest {
-                        text: format!(
-                            "{}... \"{}\".",
-                            Self::get_listening_prefix(deck.context.target_language),
-                            language_pack.rodeo.resolve(
-                                &possible_words
-                                    .iter()
-                                    .find(|(known, _)| *known)
-                                    .or(possible_words.first())
-                                    .cloned()
-                                    .unwrap()
-                                    .1
-                            )
-                        ),
-                        language: deck.context.target_language,
-                    },
-                    provider: TtsProvider::Google,
-                },
-                CardContent::LetterPronunciation { pattern, .. } => {
-                    // For pronunciation patterns, read the pattern itself
-                    AudioRequest {
+                    for literal in &sentence.target_language_literals {
+                        let resolved = literal.resolve(&language_pack.rodeo);
+
+                        if resolved.heteronym.is_some() {
+                            // This is a word - add to current words group
+                            current_words.push(resolved);
+                        } else {
+                            // This is punctuation - flush any accumulated words first
+                            if !current_words.is_empty() {
+                                parts.push(transcription_challenge::Part::AskedToTranscribe {
+                                    parts: current_words.clone(),
+                                });
+                                current_words.clear();
+                            }
+                            // Add the punctuation as provided
+                            parts.push(transcription_challenge::Part::Provided { part: resolved });
+                        }
+                    }
+
+                    // Flush any remaining words
+                    if !current_words.is_empty() {
+                        parts.push(transcription_challenge::Part::AskedToTranscribe {
+                            parts: current_words,
+                        });
+                    }
+
+                    Challenge::TranscribeComprehensibleSentence(TranscribeComprehensibleSentence {
+                        target_language: sentence.target_language,
+                        native_language: *sentence.native_languages.first().unwrap(),
+                        parts,
+                        audio: AudioRequest {
+                            request: TtsRequest {
+                                text: language_pack
+                                    .rodeo
+                                    .resolve(&sentence.target_language)
+                                    .to_string(),
+                                language: deck.context.target_language,
+                            },
+                            provider: TtsProvider::ElevenLabs,
+                        },
+                    })
+                } else {
+                    // todo: fix by moving the below ListeningHomophonous branch into a function and calling it here
+                }
+            }
+            CardIndicator::ListeningHomophonous { pronunciation } => {
+                let flashcard = {
+                    let listening_prefix =
+                        Self::get_listening_prefix(deck.context.target_language).to_string();
+                    let possible_words = {
+                        let Some(possible_words) = deck
+                            .context
+                            .language_pack
+                            .pronunciation_to_words
+                            .get(&pronunciation)
+                            .cloned()
+                        else {
+                            panic!(
+                                "Pronunciation {:?} was in the deck, but was not found in pronunciation_to_words",
+                                deck.context.language_pack.rodeo.resolve(&pronunciation)
+                            );
+                        };
+                        let possible_words = possible_words.into_iter().collect::<BTreeSet<_>>();
+
+                        // figure out which of those words the user knows
+                        possible_words
+                            .iter()
+                            .map(|word| {
+                                // Check if any lexeme for this word is known
+                                let word_known = deck
+                                    .context
+                                    .language_pack
+                                    .pronunciation_to_lexemes(&pronunciation)
+                                    .filter(|(w, _)| w == word)
+                                    .any(|(_, lexeme)| {
+                                        deck.cards
+                                            .get(&CardIndicator::TargetLanguage { lexeme })
+                                            .is_some_and(|status| {
+                                                matches!(status, CardStatus::Tracked(_))
+                                            })
+                                    });
+                                (word_known, *word)
+                            })
+                            .collect()
+                    };
+                    let audio = AudioRequest {
                         request: TtsRequest {
-                            text: language_pack.rodeo.resolve(pattern).to_string(),
+                            text: format!(
+                                "{}... \"{}\".",
+                                Self::get_listening_prefix(deck.context.target_language),
+                                language_pack.rodeo.resolve(
+                                    &possible_words
+                                        .iter()
+                                        .find(|(known, _)| *known)
+                                        .or(possible_words.first())
+                                        .cloned()
+                                        .unwrap()
+                                        .1
+                                )
+                            ),
                             language: deck.context.target_language,
                         },
                         provider: TtsProvider::Google,
-                    }
-                }
-            },
-            indicator: card_indicator,
-            content: card.content.clone(),
-            is_new: card.fsrs_card.state == rs_fsrs::State::New,
-            listening_prefix: listening_prefix.clone(),
-        };
-
-        let challenge: Challenge<Spur> = if card.fsrs_card.state == rs_fsrs::State::New
-            && !matches!(card_indicator, CardIndicator::ListeningLexeme { .. })
-        {
-            flashcard
-        } else if let CardIndicator::ListeningLexeme { lexeme } = card_indicator {
-            // For ListeningLexeme cards, find a sentence containing this specific lexeme
-            if let Some(sentence) = self.find_listening_lexeme_sentence(&lexeme, deck) {
-                // Create a transcription challenge where only words are transcribed, punctuation is provided
-                // Group consecutive words together and consecutive punctuation together
-                let mut parts: Vec<transcription_challenge::Part> = Vec::new();
-                let mut current_words: Vec<language_utils::Literal<String>> = Vec::new();
-
-                for literal in &sentence.target_language_literals {
-                    let resolved = literal.resolve(&language_pack.rodeo);
-
-                    if resolved.heteronym.is_some() {
-                        // This is a word - add to current words group
-                        current_words.push(resolved);
-                    } else {
-                        // This is punctuation - flush any accumulated words first
-                        if !current_words.is_empty() {
-                            parts.push(transcription_challenge::Part::AskedToTranscribe {
-                                parts: current_words.clone(),
-                            });
-                            current_words.clear();
-                        }
-                        // Add the punctuation as provided
-                        parts.push(transcription_challenge::Part::Provided { part: resolved });
-                    }
-                }
-
-                // Flush any remaining words
-                if !current_words.is_empty() {
-                    parts.push(transcription_challenge::Part::AskedToTranscribe {
-                        parts: current_words,
-                    });
-                }
-
-                Challenge::TranscribeComprehensibleSentence(TranscribeComprehensibleSentence {
-                    target_language: sentence.target_language,
-                    native_language: *sentence.native_languages.first().unwrap(),
-                    parts,
-                    audio: AudioRequest {
-                        request: TtsRequest {
-                            text: language_pack
-                                .rodeo
-                                .resolve(&sentence.target_language)
-                                .to_string(),
-                            language: deck.context.target_language,
+                    };
+                    Challenge::<Spur>::FlashCardReview {
+                        indicator: card_indicator,
+                        audio: Some(audio),
+                        content: CardContent::Listening {
+                            pronunciation,
+                            possible_words,
                         },
-                        provider: TtsProvider::ElevenLabs,
-                    },
-                })
-            } else {
-                flashcard
-            }
-        } else if let Some(pronunciation) = card.content.pronunciation() {
-            let mut heteronyms = language_pack
-                .pronunciation_to_words
-                .get(&pronunciation)
-                .unwrap()
-                .iter()
-                .cloned()
-                .flat_map(|word| {
-                    language_pack
-                        .words_to_heteronyms
-                        .get(&word)
+                        is_new,
+                        listening_prefix: None,
+                    }
+                };
+                if is_new {
+                    flashcard
+                } else {
+                    let mut heteronyms = language_pack
+                        .pronunciation_to_words
+                        .get(&pronunciation)
                         .unwrap()
-                        .clone()
-                })
-                .filter(|heteronym| deck.lexeme_known(&Lexeme::Heteronym(*heteronym)))
-                .collect::<Vec<_>>();
-            heteronyms
-                .sort_by_key(|heteronym| deck.stats.words_listened_to.get(heteronym).unwrap_or(&0));
+                        .iter()
+                        .cloned()
+                        .flat_map(|word| {
+                            language_pack
+                                .words_to_heteronyms
+                                .get(&word)
+                                .unwrap()
+                                .clone()
+                        })
+                        .filter(|heteronym| deck.lexeme_known(&Lexeme::Heteronym(*heteronym)))
+                        .collect::<Vec<_>>();
+                    heteronyms.sort_by_key(|heteronym| {
+                        deck.stats.words_listened_to.get(heteronym).unwrap_or(&0)
+                    });
 
-            if let Some((target_heteronym, sentence)) = heteronyms
-                .iter()
-                .filter_map(|heteronym| {
-                    let comprehensible_lexemes = self.get_comprehensible_written_lexemes(deck);
-                    let sentence = deck.get_comprehensible_sentence_containing(
-                        Some(&Lexeme::Heteronym(*heteronym)),
-                        comprehensible_lexemes,
-                        &deck.stats.sentences_reviewed,
-                        language_pack,
-                    )?;
-                    Some((*heteronym, sentence))
-                })
-                .next()
-            {
-                let parts = sentence
-                    .target_language_literals
-                    .into_iter()
-                    .map(|literal| {
-                        if let Some(ref heteronym) = literal.heteronym
-                            && heteronym == &target_heteronym
-                        {
-                            transcription_challenge::Part::AskedToTranscribe {
-                                parts: vec![literal.resolve(&language_pack.rodeo)],
-                            }
-                        } else {
-                            transcription_challenge::Part::Provided {
-                                part: literal.resolve(&language_pack.rodeo),
+                    if let Some((target_heteronym, sentence)) = heteronyms
+                        .iter()
+                        .filter_map(|heteronym| {
+                            let comprehensible_lexemes =
+                                self.get_comprehensible_written_lexemes(deck);
+                            let sentence = deck.get_comprehensible_sentence_containing(
+                                Some(&Lexeme::Heteronym(*heteronym)),
+                                comprehensible_lexemes,
+                                &deck.stats.sentences_reviewed,
+                                language_pack,
+                            )?;
+                            Some((*heteronym, sentence))
+                        })
+                        .next()
+                    {
+                        let parts = sentence
+                            .target_language_literals
+                            .into_iter()
+                            .map(|literal| {
+                                if let Some(ref heteronym) = literal.heteronym
+                                    && heteronym == &target_heteronym
+                                {
+                                    transcription_challenge::Part::AskedToTranscribe {
+                                        parts: vec![literal.resolve(&language_pack.rodeo)],
+                                    }
+                                } else {
+                                    transcription_challenge::Part::Provided {
+                                        part: literal.resolve(&language_pack.rodeo),
+                                    }
+                                }
+                            })
+                            .collect();
+                        Challenge::TranscribeComprehensibleSentence(
+                            TranscribeComprehensibleSentence {
+                                target_language: sentence.target_language,
+                                native_language: *sentence.native_languages.first().unwrap(),
+                                parts,
+                                audio: AudioRequest {
+                                    request: TtsRequest {
+                                        text: language_pack
+                                            .rodeo
+                                            .resolve(&sentence.target_language)
+                                            .to_string(),
+                                        language: deck.context.target_language,
+                                    },
+                                    provider: TtsProvider::ElevenLabs,
+                                },
+                            },
+                        )
+                    } else {
+                        flashcard
+                    }
+                }
+            }
+            CardIndicator::TargetLanguage { lexeme } => {
+                let flashcard = {
+                    let content = match lexeme {
+                        Lexeme::Heteronym(heteronym) => {
+                            let Some(entry) = self
+                                .context
+                                .language_pack
+                                .dictionary
+                                .get(&heteronym)
+                                .cloned()
+                            else {
+                                panic!(
+                                    "Heteronym {:?} was in the deck, but was not found in dictionary",
+                                    heteronym.resolve(&self.context.language_pack.rodeo)
+                                );
+                            };
+                            CardContent::Heteronym {
+                                heteronym,
+                                definitions: entry.definitions.clone(),
+                                morphology: entry.morphology,
                             }
                         }
-                    })
-                    .collect();
-                Challenge::TranscribeComprehensibleSentence(TranscribeComprehensibleSentence {
-                    target_language: sentence.target_language,
-                    native_language: *sentence.native_languages.first().unwrap(),
-                    parts,
-                    audio: AudioRequest {
-                        request: TtsRequest {
-                            text: language_pack
-                                .rodeo
-                                .resolve(&sentence.target_language)
-                                .to_string(),
-                            language: deck.context.target_language,
-                        },
-                        provider: TtsProvider::ElevenLabs,
-                    },
-                })
-            } else {
-                flashcard
-            }
-        } else if let Some(lexeme) = card.content.lexeme() {
-            if let Some(ComprehensibleSentence {
-                target_language,
-                target_language_literals,
-                unique_target_language_lexemes,
-                native_languages,
-            }) = {
-                let comprehensible_lexemes = self.get_comprehensible_written_lexemes(deck);
-                deck.get_comprehensible_sentence_containing(
-                    Some(&lexeme),
-                    comprehensible_lexemes,
-                    &deck.stats.sentences_reviewed,
-                    language_pack,
-                )
-            } {
-                let unique_target_language_lexeme_definitions = unique_target_language_lexemes
-                    .iter()
-                    .map(|lexeme| {
-                        let definitions = match lexeme {
-                            Lexeme::Heteronym(heteronym) => language_pack
-                                .dictionary
-                                .get(heteronym)
-                                .map(|entry| entry.definitions.clone())
-                                .unwrap_or_default(),
-                            Lexeme::Multiword(term) => language_pack
+                        Lexeme::Multiword(multiword_term) => {
+                            let Some(entry) = deck
+                                .context
+                                .language_pack
                                 .phrasebook
-                                .get(term)
-                                .map(|entry| {
-                                    vec![TargetToNativeWord {
-                                        native: entry.meaning.clone(),
-                                        note: Some(entry.additional_notes.clone()),
-                                        example_sentence_target_language: entry
-                                            .target_language_example
-                                            .clone(),
-                                        example_sentence_native_language: entry
-                                            .native_language_example
-                                            .clone(),
-                                    }]
-                                })
-                                .unwrap_or_default(),
-                        };
-                        (*lexeme, definitions)
-                    })
-                    .collect();
+                                .get(&multiword_term)
+                                .cloned()
+                            else {
+                                panic!(
+                                    "Multiword term {:?} was in the deck, but was not found in phrasebook",
+                                    deck.context.language_pack.rodeo.resolve(&multiword_term)
+                                );
+                            };
+                            CardContent::Multiword(
+                                multiword_term,
+                                MultiwordCardContent {
+                                    meaning: entry.meaning.clone(),
+                                    example_sentence_target_language: entry
+                                        .target_language_example
+                                        .clone(),
+                                    example_sentence_native_language: entry
+                                        .native_language_example
+                                        .clone(),
+                                },
+                            )
+                        }
+                    };
+                    let audio = match lexeme {
+                        Lexeme::Heteronym(heteronym) => AudioRequest {
+                            request: TtsRequest {
+                                text: language_pack.rodeo.resolve(&heteronym.word).to_string(),
+                                language: deck.context.target_language,
+                            },
+                            provider: TtsProvider::Google,
+                        },
+                        Lexeme::Multiword(multiword_term) => AudioRequest {
+                            request: TtsRequest {
+                                text: language_pack.rodeo.resolve(&multiword_term).to_string(),
+                                language: deck.context.target_language,
+                            },
+                            provider: TtsProvider::Google,
+                        },
+                    };
 
-                Challenge::TranslateComprehensibleSentence(TranslateComprehensibleSentence {
+                    Challenge::<Spur>::FlashCardReview {
+                        indicator: card_indicator,
+                        content,
+                        audio: Some(audio),
+                        is_new,
+                        listening_prefix: None,
+                    }
+                };
+                if is_new {
+                    flashcard
+                } else if let Some(ComprehensibleSentence {
                     target_language,
                     target_language_literals,
                     unique_target_language_lexemes,
-                    native_translations: native_languages,
-                    primary_expression: lexeme,
-                    unique_target_language_lexeme_definitions,
-                    audio: AudioRequest {
-                        request: TtsRequest {
-                            text: language_pack.rodeo.resolve(&target_language).to_string(),
-                            language: deck.context.target_language,
+                    native_languages,
+                }) = {
+                    let comprehensible_lexemes = self.get_comprehensible_written_lexemes(deck);
+                    deck.get_comprehensible_sentence_containing(
+                        Some(&lexeme),
+                        comprehensible_lexemes,
+                        &deck.stats.sentences_reviewed,
+                        language_pack,
+                    )
+                } {
+                    let unique_target_language_lexeme_definitions = unique_target_language_lexemes
+                        .iter()
+                        .map(|lexeme| {
+                            let definitions = match lexeme {
+                                Lexeme::Heteronym(heteronym) => language_pack
+                                    .dictionary
+                                    .get(heteronym)
+                                    .map(|entry| entry.definitions.clone())
+                                    .unwrap_or_default(),
+                                Lexeme::Multiword(term) => language_pack
+                                    .phrasebook
+                                    .get(term)
+                                    .map(|entry| {
+                                        vec![TargetToNativeWord {
+                                            native: entry.meaning.clone(),
+                                            note: Some(entry.additional_notes.clone()),
+                                            example_sentence_target_language: entry
+                                                .target_language_example
+                                                .clone(),
+                                            example_sentence_native_language: entry
+                                                .native_language_example
+                                                .clone(),
+                                        }]
+                                    })
+                                    .unwrap_or_default(),
+                            };
+                            (*lexeme, definitions)
+                        })
+                        .collect();
+
+                    Challenge::TranslateComprehensibleSentence(TranslateComprehensibleSentence {
+                        target_language,
+                        target_language_literals,
+                        unique_target_language_lexemes,
+                        native_translations: native_languages,
+                        primary_expression: lexeme,
+                        unique_target_language_lexeme_definitions,
+                        audio: AudioRequest {
+                            request: TtsRequest {
+                                text: language_pack.rodeo.resolve(&target_language).to_string(),
+                                language: deck.context.target_language,
+                            },
+                            provider: TtsProvider::ElevenLabs,
                         },
-                        provider: TtsProvider::ElevenLabs,
-                    },
-                })
-            } else {
-                flashcard
+                    })
+                } else {
+                    flashcard
+                }
             }
-        } else {
-            flashcard
+            CardIndicator::LetterPronunciation { pattern, position } => {
+                let pattern_str = deck.context.language_pack.rodeo.resolve(&pattern);
+                let Some(guide) = deck
+                    .context
+                    .language_pack
+                    .pronunciation_data
+                    .guides
+                    .iter()
+                    .find(|g| g.pattern == pattern_str && g.position == position)
+                    .cloned()
+                else {
+                    panic!(
+                        "Pattern {pattern_str} with position {position:?} was in the deck, but was not found in pronunciation guides"
+                    );
+                };
+                Challenge::FlashCardReview {
+                    indicator: card_indicator,
+                    content: CardContent::LetterPronunciation { pattern, guide },
+                    audio: None,
+                    is_new,
+                    listening_prefix: None,
+                }
+            }
+            CardIndicator::HomophonePracticeText { pair } => {
+                let sentence_pair = deck
+                    .context
+                    .language_pack
+                    .homophone_practice
+                    .get(&pair)
+                    .unwrap() // will be present - checked by is_valid
+                    .sentence_pairs
+                    .iter()
+                    .min_by_key(|s| deck.stats.sentence_pairs_reviewed.get(&s).unwrap_or(&0))
+                    .cloned()
+                    .unwrap(); // will not be empty - checked by is_valid
+            }
         };
 
         Some(challenge.resolve(&language_pack.rodeo))

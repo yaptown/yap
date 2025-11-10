@@ -175,20 +175,15 @@ impl NextCardsIterator<'_> {
         }
 
         // Count cards by type
-        let mut type_counts = HashMap::new();
+        let mut challenge_type_counts = HashMap::new();
         for challenge_type in &self.permitted_types {
-            type_counts.insert(*challenge_type, 0);
+            challenge_type_counts.insert(*challenge_type, 0);
         }
 
         for (card, status) in &self.cards {
             if matches!(status, CardStatus::Tracked(_)) {
-                let card_type = match card {
-                    CardIndicator::TargetLanguage { .. } => ChallengeType::Text,
-                    CardIndicator::ListeningHomophonous { .. }
-                    | CardIndicator::ListeningLexeme { .. } => ChallengeType::Listening,
-                    CardIndicator::LetterPronunciation { .. } => ChallengeType::Speaking,
-                };
-                if let Some(count) = type_counts.get_mut(&card_type) {
+                let challenge_type = card.challenge_type();
+                if let Some(count) = challenge_type_counts.get_mut(&challenge_type) {
                     *count += 1;
                 }
             }
@@ -196,12 +191,12 @@ impl NextCardsIterator<'_> {
 
         // Determine desired ratios for card types
         // Text: 60%, Listening: 30%, LetterPronunciation: 10%
-        let text_count = type_counts.get(&ChallengeType::Text).copied().unwrap_or(0);
-        let listening_count = type_counts
+        let text_count = challenge_type_counts.get(&ChallengeType::Text).copied().unwrap_or(0);
+        let listening_count = challenge_type_counts
             .get(&ChallengeType::Listening)
             .copied()
             .unwrap_or(0);
-        let pronunciation_count = type_counts
+        let pronunciation_count = challenge_type_counts
             .get(&ChallengeType::Speaking)
             .copied()
             .unwrap_or(0);

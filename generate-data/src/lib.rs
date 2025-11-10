@@ -2,6 +2,7 @@
 mod db_info;
 
 pub mod dict;
+pub mod disambiguation_practice;
 pub mod frequencies;
 pub mod lexide_token;
 pub mod nlp;
