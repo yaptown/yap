@@ -79,7 +79,8 @@ const CardFront = ({
       <h2 className="text-3xl font-semibold">
         {wordPrefix && (
           <span className="text-muted-foreground/60">
-            {wordPrefix.prefix}{wordPrefix.separator}
+            {wordPrefix.prefix}
+            {wordPrefix.separator}
           </span>
         )}
         {content.Heteronym.heteronym.word}
@@ -227,10 +228,16 @@ const CardBack = ({
 
         {def.example_sentence_target_language && (
           <div className="space-y-1 text-sm">
-            <div className="flex items-start gap-2">
-              <p className="text-muted-foreground italic flex-1">
-                "{def.example_sentence_target_language}"
-              </p>
+            <div className="flex items-start gap-2 justify-between">
+              <div>
+                <p className="text-muted-foreground italic flex-1">
+                  "{def.example_sentence_target_language}"
+                </p>
+                <p className="text-muted-foreground">
+                  "{def.example_sentence_native_language}"
+                </p>
+              </div>
+
               <div onClick={(e) => e.stopPropagation()}>
                 <AudioButton
                   audioRequest={{
@@ -246,9 +253,6 @@ const CardBack = ({
                 />
               </div>
             </div>
-            <p className="text-muted-foreground">
-              "{def.example_sentence_native_language}"
-            </p>
           </div>
         )}
       </div>
@@ -393,7 +397,8 @@ const CardBack = ({
                 <AudioButton
                   audioRequest={{
                     request: {
-                      text: content.Multiword[1].example_sentence_target_language,
+                      text: content.Multiword[1]
+                        .example_sentence_target_language,
                       language: targetLanguage,
                     },
                     provider: "ElevenLabs",
