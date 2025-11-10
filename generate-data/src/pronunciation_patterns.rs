@@ -26,8 +26,6 @@ struct SoundsListResponse {
 pub async fn generate_language_sounds(
     language: Language,
 ) -> anyhow::Result<Vec<(String, PatternPosition)>> {
-    println!("Generating characteristic sounds for {language:?}...");
-
     let response: SoundsListResponse = CHAT_CLIENT.chat_with_system_prompt(
         format!(r#"You are creating a comprehensive list of characteristic sounds and letter patterns for {language:?}.
 
@@ -80,10 +78,6 @@ Examples of patterns:
         })
         .collect();
 
-    println!(
-        "Generated {} sounds for {language:?}",
-        processed_sounds.len()
-    );
     Ok(processed_sounds)
 }
 
@@ -92,11 +86,6 @@ pub async fn generate_pronunciation_guides(
     course: Course,
     sounds: &[(String, PatternPosition)],
 ) -> anyhow::Result<Vec<(String, PronunciationGuideThoughts)>> {
-    println!(
-        "Generating pronunciation guides for {:?} speakers learning {:?}...",
-        course.native_language, course.target_language
-    );
-
     let guides = futures::stream::iter(sounds)
         .map(|(clean_pattern, position)| {
             let clean_pattern = clean_pattern.clone();
@@ -190,7 +179,6 @@ Good examples for French "ch" and English speakers:
         .collect::<Vec<_>>()
         .await;
 
-    println!("Generated {} guides", guides.len());
     Ok(guides)
 }
 
@@ -226,21 +214,7 @@ where
         })
     });
 
-    if is_korean {
-        eprintln!("Detected Korean patterns - will use NFD normalization");
-        // Debug: show first pattern
-        if let Some((pattern, _)) = sounds.first() {
-            eprintln!(
-                "First pattern: '{}' (bytes: {:?}, chars: {:?})",
-                pattern,
-                pattern.bytes().collect::<Vec<_>>(),
-                pattern.chars().collect::<Vec<_>>()
-            );
-        }
-    }
-
     // Sum up frequencies for each pattern based on word occurrences
-    let mut debug_count = 0;
     for freq_entry in word_frequencies {
         // Get the actual word string from the lexeme
         let word = match &freq_entry.lexeme {
@@ -253,17 +227,7 @@ where
         let word_normalized = if is_korean {
             // NFKD performs compatibility decomposition followed by canonical composition
             // This properly handles Korean text decomposition
-            let nfkd = word.nfkd().collect::<String>();
-            if debug_count < 5 {
-                eprintln!(
-                    "Korean word '{}' -> NFKD: '{}' (chars: {:?})",
-                    word,
-                    nfkd,
-                    nfkd.chars().collect::<Vec<_>>()
-                );
-                debug_count += 1;
-            }
-            nfkd
+            word.nfkd().collect::<String>()
         } else {
             word.to_lowercase()
         };
@@ -402,13 +366,6 @@ where
                 // Add the word's frequency count to the pattern's total
                 let current = frequencies.get_mut(&(pattern.clone(), *position)).unwrap();
                 *current += freq_entry.count;
-
-                // Debug: show first match for each pattern
-                if is_korean && *current == freq_entry.count {
-                    eprintln!(
-                        "Found pattern '{pattern}' in word '{word}' (NFD: '{word_normalized}') at position {position:?}"
-                    );
-                }
             }
         }
     }

@@ -112,14 +112,12 @@ pub async fn process_sentences(
         .ok_or_else(|| anyhow::anyhow!("Language {} is not yet supported by lexide", language))?;
 
     // Initialize lexide
-    println!("Initializing lexide NLP model...");
     let lexide = Lexide::from_server("https://anchpop--lexide-gemma-3-27b-vllm-serve.modal.run")
         .context("Failed to initialize lexide")?;
 
     // Load already processed sentences from output file (if it exists)
     let mut already_processed: BTreeMap<String, Vec<lexide::Token>> = BTreeMap::new();
     if output_file.exists() {
-        println!("Loading already processed sentences...");
         let file = std::fs::File::open(output_file)?;
         let reader = BufReader::new(file);
 
@@ -128,22 +126,11 @@ pub async fn process_sentences(
                 already_processed.insert(tokenized.sentence, tokenized.tokens);
             }
         }
-        println!(
-            "Found {} already processed sentences",
-            already_processed.len()
-        );
     }
 
     // Load failure tracking
     let failure_file = get_failure_file_path(output_file);
     let mut failures = load_failures(&failure_file)?;
-    let initial_failure_count = failures.len();
-    if !failures.is_empty() {
-        println!(
-            "Found {} sentences that previously failed tokenization",
-            failures.len()
-        );
-    }
 
     // Filter out already processed sentences AND previously failed sentences
     let sentences_to_process: HashSet<String> = sentences
@@ -152,16 +139,7 @@ pub async fn process_sentences(
         .cloned()
         .collect();
 
-    println!(
-        "Total sentences: {}",
-        sentences_to_process.len() + already_processed.len() + failures.len()
-    );
-    println!("Already processed: {}", already_processed.len());
-    println!("Previously failed: {}", failures.len());
-    println!("To process: {}", sentences_to_process.len());
-
     if sentences_to_process.is_empty() {
-        println!("No new sentences to process!");
         // Return only the sentences that were requested
         let result: BTreeMap<String, Vec<lexide::Token>> = sentences
             .into_iter()
@@ -178,7 +156,6 @@ pub async fn process_sentences(
     let mut writer = std::io::BufWriter::new(output_file_handle);
 
     // Process sentences concurrently
-    println!("\nTokenizing sentences...");
 
     let pb = ProgressBar::new(sentences_to_process.len() as u64);
     pb.set_style(
@@ -228,28 +205,9 @@ pub async fn process_sentences(
         }
     }
 
-    pb.finish_with_message("Tokenization complete");
+    pb.finish_and_clear();
 
     writer.flush()?;
-
-    let newly_failed = failures.len() - initial_failure_count;
-
-    println!(
-        "\nTokenization complete! Output written to {}",
-        output_file.display()
-    );
-    if !failures.is_empty() {
-        println!("Failed sentences tracked in: {}", failure_file.display());
-        if newly_failed > 0 {
-            println!(
-                "Total failed sentences: {} (including {} new failures)",
-                failures.len(),
-                newly_failed
-            );
-        } else {
-            println!("Total failed sentences: {}", failures.len());
-        }
-    }
 
     // Build result map containing only the requested sentences
     // Merge newly processed sentences with already processed ones
@@ -275,14 +233,7 @@ pub async fn generate_nlp_sentences(
     use language_utils::{Literal, MultiwordTerms, SentenceInfo};
     use lexide::matching::{DependencyMatcher, LemmaMatcher, TreeNode};
 
-    println!(
-        "Processing {} sentences with {} multiword terms...",
-        sentences_tokenizations.len(),
-        multiword_terms_tokenizations.len()
-    );
-
     // Build matchers for all multiword terms
-    println!("Building matchers for multiword terms...");
 
     // For lemma matcher (high confidence), create patterns from lemmas
     let lemma_patterns: Vec<(String, Vec<&str>)> = multiword_terms_tokenizations
@@ -316,15 +267,7 @@ pub async fn generate_nlp_sentences(
         })
         .collect();
 
-    println!(
-        "Created {} tree patterns from {} multiword terms",
-        tree_patterns.len(),
-        multiword_terms_tokenizations.len()
-    );
-
     let dependency_matcher = DependencyMatcher::new(&tree_patterns);
-
-    println!("Processing sentences and matching multiword terms...");
 
     // Open output file
     let output_file_handle = std::fs::File::create(output_file)?;
@@ -391,10 +334,6 @@ pub async fn generate_nlp_sentences(
     }
 
     writer.flush()?;
-    println!(
-        "NLP analyzed sentences written to: {}",
-        output_file.display()
-    );
 
     Ok(())
 }

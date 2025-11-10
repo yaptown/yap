@@ -16,13 +16,10 @@ pub async fn ensure_multiword_terms_file(
     let multiword_terms_file = base_path.join("target_language_multiword_terms.txt");
 
     if multiword_terms_file.exists() {
-        println!("Multiword terms file already exists, skipping download");
         return multiword_terms_file
             .canonicalize()
             .context("Failed to canonicalize multiword terms file path");
     }
-
-    println!("Multiword terms file not found, downloading from Wiktionary...");
     let terms = download_multiword_terms(*target_language)
         .await
         .context("Failed to download multiword terms")?;
@@ -124,14 +121,11 @@ async fn download_multiword_terms(language: Language) -> anyhow::Result<Vec<Stri
         Language::Portuguese => "Portuguese_multiword_terms",
         Language::Italian => "Italian_multiword_terms",
     };
-    println!("Downloading category: {category}");
 
     let terms = download_category(category)
         .await
         .map_err(|e| anyhow::anyhow!("{}", e))
         .context(format!("Failed to download {category}"))?;
-
-    println!("Downloaded {} terms", terms.len());
 
     Ok(terms)
 }
@@ -194,14 +188,9 @@ async fn download_category(category_name: &str) -> anyhow::Result<Vec<String>> {
         if let Some(continue_data) = data["continue"].as_object() {
             if let Some(token) = continue_data["cmcontinue"].as_str() {
                 cmcontinue = Some(token.to_string());
-
-                // Progress indicator
-                print!("\rDownloaded {} terms so far...", all_pages.len());
-                std::io::stdout().flush()?;
             }
         } else {
             // No more pages
-            println!(); // New line after progress indicator
             break;
         }
     }
