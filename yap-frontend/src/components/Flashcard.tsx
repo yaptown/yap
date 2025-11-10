@@ -227,9 +227,25 @@ const CardBack = ({
 
         {def.example_sentence_target_language && (
           <div className="space-y-1 text-sm">
-            <p className="text-muted-foreground italic">
-              "{def.example_sentence_target_language}"
-            </p>
+            <div className="flex items-start gap-2">
+              <p className="text-muted-foreground italic flex-1">
+                "{def.example_sentence_target_language}"
+              </p>
+              <div onClick={(e) => e.stopPropagation()}>
+                <AudioButton
+                  audioRequest={{
+                    request: {
+                      text: def.example_sentence_target_language,
+                      language: targetLanguage,
+                    },
+                    provider: "ElevenLabs",
+                  }}
+                  accessToken={accessToken}
+                  className="h-8 w-8"
+                  size="icon"
+                />
+              </div>
+            </div>
             <p className="text-muted-foreground">
               "{def.example_sentence_native_language}"
             </p>
@@ -369,9 +385,25 @@ const CardBack = ({
 
         {content.Multiword[1].example_sentence_target_language && (
           <div className="space-y-1 text-sm">
-            <p className="text-muted-foreground italic">
-              "{content.Multiword[1].example_sentence_target_language}"
-            </p>
+            <div className="flex items-start gap-2">
+              <p className="text-muted-foreground italic flex-1">
+                "{content.Multiword[1].example_sentence_target_language}"
+              </p>
+              <div onClick={(e) => e.stopPropagation()}>
+                <AudioButton
+                  audioRequest={{
+                    request: {
+                      text: content.Multiword[1].example_sentence_target_language,
+                      language: targetLanguage,
+                    },
+                    provider: "ElevenLabs",
+                  }}
+                  accessToken={accessToken}
+                  className="h-8 w-8"
+                  size="icon"
+                />
+              </div>
+            </div>
             <p className="text-muted-foreground">
               "{content.Multiword[1].example_sentence_native_language}"
             </p>
