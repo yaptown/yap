@@ -228,16 +228,7 @@ const CardBack = ({
 
         {def.example_sentence_target_language && (
           <div className="space-y-1 text-sm">
-            <div className="flex items-start gap-2 justify-between">
-              <div>
-                <p className="text-muted-foreground italic flex-1">
-                  "{def.example_sentence_target_language}"
-                </p>
-                <p className="text-muted-foreground">
-                  "{def.example_sentence_native_language}"
-                </p>
-              </div>
-
+            <div className="flex items-start gap-2">
               <div onClick={(e) => e.stopPropagation()}>
                 <AudioButton
                   audioRequest={{
@@ -251,6 +242,14 @@ const CardBack = ({
                   className="h-8 w-8"
                   size="icon"
                 />
+              </div>
+              <div>
+                <p className="text-muted-foreground italic flex-1">
+                  "{def.example_sentence_target_language}"
+                </p>
+                <p className="text-muted-foreground">
+                  "{def.example_sentence_native_language}"
+                </p>
               </div>
             </div>
           </div>
