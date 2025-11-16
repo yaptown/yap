@@ -3,21 +3,31 @@ use std::collections::{BTreeSet, HashMap};
 use chrono::Utc;
 use language_utils::Lexeme;
 use lasso::Spur;
+use ordered_float::NotNan;
 
-use crate::{CardIndicator, CardStatus, ChallengeType, Context, Deck, Regressions};
+use crate::{
+    CARD_TYPES, CardIndicator, CardStatus, CardType, ChallengeRequirements, Context, Deck,
+    Regressions,
+};
 
 pub(crate) struct NextCardsIterator<'a> {
     pub(crate) cards: HashMap<CardIndicator<Spur>, CardStatus>,
-    pub(crate) permitted_types: Vec<ChallengeType>,
+    pub(crate) allowed_cards: AllowedCards,
     pub(crate) context: &'a Context,
     pub(crate) regressions: &'a Regressions,
 }
 
+pub(crate) enum AllowedCards {
+    All,
+    BannedRequirements(std::collections::BTreeSet<ChallengeRequirements>),
+    Type(CardType),
+}
+
 impl<'a> NextCardsIterator<'a> {
-    pub fn new(deck: &'a Deck, permitted_types: Vec<ChallengeType>) -> Self {
+    pub fn new(deck: &'a Deck, allowed_cards: AllowedCards) -> Self {
         Self {
             cards: deck.cards.clone(),
-            permitted_types,
+            allowed_cards,
             context: &deck.context,
             regressions: &deck.regressions,
         }
@@ -150,19 +160,6 @@ impl<'a> NextCardsIterator<'a> {
 
 impl NextCardsIterator<'_> {
     fn next_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
-        if self.permitted_types.is_empty() {
-            return None;
-        }
-
-        if self.permitted_types.len() == 1 {
-            let card = match self.permitted_types[0] {
-                ChallengeType::Text => self.next_text_card(),
-                ChallengeType::Listening => self.next_listening_card(),
-                ChallengeType::Speaking => self.next_letter_pronunciation_card(),
-            }?;
-            return Some(card);
-        }
-
         let added_count = self
             .cards
             .iter()
@@ -175,80 +172,60 @@ impl NextCardsIterator<'_> {
         }
 
         // Count cards by type
-        let mut challenge_type_counts = HashMap::new();
-        for challenge_type in &self.permitted_types {
-            challenge_type_counts.insert(*challenge_type, 0);
-        }
+        let mut card_type_counts = CARD_TYPES
+            .iter()
+            .map(|card_type| (*card_type, 0))
+            .collect::<HashMap<CardType, u32>>();
 
         for (card, status) in &self.cards {
             if matches!(status, CardStatus::Tracked(_)) {
-                let challenge_type = card.challenge_type();
-                if let Some(count) = challenge_type_counts.get_mut(&challenge_type) {
-                    *count += 1;
-                }
+                let card_type = card.card_type();
+                card_type_counts
+                    .entry(card_type)
+                    .and_modify(|count| *count += 1);
             }
         }
 
-        // Determine desired ratios for card types
-        // Text: 60%, Listening: 30%, LetterPronunciation: 10%
-        let text_count = challenge_type_counts.get(&ChallengeType::Text).copied().unwrap_or(0);
-        let listening_count = challenge_type_counts
-            .get(&ChallengeType::Listening)
-            .copied()
-            .unwrap_or(0);
-        let pronunciation_count = challenge_type_counts
-            .get(&ChallengeType::Speaking)
-            .copied()
-            .unwrap_or(0);
-
         // Calculate which type is most underrepresented based on target ratios
-        let total_tracked = text_count + listening_count + pronunciation_count;
-
-        let mut candidates = vec![];
-
-        // Check each permitted type and calculate its priority
-        if self.permitted_types.contains(&ChallengeType::Text) {
-            let target_ratio = 0.6;
-            let current_ratio = if total_tracked > 0 {
-                text_count as f64 / total_tracked as f64
-            } else {
-                0.0
-            };
-            let priority = target_ratio - current_ratio;
-            candidates.push((ChallengeType::Text, priority));
-        }
-
-        if self.permitted_types.contains(&ChallengeType::Listening) {
-            let target_ratio = 0.3;
-            let current_ratio = if total_tracked > 0 {
-                listening_count as f64 / total_tracked as f64
-            } else {
-                0.0
-            };
-            let priority = target_ratio - current_ratio;
-            candidates.push((ChallengeType::Listening, priority));
-        }
-
-        if self.permitted_types.contains(&ChallengeType::Speaking) {
-            let target_ratio = 0.1;
-            let current_ratio = if total_tracked > 0 {
-                pronunciation_count as f64 / total_tracked as f64
-            } else {
-                0.0
-            };
-            let priority = target_ratio - current_ratio;
-            candidates.push((ChallengeType::Speaking, priority));
-        }
-
-        // Sort by priority (highest first)
-        candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        let total_cards: u32 = card_type_counts.values().cloned().sum();
+        let next_card_types = {
+            let mut card_type_ratios = card_type_counts
+                .iter()
+                .filter(|(card_type, _)| match &self.allowed_cards {
+                    AllowedCards::All => true,
+                    AllowedCards::BannedRequirements(banned_requirements) => {
+                        !banned_requirements.contains(&card_type.challenge_type())
+                    }
+                    AllowedCards::Type(allowed_card_type) => **card_type == *allowed_card_type,
+                })
+                .map(|(card_type, count)| {
+                    (*card_type, {
+                        let target_ratio = match card_type {
+                            CardType::TargetLanguage => 0.6,
+                            CardType::Listening => 0.3,
+                            CardType::LetterPronunciation => 0.1,
+                            CardType::UnderstandingDifferenceText => 0.0,
+                        };
+                        (*count as f64 / total_cards as f64) / target_ratio
+                    })
+                })
+                .collect::<Vec<(CardType, f64)>>();
+            card_type_ratios.sort_by_key(|(_, ratio)| NotNan::new(*ratio).unwrap());
+            card_type_ratios
+                .into_iter()
+                .map(|(card_type, _)| card_type)
+                .collect::<Vec<_>>()
+        };
 
         // Try to get a card of each type in priority order
-        for (challenge_type, _) in candidates {
-            let card = match challenge_type {
-                ChallengeType::Text => self.next_text_card(),
-                ChallengeType::Listening => self.next_listening_card(),
-                ChallengeType::Speaking => self.next_letter_pronunciation_card(),
+        for card_types in next_card_types {
+            let card = match card_types {
+                CardType::TargetLanguage => self.next_text_card(),
+                CardType::Listening => self.next_listening_card(),
+                CardType::LetterPronunciation => self.next_letter_pronunciation_card(),
+                CardType::UnderstandingDifferenceText => {
+                    continue;
+                }
             };
             if let Some(card) = card {
                 return Some(card);

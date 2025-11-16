@@ -2,7 +2,7 @@ use anyhow::Context;
 use futures::StreamExt;
 use indexmap::IndexSet;
 use itertools::Itertools;
-use language_utils::{COURSES, SentenceInfo};
+use language_utils::{COURSES, HomophonePractice};
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
@@ -12,16 +12,20 @@ use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 mod google_translate;
 use google_translate::GoogleTranslator;
 
+mod morphology_analysis;
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     for course in COURSES {
+        println!();
+        println!();
         println!(
             "Processing course: {} -> {}",
-            course.native_language.iso_639_3(),
-            course.target_language.iso_639_3()
+            course.native_language, course.target_language
         );
+        println!("================================================");
 
         let target_language_dir =
             PathBuf::from(format!("./out/{}", course.target_language.iso_639_3()));
@@ -215,51 +219,15 @@ async fn main() -> anyhow::Result<()> {
         // now add multiword terms to the tokenized sentences
         let target_language_nlp_file =
             target_language_dir.join("target_language_sentences_nlp.jsonl");
-        if !target_language_nlp_file.exists() {
-            generate_data::nlp::generate_nlp_sentences(
-                sentences_tokenizations,
-                multiword_terms_tokenizations,
-                &target_language_nlp_file,
-                course.target_language,
-            )
-            .await?;
-        }
 
-        let nlp_sentences = {
-            // read the nlp file
-            let nlp_file = File::open(&target_language_nlp_file)?;
-            let reader = BufReader::new(nlp_file);
-            let mut nlp_sentences: Vec<(String, SentenceInfo)> = reader
-                .lines()
-                .map(|line| {
-                    let line = line.unwrap();
-                    serde_json::from_str::<(String, SentenceInfo)>(&line).unwrap_or_else(|e| {
-                        panic!("Could not deserialize to (String, SentenceInfo): `{line}` {e:?}")
-                    })
-                })
-                .collect::<Vec<_>>();
-
-            // If the course teaches a new writing system, filter out proper nouns
-            if course.teaches_new_writing_system() {
-                let before_count = nlp_sentences.len();
-                nlp_sentences.retain(|(_sentence, info)| {
-                    !info.words.iter().any(|literal| {
-                        literal.heteronym.as_ref().map(|h| h.pos)
-                            == Some(language_utils::PartOfSpeech::Propn)
-                    })
-                });
-                let after_count = nlp_sentences.len();
-                println!(
-                    "Filtered out {} sentences containing proper nouns",
-                    before_count - after_count
-                );
-            }
-
-            nlp_sentences
-        };
-
-        // nlp_sentences already contains (String, SentenceInfo) tuples from the file
-        // No additional processing needed here
+        // Generate NLP sentences
+        let mut nlp_sentences = generate_data::nlp::generate_nlp_sentences(
+            sentences_tokenizations,
+            &multiword_terms_tokenizations,
+            &target_language_nlp_file,
+            course.target_language,
+        )
+        .await?;
 
         let all_lexemes: Vec<language_utils::Lexeme<String>> = nlp_sentences
             .iter()
@@ -274,7 +242,7 @@ async fn main() -> anyhow::Result<()> {
         let combined_freq_dir = target_language_dir.join("frequency_lists/combined");
         std::fs::create_dir_all(&combined_freq_dir)?;
         let frequencies_file = combined_freq_dir.join("frequencies.jsonl");
-        if !frequencies_file.exists() {
+        {
             let frequencies = generate_data::frequencies::compute_frequencies(
                 &nlp_sentences,
                 course.target_language,
@@ -298,7 +266,10 @@ async fn main() -> anyhow::Result<()> {
 
         // create and write dictionary
         let dict_file = native_specific_dir.join("dictionary.jsonl");
-        if !dict_file.exists() {
+        let dictionary: BTreeMap<
+            language_utils::Heteronym<String>,
+            language_utils::DictionaryEntry,
+        > = {
             let custom_definitions = {
                 let file = File::open(source_data_path.join("custom_definitions.jsonl"))?;
                 let reader = BufReader::new(file);
@@ -330,22 +301,41 @@ async fn main() -> anyhow::Result<()> {
 
             // Write the dictionary to a jsonl file
             let mut file = File::create(dict_file)?;
-            for entry in dictionary {
+            for entry in &dictionary {
                 let json = serde_json::to_string(&entry)?;
                 writeln!(file, "{json}")?;
             }
+            dictionary
+                .into_iter()
+                .map(|(heteronym, thoughts)| (heteronym, thoughts.into()))
+                .collect()
+        };
+
+        // Generate conjugations/declensions JSONL
+        {
+            println!("Generating conjugations/declensions map...");
+            let morphology_groups = morphology_analysis::analyze_morphology(&dictionary);
+
+            let conjugations_path = native_specific_dir.join("conjugations.jsonl");
+            morphology_analysis::write_conjugations_jsonl(&morphology_groups, &conjugations_path)?;
+            println!("  - Conjugations written to {}", conjugations_path.display());
         }
 
         // create and write phrasebook
         let phrasebook_file = native_specific_dir.join("phrasebook.jsonl");
-        if !phrasebook_file.exists() {
+        let phrasebook: BTreeMap<String, language_utils::PhrasebookEntry> = {
             let phrasebook = generate_data::dict::create_phrasebook(*course, &frequencies).await?;
             let mut file = File::create(phrasebook_file)?;
-            for entry in phrasebook {
+            let phrasebook: BTreeMap<String, language_utils::PhrasebookEntry> = phrasebook
+                .into_iter()
+                .map(|(phrase, thoughts)| (phrase, thoughts.into()))
+                .collect();
+            for entry in phrasebook.iter() {
                 let json = serde_json::to_string(&entry)?;
                 writeln!(file, "{json}")?;
             }
-        }
+            phrasebook
+        };
 
         let wikipron_path = source_data_path.join("pronunciations.tsv").canonicalize()?;
         let extra_pronunciations_path = source_data_path
@@ -432,12 +422,62 @@ async fn main() -> anyhow::Result<()> {
         )?;
 
         // Generate homophone practice sentences
-        generate_data::disambiguation_practice::generate_homophone_practice(
-            *course,
-            &homophones,
-            &target_language_dir,
-        )
-        .await?;
+        let homophone_practice: BTreeMap<
+            language_utils::HomophoneWordPair<String>,
+            language_utils::HomophonePractice<String>,
+        > = {
+            let practice = generate_data::disambiguation_practice::generate_homophone_practice(
+                *course,
+                &homophones,
+                &target_language_dir,
+            )
+            .await?;
+
+            let sentences = practice
+                .values()
+                .flat_map(|p| {
+                    p.sentence_pairs
+                        .iter()
+                        .flat_map(|s| [s.sentence1.clone(), s.sentence2.clone()])
+                })
+                .collect();
+
+            let tokenizations = generate_data::nlp::process_sentences(
+                sentences,
+                &target_language_dir.join("target_language_sentences_tokenization.jsonl"),
+                course.target_language,
+            )
+            .await?;
+
+            let nlp = generate_data::nlp::generate_nlp_sentences(
+                tokenizations,
+                &multiword_terms_tokenizations,
+                &target_language_nlp_file,
+                course.target_language,
+            )
+            .await?;
+            nlp_sentences.extend(nlp.clone());
+
+            practice
+                .into_iter()
+                .map(|(pair, practice)| {
+                    (
+                        pair,
+                        HomophonePractice {
+                            sentence_pairs: practice
+                                .sentence_pairs
+                                .into_iter()
+                                .filter(|p| {
+                                    nlp_sentences.contains_key(&p.sentence1)
+                                        && nlp_sentences.contains_key(&p.sentence2)
+                                })
+                                .collect(),
+                        },
+                    )
+                })
+                .filter(|(_, practice)| !practice.sentence_pairs.is_empty())
+                .collect()
+        };
 
         // Generate pronunciation sounds and guides
         let sounds_file = target_language_dir.join("pronunciation_sounds.jsonl");
@@ -520,48 +560,6 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Result<Vec<(String, Vec<String>)>, _>>()?
         };
 
-        let dictionary = {
-            let file = File::open(native_specific_dir.join("dictionary.jsonl"))?;
-            let reader = BufReader::new(file);
-            reader
-                .lines()
-                .map(|line| serde_json::from_str(&line.unwrap()))
-                .map(
-                    |result: Result<
-                        (
-                            _,
-                            (
-                                language_utils::DictionaryEntryThoughts,
-                                language_utils::features::Morphology,
-                            ),
-                        ),
-                        _,
-                    >| {
-                        result.map(|(heteronym, thoughts)| (heteronym, thoughts.into()))
-                    },
-                )
-                .collect::<Result<
-                    Vec<(
-                        language_utils::Heteronym<String>,
-                        language_utils::DictionaryEntry,
-                    )>,
-                    _,
-                >>()?
-        };
-
-        let phrasebook = {
-            let file = File::open(native_specific_dir.join("phrasebook.jsonl"))?;
-            let reader = BufReader::new(file);
-            reader
-                .lines()
-                .map(|line| serde_json::from_str(&line.unwrap()))
-                .map(
-                    |result: Result<(_, language_utils::PhrasebookEntryThoughts), _>| {
-                        result.map(|(heteronym, thoughts)| (heteronym, thoughts.into()))
-                    },
-                )
-                .collect::<Result<Vec<(String, language_utils::PhrasebookEntry)>, _>>()?
-        };
         // Calculate pattern frequencies using the word frequency data
         let pattern_freq_map = generate_data::pronunciation_patterns::calculate_pattern_frequencies(
             &sounds,
@@ -601,12 +599,12 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Result<Vec<(String, Vec<String>)>, _>>()?
         };
 
-        // ensure all sentences in the NLP analysis are in the target_language_sentences list
         let nlp_sentences = {
             let target_language_sentences_set = target_language_sentences
                 .clone()
                 .into_iter()
                 .collect::<std::collections::HashSet<_>>();
+
             nlp_sentences
                 .into_iter()
                 .filter(|(sentence, _)| target_language_sentences_set.contains(sentence))
@@ -630,8 +628,6 @@ async fn main() -> anyhow::Result<()> {
                 language_utils::Lexeme::Multiword(m) => phrasebook_set.contains(m),
             })
             .collect::<Vec<_>>();
-
-        // Trimming pass: Remove infrequent words (appearing 3 times or fewer)
 
         // Filter sentences that contain words not in the frequency list
         let (nlp_sentences, _removed_sentences): (Vec<_>, Vec<_>) = {
@@ -793,21 +789,6 @@ async fn main() -> anyhow::Result<()> {
                 ))
             }
         });
-
-        // Load homophone practice data
-        let homophone_practice = {
-            let practice_file = target_language_dir.join("homophone_practice.jsonl");
-            if practice_file.exists() {
-                let file = File::open(&practice_file)?;
-                let reader = BufReader::new(file);
-                reader
-                    .lines()
-                    .map(|line| serde_json::from_str(&line.unwrap()))
-                    .collect::<Result<BTreeMap<_, _>, _>>()?
-            } else {
-                BTreeMap::new()
-            }
-        };
 
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {

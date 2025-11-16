@@ -1,3 +1,4 @@
+use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{FrequencyEntry, Heteronym, Language, Lexeme, SentenceInfo};
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, HashSet};
@@ -10,13 +11,23 @@ use std::io::Write;
 /// multiword, except for French multiwords that start with "ne",
 /// which count fully.
 pub fn compute_frequencies(
-    sentences: &[(String, SentenceInfo)],
+    sentences: &BTreeMap<String, SentenceInfo>,
     language: Language,
     banned_words: &HashSet<Heteronym<String>>,
 ) -> BTreeMap<Lexeme<String>, u32> {
     let mut frequencies: BTreeMap<Lexeme<String>, f32> = BTreeMap::new();
 
+    let pb = ProgressBar::new(sentences.len() as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} sentences ({per_sec}, {eta})")
+            .unwrap()
+            .progress_chars("#>-"),
+    );
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
+
     for (_sentence_str, sentence) in sentences {
+        pb.inc(1);
         // Count individual words
         for word in &sentence.words {
             if let Some(heteronym) = &word.heteronym {
@@ -47,6 +58,8 @@ pub fn compute_frequencies(
                 .or_insert(0.0) += weight;
         }
     }
+
+    pb.finish();
 
     // Round fractional counts to integers for output
     frequencies

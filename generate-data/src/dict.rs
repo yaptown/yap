@@ -2,7 +2,7 @@ use futures::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{
     Course, DictionaryEntryThoughts, Heteronym, Language, PhrasebookEntryThoughts,
-    features::Morphology,
+    features::{Mood, Morphology},
 };
 use std::{collections::BTreeMap, sync::LazyLock};
 use tysm::chat_completions::ChatClient;
@@ -241,6 +241,14 @@ struct NumberResponse {
     number: Option<language_utils::features::Number>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+struct MoodResponse {
+    #[serde(rename = "1. thoughts")]
+    thoughts: String,
+    #[serde(rename = "2. mood")]
+    mood: Option<language_utils::features::Mood>,
+}
+
 pub async fn get_morphology(
     language: Language,
     heteronym: Heteronym<String>,
@@ -257,6 +265,7 @@ pub async fn get_morphology(
     let tense_applies = Tense::applies_to(language, pos);
     let person_applies = Person::applies_to(language, pos);
     let case_applies = Case::applies_to(language, pos);
+    let mood_applies = Mood::applies_to(language, pos);
 
     // Issue concurrent requests for all applicable features
     let gender_future = async {
@@ -289,7 +298,8 @@ If the gender of the word is not uniquely determined, return null. Neuter is onl
                 format!(
                     r#"Determine the morphological politeness of the provided {language} word.
 Think about whether this word is morphologically formal, informal, elevated, or humble.
-If it has a specific morphological politeness level, provide it. Otherwise, use `"2. politeness": null`. (Respond with JSON, using "1. thoughts" then "2. politeness".)"#,
+If it has a specific morphological politeness level, provide it. Otherwise, use `"2. politeness": null`. (Respond with JSON, using "1. thoughts" then "2. politeness".){}"#,
+                if language.tv_politeness() {"\nPoliteness should only be non-null in the second person as this is a language with T-V distinction. Literary/archaic forms are not related to politeness."} else {""},
                 ),
                 format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
@@ -415,14 +425,50 @@ If this word has a fixed grammatical number, provide it. If number is not applic
         }
     };
 
+    let mood_future = async {
+        if mood_applies {
+            let result: Result<MoodResponse, _> = chat_client.chat_with_system_prompt(
+                format!(
+                    r#"Determine the mood of the provided {language} verb.
+Think about whether this verb has a fixed mood. Mood expresses modality and subclassifies finite verb forms.
+
+Common moods:
+- Indicative: default mood, states facts (something happens/happened/will happen)
+- Imperative: commands or requests ("Go!", "Please come")
+- Conditional: actions under certain conditions ("would go", "would have gone")
+- Subjunctive: uncertain/subjective actions in subordinate clauses
+
+Less common moods (use only if applicable):
+- Potential: possible but not certain action (can, might, be able to)
+- Jussive: desire that action happens (used in Arabic, Sanskrit)
+- Purposive: "in order to" (Amazonian/Australian languages)
+- Quotative: expressing direct speech of another person
+- Optative: exclamations/wishes ("May you...", "If only...")
+- Desiderative: want/wish to do something
+- Necessitative: must/should/have to
+- Interrogative: special form for yes-no questions (Turkic languages)
+- Irrealis: action not known to have happened (roof term for conditional/potential/desiderative)
+- Admirative: surprise/irony/doubt (Albanian, Balkan languages)
+
+If this verb has a fixed mood, provide it. If mood is not applicable or varies, use `"2. mood": null`. (Respond with JSON, using "1. thoughts" then "2. mood".)"#,
+                ),
+                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+            ).await;
+            result.ok().and_then(|r| r.mood)
+        } else {
+            None
+        }
+    };
+
     // Execute all futures concurrently
-    let (gender, number, politeness, tense, person, case) = futures::join!(
+    let (gender, number, politeness, tense, person, case, mood) = futures::join!(
         gender_future,
         number_future,
         politeness_future,
         tense_future,
         person_future,
-        case_future
+        case_future,
+        mood_future
     );
 
     Ok(Morphology {
@@ -432,5 +478,6 @@ If this word has a fixed grammatical number, provide it. If number is not applic
         tense,
         person,
         case,
+        mood,
     })
 }

@@ -9,7 +9,7 @@ members = [
     "libraries/eyedee",
     "libraries/course-spot-check",
     "libraries/sentence-sampler",
-    "clean-nlp-data",
+    "clean-nlp-data", "libraries/enumap",
 ]
 resolver = "3"
 

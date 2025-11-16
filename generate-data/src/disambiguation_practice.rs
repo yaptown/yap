@@ -1,9 +1,7 @@
 use anyhow::Context;
 use futures::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
-use language_utils::{
-    Course, HomophonePractice, HomophoneSentence, HomophoneSentencePair, HomophoneWordPair,
-};
+use language_utils::{Course, HomophonePractice, HomophoneSentencePair, HomophoneWordPair};
 use std::collections::{BTreeMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
@@ -115,51 +113,6 @@ pub fn generate_homophones(
     Ok(homophones)
 }
 
-/// Parse a sentence with **asterisks** around a word and split it into before/word/after
-fn parse_sentence_with_asterisks(
-    sentence: &str,
-    expected_word: &str,
-) -> anyhow::Result<HomophoneSentence<String>> {
-    // Try to find word with double asterisks (case-insensitive)
-    let sentence_lower = sentence.to_lowercase();
-    let expected_lower = expected_word.to_lowercase();
-    let pattern_lower = format!("**{expected_lower}**");
-
-    if let Some(pos) = sentence_lower.find(&pattern_lower) {
-        let before = sentence[..pos].to_string();
-        let word_start = pos + 2; // Skip the **
-        let word_end = word_start + expected_word.len();
-        let actual_word = sentence[word_start..word_end].to_string();
-        let after = sentence[word_end + 2..].to_string(); // Skip the trailing **
-        return Ok(HomophoneSentence {
-            before,
-            word: actual_word,
-            after,
-        });
-    }
-
-    // Fallback: try with single asterisks
-    let pattern_lower = format!("*{expected_lower}*");
-    if let Some(pos) = sentence_lower.find(&pattern_lower) {
-        let before = sentence[..pos].to_string();
-        let word_start = pos + 1; // Skip the *
-        let word_end = word_start + expected_word.len();
-        let actual_word = sentence[word_start..word_end].to_string();
-        let after = sentence[word_end + 1..].to_string(); // Skip the trailing *
-        return Ok(HomophoneSentence {
-            before,
-            word: actual_word,
-            after,
-        });
-    }
-
-    Err(anyhow::anyhow!(
-        "Could not find '{}' surrounded by asterisks in sentence: {}",
-        expected_word,
-        sentence
-    ))
-}
-
 /// Generate practice sentences for homophone disambiguation using an LLM
 pub async fn generate_homophone_practice(
     course: Course,
@@ -167,22 +120,6 @@ pub async fn generate_homophone_practice(
     target_language_dir: &Path,
 ) -> anyhow::Result<BTreeMap<HomophoneWordPair<String>, HomophonePractice<String>>> {
     let practice_file = target_language_dir.join("homophone_practice.jsonl");
-
-    if practice_file.exists() {
-        // Load existing practice from file
-        let file = File::open(&practice_file)?;
-        let reader = BufReader::new(file);
-        return Ok(reader
-            .lines()
-            .filter_map(|line| {
-                let line = line.ok()?;
-                serde_json::from_str::<(HomophoneWordPair<String>, HomophonePractice<String>)>(
-                    &line,
-                )
-                .ok()
-            })
-            .collect::<BTreeMap<_, _>>());
-    }
 
     let Course {
         native_language,
@@ -227,7 +164,7 @@ Requirements:
 2. The sentences should be natural, everyday {target_language} appropriate for beginners
 3. The sentences should be very simple and easy to understand, using only very basic vocabulary and grammar.
 4. The context should make the meaning clear
-5. Surround the target word with **double asterisks** (e.g., "Je vais **à** la plage")
+5. Do not use any special syntax around the target word.
 6. Keep sentences relatively simple and clear
 7. Use varied contexts to show different uses of each word
 
@@ -237,8 +174,8 @@ Output format:
     "word2": "second word",
     "sentence_pairs": [
         {{
-            "sentence1": "Sentence with **word1** in context.",
-            "sentence2": "Sentence with **word2** in context."
+            "sentence1": "Sentence with word1 in context.",
+            "sentence2": "Sentence with word2 in context."
         }},
         ... (30 pairs total)
     ]
@@ -262,7 +199,7 @@ Output format:
 
     pb.finish_with_message(format!("{:.2}", CHAT_CLIENT.cost().unwrap_or(0.0)));
 
-    // Process the responses and parse asterisks
+    // Process the responses
     let mut practices = BTreeMap::new();
     for (response, word1, word2) in practice_data {
         if let Ok(thoughts) = response {
@@ -270,31 +207,16 @@ Output format:
                 .expect("Homophone words should be different");
 
             let mut sentence_pairs = Vec::new();
-            for pair in thoughts.sentence_pairs {
-                match (
-                    parse_sentence_with_asterisks(&pair.sentence1, &word1),
-                    parse_sentence_with_asterisks(&pair.sentence2, &word2),
-                ) {
-                    (Ok(sentence1), Ok(sentence2)) => {
-                        // Ensure correct ordering (lexicographic)
-                        let (sentence1, sentence2) = if word1 < word2 {
-                            (sentence1, sentence2)
-                        } else {
-                            (sentence2, sentence1)
-                        };
 
-                        sentence_pairs.push(HomophoneSentencePair {
-                            sentence1,
-                            sentence2,
-                        });
-                    }
-                    (Err(e1), Err(e2)) => {
-                        eprintln!("Failed to parse both sentences for {word1}/{word2}: {e1}, {e2}");
-                    }
-                    (Err(e), Ok(_)) | (Ok(_), Err(e)) => {
-                        eprintln!("Failed to parse one sentence for {word1}/{word2}: {e}");
-                    }
-                }
+            for RawSentencePair {
+                sentence1,
+                sentence2,
+            } in thoughts.sentence_pairs
+            {
+                sentence_pairs.push(HomophoneSentencePair {
+                    sentence1,
+                    sentence2,
+                });
             }
 
             if !sentence_pairs.is_empty() {
@@ -309,11 +231,6 @@ Output format:
         let json = serde_json::to_string(&practice)?;
         writeln!(file, "{json}")?;
     }
-
-    println!(
-        "Generated practice sentences for {} homophone pairs",
-        practices.len()
-    );
 
     Ok(practices)
 }

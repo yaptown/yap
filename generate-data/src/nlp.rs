@@ -224,14 +224,49 @@ pub async fn process_sentences(
 
 /// Generate NLP analyzed sentences by matching multiword terms against sentences
 /// using lemma matcher (high confidence) and dependency matcher (low confidence)
+///
+/// Returns a BTreeMap containing only the requested input sentences that were successfully processed
 pub async fn generate_nlp_sentences(
     sentences_tokenizations: BTreeMap<String, Vec<lexide::Token>>,
-    multiword_terms_tokenizations: BTreeMap<String, Vec<lexide::Token>>,
+    multiword_terms_tokenizations: &BTreeMap<String, Vec<lexide::Token>>,
     output_file: &Path,
     language: Language,
-) -> Result<()> {
+) -> Result<BTreeMap<String, language_utils::SentenceInfo>> {
     use language_utils::{Literal, MultiwordTerms, SentenceInfo};
     use lexide::matching::{DependencyMatcher, LemmaMatcher, TreeNode};
+
+    // Load already processed sentences from output file (if it exists)
+    let mut already_processed: BTreeMap<String, SentenceInfo> = BTreeMap::new();
+    if output_file.exists() {
+        let file = std::fs::File::open(output_file)?;
+        let reader = BufReader::new(file);
+
+        for line in reader.lines().map_while(Result::ok) {
+            if let Ok((sentence, info)) = serde_json::from_str::<(String, SentenceInfo)>(&line) {
+                already_processed.insert(sentence, info);
+            }
+        }
+    }
+
+    // Filter out already processed sentences
+    let sentences_to_process: BTreeMap<String, Vec<lexide::Token>> = sentences_tokenizations
+        .iter()
+        .filter(|(sentence, _)| !already_processed.contains_key(*sentence))
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+
+    if sentences_to_process.is_empty() {
+        // Return only the sentences that were requested
+        let result: BTreeMap<String, SentenceInfo> = sentences_tokenizations
+            .keys()
+            .filter_map(|s| {
+                already_processed
+                    .get(s)
+                    .map(|info| (s.clone(), info.clone()))
+            })
+            .collect();
+        return Ok(result);
+    }
 
     // Build matchers for all multiword terms
 
@@ -259,8 +294,8 @@ pub async fn generate_nlp_sentences(
             };
             match TreeNode::try_from(tokenization.clone()) {
                 Ok(tree) => Some((term_str.clone(), tree)),
-                Err(e) => {
-                    eprintln!("Warning: Failed to create TreeNode for '{term_str}': {e}");
+                Err(_e) => {
+                    // eprintln!("Warning: Failed to create TreeNode for '{term_str}': {e}"); // todo make this less noisy
                     None
                 }
             }
@@ -269,14 +304,20 @@ pub async fn generate_nlp_sentences(
 
     let dependency_matcher = DependencyMatcher::new(&tree_patterns);
 
-    // Open output file
-    let output_file_handle = std::fs::File::create(output_file)?;
+    // Open output file in append mode
+    let output_file_handle = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(output_file)?;
     let mut writer = std::io::BufWriter::new(output_file_handle);
 
     // Empty proper nouns map (for now, proper noun handling can be added later if needed)
     let proper_nouns = BTreeMap::new();
 
-    for (sent_idx, (sentence_str, tokens)) in sentences_tokenizations.iter().enumerate() {
+    // Process only the new sentences
+    let mut newly_processed: BTreeMap<String, SentenceInfo> = BTreeMap::new();
+
+    for (sentence_str, tokens) in sentences_to_process.iter() {
         let tokenization = lexide::Tokenization {
             tokens: tokens.clone(),
         };
@@ -292,14 +333,6 @@ pub async fn generate_nlp_sentences(
         let low_confidence: Vec<String> = if let Ok(tree) = TreeNode::try_from(tokenization.clone())
         {
             let dep_matches = dependency_matcher.find_all(&tree);
-
-            // Debug: log matches for first few sentences
-            if sent_idx < 3 && !dep_matches.is_empty() {
-                eprintln!("\n=== Sentence {sent_idx}: {sentence_str} ===");
-                eprintln!("Sentence tree root lemma: {}", tree.token.lemma.lemma);
-                eprintln!("Sentence tree has {} children", tree.children.len());
-                eprintln!("Found {} dependency matches", dep_matches.len());
-            }
 
             dep_matches
                 .iter()
@@ -331,9 +364,25 @@ pub async fn generate_nlp_sentences(
         // Write (sentence, SentenceInfo) tuple to output file
         let json = serde_json::to_string(&(sentence_str, &sentence_info))?;
         writeln!(writer, "{json}")?;
+
+        // Store in newly processed map
+        newly_processed.insert(sentence_str.clone(), sentence_info);
     }
 
     writer.flush()?;
 
-    Ok(())
+    // Merge newly processed sentences with already processed ones
+    already_processed.extend(newly_processed);
+
+    // Build result map containing only the requested sentences
+    let result: BTreeMap<String, SentenceInfo> = sentences_tokenizations
+        .keys()
+        .filter_map(|s| {
+            already_processed
+                .get(s)
+                .map(|info| (s.clone(), info.clone()))
+        })
+        .collect();
+
+    Ok(result)
 }

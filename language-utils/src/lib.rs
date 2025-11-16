@@ -902,9 +902,9 @@ pub struct ConsolidatedLanguageData {
     /// NLP-analyzed sentences with multiword terms and heteronyms
     pub nlp_sentences: Vec<(String, SentenceInfo)>,
     /// Dictionary entries for individual words
-    pub dictionary: Vec<(Heteronym<String>, DictionaryEntry)>,
+    pub dictionary: BTreeMap<Heteronym<String>, DictionaryEntry>,
     /// Phrasebook entries for multiword terms
-    pub phrasebook: Vec<(String, PhrasebookEntry)>,
+    pub phrasebook: BTreeMap<String, PhrasebookEntry>,
     /// Frequency data for words and phrases
     pub frequencies: Vec<FrequencyEntry<String>>,
     /// Mapping from words to their IPA pronunciations
@@ -1348,6 +1348,17 @@ impl Language {
             Language::Japanese => WritingSystem::Japanese,
         }
     }
+
+    pub fn tv_politeness(&self) -> bool {
+        match self {
+            Language::French
+            | Language::Spanish
+            | Language::German
+            | Language::Portuguese
+            | Language::Italian => true,
+            _ => false,
+        }
+    }
 }
 
 impl std::fmt::Display for Language {
@@ -1444,8 +1455,10 @@ pub const LANGUAGES: &[Language] = &[
     rkyv::Archive,
     rkyv::Serialize,
     rkyv::Deserialize,
+    tsify::Tsify,
 )]
 #[rkyv(compare(PartialEq), derive(Hash), derive(PartialEq), derive(Eq))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct HomophoneWordPair<S>
 where
     S: rkyv::Archive,
@@ -1499,65 +1512,6 @@ impl HomophoneWordPair<lasso::Spur> {
     }
 }
 
-/// A single sentence with a word that should be underlined (marked by asterisks in LLM output)
-#[derive(
-    Clone,
-    Debug,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    rkyv::Archive,
-    rkyv::Serialize,
-    rkyv::Deserialize,
-)]
-#[rkyv(compare(PartialEq))]
-pub struct HomophoneSentence<S>
-where
-    S: rkyv::Archive,
-    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
-{
-    /// The part of the sentence before the underlined word
-    pub before: S,
-    /// The underlined word itself
-    pub word: S,
-    /// The part of the sentence after the underlined word
-    pub after: S,
-}
-
-impl HomophoneSentence<String> {
-    pub fn get_interned(
-        &self,
-        rodeo: &lasso::RodeoReader,
-    ) -> Option<HomophoneSentence<lasso::Spur>> {
-        Some(HomophoneSentence {
-            before: rodeo.get(&self.before)?,
-            word: rodeo.get(&self.word)?,
-            after: rodeo.get(&self.after)?,
-        })
-    }
-
-    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophoneSentence<lasso::Spur> {
-        HomophoneSentence {
-            before: rodeo.get_or_intern(&self.before),
-            word: rodeo.get_or_intern(&self.word),
-            after: rodeo.get_or_intern(&self.after),
-        }
-    }
-}
-
-impl HomophoneSentence<lasso::Spur> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophoneSentence<String> {
-        HomophoneSentence {
-            before: rodeo.resolve(&self.before).to_string(),
-            word: rodeo.resolve(&self.word).to_string(),
-            after: rodeo.resolve(&self.after).to_string(),
-        }
-    }
-}
 /// A pair of practice sentences for disambiguating two homophones
 #[derive(
     Clone,
@@ -1580,9 +1534,9 @@ where
     <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
 {
     /// Sentence using the first word (lexicographically)
-    pub sentence1: HomophoneSentence<S>,
+    pub sentence1: S,
     /// Sentence using the second word (lexicographically)
-    pub sentence2: HomophoneSentence<S>,
+    pub sentence2: S,
 }
 
 impl HomophoneSentencePair<String> {
@@ -1591,15 +1545,15 @@ impl HomophoneSentencePair<String> {
         rodeo: &lasso::RodeoReader,
     ) -> Option<HomophoneSentencePair<lasso::Spur>> {
         Some(HomophoneSentencePair {
-            sentence1: self.sentence1.get_interned(rodeo)?,
-            sentence2: self.sentence2.get_interned(rodeo)?,
+            sentence1: rodeo.get(&self.sentence1)?,
+            sentence2: rodeo.get(&self.sentence2)?,
         })
     }
 
     fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophoneSentencePair<lasso::Spur> {
         HomophoneSentencePair {
-            sentence1: self.sentence1.get_or_intern(rodeo),
-            sentence2: self.sentence2.get_or_intern(rodeo),
+            sentence1: rodeo.get_or_intern(&self.sentence1),
+            sentence2: rodeo.get_or_intern(&self.sentence2),
         }
     }
 }
@@ -1607,8 +1561,8 @@ impl HomophoneSentencePair<String> {
 impl HomophoneSentencePair<lasso::Spur> {
     pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophoneSentencePair<String> {
         HomophoneSentencePair {
-            sentence1: self.sentence1.resolve(rodeo),
-            sentence2: self.sentence2.resolve(rodeo),
+            sentence1: rodeo.resolve(&self.sentence1).to_string(),
+            sentence2: rodeo.resolve(&self.sentence2).to_string(),
         }
     }
 }
