@@ -128,14 +128,9 @@ pub async fn create_dictionary(
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
     let dictionary = futures::stream::iter(target_language_heteronyms.iter()).map(|(heteronym, &freq)| {
-        let pb = pb.clone();
         let cost = CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0);
         pb.set_message(format!("{cost:.2} ({},{},{})", heteronym.word, heteronym.lemma, heteronym.pos));
 
-        async move {
-        if heteronym.word == "t" && heteronym.lemma == "tu" {
-            panic!("heteronym: {heteronym:?}");
-        }
         let chat_client = if freq > 500 { &*CHAT_CLIENT_O3 } else { &*CHAT_CLIENT_4O };
 
         let dict_response = {
@@ -167,13 +162,13 @@ Output the result as a JSON object containing an array of one or more definition
 
         pb.inc(1);
 
-        (dict_response, heteronym)
-    }})
+        (heteronym, dict_response)
+    })
     .buffer_unordered(50)
     .collect::<Vec<_>>()
     .await
     .into_iter()
-    .filter_map(|(dict_response, heteronym)| {
+    .filter_map(|(heteronym, dict_response)| {
         match (dict_response.ok()) {
             Some(entry) => Some((heteronym.clone(), entry)),
             None => None,

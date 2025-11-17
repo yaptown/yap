@@ -4,12 +4,52 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Write;
 
-
-pub async fn create_dictionary(
+pub async fn create_morphology(
     language: Language,
     frequencies: &Vec<language_utils::FrequencyEntry<String>>,
 ) -> anyhow::Result<Vec<(Heteronym<String>, Vec<Morphology>)>> {
-    
+    // Process sentences to get unique words and track occurrences
+    let mut target_language_heteronyms = BTreeMap::new();
+    for entry in frequencies {
+        if let Some(heteronym) = entry.lexeme.heteronym() {
+            target_language_heteronyms
+                .entry(heteronym.clone())
+                .or_insert(entry.count);
+        }
+    }
+
+    let count = target_language_heteronyms.len();
+
+    let pb = ProgressBar::new(count as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} dictionary entries ({per_sec}, ${msg}, {eta})")
+            .unwrap()
+            .progress_chars("#>-"),
+    );
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
+
+    let morphology = futures::stream::iter(target_language_heteronyms.iter())
+        .map(|(heteronym, &freq)| {
+            let morphology_response = todo!();
+            (heteronym, morphology_response)
+        })
+        .buffer_unordered(50)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .filter_map(|(heteronym, dict_response)| match (dict_response.ok()) {
+            Some(entry) => Some((heteronym.clone(), entry)),
+            None => None,
+        })
+        .collect::<Vec<(Heteronym<String>, Morphology)>>();
+
+    pb.finish_with_message(format!(
+        "{:.2}",
+        CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0)
+    ));
+
+    Ok(dictionary)
 }
 
 mod llm_morphology {

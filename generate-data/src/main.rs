@@ -293,7 +293,7 @@ async fn main() -> anyhow::Result<()> {
             let morphology = morphology_analysis::create_morphology(&dictionary);
             let dictionary = dictionary
                 .into_iter()
-                .map(|(heteronym, (def)| {
+                .map(|(heteronym, def)| {
                     let morphology = vec![morphology]; // tbh we should calculate this in the morphology analysis section
                     if let Some(def) = custom_definitions.get(&heteronym) {
                         (heteronym, (def.clone(), morphology))
