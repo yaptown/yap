@@ -12,4 +12,5 @@ pub mod proper_noun_filter;
 pub mod read_anki;
 pub mod target_sentences;
 pub mod tatoeba;
-pub mod wiktionary;
+pub mod wiktionary_conjugations;
+pub mod wiktionary_terms;

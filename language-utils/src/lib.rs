@@ -229,11 +229,11 @@ pub struct DictionaryEntryThoughts {
 pub struct DictionaryEntry {
     pub target_language_word: String,
     pub definitions: Vec<TargetToNativeWord>,
-    pub morphology: Morphology,
+    pub morphology: Vec<Morphology>,
 }
 
-impl From<(DictionaryEntryThoughts, Morphology)> for DictionaryEntry {
-    fn from(entry: (DictionaryEntryThoughts, Morphology)) -> Self {
+impl From<(DictionaryEntryThoughts, Vec<Morphology>)> for DictionaryEntry {
+    fn from(entry: (DictionaryEntryThoughts, Vec<Morphology>)) -> Self {
         let (entry, morphology) = entry;
         Self {
             target_language_word: entry.target_language_word,

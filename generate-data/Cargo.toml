@@ -33,3 +33,4 @@ unicode-normalization.workspace = true
 dashmap = { version = "6.1.0", features = ["serde"] }
 indicatif.workspace = true
 lexide.workspace = true
+scraper = "0.22"

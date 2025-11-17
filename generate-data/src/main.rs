@@ -166,9 +166,11 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // Ensure multiword terms file exists
-        let multiword_terms_file =
-            generate_data::wiktionary::ensure_multiword_terms_file(course, &target_language_dir)
-                .await?;
+        let multiword_terms_file = generate_data::wiktionary_terms::ensure_multiword_terms_file(
+            course,
+            &target_language_dir,
+        )
+        .await?;
 
         // Process multiword terms with Rust NLP (lexide)
         let multiword_terms_tokenization_file =
@@ -291,6 +293,7 @@ async fn main() -> anyhow::Result<()> {
             let dictionary = dictionary
                 .into_iter()
                 .map(|(heteronym, (def, morphology))| {
+                    let morphology = vec![morphology]; // tbh we should calculate this in the morphology analysis section
                     if let Some(def) = custom_definitions.get(&heteronym) {
                         (heteronym, (def.clone(), morphology))
                     } else {
@@ -318,7 +321,10 @@ async fn main() -> anyhow::Result<()> {
 
             let conjugations_path = native_specific_dir.join("conjugations.jsonl");
             morphology_analysis::write_conjugations_jsonl(&morphology_groups, &conjugations_path)?;
-            println!("  - Conjugations written to {}", conjugations_path.display());
+            println!(
+                "  - Conjugations written to {}",
+                conjugations_path.display()
+            );
         }
 
         // create and write phrasebook

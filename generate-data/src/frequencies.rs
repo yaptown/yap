@@ -26,7 +26,7 @@ pub fn compute_frequencies(
     );
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    for (_sentence_str, sentence) in sentences {
+    for sentence in sentences.values() {
         pb.inc(1);
         // Count individual words
         for word in &sentence.words {

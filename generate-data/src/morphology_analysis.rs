@@ -15,7 +15,7 @@ pub struct LemmaGroup {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct WordForm {
     pub word: String,
-    pub morphology: Morphology,
+    pub morphology: Vec<Morphology>,
 }
 
 /// Analyzes morphological coverage by grouping words by lemma and POS
