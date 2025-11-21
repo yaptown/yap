@@ -1,13 +1,30 @@
+use futures::StreamExt as _;
+use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::features::Morphology;
-use language_utils::{DictionaryEntry, Heteronym, PartOfSpeech};
+use language_utils::{DictionaryEntry, Heteronym, Language, PartOfSpeech};
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Write;
+use std::sync::LazyLock;
+use tysm::chat_completions::ChatClient;
+
+static CHAT_CLIENT_4O: LazyLock<ChatClient> = LazyLock::new(|| {
+    ChatClient::from_env("gpt-4o")
+        .unwrap()
+        .with_cache_directory("./.cache")
+});
+
+static CHAT_CLIENT_5: LazyLock<ChatClient> = LazyLock::new(|| {
+    ChatClient::from_env("gpt-5")
+        .unwrap()
+        .with_cache_directory("./.cache")
+        .with_service_tier("flex")
+});
 
 pub async fn create_morphology(
     language: Language,
     frequencies: &Vec<language_utils::FrequencyEntry<String>>,
-) -> anyhow::Result<Vec<(Heteronym<String>, Vec<Morphology>)>> {
+) -> anyhow::Result<BTreeMap<Heteronym<String>, Vec<Morphology>>> {
     // Process sentences to get unique words and track occurrences
     let mut target_language_heteronyms = BTreeMap::new();
     for entry in frequencies {
@@ -23,36 +40,53 @@ pub async fn create_morphology(
     let pb = ProgressBar::new(count as u64);
     pb.set_style(
         ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} dictionary entries ({per_sec}, ${msg}, {eta})")
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} morphology entries ({per_sec}, ${msg}, {eta})")
             .unwrap()
             .progress_chars("#>-"),
     );
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
     let morphology = futures::stream::iter(target_language_heteronyms.iter())
-        .map(|(heteronym, &freq)| {
-            let morphology_response = todo!();
+        .map(async |(heteronym, &freq)| {
+            let cost = CHAT_CLIENT_5.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0);
+            pb.set_message(format!(
+                "{cost:.2} ({},{},{})",
+                heteronym.word, heteronym.lemma, heteronym.pos
+            ));
+
+            let chat_client = if freq > 500 {
+                &*CHAT_CLIENT_5
+            } else {
+                &*CHAT_CLIENT_4O
+            };
+            let morphology_response =
+                llm_morphology::get_morphology(language, heteronym.clone(), chat_client).await;
+
+            pb.inc(1);
+
             (heteronym, morphology_response)
         })
         .buffer_unordered(50)
         .collect::<Vec<_>>()
         .await
         .into_iter()
-        .filter_map(|(heteronym, dict_response)| match (dict_response.ok()) {
-            Some(entry) => Some((heteronym.clone(), entry)),
+        .filter_map(|(heteronym, morphology)| match morphology.ok() {
+            Some(morphology) => Some((heteronym.clone(), vec![morphology])),
             None => None,
         })
-        .collect::<Vec<(Heteronym<String>, Morphology)>>();
+        .collect::<BTreeMap<Heteronym<String>, _>>();
 
     pb.finish_with_message(format!(
         "{:.2}",
-        CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0)
+        CHAT_CLIENT_5.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0)
     ));
 
-    Ok(dictionary)
+    Ok(morphology)
 }
 
 mod llm_morphology {
+
+    use super::*;
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
     struct GenderResponse {
@@ -115,7 +149,9 @@ mod llm_morphology {
         heteronym: Heteronym<String>,
         chat_client: &ChatClient,
     ) -> anyhow::Result<Morphology> {
-        use language_utils::features::{Case, FeatureSet, Gender, Number, Person, Polite, Tense};
+        use language_utils::features::{
+            Case, FeatureSet, Gender, Mood, Number, Person, Polite, Tense,
+        };
 
         let pos = heteronym.pos;
 

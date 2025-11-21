@@ -101,7 +101,7 @@ Of course, their native language is {native_language}, so you should write the m
 pub async fn create_dictionary(
     course: Course,
     frequencies: &Vec<language_utils::FrequencyEntry<String>>,
-) -> anyhow::Result<Vec<(Heteronym<String>, DictionaryEntryThoughts)>> {
+) -> anyhow::Result<BTreeMap<Heteronym<String>, DictionaryEntryThoughts>> {
     let Course {
         native_language,
         target_language,
@@ -127,7 +127,7 @@ pub async fn create_dictionary(
     );
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    let dictionary = futures::stream::iter(target_language_heteronyms.iter()).map(|(heteronym, &freq)| {
+    let dictionary = futures::stream::iter(target_language_heteronyms.iter()).map(async |(heteronym, &freq)| {
         let cost = CHAT_CLIENT_O3.cost().unwrap_or(0.0) + CHAT_CLIENT_4O.cost().unwrap_or(0.0);
         pb.set_message(format!("{cost:.2} ({},{},{})", heteronym.word, heteronym.lemma, heteronym.pos));
 
@@ -169,12 +169,12 @@ Output the result as a JSON object containing an array of one or more definition
     .await
     .into_iter()
     .filter_map(|(heteronym, dict_response)| {
-        match (dict_response.ok()) {
+        match dict_response.ok() {
             Some(entry) => Some((heteronym.clone(), entry)),
             None => None,
         }
     })
-    .collect::<Vec<(Heteronym<String>, DictionaryEntryThoughts)>>();
+    .collect::<BTreeMap<Heteronym<String>, DictionaryEntryThoughts>>();
 
     pb.finish_with_message(format!(
         "{:.2}",

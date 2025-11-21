@@ -290,11 +290,17 @@ async fn main() -> anyhow::Result<()> {
             };
 
             let dictionary = generate_data::dict::create_dictionary(*course, &frequencies).await?;
-            let morphology = morphology_analysis::create_morphology(&dictionary);
+            let morphology =
+                morphology_analysis::create_morphology(course.target_language, &frequencies)
+                    .await?;
             let dictionary = dictionary
                 .into_iter()
-                .map(|(heteronym, def)| {
-                    let morphology = vec![morphology]; // tbh we should calculate this in the morphology analysis section
+                .filter_map(|(heteronym, def)| {
+                    morphology
+                        .get(&heteronym)
+                        .map(|morphology| (heteronym, (def.clone(), morphology.clone())))
+                })
+                .map(|(heteronym, (def, morphology))| {
                     if let Some(def) = custom_definitions.get(&heteronym) {
                         (heteronym, (def.clone(), morphology))
                     } else {
