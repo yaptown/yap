@@ -948,11 +948,11 @@ impl ConsolidatedLanguageData {
                 }
             }
         }
-        for (heteronym, _entry) in &self.dictionary {
+        for heteronym in self.dictionary.keys() {
             rodeo.get_or_intern(&heteronym.word);
             rodeo.get_or_intern(&heteronym.lemma);
         }
-        for (multiword, _entry) in &self.phrasebook {
+        for multiword in self.phrasebook.keys() {
             rodeo.get_or_intern(multiword);
         }
 

@@ -463,7 +463,7 @@ pub fn write_conjugations_jsonl(
     let mut file = File::create(output_path)?;
 
     for group in groups {
-        let json = serde_json::to_string(group).map_err(|e| std::io::Error::other(e))?;
+        let json = serde_json::to_string(group).map_err(std::io::Error::other)?;
         writeln!(file, "{json}")?;
     }
 

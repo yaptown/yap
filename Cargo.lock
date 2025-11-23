@@ -3811,9 +3811,8 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 [[package]]
 name = "tysm"
 version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "327e9d165595b05466c43b82d8a85ded21d3788f166be486396ec1fb508c929f"
 dependencies = [
+ "dashmap",
  "dotenvy",
  "itertools",
  "log",

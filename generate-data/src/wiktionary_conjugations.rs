@@ -312,7 +312,7 @@ pub mod french {
 
         // Check which verbs we already have cached
         for verb in verbs {
-            let cache_file = cache_dir.join(format!("{}.html", verb));
+            let cache_file = cache_dir.join(format!("{verb}.html"));
             if cache_file.exists() {
                 // Try to parse from cached HTML
                 match std::fs::read_to_string(&cache_file) {
@@ -378,7 +378,7 @@ pub mod french {
             };
 
             // Save HTML to cache
-            let cache_file = cache_dir.join(format!("{}.html", verb));
+            let cache_file = cache_dir.join(format!("{verb}.html"));
             if let Err(e) = std::fs::write(&cache_file, &html) {
                 eprintln!("Failed to write cache file for {verb}: {e}");
             }
@@ -702,8 +702,8 @@ pub mod spanish {
 
         // Find the header for this tense
         let tense_keyword = match mood {
-            "indicative" => format!("{} de indicativo", spanish_tense),
-            "subjunctive" => format!("{} de subjuntivo", spanish_tense),
+            "indicative" => format!("{spanish_tense} de indicativo"),
+            "subjunctive" => format!("{spanish_tense} de subjuntivo"),
             _ => anyhow::bail!("Unknown mood: {}", mood),
         };
 
@@ -881,7 +881,7 @@ pub mod spanish {
 
         // Check which verbs we already have cached
         for verb in verbs {
-            let cache_file = cache_dir.join(format!("{}.html", verb));
+            let cache_file = cache_dir.join(format!("{verb}.html"));
             if cache_file.exists() {
                 // Try to parse from cached HTML
                 match std::fs::read_to_string(&cache_file) {
@@ -947,7 +947,7 @@ pub mod spanish {
             };
 
             // Save HTML to cache
-            let cache_file = cache_dir.join(format!("{}.html", verb));
+            let cache_file = cache_dir.join(format!("{verb}.html"));
             if let Err(e) = std::fs::write(&cache_file, &html) {
                 eprintln!("Failed to write cache file for {verb}: {e}");
             }
