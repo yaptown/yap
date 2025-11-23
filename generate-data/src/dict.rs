@@ -1,9 +1,6 @@
 use futures::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
-use language_utils::{
-    Course, DictionaryEntryThoughts, Heteronym, Language, PhrasebookEntryThoughts,
-    features::{Mood, Morphology},
-};
+use language_utils::{Course, DictionaryEntryThoughts, Heteronym, PhrasebookEntryThoughts};
 use std::{collections::BTreeMap, sync::LazyLock};
 use tysm::chat_completions::ChatClient;
 
@@ -170,10 +167,7 @@ Output the result as a JSON object containing an array of one or more definition
     .await
     .into_iter()
     .filter_map(|(heteronym, dict_response)| {
-        match dict_response.ok() {
-            Some(entry) => Some((heteronym.clone(), entry)),
-            None => None,
-        }
+        dict_response.ok().map(|entry| (heteronym.clone(), entry))
     })
     .collect::<BTreeMap<Heteronym<String>, DictionaryEntryThoughts>>();
 

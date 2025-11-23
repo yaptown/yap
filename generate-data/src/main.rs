@@ -626,13 +626,11 @@ async fn main() -> anyhow::Result<()> {
 
         // Filter frequencies to only include lexemes that have definitions in dictionary/phrasebook
         let dictionary_set: std::collections::HashSet<_> = dictionary
-            .iter()
-            .map(|(heteronym, _)| heteronym.clone())
+            .keys()
+            .map(|heteronym| heteronym.clone())
             .collect();
-        let phrasebook_set: std::collections::HashSet<_> = phrasebook
-            .iter()
-            .map(|(phrase, _)| phrase.clone())
-            .collect();
+        let phrasebook_set: std::collections::HashSet<_> =
+            phrasebook.keys().map(|phrase| phrase.clone()).collect();
 
         let frequencies = frequencies
             .into_iter()
