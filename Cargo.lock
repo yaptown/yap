@@ -1825,7 +1825,6 @@ dependencies = [
 [[package]]
 name = "lexide"
 version = "0.1.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=7f86d2277afa228030c08f5c7823be5e6d098f98#7f86d2277afa228030c08f5c7823be5e6d098f98"
 dependencies = [
  "anyhow",
  "futures",

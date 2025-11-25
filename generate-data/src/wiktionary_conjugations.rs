@@ -3,6 +3,156 @@ use scraper::{ElementRef, Html, Selector};
 use std::collections::HashMap;
 use std::path::Path;
 
+/// Generic helper to fetch and parse Wiktionary entries with caching.
+///
+/// # Arguments
+/// * `words` - List of words to fetch
+/// * `cache_dir` - Directory to cache HTML files
+/// * `entry_type` - Type of entry for logging (e.g., "French verb", "German noun")
+/// * `parse_fn` - Function to parse HTML into the target type
+/// * `fallback_suffix` - Optional suffix to strip for fallback (e.g., "se" for Spanish reflexive verbs)
+///
+/// # Returns
+/// HashMap mapping words to their parsed entries
+async fn fetch_wiktionary_entries<T, F>(
+    words: &[String],
+    cache_dir: &Path,
+    entry_type: &str,
+    parse_fn: F,
+    fallback_suffix: Option<&str>,
+) -> anyhow::Result<HashMap<String, T>>
+where
+    F: Fn(&str, &str) -> anyhow::Result<T>,
+{
+    // Create cache directory if it doesn't exist
+    std::fs::create_dir_all(cache_dir)?;
+
+    let mut results = HashMap::new();
+    let mut to_fetch = Vec::new();
+
+    // Check which words we already have cached
+    for word in words {
+        let cache_file = cache_dir.join(format!("{word}.html"));
+        if cache_file.exists() {
+            // Try to parse from cached HTML
+            match std::fs::read_to_string(&cache_file) {
+                Ok(html) => match parse_fn(&html, word) {
+                    Ok(entry) => {
+                        results.insert(word.clone(), entry);
+                    }
+                    Err(e) => {
+                        // If parsing fails, let the fetch loop handle it (including fallback logic)
+                        let has_fallback = fallback_suffix
+                            .map(|suffix| word.ends_with(suffix))
+                            .unwrap_or(false);
+                        if !has_fallback {
+                            eprintln!("Failed to parse cached HTML for {word}: {e}");
+                        }
+                        to_fetch.push(word);
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Failed to read cached HTML for {word}: {e}");
+                    to_fetch.push(word);
+                }
+            }
+        } else {
+            to_fetch.push(word);
+        }
+    }
+
+    if to_fetch.is_empty() {
+        println!("All {} {}s loaded from cache", results.len(), entry_type);
+        return Ok(results);
+    }
+
+    println!(
+        "Fetching {} {} pages from Wiktionary...",
+        to_fetch.len(),
+        entry_type
+    );
+
+    // Build HTTP client with YapBot user agent
+    let client = reqwest::Client::builder()
+        .user_agent("YapBot/1.0 (https://yap.town) reqwest/0.11")
+        .build()
+        .context("Failed to build HTTP client")?;
+
+    // Fetch each word
+    for (i, word) in to_fetch.iter().enumerate() {
+        if i > 0 && i % 10 == 0 {
+            println!("  Fetched {}/{} {}s...", i, to_fetch.len(), entry_type);
+            // Rate limiting: sleep between batches
+            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+        }
+
+        // Try fetching the word, with optional fallback
+        let mut word_to_fetch = word.as_str();
+        let mut tried_fallback = false;
+
+        loop {
+            // Fetch the Wiktionary page
+            let url = format!("https://en.wiktionary.org/wiki/{word_to_fetch}");
+            let response = match client.get(&url).send().await {
+                Ok(resp) => resp,
+                Err(e) => {
+                    eprintln!("Failed to fetch {word_to_fetch}: {e}");
+                    break;
+                }
+            };
+
+            let html = match response.text().await {
+                Ok(text) => text,
+                Err(e) => {
+                    eprintln!("Failed to read HTML for {word_to_fetch}: {e}");
+                    break;
+                }
+            };
+
+            // Save HTML to cache
+            let cache_file = cache_dir.join(format!("{word_to_fetch}.html"));
+            if let Err(e) = std::fs::write(&cache_file, &html) {
+                eprintln!("Failed to write cache file for {word_to_fetch}: {e}");
+            }
+
+            // Parse the entry
+            match parse_fn(&html, word_to_fetch) {
+                Ok(entry) => {
+                    // If we fetched a fallback form, we still store under the original word
+                    results.insert(word.to_string(), entry);
+                    break;
+                }
+                Err(e) => {
+                    // If fallback is enabled and we haven't tried it yet, try the base form
+                    if !tried_fallback {
+                        if let Some(suffix) = fallback_suffix {
+                            if word.ends_with(suffix) {
+                                let base_word = &word[..word.len() - suffix.len()];
+                                eprintln!(
+                                    "Failed to parse {word}: {e}. Trying base form '{base_word}'"
+                                );
+                                word_to_fetch = base_word;
+                                tried_fallback = true;
+                                continue;
+                            }
+                        }
+                    }
+                    eprintln!("Failed to parse {entry_type} for {word}: {e}");
+                    break;
+                }
+            }
+        }
+    }
+
+    println!(
+        "Finished fetching {}s. Total: {}",
+        entry_type,
+        results.len()
+    );
+
+    Ok(results)
+}
+
 pub mod french {
     use super::*;
 
@@ -304,102 +454,14 @@ pub mod french {
         verbs: &[String],
         cache_dir: &Path,
     ) -> anyhow::Result<HashMap<String, FrenchVerbConjugation>> {
-        // Create cache directory if it doesn't exist
-        std::fs::create_dir_all(cache_dir)?;
-
-        let mut results = HashMap::new();
-        let mut to_fetch = Vec::new();
-
-        // Check which verbs we already have cached
-        for verb in verbs {
-            let cache_file = cache_dir.join(format!("{verb}.html"));
-            if cache_file.exists() {
-                // Try to parse from cached HTML
-                match std::fs::read_to_string(&cache_file) {
-                    Ok(html) => match parse_french_verb_conjugation(&html, verb) {
-                        Ok(conjugation) => {
-                            results.insert(verb.clone(), conjugation);
-                        }
-                        Err(e) => {
-                            eprintln!("Failed to parse cached HTML for {verb}: {e}");
-                            to_fetch.push(verb);
-                        }
-                    },
-                    Err(e) => {
-                        eprintln!("Failed to read cached HTML for {verb}: {e}");
-                        to_fetch.push(verb);
-                    }
-                }
-            } else {
-                to_fetch.push(verb);
-            }
-        }
-
-        if to_fetch.is_empty() {
-            println!("All {} French verbs loaded from cache", results.len());
-            return Ok(results);
-        }
-
-        println!(
-            "Fetching {} French verb pages from Wiktionary...",
-            to_fetch.len()
-        );
-
-        // Build HTTP client with YapBot user agent
-        let client = reqwest::Client::builder()
-            .user_agent("YapBot/1.0 (https://yap.town) reqwest/0.11")
-            .build()
-            .context("Failed to build HTTP client")?;
-
-        // Fetch each verb
-        for (i, verb) in to_fetch.iter().enumerate() {
-            if i > 0 && i % 10 == 0 {
-                println!("  Fetched {}/{} verbs...", i, to_fetch.len());
-                // Rate limiting: sleep between batches
-                tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-            }
-
-            // Fetch the Wiktionary page
-            let url = format!("https://en.wiktionary.org/wiki/{verb}");
-            let response = match client.get(&url).send().await {
-                Ok(resp) => resp,
-                Err(e) => {
-                    eprintln!("Failed to fetch {verb}: {e}");
-                    continue;
-                }
-            };
-
-            let html = match response.text().await {
-                Ok(text) => text,
-                Err(e) => {
-                    eprintln!("Failed to read HTML for {verb}: {e}");
-                    continue;
-                }
-            };
-
-            // Save HTML to cache
-            let cache_file = cache_dir.join(format!("{verb}.html"));
-            if let Err(e) = std::fs::write(&cache_file, &html) {
-                eprintln!("Failed to write cache file for {verb}: {e}");
-            }
-
-            // Parse the conjugation
-            match parse_french_verb_conjugation(&html, verb) {
-                Ok(conjugation) => {
-                    results.insert((*verb).clone(), conjugation);
-                }
-                Err(e) => {
-                    eprintln!("Failed to parse conjugation for {verb}: {e}");
-                }
-            }
-        }
-
-        println!(
-            "Finished fetching French conjugations. Total: {}",
-            results.len()
-        );
-
-        Ok(results)
+        super::fetch_wiktionary_entries(
+            verbs,
+            cache_dir,
+            "French verb",
+            parse_french_verb_conjugation,
+            None,
+        )
+        .await
     }
 
     #[cfg(test)]
@@ -869,106 +931,23 @@ pub mod spanish {
     ///
     /// # Returns
     /// HashMap mapping verb infinitives to their conjugations
+    ///
+    /// # Note
+    /// For reflexive verbs ending in "se" that don't have conjugation tables on Wiktionary,
+    /// this function will automatically try fetching the base verb (without "se") and use
+    /// its conjugation instead.
     pub async fn fetch_spanish_verb_conjugations(
         verbs: &[String],
         cache_dir: &Path,
     ) -> anyhow::Result<HashMap<String, SpanishVerbConjugation>> {
-        // Create cache directory if it doesn't exist
-        std::fs::create_dir_all(cache_dir)?;
-
-        let mut results = HashMap::new();
-        let mut to_fetch = Vec::new();
-
-        // Check which verbs we already have cached
-        for verb in verbs {
-            let cache_file = cache_dir.join(format!("{verb}.html"));
-            if cache_file.exists() {
-                // Try to parse from cached HTML
-                match std::fs::read_to_string(&cache_file) {
-                    Ok(html) => match parse_spanish_verb_conjugation(&html, verb) {
-                        Ok(conjugation) => {
-                            results.insert(verb.clone(), conjugation);
-                        }
-                        Err(e) => {
-                            eprintln!("Failed to parse cached HTML for {verb}: {e}");
-                            to_fetch.push(verb);
-                        }
-                    },
-                    Err(e) => {
-                        eprintln!("Failed to read cached HTML for {verb}: {e}");
-                        to_fetch.push(verb);
-                    }
-                }
-            } else {
-                to_fetch.push(verb);
-            }
-        }
-
-        if to_fetch.is_empty() {
-            println!("All {} Spanish verbs loaded from cache", results.len());
-            return Ok(results);
-        }
-
-        println!(
-            "Fetching {} Spanish verb pages from Wiktionary...",
-            to_fetch.len()
-        );
-
-        // Build HTTP client with YapBot user agent
-        let client = reqwest::Client::builder()
-            .user_agent("YapBot/1.0 (https://yap.town) reqwest/0.11")
-            .build()
-            .context("Failed to build HTTP client")?;
-
-        // Fetch each verb
-        for (i, verb) in to_fetch.iter().enumerate() {
-            if i > 0 && i % 10 == 0 {
-                println!("  Fetched {}/{} verbs...", i, to_fetch.len());
-                // Rate limiting: sleep between batches
-                tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-            }
-
-            // Fetch the Wiktionary page
-            let url = format!("https://en.wiktionary.org/wiki/{verb}");
-            let response = match client.get(&url).send().await {
-                Ok(resp) => resp,
-                Err(e) => {
-                    eprintln!("Failed to fetch {verb}: {e}");
-                    continue;
-                }
-            };
-
-            let html = match response.text().await {
-                Ok(text) => text,
-                Err(e) => {
-                    eprintln!("Failed to read HTML for {verb}: {e}");
-                    continue;
-                }
-            };
-
-            // Save HTML to cache
-            let cache_file = cache_dir.join(format!("{verb}.html"));
-            if let Err(e) = std::fs::write(&cache_file, &html) {
-                eprintln!("Failed to write cache file for {verb}: {e}");
-            }
-
-            // Parse the conjugation
-            match parse_spanish_verb_conjugation(&html, verb) {
-                Ok(conjugation) => {
-                    results.insert((*verb).clone(), conjugation);
-                }
-                Err(e) => {
-                    eprintln!("Failed to parse conjugation for {verb}: {e}");
-                }
-            }
-        }
-
-        println!(
-            "Finished fetching Spanish conjugations. Total: {}",
-            results.len()
-        );
-
-        Ok(results)
+        super::fetch_wiktionary_entries(
+            verbs,
+            cache_dir,
+            "Spanish verb",
+            parse_spanish_verb_conjugation,
+            Some("se"), // Fallback for reflexive verbs
+        )
+        .await
     }
 
     #[cfg(test)]
@@ -1032,6 +1011,679 @@ pub mod spanish {
                 .expect("Failed to parse venir conjugation");
 
             assert_eq!(conjugation.infinitive, "venir");
+        }
+
+        #[test]
+        fn test_parse_moverse_is_nonlemma() {
+            let html = fs::read_to_string("src/wiktionary-examples/spa/moverse.txt")
+                .expect("Failed to read moverse.txt");
+
+            // moverse should fail to parse because it's not a lemma form
+            // It's just a redirect to "mover"
+            let result = parse_spanish_verb_conjugation(&html, "moverse");
+            assert!(result.is_err());
+
+            // The error should be about not finding the gerund
+            assert!(result.unwrap_err().to_string().contains("gerund"));
+        }
+    }
+}
+
+pub mod german {
+    use super::*;
+
+    #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    pub struct GermanVerbConjugation {
+        pub infinitive: String,
+        pub present_participle: String,
+        pub past_participle: String,
+
+        // Auxiliary verb (sein or haben)
+        pub auxiliary: GermanAuxiliary,
+
+        // Indicative present (6 forms: ich, du, er, wir, ihr, sie)
+        pub indicative_present: [String; 6],
+        // Indicative preterite (6 forms)
+        pub indicative_preterite: [String; 6],
+
+        // Subjunctive I (Konjunktiv I) - 6 forms
+        pub subjunctive_i: [String; 6],
+        // Subjunctive II (Konjunktiv II) - 6 forms
+        pub subjunctive_ii: [String; 6],
+
+        // Imperative (2 forms: du, ihr)
+        pub imperative: [String; 2],
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    pub enum GermanAuxiliary {
+        Haben,
+        Sein,
+    }
+
+    /// Extract the German language section from a Wiktionary page
+    fn extract_german_section(document: &Html) -> anyhow::Result<Html> {
+        // Find the h2 heading with id="German"
+        let h2_selector = Selector::parse("h2#German").unwrap();
+
+        let german_heading = document
+            .select(&h2_selector)
+            .next()
+            .context("Could not find German language section")?;
+
+        // Collect all content until the next h2 (language section)
+        let mut german_content = String::new();
+        let mut current = german_heading.parent();
+
+        while let Some(node) = current {
+            current = node.next_sibling();
+            if let Some(current_node) = current {
+                // Stop if we hit another h2 (next language section)
+                if let Some(elem) = ElementRef::wrap(current_node) {
+                    if elem.value().name() == "div" {
+                        if let Some(first_child) = elem.first_child() {
+                            if let Some(child_elem) = ElementRef::wrap(first_child) {
+                                if child_elem.value().name() == "h2" {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    german_content.push_str(&elem.html());
+                }
+            }
+        }
+
+        Ok(Html::parse_fragment(&german_content))
+    }
+
+    /// Parse a German verb conjugation table from Wiktionary HTML
+    pub fn parse_german_verb_conjugation(
+        html: &str,
+        verb: &str,
+    ) -> anyhow::Result<GermanVerbConjugation> {
+        let document = Html::parse_document(html);
+
+        // Extract only the German language section
+        let german_section = extract_german_section(&document)?;
+
+        // Parse infinitive (it's the verb itself)
+        let infinitive = verb.to_string();
+
+        // Parse present participle
+        let present_participle = parse_participle(&german_section, "pres|part")?;
+
+        // Parse past participle
+        let past_participle = parse_participle(&german_section, "past|part")?;
+
+        // Parse auxiliary verb
+        let auxiliary = parse_auxiliary(&german_section)?;
+
+        // Parse indicative present
+        let indicative_present = parse_tense(&german_section, "pres")?;
+
+        // Parse indicative preterite
+        let indicative_preterite = parse_tense(&german_section, "pret")?;
+
+        // Parse subjunctive I
+        let subjunctive_i = parse_tense(&german_section, "sub:I")?;
+
+        // Parse subjunctive II
+        let subjunctive_ii = parse_tense(&german_section, "sub:II")?;
+
+        // Parse imperative
+        let imperative = parse_imperative(&german_section)?;
+
+        Ok(GermanVerbConjugation {
+            infinitive,
+            present_participle,
+            past_participle,
+            auxiliary,
+            indicative_present,
+            indicative_preterite,
+            subjunctive_i,
+            subjunctive_ii,
+            imperative,
+        })
+    }
+
+    fn parse_participle(document: &Html, participle_type: &str) -> anyhow::Result<String> {
+        // Look for span with class containing the participle type
+        // e.g., "pres|part-form-of" or "past|part-form-of"
+        let selector_str = format!("span[class*='{participle_type}-form-of']");
+        let selector = Selector::parse(&selector_str).unwrap();
+
+        for element in document.select(&selector) {
+            // Get the text from the link inside
+            let a_selector = Selector::parse("a").unwrap();
+            if let Some(link) = element.select(&a_selector).next() {
+                if let Some(text) = link.text().next() {
+                    return Ok(text.to_string());
+                }
+            }
+            // Fallback: check if it's a selflink (bold text)
+            let strong_selector = Selector::parse("strong.selflink").unwrap();
+            if let Some(strong) = element.select(&strong_selector).next() {
+                if let Some(text) = strong.text().next() {
+                    return Ok(text.to_string());
+                }
+            }
+        }
+
+        anyhow::bail!("Failed to find {} participle", participle_type)
+    }
+
+    fn parse_auxiliary(document: &Html) -> anyhow::Result<GermanAuxiliary> {
+        // Look for the auxiliary row in the NavHead or table
+        // The NavHead contains text like "auxiliary sein" or "auxiliary haben"
+        let navhead_selector = Selector::parse("div.NavHead").unwrap();
+
+        for navhead in document.select(&navhead_selector) {
+            let text = navhead.text().collect::<String>().to_lowercase();
+            if text.contains("auxiliary") {
+                if text.contains("sein") {
+                    return Ok(GermanAuxiliary::Sein);
+                }
+                if text.contains("haben") {
+                    return Ok(GermanAuxiliary::Haben);
+                }
+            }
+        }
+
+        // Fallback: look in the table itself
+        let td_selector = Selector::parse("td").unwrap();
+        let a_selector = Selector::parse("a").unwrap();
+
+        for td in document.select(&td_selector) {
+            // Check previous sibling for "auxiliary" header
+            if let Some(prev) = td.prev_sibling() {
+                if let Some(prev_elem) = ElementRef::wrap(prev) {
+                    let prev_text = prev_elem.text().collect::<String>().to_lowercase();
+                    if prev_text.contains("auxiliary") {
+                        let td_text = td.text().collect::<String>().to_lowercase();
+                        if td_text.contains("sein") {
+                            return Ok(GermanAuxiliary::Sein);
+                        }
+                        if td_text.contains("haben") {
+                            return Ok(GermanAuxiliary::Haben);
+                        }
+                    }
+                }
+            }
+
+            // Also check links in the cell
+            for link in td.select(&a_selector) {
+                if let Some(href) = link.value().attr("href") {
+                    if href.contains("sein#German") {
+                        // Check if this is in the auxiliary row by looking at the row
+                        if let Some(parent) = td.parent() {
+                            let parent_text = ElementRef::wrap(parent)
+                                .map(|e| e.text().collect::<String>())
+                                .unwrap_or_default()
+                                .to_lowercase();
+                            if parent_text.contains("auxiliary") {
+                                return Ok(GermanAuxiliary::Sein);
+                            }
+                        }
+                    }
+                    if href.contains("haben#German") {
+                        if let Some(parent) = td.parent() {
+                            let parent_text = ElementRef::wrap(parent)
+                                .map(|e| e.text().collect::<String>())
+                                .unwrap_or_default()
+                                .to_lowercase();
+                            if parent_text.contains("auxiliary") {
+                                return Ok(GermanAuxiliary::Haben);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        anyhow::bail!("Failed to find auxiliary verb")
+    }
+
+    fn parse_tense(document: &Html, tense_marker: &str) -> anyhow::Result<[String; 6]> {
+        // German conjugation forms are marked with classes like:
+        // "1|s|pres-form-of", "2|s|pres-form-of", "3|s|pres-form-of"
+        // "1|p|pres-form-of", "2|p|pres-form-of", "3|p|pres-form-of"
+
+        let persons = ["1", "2", "3"];
+        let numbers = ["s", "p"];
+
+        let mut forms = Vec::new();
+
+        for person in &persons {
+            for number in &numbers {
+                let class_pattern = format!("{person}|{number}|{tense_marker}-form-of");
+                let selector_str = format!("span[class*='{class_pattern}']");
+
+                if let Ok(selector) = Selector::parse(&selector_str) {
+                    let mut found = false;
+                    for element in document.select(&selector) {
+                        // Get the text from the link inside, or selflink
+                        let a_selector = Selector::parse("a").unwrap();
+                        if let Some(link) = element.select(&a_selector).next() {
+                            if let Some(text) = link.text().next() {
+                                forms.push(text.to_string());
+                                found = true;
+                                break;
+                            }
+                        }
+                        // Check for selflink
+                        let strong_selector = Selector::parse("strong.selflink").unwrap();
+                        if let Some(strong) = element.select(&strong_selector).next() {
+                            if let Some(text) = strong.text().next() {
+                                forms.push(text.to_string());
+                                found = true;
+                                break;
+                            }
+                        }
+                        // Fallback: direct text
+                        if !found {
+                            let text = element.text().collect::<String>().trim().to_string();
+                            if !text.is_empty() {
+                                forms.push(text);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if !found {
+                        anyhow::bail!("Failed to find {} {} {} form", person, number, tense_marker);
+                    }
+                } else {
+                    anyhow::bail!(
+                        "Invalid selector for {} {} {}",
+                        person,
+                        number,
+                        tense_marker
+                    );
+                }
+            }
+        }
+
+        // Reorder from [1s, 1p, 2s, 2p, 3s, 3p] to [1s, 2s, 3s, 1p, 2p, 3p]
+        // Actually the loop gives us: 1s, 1p, 2s, 2p, 3s, 3p
+        // We want: ich, du, er, wir, ihr, sie = 1s, 2s, 3s, 1p, 2p, 3p
+        if forms.len() != 6 {
+            anyhow::bail!(
+                "Expected 6 forms for {}, found {}",
+                tense_marker,
+                forms.len()
+            );
+        }
+
+        Ok([
+            forms[0].clone(), // 1s (ich)
+            forms[2].clone(), // 2s (du)
+            forms[4].clone(), // 3s (er)
+            forms[1].clone(), // 1p (wir)
+            forms[3].clone(), // 2p (ihr)
+            forms[5].clone(), // 3p (sie)
+        ])
+    }
+
+    fn parse_imperative(document: &Html) -> anyhow::Result<[String; 2]> {
+        // Imperative forms are marked with "s|imp-form-of" and "p|imp-form-of"
+        let mut forms = Vec::new();
+
+        // Singular imperative (du)
+        let s_selector = Selector::parse("span[class*='s|imp-form-of']").unwrap();
+        let mut found_s = false;
+        for element in document.select(&s_selector) {
+            let a_selector = Selector::parse("a").unwrap();
+            if let Some(link) = element.select(&a_selector).next() {
+                if let Some(text) = link.text().next() {
+                    forms.push(text.to_string());
+                    found_s = true;
+                    break;
+                }
+            }
+        }
+        if !found_s {
+            anyhow::bail!("Failed to find singular imperative");
+        }
+
+        // Plural imperative (ihr)
+        let p_selector = Selector::parse("span[class*='p|imp-form-of']").unwrap();
+        let mut found_p = false;
+        for element in document.select(&p_selector) {
+            let a_selector = Selector::parse("a").unwrap();
+            if let Some(link) = element.select(&a_selector).next() {
+                if let Some(text) = link.text().next() {
+                    forms.push(text.to_string());
+                    found_p = true;
+                    break;
+                }
+            }
+        }
+        if !found_p {
+            anyhow::bail!("Failed to find plural imperative");
+        }
+
+        Ok([forms[0].clone(), forms[1].clone()])
+    }
+
+    /// Fetch German verb conjugations from Wiktionary with HTML caching
+    pub async fn fetch_german_verb_conjugations(
+        verbs: &[String],
+        cache_dir: &Path,
+    ) -> anyhow::Result<HashMap<String, GermanVerbConjugation>> {
+        super::fetch_wiktionary_entries(
+            verbs,
+            cache_dir,
+            "German verb",
+            parse_german_verb_conjugation,
+            None,
+        )
+        .await
+    }
+
+    // =====================================
+    // German Noun Declension
+    // =====================================
+
+    #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    pub struct GermanNounDeclension {
+        pub lemma: String,
+        pub gender: GermanGender,
+
+        // Singular forms (nominative, genitive, dative, accusative)
+        pub nominative_singular: String,
+        pub genitive_singular: String,
+        pub dative_singular: String,
+        pub accusative_singular: String,
+
+        // Plural forms (nominative, genitive, dative, accusative)
+        // These are Option because some nouns are uncountable (sg-only)
+        pub nominative_plural: Option<String>,
+        pub genitive_plural: Option<String>,
+        pub dative_plural: Option<String>,
+        pub accusative_plural: Option<String>,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    pub enum GermanGender {
+        Masculine,
+        Feminine,
+        Neuter,
+    }
+
+    /// Parse a German noun declension table from Wiktionary HTML
+    pub fn parse_german_noun_declension(
+        html: &str,
+        noun: &str,
+    ) -> anyhow::Result<GermanNounDeclension> {
+        let document = Html::parse_document(html);
+
+        // Extract only the German language section
+        let german_section = extract_german_section(&document)?;
+
+        let lemma = noun.to_string();
+
+        // Parse gender from NavHead
+        let gender = parse_noun_gender(&german_section)?;
+
+        // Parse singular forms (required)
+        let nominative_singular = parse_noun_form(&german_section, "nom", "s")?;
+        let genitive_singular = parse_noun_form(&german_section, "gen", "s")?;
+        let dative_singular = parse_noun_form(&german_section, "dat", "s")?;
+        let accusative_singular = parse_noun_form(&german_section, "acc", "s")?;
+
+        // Parse plural forms (optional - some nouns are uncountable/sg-only)
+        let nominative_plural = parse_noun_form(&german_section, "nom", "p").ok();
+        let genitive_plural = parse_noun_form(&german_section, "gen", "p").ok();
+        let dative_plural = parse_noun_form(&german_section, "dat", "p").ok();
+        let accusative_plural = parse_noun_form(&german_section, "acc", "p").ok();
+
+        Ok(GermanNounDeclension {
+            lemma,
+            gender,
+            nominative_singular,
+            genitive_singular,
+            dative_singular,
+            accusative_singular,
+            nominative_plural,
+            genitive_plural,
+            dative_plural,
+            accusative_plural,
+        })
+    }
+
+    fn parse_noun_gender(document: &Html) -> anyhow::Result<GermanGender> {
+        // Look for the NavHead which contains gender info like:
+        // "Declension of Frau [feminine]"
+        // "Declension of Mann [masculine, strong // mixed]"
+        // "Declension of Kind [neuter, strong // mixed]"
+        let navhead_selector = Selector::parse("div.NavHead").unwrap();
+
+        for navhead in document.select(&navhead_selector) {
+            let text = navhead.text().collect::<String>().to_lowercase();
+            if text.contains("declension") {
+                if text.contains("feminine") {
+                    return Ok(GermanGender::Feminine);
+                }
+                if text.contains("masculine") {
+                    return Ok(GermanGender::Masculine);
+                }
+                if text.contains("neuter") {
+                    return Ok(GermanGender::Neuter);
+                }
+            }
+        }
+
+        anyhow::bail!("Failed to find noun gender")
+    }
+
+    fn parse_noun_form(document: &Html, case: &str, number: &str) -> anyhow::Result<String> {
+        // German noun forms use classes like:
+        // "nom|s-form-of", "gen|s-form-of", "dat|s-form-of", "acc|s-form-of"
+        // "nom|p-form-of", "gen|p-form-of", "dat|p-form-of", "acc|p-form-of"
+        let class_pattern = format!("{case}|{number}-form-of");
+        let selector_str = format!("span[class*='{class_pattern}']");
+
+        if let Ok(selector) = Selector::parse(&selector_str) {
+            for element in document.select(&selector) {
+                // Get the text from the link inside
+                let a_selector = Selector::parse("a").unwrap();
+                if let Some(link) = element.select(&a_selector).next() {
+                    if let Some(text) = link.text().next() {
+                        return Ok(text.to_string());
+                    }
+                }
+                // Check for selflink (bold text)
+                let strong_selector = Selector::parse("strong.selflink").unwrap();
+                if let Some(strong) = element.select(&strong_selector).next() {
+                    if let Some(text) = strong.text().next() {
+                        return Ok(text.to_string());
+                    }
+                }
+            }
+        }
+
+        anyhow::bail!("Failed to find {} {} form", case, number)
+    }
+
+    /// Fetch German noun declensions from Wiktionary with HTML caching
+    pub async fn fetch_german_noun_declensions(
+        nouns: &[String],
+        cache_dir: &Path,
+    ) -> anyhow::Result<HashMap<String, GermanNounDeclension>> {
+        super::fetch_wiktionary_entries(
+            nouns,
+            cache_dir,
+            "German noun",
+            parse_german_noun_declension,
+            None,
+        )
+        .await
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use std::fs;
+
+        #[test]
+        fn test_parse_gehen() {
+            let html = fs::read_to_string("src/wiktionary-examples/deu/gehen.txt")
+                .expect("Failed to read gehen.txt");
+
+            let conjugation = parse_german_verb_conjugation(&html, "gehen")
+                .expect("Failed to parse gehen conjugation");
+
+            assert_eq!(conjugation.infinitive, "gehen");
+            assert_eq!(conjugation.present_participle, "gehend");
+            assert_eq!(conjugation.past_participle, "gegangen");
+            assert_eq!(conjugation.auxiliary, GermanAuxiliary::Sein);
+
+            // Check indicative present (ich, du, er, wir, ihr, sie)
+            assert_eq!(conjugation.indicative_present[0], "gehe"); // ich
+            assert_eq!(conjugation.indicative_present[1], "gehst"); // du
+            assert_eq!(conjugation.indicative_present[2], "geht"); // er
+            assert_eq!(conjugation.indicative_present[3], "gehen"); // wir
+            assert_eq!(conjugation.indicative_present[4], "geht"); // ihr
+            assert_eq!(conjugation.indicative_present[5], "gehen"); // sie
+
+            // Check preterite
+            assert_eq!(conjugation.indicative_preterite[0], "ging"); // ich
+            assert_eq!(conjugation.indicative_preterite[1], "gingst"); // du
+
+            // Check imperative
+            assert_eq!(conjugation.imperative[0], "geh"); // du
+            assert_eq!(conjugation.imperative[1], "geht"); // ihr
+        }
+
+        #[test]
+        fn test_parse_haben() {
+            let html = fs::read_to_string("src/wiktionary-examples/deu/haben.txt")
+                .expect("Failed to read haben.txt");
+
+            let conjugation = parse_german_verb_conjugation(&html, "haben")
+                .expect("Failed to parse haben conjugation");
+
+            assert_eq!(conjugation.infinitive, "haben");
+            assert_eq!(conjugation.auxiliary, GermanAuxiliary::Haben);
+
+            // Check indicative present
+            assert_eq!(conjugation.indicative_present[0], "habe"); // ich
+            assert_eq!(conjugation.indicative_present[1], "hast"); // du
+            assert_eq!(conjugation.indicative_present[2], "hat"); // er
+        }
+
+        #[test]
+        fn test_parse_sein() {
+            let html = fs::read_to_string("src/wiktionary-examples/deu/sein.txt")
+                .expect("Failed to read sein.txt");
+
+            let conjugation = parse_german_verb_conjugation(&html, "sein")
+                .expect("Failed to parse sein conjugation");
+
+            assert_eq!(conjugation.infinitive, "sein");
+            assert_eq!(conjugation.auxiliary, GermanAuxiliary::Sein);
+
+            // Check indicative present (highly irregular)
+            assert_eq!(conjugation.indicative_present[0], "bin"); // ich
+            assert_eq!(conjugation.indicative_present[1], "bist"); // du
+            assert_eq!(conjugation.indicative_present[2], "ist"); // er
+            assert_eq!(conjugation.indicative_present[3], "sind"); // wir
+            assert_eq!(conjugation.indicative_present[4], "seid"); // ihr
+            assert_eq!(conjugation.indicative_present[5], "sind"); // sie
+        }
+
+        #[test]
+        fn test_parse_trinken() {
+            let html = fs::read_to_string("src/wiktionary-examples/deu/trinken.txt")
+                .expect("Failed to read trinken.txt");
+
+            let conjugation = parse_german_verb_conjugation(&html, "trinken")
+                .expect("Failed to parse trinken conjugation");
+
+            assert_eq!(conjugation.infinitive, "trinken");
+            assert_eq!(conjugation.auxiliary, GermanAuxiliary::Haben);
+            assert_eq!(conjugation.past_participle, "getrunken");
+        }
+
+        // Noun declension tests
+
+        #[test]
+        fn test_parse_mann() {
+            let html = fs::read_to_string("src/wiktionary-examples/deu/Mann.txt")
+                .expect("Failed to read Mann.txt");
+
+            let declension = parse_german_noun_declension(&html, "Mann")
+                .expect("Failed to parse Mann declension");
+
+            assert_eq!(declension.lemma, "Mann");
+            assert_eq!(declension.gender, GermanGender::Masculine);
+            assert_eq!(declension.nominative_singular, "Mann");
+            assert_eq!(declension.nominative_plural, Some("Männer".to_string()));
+            assert_eq!(declension.dative_plural, Some("Männern".to_string()));
+        }
+
+        #[test]
+        fn test_parse_frau() {
+            let html = fs::read_to_string("src/wiktionary-examples/deu/Frau.txt")
+                .expect("Failed to read Frau.txt");
+
+            let declension = parse_german_noun_declension(&html, "Frau")
+                .expect("Failed to parse Frau declension");
+
+            assert_eq!(declension.lemma, "Frau");
+            assert_eq!(declension.gender, GermanGender::Feminine);
+            assert_eq!(declension.nominative_singular, "Frau");
+            assert_eq!(declension.nominative_plural, Some("Frauen".to_string()));
+        }
+
+        #[test]
+        fn test_parse_kind() {
+            let html = fs::read_to_string("src/wiktionary-examples/deu/Kind.txt")
+                .expect("Failed to read Kind.txt");
+
+            let declension = parse_german_noun_declension(&html, "Kind")
+                .expect("Failed to parse Kind declension");
+
+            assert_eq!(declension.lemma, "Kind");
+            assert_eq!(declension.gender, GermanGender::Neuter);
+            assert_eq!(declension.nominative_singular, "Kind");
+            assert_eq!(declension.nominative_plural, Some("Kinder".to_string()));
+        }
+
+        #[test]
+        fn test_parse_hund() {
+            let html = fs::read_to_string("src/wiktionary-examples/deu/Hund.txt")
+                .expect("Failed to read Hund.txt");
+
+            let declension = parse_german_noun_declension(&html, "Hund")
+                .expect("Failed to parse Hund declension");
+
+            assert_eq!(declension.lemma, "Hund");
+            assert_eq!(declension.gender, GermanGender::Masculine);
+            assert_eq!(declension.nominative_singular, "Hund");
+            assert_eq!(declension.nominative_plural, Some("Hunde".to_string()));
+        }
+
+        #[test]
+        fn test_parse_kreativitaet() {
+            let html = fs::read_to_string("src/wiktionary-examples/deu/Kreativität.txt")
+                .expect("Failed to read Kreativität.txt");
+
+            let declension = parse_german_noun_declension(&html, "Kreativität")
+                .expect("Failed to parse Kreativität declension");
+
+            assert_eq!(declension.lemma, "Kreativität");
+            assert_eq!(declension.gender, GermanGender::Feminine);
+            assert_eq!(declension.nominative_singular, "Kreativität");
+            assert_eq!(declension.genitive_singular, "Kreativität");
+            assert_eq!(declension.dative_singular, "Kreativität");
+            assert_eq!(declension.accusative_singular, "Kreativität");
+            // Uncountable noun - no plural forms
+            assert_eq!(declension.nominative_plural, None);
+            assert_eq!(declension.genitive_plural, None);
+            assert_eq!(declension.dative_plural, None);
+            assert_eq!(declension.accusative_plural, None);
         }
     }
 }

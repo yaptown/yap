@@ -18,7 +18,8 @@
       "Bash(sqlite3:*)",
       "Bash(cargo test:*)",
       "Bash(cargo run:*)",
-      "WebFetch(domain:en.wiktionary.org)"
+      "WebFetch(domain:en.wiktionary.org)",
+      "Bash(cargo fix:*)"
     ],
     "deny": []
   }
