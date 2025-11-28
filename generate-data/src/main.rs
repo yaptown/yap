@@ -12,7 +12,7 @@ use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 mod google_translate;
 use google_translate::GoogleTranslator;
 
-mod morphology_analysis;
+use generate_data::morphology_analysis;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

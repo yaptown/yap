@@ -556,6 +556,67 @@ pub mod french {
             assert_eq!(conjugation.indicative_present[0], "suis"); // je
             assert_eq!(conjugation.indicative_present[1], "es"); // tu
             assert_eq!(conjugation.indicative_present[2], "est"); // il
+
+            // Check indicative past historic (passé simple)
+            assert_eq!(conjugation.indicative_past_historic[0], "fus"); // je
+            assert_eq!(conjugation.indicative_past_historic[1], "fus"); // tu
+            assert_eq!(conjugation.indicative_past_historic[2], "fut"); // il
+            assert_eq!(conjugation.indicative_past_historic[3], "fûmes"); // nous
+            assert_eq!(conjugation.indicative_past_historic[4], "fûtes"); // vous
+            assert_eq!(conjugation.indicative_past_historic[5], "furent"); // ils
+        }
+
+        #[test]
+        fn test_etre_morphology_for_fus() {
+            use crate::morphology_analysis::wiktionary_morphology::french::conjugation_to_morphology;
+            use language_utils::features::{Number, Person};
+            use language_utils::{Heteronym, PartOfSpeech};
+
+            let html = fs::read_to_string("src/wiktionary-examples/fra/etre.txt")
+                .expect("Failed to read etre.txt");
+
+            let conjugation = parse_french_verb_conjugation(&html, "être")
+                .expect("Failed to parse être conjugation");
+
+            let morphology =
+                conjugation_to_morphology("être", &conjugation, language_utils::PartOfSpeech::Verb);
+
+            // Check that "fus" has two morphology entries (je fus, tu fus)
+            let fus_heteronym = Heteronym {
+                word: "fus".to_string(),
+                lemma: "être".to_string(),
+                pos: PartOfSpeech::Verb,
+            };
+
+            let fus_morphologies = morphology
+                .get(&fus_heteronym)
+                .expect("Should have morphology for 'fus'");
+
+            assert_eq!(
+                fus_morphologies.len(),
+                2,
+                "Should have 2 morphology entries for 'fus'"
+            );
+
+            // Check first person
+            let first_person = fus_morphologies
+                .iter()
+                .find(|m| m.person == Some(Person::First) && m.number == Some(Number::Singular))
+                .expect("Should have first person singular entry");
+            assert_eq!(
+                first_person.tense,
+                Some(language_utils::features::Tense::Past)
+            );
+
+            // Check second person
+            let second_person = fus_morphologies
+                .iter()
+                .find(|m| m.person == Some(Person::Second) && m.number == Some(Number::Singular))
+                .expect("Should have second person singular entry");
+            assert_eq!(
+                second_person.tense,
+                Some(language_utils::features::Tense::Past)
+            );
         }
 
         #[tokio::test]

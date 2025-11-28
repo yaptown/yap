@@ -470,7 +470,7 @@ pub fn write_conjugations_jsonl(
     Ok(())
 }
 
-mod wiktionary_morphology {
+pub mod wiktionary_morphology {
     use super::*;
 
     pub async fn create_morphology_from_wiktionary(
@@ -488,9 +488,9 @@ mod wiktionary_morphology {
         }
     }
 
-    mod french {
+    pub mod french {
         use super::*;
-        use generate_data::wiktionary_conjugations::french::{
+        use crate::wiktionary_conjugations::french::{
             FrenchVerbConjugation, fetch_french_verb_conjugations,
         };
         use language_utils::features::{Gender, Mood, Number, Person, Tense};
@@ -500,11 +500,11 @@ mod wiktionary_morphology {
         pub async fn create_french_morphology(
             frequencies: &Vec<language_utils::FrequencyEntry<String>>,
         ) -> anyhow::Result<BTreeMap<Heteronym<String>, Vec<Morphology>>> {
-            // Step 1: Extract all verb lemmas from frequencies
+            // Step 1: Extract all verb lemmas from frequencies (including auxiliaries)
             let mut verb_lemmas = HashSet::new();
             for entry in frequencies {
                 if let Some(heteronym) = entry.lexeme.heteronym() {
-                    if heteronym.pos == PartOfSpeech::Verb {
+                    if heteronym.pos == PartOfSpeech::Verb || heteronym.pos == PartOfSpeech::Aux {
                         verb_lemmas.insert(heteronym.lemma.clone());
                     }
                 }
@@ -523,16 +523,23 @@ mod wiktionary_morphology {
             let mut morphology = BTreeMap::new();
 
             for (infinitive, conjugation) in conjugations.iter() {
-                let verb_morphology = conjugation_to_morphology(infinitive, conjugation);
+                // Create morphology for both VERB and AUX POS (some verbs like être/avoir are used as both)
+                let verb_morphology =
+                    conjugation_to_morphology(infinitive, conjugation, PartOfSpeech::Verb);
                 morphology.extend(verb_morphology);
+
+                let aux_morphology =
+                    conjugation_to_morphology(infinitive, conjugation, PartOfSpeech::Aux);
+                morphology.extend(aux_morphology);
             }
 
             Ok(morphology)
         }
 
-        fn conjugation_to_morphology(
+        pub fn conjugation_to_morphology(
             infinitive: &str,
             conjugation: &FrenchVerbConjugation,
+            pos: PartOfSpeech,
         ) -> BTreeMap<Heteronym<String>, Vec<Morphology>> {
             let mut morphology = BTreeMap::new();
 
@@ -541,7 +548,7 @@ mod wiktionary_morphology {
                 let heteronym = Heteronym {
                     word: word.to_string(),
                     lemma: infinitive.to_string(),
-                    pos: PartOfSpeech::Verb,
+                    pos,
                 };
                 morphology
                     .entry(heteronym)
@@ -801,7 +808,7 @@ mod wiktionary_morphology {
 
     mod spanish {
         use super::*;
-        use generate_data::wiktionary_conjugations::spanish::{
+        use crate::wiktionary_conjugations::spanish::{
             SpanishVerbConjugation, fetch_spanish_verb_conjugations,
         };
         use language_utils::features::{Gender, Mood, Number, Person, Tense};
@@ -1091,7 +1098,7 @@ mod wiktionary_morphology {
 
     mod german {
         use super::*;
-        use generate_data::wiktionary_conjugations::german::{
+        use crate::wiktionary_conjugations::german::{
             GermanGender, GermanNounDeclension, GermanVerbConjugation,
             fetch_german_noun_declensions, fetch_german_verb_conjugations,
         };
@@ -1396,7 +1403,7 @@ mod wiktionary_morphology {
             );
 
             // Plural forms (optional - some nouns are uncountable/sg-only)
-            if let Some(ref nom_pl) = declension.nominative_plural {
+            if let Some(nom_pl) = &declension.nominative_plural {
                 add_morph(
                     nom_pl,
                     Morphology {
@@ -1411,7 +1418,7 @@ mod wiktionary_morphology {
                 );
             }
 
-            if let Some(ref gen_pl) = declension.genitive_plural {
+            if let Some(gen_pl) = &declension.genitive_plural {
                 add_morph(
                     gen_pl,
                     Morphology {
@@ -1426,7 +1433,7 @@ mod wiktionary_morphology {
                 );
             }
 
-            if let Some(ref dat_pl) = declension.dative_plural {
+            if let Some(dat_pl) = &declension.dative_plural {
                 add_morph(
                     dat_pl,
                     Morphology {
@@ -1441,7 +1448,7 @@ mod wiktionary_morphology {
                 );
             }
 
-            if let Some(ref acc_pl) = declension.accusative_plural {
+            if let Some(acc_pl) = &declension.accusative_plural {
                 add_morph(
                     acc_pl,
                     Morphology {
