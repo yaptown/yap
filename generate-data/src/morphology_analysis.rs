@@ -493,7 +493,7 @@ mod wiktionary_morphology {
         use generate_data::wiktionary_conjugations::french::{
             FrenchVerbConjugation, fetch_french_verb_conjugations,
         };
-        use language_utils::features::{Mood, Number, Person, Tense};
+        use language_utils::features::{Gender, Mood, Number, Person, Tense};
         use std::collections::HashSet;
         use std::path::Path;
 
@@ -577,13 +577,68 @@ mod wiktionary_morphology {
                 },
             );
 
-            // Past participle - can have gender/number agreement
-            // For now, just mark it as past
+            // Past participle - French past participles inflect for gender and number
+            // Base form (masculine singular)
+            let pp_base = &conjugation.past_participle;
+
             add_morph(
-                &conjugation.past_participle,
+                pp_base,
                 Morphology {
-                    gender: None,
+                    gender: Some(Gender::Masculine),
                     number: Some(Number::Singular),
+                    politeness: None,
+                    tense: Some(Tense::Past),
+                    person: None,
+                    case: None,
+                    mood: None,
+                },
+            );
+
+            // Feminine singular: only add 'e' if doesn't already end in 'e'
+            let pp_fem_sg = if pp_base.ends_with('e') {
+                pp_base.to_string()
+            } else {
+                format!("{pp_base}e")
+            };
+            add_morph(
+                &pp_fem_sg,
+                Morphology {
+                    gender: Some(Gender::Feminine),
+                    number: Some(Number::Singular),
+                    politeness: None,
+                    tense: Some(Tense::Past),
+                    person: None,
+                    case: None,
+                    mood: None,
+                },
+            );
+
+            // Masculine plural: only add 's' if doesn't already end in s/x
+            let pp_masc_pl = if pp_base.ends_with('s') || pp_base.ends_with('x') {
+                pp_base.to_string()
+            } else {
+                format!("{pp_base}s")
+            };
+            add_morph(
+                &pp_masc_pl,
+                Morphology {
+                    gender: Some(Gender::Masculine),
+                    number: Some(Number::Plural),
+                    politeness: None,
+                    tense: Some(Tense::Past),
+                    person: None,
+                    case: None,
+                    mood: None,
+                },
+            );
+
+            // Feminine plural: feminine singular + 's' (handles all edge cases)
+            let pp_fem_pl = format!("{pp_fem_sg}s");
+            add_morph(
+                &pp_fem_pl,
+                Morphology {
+                    gender: Some(Gender::Feminine),
+                    number: Some(Number::Plural),
                     politeness: None,
                     tense: Some(Tense::Past),
                     person: None,
