@@ -483,9 +483,7 @@ pub mod wiktionary_morphology {
 
     pub mod french {
         use super::*;
-        use crate::wiktionary_conjugations::french::{
-            FrenchVerbConjugation, parse_french_verb_conjugation,
-        };
+        use crate::wiktionary_conjugations::french::FrenchVerbConjugation;
         use language_utils::features::{Gender, Mood, Number, Person, Tense};
         use std::collections::HashSet;
         use std::path::Path;
@@ -507,74 +505,12 @@ pub mod wiktionary_morphology {
 
             // Step 2: Fetch and parse Wiktionary pages with HTML caching
             let cache_dir = Path::new(".cache/wiktionary/french");
-
-            let pb = indicatif::ProgressBar::new(verb_lemmas_vec.len() as u64);
-            pb.set_style(
-                indicatif::ProgressStyle::default_bar()
-                    .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} French verbs ({per_sec}, {msg}, {eta})")
-                    .unwrap()
-                    .progress_chars("#>-"),
-            );
-            pb.enable_steady_tick(std::time::Duration::from_millis(100));
-
-            let results: Vec<(String, Result<FrenchVerbConjugation, String>)> =
-                futures::stream::iter(verb_lemmas_vec.iter())
-                    .map(|verb| {
-                        let pb = pb.clone();
-                        async move {
-                            pb.set_message(verb.to_string());
-
-                            let result = match crate::wiktionary_conjugations::get_wiktionary_html(
-                                verb, cache_dir,
-                            )
-                            .await
-                            {
-                                Ok(html) => {
-                                    parse_french_verb_conjugation(&html, verb).map_err(|e| {
-                                        format!("Failed to parse French verb '{verb}': {e}")
-                                    })
-                                }
-                                Err(e) => {
-                                    Err(format!("Failed to get HTML for French verb '{verb}': {e}"))
-                                }
-                            };
-
-                            pb.inc(1);
-                            (verb.clone(), result)
-                        }
-                    })
-                    .buffered(50)
-                    .collect()
-                    .await;
-
-            // Process results
-            let mut conjugations = std::collections::HashMap::new();
-            let mut errors = Vec::new();
-
-            for (verb, result) in results {
-                match result {
-                    Ok(conjugation) => {
-                        conjugations.insert(verb, conjugation);
-                    }
-                    Err(e) => {
-                        errors.push(e);
-                    }
-                }
-            }
-
-            pb.finish_with_message(format!(
-                "Finished: {}/{} parsed",
-                conjugations.len(),
-                verb_lemmas_vec.len()
-            ));
-
-            // Print errors after progress bar is finished
-            if !errors.is_empty() {
-                eprintln!("\nErrors encountered while processing French verbs:");
-                for error in errors {
-                    eprintln!("  {error}");
-                }
-            }
+            let conjugations =
+                crate::wiktionary_conjugations::french::fetch_french_verb_conjugations(
+                    &verb_lemmas_vec,
+                    cache_dir,
+                )
+                .await?;
 
             // Step 3: Convert conjugations to morphology entries
             let mut morphology = BTreeMap::new();

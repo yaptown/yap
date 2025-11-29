@@ -544,6 +544,76 @@ pub mod french {
             );
         }
     }
+
+    /// Fetch French verb conjugations from Wiktionary with HTML caching
+    pub async fn fetch_french_verb_conjugations(
+        verbs: &[String],
+        cache_dir: &Path,
+    ) -> anyhow::Result<HashMap<String, FrenchVerbConjugation>> {
+        use futures::StreamExt;
+
+        let pb = indicatif::ProgressBar::new(verbs.len() as u64);
+        pb.set_style(
+            indicatif::ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} French verbs ({per_sec}, {msg}, {eta})")
+                .unwrap()
+                .progress_chars("#>-"),
+        );
+        pb.enable_steady_tick(std::time::Duration::from_millis(100));
+
+        let fetch_results: Vec<(String, Result<FrenchVerbConjugation, String>)> =
+            futures::stream::iter(verbs.iter())
+                .map(|verb| {
+                    let pb = pb.clone();
+                    async move {
+                        pb.set_message(verb.to_string());
+
+                        let result = match super::get_wiktionary_html(verb, cache_dir).await {
+                            Ok(html) => parse_french_verb_conjugation(&html, verb)
+                                .map_err(|e| format!("Failed to parse French verb '{verb}': {e}")),
+                            Err(e) => Err(format!("Failed to get HTML for French verb '{verb}': {e}")),
+                        };
+
+                        pb.inc(1);
+                        (verb.clone(), result)
+                    }
+                })
+                .buffered(50)
+                .collect()
+                .await;
+
+        // Process results
+        let mut results = HashMap::new();
+        let mut errors = Vec::new();
+
+        for (verb, result) in fetch_results {
+            match result {
+                Ok(conjugation) => {
+                    results.insert(verb, conjugation);
+                }
+                Err(e) => {
+                    errors.push(e);
+                }
+            }
+        }
+
+        pb.finish_with_message(format!(
+            "Finished: {}/{} parsed ({} errors)",
+            results.len(),
+            verbs.len(),
+            errors.len()
+        ));
+
+        // Print errors after progress bar is finished
+        if !errors.is_empty() {
+            eprintln!("\nErrors encountered while processing French verbs:");
+            for error in errors {
+                eprintln!("  {error}");
+            }
+        }
+
+        Ok(results)
+    }
 }
 
 pub mod spanish {
@@ -965,18 +1035,11 @@ pub mod spanish {
         }
 
         pb.finish_with_message(format!(
-            "Finished: {}/{} parsed",
+            "Finished: {}/{} parsed ({} errors)",
             results.len(),
-            verbs.len()
+            verbs.len(),
+            errors.len()
         ));
-
-        // Print errors after progress bar is finished
-        if !errors.is_empty() {
-            eprintln!("\nErrors encountered while processing Spanish verbs:");
-            for error in errors {
-                eprintln!("  {error}");
-            }
-        }
 
         Ok(results)
     }
@@ -1452,18 +1515,11 @@ pub mod german {
         }
 
         pb.finish_with_message(format!(
-            "Finished: {}/{} parsed",
+            "Finished: {}/{} parsed ({} errors)",
             results.len(),
-            verbs.len()
+            verbs.len(),
+            errors.len()
         ));
-
-        // Print errors after progress bar is finished
-        if !errors.is_empty() {
-            eprintln!("\nErrors encountered while processing German verbs:");
-            for error in errors {
-                eprintln!("  {error}");
-            }
-        }
 
         Ok(results)
     }
@@ -1648,18 +1704,11 @@ pub mod german {
         }
 
         pb.finish_with_message(format!(
-            "Finished: {}/{} parsed",
+            "Finished: {}/{} parsed ({} errors)",
             results.len(),
-            nouns.len()
+            nouns.len(),
+            errors.len()
         ));
-
-        // Print errors after progress bar is finished
-        if !errors.is_empty() {
-            eprintln!("\nErrors encountered while processing German nouns:");
-            for error in errors {
-                eprintln!("  {error}");
-            }
-        }
 
         Ok(results)
     }
