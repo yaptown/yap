@@ -604,14 +604,6 @@ pub mod french {
             errors.len()
         ));
 
-        // Print errors after progress bar is finished
-        if !errors.is_empty() {
-            eprintln!("\nErrors encountered while processing French verbs:");
-            for error in errors {
-                eprintln!("  {error}");
-            }
-        }
-
         Ok(results)
     }
 }
