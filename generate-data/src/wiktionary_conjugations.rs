@@ -3,154 +3,66 @@ use scraper::{ElementRef, Html, Selector};
 use std::collections::HashMap;
 use std::path::Path;
 
-/// Generic helper to fetch and parse Wiktionary entries with caching.
+/// Get HTML for a Wiktionary page, using cache if available
+///
+/// This function checks the cache first. If the file is cached, it returns it.
+/// Otherwise, it fetches from Wiktionary and saves to cache.
 ///
 /// # Arguments
-/// * `words` - List of words to fetch
+/// * `word` - The word to fetch
 /// * `cache_dir` - Directory to cache HTML files
-/// * `entry_type` - Type of entry for logging (e.g., "French verb", "German noun")
-/// * `parse_fn` - Function to parse HTML into the target type
-/// * `fallback_suffix` - Optional suffix to strip for fallback (e.g., "se" for Spanish reflexive verbs)
 ///
 /// # Returns
-/// HashMap mapping words to their parsed entries
-async fn fetch_wiktionary_entries<T, F>(
-    words: &[String],
-    cache_dir: &Path,
-    entry_type: &str,
-    parse_fn: F,
-    fallback_suffix: Option<&str>,
-) -> anyhow::Result<HashMap<String, T>>
-where
-    F: Fn(&str, &str) -> anyhow::Result<T>,
-{
-    // Create cache directory if it doesn't exist
+/// The HTML content of the Wiktionary page
+// Global mutex to ensure rate limiting works even with parallel async requests
+static WIKTIONARY_FETCH_LOCK: std::sync::LazyLock<tokio::sync::Mutex<()>> =
+    std::sync::LazyLock::new(|| tokio::sync::Mutex::new(()));
+
+pub async fn get_wiktionary_html(word: &str, cache_dir: &Path) -> anyhow::Result<String> {
     std::fs::create_dir_all(cache_dir)?;
 
-    let mut results = HashMap::new();
-    let mut to_fetch = Vec::new();
+    let cache_file = cache_dir.join(format!("{word}.html"));
 
-    // Check which words we already have cached
-    for word in words {
-        let cache_file = cache_dir.join(format!("{word}.html"));
-        if cache_file.exists() {
-            // Try to parse from cached HTML
-            match std::fs::read_to_string(&cache_file) {
-                Ok(html) => match parse_fn(&html, word) {
-                    Ok(entry) => {
-                        results.insert(word.clone(), entry);
-                    }
-                    Err(e) => {
-                        // If parsing fails, let the fetch loop handle it (including fallback logic)
-                        let has_fallback = fallback_suffix
-                            .map(|suffix| word.ends_with(suffix))
-                            .unwrap_or(false);
-                        if !has_fallback {
-                            eprintln!("Failed to parse cached HTML for {word}: {e}");
-                        }
-                        to_fetch.push(word);
-                    }
-                },
-                Err(e) => {
-                    eprintln!("Failed to read cached HTML for {word}: {e}");
-                    to_fetch.push(word);
-                }
+    // Check cache first
+    if cache_file.exists() {
+        match std::fs::read_to_string(&cache_file) {
+            Ok(html) => return Ok(html),
+            Err(e) => {
+                eprintln!("Failed to read cached HTML for {word}: {e}, will re-fetch");
             }
-        } else {
-            to_fetch.push(word);
         }
     }
 
-    if to_fetch.is_empty() {
-        println!("All {} {}s loaded from cache", results.len(), entry_type);
-        return Ok(results);
-    }
+    // Fetch from Wiktionary with rate limiting
+    // Use a mutex to ensure only one request hits the server at a time
+    let _guard = WIKTIONARY_FETCH_LOCK.lock().await;
 
-    println!(
-        "Fetching {} {} pages from Wiktionary...",
-        to_fetch.len(),
-        entry_type
-    );
+    // Rate limit: sleep before making the request to avoid overwhelming the server
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
-    // Build HTTP client with YapBot user agent
     let client = reqwest::Client::builder()
         .user_agent("YapBot/1.0 (https://yap.town) reqwest/0.11")
         .build()
         .context("Failed to build HTTP client")?;
 
-    // Fetch each word
-    for (i, word) in to_fetch.iter().enumerate() {
-        if i > 0 && i % 10 == 0 {
-            println!("  Fetched {}/{} {}s...", i, to_fetch.len(), entry_type);
-            // Rate limiting: sleep between batches
-            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-        }
+    let url = format!("https://en.wiktionary.org/wiki/{word}");
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .context(format!("Failed to fetch {word}"))?;
 
-        // Try fetching the word, with optional fallback
-        let mut word_to_fetch = word.as_str();
-        let mut tried_fallback = false;
+    let html = response
+        .text()
+        .await
+        .context(format!("Failed to read HTML for {word}"))?;
 
-        loop {
-            // Fetch the Wiktionary page
-            let url = format!("https://en.wiktionary.org/wiki/{word_to_fetch}");
-            let response = match client.get(&url).send().await {
-                Ok(resp) => resp,
-                Err(e) => {
-                    eprintln!("Failed to fetch {word_to_fetch}: {e}");
-                    break;
-                }
-            };
-
-            let html = match response.text().await {
-                Ok(text) => text,
-                Err(e) => {
-                    eprintln!("Failed to read HTML for {word_to_fetch}: {e}");
-                    break;
-                }
-            };
-
-            // Save HTML to cache
-            let cache_file = cache_dir.join(format!("{word_to_fetch}.html"));
-            if let Err(e) = std::fs::write(&cache_file, &html) {
-                eprintln!("Failed to write cache file for {word_to_fetch}: {e}");
-            }
-
-            // Parse the entry
-            match parse_fn(&html, word_to_fetch) {
-                Ok(entry) => {
-                    // If we fetched a fallback form, we still store under the original word
-                    results.insert(word.to_string(), entry);
-                    break;
-                }
-                Err(e) => {
-                    // If fallback is enabled and we haven't tried it yet, try the base form
-                    if !tried_fallback {
-                        if let Some(suffix) = fallback_suffix {
-                            if word.ends_with(suffix) {
-                                let base_word = &word[..word.len() - suffix.len()];
-                                eprintln!(
-                                    "Failed to parse {word}: {e}. Trying base form '{base_word}'"
-                                );
-                                word_to_fetch = base_word;
-                                tried_fallback = true;
-                                continue;
-                            }
-                        }
-                    }
-                    eprintln!("Failed to parse {entry_type} for {word}: {e}");
-                    break;
-                }
-            }
-        }
+    // Save to cache
+    if let Err(e) = std::fs::write(&cache_file, &html) {
+        eprintln!("Warning: Failed to write cache file for {word}: {e}");
     }
 
-    println!(
-        "Finished fetching {}s. Total: {}",
-        entry_type,
-        results.len()
-    );
-
-    Ok(results)
+    Ok(html)
 }
 
 pub mod french {
@@ -174,7 +86,8 @@ pub mod french {
         pub subjunctive_imperfect: [String; 6],
 
         // Imperative mood (3 forms: tu, nous, vous)
-        pub imperative: [String; 3],
+        // None for defective verbs that don't have imperative forms (e.g., pouvoir)
+        pub imperative: Option<[String; 3]>,
 
         // Auxiliary verb for compound tenses
         pub auxiliary: Auxiliary,
@@ -389,7 +302,7 @@ pub mod french {
         ])
     }
 
-    fn parse_imperative(document: &Html) -> anyhow::Result<[String; 3]> {
+    fn parse_imperative(document: &Html) -> anyhow::Result<Option<[String; 3]>> {
         // Find the imperative row (simple)
         let th_selector = Selector::parse("th.roa-imperative-left-rail").unwrap();
         let a_selector = Selector::parse("a").unwrap();
@@ -435,33 +348,16 @@ pub mod french {
             }
         }
 
+        // Defective verbs (like pouvoir) don't have imperative forms
+        if forms.is_empty() {
+            return Ok(None);
+        }
+
         if forms.len() != 3 {
             anyhow::bail!("Expected 3 forms for imperative, found {}", forms.len());
         }
 
-        Ok([forms[0].clone(), forms[1].clone(), forms[2].clone()])
-    }
-
-    /// Fetch French verb conjugations from Wiktionary with HTML caching
-    ///
-    /// # Arguments
-    /// * `verbs` - List of verb infinitives to fetch
-    /// * `cache_dir` - Directory to cache HTML files (e.g., `.cache/wiktionary/french/`)
-    ///
-    /// # Returns
-    /// HashMap mapping verb infinitives to their conjugations
-    pub async fn fetch_french_verb_conjugations(
-        verbs: &[String],
-        cache_dir: &Path,
-    ) -> anyhow::Result<HashMap<String, FrenchVerbConjugation>> {
-        super::fetch_wiktionary_entries(
-            verbs,
-            cache_dir,
-            "French verb",
-            parse_french_verb_conjugation,
-            None,
-        )
-        .await
+        Ok(Some([forms[0].clone(), forms[1].clone(), forms[2].clone()]))
     }
 
     #[cfg(test)]
@@ -495,9 +391,10 @@ pub mod french {
             assert_eq!(conjugation.indicative_future[1], "boiras");
 
             // Check imperative
-            assert_eq!(conjugation.imperative[0], "bois"); // tu
-            assert_eq!(conjugation.imperative[1], "buvons"); // nous
-            assert_eq!(conjugation.imperative[2], "buvez"); // vous
+            let imperative = conjugation.imperative.as_ref().unwrap();
+            assert_eq!(imperative[0], "bois"); // tu
+            assert_eq!(imperative[1], "buvons"); // nous
+            assert_eq!(imperative[2], "buvez"); // vous
         }
 
         #[test]
@@ -619,40 +516,32 @@ pub mod french {
             );
         }
 
-        #[tokio::test]
-        #[ignore] // Only run manually to avoid hitting Wiktionary during CI
-        async fn test_fetch_verb_conjugations() {
-            use tempfile::tempdir;
+        #[test]
+        fn test_parse_pouvoir() {
+            let html = fs::read_to_string("src/wiktionary-examples/fra/pouvoir.txt")
+                .expect("Failed to read pouvoir.txt");
 
-            let temp_dir = tempdir().unwrap();
-            let cache_dir = temp_dir.path().join("french");
+            let conjugation = parse_french_verb_conjugation(&html, "pouvoir")
+                .expect("Failed to parse pouvoir conjugation");
 
-            let verbs = vec![
-                "parler".to_string(),
-                "finir".to_string(),
-                "être".to_string(),
-            ];
+            assert_eq!(conjugation.infinitive, "pouvoir");
+            assert_eq!(conjugation.present_participle, "pouvant");
+            assert_eq!(conjugation.past_participle, "pu");
+            assert_eq!(conjugation.auxiliary, Auxiliary::Avoir);
 
-            // First fetch
-            let result = fetch_french_verb_conjugations(&verbs, &cache_dir)
-                .await
-                .expect("Failed to fetch conjugations");
+            // Check indicative present
+            assert_eq!(conjugation.indicative_present[0], "peux"); // je (or puis)
+            assert_eq!(conjugation.indicative_present[1], "peux"); // tu
+            assert_eq!(conjugation.indicative_present[2], "peut"); // il
+            assert_eq!(conjugation.indicative_present[3], "pouvons"); // nous
+            assert_eq!(conjugation.indicative_present[4], "pouvez"); // vous
+            assert_eq!(conjugation.indicative_present[5], "peuvent"); // ils
 
-            assert!(result.contains_key("parler"));
-            assert!(result.contains_key("finir"));
-            assert!(result.contains_key("être"));
-
-            // Verify cache files were created
-            assert!(cache_dir.join("parler.html").exists());
-            assert!(cache_dir.join("finir.html").exists());
-            assert!(cache_dir.join("être.html").exists());
-
-            // Second fetch should use cache
-            let result2 = fetch_french_verb_conjugations(&verbs, &cache_dir)
-                .await
-                .expect("Failed to fetch conjugations from cache");
-
-            assert_eq!(result.len(), result2.len());
+            // Check that pouvoir has no imperative forms (defective verb)
+            assert!(
+                conjugation.imperative.is_none(),
+                "pouvoir should not have imperative forms"
+            );
         }
     }
 }
@@ -1001,14 +890,95 @@ pub mod spanish {
         verbs: &[String],
         cache_dir: &Path,
     ) -> anyhow::Result<HashMap<String, SpanishVerbConjugation>> {
-        super::fetch_wiktionary_entries(
-            verbs,
-            cache_dir,
-            "Spanish verb",
-            parse_spanish_verb_conjugation,
-            Some("se"), // Fallback for reflexive verbs
-        )
-        .await
+        use futures::StreamExt;
+
+        let pb = indicatif::ProgressBar::new(verbs.len() as u64);
+        pb.set_style(
+            indicatif::ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} Spanish verbs ({per_sec}, {msg}, {eta})")
+                .unwrap()
+                .progress_chars("#>-"),
+        );
+        pb.enable_steady_tick(std::time::Duration::from_millis(100));
+
+        let fetch_results: Vec<(String, Result<SpanishVerbConjugation, String>)> =
+            futures::stream::iter(verbs.iter())
+                .map(|verb| {
+                    let pb = pb.clone();
+                    async move {
+                        pb.set_message(verb.to_string());
+
+                        // Try to parse, with fallback for reflexive verbs (e.g., "moverse" -> "mover")
+                        let mut verb_to_try = verb.as_str();
+                        let mut tried_fallback = false;
+
+                        let result = loop {
+                            match super::get_wiktionary_html(verb_to_try, cache_dir).await {
+                                Ok(html) => {
+                                    match parse_spanish_verb_conjugation(&html, verb_to_try) {
+                                        Ok(conjugation) => {
+                                            break Ok(conjugation);
+                                        }
+                                        Err(e) => {
+                                            // Try fallback for reflexive verbs ending in "se"
+                                            if !tried_fallback && verb.ends_with("se") {
+                                                let base_verb = &verb[..verb.len() - 2];
+                                                verb_to_try = base_verb;
+                                                tried_fallback = true;
+                                                continue;
+                                            }
+                                            break Err(format!(
+                                                "Failed to parse Spanish verb '{verb}': {e}"
+                                            ));
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    break Err(format!(
+                                        "Failed to get HTML for Spanish verb '{verb_to_try}': {e}"
+                                    ));
+                                }
+                            }
+                        };
+
+                        pb.inc(1);
+                        (verb.clone(), result)
+                    }
+                })
+                .buffered(50)
+                .collect()
+                .await;
+
+        // Process results
+        let mut results = HashMap::new();
+        let mut errors = Vec::new();
+
+        for (verb, result) in fetch_results {
+            match result {
+                Ok(conjugation) => {
+                    results.insert(verb, conjugation);
+                }
+                Err(e) => {
+                    errors.push(e);
+                }
+            }
+        }
+
+        pb.finish_with_message(format!(
+            "Finished: {}/{} parsed",
+            results.len(),
+            verbs.len()
+        ));
+
+        // Print errors after progress bar is finished
+        if !errors.is_empty() {
+            eprintln!("\nErrors encountered while processing Spanish verbs:");
+            for error in errors {
+                eprintln!("  {error}");
+            }
+        }
+
+        Ok(results)
     }
 
     #[cfg(test)]
@@ -1432,14 +1402,70 @@ pub mod german {
         verbs: &[String],
         cache_dir: &Path,
     ) -> anyhow::Result<HashMap<String, GermanVerbConjugation>> {
-        super::fetch_wiktionary_entries(
-            verbs,
-            cache_dir,
-            "German verb",
-            parse_german_verb_conjugation,
-            None,
-        )
-        .await
+        use futures::StreamExt;
+
+        let pb = indicatif::ProgressBar::new(verbs.len() as u64);
+        pb.set_style(
+            indicatif::ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} German verbs ({per_sec}, {msg}, {eta})")
+                .unwrap()
+                .progress_chars("#>-"),
+        );
+        pb.enable_steady_tick(std::time::Duration::from_millis(100));
+
+        let fetch_results: Vec<(String, Result<GermanVerbConjugation, String>)> =
+            futures::stream::iter(verbs.iter())
+                .map(|verb| {
+                    let pb = pb.clone();
+                    async move {
+                        pb.set_message(verb.to_string());
+
+                        let result = match super::get_wiktionary_html(verb, cache_dir).await {
+                            Ok(html) => parse_german_verb_conjugation(&html, verb)
+                                .map_err(|e| format!("Failed to parse German verb '{verb}': {e}")),
+                            Err(e) => {
+                                Err(format!("Failed to get HTML for German verb '{verb}': {e}"))
+                            }
+                        };
+
+                        pb.inc(1);
+                        (verb.clone(), result)
+                    }
+                })
+                .buffered(50)
+                .collect()
+                .await;
+
+        // Process results
+        let mut results = HashMap::new();
+        let mut errors = Vec::new();
+
+        for (verb, result) in fetch_results {
+            match result {
+                Ok(conjugation) => {
+                    results.insert(verb, conjugation);
+                }
+                Err(e) => {
+                    errors.push(e);
+                }
+            }
+        }
+
+        pb.finish_with_message(format!(
+            "Finished: {}/{} parsed",
+            results.len(),
+            verbs.len()
+        ));
+
+        // Print errors after progress bar is finished
+        if !errors.is_empty() {
+            eprintln!("\nErrors encountered while processing German verbs:");
+            for error in errors {
+                eprintln!("  {error}");
+            }
+        }
+
+        Ok(results)
     }
 
     // =====================================
@@ -1572,14 +1598,70 @@ pub mod german {
         nouns: &[String],
         cache_dir: &Path,
     ) -> anyhow::Result<HashMap<String, GermanNounDeclension>> {
-        super::fetch_wiktionary_entries(
-            nouns,
-            cache_dir,
-            "German noun",
-            parse_german_noun_declension,
-            None,
-        )
-        .await
+        use futures::StreamExt;
+
+        let pb = indicatif::ProgressBar::new(nouns.len() as u64);
+        pb.set_style(
+            indicatif::ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} German nouns ({per_sec}, {msg}, {eta})")
+                .unwrap()
+                .progress_chars("#>-"),
+        );
+        pb.enable_steady_tick(std::time::Duration::from_millis(100));
+
+        let fetch_results: Vec<(String, Result<GermanNounDeclension, String>)> =
+            futures::stream::iter(nouns.iter())
+                .map(|noun| {
+                    let pb = pb.clone();
+                    async move {
+                        pb.set_message(noun.to_string());
+
+                        let result = match super::get_wiktionary_html(noun, cache_dir).await {
+                            Ok(html) => parse_german_noun_declension(&html, noun)
+                                .map_err(|e| format!("Failed to parse German noun '{noun}': {e}")),
+                            Err(e) => {
+                                Err(format!("Failed to get HTML for German noun '{noun}': {e}"))
+                            }
+                        };
+
+                        pb.inc(1);
+                        (noun.clone(), result)
+                    }
+                })
+                .buffered(50)
+                .collect()
+                .await;
+
+        // Process results
+        let mut results = HashMap::new();
+        let mut errors = Vec::new();
+
+        for (noun, result) in fetch_results {
+            match result {
+                Ok(declension) => {
+                    results.insert(noun, declension);
+                }
+                Err(e) => {
+                    errors.push(e);
+                }
+            }
+        }
+
+        pb.finish_with_message(format!(
+            "Finished: {}/{} parsed",
+            results.len(),
+            nouns.len()
+        ));
+
+        // Print errors after progress bar is finished
+        if !errors.is_empty() {
+            eprintln!("\nErrors encountered while processing German nouns:");
+            for error in errors {
+                eprintln!("  {error}");
+            }
+        }
+
+        Ok(results)
     }
 
     #[cfg(test)]

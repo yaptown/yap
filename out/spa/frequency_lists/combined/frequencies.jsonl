@@ -9701,7 +9701,6 @@
 {"lexeme":{"Heteronym":{"word":"entretenimiento","lemma":"entretenimiento","pos":"NOUN"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"enviaste","lemma":"enviar","pos":"VERB"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"erradicar","lemma":"erradicar","pos":"VERB"}},"count":8}
-{"lexeme":{"Heteronym":{"word":"escabulló","lemma":"escabullar","pos":"VERB"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"escala","lemma":"escala","pos":"NOUN"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"escape","lemma":"escape","pos":"NOUN"}},"count":8}
 {"lexeme":{"Heteronym":{"word":"escaso","lemma":"escaso","pos":"ADJ"}},"count":8}
@@ -11362,7 +11361,6 @@
 {"lexeme":{"Heteronym":{"word":"avaricia","lemma":"avaricia","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"avenida","lemma":"avenida","pos":"NOUN"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"avergonzó","lemma":"avergonzar","pos":"VERB"}},"count":6}
-{"lexeme":{"Heteronym":{"word":"avergüenza","lemma":"avergüenzar","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"averiado","lemma":"averiado","pos":"ADJ"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"ayudaba","lemma":"ayudar","pos":"VERB"}},"count":6}
 {"lexeme":{"Heteronym":{"word":"bajado","lemma":"bajar","pos":"VERB"}},"count":6}
@@ -15888,7 +15886,6 @@
 {"lexeme":{"Heteronym":{"word":"víspera","lemma":"víspera","pos":"NOUN"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"yegua","lemma":"yegua","pos":"NOUN"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"yerno","lemma":"yerno","pos":"NOUN"}},"count":4}
-{"lexeme":{"Heteronym":{"word":"zambulló","lemma":"zambullar","pos":"VERB"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"zapatería","lemma":"zapatería","pos":"NOUN"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"zurdo","lemma":"zurdo","pos":"ADJ"}},"count":4}
 {"lexeme":{"Heteronym":{"word":"ácidos","lemma":"ácido","pos":"NOUN"}},"count":4}

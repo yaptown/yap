@@ -1,3 +1,5 @@
+use language_utils::Language;
+
 use crate::classify::SimplifiedTokenPrime;
 
 #[derive(Debug)]
@@ -18,7 +20,19 @@ pub enum ValidationResult {
 pub fn validate_and_fix_whitespace(
     original: &str,
     corrected_tokens: &mut [SimplifiedTokenPrime],
+    language: Language,
 ) -> ValidationResult {
+    // remove `se ` and `s'` prefix from french lemmas if present
+    if language == Language::French {
+        corrected_tokens.iter_mut().for_each(|token| {
+            if let Some(word) = token.lemma.strip_prefix("se ") {
+                token.lemma = word.to_string();
+            } else if let Some(word) = token.lemma.strip_prefix("s'") {
+                token.lemma = word.to_string();
+            }
+        });
+    }
+
     let reconstructed: String = corrected_tokens
         .iter()
         .map(|token| format!("{}{}", token.text, token.whitespace))

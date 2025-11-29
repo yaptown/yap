@@ -323,15 +323,10 @@ async fn main() -> anyhow::Result<()> {
 
         // Generate conjugations/declensions JSONL
         {
-            println!("Generating conjugations/declensions map...");
             let morphology_groups = morphology_analysis::analyze_morphology(&dictionary);
 
             let conjugations_path = native_specific_dir.join("conjugations.jsonl");
             morphology_analysis::write_conjugations_jsonl(&morphology_groups, &conjugations_path)?;
-            println!(
-                "  - Conjugations written to {}",
-                conjugations_path.display()
-            );
         }
 
         // create and write phrasebook

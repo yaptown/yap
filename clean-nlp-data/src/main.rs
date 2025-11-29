@@ -561,7 +561,11 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         // Validate that the LLM response matches the original text
         match result {
             Ok(ref mut corrected_tokens) => {
-                match validate_and_fix_whitespace(&original_sentence.sentence, corrected_tokens) {
+                match validate_and_fix_whitespace(
+                    &original_sentence.sentence,
+                    corrected_tokens,
+                    language,
+                ) {
                     ValidationResult::Valid => {
                         // No issues, continue
                     }
