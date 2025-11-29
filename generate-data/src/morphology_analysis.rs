@@ -57,8 +57,6 @@ pub async fn create_morphology(
         return Ok(morphology);
     }
 
-    println!("Using LLM for {count} remaining morphology entries");
-
     let pb = ProgressBar::new(count as u64);
     pb.set_style(
         ProgressStyle::default_bar()
@@ -824,8 +822,6 @@ pub mod wiktionary_morphology {
                 }
             }
 
-            println!("Found {} unique Spanish verb lemmas", verb_lemmas.len());
-
             let verb_lemmas_vec: Vec<String> = verb_lemmas.into_iter().collect();
 
             // Step 2: Fetch Wiktionary pages with HTML caching
@@ -1124,9 +1120,6 @@ pub mod wiktionary_morphology {
                     }
                 }
             }
-
-            println!("Found {} unique German verb lemmas", verb_lemmas.len());
-            println!("Found {} unique German noun lemmas", noun_lemmas.len());
 
             let verb_lemmas_vec: Vec<String> = verb_lemmas.into_iter().collect();
             let noun_lemmas_vec: Vec<String> = noun_lemmas.into_iter().collect();
