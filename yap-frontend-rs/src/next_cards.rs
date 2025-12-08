@@ -18,6 +18,7 @@ pub(crate) struct NextCardsIterator<'a> {
 }
 
 pub(crate) enum AllowedCards {
+    #[expect(unused)] // All is not yet used, but could be used to express intent more clearly than an empty BannedRequirements set
     All,
     BannedRequirements(std::collections::BTreeSet<ChallengeRequirements>),
     Type(CardType),
@@ -204,7 +205,6 @@ impl NextCardsIterator<'_> {
                             CardType::TargetLanguage => 0.6,
                             CardType::Listening => 0.3,
                             CardType::LetterPronunciation => 0.1,
-                            CardType::UnderstandingDifferenceText => 0.0,
                         };
                         (*count as f64 / total_cards as f64) / target_ratio
                     })
@@ -223,9 +223,6 @@ impl NextCardsIterator<'_> {
                 CardType::TargetLanguage => self.next_text_card(),
                 CardType::Listening => self.next_listening_card(),
                 CardType::LetterPronunciation => self.next_letter_pronunciation_card(),
-                CardType::UnderstandingDifferenceText => {
-                    continue;
-                }
             };
             if let Some(card) = card {
                 return Some(card);

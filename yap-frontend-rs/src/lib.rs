@@ -645,14 +645,12 @@ pub enum CardType {
     TargetLanguage,
     Listening,
     LetterPronunciation,
-    UnderstandingDifferenceText,
 }
 
-const CARD_TYPES: [CardType; 4] = [
+const CARD_TYPES: [CardType; 3] = [
     CardType::TargetLanguage,
     CardType::Listening,
     CardType::LetterPronunciation,
-    CardType::UnderstandingDifferenceText,
 ];
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify)]
@@ -685,11 +683,11 @@ where
         pattern: S,
         position: PatternPosition,
     },
-    // added when the user needs practice choosing `should_choose`
-    UnderstandingDifferenceText {
-        distinguish: S,
-        from: S,
-    },
+    // should work on this
+    // UnderstandingDifferenceText {
+    //     distinguish: S,
+    //     from: S,
+    // },
 }
 
 impl<S> CardIndicator<S>
@@ -732,9 +730,6 @@ where
             CardIndicator::ListeningHomophonous { .. } => CardType::Listening,
             CardIndicator::ListeningLexeme { .. } => CardType::Listening,
             CardIndicator::LetterPronunciation { .. } => CardType::LetterPronunciation,
-            CardIndicator::UnderstandingDifferenceText { .. } => {
-                CardType::UnderstandingDifferenceText
-            }
         }
     }
 }
@@ -743,7 +738,6 @@ impl CardType {
     pub fn challenge_type(&self) -> ChallengeRequirements {
         match self {
             CardType::TargetLanguage => ChallengeRequirements::Text,
-            CardType::UnderstandingDifferenceText => ChallengeRequirements::Text,
             CardType::Listening => ChallengeRequirements::Listening,
             CardType::LetterPronunciation => ChallengeRequirements::Speaking,
         }
@@ -770,12 +764,6 @@ impl CardIndicator<String> {
                     position: *position,
                 }
             }
-            CardIndicator::UnderstandingDifferenceText { distinguish, from } => {
-                CardIndicator::UnderstandingDifferenceText {
-                    distinguish: rodeo.get(distinguish)?,
-                    from: rodeo.get(from)?,
-                }
-            }
         })
     }
 }
@@ -798,12 +786,6 @@ impl CardIndicator<Spur> {
                 CardIndicator::LetterPronunciation {
                     pattern: rodeo.resolve(pattern).to_string(),
                     position: *position,
-                }
-            }
-            CardIndicator::UnderstandingDifferenceText { distinguish, from } => {
-                CardIndicator::UnderstandingDifferenceText {
-                    distinguish: rodeo.resolve(distinguish).to_string(),
-                    from: rodeo.resolve(from).to_string(),
                 }
             }
         }
@@ -1402,8 +1384,7 @@ impl weapon::PartialAppState for Deck {
                     | CardIndicator::ListeningLexeme { .. } => {
                         listening_points.push(point);
                     }
-                    CardIndicator::LetterPronunciation { .. }
-                    | CardIndicator::UnderstandingDifferenceText { .. } => {}
+                    CardIndicator::LetterPronunciation { .. } => {}
                 }
             }
         }
@@ -1511,32 +1492,6 @@ impl weapon::PartialAppState for Deck {
                                     CardStatus::Unadded(Unadded {}),
                                 )
                             })
-                    }),
-            )
-            .chain(
-                // Add homophone practice text cards for all homophone pairs
-                state
-                    .context
-                    .language_pack
-                    .homophone_practice
-                    .keys()
-                    .flat_map(|pair| {
-                        [
-                            (
-                                CardIndicator::UnderstandingDifferenceText {
-                                    distinguish: pair.word1,
-                                    from: pair.word2,
-                                },
-                                CardStatus::Unadded(Unadded {}),
-                            ),
-                            (
-                                CardIndicator::UnderstandingDifferenceText {
-                                    distinguish: pair.word2,
-                                    from: pair.word1,
-                                },
-                                CardStatus::Unadded(Unadded {}),
-                            ),
-                        ]
                     }),
             )
             .collect();
@@ -1910,7 +1865,6 @@ impl Deck {
                 CardIndicator::ListeningHomophonous { .. } => None,
                 CardIndicator::ListeningLexeme { .. } => None,
                 CardIndicator::LetterPronunciation { .. } => None,
-                CardIndicator::UnderstandingDifferenceText { .. } => None,
             })
             .filter_map(|(lexeme, card_status)| {
                 if let CardStatus::Tracked(card_data) = card_status {
@@ -2473,9 +2427,6 @@ impl Context {
                 .language_pack
                 .pattern_frequency_map
                 .contains_key(&(*pattern, *position)),
-            CardIndicator::UnderstandingDifferenceText { distinguish, from } => self
-                .get_homophone_practice(*distinguish, *from)
-                .is_some_and(|h| !h.sentence_pairs.is_empty()),
         }
     }
 
@@ -2636,26 +2587,10 @@ impl Context {
                     .unwrap_or(0);
                 Some(Frequency { count })
             }
-            CardIndicator::UnderstandingDifferenceText { distinguish, from } => {
-                let max_frequency = |word: Spur| -> Option<Frequency> {
-                    self.language_pack
-                        .words_to_heteronyms
-                        .get(&word)
-                        .and_then(|heteronyms| {
-                            heteronyms
-                                .iter()
-                                .map(|h| Lexeme::Heteronym(*h))
-                                .filter_map(|l| {
-                                    self.language_pack.word_frequencies.get(&l).copied()
-                                })
-                                .max()
-                        })
-                };
-                max_frequency(*distinguish).min(max_frequency(*from))
-            }
         }
     }
 
+    #[allow(unused)] // for the future "know the difference" cards
     fn get_homophone_practice(&self, word1: Spur, word2: Spur) -> Option<&HomophonePractice<Spur>> {
         self.language_pack
             .homophone_practice
@@ -2688,9 +2623,6 @@ impl Regressions {
                 // For pronunciation patterns, we don't use regression
                 // Instead we use the LLM's familiarity assessment in predict_card_knowledge_probability
                 return None;
-            }
-            CardIndicator::UnderstandingDifferenceText { .. } => {
-                self.target_language_regression.as_ref()
             }
         }?;
 
@@ -2822,42 +2754,6 @@ where
         pattern: S,
         guide: PronunciationGuide,
     },
-    UnderstandingDifferenceText {
-        pair: HomophoneWordPair<S>,
-        sentence_pair: HomophoneSentencePair<S>,
-    },
-}
-
-impl<S> CardContent<S>
-where
-    S: rkyv::Archive,
-    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
-    <Heteronym<S> as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
-{
-    fn lexeme(&self) -> Option<Lexeme<S>>
-    where
-        S: Clone,
-    {
-        match self {
-            CardContent::Heteronym { heteronym, .. } => Some(Lexeme::Heteronym(heteronym.clone())),
-            CardContent::Multiword(multiword_term, _) => {
-                Some(Lexeme::Multiword(multiword_term.clone()))
-            }
-            CardContent::Listening { .. } => None,
-            CardContent::LetterPronunciation { .. } => None,
-            CardContent::UnderstandingDifferenceText { .. } => None,
-        }
-    }
-
-    fn pronunciation(&self) -> Option<S>
-    where
-        S: Clone,
-    {
-        match self {
-            CardContent::Listening { pronunciation, .. } => Some(pronunciation.clone()),
-            _ => None,
-        }
-    }
 }
 
 impl CardContent<Spur> {
@@ -2891,13 +2787,6 @@ impl CardContent<Spur> {
                     guide: guide.clone(),
                 }
             }
-            CardContent::UnderstandingDifferenceText {
-                pair,
-                sentence_pair,
-            } => CardContent::UnderstandingDifferenceText {
-                pair: pair.resolve(rodeo),
-                sentence_pair: sentence_pair.resolve(rodeo),
-            },
         }
     }
 }
@@ -3124,7 +3013,7 @@ impl ReviewInfo {
                                 *pronunciation,
                             )
                         }
-                        Lexeme::Multiword(multiword) => {
+                        Lexeme::Multiword(_multiword) => {
                             unreachable!(
                                 "Multiword lexemes should not be in ListeningLexeme cards for now"
                             );
@@ -3153,7 +3042,7 @@ impl ReviewInfo {
                             CardContent::Heteronym {
                                 heteronym,
                                 definitions: entry.definitions.clone(),
-                                morphology: entry.morphology,
+                                morphology: entry.morphology.first().cloned().unwrap_or_default(),
                             }
                         }
                         Lexeme::Multiword(multiword_term) => {
@@ -3295,17 +3184,6 @@ impl ReviewInfo {
                     is_new,
                     listening_prefix: None,
                 }
-            }
-            CardIndicator::UnderstandingDifferenceText { distinguish, from } => {
-                let sentence_pair = deck
-                    .context
-                    .get_homophone_practice(distinguish, from)
-                    .unwrap() // will not be empty - checked by is_card_valid
-                    .sentence_pairs
-                    .iter()
-                    .min_by_key(|s| deck.stats.sentence_pairs_reviewed.get(s).unwrap_or(&0))
-                    .cloned()
-                    .unwrap();
             }
         };
 

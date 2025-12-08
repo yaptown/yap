@@ -1202,6 +1202,7 @@ impl FeatureSet for Polite {
     rkyv::Serialize,
     rkyv::Deserialize,
     tsify::Tsify,
+    Default,
 )]
 #[rkyv(compare(PartialEq), derive(Debug))]
 #[tsify(into_wasm_abi, from_wasm_abi)]
