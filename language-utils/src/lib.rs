@@ -229,11 +229,11 @@ pub struct DictionaryEntryThoughts {
 pub struct DictionaryEntry {
     pub target_language_word: String,
     pub definitions: Vec<TargetToNativeWord>,
-    pub morphology: Morphology,
+    pub morphology: Vec<Morphology>,
 }
 
-impl From<(DictionaryEntryThoughts, Morphology)> for DictionaryEntry {
-    fn from(entry: (DictionaryEntryThoughts, Morphology)) -> Self {
+impl From<(DictionaryEntryThoughts, Vec<Morphology>)> for DictionaryEntry {
+    fn from(entry: (DictionaryEntryThoughts, Vec<Morphology>)) -> Self {
         let (entry, morphology) = entry;
         Self {
             target_language_word: entry.target_language_word,
@@ -723,7 +723,7 @@ pub mod autograde {
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, tsify::Tsify)]
     #[tsify(into_wasm_abi, from_wasm_abi)]
     pub struct AutoGradeTranslationRequest {
-        pub language: Language,
+        pub course: Course,
         pub challenge_sentence: String,
         pub user_sentence: String,
         pub primary_expression: Lexeme<String>,
@@ -734,6 +734,7 @@ pub mod autograde {
     )]
     #[tsify(into_wasm_abi, from_wasm_abi)]
     pub struct AutoGradeTranslationResponse {
+        pub encouragement: Option<String>,
         pub explanation: Option<String>,
         pub primary_expression_status: Remembered,
         pub expressions_remembered: Vec<Lexeme<String>>,
@@ -743,7 +744,7 @@ pub mod autograde {
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, tsify::Tsify)]
     #[tsify(into_wasm_abi, from_wasm_abi)]
     pub struct AutoGradeTranscriptionRequest {
-        pub language: Language,
+        pub course: Course,
         pub submission: Vec<transcription_challenge::PartSubmitted>,
     }
 }
@@ -885,6 +886,7 @@ pub mod transcription_challenge {
     )]
     #[tsify(into_wasm_abi, from_wasm_abi)]
     pub struct Grade {
+        pub encouragement: Option<String>,
         pub explanation: Option<String>,
         pub results: Vec<PartGraded>,
         pub compare: Vec<String>,
@@ -893,10 +895,7 @@ pub mod transcription_challenge {
 }
 
 /// Consolidated data structure containing all generated language data
-#[derive(
-    Debug, Clone, Eq, PartialEq, Ord, PartialOrd, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,
-)]
-#[rkyv(compare(PartialEq))]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ConsolidatedLanguageData {
     /// All target language sentences from Anki cards
     pub target_language_sentences: Vec<String>,
@@ -905,9 +904,9 @@ pub struct ConsolidatedLanguageData {
     /// NLP-analyzed sentences with multiword terms and heteronyms
     pub nlp_sentences: Vec<(String, SentenceInfo)>,
     /// Dictionary entries for individual words
-    pub dictionary: Vec<(Heteronym<String>, DictionaryEntry)>,
+    pub dictionary: BTreeMap<Heteronym<String>, DictionaryEntry>,
     /// Phrasebook entries for multiword terms
-    pub phrasebook: Vec<(String, PhrasebookEntry)>,
+    pub phrasebook: BTreeMap<String, PhrasebookEntry>,
     /// Frequency data for words and phrases
     pub frequencies: Vec<FrequencyEntry<String>>,
     /// Mapping from words to their IPA pronunciations
@@ -916,6 +915,8 @@ pub struct ConsolidatedLanguageData {
     pub pronunciation_to_words: Vec<(Pronunciation, Vec<String>)>,
     /// Pronunciation patterns and guides for the course
     pub pronunciation_data: PronunciationData,
+    /// Homophone disambiguation practice sentences
+    pub homophone_practice: BTreeMap<HomophoneWordPair<String>, HomophonePractice<String>>,
 }
 
 impl ConsolidatedLanguageData {
@@ -949,11 +950,11 @@ impl ConsolidatedLanguageData {
                 }
             }
         }
-        for (heteronym, _entry) in &self.dictionary {
+        for heteronym in self.dictionary.keys() {
             rodeo.get_or_intern(&heteronym.word);
             rodeo.get_or_intern(&heteronym.lemma);
         }
-        for (multiword, _entry) in &self.phrasebook {
+        for multiword in self.phrasebook.keys() {
             rodeo.get_or_intern(multiword);
         }
 
@@ -982,6 +983,12 @@ impl ConsolidatedLanguageData {
                 rodeo.get_or_intern(&word_pair.native);
                 rodeo.get_or_intern(&word_pair.cultural_context);
             }
+        }
+
+        // intern homophone practice data
+        for (word_pair, practice) in &self.homophone_practice {
+            word_pair.get_or_intern(rodeo);
+            practice.get_or_intern(rodeo);
         }
     }
 }
@@ -1343,6 +1350,17 @@ impl Language {
             Language::Japanese => WritingSystem::Japanese,
         }
     }
+
+    pub fn tv_politeness(&self) -> bool {
+        matches!(
+            self,
+            Language::French
+                | Language::Spanish
+                | Language::German
+                | Language::Portuguese
+                | Language::Italian
+        )
+    }
 }
 
 impl std::fmt::Display for Language {
@@ -1423,6 +1441,193 @@ pub const LANGUAGES: &[Language] = &[
     Language::Italian,
 ];
 
+/// A pair of homophone words, lexicographically sorted to ensure consistency
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    schemars::JsonSchema,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    tsify::Tsify,
+)]
+#[rkyv(compare(PartialEq), derive(Hash), derive(PartialEq), derive(Eq))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct HomophoneWordPair<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
+    pub word1: S,
+    pub word2: S,
+}
+
+impl HomophoneWordPair<String> {
+    /// Create a new word pair, ensuring lexicographic ordering.
+    /// Returns None if the words are the same.
+    pub fn new(word_a: String, word_b: String) -> Option<Self> {
+        if word_a == word_b {
+            return None;
+        }
+
+        let (word1, word2) = if word_a < word_b {
+            (word_a, word_b)
+        } else {
+            (word_b, word_a)
+        };
+
+        Some(Self { word1, word2 })
+    }
+
+    pub fn get_interned(
+        &self,
+        rodeo: &lasso::RodeoReader,
+    ) -> Option<HomophoneWordPair<lasso::Spur>> {
+        Some(HomophoneWordPair {
+            word1: rodeo.get(&self.word1)?,
+            word2: rodeo.get(&self.word2)?,
+        })
+    }
+
+    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophoneWordPair<lasso::Spur> {
+        HomophoneWordPair {
+            word1: rodeo.get_or_intern(&self.word1),
+            word2: rodeo.get_or_intern(&self.word2),
+        }
+    }
+}
+
+impl HomophoneWordPair<lasso::Spur> {
+    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophoneWordPair<String> {
+        HomophoneWordPair {
+            word1: rodeo.resolve(&self.word1).to_string(),
+            word2: rodeo.resolve(&self.word2).to_string(),
+        }
+    }
+}
+
+/// A pair of practice sentences for disambiguating two homophones
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq))]
+pub struct HomophoneSentencePair<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
+    /// Sentence using the first word (lexicographically)
+    pub sentence1: S,
+    /// Sentence using the second word (lexicographically)
+    pub sentence2: S,
+}
+
+impl HomophoneSentencePair<String> {
+    pub fn get_interned(
+        &self,
+        rodeo: &lasso::RodeoReader,
+    ) -> Option<HomophoneSentencePair<lasso::Spur>> {
+        Some(HomophoneSentencePair {
+            sentence1: rodeo.get(&self.sentence1)?,
+            sentence2: rodeo.get(&self.sentence2)?,
+        })
+    }
+
+    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophoneSentencePair<lasso::Spur> {
+        HomophoneSentencePair {
+            sentence1: rodeo.get_or_intern(&self.sentence1),
+            sentence2: rodeo.get_or_intern(&self.sentence2),
+        }
+    }
+}
+
+impl HomophoneSentencePair<lasso::Spur> {
+    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophoneSentencePair<String> {
+        HomophoneSentencePair {
+            sentence1: rodeo.resolve(&self.sentence1).to_string(),
+            sentence2: rodeo.resolve(&self.sentence2).to_string(),
+        }
+    }
+}
+/// Complete disambiguation practice data for a pair of homophones
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq))]
+pub struct HomophonePractice<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash,
+{
+    pub sentence_pairs: Vec<HomophoneSentencePair<S>>,
+}
+
+impl HomophonePractice<String> {
+    pub fn get_interned(
+        &self,
+        rodeo: &lasso::RodeoReader,
+    ) -> Option<HomophonePractice<lasso::Spur>> {
+        Some(HomophonePractice {
+            sentence_pairs: self
+                .sentence_pairs
+                .iter()
+                .map(|s| s.get_interned(rodeo).unwrap())
+                .collect(),
+        })
+    }
+
+    fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> HomophonePractice<lasso::Spur> {
+        HomophonePractice {
+            sentence_pairs: self
+                .sentence_pairs
+                .iter()
+                .map(|s| s.get_or_intern(rodeo))
+                .collect(),
+        }
+    }
+}
+
+impl HomophonePractice<lasso::Spur> {
+    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> HomophonePractice<String> {
+        HomophonePractice {
+            sentence_pairs: self
+                .sentence_pairs
+                .iter()
+                .map(|s| s.resolve(rodeo))
+                .collect(),
+        }
+    }
+}
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, tsify::Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct TtsRequest {

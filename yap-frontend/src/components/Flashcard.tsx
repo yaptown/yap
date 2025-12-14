@@ -34,7 +34,7 @@ import { match } from "ts-pattern";
 import { formatMorphology } from "@/utils/formatMorphology";
 
 interface FlashcardProps {
-  audioRequest: AudioRequest;
+  audioRequest: AudioRequest | undefined;
   content: CardContent<string>;
   showAnswer: boolean;
   onToggle: () => void;
@@ -89,9 +89,19 @@ const CardFront = ({
   } else if ("Multiword" in content) {
     return <h2 className="text-3xl font-semibold">{content.Multiword[0]}</h2>;
   } else if ("LetterPronunciation" in content) {
+    const guide = content.LetterPronunciation.guide;
+    const pattern = content.LetterPronunciation.pattern;
+
+    // Add visual indicators for position
+    const displayPattern = match(guide.position)
+      .with("Beginning", () => `${pattern}___`)
+      .with("End", () => `___${pattern}`)
+      .with("Anywhere", () => pattern)
+      .exhaustive();
+
     return (
       <h2 className="text-4xl font-bold">
-        🗣️ "{content.LetterPronunciation.pattern}"
+        🗣️ "{displayPattern}"
       </h2>
     );
   } else {
@@ -654,7 +664,7 @@ export const Flashcard = function Flashcard({
                 className="flex items-center justify-between w-full"
                 onClick={(e) => e.stopPropagation()}
               >
-                {!("LetterPronunciation" in content) ? (
+                {!("LetterPronunciation" in content) && audioRequest ? (
                   <AudioButton
                     audioRequest={audioRequest}
                     accessToken={accessToken}

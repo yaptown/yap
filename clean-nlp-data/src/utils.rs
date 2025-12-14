@@ -1,3 +1,5 @@
+use language_utils::Language;
+
 use crate::classify::SimplifiedTokenPrime;
 
 #[derive(Debug)]
@@ -18,7 +20,19 @@ pub enum ValidationResult {
 pub fn validate_and_fix_whitespace(
     original: &str,
     corrected_tokens: &mut [SimplifiedTokenPrime],
+    language: Language,
 ) -> ValidationResult {
+    // remove `se ` and `s'` prefix from french lemmas if present
+    if language == Language::French {
+        corrected_tokens.iter_mut().for_each(|token| {
+            if let Some(word) = token.lemma.strip_prefix("se ") {
+                token.lemma = word.to_string();
+            } else if let Some(word) = token.lemma.strip_prefix("s'") {
+                token.lemma = word.to_string();
+            }
+        });
+    }
+
     let reconstructed: String = corrected_tokens
         .iter()
         .map(|token| format!("{}{}", token.text, token.whitespace))
@@ -142,7 +156,7 @@ mod tests {
         // LLM output: "Hello" + regular space + "world"
         let mut tokens = vec![make_token("Hello", " "), make_token("world", "")];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens);
+        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
         // Should auto-fix to use narrow non-breaking space
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -164,7 +178,7 @@ mod tests {
         // LLM output: "Hello" + no space + "world"
         let mut tokens = vec![make_token("Hello", ""), make_token("world", "")];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens);
+        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
         // Should auto-fix by adding the narrow non-breaking space
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -190,7 +204,7 @@ mod tests {
             make_token("C", ""),
         ];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens);
+        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
         // Should auto-fix
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -211,7 +225,7 @@ mod tests {
 
         let mut tokens = vec![make_token("Hello", " "), make_token("world", "")];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens);
+        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
         assert!(matches!(result, ValidationResult::Valid));
     }
@@ -229,7 +243,7 @@ mod tests {
             make_token("C", ""),
         ];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens);
+        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
         // Should auto-fix
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -261,7 +275,7 @@ mod tests {
         // LLM output: "faire" + regular space + "?"
         let mut tokens = vec![make_token("faire", " "), make_token("?", "")];
 
-        let result = validate_and_fix_whitespace(original, &mut tokens);
+        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
         // Should auto-fix
         assert!(matches!(result, ValidationResult::AutoFixed));
@@ -311,7 +325,7 @@ mod tests {
                 .map(|t| format!("{:?}", t.whitespace.chars().collect::<Vec<_>>()))
                 .collect::<Vec<_>>()
         );
-        let result = validate_and_fix_whitespace(original, &mut tokens);
+        let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
         println!(
             "After: {:?}",
             tokens

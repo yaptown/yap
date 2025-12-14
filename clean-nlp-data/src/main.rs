@@ -25,12 +25,14 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .unwrap()
         .with_cache_directory("./.cache")
         .with_service_tier("flex")
+        .with_backup_cache_directory("./.cache-backup")
 });
 
 static CHAT_CLIENT_MINI: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("gpt-5-mini")
         .unwrap()
         .with_cache_directory("./.cache")
+        .with_backup_cache_directory("./.cache-backup")
 });
 
 #[tokio::main]
@@ -210,7 +212,7 @@ async fn load_multiword_terms(language: Language) -> anyhow::Result<Vec<NlpAnaly
 
     // Ensure multiword terms file exists
     let multiword_terms_file =
-        generate_data::wiktionary::ensure_multiword_terms_file(&course, &base_dir)
+        generate_data::wiktionary_terms::ensure_multiword_terms_file(&course, &base_dir)
             .await
             .context("Failed to ensure multiword terms file")?;
 
@@ -559,7 +561,11 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         // Validate that the LLM response matches the original text
         match result {
             Ok(ref mut corrected_tokens) => {
-                match validate_and_fix_whitespace(&original_sentence.sentence, corrected_tokens) {
+                match validate_and_fix_whitespace(
+                    &original_sentence.sentence,
+                    corrected_tokens,
+                    language,
+                ) {
                     ValidationResult::Valid => {
                         // No issues, continue
                     }

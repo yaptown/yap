@@ -339,6 +339,85 @@ impl SentenceClassifier for SpanishClassifier {
                     token.text
                 ));
             }
+
+            // Check for subject pronouns in lemma (e.g., "dormir él", "lavar tú")
+            let subject_pronouns = [
+                "yo", "tú", "él", "ella", "usted", "nosotros", "nosotras", "vosotros", "vosotras",
+                "ellos", "ellas", "ustedes",
+            ];
+            for pronoun in &subject_pronouns {
+                if token.lemma.ends_with(&format!(" {pronoun}")) {
+                    reasons.push(format!(
+                        "'{}' has lemma '{}' which contains subject pronoun '{}' - subject pronouns should not be part of verb lemmas",
+                        token.text, token.lemma, pronoun
+                    ));
+                    break;
+                }
+            }
+
+            // Check for reflexive verb forms in lemma (should be separated)
+            if token.lemma.ends_with("se") && token.lemma.len() > 2 {
+                let base = &token.lemma[..token.lemma.len() - 2];
+                // Check if it looks like an infinitive + se (e.g., "limitarse", "calmarse")
+                if base.ends_with("ar") || base.ends_with("er") || base.ends_with("ir") {
+                    reasons.push(format!(
+                        "'{}' has lemma '{}' which contains reflexive pronoun 'se' - reflexive pronouns should be separate tokens",
+                        token.text, token.lemma
+                    ));
+                }
+            }
+
+            // Check for object pronouns attached to infinitives in lemma (e.g., "hacerlo")
+            let object_pronouns = ["lo", "la", "los", "las", "le", "les", "me", "te", "nos"];
+            for pronoun in &object_pronouns {
+                if token.lemma.ends_with(pronoun) && token.lemma.len() > pronoun.len() {
+                    let base = &token.lemma[..token.lemma.len() - pronoun.len()];
+                    if base.ends_with("ar") || base.ends_with("er") || base.ends_with("ir") {
+                        reasons.push(format!(
+                            "'{}' has lemma '{}' which contains object pronoun '{}' attached - pronouns should be separate tokens",
+                            token.text, token.lemma, pronoun
+                        ));
+                        break;
+                    }
+                }
+            }
+
+            // Check for lemmas that look like conjugated forms rather than infinitives
+            if token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux {
+                let lemma_lower = token.lemma.to_lowercase();
+                // Check for common conjugation endings that shouldn't be in lemmas
+                if lemma_lower.ends_with("ado")
+                    || lemma_lower.ends_with("ido")
+                    || lemma_lower.ends_with("ada")
+                    || lemma_lower.ends_with("ida")
+                    || lemma_lower.ends_with("ados")
+                    || lemma_lower.ends_with("idos")
+                    || lemma_lower.ends_with("adas")
+                    || lemma_lower.ends_with("idas")
+                {
+                    // These are past participle forms, not infinitives
+                    reasons.push(format!(
+                        "'{}' has lemma '{}' which looks like a past participle rather than an infinitive",
+                        token.text, token.lemma
+                    ));
+                }
+            }
+
+            // Check for non-verb words being lemmatized as verbs (common error)
+            if token.pos != PartOfSpeech::Verb && token.pos != PartOfSpeech::Aux {
+                let lemma_lower = token.lemma.to_lowercase();
+                // Spanish infinitives end in -ar, -er, -ir
+                if lemma_lower.ends_with("ar")
+                    || lemma_lower.ends_with("er")
+                    || lemma_lower.ends_with("ir")
+                {
+                    // This might be a verb lemma for a non-verb token
+                    reasons.push(format!(
+                        "'{}' (POS: {:?}) has verb-like lemma '{}' - verify this is correct",
+                        token.text, token.pos, token.lemma
+                    ));
+                }
+            }
         }
 
         if reasons.is_empty() {
@@ -1203,6 +1282,72 @@ impl SentenceClassifier for FrenchClassifier {
                     "'bois' can be: (1) Verb 'boire' (e.g., 'Je bois du café') → lemma 'boire', OR (2) Noun 'bois' (e.g., 'Le bois est dur') → lemma 'bois'. Current lemma: '{}'.",
                     token.lemma
                 ));
+            }
+
+            if text_lower == "puis" {
+                reasons.push(format!(
+                    "'puis' can be: (1) Verb 'pouvoir' (1st person singular passé simple, meaning 'could') → lemma 'pouvoir', POS VERB, OR (2) Adverb meaning 'then' (e.g., 'Et puis il est parti') → lemma 'puis', POS ADV. Current lemma: '{}', POS: {:?}.",
+                    token.lemma, token.pos
+                ));
+            }
+
+            if text_lower == "passé" {
+                reasons.push(format!(
+                    "'passé' can be: (1) Past participle/Adjective from 'passer' (e.g., 'Le temps passé') → lemma 'passer', POS VERB/ADJ, OR (2) Preposition meaning 'past/beyond' (e.g., 'passé minuit') → lemma 'passé', POS ADP. Current lemma: '{}', POS: {:?}.",
+                    token.lemma, token.pos
+                ));
+            }
+
+            if text_lower == "soit" {
+                reasons.push(format!(
+                    "'soit' can be: (1) Subjunctive verb from 'être' (e.g., 'il faut qu'il soit', 'quoi qu'il en soit') → lemma 'être', POS VERB, (2) Jussive subjunctive, still a verb (e.g., 'soit x un nombre') → lemma 'être', POS VERB, (3) Coordinating conjunction in 'soit... soit...' constructions → lemma 'soit', POS CCONJ, OR (4) Explanatory adverb meaning 'that is'/'namely' (e.g., 'soit dix euros') → lemma 'soit', POS ADV. Current lemma: '{}', POS: {:?}.",
+                    token.lemma, token.pos
+                ));
+            }
+
+            // Check for reflexive pronouns in lemma (should be separated)
+            if token.lemma.starts_with("s'") || token.lemma.starts_with("se ") {
+                reasons.push(format!(
+                    "'{}' has lemma '{}' which contains reflexive pronoun - the lemma should generally just be one word without indicating the reflexive pronoun.",
+                    token.text, token.lemma
+                ));
+            }
+
+            // Check for lemmas that look like conjugated forms rather than infinitives
+            // Common patterns: past participles ending in é/ée/és/ées, imperfect forms ending in -ait
+            if token.pos == PartOfSpeech::Verb || token.pos == PartOfSpeech::Aux {
+                let lemma_lower = token.lemma.to_lowercase();
+                if lemma_lower.ends_with("ait")
+                    || lemma_lower.ends_with("aient")
+                    || (lemma_lower.ends_with("é")
+                        && !lemma_lower.ends_with("er")
+                        && lemma_lower != "été")
+                    || (lemma_lower.ends_with("ée")
+                        || lemma_lower.ends_with("és")
+                        || lemma_lower.ends_with("ées"))
+                {
+                    reasons.push(format!(
+                        "'{}' has lemma '{}' which looks like a conjugated form rather than an infinitive",
+                        token.text, token.lemma
+                    ));
+                }
+            }
+
+            // Check for non-verb words being lemmatized as verbs (common error)
+            if token.pos != PartOfSpeech::Verb && token.pos != PartOfSpeech::Aux {
+                let lemma_lower = token.lemma.to_lowercase();
+                // French infinitives end in -er, -ir, -re, -oir
+                if lemma_lower.ends_with("er")
+                    || lemma_lower.ends_with("ir")
+                    || lemma_lower.ends_with("re")
+                    || lemma_lower.ends_with("oir")
+                {
+                    // This might be a verb lemma for a non-verb token
+                    reasons.push(format!(
+                        "'{}' (POS: {:?}) has verb-like lemma '{}' - verify this is correct",
+                        token.text, token.pos, token.lemma
+                    ));
+                }
             }
         }
 

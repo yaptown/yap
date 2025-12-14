@@ -11,3 +11,4 @@ tsify.workspace = true
 wasm-bindgen = "0.2.84"
 rkyv.workspace = true
 lasso.workspace = true
+parse-display = "0.10.0"

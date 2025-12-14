@@ -322,8 +322,55 @@ pub enum Degree {}
 pub enum VerbForm {}
 
 /// Mood is a feature that expresses modality and subclassifies finite verb forms.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, JsonSchema)]
-pub enum Mood {}
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    JsonSchema,
+    Ord,
+    PartialOrd,
+    serde::Deserialize,
+    serde::Serialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    tsify::Tsify,
+)]
+#[rkyv(compare(PartialEq), derive(Debug))]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum Mood {
+    /// The indicative can be considered the default mood. A verb in indicative merely states that something happens, has happened or will happen, without adding any attitude of the speaker.
+    Indicative,
+    /// The speaker uses imperative to order or ask the addressee to do the action of the verb.
+    Imperative,
+    /// The conditional mood is used to express actions that would have taken place under some circumstances but they actually did not / do not happen. Grammars of some languages may classify conditional as tense (rather than mood) but e.g. in Czech it combines with two different tenses (past and present).
+    Conditional,
+    /// The action of the verb is possible but not certain. This mood corresponds to the modal verbs can, might, be able to. Used e.g. in Finnish. See also the optative.
+    Potential,
+    /// The subjunctive mood is used under certain circumstances in subordinate clauses, typically for actions that are subjective or otherwise uncertain. In German, it may be also used to convey the conditional meaning.
+    Subjunctive,
+    /// The jussive mood expresses the desire that the action happens; it is thus close to both imperative and optative. Unlike in desiderative, it is the speaker, not the subject who wishes that it happens. Used e.g. in Arabic. We also map the Sanskrit injunctive to Mood=Jus.
+    Jussive,
+    /// Means “in order to”, occurs in Amazonian and Australian languages, such as Arabana.
+    Purposive,
+    /// The quotative mood is used to express the direct speech of another person.
+    Quotative,
+    /// Expresses exclamations like “May you have a long life!” or “If only I were rich!” In Turkish it also expresses suggestions. In Sanskrit it may express possibility (cf. the potential mood in other languages).
+    Optative,
+    /// The desiderative mood corresponds to the modal verb “want to”: “He wants to come.” Used e.g. in Japanese or Turkish.
+    Desiderative,
+    /// The necessitative mood expresses necessity and corresponds to the modal verbs “must, should, have to”: “He must come.”
+    Necessitative,
+    /// Verbs in some languages have a special interrogative form that is used in yes-no questions. This is attested, for instance, in the Turkic languages. Celtic languages have it for the copula but not for normal verbs.
+    Interrogative,
+    /// The irrealis mood denotes an action that is not known to have happened. As such, it is a roof term for a group of more specific moods such as conditional, potential, or desiderative. Some languages do not distinguish these finer shades of meaning but they do distinguish realis (which we tag with the same feature as indicative, Ind) and irrealis.
+    Irrealis,
+    /// Expresses surprise, irony or doubt. Occurs in Albanian, other Balkan languages, and in Caddo (Native American from Oklahoma).
+    Admirative,
+}
 
 /// Tense is typically a feature of verbs. It may also occur with other parts of speech (nouns, adjectives, adverbs), depending on whether borderline word forms such as participles are classified as verbs or as the other category.
 ///
@@ -911,20 +958,23 @@ impl FeatureSet for Mood {
         "Mood"
     }
     fn applies_to(language: Language, pos: PartOfSpeech) -> bool {
-        // Subclassifies finite verb forms
         match language {
             Language::French
             | Language::English
             | Language::Spanish
             | Language::German
-            | Language::Korean => {
-                matches!(pos, PartOfSpeech::Verb | PartOfSpeech::Aux)
-            }
-            Language::Chinese
+            | Language::Korean
             | Language::Japanese
             | Language::Russian
             | Language::Portuguese
-            | Language::Italian => todo!(),
+            | Language::Italian => {
+                matches!(pos, PartOfSpeech::Verb | PartOfSpeech::Aux)
+            }
+            Language::Chinese => {
+                // Chinese lacks verb inflection; mood is expressed through
+                // particles and auxiliaries rather than verb forms
+                matches!(pos, PartOfSpeech::Aux)
+            }
         }
     }
 }
@@ -1152,6 +1202,7 @@ impl FeatureSet for Polite {
     rkyv::Serialize,
     rkyv::Deserialize,
     tsify::Tsify,
+    Default,
 )]
 #[rkyv(compare(PartialEq), derive(Debug))]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -1162,6 +1213,7 @@ pub struct Morphology {
     pub tense: Option<Tense>,
     pub person: Option<Person>,
     pub case: Option<Case>,
+    pub mood: Option<Mood>,
 }
 
 /// Represents a grammatical prefix for a word (like articles in French)

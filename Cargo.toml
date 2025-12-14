@@ -10,6 +10,7 @@ members = [
     "libraries/course-spot-check",
     "libraries/sentence-sampler",
     "clean-nlp-data",
+    "libraries/enumap",
 ]
 resolver = "3"
 
@@ -25,7 +26,7 @@ schemars = "1"
 futures = "0.3.31"
 env_logger = "0.11.8"
 tsify = { version = "0.5.5", features = ["js"], default-features = false }
-tysm = { version = "0.13.1" }
+tysm = { version = "0.14.0" }
 reqwest = { version = "0.12", features = ["json"] }
 tokio = { version = "1.45.1", features = ["full"] }
 opfs = { version = "0.1.4" }
@@ -43,7 +44,9 @@ slotmap = { version = "1.0", features = ["serde"] }
 wasm-logger = "0.2.0"
 unicode-normalization = "0.1.24"
 weblocks = { version = "0.1.0" }
-lexide = { git = "https://github.com/anchpop/lexide.git", rev = "7f86d2277afa228030c08f5c7823be5e6d098f98", features = ["remote"] }
+lexide = { git = "https://github.com/anchpop/lexide.git", rev = "a8334c53e161448cb0796d8a8d4806500c9713ec", features = [
+    "remote",
+] }
 indicatif = "0.17"
 
 [workspace.dependencies.rkyv]

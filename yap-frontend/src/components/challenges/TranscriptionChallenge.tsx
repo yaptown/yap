@@ -6,6 +6,7 @@ import {
   type PartSubmitted,
   type WordGrade,
   type Language,
+  type Course,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { Button } from "@/components/ui/button";
 import { InputFieldSizingContent, InputDottedUnderline } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { AudioButton } from "../AudioButton";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { motion } from "framer-motion";
 import { CantListenButton } from "../CantListenButton";
-import Markdown from "react-markdown";
+import { FeedbackDisplay } from "@/components/FeedbackDisplay";
 import { AudioVisualizer } from "../AudioVisualizer";
 import { CardsRemaining } from "../CardsRemaining";
 import { AnimatedCard } from "../AnimatedCard";
@@ -40,7 +41,6 @@ import {
 import { MoreVertical } from "lucide-react";
 import { ReportIssueModal } from "./ReportIssueModal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { normalizeSpecialCharacters } from "@/lib/utils";
 
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence<string>;
@@ -50,6 +50,7 @@ interface TranscriptionChallengeProps {
   accessToken: string | undefined;
   onCantListen?: () => void;
   targetLanguage: Language;
+  nativeLanguage: Language;
   autoplayed: boolean;
   setAutoplayed: () => void;
 }
@@ -92,6 +93,7 @@ type GradingState =
   | {
       graded: {
         results: PartGraded[];
+        encouragement: string | undefined;
         explanation: string | undefined;
         compare: string[];
         autograding_error?: string;
@@ -106,6 +108,7 @@ export function TranscriptionChallenge({
   accessToken,
   onCantListen,
   targetLanguage,
+  nativeLanguage,
   autoplayed,
   setAutoplayed,
 }: TranscriptionChallengeProps) {
@@ -193,9 +196,7 @@ export function TranscriptionChallenge({
 
     const request: PartSubmitted[] = challenge.parts.map((part, index) => {
       if ("AskedToTranscribe" in part) {
-        const submission = normalizeSpecialCharacters(
-          userInputs.get(index) ?? ""
-        ).trim();
+        const submission = (userInputs.get(index) ?? "").trim();
 
         return {
           AskedToTranscribe: {
@@ -210,10 +211,15 @@ export function TranscriptionChallenge({
       }
     });
 
+    const course: Course = {
+      targetLanguage: targetLanguage,
+      nativeLanguage: nativeLanguage,
+    };
+
     const graded = await autograde_transcription(
       request,
       accessToken,
-      targetLanguage
+      course
     );
     const isAllCorrect = graded.results.every(
       (result) =>
@@ -230,7 +236,7 @@ export function TranscriptionChallenge({
     if (isAllCorrect) {
       playSoundEffect("perfect");
     }
-  }, [gradingState, challenge.parts, userInputs, accessToken, targetLanguage]);
+  }, [gradingState, challenge.parts, userInputs, accessToken, targetLanguage, nativeLanguage]);
 
   // Global keyboard handler for Enter key
   useEffect(() => {
@@ -472,21 +478,17 @@ export function TranscriptionChallenge({
                       }
                     />
 
-                    {gradingState.graded.explanation && (
-                      <div className="rounded-lg p-4 border bg-blue-500/10 border-blue-500/20">
-                        <p className="text-sm font-medium mb-1 text-blue-600 dark:text-blue-400">
-                          Feedback:
-                        </p>
-                        <Markdown>{gradingState.graded.explanation}</Markdown>
-                      </div>
-                    )}
+                    <FeedbackDisplay
+                      encouragement={gradingState.graded.encouragement}
+                      explanation={gradingState.graded.explanation}
+                    />
 
                     {Array.isArray(gradingState.graded.compare) &&
                       gradingState.graded.compare.length > 0 && (
                         <div className="rounded-lg p-4 border">
                           <div className="flex flex-row items-center gap-3">
                             <p className="text-sm font-medium">Listen:</p>
-                            <div className="flex flex-row justify-around items-center gap-3">
+                            <div className="flex flex-row flex-wrap justify-around items-center gap-3">
                               {gradingState.graded.compare.map((item, idx) => (
                                 <div
                                   key={idx}

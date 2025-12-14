@@ -90,9 +90,16 @@ pub fn get_target_sentences(
     });
 
     // Combine all sentences
-    // Manual sentences are NOT filtered by banned_sentences
+    // Apply cleanup BEFORE checking banned sentences to ensure proper matching
     let all_sentences: Vec<(String, Option<String>, SentenceSource)> = anki_sentences
         .chain(tatoeba_sentences)
+        .map(|(sentence, native, source)| {
+            (
+                language_utils::text_cleanup::cleanup_sentence(sentence, course.target_language),
+                native,
+                source,
+            )
+        })
         .filter(|(sentence, _, source)| {
             // Never filter manual sentences
             source.is_manual() || !banned_sentences.contains(&sentence.to_lowercase())
@@ -124,15 +131,23 @@ pub fn get_target_sentences(
         }
     }
 
-    // Language-specific cleanup phase
+    // Manual sentences also need cleanup (they weren't cleaned up earlier)
     let result = result
         .into_iter()
         .map(|(sentence, native, source)| {
-            (
-                language_utils::text_cleanup::cleanup_sentence(sentence, course.target_language),
-                native,
-                source,
-            )
+            if source.is_manual() {
+                (
+                    language_utils::text_cleanup::cleanup_sentence(
+                        sentence,
+                        course.target_language,
+                    ),
+                    native,
+                    source,
+                )
+            } else {
+                // Already cleaned up
+                (sentence, native, source)
+            }
         })
         .collect();
 

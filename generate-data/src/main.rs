@@ -2,7 +2,7 @@ use anyhow::Context;
 use futures::StreamExt;
 use indexmap::IndexSet;
 use itertools::Itertools;
-use language_utils::{COURSES, SentenceInfo};
+use language_utils::{COURSES, HomophonePractice};
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
@@ -12,13 +12,20 @@ use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 mod google_translate;
 use google_translate::GoogleTranslator;
 
+use generate_data::morphology_analysis;
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     for course in COURSES {
-        println!("Processing course: {}", course.target_language);
-        println!("======================");
+        println!();
+        println!();
+        println!(
+            "Processing course: {} -> {}",
+            course.native_language, course.target_language
+        );
+        println!("================================================");
 
         let target_language_dir =
             PathBuf::from(format!("./out/{}", course.target_language.iso_639_3()));
@@ -56,32 +63,20 @@ async fn main() -> anyhow::Result<()> {
                 })
                 .collect::<std::collections::HashSet<_>>()
         } else {
-            println!("No banned words file found, proceeding without filtering");
             std::collections::HashSet::new()
         };
-
-        if !banned_words.is_empty() {
-            println!("Loaded {} banned words", banned_words.len());
-        }
 
         // write sentences
         let target_language_sentences_file =
             target_language_dir.join("target_language_sentences.jsonl");
         let translations_file =
             native_specific_dir.join("target_language_to_native_translations.jsonl");
-        if target_language_sentences_file.exists() && translations_file.exists() {
-            println!("Skipping sentence writing because files already exist");
-        } else {
+        if !target_language_sentences_file.exists() || !translations_file.exists() {
             let mut total_sentences = 0;
 
             // Get target sentences with their existing translations (from Anki, Tatoeba, and manual sources)
             let sentences_with_translations_and_sources =
                 generate_data::target_sentences::get_target_sentences(*course)?;
-
-            println!(
-                "Loaded {} sentences from all sources (Anki, Tatoeba, manual)",
-                sentences_with_translations_and_sources.len()
-            );
 
             // Create the translator once and share it across all async tasks
             let translator = GoogleTranslator::new(
@@ -168,25 +163,18 @@ async fn main() -> anyhow::Result<()> {
             if total_sentences < 10 {
                 panic!("Too few sentences written: {total_sentences}");
             }
-
-            println!(
-                "\nTotal sentences written to {} and {}: {}",
-                target_language_sentences_file.display(),
-                translations_file.display(),
-                total_sentences
-            );
         }
 
         // Ensure multiword terms file exists
-        let multiword_terms_file =
-            generate_data::wiktionary::ensure_multiword_terms_file(course, &target_language_dir)
-                .await?;
+        let multiword_terms_file = generate_data::wiktionary_terms::ensure_multiword_terms_file(
+            course,
+            &target_language_dir,
+        )
+        .await?;
 
         // Process multiword terms with Rust NLP (lexide)
         let multiword_terms_tokenization_file =
             target_language_dir.join("target_language_multiword_terms_tokenization.jsonl");
-
-        println!("\nProcessing multiword terms with Rust NLP (lexide)...");
 
         // Read multiword terms from file
         let multiword_terms = {
@@ -207,20 +195,9 @@ async fn main() -> anyhow::Result<()> {
         )
         .await?;
 
-        println!(
-            "Successfully processed {} multiword terms.",
-            multiword_terms_tokenizations.len()
-        );
-        println!(
-            "Tokenized multiword terms written to: {}",
-            multiword_terms_tokenization_file.display()
-        );
-
         // Process sentences with lexide
         let target_language_tokenization_file =
             target_language_dir.join("target_language_sentences_tokenization.jsonl");
-
-        println!("\nProcessing sentences with Rust NLP (lexide)...");
 
         // Read sentences from file
         let sentences = {
@@ -241,70 +218,18 @@ async fn main() -> anyhow::Result<()> {
         )
         .await?;
 
-        println!(
-            "Successfully processed {} sentences.",
-            sentences_tokenizations.len()
-        );
-        println!(
-            "Tokenized sentences written to: {}",
-            target_language_tokenization_file.display()
-        );
-
         // now add multiword terms to the tokenized sentences
         let target_language_nlp_file =
             target_language_dir.join("target_language_sentences_nlp.jsonl");
-        if target_language_nlp_file.exists() {
-            println!("Skipping multiword term addition because file already exists");
-        } else {
-            println!("\nGenerating NLP analyzed sentences with multiword terms...");
-            generate_data::nlp::generate_nlp_sentences(
-                sentences_tokenizations,
-                multiword_terms_tokenizations,
-                &target_language_nlp_file,
-                course.target_language,
-            )
-            .await?;
-            println!(
-                "NLP analyzed sentences written to: {}",
-                target_language_nlp_file.display()
-            );
-        }
 
-        let nlp_sentences = {
-            // read the nlp file
-            let nlp_file = File::open(&target_language_nlp_file)?;
-            let reader = BufReader::new(nlp_file);
-            let mut nlp_sentences: Vec<(String, SentenceInfo)> = reader
-                .lines()
-                .map(|line| {
-                    let line = line.unwrap();
-                    serde_json::from_str::<(String, SentenceInfo)>(&line).unwrap_or_else(|e| {
-                        panic!("Could not deserialize to (String, SentenceInfo): `{line}` {e:?}")
-                    })
-                })
-                .collect::<Vec<_>>();
-
-            // If the course teaches a new writing system, filter out proper nouns
-            if course.teaches_new_writing_system() {
-                let before_count = nlp_sentences.len();
-                nlp_sentences.retain(|(_sentence, info)| {
-                    !info.words.iter().any(|literal| {
-                        literal.heteronym.as_ref().map(|h| h.pos)
-                            == Some(language_utils::PartOfSpeech::Propn)
-                    })
-                });
-                let after_count = nlp_sentences.len();
-                println!(
-                    "Filtered out {} sentences containing proper nouns",
-                    before_count - after_count
-                );
-            }
-
-            nlp_sentences
-        };
-
-        // nlp_sentences already contains (String, SentenceInfo) tuples from the file
-        // No additional processing needed here
+        // Generate NLP sentences
+        let mut nlp_sentences = generate_data::nlp::generate_nlp_sentences(
+            sentences_tokenizations,
+            &multiword_terms_tokenizations,
+            &target_language_nlp_file,
+            course.target_language,
+        )
+        .await?;
 
         let all_lexemes: Vec<language_utils::Lexeme<String>> = nlp_sentences
             .iter()
@@ -319,26 +244,15 @@ async fn main() -> anyhow::Result<()> {
         let combined_freq_dir = target_language_dir.join("frequency_lists/combined");
         std::fs::create_dir_all(&combined_freq_dir)?;
         let frequencies_file = combined_freq_dir.join("frequencies.jsonl");
-        if frequencies_file.exists() {
-            println!("Skipping frequencies creation because file already exists");
-        } else {
-            println!(
-                "\nGenerating word and phrase frequencies from combined sources (Anki + Tatoeba)..."
-            );
-
+        {
             let frequencies = generate_data::frequencies::compute_frequencies(
                 &nlp_sentences,
                 course.target_language,
                 &banned_words,
             );
-            println!("Computed {} frequencies", frequencies.len());
 
             generate_data::frequencies::write_frequencies_file(frequencies, &frequencies_file)?;
-
-            println!("Frequencies written to: {}", frequencies_file.display());
         }
-
-        println!("Loading frequencies...");
         let frequencies = {
             let file = File::open(&frequencies_file)?;
             let reader = BufReader::new(file);
@@ -354,9 +268,10 @@ async fn main() -> anyhow::Result<()> {
 
         // create and write dictionary
         let dict_file = native_specific_dir.join("dictionary.jsonl");
-        if dict_file.exists() {
-            println!("Skipping dictionary creation because file already exists");
-        } else {
+        let dictionary: BTreeMap<
+            language_utils::Heteronym<String>,
+            language_utils::DictionaryEntry,
+        > = {
             let custom_definitions = {
                 let file = File::open(source_data_path.join("custom_definitions.jsonl"))?;
                 let reader = BufReader::new(file);
@@ -375,8 +290,16 @@ async fn main() -> anyhow::Result<()> {
             };
 
             let dictionary = generate_data::dict::create_dictionary(*course, &frequencies).await?;
+            let morphology =
+                morphology_analysis::create_morphology(course.target_language, &frequencies)
+                    .await?;
             let dictionary = dictionary
                 .into_iter()
+                .filter_map(|(heteronym, def)| {
+                    morphology
+                        .get(&heteronym)
+                        .map(|morphology| (heteronym, (def.clone(), morphology.clone())))
+                })
                 .map(|(heteronym, (def, morphology))| {
                     if let Some(def) = custom_definitions.get(&heteronym) {
                         (heteronym, (def.clone(), morphology))
@@ -388,24 +311,39 @@ async fn main() -> anyhow::Result<()> {
 
             // Write the dictionary to a jsonl file
             let mut file = File::create(dict_file)?;
-            for entry in dictionary {
+            for entry in &dictionary {
                 let json = serde_json::to_string(&entry)?;
                 writeln!(file, "{json}")?;
             }
+            dictionary
+                .into_iter()
+                .map(|(heteronym, thoughts)| (heteronym, thoughts.into()))
+                .collect()
+        };
+
+        // Generate conjugations/declensions JSONL
+        {
+            let morphology_groups = morphology_analysis::analyze_morphology(&dictionary);
+
+            let conjugations_path = native_specific_dir.join("conjugations.jsonl");
+            morphology_analysis::write_conjugations_jsonl(&morphology_groups, &conjugations_path)?;
         }
 
         // create and write phrasebook
         let phrasebook_file = native_specific_dir.join("phrasebook.jsonl");
-        if phrasebook_file.exists() {
-            println!("Skipping phrasebook creation because file already exists");
-        } else {
+        let phrasebook: BTreeMap<String, language_utils::PhrasebookEntry> = {
             let phrasebook = generate_data::dict::create_phrasebook(*course, &frequencies).await?;
             let mut file = File::create(phrasebook_file)?;
-            for entry in phrasebook {
+            let phrasebook: BTreeMap<String, language_utils::PhrasebookEntry> = phrasebook
+                .into_iter()
+                .map(|(phrase, thoughts)| (phrase, thoughts.into()))
+                .collect();
+            for entry in phrasebook.iter() {
                 let json = serde_json::to_string(&entry)?;
                 writeln!(file, "{json}")?;
             }
-        }
+            phrasebook
+        };
 
         let wikipron_path = source_data_path.join("pronunciations.tsv").canonicalize()?;
         let extra_pronunciations_path = source_data_path
@@ -413,11 +351,7 @@ async fn main() -> anyhow::Result<()> {
             .canonicalize()?;
         let word_to_pronunciation_file = target_language_dir.join("word_to_pronunciation.jsonl");
         let pronunciation_to_word_file = target_language_dir.join("pronunciation_to_words.jsonl");
-        if word_to_pronunciation_file.exists() && pronunciation_to_word_file.exists() {
-            println!(
-                "Skipping word to pronunciation and pronunciation to word creation because files already exist"
-            );
-        } else {
+        if !word_to_pronunciation_file.exists() || !pronunciation_to_word_file.exists() {
             // Create a set of words that appear in our frequency list for quick lookup
             let frequent_words: std::collections::HashSet<String> = all_lexemes
                 .iter()
@@ -476,16 +410,82 @@ async fn main() -> anyhow::Result<()> {
                 .collect();
 
             let mut file = File::create(word_to_pronunciation_file)?;
-            for (word, pronunciation) in word_to_pronunciation {
+            for (word, pronunciation) in &word_to_pronunciation {
                 let json = serde_json::to_string(&(word, pronunciation))?;
                 writeln!(file, "{json}")?;
             }
             let mut file = File::create(pronunciation_to_word_file)?;
-            for (ipa, words) in pronunciation_to_words {
+            for (ipa, words) in &pronunciation_to_words {
                 let json = serde_json::to_string(&(ipa, words))?;
                 writeln!(file, "{json}")?;
             }
         }
+
+        // Generate disambiguation practice data
+        let homophones = generate_data::disambiguation_practice::generate_homophones(
+            *course,
+            &target_language_dir,
+            &frequencies,
+            1000,
+        )?;
+
+        // Generate homophone practice sentences
+        let homophone_practice: BTreeMap<
+            language_utils::HomophoneWordPair<String>,
+            language_utils::HomophonePractice<String>,
+        > = {
+            let practice = generate_data::disambiguation_practice::generate_homophone_practice(
+                *course,
+                &homophones,
+                &target_language_dir,
+            )
+            .await?;
+
+            let sentences = practice
+                .values()
+                .flat_map(|p| {
+                    p.sentence_pairs
+                        .iter()
+                        .flat_map(|s| [s.sentence1.clone(), s.sentence2.clone()])
+                })
+                .collect();
+
+            let tokenizations = generate_data::nlp::process_sentences(
+                sentences,
+                &target_language_dir.join("target_language_sentences_tokenization.jsonl"),
+                course.target_language,
+            )
+            .await?;
+
+            let nlp = generate_data::nlp::generate_nlp_sentences(
+                tokenizations,
+                &multiword_terms_tokenizations,
+                &target_language_nlp_file,
+                course.target_language,
+            )
+            .await?;
+            nlp_sentences.extend(nlp.clone());
+
+            practice
+                .into_iter()
+                .map(|(pair, practice)| {
+                    (
+                        pair,
+                        HomophonePractice {
+                            sentence_pairs: practice
+                                .sentence_pairs
+                                .into_iter()
+                                .filter(|p| {
+                                    nlp_sentences.contains_key(&p.sentence1)
+                                        && nlp_sentences.contains_key(&p.sentence2)
+                                })
+                                .collect(),
+                        },
+                    )
+                })
+                .filter(|(_, practice)| !practice.sentence_pairs.is_empty())
+                .collect()
+        };
 
         // Generate pronunciation sounds and guides
         let sounds_file = target_language_dir.join("pronunciation_sounds.jsonl");
@@ -493,7 +493,6 @@ async fn main() -> anyhow::Result<()> {
 
         // Generate or load language sounds
         let sounds = if sounds_file.exists() {
-            println!("Loading existing pronunciation sounds...");
             let file = File::open(&sounds_file)?;
             let reader = BufReader::new(file);
             let line = reader
@@ -502,10 +501,6 @@ async fn main() -> anyhow::Result<()> {
                 .ok_or_else(|| anyhow::anyhow!("Empty sounds file"))??;
             serde_json::from_str(&line)?
         } else {
-            println!(
-                "Generating pronunciation sounds for {:?}...",
-                course.target_language
-            );
             let sounds = generate_data::pronunciation_patterns::generate_language_sounds(
                 course.target_language,
             )
@@ -515,14 +510,12 @@ async fn main() -> anyhow::Result<()> {
             let mut file = File::create(&sounds_file)?;
             let json = serde_json::to_string(&sounds)?;
             writeln!(file, "{json}")?;
-            println!("Sounds saved to: {}", sounds_file.display());
 
             sounds
         };
 
         // Generate or load pronunciation guides
         let guides = if guides_file.exists() {
-            println!("Loading existing pronunciation guides...");
             let file = File::open(&guides_file)?;
             let reader = BufReader::new(file);
             reader
@@ -533,7 +526,6 @@ async fn main() -> anyhow::Result<()> {
                 })
                 .collect::<Result<Vec<_>, anyhow::Error>>()?
         } else {
-            println!("Generating pronunciation guides...");
             let guides_with_thoughts =
                 generate_data::pronunciation_patterns::generate_pronunciation_guides(
                     *course, &sounds,
@@ -546,7 +538,6 @@ async fn main() -> anyhow::Result<()> {
                 let json = serde_json::to_string(&(sound, guide_thoughts))?;
                 writeln!(file, "{json}")?;
             }
-            println!("Guides saved to: {}", guides_file.display());
 
             guides_with_thoughts
         };
@@ -555,10 +546,8 @@ async fn main() -> anyhow::Result<()> {
 
         // Consolidate all JSON files into a single rkyv file
         let rkyv_file = native_specific_dir.join("language_data.rkyv");
-        println!("\nConsolidating all data into rkyv format...");
 
         // Load all the JSON files
-        println!("Loading target_language sentences...");
         let target_language_sentences = {
             let file = File::open(target_language_dir.join("target_language_sentences.jsonl"))?;
             let reader = BufReader::new(file);
@@ -568,7 +557,6 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Result<Vec<String>, _>>()?
         };
 
-        println!("Loading translations...");
         let translations = {
             let file = File::open(
                 native_specific_dir.join("target_language_to_native_translations.jsonl"),
@@ -580,59 +568,13 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Result<Vec<(String, Vec<String>)>, _>>()?
         };
 
-        println!("Loading dictionary...");
-        let dictionary = {
-            let file = File::open(native_specific_dir.join("dictionary.jsonl"))?;
-            let reader = BufReader::new(file);
-            reader
-                .lines()
-                .map(|line| serde_json::from_str(&line.unwrap()))
-                .map(
-                    |result: Result<
-                        (
-                            _,
-                            (
-                                language_utils::DictionaryEntryThoughts,
-                                language_utils::features::Morphology,
-                            ),
-                        ),
-                        _,
-                    >| {
-                        result.map(|(heteronym, thoughts)| (heteronym, thoughts.into()))
-                    },
-                )
-                .collect::<Result<
-                    Vec<(
-                        language_utils::Heteronym<String>,
-                        language_utils::DictionaryEntry,
-                    )>,
-                    _,
-                >>()?
-        };
-
-        println!("Loading phrasebook...");
-        let phrasebook = {
-            let file = File::open(native_specific_dir.join("phrasebook.jsonl"))?;
-            let reader = BufReader::new(file);
-            reader
-                .lines()
-                .map(|line| serde_json::from_str(&line.unwrap()))
-                .map(
-                    |result: Result<(_, language_utils::PhrasebookEntryThoughts), _>| {
-                        result.map(|(heteronym, thoughts)| (heteronym, thoughts.into()))
-                    },
-                )
-                .collect::<Result<Vec<(String, language_utils::PhrasebookEntry)>, _>>()?
-        };
         // Calculate pattern frequencies using the word frequency data
-        println!("Calculating pattern frequencies from word frequency data...");
         let pattern_freq_map = generate_data::pronunciation_patterns::calculate_pattern_frequencies(
             &sounds,
             &frequencies,
         );
 
         // Load and process phonetics data
-        println!("Loading phonetics data...");
         let word_to_pronunciation = {
             let file = File::open(target_language_dir.join("word_to_pronunciation.jsonl"))?;
             let reader = BufReader::new(file);
@@ -646,11 +588,6 @@ async fn main() -> anyhow::Result<()> {
         let mut pattern_frequencies: Vec<((String, language_utils::PatternPosition), u32)> =
             pattern_freq_map.into_iter().collect();
         pattern_frequencies.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
-
-        println!("Pattern frequencies (top 10):");
-        for ((pattern, position), freq) in pattern_frequencies.iter().take(10) {
-            println!("  {pattern} ({position:?}): {freq} occurrences");
-        }
 
         // Create PronunciationData with frequencies
         let pronunciation_data = language_utils::PronunciationData {
@@ -670,12 +607,12 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Result<Vec<(String, Vec<String>)>, _>>()?
         };
 
-        // ensure all sentences in the NLP analysis are in the target_language_sentences list
         let nlp_sentences = {
             let target_language_sentences_set = target_language_sentences
                 .clone()
                 .into_iter()
                 .collect::<std::collections::HashSet<_>>();
+
             nlp_sentences
                 .into_iter()
                 .filter(|(sentence, _)| target_language_sentences_set.contains(sentence))
@@ -683,14 +620,8 @@ async fn main() -> anyhow::Result<()> {
         };
 
         // Filter frequencies to only include lexemes that have definitions in dictionary/phrasebook
-        let dictionary_set: std::collections::HashSet<_> = dictionary
-            .iter()
-            .map(|(heteronym, _)| heteronym.clone())
-            .collect();
-        let phrasebook_set: std::collections::HashSet<_> = phrasebook
-            .iter()
-            .map(|(phrase, _)| phrase.clone())
-            .collect();
+        let dictionary_set: std::collections::HashSet<_> = dictionary.keys().cloned().collect();
+        let phrasebook_set: std::collections::HashSet<_> = phrasebook.keys().cloned().collect();
 
         let frequencies = frequencies
             .into_iter()
@@ -700,16 +631,8 @@ async fn main() -> anyhow::Result<()> {
             })
             .collect::<Vec<_>>();
 
-        println!(
-            "After filtering to entries with definitions: {} frequency entries",
-            frequencies.len()
-        );
-
-        // Trimming pass: Remove infrequent words (appearing 3 times or fewer)
-        println!("\nPerforming trimming pass to remove useless words and sentences...");
-
         // Filter sentences that contain words not in the frequency list
-        let (nlp_sentences, removed_sentences): (Vec<_>, Vec<_>) = {
+        let (nlp_sentences, _removed_sentences): (Vec<_>, Vec<_>) = {
             let lexeme_set = frequencies
                 .iter()
                 .map(|frequency| frequency.lexeme.clone())
@@ -721,11 +644,6 @@ async fn main() -> anyhow::Result<()> {
                     .all(|lexeme| lexeme_set.contains(&lexeme))
             })
         };
-
-        println!(
-            "Removed {} sentences containing infrequent words",
-            removed_sentences.len()
-        );
 
         // Update target_language_sentences and translations to match filtered nlp_sentences
         let kept_sentences: std::collections::HashSet<String> = nlp_sentences
@@ -742,12 +660,6 @@ async fn main() -> anyhow::Result<()> {
             .into_iter()
             .filter(|(sentence, _)| kept_sentences.contains(sentence))
             .collect::<Vec<_>>();
-
-        println!(
-            "After trimming: {} sentences, {} frequency entries",
-            target_language_sentences.len(),
-            frequencies.len()
-        );
 
         // Validate that all multiword terms and heteronyms in nlp_sentences exist in the phrasebook/dictionary
         {
@@ -823,7 +735,6 @@ async fn main() -> anyhow::Result<()> {
         };
 
         // Sort sentences by the frequency of their least common word
-        println!("\nSorting sentences by least common word frequency...");
 
         // Create a frequency map for quick lookup
         let frequency_map: BTreeMap<_, _> = frequencies
@@ -892,23 +803,17 @@ async fn main() -> anyhow::Result<()> {
             word_to_pronunciation,
             pronunciation_to_words,
             pronunciation_data,
+            homophone_practice,
         };
 
-        println!("Creating language pack...");
         let language_pack = language_utils::language_pack::LanguagePack::new(consolidated_data);
 
         // Serialize with rkyv
-        println!("Serializing language pack...");
         let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&language_pack)?;
-        println!("Writing language pack to file...");
         std::fs::write(&rkyv_file, bytes)?;
-
-        println!("Consolidated data written to: {}", rkyv_file.display());
-        println!("File size: {} bytes", std::fs::metadata(&rkyv_file)?.len());
 
         // Generate hash of the rkyv file
         let hash_file = native_specific_dir.join("language_data.hash");
-        println!("Generating hash of rkyv file...");
 
         // Read the rkyv file and compute hash
         let rkyv_bytes = std::fs::read(&rkyv_file)?;
@@ -916,12 +821,6 @@ async fn main() -> anyhow::Result<()> {
 
         // Write hash to file
         std::fs::write(&hash_file, hash.to_string())?;
-
-        println!("Hash written to: {}", hash_file.display());
-        println!("Hash: {hash}");
-
-        println!();
-        println!();
     }
 
     Ok(())

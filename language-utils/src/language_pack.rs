@@ -1,7 +1,7 @@
 use crate::indexmap::IndexMap;
 use crate::{
-    ConsolidatedLanguageData, DictionaryEntry, Frequency, Heteronym, Lexeme, Literal,
-    PatternPosition, PhrasebookEntry, PronunciationData,
+    ConsolidatedLanguageData, DictionaryEntry, Frequency, Heteronym, HomophonePractice,
+    HomophoneWordPair, Lexeme, Literal, PatternPosition, PhrasebookEntry, PronunciationData,
 };
 use lasso::Spur;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -23,6 +23,7 @@ pub struct LanguagePack {
     pub pronunciation_to_words: HashMap<Spur, Vec<Spur>>,
     pub pronunciation_data: PronunciationData,
     pub pattern_frequency_map: HashMap<(Spur, PatternPosition), u32>,
+    pub homophone_practice: HashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
 }
 
 impl LanguagePack {
@@ -253,6 +254,17 @@ impl LanguagePack {
                 .collect()
         };
 
+        let homophone_practice = language_data
+            .homophone_practice
+            .iter()
+            .map(|(word_pair, practice)| {
+                (
+                    word_pair.get_interned(&rodeo).unwrap(),
+                    practice.get_interned(&rodeo).unwrap(),
+                )
+            })
+            .collect();
+
         Self {
             rodeo,
             translations,
@@ -269,6 +281,7 @@ impl LanguagePack {
             pronunciation_to_words,
             pronunciation_data,
             pattern_frequency_map,
+            homophone_practice,
         }
     }
 }
