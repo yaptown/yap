@@ -31,8 +31,13 @@ use tysm::chat_completions::ChatClient;
 static CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     let my_api =
         "https://g7edusstdonmn3vxdh3qdypkrq0wzttx.lambda-url.us-east-1.on.aws/v1/".to_string();
-    ChatClient::from_env("o3").unwrap().with_url(my_api)
+    ChatClient::from_env("gpt-5.1")
+        .unwrap()
+        .with_url(my_api)
+        .with_reasoning_effort("medium")
 });
+
+const PERSONALITY: &str = r#"You are a helpful assistant that helps users learn languages. You are friendly and encouraging, and you always try to help the user learn from their mistakes. When correcting the user's mistakes, first congratulate them on the parts they did well on, and then explain the mistakes they made and how they can improve. But the main thing to do is to explain the mistakes in a helpful (but concise) way, and encourage the user. You speak conversationally, as if you were speaking to the user directly. You don't use bullet points or headings, but you do break concepts into individual lines as necessary."#;
 
 fn language_data_for_course(course: &Course) -> Option<&'static [u8]> {
     LANGUAGE_DATA.get(course).copied()
@@ -284,10 +289,13 @@ async fn autograde_translation(
         user_sentence,
         primary_expression,
         lexemes,
-        language,
+        course,
     } = request;
 
-    let (language_name, example) = match language {
+    let target_language = course.target_language;
+    let native_language = course.native_language;
+
+    let (target_language_name, example) = match target_language {
         Language::French => (
             "French",
             r#"Example
@@ -375,8 +383,10 @@ Output: {{
         | Language::Italian => return Err(StatusCode::NOT_IMPLEMENTED),
     };
 
+    let native_language_name = native_language.to_string();
+
     let system_prompt = format!(
-        r#"The user is learning {language_name}. They were challenged to translate a {language_name} sentence to English. Your goal is to identify which {language_name} words or phrases they remembered, and which ones they forgot. If they translated the sentence correctly, that means they remembered everything! But if they translated the sentence incorrectly, we need to figure out what words and phrases they seemed to have remembered correctly, and which ones they seem to have remembered incorrectly. This will be used as part of a spaced-repetition system, which will help users study the words they need to. The system can only incorporate this for the words that it knows are in the sentence, which will be provided to you. Words are provided with additional context about their part of speech and lemmatised form, to allow you to distinguish between different usages of the same word. The 'primary word' is also provided, which is the word that the sentence most needed to test. You will also have the opportunity to provide an explanation, which you should make use of to provide the user with additional info if their translation is incorrect.
+        r#"{PERSONALITY}The user is learning {target_language_name}. They were challenged to translate a {target_language_name} sentence to {native_language_name}. Your goal is to identify which {target_language_name} words or phrases they remembered, and which ones they forgot. If they translated the sentence correctly, that means they remembered everything! But if they translated the sentence incorrectly, we need to figure out what words and phrases they seemed to have remembered correctly, and which ones they seem to have remembered incorrectly. This will be used as part of a spaced-repetition system, which will help users study the words they need to. The system can only incorporate this for the words that it knows are in the sentence, which will be provided to you. Words are provided with additional context about their part of speech and lemmatised form, to allow you to distinguish between different usages of the same word. The 'primary word' is also provided, which is the word that the sentence most needed to test. You should always provide encouragement highlighting what the user got right and acknowledging their progress. If there are any errors, also provide a brief explanation focusing on where they made mistakes and how they can improve.
 
 Many sentences will be "partial sentences," such as "Ne pas." meaning "Do not." These partial sentences are still useful as test sentences for the user, so you should still grade them.
 
@@ -387,7 +397,7 @@ Respond with JSON.
 {example}
 If there are lexemes (particularly multiword terms) that are not in the challenge sentence, do not include them in the expressions_remembered or expressions_forgot arrays. (Since the user did not have a chance to try to translate them.) However, if the user forgot a word that is in the challenge sentence, include it in the expressions_forgot array. The conjugations used in the multiword terms might be different than how they appear in the challenge sentence.
 
-The explanation should be written as if speaking directly to the user. Markdown formatting is allowed. Try to keep the explanations short and concise. The user is still learning {language_name}, so respond in English!
+The encouragement should always be provided, be a short positive message (1-2 sentences), focus on what they got right, and be written as if speaking directly to the user. The explanation should only be provided if there are errors, focus on their mistakes and how to improve, and be written as if speaking directly to the user. Markdown formatting is allowed for both (just no bullet points or numbered lists). Try to keep both short and concise. The user is still learning {target_language_name}, so respond in {native_language_name}!
 "#,
     );
 
@@ -395,7 +405,7 @@ The explanation should be written as if speaking directly to the user. Markdown 
         system_prompt,
         &{
             format!(
-            "{language_name} challenge sentence: {challenge_sentence}\nUser response: {user_sentence}\nPrimary expression: {primary_expression}\nExpressions: {expressions}",
+            "{target_language_name} challenge sentence: {challenge_sentence}\nUser response: {user_sentence}\nPrimary expression: {primary_expression}\nExpressions: {expressions}",
             challenge_sentence = challenge_sentence,
             user_sentence = user_sentence,
             primary_expression = serde_json::to_value(&primary_expression).unwrap(),
@@ -418,33 +428,39 @@ async fn autograde_transcription(
     // actually, disable authentication for now until people start abusing it:
     let _claims = verify_jwt(auth.token()).await;
 
-    let language_name = format!("{}", request.language);
+    let target_language = request.course.target_language;
+    let native_language = request.course.native_language;
+    let target_language_name = target_language.to_string();
+    let native_language_name = native_language.to_string();
 
     let system_prompt = format!(
-        r#"The user is learning {language_name} through transcription exercises. They listened to {language_name} audio and were asked to transcribe certain parts of the sentence while other parts were provided to them. Your job is to grade their transcription by comparing what they heard with what they wrote.
+        r#"{PERSONALITY}The user is learning {target_language_name} through transcription exercises. They listened to {target_language_name} audio and were asked to transcribe certain parts of the sentence while other parts were provided to them. Your job is to grade their transcription by comparing what they heard with what they wrote.
 
 For each word they were asked to transcribe, assign one of these grades:
-- Perfect: They transcribed the word in a way that makes sense semantically and is consistent with what they heard. Essentially, whether the transcription was correct. (This is relevant because some {language_name} sentences are ambiguous when spoken - if the user wrote a homophone that is contextually valid, they should not be penalized.)
+- Perfect: They transcribed the word in a way that makes sense semantically and is consistent with what they heard. Essentially, whether the transcription was correct. (This is relevant because some {target_language_name} sentences are ambiguous when spoken - if the user wrote a homophone that is contextually valid, they should not be penalized.)
 - CorrectWithTypo: They wrote a word that is correct, but with a typo or accent error. If they typoed it into a different word entirely, you should not mark it as CorrectWithTypo.
 - PhoneticallyIdenticalButContextuallyIncorrect: They wrote a word that sounds the same but is contextually wrong. Especially in the case where the user wrote the wrong conjugation of a word, you should mark it as PhoneticallyIdenticalButContextuallyIncorrect and explain to the user what other words in the sentence would have tipped them off as to what conjugation to use. However, remember that the user only hears the audio, and so if there are multiple possible words that sound the same and are all contextually valid interpretations, you should mark it as Perfect. For example, if the user wrote "Faut pas" when the expected phrase was "faux pas", you should still mark it as Perfect because there was no grammatical or phonetic way for them to distinguish between the two.
 - PhoneticallySimilarButContextuallyIncorrect: They wrote a word that sounds similar but is contextually wrong
 - Incorrect: They wrote something incorrect that doesn't sound like the target word
 - Missed: They didn't write this word at all
 
-Consider common {language_name} homophones and near-homophones when grading. Be understanding of minor spelling mistakes if the phonetics are correct.
+Consider common {target_language_name} homophones and near-homophones when grading. Be understanding of minor spelling mistakes if the phonetics are correct.
 
-You should also provide a brief explanation if there are any errors, helping the user understand what they missed or confused.
+You should always provide encouragement highlighting what the user did right and acknowledging their progress. If there are any errors, also provide a brief explanation focusing on where they made mistakes and how they can improve.
 
 Respond with JSON in this format:
 {{
-  "explanation": "Brief explanation of any errors, and how the user can improve.",
+  "encouragement": "Always provide this: warm, encouraging message highlighting what the user got right and their progress.",
+  "explanation": "Only if there are errors: brief explanation of where they made mistakes and how they can improve.",
   "grades": [{{"Perfect": {{"wrote": "the word the user wrote"}}}}, {{"PhoneticallyIdenticalButContextuallyIncorrect": {{"wrote": "the word the user wrote"}}}}, {{"Missed": {{}}}}, ...]
 }}
 
 The grades array should have one grade for each word the user was asked to transcribe, in the order they appear.
 
-The explanation should be in English and help the user learn from their mistakes. Markdown formatting is allowed, and encouraged for emphasis. If the user appeared to confuse some words, you can include those words in the compare array, and a TTS example for each word will be generated for the user to hear. {}"#,
-        match request.language {
+The encouragement should always be provided, be in {native_language_name}, be a short positive message (1-2 sentences), and focus on what they got right. The explanation should only be provided if there are errors, be in {native_language_name}, focus on their mistakes and how to improve, and help the user learn from their errors. Markdown formatting is allowed, and encouraged for emphasis (just no bullet points or numbered lists). If the user appeared to confuse some words, you can include those words in the compare array, and a TTS example for each word will be generated for the user to hear. {}
+
+P.S. Don't bother giving the user IPA-style phonetic transcriptions as they may not understand them. But you can still try to explain the phonetic differences in terms that the user might understand."#,
+        match target_language {
             Language::French =>
                 r#"For example, if the user confused "de" and "des", you could generate ["de", "des"] in the compare array."#,
             Language::Spanish =>
@@ -590,6 +606,7 @@ Words that need grading:
     // Get response from LLM
     #[derive(Deserialize, schemars::JsonSchema)]
     struct LlmResponse {
+        encouragement: Option<String>,
         explanation: Option<String>,
         grades: Vec<WordGradeResponse>,
         compare: Vec<String>,
@@ -638,6 +655,7 @@ Words that need grading:
     }
 
     let grade = transcription_challenge::Grade {
+        encouragement: llm_response.encouragement,
         explanation: llm_response.explanation,
         compare: llm_response.compare,
         results,

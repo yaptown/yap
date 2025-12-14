@@ -1,6 +1,6 @@
 import { useState, useEffect, Profiler, useSyncExternalStore, useMemo, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Outlet, useNavigate, useOutletContext } from 'react-router-dom'
-import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeType, type Course, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
+import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeRequirements, type Course, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
 import { Button } from "@/components/ui/button.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -320,7 +320,7 @@ function ReviewPage() {
               </div>
             </TopPageLayout>
           ))
-          .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage }) => (
+          .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage, nativeLanguage }) => (
             <>
               <TopPageLayout
                 userInfo={userInfo}
@@ -335,6 +335,7 @@ function ReviewPage() {
                   accessToken={accessToken}
                   deck={deck}
                   targetLanguage={targetLanguage}
+                  nativeLanguage={nativeLanguage}
                 />
               </TopPageLayout>
               <Tools />
@@ -551,9 +552,10 @@ interface ReviewProps {
   accessToken: string | undefined
   deck: Deck
   targetLanguage: Language
+  nativeLanguage: Language
 }
 
-function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
+function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }: ReviewProps) {
   const weapon = useWeapon()
 
   const CANT_LISTEN_DURATION_MS = 15 * 60 * 1000;
@@ -601,8 +603,8 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
     }
   }, [nextDueCard?.due_timestamp_ms])
 
-  const [bannedChallengeTypes, setBannedChallengeTypes] = useState<ChallengeType[]>(() => {
-    const banned: ChallengeType[] = [];
+  const [bannedChallengeTypes, setBannedChallengeTypes] = useState<ChallengeRequirements[]>(() => {
+    const banned: ChallengeRequirements[] = [];
     
     const cantListenTimestamp = localStorage.getItem('yap-cant-listen-timestamp');
     if (cantListenTimestamp) {
@@ -902,6 +904,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
               key={totalReviewsCompleted}
               unique_target_language_lexeme_definitions={currentChallenge.unique_target_language_lexeme_definitions}
               targetLanguage={targetLanguage}
+              nativeLanguage={nativeLanguage}
               autoplayed={autoplayed}
               setAutoplayed={setAutoplayed}
             />
@@ -915,6 +918,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage }: ReviewProps) {
               key={totalReviewsCompleted}
               onCantListen={handleCantListen}
               targetLanguage={targetLanguage}
+              nativeLanguage={nativeLanguage}
               autoplayed={autoplayed}
               setAutoplayed={setAutoplayed}
             />

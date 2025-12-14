@@ -1,3 +1,5 @@
+#![deny(clippy::string_slice)]
+
 mod audio;
 mod challenges;
 mod deck_selection;
@@ -27,6 +29,7 @@ use language_utils::TtsRequest;
 use language_utils::autograde;
 use language_utils::features::{Morphology, WordPrefix};
 use language_utils::language_pack::LanguagePack;
+use language_utils::text_cleanup::{find_closest_match, normalize_for_grading};
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
@@ -2994,7 +2997,7 @@ impl ReviewInfo {
                                     .to_string(),
                                 language: deck.context.target_language,
                             },
-                            provider: TtsProvider::ElevenLabs,
+                            provider: TtsProvider::Google,
                         },
                     })
                 } else {
@@ -3311,20 +3314,47 @@ pub async fn invalidate_audio_cache(request: AudioRequest) -> Result<(), JsValue
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+pub fn find_closest_translation(
+    user_translation: String,
+    candidates: Vec<String>,
+    language: Language,
+) -> Option<String> {
+    find_closest_match(&user_translation, &candidates, language)
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub async fn autograde_translation(
     challenge_sentence: String,
     user_sentence: String,
+    native_translations: Vec<String>,
     primary_expression: Lexeme<String>,
     lexemes: Vec<Lexeme<String>>,
     access_token: Option<String>,
-    language: Language,
+    course: Course,
 ) -> Result<autograde::AutoGradeTranslationResponse, JsValue> {
+    // Check if the user's translation matches any of the acceptable translations
+    let normalized_user = normalize_for_grading(&user_sentence, course.native_language);
+    let is_perfect = native_translations.iter().any(|translation| {
+        normalize_for_grading(translation, course.native_language) == normalized_user
+    });
+
+    if is_perfect {
+        // Skip server call and return perfect response
+        return Ok(autograde::AutoGradeTranslationResponse {
+            primary_expression_status: autograde::Remembered::Remembered,
+            expressions_remembered: lexemes.clone(),
+            expressions_forgot: vec![],
+            encouragement: Some("Perfect! You translated it correctly!".to_string()),
+            explanation: None,
+        });
+    }
+
     let request = autograde::AutoGradeTranslationRequest {
         challenge_sentence,
         user_sentence,
         primary_expression: primary_expression.clone(),
         lexemes,
-        language,
+        course,
     };
 
     let response = hit_ai_server(
@@ -3370,10 +3400,10 @@ pub async fn autograde_translation(
 pub async fn autograde_transcription(
     submission: Vec<transcription_challenge::PartSubmitted>,
     access_token: Option<String>,
-    language: Language,
+    course: Course,
 ) -> transcription_challenge::Grade {
     let _autograde_error =
-        match autograde_transcription_llm(submission.clone(), access_token, language).await {
+        match autograde_transcription_llm(submission.clone(), access_token, course).await {
             Ok(grade) => return grade,
             Err(e) => Some(e),
         };
@@ -3402,8 +3432,14 @@ pub async fn autograde_transcription(
                         .iter()
                         .zip(submitted_words.iter())
                         .map(|(part, &submission)| {
-                            let part_text = part.text.to_lowercase().trim().to_string();
-                            let submission = submission.to_lowercase().trim().to_string();
+                            let part_text =
+                                normalize_for_grading(&part.text, course.target_language)
+                                    .trim()
+                                    .to_string();
+                            let submission =
+                                normalize_for_grading(submission, course.target_language)
+                                    .trim()
+                                    .to_string();
                             if part_text == submission {
                                 transcription_challenge::PartGradedPart {
                                     heard: part.clone(),
@@ -3440,6 +3476,7 @@ pub async fn autograde_transcription(
         .collect();
 
     transcription_challenge::Grade {
+        encouragement: None,
         explanation: None,
         results,
         compare: Vec::new(),
@@ -3451,18 +3488,18 @@ pub async fn autograde_transcription(
 pub async fn autograde_transcription_llm(
     submission: Vec<transcription_challenge::PartSubmitted>,
     access_token: Option<String>,
-    language: Language,
+    course: Course,
 ) -> Result<transcription_challenge::Grade, JsValue> {
     // Check if all answers are exactly correct (case-insensitive)
     let all_correct = submission.iter().all(|part| match part {
         transcription_challenge::PartSubmitted::AskedToTranscribe { parts, submission } => {
-            let submission = submission.trim().to_lowercase();
+            let submission = normalize_for_grading(submission.trim(), course.target_language);
             let parts = parts
                 .iter()
                 .map(|part| {
                     format!(
                         "{text}{whitespace}",
-                        text = part.text.to_lowercase(),
+                        text = normalize_for_grading(&part.text, course.target_language),
                         whitespace = part.whitespace
                     )
                 })
@@ -3498,6 +3535,7 @@ pub async fn autograde_transcription_llm(
             .collect();
 
         return Ok(transcription_challenge::Grade {
+            encouragement: Some("Perfect! You transcribed everything correctly!".to_string()),
             explanation: None,
             results,
             compare: Vec::new(),
@@ -3505,10 +3543,7 @@ pub async fn autograde_transcription_llm(
         });
     }
 
-    let request = autograde::AutoGradeTranscriptionRequest {
-        submission,
-        language,
-    };
+    let request = autograde::AutoGradeTranscriptionRequest { submission, course };
 
     let response = hit_ai_server(
         fetch_happen::Method::POST,

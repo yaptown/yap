@@ -64,18 +64,6 @@ export function getLanguageName(isoCodeOrLanguage: string): string {
   return language ? nativeLanguageNames[language] : isoCodeOrLanguage
 }
 
-const SINGLE_QUOTE_VARIANTS = /[‘’‚‛′‵❛❜＇ʻʼʽʹ`´]/g
-const DOUBLE_QUOTE_VARIANTS = /[“”„‟″‶❝❞＂]/g
-const HYPHEN_VARIANTS = /[‐‑‒–—―−﹘﹣－]/g
-
-export function normalizeSpecialCharacters(text: string): string {
-  return text
-    .normalize('NFKC')
-    .replace(SINGLE_QUOTE_VARIANTS, "'")
-    .replace(DOUBLE_QUOTE_VARIANTS, '"')
-    .replace(HYPHEN_VARIANTS, '-')
-}
-
 export const profilerOnRender = (id: string, phase: string, actualDuration: number, baseDuration: number, startTime: number, commitTime: number) => {
   void id
   void phase

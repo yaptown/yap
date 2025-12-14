@@ -37,11 +37,9 @@ pub async fn create_morphology(
 
     // Try Wiktionary first for supported languages
     let mut morphology =
-        match wiktionary_morphology::create_morphology_from_wiktionary(language, frequencies).await
-        {
-            Ok(wiktionary_morphology) => wiktionary_morphology,
-            Err(_e) => BTreeMap::new(),
-        };
+        wiktionary_morphology::create_morphology_from_wiktionary(language, frequencies)
+            .await
+            .unwrap_or_default();
 
     // Filter out heteronyms that already have morphology from Wiktionary
     let mut remaining_heteronyms = BTreeMap::new();

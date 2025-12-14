@@ -723,7 +723,7 @@ pub mod autograde {
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, tsify::Tsify)]
     #[tsify(into_wasm_abi, from_wasm_abi)]
     pub struct AutoGradeTranslationRequest {
-        pub language: Language,
+        pub course: Course,
         pub challenge_sentence: String,
         pub user_sentence: String,
         pub primary_expression: Lexeme<String>,
@@ -734,6 +734,7 @@ pub mod autograde {
     )]
     #[tsify(into_wasm_abi, from_wasm_abi)]
     pub struct AutoGradeTranslationResponse {
+        pub encouragement: Option<String>,
         pub explanation: Option<String>,
         pub primary_expression_status: Remembered,
         pub expressions_remembered: Vec<Lexeme<String>>,
@@ -743,7 +744,7 @@ pub mod autograde {
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, tsify::Tsify)]
     #[tsify(into_wasm_abi, from_wasm_abi)]
     pub struct AutoGradeTranscriptionRequest {
-        pub language: Language,
+        pub course: Course,
         pub submission: Vec<transcription_challenge::PartSubmitted>,
     }
 }
@@ -885,6 +886,7 @@ pub mod transcription_challenge {
     )]
     #[tsify(into_wasm_abi, from_wasm_abi)]
     pub struct Grade {
+        pub encouragement: Option<String>,
         pub explanation: Option<String>,
         pub results: Vec<PartGraded>,
         pub compare: Vec<String>,
@@ -1350,14 +1352,14 @@ impl Language {
     }
 
     pub fn tv_politeness(&self) -> bool {
-        match self {
+        matches!(
+            self,
             Language::French
-            | Language::Spanish
-            | Language::German
-            | Language::Portuguese
-            | Language::Italian => true,
-            _ => false,
-        }
+                | Language::Spanish
+                | Language::German
+                | Language::Portuguese
+                | Language::Italian
+        )
     }
 }
 

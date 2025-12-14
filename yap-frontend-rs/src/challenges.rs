@@ -159,7 +159,7 @@ impl Deck {
                                 .to_string(),
                             language: self.context.target_language,
                         },
-                        provider: TtsProvider::ElevenLabs,
+                        provider: TtsProvider::Google,
                     },
                 })
             } else {

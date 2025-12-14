@@ -30,9 +30,6 @@ pub fn compute_frequencies(
         pb.inc(1);
         // Count individual words
         for word in &sentence.words {
-            if word.text == "etes" {
-                println!("sentence with etes: {:?}", sentence);
-            }
             if let Some(heteronym) = &word.heteronym {
                 if !banned_words.contains(heteronym) {
                     *frequencies

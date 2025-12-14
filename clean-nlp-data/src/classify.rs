@@ -1284,6 +1284,27 @@ impl SentenceClassifier for FrenchClassifier {
                 ));
             }
 
+            if text_lower == "puis" {
+                reasons.push(format!(
+                    "'puis' can be: (1) Verb 'pouvoir' (1st person singular passé simple, meaning 'could') → lemma 'pouvoir', POS VERB, OR (2) Adverb meaning 'then' (e.g., 'Et puis il est parti') → lemma 'puis', POS ADV. Current lemma: '{}', POS: {:?}.",
+                    token.lemma, token.pos
+                ));
+            }
+
+            if text_lower == "passé" {
+                reasons.push(format!(
+                    "'passé' can be: (1) Past participle/Adjective from 'passer' (e.g., 'Le temps passé') → lemma 'passer', POS VERB/ADJ, OR (2) Preposition meaning 'past/beyond' (e.g., 'passé minuit') → lemma 'passé', POS ADP. Current lemma: '{}', POS: {:?}.",
+                    token.lemma, token.pos
+                ));
+            }
+
+            if text_lower == "soit" {
+                reasons.push(format!(
+                    "'soit' can be: (1) Subjunctive verb from 'être' (e.g., 'il faut qu'il soit', 'quoi qu'il en soit') → lemma 'être', POS VERB, (2) Jussive subjunctive, still a verb (e.g., 'soit x un nombre') → lemma 'être', POS VERB, (3) Coordinating conjunction in 'soit... soit...' constructions → lemma 'soit', POS CCONJ, OR (4) Explanatory adverb meaning 'that is'/'namely' (e.g., 'soit dix euros') → lemma 'soit', POS ADV. Current lemma: '{}', POS: {:?}.",
+                    token.lemma, token.pos
+                ));
+            }
+
             // Check for reflexive pronouns in lemma (should be separated)
             if token.lemma.starts_with("s'") || token.lemma.starts_with("se ") {
                 reasons.push(format!(

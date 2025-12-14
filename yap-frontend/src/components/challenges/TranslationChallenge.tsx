@@ -13,7 +13,9 @@ import {
   type Literal,
   type TargetToNativeWord,
   autograde_translation,
+  find_closest_translation,
   type Language,
+  type Course,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,9 +41,8 @@ import {
 import { Check, X, MoreVertical } from "lucide-react";
 import { AudioButton } from "../AudioButton";
 import { ReportIssueModal } from "./ReportIssueModal";
-import Markdown from "react-markdown";
+import { FeedbackDisplay } from "@/components/FeedbackDisplay";
 import { playSoundEffect } from "@/lib/sound-effects";
-import { normalizeSpecialCharacters } from "@/lib/utils";
 import { CardsRemaining } from "../CardsRemaining";
 import { AnimatedCard } from "../AnimatedCard";
 
@@ -62,6 +63,7 @@ interface SentenceChallengeProps {
   ][];
   accessToken: string | undefined;
   targetLanguage: Language;
+  nativeLanguage: Language;
   autoplayed: boolean;
   setAutoplayed: () => void;
 }
@@ -253,20 +255,6 @@ function FeedbackSkeleton() {
   );
 }
 
-function Feedback({ feedback }: { feedback: string }) {
-  const processedFeedback = feedback.replace(/• /g, "- ");
-
-  return (
-    <div className={`rounded-lg p-4 border bg-blue-500/10 border-blue-500/20`}>
-      <p
-        className={`text-sm font-medium mb-1 text-blue-600 dark:text-blue-400`}
-      >
-        Feedback:
-      </p>
-      <Markdown>{processedFeedback}</Markdown>
-    </div>
-  );
-}
 
 function AutogradeError() {
   return (
@@ -337,6 +325,22 @@ function WordStatuses({
 }: WordStatusesProps) {
   const [isAnswerOpen, setIsAnswerOpen] = useState(false);
 
+  // Initialize selection when collapsible opens
+  useEffect(() => {
+    if (
+      isAnswerOpen &&
+      selectedWordIndex === -1 &&
+      sentence.unique_target_language_lexemes.length > 0
+    ) {
+      setSelectedWordIndex(0);
+    }
+  }, [
+    isAnswerOpen,
+    selectedWordIndex,
+    sentence.unique_target_language_lexemes.length,
+    setSelectedWordIndex,
+  ]);
+
   return (
     <Collapsible open={isAnswerOpen} onOpenChange={setIsAnswerOpen}>
       <CollapsibleTrigger asChild>
@@ -348,13 +352,6 @@ function WordStatuses({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        {/* Initialize selection when words are shown */}
-        {selectedWordIndex === -1 &&
-          sentence.unique_target_language_lexemes.length > 0 &&
-          (() => {
-            setSelectedWordIndex(0);
-            return null;
-          })()}
         <div className="text-center space-y-1">
           <p className="text-sm font-medium text-muted-foreground pb-2">
             Mark as remembered (✓) or forgot (✗). Tap a word to see its
@@ -467,6 +464,7 @@ export function TranslationChallenge({
   unique_target_language_lexeme_definitions,
   accessToken,
   targetLanguage,
+  nativeLanguage,
   autoplayed,
   setAutoplayed,
 }: SentenceChallengeProps) {
@@ -483,10 +481,11 @@ export function TranslationChallenge({
         graded:
           | {
               wordStatuses: [Lexeme<string>, boolean | null][];
+              encouragement?: string;
               explanation?: string;
               autogradingError?: string;
             }
-          | { perfect: string | null; explanation?: string };
+          | { perfect: string | null; encouragement?: string; explanation?: string };
       }
     | { grading: null }
     | null
@@ -522,135 +521,40 @@ export function TranslationChallenge({
   }, [sentence.target_language]);
 
   const handleCheckAnswer = useCallback(async () => {
-    // Normalize text by removing punctuation, converting to lowercase, and expanding contractions
-    const normalizeText = (text: string): string => {
-      const normalizedText = normalizeSpecialCharacters(text);
-
-      // Common contractions mapping
-      const contractions: { [key: string]: string } = {
-        "it's": "it is",
-        "that's": "that is",
-        "what's": "what is",
-        "where's": "where is",
-        "who's": "who is",
-        "there's": "there is",
-        "here's": "here is",
-        "he's": "he is",
-        "she's": "she is",
-        "i'm": "i am",
-        "you're": "you are",
-        "we're": "we are",
-        "they're": "they are",
-        "i've": "i have",
-        "you've": "you have",
-        "we've": "we have",
-        "they've": "they have",
-        "i'd": "i would",
-        "you'd": "you would",
-        "he'd": "he would",
-        "she'd": "she would",
-        "we'd": "we would",
-        "they'd": "they would",
-        "i'll": "i will",
-        "you'll": "you will",
-        "he'll": "he will",
-        "she'll": "she will",
-        "we'll": "we will",
-        "they'll": "they will",
-        "won't": "will not",
-        "wouldn't": "would not",
-        "shouldn't": "should not",
-        "couldn't": "could not",
-        "can't": "cannot",
-        "don't": "do not",
-        "doesn't": "does not",
-        "didn't": "did not",
-        "isn't": "is not",
-        "aren't": "are not",
-        "wasn't": "was not",
-        "weren't": "were not",
-        "hasn't": "has not",
-        "haven't": "have not",
-        "hadn't": "had not",
-      };
-
-      let normalized = normalizedText.toLowerCase();
-
-      // Replace contractions
-      Object.entries(contractions).forEach(([contraction, expansion]) => {
-        const regex = new RegExp(`\\b${contraction}\\b`, "g");
-        normalized = normalized.replace(regex, expansion);
-      });
-
-      // Remove punctuation and normalize whitespace
-      return normalized
-        .replace(/[.,!?;:'"()-]/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-    };
-
-    // If any word was tapped, it's not a perfect score from the start.
-    const levenshtein = (a: string, b: string): number => {
-      const matrix = Array.from({ length: a.length + 1 }, () =>
-        new Array(b.length + 1).fill(0)
-      );
-      for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
-      for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
-      for (let i = 1; i <= a.length; i++) {
-        for (let j = 1; j <= b.length; j++) {
-          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j - 1] + cost
-          );
-        }
-      }
-      return matrix[a.length][b.length];
-    };
-
-    const getClosest = (input: string) => {
-      const normalizedUser = normalizeText(input);
-      return sentence.native_translations.reduce((best, current) => {
-        return levenshtein(normalizeText(current), normalizedUser) <
-          levenshtein(normalizeText(best), normalizedUser)
-          ? current
-          : best;
-      });
-    };
-
-    const match = sentence.native_translations.find(
-      (t) => normalizeText(userTranslation) === normalizeText(t)
-    );
-    if (match) {
-      setCorrectTranslation(match);
-      setGrade({ graded: { perfect: match } });
-      playSoundEffect("perfect");
-      return;
-    }
-
     if (userTranslation.trim()) {
-      const closest = getClosest(userTranslation);
+      // Use Rust function to find closest match with normalization and Levenshtein distance
+      const closest = find_closest_translation(
+        userTranslation,
+        sentence.native_translations,
+        nativeLanguage
+      ) ?? sentence.native_translations[0];
       setCorrectTranslation(closest);
       setGrade({ grading: null });
 
       try {
+        const course: Course = {
+          targetLanguage: targetLanguage,
+          nativeLanguage: nativeLanguage,
+        };
+
         const response = await autograde_translation(
           sentence.target_language,
           userTranslation,
+          sentence.native_translations,
           sentence.primary_expression,
           sentence.unique_target_language_lexemes,
           accessToken,
-          targetLanguage
+          course
         );
 
+        const encouragement = response.encouragement;
         const explanation = response.explanation;
         let finalWordStatuses: [Lexeme<string>, boolean | null][] = [];
 
         playSoundEffect("aiDoneGrading");
 
         if (response.expressions_forgot.length === 0) {
-          setGrade({ graded: { perfect: null, explanation } });
+          setGrade({ graded: { perfect: null, encouragement, explanation } });
           playSoundEffect("perfect");
         } else {
           finalWordStatuses = sentence.unique_target_language_lexemes.map(
@@ -674,7 +578,7 @@ export function TranslationChallenge({
             }
           );
           setGrade({
-            graded: { wordStatuses: finalWordStatuses, explanation },
+            graded: { wordStatuses: finalWordStatuses, encouragement, explanation },
           });
         }
       } catch (error) {
@@ -687,6 +591,8 @@ export function TranslationChallenge({
         setGrade({
           graded: {
             wordStatuses: fallbackStatuses,
+            encouragement: undefined,
+            explanation: undefined,
             autogradingError:
               error instanceof Error
                 ? error.message
@@ -695,7 +601,7 @@ export function TranslationChallenge({
         });
       }
     }
-  }, [sentence, userTranslation, accessToken, targetLanguage]);
+  }, [sentence, userTranslation, accessToken, targetLanguage, nativeLanguage]);
 
   const lexemesTapped = useMemo(() => {
     const lexemesTapped = new Array<Lexeme<string>>();
@@ -762,6 +668,7 @@ export function TranslationChallenge({
           return {
             graded: {
               wordStatuses: newStatuses,
+              encouragement: prevGrade.graded.encouragement,
               explanation: prevGrade.graded.explanation,
             },
           };
@@ -930,10 +837,10 @@ export function TranslationChallenge({
                     <div className="space-y-2">
                       <CorrectTranslation sentence={correctTranslation} />
 
-                      {"explanation" in grade.graded &&
-                        grade.graded.explanation && (
-                          <Feedback feedback={grade.graded.explanation} />
-                        )}
+                      <FeedbackDisplay
+                        encouragement={grade.graded.encouragement}
+                        explanation={grade.graded.explanation}
+                      />
                     </div>
                   </>
                 ) : (
@@ -946,10 +853,10 @@ export function TranslationChallenge({
                     {"autogradingError" in grade.graded &&
                       grade.graded.autogradingError && <AutogradeError />}
 
-                    {"explanation" in grade.graded &&
-                      grade.graded.explanation && (
-                        <Feedback feedback={grade.graded.explanation} />
-                      )}
+                    <FeedbackDisplay
+                      encouragement={grade.graded.encouragement}
+                      explanation={grade.graded.explanation}
+                    />
 
                     <WordStatuses
                       wordStatuses={wordsToGradeManually}

@@ -164,7 +164,7 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
         <div className="space-y-4">
           {filteredEntries.map((entry, index) => {
             const prefix = get_word_prefix(
-              entry.entry.morphology,
+              entry.entry.morphology[0],
               entry.word,
               entry.heteronym.pos,
               targetLanguage
@@ -182,7 +182,7 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
                   {entry.word}
                 </h2>
                 {(() => {
-                  const morphologyText = formatMorphology(entry.entry.morphology)
+                  const morphologyText = entry.entry.morphology[0] ? formatMorphology(entry.entry.morphology[0]) : ''
                   return morphologyText && (
                     <span className="text-sm text-muted-foreground italic">
                       {morphologyText}

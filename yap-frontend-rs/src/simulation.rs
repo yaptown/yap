@@ -26,8 +26,13 @@ impl DailySimulationIterator {
     pub fn next(mut self) -> (Self, Vec<Challenge<String>>) {
         let mut day_challenges = Vec::new();
 
-        // Process all due reviews for the day
+        // Process all due reviews for the day (max 20 cards to keep simulation fast)
+        const MAX_DAILY_CARDS: usize = 20;
         loop {
+            if day_challenges.len() >= MAX_DAILY_CARDS {
+                break;
+            }
+
             let review_info = self
                 .deck
                 .get_review_info(vec![], self.current_time.timestamp_millis() as f64);

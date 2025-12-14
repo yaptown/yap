@@ -18,7 +18,8 @@ pub(crate) struct NextCardsIterator<'a> {
 }
 
 pub(crate) enum AllowedCards {
-    #[expect(unused)] // All is not yet used, but could be used to express intent more clearly than an empty BannedRequirements set
+    #[expect(unused)]
+    // All is not yet used, but could be used to express intent more clearly than an empty BannedRequirements set
     All,
     BannedRequirements(std::collections::BTreeSet<ChallengeRequirements>),
     Type(CardType),
@@ -218,8 +219,8 @@ impl NextCardsIterator<'_> {
         };
 
         // Try to get a card of each type in priority order
-        for card_types in next_card_types {
-            let card = match card_types {
+        for card_type in next_card_types {
+            let card = match card_type {
                 CardType::TargetLanguage => self.next_text_card(),
                 CardType::Listening => self.next_listening_card(),
                 CardType::LetterPronunciation => self.next_letter_pronunciation_card(),
