@@ -79,10 +79,10 @@ jobs:
 #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
 #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
 
-      - name: Generate data
-        run: cargo run --bin generate-data
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # - name: Generate data
+      #   run: cargo run --bin generate-data
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Clippy
         uses: actions-rs/cargo@v1
@@ -141,10 +141,10 @@ jobs:
 #          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_dep_news_trf-3.8.0/fr_dep_news_trf-3.8.0-py3-none-any.whl
 #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
 #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
-      - name: Generate data
-        run: cargo run --bin generate-data
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # - name: Generate data
+      #   run: cargo run --bin generate-data
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Build WASM module
         run: cargo clippy --target wasm32-unknown-unknown
@@ -220,10 +220,10 @@ jobs:
 #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
 #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
 
-      - name: Generate data
-        run: cargo run --bin generate-data
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # - name: Generate data
+      #   run: cargo run --bin generate-data
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - uses: taiki-e/install-action@nextest
 
