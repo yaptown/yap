@@ -39,9 +39,10 @@ use lasso::Spur;
 use opfs::persistent::{self};
 use pav_regression::{IsotonicRegression, Point};
 use rs_fsrs::FSRS;
+use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::hash::Hash;
 use std::sync::Arc;
 use std::sync::LazyLock;
@@ -984,7 +985,7 @@ pub struct Stats {
 
 #[derive(Clone, Debug)]
 pub struct DeckState {
-    cards: HashMap<CardIndicator<Spur>, CardData>,
+    cards: FxHashMap<CardIndicator<Spur>, CardData>,
     fsrs: FSRS,
     stats: Stats,
     context: Context,
@@ -995,7 +996,7 @@ pub struct DeckState {
 #[derive(Clone, Debug)]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct Deck {
-    cards: HashMap<CardIndicator<Spur>, CardStatus>,
+    cards: FxHashMap<CardIndicator<Spur>, CardStatus>,
     fsrs: FSRS,
     pub(crate) stats: Stats,
     pub(crate) context: Context,
@@ -1230,10 +1231,10 @@ impl weapon::PartialAppState for Deck {
 
                 // First pass: collect worst grade for each heteronym (word with its specific meaning)
                 // Using HashMap to track worst grade per heteronym
-                let mut worst_grades: std::collections::HashMap<
+                let mut worst_grades: FxHashMap<
                     Heteronym<lasso::Spur>,
                     transcription_challenge::WordGrade,
-                > = std::collections::HashMap::new();
+                > = FxHashMap::default();
 
                 for part in challenge {
                     if let transcription_challenge::PartGraded::AskedToTranscribe {
@@ -1428,10 +1429,10 @@ impl weapon::PartialAppState for Deck {
         };
 
         // Convert existing cards to CardStatus and calculate probabilities for unadded cards
-        let added_cards: HashMap<CardIndicator<Spur>, CardData> = state.cards;
+        let added_cards: FxHashMap<CardIndicator<Spur>, CardData> = state.cards;
 
         // Create all cards as Unadded first, then update with Added status
-        let mut all_cards: HashMap<CardIndicator<Spur>, CardStatus> = state
+        let mut all_cards: FxHashMap<CardIndicator<Spur>, CardStatus> = state
             .context
             .language_pack
             .word_frequencies
@@ -1523,7 +1524,7 @@ impl DeckState {
         native_language: Language,
     ) -> Self {
         Self {
-            cards: HashMap::new(),
+            cards: FxHashMap::default(),
             fsrs: FSRS::new(rs_fsrs::Parameters {
                 request_retention: 0.7,
                 ..Default::default()
@@ -2109,7 +2110,7 @@ impl Deck {
         let now = Utc::now();
         let three_weeks_later = now + chrono::Duration::days(21);
 
-        let mut daily_counts: HashMap<i64, u32> = HashMap::new();
+        let mut daily_counts: FxHashMap<i64, u32> = FxHashMap::default();
         let mut total_reviews = 0u32;
 
         for (_, card_status) in self.cards.iter() {
@@ -2172,8 +2173,8 @@ impl Deck {
         ];
 
         // Create a map to collect data for each frequency bucket
-        let mut frequency_buckets: std::collections::HashMap<String, (Vec<f64>, Vec<String>)> =
-            std::collections::HashMap::new();
+        let mut frequency_buckets: FxHashMap<String, (Vec<f64>, Vec<String>)> =
+            FxHashMap::default();
 
         // Iterate through actual lexemes in the language pack and find ones matching our target frequencies
         for (lexeme, frequency) in self.context.language_pack.word_frequencies.iter() {

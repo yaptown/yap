@@ -19,7 +19,9 @@
       "Bash(cargo test:*)",
       "Bash(cargo run:*)",
       "WebFetch(domain:en.wiktionary.org)",
-      "Bash(cargo fix:*)"
+      "Bash(cargo fix:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

@@ -4,26 +4,29 @@ use crate::{
     HomophoneWordPair, Lexeme, Literal, PatternPosition, PhrasebookEntry, PronunciationData,
 };
 use lasso::Spur;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use rustc_hash::FxHashMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct LanguagePack {
     pub rodeo: lasso::RodeoReader,
-    pub translations: HashMap<Spur, Vec<Spur>>,
-    pub words_to_heteronyms: HashMap<Spur, BTreeSet<Heteronym<Spur>>>,
-    pub sentences_containing_lexeme_index: HashMap<Lexeme<Spur>, Vec<Spur>>,
-    pub sentences_to_literals: HashMap<Spur, Vec<Literal<Spur>>>,
-    pub sentences_to_lexemes: HashMap<Spur, Vec<Lexeme<Spur>>>,
-    pub sentences_to_all_lexemes: HashMap<Spur, Vec<Lexeme<Spur>>>,
+    pub translations: FxHashMap<Spur, Vec<Spur>>,
+    pub words_to_heteronyms: FxHashMap<Spur, BTreeSet<Heteronym<Spur>>>,
+    pub sentences_containing_lexeme_index: FxHashMap<Lexeme<Spur>, Vec<Spur>>,
+    pub sentences_to_literals: FxHashMap<Spur, Vec<Literal<Spur>>>,
+    pub sentences_to_lexemes: FxHashMap<Spur, Vec<Lexeme<Spur>>>,
+    pub sentences_to_all_lexemes: FxHashMap<Spur, Vec<Lexeme<Spur>>>,
     pub word_frequencies: IndexMap<Lexeme<Spur>, Frequency>,
     pub total_word_count: u64,
     pub dictionary: BTreeMap<Heteronym<Spur>, DictionaryEntry>,
     pub phrasebook: BTreeMap<Spur, PhrasebookEntry>,
-    pub word_to_pronunciation: HashMap<Spur, Spur>,
-    pub pronunciation_to_words: HashMap<Spur, Vec<Spur>>,
+    pub word_to_pronunciation: FxHashMap<Spur, Spur>,
+    pub pronunciation_to_words: FxHashMap<Spur, Vec<Spur>>,
     pub pronunciation_data: PronunciationData,
-    pub pattern_frequency_map: HashMap<(Spur, PatternPosition), u32>,
-    pub homophone_practice: HashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
+    pub pattern_frequency_map: FxHashMap<(Spur, PatternPosition), u32>,
+    pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
+    /// Cache of maximum frequencies for each pronunciation (pre-computed at initialization)
+    pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
 }
 
 impl LanguagePack {
@@ -48,9 +51,9 @@ impl LanguagePack {
 
     /// Get the maximum frequency for any word with this pronunciation
     pub fn pronunciation_max_frequency(&self, pronunciation: &Spur) -> Option<Frequency> {
-        self.pronunciation_to_lexemes(pronunciation)
-            .filter_map(|(_, lexeme)| self.word_frequencies.get(&lexeme).copied())
-            .max()
+        self.pronunciation_max_freq_cache
+            .get(pronunciation)
+            .copied()
     }
 
     pub fn new(language_data: ConsolidatedLanguageData) -> Self {
@@ -85,7 +88,7 @@ impl LanguagePack {
         };
 
         let words_to_heteronyms = {
-            let mut map: HashMap<Spur, BTreeSet<Heteronym<Spur>>> = HashMap::new();
+            let mut map: FxHashMap<Spur, BTreeSet<Heteronym<Spur>>> = FxHashMap::default();
 
             for freq in &language_data.frequencies {
                 if let Lexeme::Heteronym(heteronym) = &freq.lexeme {
@@ -124,7 +127,7 @@ impl LanguagePack {
                 .collect()
         };
 
-        let sentences_to_lexemes: HashMap<Spur, Vec<Lexeme<Spur>>> = {
+        let sentences_to_lexemes: FxHashMap<Spur, Vec<Lexeme<Spur>>> = {
             language_data
                 .nlp_sentences
                 .iter()
@@ -141,7 +144,7 @@ impl LanguagePack {
         };
 
         let sentences_containing_lexeme_index = {
-            let mut map = HashMap::new();
+            let mut map = FxHashMap::default();
             for (i, sentence_spur) in sentences.iter().enumerate() {
                 let _sentence = rodeo.resolve(sentence_spur);
                 let Some(lexemes) = sentences_to_lexemes.get(sentence_spur) else {
@@ -229,7 +232,7 @@ impl LanguagePack {
                 .collect()
         };
 
-        let pronunciation_to_words = {
+        let pronunciation_to_words: FxHashMap<Spur, Vec<Spur>> = {
             language_data
                 .pronunciation_to_words
                 .iter()
@@ -265,6 +268,28 @@ impl LanguagePack {
             })
             .collect();
 
+        // Pre-compute pronunciation max frequencies for performance
+        let pronunciation_max_freq_cache: FxHashMap<Spur, Frequency> = pronunciation_to_words
+            .iter()
+            .filter_map(|(pronunciation, words)| {
+                let max_freq = words
+                    .iter()
+                    .flat_map(|word| {
+                        words_to_heteronyms
+                            .get(word)
+                            .map(|heteronyms| heteronyms.iter())
+                            .into_iter()
+                            .flatten()
+                    })
+                    .filter_map(|heteronym| {
+                        let lexeme = Lexeme::Heteronym(*heteronym);
+                        word_frequencies.get(&lexeme).copied()
+                    })
+                    .max()?;
+                Some((*pronunciation, max_freq))
+            })
+            .collect();
+
         Self {
             rodeo,
             translations,
@@ -282,6 +307,7 @@ impl LanguagePack {
             pronunciation_data,
             pattern_frequency_map,
             homophone_practice,
+            pronunciation_max_freq_cache,
         }
     }
 }
