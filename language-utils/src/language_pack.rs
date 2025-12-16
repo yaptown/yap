@@ -25,6 +25,8 @@ pub struct LanguagePack {
     pub pronunciation_data: PronunciationData,
     pub pattern_frequency_map: FxHashMap<(Spur, PatternPosition), u32>,
     pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
+    /// Cache of maximum frequencies for each pronunciation (pre-computed at initialization)
+    pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
 }
 
 impl LanguagePack {
@@ -49,9 +51,9 @@ impl LanguagePack {
 
     /// Get the maximum frequency for any word with this pronunciation
     pub fn pronunciation_max_frequency(&self, pronunciation: &Spur) -> Option<Frequency> {
-        self.pronunciation_to_lexemes(pronunciation)
-            .filter_map(|(_, lexeme)| self.word_frequencies.get(&lexeme).copied())
-            .max()
+        self.pronunciation_max_freq_cache
+            .get(pronunciation)
+            .copied()
     }
 
     pub fn new(language_data: ConsolidatedLanguageData) -> Self {
@@ -266,6 +268,28 @@ impl LanguagePack {
             })
             .collect();
 
+        // Pre-compute pronunciation max frequencies for performance
+        let pronunciation_max_freq_cache = {
+            let mut cache = FxHashMap::default();
+            for (pronunciation, words) in &pronunciation_to_words {
+                let max_freq = words
+                    .iter()
+                    .flat_map(|word| {
+                        words_to_heteronyms
+                            .get(word)
+                            .into_iter()
+                            .flat_map(|heteronyms| heteronyms.iter())
+                            .map(|heteronym| Lexeme::Heteronym(*heteronym))
+                    })
+                    .filter_map(|lexeme| word_frequencies.get(&lexeme).copied())
+                    .max();
+                if let Some(max_freq) = max_freq {
+                    cache.insert(*pronunciation, max_freq);
+                }
+            }
+            cache
+        };
+
         Self {
             rodeo,
             translations,
@@ -283,6 +307,7 @@ impl LanguagePack {
             pronunciation_data,
             pattern_frequency_map,
             homophone_practice,
+            pronunciation_max_freq_cache,
         }
     }
 }
