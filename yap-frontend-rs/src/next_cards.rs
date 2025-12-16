@@ -16,6 +16,9 @@ pub(crate) struct NextCardsIterator<'a> {
     pub(crate) allowed_cards: AllowedCards,
     pub(crate) context: &'a Context,
     pub(crate) regressions: &'a Regressions,
+    // Cached counts to avoid repeated iteration
+    added_count: usize,
+    card_type_counts: FxHashMap<CardType, u32>,
 }
 
 pub(crate) enum AllowedCards {
@@ -28,22 +31,36 @@ pub(crate) enum AllowedCards {
 
 impl<'a> NextCardsIterator<'a> {
     pub fn new(deck: &'a Deck, allowed_cards: AllowedCards) -> Self {
+        let cards = deck.cards.clone();
+
+        // Initialize counts by iterating once
+        let mut added_count = 0;
+        let mut card_type_counts: FxHashMap<CardType, u32> =
+            CARD_TYPES.iter().map(|card_type| (*card_type, 0)).collect();
+
+        for (card, status) in &cards {
+            if matches!(status, CardStatus::Tracked(_)) {
+                added_count += 1;
+                let card_type = card.card_type();
+                card_type_counts
+                    .entry(card_type)
+                    .and_modify(|count| *count += 1);
+            }
+        }
+
         Self {
-            cards: deck.cards.clone(),
+            cards,
             allowed_cards,
             context: &deck.context,
             regressions: &deck.regressions,
+            added_count,
+            card_type_counts,
         }
     }
 
     fn next_text_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
         // None of the first 20 cards can be multiword cards
-        let added_over_20_cards = self
-            .cards
-            .iter()
-            .filter(|(_, status)| matches!(status, CardStatus::Tracked(_)))
-            .nth(20)
-            .is_some();
+        let added_over_20_cards = self.added_count > 20;
 
         self.cards
             .iter()
@@ -163,36 +180,16 @@ impl<'a> NextCardsIterator<'a> {
 
 impl NextCardsIterator<'_> {
     fn next_card(&self) -> Option<(CardIndicator<Spur>, rs_fsrs::Card)> {
-        let added_count = self
-            .cards
-            .iter()
-            .filter(|(_, status)| matches!(status, CardStatus::Tracked(_)))
-            .count();
-
-        if added_count < 20 {
+        if self.added_count < 20 {
             let card = self.next_text_card()?;
             return Some(card);
         }
 
-        // Count cards by type
-        let mut card_type_counts = CARD_TYPES
-            .iter()
-            .map(|card_type| (*card_type, 0))
-            .collect::<FxHashMap<CardType, u32>>();
-
-        for (card, status) in &self.cards {
-            if matches!(status, CardStatus::Tracked(_)) {
-                let card_type = card.card_type();
-                card_type_counts
-                    .entry(card_type)
-                    .and_modify(|count| *count += 1);
-            }
-        }
-
         // Calculate which type is most underrepresented based on target ratios
-        let total_cards: u32 = card_type_counts.values().cloned().sum();
+        let total_cards: u32 = self.card_type_counts.values().cloned().sum();
         let next_card_types = {
-            let mut card_type_ratios = card_type_counts
+            let mut card_type_ratios = self
+                .card_type_counts
                 .iter()
                 .filter(|(card_type, _)| match &self.allowed_cards {
                     AllowedCards::All => true,
@@ -243,6 +240,14 @@ impl Iterator for NextCardsIterator<'_> {
                 card,
                 CardStatus::Tracked(crate::CardData::Added { fsrs_card }),
             );
+
+            // Update incremental counts
+            self.added_count += 1;
+            let card_type = card.card_type();
+            self.card_type_counts
+                .entry(card_type)
+                .and_modify(|count| *count += 1);
+
             Some(card)
         } else {
             None
