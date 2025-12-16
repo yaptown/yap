@@ -232,7 +232,7 @@ impl LanguagePack {
                 .collect()
         };
 
-        let pronunciation_to_words = {
+        let pronunciation_to_words: FxHashMap<Spur, Vec<Spur>> = {
             language_data
                 .pronunciation_to_words
                 .iter()
@@ -269,26 +269,26 @@ impl LanguagePack {
             .collect();
 
         // Pre-compute pronunciation max frequencies for performance
-        let pronunciation_max_freq_cache = {
-            let mut cache = FxHashMap::default();
-            for (pronunciation, words) in &pronunciation_to_words {
+        let pronunciation_max_freq_cache: FxHashMap<Spur, Frequency> = pronunciation_to_words
+            .iter()
+            .filter_map(|(pronunciation, words)| {
                 let max_freq = words
                     .iter()
                     .flat_map(|word| {
                         words_to_heteronyms
                             .get(word)
+                            .map(|heteronyms| heteronyms.iter())
                             .into_iter()
-                            .flat_map(|heteronyms| heteronyms.iter())
-                            .map(|heteronym| Lexeme::Heteronym(*heteronym))
+                            .flatten()
                     })
-                    .filter_map(|lexeme| word_frequencies.get(&lexeme).copied())
-                    .max();
-                if let Some(max_freq) = max_freq {
-                    cache.insert(*pronunciation, max_freq);
-                }
-            }
-            cache
-        };
+                    .filter_map(|heteronym| {
+                        let lexeme = Lexeme::Heteronym(*heteronym);
+                        word_frequencies.get(&lexeme).copied()
+                    })
+                    .max()?;
+                Some((*pronunciation, max_freq))
+            })
+            .collect();
 
         Self {
             rodeo,
