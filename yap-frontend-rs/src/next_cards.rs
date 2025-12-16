@@ -1,4 +1,5 @@
-use std::collections::{BTreeSet, HashMap};
+use rustc_hash::FxHashMap;
+use std::collections::BTreeSet;
 
 use chrono::Utc;
 use language_utils::Lexeme;
@@ -11,7 +12,7 @@ use crate::{
 };
 
 pub(crate) struct NextCardsIterator<'a> {
-    pub(crate) cards: HashMap<CardIndicator<Spur>, CardStatus>,
+    pub(crate) cards: FxHashMap<CardIndicator<Spur>, CardStatus>,
     pub(crate) allowed_cards: AllowedCards,
     pub(crate) context: &'a Context,
     pub(crate) regressions: &'a Regressions,
@@ -177,7 +178,7 @@ impl NextCardsIterator<'_> {
         let mut card_type_counts = CARD_TYPES
             .iter()
             .map(|card_type| (*card_type, 0))
-            .collect::<HashMap<CardType, u32>>();
+            .collect::<FxHashMap<CardType, u32>>();
 
         for (card, status) in &self.cards {
             if matches!(status, CardStatus::Tracked(_)) {

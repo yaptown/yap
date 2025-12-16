@@ -3,7 +3,7 @@
 
 #![allow(unused)]
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::hash::Hash;
 use std::iter::FromIterator;
 
@@ -14,7 +14,7 @@ use std::iter::FromIterator;
 )]
 pub struct IndexMap<K: Hash + Eq + Clone, V: Clone> {
     // Maps keys to their index in the order vector
-    indices: HashMap<K, usize>,
+    indices: FxHashMap<K, usize>,
     // Maintains insertion order of key-value pairs
     order: Vec<(K, V)>,
 }
@@ -23,7 +23,7 @@ impl<K: Clone + Hash + Eq, V: Clone> IndexMap<K, V> {
     /// Creates a new empty IndexMap
     pub fn new() -> Self {
         Self {
-            indices: HashMap::new(),
+            indices: FxHashMap::default(),
             order: Vec::new(),
         }
     }
@@ -101,7 +101,7 @@ impl<K: Clone + Hash + Eq, V: Clone> IndexMap<K, V> {
 
     /// Clears the map, removing all key-value pairs
     pub fn clear(&mut self) {
-        self.indices = HashMap::new();
+        self.indices = FxHashMap::default();
         self.order = Vec::new();
     }
 
