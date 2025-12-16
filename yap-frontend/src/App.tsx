@@ -42,6 +42,7 @@ import { Leeches } from '@/components/Leeches'
 import { TopPageLayout } from '@/components/TopPageLayout'
 import { match, P } from 'ts-pattern';
 import { ErrorMessage } from '@/components/ui/error-message'
+import { BackgroundShader } from '@/components/BackgroundShader'
 
 // Essential user info to persist for offline functionality
 export interface UserInfo {
@@ -74,6 +75,7 @@ function AppMain() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <BackgroundShader />
       <AppCheckBrowserSupport />
       <Toaster />
     </ThemeProvider>
@@ -278,7 +280,7 @@ function AppContent({ userInfo, accessToken }: AppContextType) {
   return (
     <Profiler id="App" onRender={profilerOnRender}>
       <div className="px-2">
-        <div className="min-h-screen bg-background text-foreground">
+        <div className="min-h-screen text-foreground">
           <div className="max-w-2xl mx-auto">
             <Profiler id="Content" onRender={profilerOnRender}>
               <Outlet context={{ userInfo, accessToken }} />
