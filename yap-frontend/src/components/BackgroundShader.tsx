@@ -3,6 +3,7 @@ import { useTheme } from "./theme-provider";
 
 function BackgroundShaderComponent() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const workerRef = useRef<Worker | null>(null);
   const { theme } = useTheme();
 
   // Determine actual theme (resolve "system") - memoized to prevent recalculation
@@ -15,6 +16,33 @@ function BackgroundShaderComponent() {
         : theme,
     [theme]
   );
+
+  // Set up worker for testing
+  useEffect(() => {
+    // Create worker using recommended Vite syntax
+    const worker = new Worker(
+      new URL("../workers/backgroundShader.worker.ts", import.meta.url),
+      { type: "module" }
+    );
+    workerRef.current = worker;
+
+    // Listen for messages from worker
+    worker.addEventListener("message", (event) => {
+      console.log("[Main] Received from worker:", event.data);
+    });
+
+    // Send a test ping every 2 seconds
+    const pingInterval = setInterval(() => {
+      worker.postMessage({ type: "ping" });
+    }, 2000);
+
+    // Cleanup
+    return () => {
+      clearInterval(pingInterval);
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -267,7 +295,7 @@ function BackgroundShaderComponent() {
     const colorsLocation = gl.getUniformLocation(program, "u_colors");
 
     function resize() {
-      if (!canvas) return;
+      if (!canvas || !gl) return;
       // Reduce resolution for better performance (especially in Chrome)
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const scale = 0.75; // Render at 75% resolution for performance
