@@ -74,7 +74,7 @@ function BackgroundShaderComponent() {
     // Shader configuration
     const numBands = actualTheme === "dark" ? 6 : 6;
     const speed = 0.1;
-    const lightness = actualTheme === "dark" ? 10.0 : 68.0;
+    const lightness = actualTheme === "dark" ? 10.0 : 78.0;
     const chroma = actualTheme === "dark" ? 3.0 : 30.0;
     const lightnessShift = actualTheme === "dark" ? 12.0 : 12.0;
     const hueStart = 3.2;
@@ -112,11 +112,6 @@ function BackgroundShaderComponent() {
 
       #define PI 3.14159265359
       #define TAU 6.28318530718
-
-      // Static grain function (doesn't change between frames)
-      float grain(vec2 uv) {
-        return pow(fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453), 8.0);
-      }
 
       // === Smooth blob with extended tail ===
       float blob(vec2 uv, vec2 center, float radius) {
@@ -207,11 +202,6 @@ function BackgroundShaderComponent() {
         // Subtle vignette
         float vignette = 1.0 - smoothstep(0.5, 1.5, length(v_uv - 0.5) * 1.3);
         color *= 0.94 + 0.06 * vignette;
-
-        // Add static grain
-        float grainValue = grain(v_uv * u_resolution * 0.15);
-        float grainAmount = 0.12; // Adjust this to control grain intensity
-        color += (grainValue - 0.5) * grainAmount;
 
         gl_FragColor = vec4(color, 1.0);
       }
@@ -323,15 +313,29 @@ function BackgroundShaderComponent() {
   }, [actualTheme]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 w-full h-full -z-10"
-      style={{
-        pointerEvents: "none",
-        willChange: "contents",
-        transform: "translateZ(0)",
-      }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        className="fixed inset-0 w-full h-full -z-10"
+        style={{
+          pointerEvents: "none",
+          willChange: "contents",
+          transform: "translateZ(0)",
+        }}
+      />
+      <div
+        className="fixed inset-0 w-full h-full -z-10 opacity-[0.30]"
+        style={{
+          pointerEvents: "none",
+          backgroundImage: "url(/noise2.webp)",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          mixBlendMode: actualTheme === "dark" ? "multiply" : "screen",
+          filter: actualTheme === "dark" ? "invert(1)" : "none",
+        }}
+      />
+    </>
   );
 }
 
