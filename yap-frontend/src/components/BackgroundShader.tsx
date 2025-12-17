@@ -30,12 +30,12 @@ function BackgroundShaderComponent() {
     });
     if (!gl) return;
 
-    // Shader configuration
-    const numBands = 8;
-    const speed = 1.0;
-
     // CPU-side LCH to RGB conversion
-    function lchToRgb(L: number, C: number, H: number): [number, number, number] {
+    function lchToRgb(
+      L: number,
+      C: number,
+      H: number
+    ): [number, number, number] {
       // LCH to Lab
       const a = C * Math.cos(H);
       const b = C * Math.sin(H);
@@ -60,7 +60,7 @@ function BackgroundShaderComponent() {
         c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1.0 / 2.4) - 0.055;
 
       const r = 3.2404542 * xyz[0] - 1.5371385 * xyz[1] - 0.4985314 * xyz[2];
-      const g = -0.9692660 * xyz[0] + 1.8760108 * xyz[1] + 0.0415560 * xyz[2];
+      const g = -0.969266 * xyz[0] + 1.8760108 * xyz[1] + 0.041556 * xyz[2];
       const b2 = 0.0556434 * xyz[0] - 0.2040259 * xyz[1] + 1.0572252 * xyz[2];
 
       return [
@@ -71,10 +71,14 @@ function BackgroundShaderComponent() {
     }
 
     // Pre-calculate colors for each band
-    const lightness = actualTheme === "dark" ? 15.0 : 88.0;
-    const chroma = actualTheme === "dark" ? 28.0 : 20.0;
+    // Shader configuration
+    const numBands = actualTheme === "dark" ? 6 : 6;
+    const speed = 0.1;
+    const lightness = actualTheme === "dark" ? 10.0 : 68.0;
+    const chroma = actualTheme === "dark" ? 3.0 : 30.0;
+    const lightnessShift = actualTheme === "dark" ? 12.0 : 12.0;
     const hueStart = 3.2;
-    const hueRange = -4.0;
+    const hueRange = -3.0;
 
     const colors: number[] = [];
     for (let i = 0; i < numBands; i++) {
@@ -83,7 +87,7 @@ function BackgroundShaderComponent() {
       H = H % (2 * Math.PI);
       if (H < 0) H += 2 * Math.PI;
 
-      const L = lightness + (band - 0.5) * 12.0;
+      const L = lightness + (band - 0.5) * lightnessShift;
       const rgb = lchToRgb(L, chroma, H);
       colors.push(rgb[0], rgb[1], rgb[2]);
     }
@@ -109,17 +113,32 @@ function BackgroundShaderComponent() {
       #define PI 3.14159265359
       #define TAU 6.28318530718
 
+      // Static grain function (doesn't change between frames)
+      float grain(vec2 uv) {
+        return pow(fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453), 8.0);
+      }
+
       // === Smooth blob with extended tail ===
       float blob(vec2 uv, vec2 center, float radius) {
         float d = distance(uv, center);
-        float t = 1.0 - smoothstep(0.0, radius * 1.4, d);
+        float t = 1.0 - smoothstep(0.0, radius * 2.0, d);
         return t * t;
       }
 
       void main() {
         vec2 uv = v_uv;
         float aspect = u_resolution.x / u_resolution.y;
-        vec2 uvAspect = vec2(uv.x * aspect, uv.y);
+
+        // Normalize to a consistent coordinate system based on the shorter edge
+        // This ensures blobs appear the same size on both portrait and landscape
+        vec2 uvAspect;
+        if (aspect > 1.0) {
+          // Landscape: scale x to fit
+          uvAspect = vec2(uv.x * aspect, uv.y);
+        } else {
+          // Portrait: scale y to fit
+          uvAspect = vec2(uv.x, uv.y / aspect);
+        }
 
         float t = u_time;
 
@@ -147,7 +166,13 @@ function BackgroundShaderComponent() {
           );
 
           vec2 pos = basePos[i] + offset;
-          pos.x *= aspect;
+
+          // Apply same aspect ratio correction as uvAspect
+          if (aspect > 1.0) {
+            pos.x *= aspect;
+          } else {
+            pos.y /= aspect;
+          }
 
           float influence = blob(uvAspect, pos, radius[i]);
           value += influence * weight[i];
@@ -160,10 +185,11 @@ function BackgroundShaderComponent() {
 
         // Blend: use base variation in empty areas, blob value where blobs are
         value = max(value, baseVariation * (1.0 - value * 0.8));
-        value = clamp(value, 0.0, 1.0);
+        value = clamp(value, 0.0, 0.99);
 
         // === QUANTIZE GRAYSCALE ===
         float band = floor(value * u_numBands) / u_numBands;
+
         int bandIndex = int(band * u_numBands);
 
         // Use pre-calculated color from uniform array
@@ -181,6 +207,11 @@ function BackgroundShaderComponent() {
         // Subtle vignette
         float vignette = 1.0 - smoothstep(0.5, 1.5, length(v_uv - 0.5) * 1.3);
         color *= 0.94 + 0.06 * vignette;
+
+        // Add static grain
+        float grainValue = grain(v_uv * u_resolution * 0.15);
+        float grainAmount = 0.12; // Adjust this to control grain intensity
+        color += (grainValue - 0.5) * grainAmount;
 
         gl_FragColor = vec4(color, 1.0);
       }
