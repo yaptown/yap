@@ -17,8 +17,35 @@ function BackgroundShaderComponent() {
     [theme]
   );
 
+  // Check accessibility preferences and hardware capabilities
+  const shouldRender = useMemo(() => {
+    // Disable on low-end devices
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) {
+      return false;
+    }
+
+    // Respect reduced motion preference
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return false;
+    }
+
+    // Respect high contrast preference
+    if (window.matchMedia("(prefers-contrast: more)").matches) {
+      return false;
+    }
+
+    // Respect reduced transparency preference
+    if (window.matchMedia("(prefers-reduced-transparency: reduce)").matches) {
+      return false;
+    }
+
+    return true;
+  }, []);
+
   // Set up worker and transfer canvas control
   useEffect(() => {
+    if (!shouldRender) return;
+
     const container = containerRef.current;
     if (!container) return;
 
@@ -75,7 +102,11 @@ function BackgroundShaderComponent() {
       workerRef.current = null;
       container.removeChild(canvas);
     };
-  }, [actualTheme]); // Re-run when theme changes
+  }, [actualTheme, shouldRender]); // Re-run when theme changes
+
+  if (!shouldRender) {
+    return null;
+  }
 
   return (
     <>
