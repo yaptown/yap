@@ -682,13 +682,6 @@ export function LanguageSelector({
                   <CarouselItem>
                     <Card
                       className="p-12"
-                      style={{
-                        background: `linear-gradient(135deg, ${
-                          languageColors[selectionState.targetLanguage]?.primary
-                        }80, ${
-                          languageColors[selectionState.targetLanguage]?.accent
-                        }80)`,
-                      }}
                     >
                       <div className="text-center">
                         <motion.div

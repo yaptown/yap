@@ -286,9 +286,9 @@ function initWebGL(offscreenCanvas: OffscreenCanvas, theme: "dark" | "light") {
 
   function calculateColors(theme: "dark" | "light") {
     const numBands = theme === "dark" ? 6 : 6;
-    const lightness = theme === "dark" ? 10.0 : 78.0;
+    const lightness = theme === "dark" ? 5.0 : 78.0;
     const chroma = theme === "dark" ? 3.0 : 30.0;
-    const lightnessShift = theme === "dark" ? 12.0 : 12.0;
+    const lightnessShift = theme === "dark" ? 9.0 : 12.0;
     const hueStart = 3.2;
     const hueRange = -3.0;
 

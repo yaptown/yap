@@ -403,7 +403,7 @@ function Tools() {
   return (
     <div className="animate-fade-in-delayed">
       <h2 className="text-2xl font-semibold">Tools</h2>
-      <div className="bg-card border rounded-lg p-4 mt-3 space-y-2">
+      <div className="bg-card/85 backdrop-blur-lg border rounded-lg p-4 mt-3 space-y-2">
         <button
           onClick={() => {
             navigate('/dictionary');
@@ -436,12 +436,12 @@ function DictionaryPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!userInfo || deck?.type === 'noLanguageSelected') {
+    if (deck?.type === 'noLanguageSelected') {
       navigate('/', { replace: true })
     }
-  }, [userInfo, deck, navigate])
+  }, [deck, navigate])
 
-  if (!userInfo || deck?.type === 'noLanguageSelected') {
+  if (deck?.type === 'noLanguageSelected') {
     return null
   }
 
@@ -493,12 +493,12 @@ function LeechesPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!userInfo || deck?.type === 'noLanguageSelected') {
+    if (deck?.type === 'noLanguageSelected') {
       navigate('/', { replace: true })
     }
-  }, [userInfo, deck, navigate])
+  }, [deck, navigate])
 
-  if (!userInfo || deck?.type === 'noLanguageSelected') {
+  if (deck?.type === 'noLanguageSelected') {
     return null
   }
 

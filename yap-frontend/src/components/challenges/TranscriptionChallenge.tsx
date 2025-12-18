@@ -28,6 +28,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useBackground } from "../BackgroundShader";
 import {
   Select,
   SelectContent,
@@ -123,6 +124,7 @@ export function TranscriptionChallenge({
     null
   );
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const { bumpBackground } = useBackground();
 
   // Find indices of words that should be blanks
   const blankIndices: number[] = useMemo(() => {
@@ -195,6 +197,7 @@ export function TranscriptionChallenge({
   const handleSubmit = useCallback(async () => {
     if (gradingState !== null) return;
 
+    bumpBackground(30.0);
     setGradingState({ grading: null });
 
     const request: PartSubmitted[] = challenge.parts.map((part, index) => {
@@ -242,6 +245,7 @@ export function TranscriptionChallenge({
     accessToken,
     targetLanguage,
     nativeLanguage,
+    bumpBackground,
   ]);
 
   // Global keyboard handler for Enter key
@@ -277,6 +281,7 @@ export function TranscriptionChallenge({
         } else if (gradingState && "graded" in gradingState) {
           // Handle continue when graded and no input focused
           e.preventDefault();
+          bumpBackground(30.0);
           onComplete(gradingState.graded.results);
         }
       } else if (
@@ -286,6 +291,7 @@ export function TranscriptionChallenge({
         !isInputFocused
       ) {
         e.preventDefault();
+        bumpBackground(30.0);
         onComplete(gradingState.graded.results);
       }
     };
@@ -590,7 +596,7 @@ export function TranscriptionChallenge({
         <Button
           onClick={
             gradingState && "graded" in gradingState
-              ? () => onComplete(gradingState.graded.results)
+              ? () => { bumpBackground(30.0); onComplete(gradingState.graded.results); }
               : handleSubmit
           }
           disabled={

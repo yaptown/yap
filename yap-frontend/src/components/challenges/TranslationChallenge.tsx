@@ -45,6 +45,7 @@ import { FeedbackDisplay } from "@/components/FeedbackDisplay";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { CardsRemaining } from "../CardsRemaining";
 import { AnimatedCard } from "../AnimatedCard";
+import { useBackground } from "../BackgroundShader";
 
 interface SentenceChallengeProps {
   sentence: TranslateComprehensibleSentence<string>;
@@ -93,6 +94,7 @@ const SwipeableWord = forwardRef<SwipeableWordHandle, SwipeableWordProps>(
   ({ lexeme, aliased, onSwipe, isSelected = false, status = null }, ref) => {
     const x = useMotionValue(0);
     const controls = animationControls();
+    const { bumpBackground } = useBackground();
 
     const background = useTransform(
       x,
@@ -128,6 +130,7 @@ const SwipeableWord = forwardRef<SwipeableWordHandle, SwipeableWordProps>(
 
     const handleButtonClick = useCallback(
       async (remembered: boolean) => {
+        bumpBackground(30.0);
         if (remembered) {
           await controls.start({ x: 60 });
           onSwipe(lexeme, true);
@@ -136,7 +139,7 @@ const SwipeableWord = forwardRef<SwipeableWordHandle, SwipeableWordProps>(
           onSwipe(lexeme, false);
         }
       },
-      [controls, onSwipe, lexeme]
+      [controls, onSwipe, lexeme, bumpBackground]
     );
 
     useImperativeHandle(
@@ -495,6 +498,7 @@ export function TranslationChallenge({
   >(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const wordRefs = useRef<Map<number, SwipeableWordHandle>>(new Map());
+  const { bumpBackground } = useBackground();
 
   // No need for useEffect to reset state - the component gets a new key when the challenge changes,
   // causing React to unmount and remount it with fresh state
@@ -525,6 +529,7 @@ export function TranslationChallenge({
 
   const handleCheckAnswer = useCallback(async () => {
     if (userTranslation.trim()) {
+      bumpBackground(30.0);
       // Use Rust function to find closest match with normalization and Levenshtein distance
       const closest =
         find_closest_translation(
@@ -609,7 +614,14 @@ export function TranslationChallenge({
         });
       }
     }
-  }, [sentence, userTranslation, accessToken, targetLanguage, nativeLanguage]);
+  }, [
+    sentence,
+    userTranslation,
+    accessToken,
+    targetLanguage,
+    nativeLanguage,
+    bumpBackground,
+  ]);
 
   const lexemesTapped = useMemo(() => {
     const lexemesTapped = new Array<Lexeme<string>>();
@@ -652,11 +664,19 @@ export function TranslationChallenge({
     if (canContinue) {
       if (grade && "graded" in grade) {
         // Scroll to top when continuing
+        bumpBackground(30.0);
         window.scrollTo({ top: 0, behavior: "smooth" });
         onComplete(grade.graded, lexemesTapped, userTranslation);
       }
     }
-  }, [canContinue, onComplete, grade, userTranslation, lexemesTapped]);
+  }, [
+    canContinue,
+    onComplete,
+    grade,
+    userTranslation,
+    lexemesTapped,
+    bumpBackground,
+  ]);
 
   const handleWordSwipe = useCallback(
     (lexeme: Lexeme<string>, remembered: boolean) => {

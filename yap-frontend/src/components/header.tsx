@@ -149,7 +149,7 @@ export function Header({
       </div>
 
       {!userInfo && showSignupNag && (
-        <div className="bg-muted/50 border rounded-lg p-3 flex items-center gap-3 mb-2">
+        <div className="bg-muted/70 backdrop-blur-lg border rounded-lg p-3 flex items-center gap-3 mb-2">
           <AlertTriangle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium">

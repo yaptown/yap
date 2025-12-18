@@ -108,7 +108,7 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
     .exhaustive();
 
   return (
-    <AnimatedCard className="bg-card text-card-foreground rounded-lg p-6">
+    <AnimatedCard className="bg-card/85 backdrop-blur-lg text-card-foreground rounded-lg p-6">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="h-5 w-5 text-primary" />
         <h3 className="font-semibold">{headingText}</h3>
