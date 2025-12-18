@@ -1,4 +1,13 @@
-import { useEffect, useRef, useMemo, memo, createContext, useContext, useCallback, ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useMemo,
+  memo,
+  createContext,
+  useContext,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { useTheme } from "./theme-provider";
 
 interface BackgroundContextType {
@@ -68,7 +77,7 @@ function BackgroundShaderComponent({ children }: BackgroundShaderProps) {
   // Expose bump function to children
   const bumpBackground = useCallback((multiplier?: number) => {
     if (workerRef.current) {
-      workerRef.current.postMessage({ type: 'bump', multiplier });
+      workerRef.current.postMessage({ type: "bump", multiplier });
     }
   }, []);
 
@@ -137,7 +146,7 @@ function BackgroundShaderComponent({ children }: BackgroundShaderProps) {
   // Handle theme changes separately without recreating worker
   useEffect(() => {
     if (workerRef.current && shouldRender) {
-      workerRef.current.postMessage({ type: 'theme', theme: actualTheme });
+      workerRef.current.postMessage({ type: "theme", theme: actualTheme });
     }
   }, [actualTheme, shouldRender]);
 
