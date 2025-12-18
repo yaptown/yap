@@ -229,8 +229,7 @@ export function LanguageSelector({
       primary: "#DE2910",
       secondary: "#FFDE00",
       accent: "#DE2910",
-      gradient:
-        "linear-gradient(135deg, #DE2910 50%, #FFDE00 50%)",
+      gradient: "linear-gradient(135deg, #DE2910 50%, #FFDE00 50%)",
     },
     Japanese: {
       primary: "#FFFFFF",
@@ -321,28 +320,6 @@ export function LanguageSelector({
         },
       ];
 
-  // Background floating elements with deterministic pseudo-random values
-  const floatingWords = useMemo(
-    (): Array<{ text: string; lang: Language; seed: number }> => [
-      { text: "Bonjour", lang: "French", seed: 0.2 },
-      { text: "Hola", lang: "Spanish", seed: 0.7 },
-      { text: "안녕", lang: "Korean", seed: 0.4 },
-      { text: "Hello", lang: "English", seed: 0.9 },
-      { text: "Guten Tag", lang: "German", seed: 0.15 },
-      { text: "Merci", lang: "French", seed: 0.3 },
-      { text: "Gracias", lang: "Spanish", seed: 0.6 },
-      { text: "감사", lang: "Korean", seed: 0.8 },
-      { text: "Thanks", lang: "English", seed: 0.1 },
-      { text: "Danke", lang: "German", seed: 0.25 },
-      { text: "Oui", lang: "French", seed: 0.5 },
-      { text: "Sí", lang: "Spanish", seed: 0.35 },
-      { text: "네", lang: "Korean", seed: 0.75 },
-      { text: "Yes", lang: "English", seed: 0.45 },
-      { text: "Ja", lang: "German", seed: 0.85 },
-    ],
-    []
-  );
-
   // Determine the Yaptown title to display based on selection state
   const yaptownTitle =
     selectionState.stage === "askingExperience" ||
@@ -359,78 +336,6 @@ export function LanguageSelector({
         backButton: onBack ? { label: yaptownTitle, onBack } : undefined,
       }}
     >
-      {/* Full-page animated background */}
-      <motion.div
-        className="fixed inset-0 pointer-events-none overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        {floatingWords.map((word, index) => (
-          <motion.div
-            key={`${word.text}-${index}`}
-            className="absolute text-4xl md:text-6xl font-bold opacity-[0.06] dark:opacity-[0.1] select-none dark:mix-blend-plus-lighter brightness-100 dark:brightness-500"
-            style={{
-              left: `${10 + ((index * 25) % 80)}%`,
-              top: `${10 + ((index * 15) % 70)}%`,
-              color: languageColors[word.lang]?.primary || "#000",
-            }}
-            initial={{
-              x: 0,
-              y: 0,
-              rotate: word.seed * 30 - 15,
-            }}
-            animate={{
-              x: [0, 30, -20, 0],
-              y: [0, -40, 20, 0],
-              rotate: [
-                word.seed * 30 - 15,
-                ((word.seed * 2) % 1) * 30 - 15,
-                ((word.seed * 3) % 1) * 30 - 15,
-                ((word.seed * 4) % 1) * 30 - 15,
-              ],
-            }}
-            transition={{
-              duration: 20 + index * 2,
-              repeat: Infinity,
-              repeatType: "reverse",
-              ease: "easeInOut",
-            }}
-          >
-            {word.text}
-          </motion.div>
-        ))}
-
-        {/* Gradient orbs */}
-        {(["French", "Spanish", "Korean", "English", "German"] as const).map((lang, index) => (
-          <motion.div
-            key={`orb-${lang}`}
-            className="absolute rounded-full blur-3xl opacity-30 dark:opacity-50"
-            style={{
-              width: "500px",
-              height: "500px",
-              background: `radial-gradient(circle, ${
-                languageColors[lang].primary + "40"
-              }, transparent)`,
-              left: `${index * 20}%`,
-              top: `${index % 2 === 0 ? -10 : 60}%`,
-              willChange: "transform",
-            }}
-            animate={{
-              x: [0, 100, -50, 0],
-              y: [0, -50, 100, 0],
-              scale: [1, 1.2, 0.8, 1],
-            }}
-            transition={{
-              duration: 30 + index * 5,
-              repeat: Infinity,
-              repeatType: "reverse",
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </motion.div>
-
       {/* Main content */}
       <div className="relative z-10 flex items-center justify-center mt-8">
         <AnimatePresence mode="wait">
@@ -505,7 +410,9 @@ export function LanguageSelector({
                   className="text-5xl font-bold mb-4"
                   style={{ textWrap: "balance" }}
                 >
-                  What language will you speak next?
+                  <span className="highlight">
+                    What language will you speak next?
+                  </span>
                 </h1>
                 <div className="flex items-center justify-center gap-2 mb-6">
                   <span className="text-lg text-muted-foreground">
@@ -578,13 +485,17 @@ export function LanguageSelector({
                   <Card
                     className="relative overflow-hidden p-6 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-4"
                     style={{
-                      borderColor: languageColors[currentTargetLanguage]?.primary,
+                      borderColor:
+                        languageColors[currentTargetLanguage]?.primary,
                     }}
                     onClick={onResume}
                   >
                     <div
                       className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300"
-                      style={{ background: languageColors[currentTargetLanguage]?.gradient }}
+                      style={{
+                        background:
+                          languageColors[currentTargetLanguage]?.gradient,
+                      }}
                     />
                     <div className="relative z-10 flex items-center justify-center gap-4">
                       <div className="text-5xl">

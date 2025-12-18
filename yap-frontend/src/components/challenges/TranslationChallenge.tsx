@@ -255,7 +255,6 @@ function FeedbackSkeleton() {
   );
 }
 
-
 function AutogradeError() {
   return (
     <div
@@ -485,7 +484,11 @@ export function TranslationChallenge({
               explanation?: string;
               autogradingError?: string;
             }
-          | { perfect: string | null; encouragement?: string; explanation?: string };
+          | {
+              perfect: string | null;
+              encouragement?: string;
+              explanation?: string;
+            };
       }
     | { grading: null }
     | null
@@ -523,11 +526,12 @@ export function TranslationChallenge({
   const handleCheckAnswer = useCallback(async () => {
     if (userTranslation.trim()) {
       // Use Rust function to find closest match with normalization and Levenshtein distance
-      const closest = find_closest_translation(
-        userTranslation,
-        sentence.native_translations,
-        nativeLanguage
-      ) ?? sentence.native_translations[0];
+      const closest =
+        find_closest_translation(
+          userTranslation,
+          sentence.native_translations,
+          nativeLanguage
+        ) ?? sentence.native_translations[0];
       setCorrectTranslation(closest);
       setGrade({ grading: null });
 
@@ -578,7 +582,11 @@ export function TranslationChallenge({
             }
           );
           setGrade({
-            graded: { wordStatuses: finalWordStatuses, encouragement, explanation },
+            graded: {
+              wordStatuses: finalWordStatuses,
+              encouragement,
+              explanation,
+            },
           });
         }
       } catch (error) {
@@ -763,7 +771,7 @@ export function TranslationChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div>
-        <AnimatedCard className="bg-card text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 border relative">
+        <AnimatedCard className="backdrop-blur-lg bg-card/85 text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 border relative">
           <div className="space-y-6">
             <div className="text-center">
               <div className="flex items-center justify-between w-full">
@@ -916,7 +924,9 @@ export function TranslationChallenge({
           ) : (
             <>
               {"perfect" in grade.graded ? "Nailed it!" : "Continue"}
-              <span className="ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">(⏎)</span>
+              <span className="ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">
+                (⏎)
+              </span>
             </>
           )}
         </Button>

@@ -9,7 +9,10 @@ import {
   type Course,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { Button } from "@/components/ui/button";
-import { InputFieldSizingContent, InputDottedUnderline } from "@/components/ui/input";
+import {
+  InputFieldSizingContent,
+  InputDottedUnderline,
+} from "@/components/ui/input";
 import { AudioButton } from "../AudioButton";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { motion } from "framer-motion";
@@ -216,11 +219,7 @@ export function TranscriptionChallenge({
       nativeLanguage: nativeLanguage,
     };
 
-    const graded = await autograde_transcription(
-      request,
-      accessToken,
-      course
-    );
+    const graded = await autograde_transcription(request, accessToken, course);
     const isAllCorrect = graded.results.every(
       (result) =>
         "Provided" in result ||
@@ -236,7 +235,14 @@ export function TranscriptionChallenge({
     if (isAllCorrect) {
       playSoundEffect("perfect");
     }
-  }, [gradingState, challenge.parts, userInputs, accessToken, targetLanguage, nativeLanguage]);
+  }, [
+    gradingState,
+    challenge.parts,
+    userInputs,
+    accessToken,
+    targetLanguage,
+    nativeLanguage,
+  ]);
 
   // Global keyboard handler for Enter key
   useEffect(() => {
@@ -296,10 +302,16 @@ export function TranscriptionChallenge({
 
   const renderSentenceWithBlanks = () => {
     // Check if it's a single AskedToTranscribe part (full sentence transcription)
-    const askedToTranscribeParts = challenge.parts.filter(part => "AskedToTranscribe" in part);
-    const isSinglePartTranscription = askedToTranscribeParts.length === 1 && challenge.parts.every(part => 
-      "AskedToTranscribe" in part || ("Provided" in part && !part.Provided.part.heteronym)
+    const askedToTranscribeParts = challenge.parts.filter(
+      (part) => "AskedToTranscribe" in part
     );
+    const isSinglePartTranscription =
+      askedToTranscribeParts.length === 1 &&
+      challenge.parts.every(
+        (part) =>
+          "AskedToTranscribe" in part ||
+          ("Provided" in part && !part.Provided.part.heteronym)
+      );
 
     return challenge.parts.map((item, index) => {
       if ("AskedToTranscribe" in item) {
@@ -310,10 +322,12 @@ export function TranscriptionChallenge({
         const end_whitespace =
           asked_to_transcribe.parts[asked_to_transcribe.parts.length - 1]
             .whitespace;
-        
+
         // Use dotted underline for single-part transcriptions, regular input otherwise
-        const InputComponent = isSinglePartTranscription ? InputDottedUnderline : InputFieldSizingContent;
-        
+        const InputComponent = isSinglePartTranscription
+          ? InputDottedUnderline
+          : InputFieldSizingContent;
+
         return (
           <span key={index} className="w-full">
             <InputComponent
@@ -329,7 +343,9 @@ export function TranscriptionChallenge({
                 // The accent keyboard will refocus when clicked
               }}
               disabled={gradingState !== null}
-              className={`inline-block ${isSinglePartTranscription ? 'min-w-64' : 'min-w-32'} mx-1 text-center text-2xl font-semibold ${getInputClassName(
+              className={`inline-block ${
+                isSinglePartTranscription ? "min-w-64" : "min-w-32"
+              } mx-1 text-center text-2xl font-semibold ${getInputClassName(
                 index
               )}`}
               placeholder="Write what you hear"
@@ -390,7 +406,7 @@ export function TranscriptionChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div>
-        <AnimatedCard className="bg-card text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 border relative">
+        <AnimatedCard className="backdrop-blur-lg bg-card/85 text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 border relative">
           {/* Dropdown menu for options */}
           <div className="absolute top-2 right-2">
             <DropdownMenu>
@@ -587,7 +603,9 @@ export function TranscriptionChallenge({
           {gradingState === null ? (
             <>
               Check Answer
-              <span className="ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">(⏎)</span>
+              <span className="ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">
+                (⏎)
+              </span>
             </>
           ) : "grading" in gradingState ? (
             "AI is grading..."
@@ -604,7 +622,9 @@ export function TranscriptionChallenge({
               )
                 ? "Nailed it!"
                 : "Continue"}
-              <span className="ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">(⏎)</span>
+              <span className="ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">
+                (⏎)
+              </span>
             </>
           )}
         </Button>

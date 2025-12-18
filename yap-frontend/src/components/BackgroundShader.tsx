@@ -4,7 +4,7 @@ import { useTheme } from "./theme-provider";
 function BackgroundShaderComponent() {
   const containerRef = useRef<HTMLDivElement>(null);
   const workerRef = useRef<Worker | null>(null);
-  const { theme } = useTheme();
+  const { theme, animatedBackground } = useTheme();
 
   // Determine actual theme (resolve "system") - memoized to prevent recalculation
   const actualTheme = useMemo(
@@ -19,6 +19,11 @@ function BackgroundShaderComponent() {
 
   // Check accessibility preferences and hardware capabilities
   const shouldRender = useMemo(() => {
+    // User preference
+    if (!animatedBackground) {
+      return false;
+    }
+
     // Disable on low-end devices
     if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) {
       return false;
@@ -40,14 +45,12 @@ function BackgroundShaderComponent() {
     }
 
     return true;
-  }, []);
+  }, [animatedBackground]);
 
   // Set up worker and transfer canvas control
   useEffect(() => {
-    if (!shouldRender) return;
-
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !shouldRender) return;
 
     // Create a fresh canvas element for this worker
     const canvas = document.createElement("canvas");
@@ -100,9 +103,11 @@ function BackgroundShaderComponent() {
       worker.postMessage({ type: "stop" });
       worker.terminate();
       workerRef.current = null;
-      container.removeChild(canvas);
+      if (container.contains(canvas)) {
+        container.removeChild(canvas);
+      }
     };
-  }, [actualTheme, shouldRender]); // Re-run when theme changes
+  }, [actualTheme, shouldRender]); // Re-run when theme or shouldRender changes
 
   if (!shouldRender) {
     return null;

@@ -73,7 +73,7 @@ export function Header({
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="text-2xl font-bold">{backButton.label}</h1>
+              <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,1)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">{backButton.label}</h1>
             </div>
           ) : (
             <>
@@ -93,7 +93,7 @@ export function Header({
                     {getLanguageEmoji(language)}
                   </div>
                 )}
-                <h1 className="text-2xl font-bold">
+                <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,1)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">
                   <span className="hidden sm:inline">{title}</span>
                   <span className="sm:hidden">{title.split('.')[0]}</span>
                 </h1>

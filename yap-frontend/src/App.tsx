@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Outlet, useNavigate, useOutletContext } f
 import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeRequirements, type Course, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
 import { Button } from "@/components/ui/button.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ThemeProvider } from "@/components/theme-provider"
 import { supabase } from '@/lib/supabase'
 import type { Session as SupabaseSession } from '@supabase/supabase-js'
@@ -101,7 +102,7 @@ function AppCheckBrowserSupport() {
 
   if (supported === null) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
+      <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
         <p className="text-muted-foreground animate-fade-in-delayed">Checking device compatibility...</p>
         <Progress value={progress} className="w-64 animate-fade-in-delayed" />
       </div>
@@ -244,7 +245,7 @@ function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
   if (weaponState.type === 'loading') {
     return (
       <div>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
         </div>
       </div>
@@ -317,7 +318,7 @@ function ReviewPage() {
                 showSignupNag: false
               }}
             >
-              <div className="flex-1 bg-background flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center">
                 <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
               </div>
             </TopPageLayout>
@@ -349,7 +350,7 @@ function ReviewPage() {
               userInfo={userInfo}
               headerProps={{ showSignupNag: false }}
             >
-              <div className="flex-1 bg-background flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center">
                 <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
               </div>
             </TopPageLayout>
@@ -384,9 +385,9 @@ function ReviewPage() {
               userInfo={userInfo}
               headerProps={{ showSignupNag: false }}
             >
-              <div className="bg-background flex items-center justify-center">
-                <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
-              </div>
+            <div className="flex items-center justify-center p-4 animate-fade-in-delayed">
+              <Skeleton className="h-48 w-full max-w-2xl" />
+             </div>
             </TopPageLayout>
           ))
           .exhaustive()
@@ -451,7 +452,7 @@ function DictionaryPage() {
           backButton: { label: 'Dictionary', onBack: () => navigate('/') }
         }}
       >
-        <div className="flex-1 bg-background flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </TopPageLayout>
@@ -508,7 +509,7 @@ function LeechesPage() {
           backButton: { label: 'Leeches', onBack: () => navigate('/') }
         }}
       >
-        <div className="flex-1 bg-background flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </TopPageLayout>
@@ -992,7 +993,7 @@ function SelectLanguagePage() {
           backButton: { label: 'Yap.Town', onBack: () => navigate('/') }
         }}
       >
-        <div className="flex-1 bg-background flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <p className="text-muted-foreground animate-fade-in-delayed">Loading...</p>
         </div>
       </TopPageLayout>

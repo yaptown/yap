@@ -625,7 +625,7 @@ export const Flashcard = function Flashcard({
         style={{ x, rotate, opacity }}
       >
         <div
-          className={`bg-card text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg border flex flex-col relative overflow-hidden flashcard h-full ${
+          className={`backdrop-blur-lg bg-card/85 text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg border flex flex-col relative overflow-hidden flashcard h-full ${
             !showAnswer ? "spin-on-hover" : ""
           }`}
           onClick={() => {
