@@ -76,9 +76,10 @@ function AppMain() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <BackgroundShader />
-      <AppCheckBrowserSupport />
-      <Toaster />
+      <BackgroundShader>
+        <AppCheckBrowserSupport />
+        <Toaster />
+      </BackgroundShader>
     </ThemeProvider>
   )
 }

@@ -3,15 +3,53 @@
 interface WorkerMessage {
   type: string;
   canvas?: OffscreenCanvas;
-  theme?: 'dark' | 'light';
+  theme?: "dark" | "light";
   width?: number;
   height?: number;
+  multiplier?: number;
 }
 
 let gl: WebGLRenderingContext | null = null;
 let canvas: OffscreenCanvas | null = null;
-let currentTheme: 'dark' | 'light' = 'dark';
+let currentTheme: "dark" | "light" = "dark";
 let animationFrameId: number | null = null;
+
+// Overloaded function signatures
+function zeno(current: number, target: number, delta_time: number, rate?: number): number;
+function zeno(current: number[], target: number[], delta_time: number, rate?: number): number[];
+function zeno(current: number[][], target: number[][], delta_time: number, rate?: number): number[][];
+
+// Implementation
+function zeno(
+  current: number | number[] | number[][],
+  target: number | number[] | number[][],
+  delta_time: number,
+  rate = 5.0
+): number | number[] | number[][] {
+  const alpha = 1 - Math.exp(-rate * delta_time);
+
+  // Scalar case
+  if (typeof current === 'number' && typeof target === 'number') {
+    return current + alpha * (target - current);
+  }
+
+  // Array case
+  if (Array.isArray(current) && Array.isArray(target)) {
+    // Check if it's array of arrays
+    if (Array.isArray(current[0]) && Array.isArray(target[0])) {
+      return (current as number[][]).map((row, i) =>
+        row.map((val, j) => val + alpha * ((target as number[][])[i][j] - val))
+      );
+    }
+
+    // Array of numbers
+    return (current as number[]).map((val, i) =>
+      val + alpha * ((target as number[])[i] - val)
+    );
+  }
+
+  throw new Error('Invalid types for zeno function');
+}
 
 // CPU-side LCH to RGB conversion
 function lchToRgb(L: number, C: number, H: number): [number, number, number] {
@@ -59,7 +97,7 @@ function createShader(
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+    console.error("Shader compile error:", gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
     return null;
   }
@@ -77,27 +115,27 @@ function createProgram(
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.error('Program link error:', gl.getProgramInfoLog(program));
+    console.error("Program link error:", gl.getProgramInfoLog(program));
     return null;
   }
   return program;
 }
 
-function initWebGL(offscreenCanvas: OffscreenCanvas, theme: 'dark' | 'light') {
+function initWebGL(offscreenCanvas: OffscreenCanvas, theme: "dark" | "light") {
   canvas = offscreenCanvas;
   currentTheme = theme;
 
-  gl = canvas.getContext('webgl', {
+  gl = canvas.getContext("webgl", {
     alpha: false,
     antialias: false,
     depth: false,
     stencil: false,
     preserveDrawingBuffer: false,
-    powerPreference: 'high-performance',
+    powerPreference: "low-power",
   });
 
   if (!gl) {
-    console.error('Failed to get WebGL context');
+    console.error("Failed to get WebGL context");
     return;
   }
 
@@ -217,7 +255,11 @@ function initWebGL(offscreenCanvas: OffscreenCanvas, theme: 'dark' | 'light') {
   `;
 
   const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
-  const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
+  const fragmentShader = createShader(
+    gl,
+    gl.FRAGMENT_SHADER,
+    fragmentShaderSrc
+  );
   if (!vertexShader || !fragmentShader) return;
 
   const program = createProgram(gl, vertexShader, fragmentShader);
@@ -231,20 +273,22 @@ function initWebGL(offscreenCanvas: OffscreenCanvas, theme: 'dark' | 'light') {
     gl.STATIC_DRAW
   );
 
-  const positionLocation = gl.getAttribLocation(program, 'a_position');
-  const timeLocation = gl.getUniformLocation(program, 'u_time');
-  const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-  const numBandsLocation = gl.getUniformLocation(program, 'u_numBands');
-  const colorsLocation = gl.getUniformLocation(program, 'u_colors');
+  const positionLocation = gl.getAttribLocation(program, "a_position");
+  const timeLocation = gl.getUniformLocation(program, "u_time");
+  const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+  const numBandsLocation = gl.getUniformLocation(program, "u_numBands");
+  const colorsLocation = gl.getUniformLocation(program, "u_colors");
 
-  const startTime = performance.now();
-  const speed = 0.1;
+  let elapsedTime = 0;
+  let lastFrameTime = performance.now();
+  const targetSpeed = 0.03;
+  let speed = targetSpeed;
 
-  function updateColors() {
-    const numBands = currentTheme === 'dark' ? 6 : 6;
-    const lightness = currentTheme === 'dark' ? 10.0 : 78.0;
-    const chroma = currentTheme === 'dark' ? 3.0 : 30.0;
-    const lightnessShift = currentTheme === 'dark' ? 12.0 : 12.0;
+  function calculateColors(theme: "dark" | "light") {
+    const numBands = theme === "dark" ? 6 : 6;
+    const lightness = theme === "dark" ? 10.0 : 78.0;
+    const chroma = theme === "dark" ? 3.0 : 30.0;
+    const lightnessShift = theme === "dark" ? 12.0 : 12.0;
     const hueStart = 3.2;
     const hueRange = -3.0;
 
@@ -263,12 +307,25 @@ function initWebGL(offscreenCanvas: OffscreenCanvas, theme: 'dark' | 'light') {
     return { colors, numBands };
   }
 
-  let colorData = updateColors();
+  const initialColorData = calculateColors(currentTheme);
+  let targetColors = initialColorData.colors;
+  let currentColors = [...targetColors]; // Start with target colors
+  let numBands = initialColorData.numBands;
 
   function render() {
     if (!canvas || !gl) return;
 
-    const elapsed = (performance.now() - startTime) * speed;
+    const now = performance.now();
+    const deltaTime = now - lastFrameTime;
+    lastFrameTime = now;
+
+    // Decay speed back to target using zeno
+    speed = zeno(speed, targetSpeed, deltaTime / 1000, 3.0);
+
+    // Interpolate colors towards target
+    currentColors = zeno(currentColors, targetColors, deltaTime / 1000, 18.0);
+
+    elapsedTime += deltaTime * speed;
 
     gl.useProgram(program);
 
@@ -276,10 +333,10 @@ function initWebGL(offscreenCanvas: OffscreenCanvas, theme: 'dark' | 'light') {
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-    gl.uniform1f(timeLocation, elapsed);
+    gl.uniform1f(timeLocation, elapsedTime);
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
-    gl.uniform1f(numBandsLocation, colorData.numBands);
-    gl.uniform3fv(colorsLocation, colorData.colors);
+    gl.uniform1f(numBandsLocation, numBands);
+    gl.uniform3fv(colorsLocation, currentColors);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
@@ -287,27 +344,44 @@ function initWebGL(offscreenCanvas: OffscreenCanvas, theme: 'dark' | 'light') {
   }
 
   // Expose updateColors for theme changes
-  (self as typeof self & { updateShaderColors?: () => void }).updateShaderColors = () => {
-    colorData = updateColors();
+  (
+    self as typeof self & {
+      updateShaderColors?: () => void;
+      bumpSpeed?: (multiplier?: number) => void;
+    }
+  ).updateShaderColors = () => {
+    const newColorData = calculateColors(currentTheme);
+    targetColors = newColorData.colors;
+    numBands = newColorData.numBands;
+  };
+
+  // Expose bumpSpeed function
+  (
+    self as typeof self & {
+      updateShaderColors?: () => void;
+      bumpSpeed?: (multiplier?: number) => void;
+    }
+  ).bumpSpeed = (multiplier = 3.0) => {
+    speed = targetSpeed * multiplier;
   };
 
   render();
-  self.postMessage({ type: 'ready' });
+  self.postMessage({ type: "ready" });
 }
 
 // Listen for messages from the main thread
-self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
+self.addEventListener("message", (event: MessageEvent<WorkerMessage>) => {
   const { type, canvas: offscreenCanvas, theme, width, height } = event.data;
 
   switch (type) {
-    case 'init': {
+    case "init": {
       if (offscreenCanvas && theme) {
         initWebGL(offscreenCanvas, theme);
       }
       break;
     }
 
-    case 'resize': {
+    case "resize": {
       if (canvas && gl && width !== undefined && height !== undefined) {
         const dpr = Math.min(1.5, 1.5);
         const scale = 0.75;
@@ -318,10 +392,12 @@ self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
       break;
     }
 
-    case 'theme': {
+    case "theme": {
       if (theme) {
         currentTheme = theme;
-        const updateColors = (self as typeof self & { updateShaderColors?: () => void }).updateShaderColors;
+        const updateColors = (
+          self as typeof self & { updateShaderColors?: () => void }
+        ).updateShaderColors;
         if (updateColors) {
           updateColors();
         }
@@ -329,7 +405,7 @@ self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
       break;
     }
 
-    case 'stop': {
+    case "stop": {
       if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
@@ -337,8 +413,18 @@ self.addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
       break;
     }
 
+    case "bump": {
+      const bumpSpeed = (
+        self as typeof self & { bumpSpeed?: (multiplier?: number) => void }
+      ).bumpSpeed;
+      if (bumpSpeed) {
+        bumpSpeed(event.data.multiplier);
+      }
+      break;
+    }
+
     default: {
-      console.warn('[Worker] Unknown message type:', type);
+      console.warn("[Worker] Unknown message type:", type);
       break;
     }
   }

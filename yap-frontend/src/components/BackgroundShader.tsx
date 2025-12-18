@@ -1,7 +1,25 @@
-import { useEffect, useRef, useMemo, memo } from "react";
+import { useEffect, useRef, useMemo, memo, createContext, useContext, useCallback, ReactNode } from "react";
 import { useTheme } from "./theme-provider";
 
-function BackgroundShaderComponent() {
+interface BackgroundContextType {
+  bumpBackground: (multiplier?: number) => void;
+}
+
+const BackgroundContext = createContext<BackgroundContextType | null>(null);
+
+export function useBackground() {
+  const context = useContext(BackgroundContext);
+  if (!context) {
+    throw new Error("useBackground must be used within a BackgroundShader");
+  }
+  return context;
+}
+
+interface BackgroundShaderProps {
+  children: ReactNode;
+}
+
+function BackgroundShaderComponent({ children }: BackgroundShaderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const { theme, animatedBackground } = useTheme();
@@ -46,6 +64,13 @@ function BackgroundShaderComponent() {
 
     return true;
   }, [animatedBackground]);
+
+  // Expose bump function to children
+  const bumpBackground = useCallback((multiplier?: number) => {
+    if (workerRef.current) {
+      workerRef.current.postMessage({ type: 'bump', multiplier });
+    }
+  }, []);
 
   // Set up worker and transfer canvas control
   useEffect(() => {
@@ -107,28 +132,36 @@ function BackgroundShaderComponent() {
         container.removeChild(canvas);
       }
     };
-  }, [actualTheme, shouldRender]); // Re-run when theme or shouldRender changes
+  }, [shouldRender]); // Only re-run when shouldRender changes
 
-  if (!shouldRender) {
-    return null;
-  }
+  // Handle theme changes separately without recreating worker
+  useEffect(() => {
+    if (workerRef.current && shouldRender) {
+      workerRef.current.postMessage({ type: 'theme', theme: actualTheme });
+    }
+  }, [actualTheme, shouldRender]);
 
   return (
-    <>
-      <div ref={containerRef} className="contents" />
-      <div
-        className="fixed inset-0 w-full h-full -z-10 opacity-[0.30]"
-        style={{
-          pointerEvents: "none",
-          backgroundImage: "url(/noise2.webp)",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          mixBlendMode: actualTheme === "dark" ? "multiply" : "screen",
-          filter: actualTheme === "dark" ? "invert(1)" : "none",
-        }}
-      />
-    </>
+    <BackgroundContext.Provider value={{ bumpBackground }}>
+      {shouldRender && (
+        <>
+          <div ref={containerRef} className="contents" />
+          <div
+            className="fixed inset-0 w-full h-full -z-10 opacity-[0.30]"
+            style={{
+              pointerEvents: "none",
+              backgroundImage: "url(/noise2.webp)",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              mixBlendMode: actualTheme === "dark" ? "multiply" : "screen",
+              filter: actualTheme === "dark" ? "invert(1)" : "none",
+            }}
+          />
+        </>
+      )}
+      {children}
+    </BackgroundContext.Provider>
   );
 }
 

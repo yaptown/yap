@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Check, ChevronsUpDown } from "lucide-react";
+import { useBackground } from "@/components/BackgroundShader";
 import {
   Carousel,
   CarouselContent,
@@ -69,6 +70,7 @@ export function LanguageSelector({
     "knows_some" | "beginner" | null
   >(null);
   const weapon = useWeapon();
+  const { bumpBackground } = useBackground();
 
   // Get available courses
   const availableCourses = useMemo(() => get_available_courses(), []);
@@ -540,6 +542,7 @@ export function LanguageSelector({
                     <Card
                       className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
                       onClick={() => {
+                        bumpBackground(50.0);
                         setSelectionState({
                           stage: "askingExperience",
                           nativeLanguage: selectionState.nativeLanguage,
