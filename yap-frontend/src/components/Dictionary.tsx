@@ -171,7 +171,7 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
             )
 
             return (
-            <div key={`${entry.word}-${index}`} className="border rounded-lg p-4 bg-card relative">
+            <div key={`${entry.word}-${index}`} className="border rounded-lg p-4 bg-card/85 backdrop-blur-lg relative">
               <div className="flex items-baseline justify-between gap-4 mb-2">
                 <h2 className="text-xl font-semibold">
                   {prefix && (

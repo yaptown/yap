@@ -32,6 +32,7 @@ import { CardsRemaining } from "./CardsRemaining";
 import { toast } from "sonner";
 import { match } from "ts-pattern";
 import { formatMorphology } from "@/utils/formatMorphology";
+import { useBackground } from "./BackgroundShader";
 
 interface FlashcardProps {
   audioRequest: AudioRequest | undefined;
@@ -99,11 +100,7 @@ const CardFront = ({
       .with("Anywhere", () => pattern)
       .exhaustive();
 
-    return (
-      <h2 className="text-4xl font-bold">
-        🗣️ "{displayPattern}"
-      </h2>
-    );
+    return <h2 className="text-4xl font-bold">🗣️ "{displayPattern}"</h2>;
   } else {
     return <h2 className="text-3xl font-semibold">Unknown card type</h2>;
   }
@@ -451,6 +448,7 @@ export const Flashcard = function Flashcard({
   const controls = animationControls();
   const [isDragging, setIsDragging] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const { bumpBackground } = useBackground();
 
   const leftLabel = isNew ? "Didn't know" : "Forgot";
   const rightLabel = isNew ? "Already knew" : "Good";
@@ -488,6 +486,7 @@ export const Flashcard = function Flashcard({
         transition: { duration: 0.2 },
       });
       if (onRating) {
+        bumpBackground(30.0);
         window.scrollTo({ top: 0, behavior: "smooth" });
         onRating("remembered");
       }
@@ -499,6 +498,7 @@ export const Flashcard = function Flashcard({
         transition: { duration: 0.2 },
       });
       if (onRating) {
+        bumpBackground(30.0);
         window.scrollTo({ top: 0, behavior: "smooth" });
         onRating("again");
       }
@@ -570,6 +570,7 @@ export const Flashcard = function Flashcard({
       else if (canGrade && e.key === "ArrowRight" && !e.shiftKey) {
         e.preventDefault();
         if (onRating) {
+          bumpBackground(30.0);
           window.scrollTo({ top: 0, behavior: "smooth" });
           onRating("remembered");
         }
@@ -578,6 +579,7 @@ export const Flashcard = function Flashcard({
       else if (canGrade && e.key === "ArrowLeft") {
         e.preventDefault();
         if (onRating) {
+          bumpBackground(30.0);
           window.scrollTo({ top: 0, behavior: "smooth" });
           onRating("again");
         }
@@ -625,7 +627,7 @@ export const Flashcard = function Flashcard({
         style={{ x, rotate, opacity }}
       >
         <div
-          className={`bg-card text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg border flex flex-col relative overflow-hidden flashcard h-full ${
+          className={`backdrop-blur-lg bg-card/85 text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg border flex flex-col relative overflow-hidden flashcard h-full ${
             !showAnswer ? "spin-on-hover" : ""
           }`}
           onClick={() => {
@@ -690,13 +692,28 @@ export const Flashcard = function Flashcard({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onRating("easy")}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          bumpBackground(30.0);
+                          onRating("easy");
+                        }}
+                      >
                         Easy
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onRating("good")}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          bumpBackground(30.0);
+                          onRating("good");
+                        }}
+                      >
                         Good
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onRating("hard")}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          bumpBackground(30.0);
+                          onRating("hard");
+                        }}
+                      >
                         Hard
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={copyWord}>
@@ -767,6 +784,7 @@ export const Flashcard = function Flashcard({
             <Button
               onClick={() => {
                 if (!canGrade) return;
+                bumpBackground(30.0);
                 window.scrollTo({ top: 0, behavior: "smooth" });
                 onRating("again");
               }}
@@ -785,6 +803,7 @@ export const Flashcard = function Flashcard({
             <Button
               onClick={() => {
                 if (!canGrade) return;
+                bumpBackground(30.0);
                 window.scrollTo({ top: 0, behavior: "smooth" });
                 onRating("remembered");
               }}

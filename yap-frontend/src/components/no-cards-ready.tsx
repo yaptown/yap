@@ -102,7 +102,7 @@ export function NoCardsReady({
 
   return (
     <div className="space-y-4">
-      <AnimatedCard className="bg-card text-card-foreground rounded-lg p-6 gap-6 flex flex-col text-center border">
+      <AnimatedCard className="backdrop-blur-lg bg-card/85 text-card-foreground rounded-lg p-6 gap-6 flex flex-col text-center border">
         {showLightWorkloadNotification && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
