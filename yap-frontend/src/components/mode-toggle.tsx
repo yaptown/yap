@@ -1,4 +1,4 @@
-import { Moon, Sun, Monitor, Check } from "lucide-react";
+import { Moon, Sun, Monitor, Check, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ export function ModeToggle() {
   const themes = [
     { value: "light" as const, icon: Sun, label: "Light" },
     { value: "dark" as const, icon: Moon, label: "Dark" },
+    { value: "oled" as const, icon: Zap, label: "OLED" },
     { value: "system" as const, icon: Monitor, label: "System" },
   ];
 
@@ -28,8 +29,8 @@ export function ModeToggle() {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <div className="grid grid-cols-3 gap-1 p-1">
+      <DropdownMenuContent align="end" className="w-64">
+        <div className="grid grid-cols-4 gap-1 p-1">
           {themes.map(({ value, icon: Icon, label }) => (
             <button
               key={value}

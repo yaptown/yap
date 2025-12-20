@@ -35,6 +35,7 @@ static CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .unwrap()
         .with_url(my_api)
         .with_reasoning_effort("medium")
+        .with_max_concurrent_requests(3)
 });
 
 static LOW_REASONING_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
@@ -44,6 +45,17 @@ static LOW_REASONING_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .unwrap()
         .with_url(my_api)
         .with_reasoning_effort("low")
+        .with_max_concurrent_requests(3)
+});
+
+static UNAUTHENTICATED_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
+    let my_api =
+        "https://g7edusstdonmn3vxdh3qdypkrq0wzttx.lambda-url.us-east-1.on.aws/v1/".to_string();
+    ChatClient::from_env("gpt-5.1")
+        .unwrap()
+        .with_url(my_api)
+        .with_reasoning_effort("low")
+        .with_max_concurrent_requests(1)
 });
 
 const PERSONALITY: &str = r#"You are a helpful assistant that helps users learn languages. You are friendly and encouraging, and you always try to help the user learn from their mistakes. When correcting the user's mistakes, first congratulate them on the parts they did well on, and then explain the mistakes they made and how they can improve. But the main thing to do is to explain the mistakes in a helpful (but concise) way, and encourage the user. You speak conversationally, as if you were speaking to the user directly. You don't use bullet points or headings, but you do break concepts into individual lines as necessary."#;
@@ -292,6 +304,7 @@ async fn autograde_translation(
     // Verify JWT token
     // actually, disable authentication for now until people start abusing it:
     let _claims = verify_jwt(auth.token()).await;
+    let logged_in = verify_jwt(auth.token()).await.is_ok();
 
     let autograde::AutoGradeTranslationRequest {
         challenge_sentence,
@@ -411,7 +424,9 @@ The encouragement should always be provided, be a short positive message (1-2 se
     );
 
     // Use low reasoning effort for simple challenges with few lexemes
-    let client = if lexemes.len() <= 4 {
+    let client = if !logged_in {
+        &UNAUTHENTICATED_CLIENT
+    } else if lexemes.len() <= 4 {
         &LOW_REASONING_CLIENT
     } else {
         &CLIENT

@@ -295,7 +295,7 @@ export function UserProfilePage() {
                         @{profile.display_name_slug}
                       </p>
                     )}
-                    <div className="flex gap-4 mt-2 text-sm animate-fade-in-delayed">
+                    <div className="flex gap-4 mt-2 text-sm animate-fade-in-delay-2">
                       <span>
                         {followStatus ? (
                           <>

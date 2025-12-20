@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -298,7 +299,7 @@ function WordDefinition({
     "Heteronym" in lexeme ? lexeme.Heteronym.word : lexeme.Multiword;
 
   return (
-    <div className="mt-2 p-3 bg-secondary rounded-md">
+    <div className="mt-2 p-3 border border-card/50 bg-card/30 rounded-md">
       <p className="text-sm font-semibold">{lexemeText}:</p>
       <ul className="list-disc list-inside text-sm">
         {definitions.map((def, i) => (
@@ -791,7 +792,8 @@ export function TranslationChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div>
-        <AnimatedCard className="backdrop-blur-lg bg-card/85 text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 border relative">
+        <AnimatedCard>
+          <Card className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
           <div className="space-y-6">
             <div className="text-center">
               <div className="flex items-center justify-between w-full">
@@ -915,6 +917,7 @@ export function TranslationChallenge({
               />
             ))}
           </div>
+          </Card>
         </AnimatedCard>
         <CardsRemaining
           dueCount={dueCount}

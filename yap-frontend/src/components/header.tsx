@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,7 +74,7 @@ export function Header({
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,1)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">{backButton.label}</h1>
+              <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">{backButton.label}</h1>
             </div>
           ) : (
             <>
@@ -93,7 +94,7 @@ export function Header({
                     {getLanguageEmoji(language)}
                   </div>
                 )}
-                <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,1)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">
+                <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">
                   <span className="hidden sm:inline">{title}</span>
                   <span className="sm:hidden">{title.split('.')[0]}</span>
                 </h1>
@@ -128,7 +129,7 @@ export function Header({
           ) : (
             <>
               <Button
-                variant="default"
+                variant="ghost"
                 size="sm"
                 onClick={() => {
                   setDefaultView("signin");
@@ -149,7 +150,7 @@ export function Header({
       </div>
 
       {!userInfo && showSignupNag && (
-        <div className="bg-muted/70 backdrop-blur-lg border rounded-lg p-3 flex items-center gap-3 mb-2">
+        <Card variant="light" className="p-3 flex-row items-center gap-3 mb-2 py-3">
           <AlertTriangle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium">
@@ -171,7 +172,7 @@ export function Header({
           >
             Create Account
           </Button>
-        </div>
+        </Card>
       )}
     </div>
   );

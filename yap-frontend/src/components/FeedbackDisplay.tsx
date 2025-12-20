@@ -31,7 +31,7 @@ export function FeedbackDisplay({
         )}
 
         {explanation && (
-          <div className="animate-fade-in-delayed">
+          <div className="animate-fade-in-delay-2">
             <Markdown>{explanation}</Markdown>
           </div>
         )}

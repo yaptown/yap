@@ -10,6 +10,7 @@ import {
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useInterval } from "react-use";
 import { NumericStats } from "./numeric-stats";
+import { Card } from "@/components/ui/card";
 
 // Lazy load the chart component - only loads when needed
 const FrequencyKnowledgeChart = lazy(() =>
@@ -68,7 +69,7 @@ export function Stats({ deck }: StatsProps) {
   const [isGraphsOpen, setIsGraphsOpen] = useState(false);
 
   return (
-    <div className="mt-4 animate-fade-in-delayed">
+    <div className="mt-4 animate-fade-in-delay-2">
       <NumericStats
         xp={deck.get_xp()}
         totalCards={allCardsSummary.length}
@@ -77,7 +78,7 @@ export function Stats({ deck }: StatsProps) {
         dailyStreak={deck.get_daily_streak()}
         totalReviews={deck.get_total_reviews()}
       />
-      <div className="bg-card border rounded-lg overflow-hidden">
+      <Card className="overflow-hidden p-0 gap-0">
         <table className="w-full table-fixed">
           <thead>
             <tr className="border-b bg-muted/50">
@@ -200,7 +201,7 @@ export function Stats({ deck }: StatsProps) {
             </button>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Collapsible Graphs Section */}
       <Collapsible

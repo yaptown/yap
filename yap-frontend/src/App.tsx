@@ -4,6 +4,7 @@ import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, 
 import { Button } from "@/components/ui/button.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
 import { ThemeProvider } from "@/components/theme-provider"
 import { supabase } from '@/lib/supabase'
 import type { Session as SupabaseSession } from '@supabase/supabase-js'
@@ -104,8 +105,8 @@ function AppCheckBrowserSupport() {
   if (supported === null) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
-        <p className="text-muted-foreground animate-fade-in-delayed">Checking device compatibility...</p>
-        <Progress value={progress} className="w-64 animate-fade-in-delayed" />
+        <p className="text-muted-foreground animate-fade-in-delay-2">Checking device compatibility...</p>
+        <Progress value={progress} className="w-64 animate-fade-in-delay-2" />
       </div>
     )
   }
@@ -256,7 +257,7 @@ function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
     return (
       <div>
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-card border rounded-lg p-6 text-center">
+          <Card className="max-w-md w-full p-6 text-center gap-0">
             <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-red-600 dark:text-red-400 text-xl">⚠</span>
             </div>
@@ -268,7 +269,7 @@ function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
             >
               Try Again
             </Button>
-          </div>
+          </Card>
         </div>
       </div>
     )
@@ -365,7 +366,7 @@ function ReviewPage() {
               }}
             >
               <div className="flex-1 bg-background flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-card border rounded-lg p-6">
+                <Card className="max-w-md w-full p-6 gap-0">
                   <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-red-600 dark:text-red-400 text-xl">⚠</span>
                   </div>
@@ -377,7 +378,7 @@ function ReviewPage() {
                   <Button onClick={retry} variant="outline" className="w-full">
                     Try Again
                   </Button>
-                </div>
+                </Card>
               </div>
             </TopPageLayout>
           ))
@@ -401,15 +402,15 @@ function Tools() {
   const navigate = useNavigate()
 
   return (
-    <div className="animate-fade-in-delayed">
+    <div className="animate-fade-in-delay-2">
       <h2 className="text-2xl font-semibold">Tools</h2>
-      <div className="bg-card/85 backdrop-blur-lg border rounded-lg p-4 mt-3 space-y-2">
+      <Card className="p-4 mt-3 space-y-2 gap-0">
         <button
           onClick={() => {
             navigate('/dictionary');
             window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
           }}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors"
+          className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors mb-0"
         >
           <span>📖 Dictionary</span>
           <span className="text-muted-foreground">→</span>
@@ -424,7 +425,7 @@ function Tools() {
           <span>🩹 Leeches</span>
           <span className="text-muted-foreground">→</span>
         </button>
-      </div>
+      </Card>
     </div>
   )
 }

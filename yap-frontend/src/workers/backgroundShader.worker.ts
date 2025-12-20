@@ -3,21 +3,37 @@
 interface WorkerMessage {
   type: string;
   canvas?: OffscreenCanvas;
-  theme?: "dark" | "light";
+  theme?: "dark" | "light" | "oled";
   width?: number;
   height?: number;
+  devicePixelRatio?: number;
   multiplier?: number;
 }
 
 let gl: WebGLRenderingContext | null = null;
 let canvas: OffscreenCanvas | null = null;
-let currentTheme: "dark" | "light" = "dark";
+let currentTheme: "dark" | "light" | "oled" = "dark";
 let animationFrameId: number | null = null;
 
 // Overloaded function signatures
-function zeno(current: number, target: number, delta_time: number, rate?: number): number;
-function zeno(current: number[], target: number[], delta_time: number, rate?: number): number[];
-function zeno(current: number[][], target: number[][], delta_time: number, rate?: number): number[][];
+function zeno(
+  current: number,
+  target: number,
+  delta_time: number,
+  rate?: number
+): number;
+function zeno(
+  current: number[],
+  target: number[],
+  delta_time: number,
+  rate?: number
+): number[];
+function zeno(
+  current: number[][],
+  target: number[][],
+  delta_time: number,
+  rate?: number
+): number[][];
 
 // Implementation
 function zeno(
@@ -29,7 +45,7 @@ function zeno(
   const alpha = 1 - Math.exp(-rate * delta_time);
 
   // Scalar case
-  if (typeof current === 'number' && typeof target === 'number') {
+  if (typeof current === "number" && typeof target === "number") {
     return current + alpha * (target - current);
   }
 
@@ -43,12 +59,12 @@ function zeno(
     }
 
     // Array of numbers
-    return (current as number[]).map((val, i) =>
-      val + alpha * ((target as number[])[i] - val)
+    return (current as number[]).map(
+      (val, i) => val + alpha * ((target as number[])[i] - val)
     );
   }
 
-  throw new Error('Invalid types for zeno function');
+  throw new Error("Invalid types for zeno function");
 }
 
 // CPU-side LCH to RGB conversion
@@ -121,7 +137,10 @@ function createProgram(
   return program;
 }
 
-function initWebGL(offscreenCanvas: OffscreenCanvas, theme: "dark" | "light") {
+function initWebGL(
+  offscreenCanvas: OffscreenCanvas,
+  theme: "dark" | "light" | "oled"
+) {
   canvas = offscreenCanvas;
   currentTheme = theme;
 
@@ -284,13 +303,15 @@ function initWebGL(offscreenCanvas: OffscreenCanvas, theme: "dark" | "light") {
   const targetSpeed = 0.03;
   let speed = targetSpeed;
 
-  function calculateColors(theme: "dark" | "light") {
-    const numBands = theme === "dark" ? 6 : 6;
-    const lightness = theme === "dark" ? 5.0 : 78.0;
-    const chroma = theme === "dark" ? 3.0 : 30.0;
-    const lightnessShift = theme === "dark" ? 9.0 : 12.0;
-    const hueStart = 3.2;
-    const hueRange = -3.0;
+  function calculateColors(theme: "dark" | "light" | "oled") {
+    const isDark = theme === "dark" || theme === "oled";
+    const numBands = isDark ? 6 : 6;
+    const lightness = theme === "dark" ? 15.0 : theme === "oled" ? 5.0 : 78.0;
+    const chroma = theme === "oled" ? 0.0 : theme === "dark" ? 9.0 : 30.0;
+    const lightnessShift =
+      theme === "oled" ? 20.0 : theme === "dark" ? 7.0 : 12.0;
+    const hueStart = theme === "oled" ? 3.2 : theme === "dark" ? 5.2 : 3.2;
+    const hueRange = theme === "oled" ? -3.0 : theme === "dark" ? 3.0 : -3.0;
 
     const colors: number[] = [];
     for (let i = 0; i < numBands; i++) {
@@ -371,7 +392,14 @@ function initWebGL(offscreenCanvas: OffscreenCanvas, theme: "dark" | "light") {
 
 // Listen for messages from the main thread
 self.addEventListener("message", (event: MessageEvent<WorkerMessage>) => {
-  const { type, canvas: offscreenCanvas, theme, width, height } = event.data;
+  const {
+    type,
+    canvas: offscreenCanvas,
+    theme,
+    width,
+    height,
+    devicePixelRatio,
+  } = event.data;
 
   switch (type) {
     case "init": {
@@ -382,8 +410,14 @@ self.addEventListener("message", (event: MessageEvent<WorkerMessage>) => {
     }
 
     case "resize": {
-      if (canvas && gl && width !== undefined && height !== undefined) {
-        const dpr = Math.min(1.5, 1.5);
+      if (
+        canvas &&
+        gl &&
+        width !== undefined &&
+        height !== undefined &&
+        devicePixelRatio !== undefined
+      ) {
+        const dpr = Math.min(devicePixelRatio, 1.5);
         const scale = 0.75;
         canvas.width = width * dpr * scale;
         canvas.height = height * dpr * scale;

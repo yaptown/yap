@@ -126,6 +126,7 @@ function BackgroundShaderComponent({ children }: BackgroundShaderProps) {
         type: "resize",
         width: window.innerWidth,
         height: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio || 1,
       });
     };
 
@@ -159,12 +160,36 @@ function BackgroundShaderComponent({ children }: BackgroundShaderProps) {
             className="fixed inset-0 w-full h-full -z-10 opacity-[0.30]"
             style={{
               pointerEvents: "none",
-              backgroundImage: "url(/noise2.webp)",
+              backgroundImage: actualTheme === "dark" || actualTheme === "oled" ? "url(/fog.webp)" : "url(/noise2.webp)",
               backgroundRepeat: "no-repeat",
               backgroundSize: "cover",
               backgroundPosition: "center",
-              mixBlendMode: actualTheme === "dark" ? "multiply" : "screen",
-              filter: actualTheme === "dark" ? "invert(1)" : "none",
+              mixBlendMode:
+                actualTheme === "dark" || actualTheme === "oled"
+                  ? "multiply"
+                  : "screen",
+              filter:
+                actualTheme === "dark" || actualTheme === "oled"
+                  ? "invert(1)"
+                  : "none",
+            }}
+          />
+          <div
+            className="fixed inset-0 w-full h-full -z-10 opacity-[0.20]"
+            style={{
+              pointerEvents: "none",
+              backgroundImage: "url(/noise.webp)",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              mixBlendMode:
+                actualTheme === "dark" || actualTheme === "oled"
+                  ? "multiply"
+                  : "screen",
+              filter:
+                actualTheme === "dark" || actualTheme === "oled"
+                  ? "invert(1)"
+                  : "none",
             }}
           />
         </>

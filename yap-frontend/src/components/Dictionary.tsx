@@ -3,6 +3,7 @@ import { type Deck, type Weapon, type Language, type Heteronym, get_word_prefix 
 import { CirclePlus, CircleCheckBig } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatMorphology } from '@/utils/formatMorphology'
+import { Card } from '@/components/ui/card'
 
 // Helper function to get language display name (exhaustive)
 function getLanguageDisplayName(language: Language): string {
@@ -171,7 +172,7 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
             )
 
             return (
-            <div key={`${entry.word}-${index}`} className="border rounded-lg p-4 bg-card/85 backdrop-blur-lg relative">
+            <Card key={`${entry.word}-${index}`} className="p-4 relative gap-0">
               <div className="flex items-baseline justify-between gap-4 mb-2">
                 <h2 className="text-xl font-semibold">
                   {prefix && (
@@ -231,7 +232,7 @@ export function Dictionary({ deck, weapon, targetLanguage, nativeLanguage }: { d
                   </button>
                 )}
               </div>
-            </div>
+            </Card>
             )
           })}
 

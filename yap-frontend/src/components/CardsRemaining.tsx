@@ -13,7 +13,7 @@ export function CardsRemaining({
 }: CardsRemainingProps) {
   return (
     <div className={cn("text-sm text-muted-foreground", className)}>
-      {dueCount}/{totalCount} cards remaining
+      {dueCount}/{totalCount} card{totalCount === 1 ? "" : "s"} ready for review
     </div>
   );
 }

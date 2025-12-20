@@ -13,6 +13,7 @@ import {
   InputFieldSizingContent,
   InputDottedUnderline,
 } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { AudioButton } from "../AudioButton";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { motion } from "framer-motion";
@@ -412,7 +413,8 @@ export function TranscriptionChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div>
-        <AnimatedCard className="backdrop-blur-lg bg-card/85 text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 border relative">
+        <AnimatedCard>
+          <Card className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
           {/* Dropdown menu for options */}
           <div className="absolute top-2 right-2">
             <DropdownMenu>
@@ -558,6 +560,7 @@ export function TranscriptionChallenge({
               </motion.div>
             )}
           </div>
+          </Card>
         </AnimatedCard>
 
         {/* Accented character keyboard - show when not graded, language supports it, and not on small screens */}

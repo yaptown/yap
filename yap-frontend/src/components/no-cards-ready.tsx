@@ -17,6 +17,7 @@ import {
 import { ChevronDown, AlertCircle, Sparkles } from "lucide-react";
 import { AnimatedCard } from "./AnimatedCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card } from "@/components/ui/card";
 
 interface NoCardsReadyProps {
   nextDueCard: CardSummary | null;
@@ -102,7 +103,8 @@ export function NoCardsReady({
 
   return (
     <div className="space-y-4">
-      <AnimatedCard className="backdrop-blur-lg bg-card/85 text-card-foreground rounded-lg p-6 gap-6 flex flex-col text-center border">
+      <AnimatedCard>
+        <Card className="text-center p-6">
         {showLightWorkloadNotification && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
@@ -210,6 +212,7 @@ export function NoCardsReady({
             </p>
           )}
         </div>
+        </Card>
       </AnimatedCard>
 
       {showEngagementPrompts && (

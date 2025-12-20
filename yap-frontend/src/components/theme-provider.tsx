@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "dark" | "light" | "system";
+type Theme = "dark" | "light" | "oled" | "system";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -62,7 +62,9 @@ export function ThemeProvider({
       return;
     }
 
-    root.classList.add(theme);
+    // Map "oled" to "dark" for CSS purposes
+    const cssTheme = theme === "oled" ? "dark" : theme;
+    root.classList.add(cssTheme);
   }, [theme]);
 
   const setAnimatedBackground = (enabled: boolean) => {

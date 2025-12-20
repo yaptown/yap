@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, ArrowLeft, ArrowRight, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   motion,
   useMotionValue,
@@ -65,8 +66,7 @@ const CardFront = ({
     const prefix = listeningPrefix || "Le mot est";
     return (
       <h2 className="text-3xl font-semibold flex items-center gap-3 flex-wrap justify-center text-center">
-        <span>{prefix}...</span>
-        <AudioVisualizer />
+        <span>{prefix} _____. </span>
       </h2>
     );
   } else if ("Heteronym" in content) {
@@ -222,7 +222,7 @@ const CardBack = ({
     return content.Heteronym.definitions.map((def, index) => (
       <div
         key={index}
-        className="text-left bg-muted/30 rounded-lg p-4 space-y-2"
+        className="text-left border border-card/50 bg-card/30 rounded-lg p-4 space-y-2"
       >
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-xl font-medium">{def.native}</span>
@@ -451,9 +451,9 @@ export const Flashcard = function Flashcard({
   const { bumpBackground } = useBackground();
 
   const leftLabel = isNew ? "Didn't know" : "Forgot";
-  const rightLabel = isNew ? "Already knew" : "Good";
+  const rightLabel = isNew ? "Already knew" : "Remembered";
 
-  const requireShowAnswer = totalCount < 30;
+  const requireShowAnswer = totalCount < 50;
   const canGrade = showAnswer || !requireShowAnswer;
 
   const rotate = useTransform(x, [-200, 200], [-30, 30]);
@@ -626,8 +626,8 @@ export const Flashcard = function Flashcard({
         animate={controls}
         style={{ x, rotate, opacity }}
       >
-        <div
-          className={`backdrop-blur-lg bg-card/85 text-card-foreground rounded-lg pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg border flex flex-col relative overflow-hidden flashcard h-full ${
+        <Card
+          className={`pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg overflow-hidden flashcard h-full gap-0 ${
             !showAnswer ? "spin-on-hover" : ""
           }`}
           onClick={() => {
@@ -660,8 +660,8 @@ export const Flashcard = function Flashcard({
             {rightLabel.toUpperCase()}
           </motion.div>
 
-          <div className="text-center relative z-10">
-            <div className="mb-4 justify-center gap-2 flex flex-col items-center w-full">
+          <div className="text-center relative z-10 flex flex-col gap-6">
+            <div className="justify-center gap-2 flex flex-col items-center w-full">
               <div
                 className="flex items-center justify-between w-full"
                 onClick={(e) => e.stopPropagation()}
@@ -733,7 +733,7 @@ export const Flashcard = function Flashcard({
               <CardFrontSubtitle content={content} />
             </div>
 
-            <hr className="my-4" />
+            <hr className="" />
 
             {showAnswer ? (
               <motion.div
@@ -763,7 +763,7 @@ export const Flashcard = function Flashcard({
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         <CardsRemaining
           dueCount={dueCount}

@@ -86,6 +86,13 @@ export function SyncStatusDialog() {
     await syncNow();
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (open && isOnline) {
+      // Trigger sync when dialog opens and online
+      syncNow();
+    }
+  };
+
   // Get local and remote event counts
   const localEventCount = weapon.num_events;
   const remoteEventCount =
@@ -123,7 +130,7 @@ export function SyncStatusDialog() {
   }
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <button className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
           <span
