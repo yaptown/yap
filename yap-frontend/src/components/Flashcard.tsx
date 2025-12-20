@@ -28,7 +28,6 @@ import { AudioButton } from "./AudioButton";
 import { ReportIssueModal } from "./challenges/ReportIssueModal";
 import { CantListenButton } from "./CantListenButton";
 import { CantSpeakButton } from "./CantSpeakButton";
-import { AudioVisualizer } from "./AudioVisualizer";
 import { CardsRemaining } from "./CardsRemaining";
 import { toast } from "sonner";
 import { match } from "ts-pattern";
