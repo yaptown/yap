@@ -3,7 +3,7 @@ export function BrowserNotSupported() {
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
   return (
-    <div className="px-2">
+    <div className="px-2 animate-fade-in">
       <div className="min-h-screen text-foreground">
         <div className="max-w-2xl mx-auto">
           <div className="min-h-screen flex flex-col items-center justify-center">

@@ -32,7 +32,7 @@ function BackgroundShaderComponent({ children }: BackgroundShaderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const { theme, animatedBackground } = useTheme();
-
+  
   // Determine actual theme (resolve "system") - memoized to prevent recalculation
   const actualTheme = useMemo(
     () =>
@@ -48,26 +48,31 @@ function BackgroundShaderComponent({ children }: BackgroundShaderProps) {
   const shouldRender = useMemo(() => {
     // User preference
     if (!animatedBackground) {
+      console.log("animatedBackground is false");
       return false;
     }
 
     // Disable on low-end devices
-    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) {
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) {
+      console.log(`hardwareConcurrency is less than 4: ${navigator.hardwareConcurrency}`);
       return false;
     }
 
     // Respect reduced motion preference
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      console.log("prefers-reduced-motion is reduce");
       return false;
     }
 
     // Respect high contrast preference
     if (window.matchMedia("(prefers-contrast: more)").matches) {
+      console.log("prefers-contrast is more");
       return false;
     }
 
     // Respect reduced transparency preference
     if (window.matchMedia("(prefers-reduced-transparency: reduce)").matches) {
+      console.log("prefers-reduced-transparency is reduce");
       return false;
     }
 
@@ -100,6 +105,8 @@ function BackgroundShaderComponent({ children }: BackgroundShaderProps) {
       { type: "module" }
     );
     workerRef.current = worker;
+
+
 
     // Transfer canvas control to worker
     const offscreenCanvas = canvas.transferControlToOffscreen();

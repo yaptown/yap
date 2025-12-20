@@ -96,8 +96,8 @@ function AppCheckBrowserSupport() {
     const start = Date.now()
     const timer = setInterval(() => {
       const diff = Date.now() - start
-      setProgress(Math.min(diff / 30, 100))
-    }, 30)
+      setProgress(Math.max(1, Math.min(diff / 30, 100)))
+    }, 480)
 
     return () => clearInterval(timer)
   }, [supported])
