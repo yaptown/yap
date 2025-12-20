@@ -4,7 +4,6 @@ import { Bell, Home, Sparkles } from "lucide-react";
 import { useOneSignalNotifications } from "@/hooks/use-onesignal-notifications";
 import { useIsInstalled } from "@/hooks/use-is-installed";
 import { AddToHomeScreenModal } from "@/components/add-to-home-screen-modal";
-import { AnimatedCard } from "./AnimatedCard";
 import { Card } from "@/components/ui/card";
 import { match } from "ts-pattern";
 import type { Language } from "../../../yap-frontend-rs/pkg";
@@ -106,8 +105,7 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
     .exhaustive();
 
   return (
-    <AnimatedCard>
-      <Card className="gap-0 p-6">
+      <Card animate className="gap-0 p-6">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="h-5 w-5 text-primary" />
           <h3 className="font-semibold">{headingText}</h3>
@@ -175,6 +173,5 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
           onOpenChange={handleAddToHomeScreenModalClose}
         />
       </Card>
-    </AnimatedCard>
   );
 }

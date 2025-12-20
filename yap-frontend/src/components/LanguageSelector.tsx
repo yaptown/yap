@@ -400,11 +400,8 @@ export function LanguageSelector({
             </motion.div>
           ) : selectionState.stage === "selectingTarget" ? (
             // Step 2: Select target language
-            <motion.div
+            <div
               key="target-selection"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               className="w-full max-w-4xl gap-4 flex flex-col items-center"
             >
               <div className="text-center">
@@ -412,21 +409,22 @@ export function LanguageSelector({
                   className="text-5xl font-bold mb-4"
                   style={{ textWrap: "balance" }}
                 >
-                  <span className="highlight">
+                  <span className="highlight animate-fade-in">
                     What language will you speak next?
                   </span>
                 </h1>
                 <div className="flex items-center justify-center gap-2 mb-6">
-                  <span className="text-lg text-muted-foreground">
+                  <span className="text-lg text-muted-foreground animate-fade-in">
                     Native language:
                   </span>
                   <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
                     <PopoverTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         role="combobox"
                         aria-expanded={comboboxOpen}
-                        className="w-[180px] justify-between"
+                        className="w-[180px] justify-between animate-fade-in"
+                        animate
                       >
                         <>
                           <span className="mr-2">
@@ -479,9 +477,7 @@ export function LanguageSelector({
 
               {/* Resume button if already learning a language */}
               {showResumeButton && currentTargetLanguage && onResume && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                <div
                   className="w-full max-w-md mb-4"
                 >
                   <Card
@@ -491,6 +487,7 @@ export function LanguageSelector({
                         languageColors[currentTargetLanguage]?.primary,
                     }}
                     onClick={onResume}
+                    animate
                   >
                     <div
                       className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300"
@@ -514,7 +511,7 @@ export function LanguageSelector({
                       <ArrowRight className="h-6 w-6 ml-auto" />
                     </div>
                   </Card>
-                </motion.div>
+                </div>
               )}
 
               {showResumeButton && currentTargetLanguage && (
@@ -549,6 +546,7 @@ export function LanguageSelector({
                           targetLanguage: lang,
                         });
                       }}
+                      animate
                     >
                       {isBeta(lang) && (
                         <Badge className="absolute bottom-1 right-1 z-20 gap-1">
@@ -577,7 +575,7 @@ export function LanguageSelector({
                   (Yap.Town is great for beginner and intermediate students.)
                 </p>
               </div>
-            </motion.div>
+            </div>
           ) : selectionState.stage === "askingExperience" ? (
             // Step 3: Ask about experience level
             <motion.div
@@ -645,12 +643,7 @@ export function LanguageSelector({
             </motion.div>
           ) : selectionState.stage === "onboarding" ? (
             // Step 4: Onboarding screens (if not skipping)
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-4xl"
-            >
+            <div className="flex flex-col items-center justify-center w-full max-w-4xl">
               <Carousel
                 setApi={setApi}
                 className="w-full"
@@ -661,7 +654,7 @@ export function LanguageSelector({
                 <CarouselContent>
                   {introScreens.map((screen, index) => (
                     <CarouselItem key={index}>
-                      <Card className="p-4 pt-12 pb-12">
+                      <Card className="p-4 pt-12 pb-12" animate>
                         <div className="text-center">
                           <h2
                             className="text-3xl font-bold mb-6"
@@ -680,9 +673,7 @@ export function LanguageSelector({
                     </CarouselItem>
                   ))}
                   <CarouselItem>
-                    <Card
-                      className="p-12"
-                    >
+                    <Card className="p-12" animate>
                       <div className="text-center">
                         <motion.div
                           initial={{ scale: 0 }}
@@ -771,7 +762,7 @@ export function LanguageSelector({
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
-            </motion.div>
+            </div>
           ) : null}
         </AnimatePresence>
       </div>

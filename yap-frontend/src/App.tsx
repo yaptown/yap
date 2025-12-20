@@ -325,14 +325,17 @@ function ReviewPage() {
               </div>
             </TopPageLayout>
           ))
-          .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage, nativeLanguage }) => (
+          .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage, nativeLanguage }) => {
+            const reviewInfo = deck.get_review_info([], Date.now());
+            return (
             <>
               <TopPageLayout
                 userInfo={userInfo}
                 headerProps={{
                   onChangeLanguage: () => navigate('/select-language'),
                   showSignupNag: deck !== null,
-                  language: targetLanguage
+                  language: targetLanguage,
+                  dueCount: reviewInfo.due_count || 0
                 }}
               >
                 <Review
@@ -346,7 +349,8 @@ function ReviewPage() {
               <Tools />
               <Stats deck={deck} />
             </>
-          ))
+            );
+          })
           .with({ type: "noLanguageSelected" }, () => (
             <TopPageLayout
               userInfo={userInfo}
@@ -365,7 +369,7 @@ function ReviewPage() {
                 showSignupNag: false
               }}
             >
-              <div className="flex-1 bg-background flex items-center justify-center p-4">
+              <div className="flex-1 flex items-center justify-center p-4">
                 <Card className="max-w-md w-full p-6 gap-0">
                   <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-red-600 dark:text-red-400 text-xl">⚠</span>
@@ -402,9 +406,9 @@ function Tools() {
   const navigate = useNavigate()
 
   return (
-    <div className="animate-fade-in-delay-2">
-      <h2 className="text-2xl font-semibold">Tools</h2>
-      <Card className="p-4 mt-3 space-y-2 gap-0">
+    <div className="">
+      <h2 className="text-2xl font-semibold animate-fade-in-delay-2">Tools</h2>
+      <Card className="p-4 mt-3 space-y-2 gap-0" animate>
         <button
           onClick={() => {
             navigate('/dictionary');
@@ -887,7 +891,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
               isNew={currentChallenge.is_new}
               showAnswer={showAnswer}
               onToggle={toggleAnswer}
-              dueCount={reviewInfo.due_count || 0}
               totalCount={reviewInfo.total_count}
               onRating={handleRating}
               accessToken={accessToken}
@@ -903,8 +906,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
             <TranslationChallenge
               sentence={currentChallenge}
               onComplete={handleTranslationComplete}
-              dueCount={reviewInfo.due_count || 0}
-              totalCount={reviewInfo.total_count}
               accessToken={accessToken}
               key={totalReviewsCompleted}
               unique_target_language_lexeme_definitions={currentChallenge.unique_target_language_lexeme_definitions}
@@ -917,7 +918,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
             <TranscriptionChallenge
               challenge={currentChallenge}
               onComplete={handleTranscriptionComplete}
-              dueCount={reviewInfo.due_count || 0}
               totalCount={reviewInfo.total_count}
               accessToken={accessToken}
               key={totalReviewsCompleted}

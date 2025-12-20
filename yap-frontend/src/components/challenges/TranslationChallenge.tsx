@@ -44,8 +44,6 @@ import { AudioButton } from "../AudioButton";
 import { ReportIssueModal } from "./ReportIssueModal";
 import { FeedbackDisplay } from "@/components/FeedbackDisplay";
 import { playSoundEffect } from "@/lib/sound-effects";
-import { CardsRemaining } from "../CardsRemaining";
-import { AnimatedCard } from "../AnimatedCard";
 import { useBackground } from "../BackgroundShader";
 
 interface SentenceChallengeProps {
@@ -57,8 +55,6 @@ interface SentenceChallengeProps {
     lexemesTapped: Lexeme<string>[],
     submission: string
   ) => void;
-  dueCount: number;
-  totalCount: number;
   unique_target_language_lexeme_definitions: [
     Lexeme<string>,
     TargetToNativeWord[]
@@ -244,18 +240,13 @@ function CorrectTranslation({ sentence }: { sentence: string }) {
 
 function FeedbackSkeleton() {
   return (
-    <motion.div
-      className="space-y-4 mt-4"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-    >
+    <div className="space-y-4 mt-4 animate-feedback-in">
       <div className="space-y-3">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-4 w-1/2" />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -462,8 +453,6 @@ function ChallengeSentence({
 export function TranslationChallenge({
   sentence,
   onComplete,
-  dueCount,
-  totalCount,
   unique_target_language_lexeme_definitions,
   accessToken,
   targetLanguage,
@@ -792,8 +781,7 @@ export function TranslationChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div>
-        <AnimatedCard>
-          <Card className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
+          <Card animate className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
           <div className="space-y-6">
             <div className="text-center">
               <div className="flex items-center justify-between w-full">
@@ -848,12 +836,7 @@ export function TranslationChallenge({
                 className="text-lg"
               />
             ) : (
-              <motion.div
-                className="space-y-4 mt-4"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-              >
+              <div className="space-y-4 mt-4 animate-feedback-in">
                 {"grading" in grade ? (
                   <>
                     <div className="space-y-2">
@@ -901,7 +884,7 @@ export function TranslationChallenge({
                     />
                   </>
                 )}
-              </motion.div>
+              </div>
             )}
           </div>
           <div>
@@ -918,12 +901,6 @@ export function TranslationChallenge({
             ))}
           </div>
           </Card>
-        </AnimatedCard>
-        <CardsRemaining
-          dueCount={dueCount}
-          totalCount={totalCount}
-          className="mt-2"
-        />
       </div>
 
       {grade === null ? (

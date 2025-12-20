@@ -40,17 +40,19 @@ function Button({
   variant,
   size,
   asChild = false,
+  animate,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
+    animate?: boolean;
   }) {
   const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size }), animate && "animate-card-in", className)}
       {...props}
     />
   );

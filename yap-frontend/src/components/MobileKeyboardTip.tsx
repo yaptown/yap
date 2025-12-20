@@ -6,7 +6,6 @@ import { match } from "ts-pattern";
 
 interface MobileKeyboardTipProps {
   language: Language;
-  totalCount: number;
   className?: string;
 }
 

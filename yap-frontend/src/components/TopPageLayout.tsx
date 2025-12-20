@@ -16,6 +16,7 @@ interface TopPageLayoutProps {
       onBack: () => void;
     };
     title?: string;
+    dueCount?: number;
   };
 }
 

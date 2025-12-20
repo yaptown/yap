@@ -20,9 +20,9 @@ export const NumericStats: React.FC<NumericStatsProps> = ({
 }) => {
   return (
     <div className="mb-4">
-      <h2 className="text-2xl font-semibold">Stats</h2>
+      <h2 className="text-2xl font-semibold animate-fade-in-delay-2">Stats</h2>
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-3">
-        <Card className="p-4 gap-0">
+        <Card className="p-4 gap-0" animate>
           <p className="text-sm text-muted-foreground mb-1">XP</p>
           <p className="text-2xl font-bold">{xp}</p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -31,22 +31,22 @@ export const NumericStats: React.FC<NumericStatsProps> = ({
         </Card>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
-        <Card className="p-4 gap-0">
+        <Card className="p-4 gap-0" animate>
           <p className="text-sm text-muted-foreground mb-1">Total Cards</p>
           <p className="text-2xl font-bold">{totalCards}</p>
           <p className="text-sm text-muted-foreground mt-1">{cardsReady} ready now</p>
         </Card>
-        <Card className="p-4 gap-0">
+        <Card className="p-4 gap-0" animate>
           <p className="text-sm text-muted-foreground mb-1">Words Known</p>
           <p className="text-2xl font-bold">{percentKnown.toFixed(2)}%</p>
           <p className="text-sm text-muted-foreground mt-1">of total</p>
         </Card>
-        <Card className="p-4 gap-0">
+        <Card className="p-4 gap-0" animate>
           <p className="text-sm text-muted-foreground mb-1">Daily Streak</p>
           <p className="text-2xl font-bold">{dailyStreak}</p>
           <p className="text-sm text-muted-foreground mt-1">days</p>
         </Card>
-        <Card className="p-4 gap-0">
+        <Card className="p-4 gap-0" animate>
           <p className="text-sm text-muted-foreground mb-1">Total Reviews</p>
           <p className="text-2xl font-bold">{totalReviews.toString()}</p>
           <p className="text-sm text-muted-foreground mt-1">all time</p>

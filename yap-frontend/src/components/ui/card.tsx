@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils"
 import { cva, type VariantProps } from "class-variance-authority"
 
 const cardVariants = cva(
-  "backdrop-blur-lg backdrop-brightness-140 backdrop-saturate-140 text-card-foreground flex flex-col gap-6 rounded-xl border py-6",
+  "text-card-foreground flex flex-col gap-6 rounded-xl border py-6",
   {
     variants: {
       variant: {
-        default: "bg-card/25 shadow-sm dark:shadow-xl",
-        light: "bg-card/5 shadow-sm",
+        default: "backdrop-brightness-140 backdrop-saturate-140 backdrop-blur-lg bg-card/25 shadow-sm dark:shadow-xl",
+        light: "backdrop-saturate-140",
       },
     },
     defaultVariants: {
@@ -20,13 +20,15 @@ const cardVariants = cva(
 
 export interface CardProps
   extends React.ComponentProps<"div">,
-    VariantProps<typeof cardVariants> {}
+    VariantProps<typeof cardVariants> {
+  animate?: boolean
+}
 
-function Card({ className, variant, ...props }: CardProps) {
+function Card({ className, variant, animate, ...props }: CardProps) {
   return (
     <div
       data-slot="card"
-      className={cn(cardVariants({ variant }), className)}
+      className={cn(cardVariants({ variant }), animate && "animate-card-in", className)}
       {...props}
     />
   )

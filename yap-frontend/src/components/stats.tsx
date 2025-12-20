@@ -69,7 +69,7 @@ export function Stats({ deck }: StatsProps) {
   const [isGraphsOpen, setIsGraphsOpen] = useState(false);
 
   return (
-    <div className="mt-4 animate-fade-in-delay-2">
+    <div className="mt-4">
       <NumericStats
         xp={deck.get_xp()}
         totalCards={allCardsSummary.length}
@@ -78,7 +78,7 @@ export function Stats({ deck }: StatsProps) {
         dailyStreak={deck.get_daily_streak()}
         totalReviews={deck.get_total_reviews()}
       />
-      <Card className="overflow-hidden p-0 gap-0">
+      <Card className="overflow-hidden p-0 gap-0" animate>
         <table className="w-full table-fixed">
           <thead>
             <tr className="border-b bg-muted/50">

@@ -21,14 +21,12 @@ import {
   useAnimation as animationControls,
   type PanInfo,
 } from "framer-motion";
-import { AnimatedCard } from "./AnimatedCard";
 import { useEffect, useState } from "react";
 import "./Flashcard.css";
 import { AudioButton } from "./AudioButton";
 import { ReportIssueModal } from "./challenges/ReportIssueModal";
 import { CantListenButton } from "./CantListenButton";
 import { CantSpeakButton } from "./CantSpeakButton";
-import { CardsRemaining } from "./CardsRemaining";
 import { toast } from "sonner";
 import { match } from "ts-pattern";
 import { formatMorphology } from "@/utils/formatMorphology";
@@ -39,7 +37,6 @@ interface FlashcardProps {
   content: CardContent<string>;
   showAnswer: boolean;
   onToggle: () => void;
-  dueCount: number;
   totalCount: number;
   onRating?: (rating: Rating) => void;
   accessToken: string | undefined;
@@ -431,7 +428,6 @@ export const Flashcard = function Flashcard({
   content,
   showAnswer,
   onToggle,
-  dueCount,
   totalCount,
   onRating,
   accessToken,
@@ -616,8 +612,8 @@ export const Flashcard = function Flashcard({
 
   return (
     <div className="flex flex-col flex-1 justify-between">
-      <AnimatedCard
-        className="relative w-full flex-1"
+      <motion.div
+        className="relative w-full flex-1 animate-card-in"
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         onDragStart={() => setIsDragging(true)}
@@ -735,18 +731,13 @@ export const Flashcard = function Flashcard({
             <hr className="" />
 
             {showAnswer ? (
-              <motion.div
-                className="space-y-6"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-              >
+              <div className="space-y-6 animate-feedback-in">
                 <CardBack
                   content={content}
                   targetLanguage={targetLanguage}
                   accessToken={accessToken}
                 />
-              </motion.div>
+              </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
                 <div
@@ -763,13 +754,7 @@ export const Flashcard = function Flashcard({
             )}
           </div>
         </Card>
-
-        <CardsRemaining
-          dueCount={dueCount}
-          totalCount={totalCount}
-          className="mt-4"
-        />
-      </AnimatedCard>
+      </motion.div>
 
       {onRating && (
         <div className="mt-4 flex flex-col gap-2">

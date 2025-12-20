@@ -16,12 +16,9 @@ import {
 import { Card } from "@/components/ui/card";
 import { AudioButton } from "../AudioButton";
 import { playSoundEffect } from "@/lib/sound-effects";
-import { motion } from "framer-motion";
 import { CantListenButton } from "../CantListenButton";
 import { FeedbackDisplay } from "@/components/FeedbackDisplay";
 import { AudioVisualizer } from "../AudioVisualizer";
-import { CardsRemaining } from "../CardsRemaining";
-import { AnimatedCard } from "../AnimatedCard";
 import { AccentedCharacterKeyboard } from "../AccentedCharacterKeyboard";
 import { MobileKeyboardTip } from "../MobileKeyboardTip";
 import {
@@ -50,7 +47,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence<string>;
   onComplete: (grade: PartGraded[]) => void;
-  dueCount: number;
   totalCount: number;
   accessToken: string | undefined;
   onCantListen?: () => void;
@@ -77,18 +73,13 @@ function AutogradeError() {
 
 function FeedbackSkeleton() {
   return (
-    <motion.div
-      className="space-y-4"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-    >
+    <div className="space-y-4 animate-feedback-in">
       <div className="space-y-3">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-4 w-1/2" />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -108,7 +99,6 @@ type GradingState =
 export function TranscriptionChallenge({
   challenge,
   onComplete,
-  dueCount,
   totalCount,
   accessToken,
   onCantListen,
@@ -413,8 +403,7 @@ export function TranscriptionChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div>
-        <AnimatedCard>
-          <Card className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
+          <Card animate className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
           {/* Dropdown menu for options */}
           <div className="absolute top-2 right-2">
             <DropdownMenu>
@@ -461,12 +450,7 @@ export function TranscriptionChallenge({
 
             {/* Result feedback */}
             {gradingState && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-2"
-              >
+              <div className="space-y-2 animate-feedback-in">
                 {/* Show correct answer immediately when grading starts */}
                 <div className="rounded-lg p-4 border bg-green-500/10 border-green-500/20">
                   <p className="text-sm font-medium mb-1 text-green-600 dark:text-green-400">
@@ -557,11 +541,10 @@ export function TranscriptionChallenge({
                     </div>
                   </>
                 )}
-              </motion.div>
+              </div>
             )}
           </div>
           </Card>
-        </AnimatedCard>
 
         {/* Accented character keyboard - show when not graded, language supports it, and not on small screens */}
         {gradingState === null &&
@@ -579,15 +562,8 @@ export function TranscriptionChallenge({
         {gradingState === null && totalCount < 60 && (
           <MobileKeyboardTip
             language={targetLanguage}
-            totalCount={totalCount}
           />
         )}
-
-        <CardsRemaining
-          dueCount={dueCount}
-          totalCount={totalCount}
-          className="mt-2"
-        />
       </div>
 
       <div className="mt-4 flex flex-col gap-2">

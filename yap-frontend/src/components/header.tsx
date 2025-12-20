@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ interface HeaderProps {
     onBack: () => void;
   };
   title?: string;
+  dueCount?: number;
 }
 
 function getLanguageEmoji(language: Language | undefined): string {
@@ -54,6 +56,7 @@ export function Header({
   language,
   backButton,
   title = "Yap.Town",
+  dueCount,
 }: HeaderProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [defaultView, setDefaultView] = useState<"signin" | "signup">("signin");
@@ -74,7 +77,9 @@ export function Header({
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">{backButton.label}</h1>
+              <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">
+                {backButton.label}
+              </h1>
             </div>
           ) : (
             <>
@@ -96,27 +101,38 @@ export function Header({
                 )}
                 <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">
                   <span className="hidden sm:inline">{title}</span>
-                  <span className="sm:hidden">{title.split('.')[0]}</span>
+                  <span className="sm:hidden">{title.split(".")[0]}</span>
                 </h1>
               </div>
-              {userInfo && <div className="animate-fade-in-delayed"><SyncStatusDialog /></div>}
+              {userInfo && (
+                <div className="animate-fade-in-delayed">
+                  <SyncStatusDialog />
+                </div>
+              )}
             </>
           )}
         </div>
         <div className="flex items-center gap-2">
+          {dueCount !== undefined && dueCount > 0 && (
+            <Badge variant="outline" className="text-xs text-muted-foreground">
+              {dueCount}
+            </Badge>
+          )}
           {userInfo ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="text-sm text-muted-foreground hover:text-foreground animate-fade-in-delayed"
+                  className="text-sm text-muted-foreground hover:text-foreground animate-fade-in-delayed gap-2"
                 >
                   {userInfo.displayName || userInfo.email}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <NotificationSettings />
-                <DropdownMenuItem onClick={() => navigate(`/user/id/${userInfo.id}`)}>
+                <DropdownMenuItem
+                  onClick={() => navigate(`/user/id/${userInfo.id}`)}
+                >
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
@@ -150,7 +166,10 @@ export function Header({
       </div>
 
       {!userInfo && showSignupNag && (
-        <Card variant="light" className="p-3 flex-row items-center gap-3 mb-2 py-3">
+        <Card
+          variant="light"
+          className="p-3 flex-row items-center gap-3 mb-2 py-3"
+        >
           <AlertTriangle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium">

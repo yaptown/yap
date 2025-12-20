@@ -15,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, AlertCircle, Sparkles } from "lucide-react";
-import { AnimatedCard } from "./AnimatedCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 
@@ -103,8 +102,7 @@ export function NoCardsReady({
 
   return (
     <div className="space-y-4">
-      <AnimatedCard>
-        <Card className="text-center p-6">
+        <Card animate className="text-center p-6">
         {showLightWorkloadNotification && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
@@ -213,7 +211,6 @@ export function NoCardsReady({
           )}
         </div>
         </Card>
-      </AnimatedCard>
 
       {showEngagementPrompts && (
         <EngagementPrompts language={targetLanguage} />

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { type Language } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { match } from "ts-pattern";
+import { Card } from "./ui/card";
 
 interface AccentedCharacterKeyboardProps {
   onCharacterInsert: (char: string) => void;
@@ -39,7 +40,19 @@ export function AccentedCharacterKeyboard({
     .with("Chinese", () => [])
     .with("Japanese", () => [])
     .with("Russian", () => [])
-    .with("Portuguese", () => ["á", "é", "í", "ó", "ú", "â", "ê", "ô", "ã", "õ", "ç"])
+    .with("Portuguese", () => [
+      "á",
+      "é",
+      "í",
+      "ó",
+      "ú",
+      "â",
+      "ê",
+      "ô",
+      "ã",
+      "õ",
+      "ç",
+    ])
     .with("Italian", () => ["à", "è", "é", "ì", "ò", "ù"])
     .exhaustive();
 
@@ -53,15 +66,18 @@ export function AccentedCharacterKeyboard({
   }
 
   return (
-    <div className={`accent-keyboard flex flex-col items-center ${className}`}>
+    <Card
+      variant="light"
+      className={`accent-keyboard flex flex-col items-center ${className} gap-0`}
+    >
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className="flex justify-center">
           {row.map((char, index) => (
             <Button
               key={char}
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className={`h-8 w-10 text-base font-medium rounded-none border-r-0 last:border-r ${
+              className={`h-8 w-10 text-base font-medium rounded-none border-r-0 ${
                 index === 0 ? "rounded-l-md" : ""
               } ${index === row.length - 1 ? "rounded-r-md" : ""}`}
               onClick={() => onCharacterInsert(char)}
@@ -73,6 +89,6 @@ export function AccentedCharacterKeyboard({
           ))}
         </div>
       ))}
-    </div>
+    </Card>
   );
 }
