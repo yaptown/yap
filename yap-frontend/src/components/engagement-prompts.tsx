@@ -107,7 +107,7 @@ export function EngagementPrompts({ language }: EngagementPromptsProps) {
 
   return (
     <AnimatedCard>
-      <Card className="gap-0">
+      <Card className="gap-0 p-6">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="h-5 w-5 text-primary" />
           <h3 className="font-semibold">{headingText}</h3>
