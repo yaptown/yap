@@ -114,7 +114,7 @@ export function Header({
         </div>
         <div className="flex items-center gap-2">
           {dueCount !== undefined && dueCount > 0 && (
-            <Badge variant="outline" className="text-xs text-muted-foreground">
+            <Badge variant="outline" className="text-xs text-muted-foreground border-muted-foreground">
               {dueCount}
             </Badge>
           )}
