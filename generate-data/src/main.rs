@@ -3,6 +3,7 @@ use futures::StreamExt;
 use indexmap::IndexSet;
 use itertools::Itertools;
 use language_utils::{COURSES, HomophonePractice};
+use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
@@ -823,22 +824,22 @@ async fn main() -> anyhow::Result<()> {
             let metadata_file = movies_dir.join("metadata.jsonl");
             if metadata_file.exists() {
                 let metadata_content = std::fs::read_to_string(&metadata_file)?;
-                let mut movies = Vec::new();
+                let mut movies = FxHashMap::default();
 
                 for line in metadata_content.lines() {
                     if line.trim().is_empty() {
                         continue;
                     }
                     let movie: language_utils::MovieMetadata = serde_json::from_str(line)?;
-                    movies.push(movie);
+                    movies.insert(movie.id.clone(), movie);
                 }
 
                 movies
             } else {
-                Vec::new()
+                FxHashMap::default()
             }
         } else {
-            Vec::new()
+            FxHashMap::default()
         };
 
         // Load sentence sources
@@ -856,6 +857,20 @@ async fn main() -> anyhow::Result<()> {
             }
         };
 
+        // Compute per-movie frequencies
+        let movie_frequencies = if !movies.is_empty() {
+            let movie_ids: Vec<String> = movies.keys().cloned().collect();
+            generate_data::frequencies::compute_movie_frequencies(
+                &nlp_sentences,
+                &sentence_sources,
+                &movie_ids,
+                course.target_language,
+                &banned_words,
+            )
+        } else {
+            FxHashMap::default()
+        };
+
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {
             target_language_sentences,
@@ -864,6 +879,7 @@ async fn main() -> anyhow::Result<()> {
             dictionary,
             phrasebook,
             frequencies,
+            movie_frequencies,
             word_to_pronunciation,
             pronunciation_to_words,
             pronunciation_data,

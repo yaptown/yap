@@ -439,12 +439,22 @@ async fn clean_all_languages() -> anyhow::Result<()> {
 
 async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // Load manual sentences that should never be filtered
-    let manual_sentences = load_manual_sentences(language)?;
+    let mut manual_sentences = load_manual_sentences(language)?;
+
+    match language {
+        Language::French => {
+            manual_sentences.insert("Bois-le !".to_string());
+            manual_sentences.insert("Bois-le.".to_string());
+            manual_sentences.insert("Bois un coup à ma santé.".to_string());
+            manual_sentences.insert("Est-ce que Robin des Bois est vivant ?".to_string());
+        }
+        _ => {}
+    }
 
     let samples = {
         // We probably should get at least 10_000 samples per language to get good coverage.
         // Bare minimum to get a usable result is probably around 1_500.
-        const SAMPLE_SIZE: usize = 6_000;
+        const SAMPLE_SIZE: usize = 8_000;
         const TERM_SAMPLE_SIZE: usize = 5_000;
 
         println!("Loading NLP data for {language:?}...");

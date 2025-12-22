@@ -18,7 +18,7 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("gpt-5-mini")
         .unwrap()
         .with_cache_directory("./.cache")
-        .with_service_tier("flex")
+        //.with_service_tier("flex")
 });
 
 const SENTENCES_TO_ANALYZE: usize = 2_000;

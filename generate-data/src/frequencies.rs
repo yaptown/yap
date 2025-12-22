@@ -1,5 +1,6 @@
 use indicatif::{ProgressBar, ProgressStyle};
-use language_utils::{FrequencyEntry, Heteronym, Language, Lexeme, SentenceInfo};
+use language_utils::{FrequencyEntry, Heteronym, Language, Lexeme, SentenceInfo, SentenceSource};
+use rustc_hash::FxHashMap;
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, HashSet};
 use std::fs::File;
@@ -87,4 +88,58 @@ pub fn write_frequencies_file(
     }
 
     Ok(())
+}
+
+/// Compute per-movie word frequencies
+pub fn compute_movie_frequencies(
+    sentences: &[(String, SentenceInfo)],
+    sentence_sources: &[(String, SentenceSource)],
+    movie_ids: &[String],
+    language: Language,
+    banned_words: &HashSet<Heteronym<String>>,
+) -> FxHashMap<String, Vec<FrequencyEntry<String>>> {
+    // Build a map from sentence to movie IDs
+    let sentence_to_movies: FxHashMap<&str, Vec<&str>> = {
+        let mut map: FxHashMap<&str, Vec<&str>> = FxHashMap::default();
+        for (sentence, source) in sentence_sources {
+            if !source.movie_ids.is_empty() {
+                map.insert(
+                    sentence.as_str(),
+                    source.movie_ids.iter().map(|s| s.as_str()).collect(),
+                );
+            }
+        }
+        map
+    };
+
+    let mut movie_frequencies = FxHashMap::default();
+
+    println!("Computing per-movie frequencies for {} movies...", movie_ids.len());
+
+    for movie_id in movie_ids {
+        // Filter sentences for this movie
+        let movie_sentences: BTreeMap<String, SentenceInfo> = sentences
+            .iter()
+            .filter(|(sentence, _)| {
+                sentence_to_movies
+                    .get(sentence.as_str())
+                    .map(|movie_ids| movie_ids.contains(&movie_id.as_str()))
+                    .unwrap_or(false)
+            })
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+
+        if !movie_sentences.is_empty() {
+            let freqs = compute_frequencies(&movie_sentences, language, banned_words);
+
+            let freq_entries: Vec<FrequencyEntry<String>> = freqs
+                .into_iter()
+                .map(|(lexeme, count)| FrequencyEntry { lexeme, count })
+                .collect();
+
+            movie_frequencies.insert(movie_id.clone(), freq_entries);
+        }
+    }
+
+    movie_frequencies
 }

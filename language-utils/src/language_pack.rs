@@ -19,6 +19,8 @@ pub struct LanguagePack {
     pub sentences_to_all_lexemes: FxHashMap<Spur, Vec<Lexeme<Spur>>>,
     pub word_frequencies: IndexMap<Lexeme<Spur>, Frequency>,
     pub total_word_count: u64,
+    /// Per-movie word frequencies indexed by movie ID
+    pub movie_word_frequencies: FxHashMap<String, IndexMap<Lexeme<Spur>, Frequency>>,
     pub dictionary: BTreeMap<Heteronym<Spur>, DictionaryEntry>,
     pub phrasebook: BTreeMap<Spur, PhrasebookEntry>,
     pub word_to_pronunciation: FxHashMap<Spur, Spur>,
@@ -28,8 +30,8 @@ pub struct LanguagePack {
     pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
     /// Cache of maximum frequencies for each pronunciation (pre-computed at initialization)
     pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
-    /// Movie metadata for all available movies
-    pub movies: Vec<MovieMetadata>,
+    /// Movie metadata indexed by movie ID
+    pub movies: FxHashMap<String, MovieMetadata>,
 }
 
 impl LanguagePack {
@@ -296,6 +298,24 @@ impl LanguagePack {
         // Initialize movie data
         let movies = language_data.movies;
 
+        // Convert per-movie frequencies
+        let movie_word_frequencies = {
+            language_data
+                .movie_frequencies
+                .iter()
+                .map(|(movie_id, freqs)| {
+                    let mut map = IndexMap::new();
+                    for freq in freqs {
+                        map.insert(
+                            freq.lexeme.get_interned(&rodeo).unwrap(),
+                            Frequency { count: freq.count },
+                        );
+                    }
+                    (movie_id.clone(), map)
+                })
+                .collect()
+        };
+
         Self {
             rodeo,
             translations,
@@ -306,6 +326,7 @@ impl LanguagePack {
             sentences_to_all_lexemes,
             word_frequencies,
             total_word_count,
+            movie_word_frequencies,
             dictionary,
             phrasebook,
             word_to_pronunciation,

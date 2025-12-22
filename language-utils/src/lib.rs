@@ -4,6 +4,7 @@ pub mod language_pack;
 pub mod profile;
 pub mod text_cleanup;
 
+use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
 use std::hash::Hash;
 
@@ -956,7 +957,7 @@ pub mod transcription_challenge {
 }
 
 /// Consolidated data structure containing all generated language data
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ConsolidatedLanguageData {
     /// All target language sentences from Anki cards
     pub target_language_sentences: Vec<String>,
@@ -970,6 +971,8 @@ pub struct ConsolidatedLanguageData {
     pub phrasebook: BTreeMap<String, PhrasebookEntry>,
     /// Frequency data for words and phrases
     pub frequencies: Vec<FrequencyEntry<String>>,
+    /// Per-movie word frequencies indexed by movie ID
+    pub movie_frequencies: FxHashMap<String, Vec<FrequencyEntry<String>>>,
     /// Mapping from words to their IPA pronunciations
     pub word_to_pronunciation: Vec<(String, Pronunciation)>,
     /// Mapping from IPA pronunciations to lists of words
@@ -978,8 +981,8 @@ pub struct ConsolidatedLanguageData {
     pub pronunciation_data: PronunciationData,
     /// Homophone disambiguation practice sentences
     pub homophone_practice: BTreeMap<HomophoneWordPair<String>, HomophonePractice<String>>,
-    /// Movie metadata for all available movies
-    pub movies: Vec<MovieMetadata>,
+    /// Movie metadata indexed by movie ID
+    pub movies: FxHashMap<String, MovieMetadata>,
     /// Sentence source provenance tracking (including movie_ids)
     pub sentence_sources: Vec<(String, SentenceSource)>,
 }
@@ -1012,6 +1015,21 @@ impl ConsolidatedLanguageData {
                 }
                 Lexeme::Multiword(multiword) => {
                     rodeo.get_or_intern(multiword);
+                }
+            }
+        }
+
+        // Intern words from per-movie frequency lists
+        for (_movie_id, movie_freqs) in &self.movie_frequencies {
+            for freq in movie_freqs {
+                match &freq.lexeme {
+                    Lexeme::Heteronym(heteronym) => {
+                        rodeo.get_or_intern(&heteronym.word);
+                        rodeo.get_or_intern(&heteronym.lemma);
+                    }
+                    Lexeme::Multiword(multiword) => {
+                        rodeo.get_or_intern(multiword);
+                    }
                 }
             }
         }
@@ -1057,7 +1075,7 @@ impl ConsolidatedLanguageData {
         }
 
         // intern movie data
-        for movie in &self.movies {
+        for (_movie_id, movie) in &self.movies {
             rodeo.get_or_intern(&movie.id);
             rodeo.get_or_intern(&movie.title);
             for genre in &movie.genres {

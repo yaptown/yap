@@ -1185,6 +1185,7 @@ dependencies = [
  "reqwest 0.12.23",
  "rkyv",
  "rusqlite",
+ "rustc-hash",
  "schemars",
  "scraper",
  "sentence-sampler",

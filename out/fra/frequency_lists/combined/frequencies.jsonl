@@ -2,15 +2,15 @@
 {"lexeme":{"Heteronym":{"word":"de","lemma":"de","pos":"ADP"}},"count":47812}
 {"lexeme":{"Heteronym":{"word":"est","lemma":"être","pos":"AUX"}},"count":43927}
 {"lexeme":{"Heteronym":{"word":"vous","lemma":"vous","pos":"PRON"}},"count":32506}
-{"lexeme":{"Heteronym":{"word":"le","lemma":"le","pos":"DET"}},"count":31153}
+{"lexeme":{"Heteronym":{"word":"le","lemma":"le","pos":"DET"}},"count":31151}
 {"lexeme":{"Heteronym":{"word":"la","lemma":"le","pos":"DET"}},"count":30836}
 {"lexeme":{"Heteronym":{"word":"il","lemma":"il","pos":"PRON"}},"count":28861}
 {"lexeme":{"Heteronym":{"word":"tu","lemma":"tu","pos":"PRON"}},"count":28563}
 {"lexeme":{"Heteronym":{"word":"ce","lemma":"ce","pos":"PRON"}},"count":26780}
 {"lexeme":{"Multiword":"être sur son 31"},"count":25851}
-{"lexeme":{"Heteronym":{"word":"à","lemma":"à","pos":"ADP"}},"count":23247}
+{"lexeme":{"Heteronym":{"word":"à","lemma":"à","pos":"ADP"}},"count":23246}
 {"lexeme":{"Heteronym":{"word":"que","lemma":"que","pos":"SCONJ"}},"count":22109}
-{"lexeme":{"Heteronym":{"word":"un","lemma":"un","pos":"DET"}},"count":21085}
+{"lexeme":{"Heteronym":{"word":"un","lemma":"un","pos":"DET"}},"count":21084}
 {"lexeme":{"Heteronym":{"word":"a","lemma":"avoir","pos":"AUX"}},"count":17643}
 {"lexeme":{"Heteronym":{"word":"les","lemma":"le","pos":"DET"}},"count":17241}
 {"lexeme":{"Heteronym":{"word":"une","lemma":"un","pos":"DET"}},"count":14776}
@@ -65,7 +65,7 @@
 {"lexeme":{"Heteronym":{"word":"toi","lemma":"toi","pos":"PRON"}},"count":4233}
 {"lexeme":{"Heteronym":{"word":"où","lemma":"où","pos":"ADV"}},"count":4180}
 {"lexeme":{"Multiword":"y avoir"},"count":4123}
-{"lexeme":{"Heteronym":{"word":"ma","lemma":"mon","pos":"DET"}},"count":3966}
+{"lexeme":{"Heteronym":{"word":"ma","lemma":"mon","pos":"DET"}},"count":3965}
 {"lexeme":{"Heteronym":{"word":"votre","lemma":"votre","pos":"DET"}},"count":3801}
 {"lexeme":{"Heteronym":{"word":"très","lemma":"très","pos":"ADV"}},"count":3770}
 {"lexeme":{"Heteronym":{"word":"es","lemma":"être","pos":"AUX"}},"count":3727}
@@ -318,7 +318,7 @@
 {"lexeme":{"Heteronym":{"word":"vas","lemma":"aller","pos":"AUX"}},"count":619}
 {"lexeme":{"Heteronym":{"word":"devez","lemma":"devoir","pos":"AUX"}},"count":618}
 {"lexeme":{"Heteronym":{"word":"tard","lemma":"tard","pos":"ADV"}},"count":611}
-{"lexeme":{"Heteronym":{"word":"coup","lemma":"coup","pos":"NOUN"}},"count":610}
+{"lexeme":{"Heteronym":{"word":"coup","lemma":"coup","pos":"NOUN"}},"count":609}
 {"lexeme":{"Heteronym":{"word":"vite","lemma":"vite","pos":"ADV"}},"count":607}
 {"lexeme":{"Heteronym":{"word":"entendu","lemma":"entendre","pos":"VERB"}},"count":604}
 {"lexeme":{"Heteronym":{"word":"sois","lemma":"être","pos":"AUX"}},"count":596}
@@ -467,7 +467,7 @@
 {"lexeme":{"Heteronym":{"word":"difficile","lemma":"difficile","pos":"ADJ"}},"count":395}
 {"lexeme":{"Heteronym":{"word":"meilleur","lemma":"meilleur","pos":"ADJ"}},"count":395}
 {"lexeme":{"Heteronym":{"word":"truc","lemma":"truc","pos":"NOUN"}},"count":394}
-{"lexeme":{"Multiword":"un coup"},"count":394}
+{"lexeme":{"Multiword":"un coup"},"count":393}
 {"lexeme":{"Heteronym":{"word":"fête","lemma":"fête","pos":"NOUN"}},"count":392}
 {"lexeme":{"Heteronym":{"word":"musique","lemma":"musique","pos":"NOUN"}},"count":392}
 {"lexeme":{"Heteronym":{"word":"être","lemma":"être","pos":"ADV"}},"count":392}
@@ -663,9 +663,9 @@
 {"lexeme":{"Heteronym":{"word":"rapidement","lemma":"rapidement","pos":"ADV"}},"count":279}
 {"lexeme":{"Heteronym":{"word":"aimez","lemma":"aimer","pos":"VERB"}},"count":278}
 {"lexeme":{"Multiword":"à toi"},"count":278}
-{"lexeme":{"Heteronym":{"word":"santé","lemma":"santé","pos":"NOUN"}},"count":277}
 {"lexeme":{"Heteronym":{"word":"changé","lemma":"changer","pos":"VERB"}},"count":276}
 {"lexeme":{"Heteronym":{"word":"montrer","lemma":"montrer","pos":"VERB"}},"count":276}
+{"lexeme":{"Heteronym":{"word":"santé","lemma":"santé","pos":"NOUN"}},"count":276}
 {"lexeme":{"Heteronym":{"word":"changer","lemma":"changer","pos":"VERB"}},"count":275}
 {"lexeme":{"Heteronym":{"word":"sais","lemma":"savoir","pos":"AUX"}},"count":275}
 {"lexeme":{"Heteronym":{"word":"année","lemma":"année","pos":"NOUN"}},"count":274}
