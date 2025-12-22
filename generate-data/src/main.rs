@@ -71,7 +71,8 @@ async fn main() -> anyhow::Result<()> {
             target_language_dir.join("target_language_sentences.jsonl");
         let translations_file =
             native_specific_dir.join("target_language_to_native_translations.jsonl");
-        if !target_language_sentences_file.exists() || !translations_file.exists() {
+        let sentence_sources_file = target_language_dir.join("sentence_sources.jsonl");
+        {
             let mut total_sentences = 0;
 
             // Get target sentences with their existing translations (from Anki, Tatoeba, and manual sources)
@@ -88,7 +89,7 @@ async fn main() -> anyhow::Result<()> {
 
             let all_sentences =
                 futures::stream::iter(sentences_with_translations_and_sources.into_iter().map(
-                    |(target_language_sentence, native_sentence, _source)| async {
+                    |(target_language_sentence, native_sentence, source)| async {
                         let mut translation_set = IndexSet::new();
                         match translator.translate(&target_language_sentence).await {
                             Ok(t) => {
@@ -105,7 +106,7 @@ async fn main() -> anyhow::Result<()> {
                         if let Some(native_sentence) = native_sentence {
                             translation_set.insert(native_sentence);
                         }
-                        (target_language_sentence, translation_set)
+                        (target_language_sentence, (translation_set, source))
                     },
                 ))
                 .buffered(100)
@@ -134,7 +135,18 @@ async fn main() -> anyhow::Result<()> {
             };
             let mut translations_writer = BufWriter::new(translations_file_handle);
 
-            for (target_language_sentence, native_translations) in all_sentences {
+            let sentence_sources_file_handle = match File::create(sentence_sources_file.clone()) {
+                Ok(f) => f,
+                Err(e) => {
+                    return Err(anyhow::anyhow!(
+                        "Error creating sentence sources file: {}",
+                        e
+                    ));
+                }
+            };
+            let mut sentence_sources_writer = BufWriter::new(sentence_sources_file_handle);
+
+            for (target_language_sentence, (native_translations, source)) in all_sentences {
                 // Write individual target language sentence
                 let target_language_json = serde_json::to_string(&target_language_sentence)?;
                 if let Err(e) = writeln!(target_language_writer, "{target_language_json}") {
@@ -149,6 +161,11 @@ async fn main() -> anyhow::Result<()> {
                     eprintln!("Error writing to translations file: {e}");
                 }
 
+                let source_json = serde_json::to_string(&(&target_language_sentence, &source))?;
+                if let Err(e) = writeln!(sentence_sources_writer, "{source_json}") {
+                    eprintln!("Error writing to sentence sources file: {e}");
+                }
+
                 total_sentences += 1;
             }
 
@@ -158,6 +175,9 @@ async fn main() -> anyhow::Result<()> {
             }
             if let Err(e) = translations_writer.flush() {
                 eprintln!("Error flushing translations file: {e}");
+            }
+            if let Err(e) = sentence_sources_writer.flush() {
+                eprintln!("Error flushing sentence sources file: {e}");
             }
 
             if total_sentences < 10 {
@@ -792,6 +812,50 @@ async fn main() -> anyhow::Result<()> {
             }
         });
 
+        // Load movie metadata and subtitles
+        let source_data_path = std::path::PathBuf::from(format!(
+            "./generate-data/data/{}",
+            course.target_language.iso_639_3()
+        ));
+        // Load movie metadata
+        let movies_dir = source_data_path.join("sentence-sources/movies");
+        let movies = if movies_dir.exists() {
+            let metadata_file = movies_dir.join("metadata.jsonl");
+            if metadata_file.exists() {
+                let metadata_content = std::fs::read_to_string(&metadata_file)?;
+                let mut movies = Vec::new();
+
+                for line in metadata_content.lines() {
+                    if line.trim().is_empty() {
+                        continue;
+                    }
+                    let movie: language_utils::MovieMetadata = serde_json::from_str(line)?;
+                    movies.push(movie);
+                }
+                
+                movies
+            } else {
+                Vec::new()
+            }
+        } else {
+            Vec::new()
+        };
+
+        // Load sentence sources
+        let sentence_sources = {
+            let sentence_sources_file = target_language_dir.join("sentence_sources.jsonl");
+            if sentence_sources_file.exists() {
+                let file = File::open(&sentence_sources_file)?;
+                let reader = BufReader::new(file);
+                reader
+                    .lines()
+                    .map(|line| serde_json::from_str(&line.unwrap()))
+                    .collect::<Result<Vec<(String, language_utils::SentenceSource)>, _>>()?
+            } else {
+                Vec::new()
+            }
+        };
+
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {
             target_language_sentences,
@@ -804,6 +868,8 @@ async fn main() -> anyhow::Result<()> {
             pronunciation_to_words,
             pronunciation_data,
             homophone_practice,
+            movies,
+            sentence_sources,
         };
 
         let language_pack = language_utils::language_pack::LanguagePack::new(consolidated_data);

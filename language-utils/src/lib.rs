@@ -268,6 +268,8 @@ pub struct SentenceSource {
     pub from_manual: bool,
     /// Sentence came from a song in sentence-sources/songs/
     pub from_song: bool,
+    /// Movie IDs if this sentence appears in movies (e.g., ["tt0211915", "tt0241527"])
+    pub movie_ids: Vec<String>,
 }
 
 impl SentenceSource {
@@ -278,6 +280,7 @@ impl SentenceSource {
             from_tatoeba: false,
             from_manual: false,
             from_song: false,
+            movie_ids: Vec::new(),
         }
     }
 
@@ -292,7 +295,65 @@ impl SentenceSource {
         self.from_tatoeba |= other.from_tatoeba;
         self.from_manual |= other.from_manual;
         self.from_song |= other.from_song;
+        // Merge movie IDs, avoiding duplicates
+        for movie_id in &other.movie_ids {
+            if !self.movie_ids.contains(movie_id) {
+                self.movie_ids.push(movie_id.clone());
+            }
+        }
     }
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq), derive(Debug))]
+pub struct MovieMetadata {
+    /// Unique identifier (IMDb ID, e.g., "tt0211915")
+    pub id: String,
+    /// Movie title
+    pub title: String,
+    /// Release year
+    pub year: Option<u16>,
+    /// Genres (e.g., ["Comedy", "Romance"])
+    pub genres: Vec<String>,
+    /// URL to poster image
+    pub poster_url: Option<String>,
+    /// Total word count in dialogue (for comprehensibility calculation)
+    pub total_dialogue_word_count: u64,
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(derive(Debug))]
+pub struct SubtitleLine<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: std::fmt::Debug,
+{
+    /// The sentence text (Spur reference to sentence)
+    pub sentence: S,
+    /// Start timestamp in milliseconds
+    pub start_ms: u32,
+    /// End timestamp in milliseconds
+    pub end_ms: u32,
 }
 
 #[derive(
@@ -917,6 +978,10 @@ pub struct ConsolidatedLanguageData {
     pub pronunciation_data: PronunciationData,
     /// Homophone disambiguation practice sentences
     pub homophone_practice: BTreeMap<HomophoneWordPair<String>, HomophonePractice<String>>,
+    /// Movie metadata for all available movies
+    pub movies: Vec<MovieMetadata>,
+    /// Sentence source provenance tracking (including movie_ids)
+    pub sentence_sources: Vec<(String, SentenceSource)>,
 }
 
 impl ConsolidatedLanguageData {
@@ -989,6 +1054,26 @@ impl ConsolidatedLanguageData {
         for (word_pair, practice) in &self.homophone_practice {
             word_pair.get_or_intern(rodeo);
             practice.get_or_intern(rodeo);
+        }
+
+        // intern movie data
+        for movie in &self.movies {
+            rodeo.get_or_intern(&movie.id);
+            rodeo.get_or_intern(&movie.title);
+            for genre in &movie.genres {
+                rodeo.get_or_intern(genre);
+            }
+            if let Some(poster_url) = &movie.poster_url {
+                rodeo.get_or_intern(poster_url);
+            }
+        }
+
+        // intern sentence sources (sentences already interned, just need movie_ids)
+        for (sentence, source) in &self.sentence_sources {
+            rodeo.get_or_intern(sentence);
+            for movie_id in &source.movie_ids {
+                rodeo.get_or_intern(movie_id);
+            }
         }
     }
 }

@@ -1,7 +1,8 @@
 use crate::indexmap::IndexMap;
 use crate::{
     ConsolidatedLanguageData, DictionaryEntry, Frequency, Heteronym, HomophonePractice,
-    HomophoneWordPair, Lexeme, Literal, PatternPosition, PhrasebookEntry, PronunciationData,
+    HomophoneWordPair, Lexeme, Literal, MovieMetadata, PatternPosition, PhrasebookEntry,
+    PronunciationData,
 };
 use lasso::Spur;
 use rustc_hash::FxHashMap;
@@ -27,6 +28,8 @@ pub struct LanguagePack {
     pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
     /// Cache of maximum frequencies for each pronunciation (pre-computed at initialization)
     pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
+    /// Movie metadata for all available movies
+    pub movies: Vec<MovieMetadata>,
 }
 
 impl LanguagePack {
@@ -290,6 +293,9 @@ impl LanguagePack {
             })
             .collect();
 
+        // Initialize movie data
+        let movies = language_data.movies;
+
         Self {
             rodeo,
             translations,
@@ -308,6 +314,7 @@ impl LanguagePack {
             pattern_frequency_map,
             homophone_practice,
             pronunciation_max_freq_cache,
+            movies,
         }
     }
 }

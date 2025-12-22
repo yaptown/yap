@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use anyhow::Context;
 use indexmap::IndexSet;
-use language_utils::{Course, SentenceSource};
+use language_utils::{Course, Language, SentenceSource};
 
 /// Default target maximum number of sentences to import from Tatoeba
 const DEFAULT_TARGET_SENTENCE_COUNT: usize = 200_000;
@@ -63,7 +63,7 @@ pub fn get_target_sentences(
             source.from_anki = true;
             (target_language_sentence.clone(), native_sentence, source)
         })
-    });
+    }).collect::<Vec<_>>();
 
     // Extract target sentences from Tatoeba pairs with their translations
     let tatoeba_sentences = tatoeba_pairs.iter().map(|pair| {
@@ -82,6 +82,17 @@ pub fn get_target_sentences(
         (pair.target.clone(), native_sentence, source)
     });
 
+    // Load movie sentences
+    let movie_sentences = load_movie_sentences(&source_data_path, course.target_language)?;
+
+    println!(
+        "  Loaded sentences: Anki: {}, Tatoeba: {}, Movies: {}, Manual: {}",
+        anki_sentences.len(),
+        tatoeba_sentences.len(),
+        movie_sentences.len(),
+        manual_sentences.len(),
+    );
+
     // Add manual sentences with source tracking
     let manual_sentences_iter = manual_sentences.into_iter().map(|sentence| {
         let mut source = SentenceSource::none();
@@ -89,10 +100,12 @@ pub fn get_target_sentences(
         (sentence, None, source)
     });
 
+
     // Combine all sentences
     // Apply cleanup BEFORE checking banned sentences to ensure proper matching
-    let all_sentences: Vec<(String, Option<String>, SentenceSource)> = anki_sentences
+    let all_sentences: Vec<(String, Option<String>, SentenceSource)> = anki_sentences.into_iter()
         .chain(tatoeba_sentences)
+        .chain(movie_sentences.into_iter()) // Add movie sentences
         .map(|(sentence, native, source)| {
             (
                 language_utils::text_cleanup::cleanup_sentence(sentence, course.target_language),
@@ -204,12 +217,252 @@ fn load_manual_sentences(source_data_path: &std::path::Path) -> anyhow::Result<V
                 manual_sentences.push(line);
             }
         }
-        println!(
-            "Loaded {} manual sentences from {}",
-            manual_sentences.len(),
-            manual_file.display()
-        );
     }
 
     Ok(manual_sentences)
+}
+
+/// Load movie sentences from OpenSubtitles data
+fn load_movie_sentences(
+    source_data_path: &std::path::Path,
+    language: Language,
+) -> anyhow::Result<Vec<(String, Option<String>, SentenceSource)>> {
+    let movies_dir = source_data_path.join("sentence-sources/movies");
+
+    // If movies directory doesn't exist, return empty vec
+    if !movies_dir.exists() {
+        return Ok(vec![]);
+    }
+
+    let metadata_file = movies_dir.join("metadata.jsonl");
+    if !metadata_file.exists() {
+        return Ok(vec![]);
+    }
+
+    // Load movie metadata
+    let metadata_content =
+        std::fs::read_to_string(&metadata_file).context("Failed to read movie metadata file")?;
+
+    let mut all_movie_sentences = Vec::new();
+
+    for line in metadata_content.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+
+        let movie: language_utils::MovieMetadata =
+            serde_json::from_str(line).context("Failed to parse movie metadata")?;
+
+        // Load subtitle file for this movie
+        let subtitle_file = movies_dir.join(format!("subtitles/{}.jsonl", movie.id));
+        if !subtitle_file.exists() {
+            continue;
+        }
+
+        let subtitle_content = std::fs::read_to_string(&subtitle_file).with_context(|| {
+            format!("Failed to read subtitle file: {}", subtitle_file.display())
+        })?;
+
+        for subtitle_line in subtitle_content.lines() {
+            let subtitle_line = subtitle_line.trim();
+            if subtitle_line.is_empty() {
+                continue;
+            }
+
+            // Parse subtitle line JSON
+            let subtitle: serde_json::Value =
+                serde_json::from_str(subtitle_line).context("Failed to parse subtitle line")?;
+
+            if let Some(sentence) = subtitle.get("sentence").and_then(|s| s.as_str()) {
+                // Filter out bad sentences (music markers, numbers, too short/long, etc.)
+                if !should_include_sentence(sentence, language) {
+                    continue;
+                }
+
+                let mut source = SentenceSource::none();
+                source.movie_ids.push(movie.id.clone());
+
+                all_movie_sentences.push((
+                    sentence.to_string(),
+                    None, // No native translation for movies
+                    source,
+                ));
+            }
+        }
+    }
+
+    Ok(all_movie_sentences)
+}
+
+/// Check if a sentence pair should be included based on filtering criteria
+pub fn should_include_pair(target_sentence: &str, native_sentence: &str, course: Course) -> bool {
+    should_include_sentence(target_sentence, course.target_language)
+        && should_include_sentence(native_sentence, course.native_language)
+}
+
+/// Check if a single sentence should be included (for sources without translations like movies)
+pub fn should_include_sentence(sentence: &str, language: Language) -> bool {
+    // 1. Skip sentences that are too short or too long
+    if sentence.len() < 5 || sentence.len() > 80 {
+        return false;
+    }
+
+    // 2. Skip sentences ending with ellipsis
+    if sentence.ends_with("...") {
+        return false;
+    }
+
+    // 3. Skip sentences containing ellipsis anywhere
+    if sentence.contains("...") {
+        return false;
+    }
+
+    // 4. Skip music markers (common in subtitles)
+    if sentence.contains('♪') {
+        return false;
+    }
+
+    // 5. Check if sentence is "proper" according to language rules
+    if !is_proper_sentence(sentence, language) {
+        return false;
+    }
+
+    // 6. Skip sentences with multiple punctuation marks
+    let punct_count = sentence.matches('.').count()
+        + sentence.matches('!').count()
+        + sentence.matches('?').count();
+
+    if punct_count > 1 {
+        return false;
+    }
+
+    // 7. Skip sentences with numbers
+    if sentence.chars().any(|c| c.is_numeric()) {
+        return false;
+    }
+
+    true
+}
+
+/// Check if a sentence is "proper" - language-specific validation
+fn is_proper_sentence(text: &str, language: Language) -> bool {
+    if text.is_empty() {
+        return false;
+    }
+
+    // Reject sentences starting with dash/hyphen
+    if text.starts_with('-') || text.starts_with('—') || text.starts_with('–') {
+        return false;
+    }
+
+    let first_char = text.chars().next().unwrap();
+    let last_char = text.chars().last().unwrap();
+
+    // Language-specific checks
+    match language {
+        Language::English
+        | Language::French
+        | Language::Spanish
+        | Language::German
+        | Language::Portuguese
+        | Language::Italian => {
+            // Must start with uppercase letter
+            if !first_char.is_uppercase() || !first_char.is_alphabetic() {
+                return false;
+            }
+
+            // Must end with period, exclamation mark, or question mark
+            if last_char != '.' && last_char != '!' && last_char != '?' {
+                return false;
+            }
+        }
+        Language::Russian => {
+            // Russian sentences should not contain Latin letters
+            if text
+                .chars()
+                .any(|c| c.is_ascii_lowercase() || c.is_ascii_uppercase())
+            {
+                return false;
+            }
+
+            // Must start with uppercase Cyrillic letter
+            if !first_char.is_uppercase() {
+                return false;
+            }
+
+            // Must end with period, exclamation mark, or question mark
+            if last_char != '.' && last_char != '!' && last_char != '?' {
+                return false;
+            }
+        }
+        Language::Chinese => {
+            // Chinese sentences should not contain Latin letters (except maybe proper nouns)
+            // But we'll be strict and reject any with Latin letters
+            if text
+                .chars()
+                .any(|c| c.is_ascii_lowercase() || c.is_ascii_uppercase())
+            {
+                return false;
+            }
+
+            // Must end with Chinese or Western punctuation
+            if last_char != '。'
+                && last_char != '！'
+                && last_char != '？'
+                && last_char != '.'
+                && last_char != '!'
+                && last_char != '?'
+            {
+                return false;
+            }
+        }
+        Language::Japanese => {
+            // Japanese sentences should not contain Latin letters (except maybe proper nouns)
+            // But we'll be strict and reject any with Latin letters
+            if text
+                .chars()
+                .any(|c| c.is_ascii_lowercase() || c.is_ascii_uppercase())
+            {
+                return false;
+            }
+
+            // Must end with Japanese or Western punctuation
+            if last_char != '。'
+                && last_char != '！'
+                && last_char != '？'
+                && last_char != '.'
+                && last_char != '!'
+                && last_char != '?'
+            {
+                return false;
+            }
+        }
+        Language::Korean => {
+            // Korean sentences should not contain Latin letters
+            if text
+                .chars()
+                .any(|c| c.is_ascii_lowercase() || c.is_ascii_uppercase())
+            {
+                return false;
+            }
+
+            // Must end with appropriate Korean punctuation or period/exclamation/question
+            if last_char != '.' && last_char != '!' && last_char != '?' {
+                return false;
+            }
+        }
+    }
+
+    // Reject sentences with quotes (often dialogue or non-standard)
+    if text.contains('"') || text.contains('\'') || text.contains('"') || text.contains('"') {
+        return false;
+    }
+
+    // Reject sentences with special characters that indicate non-standard text
+    if text.contains('~') || text.contains('*') || text.contains('_') {
+        return false;
+    }
+
+    true
 }

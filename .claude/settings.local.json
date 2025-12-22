@@ -21,7 +21,8 @@
       "WebFetch(domain:en.wiktionary.org)",
       "Bash(cargo fix:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }
