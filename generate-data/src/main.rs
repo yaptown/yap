@@ -832,7 +832,7 @@ async fn main() -> anyhow::Result<()> {
                     let movie: language_utils::MovieMetadata = serde_json::from_str(line)?;
                     movies.push(movie);
                 }
-                
+
                 movies
             } else {
                 Vec::new()

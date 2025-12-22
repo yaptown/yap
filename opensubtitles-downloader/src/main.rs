@@ -140,11 +140,10 @@ impl OpenSubtitlesClient {
     /// Get popular movies from the discover/popular endpoint
     async fn get_popular_movies(&self, language: &str, limit: usize) -> Result<Vec<PopularMovie>> {
         let url = format!(
-            "https://api.opensubtitles.com/api/v1/discover/popular?languages={}&type=movie",
-            language
+            "https://api.opensubtitles.com/api/v1/discover/popular?languages={language}&type=movie"
         );
 
-        println!("Fetching popular movies: {}", url);
+        println!("Fetching popular movies: {url}");
 
         let response = self
             .client
@@ -154,7 +153,7 @@ impl OpenSubtitlesClient {
             .await?;
 
         let status = response.status();
-        println!("Response status: {}", status);
+        println!("Response status: {status}");
 
         if !status.is_success() {
             let error_text = response.text().await?;
@@ -176,8 +175,7 @@ impl OpenSubtitlesClient {
         language: &str,
     ) -> Result<Vec<SubtitleResult>> {
         let url = format!(
-            "https://api.opensubtitles.com/api/v1/subtitles?imdb_id={}&languages={}",
-            imdb_id, language
+            "https://api.opensubtitles.com/api/v1/subtitles?imdb_id={imdb_id}&languages={language}"
         );
 
         let response = self
@@ -194,8 +192,7 @@ impl OpenSubtitlesClient {
             .context("Failed to get subtitle search response")?;
         let search_response: SubtitleSearchResponse = serde_json::from_str(&search_response)
             .context(format!(
-                "Failed to parse subtitle search response: {}",
-                search_response
+                "Failed to parse subtitle search response: {search_response}"
             ))
             .unwrap();
 
@@ -214,7 +211,7 @@ impl OpenSubtitlesClient {
 
         // Add Authorization header if we have a token
         if let Some(token) = &self.access_token {
-            request = request.header("Authorization", format!("Bearer {}", token));
+            request = request.header("Authorization", format!("Bearer {token}"));
         }
 
         let response = request.json(&body).send().await?.error_for_status()?;
@@ -375,21 +372,19 @@ async fn main() -> Result<()> {
             "por" => "pt",
             "ita" => "it",
             _ => {
-                eprintln!("Unsupported language code: {}", language_iso639_3);
+                eprintln!("Unsupported language code: {language_iso639_3}");
                 eprintln!("Supported: fra, eng, spa, deu, kor, zho, jpn, rus, por, ita");
                 continue; // Skip this language instead of exiting
             }
         };
 
         println!(
-            "\n========================================\nDownloading {} subtitles for language: {}\n========================================",
-            count, language_iso639_3
+            "\n========================================\nDownloading {count} subtitles for language: {language_iso639_3}\n========================================"
         );
 
         // Create output directory using ISO 639-3 to match generate-data pipeline
         let output_dir = PathBuf::from(format!(
-            "./generate-data/data/{}/sentence-sources/movies",
-            language_iso639_3
+            "./generate-data/data/{language_iso639_3}/sentence-sources/movies"
         ));
         fs::create_dir_all(&output_dir)?;
         fs::create_dir_all(output_dir.join("subtitles"))?;
@@ -399,14 +394,14 @@ async fn main() -> Result<()> {
         let existing_count = if subtitles_dir.exists() {
             fs::read_dir(&subtitles_dir)?
                 .filter_map(|e| e.ok())
-                .filter(|e| e.path().extension().map_or(false, |ext| ext == "jsonl"))
+                .filter(|e| e.path().extension().is_some_and(|ext| ext == "jsonl"))
                 .count()
         } else {
             0
         };
 
         if existing_count > 0 {
-            println!("Found {} already downloaded movies", existing_count);
+            println!("Found {existing_count} already downloaded movies");
         }
 
         // Get popular movies using ISO 639-1 for OpenSubtitles API
@@ -429,7 +424,7 @@ async fn main() -> Result<()> {
             }
             let attrs = &popular_movie.attributes;
             let imdb_id = attrs.imdb_id;
-            let imdb_id_str = format!("tt{:07}", imdb_id);
+            let imdb_id_str = format!("tt{imdb_id:07}");
             let title = &attrs.title;
             let year = attrs.year.as_ref().and_then(|y| y.parse::<u16>().ok());
 
@@ -442,7 +437,7 @@ async fn main() -> Result<()> {
             );
 
             // Check if subtitle file already exists
-            let subtitle_path = output_dir.join(format!("subtitles/{}.jsonl", imdb_id_str));
+            let subtitle_path = output_dir.join(format!("subtitles/{imdb_id_str}.jsonl"));
             let (_subtitle_lines, total_word_count, is_new) = if subtitle_path.exists() {
                 println!("  ✓ Already downloaded, skipping...");
 
@@ -461,7 +456,7 @@ async fn main() -> Result<()> {
                         }
                     }
                 }
-                println!("  {} dialogue lines, {} words", line_count, word_count);
+                println!("  {line_count} dialogue lines, {word_count} words");
                 (Vec::new(), word_count, false) // Not a new download
             } else {
                 // Search for subtitles for this specific movie
@@ -539,11 +534,11 @@ async fn main() -> Result<()> {
                     };
 
                     // Download subtitle
-                    println!("  Downloading subtitle (file_id: {})...", file_id);
+                    println!("  Downloading subtitle (file_id: {file_id})...");
                     let srt_content = match client.download_subtitle(file_id).await {
                         Ok(content) => content,
                         Err(e) => {
-                            println!("  ✗ Download failed: {}, trying next...", e);
+                            println!("  ✗ Download failed: {e}, trying next...");
                             continue;
                         }
                     };
@@ -553,7 +548,7 @@ async fn main() -> Result<()> {
                     let subtitle_lines = match parse_srt(&srt_content) {
                         Ok(lines) => lines,
                         Err(e) => {
-                            println!("  ✗ Parse failed: {}, trying next...", e);
+                            println!("  ✗ Parse failed: {e}, trying next...");
                             continue;
                         }
                     };
@@ -570,17 +565,17 @@ async fn main() -> Result<()> {
                     let subtitle_file = match fs::File::create(&subtitle_path) {
                         Ok(file) => file,
                         Err(e) => {
-                            println!("  ✗ Failed to create file: {}, trying next...", e);
+                            println!("  ✗ Failed to create file: {e}, trying next...");
                             continue;
                         }
                     };
                     for line in &subtitle_lines {
                         if let Err(e) = serde_json::to_writer(&subtitle_file, &line) {
-                            println!("  ✗ Failed to write subtitle: {}", e);
+                            println!("  ✗ Failed to write subtitle: {e}");
                             break;
                         }
                         if let Err(e) = writeln!(&subtitle_file) {
-                            println!("  ✗ Failed to write newline: {}", e);
+                            println!("  ✗ Failed to write newline: {e}");
                             break;
                         }
                     }
@@ -623,8 +618,7 @@ async fn main() -> Result<()> {
         // Warn if we couldn't download enough movies
         if downloaded_count < count {
             println!(
-                "\n⚠ Warning: Only found {} movies with subtitles (requested {})",
-                downloaded_count, count
+                "\n⚠ Warning: Only found {downloaded_count} movies with subtitles (requested {count})"
             );
         }
 

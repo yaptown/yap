@@ -47,23 +47,26 @@ pub fn get_target_sentences(
 
     // Extract target sentences from Anki cards with their native translations
     let use_native_card_side = course.native_language == language_utils::Language::English;
-    let anki_sentences = all_cards.iter().flat_map(|card| {
-        card.target.iter().map(|target_language_sentence| {
-            let native_sentence = if use_native_card_side {
-                let trimmed_native = card.english.trim();
-                if trimmed_native.is_empty() {
-                    None
+    let anki_sentences = all_cards
+        .iter()
+        .flat_map(|card| {
+            card.target.iter().map(|target_language_sentence| {
+                let native_sentence = if use_native_card_side {
+                    let trimmed_native = card.english.trim();
+                    if trimmed_native.is_empty() {
+                        None
+                    } else {
+                        Some(trimmed_native.to_string())
+                    }
                 } else {
-                    Some(trimmed_native.to_string())
-                }
-            } else {
-                None
-            };
-            let mut source = SentenceSource::none();
-            source.from_anki = true;
-            (target_language_sentence.clone(), native_sentence, source)
+                    None
+                };
+                let mut source = SentenceSource::none();
+                source.from_anki = true;
+                (target_language_sentence.clone(), native_sentence, source)
+            })
         })
-    }).collect::<Vec<_>>();
+        .collect::<Vec<_>>();
 
     // Extract target sentences from Tatoeba pairs with their translations
     let tatoeba_sentences = tatoeba_pairs.iter().map(|pair| {
@@ -100,12 +103,12 @@ pub fn get_target_sentences(
         (sentence, None, source)
     });
 
-
     // Combine all sentences
     // Apply cleanup BEFORE checking banned sentences to ensure proper matching
-    let all_sentences: Vec<(String, Option<String>, SentenceSource)> = anki_sentences.into_iter()
+    let all_sentences: Vec<(String, Option<String>, SentenceSource)> = anki_sentences
+        .into_iter()
         .chain(tatoeba_sentences)
-        .chain(movie_sentences.into_iter()) // Add movie sentences
+        .chain(movie_sentences) // Add movie sentences
         .map(|(sentence, native, source)| {
             (
                 language_utils::text_cleanup::cleanup_sentence(sentence, course.target_language),
