@@ -824,13 +824,23 @@ async fn main() -> anyhow::Result<()> {
             let metadata_file = movies_dir.join("metadata.jsonl");
             if metadata_file.exists() {
                 let metadata_content = std::fs::read_to_string(&metadata_file)?;
+                let posters_dir = movies_dir.join("posters");
                 let mut movies = FxHashMap::default();
 
                 for line in metadata_content.lines() {
                     if line.trim().is_empty() {
                         continue;
                     }
-                    let movie: language_utils::MovieMetadata = serde_json::from_str(line)?;
+                    let mut movie: language_utils::MovieMetadata = serde_json::from_str(line)?;
+
+                    // Load poster bytes from separate file if it exists
+                    let poster_path = posters_dir.join(format!("{}.jpg", movie.id));
+                    if poster_path.exists() {
+                        if let Ok(bytes) = std::fs::read(&poster_path) {
+                            movie.poster_bytes = Some(bytes);
+                        }
+                    }
+
                     movies.insert(movie.id.clone(), movie);
                 }
 

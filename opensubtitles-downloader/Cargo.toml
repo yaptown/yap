@@ -15,3 +15,5 @@ dotenv = "0.15"
 language-utils = { path = "../language-utils" }
 clap = { version = "4", features = ["derive"] }
 futures = {workspace = true}
+rustc-hash = "2.1"
+base64 = "0.22"

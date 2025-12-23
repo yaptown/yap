@@ -114,7 +114,10 @@ pub fn compute_movie_frequencies(
 
     let mut movie_frequencies = FxHashMap::default();
 
-    println!("Computing per-movie frequencies for {} movies...", movie_ids.len());
+    println!(
+        "Computing per-movie frequencies for {} movies...",
+        movie_ids.len()
+    );
 
     for movie_id in movie_ids {
         // Filter sentences for this movie

@@ -326,12 +326,9 @@ pub struct MovieMetadata {
     pub title: String,
     /// Release year
     pub year: Option<u16>,
-    /// Genres (e.g., ["Comedy", "Romance"])
-    pub genres: Vec<String>,
-    /// URL to poster image
-    pub poster_url: Option<String>,
-    /// Total word count in dialogue (for comprehensibility calculation)
-    pub total_dialogue_word_count: u64,
+    /// Poster image bytes (JPEG format)
+    #[serde(skip)]
+    pub poster_bytes: Option<Vec<u8>>,
 }
 
 #[derive(
@@ -1078,12 +1075,6 @@ impl ConsolidatedLanguageData {
         for (_movie_id, movie) in &self.movies {
             rodeo.get_or_intern(&movie.id);
             rodeo.get_or_intern(&movie.title);
-            for genre in &movie.genres {
-                rodeo.get_or_intern(genre);
-            }
-            if let Some(poster_url) = &movie.poster_url {
-                rodeo.get_or_intern(poster_url);
-            }
         }
 
         // intern sentence sources (sentences already interned, just need movie_ids)

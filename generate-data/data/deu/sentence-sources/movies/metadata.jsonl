@@ -1,24 +1,63 @@
-{"id":"tt0241527","title":"harry potter and the philosopher's stone","year":2001,"genres":[],"poster_url":null,"total_dialogue_word_count":8770}
-{"id":"tt0133093","title":"the matrix","year":1999,"genres":[],"poster_url":null,"total_dialogue_word_count":6417}
-{"id":"tt31844586","title":"sisu: road to revenge","year":2025,"genres":[],"poster_url":null,"total_dialogue_word_count":78}
-{"id":"tt12300742","title":"bugonia","year":2025,"genres":[],"poster_url":null,"total_dialogue_word_count":9877}
-{"id":"tt29927663","title":"the great flood","year":2025,"genres":[],"poster_url":null,"total_dialogue_word_count":4703}
-{"id":"tt1853728","title":"django unchained","year":2012,"genres":[],"poster_url":null,"total_dialogue_word_count":11084}
-{"id":"tt0097958","title":"national lampoon's christmas vacation","year":1989,"genres":[],"poster_url":null,"total_dialogue_word_count":6411}
-{"id":"tt1630029","title":"avatar 2","year":2020,"genres":[],"poster_url":null,"total_dialogue_word_count":9079}
-{"id":"tt30144839","title":"one battle after another","year":2025,"genres":[],"poster_url":null,"total_dialogue_word_count":11301}
-{"id":"tt14364480","title":"wake up dead man: a knives out mystery","year":2025,"genres":[],"poster_url":null,"total_dialogue_word_count":66}
-{"id":"tt2096673","title":"inside out","year":2015,"genres":[],"poster_url":null,"total_dialogue_word_count":6538}
-{"id":"tt10374610","title":"the long walk","year":2025,"genres":[],"poster_url":null,"total_dialogue_word_count":9771}
-{"id":"tt0405094","title":"the lives of others","year":2006,"genres":[],"poster_url":null,"total_dialogue_word_count":8384}
-{"id":"tt0417741","title":"harry potter and the half-blood prince","year":2009,"genres":[],"poster_url":null,"total_dialogue_word_count":9948}
-{"id":"tt1375666","title":"inception","year":2010,"genres":[],"poster_url":null,"total_dialogue_word_count":12535}
-{"id":"tt1392190","title":"mad max: fury road","year":2015,"genres":[],"poster_url":null,"total_dialogue_word_count":5270}
-{"id":"tt1446714","title":"prometheus","year":2012,"genres":[],"poster_url":null,"total_dialogue_word_count":5621}
-{"id":"tt0120737","title":"the lord of the rings: the fellowship of the ring","year":2001,"genres":[],"poster_url":null,"total_dialogue_word_count":3918}
-{"id":"tt0499549","title":"avatar","year":2009,"genres":[],"poster_url":null,"total_dialogue_word_count":9144}
-{"id":"tt0167260","title":"the lord of the rings: the return of the king","year":2003,"genres":[],"poster_url":null,"total_dialogue_word_count":6727}
-{"id":"tt14107334","title":"the running man","year":2025,"genres":[],"poster_url":null,"total_dialogue_word_count":11394}
-{"id":"tt0816692","title":"interstellar","year":2014,"genres":[],"poster_url":null,"total_dialogue_word_count":12731}
-{"id":"tt31227572","title":"predator: badlands","year":2025,"genres":[],"poster_url":null,"total_dialogue_word_count":937}
-{"id":"tt30972054","title":"manitou's canoe","year":2025,"genres":[],"poster_url":null,"total_dialogue_word_count":7771}
+{"id":"tt0241527","title":"Harry Potter und der Stein der Weisen","year":2001}
+{"id":"tt0133093","title":"Matrix","year":1999}
+{"id":"tt0167261","title":"Der Herr der Ringe - Die zwei Türme","year":2002}
+{"id":"tt31844586","title":"Sisu: Road to Revenge","year":2025}
+{"id":"tt12300742","title":"Bugonia","year":2025}
+{"id":"tt29927663","title":"The Great Flood","year":2025}
+{"id":"tt1853728","title":"Django Unchained","year":2012}
+{"id":"tt0097958","title":"Schöne Bescherung","year":1989}
+{"id":"tt2096673","title":"Alles steht Kopf","year":2015}
+{"id":"tt1630029","title":"Avatar: The Way of Water","year":2022}
+{"id":"tt10374610","title":"The Long Walk - Todesmarsch","year":2025}
+{"id":"tt14364480","title":"Wake Up Dead Man: A Knives Out Mystery","year":2025}
+{"id":"tt30144839","title":"One Battle After Another","year":2025}
+{"id":"tt0405094","title":"Das Leben der Anderen","year":2006}
+{"id":"tt0417741","title":"Harry Potter und der Halbblutprinz","year":2009}
+{"id":"tt0120737","title":"Der Herr der Ringe - Die Gefährten","year":2001}
+{"id":"tt0499549","title":"Avatar - Aufbruch nach Pandora","year":2009}
+{"id":"tt0167260","title":"Der Herr der Ringe - Die Rückkehr des Königs","year":2003}
+{"id":"tt31227572","title":"Predator: Badlands","year":2025}
+{"id":"tt30972054","title":"Das Kanu des Manitu","year":2025}
+{"id":"tt14107334","title":"The Running Man","year":2025}
+{"id":"tt1375666","title":"Inception","year":2010}
+{"id":"tt0816692","title":"Interstellar","year":2014}
+{"id":"tt1392190","title":"Mad Max: Fury Road","year":2015}
+{"id":"tt6751668","title":"Parasite","year":2019}
+{"id":"tt20215234","title":"Konklave","year":2024}
+{"id":"tt2584384","title":"Jojo Rabbit","year":2019}
+{"id":"tt4468740","title":"Paddington 2","year":2017}
+{"id":"tt1856101","title":"Blade Runner 2049","year":2017}
+{"id":"tt3654796","title":"Creep 2","year":2017}
+{"id":"tt2428170","title":"Creep","year":2014}
+{"id":"tt4263482","title":"The Witch","year":2016}
+{"id":"tt28607951","title":"Anora","year":2024}
+{"id":"tt2582802","title":"Whiplash","year":2014}
+{"id":"tt0382932","title":"Ratatouille","year":2007}
+{"id":"tt0347149","title":"Das wandelnde Schloss","year":2004}
+{"id":"tt0299658","title":"Chicago","year":2002}
+{"id":"tt0245429","title":"Chihiros Reise ins Zauberland","year":2001}
+{"id":"tt0230011","title":"Atlantis - Das Geheimnis der verlorenen Stadt","year":2001}
+{"id":"tt0805564","title":"Lars und die Frauen","year":2007}
+{"id":"tt0460989","title":"The Wind That Shakes the Barley","year":2006}
+{"id":"tt0320661","title":"Königreich der Himmel","year":2005}
+{"id":"tt0363163","title":"Der Untergang","year":2004}
+{"id":"tt0120737","title":"Der Herr der Ringe - Die Gefährten","year":2001}
+{"id":"tt0167261","title":"Der Herr der Ringe - Die zwei Türme","year":2002}
+{"id":"tt0167260","title":"Der Herr der Ringe - Die Rückkehr des Königs","year":2003}
+{"id":"tt0265666","title":"Die Royal Tenenbaums","year":2001}
+{"id":"tt0137523","title":"Fight Club","year":1999}
+{"id":"tt0128445","title":"Rushmore","year":1998}
+{"id":"tt0120338","title":"Titanic","year":1997}
+{"id":"tt0119698","title":"Prinzessin Mononoke","year":1997}
+{"id":"tt0104797","title":"Malcolm X","year":1992}
+{"id":"tt0105236","title":"Reservoir Dogs - Wilde Hunde","year":1992}
+{"id":"tt3783958","title":"La La Land","year":2016}
+{"id":"tt0099685","title":"GoodFellas","year":1990}
+{"id":"tt0097499","title":"Henry V","year":1989}
+{"id":"tt0097165","title":"Der Club der toten Dichter","year":1989}
+{"id":"tt0097576","title":"Indiana Jones und der letzte Kreuzzug","year":1989}
+{"id":"tt0097216","title":"Do the Right Thing","year":1989}
+{"id":"tt0093779","title":"Die Braut des Prinzen","year":1987}
+{"id":"tt0096018","title":"Die Flucht ins Ungewisse","year":1988}
+{"id":"tt0181875","title":"Almost Famous - Fast berühmt","year":2000}
+{"id":"tt2194499","title":"Alles eine Frage der Zeit","year":2013}

@@ -1,11 +1,64 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use language_utils::MovieMetadata;
+use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
+
+/// Fetch an image from a URL and return the bytes
+async fn fetch_image_bytes(client: &reqwest::Client, url: &str) -> Result<Vec<u8>> {
+    let response = client.get(url).send().await?;
+    let bytes = response.bytes().await?;
+    Ok(bytes.to_vec())
+}
+
+const EXTRA_MOVIES: &[&str] = &[
+    "tt6751668",
+    "tt20215234",
+    "tt2584384",
+    "tt4468740",
+    "tt1856101",
+    "tt3654796",
+    "tt2428170",
+    "tt4263482",
+    "tt28607951",
+    "tt2582802",
+    "tt0382932",
+    "tt0347149",
+    "tt0299658",
+    "tt0245429",
+    "tt0230011",
+    "tt2396224",
+    "tt0805564",
+    "tt0460989",
+    "tt0320661",
+    "tt0363163",
+    "tt0120737",
+    "tt0167261",
+    "tt0167260",
+    "tt0265666",
+    "tt0137523",
+    "tt0128445",
+    "tt0120338",
+    "tt0119698",
+    "tt0104797",
+    "tt0105236",
+    "tt3783958",
+    "tt0099685",
+    "tt0097499",
+    "tt0097165",
+    "tt0097576",
+    "tt0097216",
+    "tt0093779",
+    "tt0096018",
+    "tt0181875",
+    "tt2194499",
+    "tt0780504",
+    "tt7131622",
+];
 
 /// Response from /discover/popular endpoint
 #[derive(Debug, Deserialize)]
@@ -85,6 +138,55 @@ struct SubtitleLineJson {
     sentence: String,
     start_ms: u32,
     end_ms: u32,
+}
+
+/// TMDB API Movie Response
+#[derive(Debug, Deserialize)]
+struct TmdbMovie {
+    title: String,
+    release_date: Option<String>,
+    poster_path: Option<String>,
+}
+
+/// TMDB Find API Response
+#[derive(Debug, Deserialize)]
+struct TmdbFindResponse {
+    movie_results: Vec<TmdbMovie>,
+}
+
+struct TmdbClient {
+    api_key: String,
+    client: reqwest::Client,
+}
+
+impl TmdbClient {
+    fn new(api_key: String) -> Self {
+        Self {
+            api_key,
+            client: reqwest::Client::new(),
+        }
+    }
+
+    async fn get_movie(&self, imdb_id: &str, language: &str) -> Result<TmdbMovie> {
+        // Use the find endpoint to search by IMDB ID
+        let url = format!(
+            "https://api.themoviedb.org/3/find/{}?api_key={}&external_source=imdb_id&language={}",
+            imdb_id, self.api_key, language
+        );
+
+        let response = self.client.get(&url).send().await?;
+        let response_text = response.text().await?;
+        let find_response: TmdbFindResponse = serde_json::from_str(&response_text)?;
+
+        if find_response.movie_results.is_empty() {
+            return Err(anyhow!("No movie found for IMDB ID {}", imdb_id));
+        }
+
+        // Rate limiting: wait 250ms between requests
+        tokio::time::sleep(tokio::time::Duration::from_millis(2500)).await;
+
+        Ok(find_response.movie_results.into_iter().next().unwrap())
+    }
 }
 
 struct OpenSubtitlesClient {
@@ -223,6 +325,9 @@ impl OpenSubtitlesClient {
 
         let srt_content = srt_response.text().await?;
 
+        // Rate limiting: wait 1 second between requests
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
         Ok(srt_content)
     }
 }
@@ -314,6 +419,298 @@ fn strip_html_tags(text: &str) -> String {
     re.replace_all(text, "").to_string()
 }
 
+/// Download subtitles for a single movie and return metadata
+async fn download_movie_subtitles(
+    opensub_client: &OpenSubtitlesClient,
+    tmdb_client: &TmdbClient,
+    imdb_id: u64,
+    imdb_id_str: &str,
+    language_iso639_1: &str,
+    tmdb_language: &str,
+    subtitle_path: &std::path::Path,
+    posters_dir: &std::path::Path,
+) -> Result<Option<(Vec<SubtitleLineJson>, MovieMetadata)>> {
+    // Search for subtitles
+    let mut subtitle_results = opensub_client
+        .search_subtitles_for_movie(imdb_id, language_iso639_1)
+        .await?;
+
+    if subtitle_results.is_empty() {
+        return Ok(None);
+    }
+
+    // Filter and sort by quality
+    subtitle_results.retain(|s| !s.attributes.ai_translated && !s.attributes.machine_translated);
+    if subtitle_results.is_empty() {
+        println!("  ✗ No human-translated subtitles available");
+        return Ok(None);
+    }
+
+    subtitle_results.sort_by(|a, b| {
+        match (a.attributes.from_trusted, b.attributes.from_trusted) {
+            (Some(true), _) => return std::cmp::Ordering::Less,
+            (_, Some(true)) => return std::cmp::Ordering::Greater,
+            _ => {}
+        }
+        match (a.attributes.download_count, b.attributes.download_count) {
+            (Some(a_count), Some(b_count)) => {
+                if a_count != b_count {
+                    return b_count.cmp(&a_count);
+                }
+            }
+            (Some(_), None) => return std::cmp::Ordering::Less,
+            (None, Some(_)) => return std::cmp::Ordering::Greater,
+            _ => {}
+        }
+        match (a.attributes.ratings, b.attributes.ratings) {
+            (Some(a_rating), Some(b_rating)) => b_rating
+                .partial_cmp(&a_rating)
+                .unwrap_or(std::cmp::Ordering::Equal),
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            _ => std::cmp::Ordering::Equal,
+        }
+    });
+
+    println!("  Found {} subtitle options", subtitle_results.len());
+
+    // Try each subtitle in order until one succeeds
+    for subtitle_result in subtitle_results {
+        println!(
+            "  Trying subtitle: {} downloads, trusted: {}, rating: {:.1}",
+            subtitle_result.attributes.download_count.unwrap_or(0),
+            subtitle_result.attributes.from_trusted.unwrap_or(false),
+            subtitle_result.attributes.ratings.unwrap_or(0.0)
+        );
+
+        let Some(file_id) = subtitle_result.attributes.files.first().map(|f| f.file_id) else {
+            println!("  ✗ No files found for this subtitle, trying next...");
+            continue;
+        };
+
+        println!("  Downloading subtitle (file_id: {file_id})...");
+        let srt_content = match opensub_client.download_subtitle(file_id).await {
+            Ok(content) => content,
+            Err(e) => {
+                println!("  ✗ Download failed: {e}, trying next...");
+                continue;
+            }
+        };
+
+        println!("  Parsing SRT...");
+        let subtitle_lines = match parse_srt(&srt_content) {
+            Ok(lines) => lines,
+            Err(e) => {
+                println!("  ✗ Parse failed: {e}, trying next...");
+                continue;
+            }
+        };
+
+        if subtitle_lines.is_empty() {
+            continue;
+        }
+
+        println!("  Extracted {} dialogue lines", subtitle_lines.len());
+
+        // Save subtitle file
+        let subtitle_file = match fs::File::create(subtitle_path) {
+            Ok(file) => file,
+            Err(e) => {
+                println!("  ✗ Failed to create file: {e}, trying next...");
+                continue;
+            }
+        };
+
+        for line in &subtitle_lines {
+            if let Err(e) = serde_json::to_writer(&subtitle_file, &line) {
+                println!("  ✗ Failed to write subtitle: {e}");
+                break;
+            }
+            if let Err(e) = writeln!(&subtitle_file) {
+                println!("  ✗ Failed to write newline: {e}");
+                break;
+            }
+        }
+
+        println!("  ✓ Saved to {}", subtitle_path.display());
+
+        // Fetch metadata from TMDB
+        println!("  Fetching metadata from TMDB...");
+        let (title, year, poster_bytes) =
+            match tmdb_client.get_movie(imdb_id_str, tmdb_language).await {
+                Ok(tmdb_data) => {
+                    let title = tmdb_data.title;
+                    let year = tmdb_data
+                        .release_date
+                        .and_then(|d| d.split('-').next().and_then(|y| y.parse::<u16>().ok()));
+
+                    // Fetch and save poster if available
+                    let poster_bytes = if let Some(poster_path) = tmdb_data.poster_path {
+                        println!("  Fetching poster image...");
+                        let poster_url = format!("https://image.tmdb.org/t/p/w500{}", poster_path);
+                        match fetch_image_bytes(&opensub_client.client, &poster_url).await {
+                            Ok(bytes) => {
+                                // Save poster to file
+                                let poster_file = posters_dir.join(format!("{}.jpg", imdb_id_str));
+                                if let Err(e) = fs::write(&poster_file, &bytes) {
+                                    println!("  ⚠ Failed to save poster: {e}");
+                                    None
+                                } else {
+                                    println!("  ✓ Saved poster to {}", poster_file.display());
+                                    Some(bytes)
+                                }
+                            }
+                            Err(e) => {
+                                println!("  ⚠ Failed to fetch poster: {e}");
+                                None
+                            }
+                        }
+                    } else {
+                        None
+                    };
+
+                    (title, year, poster_bytes)
+                }
+                Err(e) => {
+                    println!("  ⚠ Could not fetch TMDB metadata: {e:?}");
+                    ("Unknown".to_string(), None, None)
+                }
+            };
+
+        let movie = MovieMetadata {
+            id: imdb_id_str.to_string(),
+            title,
+            year,
+            poster_bytes,
+        };
+
+        return Ok(Some((subtitle_lines, movie)));
+    }
+
+    Ok(None)
+}
+
+/// Fetch movie metadata from TMDB
+async fn fetch_tmdb_metadata(
+    tmdb_client: &TmdbClient,
+    imdb_id_str: &str,
+    tmdb_language: &str,
+    opensub_client: &OpenSubtitlesClient,
+    posters_dir: &std::path::Path,
+) -> Result<MovieMetadata> {
+    let (tmdb_title, tmdb_year, poster_bytes) =
+        match tmdb_client.get_movie(imdb_id_str, tmdb_language).await {
+            Ok(tmdb_data) => {
+                let tmdb_title = tmdb_data.title;
+                let tmdb_year = tmdb_data
+                    .release_date
+                    .and_then(|d| d.split('-').next().and_then(|y| y.parse::<u16>().ok()));
+
+                // Fetch and save poster if available
+                let poster_bytes = if let Some(poster_path) = tmdb_data.poster_path {
+                    println!("  Fetching poster image...");
+                    let poster_url = format!("https://image.tmdb.org/t/p/w500{}", poster_path);
+                    match fetch_image_bytes(&opensub_client.client, &poster_url).await {
+                        Ok(bytes) => {
+                            // Save poster to file
+                            let poster_file = posters_dir.join(format!("{}.jpg", imdb_id_str));
+                            if let Err(e) = fs::write(&poster_file, &bytes) {
+                                println!("  ⚠ Failed to save poster: {e}");
+                                None
+                            } else {
+                                println!("  ✓ Saved poster to {}", poster_file.display());
+                                Some(bytes)
+                            }
+                        }
+                        Err(e) => {
+                            println!("  ⚠ Failed to fetch poster: {e}");
+                            None
+                        }
+                    }
+                } else {
+                    None
+                };
+
+                (tmdb_title, tmdb_year, poster_bytes)
+            }
+            Err(e) => {
+                println!("  ⚠ Could not fetch TMDB metadata: {e}");
+                return Err(anyhow!("Failed to fetch TMDB metadata: {e}"));
+            }
+        };
+
+    Ok(MovieMetadata {
+        id: imdb_id_str.to_string(),
+        title: tmdb_title,
+        year: tmdb_year,
+        poster_bytes,
+    })
+}
+
+/// Process a single movie: download subtitle if needed, fetch metadata if needed
+/// Returns (metadata, is_new_download)
+async fn process_movie(
+    imdb_id_str: &str,
+    opensub_client: &OpenSubtitlesClient,
+    tmdb_client: &TmdbClient,
+    existing_metadata: &FxHashMap<String, MovieMetadata>,
+    language_iso639_1: &str,
+    tmdb_language: &str,
+    output_dir: &std::path::Path,
+    posters_dir: &std::path::Path,
+) -> Result<(MovieMetadata, bool)> {
+    let subtitle_path = output_dir.join(format!("subtitles/{}.jsonl", imdb_id_str));
+    let imdb_id = imdb_id_str.strip_prefix("tt").unwrap().parse::<u64>()?;
+
+    let (is_new_download, maybe_metadata) = if subtitle_path.exists() {
+        println!("  ✓ Subtitle already downloaded");
+        (false, None)
+    } else {
+        println!("  Searching for subtitles...");
+        match download_movie_subtitles(
+            opensub_client,
+            tmdb_client,
+            imdb_id,
+            imdb_id_str,
+            language_iso639_1,
+            tmdb_language,
+            &subtitle_path,
+            posters_dir,
+        )
+        .await?
+        {
+            Some((_, movie)) => {
+                println!("  ✓ Downloaded successfully");
+                (true, Some(movie))
+            }
+            None => {
+                println!("  ✗ Failed to download subtitles");
+                return Err(anyhow!("No subtitles available"));
+            }
+        }
+    };
+
+    // If we got metadata from download, use it. Otherwise check existing or fetch from TMDB
+    let metadata = if let Some(meta) = maybe_metadata {
+        meta
+    } else if let Some(existing) = existing_metadata.get(imdb_id_str) {
+        println!("  ✓ Using existing metadata");
+        existing.clone()
+    } else {
+        println!("  Fetching metadata from TMDB...");
+        fetch_tmdb_metadata(
+            tmdb_client,
+            imdb_id_str,
+            tmdb_language,
+            opensub_client,
+            posters_dir,
+        )
+        .await?
+    };
+
+    Ok((metadata, is_new_download))
+}
+
 /// Download movie subtitles from OpenSubtitles
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -332,9 +729,11 @@ async fn main() -> Result<()> {
     // Load .env file if it exists
     dotenv::dotenv().ok();
 
-    // Get API key from environment
-    let api_key = std::env::var("OPENSUBTITLES_API_KEY")
+    // Get API keys from environment
+    let opensub_api_key = std::env::var("OPENSUBTITLES_API_KEY")
         .context("OPENSUBTITLES_API_KEY environment variable not set")?;
+    let tmdb_api_key =
+        std::env::var("TMDB_API_KEY").context("TMDB_API_KEY environment variable not set")?;
 
     // Get optional login credentials
     let username = std::env::var("OPENSUBTITLES_USERNAME").ok();
@@ -345,13 +744,14 @@ async fn main() -> Result<()> {
     let languages = args.language;
     let count = args.count;
 
-    // Create client once for all languages
-    let mut client = OpenSubtitlesClient::new(api_key);
+    // Create clients once for all languages
+    let mut opensub_client = OpenSubtitlesClient::new(opensub_api_key);
+    let tmdb_client = TmdbClient::new(tmdb_api_key);
 
     // Login if credentials are provided
     if let (Some(user), Some(pass)) = (username, password) {
         println!("Logging in to OpenSubtitles...");
-        client.login(&user, &pass).await?;
+        opensub_client.login(&user, &pass).await?;
     } else {
         println!("No login credentials provided - using unauthenticated mode (limited downloads)");
         println!("Set OPENSUBTITLES_USERNAME and OPENSUBTITLES_PASSWORD in .env to authenticate");
@@ -378,6 +778,21 @@ async fn main() -> Result<()> {
             }
         };
 
+        // Map to TMDB language code (language-REGION format for localized metadata)
+        let tmdb_language = match language_iso639_3.as_str() {
+            "fra" => "fr-FR",
+            "eng" => "en-US",
+            "spa" => "es-ES",
+            "deu" => "de-DE",
+            "kor" => "ko-KR",
+            "zho" => "zh-CN",
+            "jpn" => "ja-JP",
+            "rus" => "ru-RU",
+            "por" => "pt-BR",
+            "ita" => "it-IT",
+            _ => "en-US", // Fallback
+        };
+
         println!(
             "\n========================================\nDownloading {count} subtitles for language: {language_iso639_3}\n========================================"
         );
@@ -388,6 +803,24 @@ async fn main() -> Result<()> {
         ));
         fs::create_dir_all(&output_dir)?;
         fs::create_dir_all(output_dir.join("subtitles"))?;
+        let posters_dir = output_dir.join("posters");
+        fs::create_dir_all(&posters_dir)?;
+
+        // Read existing metadata to avoid re-fetching OMDB data
+        let metadata_path = output_dir.join("metadata.jsonl");
+        let mut existing_metadata: FxHashMap<String, MovieMetadata> = FxHashMap::default();
+        if metadata_path.exists() {
+            let metadata_content = fs::read_to_string(&metadata_path)?;
+            for line in metadata_content.lines() {
+                if line.trim().is_empty() {
+                    continue;
+                }
+                if let Ok(movie) = serde_json::from_str::<MovieMetadata>(line) {
+                    existing_metadata.insert(movie.id.clone(), movie);
+                }
+            }
+            println!("Loaded metadata for {} movies", existing_metadata.len());
+        }
 
         // Count already downloaded movies
         let subtitles_dir = output_dir.join("subtitles");
@@ -408,7 +841,7 @@ async fn main() -> Result<()> {
         // Request more than needed to account for already-downloaded movies and low-quality subtitles
         let fetch_count = count * 3 + existing_count;
         println!("Searching for popular movies...");
-        let popular_movies = client
+        let popular_movies = opensub_client
             .get_popular_movies(language_iso639_1, fetch_count)
             .await?;
 
@@ -423,196 +856,38 @@ async fn main() -> Result<()> {
                 break;
             }
             let attrs = &popular_movie.attributes;
-            let imdb_id = attrs.imdb_id;
-            let imdb_id_str = format!("tt{imdb_id:07}");
-            let title = &attrs.title;
-            let year = attrs.year.as_ref().and_then(|y| y.parse::<u16>().ok());
+            let imdb_id_str = format!("tt{:07}", attrs.imdb_id);
 
             println!(
                 "\n[Downloaded: {}/{}] {} ({})",
                 downloaded_count,
                 count,
-                title,
-                year.unwrap_or(0)
+                attrs.title,
+                attrs.year.as_ref().map(|s| s.as_str()).unwrap_or("Unknown")
             );
 
-            // Check if subtitle file already exists
-            let subtitle_path = output_dir.join(format!("subtitles/{imdb_id_str}.jsonl"));
-            let (_subtitle_lines, total_word_count, is_new) = if subtitle_path.exists() {
-                println!("  ✓ Already downloaded, skipping...");
-
-                // Read existing file to get word count
-                let content = fs::read_to_string(&subtitle_path)?;
-                let mut line_count = 0;
-                let mut word_count = 0;
-                for line in content.lines() {
-                    if line.trim().is_empty() {
-                        continue;
-                    }
-                    if let Ok(subtitle) = serde_json::from_str::<serde_json::Value>(line) {
-                        if let Some(sentence) = subtitle.get("sentence").and_then(|s| s.as_str()) {
-                            line_count += 1;
-                            word_count += sentence.split_whitespace().count();
-                        }
+            match process_movie(
+                &imdb_id_str,
+                &opensub_client,
+                &tmdb_client,
+                &existing_metadata,
+                language_iso639_1,
+                tmdb_language,
+                &output_dir,
+                &posters_dir,
+            )
+            .await
+            {
+                Ok((movie, is_new)) => {
+                    movies.push(movie);
+                    if is_new {
+                        downloaded_count += 1;
                     }
                 }
-                println!("  {line_count} dialogue lines, {word_count} words");
-                (Vec::new(), word_count, false) // Not a new download
-            } else {
-                // Search for subtitles for this specific movie
-                println!("  Searching for subtitles...");
-                let Ok(mut subtitle_results) = client
-                    .search_subtitles_for_movie(imdb_id, language_iso639_1)
-                    .await
-                else {
-                    println!("  ✗ No subtitles found for this movie");
-                    continue;
-                };
-
-                if subtitle_results.is_empty() {
-                    println!("  ✗ No subtitles found for this movie");
-                    continue;
+                Err(e) => {
+                    println!("  ✗ Error: {e}");
                 }
-
-                println!("  Found {} subtitle options", subtitle_results.len());
-
-                // Filter and sort to find the best subtitle
-                // 1. Remove AI/machine translated
-                subtitle_results
-                    .retain(|s| !s.attributes.ai_translated && !s.attributes.machine_translated);
-
-                if subtitle_results.is_empty() {
-                    println!("  ✗ No human-translated subtitles available");
-                    continue;
-                }
-
-                // 2. Sort by quality (prefer: trusted, higher downloads, higher ratings)
-                subtitle_results.sort_by(|a, b| {
-                    // Trusted first
-                    match (a.attributes.from_trusted, b.attributes.from_trusted) {
-                        (Some(true), _) => return std::cmp::Ordering::Less,
-                        (_, Some(true)) => return std::cmp::Ordering::Greater,
-                        _ => {}
-                    }
-                    // Then by download count
-                    match (a.attributes.download_count, b.attributes.download_count) {
-                        (Some(a_count), Some(b_count)) => {
-                            if a_count != b_count {
-                                return b_count.cmp(&a_count);
-                            }
-                        }
-                        (Some(_), None) => return std::cmp::Ordering::Less,
-                        (None, Some(_)) => return std::cmp::Ordering::Greater,
-                        _ => {}
-                    }
-                    // Then by ratings
-                    match (a.attributes.ratings, b.attributes.ratings) {
-                        (Some(a_rating), Some(b_rating)) => b_rating
-                            .partial_cmp(&a_rating)
-                            .unwrap_or(std::cmp::Ordering::Equal),
-                        (Some(_), None) => std::cmp::Ordering::Less,
-                        (None, Some(_)) => std::cmp::Ordering::Greater,
-                        _ => std::cmp::Ordering::Equal,
-                    }
-                });
-
-                // Try each subtitle in order until one succeeds
-                let mut download_result = None;
-                for subtitle_result in subtitle_results {
-                    println!(
-                        "  Trying subtitle: {} downloads, trusted: {}, rating: {:.1}",
-                        subtitle_result.attributes.download_count.unwrap_or(0),
-                        subtitle_result.attributes.from_trusted.unwrap_or(false),
-                        subtitle_result.attributes.ratings.unwrap_or(0.0)
-                    );
-
-                    // Get file ID
-                    let Some(file_id) = subtitle_result.attributes.files.first().map(|f| f.file_id)
-                    else {
-                        println!("  ✗ No files found for this subtitle, trying next...");
-                        continue;
-                    };
-
-                    // Download subtitle
-                    println!("  Downloading subtitle (file_id: {file_id})...");
-                    let srt_content = match client.download_subtitle(file_id).await {
-                        Ok(content) => content,
-                        Err(e) => {
-                            println!("  ✗ Download failed: {e}, trying next...");
-                            continue;
-                        }
-                    };
-
-                    // Parse SRT
-                    println!("  Parsing SRT...");
-                    let subtitle_lines = match parse_srt(&srt_content) {
-                        Ok(lines) => lines,
-                        Err(e) => {
-                            println!("  ✗ Parse failed: {e}, trying next...");
-                            continue;
-                        }
-                    };
-
-                    println!("  Extracted {} dialogue lines", subtitle_lines.len());
-
-                    // Count total words
-                    let total_word_count: usize = subtitle_lines
-                        .iter()
-                        .map(|line| line.sentence.split_whitespace().count())
-                        .sum();
-
-                    // Save subtitle lines to JSON
-                    let subtitle_file = match fs::File::create(&subtitle_path) {
-                        Ok(file) => file,
-                        Err(e) => {
-                            println!("  ✗ Failed to create file: {e}, trying next...");
-                            continue;
-                        }
-                    };
-                    for line in &subtitle_lines {
-                        if let Err(e) = serde_json::to_writer(&subtitle_file, &line) {
-                            println!("  ✗ Failed to write subtitle: {e}");
-                            break;
-                        }
-                        if let Err(e) = writeln!(&subtitle_file) {
-                            println!("  ✗ Failed to write newline: {e}");
-                            break;
-                        }
-                    }
-
-                    println!("  ✓ Saved to {}", subtitle_path.display());
-                    download_result = Some((subtitle_lines, total_word_count, true));
-                    break;
-                }
-
-                match download_result {
-                    Some(data) => data,
-                    None => {
-                        println!("  ✗ Failed to download any subtitle for this movie");
-                        continue;
-                    }
-                }
-            };
-
-            // Count this as a new download if it wasn't skipped
-            if is_new {
-                downloaded_count += 1;
             }
-
-            // Create movie metadata
-            let movie = MovieMetadata {
-                id: imdb_id_str.clone(),
-                title: title.to_string(),
-                year,
-                genres: vec![],   // TODO: Could fetch from TMDB API
-                poster_url: None, // TODO: Could fetch from TMDB API
-                total_dialogue_word_count: total_word_count as u64,
-            };
-
-            movies.push(movie);
-
-            // Rate limiting: wait 1 second between requests
-            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         }
 
         // Warn if we couldn't download enough movies
@@ -620,6 +895,32 @@ async fn main() -> Result<()> {
             println!(
                 "\n⚠ Warning: Only found {downloaded_count} movies with subtitles (requested {count})"
             );
+        }
+
+        // Also download EXTRA_MOVIES if not already downloaded
+        println!("\nProcessing extra movies list...");
+        for &imdb_id_str in EXTRA_MOVIES {
+            println!("\n  Processing {imdb_id_str}...");
+
+            match process_movie(
+                imdb_id_str,
+                &opensub_client,
+                &tmdb_client,
+                &existing_metadata,
+                language_iso639_1,
+                tmdb_language,
+                &output_dir,
+                &posters_dir,
+            )
+            .await
+            {
+                Ok((movie, _)) => {
+                    movies.push(movie);
+                }
+                Err(e) => {
+                    println!("  ✗ Error: {e}");
+                }
+            }
         }
 
         // Save metadata

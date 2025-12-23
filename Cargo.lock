@@ -2472,12 +2472,14 @@ name = "opensubtitles-downloader"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
  "clap",
  "dotenv",
  "futures",
  "language-utils",
  "regex 1.11.2",
  "reqwest 0.12.23",
+ "rustc-hash",
  "serde",
  "serde_json",
  "subparse",
