@@ -25,14 +25,12 @@ static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .unwrap()
         .with_cache_directory("./.cache")
         .with_service_tier("flex")
-        .with_backup_cache_directory("./.cache-backup")
 });
 
 static CHAT_CLIENT_MINI: LazyLock<ChatClient> = LazyLock::new(|| {
     ChatClient::from_env("gpt-5-mini")
         .unwrap()
         .with_cache_directory("./.cache")
-        .with_backup_cache_directory("./.cache-backup")
 });
 
 #[tokio::main]
@@ -452,9 +450,11 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     }
 
     let samples = {
-        // We probably should get at least 10_000 samples per language to get good coverage.
-        // Bare minimum to get a usable result is probably around 1_500.
-        const SAMPLE_SIZE: usize = 8_000;
+        let sample_size: usize = 6_000
+            + match language {
+                Language::French | Language::German | Language::Spanish => 2_000,
+                _ => 0,
+            };
         const TERM_SAMPLE_SIZE: usize = 5_000;
 
         println!("Loading NLP data for {language:?}...");
@@ -479,7 +479,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         println!("Loaded {} multiword terms", terms.len());
 
         let sampled_sentences =
-            sample_to_target(sentences, SAMPLE_SIZE, |s: &NlpAnalyzedSentence| {
+            sample_to_target(sentences, sample_size, |s: &NlpAnalyzedSentence| {
                 s.sentence.clone()
             });
 
