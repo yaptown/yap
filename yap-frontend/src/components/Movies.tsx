@@ -90,7 +90,7 @@ export function Movies({ deck }: MoviesProps) {
                   />
                 </div>
                 <span className="text-xs font-mono font-semibold">
-                  {closestToMilestone.percent_known.toFixed(0)}%
+                  {Math.floor(closestToMilestone.percent_known)}%
                 </span>
               </div>
             </div>
@@ -146,7 +146,7 @@ export function Movies({ deck }: MoviesProps) {
                   }}
                 />
                 <span className="relative text-sm font-mono font-semibold text-foreground">
-                  {movie.percent_known.toFixed(0)}% known
+                  {Math.floor(movie.percent_known)}% known
                 </span>
               </div>
             </Card>
