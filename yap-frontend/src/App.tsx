@@ -45,6 +45,7 @@ import { TopPageLayout } from '@/components/TopPageLayout'
 import { match, P } from 'ts-pattern';
 import { ErrorMessage } from '@/components/ui/error-message'
 import { BackgroundShader } from '@/components/BackgroundShader'
+import { getMovieMetadata } from '@/lib/movie-cache'
 
 // Essential user info to persist for offline functionality
 export interface UserInfo {
@@ -407,14 +408,26 @@ function Tools({ deck }: { deck: Deck }) {
   const movieStats = useMemo(() => deck.get_movie_stats(), [deck])
   const [showAllMovies, setShowAllMovies] = useState(false)
 
+  // Join stats with metadata (metadata is cached globally)
+  const moviesWithMetadata = useMemo(() => {
+    const movieIds = movieStats.map(s => s.id)
+    const metadata = getMovieMetadata(deck, movieIds)
+    const metadataMap = new Map(metadata.map(m => [m.id, m]))
+
+    return movieStats.map(stat => ({
+      ...stat,
+      ...(metadataMap.get(stat.id) || {}),
+    }))
+  }, [movieStats, deck])
+
   // Find movie closest to next milestone
   const closestToMilestone = useMemo(() => {
-    return movieStats
+    return moviesWithMetadata
       .filter(m => m.cards_to_next_milestone !== null && m.cards_to_next_milestone !== undefined)
       .sort((a, b) => (a.cards_to_next_milestone || 0) - (b.cards_to_next_milestone || 0))[0]
-  }, [movieStats])
+  }, [moviesWithMetadata])
 
-  const visibleMovies = showAllMovies ? movieStats : movieStats.slice(0, 8)
+  const visibleMovies = showAllMovies ? moviesWithMetadata : moviesWithMetadata.slice(0, 8)
 
   // Helper function to convert poster bytes to data URL
   const getPosterDataUrl = (posterBytes: number[] | undefined) => {

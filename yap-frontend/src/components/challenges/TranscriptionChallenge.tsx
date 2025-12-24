@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { getMovieMetadata } from "@/lib/movie-cache";
 import {
   autograde_transcription,
   type TranscribeComprehensibleSentence,
@@ -7,6 +8,7 @@ import {
   type WordGrade,
   type Language,
   type Course,
+  type Deck,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +57,7 @@ interface TranscriptionChallengeProps {
   nativeLanguage: Language;
   autoplayed: boolean;
   setAutoplayed: () => void;
-  deck: any;
+  deck: Deck;
 }
 
 function AutogradeError() {
@@ -117,7 +119,7 @@ export function TranscriptionChallenge({
       return [];
     }
     const movieIds = challenge.movie_titles.map(([id]) => id);
-    return deck.get_movies(movieIds);
+    return getMovieMetadata(deck, movieIds);
   }, [challenge.movie_titles, deck]);
   const [gradingState, setGradingState] = useState<GradingState>(null);
   const [showReportModal, setShowReportModal] = useState(false);

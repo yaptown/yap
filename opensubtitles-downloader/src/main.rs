@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
-use language_utils::MovieMetadata;
+use language_utils::MovieMetadataBasic;
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -430,7 +430,7 @@ async fn download_movie_subtitles(
     tmdb_language: &str,
     subtitle_path: &std::path::Path,
     posters_dir: &std::path::Path,
-) -> Result<Option<(Vec<SubtitleLineJson>, MovieMetadata)>> {
+) -> Result<Option<(Vec<SubtitleLineJson>, MovieMetadataBasic)>> {
     // Search for subtitles
     let mut subtitle_results = opensub_client
         .search_subtitles_for_movie(imdb_id, language_iso639_1)
@@ -537,7 +537,7 @@ async fn download_movie_subtitles(
 
         // Fetch metadata from TMDB
         println!("  Fetching metadata from TMDB...");
-        let (title, year, poster_bytes) =
+        let (title, year, _poster_bytes) =
             match tmdb_client.get_movie(imdb_id_str, tmdb_language).await {
                 Ok(tmdb_data) => {
                     let title = tmdb_data.title;
@@ -578,11 +578,10 @@ async fn download_movie_subtitles(
                 }
             };
 
-        let movie = MovieMetadata {
+        let movie = MovieMetadataBasic {
             id: imdb_id_str.to_string(),
             title,
             year,
-            poster_bytes,
         };
 
         return Ok(Some((subtitle_lines, movie)));
@@ -598,8 +597,8 @@ async fn fetch_tmdb_metadata(
     tmdb_language: &str,
     opensub_client: &OpenSubtitlesClient,
     posters_dir: &std::path::Path,
-) -> Result<MovieMetadata> {
-    let (tmdb_title, tmdb_year, poster_bytes) =
+) -> Result<MovieMetadataBasic> {
+    let (tmdb_title, tmdb_year, _poster_bytes) =
         match tmdb_client.get_movie(imdb_id_str, tmdb_language).await {
             Ok(tmdb_data) => {
                 let tmdb_title = tmdb_data.title;
@@ -640,11 +639,10 @@ async fn fetch_tmdb_metadata(
             }
         };
 
-    Ok(MovieMetadata {
+    Ok(MovieMetadataBasic {
         id: imdb_id_str.to_string(),
         title: tmdb_title,
         year: tmdb_year,
-        poster_bytes,
     })
 }
 
@@ -655,12 +653,12 @@ async fn process_movie(
     imdb_id_str: &str,
     opensub_client: &OpenSubtitlesClient,
     tmdb_client: &TmdbClient,
-    existing_metadata: &FxHashMap<String, MovieMetadata>,
+    existing_metadata: &FxHashMap<String, MovieMetadataBasic>,
     language_iso639_1: &str,
     tmdb_language: &str,
     output_dir: &std::path::Path,
     posters_dir: &std::path::Path,
-) -> Result<(MovieMetadata, bool)> {
+) -> Result<(MovieMetadataBasic, bool)> {
     let subtitle_path = output_dir.join(format!("subtitles/{imdb_id_str}.jsonl"));
     let imdb_id = imdb_id_str.strip_prefix("tt").unwrap().parse::<u64>()?;
 
@@ -810,14 +808,14 @@ async fn main() -> Result<()> {
 
         // Read existing metadata to avoid re-fetching OMDB data
         let metadata_path = output_dir.join("metadata.jsonl");
-        let mut existing_metadata: FxHashMap<String, MovieMetadata> = FxHashMap::default();
+        let mut existing_metadata: FxHashMap<String, MovieMetadataBasic> = FxHashMap::default();
         if metadata_path.exists() {
             let metadata_content = fs::read_to_string(&metadata_path)?;
             for line in metadata_content.lines() {
                 if line.trim().is_empty() {
                     continue;
                 }
-                if let Ok(movie) = serde_json::from_str::<MovieMetadata>(line) {
+                if let Ok(movie) = serde_json::from_str::<MovieMetadataBasic>(line) {
                     existing_metadata.insert(movie.id.clone(), movie);
                 }
             }

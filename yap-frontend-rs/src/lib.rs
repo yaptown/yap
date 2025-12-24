@@ -33,7 +33,8 @@ use language_utils::text_cleanup::{find_closest_match, normalize_for_grading};
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
-    DictionaryEntry, Heteronym, Lexeme, PatternPosition, PronunciationGuide, TargetToNativeWord,
+    DictionaryEntry, Heteronym, Lexeme, MovieMetadata, PatternPosition, PronunciationGuide,
+    TargetToNativeWord,
 };
 use lasso::Spur;
 use opfs::persistent::{self};
@@ -1924,10 +1925,33 @@ impl Deck {
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_movie_stats(&self) -> Vec<MovieStats> {
+        use rustc_hash::FxHashSet;
+
         let language_pack = &self.context.language_pack;
         let mut stats = Vec::new();
 
-        for (movie_id, movie_metadata) in &language_pack.movies {
+        // Pre-compute set of all comprehensible lexemes - this is the key optimization
+        // Instead of looking up cards for every word in every movie, we build this set once
+        let comprehensible_lexemes: FxHashSet<Lexeme<Spur>> = self
+            .cards
+            .iter()
+            .filter_map(|(indicator, status)| {
+                if let CardIndicator::TargetLanguage { lexeme } = indicator {
+                    if self
+                        .context
+                        .is_comprehensible(indicator, status, &self.regressions)
+                    {
+                        Some(*lexeme)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        for movie_id in language_pack.movies.keys() {
             // Get the movie's word frequencies
             let Some(movie_frequencies) = language_pack.movie_word_frequencies.get(movie_id) else {
                 continue;
@@ -1937,7 +1961,7 @@ impl Deck {
                 continue;
             }
 
-            // Calculate total words and comprehensible words
+            // Calculate total words and comprehensible words using the pre-computed set
             let mut total_word_count = 0u64;
             let mut comprehensible_word_count = 0u64;
 
@@ -1945,16 +1969,8 @@ impl Deck {
                 let word_count = frequency.count as u64;
                 total_word_count += word_count;
 
-                // Check if this lexeme is comprehensible
-                let card_indicator = CardIndicator::TargetLanguage { lexeme: *lexeme };
-                if let Some(card_status) = self.cards.get(&card_indicator) {
-                    if self.context.is_comprehensible(
-                        &card_indicator,
-                        card_status,
-                        &self.regressions,
-                    ) {
-                        comprehensible_word_count += word_count;
-                    }
+                if comprehensible_lexemes.contains(lexeme) {
+                    comprehensible_word_count += word_count;
                 }
             }
 
@@ -1972,23 +1988,11 @@ impl Deck {
                 let words_needed = target_word_count.saturating_sub(comprehensible_word_count);
 
                 if words_needed > 0 {
-                    // Collect unknown words with their frequencies
+                    // Collect unknown words with their frequencies - also using pre-computed set
                     let mut unknown_words: Vec<(Lexeme<Spur>, u64)> = movie_frequencies
                         .iter()
                         .filter_map(|(lexeme, frequency)| {
-                            let card_indicator = CardIndicator::TargetLanguage { lexeme: *lexeme };
-                            let is_known =
-                                if let Some(card_status) = self.cards.get(&card_indicator) {
-                                    self.context.is_comprehensible(
-                                        &card_indicator,
-                                        card_status,
-                                        &self.regressions,
-                                    )
-                                } else {
-                                    false
-                                };
-
-                            if !is_known {
+                            if !comprehensible_lexemes.contains(lexeme) {
                                 Some((*lexeme, frequency.count as u64))
                             } else {
                                 None
@@ -2021,10 +2025,7 @@ impl Deck {
 
             stats.push(MovieStats {
                 id: movie_id.clone(),
-                title: movie_metadata.title.clone(),
-                year: movie_metadata.year,
                 percent_known,
-                poster_bytes: movie_metadata.poster_bytes.clone(),
                 cards_to_next_milestone,
             });
         }
@@ -2036,24 +2037,27 @@ impl Deck {
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn get_movies(&self, movie_ids: Vec<String>) -> Vec<MovieStats> {
+    pub fn get_movie_metadata(&self, movie_ids: Vec<String>) -> Vec<MovieMetadata> {
         let language_pack = &self.context.language_pack;
         let mut movies = Vec::new();
 
         for movie_id in movie_ids {
             if let Some(movie_metadata) = language_pack.movies.get(&movie_id) {
-                movies.push(MovieStats {
+                movies.push(MovieMetadata {
                     id: movie_id.clone(),
                     title: movie_metadata.title.clone(),
                     year: movie_metadata.year,
-                    percent_known: 0.0,
                     poster_bytes: movie_metadata.poster_bytes.clone(),
-                    cards_to_next_milestone: None,
                 });
             }
         }
 
         movies
+    }
+
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_target_language(&self) -> Language {
+        self.context.target_language
     }
 
     fn max_cards_to_add(&self) -> usize {
@@ -2429,10 +2433,7 @@ pub struct FrequencyKnowledgePoint {
 #[cfg_attr(target_arch = "wasm32", tsify(into_wasm_abi))]
 pub struct MovieStats {
     pub id: String,
-    pub title: String,
-    pub year: Option<u16>,
     pub percent_known: f64,
-    pub poster_bytes: Option<Vec<u8>>,
     pub cards_to_next_milestone: Option<u32>,
 }
 

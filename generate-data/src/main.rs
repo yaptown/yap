@@ -831,9 +831,10 @@ async fn main() -> anyhow::Result<()> {
                     if line.trim().is_empty() {
                         continue;
                     }
-                    let mut movie: language_utils::MovieMetadata = serde_json::from_str(line)?;
+                    let basic: language_utils::MovieMetadataBasic = serde_json::from_str(line)?;
 
-                    // Load poster bytes from separate file if it exists
+                    // Convert to full MovieMetadata and load poster bytes from separate file
+                    let mut movie: language_utils::MovieMetadata = basic.into();
                     let poster_path = posters_dir.join(format!("{}.jpg", movie.id));
                     if poster_path.exists() {
                         if let Ok(bytes) = std::fs::read(&poster_path) {

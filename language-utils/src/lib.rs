@@ -305,6 +305,18 @@ impl SentenceSource {
     }
 }
 
+/// Basic movie metadata without poster bytes, for serialization to files
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+pub struct MovieMetadataBasic {
+    /// Unique identifier (IMDb ID, e.g., "tt0211915")
+    pub id: String,
+    /// Movie title
+    pub title: String,
+    /// Release year
+    pub year: Option<u16>,
+}
+
+/// Full movie metadata including poster bytes, for runtime use
 #[derive(
     Clone,
     Debug,
@@ -318,6 +330,8 @@ impl SentenceSource {
     rkyv::Serialize,
     rkyv::Deserialize,
 )]
+#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify))]
+#[cfg_attr(target_arch = "wasm32", tsify(into_wasm_abi))]
 #[rkyv(compare(PartialEq), derive(Debug))]
 pub struct MovieMetadata {
     /// Unique identifier (IMDb ID, e.g., "tt0211915")
@@ -327,8 +341,18 @@ pub struct MovieMetadata {
     /// Release year
     pub year: Option<u16>,
     /// Poster image bytes (JPEG format)
-    #[serde(skip)]
     pub poster_bytes: Option<Vec<u8>>,
+}
+
+impl From<MovieMetadataBasic> for MovieMetadata {
+    fn from(basic: MovieMetadataBasic) -> Self {
+        MovieMetadata {
+            id: basic.id,
+            title: basic.title,
+            year: basic.year,
+            poster_bytes: None,
+        }
+    }
 }
 
 #[derive(

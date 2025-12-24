@@ -7,6 +7,7 @@ import {
   useImperativeHandle,
   useMemo,
 } from "react";
+import { getMovieMetadata } from "@/lib/movie-cache";
 import {
   type TranslateComprehensibleSentence,
   type Lexeme,
@@ -16,6 +17,7 @@ import {
   find_closest_translation,
   type Language,
   type Course,
+  type Deck,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +67,7 @@ interface SentenceChallengeProps {
   nativeLanguage: Language;
   autoplayed: boolean;
   setAutoplayed: () => void;
-  deck: any;
+  deck: Deck;
 }
 
 interface ChallengeSentenceProps {
@@ -471,7 +473,7 @@ export function TranslationChallenge({
       return [];
     }
     const movieIds = sentence.movie_titles.map(([id]) => id);
-    return deck.get_movies(movieIds);
+    return getMovieMetadata(deck, movieIds);
   }, [sentence.movie_titles, deck]);
   const [correctTranslation, setCorrectTranslation] = useState(
     sentence.native_translations[0]
