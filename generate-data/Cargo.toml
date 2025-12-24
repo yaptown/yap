@@ -27,6 +27,7 @@ xxhash-rust.workspace = true
 indexmap.workspace = true
 itertools = "0.14.0"
 lasso.workspace = true
+rustc-hash = "2.1"
 reqwest.workspace = true
 html-escape.workspace = true
 unicode-normalization.workspace = true

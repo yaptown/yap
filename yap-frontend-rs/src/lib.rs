@@ -1918,6 +1918,119 @@ impl Deck {
         }
     }
 
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_movie_stats(&self) -> Vec<MovieStats> {
+        let language_pack = &self.context.language_pack;
+        let mut stats = Vec::new();
+
+        for (movie_id, movie_metadata) in &language_pack.movies {
+            // Get the movie's word frequencies
+            let Some(movie_frequencies) = language_pack.movie_word_frequencies.get(movie_id) else {
+                continue;
+            };
+
+            if movie_frequencies.is_empty() {
+                continue;
+            }
+
+            // Calculate total words and comprehensible words
+            let mut total_word_count = 0u64;
+            let mut comprehensible_word_count = 0u64;
+
+            for (lexeme, frequency) in movie_frequencies.iter() {
+                let word_count = frequency.count as u64;
+                total_word_count += word_count;
+
+                // Check if this lexeme is comprehensible
+                let card_indicator = CardIndicator::TargetLanguage { lexeme: *lexeme };
+                if let Some(card_status) = self.cards.get(&card_indicator) {
+                    if self.context.is_comprehensible(
+                        &card_indicator,
+                        card_status,
+                        &self.regressions,
+                    ) {
+                        comprehensible_word_count += word_count;
+                    }
+                }
+            }
+
+            if total_word_count == 0 {
+                continue;
+            }
+
+            let percent_known =
+                (comprehensible_word_count as f64 / total_word_count as f64) * 100.0;
+
+            // Calculate cards needed to reach next 5% milestone
+            let cards_to_next_milestone = if percent_known < 100.0 {
+                let next_milestone = ((percent_known / 5.0).ceil() * 5.0).min(100.0);
+                let target_word_count = ((next_milestone / 100.0) * total_word_count as f64) as u64;
+                let words_needed = target_word_count.saturating_sub(comprehensible_word_count);
+
+                if words_needed > 0 {
+                    // Collect unknown words with their frequencies
+                    let mut unknown_words: Vec<(Lexeme<Spur>, u64)> = movie_frequencies
+                        .iter()
+                        .filter_map(|(lexeme, frequency)| {
+                            let card_indicator = CardIndicator::TargetLanguage { lexeme: *lexeme };
+                            let is_known =
+                                if let Some(card_status) = self.cards.get(&card_indicator) {
+                                    self.context.is_comprehensible(
+                                        &card_indicator,
+                                        card_status,
+                                        &self.regressions,
+                                    )
+                                } else {
+                                    false
+                                };
+
+                            if !is_known {
+                                Some((*lexeme, frequency.count as u64))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+
+                    // Sort by frequency descending (most common words first)
+                    unknown_words.sort_by(|a, b| b.1.cmp(&a.1));
+
+                    // Count how many cards we need to learn to reach target
+                    let mut accumulated_words = 0u64;
+                    let mut cards_needed = 0u32;
+
+                    for (_lexeme, count) in unknown_words {
+                        if accumulated_words >= words_needed {
+                            break;
+                        }
+                        accumulated_words += count;
+                        cards_needed += 1;
+                    }
+
+                    Some(cards_needed)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
+            stats.push(MovieStats {
+                id: movie_id.clone(),
+                title: movie_metadata.title.clone(),
+                year: movie_metadata.year,
+                percent_known,
+                poster_bytes: movie_metadata.poster_bytes.clone(),
+                cards_to_next_milestone,
+            });
+        }
+
+        // Sort by percent known descending
+        stats.sort_by(|a, b| b.percent_known.partial_cmp(&a.percent_known).unwrap());
+
+        stats
+    }
+
     fn max_cards_to_add(&self) -> usize {
         let current_cards = self.num_cards();
 
@@ -2284,6 +2397,18 @@ pub struct FrequencyKnowledgePoint {
     pub predicted_knowledge: f64,
     pub word_count: u32,
     pub example_words: String,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify))]
+#[cfg_attr(target_arch = "wasm32", tsify(into_wasm_abi))]
+pub struct MovieStats {
+    pub id: String,
+    pub title: String,
+    pub year: Option<u16>,
+    pub percent_known: f64,
+    pub poster_bytes: Option<Vec<u8>>,
+    pub cards_to_next_milestone: Option<u32>,
 }
 
 impl Deck {

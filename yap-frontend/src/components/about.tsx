@@ -6,7 +6,7 @@ export function About() {
         Andre Popovitch
       </a>
       .{" "}
-      <a href="https://github.com/anchpop/yap" className="underline">
+      <a href="https://github.com/yaptown/yap" className="underline">
         GitHub
       </a>
       {" | "}

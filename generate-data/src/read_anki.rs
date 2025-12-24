@@ -371,10 +371,6 @@ fn test_db_schema_docs_up_to_date() -> Result<(), String> {
 pub fn get_all_cards(source_data_path: &Path) -> IndexSet<CardOutput> {
     let anki_decks_dir = source_data_path.join("sentence-sources/anki-decks");
     if !anki_decks_dir.exists() {
-        println!(
-            "Anki decks directory not found at: {}",
-            anki_decks_dir.display()
-        );
         return IndexSet::new();
     }
     let anki_decks_dir = anki_decks_dir.canonicalize().unwrap();
@@ -400,13 +396,9 @@ pub fn get_all_cards(source_data_path: &Path) -> IndexSet<CardOutput> {
                         .unwrap_or("unknown")
                         .to_string();
 
-                    println!("Processing deck: {deck_filename}");
-
                     match AnkiReader::from_file(&path) {
                         Ok(reader) => match reader.get_cards() {
                             Ok(cards) => {
-                                println!("Found {} cards in {}", cards.len(), deck_filename);
-
                                 for card in cards.iter() {
                                     if !card.question.is_empty() && !card.answer.is_empty() {
                                         let card_output = CardOutput {

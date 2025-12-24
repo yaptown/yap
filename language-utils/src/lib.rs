@@ -4,6 +4,7 @@ pub mod language_pack;
 pub mod profile;
 pub mod text_cleanup;
 
+use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
 use std::hash::Hash;
 
@@ -268,6 +269,8 @@ pub struct SentenceSource {
     pub from_manual: bool,
     /// Sentence came from a song in sentence-sources/songs/
     pub from_song: bool,
+    /// Movie IDs if this sentence appears in movies (e.g., ["tt0211915", "tt0241527"])
+    pub movie_ids: Vec<String>,
 }
 
 impl SentenceSource {
@@ -278,6 +281,7 @@ impl SentenceSource {
             from_tatoeba: false,
             from_manual: false,
             from_song: false,
+            movie_ids: Vec::new(),
         }
     }
 
@@ -292,7 +296,62 @@ impl SentenceSource {
         self.from_tatoeba |= other.from_tatoeba;
         self.from_manual |= other.from_manual;
         self.from_song |= other.from_song;
+        // Merge movie IDs, avoiding duplicates
+        for movie_id in &other.movie_ids {
+            if !self.movie_ids.contains(movie_id) {
+                self.movie_ids.push(movie_id.clone());
+            }
+        }
     }
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(compare(PartialEq), derive(Debug))]
+pub struct MovieMetadata {
+    /// Unique identifier (IMDb ID, e.g., "tt0211915")
+    pub id: String,
+    /// Movie title
+    pub title: String,
+    /// Release year
+    pub year: Option<u16>,
+    /// Poster image bytes (JPEG format)
+    #[serde(skip)]
+    pub poster_bytes: Option<Vec<u8>>,
+}
+
+#[derive(
+    Clone,
+    Debug,
+    serde::Serialize,
+    serde::Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
+#[rkyv(derive(Debug))]
+pub struct SubtitleLine<S>
+where
+    S: rkyv::Archive,
+    <S as rkyv::Archive>::Archived: std::fmt::Debug,
+{
+    /// The sentence text (Spur reference to sentence)
+    pub sentence: S,
+    /// Start timestamp in milliseconds
+    pub start_ms: u32,
+    /// End timestamp in milliseconds
+    pub end_ms: u32,
 }
 
 #[derive(
@@ -895,7 +954,7 @@ pub mod transcription_challenge {
 }
 
 /// Consolidated data structure containing all generated language data
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ConsolidatedLanguageData {
     /// All target language sentences from Anki cards
     pub target_language_sentences: Vec<String>,
@@ -909,6 +968,8 @@ pub struct ConsolidatedLanguageData {
     pub phrasebook: BTreeMap<String, PhrasebookEntry>,
     /// Frequency data for words and phrases
     pub frequencies: Vec<FrequencyEntry<String>>,
+    /// Per-movie word frequencies indexed by movie ID
+    pub movie_frequencies: FxHashMap<String, Vec<FrequencyEntry<String>>>,
     /// Mapping from words to their IPA pronunciations
     pub word_to_pronunciation: Vec<(String, Pronunciation)>,
     /// Mapping from IPA pronunciations to lists of words
@@ -917,6 +978,10 @@ pub struct ConsolidatedLanguageData {
     pub pronunciation_data: PronunciationData,
     /// Homophone disambiguation practice sentences
     pub homophone_practice: BTreeMap<HomophoneWordPair<String>, HomophonePractice<String>>,
+    /// Movie metadata indexed by movie ID
+    pub movies: FxHashMap<String, MovieMetadata>,
+    /// Sentence source provenance tracking (including movie_ids)
+    pub sentence_sources: Vec<(String, SentenceSource)>,
 }
 
 impl ConsolidatedLanguageData {
@@ -947,6 +1012,21 @@ impl ConsolidatedLanguageData {
                 }
                 Lexeme::Multiword(multiword) => {
                     rodeo.get_or_intern(multiword);
+                }
+            }
+        }
+
+        // Intern words from per-movie frequency lists
+        for movie_freqs in self.movie_frequencies.values() {
+            for freq in movie_freqs {
+                match &freq.lexeme {
+                    Lexeme::Heteronym(heteronym) => {
+                        rodeo.get_or_intern(&heteronym.word);
+                        rodeo.get_or_intern(&heteronym.lemma);
+                    }
+                    Lexeme::Multiword(multiword) => {
+                        rodeo.get_or_intern(multiword);
+                    }
                 }
             }
         }
@@ -989,6 +1069,20 @@ impl ConsolidatedLanguageData {
         for (word_pair, practice) in &self.homophone_practice {
             word_pair.get_or_intern(rodeo);
             practice.get_or_intern(rodeo);
+        }
+
+        // intern movie data
+        for movie in self.movies.values() {
+            rodeo.get_or_intern(&movie.id);
+            rodeo.get_or_intern(&movie.title);
+        }
+
+        // intern sentence sources (sentences already interned, just need movie_ids)
+        for (sentence, source) in &self.sentence_sources {
+            rodeo.get_or_intern(sentence);
+            for movie_id in &source.movie_ids {
+                rodeo.get_or_intern(movie_id);
+            }
         }
     }
 }

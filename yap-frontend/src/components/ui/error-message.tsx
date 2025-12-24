@@ -69,7 +69,7 @@ export function ErrorMessage({
     const issueBody = encodeURIComponent(
       `## Additional Context\n\n[Please describe what you were doing when this error occurred]\n\n## Device Information\n\n- Device Type: ${deviceType}\n- OS: ${os}\n- Browser: ${browser}\n- User Agent: \`${userAgent}\`\n\n## Error Details\n\n\`\`\`\n${message}\n\`\`\`\n\n`
     );
-    return `https://github.com/anchpop/yap/issues/new?title=${issueTitle}&body=${issueBody}&labels[]=bug`;
+    return `https://github.com/yaptown/yap/issues/new?title=${issueTitle}&body=${issueBody}&labels[]=bug`;
   };
 
   return (

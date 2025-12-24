@@ -10,7 +10,7 @@ members = [
     "libraries/course-spot-check",
     "libraries/sentence-sampler",
     "clean-nlp-data",
-    "libraries/enumap",
+    "libraries/enumap", "opensubtitles-downloader",
 ]
 resolver = "3"
 

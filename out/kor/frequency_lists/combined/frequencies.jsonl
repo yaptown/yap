@@ -96,12 +96,12 @@
 {"lexeme":{"Heteronym":{"word":"아주","lemma":"아주","pos":"ADV"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"이건","lemma":"이것","pos":"PRON"}},"count":40}
 {"lexeme":{"Heteronym":{"word":"이것은","lemma":"이것","pos":"PRON"}},"count":40}
-{"lexeme":{"Heteronym":{"word":"지금","lemma":"지금","pos":"ADV"}},"count":40}
 {"lexeme":{"Multiword":"아주"},"count":40}
 {"lexeme":{"Multiword":"알고 있어"},"count":40}
 {"lexeme":{"Multiword":"필요하다"},"count":40}
 {"lexeme":{"Heteronym":{"word":"있어요","lemma":"있다","pos":"VERB"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"줄","lemma":"줄","pos":"NOUN"}},"count":39}
+{"lexeme":{"Heteronym":{"word":"지금","lemma":"지금","pos":"ADV"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"한다","lemma":"하다","pos":"AUX"}},"count":39}
 {"lexeme":{"Heteronym":{"word":"날","lemma":"나","pos":"PRON"}},"count":38}
 {"lexeme":{"Heteronym":{"word":"무슨","lemma":"무슨","pos":"DET"}},"count":38}
@@ -141,7 +141,6 @@
 {"lexeme":{"Heteronym":{"word":"다시","lemma":"다시","pos":"ADV"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"뭐","lemma":"무엇","pos":"PRON"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"싶어요","lemma":"싶다","pos":"AUX"}},"count":31}
-{"lexeme":{"Heteronym":{"word":"없어","lemma":"없다","pos":"ADJ"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"있는","lemma":"있다","pos":"AUX"}},"count":31}
 {"lexeme":{"Heteronym":{"word":"좋아해","lemma":"좋아해","pos":"VERB"}},"count":31}
 {"lexeme":{"Multiword":"위하다"},"count":31}
@@ -154,6 +153,7 @@
 {"lexeme":{"Heteronym":{"word":"그만","lemma":"그만","pos":"ADV"}},"count":30}
 {"lexeme":{"Heteronym":{"word":"사람들은","lemma":"사람","pos":"NOUN"}},"count":30}
 {"lexeme":{"Heteronym":{"word":"어떤","lemma":"어떤","pos":"DET"}},"count":30}
+{"lexeme":{"Heteronym":{"word":"없어","lemma":"없다","pos":"ADJ"}},"count":30}
 {"lexeme":{"Heteronym":{"word":"우린","lemma":"우리","pos":"PRON"}},"count":30}
 {"lexeme":{"Heteronym":{"word":"있는","lemma":"있다","pos":"VERB"}},"count":30}
 {"lexeme":{"Multiword":"어떤"},"count":30}
