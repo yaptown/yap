@@ -5,6 +5,7 @@ import type {
   AddCardOptions,
   CardSummary,
   CardType,
+  ChallengeRequirements,
   Deck,
   Language,
 } from "../../../yap-frontend-rs/pkg";
@@ -17,24 +18,31 @@ import {
 import { ChevronDown, AlertCircle, Sparkles } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
+import type { UserInfo } from "@/App";
 
 interface NoCardsReadyProps {
   nextDueCard: CardSummary | null;
   showEngagementPrompts: boolean;
   addNextCards: (card_type: CardType | undefined, count: number) => void;
-  addCardOptions: AddCardOptions;
   targetLanguage: Language;
   deck: Deck;
+  bannedChallengeTypes: ChallengeRequirements[];
+  userInfo: UserInfo | undefined;
 }
 
 export function NoCardsReady({
   nextDueCard,
   showEngagementPrompts,
   addNextCards,
-  addCardOptions,
   targetLanguage,
   deck,
+  bannedChallengeTypes,
+  userInfo,
 }: NoCardsReadyProps) {
+  const addCardOptionsRaw = deck.add_card_options(bannedChallengeTypes);
+  const addCardOptions: AddCardOptions = userInfo === undefined
+    ? { smart_add: 0, manual_add: addCardOptionsRaw.manual_add.map(([count, card_type]) => [card_type == "TargetLanguage" || card_type == "LetterPronunciation" ? count : 0, card_type] as [number, CardType]) }
+    : addCardOptionsRaw;
   let nextTargetLanguageWord: string | null = null;
   if (nextDueCard && "TargetLanguage" in nextDueCard.card_indicator) {
     const lexeme = nextDueCard.card_indicator.TargetLanguage.lexeme;

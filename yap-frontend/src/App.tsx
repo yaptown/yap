@@ -1,6 +1,6 @@
 import { useState, useEffect, Profiler, useSyncExternalStore, useMemo, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Outlet, useNavigate, useOutletContext } from 'react-router-dom'
-import { CardSummary, Deck, type AddCardOptions, type CardType, type Challenge, type ChallengeRequirements, type Course, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
+import { CardSummary, Deck, type CardType, type Challenge, type ChallengeRequirements, type Course, type Language, type Lexeme, type /* comes from TranscriptionChallenge */ PartGraded, type Rating } from '../../yap-frontend-rs/pkg'
 import { Button } from "@/components/ui/button.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -699,10 +699,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
   useInterval(() => setCardsBecameDue(cardsBecameDue => cardsBecameDue + 1), reviewInfo.due_count === 0 ? 1000 : 60000);
 
   const currentChallenge: Challenge<string> | undefined = useMemo(() => reviewInfo.get_next_challenge(deck), [reviewInfo, deck]);
-  const addCardOptionsRaw = deck.add_card_options(bannedChallengeTypes);
-  const addCardOptions: AddCardOptions = userInfo === undefined
-    ? { smart_add: 0, manual_add: addCardOptionsRaw.manual_add.map(([count, card_type]) => [card_type == "TargetLanguage" || card_type == "LetterPronunciation" ? count : 0, card_type] as [number, CardType]) }
-    : addCardOptionsRaw;
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -829,18 +825,6 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
         if (deck.num_cards() === 0) {
           event.preventDefault();
           addNextCards(undefined, 1);
-        } else if (reviewInfo.due_count === 0 && !currentChallenge) {
-          event.preventDefault();
-          if (addCardOptions.smart_add > 0) {
-            addNextCards(undefined, addCardOptions.smart_add);
-          } else {
-            for (const [count, card_type] of addCardOptions.manual_add) {
-              if (card_type === "TargetLanguage") {
-                addNextCards(card_type, count);
-                break;
-              }
-            }
-          }
         }
       }
     };
@@ -850,7 +834,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [addNextCards, deck, reviewInfo, currentChallenge, addCardOptions.smart_add, addCardOptions.manual_add]);
+  }, [addNextCards, deck]);
 
   // Check if we should show the SetDisplayName prompt
   const shouldShowSetDisplayName =
@@ -881,9 +865,10 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
             nextDueCard={nextDueCard}
             addNextCards={addNextCards}
             showEngagementPrompts={reviewInfo.total_count > 5 && network.online === true && userInfo !== undefined}
-            addCardOptions={addCardOptions}
             targetLanguage={targetLanguage}
             deck={deck}
+            bannedChallengeTypes={bannedChallengeTypes}
+            userInfo={userInfo}
           />
         ) : currentChallenge ? (
           (currentChallenge.type === 'FlashCardReview') ? (
