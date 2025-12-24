@@ -434,20 +434,22 @@ function ChallengeSentence({
             : undefined;
 
         return (
-          <span
-            key={i}
-            className={`${colorClass} ${
-              heteronym ? "cursor-pointer hover:underline" : ""
-            }`}
-            onClick={() => {
-              if (heteronym) {
-                onWordTap(i);
-              }
-            }}
-          >
-            {literal.text}
+          <>
+            <span
+              key={i}
+              className={`${colorClass} ${
+                heteronym ? "cursor-pointer hover:underline" : ""
+              }`}
+              onClick={() => {
+                if (heteronym) {
+                  onWordTap(i);
+                }
+              }}
+            >
+              {literal.text}
+            </span>
             {literal.whitespace}
-          </span>
+          </>
         );
       })}
     </h2>
@@ -794,7 +796,7 @@ export function TranslationChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div>
-          <Card animate className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
+        <Card animate className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
           <div className="space-y-6">
             <div className="text-center">
               <div className="flex items-center justify-between w-full">
@@ -811,12 +813,16 @@ export function TranslationChallenge({
                     literals={sentence.target_language_literals}
                     onWordTap={handleWordTap}
                     wordStatuses={
-                      grade && "graded" in grade && "wordStatuses" in grade.graded
+                      grade &&
+                      "graded" in grade &&
+                      "wordStatuses" in grade.graded
                         ? grade.graded.wordStatuses
                         : undefined
                     }
                     isPerfect={
-                      (grade && "graded" in grade && "perfect" in grade.graded) ??
+                      (grade &&
+                        "graded" in grade &&
+                        "perfect" in grade.graded) ??
                       undefined
                     }
                     tappedWords={tappedWords}
@@ -915,7 +921,7 @@ export function TranslationChallenge({
               />
             ))}
           </div>
-          </Card>
+        </Card>
 
         {/* Movie posters */}
         {movieData.length > 0 && (
