@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   Deploy-Preview:
-    runs-on: ubuntu-latest-xl
+    runs-on: ubuntu-latest-m
     steps:
       - name: Checkout
         uses: actions/checkout@v4
