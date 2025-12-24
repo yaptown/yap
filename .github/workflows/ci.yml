@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest]
+        platform: [ubuntu-latest-xl]
         style: [default]
         rust:
           - "1.88.0"
@@ -58,26 +58,26 @@ jobs:
           command: fmt
           args: --all -- --check
 
-#      - name: Cache venv
-#        id: cache-venv
-#        uses: actions/cache@v4
-#        with:
-#          path: generate-data/nlp/.venv
-#          key: ${{ runner.os }}-venv-${{ hashFiles('generate-data/nlp/**/*.py') }}
-#
-#      - name: Install uv
-#        uses: astral-sh/setup-uv@v5
-#        with:
-#          version: "0.7.11"
-#
-#      - name: Install spaCy models
-#        working-directory: generate-data/nlp
-#        run: |
-#          uv sync
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_dep_news_trf-3.8.0/fr_dep_news_trf-3.8.0-py3-none-any.whl
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
+      #      - name: Cache venv
+      #        id: cache-venv
+      #        uses: actions/cache@v4
+      #        with:
+      #          path: generate-data/nlp/.venv
+      #          key: ${{ runner.os }}-venv-${{ hashFiles('generate-data/nlp/**/*.py') }}
+      #
+      #      - name: Install uv
+      #        uses: astral-sh/setup-uv@v5
+      #        with:
+      #          version: "0.7.11"
+      #
+      #      - name: Install spaCy models
+      #        working-directory: generate-data/nlp
+      #        run: |
+      #          uv sync
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_dep_news_trf-3.8.0/fr_dep_news_trf-3.8.0-py3-none-any.whl
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
 
       # - name: Generate data
       #   run: cargo run --bin generate-data
@@ -91,7 +91,7 @@ jobs:
           args: --workspace -- -D warnings
 
   build-wasm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-xl
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -121,26 +121,26 @@ jobs:
             ${{ runner.os }}-cargo-wasm-
             ${{ runner.os }}-cargo-
 
-#      - name: Cache venv
-#        id: cache-venv
-#        uses: actions/cache@v4
-#        with:
-#          path: generate-data/nlp/.venv
-#          key: ${{ runner.os }}-venv-${{ hashFiles('generate-data/nlp/**/*.py') }}
-#
-#      - name: Install uv
-#        uses: astral-sh/setup-uv@v5
-#        with:
-#          version: "0.7.11"
-#
-#      - name: Install spaCy models
-#        working-directory: generate-data/nlp
-#        run: |
-#          uv sync
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_dep_news_trf-3.8.0/fr_dep_news_trf-3.8.0-py3-none-any.whl
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
+      #      - name: Cache venv
+      #        id: cache-venv
+      #        uses: actions/cache@v4
+      #        with:
+      #          path: generate-data/nlp/.venv
+      #          key: ${{ runner.os }}-venv-${{ hashFiles('generate-data/nlp/**/*.py') }}
+      #
+      #      - name: Install uv
+      #        uses: astral-sh/setup-uv@v5
+      #        with:
+      #          version: "0.7.11"
+      #
+      #      - name: Install spaCy models
+      #        working-directory: generate-data/nlp
+      #        run: |
+      #          uv sync
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_dep_news_trf-3.8.0/fr_dep_news_trf-3.8.0-py3-none-any.whl
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
       # - name: Generate data
       #   run: cargo run --bin generate-data
       #   env:
@@ -154,7 +154,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest]
+        platform: [ubuntu-latest-xl]
         style: [no_default, default]
         rust:
           - "1.88.0"
@@ -199,26 +199,26 @@ jobs:
             ${{ runner.os }}-cargo-test-${{ matrix.style }}-
             ${{ runner.os }}-cargo-
 
-#      - name: Cache venv
-#        id: cache-venv
-#        uses: actions/cache@v4
-#        with:
-#          path: generate-data/nlp/.venv
-#          key: ${{ runner.os }}-venv-${{ hashFiles('generate-data/nlp/**/*.py') }}
-#
-#      - name: Install uv
-#        uses: astral-sh/setup-uv@v5
-#        with:
-#          version: "0.7.11"
-#
-#      - name: Install spaCy models
-#        working-directory: generate-data/nlp
-#        run: |
-#          uv sync
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_dep_news_trf-3.8.0/fr_dep_news_trf-3.8.0-py3-none-any.whl
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
-#          uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
+      #      - name: Cache venv
+      #        id: cache-venv
+      #        uses: actions/cache@v4
+      #        with:
+      #          path: generate-data/nlp/.venv
+      #          key: ${{ runner.os }}-venv-${{ hashFiles('generate-data/nlp/**/*.py') }}
+      #
+      #      - name: Install uv
+      #        uses: astral-sh/setup-uv@v5
+      #        with:
+      #          version: "0.7.11"
+      #
+      #      - name: Install spaCy models
+      #        working-directory: generate-data/nlp
+      #        run: |
+      #          uv sync
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.8.0/fr_core_news_sm-3.8.0-py3-none-any.whl
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/fr_dep_news_trf-3.8.0/fr_dep_news_trf-3.8.0-py3-none-any.whl
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
+      #          uv pip install https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
 
       # - name: Generate data
       #   run: cargo run --bin generate-data
