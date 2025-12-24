@@ -1017,7 +1017,7 @@ impl ConsolidatedLanguageData {
         }
 
         // Intern words from per-movie frequency lists
-        for (_movie_id, movie_freqs) in &self.movie_frequencies {
+        for movie_freqs in self.movie_frequencies.values() {
             for freq in movie_freqs {
                 match &freq.lexeme {
                     Lexeme::Heteronym(heteronym) => {
@@ -1072,7 +1072,7 @@ impl ConsolidatedLanguageData {
         }
 
         // intern movie data
-        for (_movie_id, movie) in &self.movies {
+        for movie in self.movies.values() {
             rodeo.get_or_intern(&movie.id);
             rodeo.get_or_intern(&movie.title);
         }

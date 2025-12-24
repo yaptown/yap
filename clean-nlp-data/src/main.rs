@@ -439,14 +439,11 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     // Load manual sentences that should never be filtered
     let mut manual_sentences = load_manual_sentences(language)?;
 
-    match language {
-        Language::French => {
-            manual_sentences.insert("Bois-le !".to_string());
-            manual_sentences.insert("Bois-le.".to_string());
-            manual_sentences.insert("Bois un coup à ma santé.".to_string());
-            manual_sentences.insert("Est-ce que Robin des Bois est vivant ?".to_string());
-        }
-        _ => {}
+    if language == Language::French {
+        manual_sentences.insert("Bois-le !".to_string());
+        manual_sentences.insert("Bois-le.".to_string());
+        manual_sentences.insert("Bois un coup à ma santé.".to_string());
+        manual_sentences.insert("Est-ce que Robin des Bois est vivant ?".to_string());
     }
 
     let samples = {

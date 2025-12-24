@@ -420,6 +420,7 @@ fn strip_html_tags(text: &str) -> String {
 }
 
 /// Download subtitles for a single movie and return metadata
+#[allow(clippy::too_many_arguments)]
 async fn download_movie_subtitles(
     opensub_client: &OpenSubtitlesClient,
     tmdb_client: &TmdbClient,
@@ -547,11 +548,11 @@ async fn download_movie_subtitles(
                     // Fetch and save poster if available
                     let poster_bytes = if let Some(poster_path) = tmdb_data.poster_path {
                         println!("  Fetching poster image...");
-                        let poster_url = format!("https://image.tmdb.org/t/p/w500{}", poster_path);
+                        let poster_url = format!("https://image.tmdb.org/t/p/w500{poster_path}");
                         match fetch_image_bytes(&opensub_client.client, &poster_url).await {
                             Ok(bytes) => {
                                 // Save poster to file
-                                let poster_file = posters_dir.join(format!("{}.jpg", imdb_id_str));
+                                let poster_file = posters_dir.join(format!("{imdb_id_str}.jpg"));
                                 if let Err(e) = fs::write(&poster_file, &bytes) {
                                     println!("  ⚠ Failed to save poster: {e}");
                                     None
@@ -609,11 +610,11 @@ async fn fetch_tmdb_metadata(
                 // Fetch and save poster if available
                 let poster_bytes = if let Some(poster_path) = tmdb_data.poster_path {
                     println!("  Fetching poster image...");
-                    let poster_url = format!("https://image.tmdb.org/t/p/w500{}", poster_path);
+                    let poster_url = format!("https://image.tmdb.org/t/p/w500{poster_path}");
                     match fetch_image_bytes(&opensub_client.client, &poster_url).await {
                         Ok(bytes) => {
                             // Save poster to file
-                            let poster_file = posters_dir.join(format!("{}.jpg", imdb_id_str));
+                            let poster_file = posters_dir.join(format!("{imdb_id_str}.jpg"));
                             if let Err(e) = fs::write(&poster_file, &bytes) {
                                 println!("  ⚠ Failed to save poster: {e}");
                                 None
@@ -649,6 +650,7 @@ async fn fetch_tmdb_metadata(
 
 /// Process a single movie: download subtitle if needed, fetch metadata if needed
 /// Returns (metadata, is_new_download)
+#[allow(clippy::too_many_arguments)]
 async fn process_movie(
     imdb_id_str: &str,
     opensub_client: &OpenSubtitlesClient,
@@ -659,7 +661,7 @@ async fn process_movie(
     output_dir: &std::path::Path,
     posters_dir: &std::path::Path,
 ) -> Result<(MovieMetadata, bool)> {
-    let subtitle_path = output_dir.join(format!("subtitles/{}.jsonl", imdb_id_str));
+    let subtitle_path = output_dir.join(format!("subtitles/{imdb_id_str}.jsonl"));
     let imdb_id = imdb_id_str.strip_prefix("tt").unwrap().parse::<u64>()?;
 
     let (is_new_download, maybe_metadata) = if subtitle_path.exists() {
@@ -863,7 +865,7 @@ async fn main() -> Result<()> {
                 downloaded_count,
                 count,
                 attrs.title,
-                attrs.year.as_ref().map(|s| s.as_str()).unwrap_or("Unknown")
+                attrs.year.as_deref().unwrap_or("Unknown")
             );
 
             match process_movie(

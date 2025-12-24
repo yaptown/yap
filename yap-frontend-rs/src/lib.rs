@@ -1964,8 +1964,7 @@ impl Deck {
             // Calculate cards needed to reach next 5% milestone
             let cards_to_next_milestone = if percent_known < 100.0 {
                 let next_milestone = ((percent_known / 5.0).ceil() * 5.0).min(100.0);
-                let target_word_count =
-                    ((next_milestone / 100.0) * total_word_count as f64) as u64;
+                let target_word_count = ((next_milestone / 100.0) * total_word_count as f64) as u64;
                 let words_needed = target_word_count.saturating_sub(comprehensible_word_count);
 
                 if words_needed > 0 {
@@ -1974,16 +1973,16 @@ impl Deck {
                         .iter()
                         .filter_map(|(lexeme, frequency)| {
                             let card_indicator = CardIndicator::TargetLanguage { lexeme: *lexeme };
-                            let is_known = if let Some(card_status) = self.cards.get(&card_indicator)
-                            {
-                                self.context.is_comprehensible(
-                                    &card_indicator,
-                                    card_status,
-                                    &self.regressions,
-                                )
-                            } else {
-                                false
-                            };
+                            let is_known =
+                                if let Some(card_status) = self.cards.get(&card_indicator) {
+                                    self.context.is_comprehensible(
+                                        &card_indicator,
+                                        card_status,
+                                        &self.regressions,
+                                    )
+                                } else {
+                                    false
+                                };
 
                             if !is_known {
                                 Some((*lexeme, frequency.count as u64))
