@@ -46,6 +46,7 @@ import { match, P } from 'ts-pattern';
 import { ErrorMessage } from '@/components/ui/error-message'
 import { BackgroundShader } from '@/components/BackgroundShader'
 import { Movies } from '@/components/Movies'
+import { getMovieMetadata } from '@/lib/movie-cache'
 
 // Essential user info to persist for offline functionality
 export interface UserInfo {
@@ -328,6 +329,17 @@ function ReviewPage() {
           ))
           .with({ type: "deck", deck: P.not(P.nullish) }, ({ deck, targetLanguage, nativeLanguage }) => {
             const reviewInfo = deck.get_review_info([], Date.now());
+
+            // Calculate movie stats once for use in both Review and Movies components
+            const movieStats = deck.get_movie_stats()
+            const movieIds = movieStats.map(s => s.id)
+            const metadata = getMovieMetadata(deck, movieIds)
+            const metadataMap = new Map(metadata.map(m => [m.id, m]))
+            const moviesWithMetadata = movieStats.map(stat => ({
+              ...stat,
+              ...(metadataMap.get(stat.id) || {}),
+            }))
+
             return (
             <>
               <TopPageLayout
@@ -345,10 +357,11 @@ function ReviewPage() {
                   deck={deck}
                   targetLanguage={targetLanguage}
                   nativeLanguage={nativeLanguage}
+                  moviesWithMetadata={moviesWithMetadata}
                 />
               </TopPageLayout>
               <Tools deck={deck} />
-              <Movies deck={deck} />
+              <Movies moviesWithMetadata={moviesWithMetadata} />
               <Stats deck={deck} />
             </>
             );
@@ -558,15 +571,25 @@ function findNextDueCard(deck: Deck): CardSummary | null {
   return futureCards.length > 0 ? futureCards[0] : null
 }
 
+interface MovieWithMetadata {
+  id: string
+  percent_known: number
+  cards_to_next_milestone: number | null | undefined
+  title?: string
+  year?: number
+  poster_bytes?: number[]
+}
+
 interface ReviewProps {
   userInfo: UserInfo | undefined
   accessToken: string | undefined
   deck: Deck
   targetLanguage: Language
   nativeLanguage: Language
+  moviesWithMetadata: MovieWithMetadata[]
 }
 
-function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }: ReviewProps) {
+function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage, moviesWithMetadata }: ReviewProps) {
   const weapon = useWeapon()
 
   const CANT_LISTEN_DURATION_MS = 15 * 60 * 1000;
@@ -584,6 +607,13 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
   const setAutoplayed = useCallback(() => setLastAutoPlayReviewCount(totalReviewsCompleted), [totalReviewsCompleted])
 
   const nextDueCard = findNextDueCard(deck)
+
+  // Find movie closest to next milestone for NoCardsReady component
+  const closestToMilestone = useMemo(() => {
+    return moviesWithMetadata
+      .filter(m => m.cards_to_next_milestone !== null && m.cards_to_next_milestone !== undefined)
+      .sort((a, b) => (a.cards_to_next_milestone || 0) - (b.cards_to_next_milestone || 0))[0]
+  }, [moviesWithMetadata])
 
   // Update scheduled push notifications and language stats when the deck state changes
   useEffect(() => {
@@ -869,6 +899,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
             deck={deck}
             bannedChallengeTypes={bannedChallengeTypes}
             userInfo={userInfo}
+            closestToMilestone={closestToMilestone}
           />
         ) : currentChallenge ? (
           (currentChallenge.type === 'FlashCardReview') ? (

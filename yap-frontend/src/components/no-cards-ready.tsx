@@ -19,6 +19,16 @@ import { ChevronDown, AlertCircle, Sparkles } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import type { UserInfo } from "@/App";
+import { AlmostThereMovie } from "@/components/AlmostThereMovie";
+
+interface MovieWithMetadata {
+  id: string;
+  percent_known: number;
+  cards_to_next_milestone: number | null | undefined;
+  title?: string;
+  year?: number;
+  poster_bytes?: number[];
+}
 
 interface NoCardsReadyProps {
   nextDueCard: CardSummary | null;
@@ -28,6 +38,7 @@ interface NoCardsReadyProps {
   deck: Deck;
   bannedChallengeTypes: ChallengeRequirements[];
   userInfo: UserInfo | undefined;
+  closestToMilestone?: MovieWithMetadata;
 }
 
 export function NoCardsReady({
@@ -38,6 +49,7 @@ export function NoCardsReady({
   deck,
   bannedChallengeTypes,
   userInfo,
+  closestToMilestone,
 }: NoCardsReadyProps) {
   const addCardOptionsRaw = deck.add_card_options(bannedChallengeTypes);
   const addCardOptions: AddCardOptions = userInfo === undefined
@@ -219,6 +231,10 @@ export function NoCardsReady({
           )}
         </div>
         </Card>
+
+      {closestToMilestone && (
+        <AlmostThereMovie movie={closestToMilestone} />
+      )}
 
       {showEngagementPrompts && (
         <EngagementPrompts language={targetLanguage} />
