@@ -2,7 +2,7 @@ use crate::indexmap::IndexMap;
 use crate::{
     ConsolidatedLanguageData, DictionaryEntry, Frequency, Heteronym, HomophonePractice,
     HomophoneWordPair, Lexeme, Literal, MovieMetadata, PatternPosition, PhrasebookEntry,
-    PronunciationData,
+    PronunciationData, SentenceSource,
 };
 use lasso::Spur;
 use rustc_hash::FxHashMap;
@@ -32,6 +32,8 @@ pub struct LanguagePack {
     pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
     /// Movie metadata indexed by movie ID
     pub movies: FxHashMap<String, MovieMetadata>,
+    /// Sentence source provenance tracking (maps sentence to its sources)
+    pub sentence_sources: FxHashMap<Spur, SentenceSource>,
 }
 
 impl LanguagePack {
@@ -316,6 +318,15 @@ impl LanguagePack {
                 .collect()
         };
 
+        // Convert sentence sources
+        let sentence_sources = {
+            language_data
+                .sentence_sources
+                .iter()
+                .map(|(sentence, source)| (rodeo.get(sentence).unwrap(), source.clone()))
+                .collect()
+        };
+
         Self {
             rodeo,
             translations,
@@ -336,6 +347,7 @@ impl LanguagePack {
             homophone_practice,
             pronunciation_max_freq_cache,
             movies,
+            sentence_sources,
         }
     }
 }

@@ -45,6 +45,7 @@ import { ReportIssueModal } from "./ReportIssueModal";
 import { FeedbackDisplay } from "@/components/FeedbackDisplay";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { useBackground } from "../BackgroundShader";
+import { MoviePosterCard } from "./MoviePosterCard";
 
 interface SentenceChallengeProps {
   sentence: TranslateComprehensibleSentence<string>;
@@ -64,6 +65,7 @@ interface SentenceChallengeProps {
   nativeLanguage: Language;
   autoplayed: boolean;
   setAutoplayed: () => void;
+  deck: any;
 }
 
 interface ChallengeSentenceProps {
@@ -459,9 +461,18 @@ export function TranslationChallenge({
   nativeLanguage,
   autoplayed,
   setAutoplayed,
+  deck,
 }: SentenceChallengeProps) {
   "use memo";
   const [userTranslation, setUserTranslation] = useState("");
+
+  const movieData = useMemo(() => {
+    if (!sentence.movie_titles || sentence.movie_titles.length === 0) {
+      return [];
+    }
+    const movieIds = sentence.movie_titles.map(([id]) => id);
+    return deck.get_movies(movieIds);
+  }, [sentence.movie_titles, deck]);
   const [correctTranslation, setCorrectTranslation] = useState(
     sentence.native_translations[0]
   );
@@ -793,23 +804,25 @@ export function TranslationChallenge({
                   setAutoplayed={setAutoplayed}
                 />
 
-                <ChallengeSentence
-                  literals={sentence.target_language_literals}
-                  onWordTap={handleWordTap}
-                  wordStatuses={
-                    grade && "graded" in grade && "wordStatuses" in grade.graded
-                      ? grade.graded.wordStatuses
-                      : undefined
-                  }
-                  isPerfect={
-                    (grade && "graded" in grade && "perfect" in grade.graded) ??
-                    undefined
-                  }
-                  tappedWords={tappedWords}
-                  uniqueTargetLanguageLexemes={
-                    sentence.unique_target_language_lexemes
-                  }
-                />
+                <div className="flex flex-col items-center gap-1">
+                  <ChallengeSentence
+                    literals={sentence.target_language_literals}
+                    onWordTap={handleWordTap}
+                    wordStatuses={
+                      grade && "graded" in grade && "wordStatuses" in grade.graded
+                        ? grade.graded.wordStatuses
+                        : undefined
+                    }
+                    isPerfect={
+                      (grade && "graded" in grade && "perfect" in grade.graded) ??
+                      undefined
+                    }
+                    tappedWords={tappedWords}
+                    uniqueTargetLanguageLexemes={
+                      sentence.unique_target_language_lexemes
+                    }
+                  />
+                </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -901,6 +914,21 @@ export function TranslationChallenge({
             ))}
           </div>
           </Card>
+
+        {/* Movie posters */}
+        {movieData.length > 0 && (
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {movieData.map((movie) => (
+              <MoviePosterCard
+                key={movie.id}
+                id={movie.id}
+                title={movie.title}
+                year={movie.year}
+                posterBytes={movie.poster_bytes}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {grade === null ? (

@@ -596,10 +596,10 @@
 {"lexeme":{"Heteronym":{"word":"month","lemma":"month","pos":"NOUN"}},"count":202}
 {"lexeme":{"Heteronym":{"word":"rain","lemma":"rain","pos":"NOUN"}},"count":202}
 {"lexeme":{"Heteronym":{"word":"wearing","lemma":"wear","pos":"VERB"}},"count":202}
-{"lexeme":{"Heteronym":{"word":"heard","lemma":"hear","pos":"VERB"}},"count":201}
 {"lexeme":{"Heteronym":{"word":"kept","lemma":"keep","pos":"VERB"}},"count":201}
 {"lexeme":{"Heteronym":{"word":"tennis","lemma":"tennis","pos":"NOUN"}},"count":201}
 {"lexeme":{"Heteronym":{"word":"computer","lemma":"computer","pos":"NOUN"}},"count":200}
+{"lexeme":{"Heteronym":{"word":"heard","lemma":"hear","pos":"VERB"}},"count":200}
 {"lexeme":{"Multiword":"look like"},"count":200}
 {"lexeme":{"Heteronym":{"word":"end","lemma":"end","pos":"NOUN"}},"count":199}
 {"lexeme":{"Heteronym":{"word":"hard","lemma":"hard","pos":"ADV"}},"count":197}

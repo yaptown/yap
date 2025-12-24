@@ -145,6 +145,28 @@ impl Deck {
                         }
                     })
                     .collect();
+
+                // Get movie titles from sentence_sources and movie metadata
+                let movie_titles = self
+                    .context
+                    .language_pack
+                    .sentence_sources
+                    .get(&sentence.target_language)
+                    .map(|source| {
+                        source
+                            .movie_ids
+                            .iter()
+                            .filter_map(|movie_id| {
+                                self.context
+                                    .language_pack
+                                    .movies
+                                    .get(movie_id)
+                                    .map(|metadata| (movie_id.clone(), metadata.title.clone()))
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
+
                 Challenge::TranscribeComprehensibleSentence(TranscribeComprehensibleSentence {
                     target_language: sentence.target_language,
                     native_language: *sentence.native_languages.first().unwrap(),
@@ -161,6 +183,7 @@ impl Deck {
                         },
                         provider: TtsProvider::Google,
                     },
+                    movie_titles,
                 })
             } else {
                 flashcard

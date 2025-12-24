@@ -563,6 +563,7 @@ where
     pub unique_target_language_lexemes: Vec<Lexeme<S>>,
     pub unique_target_language_lexeme_definitions: Vec<(Lexeme<S>, Vec<TargetToNativeWord>)>,
     pub native_translations: Vec<S>,
+    pub movie_titles: Vec<(String, String)>,
 }
 
 impl TranslateComprehensibleSentence<Spur> {
@@ -591,6 +592,7 @@ impl TranslateComprehensibleSentence<Spur> {
                 .iter()
                 .map(|t| rodeo.resolve(t).to_string())
                 .collect(),
+            movie_titles: self.movie_titles.clone(),
         }
     }
 }
@@ -602,6 +604,7 @@ pub struct TranscribeComprehensibleSentence<S> {
     pub audio: AudioRequest,
     pub native_language: S,
     pub parts: Vec<transcription_challenge::Part>,
+    pub movie_titles: Vec<(String, String)>,
 }
 
 impl TranscribeComprehensibleSentence<Spur> {
@@ -611,6 +614,7 @@ impl TranscribeComprehensibleSentence<Spur> {
             audio: self.audio.clone(),
             native_language: rodeo.resolve(&self.native_language).to_string(),
             parts: self.parts.clone(),
+            movie_titles: self.movie_titles.clone(),
         }
     }
 }
@@ -2031,6 +2035,27 @@ impl Deck {
         stats
     }
 
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn get_movies(&self, movie_ids: Vec<String>) -> Vec<MovieStats> {
+        let language_pack = &self.context.language_pack;
+        let mut movies = Vec::new();
+
+        for movie_id in movie_ids {
+            if let Some(movie_metadata) = language_pack.movies.get(&movie_id) {
+                movies.push(MovieStats {
+                    id: movie_id.clone(),
+                    title: movie_metadata.title.clone(),
+                    year: movie_metadata.year,
+                    percent_known: 0.0,
+                    poster_bytes: movie_metadata.poster_bytes.clone(),
+                    cards_to_next_milestone: None,
+                });
+            }
+        }
+
+        movies
+    }
+
     fn max_cards_to_add(&self) -> usize {
         let current_cards = self.num_cards();
 
@@ -3111,6 +3136,24 @@ impl ReviewInfo {
                         });
                     }
 
+                    // Get movie titles from sentence_sources and movie metadata
+                    let movie_titles = language_pack
+                        .sentence_sources
+                        .get(&sentence.target_language)
+                        .map(|source| {
+                            source
+                                .movie_ids
+                                .iter()
+                                .filter_map(|movie_id| {
+                                    language_pack
+                                        .movies
+                                        .get(movie_id)
+                                        .map(|metadata| (movie_id.clone(), metadata.title.clone()))
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default();
+
                     Challenge::TranscribeComprehensibleSentence(TranscribeComprehensibleSentence {
                         target_language: sentence.target_language,
                         native_language: *sentence.native_languages.first().unwrap(),
@@ -3125,6 +3168,7 @@ impl ReviewInfo {
                             },
                             provider: TtsProvider::Google,
                         },
+                        movie_titles,
                     })
                 } else {
                     match lexeme {
@@ -3272,6 +3316,24 @@ impl ReviewInfo {
                         })
                         .collect();
 
+                    // Get movie titles from sentence_sources and movie metadata
+                    let movie_titles = language_pack
+                        .sentence_sources
+                        .get(&target_language)
+                        .map(|source| {
+                            source
+                                .movie_ids
+                                .iter()
+                                .filter_map(|movie_id| {
+                                    language_pack
+                                        .movies
+                                        .get(movie_id)
+                                        .map(|metadata| (movie_id.clone(), metadata.title.clone()))
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default();
+
                     Challenge::TranslateComprehensibleSentence(TranslateComprehensibleSentence {
                         target_language,
                         target_language_literals,
@@ -3286,6 +3348,7 @@ impl ReviewInfo {
                             },
                             provider: TtsProvider::ElevenLabs,
                         },
+                        movie_titles,
                     })
                 } else {
                     flashcard

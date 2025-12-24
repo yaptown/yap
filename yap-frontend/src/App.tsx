@@ -1055,6 +1055,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
               nativeLanguage={nativeLanguage}
               autoplayed={autoplayed}
               setAutoplayed={setAutoplayed}
+              deck={deck}
             />
           ) : (
             <TranscriptionChallenge
@@ -1068,6 +1069,7 @@ function Review({ userInfo, accessToken, deck, targetLanguage, nativeLanguage }:
               nativeLanguage={nativeLanguage}
               autoplayed={autoplayed}
               setAutoplayed={setAutoplayed}
+              deck={deck}
             />
           )
         ) : <div>Unexpected challenge state. This is a bug. currentChallenge: {JSON.stringify(currentChallenge)}</div>}

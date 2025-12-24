@@ -43,6 +43,7 @@ import {
 import { MoreVertical } from "lucide-react";
 import { ReportIssueModal } from "./ReportIssueModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MoviePosterCard } from "./MoviePosterCard";
 
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence<string>;
@@ -54,6 +55,7 @@ interface TranscriptionChallengeProps {
   nativeLanguage: Language;
   autoplayed: boolean;
   setAutoplayed: () => void;
+  deck: any;
 }
 
 function AutogradeError() {
@@ -106,8 +108,17 @@ export function TranscriptionChallenge({
   nativeLanguage,
   autoplayed,
   setAutoplayed,
+  deck,
 }: TranscriptionChallengeProps) {
   const [userInputs, setUserInputs] = useState<Map<number, string>>(new Map());
+
+  const movieData = useMemo(() => {
+    if (!challenge.movie_titles || challenge.movie_titles.length === 0) {
+      return [];
+    }
+    const movieIds = challenge.movie_titles.map(([id]) => id);
+    return deck.get_movies(movieIds);
+  }, [challenge.movie_titles, deck]);
   const [gradingState, setGradingState] = useState<GradingState>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isTranslationRevealed, setIsTranslationRevealed] = useState(false);
@@ -403,7 +414,7 @@ export function TranscriptionChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div>
-          <Card animate className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
+        <Card animate className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
           {/* Dropdown menu for options */}
           <div className="absolute top-2 right-2">
             <DropdownMenu>
@@ -544,7 +555,7 @@ export function TranscriptionChallenge({
               </div>
             )}
           </div>
-          </Card>
+        </Card>
 
         {/* Accented character keyboard - show when not graded, language supports it, and not on small screens */}
         {gradingState === null &&
@@ -560,9 +571,22 @@ export function TranscriptionChallenge({
 
         {/* Mobile keyboard tip - show on small screens when conditions are met */}
         {gradingState === null && totalCount < 60 && (
-          <MobileKeyboardTip
-            language={targetLanguage}
-          />
+          <MobileKeyboardTip language={targetLanguage} />
+        )}
+
+        {/* Movie posters */}
+        {movieData.length > 0 && (
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {movieData.map((movie) => (
+              <MoviePosterCard
+                key={movie.id}
+                id={movie.id}
+                title={movie.title}
+                year={movie.year}
+                posterBytes={movie.poster_bytes}
+              />
+            ))}
+          </div>
         )}
       </div>
 
@@ -575,7 +599,10 @@ export function TranscriptionChallenge({
         <Button
           onClick={
             gradingState && "graded" in gradingState
-              ? () => { bumpBackground(30.0); onComplete(gradingState.graded.results); }
+              ? () => {
+                  bumpBackground(30.0);
+                  onComplete(gradingState.graded.results);
+                }
               : handleSubmit
           }
           disabled={
