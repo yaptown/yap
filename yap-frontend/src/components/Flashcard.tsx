@@ -452,7 +452,6 @@ export const Flashcard = function Flashcard({
   const canGrade = showAnswer || !requireShowAnswer;
 
   const rotate = useTransform(x, [-200, 200], [-30, 30]);
-  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
 
   // Color overlay for visual feedback
   const leftOverlayOpacity = useTransform(x, [-200, 0], [1, 0]);
@@ -477,7 +476,6 @@ export const Flashcard = function Flashcard({
       // Swiped right - "remembered"
       await controls.start({
         x: 300,
-        opacity: 0,
         transition: { duration: 0.2 },
       });
       if (onRating) {
@@ -489,7 +487,6 @@ export const Flashcard = function Flashcard({
       // Swiped left - Again
       await controls.start({
         x: -300,
-        opacity: 0,
         transition: { duration: 0.2 },
       });
       if (onRating) {
@@ -509,10 +506,9 @@ export const Flashcard = function Flashcard({
   // Reset position and animate in
   useEffect(() => {
     // Reset to initial state instantly, then animate in
-    controls.set({ x: 0, opacity: 0, scale: 0.95 });
+    controls.set({ x: 0, scale: 0.95 });
     controls.start({
       x: 0,
-      opacity: 1,
       scale: 1,
       transition: {
         duration: 0.3,
@@ -613,13 +609,13 @@ export const Flashcard = function Flashcard({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <motion.div
-        className="relative w-full flex-1 animate-card-in"
+        className="relative w-full flex-1"
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
         animate={controls}
-        style={{ x, rotate, opacity }}
+        style={{ x, rotate }}
       >
         <Card
           className={`pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg overflow-hidden flashcard h-full gap-0 ${
@@ -630,6 +626,7 @@ export const Flashcard = function Flashcard({
               onToggle();
             }
           }}
+          animate
         >
           {/* Swipe feedback overlays */}
           <motion.div
