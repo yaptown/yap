@@ -35,7 +35,7 @@ export function AlmostThereMovie({ movie }: AlmostThereMovieProps) {
             <img
               src={getPosterDataUrl(movie.poster_bytes)!}
               alt={movie.title}
-              className="w-full h-full object-cover opacity-70 saturate-70"
+              className="w-full h-full object-cover opacity-70 saturate-80"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-4xl">
