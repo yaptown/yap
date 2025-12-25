@@ -1,31 +1,31 @@
-import { Card } from "@/components/ui/card"
+import { Card } from "@/components/ui/card";
 
 interface MovieWithMetadata {
-  id: string
-  percent_known: number
-  cards_to_next_milestone: number | null | undefined
-  title?: string
-  year?: number
-  poster_bytes?: number[]
+  id: string;
+  percent_known: number;
+  cards_to_next_milestone: number | null | undefined;
+  title?: string;
+  year?: number;
+  poster_bytes?: number[];
 }
 
 interface AlmostThereMovieProps {
-  movie: MovieWithMetadata
+  movie: MovieWithMetadata;
 }
 
 export function AlmostThereMovie({ movie }: AlmostThereMovieProps) {
   // Helper function to convert poster bytes to data URL
   const getPosterDataUrl = (posterBytes: number[] | undefined) => {
-    if (!posterBytes) return null
-    const uint8Array = new Uint8Array(posterBytes)
-    let binaryString = ''
-    const chunkSize = 8192
+    if (!posterBytes) return null;
+    const uint8Array = new Uint8Array(posterBytes);
+    let binaryString = "";
+    const chunkSize = 8192;
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, i + chunkSize)
-      binaryString += String.fromCharCode(...chunk)
+      const chunk = uint8Array.subarray(i, i + chunkSize);
+      binaryString += String.fromCharCode(...chunk);
     }
-    return `data:image/jpeg;base64,${btoa(binaryString)}`
-  }
+    return `data:image/jpeg;base64,${btoa(binaryString)}`;
+  };
 
   return (
     <Card variant="light" className="overflow-hidden p-0" animate>
@@ -35,7 +35,7 @@ export function AlmostThereMovie({ movie }: AlmostThereMovieProps) {
             <img
               src={getPosterDataUrl(movie.poster_bytes)!}
               alt={movie.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover opacity-70 saturate-70"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-4xl">
@@ -44,13 +44,28 @@ export function AlmostThereMovie({ movie }: AlmostThereMovieProps) {
           )}
         </div>
         <div className="flex-1 p-4 flex flex-col justify-center">
-          <div className="text-xs font-medium text-muted-foreground mb-1">ALMOST THERE</div>
-          <h3 className="text-lg font-semibold text-muted-foreground mb-1">{movie.title}</h3>
+          <div className="text-xs font-medium text-muted-foreground mb-1">
+            ALMOST THERE
+          </div>
+          <h3 className="text-lg font-semibold text-muted-foreground mb-1">
+            {movie.title}
+          </h3>
           {movie.year && (
-            <div className="text-sm text-muted-foreground mb-2">{movie.year}</div>
+            <div className="text-sm text-muted-foreground mb-2">
+              {movie.year}
+            </div>
           )}
           <p className="text-sm mb-3 text-muted-foreground">
-            You're just <span className="font-semibold text-muted-foreground">{movie.cards_to_next_milestone} {movie.cards_to_next_milestone === 1 ? 'card' : 'cards'}</span> away from reaching <span className="font-semibold text-muted-foreground">{Math.ceil(movie.percent_known / 5) * 5}%</span> comprehension!
+            You're just{" "}
+            <span className="font-semibold text-muted-foreground">
+              {movie.cards_to_next_milestone}{" "}
+              {movie.cards_to_next_milestone === 1 ? "card" : "cards"}
+            </span>{" "}
+            away from reaching{" "}
+            <span className="font-semibold text-muted-foreground">
+              {Math.ceil(movie.percent_known / 5) * 5}%
+            </span>{" "}
+            comprehension!
           </p>
           <div className="flex items-center gap-2">
             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
@@ -66,5 +81,5 @@ export function AlmostThereMovie({ movie }: AlmostThereMovieProps) {
         </div>
       </div>
     </Card>
-  )
+  );
 }
