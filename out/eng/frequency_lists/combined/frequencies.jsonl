@@ -16,7 +16,7 @@
 {"lexeme":{"Multiword":"do you"},"count":6361}
 {"lexeme":{"Heteronym":{"word":"his","lemma":"he","pos":"DET"}},"count":6304}
 {"lexeme":{"Heteronym":{"word":"it","lemma":"it","pos":"PRON"}},"count":6032}
-{"lexeme":{"Heteronym":{"word":"this","lemma":"this","pos":"DET"}},"count":5773}
+{"lexeme":{"Heteronym":{"word":"this","lemma":"this","pos":"DET"}},"count":5772}
 {"lexeme":{"Heteronym":{"word":"for","lemma":"for","pos":"ADP"}},"count":5770}
 {"lexeme":{"Heteronym":{"word":"me","lemma":"i","pos":"PRON"}},"count":5483}
 {"lexeme":{"Heteronym":{"word":"do","lemma":"do","pos":"AUX"}},"count":5382}
@@ -47,7 +47,7 @@
 {"lexeme":{"Heteronym":{"word":"did","lemma":"do","pos":"AUX"}},"count":2477}
 {"lexeme":{"Heteronym":{"word":"an","lemma":"a","pos":"DET"}},"count":2421}
 {"lexeme":{"Heteronym":{"word":"very","lemma":"very","pos":"ADV"}},"count":2418}
-{"lexeme":{"Heteronym":{"word":"has","lemma":"have","pos":"VERB"}},"count":2390}
+{"lexeme":{"Heteronym":{"word":"has","lemma":"have","pos":"VERB"}},"count":2389}
 {"lexeme":{"Heteronym":{"word":"this","lemma":"this","pos":"PRON"}},"count":2387}
 {"lexeme":{"Multiword":"I am"},"count":2381}
 {"lexeme":{"Multiword":"going to"},"count":2284}
@@ -320,8 +320,8 @@
 {"lexeme":{"Heteronym":{"word":"learn","lemma":"learn","pos":"VERB"}},"count":381}
 {"lexeme":{"Heteronym":{"word":"place","lemma":"place","pos":"NOUN"}},"count":381}
 {"lexeme":{"Heteronym":{"word":"young","lemma":"young","pos":"ADJ"}},"count":381}
-{"lexeme":{"Heteronym":{"word":"boy","lemma":"boy","pos":"NOUN"}},"count":380}
 {"lexeme":{"Heteronym":{"word":"small","lemma":"small","pos":"ADJ"}},"count":380}
+{"lexeme":{"Heteronym":{"word":"boy","lemma":"boy","pos":"NOUN"}},"count":379}
 {"lexeme":{"Heteronym":{"word":"its","lemma":"it","pos":"DET"}},"count":379}
 {"lexeme":{"Heteronym":{"word":"son","lemma":"son","pos":"NOUN"}},"count":378}
 {"lexeme":{"Multiword":"could do"},"count":374}
@@ -18495,7 +18495,6 @@
 {"lexeme":{"Multiword":"I'm fine, thank you"},"count":2}
 {"lexeme":{"Multiword":"I'm single"},"count":2}
 {"lexeme":{"Multiword":"Japanese full stop"},"count":2}
-{"lexeme":{"Multiword":"Jesus H. Christ"},"count":2}
 {"lexeme":{"Multiword":"Lake Chad"},"count":2}
 {"lexeme":{"Multiword":"Lyme disease"},"count":2}
 {"lexeme":{"Multiword":"Milky Way"},"count":2}
@@ -29146,7 +29145,6 @@
 {"lexeme":{"Multiword":"God is in the detail"},"count":1}
 {"lexeme":{"Multiword":"God only knows"},"count":1}
 {"lexeme":{"Multiword":"Gold Star"},"count":1}
-{"lexeme":{"Multiword":"Gordon Bennett"},"count":1}
 {"lexeme":{"Multiword":"Grand Canyon"},"count":1}
 {"lexeme":{"Multiword":"Great Bear"},"count":1}
 {"lexeme":{"Multiword":"Great Mother"},"count":1}
@@ -29235,6 +29233,7 @@
 {"lexeme":{"Multiword":"International Monetary Fund"},"count":1}
 {"lexeme":{"Multiword":"Japanese chess"},"count":1}
 {"lexeme":{"Multiword":"Jerusalem artichoke"},"count":1}
+{"lexeme":{"Multiword":"Jesus H. Christ"},"count":1}
 {"lexeme":{"Multiword":"Jesus wept"},"count":1}
 {"lexeme":{"Multiword":"Jesus, Mary and Joseph"},"count":1}
 {"lexeme":{"Multiword":"Jesus, Mary, and Joseph"},"count":1}
@@ -29297,7 +29296,6 @@
 {"lexeme":{"Multiword":"Paralympic Games"},"count":1}
 {"lexeme":{"Multiword":"Park Ridge"},"count":1}
 {"lexeme":{"Multiword":"Pará rubber tree"},"count":1}
-{"lexeme":{"Multiword":"Perfidious Albion"},"count":1}
 {"lexeme":{"Multiword":"Persian cat"},"count":1}
 {"lexeme":{"Multiword":"Peter Pan"},"count":1}
 {"lexeme":{"Multiword":"Pine Nut"},"count":1}

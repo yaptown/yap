@@ -490,6 +490,29 @@ impl SentenceInfo {
                 .map(|term| Lexeme::Multiword(term.clone())),
         )
     }
+
+    /// The fraction of words that are proper nouns
+    pub fn proper_noun_fraction(&self) -> f32 {
+        let total_words = self
+            .words
+            .iter()
+            .filter(|token| token.heteronym.is_some())
+            .count() as f32;
+        let proper_nouns = self
+            .words
+            .iter()
+            .filter(|token| {
+                matches!(
+                    &token.heteronym,
+                    Some(Heteronym {
+                        pos: PartOfSpeech::Propn,
+                        ..
+                    })
+                )
+            })
+            .count() as f32;
+        proper_nouns / total_words
+    }
 }
 
 #[derive(
