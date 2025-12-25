@@ -9,7 +9,7 @@ const cardVariants = cva(
     variants: {
       variant: {
         default: "backdrop-brightness-140 backdrop-saturate-140 backdrop-blur-lg bg-card/25 shadow-sm dark:shadow-xl",
-        light: "backdrop-saturate-120 backdrop-brightness-110 backdrop-blur-sm",
+        light: "backdrop-saturate-120 backdrop-brightness-110 dark:backdrop-brightness-100 backdrop-blur-sm",
       },
     },
     defaultVariants: {
