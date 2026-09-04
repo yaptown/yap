@@ -43,6 +43,37 @@ pub fn report_batch_progress(
     progress.set_position(position.min(progress.length().unwrap_or(u64::MAX)));
 }
 
+/// Progress over several Batch API jobs polled at the same time. Each job
+/// reports into its own slot and the bar shows the sum, so jobs completing
+/// in any order never move it backwards — [`report_batch_progress`]'s fixed
+/// offsets only work for jobs run one after another.
+pub struct BatchProgress<'a> {
+    bar: &'a indicatif::ProgressBar,
+    done: Vec<std::sync::atomic::AtomicU64>,
+}
+
+impl<'a> BatchProgress<'a> {
+    pub fn new(bar: &'a indicatif::ProgressBar, jobs: usize) -> Self {
+        Self {
+            bar,
+            done: (0..jobs).map(|_| Default::default()).collect(),
+        }
+    }
+
+    /// Record job `job`'s standing (`expected` requests were put to it,
+    /// however many the cache already had) and redraw the bar.
+    pub fn report(&self, job: usize, expected: usize, batch: &tysm::batch::Batch) {
+        use std::sync::atomic::Ordering;
+        let total = u64::from(batch.request_counts.total);
+        let processed = u64::from(batch.request_counts.completed + batch.request_counts.failed);
+        let cached = (expected as u64).saturating_sub(total);
+        self.done[job].store(cached + processed, Ordering::Relaxed);
+        let position: u64 = self.done.iter().map(|d| d.load(Ordering::Relaxed)).sum();
+        self.bar
+            .set_position(position.min(self.bar.length().unwrap_or(u64::MAX)));
+    }
+}
+
 /// Apply the process-wide cache-only setting to a tysm ChatClient.
 pub fn apply_cache_only(
     client: tysm::chat_completions::ChatClient,

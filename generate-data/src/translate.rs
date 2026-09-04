@@ -723,22 +723,23 @@ impl Translator {
             self.cost_estimate_usd()
         ));
 
-        // Jobs run sequentially: each one is already maximally parallel on
-        // OpenAI's side, and sequential submission keeps the enqueued-token
-        // footprint bounded.
-        for chunk in pending.chunks(OPENAI_BATCH_CHUNK) {
-            let chunk_start = pb.position();
+        // Every job goes out at once. Each is already maximally parallel on
+        // OpenAI's side, and a job can take a day to come back, so jobs
+        // waiting on one another would multiply that by the chunk count.
+        let chunks: Vec<&[&str]> = pending.chunks(OPENAI_BATCH_CHUNK).collect();
+        let progress = crate::BatchProgress::new(pb, chunks.len());
+        let (progress, system_prompt) = (&progress, &system_prompt);
+        let jobs = chunks.iter().enumerate().map(|(job, chunk)| async move {
             if self.over_budget() {
-                pb.inc(chunk.len() as u64);
-                continue;
+                return;
             }
             self.api_calls
                 .fetch_add(chunk.len() as u64, Ordering::Relaxed);
             match client
                 .batch_chat_with_system_prompt::<TranslationResponse>(
-                    &system_prompt,
+                    system_prompt,
                     chunk.to_vec(),
-                    |batch| crate::report_batch_progress(pb, chunk_start, chunk.len(), batch),
+                    |batch| progress.report(job, chunk.len(), batch),
                 )
                 .await
             {
@@ -754,28 +755,28 @@ impl Translator {
                             Err(e) => eprintln!("Batch item failed for '{text}': {e}"),
                         }
                     }
-                    pb.set_position(chunk_start + chunk.len() as u64);
                 }
                 Err(e) => {
                     eprintln!("OpenAI batch translate failed ({} texts): {e}", chunk.len());
-                    pb.set_position(chunk_start + chunk.len() as u64);
                 }
             }
+        });
+        futures::future::join_all(jobs).await;
+        pb.set_position(pending.len() as u64);
 
-            if let Some(cost) = client.cost() {
-                let total_micro = (cost * 1_000_000.0) as u64;
-                let mut recorded = recorded_micro.lock().unwrap();
-                if total_micro > *recorded {
-                    self.add_spend(total_micro - *recorded);
-                    *recorded = total_micro;
-                }
+        if let Some(cost) = client.cost() {
+            let total_micro = (cost * 1_000_000.0) as u64;
+            let mut recorded = recorded_micro.lock().unwrap();
+            if total_micro > *recorded {
+                self.add_spend(total_micro - *recorded);
+                *recorded = total_micro;
             }
-            pb.set_message(format!(
-                "{} Batch API, ~${:.4}",
-                client.model,
-                self.cost_estimate_usd()
-            ));
         }
+        pb.set_message(format!(
+            "{} Batch API, ~${:.4}",
+            client.model,
+            self.cost_estimate_usd()
+        ));
     }
 }
 

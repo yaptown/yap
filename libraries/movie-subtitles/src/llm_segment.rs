@@ -39,13 +39,13 @@ const CONTEXT_CUES: usize = 3;
 /// without flooding the log.
 const SHOWN_FALLBACKS: usize = 40;
 
-/// Requests per Batch API job. OpenAI caps a job at 50,000 requests; a whole
-/// library of subtitles is several times that.
+/// Requests per Batch API job. OpenAI caps a job at 50,000 requests and its
+/// input file at 200 MB; a whole library of subtitles is several times the
+/// first, and each request carries the response schema, so the jobs stay
+/// well under both. Every job is submitted at once — a batch can take a day
+/// to come back, so jobs waiting on one another would turn a library into a
+/// week.
 const BATCH_REQUESTS: usize = 20_000;
-
-/// Batch jobs in flight at once. Enough to keep a library's worth moving,
-/// few enough not to trip the enqueued-token quota.
-const BATCHES_IN_FLIGHT: usize = 4;
 
 /// A silence between cues is mentioned only from this length — a shorter
 /// one is display timing, not evidence about sentence boundaries, and
@@ -260,26 +260,24 @@ pub async fn split_tracks(
         }
         evident.push(track);
     }
-    // Chunked into Batch API jobs, a few in flight at a time; answers are
+    // Chunked into Batch API jobs, all in flight together; answers are
     // reassembled in prompt order.
     let on_progress = std::sync::Mutex::new(on_progress);
     type Answer<'a> = (
         &'a (usize, usize, String),
         Result<CueSplit, tysm::chat_completions::IndividualChatError>,
     );
+    let jobs = prompts.chunks(BATCH_REQUESTS).map(|chunk| {
+        client.batch_chat_with_system_prompt_fn::<_, _, CueSplit>(
+            SYSTEM_PROMPT,
+            chunk,
+            |(_, _, p)| p.clone(),
+            |batch| (on_progress.lock().unwrap())(batch),
+        )
+    });
     let mut answers: Vec<Answer> = Vec::with_capacity(prompts.len());
-    for wave in prompts.chunks(BATCH_REQUESTS * BATCHES_IN_FLIGHT) {
-        let jobs = wave.chunks(BATCH_REQUESTS).map(|chunk| {
-            client.batch_chat_with_system_prompt_fn::<_, _, CueSplit>(
-                SYSTEM_PROMPT,
-                chunk,
-                |(_, _, p)| p.clone(),
-                |batch| (on_progress.lock().unwrap())(batch),
-            )
-        });
-        for job in futures::future::join_all(jobs).await {
-            answers.extend(job?);
-        }
+    for job in futures::future::join_all(jobs).await {
+        answers.extend(job?);
     }
 
     // Model answers land in their cue's slot; the self-evident cues are
