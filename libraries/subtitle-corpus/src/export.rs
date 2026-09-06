@@ -10,7 +10,7 @@
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use anyhow::{bail, Context, Result};
 use language_utils::Language;
@@ -50,6 +50,8 @@ const HI_AAC: &str = "160k";
 const LO_CRF: u32 = 27;
 const LO_PRESET: &str = "veryfast";
 const LO_AAC: &str = "96k";
+/// R2 puts in flight at once during upload (see `upload_lang`).
+const UPLOAD_JOBS: usize = 8;
 
 /// Sidecar `format` field.
 const SIDECAR_FORMAT: u32 = 2;
@@ -591,18 +593,18 @@ fn upload_lang(lang_dir: &Path, code: &str, bucket: &str) -> Result<()> {
             attempt += 1;
         }
     };
-    let mut uploaded = 0usize;
-    let mut skipped = 0usize;
     let mut dirs: Vec<PathBuf> = std::fs::read_dir(lang_dir)?
         .flatten()
         .map(|e| e.path())
         .filter(|p| p.is_dir())
         .collect();
     dirs.sort();
-    for dir in dirs {
+    let uploaded = AtomicUsize::new(0);
+    let skipped = AtomicUsize::new(0);
+    let upload_dir = |dir: &Path| -> Result<()> {
         let id = dir.file_name().and_then(|s| s.to_str()).unwrap_or_default();
         if !dir.join("meta.json").exists() {
-            continue; // half-written export
+            return Ok(()); // half-written export
         }
         // The marker records what was uploaded, not that something was:
         // skip only when every file still hashes to what went up. An edited
@@ -616,8 +618,8 @@ fn upload_lang(lang_dir: &Path, code: &str, bucket: &str) -> Result<()> {
             .ok()
             .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok());
         if marked.as_ref() == Some(&hashes) {
-            skipped += 1;
-            continue;
+            skipped.fetch_add(1, Ordering::Relaxed);
+            return Ok(());
         }
         put(
             &dir.join("hi.mp4"),
@@ -638,11 +640,48 @@ fn upload_lang(lang_dir: &Path, code: &str, bucket: &str) -> Result<()> {
             IMMUTABLE,
         )?;
         std::fs::write(dir.join(".uploaded"), serde_json::to_vec(&hashes)?)?;
-        uploaded += 1;
-        if uploaded.is_multiple_of(25) {
-            println!("  {uploaded} uploaded (last: {id})");
+        let n = uploaded.fetch_add(1, Ordering::Relaxed) + 1;
+        if n.is_multiple_of(25) {
+            println!("  {n} uploaded (last: {id})");
         }
-    }
+        Ok(())
+    };
+    // Each put is a whole `wrangler` process — mostly Node start-up, ~2s
+    // for a few MB — so one at a time meant ~700 clips/h and a day per
+    // publish. Workers take clip dirs in order; a dir's marker lands only
+    // after all three objects do, so a killed run redoes at most UPLOAD_JOBS
+    // dirs. The first failure stops the rest at their next dir.
+    let next = AtomicUsize::new(0);
+    let failed = AtomicBool::new(false);
+    std::thread::scope(|scope| -> Result<()> {
+        let workers: Vec<_> = (0..UPLOAD_JOBS)
+            .map(|_| {
+                scope.spawn(|| -> Result<()> {
+                    loop {
+                        if failed.load(Ordering::Relaxed) {
+                            return Ok(());
+                        }
+                        let Some(dir) = dirs.get(next.fetch_add(1, Ordering::Relaxed)) else {
+                            return Ok(());
+                        };
+                        if let Err(e) = upload_dir(dir) {
+                            failed.store(true, Ordering::Relaxed);
+                            return Err(e);
+                        }
+                    }
+                })
+            })
+            .collect();
+        let mut first_error = None;
+        for worker in workers {
+            if let Err(e) = worker.join().expect("upload worker panicked") {
+                first_error.get_or_insert(e);
+            }
+        }
+        first_error.map_or(Ok(()), Err)
+    })?;
+    let uploaded = uploaded.into_inner();
+    let skipped = skipped.into_inner();
     let index = lang_dir.join("index.jsonl");
     if index.exists() {
         put(
