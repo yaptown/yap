@@ -560,20 +560,36 @@ pub async fn publish(
 /// forever cache; the index gets a short one.
 fn upload_lang(lang_dir: &Path, code: &str, bucket: &str) -> Result<()> {
     const IMMUTABLE: &str = "public, max-age=31536000, immutable";
+    // Cloudflare's API answers a small fraction of puts with a 502; over the
+    // ~50k objects of a full publish one such blip is near-certain, and a
+    // failed put costs the whole run (2026-09-06: died at 1,575 of 18k clips).
+    // Retry with growing waits before giving up on a key.
+    const RETRY_WAITS: [u64; 4] = [5, 30, 120, 300];
     let put = |file: &Path, key: &str, content_type: &str, cache: &str| -> Result<()> {
-        let status = Command::new("wrangler")
-            .args(["r2", "object", "put", &format!("{bucket}/{key}")])
-            .arg("--file")
-            .arg(file)
-            .args(["--content-type", content_type, "--cache-control", cache])
-            .arg("--remote")
-            .stdout(std::process::Stdio::null())
-            .status()
-            .context("wrangler failed to start")?;
-        if !status.success() {
-            bail!("upload failed for {key}");
+        let mut attempt = 0;
+        loop {
+            let status = Command::new("wrangler")
+                .args(["r2", "object", "put", &format!("{bucket}/{key}")])
+                .arg("--file")
+                .arg(file)
+                .args(["--content-type", content_type, "--cache-control", cache])
+                .arg("--remote")
+                .stdout(std::process::Stdio::null())
+                .status()
+                .context("wrangler failed to start")?;
+            if status.success() {
+                return Ok(());
+            }
+            let Some(wait) = RETRY_WAITS.get(attempt) else {
+                bail!("upload failed for {key} after {} attempts", attempt + 1);
+            };
+            eprintln!(
+                "  upload of {key} failed (attempt {}), retrying in {wait}s",
+                attempt + 1
+            );
+            std::thread::sleep(std::time::Duration::from_secs(*wait));
+            attempt += 1;
         }
-        Ok(())
     };
     let mut uploaded = 0usize;
     let mut skipped = 0usize;
