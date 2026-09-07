@@ -185,3 +185,20 @@ generated values. The integration test exercises a real French add-card event,
 arrays of card-summary objects, a returned review-info object, its next challenge,
 and the resulting review event. Internal Rust-only accessor impls remain ordinary
 Rust impls. Event serialization and review logic are unchanged.
+
+## Physical iPhone
+
+With a paired iPhone, Developer Mode enabled, and an Apple development account
+configured in Xcode, run from the repository root:
+
+```sh
+python3 prototypes/yap-swift/device.py --device IPHONE_UDID --team APPLE_TEAM_ID
+```
+
+This builds the Rust library for iOS 18+, signs a small bootstrap app that
+generates bindings on the phone, then builds and installs the SwiftUI app.
+It runs checks against the existing HTTPS backend and native filesystem in a
+temporary sandbox, retrieves the results, and leaves the interactive app open.
+The interactive app keeps its own local data between launches. Generated Xcode
+projects, signing artifacts, and device reports stay under ignored `generated/iphone/`.
+Use `--reuse-bindings` on later runs when the script's archive checksum still matches.
