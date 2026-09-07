@@ -279,7 +279,11 @@ async fn export_film(
     let audio_opus = dir.join("audio.opus");
 
     let empty = std::collections::HashMap::new();
-    let ctx = VerifyContext::new(http, store.clone(), &empty, language)?;
+    // An audio-only language (Korean) has no phoneme model to align with;
+    // its clips ship without the alignment block rather than not at all.
+    let ctx = (!crate::clips::audio_only(code))
+        .then(|| VerifyContext::new(http, store.clone(), &empty, language))
+        .transpose()?;
 
     let lang_dir = dest.join(code);
     let passing: Vec<&Clip> = clips.iter().filter(|c| c.passed).collect();
@@ -291,7 +295,7 @@ async fn export_film(
     use futures::StreamExt;
     let results: Vec<Result<()>> = futures::stream::iter(passing.iter().map(|clip| {
         let (ctx, movie, provenance, clips, sentences, cues, transcript) = (
-            &ctx,
+            ctx.as_ref(),
             movie,
             &provenance,
             &clips,
@@ -426,39 +430,40 @@ fn clip_id(imdb: &str, clip: &Clip, sentences: &[KeyedSentence], all: &[Clip]) -
         .filter(|k| k.sentence == clip.sentence)
         .map(|k| (i64::from(k.start_ms), i64::from(k.end_ms)))
         .collect();
-    let index = match occ.len() {
-        0 | 1 => 0,
-        _ => {
-            // Pick the occurrence whose passage span sits closest to this
-            // clip's audio span. Cue stamps are display times, so exact
-            // containment can miss; nearest midpoint is unambiguous when the
-            // same line recurs minutes apart.
-            let mid = (clip.start_ms + clip.end_ms) / 2;
-            occ.iter()
-                .enumerate()
-                .min_by_key(|(_, (a, b))| ((a + b) / 2 - mid).abs())
-                .map(|(i, _)| i)
-                .unwrap_or(0)
-        }
+    // Pick the occurrence whose passage span sits closest to a clip's audio
+    // span. Cue stamps are display times, so exact containment can miss;
+    // nearest midpoint is unambiguous when the same line recurs minutes
+    // apart.
+    let nearest = |c: &Clip| -> usize {
+        let mid = (c.start_ms + c.end_ms) / 2;
+        occ.iter()
+            .enumerate()
+            .min_by_key(|(_, (a, b))| ((a + b) / 2 - mid).abs())
+            .map(|(i, _)| i)
+            .unwrap_or(0)
     };
-    // Sanity: two clips of the same sentence must not land on one id. If the
-    // nearest-midpoint tie-break ever collides (identical spans), fall back
-    // to rank among same-sentence clips by start time.
+    // Two clips of the same sentence must never land on one id: exported
+    // concurrently, they would render into and delete the same directory
+    // (Pee Mak, 2026-09-07). When the twins of this sentence do not all pick
+    // distinct occurrences — more clips than occurrences, or two clips
+    // nearest the same one — every twin falls back to its position among
+    // the twins in `all` (`clip` is one of them), unique by construction.
     let twins: Vec<&Clip> = all.iter().filter(|c| c.sentence == clip.sentence).collect();
-    let index = if twins.len() > occ.len() {
+    let picks: std::collections::HashSet<usize> = twins.iter().map(|c| nearest(c)).collect();
+    let index = if picks.len() == twins.len() {
+        nearest(clip)
+    } else {
         twins
             .iter()
-            .position(|c| c.start_ms == clip.start_ms)
-            .unwrap_or(index)
-    } else {
-        index
+            .position(|c| std::ptr::eq(*c, clip))
+            .expect("clip is drawn from `all`")
     };
     format!("{imdb}-{hash}-{index}")
 }
 
 #[allow(clippy::too_many_arguments)]
 async fn export_one(
-    ctx: &VerifyContext<'_>,
+    ctx: Option<&VerifyContext<'_>>,
     movie: &Movie,
     provenance: &Provenance,
     clip: &Clip,
@@ -887,11 +892,12 @@ fn context_bounds(
 
 /// Per-phoneme spans in clip-relative ms, from the cached frame matrix.
 async fn align_phonemes(
-    ctx: &VerifyContext<'_>,
+    ctx: Option<&VerifyContext<'_>>,
     audio_opus: &Path,
     clip: &Clip,
     scored_offset_ms: i64,
 ) -> Option<serde_json::Value> {
+    let ctx = ctx?;
     let wav = slice_wav_padded(
         audio_opus,
         clip.start_ms,
@@ -1113,6 +1119,9 @@ fn read_clips_with_provenance(path: &Path) -> Result<(Provenance, Vec<Clip>)> {
 
 /// One line per exported clip, rebuilt from the sidecars.
 fn write_index(lang_dir: &Path) -> Result<usize> {
+    // A language whose films all failed or passed nothing still gets its
+    // (empty) index: the queue named it, so the served listing must too.
+    std::fs::create_dir_all(lang_dir)?;
     let mut rows: Vec<(String, serde_json::Value)> = Vec::new();
     if let Ok(entries) = std::fs::read_dir(lang_dir) {
         for entry in entries.flatten() {
