@@ -38,22 +38,21 @@ Principles:
 Caching: every artifact skips on **provenance equality, never existence**.
 `clips.jsonl` re-maps when its provenance line (inputs digests, model, gate,
 G2P backend identity) differs; a G2P preflight canary fails a film loudly
-before anything is written. Exported clip dirs skip only when the sidecar's
-`export` stamp (sidecar format, encode recipe, clips-provenance digest,
-source-video identity) equals the one computed now — else delete and
-re-render; full-language runs sweep orphaned ids. Upload markers store the
-three files' content hashes and re-upload on any byte change. Better to
-recalculate than to trust a cache whose inputs may have moved.
+before anything is written. An exported clip's renditions are reused only
+when the sidecar's `media.stamp` (encode recipe, source-video identity —
+filename, bytes, runtime, height, HDR, audio stream — and the cut: window
+and critical span) equals the one computed now — else delete and re-render.
+The stamp is deliberately not the clips provenance: a re-map under a new
+segmenter or gate that lands on the same span costs a sidecar rewrite, not
+a day of re-encoding. The sidecar itself is always regenerated and left
+untouched when it comes out byte-identical; full-language runs sweep
+orphaned ids. Upload markers store the three files' content hashes and
+re-upload each file whose bytes changed. Better to recalculate than to
+trust a cache whose inputs may have moved.
 
 ```jsonc
 {
   "format": 2,
-  "export": {                          // the export stamp (see above) — resume key
-    "sidecar_format": 2,
-    "recipe": "hi h264 crf19 medium …",
-    "clips_provenance": "9f2c41d08ab313e7",
-    "video": { "filename": "….mkv", "bytes": 31882123456, "audio_stream": 2 }
-  },
   "id": "tt0101700-3fa2c81d-0",        // imdb id + sentence hash + occurrence index (see above)
   "language": "fra",
 
@@ -120,8 +119,15 @@ recalculate than to trust a cache whose inputs may have moved.
   },
 
   "media": {
+    "stamp": {                         // the media stamp (see above) — rendition reuse key
+      "recipe": "hi h264 crf19 medium …",
+      "video": { "filename": "….mkv", "bytes": 31882123456, "duration_ms": 7126875,
+                 "height": 1080, "hdr": false, "audio_stream": 2 },
+      "cut": { "start_ms": 5231200, "end_ms": 5238800,
+               "critical_start_ms": 1850, "critical_end_ms": 5600 }
+    },
     "duration_ms": 7600,
-    "loudnorm": { "measured_i": -24.3, "gain_db": 6.3,
+    "loudnorm": { "measured_i": -24.3, "measured_tp": -3.1, "gain_db": 6.3,
                   "measured_over": "critical" },
     "keyframe_at_critical": true
   }

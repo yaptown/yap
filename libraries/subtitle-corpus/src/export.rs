@@ -69,27 +69,93 @@ fn encode_recipe() -> String {
     )
 }
 
-/// The provenance of one exported clip directory: a pure function of every
-/// input that could change its bytes. Written into the sidecar as `export`;
-/// a clip is skipped on resume only when its stored stamp equals the one
-/// computed now — anything else (missing, older format, different recipe,
-/// re-mapped clips, replaced video) is deleted and re-rendered. Better to
-/// recalculate than to trust a cache whose inputs may have moved.
-fn export_stamp(provenance: &Provenance, movie: &Movie, audio_stream: u32) -> serde_json::Value {
+/// Where one clip is cut from the film: the scored span (what the gates
+/// heard) and the generous cut around it with neighbouring subtitle lines.
+struct Cut {
+    scored_start: i64,
+    scored_end: i64,
+    cut_start: i64,
+    cut_end: i64,
+    ctx_before: usize,
+    ctx_after: usize,
+}
+
+impl Cut {
+    /// The scored span, clip-relative: the keyframe lands on its start and
+    /// the loudness is measured over it.
+    fn critical(&self) -> (i64, i64) {
+        (
+            self.scored_start - self.cut_start,
+            self.scored_end - self.cut_start,
+        )
+    }
+}
+
+fn plan_cut(clip: &Clip, cues: &[Cue]) -> Cut {
+    let scored_start = (clip.start_ms - clip.pad_before_ms).max(0);
+    let scored_end = clip.end_ms + clip.pad_after_ms;
+    let (cut_start, cut_end, ctx_before, ctx_after) =
+        context_bounds(clip, scored_start, scored_end, cues);
+    Cut {
+        scored_start,
+        scored_end,
+        cut_start,
+        cut_end,
+        ctx_before,
+        ctx_after,
+    }
+}
+
+/// Everything that decides the bytes of a clip's two renditions: the recipe,
+/// the source video's identity, and the cut. Written into the sidecar as
+/// `media.stamp`; on resume the renditions are reused when the stored stamp
+/// equals the one computed now, and re-rendered otherwise. Deliberately
+/// *not* the clips provenance: a re-map under a new segmenter or gate that
+/// lands on the same span must not cost a day of re-encoding (it did,
+/// twice, in 2026-09). The sidecar itself is always rewritten — it is cheap
+/// and carries the provenance.
+fn media_stamp(
+    movie: &Movie,
+    video: &VideoProbe,
+    audio_stream: u32,
+    cut: &Cut,
+) -> serde_json::Value {
     let video_bytes = std::fs::metadata(&movie.path).map(|m| m.len()).unwrap_or(0);
+    let critical = cut.critical();
     json!({
-        "sidecar_format": SIDECAR_FORMAT,
         "recipe": encode_recipe(),
-        "clips_provenance": format!(
-            "{:016x}",
-            xxhash_rust::xxh3::xxh3_64(&serde_json::to_vec(provenance).unwrap_or_default())
-        ),
         "video": {
             "filename": movie.path.file_name().and_then(|f| f.to_str()),
             "bytes": video_bytes,
+            "duration_ms": video.duration_ms,
+            "height": video.height,
+            "hdr": video.hdr,
             "audio_stream": audio_stream,
         },
+        "cut": {
+            "start_ms": cut.cut_start,
+            "end_ms": cut.cut_end,
+            "critical_start_ms": critical.0,
+            "critical_end_ms": critical.1,
+        },
     })
+}
+
+/// Sidecars written before `media.stamp` existed (2026-09) state the same
+/// facts under `export`, `source` and `critical` — height, HDR and runtime
+/// follow from the same file. Honouring them lets the first publish after
+/// the change reuse ~19k renditions instead of re-encoding them. Remove
+/// once every served sidecar carries `media.stamp`.
+fn legacy_stamp_matches(old: &serde_json::Value, stamp: &serde_json::Value) -> bool {
+    let (e, v) = (&old["export"], &old["export"]["video"]);
+    e["recipe"] == stamp["recipe"]
+        && v["filename"] == stamp["video"]["filename"]
+        && v["bytes"] == stamp["video"]["bytes"]
+        && v["audio_stream"] == stamp["video"]["audio_stream"]
+        && old["source"]["cut_start_ms"] == stamp["cut"]["start_ms"]
+        && old["source"]["cut_end_ms"] == stamp["cut"]["end_ms"]
+        && old["critical"]["start_ms"] == stamp["cut"]["critical_start_ms"]
+        && old["critical"]["end_ms"] == stamp["cut"]["critical_end_ms"]
 }
 
 pub async fn export_clips(
@@ -122,8 +188,7 @@ pub async fn export_clips(
     let http = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
         .build()?;
-    let mut written = 0usize;
-    let mut skipped = 0usize;
+    let (mut rendered, mut refreshed, mut unchanged) = (0usize, 0usize, 0usize);
     let mut failed = false;
     let mut valid: std::collections::HashMap<String, std::collections::HashSet<String>> =
         std::collections::HashMap::new();
@@ -131,11 +196,12 @@ pub async fn export_clips(
         let title = truncate(&movie.title, 34);
         match export_film(&http, &store, movie, &out, &dest, jobs).await {
             Ok(f) => {
-                written += f.written;
-                skipped += f.skipped;
+                rendered += f.rendered;
+                refreshed += f.refreshed;
+                unchanged += f.unchanged;
                 println!(
-                    "{title} ✓ {} exported, {} already current",
-                    f.written, f.skipped
+                    "{title} ✓ {} rendered, {} sidecars refreshed, {} current",
+                    f.rendered, f.refreshed, f.unchanged
                 );
                 valid.entry(f.code).or_default().extend(f.ids);
             }
@@ -145,7 +211,7 @@ pub async fn export_clips(
             }
         }
     }
-    println!("\n{written} clips exported, {skipped} already current");
+    println!("\n{rendered} clips rendered, {refreshed} sidecars refreshed, {unchanged} current");
 
     // Orphan sweep: a clip dir whose id no longer exists (sentence re-keyed,
     // gate change) must not linger looking servable. Only on unfiltered,
@@ -214,12 +280,12 @@ async fn export_film(
 
     let empty = std::collections::HashMap::new();
     let ctx = VerifyContext::new(http, store.clone(), &empty, language)?;
-    let stamp = export_stamp(&provenance, movie, audio_stream);
 
     let lang_dir = dest.join(code);
     let passing: Vec<&Clip> = clips.iter().filter(|c| c.passed).collect();
-    let done = AtomicUsize::new(0);
-    let skipped = AtomicUsize::new(0);
+    let rendered = AtomicUsize::new(0);
+    let refreshed = AtomicUsize::new(0);
+    let unchanged = AtomicUsize::new(0);
     let total = passing.len();
 
     use futures::StreamExt;
@@ -233,25 +299,35 @@ async fn export_film(
             &cues,
             &transcript,
         );
-        let stamp = &stamp;
         let (lang_dir, audio_opus, video) = (&lang_dir, &audio_opus, &video);
-        let (done, skipped) = (&done, &skipped);
+        let (rendered, refreshed, unchanged) = (&rendered, &refreshed, &unchanged);
         async move {
             let id = clip_id(&movie.imdb_id, clip, sentences, clips);
             let clip_dir = lang_dir.join(&id);
-            let current = std::fs::read(clip_dir.join("meta.json"))
-                .ok()
-                .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
-                .is_some_and(|m| {
-                    m["export"] == *stamp
+            let cut = plan_cut(clip, cues);
+            let stamp = media_stamp(movie, video, audio_stream, &cut);
+            // Renditions on disk are reused when they were cut from the same
+            // bytes to the same recipe; the loudness they were normalised
+            // with is a function of those same inputs, so it comes along.
+            let old = std::fs::read(clip_dir.join("meta.json")).ok();
+            let reuse = old
+                .as_deref()
+                .and_then(|b| serde_json::from_slice::<serde_json::Value>(b).ok())
+                .filter(|m| {
+                    (m["media"]["stamp"] == stamp || legacy_stamp_matches(m, &stamp))
                         && clip_dir.join("hi.mp4").exists()
                         && clip_dir.join("lo.mp4").exists()
+                })
+                .and_then(|m| {
+                    let l = &m["media"]["loudnorm"];
+                    Some(Loudness {
+                        measured_i: l["measured_i"].as_f64()?,
+                        measured_tp: l["measured_tp"].as_f64()?,
+                    })
                 });
-            if current {
-                skipped.fetch_add(1, Ordering::Relaxed);
-                return Ok(());
+            if reuse.is_none() {
+                let _ = std::fs::remove_dir_all(&clip_dir);
             }
-            let _ = std::fs::remove_dir_all(&clip_dir);
             let course_sentence = sentences
                 .iter()
                 .any(|k| k.course_worthy && k.sentence == clip.sentence);
@@ -262,7 +338,10 @@ async fn export_film(
                 clip,
                 &id,
                 course_sentence,
+                &cut,
                 stamp,
+                reuse,
+                old.as_deref(),
                 cues,
                 transcript,
                 audio_opus,
@@ -271,12 +350,20 @@ async fn export_film(
                 &clip_dir,
             )
             .await;
-            let n = done.fetch_add(1, Ordering::Relaxed) + 1;
             match &r {
-                Ok(()) => println!("  [{n}/{total}] {id} ✓"),
-                Err(e) => println!("  [{n}/{total}] {id} ✗ {e:#}"),
+                Ok(Outcome::Unchanged) => {
+                    unchanged.fetch_add(1, Ordering::Relaxed);
+                }
+                Ok(Outcome::Refreshed) => {
+                    refreshed.fetch_add(1, Ordering::Relaxed);
+                }
+                Ok(Outcome::Rendered) => {
+                    let n = rendered.fetch_add(1, Ordering::Relaxed) + 1;
+                    println!("  [{n}/{total}] {id} ✓");
+                }
+                Err(e) => println!("  {id} ✗ {e:#}"),
             }
-            r
+            r.map(|_| ())
         }
     }))
     .buffer_unordered(jobs.max(1))
@@ -292,8 +379,9 @@ async fn export_film(
         .map(|clip| clip_id(&movie.imdb_id, clip, &sentences, &clips))
         .collect();
     Ok(FilmExport {
-        written: done.load(Ordering::Relaxed),
-        skipped: skipped.load(Ordering::Relaxed),
+        rendered: rendered.load(Ordering::Relaxed),
+        refreshed: refreshed.load(Ordering::Relaxed),
+        unchanged: unchanged.load(Ordering::Relaxed),
         code: code.to_string(),
         ids,
     })
@@ -301,10 +389,27 @@ async fn export_film(
 
 /// What one film's export produced, for totals and the orphan sweep.
 struct FilmExport {
-    written: usize,
-    skipped: usize,
+    /// Clip dirs whose renditions were (re-)encoded.
+    rendered: usize,
+    /// Renditions reused, sidecar rewritten.
+    refreshed: usize,
+    /// Nothing to do: renditions reused and the sidecar came out identical.
+    unchanged: usize,
     code: String,
     ids: Vec<String>,
+}
+
+enum Outcome {
+    Rendered,
+    Refreshed,
+    Unchanged,
+}
+
+/// EBU R128 numbers the renditions were normalised with; carried over from
+/// the old sidecar when the renditions are reused.
+struct Loudness {
+    measured_i: f64,
+    measured_tp: f64,
 }
 
 /// `imdb - sha256(NFC sentence)[..8] - occurrence index`, the occurrence
@@ -359,64 +464,86 @@ async fn export_one(
     clip: &Clip,
     id: &str,
     course_sentence: bool,
-    stamp: &serde_json::Value,
+    cut: &Cut,
+    stamp: serde_json::Value,
+    reuse: Option<Loudness>,
+    old_sidecar: Option<&[u8]>,
     cues: &[Cue],
     transcript: &[Spoken],
     audio_opus: &Path,
     video: &VideoProbe,
     audio_stream: u32,
     clip_dir: &Path,
-) -> Result<()> {
-    // The scored cut (what the gates heard) and the generous cut around it.
-    let scored_start = (clip.start_ms - clip.pad_before_ms).max(0);
-    let scored_end = clip.end_ms + clip.pad_after_ms;
-    let (cut_start, cut_end, ctx_before, ctx_after) =
-        context_bounds(clip, scored_start, scored_end, cues);
-    let critical = (scored_start - cut_start, scored_end - cut_start);
+) -> Result<Outcome> {
+    let Cut {
+        scored_start,
+        scored_end,
+        cut_start,
+        cut_end,
+        ctx_before,
+        ctx_after,
+    } = *cut;
+    let critical = cut.critical();
 
     // Forced alignment from the cached frame matrix — same wav bytes the
     // gates scored, so this is a cache hit unless the cut code drifted.
     // Failure loses the alignment block, never the clip.
     let alignment = align_phonemes(ctx, audio_opus, clip, scored_start - cut_start).await;
 
-    // Loudness of the critical span through the same stereo downmix the
-    // encode uses; gain capped by the true-peak ceiling.
-    let (measured_i, measured_tp) = tokio::task::spawn_blocking({
-        let path = movie.path.clone();
-        move || measure_loudness(&path, audio_stream, scored_start, scored_end - scored_start)
-    })
-    .await??;
+    let reused = reuse.is_some();
+    let Loudness {
+        measured_i,
+        measured_tp,
+    } = match reuse {
+        Some(l) => l,
+        None => {
+            // Loudness of the critical span through the same stereo downmix
+            // the encode uses; gain capped by the true-peak ceiling.
+            let (measured_i, measured_tp) = tokio::task::spawn_blocking({
+                let path = movie.path.clone();
+                move || {
+                    measure_loudness(&path, audio_stream, scored_start, scored_end - scored_start)
+                }
+            })
+            .await??;
+            Loudness {
+                measured_i,
+                measured_tp,
+            }
+        }
+    };
     let gain_db = (TARGET_I - measured_i).min(TP_CEIL - measured_tp);
 
-    std::fs::create_dir_all(clip_dir)?;
-    let encode = tokio::task::spawn_blocking({
-        let (path, clip_dir) = (movie.path.clone(), clip_dir.to_path_buf());
-        let video = video.clone();
-        let crit_s = critical.0 as f64 / 1000.0;
-        move || {
-            encode_renditions(
-                &path,
-                audio_stream,
-                &video,
-                cut_start,
-                cut_end,
-                gain_db,
-                crit_s,
-                &clip_dir,
-            )
+    if !reused {
+        std::fs::create_dir_all(clip_dir)?;
+        let encode = tokio::task::spawn_blocking({
+            let (path, clip_dir) = (movie.path.clone(), clip_dir.to_path_buf());
+            let video = video.clone();
+            let crit_s = critical.0 as f64 / 1000.0;
+            move || {
+                encode_renditions(
+                    &path,
+                    audio_stream,
+                    &video,
+                    cut_start,
+                    cut_end,
+                    gain_db,
+                    crit_s,
+                    &clip_dir,
+                )
+            }
+        })
+        .await?;
+        if let Err(e) = encode {
+            // A half-written directory must not read as done on resume.
+            let _ = std::fs::remove_dir_all(clip_dir);
+            return Err(e);
         }
-    })
-    .await?;
-    if let Err(e) = encode {
-        // A half-written directory must not read as done on resume.
-        let _ = std::fs::remove_dir_all(clip_dir);
-        return Err(e);
     }
 
     let rel = |ms: i64| ms - cut_start;
     let sidecar = json!({
         "format": SIDECAR_FORMAT,
-        "export": stamp,
         "id": id,
         "language": provenance.language,
         "film": {
@@ -502,6 +629,7 @@ async fn export_one(
             },
         },
         "media": {
+            "stamp": stamp,
             "duration_ms": cut_end - cut_start,
             "loudnorm": {
                 "measured_i": measured_i,
@@ -516,11 +644,19 @@ async fn export_one(
             },
         },
     });
+    let bytes = serde_json::to_vec_pretty(&sidecar)?;
+    if reused && old_sidecar == Some(bytes.as_slice()) {
+        return Ok(Outcome::Unchanged);
+    }
     // Write-then-rename so `meta.json exists` really means the clip is whole.
     let tmp = clip_dir.join("meta.json.tmp");
-    std::fs::write(&tmp, serde_json::to_vec_pretty(&sidecar)?)?;
+    std::fs::write(&tmp, bytes)?;
     std::fs::rename(&tmp, clip_dir.join("meta.json"))?;
-    Ok(())
+    Ok(if reused {
+        Outcome::Refreshed
+    } else {
+        Outcome::Rendered
+    })
 }
 
 /// The full serve pipeline, [`crate::clips`]-style resumable at every stage:
@@ -607,38 +743,38 @@ fn upload_lang(lang_dir: &Path, code: &str, bucket: &str) -> Result<()> {
             return Ok(()); // half-written export
         }
         // The marker records what was uploaded, not that something was:
-        // skip only when every file still hashes to what went up. An edited
-        // sidecar or re-rendered mp4 re-uploads; a stale marker never wins.
-        let hashes = json!({
-            "hi": file_hash(&dir.join("hi.mp4"))?,
-            "lo": file_hash(&dir.join("lo.mp4"))?,
-            "meta": file_hash(&dir.join("meta.json"))?,
-        });
+        // each file goes up only when it no longer hashes to what went up.
+        // A refreshed sidecar costs one small put, a re-rendered clip all
+        // three; a stale marker never wins.
+        let files = [
+            ("hi", "hi.mp4", "video/mp4"),
+            ("lo", "lo.mp4", "video/mp4"),
+            ("meta", "meta.json", "application/json"),
+        ];
+        let mut hashes = serde_json::Map::new();
+        for (key, name, _) in files {
+            hashes.insert(key.into(), file_hash(&dir.join(name))?.into());
+        }
         let marked = std::fs::read(dir.join(".uploaded"))
             .ok()
-            .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok());
-        if marked.as_ref() == Some(&hashes) {
+            .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
+            .unwrap_or_default();
+        let stale: Vec<_> = files
+            .iter()
+            .filter(|(key, _, _)| marked[*key] != hashes[*key])
+            .collect();
+        if stale.is_empty() {
             skipped.fetch_add(1, Ordering::Relaxed);
             return Ok(());
         }
-        put(
-            &dir.join("hi.mp4"),
-            &format!("{code}/{id}/hi.mp4"),
-            "video/mp4",
-            IMMUTABLE,
-        )?;
-        put(
-            &dir.join("lo.mp4"),
-            &format!("{code}/{id}/lo.mp4"),
-            "video/mp4",
-            IMMUTABLE,
-        )?;
-        put(
-            &dir.join("meta.json"),
-            &format!("{code}/{id}/meta.json"),
-            "application/json",
-            IMMUTABLE,
-        )?;
+        for (_, name, content_type) in stale {
+            put(
+                &dir.join(name),
+                &format!("{code}/{id}/{name}"),
+                content_type,
+                IMMUTABLE,
+            )?;
+        }
         std::fs::write(dir.join(".uploaded"), serde_json::to_vec(&hashes)?)?;
         let n = uploaded.fetch_add(1, Ordering::Relaxed) + 1;
         if n.is_multiple_of(25) {
@@ -801,12 +937,19 @@ struct VideoProbe {
     height: i64,
     /// PQ / HLG sources are tonemapped to SDR bt709 for h264 playback.
     hdr: bool,
+    /// Container runtime; part of the media stamp so a different cut of the
+    /// film under the same name and size still reads as a new source.
+    duration_ms: i64,
 }
 
 fn probe_video(path: &Path) -> Result<VideoProbe> {
     let out = Command::new("ffprobe")
         .args(["-v", "error", "-select_streams", "v:0", "-show_entries"])
-        .args(["stream=height,color_transfer", "-of", "json"])
+        .args([
+            "stream=height,color_transfer:format=duration",
+            "-of",
+            "json",
+        ])
         .arg(path)
         .output()
         .context("ffprobe failed to start")?;
@@ -814,9 +957,15 @@ fn probe_video(path: &Path) -> Result<VideoProbe> {
     let stream = v["streams"].get(0).context("no video stream")?;
     let height = stream["height"].as_i64().context("no height")?;
     let transfer = stream["color_transfer"].as_str().unwrap_or("");
+    let duration_ms = v["format"]["duration"]
+        .as_str()
+        .and_then(|s| s.parse::<f64>().ok())
+        .map(|s| (s * 1000.0).round() as i64)
+        .context("no container duration")?;
     Ok(VideoProbe {
         height,
         hdr: matches!(transfer, "smpte2084" | "arib-std-b67"),
+        duration_ms,
     })
 }
 
