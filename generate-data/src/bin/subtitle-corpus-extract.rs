@@ -101,9 +101,6 @@ fn main() -> Result<()> {
         let Some(code) = course_code_full(&entry.original_language) else {
             continue;
         };
-        if code == "kor" {
-            continue; // no kor training config yet
-        }
         if let Some(w) = &wanted
             && !w.contains(code)
         {
