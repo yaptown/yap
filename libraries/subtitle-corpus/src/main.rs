@@ -1465,7 +1465,7 @@ fn extract_audio_one(movie: &Movie, dir: &std::path::Path) -> AudioOutcome {
                 duration_ms: stamp.duration_ms,
                 subtitle: None,
             };
-            if recorded.matches(&current) && stamp.stream == identity {
+            if recorded.matches(&current) && stamp.stream.same_track(&identity) {
                 return AudioOutcome::Current;
             }
         }

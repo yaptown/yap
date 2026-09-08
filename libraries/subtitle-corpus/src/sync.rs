@@ -359,7 +359,8 @@ mod variety_tests {
 ///
 /// A remux can keep a video's name while reordering or replacing its audio, so
 /// file identity alone is not enough: the stamp records which stream was read
-/// and what it looked like, and any mismatch evicts the extraction.
+/// and what it looked like, and a mismatch evicts the extraction — except the
+/// one rewrite that keeps the recording: see [`Self::same_track`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AudioStreamIdentity {
     /// Position among the file's *audio* streams, as `-map 0:a:N` counts.
@@ -368,6 +369,25 @@ pub struct AudioStreamIdentity {
     pub channels: u32,
     #[serde(default)]
     pub channel_layout: String,
+}
+
+impl AudioStreamIdentity {
+    /// Whether the stream on disk now is the same recording this stamp was
+    /// taken from. The media encoder rewrites films in place — same name,
+    /// same runtime, AV1 video, the original-language track transcoded to
+    /// opus — once per film, and 228 of the plan's 608 films had been through
+    /// it by 2026-09-07. That transcode is the same audio on the same
+    /// timeline, so the extraction, the transcript and every clip verified
+    /// against them stay valid; only the codec name moved. A change of
+    /// channel count, or any codec change that is not to opus, still means
+    /// a different track and evicts. The stamp is left as extraction saw it:
+    /// the transcript's provenance hashes it, and rewriting it would bill a
+    /// re-transcription for nothing.
+    pub fn same_track(&self, now: &Self) -> bool {
+        self.stream_index == now.stream_index
+            && self.channels == now.channels
+            && (self.codec == now.codec || now.codec == "opus")
+    }
 }
 
 pub fn audio_stream_identity(video: &Path, audio_stream: usize) -> Result<AudioStreamIdentity> {

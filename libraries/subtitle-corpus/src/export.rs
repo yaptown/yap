@@ -24,7 +24,7 @@ use unicode_normalization::UnicodeNormalization;
 use crate::clips::{clips_path, read_clips, subtitle_sentences, Clip, Provenance};
 use crate::cues::{load_transcript, parse_cues, repair_latin_homoglyphs, slice_wav_padded};
 use crate::library::{course_dir, read_plan, truncate, Movie};
-use crate::sync::Cue;
+use crate::sync::{AudioStreamIdentity, Cue};
 use crate::transcript::{Kind, Spoken};
 use movie_subtitles::sentences::KeyedSentence;
 
@@ -274,8 +274,8 @@ async fn export_film(
         })
         .collect();
     let transcript = load_transcript(&dir.join("transcript.jsonl"))?;
-    let audio_stream = audio_stream_index(&dir.join("audio.json"), &movie.path)?;
     let video = probe_video(&movie.path)?;
+    let audio_stream = audio_stream_index(&dir.join("audio.json"), &movie.path, &video)?;
     let audio_opus = dir.join("audio.opus");
 
     let empty = std::collections::HashMap::new();
@@ -978,26 +978,41 @@ fn probe_video(path: &Path) -> Result<VideoProbe> {
 /// The audio-relative stream index (`-map 0:a:N`) recorded at extraction,
 /// verified against the file on disk — a remux can reorder audio tracks
 /// under an unchanged filename, and the wrong language track must fail loud.
-fn audio_stream_index(audio_json: &Path, video: &Path) -> Result<u32> {
+/// An in-place transcode of the same track is fine
+/// ([`AudioStreamIdentity::same_track`]).
+fn audio_stream_index(audio_json: &Path, video: &Path, probe: &VideoProbe) -> Result<u32> {
     let v: serde_json::Value = serde_json::from_slice(&std::fs::read(audio_json)?)?;
-    let index = v["stream"]["stream_index"]
-        .as_u64()
-        .context("audio.json has no stream_index")?;
-    let identity = crate::sync::audio_stream_identity(video, index as usize)?;
-    let (codec, channels) = (
-        v["stream"]["codec"].as_str().unwrap_or_default(),
-        v["stream"]["channels"].as_u64().unwrap_or_default() as u32,
-    );
-    if identity.codec != codec || identity.channels != channels {
+    // Same film first: the extraction names the file and its runtime, and a
+    // stream check means nothing against a different cut under the same name
+    // (the refresh evicts such films, but publish must not trust that).
+    let filename = video
+        .file_name()
+        .and_then(|f| f.to_str())
+        .unwrap_or_default();
+    let recorded_ms = v["duration_ms"].as_i64().unwrap_or_default();
+    if v["filename"] != filename || (recorded_ms - probe.duration_ms).abs() > 250 {
         bail!(
-            "audio stream a:{index} is now {}/{}ch, extraction saw {codec}/{channels}ch — \
-             remux changed under {}",
-            identity.codec,
-            identity.channels,
+            "extraction was from {} ({}ms), the film is now {filename} ({}ms)",
+            v["filename"].as_str().unwrap_or_default(),
+            recorded_ms,
+            probe.duration_ms
+        );
+    }
+    let recorded: AudioStreamIdentity =
+        serde_json::from_value(v["stream"].clone()).context("audio.json has no stream")?;
+    let now = crate::sync::audio_stream_identity(video, recorded.stream_index)?;
+    if !recorded.same_track(&now) {
+        bail!(
+            "audio stream a:{} is now {}/{}ch, extraction saw {}/{}ch — remux changed under {}",
+            recorded.stream_index,
+            now.codec,
+            now.channels,
+            recorded.codec,
+            recorded.channels,
             video.display()
         );
     }
-    Ok(index as u32)
+    Ok(recorded.stream_index as u32)
 }
 
 /// EBU R128 integrated loudness + true peak of one span, through the same
