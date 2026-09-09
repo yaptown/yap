@@ -18,7 +18,7 @@ import { interruptPlayback, registerPlayback } from "@/lib/utils";
 import { isSoundEffectPlaying } from "@/lib/sound-effects";
 import { getMovieMetadata } from "@/lib/movie-cache";
 import { TargetLanguageText } from "./TargetLanguageText";
-import { MoviePosterCard } from "./challenges/MoviePosterCard";
+import { Poster } from "./Poster";
 
 interface VideoClipPlayerProps {
   language: Language;
@@ -42,10 +42,11 @@ interface VideoClipPlayerProps {
    */
   renderSentenceCue?: (text: string) => ReactNode;
   /**
-   * When given, the film's poster is shown tucked into the video's corner
-   * (with the usual hover overlay: title, year, Rotten Tomatoes score). The
-   * film is identified by the clip itself, not the challenge — a sentence
-   * can appear in several movies, but the clip was cut from exactly one.
+   * When given, a subtle header over the top of the video names the film:
+   * a small text-free poster, the title and year, and the Rotten Tomatoes
+   * score. The film is identified by the clip itself, not the challenge — a
+   * sentence can appear in several movies, but the clip was cut from
+   * exactly one.
    */
   deck?: Deck;
 }
@@ -273,8 +274,25 @@ export function VideoClipPlayer({
       )}
       </div>
       {movie && deck && (
-        <div className="absolute -top-2 -right-2 w-16 rotate-3 drop-shadow-lg transition-transform hover:rotate-0 hover:scale-[2.25] hover:z-10 origin-top-right">
-          <MoviePosterCard movie={movie} deck={deck} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 rounded-t-lg bg-gradient-to-b from-black/60 via-black/30 to-transparent pb-4">
+          {/* The row rides slightly above the frame: the poster pokes past
+              the top edge and pulls the title up with it. */}
+          <div className="-mt-6 flex items-center gap-2 px-2">
+            <div className="pointer-events-auto -ml-4 w-15 shrink-0 aspect-[2/3] overflow-hidden rounded-md bg-muted shadow-md transition-transform origin-top-left rotate-4 hover:scale-[3] hover:rotate-0 hover:z-10">
+              <Poster movieId={clip.movieId} deck={deck} alt={movie.title} />
+            </div>
+            <span className="min-w-0 truncate text-sm font-medium text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.9)]">
+              {movie.title}
+              {movie.year !== undefined && (
+                <span className="text-white/80"> ({movie.year})</span>
+              )}
+            </span>
+            {movie.rotten_tomatoes_score !== undefined && (
+              <span className="ml-auto shrink-0 pr-1 text-sm text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.9)]">
+                🍅 {movie.rotten_tomatoes_score}%
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>
