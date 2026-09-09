@@ -67,12 +67,17 @@ pub fn get_review_prompts(
     }
 }
 
+/// `has_taken_test` is a tri-state on purpose: `None` means the user's
+/// review history hasn't been confirmed against the server yet, and an
+/// unknown history must never be read as "never took it" — a fresh device
+/// replays zero local events long before the remote history arrives, and
+/// offering the test in that window re-tests users who already took it.
 pub(crate) fn should_offer_placement_test(
     starting_fresh: Option<bool>,
-    has_taken_test: bool,
+    has_taken_test: Option<bool>,
     cards_added: usize,
 ) -> bool {
-    starting_fresh == Some(false) && !has_taken_test && cards_added < 3
+    starting_fresh == Some(false) && has_taken_test == Some(false) && cards_added < 3
 }
 
 #[cfg(test)]
@@ -194,13 +199,16 @@ mod tests {
     #[test]
     fn placement_is_only_offered_to_existing_learners_before_three_added_cards() {
         for (preference, taken, cards, expected) in [
-            (None, false, 0, false),
-            (Some(true), false, 0, false),
-            (Some(false), false, 0, true),
-            (Some(false), false, 2, true),
-            (Some(false), false, 3, false),
-            (Some(false), false, 4, false),
-            (Some(false), true, 0, false),
+            (None, Some(false), 0, false),
+            (Some(true), Some(false), 0, false),
+            (Some(false), Some(false), 0, true),
+            (Some(false), Some(false), 2, true),
+            (Some(false), Some(false), 3, false),
+            (Some(false), Some(false), 4, false),
+            (Some(false), Some(true), 0, false),
+            // Unknown history (server not yet consulted) must never offer
+            // the test, whatever the local event replay looked like.
+            (Some(false), None, 0, false),
         ] {
             assert_eq!(
                 should_offer_placement_test(preference, taken, cards),

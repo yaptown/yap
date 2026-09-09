@@ -106,6 +106,7 @@ dependencies = [
  "tower-http",
  "tsify",
  "tysm",
+ "unicode-normalization",
  "uuid",
  "wasm-bindgen",
 ]

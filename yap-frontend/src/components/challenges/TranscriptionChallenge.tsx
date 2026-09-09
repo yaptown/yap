@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { languageToLangAttr } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { AudioButton } from "../AudioButton";
+import { VideoClipPlayer } from "../VideoClipPlayer";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { CantListenButton } from "../CantListenButton";
 import { AudioErrorBanner } from "../AudioErrorBanner";
@@ -323,7 +324,12 @@ export function TranscriptionChallenge({
       nativeLanguage: nativeLanguage,
     };
 
-    const graded = await autograde_transcription(submission.request, accessToken, course);
+    const graded = await autograde_transcription(
+      submission.request,
+      accessToken,
+      course,
+      challenge.movie_titles,
+    );
     if (generation !== gradingGenerationRef.current) return;
 
     if (graded.autograding_error) {
@@ -347,6 +353,7 @@ export function TranscriptionChallenge({
     accessToken,
     targetLanguage,
     nativeLanguage,
+    challenge.movie_titles,
     bumpBackground,
   ]);
 
@@ -416,6 +423,22 @@ export function TranscriptionChallenge({
   const isAllCorrect = gradingState && "graded" in gradingState
     ? transcription_is_perfect(gradingState.graded.results)
     : false;
+
+  // The sentence with the same words elided as the challenge's blanks, for
+  // the video caption before grading — built from the challenge parts (the
+  // subtitle cue text may differ cosmetically from the pack sentence, so the
+  // parts are the reliable source of what's hidden).
+  const maskedSentenceCaption = useMemo(
+    () =>
+      challenge.parts
+        .map((part) =>
+          part.type === "Provided"
+            ? part.part.word.text + part.part.whitespace
+            : part.parts.map((literal) => "____" + literal.whitespace).join(""),
+        )
+        .join(""),
+    [challenge.parts],
+  );
 
   const renderSentenceWithBlanks = () => {
     const askedToTranscribeParts = challenge.parts.filter(
@@ -565,6 +588,28 @@ export function TranscriptionChallenge({
                 </div>
               </div>
             </div>
+
+            {/* The clip sits under the answer area as secondary media.
+                Watchable before grading — hearing the line is the exercise —
+                but its caption elides the blanked words until grading, so
+                the subtitle can't give the answer away. */}
+            <VideoClipPlayer
+              language={targetLanguage}
+              text={challenge.target_language}
+              accessToken={accessToken}
+              deck={deck}
+              renderSentenceCue={(text) =>
+                gradingState === null ? (
+                  <TargetLanguageText language={targetLanguage}>
+                    {maskedSentenceCaption}
+                  </TargetLanguageText>
+                ) : (
+                  <TargetLanguageText language={targetLanguage}>
+                    {text}
+                  </TargetLanguageText>
+                )
+              }
+            />
 
             {gradingState === null && (
               <ProperNounDefinitions

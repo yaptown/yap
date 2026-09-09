@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "yap-frontend",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "/Volumes/T7/coding/yap/yap-frontend", "dev"],
+      "port": 5173
+    }
+  ]
+}

@@ -1620,6 +1620,7 @@ impl YapMcp {
             challenge.literal_gram_indices.clone(),
             autograde::GramDefinitions(challenge.phrase_definitions.clone()),
             challenge.primary_expression.clone(),
+            autograde::MovieTitles(challenge.movie_titles.clone()),
         )
         .await;
 

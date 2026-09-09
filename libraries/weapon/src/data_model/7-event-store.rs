@@ -229,6 +229,25 @@ impl<
 
         stream.mark_loaded(modifier)
     }
+
+    /// Whether this stream has completed at least one successful download
+    /// from the remote this session. Distinguishes "the stream really has no
+    /// events" from "we just haven't fetched them yet".
+    pub fn synced_at_least_once(&self, stream: &Stream) -> bool {
+        self.streams
+            .get(stream)
+            .map(|s| s.synced_at_least_once())
+            .unwrap_or(false)
+    }
+
+    /// returns true if the `synced` marker was changed
+    pub fn mark_synced(&mut self, stream: Stream, modifier: Option<ListenerKey>) -> bool {
+        let Some(stream) = self.streams.get_mut(&stream) else {
+            return false;
+        };
+
+        stream.mark_synced(modifier)
+    }
 }
 
 impl<

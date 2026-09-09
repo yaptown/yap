@@ -1488,6 +1488,25 @@ pub mod autograde {
         Forgot,
     }
 
+    /// Where a challenge sentence comes from, offered to the grader as
+    /// disambiguation help: the film's title and the dialogue lines around
+    /// the sentence (from the movie clip's subtitles, when one exists).
+    /// Purely advisory — the grader must never grade the context itself.
+    #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+    pub struct GraderContext {
+        pub movie_title: Option<String>,
+        pub dialogue_before: Vec<String>,
+        pub dialogue_after: Vec<String>,
+    }
+
+    impl GraderContext {
+        pub fn is_empty(&self) -> bool {
+            self.movie_title.is_none()
+                && self.dialogue_before.is_empty()
+                && self.dialogue_after.is_empty()
+        }
+    }
+
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     pub struct AutoGradeTranslationRequest {
         pub course: Course,
@@ -1497,6 +1516,8 @@ pub mod autograde {
         pub phrases: Vec<Gram<String>>,
         /// The gram that motivated this challenge — the LLM must always grade it.
         pub primary_expression: Gram<String>,
+        #[serde(default)]
+        pub context: GraderContext,
     }
 
     /// Response from autograde.
@@ -1518,6 +1539,8 @@ pub mod autograde {
     pub struct AutoGradeTranscriptionRequest {
         pub course: Course,
         pub submission: Vec<transcription_challenge::PartSubmitted>,
+        #[serde(default)]
+        pub context: GraderContext,
     }
 
     /// Wrapper for passing gram grades across the WASM boundary.
@@ -1530,6 +1553,12 @@ pub mod autograde {
     #[bridgerton::bridge(transparent)]
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     pub struct GramDefinitions(pub Vec<Option<GramDefinition>>);
+
+    /// Wrapper for passing a challenge's `(imdb id, title)` pairs across the
+    /// WASM boundary (bare tuples can't cross it as parameters).
+    #[bridgerton::bridge(transparent)]
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    pub struct MovieTitles(pub Vec<(String, String)>);
 }
 
 pub mod transcription_challenge {
@@ -4653,5 +4682,52 @@ mod subtitle_script_tests {
             .unwrap_err();
         // Fails on the first missing Thai sanity word.
         assert!(err.contains("missing required word"), "{err}");
+    }
+}
+
+#[cfg(test)]
+mod autograde_request_compat_tests {
+    use super::autograde::*;
+    use super::*;
+
+    /// A request serialized by a client that predates `GraderContext` (no
+    /// `context` field) must still deserialize — the field defaults to empty.
+    #[test]
+    fn autograde_requests_accept_missing_context() {
+        let course = Course {
+            target_language: Language::French,
+            native_language: Language::English,
+        };
+        let translation = AutoGradeTranslationRequest {
+            course,
+            challenge_sentence: "Vous y tenez ?".to_string(),
+            user_sentence: "Do you like it?".to_string(),
+            literals: vec![],
+            phrases: vec![],
+            primary_expression: Gram(vec![]),
+            context: Default::default(),
+        };
+        let mut old_json = serde_json::to_value(&translation).unwrap();
+        old_json.as_object_mut().unwrap().remove("context");
+        let parsed: AutoGradeTranslationRequest = serde_json::from_value(old_json).unwrap();
+        assert!(parsed.context.is_empty());
+
+        let transcription = AutoGradeTranscriptionRequest {
+            course,
+            submission: vec![],
+            context: GraderContext {
+                movie_title: Some("Delicatessen".to_string()),
+                dialogue_before: vec![],
+                dialogue_after: vec![],
+            },
+        };
+        let mut old_json = serde_json::to_value(&transcription).unwrap();
+        old_json.as_object_mut().unwrap().remove("context");
+        let parsed: AutoGradeTranscriptionRequest = serde_json::from_value(old_json).unwrap();
+        assert!(parsed.context.is_empty());
+        // And a round trip with context keeps it.
+        let round: AutoGradeTranscriptionRequest =
+            serde_json::from_value(serde_json::to_value(&transcription).unwrap()).unwrap();
+        assert_eq!(round.context.movie_title.as_deref(), Some("Delicatessen"));
     }
 }

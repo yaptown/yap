@@ -2,6 +2,7 @@
 
 mod audio;
 mod challenge;
+mod clips;
 mod deck_event;
 pub mod deck_selection;
 pub mod dictionary;
@@ -229,6 +230,19 @@ impl Weapon {
             log::warn!("Failed to seed audio cache mirror: {e:?}");
         }
 
+        // Same idea for clip manifests: load last session's "which sentences
+        // have movie clips" knowledge from OPFS into the synchronous mirror,
+        // so the first challenge selection can already prioritize clip
+        // sentences. This reads a few small local JSON files — it does not
+        // touch the network (the frontend refreshes manifests in the
+        // background separately) and must never block the first challenge on
+        // a fetch. Wasm-only for the same reason as above.
+        #[cfg(target_arch = "wasm32")]
+        match clips::ClipCache::new().await {
+            Ok(cache) => cache.seed_manifests().await,
+            Err(e) => log::warn!("Failed to seed clip manifests: {e:?}"),
+        }
+
         Ok(Self {
             store: RefCell::new(events),
             user_id,
@@ -270,6 +284,20 @@ impl Weapon {
                 "deck_selection".to_string(),
                 None,
             );
+    }
+
+    /// Whether the user's review history can be treated as complete: either
+    /// they're anonymous (there is no server copy — local is the whole
+    /// truth) or the reviews stream has finished at least one download from
+    /// Supabase this session. Until this is true, "no placement test event
+    /// locally" means *unknown*, not "never took it" — the placement test
+    /// must not be offered off an unconfirmed history.
+    pub fn reviews_history_known(&self) -> bool {
+        self.user_id.is_none()
+            || self
+                .store
+                .borrow()
+                .synced_at_least_once(&"reviews".to_string())
     }
 
     pub fn get_stream_num_events(&self, stream_id: String) -> Option<usize> {
@@ -2689,6 +2717,13 @@ impl Deck {
                 return;
             }
         };
+        let mut clip_cache = match clips::ClipCache::new().await {
+            Ok(cache) => cache,
+            Err(e) => {
+                log::error!("Failed to create clip cache: {e:?}");
+                return;
+            }
+        };
         let access_token = access_token.as_ref();
 
         const SIMULATION_CHALLENGES: usize = 30;
@@ -2697,6 +2732,7 @@ impl Deck {
         // after this many rather than spinning forever in the background.
         const MAX_EMPTY_DAYS: usize = 14;
         let mut requested_filenames = BTreeSet::new();
+        let mut requested_clip_ids = BTreeSet::new();
         // Simulate only what the app will actually show — a challenge the
         // user never sees is a wasted fetch here and, worse, its absence from
         // `requested_filenames` gets a genuinely upcoming clip cleaned up.
@@ -2740,6 +2776,21 @@ impl Deck {
                     requested_filenames.insert(cache_filename);
                 }
 
+                // Pre-fetch movie clips for sentences the manifest lists,
+                // so cards open with video ready.
+                for (language, text) in challenge.clip_requests() {
+                    if abort_signal.as_ref().is_some_and(AbortSignal::aborted) {
+                        return;
+                    }
+                    let Some(row) = clips::clip_for_sentence(language, &text) else {
+                        continue;
+                    };
+                    let _ = clip_cache
+                        .fetch_and_cache(language, &text, access_token)
+                        .await;
+                    requested_clip_ids.insert(clips::clip_cache_key(language, &row.clip_id));
+                }
+
                 if challenges_fetched >= SIMULATION_CHALLENGES {
                     break 'outer;
                 }
@@ -2766,6 +2817,9 @@ impl Deck {
         // Clean up any files that weren't in the requested set
         if let Err(e) = audio_cache.cleanup_except(requested_filenames).await {
             log::error!("Failed to clean up audio cache: {e:?}");
+        }
+        if let Err(e) = clip_cache.cleanup_except(requested_clip_ids).await {
+            log::error!("Failed to clean up clip cache: {e:?}");
         }
 
         // Clean up expired temp audio files (older than 24 hours)
@@ -3506,10 +3560,27 @@ impl Deck {
         }
     }
 
-    pub fn should_offer_placement_test(&self, starting_fresh: Option<bool>) -> bool {
+    /// `history_known` says whether this deck's event replay can be trusted
+    /// as the user's complete history — i.e. the reviews stream has been
+    /// confirmed against the server (or there is no server copy, for an
+    /// anonymous user). See `Weapon::reviews_history_known`. A locally
+    /// visible completed test is proof by itself; the absence of one is only
+    /// proof once the history is known.
+    pub fn should_offer_placement_test(
+        &self,
+        starting_fresh: Option<bool>,
+        history_known: bool,
+    ) -> bool {
+        let has_taken_test = if self.has_taken_placement_test() {
+            Some(true)
+        } else if history_known {
+            Some(false)
+        } else {
+            None
+        };
         disclosure::should_offer_placement_test(
             starting_fresh,
-            self.has_taken_placement_test(),
+            has_taken_test,
             self.num_cards_added(),
         )
     }
@@ -3874,7 +3945,11 @@ impl Deck {
         NextCardsIterator::new(self, allowed_cards, sentence_list, limit)
     }
 
-    /// Pick the least-reviewed comprehensible sentence matching the filter.
+    /// Pick a comprehensible sentence matching the filter: sentences with a
+    /// movie clip beat sentences without one, and within each group the
+    /// least-reviewed wins. When no clip manifest has loaded yet,
+    /// `sentence_has_clip` is uniformly false and this degrades to plain
+    /// least-reviewed — clip knowledge improves selection but never gates it.
     fn pick_comprehensible_sentence(
         &self,
         required_gram: Option<&SpurGram>,
@@ -3882,9 +3957,16 @@ impl Deck {
         sentences_reviewed: &BTreeMap<Spur, u32>,
         language_pack: &LanguagePack,
     ) -> Option<Spur> {
+        let language = self.context.course.target_language;
         let mut possible_sentences = language_pack
             .comprehensible_sentences(required_gram, |gram| comprehensible_grams.contains(gram));
-        possible_sentences.sort_by_key(|sentence| *sentences_reviewed.get(sentence).unwrap_or(&0));
+        possible_sentences.sort_by_key(|sentence| {
+            let text = language_pack.string_rodeo.resolve(sentence);
+            (
+                !clips::sentence_has_clip(language, text),
+                *sentences_reviewed.get(sentence).unwrap_or(&0),
+            )
+        });
         possible_sentences.first().copied()
     }
 
@@ -4306,6 +4388,20 @@ impl<G> Challenge<G> {
             }
         }
     }
+
+    /// The `(language, sentence text)` pairs whose movie clips this challenge
+    /// can show — the sentence challenge types only. Used by the prefetcher.
+    fn clip_requests(&self) -> Vec<(Language, String)> {
+        match self {
+            Challenge::FlashCardReview { .. } | Challenge::PronunciationChallenge { .. } => vec![],
+            Challenge::TranslateComprehensibleSentence(c) => {
+                vec![(c.audio.request.language, c.target_language.clone())]
+            }
+            Challenge::TranscribeComprehensibleSentence(c) => {
+                vec![(c.audio.request.language, c.target_language.clone())]
+            }
+        }
+    }
 }
 
 #[bridge(transparent)]
@@ -4581,6 +4677,109 @@ pub async fn get_temp_audio(
     Ok(fetched.into())
 }
 
+/// A sentence's movie clip: lo.mp4 bytes plus the timing metadata the video
+/// player uses (total length and the critical window containing the sentence
+/// itself, for picking a poster frame).
+#[bridgerton::bridge(opaque)]
+pub struct ClipResult {
+    clip: clips::FetchedClip,
+}
+
+#[bridgerton::bridge]
+impl ClipResult {
+    #[bridge(getter)]
+    pub fn bytes(&self) -> Vec<u8> {
+        self.clip.bytes.clone()
+    }
+
+    #[bridge(getter)]
+    pub fn duration_ms(&self) -> u64 {
+        self.clip.duration_ms
+    }
+
+    #[bridge(getter)]
+    pub fn critical_start_ms(&self) -> u64 {
+        self.clip.critical.start_ms
+    }
+
+    #[bridge(getter)]
+    pub fn critical_end_ms(&self) -> u64 {
+        self.clip.critical.end_ms
+    }
+
+    /// Time-synced subtitle cues for the video (clip-relative ms). Empty
+    /// when unavailable — captions are an enhancement, not a requirement.
+    #[bridge(getter)]
+    pub fn subtitles(&self) -> Vec<clips::ClipSubtitleCue> {
+        self.clip.subtitles.clone()
+    }
+
+    /// IMDb id of the film this clip was cut from (the first segment of the
+    /// clip id), for showing the movie's poster next to the video.
+    #[bridge(getter)]
+    pub fn movie_id(&self) -> String {
+        self.clip
+            .clip_id
+            .split('-')
+            .next()
+            .unwrap_or_default()
+            .to_string()
+    }
+}
+
+/// Fetch the latest clip manifest for a language from the AI backend and
+/// persist it, so challenge selection knows which sentences have movie
+/// clips. The frontend calls this in the background on load; until it (or
+/// the OPFS-cached manifest from a previous session) lands, the app simply
+/// behaves as if no sentences have clips — nothing blocks on it.
+#[bridgerton::bridge]
+pub async fn refresh_clip_manifest(
+    language: Language,
+    access_token: Option<String>,
+) -> Result<(), bridgerton::Error> {
+    let cache = clips::ClipCache::new().await?;
+    cache
+        .refresh_manifest(language, access_token.as_ref())
+        .await
+}
+
+/// Bumped whenever a clip manifest loads or refreshes. The frontend polls
+/// this (alongside the audio cache version) to re-run challenge selection
+/// once clip knowledge arrives.
+#[bridgerton::bridge]
+pub fn get_clip_manifest_version() -> u32 {
+    clips::clip_manifest_version()
+}
+
+/// The movie clip for a sentence, if the loaded manifest lists one — from
+/// the OPFS cache when possible, otherwise via the AI backend. `None` means
+/// the sentence has no clip (a purely local answer, so calling this freely
+/// is cheap).
+#[bridgerton::bridge]
+pub async fn get_clip(
+    language: Language,
+    text: String,
+    access_token: Option<String>,
+) -> Result<Option<ClipResult>, bridgerton::Error> {
+    let cache = clips::ClipCache::new().await?;
+    let clip = cache
+        .fetch_and_cache(language, &text, access_token.as_ref())
+        .await?;
+    Ok(clip.map(|clip| ClipResult { clip }))
+}
+
+/// Forget everything cached for this sentence's clip, so the next `get_clip`
+/// re-asks the server. Called when the video element rejects cached bytes.
+#[bridgerton::bridge]
+pub async fn invalidate_clip_cache(
+    language: Language,
+    text: String,
+) -> Result<(), bridgerton::Error> {
+    let cache = clips::ClipCache::new().await?;
+    cache.invalidate(language, &text).await;
+    Ok(())
+}
+
 #[bridgerton::bridge]
 pub async fn invalidate_audio_cache(request: AudioRequest) -> Result<(), bridgerton::Error> {
     let audio_cache = audio::AudioCache::new().await?;
@@ -4657,6 +4856,7 @@ pub async fn autograde_translation(
     literal_gram_indices: Vec<usize>,
     phrase_definitions: autograde::GramDefinitions,
     primary_expression: Gram<String>,
+    movie_titles: autograde::MovieTitles,
 ) -> autograde::AutoGradeTranslationResponse {
     let gram_definitions = gram_definitions.0;
     let phrase_definitions = phrase_definitions.0;
@@ -4671,6 +4871,11 @@ pub async fn autograde_translation(
         return response;
     }
 
+    // Where the sentence comes from — the film and surrounding dialogue, in
+    // case it helps the grader disambiguate meaning or register.
+    let context =
+        clips::grader_context(course.target_language, &challenge_sentence, movie_titles.0).await;
+
     let request = autograde::AutoGradeTranslationRequest {
         challenge_sentence,
         user_sentence: user_sentence.clone(),
@@ -4678,6 +4883,7 @@ pub async fn autograde_translation(
         phrases: phrases.clone(),
         course,
         primary_expression,
+        context,
     };
 
     let llm_result = async {
@@ -4845,9 +5051,12 @@ pub async fn autograde_transcription(
     submission: Vec<transcription_challenge::PartSubmitted>,
     access_token: Option<String>,
     course: Course,
+    movie_titles: autograde::MovieTitles,
 ) -> transcription_challenge::Grade {
     let _autograde_error =
-        match autograde_transcription_llm(submission.clone(), access_token, course).await {
+        match autograde_transcription_llm(submission.clone(), access_token, course, movie_titles)
+            .await
+        {
             Ok(grade) => return grade,
             Err(e) => Some(e),
         };
@@ -4933,6 +5142,7 @@ pub async fn autograde_transcription_llm(
     submission: Vec<transcription_challenge::PartSubmitted>,
     access_token: Option<String>,
     course: Course,
+    movie_titles: autograde::MovieTitles,
 ) -> Result<transcription_challenge::Grade, bridgerton::Error> {
     let all_correct = submission.iter().all(|part| match part {
         transcription_challenge::PartSubmitted::AskedToTranscribe { parts, submission } => {
@@ -4986,7 +5196,26 @@ pub async fn autograde_transcription_llm(
         });
     }
 
-    let request = autograde::AutoGradeTranscriptionRequest { submission, course };
+    // Reconstruct the full sentence to key the clip lookup — the pack
+    // sentence is exactly the concatenation of the parts.
+    let full_sentence: String = submission
+        .iter()
+        .flat_map(|part| match part {
+            transcription_challenge::PartSubmitted::AskedToTranscribe { parts, .. } => {
+                parts.iter().collect::<Vec<_>>()
+            }
+            transcription_challenge::PartSubmitted::Provided { part } => vec![part],
+        })
+        .map(|literal| format!("{}{}", literal.word.text, literal.whitespace))
+        .collect();
+    let context =
+        clips::grader_context(course.target_language, full_sentence.trim(), movie_titles.0).await;
+
+    let request = autograde::AutoGradeTranscriptionRequest {
+        submission,
+        course,
+        context,
+    };
 
     let response = hit_ai_server(
         fetch_happen::Method::POST,
@@ -5875,23 +6104,11 @@ mod tests {
         );
     }
 
-    /// Fetch a user's events from Supabase and print their deck state + add card options.
-    /// The language pair is auto-detected from deck_selection events.
-    ///
-    /// Usage:
-    ///   INSPECT_EMAIL=user@example.com cargo test -p yap-frontend-rs inspect_user_deck -- --nocapture
-    ///
-    /// Requires SUPABASE_SERVICE_ROLE_KEY env var.
-    #[tokio::test]
-    #[ignore]
-    async fn inspect_user_deck() {
-        let email = match std::env::var("INSPECT_EMAIL") {
-            Ok(e) => e,
-            Err(_) => {
-                println!("Skipping: set INSPECT_EMAIL to run this test");
-                return;
-            }
-        };
+    /// Fetch a user's events from Supabase, replay them against their
+    /// course's language pack, and return the reconstructed deck. Shared by
+    /// the `inspect_user_*` tests. The language pair is auto-detected from
+    /// deck_selection events. Requires SUPABASE_SERVICE_ROLE_KEY env var.
+    async fn fetch_deck_for_inspection(email: &str) -> Deck {
         let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
             .expect("SUPABASE_SERVICE_ROLE_KEY env var required");
         let supabase_url = std::env::var("SUPABASE_URL")
@@ -5920,7 +6137,7 @@ mod tests {
             if users.is_empty() {
                 break;
             }
-            if let Some(u) = users.iter().find(|u| u["email"].as_str() == Some(&email)) {
+            if let Some(u) = users.iter().find(|u| u["email"].as_str() == Some(email)) {
                 user_id = Some(u["id"].as_str().unwrap().to_string());
                 break;
             }
@@ -6053,7 +6270,27 @@ mod tests {
             .get::<EventType<DeckEvent>>("reviews".to_string())
             .expect("reviews stream should exist");
 
-        let deck: Deck = stream.state(initial_state, &context);
+        stream.state(initial_state, &context)
+    }
+
+    /// Fetch a user's events from Supabase and print their deck state + add card options.
+    /// The language pair is auto-detected from deck_selection events.
+    ///
+    /// Usage:
+    ///   INSPECT_EMAIL=user@example.com cargo test -p yap-frontend-rs inspect_user_deck -- --nocapture
+    ///
+    /// Requires SUPABASE_SERVICE_ROLE_KEY env var.
+    #[tokio::test]
+    #[ignore]
+    async fn inspect_user_deck() {
+        let email = match std::env::var("INSPECT_EMAIL") {
+            Ok(e) => e,
+            Err(_) => {
+                println!("Skipping: set INSPECT_EMAIL to run this test");
+                return;
+            }
+        };
+        let deck = fetch_deck_for_inspection(&email).await;
 
         // 6. Print report
         println!("\n=== Deck State ===");
@@ -6210,6 +6447,115 @@ mod tests {
                     report(&term.gram, "low-conf-multiword");
                 }
             }
+        }
+    }
+
+    /// Fetch a user's deck, load the live clip manifest for their course,
+    /// and simulate upcoming challenges to see how soon (and how often) the
+    /// clip-prioritized sentence selection would put a movie clip on screen.
+    ///
+    /// Usage:
+    ///   INSPECT_EMAIL=user@example.com cargo test -p yap-frontend-rs inspect_user_clip_flow -- --ignored --nocapture
+    #[tokio::test]
+    #[ignore]
+    async fn inspect_user_clip_flow() {
+        use unicode_normalization::UnicodeNormalization;
+
+        let email = match std::env::var("INSPECT_EMAIL") {
+            Ok(e) => e,
+            Err(_) => {
+                println!("Skipping: set INSPECT_EMAIL to run this test");
+                return;
+            }
+        };
+        let deck = fetch_deck_for_inspection(&email).await;
+        let target = deck.context.course.target_language;
+
+        // Load the published clip index straight from the bucket (same rows
+        // the backend's /clip/{lang}/sentences serves) into the selection
+        // mirror, exactly as a refreshed manifest would be.
+        let url = format!("https://clips.yap.town/{}/index.jsonl", target.code());
+        let jsonl = reqwest::get(&url).await.unwrap().text().await.unwrap();
+        let rows: Vec<clips::ClipRow> = jsonl
+            .lines()
+            .filter(|l| !l.trim().is_empty())
+            .filter_map(|l| serde_json::from_str::<serde_json::Value>(l).ok())
+            .filter(|row| row["course_sentence"] == serde_json::Value::Bool(true))
+            .filter_map(|row| serde_json::from_value::<clips::ClipRow>(row).ok())
+            .map(|mut row| {
+                row.sentence = row.sentence.nfc().collect();
+                row
+            })
+            .collect();
+        println!(
+            "Clip manifest for {target}: {} course sentences with clips",
+            rows.len()
+        );
+        clips::publish_manifest(target, rows);
+
+        // Simulate the app-visible challenge sequence and report where clips
+        // land. The first day is what the user sees when they next open the
+        // app.
+        let mut simulation = deck
+            .simulate_usage(chrono::Utc::now())
+            .with_app_visible_challenges(vec![]);
+        let mut overall_index = 0usize;
+        let mut sentence_index = 0usize;
+        let mut first_clip_by_kind: BTreeMap<&str, (usize, usize, usize, String)> = BTreeMap::new();
+        for day in 1..=7 {
+            let mut day_iter = simulation.next_day();
+            let (mut flashcards, mut pronunciation, mut with_clip, mut without_clip) = (0, 0, 0, 0);
+            for challenge in day_iter.by_ref() {
+                overall_index += 1;
+                let sentence = match &challenge {
+                    Challenge::TranslateComprehensibleSentence(c) => {
+                        Some(("translation", &c.target_language))
+                    }
+                    Challenge::TranscribeComprehensibleSentence(c) => {
+                        Some(("transcription", &c.target_language))
+                    }
+                    Challenge::FlashCardReview { .. } => {
+                        flashcards += 1;
+                        None
+                    }
+                    Challenge::PronunciationChallenge { .. } => {
+                        pronunciation += 1;
+                        None
+                    }
+                };
+                if let Some((kind, sentence)) = sentence {
+                    sentence_index += 1;
+                    if clips::sentence_has_clip(target, sentence) {
+                        with_clip += 1;
+                        first_clip_by_kind.entry(kind).or_insert((
+                            day,
+                            overall_index,
+                            sentence_index,
+                            sentence.clone(),
+                        ));
+                        println!(
+                            "  clip {kind} on day {day}: challenge #{overall_index}, {sentence:?}"
+                        );
+                    } else {
+                        without_clip += 1;
+                    }
+                }
+            }
+            println!(
+                "Day {day}: {flashcards} flashcards, {pronunciation} pronunciation, \
+                 {with_clip} sentence challenges WITH clip, {without_clip} without"
+            );
+            simulation = day_iter.finish_day();
+        }
+
+        if first_clip_by_kind.is_empty() {
+            println!("\nNo clip-backed sentence challenge in 7 simulated days");
+        }
+        for (kind, (day, overall, sentence, text)) in first_clip_by_kind {
+            println!(
+                "\nFirst clip-backed {kind}: day {day}, challenge #{overall} overall, \
+                 sentence challenge #{sentence}: {text:?}"
+            );
         }
     }
 
@@ -6811,6 +7157,7 @@ mod tests {
                 literals,
                 phrases,
                 primary_expression,
+                context: Default::default(),
             };
             requests.push((case, request));
         }

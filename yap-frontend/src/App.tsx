@@ -36,6 +36,8 @@ import {
   type Rating,
   get_pronunciation_connector,
   get_audio_cache_version,
+  get_clip_manifest_version,
+  refresh_clip_manifest,
   get_flashcard_disclosure,
   get_review_prompts,
   get_challenge_restrictions,
@@ -448,7 +450,7 @@ function ReviewPage() {
         ))
         .with(
           { type: "deck", deck: P.not(P.nullish) },
-          ({ deck, targetLanguage, nativeLanguage, startingFresh }) => {
+          ({ deck, targetLanguage, nativeLanguage, startingFresh, historyKnown }) => {
             const totalReviewsCompleted = deck.get_total_reviews();
             const autoplayed = lastAutoPlayReviewCount == totalReviewsCompleted;
             const setAutoplayed = () =>
@@ -483,6 +485,7 @@ function ReviewPage() {
                     nativeLanguage={nativeLanguage}
                     moviesWithMetadata={moviesWithMetadata}
                     startingFresh={startingFresh}
+                    historyKnown={historyKnown}
                     autoplayed={autoplayed}
                     setAutoplayed={setAutoplayed}
                   />
@@ -769,6 +772,7 @@ interface ReviewProps {
   nativeLanguage: Language;
   moviesWithMetadata: MovieWithMetadata[];
   startingFresh: boolean | undefined;
+  historyKnown: boolean;
   autoplayed: boolean;
   setAutoplayed: () => void;
 }
@@ -798,6 +802,7 @@ function Review({
   nativeLanguage,
   moviesWithMetadata,
   startingFresh,
+  historyKnown,
   autoplayed,
   setAutoplayed,
 }: ReviewProps) {
@@ -889,6 +894,19 @@ function Review({
   const [audioCacheVersion, setAudioCacheVersion] = useState(0);
   useInterval(() => setAudioCacheVersion(get_audio_cache_version()), 2000);
 
+  // Sentence selection prioritizes sentences with movie clips, which it
+  // learns from the per-language clip manifest: the OPFS-cached copy is
+  // seeded at boot, and this refreshes it from the server in the background.
+  // Neither blocks anything — until a manifest lands, selection just doesn't
+  // prioritize. The version poll re-runs selection once one does.
+  const [clipManifestVersion, setClipManifestVersion] = useState(0);
+  useInterval(() => setClipManifestVersion(get_clip_manifest_version()), 2000);
+  useEffect(() => {
+    refresh_clip_manifest(targetLanguage, accessToken).catch((error) => {
+      console.warn("Failed to refresh clip manifest:", error);
+    });
+  }, [targetLanguage, accessToken]);
+
   const { reviewInfo, lockupOffer } = useMemo(() => {
     const now = Date.now();
     return {
@@ -897,20 +915,46 @@ function Review({
       // most-due cards active and set the rest aside
       lockupOffer: deck.get_lockup_offer(bannedChallengeTypes, now),
     };
-    // cardsBecameDue and audioCacheVersion are intentionally included to
-    // trigger recalculation when cards become due / audio finishes caching
-  }, [deck, bannedChallengeTypes, cardsBecameDue, audioCacheVersion]);
+    // cardsBecameDue, audioCacheVersion, and clipManifestVersion are
+    // intentionally included to trigger recalculation when cards become due,
+    // audio finishes caching, or clip knowledge arrives
+  }, [deck, bannedChallengeTypes, cardsBecameDue, audioCacheVersion, clipManifestVersion]);
 
   useInterval(
     () => setCardsBecameDue((cardsBecameDue) => cardsBecameDue + 1),
     60000,
   );
 
+  // A challenge, once on screen, stays until the deck itself changes.
+  // reviewInfo recomputes underneath for many reasons (a clip manifest
+  // arriving, cards becoming due, prefetched audio landing) and can pick a
+  // different sentence for the same card — swapping it mid-answer would
+  // strand the user's typed input (and their grade) against the wrong
+  // sentence. The deck object is rebuilt exactly when events land
+  // (completing a review, accepting a lockup offer, a remote sync), which
+  // are the moments a re-pick is legitimate; the user changing challenge
+  // restrictions mid-challenge (the can't-listen/can't-speak buttons) must
+  // also swap immediately. A held "no challenge" never sticks, so newly due
+  // cards still surface from idle.
+  const heldChallenge = useRef<{
+    deck: Deck;
+    banned: ChallengeRequirements[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    challenge: Challenge<any>;
+  } | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentChallenge: Challenge<any> | undefined = useMemo(
-    () => reviewInfo.get_next_challenge(deck),
-    [reviewInfo, deck],
-  );
+  const currentChallenge: Challenge<any> | undefined = useMemo(() => {
+    const held = heldChallenge.current;
+    if (held && held.deck === deck && held.banned === bannedChallengeTypes) {
+      return held.challenge;
+    }
+    const next = reviewInfo.get_next_challenge(deck);
+    heldChallenge.current =
+      next === undefined
+        ? null
+        : { deck, banned: bannedChallengeTypes, challenge: next };
+    return next;
+  }, [reviewInfo, deck, bannedChallengeTypes]);
 
   useEffect(() => {
     if (currentChallenge) return;
@@ -1114,7 +1158,10 @@ function Review({
     },
   );
 
-  const shouldShowPlacementTest = deck.should_offer_placement_test(startingFresh);
+  const shouldShowPlacementTest = deck.should_offer_placement_test(
+    startingFresh,
+    historyKnown,
+  );
 
   return (
     <>
@@ -1486,6 +1533,7 @@ export function useDeck():
       targetLanguage: Language;
       deck: Deck | null;
       startingFresh: boolean | undefined;
+      historyKnown: boolean;
     }
   | { type: "noLanguageSelected" }
   | { type: "error"; message: string; retry: () => void; retryCount: number }
@@ -1537,6 +1585,19 @@ export function useDeck():
   );
 
   const numEvents = useSyncExternalStore(subscribe, getSnapshot);
+
+  // Whether the reviews stream has been confirmed against the server (or
+  // the user is anonymous and local is the whole truth). The placement-test
+  // decision reads absence-of-an-event as "never took it", which is only
+  // sound once this is true — before then, a fresh device's empty local
+  // store would re-offer the test to someone who already took it. Shares
+  // the stream subscription: completing a sync marks the stream dirty, so
+  // the flip re-renders even when zero events came down.
+  const historyKnownSnapshot = useCallback(
+    () => weapon.reviews_history_known(),
+    [weapon],
+  );
+  const historyKnown = useSyncExternalStore(subscribe, historyKnownSnapshot);
 
   const retry = useCallback(() => {
     setRetryCount((count) => count + 1);
@@ -1706,7 +1767,8 @@ export function useDeck():
       if (!languagePackResult.full) {
         const startingFresh = deck_selection.onboardingSelections?.startingFresh;
         const wouldShowPlacementTest =
-          deck !== null && deck.should_offer_placement_test(startingFresh);
+          deck !== null &&
+          deck.should_offer_placement_test(startingFresh, historyKnown);
         if (!wouldShowPlacementTest) return null;
       }
 
@@ -1714,6 +1776,7 @@ export function useDeck():
         type: "deck",
         courseKey,
         startingFresh: deck_selection.onboardingSelections?.startingFresh,
+        historyKnown,
         nativeLanguage: course.nativeLanguage,
         targetLanguage: course.targetLanguage,
         deck,
@@ -1724,6 +1787,7 @@ export function useDeck():
         targetLanguage: Language;
         deck: Deck | null;
         startingFresh: boolean | undefined;
+        historyKnown: boolean;
       };
     } catch (error) {
       const errorMessage = getErrorMessage(error);
@@ -1758,6 +1822,7 @@ export function useDeck():
   }, [
     weapon,
     numEvents,
+    historyKnown,
     courseKey,
     languagePackResult,
     retryCount,

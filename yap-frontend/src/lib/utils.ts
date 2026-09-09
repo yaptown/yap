@@ -11,7 +11,25 @@ import type { PlaybackOptions } from "./pure";
 export type { VoiceActorInfo };
 export * from "./pure";
 
+// One media element plays at a time, app-wide. TTS playback and the movie
+// clip player both register their interrupt here; starting either one stops
+// whatever else was playing.
 let interruptCurrent: (() => void) | undefined;
+
+/// Stop whatever is currently playing (TTS audio or a movie clip).
+export function interruptPlayback(): void {
+  interruptCurrent?.();
+}
+
+/// Register the interrupt for a playback that is about to start. Returns an
+/// unregister function; call it when the playback ends on its own so a stale
+/// interrupt can't fire later.
+export function registerPlayback(interrupt: () => void): () => void {
+  interruptCurrent = interrupt;
+  return () => {
+    if (interruptCurrent === interrupt) interruptCurrent = undefined;
+  };
+}
 
 export async function playAudio(
   audioRequest: AudioRequest,
@@ -21,7 +39,7 @@ export async function playAudio(
 ): Promise<void> {
   const abortError = () => new DOMException("Aborted", "AbortError");
   if (signal?.aborted) throw abortError();
-  interruptCurrent?.();
+  interruptPlayback();
 
   return new Promise((resolve, reject) => {
     let audio: HTMLAudioElement | undefined;
@@ -31,7 +49,7 @@ export async function playAudio(
     const finish = (error?: unknown) => {
       if (settled) return;
       settled = true;
-      if (interruptCurrent === interrupt) interruptCurrent = undefined;
+      unregister();
       signal?.removeEventListener("abort", interrupt);
       if (audio) {
         // Clearing src can fire an error; detach handlers before teardown.
@@ -50,7 +68,7 @@ export async function playAudio(
     };
 
     const interrupt = () => finish(abortError());
-    interruptCurrent = interrupt;
+    const unregister = registerPlayback(interrupt);
     signal?.addEventListener("abort", interrupt, { once: true });
 
     const playbackFailed = (error: unknown) => {

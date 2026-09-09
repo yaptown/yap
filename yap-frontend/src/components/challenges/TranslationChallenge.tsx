@@ -60,6 +60,7 @@ import {
 } from "framer-motion";
 import { Check, X, MoreVertical } from "lucide-react";
 import { AudioButton } from "../AudioButton";
+import { VideoClipPlayer } from "../VideoClipPlayer";
 import { ReportIssueModal } from "./ReportIssueModal";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { useBackground } from "../background-context";
@@ -560,6 +561,9 @@ export function TranslationChallenge({
   );
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState<number>(-1);
   const [showReportModal, setShowReportModal] = useState(false);
+  // Whether a movie clip exists for this sentence. Decides who owns
+  // autoplay: the video when available, the TTS AudioButton otherwise.
+  const [hasClip, setHasClip] = useState(false);
   const [tappedWords, setTappedWords] = useState<Set<number>>(new Set());
   const STORAGE_KEY = "yap-pending-translation-grade";
 
@@ -726,6 +730,7 @@ export function TranslationChallenge({
           new Uint32Array(sentence.literal_gram_indices),
           sentence.phrase_definitions,
           sentence.primary_expression,
+          sentence.movie_titles,
         );
 
         if (generation !== gradingGenerationRef.current) return;
@@ -902,7 +907,7 @@ export function TranslationChallenge({
                 <AudioButton
                   audioRequest={sentence.audio}
                   accessToken={accessToken}
-                  autoPlay={grade !== null}
+                  autoPlay={grade !== null && !hasClip}
                   autoplayed={autoplayed}
                   setAutoplayed={setAutoplayed}
                 />
@@ -986,6 +991,19 @@ export function TranslationChallenge({
                 ) : null}
               </div>
             )}
+
+            {/* The clip sits under the answer area: it's secondary to the
+                sentence being translated, not the headline. */}
+            <VideoClipPlayer
+              language={targetLanguage}
+              text={sentence.target_language}
+              accessToken={accessToken}
+              autoPlay={grade !== null}
+              autoplayed={autoplayed}
+              setAutoplayed={setAutoplayed}
+              onAvailabilityChange={setHasClip}
+              deck={deck}
+            />
           </div>
           {tappedDefinitions.length > 0 && (
             <div className="space-y-2">

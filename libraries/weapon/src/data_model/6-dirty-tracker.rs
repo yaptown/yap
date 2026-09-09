@@ -22,6 +22,12 @@ pub struct DirtyTracker<Store> {
     /// Tracks whether there are pending notifications and who should be notified
     pub dirty_state: DirtyState,
     loaded_at_least_once: bool,
+    /// Whether this stream has completed at least one successful download
+    /// from the remote sync target this session. Local load alone can't
+    /// distinguish "no events" from "events we haven't fetched yet" — this
+    /// flag is what lets consumers treat the absence of an event as a fact
+    /// rather than a gap.
+    synced_at_least_once: bool,
 }
 
 impl<Store: Default> Default for DirtyTracker<Store> {
@@ -32,6 +38,7 @@ impl<Store: Default> Default for DirtyTracker<Store> {
             // Creating a stream is an action that warrants a notification.
             dirty_state: DirtyState::DirtyAll,
             loaded_at_least_once: false,
+            synced_at_least_once: false,
         }
     }
 }
@@ -112,11 +119,27 @@ impl<Store> DirtyTracker<Store> {
         self.loaded_at_least_once
     }
 
+    /// Returns true if the `synced` marker was changed
+    pub(crate) fn mark_synced(&mut self, modifier: Option<ListenerKey>) -> bool {
+        if !self.synced_at_least_once {
+            self.synced_at_least_once = true;
+            self.store_mut(modifier).mark_dirty();
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn synced_at_least_once(&self) -> bool {
+        self.synced_at_least_once
+    }
+
     pub fn map<NewStore>(self, f: impl FnOnce(Store) -> NewStore) -> DirtyTracker<NewStore> {
         DirtyTracker {
             store: f(self.store),
             dirty_state: self.dirty_state,
             loaded_at_least_once: self.loaded_at_least_once,
+            synced_at_least_once: self.synced_at_least_once,
         }
     }
 }

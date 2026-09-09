@@ -8,10 +8,33 @@
 //! (based on auth / difficulty) and calls [`grade_translation`].
 
 use language_utils::autograde::{
-    AutoGradeTranslationRequest, AutoGradeTranslationResponse, Remembered,
+    AutoGradeTranslationRequest, AutoGradeTranslationResponse, GraderContext, Remembered,
 };
 use serde::Deserialize;
 use tysm::chat_completions::ChatClient;
+
+/// Render a grader-context block for a user prompt: the film and the
+/// dialogue around the challenge sentence, when known. Empty context renders
+/// as nothing, so prompts without context are byte-identical to before the
+/// field existed. Shared by translation grading here and the backend's
+/// transcription handler.
+pub fn grader_context_display(context: &GraderContext) -> String {
+    if context.is_empty() {
+        return String::new();
+    }
+    let mut block = String::from("Context (for disambiguation only — never grade these lines):\n");
+    if let Some(title) = &context.movie_title {
+        block.push_str(&format!("From the film: {title}\n"));
+    }
+    for line in &context.dialogue_before {
+        block.push_str(&format!("Dialogue before: {line}\n"));
+    }
+    for line in &context.dialogue_after {
+        block.push_str(&format!("Dialogue after: {line}\n"));
+    }
+    block.push('\n');
+    block
+}
 
 /// Shared assistant persona prepended to grading/feedback prompts.
 pub const PERSONALITY: &str = r#"You are a helpful assistant that helps users learn languages. You are friendly and encouraging, and you always try to help the user learn from their mistakes. When correcting the user's mistakes, first congratulate them on the parts they did well on, and then explain the mistakes they made and how they can improve. But the main thing to do is to explain the mistakes in a helpful (but concise) way, and encourage the user. You speak conversationally, as if you were speaking to the user directly. You don't use bullet points or headings, but you do break concepts into individual lines as necessary."#;
@@ -36,6 +59,7 @@ pub async fn grade_translation(
         phrases,
         course,
         primary_expression,
+        context,
     } = request;
 
     let target_language = course.target_language;
@@ -217,17 +241,20 @@ Note: Even though "se passer" was forgotten, the individual words "se" and "pass
 The encouragement should always be provided, focus on what they got right, and be written as if speaking directly to the user. The explanation should only be provided if there are errors. Markdown formatting is allowed (no bullet points or numbered lists). Keep both short and concise. Respond in {native_language_name}!
 
 When you mention a {target_language_name} word or phrase inside the encouragement or explanation, wrap it in a <word>...</word> tag (e.g. <word>word</word>). This lets the UI style and pronounce it correctly. Do not wrap {native_language_name} text.
+
+The input may include a Context block naming the film the sentence comes from and the dialogue lines around it. Use it only to disambiguate meaning, tone, or register — never grade the context lines themselves, and never require the user's translation to reflect information that only appears in the context.
 "#,
     );
 
     let user_prompt = format!(
-        r#"Challenge sentence: {challenge_sentence}
+        r#"{context_display}Challenge sentence: {challenge_sentence}
 User response: {user_sentence}
 
 Literals:
 {literals_display}
 Phrases:
-{phrases_display}"#
+{phrases_display}"#,
+        context_display = grader_context_display(context),
     );
 
     // LLM response format uses indexed grades for easier model tracking
@@ -291,4 +318,26 @@ Phrases:
         phrases_forgot,
         autograding_error: None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn grader_context_renders_only_when_present() {
+        assert_eq!(grader_context_display(&GraderContext::default()), "");
+
+        let context = GraderContext {
+            movie_title: Some("Delicatessen".to_string()),
+            dialogue_before: vec!["-Pourquoi vous faites ça ?".to_string()],
+            dialogue_after: vec!["Vraiment ?".to_string(), "Dites quelque chose.".to_string()],
+        };
+        let display = grader_context_display(&context);
+        assert!(display.starts_with("Context (for disambiguation only"));
+        assert!(display.contains("From the film: Delicatessen"));
+        assert!(display.contains("Dialogue before: -Pourquoi vous faites ça ?"));
+        assert!(display.contains("Dialogue after: Dites quelque chose."));
+        assert!(display.ends_with("\n\n"));
+    }
 }

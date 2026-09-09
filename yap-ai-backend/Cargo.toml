@@ -36,6 +36,7 @@ wasm-bindgen.workspace = true
 postgrest = "1.6"
 resend-rs = "0.25"
 google-tts = { path = "../libraries/google-tts" }
+unicode-normalization.workspace = true
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

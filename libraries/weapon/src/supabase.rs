@@ -41,12 +41,26 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
     ) -> Result<SupabaseSyncResult, SyncError> {
         store.borrow_mut().mark_sync_started(SyncTarget::Supabase);
 
+        // Snapshot which streams this sync will actually request BEFORE
+        // awaiting: a stream created while the request is in flight is not
+        // part of it, and must not be marked as having its remote history.
+        // (A stream created between this snapshot and the request's own
+        // vector-clock snapshot errs the safe way — synced but unmarked.)
+        let requested_streams: Vec<String> = match &stream_id_to_sync {
+            Some(stream_id) => vec![stream_id.clone()],
+            None => store
+                .borrow()
+                .iter()
+                .map(|(stream_id, _)| stream_id.clone())
+                .collect(),
+        };
+
         match Self::sync_with_supabase_inner(
             store,
             access_token,
             supabase_config,
             user_id,
-            stream_id_to_sync,
+            stream_id_to_sync.clone(),
             modifier,
             upload,
         )
@@ -59,6 +73,16 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
                 store
                     .borrow_mut()
                     .update_sync_clock(SyncTarget::Supabase, final_remote_clock);
+                // The download succeeded, so each requested stream's local
+                // view now provably includes the remote history — even when
+                // zero events came down. Consumers use this to tell "no such
+                // event" apart from "haven't fetched yet".
+                {
+                    let mut store = store.borrow_mut();
+                    for stream_id in requested_streams {
+                        store.mark_synced(stream_id, modifier);
+                    }
+                }
                 Ok(res)
             }
             Err(e) => {

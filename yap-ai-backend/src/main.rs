@@ -1,7 +1,7 @@
 use axum::{
     Router,
     body::Bytes,
-    extract::Json,
+    extract::{Json, Path},
     http::{StatusCode, header},
     response::Response,
     routing::{get, post},
@@ -1016,7 +1016,9 @@ The explanation should avoid generic advice like "try to listen more carefully" 
 
 When you mention a {target_language_name} word or phrase inside the encouragement or explanation, wrap it in a <word>...</word> tag (e.g. <word>word</word>). This lets the UI style and pronounce it correctly. Do not wrap {native_language_name} text.
 
-P.S. Don't bother giving the user IPA-style phonetic transcriptions as they may not understand them. But you can still try to explain the phonetic differences in terms that the user might understand."#,
+P.S. Don't bother giving the user IPA-style phonetic transcriptions as they may not understand them. But you can still try to explain the phonetic differences in terms that the user might understand.
+
+The input may include a Context block naming the film the sentence comes from and the dialogue lines around it. Use it only to judge which homophones and conjugations are contextually valid — never grade the context lines themselves."#,
         match target_language {
             Language::French =>
                 r#"For example, if the user confused "de" and "des", you could generate ["de", "des"] in the compare array."#,
@@ -1123,12 +1125,13 @@ P.S. Don't bother giving the user IPA-style phonetic transcriptions as they may 
         .unwrap_or_default();
 
     let prompt = format!(
-        r#"User heard: "{full_sentence}"
+        r#"{context_display}User heard: "{full_sentence}"
 {heard_ipa_line}User saw: {sentence_shown}
 User wrote: {user_sentence}
 {wrote_ipa_line}
 Words that need grading:
 {words_to_grade}"#,
+        context_display = autograde_core::grader_context_display(&request.context),
         words_to_grade = words_to_grade_list.join("\n")
     );
 
@@ -2171,6 +2174,244 @@ async fn get_follow_status(
     }))
 }
 
+/// Movie clips live in the public `yap-clips` R2 bucket behind this domain.
+/// The app never talks to it directly; both routes below mediate access, so
+/// the bucket can later be made private (or rate-limited) without touching
+/// clients.
+const CLIPS_ORIGIN: &str = "https://clips.yap.town";
+const CLIP_INDEX_TTL: std::time::Duration = std::time::Duration::from_secs(60);
+
+/// One course sentence that has a published clip — the row the app's clip
+/// manifest is made of. `sentence` is the exact pack-key text (NFC), which is
+/// how the app joins its own sentences to clips.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ClipRow {
+    #[serde(rename = "id")]
+    clip_id: String,
+    sentence: String,
+    duration_ms: u64,
+    critical: ClipCritical,
+    /// Exact size of lo.mp4. The pipeline can republish corrected media
+    /// under the same clip id, so the app uses this to revalidate its
+    /// cached copy.
+    lo_bytes: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ClipCritical {
+    start_ms: u64,
+    end_ms: u64,
+}
+
+struct CachedClipIndex {
+    fetched_at: std::time::Instant,
+    rows: Vec<ClipRow>,
+}
+
+static CLIP_INDEXES: LazyLock<
+    tokio::sync::RwLock<std::collections::HashMap<String, CachedClipIndex>>,
+> = LazyLock::new(Default::default);
+
+/// Parse one language's index.jsonl into manifest rows, keeping only course
+/// sentences (the only ones the app can ever show) and NFC-normalizing the
+/// text so the app's lookups don't depend on which normalization either side
+/// used. Bad lines are skipped: one malformed row must not take down the
+/// language.
+fn parse_clip_index(jsonl: &str) -> Vec<ClipRow> {
+    use unicode_normalization::UnicodeNormalization;
+    let mut rows = Vec::new();
+    for line in jsonl.lines().filter(|l| !l.trim().is_empty()) {
+        let Ok(row) = serde_json::from_str::<serde_json::Value>(line) else {
+            continue;
+        };
+        if row["course_sentence"] != serde_json::Value::Bool(true) {
+            continue;
+        }
+        let Ok(mut clip) = serde_json::from_value::<ClipRow>(row.clone()) else {
+            continue;
+        };
+        clip.sentence = clip.sentence.nfc().collect();
+        rows.push(clip);
+    }
+    rows
+}
+
+/// The clip manifest for a language, (re)fetching its index.jsonl when the
+/// cached copy is older than its 60s upstream cache. A missing index
+/// (language not yet published) caches as empty for the same TTL.
+async fn clip_manifest(language: Language) -> Result<Vec<ClipRow>, StatusCode> {
+    let code = language.code();
+
+    {
+        let indexes = CLIP_INDEXES.read().await;
+        if let Some(cached) = indexes.get(code)
+            && cached.fetched_at.elapsed() < CLIP_INDEX_TTL
+        {
+            return Ok(cached.rows.clone());
+        }
+    }
+
+    let url = format!("{CLIPS_ORIGIN}/{code}/index.jsonl");
+    let response = reqwest::Client::new()
+        .get(&url)
+        .send()
+        .await
+        .map_err(|_| StatusCode::BAD_GATEWAY)?;
+    let rows = if response.status() == reqwest::StatusCode::NOT_FOUND {
+        Vec::new()
+    } else if response.status().is_success() {
+        let text = response.text().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
+        parse_clip_index(&text)
+    } else {
+        return Err(StatusCode::BAD_GATEWAY);
+    };
+
+    let mut indexes = CLIP_INDEXES.write().await;
+    indexes.insert(
+        code.to_string(),
+        CachedClipIndex {
+            fetched_at: std::time::Instant::now(),
+            rows: rows.clone(),
+        },
+    );
+    Ok(rows)
+}
+
+/// Every course sentence with a published clip for a language, with the
+/// playback metadata. The app caches this manifest locally, refreshes it in
+/// the background on load, and uses it both to prioritize clip sentences in
+/// challenge selection and to know which clip to download for a sentence.
+async fn serve_clip_sentences(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    Path(lang): Path<String>,
+) -> Result<Json<Vec<ClipRow>>, StatusCode> {
+    // Verify JWT token
+    // actually, disable authentication for now until people start abusing it:
+    let _claims = verify_jwt(auth.token()).await;
+
+    let language = Language::from_code(&lang).ok_or(StatusCode::NOT_FOUND)?;
+    Ok(Json(clip_manifest(language).await?))
+}
+
+async fn serve_clip_video(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    Path((lang, clip_id)): Path<(String, String)>,
+) -> Response {
+    // Verify JWT token
+    // actually, disable authentication for now until people start abusing it:
+    let _claims = verify_jwt(auth.token()).await;
+
+    // Both segments become path components of the upstream URL; restrict them
+    // to the alphabet the exporter actually uses so this can't be steered at
+    // arbitrary keys.
+    let valid = |s: &str| {
+        !s.is_empty()
+            && s.chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    };
+    if !valid(&lang) || !valid(&clip_id) {
+        return Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(axum::body::Body::from("invalid clip path"))
+            .unwrap();
+    }
+
+    let url = format!("{CLIPS_ORIGIN}/{lang}/{clip_id}/lo.mp4");
+    let upstream = match reqwest::Client::new().get(&url).send().await {
+        Ok(r) => r,
+        Err(_) => {
+            return Response::builder()
+                .status(StatusCode::BAD_GATEWAY)
+                .body(axum::body::Body::from("clip fetch failed"))
+                .unwrap();
+        }
+    };
+    if !upstream.status().is_success() {
+        let status = if upstream.status() == reqwest::StatusCode::NOT_FOUND {
+            StatusCode::NOT_FOUND
+        } else {
+            StatusCode::BAD_GATEWAY
+        };
+        return Response::builder()
+            .status(status)
+            .body(axum::body::Body::from("clip unavailable"))
+            .unwrap();
+    }
+    let bytes = match upstream.bytes().await {
+        Ok(b) => b,
+        Err(_) => {
+            return Response::builder()
+                .status(StatusCode::BAD_GATEWAY)
+                .body(axum::body::Body::from("clip fetch failed"))
+                .unwrap();
+        }
+    };
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "video/mp4")
+        .header(header::CONTENT_LENGTH, bytes.len())
+        // Clip keys are immutable in R2 (content-addressed by sentence hash +
+        // occurrence), so the response can be cached forever too.
+        .header(header::CACHE_CONTROL, "public, max-age=31536000, immutable")
+        .body(axum::body::Body::from(bytes))
+        .unwrap()
+}
+
+/// One subtitle cue overlaid on a clip, clip-relative milliseconds. `role`
+/// distinguishes the target sentence's own cue from the padded-in context
+/// lines around it (which never passed verification — display only).
+/// Timestamps are signed: the sidecar includes every cue *overlapping* the
+/// cut, so a cue that starts before the video begins has a negative `at_ms`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ClipSubtitleCue {
+    text: String,
+    at_ms: i64,
+    until_ms: i64,
+    role: String,
+}
+
+/// The subtitle cues for a clip, extracted from its sidecar (`meta.json` in
+/// the bucket). The sidecar also carries transcripts, phonemes, and the
+/// verification verdict — none of which the app needs for captions, so this
+/// serves just the `subtitles` array rather than proxying the whole file.
+async fn serve_clip_subtitles(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    Path((lang, clip_id)): Path<(String, String)>,
+) -> Result<Json<Vec<ClipSubtitleCue>>, StatusCode> {
+    // Verify JWT token
+    // actually, disable authentication for now until people start abusing it:
+    let _claims = verify_jwt(auth.token()).await;
+
+    // Same alphabet restriction as the video route: both segments become
+    // upstream path components.
+    let valid = |s: &str| {
+        !s.is_empty()
+            && s.chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    };
+    if !valid(&lang) || !valid(&clip_id) {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    let url = format!("{CLIPS_ORIGIN}/{lang}/{clip_id}/meta.json");
+    let upstream = reqwest::Client::new()
+        .get(&url)
+        .send()
+        .await
+        .map_err(|_| StatusCode::BAD_GATEWAY)?;
+    if upstream.status() == reqwest::StatusCode::NOT_FOUND {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    if !upstream.status().is_success() {
+        return Err(StatusCode::BAD_GATEWAY);
+    }
+    let sidecar: serde_json::Value = upstream.json().await.map_err(|_| StatusCode::BAD_GATEWAY)?;
+    let cues: Vec<ClipSubtitleCue> = serde_json::from_value(sidecar["subtitles"].clone())
+        .map_err(|_| StatusCode::BAD_GATEWAY)?;
+    Ok(Json(cues))
+}
+
 const SENTRY_HOST: &str = "o4511102905090048.ingest.us.sentry.io";
 const SENTRY_PROJECT_ID: &str = "4511102907056128";
 
@@ -2226,6 +2467,12 @@ fn app() -> Router {
             post(generate_pronunciation_feedback),
         )
         .route("/language-data", post(serve_language_data))
+        .route("/clip/{lang}/sentences", get(serve_clip_sentences))
+        .route("/clip/{lang}/{clip_id}/lo.mp4", get(serve_clip_video))
+        .route(
+            "/clip/{lang}/{clip_id}/subtitles",
+            get(serve_clip_subtitles),
+        )
         .route("/profile", get(get_profile).patch(update_profile))
         .route("/language-stats", post(update_language_stats))
         .route("/user-language-stats", get(get_language_stats))
@@ -2641,5 +2888,30 @@ mod tests {
                 .headers()
                 .contains_key("access-control-allow-origin")
         );
+    }
+
+    #[test]
+    fn clip_index_parses_and_normalizes() {
+        // "était" written with a combining accent (NFD) in the index must
+        // come out NFC, bad lines and non-course sentences must be skipped,
+        // and rows keep their metadata.
+        let jsonl = concat!(
+            r#"{"id":"tt0101700-3fa2c81d-0","imdb_id":"tt0101700","title":"Delicatessen","sentence":"C'était bien.","course_sentence":true,"duration_ms":2400,"critical":{"start_ms":300,"end_ms":2100},"hi_bytes":900000,"lo_bytes":120000}"#,
+            "\n",
+            "not json\n",
+            r#"{"id":"tt0101700-deadbeef-0","sentence":"Sans les champs requis."}"#,
+            "\n",
+            r#"{"id":"tt0101700-11111111-0","sentence":"Pas une phrase de cours.","course_sentence":false,"duration_ms":1000,"critical":{"start_ms":0,"end_ms":900}}"#,
+            "\n",
+        );
+        let rows = parse_clip_index(jsonl);
+        assert_eq!(rows.len(), 1);
+        let clip = &rows[0];
+        assert_eq!(clip.sentence, "C'était bien.");
+        assert_eq!(clip.clip_id, "tt0101700-3fa2c81d-0");
+        assert_eq!(clip.duration_ms, 2400);
+        assert_eq!(clip.critical.start_ms, 300);
+        assert_eq!(clip.critical.end_ms, 2100);
+        assert_eq!(clip.lo_bytes, 120000);
     }
 }
