@@ -684,6 +684,20 @@ struct FilmStamp {
     duration_ms: i64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     subtitle: Option<SubtitleStamp>,
+    /// The disc stream a disc-derived subtitle was read from. A re-ranking
+    /// of the tracks (2026-09-08: Day for Night's 18-cue "For non-French
+    /// dialogue" track gave way to the full VobSub one) is a source change
+    /// the filename-based `subtitle` stamp cannot see.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    track: Option<u32>,
+}
+
+/// The disc stream the plan reads the film's subtitle from, if any.
+fn disc_track(movie: &Movie) -> Option<u32> {
+    match movie.source {
+        Source::DiscText { index, .. } | Source::DiscBitmap { index, .. } => Some(index),
+        _ => None,
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize, PartialEq, Clone)]
@@ -752,6 +766,7 @@ fn film_stamp(movie: &Movie) -> Result<FilmStamp> {
         filename: film_filename(movie),
         duration_ms: sync::duration_ms(&movie.path)?,
         subtitle: None,
+        track: None,
     })
 }
 
@@ -830,10 +845,10 @@ fn write_stamp(dir: &std::path::Path, movie: &Movie, source: StampSource) {
     let Ok(mut stamp) = film_stamp(movie) else {
         return;
     };
-    stamp.subtitle = match source {
-        StampSource::Disc => None,
-        StampSource::File(p) => subtitle_stamp(p),
-        StampSource::Keep => read_stamp(dir).and_then(|s| s.subtitle),
+    (stamp.subtitle, stamp.track) = match source {
+        StampSource::Disc => (None, disc_track(movie)),
+        StampSource::File(p) => (subtitle_stamp(p), None),
+        StampSource::Keep => read_stamp(dir).map_or((None, None), |s| (s.subtitle, s.track)),
     };
     if let Ok(json) = serde_json::to_vec_pretty(&stamp) {
         let _ = std::fs::write(dir.join("film.json"), json);
@@ -921,6 +936,7 @@ fn extracted_audio(movie: &Movie, dir: &std::path::Path) -> Option<PathBuf> {
         filename: stamp.filename,
         duration_ms: stamp.duration_ms,
         subtitle: None,
+        track: None,
     };
     recorded.matches(&current).then_some(path)
 }
@@ -1012,7 +1028,30 @@ fn freshen_output(movie: &Movie, out: &std::path::Path, data_root: &std::path::P
             why: format!("film changed ({} → {})", old.filename, current.filename),
         };
     }
-    // Video unchanged; is the subtitle still derived from the right source?
+    // Video unchanged; a disc-derived subtitle is still from the track the
+    // plan names? (An adopted file records itself in `subtitle` and is
+    // judged below; only a stamp with no file behind it is the disc's.)
+    if let (Some(index), None) = (disc_track(movie), &old.subtitle) {
+        match old.track {
+            Some(was) if was != index => {
+                let _ = std::fs::remove_file(dir.join("subtitle.srt"));
+                write_stamp(&dir, movie, StampSource::Disc);
+                if has_subtitle {
+                    return Freshness::Evicted {
+                        why: format!("disc track changed ({was} → {index})"),
+                    };
+                }
+                return Freshness::Fine;
+            }
+            None if has_subtitle => {
+                // Pre-track stamp: record the track, don't evict.
+                write_stamp(&dir, movie, StampSource::Disc);
+                return Freshness::Backfilled;
+            }
+            _ => {}
+        }
+    }
+    // Is the subtitle still derived from the right source file?
     let expected_path = expected_subtitle_source(movie, &dir, data_root);
     let expected = expected_path.as_deref().and_then(subtitle_stamp);
     match (&old.subtitle, &expected) {
@@ -1464,6 +1503,7 @@ fn extract_audio_one(movie: &Movie, dir: &std::path::Path) -> AudioOutcome {
                 filename: stamp.filename.clone(),
                 duration_ms: stamp.duration_ms,
                 subtitle: None,
+                track: None,
             };
             if recorded.matches(&current) && stamp.stream.same_track(&identity) {
                 return AudioOutcome::Current;
@@ -3044,9 +3084,13 @@ async fn transcript_check(
                 report = verbatim::check(&dir, language, code, min_verbatim).await?;
             }
         }
+        // "Empty" belongs here too: a forced track under a title the
+        // classifier did not recognise reads as a film with no dialogue,
+        // and the alternatives are the only way out (Day for Night, 8
+        // eligible cues from "For non-French dialogue").
         if matches!(
             report.measure.verdict,
-            Verdict::Paraphrase | Verdict::Skewed
+            Verdict::Paraphrase | Verdict::Skewed | Verdict::Empty
         ) && !dry_run
         {
             println!(
@@ -3141,7 +3185,7 @@ async fn fetch_candidates(
         .parse()
         .with_context(|| format!("bad IMDb id {}", movie.imdb_id))?;
     let mut results = client
-        .search_subtitles_for_movie(imdb_num, language.opensubtitles_language_code())
+        .search_subtitles_for_movie(imdb_num, language.opensubtitles_languages())
         .await
         .context("OpenSubtitles search")?;
     results.retain(|s| !s.attributes.ai_translated && !s.attributes.machine_translated);
@@ -3154,7 +3198,7 @@ async fn fetch_candidates(
         .count();
     println!(
         "      OpenSubtitles ({}): {} human-made candidates, {unseen} not yet fetched",
-        language.opensubtitles_language_code(),
+        language.opensubtitles_languages(),
         results.len()
     );
 

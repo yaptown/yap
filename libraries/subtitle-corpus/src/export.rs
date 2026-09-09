@@ -189,7 +189,7 @@ pub async fn export_clips(
         .timeout(std::time::Duration::from_secs(120))
         .build()?;
     let (mut rendered, mut refreshed, mut unchanged) = (0usize, 0usize, 0usize);
-    let mut failed = false;
+    let mut failed: std::collections::HashSet<&str> = std::collections::HashSet::new();
     let mut valid: std::collections::HashMap<String, std::collections::HashSet<String>> =
         std::collections::HashMap::new();
     for movie in &queue {
@@ -206,7 +206,7 @@ pub async fn export_clips(
                 valid.entry(f.code).or_default().extend(f.ids);
             }
             Err(e) => {
-                failed = true;
+                failed.insert(&movie.imdb_id);
                 println!("{title} ✗ {e:#}");
             }
         }
@@ -214,16 +214,21 @@ pub async fn export_clips(
     println!("\n{rendered} clips rendered, {refreshed} sidecars refreshed, {unchanged} current");
 
     // Orphan sweep: a clip dir whose id no longer exists (sentence re-keyed,
-    // gate change) must not linger looking servable. Only on unfiltered,
-    // fully-successful runs — a partial run cannot know the full id set.
-    if imdb.is_none() && limit == 0 && !failed {
+    // gate change, film dropped from the plan or its clips evicted) must not
+    // linger looking servable. Only on unfiltered runs — a partial run
+    // cannot know the full id set — and judged film by film: a film that
+    // failed this run has an unknown id set, so its dirs are kept, but one
+    // failure must not shield every other film's leftovers (2026-09-08:
+    // seven stale films kept 99 orphans in the served index for a week).
+    if imdb.is_none() && limit == 0 {
         for (code, ids) in &valid {
             let lang_dir = dest.join(code);
             let mut swept = 0usize;
             for entry in std::fs::read_dir(&lang_dir).into_iter().flatten().flatten() {
                 let path = entry.path();
                 let name = entry.file_name().to_string_lossy().into_owned();
-                if path.is_dir() && !ids.contains(&name) {
+                let film = name.split('-').next().unwrap_or_default();
+                if path.is_dir() && !ids.contains(&name) && !failed.contains(film) {
                     std::fs::remove_dir_all(&path)?;
                     swept += 1;
                 }

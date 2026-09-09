@@ -843,6 +843,12 @@ async fn clips_one(
         .unwrap_or_else(|| crate::verbatim::min_fraction(code));
     let check = crate::verbatim::check(dir, language, code, min_verbatim).await?;
     if check.measure.verdict != crate::verbatim::Verdict::Verbatim {
+        // A clips.jsonl mapped before this gate existed, or before the
+        // subtitle turned into a rewrite, is not evidence of anything now:
+        // left in place, export reads it as a film to serve (or fails the
+        // whole run on its old provenance line). Nothing downstream may
+        // trust a file this gate would not write today.
+        let _ = std::fs::remove_file(clips_path(dir));
         bail!(
             "subtitle not verbatim: {}",
             crate::verbatim::describe(&check.measure)

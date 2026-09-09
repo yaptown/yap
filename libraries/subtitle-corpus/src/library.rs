@@ -143,11 +143,48 @@ impl Stream {
 
     /// A "forced" track only translates foreign dialogue and on-screen signs —
     /// a handful of cues across a whole film. Picking one silently yields a
-    /// subtitle that looks valid and contains almost no dialogue.
+    /// subtitle that looks valid and contains almost no dialogue. Titles
+    /// describe the same thing in other words ("For non-French dialogue" on
+    /// Day for Night's Criterion remux: 18 cues where the full track has
+    /// 1,438), and a muxer's frame-count tag, when present, shows it
+    /// outright — see [`Stream::is_sparse`].
     fn is_forced(&self) -> bool {
+        let t = self.title();
         self.disposition.get("forced").copied().unwrap_or(0) == 1
-            || self.title().contains("forced")
-            || self.title().contains("signs")
+            || t.contains("forced")
+            || t.contains("signs")
+            || t.contains("non-")
+            || t.contains("foreign")
+    }
+
+    /// Cue count from the muxer's statistics tag, on the remuxes that carry
+    /// one. Costs nothing to read; counting packets would mean demuxing the
+    /// whole film.
+    fn frames(&self) -> Option<u64> {
+        ["NUMBER_OF_FRAMES", "NUMBER_OF_FRAMES-eng"]
+            .iter()
+            .find_map(|k| self.tags.get(*k)?.trim().parse().ok())
+    }
+
+    /// A track with under a tenth of the cues of the fullest track of the
+    /// same codec on the disc is a forced track whatever it is called (Das
+    /// Boot: "English (Forced)" 18 cues, "English" 2,914). Same codec only:
+    /// an ASS track counts every typesetting event (A Silent Voice: 89,020
+    /// against 4,665 on the full Japanese PGS track). Only judged when both
+    /// counts are tagged.
+    fn is_sparse(&self, fullest: &HashMap<&str, u64>) -> bool {
+        match (self.frames(), self.codec_name.as_deref()) {
+            (Some(n), Some(codec)) => fullest.get(codec).is_some_and(|max| n * 10 < *max),
+            _ => false,
+        }
+    }
+
+    /// A track that renders each line in the *other* language of a bilingual
+    /// film — German text under English speech and English under German
+    /// (Victoria's "German-English (Bilingual)": 0.2% verbatim). Never what
+    /// is said; last resort only.
+    fn is_bilingual(&self) -> bool {
+        self.title().contains("bilingual")
     }
 
     fn is_commentary(&self) -> bool {
@@ -177,7 +214,7 @@ fn probe(path: &Path, kind: &str) -> Result<Vec<Stream>> {
             "-select_streams",
             kind,
             "-show_entries",
-            "stream=index,codec_name:stream_tags=language,title:stream_disposition=forced,comment,default",
+            "stream=index,codec_name:stream_tags=language,title,NUMBER_OF_FRAMES,NUMBER_OF_FRAMES-eng:stream_disposition=forced,comment,default",
             "-of",
             "json",
         ])
@@ -281,10 +318,17 @@ pub fn classify(
     // Forced and commentary tracks are excluded outright rather than ranked
     // last: a forced track is not a worse subtitle, it is a different thing,
     // and falling through to OCR or a downloaded file beats "3 cues".
+    let mut fullest: HashMap<&str, u64> = HashMap::new();
+    for s in &subs {
+        if let (Some(codec), Some(n)) = (s.codec_name.as_deref(), s.frames()) {
+            let max = fullest.entry(codec).or_default();
+            *max = (*max).max(n);
+        }
+    }
     let own: Vec<&Stream> = subs
         .iter()
         .filter(|s| codes.contains(&lang_of(s).as_str()))
-        .filter(|s| !s.is_forced() && !s.is_commentary())
+        .filter(|s| !s.is_forced() && !s.is_commentary() && !s.is_sparse(&fullest))
         .collect();
 
     // Plain dialogue track first, then SDH.
@@ -314,11 +358,22 @@ pub fn classify(
         }
     }
 
-    if let Some(s) = own.iter().find(|s| {
-        s.codec_name
-            .as_deref()
-            .is_some_and(|c| BITMAP_CODECS.contains(&c))
-    }) {
+    // Same order as text: plain dialogue, then SDH, and a bilingual
+    // cross-translation only when nothing else is in the language.
+    let bitmap = |want: fn(&Stream) -> bool| {
+        own.iter()
+            .find(|s| {
+                s.codec_name
+                    .as_deref()
+                    .is_some_and(|c| BITMAP_CODECS.contains(&c))
+                    && want(s)
+            })
+            .copied()
+    };
+    if let Some(s) = bitmap(|s| !s.is_sdh() && !s.is_bilingual())
+        .or_else(|| bitmap(|s| !s.is_bilingual()))
+        .or_else(|| bitmap(|_| true))
+    {
         return Ok(Source::DiscBitmap {
             index: s.index,
             codec: s.codec_name.clone().unwrap_or_default(),
