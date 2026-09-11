@@ -14,9 +14,12 @@ COPY libraries/weapon/Cargo.toml libraries/weapon/Cargo.toml
 COPY libraries/imdex_map/Cargo.toml libraries/imdex_map/Cargo.toml
 COPY libraries/eyedee/Cargo.toml libraries/eyedee/Cargo.toml
 COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
+COPY libraries/bridgerton/Cargo.toml libraries/bridgerton/Cargo.toml
+COPY libraries/bridgerton/macros/Cargo.toml libraries/bridgerton/macros/Cargo.toml
 # Trim the workspace to yap-mcp's path-dependency closure (yap-frontend-rs
-# pulls in weapon, imdex_map, eyedee, and autograde-core).
-RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "yap-frontend-rs",\n    "language-utils",\n    "libraries/weapon",\n    "libraries/imdex_map",\n    "libraries/eyedee",\n    "libraries/autograde-core",\n]' Cargo.toml
+# pulls in weapon, imdex_map, eyedee, and autograde-core; language-utils,
+# weapon and yap-frontend-rs pull in bridgerton and its proc-macro crate).
+RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-mcp",\n    "yap-frontend-rs",\n    "language-utils",\n    "libraries/weapon",\n    "libraries/imdex_map",\n    "libraries/eyedee",\n    "libraries/autograde-core",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n]' Cargo.toml
 # cargo-chef needs stub files for every target declared in the manifests
 RUN mkdir -p yap-mcp/src && echo "fn main() {}" > yap-mcp/src/main.rs
 RUN mkdir -p yap-frontend-rs/src yap-frontend-rs/benches \
@@ -30,6 +33,10 @@ RUN mkdir -p libraries/weapon/src/bin \
 RUN mkdir -p libraries/imdex_map/src && touch libraries/imdex_map/src/lib.rs
 RUN mkdir -p libraries/eyedee/src && touch libraries/eyedee/src/lib.rs
 RUN mkdir -p libraries/autograde-core/src && touch libraries/autograde-core/src/lib.rs
+RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests libraries/bridgerton/macros/src \
+    && touch libraries/bridgerton/src/lib.rs \
+    && echo "fn main() {}" > libraries/bridgerton/tests/tokio_context.rs \
+    && touch libraries/bridgerton/macros/src/lib.rs
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -49,6 +56,7 @@ COPY libraries/weapon libraries/weapon
 COPY libraries/imdex_map libraries/imdex_map
 COPY libraries/eyedee libraries/eyedee
 COPY libraries/autograde-core libraries/autograde-core
+COPY libraries/bridgerton libraries/bridgerton
 # Drop target/ within the same layer: it's ~hundreds of MB of incremental
 # artifacts that change every commit, and mode=max cache export would ship
 # all of it to the registry each deploy.

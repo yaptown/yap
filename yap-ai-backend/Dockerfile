@@ -11,15 +11,22 @@ COPY yap-ai-backend/Cargo.toml yap-ai-backend/Cargo.toml
 COPY language-utils/Cargo.toml language-utils/Cargo.toml
 COPY libraries/google-tts/Cargo.toml libraries/google-tts/Cargo.toml
 COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
+COPY libraries/bridgerton/Cargo.toml libraries/bridgerton/Cargo.toml
+COPY libraries/bridgerton/macros/Cargo.toml libraries/bridgerton/macros/Cargo.toml
 # Trim workspace to only the crates needed for ai-backend (google-tts and
-# autograde-core are path dependencies of yap-ai-backend, so their manifests
-# must be present too).
-RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-ai-backend",\n    "language-utils",\n    "libraries/google-tts",\n    "libraries/autograde-core",\n]' Cargo.toml
-# cargo-chef needs stub source files to prepare the recipe
+# autograde-core are path dependencies of yap-ai-backend, and language-utils
+# pulls in bridgerton and its proc-macro crate, so their manifests must be
+# present too).
+RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-ai-backend",\n    "language-utils",\n    "libraries/google-tts",\n    "libraries/autograde-core",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n]' Cargo.toml
+# cargo-chef needs stub files for every target declared in the manifests
 RUN mkdir -p yap-ai-backend/src && echo "fn main() {}" > yap-ai-backend/src/main.rs
 RUN mkdir -p language-utils/src && touch language-utils/src/lib.rs
 RUN mkdir -p libraries/google-tts/src && touch libraries/google-tts/src/lib.rs
 RUN mkdir -p libraries/autograde-core/src && touch libraries/autograde-core/src/lib.rs
+RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests libraries/bridgerton/macros/src \
+    && touch libraries/bridgerton/src/lib.rs \
+    && echo "fn main() {}" > libraries/bridgerton/tests/tokio_context.rs \
+    && touch libraries/bridgerton/macros/src/lib.rs
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -44,6 +51,7 @@ COPY yap-ai-backend yap-ai-backend
 COPY language-utils language-utils
 COPY libraries/google-tts libraries/google-tts
 COPY libraries/autograde-core libraries/autograde-core
+COPY libraries/bridgerton libraries/bridgerton
 # Drop target/ within the same layer: it's ~hundreds of MB of incremental
 # artifacts that change every commit, and mode=max cache export would ship
 # all of it to the registry each deploy.
