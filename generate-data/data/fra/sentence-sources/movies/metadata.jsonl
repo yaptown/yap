@@ -349,7 +349,7 @@
 {"id":"tt30144839","title":"Une bataille après l'autre","year":2025,"original_language":"en","rotten_tomatoes_score":95}
 {"id":"tt0903624","title":"Le Hobbit : Un voyage inattendu","year":2012,"original_language":"en","rotten_tomatoes_score":64}
 {"id":"tt32916440","title":"Marty Supreme","year":2025,"original_language":"en","rotten_tomatoes_score":94}
-{"id":"tt4357198","title":"L'Ultime Héritier","year":2026,"original_language":"en","rotten_tomatoes_score":null}
+{"id": "tt4357198", "title": "L'Ultime Héritier", "year": 2026, "original_language": "en", "rotten_tomatoes_score": 45}
 {"id":"tt1757678","title":"Avatar : De feu et de cendres","year":2025,"original_language":"en","rotten_tomatoes_score":66}
 {"id":"tt0993846","title":"Le Loup de Wall Street","year":2013,"original_language":"en","rotten_tomatoes_score":79}
 {"id":"tt32642706","title":"The Rip","year":2026,"original_language":"en","rotten_tomatoes_score":77}
@@ -361,22 +361,22 @@
 {"id":"tt0330373","title":"Harry Potter et la Coupe de feu","year":2005,"original_language":"en","rotten_tomatoes_score":88}
 {"id":"tt26443597","title":"Zootopie 2","year":2025,"original_language":"en","rotten_tomatoes_score":91}
 {"id":"tt2948356","title":"Zootopie","year":2016,"original_language":"en","rotten_tomatoes_score":98}
-{"id":"tt27847051","title":"L'Agent secret","year":2025,"original_language":"pt","rotten_tomatoes_score":null}
+{"id": "tt27847051", "title": "L'Agent secret", "year": 2025, "original_language": "pt", "rotten_tomatoes_score": 98}
 {"id":"tt1341338","title":"Good Luck, Have Fun, Don't Die","year":2026,"original_language":"en","rotten_tomatoes_score":null}
 {"id":"tt0120915","title":"Star Wars, épisode I - La Menace fantôme","year":1999,"original_language":"en","rotten_tomatoes_score":54}
-{"id":"tt32357218","title":"Shelter","year":2026,"original_language":"en","rotten_tomatoes_score":null}
+{"id": "tt32357218", "title": "Shelter", "year": 2026, "original_language": "en", "rotten_tomatoes_score": 64}
 {"id":"tt0295297","title":"Harry Potter et la Chambre des secrets","year":2002,"original_language":"en","rotten_tomatoes_score":82}
 {"id":"tt34610311","title":"The Shadow's Edge","year":2025,"original_language":"zh","rotten_tomatoes_score":80}
 {"id":"tt34794183","title":"Dossier 137","year":2025,"original_language":"fr","rotten_tomatoes_score":92}
 {"id":"tt0083658","title":"Blade Runner","year":1982,"original_language":"en","rotten_tomatoes_score":89}
 {"id":"tt6604188","title":"Tron : Ares","year":2025,"original_language":"en","rotten_tomatoes_score":53}
 {"id":"tt33244668","title":"Anaconda","year":2025,"original_language":"en","rotten_tomatoes_score":48}
-{"id":"tt15940132","title":"War Machine","year":2026,"original_language":"en","rotten_tomatoes_score":null}
+{"id": "tt15940132", "title": "War Machine", "year": 2026, "original_language": "en", "rotten_tomatoes_score": 66}
 {"id":"tt30274401","title":"Five Nights at Freddy's 2","year":2025,"original_language":"en","rotten_tomatoes_score":16}
 {"id":"tt31050594","title":"Reconnu coupable","year":2026,"original_language":"en","rotten_tomatoes_score":null}
 {"id":"tt14107334","title":"Running Man","year":2025,"original_language":"en","rotten_tomatoes_score":63}
 {"id":"tt31514146","title":"Plus fort que moi","year":2025,"original_language":"en","rotten_tomatoes_score":100}
-{"id":"tt15574124","title":"Peaky Blinders : L'Immortel","year":2026,"original_language":"en","rotten_tomatoes_score":null}
+{"id": "tt15574124", "title": "Peaky Blinders : L'Immortel", "year": 2026, "original_language": "en", "rotten_tomatoes_score": 90}
 {"id":"tt29550683","title":"Le Sifflet","year":2026,"original_language":"en","rotten_tomatoes_score":64}
 {"id":"tt15239678","title":"Dune : Deuxième partie","year":2024,"original_language":"en","rotten_tomatoes_score":92}
 {"id":"tt31844586","title":"Sisu : Le Chemin de la vengeance","year":2025,"original_language":"fi","rotten_tomatoes_score":95}
@@ -386,10 +386,10 @@
 {"id":"tt27047903","title":"Scream 7","year":2026,"original_language":"en","rotten_tomatoes_score":30}
 {"id":"tt31227572","title":"Predator : Badlands","year":2025,"original_language":"en","rotten_tomatoes_score":86}
 {"id":"tt24950660","title":"Pour l'éternité","year":2025,"original_language":"en","rotten_tomatoes_score":77}
-{"id":"tt32430579","title":"Crime 101","year":2026,"original_language":"en","rotten_tomatoes_score":null}
+{"id": "tt32430579", "title": "Crime 101", "year": 2026, "original_language": "en", "rotten_tomatoes_score": 88}
 {"id":"tt0472043","title":"Apocalypto","year":2006,"original_language":"en","rotten_tomatoes_score":65}
 {"id":"tt16311594","title":"F1® Le Film","year":2025,"original_language":"en","rotten_tomatoes_score":82}
-{"id":"tt9362736","title":"Die My Love","year":2025,"original_language":"en","rotten_tomatoes_score":null}
+{"id": "tt9362736", "title": "Die My Love", "year": 2025, "original_language": "en", "rotten_tomatoes_score": 74}
 {"id":"tt12300742","title":"Bugonia","year":2025,"original_language":"en","rotten_tomatoes_score":87}
 {"id":"tt32141377","title":"28 Ans plus tard : Le Temple des morts","year":2026,"original_language":"en","rotten_tomatoes_score":91}
 {"id":"tt1527793","title":"Aucun autre choix","year":2025,"original_language":"ko","rotten_tomatoes_score":98}
@@ -398,5 +398,5 @@
 {"id":"tt4154756","title":"Avengers : Infinity War","year":2018,"original_language":"en","rotten_tomatoes_score":85}
 {"id":"tt0241527","title":"Harry Potter à l'école des sorciers","year":2001,"original_language":"en","rotten_tomatoes_score":80}
 {"id":"tt12042730","title":"Projet Dernière Chance","year":2026,"original_language":"en","rotten_tomatoes_score":95}
-{"id":"tt0097904","title":"Monsieur Hire","year":1989,"original_language":"fr","rotten_tomatoes_score":null}
+{"id": "tt0097904", "title": "Monsieur Hire", "year": 1989, "original_language": "fr", "rotten_tomatoes_score": 100}
 {"id":"tt0083287","title":"Viens chez moi, j'habite chez une copine","year":1981,"original_language":"fr","rotten_tomatoes_score":null}

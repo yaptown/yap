@@ -457,6 +457,9 @@ const EXCLUDED_MOVIES: &[&str] = &[
 struct OmdbResponse {
     #[serde(rename = "Ratings", default)]
     ratings: Vec<OmdbRating>,
+    /// OMDb reports failures (bad key, unknown id) as 200s with this set.
+    #[serde(rename = "Error")]
+    error: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -485,8 +488,20 @@ impl OmdbClient {
             "https://www.omdbapi.com/?i={}&apikey={}",
             imdb_id, self.api_key
         );
-        let response = self.client.get(&url).send().await.ok()?;
-        let omdb: OmdbResponse = response.json().await.ok()?;
+        let omdb: OmdbResponse =
+            match async { self.client.get(&url).send().await?.json().await }.await {
+                Ok(omdb) => omdb,
+                Err(e) => {
+                    println!("  ⚠ OMDb request failed for {imdb_id}: {e}");
+                    return None;
+                }
+            };
+        if let Some(error) = &omdb.error {
+            // An invalid key fails every film the same way; without this the
+            // run just quietly writes nulls for every score.
+            println!("  ⚠ OMDb error for {imdb_id}: {error}");
+            return None;
+        }
         for rating in &omdb.ratings {
             if rating.source == "Rotten Tomatoes" {
                 return rating.value.trim_end_matches('%').parse().ok();
