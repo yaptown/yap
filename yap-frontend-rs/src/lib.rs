@@ -6,16 +6,47 @@ mod deck_event;
 pub mod deck_selection;
 pub mod dictionary;
 mod directories;
+mod disclosure;
 mod human_audio;
 mod language_pack;
+mod learning_metadata;
+pub use learning_metadata::{
+    CourseMaturity, DailyGoalOption, LanguageMetadata, get_daily_goal_options,
+    get_language_metadata,
+};
 mod next_cards;
 mod notifications;
+mod restrictions;
+pub use restrictions::{ChallengeRestrictions, get_challenge_restrictions};
 pub mod opfs_test;
+mod placement_session;
 mod placement_test;
+pub use placement_session::{
+    PlacementSession, PlacementSessionInfo, get_placement_session_info, toggle_placement_word,
+};
 pub mod profile;
 pub mod simulation;
+mod study_options;
 mod supabase;
+pub use study_options::{IdleStudyState, get_idle_study_state, next_progress_milestone};
+mod sentence_lists;
 mod tiers;
+mod transcription_review;
+pub use transcription_review::{
+    TranscriptionInput, TranscriptionSubmission, apply_transcription_grade,
+    get_transcription_review_definitions, prepare_transcription_submission,
+    transcription_is_perfect,
+};
+mod translation_review;
+pub use sentence_lists::{
+    SentenceListCategory, SentenceListNavigation, SentenceListProgress,
+    get_sentence_list_navigation,
+};
+pub use translation_review::{
+    ManualTranslationGrade, ReviewDefinition, TranslationGradeItem, TranslationReviewFeedback,
+    TranslationReviewResult, apply_translation_grade, failed_translation_review,
+    get_translation_review_feedback, prepare_translation_review,
+};
 mod utils;
 
 pub use audio::{
@@ -23,6 +54,10 @@ pub use audio::{
 };
 pub use challenge::CardContext;
 pub use deck_event::*;
+pub use disclosure::{
+    FlashcardDisclosure, ReviewPromptContext, ReviewPrompts, get_flashcard_disclosure,
+    get_review_prompts, should_show_challenge_tutorial,
+};
 pub use human_audio::{lookup as lookup_human_audio, register as register_human_audio};
 pub use utils::ai_server_url;
 
@@ -35,6 +70,7 @@ use language_utils::SentenceGrams;
 use language_utils::SpurGram;
 pub use simulation::{DailySimulationIterator, DayChallengeIterator};
 
+use bridgerton::{AbortSignal, Callback, bridge};
 use chrono::{DateTime, Datelike, Utc};
 use deck_selection::DailyReviewTarget;
 use deck_selection::DeckSelectionEvent;
@@ -62,10 +98,8 @@ use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::hash::Hash;
 use std::sync::Arc;
-use std::sync::LazyLock;
-use wasm_bindgen::prelude::*;
 use weapon::AppState as _;
-use weapon::data_model::{EventStore, EventType, ListenerKey, Timestamped};
+use weapon::data_model::{EventType, ListenerKey, LocalEventStore as EventStore, Timestamped};
 
 use crate::deck_selection::DeckSelection;
 use crate::deck_selection::DeckSelectionPartial;
@@ -82,7 +116,7 @@ fn language_pack_lock_name(course: Course) -> String {
     )
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn get_available_courses() -> Vec<language_utils::Course> {
     language_utils::COURSES.to_vec()
 }
@@ -90,7 +124,7 @@ pub fn get_available_courses() -> Vec<language_utils::Course> {
 /// The AI-backend base URL baked into this build by the `local-backend`
 /// feature switch. Exposed so the frontend can report to Sentry if a
 /// local-backend build ever ends up deployed to production.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn get_ai_server_url() -> String {
     utils::ai_server_url().to_string()
 }
@@ -99,12 +133,12 @@ pub fn get_ai_server_url() -> String {
 /// is cached or evicted. The frontend polls this to re-run challenge
 /// selection as the background prefetcher lands clips (which can un-hide
 /// audio challenges that were held back as not-yet-playable).
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn get_audio_cache_version() -> u32 {
     audio::cached_clips_version()
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn get_showcase_data() -> Vec<language_utils::CourseShowcase> {
     static SHOWCASE_JSONS: &[&str] = &[
         include_str!("../../out/fra_for_eng/showcase.json"),
@@ -127,7 +161,7 @@ pub fn get_showcase_data() -> Vec<language_utils::CourseShowcase> {
         .collect()
 }
 
-#[wasm_bindgen]
+#[bridgerton::bridge(opaque)]
 pub struct Weapon {
     // todo: move these into a type in `weapon`
     // btw, we should never hold a borrow across an .await. by avoiding this, we guarantee the absence of "borrow while locked" panics
@@ -140,28 +174,15 @@ pub struct Weapon {
     directories: Directories,
 }
 
-// putting this inside LOGGER prevents us from accidentally initializing the logger more than once
-#[allow(clippy::declare_interior_mutable_const)]
-const LOGGER: LazyLock<()> = LazyLock::new(|| {
-    utils::set_panic_hook();
-
-    wasm_logger::init(wasm_logger::Config::default());
-    log::info!("Logging initialized");
-});
-
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge]
 impl Weapon {
-    // Todo: I want to mostly move this into `weapon`. The one holdup is that wasm-bindgen types can't be generic, necessitating wrappers
-    // Exposed as a static factory rather than a constructor: wasm-bindgen deprecated
-    // async constructors (they generate invalid TS).
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    // Todo: I want to mostly move this into `weapon`. The one holdup is that bridged objects can't be generic, necessitating wrappers.
+    // An async factory rather than a constructor: bridged constructors are synchronous on both platforms.
     pub async fn create(
         user_id: Option<String>,
-        sync_stream: js_sys::Function,
-    ) -> Result<Self, persistent::Error> {
-        // used to only initialize the logger once
-        #[allow(clippy::borrow_interior_mutable_const)]
-        *LOGGER;
+        sync_stream: Callback<(ListenerKey, String)>,
+    ) -> Result<Self, bridgerton::Error> {
+        bridgerton::platform::init_logging();
 
         let directories = directories::get_directories(&user_id)
             .await
@@ -192,17 +213,7 @@ impl Weapon {
         let mut events: EventStore<String, String> = EventStore::default();
 
         events.register_listener(move |listener_id, stream_id| {
-            #[cfg(target_arch = "wasm32")]
-            {
-                let this = JsValue::null();
-                let listener_js: JsValue = listener_id.into();
-                let stream_js = JsValue::from_str(&stream_id);
-                let _ = sync_stream.call2(&this, &listener_js, &stream_js);
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                let _ = (listener_id, &sync_stream, stream_id);
-            }
+            let _ = sync_stream.call((listener_id, stream_id));
         });
 
         // Seed the audio-cache mirror before any deck API is reachable, so
@@ -227,12 +238,7 @@ impl Weapon {
         })
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub fn subscribe_to_stream(
-        &self,
-        stream_id: String,
-        callback: js_sys::Function,
-    ) -> ListenerKey {
+    pub fn subscribe_to_stream(&self, stream_id: String, callback: Callback<()>) -> ListenerKey {
         // After sync, flush any pending notifications to JS listeners
         let _flusher = FlushLater::new(self);
 
@@ -240,18 +246,15 @@ impl Weapon {
             .borrow_mut()
             .register_listener(move |_, event_stream_id| {
                 if event_stream_id == stream_id {
-                    let this = JsValue::null();
-                    let _ = callback.call0(&this);
+                    let _ = callback.call(());
                 }
             })
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn unsubscribe(&self, key: ListenerKey) {
         self.store.borrow_mut().unregister_listener(key)
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn request_reviews(&self) {
         let _flusher = FlushLater::new(self); // The addition of a new stream can trigger listeners, so we want to make sure to flush them after.
         self.store
@@ -259,7 +262,6 @@ impl Weapon {
             .get_or_insert_default::<EventType<DeckEvent>>("reviews".to_string(), None);
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn request_deck_selection(&self) {
         let _flusher = FlushLater::new(self); // The addition of a new stream can trigger listeners, so we want to make sure to flush them after.
         self.store
@@ -270,7 +272,6 @@ impl Weapon {
             );
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_stream_num_events(&self, stream_id: String) -> Option<usize> {
         let store = self.store.borrow();
         if !store.loaded_at_least_once(&stream_id) {
@@ -301,13 +302,13 @@ impl Weapon {
         &self,
         course: Course,
         utc_offset_seconds: i32,
-    ) -> Result<Deck, JsValue> {
+    ) -> Result<Deck, bridgerton::Error> {
         let language_pack = self
             .language_pack
             .borrow()
             .get(&course)
             .map(|loaded| loaded.pack.clone())
-            .ok_or_else(|| JsValue::from_str("language pack not loaded for this course"))?;
+            .ok_or_else(|| bridgerton::Error::new("language pack not loaded for this course"))?;
         let target_language = course.target_language;
         let native_language = self
             .get_deck_selection_state()
@@ -315,7 +316,7 @@ impl Weapon {
             .unwrap_or(course.native_language);
 
         let timezone = chrono::FixedOffset::east_opt(utc_offset_seconds)
-            .ok_or_else(|| JsValue::from_str("invalid timezone offset"))?;
+            .ok_or_else(|| bridgerton::Error::new("invalid timezone offset"))?;
         let context = Context {
             language_pack,
             course: Course {
@@ -332,13 +333,12 @@ impl Weapon {
         Ok(stream.state(initial_state, &context))
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn sync_with_supabase(
         &self,
         access_token: String,
         modifier: Option<ListenerKey>,
         upload: bool,
-    ) -> Result<(), wasm_bindgen::JsValue> {
+    ) -> Result<(), bridgerton::Error> {
         if let Some(user_id) = &self.user_id {
             // After sync, flush any pending notifications to JS listeners
             let _flusher = FlushLater::new(self);
@@ -357,8 +357,6 @@ impl Weapon {
         Ok(())
     }
 
-    #[cfg(target_arch = "wasm32")]
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn sync(
         &self,
         stream_id: String,
@@ -366,7 +364,7 @@ impl Weapon {
         attempt_supabase: bool,
         modifier: Option<ListenerKey>,
         upload: bool,
-    ) -> Result<(), wasm_bindgen::JsValue> {
+    ) -> Result<(), bridgerton::Error> {
         // After sync, flush any pending notifications to JS listeners
         let _flusher = FlushLater::new(self);
 
@@ -375,13 +373,9 @@ impl Weapon {
             !store.loaded_at_least_once(&stream_id)
         };
 
-        let start_time = if is_initial_load {
-            web_sys::window()
-                .and_then(|w| w.performance())
-                .map(|p| p.now())
-        } else {
-            None
-        };
+        let load_timer = is_initial_load.then(|| {
+            bridgerton::platform::PerfTimer::new(format!("Initial load from disk for {stream_id}"))
+        });
 
         EventStore::load_from_local_storage(
             &self.store,
@@ -391,15 +385,7 @@ impl Weapon {
         )
         .await?;
 
-        if is_initial_load
-            && let (Some(start), Some(perf)) =
-                (start_time, web_sys::window().and_then(|w| w.performance()))
-        {
-            log::info!(
-                "Initial load from disk for {stream_id} took {}ms",
-                perf.now() - start
-            );
-        }
+        drop(load_timer);
 
         {
             if self
@@ -432,6 +418,7 @@ impl Weapon {
                 upload,
             )
             .await?;
+
             if supabase_sync_result.downloaded_from_supabase > 0 {
                 EventStore::save_to_local_storage(
                     &self.store,
@@ -445,7 +432,6 @@ impl Weapon {
         Ok(())
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_timestamp_of_earliest_unsynced_event(
         &self,
         target: weapon::data_model::SyncTarget,
@@ -456,12 +442,10 @@ impl Weapon {
             .map(|timestamp| EarliestUnsyncedEvent { timestamp })
     }
 
-    #[cfg(target_arch = "wasm32")]
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn load_from_local_storage(
         &self,
         stream_id: String,
-    ) -> Result<(), persistent::Error> {
+    ) -> Result<(), bridgerton::Error> {
         let _flusher = FlushLater::new(self);
 
         EventStore::load_from_local_storage(
@@ -477,7 +461,6 @@ impl Weapon {
         Ok(())
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_sync_state(
         &self,
         target: weapon::data_model::SyncTarget,
@@ -503,7 +486,7 @@ impl Weapon {
     // non-obviously for JS consumption
     // =======
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn num_events(&self) -> usize {
         self.store
             .borrow()
@@ -513,7 +496,6 @@ impl Weapon {
             .sum()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn num_events_on_remote_as_of_last_sync(
         &self,
         target: weapon::data_model::SyncTarget,
@@ -531,27 +513,25 @@ impl Weapon {
             .unwrap_or(0)
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn user_id(&self) -> Option<String> {
         self.user_id.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn device_id(&self) -> String {
         self.device_id.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn add_remote_event(
         &self,
         device_id: String,
         stream_id: String,
         event: String,
-    ) -> Result<(), JsValue> {
-        let event: serde_json::Value =
-            serde_json::from_str(&event).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
+    ) -> Result<(), bridgerton::Error> {
+        let event: serde_json::Value = serde_json::from_str(&event)?;
         let versioned_event: Timestamped<EventType<VersionedDeckEvent>> =
-            serde_json::from_value(event).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
+            serde_json::from_value(event)?;
 
         // Add the versioned event directly - it will be stored on disk.
         // Events that can't convert to current form will be skipped during state computation.
@@ -572,7 +552,7 @@ impl Weapon {
             self.device_id.clone(),
             event,
             None,
-            utils::current_local_offset(),
+            bridgerton::platform::current_local_offset(),
         );
         self.flush_notifications();
     }
@@ -588,7 +568,7 @@ impl Weapon {
             event,
             None,
             timestamp,
-            utils::current_local_offset(),
+            bridgerton::platform::current_local_offset(),
         );
         self.flush_notifications();
     }
@@ -599,12 +579,11 @@ impl Weapon {
             self.device_id.clone(),
             event,
             None,
-            utils::current_local_offset(),
+            bridgerton::platform::current_local_offset(),
         );
         self.flush_notifications();
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn cache_language_pack(
         &self,
         course: Course,
@@ -614,15 +593,14 @@ impl Weapon {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge]
 impl Weapon {
     /// Load the full language pack (core + sentences), replacing a core-only
     /// pack if one was loaded first.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn load_language_pack(
         &self,
         course: Course,
-        on_progress: Option<js_sys::Function>,
+        on_progress: Option<Callback<(String, f32)>>,
     ) -> Result<(), language_pack::LanguageDataError> {
         self.load_language_pack_inner(course, on_progress, false)
             .await
@@ -631,11 +609,10 @@ impl Weapon {
     /// Load just the core half (dictionary + frequencies) — enough to create
     /// a deck and run the placement test while the sentence half is still
     /// downloading. A later `load_language_pack` call swaps in the full pack.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn load_language_pack_core(
         &self,
         course: Course,
-        on_progress: Option<js_sys::Function>,
+        on_progress: Option<Callback<(String, f32)>>,
     ) -> Result<(), language_pack::LanguageDataError> {
         self.load_language_pack_inner(course, on_progress, true)
             .await
@@ -643,7 +620,6 @@ impl Weapon {
 
     /// Whether the loaded pack for this course (if any) includes the
     /// sentence half.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn is_language_pack_fully_loaded(&self, course: Course) -> bool {
         self.language_pack
             .borrow()
@@ -654,7 +630,7 @@ impl Weapon {
     async fn load_language_pack_inner(
         &self,
         course: Course,
-        on_progress: Option<js_sys::Function>,
+        on_progress: Option<Callback<(String, f32)>>,
         core_only: bool,
     ) -> Result<(), language_pack::LanguageDataError> {
         let satisfied = |loaded: &BTreeMap<Course, LoadedLanguagePack>| {
@@ -672,10 +648,9 @@ impl Weapon {
         )
         .await
         .map_err(|e| {
-            language_pack::LanguageDataError::InvalidData(
-                e.as_string()
-                    .unwrap_or_else(|| "Failed to acquire language pack lock".to_string()),
-            )
+            language_pack::LanguageDataError::InvalidData(format!(
+                "Failed to acquire language pack lock: {e:?}"
+            ))
         })?;
 
         if satisfied(&self.language_pack.borrow()) {
@@ -684,10 +659,7 @@ impl Weapon {
 
         let set_loading_state = |message: &str, progress: f32| {
             if let Some(ref callback) = on_progress {
-                let this = wasm_bindgen::JsValue::NULL;
-                let message_js = wasm_bindgen::JsValue::from_str(message);
-                let progress_js = wasm_bindgen::JsValue::from_f64(progress as f64);
-                let _ = callback.call2(&this, &message_js, &progress_js);
+                let _ = callback.call((message.to_owned(), progress));
             }
         };
         let language_pack = if core_only {
@@ -727,8 +699,8 @@ struct LoadedLanguagePack {
     full: bool,
 }
 
-#[derive(Clone, Debug, tsify::Tsify, serde::Serialize, serde::Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct EarliestUnsyncedEvent {
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
@@ -750,8 +722,8 @@ impl<'a> Drop for FlushLater<'a> {
     }
 }
 
-#[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridgerton::bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct TranslateComprehensibleSentence {
     pub audio: AudioRequest,
     pub target_language: String,
@@ -780,8 +752,8 @@ pub struct TranslateComprehensibleSentence {
     pub second_chance: bool,
 }
 
-#[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridgerton::bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct TranscribeComprehensibleSentence {
     pub target_language: String,
     pub audio: AudioRequest,
@@ -803,21 +775,8 @@ pub struct TranscribeComprehensibleSentence {
     pub second_chance: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct PickHomophone<S>
-where
-    S: rkyv::Archive + Hash + std::fmt::Debug + Eq + PartialEq + Ord + PartialOrd,
-    <S as rkyv::Archive>::Archived: PartialEq + PartialOrd + Eq + Ord + Hash + std::fmt::Debug,
-{
-    word_pair: HomophoneWordPair<S>,
-    sentence_pair: HomophoneSentencePair<S>,
-}
-
-#[derive(
-    Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, tsify::Tsify, Hash,
-)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridge(transparent)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum CardType {
     TargetLanguage,
     Listening,
@@ -833,8 +792,8 @@ const CARD_TYPES: [CardType; 3] = [
 /// Which onboarding rule next_text_card is using to pick smart-add cards.
 /// Mirrors the thresholds in next_cards::next_text_card so the UI can
 /// describe what "Smart add" is about to do.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, tsify::Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridge(transparent)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SmartAddRegime {
     /// First 5 cards on a Latin-script course: high-frequency easy single words.
     Easy,
@@ -844,8 +803,8 @@ pub enum SmartAddRegime {
     General,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, tsify::Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct NoCardsReadyInfo {
     pub smart_add_count: u32,
     pub smart_add_regime: SmartAddRegime,
@@ -859,15 +818,11 @@ pub struct NoCardsReadyInfo {
     pub smart_add_event: Option<DeckEvent>,
     /// Current tier info
     pub tier_info: TierInfo,
-    /// Workload stats for notification
-    pub past_week_challenge_average: f64,
-    pub upcoming_total_reviews: u32,
-    pub upcoming_max_per_day: u32,
-    pub cards_added_past_16_hours: u32,
+    pub recommend_more_cards: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, tsify::Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct ManualAddOption {
     pub count: u32,
     pub card_type: CardType,
@@ -974,14 +929,14 @@ pub struct TodayStats {
     pub forgot: u32,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize, tsify::Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridge(transparent)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Accomplishment {
     DailyGoalReached,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, tsify::Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct TodayNewCard {
     pub word: String,
     pub translation: String,
@@ -998,8 +953,8 @@ pub struct DaySummary {
     pub locked_in_cards: u32,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, tsify::Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridge(transparent)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct DayProgress {
     /// 0 = Monday, 6 = Sunday
     pub weekday: u8,
@@ -1017,8 +972,8 @@ pub struct DayProgress {
     pub is_future: bool,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, tsify::Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct TodaySummary {
     pub reviews: u32,
     pub time_spent_seconds: u32,
@@ -1044,18 +999,8 @@ pub struct Context {
 
 /// Flashcard types for tracking tutorial progress
 #[derive(
-    Clone,
-    Debug,
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize,
-    tsify::Tsify,
+    Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Serialize, serde::Deserialize,
 )]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum FlashcardType {
     WrittenGram,
     Listening,
@@ -1094,16 +1039,6 @@ pub struct Stats {
     pub wrong_sentences: VecDeque<(Spur, SentenceChallengeType)>,
 }
 
-#[derive(
-    Clone, Debug, Eq, PartialEq, Ord, PartialOrd, serde::Serialize, serde::Deserialize, tsify::Tsify,
-)]
-#[serde(tag = "type")]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum UserStatedExperience {
-    PlacementTest { results: PlacementTest },
-    FreshStart {},
-}
-
 #[derive(Clone, Debug)]
 pub struct DeckState {
     placement_test_results: Option<PlacementTest>,
@@ -1124,8 +1059,8 @@ pub struct DeckState {
     last_lock_day: Option<chrono::NaiveDate>,
 }
 
+#[bridgerton::bridge(opaque)]
 #[derive(Clone, Debug)]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct Deck {
     placement_test_results: Option<PlacementTest>,
     cards: FxHashMap<CardIndicator<SpurGram, Spur>, CardData>,
@@ -1259,7 +1194,6 @@ impl weapon::AppState for Deck {
             content: event,
         }) = event;
 
-        // Set start_time on first event
         if deck.stats.start_time.is_none() {
             deck.stats.start_time = Some(*timestamp);
         }
@@ -1286,7 +1220,6 @@ impl weapon::AppState for Deck {
             deck.update_daily_activity(timestamp, &timezone);
             deck.stats.total_reviews += 1;
 
-            // Check if the user just crossed their daily study goal
             if let Some(today) = &deck.stats.today {
                 let target = deck.daily_review_target.target_seconds();
                 if time_before < target && today.time_spent_seconds >= target {
@@ -1345,7 +1278,6 @@ impl weapon::AppState for Deck {
                         if !context.is_card_valid(&card) {
                             continue;
                         }
-                        // Add the card to the deck if it's not already in it, or transition ghost to added
                         deck.cards
                             .entry(card)
                             .and_modify(|existing| {
@@ -1431,7 +1363,6 @@ impl weapon::AppState for Deck {
                         .collect()
                 };
 
-                // Get the challenge sentence
                 let challenge_sentence = match &review {
                     current::SentenceReviewResult::Perfect { challenge, .. } => challenge,
                     current::SentenceReviewResult::Graded { challenge, .. } => challenge,
@@ -1448,7 +1379,6 @@ impl weapon::AppState for Deck {
                     && let Some(encoded_sentence) =
                         context.language_pack.encoded_sentences.get(&sentence_spur)
                 {
-                    // Update sentence review count
                     *deck
                         .stats
                         .sentences_reviewed
@@ -1510,7 +1440,6 @@ impl weapon::AppState for Deck {
                         // else: Unknown state, skip this gram
                     }
 
-                    // Handle phrases (multiword terms) via remembered_grams/forgotten_grams
                     match &review {
                         current::SentenceReviewResult::Perfect { .. } => {
                             for gram_spur in encoded_sentence
@@ -1824,7 +1753,6 @@ impl weapon::AppState for Deck {
                             );
                         }
                     }
-                    // Update sentence review count if perfect (no Again ratings)
                     if !any_again {
                         *deck
                             .stats
@@ -1972,7 +1900,6 @@ impl weapon::AppState for Deck {
                 points
             };
 
-        // Calculate smoothing window as 20% of max ease
         let smoothing_window = context
             .language_pack
             .gram_frequencies
@@ -1981,7 +1908,6 @@ impl weapon::AppState for Deck {
             .map(|(_, freq)| freq.ease * 0.2)
             .unwrap_or(1.0); // Fallback if no frequencies exist
 
-        // Create isotonic regressions (need at least 2 non-new cards)
         let target_language_regression =
             if target_language_points.len() >= 2 || state.placement_test_results.is_some() {
                 target_language_points.extend_from_slice(&bias_points[..]);
@@ -2153,13 +2079,11 @@ impl DeckState {
         let was_new = state_before == rs_fsrs::State::New;
 
         let card_data = self.cards.entry(card).or_insert_with(|| {
-            // Create a ghost card if it doesn't exist
             let mut fsrs_card = rs_fsrs::Card::new(timestamp);
             fsrs_card.due = timestamp;
             CardData::Ghost { fsrs_card }
         });
 
-        // Update the card data
         let fsrs_card = match card_data {
             CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => fsrs_card,
         };
@@ -2230,7 +2154,6 @@ impl DeckState {
     fn update_daily_activity(&mut self, timestamp: &DateTime<Utc>, timezone: &chrono::FixedOffset) {
         let day = timestamp.with_timezone(timezone).date_naive();
 
-        // Update daily streak
         match &self.stats.daily_streak {
             None => {
                 self.stats.daily_streak = Some(DailyStreak {
@@ -2256,7 +2179,6 @@ impl DeckState {
             }
         }
 
-        // Update today stats
         const MAX_REVIEW_SECONDS: u32 = 30;
         match self.stats.today.take() {
             Some(mut today) if today.day == day => {
@@ -2313,7 +2235,7 @@ impl DeckState {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge]
 impl Deck {
     /// Helper function to create a CardSummary from a card indicator and card data
     fn card_to_summary(
@@ -2334,7 +2256,6 @@ impl Deck {
                 CardIndicator::WrittenGram { gram } => {
                     let gram_resolved = self.context.language_pack.resolve_gram(gram);
                     let text = gram_resolved.to_display_string(self.context.course.target_language);
-                    // Get POS from first heteronym if available for subtitle
                     let subtitle = gram_resolved.0.first().and_then(|atom| {
                         if let language_utils::Atom::Tok(word) = atom
                             && let language_utils::WordType::Heteronym(h) = &word.word_type
@@ -2521,7 +2442,6 @@ impl Deck {
     /// Returns all cards as summaries, ordered consistently with get_review_info
     /// (due cards first, then future cards, each sorted by due date and card indicator).
     /// Includes locked cards — lockup only hides cards from the review queue.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_all_cards_summary(&self) -> Vec<CardSummary> {
         let now = Utc::now().timestamp_millis() as f64;
         let review_info = self.get_review_info_including_locked(now);
@@ -2537,7 +2457,6 @@ impl Deck {
     }
 
     /// Get all cards that have been detected as leeches (12+ lapses)
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_leeches(&self) -> Vec<CardSummary> {
         self.leeches
             .keys()
@@ -2549,7 +2468,6 @@ impl Deck {
             .collect()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_review_info(
         &self,
         banned_challenge_types: Vec<ChallengeRequirements>,
@@ -2637,7 +2555,6 @@ impl Deck {
     }
 
     /// How many cards are currently set aside in lockup.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn locked_count(&self) -> usize {
         self.locked_cards.len()
     }
@@ -2646,7 +2563,6 @@ impl Deck {
     /// Non-None when more than `REVIEW_LOCKUP_TRIGGER` cards are due and the
     /// user hasn't locked up yet today; keeps the `REVIEW_LOCKUP_KEEP`
     /// most-due cards active and sets the rest aside.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_lockup_offer(
         &self,
         banned_challenge_types: Vec<ChallengeRequirements>,
@@ -2702,7 +2618,6 @@ impl Deck {
     /// None when no locked card is actually due — locked cards scheduled for
     /// the future are morally just future cards, so they don't keep the user
     /// in "release mode" (or block adding new cards).
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_release_offer(&self, timestamp_ms: f64) -> Option<ReleaseOffer> {
         let now =
             DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64).unwrap_or_else(Utc::now);
@@ -2758,13 +2673,15 @@ impl Deck {
         })
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn cache_challenge_audio(
         &self,
         banned_challenge_types: Vec<ChallengeRequirements>,
         access_token: Option<String>,
-        abort_signal: Option<web_sys::AbortSignal>,
+        abort_signal: Option<AbortSignal>,
     ) {
+        if abort_signal.as_ref().is_some_and(AbortSignal::aborted) {
+            return;
+        }
         let mut audio_cache = match audio::AudioCache::new().await {
             Ok(cache) => cache,
             Err(e) => {
@@ -2794,29 +2711,14 @@ impl Deck {
             let mut challenges_this_day = 0;
 
             loop {
-                // Yield to the main thread to avoid blocking old devices
-                let promise = js_sys::Promise::new(&mut |resolve, _| {
-                    if let Some(window) = web_sys::window() {
-                        if window
-                            .set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 200)
-                            .is_err()
-                        {
-                            // setTimeout failed; resolve immediately rather than hanging
-                            let _ = resolve.call0(&wasm_bindgen::JsValue::UNDEFINED);
-                        }
-                    } else {
-                        // No window (e.g. Worker context); resolve immediately
-                        let _ = resolve.call0(&wasm_bindgen::JsValue::UNDEFINED);
+                // Give the UI time between simulated challenges. Cancellation skips cleanup.
+                let pause = bridgerton::platform::sleep_ms(200);
+                if let Some(signal) = &abort_signal {
+                    if signal.until(pause).await.is_err() {
+                        return;
                     }
-                });
-                let _ = wasm_bindgen_futures::JsFuture::from(promise).await;
-
-                // Early return (not just break) so we skip the audio cleanup below,
-                // preserving any previously cached files that may still be useful.
-                if let Some(ref signal) = abort_signal
-                    && signal.aborted()
-                {
-                    return;
+                } else {
+                    pause.await;
                 }
 
                 let Some(challenge) = day.next() else {
@@ -2827,6 +2729,11 @@ impl Deck {
 
                 // Pre-fetch audio files
                 for request in challenge.audio_requests() {
+                    if abort_signal.as_ref().is_some_and(AbortSignal::aborted) {
+                        return;
+                    }
+                    // A playback caller may share this fetch. Finish its cache write before
+                    // checking cancellation again; aborting prefetch must not cancel playback.
                     let cache_filename =
                         audio::tts_cache_filename(&request.request, &request.provider);
                     let _ = audio_cache.fetch_and_cache(&request, access_token).await;
@@ -2850,7 +2757,6 @@ impl Deck {
             simulation_iterator = day.finish_day();
         }
 
-        // Check if aborted before cleanup
         if let Some(ref signal) = abort_signal
             && signal.aborted()
         {
@@ -2870,7 +2776,6 @@ impl Deck {
         }
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_percent_of_words_known(&self) -> f64 {
         let written = self.get_comprehensible_written_grams(true);
         let listening = self.get_comprehensible_listening_grams(true);
@@ -2883,12 +2788,10 @@ impl Deck {
             / 100.0
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_sentence_list(&self) -> Option<SentenceListSelection> {
         self.sentence_list.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn change_sentence_list(&self, sentence_list: Option<SentenceListSelection>) -> DeckEvent {
         DeckEvent::Language(LanguageEvent {
             target_language: self.context.course.target_language,
@@ -2897,12 +2800,10 @@ impl Deck {
         })
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_daily_review_target_setting(&self) -> DailyReviewTarget {
         self.daily_review_target.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn set_daily_review_target(&self, daily_review_target: DailyReviewTarget) -> DeckEvent {
         DeckEvent::Language(LanguageEvent {
             target_language: self.context.course.target_language,
@@ -2915,7 +2816,6 @@ impl Deck {
 
     /// Get the tier level where adding the next batch of cards makes the most progress.
     /// Falls back to the first incomplete level if no cards improve any level.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_current_tier(&self) -> TierInfo {
         let freq_list = &self.context.language_pack.gram_frequencies;
         let all_grams: Vec<SpurGram> = freq_list.entries.keys().copied().collect();
@@ -2969,22 +2869,18 @@ impl Deck {
         level.to_tier_info(pct, cumulative_pct)
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_accomplishment(&self) -> Option<Accomplishment> {
         self.accomplishment.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_total_reviews(&self) -> u64 {
         self.stats.total_reviews
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_xp(&self) -> f64 {
         self.stats.xp
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_daily_streak(&self) -> u32 {
         match &self.stats.daily_streak {
             None => 0,
@@ -3003,7 +2899,6 @@ impl Deck {
         }
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_today_reviews(&self) -> u32 {
         match &self.stats.today {
             Some(today) => {
@@ -3021,7 +2916,6 @@ impl Deck {
     }
 
     /// Today's estimated time spent reviewing, in seconds.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_today_time_spent(&self) -> u32 {
         match &self.stats.today {
             Some(today) => {
@@ -3038,7 +2932,6 @@ impl Deck {
         }
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_today_summary(&self) -> TodaySummary {
         let language_pack = &self.context.language_pack;
 
@@ -3146,13 +3039,11 @@ impl Deck {
     }
 
     /// Daily goal target in seconds.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_daily_review_target(&self) -> u32 {
         self.daily_review_target.target_seconds()
     }
 
     /// Progress for each day of the current week (Monday → Sunday) in the user's local timezone.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_current_week_progress(&self) -> Vec<DayProgress> {
         use chrono::Datelike;
         let timezone = &self.context.timezone;
@@ -3187,7 +3078,6 @@ impl Deck {
             .collect()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_movie_stats(&self) -> Vec<MovieStats> {
         let language_pack = &self.context.language_pack;
         let mut stats = Vec::new();
@@ -3229,7 +3119,6 @@ impl Deck {
                 })
                 .sum();
 
-            // Calculate cards needed to reach next 5% milestone
             let cards_to_next_milestone = if !score.all_available_learned {
                 let next_milestone = ((percent_known / 5.0).ceil() * 5.0).min(100.0);
                 let target_word_count = ((next_milestone / 100.0) * total_word_count as f64) as u64;
@@ -3286,7 +3175,6 @@ impl Deck {
         stats
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_pimsleur_stats(&self) -> Vec<PimsleurStats> {
         let language_pack = &self.context.language_pack;
         let mut stats = Vec::new();
@@ -3321,7 +3209,6 @@ impl Deck {
     }
 
     /// Returns the best movie sentence list: highest RT score among incomplete movies.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_best_movie_sentence_list(&self) -> Option<SentenceListSelection> {
         let stats = self.get_movie_stats();
         let incomplete: std::collections::BTreeSet<_> = stats
@@ -3348,7 +3235,6 @@ impl Deck {
     }
 
     /// Returns the best Pimsleur lesson: the first incomplete one (by level/lesson).
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_best_pimsleur_sentence_list(&self) -> Option<SentenceListSelection> {
         let stats = self.get_pimsleur_stats();
         // Already sorted by level then lesson
@@ -3361,7 +3247,6 @@ impl Deck {
             })
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_movie_metadata(&self, movie_ids: Vec<String>) -> Vec<MovieMetadataBasic> {
         let language_pack = &self.context.language_pack;
         let mut movies = Vec::new();
@@ -3387,7 +3272,6 @@ impl Deck {
         movies
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_movie_poster(&self, movie_id: String) -> Option<Vec<u8>> {
         self.context
             .language_pack
@@ -3396,7 +3280,6 @@ impl Deck {
             .and_then(|m| m.poster_bytes.clone())
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_book_metadata(&self, book_ids: Vec<String>) -> Vec<language_utils::BookMetadata> {
         let language_pack = &self.context.language_pack;
         book_ids
@@ -3405,7 +3288,6 @@ impl Deck {
             .collect()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_target_language(&self) -> Language {
         self.context.course.target_language
     }
@@ -3451,7 +3333,6 @@ impl Deck {
 
     /// Compute everything the NoCardsReady screen needs in a single call.
     /// This calls next_unknown_cards only once.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_no_cards_ready_info(
         &self,
         banned_challenge_types: Vec<ChallengeRequirements>,
@@ -3578,15 +3459,31 @@ impl Deck {
             percent_known_after,
             smart_add_event,
             tier_info,
-            past_week_challenge_average,
-            upcoming_total_reviews: upcoming.total_reviews,
-            upcoming_max_per_day: upcoming.max_per_day,
-            cards_added_past_16_hours,
+            recommend_more_cards: study_options::recommend_more_cards(
+                cards_added_past_16_hours,
+                past_week_challenge_average,
+                upcoming.total_reviews,
+                upcoming.max_per_day,
+                smart_add_cards.len(),
+            ),
         }
     }
 
+    /// Choices for the manual-add picker. Call lazily when the picker opens.
+    pub fn get_manual_add_options(
+        &self,
+        sentence_list: Option<SentenceListSelection>,
+        is_signed_in: bool,
+    ) -> Vec<ManualAddOption> {
+        CARD_TYPES
+            .into_iter()
+            .filter(|kind| is_signed_in || *kind != CardType::Listening)
+            .map(|kind| self.get_manual_add_option(kind, sentence_list.clone()))
+            .filter(|option| is_signed_in || option.count > 0)
+            .collect()
+    }
+
     /// Compute a manual add option for a specific card type. Call lazily (e.g. on dropdown open).
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_manual_add_option(
         &self,
         card_type: CardType,
@@ -3609,7 +3506,14 @@ impl Deck {
         }
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+    pub fn should_offer_placement_test(&self, starting_fresh: Option<bool>) -> bool {
+        disclosure::should_offer_placement_test(
+            starting_fresh,
+            self.has_taken_placement_test(),
+            self.num_cards_added(),
+        )
+    }
+
     pub fn complete_placement_test(
         &self,
         known_words: Vec<String>,
@@ -3627,7 +3531,6 @@ impl Deck {
         })
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn review_card(
         &self,
         reviewed: CardIndicator<Gram<String>, String>,
@@ -3646,7 +3549,6 @@ impl Deck {
         })
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn translate_sentence_perfect(
         &self,
         words_tapped: Vec<Heteronym<String>>,
@@ -3700,7 +3602,6 @@ impl Deck {
     /// `literal_grades` should have one entry per literal in the sentence (same order as
     /// `target_language_literals` from the challenge). None for Other word types or unknown,
     /// Some(Remembered/Forgot) for heteronyms.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn translate_sentence_wrong(
         &self,
         challenge_sentence: String,
@@ -3783,7 +3684,6 @@ impl Deck {
         }))
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn transcribe_sentence(
         &self,
         challenge: Vec<transcription_challenge::PartGraded>,
@@ -3799,7 +3699,6 @@ impl Deck {
     /// Use this for onboarding/regime decisions and any "how much have you
     /// engaged with this deck" UX — a ghost card represents a word the user
     /// happened to encounter in a sentence, not a deliberate add.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn num_cards_added(&self) -> usize {
         self.cards
             .values()
@@ -3829,11 +3728,9 @@ impl Deck {
                     continue;
                 }
 
-                // Check if due within the next three weeks
                 if due_date > now && due_date <= three_weeks_later {
                     total_reviews += 1;
 
-                    // Get the day offset from today (0 = today, 1 = tomorrow, etc.)
                     let days_from_now = (due_date - now).num_days();
                     *daily_counts.entry(days_from_now).or_insert(0) += 1;
                 }
@@ -3867,7 +3764,6 @@ impl Deck {
             .count() as u32
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_frequency_knowledge_chart_data(&self) -> Vec<FrequencyKnowledgePoint> {
         let regression = match &self.regressions.target_language_regression {
             Some(r) => r,
@@ -3924,7 +3820,6 @@ impl Deck {
         chart_data
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn has_taken_placement_test(&self) -> bool {
         self.placement_test_results.is_some()
     }
@@ -3936,9 +3831,8 @@ struct UpcomingReviewStats {
     max_per_day: u32,
 }
 
+#[bridge(transparent)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify))]
-#[cfg_attr(target_arch = "wasm32", tsify(into_wasm_abi))]
 pub struct FrequencyKnowledgePoint {
     pub frequency: f64,
     pub predicted_knowledge: f64,
@@ -3951,9 +3845,8 @@ struct ComprehensionScore {
     pub(crate) all_available_learned: bool,
 }
 
+#[bridge(transparent)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify))]
-#[cfg_attr(target_arch = "wasm32", tsify(into_wasm_abi))]
 pub struct MovieStats {
     pub id: String,
     pub percent_known: f64,
@@ -3961,9 +3854,8 @@ pub struct MovieStats {
     pub cards_to_next_milestone: Option<u32>,
 }
 
+#[bridge(transparent)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify))]
-#[cfg_attr(target_arch = "wasm32", tsify(into_wasm_abi))]
 pub struct PimsleurStats {
     pub level: u32,
     pub lesson: u32,
@@ -4070,7 +3962,6 @@ impl Context {
             Some(CardData::Ghost { fsrs_card }) => fsrs_card.state == rs_fsrs::State::Review,
             // For unadded cards, use regression predictions
             None => {
-                // Check if we have high confidence they would be known
                 // Use 80% probability threshold for considering a card comprehensible
                 // 80% was not chosen in a super scientific way, it's just a number that seemed to work well
                 if let Some((knowledge_probability, _)) =
@@ -4114,7 +4005,6 @@ impl Context {
     ) -> Option<ordered_float::NotNan<f32>> {
         let freq_score = Self::card_value_frequency(card, frequency);
 
-        // Check if we have a reviewed card (ghost or added)
         if let Some(card_data) = card_data {
             let fsrs_card = match card_data {
                 CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => fsrs_card,
@@ -4282,8 +4172,8 @@ impl Regressions {
     }
 }
 
-#[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridgerton::bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum CardContent {
     Gram {
@@ -4313,53 +4203,53 @@ pub(crate) const REVIEW_LOCKUP_TRIGGER: usize = 20;
 pub(crate) const REVIEW_LOCKUP_KEEP: usize = 15;
 
 /// The daily offer to set aside ("lock up") all but the most-due cards.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge(opaque)]
 pub struct LockupOffer {
     keep_preview: Vec<CardSummary>,
     lock_event: DeckEvent,
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge]
 impl LockupOffer {
     /// The cards that stay active — exactly what the user is shown and approves.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn keep_preview(&self) -> Vec<CardSummary> {
         self.keep_preview.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn lock_event(&self) -> DeckEvent {
         self.lock_event.clone()
     }
 }
 
 /// The "Review N more cards" offer that releases cards from lockup.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge(opaque)]
 pub struct ReleaseOffer {
     release_preview: Vec<CardSummary>,
     unlock_event: DeckEvent,
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge]
 impl ReleaseOffer {
     /// The cards that would be released — exactly what the user is shown.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn release_preview(&self) -> Vec<CardSummary> {
         self.release_preview.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn release_count(&self) -> usize {
         self.release_preview.len()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn unlock_event(&self) -> DeckEvent {
         self.unlock_event.clone()
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge(opaque)]
 #[derive(Debug, Clone)]
 pub struct ReviewInfo {
     due_cards: Vec<CardIndicator<SpurGram, Spur>>,
@@ -4372,15 +4262,15 @@ pub struct ReviewInfo {
     future_cards: Vec<CardIndicator<SpurGram, Spur>>,
 }
 
-#[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct FlashCard {
     pub content: CardContent,
     pub audio: Option<AudioRequest>,
 }
 
-#[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum Challenge<G> {
     FlashCardReview {
@@ -4418,20 +4308,10 @@ impl<G> Challenge<G> {
     }
 }
 
+#[bridge(transparent)]
 #[derive(
-    tsify::Tsify,
-    Eq,
-    PartialEq,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize,
-    Debug,
-    Clone,
-    Copy,
-    PartialOrd,
-    Ord,
+    Eq, PartialEq, Hash, serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialOrd, Ord,
 )]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ChallengeRequirements {
     Text,
     Listening,
@@ -4499,9 +4379,8 @@ impl ReviewInfo {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge]
 impl ReviewInfo {
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub fn get_next_challenge(&self, deck: &Deck) -> Option<Challenge<Gram<String>>> {
         if let Some(due_card) = self.due_cards.first() {
             Some(self.get_challenge_for_card(deck, *due_card)?)
@@ -4511,41 +4390,41 @@ impl ReviewInfo {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge]
 impl ReviewInfo {
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn due_count(&self) -> usize {
         self.due_cards.len()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn due_but_banned_count(&self) -> usize {
         self.due_but_banned_cards.len()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn due_but_locked_count(&self) -> usize {
         self.due_but_locked_cards.len()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn due_but_audio_pending_count(&self) -> usize {
         self.due_but_audio_pending_cards.len()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn future_count(&self) -> usize {
         self.future_cards.len()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn total_count(&self) -> usize {
         self.due_cards.len() + self.future_cards.len()
     }
 }
 
-/// Accessors for native (non-wasm) consumers like yap-mcp. Kept in a plain impl
-/// block so wasm-bindgen doesn't try to export their non-wasm-compatible types.
+/// Accessors for Rust consumers like yap-mcp. A plain impl: these borrow
+/// internal types that are not bridged.
 impl Deck {
     pub fn stats(&self) -> &Stats {
         &self.stats
@@ -4595,7 +4474,7 @@ impl Deck {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge(opaque)]
 #[derive(Clone)]
 pub struct CardSummary {
     card_indicator: CardIndicator<Gram<String>, String>,
@@ -4607,46 +4486,41 @@ pub struct CardSummary {
     card_subtitle: Option<String>,
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridge]
 impl CardSummary {
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn card_indicator(&self) -> CardIndicator<Gram<String>, String> {
         self.card_indicator.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn due_timestamp_ms(&self) -> f64 {
         self.due_timestamp_ms
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn state(&self) -> String {
         self.state.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn card_text(&self) -> String {
         self.card_text.clone()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn card_subtitle(&self) -> Option<String> {
         self.card_subtitle.clone()
     }
 }
 
-#[wasm_bindgen]
-pub fn test_fn(f: js_sys::Function) {
-    f.call0(&JsValue::NULL).unwrap();
-}
-
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn get_pronunciation_connector(language: Language) -> String {
     language.pronunciation_connector().to_string()
 }
 
-#[derive(tsify::Tsify, serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct AudioRequest {
     request: TtsRequest,
     provider: TtsProvider,
@@ -4654,21 +4528,21 @@ pub struct AudioRequest {
 
 /// Audio bytes plus a sidecar identifying the voice actor, when the clip
 /// came from a human recording rather than TTS.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge(opaque)]
 pub struct AudioResult {
     bytes: Vec<u8>,
     voice_actor: Option<audio::VoiceActorInfo>,
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 impl AudioResult {
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
-    pub fn bytes(&self) -> js_sys::Uint8Array {
-        js_sys::Uint8Array::from(&self.bytes[..])
+    #[bridge(getter)]
+    pub fn bytes(&self) -> Vec<u8> {
+        self.bytes.clone()
     }
 
     /// The voice actor behind the clip when it's human-recorded, else `None`.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
+    #[bridge(getter)]
     pub fn voice_actor(&self) -> Option<audio::VoiceActorInfo> {
         self.voice_actor.clone()
     }
@@ -4683,11 +4557,11 @@ impl From<audio::FetchedAudio> for AudioResult {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub async fn get_audio(
     request: AudioRequest,
     access_token: Option<String>,
-) -> Result<AudioResult, JsValue> {
+) -> Result<AudioResult, bridgerton::Error> {
     let audio_cache = audio::AudioCache::new().await?;
     let fetched = audio_cache
         .fetch_and_cache(&request, access_token.as_ref())
@@ -4695,11 +4569,11 @@ pub async fn get_audio(
     Ok(fetched.into())
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub async fn get_temp_audio(
     request: AudioRequest,
     access_token: Option<String>,
-) -> Result<AudioResult, JsValue> {
+) -> Result<AudioResult, bridgerton::Error> {
     let temp_cache = audio::TempAudioCache::new().await?;
     let fetched = temp_cache
         .fetch_and_cache(&request, access_token.as_ref())
@@ -4707,20 +4581,20 @@ pub async fn get_temp_audio(
     Ok(fetched.into())
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-pub async fn invalidate_audio_cache(request: AudioRequest) -> Result<(), JsValue> {
+#[bridgerton::bridge]
+pub async fn invalidate_audio_cache(request: AudioRequest) -> Result<(), bridgerton::Error> {
     let audio_cache = audio::AudioCache::new().await?;
     audio_cache
         .remove_cached(&request.request, &request.provider)
         .await
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn gram_to_display_string(gram: Gram<String>, language: Language) -> String {
     gram.to_display_string(language)
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn find_closest_translation(
     user_translation: String,
     candidates: Vec<String>,
@@ -4770,7 +4644,7 @@ pub fn autograde_perfect_match(
 }
 
 #[allow(clippy::too_many_arguments)]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub async fn autograde_translation(
     challenge_sentence: String,
     user_sentence: String,
@@ -4855,7 +4729,7 @@ pub async fn autograde_translation(
 /// credit a word the user never demonstrated. Shared by the app's
 /// TranslationChallenge and yap-mcp's grade_translation so the promotion
 /// rule lives in exactly one place.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn translation_is_perfect(
     literals: Vec<Literal<String>>,
     response: autograde::AutoGradeTranslationResponse,
@@ -4914,7 +4788,6 @@ pub fn heuristic_grade_translation(
 
             let found = native_words.iter().any(|native| {
                 let normalized_native = normalize_for_grading(native, native_language);
-                // Check if any word from the native translation appears in the user's translation
                 normalized_native
                     .split_whitespace()
                     .any(|word| user_words.contains(&word))
@@ -4967,7 +4840,7 @@ pub fn heuristic_grade_translation(
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub async fn autograde_transcription(
     submission: Vec<transcription_challenge::PartSubmitted>,
     access_token: Option<String>,
@@ -5055,13 +4928,12 @@ pub async fn autograde_transcription(
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub async fn autograde_transcription_llm(
     submission: Vec<transcription_challenge::PartSubmitted>,
     access_token: Option<String>,
     course: Course,
-) -> Result<transcription_challenge::Grade, JsValue> {
-    // Check if all answers are exactly correct (case-insensitive)
+) -> Result<transcription_challenge::Grade, bridgerton::Error> {
     let all_correct = submission.iter().all(|part| match part {
         transcription_challenge::PartSubmitted::AskedToTranscribe { parts, submission } => {
             let submission = normalize_for_grading(submission.trim(), course.target_language);
@@ -5123,12 +4995,12 @@ pub async fn autograde_transcription_llm(
         access_token.as_ref(),
     )
     .await
-    .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
+    .map_err(|e| bridgerton::Error::new(format!("Request error: {e:?}")))?;
 
     let response: transcription_challenge::Grade = response
         .json()
         .await
-        .map_err(|e| JsValue::from_str(&format!("Response parsing error: {e:?}")))?;
+        .map_err(|e| bridgerton::Error::new(format!("Response parsing error: {e:?}")))?;
 
     Ok(response)
 }
@@ -5141,12 +5013,12 @@ fn remove_accents(s: &str) -> String {
         .collect()
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn get_app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 pub fn get_courses() -> Vec<language_utils::Course> {
     language_utils::COURSES.to_vec()
 }
@@ -5154,13 +5026,11 @@ pub fn get_courses() -> Vec<language_utils::Course> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Days;
+
     use language_utils::SentenceGram;
 
     impl Default for Deck {
         fn default() -> Self {
-            // Read the French language data from file for tests
-            // Vec<u8> provides proper alignment for rkyv deserialization
             let language_pack: LanguagePack = language_utils::language_pack::load_split_dir(
                 std::path::Path::new("../out/fra_for_eng"),
             )
@@ -5182,282 +5052,23 @@ mod tests {
     }
 
     #[test]
-    fn test_fsrs() {
-        use chrono::Utc;
-        use rs_fsrs::{Card, FSRS, Rating};
-
-        let fsrs = FSRS::default();
-        let card = Card::new(Utc::now());
-
-        let record_log = fsrs.repeat(card, Utc::now());
-        for rating in Rating::iter() {
-            let item = record_log[rating].to_owned();
-
-            println!("{rating:#?}: {item:#?}");
-
-            let record_log = fsrs.repeat(
-                item.card,
-                Utc::now().checked_add_days(Days::new(10)).unwrap(),
-            );
-
-            {
-                // For any rating (Easy, Good, Hard, Again), you can compute the new card stats, which includes the next time the card should be reviewed
-                let item = record_log[rating].to_owned();
-
-                /* item = SchedulingInfo {
-                    card: Card {
-                        due: 2025-09-16T18:51:25.591443Z,
-                        stability: 104.27451175337288,
-                        difficulty: 2.24267983513529,
-                        elapsed_days: 10,
-                        scheduled_days: 104,
-                        reps: 2,
-                        lapses: 0,
-                        state: Review,
-                        last_review: 2025-06-04T18:51:25.591443Z,
-                    },
-                    review_log: ReviewLog {
-                        rating: Easy,
-                        elapsed_days: 10,
-                        scheduled_days: 15,
-                        state: Review,
-                        reviewed_date: 2025-06-04T18:51:25.591443Z,
-                    },
-                } */
-                println!("{rating:#?}+{rating:#?}: {item:#?}");
-            }
-        }
-    }
-
-    #[test]
-    fn test_card_accumulated_surprise_after_one_easy_review() {
-        use chrono::Utc;
-        use rs_fsrs::{Card, FSRS, Rating};
-
-        let fsrs = FSRS::default();
-        let card = Card::new(Utc::now());
-
-        // Do one easy review
-        let record_log = fsrs.repeat(card, Utc::now());
-        let after_easy = record_log[&Rating::Easy].to_owned();
-
-        // Easy review should increase positive surprise
-        assert!(
-            after_easy.card.accumulated_positive_surprise > 0.0,
-            "Accumulated positive surprise {} should be greater than 0 after easy review",
-            after_easy.card.accumulated_positive_surprise
-        );
-
-        // Negative surprise should remain at 0 for easy review
-        assert_eq!(
-            after_easy.card.accumulated_negative_surprise, 0.0,
-            "Accumulated negative surprise should be 0 after easy review"
-        );
-
-        println!(
-            "✓ After one easy review - Positive surprise: {}, Negative surprise: {}",
-            after_easy.card.accumulated_positive_surprise,
-            after_easy.card.accumulated_negative_surprise
-        );
-    }
-
-    #[test]
-    fn test_card_accumulated_surprise_after_one_again_review() {
-        use chrono::Utc;
-        use rs_fsrs::{Card, FSRS, Rating};
-
-        let fsrs = FSRS::default();
-        let card = Card::new(Utc::now());
-
-        // Do one "again" review (failed on first attempt)
-        let record_log = fsrs.repeat(card, Utc::now());
-        let after_again = record_log[&Rating::Again].to_owned();
-
-        // Failed review should only have negative surprise
-        assert_eq!(
-            after_again.card.accumulated_positive_surprise, 0.0,
-            "Positive surprise should be 0 after initial again review"
-        );
-
-        assert!(
-            after_again.card.accumulated_negative_surprise > 0.0,
-            "Negative surprise {} should be greater than 0 after again review",
-            after_again.card.accumulated_negative_surprise
-        );
-
-        println!(
-            "✓ After one again review - Positive surprise: {}, Negative surprise: {}",
-            after_again.card.accumulated_positive_surprise,
-            after_again.card.accumulated_negative_surprise
-        );
-        println!("  Lapses: {}", after_again.card.lapses);
-    }
-
-    #[test]
-    fn test_card_accumulated_surprise_after_two_good_reviews() {
-        use chrono::{Days, Utc};
-        use rs_fsrs::{Card, FSRS, Rating};
-
-        let fsrs = FSRS::default();
-        let mut card = Card::new(Utc::now());
-
-        // Do first good review
-        let record_log = fsrs.repeat(card, Utc::now());
-        card = record_log[&Rating::Good].card.clone();
-        let pos_surprise_first = card.accumulated_positive_surprise;
-        let neg_surprise_first = card.accumulated_negative_surprise;
-
-        // Do second good review after 2 weeks
-        let review_time = Utc::now().checked_add_days(Days::new(14)).unwrap();
-        let record_log = fsrs.repeat(card, review_time);
-        card = record_log[&Rating::Good].card.clone();
-        let pos_surprise_second = card.accumulated_positive_surprise;
-        let neg_surprise_second = card.accumulated_negative_surprise;
-
-        println!("✓ Accumulated surprise progression with two good reviews:");
-        println!(
-            "  After 1st good - Positive: {pos_surprise_first}, Negative: {neg_surprise_first}"
-        );
-        println!(
-            "  After 2nd good - Positive: {pos_surprise_second}, Negative: {neg_surprise_second}"
-        );
-        println!(
-            "  Positive change: {}",
-            pos_surprise_second - pos_surprise_first
-        );
-        println!(
-            "  Negative change: {}",
-            neg_surprise_second - neg_surprise_first
-        );
-        println!("  Reps: {}, Lapses: {}", card.reps, card.lapses);
-
-        // Good reviews typically shouldn't generate much surprise in either direction
-        // But the exact behavior depends on FSRS implementation
-        println!("  (Good reviews are neutral, surprise accumulation depends on expectations)");
-    }
-
-    #[test]
-    fn test_card_accumulated_surprise_after_one_easy_and_three_good_reviews() {
-        use chrono::{Days, Utc};
-        use rs_fsrs::{Card, FSRS, Rating};
-
-        let fsrs = FSRS::default();
-        let mut card = Card::new(Utc::now());
-
-        // Do one easy review
-        let record_log = fsrs.repeat(card, Utc::now());
-        card = record_log[&Rating::Easy].card.clone();
-        let pos_surprise_after_easy = card.accumulated_positive_surprise;
-        let neg_surprise_after_easy = card.accumulated_negative_surprise;
-
-        // Do three good reviews
-        for i in 1..=3 {
-            let review_time = Utc::now().checked_add_days(Days::new(i * 14)).unwrap();
-            let record_log = fsrs.repeat(card, review_time);
-            card = record_log[&Rating::Good].card.clone();
-        }
-
-        // Check accumulated surprise after mixed reviews
-        println!("✓ Accumulated surprise after 1 easy + 3 good reviews:");
-        println!(
-            "  Positive: {} (started at {})",
-            card.accumulated_positive_surprise, pos_surprise_after_easy
-        );
-        println!(
-            "  Negative: {} (started at {})",
-            card.accumulated_negative_surprise, neg_surprise_after_easy
-        );
-        println!("  Reps: {}, Lapses: {}", card.reps, card.lapses);
-
-        // Easy review should have added positive surprise, good reviews might add less
-        assert!(
-            card.accumulated_positive_surprise >= pos_surprise_after_easy,
-            "Positive surprise should not decrease with successful reviews"
-        );
-    }
-
-    #[test]
-    fn test_card_accumulated_surprise_after_one_easy_and_one_again_review() {
-        use chrono::{Days, Utc};
-        use rs_fsrs::{Card, FSRS, Rating};
-
-        let fsrs = FSRS::default();
-        let mut card = Card::new(Utc::now());
-
-        // Do one easy review
-        let record_log = fsrs.repeat(card, Utc::now());
-        card = record_log[&Rating::Easy].card.clone();
-        let pos_surprise_after_easy = card.accumulated_positive_surprise;
-        let neg_surprise_after_easy = card.accumulated_negative_surprise;
-
-        // Do one "again" review (failed review)
-        let review_time = Utc::now().checked_add_days(Days::new(14)).unwrap();
-        let record_log = fsrs.repeat(card, review_time);
-        card = record_log[&Rating::Again].card.clone();
-
-        // Check that negative surprise increased after the "again" review
-        assert!(
-            card.accumulated_negative_surprise > neg_surprise_after_easy,
-            "Negative surprise {} should increase from {} after an 'again' review",
-            card.accumulated_negative_surprise,
-            neg_surprise_after_easy
-        );
-
-        println!("✓ Accumulated surprise after 1 easy + 1 again review:");
-        println!(
-            "  Positive: {} (was {} after easy)",
-            card.accumulated_positive_surprise, pos_surprise_after_easy
-        );
-        println!(
-            "  Negative: {} (was {} after easy)",
-            card.accumulated_negative_surprise, neg_surprise_after_easy
-        );
-        println!("  Lapses: {}", card.lapses);
-    }
-
-    #[test]
-    fn test_default_deck_creation() {
-        use crate::Deck;
-
-        // Test that we can create a default Deck
-        let _deck = Deck::default();
-
-        println!("✓ Default Deck created successfully");
-    }
-
-    #[test]
     fn test_default_deck_can_add_cards() {
-        use crate::{Deck, DeckState};
-        use weapon::AppState;
-
-        let mut deck = Deck::default();
-
-        // Test that we can add cards to the default deck
-        if let Some(event) = deck
+        let deck = Deck::default();
+        if deck
+            .context
+            .language_pack
+            .gram_frequencies
+            .entries
+            .is_empty()
+        {
+            return;
+        }
+        let event = deck
             .get_no_cards_ready_info(Vec::new(), None)
             .smart_add_event
-        {
-            let ts = weapon::data_model::Timestamped {
-                timestamp: chrono::Utc::now(),
-                within_device_events_index: 0,
-                timezone: Some(deck.context.timezone),
-                event,
-            };
-            let context = deck.context.clone();
-            let state = DeckState::from(deck);
-            let state = Deck::process_event(state, &context, &ts);
-            deck = Deck::finalize(state, &context);
-
-            // If language pack has data, we should have added a card
-            if !context.language_pack.gram_frequencies.entries.is_empty() {
-                assert!(!deck.cards.is_empty());
-                println!("✓ Successfully added card to default deck");
-            } else {
-                println!("✓ Language pack is empty, no cards to add (expected)");
-            }
-        } else {
-            println!("✓ No cards available to add (empty language pack)");
-        }
+            .expect("default deck should offer cards to add");
+        let deck = apply_deck_event(deck, event, Utc::now());
+        assert!(deck.num_cards_added() > 0);
     }
 
     fn apply_deck_event(deck: Deck, event: DeckEvent, timestamp: DateTime<Utc>) -> Deck {
@@ -5792,20 +5403,8 @@ mod tests {
         }
     }
 
-    /// Helper for placement-test integration tests: split the placement-test
-    /// words into a high-ease "known" half and a low-ease "unknown" half,
-    /// then apply the resulting `CompletePlacementTest` event.
-    ///
-    /// The split is by ease (the regression's x-axis), not by the order
-    /// `get_placement_test` returns: it walks descending target *probabilities*
-    /// and cognate bonuses make ease non-monotone in that order — and an
-    /// ease-interleaved known/unknown split is one no isotonic regression
-    /// could separate.
+    // Split by ease rather than display order so the regression can separate the labels.
     fn apply_placement_test_split(deck: Deck) -> (Deck, Vec<String>, Vec<String>) {
-        use crate::{Deck, DeckState};
-        use weapon::AppState;
-        use weapon::data_model::Timestamped;
-
         let mut placement_words = deck.get_placement_test(vec![], vec![]);
         assert!(
             placement_words.len() >= 6,
@@ -5832,16 +5431,7 @@ mod tests {
             .collect();
 
         let event = deck.complete_placement_test(known_words.clone(), unknown_words.clone());
-        let timestamped = Timestamped {
-            timestamp: chrono::Utc::now(),
-            within_device_events_index: 0,
-            timezone: Some(deck.context.timezone),
-            event,
-        };
-        let context = deck.context.clone();
-        let state = DeckState::from(deck);
-        let state = Deck::process_event(state, &context, &timestamped);
-        let deck = Deck::finalize(state, &context);
+        let deck = apply_deck_event(deck, event, Utc::now());
         (deck, known_words, unknown_words)
     }
 
@@ -5882,7 +5472,6 @@ mod tests {
             let predicted = target_regression
                 .interpolate(ease)
                 .expect("regression should interpolate at known word's frequency");
-            println!("known   '{word}' (ease={ease:.3}) → predicted = {predicted:.3}");
             known_predictions.push(predicted);
         }
         let mut unknown_predictions = Vec::new();
@@ -5891,7 +5480,6 @@ mod tests {
             let predicted = target_regression
                 .interpolate(ease)
                 .expect("regression should interpolate at unknown word's frequency");
-            println!("unknown '{word}' (ease={ease:.3}) → predicted = {predicted:.3}");
             unknown_predictions.push(predicted);
         }
 
@@ -5953,11 +5541,6 @@ mod tests {
             return;
         }
 
-        let baseline_cards: Vec<_> = deck
-            .next_unknown_cards(AllowedCards::BannedRequirements(BTreeSet::new()), &None, 30)
-            .take(30)
-            .collect();
-
         let (deck, known_words, _unknown_words) = apply_placement_test_split(deck);
 
         let after_cards: Vec<_> = deck
@@ -5966,7 +5549,6 @@ mod tests {
             .collect();
         assert!(!after_cards.is_empty(), "should still have cards to teach");
 
-        let freq_entries = &deck.context.language_pack.gram_frequencies.entries;
         let resolve_word = |gram: &SpurGram| -> String {
             deck.context
                 .language_pack
@@ -5984,25 +5566,6 @@ mod tests {
             }
         };
 
-        println!("\nBaseline next cards (no placement test):");
-        for (i, card) in baseline_cards.iter().take(15).enumerate() {
-            if let CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } =
-                card
-            {
-                let ease = freq_entries.get(gram).map(|f| f.ease).unwrap_or(f32::NAN);
-                println!("  {}. {} (ease={ease:.3})", i + 1, resolve_word(gram));
-            }
-        }
-        println!("\nNext cards after placement test (known={known_words:?}):");
-        for (i, card) in after_cards.iter().take(15).enumerate() {
-            if let CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } =
-                card
-            {
-                let ease = freq_entries.get(gram).map(|f| f.ease).unwrap_or(f32::NAN);
-                println!("  {}. {} (ease={ease:.3})", i + 1, resolve_word(gram));
-            }
-        }
-
         let after_words: std::collections::HashSet<String> =
             after_cards.iter().filter_map(card_word).collect();
         let leaked: Vec<&String> = known_words
@@ -6018,25 +5581,11 @@ mod tests {
 
     #[test]
     fn test_change_sentence_list_does_not_increment_review_stats() {
-        use crate::{Deck, DeckState, SentenceListSelection};
-        use weapon::AppState;
-        use weapon::data_model::Timestamped;
-
         let deck = Deck::default();
-        let context = deck.context.clone();
         let event = deck.change_sentence_list(Some(SentenceListSelection::Movie {
             id: "tt0111161".to_string(),
         }));
-        let timestamped = Timestamped {
-            timestamp: chrono::Utc::now(),
-            within_device_events_index: 0,
-            timezone: Some(context.timezone),
-            event,
-        };
-
-        let state = DeckState::from(deck);
-        let state = Deck::process_event(state, &context, &timestamped);
-        let deck = Deck::finalize(state, &context);
+        let deck = apply_deck_event(deck, event, Utc::now());
 
         assert_eq!(deck.stats.total_reviews, 0);
         assert_eq!(deck.stats.xp, 0.0);
@@ -6051,10 +5600,6 @@ mod tests {
 
     #[test]
     fn test_add_card_limits_scale_with_deck_size() {
-        use crate::{Deck, DeckState};
-        use weapon::AppState;
-        use weapon::data_model::Timestamped;
-
         let mut deck = Deck::default();
 
         let assert_limits = |deck: &Deck| {
@@ -6080,18 +5625,8 @@ mod tests {
                 break;
             };
 
-            let timestamped = Timestamped {
-                timestamp: chrono::Utc::now(),
-                within_device_events_index: 0,
-                timezone: Some(deck.context.timezone),
-                event,
-            };
-
             let previous_cards = deck.num_cards_added();
-            let context = deck.context.clone();
-            let state = DeckState::from(deck);
-            let state = Deck::process_event(state, &context, &timestamped);
-            deck = Deck::finalize(state, &context);
+            deck = apply_deck_event(deck, event, Utc::now());
             assert!(
                 deck.num_cards_added() <= previous_cards + 5,
                 "deck should not grow by more than the requested amount"
@@ -6107,39 +5642,33 @@ mod tests {
     #[test]
     fn test_e2e_load_weapon_data_and_compute_state() {
         use std::collections::BTreeMap;
-        use weapon::data_model::{EventStore, EventType, Timestamped};
+        use weapon::data_model::{EventType, LocalEventStore as EventStore, Timestamped};
         use weapon::opfs::parse_event_log_records;
 
-        // 1. Load language pack from rkyv
         let language_pack: LanguagePack = language_utils::language_pack::load_split_dir(
             std::path::Path::new("../out/fra_for_eng"),
         )
         .expect("Failed to load language pack - run `cargo run --bin generate-data` first");
         let language_pack = Arc::new(language_pack);
 
-        // 2. Set up the EventStore (same as production: EventStore<String, String>)
         let mut store: EventStore<String, String> = EventStore::default();
 
-        // Initialize the streams with the correct typed stores
         store.get_or_insert_default::<EventType<DeckEvent>>("reviews".to_string(), None);
         store.get_or_insert_default::<EventType<DeckSelectionEvent>>(
             "deck_selection".to_string(),
             None,
         );
 
-        // 3. Load and parse the reviews event blob
         let reviews_blob = std::fs::read(
             "test-data/.weapon/user-events/user__aa6b6044-10d0-444b-8518-3696a15d2392/stream__reviews/events.blob",
         )
         .expect("Failed to read reviews events blob");
         let review_records = parse_event_log_records(&reviews_blob);
-        println!("Parsed {} review event records", review_records.len());
         assert!(
             !review_records.is_empty(),
             "Expected review events in test data"
         );
 
-        // Group events by device and add them to the store
         let mut reviews_by_device: BTreeMap<String, Vec<Timestamped<serde_json::Value>>> =
             BTreeMap::new();
         for record in &review_records {
@@ -6155,20 +5684,14 @@ mod tests {
                 events.clone(),
                 None,
             );
-            println!("Added {added} review events for device {device_id}");
             assert!(added > 0, "Expected to add review events for {device_id}");
         }
 
-        // 4. Load and parse the deck_selection event blob
         let deck_selection_blob = std::fs::read(
             "test-data/.weapon/user-events/user__aa6b6044-10d0-444b-8518-3696a15d2392/stream__deck_selection/events.blob",
         )
         .expect("Failed to read deck_selection events blob");
         let deck_selection_records = parse_event_log_records(&deck_selection_blob);
-        println!(
-            "Parsed {} deck_selection event records",
-            deck_selection_records.len()
-        );
 
         let mut selections_by_device: BTreeMap<String, Vec<Timestamped<serde_json::Value>>> =
             BTreeMap::new();
@@ -6182,7 +5705,6 @@ mod tests {
             store.add_device_events_jsons("deck_selection".to_string(), device_id, events, None);
         }
 
-        // 5. Compute the deck state by replaying all events
         let context = Context {
             language_pack,
             course: Course {
@@ -6197,19 +5719,8 @@ mod tests {
             .expect("reviews stream should exist");
         let deck: Deck = stream.state(initial_state, &context);
 
-        // 6. Verify the computed state looks reasonable
         let num_cards = deck.num_cards_added();
         let total_reviews = deck.stats.total_reviews;
-        println!("Computed deck state:");
-        println!("  Total tracked cards: {num_cards}");
-        println!("  Total reviews: {total_reviews}");
-        println!("  XP: {}", deck.stats.xp);
-        println!(
-            "  Has placement test: {}",
-            deck.placement_test_results.is_some()
-        );
-        println!("  Leeches: {}", deck.leeches.len());
-        println!("  Start time: {:?}", deck.stats.start_time);
 
         assert!(num_cards > 0, "Expected cards after replaying events");
         assert!(
@@ -6228,7 +5739,6 @@ mod tests {
 
     #[test]
     fn test_savoir_sentence_cleanup_and_lookup() {
-        // Load language pack
         let language_pack: LanguagePack = language_utils::language_pack::load_split_dir(
             std::path::Path::new("../out/fra_for_eng"),
         )
@@ -6237,22 +5747,17 @@ mod tests {
         // The sentence from v1 events (without proper French punctuation spacing)
         let raw_sentence = "Qu'est-ce que tu veux savoir?";
 
-        // The raw sentence should NOT be in the language pack
         let raw_in_rodeo = language_pack.string_rodeo.get(raw_sentence).is_some();
-        println!("Raw sentence '{raw_sentence}' in string_rodeo: {raw_in_rodeo}");
         assert!(
             !raw_in_rodeo,
             "Raw sentence should NOT be in language pack (it lacks proper French spacing)"
         );
 
-        // After cleanup, it should match the language pack
         let cleaned_sentence = language_utils::text_cleanup::cleanup_sentence(
             raw_sentence.to_string(),
             Language::French,
         );
-        println!("Cleaned sentence: '{cleaned_sentence}'");
 
-        // The cleaned sentence should be in all structures
         let cleaned_in_rodeo = language_pack.string_rodeo.get(&cleaned_sentence).is_some();
         let cleaned_in_encoded = language_pack
             .string_rodeo
@@ -6264,10 +5769,6 @@ mod tests {
             .get(&cleaned_sentence)
             .and_then(|spur| language_pack.sentence_to_literals(&spur, Language::French))
             .is_some();
-
-        println!("Cleaned sentence in string_rodeo: {cleaned_in_rodeo}");
-        println!("Cleaned sentence in encoded_sentences: {cleaned_in_encoded}");
-        println!("Cleaned sentence has literals: {cleaned_has_literals}");
 
         assert!(
             cleaned_in_rodeo,
@@ -6289,10 +5790,9 @@ mod tests {
     #[test]
     fn test_comprehensible_sentence_has_translation() {
         use std::collections::BTreeMap;
-        use weapon::data_model::{EventStore, EventType, Timestamped};
+        use weapon::data_model::{EventType, LocalEventStore as EventStore, Timestamped};
         use weapon::opfs::parse_event_log_records;
 
-        // Load language pack and replay events to get deck state
         let language_pack: LanguagePack = language_utils::language_pack::load_split_dir(
             std::path::Path::new("../out/fra_for_eng"),
         )
@@ -6457,7 +5957,7 @@ mod tests {
 
         // 3. Group by (stream_id, device_id) and load into EventStore
         use std::collections::BTreeMap;
-        use weapon::data_model::{EventStore, EventType, Timestamped};
+        use weapon::data_model::{EventType, LocalEventStore as EventStore, Timestamped};
 
         let mut grouped: BTreeMap<String, BTreeMap<String, Vec<Timestamped<serde_json::Value>>>> =
             BTreeMap::new();
@@ -6839,7 +6339,7 @@ mod tests {
         pack_cache: &mut std::collections::BTreeMap<Course, PackEntry>,
     ) -> Vec<RawCase> {
         use weapon::data_model::Event as _;
-        use weapon::data_model::{EventStore, EventType, Timestamped};
+        use weapon::data_model::{EventType, LocalEventStore as EventStore, Timestamped};
 
         // Group raw rows by (stream, device), like inspect_user_deck.
         let mut grouped: BTreeMap<String, BTreeMap<String, Vec<Timestamped<serde_json::Value>>>> =
@@ -6909,7 +6409,6 @@ mod tests {
             native_language: native,
         };
 
-        // Load the pack for migration context.
         let entry = pack_cache
             .entry(course)
             .or_insert_with(|| build_pack_entry(course));

@@ -1,6 +1,6 @@
 use crate::{CardSummary, Deck, supabase::supabase_config};
+use bridgerton::Error;
 use chrono::Utc;
-use wasm_bindgen::prelude::*;
 use weapon::supabase::SupabaseConfig;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
@@ -123,7 +123,6 @@ impl Deck {
         // so we need to subtract it to get local time
         let local_now = now - chrono::Duration::minutes(timezone_offset_minutes as i64);
 
-        // Get all cards sorted by due date
         let cards = self.get_all_cards_summary();
 
         // Find cards that are due
@@ -134,14 +133,11 @@ impl Deck {
 
         // Helper function to get a specific hour today or in the future
         let get_next_occurrence = |hour: u32, days_ahead: i64| {
-            // Get the target date in the user's local time
             let local_target = (local_now + chrono::Duration::days(days_ahead))
                 .date_naive()
                 .and_hms_opt(hour, 0, 0)
                 .unwrap();
 
-            // Convert from local time to UTC by adding the timezone offset
-            // (opposite of the conversion to local time)
             local_target.and_utc() + chrono::Duration::minutes(timezone_offset_minutes as i64)
         };
 
@@ -227,7 +223,6 @@ impl Deck {
             }
         }
 
-        // Remove duplicate notifications at the same time
         notifications.sort_by(|a, b| a.scheduled_at.total_cmp(&b.scheduled_at));
         notifications.dedup_by(|a, b| (a.scheduled_at - b.scheduled_at).abs() < 60000.0); // Within 1 minute
 
@@ -235,14 +230,13 @@ impl Deck {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[bridgerton::bridge]
 impl Deck {
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
     pub async fn submit_push_notifications(
         &self,
         access_token: &str,
         user_id: &str,
-    ) -> Result<(), JsValue> {
+    ) -> Result<(), Error> {
         let client = fetch_happen::Client;
 
         let SupabaseConfig {
@@ -250,11 +244,9 @@ impl Deck {
             supabase_anon_key,
         } = supabase_config();
 
-        // Get timezone offset from JS
-        let timezone_offset = js_sys::Date::new_0().get_timezone_offset();
-        let scheduled_notifications = self.compute_scheduled_notifications(timezone_offset as i32);
+        let timezone_offset = bridgerton::platform::current_local_offset().utc_minus_local() / 60;
+        let scheduled_notifications = self.compute_scheduled_notifications(timezone_offset);
 
-        // Convert to JSON values for API with proper timestamp formatting
         let notifications_json: Vec<serde_json::Value> = scheduled_notifications
                 .into_iter()
                 .map(|n| {
@@ -296,10 +288,10 @@ impl Deck {
                 .header("apikey", &supabase_anon_key)
                 .header("Authorization", format!("Bearer {access_token}"))
                 .json(&notifications_json)
-                .map_err(|e| JsValue::from_str(&format!("{e:?}")))?
+                .map_err(|e| Error::new(format!("{e:?}")))?
                 .send()
                 .await
-                .map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
+                .map_err(|e| Error::new(format!("{e:?}")))?;
 
             if !insert_response.ok() {
                 log::warn!(
@@ -314,18 +306,16 @@ impl Deck {
         Ok(())
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-    pub async fn submit_language_stats(&self, access_token: &str) -> Result<(), JsValue> {
+    pub async fn submit_language_stats(&self, access_token: &str) -> Result<(), Error> {
         use language_utils::profile::UpdateLanguageStatsRequest;
 
         // Get current stats from the deck (locked cards still count — lockup
         // only hides cards from the review queue)
-        let now = js_sys::Date::now();
+        let now = Utc::now().timestamp_millis() as f64;
         let review_info = self.get_review_info_including_locked(now);
 
         let total_count = review_info.total_count() as i64;
 
-        // Get daily streak information
         let daily_streak = self.get_daily_streak() as i64;
         let daily_streak_expiry = self.stats.daily_streak.as_ref().map(|streak| {
             let tomorrow = streak.last_active_day + chrono::Duration::days(2);
@@ -339,12 +329,10 @@ impl Deck {
 
         let xp = self.stats.xp;
 
-        // Get percent_known from the existing method (weighted by word frequency)
         let percent_known = self.get_percent_of_words_known() * 100.0;
 
         let language = self.context.course.target_language;
 
-        // Get start_time from stats
         let start_time = self.stats.start_time.map(|time| time.to_rfc3339());
 
         let request = UpdateLanguageStatsRequest {
@@ -364,11 +352,11 @@ impl Deck {
             Some(&access_token.to_string()),
         )
         .await
-        .map_err(|e| JsValue::from_str(&format!("Request error: {e:?}")))?;
+        .map_err(|e| Error::new(format!("Request error: {e:?}")))?;
 
         if !response.ok() {
             log::warn!("Failed to update language stats: {}", response.status());
-            return Err(JsValue::from_str(&format!(
+            return Err(Error::new(format!(
                 "Failed to update language stats: {}",
                 response.status()
             )));
