@@ -1089,32 +1089,54 @@ fn encode_renditions(
          aresample=48000,asplit=2[ah][al]"
     );
     let key = format!("{crit_s:.3}");
-    let status = Command::new("ffmpeg")
-        .args(["-v", "error", "-y", "-ss"])
-        .arg(format!("{:.3}", cut_start as f64 / 1000.0))
-        .args([
-            "-t",
-            &format!("{:.3}", (cut_end - cut_start) as f64 / 1000.0),
-        ])
-        .arg("-i")
-        .arg(path)
-        .args(["-filter_complex", &filter])
-        .args(["-map", "[vh]", "-map", "[ah]"])
-        .args(["-c:v", "libx264", "-crf", "19", "-preset", "medium"])
-        .args(["-c:a", "aac", "-b:a", "160k"])
-        .args(["-force_key_frames", &key, "-movflags", "+faststart"])
-        .arg(clip_dir.join("hi.mp4"))
-        .args(["-map", "[vl]", "-map", "[al]"])
-        .args(["-c:v", "libx264", "-crf", "27", "-preset", "veryfast"])
-        .args(["-c:a", "aac", "-b:a", "96k"])
-        .args(["-force_key_frames", &key, "-movflags", "+faststart"])
-        .arg(clip_dir.join("lo.mp4"))
-        .status()
-        .context("ffmpeg (encode) failed to start")?;
-    if !status.success() {
-        bail!("ffmpeg encode failed for {}", clip_dir.display());
+    let run = |core_only: bool| -> Result<bool> {
+        let mut cmd = Command::new("ffmpeg");
+        cmd.args(["-v", "error", "-y"]);
+        if core_only {
+            cmd.args(["-core_only", "1"]);
+        }
+        cmd.arg("-ss")
+            .arg(format!("{:.3}", cut_start as f64 / 1000.0))
+            .args([
+                "-t",
+                &format!("{:.3}", (cut_end - cut_start) as f64 / 1000.0),
+            ])
+            .arg("-i")
+            .arg(path)
+            .args(["-filter_complex", &filter])
+            .args(["-map", "[vh]", "-map", "[ah]"])
+            .args(["-c:v", "libx264", "-crf", "19", "-preset", "medium"])
+            .args(["-c:a", "aac", "-b:a", "160k"])
+            .args(["-force_key_frames", &key, "-movflags", "+faststart"])
+            .arg(clip_dir.join("hi.mp4"))
+            .args(["-map", "[vl]", "-map", "[al]"])
+            .args(["-c:v", "libx264", "-crf", "27", "-preset", "veryfast"])
+            .args(["-c:a", "aac", "-b:a", "96k"])
+            .args(["-force_key_frames", &key, "-movflags", "+faststart"])
+            .arg(clip_dir.join("lo.mp4"));
+        Ok(cmd
+            .status()
+            .context("ffmpeg (encode) failed to start")?
+            .success())
+    };
+    if run(false)? {
+        return Ok(());
     }
-    Ok(())
+    // A DTS-HD MA frame with a bad XLL sync word decodes as its lossy 5.1
+    // core; that one frame arriving in a filtergraph configured for 7.1 is a
+    // property change ffmpeg cannot reinit a complex graph for, and it can
+    // sit in the keyframe pre-roll before the cut. Decoding the core only
+    // gives every frame the same layout; after the stereo AAC downmix the
+    // lossless extension made no difference. (Non-DTS decoders ignore the
+    // option.)
+    eprintln!(
+        "  retrying with core-only audio decode: {}",
+        clip_dir.display()
+    );
+    if run(true)? {
+        return Ok(());
+    }
+    bail!("ffmpeg encode failed for {}", clip_dir.display());
 }
 
 fn file_hash(path: &Path) -> Result<String> {
