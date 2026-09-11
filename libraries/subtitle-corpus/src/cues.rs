@@ -68,14 +68,17 @@ pub enum Tokenization {
     /// (jpn/zho-hans/tha), where "word" tokens would be whole clauses and
     /// every comparison saturates. ElevenLabs transcript units for these
     /// languages are already near-character-sized, so both witnesses land
-    /// in the same unit space.
+    /// in the same unit space. Korean is spaced but its spacing is
+    /// orthographically unstable (particle/compound spacing varies between
+    /// subtitles and ASR), so syllable-block chars are the comparable unit
+    /// there too.
     Chars,
 }
 
 /// The tokenization a pronunciation-corpus lang code needs.
 pub fn tokenization_for(code: &str) -> Tokenization {
     match code {
-        "jpn" | "zho-hans" | "tha" => Tokenization::Chars,
+        "jpn" | "zho-hans" | "tha" | "kor" => Tokenization::Chars,
         _ => Tokenization::Words,
     }
 }

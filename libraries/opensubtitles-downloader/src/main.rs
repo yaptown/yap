@@ -1006,7 +1006,7 @@ async fn main() -> Result<()> {
     // Process each language
     for language in languages {
         let language_iso639_3 = language.code();
-        let language_iso639_1 = language.opensubtitles_language_code();
+        let language_iso639_1 = language.opensubtitles_languages();
         let tmdb_language = language.tmdb_language_code();
 
         println!(

@@ -3065,13 +3065,19 @@ impl Language {
     }
 
     /// OpenSubtitles API language code (usually ISO 639-1, but pt-br for Portuguese)
-    pub fn opensubtitles_language_code(&self) -> &'static str {
-        // OpenSubtitles has no bare "zh" or "pt" — those queries silently return
-        // zero results rather than erroring, so the region suffix is mandatory.
+    /// The OpenSubtitles `languages=` query for this language: every code a
+    /// subtitle in it may be filed under, comma-separated as the API takes
+    /// them. A query names its codes and silently returns nothing for the
+    /// rest: there is no bare "zh" or "pt", and Spanish is split three ways
+    /// — "es", "sp" (Spanish (EU)) and "ea" (Spanish (LA)) — with a film's
+    /// only human-made subtitle sometimes under a variant alone (Abre los
+    /// ojos: one file, under "sp").
+    pub fn opensubtitles_languages(&self) -> &'static str {
         match self {
             Language::Portuguese => "pt-br",
             Language::ChineseSimplified => "zh-cn",
             Language::ChineseTraditional => "zh-tw",
+            Language::Spanish => "es,sp,ea",
             other => other.iso_639_1(),
         }
     }

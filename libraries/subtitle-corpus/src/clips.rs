@@ -462,6 +462,69 @@ pub async fn subtitle_sentences(
     movie_subtitles::sentences::keyed_sentences(&subtitle_lines(srt), language, segmenter).await
 }
 
+/// Segment every model-segmented film in `films` in one Batch API round
+/// trip, so that the per-film [`subtitle_sentences`] calls that follow it
+/// are cache hits. A step that works through films one at a time would
+/// otherwise run a film-sized batch for each — and a batch can take a day
+/// to come back. Films in a rule-segmented language cost nothing here, and
+/// so does a queue the `segment` step has already warmed.
+pub async fn warm_segmentation(out: &Path, films: &[Movie]) -> Result<()> {
+    use movie_subtitles::llm_segment;
+    let tracks = llm_tracks(out, films)?;
+    if tracks.is_empty() {
+        return Ok(());
+    }
+    let cues: usize = tracks.iter().map(|(_, _, lines)| lines.len()).sum();
+    println!(
+        "segmenting {} model-segmented films ({cues} cues) in one batch",
+        tracks.len()
+    );
+    let borrowed: Vec<(&[SubtitleLine], Language)> = tracks
+        .iter()
+        .map(|(_, language, lines)| (lines.as_slice(), *language))
+        .collect();
+    let client = llm_segment::client()?;
+    let (_, report) =
+        llm_segment::split_tracks(&client, &borrowed, llm_segment::print_progress()).await?;
+    println!(
+        "  {} cues put to the model, {} fell back to per-cue",
+        report.asked, report.fallbacks
+    );
+    Ok(())
+}
+
+/// The subtitle of every film in `films` whose language the model segments,
+/// as the cue lines segmentation starts from: `(index into films, language,
+/// lines)`. Films without a subtitle are skipped.
+pub fn llm_tracks(
+    out: &Path,
+    films: &[Movie],
+) -> Result<Vec<(usize, Language, Vec<SubtitleLine>)>> {
+    films
+        .iter()
+        .enumerate()
+        .filter_map(|(i, m)| {
+            let language = course_dir(&m.original_language).and_then(Language::from_code)?;
+            if !movie_subtitles::llm_segment::uses_llm(language) {
+                return None;
+            }
+            let path = out.join(&m.imdb_id).join("subtitle.srt");
+            if !path.exists() {
+                return None;
+            }
+            Some(
+                std::fs::read_to_string(&path)
+                    .map(|srt| {
+                        let lines =
+                            movie_subtitles::sentences::prepared_lines(&subtitle_lines(&srt));
+                        (i, language, lines)
+                    })
+                    .with_context(|| format!("read {}", path.display())),
+            )
+        })
+        .collect()
+}
+
 /// A subtitle text as the cleaned cue lines segmentation starts from.
 pub fn subtitle_lines(srt: &str) -> Vec<SubtitleLine> {
     parse_cues(srt)
@@ -780,6 +843,12 @@ async fn clips_one(
         .unwrap_or_else(|| crate::verbatim::min_fraction(code));
     let check = crate::verbatim::check(dir, language, code, min_verbatim).await?;
     if check.measure.verdict != crate::verbatim::Verdict::Verbatim {
+        // A clips.jsonl mapped before this gate existed, or before the
+        // subtitle turned into a rewrite, is not evidence of anything now:
+        // left in place, export reads it as a film to serve (or fails the
+        // whole run on its old provenance line). Nothing downstream may
+        // trust a file this gate would not write today.
+        let _ = std::fs::remove_file(clips_path(dir));
         bail!(
             "subtitle not verbatim: {}",
             crate::verbatim::describe(&check.measure)
@@ -1107,6 +1176,7 @@ pub async fn clips_all(
     if total == 0 {
         return Ok(());
     }
+    warm_segmentation(&out, &queue).await?;
 
     let store = Arc::new(osmo::Store::open("./.cache"));
     let http = Arc::new(

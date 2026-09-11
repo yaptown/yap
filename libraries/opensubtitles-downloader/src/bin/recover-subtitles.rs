@@ -835,7 +835,7 @@ fn build_queue(args: &Args) -> Result<Vec<Job>> {
                 own_language: own_code
                     .is_some_and(|c| originals.get(&imdb_id).is_some_and(|o| o == c)),
                 language_dir: dir_name.clone(),
-                opensubtitles_code: language.opensubtitles_language_code().to_string(),
+                opensubtitles_code: language.opensubtitles_languages().to_string(),
                 movies_dir: movies_dir.clone(),
                 imdb_id,
             })

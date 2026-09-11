@@ -543,24 +543,26 @@ You'll receive a morpheme plus a small sample of words it appears in. Pick the s
         .cloned()
         .collect::<Vec<_>>();
 
-    let roots = define_client
-        .batch_chat_with_messages_fn::<_, LookupResponse>(
+    // The two batches need nothing from each other, and a batch can take a
+    // day to come back: they go out together.
+    let progress = crate::BatchProgress::new(&pb, 2);
+    let (roots, glosses) = futures::future::join(
+        define_client.batch_chat_with_messages_fn::<_, LookupResponse>(
             &free,
             |(segment, examples, candidates)| {
                 lookup_messages(language, segment, candidates, examples)
             },
-            |batch| crate::report_batch_progress(&pb, 0, free.len(), batch),
-        )
-        .await
-        .unwrap_or_default();
-    let glosses = define_client
-        .batch_chat_with_messages_fn::<_, DefineResponse>(
+            |batch| progress.report(0, free.len(), batch),
+        ),
+        define_client.batch_chat_with_messages_fn::<_, DefineResponse>(
             &nonfree,
             |(segment, category, examples)| define_messages(course, segment, *category, examples),
-            |batch| crate::report_batch_progress(&pb, free.len() as u64, nonfree.len(), batch),
-        )
-        .await
-        .unwrap_or_default();
+            |batch| progress.report(1, nonfree.len(), batch),
+        ),
+    )
+    .await;
+    let roots = roots.unwrap_or_default();
+    let glosses = glosses.unwrap_or_default();
 
     let mut results = roots
         .into_iter()
