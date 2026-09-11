@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 4598748
-Total errors: 1662
+Total predictions: 4618752
+Total errors: 1673
 Accuracy: 99.96%
 
 ## Error Patterns (sorted by frequency)
@@ -310,6 +310,14 @@ Accuracy: 99.96%
   - Espèce d‘enculé.
   - Ils ont le droit d‘avoir des calibres aussi gros ?
 
+### "est" + "—" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Qu‘est—ce tu cherches ?
+  - Qu‘est—ce tu fais avec ton grenaille ?
+  - Qu‘est—ce tu peux faire de mieux ?
+
 ### "m" + "‘" (4 occurrences)
 - Predicted: Space
 - Actual: None
@@ -341,6 +349,14 @@ Accuracy: 99.96%
   - Ils ont des yeux, mais ne voient pas; des oreilles, mais n'entendent pas.
   - Je te jure qu'il souffrira pas; on est vraiment bons pour ça.
   - Ne me demande pas; je suis un chat.
+
+### "—" + "ce" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Qu‘est—ce tu cherches ?
+  - Qu‘est—ce tu fais avec ton grenaille ?
+  - Qu‘est—ce tu peux faire de mieux ?
 
 ### "—" + "lui" (4 occurrences)
 - Predicted: Space
@@ -494,14 +510,6 @@ Accuracy: 99.96%
   - Here's the doctor's phone number.
   - The doctor's practice is closed.
 
-### "est" + "—" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Qu‘est—ce tu cherches ?
-  - Qu‘est—ce tu fais avec ton grenaille ?
-  - Qu‘est—ce tu peux faire de mieux ?
-
 ### "et" + "je" (3 occurrences)
 - Predicted: Space
 - Actual: None
@@ -622,14 +630,6 @@ Accuracy: 99.96%
   - Dites, we're exhausted.
   - Fortunately, that we're not staying too long.
 
-### "—" + "ce" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Qu‘est—ce tu cherches ?
-  - Qu‘est—ce tu fais avec ton grenaille ?
-  - Qu‘est—ce tu peux faire de mieux ?
-
 ### "—" + "y" (3 occurrences)
 - Predicted: Space
 - Actual: None
@@ -716,6 +716,13 @@ Accuracy: 99.96%
 - Examples:
   - Excusez- moi.
   - Regarde- moi.
+
+### "-" + "nous" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Comment allons- nous nous battre ?
+  - Qui sommes-nous, à quelle fin sommes- nous ici, où courrons-nous aveuglément ?
 
 ### "-" + "t" (2 occurrences)
 - Predicted: None
@@ -850,6 +857,13 @@ Accuracy: 99.96%
   - Où es-tu allé ?
   - Où tout le monde est-il allé ?
 
+### "aujourd'hui" + ";" (2 occurrences)
+- Predicted: NarrowNbsp
+- Actual: Space
+- Examples:
+  - Il ne peut y avoir de crises aujourd'hui ; mon emploi du temps est déjà complet.
+  - Il pleut aujourd'hui ; où ai-je donc mon parapluie ?
+
 ### "aussi" + "?" (2 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
@@ -947,13 +961,6 @@ Accuracy: 99.96%
 - Examples:
   - Mais qu'iI finisse ce qu'iI a commencé.
   - Mais qu'iI finisse ce qu'iI a commencé.
-
-### "ici" + ";" (2 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Elle n'est pas ici ; elle est chez le médecin.
-  - Je n'arrive pas à trouver mon carnet ici ; j'ai dû le poser ailleurs.
 
 ### "ici" + "?" (2 occurrences)
 - Predicted: NarrowNbsp
@@ -1580,6 +1587,12 @@ Accuracy: 99.96%
 - Examples:
   - Debout- debout !
 
+### "-" + "des" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Clochers d'église - des entonnoirs renversés pour conduire les prières au ciel.
+
 ### "-" + "en" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1627,12 +1640,6 @@ Accuracy: 99.96%
 - Actual: Space
 - Examples:
   - Si tu n'es pas occupé, tiens- lui compagnie.
-
-### "-" + "nous" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Comment allons- nous nous battre ?
 
 ### "-" + "petite" (1 occurrences)
 - Predicted: None
@@ -2618,6 +2625,12 @@ Accuracy: 99.96%
 - Examples:
   - Si loin ?
 
+### "Six Un Un" + "," (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eh bien, voilà un point de contrôle illégal sur la Six Un Un , Caporal Pearson.
+
 ### "Son" + "frère" (1 occurrences)
 - Predicted: Space
 - Actual: Nbsp
@@ -3182,17 +3195,17 @@ Accuracy: 99.96%
 - Examples:
   - Et des pains au millet ?
 
-### "aujourd'hui" + ";" (1 occurrences)
-- Predicted: NarrowNbsp
-- Actual: Space
-- Examples:
-  - Il pleut aujourd'hui ; où ai-je donc mon parapluie ?
-
 ### "aussi" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Tout comme la police, je croyais moi aussi ..
+
+### "autres" + ";" (1 occurrences)
+- Predicted: NarrowNbsp
+- Actual: Space
+- Examples:
+  - Elle ne prête pas attention aux autres ; en d'autres termes, elle est égoïste.
 
 ### "aux" + "cellules" (1 occurrences)
 - Predicted: Space
@@ -4411,6 +4424,12 @@ Accuracy: 99.96%
 - Actual: Space
 - Examples:
   - On le voit d'ici .
+
+### "ici" + ";" (1 occurrences)
+- Predicted: NarrowNbsp
+- Actual: Space
+- Examples:
+  - Elle n'est pas ici ; elle est chez le médecin.
 
 ### "ils" + "'" (1 occurrences)
 - Predicted: Space
@@ -5720,6 +5739,12 @@ Accuracy: 99.96%
 - Examples:
   - L'amour, c'est comme la rubéole - tout le monde doit en faire l'expérience.
 
+### "rythmée" + ";" (1 occurrences)
+- Predicted: NarrowNbsp
+- Actual: Space
+- Examples:
+  - La musique électronique est rythmée ; elle sonne comme des battements du cœur.
+
 ### "récemment" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: Space
@@ -6524,6 +6549,12 @@ Accuracy: 99.96%
 - Examples:
   - Va falloir qu'on fasse ça tous les soirs pendant deux semaines « On » ?
 
+### "«" + "Partenaires en Crise" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bienvenue à « Partenaires en Crise », un atelier pour duos au bord du désastre.
+
 ### "«" + "R" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6559,6 +6590,12 @@ Accuracy: 99.96%
 - Actual: Space
 - Examples:
   - Il a quitté la maison sans dire « au revoir ».
+
+### "«" + "bagage" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Nous avons des interprétations différentes de ce que signifie le mot « bagage ».
 
 ### "«" + "bien" (1 occurrences)
 - Predicted: None
@@ -6841,6 +6878,18 @@ Accuracy: 99.96%
 - Actual: Space
 - Examples:
   - Mais avec le vieux Tony, rien à lire, rien à écrire - tout dans la tête.
+
+### "égalité" + ";" (1 occurrences)
+- Predicted: NarrowNbsp
+- Actual: Space
+- Examples:
+  - Nous sommes sur le même plan d'égalité ; pas d'infériorité ni de supériorité.
+
+### "église" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Clochers d'église - des entonnoirs renversés pour conduire les prières au ciel.
 
 ### "émancipée" + "." (1 occurrences)
 - Predicted: None

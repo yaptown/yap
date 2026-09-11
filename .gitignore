@@ -12,6 +12,16 @@ target
 
 .env
 
+# Machine-specific Claude configuration
+**/.claude/settings.local.json
+/.claude/launch.json
+
+# Local planning notes and generated submission artifacts
+/PLAN.md
+/plan.md
+/new-jpn.md
+/chatgpt-app-submission.json
+
 **.pyc 
 
 .DS_Store

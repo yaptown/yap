@@ -1,23 +1,23 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dire quelque chose	filled	9296	10	12	0.83	yes	Ce nom ne vous dit rien ?	dit … rien
-dire quelque chose	clitic	2382	11	12	0.92	yes	Il m'a à peine dit bonjour ce matin.	m' … dit
-sa mère	clitic	2100	12	12	1.00	yes		
-sortir quelque chose	filled	680	10	12	0.83	yes	A t on une chance de faire sortir Bohr du Danemark ?	sortir … Bohr
-arriver à quelqu'un	filled	599	7	12	0.58	no	Alors que le procès du siècle arrive finalement à son terme.	arrive … à … terme
+dire quelque chose	filled	9308	9	12	0.75	yes	Ce nom me dit quelque chose.	dit … chose
+dire quelque chose	clitic	2386	11	12	0.92	yes	Je crois que nous nous sommes déjà dit au revoir, camarade Novoseltsev.	nous … dit
+sa mère	clitic	2116	12	12	1.00	yes		
+sortir quelque chose	filled	683	10	12	0.83	yes	A t on une chance de faire sortir Bohr du Danemark ?	sortir … Bohr
+arriver à quelqu'un	filled	605	5	12	0.42	no	Alors que le procès du siècle arrive finalement à son terme.	arrive … à … terme
 arriver à quelqu'un	clitic	539	12	12	1.00	yes		
-sortir quelque chose	clitic	347	7	12	0.58	no	Comment vas-tu t'en sortir sans boulot ?	t' … sortir
-désolé de faire quelque chose	infinitive	241	12	12	1.00	yes		
-ravi de faire quelque chose	infinitive	198	12	12	1.00	yes		
-faire de son mieux	clitic	155	12	12	1.00	yes		
-sa mère	filled	126	11	12	0.92	yes	La guerre est mère de toute chose.	mère … chose
-bien dans ses baskets	clitic	87	0	12	0.00	no	A l'époque, les gens pouvaient oublier leur nom, jamais leurs biens.	leurs … biens
+sortir quelque chose	clitic	349	7	12	0.58	no	Comment vas-tu t'en sortir ?	t' … sortir
+désolé de faire quelque chose	infinitive	244	12	12	1.00	yes		
+ravi de faire quelque chose	infinitive	200	12	12	1.00	yes		
+faire de son mieux	clitic	156	12	12	1.00	yes		
+sa mère	filled	128	10	12	0.83	yes	La guerre est mère de toute chose.	mère … chose
+bien dans ses baskets	clitic	88	0	12	0.00	no	A l'époque, les gens pouvaient oublier leur nom, jamais leurs biens.	leurs … biens
 but contre son camp	clitic	65	0	12	0.00	no	Ainsi c'est là votre but, entrer dans la montagne.	votre … but
 prendre son temps	clitic	57	11	12	0.92	yes	Les affaires lui prennent tout son temps.	prennent … son … temps
 faire son possible	clitic	50	12	12	1.00	yes		
 enchanté de faire quelque chose	infinitive	35	12	12	1.00	yes		
 y être pour quelque chose	filled	35	10	12	0.83	yes	Elle y était pour lui, son fiancé était via Tasso.	y … était … pour … lui
 donner sa parole	clitic	31	12	12	1.00	yes		
-faire ses valises	clitic	28	12	12	1.00	yes		
+faire ses valises	clitic	29	12	12	1.00	yes		
 dans son monde	filled	25	2	12	0.17	no	Bienvenue dans le monde à l'intérieur du tableau.	dans … monde … intérieur
 mettre dans sa poche	clitic	22	12	12	1.00	yes		
 faire son lit	clitic	21	12	12	1.00	yes		
@@ -32,13 +32,13 @@ tirer quelque chose au clair	filled	15	12	12	1.00	yes
 faire son affaire	clitic	13	5	12	0.42	no	Alors comme ça au premier coup d’œil Vous faites pas mon affaire.	faites … mon … affaire
 perdre son chemin	clitic	12	12	12	1.00	yes		
 dans son coin	clitic	11	8	11	0.73	yes	Pas dans mon coin.	dans … mon … coin
+faire sa B.A.	filled	11	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
+faire son apparition	filled	11	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
+faire son entrée	filled	11	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
 être victime de son succès	filled	11	0	11	0.00	no	Ce criminel est une victime de ses gènes.	est … victime … de … gènes
 avoir ses règles	filled	10	0	10	0.00	no	De bons conducteurs, il y en a des tonnes.	conducteurs … a
 dans son coin	filled	10	0	10	0.00	no	Aujourd'hui, je veux te baiser dans chaque coin de cette pièce.	dans … coin … pièce
 en croire ses yeux	clitic	10	10	10	1.00	yes		
-faire sa B.A.	filled	10	0	10	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
-faire son apparition	filled	10	0	10	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
-faire son entrée	filled	10	0	10	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
 avoir son compte	clitic	9	9	9	1.00	yes		
 de son choix	clitic	9	5	9	0.56	no	Elle veut être libre de ses choix.	de … ses … choix
 faire son possible	filled	9	9	9	1.00	yes		

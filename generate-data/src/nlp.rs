@@ -4,7 +4,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{Gram, Language};
 use lexide::Lexide;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 
@@ -56,8 +56,8 @@ fn get_failure_file_path(output_file: &Path) -> PathBuf {
 }
 
 /// Load failure records from the failure tracking file
-fn load_failures(failure_file: &Path) -> Result<HashMap<String, u32>> {
-    let mut failures = HashMap::new();
+fn load_failures(failure_file: &Path) -> Result<BTreeMap<String, u32>> {
+    let mut failures = BTreeMap::new();
 
     if failure_file.exists() {
         let file = std::fs::File::open(failure_file)?;
@@ -81,8 +81,8 @@ const MAX_TOKENIZATION_ATTEMPTS: u32 = 3;
 /// Attempts within a single run before a sentence counts as failed for that run.
 const IN_RUN_ATTEMPTS: usize = 3;
 
-/// Write the failure map out, replacing the file's previous contents.
-fn write_failures(failures: &HashMap<String, u32>, failure_file: &Path) -> Result<()> {
+/// Replace the failure file in sentence order to keep diffs stable across runs.
+fn write_failures(failures: &BTreeMap<String, u32>, failure_file: &Path) -> Result<()> {
     let file = std::fs::File::create(failure_file)?;
     let mut writer = std::io::BufWriter::new(file);
 
