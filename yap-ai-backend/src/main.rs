@@ -654,40 +654,7 @@ async fn elevenlabs_synthesize(
 /// can't resemble markup. It has to be caught here, at the point where a
 /// voice that can't honor the request would otherwise be picked anyway.
 fn google_voice(language: Language, is_ssml: bool) -> (&'static str, &'static str) {
-    // `generative` reads more naturally; `literal` says exactly what it's given.
-    let (language_code, generative_voice, literal_voice) = match language {
-        Language::French => ("fr-FR", "fr-FR-Chirp3-HD-Achernar", "fr-FR-Neural2-F"),
-        Language::Spanish => ("es-US", "es-US-Chirp3-HD-Achernar", "es-US-Neural2-A"),
-        Language::English => ("en-US", "en-US-Chirp3-HD-Achernar", "en-US-Neural2-A"),
-        Language::Korean => ("ko-KR", "ko-KR-Chirp3-HD-Achernar", "ko-KR-Neural2-A"),
-        Language::German => ("de-DE", "de-DE-Chirp3-HD-Achernar", "de-DE-Neural2-G"),
-        Language::Italian => ("it-IT", "it-IT-Chirp3-HD-Achernar", "it-IT-Neural2-A"),
-        Language::Portuguese => ("pt-BR", "pt-BR-Chirp3-HD-Achernar", "pt-BR-Neural2-A"),
-        // Russian and both Chinese locales have no Neural2 voice at all.
-        Language::Russian => ("ru-RU", "ru-RU-Chirp3-HD-Aoede", "ru-RU-Wavenet-A"),
-        Language::Japanese => ("ja-JP", "ja-JP-Chirp3-HD-Achernar", "ja-JP-Neural2-B"),
-        Language::Hindi => ("hi-IN", "hi-IN-Chirp3-HD-Achernar", "hi-IN-Neural2-A"),
-        Language::ChineseSimplified => ("cmn-CN", "cmn-CN-Chirp3-HD-Achernar", "cmn-CN-Wavenet-A"),
-        Language::Thai => ("th-TH", "th-TH-Chirp3-HD-Achernar", "th-TH-Neural2-C"),
-        // Taiwanese Mandarin, and the one language here without a Chirp3-HD
-        // voice. `cmn-CN-Chirp3-HD` does read Traditional characters
-        // correctly — the script is input encoding, the speech is Mandarin
-        // either way — but a Traditional course is a Taiwan course, and a
-        // mainland accent teaches the wrong pronunciation. Accent fidelity is
-        // worth more to a learner here than a newer voice model. Being a
-        // Wavenet voice already, it handles `<break>`, so both columns agree.
-        Language::ChineseTraditional => ("cmn-TW", "cmn-TW-Wavenet-A", "cmn-TW-Wavenet-A"),
-    };
-    // `is_ssml` is a proxy for "contains `<break>`", which is exact today:
-    // pronunciation cards are the only SSML we send, and they're all breaks.
-    (
-        language_code,
-        if is_ssml {
-            literal_voice
-        } else {
-            generative_voice
-        },
-    )
+    language.google_tts_voice(is_ssml)
 }
 
 async fn google_synthesize(request: &TtsRequest) -> Result<Option<Vec<u8>>, SynthError> {

@@ -399,6 +399,12 @@ pub async fn verify_clip_bytes(
         });
     }
 
+    // Populate the frame-level distribution cache for every clip we verify.
+    // `frame_matrix` also stores the greedy prediction from the same Modal
+    // response, so a cold verification still costs only one inference call.
+    frame_matrix(ctx, audio_bytes)
+        .await
+        .with_context(|| format!("Failed to cache frame matrix for {source_label}"))?;
     let (raw_phonemes, raw_top_k) = predict_phonemes(ctx, audio_bytes)
         .await
         .with_context(|| format!("Failed to predict phonemes for {source_label}"))?;
@@ -625,15 +631,23 @@ async fn predict_phonemes(
         "top_k": MODAL_TOP_K,
     });
     let modal = post_modal(ctx, payload).await?;
+    cache_modal_prediction(ctx, hash, &modal).await
+}
 
+/// Persist and return the greedy/top-k prediction carried by a Modal response.
+/// Frame-matrix responses contain this data too, so sharing this path avoids a
+/// second request when both cache partitions are cold.
+async fn cache_modal_prediction(
+    ctx: &VerifyContext<'_>,
+    hash: u64,
+    modal: &ModalResponse,
+) -> Result<(Vec<String>, Vec<Vec<RawPhonemeAlt>>)> {
     let raw_phonemes: Vec<String> = modal.phonemes.iter().map(|p| p.phoneme.clone()).collect();
     let top_k: Vec<Vec<RawPhonemeAlt>> = modal
         .phonemes
-        .into_iter()
+        .iter()
         .map(|p| {
-            // Defensively sort by probability desc; Modal returns them sorted
-            // already, but we depend on that ordering.
-            let mut alts = p.top_k;
+            let mut alts = p.top_k.clone();
             alts.sort_by(|a, b| {
                 b.probability
                     .partial_cmp(&a.probability)
@@ -642,18 +656,16 @@ async fn predict_phonemes(
             alts
         })
         .collect();
-
-    let to_write = CachedPrediction {
+    let cached = CachedPrediction {
         raw_phonemes: raw_phonemes.clone(),
         top_k: top_k.clone(),
     };
-    let serialized =
-        serde_json::to_string(&to_write).context("Failed to serialize cache payload")?;
+    let cache_key = format!("wav2vec2/{}/{hash:016x}", ctx.cache_version);
+    let serialized = serde_json::to_vec(&cached).context("Failed to serialize cache payload")?;
     ctx.store
-        .write(&cache_key, serialized.as_bytes())
+        .write(&cache_key, &serialized)
         .await
         .with_context(|| format!("Failed to write cache entry {cache_key}"))?;
-
     Ok((raw_phonemes, top_k))
 }
 
@@ -680,10 +692,11 @@ pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<F
     let payload = serde_json::json!({
         "audio": samples,
         "sample_rate": MODAL_SAMPLE_RATE,
-        "top_k": 1,
+        "top_k": MODAL_TOP_K,
         "return_frame_matrix": true,
     });
     let modal = post_modal(ctx, payload).await?;
+    cache_modal_prediction(ctx, hash, &modal).await?;
     let Some(payload) = modal.frame_matrix else {
         anyhow::bail!(
             "endpoint returned no frame matrix (does this deploy support return_frame_matrix?)"
@@ -1217,11 +1230,34 @@ pub async fn verify_with_google_tts(
     voice: TtsVoice,
     google_api_key: &str,
 ) -> Result<ClipVerification> {
+    let (_, verification) =
+        synthesize_verified_google_tts(ctx, actor, text, text, voice, false, Some(google_api_key))
+            .await?;
+    Ok(verification)
+}
+
+/// Synthesize (or load) Google TTS audio and verify it against a separately
+/// supplied spoken transcript. Keeping synthesis text separate matters for
+/// SSML: the provider receives markup, while the phonemizer must receive the
+/// words that the markup is expected to produce.
+///
+/// The returned audio is suitable for embedding in a language pack. The API
+/// key is optional so a cache-only generate-data run can consume an already
+/// populated entry; it is required only on a TTS cache miss.
+pub async fn synthesize_verified_google_tts(
+    ctx: &VerifyContext<'_>,
+    actor: &str,
+    synthesis_text: &str,
+    spoken_text: &str,
+    voice: TtsVoice,
+    is_ssml: bool,
+    google_api_key: Option<&str>,
+) -> Result<(Vec<u8>, ClipVerification)> {
     // Cache key: hash the request inputs that uniquely determine the output.
     // If we ever change voice/speed/text, the cache miss is automatic.
     let speed = 1.0f64;
     let cache_seed = format!(
-        "{text}|{}|{}|{speed}",
+        "{synthesis_text}|{}|{}|{speed}|ssml={is_ssml}",
         voice.language_code, voice.voice_name
     );
     let hash = xxh3_64(cache_seed.as_bytes());
@@ -1244,21 +1280,24 @@ pub async fn verify_with_google_tts(
     } else {
         if cache_only() {
             anyhow::bail!(
-                "google-tts cache miss for {text:?} ({hash:016x}); cache-only mode is enabled"
+                "google-tts cache miss for {synthesis_text:?} ({hash:016x}); cache-only mode is enabled"
             );
         }
+        let google_api_key = google_api_key.ok_or_else(|| {
+            anyhow::anyhow!("GOOGLE_CLOUD_API_KEY is required for uncached pronunciation audio")
+        })?;
         let client =
             google_tts::GoogleTtsClient::new(google_api_key.to_string()).with_max_attempts(5);
         let outcome = client
             .synthesize(&google_tts::GoogleTtsRequest {
-                text: text.to_string(),
+                text: synthesis_text.to_string(),
                 language_code: voice.language_code.to_string(),
                 voice_name: voice.voice_name.to_string(),
                 speed,
-                is_ssml: false,
+                is_ssml,
             })
             .await
-            .with_context(|| format!("Google TTS call failed for {text:?}"))?;
+            .with_context(|| format!("Google TTS call failed for {synthesis_text:?}"))?;
         let (passed, last_defect) = match outcome.status {
             google_tts::TtsStatus::Passed => (true, None),
             google_tts::TtsStatus::HitLimit { last_defect } => {
@@ -1266,7 +1305,7 @@ pub async fn verify_with_google_tts(
             }
         };
         let to_cache = CachedTts {
-            text: Some(text.to_string()),
+            text: Some(synthesis_text.to_string()),
             audio_base64: base64::engine::general_purpose::STANDARD.encode(&outcome.audio_bytes),
             attempts: outcome.attempts,
             passed,
@@ -1299,9 +1338,9 @@ pub async fn verify_with_google_tts(
     // is unusable). Cleanest fix: don't trust verification on audio Google
     // already flagged as defective; surface the TTS warning as the failure.
     if let Some(note) = tts_note {
-        return Ok(ClipVerification {
+        let verification = ClipVerification {
             actor: actor.to_string(),
-            text: text.to_string(),
+            text: spoken_text.to_string(),
             wav_path: format!("google-tts://{}", voice.voice_name),
             predicted_raw: Vec::new(),
             predicted_normalized: Vec::new(),
@@ -1311,22 +1350,24 @@ pub async fn verify_with_google_tts(
             edit_distance_pct: None,
             alignment: None,
             failure_reason: Some(note),
-        });
+        };
+        return Ok((audio_bytes, verification));
     }
 
     // Google TTS clips don't have per-clip transcription overrides — they're
     // synthesized from the canonical text, so the wikipron+espeak ground
     // truth is the right reference.
-    let expected = expected_phoneme_variants(ctx, text, None);
-    verify_clip_bytes(
+    let expected = expected_phoneme_variants(ctx, spoken_text, None);
+    let verification = verify_clip_bytes(
         ctx,
         actor,
-        text,
+        spoken_text,
         &format!("google-tts://{}", voice.voice_name),
         &audio_bytes,
         expected,
     )
-    .await
+    .await?;
+    Ok((audio_bytes, verification))
 }
 
 use std::sync::atomic::{AtomicBool, Ordering};

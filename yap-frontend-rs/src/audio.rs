@@ -82,6 +82,11 @@ pub(crate) fn cached_clips_version() -> u32 {
 /// availability is unknown.
 pub(crate) fn locally_available(request: &AudioRequest) -> Option<bool> {
     let AudioRequest { request, provider } = request;
+    if pronunciation_audio_applies(request, provider)
+        && human_audio::has_pronunciation_audio(request.language, &request.text)
+    {
+        return Some(true);
+    }
     if human_audio_applies(request) && human_audio::has_clip(request.language, &request.text) {
         return Some(true);
     }
@@ -309,6 +314,15 @@ impl AudioCache {
         access_token: Option<&String>,
     ) -> Result<FetchedAudio, Error> {
         let AudioRequest { request, provider } = request;
+
+        if pronunciation_audio_applies(request, provider)
+            && let Some(bytes) = human_audio::pronunciation_audio(request.language, &request.text)
+        {
+            return Ok(FetchedAudio {
+                bytes,
+                voice_actor: None,
+            });
+        }
 
         // Human recordings live in the language pack and don't need OPFS caching.
         // Only serve them for a plain request — see `human_audio_applies`.
@@ -540,6 +554,15 @@ impl TempAudioCache {
     ) -> Result<FetchedAudio, Error> {
         let AudioRequest { request, provider } = request;
 
+        if pronunciation_audio_applies(request, provider)
+            && let Some(bytes) = human_audio::pronunciation_audio(request.language, &request.text)
+        {
+            return Ok(FetchedAudio {
+                bytes,
+                voice_actor: None,
+            });
+        }
+
         // Human recordings live in the language pack and don't need OPFS caching.
         // Only serve them for a plain request — see `human_audio_applies`.
         if human_audio_applies(request)
@@ -635,6 +658,14 @@ impl TempAudioCache {
 /// TTS provider for a plain request.)
 pub fn human_audio_applies(request: &TtsRequest) -> bool {
     !request.is_ssml && request.instructions.is_none() && (request.speed - 1.0).abs() < f64::EPSILON
+}
+
+fn pronunciation_audio_applies(request: &TtsRequest, provider: &TtsProvider) -> bool {
+    matches!(provider, TtsProvider::Google)
+        && request.is_ssml
+        && request.instructions.is_none()
+        && request.verification_hints.is_empty()
+        && (request.speed - 1.0).abs() < f64::EPSILON
 }
 
 /// Backend route for each TTS provider — shared with the native MCP server,

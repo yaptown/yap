@@ -155,6 +155,7 @@ pub mod morpheme_info;
 pub mod morphology_analysis;
 pub mod nlp;
 pub mod pipeline;
+pub mod pronunciation_audio;
 pub mod pronunciation_patterns;
 pub mod pronunciations;
 pub mod proper_noun_definitions;

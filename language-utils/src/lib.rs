@@ -2327,6 +2327,9 @@ pub struct ConsolidatedLanguageData {
     /// target-language phrase they speak. The nested-map shape enforces that
     /// each (actor, phrase) pair has at most one clip.
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
+    /// Phonemizer-verified Google TTS for pronunciation challenges, keyed by
+    /// the exact SSML request text used by the frontend.
+    pub pronunciation_audio: FxHashMap<String, Audio>,
 }
 
 impl ConsolidatedLanguageData {
@@ -3093,6 +3096,30 @@ impl Language {
         }
     }
 
+    /// Google Cloud TTS locale and voice for this language. Pronunciation
+    /// challenges use a literal voice because Chirp3-HD can drop text beside
+    /// SSML `<break>` elements; plain speech keeps the more natural voice.
+    pub fn google_tts_voice(&self, is_ssml: bool) -> (&'static str, &'static str) {
+        let (locale, natural, literal) = match self {
+            Language::French => ("fr-FR", "fr-FR-Chirp3-HD-Achernar", "fr-FR-Neural2-F"),
+            Language::Spanish => ("es-US", "es-US-Chirp3-HD-Achernar", "es-US-Neural2-A"),
+            Language::English => ("en-US", "en-US-Chirp3-HD-Achernar", "en-US-Neural2-A"),
+            Language::Korean => ("ko-KR", "ko-KR-Chirp3-HD-Achernar", "ko-KR-Neural2-A"),
+            Language::German => ("de-DE", "de-DE-Chirp3-HD-Achernar", "de-DE-Neural2-G"),
+            Language::Italian => ("it-IT", "it-IT-Chirp3-HD-Achernar", "it-IT-Neural2-A"),
+            Language::Portuguese => ("pt-BR", "pt-BR-Chirp3-HD-Achernar", "pt-BR-Neural2-A"),
+            Language::Russian => ("ru-RU", "ru-RU-Chirp3-HD-Aoede", "ru-RU-Wavenet-A"),
+            Language::Japanese => ("ja-JP", "ja-JP-Chirp3-HD-Achernar", "ja-JP-Neural2-B"),
+            Language::Hindi => ("hi-IN", "hi-IN-Chirp3-HD-Achernar", "hi-IN-Neural2-A"),
+            Language::ChineseSimplified => {
+                ("cmn-CN", "cmn-CN-Chirp3-HD-Achernar", "cmn-CN-Wavenet-A")
+            }
+            Language::Thai => ("th-TH", "th-TH-Chirp3-HD-Achernar", "th-TH-Neural2-C"),
+            Language::ChineseTraditional => ("cmn-TW", "cmn-TW-Wavenet-A", "cmn-TW-Wavenet-A"),
+        };
+        (locale, if is_ssml { literal } else { natural })
+    }
+
     /// OpenSubtitles API language code (usually ISO 639-1, but pt-br for Portuguese)
     /// The OpenSubtitles `languages=` query for this language: every code a
     /// subtitle in it may be filed under, comma-separated as the API takes
@@ -3683,6 +3710,43 @@ impl Language {
 
         Ok(())
     }
+}
+
+/// The exact SSML synthesized for one pronunciation-guide example.
+pub fn pronunciation_challenge_ssml(language: Language, pattern: &str, example: &str) -> String {
+    fn escaped(text: &str) -> String {
+        text.replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('"', "&quot;")
+            .replace('\'', "&apos;")
+    }
+
+    format!(
+        "<speak><break time=\"100ms\"/><say-as interpret-as=\"characters\">{}</say-as><break time=\"100ms\"/>{}<break time=\"200ms\"/>{}</speak>",
+        escaped(pattern),
+        escaped(language.pronunciation_connector()),
+        escaped(example),
+    )
+}
+
+/// Plain-text transcript corresponding to [`pronunciation_challenge_ssml`],
+/// used to build the phonemizer target. Separating pattern characters mirrors
+/// SSML's `say-as="characters"` behavior.
+pub fn pronunciation_challenge_spoken_text(
+    language: Language,
+    pattern: &str,
+    example: &str,
+) -> String {
+    let spelled_pattern = pattern
+        .chars()
+        .map(|c| c.to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+    format!(
+        "{spelled_pattern} {} {example}",
+        language.pronunciation_connector()
+    )
 }
 
 impl std::fmt::Display for Language {
@@ -4895,5 +4959,34 @@ mod autograde_request_compat_tests {
         let round: AutoGradeTranscriptionRequest =
             serde_json::from_value(serde_json::to_value(&transcription).unwrap()).unwrap();
         assert_eq!(round.context.movie_title.as_deref(), Some("Delicatessen"));
+    }
+}
+
+#[cfg(test)]
+mod pronunciation_challenge_audio_tests {
+    use super::*;
+
+    #[test]
+    fn ssml_and_spoken_text_share_the_same_components() {
+        assert_eq!(
+            pronunciation_challenge_ssml(Language::French, "ch", "chat & chien"),
+            "<speak><break time=\"100ms\"/><say-as interpret-as=\"characters\">ch</say-as><break time=\"100ms\"/>comme dans<break time=\"200ms\"/>chat &amp; chien</speak>"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::French, "ch", "chat"),
+            "c h comme dans chat"
+        );
+    }
+
+    #[test]
+    fn pronunciation_voice_is_literal_for_ssml() {
+        assert_eq!(
+            Language::French.google_tts_voice(true),
+            ("fr-FR", "fr-FR-Neural2-F")
+        );
+        assert_eq!(
+            Language::French.google_tts_voice(false),
+            ("fr-FR", "fr-FR-Chirp3-HD-Achernar")
+        );
     }
 }

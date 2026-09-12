@@ -71,6 +71,7 @@ pub struct LanguagePack {
     /// Human-recorded audio clips, indexed by voice actor and then by the
     /// target-language phrase they speak.
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
+    pub pronunciation_audio: FxHashMap<String, Audio>,
 }
 
 impl LanguagePack {
@@ -495,6 +496,7 @@ impl LanguagePack {
         let books = language_data.books;
 
         let human_audio = language_data.human_audio.clone();
+        let pronunciation_audio = language_data.pronunciation_audio.clone();
 
         let source_gram_frequencies_data = language_data.source_gram_frequencies.clone();
 
@@ -924,6 +926,7 @@ impl LanguagePack {
             string_to_grams,
             morphemes,
             human_audio,
+            pronunciation_audio,
         }
     }
 }
@@ -1002,6 +1005,7 @@ pub struct LanguagePackCore {
     pub pronunciation_to_words: FxHashMap<Spur, Vec<Spur>>,
     pub minimal_pairs: MinimalPairs,
     pub pronunciation_data: PronunciationData,
+    pub pronunciation_audio: FxHashMap<String, Audio>,
     pub pattern_frequency_map: FxHashMap<(Spur, PatternPosition), u32>,
     pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
     pub proper_noun_definitions: BTreeMap<Spur, ProperNounDefinition>,
@@ -1159,6 +1163,7 @@ impl LanguagePack {
             string_to_grams,
             morphemes,
             human_audio,
+            pronunciation_audio,
         } = self;
 
         let mut r = SpurRemapper {
@@ -1431,6 +1436,7 @@ impl LanguagePack {
                 pronunciation_to_words,
                 minimal_pairs,
                 pronunciation_data,
+                pronunciation_audio,
                 pattern_frequency_map,
                 pronunciation_max_freq_cache,
                 proper_noun_definitions,
@@ -1470,6 +1476,7 @@ impl LanguagePack {
             pronunciation_to_words,
             minimal_pairs,
             pronunciation_data,
+            pronunciation_audio,
             pattern_frequency_map,
             pronunciation_max_freq_cache,
             proper_noun_definitions,
@@ -1499,6 +1506,7 @@ impl LanguagePack {
                 pronunciation_to_words,
                 minimal_pairs,
                 pronunciation_data,
+                pronunciation_audio,
                 pattern_frequency_map,
                 homophone_practice: FxHashMap::default(),
                 pronunciation_max_freq_cache,
@@ -1570,6 +1578,7 @@ impl LanguagePack {
             pronunciation_to_words,
             minimal_pairs,
             pronunciation_data,
+            pronunciation_audio,
             pattern_frequency_map,
             homophone_practice: sentences.homophone_practice,
             pronunciation_max_freq_cache,

@@ -651,15 +651,15 @@ impl ReviewInfo {
             .cloned()?;
 
         let target_language = deck.context.course.target_language;
-        let connector = target_language.pronunciation_connector();
         let audio_requests = guide
             .example_words
             .iter()
             .map(|example| AudioRequest {
                 request: TtsRequest {
-                    text: format!(
-                        "<speak><break time=\"100ms\"/><say-as interpret-as=\"characters\">{}</say-as><break time=\"100ms\"/>{}<break time=\"200ms\"/>{}</speak>",
-                        pattern_str, connector, example.target
+                    text: language_utils::pronunciation_challenge_ssml(
+                        target_language,
+                        &pattern_str,
+                        &example.target,
                     ),
                     language: target_language,
                     is_ssml: true,

@@ -1645,6 +1645,17 @@ async fn main() -> anyhow::Result<()> {
         let audio_failures_log = target_language_dir.join("audio_verification_failures.jsonl");
         let audio_all_results_log = target_language_dir.join("audio_verification_all.jsonl");
         let http_client = reqwest::Client::new();
+        let pronunciation_audio_log =
+            target_language_dir.join("pronunciation_audio_verification.jsonl");
+        let pronunciation_audio = generate_data::pronunciation_audio::generate_pronunciation_audio(
+            &pronunciation_data,
+            &word_to_pronunciation,
+            course.target_language,
+            &http_client,
+            &pronunciation_audio_log,
+        )
+        .await
+        .with_context(|| format!("Failed to generate pronunciation audio for {course:?}"))?;
         let human_audio = generate_data::human_audio::load_human_audio(
             &source_data_path,
             &word_to_pronunciation,
@@ -1688,6 +1699,7 @@ async fn main() -> anyhow::Result<()> {
             gram_dictionary: gram_keyed_dictionary,
             morphemes,
             human_audio,
+            pronunciation_audio,
         };
 
         let language_pack =

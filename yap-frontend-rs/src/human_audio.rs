@@ -48,6 +48,26 @@ pub fn has_clip(language: Language, text: &str) -> bool {
         .any(|clips| clips.contains_key(text))
 }
 
+pub fn has_pronunciation_audio(language: Language, ssml: &str) -> bool {
+    let registry = REGISTRY.lock().expect("human audio registry poisoned");
+    registry
+        .packs
+        .get(&language)
+        .and_then(Weak::upgrade)
+        .is_some_and(|pack| pack.pronunciation_audio.contains_key(ssml))
+}
+
+pub fn pronunciation_audio(language: Language, ssml: &str) -> Option<Vec<u8>> {
+    let registry = REGISTRY.lock().expect("human audio registry poisoned");
+    registry
+        .packs
+        .get(&language)?
+        .upgrade()?
+        .pronunciation_audio
+        .get(ssml)
+        .map(|audio| audio.bytes.clone())
+}
+
 /// Return a human-recorded clip for `(language, text)` if any voice actor
 /// has a recording for that exact phrase. When multiple actors have a recording,
 /// rotates round-robin across successive calls (actors sorted by name).
