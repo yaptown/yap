@@ -6,30 +6,14 @@ import {
   type VoiceActorInfo,
 } from "../../../yap-frontend-rs/pkg";
 
-import type { PlaybackOptions } from "./pure";
+import {
+  interruptPlayback,
+  registerPlayback,
+  type PlaybackOptions,
+} from "./pure";
 
 export type { VoiceActorInfo };
 export * from "./pure";
-
-// One media element plays at a time, app-wide. TTS playback and the movie
-// clip player both register their interrupt here; starting either one stops
-// whatever else was playing.
-let interruptCurrent: (() => void) | undefined;
-
-/// Stop whatever is currently playing (TTS audio or a movie clip).
-export function interruptPlayback(): void {
-  interruptCurrent?.();
-}
-
-/// Register the interrupt for a playback that is about to start. Returns an
-/// unregister function; call it when the playback ends on its own so a stale
-/// interrupt can't fire later.
-export function registerPlayback(interrupt: () => void): () => void {
-  interruptCurrent = interrupt;
-  return () => {
-    if (interruptCurrent === interrupt) interruptCurrent = undefined;
-  };
-}
 
 export async function playAudio(
   audioRequest: AudioRequest,

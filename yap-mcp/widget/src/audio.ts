@@ -2,7 +2,11 @@
 // There is no HTMLAudioElement, so the app's visualizer is unavailable here.
 import type { AudioRequest, VoiceActorInfo } from "../../../yap-frontend-rs/pkg";
 import { app, connectOnce, resultText } from "./bridge";
-import type { PlaybackOptions } from "../../../yap-frontend/src/lib/pure";
+import {
+  interruptPlayback,
+  registerPlayback,
+  type PlaybackOptions,
+} from "../../../yap-frontend/src/lib/pure";
 
 interface CachedAudio {
   buffer: AudioBuffer;
@@ -70,8 +74,6 @@ export function prefetchAudio(request: AudioRequest): void {
   void fetchAudio(request).catch(() => {});
 }
 
-let stopCurrent: (() => void) | null = null;
-
 function abortError(): DOMException {
   return new DOMException("Aborted", "AbortError");
 }
@@ -99,8 +101,9 @@ export async function playAudio(
 ): Promise<void> {
   if (signal?.aborted) throw abortError();
 
-  // If something else is already playing, stop it so the new request wins.
-  stopCurrent?.();
+  // If something else is already playing (TTS or a movie clip — the app's
+  // shared registry covers both), stop it so the new request wins.
+  interruptPlayback();
 
   const { buffer, voiceActor } = await fetchAudio(audioRequest);
   if (signal?.aborted) throw abortError();
@@ -118,11 +121,12 @@ export async function playAudio(
 
   return new Promise((resolve, reject) => {
     let settled = false;
+    let unregister = () => {};
     const settle = (outcome: () => void) => {
       if (settled) return;
       settled = true;
       signal?.removeEventListener("abort", stop);
-      if (stopCurrent === stop) stopCurrent = null;
+      unregister();
       outcome();
     };
 
@@ -136,7 +140,7 @@ export async function playAudio(
     };
 
     signal?.addEventListener("abort", stop, { once: true });
-    stopCurrent = stop;
+    unregister = registerPlayback(stop);
 
     // Fires on natural end and after stop(); settle() makes the first
     // outcome win, so a stopped source still rejects with AbortError.

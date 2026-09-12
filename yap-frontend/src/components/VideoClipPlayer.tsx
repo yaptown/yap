@@ -119,8 +119,10 @@ export function VideoClipPlayer({
           onAvailabilityChangeRef.current?.(false);
           return;
         }
+        // Copy into a fresh Uint8Array: the wasm-bindgen bytes are typed
+        // over ArrayBufferLike, which newer DOM typings reject as a BlobPart.
         url = URL.createObjectURL(
-          new Blob([result.bytes], { type: "video/mp4" }),
+          new Blob([new Uint8Array(result.bytes)], { type: "video/mp4" }),
         );
         setClip({
           status: "ready",
