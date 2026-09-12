@@ -30,10 +30,9 @@ app = modal.App(APP_NAME)
 # response whose marker isn't the one just deployed), NOT by racing a 10s
 # scaledown — so eval can keep its container warm through a long sequential
 # verification run, avoiding mid-run cold-starts of the ~2GB backbone (which
-# otherwise outrun Modal's web-endpoint timeout → 408s). Production keeps the
-# longer window so user-facing requests rarely cold-start.
-_IS_EVAL = APP_NAME != "wav2vec2-phoneme"
-_SCALEDOWN_WINDOW = 180 if _IS_EVAL else 600
+# otherwise outrun Modal's web-endpoint timeout → 408s). Production uses the
+# same three-minute window to reduce idle GPU costs.
+_SCALEDOWN_WINDOW = 180
 
 # Production champion (mel-sidechannel + MLP heads, degrade-augmented).
 # Renamed on HF from lexide-pronunciation-vad-clean-sidechannel-degrade; the
