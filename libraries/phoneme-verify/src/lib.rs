@@ -516,33 +516,29 @@ fn is_transient_status(status: reqwest::StatusCode) -> bool {
     matches!(status.as_u16(), 408 | 425 | 429 | 500 | 502 | 503 | 504)
 }
 
-/// POST one request to the endpoint, retrying transient failures, and
-/// refuse any response from a container whose deploy marker is not the
-/// one expected — so nothing from a stale/contaminated container is
-/// ever cached under the wrong model's key.
-async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Result<ModalResponse> {
+/// POST to either endpoint with shared transport/status retry behavior.
+/// Callers validate the response's deployment marker before caching.
+async fn post_modal_response<T: serde::de::DeserializeOwned>(
+    ctx: &VerifyContext<'_>,
+    url: &str,
+    payload: serde_json::Value,
+) -> Result<T> {
     // Retry transient endpoint failures — cold-start timeouts (408), rate
     // limits (429), and 5xx — which are otherwise fatal to a long run. A 408
     // typically means the container was mid-cold-start; a short backoff lets it
     // finish and the retry lands on the now-warm container.
-    let modal: ModalResponse = {
+    let modal: T = {
         let mut last_err: Option<anyhow::Error> = None;
-        let mut got: Option<ModalResponse> = None;
+        let mut got: Option<T> = None;
         for attempt in 1..=MODAL_MAX_ATTEMPTS {
-            match ctx
-                .http
-                .post(MODAL_URL.as_str())
-                .json(&payload)
-                .send()
-                .await
-            {
+            match ctx.http.post(url).json(&payload).send().await {
                 Err(e) => {
                     last_err = Some(anyhow::Error::new(e).context("Modal request transport error"));
                 }
                 Ok(response) => {
                     let status = response.status();
                     if status.is_success() {
-                        match response.json::<ModalResponse>().await {
+                        match response.json::<T>().await {
                             Ok(m) => {
                                 got = Some(m);
                                 break;
@@ -586,6 +582,11 @@ async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Resu
         }
     };
 
+    Ok(modal)
+}
+
+async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Result<ModalResponse> {
+    let modal: ModalResponse = post_modal_response(ctx, MODAL_URL.as_str(), payload).await?;
     // Per-request freshness check: the one-shot marker_only probe only proves
     // the *first* request hit a fresh container. Verifying the marker on every
     // response guarantees no later request was routed to a stale/contaminated
@@ -717,6 +718,149 @@ pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<F
         .await
         .with_context(|| format!("Failed to write cache entry {cache_key}"))?;
     FrameMatrix::decode(&payload)
+}
+
+/// Fetch frame matrices in input order, sending only cache misses to the batch
+/// endpoint in groups of at most 64. Per-clip failures do not discard neighbors.
+/// Existing matrix/prediction cache keys and cache-only behavior are preserved.
+pub async fn frame_matrices(ctx: &VerifyContext<'_>, wavs: &[&[u8]]) -> Vec<Result<FrameMatrix>> {
+    let endpoint = std::env::var("WAV2VEC2_BATCH_ENDPOINT_URL").ok();
+    let url = batch_endpoint(MODAL_URL.as_str(), endpoint.as_deref());
+    frame_matrices_at(ctx, wavs, url, cache_only()).await
+}
+
+fn batch_endpoint(single: &str, explicit: Option<&str>) -> Result<String> {
+    if let Some(url) = explicit {
+        return Ok(url.to_string());
+    }
+    if let Some(prefix) = single.strip_suffix("-predict.modal.run") {
+        return Ok(format!("{prefix}-predict-batch.modal.run"));
+    }
+    anyhow::bail!("set WAV2VEC2_BATCH_ENDPOINT_URL for this custom single-clip endpoint")
+}
+
+#[derive(Deserialize)]
+struct ModalBatchResponse {
+    results: Vec<serde_json::Value>,
+    deploy_marker: Option<String>,
+}
+
+fn validate_batch(
+    response: &ModalBatchResponse,
+    count: usize,
+    expected: Option<&str>,
+) -> Result<()> {
+    anyhow::ensure!(
+        response.results.len() == count,
+        "Modal batch returned {} results for {count} clips",
+        response.results.len()
+    );
+    if let Some(expected) = expected {
+        anyhow::ensure!(
+            response.deploy_marker.as_deref() == Some(expected),
+            "deploy-marker mismatch: refusing to cache batch predictions"
+        );
+    }
+    Ok(())
+}
+
+async fn frame_matrices_at(
+    ctx: &VerifyContext<'_>,
+    wavs: &[&[u8]],
+    url: Result<String>,
+    only_cache: bool,
+) -> Vec<Result<FrameMatrix>> {
+    let mut results: Vec<Option<Result<FrameMatrix>>> = (0..wavs.len()).map(|_| None).collect();
+    let mut pending = Vec::new();
+    for (index, wav) in wavs.iter().enumerate() {
+        let hash = xxh3_64(wav);
+        let key = format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version);
+        if let Some(bytes) = ctx.store.read(&key).await
+            && let Ok(payload) = serde_json::from_slice::<FrameMatrixPayload>(&bytes)
+        {
+            results[index] = Some(FrameMatrix::decode(&payload));
+            continue;
+        }
+        if only_cache {
+            results[index] = Some(Err(anyhow::anyhow!(
+                "frame-matrix cache miss for {hash:016x}; cache-only mode is enabled"
+            )));
+            continue;
+        }
+        pending.push((index, hash, key));
+    }
+    for chunk in pending.chunks(64) {
+        let mut requests = Vec::new();
+        let mut valid = Vec::new();
+        for (index, hash, key) in chunk {
+            let wav = wavs[*index].to_vec();
+            let decoded = tokio::task::spawn_blocking(move || decode_wav_to_f32(&wav))
+                .await
+                .context("audio decoding task failed")
+                .and_then(|result| result);
+            match decoded {
+                Ok(samples) => {
+                    requests.push(serde_json::json!({
+                        "audio_f32_b64": encode_audio_f32(&pad_to_min_length(samples, MODAL_MIN_SAMPLES)),
+                        "sample_rate": MODAL_SAMPLE_RATE, "top_k": MODAL_TOP_K,
+                        "return_frame_matrix": true,
+                    }));
+                    valid.push((*index, *hash, key));
+                }
+                Err(error) => {
+                    results[*index] = Some(Err(error.context("decoding audio for batch")))
+                }
+            }
+        }
+        if requests.is_empty() {
+            continue;
+        }
+        let response = async {
+            let url = url.as_ref().map_err(|error| anyhow::anyhow!("{error:#}"))?;
+            let response: ModalBatchResponse =
+                post_modal_response(ctx, url, serde_json::json!({"requests": requests})).await?;
+            validate_batch(
+                &response,
+                valid.len(),
+                ctx.expected_deploy_marker.as_deref(),
+            )?;
+            Ok::<_, anyhow::Error>(response)
+        }
+        .await;
+        match response {
+            Err(error) => {
+                for (index, _, _) in valid {
+                    results[index] = Some(Err(anyhow::anyhow!("{error:#}")));
+                }
+            }
+            Ok(response) => {
+                for ((index, hash, key), item) in valid.into_iter().zip(response.results) {
+                    results[index] = Some(
+                        async {
+                            if let Some(error) = item.get("error") {
+                                anyhow::bail!("Modal clip error: {error}");
+                            }
+                            let modal: ModalResponse =
+                                serde_json::from_value(item).context("invalid batch item")?;
+                            let payload = modal
+                                .frame_matrix
+                                .as_ref()
+                                .context("batch item has no frame matrix")?;
+                            let frames = FrameMatrix::decode(payload)?;
+                            cache_modal_prediction(ctx, hash, &modal).await?;
+                            ctx.store.write(key, &serde_json::to_vec(payload)?).await?;
+                            Ok(frames)
+                        }
+                        .await,
+                    );
+                }
+            }
+        }
+    }
+    results
+        .into_iter()
+        .map(|result| result.expect("every batch item resolved"))
+        .collect()
 }
 
 /// Pad `samples` symmetrically with zeros to reach at least `min_len`.
@@ -1396,6 +1540,167 @@ pub fn cache_only() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn batch_test_payload(frames: usize) -> FrameMatrixPayload {
+        let mut encoder =
+            flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+        for _ in 0..frames {
+            for value in [-2.0_f32, -0.1] {
+                encoder
+                    .write_all(&half::f16::from_f32(value).to_le_bytes())
+                    .unwrap();
+            }
+        }
+        FrameMatrixPayload {
+            shape: vec![frames, 2],
+            dtype: "float16".into(),
+            encoding: "zlib+base64".into(),
+            blank_id: 0,
+            vocab: vec!["<pad>".into(), "a".into()],
+            data: base64::engine::general_purpose::STANDARD.encode(encoder.finish().unwrap()),
+        }
+    }
+
+    fn batch_test_wav(seed: i16) -> Vec<u8> {
+        let samples = 1600_u32;
+        let mut wav = b"RIFF".to_vec();
+        wav.extend_from_slice(&(36 + samples * 2).to_le_bytes());
+        wav.extend_from_slice(b"WAVEfmt ");
+        wav.extend_from_slice(&16_u32.to_le_bytes());
+        wav.extend_from_slice(&1_u16.to_le_bytes()); // PCM
+        wav.extend_from_slice(&1_u16.to_le_bytes()); // mono
+        wav.extend_from_slice(&16000_u32.to_le_bytes());
+        wav.extend_from_slice(&32000_u32.to_le_bytes());
+        wav.extend_from_slice(&2_u16.to_le_bytes());
+        wav.extend_from_slice(&16_u16.to_le_bytes());
+        wav.extend_from_slice(b"data");
+        wav.extend_from_slice(&(samples * 2).to_le_bytes());
+        for _ in 0..samples {
+            wav.extend_from_slice(&seed.to_le_bytes());
+        }
+        wav
+    }
+
+    #[test]
+    fn batch_envelope_checks_count_marker_and_custom_endpoint() {
+        let response = ModalBatchResponse {
+            results: vec![serde_json::json!({})],
+            deploy_marker: Some("new".into()),
+        };
+        assert!(validate_batch(&response, 1, Some("new")).is_ok());
+        assert!(validate_batch(&response, 2, Some("new")).is_err());
+        assert!(validate_batch(&response, 1, Some("old")).is_err());
+        assert_eq!(
+            batch_endpoint("https://x-predict.modal.run", None).unwrap(),
+            "https://x-predict-batch.modal.run"
+        );
+        assert!(batch_endpoint("http://localhost/single", None).is_err());
+        assert_eq!(
+            batch_endpoint("http://localhost/single", Some("http://localhost/batch")).unwrap(),
+            "http://localhost/batch"
+        );
+    }
+
+    #[tokio::test]
+    async fn batch_cache_misses_are_bounded_ordered_and_isolated() {
+        use std::io::Read;
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}", listener.local_addr().unwrap());
+        let server = std::thread::spawn(move || {
+            for count in [64, 1] {
+                let (mut socket, _) = listener.accept().unwrap();
+                socket
+                    .set_read_timeout(Some(std::time::Duration::from_secs(30)))
+                    .unwrap();
+                let mut bytes = Vec::new();
+                let (header_end, length) = loop {
+                    let mut block = [0; 8192];
+                    let n = socket.read(&mut block).unwrap();
+                    assert!(n > 0);
+                    bytes.extend_from_slice(&block[..n]);
+                    if let Some(end) = bytes.windows(4).position(|s| s == b"\r\n\r\n") {
+                        let headers = String::from_utf8_lossy(&bytes[..end]);
+                        let length = headers
+                            .lines()
+                            .find_map(|line| {
+                                let (key, value) = line.split_once(':')?;
+                                key.eq_ignore_ascii_case("content-length")
+                                    .then(|| value.trim().parse::<usize>().unwrap())
+                            })
+                            .unwrap();
+                        break (end + 4, length);
+                    }
+                };
+                while bytes.len() < header_end + length {
+                    let mut block = [0; 8192];
+                    let n = socket.read(&mut block).unwrap();
+                    assert!(n > 0);
+                    bytes.extend_from_slice(&block[..n]);
+                }
+                let request: serde_json::Value =
+                    serde_json::from_slice(&bytes[header_end..header_end + length]).unwrap();
+                let items = request["requests"].as_array().unwrap();
+                assert_eq!(items.len(), count);
+                assert!(
+                    items.iter().all(
+                        |item| item["audio_f32_b64"].is_string() && item.get("audio").is_none()
+                    )
+                );
+                let results: Vec<_> = (0..count).map(|i| if count == 64 && i == 1 {
+                    serde_json::json!({"error": {"type": "ValueError", "message": "bad clip"}})
+                } else {
+                    serde_json::json!({"phonemes": [], "frame_matrix": batch_test_payload(1)})
+                }).collect();
+                let body = serde_json::to_vec(
+                    &serde_json::json!({"results": results, "deploy_marker": "test"}),
+                )
+                .unwrap();
+                write!(socket, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len()).unwrap();
+                socket.write_all(&body).unwrap();
+            }
+        });
+        let dir = tempfile::tempdir().unwrap();
+        let store = osmo::Store::open(dir.path());
+        let http = reqwest::Client::new();
+        let empty = HashMap::new();
+        let ctx = VerifyContext {
+            http: &http,
+            store,
+            cache_version: "test".into(),
+            word_to_pronunciation: &empty,
+            mismatch_threshold: 0.3,
+            target_language: Language::English,
+            expected_deploy_marker: Some("test".into()),
+        };
+        let cached = b"cached without decoding".to_vec();
+        let key = format!("wav2vec2-frames/test/{:016x}", xxh3_64(&cached));
+        ctx.store
+            .write(&key, &serde_json::to_vec(&batch_test_payload(2)).unwrap())
+            .await
+            .unwrap();
+        let mut wavs = vec![cached];
+        wavs.extend((0..65).map(batch_test_wav));
+        wavs.push(b"invalid WAV".to_vec());
+        let refs: Vec<_> = wavs.iter().map(Vec::as_slice).collect();
+        let results = frame_matrices_at(&ctx, &refs, Ok(url), false).await;
+        server.join().unwrap();
+        assert_eq!(results.len(), 67);
+        assert_eq!(results[0].as_ref().unwrap().frames, 2);
+        assert_eq!(
+            results
+                .iter()
+                .enumerate()
+                .filter_map(|(i, r)| r.is_err().then_some(i))
+                .collect::<Vec<_>>(),
+            vec![2, 66]
+        );
+        assert_eq!(results[65].as_ref().unwrap().frames, 1);
+        // No endpoint required for cache hits; cache-only misses never make HTTP calls.
+        let cached =
+            frame_matrices_at(&ctx, &refs, Err(anyhow::anyhow!("no endpoint")), true).await;
+        assert_eq!(cached.iter().filter(|r| r.is_ok()).count(), 65);
+        let prediction_key = format!("wav2vec2/test/{:016x}", xxh3_64(&wavs[1]));
+        assert!(ctx.store.read(&prediction_key).await.is_some());
+    }
 
     #[test]
     fn audio_transport_is_little_endian_float32() {

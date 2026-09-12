@@ -44,7 +44,7 @@ use language_utils::Language;
 use movie_subtitles::segment::SubtitleSegmenter;
 use movie_subtitles::sentences::KeyedSentence;
 use movie_subtitles::{cleanup_subtitle_text, SubtitleLine};
-use phoneme_verify::{FrameMatrix, VerifyContext};
+use phoneme_verify::VerifyContext;
 use serde::{Deserialize, Serialize};
 
 use crate::cues::{
@@ -966,9 +966,8 @@ async fn clips_one(
     summary.aligned = placed.len();
 
     use futures::StreamExt;
-    let clips: Vec<Option<Clip>> = futures::stream::iter(placed)
+    let clips: Vec<Vec<Clip>> = futures::stream::iter(placed)
         .map(|(sentence, p)| {
-            let ctx = &ctx;
             let audio = audio.clone();
             let imdb_id = movie.imdb_id.clone();
             let profile = &profile;
@@ -1017,11 +1016,11 @@ async fn clips_one(
                 };
                 if clip.audio_event_overlap {
                     clip.reject = Some("audio event inside the span".into());
-                    return Some(clip);
+                    return Some((clip, None));
                 }
                 if margins.is_none() {
                     clip.reject = Some("neighbouring speech too close to cut clean".into());
-                    return Some(clip);
+                    return Some((clip, None));
                 }
                 let wav = match tokio::task::spawn_blocking(move || {
                     slice_wav_padded(&audio, start_ms, end_ms, pad_before_ms, pad_after_ms)
@@ -1032,7 +1031,7 @@ async fn clips_one(
                     Ok(w) => w,
                     Err(e) => {
                         clip.reject = Some(format!("cut: {e:#}"));
-                        return Some(clip);
+                        return Some((clip, None));
                     }
                 };
                 let padded_ms = (end_ms - start_ms + pad_before_ms + pad_after_ms) as f64;
@@ -1049,61 +1048,23 @@ async fn clips_one(
                     }
                     clip.voiced = voiced_fraction(span_samples, 16_000);
                 }
-                if let Some(min_ratio) = min_ratio {
-                    let ctx = ctx.as_ref().expect("gated languages have a verify context");
+                if min_ratio.is_some() {
                     let target = match phoneme_verify::model_target(&sentence, language) {
                         Some(Ok(p)) if !p.phonemes.is_empty() => p.phonemes,
                         Some(Ok(_)) | None => {
                             clip.reject = Some("g2p produced no phonemes".into());
-                            return Some(clip);
+                            return Some((clip, None));
                         }
                         // Includes the Hindi chain refusing digits or Latin
                         // script: a target with a hole where the audio has
                         // speech would score wrong, so the clip is rejected.
                         Some(Err(e)) => {
                             clip.reject = Some(format!("g2p: {e:#}"));
-                            return Some(clip);
+                            return Some((clip, None));
                         }
                     };
-                    clip.target_ipa = target.clone();
-                    let frames: FrameMatrix = match phoneme_verify::frame_matrix(ctx, &wav).await {
-                        Ok(f) => f,
-                        Err(e) => {
-                            eprintln!("  {}: {e:#}", clip.sentence);
-                            return None;
-                        }
-                    };
-                    // The pads under the model's ear: frames spread evenly
-                    // over the sliced audio, so the pad regions are the
-                    // first and last stretches of the matrix.
-                    let frame_ms = padded_ms / frames.frames as f64;
-                    let lead_frames = (pad_before_ms as f64 / frame_ms) as usize;
-                    let tail_frames = (pad_after_ms as f64 / frame_ms) as usize;
-                    clip.lead_speech = frames.speech_fraction(0, lead_frames);
-                    clip.tail_speech = frames
-                        .speech_fraction(frames.frames.saturating_sub(tail_frames), frames.frames);
-                    let score = frames.score_target(&target);
-                    clip.heard_ipa = frames
-                        .greedy_ids()
-                        .into_iter()
-                        .map(|id| frames.vocab[id].clone())
-                        .collect();
-                    clip.oov = score.oov;
-                    clip.ratio = score.ratio;
-                    clip.logp_target_per_phoneme = score.logp_target_per_phoneme;
-                    let ids: Vec<usize> = target.iter().filter_map(|t| frames.id(t)).collect();
-                    if let Some(spans) = frames.force_align(&ids) {
-                        let k = EDGE_PHONEMES.min(spans.len());
-                        let mean = |spans: &[phoneme_verify::AlignedPhoneme]| {
-                            spans.iter().map(|s| s.logp_mean).sum::<f64>() / spans.len() as f64
-                        };
-                        clip.edge_logp_start = Some(mean(&spans[..k]));
-                        clip.edge_logp_end = Some(mean(&spans[spans.len() - k..]));
-                    }
-                    if let Some(reason) = phoneme_reject(&clip, min_ratio, gate) {
-                        clip.reject = Some(reason);
-                        return Some(clip);
-                    }
+                    clip.target_ipa = target;
+                    return Some((clip, Some(wav)));
                 } else {
                     // No model to listen to the pads: the earshot profile
                     // says whether anyone speaks in them.
@@ -1118,10 +1079,94 @@ async fn clips_one(
                 }
                 clip.reject = audio_reject(&clip, gate);
                 clip.passed = clip.reject.is_none();
-                Some(clip)
+                Some((clip, None))
             }
         })
         .buffered(concurrency.max(1))
+        // Collect prepared clips before inference so even low slicing
+        // concurrency can fill a batch. Cached matrices never go to Modal.
+        .chunks(64)
+        .then(|prepared| {
+            let ctx = &ctx;
+            async move {
+                let mut prepared: Vec<_> = prepared.into_iter().flatten().collect();
+                let mut failed = std::collections::HashSet::new();
+                if let Some(min_ratio) = min_ratio {
+                    let ctx = ctx.as_ref().expect("gated languages have a verify context");
+                    let indices: Vec<_> = prepared
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(i, (_, wav))| wav.as_ref().map(|_| i))
+                        .collect();
+                    let wavs: Vec<&[u8]> = indices
+                        .iter()
+                        .map(|&i| prepared[i].1.as_ref().unwrap().as_slice())
+                        .collect();
+                    let matrices = phoneme_verify::frame_matrices(ctx, &wavs).await;
+                    for (index, frames) in indices.into_iter().zip(matrices) {
+                        let clip = &mut prepared[index].0;
+                        let frames = match frames {
+                            Ok(frames) => frames,
+                            Err(error) => {
+                                eprintln!("  {}: {error:#}", clip.sentence);
+                                failed.insert(index);
+                                continue;
+                            }
+                        };
+                        let padded_ms = (clip.end_ms - clip.start_ms
+                            + clip.pad_before_ms
+                            + clip.pad_after_ms) as f64;
+                        let pad_before_ms = clip.pad_before_ms;
+                        let pad_after_ms = clip.pad_after_ms;
+                        // The pads under the model's ear: frames spread evenly
+                        // over the sliced audio, so the pad regions are the
+                        // first and last stretches of the matrix.
+                        let frame_ms = padded_ms / frames.frames as f64;
+                        let lead_frames = (pad_before_ms as f64 / frame_ms) as usize;
+                        let tail_frames = (pad_after_ms as f64 / frame_ms) as usize;
+                        clip.lead_speech = frames.speech_fraction(0, lead_frames);
+                        clip.tail_speech = frames.speech_fraction(
+                            frames.frames.saturating_sub(tail_frames),
+                            frames.frames,
+                        );
+                        let score = frames.score_target(&clip.target_ipa);
+                        clip.heard_ipa = frames
+                            .greedy_ids()
+                            .into_iter()
+                            .map(|id| frames.vocab[id].clone())
+                            .collect();
+                        clip.oov = score.oov;
+                        clip.ratio = score.ratio;
+                        clip.logp_target_per_phoneme = score.logp_target_per_phoneme;
+                        let ids: Vec<usize> = clip
+                            .target_ipa
+                            .iter()
+                            .filter_map(|t| frames.id(t))
+                            .collect();
+                        if let Some(spans) = frames.force_align(&ids) {
+                            let k = EDGE_PHONEMES.min(spans.len());
+                            let mean = |spans: &[phoneme_verify::AlignedPhoneme]| {
+                                spans.iter().map(|s| s.logp_mean).sum::<f64>() / spans.len() as f64
+                            };
+                            clip.edge_logp_start = Some(mean(&spans[..k]));
+                            clip.edge_logp_end = Some(mean(&spans[spans.len() - k..]));
+                        }
+                        if let Some(reason) = phoneme_reject(clip, min_ratio, gate) {
+                            clip.reject = Some(reason);
+                            continue;
+                        }
+
+                        clip.reject = audio_reject(clip, gate);
+                        clip.passed = clip.reject.is_none();
+                    }
+                }
+                prepared
+                    .into_iter()
+                    .enumerate()
+                    .filter_map(|(i, (clip, _))| (!failed.contains(&i)).then_some(clip))
+                    .collect()
+            }
+        })
         .collect()
         .await;
 
