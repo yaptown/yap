@@ -1,4 +1,4 @@
-"""CPU contract tests; real GPU/HTTP validation lives in the benchmark script."""
+"""CPU contract tests for pronunciation batching and wire formats."""
 import base64
 from pathlib import Path
 import sys
@@ -51,6 +51,40 @@ def worker():
 
 def clip(n, **kwargs):
     return {"audio": [0.1, -0.2] * (n // 2), **kwargs}
+
+
+def compact(request):
+    import numpy as np
+    request = dict(request)
+    request["audio_f32_b64"] = base64.b64encode(
+        np.asarray(request.pop("audio"), dtype="<f4").tobytes()
+    ).decode()
+    return request
+
+
+def test_compact_audio_matches_legacy_sample_values_and_response(worker):
+    legacy = clip(1600, return_frames=True, return_frame_matrix=True, language="tha")
+    encoded = compact(legacy)
+    torch.testing.assert_close(worker._prepare_audio(encoded), worker._prepare_audio(legacy),
+                               rtol=0, atol=0)
+    assert batch_method(worker, [encoded]) == batch_method(worker, [legacy])
+
+
+@pytest.mark.parametrize("encoded", [None, [], "!", "", "AA==", "AAAAAAA=", "AACAfw=="])
+def test_invalid_compact_audio_is_isolated(worker, encoded):
+    results = batch_method(worker, [compact(clip(1600)), {"audio_f32_b64": encoded}])
+    assert "phonemes" in results[0]
+    assert results[1]["error"]["type"] == "ValueError"
+
+
+def test_matrix_bytes_match_old_encoder_for_trimmed_tensor(worker):
+    values = torch.arange(60, dtype=torch.float32).reshape(2, 10, 3) / 7
+    values[1, 2, 0] = float("-inf")
+    trimmed = values[1:2, :5]
+    expected = trimmed[0].half().contiguous()
+    matrix = worker._frame_matrix(trimmed)
+    assert matrix["shape"] == [5, 3]
+    assert base64.b64decode(matrix["data"]) == zlib.compress(bytes(expected.untyped_storage()), 6)
 
 
 def test_planner_reduces_padding_for_64_unsorted_clips():
@@ -144,7 +178,7 @@ def test_http_envelope_and_limit(worker):
         return batch_endpoint(worker, request)
 
     with TestClient(app) as client:
-        response = client.post("/batch", json={"requests": [clip(2000), {}, clip(1600)]})
+        response = client.post("/batch", json={"requests": [compact(clip(2000)), {}, compact(clip(1600))]})
         assert response.status_code == 200
         assert ["error" in item for item in response.json()["results"]] == [False, True, False]
         assert response.json()["deploy_marker"] == service.DEPLOY_MARKER

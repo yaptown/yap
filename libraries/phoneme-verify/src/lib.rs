@@ -626,7 +626,7 @@ async fn predict_phonemes(
         decode_wav_to_f32(wav_bytes).context("Failed to decode WAV to f32 samples via ffmpeg")?;
     let samples = pad_to_min_length(samples, MODAL_MIN_SAMPLES);
     let payload = serde_json::json!({
-        "audio": samples,
+        "audio_f32_b64": encode_audio_f32(&samples),
         "sample_rate": MODAL_SAMPLE_RATE,
         "top_k": MODAL_TOP_K,
     });
@@ -669,6 +669,15 @@ async fn cache_modal_prediction(
     Ok((raw_phonemes, top_k))
 }
 
+/// Mono float32 samples in little-endian order, encoded for the Modal API.
+fn encode_audio_f32(samples: &[f32]) -> String {
+    let bytes: Vec<u8> = samples
+        .iter()
+        .flat_map(|sample| sample.to_le_bytes())
+        .collect();
+    base64::engine::general_purpose::STANDARD.encode(bytes)
+}
+
 /// The model's per-frame log-prob matrix for a clip, from the cache or the
 /// endpoint. Cached under its own partition (`wav2vec2-frames/…`), keyed by
 /// the WAV bytes like predictions are; the compressed payload is stored as
@@ -690,7 +699,7 @@ pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<F
         decode_wav_to_f32(wav_bytes).context("Failed to decode WAV to f32 samples via ffmpeg")?;
     let samples = pad_to_min_length(samples, MODAL_MIN_SAMPLES);
     let payload = serde_json::json!({
-        "audio": samples,
+        "audio_f32_b64": encode_audio_f32(&samples),
         "sample_rate": MODAL_SAMPLE_RATE,
         "top_k": MODAL_TOP_K,
         "return_frame_matrix": true,
@@ -1387,6 +1396,11 @@ pub fn cache_only() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn audio_transport_is_little_endian_float32() {
+        assert_eq!(encode_audio_f32(&[0.0, 1.0, -0.5]), "AAAAAAAAgD8AAAC/");
+    }
 
     #[test]
     fn normalize_strips_suprasegmentals() {

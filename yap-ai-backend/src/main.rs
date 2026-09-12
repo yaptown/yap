@@ -1306,30 +1306,20 @@ async fn get_phonemes_from_modal(
     http: &reqwest::Client,
     audio_bytes: &[u8],
 ) -> Result<Vec<ModalPhoneme>, StatusCode> {
-    // Convert mp3 to f32 samples at 16kHz using symphonia or just send raw and let Modal resample
-    // For now, we send the audio as f32 samples. We need to decode the mp3 first.
-    // Actually, the Modal endpoint expects raw float samples. Let's add an mp3 endpoint to Modal instead.
-    // For now, let's base64-encode and send to a new Modal endpoint that accepts mp3 directly.
-
     let modal_url = std::env::var("WAV2VEC2_ENDPOINT_URL").unwrap_or_else(|_| {
         "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict.modal.run".to_string()
     });
 
-    // We need to send raw audio samples. Let's decode the mp3 to PCM f32 here.
-    // Use a subprocess call to ffmpeg to decode, or add a Rust mp3 decoder.
-    // For simplicity in a server context, let's use the `rodio` or `minimp3` crate.
-    // Actually, let's just update the Modal endpoint to accept base64 mp3 directly.
-    // For now, let's do the conversion here with symphonia.
-
-    // Decode the audio (mp3 or ogg opus) to f32 samples at whatever sample
-    // rate, send with sample_rate
+    // Send lossless little-endian float32 samples in a compact base64 payload.
     let (samples, sample_rate) = google_tts::decode_audio_to_f32(audio_bytes).map_err(|e| {
         eprintln!("Failed to decode audio: {e}");
         StatusCode::BAD_REQUEST
     })?;
 
     let payload = serde_json::json!({
-        "audio": samples,
+        "audio_f32_b64": base64::engine::general_purpose::STANDARD.encode(
+            samples.iter().flat_map(|sample| sample.to_le_bytes()).collect::<Vec<u8>>()
+        ),
         "sample_rate": sample_rate,
         "top_k": 5,
     });

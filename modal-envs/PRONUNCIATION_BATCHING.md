@@ -7,23 +7,31 @@ Production URL: https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict-batch.
 The service resamples and normalizes each clip separately, sorts by length,
 runs similar-length microbatches, trims padding from the outputs, and restores
 the caller's order. Each item supports the existing single-request fields:
-`audio`, `sample_rate`, `language`, `top_k`, `return_frames`,
+`audio_f32_b64`, `sample_rate`, `language`, `top_k`, `return_frames`,
 `return_frame_matrix`, and `target_phonemes`.
 
 ```python
+import base64
+import numpy as np
 import requests
 
-# audio_a and audio_b are lists of mono float samples.
+# Pack mono samples as little-endian IEEE-754 float32 (no WAV header).
+def encode_audio(samples):
+    return base64.b64encode(np.asarray(samples, dtype="<f4").tobytes()).decode()
 response = requests.post(batch_url, json={
     "requests": [
-        {"audio": audio_a, "sample_rate": 16000, "language": "eng"},
-        {"audio": audio_b, "sample_rate": 16000, "language": "tha",
+        {"audio_f32_b64": encode_audio(audio_a), "sample_rate": 16000, "language": "eng"},
+        {"audio_f32_b64": encode_audio(audio_b), "sample_rate": 16000, "language": "tha",
          "return_frame_matrix": True},
     ],
 }, timeout=180)
 response.raise_for_status()
 results = response.json()["results"]
 ```
+
+Both single and batch HTTP endpoints accept this compact format. Legacy
+`audio` float arrays are also accepted during caller rollout. Compact input
+takes precedence if both fields are supplied; invalid compact input is rejected.
 
 The response is `{"results": [...], "deploy_marker": "..."}`. Each successful
 item has the existing pronunciation response fields. An invalid item receives

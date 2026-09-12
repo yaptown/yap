@@ -580,11 +580,10 @@ class Wav2Vec2Phoneme:
         """
         import base64, zlib
 
-        # torch's own buffer, not numpy's — numpy is not in this image (torch
-        # imports it lazily and warns when absent), and going through it would
-        # add a dependency for a byte copy we can do directly.
+        # Copy the contiguous matrix in bulk; bytes(untyped_storage()) reads
+        # individual bytes through Python and dominates inference latency.
         mat = log_probs[0].detach().to("cpu").half().contiguous()
-        payload = zlib.compress(bytes(mat.untyped_storage()), 6)
+        payload = zlib.compress(mat.numpy().tobytes(), 6)
         # Row labels come from the tokenizer's own vocab, NOT `_label`
         # (`decode`). The two disagree on 78 of 461 entries — decode renders
         # `<pad>` as `<blank>` and collapses some doubled forms — so labeling
@@ -798,12 +797,29 @@ class Wav2Vec2Phoneme:
 
         if not isinstance(request, dict):
             raise ValueError("each request must be an object")
-        if "audio" not in request:
-            raise ValueError("audio is required")
+        if "audio_f32_b64" in request:
+            import base64
+            import binascii
+            import numpy as np
+            encoded = request["audio_f32_b64"]
+            if not isinstance(encoded, str):
+                raise ValueError("audio_f32_b64 must be a base64 string")
+            try:
+                raw = base64.b64decode(encoded, validate=True)
+            except (ValueError, binascii.Error) as error:
+                raise ValueError("audio_f32_b64 is not valid base64") from error
+            if not raw or len(raw) % 4:
+                raise ValueError("audio_f32_b64 must contain whole float32 samples")
+            audio = np.frombuffer(raw, dtype="<f4").copy()
+        elif "audio" in request:
+            # Allow existing deployed callers to transition independently.
+            audio = request["audio"]
+        else:
+            raise ValueError("audio_f32_b64 is required")
         sr = int(request.get("sample_rate", 16000))
         if sr <= 0:
             raise ValueError("sample_rate must be positive")
-        samples = torch.as_tensor(request["audio"], dtype=torch.float32)
+        samples = torch.as_tensor(audio, dtype=torch.float32)
         if samples.ndim != 1 or samples.numel() == 0 or not torch.isfinite(samples).all():
             raise ValueError("audio must be a nonempty, finite mono waveform")
         if sr != 16000:
@@ -967,19 +983,10 @@ class Wav2Vec2Phoneme:
                     # So a caller can discover which languages this checkpoint
                     # has aux (tone / pitch-accent) heads for.
                     "language_head_specs": self.language_head_specs}
-        audio = request["audio"]
-        sample_rate = int(request.get("sample_rate", 16000))
-        top_k = min(max(int(request.get("top_k", 3)), 1), 100)
-        return_frames = bool(request.get("return_frames", False))
-        target_phonemes = request.get("target_phonemes") or None
-        return_frame_matrix = bool(request.get("return_frame_matrix", False))
-        # Opt-in: names which language's aux heads to run, e.g. "tha", "jpn",
-        # "zho-hans". Omitted (or unknown) means phonemes + stress only.
-        language = request.get("language")
-        result = self.transcribe_phonemes.local(
-            audio, sample_rate, top_k, return_frames, language, target_phonemes,
-            return_frame_matrix,
-        )
+        result = self._transcribe_requests([request])[0]
+        if isinstance(result, Exception):
+            from fastapi import HTTPException
+            raise HTTPException(status_code=422, detail=str(result))
         # Stamp every prediction with the deploy marker so the verifier can
         # reject (and refuse to cache) responses served by a stale/contaminated
         # container — not just the one-shot marker_only probe.
