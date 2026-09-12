@@ -26,6 +26,8 @@ use resend_rs::{Resend, types::CreateEmailBaseOptions};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, sync::LazyLock};
 
+mod deck_token;
+mod tts_cache;
 mod tts_verify;
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
@@ -354,12 +356,25 @@ async fn synthesize_provider_checked(
 /// The audio returned may not come from the requested provider. That's
 /// intended: the client treats `provider` as a preference rather than a
 /// guarantee, and caches whatever comes back under the key it asked with —
-/// so the correct clip is the one that gets kept.
+/// so the correct clip is the one that gets kept. The shared bucket is keyed
+/// the same way, and only ever receives clips that passed: see `tts_cache`.
 async fn synthesize_checked(
     http: &reqwest::Client,
     request: &TtsRequest,
     primary: TtsProvider,
 ) -> Result<String, StatusCode> {
+    let cache_filename = language_utils::tts_cache_filename(request, &primary);
+    if let Some(audio) = tts_cache::lookup(http, &cache_filename).await {
+        return Ok(base64::engine::general_purpose::STANDARD.encode(&audio));
+    }
+    // A clip that passed every check: hand it back and, off the response
+    // path, publish it for everyone after.
+    let verified = |audio: Vec<u8>| {
+        let encoded = base64::engine::general_purpose::STANDARD.encode(&audio);
+        tts_cache::store_in_background(http.clone(), cache_filename.clone(), audio);
+        Ok(encoded)
+    };
+
     // Fast path. Clips that fail a check are kept rather than discarded, so a
     // learner never lands on a silent card; the requested provider's is
     // preferred, which makes giving up entirely degrade to the old behaviour.
@@ -368,7 +383,7 @@ async fn synthesize_checked(
     let mut salvage: Vec<(Rejection, bool, Vec<u8>)> = Vec::new();
 
     let mut failure_status = match synthesize_provider_checked(http, request, primary, 1).await {
-        Ok(audio) => return Ok(base64::engine::general_purpose::STANDARD.encode(&audio)),
+        Ok(audio) => return verified(audio),
         Err(failure) => {
             salvage.extend(failure.rejected.map(|(grade, audio)| (grade, true, audio)));
             failure.status
@@ -424,7 +439,7 @@ async fn synthesize_checked(
                 if provider != primary {
                     eprintln!("{primary:?} TTS: {provider:?} won the race and passed its checks");
                 }
-                return Ok(base64::engine::general_purpose::STANDARD.encode(&audio));
+                return verified(audio);
             }
             Err(failure) => {
                 if provider == primary {
@@ -2446,6 +2461,72 @@ async fn sentry_tunnel(body: Bytes) -> StatusCode {
     }
 }
 
+/// What the client sends when it starts generating an Anki deck. `options`
+/// is whatever the deck page chose (starting level, size, sources, ...),
+/// recorded verbatim so a minted deck can be understood later; the backend
+/// doesn't interpret it.
+#[derive(Debug, Deserialize)]
+struct MintAnkiDeckRequest {
+    #[serde(default)]
+    options: serde_json::Value,
+}
+
+#[derive(Debug, Serialize)]
+struct MintAnkiDeckResponse {
+    deck_id: uuid::Uuid,
+    /// Goes into every media URL of the generated deck as `?d=<token>`.
+    token: String,
+}
+
+/// Mint the signed token a new Anki deck embeds in its media URLs, and
+/// record the mint (see `deck_token`). Signing in is optional — the deck
+/// page is public — but when the caller is signed in the deck is tied to
+/// them. The row is written before the token is handed out: a token nobody
+/// can attribute defeats the purpose of minting server-side.
+async fn mint_anki_deck(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    Json(request): Json<MintAnkiDeckRequest>,
+) -> Result<Json<MintAnkiDeckResponse>, StatusCode> {
+    let user_id = verify_jwt(auth.token()).await.ok().map(|claims| claims.sub);
+
+    let (deck_id, token) = deck_token::mint().ok_or_else(|| {
+        eprintln!("anki deck: DECK_TOKEN_SECRET is not set, refusing to mint");
+        StatusCode::NOT_IMPLEMENTED
+    })?;
+
+    let supabase_url =
+        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
+        .insert_header("apikey", service_role_key.clone())
+        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+
+    let row = serde_json::json!({
+        "id": deck_id,
+        "user_id": user_id,
+        "options": request.options,
+    });
+    let response = client
+        .from("anki_decks")
+        .insert(row.to_string())
+        .execute()
+        .await
+        .map_err(|e| {
+            eprintln!("anki deck: failed to record mint: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    if !response.status().is_success() {
+        eprintln!(
+            "anki deck: failed to record mint: {:?}",
+            response.text().await
+        );
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    Ok(Json(MintAnkiDeckResponse { deck_id, token }))
+}
+
 fn app() -> Router {
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -2468,6 +2549,7 @@ fn app() -> Router {
         )
         .route("/language-data", post(serve_language_data))
         .route("/clip/{lang}/sentences", get(serve_clip_sentences))
+        .route("/anki/deck", post(mint_anki_deck))
         .route("/clip/{lang}/{clip_id}/lo.mp4", get(serve_clip_video))
         .route(
             "/clip/{lang}/{clip_id}/subtitles",
@@ -2501,6 +2583,19 @@ async fn main() {
         );
     } else {
         println!("TTS verification: on ({})", transcribers.join(" + "));
+    }
+    if deck_token::configured() {
+        println!("Anki decks: minting enabled");
+    } else {
+        eprintln!("Anki decks: OFF — set DECK_TOKEN_SECRET to mint deck tokens");
+    }
+    if tts_cache::write_enabled() {
+        println!("TTS cache: storing verified clips in the shared bucket");
+    } else {
+        eprintln!(
+            "TTS cache: read-only — set R2_ACCESS_KEY_ID + R2_SECRET_ACCESS_KEY \
+             (and CLOUDFLARE_ACCOUNT_ID) to store verified clips for other users"
+        );
     }
 
     let app = app();

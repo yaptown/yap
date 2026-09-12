@@ -37,6 +37,9 @@ postgrest = "1.6"
 resend-rs = "0.25"
 google-tts = { path = "../libraries/google-tts" }
 unicode-normalization.workspace = true
+rusty-s3 = "0.10"
+hmac = "0.13"
+sha2 = "0.11"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

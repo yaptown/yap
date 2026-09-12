@@ -4,10 +4,10 @@ use bridgerton::Error;
 use futures::FutureExt;
 use futures::future::{LocalBoxFuture, Shared};
 use language_utils::{Compensation, TtsProvider};
+pub use language_utils::{audio_mime_type, tts_cache_filename};
 use opfs::{DirectoryHandle as _, FileHandle as _, WritableFileStream as _};
 use std::cell::{Cell, RefCell};
 use std::collections::{BTreeSet, HashMap};
-use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 
 type SharedFetch = Shared<LocalBoxFuture<'static, Result<Vec<u8>, String>>>;
 
@@ -627,68 +627,6 @@ impl TempAudioCache {
     }
 }
 
-/// Bumped whenever a backend change alters the audio produced for a request
-/// that is itself unchanged — a different voice, model, or post-processing
-/// step. Nothing in a `TtsRequest` describes *how* the backend renders it, so
-/// without this a clip cached before such a change is indistinguishable from
-/// one made after, and OPFS keeps serving the old one forever.
-///
-/// A bump costs every user one round of cache misses. That is the whole point:
-/// the alternative is a learner who already cached a defective clip never
-/// hearing the fix.
-///
-/// - 1: Chirp3-HD started eating the text next to a `<break>`, so pronunciation
-///   cards had cached audio that omitted the very letter they exist to teach.
-const TTS_SYNTHESIS_REVISION: u32 = 1;
-
-/// Cache filename for a TTS request. The key must include *every* input that
-/// changes the synthesized audio — otherwise a request differing only in, say,
-/// `speed` would be served a stale clip rendered at a different speed. Shared
-/// by both `AudioCache` and `TempAudioCache` so the two can never drift apart.
-///
-/// That includes inputs the request doesn't carry: `TTS_SYNTHESIS_REVISION`
-/// stands in for the backend's own rendering decisions.
-///
-/// `verification_hints` is keyed too, which is easy to talk yourself out of —
-/// it never reaches a TTS provider, so it can't change a single sample of any
-/// one attempt. It does decide which attempt comes back: hints feed the ASR
-/// gate, the gate decides whether a clip is accepted or the providers race,
-/// and so the same text with and without hints can legitimately return
-/// different audio. Keying them means a pack update that tags a new proper
-/// noun re-verifies the sentences containing it rather than trusting a clip
-/// that was accepted without ever knowing the name.
-pub(crate) fn tts_cache_filename(request: &TtsRequest, provider: &TtsProvider) -> String {
-    // Distinguish instructions None ('n') from Some("") ('s'): the /tts
-    // handlers treat them differently (None = default prompt, Some("") = empty
-    // prefix), so they must key to different clips.
-    let (itag, instructions) = match request.instructions.as_deref() {
-        Some(s) => ('s', s),
-        None => ('n', ""),
-    };
-    // Length-prefix the free-form fields (text, instructions) so two distinct
-    // requests can't collide via a colon embedded in the text — e.g. text
-    // "a:b" vs text "a" + instructions "b" would otherwise hash identically.
-    // The remaining fields have bounded, colon-free Debug/Display/numeric
-    // forms, so they're safe to join directly.
-    // Hints are joined with a separator that can't appear inside one (they're
-    // single words from the pack) and length-prefixed like the other
-    // free-form fields, so ["a", "b"] can't collide with ["a b"].
-    let hints = request.verification_hints.join("\u{1f}");
-    let cache_text = format!(
-        "r{TTS_SYNTHESIS_REVISION}|{provider:?}|{language}|{speed}|{is_ssml}\
-         |{tlen}:{text}|{itag}{ilen}:{instructions}|{hlen}:{hints}",
-        language = request.language,
-        speed = request.speed,
-        is_ssml = request.is_ssml,
-        tlen = request.text.len(),
-        text = request.text,
-        ilen = instructions.len(),
-        hlen = hints.len(),
-    );
-    let cache_key = const_xxh3(cache_text.as_bytes());
-    format!("{cache_key}.mp3")
-}
-
 /// Whether a human recording may satisfy this request. A human clip is a
 /// single fixed rendering of the phrase, so it can't honor non-default
 /// speed, SSML, or style instructions — when any of those is set we skip
@@ -710,14 +648,24 @@ pub fn tts_endpoint(provider: &TtsProvider) -> &'static str {
     }
 }
 
-/// Synthesize audio for a request via the AI backend, returning decoded
-/// bytes. Shared with the native MCP server — fetch-happen's native
-/// transport makes the browser and native wire calls identical.
+/// Synthesize audio for a request, returning decoded bytes. Shared with the
+/// native MCP server — fetch-happen's native transport makes the browser and
+/// native wire calls identical.
+///
+/// The shared cache is tried first, straight from its public bucket: the key
+/// is computed here, so a clip any user has already had verified comes back
+/// as a plain GET that never touches the backend (nor its cold start). Only
+/// a miss falls through to `/tts`, where the backend synthesizes, checks, and
+/// — if the clip passed — writes it to the bucket for everyone after.
 pub async fn fetch_tts(
     request: &TtsRequest,
     provider: &TtsProvider,
     access_token: Option<&String>,
 ) -> Result<Vec<u8>, String> {
+    if let Some(bytes) = fetch_shared_cache(request, provider).await {
+        return Ok(bytes);
+    }
+
     let endpoint = tts_endpoint(provider);
 
     let response = hit_ai_server(
@@ -743,15 +691,17 @@ pub async fn fetch_tts(
         .map_err(|e| format!("Base64 decode error: {e:?}"))
 }
 
-/// Container format sniffed from magic bytes, as a mime type for playback.
-pub fn audio_mime_type(bytes: &[u8]) -> &'static str {
-    if bytes.starts_with(b"RIFF") {
-        "audio/wav"
-    } else if bytes.starts_with(b"OggS") {
-        "audio/ogg"
-    } else {
-        "audio/mpeg"
+/// The shared cache's copy of this clip, if it has one. Any failure — offline,
+/// a 404 miss, a truncated body — is a plain `None`: the cache is an
+/// accelerator, and the backend path behind it still works without it.
+async fn fetch_shared_cache(request: &TtsRequest, provider: &TtsProvider) -> Option<Vec<u8>> {
+    let url = language_utils::tts_cache_url(&tts_cache_filename(request, provider));
+    let response = fetch_happen::Client.get(url).send().await.ok()?;
+    if !response.ok() {
+        return None;
     }
+    let bytes = response.bytes().await.ok()?;
+    is_valid_audio_data(&bytes).then_some(bytes)
 }
 
 fn is_valid_audio_data(bytes: &[u8]) -> bool {

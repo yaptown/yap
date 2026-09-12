@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective August 7, 2026.</p>
+            <p className="text-sm">Effective September 11, 2026.</p>
           </div>
         </Card>
 
@@ -57,7 +57,10 @@ export function PrivacyPage() {
               sent to our server and to AI providers to generate feedback. When
               you type answers to challenges, the answer is sent to AI
               providers for grading. These are processed to give you feedback,
-              not to build a profile of you.
+              not to build a profile of you. Audio we generate for sentences is
+              kept in a shared cache on Cloudflare so it doesn't have to be
+              generated again for the next learner; those clips are keyed by
+              the sentence text alone and contain nothing about you.
             </p>
             <p>
               <span className="text-foreground">Technical.</span> We use Sentry

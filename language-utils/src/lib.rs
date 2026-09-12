@@ -4061,6 +4061,172 @@ fn default_speed() -> f64 {
     1.0
 }
 
+/// Bumped whenever a backend change alters the audio produced for a request
+/// that is itself unchanged — a different voice, model, or post-processing
+/// step. Nothing in a `TtsRequest` describes *how* the backend renders it, so
+/// without this a clip cached before such a change is indistinguishable from
+/// one made after, and every cache (OPFS, the shared bucket) keeps serving
+/// the old one forever.
+///
+/// A bump costs every user one round of cache misses. That is the whole point:
+/// the alternative is a learner who already cached a defective clip never
+/// hearing the fix.
+///
+/// - 1: Chirp3-HD started eating the text next to a `<break>`, so pronunciation
+///   cards had cached audio that omitted the very letter they exist to teach.
+const TTS_SYNTHESIS_REVISION: u32 = 1;
+
+/// Cache filename for a TTS request. The key must include *every* input that
+/// changes the synthesized audio — otherwise a request differing only in, say,
+/// `speed` would be served a stale clip rendered at a different speed. One
+/// function is shared by the browser's OPFS caches, the MCP server's temp
+/// cache, and the backend's shared bucket so none of them can drift apart —
+/// which is also what lets a client fetch the shared bucket directly, by a
+/// key it computed itself, before ever asking the backend.
+///
+/// That includes inputs the request doesn't carry: `TTS_SYNTHESIS_REVISION`
+/// stands in for the backend's own rendering decisions.
+///
+/// `verification_hints` is keyed too, which is easy to talk yourself out of —
+/// it never reaches a TTS provider, so it can't change a single sample of any
+/// one attempt. It does decide which attempt comes back: hints feed the ASR
+/// gate, the gate decides whether a clip is accepted or the providers race,
+/// and so the same text with and without hints can legitimately return
+/// different audio. Keying them means a pack update that tags a new proper
+/// noun re-verifies the sentences containing it rather than trusting a clip
+/// that was accepted without ever knowing the name.
+pub fn tts_cache_filename(request: &TtsRequest, provider: &TtsProvider) -> String {
+    // Distinguish instructions None ('n') from Some("") ('s'): the /tts
+    // handlers treat them differently (None = default prompt, Some("") = empty
+    // prefix), so they must key to different clips.
+    let (itag, instructions) = match request.instructions.as_deref() {
+        Some(s) => ('s', s),
+        None => ('n', ""),
+    };
+    // Length-prefix the free-form fields (text, instructions) so two distinct
+    // requests can't collide via a colon embedded in the text — e.g. text
+    // "a:b" vs text "a" + instructions "b" would otherwise hash identically.
+    // The remaining fields have bounded, colon-free Debug/Display/numeric
+    // forms, so they're safe to join directly.
+    // Hints are joined with a separator that can't appear inside one (they're
+    // single words from the pack) and length-prefixed like the other
+    // free-form fields, so ["a", "b"] can't collide with ["a b"].
+    let hints = request.verification_hints.join("\u{1f}");
+    let cache_text = format!(
+        "r{TTS_SYNTHESIS_REVISION}|{provider:?}|{language}|{speed}|{is_ssml}\
+         |{tlen}:{text}|{itag}{ilen}:{instructions}|{hlen}:{hints}",
+        language = request.language,
+        speed = request.speed,
+        is_ssml = request.is_ssml,
+        tlen = request.text.len(),
+        text = request.text,
+        ilen = instructions.len(),
+        hlen = hints.len(),
+    );
+    let cache_key = xxhash_rust::const_xxh3::xxh3_64(cache_text.as_bytes());
+    format!("{cache_key}.mp3")
+}
+
+/// Public origin of the shared TTS cache: the `yap-tts-cache` R2 bucket on a
+/// custom domain. Objects are named by [`tts_cache_filename`], so any client
+/// can look a clip up without the backend — a hit skips Fly entirely (and
+/// its cold start). Only clips that passed the backend's checks are ever
+/// written, so a hit is always a verified clip.
+pub const TTS_CACHE_ORIGIN: &str = "https://ttscache.yap.town";
+
+/// Where the shared cache would serve the clip for `cache_filename`.
+pub fn tts_cache_url(cache_filename: &str) -> String {
+    format!("{TTS_CACHE_ORIGIN}/{cache_filename}")
+}
+
+/// Container format sniffed from magic bytes, as a mime type for playback
+/// (and for the shared cache's `Content-Type`). The cache filename always
+/// ends in `.mp3` regardless of what the winning provider actually returned,
+/// so the bytes are the only trustworthy source.
+pub fn audio_mime_type(bytes: &[u8]) -> &'static str {
+    if bytes.starts_with(b"RIFF") {
+        "audio/wav"
+    } else if bytes.starts_with(b"OggS") {
+        "audio/ogg"
+    } else {
+        "audio/mpeg"
+    }
+}
+
+#[cfg(test)]
+mod tts_cache_key_tests {
+    use super::*;
+
+    fn request(text: &str) -> TtsRequest {
+        TtsRequest {
+            text: text.to_string(),
+            language: Language::French,
+            is_ssml: false,
+            instructions: None,
+            speed: 1.0,
+            verification_hints: vec![],
+        }
+    }
+
+    #[test]
+    fn key_is_stable_across_processes() {
+        // The browser computes this key and fetches the bucket by it; the
+        // backend computes it independently when it writes. If this value
+        // ever changes without a revision bump, every cached clip goes dark.
+        assert_eq!(
+            tts_cache_filename(&request("Bonjour tout le monde."), &TtsProvider::ElevenLabs),
+            "5553454482266024564.mp3"
+        );
+    }
+
+    #[test]
+    fn every_input_changes_the_key() {
+        let base = request("Bonjour");
+        let base_key = tts_cache_filename(&base, &TtsProvider::ElevenLabs);
+        let variants = [
+            TtsRequest {
+                text: "Bonjour!".into(),
+                ..base.clone()
+            },
+            TtsRequest {
+                language: Language::Spanish,
+                ..base.clone()
+            },
+            TtsRequest {
+                is_ssml: true,
+                ..base.clone()
+            },
+            TtsRequest {
+                instructions: Some(String::new()),
+                ..base.clone()
+            },
+            TtsRequest {
+                speed: 0.8,
+                ..base.clone()
+            },
+            TtsRequest {
+                verification_hints: vec!["Bonjour".into()],
+                ..base.clone()
+            },
+        ];
+        for variant in &variants {
+            assert_ne!(
+                tts_cache_filename(variant, &TtsProvider::ElevenLabs),
+                base_key,
+                "{variant:?} should not share a key with the base request"
+            );
+        }
+        assert_ne!(tts_cache_filename(&base, &TtsProvider::Google), base_key);
+    }
+
+    #[test]
+    fn mime_type_follows_the_bytes_not_the_name() {
+        assert_eq!(audio_mime_type(b"RIFF...."), "audio/wav");
+        assert_eq!(audio_mime_type(b"OggS...."), "audio/ogg");
+        assert_eq!(audio_mime_type(b"ID3....."), "audio/mpeg");
+    }
+}
+
 // ============================================================================
 // Whitespace prediction for reconstructing text from atoms
 // ============================================================================
