@@ -303,7 +303,7 @@ fn main() {
 
     let start = Instant::now();
     let trainer = UnigramTrainer::new(config);
-    let model = trainer.train(&corpus, &[]);
+    let model = trainer.train(&corpus, &[], |_| true);
     let elapsed = start.elapsed();
 
     let multi_char_count = model.get_vocab().iter().filter(|s| s.len() >= 2).count();

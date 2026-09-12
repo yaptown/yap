@@ -66,6 +66,18 @@ pub struct TrainedEncoding {
     pub encoder: SentenceEncoder,
 }
 
+/// Whether a learned gram may begin with `atom`. The structural rule (a real
+/// word at each end, no proper nouns) is the unigram trainer's; this is the
+/// one lexical rule on top: a clitic ("'s", "n't") is written onto the word
+/// before it, so a gram beginning with one ("'s daughter") is a fragment of
+/// the previous word, not a phrase.
+pub fn can_start_gram(atom: &Atom<lasso::Spur>, strings: &lasso::RodeoReader) -> bool {
+    !matches!(
+        atom,
+        Atom::Tok(word) if language_utils::attaches_to_preceding_word(strings.resolve(&word.text))
+    )
+}
+
 /// Train supertokens, encode sentences, and write all outputs for a language
 pub fn train_supertokens_and_write_diagnostics(
     nlp_sentences: &BTreeMap<String, Vec<Literal<String>>>,
@@ -126,7 +138,9 @@ pub fn train_supertokens_and_write_diagnostics(
     };
 
     let trainer = UnigramTrainer::new(config);
-    let model = trainer.train(&interned_corpus, &interned_seeds);
+    let model = trainer.train(&interned_corpus, &interned_seeds, |atom| {
+        can_start_gram(atom, &reader)
+    });
 
     // Build the in-memory vocabulary (index = token id) and the gram rodeo.
     // Interning in id order makes SpurGram keys and vocabulary indices

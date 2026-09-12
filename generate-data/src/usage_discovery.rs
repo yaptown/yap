@@ -1368,15 +1368,18 @@ fn snap_to_words(sent: &SentenceIndex, text: &str, verbatim: &str) -> Option<(us
     (last >= first).then_some((first, last))
 }
 
-/// The structural constraints a proposed sequence must satisfy to become a
-/// gram, matching what the unigram trainer requires of learned sequences:
-/// more than one atom, real word tokens at both ends, no proper nouns
-/// anywhere. Shared by the adjudicator's extractions and by paradigm variants
-/// so the two can't drift apart.
-fn admissible_sequence(ids: &[SpurAtom]) -> bool {
+/// The constraints a proposed sequence must satisfy to become a gram,
+/// matching what the unigram trainer requires of learned sequences: more
+/// than one atom, real word tokens at both ends, no proper nouns anywhere,
+/// and no clitic at the start (`tokenize::can_start_gram`). Shared by the
+/// adjudicator's extractions and by paradigm variants so the two can't drift
+/// apart.
+fn admissible_sequence(ids: &[SpurAtom], strings: &lasso::RodeoReader) -> bool {
     use omnigram::unigram::UnigramToken;
     ids.len() >= 2
-        && ids.first().is_some_and(|a| a.is_content())
+        && ids
+            .first()
+            .is_some_and(|a| a.is_content() && crate::tokenize::can_start_gram(a, strings))
         && ids.last().is_some_and(|a| a.is_content())
         && !ids.iter().any(|a| a.is_excluded_from_sequences())
 }
@@ -1736,7 +1739,7 @@ async fn expand_paradigms(
                 membership.insert(i, citation.clone());
                 continue;
             }
-            if !admissible_sequence(&ids)
+            if !admissible_sequence(&ids, strings)
                 || known_multi.contains(&ids)
                 || known_terms.contains(&key)
             {
@@ -2156,7 +2159,7 @@ pub async fn discover(
                 n_single += 1;
                 continue;
             }
-            if !admissible_sequence(&ids) {
+            if !admissible_sequence(&ids, &corpus.interners.strings) {
                 n_boundary += 1;
                 continue;
             }
@@ -2877,9 +2880,33 @@ mod tests {
             .iter()
             .map(|a| a.get_or_intern(&mut interner))
             .collect();
-        assert!(admissible_sequence(&interned));
-        assert!(!admissible_sequence(&interned[..1]));
-        assert!(!admissible_sequence(&[]));
+        let strings = interner.into_reader();
+        assert!(admissible_sequence(&interned, &strings));
+        assert!(!admissible_sequence(&interned[..1], &strings));
+        assert!(!admissible_sequence(&[], &strings));
+    }
+
+    #[test]
+    fn admissible_sequence_rejects_a_leading_clitic() {
+        let word = |text: &str| {
+            Atom::Tok(language_utils::Word {
+                text: text.to_string(),
+                word_type: language_utils::WordType::Heteronym(language_utils::Heteronym {
+                    word: text.to_string(),
+                    lemma: text.to_string(),
+                    pos: language_utils::PartOfSpeech::Noun,
+                }),
+            })
+        };
+        let mut interner = lasso::Rodeo::default();
+        let intern = |atoms: &[Atom<String>], interner: &mut lasso::Rodeo| -> Vec<SpurAtom> {
+            atoms.iter().map(|a| a.get_or_intern(interner)).collect()
+        };
+        let fragment = intern(&[word("'s"), word("daughter")], &mut interner);
+        let phrase = intern(&[word("king"), word("'s")], &mut interner);
+        let strings = interner.into_reader();
+        assert!(!admissible_sequence(&fragment, &strings));
+        assert!(admissible_sequence(&phrase, &strings));
     }
 
     #[test]

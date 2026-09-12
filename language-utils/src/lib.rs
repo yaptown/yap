@@ -4321,6 +4321,20 @@ const NO_SPACE_BEFORE: &[char] = &[
 /// Characters that end words and attach directly (apostrophes, hyphens in compounds)
 const ATTACHING_SUFFIXES: &[char] = &['\'', '\u{2019}', '-'];
 
+/// English contraction clitics. lexide tokenizes "I'm", "don't" and "Tom's" as
+/// "I" + "'m", "do" + "n't" and "Tom" + "'s": the clitic is its own token, with
+/// its own lemma (be, not, be), but is written onto the word before it.
+const ENGLISH_CLITICS: &[&str] = &["'s", "'m", "'re", "'ve", "'ll", "'d", "n't"];
+
+/// Whether `text` is a clitic that attaches to the preceding word with no
+/// space ("'s", "n't"). Straight and curly apostrophes both count; a lone
+/// quote mark or a word that merely begins with an apostrophe ("'cause") is
+/// not a clitic.
+pub fn attaches_to_preceding_word(text: &str) -> bool {
+    let normalized = text.to_lowercase().replace('\u{2019}', "'");
+    ENGLISH_CLITICS.contains(&normalized.as_str())
+}
+
 /// Capitalize the first letter of a string, leaving the rest unchanged.
 pub fn capitalize_first_letter(s: &str) -> String {
     let mut chars = s.chars();
@@ -4421,6 +4435,10 @@ pub fn predict_whitespace(
     };
 
     let right_text = &right.text;
+
+    if attaches_to_preceding_word(right_text) {
+        return Whitespace::None;
+    }
 
     let left_last = left_text.chars().last();
     let right_first = right_text.chars().next();
@@ -4637,6 +4655,31 @@ mod capitalization_tests {
                 pos,
             }),
         }
+    }
+
+    #[test]
+    fn english_clitics_attach_to_the_preceding_word() {
+        let left = word("I", PartOfSpeech::Pron);
+        for clitic in ["'m", "'s", "n't", "\u{2019}ll", "'S"] {
+            assert_eq!(
+                predict_whitespace(
+                    &left,
+                    Some(&word(clitic, PartOfSpeech::Aux)),
+                    Language::English
+                ),
+                Whitespace::None,
+                "{clitic} should attach to the word before it"
+            );
+        }
+        // A word that merely starts with an apostrophe keeps its space.
+        assert_eq!(
+            predict_whitespace(
+                &left,
+                Some(&word("'cause", PartOfSpeech::Sconj)),
+                Language::English
+            ),
+            Whitespace::Space
+        );
     }
 
     #[test]

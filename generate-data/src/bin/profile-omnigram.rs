@@ -226,7 +226,7 @@ fn main() {
 
     let trainer = UnigramTrainer::new(config);
     let start = Instant::now();
-    let model = trainer.train(&corpus, &[]);
+    let model = trainer.train(&corpus, &[], |_| true);
     let elapsed = start.elapsed();
 
     let multiword_vocab = model

@@ -264,7 +264,7 @@ fn run_production_path_french_stats(
     };
 
     let trainer = UnigramTrainer::new(config);
-    let model = trainer.train(&corpus, &[]);
+    let model = trainer.train(&corpus, &[], |_| true);
     eval_model(&model, &corpus, label);
     print_top_multigrams(&model, &reader, Language::French, 30);
 }
@@ -296,7 +296,7 @@ fn tokenization_stats() {
         };
 
         let trainer = UnigramTrainer::new(config);
-        let model = trainer.train(&corpus, &[]);
+        let model = trainer.train(&corpus, &[], |_| true);
         eval_model(&model, &corpus, &format!("alpha={alpha:.1}"));
     }
 }
@@ -361,7 +361,7 @@ fn tokenization_stats_compare_initial_multiplier_4_vs_10_vs_15() {
             initial_candidate_multiplier,
             merge_alpha: 0.0,
         };
-        UnigramTrainer::new(config).train(&corpus, &[])
+        UnigramTrainer::new(config).train(&corpus, &[], |_| true)
     };
 
     let model4 = make_model(4);

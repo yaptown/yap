@@ -556,6 +556,10 @@ impl UnigramTrainer {
     /// Train a Unigram model from a corpus of token sequences.
     /// `seed_sequences` are token sequences that will be injected into the vocabulary
     /// with their actual corpus frequency, and protected from pruning.
+    /// `can_start_sequence` is the caller's lexical rule for what a learned
+    /// multi-token sequence may begin with, on top of the structural one
+    /// ([`UnigramToken::is_content`]) — the token type alone can't tell, say,
+    /// a clitic from a word once it's interned. Seeds bypass it.
     /// `fixed_counts` are pre-computed expected counts from known segmentations
     /// (e.g. aligned morphological data). These are added to the EM expected counts
     /// at each iteration, biasing the model toward known morphemes without needing
@@ -564,8 +568,14 @@ impl UnigramTrainer {
         &self,
         corpus: &[Vec<T>],
         seed_sequences: &[Seq<T>],
+        can_start_sequence: impl Fn(&T) -> bool,
     ) -> UnigramModel<T> {
-        self.train_with_fixed_counts(corpus, seed_sequences, &FxHashMap::default())
+        self.train_with_fixed_counts(
+            corpus,
+            seed_sequences,
+            can_start_sequence,
+            &FxHashMap::default(),
+        )
     }
 
     /// Like [`train`], but with pre-computed fixed counts merged into each EM iteration.
@@ -573,6 +583,7 @@ impl UnigramTrainer {
         &self,
         corpus: &[Vec<T>],
         seed_sequences: &[Seq<T>],
+        can_start_sequence: impl Fn(&T) -> bool,
         fixed_counts: &FxHashMap<Seq<T>, f64>,
     ) -> UnigramModel<T> {
         let em_iterations = self.config.em_iterations.max(1);
@@ -602,10 +613,11 @@ impl UnigramTrainer {
                     let slice = &sentence[start..end];
 
                     // For multi-token sequences:
-                    // 1. Boundaries must be content tokens (no punct/proper nouns at start/end)
+                    // 1. Boundaries must be content tokens (no punct/proper nouns at start/end),
+                    //    and the first must pass the caller's start rule
                     // 2. No excluded tokens anywhere (e.g., proper nouns shouldn't be in supertokens)
                     if slice.len() >= 2 {
-                        let first_ok = slice[0].is_content();
+                        let first_ok = slice[0].is_content() && can_start_sequence(&slice[0]);
                         let last_ok = slice[slice.len() - 1].is_content();
                         if !first_ok || !last_ok {
                             continue;
@@ -1003,7 +1015,7 @@ mod tests {
         };
 
         let trainer = UnigramTrainer::new(config);
-        let model = trainer.train(&corpus, &[]);
+        let model = trainer.train(&corpus, &[], |_| true);
 
         // The model should have learned that "je suis" is common
         let tokens = vec![make_token("je"), make_token("suis"), make_token("content")];
@@ -1224,6 +1236,42 @@ mod tests {
     }
 
     #[test]
+    fn test_start_rule_keeps_clitics_off_sequence_starts() {
+        // "'s hat" is the only repeated bigram, so without a start rule it is
+        // learned; with one, nothing may begin with the clitic.
+        let corpus: Vec<Vec<TestToken>> = ["king", "queen", "dog", "cat", "man", "boy"]
+            .iter()
+            .map(|owner| vec![make_token(owner), make_token("'s"), make_token("hat")])
+            .collect();
+
+        let config = UnigramTrainerConfig {
+            target_multiword_tokens: 3,
+            max_piece_length: 2,
+            shrinking_factor: 0.8,
+            min_frequency: 2,
+            em_iterations: 8,
+            initial_candidate_multiplier: 4,
+            merge_alpha: 0.0,
+        };
+        let trainer = UnigramTrainer::new(config);
+        let starts_with_clitic =
+            |seq: &Seq<TestToken>| seq.len() > 1 && seq.first() == Some(&make_token("'s"));
+
+        let unrestricted = trainer.train(&corpus, &[], |_| true);
+        assert!(
+            unrestricted.get_vocab().iter().any(starts_with_clitic),
+            "the test corpus should make \"'s hat\" learnable"
+        );
+
+        let restricted = trainer.train(&corpus, &[], |t| t != &make_token("'s"));
+        assert!(
+            !restricted.get_vocab().iter().any(starts_with_clitic),
+            "a sequence starts with the clitic: {:?}",
+            restricted.get_vocab()
+        );
+    }
+
+    #[test]
     fn test_proper_nouns_excluded_from_sequences() {
         let corpus: Vec<Vec<TestToken>> = vec![
             vec![
@@ -1251,7 +1299,7 @@ mod tests {
         };
 
         let trainer = UnigramTrainer::new(config);
-        let model = trainer.train(&corpus, &[]);
+        let model = trainer.train(&corpus, &[], |_| true);
 
         // Check that no multi-token sequence contains a proper noun
         for seq in model.get_vocab() {

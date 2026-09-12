@@ -81,6 +81,30 @@ const MAX_TOKENIZATION_ATTEMPTS: u32 = 3;
 /// Attempts within a single run before a sentence counts as failed for that run.
 const IN_RUN_ATTEMPTS: usize = 3;
 
+/// Attempts within a single run when the endpoint itself fails to answer (a
+/// 5xx or 429 while Modal scales, a timeout, a dropped connection) before the
+/// sentence is left for the next run. These are retried patiently — with 600
+/// requests in flight a scaling hiccup hits thousands of sentences at once —
+/// and never count against the sentence.
+const ENDPOINT_ATTEMPTS: usize = 8;
+
+/// Whether `error` is the model's verdict on the sentence — its analysis came
+/// back but could not be parsed into tokens — as opposed to the endpoint not
+/// answering at all. Only lexide's parser produces the former (these are its
+/// messages), so everything else says nothing about the sentence and must not
+/// spend its failure budget: the run that recorded endpoint errors as sentence
+/// failures silently dropped 75k good sentences, a seventh of the corpus.
+fn is_models_verdict(error: &anyhow::Error) -> bool {
+    let message = format!("{error:#}");
+    [
+        "Reconstructed text does not match",
+        "Failed to parse POS",
+        "Failed to parse dependency",
+    ]
+    .iter()
+    .any(|verdict| message.contains(verdict))
+}
+
 /// Replace the failure file in sentence order to keep diffs stable across runs.
 fn write_failures(failures: &BTreeMap<String, u32>, failure_file: &Path) -> Result<()> {
     let file = std::fs::File::create(failure_file)?;
@@ -222,15 +246,15 @@ pub async fn process_sentences(
 
     // Process all sentences concurrently with buffering and collect results
     let mut newly_processed: BTreeMap<String, Vec<lexide::Token>> = BTreeMap::new();
-    let mut transport_failures = 0usize;
+    let mut endpoint_failures = 0usize;
     let mut results = futures::stream::iter(sentences_to_process)
         .map(|sentence| {
             let lexide = &lexide;
             let pb = pb.clone();
             async move {
-                let mut last_error = None;
-                for attempt in 0..IN_RUN_ATTEMPTS {
-                    match lexide.analyze(&sentence, lexide_language).await {
+                let mut attempts = 0;
+                loop {
+                    let error = match lexide.analyze(&sentence, lexide_language).await {
                         Ok(tokenization) => {
                             pb.inc(1);
                             return Ok(TokenizedSentence {
@@ -238,29 +262,35 @@ pub async fn process_sentences(
                                 tokens: tokenization.tokens,
                             });
                         }
-                        Err(e) => {
-                            last_error = Some(e);
-                            if attempt + 1 < IN_RUN_ATTEMPTS {
-                                // Back off before retrying — the failures worth
-                                // retrying are the transient ones.
-                                tokio::time::sleep(std::time::Duration::from_millis(
-                                    500u64 << attempt,
-                                ))
-                                .await;
-                            }
-                        }
+                        Err(error) => error,
+                    };
+                    attempts += 1;
+                    let verdict = is_models_verdict(&error);
+                    let budget = if verdict {
+                        IN_RUN_ATTEMPTS
+                    } else {
+                        ENDPOINT_ATTEMPTS
+                    };
+                    if attempts >= budget {
+                        eprintln!(
+                            "Warning: Failed to analyze sentence '{sentence}' after {attempts} attempts: {error:?}"
+                        );
+                        pb.inc(1);
+                        return Err((sentence, !verdict));
                     }
+                    // Back off before retrying: briefly for the model's own
+                    // failures (it runs at temperature 0, so these rarely
+                    // change), for up to half a minute when the endpoint is
+                    // the problem.
+                    let delay = if verdict {
+                        std::time::Duration::from_millis(500u64 << attempts)
+                    } else {
+                        std::time::Duration::from_secs(1u64 << attempts).min(
+                            std::time::Duration::from_secs(30),
+                        )
+                    };
+                    tokio::time::sleep(delay).await;
                 }
-
-                let error = last_error.expect("the retry loop runs at least once");
-                eprintln!(
-                    "Warning: Failed to analyze sentence '{sentence}' after {IN_RUN_ATTEMPTS} attempts: {error:?}"
-                );
-                pb.inc(1);
-                // Still unreachable after every retry: that says nothing about
-                // the sentence, and must not spend its failure budget.
-                let transport = format!("{error:#}").contains("Failed to send request");
-                Err((sentence, transport))
             }
         })
         .buffer_unordered(600);
@@ -280,13 +310,13 @@ pub async fn process_sentences(
                 failures_changed |= failures.remove(&tokenized.sentence).is_some();
                 newly_processed.insert(tokenized.sentence, tokenized.tokens);
             }
-            Err((failed_sentence, transport)) => {
-                // A transport failure (endpoint cold-starting, network out)
-                // says nothing about the sentence; recording it would silently
-                // drop a good sentence from every future build. Only the
-                // model's own failures count against a sentence.
-                if transport {
-                    transport_failures += 1;
+            Err((failed_sentence, endpoint)) => {
+                // An endpoint failure (cold start, overload, network out) says
+                // nothing about the sentence; recording it would silently drop
+                // a good sentence from every future build. Only the model's
+                // own failures count against a sentence.
+                if endpoint {
+                    endpoint_failures += 1;
                 } else {
                     *failures.entry(failed_sentence).or_insert(0) += 1;
                     failures_changed = true;
@@ -296,10 +326,10 @@ pub async fn process_sentences(
     }
 
     pb.finish_and_clear();
-    if transport_failures > 0 {
+    if endpoint_failures > 0 {
         eprintln!(
-            "Warning: {transport_failures} sentence(s) not tokenized because the endpoint could \
-             not be reached; they are not recorded as failures and will be retried next run"
+            "Warning: {endpoint_failures} sentence(s) not tokenized because the endpoint did \
+             not answer; they are not recorded as failures and will be retried next run"
         );
     }
 
