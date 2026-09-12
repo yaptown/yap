@@ -1,6 +1,22 @@
 import os
+import sys
+from pathlib import Path
 
 import modal
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pronunciation_batching import length_batches
+
+MAX_REQUESTS = 64
+BATCH_SIZE = int(os.environ.get("WAV2VEC2_BATCH_SIZE", "8"))
+MAX_PADDED_SECONDS = float(os.environ.get("WAV2VEC2_MAX_PADDED_SECONDS", "120"))
+MAX_LENGTH_RATIO = float(os.environ.get("WAV2VEC2_MAX_LENGTH_RATIO", "1.25"))
+GPU = os.environ.get("WAV2VEC2_GPU", "L40S")
+BATCH_DIAGNOSTICS = os.environ.get("WAV2VEC2_BATCH_DIAGNOSTICS", "0") == "1"
+if BATCH_SIZE < 1 or BATCH_SIZE > MAX_REQUESTS:
+    raise ValueError("invalid pronunciation batch size")
+if not (0 < MAX_PADDED_SECONDS < float("inf")) or not (1 <= MAX_LENGTH_RATIO < float("inf")):
+    raise ValueError("invalid pronunciation padding limits")
 
 # Production app name. The eval harness (scripts/compare_models.py) overrides
 # this via WAV2VEC2_APP_NAME so model comparisons deploy to a *separate* app
@@ -47,10 +63,9 @@ STRESS_MARKS = {0: "", 1: "ˈ", 2: "ˌ"}
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .apt_install("espeak-ng")
     .pip_install(
-        "torch", "torchaudio", "transformers", "fastapi[standard]",
-        "phonemizer", "huggingface_hub",
+        "torch==2.8.0", "torchaudio==2.8.0", "transformers==4.57.6",
+        "fastapi[standard]", "huggingface_hub",
     )
     # Bake the resolved identity into the image. The three constants above are
     # read from the environment of whoever runs `modal deploy`, but the
@@ -65,6 +80,11 @@ image = (
             "WAV2VEC2_MODEL_ID": MODEL_ID,
             "WAV2VEC2_MODEL_REVISION": MODEL_REVISION,
             "WAV2VEC2_DEPLOY_MARKER": DEPLOY_MARKER,
+            "WAV2VEC2_GPU": GPU,
+            "WAV2VEC2_BATCH_SIZE": str(BATCH_SIZE),
+            "WAV2VEC2_MAX_PADDED_SECONDS": str(MAX_PADDED_SECONDS),
+            "WAV2VEC2_MAX_LENGTH_RATIO": str(MAX_LENGTH_RATIO),
+            "WAV2VEC2_BATCH_DIAGNOSTICS": "1" if BATCH_DIAGNOSTICS else "0",
         }
     )
     .run_commands(
@@ -84,6 +104,11 @@ image = (
         f"hf_hub_download('{MODEL_ID}', 'factorized_heads.pt', revision='{MODEL_REVISION}')\""
     )
 )
+image = image.add_local_file(
+    Path(__file__).resolve().parent / "pronunciation_batching.py",
+    remote_path="/root/pronunciation_batching.py",
+)
+
 
 
 def _build_simple_heads(hidden_size: int, vocab_size: int, num_stress_labels: int = 3):
@@ -267,8 +292,9 @@ def _build_sidechannel(ckpt):
 
 
 @app.cls(
-    gpu="T4",
+    gpu=GPU,
     image=image,
+    max_containers=int(os.environ["WAV2VEC2_MAX_CONTAINERS"]) if "WAV2VEC2_MAX_CONTAINERS" in os.environ else None,
     # Idle-container teardown, set per app above (_SCALEDOWN_WINDOW). Both eval
     # and production keep a multi-minute window so a long sequential run (eval)
     # or a sporadic user request (prod) doesn't cold-start the ~2GB backbone
@@ -290,6 +316,8 @@ def _build_sidechannel(ckpt):
 class Wav2Vec2Phoneme:
     @modal.enter()
     def load_model(self):
+        self._pool_number = 0
+        self._label_cache = {}
         # Catch load failures (e.g. a checkpoint whose head shapes don't match
         # this endpoint) and stash the traceback instead of crashing the
         # container. predict() then reports it, so the eval harness surfaces the
@@ -419,7 +447,7 @@ class Wav2Vec2Phoneme:
         with torch.no_grad():
             self._forward(dummy.input_values.to("cuda").to(torch.float16))
 
-    def _compute_head_input_regularized(self, input_values):
+    def _compute_head_input_regularized(self, input_values, attention_mask=None):
         """Build the (1, T, head_base_dim) shared base feature for the
         regularized variant. See pronunciation/train/src/factorized_ctc.py
         FactorizedCTCModel._compute_head_input for the reference impl.
@@ -427,7 +455,7 @@ class Wav2Vec2Phoneme:
         import torch
         import torch.nn.functional as F
 
-        out = self.backbone(input_values, output_hidden_states=True)
+        out = self.backbone(input_values, attention_mask=attention_mask, output_hidden_states=True)
         # tuple of (L+1) tensors, each (B, T, backbone_hidden), fp16
         hidden_states = out.hidden_states
 
@@ -449,7 +477,7 @@ class Wav2Vec2Phoneme:
         combined = torch.cat([hidden, acoustic], dim=-1)  # (B, T, K*H + out_dim)
         return self.shared_base(combined)                  # (B, T, head_base_dim)
 
-    def _compute_head_input_sidechannel(self, input_values):
+    def _compute_head_input_sidechannel(self, input_values, attention_mask=None):
         """Build the (1, T, H + acoustic_dim) head input for the mel-sidechannel
         variant: backbone last_hidden_state concatenated with the projected
         per-frame acoustic side-channel computed straight off the waveform. See
@@ -458,7 +486,7 @@ class Wav2Vec2Phoneme:
         import torch
         import torch.nn.functional as F
 
-        out = self.backbone(input_values)
+        out = self.backbone(input_values, attention_mask=attention_mask)
         hidden = out.last_hidden_state.float()       # (1, T, H), fp32
         acoustic = self.sidechannel(input_values, hidden.shape[1], hidden.dtype)
         return torch.cat([hidden, acoustic], dim=-1)  # (1, T, H + out_dim)
@@ -477,11 +505,12 @@ class Wav2Vec2Phoneme:
             if spec.get("lang") == language and name in self.language_heads
         }
 
-    def _forward(self, input_values, language: str | None = None):
+    def _forward(self, input_values, language: str | list | None = None, attention_mask=None):
         """Return (combined_log_probs, stress_logits, p_nonblank, aux_ids).
 
-        The first three are (1, T, *); `aux_ids` maps each applicable aux
-        target ("tone", "pitch_accent") to its per-frame argmax, (T,).
+        The first three are (B, T, *). A scalar language returns a dict of
+        auxiliary target -> (T,) ids; a per-item language list returns one
+        such dict per batch item. The encoder remains language-independent.
 
         Branches on the head-input variant:
         - simple: heads run on backbone's last_hidden_state.
@@ -494,11 +523,11 @@ class Wav2Vec2Phoneme:
         import torch.nn.functional as F
 
         if self.regularized:
-            h = self._compute_head_input_regularized(input_values)  # (1, T, 768), fp32
+            h = self._compute_head_input_regularized(input_values, attention_mask)  # (1, T, 768), fp32
         elif self.mel_sidechannel:
-            h = self._compute_head_input_sidechannel(input_values)  # (1, T, H+A), fp32
+            h = self._compute_head_input_sidechannel(input_values, attention_mask)  # (1, T, H+A), fp32
         else:
-            out = self.backbone(input_values)
+            out = self.backbone(input_values, attention_mask=attention_mask)
             h = out.last_hidden_state.float()                       # (1, T, H), fp32
 
         l_nb = self.nonblank_head(h).squeeze(-1)                    # (1, T)
@@ -517,10 +546,18 @@ class Wav2Vec2Phoneme:
 
         stress_logits = self.stress_head(h)                         # (1, T, 3)
         p_nonblank = torch.sigmoid(l_nb)                            # (1, T)
-        aux_ids = {
-            target: head(h)[0].argmax(dim=-1)                       # (T,)
-            for target, head in self._aux_heads_for(language).items()
-        }
+        # One backbone pass can serve different languages. Compute each
+        # requested auxiliary head once, then select labels per request.
+        languages = language if isinstance(language, list) else [language]
+        selected = [self._aux_heads_for(lang) for lang in languages]
+        head_values = {}
+        for heads in selected:
+            for head in heads.values():
+                if head not in head_values:
+                    head_values[head] = head(h).argmax(dim=-1)
+        per_item_aux = [{target: head_values[head][i] for target, head in heads.items()}
+                        for i, heads in enumerate(selected)]
+        aux_ids = per_item_aux if isinstance(language, list) else per_item_aux[0]
         return log_probs, stress_logits, p_nonblank, aux_ids
 
     def _frame_matrix(self, log_probs) -> dict:
@@ -639,7 +676,9 @@ class Wav2Vec2Phoneme:
         }
 
     def _label(self, token_id: int) -> str:
-        return "<blank>" if token_id == self.blank_id else self.processor.decode(token_id)
+        if token_id not in self._label_cache:
+            self._label_cache[token_id] = "<blank>" if token_id == self.blank_id else self.processor.decode(token_id)
+        return self._label_cache[token_id]
 
     def _decode_with_confidence(
         self, log_probs, stress_logits, aux_ids: dict, top_k: int = 3
@@ -740,49 +779,162 @@ class Wav2Vec2Phoneme:
             )
         return frames
 
+    def _transcribe_requests(self, requests):
+        if self.load_error is not None:
+            raise RuntimeError(self.load_error)
+        results = [None] * len(requests)
+        for index, result in self._process_requests(requests):
+            results[index] = result
+        return results
+
+    def _prepare_audio(self, request):
+        import torch
+
+        if not isinstance(request, dict):
+            raise ValueError("each request must be an object")
+        if "audio" not in request:
+            raise ValueError("audio is required")
+        sr = int(request.get("sample_rate", 16000))
+        if sr <= 0:
+            raise ValueError("sample_rate must be positive")
+        samples = torch.as_tensor(request["audio"], dtype=torch.float32)
+        if samples.ndim != 1 or samples.numel() == 0 or not torch.isfinite(samples).all():
+            raise ValueError("audio must be a nonempty, finite mono waveform")
+        if sr != 16000:
+            import torchaudio.functional as F
+            samples = F.resample(samples.unsqueeze(0), sr, 16000).squeeze(0)
+        if self.backbone._get_feat_extract_output_lengths(samples.numel()) <= 0:
+            raise ValueError("audio is too short for the feature extractor")
+        # Preserve this service's preprocessing. Normalize each clip before
+        # padding; normalization over the padded batch would change the audio.
+        inputs = self.processor(samples.numpy(), sampling_rate=16000,
+                                return_tensors="pt", padding=False)
+        return inputs.input_values[0]
+
+    def _process_requests(self, requests):
+        """Partition one explicit request; yields (original index, result/error)."""
+        import json
+        prepared = []
+        for index, request in enumerate(requests):
+            try:
+                prepared.append((index, request, self._prepare_audio(request)))
+            except Exception as error:
+                yield index, error.with_traceback(None)
+        if not prepared:
+            return
+        self._pool_number += 1
+        pool_number = self._pool_number
+        lengths = [item[2].numel() for item in prepared]
+        # GroupNorm includes time in its normalization before masking, so
+        # unvalidated group-normalized checkpoints retain singleton execution.
+        size = 1 if self.backbone.config.feat_extract_norm == "group" else BATCH_SIZE
+        batches = list(length_batches(lengths, size, int(MAX_PADDED_SECONDS * 16000),
+                                      MAX_LENGTH_RATIO))
+        print(json.dumps({"pronunciation_pool": pool_number, "requests": len(requests),
+                          "microbatches": [len(batch) for batch in batches],
+                          "padding_ratio": sum(max(lengths[i] for i in batch)*len(batch)
+                                               for batch in batches)/sum(lengths)}), flush=True)
+        for batch in batches:
+            yield from self._process_microbatch([prepared[i] for i in batch], len(requests), pool_number)
+
+    def _forward_requests(self, items):
+        import torch
+        values = torch.nn.utils.rnn.pad_sequence([item[2] for item in items], batch_first=True)
+        lengths = torch.tensor([item[2].numel() for item in items])
+        frame_lengths = self.backbone._get_feat_extract_output_lengths(lengths).tolist()
+        mask = None
+        if len(items) > 1:
+            mask = (torch.arange(values.shape[1])[None, :] < lengths[:, None]).long().to("cuda")
+        with torch.inference_mode():
+            lp, stress, nb, aux = self._forward(
+                values.to("cuda", dtype=torch.float16),
+                language=[item[1].get("language") for item in items], attention_mask=mask,
+            )
+            # Bulk transfers also keep every per-frame .item() in the existing
+            # response builders off the GPU. No concurrent model forwards.
+            return (lp.cpu(), stress.cpu(), nb.cpu(),
+                    [{key: value.cpu() for key,value in labels.items()} for labels in aux], frame_lengths)
+
+    def _process_microbatch(self, items, pool_size, pool_number):
+        import torch
+        failed = False
+        try:
+            outputs = self._forward_requests(items)
+        except torch.cuda.OutOfMemoryError as error:
+            if len(items) == 1:
+                yield items[0][0], error.with_traceback(None)
+                return
+            failed = True
+        except Exception as error:
+            for index, _, _ in items:
+                yield index, error.with_traceback(None)
+            return
+        if failed:
+            # Retry after leaving the except block, releasing failed tensors.
+            torch.cuda.empty_cache()
+            middle = len(items)//2
+            yield from self._process_microbatch(items[:middle], pool_size, pool_number)
+            yield from self._process_microbatch(items[middle:], pool_size, pool_number)
+            return
+        lp, stress, nb, aux, frame_lengths = outputs
+        for i, (index, request, samples) in enumerate(items):
+            try:
+                n = frame_lengths[i]
+                log_probs, stress_logits, p_nonblank = lp[i:i+1,:n], stress[i:i+1,:n], nb[i:i+1,:n]
+                labels = {key: value[:n] for key,value in aux[i].items()}
+                top_k = min(max(int(request.get("top_k",3)),1),100)
+                result = {"phonemes": self._decode_with_confidence(log_probs, stress_logits, labels, top_k)}
+                if request.get("target_phonemes"):
+                    result["target_score"] = self._score_target(log_probs, request["target_phonemes"])
+                if request.get("return_frame_matrix"):
+                    result["frame_matrix"] = self._frame_matrix(log_probs)
+                if request.get("return_frames"):
+                    result["frames"] = self._frames_topk(log_probs, stress_logits, p_nonblank, labels, top_k)
+                if BATCH_DIAGNOSTICS:
+                    result["batch_debug"] = {"pool_size": pool_size, "pool_number": pool_number,
+                        "microbatch_size": len(items), "sample_lengths": [x[2].numel() for x in items],
+                        "valid_samples": samples.numel(), "frames": n}
+                yield index, result
+            except Exception as error:
+                yield index, error.with_traceback(None)
+
     @modal.method()
     def transcribe_phonemes(
-        self,
-        audio_samples: list[float],
-        sample_rate: int = 16000,
-        top_k: int = 3,
-        return_frames: bool = False,
-        language: str | None = None,
-        target_phonemes: list | None = None,
-        return_frame_matrix: bool = False,
+        self, audio_samples: list[float], sample_rate: int = 16000, top_k: int = 3,
+        return_frames: bool = False, language: str | None = None,
+        target_phonemes: list | None = None, return_frame_matrix: bool = False,
     ) -> dict:
-        import torch
-        import torchaudio.functional as F
+        result = self._transcribe_requests([{"audio": audio_samples, "sample_rate": sample_rate,
+            "top_k": top_k, "return_frames": return_frames, "language": language,
+            "target_phonemes": target_phonemes, "return_frame_matrix": return_frame_matrix}])[0]
+        if isinstance(result, Exception):
+            raise result
+        return result
 
-        if sample_rate != 16000:
-            samples_tensor = torch.tensor(audio_samples).unsqueeze(0)
-            samples_tensor = F.resample(samples_tensor, sample_rate, 16000)
-            audio_samples = samples_tensor.squeeze(0).tolist()
+    @modal.method()
+    def transcribe_batch(self, requests: list[dict]) -> list[dict]:
+        """Up to 64 individual request objects, returned in the original order.
 
-        inputs = self.processor(
-            audio_samples, sampling_rate=16000, return_tensors="pt", padding=True
-        )
-        input_values = inputs.input_values.to("cuda").to(torch.float16)
+        An invalid item returns an error at its own index without dropping the
+        other items. This method adds no cross-request queue or collection wait.
+        """
+        if not isinstance(requests, list) or not 1 <= len(requests) <= MAX_REQUESTS:
+            raise ValueError(f"requests must contain between 1 and {MAX_REQUESTS} items")
+        return [{"error": {"type": type(result).__name__, "message": str(result)}}
+                if isinstance(result, Exception) else result
+                for result in self._transcribe_requests(requests)]
 
-        with torch.no_grad():
-            log_probs, stress_logits, p_nonblank, aux_ids = self._forward(
-                input_values, language
-            )
-
-        out = {
-            "phonemes": self._decode_with_confidence(
-                log_probs, stress_logits, aux_ids, top_k=top_k
-            )
-        }
-        if target_phonemes:
-            out["target_score"] = self._score_target(log_probs, target_phonemes)
-        if return_frame_matrix:
-            out["frame_matrix"] = self._frame_matrix(log_probs)
-        if return_frames:
-            out["frames"] = self._frames_topk(
-                log_probs, stress_logits, p_nonblank, aux_ids, top_k=top_k
-            )
-        return out
+    @modal.fastapi_endpoint(method="POST")
+    def predict_batch(self, request: dict) -> dict:
+        from fastapi import HTTPException
+        if self.load_error is not None:
+            raise HTTPException(status_code=503, detail={"load_error": self.load_error,
+                                                       "deploy_marker": DEPLOY_MARKER})
+        requests = request.get("requests")
+        if not isinstance(requests, list) or not 1 <= len(requests) <= MAX_REQUESTS:
+            raise HTTPException(status_code=422,
+                                detail=f"requests must contain between 1 and {MAX_REQUESTS} items")
+        return {"results": self.transcribe_batch.local(requests), "deploy_marker": DEPLOY_MARKER}
 
     @modal.fastapi_endpoint(method="POST")
     def predict(self, request: dict) -> dict:
