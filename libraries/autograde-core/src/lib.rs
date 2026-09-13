@@ -199,7 +199,13 @@ For each indexed literal, decide if the user remembered it ("Remembered"), forgo
 
 For phrases, list which ones were remembered and which were forgotten. If one was netiher remembered nor forgotten (e.g. it was not in the sentence), just don't mention it at all. There might be a lot of phrases in the provided list that are not actually in the sentence - that's just to give you a large block of marble to carve from, but our phrase detection is very liberal and expansive so it often picks up false positives that you should basically ignore.
 
-Do not punish learners for non-literal translations if the meaning is preserved (including tense, tone, etc).
+The grades feed a spaced-repetition scheduler, so each "Forgot" should point at a word the user actually needs to study. Keep these distinctions in mind:
+
+"Forgot" means there is positive evidence the user did not know this word: they rendered it with the wrong meaning, or the specific sense, tense, mood, or modality it carries is missing from their translation even though the overall sentence reads plausibly. A defensible English sentence does not by itself show that every word in it was understood. If "doit" comes out as "should", or "il y a longtemps" loses the "ago", the verb or phrase that carries that meaning was forgotten.
+
+null means there is no evidence either way. When the user misparses a sentence, several words often vanish from their translation as a side effect, especially small function words like "que", "il", "ce", "de", or "en". Those words were not tested; the misparse was caused by something else. Mark the word or phrase that caused the misparse as "Forgot", and mark the words that merely dropped out as null. Grading them "Forgot" would schedule extra reviews of words the user probably knows.
+
+"Remembered" means the user's translation reflects the word's meaning in this context, even if rendered non-literally. Do not punish learners for non-literal translations when the meaning is preserved. An obvious typo in the user's own language (a letter swapped or dropped in a word that is otherwise clearly the right one) is not evidence of forgetting.
 
 Many sentences will be "partial sentences," such as "Ne pas." meaning "Do not." These are still valid test sentences.
 
@@ -237,6 +243,31 @@ Output:
 }}
 
 Note: Even though "se passer" was forgotten, the individual words "se" and "passe" were understood (the user knew they mean "itself" and "pass"), so they are marked as remembered.
+
+Second example, a misparse with one culprit:
+Input:
+Challenge sentence: Où as-tu mis les clés ?
+User response: Who has the keys?
+
+Literals:
+1. "Où" (lemma: où, pos: Adv)
+2. "as" (lemma: avoir, pos: Aux)
+3. "tu" (lemma: tu, pos: Pron)
+4. "mis" (lemma: mettre, pos: Verb)
+5. "les" (lemma: le, pos: Det)
+6. "clés" (lemma: clé, pos: Noun)
+_. "?" (does not need to be graded)
+
+Output:
+{{
+  "encouragement": "You got <word>les clés</word> right away!",
+  "explanation": "<word>Où</word> means 'where', not 'who', so the sentence asks 'Where did you put the keys?'",
+  "literal_grades": [{{"index": 1, "result": "Forgot"}}, {{"index": 2, "result": null}}, {{"index": 3, "result": null}}, {{"index": 4, "result": null}}, {{"index": 5, "result": "Remembered"}}, {{"index": 6, "result": "Remembered"}}],
+  "phrases_remembered": [],
+  "phrases_forgot": []
+}}
+
+Note: Misreading "Où" as "who" derailed the sentence, so "as", "tu", and "mis" never got a fair test: the translation does not show whether they were understood in place, so they are null rather than "Forgot". "les clés" was clearly understood, so those are "Remembered".
 
 The encouragement should always be provided, focus on what they got right, and be written as if speaking directly to the user. The explanation should only be provided if there are errors. Markdown formatting is allowed (no bullet points or numbered lists). Keep both short and concise. Respond in {native_language_name}!
 
