@@ -1085,6 +1085,8 @@ pub struct DeckState {
     locked_cards: FxHashSet<CardIndicator<SpurGram, Spur>>,
     /// The user's local day of the most recent LockCardsExcept event
     last_lock_day: Option<chrono::NaiveDate>,
+    /// The timestamp of the most recent accepted study plan.
+    last_lock_timestamp: Option<DateTime<Utc>>,
 }
 
 #[bridgerton::bridge(opaque)]
@@ -1109,6 +1111,8 @@ pub struct Deck {
     locked_cards: FxHashSet<CardIndicator<SpurGram, Spur>>,
     /// The user's local day of the most recent LockCardsExcept event
     last_lock_day: Option<chrono::NaiveDate>,
+    /// The timestamp of the most recent accepted study plan.
+    last_lock_timestamp: Option<DateTime<Utc>>,
 }
 
 #[derive(Clone, Debug)]
@@ -1190,6 +1194,7 @@ impl From<Deck> for DeckState {
             daily_review_target: deck.daily_review_target,
             locked_cards: deck.locked_cards,
             last_lock_day: deck.last_lock_day,
+            last_lock_timestamp: deck.last_lock_timestamp,
         }
     }
 }
@@ -1832,6 +1837,7 @@ impl weapon::AppState for Deck {
                     }
                 }
                 deck.last_lock_day = Some(timestamp.with_timezone(&timezone).date_naive());
+                deck.last_lock_timestamp = Some(*timestamp);
             }
             LanguageEventContent::UnlockCards { cards } => {
                 for card in cards {
@@ -2036,6 +2042,7 @@ impl weapon::AppState for Deck {
             daily_review_target: state.daily_review_target,
             locked_cards: state.locked_cards,
             last_lock_day: state.last_lock_day,
+            last_lock_timestamp: state.last_lock_timestamp,
         }
     }
 }
@@ -2076,6 +2083,7 @@ impl DeckState {
             daily_review_target: DailyReviewTarget::Regular,
             locked_cards: FxHashSet::default(),
             last_lock_day: None,
+            last_lock_timestamp: None,
         }
     }
 
@@ -2595,6 +2603,15 @@ impl Deck {
     /// How many cards are currently set aside in lockup.
     pub fn locked_count(&self) -> usize {
         self.locked_cards.len()
+    }
+
+    /// Whether the current study plan was accepted within the last 36 hours.
+    pub fn study_plan_was_recently_accepted(&self, timestamp_ms: f64) -> bool {
+        let now =
+            DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64).unwrap_or_else(Utc::now);
+        self.last_lock_timestamp.is_some_and(|accepted_at| {
+            now >= accepted_at && now - accepted_at <= chrono::Duration::hours(36)
+        })
     }
 
     /// The daily lockup offer ("Let's review these 15 cards today").
@@ -5352,6 +5369,14 @@ mod tests {
             .expect("offer expected");
         let deck = apply_deck_event(deck, offer.lock_event(), t1);
 
+        assert!(deck.study_plan_was_recently_accepted(t1_ms));
+        assert!(deck.study_plan_was_recently_accepted(
+            (t1 + chrono::Duration::hours(36)).timestamp_millis() as f64
+        ));
+        assert!(!deck.study_plan_was_recently_accepted(
+            (t1 + chrono::Duration::hours(36) + chrono::Duration::milliseconds(1))
+                .timestamp_millis() as f64
+        ));
         assert_eq!(deck.locked_count(), 10);
         let after = deck.get_review_info(vec![], t1_ms);
         assert_eq!(after.due_count(), 15);
