@@ -119,12 +119,16 @@ export const NoCardsReady = memo(function NoCardsReady({
       addEvent(releaseOffer.unlock_event);
     }
   }, [releaseOffer, addEvent]);
-  // Two-phase release: after reviewing today, first show a "Nice job!" rest
-  // screen; the review plan only appears once the user asks for more
+  // Shortly after accepting a plan, show its completion screen before offering
+  // another plan. Older plans go straight to the next plan.
   const [showReleasePlan, setShowReleasePlan] = useState(false);
+  // eslint-disable-next-line react-hooks/purity -- point-in-time check; parent re-renders every minute
+  const recentlyAcceptedStudyPlan = deck.study_plan_was_recently_accepted(Date.now());
   const releasePlanShown =
     releaseOffer !== undefined &&
-    (deck.get_today_time_spent() === 0 || showReleasePlan);
+    (deck.get_today_time_spent() === 0 ||
+      !recentlyAcceptedStudyPlan ||
+      showReleasePlan);
   const nextDueSoon = useMemo(
     () =>
       nextDueCard !== null &&
@@ -291,14 +295,10 @@ export const NoCardsReady = memo(function NoCardsReady({
       <div className="flex flex-col flex-1 gap-4 pt-4">
         <div className="flex flex-col gap-2 text-center">
           <p className="text-2xl font-bold">
-            Nice! You reviewed for{" "}
+            You completed the study plan in{" "}
             {minutesToday < 1
               ? "less than a minute"
-              : `${minutesToday} ${minutesToday === 1 ? "minute" : "minutes"}`}{" "}
-            today!
-          </p>
-          <p className="text-muted-foreground">
-            You can take a break, or review more.
+              : `${minutesToday} ${minutesToday === 1 ? "minute" : "minutes"}`}!
           </p>
           {nextDueSoon && (
             <NextReviewLine
@@ -313,7 +313,7 @@ export const NoCardsReady = memo(function NoCardsReady({
             size="lg"
             variant="outline"
           >
-            Review more
+            Study more
           </Button>
         </div>
         <WeekProgressStrip deck={deck} className="mt-auto mb-2" />
@@ -690,4 +690,3 @@ function NextReviewLine({
     </p>
   );
 }
-
