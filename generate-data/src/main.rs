@@ -1195,7 +1195,7 @@ async fn main() -> anyhow::Result<()> {
         pattern_frequencies.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
 
         // Create PronunciationData with frequencies
-        let pronunciation_data = language_utils::PronunciationData {
+        let mut pronunciation_data = language_utils::PronunciationData {
             sounds: sounds.clone(),
             guides: guides
                 .into_iter()
@@ -1648,7 +1648,7 @@ async fn main() -> anyhow::Result<()> {
         let pronunciation_audio_log =
             target_language_dir.join("pronunciation_audio_verification.jsonl");
         let pronunciation_audio = generate_data::pronunciation_audio::generate_pronunciation_audio(
-            &pronunciation_data,
+            &mut pronunciation_data,
             &word_to_pronunciation,
             course.target_language,
             &http_client,

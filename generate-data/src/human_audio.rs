@@ -185,7 +185,7 @@ pub async fn load_human_audio(
                 .await?;
                 anyhow::Ok((entry, wav_path, v))
             })
-            .buffered(8)
+            .buffered(32)
             .try_collect()
             .await?;
 
@@ -282,7 +282,7 @@ pub async fn load_human_audio(
                     .await?;
                     anyhow::Ok(v)
                 })
-                .buffered(4)
+                .buffered(16)
                 .try_collect()
                 .await?;
             let tts_pass = tts_results.iter().filter(|v| v.passed()).count();

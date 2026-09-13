@@ -2324,12 +2324,22 @@ impl Deck {
     }
 
     /// Returns an iterator over tracked cards that are eligible for scheduling:
-    /// excludes leeches and already-known cards (which behave like ghosts).
+    /// excludes leeches, already-known cards (which behave like ghosts), and
+    /// pronunciation cards the language pack no longer has a guide for — a
+    /// due card with no challenge would sit at the head of the queue forever.
     fn cards_excluding_unschedulable(
         &self,
     ) -> impl Iterator<Item = (&CardIndicator<SpurGram, Spur>, &CardData)> {
         self.cards.iter().filter(|(card_indicator, card_data)| {
-            !self.leeches.contains_key(card_indicator) && !card_data.is_already_known()
+            let teachable = match card_indicator {
+                CardIndicator::LetterPronunciation { pattern, position } => self
+                    .context
+                    .language_pack
+                    .pronunciation_guide(*pattern, *position)
+                    .is_some(),
+                _ => true,
+            };
+            teachable && !self.leeches.contains_key(card_indicator) && !card_data.is_already_known()
         })
     }
 
@@ -4136,14 +4146,7 @@ impl Context {
     ) -> f32 {
         match card {
             CardIndicator::LetterPronunciation { pattern, position } => {
-                let pattern_str = self.language_pack.string_rodeo.resolve(pattern);
-                let guide = self
-                    .language_pack
-                    .pronunciation_data
-                    .guides
-                    .iter()
-                    .find(|g| g.pattern == pattern_str && g.position == *position);
-
+                let guide = self.language_pack.pronunciation_guide(*pattern, *position);
                 match guide.map(|g| &g.familiarity) {
                     Some(language_utils::PronunciationFamiliarity::LikelyAlreadyKnows) => 0.85,
                     Some(language_utils::PronunciationFamiliarity::MaybeAlreadyKnows) => 0.50,

@@ -45,6 +45,12 @@ fn eval_endpoint_url() -> String {
     format!("https://anchpop--{EVAL_APP}-wav2vec2phoneme-predict.modal.run")
 }
 
+/// The eval app's batch endpoint, which the in-process verifier sends every
+/// clip through (see phoneme-verify's `WAV2VEC2_BATCH_ENDPOINT_URL`).
+fn eval_batch_endpoint_url() -> String {
+    format!("https://anchpop--{EVAL_APP}-wav2vec2phoneme-predict-batch.modal.run")
+}
+
 #[derive(Parser)]
 #[command(
     about = "Compare N wav2vec2 phoneme models against the voice-actor clips.",
@@ -829,7 +835,7 @@ fn main() -> Result<()> {
     // before the async runtime starts (single-threaded here, so sound) so the
     // lazily-read endpoint global picks it up.
     unsafe {
-        std::env::set_var("WAV2VEC2_ENDPOINT_URL", eval_endpoint_url());
+        std::env::set_var("WAV2VEC2_BATCH_ENDPOINT_URL", eval_batch_endpoint_url());
     }
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
 

@@ -3,6 +3,7 @@
 //! OpenAI falls back to Google entries without relabeling their provenance.
 //! This store replaces tysm's response cache for translation requests.
 
+use crate::chat_retry::ChatRetry;
 use anyhow::Context;
 use dashmap::DashMap;
 use futures::StreamExt;
@@ -459,8 +460,9 @@ impl Translator {
         let mut attempt = 0u32;
         loop {
             self.api_calls.fetch_add(1, Ordering::Relaxed);
-            let result: Result<TranslationResponse, _> =
-                client.chat_with_system_prompt(&system_prompt, text).await;
+            let result: Result<TranslationResponse, _> = client
+                .chat_with_system_prompt_retrying(&system_prompt, text)
+                .await;
 
             self.record_openai_spend(client, recorded_micro);
 

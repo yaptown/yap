@@ -642,13 +642,10 @@ impl ReviewInfo {
         position: PatternPosition,
     ) -> Option<Challenge<Gram<String>>> {
         let language_pack = &deck.context.language_pack;
-        let pattern_str = language_pack.string_rodeo.resolve(&pattern).to_string();
         let guide = language_pack
-            .pronunciation_data
-            .guides
-            .iter()
-            .find(|g| g.pattern == pattern_str && g.position == position)
-            .cloned()?;
+            .pronunciation_guide(pattern, position)?
+            .clone();
+        let pattern_str = guide.pattern.clone();
 
         let target_language = deck.context.course.target_language;
         let audio_requests = guide

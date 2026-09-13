@@ -65,7 +65,7 @@ pub fn pronunciation_audio(language: Language, ssml: &str) -> Option<Vec<u8>> {
         .upgrade()?
         .pronunciation_audio
         .get(ssml)
-        .map(|audio| audio.bytes.clone())
+        .map(|clip| clip.audio.bytes.clone())
 }
 
 /// Return a human-recorded clip for `(language, text)` if any voice actor

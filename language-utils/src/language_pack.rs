@@ -4,8 +4,8 @@ use crate::{
     Atom, Audio, BookMetadata, ConsolidatedLanguageData, Course, DictionaryEntry, Frequency, Gram,
     GramDefinition, Heteronym, HomophonePractice, HomophoneWordPair, Lexeme, Literal, MorphemeInfo,
     MorphemeSegment, MovieMetadata, MultiwordTermMatch, PartOfSpeech, PatternPosition,
-    PronunciationData, ProperNounDefinition, SentenceGram, SentenceGrams, SentenceSource, SpurGram,
-    VoiceActor, WordType, grm,
+    PronunciationClip, PronunciationData, PronunciationGuide, ProperNounDefinition, SentenceGram,
+    SentenceGrams, SentenceSource, SpurGram, VoiceActor, WordType, grm,
 };
 use lasso::Spur;
 use rustc_hash::FxHashMap;
@@ -71,10 +71,26 @@ pub struct LanguagePack {
     /// Human-recorded audio clips, indexed by voice actor and then by the
     /// target-language phrase they speak.
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
-    pub pronunciation_audio: FxHashMap<String, Audio>,
+    pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
 }
 
 impl LanguagePack {
+    /// The guide teaching `pattern` at `position`, if this pack has one. A
+    /// deck can hold a pronunciation card the pack no longer teaches (the
+    /// guide lost every verified example, or the pack was rebuilt), so
+    /// callers must treat `None` as "nothing to show".
+    pub fn pronunciation_guide(
+        &self,
+        pattern: Spur,
+        position: PatternPosition,
+    ) -> Option<&PronunciationGuide> {
+        let pattern = self.string_rodeo.resolve(&pattern);
+        self.pronunciation_data
+            .guides
+            .iter()
+            .find(|guide| guide.pattern == pattern && guide.position == position)
+    }
+
     /// Intern a resolved gram back into this pack's rodeos. Returns None if
     /// any token, or the gram itself, was never interned.
     pub fn intern_gram(&self, gram: &Gram<String>) -> Option<SpurGram> {
@@ -1005,7 +1021,7 @@ pub struct LanguagePackCore {
     pub pronunciation_to_words: FxHashMap<Spur, Vec<Spur>>,
     pub minimal_pairs: MinimalPairs,
     pub pronunciation_data: PronunciationData,
-    pub pronunciation_audio: FxHashMap<String, Audio>,
+    pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
     pub pattern_frequency_map: FxHashMap<(Spur, PatternPosition), u32>,
     pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
     pub proper_noun_definitions: BTreeMap<Spur, ProperNounDefinition>,

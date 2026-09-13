@@ -2276,6 +2276,28 @@ pub struct Audio {
     pub bytes: Vec<u8>,
 }
 
+/// One stretch of a pronunciation-challenge clip: what the learner sees for
+/// it, and when the voice says it, so the app can highlight along. The
+/// times come from the phoneme model's best alignment of the clip; CTC
+/// emissions cluster at each phoneme's onset, so `end_ms` runs early — hold
+/// a highlight until the next segment starts rather than until `end_ms`.
+#[derive(Debug, Clone, Eq, PartialEq, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+pub struct TimedSegment {
+    pub text: String,
+    pub start_ms: u32,
+    pub end_ms: u32,
+}
+
+/// Phonemizer-verified audio for one pronunciation-guide example, with the
+/// timing of each segment of its transcript (see
+/// [`pronunciation_challenge_segments`]). `segments` is empty when the
+/// alignment couldn't be computed; the audio is still good.
+#[derive(Debug, Clone, Eq, PartialEq, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+pub struct PronunciationClip {
+    pub audio: Audio,
+    pub segments: Vec<TimedSegment>,
+}
+
 /// Consolidated data structure containing all generated language data
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ConsolidatedLanguageData {
@@ -2329,7 +2351,7 @@ pub struct ConsolidatedLanguageData {
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
     /// Phonemizer-verified Google TTS for pronunciation challenges, keyed by
     /// the exact SSML request text used by the frontend.
-    pub pronunciation_audio: FxHashMap<String, Audio>,
+    pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
 }
 
 impl ConsolidatedLanguageData {
@@ -3096,6 +3118,61 @@ impl Language {
         }
     }
 
+    /// The name of `letter` as the phonemizer needs it spelled, where the
+    /// bare letter won't do. espeak already names a lone letter ("c" → /se/,
+    /// "w" → /dubləve/) and wikipron lists single letters as words, so most
+    /// letters stay bare — spelling their names out is often worse ("emme"
+    /// → /ɑ̃m/). The table covers letters espeak reads as the homographic
+    /// word in context (French "y" is the adverb /i/, English "a" the
+    /// article /ə/) and accented letters the voice names differently from
+    /// espeak (en-US says "a diaeresis" and "ash", espeak "a umlaut" and
+    /// "a e"). Spellings are chosen for what espeak makes of them: English
+    /// "eh" is /eɪ/ where "ay" is /aɪ/. Names match what the language's
+    /// voice says under `say-as="characters"`, read off the verification
+    /// logs; add a table for a language when its logs show letter-name
+    /// mismatches.
+    pub fn letter_name(&self, letter: char) -> Option<&'static str> {
+        let letter = letter.to_lowercase().next().unwrap_or(letter);
+        let name = match self {
+            Language::French => match letter {
+                'y' => "i grec",
+                'à' => "a accent grave",
+                'ô' => "o accent circonflexe",
+                'œ' => "e dans l'o",
+                _ => return None,
+            },
+            // Google's pt-BR voice spells accented vowels as "<letter> acento
+            // agudo/grave/circunflexo"; espeak's own names drop "acento".
+            Language::Portuguese => match letter {
+                'á' => "a acento agudo",
+                'é' => "e acento agudo",
+                'í' => "i acento agudo",
+                'ó' => "o acento agudo",
+                'ú' => "u acento agudo",
+                'à' => "a acento grave",
+                'â' => "a acento circunflexo",
+                'ê' => "e acento circunflexo",
+                'ô' => "o acento circunflexo",
+                _ => return None,
+            },
+            Language::English => match letter {
+                'a' => "eh",
+                'à' => "a grave",
+                'è' => "e grave",
+                'ä' => "a diaeresis",
+                'ë' => "e diaeresis",
+                'ï' => "i diaeresis",
+                'ö' => "o diaeresis",
+                'ü' => "u diaeresis",
+                'å' => "a ring above",
+                'æ' => "ash",
+                _ => return None,
+            },
+            _ => return None,
+        };
+        Some(name)
+    }
+
     /// Google Cloud TTS locale and voice for this language. Pronunciation
     /// challenges use a literal voice because Chirp3-HD can drop text beside
     /// SSML `<break>` elements; plain speech keeps the more natural voice.
@@ -3730,23 +3807,58 @@ pub fn pronunciation_challenge_ssml(language: Language, pattern: &str, example: 
     )
 }
 
+/// One thing the voice says in a pronunciation clip, paired with what the
+/// learner sees for it. A letter of the pattern is shown as itself but
+/// spoken by name where [`Language::letter_name`] has one ("y" / "i grec");
+/// connector and example words read the same both ways.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct SpokenSegment {
+    pub display: String,
+    pub spoken: String,
+}
+
+/// The transcript of [`pronunciation_challenge_ssml`] in order: each letter
+/// of the pattern (SSML's `say-as="characters"` spells it), the connector
+/// words, then the example's words.
+pub fn pronunciation_challenge_segments(
+    language: Language,
+    pattern: &str,
+    example: &str,
+) -> Vec<SpokenSegment> {
+    let letters = pattern.chars().map(|c| SpokenSegment {
+        display: c.to_string(),
+        spoken: match language.letter_name(c) {
+            Some(name) => name.to_string(),
+            None => c.to_string(),
+        },
+    });
+    let words = |text: &str| {
+        text.split_whitespace()
+            .map(|word| SpokenSegment {
+                display: word.to_string(),
+                spoken: word.to_string(),
+            })
+            .collect::<Vec<_>>()
+    };
+    letters
+        .chain(words(language.pronunciation_connector()))
+        .chain(words(example))
+        .collect()
+}
+
 /// Plain-text transcript corresponding to [`pronunciation_challenge_ssml`],
-/// used to build the phonemizer target. Separating pattern characters mirrors
-/// SSML's `say-as="characters"` behavior.
+/// used to build the phonemizer target: the spoken side of
+/// [`pronunciation_challenge_segments`].
 pub fn pronunciation_challenge_spoken_text(
     language: Language,
     pattern: &str,
     example: &str,
 ) -> String {
-    let spelled_pattern = pattern
-        .chars()
-        .map(|c| c.to_string())
+    pronunciation_challenge_segments(language, pattern, example)
+        .into_iter()
+        .map(|segment| segment.spoken)
         .collect::<Vec<_>>()
-        .join(" ");
-    format!(
-        "{spelled_pattern} {} {example}",
-        language.pronunciation_connector()
-    )
+        .join(" ")
 }
 
 impl std::fmt::Display for Language {
@@ -5018,6 +5130,59 @@ mod pronunciation_challenge_audio_tests {
         assert_eq!(
             pronunciation_challenge_spoken_text(Language::French, "ch", "chat"),
             "c h comme dans chat"
+        );
+    }
+
+    #[test]
+    fn spoken_text_names_letters_that_are_also_words() {
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::French, "y", "pays"),
+            "i grec comme dans pays"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::French, "à", "voilà"),
+            "a accent grave comme dans voilà"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::French, "oy", "Troyes"),
+            "o i grec comme dans Troyes"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::English, "ea", "bread"),
+            "e eh as in bread"
+        );
+    }
+
+    #[test]
+    fn portuguese_accented_letters_speak_their_google_names() {
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Portuguese, "á", "chá"),
+            "a acento agudo como em chá"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Portuguese, "ã", "pão"),
+            "ã como em pão"
+        );
+    }
+
+    #[test]
+    fn segments_show_letters_but_speak_their_names() {
+        let segments = pronunciation_challenge_segments(Language::French, "oy", "à la carte");
+        let pairs: Vec<(&str, &str)> = segments
+            .iter()
+            .map(|s| (s.display.as_str(), s.spoken.as_str()))
+            .collect();
+        assert_eq!(
+            pairs,
+            [
+                ("o", "o"),
+                ("y", "i grec"),
+                ("comme", "comme"),
+                ("dans", "dans"),
+                ("à", "à"),
+                ("la", "la"),
+                ("carte", "carte"),
+            ]
         );
     }
 

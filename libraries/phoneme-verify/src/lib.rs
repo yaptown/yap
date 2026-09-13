@@ -7,10 +7,10 @@
 //!    as `translate.rs` and the tysm chat clients (hash → response). The
 //!    model/decoder version is part of the key so a model swap can't
 //!    silently reuse stale predictions.
-//! 2. On cache miss, decode WAV → f32 mono 16kHz via ffmpeg and POST to the
-//!    same Modal endpoint the AI backend uses
-//!    (`yap-ai-backend/src/main.rs::get_phonemes_from_modal`), then persist
-//!    the response.
+//! 2. On cache miss, decode WAV → f32 mono 16kHz via ffmpeg and send it to
+//!    the Modal batch endpoint (`modal-envs/PRONUNCIATION_BATCHING.md`),
+//!    pooled with whatever other clips are in flight, then persist the
+//!    response.
 //! 3. Strip suprasegmental markers from the model's predicted tokens and
 //!    diff against the ground-truth IPA assembled from
 //!    `word_to_pronunciation`. Ground truth has no suprasegmentals yet, so
@@ -18,8 +18,8 @@
 //! 4. Report a [`ClipVerification`] with the verdict; caller decides whether
 //!    to drop the clip and/or log it to the per-language failures jsonl.
 //!
-//! The Modal endpoint is configured via `WAV2VEC2_ENDPOINT_URL` (same env var
-//! as the AI backend) with a default to the prod URL.
+//! The batch endpoint is configured via `WAV2VEC2_BATCH_ENDPOINT_URL` with a
+//! default to the prod URL.
 
 use anyhow::{Context, Result};
 use base64::Engine;
@@ -35,11 +35,32 @@ use xxhash_rust::xxh3::xxh3_64;
 pub mod ctc;
 pub use ctc::{AlignedPhoneme, FrameMatrix, FrameMatrixPayload, TargetScore};
 
-static MODAL_URL: LazyLock<String> = LazyLock::new(|| {
-    std::env::var("WAV2VEC2_ENDPOINT_URL").unwrap_or_else(|_| {
-        "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict.modal.run".to_string()
-    })
-});
+const MODAL_BATCH_URL_DEFAULT: &str =
+    "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict-batch.modal.run";
+
+/// The batch endpoint every clip goes through: `WAV2VEC2_BATCH_ENDPOINT_URL`,
+/// else the batch sibling of a `WAV2VEC2_ENDPOINT_URL` single-clip endpoint
+/// (the same env var the AI backend uses), else production.
+fn batch_url() -> Result<String> {
+    if let Ok(url) = std::env::var("WAV2VEC2_BATCH_ENDPOINT_URL") {
+        return Ok(url);
+    }
+    match std::env::var("WAV2VEC2_ENDPOINT_URL") {
+        Ok(single) => batch_endpoint(&single),
+        Err(_) => Ok(MODAL_BATCH_URL_DEFAULT.to_string()),
+    }
+}
+
+/// Modal names a class method's endpoint after the method, so the batch
+/// endpoint sits beside the single-clip one.
+fn batch_endpoint(single: &str) -> Result<String> {
+    match single.strip_suffix("-predict.modal.run") {
+        Some(prefix) => Ok(format!("{prefix}-predict-batch.modal.run")),
+        None => anyhow::bail!(
+            "set WAV2VEC2_BATCH_ENDPOINT_URL for the custom single-clip endpoint {single}"
+        ),
+    }
+}
 
 /// Bump this whenever the underlying Modal model OR the decoding strategy
 /// changes — the cache is partitioned by this string so old entries don't
@@ -323,7 +344,7 @@ pub fn expected_phoneme_variants(
     ctx: &VerifyContext<'_>,
     text: &str,
     override_transcription: Option<&str>,
-) -> Option<Vec<Vec<String>>> {
+) -> Option<Vec<Reading>> {
     if let Some(s) = override_transcription {
         let normalized: Vec<String> = s
             .split_whitespace()
@@ -332,11 +353,16 @@ pub fn expected_phoneme_variants(
         return if normalized.is_empty() {
             None
         } else {
-            Some(vec![normalized])
+            Some(vec![vec![normalized]])
         };
     }
     ground_truth_phoneme_variants(text, ctx.word_to_pronunciation, ctx.target_language)
 }
+
+/// One accepted reading of a phrase: its words in order, each a phoneme
+/// sequence. The boundaries let the verifier tell a word the model never
+/// heard from a phrase that merely drifted; see [`unheard_word`].
+pub type Reading = Vec<Vec<String>>;
 
 /// Verify a clip against an explicit accepted-phoneme-sequence set.
 ///
@@ -349,7 +375,7 @@ pub async fn verify_clip(
     actor: &str,
     text: &str,
     wav_path: &Path,
-    expected: Option<Vec<Vec<String>>>,
+    expected: Option<Vec<Reading>>,
 ) -> Result<ClipVerification> {
     let wav_bytes = std::fs::read(wav_path)
         .with_context(|| format!("Failed to read wav {}", wav_path.display()))?;
@@ -373,7 +399,7 @@ pub async fn verify_clip_bytes(
     text: &str,
     source_label: &str,
     audio_bytes: &[u8],
-    expected: Option<Vec<Vec<String>>>,
+    expected: Option<Vec<Reading>>,
 ) -> Result<ClipVerification> {
     // Early defect check: if the audio is too quiet or truncated, the
     // wav2vec2 prediction is unreliable (and on near-silent input the
@@ -444,18 +470,25 @@ pub async fn verify_clip_bytes(
             let n_variants = variants.len();
             // Score each variant by edit distance against the prediction;
             // pick the closest one. Ties broken by variant order (main first).
-            let mut best: Option<(usize, Vec<String>, Vec<AlignmentOp>)> = None;
-            for variant in variants {
-                let (dist, ops) = align(&predicted_normalized, &predicted_top_k, &variant);
+            let mut best: Option<(usize, Reading, Vec<AlignmentOp>)> = None;
+            for reading in variants {
+                let (dist, ops) = align(&predicted_normalized, &predicted_top_k, &reading.concat());
                 if best.as_ref().is_none_or(|(d, _, _)| dist < *d) {
-                    best = Some((dist, variant, ops));
+                    best = Some((dist, reading, ops));
                 }
             }
-            let (dist, exp, ops) = best.unwrap();
+            let (dist, reading, ops) = best.unwrap();
+            let exp = reading.concat();
             let max_len = predicted_normalized.len().max(exp.len()).max(1);
             let pct = dist as f64 / max_len as f64;
             let reason = if predicted_normalized.is_empty() {
                 Some("model returned no phonemes".to_string())
+            } else if let Some(word) = unheard_word(&reading, &ops) {
+                Some(format!(
+                    "word /{}/ not heard ({dist} edits over max-len {max_len} = {:.0}%)",
+                    word.join(" "),
+                    pct * 100.0
+                ))
             } else if pct > ctx.mismatch_threshold {
                 Some(format!(
                     "phoneme mismatch ({dist} edits over max-len {max_len} = {:.0}%, \
@@ -516,81 +549,176 @@ fn is_transient_status(status: reqwest::StatusCode) -> bool {
     matches!(status.as_u16(), 408 | 425 | 429 | 500 | 502 | 503 | 504)
 }
 
-/// POST to either endpoint with shared transport/status retry behavior.
-/// Callers validate the response's deployment marker before caching.
-async fn post_modal_response<T: serde::de::DeserializeOwned>(
-    ctx: &VerifyContext<'_>,
-    url: &str,
-    payload: serde_json::Value,
-) -> Result<T> {
-    // Retry transient endpoint failures — cold-start timeouts (408), rate
-    // limits (429), and 5xx — which are otherwise fatal to a long run. A 408
-    // typically means the container was mid-cold-start; a short backoff lets it
-    // finish and the retry lands on the now-warm container.
-    let modal: T = {
-        let mut last_err: Option<anyhow::Error> = None;
-        let mut got: Option<T> = None;
-        for attempt in 1..=MODAL_MAX_ATTEMPTS {
-            match ctx.http.post(url).json(&payload).send().await {
-                Err(e) => {
-                    last_err = Some(anyhow::Error::new(e).context("Modal request transport error"));
-                }
-                Ok(response) => {
-                    let status = response.status();
-                    if status.is_success() {
-                        match response.json::<T>().await {
-                            Ok(m) => {
-                                got = Some(m);
-                                break;
-                            }
-                            Err(e) => {
-                                last_err = Some(
-                                    anyhow::Error::new(e)
-                                        .context("Failed to parse Modal wav2vec2 response"),
-                                )
-                            }
-                        }
-                    } else if is_transient_status(status) {
-                        let body = response.text().await.unwrap_or_default();
-                        last_err =
-                            Some(anyhow::anyhow!("Modal wav2vec2 transient {status}: {body}"));
-                    } else {
-                        // Non-retryable (e.g. 400): fail immediately.
-                        let body = response.text().await.unwrap_or_default();
-                        anyhow::bail!("Modal wav2vec2 error ({status}): {body}");
-                    }
-                }
-            }
-            if attempt < MODAL_MAX_ATTEMPTS {
-                let delay = std::time::Duration::from_secs(5 * attempt as u64);
-                log::warn!(
-                    "Modal call failed (attempt {attempt}/{MODAL_MAX_ATTEMPTS}), retrying in {}s",
-                    delay.as_secs()
-                );
-                tokio::time::sleep(delay).await;
-            }
-        }
-        match got {
-            Some(m) => m,
-            None => {
-                return Err(last_err
-                    .unwrap_or_else(|| anyhow::anyhow!("Modal call failed"))
-                    .context(format!(
-                        "Modal wav2vec2 endpoint failed after {MODAL_MAX_ATTEMPTS} attempts"
-                    )));
-            }
-        }
-    };
+/// Clips per request the batch endpoint accepts.
+const MODAL_BATCH_SIZE: usize = 64;
 
+/// How long the batch worker waits after the first queued clip for the
+/// other in-flight callers to enqueue theirs, so a batch carries the whole
+/// concurrent front rather than one clip.
+const MODAL_BATCH_LINGER: std::time::Duration = std::time::Duration::from_millis(200);
+
+struct BatchItem {
+    payload: serde_json::Value,
+    reply: tokio::sync::oneshot::Sender<Result<ModalResponse>>,
+}
+
+/// The process-wide queue feeding the batch worker. Spawned on first use,
+/// which is always inside the caller's tokio runtime.
+static BATCH_QUEUE: LazyLock<tokio::sync::mpsc::UnboundedSender<BatchItem>> = LazyLock::new(|| {
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    tokio::spawn(batch_worker(rx));
+    tx
+});
+
+/// Drain the queue into requests of up to [`MODAL_BATCH_SIZE`] clips and
+/// hand each caller its own result. The endpoint groups similar lengths
+/// into GPU batches itself; this only pools what concurrent callers submit.
+async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
+    let http = reqwest::Client::new();
+    let url = batch_url();
+    while let Some(first) = rx.recv().await {
+        let mut batch = vec![first];
+        tokio::time::sleep(MODAL_BATCH_LINGER).await;
+        while batch.len() < MODAL_BATCH_SIZE {
+            match rx.try_recv() {
+                Ok(item) => batch.push(item),
+                Err(_) => break,
+            }
+        }
+        let payloads: Vec<serde_json::Value> =
+            batch.iter_mut().map(|item| item.payload.take()).collect();
+        let results = match &url {
+            Ok(url) => post_batch(&http, url, payloads).await,
+            Err(e) => Err(anyhow::anyhow!("{e:#}")),
+        };
+        match results {
+            Ok(results) => {
+                for (item, result) in batch.into_iter().zip(results) {
+                    let _ = item.reply.send(result);
+                }
+            }
+            Err(e) => {
+                let message = format!("{e:#}");
+                for item in batch {
+                    let _ = item.reply.send(Err(anyhow::anyhow!("{message}")));
+                }
+            }
+        }
+    }
+}
+
+#[derive(Deserialize)]
+struct ModalBatchResponse {
+    results: Vec<serde_json::Value>,
+    #[serde(default)]
+    deploy_marker: Option<String>,
+}
+
+/// POST one batch to the endpoint, retrying transient failures — cold-start
+/// timeouts (408), rate limits (429), and 5xx — which are otherwise fatal
+/// to a long run. A 408 typically means the container was mid-cold-start;
+/// a short backoff lets it finish and the retry lands on the now-warm
+/// container. The outer `Err` is the whole request failing; an inner `Err`
+/// is the endpoint rejecting one clip (its `error` item), which is not
+/// retried.
+async fn post_batch(
+    http: &reqwest::Client,
+    url: &str,
+    payloads: Vec<serde_json::Value>,
+) -> Result<Vec<Result<ModalResponse>>> {
+    let count = payloads.len();
+    let body = serde_json::json!({ "requests": payloads });
+    let mut last_err: Option<anyhow::Error> = None;
+    for attempt in 1..=MODAL_MAX_ATTEMPTS {
+        match http.post(url).json(&body).send().await {
+            Err(e) => {
+                last_err = Some(anyhow::Error::new(e).context("Modal request transport error"));
+            }
+            Ok(response) => {
+                let status = response.status();
+                if status.is_success() {
+                    match response.json::<ModalBatchResponse>().await {
+                        Ok(batch) => return split_batch(batch, count),
+                        Err(e) => {
+                            last_err = Some(
+                                anyhow::Error::new(e)
+                                    .context("Failed to parse Modal wav2vec2 batch response"),
+                            )
+                        }
+                    }
+                } else if is_transient_status(status) {
+                    let text = response.text().await.unwrap_or_default();
+                    last_err = Some(anyhow::anyhow!("Modal wav2vec2 transient {status}: {text}"));
+                } else {
+                    // Non-retryable (e.g. 422): fail immediately.
+                    let text = response.text().await.unwrap_or_default();
+                    anyhow::bail!("Modal wav2vec2 error ({status}): {text}");
+                }
+            }
+        }
+        if attempt < MODAL_MAX_ATTEMPTS {
+            let delay = std::time::Duration::from_secs(5 * attempt as u64);
+            log::warn!(
+                "Modal call failed (attempt {attempt}/{MODAL_MAX_ATTEMPTS}), retrying in {}s",
+                delay.as_secs()
+            );
+            tokio::time::sleep(delay).await;
+        }
+    }
+    Err(last_err
+        .unwrap_or_else(|| anyhow::anyhow!("Modal call failed"))
+        .context(format!(
+            "Modal wav2vec2 endpoint failed after {MODAL_MAX_ATTEMPTS} attempts"
+        )))
+}
+
+/// One result per submitted clip, in order. The batch response stamps the
+/// deploy marker once; each item gets it so the per-context check applies.
+fn split_batch(batch: ModalBatchResponse, count: usize) -> Result<Vec<Result<ModalResponse>>> {
+    if batch.results.len() != count {
+        anyhow::bail!(
+            "Modal wav2vec2 batch returned {} results for {count} clips",
+            batch.results.len()
+        );
+    }
+    Ok(batch
+        .results
+        .into_iter()
+        .map(|item| {
+            if let Some(error) = item.get("error") {
+                anyhow::bail!("Modal wav2vec2 rejected the clip: {error}");
+            }
+            let mut modal: ModalResponse =
+                serde_json::from_value(item).context("Failed to parse Modal wav2vec2 result")?;
+            if modal.deploy_marker.is_none() {
+                modal.deploy_marker = batch.deploy_marker.clone();
+            }
+            Ok(modal)
+        })
+        .collect())
+}
+
+/// Send one clip through the batch worker and refuse any response from a
+/// container whose deploy marker is not the one expected — so nothing from
+/// a stale/contaminated container is ever cached under the wrong model's
+/// key.
+async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Result<ModalResponse> {
+    let (reply, result) = tokio::sync::oneshot::channel();
+    BATCH_QUEUE
+        .send(BatchItem { payload, reply })
+        .map_err(|_| anyhow::anyhow!("the Modal batch worker is gone"))?;
+    let modal = result
+        .await
+        .context("the Modal batch worker dropped the request")??;
+    check_deploy_marker(ctx, &modal)?;
     Ok(modal)
 }
 
-async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Result<ModalResponse> {
-    let modal: ModalResponse = post_modal_response(ctx, MODAL_URL.as_str(), payload).await?;
-    // Per-request freshness check: the one-shot marker_only probe only proves
-    // the *first* request hit a fresh container. Verifying the marker on every
-    // response guarantees no later request was routed to a stale/contaminated
-    // warm container and silently cached under the wrong model's key.
+/// Per-response freshness check: the one-shot marker_only probe only proves
+/// the *first* request hit a fresh container. Verifying the marker on every
+/// response guarantees no later request was routed to a stale/contaminated
+/// warm container and silently cached under the wrong model's key.
+fn check_deploy_marker(ctx: &VerifyContext<'_>, modal: &ModalResponse) -> Result<()> {
     if let Some(expected) = &ctx.expected_deploy_marker
         && modal.deploy_marker.as_deref() != Some(expected.as_str())
     {
@@ -600,7 +728,7 @@ async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Resu
             modal.deploy_marker
         );
     }
-    Ok(modal)
+    Ok(())
 }
 
 async fn predict_phonemes(
@@ -720,48 +848,13 @@ pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<F
     FrameMatrix::decode(&payload)
 }
 
-/// Fetch frame matrices in input order, sending only cache misses to the batch
-/// endpoint in groups of at most 64. Per-clip failures do not discard neighbors.
-/// Existing matrix/prediction cache keys and cache-only behavior are preserved.
+/// Frame matrices for `wavs` in input order, from the cache or the endpoint,
+/// for a caller with a whole list in hand (the subtitle corpus). Only cache
+/// misses are sent, in requests of at most [`MODAL_BATCH_SIZE`], and a
+/// per-clip failure doesn't discard its neighbors. A caller verifying one
+/// clip at a time gets the same batching through the queue.
 pub async fn frame_matrices(ctx: &VerifyContext<'_>, wavs: &[&[u8]]) -> Vec<Result<FrameMatrix>> {
-    let endpoint = std::env::var("WAV2VEC2_BATCH_ENDPOINT_URL").ok();
-    let url = batch_endpoint(MODAL_URL.as_str(), endpoint.as_deref());
-    frame_matrices_at(ctx, wavs, url, cache_only()).await
-}
-
-fn batch_endpoint(single: &str, explicit: Option<&str>) -> Result<String> {
-    if let Some(url) = explicit {
-        return Ok(url.to_string());
-    }
-    if let Some(prefix) = single.strip_suffix("-predict.modal.run") {
-        return Ok(format!("{prefix}-predict-batch.modal.run"));
-    }
-    anyhow::bail!("set WAV2VEC2_BATCH_ENDPOINT_URL for this custom single-clip endpoint")
-}
-
-#[derive(Deserialize)]
-struct ModalBatchResponse {
-    results: Vec<serde_json::Value>,
-    deploy_marker: Option<String>,
-}
-
-fn validate_batch(
-    response: &ModalBatchResponse,
-    count: usize,
-    expected: Option<&str>,
-) -> Result<()> {
-    anyhow::ensure!(
-        response.results.len() == count,
-        "Modal batch returned {} results for {count} clips",
-        response.results.len()
-    );
-    if let Some(expected) = expected {
-        anyhow::ensure!(
-            response.deploy_marker.as_deref() == Some(expected),
-            "deploy-marker mismatch: refusing to cache batch predictions"
-        );
-    }
-    Ok(())
+    frame_matrices_at(ctx, wavs, batch_url(), cache_only()).await
 }
 
 async fn frame_matrices_at(
@@ -789,7 +882,7 @@ async fn frame_matrices_at(
         }
         pending.push((index, hash, key));
     }
-    for chunk in pending.chunks(64) {
+    for chunk in pending.chunks(MODAL_BATCH_SIZE) {
         let mut requests = Vec::new();
         let mut valid = Vec::new();
         for (index, hash, key) in chunk {
@@ -802,7 +895,8 @@ async fn frame_matrices_at(
                 Ok(samples) => {
                     requests.push(serde_json::json!({
                         "audio_f32_b64": encode_audio_f32(&pad_to_min_length(samples, MODAL_MIN_SAMPLES)),
-                        "sample_rate": MODAL_SAMPLE_RATE, "top_k": MODAL_TOP_K,
+                        "sample_rate": MODAL_SAMPLE_RATE,
+                        "top_k": MODAL_TOP_K,
                         "return_frame_matrix": true,
                     }));
                     valid.push((*index, *hash, key));
@@ -815,33 +909,22 @@ async fn frame_matrices_at(
         if requests.is_empty() {
             continue;
         }
-        let response = async {
-            let url = url.as_ref().map_err(|error| anyhow::anyhow!("{error:#}"))?;
-            let response: ModalBatchResponse =
-                post_modal_response(ctx, url, serde_json::json!({"requests": requests})).await?;
-            validate_batch(
-                &response,
-                valid.len(),
-                ctx.expected_deploy_marker.as_deref(),
-            )?;
-            Ok::<_, anyhow::Error>(response)
-        }
-        .await;
-        match response {
+        let items = match &url {
+            Ok(url) => post_batch(ctx.http, url, requests).await,
+            Err(error) => Err(anyhow::anyhow!("{error:#}")),
+        };
+        match items {
             Err(error) => {
                 for (index, _, _) in valid {
                     results[index] = Some(Err(anyhow::anyhow!("{error:#}")));
                 }
             }
-            Ok(response) => {
-                for ((index, hash, key), item) in valid.into_iter().zip(response.results) {
+            Ok(items) => {
+                for ((index, hash, key), item) in valid.into_iter().zip(items) {
                     results[index] = Some(
                         async {
-                            if let Some(error) = item.get("error") {
-                                anyhow::bail!("Modal clip error: {error}");
-                            }
-                            let modal: ModalResponse =
-                                serde_json::from_value(item).context("invalid batch item")?;
+                            let modal = item?;
+                            check_deploy_marker(ctx, &modal)?;
                             let payload = modal
                                 .frame_matrix
                                 .as_ref()
@@ -861,6 +944,77 @@ async fn frame_matrices_at(
         .into_iter()
         .map(|result| result.expect("every batch item resolved"))
         .collect()
+}
+
+/// The deployed wav2vec2 encoder's feature extractor: a 400-sample
+/// receptive field advancing 320 samples (20 ms at 16 kHz) per frame, so a
+/// clip of `n` samples yields `(n - 400) / 320 + 1` frames. Timings depend
+/// on this; [`segment_timings`] checks it against the matrix it gets.
+const FRAME_RECEPTIVE_SAMPLES: usize = 400;
+const FRAME_STRIDE_SAMPLES: usize = 320;
+const FRAME_MS: u32 = 20;
+
+/// Where each of `segments` — spoken text, in order, together making up the
+/// clip's transcript — is said, as `[start_ms, end_ms)`. Each segment is
+/// phonemized with the model's own g2p labels and the concatenation is
+/// Viterbi-aligned to the clip's cached frame matrix; a segment spans its
+/// first phoneme's first frame to its last phoneme's last frame. CTC
+/// emissions are peaky (a phoneme's frames sit near its onset), so ends run
+/// early. Errors when a segment has no phonemes the model knows or the
+/// alignment is impossible; the caller decides what a clip without timings
+/// is worth.
+pub async fn segment_timings(
+    ctx: &VerifyContext<'_>,
+    audio_bytes: &[u8],
+    segments: &[&str],
+) -> Result<Vec<(u32, u32)>> {
+    let matrix = frame_matrix(ctx, audio_bytes).await?;
+    // A clip below the endpoint's length floor was padded symmetrically
+    // before inference; report times against the audio as it is.
+    let samples = decode_wav_to_f32(audio_bytes)
+        .context("decoding audio to count samples")?
+        .len();
+    let padded = samples.max(MODAL_MIN_SAMPLES);
+    let expected_frames = padded.saturating_sub(FRAME_RECEPTIVE_SAMPLES) / FRAME_STRIDE_SAMPLES + 1;
+    if matrix.frames.abs_diff(expected_frames) > 1 {
+        anyhow::bail!(
+            "frame matrix has {} frames for {padded} samples, expected {expected_frames}: the \
+             encoder's stride is not what the timings assume",
+            matrix.frames
+        );
+    }
+    let pad_ms = ((MODAL_MIN_SAMPLES.saturating_sub(samples) / 2) * 1000
+        / MODAL_SAMPLE_RATE as usize) as u32;
+    let mut ids = Vec::new();
+    let mut spans = Vec::with_capacity(segments.len());
+    for segment in segments {
+        let phonemized = model_target(segment, ctx.target_language)
+            .ok_or_else(|| anyhow::anyhow!("no g2p for {:?}", ctx.target_language))?
+            .with_context(|| format!("phonemizing {segment:?}"))?;
+        let start = ids.len();
+        ids.extend(phonemized.phonemes.iter().filter_map(|p| matrix.id(p)));
+        if ids.len() == start {
+            anyhow::bail!("no phonemes the model knows for {segment:?}");
+        }
+        spans.push((start, ids.len()));
+    }
+    let aligned = matrix.force_align(&ids).ok_or_else(|| {
+        anyhow::anyhow!(
+            "no alignment of {} phonemes over {} frames",
+            ids.len(),
+            matrix.frames
+        )
+    })?;
+    let ms = |frame: usize| (frame as u32 * FRAME_MS).saturating_sub(pad_ms);
+    Ok(spans
+        .iter()
+        .map(|&(start, end)| {
+            (
+                ms(aligned[start].start_frame),
+                ms(aligned[end - 1].end_frame + 1),
+            )
+        })
+        .collect())
 }
 
 /// Pad `samples` symmetrically with zeros to reach at least `min_len`.
@@ -1016,10 +1170,16 @@ const MAX_VARIANT_COMBINATIONS: usize = 16;
 /// plus any accepted alternates; the result is the (capped) cross
 /// product across words.
 ///
-/// Returns `None` only if we couldn't produce *any* candidate — i.e.
-/// every word in the phrase is missing from wikipron AND espeak doesn't
-/// support this language. As long as one source (wikipron cross-product
-/// OR espeak) produces something, we return it.
+/// A word wikipron lacks (a proper noun, a spelled-out letter name) gets
+/// its own g2p phonemization as its single variant, so the rest of the
+/// phrase keeps its wikipron variants instead of the whole phrase falling
+/// back to g2p — which reads "cognac" as /konjak/ and would have rejected a
+/// good clip over one unknown word beside it.
+///
+/// Returns `None` only if we couldn't produce *any* candidate — i.e. some
+/// word is missing from wikipron AND g2p doesn't support this language. As
+/// long as one source (wikipron cross-product OR g2p) produces something,
+/// we return it.
 ///
 /// When the wikipron cross product would exceed
 /// `MAX_VARIANT_COMBINATIONS`, we fall back to just the main-only
@@ -1039,13 +1199,13 @@ fn ground_truth_phoneme_variants(
     text: &str,
     word_to_pronunciation: &HashMap<String, language_utils::Pronunciations>,
     language: Language,
-) -> Option<Vec<Vec<String>>> {
+) -> Option<Vec<Reading>> {
     // Collect per-word phoneme-sequence variants in phrase order.
-    // `wikipron_complete` flips to false the moment any word is missing
-    // from the dictionary; we then skip the cross-product and rely on
-    // espeak (if available) as the sole ground truth.
+    // `complete` flips to false when a word is missing from the dictionary
+    // and g2p can't name it either; we then skip the cross-product and rely
+    // on the phrase-level g2p variant (if available) as the sole ground truth.
     let mut per_word: Vec<Vec<Vec<String>>> = Vec::new();
-    let mut wikipron_complete = true;
+    let mut complete = true;
     for word in text.split(|c: char| {
         c.is_whitespace() || (!c.is_alphabetic() && c != '\'' && c != '-' && c != 'ʼ')
     }) {
@@ -1056,7 +1216,19 @@ fn ground_truth_phoneme_variants(
             continue;
         }
         let Some(accepted) = word_to_pronunciation.get(&cleaned) else {
-            wikipron_complete = false;
+            let g2p_word: Vec<String> = match model_target(&cleaned, language) {
+                Some(Ok(phonemized)) => phonemized
+                    .phonemes
+                    .iter()
+                    .filter_map(|p| normalize_phoneme(p, language))
+                    .collect(),
+                _ => Vec::new(),
+            };
+            if g2p_word.is_empty() {
+                complete = false;
+            } else {
+                per_word.push(vec![g2p_word]);
+            }
             continue;
         };
         let word_variants: Vec<Vec<String>> = accepted
@@ -1077,29 +1249,25 @@ fn ground_truth_phoneme_variants(
         per_word.push(word_variants);
     }
 
-    let mut candidates: Vec<Vec<String>> = if !wikipron_complete || per_word.is_empty() {
-        // No wikipron candidates — espeak below is our only shot.
+    let mut candidates: Vec<Reading> = if !complete || per_word.is_empty() {
+        // No per-word candidates — the phrase-level g2p below is our only shot.
         Vec::new()
     } else {
         let total: usize = per_word.iter().map(|v| v.len().max(1)).product::<usize>();
         if total > MAX_VARIANT_COMBINATIONS {
             // Fall back to main-only.
-            let mut out = Vec::with_capacity(per_word.iter().map(|v| v[0].len()).sum::<usize>());
-            for word_variants in &per_word {
-                out.extend(word_variants[0].iter().cloned());
-            }
-            vec![out]
+            vec![per_word.iter().map(|v| v[0].clone()).collect()]
         } else {
             // Enumerate the cross product. `acc` accumulates phrase
             // candidates; for each word we re-expand each accumulated
             // candidate against each of that word's variants.
-            let mut acc: Vec<Vec<String>> = vec![Vec::new()];
+            let mut acc: Vec<Reading> = vec![Vec::new()];
             for word_variants in &per_word {
                 let mut next = Vec::with_capacity(acc.len() * word_variants.len());
                 for prefix in &acc {
                     for var in word_variants {
                         let mut extended = prefix.clone();
-                        extended.extend(var.iter().cloned());
+                        extended.push(var.clone());
                         next.push(extended);
                     }
                 }
@@ -1118,13 +1286,27 @@ fn ground_truth_phoneme_variants(
     // log the first error per process rather than letting it vanish.
     match model_target(text, language) {
         Some(Ok(phonemized)) => {
-            let g2p_seq: Vec<String> = phonemized
-                .phonemes
+            // Words come from g2p's own spans (a backend without them
+            // yields one word), which is what lets a phrase-level reading
+            // still say which word the audio skipped.
+            let spans = if phonemized.word_spans.is_empty() {
+                vec![(0, phonemized.phonemes.len())]
+            } else {
+                phonemized.word_spans.clone()
+            };
+            let g2p_reading: Reading = spans
                 .iter()
-                .filter_map(|p| normalize_phoneme(p, language))
+                .map(|&(start, end)| {
+                    phonemized.phonemes[start..end]
+                        .iter()
+                        .filter_map(|p| normalize_phoneme(p, language))
+                        .collect::<Vec<String>>()
+                })
+                .filter(|word| !word.is_empty())
                 .collect();
-            if !g2p_seq.is_empty() && !candidates.contains(&g2p_seq) {
-                candidates.push(g2p_seq);
+            let flat = g2p_reading.concat();
+            if !flat.is_empty() && !candidates.iter().any(|c| c.concat() == flat) {
+                candidates.push(g2p_reading);
             }
         }
         Some(Err(e)) => {
@@ -1204,6 +1386,29 @@ fn prob_of(phoneme: &str, top_k: &[(String, f64)]) -> Option<f64> {
 /// algorithm as before; ops now carry the model's confidence at the
 /// predicted position so the JSONL output can show how close the model
 /// was to the correct answer.
+/// The first word of `reading` with two or more phonemes that the alignment
+/// leaves entirely unheard: every phoneme `Missing`, none matched or
+/// substituted. A whole word gone is a letter or word the audio skipped —
+/// a voice that silently drops "œ" — however small the edit distance looks
+/// beside a long example. One-phoneme words are exempt: the model does
+/// swallow a lone schwa.
+fn unheard_word<'a>(reading: &'a Reading, ops: &[AlignmentOp]) -> Option<&'a [String]> {
+    let mut consumed = ops
+        .iter()
+        .filter(|op| !matches!(op, AlignmentOp::Extra { .. }));
+    for word in reading {
+        let heard = consumed
+            .by_ref()
+            .take(word.len())
+            .filter(|op| !matches!(op, AlignmentOp::Missing { .. }))
+            .count();
+        if word.len() >= 2 && heard == 0 {
+            return Some(word);
+        }
+    }
+    None
+}
+
 fn align(
     predicted: &[String],
     predicted_top_k: &[Vec<(String, f64)>],
@@ -1581,23 +1786,19 @@ mod tests {
     }
 
     #[test]
-    fn batch_envelope_checks_count_marker_and_custom_endpoint() {
-        let response = ModalBatchResponse {
-            results: vec![serde_json::json!({})],
+    fn batch_envelope_checks_count_marker_and_endpoint() {
+        let response = || ModalBatchResponse {
+            results: vec![serde_json::json!({"phonemes": []})],
             deploy_marker: Some("new".into()),
         };
-        assert!(validate_batch(&response, 1, Some("new")).is_ok());
-        assert!(validate_batch(&response, 2, Some("new")).is_err());
-        assert!(validate_batch(&response, 1, Some("old")).is_err());
+        assert!(split_batch(response(), 2).is_err());
+        let item = split_batch(response(), 1).unwrap().remove(0).unwrap();
+        assert_eq!(item.deploy_marker.as_deref(), Some("new"));
         assert_eq!(
-            batch_endpoint("https://x-predict.modal.run", None).unwrap(),
+            batch_endpoint("https://x-predict.modal.run").unwrap(),
             "https://x-predict-batch.modal.run"
         );
-        assert!(batch_endpoint("http://localhost/single", None).is_err());
-        assert_eq!(
-            batch_endpoint("http://localhost/single", Some("http://localhost/batch")).unwrap(),
-            "http://localhost/batch"
-        );
+        assert!(batch_endpoint("http://localhost/single").is_err());
     }
 
     #[tokio::test]
@@ -1746,6 +1947,80 @@ mod tests {
         );
     }
 
+    /// Readings flattened to phoneme sequences, for tests about which
+    /// sequences are accepted rather than where their words fall.
+    fn flat_variants(
+        text: &str,
+        wp: &HashMap<String, language_utils::Pronunciations>,
+        language: Language,
+    ) -> Option<Vec<Vec<String>>> {
+        ground_truth_phoneme_variants(text, wp, language)
+            .map(|readings| readings.iter().map(|r| r.concat()).collect())
+    }
+
+    fn word(phonemes: &[&str]) -> Vec<String> {
+        phonemes.iter().map(|p| p.to_string()).collect()
+    }
+
+    #[test]
+    fn readings_keep_word_boundaries() {
+        let mut wp = HashMap::new();
+        wp.insert("bonjour".to_string(), ap("b ɔ̃ ʒ u ʁ", &[]));
+        wp.insert("madame".to_string(), ap("m a d a m", &[]));
+        let readings =
+            ground_truth_phoneme_variants("Bonjour madame", &wp, Language::Korean).unwrap();
+        assert_eq!(
+            readings,
+            vec![vec![
+                word(&["b", "ɔ̃", "ʒ", "u", "ʁ"]),
+                word(&["m", "a", "d", "a", "m"])
+            ]]
+        );
+    }
+
+    #[test]
+    fn unheard_word_is_one_with_no_phoneme_matched_or_substituted() {
+        let reading: Reading = vec![word(&["o", "ʊ"]), word(&["æ", "z"]), word(&["ə"])];
+        let missing = |p: &str| AlignmentOp::Missing {
+            expected: p.to_string(),
+        };
+        let matched = |p: &str| AlignmentOp::Match {
+            phoneme: p.to_string(),
+            probability: 1.0,
+        };
+        // "œ" (o ʊ) skipped entirely, the rest heard: the first word is unheard.
+        let ops = vec![
+            missing("o"),
+            missing("ʊ"),
+            matched("æ"),
+            matched("z"),
+            matched("ə"),
+        ];
+        assert_eq!(
+            unheard_word(&reading, &ops),
+            Some(word(&["o", "ʊ"]).as_slice())
+        );
+        // A substitution counts as heard; extras don't consume expected phonemes.
+        let ops = vec![
+            AlignmentOp::Extra {
+                predicted: "h".into(),
+                predicted_prob: 1.0,
+            },
+            AlignmentOp::Sub {
+                expected: "o".into(),
+                predicted: "ɔ".into(),
+                predicted_prob: 1.0,
+                expected_prob: None,
+            },
+            missing("ʊ"),
+            matched("æ"),
+            matched("z"),
+            missing("ə"),
+        ];
+        // The lone schwa is exempt even though it went unheard.
+        assert_eq!(unheard_word(&reading, &ops), None);
+    }
+
     fn ap(main: &str, others: &[&str]) -> language_utils::Pronunciations {
         language_utils::Pronunciations {
             main: main.to_string(),
@@ -1761,8 +2036,7 @@ mod tests {
         // Use a language without espeak support (Korean is disabled) so
         // the test isolates the wikipron-only path; the espeak path is
         // covered by `ground_truth_includes_espeak_variant_for_supported_languages`.
-        let variants =
-            ground_truth_phoneme_variants("Bonjour, madame!", &wp, Language::Korean).unwrap();
+        let variants = flat_variants("Bonjour, madame!", &wp, Language::Korean).unwrap();
         assert_eq!(variants.len(), 1);
         assert_eq!(
             variants[0],
@@ -1777,7 +2051,7 @@ mod tests {
         // the espeak addition (which would inject a third candidate).
         let mut wp = HashMap::new();
         wp.insert("mes".to_string(), ap("m e", &["m ɛ"]));
-        let variants = ground_truth_phoneme_variants("mes", &wp, Language::Korean).unwrap();
+        let variants = flat_variants("mes", &wp, Language::Korean).unwrap();
         assert_eq!(variants.len(), 2);
         assert!(variants.contains(&vec!["m".to_string(), "e".to_string()]));
         assert!(variants.contains(&vec!["m".to_string(), "ɛ".to_string()]));
@@ -1788,7 +2062,7 @@ mod tests {
         let mut wp = HashMap::new();
         wp.insert("mes".to_string(), ap("m e", &["m ɛ"]));
         wp.insert("amis".to_string(), ap("a m i", &["a m i z"]));
-        let variants = ground_truth_phoneme_variants("mes amis", &wp, Language::Korean).unwrap();
+        let variants = flat_variants("mes amis", &wp, Language::Korean).unwrap();
         // 2 × 2 = 4 phrase candidates
         assert_eq!(variants.len(), 4);
     }
@@ -1797,7 +2071,27 @@ mod tests {
     fn ground_truth_returns_none_on_missing_word() {
         let mut wp = HashMap::new();
         wp.insert("bonjour".to_string(), ap("b ɔ̃ ʒ u ʁ", &[]));
-        assert!(ground_truth_phoneme_variants("bonjour madame", &wp, Language::Korean).is_none());
+        assert!(flat_variants("bonjour madame", &wp, Language::Korean).is_none());
+    }
+
+    // One word wikipron lacks must not cost the phrase its wikipron variants
+    // for the other words: g2p names just that word.
+    #[test]
+    fn ground_truth_fills_missing_words_from_g2p() {
+        let mut wp = HashMap::new();
+        wp.insert("cognac".to_string(), ap("k ɔ ɲ a k", &["k o ɲ a k"]));
+        let variants = flat_variants("Cyrano cognac", &wp, Language::French).unwrap();
+        let cyrano = ["s", "i", "ʁ", "a", "n", "o"].map(str::to_string);
+        for accepted in [
+            ["k", "ɔ", "ɲ", "a", "k"].map(str::to_string),
+            ["k", "o", "ɲ", "a", "k"].map(str::to_string),
+        ] {
+            let expected: Vec<String> = cyrano.iter().chain(accepted.iter()).cloned().collect();
+            assert!(
+                variants.contains(&expected),
+                "missing {expected:?} in {variants:?}"
+            );
+        }
     }
 
     #[test]
@@ -1808,7 +2102,7 @@ mod tests {
         for w in &["a", "b", "c", "d", "e"] {
             wp.insert(w.to_string(), ap("X", &["Y"]));
         }
-        let variants = ground_truth_phoneme_variants("a b c d e", &wp, Language::Korean).unwrap();
+        let variants = flat_variants("a b c d e", &wp, Language::Korean).unwrap();
         assert_eq!(variants.len(), 1);
         assert_eq!(variants[0], vec!["X"; 5]);
     }
@@ -1825,13 +2119,67 @@ mod tests {
         let mut wp = HashMap::new();
         wp.insert("on".to_string(), ap("ɔ̃", &["ɔ . n ‿"]));
         wp.insert("est".to_string(), ap("ɛ", &["e"]));
-        let variants = ground_truth_phoneme_variants("on est", &wp, Language::French).unwrap();
+        let variants = flat_variants("on est", &wp, Language::French).unwrap();
         // Must include the espeak liaison candidate that the per-word
         // cross-product can't reach.
         assert!(
             variants.contains(&vec!["ɔ̃".to_string(), "n".to_string(), "ɛ".to_string()]),
             "expected espeak liaison candidate /ɔ̃ n ɛ/ in candidates: {variants:?}"
         );
+    }
+
+    // The pronunciation-challenge transcript spells the pattern with letter
+    // names; espeak must phonemize those names as the voice says them, not
+    // as the words the bare letters would be ("y" the adverb, "à" the
+    // preposition).
+    #[test]
+    fn french_letter_names_phonemize_as_spoken() {
+        let phonemes = |pattern: &str, example: &str| {
+            let text = language_utils::pronunciation_challenge_spoken_text(
+                Language::French,
+                pattern,
+                example,
+            );
+            model_target(&text, Language::French)
+                .unwrap()
+                .unwrap()
+                .phonemes
+                .iter()
+                .filter_map(|p| normalize_phoneme(p, Language::French))
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+        assert_eq!(phonemes("y", "pays"), "i ɡ ʁ ɛ k k ɔ m d ɑ̃ p ɛ i");
+        assert_eq!(
+            phonemes("à", "voilà"),
+            "a a k s ɑ̃ ɡ ʁ a v k ɔ m d ɑ̃ v w a l a"
+        );
+        assert_eq!(
+            phonemes("ô", "côte"),
+            "o a k s ɑ̃ s i ʁ k ɔ̃ f l ɛ k s k ɔ m d ɑ̃ k o t"
+        );
+        assert_eq!(phonemes("cy", "cycle"), "s e i ɡ ʁ ɛ k k ɔ m d ɑ̃ s i k l");
+    }
+
+    // Talks to the production batch endpoint: run with `--ignored` after
+    // changing the wire format.
+    #[tokio::test]
+    #[ignore]
+    async fn batch_endpoint_round_trip() {
+        let http = reqwest::Client::new();
+        let silence = serde_json::json!({
+            "audio_f32_b64": encode_audio_f32(&vec![0.0f32; MODAL_MIN_SAMPLES]),
+            "sample_rate": MODAL_SAMPLE_RATE,
+            "top_k": MODAL_TOP_K,
+        });
+        let results = post_batch(&http, &batch_url().unwrap(), vec![silence.clone(), silence])
+            .await
+            .unwrap();
+        assert_eq!(results.len(), 2);
+        for result in results {
+            let modal = result.unwrap();
+            assert!(modal.deploy_marker.is_some(), "batch marker not applied");
+        }
     }
 
     #[test]

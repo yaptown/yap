@@ -118,23 +118,7 @@ impl GoogleTtsClient {
 
         while attempts < self.max_attempts {
             attempts += 1;
-            let response = self
-                .http
-                .post(&url)
-                .header("Content-Type", "application/json")
-                .json(&payload)
-                .send()
-                .await
-                .context("Google TTS request failed")?;
-            if !response.status().is_success() {
-                let status = response.status();
-                let body = response.text().await.unwrap_or_default();
-                anyhow::bail!("Google TTS error ({status}): {body}");
-            }
-            let body: GoogleTtsResponseBody = response
-                .json()
-                .await
-                .context("Failed to parse Google TTS response JSON")?;
+            let body = self.post(&url, &payload).await?;
             let bytes = base64::engine::general_purpose::STANDARD
                 .decode(&body.audio_content)
                 .context("Google TTS audio_content was not valid base64")?;
@@ -166,6 +150,51 @@ impl GoogleTtsClient {
                 last_defect: last_defect.unwrap_or("unknown"),
             },
         })
+    }
+}
+
+/// Rate limits and server errors are retried with exponential backoff (about
+/// two minutes in total) and don't count against the defect budget: a
+/// per-minute quota blip must not kill a run that has already synthesized
+/// hundreds of clips.
+const TRANSIENT_ATTEMPTS: u32 = 8;
+
+impl GoogleTtsClient {
+    async fn post(
+        &self,
+        url: &str,
+        payload: &GoogleTtsRequestBody,
+    ) -> Result<GoogleTtsResponseBody> {
+        for attempt in 1..=TRANSIENT_ATTEMPTS {
+            let response = self
+                .http
+                .post(url)
+                .header("Content-Type", "application/json")
+                .json(payload)
+                .send()
+                .await
+                .context("Google TTS request failed")?;
+            let status = response.status();
+            if status.is_success() {
+                return response
+                    .json()
+                    .await
+                    .context("Failed to parse Google TTS response JSON");
+            }
+            let body = response.text().await.unwrap_or_default();
+            let transient =
+                status == reqwest::StatusCode::TOO_MANY_REQUESTS || status.is_server_error();
+            if !transient || attempt == TRANSIENT_ATTEMPTS {
+                anyhow::bail!("Google TTS error ({status}): {body}");
+            }
+            let delay = std::time::Duration::from_secs(1 << (attempt - 1));
+            log::warn!(
+                "google-tts: {status} on attempt {attempt}/{TRANSIENT_ATTEMPTS}, retrying in {}s",
+                delay.as_secs()
+            );
+            tokio::time::sleep(delay).await;
+        }
+        unreachable!("the last attempt returns or bails")
     }
 }
 

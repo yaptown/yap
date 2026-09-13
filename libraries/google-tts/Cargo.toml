@@ -9,6 +9,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = "1"
 log = { workspace = true }
+tokio = { workspace = true, features = ["time"] }
 base64 = "0.22"
 minimp3 = "0.6"
 ogg = "0.9"

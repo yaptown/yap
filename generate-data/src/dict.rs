@@ -1,3 +1,4 @@
+use crate::chat_retry::ChatRetry;
 use futures::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{
@@ -357,7 +358,7 @@ Of course, their native language is {native_language}, so you should write the m
 
                 let response: Result<PhrasebookDefinitionEntry, _> = if freq > 100  {
                     let response: Result<PhrasebookDefinitionEntryV2, _> = chat_client
-                        .chat_with_system_prompt(
+                        .chat_with_system_prompt_retrying(
                             system_prompt,
                             format!(
                                 "multiword term: `{gram_text}`\n\nExample sentences:\n{examples_text}"
@@ -381,7 +382,7 @@ Of course, their native language is {native_language}, so you should write the m
                     })
                 } else {
                     chat_client
-                        .chat_with_system_prompt(
+                        .chat_with_system_prompt_retrying(
                             system_prompt,
                             format!(
                                 "multiword term: `{gram_text}`\n\nExample sentences:\n{examples_text}"
