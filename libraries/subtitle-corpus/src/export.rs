@@ -41,10 +41,13 @@ const CTX_GAP_MS: i64 = 2_000;
 const CTX_CAP_MS: i64 = 15_000;
 /// Breathing room past a context line's cue stamps.
 const CTX_PAD_MS: i64 = 150;
-/// Minimum silence on the outside of a context cut. Not part of the recipe:
+/// Minimum gap between speech runs for a widened context cut. Not part of the recipe:
 /// it only moves the cut bounds, which the media stamp already carries, so
 /// changing it re-encodes exactly the clips whose context actually changes.
 const CTX_CLEAN_MS: i64 = 200;
+/// Maximum outward search from a padded context bound. Like CTX_CLEAN_MS,
+/// this is represented by the cut bounds in the media stamp, not the recipe.
+const CTX_WIDEN_MS: i64 = 1_500;
 /// The hi rendition is never upscaled and never taller than this.
 const MAX_HEIGHT: i64 = 1440;
 const LO_HEIGHT: i64 = 480;
@@ -859,13 +862,14 @@ fn upload_lang(lang_dir: &Path, code: &str, bucket: &str) -> Result<()> {
     Ok(())
 }
 
-/// Extend the scored cut to neighboring subtitle lines within [`CTX_GAP_MS`],
-/// then trim context until the cut is under [`CTX_CAP_MS`] and opens and closes
-/// in transcript silence. Subtitle display times are authored for reading, not
-/// speech: Taxi (`tt0152930`) exposed this by placing a padded context cut 29 ms
-/// into "c'est". The scored bounds need no such check because the sentence gate
-/// already measured their margins. Returns film-absolute bounds and the number
-/// of surviving lines on each side.
+/// Extend the scored cut to neighboring subtitle lines within [`CTX_GAP_MS`].
+/// Display times are not speech times: keep the lines and move dirty cuts
+/// outward to silence, pulling in any newly overlapping cues until stable.
+/// Taxi (`tt0152930`) placed a padded cut 29 ms into "c'est"; widening into
+/// the preceding gap now keeps its context lines. Drop an outermost cue only
+/// if no gap is within [`CTX_WIDEN_MS`] or the widened cut exceeds [`CTX_CAP_MS`].
+/// Scored bounds without context are accepted as-is: the sentence gate already
+/// measured their margins. Returns film-absolute bounds and context counts.
 fn context_bounds(
     clip_start: i64,
     clip_end: i64,
@@ -874,61 +878,127 @@ fn context_bounds(
     cues: &[Cue],
     transcript: &[Spoken],
 ) -> (i64, i64, usize, usize) {
-    let mut before: Vec<&Cue> = Vec::new();
+    // Keep all candidates, including those beyond the initial gap limit, so
+    // widening can pull them in. Truncating on a drop permanently excludes
+    // that cue and everything further out, preventing trim/re-add cycles.
+    let mut before: Vec<&Cue> = cues
+        .iter()
+        .rev()
+        .filter(|c| c.end_ms <= clip_start)
+        .collect();
+    let mut after: Vec<&Cue> = cues.iter().filter(|c| c.start_ms >= clip_end).collect();
     let mut edge = clip_start;
-    for cue in cues.iter().rev().filter(|c| c.end_ms <= clip_start) {
+    let mut nb = 0;
+    for cue in &before {
         if edge - cue.end_ms > CTX_GAP_MS {
             break;
         }
         edge = cue.start_ms;
-        before.push(cue);
+        nb += 1;
     }
-    let mut after: Vec<&Cue> = Vec::new();
     let mut edge = clip_end;
-    for cue in cues.iter().filter(|c| c.start_ms >= clip_end) {
+    let mut na = 0;
+    for cue in &after {
         if cue.start_ms - edge > CTX_GAP_MS {
             break;
         }
         edge = cue.end_ms;
-        after.push(cue);
+        na += 1;
     }
-    let bounds = |before: &[&Cue], after: &[&Cue]| {
-        let s = before
-            .last()
-            .map_or(scored_start, |c| {
-                (c.start_ms - CTX_PAD_MS).min(scored_start)
-            })
-            .max(0);
-        let e = after
+    loop {
+        let s = before[..nb].last().map_or(scored_start, |c| {
+            (c.start_ms - CTX_PAD_MS).min(scored_start).max(0)
+        });
+        let e = after[..na]
             .last()
             .map_or(scored_end, |c| (c.end_ms + CTX_PAD_MS).max(scored_end));
-        (s, e)
-    };
-    loop {
-        let (s, e) = bounds(&before, &after);
-        let dirty_start = !before.is_empty() && !clean_context_start(s, transcript);
-        let dirty_end = !after.is_empty() && !clean_context_end(e, transcript);
-        if dirty_start {
-            before.pop();
+        let s = if nb == 0 {
+            Some(s)
+        } else {
+            widen_context_bound(s, transcript, true)
+        };
+        let e = if na == 0 {
+            Some(e)
+        } else {
+            widen_context_bound(e, transcript, false)
+        };
+        if s.is_none() {
+            nb -= 1;
+            before.truncate(nb);
         }
-        if dirty_end {
-            after.pop();
+        if e.is_none() {
+            na -= 1;
+            after.truncate(na);
         }
-        if dirty_start || dirty_end {
+        let (Some(s), Some(e)) = (s, e) else { continue };
+        let old_counts = (nb, na);
+        if nb > 0 {
+            while nb < before.len() && before[nb].end_ms > s {
+                nb += 1;
+            }
+        }
+        if na > 0 {
+            while na < after.len() && after[na].start_ms < e {
+                na += 1;
+            }
+        }
+        if (nb, na) != old_counts {
             continue;
         }
-        if e - s <= CTX_CAP_MS || (before.is_empty() && after.is_empty()) {
-            return (s, e, before.len(), after.len());
+        if e - s <= CTX_CAP_MS || (nb == 0 && na == 0) {
+            return (s, e, nb, na);
         }
         // Drop whichever outermost line sits furthest from the sentence.
-        let d_before = before.last().map(|c| clip_start - c.start_ms);
-        let d_after = after.last().map(|c| c.end_ms - clip_end);
+        let d_before = before[..nb].last().map(|c| clip_start - c.start_ms);
+        let d_after = after[..na].last().map(|c| c.end_ms - clip_end);
         if d_before >= d_after {
-            before.pop();
+            nb -= 1;
+            before.truncate(nb);
         } else {
-            after.pop();
+            na -= 1;
+            after.truncate(na);
         }
     }
+}
+
+fn widen_context_bound(boundary: i64, transcript: &[Spoken], start: bool) -> Option<i64> {
+    let clean = if start {
+        clean_context_start(boundary, transcript)
+    } else {
+        clean_context_end(boundary, transcript)
+    };
+    if clean {
+        return Some(boundary);
+    }
+    let mut words: Vec<_> = transcript
+        .iter()
+        .filter(|w| w.kind == Kind::Word)
+        .map(|w| (w.at_ms, w.until_ms))
+        .collect();
+    words.sort_unstable();
+    let mut end = 0;
+    let mut nearest = None;
+    // Taking the maximum end merges overlapping words into speech runs.
+    // The sentinel also exposes the silence after the final word.
+    for (next_start, next_end) in words.into_iter().chain([(i64::MAX, i64::MAX)]) {
+        let gap = next_start - end;
+        if gap >= CTX_CLEAN_MS {
+            let pad = CTX_PAD_MS.min(gap / 2);
+            let candidate = if start { next_start - pad } else { end + pad };
+            let distance = if start {
+                boundary - candidate
+            } else {
+                candidate - boundary
+            };
+            if (0..=CTX_WIDEN_MS).contains(&distance)
+                && nearest.is_none_or(|(best, _)| distance < best)
+            {
+                nearest = Some((distance, candidate));
+            }
+        }
+        end = end.max(next_end);
+    }
+    nearest.map(|(_, bound)| bound)
 }
 
 fn clean_context_start(boundary: i64, transcript: &[Spoken]) -> bool {
@@ -979,14 +1049,14 @@ mod tests {
     }
 
     #[test]
-    fn context_drops_taxi_shape_cut_inside_word() {
+    fn context_widens_taxi_shape_cut_inside_word() {
         let cues = [cue(6_000, 7_000)];
         // The padded boundary is 5_850, 29 ms after this word began.
-        let transcript = [word(5_821, 5_901)];
+        let transcript = [word(5_000, 5_571), word(5_821, 5_901)];
 
         assert_eq!(
             context_bounds(8_000, 9_000, 7_700, 9_150, &cues, &transcript),
-            (7_700, 9_150, 0, 0)
+            (5_696, 9_150, 1, 0)
         );
     }
 
@@ -1003,13 +1073,26 @@ mod tests {
 
     #[test]
     fn context_drops_dirty_trailing_cue_without_readding_it() {
-        let cues = [cue(2_500, 3_000), cue(3_500, 4_000)];
-        // The word begins 100 ms after the outer cue's padded end (4_150).
-        let transcript = [word(4_250, 4_500)];
+        let cues = [cue(2_500, 3_000), cue(3_500, 4_000), cue(6_100, 6_500)];
+        // Speech continues beyond the 1,500 ms budget after 4,150.
+        let transcript = [word(4_250, 6_000)];
 
         assert_eq!(
             context_bounds(1_000, 2_000, 700, 2_150, &cues, &transcript),
             (700, 3_150, 0, 1)
+        );
+    }
+
+    #[test]
+    fn context_widening_pulls_in_overlapping_neighbour() {
+        // The second cue is initially beyond CTX_GAP_MS, but the widened
+        // end (starting from the scored end) overlaps it. Including it then
+        // moves the padded end to 5,550.
+        let cues = [cue(2_500, 3_000), cue(5_050, 5_400)];
+        let transcript = [word(3_900, 4_500), word(4_600, 5_100)];
+        assert_eq!(
+            context_bounds(1_000, 2_000, 700, 4_000, &cues, &transcript),
+            (700, 5_550, 0, 2)
         );
     }
 }
