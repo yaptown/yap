@@ -14,6 +14,10 @@ use tysm::chat_completions::{ChatClient, ChatMessage, ChatMessageContent, ImageU
 
 use crate::pgs;
 
+// The model name is part of tysm's cache key, so re-asking a stronger model is
+// automatically a fresh request rather than the same cached bad answer.
+pub const FALLBACK_MODEL: &str = "gpt-5.6-terra";
+
 const SYSTEM_PROMPT: &str = "\
 You transcribe single lines of subtitle text from movie subtitle images.
 Reproduce exactly what is written: same words, same punctuation, same accents,
@@ -38,6 +42,89 @@ pub fn client(model: &str) -> Result<ChatClient> {
     Ok(ChatClient::from_env(model)
         .context("OPENAI_API_KEY not set")?
         .with_cache_directory("./.cache"))
+}
+
+/// Whether decoded OCR text is safe to pass into subtitle output.
+///
+/// Strict JSON-schema output can mangle an accented letter's Unicode escape:
+/// for example, `\\u00e9` may arrive as `\\u0000e9` or `\\u000e9`. JSON
+/// decoding then leaves a C0 control character followed by stray hex digits,
+/// so all controls except intentional subtitle whitespace must be rejected.
+pub fn readable(text: &str) -> bool {
+    text.chars()
+        .all(|c| !c.is_control() || matches!(c, '\n' | '\r' | '\t'))
+}
+
+/// Retry a decoded-but-corrupt transcription with the stronger live model.
+///
+/// The boolean reports whether a retry was needed; an error after a retry is
+/// deliberately treated like an unreadable batch item by callers.
+pub async fn retry_unreadable(
+    fallback_client: &ChatClient,
+    png: &[u8],
+    transcription: Transcription,
+) -> (Result<Transcription>, bool) {
+    if readable(&transcription.text) {
+        return (Ok(transcription), false);
+    }
+
+    let result = transcribe(fallback_client, png)
+        .await
+        .context("fallback OCR request failed")
+        .and_then(|fallback| {
+            if readable(&fallback.text) {
+                Ok(fallback)
+            } else {
+                bail!("fallback OCR response still contains control characters")
+            }
+        });
+    (result, true)
+}
+
+/// What a film's batch of cue images boiled down to.
+pub struct ReadLines {
+    /// `(start_ms, end_ms, text)` for every cue that read as dialogue.
+    pub lines: Vec<(u32, u32, String)>,
+    /// Cues with no usable answer, after the fallback had its turn.
+    pub unreadable: usize,
+    /// Cues re-asked of the fallback model, and how many of those it read.
+    pub retried: usize,
+    pub rescued: usize,
+}
+
+/// Turn a batch's per-cue results into subtitle lines, sending every corrupt
+/// answer through [`retry_unreadable`] first. A batch error and a fallback
+/// that also fails count the same: an unreadable cue the caller may refuse
+/// to write the film without.
+pub async fn read_lines<E>(
+    fallback_client: &ChatClient,
+    images: &[CueImage],
+    results: Vec<std::result::Result<Transcription, E>>,
+) -> ReadLines {
+    let mut read = ReadLines {
+        lines: Vec::new(),
+        unreadable: 0,
+        retried: 0,
+        rescued: 0,
+    };
+    for (img, result) in std::iter::zip(images, results) {
+        let Ok(transcription) = result else {
+            read.unreadable += 1;
+            continue;
+        };
+        let (result, did_retry) = retry_unreadable(fallback_client, &img.png, transcription).await;
+        read.retried += usize::from(did_retry);
+        let Ok(transcription) = result else {
+            read.unreadable += 1;
+            continue;
+        };
+        read.rescued += usize::from(did_retry);
+        let text = transcription.text.trim().to_string();
+        if !transcription.not_text && !text.is_empty() {
+            read.lines.push((img.start_ms, img.end_ms, text));
+        }
+    }
+    read
 }
 
 /// The request for one cue image.
@@ -188,4 +275,16 @@ pub fn to_srt(lines: &[(u32, u32, String)]) -> String {
 /// Path for a movie's extracted `.sup` under the corpus root.
 pub fn sup_path(out: &Path, imdb_id: &str) -> PathBuf {
     out.join(imdb_id).join("subtitle.sup")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::readable;
+
+    #[test]
+    fn readable_rejects_controls_but_allows_subtitle_whitespace() {
+        assert!(readable("répétition\nsérieuse\r\n\t"));
+        assert!(!readable("r\0e9pétition"));
+        assert!(!readable("sérieuse\u{000e}9"));
+    }
 }

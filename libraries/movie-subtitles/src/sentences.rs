@@ -321,6 +321,9 @@ pub fn has_encoding_corruption(sentence: &str) -> bool {
         // Zero-width space (typically from copy-paste corruption)
         '\u{200B}'
         ) || matches!(c,
+            // C0 controls are produced when OCR mangles a JSON Unicode escape.
+            // Subtitle line breaks and horizontal tabs are legitimate whitespace.
+            '\u{0000}'..='\u{0008}' | '\u{000B}'..='\u{000C}' | '\u{000E}'..='\u{001F}' |
             // C1 control characters indicate mojibake (e.g., U+009C instead of œ)
             '\u{0080}'..='\u{009F}' |
             // Greek letter homoglyphs mixed into Latin text (subtitle copy-protection).
@@ -506,6 +509,12 @@ mod split_tests {
             sentences: sentences.iter().map(|s| s.to_string()).collect(),
             unfinished,
         }
+    }
+
+    #[test]
+    fn c0_escape_damage_is_encoding_corruption() {
+        assert!(has_encoding_corruption("r\0e9pétition sérieuse"));
+        assert!(!has_encoding_corruption("répétition sérieuse"));
     }
 
     #[test]

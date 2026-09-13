@@ -1,4 +1,4 @@
-# Clip sidecar schema (format 2)
+# Clip sidecar schema (format 3)
 
 One JSON per served video clip, stored next to the mp4 (`<id>.json` beside
 `<id>.mp4`), immutable. Cut generously (neighbor sentences as context when the
@@ -52,7 +52,7 @@ trust a cache whose inputs may have moved.
 
 ```jsonc
 {
-  "format": 2,
+  "format": 3,
   "id": "tt0101700-3fa2c81d-0",        // imdb id + sentence hash + occurrence index (see above)
   "language": "fra",
 
@@ -112,8 +112,10 @@ trust a cache whose inputs may have moved.
     "edge_logp_start": -0.3, "edge_logp_end": -0.5,
     "lead_speech": 0.02, "tail_speech": 0.0, "lead_rms": 0.1, "voiced": 0.61,
     "audio_event_overlap": false, "clear_before_ms": 900, "clear_after_ms": 640,
-    "provenance": { "format": 3, "model": "…", "min_ratio": 0.0,
-                    "min_clear_ms": 0, "min_edge_logp": 0.0,
+    "pad_before_ms": 300, "pad_after_ms": 150,
+    "provenance": { "format": 11, "model": "…", "min_ratio": 0.0,
+                    "preferred_clear_ms": 100, "min_clear_ms": 0,
+                    "min_edge_logp": 0.0,
                     "max_pad_speech": 0.0, "max_lead_rms": 1.0,
                     "min_voiced": 0.25 }
   },
@@ -127,6 +129,7 @@ trust a cache whose inputs may have moved.
                "critical_start_ms": 1850, "critical_end_ms": 5600 }
     },
     "duration_ms": 7600,
+    "width": 1920, "height": 1080, "aspect_ratio": 1.7777777777777777,
     "loudnorm": { "measured_i": -24.3, "measured_tp": -3.1, "gain_db": 6.3,
                   "measured_over": "critical" },
     "keyframe_at_critical": true

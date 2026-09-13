@@ -2163,6 +2163,17 @@ struct ClipRow {
     sentence: String,
     duration_ms: u64,
     critical: ClipCritical,
+    /// These are `None` until an older row's next publish.
+    #[serde(default)]
+    clear_before_ms: Option<i64>,
+    #[serde(default)]
+    clear_after_ms: Option<i64>,
+    #[serde(default)]
+    pad_before_ms: Option<i64>,
+    #[serde(default)]
+    pad_after_ms: Option<i64>,
+    #[serde(default)]
+    aspect_ratio: Option<f64>,
     /// Exact size of lo.mp4. The pipeline can republish corrected media
     /// under the same clip id, so the app uses this to revalidate its
     /// cached copy.

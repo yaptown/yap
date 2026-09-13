@@ -5373,10 +5373,12 @@ mod tests {
         assert!(deck.study_plan_was_recently_accepted(
             (t1 + chrono::Duration::hours(36)).timestamp_millis() as f64
         ));
-        assert!(!deck.study_plan_was_recently_accepted(
-            (t1 + chrono::Duration::hours(36) + chrono::Duration::milliseconds(1))
-                .timestamp_millis() as f64
-        ));
+        assert!(
+            !deck.study_plan_was_recently_accepted(
+                (t1 + chrono::Duration::hours(36) + chrono::Duration::milliseconds(1))
+                    .timestamp_millis() as f64
+            )
+        );
         assert_eq!(deck.locked_count(), 10);
         let after = deck.get_review_info(vec![], t1_ms);
         assert_eq!(after.due_count(), 15);

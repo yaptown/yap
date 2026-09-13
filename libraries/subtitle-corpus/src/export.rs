@@ -41,6 +41,10 @@ const CTX_GAP_MS: i64 = 2_000;
 const CTX_CAP_MS: i64 = 15_000;
 /// Breathing room past a context line's cue stamps.
 const CTX_PAD_MS: i64 = 150;
+/// Minimum silence on the outside of a context cut. Not part of the recipe:
+/// it only moves the cut bounds, which the media stamp already carries, so
+/// changing it re-encodes exactly the clips whose context actually changes.
+const CTX_CLEAN_MS: i64 = 200;
 /// The hi rendition is never upscaled and never taller than this.
 const MAX_HEIGHT: i64 = 1440;
 const LO_HEIGHT: i64 = 480;
@@ -54,7 +58,7 @@ const LO_AAC: &str = "96k";
 const UPLOAD_JOBS: usize = 8;
 
 /// Sidecar `format` field.
-const SIDECAR_FORMAT: u32 = 2;
+const SIDECAR_FORMAT: u32 = 3;
 
 /// Everything that shapes the rendered files, in one comparable string.
 /// Built from the constants so no tweak can be forgotten; anything that
@@ -91,11 +95,17 @@ impl Cut {
     }
 }
 
-fn plan_cut(clip: &Clip, cues: &[Cue]) -> Cut {
+fn plan_cut(clip: &Clip, cues: &[Cue], transcript: &[Spoken]) -> Cut {
     let scored_start = (clip.start_ms - clip.pad_before_ms).max(0);
     let scored_end = clip.end_ms + clip.pad_after_ms;
-    let (cut_start, cut_end, ctx_before, ctx_after) =
-        context_bounds(clip, scored_start, scored_end, cues);
+    let (cut_start, cut_end, ctx_before, ctx_after) = context_bounds(
+        clip.start_ms,
+        clip.end_ms,
+        scored_start,
+        scored_end,
+        cues,
+        transcript,
+    );
     Cut {
         scored_start,
         scored_end,
@@ -313,7 +323,7 @@ async fn export_film(
         async move {
             let id = clip_id(&movie.imdb_id, clip, sentences, clips);
             let clip_dir = lang_dir.join(&id);
-            let cut = plan_cut(clip, cues);
+            let cut = plan_cut(clip, cues, transcript);
             let stamp = media_stamp(movie, video, audio_stream, &cut);
             // Renditions on disk are reused when they were cut from the same
             // bytes to the same recipe; the loudness they were normalised
@@ -627,10 +637,13 @@ async fn export_one(
             "audio_event_overlap": clip.audio_event_overlap,
             "clear_before_ms": clip.clear_before_ms,
             "clear_after_ms": clip.clear_after_ms,
+            "pad_before_ms": clip.pad_before_ms,
+            "pad_after_ms": clip.pad_after_ms,
             "provenance": {
                 "format": provenance.format,
                 "model": provenance.model,
                 "min_ratio": provenance.min_ratio,
+                "preferred_clear_ms": provenance.preferred_clear_ms,
                 "min_clear_ms": provenance.min_clear_ms,
                 "min_edge_logp": provenance.min_edge_logp,
                 "max_pad_speech": provenance.max_pad_speech,
@@ -641,6 +654,9 @@ async fn export_one(
         "media": {
             "stamp": stamp,
             "duration_ms": cut_end - cut_start,
+            "width": video.width,
+            "height": video.height,
+            "aspect_ratio": video.aspect_ratio,
             "loudnorm": {
                 "measured_i": measured_i,
                 "measured_tp": measured_tp,
@@ -655,6 +671,8 @@ async fn export_one(
         },
     });
     let bytes = serde_json::to_vec_pretty(&sidecar)?;
+    // Reuse is keyed only by the media stamp. New sidecar-only fields change
+    // these bytes, so an old export is refreshed without re-encoding media.
     if reused && old_sidecar == Some(bytes.as_slice()) {
         return Ok(Outcome::Unchanged);
     }
@@ -842,17 +860,23 @@ fn upload_lang(lang_dir: &Path, code: &str, bucket: &str) -> Result<()> {
 }
 
 /// Extend the scored cut to neighboring subtitle lines within [`CTX_GAP_MS`],
-/// then trim (furthest line first) back under [`CTX_CAP_MS`]. Returns the cut
-/// bounds (film-absolute) and how many lines survived on each side.
+/// then trim context until the cut is under [`CTX_CAP_MS`] and opens and closes
+/// in transcript silence. Subtitle display times are authored for reading, not
+/// speech: Taxi (`tt0152930`) exposed this by placing a padded context cut 29 ms
+/// into "c'est". The scored bounds need no such check because the sentence gate
+/// already measured their margins. Returns film-absolute bounds and the number
+/// of surviving lines on each side.
 fn context_bounds(
-    clip: &Clip,
+    clip_start: i64,
+    clip_end: i64,
     scored_start: i64,
     scored_end: i64,
     cues: &[Cue],
+    transcript: &[Spoken],
 ) -> (i64, i64, usize, usize) {
     let mut before: Vec<&Cue> = Vec::new();
-    let mut edge = clip.start_ms;
-    for cue in cues.iter().rev().filter(|c| c.end_ms <= clip.start_ms) {
+    let mut edge = clip_start;
+    for cue in cues.iter().rev().filter(|c| c.end_ms <= clip_start) {
         if edge - cue.end_ms > CTX_GAP_MS {
             break;
         }
@@ -860,8 +884,8 @@ fn context_bounds(
         before.push(cue);
     }
     let mut after: Vec<&Cue> = Vec::new();
-    let mut edge = clip.end_ms;
-    for cue in cues.iter().filter(|c| c.start_ms >= clip.end_ms) {
+    let mut edge = clip_end;
+    for cue in cues.iter().filter(|c| c.start_ms >= clip_end) {
         if cue.start_ms - edge > CTX_GAP_MS {
             break;
         }
@@ -880,19 +904,114 @@ fn context_bounds(
             .map_or(scored_end, |c| (c.end_ms + CTX_PAD_MS).max(scored_end));
         (s, e)
     };
-    let (mut s, mut e) = bounds(&before, &after);
-    while e - s > CTX_CAP_MS && (!before.is_empty() || !after.is_empty()) {
+    loop {
+        let (s, e) = bounds(&before, &after);
+        let dirty_start = !before.is_empty() && !clean_context_start(s, transcript);
+        let dirty_end = !after.is_empty() && !clean_context_end(e, transcript);
+        if dirty_start {
+            before.pop();
+        }
+        if dirty_end {
+            after.pop();
+        }
+        if dirty_start || dirty_end {
+            continue;
+        }
+        if e - s <= CTX_CAP_MS || (before.is_empty() && after.is_empty()) {
+            return (s, e, before.len(), after.len());
+        }
         // Drop whichever outermost line sits furthest from the sentence.
-        let d_before = before.last().map(|c| clip.start_ms - c.start_ms);
-        let d_after = after.last().map(|c| c.end_ms - clip.end_ms);
+        let d_before = before.last().map(|c| clip_start - c.start_ms);
+        let d_after = after.last().map(|c| c.end_ms - clip_end);
         if d_before >= d_after {
             before.pop();
         } else {
             after.pop();
         }
-        (s, e) = bounds(&before, &after);
     }
-    (s, e, before.len(), after.len())
+}
+
+fn clean_context_start(boundary: i64, transcript: &[Spoken]) -> bool {
+    let words = transcript.iter().filter(|word| word.kind == Kind::Word);
+    !words
+        .clone()
+        .any(|word| word.at_ms < boundary && word.until_ms > boundary)
+        && words
+            .filter(|word| word.until_ms <= boundary)
+            .map(|word| word.until_ms)
+            .max()
+            .is_none_or(|end| boundary - end >= CTX_CLEAN_MS)
+}
+
+fn clean_context_end(boundary: i64, transcript: &[Spoken]) -> bool {
+    let words = transcript.iter().filter(|word| word.kind == Kind::Word);
+    !words
+        .clone()
+        .any(|word| word.at_ms < boundary && word.until_ms > boundary)
+        && words
+            .filter(|word| word.at_ms >= boundary)
+            .map(|word| word.at_ms)
+            .min()
+            .is_none_or(|start| start - boundary >= CTX_CLEAN_MS)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn cue(start_ms: i64, end_ms: i64) -> Cue {
+        Cue {
+            start_ms,
+            end_ms,
+            text: String::new(),
+        }
+    }
+
+    fn word(at_ms: i64, until_ms: i64) -> Spoken {
+        Spoken {
+            text: String::new(),
+            at_ms,
+            until_ms,
+            kind: Kind::Word,
+            speaker: None,
+            logprob: None,
+        }
+    }
+
+    #[test]
+    fn context_drops_taxi_shape_cut_inside_word() {
+        let cues = [cue(6_000, 7_000)];
+        // The padded boundary is 5_850, 29 ms after this word began.
+        let transcript = [word(5_821, 5_901)];
+
+        assert_eq!(
+            context_bounds(8_000, 9_000, 7_700, 9_150, &cues, &transcript),
+            (7_700, 9_150, 0, 0)
+        );
+    }
+
+    #[test]
+    fn context_keeps_boundary_after_clean_gap() {
+        let cues = [cue(6_000, 7_000)];
+        let transcript = [word(5_200, 5_350)];
+
+        assert_eq!(
+            context_bounds(8_000, 9_000, 7_700, 9_150, &cues, &transcript),
+            (5_850, 9_150, 1, 0)
+        );
+    }
+
+    #[test]
+    fn context_drops_dirty_trailing_cue_without_readding_it() {
+        let cues = [cue(2_500, 3_000), cue(3_500, 4_000)];
+        // The word begins 100 ms after the outer cue's padded end (4_150).
+        let transcript = [word(4_250, 4_500)];
+
+        assert_eq!(
+            context_bounds(1_000, 2_000, 700, 2_150, &cues, &transcript),
+            (700, 3_150, 0, 1)
+        );
+    }
 }
 
 /// Per-phoneme spans in clip-relative ms, from the cached frame matrix.
@@ -945,7 +1064,10 @@ async fn align_phonemes(
 
 #[derive(Debug, Clone)]
 struct VideoProbe {
+    width: i64,
     height: i64,
+    /// Display width divided by display height, including anamorphic SAR.
+    aspect_ratio: f64,
     /// PQ / HLG sources are tonemapped to SDR bt709 for h264 playback.
     hdr: bool,
     /// Container runtime; part of the media stamp so a different cut of the
@@ -957,7 +1079,7 @@ fn probe_video(path: &Path) -> Result<VideoProbe> {
     let out = Command::new("ffprobe")
         .args(["-v", "error", "-select_streams", "v:0", "-show_entries"])
         .args([
-            "stream=height,color_transfer:format=duration",
+            "stream=width,height,sample_aspect_ratio,display_aspect_ratio,color_transfer:format=duration",
             "-of",
             "json",
         ])
@@ -966,7 +1088,19 @@ fn probe_video(path: &Path) -> Result<VideoProbe> {
         .context("ffprobe failed to start")?;
     let v: serde_json::Value = serde_json::from_slice(&out.stdout).context("ffprobe output")?;
     let stream = v["streams"].get(0).context("no video stream")?;
+    let width = stream["width"].as_i64().context("no width")?;
     let height = stream["height"].as_i64().context("no height")?;
+    let ratio = |name: &str| {
+        let raw = stream[name].as_str()?;
+        let (numerator, denominator) = raw.split_once(':')?;
+        let numerator = numerator.parse::<f64>().ok()?;
+        let denominator = denominator.parse::<f64>().ok()?;
+        (numerator.is_finite() && denominator.is_finite() && numerator > 0.0 && denominator > 0.0)
+            .then_some(numerator / denominator)
+    };
+    let aspect_ratio = ratio("display_aspect_ratio")
+        .or_else(|| ratio("sample_aspect_ratio").map(|sar| width as f64 * sar / height as f64))
+        .unwrap_or(width as f64 / height as f64);
     let transfer = stream["color_transfer"].as_str().unwrap_or("");
     let duration_ms = v["format"]["duration"]
         .as_str()
@@ -974,7 +1108,9 @@ fn probe_video(path: &Path) -> Result<VideoProbe> {
         .map(|s| (s * 1000.0).round() as i64)
         .context("no container duration")?;
     Ok(VideoProbe {
+        width,
         height,
+        aspect_ratio,
         hdr: matches!(transfer, "smpte2084" | "arib-std-b67"),
         duration_ms,
     })
@@ -1182,6 +1318,11 @@ fn write_index(lang_dir: &Path) -> Result<usize> {
                     "course_sentence": m["sentence"]["course_sentence"],
                     "duration_ms": m["media"]["duration_ms"],
                     "critical": m["critical"],
+                    "clear_before_ms": m["verification"]["clear_before_ms"],
+                    "clear_after_ms": m["verification"]["clear_after_ms"],
+                    "pad_before_ms": m["verification"]["pad_before_ms"],
+                    "pad_after_ms": m["verification"]["pad_after_ms"],
+                    "aspect_ratio": m["media"]["aspect_ratio"],
                     "hi_bytes": m["media"]["renditions"]["hi"]["bytes"],
                     "lo_bytes": m["media"]["renditions"]["lo"]["bytes"],
                 }),

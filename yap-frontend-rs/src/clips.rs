@@ -49,6 +49,17 @@ pub struct ClipRow {
     pub sentence: String,
     pub duration_ms: u64,
     pub critical: ClipCritical,
+    /// These are `None` until an older row's next publish.
+    #[serde(default)]
+    pub clear_before_ms: Option<i64>,
+    #[serde(default)]
+    pub clear_after_ms: Option<i64>,
+    #[serde(default)]
+    pub pad_before_ms: Option<i64>,
+    #[serde(default)]
+    pub pad_after_ms: Option<i64>,
+    #[serde(default)]
+    pub aspect_ratio: Option<f64>,
     /// Exact size of lo.mp4, used to revalidate the cached copy: the
     /// pipeline can republish corrected media under the same clip id.
     #[serde(default)]

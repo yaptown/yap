@@ -153,10 +153,25 @@ pub const MIN_CUE_MS: i64 = 400;
 pub const MAX_CUE_MS: i64 = 12_000;
 /// WER at or below which the transcript confirms the cue.
 pub const POS_WER: f64 = 0.12;
+
+/// Whether an edit distance is close enough for the transcript to confirm a
+/// sentence.
+///
+/// Applying [`POS_WER`] as a floating-point ratio creates an integer cliff:
+/// every sentence shorter than nine tokens otherwise permits no edits. In the
+/// 2026-09-13 corpus, 14,999 of 49,374 placement disagreements were exactly
+/// one edit, all on sentences of at most eight tokens (for example, "Ah,
+/// c'est du joli." against "Ah, c'est joli."). Four-token sentences are long
+/// enough to grant that single-edit allowance; shorter ones remain exact.
+pub fn agrees(distance: usize, tokens: usize) -> bool {
+    let allowance = usize::from(tokens >= 4);
+    distance <= allowance.max((POS_WER * tokens as f64).floor() as usize)
+}
+
 /// WER at or above which the transcript contradicts it.
 pub const NEG_WER: f64 = 0.6;
 /// Both labels need at least this many subtitle tokens to mean anything.
-pub const MIN_TOKENS: usize = 3;
+pub const MIN_TOKENS: usize = 2;
 /// A film must yield at least this many verbatim positives to participate.
 /// Below it, the subtitle is desynced, a different cut, or a forced-subs
 /// track (The Producers sat ~60s off; Phantom Menace had a 38-cue forced
@@ -296,9 +311,11 @@ pub fn label_cues(
             _ => None,
         };
 
-        let label = if wer <= POS_WER && exact_wer <= POS_WER && !audio_event_overlap {
+        let transcript_agrees = agrees(dist, cue_tokens.len());
+        let exact_agrees = agrees(exact_dist, cue_tokens.len().max(span_tokens.len()).max(1));
+        let label = if transcript_agrees && exact_agrees && !audio_event_overlap {
             CueLabel::Pos
-        } else if wer <= POS_WER && exact_wer >= 0.3 {
+        } else if transcript_agrees && exact_wer >= 0.3 {
             CueLabel::NegExtraSpeech
         } else if wer >= NEG_WER && heard_tokens.len() < cue_tokens.len() / 2 {
             CueLabel::NegSilent
@@ -498,5 +515,14 @@ mod align_tests {
         let heard = toks("bois bois bois attends bois bois");
         let m = align_sentence(&toks("Bois ! Bois !"), &heard).unwrap();
         assert_eq!((m.first, m.last, m.distance), (0, 1, 0));
+    }
+
+    #[test]
+    fn agreement_allows_one_short_sentence_edit_without_loosening_tiny_sentences() {
+        assert!(!agrees(1, 3));
+        assert!(agrees(1, 4));
+        assert!(!agrees(2, 8));
+        assert!(agrees(1, 9));
+        assert!(agrees(2, 17));
     }
 }

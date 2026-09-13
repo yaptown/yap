@@ -48,15 +48,15 @@ use phoneme_verify::VerifyContext;
 use serde::{Deserialize, Serialize};
 
 use crate::cues::{
-    agreement_tokens, align_sentence, load_transcript, parse_cues, slice_wav_padded,
-    tokenization_for, AUDIO_PAD_MS, MATCH_SLOP_MS, MAX_CUE_MS, MIN_CUE_MS, MIN_TOKENS, POS_WER,
+    agreement_tokens, agrees, align_sentence, load_transcript, parse_cues, slice_wav_padded,
+    tokenization_for, AUDIO_PAD_MS, MATCH_SLOP_MS, MAX_CUE_MS, MIN_CUE_MS, MIN_TOKENS,
 };
 use crate::library::{course_dir, read_plan, Movie};
 use crate::transcript::{Kind, Spoken};
 
 /// Bump when the record format or the gating logic changes in a way that
 /// makes existing `clips.jsonl` files not comparable.
-const FORMAT_VERSION: u32 = 10;
+const FORMAT_VERSION: u32 = 11;
 
 /// How late earshot flags speech after it begins. Measured 2026-09-02 on
 /// four films: with the profile allowed to trim inside the stamped words
@@ -105,6 +105,9 @@ pub struct Provenance {
     /// cut would leave old verdicts standing. `None` for an [`audio_only`]
     /// language: no phoneme gate at all.
     pub min_ratio: Option<f64>,
+    /// Preferred pause length used to repair word-stamp boundaries from the
+    /// speech profile. Stored because changing it can change the cut.
+    pub preferred_clear_ms: i64,
     pub min_clear_ms: i64,
     pub min_edge_logp: f64,
     pub max_pad_speech: f64,
@@ -217,13 +220,14 @@ pub struct Gate {
     /// Lowest CTC log-odds ratio a clip may have and still pass; `None`
     /// takes the per-language default from [`default_min_ratio`].
     pub min_ratio: Option<f64>,
-    /// Silence required on each side of the span. The pad shrinks to fit
-    /// whatever silence there is; below this there is no room for a clean
-    /// cut at all — word stamps lag true onsets by tens of ms, so a cut
-    /// into a smaller gap clips the first consonant or carries a
-    /// neighbour's tail. Blind-ASR adjudication (2026-08-30) put margins of
-    /// 100–200 ms at 90–94% clean — as clean as the pass pool — and only
-    /// margins under 100 ms meaningfully worse, so 100 is the line.
+    /// Pause length the boundary repair looks for before falling back to the
+    /// transcript stamp. Blind-ASR adjudication (2026-08-30) put margins of
+    /// 100–200 ms at 90–94% clean — as clean as the pass pool — while margins
+    /// under 100 ms measured meaningfully worse, so the chosen preference is
+    /// recorded in provenance even though a tighter margin is not rejected.
+    pub preferred_clear_ms: i64,
+    /// Acceptance floor for the measured quiet adjacent to each boundary.
+    /// Zero keeps tight-margin clips; their padding naturally shrinks to zero.
     pub min_clear_ms: i64,
     /// Lowest forced-alignment mean log-prob the first/last
     /// [`EDGE_PHONEMES`] may have — the test that the sentence's start and
@@ -264,7 +268,8 @@ impl Default for Gate {
             min_verbatim: None,
             speech_threshold: 0.7,
             min_ratio: None,
-            min_clear_ms: 100,
+            preferred_clear_ms: 100,
+            min_clear_ms: 0,
             min_edge_logp: -4.0,
             // An ear test (2026-08-30) found rejects at these thresholds
             // are often fine clips — but a bad clip in the deck costs far
@@ -546,11 +551,6 @@ pub struct Placed {
     pub speaker: Option<String>,
     pub wer: f64,
     pub audio_event_overlap: bool,
-    /// Silence between the span and the nearest other word *by the stamps*
-    /// — the transcript's opinion, kept for comparison; the cut is made
-    /// from the speech profile.
-    pub clear_before_ms: i64,
-    pub clear_after_ms: i64,
     /// Where the neighbouring words begin and end: the silence search
     /// never reaches into them.
     pub prev_word_start_ms: Option<i64>,
@@ -596,7 +596,7 @@ pub fn place(
         .collect();
     let m = align_sentence(&tokens, &heard).ok_or("nothing heard")?;
     let wer = m.distance as f64 / tokens.len() as f64;
-    if wer > POS_WER {
+    if !agrees(m.distance, tokens.len()) {
         return Err("transcript disagrees");
     }
     let (first_word, last_word) = (word_of_token[m.first], word_of_token[m.last]);
@@ -627,8 +627,6 @@ pub fn place(
         .iter()
         .filter(spoken)
         .find(|w| w.until_ms > end_ms);
-    let before = prev.map_or(i64::MAX, |w| start_ms - w.until_ms);
-    let after = next.map_or(i64::MAX, |w| w.at_ms - end_ms);
     let mut speakers: Vec<&str> = span.iter().filter_map(|w| w.speaker.as_deref()).collect();
     speakers.dedup();
     Ok(Placed {
@@ -647,8 +645,6 @@ pub fn place(
         },
         wer,
         audio_event_overlap,
-        clear_before_ms: before,
-        clear_after_ms: after,
         prev_word_start_ms: prev.map(|w| w.at_ms),
         next_word_end_ms: next.map(|w| w.until_ms),
     })
@@ -761,56 +757,87 @@ struct Margins {
     clear_after_ms: i64,
 }
 
-/// Find the pause on each side of a placed span in the film's speech
+/// Measure the quiet run that touches a stamp, or zero when the profile says
+/// speech reaches the stamp. This is only the fallback: preferred pauses may
+/// sit farther out because they can repair a squeezed transcript boundary.
+fn adjacent_quiet_before(profile: &[f32], threshold: f32, from_ms: i64, stamp_ms: i64) -> i64 {
+    silences(profile, threshold, from_ms, stamp_ms, 0)
+        .last()
+        .filter(|(_, end)| *end >= stamp_ms)
+        .map_or(0, |(start, _)| (stamp_ms - start).max(0))
+}
+
+fn adjacent_quiet_after(profile: &[f32], threshold: f32, stamp_ms: i64, to_ms: i64) -> i64 {
+    silences(profile, threshold, stamp_ms, to_ms, 0)
+        .first()
+        .filter(|(start, _)| *start <= stamp_ms)
+        .map_or(0, |(_, end)| (end - stamp_ms).max(0))
+}
+
+/// Find the best boundary on each side of a placed span in the film's speech
 /// profile. The search runs between the neighbouring word's stamp and the
-/// span's own stamp, never inside the span; the pause nearest the span
-/// wins. A boundary only moves outward: when the pause ends before the
-/// stamped onset, speech began earlier than the stamp says (a squeezed or
-/// late stamp) and the start moves back to it, less [`ONSET_LAG_MS`]. A
-/// stamp stretched over silence is left alone — dead air inside the span
-/// is harmless, a clipped consonant is not. `None` when either side has no
-/// pause of `min_clear_ms` next to the span, which is the transcript's
-/// "too close" verdict made against the audio instead of its own stamps.
+/// span's own stamp, never inside the span; the nearest pause at least
+/// `preferred_clear_ms` long wins. A boundary only moves outward: when such a
+/// pause ends before the stamped onset, speech began earlier than the stamp
+/// says (a squeezed or late stamp) and the start moves back to it, less
+/// [`ONSET_LAG_MS`]. A stamp stretched over silence is left alone — dead air
+/// inside the span is harmless, a clipped consonant is not. When no preferred
+/// pause exists on one side, that side keeps its stamp and records the shorter
+/// quiet run actually touching it.
 fn earshot_margins(
     profile: &[f32],
     threshold: f32,
     p: &Placed,
-    min_clear_ms: i64,
-) -> Option<Margins> {
+    preferred_clear_ms: i64,
+) -> Margins {
     let first = &p.words[0];
     let last = &p.words[p.words.len() - 1];
+    let head_start = p.prev_word_start_ms.unwrap_or(first.at_ms - OPEN_SEARCH_MS);
     let head = silences(
         profile,
         threshold,
-        p.prev_word_start_ms.unwrap_or(first.at_ms - OPEN_SEARCH_MS),
+        head_start,
         first.at_ms,
-        min_clear_ms,
+        preferred_clear_ms,
     );
-    let (gap_start, gap_end) = *head.last()?;
-    // The window ends at the stamp, so a pause reaching it means the stamp
-    // is where speech begins; a pause ending short of it means speech
-    // began earlier, at (roughly) the frame that first read as speech.
-    let start_ms = if gap_end < first.at_ms {
-        (gap_end - ONSET_LAG_MS).max(gap_start)
+    let (start_ms, clear_before_ms) = if let Some(&(gap_start, gap_end)) = head.last() {
+        // The window ends at the stamp, so a pause reaching it means the stamp
+        // is where speech begins; a pause ending short of it means speech
+        // began earlier, at (roughly) the frame that first read as speech.
+        let start_ms = if gap_end < first.at_ms {
+            (gap_end - ONSET_LAG_MS).max(gap_start)
+        } else {
+            first.at_ms
+        };
+        (start_ms, start_ms - gap_start)
     } else {
-        first.at_ms
+        (
+            first.at_ms,
+            adjacent_quiet_before(profile, threshold, head_start, first.at_ms),
+        )
     };
-    let clear_before_ms = start_ms - gap_start;
+    let tail_end = p.next_word_end_ms.unwrap_or(last.until_ms + OPEN_SEARCH_MS);
     let tail = silences(
         profile,
         threshold,
         last.until_ms,
-        p.next_word_end_ms.unwrap_or(last.until_ms + OPEN_SEARCH_MS),
-        min_clear_ms,
+        tail_end,
+        preferred_clear_ms,
     );
-    let (end_ms, tail_end) = *tail.first()?;
-    let clear_after_ms = tail_end - end_ms;
-    (clear_before_ms >= min_clear_ms && clear_after_ms >= min_clear_ms).then_some(Margins {
+    let (end_ms, clear_after_ms) = if let Some(&(end_ms, quiet_end)) = tail.first() {
+        (end_ms, quiet_end - end_ms)
+    } else {
+        (
+            last.until_ms,
+            adjacent_quiet_after(profile, threshold, last.until_ms, tail_end),
+        )
+    };
+    Margins {
         start_ms,
         end_ms,
         clear_before_ms,
         clear_after_ms,
-    })
+    }
 }
 
 /// Map one film. Returns the summary, or the reason nothing was done.
@@ -909,6 +936,7 @@ async fn clips_one(
         segmentation: movie_subtitles::segment::provenance(language),
         language: code.to_string(),
         min_ratio,
+        preferred_clear_ms: gate.preferred_clear_ms,
         min_clear_ms: gate.min_clear_ms,
         min_edge_logp: gate.min_edge_logp,
         max_pad_speech: gate.max_pad_speech,
@@ -973,13 +1001,13 @@ async fn clips_one(
             let profile = &profile;
             async move {
                 let stamped = (p.words[0].at_ms, p.words[p.words.len() - 1].until_ms);
-                let margins = earshot_margins(profile, threshold, &p, gate.min_clear_ms);
-                // Without a pause on both sides the stamps stand in, so the
-                // record still says where the transcript put the sentence.
-                let (start_ms, end_ms, clear_before_ms, clear_after_ms) = match &margins {
-                    Some(m) => (m.start_ms, m.end_ms, m.clear_before_ms, m.clear_after_ms),
-                    None => (stamped.0, stamped.1, p.clear_before_ms, p.clear_after_ms),
-                };
+                let margins = earshot_margins(profile, threshold, &p, gate.preferred_clear_ms);
+                let (start_ms, end_ms, clear_before_ms, clear_after_ms) = (
+                    margins.start_ms,
+                    margins.end_ms,
+                    margins.clear_before_ms,
+                    margins.clear_after_ms,
+                );
                 let (repaired_before_ms, repaired_after_ms) =
                     (stamped.0 - start_ms, end_ms - stamped.1);
                 let pad = |target: i64, clear: i64| target.min(clear / 2).max(0);
@@ -1018,7 +1046,7 @@ async fn clips_one(
                     clip.reject = Some("audio event inside the span".into());
                     return Some((clip, None));
                 }
-                if margins.is_none() {
+                if clear_before_ms < gate.min_clear_ms || clear_after_ms < gate.min_clear_ms {
                     clip.reject = Some("neighbouring speech too close to cut clean".into());
                     return Some((clip, None));
                 }
@@ -1280,4 +1308,62 @@ pub async fn clips_all(
         done.iter().map(|s| s.passed).sum::<usize>()
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod margin_tests {
+    use super::*;
+
+    fn placed() -> Placed {
+        Placed {
+            words: vec![
+                ClipWord {
+                    text: "first".into(),
+                    at_ms: 320,
+                    until_ms: 480,
+                },
+                ClipWord {
+                    text: "last".into(),
+                    at_ms: 480,
+                    until_ms: 640,
+                },
+            ],
+            speaker: None,
+            wer: 0.0,
+            audio_event_overlap: false,
+            prev_word_start_ms: Some(0),
+            next_word_end_ms: Some(1_024),
+        }
+    }
+
+    #[test]
+    fn preferred_pause_wins_over_shorter_adjacent_pause() {
+        let mut profile = vec![1.0; 64];
+        profile[4..14].fill(0.0); // 160 ms farther out.
+        profile[16..20].fill(0.0); // 64 ms adjacent to the onset stamp.
+        profile[40..50].fill(0.0); // A preferred tail pause.
+
+        let margins = earshot_margins(&profile, 0.7, &placed(), 100);
+
+        // This is the pre-fallback boundary calculation byte for byte: the
+        // 160 ms pause ends at 224, then the 80 ms onset lag lands at 144.
+        assert_eq!(margins.start_ms, 144);
+        assert_eq!(margins.clear_before_ms, 80);
+        assert_eq!(margins.end_ms, 640);
+        assert_eq!(margins.clear_after_ms, 160);
+    }
+
+    #[test]
+    fn short_adjacent_pause_falls_back_to_stamp_and_is_measured() {
+        let mut profile = vec![1.0; 64];
+        profile[16..20].fill(0.0); // 64 ms before the onset stamp.
+        profile[40..44].fill(0.0); // 64 ms after the end stamp.
+
+        let margins = earshot_margins(&profile, 0.7, &placed(), 100);
+
+        assert_eq!(margins.start_ms, 320);
+        assert_eq!(margins.end_ms, 640);
+        assert_eq!(margins.clear_before_ms, 64);
+        assert_eq!(margins.clear_after_ms, 64);
+    }
 }

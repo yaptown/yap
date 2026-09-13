@@ -152,6 +152,12 @@ enum Command_ {
         /// Raise it only to force through a film that never converges.
         #[arg(long, default_value_t = 0)]
         allow_unreadable: usize,
+        /// OCR this IMDb id even when its `subtitle.srt` already exists.
+        ///
+        /// May be repeated. The existing SRT remains in place unless the
+        /// replacement finishes within the unreadable-cue tolerance.
+        #[arg(long)]
+        redo: Vec<String>,
     },
     /// OCR a standalone bitmap subtitle into an SRT with the disc's timings.
     ///
@@ -1277,7 +1283,7 @@ fn refresh(
         }),
         ("ocr", {
             let out = out.clone();
-            Box::new(move || ocr_all(out, "gpt-5.6-luna".into(), 0, 0, 0))
+            Box::new(move || ocr_all(out, "gpt-5.6-luna".into(), 0, 0, 0, Vec::new()))
         }),
         ("extract-audio", {
             let out = out.clone();
@@ -1985,10 +1991,13 @@ async fn ocr_sample(out: PathBuf, movies: usize, cues: usize, model: String) -> 
     );
 
     let client = ocr::client(&model)?;
+    let fallback_client = ocr::client(ocr::FALLBACK_MODEL)?;
     let mut total_cues = 0usize;
     let mut png_bytes = 0usize;
     let mut pixels = 0u64;
     let mut transcribed = 0usize;
+    let mut retried = 0usize;
+    let mut rescued = 0usize;
     let mut shown = Vec::new();
 
     for movie in &picked {
@@ -2018,6 +2027,19 @@ async fn ocr_sample(out: PathBuf, movies: usize, cues: usize, model: String) -> 
             pixels += img.width as u64 * img.height as u64;
             match ocr::transcribe(&client, &img.png).await {
                 Ok(t) => {
+                    let (result, did_retry) =
+                        ocr::retry_unreadable(&fallback_client, &img.png, t).await;
+                    retried += usize::from(did_retry);
+                    let t = match result {
+                        Ok(t) => {
+                            rescued += usize::from(did_retry);
+                            t
+                        }
+                        Err(e) => {
+                            println!("    ✗ transcribe failed: {e}");
+                            continue;
+                        }
+                    };
                     transcribed += 1;
                     if shown.len() < 10 && !t.not_text {
                         shown.push((movie.imdb_id.clone(), t.text.clone()));
@@ -2047,6 +2069,7 @@ async fn ocr_sample(out: PathBuf, movies: usize, cues: usize, model: String) -> 
     }
     println!("\n──────── measured ────────");
     println!("cues transcribed      {transcribed}");
+    println!("control retries       {retried} ({rescued} rescued)");
     println!(
         "mean image            {:.0} px, {:.1} KiB PNG",
         pixels as f64 / transcribed as f64,
@@ -2083,6 +2106,7 @@ async fn ocr_all(
     films_in_flight: usize,
     limit: usize,
     allow_unreadable: usize,
+    redo: Vec<String>,
 ) -> Result<()> {
     use futures::stream::StreamExt;
     use std::sync::Arc;
@@ -2091,7 +2115,10 @@ async fn ocr_all(
     let mut queue: Vec<Movie> = plan
         .into_iter()
         .filter(|m| matches!(m.source, Source::DiscBitmap { .. }))
-        .filter(|m| !out.join(&m.imdb_id).join("subtitle.srt").exists())
+        .filter(|m| {
+            redo.iter().any(|imdb| imdb == &m.imdb_id)
+                || !out.join(&m.imdb_id).join("subtitle.srt").exists()
+        })
         .collect();
     if limit > 0 {
         queue.truncate(limit);
@@ -2105,21 +2132,31 @@ async fn ocr_all(
     println!("{total} movies still need OCR, {films_in_flight} batches in flight");
 
     let client = Arc::new(ocr::client(&model)?);
+    let fallback_client = Arc::new(ocr::client(ocr::FALLBACK_MODEL)?);
     let out = Arc::new(out);
     let progress = AtomicUsize::new(0);
 
     // Only the verdict per film is needed; the name is printed as it lands.
-    let results: Vec<Result<(usize, usize)>> = futures::stream::iter(queue.into_iter())
+    let results: Vec<Result<(usize, usize, usize, usize)>> =
+        futures::stream::iter(queue.into_iter())
         .map(|movie| {
             let client = Arc::clone(&client);
+            let fallback_client = Arc::clone(&fallback_client);
             let out = Arc::clone(&out);
             let progress = &progress;
             async move {
-                let outcome = ocr_one(&client, &movie, &out, allow_unreadable).await;
+                let outcome = ocr_one(
+                    &client,
+                    &fallback_client,
+                    &movie,
+                    &out,
+                    allow_unreadable,
+                )
+                .await;
                 let n = progress.fetch_add(1, Ordering::Relaxed) + 1;
                 match &outcome {
-                    Ok((lines, cues)) => println!(
-                        "[{n}/{total}] {} ✓ {lines} lines (of {cues} cues)",
+                    Ok((lines, cues, retried, rescued)) => println!(
+                        "[{n}/{total}] {} ✓ {lines} lines (of {cues} cues; {retried} retried, {rescued} rescued)",
                         truncate(&movie.title, 42)
                     ),
                     Err(e) => println!("[{n}/{total}] {} ✗ {e}", truncate(&movie.title, 42)),
@@ -2143,10 +2180,11 @@ async fn ocr_all(
 /// and write the SRT with the disc's own timings.
 async fn ocr_one(
     client: &tysm::chat_completions::ChatClient,
+    fallback_client: &tysm::chat_completions::ChatClient,
     movie: &Movie,
     out: &std::path::Path,
     allow_unreadable: usize,
-) -> Result<(usize, usize)> {
+) -> Result<(usize, usize, usize, usize)> {
     let Source::DiscBitmap { index, codec } = &movie.source else {
         bail!("not a bitmap source");
     };
@@ -2186,14 +2224,12 @@ async fn ocr_one(
         .await
         .map_err(|e| anyhow::anyhow!("batch: {e}"))?;
 
-    let unreadable = results.iter().filter(|r| r.is_err()).count();
-    let lines: Vec<(u32, u32, String)> = std::iter::zip(&images, results)
-        .filter_map(|(img, r)| {
-            let t = r.ok()?;
-            let text = t.text.trim().to_string();
-            (!t.not_text && !text.is_empty()).then_some((img.start_ms, img.end_ms, text))
-        })
-        .collect();
+    let ocr::ReadLines {
+        lines,
+        unreadable,
+        retried,
+        rescued,
+    } = ocr::read_lines(fallback_client, &images, results).await;
 
     // Leaving the film unwritten is what makes it retry on a later run, and on
     // that run tysm serves every cue already read from cache, so only the
@@ -2203,8 +2239,8 @@ async fn ocr_one(
     // accepting even a few means silently losing dialogue nothing goes back for.
     if unreadable > allow_unreadable {
         bail!(
-            "{unreadable}/{} cues unreadable — left for a retry",
-            images.len()
+            "{unreadable}/{} cues unreadable — left for a retry; {retried} retried, {rescued} rescued",
+            images.len(),
         );
     }
     if lines.is_empty() {
@@ -2218,7 +2254,7 @@ async fn ocr_one(
     write_stamp(&out.join(&movie.imdb_id), movie, StampSource::Disc);
     // The .sup is large and fully derived from the film; the SRT replaces it.
     let _ = std::fs::remove_file(&sup);
-    Ok((lines.len(), images.len()))
+    Ok((lines.len(), images.len(), retried, rescued))
 }
 
 /// OCR one standalone bitmap subtitle file into an SRT. The same read-it-all
@@ -2233,6 +2269,7 @@ async fn ocr_file(
     allow_unreadable: usize,
 ) -> Result<()> {
     let client = ocr::client(&model)?;
+    let fallback_client = ocr::client(ocr::FALLBACK_MODEL)?;
     let images = if input.extension().is_some_and(|e| e == "sup") {
         ocr::cue_images(&input).context("decode")?
     } else {
@@ -2252,14 +2289,12 @@ async fn ocr_file(
         .await
         .map_err(|e| anyhow::anyhow!("batch: {e}"))?;
 
-    let unreadable = results.iter().filter(|r| r.is_err()).count();
-    let lines: Vec<(u32, u32, String)> = std::iter::zip(&images, results)
-        .filter_map(|(img, r)| {
-            let t = r.ok()?;
-            let text = t.text.trim().to_string();
-            (!t.not_text && !text.is_empty()).then_some((img.start_ms, img.end_ms, text))
-        })
-        .collect();
+    let ocr::ReadLines {
+        lines,
+        unreadable,
+        retried,
+        rescued,
+    } = ocr::read_lines(&fallback_client, &images, results).await;
     if unreadable > allow_unreadable {
         bail!(
             "{unreadable}/{} cues unreadable — rerun to retry just those",
@@ -2272,9 +2307,11 @@ async fn ocr_file(
 
     std::fs::write(&srt, ocr::to_srt(&lines))?;
     println!(
-        "{} lines (of {} cues) → {}",
+        "{} lines (of {} cues; {} retried, {} rescued) → {}",
         lines.len(),
         images.len(),
+        retried,
+        rescued,
         srt.display()
     );
     if let Some(cost) = client.cost() {
@@ -4354,7 +4391,8 @@ fn main() -> Result<()> {
             films_in_flight,
             limit,
             allow_unreadable,
-        } => ocr_all(out, model, films_in_flight, limit, allow_unreadable),
+            redo,
+        } => ocr_all(out, model, films_in_flight, limit, allow_unreadable, redo),
         Command_::OcrFile {
             input,
             index,
