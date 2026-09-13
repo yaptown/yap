@@ -2188,6 +2188,9 @@ async fn ocr_one(
     let Source::DiscBitmap { index, codec } = &movie.source else {
         bail!("not a bitmap source");
     };
+    // A film seen for the first time has no corpus directory yet; nothing
+    // upstream of OCR creates one for a bitmap source.
+    std::fs::create_dir_all(out.join(&movie.imdb_id))?;
     let sup = ocr::sup_path(out, &movie.imdb_id);
 
     // Reading a whole film blocks its thread for minutes; keep it off the
