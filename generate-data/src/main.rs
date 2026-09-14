@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
     let _ = rustls::crypto::ring::default_provider().install_default();
 
     // Parse CLI args. Supported forms:
-    //   generate-data [--cache-only] [<lang>...]
+    //   generate-data [--cache-only] [--pronunciation-audio-only] [<lang>...]
     // Naming one or more target languages restricts the run to the courses
     // teaching them; naming none runs every course. A language teaching more
     // than one native audience (por has por_for_eng and por_for_fra) runs all
@@ -33,46 +33,27 @@ async fn main() -> anyhow::Result<()> {
     // --cache-only puts tysm ChatClients, the Translator, and lexide
     // tokenization into cache-only mode (no network calls; cache misses error
     // out or are skipped for lexide).
-    let mut lang_filter: BTreeSet<String> = BTreeSet::new();
-    let mut cache_only = false;
-    let mut sync_cache_only = false;
-    for arg in std::env::args().skip(1) {
-        match arg.as_str() {
-            "--cache-only" => cache_only = true,
-            "--sync-cache" => sync_cache_only = true,
-            s if s.starts_with("--") => {
-                anyhow::bail!("unknown flag: {s}");
-            }
-            _ => {
-                lang_filter.insert(arg);
-            }
-        }
-    }
-
-    // Reject unknown codes up front. A typo used to be silent -- the filter
-    // simply matched nothing and the run "succeeded" having done no work, which
-    // is much easier to miss now that a run can name several languages and
-    // legitimately skip most courses.
+    let Args {
+        lang_filter,
+        cache_only,
+        sync_cache_only,
+        pronunciation_audio_only,
+    } = Args::parse(std::env::args().skip(1))?;
     if !lang_filter.is_empty() {
-        let known: BTreeSet<&str> = COURSES.iter().map(|c| c.target_language.code()).collect();
-        let unknown: Vec<&str> = lang_filter
-            .iter()
-            .map(String::as_str)
-            .filter(|code| !known.contains(code))
-            .collect();
-        if !unknown.is_empty() {
-            anyhow::bail!(
-                "unknown language code(s): {}\nknown codes: {}",
-                unknown.join(", "),
-                known.into_iter().collect::<Vec<_>>().join(", "),
-            );
-        }
         println!(
             "restricting run to: {}",
-            lang_filter.iter().cloned().collect::<Vec<_>>().join(", "),
+            lang_filter.iter().cloned().collect::<Vec<_>>().join(", ")
         );
     }
     generate_data::set_cache_only(cache_only);
+    if pronunciation_audio_only {
+        if cache_only {
+            println!(
+                "cache-only mode: no TTS synthesis; verifier identity discovery may access the endpoint"
+            );
+        }
+        return generate_data::pronunciation_audio_only::run(Path::new("out"), &lang_filter).await;
+    }
     if cache_only {
         println!("cache-only mode: no API calls will be made");
     }
@@ -1728,4 +1709,105 @@ async fn main() -> anyhow::Result<()> {
     cache_remote::flush().await;
 
     Ok(())
+}
+
+/// The main binary intentionally uses a small manual parser, not clap.
+#[derive(Debug, Default)]
+struct Args {
+    lang_filter: BTreeSet<String>,
+    cache_only: bool,
+    sync_cache_only: bool,
+    pronunciation_audio_only: bool,
+}
+
+impl Args {
+    fn parse(args: impl IntoIterator<Item = String>) -> anyhow::Result<Self> {
+        let mut parsed = Self::default();
+        for arg in args {
+            match arg.as_str() {
+                "--cache-only" => parsed.cache_only = true,
+                "--sync-cache" => parsed.sync_cache_only = true,
+                "--pronunciation-audio-only" => parsed.pronunciation_audio_only = true,
+                s if s.starts_with("--") => anyhow::bail!("unknown flag: {s}"),
+                _ => {
+                    parsed.lang_filter.insert(arg);
+                }
+            }
+        }
+        anyhow::ensure!(
+            !(parsed.pronunciation_audio_only && parsed.sync_cache_only),
+            "--pronunciation-audio-only conflicts with --sync-cache"
+        );
+        let known: BTreeSet<&str> = COURSES.iter().map(|c| c.target_language.code()).collect();
+        let unknown: Vec<&str> = parsed
+            .lang_filter
+            .iter()
+            .map(String::as_str)
+            .filter(|code| !known.contains(code))
+            .collect();
+        anyhow::ensure!(
+            unknown.is_empty(),
+            "unknown language code(s): {}\nknown codes: {}",
+            unknown.join(", "),
+            known.into_iter().collect::<Vec<_>>().join(", ")
+        );
+        Ok(parsed)
+    }
+}
+
+#[cfg(test)]
+mod args_tests {
+    use super::*;
+
+    fn parse(args: &[&str]) -> anyhow::Result<Args> {
+        Args::parse(args.iter().map(|arg| (*arg).to_owned()))
+    }
+
+    #[test]
+    fn pronunciation_only_combines_with_cache_only_and_language_filters() {
+        let args = parse(&[
+            "eng",
+            "--pronunciation-audio-only",
+            "--cache-only",
+            "por",
+            "eng",
+        ])
+        .unwrap();
+        assert!(args.pronunciation_audio_only && args.cache_only);
+        assert_eq!(
+            args.lang_filter,
+            BTreeSet::from(["eng".into(), "por".into()])
+        );
+        assert_eq!(
+            COURSES
+                .iter()
+                .filter(|c| args.lang_filter.contains(c.target_language.code()))
+                .count(),
+            3
+        );
+    }
+
+    #[test]
+    fn rejects_conflicts_unknown_flags_and_unknown_languages() {
+        for args in [
+            vec!["--pronunciation-audio-only", "--sync-cache"],
+            vec!["--wat"],
+            vec!["en"],
+        ] {
+            assert!(parse(&args).is_err(), "{args:?}");
+        }
+    }
+
+    #[test]
+    fn no_filter_means_all_courses_and_existing_modes_still_parse() {
+        assert!(
+            parse(&["--pronunciation-audio-only"])
+                .unwrap()
+                .lang_filter
+                .is_empty()
+        );
+        assert!(parse(&["--sync-cache"]).unwrap().sync_cache_only);
+        assert!(parse(&["--cache-only"]).unwrap().cache_only);
+        assert!(!parse(&[]).unwrap().pronunciation_audio_only);
+    }
 }

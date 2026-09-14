@@ -102,6 +102,35 @@ Each individual step writes artifacts to a file in the out/ directory, for you t
 
 The NLP is extremely slow. It runs on [lexide](https://github.com/anchpop/lexide)'s Modal endpoint (currently an A100-80GB serving the fine-tuned model via vLLM).
 
+### Pronunciation audio only
+
+Run from the repository root; `dotenvy` loads `.env` without shell exports:
+
+```bash
+AUDIO_VERIFY_THRESHOLD=0.3 cargo run -p generate-data --bin generate-data -- --pronunciation-audio-only --cache-only eng
+```
+
+Remove `--cache-only` to allow synthesis of missing audio. The mode requires
+saved `out/<target>_for_<native>/pronunciation_guides.jsonl`, and uses
+`out/<target>/word_to_pronunciation.jsonl` when available. Otherwise it reads
+`generate-data/data/<target>/{pronunciations,extra_pronunciations}.tsv`: the first
+curated pronunciation is main, or the lexicographically first WikiPron variant
+when no curated entry exists; all other variants remain accepted. No paid
+canonical-pronunciation selection runs. This fallback can order the verifier's
+capped variant combinations differently from the full pipeline.
+
+Target codes filter all matching courses; no codes means all courses.
+`--sync-cache` conflicts with this mode. Only the local `.cache` is used, with no
+remote cache warm/flush or unrelated generation. `--cache-only` guarantees no
+TTS synthesis and errors on misses; normal verifier identity discovery still
+runs and may access its endpoint. Identity errors are not bypassed.
+
+Audio goes to the existing synthesis cache and verdicts/timings to
+`out/<target>/pronunciation_audio_verification.jsonl`. Saved guides and language
+packs are **not updated**. The final summary includes wall time and actual
+Gemini/Chirp3 HTTP synthesis attempts, including failures, retries and fallbacks,
+not cache hits. Per-request counts are available with `RUST_LOG=google_tts=info`.
+
 ## Data Cleaning (for custom NLP training data)
 
 The NLP model used by Yap (lexide) is trained from data in this repo. See [libraries/clean-nlp-data](libraries/clean-nlp-data/README.md) for setup (spaCy model installation) and usage.

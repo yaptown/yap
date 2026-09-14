@@ -13,6 +13,9 @@ use base64::Engine;
 use serde::{Deserialize, Serialize};
 
 pub mod gemini;
+mod telemetry;
+
+pub use telemetry::{RequestCounts, request_counts};
 
 #[derive(Debug, Clone)]
 pub struct GoogleTtsRequest {
@@ -167,6 +170,7 @@ impl GoogleTtsClient {
         for attempt in 1..=TRANSIENT_ATTEMPTS {
             // The key travels in a header, not the query string, so a
             // transport error's URL never carries it into a log.
+            telemetry::record_request(telemetry::Backend::Chirp3);
             let response = self
                 .http
                 .post(url)
