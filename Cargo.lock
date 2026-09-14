@@ -86,16 +86,18 @@ dependencies = [
 name = "ai-backend"
 version = "0.1.0"
 dependencies = [
+ "audio-codec",
  "autograde-core",
  "axum",
  "axum-extra",
  "base64 0.22.1",
  "dotenvy",
  "g2p",
- "google-tts",
+ "google-speech",
  "hmac 0.13.0",
  "jsonwebtoken",
  "language-utils",
+ "phoneme-verify",
  "postgrest",
  "reqwest 0.13.4",
  "resend-rs",
@@ -112,6 +114,7 @@ dependencies = [
  "unicode-normalization",
  "uuid",
  "wasm-bindgen",
+ "whisper",
 ]
 
 [[package]]
@@ -255,6 +258,17 @@ name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
+
+[[package]]
+name = "audio-codec"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "hound",
+ "minimp3",
+ "ogg",
+ "opus",
+]
 
 [[package]]
 name = "audiopus_sys"
@@ -1503,7 +1517,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.61.1",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2067,7 +2081,7 @@ dependencies = [
  "futures",
  "g2p",
  "gcp_auth",
- "google-tts",
+ "google-speech",
  "half",
  "hdbscan",
  "html-escape",
@@ -2225,16 +2239,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "google-tts"
+name = "google-speech"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "audio-codec",
  "base64 0.22.1",
- "hound",
  "log 0.4.31",
- "minimp3",
- "ogg",
- "opus",
  "reqwest 0.13.4",
  "serde",
  "serde_json",
@@ -3847,7 +3858,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.1",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4358,10 +4369,11 @@ name = "phoneme-verify"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "audio-codec",
  "base64 0.22.1",
  "flate2",
  "g2p",
- "google-tts",
+ "google-speech",
  "half",
  "language-utils",
  "lexide",
@@ -5306,7 +5318,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.1",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5386,7 +5398,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.1",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5910,7 +5922,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.61.1",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6098,6 +6110,7 @@ dependencies = [
  "flate2",
  "futures",
  "g2p",
+ "google-speech",
  "image 0.25.10",
  "language-utils",
  "matroska-demuxer",
@@ -6114,6 +6127,7 @@ dependencies = [
  "tokio",
  "tysm",
  "unicode-normalization",
+ "whisper",
  "xxhash-rust",
 ]
 
@@ -6257,7 +6271,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.61.1",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6656,7 +6670,7 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 [[package]]
 name = "tysm"
 version = "0.20.0"
-source = "git+https://github.com/anchpop/tysm.git?rev=2c12d98cf1348434c4e872f462c6629729884e12#2c12d98cf1348434c4e872f462c6629729884e12"
+source = "git+https://github.com/anchpop/tysm.git?rev=74a425d6076b632564206b2c48fb7737f6dbf8e4#74a425d6076b632564206b2c48fb7737f6dbf8e4"
 dependencies = [
  "base64 0.22.1",
  "dashmap",
@@ -7218,6 +7232,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "whisper"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "language-utils",
+ "log 0.4.31",
+ "reqwest 0.13.4",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "winapi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7239,7 +7266,7 @@ version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0978bf7171b3d90bac376700cb56d606feb40f251a475a5d6634613564460b22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]

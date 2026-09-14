@@ -1,0 +1,13 @@
+[package]
+name = "whisper"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = "1"
+base64 = "0.22"
+language-utils = { path = "../../language-utils" }
+log = { workspace = true }

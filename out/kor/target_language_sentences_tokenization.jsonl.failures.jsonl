@@ -1,61 +1,807 @@
-{"sentence":"여기 이 삼각형이 키쿠치요님이시다 / 거 생각했는데!","failure_count":1}
-{"sentence":"파티 도중에 없어진 적은?","failure_count":1}
-{"sentence":"넘어갈 수 있는 곳을 찾아야 돼.","failure_count":1}
-{"sentence":"얼마 걸고 내기할래?","failure_count":1}
-{"sentence":"자네가 아닌 아들에게서 들어야 하지?","failure_count":1}
-{"sentence":"찾아선?","failure_count":2}
-{"sentence":"지하 주차장에요 마나님과는 어때요?","failure_count":1}
-{"sentence":"네 아버지가 어떤 작자인지 말해줘?","failure_count":1}
-{"sentence":"그런 불운한 사내는 상대않는게 좋아 / 그렇지 않습니다!","failure_count":1}
-{"sentence":"방 검사를 해?","failure_count":1}
-{"sentence":"그랬구나!","failure_count":1}
-{"sentence":"빗방울이 그녀의 볼 위로 떨어졌다.","failure_count":1}
-{"sentence":"난 나를위해서만 말을할수있어.","failure_count":2}
-{"sentence":"소타산은 인기가 많어요.","failure_count":2}
-{"sentence":"그랬어요?","failure_count":1}
-{"sentence":"우린 톰이 학교를 중퇴하려 한다는 말을 들었다.","failure_count":1}
-{"sentence":"괜찮어요.","failure_count":2}
-{"sentence":"어디서 온 꼬맹인가?","failure_count":2}
-{"sentence":"지금 이 순간 몇 쌍이 오르가즘을 느끼고 있을까?","failure_count":1}
-{"sentence":"그녀는 스무 살에 선생님이 되었다.","failure_count":1}
-{"sentence":"그랬더니 뭐랬지?","failure_count":1}
-{"sentence":"뭘 했는진 나도 몰라 그냥 막 대했다니까?","failure_count":2}
-{"sentence":"뭔가 거대한 게.","failure_count":1}
-{"sentence":"왜 이렇게 어두워?","failure_count":1}
-{"sentence":"먼저 시비 건 건 걔들이었어요.","failure_count":2}
-{"sentence":"그럼 일요일에도 모일까, 우리?","failure_count":1}
-{"sentence":"누가가 이렇게 한 거야?","failure_count":2}
-{"sentence":"그렇죠.","failure_count":1}
-{"sentence":"레슬링 경긴가?","failure_count":1}
-{"sentence":"뭘로요?","failure_count":1}
-{"sentence":"놀랬잖나, 스탈링!","failure_count":1}
-{"sentence":"물론 드 윈터 씨가 왜 널 택했는진 알지?","failure_count":1}
-{"sentence":"그는 그들에게 죄수들을 풀어주라고 명령했다.","failure_count":1}
-{"sentence":"톰은 걸을 것이다.","failure_count":2}
-{"sentence":"야야야야야야야!","failure_count":2}
-{"sentence":"피곤해서 더 이상 걸을 수 없어.","failure_count":1}
-{"sentence":"이 여자가 이 남잘 사랑하나?","failure_count":1}
-{"sentence":"어떻게 집에까지 온 거죠?","failure_count":1}
-{"sentence":"저 여자가 그 스웨덴 배우야?","failure_count":1}
-{"sentence":"정말 돌아올 놈이었으면 진작 왔어.","failure_count":1}
-{"sentence":"아니라니?","failure_count":1}
-{"sentence":"얼마나 큰 건인지 말해줘?","failure_count":1}
-{"sentence":"놈들이 누구야?","failure_count":1}
-{"sentence":"마이애미에서의 한여름 밤의 꿈?","failure_count":1}
-{"sentence":"만그들이 이 사막을 자신들의 일부분으로 만들었잖아.","failure_count":2}
-{"sentence":"살인이 이젠 범죄라는 거 안 가르쳤어?","failure_count":2}
-{"sentence":"아니면 운명이 다른 길을 제시한 걸까?","failure_count":1}
-{"sentence":"진짜일 수도 있어.","failure_count":1}
+{"sentence":"京子へ - おとしだま","failure_count":3}
+{"sentence":"가난한 건 우리나라도 마찬가지야","failure_count":3}
+{"sentence":"가볍고 손잡이를 조절할 수 있고 양손으로 사용할 수도 있어","failure_count":3}
+{"sentence":"가상화폐 몇 푼 턴 거잖아 내가 말하는 건 큰 건이야 세상을 진짜로 바꿀 큰 건 너희가 하려는 게 그거잖아","failure_count":3}
+{"sentence":"가서 어떻게 살건데..?","failure_count":3}
+{"sentence":"가장 강한 내 부하들을 소개하죠 마고타로, 야하치, 마르수키치 그리고 수케주","failure_count":3}
+{"sentence":"가장 행복한 순간이라기엔 희한한 나이라서요","failure_count":3}
+{"sentence":"갈아입어 여자들은 특히 야하게 반짝이만으로는 안 돼","failure_count":3}
+{"sentence":"감히 어떻게 내 명령을 무시할 수 있나!?","failure_count":3}
+{"sentence":"걔를 사이에 두고 지사랑 다퉜다니까 자네도 좋아했잖아","failure_count":3}
+{"sentence":"걘 내가 타이를게","failure_count":3}
+{"sentence":"걜 넘겨줄게","failure_count":3}
+{"sentence":"걜 더 이상 나쁘게 말하지 말라고","failure_count":3}
+{"sentence":"걜 사랑했어","failure_count":3}
+{"sentence":"걜 찾아야 돼요","failure_count":3}
+{"sentence":"거기에다 둬요","failure_count":3}
+{"sentence":"거기에선 모두 다 같아요","failure_count":3}
+{"sentence":"거짓말이죠!?","failure_count":3}
+{"sentence":"건물 따윈 중요하지 않아","failure_count":3}
+{"sentence":"검을 쓸 줄 아는 사람은 전부 병기고에 보냈습니다","failure_count":3}
+{"sentence":"검이나 무사는 존재하지 않는 둘이서만 있을 곳에 말입니다","failure_count":3}
+{"sentence":"겁먹고 도망치는 놈들은..!","failure_count":3}
+{"sentence":"겁에 질린 목소린데 다시 겁 없는 목소리로 해봐","failure_count":3}
+{"sentence":"겁쟁이 자식이 저런 놈 하나 물지를 못하네","failure_count":3}
+{"sentence":"겁쟁이었으니깐","failure_count":3}
+{"sentence":"겨우 이 기지만 지켜 냈어","failure_count":3}
+{"sentence":"결국은 내 동료들도 나만큼 불운했던 거니까 그렇게 난 나의 엘리자베타에게 돌아왔네","failure_count":3}
+{"sentence":"경호대장 유해보가 옥 대인 집까지 추격했대요","failure_count":3}
+{"sentence":"과거가 마치 내려갈 수 있는 협곡일 수도 있어요","failure_count":3}
+{"sentence":"관내의 백성들과 요괴는 공존할 수 없습니다","failure_count":3}
+{"sentence":"괜찮어요.","failure_count":3}
+{"sentence":"괜찮으니 걱정 마","failure_count":3}
+{"sentence":"괜찮으니 걱정 마요","failure_count":3}
+{"sentence":"괜찮으니 그냥 나가라고 속삭여 댔죠","failure_count":3}
+{"sentence":"괜찮으니 신경 쓰지 마","failure_count":3}
+{"sentence":"교회가 우리의 희생으로 지켜질 수 있다고 생각하나요?","failure_count":3}
+{"sentence":"구덩이에 시스템 따윈 없어","failure_count":3}
+{"sentence":"귀는 어머니를 닮았고 나머진 당신 겁니다","failure_count":3}
+{"sentence":"그 건은 좀더 생각해 보지","failure_count":3}
+{"sentence":"그 남잘 봤어","failure_count":3}
+{"sentence":"그 뒤에 돌아와서 자식과 손주들과 교회 모임까지 다시 비참하게 정체성을 숨기고 살았어요","failure_count":3}
+{"sentence":"그 미스터리(불가사의)의 끝을 나에게 알려주지 말아줘.","failure_count":3}
+{"sentence":"그 복잡한 코드로, 당신이 그것을 담을 수 있다고 생각하는 이유는 무엇입니까?","failure_count":3}
 {"sentence":"그 여자가 그런 거지?","failure_count":1}
-{"sentence":"덧붙여 말하면 선서서는 대사관에 있소.","failure_count":1}
-{"sentence":"모자 쓴 남자라니?","failure_count":1}
-{"sentence":"그런 짓을 내가 내버려둘 줄 알아?","failure_count":2}
-{"sentence":"카메라 움직여서요?","failure_count":1}
-{"sentence":"하마는 아프리카에 산다.","failure_count":1}
-{"sentence":"무슨 일이래?","failure_count":1}
 {"sentence":"그 여자가 무슨 죄인인가?","failure_count":1}
+{"sentence":"그 이름은 오직 필요할 때만 씁니다","failure_count":3}
+{"sentence":"그 중에서도 사랑 없이 사는 사람들을 가장 불쌍하게 여기렴.","failure_count":3}
+{"sentence":"그, 예전에 그 광호 신고 있는 운동화를 보니까 그 하도 낡아 가지고 냄새도 나고 이래가 내가 마음이 아팠어요, 예?","failure_count":3}
+{"sentence":"그, 제가 지금 영정 사진 하나 없이 장례 치르는 게 좀 마음에 걸려서 그러니까 제가 부탁 하나만 드릴게요 이모님들","failure_count":3}
+{"sentence":"그가 꽤 극단적인 진보 성향을 갖고 있다는 건 알고 있었습니다 반국가적 행동도 할 수 있다고 생각했나요?","failure_count":3}
+{"sentence":"그가 무엇 때문에 그리 중요한 화가가 됐겠니?","failure_count":3}
+{"sentence":"그가 죽을 때는 그는 강하고 단단하도다","failure_count":3}
+{"sentence":"그간 정말 고마웠소 만치아를리양.","failure_count":3}
+{"sentence":"그건 살인이였지만 범죄는 아니었어","failure_count":3}
+{"sentence":"그건 혐의를 인정하는 거니까 그럼 직장을 잃겠지 명성도 잃고 이 집도 잃고!","failure_count":3}
+{"sentence":"그걸 보고하면 당신은 우주비행사로서 큰 타격을 입을 겁니다","failure_count":3}
+{"sentence":"그것은 내가 한텐구가 자신의 마음 속에 숨어 있다는 것을 알았던 것과 같았어.","failure_count":3}
+{"sentence":"그게 사람 할 짓이야!?","failure_count":3}
+{"sentence":"그게요 과장님","failure_count":3}
+{"sentence":"그녀는 스무 살에 선생님이 되었다.","failure_count":1}
+{"sentence":"그녈 못 본 체 하렴 내 가슴아","failure_count":3}
+{"sentence":"그녈 찾았군","failure_count":3}
+{"sentence":"그는 그들에게 죄수들을 풀어주라고 명령했다.","failure_count":1}
+{"sentence":"그는 내 형제가 될 순 없지만 어머니는 그의 어머니가 될 수 있소 정상적이라 할 수는 없군요","failure_count":3}
+{"sentence":"그는 두려워하지 않았소 두려움보다 더 힘든 것이 이 일을 오직 혼자만 겪고 있다는 생각이 죽인 겁니다","failure_count":3}
+{"sentence":"그는 라운지에서 기타 연줄했는데 모두 그를 좋아했다","failure_count":3}
+{"sentence":"그는 벌써부터 자기가 다음 시장인냥 행동하고 있지 심지어 비단업까지 시작했고 그러자 타자에몬은 난처한 상황이 되어 버렸지","failure_count":3}
+{"sentence":"그는 언젠가 죽을 것이며 인간의 왕들의 영광스런 광채도 언젠간 세상에서 잊혀질 거야","failure_count":3}
+{"sentence":"그는 평생 그날 아침을 잊을 수 없었다","failure_count":3}
+{"sentence":"그래, 지금 당장은 따로 얘기가 있을 때까지?","failure_count":3}
+{"sentence":"그래도 우리가 신뢰하던 친군데 예의는 지켜주었으면 해요","failure_count":3}
+{"sentence":"그래서 그를 지지하는 겁니다","failure_count":3}
+{"sentence":"그랬구나!","failure_count":1}
+{"sentence":"그랬더니 뭐랬지?","failure_count":1}
+{"sentence":"그랬어요?","failure_count":1}
+{"sentence":"그러고도 니가 말이야!?","failure_count":3}
+{"sentence":"그러니 일단은 할 수 있는 데까지만 해 보자고","failure_count":3}
+{"sentence":"그러면은 여기 대사를 한번 해볼까요","failure_count":3}
+{"sentence":"그러자면 너나 나 같은 사람들이 필요해","failure_count":3}
+{"sentence":"그런 모자는 모스크바에 쌔고 쌨어요","failure_count":3}
+{"sentence":"그런 불운한 사내는 상대않는게 좋아 / 그렇지 않습니다!","failure_count":1}
+{"sentence":"그런 짓을 내가 내버려둘 줄 알아?","failure_count":3}
+{"sentence":"그런데 그 녀석은 그런 건 전혀 몰라 조금은 알아줬으면 하는데","failure_count":3}
+{"sentence":"그런데 그런 짓이 다 헛짓거리였는데 신은 내게 죽을 자유조차 빼앗았던 거야","failure_count":3}
+{"sentence":"그런데 뭐지, 이건!?","failure_count":3}
+{"sentence":"그럼 검찰에서 소기의 공소장에 의해서 모두 진술해 주십시오","failure_count":3}
+{"sentence":"그럼 경고의 표시로 길거릴 쑥밭으로 한번 만들어볼까?","failure_count":3}
+{"sentence":"그럼 그가 날 죽이기 전에, 그를 먼저 죽이는 수 밖에요","failure_count":3}
+{"sentence":"그럼 뒈져어어어어!!","failure_count":3}
+{"sentence":"그럼 일요일에도 모일까, 우리?","failure_count":1}
+{"sentence":"그렇게 소리들을 질러대니 정신이 나가지","failure_count":3}
+{"sentence":"그렇죠.","failure_count":1}
+{"sentence":"그를 순교자로 만들 순 없지 오펜하이머의 신뢰성을 체계적으로 무너뜨려서 다신 국가 안보 문제를 거론 못 하게 해야 돼요","failure_count":3}
+{"sentence":"그리고 반동 원대인 놈 앞에서도 불렀습니다","failure_count":3}
+{"sentence":"그리고 어두워지면 함께 자는 거요 어둠 속에서 모두 함께 말이요","failure_count":3}
+{"sentence":"그리고 저 같은 조수한테도 일일이 고개를 숙여가며 부탁하시는데 정말 어떻게 좀 잘 잘 좀 부탁드립니다","failure_count":3}
+{"sentence":"그리고, 당신 형이 지금 당장은 내가 할 일이 없다고 했소","failure_count":3}
+{"sentence":"그앨 잘 봐줘야 해","failure_count":3}
+{"sentence":"그중 한사람이 해고된다면 아빠가 바지에 오줌 쌌을때 우리가 어떻게 그곳을 현대화하겠어요?","failure_count":3}
+{"sentence":"근데 걔가 날 깔아뭉갰어","failure_count":3}
+{"sentence":"근데 나는 나는 지쳤거든","failure_count":3}
+{"sentence":"근데 지금 당장은 엔지니어를 필요로 하지 않아","failure_count":3}
+{"sentence":"금요일에 오디션 있는데요..?","failure_count":3}
+{"sentence":"긍께 조씨를 불러다놓고, 여서 쥑인 담에 걸 또 자루에 너서 그걸 또 집에까정 끌고 가가꼬 마누라까정 죽인거 아녀","failure_count":3}
+{"sentence":"기술자들, 공학자들 수백 명의 사람들이 자식을 먹여 살릴 수 있게 되죠 그 아이들이 자라서 아이들을 낳고 또 낳고 반복되죠","failure_count":3}
+{"sentence":"기자니까 기자는 사건이 생기면 어디든 가는 겁니다","failure_count":3}
+{"sentence":"긴 세월 친구였던 그가 절 통해서 정보를 빼내려 한다는 의심은 안 했습니다","failure_count":3}
+{"sentence":"깨질 수 있으니까","failure_count":3}
+{"sentence":"끝나갑니다","failure_count":3}
+{"sentence":"나 홀로 걸어가는 안개만이 자욱한 이 거리 그 언젠가 다정했던 그대의 그림자 하나 생각하면 무엇 하나 지나간 추억 그래도 애타게 그리는 마음","failure_count":3}
+{"sentence":"나 홀로 걸어가는 안개만이 자욱한 이 거리 어어 그 언젠가 아 못 오시는 줄 알았는데","failure_count":3}
+{"sentence":"나는 나처럼… 나는 나처럼 못 생기고 멍청해 퉁명스럽고 툭하면 짜증 내고… 그래서… 난 내가 싫어","failure_count":3}
+{"sentence":"나는요 깨끗해요","failure_count":3}
+{"sentence":"나도 밥..!","failure_count":3}
+{"sentence":"나도 언니를 믿지만 아빠가 가진 믿음에 비할 순 없지","failure_count":3}
+{"sentence":"나라도 합세하여 더 버틸 수 있는지 시도라도 해 봐야겠다","failure_count":3}
+{"sentence":"난 겁쟁인가 봐","failure_count":3}
+{"sentence":"난 겁쟁인지는 몰라도 미치지는 않았어요","failure_count":3}
+{"sentence":"난 나를위해서만 말을할수있어.","failure_count":3}
+{"sentence":"난 멍청이에요","failure_count":3}
+{"sentence":"난 언제나 네가 하는 일이 옳다고 생각하니까 개의치는 않았단다 누가 말리겠니?","failure_count":3}
+{"sentence":"난 우주 해적 이야","failure_count":3}
+{"sentence":"난 지금 당장은 톰한테 물어볼 수 없어.","failure_count":3}
+{"sentence":"난, 알랑 알랑 듀샹","failure_count":3}
+{"sentence":"날라서, 스카-블램!","failure_count":3}
+{"sentence":"남자가 청혼을 하면 아가씨가 받아들이고 혼인의식을 해야 비로소 만나는 겁니다","failure_count":3}
+{"sentence":"내 보장을 받으나마나야","failure_count":3}
+{"sentence":"내 집을 정리하라니!?","failure_count":3}
+{"sentence":"내 친군데 멕시코 출신이죠","failure_count":3}
+{"sentence":"내가 가르친건 다 까먹은거야!?","failure_count":3}
+{"sentence":"내가 가서 가져올게","failure_count":3}
+{"sentence":"내가 가죠","failure_count":3}
+{"sentence":"내가 깔개 가져왔어","failure_count":3}
+{"sentence":"내가 너무 신경 쓰는 건지는 모르겠지만 너도 잘 모르는 여자잖아 서두르지 않아도 돼","failure_count":3}
+{"sentence":"내가 뭐 하는 거냐고요!?","failure_count":3}
+{"sentence":"내가 뭘 내가 뭘 잘못했다고…","failure_count":3}
+{"sentence":"내가 뭘 선택할 수 있었는데 긴 성냥 두 개 중 하나?","failure_count":3}
+{"sentence":"내가 잘할 수 있을까","failure_count":3}
+{"sentence":"내가 정리할 수 있어","failure_count":3}
+{"sentence":"내가 찾아볼게 넌 당장은 여길 못 떠나니까 파울리나 모랄레스는 어때요?","failure_count":3}
+{"sentence":"내가 허락 할 테니까 키스해","failure_count":3}
+{"sentence":"내가 현찰 조금과 핸드폰을 줬어 계획을 좀 하고 연락할 수 있게 근데 갑자기 동생이 어떤 여잘 죽였다는 거야","failure_count":3}
+{"sentence":"내려갈 수 있어","failure_count":3}
+{"sentence":"내말은, 인생을 좀 즐기기기도 하느냔 말이야 영화 보러 간다든지 하는거요?","failure_count":3}
+{"sentence":"내일까진 힘들어요","failure_count":3}
+{"sentence":"너 같은 놈은 전에도 널렸었어","failure_count":3}
+{"sentence":"너 나와 비슷하구나","failure_count":3}
+{"sentence":"너 덕분에..!","failure_count":3}
+{"sentence":"너나 나나 모르는 건 똑같아","failure_count":3}
+{"sentence":"너는 고블린 사이에서도 유명해","failure_count":3}
+{"sentence":"너랑 나랑 이지구가 혼자 와서 작년에 산 선불권 환불해 달라고 네, 그죠","failure_count":3}
+{"sentence":"너야말로 누군데","failure_count":3}
+{"sentence":"너희는 이를 기술로 행하고 난 태곳적부터 전해오는 언어의 힘으로 행하는 거지","failure_count":3}
+{"sentence":"너희도 나처럼 빈털터리지 자원병 중에서도 많은 수가 토지나 가축을 압류당했어","failure_count":3}
+{"sentence":"너희들 뒤치다꺼리에 허리가 휘겠다","failure_count":3}
+{"sentence":"넌 계곡에 평화를 위해 선택되었으며 싸워서 이기는 거 말고 평화를 가져올 수 있는 다른 방법이 있단다","failure_count":3}
+{"sentence":"넌 일 배우면서 돈 버니까 좋고 우리 집은 입 하나가 줄어드는 거잖아","failure_count":3}
+{"sentence":"넌 절대로 위대한 고전을 터득할 수 없을 거다 영원한 진리를 죽음이 삶이란 것을!","failure_count":3}
+{"sentence":"넘어갈 수 있는 곳을 찾아야 돼.","failure_count":1}
+{"sentence":"네 놈 혓바닥으로 매달아 버릴 거야 죽여버릴 테다!","failure_count":3}
+{"sentence":"네 놈이 보고 오기라도 한거야!?","failure_count":3}
+{"sentence":"네 돈 따윈 필요 없어","failure_count":3}
+{"sentence":"네 아버지가 어떤 작자인지 말해줘?","failure_count":1}
+{"sentence":"네, 기지도 겨우 보이는걸요","failure_count":3}
+{"sentence":"네, 만의 반대편으로 가는 겁니다","failure_count":3}
+{"sentence":"네, 맑은 공기 좀 쐤죠","failure_count":3}
+{"sentence":"네, 쌍둥이에요","failure_count":3}
+{"sentence":"네, 오실 거면 아껴뒀다가… 지금 당장은 내가 그분이에요","failure_count":3}
+{"sentence":"네, 하지만 로버트는 프린스턴 고등연구소 이사 자격으로 만난 겁니다","failure_count":3}
+{"sentence":"네놈은..?","failure_count":3}
+{"sentence":"네놈을 뼈까지 남김없이 불사를 것이야!!","failure_count":3}
+{"sentence":"네놈이 정말 내가 내 딸을 다시 못 보게 막을 수 있을 것 같나?","failure_count":3}
+{"sentence":"네투는 현실을 멋지게 이용했던 것이다 동시에 상당히 위험한 작전이기도 했다","failure_count":3}
+{"sentence":"노래 전체가 커다란 거시기에 관한 은유라니까","failure_count":3}
+{"sentence":"노부시가 안 오면 것보다 좋은 일이 어디 있어!?","failure_count":3}
+{"sentence":"노부시를 본 사람은!?","failure_count":3}
+{"sentence":"놀랬잖나, 스탈링!","failure_count":1}
+{"sentence":"놈들이 누구야?","failure_count":1}
+{"sentence":"놈이 몸을 맞바꾼 것 같아 젊은 여자랑 말이야 사람들이 머릴 쓰는 걸 보면 정말 놀라워요","failure_count":3}
+{"sentence":"누가가 이렇게 한 거야?","failure_count":3}
+{"sentence":"누군가 이 무선망에 접속하는 순간 나도 그 컴퓨터에 연결된 서버에 침투할 수 있게 된다","failure_count":3}
+{"sentence":"누굴 놀리는 거야","failure_count":3}
+{"sentence":"누굴 만나기로 했어요","failure_count":3}
+{"sentence":"누굴 만나러요","failure_count":3}
+{"sentence":"누굴 만난 거예요","failure_count":3}
+{"sentence":"누굴 만날지는 내가 결정해요","failure_count":3}
+{"sentence":"누굴 조사할 건지만 말해","failure_count":3}
+{"sentence":"누굴 좀 만나 줬으면 해","failure_count":3}
+{"sentence":"누굴 쫓고 있어요,","failure_count":3}
+{"sentence":"누나가 나이에 맞게 즐겁게 지내면 좋겠어","failure_count":3}
+{"sentence":"눈에는 눈 이에는 이였죠","failure_count":3}
+{"sentence":"눈을 떠어어어어!!","failure_count":3}
+{"sentence":"니 놈들은 밥도 안 먹었냐!?","failure_count":3}
+{"sentence":"다르야","failure_count":3}
+{"sentence":"다른 손 지혜의 지팡이에요","failure_count":3}
+{"sentence":"다른 책에선 마늘로 이걸 쫓아낼 수 있다고 돼 있지만 그게 얼마나 효과 있을진 모르겠어요","failure_count":3}
+{"sentence":"다른 피해자들에도 그랬죠","failure_count":3}
+{"sentence":"다수의 막돼먹은 불량배들이 주위를 돌아다닌다고","failure_count":3}
+{"sentence":"다시 만날 수 있을지 없을지 모릅니다","failure_count":3}
+{"sentence":"다음 주에..!","failure_count":3}
+{"sentence":"다음은 누구지!?","failure_count":3}
+{"sentence":"다친 사람은 없겠지!?","failure_count":3}
+{"sentence":"다툼이나 몸싸움처럼 보일 수 있으니까요","failure_count":3}
+{"sentence":"당부한다 총알 하나는 꼭 주머니에 남겨둬라 사살용이 아닌 자살용으로 알랑, 요새까진 얼마나 될까?","failure_count":3}
+{"sentence":"당신들은 내가 내 이론을 더 이상 이해 못 한다고 생각했죠","failure_count":3}
+{"sentence":"당신은 농담을 잘하지만 속으로는 울고 있는 듯하오","failure_count":3}
+{"sentence":"당신은 음악도 알고 숫자도 알지, 둘까지 밖에 못 세지만 필요하면 경우에 따라선 여섯까지도 세","failure_count":3}
+{"sentence":"당신의 패배는 최고회의의 근간을 뒤흔들고 존 윅을 성자로 만들 겁니다","failure_count":3}
+{"sentence":"당신이 공산주의자로 의심받는 호사가에 바람둥이라는 거 전 뉴딜 민주당원입니다","failure_count":3}
+{"sentence":"당신이 너무 짜게 지불해서, 하치가 술에 취해 말해버렸지..","failure_count":3}
+{"sentence":"당신이 만약 세상의 악만을 기억한다면 하느님 앞에서도 행복하지 않을 겁니다","failure_count":3}
+{"sentence":"당장은 못 만나요","failure_count":3}
+{"sentence":"당장은 승인이 안 돼요","failure_count":3}
+{"sentence":"당장은 아니고 피가 머릿속에 고일 때까지 기다렸다가 죽일 거야","failure_count":3}
+{"sentence":"당장은 참고 나중에 웃는 전략이죠","failure_count":3}
+{"sentence":"당장은 큰 관심을 끌고 있지 않아요 관련한 어떤 거래나 답변 요구도 없었고요 그러니 지켜보도록 하죠","failure_count":3}
+{"sentence":"당장은 힘드니까 모르는 거야","failure_count":3}
+{"sentence":"대갈통에 뇌가 들어차 있지 않은 거냐!?","failure_count":3}
+{"sentence":"대어를 낚을 수 있다","failure_count":3}
+{"sentence":"더 많은 단서가 있을 수 있어","failure_count":3}
+{"sentence":"덧붙여 말하면 선서서는 대사관에 있소.","failure_count":1}
+{"sentence":"데이가 줬습니다","failure_count":3}
+{"sentence":"도대체 뭘 기다리고 있는거야","failure_count":3}
+{"sentence":"도망칠 셈이냐!?","failure_count":3}
+{"sentence":"도준아, 제일로 중요한 게 네가 그날 밤 일 기억나는 거 조그만 거 하나까지라도 죄다 소상하게 변호사님한테 일러바쳐야 한다는 거야","failure_count":3}
+{"sentence":"독일인으로서는 두 번째로 난 우주 속을 모험했다","failure_count":3}
+{"sentence":"돈도, 여자도 아닌 바로 너 때문이다","failure_count":3}
 {"sentence":"돌아갈 방법을 연구해야지 /또 약을 먹어요?","failure_count":1}
-{"sentence":"사자 엉덩일 걷어차 줘!","failure_count":2}
-{"sentence":"혼자서 걸을 수 있어?","failure_count":1}
+{"sentence":"돌아갑시다","failure_count":3}
+{"sentence":"돌아라 돌아라 돌아라 물레방아야 돌아라","failure_count":3}
+{"sentence":"돌아라 돌아라 돌아라 물레방아야 돌아라 돌아서 해님을 불러 오렴","failure_count":3}
+{"sentence":"돌의 목소린 매우 작단다","failure_count":3}
+{"sentence":"될 것 같아..?","failure_count":3}
+{"sentence":"둘 다 새잔이니, 아무거나 마셔도 되지요","failure_count":3}
+{"sentence":"둘∙∙∙ 나다!","failure_count":3}
+{"sentence":"드 윈터 부인이 되어 그녀의 집에 살고 그녀의 물건을 가질 수 있다고 생각했겠지만 당신에겐 벅찬 상대예요","failure_count":3}
+{"sentence":"들어갈 수 있어요","failure_count":3}
+{"sentence":"들어보세요, 이 마을은 살인만 해주면 돈을 벌 수 있다는 얘기이지 않습니까..","failure_count":3}
+{"sentence":"따님은 출생 신고가 안 돼 있고요 공식적으로 안 태어난 거예요","failure_count":3}
+{"sentence":"딴소리 말고 그러기로 혔응께 돈 준비허라고 효진이 어딨냐고?","failure_count":3}
+{"sentence":"또 거실 바닥과 친구 먹으셨으니까 변호사랑 일이 안 풀렸나 봐","failure_count":3}
+{"sentence":"또 내 관할에서 저분 오른손잡인데요","failure_count":3}
+{"sentence":"또 뭘 쏴","failure_count":3}
+{"sentence":"또 요전 꼴 당하고 싶은게야!?","failure_count":3}
+{"sentence":"똥도 구할 수 없어","failure_count":3}
+{"sentence":"뚱뚱한 여잘 좋아해","failure_count":3}
+{"sentence":"란초, 피아야","failure_count":3}
+{"sentence":"란초다스 샤말다스 찬차드요 란초다스 샤말다스 찬차드가 바로 접니다","failure_count":3}
+{"sentence":"러시아를 방문중인 저의 유럽 친굽니다 반갑습니다","failure_count":3}
+{"sentence":"레난은 타만다레 가로 가","failure_count":3}
+{"sentence":"레슬링 경긴가?","failure_count":1}
+{"sentence":"로버에서 내리면 내가 그곳을 밟은 최초의 사람이고 저 언덕을 올라도 최초가 되는 거죠","failure_count":3}
+{"sentence":"로버트 내 아들과 그 애 약혼녀가 원폭의 아버질 보고 싶대요","failure_count":3}
+{"sentence":"루제로, 루제로 삐치지 마","failure_count":3}
+{"sentence":"리더가 태어날 수 있도록 토루크 막토는 사라질 것이다","failure_count":3}
+{"sentence":"마굿간도 나한테 줄셈이야!?","failure_count":3}
+{"sentence":"마리아의 팀은 이번 발표에서 권력 남용으로 인해 부정한 기관들이 탄생할 수 있다는 것을 보여준 것 같군 누가 이런 기관의 예를 들어 보겠나?","failure_count":3}
+{"sentence":"마이애미에서의 한여름 밤의 꿈?","failure_count":1}
+{"sentence":"마차를 빌려주지를 않네요","failure_count":3}
+{"sentence":"막 겁도 나고 그, 무슨 배짱인지 내가 그냥 덜컥 같이 살자 그랬어 호강시켜 준다고 근데","failure_count":3}
+{"sentence":"막 니르구나, 위대한 거인이였지","failure_count":3}
+{"sentence":"만그들이 이 사막을 자신들의 일부분으로 만들었잖아.","failure_count":3}
+{"sentence":"말은 작년, 노부시에게..!","failure_count":3}
+{"sentence":"망치다니 아무래도 나한테는… 과분한 상대 같아","failure_count":3}
+{"sentence":"맞아요, 당신이 똑똑이죠","failure_count":3}
+{"sentence":"매사에 부정적인 사람들은 이 나라를… 이런 거 듣기 싫어","failure_count":3}
+{"sentence":"머리에 쓴 것도 플루시인가 플러시예요","failure_count":3}
+{"sentence":"머프!!!!!","failure_count":3}
+{"sentence":"먼저 시비 건 건 걔들이었어요.","failure_count":3}
+{"sentence":"모두 참석한 그 주 예배엔 기대와 시작의 기운이 맴돌았습니다 이제 모든 게 바뀔 거니까요","failure_count":3}
+{"sentence":"모리지오는 이성적이라 대화로 해결하려고 하지만 이 친구가 듣지를 않아","failure_count":3}
+{"sentence":"모자 쓴 남자라니?","failure_count":1}
+{"sentence":"모친은 고령에도 불구하고 정정함을 잃지 않고 계신다","failure_count":3}
+{"sentence":"목욕 절대 금지!!!!!!!","failure_count":3}
+{"sentence":"몬터규가까지만 가면 돼","failure_count":3}
+{"sentence":"몰랐구나, 아무나 발 안마를 받을 수 있는 게 아니야","failure_count":3}
+{"sentence":"몸은 이렇게 난간 밖으로 밀리고 맞았을 때의 힘에 머리는 공중에 있었기에 이 지점에 피가 떨어진 겁니다","failure_count":3}
+{"sentence":"무슨 말이니..?","failure_count":3}
+{"sentence":"무슨 수를 써서라도 우리 딸이 말을 하고 학교만 갈 수 있다면 무슨 짓이든 할께요","failure_count":3}
+{"sentence":"무슨 용무이시오!?","failure_count":3}
+{"sentence":"무슨 일이래?","failure_count":1}
+{"sentence":"무에서도 유를 창조할 수 있군!","failure_count":3}
+{"sentence":"물론 드 윈터 씨가 왜 널 택했는진 알지?","failure_count":1}
+{"sentence":"뭐, 앞일은 모르는 거긴 하죠","failure_count":3}
+{"sentence":"뭐든 꿈꾸고 뭐든 할 수 있는 너희가 참 부러워","failure_count":3}
+{"sentence":"뭐야 그 얼굴은!?","failure_count":3}
+{"sentence":"뭔가 거대한 게.","failure_count":1}
+{"sentence":"뭘 가져와야 할지 몰라서 이것도 갖고 왔어","failure_count":3}
+{"sentence":"뭘 강요하려는 생각은 없어요 이곳 상황은 당신들에게 달렸으니까 하지만 바깥 상황은 얘기가 달라요","failure_count":3}
+{"sentence":"뭘 그 정도 가지고 여긴 남자보다 여자가 더 많으니 여자들이 많이 팔려나갔죠","failure_count":3}
+{"sentence":"뭘 그렇게 서둘러요","failure_count":3}
+{"sentence":"뭘 그렇게 쳐다보고 있는 거예요","failure_count":3}
+{"sentence":"뭘 기대하셨죠","failure_count":3}
+{"sentence":"뭘 기대했나","failure_count":3}
+{"sentence":"뭘 기대했는지도 모르겠고 생각이 없었어요 아무 생각이 없었어요","failure_count":3}
+{"sentence":"뭘 깜빡해서요","failure_count":3}
+{"sentence":"뭘 꾸물거리세요, 박사님","failure_count":3}
+{"sentence":"뭘 꾸물대, 벌써 이동 중이야","failure_count":3}
+{"sentence":"뭘 당신이랑 얘기하고 싶은데 시간이 없어요","failure_count":3}
+{"sentence":"뭘 도와 달라는 것 같아","failure_count":3}
+{"sentence":"뭘 도와드릴 까요","failure_count":3}
+{"sentence":"뭘 도와드릴까요","failure_count":3}
+{"sentence":"뭘 드셨다는 게 놀랍네요","failure_count":3}
+{"sentence":"뭘 따지고 그래","failure_count":3}
+{"sentence":"뭘 따지긴","failure_count":3}
+{"sentence":"뭘 떨어뜨리셨네요, 메이어","failure_count":3}
+{"sentence":"뭘 말하는 건지 모르겠습니다","failure_count":3}
+{"sentence":"뭘 말할지 생각해 놓을게요","failure_count":3}
+{"sentence":"뭘 말했는지 까먹었습니다","failure_count":3}
+{"sentence":"뭘 망설여","failure_count":3}
+{"sentence":"뭘 먹어야 떠나는 거지","failure_count":3}
+{"sentence":"뭘 먹어요","failure_count":3}
+{"sentence":"뭘 모르겠는데?","failure_count":3}
+{"sentence":"뭘 모르네","failure_count":3}
+{"sentence":"뭘 모르는 거야?","failure_count":3}
+{"sentence":"뭘 모르는군,","failure_count":3}
+{"sentence":"뭘 모르니까 떠드는 거야","failure_count":3}
+{"sentence":"뭘 모르시는군","failure_count":3}
+{"sentence":"뭘 바라겠나","failure_count":3}
+{"sentence":"뭘 박수까지 안녕, 멋쟁이","failure_count":3}
+{"sentence":"뭘 볼 줄 아는군","failure_count":3}
+{"sentence":"뭘 봐","failure_count":3}
+{"sentence":"뭘 봐, 이 씨발 년들아","failure_count":3}
+{"sentence":"뭘 봐, 이 씨발 놈들아","failure_count":3}
+{"sentence":"뭘 선택하든 넌 잘해낼 거야","failure_count":3}
+{"sentence":"뭘 싫어하는지 좋아하는지 당신이 보여주는 것만 알아","failure_count":3}
+{"sentence":"뭘 써 넣어야 하는진 깜박 잊고 얘길 안 했지만요 기차역이에요","failure_count":3}
+{"sentence":"뭘 써야 할지도 모르겠고","failure_count":3}
+{"sentence":"뭘 아는지 알아봐","failure_count":3}
+{"sentence":"뭘 아시는군요","failure_count":3}
+{"sentence":"뭘 알아내면 지체 없이 떠나세요","failure_count":3}
+{"sentence":"뭘 알아야겠는데 놈이 입을 안 열면 손가락을 자르면 돼","failure_count":3}
+{"sentence":"뭘 약해빠진 소리 내뱉고 자빠졌냐!!","failure_count":3}
+{"sentence":"뭘 얘기를 안 해, 인마","failure_count":3}
+{"sentence":"뭘 어쩔 수 있나요","failure_count":3}
+{"sentence":"뭘 원하나","failure_count":3}
+{"sentence":"뭘 원하냐고 남자!","failure_count":3}
+{"sentence":"뭘 원하는 거야","failure_count":3}
+{"sentence":"뭘 원하는지 말해 봐","failure_count":3}
+{"sentence":"뭘 원하는지도 알아요","failure_count":3}
+{"sentence":"뭘 원하는진 알아","failure_count":3}
+{"sentence":"뭘 원하세요?","failure_count":3}
+{"sentence":"뭘 이제와서 망설여","failure_count":3}
+{"sentence":"뭘 잃어버렸어요","failure_count":3}
+{"sentence":"뭘 입었는지","failure_count":3}
+{"sentence":"뭘 잔뜩 실어서 버리고 오거든","failure_count":3}
+{"sentence":"뭘 잘라야 할지 모르겠어 아무거나 선택해서 자르는 수밖에 담요 가져와!","failure_count":3}
+{"sentence":"뭘 잘못했냐고","failure_count":3}
+{"sentence":"뭘 좀 드십시다","failure_count":3}
+{"sentence":"뭘 좀 마시고 진정하세요","failure_count":3}
+{"sentence":"뭘 좀 먹어야지","failure_count":3}
+{"sentence":"뭘 좀 먹으러 가야겠어","failure_count":3}
+{"sentence":"뭘 좀 먹으면 될 거예요","failure_count":3}
+{"sentence":"뭘 좀 입어 신발도 신고 잠깐, 가방 여기 있어","failure_count":3}
+{"sentence":"뭘 좋아하는지 모르잖아요","failure_count":3}
+{"sentence":"뭘 쪼개, 이 씹새야","failure_count":3}
+{"sentence":"뭘 찍는지는 몰라도 당신은 안 가도 될 거야","failure_count":3}
+{"sentence":"뭘 찾는지 말해주면 나도 도와줄게요","failure_count":3}
+{"sentence":"뭘 찾는지 몰라도 나한텐 안 보냈을 거야","failure_count":3}
+{"sentence":"뭘 찾는지 알아 하지만 절대 못 찾아","failure_count":3}
+{"sentence":"뭘 찾든 침묵의 대가로 몇푼 집어주면 끝이었다","failure_count":3}
+{"sentence":"뭘 찾았나 보세요","failure_count":3}
+{"sentence":"뭘 찾았는지 봐","failure_count":3}
+{"sentence":"뭘 투여했는지 몰라도 그것 때문에 부작용이 온 거라고요 대체 무슨 약을 쓴 거죠?","failure_count":3}
+{"sentence":"뭘 팔러 오셨다면","failure_count":3}
+{"sentence":"뭘 하고 있었는지 알아야겠어","failure_count":3}
+{"sentence":"뭘 하나 사주면 풀어질 거야","failure_count":3}
+{"sentence":"뭘 하는지 모르겠더라","failure_count":3}
+{"sentence":"뭘 하는지 몰라도 이건 꼭 명심해요","failure_count":3}
+{"sentence":"뭘 하는지 보러 가자","failure_count":3}
+{"sentence":"뭘 하는지 일어나면 그 생각으로 가득했어요 그녀 생각뿐이었죠","failure_count":3}
+{"sentence":"뭘 하는지 잘 알죠","failure_count":3}
+{"sentence":"뭘 하는지도 제대로 모르면서 파이브 타운에서 왔어","failure_count":3}
+{"sentence":"뭘 하든 난 상관없어","failure_count":3}
+{"sentence":"뭘 하든 니 맘대로 해 봐","failure_count":3}
+{"sentence":"뭘 하라는지 명확하질 않아서요","failure_count":3}
+{"sentence":"뭘 하려는지 알겠어","failure_count":3}
+{"sentence":"뭘 하려는지 알지만 실패할 거야 떠난 사람들이야","failure_count":3}
+{"sentence":"뭘 할 건가 봐요","failure_count":3}
+{"sentence":"뭘 할 필요도 없소","failure_count":3}
+{"sentence":"뭘 해도 지는 게임이지만 잘하면 목숨은 구할 수 있지","failure_count":3}
+{"sentence":"뭘 해드려야 할지 모르겠네요","failure_count":3}
+{"sentence":"뭘 해야 하는지 말만 해줘요","failure_count":3}
+{"sentence":"뭘 해야 하는지 아실 겁니다","failure_count":3}
+{"sentence":"뭘 해야 할지를 알았어요","failure_count":3}
+{"sentence":"뭘 했는지 실토하라니까","failure_count":3}
+{"sentence":"뭘 했는진 나도 몰라 그냥 막 대했다니까?","failure_count":3}
+{"sentence":"뭘 확인하는 거야","failure_count":3}
+{"sentence":"뭘로요?","failure_count":1}
+{"sentence":"뭘요, 제가 좋아서 이런 거예요 하지만 얘야, 어디 그렇겠니","failure_count":3}
+{"sentence":"미래는 오를 수 있는 산일 수도 있고 근데 우리한텐 아니에요 알겠어요?","failure_count":3}
+{"sentence":"미신을 잘 믿는 동네라서 정말 다행이었지 진실을 말하는 것보다 그 믿음에 따르는 게 내게는 훨씬 쉬웠어","failure_count":3}
+{"sentence":"민디, 머릴 잘라야 돼요","failure_count":3}
+{"sentence":"바꿀 수 없습니다","failure_count":3}
+{"sentence":"바로 그 영향을 받은 겁니다","failure_count":3}
+{"sentence":"바보라도 만들 수 있다","failure_count":3}
+{"sentence":"반동과 두개골 부상도 설명할 수 있고요 제가 보기엔 그렇습니다","failure_count":3}
+{"sentence":"반장님 때문에 아빠는 죽고 마약상은 도망쳤어요","failure_count":3}
+{"sentence":"방 검사를 해?","failure_count":1}
+{"sentence":"방송국 분들인데 취재차 온 겁니다","failure_count":3}
+{"sentence":"배수 마개란 배의 물을 빼내기 위한 밸브죠 일단 바다에 나갈 때는 잠겨 있어야 하는 겁니다","failure_count":3}
+{"sentence":"베르크의 교외를 구경하는 것도 재미있다","failure_count":3}
+{"sentence":"베이글이 모든 것의 본질을 보여줄 테니 저 박스를 통해 나와 자유로워 지는 거야","failure_count":3}
+{"sentence":"변명 따윈 필요 없네","failure_count":3}
+{"sentence":"보긴 뭘 봐","failure_count":3}
+{"sentence":"보긴 뭘 봐요","failure_count":3}
+{"sentence":"보리라 항상은 영원히 항상 하나가 하나인 한 아버지를 위해 네 안으로 모두는 하나","failure_count":3}
+{"sentence":"보안부 어떻게 된 건가!?","failure_count":3}
+{"sentence":"보트 타기 놀이에요","failure_count":3}
+{"sentence":"본능은 이해를해줘야지","failure_count":3}
+{"sentence":"부모에게 죽은 아들에 대한 이야길 하는 것이요","failure_count":3}
+{"sentence":"부인 뒤에 숨기만 하라고","failure_count":3}
+{"sentence":"부인들에게 일자릴 줬죠","failure_count":3}
+{"sentence":"부탁드립니다, 저 분도 함께..!","failure_count":3}
+{"sentence":"부해가 생긴 이유라… 넌 별걸 다 생각하는구나","failure_count":3}
+{"sentence":"부해가 생긴 후 천 년 동안 인간들은 몇 번이고 태우려고 했었지만 매번 오무 무리가 인간세상을 덮쳐서 쑥대밭을 만들었다","failure_count":3}
+{"sentence":"부해에 손을 대면 절대 안 된다","failure_count":3}
+{"sentence":"북경시민 모두가 패왕과 우희만을 기다기고 있습니다","failure_count":3}
+{"sentence":"분명 아까 말을 그렇게 하셨지만 속으로는 나가","failure_count":3}
+{"sentence":"분명이 말해줘 니가 원하는 걸 난 아니면 로티","failure_count":3}
+{"sentence":"불행은 깨진 거울이 아니라 깨진 마음 때문에 오는 겁니다","failure_count":3}
+{"sentence":"불확실한 미래와 새 인생을 향해 날아오면서 릭은 어떤 날들이 기다릴지 짐작이 안 됐지","failure_count":3}
+{"sentence":"비싼 넥타이니까 깨끗이 써","failure_count":3}
+{"sentence":"비자도 없고 말이야!?","failure_count":3}
+{"sentence":"비켜어어어어어!!!","failure_count":3}
+{"sentence":"빅이 감찰관 때문에 골치가 아파","failure_count":3}
+{"sentence":"빌보의 이야긴 이제 끝났다","failure_count":3}
+{"sentence":"빗방울이 그녀의 볼 위로 떨어졌다.","failure_count":1}
+{"sentence":"빵점이였어요","failure_count":3}
+{"sentence":"뻥만 치지 말고 제대로 던져 넘어지지나 말아요","failure_count":3}
+{"sentence":"사귀귀엔 내가 너무 순진하다고 그 말이 맞았는지도 몰라요","failure_count":3}
+{"sentence":"사람이 말을 해도 듣지를 않는디 않그냐고?","failure_count":3}
+{"sentence":"사랑에 대한 이야긴가요","failure_count":3}
+{"sentence":"사모님, 그게요 소인이 나왔어요","failure_count":3}
+{"sentence":"사무라이..?","failure_count":3}
+{"sentence":"사무라이가 이걸 보면, 우릴 어떻게 여기겠어!?","failure_count":3}
+{"sentence":"사무라이를 고용못하면, 남은 방법은 그것 뿐이잖아!?","failure_count":3}
+{"sentence":"사무라인 돈 많이 들걸!?","failure_count":3}
+{"sentence":"사생활만큼이나 정치 문제에서도 게다가 호감이 가는 젊은이지","failure_count":3}
+{"sentence":"사실 이런 질문을 드리는 데에 악의는 없습니다","failure_count":3}
+{"sentence":"사악한 자들과 손을 잡았거든요 우리 집시들을 파멸시킬 자들과요","failure_count":3}
+{"sentence":"사자 엉덩일 걷어차 줘!","failure_count":3}
+{"sentence":"사자는 아무거나 먹어치워요","failure_count":3}
+{"sentence":"사토 씨처럼은 할 수 없지만 그의 아들의 즐거움만은 나도 누릴 수 있었다","failure_count":3}
+{"sentence":"산 넘고 물 건너 속으면 안돼요!","failure_count":3}
+{"sentence":"살려줘..!","failure_count":3}
+{"sentence":"살인이 이젠 범죄라는 거 안 가르쳤어?","failure_count":2}
+{"sentence":"삼촌은 글로써 평화를 이룰 수 있다고 믿었어요","failure_count":3}
+{"sentence":"상상하시다시피, 마법사님이 갑자기 자리를 비우셔서 제가 할일 많답니다.","failure_count":3}
+{"sentence":"상처는 멧돼지와 싸우다 생긴 겁니다","failure_count":3}
+{"sentence":"상처를 막을 방법은 없나요!?","failure_count":3}
+{"sentence":"샌드위치는 엄마가 만들어 주는 게 최곤데 햄 치즈 샌드위치?","failure_count":3}
+{"sentence":"생각해보고 나중에 다시 얘기하세","failure_count":3}
+{"sentence":"생각해볼게,","failure_count":3}
+{"sentence":"생각해볼게요","failure_count":3}
+{"sentence":"생각해볼께요.","failure_count":3}
+{"sentence":"생각해봐요","failure_count":3}
+{"sentence":"생각해봐요 그후에 당신이 가고싶은곳 어디든 골라갈수 있게 해줄께","failure_count":3}
+{"sentence":"생각해봐요.","failure_count":3}
+{"sentence":"생각해봤는데 씨라쿠사로 옮기는 게 좋겠다","failure_count":3}
+{"sentence":"생각해봤는데 자네도 남게 남으라고요?","failure_count":3}
+{"sentence":"서로 좋다는데 무슨 상관이야!?","failure_count":3}
+{"sentence":"서장은 엉뚱한 사람을 범인으로 지목하고 그에게 본때를 보여주기로 결심했던 것이다","failure_count":3}
+{"sentence":"선지자는 예언이 틀리면 끝장이야","failure_count":3}
+{"sentence":"설령 그의 움직임을 예측하고 공격을 막을 수 있다 해도, 나는 상처 없이 빠져나갈 수는 없을 거야.","failure_count":3}
+{"sentence":"성은은 내게 백 선생이 차를 바꾸려고 한다는 사실을 알려 줬고 백 선생은 아름다운 자동차 딜러 박이정의 방문을 받았다","failure_count":3}
+{"sentence":"소니, 싸우지 말고 보내줘요","failure_count":3}
+{"sentence":"소란을 피할 수 없었죠","failure_count":3}
+{"sentence":"소련 영사관과 관련 있는 한 남자가 프로젝트 멤버들에게 자신이 정보를 전해줄 수 있다고 중개인을 통해 말했다더군요","failure_count":3}
+{"sentence":"소문만은 아니에요","failure_count":3}
+{"sentence":"소타산은 인기가 많어요.","failure_count":3}
+{"sentence":"손주가 스물이지만 찾아오는 녀석은 에발드 밖에 없단다","failure_count":3}
+{"sentence":"수압파쇄 공법 덕에 우린 많은 일자리와 이윤과 에너지를 얻었습니다","failure_count":3}
+{"sentence":"수요일까진 다 나을 거야","failure_count":3}
+{"sentence":"수하일까지 널 찾으러 다녔어","failure_count":3}
+{"sentence":"술만 처먹으면 주먹질이였을걸","failure_count":3}
+{"sentence":"숨겨둔 버너폰이 있었는데 싸움 말리다가 잃어버렸나 봐요","failure_count":3}
+{"sentence":"숲의 현자라는 성성이들이 왜 인간 따윌 먹겠단 건가?","failure_count":3}
+{"sentence":"슈타지가 이렇게 물러 터졌을 줄이야","failure_count":3}
+{"sentence":"슈타지가 집을 발칵 뒤집어놨어","failure_count":3}
+{"sentence":"스물을 짓밟히고 셋에서 어찌 살 수 있을것인고!?","failure_count":3}
+{"sentence":"습관이 돼서 딸애들한테 안부를 괜찮습니다","failure_count":3}
+{"sentence":"시노..!","failure_count":3}
+{"sentence":"시치로오지 녀석, 우리도 기합 좀 넣어볼까!?","failure_count":3}
+{"sentence":"시타, 용기는 나의 원동력이지만 당신의 용기 덕에 내가 이길 수 있어","failure_count":3}
+{"sentence":"신고하셨으면 이제 된 겁니다","failure_count":3}
+{"sentence":"싫어어어어어!!","failure_count":3}
+{"sentence":"싸치가 갈수록 미치광이가 되나보오","failure_count":3}
+{"sentence":"아, 근데 그러면은 저희가 좀 이게 녹음을 좀 해놨으면 좋겠는데요","failure_count":3}
+{"sentence":"아- 미행은 나으 주특긴데 니가 할머니 손에 컸다고 해서 맡긴 일이니까 잘 좀 해봐","failure_count":3}
+{"sentence":"아까까진 보통 바위였잖아","failure_count":3}
+{"sentence":"아깐 너무 무서웠어요… 아빨 다시 못 보게 될 거 같아서 어제 노래도 아빠한테 들려주고 싶어서 연습했던 건데…","failure_count":3}
+{"sentence":"아뇨, 기술자로 쓴다고 보내 주지를 않더군요","failure_count":3}
+{"sentence":"아뇨, 딴 여잘 좋아해요","failure_count":3}
+{"sentence":"아뇨, 전 고깃덩어립니다","failure_count":3}
+{"sentence":"아니라니?","failure_count":1}
+{"sentence":"아니면 운명이 다른 길을 제시한 걸까?","failure_count":1}
+{"sentence":"아무에게나 토하지 않게 조심하고 관객들은 내가 극 중에서 임신한 걸 좋아해","failure_count":3}
+{"sentence":"아무한테도 오스왈도를 안 보여 주려고 해요","failure_count":3}
+{"sentence":"아버님 저 여자는 누굽니까?","failure_count":3}
+{"sentence":"아버지 앞에서도 연기를 하고 있구나","failure_count":3}
+{"sentence":"아버지한테 배워서 어릴 적엔 장난감도 만들었어요","failure_count":3}
+{"sentence":"아이, 자식은 이거 어쩌다 보면은 이게 진짜 재수가 없어요","failure_count":3}
+{"sentence":"아정이가 미친년이 줬다 뺏고 지랄이야","failure_count":3}
+{"sentence":"아휘의 슬픈 일을 여기에다 놓고 가 주기로 약속했는데 그가 무슨 말을 했는지 알아들을 수가 없다","failure_count":3}
+{"sentence":"악에서 주님에게로 돌아가 회개할 수 있게 해주소서","failure_count":3}
+{"sentence":"안 나오면 문 앞에다 소변을 추방시킬 거야 열 셀 동안 안 나오면 학기 내내 네 문 앞에 소변을 추방시킨다","failure_count":3}
+{"sentence":"안달하고 하찮은 말이나 해대며 우리는 우리 내면의 본성을 믿지 않기 때문이죠","failure_count":3}
+{"sentence":"알고 있다면 왜 도와주려 않아!?","failure_count":3}
+{"sentence":"알파벳을 조합할 수 있지만 영어로는 안 돼요","failure_count":3}
+{"sentence":"앞으로 원폭이 세계의 무기고에 한자릴 차지한다면 인류는 로스앨러모스라는 이름을 저주하게 될 테니까요","failure_count":3}
+{"sentence":"애국 따윈 인간끼리 많이 하쇼","failure_count":3}
+{"sentence":"애들은 가만히 있지를 못하고 야단법석이지 이 전화기도 마찬가지고 근대의 저주야!","failure_count":3}
+{"sentence":"앨이스 바꿔","failure_count":3}
+{"sentence":"야수들, 그들은 세지만 시끄럽지 하지만 초식동물들은 야수들보다 숫적으로 많아.","failure_count":3}
+{"sentence":"야야야야야야야!","failure_count":3}
+{"sentence":"약이 안 들으면 병원에 가서 처방 바꿔 달래야지","failure_count":3}
+{"sentence":"얘기해야죠 협조해 주실 겁니다 옆자리에는 아무도 없었다고 하란 겁니까?","failure_count":3}
+{"sentence":"얘들이 나한테 어떤 존재인데 얘들 덕에 내가 사람 노릇하면서 산다고요","failure_count":3}
+{"sentence":"어, 그러니까 제가 엄마한테 듣기로는 이모님께서 워낙 어릴 적에 집을 나가셔서는 저희하고는 전혀 교류가 없으셨기 때문에… 예, 예, 예, 뭐","failure_count":3}
+{"sentence":"어?, 이제 그만합시다","failure_count":3}
+{"sentence":"어디서 온 꼬맹인가?","failure_count":3}
+{"sentence":"어딜 찾아야 할지 모르잖아요","failure_count":3}
+{"sentence":"어딜 칠지 알아야 해요","failure_count":3}
+{"sentence":"어딜 파야 돈이 나오니","failure_count":3}
+{"sentence":"어떤 놈이냐!?","failure_count":3}
+{"sentence":"어떤 방법으로든 머릴 잘라야 돼요","failure_count":3}
+{"sentence":"어떤 상위 원칙에 얽매이지 않고 삶을 선택할 수 있다고 보여줬거든","failure_count":3}
+{"sentence":"어떤..?","failure_count":3}
+{"sentence":"어떨 때는 되게 심각하고 또 반대이기도 하고","failure_count":3}
+{"sentence":"어떨 때는 제가 과연 인간이 맞나 고민해요","failure_count":3}
+{"sentence":"어떻게 된 거지!?","failure_count":3}
+{"sentence":"어떻게 막아야 하지!?","failure_count":3}
+{"sentence":"어떻게 우리가 지금까진 지뢰에 폭발하지 않은거지","failure_count":3}
+{"sentence":"어떻게 집에까지 온 거죠?","failure_count":1}
+{"sentence":"어떻게 할 셈이야!?","failure_count":3}
+{"sentence":"어떻게 해야 나갈 수 있지!?","failure_count":3}
+{"sentence":"어려움이 많아 철저히 준비해야 한다고 나무를 모두 베어 버리고 폭약을 주위에 설치한 다음 동시에 터뜨리는 거야","failure_count":3}
+{"sentence":"어린 왕자는 저와 있을 테니까요 매주 목요일에 보시는 그 중요한 볼일을 보시는 동안요","failure_count":3}
+{"sentence":"어젯밤 축하연에서 이런 생각이 들었죠 내일은 적이 될 수 있다고 그날이 오면 그댄 그대대로 난 나대로 각자 편에 서야겠지","failure_count":3}
+{"sentence":"어쩌면 내가 골칫거린가 봐","failure_count":3}
+{"sentence":"어쩌면 제가 가길 바라나요?","failure_count":3}
+{"sentence":"어차피 뭐든 살 수 있잖아","failure_count":3}
+{"sentence":"어차피 화장할 거면 다 가루 될 걸","failure_count":3}
+{"sentence":"언닌 러시아 남잘 좋아하거든","failure_count":3}
+{"sentence":"언제부터 그렇게 남들 신경을 썼다고..?","failure_count":3}
+{"sentence":"얼마 걸고 내기할래?","failure_count":1}
+{"sentence":"얼마나 큰 건인지 말해줘?","failure_count":1}
+{"sentence":"에이, 뭘 감사해요","failure_count":3}
+{"sentence":"에이펙스가 전에 썼던 전략인데요 당장은 순위가 오르겠지만","failure_count":3}
+{"sentence":"에프비아이라고 있어, 에프비아이","failure_count":3}
+{"sentence":"엘파바, 너 뭐하려고 그래..?","failure_count":3}
+{"sentence":"여기 매이라는 애, 좋은 애야","failure_count":3}
+{"sentence":"여기 이 삼각형이 키쿠치요님이시다 / 거 생각했는데!","failure_count":1}
+{"sentence":"여기 이걸 사용할 수 있어","failure_count":3}
+{"sentence":"여기가 무슨 소 여물간 인줄 알아!?","failure_count":3}
+{"sentence":"여기서 서쪽으로 계속 가서 산을 넘고 또 넘으면 사람이 갈 수 없는 깊은 숲이 나오지","failure_count":3}
+{"sentence":"여길 꽉 잡으시오","failure_count":3}
+{"sentence":"여길 나가야 돼","failure_count":3}
+{"sentence":"여길 내려가고 말고는 니 의지가 아니라고","failure_count":3}
+{"sentence":"여길 눌러요","failure_count":3}
+{"sentence":"여길 늘 싫어했는데 이제 떠나려니 두렵군","failure_count":3}
+{"sentence":"여길 다 밀어봐","failure_count":3}
+{"sentence":"여길 벗어나야 돼","failure_count":3}
+{"sentence":"여길 보라고","failure_count":3}
+{"sentence":"여길 보세요","failure_count":3}
+{"sentence":"여길 봐","failure_count":3}
+{"sentence":"여길 봐,","failure_count":3}
+{"sentence":"여길 봐라","failure_count":3}
+{"sentence":"여길 봐요","failure_count":3}
+{"sentence":"여길 쓰게 해 줘","failure_count":3}
+{"sentence":"여길 열어라","failure_count":3}
+{"sentence":"여길 잘라, 어서","failure_count":3}
+{"sentence":"여길 좀 보세요","failure_count":3}
+{"sentence":"여길 좀 봐","failure_count":3}
+{"sentence":"여길 해보자","failure_count":3}
+{"sentence":"여깁니다","failure_count":3}
+{"sentence":"여러 왕이 이곳에 가트를 세웠고 사방에서 온 성직자들이 이곳에 정착했지","failure_count":3}
+{"sentence":"연인 이네스 데 아치엔사도 그와 함께할 것이다","failure_count":3}
+{"sentence":"열심히 하는 놈들 보면은 대단해, 진짜, 존경스러워","failure_count":3}
+{"sentence":"염병할..!","failure_count":3}
+{"sentence":"영감탱이, 무슨 불만이라도 있수!?","failure_count":3}
+{"sentence":"영국은 작지만 위대한 나랍니다","failure_count":3}
+{"sentence":"영주가 환생하면 그 이름을 나타라 부르거라","failure_count":3}
+{"sentence":"영차..!","failure_count":3}
+{"sentence":"영화 제목이 바뀌었으니 주제가 제목도 바뀌어야죠","failure_count":3}
+{"sentence":"영화에 그런 주제를 사용할 수 있다는 게 믿어지지 않아요","failure_count":3}
+{"sentence":"예전에 감시 시스템이 없었을 때는 경찰이 어떻게 범인을 잡았지?","failure_count":3}
+{"sentence":"오늘 아침에 이 사실을 알게 되었을 때 말씀드렸어야 했는데 정황상 베니테즈 추기경이 교황이 되실 줄은 꿈에도..","failure_count":3}
+{"sentence":"오늘까진 내가 가장 바보인 줄 알았는데 너희가 있었군","failure_count":3}
+{"sentence":"오늘까진 봐주겠어","failure_count":3}
+{"sentence":"오늘부터 여기서 사는 겁니다","failure_count":3}
+{"sentence":"오늘은 너무 힘들어서 오늘 밤 푹 잘 것 같다.","failure_count":3}
+{"sentence":"오늘은 평소와 달리 조용하고… 여보, 그게요 뭣이?","failure_count":3}
+{"sentence":"오늘의 스페셜은 거위 간 요립니다","failure_count":3}
+{"sentence":"오니의 공격인가!?","failure_count":3}
+{"sentence":"오니한테 조종당하고 있는 건가!?","failure_count":3}
+{"sentence":"오덜트, 그는 나의 플로리스트였어, 그는 우리 가족의 일원이였지.","failure_count":3}
+{"sentence":"오데트에겐 너무 했어요","failure_count":3}
+{"sentence":"오래 떨어져 있어선지 쇼지가 어딘가 살아있을 것 같아","failure_count":3}
+{"sentence":"오로르 이리로 와","failure_count":3}
+{"sentence":"올라서라.","failure_count":3}
+{"sentence":"와인을 잘 안다고 하면서 술 마시는 걸 포장할 수 있다고 아니, 아무렇지 않은 척 슬쩍 넘어가려는 엄청난 정보 말이야","failure_count":3}
+{"sentence":"왜 이렇게 어두워?","failure_count":1}
+{"sentence":"왜 자기 담당구역을 비운게지!?","failure_count":3}
+{"sentence":"용감했던 그의 영혼은 틀림없이 선조의 전당에 들 겁니다","failure_count":3}
+{"sentence":"우리 독일 민주공화국에는 이런 류의 속옷을 소화할 수 있는 젊고 깡마른 여성 동무만 사는 게 아닙니다","failure_count":3}
+{"sentence":"우리 아버님 앞에서도 게다가 티비에서 나오는 파키스탄 국기에 키스까지 했어요","failure_count":3}
+{"sentence":"우리 아이들 심장이 뛴다는 걸, 숨을 쉰다는 걸, 걷고 말하고… 웃고, 다투고, 놀 수 있다는 걸.","failure_count":3}
+{"sentence":"우리 아황이 필요해","failure_count":3}
+{"sentence":"우리 집에 다시 온 것 같은데 뭘 조용히 해요","failure_count":3}
+{"sentence":"우리가 가게를 인수할 수 있다는 내용입니다","failure_count":3}
+{"sentence":"우리가 아직까진 사회에 큰 영향을 끼친 거 같진 않구나","failure_count":3}
+{"sentence":"우리가 쩐에 보고 간 것들이락해 우리가 전에 보고 간 것이요","failure_count":3}
+{"sentence":"우린 나라와 동족과 주님의 집까지 버리고 이곳까지 왔다고요 광대한 바다를 건너왔죠","failure_count":3}
+{"sentence":"우린 참패하고 말 겁니다","failure_count":3}
+{"sentence":"우린 톰이 학교를 중퇴하려 한다는 말을 들었다.","failure_count":1}
+{"sentence":"우린 혹독한 훈련을 받았습니다 아무리 웃긴 얘기를 들어도 웃지 않는다고요","failure_count":3}
+{"sentence":"울지 말라니깐..!","failure_count":3}
+{"sentence":"움직일 수 있다","failure_count":3}
+{"sentence":"원갑, 이날을 기다렸네","failure_count":3}
+{"sentence":"원래 걔가 엄마도 일찍 죽고 아빠는 딴 여자랑 도망가고 친척들도 완전 개싸가진데 그 어린 게 제 혼자서 버틴 거지","failure_count":3}
+{"sentence":"은퇴 발레리나하고 그 후원자하고 자폐증 소년이 나오는 독일 방송국에서 만든 거 그걸 따온 거야 괜찮겠지?","failure_count":3}
+{"sentence":"음식은 플랫폼이 우리 층에 왔을 때만 허락돼 갖고 있으면 타 죽을 때까지 이러지 얼어 죽을 때까지 추워질 때도 있고 젠장","failure_count":3}
+{"sentence":"응! 우리가 넣어버릴꺼야","failure_count":3}
+{"sentence":"응접실 하녀인데 개인 하녀가 도착할 때까지만 있을 겁니다","failure_count":3}
+{"sentence":"의사도 틀릴 수 있어","failure_count":3}
+{"sentence":"의사라고 해도 그 노파가 믿지를 않는 거야","failure_count":3}
+{"sentence":"이 나라에 사는 우리 모두가 이 나라를 소유한다는 거야 의회를 위해 투표했을 때 우린 그런 걸 바란 거야","failure_count":3}
+{"sentence":"이 놈들..!","failure_count":3}
+{"sentence":"이 놈들이 진짜..!","failure_count":3}
+{"sentence":"이 두 가지 질문에 대답할 수 있다면 좋은 음악은 빛이 날 수도 텅텅 빌 수도 있어","failure_count":3}
+{"sentence":"이 여자가 이 남잘 사랑하나?","failure_count":1}
+{"sentence":"이 중 아무거나 골라서 더해도 좋다","failure_count":3}
+{"sentence":"이 지독한 감기가 낫는 대로 당신이 지루하지 않게 해드릴게요","failure_count":3}
+{"sentence":"이거 타면 나고야나 기후에서 날이 밝겠네요","failure_count":3}
+{"sentence":"이건 내가 내마","failure_count":3}
+{"sentence":"이건 미국에서 가장 권위있는 자립니다","failure_count":3}
+{"sentence":"이게 무슨 짓이더냐!?","failure_count":3}
+{"sentence":"이고도 일자릴 잃었어","failure_count":3}
+{"sentence":"이노스케, 괜찮아!?","failure_count":3}
+{"sentence":"이노스케, 어디 있어!?","failure_count":3}
+{"sentence":"이놈이 벌레한테 물려가는 걸 어린아인 줄 알고 내가 총을 쏜 거야","failure_count":3}
+{"sentence":"이런 건 전에도 봤죠","failure_count":3}
+{"sentence":"이런 마법의 돌은 나에게만 보여지는 게 아니라 다른 누가 보고 있을 지 모르니까 자네 생각보다 시간이 너무 없어","failure_count":3}
+{"sentence":"이런 이야","failure_count":3}
+{"sentence":"이럴 필요까진 없어요","failure_count":3}
+{"sentence":"이렇게 멋진 다섯 귀공자 중에서 선택할 수 있다니!","failure_count":3}
+{"sentence":"이를테면 말입니다 접시 주위를 맴도는 바퀴벌레가 있다치죠","failure_count":3}
+{"sentence":"이름을 먼저 대면 내 이름도 말해주지","failure_count":3}
+{"sentence":"이번 일과는 별로 연관 없겠지만 전 항상 여기에 제가 하나 있고 다른 곳에 또 하나가 있는 듯했어요","failure_count":3}
+{"sentence":"이번이야 말로 본때 보여주지 않으면 끝이 없을걸!?","failure_count":3}
+{"sentence":"이봐 너희나 나나 다 중국사람이야","failure_count":3}
+{"sentence":"이삿짐 문제는 걱정 마","failure_count":3}
+{"sentence":"이삿짐센터에서 왔어","failure_count":3}
+{"sentence":"이제 다시 매이라는 여자의 근처에도 가지 않을 것이다","failure_count":3}
+{"sentence":"이제 문제는 뭘 먹을 것인가야","failure_count":3}
+{"sentence":"이제 좀 먹어보자 게가 저절로 없어지진 않을 테니까 뭐부터 먹어볼까?","failure_count":3}
+{"sentence":"이제까진 몰라도 앞으론 어림없소","failure_count":3}
+{"sentence":"이제는 눈에는 눈 이에는 이로 답하리라","failure_count":3}
+{"sentence":"이젠 울타리를 무너뜨러야겠어 네 타임리퍼로 이 우주를 파괴하고 그다음, 그다음, 그다음 보이드만 남을 때까지 파괴할 거야","failure_count":3}
+{"sentence":"이후 그러한 족속들은..!","failure_count":3}
+{"sentence":"인터미디어트로 바꿔줘요","failure_count":3}
+{"sentence":"일까나..?","failure_count":3}
+{"sentence":"일단 피로부터 풀지","failure_count":3}
+{"sentence":"일주일 내내 전화했는데 경찰이 호위해줘야 이 동네에 행차한단다","failure_count":3}
+{"sentence":"잃어버릴까 봐 갖고 있었어요","failure_count":3}
+{"sentence":"있긴 있지만 아빠는 거의 만날 수 없고 엄마는 워낙 바빠서 같이 있을 수 없어","failure_count":3}
+{"sentence":"자, 누군가 고통을 가져가 줄 수 있다고 말한다면, 그렇게 하겠니?","failure_count":3}
+{"sentence":"자, 본인도 인정을 했고 이거 인자 일단 그 사건 내용이랑 일단 쭉 정리해가지고 적어놓은 거거든","failure_count":3}
+{"sentence":"자네가 아닌 아들에게서 들어야 하지?","failure_count":1}
+{"sentence":"자네나 나 같은 사람들은 영화 일 하면서 행복하게 돼 있어","failure_count":3}
+{"sentence":"자네는 한낱 호빗이 사우론의 의지에 맞설 수 있다고 생각하나?","failure_count":3}
+{"sentence":"자네들이 이 가게 주인인가 보군.","failure_count":3}
+{"sentence":"자네를 이용해 여귀들과 요괴를 유인해 없애버려야겠네","failure_count":3}
+{"sentence":"자아, 시작 해 볼까!?","failure_count":3}
+{"sentence":"자아아암들어어어어어어어어!!!","failure_count":3}
+{"sentence":"자전거가 있기는 한데 당장은 못 써요 며칠 뒤에 쓸 수 있죠","failure_count":3}
+{"sentence":"잘 안들리는데 제 키도 좀 챙겨 주시면..?","failure_count":3}
+{"sentence":"잘 타이를게요","failure_count":3}
+{"sentence":"장례식 때는 돌아올 겁니다","failure_count":3}
+{"sentence":"저 깜둥인 늘 핑계야","failure_count":3}
+{"sentence":"저 놈들은 대낮부터 술에 취하고 우린 포탄껍질을 회수해야 하니..!","failure_count":3}
+{"sentence":"저 놈들이랑 있으면 숨이 막혀 줄을거야","failure_count":3}
+{"sentence":"저 소리가 반가울 줄 이야","failure_count":3}
+{"sentence":"저 여자가 그 스웨덴 배우야?","failure_count":1}
+{"sentence":"저것도 벌이가 짭짤하다고 그런데 이제 서장님이 전부 가로채실 모양이야","failure_count":3}
+{"sentence":"저녁으로 뭘 먹을지 물어봐요","failure_count":3}
+{"sentence":"저는 산티아고 일병으로 해병 소총 경비부대의 소총수입니다","failure_count":3}
+{"sentence":"저는 오사카를 대표해서 말하고 있는 겁니다","failure_count":3}
+{"sentence":"저는 지금 푸네의 인드라야니 다리에 있는데요 이곳에서 시미 시나의 차, 가방, 신발이 발견됐습니다","failure_count":3}
+{"sentence":"저렇게 무자비한데 인간인들 어쩌겠소","failure_count":3}
+{"sentence":"저리가 있어 빨리","failure_count":3}
+{"sentence":"적들의 본거지에 침투할 수 있는 유능한 친구예요","failure_count":3}
+{"sentence":"전 샬로 사부꼐서 직접 하시는게 좋을 것 같아서… 동의하셔 놓구 갑자기 왜 그러세요?","failure_count":3}
+{"sentence":"전선이 끊어졌습니다","failure_count":3}
+{"sentence":"전에는 여기 와본 적 없어요","failure_count":3}
+{"sentence":"절대, 절대, 절대 절대, 절대 절대, 절대 절대, 절대 놓지 마","failure_count":3}
+{"sentence":"절반은 이미 받았고 나머진 갈가니가 책임진다","failure_count":3}
+{"sentence":"정말 과학자가 아니라 경리로군요","failure_count":3}
+{"sentence":"정말 돌아올 놈이었으면 진작 왔어.","failure_count":1}
+{"sentence":"정말 안전한 가장 좋은 방법은 다음번 투표에서 순찰차를 줄이자는 데 반대하는 거예요","failure_count":3}
+{"sentence":"제 새끼를 죽인 살인자 걘 지옥에서 고통 속에 울부짖고 있어","failure_count":3}
+{"sentence":"제 스페인어가 부족해서 문제되는 서류를 그가 본 것 것처럼 인상을 줬는지 그가 걱정할 필요가 없다고 답했습니다","failure_count":3}
+{"sentence":"제 증거는 자살 가능성을 완전히 뒤엎는 겁니다","failure_count":3}
+{"sentence":"제 한숨은 달까지도 도달할겁니다","failure_count":3}
+{"sentence":"제가 말하려는 건 티투스 황제와 베레니체 여왕의 사랑을 받은 공작님께는 아무런 영향을 안 줄 겁니다","failure_count":3}
+{"sentence":"제가 알파벳을 천천히 읽을 테니까 말하고 싶은 단어 알파벳에서 깜빡이세요 그걸 기록하고 다음 글자를 찾는 거예요","failure_count":3}
+{"sentence":"제가 왜 그럤는지 하면은 뭐 하는 거야","failure_count":3}
+{"sentence":"젠장, 이 자식… 대체 뭘 하는 거야!?","failure_count":3}
+{"sentence":"조가 도울 수 있어","failure_count":3}
+{"sentence":"조금만치라도 외국 사람이면 스파이로 몰다니, 자네도 조심해","failure_count":3}
+{"sentence":"조도 가고요","failure_count":3}
+{"sentence":"조지프와 질라조차 얼굴을 붉힐걸","failure_count":3}
+{"sentence":"조회해보니까 있긴 하던데 당장은 못 찾겠어요","failure_count":3}
+{"sentence":"존과 함께 있어 자네가 나타난 덕에 이곳에 더는 있을 수 없게 됐지","failure_count":3}
+{"sentence":"종팔이 걔 있잖아 왜 옥상 위에다 올려놨을까?","failure_count":3}
+{"sentence":"좋은 느낌인걸 내가 쓴 밧줄은 묶어서 이은 자의 꿈에 침입할 수 있는 특별한 술법이야","failure_count":3}
+{"sentence":"좋은 여잘 만나 안정을 찾고 결혼하잖니 곧 가족도 늘어날 거다","failure_count":3}
+{"sentence":"죄다 왕후장상에 재자가인이야","failure_count":3}
+{"sentence":"주인들은 이놈 저놈 가릴 것 없이 문패를 무기처럼 붙이고 정치가라도 되는 듯이 신문을 본다","failure_count":3}
+{"sentence":"죽음으로부터 도망칠 수 있다고 생각했어 막을 수 있다고 너를 막을 수 있다고..","failure_count":3}
+{"sentence":"죽지 않아!?","failure_count":3}
+{"sentence":"중계할 수 있다면 내가 가겠어","failure_count":3}
+{"sentence":"중독까진 아냐","failure_count":3}
+{"sentence":"즉시 가지 나머진 작업을 계속 진행해","failure_count":3}
+{"sentence":"지구에 있는 사람들을 구할 마지막 기회거든요 제가 양자 데이터를 얻어서 성공적으로 전송할 수 있다면 지구에도 충분한 기회가 생길 거예요","failure_count":3}
+{"sentence":"지금 그렇게 말하면 평생 크고 분명하게 말할 수 있어요","failure_count":3}
+{"sentence":"지금 당장은 대화할 시간이 없네.","failure_count":3}
+{"sentence":"지금 당장은 아니야","failure_count":3}
+{"sentence":"지금 당장이라도 처리할 수 있어","failure_count":3}
+{"sentence":"지금 뭘 하든간에 멈추세요 당장","failure_count":3}
+{"sentence":"지금 이 순간 몇 쌍이 오르가즘을 느끼고 있을까?","failure_count":1}
+{"sentence":"지금까진 그랬죠","failure_count":3}
+{"sentence":"지금까진 수업이 얼렁뚱땅 진행됐더군요","failure_count":3}
+{"sentence":"지금까진 아무에게도 말하지 않았다오","failure_count":3}
+{"sentence":"지금까진 좋아","failure_count":3}
+{"sentence":"지금은 그냥 잠들어 있을 뿐이란 말야!?","failure_count":3}
+{"sentence":"지금이 어느 땐데..!","failure_count":3}
+{"sentence":"지나는… 함부로 지나 이름 부르지 마","failure_count":3}
+{"sentence":"지배적인 인격이 승리를 거뒀어요","failure_count":3}
+{"sentence":"지브롤터 해협에 가까이 갈 수 있는 만큼 간다","failure_count":3}
+{"sentence":"지체할 수 없습니다","failure_count":3}
+{"sentence":"지하 주차장에요 마나님과는 어때요?","failure_count":1}
+{"sentence":"진영인 소개로 왔다고 해요","failure_count":3}
+{"sentence":"진지하게..? 로라","failure_count":3}
+{"sentence":"진짜일 수도 있어.","failure_count":1}
+{"sentence":"질문은 여기까지만 받을게요","failure_count":3}
+{"sentence":"집도 지을 수 있고요","failure_count":3}
+{"sentence":"집에 누군가 있어 대장장이이에요","failure_count":3}
+{"sentence":"집집이 그런 인물이 꼭 있잖아 성적도 안 좋고 하는 일마다 망치고 인생이 꼬이는 사람 내가 우리 집안 골칫거린가 봐","failure_count":3}
+{"sentence":"징그러!!!","failure_count":3}
+{"sentence":"차라리 모닥불에 너랑 탸덴이랑 크로프랑 뮐러랑 둘러앉아… 감자튀김 먹는 게 낫겠다고 껍질도 안 깐 채로 네","failure_count":3}
+{"sentence":"찬스라고 전에도 말했잖아","failure_count":3}
+{"sentence":"찾아선?","failure_count":3}
+{"sentence":"천존께서 천겁을 내려 너를 멸하려 하셨으니 나타야 노부는 네가 효심 깊은 아들이라 생각한다","failure_count":3}
+{"sentence":"추천할 수 없습니다","failure_count":3}
+{"sentence":"친구들, 여기에 불 좀 쫴 줘","failure_count":3}
+{"sentence":"카메라 움직여서요?","failure_count":1}
+{"sentence":"큰 갈고리로 지미마 두개골을 박살 낸 년 말이야","failure_count":3}
+{"sentence":"큰일이야, 어쩌지!?","failure_count":3}
+{"sentence":"타살로 의심할 정황이 없는데 나 이제 질곡동 범이 살인범 잡고 싶은데 송서래 살인 용의잡니다","failure_count":3}
+{"sentence":"타자기는 있는데요 슈타지가 활자체를 꿰고 있거든요 국경에서 원고가 적발되면 바로 보안부 구치소행이죠","failure_count":3}
+{"sentence":"타티아나는 루스카 로마에 남기 위한 자질이 부족했어.","failure_count":3}
+{"sentence":"탐사봉 활용법을 배우면 물이 어디 있는지 찾을 수 있을 거예요","failure_count":3}
+{"sentence":"태어난 것 자체가 제일 큰 실수인 것 같은데 일자릴 찾는 거라면 허수아비 정도는 해볼 수 있지","failure_count":3}
+{"sentence":"테데스코 추기경님, 들어드릴..?","failure_count":3}
+{"sentence":"토요일 밤에 월요일이 유태인 휴일이라 화요일까진 아무도 몰라","failure_count":3}
+{"sentence":"팀이 저에게 들러리가 돼 달라고 했을 때 겁이 났어요","failure_count":3}
+{"sentence":"파티 도중에 없어진 적은?","failure_count":1}
+{"sentence":"판도라의 숲은 많은 위험을 안고 있다 하지만 판도라에 관한 가장 위험한 건… 그녀를 너무 좋아하게 될 수 있다는 것이다","failure_count":3}
+{"sentence":"팔 길이가 문제지","failure_count":3}
+{"sentence":"팝스타가 되면 공짜로 얻을 수 있답니다","failure_count":3}
+{"sentence":"페드로사라는 친굽니다","failure_count":3}
+{"sentence":"폭풍이 몰아칠 때 스쿠너에 타봐야 하는데 이 아래선 아무것도 느끼지를 못하잖아","failure_count":3}
+{"sentence":"프랑코라고 부르게 이 사람을 어디서 찾았니?","failure_count":3}
+{"sentence":"피곤해서 더 이상 걸을 수 없어.","failure_count":1}
+{"sentence":"하느님이 이들에게 생명을 주실 수 있다면 그 생명을 거두어 가실 수도 있다","failure_count":3}
+{"sentence":"하리아나주 대표팀에 발탁된 기타 쿠마리는 우리 학교뿐 아니라 비와니 지역의 자랑이며 전국 어린이 대회에서도 좋은 성적을 거둘 겁니다","failure_count":3}
+{"sentence":"하마는 아프리카에 산다.","failure_count":1}
+{"sentence":"하물며 녀석은 뇌의학용의 뇌디바이스를 채워 넣을 수 있을 만큼 채워 넣고 있어.","failure_count":3}
+{"sentence":"하지만 당장은 릴루를 구해야 합니다","failure_count":3}
+{"sentence":"하지만, 그런 괴물을 만들어낸게 누군데!?","failure_count":3}
+{"sentence":"하지만, 넌 그 돈을 받게 될 사람하고는 전혀 닮지를 않았지","failure_count":3}
+{"sentence":"한 명 낚었지","failure_count":3}
+{"sentence":"한 방에 조져 삘 거야","failure_count":3}
+{"sentence":"한 번 굽신거리기 시작하면 우릴 아주 제놈들 밥으로 여길걸!?","failure_count":3}
+{"sentence":"한 번 더..!","failure_count":3}
+{"sentence":"한때 내 얘기를 듣던 사람들이 이젠 내 책을 읽게 되어 모이지 않고 따로 앉아 남들을 개의치 않는다","failure_count":3}
+{"sentence":"할 일은 다 했건만, 노부시는 오질 않아 이젠 오지 않는게 아닐까?","failure_count":3}
+{"sentence":"할매가 그런디, 그놈이 자꼬 뵈는 것은 그 놈이 자꼬 찾으가갖고 뵈는 것이랴 피를 말려 쥑일라고","failure_count":3}
+{"sentence":"함께할 수 있다면 안심할 수 있지","failure_count":3}
+{"sentence":"해 볼테냐!?","failure_count":3}
 {"sentence":"해적들은 항복할 수 밖에 없었다.","failure_count":1}
-{"sentence":"무에서도 유를 창조할 수 있군!","failure_count":2}
+{"sentence":"향신료 덕에 한 석 달 바빠질걸","failure_count":3}
+{"sentence":"허접한 너희 홀로그램을 사흘 안에 동굴 벽화 정도로는 보이게 다듬어야 해","failure_count":3}
+{"sentence":"헌데 이 땅꾼놈들은 뭘 쳐먹고 있다고 생각해!?","failure_count":3}
+{"sentence":"헤이스의 전적이 있어서 아주 세심히 볼 겁니다","failure_count":3}
+{"sentence":"현명한 노인께 경의를 표하며 인생의 대선배이자 박식한 학자님께 바치는 바입니다","failure_count":3}
+{"sentence":"현명한 영적 지도자가 말했듯이, 싸우려고 하지 않는자와 어찌 싸우겠는가?","failure_count":3}
+{"sentence":"형님께서 말씀하셨잖아요 제가 인간 형상으로 변할 수 있게 되면 옥허궁에 소개시켜 주시겠다고요 저 인간으로 변할 수 있어요","failure_count":3}
+{"sentence":"호오, 과연..?","failure_count":3}
+{"sentence":"혼자서 걸을 수 있어?","failure_count":1}
+{"sentence":"홀리데이 인 호텔에 있으니까 할 말이 있으면 거기로 연락해","failure_count":3}
+{"sentence":"화승총 말이죠!?","failure_count":3}
+{"sentence":"황제는 걸을 것이다","failure_count":3}
+{"sentence":"휴식 시간에 들르게 기침","failure_count":3}

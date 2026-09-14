@@ -70,7 +70,7 @@ const NO_VERBATIM: bool = false;
 /// The ElevenLabs account transcription runs against.
 ///
 /// Read once at the top of a run, for the same reason as
-/// [`crate::sync::WhisperAccount`]: reading the environment per chunk turns a
+/// [`whisper::CloudflareWhisper`]: reading the environment per chunk turns a
 /// missing key into a per-chunk failure, and a film that fails every chunk
 /// looks exactly like a film with nothing to say.
 #[derive(Clone)]

@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+audio-codec = { path = "../libraries/audio-codec" }
+whisper = { path = "../libraries/whisper" }
 reqwest = { version = "0.13", default-features = false, features = [
     "json",
-    "multipart",
     "rustls",
 ] }
 base64 = "0.22"
@@ -35,7 +36,8 @@ tsify.workspace = true
 wasm-bindgen.workspace = true
 postgrest = "1.6"
 resend-rs = "0.25"
-google-tts = { path = "../libraries/google-tts" }
+google-speech = { path = "../libraries/google-speech" }
+phoneme-verify = { path = "../libraries/phoneme-verify" }
 unicode-normalization.workspace = true
 rusty-s3 = "0.10"
 hmac = "0.13"

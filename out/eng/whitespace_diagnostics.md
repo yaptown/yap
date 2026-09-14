@@ -1,130 +1,162 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 2128250
-Total errors: 1533
-Accuracy: 99.93%
+Total predictions: 3835631
+Total errors: 8309
+Accuracy: 99.78%
 
 ## Error Patterns (sorted by frequency)
 
-### "can" + "not" (629 occurrences)
+### "can" + "'t" (5909 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - A butterfly cannot turn into a lion.
-  - A few months and send you packing, but I cannot.
-  - A foreign language cannot be mastered in a year or so.
+  - A Sky Person can't just show up.
+  - A bitch like that can't be eaten by buzzards!
+  - A blind man can't play cards.
 
-### "gon" + "na" (66 occurrences)
+### "can" + "not" (705 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A few months and send you packing, but I cannot.
+  - A man cannot be judged by his appearance.
+  - A man worthy of his salt cannot do such a thing.
+
+### "Can" + "'t" (452 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Can't I call you back, Margie?
+  - Can't I come in?
+  - Can't I do that sometimes?
+
+### "gon" + "na" (71 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - A scary movies gonna be on.
   - Are we gonna do nothing?
-  - Are we gonna let them do this?
+  - Are you gonna finish me off?
+
+### "--" + "I" (43 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Alex, that's-- I'll say I made you do it.
+  - Don't get me wrong -- I love this type.
+  - He flew like a madman always, so I-- I took no notice.
+
+### "got" + "ta" (22 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A dog's gotta eat shit!
+  - A pig's gotta fly.
+  - Franco, you gotta stop.
 
 ### "-" + "I" (19 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - And I need-- I need morphine.
-  - And a third in - I forget.
-  - I just-- I just wanted pie.
+  - Don't even try to talk me to death - I have earplugs.
+  - Finally, he got- I suspect- an infected jaw, and he was abandoned.
 
-### "did" + "n’t" (19 occurrences)
+### "I" + "'mma" (18 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - As a matter of fact, I didn’t want to go.
-  - But I didn’t read it.
-  - Could it be that the Captain didn’t notify the customs?
+  - I'mma be at Messenger's tonight, same as I am every Saturday night.
+  - I'mma call them too, dawg!
+  - I'mma come and getcha!
 
-### "--" + "-" (15 occurrences)
+### "don" + "'t" (10 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He don't fuck around, all right.
+  - He don't get no respect!
+  - He don't look too good.
+
+### "--" + "You" (9 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Carrots, we need-- -Nick.
-  - Did I sense a little-- -Yeah.
-  - Hey-- -You showing me something?
+  - I told you -- You can go piss yourself.
+  - I'm calling because-- You know that thing that happened in college?
+  - I'm gonna go grab-- You guys need any waters?
 
-### "got" + "ta" (12 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Franco, you gotta stop.
-  - I gotta call to get my bucks.
-  - I gotta get out of here.
-
-### "-" + "What" (9 occurrences)
+### "-" + "What" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Armed rob-- What are you talking about?
-  - Batteries charge automatic - What?
   - Get him-- What does he like?
+  - I want for the broad-- What does she like?
 
-### "-" + "the" (9 occurrences)
+### "-" + "the" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Ah, here she is-- the missing link, the witness who will help supply the motive.
-  - Because the best mushroom grows there - the chanterelle.
-  - Could you tell the audience - the jury - what happened next?
+  - God forbid - the money would be on the table tomorrow.
+  - I reached over to-- the girl had to be home.
 
-### "-" + "a" (8 occurrences)
+### "-" + "we" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - But I'm sorry- we are down to plastic cups now.
+  - Food, medicine- we'll store it all.
+  - Uh, we are-- we are closing.
+
+### "--" + "that" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Sally-- that's a droll sort of name.
+  - That was-- that was a lot of little bumps.
+  - That's a big boy-- that's a big boy knife you got there.
+
+### "-" + "a" (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - All those are yours-- a present.
-  - Brother, did you see my nuke - a duke shot!
   - But it takes a long time-- a very long time.
+  - There was a man there-- a queer sort of person.
 
-### "do" + "n't" (8 occurrences)
+### "won" + "'t" (6 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - I don't believe it.
-  - I don't know the answer.
-  - I don't think so.
+  - Hopefully he won't notice anything!
+  - I'm sure Tom and Mary won't be the first ones to do that.
+  - If by some chance it rains, the garden party won't take place.
 
-### "," + "-" (7 occurrences)
+### "'n" + "'" (5 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Hey, Steak'n'fries, let's see what you're made of.
+  - Honey, you're too sweet for rock'n'roll.
+  - People have a hard time explaining rock, really explain rock'n'roll.
+
+### "-" + "it" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Anyway Thank you, bye, - see you Aman.
-  - He may look like an angel, -Oh, hi, will you wait?
-  - If you have time, - Yes.
+  - I can't buy that car - it costs an arm and a leg.
+  - I killed him in a fit of rage - it wasn't premeditated.
+  - Luck is like a woman - it must be desired.
 
-### "-" + "what" (7 occurrences)
+### "--" + "That" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Could you tell the audience - the jury - what happened next?
-  - I would - what would I not?
-  - I would do - what would I not?
-
-### "-" + "and" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - All light- and sound-proof, but you can get air inside.
-  - I am leaving immediately to return to Wisborg - and to you.
-  - I prefer black- and red-colored clothes.
-
-### "," + "“" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - As they say in India, “birth right“.
-  - For children, “le Cirque du Soleil” is an unforgettable show.
-  - He asks the nurse, “Hey, where they keep the Coke machine?
-
-### "-" + "No" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Hi, Schutte - No names!
-  - I mean, I wish I-- No.
-  - Listen-- No, no, no!
+  - I'm not su-- That's lava.
+  - Is that what-- is that-- is that-- That's your buddy?
+  - Milly and-- That's the best karaoke in town.
 
 ### "--" + "dumb" (5 occurrences)
 - Predicted: None
@@ -134,117 +166,165 @@ Accuracy: 99.93%
   - Just dumb-- dumb-- dumb-- dumb-- dumb-- dumb bunny.
   - Just dumb-- dumb-- dumb-- dumb-- dumb-- dumb bunny.
 
-### "Do" + "n't" (5 occurrences)
+### "--" + "they" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I don't wear socks-- they itch.
+  - I have no hens or goats-- they're too much trouble.
+  - No doubt about it -- they're scouts.
+
+### "if" + "you" (5 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Don't be late.
-  - Don't forget your keys.
-  - Don't give up.
+  - But ifyou're a flamenco diva, you'll need more.
+  - I wanted to know ifyou'd come with me.
+  - I'll give that woman a chance ifyou don't go to El Salvador.
 
-### "have" + "n’t" (5 occurrences)
+### "rock" + "'n" (5 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Excuse me, haven’t you got the same thing, but without the wings?
-  - I haven’t been to New York, I’ve been to Istanbul.
-  - I haven’t had it in my hands since the war.
-
-### "-" + "-" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Fifty years ago - - The Olympic Games!
-  - Global warming-- -Could you stop talking?
-  - Millions, thousands - - what is the difference?
-
-### "-" + "The" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Exact - The race will disappear.
-  - Fifty years ago - - The Olympic Games!
-  - Hey - The whistle.
-
-### "-" + "Where" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Follow me - Where?
-  - Oh my-- Where am I going?
-  - Turn on the lights - Where to?
+  - God's gift to rock'n'roll.
+  - Honey, you're too sweet for rock'n'roll.
+  - People have a hard time explaining rock, really explain rock'n'roll.
 
 ### "-" + "You" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And with both of us working - You know how it is.
   - I-- You have to read the actual book.
   - No idea-- You have no idea.
+  - Where-- You know?
 
-### "-" + "my" (4 occurrences)
+### "-" + "he" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I had everything in that suitcase- my CK shirts, my DKNY shoes, my AX ties.
-  - Look - my eyes.
-  - My father - my father was my father.
+  - I'll say this for him- he's consistent.
+  - No, no, he-- he knew a few things.
+  - Oh, he- he might be a man who lives outside of time as we know it.
 
-### "I" + "'m" (4 occurrences)
+### "-" + "to" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He could have stopped and be waiting - to surprise us when we surface.
+  - Raw little chicken things, frozen to the-- to the wood beam.
+  - This is the Alphaverse's mission - to take us back to how it's supposed to be.
+
+### "--" + "Oh" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Guarding the-- Oh, hey, Mike.
+  - It's Christmas and it's all-- Oh, I don't know.
+  - What's-- Oh, shit.
+
+### "--" + "and" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Butyou think it-- and you're right.
+  - Even if it was human-- and it's not-- it's still evil.
+  - Look, I-I didn't-- and I didn't expect this to happen.
+
+### "--" + "is" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Bradley, is he-- is he here?
+  - Is that what-- is that-- is that-- That's your buddy?
+  - Is that what-- is that-- is that-- That's your buddy?
+
+### "Don" + "'t" (4 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - I'm gonna go home now.
-  - I'm gonna make dinner.
-  - I'm gonna tell you a secret.
+  - Can't touch the thugs Don't touch the thugs.
+  - Don't matter whether I cry in public nobody remembers so fuck that, anyway.
+  - Don't worn].
 
-### "you" + "-" (4 occurrences)
+### "If" + "you" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ifyou don't mind, I'd rather not tell him anything.
+  - Ifyou don't want lgnat to become like that, get married as soon as possible.
+  - Ifyou don't want me to tell Huma, do it in the bathroom.
+
+### "it" + "?" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And you -you call that clean?
-  - That young man who was with you - where can I find him?
-  - What - do - you - want?
+  - What is it ?
+  - Who is it ?
+  - You did it ?
 
-### "-" + "Are" (3 occurrences)
+### "me" + "?" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Are you-- Are you fighting rats or the entire German army?
-  - Devdas Mukherjee - Are you insane?
-  - What are you-- Are you mad?
+  - Are you kidding me ?
+  - Show me ?
+  - Will you marry me ?
 
-### "-" + "My" (3 occurrences)
+### "n't" + "you" (4 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Butyou know who he is, don'tyou?
+  - Why didn'tyou tell me when I called?
+  - Why don'tyou check Nina into a clinic?
+
+### "time" + ".." (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I just got to know that their love story was born in your house - My house?
-  - Look - My dad.
-  - My let-- My letters?
+  - Get the time ..
+  - I love this waste of time ..
+  - I want to waste my time ..
 
-### "-" + "Yes" (3 occurrences)
+### "you" + "?" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Govind - Yes, sir?
-  - If you have time, - Yes.
-  - When we get there, - Yes.
+  - And you ?
+  - What's the matter with you ?
+  - Who are you ?
 
-### "-" + "is" (3 occurrences)
+### "-" + "No" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - But is he-- is he crazy?
-  - Police chief Euklidas - is quite a character.
-  - So What - is - Definite?
+  - I mean, I wish I-- No.
+  - Listen-- No, no, no!
+  - We could do a-- No?
 
-### "-" + "it" (3 occurrences)
+### "-" + "but" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Look - it looks like you.
-  - Reality has one problem - it is always honest.
-  - Wear the blue shirt - it suits you!
+  - I am calm-- but call them.
+  - I have always imagined both as entirely mythic - but I would like to hear more.
+  - They have one, - but it's expensive.
+
+### "-" + "that" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He's a nice guy - that's unanimous.
+  - I demand it - that you tell these people the truth.
+  - To drink or not to drink - that is the question.
+
+### "-" + "they" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Brilliant people have one major drawback - they don't know how to lose.
+  - My words, whatever I say- they won't change your mind.
+  - They said his-- they said his name.
 
 ### "-" + "this" (3 occurrences)
 - Predicted: None
@@ -258,41 +338,65 @@ Accuracy: 99.93%
 - Predicted: None
 - Actual: Space
 - Examples:
+  - A guy with your mind- you'd have studied a great deal.
   - This is what-- you see?
-  - This one is for the girls - you can take your personal stuff with you, too!
-  - What - do - you - want?
+  - Whether you lied, or let her get away- you're screwed.
 
-### "--" + "You" (3 occurrences)
+### "--" + "What" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I told you -- You can go piss yourself.
-  - Wait, you-- You watch Gilmore Girls?
-  - You-- You heard about that, huh?
+  - I don't-- What do you mean?
+  - I mean, what is-- What's that supposed to mean?
+  - Just put the-- What's your name?
 
-### ";" + "-" (3 occurrences)
+### "--" + "he" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And sister Rosa Lazaga; -Who are you?
-  - Should I call Dr Vega; -Carry on with what you are doing.
-  - Who named you Lydia; -My father.
+  - He-- he didn't mean that.
+  - He-- he took our phones.
+  - You can see-- he's normal.
 
-### "Is" + "n’t" (3 occurrences)
+### "--" + "it" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Even if it was human-- and it's not-- it's still evil.
+  - It's-- it's just a hat.
+  - Violence-- it's like her native tongue.
+
+### "--" + "the" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Liberty, equality, human rights-- the whole caboodle!
+  - The ID cards we're supposed to produce-- the problem's the cover and the paper.
+  - You know better than I, Mr. Di Vita-- the economy, TV, videos.
+
+### "--" + "we" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Germans, Poles, Kashubians-- we'll all live together in peace.
+  - We have to-- we have to fix it.
+  - We're gonna work it-- we're gonna work it out.
+
+### "I" + "'" (3 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Isn’t it funny?
-  - Isn’t that bad?
-  - Isn’t that spare tire too worn out?
+  - I'Il, uh, I'll write you a check.
+  - I'Il, uh, be stopping by your campus tomorrow morning.
+  - I'mma help it down the drain!
 
-### "Look" + "-" (3 occurrences)
+### "Watanabe" + "!" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Look - My dad.
-  - Look - it looks like you.
-  - Look - my eyes.
+  - Like Watanabe !
+  - Mr. Kanji Watanabe !
+  - Mr. Watanabe !
 
 ### "Yak" + "ul" (3 occurrences)
 - Predicted: Space
@@ -302,37 +406,45 @@ Accuracy: 99.93%
   - Yakul!
   - Yakul, run!
 
-### "are" + "n’t" (3 occurrences)
+### "about" + "your" (3 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Excuse me, you’re an amateur actor, aren’t you?
-  - Our lawns aren’t made to walk on!
-  - You are determined, aren’t you?
+  - I couldn't sleep all night thinking aboutyour son.
+  - See a doctor aboutyour nerves when the war's over.
+  - See a doctor aboutyour nerves.
 
-### "it" + "?" (3 occurrences)
+### "for" + "?" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - What is it ?
-  - Who is it ?
-  - You want to try it ?
+  - What are we waiting for ?
+  - What are you looking for ?
+  - What are you waiting for ?
 
-### "me" + "?" (3 occurrences)
+### "hey" + "?" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Are you kidding me ?
-  - Show me ?
-  - Will you marry me ?
+  - A political speech hey ?
+  - Good one hey ?
+  - It's chilly hey ?
 
-### "should" + "n’t" (3 occurrences)
+### "n" + "'" (3 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - I shouldn’t have pushed you.
-  - We shouldn’t get involved.
-  - You shouldn’t have followed him.
+  - Bacon, eggs, bologna, rock'n'roll, motorcycles.
+  - Miss Penny Lane, let me tell you what rock'n'roll will miss.
+  - Rock'n'roll.
+
+### "of" + "your" (3 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He was a friend ofyour husband.
+  - I'd like to see one ofyour seminars.
+  - This is all the result ofyour indulging him.
 
 ### "some" + "?" (3 occurrences)
 - Predicted: None
@@ -342,20 +454,27 @@ Accuracy: 99.93%
   - You have some ?
   - You want some ?
 
-### "would" + "n’t" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Any girl who could get the lead wouldn’t marry you.
-  - Happy people wouldn’t go to that kind of concert.
-  - No, no, I wouldn’t think of it!
-
-### "&" + "-" (2 occurrences)
+### "you" + ".." (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - He must go far & -No.
-  - Oh, sh & -Yeah!
+  - This is for you ..
+  - This kind of wrong number, like where you ..
+  - Today, if you tell people that you ..
+
+### "," + "-" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm tired of museums, - graveyards of the arts.
+  - They have one, - but it's expensive.
+
+### "-" + "Are" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Are you-- Are you fighting rats or the entire German army?
+  - What are you-- Are you mad?
 
 ### "-" + "Can" (2 occurrences)
 - Predicted: None
@@ -364,13 +483,6 @@ Accuracy: 99.93%
   - Can I go- Can I go back and get it?
   - Hey-- Can he hear me?
 
-### "-" + "Come" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Freeze - Die - Come to Life!
-  - What did - Come here!
-
 ### "-" + "Oh" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -378,19 +490,12 @@ Accuracy: 99.93%
   - I mean-- Oh, okay.
   - We, uh-- Oh, come on!
 
-### "-" + "This" (2 occurrences)
+### "-" + "Where" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - This is - This is bullshit.
-  - This is what your-- This is what the script is saying?
-
-### "-" + "Wait" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - W- Wait a minute!
-  - W- Wait!
+  - Oh my-- Where am I going?
+  - W- Where am I?
 
 ### "-" + "Why" (2 occurrences)
 - Predicted: None
@@ -399,12 +504,12 @@ Accuracy: 99.93%
   - Are these zip-- Why do you have zip ties on the door?
   - Why-- Why are you so determined to keep me alive?
 
-### "-" + "Yeah" (2 occurrences)
+### "-" + "and" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And he is Mohammed Ali- Yeah.
-  - Miss - Yeah?
+  - All light- and sound-proof, but you can get air inside.
+  - Take care-- and eat!
 
 ### "-" + "are" (2 occurrences)
 - Predicted: None
@@ -413,6 +518,13 @@ Accuracy: 99.93%
   - Are you-- are you okay?
   - I mean, you too- are Rohit?
 
+### "-" + "for" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - And the next day, she sends for-- for Gyges and challenged him.
+  - I won't forget that - for faking a government application.
+
 ### "-" + "how" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -420,19 +532,12 @@ Accuracy: 99.93%
   - How-- how much is it?
   - Salad-- how wonderful!
 
-### "-" + "just" (2 occurrences)
+### "-" + "in" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - My circus dreams - just memories ten years from now.
-  - Very easy - just say please once.
-
-### "-" + "like" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - IfI boreyou, you can pretend to snore-- like this.
-  - Special - like hell.
+  - Otherwise, you'll pay twice- in this life and in the next.
+  - The Fuhrer- in-waiting.
 
 ### "-" + "not" (2 occurrences)
 - Predicted: None
@@ -441,47 +546,12 @@ Accuracy: 99.93%
   - As I feared, sir- not functional.
   - Eighteen years-- not a word, not a letter, not a fucking call.
 
-### "-" + "nothing" (2 occurrences)
+### "-" + "someone" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Always forgive your enemies - nothing annoys them so much.
-  - Knowledge - nothing.
-
-### "-" + "pretense" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Catching a fish - pretense.
-  - Throwing a hip out wrestling with one of them - pretense.
-
-### "-" + "she" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Mother - she never was my mother.
-  - When I looked down-- ages afterwards, it seemed-- she was lying on the floor.
-
-### "-" + "silent" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - If languages - silent.
-  - Languages - silent.
-
-### "-" + "something" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Big waves - something else.
-  - West - something you learned in school.
-
-### "-" + "that" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - To drink or not to drink - that is the question.
-  - Water, luts and fines to etsilopps, - that made up at least a chatl a day.
+  - I'm someone ambitious - someone who knows very well what he is after.
+  - She said someone died-- someone named Alfredo.
 
 ### "-" + "uh" (2 occurrences)
 - Predicted: None
@@ -490,26 +560,61 @@ Accuracy: 99.93%
   - I just need to-- uh, Agnes, I just need to work.
   - This is-- this is-- uh, Phil.
 
-### "-" + "we" (2 occurrences)
+### "-" + "what" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Uh, we are-- we are closing.
-  - We also-- we made her, like, way too tall.
+  - That day you came over to my place to play doctor- what was going on there?
+  - Wha-- what are you doing?
 
-### "-" + "where" (2 occurrences)
+### "-" + "with" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Please sit - where?
-  - That young man who was with you - where can I find him?
+  - Enough with the- with the dying.
+  - Wouldn't you like your own room- with a bathroom, CDs?
 
-### "--" + "I" (2 occurrences)
+### "--" + "Hey" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I was-- I was a piece of shit.
-  - Then three days later-- today-- I was called to testify.
+  - Don't be fr-- Hey.
+  - I was-- Hey, wait!
+
+### "--" + "It" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It wasn't-- It wasn't meant to be.
+  - It's not who-- It's not who we were.
+
+### "--" + "Let" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Here, just-- Let's just rest a bit.
+  - Let's just-- Let's forget about it, okay?
+
+### "--" + "No" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ch-Ch-Ch-- No.
+  - What-- No.
+
+### "--" + "Okay" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Look-- Okay.
+  - You-- Okay, you know what?
+
+### "--" + "Where" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Where's-- Where's Roger?
+  - Yeah, it's a-- Where are we again?
 
 ### "--" + "a" (2 occurrences)
 - Predicted: None
@@ -518,12 +623,40 @@ Accuracy: 99.93%
   - I used to be-- a long, long time ago-- a Communist.
   - I used to be-- a long, long time ago-- a Communist.
 
-### "It" + "'s" (2 occurrences)
-- Predicted: Space
-- Actual: None
+### "--" + "do" (2 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - It's gonna rain tomorrow.
-  - It's gonna take some time.
+  - Also, high school teachers don't-- don't go on sabbatical.
+  - Don't all talk -- don't all talk at the same time.
+
+### "--" + "just" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Just-- just a little talk, that's all.
+  - There, that's better-- just as she always laid it down.
+
+### "--" + "let" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm begging you -- let me be your disciple.
+  - Wait, what-- let who take who?
+
+### "--" + "you" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We're the only two people in the world that know, Maxim-- you and I.
+  - You met him-- you met him a few times.
+
+### "Jakesully" + "," (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Jakesully , the outcast is stirring up the young bulls.
+  - Jakesully , you are always Toruk Makto.
 
 ### "Jakesully" + "." (2 occurrences)
 - Predicted: None
@@ -532,12 +665,19 @@ Accuracy: 99.93%
   - Jakesully .
   - We are grateful you stand with us, Jakesully .
 
-### "She" + "'s" (2 occurrences)
-- Predicted: Space
-- Actual: None
+### "Mangkwan" + "." (2 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - She's gonna call you later.
-  - She's gonna love this.
+  - Mangkwan .
+  - Tsahik of the Mangkwan .
+
+### "Pandit" + ".." (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Mr. Pandit, Mr. Pandit ..
+  - Pandit ..
 
 ### "Sikandar" + "!" (2 occurrences)
 - Predicted: None
@@ -553,13 +693,6 @@ Accuracy: 99.93%
   - Skxawng , let go.
   - Skxawng , over here.
 
-### "They" + "'re" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - They're gonna need help.
-  - They're gonna win the game.
-
 ### "Tram" + "p" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -574,26 +707,40 @@ Accuracy: 99.93%
   - I am Tsahik !
   - Then be Tsahik !
 
-### "We" + "'re" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - We're gonna be late.
-  - We're gonna miss the bus.
-
-### "What" + "-" (2 occurrences)
+### "Tsahik" + "." (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - So What - is - Definite?
-  - What - do - you - want?
+  - I brought something for your Tsahik .
+  - To pray, Tsahik .
 
-### "ca" + "n’t" (2 occurrences)
+### "about" + "?" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - What does it talk about ?
+  - What is this commotion all about ?
+
+### "at" + "your" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - With just a salary to live on, you can’t take taxis!
-  - You can answer, can’t you?
+  - Let's go and have a look atyour troops.
+  - Look atyour comrade's face!
+
+### "boil" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It boil'st!
+  - It boil'st.
+
+### "but" + "you" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He's in Madrid, butyou can't see him.
+  - You've got talent-- limited talent, butyou've got it.
 
 ### "credentials" + "?" (2 occurrences)
 - Predicted: None
@@ -602,33 +749,26 @@ Accuracy: 99.93%
   - What are your credentials ?
   - What exactly are his credentials ?
 
-### "do" + "-" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I would do - what would I not?
-  - What - do - you - want?
-
-### "do" + "n’t" (2 occurrences)
+### "didn't" + "you" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - No, I don’t mind.
-  - Strange, but we all know what this is, don’t we?
+  - Why didn'tyou shoot?
+  - You volunteered, didn'tyou?
 
-### "does" + "n't" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - He doesn't work here.
-  - She doesn't like coffee.
-
-### "for" + "?" (2 occurrences)
+### "do" + "?" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - What are you looking for ?
-  - What are you waiting for ?
+  - What are we going to do ?
+  - What'd you do ?
+
+### "for" + "you" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Thatmustbe thegentleman who's come foryou.
+  - This is foryou.
 
 ### "friends" + "?" (2 occurrences)
 - Predicted: None
@@ -637,19 +777,19 @@ Accuracy: 99.93%
   - We are friends ?
   - Where are all my friends ?
 
-### "here" + "-" (2 occurrences)
+### "go" + "?" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Vic, come here -What vic?
-  - When you lived here -as a little girl- were you not afraid?
+  - Let's go ?
+  - Where did all the love go ?
 
-### "hey" + "?" (2 occurrences)
+### "have" + "." (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A political speech hey ?
-  - Good one hey ?
+  - Here, that's all I have .
+  - Much more as our names here have .
 
 ### "him" + "?" (2 occurrences)
 - Predicted: None
@@ -658,26 +798,19 @@ Accuracy: 99.93%
   - Why him ?
   - You know him ?
 
-### "in" + "-" (2 occurrences)
+### "ilu" + "." (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And a third in - I forget.
-  - No, Say in - I want to hear it!
+  - I'm going to get my own ilu .
+  - You need a very small ilu .
 
-### "is" + "-" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - So What - is - Definite?
-  - This is - This is bullshit.
-
-### "is" + "n’t" (2 occurrences)
+### "in" + "'t" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - If it isn’t, we won’t be so polite.
-  - No, he isn’t.
+  - Is there owt to drink in't fridge?
+  - Though this be madness, yet there is method in't.
 
 ### "know" + "?" (2 occurrences)
 - Predicted: None
@@ -686,26 +819,54 @@ Accuracy: 99.93%
   - What do you want to know ?
   - You want to know ?
 
-### "me" + "-" (2 occurrences)
+### "name" + "?" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Follow me - Where?
-  - Stop teasing me -Did I scare you?
+  - What's your name ?
+  - Your name ?
 
-### "of" + "your" (2 occurrences)
+### "o" + "'" (2 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - He was a friend ofyour husband.
-  - This is all the result ofyour indulging him.
+  - He is happy to munch our left-o'ers.
+  - There's a six-o'clock gutting as well.
 
-### "one" + "-" (2 occurrences)
+### "of" + "him" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I've gotten sort of fond ofhim, you know?
+  - Let go ofhim.
+
+### "of" + "us" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It wouldn't do either ofus any harm.
+  - You've screwed it up for all ofus!
+
+### "of" + "you" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm thinking ofyou.
+  - I'm tired ofyou two whispering behind my back all the time!
+
+### "on" + "." (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Have one - from Keizo.
-  - Three, two, one - swastika.
+  - Come on .
+  - Madam, magic is forbidden from here on .
+
+### "on" + "?" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - What else you got going on ?
+  - What is going on ?
 
 ### "park" + "?" (2 occurrences)
 - Predicted: None
@@ -714,12 +875,12 @@ Accuracy: 99.93%
   - In that park ?
   - Why would Mr Watanabe have wanted to create a park ?
 
-### "sad" + "-" (2 occurrences)
-- Predicted: None
-- Actual: Space
+### "rock" + "'" (2 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - My heart is sad - I dare not tell, My heart is sad for Somebody.
-  - My heart is sad - I dare not tell.
+  - Bacon, eggs, bologna, rock'n'roll, motorcycles.
+  - Miss Penny Lane, let me tell you what rock'n'roll will miss.
 
 ### "say" + "?" (2 occurrences)
 - Predicted: None
@@ -728,12 +889,12 @@ Accuracy: 99.93%
   - What did I say ?
   - What did you say ?
 
-### "shoyu" + "-" (2 occurrences)
-- Predicted: None
-- Actual: Space
+### "that" + "you" (2 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - We will create rich depth and a clear, shoyu -flavored soup.
-  - Yeah, shoyu -flavored.
+  - Beforeyou came, we were saying thatyou could take my place.
+  - Can you prove thatyou're from the other bank?
 
 ### "the" + "Jew" (2 occurrences)
 - Predicted: Space
@@ -741,6 +902,20 @@ Accuracy: 99.93%
 - Examples:
   - But it is true that theJew is slowly eating away at our future.
   - Why are we enemies of theJew?
+
+### "then" + ".." (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Well then ..
+  - You buy it then ..
+
+### "time" + "!" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I don't have time !
+  - We live losing our time !
 
 ### "what" + "?" (2 occurrences)
 - Predicted: None
@@ -754,26 +929,107 @@ Accuracy: 99.93%
 - Actual: Space
 - Examples:
   - To the whole world - good night, good day and good morning.
-  - Workers of the world - unite!
+  - Welcome to the world - inside the painting.
 
-### "you" + "?" (2 occurrences)
+### "you" + "!" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And you ?
-  - Who are you ?
+  - Hopefully, being ridiculous doesn't kill you !
+  - I have already told you !
 
-### "-" + "-Save" (1 occurrences)
+### "you" + "--" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - No, I-I-- -Save it!
+  - I told you -- You can go piss yourself.
+  - I'm begging you -- let me be your disciple.
 
-### "-" + "And" (1 occurrences)
+### "you" + "." (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - They give food for free - And you want to check in there?
+  - Thank you .
+  - When I have him, I'll deliver him to you .
+
+### "your" + "job" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He says, it's yourjob, as a father, to deal with the problem.
+  - What's yourjob?
+
+### "#" + "Kamehama" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You couldn't even do it on that #Kamehama# thing.
+
+### "&" + "I" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And then when you're begging for your life & &I'll scalp you.
+
+### "'m" + "going" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'mgoing toanAIDSconference organizedby Can Ruti.
+
+### "'m" + "sohappy" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'msohappy.
+
+### "'n" + "'roll" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - God's gift to rock'n'roll.
+
+### "'renot" + "people" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They'renotpeople.
+
+### "'s" + "just" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It'sjust a bit swollen.
+
+### "'s" + "parents" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Thesituation with Rosa'sparents is unbearable.
+
+### "'t" + "believe" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ican'tbelieveher andgo onliving withStanley.
+
+### "'t" + "predict" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We can'tpredict the future.
+
+### "'ve" + "just" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'vejust rented one, but it's barely furnished.
+
+### "," + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He's not fighting for Hindu freedom, ..
 
 ### "-" + "Britain" (1 occurrences)
 - Predicted: None
@@ -781,11 +1037,11 @@ Accuracy: 99.93%
 - Examples:
   - France seems to be swinging left - Britain to the right.
 
-### "-" + "Candy" (1 occurrences)
+### "-" + "C." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A little bit - Candy?
+  - One- C.
 
 ### "-" + "Carrots" (1 occurrences)
 - Predicted: None
@@ -799,35 +1055,23 @@ Accuracy: 99.93%
 - Examples:
   - Oh, my-- Darren?
 
-### "-" + "Definite" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - So What - is - Definite?
-
 ### "-" + "Did" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Did-- Did they make a movie of it?
 
-### "-" + "Die" (1 occurrences)
+### "-" + "Don't" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Freeze - Die - Come to Life!
+  - Don't- Don't worry.
 
 ### "-" + "Easter" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Even holidays-- Easter, Christmas.
-
-### "-" + "For" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Needed the guts - For what?
 
 ### "-" + "Get" (1 occurrences)
 - Predicted: None
@@ -847,35 +1091,11 @@ Accuracy: 99.93%
 - Examples:
   - Get-- Go.
 
-### "-" + "God" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Oh - my - God!
-
-### "-" + "Good" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Super - Good luck.
-
-### "-" + "Goodness" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Kaushalya Didi - Goodness!
-
 ### "-" + "Got" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - You wear something new and- Got a light?
-
-### "-" + "Happiness" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Like they say - Happiness only doubles when it is shared!
 
 ### "-" + "He" (1 occurrences)
 - Predicted: None
@@ -883,29 +1103,23 @@ Accuracy: 99.93%
 - Examples:
   - Tell him-- He used to diffuse bombs for the Nazis.
 
-### "-" + "Help" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - The Fearless - Help me!
-
-### "-" + "Hey" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - In the pocket - Hey, my pants!
-
-### "-" + "How" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I can make this - How?
-
 ### "-" + "It" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - It will not sti-- It will not stick!
+
+### "-" + "Kong" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - If I don't get a seat on this plane, I will miss my connection to Hong- Kong.
+
+### "-" + "Lyon" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Here is the Paris - Lyon train schedule.
 
 ### "-" + "Might" (1 occurrences)
 - Predicted: None
@@ -913,11 +1127,11 @@ Accuracy: 99.93%
 - Examples:
   - Might-- Might I have a sip of water?
 
-### "-" + "Miss" (1 occurrences)
+### "-" + "My" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Mama - Miss Morton gave it to me.
+  - My let-- My letters?
 
 ### "-" + "N" (1 occurrences)
 - Predicted: None
@@ -931,59 +1145,23 @@ Accuracy: 99.93%
 - Examples:
   - The west wing-- Nobody ever uses it anymore, do they?
 
-### "-" + "Ohh" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Ha ha ha ha - Ohh!
-
 ### "-" + "Okay" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - O- Okay.
 
-### "-" + "Out" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - In simple language - Out!
-
-### "-" + "Pie" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Sweetie - Pie!
-
-### "-" + "Please" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - See that jeep behind us - Please go in that!
-
-### "-" + "Queen" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Rani - Queen!
-
-### "-" + "Recruitment" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Indian Railways - Recruitment Madam admitted.
-
 ### "-" + "Ryu" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - R- Ryu?
+  - R- Ryu?!
 
-### "-" + "See" (1 occurrences)
+### "-" + "Sameer" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - You, you, you, watch out - See what I do.
+  - You are not that- Sameer.
 
 ### "-" + "She" (1 occurrences)
 - Predicted: None
@@ -991,23 +1169,23 @@ Accuracy: 99.93%
 - Examples:
   - Bump into each other, sparks happen-- She knows.
 
-### "-" + "So" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - But the thief must had come to Delhi - So?
-
-### "-" + "Thank" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Yeah, - Thank you sir.
-
 ### "-" + "These" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - These cards-- These cards suck.
+
+### "-" + "This" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - This is what your-- This is what the script is saying?
+
+### "-" + "Wait" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - W- Wait!
 
 ### "-" + "Who" (1 occurrences)
 - Predicted: None
@@ -1015,47 +1193,65 @@ Accuracy: 99.93%
 - Examples:
   - W- Who the hell are they?
 
+### "-" + "Yeah" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - And he is Mohammed Ali- Yeah.
+
+### "-" + "Yes" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Y- Yes, that's right.
+
 ### "-" + "ages" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - When I looked down-- ages afterwards, it seemed-- she was lying on the floor.
 
-### "-" + "always" (1 occurrences)
+### "-" + "an" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - He has no schedule anymore - always in and out.
+  - Finally, he got- I suspect- an infected jaw, and he was abandoned.
 
-### "-" + "another" (1 occurrences)
+### "-" + "apples" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And his son - another jerk.
+  - What do you like most - apples or bananas?
 
-### "-" + "as" (1 occurrences)
+### "-" + "bearing" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Shooting - as in, hunting?
+  - But these aren't structure- bearing elements, Dad.
 
-### "-" + "boom" (1 occurrences)
+### "-" + "before" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And then - boom!
+  - We can only take so much pressure - before the boat will be crushed.
 
-### "-" + "but" (1 occurrences)
+### "-" + "books" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I am calm-- but call them.
+  - You bought many things-- books, tools, bran for the rabbits.
 
 ### "-" + "can" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Uh, c-- can I get your opinion on something?
+
+### "-" + "choose" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The future has many paths - choose wisely.
 
 ### "-" + "class" (1 occurrences)
 - Predicted: None
@@ -1069,17 +1265,17 @@ Accuracy: 99.93%
 - Examples:
   - Your personal relationship with him - could you tell the jury when that began?
 
-### "-" + "disgusting" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A heretic - disgusting!
-
 ### "-" + "do" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - What - do - you - want?
+  - Here's an important message from your Uncle Bill - don't buy drugs.
+
+### "-" + "ears" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - They have eyes but they do not see - ears, and they do not hear.
 
 ### "-" + "ess" (1 occurrences)
 - Predicted: None
@@ -1087,17 +1283,17 @@ Accuracy: 99.93%
 - Examples:
   - Host- ess!
 
+### "-" + "even" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I learned some new tricks- even faked my death a couple of times.
+
 ### "-" + "flat" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - His belly reminds me of postcards from Japan - flat and pretty.
-
-### "-" + "from" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Have one - from Keizo.
 
 ### "-" + "giddy" (1 occurrences)
 - Predicted: None
@@ -1105,29 +1301,17 @@ Accuracy: 99.93%
 - Examples:
   - Just like your father-- giddy as a schoolboy.
 
-### "-" + "gone" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Prophecy - gone.
-
 ### "-" + "good" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - To the whole world - good night, good day and good morning.
 
-### "-" + "hand" (1 occurrences)
+### "-" + "graveyards" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Genuine Italian leather - hand-stitched!
-
-### "-" + "he" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - No, no, he-- he knew a few things.
+  - I'm tired of museums, - graveyards of the arts.
 
 ### "-" + "hearted" (1 occurrences)
 - Predicted: None
@@ -1135,41 +1319,107 @@ Accuracy: 99.93%
 - Examples:
   - I wish everyone were as kind- hearted as you are, Mark.
 
-### "-" + "heated" (1 occurrences)
+### "-" + "help" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Swimming pool - heated!
+  - I don't know- help you a little.
 
-### "-" + "his" (1 occurrences)
+### "-" + "hiding" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - If not with my son, with whom do I share my woes - his friends?
+  - You're hiding- hiding behind rules and regulations.
 
-### "-" + "in" (1 occurrences)
+### "-" + "home" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - The Fuhrer- in-waiting.
+  - Walt and Bob Barrenger-- invite them over-- home cooked meal.
 
-### "-" + "lethal" (1 occurrences)
+### "-" + "inside" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Also biscuits - lethal.
+  - Welcome to the world - inside the painting.
 
-### "-" + "nearly" (1 occurrences)
+### "-" + "invite" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Grenade fishing - nearly catch of the fucking day, me.
+  - Walt and Bob Barrenger-- invite them over-- home cooked meal.
 
-### "-" + "our" (1 occurrences)
+### "-" + "is" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Money, documents, currency, - our guide has got all.
+  - But is he-- is he crazy?
+
+### "-" + "law" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - My mother's friend broke her son-in- law's head, and they're doing alright.
+
+### "-" + "like" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - IfI boreyou, you can pretend to snore-- like this.
+
+### "-" + "me" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hottest teacher - me.
+
+### "-" + "mice" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Or maybe acorn- mice?
+
+### "-" + "my" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I had everything in that suitcase- my CK shirts, my DKNY shoes, my AX ties.
+
+### "-" + "never" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Alcohol - never again!
+
+### "-" + "no" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - But to be beholden forever to Don Ciccio Matara - no, no, no.
+
+### "-" + "nothing" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Always forgive your enemies - nothing annoys them so much.
+
+### "-" + "oh" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Nothing unusual - oh, until one day, I met a caveman who thought he was Jesus.
+
+### "-" + "or" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I can tell right away if he's in B- or A+ condition.
+
+### "-" + "overturned" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Church steeples - overturned funnels to lead prayers to heaven.
 
 ### "-" + "physically" (1 occurrences)
 - Predicted: None
@@ -1177,11 +1427,17 @@ Accuracy: 99.93%
 - Examples:
   - I mean, physically-- physically, it is spot-on.
 
-### "-" + "please" (1 occurrences)
+### "-" + "professor" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Let them do what they want - please!
+  - I learned that in- professor Hensen's tepid lectures.
+
+### "-" + "refined" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Well, I guess I am a rather interesting man - refined, intelligent.
 
 ### "-" + "robberies" (1 occurrences)
 - Predicted: None
@@ -1193,7 +1449,13 @@ Accuracy: 99.93%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Bhagwan - say the full name.
+  - Tomorrow, tomorrow, just not today - say all lazy people.
+
+### "-" + "science" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - To hold court they have to-- science lab at the high school.
 
 ### "-" + "secretive" (1 occurrences)
 - Predicted: None
@@ -1201,11 +1463,11 @@ Accuracy: 99.93%
 - Examples:
   - Manderley-- secretive and silent.
 
-### "-" + "see" (1 occurrences)
+### "-" + "she" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Anyway Thank you, bye, - see you Aman.
+  - When I looked down-- ages afterwards, it seemed-- she was lying on the floor.
 
 ### "-" + "shirt" (1 occurrences)
 - Predicted: None
@@ -1213,83 +1475,47 @@ Accuracy: 99.93%
 - Examples:
   - T- shirt.
 
+### "-" + "shredding" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It was the biggest paper- shredding in Rio's history.
+
 ### "-" + "six" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - You forget the fence-- six feet high, galvanized iron!
 
-### "-" + "someone" (1 occurrences)
+### "-" + "some" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - She said someone died-- someone named Alfredo.
+  - Oh, I'll just ha-have s- some scrambled eggs.
 
-### "-" + "swastika" (1 occurrences)
+### "-" + "something" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Three, two, one - swastika.
+  - Let me get this straight- something you can transplant?
 
-### "-" + "there" (1 occurrences)
+### "-" + "these" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Help me to get some wine - there is not much left.
+  - Murder, crime, poverty- these things don't concern me.
 
-### "-" + "they" (1 occurrences)
+### "-" + "when" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - They said his-- they said his name.
+  - When it all-when it- when it comes to an end and the big one comes?
 
-### "-" + "three" (1 occurrences)
+### "-" + "words" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - On the tray are five objects - three of them are keys.
-
-### "-" + "to" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A long life eating gruel - to hell with that!
-
-### "-" + "unite" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Workers of the world - unite!
-
-### "-" + "want" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - What - do - you - want?
-
-### "-" + "were" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - When you lived here -as a little girl- were you not afraid?
-
-### "-" + "who" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - A lover for Rosalia - who could it be?
-
-### "-" + "with" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Enough with the- with the dying.
-
-### "-" + "yes" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - They are men - yes sir!
+  - Or perhaps he searched for words - words that could express his pain.
 
 ### "--" + "All" (1 occurrences)
 - Predicted: None
@@ -1297,11 +1523,29 @@ Accuracy: 99.93%
 - Examples:
   - What-- All right.
 
+### "--" + "Am" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - There's part, a young girl-- Am I right?
+
 ### "--" + "Beto" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He never -- Beto.
+
+### "--" + "But" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - But-- But we'll see each other soon.
+
+### "--" + "Come" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - One st-- Come to your right.
 
 ### "--" + "Comeuppance" (1 occurrences)
 - Predicted: None
@@ -1309,17 +1553,71 @@ Accuracy: 99.93%
 - Examples:
   - His come-- Comeuppance?
 
+### "--" + "Did" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I can't believe-- Did he just say that?
+
+### "--" + "Dion" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We have nowhere-- Dion.
+
+### "--" + "Do" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I don't want-- Do you want this, by the way?
+
+### "--" + "Don" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Don-- Don't worry about it.
+
+### "--" + "Don't" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No, don't-- Don't radio anybody!
+
+### "--" + "Excuse" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I-- Excuse me.
+
 ### "--" + "Fuck" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Jimmy Boy, you fucking-- Fuck you!
 
-### "--" + "Hey" (1 occurrences)
+### "--" + "He" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I was-- Hey, wait!
+  - Yeah, but Joe's been-- He's been having a few thoughts.
+
+### "--" + "Heathcliff" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - What're you-- Heathcliff!
+
+### "--" + "Hoggbottom" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No, Hogg-- Hoggbottom.
+
+### "--" + "How" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - How'd-- How'd it go in there with the feds?
 
 ### "--" + "Is" (1 occurrences)
 - Predicted: None
@@ -1327,23 +1625,83 @@ Accuracy: 99.93%
 - Examples:
   - I mean, are you positive about-- Is anybody positive about anything?
 
+### "--" + "Joe" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We're going to have some local food, some roadhouse-- Joe, wanna go?
+
+### "--" + "Kevin" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Uh, that's uh-- Kevin, no running.
+
 ### "--" + "Look" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - No matter what you see-- Look at me.
 
-### "--" + "Oh" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Guarding the-- Oh, hey, Mike.
-
 ### "--" + "Ow" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Do you like my-- Ow!
+  - Do you like my-- Ow!!
+
+### "--" + "Shit" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Look, I ain't-- Shit!
+
+### "--" + "So" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I was just so-- So angry.
+
+### "--" + "Stop" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Take your hands away from your-- I can't under-- Stop it!
+
+### "--" + "Tell" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Listen, it's complet-- Tell them that it's totally safe.
+
+### "--" + "There" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - There's-- There's nothing.
+
+### "--" + "These" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - They'll, uh-- These things happen.
+
+### "--" + "Turn" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No, I want-- Turn over.
+
+### "--" + "We" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We gotta-- We gotta find shipping lanes.
+
+### "--" + "Well" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - And the story-- Well, there's, um, this Hungarian count.
 
 ### "--" + "Which" (1 occurrences)
 - Predicted: None
@@ -1351,17 +1709,83 @@ Accuracy: 99.93%
 - Examples:
   - Nets-- Which nets?
 
-### "--" + "and" (1 occurrences)
+### "--" + "Who" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - On his deathbed -- and I’m quoting verbatim.
+  - What are you-- Who are you?
+
+### "--" + "Why" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I don't know if I have-- Why are you asking me this?
+
+### "--" + "Wow" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I think it's-- Wow.
+
+### "--" + "Yeah" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I know I said I'd-- Yeah, I did.
+
+### "--" + "Your" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tell him he's a-- Your champion is a fraud and a chicken.
+
+### "--" + "all" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Just-- all right.
 
 ### "--" + "as" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Do you take candy sugar-- as a Jew?
+
+### "--" + "at" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hello, I'm calling in regards to a Dr. McClure-- yes-- at Colby General.
+
+### "--" + "but" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No, no, no, but -- but, no, it's true.
+
+### "--" + "deafening" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I was in a bar -- deafening music, blind drunk, everyone waiting for me.
+
+### "--" + "for" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Well, the desert is, it's, uh-- for a woman, it's very tough.
+
+### "--" + "get" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Or-- I don't know-- get a full-time job?
+
+### "--" + "graphic" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - All professional-- graphic artists, printers, retouchers, copper engravers.
 
 ### "--" + "hang" (1 occurrences)
 - Predicted: None
@@ -1381,17 +1805,83 @@ Accuracy: 99.93%
 - Examples:
   - Okay, in a -- in a minute.
 
-### "--" + "is" (1 occurrences)
+### "--" + "internal" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Bradley, is he-- is he here?
+  - I'm a doctor-- internal medicine!
 
-### "--" + "let" (1 occurrences)
+### "--" + "kind" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Wait, what-- let who take who?
+  - Butyou're cute, nicely proportioned-- kind ofsmall, but cute.
+
+### "--" + "like" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I do, like, hori-- like, uh, landscapes.
+
+### "--" + "limited" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You've got talent-- limited talent, butyou've got it.
+
+### "--" + "maybe" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A basin's broken-- maybe he can repair it.
+
+### "--" + "my" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - There's two ways you can go on this job-- my way or the highway.
+
+### "--" + "not" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No bones were broken, but after that, he didn't grow-- not a single centimeter.
+
+### "--" + "our" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Yeah, you haven't even told us our-- our goal.
+
+### "--" + "outdoors" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'll raise them the modern way-- outdoors.
+
+### "--" + "plug" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Yeah, plug-- plug it in.
+
+### "--" + "quite" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'll be at the inquest tomorrow, Maxim-- quite unofficially, you know.
+
+### "--" + "so" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Wait, so-- so we're expendable?
+
+### "--" + "tall" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - She was a very beautiful woman-- tall, dark, exquisitely dressed.
 
 ### "--" + "to" (1 occurrences)
 - Predicted: None
@@ -1405,11 +1895,71 @@ Accuracy: 99.93%
 - Examples:
   - Then three days later-- today-- I was called to testify.
 
+### "--" + "top" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Sorry, that just wasn't on my-- top of my list of priorities.
+
+### "--" + "tricks" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You Jews-- tricks and fakery, that's what you're good at.
+
+### "--" + "two" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tits-- two, because I'm no monster.
+
+### "--" + "um" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Oh, it's probably the hor-- um, Mercury in retrograde.
+
+### "--" + "very" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He was a lovely person-- very unusual.
+
+### "--" + "what" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Doug, it's-- what, three days?
+
 ### "--" + "whatever" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Men, machines, material-- whatever you need!
+
+### "--" + "who" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Like you're the one who made them laugh-- who made them forget their troubles.
+
+### "--" + "yes" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hello, I'm calling in regards to a Dr. McClure-- yes-- at Colby General.
+
+### "A-" + "on" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You said you got an A- on the teacher's exam.
+
+### "AIDS" + "conference" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'mgoing toanAIDSconference organizedby Can Ruti.
 
 ### "Age" + "?" (1 occurrences)
 - Predicted: None
@@ -1417,11 +1967,29 @@ Accuracy: 99.93%
 - Examples:
   - Age ?
 
+### "Alcohol" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Alcohol - never again!
+
 ### "Alphas" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - In real life I was an Omega among Alphas .
+
+### "Azad" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Look at Bhagat Singh and Azad ..
+
+### "Background" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Background ..
 
 ### "Barfi" + "?" (1 occurrences)
 - Predicted: None
@@ -1435,11 +2003,11 @@ Accuracy: 99.93%
 - Examples:
   - Bastard !
 
-### "Because" + "“" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "Beethoven" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - Because“.
+  - It's Beethoven .
 
 ### "Before" + "you" (1 occurrences)
 - Predicted: Space
@@ -1447,23 +2015,41 @@ Accuracy: 99.93%
 - Examples:
   - Beforeyou came, we were saying thatyou could take my place.
 
-### "Bhagwan" + "-" (1 occurrences)
+### "Berlin" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Bhagwan - say the full name.
+  - It describes how he wakes up in the modern Berlin .
 
-### "Budhan" + "-" (1 occurrences)
+### "Box" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Budhan -Yes?
+  - Black Box .
+
+### "Brother" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Brother ..
 
 ### "Bush" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - A Bush ?
+
+### "But" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - But ..
+
+### "But" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Butyou're cute, nicely proportioned-- kind ofsmall, but cute.
 
 ### "Chief" + "!" (1 occurrences)
 - Predicted: None
@@ -1477,41 +2063,23 @@ Accuracy: 99.93%
 - Examples:
   - Deepak !
 
-### "Delhi" + "-" (1 occurrences)
+### "Deputy" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - But the thief must had come to Delhi - So?
+  - Deputy .
 
-### "Devdas Mukherjee" + "-" (1 occurrences)
+### "Don Ciccio Matara" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Devdas Mukherjee - Are you insane?
+  - But to be beholden forever to Don Ciccio Matara - no, no, no.
 
-### "Did" + "n’t" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Didn’t you say you were using a fake name?
-
-### "Die" + "-" (1 occurrences)
+### "Embassy" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Freeze - Die - Come to Life!
-
-### "Euklidas" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Police chief Euklidas - is quite a character.
-
-### "Exact" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Exact - The race will disappear.
+  - Why Pakistan Embassy ..?
 
 ### "Excuses" + "!" (1 occurrences)
 - Predicted: None
@@ -1525,29 +2093,17 @@ Accuracy: 99.93%
 - Examples:
   - Failures !
 
-### "Fearless" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "Get" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - The Fearless - Help me!
+  - Get'em out!
 
-### "Freeze" + "-" (1 occurrences)
+### "God" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Freeze - Die - Come to Life!
-
-### "Fuser" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - This time is different Fuser -Why?
-
-### "Gibarian" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I would like to see Gibarian - I mean, Sartorius.
+  - I asked God ..
 
 ### "Got" + "ta" (1 occurrences)
 - Predicted: Space
@@ -1555,17 +2111,17 @@ Accuracy: 99.93%
 - Examples:
   - Gotta use the phone, love?
 
-### "Govind" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Govind - Yes, sir?
-
 ### "Greens" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I would form a coalition with the Greens .
+
+### "Gulabo" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - She's so pink her name should be Gulabo .
 
 ### "Hallo" + "?" (1 occurrences)
 - Predicted: None
@@ -1573,11 +2129,11 @@ Accuracy: 99.93%
 - Examples:
   - Hallo ?
 
-### "He" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "Harishchandra ghat" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - He's gonna be angry.
+  - I live in Harishchandra ghat .
 
 ### "Heh" + "?" (1 occurrences)
 - Predicted: None
@@ -1585,17 +2141,11 @@ Accuracy: 99.93%
 - Examples:
   - Heh ?
 
-### "Hey" + "-" (1 occurrences)
+### "Hello" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Hey - The whistle.
-
-### "How" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - How ?
+  - Hello ?
 
 ### "Howl" + "!" (1 occurrences)
 - Predicted: None
@@ -1609,11 +2159,41 @@ Accuracy: 99.93%
 - Examples:
   - Hurry !
 
+### "I" + "'faith" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'faith, my wooing is fit for thy understanding.
+
+### "I" + "'lljump" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Cut it out or I'lljump!
+
+### "I" + "'ma" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Oh, I'ma use it.
+
+### "I" + "'v" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Why the devil I'v got tied up with him?
+
 ### "I" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Neither did I .
+
+### "I" + "can" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ican'tbelieveher andgo onliving withStanley.
 
 ### "I" + "‘m" (1 occurrences)
 - Predicted: Space
@@ -1621,11 +2201,29 @@ Accuracy: 99.93%
 - Examples:
   - I‘m ironing my handkerchiefs.
 
+### "ID" + "'ed" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We've ID'ed the guy the Major collared.
+
 ### "If" + "I" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - IfI boreyou, you can pretend to snore-- like this.
+
+### "If" + "it" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ifit won't giveyou a heart attack, I could do her part.
+
+### "Ikhwan khwan-m-Mukhbireen" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We need to nourish the Ikhwan khwan-m-Mukhbireen ..
 
 ### "Incredible" + "!" (1 occurrences)
 - Predicted: None
@@ -1633,11 +2231,17 @@ Accuracy: 99.93%
 - Examples:
   - Incredible !
 
-### "Indian Railways" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "It" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Indian Railways - Recruitment Madam admitted.
+  - It'no bother.
+
+### "It" + "'an" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It'an honor.
 
 ### "Jakesully" + "?" (1 occurrences)
 - Predicted: None
@@ -1663,11 +2267,11 @@ Accuracy: 99.93%
 - Examples:
   - Just-- Just breathe, okay?
 
-### "Kaushalya Didi" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "Kamehama" + "#" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Kaushalya Didi - Goodness!
+  - You couldn't even do it on that #Kamehama# thing.
 
 ### "Keri" + "." (1 occurrences)
 - Predicted: None
@@ -1681,23 +2285,35 @@ Accuracy: 99.93%
 - Examples:
   - And Kimura ?
 
-### "Knowledge" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "Know" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Knowledge - nothing.
+  - Know'st thou a wizard?
 
-### "Languages" + "-" (1 occurrences)
+### "Lapdog" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Languages - silent.
+  - Like the lady in The Widow's Lapdog ?
+
+### "Let" + "'em" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Let'em go.
 
 ### "Look" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Look .
+
+### "Louder" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm upset Louder .
 
 ### "Luna" + "!" (1 occurrences)
 - Predicted: None
@@ -1717,17 +2333,23 @@ Accuracy: 99.93%
 - Examples:
   - Ma Jake .
 
-### "Maggie" + "-" (1 occurrences)
+### "Majesty" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Little Maggie -Little Maggie.
+  - Your Majesty - to be torn apart by five horses.
 
-### "Mama" + "-" (1 occurrences)
+### "Mama" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Mama - Miss Morton gave it to me.
+  - That's all right, isn't it, Mama ?
+
+### "Manager" + "??" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You're the Population Dpt Manager ??
 
 ### "Mangkwan" + "!" (1 occurrences)
 - Predicted: None
@@ -1735,17 +2357,17 @@ Accuracy: 99.93%
 - Examples:
   - Mangkwan !
 
-### "Mangkwan" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Tsahik of the Mangkwan .
-
 ### "Max" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Max ?
+
+### "Maybe" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Maybe .
 
 ### "Michael Jackson" + "?" (1 occurrences)
 - Predicted: None
@@ -1753,29 +2375,17 @@ Accuracy: 99.93%
 - Examples:
   - Do you know the brother of Michael Jackson ?
 
-### "Mine" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Mine -And the adress under the car?
-
-### "Miss" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Miss - Yeah?
-
 ### "Mom" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Mom !
 
-### "Mother" + "-" (1 occurrences)
+### "Monday" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Mother - she never was my mother.
+  - One says to sacrifices on Monday ..
 
 ### "Motilal" + "!" (1 occurrences)
 - Predicted: None
@@ -1789,17 +2399,11 @@ Accuracy: 99.93%
 - Examples:
   - These guys want to inherit the Nazi ?
 
-### "No" + "-" (1 occurrences)
+### "Obara" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - No -Wanna bet?
-
-### "Oh" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Oh - my - God!
+  - Mr. Obara ?
 
 ### "Oink-" + "oink" (1 occurrences)
 - Predicted: None
@@ -1812,6 +2416,12 @@ Accuracy: 99.93%
 - Actual: Space
 - Examples:
   - Okay ?
+
+### "Open" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Open'em all!
 
 ### "Opportunities" + "." (1 occurrences)
 - Predicted: None
@@ -1843,17 +2453,29 @@ Accuracy: 99.93%
 - Examples:
   - Are you PK ?
 
+### "Paris" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Here is the Paris - Lyon train schedule.
+
+### "Paula" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Thank you, Paula .
+
 ### "Piyush" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Piyush !
 
-### "Prophecy" + "-" (1 occurrences)
+### "Please" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Prophecy - gone.
+  - Please ..
 
 ### "Quand" + "?" (1 occurrences)
 - Predicted: None
@@ -1867,35 +2489,53 @@ Accuracy: 99.93%
 - Examples:
   - Questions ?
 
-### "Rani" + "-" (1 occurrences)
+### "Rajguru" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Rani - Queen!
+  - Bhagat Singh, Chandrashekhar Azad, Rajguru ..
 
 ### "Really" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Really !
+  - Really !?
 
-### "Rosalia" + "-" (1 occurrences)
+### "Really" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - A lover for Rosalia - who could it be?
+  - Really ?
 
-### "Schutte" + "-" (1 occurrences)
+### "Rock" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Rock'n'roll.
+
+### "Saito" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Hi, Schutte - No names!
+  - And for Mr. Saito ?
+
+### "San Francisco" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We hadn't seen her since San Francisco .
 
 ### "See" + "," (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - That song in your diary, The Face I Want to See , that will be the sign.
+
+### "Shadow Lake" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Shadow Lake .
 
 ### "Shambhu Chacha" + "!" (1 occurrences)
 - Predicted: None
@@ -1921,17 +2561,23 @@ Accuracy: 99.93%
 - Examples:
   - Shit !
 
-### "Shooting" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "Show" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Shooting - as in, hunting?
+  - Show'em.
 
-### "Silencer" + "-" (1 occurrences)
+### "Since" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Sinceyou left, I haven't had a decent meal.
+
+### "Sir" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Look at Silencer - the nude dude!
+  - Sir ..?
 
 ### "Skxawng" + "." (1 occurrences)
 - Predicted: None
@@ -1939,41 +2585,71 @@ Accuracy: 99.93%
 - Examples:
   - Skxawng .
 
-### "Special" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Special - like hell.
-
-### "Stop" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Stop - What is this?
-
-### "Super" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Super - Good luck.
-
-### "Sweetie" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Sweetie - Pie!
-
-### "Tancred" + "“" (1 occurrences)
+### "Steak" + "'n" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Tancred“!
+  - Hey, Steak'n'fries, let's see what you're made of.
 
-### "Then" + "-" (1 occurrences)
+### "Tanagra" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Then -you, too?
+  - Tanagra .
+
+### "That" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Thatyou love her-- I don't know.
+
+### "The" + "Jew" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - TheJew has no interest in the solution of Germany's problems.
+
+### "The New York Times" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Merle's on the phone right now with The New York Times .
+
+### "They" + "'rejuvenile" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They'rejuvenile delinquents, mentaldefectives.
+
+### "They" + "'reneverindoors" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They'reneverindoors longenough.
+
+### "They" + "'renobody" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They'renobody's fans.
+
+### "They" + "'renot" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - They'renotpeople.
+
+### "Toruk Makt" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Even the son of Toruk Makt .
+
+### "Toruk Makto" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Where is the one they call Toruk Makto ?
 
 ### "Tsahik" + "," (1 occurrences)
 - Predicted: None
@@ -1981,41 +2657,59 @@ Accuracy: 99.93%
 - Examples:
   - Tsahik , look.
 
-### "Tsahik" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - To pray, Tsahik .
-
-### "Tsahì" + "--" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - You take me to your Tsahì -- -Move!
-
 ### "Tsyong" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Tsyong !
 
-### "Valerka" + "-" (1 occurrences)
+### "Tuesday" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Valerka -What?
+  - Another says to sacrifices on Tuesday ..
 
-### "Watanabe" + "!" (1 occurrences)
+### "Tulkun" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Like Watanabe !
+  - Tulkun .
 
-### "West" + "-" (1 occurrences)
+### "Uncle" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - West - something you learned in school.
+  - Uncle ..
+
+### "Uncle Bill" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Here's an important message from your Uncle Bill - don't buy drugs.
+
+### "Warning" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Warning !
+
+### "Was" + "'t" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Was't a wolf stole Sam?
+
+### "Watanabe" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Wasn't it Mr. Watanabe ?
+
+### "Were" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Were'nt you supposed to be with dad, fucker?
 
 ### "Wh" + "—" (1 occurrences)
 - Predicted: Space
@@ -2029,11 +2723,23 @@ Accuracy: 99.93%
 - Examples:
   - What ?
 
+### "What" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What—?
+
 ### "Whatever" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Whatever !
+
+### "Who" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Who ?
 
 ### "Why" + "?" (1 occurrences)
 - Predicted: None
@@ -2041,11 +2747,11 @@ Accuracy: 99.93%
 - Examples:
   - Why ?
 
-### "Wisborg" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "Won't" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - I am leaving immediately to return to Wisborg - and to you.
+  - Won'tyou tell me anything?
 
 ### "Y" + "—" (1 occurrences)
 - Predicted: Space
@@ -2077,11 +2783,23 @@ Accuracy: 99.93%
 - Examples:
   - Yes ?
 
-### "You" + "'re" (1 occurrences)
+### "You" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - You're gonna be fine.
+  - You'resolucky.
+
+### "You" + "and" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Youandyour friend, Mr. Mitchell.
+
+### "a" + "'layin" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Been a'layin traps for some while now, even before this new misery.
 
 ### "a" + "--" (1 occurrences)
 - Predicted: None
@@ -2107,23 +2825,29 @@ Accuracy: 99.93%
 - Examples:
   - Brother… a-are you serious?
 
-### "about" + "?" (1 occurrences)
+### "a" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - What is this commotion all about ?
+  - Maybe a … an old friend?
 
-### "about" + "your" (1 occurrences)
+### "about" + "you" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - See a doctor aboutyour nerves.
+  - I'm writing a story aboutyou for a competition.
 
-### "ago" + "-" (1 occurrences)
+### "after" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She went out afteryou did.
+
+### "again" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Fifty years ago - - The Olympic Games!
+  - Never again !
 
 ### "ahead" + "--" (1 occurrences)
 - Predicted: None
@@ -2131,11 +2855,29 @@ Accuracy: 99.93%
 - Examples:
   - Go ahead -- hang yourself and die!
 
+### "ahead" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Go ahead .
+
 ### "alive" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He is barely alive !
+
+### "all" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - And that's all ?
+
+### "allow" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You allow ?
 
 ### "alone" + "?" (1 occurrences)
 - Predicted: None
@@ -2143,23 +2885,53 @@ Accuracy: 99.93%
 - Examples:
   - You live alone ?
 
+### "ambitious" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm someone ambitious - someone who knows very well what he is after.
+
+### "an" + "AIDS" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'mgoing toanAIDSconference organizedby Can Ruti.
+
+### "and" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Boys and girls and ..
+
+### "and" + "go" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ican'tbelieveher andgo onliving withStanley.
+
 ### "and" + "of" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Takegoodcare ofyourselfandofHuma.
 
-### "anymore" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "and" + "your" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - He has no schedule anymore - always in and out.
+  - Youandyour friend, Mr. Mitchell.
 
 ### "anyone" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - You see anything unusual or anyone—?
+
+### "apologize" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Don't apologize .
 
 ### "are" + "Jew" (1 occurrences)
 - Predicted: Space
@@ -2179,6 +2951,12 @@ Accuracy: 99.93%
 - Examples:
   - Est-ce que vous êtes arrivés ?
 
+### "aside" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Step aside !
+
 ### "asses." + "" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2191,17 +2969,23 @@ Accuracy: 99.93%
 - Examples:
   - What are you looking at ?
 
-### "audience" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "at" + "Army HQ" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Could you tell the audience - the jury - what happened next?
+  - Who d'you know atArmy HQ?
 
-### "automatic" + "-" (1 occurrences)
+### "away" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Batteries charge automatic - What?
+  - So can you not go away ?
+
+### "bar" + "--" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I was in a bar -- deafening music, blind drunk, everyone waiting for me.
 
 ### "bar" + "with" (1 occurrences)
 - Predicted: Space
@@ -2209,17 +2993,29 @@ Accuracy: 99.93%
 - Examples:
   - Who was that woman in the barwith you?
 
-### "biscuits" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "because" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Also biscuits - lethal.
+  - It isn't becauseyou saved my life, but how I've missed you!
 
-### "bit" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "believe" + "her" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - A little bit - Candy?
+  - Ican'tbelieveher andgo onliving withStanley.
+
+### "bet" + "'cha" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You bet'cha!
+
+### "better" + "'n" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - No, pal, he sees better'n you do.
 
 ### "body" + "?" (1 occurrences)
 - Predicted: None
@@ -2227,17 +3023,47 @@ Accuracy: 99.93%
 - Examples:
   - On my body ?
 
+### "bombs" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - None of them died under the bombs .
+
+### "boredom" + ";" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A naked lecture conveys boredom ; tales help precepts get through.
+
+### "brother" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hey brother ..
+
 ### "brother" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - What are you doing brother ?
 
-### "calm" + "-" (1 occurrences)
+### "bus" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Stay calm -Why?
+  - From there, take a bus ..
+
+### "but" + "--" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No, no, no, but -- but, no, it's true.
+
+### "by" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Eng subs ripped by ..
 
 ### "can" + "?" (1 occurrences)
 - Predicted: None
@@ -2257,6 +3083,12 @@ Accuracy: 99.93%
 - Examples:
   - Did he know he had a cancer ?
 
+### "car" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I can't buy that car - it costs an arm and a leg.
+
 ### "caricature" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2268,6 +3100,12 @@ Accuracy: 99.93%
 - Actual: Space
 - Examples:
   - Plus, there are a lot of other cases - robberies, murders, burglaries, thuggery.
+
+### "cassette" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Right now, the main thing is to recover the cassette .
 
 ### "celebrate" + "your" (1 occurrences)
 - Predicted: Space
@@ -2281,6 +3119,24 @@ Accuracy: 99.93%
 - Examples:
   - Are you certain ?
 
+### "children" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - So what kind of father will tell their children ..
+
+### "city" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I returned to my city ..
+
+### "cleaning" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It could use some cleaning .
+
 ### "closer" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2293,11 +3149,29 @@ Accuracy: 99.93%
 - Examples:
   - What if we got closer ?
 
+### "coincidence" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It wasn't a coincidence .
+
+### "complaining" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm not complaining .
+
 ### "condemned" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He knew he was condemned !
+
+### "conditioned" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - But we are conditioned ..
 
 ### "contact" + "Army HQ" (1 occurrences)
 - Predicted: Space
@@ -2311,23 +3185,59 @@ Accuracy: 99.93%
 - Examples:
   - Wouldyoulike us to contactyour family?
 
-### "dad" + "-" (1 occurrences)
+### "cooled" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Yes, dad -Then.
+  - Fire has completely cooled ..
 
-### "dah" + "!" (1 occurrences)
+### "country" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Tah dah !
+  - From then on, I decided, if I want to live in this country ..
+
+### "cowardice" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Such a small plate is a sign of cowardice .
 
 ### "dare" + "you" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - How dareyou bring a whore here!
+
+### "daughter" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - But I'm a father's daughter ..
+
+### "day" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Then one day ..
+
+### "day" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Some dayyou'll have to tell me all about my father.
+
+### "dead" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - And then you're dead ?
+
+### "death" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Don't even try to talk me to death - I have earplugs.
 
 ### "deathbed" + "--" (1 occurrences)
 - Predicted: None
@@ -2341,11 +3251,17 @@ Accuracy: 99.93%
 - Examples:
   - No not if we are decided !
 
-### "did" + "-" (1 occurrences)
+### "did" + "'t" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Why did't you let her come?
+
+### "die" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - What did - Come here!
+  - You saw them age and die - a friend, a colleague, a wife.
 
 ### "disaster" + "just" (1 occurrences)
 - Predicted: Space
@@ -2359,11 +3275,17 @@ Accuracy: 99.93%
 - Examples:
   - For now you can continue to disseminate .
 
-### "do" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "do" + "es" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - What are we going to do ?
+  - Attention doesn't hurt.
+
+### "do" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Why doyou want to move in here ifyou're ill?
 
 ### "doctorate" + "?" (1 occurrences)
 - Predicted: None
@@ -2371,11 +3293,11 @@ Accuracy: 99.93%
 - Examples:
   - Does he have a doctorate ?
 
-### "does" + "n’t" (1 occurrences)
+### "doesen" + "'t" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Cretinism doesn’t sink any lower.
+  - IT doesen't look good.
 
 ### "dog" + "?" (1 occurrences)
 - Predicted: None
@@ -2395,11 +3317,11 @@ Accuracy: 99.93%
 - Examples:
   - Open the door !
 
-### "dreams" + "-" (1 occurrences)
+### "drawback" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - My circus dreams - just memories ten years from now.
+  - Brilliant people have one major drawback - they don't know how to lose.
 
 ### "drink" + "-" (1 occurrences)
 - Predicted: None
@@ -2425,12 +3347,6 @@ Accuracy: 99.93%
 - Examples:
   - How much do you earn ?
 
-### "easy" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Very easy - just say please once.
-
 ### "eep." + "" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2443,29 +3359,35 @@ Accuracy: 99.93%
 - Examples:
   - Always forgive your enemies - nothing annoys them so much.
 
+### "enka" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It's like a scene from an enka .
+
 ### "entertainment" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - It has given a new dimension to entertainment .
 
-### "erexcitable ch" + "ildren." (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - It was a boarding school for… Overexcitable children.
-
-### "everything" + "-" (1 occurrences)
+### "existence" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - What can cheer up, soften, color everything - a big love.
+  - Shiva, destroyed the existence ..
 
 ### "extraordinary" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - It was extraordinary !
+
+### "face" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Get another face ..
 
 ### "family" + "?" (1 occurrences)
 - Predicted: None
@@ -2485,23 +3407,35 @@ Accuracy: 99.93%
 - Examples:
   - This yellow colour, can be seen from a far .
 
-### "father" + "-" (1 occurrences)
+### "fast" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - My father - my father was my father.
+  - Without the politicians it wouldn't have been so fast !
 
-### "fish" + "-" (1 occurrences)
+### "finish" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Catching a fish - pretense.
+  - It's finish ?
 
-### "fishing" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "five" + "just" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Grenade fishing - nearly catch of the fucking day, me.
+  - You took fivejust now.
+
+### "fix" + "your" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm going to fixyour hair and makeyou up a bit.
+
+### "for" + "Jasper" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm sorry I was such a time, but I had to find a rope forJasper.
 
 ### "for" + "Tuesday" (1 occurrences)
 - Predicted: Space
@@ -2509,11 +3443,23 @@ Accuracy: 99.93%
 - Examples:
   - A return ticket forTuesday.
 
-### "free" + "-" (1 occurrences)
+### "for" + "your" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We'll go foryour things now, and you'll move in here.
+
+### "forbid" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - They give food for free - And you want to check in there?
+  - God forbid - the money would be on the table tomorrow.
+
+### "fraud" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The solutions that we are given, are they coming from God, or from some fraud ?
 
 ### "friend" + "—" (1 occurrences)
 - Predicted: Space
@@ -2527,17 +3473,41 @@ Accuracy: 99.93%
 - Examples:
   - I was having fun !
 
+### "future" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Look at the world future ..
+
+### "get" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Milked or not, get'em out!
+
+### "get" + "ting" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - If she knew I'm getting kicked by buffaloes, she'll kick me out.
+
+### "gettin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He's gettin'away!
+
 ### "ghats" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - They are interested in the history of the ghats .
 
-### "girls" + "-" (1 occurrences)
+### "go" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - This one is for the girls - you can take your personal stuff with you, too!
+  - Let's go !
 
 ### "god" + "—" (1 occurrences)
 - Predicted: Space
@@ -2545,29 +3515,65 @@ Accuracy: 99.93%
 - Examples:
   - Your god—where is He now?
 
-### "gruel" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "going" + "I" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - A long life eating gruel - to hell with that!
+  - But, where are you goingI'm going a bit further from your destination.
 
-### "guts" + "-" (1 occurrences)
+### "gone" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Needed the guts - For what?
+  - No, he's gone .
 
-### "ha" + "-" (1 occurrences)
+### "graciously" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Ha ha ha ha - Ohh!
+  - Why don't they give us the money graciously ?
+
+### "granny" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Give up granny .
+
+### "guy" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He's a nice guy - that's unanimous.
+
+### "hands" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Our world is so used to men holding hands ..
+
+### "happened" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hello, but what happened ..?
 
 ### "happening" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - What is happening ?
+
+### "heard" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You heard ?
+
+### "her" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It's her !
 
 ### "her" + "?" (1 occurrences)
 - Predicted: None
@@ -2587,11 +3593,11 @@ Accuracy: 99.93%
 - Examples:
   - What are you doing here ?
 
-### "heretic" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "here" + "just" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - A heretic - disgusting!
+  - You're locked in herejust like us.
 
 ### "herself" + "and" (1 occurrences)
 - Predicted: Space
@@ -2623,17 +3629,23 @@ Accuracy: 99.93%
 - Examples:
   - Your personal relationship with him - could you tell the jury when that began?
 
+### "him" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You that isn't him .
+
+### "home" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - At their home ?
+
 ### "homeland" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - I love my family and, even more, my homeland—the land where I was born.
-
-### "house" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I just got to know that their love story was born in your house - My house?
 
 ### "house" + "?" (1 occurrences)
 - Predicted: None
@@ -2653,6 +3665,18 @@ Accuracy: 99.93%
 - Examples:
   - And what ifVitya is in there?
 
+### "if" + "it" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - And when you get used to it, it's as ifit didn't exist.
+
+### "if" + "no" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - We'll be lucky ifno one is trampled to death in there!
+
 ### "if" + "nobody" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2671,17 +3695,17 @@ Accuracy: 99.93%
 - Examples:
   - What ifthey get lost?
 
-### "ildren." + "" (1 occurrences)
+### "if" + "we" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - It was a boarding school for… Overexcitable children.
+  - But what ifwe've got a witness?
 
-### "ilu" + "." (1 occurrences)
+### "incompetent" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - You need a very small ilu .
+  - You're as pathetic incompetent !
 
 ### "incorrigible" + "!" (1 occurrences)
 - Predicted: None
@@ -2689,11 +3713,41 @@ Accuracy: 99.93%
 - Examples:
   - You are incorrigible !
 
+### "insanity" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I don't suffer from insanity - I enjoy it!
+
+### "inside" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Everyone has passion for something inside ..
+
 ### "ironic" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Not because they are funny or ironic .
+
+### "is" + "'t" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What is't, boy?
+
+### "is" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Poetry that is ..
+
+### "is" + "missing" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Ididn't want to tellher, butmylife ismissing thatsamehalf.
 
 ### "is--" + "Why" (1 occurrences)
 - Predicted: None
@@ -2707,11 +3761,23 @@ Accuracy: 99.93%
 - Examples:
   - The noes have it !
 
-### "it" + "-Why" (1 occurrences)
+### "it" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Throw it away or burn it -Why?
+  - I demand it - that you tell these people the truth.
+
+### "it" + "--" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - No doubt about it -- they're scouts.
+
+### "it" + "just" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Oh, Lena, itjust doesn't make sense.
 
 ### "it" + "your" (1 occurrences)
 - Predicted: Space
@@ -2731,11 +3797,29 @@ Accuracy: 99.93%
 - Examples:
   - Combien de jours ?
 
-### "jury" + "-" (1 occurrences)
+### "just" + "joking" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He's justjoking.
+
+### "kidding" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Could you tell the audience - the jury - what happened next?
+  - Are you kidding !
+
+### "know" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Thou know'st me?
+
+### "know" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - So how did he know ..
 
 ### "kuru" + "." (1 occurrences)
 - Predicted: None
@@ -2755,23 +3839,17 @@ Accuracy: 99.93%
 - Examples:
   - A lamp ?
 
-### "language" + "-" (1 occurrences)
+### "language" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - In simple language - Out!
+  - He does not know our language ..
 
-### "languages" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "laughin" + "'" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - If languages - silent.
-
-### "leather" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Genuine Italian leather - hand-stitched!
+  - What are you laughin'at?
 
 ### "left" + "-" (1 occurrences)
 - Predicted: None
@@ -2785,11 +3863,17 @@ Accuracy: 99.93%
 - Examples:
   - You leftyesterday withoutyour money.
 
-### "lights" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "like" + "just" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Turn on the lights - Where to?
+  - I don't likejust anyone kissing the baby.
+
+### "like" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I don't think I likeyou writing about me.
 
 ### "long" + "." (1 occurrences)
 - Predicted: None
@@ -2797,17 +3881,35 @@ Accuracy: 99.93%
 - Examples:
   - I am waiting for this moment for so long .
 
-### "lucky" + "-" (1 occurrences)
+### "lunch" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - He said I was lucky - the doctor.
+  - I'm taking lunch .
+
+### "machine" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It's quite a machine .
+
+### "make" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm going to fixyour hair and makeyou up a bit.
 
 ### "man" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - What a man !
+
+### "man" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Well, I guess I am a rather interesting man - refined, intelligent.
 
 ### "manager" + "!" (1 occurrences)
 - Predicted: None
@@ -2821,11 +3923,41 @@ Accuracy: 99.93%
 - Examples:
   - How many ?
 
+### "matter" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - What's the matter ?
+
+### "me" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - One almost hit me .
+
+### "me" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It's you who teach me ..
+
 ### "me" + "your" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Show meyour cock.
+
+### "mean" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - What do you mean ?
+
+### "means" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - That means ..
 
 ### "melancholy" + "!" (1 occurrences)
 - Predicted: None
@@ -2833,41 +3965,29 @@ Accuracy: 99.93%
 - Examples:
   - I hate melancholy !
 
-### "men" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - They are men - yes sir!
-
-### "million" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - One million -Dollars?
-
-### "minister" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - As-Salaam-Alaikum, minister -Alaikum-Salaam, sister.
-
-### "minute" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - One minute -What?
-
 ### "mishegoss" + "," (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - None of this ping-pong mishegoss , okay?
 
-### "money" + "-" (1 occurrences)
+### "mission" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I earned that money -Where?
+  - This is the Alphaverse's mission - to take us back to how it's supposed to be.
+
+### "most" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - What do you like most - apples or bananas?
+
+### "mother" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Everyone says I look like my mother ..
 
 ### "motorcycle" + "!" (1 occurrences)
 - Predicted: None
@@ -2875,17 +3995,23 @@ Accuracy: 99.93%
 - Examples:
   - A motorcycle !
 
+### "mouth" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I have something in the mouth ?
+
+### "much" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Wasn't he right to insist so much ?
+
 ### "music" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - She prefers quiet music - the baroque, for example.
-
-### "my" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Oh - my - God!
 
 ### "myprovoleta" + "." (1 occurrences)
 - Predicted: None
@@ -2893,23 +4019,23 @@ Accuracy: 99.93%
 - Examples:
   - And myprovoleta .
 
+### "mythic" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I have always imagined both as entirely mythic - but I would like to hear more.
+
 ### "name" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Your name !
 
-### "name" + "-" (1 occurrences)
+### "name" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - What a lovely name - I mean yours.
-
-### "name" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Your name ?
+  - Get another name ..
 
 ### "negative" + "." (1 occurrences)
 - Predicted: None
@@ -2917,17 +4043,17 @@ Accuracy: 99.93%
 - Examples:
   - I do not know if it was positive or negative .
 
-### "neighbourhood" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - There is no hospital in this neighbourhood - I know.
-
 ### "never" + "--" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - He never -- Beto.
+
+### "never" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Instead they did something that I had never ..
 
 ### "night" + "." (1 occurrences)
 - Predicted: None
@@ -2941,23 +4067,23 @@ Accuracy: 99.93%
 - Examples:
   - This noise ?
 
+### "not" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - If they'll give us the money or not !
+
+### "not" + "joking" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm notjoking!
+
 ### "nothing" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - But we little people can do nothing .
-
-### "now" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Come back here right now !
-
-### "now" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Excuse me, this has to be freezing by now -No, leave it there!
 
 ### "now" + "?" (1 occurrences)
 - Predicted: None
@@ -2965,23 +4091,23 @@ Accuracy: 99.93%
 - Examples:
   - What are we gonna do now ?
 
-### "nuke" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Brother, did you see my nuke - a duke shot!
-
 ### "nurse" + "or" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Did he ask the head nurseor you if you like bestiality or coprophagy?
 
-### "objects" + "-" (1 occurrences)
+### "occasion" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - On the tray are five objects - three of them are keys.
+  - This is a special occasion - the birthday of our dear friend Gosha.
+
+### "of" + "Algerian" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The guy's the son ofAlgerian farmhands who worked for my parents.
 
 ### "of" + "Huma" (1 occurrences)
 - Predicted: Space
@@ -3001,17 +4127,65 @@ Accuracy: 99.93%
 - Examples:
   - The discipline of a lifetime now collapses like the walls ofJericho.
 
+### "of" + "North China" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Oppose Japan's invasion ofNorth China!
+
+### "of" + "Stella" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I've known the part ofStella foryears.
+
 ### "of" + "bad" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Sweep away all sorts ofbad characters!
 
+### "of" + "bandages" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I've got Vaseline, condoms and lots ofbandages.
+
+### "of" + "beauty" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - It must have the sense ofbeauty.
+
+### "of" + "cutting" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Haven'tyou ever thought ofcutting it off?
+
+### "of" + "having" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I always dreamed ofhaving a son.
+
+### "of" + "her" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm sick ofher insults.
+
 ### "of" + "his" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - It was the night ofhis birthday.
+
+### "of" + "humor" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You've got no sense ofhumor.
 
 ### "of" + "ironing" (1 occurrences)
 - Predicted: Space
@@ -3031,6 +4205,12 @@ Accuracy: 99.93%
 - Examples:
   - You the one that plays ten kinds ofjazz rolled into one?
 
+### "of" + "jealous" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm not some kind ofjealous wife who suspects hubby's cheating on her.
+
 ### "of" + "jigaboos" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -3049,6 +4229,24 @@ Accuracy: 99.93%
 - Examples:
   - The feathers are collected from the tails oflive peacocks.
 
+### "of" + "miscarriage" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - There's a risk ofmiscarriage.
+
+### "of" + "money" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - A waste ofmoney.
+
+### "of" + "peace" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I trade it for a bit ofpeace.
+
 ### "of" + "place" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -3061,11 +4259,41 @@ Accuracy: 99.93%
 - Examples:
   - He returned with a box ofroses to beg my forgiveness.
 
+### "of" + "small" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Butyou're cute, nicely proportioned-- kind ofsmall, but cute.
+
+### "of" + "the" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - She's the psychologist in charge ofthe seminar.
+
+### "of" + "things" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I said all sorts ofthings.
+
 ### "of" + "three" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - On my count ofthree your hands will become immobile.
+
+### "of" + "virtue" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You think you'll become a lady ofvirtue?
+
+### "of" + "what" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Heedless ofwhat?
 
 ### "of" + "yourself" (1 occurrences)
 - Predicted: Space
@@ -3079,23 +4307,29 @@ Accuracy: 99.93%
 - Examples:
   - Maybe you can sweep her offher feet with that broom.
 
-### "on" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "on" + "junk" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Madam, magic is forbidden from here on .
+  - She's hooked onjunk, but I'm hooked on her.
 
-### "on" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "on" + "living" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - What is going on ?
+  - Ican'tbelieveher andgo onliving withStanley.
 
-### "other" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "one" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - We just keep on shooting at each other - and without results.
+  - The oneyou didn't want to let in?
+
+### "organized" + "by" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'mgoing toanAIDSconference organizedby Can Ruti.
 
 ### "out" + "!" (1 occurrences)
 - Predicted: None
@@ -3103,11 +4337,11 @@ Accuracy: 99.93%
 - Examples:
   - Get out !
 
-### "out" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "out" + "'a" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - You, you, you, watch out - See what I do.
+  - Get out'a here!
 
 ### "out" + "—" (1 occurrences)
 - Predicted: Space
@@ -3115,17 +4349,53 @@ Accuracy: 99.93%
 - Examples:
   - Watch out—that guy is a real snake in the grass.
 
+### "paranoid" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You're paranoid .
+
+### "paths" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The future has many paths - choose wisely.
+
+### "pen" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You have a pen ?
+
+### "pendejos" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - That's right, pendejos .
+
 ### "penpushers" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - What can be done amongst those penpushers ?
 
-### "pieces" + "-" (1 occurrences)
+### "pierced" + "'st" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You almost pierced'st me!
+
+### "pierced" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Two silver pieces - what an insult.
+  - Every moment, my mind splits, my body is pierced .
+
+### "pity" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - What a pityyou weren't there.
 
 ### "place" + "?" (1 occurrences)
 - Predicted: None
@@ -3133,29 +4403,41 @@ Accuracy: 99.93%
 - Examples:
   - You will come to my place ?
 
+### "plan" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - But who changed the plan ?
+
+### "planet" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Without the remote control, he can never go back to his home planet ..
+
 ### "plant" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - A plant ?
 
-### "pocket" + "-" (1 occurrences)
+### "poems" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - In the pocket - Hey, my pants!
+  - He sang the words of his poems ..
+
+### "poetry" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I mean, You will go to listen to the poetry ..
 
 ### "policy" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - What is the National Socialist policy ?
-
-### "pool" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Swimming pool - heated!
 
 ### "poses" + "!" (1 occurrences)
 - Predicted: None
@@ -3169,11 +4451,11 @@ Accuracy: 99.93%
 - Examples:
   - Nobody has a preference ?
 
-### "problem" + "-" (1 occurrences)
+### "pressure" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Reality has one problem - it is always honest.
+  - We can only take so much pressure - before the boat will be crushed.
 
 ### "project" + "!" (1 occurrences)
 - Predicted: None
@@ -3193,11 +4475,11 @@ Accuracy: 99.93%
 - Examples:
   - No quarter !
 
-### "question" + "-" (1 occurrences)
+### "quickly" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - PK has raised a very important question - What is it?
+  - Come quickly ..
 
 ### "r" + "e yo" (1 occurrences)
 - Predicted: Space
@@ -3205,11 +4487,29 @@ Accuracy: 99.93%
 - Examples:
   - Brother… a-are you serious?
 
-### "really" + "-" (1 occurrences)
+### "rage" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Oh really -Yes.
+  - I killed him in a fit of rage - it wasn't premeditated.
+
+### "remote" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - The fake person who is misguiding Tapaswi has stolen my remote ..
+
+### "rent" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You want me to pay you a rent ?
+
+### "rest" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - If you listen to the rest ..
 
 ### "revolution" + "is" (1 occurrences)
 - Predicted: Space
@@ -3217,17 +4517,29 @@ Accuracy: 99.93%
 - Examples:
   - This aim of our revolutionis the freedom for our country.
 
+### "rigged" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I think that the elections are rigged .
+
+### "right" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Not from a less respected family, right ..?
+
+### "right" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You're all right ?
+
 ### "right" + "‐" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - In the United States, cars drive on the right‐hand side of the road.
-
-### "right" + "“" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - As they say in India, “birth right“.
 
 ### "rious?" + "" (1 occurrences)
 - Predicted: Space
@@ -3235,35 +4547,65 @@ Accuracy: 99.93%
 - Examples:
   - Brother… a-are you serious?
 
-### "rule" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Sixth rule - No shirts, no shoes.
-
 ### "s gl" + "asses." (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - How different… without his glasses.
 
-### "savior" + "-" (1 occurrences)
+### "said" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - The savior - The Greek?
+  - You said - he doesn't mind his business and you don't want to see him.
 
-### "say" + "-" (1 occurrences)
+### "said" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Like they say - Happiness only doubles when it is shared!
+  - God said ..
+
+### "sait" + "jusqu'" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - God alone saitjusqu'à when.
+
+### "sales" + "girls" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The two pretty salesgirls.
+
+### "same" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - It's the same ..
+
+### "screen" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - With this, moving the cursor on the screen .
 
 ### "section" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Anti-Epidemic section ?
+
+### "see" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - They have eyes but they do not see - ears, and they do not hear.
+
+### "see" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - From the cafe where we sat, we couldn't see .
 
 ### "see" + "?" (1 occurrences)
 - Predicted: None
@@ -3277,11 +4619,11 @@ Accuracy: 99.93%
 - Examples:
   - You are in shape ?
 
-### "shirt" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "should" + "'nt" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Wear the blue shirt - it suits you!
+  - He should'nt have bothered the other departments.
 
 ### "sick" + "!" (1 occurrences)
 - Predicted: None
@@ -3289,17 +4631,17 @@ Accuracy: 99.93%
 - Examples:
   - That makes me sick !
 
+### "sing" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Let's sing !
+
 ### "sing" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - You sing ?
-
-### "sit" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Please sit - where?
 
 ### "skxawng" + "!" (1 occurrences)
 - Predicted: None
@@ -3307,11 +4649,17 @@ Accuracy: 99.93%
 - Examples:
   - Hey, skxawng !
 
-### "sliced" + "-" (1 occurrences)
+### "sleep" + "'st" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - The Count of Montmirail sleep'st at Montmirail.
+
+### "sleep" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - The fruit is grown, harvested, sliced - and you just throw it away!
+  - You sleep ?
 
 ### "so" + "?" (1 occurrences)
 - Predicted: None
@@ -3319,17 +4667,35 @@ Accuracy: 99.93%
 - Examples:
   - Is that so ?
 
+### "so" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Do you have complexes, because you're so … so small?
+
 ### "soap-" + "the" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - I make and I sell soap- the yard stick of civilization.
 
-### "son" + "-" (1 occurrences)
+### "something" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And his son - another jerk.
+  - Do something !
+
+### "something" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - He also taught something ..
+
+### "something" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You offered tea or something ?
 
 ### "son" + "?" (1 occurrences)
 - Predicted: None
@@ -3337,11 +4703,35 @@ Accuracy: 99.93%
 - Examples:
   - You have a son ?
 
+### "sorry" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm sorryyou came for nothing.
+
+### "star" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A big star ..
+
 ### "staring" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Hey, what are you staring ?
+
+### "stay" + "!" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - They couldn't stay !
+
+### "steeples" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Church steeples - overturned funnels to lead prayers to heaven.
 
 ### "storm" + "?" (1 occurrences)
 - Predicted: None
@@ -3349,17 +4739,35 @@ Accuracy: 99.93%
 - Examples:
   - In this storm ?
 
+### "story" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - With his flight began another story - the story of war, and it's still going on.
+
+### "sure" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I'm sure ..
+
+### "surroundedby" + "hostility" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'm taking Esteban wherehe won'tbe surroundedbyhostility.
+
 ### "take" + "Jaime" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Since then, no one has dared takeJaime on.
 
-### "target" + "-" (1 occurrences)
+### "talk" + "--" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - The target - the Odessa theater.
+  - Don't all talk -- don't all talk at the same time.
 
 ### "tat" + "?" (1 occurrences)
 - Predicted: None
@@ -3367,17 +4775,35 @@ Accuracy: 99.93%
 - Examples:
   - Want to play tit for tat ?
 
+### "teacher" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Hottest teacher - me.
+
 ### "temps" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - Combien de temps ?
 
-### "that" + "you" (1 occurrences)
+### "that" + "'snormal" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Beforeyou came, we were saying thatyou could take my place.
+  - In my case that'snormal, because I'm alsoa writer.
+
+### "that" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I won't forget that - for faking a government application.
+
+### "that" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Or will tell him that ..
 
 ### "that" + "—" (1 occurrences)
 - Predicted: Space
@@ -3385,23 +4811,29 @@ Accuracy: 99.93%
 - Examples:
   - Did you see that—?
 
-### "them" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "the" + "Jesuits" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Throwing a hip out wrestling with one of them - pretense.
+  - We'll send him to theJesuits or the army orphans.
 
-### "then" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "the" + "gentleman" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - And then - boom!
+  - Thatmustbe thegentleman who's come foryou.
 
-### "there" + "-" (1 occurrences)
+### "them" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Because the best mushroom grows there - the chanterelle.
+  - Don't you resent them ?
+
+### "then" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Now then—your turn.
 
 ### "there" + "⁈" (1 occurrences)
 - Predicted: Space
@@ -3409,17 +4841,35 @@ Accuracy: 99.93%
 - Examples:
   - Is my daughter in there⁈ Motherfuckers!
 
-### "this" + "-" (1 occurrences)
+### "think" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I can make this - How?
+  - What do you think ?
 
-### "thousands" + "-" (1 occurrences)
+### "think" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I thinkyou're all bullshitters.
+
+### "this" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Millions, thousands - - what is the difference?
+  - What's this ?
+
+### "those" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - If you want to ask question, go ask those ..
+
+### "thought" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - I always thought ..
 
 ### "thout hi" + "s gl" (1 occurrences)
 - Predicted: Space
@@ -3427,11 +4877,29 @@ Accuracy: 99.93%
 - Examples:
   - How different… without his glasses.
 
-### "time" + "!" (1 occurrences)
+### "threw" + "Mitch" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You threwMitch out?
+
+### "through" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - We live losing our time !
+  - After months of frustration a break through ..
+
+### "time" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - We mustn't waste time - we have to do something!
+
+### "to" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Ma'am, I was wondering if you'd like to ..
 
 ### "to" + "Japan" (1 occurrences)
 - Predicted: Space
@@ -3439,11 +4907,35 @@ Accuracy: 99.93%
 - Examples:
   - Going toJapan?
 
+### "to" + "an" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I'mgoing toanAIDSconference organizedby Can Ruti.
+
+### "today" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Tomorrow, tomorrow, just not today - say all lazy people.
+
+### "today" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - But the message he sent today ..
+
 ### "too" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - And you too !
+
+### "tree" + "?" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A tree ?
 
 ### "trick" + "?" (1 occurrences)
 - Predicted: None
@@ -3475,23 +4967,47 @@ Accuracy: 99.93%
 - Examples:
   - You understand ?
 
-### "ups" + "-" (1 occurrences)
+### "understood" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - No mess ups -Sir!
+  - It is the only language he understood .
 
-### "us" + "-" (1 occurrences)
+### "understood" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - See that jeep behind us - Please go in that!
+  - It's understood ?
 
-### "very" + "tired" (1 occurrences)
+### "until" + "June" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - Sorry, I ‘m just verytired.
+  - I can't ever remember enjoying swimming in England untilJune, can you?
+
+### "unusual" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Nothing unusual - oh, until one day, I met a caveman who thought he was Jesus.
+
+### "up" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - How can I give up ..?
+
+### "upon" + "'t" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Fie upon't!
+
+### "very" + "jealous" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - He's veryjealous.
 
 ### "very" + "young" (1 occurrences)
 - Predicted: Space
@@ -3499,17 +5015,11 @@ Accuracy: 99.93%
 - Examples:
   - My friend was veryyoung.
 
-### "victory" + "-" (1 occurrences)
+### "waiting" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - The taste of victory -So move your feet to the beat!
-
-### "want" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Let them do what they want - please!
+  - He could have stopped and be waiting - to surprise us when we surface.
 
 ### "want" + "?" (1 occurrences)
 - Predicted: None
@@ -3517,23 +5027,29 @@ Accuracy: 99.93%
 - Examples:
   - What do you want ?
 
+### "want" + "yourself" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - You can tell him whateveryou wantyourself.
+
 ### "was" + "joking" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - I wasjoking.
 
-### "was" + "n’t" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - What, it wasn’t scary without the glasses?
-
 ### "was" + "young" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Lastnight, Momshowedme apicture ofwhenshe wasyoung.
+
+### "wasn't" + "just" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - I wasn'tjust meeting Barfi.
 
 ### "watching" + "?" (1 occurrences)
 - Predicted: None
@@ -3547,23 +5063,29 @@ Accuracy: 99.93%
 - Examples:
   - A glass of water ?
 
-### "waves" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Big waves - something else.
-
-### "week" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Died just last week -How did he die?
-
-### "were" + "n’t" (1 occurrences)
+### "wealth" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - You weren’t in a hurry.
+  - Health is better than wealth—to him who has wealth only.
+
+### "weird" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - You're weird - I like you.
+
+### "what" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Take whatyou like.
+
+### "why" + ".." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - If you have so many problems then why ..
 
 ### "wicked" + "!" (1 occurrences)
 - Predicted: None
@@ -3583,11 +5105,17 @@ Accuracy: 99.93%
 - Examples:
   - You will win ?
 
-### "wine" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "with" + "Stanley" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - Help me to get some wine - there is not much left.
+  - Ican'tbelieveher andgo onliving withStanley.
+
+### "with" + "junk" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Don't tell anyone, but Nina's got problems withjunk.
 
 ### "without" + "your" (1 occurrences)
 - Predicted: Space
@@ -3595,11 +5123,23 @@ Accuracy: 99.93%
 - Examples:
   - You leftyesterday withoutyour money.
 
-### "woes" + "-" (1 occurrences)
+### "woman" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - If not with my son, with whom do I share my woes - his friends?
+  - Luck is like a woman - it must be desired.
+
+### "won't" + "you" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Why won'tyou see me?
+
+### "words" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Or perhaps he searched for words - words that could express his pain.
 
 ### "work" + "?" (1 occurrences)
 - Predicted: None
@@ -3607,41 +5147,41 @@ Accuracy: 99.93%
 - Examples:
   - Are you going to work ?
 
-### "working" + "-" (1 occurrences)
+### "world" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - And with both of us working - You know how it is.
+  - Or else in this world ..
 
-### "worse" + "?" (1 occurrences)
+### "would" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Could it be worse ?
+  - If the English could hear you they would ..
 
-### "would" + "-" (1 occurrences)
+### "wrong" + "--" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I would - what would I not?
+  - Don't get me wrong -- I love this type.
 
-### "yes" + "-" (1 occurrences)
+### "you" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - Oh, yes - I fought with my sister on vacation.
+  - No, you … you are free, Hanna.
 
-### "you" + "--" (1 occurrences)
+### "your" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - I told you -- You can go piss yourself.
+  - You're outta your !
 
-### "your" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "your" + "'n" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - To begin your spacewalk, put on your ?
+  - He ain't your'n.
 
 ### "your" + "jacket" (1 occurrences)
 - Predicted: Space
@@ -3691,29 +5231,23 @@ Accuracy: 99.93%
 - Examples:
   - I love my family and, even more, my homeland—the land where I was born.
 
+### "—" + "to" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Health is better than wealth—to him who has wealth only.
+
 ### "—" + "where" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Your god—where is He now?
 
-### "’" + "magazine" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - I read it in the ‘House and Home’ magazine.
-
-### "…" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Just now you heard them… -Right before you walked in, okay?
-
-### "… Ov" + "erexcitable ch" (1 occurrences)
+### "—" + "your" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - It was a boarding school for… Overexcitable children.
+  - Now then—your turn.
 
 ### "… sl" + "eep." (1 occurrences)
 - Predicted: Space

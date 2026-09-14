@@ -16,15 +16,10 @@ import os
 import re
 import sys
 import tempfile
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-import requests
-
-GEMINI_OPENAI_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-)
+from gemini_chat import chat_json, sentence_pairs_schema
 
 
 def lesson_coordinates(path: Path, source: Path) -> tuple[int, int] | None:
@@ -80,32 +75,6 @@ def output_path(root: Path, native_code: str, level: int, lesson: int) -> Path:
     )
 
 
-def response_schema() -> dict:
-    return {
-        "name": "pimsleur_lesson",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "sentences": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "target_language": {"type": "string"},
-                            "native_language": {"type": "string"},
-                        },
-                        "required": ["target_language", "native_language"],
-                        "additionalProperties": False,
-                    },
-                }
-            },
-            "required": ["sentences"],
-            "additionalProperties": False,
-        },
-    }
-
-
 def prompt(target_name: str, native_name: str) -> str:
     return f"""This is a Pimsleur lesson for {native_name} speakers learning {target_name}.
 
@@ -134,14 +103,35 @@ def transcribe(
     attempts: int,
 ) -> list[dict[str, str]]:
     encoded = base64.b64encode(audio_path.read_bytes()).decode("ascii")
-    payload = {
-        "model": model,
-        "temperature": 0,
-        "response_format": {
-            "type": "json_schema",
-            "json_schema": response_schema(),
-        },
-        "messages": [
+
+    def parse(result: dict) -> list[dict[str, str]]:
+        sentences = [
+            row
+            for row in result["sentences"]
+            if "fragment" not in row["native_language"].casefold()
+            and not (
+                target_name.casefold() == "thai"
+                and re.search(r"[A-Za-z]", row["target_language"])
+            )
+        ]
+        if not sentences:
+            raise ValueError("model returned no sentence pairs")
+        for row in sentences:
+            if not row["target_language"].strip() or not row["native_language"].strip():
+                raise ValueError("model returned a blank target/native field")
+        distinct = []
+        seen_targets = set()
+        for row in sentences:
+            target = row["target_language"].strip()
+            if target not in seen_targets:
+                distinct.append(row)
+                seen_targets.add(target)
+        return distinct
+
+    return chat_json(
+        api_key,
+        model,
+        [
             {
                 "role": "user",
                 "content": [
@@ -153,47 +143,11 @@ def transcribe(
                 ],
             }
         ],
-    }
-
-    last_error: Exception | None = None
-    for attempt in range(1, attempts + 1):
-        try:
-            response = requests.post(
-                GEMINI_OPENAI_URL,
-                headers={"Authorization": f"Bearer {api_key}"},
-                json=payload,
-                timeout=900,
-            )
-            response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"]
-            result = json.loads(content)
-            sentences = [
-                row
-                for row in result["sentences"]
-                if "fragment" not in row["native_language"].casefold()
-                and not (
-                    target_name.casefold() == "thai"
-                    and re.search(r"[A-Za-z]", row["target_language"])
-                )
-            ]
-            if not sentences:
-                raise ValueError("model returned no sentence pairs")
-            for row in sentences:
-                if not row["target_language"].strip() or not row["native_language"].strip():
-                    raise ValueError("model returned a blank target/native field")
-            distinct = []
-            seen_targets = set()
-            for row in sentences:
-                target = row["target_language"].strip()
-                if target not in seen_targets:
-                    distinct.append(row)
-                    seen_targets.add(target)
-            return distinct
-        except Exception as error:  # noqa: BLE001 - retry all request/response failures
-            last_error = error
-            if attempt < attempts:
-                time.sleep(min(60, 5 * 2 ** (attempt - 1)))
-    raise RuntimeError(f"failed after {attempts} attempts: {last_error}") from last_error
+        sentence_pairs_schema("pimsleur_lesson"),
+        parse=parse,
+        timeout=900,
+        attempts=attempts,
+    )
 
 
 def write_jsonl(path: Path, rows: list[dict[str, str]]) -> None:

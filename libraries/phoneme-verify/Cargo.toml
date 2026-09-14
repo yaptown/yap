@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+audio-codec = { path = "../audio-codec" }
 anyhow = "1.0"
 base64 = "0.22"
 log = { workspace = true }
@@ -14,7 +15,7 @@ tokio = { workspace = true }
 xxhash-rust = { workspace = true }
 osmo = { workspace = true }
 language-utils = { path = "../../language-utils" }
-google-tts = { path = "../google-tts" }
+google-speech = { path = "../google-speech" }
 g2p = { workspace = true }
 lexide = { workspace = true }
 

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+whisper = { path = "../whisper" }
 anyhow = "1.0"
 dotenvy = "0.15.7"
 clap = { version = "4", features = ["derive"] }
@@ -24,6 +25,7 @@ flate2 = "1.1.9"
 osmo = { workspace = true }
 xxhash-rust = { workspace = true }
 tempfile = { workspace = true }
+google-speech = { path = "../google-speech" }
 phoneme-verify = { path = "../phoneme-verify" }
 g2p = { workspace = true }
 opensubtitles-downloader = { path = "../opensubtitles-downloader" }

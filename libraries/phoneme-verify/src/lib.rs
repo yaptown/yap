@@ -21,6 +21,8 @@
 //! The batch endpoint is configured via `WAV2VEC2_BATCH_ENDPOINT_URL` with a
 //! default to the prod URL.
 
+pub mod wav2vec2;
+
 use anyhow::{Context, Result};
 use base64::Engine;
 use language_utils::{Language, PhonemeLabelSource};
@@ -30,39 +32,13 @@ use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::sync::LazyLock;
+use wav2vec2::{Alternative, Prediction};
 use xxhash_rust::xxh3::xxh3_64;
 
 pub use lexide::pronunciation::{
     AlignedPhoneme, DecodedPath, FrameMatrix, FrameMatrixPayload, PhoneRun, TargetScore,
     decode_path, is_phone_token,
 };
-
-const MODAL_BATCH_URL_DEFAULT: &str =
-    "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict-batch.modal.run";
-
-/// The batch endpoint every clip goes through: `WAV2VEC2_BATCH_ENDPOINT_URL`,
-/// else the batch sibling of a `WAV2VEC2_ENDPOINT_URL` single-clip endpoint
-/// (the same env var the AI backend uses), else production.
-fn batch_url() -> Result<String> {
-    if let Ok(url) = std::env::var("WAV2VEC2_BATCH_ENDPOINT_URL") {
-        return Ok(url);
-    }
-    match std::env::var("WAV2VEC2_ENDPOINT_URL") {
-        Ok(single) => batch_endpoint(&single),
-        Err(_) => Ok(MODAL_BATCH_URL_DEFAULT.to_string()),
-    }
-}
-
-/// Modal names a class method's endpoint after the method, so the batch
-/// endpoint sits beside the single-clip one.
-fn batch_endpoint(single: &str) -> Result<String> {
-    match single.strip_suffix("-predict.modal.run") {
-        Some(prefix) => Ok(format!("{prefix}-predict-batch.modal.run")),
-        None => anyhow::bail!(
-            "set WAV2VEC2_BATCH_ENDPOINT_URL for the custom single-clip endpoint {single}"
-        ),
-    }
-}
 
 /// Bump this whenever the underlying Modal model OR the decoding strategy
 /// changes — the cache is partitioned by this string so old entries don't
@@ -108,37 +84,6 @@ pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonem
     Some(g2p::phonemize_lang_with(lang, text, MODEL_HINDI_CANON))
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct ModalResponse {
-    phonemes: Vec<ModalPhoneme>,
-    /// The deploy marker the serving container reports. Checked against
-    /// `WAV2VEC2_EXPECTED_DEPLOY_MARKER` (when set, by the eval harness) so a
-    /// stale/contaminated container's predictions are rejected before caching.
-    /// Absent for older endpoints / production, where the check is a no-op.
-    #[serde(default)]
-    deploy_marker: Option<String>,
-    /// Present when the request asked for `return_frame_matrix`.
-    #[serde(default)]
-    frame_matrix: Option<FrameMatrixPayload>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-struct ModalPhoneme {
-    phoneme: String,
-    #[serde(default)]
-    confidence: f64,
-    /// Top-k alternatives from the model. The chosen phoneme is normally
-    /// the first entry, but we re-sort defensively at load time.
-    #[serde(default)]
-    top_k: Vec<RawPhonemeAlt>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct RawPhonemeAlt {
-    phoneme: String,
-    probability: f64,
-}
-
 /// The on-disk cache payload. Stores both the raw chosen phonemes and the
 /// per-position top-k alternatives so we can report probabilities for the
 /// expected and predicted phonemes when a clip fails verification.
@@ -151,7 +96,7 @@ struct CachedPrediction {
     /// Parallel to `raw_phonemes`. `top_k[i]` is the list of (phoneme,
     /// probability) alternatives for position `i`, sorted by probability
     /// descending.
-    top_k: Vec<Vec<RawPhonemeAlt>>,
+    top_k: Vec<Vec<Alternative>>,
 }
 
 /// One step of the optimal alignment between predicted and expected phoneme
@@ -412,7 +357,7 @@ pub async fn verify_clip_bytes(
     // defect as the failure reason. Mirrors the same check applied to
     // Google TTS output in `verify_with_google_tts`.
     if let Ok(samples) = decode_wav_to_f32(audio_bytes)
-        && let Some(defect) = google_tts::samples_defect(&samples, MODAL_SAMPLE_RATE)
+        && let Some(defect) = audio_codec::samples_defect(&samples, MODAL_SAMPLE_RATE)
     {
         return Ok(ClipVerification {
             actor: actor.to_string(),
@@ -531,27 +476,10 @@ pub async fn verify_clip_bytes(
 /// Sample rate we always send to Modal — matches wav2vec2's training rate.
 const MODAL_SAMPLE_RATE: u32 = 16_000;
 
-/// Minimum samples we send to Modal. wav2vec2's convolutional encoder needs
-/// roughly one full stride window of context (~320 samples at 16 kHz, but
-/// in practice the Modal endpoint 500s on anything below several hundred
-/// ms), so we pad with leading/trailing silence to stay safely above that
-/// floor. 0.6 s is comfortably past every minimum we've observed.
-const MODAL_MIN_SAMPLES: usize = (MODAL_SAMPLE_RATE as usize * 6) / 10;
-
 /// How many alternatives we ask Modal for at each position. Larger = more
 /// chance of catching the correct phoneme in the top-k for failure
 /// analysis; trades off cache size linearly. 10 is comfortable for French.
 const MODAL_TOP_K: usize = 10;
-
-/// How many times to attempt a single Modal prediction before giving up.
-/// Transient failures (cold-start 408s, rate limits, 5xx) are retried with a
-/// linear backoff; a non-transient status fails immediately.
-const MODAL_MAX_ATTEMPTS: usize = 5;
-
-/// Whether an HTTP status from the Modal endpoint is worth retrying.
-fn is_transient_status(status: reqwest::StatusCode) -> bool {
-    matches!(status.as_u16(), 408 | 425 | 429 | 500 | 502 | 503 | 504)
-}
 
 /// Clips per request the batch endpoint accepts.
 const MODAL_BATCH_SIZE: usize = 64;
@@ -563,7 +491,7 @@ const MODAL_BATCH_LINGER: std::time::Duration = std::time::Duration::from_millis
 
 struct BatchItem {
     payload: serde_json::Value,
-    reply: tokio::sync::oneshot::Sender<Result<ModalResponse>>,
+    reply: tokio::sync::oneshot::Sender<Result<Prediction>>,
 }
 
 /// The process-wide queue feeding the batch worker. Spawned on first use,
@@ -579,7 +507,7 @@ static BATCH_QUEUE: LazyLock<tokio::sync::mpsc::UnboundedSender<BatchItem>> = La
 /// into GPU batches itself; this only pools what concurrent callers submit.
 async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
     let http = reqwest::Client::new();
-    let url = batch_url();
+    let url = wav2vec2::batch_url();
     while let Some(first) = rx.recv().await {
         let mut batch = vec![first];
         tokio::time::sleep(MODAL_BATCH_LINGER).await;
@@ -592,7 +520,7 @@ async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
         let payloads: Vec<serde_json::Value> =
             batch.iter_mut().map(|item| item.payload.take()).collect();
         let results = match &url {
-            Ok(url) => post_batch(&http, url, payloads).await,
+            Ok(url) => wav2vec2::predict_batch(&http, url, payloads).await,
             Err(e) => Err(anyhow::anyhow!("{e:#}")),
         };
         match results {
@@ -611,102 +539,11 @@ async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
     }
 }
 
-#[derive(Deserialize)]
-struct ModalBatchResponse {
-    results: Vec<serde_json::Value>,
-    #[serde(default)]
-    deploy_marker: Option<String>,
-}
-
-/// POST one batch to the endpoint, retrying transient failures — cold-start
-/// timeouts (408), rate limits (429), and 5xx — which are otherwise fatal
-/// to a long run. A 408 typically means the container was mid-cold-start;
-/// a short backoff lets it finish and the retry lands on the now-warm
-/// container. The outer `Err` is the whole request failing; an inner `Err`
-/// is the endpoint rejecting one clip (its `error` item), which is not
-/// retried.
-async fn post_batch(
-    http: &reqwest::Client,
-    url: &str,
-    payloads: Vec<serde_json::Value>,
-) -> Result<Vec<Result<ModalResponse>>> {
-    let count = payloads.len();
-    let body = serde_json::json!({ "requests": payloads });
-    let mut last_err: Option<anyhow::Error> = None;
-    for attempt in 1..=MODAL_MAX_ATTEMPTS {
-        match http.post(url).json(&body).send().await {
-            Err(e) => {
-                last_err = Some(anyhow::Error::new(e).context("Modal request transport error"));
-            }
-            Ok(response) => {
-                let status = response.status();
-                if status.is_success() {
-                    match response.json::<ModalBatchResponse>().await {
-                        Ok(batch) => return split_batch(batch, count),
-                        Err(e) => {
-                            last_err = Some(
-                                anyhow::Error::new(e)
-                                    .context("Failed to parse Modal wav2vec2 batch response"),
-                            )
-                        }
-                    }
-                } else if is_transient_status(status) {
-                    let text = response.text().await.unwrap_or_default();
-                    last_err = Some(anyhow::anyhow!("Modal wav2vec2 transient {status}: {text}"));
-                } else {
-                    // Non-retryable (e.g. 422): fail immediately.
-                    let text = response.text().await.unwrap_or_default();
-                    anyhow::bail!("Modal wav2vec2 error ({status}): {text}");
-                }
-            }
-        }
-        if attempt < MODAL_MAX_ATTEMPTS {
-            let delay = std::time::Duration::from_secs(5 * attempt as u64);
-            log::warn!(
-                "Modal call failed (attempt {attempt}/{MODAL_MAX_ATTEMPTS}), retrying in {}s",
-                delay.as_secs()
-            );
-            tokio::time::sleep(delay).await;
-        }
-    }
-    Err(last_err
-        .unwrap_or_else(|| anyhow::anyhow!("Modal call failed"))
-        .context(format!(
-            "Modal wav2vec2 endpoint failed after {MODAL_MAX_ATTEMPTS} attempts"
-        )))
-}
-
-/// One result per submitted clip, in order. The batch response stamps the
-/// deploy marker once; each item gets it so the per-context check applies.
-fn split_batch(batch: ModalBatchResponse, count: usize) -> Result<Vec<Result<ModalResponse>>> {
-    if batch.results.len() != count {
-        anyhow::bail!(
-            "Modal wav2vec2 batch returned {} results for {count} clips",
-            batch.results.len()
-        );
-    }
-    Ok(batch
-        .results
-        .into_iter()
-        .map(|item| {
-            if let Some(error) = item.get("error") {
-                anyhow::bail!("Modal wav2vec2 rejected the clip: {error}");
-            }
-            let mut modal: ModalResponse =
-                serde_json::from_value(item).context("Failed to parse Modal wav2vec2 result")?;
-            if modal.deploy_marker.is_none() {
-                modal.deploy_marker = batch.deploy_marker.clone();
-            }
-            Ok(modal)
-        })
-        .collect())
-}
-
 /// Send one clip through the batch worker and refuse any response from a
 /// container whose deploy marker is not the one expected — so nothing from
 /// a stale/contaminated container is ever cached under the wrong model's
 /// key.
-async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Result<ModalResponse> {
+async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Result<Prediction> {
     let (reply, result) = tokio::sync::oneshot::channel();
     BATCH_QUEUE
         .send(BatchItem { payload, reply })
@@ -722,7 +559,7 @@ async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Resu
 /// the *first* request hit a fresh container. Verifying the marker on every
 /// response guarantees no later request was routed to a stale/contaminated
 /// warm container and silently cached under the wrong model's key.
-fn check_deploy_marker(ctx: &VerifyContext<'_>, modal: &ModalResponse) -> Result<()> {
+fn check_deploy_marker(ctx: &VerifyContext<'_>, modal: &Prediction) -> Result<()> {
     if let Some(expected) = &ctx.expected_deploy_marker
         && modal.deploy_marker.as_deref() != Some(expected.as_str())
     {
@@ -738,7 +575,7 @@ fn check_deploy_marker(ctx: &VerifyContext<'_>, modal: &ModalResponse) -> Result
 async fn predict_phonemes(
     ctx: &VerifyContext<'_>,
     wav_bytes: &[u8],
-) -> Result<(Vec<String>, Vec<Vec<RawPhonemeAlt>>)> {
+) -> Result<(Vec<String>, Vec<Vec<Alternative>>)> {
     let hash = xxh3_64(wav_bytes);
     let cache_key = format!("wav2vec2/{}/{hash:016x}", ctx.cache_version);
 
@@ -757,11 +594,11 @@ async fn predict_phonemes(
 
     let samples =
         decode_wav_to_f32(wav_bytes).context("Failed to decode WAV to f32 samples via ffmpeg")?;
-    let samples = pad_to_min_length(samples, MODAL_MIN_SAMPLES);
-    let payload = serde_json::json!({
-        "audio_f32_b64": encode_audio_f32(&samples),
-        "sample_rate": MODAL_SAMPLE_RATE,
-        "top_k": MODAL_TOP_K,
+    let payload = wav2vec2::clip_payload(&wav2vec2::Clip {
+        samples: &samples,
+        sample_rate: MODAL_SAMPLE_RATE,
+        top_k: MODAL_TOP_K,
+        return_frame_matrix: false,
     });
     let modal = post_modal(ctx, payload).await?;
     cache_modal_prediction(ctx, hash, &modal).await
@@ -773,10 +610,10 @@ async fn predict_phonemes(
 async fn cache_modal_prediction(
     ctx: &VerifyContext<'_>,
     hash: u64,
-    modal: &ModalResponse,
-) -> Result<(Vec<String>, Vec<Vec<RawPhonemeAlt>>)> {
+    modal: &Prediction,
+) -> Result<(Vec<String>, Vec<Vec<Alternative>>)> {
     let raw_phonemes: Vec<String> = modal.phonemes.iter().map(|p| p.phoneme.clone()).collect();
-    let top_k: Vec<Vec<RawPhonemeAlt>> = modal
+    let top_k: Vec<Vec<Alternative>> = modal
         .phonemes
         .iter()
         .map(|p| {
@@ -802,15 +639,6 @@ async fn cache_modal_prediction(
     Ok((raw_phonemes, top_k))
 }
 
-/// Mono float32 samples in little-endian order, encoded for the Modal API.
-fn encode_audio_f32(samples: &[f32]) -> String {
-    let bytes: Vec<u8> = samples
-        .iter()
-        .flat_map(|sample| sample.to_le_bytes())
-        .collect();
-    base64::engine::general_purpose::STANDARD.encode(bytes)
-}
-
 /// The model's per-frame log-prob matrix for a clip, from the cache or the
 /// endpoint. Cached under its own partition (`wav2vec2-frames/…`), keyed by
 /// the WAV bytes like predictions are; the compressed payload is stored as
@@ -830,12 +658,11 @@ pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<F
     }
     let samples =
         decode_wav_to_f32(wav_bytes).context("Failed to decode WAV to f32 samples via ffmpeg")?;
-    let samples = pad_to_min_length(samples, MODAL_MIN_SAMPLES);
-    let payload = serde_json::json!({
-        "audio_f32_b64": encode_audio_f32(&samples),
-        "sample_rate": MODAL_SAMPLE_RATE,
-        "top_k": MODAL_TOP_K,
-        "return_frame_matrix": true,
+    let payload = wav2vec2::clip_payload(&wav2vec2::Clip {
+        samples: &samples,
+        sample_rate: MODAL_SAMPLE_RATE,
+        top_k: MODAL_TOP_K,
+        return_frame_matrix: true,
     });
     let modal = post_modal(ctx, payload).await?;
     cache_modal_prediction(ctx, hash, &modal).await?;
@@ -858,7 +685,7 @@ pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<F
 /// per-clip failure doesn't discard its neighbors. A caller verifying one
 /// clip at a time gets the same batching through the queue.
 pub async fn frame_matrices(ctx: &VerifyContext<'_>, wavs: &[&[u8]]) -> Vec<Result<FrameMatrix>> {
-    frame_matrices_at(ctx, wavs, batch_url(), cache_only()).await
+    frame_matrices_at(ctx, wavs, wav2vec2::batch_url(), cache_only()).await
 }
 
 async fn frame_matrices_at(
@@ -897,11 +724,11 @@ async fn frame_matrices_at(
                 .and_then(|result| result);
             match decoded {
                 Ok(samples) => {
-                    requests.push(serde_json::json!({
-                        "audio_f32_b64": encode_audio_f32(&pad_to_min_length(samples, MODAL_MIN_SAMPLES)),
-                        "sample_rate": MODAL_SAMPLE_RATE,
-                        "top_k": MODAL_TOP_K,
-                        "return_frame_matrix": true,
+                    requests.push(wav2vec2::clip_payload(&wav2vec2::Clip {
+                        samples: &samples,
+                        sample_rate: MODAL_SAMPLE_RATE,
+                        top_k: MODAL_TOP_K,
+                        return_frame_matrix: true,
                     }));
                     valid.push((*index, *hash, key));
                 }
@@ -914,7 +741,7 @@ async fn frame_matrices_at(
             continue;
         }
         let items = match &url {
-            Ok(url) => post_batch(ctx.http, url, requests).await,
+            Ok(url) => wav2vec2::predict_batch(ctx.http, url, requests).await,
             Err(error) => Err(anyhow::anyhow!("{error:#}")),
         };
         match items {
@@ -978,7 +805,7 @@ pub async fn segment_timings(
     let samples = decode_wav_to_f32(audio_bytes)
         .context("decoding audio to count samples")?
         .len();
-    let padded = samples.max(MODAL_MIN_SAMPLES);
+    let padded = samples.max(wav2vec2::min_samples(MODAL_SAMPLE_RATE));
     let expected_frames = padded.saturating_sub(FRAME_RECEPTIVE_SAMPLES) / FRAME_STRIDE_SAMPLES + 1;
     if matrix.frames.abs_diff(expected_frames) > 1 {
         anyhow::bail!(
@@ -987,7 +814,7 @@ pub async fn segment_timings(
             matrix.frames
         );
     }
-    let pad_ms = ((MODAL_MIN_SAMPLES.saturating_sub(samples) / 2) * 1000
+    let pad_ms = ((wav2vec2::min_samples(MODAL_SAMPLE_RATE).saturating_sub(samples) / 2) * 1000
         / MODAL_SAMPLE_RATE as usize) as u32;
     let mut ids = Vec::new();
     let mut spans = Vec::with_capacity(segments.len());
@@ -1019,26 +846,6 @@ pub async fn segment_timings(
             )
         })
         .collect())
-}
-
-/// Pad `samples` symmetrically with zeros to reach at least `min_len`.
-/// wav2vec2 normally sees speech surrounded by silence, so leading/trailing
-/// zero-padding is a no-op for phoneme prediction on the speech we *do*
-/// care about — and it lifts very short clips (e.g. 0.2 s synthetic-TTS
-/// renders of single syllables) above the Modal endpoint's minimum-length
-/// floor.
-fn pad_to_min_length(samples: Vec<f32>, min_len: usize) -> Vec<f32> {
-    if samples.len() >= min_len {
-        return samples;
-    }
-    let needed = min_len - samples.len();
-    let lead = needed / 2;
-    let trail = needed - lead;
-    let mut padded = Vec::with_capacity(min_len);
-    padded.resize(lead, 0.0);
-    padded.extend_from_slice(&samples);
-    padded.resize(padded.len() + trail, 0.0);
-    padded
 }
 
 /// Decode WAV bytes to mono f32 samples at 16 kHz by piping through ffmpeg.
@@ -1347,7 +1154,7 @@ fn ground_truth_phoneme_variants(
 ///     re-sorted by probability descending.
 fn normalize_with_topk(
     raw_phonemes: &[String],
-    raw_top_k: &[Vec<RawPhonemeAlt>],
+    raw_top_k: &[Vec<Alternative>],
     language: Language,
 ) -> (Vec<String>, Vec<Vec<(String, f64)>>) {
     let mut normalized = Vec::with_capacity(raw_phonemes.len());
@@ -1664,7 +1471,7 @@ impl TtsSynthesis {
             } => {
                 let seed = format!(
                     "{}|{voice}|{instructions}|{text}|{attempt}",
-                    google_tts::gemini::GEMINI_TTS_MODEL
+                    google_speech::gemini::GEMINI_TTS_MODEL
                 );
                 // v2: clips encoded with the lookahead flushed; v1 entries
                 // lost their last few milliseconds to the encoder delay.
@@ -1733,10 +1540,10 @@ pub async fn synthesize_verified(
                     let api_key = keys.google.as_deref().ok_or_else(|| {
                         anyhow::anyhow!("GOOGLE_CLOUD_API_KEY is required for uncached TTS audio")
                     })?;
-                    let client =
-                        google_tts::GoogleTtsClient::new(api_key.to_string()).with_max_attempts(5);
+                    let client = google_speech::GoogleTtsClient::new(api_key.to_string())
+                        .with_max_attempts(5);
                     let outcome = client
-                        .synthesize(&google_tts::GoogleTtsRequest {
+                        .synthesize(&google_speech::GoogleTtsRequest {
                             text: text.clone(),
                             language_code: voice.language_code.to_string(),
                             voice_name: voice.voice_name.to_string(),
@@ -1746,8 +1553,8 @@ pub async fn synthesize_verified(
                         .await
                         .with_context(|| format!("Google TTS call failed for {text:?}"))?;
                     let (passed, last_defect) = match outcome.status {
-                        google_tts::TtsStatus::Passed => (true, None),
-                        google_tts::TtsStatus::HitLimit { last_defect } => {
+                        google_speech::TtsStatus::Passed => (true, None),
+                        google_speech::TtsStatus::HitLimit { last_defect } => {
                             (false, Some(last_defect.to_string()))
                         }
                     };
@@ -1762,11 +1569,11 @@ pub async fn synthesize_verified(
                     let api_key = keys.gemini.as_deref().ok_or_else(|| {
                         anyhow::anyhow!("GEMINI_API_KEY is required for uncached Gemini TTS audio")
                     })?;
-                    let client = google_tts::gemini::GeminiTtsClient::with_http(
+                    let client = google_speech::gemini::GeminiClient::with_http(
                         api_key.to_string(),
                         ctx.http.clone(),
                     );
-                    let request = google_tts::gemini::GeminiTtsRequest {
+                    let request = google_speech::gemini::GeminiTtsRequest {
                         instructions: instructions.clone(),
                         text: text.clone(),
                         voice: voice.clone(),
@@ -1776,14 +1583,14 @@ pub async fn synthesize_verified(
                             let bytes = audio
                                 .to_ogg_opus()
                                 .with_context(|| format!("encoding Gemini audio for {text:?}"))?;
-                            let defect = google_tts::audio_defect(&bytes);
+                            let defect = audio_codec::audio_defect(&bytes);
                             (bytes, 1, defect.is_none(), defect.map(str::to_string))
                         }
                         Ok(None) => (Vec::new(), 1, false, Some("no audio in response".into())),
-                        Err(google_tts::gemini::GeminiTtsError::Declined(body)) => {
+                        Err(google_speech::gemini::GeminiError::Declined(body)) => {
                             (Vec::new(), 1, false, Some(format!("declined: {body}")))
                         }
-                        Err(google_tts::gemini::GeminiTtsError::Other(e)) => {
+                        Err(google_speech::gemini::GeminiError::Other(e)) => {
                             return Err(e.context(format!("Gemini TTS call failed for {text:?}")));
                         }
                     }
@@ -1904,22 +1711,6 @@ mod tests {
         wav
     }
 
-    #[test]
-    fn batch_envelope_checks_count_marker_and_endpoint() {
-        let response = || ModalBatchResponse {
-            results: vec![serde_json::json!({"phonemes": []})],
-            deploy_marker: Some("new".into()),
-        };
-        assert!(split_batch(response(), 2).is_err());
-        let item = split_batch(response(), 1).unwrap().remove(0).unwrap();
-        assert_eq!(item.deploy_marker.as_deref(), Some("new"));
-        assert_eq!(
-            batch_endpoint("https://x-predict.modal.run").unwrap(),
-            "https://x-predict-batch.modal.run"
-        );
-        assert!(batch_endpoint("http://localhost/single").is_err());
-    }
-
     #[tokio::test]
     async fn batch_cache_misses_are_bounded_ordered_and_isolated() {
         use std::io::Read;
@@ -2020,11 +1811,6 @@ mod tests {
         assert_eq!(cached.iter().filter(|r| r.is_ok()).count(), 65);
         let prediction_key = format!("wav2vec2/test/{:016x}", xxh3_64(&wavs[1]));
         assert!(ctx.store.read(&prediction_key).await.is_some());
-    }
-
-    #[test]
-    fn audio_transport_is_little_endian_float32() {
-        assert_eq!(encode_audio_f32(&[0.0, 1.0, -0.5]), "AAAAAAAAgD8AAAC/");
     }
 
     #[test]
@@ -2286,27 +2072,6 @@ mod tests {
         assert_eq!(phonemes("cy", "cycle"), "s e i ɡ ʁ ɛ k k ɔ m d ɑ̃ s i k l");
     }
 
-    // Talks to the production batch endpoint: run with `--ignored` after
-    // changing the wire format.
-    #[tokio::test]
-    #[ignore]
-    async fn batch_endpoint_round_trip() {
-        let http = reqwest::Client::new();
-        let silence = serde_json::json!({
-            "audio_f32_b64": encode_audio_f32(&vec![0.0f32; MODAL_MIN_SAMPLES]),
-            "sample_rate": MODAL_SAMPLE_RATE,
-            "top_k": MODAL_TOP_K,
-        });
-        let results = post_batch(&http, &batch_url().unwrap(), vec![silence.clone(), silence])
-            .await
-            .unwrap();
-        assert_eq!(results.len(), 2);
-        for result in results {
-            let modal = result.unwrap();
-            assert!(modal.deploy_marker.is_some(), "batch marker not applied");
-        }
-    }
-
     #[test]
     fn hindi_targets_use_the_deployed_models_label_canon() {
         // The model was trained on lexide's legacy schwa-stress-hin labels
@@ -2345,22 +2110,6 @@ mod tests {
             model_target("我有2个", Language::ChineseSimplified),
             Some(Err(g2p::Error::Unlabelable(_)))
         ));
-    }
-
-    #[test]
-    fn pad_to_min_length_pads_symmetrically() {
-        let s = vec![1.0_f32, 2.0, 3.0];
-        // 5 needed: 1 lead, 1 trail (3 + 2 = 5)
-        let padded = pad_to_min_length(s, 5);
-        assert_eq!(padded, vec![0.0, 1.0, 2.0, 3.0, 0.0]);
-        // No-op when already at length.
-        let s = vec![1.0_f32, 2.0, 3.0];
-        let padded = pad_to_min_length(s.clone(), 3);
-        assert_eq!(padded, s);
-        // Odd needed: extra sample goes on the trailing side.
-        let s = vec![1.0_f32];
-        let padded = pad_to_min_length(s, 4);
-        assert_eq!(padded, vec![0.0, 1.0, 0.0, 0.0]);
     }
 
     /// Build a degenerate top-k where each predicted phoneme is the only
@@ -2468,15 +2217,15 @@ mod tests {
         // summed probability.
         let raw_phonemes = vec!["r".to_string()];
         let raw_topk = vec![vec![
-            RawPhonemeAlt {
+            Alternative {
                 phoneme: "r".to_string(),
                 probability: 0.4,
             },
-            RawPhonemeAlt {
+            Alternative {
                 phoneme: "ʁ".to_string(),
                 probability: 0.3,
             },
-            RawPhonemeAlt {
+            Alternative {
                 phoneme: "a".to_string(),
                 probability: 0.2,
             },

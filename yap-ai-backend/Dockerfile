@@ -9,19 +9,23 @@ FROM chef AS planner
 COPY Cargo.toml Cargo.lock ./
 COPY yap-ai-backend/Cargo.toml yap-ai-backend/Cargo.toml
 COPY language-utils/Cargo.toml language-utils/Cargo.toml
-COPY libraries/google-tts/Cargo.toml libraries/google-tts/Cargo.toml
+COPY libraries/audio-codec/Cargo.toml libraries/audio-codec/Cargo.toml
+COPY libraries/whisper/Cargo.toml libraries/whisper/Cargo.toml
+COPY libraries/phoneme-verify/Cargo.toml libraries/phoneme-verify/Cargo.toml
+COPY libraries/google-speech/Cargo.toml libraries/google-speech/Cargo.toml
 COPY libraries/autograde-core/Cargo.toml libraries/autograde-core/Cargo.toml
 COPY libraries/bridgerton/Cargo.toml libraries/bridgerton/Cargo.toml
 COPY libraries/bridgerton/macros/Cargo.toml libraries/bridgerton/macros/Cargo.toml
-# Trim workspace to only the crates needed for ai-backend (google-tts and
-# autograde-core are path dependencies of yap-ai-backend, and language-utils
-# pulls in bridgerton and its proc-macro crate, so their manifests must be
-# present too).
-RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-ai-backend",\n    "language-utils",\n    "libraries/google-tts",\n    "libraries/autograde-core",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n]' Cargo.toml
+# Trim the workspace to the backend and its transitive path dependencies.
+# cargo-chef needs every manifest, even for crates only reached indirectly.
+RUN sed -i '/^members = \[/,/^\]/c\members = [\n    "yap-ai-backend",\n    "language-utils",\n    "libraries/audio-codec",\n    "libraries/whisper",\n    "libraries/phoneme-verify",\n    "libraries/google-speech",\n    "libraries/autograde-core",\n    "libraries/bridgerton",\n    "libraries/bridgerton/macros",\n]' Cargo.toml
 # cargo-chef needs stub files for every target declared in the manifests
 RUN mkdir -p yap-ai-backend/src && echo "fn main() {}" > yap-ai-backend/src/main.rs
 RUN mkdir -p language-utils/src && touch language-utils/src/lib.rs
-RUN mkdir -p libraries/google-tts/src && touch libraries/google-tts/src/lib.rs
+RUN mkdir -p libraries/audio-codec/src && touch libraries/audio-codec/src/lib.rs
+RUN mkdir -p libraries/whisper/src && touch libraries/whisper/src/lib.rs
+RUN mkdir -p libraries/phoneme-verify/src && touch libraries/phoneme-verify/src/lib.rs
+RUN mkdir -p libraries/google-speech/src && touch libraries/google-speech/src/lib.rs
 RUN mkdir -p libraries/autograde-core/src && touch libraries/autograde-core/src/lib.rs
 RUN mkdir -p libraries/bridgerton/src libraries/bridgerton/tests libraries/bridgerton/macros/src \
     && touch libraries/bridgerton/src/lib.rs \
@@ -49,7 +53,10 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY out out
 COPY yap-ai-backend yap-ai-backend
 COPY language-utils language-utils
-COPY libraries/google-tts libraries/google-tts
+COPY libraries/audio-codec libraries/audio-codec
+COPY libraries/whisper libraries/whisper
+COPY libraries/phoneme-verify libraries/phoneme-verify
+COPY libraries/google-speech libraries/google-speech
 COPY libraries/autograde-core libraries/autograde-core
 COPY libraries/bridgerton libraries/bridgerton
 # Drop target/ within the same layer: it's ~hundreds of MB of incremental

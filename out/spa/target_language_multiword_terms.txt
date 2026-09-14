@@ -216,6 +216,7 @@ Comunidad Valenciana
 Comunidad de Estados Independientes
 Comunidad de Madrid
 Comunión anglicana
+Con cariño
 Concepción Batres
 Concepción Quetzaltepeque
 Concepción de Ataco
@@ -551,6 +552,7 @@ Juegos Olímpicos
 Juegos Olímpicos de Invierno
 Juegos Paralímpicos
 Jueves Santo
+Juzgando por
 Kabardia-Balkaria
 Komsomolsk del Amur
 Krai de Primorie
@@ -4732,6 +4734,7 @@ como resultado de
 como sea
 como si
 como si dijéramos
+como si fuera ayer
 como si fuera poco
 como si nada
 como si no fuera suficiente
@@ -4964,6 +4967,8 @@ contaminación lumínica
 contante y sonante
 contar con
 contar on
+contener las lágrimas
+contener sus lágrimas
 contestador automático
 continuar + gerundio
 contra el reloj
@@ -7544,6 +7549,7 @@ erre que erre
 erupción solar
 es decir
 es lo que hay
+es lo que parece
 es material
 es más
 es o no es
@@ -8804,6 +8810,7 @@ hacer popó
 hacer por escrito
 hacer pucheros
 hacer puente
+hacer realidad
 hacer referencia a
 hacer sitio
 hacer soga
@@ -10112,6 +10119,7 @@ lo cierto es que
 lo comido por lo servido
 lo creas o no
 lo de
+lo de ayer
 lo de siempre
 lo habido y por haber
 lo justo
@@ -10816,6 +10824,7 @@ mi casa es vuestra casa
 mi casa y mi hogar cien doblas val
 mi culo
 mi gozo en un pozo
+mi señora
 michay rojo
 mico de noche
 microscopio electrónico
@@ -11390,6 +11399,8 @@ no digas mamadas
 no encontrar ni pies ni cabeza a
 no entender ni papa
 no entiendo
+no es lo que parece
+no es lugar para
 no es nada
 no es oro todo lo que reluce
 no estar el horno para bollos
@@ -11470,11 +11481,13 @@ no saber ni papa
 no se ganó Zamora en una hora
 no se pescan truchas a bragas enjutas
 no sea que
+no ser lugar para
 no ser moco de pavo
 no ser nada
 no ser para tanto
 no ser plan
 no sino
+no solo
 no solo sino también
 no soltar prenda
 no sé
@@ -13782,6 +13795,7 @@ quién quita
 quién sabe
 quién va
 quién vive
+qué asco
 qué bien
 qué bolá
 qué carajo
@@ -13799,6 +13813,7 @@ qué hay
 qué hay de
 qué hay de nuevo
 qué hora es
+qué importa
 qué leches
 qué lástima
 qué mal
@@ -14292,6 +14307,7 @@ sala común
 sala de apelación
 sala de audiencia
 sala de chat
+sala de conferencias
 sala de emergencias
 sala de espera
 sala de estar
@@ -14302,6 +14318,7 @@ sala de lectura
 sala de maternidad
 sala de máquinas
 sala de operaciones
+sala de reuniones
 sala de tribunales
 salamandra portuguesa
 salario mínimo
@@ -14580,6 +14597,7 @@ septuagésimo segundo
 septuagésimo sexto
 septuagésimo séptimo
 septuagésimo tercero
+ser alguien
 ser canela en rama
 ser como
 ser culo de mal asiento
@@ -14594,6 +14612,7 @@ ser habas contadas
 ser humano
 ser la polla
 ser la repanocha
+ser lo que parecer
 ser más de pueblo que las amapolas
 ser más majo que las pesetas
 ser otro cantar
@@ -15250,6 +15269,7 @@ tener en mente
 tener en mucho
 tener en palmitas
 tener enchufe
+tener entendido
 tener entre ceja y ceja
 tener flojos los tornillos
 tener ganas
@@ -15301,6 +15321,7 @@ tenerlos bien puestos
 tenerlos puestos
 tengamos la fiesta en paz
 tengo calor
+tengo entendido
 tengo hambre
 tengo que vomitar
 tengo una pregunta

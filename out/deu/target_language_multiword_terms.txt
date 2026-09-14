@@ -3,14 +3,20 @@
 A und O
 Aa machen
 Aas fressend
+Aber nein
+Aber sicher
 Abh. Berl. Akad.
 Ablehnung finden
 Abschied nehmen
 Absolute Beginner
 Absolutkonvexe Menge
 Abu Dhabi
+Ach ne
 Achse des Bösen
 Acht geben
+Achte darauf
+Achten Sie darauf
+Achtet darauf
 Adam und Eva
 Addis Abeba
 Adriatisches Meer
@@ -27,6 +33,7 @@ Allgemeine Geschäftsbedingungen
 Alma Mater
 Aloe vera
 Alpha privativum
+Also los
 Alte Welt
 Altenburger Land
 Alter Ego
@@ -84,6 +91,7 @@ Auge um Auge, Zahn um Zahn
 Augen machen
 Ausdruck finden
 Ausnahmen bestätigen die Regel
+Aussicht auf
 Australian Football
 Auswärtiges Amt
 Auto fahren
@@ -269,6 +277,7 @@ Blaue Stadt
 Blauer Nachzügler
 Blauflügelige Ödlandschrecke
 Blech reden
+Bleiben Sie dran
 Blume des Lebens
 Blut ist dicker als Wasser
 Blut lecken
@@ -303,6 +312,7 @@ Café Crème
 Casus Belli
 Casus knacksus
 Cause célèbre
+Chance geben
 Chicken Nugget
 Chili con Carne
 Chinesisch sprechen
@@ -324,11 +334,13 @@ Dalai Lama
 Daman und Diu
 Damen und Herren
 Dampf ablassen
+Danke vielmals
 Dark Waver
 Darwin Award
 Das Reich
 Daumen drücken
 Daumen mal Pi
+Davon abgesehen
 Deep Learning
 Dei ex Machina
 Demokratische Republik Kongo
@@ -492,6 +504,7 @@ Fünfte Kolonne
 Für und Wider
 Fürst der Finsternis
 Fürstentum Albanien
+Ganz gleich
 Garbage Collector
 Garten Eden
 Garten- und Landschaftsbau
@@ -508,6 +521,7 @@ Gelber Fleck
 Gelbes Meer
 Geld stinkt nicht
 Geld wie Heu haben
+Gelobt sei
 Gelobtes Land
 Gemeine Fichte
 Generation Golf
@@ -518,6 +532,7 @@ Genus verbi
 Gerechter unter den Völkern
 Geschenk des Himmels
 Geschmack finden
+Gesellschaft leisten
 Gesellschaft mit beschränkter Haftung
 Gesetz der großen Zahl
 Gesetz der großen Zahlen
@@ -581,6 +596,7 @@ Großer Wagen
 Großes Gewächs
 Großfrüchtige Moosbeere
 Grund und Boden
+Grün steht
 Grüne Meerkatze
 Grüner Knollenblätterpilz
 Grüner Star
@@ -675,6 +691,7 @@ Hände schütteln
 Höhen und Tiefen
 Höhle der Löwen
 Höhle des Löwen
+Ihnen nach
 Ihre Majestät
 Indischer Ozean
 Insel Man
@@ -785,6 +802,8 @@ Land unter
 Landau an der Isar
 Landau in der Pfalz
 Landsberg am Lech
+Lassen Sie mich durch
+Lasst mich durch
 Laterna magica
 Latte Macchiato
 Latte macchiato
@@ -812,6 +831,7 @@ Lübecker Hütchen
 Lügen haben kurze Beine
 Lügen haben schöne Beine
 Lügen strafen
+Macht es Ihnen etwas aus
 Machu Picchu
 Mammoth Mountain
 Mann für Mann
@@ -860,6 +880,8 @@ Mücken seihen und Kamele verschlucken
 Mülheim an der Ruhr
 Müßiggang ist aller Laster Anfang
 N. N.
+Na geh
+Na toll
 Nacht der langen Messer
 Nadel im Heuhaufen
 Nagorny Karabach
@@ -905,6 +927,7 @@ Nordic Walking
 Not kennt kein Gebot
 Not tun
 Numerus clausus
+Nun zu
 Nägel mit Köpfen machen
 Nördliche Kalkalpen
 Nördliche Marianen
@@ -999,7 +1022,11 @@ Rechenschaft ablegen
 Rechnung tragen
 Recht bekommen
 Recht geben
+Recht habe
 Recht haben
+Recht hast
+Recht hat
+Recht hatte
 Rede und Antwort stehen
 Reden ist Silber, Schweigen ist Gold
 Reich der Mitte
@@ -1166,6 +1193,7 @@ Sinn machen
 Sinn und Verstand
 Sitz im Leben
 Small Talk
+So ein Mist
 Social Media
 Social Network
 Soft Skill
@@ -1326,6 +1354,8 @@ Wasser auf die Mühlen
 Wasser auf jemandes Mühle leiten
 Wasser ins Meer tragen
 Wasser predigen und Wein trinken
+Weg mit dir
+Weg mit euch
 Weib und Kind
 Weiden in der Oberpfalz
 Weimarer Land
@@ -1341,6 +1371,7 @@ Weißer Zwerg
 Weißes Haus
 Weißes Meer
 Weißmündige Bänderschnecke
+Wenn, dann
 Westliche Ostalpen
 Westlicher Fettschwanzmaki
 Weströmisches Reich
@@ -1443,6 +1474,7 @@ ach du liebe Zeit
 ach so
 ach, du Schande
 acht Uhr
+achtete darauf
 ad acta
 ad infinitum
 ad interim
@@ -1491,6 +1523,9 @@ alles hat ein Ende, nur die Wurst hat zwei
 alles im grünen Bereich sein
 alles in Butter
 alles in Ordnung
+alles in Ordnung ist
+alles in Ordnung sei
+alles in Ordnung sein
 alles in allem
 alles in einem
 alles klar
@@ -1522,6 +1557,7 @@ alte Ziegen lecken auch gern Salz
 alter Drache
 alter Hase
 alter Hut
+alter Junge
 alter Kämpfer
 alter Sack
 alter Schwede
@@ -1544,6 +1580,7 @@ am Kerbholz haben
 am Leben
 am Leben bleiben
 am Leben erhalten
+am Leben lassen
 am Nasenring durch die Manege führen
 am Platz sein
 am Rad drehen
@@ -1678,6 +1715,7 @@ auf Umwegen
 auf Wiederhören
 auf Wiederschauen
 auf Wiedersehen
+auf Wiedersehen sagen
 auf Wiedertreffen
 auf Wunsch
 auf Zack bringen
@@ -1689,6 +1727,7 @@ auf allen vieren
 auf alten Pferden lernt man reiten
 auf alten Schiffen lernt man segeln
 auf beiden Ohren
+auf das Wohl
 auf dass
 auf dem Damm
 auf dem Gewissen haben
@@ -1797,7 +1836,9 @@ auf einen Nenner bringen
 auf einen Schlag
 auf einen Sprung vorbeikommen
 auf einmal
+auf etw. kommen
 auf etwas Gift nehmen können
+auf etwas achten
 auf etwas wetten
 auf ex trinken
 auf freiem Fuß
@@ -1810,9 +1851,11 @@ auf gut Deutsch
 auf gutem Fuß stehen
 auf halb acht
 auf halbem Weg
+auf ihn zählen
 auf jeden
 auf jeden Fall
 auf jeden Topf passt ein Deckel
+auf jemanden zählen
 auf jemandes Nacken
 auf keine Kuhhaut gehen
 auf keine Kuhhaut passen
@@ -1824,6 +1867,7 @@ auf lock
 auf offener Straße
 auf seine Seite ziehen
 auf seiten
+auf sich
 auf sich allein gestellt
 auf sich selbst gestellt
 auf süß
@@ -1847,6 +1891,7 @@ aufs Ziel
 aufs Äußerste
 aufwärts
 aus Ernst wird Spaß
+aus Fleisch und Blut
 aus Interesse
 aus Spaß
 aus Versehen
@@ -1860,6 +1905,7 @@ aus dem Grund
 aus dem Gröbsten heraus
 aus dem Handgelenk
 aus dem Hut zaubern
+aus dem Häuschen
 aus dem Konzept bringen
 aus dem Kopf
 aus dem Kreuz leiern
@@ -1922,6 +1968,7 @@ aus zweiter Hand
 auseinander
 ausfindig machen
 ausgemachte Sache
+ausgerechnet ich
 ausnahmslos
 ausschneiden und einfügen
 aussichtslos
@@ -1955,6 +2002,7 @@ außerordentlich
 b. m.
 back dir ein Eis
 bald bald
+bald schon
 balla balla
 ballistische Rakete
 bare Münze
@@ -1967,6 +2015,7 @@ bei Adam und Eva anfangen
 bei Leibe
 bei Licht besehen
 bei Licht betrachtet
+bei Rot
 bei Weitem
 bei allem
 bei allem gebotenen Respekt
@@ -2163,9 +2212,11 @@ darauf achten
 darauf ankommen
 darauf antworten
 darauf bestehen
+darauf gekommen
 darauf hin
 darauf hinweisen
 darauf hoffen
+darauf kommt
 darauf reagieren
 darauf warten
 darauf zu
@@ -2224,6 +2275,7 @@ das Maß voll
 das Maß überschreiten
 das Pferd von hinten aufzäumen
 das Rad neu erfinden
+das Sagen
 das Wasser reichen können
 das Weite suchen
 das Wort ergreifen
@@ -2435,6 +2487,7 @@ der folgende
 der frühe Vogel fängt den Wurm
 der kommende
 der letzte
+der letzte Mensch
 der nächste
 der springende Punkt
 der vergangene
@@ -2566,6 +2619,7 @@ die Sau rauslassen
 die Schafe von den Böcken scheiden
 die Schau stehlen
 die Schnauze halten
+die Schnauze voll
 die Schnauze voll haben
 die Schuld geben
 die Schönheit liegt im Auge des Betrachters
@@ -2610,6 +2664,8 @@ dieses Mal
 diesmal
 digitale Kluft
 digitales Zeitalter
+dir nach
+dir so passen
 direkt vor der Nase
 direkte Rede
 direktes Objekt
@@ -2668,6 +2724,8 @@ ehrlich machen
 ehrlich währt am längsten
 eierlegende Wollmilchsau
 eigene Wege gehen
+eigenen Weg
+eigener Weg
 ein Apfel und ein Ei
 ein Ass im Ärmel haben
 ein Auge auf
@@ -2689,6 +2747,7 @@ ein Indianer kennt keinen Schmerz
 ein Liedchen singen können
 ein Machtwort sprechen
 ein Rohr verlegen
+ein Schatz
 ein Schelm, der Böses dabei denkt
 ein Schelm, wer Böses dabei denkt
 ein Stein fällt auf den Kopf
@@ -2715,6 +2774,7 @@ ein und aus gehen
 ein und derselbe
 ein wenig
 eine Affäre haben
+eine Ausnahme machen
 eine Entscheidung treffen
 eine Frage stellen
 eine Hand wäscht die andere
@@ -2919,7 +2979,11 @@ es macht Sinn
 es macht Spaß
 es macht nichts
 es mangelt an
+es nicht anders verdient haben
+es nie versäumen, etwas zu tun
 es scheint
+es schwer
+es schwer haben
 es sei
 es sei denn
 es selber machen
@@ -2954,6 +3018,7 @@ etwas auf der Pfanne haben
 etwas auf die hohe Kante legen
 etwas auf die lange Bank schieben
 etwas auf seine Kappe nehmen
+etwas auf sich nehmen
 etwas aus der Luft greifen
 etwas durch die rosarote Brille sehen
 etwas einreißen lassen
@@ -2967,6 +3032,7 @@ etwas im Schilde führen
 etwas im Zaum halten
 etwas in den Wind schlagen
 etwas in die Schanze schlagen
+etwas in die Tat umsetzen
 etwas ist faul im Staate Dänemark
 etwas nicht auf sich sitzen lassen
 etwas satt haben
@@ -2975,6 +3041,7 @@ etwas von wegen
 etwas zu Tage fördern
 etwas zu den Akten legen
 etwas über die Bühne bringen
+euch nach
 euklidische Geometrie
 eulersche Formel
 eulersche Identität
@@ -2996,6 +3063,7 @@ falls doch
 falls ja
 falls nein
 falls nicht
+falsch liegen
 falsch positiv
 falscher Freund
 fehl am Platz
@@ -3073,10 +3141,12 @@ für jemanden Partei ergreifen
 für lau
 für meinen Geschmack
 für sich
+für sich sprechen
 für teuer Geld
 für umsonst
 für und für
 für's Protokoll
+füreinander bestimmt
 fürs Erste
 fürs Horizont
 fürs Protokoll
@@ -3127,6 +3197,7 @@ gelb-rote Karte
 gelbe Karte
 gelbe Rübe
 gelinde gesagt
+gelobt sein
 gelobtes Land
 geltend machen
 gemeiner Mitteleuropäer
@@ -3184,11 +3255,13 @@ gewissenlos
 gewohnt
 gewöhnlich
 gibt es hier einen Lebensmittelladen
+ging schief
 glatt wie ein Aal sein
 glauben Sie an Gott
 glaubst du an Gott
 gleich um die Ecke
 gleich vor der Nase
+gleich, wie
 gleicher Art
 gleichmäßig
 gleichseitiges Dreieck
@@ -3244,8 +3317,14 @@ gut bestückt
 gut durch
 gut gebrüllt, Löwe
 gut gekaut ist halb verdaut
+gut gelaufen ist
 gut im Futter
+gut laufen
+gut läuft
 gut situiert
+gut stehen
+gut tun
+gut verstanden
 gute Absichten
 gute Besserung
 gute Nacht
@@ -3271,8 +3350,10 @@ günstigenfalls
 h quer
 ha noi
 habe die Ehre
+habe mich über
 haben Sie Allergien gegen irgendwelche Medikamente
 haben können
+haben uns über
 haben zu
 haftbar machen
 halb so wild
@@ -3286,6 +3367,7 @@ harter Gaumen
 harter Schanker
 hast du Allergien gegen irgendwelche Medikamente
 haste nicht gesehen
+hat sich über
 hau ruck
 hegen und pflegen
 heilige Kuh
@@ -3305,6 +3387,7 @@ herzlichen Glückwunsch
 heute Nacht
 hie und da
 hieb- und stichfest
+hielt inne
 hier oben
 hier spielt die Musik
 hier steppt der Bär
@@ -3455,6 +3538,8 @@ ich weiß Bescheid
 ich weiß nicht mehr
 ich will nicht mehr
 ich wüsste gern
+ihm nach
+ihr nach
 ihre Tage haben
 ihrer Nase nach
 im Allgemeinen
@@ -3596,6 +3681,7 @@ in Anbetracht dessen
 in Angriff nehmen
 in Anspruch nehmen
 in Ausnahmefällen
+in Aussicht
 in Bausch und Bogen
 in Berufung gehen
 in Beschlag nehmen
@@ -3749,6 +3835,7 @@ in die Puschen kommen
 in die Pötte kommen
 in die Quere kommen
 in die Schule
+in die Tat um
 in die Tat umsetzen
 in die Tiefe
 in die Vergangenheit
@@ -3884,6 +3971,10 @@ jahraus jahrein
 jahraus, jahrein
 jahrein, jahraus
 jambischer Fünfheber
+jdm zu Ohren kommen
+jdm. stehen
+jdn durchlassen
+jdn. schuldig sprechen
 je desto
 je früher
 je länger
@@ -3934,6 +4025,7 @@ jemandem ein Kuckucksei ins Nest legen
 jemandem ein X für ein U vormachen
 jemandem eins auswischen
 jemandem etwas aus der Nase ziehen
+jemandem etwas ausmachen
 jemandem etwas in die Schuhe schieben
 jemandem etwas zur Last legen
 jemandem fehlen die Worte
@@ -3945,7 +4037,9 @@ jemandem in den Hintern kriechen
 jemandem in den Kram passen
 jemandem in die Suppe spucken
 jemandem ist eine Laus über die Leber gelaufen
+jemandem nach!
 jemandem nicht das Wasser reichen können
+jemandem so passen
 jemandem stehen die Haare zu Berge
 jemandem zu nahe treten
 jemandem zu schaffen machen
@@ -4004,6 +4098,7 @@ keine Worte finden
 keine Zeit haben
 keine halben Sachen machen
 keine zehn Pferde
+keinen Cent
 keinen Erfolg haben
 keinen Fick geben
 keinen Finger rühren
@@ -4082,6 +4177,7 @@ künstlerischer Leiter
 künstliche Befruchtung
 künstliche Intelligenz
 künstlicher Darmausgang
+lag falsch
 lang und breit
 lange Rede, kurzer Sinn
 lange her
@@ -4103,6 +4199,7 @@ lecko mio
 leere Menge
 leeres Nest
 leeres Stroh dreschen
+lehnte sich zurück
 leicht reden haben
 leichter gesagt als getan
 leid sein
@@ -4127,7 +4224,9 @@ lieber spät als gar nie
 lieber tot als rot
 lieferbar
 liegen bleiben
+liegen falsch
 liegen lassen
+liegst falsch
 lineare Algebra
 linienflüchtiger Vektor
 links liegen lassen
@@ -4147,7 +4246,11 @@ m ü. A.
 m. E.
 m. a. W.
 mach's gut
+machen sich über
 macht nichts
+macht sich über
+machte sich über
+machten sich über
 made in Germany
 magisches Denken
 magna cum laude
@@ -4208,6 +4311,7 @@ mir ist schlecht
 mir ist schwindelig
 mir ist warm
 mir ist übel
+mir nach
 mir nichts dir nichts
 mir nichts, dir nichts
 mit Absicht
@@ -4215,6 +4319,7 @@ mit Abstand
 mit Ach und Krach
 mit Argusaugen beobachten
 mit Augen
+mit Ausnahme
 mit Bezug auf
 mit Blick auf
 mit Fug und Recht
@@ -4369,6 +4474,7 @@ nachträglich
 nachts ist es kälter als draußen
 nachts sind alle Katzen grau
 nah am Wasser gebaut
+nah dran
 nahe gelegen
 namhaft machen
 nass machen
@@ -4395,6 +4501,7 @@ neuronales Netzwerk
 never change a running system
 nich' lang schnacken, Kopp in'n Nacken
 nicht alle Tassen im Schrank haben
+nicht anders verdient
 nicht auf Lager
 nicht auf der Brennsuppe dahergeschwommen sein
 nicht bei der Sache sein
@@ -4412,6 +4519,7 @@ nicht lieferbar
 nicht mal
 nicht mehr
 nicht nur sondern auch
+nicht recht wissen
 nicht so tun als ob
 nicht sondern
 nicht tot überm Zaun hängen wollen
@@ -4453,6 +4561,7 @@ nie da gewesen
 nie genug
 nie im Leben
 nie mehr
+nie träumen lassen
 nie und nimmer
 nie wieder
 niemals genug
@@ -4462,6 +4571,7 @@ niet- und nagelfest
 nirgendwohin
 nix da
 noch besser
+noch bevor
 noch dazu
 noch einmal
 noch etwas
@@ -4658,6 +4768,8 @@ radioaktiver Zerfall
 rationale Zahl
 rauf und runter
 raus mit der Sprache
+recht daran
+recht daran tun
 recht haben
 rechte Hand
 rechts ist, wo der Daumen links ist
@@ -4699,6 +4811,11 @@ rund um die Uhr
 runder Geburtstag
 runder Tisch
 rundes r
+runter damit
+runter mit dir
+runter mit etw.
+runter mit euch
+runter mit ihm
 räumliche Komponente
 römisches Licht
 rückbezügliches Fürwort
@@ -4722,9 +4839,12 @@ sang- und klanglos
 sauberes Fleisch
 saurer Regen
 schade Schokolade
+schade um
 schadlos halten
 schaff ich
 schaff ich nicht
+scharf auf
+scharf auf etwas/jemanden sein
 scharfes S
 schauen wie der Ochs vorm Berg
 scheinen zu
@@ -4753,6 +4873,7 @@ schon mal
 schon oft
 schon wieder
 schuld sein
+schuldig gesprochen
 schuldig sein
 schwache Deklination
 schwache Kernkraft
@@ -4816,6 +4937,7 @@ seinen Senf dazugeben
 seinen Spaß haben
 seinen Weg gehen
 seinen Weg machen
+seinen eigenen Weg
 seiner Nase nach
 seines Zeichens
 seit einiger Zeit
@@ -4851,6 +4973,7 @@ sich auf seinen Lorbeeren ausruhen
 sich aus dem Fenster lehnen
 sich aus dem Staub machen
 sich aus den Fingern saugen
+sich auszahlen
 sich blicken lassen
 sich den Kopf zerbrechen
 sich den Magen verderben
@@ -4879,6 +5002,7 @@ sich freuen auf
 sich freuen über
 sich gehen lassen
 sich geschlagen geben
+sich gut verstehen
 sich im Kreis drehen
 sich in Luft auflösen
 sich in die Brust werfen
@@ -4893,7 +5017,9 @@ sich kümmern um
 sich lassen
 sich lieb Kind machen
 sich mit Ruhm bekleckern
+sich mit jemandem umgeben
 sich nicht vom Fleck rühren
+sich nie träumen lassen
 sich schuldig fühlen
 sich schuldig machen
 sich sehnen nach
@@ -4908,6 +5034,8 @@ sich vom Mund absparen
 sich wacker schlagen
 sich wundern über
 sich zu Schulden kommen lassen
+sich zurücklehnen
+sich über jemanden lustig machen
 sie alle haben
 sieben Todsünden
 siehe auch
@@ -5000,6 +5128,7 @@ spazieren gehen
 speicherprogrammierbare Steuerung
 sprechen Sie Deutsch
 sprechen Sie Englisch
+sprechen für sich
 sprich
 sprichst du Deutsch
 sprichst du Englisch
@@ -5017,6 +5146,7 @@ stehen bleiben
 stehende Ovation
 stehenden Fußes
 stehendes Heer
+steht fest
 steif wie ein Stock
 stellen wir uns vor
 sterbender Schwan
@@ -5039,6 +5169,8 @@ supramolekulare Chemie
 symplektische Matrix
 syntaktischer Zucker
 syntaktisches Salz
+süchtig nach
+süchtig nach etwas sein
 südlicher Wendekreis
 süßes Nichtstun
 tagaus tagein
@@ -5128,6 +5260,7 @@ um wie viel
 um wie viel Uhr
 um … willen
 umgekehrt wird ein Schuh daraus
+umgibt sich mit
 ums Arschlecken
 ums Leben kommen
 umsonst
@@ -5164,6 +5297,7 @@ unnützer Esser
 unordentlich
 unpassend
 unregelmäßig
+uns nach
 unserer Nase nach
 unsichtbare Hand
 unten genannt
@@ -5172,6 +5306,7 @@ unter Dach und Fach
 unter Druck geraten
 unter Druck setzen
 unter Druck stehen
+unter Hausarrest
 unter Kontrolle
 unter Qualen
 unter Schmerzen
@@ -5234,6 +5369,7 @@ ver- -fachen
 verbunden
 vereint
 verfickt nochmal
+verfickte Scheiße
 verflixt und zugenäht
 verfügbar
 verfügbarer Briefkurs
@@ -5244,8 +5380,10 @@ vergelt's Gott
 verglichen mit
 verhältnismäßig
 verkehrt herum
+verrückt nach
 verschärfte Vernehmung
 verstärkte Zusammenarbeit
+versäumt es nie
 vertraut
 verwaistes Werk
 verwalteter Code
@@ -5289,6 +5427,7 @@ voller Ziele
 voller Zukunft
 volllaufen lassen
 vom Anfang bis zum Ende
+vom Blatt
 vom Fleck weg
 vom Fleisch fallen
 vom Horizont
@@ -5307,6 +5446,7 @@ von A bis Z
 von Anfang an
 von Angesicht zu Angesicht
 von Auge zu Auge
+von Belang
 von Fall zu Fall
 von Grund auf
 von Haus aus
@@ -5493,6 +5633,7 @@ wechselseitiger Ausschluss
 weder Fisch noch Fleisch
 weder Hand noch Fuß
 weder noch
+weg mit jemandem!
 weggegangen, Platz vergangen
 weggehen wie warme Semmeln
 weh mir
@@ -5509,12 +5650,14 @@ weit hergeholt
 weit und breit
 weit weg
 weiter bestehen
+weiter nichts
 weiter so
 weiterhin
 weiß Gott
 weiß der Geier
 weiß der Himmel
 weiß der Kuckuck
+weiß nicht recht
 weiße Fahne
 weiße Flecken
 weiße Weste
@@ -5653,6 +5796,7 @@ wie man's macht, macht man's falsch
 wie meinen
 wie oben erwähnt
 wie oft
+wie schade
 wie schon gesagt
 wie sehr auch
 wie spät
@@ -5679,6 +5823,8 @@ willkommen heißen
 wir schaffen das
 wir sind wieder wer
 wird es regnen
+wird schon gehen
+wissen lassen
 wissen zu
 wissen, was man getan hat
 wissenschaftliche Methode
@@ -5729,6 +5875,7 @@ you name it
 z. B.
 z. E.
 z. T.
+zahlt sich aus
 zartes Pflänzchen
 zeit jemandes Lebens
 ziellos
@@ -5767,6 +5914,7 @@ zu Lasten
 zu Markte tragen
 zu Mittag essen
 zu Mute
+zu Ohren
 zu Papier bringen
 zu Potte kommen
 zu Recht
@@ -5786,6 +5934,7 @@ zu allererst
 zu bunt
 zu deiner Zeit
 zu dem Ergebnis kommen
+zu dem Schluss
 zu dem Schluss kommen
 zu der Ansicht kommen
 zu der Zeit
@@ -5912,6 +6061,7 @@ zur Seite stehen
 zur Seite treten
 zur Sprache bringen
 zur Sprache kommen
+zur Stelle
 zur Strecke bringen
 zur Verantwortung ziehen
 zur Verfügung stehen

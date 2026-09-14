@@ -1,18 +1,10 @@
 # Whitespace Prediction Diagnostics
 
 Total predictions: 4618752
-Total errors: 1673
-Accuracy: 99.96%
+Total errors: 1442
+Accuracy: 99.97%
 
 ## Error Patterns (sorted by frequency)
-
-### "it" + "'s" (33 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Ah, but it's the tie that makes the man !
-  - Ah, this time it's working.
-  - Because it's a holiday.
 
 ### "'" + "?" (27 occurrences)
 - Predicted: None
@@ -30,30 +22,6 @@ Accuracy: 99.96%
   - C‘est Hercule, la vraie racaille.
   - C‘est bon, Saïd, ramène-toi.
 
-### "I" + "'m" (24 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - And today, I'm really exhausted.
-  - But I'm going to make an effort in order to dress up.
-  - But now I'm resting.
-
-### "It" + "'s" (24 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - It's a holiday.
-  - It's better than a flat tire or than a weekend at the laundromat.
-  - It's going to cost me an arm and a leg.
-
-### "I" + "'ll" (19 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - I hope that in three years I'll still be in good health.
-  - I'll be careful or I'll pay attention.
-  - I'll be careful or I'll pay attention.
-
 ### "—" + "moi" (19 occurrences)
 - Predicted: Space
 - Actual: None
@@ -61,14 +29,6 @@ Accuracy: 99.96%
   - Ah oui, nique—moi ?
   - Alors, laisse—moi.
   - Arrête—moi ça.
-
-### "do" + "n't" (17 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Answer that no, you don't see it.
-  - But don't be scared, calm yourselves.
-  - Come on, don't hesitate.
 
 ### "c" + "‘" (14 occurrences)
 - Predicted: Space
@@ -85,14 +45,6 @@ Accuracy: 99.96%
   - C‘est Astérix qu‘a ton argent.
   - Et qu‘on ne les y reprenne plus.
   - Il paraît qu‘un keuf a perdu son calibre dans la cité, cette nuit.
-
-### "you" + "'re" (11 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - And you're tired.
-  - As you're texting friends, tell her, an SMS, that's more practical.
-  - Dites, actually, I believe that you're right.
 
 ### "," + "'" (10 occurrences)
 - Predicted: None
@@ -142,22 +94,6 @@ Accuracy: 99.96%
   - C'est ça , ramènes ton gros cul chez maman.
   - Comment tu sais ça, toi ?
 
-### "Here" + "'s" (7 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Here's how she'd ask, do you write ?
-  - Here's how to say, I need to charge it.
-  - Here's how to say, she writes letters.
-
-### "does" + "n't" (7 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - But it doesn't matter if she doesn't dress up.
-  - But it doesn't matter if she doesn't dress up.
-  - Comment dirait-il, it doesn't matter, leave him alone ?
-
 ### "non" + "?" (7 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
@@ -182,14 +118,6 @@ Accuracy: 99.96%
   - Où est-ce que-- ! ?
   - Quoii-- ! ?
 
-### "I" + "'d" (6 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - I'd also like to call home.
-  - I'd like a cup of tea for my husband, please.
-  - I'd like also to charge my phone.
-
 ### "T" + "‘" (6 occurrences)
 - Predicted: Space
 - Actual: None
@@ -198,22 +126,6 @@ Accuracy: 99.96%
   - T‘as même pas le droit de la regarder.
   - T‘as un numéro de téléphone ?
 
-### "That" + "'s" (6 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - That's all the same to me, I dream of it.
-  - That's enough, we calm ourselves.
-  - That's in English.
-
-### "that" + "'s" (6 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A house in France, that's very expensive.
-  - And a used machine, that's not fun to repair.
-  - As you're texting friends, tell her, an SMS, that's more practical.
-
 ### "—" + "toi" (6 occurrences)
 - Predicted: Space
 - Actual: None
@@ -221,14 +133,6 @@ Accuracy: 99.96%
   - Allez, barre—toi.
   - Casse—toi.
   - Dépêche—toi !
-
-### "We" + "'ll" (5 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - We'll be able to watch TV together when we'll be big.
-  - We'll make the shellfish grin.
-  - We'll see when the children will leave.
 
 ### "a" + "ida" (5 occurrences)
 - Predicted: Space
@@ -254,14 +158,6 @@ Accuracy: 99.96%
   - Je t‘ai parlé à toi ?
   - Je t‘ai pas parlé.
 
-### "you" + "'ll" (5 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - When you'll be retired, you'll do sports all the time.
-  - When you'll be retired, you'll do sports all the time.
-  - When you'll be retired.
-
 ### "," + "c’" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -285,22 +181,6 @@ Accuracy: 99.96%
   - J‘ai fêté mon anniversaire dans un restaurant.
   - J‘aime celui-ci.
   - J‘aime les soupes avec de nombreux végétaux.
-
-### "We" + "'re" (4 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - We're full of mud.
-  - We're going to bring her with us.
-  - We're going to party together.
-
-### "You" + "'re" (4 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - You're feeling badly ?
-  - You're in a temp staffing agency.
-  - You're kidding !
 
 ### "d" + "‘" (4 occurrences)
 - Predicted: Space
@@ -430,22 +310,6 @@ Accuracy: 99.96%
   - Fais—moi crédit.
   - Fais—moi peur.
 
-### "He" + "'s" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - He's a student over there.
-  - He's at the University of Rennes.
-  - He's at the university in Montreal.
-
-### "I" + "'ve" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - I've been resting for three months.
-  - I've talked to her about you.
-  - I've thought about it.
-
 ### "Qu" + "‘" (3 occurrences)
 - Predicted: Space
 - Actual: None
@@ -453,22 +317,6 @@ Accuracy: 99.96%
   - Qu‘est—ce tu cherches ?
   - Qu‘est—ce tu fais avec ton grenaille ?
   - Qu‘est—ce tu peux faire de mieux ?
-
-### "She" + "'s" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - She's coming to pay me a visit.
-  - She's passing through Paris on business.
-  - She's passing through for a few days.
-
-### "What" + "'s" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - What's new ?
-  - What's wrong ?
-  - When you finally get back to your room, your husband asks, What's wrong ?
 
 ### "bien" + "," (3 occurrences)
 - Predicted: None
@@ -493,22 +341,6 @@ Accuracy: 99.96%
   - Ce tableau est considéré comme un chef-d'œuvre.
   - Je me casse d'ici.
   - Je veux que tu sortes d'ici.
-
-### "did" + "n't" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - But she didn't have a lot of things to do.
-  - Dites, it's true, we didn't think about it.
-  - Il dit, it's too bad that she didn't come.
-
-### "doctor" + "'s" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - And how would the clerk say, I write the doctor's address ?
-  - Here's the doctor's phone number.
-  - The doctor's practice is closed.
 
 ### "et" + "je" (3 occurrences)
 - Predicted: Space
@@ -582,14 +414,6 @@ Accuracy: 99.96%
   - L'a-t'il déjà dit ?
   - Pourquoi y-a't'il un tel fouillis ici, ma fille ?
 
-### "they" + "'ll" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Or when they'll work.
-  - When they'll be students.
-  - When they'll leave.
-
 ### "toi" + "," (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -613,22 +437,6 @@ Accuracy: 99.96%
   - Ca ne devrait pas être trop dur pour vous .
   - Non, vous, réveillez vous .
   - Regardez tout autour de vous .
-
-### "we" + "'ll" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - But for now we'll use petite amie.
-  - We'll be able to watch TV together when we'll be big.
-  - We'll talk about it again, or we'll retalk about it.
-
-### "we" + "'re" (3 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - And then we're going to party in pajamas.
-  - Dites, we're exhausted.
-  - Fortunately, that we're not staying too long.
 
 ### "—" + "y" (3 occurrences)
 - Predicted: Space
@@ -829,20 +637,6 @@ Accuracy: 99.96%
   - Non , non , non !
   - Non , non !
 
-### "Seb" + "'s" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Bienvenue chez Seb's.
-  - Je crois que ça devrait s'appeler Seb's.
-
-### "You" + "'ll" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - You'll be able to come with them.
-  - You'll come ?
-
 ### "a" + "," (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -898,13 +692,6 @@ Accuracy: 99.96%
 - Examples:
   - Le fils de Skywalker ne doit pas devenirJedi.
   - Pourquoi veux-tu devenirJedi ?
-
-### "driver" + "'s" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - A driver's license is a permit of driving.
-  - And I lost my driver's license.
 
 ### "en" + "fuir" (2 occurrences)
 - Predicted: Space
@@ -1087,13 +874,6 @@ Accuracy: 99.96%
 - Examples:
   - Je suis scientifique , vous vous en souvenez ?
   - Tommy était le scientifique , pas moi.
-
-### "she" + "'s" (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - But she's a student in London.
-  - Now she's on vacation in Rennes.
 
 ### "toi" + "?" (2 occurrences)
 - Predicted: NarrowNbsp
@@ -2073,12 +1853,6 @@ Accuracy: 99.96%
 - Examples:
   - Hé, Frank !
 
-### "Freddy" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Je suis déjà allé chez Freddy's.
-
 ### "FÉLICITATIONS" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2246,12 +2020,6 @@ Accuracy: 99.96%
 - Actual: Nbsp
 - Examples:
   - Les architectes !
-
-### "Let" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Let's rock'n'roll !
 
 ### "Lily" + "'" (1 occurrences)
 - Predicted: Space
@@ -2637,23 +2405,11 @@ Accuracy: 99.96%
 - Examples:
   - Son frère ?
 
-### "Subbie" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Je vais chez Subbie's.
-
 ### "Sébastien" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
 - Examples:
   - Je veux prêter la maison à Sébastien; il veut emmener Rémy.
-
-### "They" + "'ll" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - They'll leave.
 
 ### "Tignasse" + "?" (1 occurrences)
 - Predicted: NarrowNbsp
@@ -2684,12 +2440,6 @@ Accuracy: 99.96%
 - Actual: Nbsp
 - Examples:
   - Ton témoin ?
-
-### "Traveler" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Traveler's chèques.
 
 ### "Trop" + "beau" (1 occurrences)
 - Predicted: Space
@@ -2841,12 +2591,6 @@ Accuracy: 99.96%
 - Examples:
   - Vous osez !
 
-### "Who" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Who's up there ?
-
 ### "Workman" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2864,24 +2608,6 @@ Accuracy: 99.96%
 - Actual: Space
 - Examples:
   - Les hommes ont un chromosome X et un Y ; les femmes, deux X.
-
-### "Yong" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Bienvenue chez Yong's.
-
-### "You" + "'d" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - You'd like to pack up and leave, right ?
-
-### "You" + "'ve" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - You've recharged your phone and called the doctor.
 
 ### "Zico" + "?" (1 occurrences)
 - Predicted: NarrowNbsp
@@ -3771,12 +3497,6 @@ Accuracy: 99.96%
 - Examples:
   - Et tout sera sec en un clin dâ€™œil.
 
-### "daughter" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - My daughter's a student in Rennes.
-
 ### "de" + "Josie" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -4352,18 +4072,6 @@ Accuracy: 99.96%
 - Actual: Space
 - Examples:
   - Enlevez vos harnais .
-
-### "he" + "'ll" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - If the Duke discovers this shocking entrevue, he'll murder us !
-
-### "here" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - And here's to return or to go back.
 
 ### "heureuse" + ";" (1 occurrences)
 - Predicted: NarrowNbsp
@@ -5889,12 +5597,6 @@ Accuracy: 99.96%
 - Examples:
   - Un shampoing !
 
-### "she" + "'d" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Here's how she'd ask, do you write ?
-
 ### "signal" + "?" (1 occurrences)
 - Predicted: NarrowNbsp
 - Actual: None
@@ -6093,23 +5795,11 @@ Accuracy: 99.96%
 - Examples:
   - Qu'est-ce que tu veux dire par 'test' ?
 
-### "there" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - She said, there's a pharmacy on School Street.
-
 ### "they" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - Dites encore, they live or they've lived.
-
-### "they" + "'re" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Say again that they're coming to pay you a visit.
 
 ### "tire" + "—" (1 occurrences)
 - Predicted: Space
@@ -6441,29 +6131,11 @@ Accuracy: 99.96%
 - Examples:
   - Ce n'est pas mon point de vue ; ce n'est que ma traduction !
 
-### "we" + "'ve" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - I think we've got a problem.
-
-### "what" + "'s" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Steve, Sylvia, what's becoming of you ?
-
 ### "you" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - We hope you've enjoyed learning your new language.
-
-### "you" + "'d" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Here's how you'd use nous to say we go there.
 
 ### "zone" + "'" (1 occurrences)
 - Predicted: Space

@@ -1,262 +1,762 @@
-{"sentence":"ให้ได้แรงบรรดาลใจ","failure_count":3}
-{"sentence":"ตายห่า, พระเจ้า, ผมขอโทษ!","failure_count":3}
-{"sentence":"ไม่เป็นอะไรนะ","failure_count":3}
-{"sentence":"ลากันตรงนี้นะ","failure_count":3}
-{"sentence":"โฟรโดยังไม่ตาย","failure_count":3}
-{"sentence":"ท่านเป็นหนึ่งในดูนาไดน์สิ","failure_count":3}
-{"sentence":"เดี๋ยวไอ้เอก็ตามมาทันหรอก","failure_count":3}
-{"sentence":"มันไม่ใช่ที่ที่เราจะไปได้","failure_count":3}
-{"sentence":"เห็นรถแบ็กโฮมั้ย","failure_count":3}
-{"sentence":"ก็นายเป็นนาซีนี่","failure_count":3}
-{"sentence":"ไอ้บ้านั่น!","failure_count":3}
-{"sentence":"ฝ-ฝะ-ฝะ-ฝรั่งเศส.","failure_count":3}
-{"sentence":"ใช่ ส่วนพุพุน่ะ","failure_count":3}
-{"sentence":"ในที่ๆ เราเดิน หนทางมันมี","failure_count":1}
-{"sentence":"คุณเป็นตุ่นที่หล่อนะ","failure_count":3}
-{"sentence":"กูจะล่ามึงจนตาย","failure_count":3}
-{"sentence":"มันอาจไม่ได้มากมายอะไร","failure_count":3}
-{"sentence":"นอกจากนาจากับไท่อี่","failure_count":3}
-{"sentence":"เขาคงสร้างปัญหาให้ลูกสิท่า","failure_count":3}
-{"sentence":"ห้องนี่เคยเป็นห้องแม่ของผม","failure_count":3}
-{"sentence":"ไม่อย่าพูดอย่านั้น!","failure_count":3}
-{"sentence":"คงเส้นคงวากว่าคุณทั้งคู่","failure_count":3}
-{"sentence":"ยุคนั้นต้องฆ่าให้เป็น","failure_count":3}
-{"sentence":"เขาไม่เป็นอะไร.","failure_count":3}
-{"sentence":"มันมีหนู, พ่อ","failure_count":3}
-{"sentence":"ความผิดแก แกเริ่มก่อน","failure_count":3}
-{"sentence":"คุณไม่เป็นอะไรนะที่รัก","failure_count":3}
-{"sentence":"เดิมทีข้าว่าจะออมมือให้","failure_count":3}
-{"sentence":"ภรรญาของฉันตายจากโรคมะเร็ง","failure_count":3}
+{"sentence":"กระบวนหมัดไหนน่ะ..?","failure_count":2}
+{"sentence":"กลยุทธ์ใหม่ๆ ท่าใหม่ๆ เทคนิคใหม่ๆ ดีมากเลยค่ะ","failure_count":2}
+{"sentence":"กลับไปในที่ที่เธอมา!","failure_count":1}
+{"sentence":"กล้ายิงข้างั้นเหรอ","failure_count":2}
+{"sentence":"กล้ายิงน้องอาจารย์เหรอ","failure_count":1}
+{"sentence":"กว่าจะมีลูกค้าประจํามันต้องใช้เวลานะจ๊ะ","failure_count":2}
+{"sentence":"กองทับเดินด้วยท้อง","failure_count":2}
+{"sentence":"การคุยในที่ที่มีกล้อง วงจรปิดนี่ไม่ฉลาดเลย","failure_count":2}
+{"sentence":"การที่คุณมาเลสกี้เปิดเพลง อย่างดังกระหึ่ม บ่งบอกไหมว่าเขาหึงคุณ","failure_count":2}
 {"sentence":"การเปลี่ยนแปลงใช้เวาลานาน","failure_count":3}
 {"sentence":"กินสุชิก่อนนะ","failure_count":3}
-{"sentence":"ดูที่ที่คุณเหยียบ","failure_count":3}
-{"sentence":"ไอ้บ้านี่มันอะไร","failure_count":3}
-{"sentence":"แล้วท่านนายกล่ะครับ","failure_count":3}
-{"sentence":"ตอนี้แหละ","failure_count":3}
-{"sentence":"ตายแล้วจะได้ไม่เจ็บ","failure_count":3}
-{"sentence":"ไปที่บ้านเซนิบ้านะเหรอ?","failure_count":3}
-{"sentence":"มีเงินพอซื้อขอด้ทุกอย่าง","failure_count":3}
-{"sentence":"ราฮิลาน่าจะอ่อนกว่าปีสองปี","failure_count":3}
-{"sentence":"ไม่เป็นอะไรเลย","failure_count":3}
-{"sentence":"ไม่มีข้อมููล","failure_count":3}
-{"sentence":"มันสิ่งไปสนามบินฮาเนด่ะ","failure_count":3}
-{"sentence":"ข้าจะตัดหัวเจ้า เจ้าคนแคระ","failure_count":3}
-{"sentence":"ลิลี่ ใจเย็นๆสิ","failure_count":3}
-{"sentence":"นายตัวแสบบรอโตดู","failure_count":3}
-{"sentence":"ทำไม่มองมาทางฉันล่ะ?","failure_count":3}
-{"sentence":"ดูไม่ใช่ที่ที่มีค่าอะไรเลย","failure_count":3}
-{"sentence":"ในที่ที่เรามองไม่เห็น","failure_count":3}
-{"sentence":"ให้กูสตาร์ตรถให้มึงก็ยังดี","failure_count":3}
+{"sentence":"กุคกี้ ลูกสาวของป้านีลูกับลุงโกกิ ฉันตัดสินใจแล้วว่าฉันจะไปดื่มชา","failure_count":2}
+{"sentence":"กูขอโทษมึงนะ ที่ว่ามึงเป็นคนไม่ได้เรื่องบ่อยๆ ช่วงนี้ม่าก็ให้เอ็มเกาะกินไปก่อน","failure_count":2}
+{"sentence":"กูจะบอกว่าเมียมึงอ่ะ หน้าตาดีมาก อย่างกับนางงามแน่ะ","failure_count":2}
+{"sentence":"กูจะล่ามึงจนตาย","failure_count":3}
+{"sentence":"กูดมอนิ่ง","failure_count":2}
+{"sentence":"กูดมอนิ่ง หมาดำ","failure_count":3}
+{"sentence":"กูนึกว่าม้ามแตก","failure_count":3}
+{"sentence":"กูฝันเห็นเตี่ยกับม่ากู อีตามมาจะเอากูไปอยู่ด้วย","failure_count":2}
+{"sentence":"กูไม่ได้เย้ามึง ไอ้มาก กูพูดจริงๆ","failure_count":2}
+{"sentence":"ก็นายเป็นนาซีนี่","failure_count":3}
+{"sentence":"ก็พอ ๆ กับที่เรากำลังทำร้ายจิตใจของจอห์น เขาไม่ได้เชื่อในสิ่งที่พูดออกมาหรอก","failure_count":2}
+{"sentence":"ก็มาดูพวกลามกว่าจะมาแอบดูคนอาบน้ำป่าว","failure_count":2}
+{"sentence":"ก็รู้ว่าวันนี้ฮากุไม่อยู่","failure_count":2}
+{"sentence":"ก็อย่างที่บอกฉันบังเอิญผ่านมา","failure_count":2}
+{"sentence":"ก็ใช่ แต่คนเราก็ต้องมี สิ่งยึดโยงอยู่บ้าง กับที่ที่เรารู้สึกว่าใช่ เป็นของเรา","failure_count":2}
+{"sentence":"ก็ไม่เสียหายนี่","failure_count":3}
+{"sentence":"ก็ไม่เห็นจะต้องเข้าสมาธิเลยนี่","failure_count":2}
+{"sentence":"ก่อนนั้นนักการ เมืองใช้ระบบเพื่อทำเงิน","failure_count":2}
+{"sentence":"กําลังคุยกันถูกคอเลย","failure_count":2}
+{"sentence":"ขยายไปเจียนซาจวี่งั้นเหรอ","failure_count":2}
+{"sentence":"ขอต้อนรับสู่ลอส อลามอสนะ","failure_count":2}
+{"sentence":"ขอบคุณ แต่ผมเห็นจะต้องกลับแล้ว","failure_count":2}
+{"sentence":"ขอเราสองคนคุยกันแป๊ปนะ","failure_count":2}
+{"sentence":"ขอเวลาฉันแป๊ปเดียว","failure_count":2}
+{"sentence":"ขายของคุณภาพเยี่ยมกว่าคู่แข่ง ในราคาต่ำกว่าสินค้าคู่แข่ง","failure_count":2}
+{"sentence":"ขาแปลนวนิยายญี่ปุ่นเป็นภาษาฝรั่งเศส","failure_count":2}
+{"sentence":"ข้อมูลของ ชาแทชิก จากอเมริการส่งมาที่หน่วยสืบสวนของเราแล้ว","failure_count":2}
 {"sentence":"ข้างใต้นั่นน่ะ","failure_count":1}
-{"sentence":"ไม่ต้องห่วง, ผมไม่เป็นอะไร.","failure_count":3}
-{"sentence":"แม่ไม่เป็นอะไรหรอก","failure_count":3}
-{"sentence":"แกะน้อยบ้าน่ะสิ","failure_count":3}
-{"sentence":"เข้าไปฟังลิลี่เถอะ","failure_count":3}
-{"sentence":"ฉันจะลงมากกินน้ำ","failure_count":3}
-{"sentence":"แล้วบูล่ะฮะ","failure_count":3}
-{"sentence":"เซี๊ยงเทียน","failure_count":3}
-{"sentence":"มันถูกปกคลุมไปด้วยเลือด","failure_count":3}
-{"sentence":"เพราะคุณตะโกน โท โท โท?","failure_count":3}
-{"sentence":"มันไม่ใช่ของของเรา","failure_count":3}
-{"sentence":"เธอไม่เป็นอะไรแล้วล่ะครับ","failure_count":3}
-{"sentence":"ให้ตายสิ ให้ลิลี่ทำสิ","failure_count":3}
-{"sentence":"พวกคนในคูเรียน่ะ","failure_count":3}
-{"sentence":"นั่น นั่น นั่น ขึ้นมานี่","failure_count":3}
-{"sentence":"เขาจะไปเยินยอกัน","failure_count":3}
-{"sentence":"เดี๋ยวๆ เดี๋ยวๆ รู้","failure_count":3}
-{"sentence":"เก่าเเบบนี้เเหละดี","failure_count":3}
-{"sentence":"อย่าพูดจากับแม่แบบนี้นะ!","failure_count":3}
-{"sentence":"แล้วพี่มากล่ะ","failure_count":3}
-{"sentence":"หาเรื่องทำะไรไปพลางๆก่อน","failure_count":3}
-{"sentence":"เจ้าไม่เป็นอะไรนะ?","failure_count":3}
+{"sentence":"ข้าจะจับพวกมันห้อยหัวกับต้นไม้ แล้วเผาพริกรมควัน","failure_count":2}
+{"sentence":"ข้าจะตัดหัวเจ้า เจ้าคนแคระ","failure_count":3}
+{"sentence":"ข้าเกิดความรู้สึก ว่าข้าคงไม่ได้กลับมา ได้กลับสิ","failure_count":2}
+{"sentence":"ข้าได้ยินเสียงความเจ็บปวดของป่าทีไร ก็พาลเจ็บในอกตรงที่กระสุนฝังทุกที","failure_count":2}
+{"sentence":"ข้าไม่งอมืองอตีน ให้ผีอีนากมาฆ่าเอาเฉยๆ หรอก","failure_count":2}
+{"sentence":"คงเส้นคงวากว่าคุณทั้งคู่","failure_count":3}
+{"sentence":"คดีที่จิลก๊อกใช่มั้ยล่ะ","failure_count":3}
+{"sentence":"คดีที่ยังไขไม่ได้ ไม่รู้จะได้เอามันลงเมื่อไหร่…","failure_count":2}
+{"sentence":"คนที่กำลังหางานอยู่นี่ โชคไม่ค่อยมีเลยครับ","failure_count":2}
+{"sentence":"คนที่พยายามติดต่อกับพระเจ้า เลยติดต่อไปผิดเบอร์","failure_count":2}
+{"sentence":"คนที่โฉ่งฉ่างสุดคือจุดอ่อนที่สุด","failure_count":2}
+{"sentence":"คนปกติธรรมดก็ต้องการพักบ้างล่ะ","failure_count":2}
+{"sentence":"คนผู้โชคดีที่สุด ปราดเปรียวที่สุด ไม่ระวังตัวที่สุดเท่าที่เคยข้ารู้จัก","failure_count":2}
+{"sentence":"คนเราถ้ามีอะไรกันบนรถ อาจมีผมร่วง หรือทำตุ้มหูหลุดไว้","failure_count":2}
+{"sentence":"คนไข้ส่วนใหซ่อยู่ทางด้านโน้น","failure_count":2}
+{"sentence":"ครับ, ส-ส-ส-","failure_count":3}
+{"sentence":"คราวนี้ กล้ายิงน้องอาจารย์เหรอ","failure_count":2}
+{"sentence":"คราวนี้คุณก็ได้ใช้ลูกโม่โปเกนั่นแล้วสิ?","failure_count":2}
+{"sentence":"ครูสมัยมัธยมปลายแก แวะมากินข้าวเย็นเมื่อวันก่อน","failure_count":2}
+{"sentence":"ความผิดแก แกเริ่มก่อน","failure_count":3}
+{"sentence":"คอลิน แกน่ะมันงี่เง่า บ้าๆบอๆ ยอมรับเหอะว่ะ","failure_count":2}
+{"sentence":"คำถามโคตรงงเลย","failure_count":3}
+{"sentence":"คำว่าเคียว เหมือนที่เขียนในโตเคียว","failure_count":2}
+{"sentence":"คิดว่าตัวเองเป็นจิตรกรงั้นหรือ","failure_count":2}
+{"sentence":"คุณกำลังจะบอกว่านั่นเป็นเหตุผล ที่เขาใช้ไวรัสรุ่นเก่างั้นเหรอ?","failure_count":2}
+{"sentence":"คุณคงไม่ได้ตั้งใจจะยกโทษให้เขาใช่ไหม?","failure_count":2}
+{"sentence":"คุณครูมาอยู่ซานเหอถุนหนึ่งเดือนแล้วใช่มั้ย","failure_count":2}
+{"sentence":"คุณควรจะซื้อกลับไปใช้ที่บ้าน คุณจะได้ไม่ต้องมานอนที่นี่ทุกครั้งไง","failure_count":2}
+{"sentence":"คุณคิดว่า ตลอดเวลาที่สอนฉันมาจากตำรางั้นหรือ","failure_count":2}
+{"sentence":"คุณชุตต์เท่อยืนยันได้ครับ","failure_count":2}
+{"sentence":"คุณทำงานต่อไปดีกว่านะ","failure_count":2}
+{"sentence":"คุณทำงานอะไร","failure_count":3}
+{"sentence":"คุณทำงานอะไร ผมเป็นหุ้นส่วน","failure_count":3}
+{"sentence":"คุณทำงานอะไรคะ","failure_count":3}
+{"sentence":"คุณทำงานอะไรเหรอ","failure_count":3}
+{"sentence":"คุณนายฮาร์ทรู้สึกว่า เหล้าและเพลงแจ๊ชทำให้เธอตกต่ำ","failure_count":2}
+{"sentence":"คุณบอกว่าถ้ามีใครขัดขวาง แผนกวนเมือง..","failure_count":2}
+{"sentence":"คุณประสบอุบัติเหตุในที่ที่ผมเจอเธอ และรถของลูกผมก็อยู่ที่นั่น","failure_count":2}
+{"sentence":"คุณหนูไม่มีวันเป็นเจ้าหญิงผู้เลอโฉมได้ หากหน้าตายังเป็นแบบนี้","failure_count":2}
+{"sentence":"คุณอยากไปเดินเล่ยมั้ย","failure_count":3}
+{"sentence":"คุณเคยทำให้ลูกสาวของคุณเองทานเหรอคะ","failure_count":2}
+{"sentence":"คุณเป็นตุ่นที่หล่อนะ","failure_count":3}
+{"sentence":"คุณได้ได้รับแต่งตั้งมากี่ปีแล้วนะ","failure_count":2}
+{"sentence":"คุณไม่คิดว่เขาจะโทรหา ถ้าเขามีอะไรเลยเหรอ","failure_count":2}
+{"sentence":"คุณไม่ปฏิเสธอดีตที่ผมเคยอยู่ฝ่ายซ้าย แต่กลับจ้างผมเพราะเรื่องนั้น","failure_count":2}
+{"sentence":"คุณไม่เป็นอะไรนะที่รัก","failure_count":3}
+{"sentence":"คุณไม่ใช่คนสมถะและไม่ได้เป็นแค่ทหาร","failure_count":2}
+{"sentence":"ค่อยพูดค่อยจากันก็ได้.","failure_count":2}
+{"sentence":"ค่ะ ฉันไม่เป็นอะไร","failure_count":3}
+{"sentence":"คําถามมีมากขึ้น","failure_count":3}
+{"sentence":"งั้นคุณคงไม่ได้มาอยู่กับผมที่นี่เเน่","failure_count":2}
+{"sentence":"งั้นเหรอ..?","failure_count":2}
+{"sentence":"จงรู้ไว้ว่าเราจะต้องได้รับสิ่งต่างๆ มากกว่านี้หลายเท่าตัว","failure_count":2}
+{"sentence":"จนถึงนี่ หูฟังแสนแพง…","failure_count":2}
 {"sentence":"จนถึงนี่ เธอน่าจะใส่ได้","failure_count":3}
-{"sentence":"เมื่อวันก่อนพ่อแม่ฉันโทรมา","failure_count":3}
-{"sentence":"ไอ้บ้านี่ ไปไม่บอกลา","failure_count":3}
-{"sentence":"ชุน เธอยู่ที่ไหน","failure_count":3}
-{"sentence":"ต้องใช้น้ำเหมือนกันะ","failure_count":3}
-{"sentence":"ไปซะ พวกคุณจะไม่เป็นอะไร","failure_count":3}
-{"sentence":"แต่หลายร้อยปีที่ฝานมา","failure_count":3}
-{"sentence":"พวกนั้นต้องไม่เป็นอะไร","failure_count":3}
-{"sentence":"โตขึ้นแล้วหล่อนะเนี่ย","failure_count":3}
-{"sentence":"ตายล่ะ เจ๊ปากหมารู้ตัว","failure_count":3}
-{"sentence":"เหตุการณ์นี้เคยผ่านมาแล้ว","failure_count":3}
-{"sentence":"ฉันไม่ได้โพสหรอก","failure_count":3}
-{"sentence":"ฉันไม่เป็นอะไร","failure_count":3}
-{"sentence":"ไอ้บ้านี่ทำไมลึกลับจังว่ะ","failure_count":3}
-{"sentence":"พักซะนะ เจ้าไม่เป็นอะไรแล้ว","failure_count":3}
-{"sentence":"เนโต้งัดกับระบบอย่างแยบยล","failure_count":3}
-{"sentence":"พ่อโทรมารึเปล่า","failure_count":3}
-{"sentence":"ไบยาโอยู่ไหน ว่ายังไงบอกมา","failure_count":1}
-{"sentence":"อาโส่ยน่ะ","failure_count":3}
-{"sentence":"หมอเขาก็ให้เช็กลำไส้","failure_count":3}
-{"sentence":"ฉันไม่เห็นรู้สสึกอะไร","failure_count":3}
-{"sentence":"นี่จะเป็นหนังโรแมนติคล่ะ","failure_count":3}
+{"sentence":"จริงๆ นะ ผมคงมีความสุขมาก","failure_count":3}
+{"sentence":"จริงๆ แล้ว… ฟิล์มที่ผมถ่ายก็ไม่ได้เอามาล้างด้วยซ้ำ","failure_count":2}
+{"sentence":"จะทำงานแบบนี้ได้จริงๆเหรอ","failure_count":3}
+{"sentence":"จะมีใครมาสมัครอีกไหม!?","failure_count":2}
+{"sentence":"จะเกิดอะไรขึ้น ถ้าคุณทำคอมันหัก","failure_count":2}
+{"sentence":"จะไม่มีวันผลิดอกอีก","failure_count":3}
+{"sentence":"จัดให้พวกทหารเฝ้ายามอยู่ที่ชายป่า","failure_count":2}
+{"sentence":"จากฐานถึง ฮ. มีรายงานการยิงต่อสู้กัน มุ่งหน้าไปวอชิงตันและลาเบลียด่วน","failure_count":2}
+{"sentence":"จากที่ที่คุณกล่าวมา คุณอยู่ตรงไหนเวลานี้","failure_count":2}
+{"sentence":"จำไว้ต้องวางท่านิดหน่อย","failure_count":3}
+{"sentence":"จุงโซมี ฉันรู้ว่าเธออยู่ในนั้น โผล่ก้นของเธออกมาเดี๋ยวนี่นะ!","failure_count":2}
+{"sentence":"จูนบัค นี่เป็นเรื่องที่ยากมากๆๆเลยนะ","failure_count":2}
+{"sentence":"จ้ะ แต่ว่ายใกล้ฝั่งเท่านั้นนะ","failure_count":2}
+{"sentence":"ฉันกำลังพูดอะไร?!?!?!","failure_count":2}
+{"sentence":"ฉันขอบัตเตอร์สก็อตซันเดย์","failure_count":1}
+{"sentence":"ฉันคงไม่ได้กวนใจนายนะ","failure_count":3}
+{"sentence":"ฉันคงไม่ได้ไป","failure_count":3}
+{"sentence":"ฉันควรใส่วัวนั่นลงในประวัติย่อมั้ย","failure_count":2}
+{"sentence":"ฉันจะลงมากกินน้ำ","failure_count":3}
+{"sentence":"ฉันตกลงไว้กับผู้คุมวิญญาณ เพื่อช่วยคุน ชุน เธอยู่ที่ไหน","failure_count":2}
+{"sentence":"ฉันต้องไปทำแซนวิขกินแล้วล่ะ","failure_count":2}
+{"sentence":"ฉันถามว่าพ่อโทรมารึเปล่า","failure_count":2}
+{"sentence":"ฉันทำงานกลางคืน แล้ว..?","failure_count":2}
 {"sentence":"ฉันบังเอิญผ่านมาน่ะ","failure_count":3}
-{"sentence":"แน่นนอนจ้ะ","failure_count":3}
-{"sentence":"เดี๋ยวไม่หล่อนะ","failure_count":3}
-{"sentence":"ถึงเปียกก็ไม่เป็นอะไรหรอก","failure_count":3}
-{"sentence":"พวกคุณจะไม่เป็นอะไร","failure_count":3}
-{"sentence":"เธอเองก็ยังไม่มีไม่ใช่เหรอ","failure_count":3}
 {"sentence":"ฉันมากไง","failure_count":3}
+{"sentence":"ฉันรู้สึกเอือมระอากับครอบครัวของเธอ","failure_count":2}
+{"sentence":"ฉันอยากให้แกระวังหน่อย","failure_count":2}
+{"sentence":"ฉันเก็บ เวชภัณฑ์ยาจากตะวันตก สินค้เที่ยวสุดท้ายขายออกหมดอย่างรวดเร็ว","failure_count":2}
+{"sentence":"ฉันเขียนมันไว้ในไดอารี่ เพื่อที่ฉันจะได้ไม่ต้องจำ.","failure_count":2}
+{"sentence":"ฉันเบื่อความจำเจอยากเปลี่ยนอะไรบ้าง","failure_count":2}
+{"sentence":"ฉันเพียงผ่านมา เลยอยากรู้ว่า คุณสบายดีไหม","failure_count":2}
+{"sentence":"ฉันโตมาใกล้กับฐานทัพอเมริกานะโว้ย","failure_count":2}
+{"sentence":"ฉันไม่ชอบการตายแบบไม่ธรรมชาตินะ","failure_count":2}
+{"sentence":"ฉันไม่อยากเห็นอาเฉียกลายเป็นบ้า","failure_count":2}
+{"sentence":"ฉันไม่เป็นอะไร","failure_count":3}
+{"sentence":"ฉันไม่เห็นรู้สสึกอะไร","failure_count":3}
+{"sentence":"ฉันไม่ได้เขียนใบลานี่นะ","failure_count":3}
+{"sentence":"ฉันไม่ได้โพสหรอก","failure_count":3}
+{"sentence":"ชัวร์แน่นะ","failure_count":2}
+{"sentence":"ชั้นเป็นหมารับใช้ของนาย","failure_count":2}
+{"sentence":"ชีวิตส่วนตัวของฉัน มันก็แดกดันเหมือนกันค่ะ","failure_count":2}
+{"sentence":"ชุน เธอยู่ที่ไหน","failure_count":3}
+{"sentence":"ช่วงนี้พ่องานยุ่งมาก","failure_count":3}
+{"sentence":"ช่วงนี้หนอนเยอะมาก","failure_count":3}
+{"sentence":"ช่วงเวลาที่เราทุกคนรอคอย","failure_count":2}
+{"sentence":"ช่วยเตือนอิชิกาว่า ด้วยนะว่าอย่าระห่ำนัก, โอเค๊..?","failure_count":2}
+{"sentence":"ซง ซอเรคงขึ้นไปทางง่าย","failure_count":3}
+{"sentence":"ซันซันบอกว่าอาหารที่คุณนายเหลียง ทำให้กินแย่กว่าของแม่แกอีกค่ะ","failure_count":2}
+{"sentence":"ซามูไรของขุนนางอาซาโนะโจมตีเมืองเหล็ก","failure_count":2}
+{"sentence":"ซามูไรคงมาถึงในเร็ววันนี้แล้ว","failure_count":2}
+{"sentence":"ดังนั้น ทะเลที่สวยงานที่ประธานคนก่อนรักษาไว้ แล้วยังเป็นสุสานของภรรยาผมด้วย","failure_count":2}
+{"sentence":"ดังนั้นคุณคิดว่าฉันควรเก็บของฉันไว้ ปิดปากเหรอ?","failure_count":2}
+{"sentence":"ดังนั้นเราต้องตัดสินใจเรื่องยากมากๆ บางอย่าง","failure_count":2}
+{"sentence":"ดี มันระยะไกลพอควรกับที่ที่เราจะไป","failure_count":2}
+{"sentence":"ดีเจอาจไม่ได้หลับ","failure_count":3}
+{"sentence":"ดูซิจะเจอใครก่อน..?","failure_count":2}
+{"sentence":"ดูที่ที่คุณเหยียบ","failure_count":3}
+{"sentence":"ดูเรือนั่นสิ","failure_count":3}
+{"sentence":"ดูไม่ใช่ที่ที่มีค่าอะไรเลย","failure_count":3}
+{"sentence":"ด้วยสภาพของแคลซิเฟอร์ตอนนี้ เขาช่วยอะไรเราไม่ได้หรอก","failure_count":2}
+{"sentence":"ตรงนี้ กัปตันบอกยิ้มไว้คนจะได้ไม่แตกตื่น","failure_count":2}
+{"sentence":"ตราบนานเท่าที่ผมจำได้","failure_count":2}
+{"sentence":"ตอนนี้เขาไม่เป็นอะไร","failure_count":3}
+{"sentence":"ตอนนี้เหลืออยู๋เท่าไหร่หล่ะ?","failure_count":2}
+{"sentence":"ตอนี้แหละ","failure_count":3}
+{"sentence":"ตอบตกลงสิยัยกุ้งแห้ง","failure_count":2}
+{"sentence":"ตายล่ะ เจ๊ปากหมารู้ตัว","failure_count":3}
+{"sentence":"ตายห่า, พระเจ้า, ผมขอโทษ!","failure_count":3}
+{"sentence":"ตายห่า, พระเจ้า, ผมขอโทษ!!","failure_count":2}
+{"sentence":"ตายแล้วจะได้ไม่เจ็บ","failure_count":3}
+{"sentence":"ต่อยกันทั้งวัน ไม่เบื่อกันบ้างเหรอ!?","failure_count":2}
+{"sentence":"ต้องมากังวลเรื่องอนาคตของตัวเอง","failure_count":2}
+{"sentence":"ต้องมีอยากอื่นอีก","failure_count":3}
+{"sentence":"ต้องเป็น บอ-ดี้-ก-า-ร์-ด","failure_count":3}
+{"sentence":"ต้องใช้น้ำเหมือนกันะ","failure_count":3}
+{"sentence":"ถนนตรงภูเขา คงไม่เป็นอะไร","failure_count":3}
+{"sentence":"ถังอับเฉาคือประตูเปิดปิดเพื่อไล่น้ำออกจากเรือ ถูกปิดเเน่นเสมอเพื่อให้เรือลอย","failure_count":2}
+{"sentence":"ถามหน่อยเรื่องนั้นจะให้ฉันทํายังไง","failure_count":2}
+{"sentence":"ถึงคนที่ฉันไม่ควรพบเมื่อเร็ว ๆ นี้ เราเจอกันแล้วใช่ไหม?","failure_count":2}
+{"sentence":"ถึงคุณไม่ได้ชนเเจกันล้ม ผมก็กะจะชวนคุณอยู่พอดี","failure_count":2}
+{"sentence":"ถึงจะไม่มีเรื่องโชคร้าย ชีวิตเราก็ไม่ได้ดีขึ้น แต่จะแย่ลง","failure_count":2}
+{"sentence":"ถึงพ่อจะไม่อยู่ แต่พ่อก็คอยจับตาดูลูกอยู่เสมอนะ","failure_count":2}
+{"sentence":"ถึงเปียกก็ไม่เป็นอะไรหรอก","failure_count":3}
+{"sentence":"ถึงแม้มันจะดูแปลกๆ กับดักงูของเรา, มักจะตั้งไว้ตรงนั่น","failure_count":2}
+{"sentence":"ถึงไม่ได้ทุมบ์บาด อย่างน้อยคฤหาสน์ก็เป็นของเราใช่มั้ย","failure_count":2}
+{"sentence":"ถ้าคุณอยู่ในแก๊งค์ จะไม่มีใคร มาบอกว่าเขาจะมาฆ่าคุณ","failure_count":2}
+{"sentence":"ถ้าคุณไม่ถือสากับเรื่อง ไม่สะดวกนิดหน่อยนะ ไม่เลยจ้า","failure_count":2}
+{"sentence":"ถ้าคุณไม่ได้เป็นลมไปซะก่อน ผมคงควบคุมอารมณ์ไม่อยู่","failure_count":2}
+{"sentence":"ถ้าฉันทิ้งร่องรอยไว้ ตอนนี้เราไม่ได้มานั่งที่นี่หรอก","failure_count":2}
+{"sentence":"ถ้าฉันอยู่กับพี่มากในโลกนี้ไม่ได้ งั้นพี่มากก็ไปอยู่กับฉันเถอะ","failure_count":2}
+{"sentence":"ถ้านายพบฉันเร็วกว่านี้ เขาไม่มีวันได้มาป้วนเปี้ยนอยู่ใกล้ๆแล้ว","failure_count":2}
+{"sentence":"ถ้าผมดีพอล่ะก็ ผมยินดีครับ","failure_count":3}
+{"sentence":"ถ้ามันเจอนาย นายตายแ่น่","failure_count":2}
+{"sentence":"ถ้ามีทหารมาร่วมด้วยเราจะจะดูแลได้ง่ายขึ้น","failure_count":2}
+{"sentence":"ถ้ายอมยักเงินของชิชินาสักหน่อย ก็คม่ลำบาก","failure_count":2}
+{"sentence":"ถ้าลูกคัดค้านก็ตัดผมลูก","failure_count":3}
+{"sentence":"ถ้าอาจารย์กงไม่อ้าแขนรับฉันไว้ ฉันคงไม่ต่างอะไรกับหมาข้างถนน","failure_count":2}
+{"sentence":"ถ้าเธอรู้ว่าตอนนั้นเธอถูก แล้วำทำไมต้องทำหน้าเสียด้วยล่ะ","failure_count":2}
+{"sentence":"ถ้าแกพาเพื่อนกระเป๋าหนักมากินข้าว แกก็ไม่ต้องทำงานเหมือนกัน","failure_count":2}
+{"sentence":"ถ้าได้ยินพี่, ข้างนอกนี่ไม่ได้ดีนัก.","failure_count":2}
+{"sentence":"ถ้าไปไม่ทัน จะบอกนาตาลียังไงดี","failure_count":2}
+{"sentence":"ถ้าไม่ทำยังนี้ จะให้ฉันรอดูธุรกิจของฉันถูนายงาบไปทั้งหมดงั้นหรือ","failure_count":2}
+{"sentence":"ถ้าไม่มีส่วนแบ่งจากยา พวกคนโกงก็ไม่ได้อยู่อีกต่อไป","failure_count":2}
+{"sentence":"ท--ท-ท--ทั่วไป","failure_count":3}
+{"sentence":"ท--ท-ท--ทั่วไป ทั่วไป?","failure_count":2}
+{"sentence":"ทนายน่ะหรอ","failure_count":3}
 {"sentence":"ทยานขึ้น","failure_count":3}
 {"sentence":"ทำมาเรียกโค้ชคุน","failure_count":3}
-{"sentence":"คําถามมีมากขึ้น","failure_count":3}
+{"sentence":"ทำอาหารแล้วก็ทำความสะอาด แต่พวกเธอไม่แม้กระทั่งักทายฉัน","failure_count":2}
+{"sentence":"ทำไม เธออายกับที่เราทำลงไปงั้นเหรอ?","failure_count":2}
+{"sentence":"ทำไมคลอดยากคลอดเย็นอย่างนี้","failure_count":2}
+{"sentence":"ทำไมหารค่าพายได้เร็วอย่างนี้","failure_count":2}
+{"sentence":"ทำไมเรือถึงบรรทุกคนแค่ครึ่งลำ","failure_count":2}
+{"sentence":"ทำไมไอ้บ้านั่นย้ายมาอยู่คนเดียวนะ?","failure_count":2}
+{"sentence":"ทำไม่มองมาทางฉันล่ะ?","failure_count":3}
+{"sentence":"ทำไรอยู่น่ะ?, มานี่","failure_count":2}
+{"sentence":"ที่ที่คุณจะดื่ม กิน พูดคุยสนุกสนานกับเพื่อนได้","failure_count":2}
+{"sentence":"ที่ที่คุณจะไปชื่ออะไรนะ","failure_count":2}
+{"sentence":"ที่ที่คุณเคยอยู่ก็ยังเหมือนเดิมนะ","failure_count":2}
+{"sentence":"ที่ที่เราจะทำให้ทุกคนเติบโต","failure_count":2}
+{"sentence":"ที่นั่นมีปืนมากว่าหน่วยฉันอีก","failure_count":2}
+{"sentence":"ที่นี่ไม่ใช่ที่ที่คุณจะมาทำตัวเป็นใหญ่","failure_count":2}
+{"sentence":"ที่แท้ก็ไอ้ดำ ลูกตาเดื่อนี่เอง","failure_count":2}
+{"sentence":"ทุกคนปล่อยเต็มที่ในปาร์ตี้สละโสด ที่จริงจนถึงวันนี้นิคฮิลยังไม่ยอมตอบฉันตรงๆ เลย","failure_count":2}
+{"sentence":"ทุกคนไม่เป็นอะไรนะ","failure_count":2}
 {"sentence":"ท่านจะให้สัญญานยังไง?","failure_count":3}
-{"sentence":"น้ำท่วมนากลบบ้านเรือนหาย","failure_count":3}
-{"sentence":"เด็กชายสองคนกำลังหาบนํ้า","failure_count":3}
-{"sentence":"โลกจะดีดุจโลกเดิมได้ไง","failure_count":3}
-{"sentence":"ท--ท-ท--ทั่วไป","failure_count":3}
-{"sentence":"เดี๋ยวๆ พูดใหม่อีกที","failure_count":3}
-{"sentence":"โทกุสะ!","failure_count":3}
-{"sentence":"เราไม่มีอะไรจะต้องกลัว","failure_count":3}
-{"sentence":"วู้ว--ฮ่าๆๆๆๆ!","failure_count":3}
-{"sentence":"เฉลียวฉลาด","failure_count":3}
-{"sentence":"โทกิ!","failure_count":3}
-{"sentence":"ผมคอลินครับ","failure_count":3}
-{"sentence":"ครับ, ส-ส-ส-","failure_count":3}
-{"sentence":"สุขสันต์วันเกินน้องชาย","failure_count":3}
-{"sentence":"ตอนนี้เขาไม่เป็นอะไร","failure_count":3}
-{"sentence":"หาเงินไปซื้อของให้เหลนน่ะ","failure_count":3}
-{"sentence":"จริงๆ นะ ผมคงมีความสุขมาก","failure_count":3}
-{"sentence":"หมายความว่าล่อเเหลมน่ะสิ","failure_count":3}
-{"sentence":"นายของานง่ายๆ ต้อนรับกลับมา","failure_count":3}
-{"sentence":"ไม่ ไม่มีทางเลย","failure_count":3}
-{"sentence":"ช่วงนี้หนอนเยอะมาก","failure_count":3}
-{"sentence":"หากพวกเราแตกคอกันเอง","failure_count":3}
-{"sentence":"ซง ซอเรคงขึ้นไปทางง่าย","failure_count":3}
-{"sentence":"หมาป่ามากำลังมา!","failure_count":3}
-{"sentence":"เรนาน น่ะเหรอ","failure_count":3}
-{"sentence":"ฝีมือกีตากับบาบิตาโน่น","failure_count":3}
-{"sentence":"ไม่เป็นอะไรใช่ไหม","failure_count":3}
-{"sentence":"ผมไม่ควรจะะรบกวนคุณ ผมรู้ดี","failure_count":3}
-{"sentence":"บังเอิญผ่านมา","failure_count":3}
-{"sentence":"ฉันคงไม่ได้ไป","failure_count":3}
-{"sentence":"เย่ ฮ่า ฮ่า ฮ่า!","failure_count":3}
-{"sentence":"ทนายน่ะหรอ","failure_count":3}
-{"sentence":"แม่ครับ ผมคิดใคร่ครวญดูแล้ว","failure_count":3}
-{"sentence":"พวกเราจะไม่เป็นอะไร","failure_count":3}
-{"sentence":"ไปลากคอมันกัน","failure_count":3}
-{"sentence":"ไอ้บ้านั่น รีบๆ ไปจับมันซิ!","failure_count":3}
-{"sentence":"ก็ไม่เสียหายนี่","failure_count":3}
-{"sentence":"ไม่นะ ไม่ๆๆๆๆๆ!","failure_count":3}
-{"sentence":"ใบสะระแหนต้ม","failure_count":3}
-{"sentence":"แล้วแต่อะไร","failure_count":3}
-{"sentence":"คำถามโคตรงงเลย","failure_count":3}
-{"sentence":"คุณทำงานอะไร ผมเป็นหุ้นส่วน","failure_count":3}
-{"sentence":"ไม่ไม่ใช่เคี้ยว","failure_count":3}
-{"sentence":"เขาดูหล่อนะ","failure_count":3}
-{"sentence":"นายจะทำอะไรเืมื่อนายออกไป","failure_count":3}
-{"sentence":"ต้องมีอยากอื่นอีก","failure_count":3}
-{"sentence":"แต่เธอถนัดขวานะ","failure_count":3}
-{"sentence":"ถนนตรงภูเขา คงไม่เป็นอะไร","failure_count":3}
-{"sentence":"กล้ายิงน้องอาจารย์เหรอ","failure_count":1}
-{"sentence":"ไอ้บ้านี่เป็นใคร","failure_count":3}
-{"sentence":"แล้วแต่อารมณ์","failure_count":3}
-{"sentence":"กูดมอนิ่ง หมาดำ","failure_count":3}
-{"sentence":"พวกเขามีป้ายไว้อาลัยมา","failure_count":3}
-{"sentence":"สนุกซะตอนยังมีโอกาสจดไว้นะ","failure_count":3}
-{"sentence":"เอาให้แน่นะ","failure_count":3}
-{"sentence":"ไอ้บ้านี่มาทำอะไร","failure_count":3}
-{"sentence":"โอเค ฉันก็ไม่ได้รักเธอ","failure_count":3}
-{"sentence":"ม่าดูแลเอ็มตั้งหลายปี","failure_count":3}
-{"sentence":"แต่ไปๆ มาๆ ก็ไม่ได้ปลุก","failure_count":3}
-{"sentence":"มาจิ๊บๆ ๆ ๆใครจะนอนได้","failure_count":3}
-{"sentence":"เเซม!","failure_count":3}
-{"sentence":"โรงพยาบาลงั้นเหรอ","failure_count":3}
-{"sentence":"ไปที่ที่คุณจะได้ใช้ความคิด","failure_count":3}
-{"sentence":"แล้วสะพานเรือน่ะ","failure_count":3}
-{"sentence":"มาๆ ๆ นั่นแหละปัญหา","failure_count":1}
-{"sentence":"หมอบลง หลบ","failure_count":1}
-{"sentence":"เดี๋ยวหมอก็จะมา","failure_count":3}
-{"sentence":"มันช่างแดกดันจริง ๆ เลยนะ","failure_count":3}
-{"sentence":"คดีที่จิลก๊อกใช่มั้ยล่ะ","failure_count":3}
-{"sentence":"ห้ามยุ่งเกี่ยวกับมนุษย์","failure_count":3}
-{"sentence":"เเม่มดน้อยเเสนเก่ง","failure_count":3}
-{"sentence":"เอ๊ย มิสเตอร์แบงค์สิ","failure_count":3}
-{"sentence":"เดี๋ยวก็ได้รู้กัน","failure_count":3}
-{"sentence":"ต้องเป็น บอ-ดี้-ก-า-ร์-ด","failure_count":3}
-{"sentence":"โป๊อยู่นี่","failure_count":3}
-{"sentence":"ถ้าผมดีพอล่ะก็ ผมยินดีครับ","failure_count":3}
-{"sentence":"ไอ้บ้านั่นกลับมาแล้ว","failure_count":3}
-{"sentence":"ออกลูกตายทั้งกลมนั่นแหละ","failure_count":3}
+{"sentence":"ท่านหญิงของเจ้าควรเรียน เรื่องความเคารพบ้างนะ","failure_count":2}
+{"sentence":"ท่านเป็นหนึ่งในดูนาไดน์สิ","failure_count":3}
+{"sentence":"ท่านเยียน..?","failure_count":2}
+{"sentence":"ท่านแม่ แม่คงไม่ได้อยู่ดูเจ้าเติบโต","failure_count":2}
+{"sentence":"ท่านโม่ ผมได้ข้อมูลมา อาห่าว หม่า และก็อาเฉิง แตกคอกันครับ","failure_count":2}
+{"sentence":"ธุรกิจผม เมียผม แม่ผม ญาติผมอยู่นี่","failure_count":2}
+{"sentence":"นอกจากนาจากับไท่อี่","failure_count":3}
+{"sentence":"นอกจากนาจากับไท่อี่ จากนี้ห้ามใครออกจากเฉินถังกวานเป็นอันขาด","failure_count":2}
+{"sentence":"นัดที่สองแปว่าวัวกำลังไล่เรา","failure_count":2}
+{"sentence":"นับจากผมจบแพทย์ที่ ฮาร์วาร์ด แล้วก็ไปเป็นแพทย์ฝึกหัด ผมก็เริ่มรู้สึกแล้ว","failure_count":2}
+{"sentence":"นั่น นั่น นั่น ขึ้นมานี่","failure_count":3}
+{"sentence":"นั่น เธอเป็นแบบนี้น ที่เธอกำลังทำอะไร","failure_count":2}
 {"sentence":"นั่นเป็นสิ่งที่น่ารอดูมาก","failure_count":3}
-{"sentence":"เอาหลัก มาขัด ๆ ๆ เฮ้","failure_count":3}
-{"sentence":"ไอ้บิ๊กแบร์น่ะสิ","failure_count":3}
-{"sentence":"คุณทำงานอะไรคะ","failure_count":3}
 {"sentence":"นั่นไพอึน!","failure_count":3}
-{"sentence":"ปริก!","failure_count":3}
-{"sentence":"โครงการวานเดอริ่ง เอิร์ท","failure_count":1}
-{"sentence":"เกรงว่าจะไม่ใช่คราวนี้นะ","failure_count":3}
-{"sentence":"ฉันขอบัตเตอร์สก็อตซันเดย์","failure_count":1}
-{"sentence":"คุณอยากไปเดินเล่ยมั้ย","failure_count":3}
-{"sentence":"โอเค๊ สำเร็จแล้วววว","failure_count":3}
-{"sentence":"ร้านนี้ก้าวร้าวจริง","failure_count":3}
-{"sentence":"ช่วงนี้พ่องานยุ่งมาก","failure_count":3}
-{"sentence":"อั้วไม่อั้น","failure_count":3}
-{"sentence":"ผมแค่ถามดูเผื่อฟลุ้คน่ะ","failure_count":3}
-{"sentence":"จะไม่มีวันผลิดอกอีก","failure_count":3}
-{"sentence":"เขาทำงานอะไร","failure_count":3}
-{"sentence":"ไม่เป็นอะไรหรอก ฉันไปก่อนนะ","failure_count":3}
-{"sentence":"เขามาขอรับบริจาคน่ะ","failure_count":3}
-{"sentence":"เยี่ยมมาก แล้วเราจะติดต่อไป","failure_count":3}
-{"sentence":"มากๆเลยยยยยยยยยยย!","failure_count":3}
-{"sentence":"ฉันคงไม่ได้กวนใจนายนะ","failure_count":3}
-{"sentence":"ไม่ ไม่เป็นไร โอเค","failure_count":1}
-{"sentence":"คุณทำงานอะไรเหรอ","failure_count":3}
-{"sentence":"เปิดประตูบ้านี้นะ!","failure_count":3}
-{"sentence":"แองเจลินายังคงจู่โจม","failure_count":3}
-{"sentence":"เดี๋ยวตำรวจแอลเอก็มาแล้ว","failure_count":3}
-{"sentence":"เขาทำงานทำการอะไรเหรอ","failure_count":3}
-{"sentence":"ไม่ควรคุยและลืมรสชาดชา","failure_count":3}
-{"sentence":"กลับไปในที่ที่เธอมา!","failure_count":1}
-{"sentence":"มาหักคอกูเลย!","failure_count":3}
-{"sentence":"ไม่เป็นอะไรใช่ไหม ?","failure_count":3}
-{"sentence":"แม่งเอ๊ยยยยยย!","failure_count":3}
-{"sentence":"ผมไม่เป็นอะไรจริงๆ","failure_count":3}
-{"sentence":"ออซอวยพรคุณ ดร.ดิลมอนด์","failure_count":3}
-{"sentence":"บางทีเราอาจจจะลองคุยกะเค้า","failure_count":3}
-{"sentence":"ดูเรือนั่นสิ","failure_count":3}
-{"sentence":"รู้อ่ะ ปูดานก็นอนอยู่ในรถ","failure_count":3}
-{"sentence":"ค่ะ ฉันไม่เป็นอะไร","failure_count":3}
-{"sentence":"แล้วคุณหานเซียงล่ะ","failure_count":3}
-{"sentence":"ใช้ชีส มิโมเลตต์ เท่านั้น","failure_count":3}
-{"sentence":"ใกล้พอจะได้สัมผัส","failure_count":3}
-{"sentence":"กูนึกว่าม้ามแตก","failure_count":3}
-{"sentence":"เขาลาน่ะสิ","failure_count":3}
-{"sentence":"รอแป๊ปนึง","failure_count":3}
-{"sentence":"เครื่องบ้านี่ก็ไม่ยอมติด","failure_count":3}
-{"sentence":"เซ็น เจ้าไม่เป็นอะไรนะ!","failure_count":3}
+{"sentence":"นายของานง่ายๆ ต้อนรับกลับมา","failure_count":3}
+{"sentence":"นายคิดว่าควรจะลบคำอุทิศนั้น เพราะนายไม่ชอบแล้วเขียนใหม่งั้นเหรอ","failure_count":2}
+{"sentence":"นายจะต้องถูกคอยสังเกตการณ์นะ เพื่อที่เราจะได้แยกนายได้","failure_count":2}
+{"sentence":"นายจะทำอะไรเืมื่อนายออกไป","failure_count":3}
+{"sentence":"นายจะเอายังไง แตกคอกับจิมมี่ คอนเวย์เหรอ?","failure_count":2}
+{"sentence":"นายตัวแสบบรอโตดู","failure_count":3}
+{"sentence":"นายน้อย มาอเมริกานานแล้วเหรอครับ","failure_count":2}
+{"sentence":"นายพูดแรงไป ก็มันไม่ยอมหุบปากเรื่องที๋ฉัน ทำงานหรือไม่ทำเองนี่หว่า","failure_count":2}
+{"sentence":"นายมองอะไนน่ะ","failure_count":2}
+{"sentence":"นายโตเมื่อไหร่ เดี๋ยวนายก็เข้าใจเองแหละ","failure_count":2}
+{"sentence":"นายไม่เป็นอะไรหรอก","failure_count":2}
 {"sentence":"นายไม่เป็นอะไรใช่ไหม?","failure_count":3}
-{"sentence":"แกก็ใช้บัตรเสริมแกสิ","failure_count":3}
-{"sentence":"แค่ใช้น้ำลายถูก็หายแล้ว","failure_count":3}
-{"sentence":"ไม่ ไม่ ไม่ ไม่นะ อย่า ได้โปรด","failure_count":3}
-{"sentence":"ใครเขียนใบลานี่ให้","failure_count":3}
+{"sentence":"นี่คือจำนวนยูเรเนียม ที่โอ๊คริดจ์สกัดออกมาได้เดือนที่แล้ว","failure_count":2}
+{"sentence":"นี่คือที่ที่เราพบกันครั้งแรก","failure_count":2}
+{"sentence":"นี่จะเป็นหนังโรแมนติคล่ะ","failure_count":3}
+{"sentence":"นี่เดือนมิถุนานะ","failure_count":2}
+{"sentence":"นี่ไม่ใช่เช็คสเปียร์ซะหน่อย","failure_count":2}
+{"sentence":"น้ำที่หนาวอย่างน้ำข้างล่างนั่น ยังกะมีดนับพันๆ เล่ม ทิ่มแทงทั่วร่างคุณ","failure_count":2}
+{"sentence":"น้ำท่วมนากลบบ้านเรือนหาย","failure_count":3}
+{"sentence":"บอกลา เป๊ปปิโน่ สิจ้ะ.","failure_count":2}
+{"sentence":"บังเอิญผ่านมา","failure_count":3}
+{"sentence":"บางที เจ้าอาจจะเรียกว่ามันไกล","failure_count":2}
+{"sentence":"บางทีคุณอาจไม่ได้แข็งแกร่งขนาดนั้น","failure_count":2}
+{"sentence":"บางทีเราอาจจจะลองคุยกะเค้า","failure_count":3}
+{"sentence":"บาทาพายุหนักแน่นรุนแรงสมคำร่ำลือ","failure_count":2}
+{"sentence":"บ้าจริง..!","failure_count":2}
+{"sentence":"ปกติอยู่กับคุณยาย ถ้าเป็นวันฝนตกแกจะไม่ค่อยยอมให้เจอ","failure_count":2}
+{"sentence":"ปริก!","failure_count":3}
+{"sentence":"ปีนี้ผู้ได้รับการเสนอชื่อรายอื่นมีสิทธิ์กว่าฉัน","failure_count":2}
+{"sentence":"ผมก็โดน เวลาคุณนายสั่งแล้วเราโอ้เอ้น่ะ","failure_count":2}
+{"sentence":"ผมคอลินครับ","failure_count":3}
+{"sentence":"ผมคิดว่ามีบางอย่าผิดปกติเหมือนกัน แต่ไม่ใช่อย่างเดียวกัน","failure_count":2}
+{"sentence":"ผมจะพารามของคุณกลับมาแม้ต้องแลกด้วยชีวิต","failure_count":2}
+{"sentence":"ผมจะส่งตัวคุณเข้าไปให้หมอดูอาการ","failure_count":2}
+{"sentence":"ผมทำก๋วยเตี๋ยวกินตอนกลางวัน","failure_count":2}
+{"sentence":"ผมทำงานพลาด","failure_count":2}
+{"sentence":"ผมบอกว่าไม่ไม่ได้","failure_count":2}
+{"sentence":"ผมพยายามไล่จับมัน กระโจนไล่ตามมันจากกิ่งไม้หนึ่งสู่อีกกิ่งหนึ่ง","failure_count":2}
+{"sentence":"ผมว่าเขาคงไม่ได้เล่นเอ็นบีเอแล้ว","failure_count":2}
+{"sentence":"ผมอาจต้องพูดตรงไปตรงมากกับคุณ","failure_count":2}
+{"sentence":"ผมเพิ่งได้รับจดหมายจากพ่อเมื่อกี้เอง","failure_count":2}
+{"sentence":"ผมเพิ่งได้รับโทรศัพท์จาก คนขายรถต่างประเทศ","failure_count":2}
+{"sentence":"ผมเอีอมระอากับสงครามจริงๆเลย","failure_count":2}
+{"sentence":"ผมแค่ถามดูเผื่อฟลุ้คน่ะ","failure_count":3}
+{"sentence":"ผมไม่ควรจะะรบกวนคุณ","failure_count":2}
+{"sentence":"ผมไม่ควรจะะรบกวนคุณ ผมรู้ดี","failure_count":3}
+{"sentence":"ผมไม่อยาก จะยุ่งเกี่ยวกับเรื่องนี้อีกแล้ว","failure_count":2}
+{"sentence":"ผมไม่เป็นอะไรจริงๆ","failure_count":3}
+{"sentence":"ผมไม่เป็นอะไรหรอกแม่","failure_count":2}
+{"sentence":"ผิวหนังของกิ้งก่า สีเขียว สีฟ้า สีม่วง สีขาว มีไว้พรางตัวจากสัตว์อื่น","failure_count":2}
+{"sentence":"ผู้การต้องดื่มเหล้ามงคลคนอื่นมากี่สิบปี ท่านให้ของขวัญคนอื่น มากี่ร้อยครั้งแล้ว","failure_count":2}
+{"sentence":"ผู้สื่อข่าวก็ไปทุกที่ที่มีข่าว","failure_count":2}
+{"sentence":"ผู้โดยสารผมเขาจะไปกวางจูน่ะครับ","failure_count":2}
+{"sentence":"ฝ-ฝะ-ฝะ-ฝรั่งเศส.","failure_count":3}
+{"sentence":"ฝีมือกีตากับบาบิตาโน่น","failure_count":3}
+{"sentence":"พรุ่งนี้ถ้าโอนเงินแล้ว จะติดต่อไปอีกรอบ","failure_count":2}
+{"sentence":"พร้อม..!","failure_count":2}
+{"sentence":"พวกคนในคูเรียน่ะ","failure_count":3}
+{"sentence":"พวกคนในคูเรียน่ะ ยานุส","failure_count":2}
+{"sentence":"พวกคุณจะไม่เป็นอะไร","failure_count":3}
+{"sentence":"พวกท่านคงไม่ได้เงินเหล่านี้ถ้าฉันเป็นลูกแท้ๆ ของท่าน","failure_count":2}
+{"sentence":"พวกนั้นต้องไม่เป็นอะไร","failure_count":3}
+{"sentence":"พวกพลร่มกำลังตามหาแท็กซี่ ที่มาจากโซลอยู่นะ","failure_count":2}
+{"sentence":"พวกมันชนะ เพราะออกกฎมายเลือกตั้งขี้โกง","failure_count":2}
+{"sentence":"พวกเขามีป้ายไว้อาลัยมา","failure_count":3}
+{"sentence":"พวกเราจะไม่เป็นอะไร","failure_count":3}
+{"sentence":"พอกลับมา","failure_count":2}
+{"sentence":"พอกลับมา เขาก็กลายเป็นวีรบุรุษ","failure_count":2}
+{"sentence":"พอกลับมาถึงบ้าน ผมเริ่มทำอาหารต่อ","failure_count":2}
+{"sentence":"พอกลับมาบ้านปุ๊บ","failure_count":2}
+{"sentence":"พอมาคิดดู เงินก็หาไม่ได้ ลูกก็ไม่ได้เลี้ยงให้ดี","failure_count":2}
+{"sentence":"พอลับตาคนพวกมันจะ เปลี่ยนเส้นทางไปยังเกาะที่ใกล้ที่สุด เพราะต้องประหยัดน้ำมัน","failure_count":2}
+{"sentence":"พักซะนะ เจ้าไม่เป็นอะไรแล้ว","failure_count":3}
+{"sentence":"พาเข้านอน","failure_count":2}
+{"sentence":"พาโบล เนรูด้านักกวีมาเยือนกรุงโรม","failure_count":2}
+{"sentence":"พ่อจับเราส่งบ้านเด็กกำพร้าหรือะไรแบบนั้นก็ได้","failure_count":2}
+{"sentence":"พ่อถึงได้วิจารณ์แม่งั้นเหรอคะ","failure_count":2}
+{"sentence":"พ่อมาอยู่ภายหลัง เรื่องราวที่ท่านมาชอบพอกัน ดังไปทั้งหมู่บ้าน","failure_count":2}
+{"sentence":"พ่อเป็นโรคไขข้อ เขาทำท่าแบบนั้นไม่ได้เหรอก","failure_count":2}
+{"sentence":"พ่อโทรมารึเปล่า","failure_count":3}
+{"sentence":"ภรรญาของฉันตายจากโรคมะเร็ง","failure_count":3}
+{"sentence":"ภรรยาคุณยังไม่กลับมาไม่ใช่เหรอ","failure_count":2}
+{"sentence":"มอรี่พูด, นั้นใคร?, เขาอยู่นี่","failure_count":2}
+{"sentence":"มันช่างแดกดันจริง ๆ เลยนะ","failure_count":3}
+{"sentence":"มันดูเหมือนก้อนเมือก ก้อนเมือกก้อนใหญ่ มันทำให้ฉันคิดถึงอย่างอื่นมากกว่า","failure_count":2}
+{"sentence":"มันถูกปกคลุมไปด้วยเลือด","failure_count":3}
+{"sentence":"มันทำให้พี่อุ่นใจในคืนหนาว คืนที่มีแต่เสียงกระซิบของสายลม เสียงของคนคุ้นเคย","failure_count":2}
+{"sentence":"มันนายอมรับกับเรา ทั้งหมดที่เขาโกง!","failure_count":2}
+{"sentence":"มันมีหนู, พ่อ","failure_count":3}
+{"sentence":"มันสิ่งไปสนามบินฮาเนด่ะ","failure_count":3}
+{"sentence":"มันอาจไม่ได้มากมายอะไร","failure_count":3}
+{"sentence":"มันเรียกกว่าการคัดสรรค์ของธรรมชาติ","failure_count":2}
 {"sentence":"มันเลียนิ้วด้วย","failure_count":3}
-{"sentence":"คุณทำงานอะไร","failure_count":3}
-{"sentence":"ไม่ ไม่มี","failure_count":3}
-{"sentence":"เขาให้แกลงมาทุกคน","failure_count":3}
-{"sentence":"อินเดียน่ะ หวังว่างั้น","failure_count":3}
-{"sentence":"เขาไม่เป็นอะไรหรอก","failure_count":3}
-{"sentence":"ฉันไม่ได้เขียนใบลานี่นะ","failure_count":3}
+{"sentence":"มันไม่ใช่ของของเรา","failure_count":3}
+{"sentence":"มันไม่ใช่ที่ที่เราจะไปได้","failure_count":3}
+{"sentence":"มากๆเลยยยยยยยยยยย!","failure_count":3}
+{"sentence":"มาจิ๊บๆ ๆ ๆใครจะนอนได้","failure_count":3}
+{"sentence":"มาร์ค นี่ห้องเด็เหรอ","failure_count":2}
+{"sentence":"มาหักคอกูเลย!","failure_count":3}
+{"sentence":"มาๆ ๆ นั่นแหละปัญหา","failure_count":1}
+{"sentence":"มีคนมารับสมอ้างสักคนก็ดีนะ","failure_count":2}
+{"sentence":"มีทางเดินยาวตลอดปีก","failure_count":2}
+{"sentence":"มีพ่อครัวหนุ่ม ๆ ฝีมือดีตั้งหลายคน ที่คุณจะเลือกไปทำงานให้ได้","failure_count":2}
+{"sentence":"มีเงินพอซื้อขอด้ทุกอย่าง","failure_count":3}
+{"sentence":"มีแต่พวกโง่แบบดีเจนั่นแหละที่ถอย","failure_count":2}
+{"sentence":"มึงไม่ต้องเข้าไป เดี๋ยวมึงรู้เลขที่ธนาคารกูหมด","failure_count":2}
+{"sentence":"มือมีดโกน ลี้ภัยไปอยู่ในฮ่องกง และเปิดร้านตัดผมชื่อกุหลาบขาว","failure_count":2}
 {"sentence":"มือไวโอลิน บิล ดักลาส","failure_count":3}
-{"sentence":"และถ้าคุณไม่ว่าโง้นงี้","failure_count":3}
-{"sentence":"ไม่จ้ะ เป็นเซอร์ไพรซ์น่ะ","failure_count":3}
-{"sentence":"แต่เขาคงไม่ได้ฟังมัน","failure_count":3}
-{"sentence":"เเซม","failure_count":3}
-{"sentence":"เห็นนั่นใหม","failure_count":3}
-{"sentence":"โทษทีจ้ะ โทษที โทษที","failure_count":3}
-{"sentence":"ดีเจอาจไม่ได้หลับ","failure_count":3}
-{"sentence":"ไม่เป็นอะไรนะครับ","failure_count":3}
-{"sentence":"จะทำงานแบบนี้ได้จริงๆเหรอ","failure_count":3}
-{"sentence":"เเม่คะ อันนั้นเเสนเก่าเลย","failure_count":3}
-{"sentence":"ถ้าลูกคัดค้านก็ตัดผมลูก","failure_count":3}
-{"sentence":"จำไว้ต้องวางท่านิดหน่อย","failure_count":3}
-{"sentence":"เอามือไว้ในที่ที่ผมเห็น","failure_count":3}
-{"sentence":"ไปกวางจูน่ะครับ","failure_count":3}
-{"sentence":"ไอ้บ้านี่","failure_count":3}
-{"sentence":"เราไปค้นหาหางเครื่องบิน","failure_count":3}
+{"sentence":"ม่าดูแลเอ็มตั้งหลายปี","failure_count":3}
+{"sentence":"ม้าโยเฮปะไร","failure_count":2}
+{"sentence":"ยงโจวยังคงเป็นที่ที่ปลอดภัย","failure_count":2}
+{"sentence":"ยอมจำนนต่ออำนาจของโทลเมเกียงั้นเหรอ","failure_count":2}
+{"sentence":"ยังดีไม่พองั้นเหรอ","failure_count":2}
+{"sentence":"ยังวุ่นวายกับคดีบนเขากูโซอยู่อีกเหรอ","failure_count":2}
 {"sentence":"ยานั้นคืออะไร?","failure_count":3}
-{"sentence":"แล้วนึกไงปาดยังงั้น","failure_count":3}
-{"sentence":"ไก ใครถูกยิง","failure_count":3}
+{"sentence":"ยานี้จะเพิ่มพลังให้เรามหาศาล","failure_count":2}
+{"sentence":"ยามยากแบบนี้ มีแต่ผู้คนที่ให้ความร่วมมือเท่านั้น","failure_count":2}
+{"sentence":"ยุคนั้นต้องฆ่าให้เป็น","failure_count":3}
+{"sentence":"ยุ่งอะไรกัน วันๆ..?","failure_count":2}
+{"sentence":"รถสีแดง รถสีแดง ขับออกไป","failure_count":2}
+{"sentence":"รอแป๊ปนึง","failure_count":3}
+{"sentence":"รอแป๊ปนึงสิ","failure_count":2}
+{"sentence":"ราวกับเมือง ได้เปลี่ยนมาสวมชุดสว่างสดใส","failure_count":2}
+{"sentence":"ราฮิลาน่าจะอ่อนกว่าปีสองปี","failure_count":3}
+{"sentence":"รู้มั้ยมีกี่คนบนโลกไม่ได้สิทธิ์ เข้าไปเมืองใต้ดิน กี่คนจะต้องตายเพื่อที่ของคุณ","failure_count":2}
+{"sentence":"รู้ว่าต้องใหญ่มากๆๆ จะต้องวุ่นวายแน่ๆเลย ถ้ามันออกมาเดินข้างนอก","failure_count":2}
+{"sentence":"รู้อ่ะ ปูดานก็นอนอยู่ในรถ","failure_count":3}
+{"sentence":"ร้านนี้ก้าวร้าวจริง","failure_count":3}
+{"sentence":"ละทิ้งพรสวรรค์ของตัวเอง ในถานะครูกับลูกศิษ เราจะเป็นใหญ่","failure_count":2}
+{"sentence":"ลา ลา ลา ลา ลา ลา ลา ลา ลา..","failure_count":2}
+{"sentence":"ลากันตรงนี้นะ","failure_count":3}
+{"sentence":"ลาร์สมาน่ะ","failure_count":2}
+{"sentence":"ลิลี่ ใจเย็นๆสิ","failure_count":3}
+{"sentence":"ลูกชายฉันที่ทำงานราชการ บอกว่าฉันควรขายที่นี่ เขาจะได้เอามาสร้างคอนโด","failure_count":2}
+{"sentence":"ลูกหายไปตั้งสองเดือน เพิ่งจะมาหาแม่งั้นเหรอ","failure_count":2}
+{"sentence":"ล็อกจากข้างนอก","failure_count":2}
+{"sentence":"วอลเตอร์ , คุณคงไม่ได้ทอดทิ้งแขกของคุณนะ","failure_count":2}
+{"sentence":"วันนี้ ฉันขับรถเอ็มยีมาเชียวนะ","failure_count":2}
+{"sentence":"วันนี้เรื่องปลุกเสก ทับทิมเห็นจะพอก่อนหนา","failure_count":2}
+{"sentence":"วางหลอดทดลองกับขวดยา แล้วไปจากเคมบริดจ์สิ ไปที่ที่คุณจะได้ใช้ความคิด","failure_count":2}
+{"sentence":"วางอาวุธของแกลง แล้วปล่อยผู้กองลู่ เดี๋ยวนี้","failure_count":2}
+{"sentence":"วายฟายน่ะ ชูโทรศัพท์สูงๆ ลองไปหาสัญญาณทุกซอกทุกมุม","failure_count":2}
+{"sentence":"วุฒิสภาสหรัฐฯ กําลังหารือถอดถอน และฟื้นโครงการดิจิทัลไลฟ์อีกครั้ง","failure_count":2}
+{"sentence":"วู้ว--ฮ่าๆๆๆๆ!","failure_count":3}
+{"sentence":"วู้ว--ฮ่าๆๆๆๆ!!!","failure_count":2}
+{"sentence":"ว่ากันตามเนื้อผ้า เราเป็นแค่วนิพกขายเสียงเพลงเท่านั้น","failure_count":2}
+{"sentence":"ว่ากันว่าพวกพวกเขาถูกทำลาย ในช่วงไฟไหม้เจ็ดวัน","failure_count":2}
+{"sentence":"ว่าที่นี่อยากจะรับน้องลินหรือเปล่า","failure_count":2}
+{"sentence":"ว่าเขาไม่เป็นอะไรหรอก","failure_count":2}
+{"sentence":"ว่าไง ท่านจิน..?","failure_count":2}
+{"sentence":"ว้ากก!!!","failure_count":2}
+{"sentence":"สนธิสัญญานี่ทำให้นายเป็นทาสอังกฤษ","failure_count":2}
+{"sentence":"สนุกซะตอนยังมีโอกาส","failure_count":2}
+{"sentence":"สนุกซะตอนยังมีโอกาสจดไว้นะ","failure_count":3}
+{"sentence":"สมมติว่า ถ้าสิ่งนี้ถูกใช้ในที่ที่ชีวิตมีอยู่แล้วล่ะ","failure_count":2}
+{"sentence":"สั่งให้ยุติสะกดรอยตามหานเซิน","failure_count":2}
+{"sentence":"สาม เธออกหักเลยไม่อยากให้คนอื่นเห็น ว่าเธอร้องไห้อยู่","failure_count":2}
+{"sentence":"สายลมหนาวที่โชยพัด ทว่าแสงตะวันที่เบาบางที่ลูบไล้ ทำให้ใจเราอบอุ่น","failure_count":2}
+{"sentence":"สำเร็จแล้วววว","failure_count":2}
+{"sentence":"สุขสันต์วันเกินน้องชาย","failure_count":3}
+{"sentence":"สุดท้ายขึ้นอยู่กับว่าบอร์เด้น จะจูงจมูกเท็ลเลอร์ได้มากแค่ไหน","failure_count":2}
+{"sentence":"สุดท้ายมากังวลตอนสามีคุณกลับบ้าน","failure_count":2}
+{"sentence":"สุภาพสตรีนั่นคงจะใช้ชื่อปลอม","failure_count":2}
+{"sentence":"สแกนเนอร์อาจไม่ได้ปรับก็ได้","failure_count":2}
+{"sentence":"ส่วนนาธอยู่อีกฝั่ง","failure_count":2}
+{"sentence":"ส่วนพุพุน่ะ คานิกามาโบโกะ ปูอัด","failure_count":2}
+{"sentence":"หนูต่างหาก ที่คู่ควรได้รับการใส่ใจ เป็นลูกรัก หนูเหมือนพ่อยิ่งกว่าไอ้ตัวห่วยนั่น","failure_count":2}
+{"sentence":"หมอบลง หลบ","failure_count":1}
+{"sentence":"หมอเขาก็ให้เช็กลำไส้","failure_count":3}
+{"sentence":"หมาป่ามากำลังมา!","failure_count":3}
+{"sentence":"หมายความว่าล่อเเหลมน่ะสิ","failure_count":3}
+{"sentence":"หลังจากที่เหล้านี้หมดถ้วยแล้ว เราก็คือคนในสำนักเดียวกัน","failure_count":2}
+{"sentence":"หลังจากมันเลียนิ้วผม แผลก็หายไปเลย","failure_count":2}
+{"sentence":"หลังจากสงคราม ก็ยากที่ออกจากฮ่องกง ฉันได้รับอนุญาตในเดือนเมษายนนี้","failure_count":2}
+{"sentence":"หลังจากเหล้านี้หมดถ้วยเมื่อไหร่ เราคือศิษย์ร่วมสำนักเดียวกัน","failure_count":2}
+{"sentence":"หลานอันนายังไม่กลับบ้านเลยครับ","failure_count":2}
+{"sentence":"หลี่ เจิ้งเหา - มา ขานดังๆ","failure_count":2}
+{"sentence":"หล่อนก็เสียดายเหมือนกัน พวกขี้เหงาน่ะ","failure_count":2}
+{"sentence":"หล่อนจมนํ้าตายตอนที่เเล่นเรืออยู่ใกล้ๆ แมนเดอเลย์","failure_count":2}
+{"sentence":"หล่อนจะไม่กลับมาอีกไม่ใช่เหรอ","failure_count":2}
+{"sentence":"หวังว่าคงไม่ได้ฆ่าใครเพื่อชิงมันมานะ","failure_count":2}
+{"sentence":"หวังว่าคงไม่ได้ทําให้คุณยุ่งยากมากนัก","failure_count":2}
+{"sentence":"หวังว่าคุณคงได้รับความเพลิดเพลินนะคะ","failure_count":2}
+{"sentence":"หวังว่าเราคงไม่ได้มารบกวนพวกเธอกันนะ","failure_count":2}
+{"sentence":"หัวนมชั้น ออกไปได้มั้ย?, ผมจะคุยโทรศัพท์","failure_count":2}
+{"sentence":"หัวหน้าเเผนกโหลยโท่ยน่ะสิไม่ว่า !","failure_count":2}
+{"sentence":"หากพวกเราแตกคอกันเอง","failure_count":3}
+{"sentence":"หาเงินไปซื้อของให้เหลนน่ะ","failure_count":3}
+{"sentence":"หาเรื่องทำะไรไปพลางๆก่อน","failure_count":3}
+{"sentence":"ห่างจากทีมของเขา อาวุธเขาก็ไม่ได้อยู่นั่น","failure_count":2}
+{"sentence":"ห้องนี่เคยเป็นห้องแม่ของผม","failure_count":3}
+{"sentence":"ห้ามยุ่งเกี่ยวกับมนุษย์","failure_count":3}
+{"sentence":"ห้ามเรียกฉันว่าไอ้ต่างด้าวนะ","failure_count":2}
+{"sentence":"อมิโก้ ฉันบอกว่าอยู่อีกฝั่งไง","failure_count":2}
+{"sentence":"อยากทำงานแล้วนอนพัก","failure_count":2}
+{"sentence":"อย่างน้อย ให้กูสตาร์ตรถให้มึงก็ยังดี","failure_count":2}
+{"sentence":"อย่าพูดจากับแม่แบบนี้นะ!","failure_count":3}
+{"sentence":"อย่ายอมเเพ้ อย่ายอมเเพ้ อย่ายอมเเพ้","failure_count":2}
+{"sentence":"ออกลูกตายทั้งกลมนั่นแหละ","failure_count":3}
+{"sentence":"ออซอวยพรคุณ ดร.ดิลมอนด์","failure_count":3}
+{"sentence":"ออเรเลียน่ะครับ","failure_count":2}
+{"sentence":"อั้วไม่อั้น","failure_count":3}
+{"sentence":"อา โอ้ว อ๊า!!!!!!!!!!!","failure_count":2}
+{"sentence":"อาชญากร คนเป็นโรคนอนไม่หลับ ยามและคนโง่","failure_count":2}
+{"sentence":"อาซ๊อกับอาจุนเป็นไงบ้างเนี่ย?","failure_count":2}
+{"sentence":"อาภรณ์ไร้ราคา แต่ทว่าสวมแหวนแปลกๆ อสรพิษสองตัวที่มีนัยน์ตามรกต ตัวหนึ่งกลืนกิน","failure_count":2}
+{"sentence":"อามีลีน่ะ","failure_count":2}
+{"sentence":"อาโส่ยน่ะ","failure_count":3}
+{"sentence":"อินเดียน่ะ หวังว่างั้น","failure_count":3}
+{"sentence":"อีกอย่างแม่ว่ามันไม่ใช่ความคิดที่ดี ที่จะวางเครื่องใช้ไฟฟ้าไว้บนอ่าง","failure_count":2}
+{"sentence":"อึ้ม!..","failure_count":2}
+{"sentence":"อ่อ คนขับอาจะเอาไว้ป้องกันตัวน่ะ","failure_count":2}
+{"sentence":"อ่ะ ถ้าลื้อคิดว่าคนของลื้อจะชนะนะ เพิ่มเดิมพนันไปเลย เท่าไหร่ก็ได้","failure_count":2}
+{"sentence":"ฮัลโหล..?","failure_count":2}
+{"sentence":"าร็อกซี่-อย่าแขวนคอลูกฉันำ","failure_count":2}
+{"sentence":"เกมนี้เหมือนกิลลีดันดานั่นแหละ","failure_count":2}
+{"sentence":"เกรงว่าจะไม่ใช่คราวนี้นะ","failure_count":3}
 {"sentence":"เกิดอุบัติเหรอ?","failure_count":3}
+{"sentence":"เกือบแล้ว อีกนิดหนึ่ง","failure_count":2}
 {"sentence":"เกือบไปแล้ว แกไม่เป็นอะไรนะ","failure_count":3}
+{"sentence":"เก่าเเบบนี้เเหละดี","failure_count":3}
+{"sentence":"เขาคงสร้างปัญหาให้ลูกสิท่า","failure_count":3}
+{"sentence":"เขาจะหงุดหงินถ้าฉันทำแบบนี้เหรอ?","failure_count":2}
+{"sentence":"เขาจะไปเยินยอกัน","failure_count":3}
+{"sentence":"เขาจะไปเยินยอกัน ในฐานะนายของจักรวาล ขอบคุณเลดี้ที่มาร่วมรับประทาน","failure_count":2}
+{"sentence":"เขาดูหล่อนะ","failure_count":3}
+{"sentence":"เขาทำงานทำการอะไรเหรอ","failure_count":3}
+{"sentence":"เขาทำงานอะไร","failure_count":3}
+{"sentence":"เขาทิ้งเรากับลูกชายเขา แล้วก็ไม่เคยกับมา","failure_count":2}
+{"sentence":"เขามันพวกจอมละโมบนี่นา","failure_count":2}
+{"sentence":"เขามาขอรับบริจาคน่ะ","failure_count":3}
+{"sentence":"เขามีรูปร่างใหญ่เหมือนหมี หรืออาจใหญ่โตเหมือนสิงโตทะเลย","failure_count":2}
+{"sentence":"เขาลาน่ะสิ","failure_count":3}
+{"sentence":"เขาอยากที่จะตรวจสอบกับเกสตาโป และติดต่อไปยังอัยการ, แล้วเขาจะแจ้งแฮนเซ่น","failure_count":2}
+{"sentence":"เขาอาจไม่ได้พูดความจริงก็ได้","failure_count":2}
+{"sentence":"เขาเป็นเหมือนชีสบนมักโรนีของฉัน","failure_count":2}
+{"sentence":"เขาให้แกลงมาทุกคน","failure_count":3}
+{"sentence":"เขาให้แกลงมาทุกคน เหรอ","failure_count":2}
+{"sentence":"เขาไปยุ่งเกี่ยวกับเรื่องนี้ได้ยังไง","failure_count":2}
+{"sentence":"เขาไม่เป็นอะไร.","failure_count":3}
+{"sentence":"เขาไม่เป็นอะไรหรอก","failure_count":3}
+{"sentence":"เขียนในใบมรณะบัตรว่าเป็นโรคหัวใจละกัน ครอบครัวจะได้ไม่เสียชื่อเสียง","failure_count":2}
+{"sentence":"เข้าไปฟังลิลี่เถอะ","failure_count":3}
+{"sentence":"เครื่องบ้านี่ก็ไม่ยอมติด","failure_count":3}
+{"sentence":"เค้าคงต้องมีเหตุผลที่ทำให้เค้าโกหก","failure_count":2}
+{"sentence":"เค้าคิดถึ๊ง คิดถึง ๆ ๆ ๆ คิดถึงตัวเองที่สุดในโลกเลยนะ","failure_count":2}
+{"sentence":"เค้าจะได้ไปเล่นที่บ้าน เขามีเพื่อนใหม่ ได้ไง?","failure_count":2}
+{"sentence":"เค้าน่าจะให้ลูกยืมมากว่านี้น่ะ","failure_count":2}
+{"sentence":"เงื่อนไขที่จะทำให้โตเกียวตกต่ำ พลังงานนั้นจะยังคงมากขึ้นสำหรับ-- อะไร?!","failure_count":2}
+{"sentence":"เจี้ยนชิง รีโมตน่ะ ผมบอกพ่อเป็นร้อยรอบแล้ว ว่าให้ดูถ่านบ้าง","failure_count":2}
+{"sentence":"เจ้าขายซุปหรือว่าเยี่ยวลากันแน่","failure_count":2}
+{"sentence":"เจ้ามาทำอาไรที่นี่ หือ!?","failure_count":2}
+{"sentence":"เจ้าเหมียวสายฟ้าจะออกมาแล้วววว","failure_count":2}
+{"sentence":"เจ้าไม่มีอะไรยุ่งเกี่ยวกับพวกนั้นไม่ใช่หรือไง","failure_count":2}
+{"sentence":"เจ้าไม่เป็นอะไรนะ?","failure_count":3}
+{"sentence":"เจ้าไม่เป็นอะไรแล้ว","failure_count":2}
+{"sentence":"เจ๊ปากหมารู้ตัว","failure_count":2}
+{"sentence":"เฉลียวฉลาด","failure_count":3}
+{"sentence":"เฉลียวฉลาดจนน่ากลัว","failure_count":2}
+{"sentence":"เชิญโค้ชคุนมาที่ฟร้อนท์ มีคนมาหาค่ะ","failure_count":2}
+{"sentence":"เซอร์คอลินมาแล้วววว","failure_count":2}
+{"sentence":"เซี๊ยงเทียน","failure_count":3}
+{"sentence":"เซี๊ยงเทียน เป็นยังไงบ้าง","failure_count":2}
+{"sentence":"เซ็น เจ้าไม่เป็นอะไรนะ!","failure_count":3}
+{"sentence":"เซ็น เจ้าไม่เป็นอะไรนะ!?","failure_count":2}
+{"sentence":"เดิมทีข้าว่าจะออมมือให้","failure_count":3}
+{"sentence":"เดี๋ยวก็ได้ฆ่าเขาตายหรอก","failure_count":2}
+{"sentence":"เดี๋ยวก็ได้ตายตามแม่ไปหรอก นังแพศยา","failure_count":2}
+{"sentence":"เดี๋ยวก็ได้รู้กัน","failure_count":3}
+{"sentence":"เดี๋ยวตำรวจแอลเอก็มาแล้ว","failure_count":3}
+{"sentence":"เดี๋ยวผมขอรบกวน เปลี่ยนท่านิดหน่อย","failure_count":2}
+{"sentence":"เดี๋ยวหมอก็จะมา","failure_count":3}
+{"sentence":"เดี๋ยวไม่หล่อนะ","failure_count":3}
+{"sentence":"เดี๋ยวไอ้เอก็ตามมาทันหรอก","failure_count":3}
+{"sentence":"เดี๋ยวๆ พูดใหม่อีกที","failure_count":3}
+{"sentence":"เดี๋ยวๆ เดี๋ยวๆ รู้","failure_count":3}
+{"sentence":"เด็กชายสองคนกำลังหาบนํ้า","failure_count":3}
+{"sentence":"เด็กเวร..!","failure_count":2}
+{"sentence":"เท้าเปล่าโจมีปัญหา","failure_count":2}
+{"sentence":"เธอก็..?","failure_count":2}
+{"sentence":"เธอคงไม่ได้อยู่คนเดียวหรอก","failure_count":2}
+{"sentence":"เธอบอกฉันเมื่อกี้นี้แล้ว แต่เธอจะให้ฉันช่วยยังไง","failure_count":2}
+{"sentence":"เธอรู้ว่าหมอเฟอเรริโอเป็นคนดีใช่มั๊ย","failure_count":2}
+{"sentence":"เธออาจไม่ได้ยินพวกเขาเลยก็ได้","failure_count":2}
+{"sentence":"เธอเป็นผู้หญิงที่สวยใสบริสุทธิ์ ที่สุดในโลกนี้ที่ฉันเคยเจอ","failure_count":2}
+{"sentence":"เธอเองก็ยังไม่มีไม่ใช่เหรอ","failure_count":3}
+{"sentence":"เธอแค่เป็นบ้านิดหน่อยเป็นครั้งคราว","failure_count":2}
+{"sentence":"เธอไม่เป็นอะไรแล้วล่ะครับ","failure_count":3}
+{"sentence":"เธอไม่ได้เพิ่งเดิน ขึ้นบันไดไปหรอกเหรอ?","failure_count":2}
+{"sentence":"เนโต้งัดกับระบบอย่างแยบยล","failure_count":3}
+{"sentence":"เบร็น พาลิเบอร์ตี้เบลล์ไปเรียนไอซ์สเก็ต","failure_count":2}
+{"sentence":"เปิดประตูบ้านี้นะ!","failure_count":3}
+{"sentence":"เปิดไอ่ประตูบ้านี่เดี๋ยวนี้นะ!","failure_count":2}
+{"sentence":"เป็นผู้หญิงที่วิเศษ ที่สุดที่ผมเคยรู้จัก","failure_count":2}
+{"sentence":"เป็นมุขคนแถวนี้น่ะ","failure_count":2}
+{"sentence":"เป็นหุ่นเชิดของนาชีเหมือนแกหรือ?","failure_count":2}
+{"sentence":"เป็นอะไรน่ะ..?","failure_count":2}
+{"sentence":"เป็นเซอร์ไพรซ์น่ะ","failure_count":2}
+{"sentence":"เพราะคุณตะโกน โท โท โท?","failure_count":3}
+{"sentence":"เพราะงั้นความสำเร็จนายมันเหล่นายแล้ว","failure_count":2}
+{"sentence":"เพราะบนท้องฟ้า ดวงดาราก็สู้มวยปล้ำกัน","failure_count":2}
+{"sentence":"เพิ่งเมื่อฆ่าเมื่อเช้าานี่เลย","failure_count":2}
+{"sentence":"เพื่อที่เราจะได้กราบไหว้กันไง","failure_count":2}
+{"sentence":"เพื่อนของฉันจากอีกตู้นึงกำลังมาที่นี่","failure_count":2}
+{"sentence":"เพื่อให้ชัดเจน ย่านคนจนในริโอ มีมากว่าแหล่งค้ายาซะอีก","failure_count":2}
+{"sentence":"เฟสสิกกับอินนิโกรวมตัวกันอีกครั้ง","failure_count":2}
+{"sentence":"เมื่อดูจากสภาพที่คุณอยู่ ยิ่งพล่ามโน่นนี่นั่นก็ยิ่งเสียเวลา","failure_count":2}
+{"sentence":"เมื่อวันก่อน ไอ้เคี้ยงกับไอ้โส่ยมันก็เพิ่งมากัน","failure_count":2}
+{"sentence":"เมื่อวันก่อนฉันลงไปที่กระท่อมริมหาด มีผู้ชายอยู่ที่นั่นท่าทางแปลกๆ","failure_count":2}
+{"sentence":"เมื่อวันก่อนพ่อแม่ฉันโทรมา","failure_count":3}
+{"sentence":"เมื่อหนูโตขึ้น หนูจะรู้ว่า ชีวิตหน่ะมันไม่เหมือนนิยายหรอก","failure_count":2}
+{"sentence":"เยียน อยากรู้นัก..!","failure_count":2}
+{"sentence":"เยี่ยมมาก แล้วเราจะติดต่อไป","failure_count":3}
+{"sentence":"เย่ ฮ่า ฮ่า ฮ่า!","failure_count":3}
+{"sentence":"เย้!!!!!!","failure_count":2}
+{"sentence":"เรนาน น่ะเหรอ","failure_count":3}
+{"sentence":"เราคิดว่าถึงเวลาที่เรา จะต้องกลับบ้านกันเสียที","failure_count":2}
+{"sentence":"เราจะบอกว่าเราคิดใคร่ครวญอีกที และเราต้องการเวลามากกว่านี้ แค่นั้น","failure_count":2}
+{"sentence":"เราจะไม่เป็นอะไร","failure_count":2}
+{"sentence":"เราถึงอยากให้พ่อเเม่อยู่กันที่อาตามิไงคะ","failure_count":2}
+{"sentence":"เราทุกคนต่างเป็นบ้านิดหน่ยเป็นครั้งคราว","failure_count":2}
+{"sentence":"เรามียานและ วิธีการที่จะไปในที่ที่เราต้องการ","failure_count":2}
+{"sentence":"เราอยู่ในโตเกียวก็พอจะดูเเลเเม่ได้","failure_count":2}
+{"sentence":"เราไปค้นหาหางเครื่องบิน","failure_count":3}
+{"sentence":"เราไปค้นหาหางเครื่องบิน โดยไม่บอกใคร ไม่วางแผนล่วงหน้า","failure_count":2}
+{"sentence":"เราไม่มีอะไรจะต้องกลัว","failure_count":3}
+{"sentence":"เราไม่เป็นอะไร","failure_count":2}
+{"sentence":"เราไม่เป็นอะไรจริงๆ","failure_count":2}
+{"sentence":"เรียกว่ากันเหนียวไว้ก็ได้","failure_count":2}
+{"sentence":"เรียนรู้ที่จะเป็นอิสะเหมือนสายลม เรียนรู้ที่จะไหลเอื่อยอย่างอิสระเหมือนแม่น้ำ","failure_count":2}
+{"sentence":"เรืองคนหายนายตามไปถึงไหนแล้ว?","failure_count":2}
+{"sentence":"เรื่องบางเรื่อง ฉันก็ไม่ได้อยากให้เขารู้","failure_count":2}
+{"sentence":"เวลาคว้านหาคนสุดท้ายนั้นหามีไม่","failure_count":2}
+{"sentence":"เสี่ยวเม่ยงดงามนัก","failure_count":2}
+{"sentence":"เหตุการณ์นี้เคยผ่านมาแล้ว","failure_count":3}
+{"sentence":"เห็นนั่นใหม","failure_count":3}
+{"sentence":"เห็นนั่นใหม ข้างใต้นั่นน่ะ ในน้ำ","failure_count":2}
+{"sentence":"เห็นรถแบ็กโฮมั้ย","failure_count":3}
+{"sentence":"เห็นเขืยนมาว่าเจ็บหนักนี่","failure_count":2}
+{"sentence":"เห็นเขืยนมาว่าเเกต้องเเวะกันที่โอซาก้า เพราะเเม่ป่วยกระทันหัน","failure_count":2}
+{"sentence":"เห็นเขืยนมาว่าเเม่กำลังจะตาย","failure_count":2}
+{"sentence":"เอามือไว้ในที่ที่ผมเห็น","failure_count":3}
+{"sentence":"เอาล่ะ ดีกว่ามีความหวังนะ","failure_count":2}
+{"sentence":"เอาล่ะ เป็นคนที่โรงเรียนใช่มั้ย?","failure_count":2}
+{"sentence":"เอาหลัก มาขัด ๆ ๆ เฮ้","failure_count":3}
+{"sentence":"เอาเครื่องดื่มให้พวกเขา และให้พ่อหนุ่มไอริชสุดหล่อนั่นด้วย","failure_count":2}
+{"sentence":"เอาให้แน่นะ","failure_count":3}
+{"sentence":"เอ๊ย มิสเตอร์แบงค์สิ","failure_count":3}
+{"sentence":"เอ๊ะ อยู่ๆก็วางสายไป ไอ้บ้านี่","failure_count":2}
+{"sentence":"เฮ้ยอย่า..!","failure_count":2}
+{"sentence":"เเกตกอยู่เเถวนี้นี่เเหละ","failure_count":2}
+{"sentence":"เเซม","failure_count":3}
+{"sentence":"เเซม!","failure_count":3}
+{"sentence":"เเดนนี่ดีใจที่ได้เจอกันอีก","failure_count":2}
+{"sentence":"เเต่ฉัน ได้เเค่นี้ ขี่ไม้กวาดเคยสนุก จนกระทั่งมาทําเป็นอาชีพ","failure_count":2}
+{"sentence":"เเต่ฉันเพิ่งได้รับโทรเลขเมื่อเช้า เเจ้งว่าลูกสาวหมั้นแล้วเตรียมจะเเต่งงาน","failure_count":2}
+{"sentence":"เเต่ผมก็ไม่ได้ดําเนินการไต่สวนนี้เพื่อเล่นสนุก","failure_count":2}
+{"sentence":"เเม็กซิม อย่าทําน่ารังเกียจสิ","failure_count":2}
+{"sentence":"เเม่คะ อันนั้นเเสนเก่าเลย","failure_count":3}
+{"sentence":"เเม่มดน้อยเเสนเก่ง","failure_count":3}
+{"sentence":"เเม่หนูคงต้องภูมิใจ","failure_count":2}
+{"sentence":"เเวะเข้าบ้านฉันก่อน","failure_count":2}
+{"sentence":"แ ต แต่ ฉันบอกไปแล้ว","failure_count":2}
+{"sentence":"แกก็ใช้บัตรเสริมแกสิ","failure_count":3}
+{"sentence":"แกมาที่นี่เป็นร้อยๆ ครั้งแล้วเหรอะ","failure_count":2}
+{"sentence":"แกลูบไล้ตรงไหนก่อน หน้านังนั่น","failure_count":2}
+{"sentence":"แกะน้อยบ้าน่ะสิ","failure_count":3}
+{"sentence":"แกเพิ่งเรียกฉันว่าำไอ้หมูเหรอ","failure_count":2}
+{"sentence":"แกใช่เจ้ามอร์ดิไครึเปล่า","failure_count":2}
+{"sentence":"แกไม่เป็นอะไรนะ","failure_count":2}
+{"sentence":"แค่นี้ยังรอกแหรก แล้วดันจะมาเป็นมาเฟีย","failure_count":2}
+{"sentence":"แค่ใช้น้ำลายถูก็หายแล้ว","failure_count":3}
+{"sentence":"แต่การตายของ ปาร์คแฮจุง กับ ชาแทชิกก็ไม่น่าเกี่ยวกัน","failure_count":2}
+{"sentence":"แต่ก่อนอื่น ฉันต้องไปสุสานท่านอาจารณ์ก่อน","failure_count":2}
+{"sentence":"แต่คุณคงไม่ได้มาคุยเรื่องนี้ใช่มั้ย","failure_count":2}
+{"sentence":"แต่หนังสือเล่มนี้สันนิษฐานว่า เขาอาจไม่ได้ตายที่นั่น","failure_count":2}
+{"sentence":"แต่หลังจากนั้น โศกนาฏกรรมการสูญเสียก็ตามมา","failure_count":2}
+{"sentence":"แต่หลายร้อยปีที่ฝานมา","failure_count":3}
+{"sentence":"แต่เขาคงไม่ได้ฟังมัน","failure_count":3}
+{"sentence":"แต่เจ้า, เจ้านั้นแข็งแกร่ง และความต้องการของเราก็มาก เลือดของพวกเรากำลังไหลหลั่ง","failure_count":2}
+{"sentence":"แต่เธอถนัดขวานะ","failure_count":3}
+{"sentence":"แต่เราดีใจที่คุณไม่เป็นอะไรนะ","failure_count":2}
+{"sentence":"แต่แกเห็นหรือยัง ว่าถึงแม้แกจะไม่ได้โกงเนี่ย ชีวิตแม่งก็เหมือนจะโกงแกอยู่ดี","failure_count":2}
+{"sentence":"แต่ไปๆ มาๆ ก็ไม่ได้ปลุก","failure_count":3}
+{"sentence":"แต่ไอ้บ้านั่นเข้าร้านมาแล้ว","failure_count":2}
+{"sentence":"แน่นนอนจ้ะ","failure_count":3}
+{"sentence":"แน่นอน แม่แทบรอไปเจอไม่ใหวแน่ะ","failure_count":2}
+{"sentence":"แปลว่าฮาวล์กลายเป็นปีศาจแล้วจริงเหรอ","failure_count":2}
+{"sentence":"แม่ครับ ผมคิดใคร่ครวญดูแล้ว","failure_count":3}
+{"sentence":"แม่ครับ ผมคิดใคร่ครวญดูแล้ว ครั้งนี้แม่ตามผมกลับไปอยู่ในเมืองด้วยกันนะ","failure_count":2}
+{"sentence":"แม่งเอ๊ยยยยยย!","failure_count":3}
+{"sentence":"แม่เขาคงไม่ได้เปิดโรงศพ ดูหน้าเขาครั้งสุดท้าย","failure_count":2}
+{"sentence":"แม่ไม่เป็นอะไรหรอก","failure_count":3}
+{"sentence":"แม้นมันเป็นโจร ก็แกร่งทั้งสี่สิบ ซามูไรสองถึงสามคนไม่พอ","failure_count":2}
+{"sentence":"แม้เป็นเพียงแค่คนตัวเล็กๆคนหนึ่ง ก็สามารถเปลี่ยนแปลงอนาคตได้","failure_count":2}
+{"sentence":"แม้แต่คนอังกฤษก็ไม่มียาที่ใช้แก้พิษเจ้างูนี่","failure_count":2}
+{"sentence":"และถ้าคุณไม่ว่าโง้นงี้","failure_count":3}
+{"sentence":"และถ้าคุณไม่ว่าโง้นงี้ ผมไม่อยากลากสังขารมาถึงนี่อีก","failure_count":2}
+{"sentence":"และถ้าลูเลียนแบบโบวี่ ลูก็ยังคงเป็นตัวของตัวเองอยู่","failure_count":2}
+{"sentence":"แล้วคุณหานเซียงล่ะ","failure_count":3}
+{"sentence":"แล้วค่าเสียหายนี่ใครจะเป็นคนจ่าย?","failure_count":2}
+{"sentence":"แล้วที่ที่คุณโต หลงรักหุ้นส่วนธุรกิจไม่เดียงสารึ","failure_count":2}
+{"sentence":"แล้วท่านนายกล่ะครับ","failure_count":3}
+{"sentence":"แล้วนี่พวกเลวนั่น ไม่ให้เงินซื้อเบาะอันเดียวด้วยซ้ำ","failure_count":2}
+{"sentence":"แล้วนี่ใครเขียน ใครเขียนใบลานี่ให้ แกเขียนหนังสือยังไม่เป็นตัวเลย","failure_count":2}
+{"sentence":"แล้วนึกไงปาดยังงั้น","failure_count":3}
+{"sentence":"แล้วบูล่ะฮะ","failure_count":3}
+{"sentence":"แล้วพระองค์จะพักที่บ้านบิช้อป ที่ใกล้แถวสลัมตูตาโน่น่ะ","failure_count":2}
+{"sentence":"แล้วพี่มากล่ะ","failure_count":3}
+{"sentence":"แล้วสะพานเรือน่ะ","failure_count":3}
+{"sentence":"แล้วสะพานเรือน่ะ มันแค่ไม่กี่ก้าว","failure_count":2}
+{"sentence":"แล้วเธอก็ทำตามที่พวกนั้นของั้นเหรอ","failure_count":2}
+{"sentence":"แล้วเราจะติดต่อไป","failure_count":2}
+{"sentence":"แล้วแต่อะไร","failure_count":3}
+{"sentence":"แล้วแต่อารมณ์","failure_count":3}
+{"sentence":"แล้วแม่งก็ร้องซะ กูนึกว่าม้ามแตก","failure_count":2}
+{"sentence":"แล้วแม่จะให้ฉันทำไง ทำ?, แกจะไปทำอะไรได้","failure_count":2}
+{"sentence":"แล้วไอ้เรื่องภาระนั่น มันอะไรกันครับ","failure_count":2}
+{"sentence":"แสงที่งดงามของพระองค์ ท้องนภาพราวพร่างไปด้วยดวงดาว","failure_count":2}
+{"sentence":"แสดงว่าเขายังรู้จักมันไม่พอ","failure_count":2}
+{"sentence":"แองเจลินายังคงจู่โจม","failure_count":3}
+{"sentence":"โกหกระยำเลย","failure_count":2}
+{"sentence":"โครงการวานเดอริ่ง เอิร์ท","failure_count":1}
+{"sentence":"โครงการวานเดอริ่ง เอิร์ท โปรเจค","failure_count":2}
+{"sentence":"โง่สุดๆ ที่ดันไปซื้อเรือนั่นเข้า.","failure_count":2}
+{"sentence":"โช!!!","failure_count":2}
+{"sentence":"โซฟียังไม่มาทำงานเลยค่ะคุณนายแฮทเทอร์","failure_count":2}
+{"sentence":"โดยมีเงื่อนไขหนึ่งข้อ นั่นคือเขาจะไม่ได้รับการเคารพบูชา และจะถูกลืมไปตลอดกาล","failure_count":2}
+{"sentence":"โตขึ้นแล้วหล่อนะเนี่ย","failure_count":3}
+{"sentence":"โทกิ!","failure_count":3}
+{"sentence":"โทกุสะ!","failure_count":3}
+{"sentence":"โทดทีน้า","failure_count":2}
+{"sentence":"โทษทีจ้ะ โทษที โทษที","failure_count":3}
+{"sentence":"โทษทีนะ แต่ฉันไม่ได้สนับสนุนความรู้แบบสุดโต่ง","failure_count":2}
+{"sentence":"โน่นคนนี่คน เจอที่ไหนก็มีที่นั่นแหละ","failure_count":2}
+{"sentence":"โป๊อยู่นี่","failure_count":3}
+{"sentence":"โฟรโดยังไม่ตาย","failure_count":3}
+{"sentence":"โรงพยาบาลงั้นเหรอ","failure_count":3}
+{"sentence":"โลกจะดีดุจโลกเดิมได้ไง","failure_count":3}
+{"sentence":"โหย..!!","failure_count":2}
+{"sentence":"โอะ!!","failure_count":2}
+{"sentence":"โอเค ฉันก็ไม่ได้รักเธอ","failure_count":3}
+{"sentence":"โอเค๊ สำเร็จแล้วววว","failure_count":3}
+{"sentence":"โอ้ นายคงไม่ได้มีปัญหาอะไรใช่มั้ย","failure_count":2}
+{"sentence":"โอ้, ถ้าเพียงแต่ พ่อจะได้อยู่ที่นั่นกับลูก มันมีหนู, พ่อ","failure_count":2}
+{"sentence":"ใกล้พอจะได้สัมผัส","failure_count":3}
+{"sentence":"ใครงมเก็บได้เอาไปเลย","failure_count":2}
+{"sentence":"ใครเขียนใบลานี่ให้","failure_count":3}
+{"sentence":"ใจเย็นน่า ลูกเป็นคนฉลาด ไม่เป็นอะไรหรอก","failure_count":2}
+{"sentence":"ใช่ ส่วนพุพุน่ะ","failure_count":3}
+{"sentence":"ใช้ชีส มิโมเลตต์ เท่านั้น","failure_count":3}
+{"sentence":"ในที่ที่มืดมิด","failure_count":2}
+{"sentence":"ในที่ที่เรามองไม่เห็น","failure_count":3}
+{"sentence":"ในที่ๆ เราเดิน หนทางมันมี","failure_count":1}
+{"sentence":"ในที่ๆ เราเดิน หนทางมันมี เราควรกลับบ้าน","failure_count":2}
+{"sentence":"ในเมื่องี่เง่า ไม่ยอมมองดูความเป็นจริง","failure_count":2}
+{"sentence":"ในเมื่อนายไม่ได้ร้อยเชือกรองเท้า ทำไมนายไม่ไปเอาแพโน่นมาล่ะ","failure_count":2}
+{"sentence":"ใบสะระแหนต้ม","failure_count":3}
+{"sentence":"ให้กูสตาร์ตรถให้มึงก็ยังดี","failure_count":3}
+{"sentence":"ให้ตายสิ ให้ลิลี่ทำสิ","failure_count":3}
+{"sentence":"ให้พวกเด็กวิศวะโฉดๆ มายุ่งกับทาเฮเนี่ยนะ","failure_count":2}
+{"sentence":"ให้ลิลี่ทำสิ","failure_count":2}
+{"sentence":"ให้ได้แรงบรรดาลใจ","failure_count":3}
+{"sentence":"ไก ใครถูกยิง","failure_count":3}
+{"sentence":"ไชโย!!!!!","failure_count":2}
+{"sentence":"ได้แต่นั่งแคะขึ้มูกเหมือนเป็นตัวตลก","failure_count":2}
+{"sentence":"ไบยาโอยู่ไหน","failure_count":2}
+{"sentence":"ไบยาโอยู่ไหน ว่ายังไงบอกมา","failure_count":1}
+{"sentence":"ไปกวางจูน่ะครับ","failure_count":3}
+{"sentence":"ไปซะ พวกคุณจะไม่เป็นอะไร","failure_count":3}
+{"sentence":"ไปที่ที่คุณจะได้ใช้ความคิด","failure_count":3}
+{"sentence":"ไปที่บ้านเซนิบ้านะเหรอ?","failure_count":3}
+{"sentence":"ไปทุกที่ที่มีเรื่องตื่นเต้น","failure_count":2}
+{"sentence":"ไปลากคอมันกัน","failure_count":3}
+{"sentence":"ไปลากคอมันมา","failure_count":2}
+{"sentence":"ไปในที่ที่พวกเขาไป","failure_count":2}
+{"sentence":"ไมงั้นคงได้นอนเปลหามกลับบ้าน","failure_count":2}
+{"sentence":"ไม่ ฉันไม่เป็นอะไร แต่ต้องการรถลาก","failure_count":2}
+{"sentence":"ไม่ ไม่ ไม่ ไม่นะ อย่า ได้โปรด","failure_count":3}
+{"sentence":"ไม่ ไม่ ไม่เป็นไร ไม่เป็นไรแล้ว","failure_count":2}
+{"sentence":"ไม่ ไม่มี","failure_count":3}
+{"sentence":"ไม่ ไม่มีทางเลย","failure_count":3}
+{"sentence":"ไม่ ไม่เป็นไร โอเค","failure_count":1}
+{"sentence":"ไม่กล้าสู้รึไง!?","failure_count":2}
+{"sentence":"ไม่ควรคุยและลืมรสชาดชา","failure_count":3}
+{"sentence":"ไม่ค่อยเคยเจอแบบนี้ใช่มั้ยครับ","failure_count":2}
+{"sentence":"ไม่งั้นแกต้องนอนเปลหามกลับไปแน่","failure_count":2}
+{"sentence":"ไม่จ้ะ เป็นเซอร์ไพรซ์น่ะ","failure_count":3}
+{"sentence":"ไม่ต้องห่วง, ผมไม่เป็นอะไร.","failure_count":3}
+{"sentence":"ไม่ต้องห่วงเรื่องสัญญานเตือนภัย ฉันจะหาทางเอากุญแจมา","failure_count":2}
+{"sentence":"ไม่นะ ไม่ๆๆๆๆๆ!","failure_count":3}
+{"sentence":"ไม่มีข้อมููล","failure_count":3}
+{"sentence":"ไม่มีปัญหาหรอกค่ะ พี่ถือสายแป๊ปนึงได้มั้ย ?","failure_count":2}
+{"sentence":"ไม่รู้เมืองนี้มีเเม่มดประจํารึยัง","failure_count":2}
+{"sentence":"ไม่อย่าพูดอย่านั้น!","failure_count":3}
+{"sentence":"ไม่เป็นอะไรนะ","failure_count":3}
+{"sentence":"ไม่เป็นอะไรนะครับ","failure_count":3}
+{"sentence":"ไม่เป็นอะไรหรอก","failure_count":2}
+{"sentence":"ไม่เป็นอะไรหรอก ฉันไปก่อนนะ","failure_count":3}
+{"sentence":"ไม่เป็นอะไรหรอกน่า","failure_count":2}
+{"sentence":"ไม่เป็นอะไรเลย","failure_count":3}
+{"sentence":"ไม่เป็นอะไรเหรอ","failure_count":2}
+{"sentence":"ไม่เป็นอะไรใช่ไหม","failure_count":3}
+{"sentence":"ไม่เป็นอะไรใช่ไหม ?","failure_count":3}
+{"sentence":"ไม่ได้มีไว้ให้เจ้านำไปสร้างปัญหา และที่สำคัญคือไม่ใช่มีไว้ให้เจ้าเอาไปแก้แค้น","failure_count":2}
+{"sentence":"ไม่ไม่ใช่เคี้ยว","failure_count":3}
+{"sentence":"ไอคิล่าเซฟฟรอน ของอิตาเลี่ยนด้วยเหรอะ","failure_count":2}
+{"sentence":"ไอ้การอัดเสียงบนเรือน่ะ","failure_count":2}
+{"sentence":"ไอ้กำนันเดื่อน่ะเคยช่วยเหลือข้าไว้ ข้าจึงมอบปืนกระบอกนี้ให้กับมัน","failure_count":2}
+{"sentence":"ไอ้นี่มันกลัวเมีย จนทำกับผมยังกับเป็นก้างขวางคองั้นเเหละ","failure_count":2}
+{"sentence":"ไอ้นี่ในที่ที่ฉันบอกเธอ","failure_count":2}
+{"sentence":"ไอ้บิ๊กแบร์น่ะสิ","failure_count":3}
+{"sentence":"ไอ้บ้านั่น รีบๆ ไปจับมันซิ!","failure_count":3}
+{"sentence":"ไอ้บ้านั่น!","failure_count":3}
+{"sentence":"ไอ้บ้านั่นกลับมาแล้ว","failure_count":3}
+{"sentence":"ไอ้บ้านั่นมันวางหูใส่ฉัน","failure_count":2}
+{"sentence":"ไอ้บ้านั่นส่งจดหมายให้ผู้หญิงทุกคนเหมือนกันเด๊ะ","failure_count":2}
+{"sentence":"ไอ้บ้านั่นไม่ได้เพี้ยน","failure_count":2}
+{"sentence":"ไอ้บ้านี่","failure_count":3}
+{"sentence":"ไอ้บ้านี่ ไปไม่บอกลา","failure_count":3}
+{"sentence":"ไอ้บ้านี่ทำให้เด็กท็อปไฟว์ ของโรงเรียนท้อง","failure_count":2}
+{"sentence":"ไอ้บ้านี่ทำไมลึกลับจังว่ะ","failure_count":3}
+{"sentence":"ไอ้บ้านี่มันลึกลับซับซ้อนจริงๆ","failure_count":2}
+{"sentence":"ไอ้บ้านี่มันอะไร","failure_count":3}
+{"sentence":"ไอ้บ้านี่มาทำอะไร","failure_count":3}
+{"sentence":"ไอ้บ้านี่เป็นใคร","failure_count":3}
+{"sentence":"ไอ้บ้านี่ไม่ยอมให้ผู้ชายลงเรือด้วย","failure_count":2}
+{"sentence":"ไอ้วิปริตนั่นก็แค่อยากเล่นคนเดียว","failure_count":2}

@@ -21,6 +21,7 @@ use language_utils::{
     },
     transcription_challenge,
 };
+use phoneme_verify::wav2vec2;
 use postgrest::Postgrest;
 use resend_rs::{Resend, types::CreateEmailBaseOptions};
 use serde::{Deserialize, Serialize};
@@ -139,7 +140,7 @@ struct VoiceSettings {
 
 /// Retry budget per provider. Each attempt now costs a synthesis *and* (for
 /// gated languages) a transcription, so this is deliberately smaller than the
-/// 5 `google-tts` used to run on its own.
+/// 5 `google-speech` used to run on its own.
 const TTS_MAX_ATTEMPTS: usize = 3;
 
 /// How much longer the race may run once an audible clip is in hand. Generous
@@ -251,7 +252,7 @@ async fn audio_rejection(
     request: &TtsRequest,
     audio: &[u8],
 ) -> Option<(Rejection, String)> {
-    if let Some(defect) = google_tts::audio_defect(audio) {
+    if let Some(defect) = audio_codec::audio_defect(audio) {
         return Some((Rejection::Defective, defect.to_string()));
     }
     let reason = tts_verify::content_defect(http, request, audio).await?;
@@ -343,7 +344,7 @@ async fn synthesize_checked(
 /// the faithful providers when the requested one can't get it right.
 ///
 /// Before this existed the four TTS handlers disagreed about robustness:
-/// `google-tts` retried five times on a defect, Gemini three, and ElevenLabs
+/// `google-speech` retried five times on a defect, Gemini three, and ElevenLabs
 /// and OpenAI not at all — and none of them looked at *what the audio said*.
 /// Funnelling all four through here means a new check is added once and every
 /// provider inherits it, rather than being something each handler has to
@@ -638,9 +639,9 @@ async fn google_synthesize(request: &TtsRequest) -> Result<Option<Vec<u8>>, Synt
 
     // One attempt per call: `synthesize_checked_bytes` owns the retry budget now, so
     // leaving the library's own loop enabled would multiply the two.
-    let client = google_tts::GoogleTtsClient::new(api_key).with_max_attempts(1);
+    let client = google_speech::GoogleTtsClient::new(api_key).with_max_attempts(1);
     let outcome = client
-        .synthesize(&google_tts::GoogleTtsRequest {
+        .synthesize(&google_speech::GoogleTtsRequest {
             text: request.text.clone(),
             language_code: language_code.to_string(),
             voice_name: voice_name.to_string(),
@@ -702,8 +703,8 @@ async fn gemini_synthesize(
     request: &TtsRequest,
 ) -> Result<Option<Vec<u8>>, SynthError> {
     let api_key = std::env::var("GEMINI_API_KEY").map_err(|_| SynthError::Unsupported)?;
-    let client = google_tts::gemini::GeminiTtsClient::with_http(api_key, http.clone());
-    let gemini_request = google_tts::gemini::GeminiTtsRequest {
+    let client = google_speech::gemini::GeminiClient::with_http(api_key, http.clone());
+    let gemini_request = google_speech::gemini::GeminiTtsRequest {
         instructions: gemini_tts_instructions(request),
         text: request.text.clone(),
         voice: GEMINI_TTS_VOICE.to_string(),
@@ -1164,25 +1165,7 @@ struct PronunciationFeedbackResponse {
     feedback: String,
 }
 
-#[derive(Deserialize)]
-struct ModalPhonemeResponse {
-    phonemes: Vec<ModalPhoneme>,
-}
-
-#[derive(Deserialize)]
-struct ModalPhoneme {
-    phoneme: String,
-    confidence: f64,
-    top_k: Vec<ModalPhonemeAlt>,
-}
-
-#[derive(Deserialize)]
-struct ModalPhonemeAlt {
-    phoneme: String,
-    probability: f64,
-}
-
-fn format_phoneme_analysis(phonemes: &[ModalPhoneme]) -> String {
+fn format_phoneme_analysis(phonemes: &[wav2vec2::Phoneme]) -> String {
     phonemes
         .iter()
         .map(|p| {
@@ -1210,53 +1193,6 @@ static GEMINI_PRO_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_reasoning_effort("high")
 });
 
-async fn get_phonemes_from_modal(
-    http: &reqwest::Client,
-    audio_bytes: &[u8],
-) -> Result<Vec<ModalPhoneme>, StatusCode> {
-    let modal_url = std::env::var("WAV2VEC2_ENDPOINT_URL").unwrap_or_else(|_| {
-        "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict.modal.run".to_string()
-    });
-
-    // Send lossless little-endian float32 samples in a compact base64 payload.
-    let (samples, sample_rate) = google_tts::decode_audio_to_f32(audio_bytes).map_err(|e| {
-        eprintln!("Failed to decode audio: {e}");
-        StatusCode::BAD_REQUEST
-    })?;
-
-    let payload = serde_json::json!({
-        "audio_f32_b64": base64::engine::general_purpose::STANDARD.encode(
-            samples.iter().flat_map(|sample| sample.to_le_bytes()).collect::<Vec<u8>>()
-        ),
-        "sample_rate": sample_rate,
-        "top_k": 5,
-    });
-
-    let response = http
-        .post(&modal_url)
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|e| {
-            eprintln!("Modal request failed: {e}");
-            StatusCode::BAD_GATEWAY
-        })?;
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response.text().await.unwrap_or_default();
-        eprintln!("Modal error ({status}): {body}");
-        return Err(StatusCode::BAD_GATEWAY);
-    }
-
-    let result: ModalPhonemeResponse = response.json().await.map_err(|e| {
-        eprintln!("Failed to parse Modal response: {e}");
-        StatusCode::BAD_GATEWAY
-    })?;
-
-    Ok(result.phonemes)
-}
-
 /// Gemini's OpenAI-compatible endpoint only accepts "wav" and "mp3" input
 /// audio, so Ogg Opus (what /tts/google returns) is re-encoded as 16-bit PCM
 /// WAV. WAV (what /tts/gemini returns) passes through labeled as such; MP3 is
@@ -1271,7 +1207,7 @@ fn gemini_input_audio(
     if !audio_bytes.starts_with(b"OggS") {
         return Ok(InputAudio::mp3(audio_bytes));
     }
-    let (samples, sample_rate) = google_tts::decode_audio_to_f32(audio_bytes).map_err(|e| {
+    let (samples, sample_rate) = audio_codec::decode_audio_to_f32(audio_bytes).map_err(|e| {
         eprintln!("Failed to decode audio: {e}");
         StatusCode::BAD_REQUEST
     })?;
@@ -1296,14 +1232,48 @@ async fn generate_pronunciation_feedback(
         .decode(&request.reference_audio)
         .map_err(|_| StatusCode::BAD_REQUEST)?;
 
-    // Get phonemes from Modal for both audio clips in parallel
-    let (user_phonemes, ref_phonemes) = tokio::try_join!(
-        get_phonemes_from_modal(&http, &user_audio_bytes),
-        get_phonemes_from_modal(&http, &reference_audio_bytes),
-    )?;
+    // Keep each clip's native sample rate and send both in one batch.
+    let [user, reference] = [&user_audio_bytes, &reference_audio_bytes].map(|audio_bytes| {
+        let (samples, sample_rate) =
+            audio_codec::decode_audio_to_f32(audio_bytes).map_err(|e| {
+                eprintln!("Failed to decode audio: {e}");
+                StatusCode::BAD_REQUEST
+            })?;
+        Ok::<_, StatusCode>(wav2vec2::clip_payload(&wav2vec2::Clip {
+            samples: &samples,
+            sample_rate,
+            top_k: 5,
+            return_frame_matrix: false,
+        }))
+    });
+    let (user, reference) = (user?, reference?);
+    let url = wav2vec2::batch_url().map_err(|e| {
+        eprintln!("Invalid Modal endpoint: {e}");
+        StatusCode::BAD_GATEWAY
+    })?;
+    let predictions = wav2vec2::predict_batch(&http, &url, vec![user, reference])
+        .await
+        .map_err(|e| {
+            eprintln!("Modal request failed: {e}");
+            StatusCode::BAD_GATEWAY
+        })?
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| {
+            eprintln!("Modal prediction failed: {e}");
+            StatusCode::BAD_GATEWAY
+        })?;
+    let [user_prediction, ref_prediction]: [wav2vec2::Prediction; 2] =
+        predictions.try_into().map_err(|predictions: Vec<_>| {
+            eprintln!(
+                "Modal returned {} predictions for two clips",
+                predictions.len()
+            );
+            StatusCode::BAD_GATEWAY
+        })?;
 
-    let user_detailed = format_phoneme_analysis(&user_phonemes);
-    let ref_detailed = format_phoneme_analysis(&ref_phonemes);
+    let user_detailed = format_phoneme_analysis(&user_prediction.phonemes);
+    let ref_detailed = format_phoneme_analysis(&ref_prediction.phonemes);
 
     use tysm::chat_completions::{ChatMessage, ChatMessageContent, Role};
 

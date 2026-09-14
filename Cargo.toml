@@ -24,7 +24,9 @@ members = [
     "libraries/phoneme-verify",
     "libraries/omnigram",
     "libraries/user-metrics",
-    "libraries/google-tts",
+    "libraries/google-speech",
+    "libraries/audio-codec",
+    "libraries/whisper",
     "generate-dictionary-data",
     "yap-mcp",
     "prototypes/yap-swift",
@@ -45,7 +47,7 @@ schemars = "1"
 futures = "0.3.32"
 env_logger = "0.11.10"
 tsify = { version = "0.5.6", features = ["js"], default-features = false }
-tysm = { git = "https://github.com/anchpop/tysm.git", rev = "2c12d98cf1348434c4e872f462c6629729884e12", features = [
+tysm = { git = "https://github.com/anchpop/tysm.git", rev = "74a425d6076b632564206b2c48fb7737f6dbf8e4", features = [
     "small-batch-optimization",
 ] }
 # Local-first KV cache store synced to R2 (github.com/anchpop/osmo). All of

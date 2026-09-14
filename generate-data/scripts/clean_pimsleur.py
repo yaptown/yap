@@ -9,41 +9,10 @@ import os
 import re
 import sys
 import tempfile
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-import requests
-
-GEMINI_OPENAI_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-)
-
-
-def response_schema() -> dict:
-    return {
-        "name": "clean_pimsleur_lesson",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "sentences": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "target_language": {"type": "string"},
-                            "native_language": {"type": "string"},
-                        },
-                        "required": ["target_language", "native_language"],
-                        "additionalProperties": False,
-                    },
-                }
-            },
-            "required": ["sentences"],
-            "additionalProperties": False,
-        },
-    }
+from gemini_chat import chat_json, sentence_pairs_schema
 
 
 def prompt(target_name: str, target_code: str, rows: list[dict[str, str]]) -> str:
@@ -93,63 +62,48 @@ def clean_lesson(
     api_key: str,
     attempts: int,
 ) -> list[dict[str, str]]:
-    payload = {
-        "model": model,
-        "temperature": 0,
-        "response_format": {
-            "type": "json_schema",
-            "json_schema": response_schema(),
-        },
-        "messages": [
+    def parse(result: dict) -> list[dict[str, str]]:
+        cleaned = result["sentences"]
+        if not cleaned:
+            raise ValueError("model removed the entire lesson")
+        if len(cleaned) > len(rows) * 1.25:
+            raise ValueError(
+                f"model expanded {len(rows)} input rows to {len(cleaned)} rows"
+            )
+
+        distinct = []
+        seen_targets = set()
+        for row in cleaned:
+            target = row["target_language"].strip()
+            native = row["native_language"].strip()
+            if not target or not native:
+                continue
+            if target_code == "tha" and re.search(r"[A-Za-z\u3400-\u9fff]", target):
+                continue
+            if target in seen_targets:
+                continue
+            distinct.append(
+                {"target_language": target, "native_language": native}
+            )
+            seen_targets.add(target)
+        if not distinct:
+            raise ValueError("no valid distinct pairs remained")
+        return distinct
+
+    return chat_json(
+        api_key,
+        model,
+        [
             {
                 "role": "user",
                 "content": prompt(target_name, target_code, rows),
             }
         ],
-    }
-
-    last_error: Exception | None = None
-    for attempt in range(1, attempts + 1):
-        try:
-            response = requests.post(
-                GEMINI_OPENAI_URL,
-                headers={"Authorization": f"Bearer {api_key}"},
-                json=payload,
-                timeout=600,
-            )
-            response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"]
-            cleaned = json.loads(content)["sentences"]
-            if not cleaned:
-                raise ValueError("model removed the entire lesson")
-            if len(cleaned) > len(rows) * 1.25:
-                raise ValueError(
-                    f"model expanded {len(rows)} input rows to {len(cleaned)} rows"
-                )
-
-            distinct = []
-            seen_targets = set()
-            for row in cleaned:
-                target = row["target_language"].strip()
-                native = row["native_language"].strip()
-                if not target or not native:
-                    continue
-                if target_code == "tha" and re.search(r"[A-Za-z\u3400-\u9fff]", target):
-                    continue
-                if target in seen_targets:
-                    continue
-                distinct.append(
-                    {"target_language": target, "native_language": native}
-                )
-                seen_targets.add(target)
-            if not distinct:
-                raise ValueError("no valid distinct pairs remained")
-            return distinct
-        except Exception as error:  # noqa: BLE001 - retry request/response failures
-            last_error = error
-            if attempt < attempts:
-                time.sleep(min(60, 5 * 2 ** (attempt - 1)))
-    raise RuntimeError(f"failed after {attempts} attempts: {last_error}") from last_error
+        sentence_pairs_schema("clean_pimsleur_lesson"),
+        parse=parse,
+        timeout=600,
+        attempts=attempts,
+    )
 
 
 def read_jsonl(path: Path) -> list[dict[str, str]]:

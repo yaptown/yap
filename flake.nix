@@ -33,7 +33,7 @@
             openssl.dev
             sqlite
             sqlite.dev
-            # audiopus_sys (via opus <- google-tts) links system Opus through
+            # audiopus_sys (via opus <- audio-codec) links system Opus through
             # pkg-config; without it the bundled CMake build mis-installs to
             # lib64/ and the linker can't find -lopus. cmake is a fallback.
             cmake

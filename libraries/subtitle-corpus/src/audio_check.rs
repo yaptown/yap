@@ -16,7 +16,7 @@ use std::path::Path;
 use std::process::Command;
 
 use anyhow::{bail, Context, Result};
-use base64::Engine;
+use google_speech::gemini::{GenerateContent, Output, Part};
 use serde::{Deserialize, Serialize};
 
 pub const MODEL: &str = "gemini-3.1-pro-preview";
@@ -126,25 +126,22 @@ fn prompt(expected: &str) -> String {
 
 /// Ask the model what it hears on the track.
 pub async fn judge(
-    http: &reqwest::Client,
-    key: &str,
+    client: &google_speech::gemini::GeminiClient,
     expected: &str,
     samples: &[Vec<u8>],
 ) -> Result<Verdict> {
-    let mut parts = vec![serde_json::json!({ "text": prompt(expected) })];
+    let mut parts = vec![Part::Text(prompt(expected))];
     for sample in samples {
-        parts.push(serde_json::json!({
-            "inlineData": {
-                "mimeType": "audio/ogg",
-                "data": base64::engine::general_purpose::STANDARD.encode(sample),
-            }
-        }));
+        parts.push(Part::InlineData {
+            mime_type: "audio/ogg".to_owned(),
+            data: sample.clone(),
+        });
     }
-    let body = serde_json::json!({
-        "contents": [{ "parts": parts }],
-        "generationConfig": {
-            "responseMimeType": "application/json",
-            "responseSchema": {
+    let request = GenerateContent {
+        model: MODEL.to_owned(),
+        parts,
+        output: Output::Json {
+            schema: serde_json::json!({
                 "type": "OBJECT",
                 "properties": {
                     "spoken_language": { "type": "STRING" },
@@ -155,72 +152,10 @@ pub async fn judge(
                     "notes": { "type": "STRING" },
                 },
                 "required": ["spoken_language", "expected_language_spoken", "enough_dialogue", "commentary", "confidence", "notes"],
-            },
+            }),
         },
-    });
-    let url =
-        format!("https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent");
-
-    let mut last = None;
-    for attempt in 0..4 {
-        if attempt > 0 {
-            tokio::time::sleep(std::time::Duration::from_secs(5 << attempt)).await;
-        }
-        let response = http
-            .post(&url)
-            .header("x-goog-api-key", key)
-            .json(&body)
-            .send()
-            .await;
-        let response = match response {
-            Ok(r) => r,
-            Err(e) => {
-                last = Some(anyhow::Error::from(e));
-                continue;
-            }
-        };
-        let status = response.status();
-        let text = response.text().await.unwrap_or_default();
-        // Overload and rate limits are worth a retry; anything else is ours.
-        if status.as_u16() == 429 || status.is_server_error() {
-            last = Some(anyhow::anyhow!(
-                "{status}: {}",
-                text.chars().take(200).collect::<String>()
-            ));
-            continue;
-        }
-        if !status.is_success() {
-            bail!("{status}: {}", text.chars().take(500).collect::<String>());
-        }
-        return parse(&text);
-    }
-    Err(last.unwrap_or_else(|| anyhow::anyhow!("no response")))
-}
-
-fn parse(text: &str) -> Result<Verdict> {
-    #[derive(Deserialize)]
-    struct Response {
-        candidates: Vec<Candidate>,
-    }
-    #[derive(Deserialize)]
-    struct Candidate {
-        content: Content,
-    }
-    #[derive(Deserialize)]
-    struct Content {
-        parts: Vec<Part>,
-    }
-    #[derive(Deserialize)]
-    struct Part {
-        text: String,
-    }
-    let response: Response = serde_json::from_str(text).context("unexpected response shape")?;
-    let answer = response
-        .candidates
-        .into_iter()
-        .next()
-        .and_then(|c| c.content.parts.into_iter().next())
-        .context("response has no candidate")?
-        .text;
-    serde_json::from_str(&answer).with_context(|| format!("verdict is not the schema: {answer}"))
+    };
+    let response = client.generate(&request).await?;
+    let answer = response.text().context("response has no candidate text")?;
+    serde_json::from_str(answer).with_context(|| format!("verdict is not the schema: {answer}"))
 }

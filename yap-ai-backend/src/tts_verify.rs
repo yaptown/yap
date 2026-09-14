@@ -1,6 +1,6 @@
 //! An ASR gate for synthesized speech.
 //!
-//! `google_tts::audio_defect` catches audio that is broken as a *signal* —
+//! `audio_codec::audio_defect` catches audio that is broken as a *signal* —
 //! silent, undecodable, truncated. It cannot catch audio that is a perfectly
 //! healthy recording of the wrong words, because it never sees the text. That
 //! gap is not theoretical: Gemini reproducibly read the French sentence
@@ -35,12 +35,7 @@
 //!    "no defect".
 
 use language_utils::{Language, TtsRequest};
-
-/// Cloudflare's Whisper. `large-v3-turbo` is the variant that exposes
-/// `initial_prompt`, and it reads proper nouns markedly better than OpenAI's
-/// hosted `whisper-1` — on our fixture it transcribed "Baxter" correctly with
-/// no conditioning at all, where `whisper-1` produced "backstairs".
-const WHISPER_MODEL: &str = "@cf/openai/whisper-large-v3-turbo";
+use whisper::{CloudflareWhisper, GroqWhisper, TranscribeRequest};
 
 /// Languages where a punctuation-stripped transcript match is a trustworthy
 /// pass/fail signal.
@@ -56,11 +51,11 @@ const WHISPER_MODEL: &str = "@cf/openai/whisper-large-v3-turbo";
 /// Returns the ISO code Whisper wants for the language.
 fn whisper_language(language: Language) -> Option<&'static str> {
     match language {
-        Language::French => Some("fr"),
-        Language::Spanish => Some("es"),
-        Language::German => Some("de"),
-        Language::Italian => Some("it"),
-        Language::Portuguese => Some("pt"),
+        Language::French
+        | Language::Spanish
+        | Language::German
+        | Language::Italian
+        | Language::Portuguese => Some(whisper::language_code(language)),
         // Not yet calibrated — see the note above. English and Russian are
         // plausible next additions; the CJK/Thai courses need a different
         // comparison entirely.
@@ -124,18 +119,6 @@ fn is_checkable(request: &TtsRequest) -> bool {
         && normalize(&request.text).split_whitespace().count() >= 2
 }
 
-/// The Cloudflare credentials the gate runs on, if both are present.
-fn cloudflare_credentials() -> Option<(String, String)> {
-    let account_id = std::env::var("CLOUDFLARE_ACCOUNT_ID").ok()?;
-    let api_token = std::env::var("CLOUDFLARE_API_TOKEN").ok()?;
-    Some((account_id, api_token))
-}
-
-/// The Groq credential, if present.
-fn groq_api_key() -> Option<String> {
-    std::env::var("GROQ_API_KEY").ok()
-}
-
 /// The transcription hosts that can actually run, by name — for the boot log.
 ///
 /// Failing open means an unconfigured gate is *silent* — every clip passes and
@@ -143,11 +126,12 @@ fn groq_api_key() -> Option<String> {
 /// that must not fail open is startup: a missing secret is a deploy mistake,
 /// and it should be a line in the boot log, not a mystery six weeks later.
 pub fn configured_transcribers() -> Vec<&'static str> {
+    let http = reqwest::Client::new();
     let mut hosts = Vec::new();
-    if cloudflare_credentials().is_some() {
+    if CloudflareWhisper::from_env(http.clone()).is_ok() {
         hosts.push("cloudflare");
     }
-    if groq_api_key().is_some() {
+    if GroqWhisper::from_env(http.clone()).is_ok() {
         hosts.push("groq");
     }
     hosts
@@ -187,57 +171,20 @@ async fn transcribe_cloudflare(
     audio: &[u8],
     language: &str,
 ) -> Option<String> {
-    use base64::Engine;
-
-    let (account_id, api_token) = cloudflare_credentials()?;
-
-    let mut body = serde_json::json!({
-        "audio": base64::engine::general_purpose::STANDARD.encode(audio),
-        "task": "transcribe",
-        "language": language,
-        // Single isolated utterances: there is no previous text worth
-        // conditioning on, and leaving it enabled invites hallucination loops.
-        "condition_on_previous_text": false,
-    });
-
-    if !request.verification_hints.is_empty() {
-        body["initial_prompt"] = serde_json::Value::String(request.verification_hints.join(", "));
-    }
-
-    let url = format!(
-        "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{WHISPER_MODEL}"
-    );
-
-    let response = http
-        .post(&url)
-        .header("Authorization", format!("Bearer {api_token}"))
-        .json(&body)
-        .send()
+    let client = CloudflareWhisper::from_env(http.clone()).ok()?;
+    client
+        .transcribe(&TranscribeRequest {
+            audio,
+            language,
+            vocabulary: &request.verification_hints,
+            // Isolated utterances have no previous text to condition on.
+            condition_on_previous_text: false,
+        })
         .await
+        .map(|transcript| transcript.text)
         .map_err(|e| eprintln!("TTS verify: Whisper request failed: {e}"))
-        .ok()?;
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let detail = response.text().await.unwrap_or_default();
-        eprintln!("TTS verify: Whisper returned {status}: {detail}");
-        return None;
-    }
-
-    let payload: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| eprintln!("TTS verify: Whisper response was not JSON: {e}"))
-        .ok()?;
-
-    payload
-        .pointer("/result/text")
-        .and_then(|v| v.as_str())
-        .map(str::to_owned)
+        .ok()
 }
-
-/// Groq's hosting of the same model, behind an OpenAI-compatible endpoint.
-const GROQ_WHISPER_MODEL: &str = "whisper-large-v3-turbo";
 
 /// One transcription attempt against Groq.
 async fn transcribe_groq(
@@ -246,63 +193,23 @@ async fn transcribe_groq(
     audio: &[u8],
     language: &str,
 ) -> Option<String> {
-    let api_key = groq_api_key()?;
-
-    // Groq sniffs the container from the part's filename extension, so it has
-    // to match the bytes: Google returns Ogg Opus, Gemini WAV, the rest MP3.
-    let filename = if audio.starts_with(b"RIFF") {
-        "audio.wav"
-    } else if audio.starts_with(b"OggS") {
-        "audio.ogg"
-    } else {
-        "audio.mp3"
-    };
-
-    let mut form = reqwest::multipart::Form::new()
-        .part(
-            "file",
-            reqwest::multipart::Part::bytes(audio.to_vec()).file_name(filename),
-        )
-        .text("model", GROQ_WHISPER_MODEL)
-        .text("language", language.to_owned())
-        .text("response_format", "json");
-
-    // Groq's `prompt` conditions like Cloudflare's `initial_prompt`:
-    // vocabulary, not a transcript to parrot.
-    if !request.verification_hints.is_empty() {
-        form = form.text("prompt", request.verification_hints.join(", "));
-    }
-
-    let response = http
-        .post("https://api.groq.com/openai/v1/audio/transcriptions")
-        .header("Authorization", format!("Bearer {api_key}"))
-        .multipart(form)
-        .send()
+    let client = GroqWhisper::from_env(http.clone()).ok()?;
+    client
+        .transcribe(&TranscribeRequest {
+            audio,
+            language,
+            vocabulary: &request.verification_hints,
+            // Isolated utterances have no previous text to condition on.
+            condition_on_previous_text: false,
+        })
         .await
+        .map(|transcript| transcript.text)
         .map_err(|e| eprintln!("TTS verify: Groq request failed: {e}"))
-        .ok()?;
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let detail = response.text().await.unwrap_or_default();
-        eprintln!("TTS verify: Groq returned {status}: {detail}");
-        return None;
-    }
-
-    let payload: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| eprintln!("TTS verify: Groq response was not JSON: {e}"))
-        .ok()?;
-
-    payload
-        .get("text")
-        .and_then(|v| v.as_str())
-        .map(str::to_owned)
+        .ok()
 }
 
 /// `Some(reason)` when the audio demonstrably says something other than
-/// `request.text`, mirroring `google_tts::audio_defect`'s shape so both
+/// `request.text`, mirroring `audio_codec::audio_defect`'s shape so both
 /// checks read the same at the call site.
 ///
 /// This detects gross substitutions — a swapped word, a dropped clause — not

@@ -17,8 +17,10 @@ use std::sync::Mutex;
 
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
+use language_utils::Language;
 use library::{plan_path, read_plan, truncate, Movie, Source};
 use serde::{Deserialize, Serialize};
+use whisper::CloudflareWhisper;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -1687,8 +1689,7 @@ struct Listened {
 }
 
 async fn audio_check_one(
-    http: &reqwest::Client,
-    key: &str,
+    client: &google_speech::gemini::GeminiClient,
     movie: &Movie,
     dir: &std::path::Path,
 ) -> Result<Listened> {
@@ -1704,7 +1705,7 @@ async fn audio_check_one(
                 tokio::task::spawn_blocking(move || audio_check::samples(&audio, duration, points))
                     .await??
             };
-            let heard = audio_check::judge(http, key, expected, &samples).await?;
+            let heard = audio_check::judge(client, expected, &samples).await?;
             let quiet = !heard.enough_dialogue;
             verdict = Some(heard);
             if !quiet {
@@ -1773,7 +1774,8 @@ async fn audio_check(out: PathBuf, jobs: usize, limit: usize, imdb: Option<Strin
     use futures::stream::StreamExt;
     use std::sync::Arc;
 
-    let key = Arc::new(std::env::var("GEMINI_API_KEY").context("GEMINI_API_KEY not set")?);
+    let key = std::env::var("GEMINI_API_KEY").context("GEMINI_API_KEY not set")?;
+    let client = Arc::new(google_speech::gemini::GeminiClient::new(key));
     let plan = read_plan(&out)?;
     let mut queue: Vec<Movie> = plan
         .into_iter()
@@ -1795,15 +1797,14 @@ async fn audio_check(out: PathBuf, jobs: usize, limit: usize, imdb: Option<Strin
         return Ok(());
     }
 
-    let http = Arc::new(reqwest::Client::new());
     let out = Arc::new(out);
     let progress = AtomicUsize::new(0);
     let outcomes: Vec<Result<Listened>> = futures::stream::iter(queue)
         .map(|movie| {
-            let (http, key, out) = (Arc::clone(&http), Arc::clone(&key), Arc::clone(&out));
+            let (client, out) = (Arc::clone(&client), Arc::clone(&out));
             let progress = &progress;
             async move {
-                let outcome = audio_check_one(&http, &key, &movie, &out.join(&movie.imdb_id)).await;
+                let outcome = audio_check_one(&client, &movie, &out.join(&movie.imdb_id)).await;
                 let n = progress.fetch_add(1, Ordering::Relaxed) + 1;
                 let title = truncate(&movie.title, 34);
                 match &outcome {
@@ -2365,7 +2366,7 @@ async fn sync_all(
     use std::sync::Arc;
 
     // Fail here rather than one window at a time — see `check_all`.
-    let account = Arc::new(sync::WhisperAccount::from_env()?);
+    let client = Arc::new(CloudflareWhisper::from_env(reqwest::Client::new())?);
 
     let plan = read_plan(&out)?;
     let mut queue: Vec<(Movie, PathBuf)> = Vec::new();
@@ -2394,18 +2395,16 @@ async fn sync_all(
         parked_note(parked)
     );
 
-    let http = Arc::new(reqwest::Client::new());
     let out = Arc::new(out);
     let progress = AtomicUsize::new(0);
 
     let results: Vec<bool> = futures::stream::iter(queue.into_iter())
         .map(|(movie, raw)| {
-            let http = Arc::clone(&http);
-            let account = Arc::clone(&account);
+            let client = Arc::clone(&client);
             let out = Arc::clone(&out);
             let progress = &progress;
             async move {
-                let outcome = sync_one(&http, &account, &movie, &raw, &out, opts).await;
+                let outcome = sync_one(&client, &movie, &raw, &out, opts).await;
                 let n = progress.fetch_add(1, Ordering::Relaxed) + 1;
                 match &outcome {
                     Ok(a) => println!(
@@ -2437,8 +2436,7 @@ async fn sync_all(
 
 /// Align one film: transcribe a few windows, match lines, fit, write.
 async fn sync_one(
-    http: &reqwest::Client,
-    account: &sync::WhisperAccount,
+    client: &CloudflareWhisper,
     movie: &Movie,
     raw_srt: &std::path::Path,
     out: &std::path::Path,
@@ -2451,7 +2449,8 @@ async fn sync_one(
     let (media, stream) = audio_source(movie, &out.join(&movie.imdb_id))?;
     let duration = sync::duration_ms(&movie.path)?;
     let language = library::course_dir(&movie.original_language)
-        .and_then(whisper_language)
+        .and_then(Language::from_code)
+        .map(whisper::language_code)
         .unwrap_or("en");
 
     // Spread the windows across the body of the film. Openings are logos and
@@ -2459,16 +2458,7 @@ async fn sync_one(
     // anchors clustered at one end cannot reveal a rate.
     let mut heard = Vec::new();
     for at in sync::choose_windows(&cues, duration, opts.windows, opts.window_secs) {
-        match sync::transcribe_window(
-            http,
-            account,
-            &media,
-            stream,
-            at,
-            opts.window_secs,
-            language,
-        )
-        .await
+        match sync::transcribe_window(client, &media, stream, at, opts.window_secs, language).await
         {
             Ok(words) => heard.extend(words),
             // One refused window is survivable; the fit needs several anyway.
@@ -2701,7 +2691,7 @@ async fn check_all(
     // Before any film is touched: a run without credentials would fail every
     // window of every film and record each one `undecided`, which reads as
     // "unverifiable" forever after.
-    let account = Arc::new(sync::WhisperAccount::from_env()?);
+    let client = Arc::new(CloudflareWhisper::from_env(reqwest::Client::new())?);
 
     let log_path = out.join("whisper-check.jsonl");
     let existing = read_check_log(&log_path);
@@ -2730,19 +2720,17 @@ async fn check_all(
             .append(true)
             .open(&log_path)?,
     )));
-    let http = Arc::new(reqwest::Client::new());
     let out = Arc::new(out);
     let progress = AtomicUsize::new(0);
 
     let fresh: Vec<CheckRow> = futures::stream::iter(queue.into_iter())
         .map(|movie| {
-            let http = Arc::clone(&http);
-            let account = Arc::clone(&account);
+            let client = Arc::clone(&client);
             let out = Arc::clone(&out);
             let log = Arc::clone(&log);
             let progress = &progress;
             async move {
-                let outcome = check_one(&http, &account, &movie, &out, windows, window_secs).await;
+                let outcome = check_one(&client, &movie, &out, windows, window_secs).await;
                 let n = progress.fetch_add(1, Ordering::Relaxed) + 1;
                 let row = CheckRow {
                     imdb_id: movie.imdb_id.clone(),
@@ -2803,8 +2791,7 @@ async fn check_all(
 
 /// Fit Whisper anchors against a film's *already aligned* subtitle.
 async fn check_one(
-    http: &reqwest::Client,
-    account: &sync::WhisperAccount,
+    client: &CloudflareWhisper,
     movie: &Movie,
     out: &std::path::Path,
     windows: usize,
@@ -2827,21 +2814,13 @@ async fn check_one(
     )?;
     let duration = sync::duration_ms(&movie.path)?;
     let language = library::course_dir(&movie.original_language)
-        .and_then(whisper_language)
+        .and_then(Language::from_code)
+        .map(whisper::language_code)
         .unwrap_or("en");
 
     let mut heard = Vec::new();
     for at in sync::choose_windows(&cues, duration, windows, window_secs) {
-        match sync::transcribe_window(
-            http,
-            account,
-            &movie.path,
-            stream,
-            at,
-            window_secs,
-            language,
-        )
-        .await
+        match sync::transcribe_window(client, &movie.path, stream, at, window_secs, language).await
         {
             Ok(words) => heard.extend(words),
             Err(e) => eprintln!("      window at {}s failed: {e}", at / 1000),
@@ -2865,25 +2844,6 @@ async fn check_one(
     Ok(alignment)
 }
 
-/// Whisper's language hint for one of our language packs.
-fn whisper_language(course: &str) -> Option<&'static str> {
-    Some(match course {
-        "eng" => "en",
-        "fra" => "fr",
-        "deu" => "de",
-        "spa" => "es",
-        "ita" => "it",
-        "por" => "pt",
-        "rus" => "ru",
-        "jpn" => "ja",
-        "kor" => "ko",
-        "tha" => "th",
-        "hin" => "hi",
-        "zho-hans" => "zh",
-        _ => return None,
-    })
-}
-
 /// Transcribe one film in full and write it beside the subtitle.
 /// Does this film need transcribing — because it has none, or because the one
 /// it has was made under settings we no longer use?
@@ -2901,7 +2861,8 @@ fn transcript_is_stale(movie: &Movie, dir: &std::path::Path) -> bool {
     };
     let audio = read_audio_stamp(dir).map(|s| s.stream);
     match library::course_dir(&movie.original_language)
-        .and_then(whisper_language)
+        .and_then(Language::from_code)
+        .map(whisper::language_code)
         .map(|language| transcript::provenance(language, audio))
     {
         Some(Ok(current)) => stored.is_stale_against(&current),
@@ -2920,7 +2881,8 @@ async fn transcribe_one(
 ) -> Result<usize> {
     let dir = out.join(&movie.imdb_id);
     let language = library::course_dir(&movie.original_language)
-        .and_then(whisper_language)
+        .and_then(Language::from_code)
+        .map(whisper::language_code)
         .context("no Whisper language for this film's original language")?;
     let audio = extracted_audio(movie, &dir).context("no extracted audio")?;
 

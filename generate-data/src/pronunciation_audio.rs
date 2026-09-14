@@ -19,7 +19,7 @@ use std::path::Path;
 
 /// The Gemini voice that reads the cues. Achernar was the clearest of the
 /// prebuilt voices across every course language in listening tests.
-const GEMINI_VOICE: &str = google_tts::gemini::DEFAULT_VOICE;
+const GEMINI_VOICE: &str = google_speech::gemini::DEFAULT_VOICE;
 
 pub async fn generate_pronunciation_audio(
     pronunciation_data: &mut PronunciationData,

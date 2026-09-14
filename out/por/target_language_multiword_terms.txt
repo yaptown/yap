@@ -60,6 +60,7 @@ Agualva-Cacém
 Agudos do Sul
 Aguiar da Beira
 Ah Puch
+Ah, bem
 Ahura Masda
 Ahura Mazda
 Ahura-Masda
@@ -204,6 +205,7 @@ Associação de Nações do Sudeste Asiático
 Astolfo Dutra
 Atalaia do Norte
 Atos dos Apóstolos
+Até onde sei
 Augusto Pestana
 Augusto de Lima
 Aurelino Leal
@@ -282,6 +284,8 @@ Belo Horizonte
 Belo Oriente
 Belo Vale
 Belém do São Francisco
+Bem que eu
+Bem, bem
 Benedito Novo
 Bengala Ocidental
 Benjamin Constant
@@ -552,6 +556,7 @@ Cocal do Sul
 Colinas de Golã
 Colosso de Rodes
 Colúmbia Britânica
+Com a exceção de
 Comendador Gomes
 Comendador Levy Gasparian
 Comissão Europeia
@@ -800,6 +805,7 @@ Entre Rios
 Entre Rios de Minas
 Entre Rios do Sul
 Entre-Ijuís
+Então tá
 Era Comum
 Erval Grande
 Erval Seco
@@ -845,6 +851,7 @@ Estrela do Norte
 Estrela do Sul
 Estremadura Leonesa
 Estremadura Portuguesa
+Está combinado
 Estátua da Liberdade
 Estância Velha
 Euclides da Cunha
@@ -887,6 +894,7 @@ Ferreira Gomes
 Ferreira de Aves
 Ferreira do Alentejo
 Ferreira do Zêzere
+Fica frio
 Ficha Limpa
 Figueira da Foz
 Figueira de Castelo Rodrigo
@@ -904,6 +912,7 @@ Floriano Peixoto
 Flórida Paulista
 Fonte Boa
 Fontoura Xavier
+Fora isso
 Formosa do Rio Preto
 Formosa do Sul
 Forno Alegre
@@ -1441,12 +1450,14 @@ Mónaco-Ville
 Mônaco-Ville
 NP-completo
 Nacip Raydan
+Nada como
 Nagorno-Carabaque
 Nagorno-Karabakh
 Natividade da Serra
 Navio Argo
 Nazaré Paulista
 Nações Unidas
+Negócio fechado
 Neves Paulista
 New Brunswick
 Nicolau Vergueiro
@@ -1559,6 +1570,7 @@ Novo Testamento
 Novo Tiradentes
 Novo Triunfo
 Novo Xingu
+Não me entenda mal
 Não-Me-Toque
 Níjni Novgorod
 Níjni-Novgorod
@@ -1728,6 +1740,8 @@ Plano Real
 Plácido de Castro
 Pnom Pen
 Pnom-Pen
+Pois bem
+Pois então
 Polinésia Francesa
 Polo Norte
 Polo Sul
@@ -1747,6 +1761,7 @@ Pontes Gestal
 Ponto Chique
 Ponto Novo
 Ponto dos Volantes
+Por certo
 Port Louis
 Port Moresby
 Portela de Sintra
@@ -1826,6 +1841,7 @@ Póvoa de Lanhoso
 Póvoa de Varzim
 Quartel Geral
 Quatro Irmãos
+Que prazer
 Questão Arménia
 Questão Armênia
 Quinta-Feira Santa
@@ -2274,6 +2290,7 @@ Sebastianópolis do Sul
 Sebastião Laranjeiras
 Sede Nova
 Segunda Guerra Mundial
+Seja você mesmo
 Sem-Peixe
 Semana Santa
 Semana de 22
@@ -2543,6 +2560,7 @@ Taboão da Serra
 Taipa Grande
 Taipa Pequena
 Taj Mahal
+Tal como
 Tamil Nadu
 Tanque Novo
 Taquaraçu de Minas
@@ -2635,6 +2653,7 @@ Três Rios
 Três de Maio
 Trópico de Capricórnio
 Trópico de Câncer
+Tudo beleza
 Tupanci do Sul
 Tupi Paulista
 URL amigável
@@ -2807,6 +2826,7 @@ a emenda sair pior que o soneto
 a esmo
 a esperança é a última a morrer
 a esperança é a última que morre
+a este respeito
 a favor
 a favor de
 a ferro e fogo
@@ -2891,6 +2911,7 @@ a seguir
 a seu bel-prazer
 a sorte favorece os audazes
 a sério
+a tal
 a tempo e horas
 a tiracollo
 a tiracolo
@@ -2970,6 +2991,8 @@ acabar com o sofrimento
 acabar de
 acabar em pizza
 acabar por
+acabar sendo
+acabou sendo
 acampamento de verão
 acanto espinhoso
 acará-bandeira
@@ -2984,6 +3007,7 @@ acento diacrítico
 acento grave
 acento musical
 acento tonal
+acertar as contas
 acertar em cheio
 acessulfame K
 acessulfame-K
@@ -3078,6 +3102,7 @@ ai, meu canário
 aie-aie
 ainda assim
 ainda bem
+ainda bem que
 ainda mais
 ainda por cima
 ainda que
@@ -3477,6 +3502,7 @@ ao avesso
 ao cabo de
 ao calhas
 ao cargo de
+ao certo
 ao chou
 ao contrário
 ao contrário de
@@ -3713,6 +3739,7 @@ atração de van der Waals
 atrás das grades
 atrás de
 até a segunda ordem
+até agora
 até breve
 até debaixo d'água
 até logo
@@ -4178,7 +4205,10 @@ bolsa de estudos
 bolsa de valores
 bolsa-estupro
 bom apetite
+bom aspecto
+bom coração
 bom dia
+bom ponto
 bom proveito
 bom samaritano
 bom senso
@@ -5079,6 +5109,7 @@ com as mãos abanando
 com base em
 com certeza
 com efeito
+com exceção
 com licença
 com maior razão
 com medo de que
@@ -5140,6 +5171,7 @@ como quiseres
 como se
 como se diz
 como se não houvesse amanhã
+como tal
 como tas
 como te chamas
 como um elefante em uma loja de cristais
@@ -5316,8 +5348,10 @@ corrente contínua
 corrente sanguínea
 correr atrás
 correr o risco de
+correr tudo bem
 corretor líquido
 corretor ortográfico
+correu tudo bem
 correção política
 corrida armamentista
 corrida armamentícia
@@ -5613,6 +5647,7 @@ dar bronca
 dar cabo
 dar carta branca
 dar cartas
+dar certo
 dar com a língua nos dentes
 dar com os burros n'água
 dar conta
@@ -5828,6 +5863,7 @@ de nenhuma maneira
 de noite
 de novo
 de olho
+de onda
 de onde a onde
 de onde em onde
 de ouro
@@ -5936,6 +5972,7 @@ deixar para lá
 deixar passar
 deixar quieto
 deixar rabo
+deixar uma mensagem
 deixar-se enganar
 deixar-se ir
 delação premiada
@@ -6145,6 +6182,8 @@ do costume
 do dia para a noite
 do dia pra noite
 do fundo do coração
+do jeito de alguém
+do jeito dele
 do lado bom
 do mundo
 do nada
@@ -6153,6 +6192,7 @@ do qual
 do que
 do que alguém é feito
 do quê
+do seu jeito
 do todes
 do zero
 doador de órgãos
@@ -6282,6 +6322,7 @@ e olhe lá
 e por aí fora
 e por aí vai
 e se
+e sim
 e tal
 e tals
 e talz
@@ -6395,6 +6436,7 @@ em especial
 em espécie
 em essência
 em face de
+em falta
 em favor de
 em flagrante
 em frente a
@@ -6551,6 +6593,7 @@ ensino primário
 ensino secundário
 ensino superior
 entendedores entenderão
+entender mal
 entender-se
 entender-se em
 entornar o caldo
@@ -6715,6 +6758,7 @@ esquilo vermelho
 esquilo voador
 essa Coca é Fanta
 essa é velha
+esse tal
 esses dias
 estaca zero
 estado absoluto
@@ -6744,6 +6788,7 @@ estar com bicho-carpinteiro
 estar com os pés na cova
 estar com os pés para a cova
 estar com tudo
+estar combinado
 estar de chico
 estar em condições de
 estar em jogo
@@ -6974,6 +7019,7 @@ fazer o possível e o impossível
 fazer o quê
 fazer ouvidos moucos
 fazer oó
+fazer papel de
 fazer parte
 fazer parte de
 fazer pender a balança
@@ -7100,6 +7146,7 @@ ficar de fora
 ficar de olho em
 ficar enfiado
 ficar esperto
+ficar frio
 ficar no aguardo
 ficar para trás
 ficar por
@@ -7154,6 +7201,7 @@ fio condutor
 fio da meada
 fio dental
 fios de ovos
+fique fria
 first-person shooter
 fiscal do Sarney
 fissão nuclear
@@ -7208,6 +7256,7 @@ fogo no rabo
 fogo-corredor
 fogo-de-santelmo
 fogo-fátuo
+foi aí que
 foi mal
 foice e martelo
 foie gras
@@ -7304,6 +7353,7 @@ fuga de informação
 fugir como o diabo foge da cruz
 full house
 fumar um
+fumaça sem fogo
 fumo passivo
 funcionária fantasma
 funcionária-fantasma
@@ -7549,6 +7599,7 @@ gralha-preta
 grampo de roupa
 granada de mão
 grande coisa
+grande coração
 grande felino
 grande osso
 grande penalidade
@@ -7669,6 +7720,7 @@ harmônica de vidro
 harpa de boca
 hat-trick
 haver
+haver com
 haver de
 heavy metal
 hemisfério norte
@@ -7925,6 +7977,7 @@ jalapa-verdadeira
 jam session
 jambo-rosa
 janela cega
+jantar fora
 jardim botânico
 jardim de infância
 jardim murado
@@ -7947,6 +8000,7 @@ jogar bola
 jogar conversa fora
 jogar fora
 jogar fora o bebê com a água do banho
+jogar isto fora
 jogar luz
 jogar merda no ventilador
 jogar na cara
@@ -8132,6 +8186,7 @@ lesão corporal
 lesão em chicote
 lesão por esforço repetitivo
 leucemia linfoblástica aguda
+leva jeito
 levantador de peso
 levantador de pesos
 levantamento de peso
@@ -8146,6 +8201,7 @@ levar a melhor
 levar a pior
 levar em consideração
 levar em conta
+levar jeito
 levar no cagueiro
 levar no cu
 levar tempo
@@ -8172,6 +8228,7 @@ licença poética
 licença-maternidade
 licença-paternidade
 ligado no 220
+ligar de volta
 ligar o foda-se
 ligação azul
 ligação vermelha
@@ -8620,6 +8677,7 @@ maçã do amor
 maçã do rosto
 maçã podre
 maçã-de-Adão
+me dar mal
 me erra
 mecânica analítica
 mecânica quântica
@@ -8752,6 +8810,7 @@ metro cúbico
 metro quadrado
 meu Deus
 meu irmão
+meu melhor
 meu ouvido não é penico
 meu ovo
 meu povo e minha pova
@@ -8779,6 +8838,7 @@ mina de ouro
 mina terrestre
 minha nossa
 minha nossa senhora
+minha volta
 mini system
 mini-saia
 ministro do exterior
@@ -8853,6 +8913,8 @@ moradia em banda
 morango silvestre
 morcego-vampiro
 morde e assopra
+morder a isca
+mordeu a isca
 morrer de fome
 morrer de inveja
 morrer de rir
@@ -8894,6 +8956,7 @@ muay thai
 muda de roupa
 mudam-se os tempos, mudam-se os costumes
 mudança climática
+mudar de canal
 mudar de ideia
 mudar de pato para ganso
 mudar de pato pra ganso
@@ -9008,6 +9071,7 @@ na frente de
 na guerra e no amor vale tudo
 na hora
 na lata
+na madeira
 na maior parte
 na manga
 na marra
@@ -9039,6 +9103,7 @@ nacional-socialista
 nada
 nada a ver
 nada além de
+nada demais
 nada haver
 nada mais que
 nada mau
@@ -9208,6 +9273,7 @@ nos bastidores
 nos mesmos moldes
 nos últimos tempos
 nossa senhora
+nosso melhor
 nota azul
 nota de ornamento
 nota de rodapé
@@ -9326,6 +9392,7 @@ não sei o quê
 não sei quê
 não sei, não quero saber e tenho raiva de quem sabe
 não senão
+não ser exagero dizer
 não ser grande espingarda
 não só
 não só mas também
@@ -9342,6 +9409,7 @@ não ver a hora
 não é
 não é assim que a banda toca
 não é da sua conta
+não é exagero dizer
 não é flor que se cheire
 não é não
 não és transparente
@@ -9414,6 +9482,7 @@ o hábito não faz o monge
 o importante é
 o inferno está cheio de boas intenções
 o jogo só acaba quando termina
+o melhor de alguém
 o mesmo
 o mestre mandou
 o mundo dá voltas
@@ -9457,6 +9526,7 @@ o sangue é mais grosso que a água
 o senhor
 o silêncio é ouro
 o sujo falando do mal lavado
+o tal
 o tempo cura tudo
 o tempo dirá
 o tempo e a maré não esperam por ninguém
@@ -10375,6 +10445,7 @@ por via das dúvidas
 por via de
 por via de regra
 por via popular
+por volta
 por volta de
 porca-sara
 porcaria nenhuma
@@ -10820,6 +10891,7 @@ pôr em marcha
 pôr em prática
 pôr em questão
 pôr fim a
+pôr fogo
 pôr lenha na fogueira
 pôr o pé
 pôr os pontos nos ii
@@ -10827,10 +10899,12 @@ pôr os pontos nos is
 pôr os pés em polvorosa
 pôr-do-sol
 pôr-se a
+pôs fogo
 público-alvo
 qi-gong
 quadro de giz
 quadro-negro
+qual um
 qual é
 qual é o teu nome
 qualidade de vida
@@ -10855,12 +10929,14 @@ quando se amarrava cachorro com linguiça
 quando um burro fala, o outro abaixa a orelha
 quando um não quer, dois não brigam
 quanto a
+quanto ao
 quanto baste
 quanto custa
 quanto maior a altura, maior a queda
 quanto mais
 quanto mais as coisas mudam, mais elas ficam iguais
 quanto mais, melhor
+quanto à
 quarenta e cinco
 quarenta e dois
 quarenta e nove
@@ -10894,6 +10970,7 @@ quatro olhos
 quatro-momento
 que a paz esteja com ele
 que bicho te mordeu?
+que chato
 que coisa
 que diabos
 que eu ganho mais
@@ -11006,6 +11083,7 @@ querer ser mico de circo
 querer sol na eira e chuva no nabal
 quero ver
 quero-quero
+questão de tempo
 quilowatt-hora
 quilómetro quadrado
 quilômetro quadrado
@@ -11295,6 +11373,7 @@ sair fora
 sair ganhando
 sair o tiro pela culatra
 sair pela culatra
+sair-se bem
 sal comum
 sal da terra
 sal de cozinha
@@ -11378,6 +11457,7 @@ se bobear
 se calhar
 se correr o bicho pega, se ficar o bicho come
 se cuida
+se dar mal
 se e somente se
 se eu fosse você
 se faz favor
@@ -11387,6 +11467,9 @@ se não me engano
 se não pode vencê-los, junte-se a eles
 se pá
 se queres que te diga
+se sair bem
+se sairá bem
+se saiu bem
 se você não pode vencê-los, junte-se a eles
 se é que me entendes
 se é que você me entende
@@ -11439,10 +11522,12 @@ self-service
 selo de segurança
 sem choro, nem vela
 sem comentários
+sem demora
 sem dor, sem ganho
 sem dúvida
 sem eira nem beira
 sem embargo de
+sem exceção
 sem falar de
 sem futuro
 sem graça
@@ -11511,6 +11596,7 @@ ser mais fácil a cobra fumar do que
 ser mais fácil a cobra fumar que
 ser mais fácil uma cobra fumar do que
 ser o de menos
+ser si mesmo
 ser um livro aberto
 ser unha com carne
 ser vivo
@@ -11565,6 +11651,7 @@ setenta e sete
 setenta e três
 setenta e um
 setter irlandês
+seu melhor
 sex appeal
 sex shop
 sex symbol
@@ -11828,6 +11915,8 @@ tacada de aproximação
 taco de golfe
 taco de hóquei
 tae kwon do
+tal de
+tal e qual
 tal e tal
 tal pai, tal filho
 talha dourada
@@ -11922,6 +12011,7 @@ telhado de vidro
 tem avonde
 tem caroço nesse angu
 tem coisa aí
+tem graça
 tem louco pra tudo
 tem-tem
 tema de casa
@@ -11940,6 +12030,7 @@ tenente de fragata
 tenente de navio
 tenente-coronel
 tenente-general
+tenho a ver com
 tenho uma pergunta
 tensão superficial
 tentar
@@ -11981,6 +12072,7 @@ ter em conta
 ter em mente
 ter em vista
 ter fogo no rabo
+ter graça
 ter início
 ter mais olhos que barriga
 ter o olho maior do que a barriga
@@ -12034,6 +12126,7 @@ testemunha de Jeová
 testemunha ocular
 teta de nega
 tetraz-grande-das-serras
+teve graça
 texto puro
 texugo-americano
 texugo-do-mel
@@ -12057,6 +12150,7 @@ tiki-taka
 tim tim
 tim-tim
 time-lapse
+tinha a ver com
 tio Paulo
 tio do pavê
 tio materno
@@ -12141,6 +12235,8 @@ tomar conta
 tomar conta de
 tomar cuidado
 tomar em consideração
+tomar medidas
+tomar muito cuidado
 tomar no cu
 tomar parte
 tomar parte em
@@ -12371,6 +12467,7 @@ um dia
 um dia da caça, outro do caçador
 um dia não são dias
 um e noventa e nove
+um fora
 um grande número de
 um homem prevenido vale por dois
 um mais que o outro
@@ -12484,6 +12581,7 @@ vai entender
 vai levar no cu
 vai que
 vai saber
+vai se dar mal
 vai se foder
 vai se lascar
 vai te foder
@@ -12734,7 +12832,9 @@ vitória-régia
 viu só
 vivendo e aprendendo
 viver da terra
+viver de
 viver e deixar viver
+vivo de
 vizo rei
 vizo rey
 vizo-rey
@@ -12894,6 +12994,7 @@ zé-prequeté
 à medida que
 à mercê
 à mercê de
+à minha volta
 à moda antiga
 à mostra
 à mão
@@ -13148,6 +13249,7 @@ zé-prequeté
 é dando que se recebe
 é de cair o cu da bunda
 é de menino que se torce o pepino
+é ele mesmo
 é evidente que
 é isso aí
 é mais fácil dizer do que fazer

@@ -557,15 +557,14 @@ impl Weapon {
         stream_id: String,
         event: String,
     ) -> Result<(), bridgerton::Error> {
-        let event: serde_json::Value = serde_json::from_str(&event)?;
-        let versioned_event: Timestamped<EventType<VersionedDeckEvent>> =
-            serde_json::from_value(event)?;
-
-        // Add the versioned event directly - it will be stored on disk.
-        // Events that can't convert to current form will be skipped during state computation.
+        // Realtime rows arrive from any stream (reviews, deck_selection, ...), so hand the raw
+        // JSON to the store and let the stream's own event type decode it — exactly what the
+        // sync download path does. Typing the payload here would silently assume one stream's
+        // schema for every stream.
+        let event: Timestamped<serde_json::Value> = serde_json::from_str(&event)?;
         self.store
             .borrow_mut()
-            .add_device_event(stream_id, device_id, versioned_event, None);
+            .add_device_events_jsons(stream_id, device_id, vec![event], None);
         self.flush_notifications();
         Ok(())
     }
@@ -5893,6 +5892,35 @@ mod tests {
 
             assert_limits(&deck);
         }
+    }
+
+    /// A realtime row from another device's `deck_selection` stream must be accepted as-is.
+    /// `add_remote_event` used to decode every stream's payload as a *deck* event, which
+    /// rejected this exact production payload with "missing field `type`".
+    #[test]
+    fn remote_deck_selection_event_is_ingested_as_raw_json() {
+        use weapon::data_model::{EventType, LocalEventStore as EventStore, Timestamped};
+
+        let payload = r#"{"event":{"User":{"version":"V2","SetHeardAbout":{"heard_about":"Other"}}},"timezone":7200,"timestamp":"2026-09-14T08:43:50.188Z","within_device_events_index":0}"#;
+
+        // The old typed decode does not fit this stream's schema.
+        assert!(
+            serde_json::from_str::<Timestamped<EventType<VersionedDeckEvent>>>(payload).is_err()
+        );
+
+        let mut store: EventStore<String, String> = EventStore::default();
+        store.get_or_insert_default::<EventType<DeckSelectionEvent>>(
+            "deck_selection".to_string(),
+            None,
+        );
+        let event: Timestamped<serde_json::Value> = serde_json::from_str(payload).unwrap();
+        let added = store.add_device_events_jsons(
+            "deck_selection".to_string(),
+            "other-device".to_string(),
+            vec![event],
+            None,
+        );
+        assert_eq!(added, 1);
     }
 
     /// E2E integration test: loads real weapon event data from disk,

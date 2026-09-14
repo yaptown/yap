@@ -2003,6 +2003,7 @@ Alligator Auschwitz
 Allison effect
 Allithwaite and Cartmel
 Allman style
+Allow me
 Alluri Sitharama Raju
 Ally Pally
 Alma Park
@@ -5618,6 +5619,7 @@ Bissell truck
 Bistra Mărului
 Bistrița River
 Bistrița-Năsăud
+Bit of a
 Bit-os
 Bitan-agan
 Bitan-o/Dalipay
@@ -9342,6 +9344,7 @@ Chediak-Higashi anomaly
 Cheerio effect
 Cheerios effect
 Cheero Point
+Cheers to
 Cheese Week
 Cheetham Hill
 Chef Mic
@@ -21185,6 +21188,7 @@ Houston, we have a problem
 Hout Bay
 Hovells Creek
 Hovmöller diagram
+How soon
 Howard County
 Howard's battlers
 Howards Grass
@@ -27013,6 +27017,7 @@ Lissajous projection
 List 99
 List A
 List X
+Listen to
 Lister's river snail
 Listing number
 Liszt fever
@@ -33936,6 +33941,7 @@ Odyssean Wicca
 Odyssean Wiccan
 Oedipus complex
 Oesterlé-Masser conjecture
+Off you go
 Offa's Dyke
 Officer Friendly
 Officer South
@@ -33956,6 +33962,9 @@ Ogmore Valley
 Oh Em Gee
 Oh My God Particle
 Oh My God particle
+Oh right
+Oh shit
+Oh, right
 Oh-My-God Particle
 Oh-My-God particle
 Ohara's fever
@@ -36760,6 +36769,7 @@ Poor Clare
 Poor John
 Poor Lady
 Poor Tom
+Poor little
 Pooty-Poot
 Poowong East
 Poowong North
@@ -37895,6 +37905,7 @@ Quirino District
 Quirino Hill
 Quirino Magsaysay
 Quistclose trust
+Quite frankly
 Quitman County
 Quitter's Day
 Quixote yucca
@@ -45961,6 +45972,7 @@ Thang Ta
 Thang-Ta
 Thanh Hoá
 Thanh Quang
+Thanks anyway
 Thanksgiving Day
 Thanksgiving Thursday
 Thanksgiving break
@@ -50493,6 +50505,7 @@ Worcester County
 Worcester Park
 Worcester sauce
 Worcestershire sauce
+Word came down
 Word of Allah
 Word of God
 Word of Wisdom
@@ -51097,6 +51110,7 @@ Your Royal Majesty
 Your Serene Highness
 Your Worship
 Your Worshipfulness
+Your turn
 Youth Day
 Yowah nut
 Yowie Bay
@@ -51656,8 +51670,10 @@ a watched pot never boils
 a watched pot never boils over
 a week from next Tuesday
 a week is a long time in politics
+a while back
 a whisper down the lane
 a whole 'nother
+a whole lot
 a whole nother
 a wild goose never laid a tame egg
 a woman needs a man like a fish needs a bicycle
@@ -55222,6 +55238,7 @@ an apple a day keeps the doctor at bay
 an apple a day keeps the doctor away
 an arm and a leg
 an army marches on its stomach
+an awful lot
 an egg's age
 an eye for an eye makes the whole world blind
 an eye for an eye, a tooth for a tooth
@@ -59560,6 +59577,7 @@ back vowel
 back wall
 back wash
 back water
+back way
 back wheel
 back when
 back yard
@@ -61732,6 +61750,7 @@ be damned
 be done with
 be down with
 be due to
+be engaged in
 be fearful when others are greedy
 be fond of
 be friends
@@ -69590,6 +69609,7 @@ brush talk
 brush truck
 brush turkey
 brush up
+brush up on
 brush up to
 brush warbler
 brush wheel
@@ -72181,6 +72201,7 @@ camber arch
 camber beam
 camber-keeled
 cambric tea
+came to like
 camel case
 camel clutch
 camel driver
@@ -73543,6 +73564,7 @@ cassowary plum
 cast a chill
 cast a pall
 cast a shadow
+cast a spell
 cast about
 cast accounts
 cast adrift
@@ -79914,6 +79936,7 @@ come to grips with
 come to hand
 come to life
 come to light
+come to like
 come to mention it
 come to mind
 come to naught
@@ -82780,6 +82803,7 @@ could not care less
 could not get elected dogcatcher
 could use
 could we get the bill
+could well
 could've sworn
 coulda fooled me
 coulda, shoulda, woulda
@@ -89249,6 +89273,7 @@ dig for victory
 dig in
 dig in one's heels
 dig into
+dig it
 dig on
 dig one's grave with a fork
 dig one's grave with a fork and spoon
@@ -96359,7 +96384,9 @@ enforcement authority
 enforcing sadism
 engage in
 engaged column
+engaged in
 engaged time
+engaged to
 engaged tone
 engagement chicken
 engagement ring
@@ -103668,6 +103695,7 @@ for me
 for me and not for thee
 for mercy's sake
 for my money
+for my sake
 for my sins
 for myself
 for name's sake
@@ -103717,6 +103745,7 @@ for so long a time
 for some reason
 for some time
 for someone
+for someone's sake
 for sour apples
 for sport
 for starters
@@ -108328,6 +108357,7 @@ getaway driver
 getaway man
 getter-up
 getting any
+getting back
 getting enough
 getting used to
 getting-to-know-you
@@ -108893,6 +108923,7 @@ give heed
 give in
 give into
 give it a break
+give it a go
 give it a rest
 give it large
 give it mouth
@@ -110913,6 +110944,7 @@ gossip mirror
 gossip-mill
 gossip-mirror
 gossip-prone
+got back
 got it going on
 got it in for
 got to
@@ -117597,6 +117629,7 @@ his heels
 his nabs
 his nibs
 his nob
+his turn
 hispi cabbage
 hiss-and-tell
 hissie fit
@@ -126260,6 +126293,7 @@ keep from
 keep going
 keep good hours
 keep good time
+keep him company
 keep hope alive
 keep house
 keep in
@@ -126280,6 +126314,7 @@ keep it simple, stupid
 keep it tall
 keep it together
 keep it up
+keep me company
 keep measures
 keep off
 keep off the street
@@ -126403,6 +126438,7 @@ keep up with the times
 keep vigil
 keep watch
 keep wicket
+keep you company
 keep your friends close, and your enemies closer
 keep yourself safe
 keep-away
@@ -142415,6 +142451,7 @@ my condom broke
 my conscience
 my country, right or wrong
 my culture is not your costume
+my dear
 my dear fellow
 my dog ate my homework
 my emphasis
@@ -144902,6 +144939,7 @@ no cap
 no chance
 no changer
 no chill
+no choice but
 no claims bonus
 no clue
 no comment
@@ -146751,6 +146789,7 @@ not a patch on
 not a pretty sight
 not a sausage
 not a soul
+not a sound
 not a word
 not a word of a lie
 not again
@@ -147880,6 +147919,7 @@ of all places
 of all things
 of all time
 of an
+of any kind
 of any use
 of blessed memory
 of choice
@@ -149703,10 +149743,12 @@ one's own master
 one's race is run
 one's self
 one's ship comes in
+one's sincere condolences
 one's socks off
 one's stomach thinks one's throat has been cut
 one's teeth water
 one's time is one's own
+one's turn
 one's turn in the barrel
 one's way
 one's word is law
@@ -151019,6 +151061,7 @@ our asses
 our era
 our kid
 our lass
+our turn
 ourang outang
 ourang-outan
 ourang-outang
@@ -155126,6 +155169,7 @@ perfect interval
 perfect is the enemy of good
 perfect is the enemy of good enough
 perfect market
+perfect match
 perfect metal
 perfect number
 perfect octave
@@ -159368,6 +159412,7 @@ poor box
 poor boy
 poor cod
 poor dab
+poor dear
 poor devil
 poor diddums
 poor doer
@@ -165486,6 +165531,7 @@ quitch grass
 quitclaim deed
 quite a bit
 quite a few
+quite another
 quite good
 quite poor
 quite so
@@ -171563,6 +171609,7 @@ round game
 round girl
 round hand
 round heart disease
+round here
 round herring
 round house
 round in
@@ -173722,6 +173769,7 @@ save the drama for your mama
 save the drama for your momma
 save the furniture
 save the mark
+save time
 save up
 save versus
 save vs.
@@ -175742,6 +175790,7 @@ see eye to eye
 see fit
 see for oneself
 see here
+see him off
 see how
 see how the land lies
 see hum
@@ -175766,6 +175815,7 @@ see red
 see sense
 see service
 see shit
+see someone off
 see someone right
 see someone's etchings
 see something green in one's eye
@@ -180780,6 +180830,7 @@ since Hector was a pup
 since Skippy was a pup
 since long
 since when
+sincere condolences
 sine curve
 sine die
 sine formula
@@ -183520,6 +183571,9 @@ so be it
 so called
 so crazy it just might work
 so crazy it might just work
+so did
+so do
+so does
 so far
 so far as
 so far so bad
@@ -190661,6 +190715,7 @@ suck the oxygen out of
 suck tits
 suck under
 suck up
+suck up (to someone)
 suck up all the air in
 suck up all the oxygen in
 suck your mum
@@ -190688,6 +190743,7 @@ suckling clover
 suckling pig
 sucks to be you
 sucks to suck
+sucks up
 sucky sucky
 sucky-sucky
 sucre bleu
@@ -195862,6 +195918,7 @@ the line is busy
 the long and short
 the long way around the barn
 the longest pole knocks the persimmon
+the lot
 the love of money is the root of all evil
 the lower 48
 the man
@@ -195944,6 +196001,7 @@ the schoolmaster is abroad
 the screwing you get isn't worth the screwing you get
 the screwing you get isn't worth the screwing you take
 the screwing you get isn't worth the screwing you're going to get
+the second
 the second mouse gets the cheese
 the seventh water after kissel
 the shape of things to come
@@ -196061,6 +196119,7 @@ theezan tea
 theft by finding
 their ABC
 their nibs
+their turn
 theistic evolution
 theistic evolutionism
 theistic evolutionist
@@ -197710,6 +197769,7 @@ tie clip
 tie down
 tie down strap
 tie hand and foot
+tie him up
 tie in
 tie in knots
 tie in with
@@ -197725,6 +197785,7 @@ tie periwig
 tie pin
 tie plate
 tie rod
+tie someone up
 tie someone's hands
 tie someone's tubes
 tie tac
@@ -202489,6 +202550,7 @@ turn inside out
 turn inside-out
 turn into
 turn into a pumpkin
+turn it down
 turn king's evidence
 turn loose
 turn of duty
@@ -208783,6 +208845,7 @@ welwitschia bug
 wendigo psychosis
 were gild
 were it not for
+were to
 were wolf
 were you born in a tent
 were-creature
@@ -212140,6 +212203,7 @@ word bubble
 word chain
 word class
 word cloud
+word comes down
 word count
 word divider
 word family
@@ -212773,6 +212837,7 @@ write one's own ticket
 write oneself into a corner
 write out
 write over
+write that down
 write the book
 write up
 write-ahead log

@@ -17,7 +17,7 @@ tysm.workspace = true
 osmo.workspace = true
 schemars.workspace = true
 language-utils = { path = "../language-utils" }
-google-tts = { path = "../libraries/google-tts" }
+google-speech = { path = "../libraries/google-speech" }
 g2p.workspace = true
 base64 = "0.22"
 omnigram = { path = "../libraries/omnigram" }

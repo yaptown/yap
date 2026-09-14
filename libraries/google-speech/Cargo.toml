@@ -1,5 +1,5 @@
 [package]
-name = "google-tts"
+name = "google-speech"
 version = "0.1.0"
 edition = "2024"
 
@@ -11,7 +11,4 @@ anyhow = "1"
 log = { workspace = true }
 tokio = { workspace = true, features = ["time"] }
 base64 = "0.22"
-minimp3 = "0.6"
-ogg = "0.9"
-opus = "0.3"
-hound = "3.5.1"
+audio-codec = { path = "../audio-codec" }

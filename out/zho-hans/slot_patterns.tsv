@@ -1,2 +1,6 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-包在……身上	filled	1	0	1	0.00	no	这张画也包在裹面。	包 … 在 … 裹面
+对……来说	clitic	6	6	6	1.00	yes		
+对……来说	filled	6	6	6	1.00	yes		
+包在……身上	filled	4	3	4	0.75	yes	这张画也包在裹面。	包 … 在 … 裹面
+非……不可	clitic	1	1	1	1.00	yes		
+非……不可	filled	1	1	1	1.00	yes		

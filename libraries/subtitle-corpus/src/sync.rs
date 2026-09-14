@@ -17,6 +17,7 @@ use std::process::Command;
 
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
+use whisper::{CloudflareWhisper, TranscribeRequest};
 
 /// One subtitle cue, text preserved exactly as written.
 ///
@@ -135,31 +136,6 @@ fn tokens(text: &str) -> Vec<String> {
             .collect();
     }
     cleaned.split_whitespace().map(str::to_owned).collect()
-}
-
-#[derive(Debug, Deserialize)]
-struct WhisperWord {
-    word: String,
-    start: f64,
-    #[serde(default)]
-    end: f64,
-}
-
-#[derive(Debug, Deserialize)]
-struct WhisperSegment {
-    #[serde(default)]
-    words: Vec<WhisperWord>,
-}
-
-#[derive(Debug, Deserialize)]
-struct WhisperResult {
-    #[serde(default)]
-    segments: Vec<WhisperSegment>,
-}
-
-#[derive(Debug, Deserialize)]
-struct WhisperEnvelope {
-    result: WhisperResult,
 }
 
 /// A transcribed word and the span it occupies, in milliseconds into the film.
@@ -432,49 +408,9 @@ pub fn audio_stream_identity(video: &Path, audio_stream: usize) -> Result<AudioS
     })
 }
 
-/// The Workers AI account to transcribe against.
-///
-/// Read once, at the top of a run, because the alternative is worse than it
-/// looks: reading the environment per window turns a missing variable into a
-/// per-window failure, every window of a film fails, and the film is recorded
-/// `undecided` — a durable "we could not verify this" written by a typo.
-/// Holding the credentials in a value the transcriber cannot be called
-/// without makes that unrepresentable.
-#[derive(Clone)]
-pub struct WhisperAccount {
-    account: String,
-    token: String,
-}
-
-impl WhisperAccount {
-    pub fn from_env() -> Result<Self> {
-        Ok(Self {
-            account: std::env::var("CLOUDFLARE_ACCOUNT_ID")
-                .context("CLOUDFLARE_ACCOUNT_ID not set")?,
-            token: std::env::var("CLOUDFLARE_WORKER_AI_API_TOKEN")
-                .context("CLOUDFLARE_WORKER_AI_API_TOKEN not set")?,
-        })
-    }
-
-    pub fn transcribe_url(&self) -> String {
-        format!(
-            "https://api.cloudflare.com/client/v4/accounts/{}/ai/run/{WHISPER_MODEL}",
-            self.account
-        )
-    }
-
-    pub fn token(&self) -> &str {
-        &self.token
-    }
-}
-
-/// The Workers AI model every transcription in this crate goes through.
-const WHISPER_MODEL: &str = "@cf/openai/whisper-large-v3-turbo";
-
 /// Transcribe one window of the film, returning words timed from its start.
 pub async fn transcribe_window(
-    http: &reqwest::Client,
-    account: &WhisperAccount,
+    client: &CloudflareWhisper,
     video: &Path,
     audio_stream: usize,
     start_ms: i64,
@@ -507,31 +443,22 @@ pub async fn transcribe_window(
     let wav = std::fs::read(&tmp)?;
     let _ = std::fs::remove_file(&tmp);
 
-    let url = account.transcribe_url();
-    let token = account.token();
-    use base64::Engine;
-    let body = serde_json::json!({
-        "audio": base64::engine::general_purpose::STANDARD.encode(&wav),
-        "language": language,
-    });
-    let response = http
-        .post(&url)
-        .bearer_auth(token)
-        .json(&body)
-        .send()
-        .await?
-        .error_for_status()?;
-    let envelope: WhisperEnvelope = response.json().await?;
+    let transcript = client
+        .transcribe(&TranscribeRequest {
+            audio: &wav,
+            language,
+            vocabulary: &[],
+            condition_on_previous_text: true,
+        })
+        .await?;
 
-    Ok(envelope
-        .result
-        .segments
+    Ok(transcript
+        .words
         .into_iter()
-        .flat_map(|s| s.words)
         .map(|w| TimedWord {
-            at_ms: start_ms + (w.start * 1000.0) as i64,
-            until_ms: start_ms + (w.end.max(w.start) * 1000.0) as i64,
-            text: w.word,
+            at_ms: start_ms + (w.start_s * 1000.0) as i64,
+            until_ms: start_ms + (w.end_s * 1000.0) as i64,
+            text: w.text,
         })
         .collect())
 }
