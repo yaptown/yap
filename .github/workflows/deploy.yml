@@ -354,14 +354,8 @@ jobs:
           workingDirectory: deploy-output
           command: pages deploy . --project-name=yap
 
-      - name: Install Modal
-        run: pip install modal
-
-      - name: Deploy Modal apps
-        run: modal deploy modal-envs/wav2vec2_phoneme.py
-        env:
-          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
-          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+      # Pronunciation deployment is owned by the sibling lexide repository.
+      # See ../lexide/pronunciation/modal/PRONUNCIATION_BATCHING.md.
 
       - name: Download dictionary data
         if: needs.web-build.outputs.dictionary_changed == 'true'

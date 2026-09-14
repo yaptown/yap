@@ -8,7 +8,7 @@
 //!    model/decoder version is part of the key so a model swap can't
 //!    silently reuse stale predictions.
 //! 2. On cache miss, decode WAV → f32 mono 16kHz via ffmpeg and send it to
-//!    the Modal batch endpoint (`modal-envs/PRONUNCIATION_BATCHING.md`),
+//!    the Modal batch endpoint (lexide `pronunciation/modal/PRONUNCIATION_BATCHING.md`),
 //!    pooled with whatever other clips are in flight, then persist the
 //!    response.
 //! 3. Strip suprasegmental markers from the model's predicted tokens and
@@ -68,7 +68,7 @@ fn batch_endpoint(single: &str) -> Result<String> {
 /// changes — the cache is partitioned by this string so old entries don't
 /// silently get reused with a new model. Format: `<repo>@<revision>__<decoder>`,
 /// and the revision must match `MODEL_REVISION` in
-/// `modal-envs/wav2vec2_phoneme.py`, since that's what production serves. For
+/// lexide `pronunciation/modal/wav2vec2_phoneme.py`, since that is what production serves. For
 /// ad-hoc model comparisons the eval harness overrides this per-run via
 /// `WAV2VEC2_CACHE_VERSION_OVERRIDE`, so this const only governs the default
 /// (production) cache partition.
