@@ -246,6 +246,82 @@ mod tests {
     }
 
     #[test]
+    fn guide_loader_rejects_control_characters_in_cue_text() {
+        let root = tempfile::tempdir().unwrap();
+        let course = Course {
+            native_language: language_utils::Language::English,
+            target_language: language_utils::Language::German,
+        };
+        let dir = root.path().join("deu_for_eng");
+        std::fs::create_dir(&dir).unwrap();
+        let path = dir.join("pronunciation_guides.jsonl");
+        let mut guide = saved_guide();
+        guide.pattern = "k".into();
+        guide.example_words = vec![language_utils::WordPair {
+            target: "Köln".into(),
+            native: "Cologne (the German city on the Rhine)".into(),
+            position: language_utils::SoundPosition::Beginning,
+            cultural_context: "The German name for Cologne.".into(),
+        }];
+        let valid = serde_json::to_value(&guide).unwrap();
+        for (field, bad_text, codepoint) in [
+            ("target", format!("K{}f6ln", char::from(0)), "U+0000"),
+            ("pattern", format!("k{}", char::from(0)), "U+0000"),
+            ("target", format!("K{}öln", char::from(9)), "U+0009"),
+            ("pattern", format!("k{}", char::from(10)), "U+000A"),
+            ("target", format!("K{}öln", char::from(127)), "U+007F"),
+            ("pattern", format!("k{}", char::from(133)), "U+0085"),
+        ] {
+            let mut malformed = valid.clone();
+            if field == "pattern" {
+                malformed["pattern"] = bad_text.into();
+            } else {
+                malformed["example_words"][0]["target"] = bad_text.into();
+            }
+            std::fs::write(&path, format!("{}\n", serde_json::json!(["k", malformed]))).unwrap();
+            let error = format!(
+                "{:#}",
+                load_inputs(root.path(), root.path(), &course).unwrap_err()
+            );
+            assert!(error.contains(&path.display().to_string()), "{error}");
+            assert!(error.contains("line 1"), "{error}");
+            assert!(
+                error.contains("pronunciation cue text contains control character"),
+                "{error}"
+            );
+            assert!(error.contains(codepoint), "{error}");
+            // The pack-facing guide type has the same validation as the
+            // saved/generated guide-with-thoughts type used by the loader.
+            assert!(
+                serde_json::from_value::<language_utils::PronunciationGuide>(malformed)
+                    .unwrap_err()
+                    .to_string()
+                    .contains(codepoint)
+            );
+        }
+
+        // Valid cues are not normalized or rewritten at the JSON boundary.
+        for (pattern, target) in [("k", "Köln"), ("á", "à la carte"), ("क्ष", "क्षमा")]
+        {
+            guide.pattern = pattern.into();
+            guide.example_words[0].target = target.into();
+            let json = serde_json::to_string(&guide).unwrap();
+            let loaded: PronunciationGuideThoughts = serde_json::from_str(&json).unwrap();
+            assert_eq!(loaded, guide);
+            let loaded: language_utils::PronunciationGuide = serde_json::from_str(&json).unwrap();
+            assert_eq!(loaded, guide.clone().into());
+        }
+        assert_eq!(
+            language_utils::pronunciation_challenge_spoken_text(
+                course.target_language,
+                "k",
+                "Köln"
+            ),
+            "k wie in Köln"
+        );
+    }
+
+    #[test]
     fn tsv_fallback_preserves_all_variants_and_curated_priority() {
         let root = tempfile::tempdir().unwrap();
         std::fs::write(

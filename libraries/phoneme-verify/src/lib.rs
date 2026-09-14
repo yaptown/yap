@@ -193,6 +193,9 @@ pub const MODEL_HINDI_CANON: g2p::HindiCanon = g2p::HindiCanon::Legacy;
 /// chain at [`MODEL_HINDI_CANON`] for Hindi. `None` for languages the model
 /// has no g2p-produced labels for (see `Language::g2p_lang`).
 pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonemized, g2p::Error>> {
+    // TODO(g2p): expose a disable-language-switch option, then use it here.
+    // The pinned API only accepts text/voice (and HindiCanon); French words
+    // such as polyuréthane and Giverny can currently switch to English.
     let lang = language.g2p_lang()?;
     Some(g2p::phonemize_lang_with(lang, text, MODEL_HINDI_CANON))
 }
@@ -246,6 +249,10 @@ pub enum AlignmentOp {
 /// passed and should be kept.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClipVerification {
+    /// Resolved model/decoder cache namespace used for this attempt, including
+    /// attempts rejected before inference. Absent only in historical rows.
+    #[serde(default)]
+    pub cache_version: Option<String>,
     pub actor: String,
     pub text: String,
     pub wav_path: String,
@@ -411,7 +418,7 @@ pub fn expected_phoneme_variants(
     if let Some(s) = override_transcription {
         let normalized: Vec<String> = s
             .split_whitespace()
-            .filter_map(|t| normalize_phoneme(t, ctx.target_language))
+            .flat_map(|t| normalize_phonemes(t, ctx.target_language))
             .collect();
         return if normalized.is_empty() {
             None
@@ -474,6 +481,7 @@ pub async fn verify_clip_bytes(
         && let Some(defect) = google_tts::samples_defect(&samples, MODAL_SAMPLE_RATE)
     {
         return Ok(ClipVerification {
+            cache_version: Some(ctx.cache_version.clone()),
             actor: actor.to_string(),
             text: text.to_string(),
             wav_path: source_label.to_string(),
@@ -573,6 +581,7 @@ pub async fn verify_clip_bytes(
     };
 
     Ok(ClipVerification {
+        cache_version: Some(ctx.cache_version.clone()),
         actor: actor.to_string(),
         text: text.to_string(),
         wav_path: source_label.to_string(),
@@ -1217,7 +1226,21 @@ fn decode_wav_to_f32(wav_bytes: &[u8]) -> Result<Vec<f32>> {
         .collect())
 }
 
-/// Normalize a single IPA token into a canonical comparable form. Returns
+/// Expand a raw IPA token into the deployed model's comparable token sequence.
+/// Shared by expected readings, predictions, and top-k alternatives.
+///
+/// The deployed model and g2p pin 3ae99aa (<0.4) use the OLD split canon.
+/// When upgrading the g2p pin to >=0.4, flip this normalization to the merged
+/// canon together with the deployed model; do not silently mix label spaces.
+/// Only explicit tie bars split tokens: preserve untied diphthongs/diacritics.
+pub fn normalize_phonemes(token: &str, language: Language) -> Vec<String> {
+    token
+        .split(['\u{0361}', '\u{035c}'])
+        .filter_map(|component| normalize_phoneme(component, language))
+        .collect()
+}
+
+/// Normalize a single IPA component into a canonical comparable form. Returns
 /// `None` for tokens that consist entirely of non-phonemic markers.
 ///
 /// Three layers of cleanup, applied in order:
@@ -1240,8 +1263,8 @@ fn decode_wav_to_f32(wav_bytes: &[u8]) -> Result<Vec<f32>> {
 ///    approximant from `y`).
 ///
 /// Combining diacritics inside the phoneme (e.g. the tilde on `ã`) are NOT
-/// touched — those are phonemic.
-pub fn normalize_phoneme(token: &str, language: Language) -> Option<String> {
+/// touched — those are phonemic (except German non-syllabic U+032F).
+fn normalize_phoneme(token: &str, language: Language) -> Option<String> {
     let stripped: String = token
         .chars()
         .filter(|c| {
@@ -1250,10 +1273,8 @@ pub fn normalize_phoneme(token: &str, language: Language) -> Option<String> {
                 && !c.is_whitespace()
         })
         .collect();
-    if stripped.is_empty() {
-        return None;
-    }
-    Some(canonicalize_for_language(&stripped, language))
+    let canonical = canonicalize_for_language(&stripped, language);
+    (!canonical.is_empty()).then_some(canonical)
 }
 
 /// Map a phoneme token onto its canonical form for the given target
@@ -1261,6 +1282,13 @@ pub fn normalize_phoneme(token: &str, language: Language) -> Option<String> {
 /// through this, equivalence-class members compare equal.
 fn canonicalize_for_language(token: &str, language: Language) -> String {
     match language {
+        // German inventory: 43,267 rows / 1,079,676 tokens in lexide's
+        // pronunciation/data/audio/deu/phonemes.jsonl contain neither ʔ nor
+        // U+032F. Strip these reference-only marks, not vowels or diphthongs.
+        Language::German => token
+            .chars()
+            .filter(|c| !matches!(c, 'ʔ' | '\u{032f}'))
+            .collect(),
         Language::French => match token {
             // R variants: ground truth uses ʁ (uvular fricative); the
             // multilingual model emits any of: r (alveolar trill, common
@@ -1351,7 +1379,7 @@ fn ground_truth_phoneme_variants(
                 Some(Ok(phonemized)) => phonemized
                     .phonemes
                     .iter()
-                    .filter_map(|p| normalize_phoneme(p, language))
+                    .flat_map(|p| normalize_phonemes(p, language))
                     .collect(),
                 _ => Vec::new(),
             };
@@ -1368,7 +1396,7 @@ fn ground_truth_phoneme_variants(
             .all()
             .map(|ipa| {
                 ipa.split_whitespace()
-                    .filter_map(|p| normalize_phoneme(p, language))
+                    .flat_map(|p| normalize_phonemes(p, language))
                     .collect::<Vec<String>>()
             })
             // Distinct sequences only — after normalization, different raw
@@ -1434,7 +1462,7 @@ fn ground_truth_phoneme_variants(
                     .map(|&(start, end)| {
                         phonemized.phonemes[start..end]
                             .iter()
-                            .filter_map(|p| normalize_phoneme(p, language))
+                            .flat_map(|p| normalize_phonemes(p, language))
                             .collect::<Vec<String>>()
                     })
                     .filter(|word| !word.is_empty())
@@ -1474,7 +1502,7 @@ fn add_spanish_dialect_word(text: &str, language: Language, variants: &mut Vec<V
         let phones: Vec<String> = target
             .phonemes
             .iter()
-            .filter_map(|p| normalize_phoneme(p, language))
+            .flat_map(|p| normalize_phonemes(p, language))
             .collect();
         if !phones.is_empty() && !variants.contains(&phones) {
             variants.push(phones);
@@ -1486,15 +1514,12 @@ fn add_spanish_dialect_word(text: &str, language: Language, variants: &mut Vec<V
 /// alternatives at the same time. Returns the two lists with matching
 /// length, parallel by position.
 ///
-/// At each raw position:
-///   * If the chosen phoneme normalizes to `None` (i.e. it's pure
-///     suprasegmental), the entire position is dropped — same as the
-///     existing `predicted_normalized` behavior.
-///   * Otherwise, the position is kept. The top-k alternatives are also
-///     normalized, dropped-where-None, and then merged when two distinct
-///     raw alternatives normalize to the same form (e.g. raw `r` + `ʁ` →
-///     a single `ʁ` entry with summed probability). The merged top-k is
-///     re-sorted by probability descending.
+/// Empty normalized tokens drop their entire position. A tied affricate
+/// expands into component positions; alternatives with the same component
+/// count contribute probability only to their corresponding position. Other
+/// lengths are omitted, since a per-position top-k cannot represent them.
+/// Canonical equivalents at each position merge by summing probability, then
+/// sort by descending probability. No probability is renormalized.
 fn normalize_with_topk(
     raw_phonemes: &[String],
     raw_top_k: &[Vec<RawPhonemeAlt>],
@@ -1504,26 +1529,31 @@ fn normalize_with_topk(
     let mut normalized_top_k: Vec<Vec<(String, f64)>> = Vec::with_capacity(raw_phonemes.len());
 
     for (i, raw) in raw_phonemes.iter().enumerate() {
-        let Some(norm) = normalize_phoneme(raw, language) else {
-            continue;
-        };
-        normalized.push(norm);
-
-        let mut merged: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
+        let components = normalize_phonemes(raw, language);
+        let mut merged = vec![HashMap::<String, f64>::new(); components.len()];
         if let Some(alts) = raw_top_k.get(i) {
             for alt in alts {
-                if let Some(alt_norm) = normalize_phoneme(&alt.phoneme, language) {
-                    *merged.entry(alt_norm).or_insert(0.0) += alt.probability;
+                let alt_components = normalize_phonemes(&alt.phoneme, language);
+                // Alternatives must span the same number of component positions.
+                // Do not credit a single /t/ with a whole /t͡ʃ/, or duplicate an
+                // atomic alternative across both positions of a split affricate.
+                if alt_components.len() == components.len() {
+                    for (position, component) in merged.iter_mut().zip(alt_components) {
+                        *position.entry(component).or_default() += alt.probability;
+                    }
                 }
             }
         }
-        let mut vec: Vec<(String, f64)> = merged.into_iter().collect();
-        vec.sort_by(|a, b| {
-            b.1.partial_cmp(&a.1)
-                .unwrap_or(std::cmp::Ordering::Equal)
-                .then_with(|| a.0.cmp(&b.0))
-        });
-        normalized_top_k.push(vec);
+        normalized.extend(components);
+        for position in merged {
+            let mut alts: Vec<_> = position.into_iter().collect();
+            alts.sort_by(|a, b| {
+                b.1.partial_cmp(&a.1)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+                    .then_with(|| a.0.cmp(&b.0))
+            });
+            normalized_top_k.push(alts);
+        }
     }
 
     (normalized, normalized_top_k)
@@ -1973,6 +2003,7 @@ pub async fn synthesize_verified(
     // flagged; surface the provider's note as the failure.
     if let Some(note) = tts_note {
         let verification = ClipVerification {
+            cache_version: Some(ctx.cache_version.clone()),
             actor: actor.to_string(),
             text: spoken_text.to_string(),
             wav_path: label,
@@ -2013,6 +2044,262 @@ pub fn cache_only() -> bool {
 }
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn split_canon_requires_resolved_g2p_before_0_4() {
+        // Query the actual linked crate, not a duplicate hard-coded version.
+        let identity = g2p::identity();
+        let version = identity
+            .split_whitespace()
+            .next()
+            .unwrap()
+            .strip_prefix("g2p/")
+            .unwrap();
+        let mut parts = version.split('.').map(|part| part.parse::<u32>().unwrap());
+        let major_minor = (parts.next().unwrap(), parts.next().unwrap());
+        assert!(
+            major_minor < (0, 4),
+            "g2p {version}: flip split normalization together with the deployed model"
+        );
+    }
+
+    #[test]
+    fn tied_affricates_expand_symmetrically_in_every_language() {
+        for language in [
+            Language::German,
+            Language::Spanish,
+            Language::Italian,
+            Language::French,
+            Language::English,
+            Language::Russian,
+            Language::Hindi,
+            Language::Portuguese,
+            Language::Korean,
+            Language::ChineseSimplified,
+            Language::ChineseTraditional,
+            Language::Japanese,
+            Language::Thai,
+        ] {
+            for (raw, components) in [
+                ("ˈt͡ʃː", ["t", "ʃ"]),
+                ("t͜ʃ", ["t", "ʃ"]),
+                ("d͡ʒ", ["d", "ʒ"]),
+                ("d͜ʒ", ["d", "ʒ"]),
+                ("t͡s", ["t", "s"]),
+                ("t͜s", ["t", "s"]),
+                ("d͡z", ["d", "z"]),
+                ("d͜z", ["d", "z"]),
+            ] {
+                let expected = normalize_phonemes(raw, language);
+                assert_eq!(expected, word(&components));
+                let (predicted, topk) = normalize_with_topk(&word(&[raw]), &[], language);
+                assert_eq!(predicted, expected);
+                assert_eq!(topk.len(), 2);
+                assert_eq!(align(&predicted, &topk, &expected).0, 0);
+            }
+        }
+        assert_eq!(normalize_phonemes("aɪ", Language::German), word(&["aɪ"]));
+        assert_eq!(normalize_phonemes("ɪ̯", Language::German), word(&["ɪ"]));
+        assert_eq!(normalize_phonemes("ɐ̯", Language::German), word(&["ɐ"]));
+        assert_eq!(normalize_phonemes("ɪ̯", Language::Spanish), word(&["ɪ̯"]));
+        assert_eq!(
+            normalize_phonemes("ʔ", Language::German),
+            Vec::<String>::new()
+        );
+        assert_eq!(normalize_phonemes("ʔ", Language::English), word(&["ʔ"]));
+        assert_eq!(normalize_phonemes("ã", Language::German), word(&["ã"]));
+    }
+
+    #[test]
+    fn expanded_topk_is_component_aligned_without_spurious_atomic_matches() {
+        let alt = |phoneme: &str, probability| RawPhonemeAlt {
+            phoneme: phoneme.into(),
+            probability,
+        };
+        let raw = word(&["ʔ", "t͡ʃ", "a", "t"]);
+        let topk = vec![
+            vec![alt("ʔ", 1.0)],
+            vec![
+                alt("t͡ʃ", 0.5),
+                alt("t͜ʃ", 0.2),
+                alt("d͡ʒ", 0.1),
+                alt("t", 0.2),
+            ],
+            vec![alt("a", 0.9)],
+            vec![alt("t", 0.6), alt("t͡ʃ", 0.4)],
+        ];
+        let (tokens, normalized) = normalize_with_topk(&raw, &topk, Language::German);
+        assert_eq!(tokens, word(&["t", "ʃ", "a", "t"]));
+        assert_eq!(normalized.len(), tokens.len());
+        assert_eq!(prob_of("t", &normalized[0]), Some(0.7));
+        assert_eq!(prob_of("ʃ", &normalized[1]), Some(0.7));
+        assert_eq!(prob_of("d", &normalized[0]), Some(0.1));
+        assert_eq!(prob_of("ʒ", &normalized[1]), Some(0.1));
+        assert_eq!(prob_of("t", &normalized[1]), None);
+        assert_eq!(prob_of("a", &normalized[2]), Some(0.9));
+        assert_eq!(prob_of("t", &normalized[3]), Some(0.6));
+        assert_eq!(prob_of("ʃ", &normalized[3]), None);
+    }
+
+    #[test]
+    fn systemic_cues_normalize_references_without_hiding_spoken_errors() {
+        // Exact examples extracted from the September 14 deployed verification
+        // reports under /tmp/lexide-deploy-verify/{deu,spa,ita}-systemic.json.
+        let fixtures: Vec<serde_json::Value> =
+            serde_json::from_str(include_str!("../tests/fixtures/systemic-cues.json")).unwrap();
+        for fixture in fixtures {
+            let language = match fixture["language"].as_str().unwrap() {
+                "deu" => Language::German,
+                "spa" => Language::Spanish,
+                "ita" => Language::Italian,
+                _ => unreachable!(),
+            };
+            let raw: Vec<String> = serde_json::from_value(fixture["raw"].clone()).unwrap();
+            let original: Vec<String> =
+                serde_json::from_value(fixture["expected"].clone()).unwrap();
+            let expected: Vec<_> = original
+                .iter()
+                .flat_map(|p| normalize_phonemes(p, language))
+                .collect();
+            let (heard, topk) = normalize_with_topk(&raw, &[], language);
+            assert_eq!(
+                expected,
+                original
+                    .iter()
+                    .flat_map(|p| {
+                        if language == Language::German {
+                            match p.as_str() {
+                                "ʔ" => vec![],
+                                "ʏ̯" => word(&["ʏ"]),
+                                _ => vec![p.clone()],
+                            }
+                        } else {
+                            match p.as_str() {
+                                "t͡ʃ" => word(&["t", "ʃ"]),
+                                "d͡ʒ" => word(&["d", "ʒ"]),
+                                _ => vec![p.clone()],
+                            }
+                        }
+                    })
+                    .collect::<Vec<_>>(),
+                "{}",
+                fixture["text"]
+            );
+            assert_eq!(
+                heard,
+                serde_json::from_value::<Vec<String>>(fixture["heard"].clone()).unwrap()
+            );
+            assert!(
+                align(&heard, &topk, &expected).0 > 0,
+                "do not erase genuine errors: {}",
+                fixture["text"]
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn german_normalization_and_provenance_cover_every_verification_path() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let mut dictionary = HashMap::new();
+        dictionary.insert("test".into(), ap("ʔ t͡ʃ ɪ̯", &[]));
+        let ctx = VerifyContext {
+            http: &http,
+            store: osmo::Store::open(dir.path()),
+            cache_version: "resolved-model-and-decoder".into(),
+            expected_identity: None,
+            word_to_pronunciation: &dictionary,
+            mismatch_threshold: 0.3,
+            target_language: Language::German,
+            expected_deploy_marker: None,
+        };
+        let expected = expected_phoneme_variants(&ctx, "test", Some("ʔ t͡ʃ ɪ̯")).unwrap();
+        assert_eq!(expected, vec![vec![word(&["t", "ʃ", "ɪ"])]]);
+        assert!(
+            expected_phoneme_variants(&ctx, "test", None)
+                .unwrap()
+                .contains(&expected[0])
+        );
+        // Invalid bytes intentionally bypass ffmpeg's defect gate; both model
+        // payloads below are cached, so there is no inference/network request.
+        let audio = b"cached normalization regression";
+        let hash = xxh3_64(audio);
+        ctx.store
+            .write(
+                &format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version),
+                &serde_json::to_vec(&batch_test_payload(1)).unwrap(),
+            )
+            .await
+            .unwrap();
+        ctx.store
+            .write(
+                &format!("wav2vec2/{}/{hash:016x}", ctx.cache_version),
+                &serde_json::to_vec(&CachedPrediction {
+                    raw_phonemes: word(&["ʔ", "t͜ʃ", "ɪ̯"]),
+                    top_k: vec![],
+                })
+                .unwrap(),
+            )
+            .await
+            .unwrap();
+        let passed = verify_clip_bytes(&ctx, "test", "test", "cached", audio, Some(expected))
+            .await
+            .unwrap();
+        assert!(passed.passed(), "{:?}", passed.failure_reason);
+        assert_eq!(passed.edit_distance, Some(0));
+        let missing = verify_clip_bytes(&ctx, "test", "test", "cached", audio, None)
+            .await
+            .unwrap();
+        assert!(!missing.passed());
+        let defective = verify_clip_bytes(&ctx, "test", "test", "silent", &batch_test_wav(0), None)
+            .await
+            .unwrap();
+        assert!(
+            defective
+                .failure_reason
+                .as_deref()
+                .unwrap()
+                .starts_with("audio defect:")
+        );
+        let synthesis = TtsSynthesis::Google {
+            voice: default_voice_for(Language::German).unwrap(),
+            text: "test".into(),
+        };
+        ctx.store
+            .write(
+                &synthesis.cache_key(),
+                &serde_json::to_vec(&CachedTts {
+                    text: Some("test".into()),
+                    audio_base64: String::new(),
+                    attempts: 5,
+                    passed: false,
+                    last_defect: Some("silent".into()),
+                })
+                .unwrap(),
+            )
+            .await
+            .unwrap();
+        let (_, rejected_tts) =
+            synthesize_verified(&ctx, "test", &synthesis, "test", &TtsKeys::default())
+                .await
+                .unwrap();
+        assert!(!rejected_tts.passed());
+        for row in [passed, missing, defective, rejected_tts] {
+            assert_eq!(
+                row.cache_version.as_deref(),
+                Some(ctx.cache_version.as_str())
+            );
+            let mut json = serde_json::to_value(&row).unwrap();
+            assert_eq!(json["cache_version"], ctx.cache_version);
+            json.as_object_mut().unwrap().remove("cache_version");
+            assert!(
+                serde_json::from_value::<ClipVerification>(json)
+                    .unwrap()
+                    .cache_version
+                    .is_none()
+            );
+        }
+    }
+
     use super::*;
     fn batch_test_payload(frames: usize) -> FrameMatrixPayload {
         let mut encoder =
@@ -2621,7 +2908,7 @@ mod tests {
                 .unwrap()
                 .phonemes
                 .iter()
-                .filter_map(|p| normalize_phoneme(p, Language::Hindi))
+                .flat_map(|p| normalize_phonemes(p, Language::Hindi))
                 .collect();
             let readings =
                 ground_truth_phoneme_variants(text, &HashMap::new(), Language::Hindi).unwrap();
@@ -2667,7 +2954,7 @@ mod tests {
                 .unwrap()
                 .phonemes
                 .iter()
-                .filter_map(|p| normalize_phoneme(p, Language::French))
+                .flat_map(|p| normalize_phonemes(p, Language::French))
                 .collect::<Vec<_>>()
                 .join(" ")
         };
@@ -2897,7 +3184,7 @@ mod letter_name_tests {
             .unwrap()
             .phonemes
             .iter()
-            .filter_map(|p| normalize_phoneme(p, language))
+            .flat_map(|p| normalize_phonemes(p, language))
             .collect::<Vec<_>>()
             .join(" ")
     }
@@ -2923,7 +3210,7 @@ mod letter_name_tests {
             let phones = target
                 .phonemes
                 .iter()
-                .filter_map(|p| normalize_phoneme(p, language))
+                .flat_map(|p| normalize_phonemes(p, language))
                 .collect::<Vec<_>>()
                 .join(" ");
             assert_eq!(phones, expected, "{language:?} {pattern}");

@@ -22,7 +22,7 @@
 use anyhow::{Context, Result, bail};
 use clap::Parser;
 use generate_data::audio_verification::{
-    ClipVerification, VerifyContext, expected_phoneme_variants, normalize_phoneme, verify_clip,
+    ClipVerification, VerifyContext, expected_phoneme_variants, normalize_phonemes, verify_clip,
 };
 use language_utils::{Language, Pronunciations};
 use std::collections::{BTreeSet, HashMap};
@@ -384,7 +384,7 @@ impl ModelRun {
 fn norm_seq(tokens: &[String], language: Language) -> Vec<String> {
     tokens
         .iter()
-        .filter_map(|t| normalize_phoneme(t, language))
+        .flat_map(|t| normalize_phonemes(t, language))
         .collect()
 }
 

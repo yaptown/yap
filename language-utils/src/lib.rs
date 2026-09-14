@@ -2731,6 +2731,7 @@ pub enum PatternPosition {
     schemars::JsonSchema,
 )]
 pub struct WordPair {
+    #[serde(deserialize_with = "deserialize_pronunciation_cue_text")]
     pub target: String,
     pub native: String,
     pub position: SoundPosition,  // Where the sound appears in the word
@@ -2754,6 +2755,7 @@ pub struct WordPair {
 )]
 pub struct PronunciationGuideThoughts {
     pub thoughts: String,
+    #[serde(deserialize_with = "deserialize_pronunciation_cue_text")]
     pub pattern: String,
     pub position: PatternPosition,
     pub description: String,
@@ -2779,12 +2781,29 @@ pub struct PronunciationGuideThoughts {
     schemars::JsonSchema,
 )]
 pub struct PronunciationGuide {
+    #[serde(deserialize_with = "deserialize_pronunciation_cue_text")]
     pub pattern: String,
     pub position: PatternPosition,
     pub description: String,
     pub familiarity: PronunciationFamiliarity,
     pub difficulty: PronunciationDifficulty,
     pub example_words: Vec<WordPair>,
+}
+
+// Validate at the JSON boundary, before malformed guide text can reach TTS or
+// a language pack. Keep valid Unicode (including combining marks) verbatim.
+fn deserialize_pronunciation_cue_text<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let text = <String as serde::Deserialize>::deserialize(deserializer)?;
+    if let Some((offset, character)) = text.char_indices().find(|(_, c)| c.is_control()) {
+        return Err(serde::de::Error::custom(format!(
+            "pronunciation cue text contains control character U+{:04X} at byte {offset}: {text:?}",
+            character as u32,
+        )));
+    }
+    Ok(text)
 }
 
 impl From<PronunciationGuideThoughts> for PronunciationGuide {
