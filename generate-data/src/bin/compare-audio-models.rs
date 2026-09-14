@@ -796,7 +796,7 @@ async fn run(args: Args) -> Result<()> {
             Some(deploy_and_verify(&http, &url, &sn, &model_id, &revision, &mut seq).await?)
         };
 
-        let cache_key = format!("{sn}__greedy_v1");
+        let cache_key = format!("{sn}__nonblank_v1");
         println!("  → verifying clips (cache={cache_key})");
         let results = verify_model(
             &http,

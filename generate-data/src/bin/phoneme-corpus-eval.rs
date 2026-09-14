@@ -85,7 +85,7 @@ struct Args {
 /// partition is byte-identical to `audio_verification.rs`'s, so eval and
 /// production share predictions; any other marker gets its own partition.
 fn cache_version(model_marker: &str) -> String {
-    format!("anchpop_lexide-pronunciation@{model_marker}__greedy_v1")
+    format!("anchpop_lexide-pronunciation@{model_marker}__nonblank_v1")
 }
 
 /// One evaluated cue, as a line of the output JSONL.

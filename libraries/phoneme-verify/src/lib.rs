@@ -32,8 +32,10 @@ use std::process::{Command, Stdio};
 use std::sync::LazyLock;
 use xxhash_rust::xxh3::xxh3_64;
 
-pub mod ctc;
-pub use ctc::{AlignedPhoneme, FrameMatrix, FrameMatrixPayload, TargetScore};
+pub use lexide::pronunciation::{
+    AlignedPhoneme, DecodedPath, FrameMatrix, FrameMatrixPayload, PhoneRun, TargetScore,
+    decode_path, is_phone_token,
+};
 
 const MODAL_BATCH_URL_DEFAULT: &str =
     "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict-batch.modal.run";
@@ -77,7 +79,9 @@ fn batch_endpoint(single: &str) -> Result<String> {
 /// transcript-verified movie clips into the corpus. Same 392-token vocab as
 /// the previous pin, but every prediction moves, so the whole cache partition
 /// turns over — expect a full recompute on the next run.
-const WAV2VEC2_CACHE_VERSION: &str = "anchpop_lexide-pronunciation@edcbbbf43a7f__greedy_v1";
+/// `nonblank_v1` gates frames on the nonblank head before choosing a phone;
+/// joint CTC probabilities are unchanged, but decoded predictions must be recached.
+const WAV2VEC2_CACHE_VERSION: &str = "anchpop_lexide-pronunciation@edcbbbf43a7f__nonblank_v1";
 
 /// The cache partition production predictions live under — what a caller
 /// should record as provenance for anything derived from them.

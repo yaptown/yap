@@ -601,7 +601,24 @@ class Wav2Vec2Phoneme:
             "data": base64.b64encode(payload).decode(),
         }
 
-    def _score_target(self, log_probs, target_phonemes: list) -> dict:
+    def _phone_frames(self, log_probs, p_nonblank):
+        """Return nonblank-first ids, conditional phone probabilities, and vocab ids."""
+        import torch
+
+        excluded = {self.blank_id, *self.masked_slots}
+        phone_ids = torch.tensor(
+            [i for i in range(log_probs.shape[-1]) if i not in excluded],
+            dtype=torch.long, device=log_probs.device,
+        )
+        # The shared log P(nonblank) cancels under softmax. Unlike dividing
+        # joint probabilities by sigmoid, this stays stable when sigmoid is 0.
+        phone_log_probs = log_probs[0].index_select(-1, phone_ids)
+        conditional = phone_log_probs.softmax(dim=-1)
+        predicted = phone_ids[phone_log_probs.argmax(dim=-1)]
+        predicted = torch.where(p_nonblank[0] > 0.5, predicted, self.blank_id)
+        return predicted, conditional, phone_ids
+
+    def _score_target(self, log_probs, p_nonblank, target_phonemes: list) -> dict:
         """How well does the audio support *this specific* phoneme sequence?
 
         Greedy decode + edit distance answers a different question than the one
@@ -615,10 +632,11 @@ class Wav2Vec2Phoneme:
 
         Returned as a likelihood ratio against the model's own free decode:
         `ratio = (logP(target) - logP(free)) / len(target)`, i.e. log-odds per
-        phoneme of the claimed sentence versus the best explanation the model
+        phoneme of the claimed sentence versus the nonblank-first reading the model
         can offer for this audio. 0 means the target IS the model's preferred
         reading; more negative means the audio increasingly fails to support it.
-        Scale-free across clip lengths, and needs no per-language equivalence
+        This free decode need not maximize CTC likelihood, so positive ratios are
+        possible. Scale-free across clip lengths, and needs no per-language equivalence
         table to be meaningful.
         """
         import torch
@@ -649,9 +667,10 @@ class Wav2Vec2Phoneme:
             )
             return float(-loss[0].item())                   # loss is -logP
 
-        # The model's own reading of this audio: greedy path, CTC-collapsed.
+        # The model's own reading: nonblank-first phone path, CTC-collapsed.
         # Its CTC score is the reference the target is measured against.
-        pred = log_probs[0].argmax(dim=-1).tolist()
+        predicted, _, _ = self._phone_frames(log_probs, p_nonblank)
+        pred = predicted.tolist()
         free = []
         for i, tok in enumerate(pred):
             if tok != self.blank_id and (i == 0 or tok != pred[i - 1]):
@@ -686,7 +705,7 @@ class Wav2Vec2Phoneme:
         return self._label_cache[token_id]
 
     def _decode_with_confidence(
-        self, log_probs, stress_logits, aux_ids: dict, top_k: int = 3
+        self, log_probs, stress_logits, p_nonblank, aux_ids: dict, top_k: int = 3
     ) -> list[dict]:
         """Greedy CTC decode + per-emitted-phoneme top-k.
 
@@ -696,46 +715,44 @@ class Wav2Vec2Phoneme:
         whichever aux heads apply to the request's language — is read at the
         *first* frame of each emitted group (that head's call for the segment).
         """
-        probs = log_probs[0].exp()                          # (T, V)
-        predicted_ids = probs.argmax(dim=-1)                # (T,)
+        predicted_ids, conditional, phone_ids = self._phone_frames(log_probs, p_nonblank)
         # All the per-frame label heads, decoded the same way.
         label_heads = {"stress": stress_logits[0].argmax(dim=-1), **aux_ids}
 
         results = []
-        prev_id = None
-        group_probs = []
-        group_labels = {}
-        for t in range(len(predicted_ids)):
-            tid = predicted_ids[t].item()
-            if tid != prev_id:
-                if prev_id is not None and prev_id != self.blank_id and group_probs:
-                    results.append(
-                        self._aggregate_group(group_probs, group_labels, top_k)
-                    )
-                group_probs = [probs[t]]
-                group_labels = {k: int(v[t].item()) for k, v in label_heads.items()}
-                prev_id = tid
-            else:
-                group_probs.append(probs[t])
-        if prev_id is not None and prev_id != self.blank_id and group_probs:
-            results.append(self._aggregate_group(group_probs, group_labels, top_k))
+        predicted = predicted_ids.tolist()
+        start = 0
+        for end in range(1, len(predicted) + 1):
+            if end < len(predicted) and predicted[end] == predicted[start]:
+                continue
+            token_id = predicted[start]
+            if token_id != self.blank_id:
+                labels = {k: int(v[start].item()) for k, v in label_heads.items()}
+                results.append(self._aggregate_group(
+                    conditional[start:end], p_nonblank[0, start:end],
+                    phone_ids, token_id, labels, top_k,
+                ))
+            start = end
         return results
 
-    def _aggregate_group(self, frame_probs, labels_at_onset: dict, top_k: int) -> dict:
-        import torch
-
-        avg_probs = torch.stack(frame_probs).mean(dim=0)  # (V,)
-        top_k = min(top_k, avg_probs.numel())
-        top_values, top_indices = torch.topk(avg_probs, top_k)
-        labels = [self._label(idx.item()) for idx in top_indices]
+    def _aggregate_group(
+        self, conditional, p_nonblank, phone_ids, token_id: int,
+        labels_at_onset: dict, top_k: int,
+    ) -> dict:
+        # Response schema: confidence and top_k probabilities are
+        # mean(P(phone | nonblank)) * mean(P(nonblank)) over the group,
+        # NOT mean joint probability. Alternatives exclude blank/specials.
+        avg_probs = conditional.mean(dim=0) * p_nonblank.mean()
+        top_values, top_indices = avg_probs.topk(min(top_k, avg_probs.numel()))
+        labels = [self._label(phone_ids[idx].item()) for idx in top_indices]
         # Embed the predicted stress on the chosen phoneme so existing
         # callers that just read `phoneme` get IPA-with-stress for free.
         # Alternatives stay bare since stress is predicted separately and
         # doesn't vary across phoneme alternatives at a given position.
-        chosen_with_stress = STRESS_MARKS[labels_at_onset["stress"]] + labels[0]
+        chosen_with_stress = STRESS_MARKS[labels_at_onset["stress"]] + self._label(token_id)
         return {
             "phoneme": chosen_with_stress,
-            "confidence": round(top_values[0].item(), 4),
+            "confidence": round(avg_probs[phone_ids == token_id].item(), 4),
             "top_k": [
                 {"phoneme": label, "probability": round(prob.item(), 4)}
                 for label, prob in zip(labels, top_values)
@@ -748,7 +765,10 @@ class Wav2Vec2Phoneme:
     def _frames_topk(
         self, log_probs, stress_logits, p_nonblank, aux_ids: dict, top_k: int
     ) -> list[dict]:
-        """Per-frame top-k (no CTC collapse, blanks included).
+        """Phone-only top-k for every frame (including non-emitting frames).
+
+        Probabilities are P(phone | nonblank) * P(nonblank), the single-frame
+        version of group confidence; blank and masked special slots are omitted.
 
         Each entry: {"frame", "stress", "p_nonblank", "top_k":
         [{"phoneme","probability"}]}, plus any aux target ("tone",
@@ -758,17 +778,19 @@ class Wav2Vec2Phoneme:
         (compare to unified to see if VAD-v2's nonblank fires high where
         unified's fires low).
         """
-        probs = log_probs[0].exp()                          # (T, V)
+        _, conditional, phone_ids = self._phone_frames(log_probs, p_nonblank)
         stress_ids = stress_logits[0].argmax(dim=-1)        # (T,)
         nb = p_nonblank[0]                                  # (T,)
+        probs = conditional * nb.unsqueeze(-1)
         top_k = min(top_k, probs.shape[-1])
         top_values, top_indices = probs.topk(top_k, dim=-1)
+        top_ids = phone_ids[top_indices]
 
         frames = []
         for t in range(probs.shape[0]):
             entries = [
                 {
-                    "phoneme": self._label(top_indices[t, r].item()),
+                    "phoneme": self._label(top_ids[t, r].item()),
                     "probability": round(top_values[t, r].item(), 4),
                 }
                 for r in range(top_k)
@@ -905,9 +927,9 @@ class Wav2Vec2Phoneme:
                 log_probs, stress_logits, p_nonblank = lp[i:i+1,:n], stress[i:i+1,:n], nb[i:i+1,:n]
                 labels = {key: value[:n] for key,value in aux[i].items()}
                 top_k = min(max(int(request.get("top_k",3)),1),100)
-                result = {"phonemes": self._decode_with_confidence(log_probs, stress_logits, labels, top_k)}
+                result = {"phonemes": self._decode_with_confidence(log_probs, stress_logits, p_nonblank, labels, top_k)}
                 if request.get("target_phonemes"):
-                    result["target_score"] = self._score_target(log_probs, request["target_phonemes"])
+                    result["target_score"] = self._score_target(log_probs, p_nonblank, request["target_phonemes"])
                 if request.get("return_frame_matrix"):
                     result["frame_matrix"] = self._frame_matrix(log_probs)
                 if request.get("return_frames"):

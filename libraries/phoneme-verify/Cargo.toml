@@ -6,8 +6,6 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0"
 base64 = "0.22"
-half = "2.7.1"
-flate2 = "1.1.9"
 log = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
@@ -18,6 +16,9 @@ osmo = { workspace = true }
 language-utils = { path = "../../language-utils" }
 google-tts = { path = "../google-tts" }
 g2p = { workspace = true }
+lexide = { workspace = true }
 
 [dev-dependencies]
+half = "2.7.1"
+flate2 = "1.1.9"
 tempfile = { workspace = true }

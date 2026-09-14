@@ -27,6 +27,7 @@ def worker():
     obj._pool_number = 0
     obj._label_cache = {}
     obj.blank_id = 0
+    obj.masked_slots = [0]
     obj.backbone = SimpleNamespace(
         config=SimpleNamespace(feat_extract_norm="layer"),
         _get_feat_extract_output_lengths=lambda n: (n - 400) // 320 + 1,
@@ -133,7 +134,7 @@ def test_order_trimming_language_and_options(worker):
         assert len(result["frames"]) == n
         assert result["frame_matrix"]["shape"] == [n, 3]
         assert len(zlib.decompress(base64.b64decode(result["frame_matrix"]["data"]))) == n * 3 * 2
-        assert len(result["frames"][0]["top_k"]) == request["top_k"]
+        assert len(result["frames"][0]["top_k"]) == min(request["top_k"], 2)
         assert ("tone" in result["frames"][0]) == (request["language"] == "tha")
     assert set(batch_method(worker, [clip(1600)])[0]) == {"phonemes"}
 
@@ -217,3 +218,113 @@ def test_mixed_languages_select_distinct_heads_once(worker):
     assert [dict((key, value.unique().item()) for key, value in item.items()) for item in aux] == [
         {"tone": 1}, {"tone": 2}, {"pitch_accent": 3}, {"tone": 1}, {}]
     assert all(head.calls == 1 for head in worker.language_heads.values())
+
+
+@pytest.fixture
+def headed_worker(worker):
+    """Run the real factorized forward with deterministic CPU head logits."""
+    worker.regularized = worker.mel_sidechannel = False
+    worker.masked_slots = [0, 2, 4, 6]
+    vocab = {"<pad>": 0, "a": 1, "<s>": 2, "b": 3, "</s>": 4, "c": 5, "<unk>": 6}
+    worker.processor.tokenizer = SimpleNamespace(get_vocab=lambda: vocab)
+    worker.processor.decode = lambda token: next(k for k, v in vocab.items() if v == token)
+
+    def forward(nb, phones=None, stress=None, tone=None):
+        t = len(nb)
+        phones = torch.tensor(phones if phones is not None else [[.4, .3, .3]] * t)
+        phone_logits = torch.full((1, t, 7), 100.)  # Specials would win without masking.
+        phone_logits[..., [1, 3, 5]] = phones.log()
+        worker.backbone = lambda values, **kwargs: SimpleNamespace(last_hidden_state=values.unsqueeze(-1))
+        worker.nonblank_head = lambda h: torch.logit(torch.tensor(nb)).reshape(1, t, 1)
+        worker.phoneme_head = lambda h: phone_logits
+        worker.stress_head = lambda h: torch.nn.functional.one_hot(
+            torch.tensor([stress if stress is not None else [0] * t]), 3).float()
+        worker.language_heads = {"thai": lambda h: torch.nn.functional.one_hot(
+            torch.tensor([tone if tone is not None else [0] * t]), 4).float()}
+        worker.language_head_specs = {"thai": {"lang": "tha", "target": "tone"}}
+        return worker._forward(torch.zeros(1, t), language="tha")
+
+    return worker, forward
+
+
+@pytest.mark.parametrize("nb,emits", [(.6, True), (.4, False), (.5, False)])
+def test_nonblank_first_real_forward(headed_worker, nb, emits):
+    worker, forward = headed_worker
+    lp, stress, p_nb, aux = forward([nb])
+    assert lp[0, 0].argmax().item() == worker.blank_id  # Original failure.
+    torch.testing.assert_close(lp[0, 0, [0, 1, 3, 5]].exp(),
+                               torch.tensor([1 - nb, nb * .4, nb * .3, nb * .3]))
+    result = worker._decode_with_confidence(lp, stress, p_nb, aux, 100)
+    assert [p["phoneme"] for p in result] == (["a"] if emits else [])
+    if emits:
+        assert result[0]["confidence"] == .24
+        assert {x["phoneme"] for x in result[0]["top_k"]} == {"a", "b", "c"}
+    frames = worker._frames_topk(lp, stress, p_nb, aux, 100)
+    assert frames[0]["p_nonblank"] == nb
+    assert {x["phoneme"] for x in frames[0]["top_k"]} == {"a", "b", "c"}
+    assert sum(x["probability"] for x in frames[0]["top_k"]) == pytest.approx(nb)
+    score = worker._score_target(lp, p_nb, ["a"])
+    assert score["logp_target"] == pytest.approx(torch.tensor(nb * .4).log().item())
+    assert score["free_len"] == int(emits)
+    assert score["ratio"] == (0.0 if emits else None)
+
+
+def test_collapse_onset_labels_and_free_reference(headed_worker):
+    worker, forward = headed_worker
+    lp, stress, nb, aux = forward([.6, .7, .5, .6, .8],
+                                  stress=[1, 2, 0, 2, 1], tone=[1, 2, 0, 3, 2])
+    result = worker._decode_with_confidence(lp, stress, nb, aux)
+    assert [p["phoneme"] for p in result] == ["ˈa", "ˌa"]
+    assert [p["tone"] for p in result] == [1, 3]
+    score = worker._score_target(lp, nb, ["a", "a"])
+    expected = -torch.nn.functional.ctc_loss(
+        lp.transpose(0, 1), torch.tensor([[1, 1]]), torch.tensor([5]),
+        torch.tensor([2]), blank=0, reduction="none")[0].item()
+    assert score["free_len"] == len(result) == 2
+    assert score["logp_free"] == pytest.approx(expected)
+    assert score["logp_target"] == pytest.approx(expected)
+    assert score["ratio"] == 0
+    other = worker._score_target(lp, nb, ["b"])
+    assert other["logp_free"] == score["logp_free"]
+    assert other["ratio"] == pytest.approx(other["logp_target"] - expected)
+
+    # Exercise the actual response builder to catch missing p_nonblank plumbing.
+    worker._forward_requests = lambda items: (lp, stress, nb, [aux], [5])
+    _, response = next(worker._process_microbatch(
+        [(0, {"target_phonemes": ["a", "a"]}, torch.zeros(1680))], 1, 1))
+    assert response["phonemes"] == result
+    assert response["target_score"] == score
+
+
+def test_confidence_is_product_of_means(headed_worker):
+    worker, forward = headed_worker
+    lp, stress, nb, aux = forward([.6, .9], phones=[[.4, .3, .3], [.8, .1, .1]])
+    result = worker._decode_with_confidence(lp, stress, nb, aux, 100)
+    assert len(result) == 1
+    assert result[0]["phoneme"] == "a"
+    assert result[0]["confidence"] == .45  # (.4 + .8)/2 * (.6 + .9)/2, not .48.
+    assert {x["phoneme"]: x["probability"] for x in result[0]["top_k"]} == {
+        "a": .45, "b": .15, "c": .15}
+
+
+def test_tied_topk_does_not_change_winning_id(headed_worker):
+    worker, forward = headed_worker
+    lp, stress, nb, aux = forward([.6], phones=[[1/3, 1/3, 1/3]])
+    assert worker._decode_with_confidence(lp, stress, nb, aux, 100)[0]["phoneme"] == "a"
+
+
+def test_conditional_softmax_survives_zero_sigmoid_and_excludes_slots(headed_worker):
+    worker, forward = headed_worker
+    lp, stress, nb, aux = forward([.6])
+    # Finite log-sigmoid at very negative logits, even though sigmoid underflows.
+    lp[..., [1, 3, 5]] -= 1000
+    lp[..., worker.masked_slots] = 100  # Explicit exclusion, not just -inf from forward.
+    nb.zero_()
+    predicted, conditional, ids = worker._phone_frames(lp, nb)
+    assert predicted.tolist() == [worker.blank_id]
+    assert ids.tolist() == [1, 3, 5]
+    torch.testing.assert_close(conditional, torch.tensor([[.4, .3, .3]]), atol=2e-5, rtol=0)
+    frames = worker._frames_topk(lp, stress, nb, aux, 100)
+    assert all(x["probability"] == 0 for x in frames[0]["top_k"])
+    nb.fill_(.6)
+    assert worker._decode_with_confidence(lp, stress, nb, aux)[0]["phoneme"] == "a"

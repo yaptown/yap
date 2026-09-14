@@ -3344,11 +3344,14 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 
 [[package]]
 name = "lexide"
-version = "0.1.1"
-source = "git+https://github.com/anchpop/lexide.git?rev=f27160eab541c3d8de55386a72efce142c6f8086#f27160eab541c3d8de55386a72efce142c6f8086"
+version = "0.2.0"
+source = "git+https://github.com/anchpop/lexide.git?rev=8c7cb221d6dde485942861dc5c3591a98b5dc199#8c7cb221d6dde485942861dc5c3591a98b5dc199"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
+ "flate2",
  "futures",
+ "half",
  "hf-hub",
  "regex 1.12.4",
  "reqwest 0.12.23",
@@ -4361,6 +4364,7 @@ dependencies = [
  "google-tts",
  "half",
  "language-utils",
+ "lexide",
  "log 0.4.31",
  "osmo",
  "reqwest 0.13.4",
@@ -7235,7 +7239,7 @@ version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0978bf7171b3d90bac376700cb56d606feb40f251a475a5d6634613564460b22"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
