@@ -24,12 +24,16 @@
 use anyhow::{Context, Result};
 use base64::Engine;
 use language_utils::{Language, PhonemeLabelSource};
+use lexide::pronunciation::{
+    BatchResponse as ModalBatchResponse, BatchResult, DECODER_VERSION, ModelIdentity,
+    PhonemeAlternative as RawPhonemeAlt, PredictResponse as ModalResponse, cache_version,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
-use std::sync::LazyLock;
+use std::sync::{LazyLock, OnceLock};
 use xxhash_rust::xxh3::xxh3_64;
 
 pub use lexide::pronunciation::{
@@ -64,30 +68,116 @@ fn batch_endpoint(single: &str) -> Result<String> {
     }
 }
 
-/// Bump this whenever the underlying Modal model OR the decoding strategy
-/// changes — the cache is partitioned by this string so old entries don't
-/// silently get reused with a new model. Format: `<repo>@<revision>__<decoder>`,
-/// and the revision must match `MODEL_REVISION` in
-/// lexide `pronunciation/modal/wav2vec2_phoneme.py`, since that is what production serves. For
-/// ad-hoc model comparisons the eval harness overrides this per-run via
-/// `WAV2VEC2_CACHE_VERSION_OVERRIDE`, so this const only governs the default
-/// (production) cache partition.
-///
-/// `edcbbbf43a7f` is the retrain that added the F0-capable acoustic
-/// side-channel (log-mel widened to 128 bins / 1024-point window, plus a
-/// 64-dim low-band spectrogram over the F0 range) and folded 3,414
-/// transcript-verified movie clips into the corpus. Same 392-token vocab as
-/// the previous pin, but every prediction moves, so the whole cache partition
-/// turns over — expect a full recompute on the next run.
-/// `nonblank_v1` gates frames on the nonblank head before choosing a phone;
-/// joint CTC probabilities are unchanged, but decoded predictions must be recached.
-const WAV2VEC2_CACHE_VERSION: &str = "anchpop_lexide-pronunciation@edcbbbf43a7f__nonblank_v1";
+#[derive(Deserialize)]
+struct IdentityProbe {
+    #[serde(flatten)]
+    identity: ModelIdentity,
+    #[serde(default)]
+    load_error: Option<serde_json::Value>,
+}
 
-/// The cache partition production predictions live under — what a caller
-/// should record as provenance for anything derived from them.
-pub fn production_cache_version() -> String {
-    std::env::var("WAV2VEC2_CACHE_VERSION_OVERRIDE")
-        .unwrap_or_else(|_| WAV2VEC2_CACHE_VERSION.to_string())
+impl IdentityProbe {
+    fn into_identity(self) -> Result<ModelIdentity> {
+        anyhow::ensure!(
+            self.load_error.is_none(),
+            "phonemizer failed to load: {:?}",
+            self.load_error
+        );
+        Ok(self.identity)
+    }
+}
+
+fn expected_deploy_marker() -> Option<String> {
+    std::env::var("WAV2VEC2_EXPECTED_DEPLOY_MARKER")
+        .ok()
+        .filter(|s| !s.is_empty())
+}
+
+/// Identity and cache partition are frozen together on first production use.
+struct ResolvedModel {
+    identity: Option<ModelIdentity>,
+    version: String,
+}
+
+static PRODUCTION_MODEL: OnceLock<Result<ResolvedModel, String>> = OnceLock::new();
+
+fn resolve_model(
+    override_version: Option<String>,
+    probe: impl FnOnce() -> Result<ModelIdentity>,
+) -> Result<ResolvedModel> {
+    if let Some(version) = override_version {
+        return Ok(ResolvedModel {
+            identity: None,
+            version,
+        });
+    }
+    let identity = probe()?;
+    anyhow::ensure!(
+        !identity.model_id.trim().is_empty() && !identity.model_revision.trim().is_empty(),
+        "phonemizer probe returned empty model identity"
+    );
+    check_decoder(identity.decoder_version.as_deref())?;
+    Ok(ResolvedModel {
+        version: cache_version(&identity),
+        identity: Some(identity),
+    })
+}
+
+fn resolved_model_once(
+    cell: &OnceLock<Result<ResolvedModel, String>>,
+    initialize: impl FnOnce() -> Result<ResolvedModel>,
+) -> Result<&ResolvedModel> {
+    cell.get_or_init(|| {
+        initialize().map_err(|error| format!("resolving phonemizer identity: {error:#}"))
+    })
+    .as_ref()
+    .map_err(|error| anyhow::anyhow!("{error}"))
+}
+
+fn production_model() -> Result<&'static ResolvedModel> {
+    resolved_model_once(&PRODUCTION_MODEL, || {
+        let model = resolve_model(
+            std::env::var("WAV2VEC2_CACHE_VERSION_OVERRIDE").ok(),
+            probe_identity,
+        )?;
+        if let Some(identity) = &model.identity {
+            check_marker(
+                expected_deploy_marker().as_deref(),
+                identity.deploy_marker.as_deref(),
+            )?;
+        }
+        Ok(model)
+    })
+}
+
+fn probe_identity() -> Result<ModelIdentity> {
+    // Constructors are synchronous and may run inside a current-thread Tokio
+    // runtime. This thread owns and drops its runtime and HTTP client; never
+    // block_on a caller's runtime.
+    std::thread::spawn(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all().build()?.block_on(async {
+                let batch = batch_url()?;
+                let predict = match std::env::var("WAV2VEC2_ENDPOINT_URL") {
+                    Ok(url) => url,
+                    Err(_) => batch.strip_suffix("-predict-batch.modal.run")
+                        .map(|prefix| format!("{prefix}-predict.modal.run"))
+                        .context("set WAV2VEC2_ENDPOINT_URL for identity discovery on a custom batch endpoint")?,
+                };
+                let http = reqwest::Client::builder()
+                    .timeout(std::time::Duration::from_secs(300)).build()?;
+                let probe: IdentityProbe = http.post(predict)
+                    .json(&serde_json::json!({"marker_only": true}))
+                    .send().await?.error_for_status()?.json().await?;
+                probe.into_identity()
+            })
+    }).join().map_err(|_| anyhow::anyhow!("phonemizer identity probe thread panicked"))?
+}
+
+/// The exact cache partition used by production contexts, including overrides.
+/// Discovery failures are fatal rather than falling back to stale provenance.
+pub fn production_cache_version() -> Result<String> {
+    Ok(production_model()?.version.clone())
 }
 
 /// The Hindi label convention the deployed model was trained on. The g2p
@@ -95,8 +185,7 @@ pub fn production_cache_version() -> String {
 /// that lexide will relabel with before the next retrain; until a model
 /// trained on those ships, targets must use the convention the model
 /// learned, or 39% of Hindi rows would be scored against a vowel the model
-/// was taught to call something else. Bump together with
-/// [`WAV2VEC2_CACHE_VERSION`].
+/// was taught to call something else. Review when deploying a new model.
 pub const MODEL_HINDI_CANON: g2p::HindiCanon = g2p::HindiCanon::Legacy;
 
 /// The scoring target for `text` in `language`, in the deployed model's
@@ -106,37 +195,6 @@ pub const MODEL_HINDI_CANON: g2p::HindiCanon = g2p::HindiCanon::Legacy;
 pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonemized, g2p::Error>> {
     let lang = language.g2p_lang()?;
     Some(g2p::phonemize_lang_with(lang, text, MODEL_HINDI_CANON))
-}
-
-#[derive(Debug, Clone, Deserialize)]
-struct ModalResponse {
-    phonemes: Vec<ModalPhoneme>,
-    /// The deploy marker the serving container reports. Checked against
-    /// `WAV2VEC2_EXPECTED_DEPLOY_MARKER` (when set, by the eval harness) so a
-    /// stale/contaminated container's predictions are rejected before caching.
-    /// Absent for older endpoints / production, where the check is a no-op.
-    #[serde(default)]
-    deploy_marker: Option<String>,
-    /// Present when the request asked for `return_frame_matrix`.
-    #[serde(default)]
-    frame_matrix: Option<FrameMatrixPayload>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-struct ModalPhoneme {
-    phoneme: String,
-    #[serde(default)]
-    confidence: f64,
-    /// Top-k alternatives from the model. The chosen phoneme is normally
-    /// the first entry, but we re-sort defensively at load time.
-    #[serde(default)]
-    top_k: Vec<RawPhonemeAlt>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct RawPhonemeAlt {
-    phoneme: String,
-    probability: f64,
 }
 
 /// The on-disk cache payload. Stores both the raw chosen phonemes and the
@@ -230,6 +288,7 @@ pub struct VerifyContext<'a> {
     store: osmo::Store,
     /// Partitions predictions by (model, decoder) as part of the cache key.
     cache_version: String,
+    expected_identity: Option<ModelIdentity>,
     /// word (lowercase) → accepted IPA pronunciations (main + alternates).
     /// The verifier passes a clip if the model's prediction is within
     /// threshold of *any* of these variants — alternates exist because
@@ -253,7 +312,7 @@ pub struct VerifyContext<'a> {
 
 impl<'a> VerifyContext<'a> {
     /// Production / env-driven constructor. The cache version partitions
-    /// predictions by (model, decoder); the compile-time const is the default,
+    /// predictions by the process-wide discovered (model, decoder),
     /// overridable via `WAV2VEC2_CACHE_VERSION_OVERRIDE`. Threshold and the
     /// expected deploy marker likewise come from env.
     pub fn new(
@@ -262,24 +321,23 @@ impl<'a> VerifyContext<'a> {
         word_to_pronunciation: &'a HashMap<String, language_utils::Pronunciations>,
         target_language: Language,
     ) -> Result<Self> {
-        let version = std::env::var("WAV2VEC2_CACHE_VERSION_OVERRIDE")
-            .unwrap_or_else(|_| WAV2VEC2_CACHE_VERSION.to_string());
+        let model = production_model()?;
         let threshold = std::env::var("AUDIO_VERIFY_THRESHOLD")
             .ok()
             .and_then(|s| s.parse::<f64>().ok())
             .unwrap_or(0.3);
-        let expected_deploy_marker = std::env::var("WAV2VEC2_EXPECTED_DEPLOY_MARKER")
-            .ok()
-            .filter(|s| !s.is_empty());
-        Self::with_overrides(
+        let expected_deploy_marker = expected_deploy_marker();
+        let mut ctx = Self::with_overrides(
             http,
             store,
             word_to_pronunciation,
             target_language,
-            version,
+            model.version.clone(),
             threshold,
             expected_deploy_marker,
-        )
+        )?;
+        ctx.expected_identity = model.identity.clone();
+        Ok(ctx)
     }
 
     /// Explicit constructor for in-process callers (the compare-audio-models
@@ -325,6 +383,7 @@ impl<'a> VerifyContext<'a> {
             http,
             store,
             cache_version,
+            expected_identity: None,
             word_to_pronunciation,
             mismatch_threshold,
             target_language,
@@ -611,13 +670,6 @@ async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
     }
 }
 
-#[derive(Deserialize)]
-struct ModalBatchResponse {
-    results: Vec<serde_json::Value>,
-    #[serde(default)]
-    deploy_marker: Option<String>,
-}
-
 /// POST one batch to the endpoint, retrying transient failures — cold-start
 /// timeouts (408), rate limits (429), and 5xx — which are otherwise fatal
 /// to a long run. A 408 typically means the container was mid-cold-start;
@@ -685,18 +737,35 @@ fn split_batch(batch: ModalBatchResponse, count: usize) -> Result<Vec<Result<Mod
             batch.results.len()
         );
     }
+    check_decoder(batch.decoder_version.as_deref())?;
     Ok(batch
         .results
         .into_iter()
         .map(|item| {
-            if let Some(error) = item.get("error") {
-                anyhow::bail!("Modal wav2vec2 rejected the clip: {error}");
-            }
-            let mut modal: ModalResponse =
-                serde_json::from_value(item).context("Failed to parse Modal wav2vec2 result")?;
-            if modal.deploy_marker.is_none() {
-                modal.deploy_marker = batch.deploy_marker.clone();
-            }
+            let mut modal = match item {
+                BatchResult::Error { error } => anyhow::bail!(
+                    "Modal wav2vec2 rejected the clip: {}: {}",
+                    error.error_type,
+                    error.message
+                ),
+                BatchResult::Prediction(modal) => modal,
+            };
+            merge_metadata("model id", &mut modal.model_id, &batch.model_id)?;
+            merge_metadata(
+                "model revision",
+                &mut modal.model_revision,
+                &batch.model_revision,
+            )?;
+            merge_metadata(
+                "decoder",
+                &mut modal.decoder_version,
+                &batch.decoder_version,
+            )?;
+            merge_metadata(
+                "deploy-marker",
+                &mut modal.deploy_marker,
+                &batch.deploy_marker,
+            )?;
             Ok(modal)
         })
         .collect())
@@ -714,22 +783,70 @@ async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Resu
     let modal = result
         .await
         .context("the Modal batch worker dropped the request")??;
-    check_deploy_marker(ctx, &modal)?;
+    check_response_identity(ctx, &modal)?;
     Ok(modal)
+}
+
+fn check_decoder(decoder: Option<&str>) -> Result<()> {
+    if let Some(decoder) = decoder {
+        anyhow::ensure!(
+            decoder == DECODER_VERSION,
+            "decoder mismatch: endpoint reported {decoder:?}, expected {DECODER_VERSION:?}"
+        );
+    }
+    Ok(())
+}
+
+/// Never mask an item/envelope disagreement with the other layer's metadata.
+/// After merging, checking an item against its context also checks the envelope.
+fn merge_metadata(name: &str, item: &mut Option<String>, envelope: &Option<String>) -> Result<()> {
+    if let Some(envelope) = envelope {
+        if let Some(item) = item.as_ref() {
+            anyhow::ensure!(
+                item == envelope,
+                "batch {name} mismatch: item {item:?}, envelope {envelope:?}"
+            );
+        } else {
+            *item = Some(envelope.clone());
+        }
+    }
+    Ok(())
 }
 
 /// Per-response freshness check: the one-shot marker_only probe only proves
 /// the *first* request hit a fresh container. Verifying the marker on every
 /// response guarantees no later request was routed to a stale/contaminated
 /// warm container and silently cached under the wrong model's key.
-fn check_deploy_marker(ctx: &VerifyContext<'_>, modal: &ModalResponse) -> Result<()> {
-    if let Some(expected) = &ctx.expected_deploy_marker
-        && modal.deploy_marker.as_deref() != Some(expected.as_str())
-    {
-        anyhow::bail!(
-            "deploy-marker mismatch: endpoint reported {:?}, expected {expected:?} — \
-             refusing to cache a possibly-contaminated prediction",
-            modal.deploy_marker
+fn check_response_identity(ctx: &VerifyContext<'_>, modal: &ModalResponse) -> Result<()> {
+    check_decoder(modal.decoder_version.as_deref())?;
+    if let Some(identity) = &ctx.expected_identity {
+        for (name, reported, expected) in [
+            ("model id", modal.model_id.as_ref(), &identity.model_id),
+            (
+                "model revision",
+                modal.model_revision.as_ref(),
+                &identity.model_revision,
+            ),
+        ] {
+            if let Some(reported) = reported {
+                anyhow::ensure!(
+                    reported == expected,
+                    "{name} mismatch: endpoint reported {reported:?}, expected {expected:?} — refusing to cache prediction"
+                );
+            }
+        }
+    }
+    check_marker(
+        ctx.expected_deploy_marker.as_deref(),
+        modal.deploy_marker.as_deref(),
+    )
+}
+
+fn check_marker(expected: Option<&str>, reported: Option<&str>) -> Result<()> {
+    if let Some(expected) = expected {
+        anyhow::ensure!(
+            reported == Some(expected),
+            "deploy-marker mismatch: endpoint reported {reported:?}, expected {expected:?} — refusing to cache a possibly-contaminated prediction"
         );
     }
     Ok(())
@@ -775,6 +892,7 @@ async fn cache_modal_prediction(
     hash: u64,
     modal: &ModalResponse,
 ) -> Result<(Vec<String>, Vec<Vec<RawPhonemeAlt>>)> {
+    check_response_identity(ctx, modal)?;
     let raw_phonemes: Vec<String> = modal.phonemes.iter().map(|p| p.phoneme.clone()).collect();
     let top_k: Vec<Vec<RawPhonemeAlt>> = modal
         .phonemes
@@ -928,7 +1046,7 @@ async fn frame_matrices_at(
                     results[index] = Some(
                         async {
                             let modal = item?;
-                            check_deploy_marker(ctx, &modal)?;
+                            check_response_identity(ctx, &modal)?;
                             let payload = modal
                                 .frame_matrix
                                 .as_ref()
@@ -1936,10 +2054,137 @@ mod tests {
         wav
     }
 
+    fn test_identity() -> ModelIdentity {
+        ModelIdentity {
+            model_id: "test/model".into(),
+            model_revision: "1234567890abcdef".into(),
+            decoder_version: Some(DECODER_VERSION.into()),
+            deploy_marker: Some("fresh".into()),
+        }
+    }
+
+    #[test]
+    fn resolved_state_is_shared_and_failure_is_not_reprobed() {
+        let cell = OnceLock::new();
+        let first =
+            resolved_model_once(&cell, || resolve_model(None, || Ok(test_identity()))).unwrap();
+        let second = resolved_model_once(&cell, || panic!("must resolve only once")).unwrap();
+        assert!(std::ptr::eq(first, second));
+        assert_eq!(first.version, second.version);
+        let failed = OnceLock::new();
+        assert!(resolved_model_once(&failed, || anyhow::bail!("offline")).is_err());
+        assert!(resolved_model_once(&failed, || panic!("must not retry")).is_err());
+    }
+
+    #[test]
+    fn override_skips_probe_and_discovery_fails_closed() {
+        let model = resolve_model(Some("offline".into()), || panic!("must not probe")).unwrap();
+        assert_eq!(model.version, "offline");
+        assert!(model.identity.is_none());
+        let model = resolve_model(None, || Ok(test_identity())).unwrap();
+        assert_eq!(model.version, "test_model@1234567890ab__nonblank_v1");
+        assert_eq!(model.identity, Some(test_identity()));
+        assert!(resolve_model(None, || anyhow::bail!("offline")).is_err());
+        for field in ["model_id", "model_revision", "decoder_version"] {
+            let mut identity = test_identity();
+            match field {
+                "model_id" => identity.model_id.clear(),
+                "model_revision" => identity.model_revision.clear(),
+                _ => identity.decoder_version = Some("wrong".into()),
+            }
+            assert!(resolve_model(None, || Ok(identity)).is_err());
+        }
+        assert!(
+            serde_json::from_value::<IdentityProbe>(serde_json::json!({"deploy_marker": "fresh"}))
+                .is_err()
+        );
+        let mut probe = serde_json::to_value(test_identity()).unwrap();
+        probe["load_error"] = serde_json::json!("failed loading weights");
+        assert!(
+            serde_json::from_value::<IdentityProbe>(probe)
+                .unwrap()
+                .into_identity()
+                .is_err()
+        );
+        assert!(check_marker(Some("fresh"), Some("stale")).is_err());
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn response_and_envelope_identity_guards() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let words = HashMap::new();
+        // Explicit contexts never discover production identity.
+        let mut ctx = VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &words,
+            Language::English,
+            "offline".into(),
+            0.3,
+            Some("fresh".into()),
+        )
+        .unwrap();
+        let response = |metadata: serde_json::Value| {
+            let mut value = metadata;
+            value["phonemes"] = serde_json::json!([]);
+            serde_json::from_value::<ModalResponse>(value).unwrap()
+        };
+        let good = serde_json::to_value(test_identity()).unwrap();
+        assert!(check_response_identity(&ctx, &response(good.clone())).is_ok());
+        // Overrides still enforce decoder and marker; no identity pin is inferred.
+        for (field, value) in [("decoder_version", "wrong"), ("deploy_marker", "stale")] {
+            let mut bad = good.clone();
+            bad[field] = serde_json::json!(value);
+            assert!(check_response_identity(&ctx, &response(bad)).is_err());
+        }
+        ctx.expected_identity = Some(test_identity());
+        for field in [
+            "model_id",
+            "model_revision",
+            "decoder_version",
+            "deploy_marker",
+        ] {
+            let mut bad = good.clone();
+            bad[field] = serde_json::json!("wrong");
+            assert!(check_response_identity(&ctx, &response(bad.clone())).is_err());
+            // A good per-item claim must not mask a bad envelope.
+            bad["results"] = serde_json::json!([response(good.clone())]);
+            let split = split_batch(serde_json::from_value(bad).unwrap(), 1);
+            assert!(split.is_err() || split.unwrap().remove(0).is_err());
+            // Missing per-item metadata inherits the envelope and is checked.
+            let mut envelope = good.clone();
+            envelope[field] = serde_json::json!("wrong");
+            envelope["results"] = serde_json::json!([{"phonemes": []}]);
+            match split_batch(serde_json::from_value(envelope).unwrap(), 1) {
+                Err(_) => {}
+                Ok(mut items) => {
+                    assert!(check_response_identity(&ctx, &items.remove(0).unwrap()).is_err())
+                }
+            }
+        }
+        let mut envelope = good.clone();
+        envelope["results"] = serde_json::json!([{"phonemes": []}]);
+        let item = split_batch(serde_json::from_value(envelope).unwrap(), 1)
+            .unwrap()
+            .remove(0)
+            .unwrap();
+        assert!(check_response_identity(&ctx, &item).is_ok());
+        assert_eq!(item.model_revision, Some(test_identity().model_revision));
+        assert!(check_response_identity(&ctx, &response(serde_json::json!({}))).is_err());
+        ctx.expected_deploy_marker = None;
+        assert!(check_response_identity(&ctx, &response(serde_json::json!({}))).is_ok());
+    }
+
     #[test]
     fn batch_envelope_checks_count_marker_and_endpoint() {
         let response = || ModalBatchResponse {
-            results: vec![serde_json::json!({"phonemes": []})],
+            results: vec![BatchResult::Prediction(
+                serde_json::from_value(serde_json::json!({"phonemes": []})).unwrap(),
+            )],
+            model_id: None,
+            model_revision: None,
+            decoder_version: None,
             deploy_marker: Some("new".into()),
         };
         assert!(split_batch(response(), 2).is_err());
@@ -2018,6 +2263,7 @@ mod tests {
             http: &http,
             store,
             cache_version: "test".into(),
+            expected_identity: None,
             word_to_pronunciation: &empty,
             mismatch_threshold: 0.3,
             target_language: Language::English,

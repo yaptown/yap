@@ -797,7 +797,13 @@ async fn run(args: Args) -> Result<()> {
             Some(deploy_and_verify(&http, &url, &sn, &model_id, &revision, &mut seq).await?)
         };
 
-        let cache_key = format!("{sn}__nonblank_v1");
+        let cache_key =
+            lexide::pronunciation::cache_version(&lexide::pronunciation::ModelIdentity {
+                model_id: model_id.clone(),
+                model_revision: revision.clone(),
+                decoder_version: None,
+                deploy_marker: expected_marker.clone(),
+            });
         println!("  → verifying clips (cache={cache_key})");
         let results = verify_model(
             &http,

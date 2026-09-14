@@ -918,14 +918,14 @@ async fn clips_one(
     let (model, g2p) = match (min_ratio, language) {
         (None, _) => ("none".to_string(), "none".to_string()),
         (Some(_), Language::Hindi) => (
-            phoneme_verify::production_cache_version(),
+            phoneme_verify::production_cache_version()?,
             format!(
                 "{} hindi={:?}",
                 g2p::identity(),
                 phoneme_verify::MODEL_HINDI_CANON
             ),
         ),
-        (Some(_), _) => (phoneme_verify::production_cache_version(), g2p::identity()),
+        (Some(_), _) => (phoneme_verify::production_cache_version()?, g2p::identity()),
     };
     let provenance = Provenance {
         format: FORMAT_VERSION,
