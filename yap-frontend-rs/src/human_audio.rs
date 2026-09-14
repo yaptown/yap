@@ -48,23 +48,23 @@ pub fn has_clip(language: Language, text: &str) -> bool {
         .any(|clips| clips.contains_key(text))
 }
 
-pub fn has_pronunciation_audio(language: Language, ssml: &str) -> bool {
+pub fn has_pronunciation_audio(language: Language, spoken_text: &str) -> bool {
     let registry = REGISTRY.lock().expect("human audio registry poisoned");
     registry
         .packs
         .get(&language)
         .and_then(Weak::upgrade)
-        .is_some_and(|pack| pack.pronunciation_audio.contains_key(ssml))
+        .is_some_and(|pack| pack.pronunciation_audio.contains_key(spoken_text))
 }
 
-pub fn pronunciation_audio(language: Language, ssml: &str) -> Option<Vec<u8>> {
+pub fn pronunciation_audio(language: Language, spoken_text: &str) -> Option<Vec<u8>> {
     let registry = REGISTRY.lock().expect("human audio registry poisoned");
     registry
         .packs
         .get(&language)?
         .upgrade()?
         .pronunciation_audio
-        .get(ssml)
+        .get(spoken_text)
         .map(|clip| clip.audio.bytes.clone())
 }
 

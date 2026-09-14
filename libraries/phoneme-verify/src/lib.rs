@@ -1588,48 +1588,126 @@ pub async fn verify_with_google_tts(
     voice: TtsVoice,
     google_api_key: &str,
 ) -> Result<ClipVerification> {
-    let (_, verification) =
-        synthesize_verified_google_tts(ctx, actor, text, text, voice, false, Some(google_api_key))
-            .await?;
+    let synthesis = TtsSynthesis::Google {
+        voice,
+        text: text.to_string(),
+    };
+    let keys = TtsKeys {
+        google: Some(google_api_key.to_string()),
+        gemini: None,
+    };
+    let (_, verification) = synthesize_verified(ctx, actor, &synthesis, text, &keys).await?;
     Ok(verification)
 }
 
-/// Synthesize (or load) Google TTS audio and verify it against a separately
-/// supplied spoken transcript. Keeping synthesis text separate matters for
-/// SSML: the provider receives markup, while the phonemizer must receive the
-/// words that the markup is expected to produce.
+/// API keys a synthesis may need. Each is optional so a cache-only run can
+/// consume already populated entries; a key is required only on a miss.
+#[derive(Debug, Clone, Default)]
+pub struct TtsKeys {
+    pub google: Option<String>,
+    pub gemini: Option<String>,
+}
+
+impl TtsKeys {
+    /// `GOOGLE_CLOUD_API_KEY` and `GEMINI_API_KEY`, whichever are set.
+    pub fn from_env() -> Self {
+        Self {
+            google: std::env::var("GOOGLE_CLOUD_API_KEY").ok(),
+            gemini: std::env::var("GEMINI_API_KEY").ok(),
+        }
+    }
+}
+
+/// One way of producing a clip of some spoken text. A cue is tried through
+/// several of these in order — Gemini twice, then Cloud TTS — and the first
+/// whose clip passes verification is kept.
+#[derive(Debug, Clone)]
+pub enum TtsSynthesis {
+    /// Cloud TTS: a fixed per-language voice reading `text` literally.
+    Google { voice: TtsVoice, text: String },
+    /// Gemini reading `text` under `instructions`. The model is stochastic,
+    /// so `attempt` distinguishes repeated draws of the same prompt in the
+    /// cache — a second draw is a genuinely different clip.
+    Gemini {
+        voice: String,
+        instructions: String,
+        text: String,
+        attempt: u32,
+    },
+}
+
+impl TtsSynthesis {
+    /// Where the clip lives in the cache: hashed from every input that
+    /// determines the audio, so a change to any of them misses automatically.
+    fn cache_key(&self) -> String {
+        match self {
+            TtsSynthesis::Google { voice, text } => {
+                let speed = 1.0f64;
+                let seed = format!(
+                    "{text}|{}|{}|{speed}|ssml=false",
+                    voice.language_code, voice.voice_name
+                );
+                format!("google-tts/{:016x}", xxh3_64(seed.as_bytes()))
+            }
+            TtsSynthesis::Gemini {
+                voice,
+                instructions,
+                text,
+                attempt,
+            } => {
+                let seed = format!(
+                    "{}|{voice}|{instructions}|{text}|{attempt}",
+                    google_tts::gemini::GEMINI_TTS_MODEL
+                );
+                // v2: clips encoded with the lookahead flushed; v1 entries
+                // lost their last few milliseconds to the encoder delay.
+                format!("gemini-tts/v2/{:016x}", xxh3_64(seed.as_bytes()))
+            }
+        }
+    }
+
+    /// Recorded as the verification's `wav_path`: which provider and voice
+    /// produced the clip, and for Gemini which draw.
+    pub fn label(&self) -> String {
+        match self {
+            TtsSynthesis::Google { voice, .. } => format!("google-tts://{}", voice.voice_name),
+            TtsSynthesis::Gemini { voice, attempt, .. } => {
+                format!("gemini-tts://{voice}#{attempt}")
+            }
+        }
+    }
+}
+
+/// Synthesize (or load from the cache) one clip and verify it against
+/// `spoken_text`: the same words the voice was given, phonemized as the
+/// reference. The returned audio is Ogg Opus whichever provider made it,
+/// ready to embed in a language pack.
 ///
-/// The returned audio is suitable for embedding in a language pack. The API
-/// key is optional so a cache-only generate-data run can consume an already
-/// populated entry; it is required only on a TTS cache miss.
-pub async fn synthesize_verified_google_tts(
+/// A provider's own refusal to produce usable audio — Cloud TTS exhausting
+/// its defect retries, Gemini declining a prompt or answering without audio
+/// — comes back as a failed [`ClipVerification`], cached like any other
+/// outcome, so the caller moves on to its next candidate. Transport errors
+/// and exhausted rate-limit backoff are `Err`: the run can't tell good audio
+/// from bad and should stop rather than quietly fall through.
+pub async fn synthesize_verified(
     ctx: &VerifyContext<'_>,
     actor: &str,
-    synthesis_text: &str,
+    synthesis: &TtsSynthesis,
     spoken_text: &str,
-    voice: TtsVoice,
-    is_ssml: bool,
-    google_api_key: Option<&str>,
+    keys: &TtsKeys,
 ) -> Result<(Vec<u8>, ClipVerification)> {
-    // Cache key: hash the request inputs that uniquely determine the output.
-    // If we ever change voice/speed/text, the cache miss is automatic.
-    let speed = 1.0f64;
-    let cache_seed = format!(
-        "{synthesis_text}|{}|{}|{speed}|ssml={is_ssml}",
-        voice.language_code, voice.voice_name
-    );
-    let hash = xxh3_64(cache_seed.as_bytes());
-    let cache_key = format!("google-tts/{hash:016x}");
+    let cache_key = synthesis.cache_key();
+    let label = synthesis.label();
 
     let (audio_bytes, tts_note) = if let Some(s) = ctx.store.read(&cache_key).await
         && let Ok(cached) = serde_json::from_slice::<CachedTts>(&s)
     {
         let bytes = base64::engine::general_purpose::STANDARD
             .decode(&cached.audio_base64)
-            .context("Cached google-tts audio_base64 was not valid base64")?;
+            .context("Cached TTS audio_base64 was not valid base64")?;
         let note = (!cached.passed).then(|| {
             format!(
-                "google-tts hit retry limit after {} attempts ({})",
+                "{label} gave up after {} attempt(s) ({})",
                 cached.attempts,
                 cached.last_defect.as_deref().unwrap_or("unknown defect")
             )
@@ -1638,34 +1716,76 @@ pub async fn synthesize_verified_google_tts(
     } else {
         if cache_only() {
             anyhow::bail!(
-                "google-tts cache miss for {synthesis_text:?} ({hash:016x}); cache-only mode is enabled"
+                "TTS cache miss for {spoken_text:?} via {label} ({cache_key}); cache-only mode is \
+                 enabled"
             );
         }
-        let google_api_key = google_api_key.ok_or_else(|| {
-            anyhow::anyhow!("GOOGLE_CLOUD_API_KEY is required for uncached pronunciation audio")
-        })?;
-        let client =
-            google_tts::GoogleTtsClient::new(google_api_key.to_string()).with_max_attempts(5);
-        let outcome = client
-            .synthesize(&google_tts::GoogleTtsRequest {
-                text: synthesis_text.to_string(),
-                language_code: voice.language_code.to_string(),
-                voice_name: voice.voice_name.to_string(),
-                speed,
-                is_ssml,
-            })
-            .await
-            .with_context(|| format!("Google TTS call failed for {synthesis_text:?}"))?;
-        let (passed, last_defect) = match outcome.status {
-            google_tts::TtsStatus::Passed => (true, None),
-            google_tts::TtsStatus::HitLimit { last_defect } => {
-                (false, Some(last_defect.to_string()))
-            }
-        };
+        let (bytes, attempts, passed, last_defect): (Vec<u8>, usize, bool, Option<String>) =
+            match synthesis {
+                TtsSynthesis::Google { voice, text } => {
+                    let api_key = keys.google.as_deref().ok_or_else(|| {
+                        anyhow::anyhow!("GOOGLE_CLOUD_API_KEY is required for uncached TTS audio")
+                    })?;
+                    let client =
+                        google_tts::GoogleTtsClient::new(api_key.to_string()).with_max_attempts(5);
+                    let outcome = client
+                        .synthesize(&google_tts::GoogleTtsRequest {
+                            text: text.clone(),
+                            language_code: voice.language_code.to_string(),
+                            voice_name: voice.voice_name.to_string(),
+                            speed: 1.0,
+                            is_ssml: false,
+                        })
+                        .await
+                        .with_context(|| format!("Google TTS call failed for {text:?}"))?;
+                    let (passed, last_defect) = match outcome.status {
+                        google_tts::TtsStatus::Passed => (true, None),
+                        google_tts::TtsStatus::HitLimit { last_defect } => {
+                            (false, Some(last_defect.to_string()))
+                        }
+                    };
+                    (outcome.audio_bytes, outcome.attempts, passed, last_defect)
+                }
+                TtsSynthesis::Gemini {
+                    voice,
+                    instructions,
+                    text,
+                    ..
+                } => {
+                    let api_key = keys.gemini.as_deref().ok_or_else(|| {
+                        anyhow::anyhow!("GEMINI_API_KEY is required for uncached Gemini TTS audio")
+                    })?;
+                    let client = google_tts::gemini::GeminiTtsClient::with_http(
+                        api_key.to_string(),
+                        ctx.http.clone(),
+                    );
+                    let request = google_tts::gemini::GeminiTtsRequest {
+                        instructions: instructions.clone(),
+                        text: text.clone(),
+                        voice: voice.clone(),
+                    };
+                    match client.synthesize(&request).await {
+                        Ok(Some(audio)) => {
+                            let bytes = audio
+                                .to_ogg_opus()
+                                .with_context(|| format!("encoding Gemini audio for {text:?}"))?;
+                            let defect = google_tts::audio_defect(&bytes);
+                            (bytes, 1, defect.is_none(), defect.map(str::to_string))
+                        }
+                        Ok(None) => (Vec::new(), 1, false, Some("no audio in response".into())),
+                        Err(google_tts::gemini::GeminiTtsError::Declined(body)) => {
+                            (Vec::new(), 1, false, Some(format!("declined: {body}")))
+                        }
+                        Err(google_tts::gemini::GeminiTtsError::Other(e)) => {
+                            return Err(e.context(format!("Gemini TTS call failed for {text:?}")));
+                        }
+                    }
+                }
+            };
         let to_cache = CachedTts {
-            text: Some(synthesis_text.to_string()),
-            audio_base64: base64::engine::general_purpose::STANDARD.encode(&outcome.audio_bytes),
-            attempts: outcome.attempts,
+            text: Some(spoken_text.to_string()),
+            audio_base64: base64::engine::general_purpose::STANDARD.encode(&bytes),
+            attempts,
             passed,
             last_defect: last_defect.clone(),
         };
@@ -1680,26 +1800,25 @@ pub async fn synthesize_verified_google_tts(
             .with_context(|| format!("Failed to write cache entry {cache_key}"))?;
         let note = (!passed).then(|| {
             format!(
-                "google-tts hit retry limit after {} attempts ({})",
-                outcome.attempts,
+                "{label} gave up after {attempts} attempt(s) ({})",
                 last_defect.unwrap_or_else(|| "unknown defect".to_string())
             )
         });
-        (outcome.audio_bytes, note)
+        (bytes, note)
     };
 
-    // If the TTS retry loop gave up, skip verification entirely. Running
-    // wav2vec2 on near-silent or truncated audio invites the model to
-    // hallucinate plausible phonemes (the `pas` case: TTS returned 0.19s
-    // of -50 dB audio, we padded to 0.6s with zeros, model emitted `p a`
-    // matching expected, edit_distance came out 0 — but the audio itself
-    // is unusable). Cleanest fix: don't trust verification on audio Google
-    // already flagged as defective; surface the TTS warning as the failure.
+    // If the provider gave up, skip verification entirely. Running wav2vec2
+    // on near-silent or truncated audio invites the model to hallucinate
+    // plausible phonemes (the `pas` case: TTS returned 0.19s of -50 dB
+    // audio, we padded to 0.6s with zeros, model emitted `p a` matching
+    // expected, edit_distance came out 0 — but the audio itself is
+    // unusable). Don't trust verification on audio the provider already
+    // flagged; surface the provider's note as the failure.
     if let Some(note) = tts_note {
         let verification = ClipVerification {
             actor: actor.to_string(),
             text: spoken_text.to_string(),
-            wav_path: format!("google-tts://{}", voice.voice_name),
+            wav_path: label,
             predicted_raw: Vec::new(),
             predicted_normalized: Vec::new(),
             expected: None,
@@ -1712,19 +1831,12 @@ pub async fn synthesize_verified_google_tts(
         return Ok((audio_bytes, verification));
     }
 
-    // Google TTS clips don't have per-clip transcription overrides — they're
-    // synthesized from the canonical text, so the wikipron+espeak ground
-    // truth is the right reference.
+    // Synthesized clips have no per-clip transcription overrides — they were
+    // made from the canonical text, so the wikipron+espeak ground truth is
+    // the right reference.
     let expected = expected_phoneme_variants(ctx, spoken_text, None);
-    let verification = verify_clip_bytes(
-        ctx,
-        actor,
-        spoken_text,
-        &format!("google-tts://{}", voice.voice_name),
-        &audio_bytes,
-        expected,
-    )
-    .await?;
+    let verification =
+        verify_clip_bytes(ctx, actor, spoken_text, &label, &audio_bytes, expected).await?;
     Ok((audio_bytes, verification))
 }
 
@@ -2361,5 +2473,62 @@ mod tests {
         assert_eq!(norm_topk[0][0].0, "ʁ");
         assert!((norm_topk[0][0].1 - 0.7).abs() < 1e-9);
         assert_eq!(norm_topk[0][1].0, "a");
+    }
+}
+
+#[cfg(test)]
+mod letter_name_tests {
+    use super::*;
+
+    fn phonemes(language: Language, pattern: &str, example: &str) -> String {
+        let text = language_utils::pronunciation_challenge_spoken_text(language, pattern, example);
+        model_target(&text, language)
+            .unwrap()
+            .unwrap()
+            .phonemes
+            .iter()
+            .filter_map(|p| normalize_phoneme(p, language))
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+
+    // The letter-name table is only useful if espeak reads each name as the
+    // voice will say it: a name that phonemizes as something else would
+    // fail every clip of that letter however well it was spoken.
+    #[test]
+    fn letter_names_phonemize_as_spoken() {
+        assert_eq!(
+            phonemes(Language::German, "ü", "über"),
+            "u ʊ m l a ʊ t v i ɪ n y b ɜ"
+        );
+        assert_eq!(
+            phonemes(Language::German, "ß", "Straße"),
+            "ɛ s t s ɛ t v i ɪ n ʃ t ɾ ɑ s ə"
+        );
+        assert_eq!(
+            phonemes(Language::Spanish, "ñ", "niño"),
+            "e ɲ e k o m o e n n i ɲ o"
+        );
+        assert_eq!(
+            phonemes(Language::Portuguese, "ã", "pão"),
+            "a t ʃ i ʊ k o m w e\u{303} j p ɐ\u{303} ʊ\u{303}"
+        );
+        assert_eq!(
+            phonemes(Language::Russian, "щ", "борщ"),
+            "ɕ ɑ k ɑ k v b o r ɕ"
+        );
+        assert_eq!(
+            phonemes(Language::Russian, "ь", "соль"),
+            "mʲ ɑ x kʲ i j z n ɑ k k ɑ k f s o ɫ"
+        );
+        assert_eq!(
+            phonemes(Language::French, "ç", "garçon"),
+            "s e s e d i j k ɔ m d ɑ\u{303} ɡ a ʁ s ɔ\u{303}"
+        );
+        // A lone sokuon has no reading at all; its name does.
+        assert_eq!(
+            phonemes(Language::Japanese, "っ", "カップ"),
+            "tɕ i i s a i ts ɯᵝ n o j o o n i k a p ɯᵝ"
+        );
     }
 }

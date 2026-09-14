@@ -627,70 +627,14 @@ async fn elevenlabs_synthesize(
     Ok(Some(audio_bytes.to_vec()))
 }
 
-/// The Google locale and voice to synthesize `language` with.
-///
-/// Two voices per language, because Chirp3-HD mishandles `<break>` — and it
-/// doesn't error, it eats the text next to the tag. Our pronunciation cards
-/// are built entirely out of breaks:
-///
-/// ```text
-/// <break time="100ms"/><say-as interpret-as="characters">e</say-as>
-/// <break time="100ms"/>comme dans<break time="200ms"/>je
-/// ```
-///
-/// Chirp3-HD reads that back as "comme dans", losing both the letter being
-/// taught and the example word. Measured on the "e" card (transcribed with
-/// the same Whisper model the ASR gate uses):
-///
-/// | payload                     | Chirp3-HD     | Neural2            |
-/// |-----------------------------|---------------|--------------------|
-/// | breaks + say-as (we ship)   | "comme dans"  | "euh comme dans J" |
-/// | breaks only                 | "comme dans"  | "euh comme dans J" |
-/// | say-as only, no breaks      | "e comme dans jeu" | "e comme dans J" |
-/// | say-as, digraph "ch"        | "CH comme dans chat" | "CH comme dans chat" |
-///
-/// So `<say-as>` is *fine* on Chirp3-HD; `<break>` is the whole problem. This
-/// is worth stating precisely because the obvious fix — drop the breaks, keep
-/// the better voice — doesn't work either, for two reasons:
-///
-/// 1. Google's documented alternative, `[pause]` tags in the `markup` input
-///    field, fails identically: `e [pause short] comme dans [pause] je` comes
-///    back as "comme dans jeu", letter gone. Chirp3-HD has no working way to
-///    put a pause before a short token.
-/// 2. Chirp3-HD is generative, and on fragments this short it embellishes.
-///    Asked for "e comme dans je" with no pauses at all it produced "c'est
-///    comme dans le jeu" and "e comme dans je t'aide" — inventing words we
-///    never sent. Neural2 and Wavenet returned the exact text every time.
-///
-/// For a card whose entire job is to demonstrate one letter, saying precisely
-/// the requested words beats naturalness. That's the real axis here, and it's
-/// why the split isn't just "older tier for SSML": Chirp3-HD stays the better
-/// choice on the plain-text paths (grams, dictionary, sentence fallback).
-///
-/// # How this regressed without us touching it
-///
-/// The card shipped working in March 2026 and broke months later with no
-/// change on our side. Google's release notes date the cause to 2025-10-17:
-/// "Chirp 3 HD now supports speech synthesis using SSML input. Supported SSML
-/// tags are: `<phoneme>`, `<p>`, `<s>`, `<sub>`, and `<say-as>`." No
-/// `<break>` — so our breaks were silently *ignored*, the rest was read
-/// correctly, and the card sounded right. Google later added `<break>` to the
-/// supported list (it's on the Chirp3-HD docs page now, with no release-note
-/// entry), and the implementation ate the adjacent text. Support for the tag
-/// turned out to be worse than not having it.
-///
-/// Nothing downstream catches this: the audio is a healthy recording so
-/// `audio_defect` passes it, and the ASR gate skips SSML because a transcript
-/// can't resemble markup. It has to be caught here, at the point where a
-/// voice that can't honor the request would otherwise be picked anyway.
-fn google_voice(language: Language, is_ssml: bool) -> (&'static str, &'static str) {
-    language.google_tts_voice(is_ssml)
-}
-
+/// Cloud TTS with the language's Chirp 3 HD voice. Chirp 3 embellishes very
+/// short fragments and mishandles SSML `<break>`, which is why pronunciation
+/// cues no longer come through here: they are plain spoken text read by
+/// Gemini, with this voice as the fallback, and verified before they ship.
 async fn google_synthesize(request: &TtsRequest) -> Result<Option<Vec<u8>>, SynthError> {
     let api_key = std::env::var("GOOGLE_CLOUD_API_KEY").map_err(|_| SynthError::Unsupported)?;
 
-    let (language_code, voice_name) = google_voice(request.language, request.is_ssml);
+    let (language_code, voice_name) = request.language.google_tts_voice();
 
     // One attempt per call: `synthesize_checked_bytes` owns the retry budget now, so
     // leaving the library's own loop enabled would multiply the two.
@@ -758,10 +702,20 @@ async fn gemini_synthesize(
     request: &TtsRequest,
 ) -> Result<Option<Vec<u8>>, SynthError> {
     let api_key = std::env::var("GEMINI_API_KEY").map_err(|_| SynthError::Unsupported)?;
-    let prompt = gemini_tts_prompt(request);
-    gemini_tts_attempt(http, &api_key, &prompt)
-        .await
-        .map_err(SynthError::Failed)
+    let client = google_tts::gemini::GeminiTtsClient::with_http(api_key, http.clone());
+    let gemini_request = google_tts::gemini::GeminiTtsRequest {
+        instructions: gemini_tts_instructions(request),
+        text: request.text.clone(),
+        voice: GEMINI_TTS_VOICE.to_string(),
+    };
+    match client.synthesize(&gemini_request).await {
+        Ok(Some(audio)) => Ok(Some(audio.to_wav())),
+        Ok(None) => Ok(None),
+        Err(e) => {
+            eprintln!("Gemini TTS error: {e}");
+            Err(SynthError::Failed(StatusCode::BAD_GATEWAY))
+        }
+    }
 }
 
 async fn text_to_speech(
@@ -824,19 +778,16 @@ fn wrap_pcm_in_wav(
     wav
 }
 
-/// Gemini's TTS model. Unlike Google Cloud TTS it has no per-language voice
-/// list — one voice speaks every language, picked from the text itself — and
-/// no `speakingRate` knob, so delivery is steered entirely by the prompt that
-/// precedes the text. Language coverage includes every [`Language`] we ship.
-const GEMINI_TTS_MODEL: &str = "gemini-3.1-flash-tts-preview";
+/// The Gemini voice the app's sentence audio uses. The cue clips in the
+/// language packs pick their own (see generate-data).
+const GEMINI_TTS_VOICE: &str = "Zephyr";
 
 /// House style for Gemini TTS when the caller doesn't ask for something else.
 const GEMINI_TTS_DEFAULT_INSTRUCTIONS: &str = "Read aloud in a warm welcoming tone";
 
-/// Builds the prompt Gemini speaks. Everything before the newline is
-/// direction, everything after is the text to voice — which is also how the
-/// speaking rate gets expressed, since the API has no rate parameter.
-fn gemini_tts_prompt(request: &TtsRequest) -> String {
+/// The direction line Gemini speaks under. Gemini has no rate parameter, so
+/// the speaking rate is expressed here too.
+fn gemini_tts_instructions(request: &TtsRequest) -> String {
     let instructions = request
         .instructions
         .as_deref()
@@ -850,80 +801,7 @@ fn gemini_tts_prompt(request: &TtsRequest) -> String {
         ""
     };
 
-    format!("{instructions}{pace}\n{}", request.text)
-}
-
-/// One synthesis round-trip. Returns WAV bytes, or `None` when the response
-/// carried no audio (a transient Gemini failure worth retrying).
-async fn gemini_tts_attempt(
-    client: &reqwest::Client,
-    api_key: &str,
-    prompt: &str,
-) -> Result<Option<Vec<u8>>, StatusCode> {
-    let gemini_request = serde_json::json!({
-        "contents": [{
-            "role": "user",
-            "parts": [{ "text": prompt }]
-        }],
-        "generationConfig": {
-            "responseModalities": ["audio"],
-            "temperature": 1,
-            "speech_config": {
-                "voice_config": {
-                    "prebuilt_voice_config": {
-                        "voice_name": "Zephyr"
-                    }
-                }
-            }
-        }
-    });
-
-    let url = format!(
-        "https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_TTS_MODEL}:generateContent?key={api_key}"
-    );
-
-    let response = client
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .json(&gemini_request)
-        .send()
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response.text().await.unwrap_or_default();
-        eprintln!("Gemini TTS Error ({status}): {body}");
-        return Err(StatusCode::BAD_GATEWAY);
-    }
-
-    let response_body: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Audio arrives as one or more inlineData parts of raw linear16 PCM.
-    let mut pcm = Vec::new();
-    for part in response_body
-        .pointer("/candidates/0/content/parts")
-        .and_then(|v| v.as_array())
-        .map(Vec::as_slice)
-        .unwrap_or_default()
-    {
-        if let Some(data) = part.pointer("/inlineData/data").and_then(|v| v.as_str()) {
-            let bytes = base64::engine::general_purpose::STANDARD
-                .decode(data)
-                .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-            pcm.extend_from_slice(&bytes);
-        }
-    }
-
-    if pcm.is_empty() {
-        return Ok(None);
-    }
-
-    // Gemini returns raw linear16 PCM at 24kHz mono - wrap in a WAV header
-    Ok(Some(wrap_pcm_in_wav(&pcm, 24000, 1, 16)))
+    format!("{instructions}{pace}")
 }
 
 async fn gemini_text_to_speech(
@@ -2723,44 +2601,6 @@ mod tests {
             fallback_chain(TtsProvider::Google, &request),
             vec![TtsProvider::Google]
         );
-    }
-
-    #[test]
-    fn ssml_never_gets_a_chirp3_voice() {
-        // Chirp3-HD eats the text adjacent to a `<break>` instead of erroring,
-        // so this is the only thing standing between a pronunciation card and
-        // audio that silently omits the letter it exists to teach. Asserted
-        // across every language so adding a course can't quietly reintroduce
-        // it — see `google_voice` for the measurements.
-        for language in [
-            Language::French,
-            Language::Spanish,
-            Language::English,
-            Language::Korean,
-            Language::German,
-            Language::Italian,
-            Language::Portuguese,
-            Language::Russian,
-            Language::Japanese,
-            Language::Hindi,
-            Language::ChineseSimplified,
-            Language::ChineseTraditional,
-            Language::Thai,
-        ] {
-            let (locale, voice) = google_voice(language, true);
-            assert!(
-                !voice.contains("Chirp"),
-                "{language:?} would synthesize SSML with {voice}"
-            );
-            assert!(
-                voice.starts_with(locale),
-                "{language:?}: voice {voice} doesn't belong to locale {locale}"
-            );
-
-            // The plain-text path is the one that should keep the good voice.
-            let (_, plain) = google_voice(language, false);
-            assert!(plain.contains("Chirp3") || language == Language::ChineseTraditional);
-        }
     }
 
     #[test]

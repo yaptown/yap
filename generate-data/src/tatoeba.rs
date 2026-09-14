@@ -40,8 +40,8 @@ pub fn get_tatoeba_pairs(
     }
 
     // Get language codes
-    let target_lang_code = course.target_language.code();
-    let native_lang_code = course.native_language.code();
+    let target_lang_code = course.target_language.tatoeba_code();
+    let native_lang_code = course.native_language.tatoeba_code();
 
     // Read entire sentences file at once to avoid per-line allocations
     let sentences_data = match std::fs::read_to_string(&sentences_file) {
@@ -82,6 +82,11 @@ pub fn get_tatoeba_pairs(
         };
 
         let text = text.trim();
+        // Tatoeba's `cmn` rows mix Simplified and Traditional; a course
+        // wants only its own script.
+        if lang == target_lang_code && course.target_language.contains_wrong_han_script(text) {
+            continue;
+        }
         relevant_ids.insert(id);
         if lang == target_lang_code {
             target_texts.insert(id, text.to_string());

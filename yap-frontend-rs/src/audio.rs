@@ -660,10 +660,14 @@ pub fn human_audio_applies(request: &TtsRequest) -> bool {
     !request.is_ssml && request.instructions.is_none() && (request.speed - 1.0).abs() < f64::EPSILON
 }
 
-fn pronunciation_audio_applies(request: &TtsRequest, provider: &TtsProvider) -> bool {
-    matches!(provider, TtsProvider::Google)
-        && request.is_ssml
-        && request.instructions.is_none()
+/// A pronunciation cue as `PronunciationChallenge` builds it: the pack's
+/// precached clip answers it whichever provider the fallback names.
+fn pronunciation_audio_applies(request: &TtsRequest, _provider: &TtsProvider) -> bool {
+    !request.is_ssml
+        && request.instructions.as_deref()
+            == Some(
+                language_utils::pronunciation_challenge_tts_instructions(request.language).as_str(),
+            )
         && request.verification_hints.is_empty()
         && (request.speed - 1.0).abs() < f64::EPSILON
 }

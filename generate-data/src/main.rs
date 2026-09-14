@@ -1122,13 +1122,23 @@ async fn main() -> anyhow::Result<()> {
         let sounds_file = target_language_dir.join("pronunciation_sounds.jsonl");
         let guides_file = native_specific_dir.join("pronunciation_guides.jsonl");
 
-        // Generate or load language sounds
+        // Generate or load language sounds. A language whose writing is not
+        // phonographic has no spelling-to-sound guides to give: its sound
+        // inventory would be pinyin letters nobody reads, so it gets none.
         let sounds = {
-            let sounds = generate_data::pronunciation_patterns::generate_language_sounds(
-                course.target_language,
-            )
-            .await
-            .context("Failed to generate language sounds")?;
+            let sounds = if course.target_language.is_phonographic() {
+                generate_data::pronunciation_patterns::generate_language_sounds(
+                    course.target_language,
+                )
+                .await
+                .context("Failed to generate language sounds")?
+            } else {
+                println!(
+                    "Skipping pronunciation guides for {:?}: its writing is not phonographic",
+                    course.target_language
+                );
+                Vec::new()
+            };
 
             // Save to file
             let mut file =
@@ -1141,12 +1151,15 @@ async fn main() -> anyhow::Result<()> {
 
         // Generate or load pronunciation guides
         let guides = {
-            let guides_with_thoughts =
+            let guides_with_thoughts = if sounds.is_empty() {
+                Vec::new()
+            } else {
                 generate_data::pronunciation_patterns::generate_pronunciation_guides(
                     *course, &sounds,
                 )
                 .await
-                .context("Failed to generate pronunciation guides")?;
+                .context("Failed to generate pronunciation guides")?
+            };
 
             // Save to file
             let mut file =

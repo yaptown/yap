@@ -652,19 +652,25 @@ impl ReviewInfo {
             .example_words
             .iter()
             .map(|example| AudioRequest {
+                // The precached, phoneme-verified clip is keyed by this same
+                // spoken text; only a pack without one falls through to the
+                // backend, where Gemini reads the cue under the same
+                // direction the pack's clips were made with.
                 request: TtsRequest {
-                    text: language_utils::pronunciation_challenge_ssml(
+                    text: language_utils::pronunciation_challenge_spoken_text(
                         target_language,
                         &pattern_str,
                         &example.target,
                     ),
                     language: target_language,
-                    is_ssml: true,
-                    instructions: None,
+                    is_ssml: false,
+                    instructions: Some(language_utils::pronunciation_challenge_tts_instructions(
+                        target_language,
+                    )),
                     speed: 1.0,
                     verification_hints: Vec::new(),
                 },
-                provider: TtsProvider::Google,
+                provider: TtsProvider::Gemini,
             })
             .collect();
 

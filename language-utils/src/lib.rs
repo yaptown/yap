@@ -2349,8 +2349,8 @@ pub struct ConsolidatedLanguageData {
     /// target-language phrase they speak. The nested-map shape enforces that
     /// each (actor, phrase) pair has at most one clip.
     pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
-    /// Phonemizer-verified Google TTS for pronunciation challenges, keyed by
-    /// the exact SSML request text used by the frontend.
+    /// Phonemizer-verified TTS clips for pronunciation challenges, keyed by
+    /// the cue's spoken text — the same string the frontend requests.
     pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
 }
 
@@ -3028,6 +3028,17 @@ impl Language {
         }
     }
 
+    /// The language tag Tatoeba's sentence dump uses. Tatoeba tags Mandarin
+    /// as `cmn` whichever script a sentence is written in, so both Chinese
+    /// courses read the same rows and filter by script afterwards; every
+    /// other tag coincides with [`Language::code`].
+    pub fn tatoeba_code(&self) -> &'static str {
+        match self {
+            Language::ChineseSimplified | Language::ChineseTraditional => "cmn",
+            other => other.code(),
+        }
+    }
+
     /// Inverse of [`Language::code`]. Bare "zho" is deliberately not accepted:
     /// it doesn't say which script, and the whole point of the split is to
     /// make that ambiguity a loud error instead of a silent default.
@@ -3084,6 +3095,16 @@ impl Language {
         }
     }
 
+    /// Whether this language's writing is phonographic: written units stand
+    /// for sounds, so a "this spelling sounds like that" pronunciation guide
+    /// has something to teach. Han characters stand for morphemes, and the
+    /// pinyin letters a sound inventory falls back to are not what a learner
+    /// reads, so Chinese gets no pronunciation guides. Japanese counts: its
+    /// inventory is the kana, and kana are a syllabary.
+    pub fn is_phonographic(&self) -> bool {
+        !matches!(self.writing_system(), WritingSystem::Han)
+    }
+
     pub fn tv_politeness(&self) -> bool {
         matches!(
             self,
@@ -3118,31 +3139,50 @@ impl Language {
         }
     }
 
-    /// The name of `letter` as the phonemizer needs it spelled, where the
-    /// bare letter won't do. espeak already names a lone letter ("c" → /se/,
-    /// "w" → /dubləve/) and wikipron lists single letters as words, so most
-    /// letters stay bare — spelling their names out is often worse ("emme"
-    /// → /ɑ̃m/). The table covers letters espeak reads as the homographic
-    /// word in context (French "y" is the adverb /i/, English "a" the
-    /// article /ə/) and accented letters the voice names differently from
-    /// espeak (en-US says "a diaeresis" and "ash", espeak "a umlaut" and
-    /// "a e"). Spellings are chosen for what espeak makes of them: English
-    /// "eh" is /eɪ/ where "ay" is /aɪ/. Names match what the language's
-    /// voice says under `say-as="characters"`, read off the verification
-    /// logs; add a table for a language when its logs show letter-name
-    /// mismatches.
+    /// How a pronunciation cue says `letter`: the name a speaker of this
+    /// language gives it where that name is more than the letter itself
+    /// ("u Umlaut", "c cédille", "мягкий знак", "기역"). `None` means the
+    /// bare letter is its own name — a voice reads a lone "b" as /be/, and
+    /// espeak phonemizes it the same way, so spelling that out buys nothing
+    /// and can hurt ("emme" phonemizes as /ɑ̃m/).
+    ///
+    /// This table is the single source for a cue's wording: the same spoken
+    /// text goes to the TTS voice and to the phonemizer that verifies the
+    /// clip, so the two can only ever disagree on delivery, never on which
+    /// letter name was meant. Left to its own devices every voice invents a
+    /// different reading of a bare "ã" or "ß"; given the name, they agree.
+    /// Two kinds of letter therefore need an entry: any letter whose name is
+    /// a phrase (accents, ligatures, modifier letters, Korean jamo), and any
+    /// letter espeak would otherwise read as the homographic word (French "y"
+    /// is the adverb /i/, English "a" the article /ə/). Spellings are chosen
+    /// for what espeak makes of them: English "eh" is /eɪ/ where "ay" is
+    /// /aɪ/. Languages whose sound inventory is syllabic (kana, Devanagari,
+    /// Thai) read every character as itself.
     pub fn letter_name(&self, letter: char) -> Option<&'static str> {
         let letter = letter.to_lowercase().next().unwrap_or(letter);
         let name = match self {
             Language::French => match letter {
                 'y' => "i grec",
                 'à' => "a accent grave",
+                'â' => "a accent circonflexe",
+                'ä' => "a tréma",
+                'ç' => "c cédille",
+                'é' => "e accent aigu",
+                'è' => "e accent grave",
+                'ê' => "e accent circonflexe",
+                'ë' => "e tréma",
+                'î' => "i accent circonflexe",
+                'ï' => "i tréma",
                 'ô' => "o accent circonflexe",
+                'ö' => "o tréma",
+                'ù' => "u accent grave",
+                'û' => "u accent circonflexe",
+                'ü' => "u tréma",
+                'ÿ' => "i grec tréma",
                 'œ' => "e dans l'o",
+                'æ' => "e dans l'a",
                 _ => return None,
             },
-            // Google's pt-BR voice spells accented vowels as "<letter> acento
-            // agudo/grave/circunflexo"; espeak's own names drop "acento".
             Language::Portuguese => match letter {
                 'á' => "a acento agudo",
                 'é' => "e acento agudo",
@@ -3153,48 +3193,201 @@ impl Language {
                 'â' => "a acento circunflexo",
                 'ê' => "e acento circunflexo",
                 'ô' => "o acento circunflexo",
+                'ã' => "a til",
+                'õ' => "o til",
+                'ç' => "c cedilha",
+                'ü' => "u trema",
+                _ => return None,
+            },
+            Language::Spanish => match letter {
+                'y' => "i griega",
+                'ñ' => "eñe",
+                'á' => "a con acento",
+                'é' => "e con acento",
+                'í' => "i con acento",
+                'ó' => "o con acento",
+                'ú' => "u con acento",
+                'ü' => "u con diéresis",
+                _ => return None,
+            },
+            Language::Italian => match letter {
+                'à' => "a con accento grave",
+                'è' => "e con accento grave",
+                'é' => "e con accento acuto",
+                'ì' => "i con accento grave",
+                'ò' => "o con accento grave",
+                'ó' => "o con accento acuto",
+                'ù' => "u con accento grave",
+                _ => return None,
+            },
+            Language::German => match letter {
+                'ä' => "a Umlaut",
+                'ö' => "o Umlaut",
+                'ü' => "u Umlaut",
+                'ß' => "Eszett",
                 _ => return None,
             },
             Language::English => match letter {
                 'a' => "eh",
                 'à' => "a grave",
-                'è' => "e grave",
+                'á' => "a acute",
+                'â' => "a circumflex",
                 'ä' => "a diaeresis",
-                'ë' => "e diaeresis",
-                'ï' => "i diaeresis",
-                'ö' => "o diaeresis",
-                'ü' => "u diaeresis",
                 'å' => "a ring above",
                 'æ' => "ash",
+                'ç' => "c cedilla",
+                'è' => "e grave",
+                'é' => "e acute",
+                'ê' => "e circumflex",
+                'ë' => "e diaeresis",
+                'í' => "i acute",
+                'ï' => "i diaeresis",
+                'ñ' => "n tilde",
+                'ó' => "o acute",
+                'ô' => "o circumflex",
+                'ö' => "o diaeresis",
+                'ú' => "u acute",
+                'ü' => "u diaeresis",
+                'œ' => "ethel",
+                'ß' => "sharp s",
                 _ => return None,
             },
-            _ => return None,
+            // Consonants are named in full: a Russian voice reading a bare
+            // "щ" or "ч" picks between the sound and the name at random.
+            // Vowels are their own names. The combining acute (U+0301) marks
+            // a stressed vowel in the sound inventory and is read as such.
+            Language::Russian => match letter {
+                'б' => "бэ",
+                'в' => "вэ",
+                'г' => "гэ",
+                'д' => "дэ",
+                'ж' => "жэ",
+                'з' => "зэ",
+                'й' => "и краткое",
+                'к' => "ка",
+                'л' => "эль",
+                'м' => "эм",
+                'н' => "эн",
+                'п' => "пэ",
+                'р' => "эр",
+                'с' => "эс",
+                'т' => "тэ",
+                'ф' => "эф",
+                'х' => "ха",
+                'ц' => "цэ",
+                'ч' => "че",
+                'ш' => "ша",
+                'щ' => "ща",
+                'ъ' => "твёрдый знак",
+                'ь' => "мягкий знак",
+                '\u{301}' => "с ударением",
+                _ => return None,
+            },
+            // Jamo are named, not sounded: a lone "ㄱ" is 기역.
+            Language::Korean => match letter {
+                'ㄱ' => "기역",
+                'ㄲ' => "쌍기역",
+                'ㄳ' => "기역시옷",
+                'ㄴ' => "니은",
+                'ㄵ' => "니은지읒",
+                'ㄶ' => "니은히읗",
+                'ㄷ' => "디귿",
+                'ㄸ' => "쌍디귿",
+                'ㄹ' => "리을",
+                'ㄺ' => "리을기역",
+                'ㄻ' => "리을미음",
+                'ㄼ' => "리을비읍",
+                'ㄽ' => "리을시옷",
+                'ㄾ' => "리을티읕",
+                'ㄿ' => "리을피읖",
+                'ㅀ' => "리을히읗",
+                'ㅁ' => "미음",
+                'ㅂ' => "비읍",
+                'ㅃ' => "쌍비읍",
+                'ㅄ' => "비읍시옷",
+                'ㅅ' => "시옷",
+                'ㅆ' => "쌍시옷",
+                'ㅇ' => "이응",
+                'ㅈ' => "지읒",
+                'ㅉ' => "쌍지읒",
+                'ㅊ' => "치읓",
+                'ㅋ' => "키읔",
+                'ㅌ' => "티읕",
+                'ㅍ' => "피읖",
+                'ㅎ' => "히읗",
+                'ㅏ' => "아",
+                'ㅐ' => "애",
+                'ㅑ' => "야",
+                'ㅒ' => "얘",
+                'ㅓ' => "어",
+                'ㅔ' => "에",
+                'ㅕ' => "여",
+                'ㅖ' => "예",
+                'ㅗ' => "오",
+                'ㅘ' => "와",
+                'ㅙ' => "왜",
+                'ㅚ' => "외",
+                'ㅛ' => "요",
+                'ㅜ' => "우",
+                'ㅝ' => "워",
+                'ㅞ' => "웨",
+                'ㅟ' => "위",
+                'ㅠ' => "유",
+                'ㅡ' => "으",
+                'ㅢ' => "의",
+                'ㅣ' => "이",
+                _ => return None,
+            },
+            // Kana read as themselves, except the small kana: a lone っ has
+            // no sound to voice and the small vowels and y-kana merely
+            // modify their neighbour, so each is named the way a teacher
+            // does, "small tsu".
+            Language::Japanese => match letter {
+                'っ' => "小さいつ",
+                'ッ' => "小さいツ",
+                'ぁ' => "小さいあ",
+                'ぃ' => "小さいい",
+                'ぅ' => "小さいう",
+                'ぇ' => "小さいえ",
+                'ぉ' => "小さいお",
+                'ゃ' => "小さいや",
+                'ゅ' => "小さいゆ",
+                'ょ' => "小さいよ",
+                'ァ' => "小さいア",
+                'ィ' => "小さいイ",
+                'ゥ' => "小さいウ",
+                'ェ' => "小さいエ",
+                'ォ' => "小さいオ",
+                'ャ' => "小さいヤ",
+                'ュ' => "小さいユ",
+                'ョ' => "小さいヨ",
+                _ => return None,
+            },
+            Language::ChineseSimplified
+            | Language::ChineseTraditional
+            | Language::Hindi
+            | Language::Thai => return None,
         };
         Some(name)
     }
 
-    /// Google Cloud TTS locale and voice for this language. Pronunciation
-    /// challenges use a literal voice because Chirp3-HD can drop text beside
-    /// SSML `<break>` elements; plain speech keeps the more natural voice.
-    pub fn google_tts_voice(&self, is_ssml: bool) -> (&'static str, &'static str) {
-        let (locale, natural, literal) = match self {
-            Language::French => ("fr-FR", "fr-FR-Chirp3-HD-Achernar", "fr-FR-Neural2-F"),
-            Language::Spanish => ("es-US", "es-US-Chirp3-HD-Achernar", "es-US-Neural2-A"),
-            Language::English => ("en-US", "en-US-Chirp3-HD-Achernar", "en-US-Neural2-A"),
-            Language::Korean => ("ko-KR", "ko-KR-Chirp3-HD-Achernar", "ko-KR-Neural2-A"),
-            Language::German => ("de-DE", "de-DE-Chirp3-HD-Achernar", "de-DE-Neural2-G"),
-            Language::Italian => ("it-IT", "it-IT-Chirp3-HD-Achernar", "it-IT-Neural2-A"),
-            Language::Portuguese => ("pt-BR", "pt-BR-Chirp3-HD-Achernar", "pt-BR-Neural2-A"),
-            Language::Russian => ("ru-RU", "ru-RU-Chirp3-HD-Aoede", "ru-RU-Wavenet-A"),
-            Language::Japanese => ("ja-JP", "ja-JP-Chirp3-HD-Achernar", "ja-JP-Neural2-B"),
-            Language::Hindi => ("hi-IN", "hi-IN-Chirp3-HD-Achernar", "hi-IN-Neural2-A"),
-            Language::ChineseSimplified => {
-                ("cmn-CN", "cmn-CN-Chirp3-HD-Achernar", "cmn-CN-Wavenet-A")
-            }
-            Language::Thai => ("th-TH", "th-TH-Chirp3-HD-Achernar", "th-TH-Neural2-C"),
-            Language::ChineseTraditional => ("cmn-TW", "cmn-TW-Wavenet-A", "cmn-TW-Wavenet-A"),
-        };
-        (locale, if is_ssml { literal } else { natural })
+    /// Google Cloud TTS locale and voice for this language.
+    pub fn google_tts_voice(&self) -> (&'static str, &'static str) {
+        match self {
+            Language::French => ("fr-FR", "fr-FR-Chirp3-HD-Achernar"),
+            Language::Spanish => ("es-US", "es-US-Chirp3-HD-Achernar"),
+            Language::English => ("en-US", "en-US-Chirp3-HD-Achernar"),
+            Language::Korean => ("ko-KR", "ko-KR-Chirp3-HD-Achernar"),
+            Language::German => ("de-DE", "de-DE-Chirp3-HD-Achernar"),
+            Language::Italian => ("it-IT", "it-IT-Chirp3-HD-Achernar"),
+            Language::Portuguese => ("pt-BR", "pt-BR-Chirp3-HD-Achernar"),
+            Language::Russian => ("ru-RU", "ru-RU-Chirp3-HD-Aoede"),
+            Language::Japanese => ("ja-JP", "ja-JP-Chirp3-HD-Achernar"),
+            Language::Hindi => ("hi-IN", "hi-IN-Chirp3-HD-Achernar"),
+            Language::ChineseSimplified => ("cmn-CN", "cmn-CN-Chirp3-HD-Achernar"),
+            Language::Thai => ("th-TH", "th-TH-Chirp3-HD-Achernar"),
+            Language::ChineseTraditional => ("cmn-TW", "cmn-TW-Wavenet-A"),
+        }
     }
 
     /// OpenSubtitles API language code (usually ISO 639-1, but pt-br for Portuguese)
@@ -3789,49 +3982,59 @@ impl Language {
     }
 }
 
-/// The exact SSML synthesized for one pronunciation-guide example.
-pub fn pronunciation_challenge_ssml(language: Language, pattern: &str, example: &str) -> String {
-    fn escaped(text: &str) -> String {
-        text.replace('&', "&amp;")
-            .replace('<', "&lt;")
-            .replace('>', "&gt;")
-            .replace('"', "&quot;")
-            .replace('\'', "&apos;")
-    }
-
+/// The direction a prompt-driven voice (Gemini TTS) is given ahead of a
+/// pronunciation cue. Delivery is the only thing left to the prompt — the
+/// words come from [`pronunciation_challenge_spoken_text`] — and the pace
+/// matters: unprompted, the model leaves a second of silence between
+/// spelled letters. Named in English because it addresses the model, not
+/// the learner.
+pub fn pronunciation_challenge_tts_instructions(language: Language) -> String {
     format!(
-        "<speak><break time=\"100ms\"/><say-as interpret-as=\"characters\">{}</say-as><break time=\"100ms\"/>{}<break time=\"200ms\"/>{}</speak>",
-        escaped(pattern),
-        escaped(language.pronunciation_connector()),
-        escaped(example),
+        "Read this short {language} pronunciation cue aloud for a flashcard, in a clear, warm, \
+         natural {language} voice, at a normal conversational pace with no long pauses. Say the \
+         letter names as a quick spelled-out sequence, then the connecting words, then the \
+         example word as a normal word. Say nothing else."
     )
 }
 
 /// One thing the voice says in a pronunciation clip, paired with what the
 /// learner sees for it. A letter of the pattern is shown as itself but
-/// spoken by name where [`Language::letter_name`] has one ("y" / "i grec");
-/// connector and example words read the same both ways.
+/// spoken by name where [`Language::letter_name`] has one ("ü" / "u
+/// Umlaut"); connector and example words read the same both ways.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SpokenSegment {
     pub display: String,
     pub spoken: String,
 }
 
-/// The transcript of [`pronunciation_challenge_ssml`] in order: each letter
-/// of the pattern (SSML's `say-as="characters"` spells it), the connector
-/// words, then the example's words.
+/// What a pronunciation cue says, in order: each letter of the pattern by
+/// name, the connector words, then the example's words. A combining mark
+/// (the stress accent in Russian patterns) belongs to the letter before it:
+/// shown attached, and its name spoken after the letter's.
 pub fn pronunciation_challenge_segments(
     language: Language,
     pattern: &str,
     example: &str,
 ) -> Vec<SpokenSegment> {
-    let letters = pattern.chars().map(|c| SpokenSegment {
-        display: c.to_string(),
-        spoken: match language.letter_name(c) {
+    let mut letters: Vec<SpokenSegment> = Vec::new();
+    for c in pattern.chars() {
+        let spoken = match language.letter_name(c) {
             Some(name) => name.to_string(),
             None => c.to_string(),
-        },
-    });
+        };
+        let is_combining_mark = ('\u{300}'..='\u{36f}').contains(&c);
+        match letters.last_mut() {
+            Some(previous) if is_combining_mark => {
+                previous.display.push(c);
+                previous.spoken.push(' ');
+                previous.spoken.push_str(&spoken);
+            }
+            _ => letters.push(SpokenSegment {
+                display: c.to_string(),
+                spoken,
+            }),
+        }
+    }
     let words = |text: &str| {
         text.split_whitespace()
             .map(|word| SpokenSegment {
@@ -3841,14 +4044,15 @@ pub fn pronunciation_challenge_segments(
             .collect::<Vec<_>>()
     };
     letters
+        .into_iter()
         .chain(words(language.pronunciation_connector()))
         .chain(words(example))
         .collect()
 }
 
-/// Plain-text transcript corresponding to [`pronunciation_challenge_ssml`],
-/// used to build the phonemizer target: the spoken side of
-/// [`pronunciation_challenge_segments`].
+/// The text a pronunciation cue is synthesized from and verified against:
+/// the spoken side of [`pronunciation_challenge_segments`]. One string for
+/// both, so the voice and the phonemizer are always given the same words.
 pub fn pronunciation_challenge_spoken_text(
     language: Language,
     pattern: &str,
@@ -5122,15 +5326,73 @@ mod pronunciation_challenge_audio_tests {
     use super::*;
 
     #[test]
-    fn ssml_and_spoken_text_share_the_same_components() {
-        assert_eq!(
-            pronunciation_challenge_ssml(Language::French, "ch", "chat & chien"),
-            "<speak><break time=\"100ms\"/><say-as interpret-as=\"characters\">ch</say-as><break time=\"100ms\"/>comme dans<break time=\"200ms\"/>chat &amp; chien</speak>"
-        );
+    fn bare_letters_are_their_own_names() {
         assert_eq!(
             pronunciation_challenge_spoken_text(Language::French, "ch", "chat"),
             "c h comme dans chat"
         );
+    }
+
+    #[test]
+    fn accented_letters_speak_their_technical_names() {
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::German, "ü", "über"),
+            "u Umlaut wie in über"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::German, "sch", "Schule"),
+            "s c h wie in Schule"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Spanish, "ñ", "niño"),
+            "eñe como en niño"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Russian, "щ", "борщ"),
+            "ща как в борщ"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Korean, "ㅋ", "코"),
+            "키읔 처럼 코"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Japanese, "きぇ", "きぇーっ"),
+            "き 小さいえ のように きぇーっ"
+        );
+    }
+
+    #[test]
+    fn stress_marks_stay_attached_to_their_vowel() {
+        let segments = pronunciation_challenge_segments(Language::Russian, "а\u{301}", "мама");
+        let pairs: Vec<(&str, &str)> = segments
+            .iter()
+            .map(|s| (s.display.as_str(), s.spoken.as_str()))
+            .collect();
+        assert_eq!(
+            pairs,
+            [
+                ("а\u{301}", "а с ударением"),
+                ("как", "как"),
+                ("в", "в"),
+                ("мама", "мама"),
+            ]
+        );
+    }
+
+    #[test]
+    fn han_is_the_only_non_phonographic_script() {
+        assert!(!Language::ChineseSimplified.is_phonographic());
+        assert!(!Language::ChineseTraditional.is_phonographic());
+        assert!(Language::Japanese.is_phonographic());
+        assert!(Language::Thai.is_phonographic());
+        assert!(Language::French.is_phonographic());
+    }
+
+    #[test]
+    fn tts_instructions_name_the_language() {
+        let instructions = pronunciation_challenge_tts_instructions(Language::Portuguese);
+        assert!(instructions.contains("Portuguese pronunciation cue"));
+        assert!(instructions.ends_with("Say nothing else."));
     }
 
     #[test]
@@ -5154,14 +5416,14 @@ mod pronunciation_challenge_audio_tests {
     }
 
     #[test]
-    fn portuguese_accented_letters_speak_their_google_names() {
+    fn portuguese_accented_letters_speak_their_names() {
         assert_eq!(
             pronunciation_challenge_spoken_text(Language::Portuguese, "á", "chá"),
             "a acento agudo como em chá"
         );
         assert_eq!(
-            pronunciation_challenge_spoken_text(Language::Portuguese, "ã", "pão"),
-            "ã como em pão"
+            pronunciation_challenge_spoken_text(Language::Portuguese, "ãe", "pães"),
+            "a til e como em pães"
         );
     }
 
@@ -5183,18 +5445,6 @@ mod pronunciation_challenge_audio_tests {
                 ("la", "la"),
                 ("carte", "carte"),
             ]
-        );
-    }
-
-    #[test]
-    fn pronunciation_voice_is_literal_for_ssml() {
-        assert_eq!(
-            Language::French.google_tts_voice(true),
-            ("fr-FR", "fr-FR-Neural2-F")
-        );
-        assert_eq!(
-            Language::French.google_tts_voice(false),
-            ("fr-FR", "fr-FR-Chirp3-HD-Achernar")
         );
     }
 }
