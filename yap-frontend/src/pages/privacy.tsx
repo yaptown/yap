@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective September 11, 2026.</p>
+            <p className="text-sm">Effective September 13, 2026.</p>
           </div>
         </Card>
 
@@ -61,6 +61,16 @@ export function PrivacyPage() {
               kept in a shared cache on Cloudflare so it doesn't have to be
               generated again for the next learner; those clips are keyed by
               the sentence text alone and contain nothing about you.
+            </p>
+            <p>
+              <span className="text-foreground">Exported Anki decks.</span>{" "}
+              When you download an Anki deck, we record that the deck was made,
+              the options you chose, and your account if you were signed in.
+              Audio in the deck streams from us, and each time a card makes us
+              generate a clip that wasn't already cached we log which sentence
+              it was and when, tied to that deck. We use this to keep the cost
+              of generating audio in check and to switch off a deck that is
+              being shared in ways it shouldn't be.
             </p>
             <p>
               <span className="text-foreground">Technical.</span> We use Sentry

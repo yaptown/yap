@@ -26,6 +26,7 @@ use resend_rs::{Resend, types::CreateEmailBaseOptions};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, sync::LazyLock};
 
+mod anki_tts;
 mod deck_token;
 mod tts_cache;
 mod tts_verify;
@@ -320,6 +321,24 @@ async fn synthesize_provider_checked(
     Err(ProviderFailure { rejected, status })
 }
 
+struct Synthesized {
+    audio: Vec<u8>,
+    /// Passed the checks, or came from the verified-only shared cache.
+    verified: bool,
+    /// False for cache hits, including a hit after the GET handler's lookup.
+    /// Only newly synthesized audio counts toward a deck's synthesis counter.
+    synthesized: bool,
+}
+
+async fn synthesize_checked(
+    http: &reqwest::Client,
+    request: &TtsRequest,
+    primary: TtsProvider,
+) -> Result<String, StatusCode> {
+    let result = synthesize_checked_bytes(http, request, primary).await?;
+    Ok(base64::engine::general_purpose::STANDARD.encode(&result.audio))
+}
+
 /// Synthesize `request`, checking every clip before returning it, and racing
 /// the faithful providers when the requested one can't get it right.
 ///
@@ -358,21 +377,28 @@ async fn synthesize_provider_checked(
 /// guarantee, and caches whatever comes back under the key it asked with —
 /// so the correct clip is the one that gets kept. The shared bucket is keyed
 /// the same way, and only ever receives clips that passed: see `tts_cache`.
-async fn synthesize_checked(
+async fn synthesize_checked_bytes(
     http: &reqwest::Client,
     request: &TtsRequest,
     primary: TtsProvider,
-) -> Result<String, StatusCode> {
+) -> Result<Synthesized, StatusCode> {
     let cache_filename = language_utils::tts_cache_filename(request, &primary);
     if let Some(audio) = tts_cache::lookup(http, &cache_filename).await {
-        return Ok(base64::engine::general_purpose::STANDARD.encode(&audio));
+        return Ok(Synthesized {
+            audio,
+            verified: true,
+            synthesized: false,
+        });
     }
     // A clip that passed every check: hand it back and, off the response
     // path, publish it for everyone after.
     let verified = |audio: Vec<u8>| {
-        let encoded = base64::engine::general_purpose::STANDARD.encode(&audio);
-        tts_cache::store_in_background(http.clone(), cache_filename.clone(), audio);
-        Ok(encoded)
+        tts_cache::store_in_background(http.clone(), cache_filename.clone(), audio.clone());
+        Ok(Synthesized {
+            audio,
+            verified: true,
+            synthesized: true,
+        })
     };
 
     // Fast path. Clips that fail a check are kept rather than discarded, so a
@@ -474,7 +500,11 @@ async fn synthesize_checked(
             failure_status
         })?;
     eprintln!("{primary:?} TTS: every provider failed its checks; returning best effort");
-    Ok(base64::engine::general_purpose::STANDARD.encode(&audio))
+    Ok(Synthesized {
+        audio,
+        verified: false,
+        synthesized: true,
+    })
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -662,7 +692,7 @@ async fn google_synthesize(request: &TtsRequest) -> Result<Option<Vec<u8>>, Synt
 
     let (language_code, voice_name) = google_voice(request.language, request.is_ssml);
 
-    // One attempt per call: `synthesize_checked` owns the retry budget now, so
+    // One attempt per call: `synthesize_checked_bytes` owns the retry budget now, so
     // leaving the library's own loop enabled would multiply the two.
     let client = google_tts::GoogleTtsClient::new(api_key).with_max_attempts(1);
     let outcome = client
@@ -1477,16 +1507,29 @@ fn html_escape(s: &str) -> String {
         .replace('\'', "&#x27;")
 }
 
+/// The Supabase project URL and service-role key, which bypasses RLS. For
+/// the rare call that needs the raw pair (the auth admin API has no
+/// PostgREST client); everything else goes through `service_role_client`.
+fn service_role_credentials() -> Result<(String, String), StatusCode> {
+    let supabase_url =
+        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok((supabase_url, service_role_key))
+}
+
+fn service_role_client() -> Result<Postgrest, StatusCode> {
+    let (supabase_url, service_role_key) = service_role_credentials()?;
+    Ok(Postgrest::new(format!("{supabase_url}/rest/v1"))
+        .insert_header("apikey", service_role_key.clone())
+        .insert_header("Authorization", format!("Bearer {service_role_key}")))
+}
+
 async fn send_follow_notification(
     follower_id: uuid::Uuid,
     following_id: &str,
-    supabase_url: &str,
-    service_role_key: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Create Supabase client
-    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
-        .insert_header("apikey", service_role_key)
-        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+    let client = service_role_client().map_err(|status| status.to_string())?;
 
     // Get the following user's profile to check if email notifications are enabled
     let following_profile_response = client
@@ -1536,10 +1579,12 @@ async fn send_follow_notification(
         .unwrap_or("Someone");
 
     // Get the email from auth.users table using Supabase REST API
+    let (supabase_url, service_role_key) =
+        service_role_credentials().map_err(|status| status.to_string())?;
     let auth_client = reqwest::Client::new();
     let auth_response = auth_client
         .get(format!("{supabase_url}/auth/v1/admin/users/{following_id}"))
-        .header("apikey", service_role_key)
+        .header("apikey", &service_role_key)
         .header("Authorization", format!("Bearer {service_role_key}"))
         .send()
         .await?;
@@ -1593,16 +1638,7 @@ async fn send_follow_notification(
 use axum::extract::Query;
 
 async fn get_profile(Query(params): Query<GetProfileQuery>) -> Result<Json<Profile>, StatusCode> {
-    // Get Supabase credentials from environment
-    let supabase_url =
-        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Create Supabase client
-    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
-        .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+    let client = service_role_client()?;
 
     // Build query based on provided parameter
     let mut query = client.from("profiles").select("*");
@@ -1639,16 +1675,7 @@ async fn get_profile(Query(params): Query<GetProfileQuery>) -> Result<Json<Profi
 async fn get_language_stats(
     Query(params): Query<GetProfileQuery>,
 ) -> Result<Json<Vec<language_utils::profile::UserLanguageStats>>, StatusCode> {
-    // Get Supabase credentials from environment
-    let supabase_url =
-        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Create Supabase client
-    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
-        .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+    let client = service_role_client()?;
 
     // Build query based on provided parameter - we need to get user_id first
     let user_id = if let Some(id) = params.id {
@@ -1720,16 +1747,7 @@ async fn update_profile(
     let claims = verify_jwt(auth.token()).await?;
     let user_id = claims.sub;
 
-    // Get Supabase credentials from environment
-    let supabase_url =
-        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Create Supabase client
-    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
-        .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+    let client = service_role_client()?;
 
     // Build the update payload
     let mut update_data = serde_json::Map::new();
@@ -1784,16 +1802,7 @@ async fn update_language_stats(
     let claims = verify_jwt(auth.token()).await?;
     let user_id = claims.sub;
 
-    // Get Supabase credentials from environment
-    let supabase_url =
-        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Create Supabase client
-    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
-        .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+    let client = service_role_client()?;
 
     // Serialize the language to a string for the database
     let language_str = request.language.to_string();
@@ -1915,16 +1924,7 @@ async fn follow_user(
     let claims = verify_jwt(auth.token()).await?;
     let follower_id = claims.sub;
 
-    // Get Supabase credentials from environment
-    let supabase_url =
-        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Create Supabase client
-    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
-        .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+    let client = service_role_client()?;
 
     // Prevent users from following themselves
     if follower_id.to_string() == request.user_id {
@@ -1957,17 +1957,8 @@ async fn follow_user(
 
     if response.status().is_success() {
         // Send email notification (non-blocking, errors are logged but don't fail the request)
-        let supabase_url_clone = supabase_url.clone();
-        let service_role_key_clone = service_role_key.clone();
         tokio::spawn(async move {
-            if let Err(e) = send_follow_notification(
-                follower_id,
-                &following_user_id,
-                &supabase_url_clone,
-                &service_role_key_clone,
-            )
-            .await
-            {
+            if let Err(e) = send_follow_notification(follower_id, &following_user_id).await {
                 eprintln!("Failed to send follow notification email: {e:?}");
             }
         });
@@ -1987,16 +1978,7 @@ async fn unfollow_user(
     let claims = verify_jwt(auth.token()).await?;
     let follower_id = claims.sub;
 
-    // Get Supabase credentials from environment
-    let supabase_url =
-        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Create Supabase client
-    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
-        .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+    let client = service_role_client()?;
 
     // Delete the follow relationship
     let response = client
@@ -2027,16 +2009,7 @@ async fn get_follow_status(
     let claims = verify_jwt(auth.token()).await?;
     let current_user_id = claims.sub;
 
-    // Get Supabase credentials from environment
-    let supabase_url =
-        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Create Supabase client
-    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
-        .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+    let client = service_role_client()?;
 
     // Get the target user's ID
     let target_user_id = if let Some(id) = params.id {
@@ -2462,13 +2435,7 @@ async fn mint_anki_deck(
         StatusCode::NOT_IMPLEMENTED
     })?;
 
-    let supabase_url =
-        std::env::var("SUPABASE_URL").map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let service_role_key = std::env::var("SUPABASE_SERVICE_ROLE_KEY")
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let client = Postgrest::new(format!("{supabase_url}/rest/v1"))
-        .insert_header("apikey", service_role_key.clone())
-        .insert_header("Authorization", format!("Bearer {service_role_key}"));
+    let client = service_role_client()?;
 
     let row = serde_json::json!({
         "id": deck_id,
@@ -2518,6 +2485,7 @@ fn app() -> Router {
         .route("/language-data", post(serve_language_data))
         .route("/clip/{lang}/sentences", get(serve_clip_sentences))
         .route("/anki/deck", post(mint_anki_deck))
+        .route("/anki/tts", get(anki_tts::tts))
         .route("/clip/{lang}/{clip_id}/lo.mp4", get(serve_clip_video))
         .route(
             "/clip/{lang}/{clip_id}/subtitles",
@@ -2553,9 +2521,9 @@ async fn main() {
         println!("TTS verification: on ({})", transcribers.join(" + "));
     }
     if deck_token::configured() {
-        println!("Anki decks: minting enabled");
+        println!("Anki decks: minting and streamed TTS enabled");
     } else {
-        eprintln!("Anki decks: OFF — set DECK_TOKEN_SECRET to mint deck tokens");
+        eprintln!("Anki decks: OFF — set DECK_TOKEN_SECRET to mint deck tokens and serve deck TTS");
     }
     if tts_cache::write_enabled() {
         println!("TTS cache: storing verified clips in the shared bucket");

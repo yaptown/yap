@@ -81,6 +81,21 @@ pub async fn lookup(http: &reqwest::Client, cache_filename: &str) -> Option<Vec<
     (!bytes.is_empty()).then(|| bytes.to_vec())
 }
 
+/// Check for a clip without downloading it before redirecting the learner.
+/// Like [`lookup`], this busts the edge's stale 404s; the redirect itself
+/// should use the ordinary URL so playback can be cached.
+pub async fn exists(http: &reqwest::Client, cache_filename: &str) -> bool {
+    let url = format!(
+        "{}?fresh={}",
+        tts_cache_url(cache_filename),
+        uuid::Uuid::new_v4().simple()
+    );
+    http.head(url)
+        .send()
+        .await
+        .is_ok_and(|response| response.status().is_success())
+}
+
 /// Store a clip that passed every check, without holding up the response
 /// that carries it. Failures are logged and otherwise ignored: the caller
 /// already has its audio, and the next miss will simply try again.

@@ -4,13 +4,13 @@
 //! `https://clips.yap.town/<lang>/<clip>/lo.mp4?d=<token>`. The token names
 //! the deck (a fresh id) and carries an HMAC over that id under a secret
 //! only the backend holds, so a token can't be forged and a leaked deck can
-//! be traced to one mint and, later, revoked individually. Today the clip
-//! domain is a plain public bucket that ignores the query string, so the
-//! tokens are inert; a Worker that validates them with [`verify`] and
-//! consults a denylist can be put in front of the bucket without touching
-//! any deck already in the wild. That future is the whole reason the token
-//! is signed now rather than being a bare random id: an unsigned scheme
-//! could never tell a mint from a forgery after the fact.
+//! be traced to one mint and revoked individually. The `/anki/tts` endpoint
+//! checks them with [`verify`] on cache misses: they guard synthesis spend,
+//! not playback, so cached audio keeps working even for revoked decks.
+//! The clip domain is still a plain public bucket that ignores the query
+//! string; a Worker could validate the same tokens there without touching
+//! decks already in the wild. Signing rather than using a bare random id
+//! lets either endpoint tell a mint from a forgery.
 //!
 //! Wire format: base64url (no padding) of the 16 id bytes followed by the
 //! first 16 bytes of `HMAC-SHA256(secret, id)` — 43 characters, safe in a
@@ -77,9 +77,7 @@ pub fn mint() -> Option<(Uuid, String)> {
 }
 
 /// The deck a token was minted for, if it was minted by us and is intact.
-/// Not called by anything yet — it is the check the clip-domain Worker will
-/// run, kept next to `mint` so the two can't drift.
-#[cfg_attr(not(test), expect(dead_code))]
+/// Checked before an exported deck can cause new synthesis spend.
 pub fn verify(token: &str) -> Option<Uuid> {
     decode(SECRET.as_deref()?, token)
 }
