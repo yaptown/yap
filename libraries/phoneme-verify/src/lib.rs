@@ -1178,8 +1178,9 @@ const MAX_VARIANT_COMBINATIONS: usize = 16;
 /// product across words.
 ///
 /// A word wikipron lacks (a proper noun, a spelled-out letter name) gets
-/// its own g2p phonemization as its single variant, so the rest of the
-/// phrase keeps its wikipron variants instead of the whole phrase falling
+/// its own g2p phonemization (including Spanish's `es-419` dialect
+/// alternate), so the rest of the phrase keeps its wikipron variants instead
+/// of the whole phrase falling
 /// back to g2p — which reads "cognac" as /konjak/ and would have rejected a
 /// good clip over one unknown word beside it.
 ///
@@ -1188,10 +1189,10 @@ const MAX_VARIANT_COMBINATIONS: usize = 16;
 /// long as one source (wikipron cross-product OR g2p) produces something,
 /// we return it.
 ///
-/// When the wikipron cross product would exceed
-/// `MAX_VARIANT_COMBINATIONS`, we fall back to just the main-only
-/// variant: better to under-accept than to spend exponential time
-/// enumerating a long sentence.
+/// Keep at most `MAX_VARIANT_COMBINATIONS` per-word combinations, with
+/// earlier words varying fastest: cue-initial letter-name alternates take
+/// priority over later example-word alternates. The main-only reading is
+/// always first; phrase-level g2p candidates are added outside this cap.
 ///
 /// The espeak phrase-level IPA, when available, is *always* added as an
 /// extra candidate independent of the wikipron path. Espeak applies
@@ -1213,13 +1214,18 @@ fn ground_truth_phoneme_variants(
     // on the phrase-level g2p variant (if available) as the sole ground truth.
     let mut per_word: Vec<Vec<Vec<String>>> = Vec::new();
     let mut complete = true;
-    for word in text.split(|c: char| {
-        c.is_whitespace() || (!c.is_alphabetic() && c != '\'' && c != '-' && c != 'ʼ')
-    }) {
-        let cleaned = word
-            .trim_matches(|c: char| !c.is_alphabetic())
-            .to_lowercase();
-        if cleaned.is_empty() {
+    // `is_alphabetic` excludes some combining signs (notably Hindi nukta
+    // and virama). Keep them attached in dictionary keys and g2p input,
+    // along with decomposed accents and Russian stress marks.
+    let is_word_char = |c: char| {
+        c.is_alphabetic()
+            || matches!(c, '\u{0300}'..='\u{036f}' | '\u{0900}'..='\u{0903}'
+                | '\u{093a}'..='\u{094f}' | '\u{0951}'..='\u{0957}'
+                | '\u{0962}'..='\u{0963}' | '\u{200c}' | '\u{200d}')
+    };
+    for word in text.split(|c: char| !is_word_char(c) && !matches!(c, '\'' | '-' | 'ʼ')) {
+        let cleaned = word.trim_matches(|c: char| !is_word_char(c)).to_lowercase();
+        if !cleaned.chars().any(char::is_alphabetic) {
             continue;
         }
         let Some(accepted) = word_to_pronunciation.get(&cleaned) else {
@@ -1234,11 +1240,13 @@ fn ground_truth_phoneme_variants(
             if g2p_word.is_empty() {
                 complete = false;
             } else {
-                per_word.push(vec![g2p_word]);
+                let mut variants = vec![g2p_word];
+                add_spanish_dialect_word(&cleaned, language, &mut variants);
+                per_word.push(variants);
             }
             continue;
         };
-        let word_variants: Vec<Vec<String>> = accepted
+        let mut word_variants: Vec<Vec<String>> = accepted
             .all()
             .map(|ipa| {
                 ipa.split_whitespace()
@@ -1253,6 +1261,7 @@ fn ground_truth_phoneme_variants(
                 }
                 acc
             });
+        add_spanish_dialect_word(&cleaned, language, &mut word_variants);
         per_word.push(word_variants);
     }
 
@@ -1260,28 +1269,25 @@ fn ground_truth_phoneme_variants(
         // No per-word candidates — the phrase-level g2p below is our only shot.
         Vec::new()
     } else {
-        let total: usize = per_word.iter().map(|v| v.len().max(1)).product::<usize>();
-        if total > MAX_VARIANT_COMBINATIONS {
-            // Fall back to main-only.
-            vec![per_word.iter().map(|v| v[0].clone()).collect()]
-        } else {
-            // Enumerate the cross product. `acc` accumulates phrase
-            // candidates; for each word we re-expand each accumulated
-            // candidate against each of that word's variants.
-            let mut acc: Vec<Reading> = vec![Vec::new()];
-            for word_variants in &per_word {
-                let mut next = Vec::with_capacity(acc.len() * word_variants.len());
+        let mut acc: Vec<Reading> = vec![Vec::new()];
+        for word_variants in &per_word {
+            let mut next = Vec::with_capacity(MAX_VARIANT_COMBINATIONS);
+            // Alternates outside, prefixes inside: earlier words vary
+            // fastest and survive truncation. Never compute the total
+            // product or allocate more than the cap at any expansion.
+            'variants: for var in word_variants {
                 for prefix in &acc {
-                    for var in word_variants {
-                        let mut extended = prefix.clone();
-                        extended.push(var.clone());
-                        next.push(extended);
+                    let mut extended = prefix.clone();
+                    extended.push(var.clone());
+                    next.push(extended);
+                    if next.len() == MAX_VARIANT_COMBINATIONS {
+                        break 'variants;
                     }
                 }
-                acc = next;
             }
-            acc
+            acc = next;
         }
+        acc
     };
 
     // Add the phrase-level g2p variant in the model's own label space, for
@@ -1291,44 +1297,70 @@ fn ground_truth_phoneme_variants(
     // ms. Failures are *important*: without this variant the verifier loses
     // all phrase-level ground truth for text wikipron can't decompose, so
     // log the first error per process rather than letting it vanish.
-    match model_target(text, language) {
-        Some(Ok(phonemized)) => {
-            // Words come from g2p's own spans (a backend without them
-            // yields one word), which is what lets a phrase-level reading
-            // still say which word the audio skipped.
-            let spans = if phonemized.word_spans.is_empty() {
-                vec![(0, phonemized.phonemes.len())]
-            } else {
-                phonemized.word_spans.clone()
-            };
-            let g2p_reading: Reading = spans
-                .iter()
-                .map(|&(start, end)| {
-                    phonemized.phonemes[start..end]
-                        .iter()
-                        .filter_map(|p| normalize_phoneme(p, language))
-                        .collect::<Vec<String>>()
-                })
-                .filter(|word| !word.is_empty())
-                .collect();
-            let flat = g2p_reading.concat();
-            if !flat.is_empty() && !candidates.iter().any(|c| c.concat() == flat) {
-                candidates.push(g2p_reading);
+    for target in model_target(text, language)
+        .into_iter()
+        .chain(spanish_dialect_target(text, language))
+    {
+        match target {
+            Ok(phonemized) => {
+                // Words come from g2p's own spans (a backend without them
+                // yields one word), which is what lets a phrase-level reading
+                // still say which word the audio skipped.
+                let spans = if phonemized.word_spans.is_empty() {
+                    vec![(0, phonemized.phonemes.len())]
+                } else {
+                    phonemized.word_spans.clone()
+                };
+                let g2p_reading: Reading = spans
+                    .iter()
+                    .map(|&(start, end)| {
+                        phonemized.phonemes[start..end]
+                            .iter()
+                            .filter_map(|p| normalize_phoneme(p, language))
+                            .collect::<Vec<String>>()
+                    })
+                    .filter(|word| !word.is_empty())
+                    .collect();
+                let flat = g2p_reading.concat();
+                if !flat.is_empty() && !candidates.iter().any(|c| c.concat() == flat) {
+                    candidates.push(g2p_reading);
+                }
+            }
+            Err(e) => {
+                static WARNED: std::sync::Once = std::sync::Once::new();
+                WARNED.call_once(|| {
+                    log::warn!("g2p phonemization failed (first occurrence shown only): {e:#}");
+                });
             }
         }
-        Some(Err(e)) => {
-            static WARNED: std::sync::Once = std::sync::Once::new();
-            WARNED.call_once(|| {
-                log::warn!("g2p phonemization failed (first occurrence shown only): {e:#}");
-            });
-        }
-        None => {}
     }
 
     if candidates.is_empty() {
         None
     } else {
         Some(candidates)
+    }
+}
+
+/// Seseo is an accepted Spanish dialect reading, not a θ/s equivalence:
+/// keep the training-contract `es` target and both phones unchanged.
+fn spanish_dialect_target(
+    text: &str,
+    language: Language,
+) -> Option<Result<g2p::Phonemized, g2p::Error>> {
+    (language == Language::Spanish).then(|| g2p::phonemize(text, "es-419"))
+}
+
+fn add_spanish_dialect_word(text: &str, language: Language, variants: &mut Vec<Vec<String>>) {
+    if let Some(Ok(target)) = spanish_dialect_target(text, language) {
+        let phones: Vec<String> = target
+            .phonemes
+            .iter()
+            .filter_map(|p| normalize_phoneme(p, language))
+            .collect();
+        if !phones.is_empty() && !variants.contains(&phones) {
+            variants.push(phones);
+        }
     }
 }
 
@@ -2220,16 +2252,135 @@ mod tests {
     }
 
     #[test]
-    fn ground_truth_falls_back_to_main_when_too_many_combinations() {
-        // 5 words × 2 variants each = 32 > MAX_VARIANT_COMBINATIONS (16) →
-        // fall back to single main-only candidate (no espeak under Korean).
-        let mut wp = HashMap::new();
-        for w in &["a", "b", "c", "d", "e"] {
-            wp.insert(w.to_string(), ap("X", &["Y"]));
+    fn ground_truth_caps_combinations_preserving_earlier_alternates() {
+        // Korean isolates the dictionary path. 2^100 would overflow usize;
+        // both phrases must instead keep the same bounded prefix choices.
+        let wp = HashMap::from([("a".to_string(), ap("X", &["Y"]))]);
+        for count in [5, 100] {
+            let text = vec!["a"; count].join(" ");
+            let variants = flat_variants(&text, &wp, Language::Korean).unwrap();
+            assert_eq!(variants.len(), MAX_VARIANT_COMBINATIONS);
+            for (index, variant) in variants.iter().enumerate() {
+                let expected: Vec<&str> = (0..count)
+                    .map(|position| {
+                        if position < 4 && index & (1 << position) != 0 {
+                            "Y"
+                        } else {
+                            "X"
+                        }
+                    })
+                    .collect();
+                assert_eq!(*variant, expected);
+            }
+            assert_eq!(
+                variants,
+                flat_variants(&text, &wp, Language::Korean).unwrap()
+            );
         }
-        let variants = flat_variants("a b c d e", &wp, Language::Korean).unwrap();
-        assert_eq!(variants.len(), 1);
-        assert_eq!(variants[0], vec!["X"; 5]);
+    }
+
+    #[test]
+    fn portuguese_cerveja_cue_keeps_letter_name_alternates() {
+        // Actual out/por/word_to_pronunciation.jsonl entries. The raw cue
+        // has 18 combinations and used to lose both /e/ and /ɛ/ to the cap.
+        let wp = HashMap::from([
+            ("e".to_string(), ap("i", &["e", "ɛ"])),
+            ("é".to_string(), ap("ɛ", &[])),
+            ("como".to_string(), ap("k o m u", &["k u m u"])),
+            ("em".to_string(), ap("ɐ̃ j̃", &[])),
+            (
+                "cerveja".to_string(),
+                ap("s ɨ ɾ v e ʒ ɐ", &["s ɨ ɾ b e ʒ ɐ", "s ɨ ɾ v ɐ j ʒ ɐ"]),
+            ),
+        ]);
+        let spoken = language_utils::pronunciation_challenge_spoken_text(
+            Language::Portuguese,
+            "ce",
+            "cerveja",
+        );
+        assert_eq!(spoken, "c é como em cerveja");
+        for (text, count) in [(spoken.as_str(), 6), ("c e como em cerveja", 16)] {
+            let readings = ground_truth_phoneme_variants(text, &wp, Language::Portuguese).unwrap();
+            assert_eq!(readings.len(), count + 1); // phrase g2p is outside the cap
+            let expected = word(&[
+                "s", "e", "ɛ", "k", "o", "m", "u", "ɐ̃", "j̃", "s", "ɨ", "ɾ", "v", "e", "ʒ", "ɐ",
+            ]);
+            assert!(readings.iter().any(|r| r.concat() == expected));
+            assert!(readings.iter().all(|r| r.len() == 5));
+            let phrase = model_target(text, Language::Portuguese).unwrap().unwrap();
+            assert!(readings.iter().any(|r| r.concat() == phrase.phonemes));
+        }
+    }
+
+    #[test]
+    fn spanish_accepts_seseo_without_changing_training_labels() {
+        assert!(matches!(
+            Language::Spanish.phoneme_label_source(),
+            PhonemeLabelSource::Espeak("es")
+        ));
+        assert_eq!(
+            model_target("cinco", Language::Spanish)
+                .unwrap()
+                .unwrap()
+                .phonemes,
+            word(&["θ", "i", "n", "k", "o"])
+        );
+        assert_eq!(normalize_phoneme("θ", Language::Spanish), Some("θ".into()));
+        assert_eq!(normalize_phoneme("s", Language::Spanish), Some("s".into()));
+        let empty = HashMap::new();
+        let variants = flat_variants("cinco", &empty, Language::Spanish).unwrap();
+        assert_eq!(
+            variants,
+            vec![
+                word(&["θ", "i", "n", "k", "o"]),
+                word(&["s", "i", "n", "k", "o"])
+            ]
+        );
+        // Latin American per-word g2p also combines with dictionary-only
+        // pronunciations, not merely a whole-phrase fallback.
+        let mut wp = HashMap::from([("nombre".to_string(), ap("X", &[]))]);
+        for dictionary_cinco in [false, true] {
+            if dictionary_cinco {
+                wp.insert("cinco".to_string(), ap("θ i n k o", &[]));
+            }
+            let readings =
+                ground_truth_phoneme_variants("cinco nombre", &wp, Language::Spanish).unwrap();
+            assert!(readings.contains(&vec![word(&["s", "i", "n", "k", "o"]), word(&["X"])]));
+        }
+        // The cap must not prevent a pure seseo phrase reading when later
+        // words' per-word alternates are truncated.
+        let text = ["cinco"; 6].join(" ");
+        let readings = ground_truth_phoneme_variants(&text, &empty, Language::Spanish).unwrap();
+        assert_eq!(readings.len(), MAX_VARIANT_COMBINATIONS + 1);
+        assert!(readings.contains(&vec![word(&["s", "i", "n", "k", "o"]); 6]));
+        assert_eq!(
+            flat_variants("niño", &empty, Language::Spanish)
+                .unwrap()
+                .len(),
+            1
+        );
+    }
+
+    #[test]
+    fn ground_truth_preserves_hindi_combining_signs() {
+        for text in ["क्", "क़", "क्ष", "हिंदी", "क्\u{200d}ष"] {
+            // A dictionary sentinel proves lookup sees the entire grapheme,
+            // while an empty dictionary exercises g2p on the intact word.
+            let wp = HashMap::from([(text.to_string(), ap("X", &[]))]);
+            let readings =
+                ground_truth_phoneme_variants(&format!("‘{text}।’"), &wp, Language::Hindi).unwrap();
+            assert_eq!(readings[0], vec![word(&["X"])]);
+            let expected: Vec<String> = model_target(text, Language::Hindi)
+                .unwrap()
+                .unwrap()
+                .phonemes
+                .iter()
+                .filter_map(|p| normalize_phoneme(p, Language::Hindi))
+                .collect();
+            let readings =
+                ground_truth_phoneme_variants(text, &HashMap::new(), Language::Hindi).unwrap();
+            assert_eq!(readings, vec![vec![expected]]);
+        }
     }
 
     // The liaison output depends on our espeak-ng fork's French patches;
@@ -2503,6 +2654,34 @@ mod letter_name_tests {
             .filter_map(|p| normalize_phoneme(p, language))
             .collect::<Vec<_>>()
             .join(" ")
+    }
+
+    #[test]
+    fn japanese_and_hindi_segments_use_the_models_backend() {
+        for (language, pattern, expected) in [
+            (Language::Japanese, "は", "h a"),
+            (Language::Japanese, "へ", "h e"),
+            (Language::Japanese, "ー", "tɕ o o o ɴ p ɯᵝ"),
+            (Language::Japanese, "っ", "tɕ i i s a i ts ɯᵝ"),
+            (Language::Japanese, "ッ", "tɕ i i s a i ts ɯᵝ"),
+            (Language::Hindi, "़", "n ʊ k t̪ a"),
+            (Language::Hindi, "्", "ɦ ə l ə n t̪"),
+            (Language::Hindi, "ड़", "ɽ ə"),
+            (Language::Hindi, "क्ष", "k ʃ"),
+        ] {
+            let segments = language_utils::pronunciation_challenge_segments(language, pattern, "");
+            assert_eq!(segments[0].display, pattern);
+            let target = model_target(&segments[0].spoken, language)
+                .unwrap()
+                .unwrap();
+            let phones = target
+                .phonemes
+                .iter()
+                .filter_map(|p| normalize_phoneme(p, language))
+                .collect::<Vec<_>>()
+                .join(" ");
+            assert_eq!(phones, expected, "{language:?} {pattern}");
+        }
     }
 
     // The letter-name table is only useful if espeak reads each name as the
