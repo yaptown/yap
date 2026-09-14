@@ -1102,9 +1102,12 @@ fn decode_wav_to_f32(wav_bytes: &[u8]) -> Result<Vec<f32>> {
 ///
 /// 1. **Universal stripping** — remove characters that aren't phonemic in
 ///    any language: suprasegmental stress (`ˈ`/`ˌ`), syllable boundary
-///    (`.`), length marks (`ː`/`ˑ`), the liaison/elision marker (`‿`), and
+///    (`.`), length marks (`ː`/`ˑ`), the liaison/elision marker (`‿`),
 ///    ASCII digits (the multilingual wav2vec2 model leaks Mandarin tone
-///    numbers like `y5`, `i5`, `a5` into French output).
+///    numbers like `y5`, `i5`, `a5` into French output), and `^`, an
+///    espeak artifact the Russian voice leaves on a word-final palatalized
+///    consonant (`царь` → `tsɑrɪ^`) that lexide blacklists at preprocess
+///    time, so no model can emit it.
 /// 2. **Internal whitespace strip** — `f a ɪ` is already split on
 ///    whitespace by the caller, but defensive in case a token slipped
 ///    through with embedded whitespace.
@@ -1120,7 +1123,7 @@ pub fn normalize_phoneme(token: &str, language: Language) -> Option<String> {
     let stripped: String = token
         .chars()
         .filter(|c| {
-            !matches!(*c, 'ˈ' | 'ˌ' | '.' | 'ː' | 'ˑ' | '‿')
+            !matches!(*c, 'ˈ' | 'ˌ' | '.' | 'ː' | 'ˑ' | '‿' | '^')
                 && !c.is_ascii_digit()
                 && !c.is_whitespace()
         })
@@ -2030,6 +2033,12 @@ mod tests {
         assert_eq!(normalize_phoneme("ˈ", lang), None);
         // Combining diacritics inside the phoneme are preserved.
         assert_eq!(normalize_phoneme("ã", lang), Some("ã".to_string()));
+        // espeak's Russian `^` artifact is not a phone anywhere.
+        assert_eq!(
+            normalize_phoneme("ɪ^", Language::Russian),
+            Some("ɪ".to_string())
+        );
+        assert_eq!(normalize_phoneme("^", Language::Russian), None);
     }
 
     #[test]
@@ -2516,6 +2525,26 @@ mod letter_name_tests {
         assert_eq!(
             phonemes(Language::Russian, "щ", "борщ"),
             "ɕ ɑ k ɑ k v b o r ɕ"
+        );
+        // Bare letters that espeak would read as words: Portuguese "e" is
+        // the conjunction /i/ and "o" the article /u/; a bare Russian "о"
+        // reduces to /ʌ/. Named, they are the letters.
+        assert_eq!(
+            phonemes(Language::Portuguese, "e", "cerveja"),
+            "ɛ k o m w e\u{303} j s e ɾ v e ʒ ɐ"
+        );
+        assert_eq!(
+            phonemes(Language::Portuguese, "o", "ovo"),
+            "ɔ k o m w e\u{303} j o v ʊ"
+        );
+        assert_eq!(
+            phonemes(Language::Russian, "о", "окно"),
+            "o k ɑ k v ʌ k n o"
+        );
+        // The `^` espeak leaves on царь is stripped, not scored.
+        assert_eq!(
+            phonemes(Language::Russian, "ц", "царь"),
+            "t s ɛ k ɑ k f t s ɑ r ɪ"
         );
         assert_eq!(
             phonemes(Language::Russian, "ь", "соль"),

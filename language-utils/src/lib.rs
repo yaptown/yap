@@ -3154,10 +3154,14 @@ impl Language {
     /// Two kinds of letter therefore need an entry: any letter whose name is
     /// a phrase (accents, ligatures, modifier letters, Korean jamo), and any
     /// letter espeak would otherwise read as the homographic word (French "y"
-    /// is the adverb /i/, English "a" the article /ə/). Spellings are chosen
-    /// for what espeak makes of them: English "eh" is /eɪ/ where "ay" is
-    /// /aɪ/. Languages whose sound inventory is syllabic (kana, Devanagari,
-    /// Thai) read every character as itself.
+    /// is the adverb /i/, English "a" the article /ə/, Portuguese "e" the
+    /// conjunction /i/ and "o" the article /u/, Russian "о" an unstressed
+    /// /ʌ/). Spellings are chosen for what espeak makes of them: English
+    /// "eh" is /eɪ/ where "ay" is /aɪ/; Portuguese "é"/"ó" are the letter
+    /// names /ɛ/ and /ɔ/, so they stand in for the bare letters and lead the
+    /// accent names too; a Russian vowel carries the combining acute so it is
+    /// read stressed. Languages whose sound inventory is syllabic (kana,
+    /// Devanagari, Thai) read every character as itself.
     pub fn letter_name(&self, letter: char) -> Option<&'static str> {
         let letter = letter.to_lowercase().next().unwrap_or(letter);
         let name = match self {
@@ -3184,17 +3188,19 @@ impl Language {
                 _ => return None,
             },
             Language::Portuguese => match letter {
+                'e' => "é",
+                'o' => "ó",
                 'á' => "a acento agudo",
-                'é' => "e acento agudo",
+                'é' => "é acento agudo",
                 'í' => "i acento agudo",
-                'ó' => "o acento agudo",
+                'ó' => "ó acento agudo",
                 'ú' => "u acento agudo",
                 'à' => "a acento grave",
                 'â' => "a acento circunflexo",
-                'ê' => "e acento circunflexo",
-                'ô' => "o acento circunflexo",
+                'ê' => "é acento circunflexo",
+                'ô' => "ó acento circunflexo",
                 'ã' => "a til",
-                'õ' => "o til",
+                'õ' => "ó til",
                 'ç' => "c cedilha",
                 'ü' => "u trema",
                 _ => return None,
@@ -3254,9 +3260,16 @@ impl Language {
             },
             // Consonants are named in full: a Russian voice reading a bare
             // "щ" or "ч" picks between the sound and the name at random.
-            // Vowels are their own names. The combining acute (U+0301) marks
-            // a stressed vowel in the sound inventory and is read as such.
+            // Vowels are their own names, but a bare "а", "о" or "и" ahead
+            // of the connector is an unstressed word to espeak and reduces
+            // (о → /ʌ/, и → /ɪ/), so those carry the combining acute and
+            // are read stressed, as a letter name is. The combining acute
+            // (U+0301) also marks a stressed vowel in the sound inventory
+            // and is read as such.
             Language::Russian => match letter {
+                'а' => "а\u{301}",
+                'о' => "о\u{301}",
+                'и' => "и\u{301}",
                 'б' => "бэ",
                 'в' => "вэ",
                 'г' => "гэ",
@@ -5368,10 +5381,12 @@ mod pronunciation_challenge_audio_tests {
             .iter()
             .map(|s| (s.display.as_str(), s.spoken.as_str()))
             .collect();
+        // The vowel's own name already carries the acute (a bare "а" ahead
+        // of "с ударением" would reduce); the mark's name follows it.
         assert_eq!(
             pairs,
             [
-                ("а\u{301}", "а с ударением"),
+                ("а\u{301}", "а\u{301} с ударением"),
                 ("как", "как"),
                 ("в", "в"),
                 ("мама", "мама"),
@@ -5413,6 +5428,26 @@ mod pronunciation_challenge_audio_tests {
             pronunciation_challenge_spoken_text(Language::English, "ea", "bread"),
             "e eh as in bread"
         );
+        // Portuguese "e" is the conjunction and "o" the article; the letter
+        // names are "é" and "ó".
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Portuguese, "ce", "cerveja"),
+            "c é como em cerveja"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Portuguese, "o", "ovo"),
+            "ó como em ovo"
+        );
+        // A bare Russian vowel reduces as an unstressed word; the stress
+        // mark keeps it a letter name.
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Russian, "о", "окно"),
+            "о\u{301} как в окно"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Russian, "у", "утро"),
+            "у как в утро"
+        );
     }
 
     #[test]
@@ -5423,7 +5458,11 @@ mod pronunciation_challenge_audio_tests {
         );
         assert_eq!(
             pronunciation_challenge_spoken_text(Language::Portuguese, "ãe", "pães"),
-            "a til e como em pães"
+            "a til é como em pães"
+        );
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Portuguese, "ê", "você"),
+            "é acento circunflexo como em você"
         );
     }
 
