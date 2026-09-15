@@ -1,0 +1,8 @@
+# TEMPORARY — delete this file once CI is green.
+#
+# nextest's default fail-fast aborts the run at the first failure, so a CI run
+# only ever reveals one broken test. While we clear out the agent-written tests
+# that don't survive the runner, run everything so a single CI cycle lists them
+# all instead of one per round trip.
+[profile.default]
+fail-fast = false
