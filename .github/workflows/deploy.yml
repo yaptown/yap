@@ -55,6 +55,17 @@ jobs:
 
       - uses: taiki-e/install-action@nextest
 
+      # The g2p dependency builds the anchpop/espeak-ng fork from source with
+      # CMake (statically linked, data embedded), so the fork is compiled and
+      # exercised by the regular test run — no separate espeak job. ffmpeg is
+      # how phoneme-verify and subtitle-corpus decode audio, so their tests
+      # shell out to it. Keep this step identical in ci.yml and deploy.yml:
+      # both run the same `cargo nextest run --all` on the same runner.
+      - name: Ensure cmake and ffmpeg
+        run: |
+          command -v cmake >/dev/null && command -v ffmpeg >/dev/null ||
+            (sudo apt-get update && sudo apt-get install -y cmake ffmpeg)
+
       - name: Rustfmt
         run: cargo fmt --all -- --check
 
