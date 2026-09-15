@@ -938,17 +938,50 @@ fn encode_audio_f32(samples: &[f32]) -> String {
     base64::engine::general_purpose::STANDARD.encode(bytes)
 }
 
+/// Raw frame matrices are decoder-independent: even `p_nonblank` is recoverable
+/// from the blank column. Strip only the final decoder suffix, preserving the
+/// exact model/revision prefix (which may itself contain `__`).
+pub(crate) fn frames_partition(version: &str) -> &str {
+    version
+        .rsplit_once("__")
+        .map_or(version, |(model, _)| model)
+}
+
+// Previously shipped decoder partitions whose raw matrices can still be reused.
+const LEGACY_FRAME_DECODERS: &[&str] = &["greedy_v1"];
+
+async fn cached_frame_matrix(ctx: &VerifyContext<'_>, hash: u64) -> Option<Result<FrameMatrix>> {
+    let partition = frames_partition(&ctx.cache_version);
+    let versions = [partition.to_owned(), ctx.cache_version.clone()]
+        .into_iter()
+        .chain(
+            LEGACY_FRAME_DECODERS
+                .iter()
+                .map(|decoder| format!("{partition}__{decoder}")),
+        );
+    for version in versions {
+        let key = format!("wav2vec2-frames/{version}/{hash:016x}");
+        if let Some(bytes) = ctx.store.read(&key).await
+            && let Ok(payload) = serde_json::from_slice::<FrameMatrixPayload>(&bytes)
+        {
+            return Some(FrameMatrix::decode(&payload));
+        }
+    }
+    None
+}
+
 /// The model's per-frame log-prob matrix for a clip, from the cache or the
 /// endpoint. Cached under its own partition (`wav2vec2-frames/…`), keyed by
 /// the WAV bytes like predictions are; the compressed payload is stored as
 /// shipped, so a cache entry is ~24 KB per audio-second.
 pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<FrameMatrix> {
     let hash = xxh3_64(wav_bytes);
-    let cache_key = format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version);
-    if let Some(contents) = ctx.store.read(&cache_key).await
-        && let Ok(payload) = serde_json::from_slice::<FrameMatrixPayload>(&contents)
-    {
-        return FrameMatrix::decode(&payload);
+    let cache_key = format!(
+        "wav2vec2-frames/{}/{hash:016x}",
+        frames_partition(&ctx.cache_version)
+    );
+    if let Some(cached) = cached_frame_matrix(ctx, hash).await {
+        return cached;
     }
     if cache_only() {
         anyhow::bail!(
@@ -998,11 +1031,12 @@ async fn frame_matrices_at(
     let mut pending = Vec::new();
     for (index, wav) in wavs.iter().enumerate() {
         let hash = xxh3_64(wav);
-        let key = format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version);
-        if let Some(bytes) = ctx.store.read(&key).await
-            && let Ok(payload) = serde_json::from_slice::<FrameMatrixPayload>(&bytes)
-        {
-            results[index] = Some(FrameMatrix::decode(&payload));
+        let key = format!(
+            "wav2vec2-frames/{}/{hash:016x}",
+            frames_partition(&ctx.cache_version)
+        );
+        if let Some(cached) = cached_frame_matrix(ctx, hash).await {
+            results[index] = Some(cached);
             continue;
         }
         if only_cache {
@@ -2321,6 +2355,75 @@ mod tests {
         }
     }
 
+    #[test]
+    fn frame_partition_strips_only_the_decoder() {
+        // The matrix is raw model output, so the decoder segment goes...
+        assert_eq!(frames_partition("model@rev__nonblank_v1"), "model@rev");
+        // ...but only the last one: a model whose own id carries `__` keeps it,
+        // so two different models can never share a partition.
+        assert_eq!(
+            frames_partition("model__name@rev__greedy_v1"),
+            "model__name@rev"
+        );
+        // An override with no decoder segment is already a partition.
+        assert_eq!(frames_partition("offline"), "offline");
+    }
+
+    #[tokio::test]
+    async fn frame_cache_fallback_priority_and_revision_isolation() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let words = HashMap::new();
+        let mut ctx = VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &words,
+            Language::English,
+            "model__name@rev1__nonblank_v1".into(),
+            0.3,
+            None,
+        )
+        .unwrap();
+        // Deliberately not WAV data: every hit must bypass decoding and HTTP.
+        let wav = b"cached raw frames";
+        let hash = xxh3_64(wav);
+        let partition = frames_partition(&ctx.cache_version).to_owned();
+        let new_key = format!("wav2vec2-frames/{partition}/{hash:016x}");
+        let current_key = format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version);
+        let greedy_key = format!("wav2vec2-frames/{partition}__greedy_v1/{hash:016x}");
+        // Add entries from lowest to highest priority. Reads must never migrate
+        // the older payloads, and both entry points must use the same ordering.
+        for (key, frames) in [(&greedy_key, 1), (&current_key, 2), (&new_key, 3)] {
+            let bytes = serde_json::to_vec(&batch_test_payload(frames)).unwrap();
+            ctx.store.write(key, &bytes).await.unwrap();
+            assert_eq!(frame_matrix(&ctx, wav).await.unwrap().frames, frames);
+            let batch =
+                frame_matrices_at(&ctx, &[wav], Err(anyhow::anyhow!("offline")), true).await;
+            assert_eq!(batch[0].as_ref().unwrap().frames, frames);
+            assert_eq!(ctx.store.read(key).await.unwrap(), bytes);
+            if frames < 3 {
+                assert!(ctx.store.read(&new_key).await.is_none());
+            }
+            if frames == 1 {
+                assert!(ctx.store.read(&current_key).await.is_none());
+            }
+        }
+        // Neither another revision nor another model may reuse these entries.
+        for version in ["model__name@rev2__nonblank_v1", "other@rev1__nonblank_v1"] {
+            ctx.cache_version = version.into();
+            assert!(cached_frame_matrix(&ctx, hash).await.is_none());
+            let batch =
+                frame_matrices_at(&ctx, &[wav], Err(anyhow::anyhow!("offline")), true).await;
+            assert!(
+                batch[0]
+                    .as_ref()
+                    .unwrap_err()
+                    .to_string()
+                    .contains("cache-only mode")
+            );
+        }
+    }
+
     fn batch_test_wav(seed: i16) -> Vec<u8> {
         let samples = 1600_u32;
         let mut wav = b"RIFF".to_vec();
@@ -2549,7 +2652,7 @@ mod tests {
         let ctx = VerifyContext {
             http: &http,
             store,
-            cache_version: "test".into(),
+            cache_version: "test__nonblank_v1".into(),
             expected_identity: None,
             word_to_pronunciation: &empty,
             mismatch_threshold: 0.3,
@@ -2583,8 +2686,21 @@ mod tests {
         let cached =
             frame_matrices_at(&ctx, &refs, Err(anyhow::anyhow!("no endpoint")), true).await;
         assert_eq!(cached.iter().filter(|r| r.is_ok()).count(), 65);
-        let prediction_key = format!("wav2vec2/test/{:016x}", xxh3_64(&wavs[1]));
+        let hash = xxh3_64(&wavs[1]);
+        let prediction_key = format!("wav2vec2/test__nonblank_v1/{hash:016x}");
         assert!(ctx.store.read(&prediction_key).await.is_some());
+        assert!(
+            ctx.store
+                .read(&format!("wav2vec2-frames/test/{hash:016x}"))
+                .await
+                .is_some()
+        );
+        assert!(
+            ctx.store
+                .read(&format!("wav2vec2-frames/test__nonblank_v1/{hash:016x}"))
+                .await
+                .is_none()
+        );
     }
 
     #[test]
