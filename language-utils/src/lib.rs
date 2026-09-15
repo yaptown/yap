@@ -2731,6 +2731,7 @@ pub enum PatternPosition {
     schemars::JsonSchema,
 )]
 pub struct WordPair {
+    #[serde(deserialize_with = "deserialize_pronunciation_cue_text")]
     pub target: String,
     pub native: String,
     pub position: SoundPosition,  // Where the sound appears in the word
@@ -2754,6 +2755,7 @@ pub struct WordPair {
 )]
 pub struct PronunciationGuideThoughts {
     pub thoughts: String,
+    #[serde(deserialize_with = "deserialize_pronunciation_cue_text")]
     pub pattern: String,
     pub position: PatternPosition,
     pub description: String,
@@ -2779,12 +2781,29 @@ pub struct PronunciationGuideThoughts {
     schemars::JsonSchema,
 )]
 pub struct PronunciationGuide {
+    #[serde(deserialize_with = "deserialize_pronunciation_cue_text")]
     pub pattern: String,
     pub position: PatternPosition,
     pub description: String,
     pub familiarity: PronunciationFamiliarity,
     pub difficulty: PronunciationDifficulty,
     pub example_words: Vec<WordPair>,
+}
+
+// Validate at the JSON boundary, before malformed guide text can reach TTS or
+// a language pack. Keep valid Unicode (including combining marks) verbatim.
+fn deserialize_pronunciation_cue_text<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let text = <String as serde::Deserialize>::deserialize(deserializer)?;
+    if let Some((offset, character)) = text.char_indices().find(|(_, c)| c.is_control()) {
+        return Err(serde::de::Error::custom(format!(
+            "pronunciation cue text contains control character U+{:04X} at byte {offset}: {text:?}",
+            character as u32,
+        )));
+    }
+    Ok(text)
 }
 
 impl From<PronunciationGuideThoughts> for PronunciationGuide {
@@ -3160,8 +3179,9 @@ impl Language {
     /// "eh" is /eɪ/ where "ay" is /aɪ/; Portuguese "é"/"ó" are the letter
     /// names /ɛ/ and /ɔ/, so they stand in for the bare letters and lead the
     /// accent names too; a Russian vowel carries the combining acute so it is
-    /// read stressed. Languages whose sound inventory is syllabic (kana,
-    /// Devanagari, Thai) read every character as itself.
+    /// read stressed. Kana, Devanagari and Thai generally read as themselves,
+    /// with names for silent signs and ambiguous or otherwise unreadable
+    /// standalone letters.
     pub fn letter_name(&self, letter: char) -> Option<&'static str> {
         let letter = letter.to_lowercase().next().unwrap_or(letter);
         let name = match self {
@@ -3351,11 +3371,15 @@ impl Language {
                 'ㅣ' => "이",
                 _ => return None,
             },
-            // Kana read as themselves, except the small kana: a lone っ has
+            // Katakana keeps は/へ from reading as the particles /wa/, /e/.
+            // Other kana read as themselves, except the small kana: a lone っ has
             // no sound to voice and the small vowels and y-kana merely
             // modify their neighbour, so each is named the way a teacher
             // does, "small tsu".
             Language::Japanese => match letter {
+                'は' => "ハ",
+                'へ' => "ヘ",
+                'ー' => "長音符",
                 'っ' => "小さいつ",
                 'ッ' => "小さいツ",
                 'ぁ' => "小さいあ",
@@ -3376,10 +3400,43 @@ impl Language {
                 'ョ' => "小さいヨ",
                 _ => return None,
             },
-            Language::ChineseSimplified
-            | Language::ChineseTraditional
-            | Language::Hindi
-            | Language::Thai => return None,
+            // Attached signs modify their grapheme instead (see the cue
+            // segment builder); only a standalone nukta/virama is named.
+            Language::Hindi => match letter {
+                '\u{93c}' => "नुक्ता",
+                '\u{94d}' => "हलंत",
+                _ => return None,
+            },
+            Language::Thai => match letter {
+                'ฃ' => "ขอ ขวด",
+                'ฅ' => "คอ คน",
+                'ฆ' => "คอ ระฆัง",
+                'ฉ' => "ฉอ ฉิ่ง",
+                // ชอ เฌอ acquires an extra /ʔa/ in the Thai backend.
+                'ฌ' => "ฌอ เฌอ",
+                'ฑ' => "ทอ มณโฑ",
+                'ผ' => "ผอ ผึ้ง",
+                'ฝ' => "ฝอ ฝา",
+                'ฬ' => "ลอ จุฬา",
+                'ฮ' => "ฮอ นกฮูก",
+                'ั' => "ไม้หันอากาศ",
+                // Spell out /sa ra/: สระ is otherwise read as "pool" /sa/.
+                'ิ' => "สะระอิ",
+                'ี' => "สะระอี",
+                'ึ' => "สะระอึ",
+                'ื' => "สะระอือ",
+                'ุ' => "สะระอุ",
+                'ู' => "สะระอู",
+                '่' => "ไม้เอก",
+                '้' => "ไม้โท",
+                '๊' => "ไม้ตรี",
+                '๋' => "ไม้จัตวา",
+                '็' => "ไม้ไต่คู้",
+                '์' => "ทัณฑฆาต",
+                'ํ' => "นิคหิต",
+                _ => return None,
+            },
+            Language::ChineseSimplified | Language::ChineseTraditional => return None,
         };
         Some(name)
     }
@@ -4023,7 +4080,9 @@ pub struct SpokenSegment {
 /// What a pronunciation cue says, in order: each letter of the pattern by
 /// name, the connector words, then the example's words. A combining mark
 /// (the stress accent in Russian patterns) belongs to the letter before it:
-/// shown attached, and its name spoken after the letter's.
+/// shown attached, and its name spoken after the letter's. Hindi dependent
+/// signs instead stay attached in speech too, and a virama joins the next
+/// consonant so conjuncts reach the voice and phonemizer intact.
 pub fn pronunciation_challenge_segments(
     language: Language,
     pattern: &str,
@@ -4036,7 +4095,18 @@ pub fn pronunciation_challenge_segments(
             None => c.to_string(),
         };
         let is_combining_mark = ('\u{300}'..='\u{36f}').contains(&c);
+        let is_hindi_sign = language == Language::Hindi
+            && matches!(c, '\u{93c}' | '\u{94d}' | '\u{93e}'..='\u{94c}' | '\u{901}'..='\u{903}');
         match letters.last_mut() {
+            Some(previous)
+                if is_hindi_sign
+                    || (language == Language::Hindi
+                        && previous.spoken.ends_with('\u{94d}')
+                        && matches!(c, '\u{915}'..='\u{939}' | '\u{958}'..='\u{95f}')) =>
+            {
+                previous.display.push(c);
+                previous.spoken.push(c);
+            }
             Some(previous) if is_combining_mark => {
                 previous.display.push(c);
                 previous.spoken.push(' ');
@@ -5372,6 +5442,123 @@ mod pronunciation_challenge_audio_tests {
             pronunciation_challenge_spoken_text(Language::Japanese, "きぇ", "きぇーっ"),
             "き 小さいえ のように きぇーっ"
         );
+    }
+
+    #[test]
+    fn japanese_particles_and_silent_signs_speak_their_names() {
+        for (letter, name) in [
+            ('は', "ハ"),
+            ('へ', "ヘ"),
+            ('っ', "小さいつ"),
+            ('ッ', "小さいツ"),
+            ('ー', "長音符"),
+        ] {
+            assert_eq!(Language::Japanese.letter_name(letter), Some(name));
+            let segments =
+                pronunciation_challenge_segments(Language::Japanese, &letter.to_string(), "はっぱ");
+            assert_eq!(segments[0].display, letter.to_string());
+            assert_eq!(segments[0].spoken, name);
+            assert_eq!(segments[2].spoken, "はっぱ");
+        }
+        assert_eq!(Language::Japanese.letter_name('か'), None);
+    }
+
+    #[test]
+    fn thai_unreadable_letters_and_signs_speak_their_names() {
+        for (letter, name) in [
+            ('ฃ', "ขอ ขวด"),
+            ('ฅ', "คอ คน"),
+            ('ฆ', "คอ ระฆัง"),
+            ('ฉ', "ฉอ ฉิ่ง"),
+            ('ฌ', "ฌอ เฌอ"),
+            ('ฑ', "ทอ มณโฑ"),
+            ('ผ', "ผอ ผึ้ง"),
+            ('ฝ', "ฝอ ฝา"),
+            ('ฬ', "ลอ จุฬา"),
+            ('ฮ', "ฮอ นกฮูก"),
+            ('ั', "ไม้หันอากาศ"),
+            ('ิ', "สะระอิ"),
+            ('ี', "สะระอี"),
+            ('ึ', "สะระอึ"),
+            ('ื', "สะระอือ"),
+            ('ุ', "สะระอุ"),
+            ('ู', "สะระอู"),
+            ('่', "ไม้เอก"),
+            ('้', "ไม้โท"),
+            ('๊', "ไม้ตรี"),
+            ('๋', "ไม้จัตวา"),
+            ('็', "ไม้ไต่คู้"),
+            ('์', "ทัณฑฆาต"),
+            ('ํ', "นิคหิต"),
+        ] {
+            assert_eq!(Language::Thai.letter_name(letter), Some(name));
+            let segments =
+                pronunciation_challenge_segments(Language::Thai, &letter.to_string(), "กา");
+            assert_eq!(segments[0].display, letter.to_string());
+            assert_eq!(segments[0].spoken, name);
+            assert_eq!(
+                pronunciation_challenge_spoken_text(Language::Thai, &letter.to_string(), "กา"),
+                format!("{name} เหมือนใน กา")
+            );
+        }
+        assert_eq!(Language::Thai.letter_name('ก'), None);
+    }
+
+    #[test]
+    fn hindi_dependent_signs_stay_attached_in_display_and_speech() {
+        for sign in ['\u{93c}', '\u{94d}']
+            .into_iter()
+            .chain('\u{93e}'..='\u{94c}')
+            .chain('\u{901}'..='\u{903}')
+        {
+            let pattern = format!("क{sign}");
+            let segments = pronunciation_challenge_segments(Language::Hindi, &pattern, "कमल");
+            assert_eq!(segments.len(), 3, "{pattern}");
+            assert_eq!(segments[0].display, pattern);
+            assert_eq!(segments[0].spoken, pattern);
+            assert_eq!(
+                pronunciation_challenge_spoken_text(Language::Hindi, &pattern, "कमल"),
+                format!("{pattern} जैसे कमल")
+            );
+        }
+    }
+
+    #[test]
+    fn hindi_nukta_and_conjuncts_remain_composed_graphemes() {
+        for (pattern, example) in [("ड़", "लड़का"), ("क्ष", "क्षमा"), ("क्षि", "क्षितिज")]
+        {
+            let segments = pronunciation_challenge_segments(Language::Hindi, pattern, example);
+            let pairs: Vec<(&str, &str)> = segments
+                .iter()
+                .map(|s| (s.display.as_str(), s.spoken.as_str()))
+                .collect();
+            assert_eq!(
+                pairs,
+                [(pattern, pattern), ("जैसे", "जैसे"), (example, example)]
+            );
+        }
+        // Ordinary consonants are still spelled separately, not merged as a word.
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Hindi, "कम", "कमल"),
+            "क म जैसे कमल"
+        );
+    }
+
+    #[test]
+    fn hindi_standalone_nukta_and_virama_speak_their_names() {
+        for (letter, name) in [('\u{93c}', "नुक्ता"), ('\u{94d}', "हलंत")] {
+            assert_eq!(Language::Hindi.letter_name(letter), Some(name));
+            assert_eq!(
+                pronunciation_challenge_spoken_text(Language::Hindi, &letter.to_string(), "कमल"),
+                format!("{name} जैसे कमल")
+            );
+        }
+        // A leading, named virama has no preceding consonant to join to.
+        assert_eq!(
+            pronunciation_challenge_spoken_text(Language::Hindi, "्क", "कमल"),
+            "हलंत क जैसे कमल"
+        );
+        assert_eq!(Language::Hindi.letter_name('क'), None);
     }
 
     #[test]

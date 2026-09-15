@@ -8,9 +8,11 @@
 //! forced alignment re-reads the cached frame matrices under
 //! [`phoneme_verify::set_cache_only`], so an export run spends no inference.
 
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::OnceLock;
 
 use anyhow::{bail, Context, Result};
 use language_utils::Language;
@@ -51,6 +53,8 @@ const CTX_WIDEN_MS: i64 = 1_500;
 /// The hi rendition is never upscaled and never taller than this.
 const MAX_HEIGHT: i64 = 1440;
 const LO_HEIGHT: i64 = 480;
+const HI_CQ: u32 = 23;
+const HI_GPU_PRESET: &str = "p4";
 const HI_CRF: u32 = 19;
 const HI_PRESET: &str = "medium";
 const HI_AAC: &str = "160k";
@@ -68,11 +72,14 @@ const SIDECAR_FORMAT: u32 = 3;
 /// changes the output must appear here or in the per-film stamp.
 fn encode_recipe() -> String {
     format!(
-        "hi h264 crf{HI_CRF} {HI_PRESET} aac{HI_AAC} le{MAX_HEIGHT}p | \
-         lo crf{LO_CRF} {LO_PRESET} aac{LO_AAC} le{LO_HEIGHT}p | \
-         loudnorm I{TARGET_I} TP{TP_CEIL} critical linear | \
-         ctx gap{CTX_GAP_MS} cap{CTX_CAP_MS} pad{CTX_PAD_MS} | \
-         keyframe@critical | tonemap zscale hable bt709 | lanczos yuv420p"
+        "gpu hi h264_nvenc cq{HI_CQ} {HI_GPU_PRESET} forced-idr1 scale_cuda | \
+         gpu tonemap_cuda hable desat0 yuv420p matrix/primaries/transfer bt709 | \
+         fallback cpu libx264 crf{HI_CRF} {HI_PRESET}, then cpu core_only1 | \
+         cpu tonemap zscale linear npl100 gbrpf32le bt709 hable desat0 tv lanczos yuv420p | \
+         hi aac{HI_AAC} le{MAX_HEIGHT}p | \
+         lo libx264 crf{LO_CRF} {LO_PRESET} aac{LO_AAC} le{LO_HEIGHT}p | \
+         loudnorm I{TARGET_I} TP{TP_CEIL} critical linear stereo 48000Hz | \
+         keyframe@critical faststart"
     )
 }
 
@@ -171,6 +178,10 @@ fn legacy_stamp_matches(old: &serde_json::Value, stamp: &serde_json::Value) -> b
         && old["critical"]["end_ms"] == stamp["cut"]["critical_end_ms"]
 }
 
+/// Export clips with at most `jobs` concurrent clips (at least one). Each GPU
+/// attempt uses one NVENC session; the roughly 12 sessions available on this
+/// host are shared with Jellyfin, so leave headroom when choosing `jobs`.
+/// CPU fallbacks and loudness measurement also share this concurrency budget.
 pub async fn export_clips(
     out: PathBuf,
     dest: PathBuf,
@@ -179,6 +190,7 @@ pub async fn export_clips(
     imdb: Option<String>,
     langs: Option<Vec<String>>,
 ) -> Result<()> {
+    export_ffmpeg()?;
     // Cache misses must fail the clip's alignment block, never call Modal.
     phoneme_verify::set_cache_only(true);
     let plan = read_plan(&out)?;
@@ -694,6 +706,8 @@ async fn export_one(
 /// re-map clips (skips films whose provenance is current), export videos
 /// (skips clip dirs with a finished sidecar), upload to R2 (skips `.uploaded`
 /// markers). Safe to re-run after any interruption.
+/// `jobs` is the export concurrency / NVENC session budget (see [`export_clips`]);
+/// it does not change re-map or upload concurrency.
 pub async fn publish(
     out: PathBuf,
     dest: PathBuf,
@@ -701,6 +715,7 @@ pub async fn publish(
     langs: Option<Vec<String>>,
     bucket: String,
 ) -> Result<()> {
+    export_ffmpeg()?;
     println!("=== stage 1: clips re-map ===");
     let gate = crate::clips::Gate::default();
     crate::clips::clips_all(out.clone(), 4, 0, None, langs.clone(), gate).await?;
@@ -1029,6 +1044,146 @@ fn clean_context_end(boundary: i64, transcript: &[Spoken]) -> bool {
 mod tests {
     use super::*;
 
+    fn example_args(mode: EncodeMode, hdr: bool) -> Vec<OsString> {
+        rendition_args(
+            mode,
+            Path::new("/film with spaces.mkv"),
+            2,
+            hdr,
+            1234,
+            6789,
+            -2.345,
+            0.456,
+            Path::new("/clips/test"),
+        )
+    }
+
+    #[test]
+    fn rendition_commands_preserve_cpu_and_order_gpu_fallbacks() {
+        assert_eq!(
+            ENCODE_MODES,
+            [EncodeMode::Gpu, EncodeMode::Cpu, EncodeMode::CpuCoreOnly]
+        );
+        for hdr in [false, true] {
+            for mode in ENCODE_MODES {
+                let mut expected = vec!["-v", "error", "-y"];
+                match mode {
+                    EncodeMode::Gpu => {
+                        expected.extend(["-hwaccel", "cuda", "-hwaccel_output_format", "cuda"])
+                    }
+                    EncodeMode::Cpu => {}
+                    EncodeMode::CpuCoreOnly => expected.extend(["-core_only", "1"]),
+                }
+                let tonemap = match (mode, hdr) {
+                    (EncodeMode::Gpu, true) => "tonemap_cuda=tonemap=hable:desat=0:format=yuv420p:matrix=bt709:primaries=bt709:transfer=bt709,",
+                    (_, true) => "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,",
+                    (_, false) => "",
+                };
+                let scaling = if mode == EncodeMode::Gpu {
+                    "scale_cuda=w=-2:h='min(1440,ih)':format=yuv420p,split=2[vh][v0];[v0]scale_cuda=w=-2:h='min(480,ih)',hwdownload,format=yuv420p[vl]"
+                } else {
+                    "scale=-2:'min(1440,ih)':flags=lanczos,format=yuv420p,split=2[vh][v0];[v0]scale=-2:'min(480,ih)'[vl]"
+                };
+                let filter = format!("[0:v:0]{tonemap}{scaling};[0:a:2]aformat=channel_layouts=stereo,volume=-2.35dB,aresample=48000,asplit=2[ah][al]");
+                expected.extend([
+                    "-ss",
+                    "1.234",
+                    "-t",
+                    "5.555",
+                    "-i",
+                    "/film with spaces.mkv",
+                    "-filter_complex",
+                    &filter,
+                    "-map",
+                    "[vh]",
+                    "-map",
+                    "[ah]",
+                ]);
+                if mode == EncodeMode::Gpu {
+                    expected.extend([
+                        "-c:v",
+                        "h264_nvenc",
+                        "-cq",
+                        "23",
+                        "-preset",
+                        "p4",
+                        "-forced-idr",
+                        "1",
+                    ]);
+                } else {
+                    expected.extend(["-c:v", "libx264", "-crf", "19", "-preset", "medium"]);
+                }
+                expected.extend([
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "160k",
+                    "-force_key_frames",
+                    "0.456",
+                    "-movflags",
+                    "+faststart",
+                    "/clips/test/hi.mp4",
+                    "-map",
+                    "[vl]",
+                    "-map",
+                    "[al]",
+                    "-c:v",
+                    "libx264",
+                    "-crf",
+                    "27",
+                    "-preset",
+                    "veryfast",
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "96k",
+                    "-force_key_frames",
+                    "0.456",
+                    "-movflags",
+                    "+faststart",
+                    "/clips/test/lo.mp4",
+                ]);
+                assert_eq!(
+                    example_args(mode, hdr),
+                    expected.into_iter().map(OsString::from).collect::<Vec<_>>(),
+                    "{mode:?}, hdr={hdr}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn gpu_capabilities_match_exact_name_columns() {
+        assert!(missing_gpu_capabilities(
+            " V....D h264_nvenc NVIDIA encoder",
+            " ... scale_cuda V->V CUDA scaler\n ... tonemap_cuda V->V CUDA tonemap"
+        )
+        .is_empty());
+        assert_eq!(
+            missing_gpu_capabilities(
+                " V....D other description h264_nvenc",
+                " ... scale_cuda_extra V->V\n ... tonemap V->V tonemap_cuda"
+            ),
+            ["h264_nvenc", "scale_cuda", "tonemap_cuda"]
+        );
+        assert_eq!(
+            missing_gpu_capabilities(" V....D h264_nvenc encoder", " ... scale_cuda V->V"),
+            ["tonemap_cuda"]
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn rendition_paths_preserve_non_utf8() {
+        use std::os::unix::ffi::OsStringExt;
+        let source = PathBuf::from(OsString::from_vec(b"/film-\xff.mkv".to_vec()));
+        let dest = PathBuf::from(OsString::from_vec(b"/clips-\xfe".to_vec()));
+        let args = rendition_args(EncodeMode::Gpu, &source, 0, false, 0, 1000, 0.0, 0.0, &dest);
+        let input = args.iter().position(|arg| arg == "-i").unwrap();
+        assert_eq!(args[input + 1], source.as_os_str());
+        assert_eq!(args.last().unwrap(), dest.join("lo.mp4").as_os_str());
+    }
+
     fn cue(start_ms: i64, end_ms: i64) -> Cue {
         Cue {
             start_ms,
@@ -1247,7 +1402,7 @@ fn measure_loudness(
     start_ms: i64,
     dur_ms: i64,
 ) -> Result<(f64, f64)> {
-    let out = Command::new("ffmpeg")
+    let out = Command::new(export_ffmpeg()?)
         .args(["-nostats", "-hide_banner", "-ss"])
         .arg(format!("{:.3}", start_ms as f64 / 1000.0))
         .args(["-t", &format!("{:.3}", dur_ms as f64 / 1000.0), "-i"])
@@ -1281,6 +1436,104 @@ fn measure_loudness(
     Ok((i, tp))
 }
 
+/// Resolve PATH once and probe that same binary once, including failures. Keep
+/// the absolute PATH entry rather than canonicalizing symlinks: wrappers may
+/// rely on their invocation path. No dependency or machine-specific path needed.
+fn export_ffmpeg() -> Result<&'static Path> {
+    static FFMPEG: OnceLock<std::result::Result<PathBuf, String>> = OnceLock::new();
+    FFMPEG
+        .get_or_init(|| {
+            (|| -> Result<PathBuf> {
+                let path =
+                    std::env::var_os("PATH").context("cannot resolve ffmpeg: PATH is unset")?;
+                let cwd = std::env::current_dir().context("resolving ffmpeg from PATH")?;
+                let binary = std::env::split_paths(&path)
+                    .map(|dir| cwd.join(dir).join("ffmpeg"))
+                    .find(|candidate| {
+                        let Ok(metadata) = candidate.metadata() else {
+                            return false;
+                        };
+                        if !metadata.is_file() {
+                            return false;
+                        }
+                        #[cfg(unix)]
+                        {
+                            use std::os::unix::fs::PermissionsExt;
+                            metadata.permissions().mode() & 0o111 != 0
+                        }
+                        #[cfg(not(unix))]
+                        {
+                            true
+                        }
+                    })
+                    .context("cannot find executable ffmpeg on PATH")?;
+                let probe = |listing: &str| -> Result<String> {
+                    let output = Command::new(&binary)
+                        .args(["-hide_banner", listing])
+                        .output()
+                        .with_context(|| {
+                            format!("{} {listing} failed to start", binary.display())
+                        })?;
+                    if !output.status.success() {
+                        bail!(
+                            "{} {listing} failed ({}): {}",
+                            binary.display(),
+                            output.status,
+                            String::from_utf8_lossy(&output.stderr)
+                        );
+                    }
+                    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+                };
+                let encoders = probe("-encoders")?;
+                let filters = probe("-filters")?;
+                let missing = missing_gpu_capabilities(&encoders, &filters);
+                if !missing.is_empty() {
+                    bail!(
+                        "ffmpeg {} missing required GPU capabilities: {}",
+                        binary.display(),
+                        missing.join(", ")
+                    );
+                }
+                Ok(binary)
+            })()
+            .map_err(|error| format!("{error:#}"))
+        })
+        .as_deref()
+        .map_err(|error| anyhow::anyhow!("{error}"))
+}
+
+fn missing_gpu_capabilities(encoders: &str, filters: &str) -> Vec<&'static str> {
+    // Match the name column, never descriptions or similarly named filters.
+    let has = |listing: &str, name: &str| {
+        listing
+            .lines()
+            .any(|line| line.split_whitespace().nth(1) == Some(name))
+    };
+    [
+        (encoders, "h264_nvenc"),
+        (filters, "scale_cuda"),
+        (filters, "tonemap_cuda"),
+    ]
+    .into_iter()
+    .filter_map(|(listing, name)| (!has(listing, name)).then_some(name))
+    .collect()
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum EncodeMode {
+    Gpu,
+    Cpu,
+    CpuCoreOnly,
+}
+
+// First keep decode, tonemap and hi scaling/encoding on CUDA, downloading only
+// the small lo branch. Unsupported inputs or exhausted GPU sessions fall back
+// to the original full CPU encode. Finally retry that CPU graph with DTS core
+// audio: corrupt DTS-HD XLL frames can change 7.1 to 5.1 in the keyframe pre-roll,
+// which a complex graph cannot reinitialize. Core-only keeps a stable layout;
+// non-DTS decoders ignore it. A clip fails only after all three stages fail.
+const ENCODE_MODES: [EncodeMode; 3] = [EncodeMode::Gpu, EncodeMode::Cpu, EncodeMode::CpuCoreOnly];
+
 /// One decode of the source segment, two encodes: `hi.mp4` (≤1440p, quality)
 /// and `lo.mp4` (≤480p, fast first paint). Both get a keyframe at the
 /// critical start and faststart moov.
@@ -1295,67 +1548,140 @@ fn encode_renditions(
     crit_s: f64,
     clip_dir: &Path,
 ) -> Result<()> {
-    let tonemap = if video.hdr {
-        "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,\
-         zscale=t=bt709:m=bt709:r=tv,"
-    } else {
-        ""
-    };
-    let filter = format!(
-        "[0:v:0]{tonemap}scale=-2:'min({MAX_HEIGHT},ih)':flags=lanczos,format=yuv420p,\
-         split=2[vh][v0];[v0]scale=-2:'min({LO_HEIGHT},ih)'[vl];\
-         [0:a:{audio_stream}]aformat=channel_layouts=stereo,volume={gain_db:.2}dB,\
-         aresample=48000,asplit=2[ah][al]"
-    );
-    let key = format!("{crit_s:.3}");
-    let run = |core_only: bool| -> Result<bool> {
-        let mut cmd = Command::new("ffmpeg");
-        cmd.args(["-v", "error", "-y"]);
-        if core_only {
-            cmd.args(["-core_only", "1"]);
+    let binary = export_ffmpeg()?;
+    let mut failures = Vec::new();
+    for mode in ENCODE_MODES {
+        match mode {
+            EncodeMode::Gpu => {}
+            EncodeMode::Cpu => eprintln!(
+                "  retrying with CPU encode: {} ({})",
+                clip_dir.display(),
+                failures.last().expect("GPU attempted")
+            ),
+            EncodeMode::CpuCoreOnly => eprintln!(
+                "  retrying with core-only audio decode: {} ({})",
+                clip_dir.display(),
+                failures.last().expect("CPU attempted")
+            ),
         }
-        cmd.arg("-ss")
-            .arg(format!("{:.3}", cut_start as f64 / 1000.0))
-            .args([
-                "-t",
-                &format!("{:.3}", (cut_end - cut_start) as f64 / 1000.0),
-            ])
-            .arg("-i")
-            .arg(path)
-            .args(["-filter_complex", &filter])
-            .args(["-map", "[vh]", "-map", "[ah]"])
-            .args(["-c:v", "libx264", "-crf", "19", "-preset", "medium"])
-            .args(["-c:a", "aac", "-b:a", "160k"])
-            .args(["-force_key_frames", &key, "-movflags", "+faststart"])
-            .arg(clip_dir.join("hi.mp4"))
-            .args(["-map", "[vl]", "-map", "[al]"])
-            .args(["-c:v", "libx264", "-crf", "27", "-preset", "veryfast"])
-            .args(["-c:a", "aac", "-b:a", "96k"])
-            .args(["-force_key_frames", &key, "-movflags", "+faststart"])
-            .arg(clip_dir.join("lo.mp4"));
-        Ok(cmd
-            .status()
-            .context("ffmpeg (encode) failed to start")?
-            .success())
-    };
-    if run(false)? {
-        return Ok(());
+        let args = rendition_args(
+            mode,
+            path,
+            audio_stream,
+            video.hdr,
+            cut_start,
+            cut_end,
+            gain_db,
+            crit_s,
+            clip_dir,
+        );
+        match Command::new(binary).args(args).output() {
+            Ok(output) if output.status.success() => return Ok(()),
+            Ok(output) => failures.push(format!(
+                "{mode:?} ({}): {}",
+                output.status,
+                String::from_utf8_lossy(&output.stderr)
+            )),
+            Err(error) => failures.push(format!("{mode:?} failed to start: {error}")),
+        }
     }
-    // A DTS-HD MA frame with a bad XLL sync word decodes as its lossy 5.1
-    // core; that one frame arriving in a filtergraph configured for 7.1 is a
-    // property change ffmpeg cannot reinit a complex graph for, and it can
-    // sit in the keyframe pre-roll before the cut. Decoding the core only
-    // gives every frame the same layout; after the stereo AAC downmix the
-    // lossless extension made no difference. (Non-DTS decoders ignore the
-    // option.)
-    eprintln!(
-        "  retrying with core-only audio decode: {}",
-        clip_dir.display()
+    bail!(
+        "ffmpeg {} encode failed for {} after GPU, CPU and CPU core-only attempts:\n{}",
+        binary.display(),
+        clip_dir.display(),
+        failures.join("\n")
     );
-    if run(true)? {
-        return Ok(());
+}
+
+/// Pure command construction keeps fallback order and every output option
+/// testable without a GPU, ffmpeg, or a source film. Paths remain lossless.
+#[allow(clippy::too_many_arguments)]
+fn rendition_args(
+    mode: EncodeMode,
+    path: &Path,
+    audio_stream: u32,
+    hdr: bool,
+    cut_start: i64,
+    cut_end: i64,
+    gain_db: f64,
+    crit_s: f64,
+    clip_dir: &Path,
+) -> Vec<OsString> {
+    let tonemap = match (mode, hdr) {
+        (EncodeMode::Gpu, true) => "tonemap_cuda=tonemap=hable:desat=0:format=yuv420p:matrix=bt709:primaries=bt709:transfer=bt709,",
+        (_, true) => "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,",
+        (_, false) => "",
+    };
+    let video_filter = if mode == EncodeMode::Gpu {
+        // `format=yuv420p` on the hi scale is what makes the lo branch's
+        // `hwdownload` legal: a hardware frame can only be downloaded in the
+        // format it already holds, and the decoder hands us nv12/p010. HDR
+        // clips get it from `tonemap_cuda` too, but SDR clips have no tonemap
+        // stage, so without this every SDR film fell back to the CPU encode.
+        format!("[0:v:0]{tonemap}scale_cuda=w=-2:h='min({MAX_HEIGHT},ih)':format=yuv420p,split=2[vh][v0];[v0]scale_cuda=w=-2:h='min({LO_HEIGHT},ih)',hwdownload,format=yuv420p[vl]")
+    } else {
+        format!("[0:v:0]{tonemap}scale=-2:'min({MAX_HEIGHT},ih)':flags=lanczos,format=yuv420p,split=2[vh][v0];[v0]scale=-2:'min({LO_HEIGHT},ih)'[vl]")
+    };
+    let filter = format!("{video_filter};[0:a:{audio_stream}]aformat=channel_layouts=stereo,volume={gain_db:.2}dB,aresample=48000,asplit=2[ah][al]");
+    let mut args: Vec<OsString> = ["-v", "error", "-y"].map(OsString::from).into();
+    match mode {
+        EncodeMode::Gpu => {
+            args.extend(["-hwaccel", "cuda", "-hwaccel_output_format", "cuda"].map(OsString::from))
+        }
+        EncodeMode::Cpu => {}
+        EncodeMode::CpuCoreOnly => args.extend(["-core_only", "1"].map(OsString::from)),
     }
-    bail!("ffmpeg encode failed for {}", clip_dir.display());
+    args.extend([
+        OsString::from("-ss"),
+        format!("{:.3}", cut_start as f64 / 1000.0).into(),
+        "-t".into(),
+        format!("{:.3}", (cut_end - cut_start) as f64 / 1000.0).into(),
+        "-i".into(),
+        path.as_os_str().to_owned(),
+        "-filter_complex".into(),
+        filter.into(),
+    ]);
+    let key = format!("{crit_s:.3}");
+    for (hi, video_label, audio_label, filename, aac) in [
+        (true, "[vh]", "[ah]", "hi.mp4", HI_AAC),
+        (false, "[vl]", "[al]", "lo.mp4", LO_AAC),
+    ] {
+        args.extend(["-map", video_label, "-map", audio_label].map(OsString::from));
+        if hi && mode == EncodeMode::Gpu {
+            args.extend(
+                [
+                    "-c:v",
+                    "h264_nvenc",
+                    "-cq",
+                    &HI_CQ.to_string(),
+                    "-preset",
+                    HI_GPU_PRESET,
+                    "-forced-idr",
+                    "1",
+                ]
+                .map(OsString::from),
+            );
+        } else {
+            let crf = if hi { HI_CRF } else { LO_CRF }.to_string();
+            let preset = if hi { HI_PRESET } else { LO_PRESET };
+            args.extend(["-c:v", "libx264", "-crf", &crf, "-preset", preset].map(OsString::from));
+        }
+        args.extend(
+            [
+                "-c:a",
+                "aac",
+                "-b:a",
+                aac,
+                "-force_key_frames",
+                &key,
+                "-movflags",
+                "+faststart",
+            ]
+            .map(OsString::from),
+        );
+        args.push(clip_dir.join(filename).into_os_string());
+    }
+    args
 }
 
 fn file_hash(path: &Path) -> Result<String> {

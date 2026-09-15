@@ -5,8 +5,9 @@ each sentence, from a fixed layer of a multilingual bidirectional encoder.
 Chosen via broad multilingual probe sweeps: one model + one layer shared by
 every course language.
 
-Same deploy pattern as wav2vec2_phoneme.py: identity is baked into the image
-env so the remote worker can't silently fall back to defaults, and every
+Same deploy pattern as ../lexide/pronunciation/modal/wav2vec2_phoneme.py:
+identity is baked into the image env so the remote worker cannot silently
+fall back to defaults, and every
 response carries a deploy marker the caller can assert on.
 """
 
@@ -18,8 +19,9 @@ APP_NAME = os.environ.get("TOKEN_EMBED_APP_NAME", "token-embeddings")
 app = modal.App(APP_NAME)
 
 MODEL_ID = os.environ.get("TOKEN_EMBED_MODEL_ID", "BAAI/bge-m3")
-# Frozen to an exact commit SHA (same reasoning as wav2vec2_phoneme.py: a pin
-# is only a pin if it can't move).
+# Frozen to an exact commit SHA (see
+# ../lexide/pronunciation/modal/wav2vec2_phoneme.py): a pin
+# is only a pin if it cannot move.
 MODEL_REVISION = os.environ.get(
     "TOKEN_EMBED_MODEL_REVISION", "5617a9f61b028005a4858fdac845db406aefb181"
 )
@@ -32,7 +34,8 @@ DEPLOY_MARKER = os.environ.get(
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install("torch", "transformers", "fastapi[standard]", "huggingface_hub")
-    # Bake resolved identity into the image (see wav2vec2_phoneme.py for why:
+    # Bake resolved identity into the image (see
+    # ../lexide/pronunciation/modal/wav2vec2_phoneme.py for why:
     # the container re-imports this module with its OWN environment).
     .env(
         {

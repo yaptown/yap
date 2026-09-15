@@ -1,9 +1,11 @@
 //! Wire types, audio payloads, and retrying transport for Modal's wav2vec2 endpoint.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use base64::Engine;
-use lexide::pronunciation::FrameMatrixPayload;
-use serde::{Deserialize, Serialize};
+use lexide::pronunciation::{BatchResponse as ModalBatchResponse, BatchResult};
+pub use lexide::pronunciation::{EmittedPhoneme, PhonemeAlternative, PredictResponse};
+
+use super::{check_decoder, merge_metadata};
 
 pub const MODAL_BATCH_URL_DEFAULT: &str =
     "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict-batch.modal.run";
@@ -30,37 +32,6 @@ pub fn batch_endpoint(single: &str) -> Result<String> {
             "set WAV2VEC2_BATCH_ENDPOINT_URL for the custom single-clip endpoint {single}"
         ),
     }
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct Prediction {
-    pub phonemes: Vec<Phoneme>,
-    /// The deploy marker the serving container reports. Checked against
-    /// `WAV2VEC2_EXPECTED_DEPLOY_MARKER` (when set, by the eval harness) so a
-    /// stale/contaminated container's predictions are rejected before caching.
-    /// Absent for older endpoints / production, where the check is a no-op.
-    #[serde(default)]
-    pub deploy_marker: Option<String>,
-    /// Present when the request asked for `return_frame_matrix`.
-    #[serde(default)]
-    pub frame_matrix: Option<FrameMatrixPayload>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Phoneme {
-    pub phoneme: String,
-    #[serde(default)]
-    pub confidence: f64,
-    /// Top-k alternatives from the model. The chosen phoneme is normally
-    /// the first entry, but we re-sort defensively at load time.
-    #[serde(default)]
-    pub top_k: Vec<Alternative>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Alternative {
-    pub phoneme: String,
-    pub probability: f64,
 }
 
 /// Minimum seconds we send to Modal. wav2vec2's convolutional encoder needs
@@ -109,13 +80,6 @@ fn is_transient_status(status: reqwest::StatusCode) -> bool {
     matches!(status.as_u16(), 408 | 425 | 429 | 500 | 502 | 503 | 504)
 }
 
-#[derive(Deserialize)]
-struct ModalBatchResponse {
-    results: Vec<serde_json::Value>,
-    #[serde(default)]
-    deploy_marker: Option<String>,
-}
-
 /// POST one batch to the endpoint, retrying transient failures — cold-start
 /// timeouts (408), rate limits (429), and 5xx — which are otherwise fatal
 /// to a long run. A 408 typically means the container was mid-cold-start;
@@ -127,7 +91,7 @@ pub async fn predict_batch(
     http: &reqwest::Client,
     url: &str,
     payloads: Vec<serde_json::Value>,
-) -> Result<Vec<Result<Prediction>>> {
+) -> Result<Vec<Result<PredictResponse>>> {
     let count = payloads.len();
     let body = serde_json::json!({ "requests": payloads });
     let mut last_err: Option<anyhow::Error> = None;
@@ -176,25 +140,45 @@ pub async fn predict_batch(
 
 /// One result per submitted clip, in order. The batch response stamps the
 /// deploy marker once; each item gets it so the per-context check applies.
-fn split_batch(batch: ModalBatchResponse, count: usize) -> Result<Vec<Result<Prediction>>> {
+pub(crate) fn split_batch(
+    batch: ModalBatchResponse,
+    count: usize,
+) -> Result<Vec<Result<PredictResponse>>> {
     if batch.results.len() != count {
         anyhow::bail!(
             "Modal wav2vec2 batch returned {} results for {count} clips",
             batch.results.len()
         );
     }
+    check_decoder(batch.decoder_version.as_deref())?;
     Ok(batch
         .results
         .into_iter()
         .map(|item| {
-            if let Some(error) = item.get("error") {
-                anyhow::bail!("Modal wav2vec2 rejected the clip: {error}");
-            }
-            let mut modal: Prediction =
-                serde_json::from_value(item).context("Failed to parse Modal wav2vec2 result")?;
-            if modal.deploy_marker.is_none() {
-                modal.deploy_marker = batch.deploy_marker.clone();
-            }
+            let mut modal = match item {
+                BatchResult::Error { error } => anyhow::bail!(
+                    "Modal wav2vec2 rejected the clip: {}: {}",
+                    error.error_type,
+                    error.message
+                ),
+                BatchResult::Prediction(modal) => modal,
+            };
+            merge_metadata("model id", &mut modal.model_id, &batch.model_id)?;
+            merge_metadata(
+                "model revision",
+                &mut modal.model_revision,
+                &batch.model_revision,
+            )?;
+            merge_metadata(
+                "decoder",
+                &mut modal.decoder_version,
+                &batch.decoder_version,
+            )?;
+            merge_metadata(
+                "deploy-marker",
+                &mut modal.deploy_marker,
+                &batch.deploy_marker,
+            )?;
             Ok(modal)
         })
         .collect())
@@ -262,7 +246,12 @@ mod tests {
     #[test]
     fn batch_envelope_checks_count_marker_and_endpoint() {
         let response = || ModalBatchResponse {
-            results: vec![serde_json::json!({"phonemes": []})],
+            results: vec![BatchResult::Prediction(
+                serde_json::from_value(serde_json::json!({"phonemes": []})).unwrap(),
+            )],
+            model_id: None,
+            model_revision: None,
+            decoder_version: None,
             deploy_marker: Some("new".into()),
         };
         assert!(split_batch(response(), 2).is_err());

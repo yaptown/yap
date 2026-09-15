@@ -302,6 +302,7 @@ impl GeminiClient {
         let mut attempt = 0;
         loop {
             attempt += 1;
+            crate::telemetry::record_request(crate::telemetry::Backend::Gemini);
             let response = self
                 .http
                 .post(&url)

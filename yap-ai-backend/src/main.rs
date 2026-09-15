@@ -1165,7 +1165,7 @@ struct PronunciationFeedbackResponse {
     feedback: String,
 }
 
-fn format_phoneme_analysis(phonemes: &[wav2vec2::Phoneme]) -> String {
+fn format_phoneme_analysis(phonemes: &[wav2vec2::EmittedPhoneme]) -> String {
     phonemes
         .iter()
         .map(|p| {
@@ -1263,7 +1263,7 @@ async fn generate_pronunciation_feedback(
             eprintln!("Modal prediction failed: {e}");
             StatusCode::BAD_GATEWAY
         })?;
-    let [user_prediction, ref_prediction]: [wav2vec2::Prediction; 2] =
+    let [user_prediction, ref_prediction]: [wav2vec2::PredictResponse; 2] =
         predictions.try_into().map_err(|predictions: Vec<_>| {
             eprintln!(
                 "Modal returned {} predictions for two clips",

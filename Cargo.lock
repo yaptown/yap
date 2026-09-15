@@ -2721,7 +2721,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.6.4",
+ "socket2 0.5.10",
  "system-configuration 0.6.1",
  "tokio",
  "tower-service",
@@ -3355,8 +3355,8 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 
 [[package]]
 name = "lexide"
-version = "0.2.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=8c7cb221d6dde485942861dc5c3591a98b5dc199#8c7cb221d6dde485942861dc5c3591a98b5dc199"
+version = "0.3.0"
+source = "git+https://github.com/anchpop/lexide.git?rev=ef8abcce7f72aaea5a0c7c904c01036d99469e03#ef8abcce7f72aaea5a0c7c904c01036d99469e03"
 dependencies = [
  "anyhow",
  "base64 0.22.1",

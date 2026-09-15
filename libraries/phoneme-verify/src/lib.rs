@@ -8,7 +8,7 @@
 //!    model/decoder version is part of the key so a model swap can't
 //!    silently reuse stale predictions.
 //! 2. On cache miss, decode WAV → f32 mono 16kHz via ffmpeg and send it to
-//!    the Modal batch endpoint (`modal-envs/PRONUNCIATION_BATCHING.md`),
+//!    the Modal batch endpoint (lexide `pronunciation/modal/PRONUNCIATION_BATCHING.md`),
 //!    pooled with whatever other clips are in flight, then persist the
 //!    response.
 //! 3. Strip suprasegmental markers from the model's predicted tokens and
@@ -26,13 +26,16 @@ pub mod wav2vec2;
 use anyhow::{Context, Result};
 use base64::Engine;
 use language_utils::{Language, PhonemeLabelSource};
+use lexide::pronunciation::{
+    DECODER_VERSION, ModelIdentity, PhonemeAlternative as RawPhonemeAlt,
+    PredictResponse as ModalResponse, cache_version,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
-use std::sync::LazyLock;
-use wav2vec2::{Alternative, Prediction};
+use std::sync::{LazyLock, OnceLock};
 use xxhash_rust::xxh3::xxh3_64;
 
 pub use lexide::pronunciation::{
@@ -40,30 +43,116 @@ pub use lexide::pronunciation::{
     decode_path, is_phone_token,
 };
 
-/// Bump this whenever the underlying Modal model OR the decoding strategy
-/// changes — the cache is partitioned by this string so old entries don't
-/// silently get reused with a new model. Format: `<repo>@<revision>__<decoder>`,
-/// and the revision must match `MODEL_REVISION` in
-/// `modal-envs/wav2vec2_phoneme.py`, since that's what production serves. For
-/// ad-hoc model comparisons the eval harness overrides this per-run via
-/// `WAV2VEC2_CACHE_VERSION_OVERRIDE`, so this const only governs the default
-/// (production) cache partition.
-///
-/// `edcbbbf43a7f` is the retrain that added the F0-capable acoustic
-/// side-channel (log-mel widened to 128 bins / 1024-point window, plus a
-/// 64-dim low-band spectrogram over the F0 range) and folded 3,414
-/// transcript-verified movie clips into the corpus. Same 392-token vocab as
-/// the previous pin, but every prediction moves, so the whole cache partition
-/// turns over — expect a full recompute on the next run.
-/// `nonblank_v1` gates frames on the nonblank head before choosing a phone;
-/// joint CTC probabilities are unchanged, but decoded predictions must be recached.
-const WAV2VEC2_CACHE_VERSION: &str = "anchpop_lexide-pronunciation@edcbbbf43a7f__nonblank_v1";
+#[derive(Deserialize)]
+struct IdentityProbe {
+    #[serde(flatten)]
+    identity: ModelIdentity,
+    #[serde(default)]
+    load_error: Option<serde_json::Value>,
+}
 
-/// The cache partition production predictions live under — what a caller
-/// should record as provenance for anything derived from them.
-pub fn production_cache_version() -> String {
-    std::env::var("WAV2VEC2_CACHE_VERSION_OVERRIDE")
-        .unwrap_or_else(|_| WAV2VEC2_CACHE_VERSION.to_string())
+impl IdentityProbe {
+    fn into_identity(self) -> Result<ModelIdentity> {
+        anyhow::ensure!(
+            self.load_error.is_none(),
+            "phonemizer failed to load: {:?}",
+            self.load_error
+        );
+        Ok(self.identity)
+    }
+}
+
+fn expected_deploy_marker() -> Option<String> {
+    std::env::var("WAV2VEC2_EXPECTED_DEPLOY_MARKER")
+        .ok()
+        .filter(|s| !s.is_empty())
+}
+
+/// Identity and cache partition are frozen together on first production use.
+struct ResolvedModel {
+    identity: Option<ModelIdentity>,
+    version: String,
+}
+
+static PRODUCTION_MODEL: OnceLock<Result<ResolvedModel, String>> = OnceLock::new();
+
+fn resolve_model(
+    override_version: Option<String>,
+    probe: impl FnOnce() -> Result<ModelIdentity>,
+) -> Result<ResolvedModel> {
+    if let Some(version) = override_version {
+        return Ok(ResolvedModel {
+            identity: None,
+            version,
+        });
+    }
+    let identity = probe()?;
+    anyhow::ensure!(
+        !identity.model_id.trim().is_empty() && !identity.model_revision.trim().is_empty(),
+        "phonemizer probe returned empty model identity"
+    );
+    check_decoder(identity.decoder_version.as_deref())?;
+    Ok(ResolvedModel {
+        version: cache_version(&identity),
+        identity: Some(identity),
+    })
+}
+
+fn resolved_model_once(
+    cell: &OnceLock<Result<ResolvedModel, String>>,
+    initialize: impl FnOnce() -> Result<ResolvedModel>,
+) -> Result<&ResolvedModel> {
+    cell.get_or_init(|| {
+        initialize().map_err(|error| format!("resolving phonemizer identity: {error:#}"))
+    })
+    .as_ref()
+    .map_err(|error| anyhow::anyhow!("{error}"))
+}
+
+fn production_model() -> Result<&'static ResolvedModel> {
+    resolved_model_once(&PRODUCTION_MODEL, || {
+        let model = resolve_model(
+            std::env::var("WAV2VEC2_CACHE_VERSION_OVERRIDE").ok(),
+            probe_identity,
+        )?;
+        if let Some(identity) = &model.identity {
+            check_marker(
+                expected_deploy_marker().as_deref(),
+                identity.deploy_marker.as_deref(),
+            )?;
+        }
+        Ok(model)
+    })
+}
+
+fn probe_identity() -> Result<ModelIdentity> {
+    // Constructors are synchronous and may run inside a current-thread Tokio
+    // runtime. This thread owns and drops its runtime and HTTP client; never
+    // block_on a caller's runtime.
+    std::thread::spawn(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all().build()?.block_on(async {
+                let batch = wav2vec2::batch_url()?;
+                let predict = match std::env::var("WAV2VEC2_ENDPOINT_URL") {
+                    Ok(url) => url,
+                    Err(_) => batch.strip_suffix("-predict-batch.modal.run")
+                        .map(|prefix| format!("{prefix}-predict.modal.run"))
+                        .context("set WAV2VEC2_ENDPOINT_URL for identity discovery on a custom batch endpoint")?,
+                };
+                let http = reqwest::Client::builder()
+                    .timeout(std::time::Duration::from_secs(300)).build()?;
+                let probe: IdentityProbe = http.post(predict)
+                    .json(&serde_json::json!({"marker_only": true}))
+                    .send().await?.error_for_status()?.json().await?;
+                probe.into_identity()
+            })
+    }).join().map_err(|_| anyhow::anyhow!("phonemizer identity probe thread panicked"))?
+}
+
+/// The exact cache partition used by production contexts, including overrides.
+/// Discovery failures are fatal rather than falling back to stale provenance.
+pub fn production_cache_version() -> Result<String> {
+    Ok(production_model()?.version.clone())
 }
 
 /// The Hindi label convention the deployed model was trained on. The g2p
@@ -71,8 +160,7 @@ pub fn production_cache_version() -> String {
 /// that lexide will relabel with before the next retrain; until a model
 /// trained on those ships, targets must use the convention the model
 /// learned, or 39% of Hindi rows would be scored against a vowel the model
-/// was taught to call something else. Bump together with
-/// [`WAV2VEC2_CACHE_VERSION`].
+/// was taught to call something else. Review when deploying a new model.
 pub const MODEL_HINDI_CANON: g2p::HindiCanon = g2p::HindiCanon::Legacy;
 
 /// The scoring target for `text` in `language`, in the deployed model's
@@ -80,6 +168,9 @@ pub const MODEL_HINDI_CANON: g2p::HindiCanon = g2p::HindiCanon::Legacy;
 /// chain at [`MODEL_HINDI_CANON`] for Hindi. `None` for languages the model
 /// has no g2p-produced labels for (see `Language::g2p_lang`).
 pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonemized, g2p::Error>> {
+    // TODO(g2p): expose a disable-language-switch option, then use it here.
+    // The pinned API only accepts text/voice (and HindiCanon); French words
+    // such as polyuréthane and Giverny can currently switch to English.
     let lang = language.g2p_lang()?;
     Some(g2p::phonemize_lang_with(lang, text, MODEL_HINDI_CANON))
 }
@@ -96,7 +187,7 @@ struct CachedPrediction {
     /// Parallel to `raw_phonemes`. `top_k[i]` is the list of (phoneme,
     /// probability) alternatives for position `i`, sorted by probability
     /// descending.
-    top_k: Vec<Vec<Alternative>>,
+    top_k: Vec<Vec<RawPhonemeAlt>>,
 }
 
 /// One step of the optimal alignment between predicted and expected phoneme
@@ -133,6 +224,10 @@ pub enum AlignmentOp {
 /// passed and should be kept.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClipVerification {
+    /// Resolved model/decoder cache namespace used for this attempt, including
+    /// attempts rejected before inference. Absent only in historical rows.
+    #[serde(default)]
+    pub cache_version: Option<String>,
     pub actor: String,
     pub text: String,
     pub wav_path: String,
@@ -175,6 +270,7 @@ pub struct VerifyContext<'a> {
     store: osmo::Store,
     /// Partitions predictions by (model, decoder) as part of the cache key.
     cache_version: String,
+    expected_identity: Option<ModelIdentity>,
     /// word (lowercase) → accepted IPA pronunciations (main + alternates).
     /// The verifier passes a clip if the model's prediction is within
     /// threshold of *any* of these variants — alternates exist because
@@ -198,7 +294,7 @@ pub struct VerifyContext<'a> {
 
 impl<'a> VerifyContext<'a> {
     /// Production / env-driven constructor. The cache version partitions
-    /// predictions by (model, decoder); the compile-time const is the default,
+    /// predictions by the process-wide discovered (model, decoder),
     /// overridable via `WAV2VEC2_CACHE_VERSION_OVERRIDE`. Threshold and the
     /// expected deploy marker likewise come from env.
     pub fn new(
@@ -207,24 +303,23 @@ impl<'a> VerifyContext<'a> {
         word_to_pronunciation: &'a HashMap<String, language_utils::Pronunciations>,
         target_language: Language,
     ) -> Result<Self> {
-        let version = std::env::var("WAV2VEC2_CACHE_VERSION_OVERRIDE")
-            .unwrap_or_else(|_| WAV2VEC2_CACHE_VERSION.to_string());
+        let model = production_model()?;
         let threshold = std::env::var("AUDIO_VERIFY_THRESHOLD")
             .ok()
             .and_then(|s| s.parse::<f64>().ok())
             .unwrap_or(0.3);
-        let expected_deploy_marker = std::env::var("WAV2VEC2_EXPECTED_DEPLOY_MARKER")
-            .ok()
-            .filter(|s| !s.is_empty());
-        Self::with_overrides(
+        let expected_deploy_marker = expected_deploy_marker();
+        let mut ctx = Self::with_overrides(
             http,
             store,
             word_to_pronunciation,
             target_language,
-            version,
+            model.version.clone(),
             threshold,
             expected_deploy_marker,
-        )
+        )?;
+        ctx.expected_identity = model.identity.clone();
+        Ok(ctx)
     }
 
     /// Explicit constructor for in-process callers (the compare-audio-models
@@ -270,6 +365,7 @@ impl<'a> VerifyContext<'a> {
             http,
             store,
             cache_version,
+            expected_identity: None,
             word_to_pronunciation,
             mismatch_threshold,
             target_language,
@@ -297,7 +393,7 @@ pub fn expected_phoneme_variants(
     if let Some(s) = override_transcription {
         let normalized: Vec<String> = s
             .split_whitespace()
-            .filter_map(|t| normalize_phoneme(t, ctx.target_language))
+            .flat_map(|t| normalize_phonemes(t, ctx.target_language))
             .collect();
         return if normalized.is_empty() {
             None
@@ -360,6 +456,7 @@ pub async fn verify_clip_bytes(
         && let Some(defect) = audio_codec::samples_defect(&samples, MODAL_SAMPLE_RATE)
     {
         return Ok(ClipVerification {
+            cache_version: Some(ctx.cache_version.clone()),
             actor: actor.to_string(),
             text: text.to_string(),
             wav_path: source_label.to_string(),
@@ -459,6 +556,7 @@ pub async fn verify_clip_bytes(
     };
 
     Ok(ClipVerification {
+        cache_version: Some(ctx.cache_version.clone()),
         actor: actor.to_string(),
         text: text.to_string(),
         wav_path: source_label.to_string(),
@@ -491,7 +589,7 @@ const MODAL_BATCH_LINGER: std::time::Duration = std::time::Duration::from_millis
 
 struct BatchItem {
     payload: serde_json::Value,
-    reply: tokio::sync::oneshot::Sender<Result<Prediction>>,
+    reply: tokio::sync::oneshot::Sender<Result<ModalResponse>>,
 }
 
 /// The process-wide queue feeding the batch worker. Spawned on first use,
@@ -543,7 +641,7 @@ async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
 /// container whose deploy marker is not the one expected — so nothing from
 /// a stale/contaminated container is ever cached under the wrong model's
 /// key.
-async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Result<Prediction> {
+async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Result<ModalResponse> {
     let (reply, result) = tokio::sync::oneshot::channel();
     BATCH_QUEUE
         .send(BatchItem { payload, reply })
@@ -551,22 +649,70 @@ async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Resu
     let modal = result
         .await
         .context("the Modal batch worker dropped the request")??;
-    check_deploy_marker(ctx, &modal)?;
+    check_response_identity(ctx, &modal)?;
     Ok(modal)
+}
+
+fn check_decoder(decoder: Option<&str>) -> Result<()> {
+    if let Some(decoder) = decoder {
+        anyhow::ensure!(
+            decoder == DECODER_VERSION,
+            "decoder mismatch: endpoint reported {decoder:?}, expected {DECODER_VERSION:?}"
+        );
+    }
+    Ok(())
+}
+
+/// Never mask an item/envelope disagreement with the other layer's metadata.
+/// After merging, checking an item against its context also checks the envelope.
+fn merge_metadata(name: &str, item: &mut Option<String>, envelope: &Option<String>) -> Result<()> {
+    if let Some(envelope) = envelope {
+        if let Some(item) = item.as_ref() {
+            anyhow::ensure!(
+                item == envelope,
+                "batch {name} mismatch: item {item:?}, envelope {envelope:?}"
+            );
+        } else {
+            *item = Some(envelope.clone());
+        }
+    }
+    Ok(())
 }
 
 /// Per-response freshness check: the one-shot marker_only probe only proves
 /// the *first* request hit a fresh container. Verifying the marker on every
 /// response guarantees no later request was routed to a stale/contaminated
 /// warm container and silently cached under the wrong model's key.
-fn check_deploy_marker(ctx: &VerifyContext<'_>, modal: &Prediction) -> Result<()> {
-    if let Some(expected) = &ctx.expected_deploy_marker
-        && modal.deploy_marker.as_deref() != Some(expected.as_str())
-    {
-        anyhow::bail!(
-            "deploy-marker mismatch: endpoint reported {:?}, expected {expected:?} — \
-             refusing to cache a possibly-contaminated prediction",
-            modal.deploy_marker
+fn check_response_identity(ctx: &VerifyContext<'_>, modal: &ModalResponse) -> Result<()> {
+    check_decoder(modal.decoder_version.as_deref())?;
+    if let Some(identity) = &ctx.expected_identity {
+        for (name, reported, expected) in [
+            ("model id", modal.model_id.as_ref(), &identity.model_id),
+            (
+                "model revision",
+                modal.model_revision.as_ref(),
+                &identity.model_revision,
+            ),
+        ] {
+            if let Some(reported) = reported {
+                anyhow::ensure!(
+                    reported == expected,
+                    "{name} mismatch: endpoint reported {reported:?}, expected {expected:?} — refusing to cache prediction"
+                );
+            }
+        }
+    }
+    check_marker(
+        ctx.expected_deploy_marker.as_deref(),
+        modal.deploy_marker.as_deref(),
+    )
+}
+
+fn check_marker(expected: Option<&str>, reported: Option<&str>) -> Result<()> {
+    if let Some(expected) = expected {
+        anyhow::ensure!(
+            reported == Some(expected),
+            "deploy-marker mismatch: endpoint reported {reported:?}, expected {expected:?} — refusing to cache a possibly-contaminated prediction"
         );
     }
     Ok(())
@@ -575,7 +721,7 @@ fn check_deploy_marker(ctx: &VerifyContext<'_>, modal: &Prediction) -> Result<()
 async fn predict_phonemes(
     ctx: &VerifyContext<'_>,
     wav_bytes: &[u8],
-) -> Result<(Vec<String>, Vec<Vec<Alternative>>)> {
+) -> Result<(Vec<String>, Vec<Vec<RawPhonemeAlt>>)> {
     let hash = xxh3_64(wav_bytes);
     let cache_key = format!("wav2vec2/{}/{hash:016x}", ctx.cache_version);
 
@@ -610,10 +756,11 @@ async fn predict_phonemes(
 async fn cache_modal_prediction(
     ctx: &VerifyContext<'_>,
     hash: u64,
-    modal: &Prediction,
-) -> Result<(Vec<String>, Vec<Vec<Alternative>>)> {
+    modal: &ModalResponse,
+) -> Result<(Vec<String>, Vec<Vec<RawPhonemeAlt>>)> {
+    check_response_identity(ctx, modal)?;
     let raw_phonemes: Vec<String> = modal.phonemes.iter().map(|p| p.phoneme.clone()).collect();
-    let top_k: Vec<Vec<Alternative>> = modal
+    let top_k: Vec<Vec<RawPhonemeAlt>> = modal
         .phonemes
         .iter()
         .map(|p| {
@@ -639,17 +786,50 @@ async fn cache_modal_prediction(
     Ok((raw_phonemes, top_k))
 }
 
+/// Raw frame matrices are decoder-independent: even `p_nonblank` is recoverable
+/// from the blank column. Strip only the final decoder suffix, preserving the
+/// exact model/revision prefix (which may itself contain `__`).
+pub(crate) fn frames_partition(version: &str) -> &str {
+    version
+        .rsplit_once("__")
+        .map_or(version, |(model, _)| model)
+}
+
+// Previously shipped decoder partitions whose raw matrices can still be reused.
+const LEGACY_FRAME_DECODERS: &[&str] = &["greedy_v1"];
+
+async fn cached_frame_matrix(ctx: &VerifyContext<'_>, hash: u64) -> Option<Result<FrameMatrix>> {
+    let partition = frames_partition(&ctx.cache_version);
+    let versions = [partition.to_owned(), ctx.cache_version.clone()]
+        .into_iter()
+        .chain(
+            LEGACY_FRAME_DECODERS
+                .iter()
+                .map(|decoder| format!("{partition}__{decoder}")),
+        );
+    for version in versions {
+        let key = format!("wav2vec2-frames/{version}/{hash:016x}");
+        if let Some(bytes) = ctx.store.read(&key).await
+            && let Ok(payload) = serde_json::from_slice::<FrameMatrixPayload>(&bytes)
+        {
+            return Some(FrameMatrix::decode(&payload));
+        }
+    }
+    None
+}
+
 /// The model's per-frame log-prob matrix for a clip, from the cache or the
 /// endpoint. Cached under its own partition (`wav2vec2-frames/…`), keyed by
 /// the WAV bytes like predictions are; the compressed payload is stored as
 /// shipped, so a cache entry is ~24 KB per audio-second.
 pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<FrameMatrix> {
     let hash = xxh3_64(wav_bytes);
-    let cache_key = format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version);
-    if let Some(contents) = ctx.store.read(&cache_key).await
-        && let Ok(payload) = serde_json::from_slice::<FrameMatrixPayload>(&contents)
-    {
-        return FrameMatrix::decode(&payload);
+    let cache_key = format!(
+        "wav2vec2-frames/{}/{hash:016x}",
+        frames_partition(&ctx.cache_version)
+    );
+    if let Some(cached) = cached_frame_matrix(ctx, hash).await {
+        return cached;
     }
     if cache_only() {
         anyhow::bail!(
@@ -698,11 +878,12 @@ async fn frame_matrices_at(
     let mut pending = Vec::new();
     for (index, wav) in wavs.iter().enumerate() {
         let hash = xxh3_64(wav);
-        let key = format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version);
-        if let Some(bytes) = ctx.store.read(&key).await
-            && let Ok(payload) = serde_json::from_slice::<FrameMatrixPayload>(&bytes)
-        {
-            results[index] = Some(FrameMatrix::decode(&payload));
+        let key = format!(
+            "wav2vec2-frames/{}/{hash:016x}",
+            frames_partition(&ctx.cache_version)
+        );
+        if let Some(cached) = cached_frame_matrix(ctx, hash).await {
+            results[index] = Some(cached);
             continue;
         }
         if only_cache {
@@ -755,7 +936,7 @@ async fn frame_matrices_at(
                     results[index] = Some(
                         async {
                             let modal = item?;
-                            check_deploy_marker(ctx, &modal)?;
+                            check_response_identity(ctx, &modal)?;
                             let payload = modal
                                 .frame_matrix
                                 .as_ref()
@@ -906,7 +1087,21 @@ fn decode_wav_to_f32(wav_bytes: &[u8]) -> Result<Vec<f32>> {
         .collect())
 }
 
-/// Normalize a single IPA token into a canonical comparable form. Returns
+/// Expand a raw IPA token into the deployed model's comparable token sequence.
+/// Shared by expected readings, predictions, and top-k alternatives.
+///
+/// The deployed model and g2p pin 3ae99aa (<0.4) use the OLD split canon.
+/// When upgrading the g2p pin to >=0.4, flip this normalization to the merged
+/// canon together with the deployed model; do not silently mix label spaces.
+/// Only explicit tie bars split tokens: preserve untied diphthongs/diacritics.
+pub fn normalize_phonemes(token: &str, language: Language) -> Vec<String> {
+    token
+        .split(['\u{0361}', '\u{035c}'])
+        .filter_map(|component| normalize_phoneme(component, language))
+        .collect()
+}
+
+/// Normalize a single IPA component into a canonical comparable form. Returns
 /// `None` for tokens that consist entirely of non-phonemic markers.
 ///
 /// Three layers of cleanup, applied in order:
@@ -929,8 +1124,8 @@ fn decode_wav_to_f32(wav_bytes: &[u8]) -> Result<Vec<f32>> {
 ///    approximant from `y`).
 ///
 /// Combining diacritics inside the phoneme (e.g. the tilde on `ã`) are NOT
-/// touched — those are phonemic.
-pub fn normalize_phoneme(token: &str, language: Language) -> Option<String> {
+/// touched — those are phonemic (except German non-syllabic U+032F).
+fn normalize_phoneme(token: &str, language: Language) -> Option<String> {
     let stripped: String = token
         .chars()
         .filter(|c| {
@@ -939,10 +1134,8 @@ pub fn normalize_phoneme(token: &str, language: Language) -> Option<String> {
                 && !c.is_whitespace()
         })
         .collect();
-    if stripped.is_empty() {
-        return None;
-    }
-    Some(canonicalize_for_language(&stripped, language))
+    let canonical = canonicalize_for_language(&stripped, language);
+    (!canonical.is_empty()).then_some(canonical)
 }
 
 /// Map a phoneme token onto its canonical form for the given target
@@ -950,6 +1143,13 @@ pub fn normalize_phoneme(token: &str, language: Language) -> Option<String> {
 /// through this, equivalence-class members compare equal.
 fn canonicalize_for_language(token: &str, language: Language) -> String {
     match language {
+        // German inventory: 43,267 rows / 1,079,676 tokens in lexide's
+        // pronunciation/data/audio/deu/phonemes.jsonl contain neither ʔ nor
+        // U+032F. Strip these reference-only marks, not vowels or diphthongs.
+        Language::German => token
+            .chars()
+            .filter(|c| !matches!(c, 'ʔ' | '\u{032f}'))
+            .collect(),
         Language::French => match token {
             // R variants: ground truth uses ʁ (uvular fricative); the
             // multilingual model emits any of: r (alveolar trill, common
@@ -985,8 +1185,9 @@ const MAX_VARIANT_COMBINATIONS: usize = 16;
 /// product across words.
 ///
 /// A word wikipron lacks (a proper noun, a spelled-out letter name) gets
-/// its own g2p phonemization as its single variant, so the rest of the
-/// phrase keeps its wikipron variants instead of the whole phrase falling
+/// its own g2p phonemization (including Spanish's `es-419` dialect
+/// alternate), so the rest of the phrase keeps its wikipron variants instead
+/// of the whole phrase falling
 /// back to g2p — which reads "cognac" as /konjak/ and would have rejected a
 /// good clip over one unknown word beside it.
 ///
@@ -995,10 +1196,10 @@ const MAX_VARIANT_COMBINATIONS: usize = 16;
 /// long as one source (wikipron cross-product OR g2p) produces something,
 /// we return it.
 ///
-/// When the wikipron cross product would exceed
-/// `MAX_VARIANT_COMBINATIONS`, we fall back to just the main-only
-/// variant: better to under-accept than to spend exponential time
-/// enumerating a long sentence.
+/// Keep at most `MAX_VARIANT_COMBINATIONS` per-word combinations, with
+/// earlier words varying fastest: cue-initial letter-name alternates take
+/// priority over later example-word alternates. The main-only reading is
+/// always first; phrase-level g2p candidates are added outside this cap.
 ///
 /// The espeak phrase-level IPA, when available, is *always* added as an
 /// extra candidate independent of the wikipron path. Espeak applies
@@ -1020,13 +1221,18 @@ fn ground_truth_phoneme_variants(
     // on the phrase-level g2p variant (if available) as the sole ground truth.
     let mut per_word: Vec<Vec<Vec<String>>> = Vec::new();
     let mut complete = true;
-    for word in text.split(|c: char| {
-        c.is_whitespace() || (!c.is_alphabetic() && c != '\'' && c != '-' && c != 'ʼ')
-    }) {
-        let cleaned = word
-            .trim_matches(|c: char| !c.is_alphabetic())
-            .to_lowercase();
-        if cleaned.is_empty() {
+    // `is_alphabetic` excludes some combining signs (notably Hindi nukta
+    // and virama). Keep them attached in dictionary keys and g2p input,
+    // along with decomposed accents and Russian stress marks.
+    let is_word_char = |c: char| {
+        c.is_alphabetic()
+            || matches!(c, '\u{0300}'..='\u{036f}' | '\u{0900}'..='\u{0903}'
+                | '\u{093a}'..='\u{094f}' | '\u{0951}'..='\u{0957}'
+                | '\u{0962}'..='\u{0963}' | '\u{200c}' | '\u{200d}')
+    };
+    for word in text.split(|c: char| !is_word_char(c) && !matches!(c, '\'' | '-' | 'ʼ')) {
+        let cleaned = word.trim_matches(|c: char| !is_word_char(c)).to_lowercase();
+        if !cleaned.chars().any(char::is_alphabetic) {
             continue;
         }
         let Some(accepted) = word_to_pronunciation.get(&cleaned) else {
@@ -1034,22 +1240,24 @@ fn ground_truth_phoneme_variants(
                 Some(Ok(phonemized)) => phonemized
                     .phonemes
                     .iter()
-                    .filter_map(|p| normalize_phoneme(p, language))
+                    .flat_map(|p| normalize_phonemes(p, language))
                     .collect(),
                 _ => Vec::new(),
             };
             if g2p_word.is_empty() {
                 complete = false;
             } else {
-                per_word.push(vec![g2p_word]);
+                let mut variants = vec![g2p_word];
+                add_spanish_dialect_word(&cleaned, language, &mut variants);
+                per_word.push(variants);
             }
             continue;
         };
-        let word_variants: Vec<Vec<String>> = accepted
+        let mut word_variants: Vec<Vec<String>> = accepted
             .all()
             .map(|ipa| {
                 ipa.split_whitespace()
-                    .filter_map(|p| normalize_phoneme(p, language))
+                    .flat_map(|p| normalize_phonemes(p, language))
                     .collect::<Vec<String>>()
             })
             // Distinct sequences only — after normalization, different raw
@@ -1060,6 +1268,7 @@ fn ground_truth_phoneme_variants(
                 }
                 acc
             });
+        add_spanish_dialect_word(&cleaned, language, &mut word_variants);
         per_word.push(word_variants);
     }
 
@@ -1067,28 +1276,25 @@ fn ground_truth_phoneme_variants(
         // No per-word candidates — the phrase-level g2p below is our only shot.
         Vec::new()
     } else {
-        let total: usize = per_word.iter().map(|v| v.len().max(1)).product::<usize>();
-        if total > MAX_VARIANT_COMBINATIONS {
-            // Fall back to main-only.
-            vec![per_word.iter().map(|v| v[0].clone()).collect()]
-        } else {
-            // Enumerate the cross product. `acc` accumulates phrase
-            // candidates; for each word we re-expand each accumulated
-            // candidate against each of that word's variants.
-            let mut acc: Vec<Reading> = vec![Vec::new()];
-            for word_variants in &per_word {
-                let mut next = Vec::with_capacity(acc.len() * word_variants.len());
+        let mut acc: Vec<Reading> = vec![Vec::new()];
+        for word_variants in &per_word {
+            let mut next = Vec::with_capacity(MAX_VARIANT_COMBINATIONS);
+            // Alternates outside, prefixes inside: earlier words vary
+            // fastest and survive truncation. Never compute the total
+            // product or allocate more than the cap at any expansion.
+            'variants: for var in word_variants {
                 for prefix in &acc {
-                    for var in word_variants {
-                        let mut extended = prefix.clone();
-                        extended.push(var.clone());
-                        next.push(extended);
+                    let mut extended = prefix.clone();
+                    extended.push(var.clone());
+                    next.push(extended);
+                    if next.len() == MAX_VARIANT_COMBINATIONS {
+                        break 'variants;
                     }
                 }
-                acc = next;
             }
-            acc
+            acc = next;
         }
+        acc
     };
 
     // Add the phrase-level g2p variant in the model's own label space, for
@@ -1098,38 +1304,42 @@ fn ground_truth_phoneme_variants(
     // ms. Failures are *important*: without this variant the verifier loses
     // all phrase-level ground truth for text wikipron can't decompose, so
     // log the first error per process rather than letting it vanish.
-    match model_target(text, language) {
-        Some(Ok(phonemized)) => {
-            // Words come from g2p's own spans (a backend without them
-            // yields one word), which is what lets a phrase-level reading
-            // still say which word the audio skipped.
-            let spans = if phonemized.word_spans.is_empty() {
-                vec![(0, phonemized.phonemes.len())]
-            } else {
-                phonemized.word_spans.clone()
-            };
-            let g2p_reading: Reading = spans
-                .iter()
-                .map(|&(start, end)| {
-                    phonemized.phonemes[start..end]
-                        .iter()
-                        .filter_map(|p| normalize_phoneme(p, language))
-                        .collect::<Vec<String>>()
-                })
-                .filter(|word| !word.is_empty())
-                .collect();
-            let flat = g2p_reading.concat();
-            if !flat.is_empty() && !candidates.iter().any(|c| c.concat() == flat) {
-                candidates.push(g2p_reading);
+    for target in model_target(text, language)
+        .into_iter()
+        .chain(spanish_dialect_target(text, language))
+    {
+        match target {
+            Ok(phonemized) => {
+                // Words come from g2p's own spans (a backend without them
+                // yields one word), which is what lets a phrase-level reading
+                // still say which word the audio skipped.
+                let spans = if phonemized.word_spans.is_empty() {
+                    vec![(0, phonemized.phonemes.len())]
+                } else {
+                    phonemized.word_spans.clone()
+                };
+                let g2p_reading: Reading = spans
+                    .iter()
+                    .map(|&(start, end)| {
+                        phonemized.phonemes[start..end]
+                            .iter()
+                            .flat_map(|p| normalize_phonemes(p, language))
+                            .collect::<Vec<String>>()
+                    })
+                    .filter(|word| !word.is_empty())
+                    .collect();
+                let flat = g2p_reading.concat();
+                if !flat.is_empty() && !candidates.iter().any(|c| c.concat() == flat) {
+                    candidates.push(g2p_reading);
+                }
+            }
+            Err(e) => {
+                static WARNED: std::sync::Once = std::sync::Once::new();
+                WARNED.call_once(|| {
+                    log::warn!("g2p phonemization failed (first occurrence shown only): {e:#}");
+                });
             }
         }
-        Some(Err(e)) => {
-            static WARNED: std::sync::Once = std::sync::Once::new();
-            WARNED.call_once(|| {
-                log::warn!("g2p phonemization failed (first occurrence shown only): {e:#}");
-            });
-        }
-        None => {}
     }
 
     if candidates.is_empty() {
@@ -1139,48 +1349,72 @@ fn ground_truth_phoneme_variants(
     }
 }
 
+/// Seseo is an accepted Spanish dialect reading, not a θ/s equivalence:
+/// keep the training-contract `es` target and both phones unchanged.
+fn spanish_dialect_target(
+    text: &str,
+    language: Language,
+) -> Option<Result<g2p::Phonemized, g2p::Error>> {
+    (language == Language::Spanish).then(|| g2p::phonemize(text, "es-419"))
+}
+
+fn add_spanish_dialect_word(text: &str, language: Language, variants: &mut Vec<Vec<String>>) {
+    if let Some(Ok(target)) = spanish_dialect_target(text, language) {
+        let phones: Vec<String> = target
+            .phonemes
+            .iter()
+            .flat_map(|p| normalize_phonemes(p, language))
+            .collect();
+        if !phones.is_empty() && !variants.contains(&phones) {
+            variants.push(phones);
+        }
+    }
+}
+
 /// Normalize the model's raw phoneme output AND the parallel top-k
 /// alternatives at the same time. Returns the two lists with matching
 /// length, parallel by position.
 ///
-/// At each raw position:
-///   * If the chosen phoneme normalizes to `None` (i.e. it's pure
-///     suprasegmental), the entire position is dropped — same as the
-///     existing `predicted_normalized` behavior.
-///   * Otherwise, the position is kept. The top-k alternatives are also
-///     normalized, dropped-where-None, and then merged when two distinct
-///     raw alternatives normalize to the same form (e.g. raw `r` + `ʁ` →
-///     a single `ʁ` entry with summed probability). The merged top-k is
-///     re-sorted by probability descending.
+/// Empty normalized tokens drop their entire position. A tied affricate
+/// expands into component positions; alternatives with the same component
+/// count contribute probability only to their corresponding position. Other
+/// lengths are omitted, since a per-position top-k cannot represent them.
+/// Canonical equivalents at each position merge by summing probability, then
+/// sort by descending probability. No probability is renormalized.
 fn normalize_with_topk(
     raw_phonemes: &[String],
-    raw_top_k: &[Vec<Alternative>],
+    raw_top_k: &[Vec<RawPhonemeAlt>],
     language: Language,
 ) -> (Vec<String>, Vec<Vec<(String, f64)>>) {
     let mut normalized = Vec::with_capacity(raw_phonemes.len());
     let mut normalized_top_k: Vec<Vec<(String, f64)>> = Vec::with_capacity(raw_phonemes.len());
 
     for (i, raw) in raw_phonemes.iter().enumerate() {
-        let Some(norm) = normalize_phoneme(raw, language) else {
-            continue;
-        };
-        normalized.push(norm);
-
-        let mut merged: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
+        let components = normalize_phonemes(raw, language);
+        let mut merged = vec![HashMap::<String, f64>::new(); components.len()];
         if let Some(alts) = raw_top_k.get(i) {
             for alt in alts {
-                if let Some(alt_norm) = normalize_phoneme(&alt.phoneme, language) {
-                    *merged.entry(alt_norm).or_insert(0.0) += alt.probability;
+                let alt_components = normalize_phonemes(&alt.phoneme, language);
+                // Alternatives must span the same number of component positions.
+                // Do not credit a single /t/ with a whole /t͡ʃ/, or duplicate an
+                // atomic alternative across both positions of a split affricate.
+                if alt_components.len() == components.len() {
+                    for (position, component) in merged.iter_mut().zip(alt_components) {
+                        *position.entry(component).or_default() += alt.probability;
+                    }
                 }
             }
         }
-        let mut vec: Vec<(String, f64)> = merged.into_iter().collect();
-        vec.sort_by(|a, b| {
-            b.1.partial_cmp(&a.1)
-                .unwrap_or(std::cmp::Ordering::Equal)
-                .then_with(|| a.0.cmp(&b.0))
-        });
-        normalized_top_k.push(vec);
+        normalized.extend(components);
+        for position in merged {
+            let mut alts: Vec<_> = position.into_iter().collect();
+            alts.sort_by(|a, b| {
+                b.1.partial_cmp(&a.1)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+                    .then_with(|| a.0.cmp(&b.0))
+            });
+            normalized_top_k.push(alts);
+        }
     }
 
     (normalized, normalized_top_k)
@@ -1630,6 +1864,7 @@ pub async fn synthesize_verified(
     // flagged; surface the provider's note as the failure.
     if let Some(note) = tts_note {
         let verification = ClipVerification {
+            cache_version: Some(ctx.cache_version.clone()),
             actor: actor.to_string(),
             text: spoken_text.to_string(),
             wav_path: label,
@@ -1670,6 +1905,262 @@ pub fn cache_only() -> bool {
 }
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn split_canon_requires_resolved_g2p_before_0_4() {
+        // Query the actual linked crate, not a duplicate hard-coded version.
+        let identity = g2p::identity();
+        let version = identity
+            .split_whitespace()
+            .next()
+            .unwrap()
+            .strip_prefix("g2p/")
+            .unwrap();
+        let mut parts = version.split('.').map(|part| part.parse::<u32>().unwrap());
+        let major_minor = (parts.next().unwrap(), parts.next().unwrap());
+        assert!(
+            major_minor < (0, 4),
+            "g2p {version}: flip split normalization together with the deployed model"
+        );
+    }
+
+    #[test]
+    fn tied_affricates_expand_symmetrically_in_every_language() {
+        for language in [
+            Language::German,
+            Language::Spanish,
+            Language::Italian,
+            Language::French,
+            Language::English,
+            Language::Russian,
+            Language::Hindi,
+            Language::Portuguese,
+            Language::Korean,
+            Language::ChineseSimplified,
+            Language::ChineseTraditional,
+            Language::Japanese,
+            Language::Thai,
+        ] {
+            for (raw, components) in [
+                ("ˈt͡ʃː", ["t", "ʃ"]),
+                ("t͜ʃ", ["t", "ʃ"]),
+                ("d͡ʒ", ["d", "ʒ"]),
+                ("d͜ʒ", ["d", "ʒ"]),
+                ("t͡s", ["t", "s"]),
+                ("t͜s", ["t", "s"]),
+                ("d͡z", ["d", "z"]),
+                ("d͜z", ["d", "z"]),
+            ] {
+                let expected = normalize_phonemes(raw, language);
+                assert_eq!(expected, word(&components));
+                let (predicted, topk) = normalize_with_topk(&word(&[raw]), &[], language);
+                assert_eq!(predicted, expected);
+                assert_eq!(topk.len(), 2);
+                assert_eq!(align(&predicted, &topk, &expected).0, 0);
+            }
+        }
+        assert_eq!(normalize_phonemes("aɪ", Language::German), word(&["aɪ"]));
+        assert_eq!(normalize_phonemes("ɪ̯", Language::German), word(&["ɪ"]));
+        assert_eq!(normalize_phonemes("ɐ̯", Language::German), word(&["ɐ"]));
+        assert_eq!(normalize_phonemes("ɪ̯", Language::Spanish), word(&["ɪ̯"]));
+        assert_eq!(
+            normalize_phonemes("ʔ", Language::German),
+            Vec::<String>::new()
+        );
+        assert_eq!(normalize_phonemes("ʔ", Language::English), word(&["ʔ"]));
+        assert_eq!(normalize_phonemes("ã", Language::German), word(&["ã"]));
+    }
+
+    #[test]
+    fn expanded_topk_is_component_aligned_without_spurious_atomic_matches() {
+        let alt = |phoneme: &str, probability| RawPhonemeAlt {
+            phoneme: phoneme.into(),
+            probability,
+        };
+        let raw = word(&["ʔ", "t͡ʃ", "a", "t"]);
+        let topk = vec![
+            vec![alt("ʔ", 1.0)],
+            vec![
+                alt("t͡ʃ", 0.5),
+                alt("t͜ʃ", 0.2),
+                alt("d͡ʒ", 0.1),
+                alt("t", 0.2),
+            ],
+            vec![alt("a", 0.9)],
+            vec![alt("t", 0.6), alt("t͡ʃ", 0.4)],
+        ];
+        let (tokens, normalized) = normalize_with_topk(&raw, &topk, Language::German);
+        assert_eq!(tokens, word(&["t", "ʃ", "a", "t"]));
+        assert_eq!(normalized.len(), tokens.len());
+        assert_eq!(prob_of("t", &normalized[0]), Some(0.7));
+        assert_eq!(prob_of("ʃ", &normalized[1]), Some(0.7));
+        assert_eq!(prob_of("d", &normalized[0]), Some(0.1));
+        assert_eq!(prob_of("ʒ", &normalized[1]), Some(0.1));
+        assert_eq!(prob_of("t", &normalized[1]), None);
+        assert_eq!(prob_of("a", &normalized[2]), Some(0.9));
+        assert_eq!(prob_of("t", &normalized[3]), Some(0.6));
+        assert_eq!(prob_of("ʃ", &normalized[3]), None);
+    }
+
+    #[test]
+    fn systemic_cues_normalize_references_without_hiding_spoken_errors() {
+        // Exact examples extracted from the September 14 deployed verification
+        // reports under /tmp/lexide-deploy-verify/{deu,spa,ita}-systemic.json.
+        let fixtures: Vec<serde_json::Value> =
+            serde_json::from_str(include_str!("../tests/fixtures/systemic-cues.json")).unwrap();
+        for fixture in fixtures {
+            let language = match fixture["language"].as_str().unwrap() {
+                "deu" => Language::German,
+                "spa" => Language::Spanish,
+                "ita" => Language::Italian,
+                _ => unreachable!(),
+            };
+            let raw: Vec<String> = serde_json::from_value(fixture["raw"].clone()).unwrap();
+            let original: Vec<String> =
+                serde_json::from_value(fixture["expected"].clone()).unwrap();
+            let expected: Vec<_> = original
+                .iter()
+                .flat_map(|p| normalize_phonemes(p, language))
+                .collect();
+            let (heard, topk) = normalize_with_topk(&raw, &[], language);
+            assert_eq!(
+                expected,
+                original
+                    .iter()
+                    .flat_map(|p| {
+                        if language == Language::German {
+                            match p.as_str() {
+                                "ʔ" => vec![],
+                                "ʏ̯" => word(&["ʏ"]),
+                                _ => vec![p.clone()],
+                            }
+                        } else {
+                            match p.as_str() {
+                                "t͡ʃ" => word(&["t", "ʃ"]),
+                                "d͡ʒ" => word(&["d", "ʒ"]),
+                                _ => vec![p.clone()],
+                            }
+                        }
+                    })
+                    .collect::<Vec<_>>(),
+                "{}",
+                fixture["text"]
+            );
+            assert_eq!(
+                heard,
+                serde_json::from_value::<Vec<String>>(fixture["heard"].clone()).unwrap()
+            );
+            assert!(
+                align(&heard, &topk, &expected).0 > 0,
+                "do not erase genuine errors: {}",
+                fixture["text"]
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn german_normalization_and_provenance_cover_every_verification_path() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let mut dictionary = HashMap::new();
+        dictionary.insert("test".into(), ap("ʔ t͡ʃ ɪ̯", &[]));
+        let ctx = VerifyContext {
+            http: &http,
+            store: osmo::Store::open(dir.path()),
+            cache_version: "resolved-model-and-decoder".into(),
+            expected_identity: None,
+            word_to_pronunciation: &dictionary,
+            mismatch_threshold: 0.3,
+            target_language: Language::German,
+            expected_deploy_marker: None,
+        };
+        let expected = expected_phoneme_variants(&ctx, "test", Some("ʔ t͡ʃ ɪ̯")).unwrap();
+        assert_eq!(expected, vec![vec![word(&["t", "ʃ", "ɪ"])]]);
+        assert!(
+            expected_phoneme_variants(&ctx, "test", None)
+                .unwrap()
+                .contains(&expected[0])
+        );
+        // Invalid bytes intentionally bypass ffmpeg's defect gate; both model
+        // payloads below are cached, so there is no inference/network request.
+        let audio = b"cached normalization regression";
+        let hash = xxh3_64(audio);
+        ctx.store
+            .write(
+                &format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version),
+                &serde_json::to_vec(&batch_test_payload(1)).unwrap(),
+            )
+            .await
+            .unwrap();
+        ctx.store
+            .write(
+                &format!("wav2vec2/{}/{hash:016x}", ctx.cache_version),
+                &serde_json::to_vec(&CachedPrediction {
+                    raw_phonemes: word(&["ʔ", "t͜ʃ", "ɪ̯"]),
+                    top_k: vec![],
+                })
+                .unwrap(),
+            )
+            .await
+            .unwrap();
+        let passed = verify_clip_bytes(&ctx, "test", "test", "cached", audio, Some(expected))
+            .await
+            .unwrap();
+        assert!(passed.passed(), "{:?}", passed.failure_reason);
+        assert_eq!(passed.edit_distance, Some(0));
+        let missing = verify_clip_bytes(&ctx, "test", "test", "cached", audio, None)
+            .await
+            .unwrap();
+        assert!(!missing.passed());
+        let defective = verify_clip_bytes(&ctx, "test", "test", "silent", &batch_test_wav(0), None)
+            .await
+            .unwrap();
+        assert!(
+            defective
+                .failure_reason
+                .as_deref()
+                .unwrap()
+                .starts_with("audio defect:")
+        );
+        let synthesis = TtsSynthesis::Google {
+            voice: default_voice_for(Language::German).unwrap(),
+            text: "test".into(),
+        };
+        ctx.store
+            .write(
+                &synthesis.cache_key(),
+                &serde_json::to_vec(&CachedTts {
+                    text: Some("test".into()),
+                    audio_base64: String::new(),
+                    attempts: 5,
+                    passed: false,
+                    last_defect: Some("silent".into()),
+                })
+                .unwrap(),
+            )
+            .await
+            .unwrap();
+        let (_, rejected_tts) =
+            synthesize_verified(&ctx, "test", &synthesis, "test", &TtsKeys::default())
+                .await
+                .unwrap();
+        assert!(!rejected_tts.passed());
+        for row in [passed, missing, defective, rejected_tts] {
+            assert_eq!(
+                row.cache_version.as_deref(),
+                Some(ctx.cache_version.as_str())
+            );
+            let mut json = serde_json::to_value(&row).unwrap();
+            assert_eq!(json["cache_version"], ctx.cache_version);
+            json.as_object_mut().unwrap().remove("cache_version");
+            assert!(
+                serde_json::from_value::<ClipVerification>(json)
+                    .unwrap()
+                    .cache_version
+                    .is_none()
+            );
+        }
+    }
+
     use super::*;
     fn batch_test_payload(frames: usize) -> FrameMatrixPayload {
         let mut encoder =
@@ -1691,6 +2182,75 @@ mod tests {
         }
     }
 
+    #[test]
+    fn frame_partition_strips_only_the_decoder() {
+        // The matrix is raw model output, so the decoder segment goes...
+        assert_eq!(frames_partition("model@rev__nonblank_v1"), "model@rev");
+        // ...but only the last one: a model whose own id carries `__` keeps it,
+        // so two different models can never share a partition.
+        assert_eq!(
+            frames_partition("model__name@rev__greedy_v1"),
+            "model__name@rev"
+        );
+        // An override with no decoder segment is already a partition.
+        assert_eq!(frames_partition("offline"), "offline");
+    }
+
+    #[tokio::test]
+    async fn frame_cache_fallback_priority_and_revision_isolation() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let words = HashMap::new();
+        let mut ctx = VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &words,
+            Language::English,
+            "model__name@rev1__nonblank_v1".into(),
+            0.3,
+            None,
+        )
+        .unwrap();
+        // Deliberately not WAV data: every hit must bypass decoding and HTTP.
+        let wav = b"cached raw frames";
+        let hash = xxh3_64(wav);
+        let partition = frames_partition(&ctx.cache_version).to_owned();
+        let new_key = format!("wav2vec2-frames/{partition}/{hash:016x}");
+        let current_key = format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version);
+        let greedy_key = format!("wav2vec2-frames/{partition}__greedy_v1/{hash:016x}");
+        // Add entries from lowest to highest priority. Reads must never migrate
+        // the older payloads, and both entry points must use the same ordering.
+        for (key, frames) in [(&greedy_key, 1), (&current_key, 2), (&new_key, 3)] {
+            let bytes = serde_json::to_vec(&batch_test_payload(frames)).unwrap();
+            ctx.store.write(key, &bytes).await.unwrap();
+            assert_eq!(frame_matrix(&ctx, wav).await.unwrap().frames, frames);
+            let batch =
+                frame_matrices_at(&ctx, &[wav], Err(anyhow::anyhow!("offline")), true).await;
+            assert_eq!(batch[0].as_ref().unwrap().frames, frames);
+            assert_eq!(ctx.store.read(key).await.unwrap(), bytes);
+            if frames < 3 {
+                assert!(ctx.store.read(&new_key).await.is_none());
+            }
+            if frames == 1 {
+                assert!(ctx.store.read(&current_key).await.is_none());
+            }
+        }
+        // Neither another revision nor another model may reuse these entries.
+        for version in ["model__name@rev2__nonblank_v1", "other@rev1__nonblank_v1"] {
+            ctx.cache_version = version.into();
+            assert!(cached_frame_matrix(&ctx, hash).await.is_none());
+            let batch =
+                frame_matrices_at(&ctx, &[wav], Err(anyhow::anyhow!("offline")), true).await;
+            assert!(
+                batch[0]
+                    .as_ref()
+                    .unwrap_err()
+                    .to_string()
+                    .contains("cache-only mode")
+            );
+        }
+    }
+
     fn batch_test_wav(seed: i16) -> Vec<u8> {
         let samples = 1600_u32;
         let mut wav = b"RIFF".to_vec();
@@ -1709,6 +2269,128 @@ mod tests {
             wav.extend_from_slice(&seed.to_le_bytes());
         }
         wav
+    }
+
+    fn test_identity() -> ModelIdentity {
+        ModelIdentity {
+            model_id: "test/model".into(),
+            model_revision: "1234567890abcdef".into(),
+            decoder_version: Some(DECODER_VERSION.into()),
+            deploy_marker: Some("fresh".into()),
+        }
+    }
+
+    #[test]
+    fn resolved_state_is_shared_and_failure_is_not_reprobed() {
+        let cell = OnceLock::new();
+        let first =
+            resolved_model_once(&cell, || resolve_model(None, || Ok(test_identity()))).unwrap();
+        let second = resolved_model_once(&cell, || panic!("must resolve only once")).unwrap();
+        assert!(std::ptr::eq(first, second));
+        assert_eq!(first.version, second.version);
+        let failed = OnceLock::new();
+        assert!(resolved_model_once(&failed, || anyhow::bail!("offline")).is_err());
+        assert!(resolved_model_once(&failed, || panic!("must not retry")).is_err());
+    }
+
+    #[test]
+    fn override_skips_probe_and_discovery_fails_closed() {
+        let model = resolve_model(Some("offline".into()), || panic!("must not probe")).unwrap();
+        assert_eq!(model.version, "offline");
+        assert!(model.identity.is_none());
+        let model = resolve_model(None, || Ok(test_identity())).unwrap();
+        assert_eq!(model.version, "test_model@1234567890ab__nonblank_v1");
+        assert_eq!(model.identity, Some(test_identity()));
+        assert!(resolve_model(None, || anyhow::bail!("offline")).is_err());
+        for field in ["model_id", "model_revision", "decoder_version"] {
+            let mut identity = test_identity();
+            match field {
+                "model_id" => identity.model_id.clear(),
+                "model_revision" => identity.model_revision.clear(),
+                _ => identity.decoder_version = Some("wrong".into()),
+            }
+            assert!(resolve_model(None, || Ok(identity)).is_err());
+        }
+        assert!(
+            serde_json::from_value::<IdentityProbe>(serde_json::json!({"deploy_marker": "fresh"}))
+                .is_err()
+        );
+        let mut probe = serde_json::to_value(test_identity()).unwrap();
+        probe["load_error"] = serde_json::json!("failed loading weights");
+        assert!(
+            serde_json::from_value::<IdentityProbe>(probe)
+                .unwrap()
+                .into_identity()
+                .is_err()
+        );
+        assert!(check_marker(Some("fresh"), Some("stale")).is_err());
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn response_and_envelope_identity_guards() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let words = HashMap::new();
+        // Explicit contexts never discover production identity.
+        let mut ctx = VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &words,
+            Language::English,
+            "offline".into(),
+            0.3,
+            Some("fresh".into()),
+        )
+        .unwrap();
+        let response = |metadata: serde_json::Value| {
+            let mut value = metadata;
+            value["phonemes"] = serde_json::json!([]);
+            serde_json::from_value::<ModalResponse>(value).unwrap()
+        };
+        let good = serde_json::to_value(test_identity()).unwrap();
+        assert!(check_response_identity(&ctx, &response(good.clone())).is_ok());
+        // Overrides still enforce decoder and marker; no identity pin is inferred.
+        for (field, value) in [("decoder_version", "wrong"), ("deploy_marker", "stale")] {
+            let mut bad = good.clone();
+            bad[field] = serde_json::json!(value);
+            assert!(check_response_identity(&ctx, &response(bad)).is_err());
+        }
+        ctx.expected_identity = Some(test_identity());
+        for field in [
+            "model_id",
+            "model_revision",
+            "decoder_version",
+            "deploy_marker",
+        ] {
+            let mut bad = good.clone();
+            bad[field] = serde_json::json!("wrong");
+            assert!(check_response_identity(&ctx, &response(bad.clone())).is_err());
+            // A good per-item claim must not mask a bad envelope.
+            bad["results"] = serde_json::json!([response(good.clone())]);
+            let split = wav2vec2::split_batch(serde_json::from_value(bad).unwrap(), 1);
+            assert!(split.is_err() || split.unwrap().remove(0).is_err());
+            // Missing per-item metadata inherits the envelope and is checked.
+            let mut envelope = good.clone();
+            envelope[field] = serde_json::json!("wrong");
+            envelope["results"] = serde_json::json!([{"phonemes": []}]);
+            match wav2vec2::split_batch(serde_json::from_value(envelope).unwrap(), 1) {
+                Err(_) => {}
+                Ok(mut items) => {
+                    assert!(check_response_identity(&ctx, &items.remove(0).unwrap()).is_err())
+                }
+            }
+        }
+        let mut envelope = good.clone();
+        envelope["results"] = serde_json::json!([{"phonemes": []}]);
+        let item = wav2vec2::split_batch(serde_json::from_value(envelope).unwrap(), 1)
+            .unwrap()
+            .remove(0)
+            .unwrap();
+        assert!(check_response_identity(&ctx, &item).is_ok());
+        assert_eq!(item.model_revision, Some(test_identity().model_revision));
+        assert!(check_response_identity(&ctx, &response(serde_json::json!({}))).is_err());
+        ctx.expected_deploy_marker = None;
+        assert!(check_response_identity(&ctx, &response(serde_json::json!({}))).is_ok());
     }
 
     #[tokio::test]
@@ -1776,7 +2458,8 @@ mod tests {
         let ctx = VerifyContext {
             http: &http,
             store,
-            cache_version: "test".into(),
+            cache_version: "test__nonblank_v1".into(),
+            expected_identity: None,
             word_to_pronunciation: &empty,
             mismatch_threshold: 0.3,
             target_language: Language::English,
@@ -1809,8 +2492,21 @@ mod tests {
         let cached =
             frame_matrices_at(&ctx, &refs, Err(anyhow::anyhow!("no endpoint")), true).await;
         assert_eq!(cached.iter().filter(|r| r.is_ok()).count(), 65);
-        let prediction_key = format!("wav2vec2/test/{:016x}", xxh3_64(&wavs[1]));
+        let hash = xxh3_64(&wavs[1]);
+        let prediction_key = format!("wav2vec2/test__nonblank_v1/{hash:016x}");
         assert!(ctx.store.read(&prediction_key).await.is_some());
+        assert!(
+            ctx.store
+                .read(&format!("wav2vec2-frames/test/{hash:016x}"))
+                .await
+                .is_some()
+        );
+        assert!(
+            ctx.store
+                .read(&format!("wav2vec2-frames/test__nonblank_v1/{hash:016x}"))
+                .await
+                .is_none()
+        );
     }
 
     #[test]
@@ -2006,16 +2702,135 @@ mod tests {
     }
 
     #[test]
-    fn ground_truth_falls_back_to_main_when_too_many_combinations() {
-        // 5 words × 2 variants each = 32 > MAX_VARIANT_COMBINATIONS (16) →
-        // fall back to single main-only candidate (no espeak under Korean).
-        let mut wp = HashMap::new();
-        for w in &["a", "b", "c", "d", "e"] {
-            wp.insert(w.to_string(), ap("X", &["Y"]));
+    fn ground_truth_caps_combinations_preserving_earlier_alternates() {
+        // Korean isolates the dictionary path. 2^100 would overflow usize;
+        // both phrases must instead keep the same bounded prefix choices.
+        let wp = HashMap::from([("a".to_string(), ap("X", &["Y"]))]);
+        for count in [5, 100] {
+            let text = vec!["a"; count].join(" ");
+            let variants = flat_variants(&text, &wp, Language::Korean).unwrap();
+            assert_eq!(variants.len(), MAX_VARIANT_COMBINATIONS);
+            for (index, variant) in variants.iter().enumerate() {
+                let expected: Vec<&str> = (0..count)
+                    .map(|position| {
+                        if position < 4 && index & (1 << position) != 0 {
+                            "Y"
+                        } else {
+                            "X"
+                        }
+                    })
+                    .collect();
+                assert_eq!(*variant, expected);
+            }
+            assert_eq!(
+                variants,
+                flat_variants(&text, &wp, Language::Korean).unwrap()
+            );
         }
-        let variants = flat_variants("a b c d e", &wp, Language::Korean).unwrap();
-        assert_eq!(variants.len(), 1);
-        assert_eq!(variants[0], vec!["X"; 5]);
+    }
+
+    #[test]
+    fn portuguese_cerveja_cue_keeps_letter_name_alternates() {
+        // Actual out/por/word_to_pronunciation.jsonl entries. The raw cue
+        // has 18 combinations and used to lose both /e/ and /ɛ/ to the cap.
+        let wp = HashMap::from([
+            ("e".to_string(), ap("i", &["e", "ɛ"])),
+            ("é".to_string(), ap("ɛ", &[])),
+            ("como".to_string(), ap("k o m u", &["k u m u"])),
+            ("em".to_string(), ap("ɐ̃ j̃", &[])),
+            (
+                "cerveja".to_string(),
+                ap("s ɨ ɾ v e ʒ ɐ", &["s ɨ ɾ b e ʒ ɐ", "s ɨ ɾ v ɐ j ʒ ɐ"]),
+            ),
+        ]);
+        let spoken = language_utils::pronunciation_challenge_spoken_text(
+            Language::Portuguese,
+            "ce",
+            "cerveja",
+        );
+        assert_eq!(spoken, "c é como em cerveja");
+        for (text, count) in [(spoken.as_str(), 6), ("c e como em cerveja", 16)] {
+            let readings = ground_truth_phoneme_variants(text, &wp, Language::Portuguese).unwrap();
+            assert_eq!(readings.len(), count + 1); // phrase g2p is outside the cap
+            let expected = word(&[
+                "s", "e", "ɛ", "k", "o", "m", "u", "ɐ̃", "j̃", "s", "ɨ", "ɾ", "v", "e", "ʒ", "ɐ",
+            ]);
+            assert!(readings.iter().any(|r| r.concat() == expected));
+            assert!(readings.iter().all(|r| r.len() == 5));
+            let phrase = model_target(text, Language::Portuguese).unwrap().unwrap();
+            assert!(readings.iter().any(|r| r.concat() == phrase.phonemes));
+        }
+    }
+
+    #[test]
+    fn spanish_accepts_seseo_without_changing_training_labels() {
+        assert!(matches!(
+            Language::Spanish.phoneme_label_source(),
+            PhonemeLabelSource::Espeak("es")
+        ));
+        assert_eq!(
+            model_target("cinco", Language::Spanish)
+                .unwrap()
+                .unwrap()
+                .phonemes,
+            word(&["θ", "i", "n", "k", "o"])
+        );
+        assert_eq!(normalize_phoneme("θ", Language::Spanish), Some("θ".into()));
+        assert_eq!(normalize_phoneme("s", Language::Spanish), Some("s".into()));
+        let empty = HashMap::new();
+        let variants = flat_variants("cinco", &empty, Language::Spanish).unwrap();
+        assert_eq!(
+            variants,
+            vec![
+                word(&["θ", "i", "n", "k", "o"]),
+                word(&["s", "i", "n", "k", "o"])
+            ]
+        );
+        // Latin American per-word g2p also combines with dictionary-only
+        // pronunciations, not merely a whole-phrase fallback.
+        let mut wp = HashMap::from([("nombre".to_string(), ap("X", &[]))]);
+        for dictionary_cinco in [false, true] {
+            if dictionary_cinco {
+                wp.insert("cinco".to_string(), ap("θ i n k o", &[]));
+            }
+            let readings =
+                ground_truth_phoneme_variants("cinco nombre", &wp, Language::Spanish).unwrap();
+            assert!(readings.contains(&vec![word(&["s", "i", "n", "k", "o"]), word(&["X"])]));
+        }
+        // The cap must not prevent a pure seseo phrase reading when later
+        // words' per-word alternates are truncated.
+        let text = ["cinco"; 6].join(" ");
+        let readings = ground_truth_phoneme_variants(&text, &empty, Language::Spanish).unwrap();
+        assert_eq!(readings.len(), MAX_VARIANT_COMBINATIONS + 1);
+        assert!(readings.contains(&vec![word(&["s", "i", "n", "k", "o"]); 6]));
+        assert_eq!(
+            flat_variants("niño", &empty, Language::Spanish)
+                .unwrap()
+                .len(),
+            1
+        );
+    }
+
+    #[test]
+    fn ground_truth_preserves_hindi_combining_signs() {
+        for text in ["क्", "क़", "क्ष", "हिंदी", "क्\u{200d}ष"] {
+            // A dictionary sentinel proves lookup sees the entire grapheme,
+            // while an empty dictionary exercises g2p on the intact word.
+            let wp = HashMap::from([(text.to_string(), ap("X", &[]))]);
+            let readings =
+                ground_truth_phoneme_variants(&format!("‘{text}।’"), &wp, Language::Hindi).unwrap();
+            assert_eq!(readings[0], vec![word(&["X"])]);
+            let expected: Vec<String> = model_target(text, Language::Hindi)
+                .unwrap()
+                .unwrap()
+                .phonemes
+                .iter()
+                .flat_map(|p| normalize_phonemes(p, Language::Hindi))
+                .collect();
+            let readings =
+                ground_truth_phoneme_variants(text, &HashMap::new(), Language::Hindi).unwrap();
+            assert_eq!(readings, vec![vec![expected]]);
+        }
     }
 
     // The liaison output depends on our espeak-ng fork's French patches;
@@ -2056,7 +2871,7 @@ mod tests {
                 .unwrap()
                 .phonemes
                 .iter()
-                .filter_map(|p| normalize_phoneme(p, Language::French))
+                .flat_map(|p| normalize_phonemes(p, Language::French))
                 .collect::<Vec<_>>()
                 .join(" ")
         };
@@ -2217,15 +3032,15 @@ mod tests {
         // summed probability.
         let raw_phonemes = vec!["r".to_string()];
         let raw_topk = vec![vec![
-            Alternative {
+            RawPhonemeAlt {
                 phoneme: "r".to_string(),
                 probability: 0.4,
             },
-            Alternative {
+            RawPhonemeAlt {
                 phoneme: "ʁ".to_string(),
                 probability: 0.3,
             },
-            Alternative {
+            RawPhonemeAlt {
                 phoneme: "a".to_string(),
                 probability: 0.2,
             },
@@ -2249,9 +3064,37 @@ mod letter_name_tests {
             .unwrap()
             .phonemes
             .iter()
-            .filter_map(|p| normalize_phoneme(p, language))
+            .flat_map(|p| normalize_phonemes(p, language))
             .collect::<Vec<_>>()
             .join(" ")
+    }
+
+    #[test]
+    fn japanese_and_hindi_segments_use_the_models_backend() {
+        for (language, pattern, expected) in [
+            (Language::Japanese, "は", "h a"),
+            (Language::Japanese, "へ", "h e"),
+            (Language::Japanese, "ー", "tɕ o o o ɴ p ɯᵝ"),
+            (Language::Japanese, "っ", "tɕ i i s a i ts ɯᵝ"),
+            (Language::Japanese, "ッ", "tɕ i i s a i ts ɯᵝ"),
+            (Language::Hindi, "़", "n ʊ k t̪ a"),
+            (Language::Hindi, "्", "ɦ ə l ə n t̪"),
+            (Language::Hindi, "ड़", "ɽ ə"),
+            (Language::Hindi, "क्ष", "k ʃ"),
+        ] {
+            let segments = language_utils::pronunciation_challenge_segments(language, pattern, "");
+            assert_eq!(segments[0].display, pattern);
+            let target = model_target(&segments[0].spoken, language)
+                .unwrap()
+                .unwrap();
+            let phones = target
+                .phonemes
+                .iter()
+                .flat_map(|p| normalize_phonemes(p, language))
+                .collect::<Vec<_>>()
+                .join(" ");
+            assert_eq!(phones, expected, "{language:?} {pattern}");
+        }
     }
 
     // The letter-name table is only useful if espeak reads each name as the

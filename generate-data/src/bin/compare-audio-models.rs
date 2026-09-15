@@ -22,7 +22,7 @@
 use anyhow::{Context, Result, bail};
 use clap::Parser;
 use generate_data::audio_verification::{
-    ClipVerification, VerifyContext, expected_phoneme_variants, normalize_phoneme, verify_clip,
+    ClipVerification, VerifyContext, expected_phoneme_variants, normalize_phonemes, verify_clip,
 };
 use language_utils::{Language, Pronunciations};
 use std::collections::{BTreeSet, HashMap};
@@ -33,7 +33,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 /// Dedicated eval app — NEVER the production "wav2vec2-phoneme". The Modal file
 /// reads `WAV2VEC2_APP_NAME`, so deploying with this isolates eval runs.
 const EVAL_APP: &str = "wav2vec2-phoneme-eval";
-const MODAL_PY: &str = "modal-envs/wav2vec2_phoneme.py";
+const MODAL_PY: &str = "../lexide/pronunciation/modal/wav2vec2_phoneme.py";
 /// At threshold 0 a clip passes only on an exact phoneme match — the right
 /// setting for head-to-head model comparison (see the project audio-verify
 /// threshold note).
@@ -152,7 +152,8 @@ fn stop_app() {
 }
 
 /// Deploy the tracked Modal file to the eval app, selecting the checkpoint
-/// entirely through the environment — `wav2vec2_phoneme.py` reads all four of
+/// entirely through the environment — the sibling lexide service at
+/// `../lexide/pronunciation/modal/wav2vec2_phoneme.py` reads all four of
 /// these, so the file is never rewritten and eval and production run byte-identical
 /// code. `deploy_marker` is unique per (re)deploy: it feeds both the freshness
 /// check and, via MODEL_WEIGHTS_VERSION, the image cache-buster that forces a
@@ -383,7 +384,7 @@ impl ModelRun {
 fn norm_seq(tokens: &[String], language: Language) -> Vec<String> {
     tokens
         .iter()
-        .filter_map(|t| normalize_phoneme(t, language))
+        .flat_map(|t| normalize_phonemes(t, language))
         .collect()
 }
 
@@ -796,7 +797,13 @@ async fn run(args: Args) -> Result<()> {
             Some(deploy_and_verify(&http, &url, &sn, &model_id, &revision, &mut seq).await?)
         };
 
-        let cache_key = format!("{sn}__nonblank_v1");
+        let cache_key =
+            lexide::pronunciation::cache_version(&lexide::pronunciation::ModelIdentity {
+                model_id: model_id.clone(),
+                model_revision: revision.clone(),
+                decoder_version: None,
+                deploy_marker: expected_marker.clone(),
+            });
         println!("  → verifying clips (cache={cache_key})");
         let results = verify_model(
             &http,
