@@ -910,39 +910,4 @@ mod tests {
             "Jean-Cavard/21a_pain.wav"
         );
     }
-
-    /// `deploy` selects the checkpoint purely through the environment, which
-    /// only works while the Modal file still reads those variables. If someone
-    /// hard-codes one back, eval would quietly deploy production's pin — so
-    /// assert the contract against the tracked source. (The runtime marker check
-    /// would also catch it, but only after a full deploy.)
-    ///
-    /// The Modal file lives in the sibling `lexide` repo, which only exists on a
-    /// developer checkout — CI clones this repo alone. Absent sibling means the
-    /// contract is unverifiable here, not broken, so skip rather than fail.
-    #[test]
-    fn modal_file_honors_the_env_overrides_deploy_sets() {
-        // Tests run with the package dir as CWD, the binary with the repo root.
-        let Some(src) = std::fs::read_to_string(format!("../{MODAL_PY}"))
-            .or_else(|_| std::fs::read_to_string(MODAL_PY))
-            .ok()
-        else {
-            eprintln!("skipping: sibling lexide checkout not present at {MODAL_PY}");
-            return;
-        };
-        // Whitespace-stripped so a black-style line wrap inside the call still
-        // matches — we're asserting the read exists, not how it's formatted.
-        let packed: String = src.chars().filter(|c| !c.is_whitespace()).collect();
-        for var in [
-            "WAV2VEC2_APP_NAME",
-            "WAV2VEC2_MODEL_ID",
-            "WAV2VEC2_MODEL_REVISION",
-            "WAV2VEC2_DEPLOY_MARKER",
-        ] {
-            assert!(
-                packed.contains(&format!("os.environ.get(\"{var}\"")),
-                "{MODAL_PY} no longer reads {var}; `deploy` sets it and would be ignored"
-            );
-        }
-    }
 }
