@@ -1,8 +1,15 @@
 # TEMPORARY — delete this file once CI is green.
 #
-# nextest's default fail-fast aborts the run at the first failure, so a CI run
-# only ever reveals one broken test. While we clear out the agent-written tests
-# that don't survive the runner, run everything so a single CI cycle lists them
-# all instead of one per round trip.
+# Two problems this works around while we clear out the agent-written tests
+# that don't survive the runner:
+#
+# 1. nextest fail-fasts by default, so a CI run only ever names one broken
+#    test. Run everything so one cycle lists them all.
+# 2. Something in the suite hangs on the runner, and fail-fast made it worse:
+#    nextest cancels, then *waits* for the still-running tests, so the job sat
+#    on "Cancelling due to test failure: 3 tests still running" for an hour
+#    with no further output. Terminating a stuck test turns that silent hang
+#    into a named TIMEOUT we can act on.
 [profile.default]
 fail-fast = false
+slow-timeout = { period = "60s", terminate-after = 3 }
