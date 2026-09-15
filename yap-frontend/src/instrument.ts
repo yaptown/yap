@@ -79,6 +79,15 @@ Sentry.init({
       }
     }
 
+    // Filter errors thrown from within the OneSignal SDK itself (e.g. its own
+    // origin-restriction check) — not our code, nothing we can fix here.
+    {
+      const frames = event.exception?.values?.[0]?.stacktrace?.frames ?? [];
+      if (frames.some((f) => f.filename?.includes("cdn.onesignal.com"))) {
+        return null;
+      }
+    }
+
     return event;
   },
 
