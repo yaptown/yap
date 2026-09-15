@@ -27,8 +27,8 @@ use anyhow::{Context, Result};
 use base64::Engine;
 use language_utils::{Language, PhonemeLabelSource};
 use lexide::pronunciation::{
-    DECODER_VERSION, ModelIdentity, PhonemeAlternative as RawPhonemeAlt,
-    PredictResponse as ModalResponse, cache_version,
+    DECODER_VERSION, ModelIdentity, PhonemeAlternative as RawPhonemeAlt, PredictRequest,
+    PredictResponse as ModalResponse, cache_version, remote::PhonemizerClient,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -42,25 +42,6 @@ pub use lexide::pronunciation::{
     AlignedPhoneme, DecodedPath, FrameMatrix, FrameMatrixPayload, PhoneRun, TargetScore,
     decode_path, is_phone_token,
 };
-
-#[derive(Deserialize)]
-struct IdentityProbe {
-    #[serde(flatten)]
-    identity: ModelIdentity,
-    #[serde(default)]
-    load_error: Option<serde_json::Value>,
-}
-
-impl IdentityProbe {
-    fn into_identity(self) -> Result<ModelIdentity> {
-        anyhow::ensure!(
-            self.load_error.is_none(),
-            "phonemizer failed to load: {:?}",
-            self.load_error
-        );
-        Ok(self.identity)
-    }
-}
 
 fn expected_deploy_marker() -> Option<String> {
     std::env::var("WAV2VEC2_EXPECTED_DEPLOY_MARKER")
@@ -111,17 +92,10 @@ fn resolved_model_once(
 
 fn production_model() -> Result<&'static ResolvedModel> {
     resolved_model_once(&PRODUCTION_MODEL, || {
-        let model = resolve_model(
+        resolve_model(
             std::env::var("WAV2VEC2_CACHE_VERSION_OVERRIDE").ok(),
             probe_identity,
-        )?;
-        if let Some(identity) = &model.identity {
-            check_marker(
-                expected_deploy_marker().as_deref(),
-                identity.deploy_marker.as_deref(),
-            )?;
-        }
-        Ok(model)
+        )
     })
 }
 
@@ -131,22 +105,21 @@ fn probe_identity() -> Result<ModelIdentity> {
     // block_on a caller's runtime.
     std::thread::spawn(|| {
         tokio::runtime::Builder::new_current_thread()
-            .enable_all().build()?.block_on(async {
-                let batch = wav2vec2::batch_url()?;
-                let predict = match std::env::var("WAV2VEC2_ENDPOINT_URL") {
-                    Ok(url) => url,
-                    Err(_) => batch.strip_suffix("-predict-batch.modal.run")
-                        .map(|prefix| format!("{prefix}-predict.modal.run"))
-                        .context("set WAV2VEC2_ENDPOINT_URL for identity discovery on a custom batch endpoint")?,
-                };
+            .enable_all()
+            .build()?
+            .block_on(async {
                 let http = reqwest::Client::builder()
-                    .timeout(std::time::Duration::from_secs(300)).build()?;
-                let probe: IdentityProbe = http.post(predict)
-                    .json(&serde_json::json!({"marker_only": true}))
-                    .send().await?.error_for_status()?.json().await?;
-                probe.into_identity()
+                    .timeout(std::time::Duration::from_secs(300))
+                    .build()?;
+                let client = wav2vec2::identity_client(http)?;
+                match expected_deploy_marker() {
+                    Some(marker) => client.check_identity(&marker).await,
+                    None => client.identity().await,
+                }
             })
-    }).join().map_err(|_| anyhow::anyhow!("phonemizer identity probe thread panicked"))?
+    })
+    .join()
+    .map_err(|_| anyhow::anyhow!("phonemizer identity probe thread panicked"))?
 }
 
 /// The exact cache partition used by production contexts, including overrides.
@@ -588,7 +561,7 @@ const MODAL_BATCH_SIZE: usize = 64;
 const MODAL_BATCH_LINGER: std::time::Duration = std::time::Duration::from_millis(200);
 
 struct BatchItem {
-    payload: serde_json::Value,
+    payload: PredictRequest,
     reply: tokio::sync::oneshot::Sender<Result<ModalResponse>>,
 }
 
@@ -604,8 +577,7 @@ static BATCH_QUEUE: LazyLock<tokio::sync::mpsc::UnboundedSender<BatchItem>> = La
 /// hand each caller its own result. The endpoint groups similar lengths
 /// into GPU batches itself; this only pools what concurrent callers submit.
 async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
-    let http = reqwest::Client::new();
-    let url = wav2vec2::batch_url();
+    let client = wav2vec2::batch_client(reqwest::Client::new());
     while let Some(first) = rx.recv().await {
         let mut batch = vec![first];
         tokio::time::sleep(MODAL_BATCH_LINGER).await;
@@ -615,10 +587,12 @@ async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
                 Err(_) => break,
             }
         }
-        let payloads: Vec<serde_json::Value> =
-            batch.iter_mut().map(|item| item.payload.take()).collect();
-        let results = match &url {
-            Ok(url) => wav2vec2::predict_batch(&http, url, payloads).await,
+        let payloads: Vec<PredictRequest> = batch
+            .iter_mut()
+            .map(|item| std::mem::take(&mut item.payload))
+            .collect();
+        let results = match &client {
+            Ok(client) => wav2vec2::predict_batch(client, &payloads).await,
             Err(e) => Err(anyhow::anyhow!("{e:#}")),
         };
         match results {
@@ -641,7 +615,7 @@ async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
 /// container whose deploy marker is not the one expected — so nothing from
 /// a stale/contaminated container is ever cached under the wrong model's
 /// key.
-async fn post_modal(ctx: &VerifyContext<'_>, payload: serde_json::Value) -> Result<ModalResponse> {
+async fn post_modal(ctx: &VerifyContext<'_>, payload: PredictRequest) -> Result<ModalResponse> {
     let (reply, result) = tokio::sync::oneshot::channel();
     BATCH_QUEUE
         .send(BatchItem { payload, reply })
@@ -712,7 +686,7 @@ fn check_marker(expected: Option<&str>, reported: Option<&str>) -> Result<()> {
     if let Some(expected) = expected {
         anyhow::ensure!(
             reported == Some(expected),
-            "deploy-marker mismatch: endpoint reported {reported:?}, expected {expected:?} — refusing to cache a possibly-contaminated prediction"
+            "deploy-marker mismatch: endpoint reported {reported:?}, expected {expected:?}"
         );
     }
     Ok(())
@@ -740,12 +714,13 @@ async fn predict_phonemes(
 
     let samples =
         decode_wav_to_f32(wav_bytes).context("Failed to decode WAV to f32 samples via ffmpeg")?;
-    let payload = wav2vec2::clip_payload(&wav2vec2::Clip {
+    let payload = wav2vec2::Clip {
         samples: &samples,
         sample_rate: MODAL_SAMPLE_RATE,
         top_k: MODAL_TOP_K,
         return_frame_matrix: false,
-    });
+    }
+    .into_request();
     let modal = post_modal(ctx, payload).await?;
     cache_modal_prediction(ctx, hash, &modal).await
 }
@@ -838,12 +813,13 @@ pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<F
     }
     let samples =
         decode_wav_to_f32(wav_bytes).context("Failed to decode WAV to f32 samples via ffmpeg")?;
-    let payload = wav2vec2::clip_payload(&wav2vec2::Clip {
+    let payload = wav2vec2::Clip {
         samples: &samples,
         sample_rate: MODAL_SAMPLE_RATE,
         top_k: MODAL_TOP_K,
         return_frame_matrix: true,
-    });
+    }
+    .into_request();
     let modal = post_modal(ctx, payload).await?;
     cache_modal_prediction(ctx, hash, &modal).await?;
     let Some(payload) = modal.frame_matrix else {
@@ -865,13 +841,19 @@ pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<F
 /// per-clip failure doesn't discard its neighbors. A caller verifying one
 /// clip at a time gets the same batching through the queue.
 pub async fn frame_matrices(ctx: &VerifyContext<'_>, wavs: &[&[u8]]) -> Vec<Result<FrameMatrix>> {
-    frame_matrices_at(ctx, wavs, wav2vec2::batch_url(), cache_only()).await
+    frame_matrices_at(
+        ctx,
+        wavs,
+        wav2vec2::batch_client(ctx.http.clone()),
+        cache_only(),
+    )
+    .await
 }
 
 async fn frame_matrices_at(
     ctx: &VerifyContext<'_>,
     wavs: &[&[u8]],
-    url: Result<String>,
+    client: Result<PhonemizerClient>,
     only_cache: bool,
 ) -> Vec<Result<FrameMatrix>> {
     let mut results: Vec<Option<Result<FrameMatrix>>> = (0..wavs.len()).map(|_| None).collect();
@@ -905,12 +887,15 @@ async fn frame_matrices_at(
                 .and_then(|result| result);
             match decoded {
                 Ok(samples) => {
-                    requests.push(wav2vec2::clip_payload(&wav2vec2::Clip {
-                        samples: &samples,
-                        sample_rate: MODAL_SAMPLE_RATE,
-                        top_k: MODAL_TOP_K,
-                        return_frame_matrix: true,
-                    }));
+                    requests.push(
+                        wav2vec2::Clip {
+                            samples: &samples,
+                            sample_rate: MODAL_SAMPLE_RATE,
+                            top_k: MODAL_TOP_K,
+                            return_frame_matrix: true,
+                        }
+                        .into_request(),
+                    );
                     valid.push((*index, *hash, key));
                 }
                 Err(error) => {
@@ -921,8 +906,8 @@ async fn frame_matrices_at(
         if requests.is_empty() {
             continue;
         }
-        let items = match &url {
-            Ok(url) => wav2vec2::predict_batch(ctx.http, url, requests).await,
+        let items = match &client {
+            Ok(client) => wav2vec2::predict_batch(client, &requests).await,
             Err(error) => Err(anyhow::anyhow!("{error:#}")),
         };
         match items {
@@ -2311,18 +2296,6 @@ mod tests {
             }
             assert!(resolve_model(None, || Ok(identity)).is_err());
         }
-        assert!(
-            serde_json::from_value::<IdentityProbe>(serde_json::json!({"deploy_marker": "fresh"}))
-                .is_err()
-        );
-        let mut probe = serde_json::to_value(test_identity()).unwrap();
-        probe["load_error"] = serde_json::json!("failed loading weights");
-        assert!(
-            serde_json::from_value::<IdentityProbe>(probe)
-                .unwrap()
-                .into_identity()
-                .is_err()
-        );
         assert!(check_marker(Some("fresh"), Some("stale")).is_err());
     }
 
@@ -2367,13 +2340,13 @@ mod tests {
             assert!(check_response_identity(&ctx, &response(bad.clone())).is_err());
             // A good per-item claim must not mask a bad envelope.
             bad["results"] = serde_json::json!([response(good.clone())]);
-            let split = wav2vec2::split_batch(serde_json::from_value(bad).unwrap(), 1);
+            let split = wav2vec2::split_batch(serde_json::from_value(bad).unwrap());
             assert!(split.is_err() || split.unwrap().remove(0).is_err());
             // Missing per-item metadata inherits the envelope and is checked.
             let mut envelope = good.clone();
             envelope[field] = serde_json::json!("wrong");
             envelope["results"] = serde_json::json!([{"phonemes": []}]);
-            match wav2vec2::split_batch(serde_json::from_value(envelope).unwrap(), 1) {
+            match wav2vec2::split_batch(serde_json::from_value(envelope).unwrap()) {
                 Err(_) => {}
                 Ok(mut items) => {
                     assert!(check_response_identity(&ctx, &items.remove(0).unwrap()).is_err())
@@ -2382,7 +2355,7 @@ mod tests {
         }
         let mut envelope = good.clone();
         envelope["results"] = serde_json::json!([{"phonemes": []}]);
-        let item = wav2vec2::split_batch(serde_json::from_value(envelope).unwrap(), 1)
+        let item = wav2vec2::split_batch(serde_json::from_value(envelope).unwrap())
             .unwrap()
             .remove(0)
             .unwrap();
@@ -2475,7 +2448,8 @@ mod tests {
         wavs.extend((0..65).map(batch_test_wav));
         wavs.push(b"invalid WAV".to_vec());
         let refs: Vec<_> = wavs.iter().map(Vec::as_slice).collect();
-        let results = frame_matrices_at(&ctx, &refs, Ok(url), false).await;
+        let client = PhonemizerClient::with_endpoints(http.clone(), &url, &url);
+        let results = frame_matrices_at(&ctx, &refs, client, false).await;
         server.join().unwrap();
         assert_eq!(results.len(), 67);
         assert_eq!(results[0].as_ref().unwrap().frames, 2);

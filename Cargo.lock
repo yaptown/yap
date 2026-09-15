@@ -97,6 +97,7 @@ dependencies = [
  "hmac 0.13.0",
  "jsonwebtoken",
  "language-utils",
+ "lexide",
  "phoneme-verify",
  "postgrest",
  "reqwest 0.13.4",
@@ -3356,7 +3357,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 [[package]]
 name = "lexide"
 version = "0.3.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=ef8abcce7f72aaea5a0c7c904c01036d99469e03#ef8abcce7f72aaea5a0c7c904c01036d99469e03"
+source = "git+https://github.com/anchpop/lexide.git?rev=72712d7630cff84bec01cffe63f81c7ea668a4f2#72712d7630cff84bec01cffe63f81c7ea668a4f2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3365,7 +3366,7 @@ dependencies = [
  "half",
  "hf-hub",
  "regex 1.12.4",
- "reqwest 0.12.23",
+ "reqwest 0.13.4",
  "safetensors",
  "serde",
  "serde_json",

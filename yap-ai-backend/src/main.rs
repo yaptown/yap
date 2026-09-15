@@ -21,6 +21,9 @@ use language_utils::{
     },
     transcription_challenge,
 };
+use lexide::pronunciation::{
+    EmittedPhoneme, PredictRequest, PredictResponse, remote::PhonemizerClient,
+};
 use phoneme_verify::wav2vec2;
 use postgrest::Postgrest;
 use resend_rs::{Resend, types::CreateEmailBaseOptions};
@@ -1165,7 +1168,7 @@ struct PronunciationFeedbackResponse {
     feedback: String,
 }
 
-fn format_phoneme_analysis(phonemes: &[wav2vec2::EmittedPhoneme]) -> String {
+fn format_phoneme_analysis(phonemes: &[EmittedPhoneme]) -> String {
     phonemes
         .iter()
         .map(|p| {
@@ -1239,19 +1242,22 @@ async fn generate_pronunciation_feedback(
                 eprintln!("Failed to decode audio: {e}");
                 StatusCode::BAD_REQUEST
             })?;
-        Ok::<_, StatusCode>(wav2vec2::clip_payload(&wav2vec2::Clip {
-            samples: &samples,
-            sample_rate,
-            top_k: 5,
-            return_frame_matrix: false,
-        }))
+        Ok::<PredictRequest, StatusCode>(
+            wav2vec2::Clip {
+                samples: &samples,
+                sample_rate,
+                top_k: 5,
+                return_frame_matrix: false,
+            }
+            .into_request(),
+        )
     });
     let (user, reference) = (user?, reference?);
-    let url = wav2vec2::batch_url().map_err(|e| {
+    let client: PhonemizerClient = wav2vec2::batch_client(http).map_err(|e| {
         eprintln!("Invalid Modal endpoint: {e}");
         StatusCode::BAD_GATEWAY
     })?;
-    let predictions = wav2vec2::predict_batch(&http, &url, vec![user, reference])
+    let predictions = wav2vec2::predict_batch(&client, &[user, reference])
         .await
         .map_err(|e| {
             eprintln!("Modal request failed: {e}");
@@ -1263,7 +1269,7 @@ async fn generate_pronunciation_feedback(
             eprintln!("Modal prediction failed: {e}");
             StatusCode::BAD_GATEWAY
         })?;
-    let [user_prediction, ref_prediction]: [wav2vec2::PredictResponse; 2] =
+    let [user_prediction, ref_prediction]: [PredictResponse; 2] =
         predictions.try_into().map_err(|predictions: Vec<_>| {
             eprintln!(
                 "Modal returned {} predictions for two clips",
@@ -2398,6 +2404,25 @@ mod tests {
     use axum::body::Body;
     use axum::http::Request;
     use tower::ServiceExt;
+
+    #[test]
+    fn phoneme_analysis_preserves_prompt_text() {
+        let response: PredictResponse = serde_json::from_value(serde_json::json!({
+            "phonemes": [
+                {"phoneme": "ˈa", "confidence": 0.876, "top_k": [
+                    {"phoneme": "a", "probability": 0.876},
+                    {"phoneme": "ə", "probability": 0.124}
+                ]},
+                {"phoneme": "t", "confidence": 1.0, "top_k": []}
+            ]
+        }))
+        .unwrap();
+        assert_eq!(
+            format_phoneme_analysis(&response.phonemes),
+            "  ˈa (conf=88%) [a:88% ə:12%]\n  t (conf=100%) []",
+        );
+        assert_eq!(format_phoneme_analysis(&[]), "");
+    }
 
     const TEST_SECRET: &[u8] = b"test-jwt-secret";
 
