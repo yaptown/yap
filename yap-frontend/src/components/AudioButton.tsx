@@ -352,7 +352,10 @@ export function AudioButton({
             }
           } catch (error) {
             if (isAbort(error)) throw error;
-            console.error("Failed to play pre-audio:", error);
+            // Pre-audio is best-effort (wakes up Bluetooth headphones); on
+            // failure we fall through to the main audio playback below, so
+            // this isn't an actionable app error.
+            console.warn("Failed to play pre-audio:", error);
           }
         }
 

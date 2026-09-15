@@ -336,8 +336,10 @@ async function checkBrowserSupport(
       }
     }
   } catch (error) {
-    console.error("Browser support check failed:", error);
-    // If test_opfs throws an error or times out, the browser is not supported
+    // Browsers that block localStorage/OPFS (private browsing, some embedded
+    // webviews) land here; this is a normal "unsupported" outcome, already
+    // handled by setBrowserSupported(false), not an actionable app error.
+    console.warn("Browser support check failed:", error);
     setBrowserSupported(false);
   }
 }
