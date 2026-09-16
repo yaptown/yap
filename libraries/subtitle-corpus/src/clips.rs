@@ -137,7 +137,7 @@ pub struct GateCuts {
     pub min_verbatim: f64,
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Producers {
     pub model: Option<phoneme_verify::ModelIdentity>,
     pub g2p: Option<String>,
@@ -187,6 +187,9 @@ pub struct Clip {
     pub producers: Producers,
     /// False for pre-gate failures; re-gating must preserve their verdicts.
     pub measured: bool,
+    /// Original padded WAV bytes; absent for failures before cutting. Export
+    /// uses this with target_ipa to read the response cache without re-cutting.
+    pub audio_hash: Option<u64>,
     pub sentence: String,
     pub imdb_id: String,
     /// Clip bounds from the transcript's word stamps (unpadded).
@@ -503,6 +506,14 @@ struct Header {
     #[serde(flatten)]
     provenance: Provenance,
     expected_candidates: usize,
+    completion: Completion,
+}
+
+#[derive(Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+enum Completion {
+    Complete,
+    RefreshG2p,
 }
 
 #[cfg(test)]
@@ -511,6 +522,15 @@ fn stored_provenance(path: &Path) -> Option<Provenance> {
 }
 
 pub fn read_file(path: &Path) -> Result<(Provenance, Vec<Clip>)> {
+    let (header, clips) = read_manifest(path)?;
+    anyhow::ensure!(
+        header.completion == Completion::Complete,
+        "G2P refresh unfinished"
+    );
+    Ok((header.provenance, clips))
+}
+
+fn read_manifest(path: &Path) -> Result<(Header, Vec<Clip>)> {
     let text = std::fs::read_to_string(path)?;
     let mut lines = text.lines();
     let header: Header = serde_json::from_str(lines.next().context("missing clip header")?)?;
@@ -527,7 +547,39 @@ pub fn read_file(path: &Path) -> Result<(Provenance, Vec<Clip>)> {
         "incomplete clip file"
     );
     anyhow::ensure!(clips.iter().all(Clip::resolved), "unresolved clip verdict");
-    Ok((header.provenance, clips))
+    Ok((header, clips))
+}
+
+fn interrupted_refresh(dir: &Path) -> bool {
+    read_manifest(&clips_path(dir))
+        .is_ok_and(|(header, _)| header.completion == Completion::RefreshG2p)
+}
+
+/// Preserve old rows for inspection, but invalidate their completion claim
+/// before touching targets. A crash then forces regeneration on any next run.
+fn begin_refresh(dir: &Path, provenance: &Provenance) -> Result<()> {
+    let (mut header, clips) = read_manifest(&clips_path(dir)).unwrap_or_else(|_| {
+        (
+            Header {
+                provenance: provenance.clone(),
+                expected_candidates: 0,
+                completion: Completion::RefreshG2p,
+            },
+            Vec::new(),
+        )
+    });
+    header.completion = Completion::RefreshG2p;
+    write_manifest(dir, &header, &clips)
+}
+
+/// Writer/reader contract across mapper and export, in different runs: the
+/// original cut's WAV hash and exact G2P labels. Producer versions never key it.
+pub fn clip_key(audio_hash: u64, phonemes: &[String]) -> String {
+    let inputs = serde_json::to_vec(&(audio_hash, phonemes)).expect("clip key is serializable");
+    format!(
+        "phoneme-response/clip/{:016x}",
+        xxhash_rust::xxh3::xxh3_64(&inputs)
+    )
 }
 
 /// Every clip, with strict format, row count and verdict validation.
@@ -1015,15 +1067,6 @@ fn existing_work(
     ) else {
         return (Work::Redo("verbatim measurement missing or stale"), None);
     };
-    // Film admissibility can change even if a persisted report was corrected
-    // independently. Reapply the film gate, never trust its old verdict string.
-    let work = if report.measure.verdict != crate::verbatim::Verdict::Verbatim
-        && clips.iter().any(|c| c.passed)
-    {
-        Work::Regate
-    } else {
-        work
-    };
     (work, Some((clips, report)))
 }
 
@@ -1036,6 +1079,7 @@ async fn prepare_film(
     dir: &Path,
     gate: &Gate,
     concurrency: usize,
+    refresh_g2p: bool,
 ) -> Result<FilmWork> {
     let code = course_dir(&movie.original_language).context("unmapped language")?;
     let language = Language::from_code(code).context("unmapped course code")?;
@@ -1053,12 +1097,24 @@ async fn prepare_film(
     }
     let provenance = current_provenance(dir, language, code, gate)?;
     let min_ratio = provenance.gate.min_ratio;
-    let (work, stored) = existing_work(dir, &provenance);
+    let interrupted = interrupted_refresh(dir);
+    let refresh_g2p = min_ratio.is_some() && (refresh_g2p || interrupted);
+    let (mut work, stored) = if refresh_g2p {
+        if interrupted {
+            println!("{}: Resuming an interrupted refresh", movie.title);
+        }
+        begin_refresh(dir, &provenance)?;
+        (Work::Redo("G2P refresh"), None)
+    } else {
+        existing_work(dir, &provenance)
+    };
     if let Some((mut clips, report)) = stored {
-        if work == Work::Regate {
-            let verbatim = report.measure.verdict == crate::verbatim::Verdict::Verbatim;
-            for clip in &mut clips {
-                regate(clip, min_ratio, gate, verbatim);
+        let verbatim = report.measure.verdict == crate::verbatim::Verdict::Verbatim;
+        for clip in &mut clips {
+            let previous = (clip.passed, clip.reject.clone());
+            regate(clip, min_ratio, gate, verbatim);
+            if previous != (clip.passed, clip.reject.clone()) {
+                work = Work::Regate;
             }
         }
         let summary = FilmSummary {
@@ -1159,6 +1215,7 @@ async fn prepare_film(
                 let mut clip = Clip {
                     producers: Producers::default(),
                     measured: false,
+                    audio_hash: None,
                     sentence: sentence.clone(),
                     imdb_id,
                     start_ms,
@@ -1207,6 +1264,8 @@ async fn prepare_film(
                         return Some((clip, None));
                     }
                 };
+                let hash = xxhash_rust::xxh3::xxh3_64(&wav);
+                clip.audio_hash = Some(hash);
                 let padded_ms = (end_ms - start_ms + pad_before_ms + pad_after_ms) as f64;
                 // The mix's loudness and voicing, straight from the samples.
                 if let Some(samples) = wav_samples(&wav) {
@@ -1225,23 +1284,28 @@ async fn prepare_film(
                     // Raw CTC scores only the single default-voice target, without
                     // accepted-variant readings (including Spanish seseo). A seseo
                     // Spanish clip therefore scores worse than on the edit-distance path.
-                    let target = match phoneme_verify::model_target(&sentence, language) {
-                        Some(Ok(p)) if !p.phonemes.is_empty() => p.phonemes,
-                        Some(Ok(_)) | None => {
+                    let target = match phoneme_verify::cached_model_target(
+                        store,
+                        language,
+                        &sentence,
+                        hash,
+                        refresh_g2p,
+                    )
+                    .await
+                    {
+                        Ok(target) if !target.phonemized.phonemes.is_empty() => target,
+                        Ok(_) => {
                             clip.reject = Some("g2p produced no phonemes".into());
                             return Some((clip, None));
                         }
-                        // Includes the Hindi chain refusing digits or Latin
-                        // script: a target with a hole where the audio has
-                        // speech would score wrong, so the clip is rejected.
-                        Some(Err(e)) => {
+                        Err(e) => {
                             clip.reject = Some(format!("g2p: {e:#}"));
                             return Some((clip, None));
                         }
                     };
-                    clip.target_ipa = target;
-                    clip.producers.g2p = Some(phoneme_verify::model_target_identity());
-                    return Some((clip, Some(wav)));
+                    clip.target_ipa = target.phonemized.phonemes;
+                    clip.producers.g2p = Some(target.renderer);
+                    return Some((clip, Some(())));
                 } else {
                     // No model to listen to the pads: the earshot profile
                     // says whether anyone speaks in them.
@@ -1263,31 +1327,27 @@ async fn prepare_film(
         .then(|prepared| {
             let ctx = &ctx;
             async move {
-                let (mut clip, wav) = prepared?;
-                let Some(wav) = wav else {
+                let (mut clip, needs_model) = prepared?;
+                let Some(()) = needs_model else {
                     return Some((clip, None));
                 };
+                let hash = clip.audio_hash.expect("cut recorded its hash");
+                let key = clip_key(hash, &clip.target_ipa);
                 let ctx = ctx.as_ref().expect("gated languages have a verify context");
-                let hash = xxhash_rust::xxh3::xxh3_64(&wav);
-                // Only a true cache miss becomes a descriptor. A cached matrix
-                // that cannot decode keeps the existing per-clip omission.
-                match phoneme_verify::cached_frame_matrix(ctx, hash).await {
+                // Corrupt/mismatched entries are misses, not permanent holes.
+                match phoneme_verify::cached_frame_matrix(ctx, &key).await {
                     Some(Ok(frames)) => {
                         score_clip(&mut clip, &frames, min_ratio.unwrap(), gate);
                         Some((clip, None))
                     }
-                    Some(Err(error)) => {
-                        eprintln!("  {}: {error:#}", clip.sentence);
-                        None
-                    }
-                    None if phoneme_verify::cache_only() => {
+                    _ if phoneme_verify::cache_only() => {
                         eprintln!(
                             "  {}: frame-matrix cache miss; cache-only mode is enabled",
                             clip.sentence
                         );
                         None
                     }
-                    None => Some((clip, Some(hash))),
+                    _ => Some((clip, Some(hash))),
                 }
             }
         })
@@ -1403,10 +1463,20 @@ fn write_clips(
     clips: &[Clip],
     summary: FilmSummary,
 ) -> Result<FilmSummary> {
-    let mut text = serde_json::to_string(&Header {
-        provenance,
-        expected_candidates: clips.len(),
-    })?;
+    write_manifest(
+        dir,
+        &Header {
+            provenance,
+            expected_candidates: clips.len(),
+            completion: Completion::Complete,
+        },
+        clips,
+    )?;
+    Ok(summarize(clips, summary))
+}
+
+fn write_manifest(dir: &Path, header: &Header, clips: &[Clip]) -> Result<()> {
+    let mut text = serde_json::to_string(header)?;
     text.push('\n');
     for clip in clips {
         text.push_str(&serde_json::to_string(clip)?);
@@ -1415,12 +1485,13 @@ fn write_clips(
     let tmp = dir.join("clips.jsonl.tmp");
     std::fs::write(&tmp, text)?;
     std::fs::rename(&tmp, clips_path(dir))?;
-    Ok(summarize(clips, summary))
+    Ok(())
 }
 
 /// An owned cut lets bounded preparation run independently of mutable result
 /// slots. It is metadata only; the WAV exists only while filling a batch.
 struct AudioCut {
+    key: String,
     audio: PathBuf,
     language: Language,
     hash: u64,
@@ -1530,6 +1601,7 @@ async fn map_staged<P>(
                     film_index,
                     descriptor.index,
                     AudioCut {
+                        key: clip_key(descriptor.hash, &clip.target_ipa),
                         audio: film.dir.join("audio.opus"),
                         language: film.language,
                         hash: descriptor.hash,
@@ -1640,11 +1712,13 @@ async fn prepare_pending<'a>(
     empty: &'a std::collections::HashMap<String, language_utils::Pronunciations>,
     cut: &AudioCut,
 ) -> Result<FrameInput<(VerifyContext<'a>, phoneme_verify::PreparedFrameRequest)>> {
-    let ctx = VerifyContext::new(http, store.clone(), empty, cut.language)?;
+    let key = cut.key.clone();
+    let ctx = VerifyContext::new(http, store.clone(), empty, cut.language)?
+        .with_cache_key(move |_| key.clone());
     // Another batch/process may have filled this key since discovery. A
     // duplicate WAV still has its own slot, target and language-specific gate.
-    if let Some(cached) = phoneme_verify::cached_frame_matrix(&ctx, cut.hash).await {
-        return cached.map(|frames| FrameInput::Cached(Box::new(frames)));
+    if let Some(Ok(frames)) = phoneme_verify::cached_frame_matrix(&ctx, &cut.key).await {
+        return Ok(FrameInput::Cached(Box::new(frames)));
     }
     anyhow::ensure!(
         !phoneme_verify::cache_only(),
@@ -1670,6 +1744,7 @@ pub async fn clips_all(
     imdb: Option<String>,
     langs: Option<Vec<String>>,
     gate: Gate,
+    refresh_g2p: bool,
 ) -> Result<()> {
     let plan = read_plan(&out)?;
     let mut queue: Vec<Movie> = plan
@@ -1705,8 +1780,11 @@ pub async fn clips_all(
                 return false;
             };
             let dir = out.join(&movie.imdb_id);
-            current_provenance(&dir, language, code, &gate)
-                .is_ok_and(|p| matches!(existing_work(&dir, &p).0, Work::Redo(_)))
+            current_provenance(&dir, language, code, &gate).is_ok_and(|p| {
+                (refresh_g2p && p.gate.min_ratio.is_some())
+                    || interrupted_refresh(&dir)
+                    || matches!(existing_work(&dir, &p).0, Work::Redo(_))
+            })
         })
         .cloned()
         .collect();
@@ -1723,7 +1801,10 @@ pub async fn clips_all(
             let (http, store, out, gate) = (&http, &store, &out, &gate);
             async move {
                 let dir = out.join(&movie.imdb_id);
-                (index, prepare_film(http, store, movie, &dir, gate, 8).await)
+                (
+                    index,
+                    prepare_film(http, store, movie, &dir, gate, 8, refresh_g2p).await,
+                )
             }
         })
         .buffer_unordered(films_in_flight.max(1))

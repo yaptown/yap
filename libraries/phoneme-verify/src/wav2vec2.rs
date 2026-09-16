@@ -216,35 +216,33 @@ mod tests {
     #[test]
     fn clip_request_pads_at_native_rate_and_preserves_options() {
         for sample_rate in [16_000, 24_000, 44_100, 48_000] {
-            {
-                let samples = [1.0, -0.5];
-                let request = Clip {
-                    samples: &samples,
-                    sample_rate,
-                    top_k: 5,
-                }
-                .into_request();
-                let bytes = base64::engine::general_purpose::STANDARD
-                    .decode(&request.audio_f32_b64)
-                    .unwrap();
-                let expected_len = sample_rate as usize * 6 / 10;
-                assert_eq!(bytes.len(), expected_len * 4);
-                let lead = (expected_len - samples.len()) / 2;
-                assert!(bytes[..lead * 4].iter().all(|byte| *byte == 0));
-                assert_eq!(&bytes[lead * 4..lead * 4 + 4], &1.0_f32.to_le_bytes());
-                assert_eq!(
-                    &bytes[lead * 4 + 4..lead * 4 + 8],
-                    &(-0.5_f32).to_le_bytes()
-                );
-                assert!(bytes[lead * 4 + 8..].iter().all(|byte| *byte == 0));
-                assert_eq!(request.sample_rate, sample_rate);
-                assert_eq!(request.top_k, 5);
-                assert!(request.return_frame_matrix);
-                assert!(request.return_all_heads);
-                assert!(!request.return_frames);
-                assert!(request.language.is_none());
-                assert!(request.target_phonemes.is_none());
+            let samples = [1.0, -0.5];
+            let request = Clip {
+                samples: &samples,
+                sample_rate,
+                top_k: 5,
             }
+            .into_request();
+            let bytes = base64::engine::general_purpose::STANDARD
+                .decode(&request.audio_f32_b64)
+                .unwrap();
+            let expected_len = sample_rate as usize * 6 / 10;
+            assert_eq!(bytes.len(), expected_len * 4);
+            let lead = (expected_len - samples.len()) / 2;
+            assert!(bytes[..lead * 4].iter().all(|byte| *byte == 0));
+            assert_eq!(&bytes[lead * 4..lead * 4 + 4], &1.0_f32.to_le_bytes());
+            assert_eq!(
+                &bytes[lead * 4 + 4..lead * 4 + 8],
+                &(-0.5_f32).to_le_bytes()
+            );
+            assert!(bytes[lead * 4 + 8..].iter().all(|byte| *byte == 0));
+            assert_eq!(request.sample_rate, sample_rate);
+            assert_eq!(request.top_k, 5);
+            assert!(request.return_frame_matrix);
+            assert!(request.return_all_heads);
+            assert!(!request.return_frames);
+            assert!(request.language.is_none());
+            assert!(request.target_phonemes.is_none());
         }
     }
 

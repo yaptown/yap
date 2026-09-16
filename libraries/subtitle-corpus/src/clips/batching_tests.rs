@@ -24,6 +24,7 @@ fn clip(film: usize, index: usize, hash: u64) -> Clip {
     Clip {
         producers: Producers::default(),
         measured: false,
+        audio_hash: Some(hash),
         sentence: format!("film {film} clip {index}"),
         imdb_id: film.to_string(),
         start_ms: (index as i64 + 1) * 1000,
@@ -465,7 +466,7 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
             min_verbatim: Some(threshold),
             ..Gate::default()
         };
-        prepare_film(&http, &store, &movie, &dir, &gate, 1)
+        prepare_film(&http, &store, &movie, &dir, &gate, 1, false)
             .await
             .unwrap();
         let rows = read_clips(&clips_path(&dir)).unwrap();
@@ -483,12 +484,85 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
         existing_work(&dir, &original).0,
         Work::Redo("audio stamp missing")
     );
-    assert!(prepare_film(&http, &store, &movie, &dir, &gate, 1)
+    assert!(prepare_film(&http, &store, &movie, &dir, &gate, 1, false)
         .await
         .err()
         .unwrap()
         .to_string()
         .contains("audio stamp missing"));
+}
+
+#[test]
+fn clip_keys_use_audio_and_exact_token_boundaries_not_producers() {
+    let mut clip = clip(0, 0, 42);
+    clip.target_ipa = vec!["t".into(), "ʃ".into()];
+    let key = clip_key(42, &clip.target_ipa);
+    clip.producers.g2p = Some("different renderer".into());
+    assert_eq!(clip_key(42, &clip.target_ipa), key);
+    assert_ne!(clip_key(43, &clip.target_ipa), key);
+    assert_ne!(clip_key(42, &["tʃ".into()]), key);
+}
+
+#[tokio::test]
+async fn interrupted_refresh_preserves_rows_but_regenerates_old_target_values() {
+    let root = tempfile::tempdir().unwrap();
+    let mut film = film(root.path(), 0, 1);
+    film.clips[0].as_mut().unwrap().passed = true;
+    let dir = film.dir.clone();
+    let provenance = film.provenance.clone();
+    finish_film(FilmWork::Prepared(Box::new(film))).unwrap();
+    let store = osmo::Store::open(root.path().join("cache"));
+    let mut old =
+        phoneme_verify::cached_model_target(&store, Language::French, "bonjour", 42, false)
+            .await
+            .unwrap();
+    old.renderer = "old-renderer".into();
+    old.phonemized.phonemes = vec!["old-label".into()];
+    let key = format!(
+        "phoneme-target/{:016x}",
+        xxhash_rust::xxh3::xxh3_64(
+            &serde_json::to_vec(&(Language::French.g2p_lang().unwrap(), "bonjour", 42_u64))
+                .unwrap()
+        )
+    );
+    store
+        .write(&key, &serde_json::to_vec(&old).unwrap())
+        .await
+        .unwrap();
+    assert_eq!(
+        phoneme_verify::cached_model_target(&store, Language::French, "bonjour", 42, false)
+            .await
+            .unwrap()
+            .renderer,
+        "old-renderer"
+    );
+    begin_refresh(&dir, &provenance).unwrap();
+    assert!(read_file(&clips_path(&dir)).is_err());
+    assert_eq!(read_manifest(&clips_path(&dir)).unwrap().1.len(), 1);
+    // A normal subsequent run sees the marker even without the CLI flag.
+    let refreshed = phoneme_verify::cached_model_target(
+        &store,
+        Language::French,
+        "bonjour",
+        42,
+        interrupted_refresh(&dir),
+    )
+    .await
+    .unwrap();
+    assert_eq!(refreshed.renderer, phoneme_verify::model_target_identity());
+    assert_ne!(refreshed.phonemized.phonemes, old.phonemized.phonemes);
+    let again = phoneme_verify::cached_model_target(&store, Language::French, "bonjour", 42, false)
+        .await
+        .unwrap();
+    assert_eq!(
+        serde_json::to_value(again).unwrap(),
+        serde_json::to_value(refreshed).unwrap()
+    );
+    std::fs::write(clips_path(&dir), "corrupt").unwrap();
+    assert!(
+        !interrupted_refresh(&dir),
+        "corruption is not a refresh request"
+    );
 }
 
 #[test]
@@ -585,7 +659,7 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
     let http = reqwest::Client::new();
     let store = osmo::Store::open(root.path().join("cache"));
     assert!(matches!(
-        prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1)
+        prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1, false)
             .await
             .unwrap(),
         FilmWork::Current(_)
@@ -598,7 +672,7 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         serde_json::to_vec(&report).unwrap(),
     )
     .unwrap();
-    prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1)
+    prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1, false)
         .await
         .unwrap();
     let clips = read_clips(&clips_path(&dir)).unwrap();
@@ -608,4 +682,15 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         .as_deref()
         .unwrap()
         .contains("film-level verbatim"));
+    report.measure.fraction = 1.0;
+    report.measure.placed = 30;
+    std::fs::write(
+        crate::verbatim::report_path(&dir),
+        serde_json::to_vec(&report).unwrap(),
+    )
+    .unwrap();
+    prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1, false)
+        .await
+        .unwrap();
+    assert!(read_clips(&clips_path(&dir)).unwrap()[0].passed);
 }

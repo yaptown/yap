@@ -5,8 +5,8 @@
 //! `docs/clip-sidecar.md`.
 //!
 //! Everything in the sidecar comes from artifacts already on disk; the
-//! forced alignment re-reads the cached frame matrices under
-//! [`phoneme_verify::set_cache_only`], so an export run spends no inference.
+//! forced alignment only reads cached responses, so export neither probes
+//! the model nor spends inference, including when an alignment is missing.
 
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -26,7 +26,7 @@ use unicode_normalization::UnicodeNormalization;
 use crate::clips::{
     clips_path, read_file as read_clips_with_provenance, subtitle_sentences, Clip, Provenance,
 };
-use crate::cues::{load_transcript, parse_cues, repair_latin_homoglyphs, slice_wav_padded};
+use crate::cues::{load_transcript, parse_cues, repair_latin_homoglyphs};
 use crate::library::{course_dir, read_plan, truncate, Movie};
 use crate::sync::{AudioStreamIdentity, Cue};
 use crate::transcript::{Kind, Spoken};
@@ -198,8 +198,6 @@ pub async fn export_clips(
     langs: Option<Vec<String>>,
 ) -> Result<()> {
     export_ffmpeg()?;
-    // Cache misses must fail the clip's alignment block, never call Modal.
-    phoneme_verify::set_cache_only(true);
     let plan = read_plan(&out)?;
     let mut queue: Vec<Movie> = plan
         .into_iter()
@@ -220,13 +218,24 @@ pub async fn export_clips(
     let http = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
         .build()?;
+    let alignment_cache_failures = AtomicUsize::new(0);
     let (mut rendered, mut refreshed, mut unchanged) = (0usize, 0usize, 0usize);
     let mut failed: std::collections::HashSet<&str> = std::collections::HashSet::new();
     let mut valid: std::collections::HashMap<String, std::collections::HashSet<String>> =
         std::collections::HashMap::new();
     for movie in &queue {
         let title = truncate(&movie.title, 34);
-        match export_film(&http, &store, movie, &out, &dest, jobs).await {
+        match export_film(
+            &http,
+            &store,
+            movie,
+            &out,
+            &dest,
+            jobs,
+            &alignment_cache_failures,
+        )
+        .await
+        {
             Ok(f) => {
                 rendered += f.rendered;
                 refreshed += f.refreshed;
@@ -244,6 +253,10 @@ pub async fn export_clips(
         }
     }
     println!("\n{rendered} clips rendered, {refreshed} sidecars refreshed, {unchanged} current");
+    let missing = alignment_cache_failures.load(Ordering::Relaxed);
+    if missing > 0 {
+        eprintln!("warning: {missing} expected phoneme alignments omitted due to missing or invalid cached responses");
+    }
 
     // Orphan sweep: a clip dir whose id no longer exists (sentence re-keyed,
     // gate change, film dropped from the plan or its clips evicted) must not
@@ -291,6 +304,7 @@ async fn export_film(
     out: &Path,
     dest: &Path,
     jobs: usize,
+    alignment_cache_failures: &AtomicUsize,
 ) -> Result<FilmExport> {
     let code = course_dir(&movie.original_language).context("unmapped language")?;
     let language = Language::from_code(code).context("unmapped course code")?;
@@ -313,13 +327,12 @@ async fn export_film(
     let transcript = load_transcript(&dir.join("transcript.jsonl"))?;
     let video = probe_video(&movie.path)?;
     let audio_stream = audio_stream_index(&dir.join("audio.json"), &movie.path, &video)?;
-    let audio_opus = dir.join("audio.opus");
 
     let empty = std::collections::HashMap::new();
     // An audio-only language (Korean) has no phoneme model to align with;
     // its clips ship without the alignment block rather than not at all.
     let ctx = (!crate::clips::audio_only(code))
-        .then(|| VerifyContext::new(http, store.clone(), &empty, language))
+        .then(|| VerifyContext::with_overrides(http, store.clone(), &empty, language, 0.3, None))
         .transpose()?;
 
     let lang_dir = dest.join(code);
@@ -340,7 +353,7 @@ async fn export_film(
             &cues,
             &transcript,
         );
-        let (lang_dir, audio_opus, video) = (&lang_dir, &audio_opus, &video);
+        let (lang_dir, video) = (&lang_dir, &video);
         let (rendered, refreshed, unchanged) = (&rendered, &refreshed, &unchanged);
         async move {
             let id = clip_id(&movie.imdb_id, clip, sentences, clips);
@@ -385,7 +398,7 @@ async fn export_film(
                 old.as_deref(),
                 cues,
                 transcript,
-                audio_opus,
+                alignment_cache_failures,
                 video,
                 audio_stream,
                 &clip_dir,
@@ -512,7 +525,7 @@ async fn export_one(
     old_sidecar: Option<&[u8]>,
     cues: &[Cue],
     transcript: &[Spoken],
-    audio_opus: &Path,
+    alignment_cache_failures: &AtomicUsize,
     video: &VideoProbe,
     audio_stream: u32,
     clip_dir: &Path,
@@ -527,10 +540,15 @@ async fn export_one(
     } = *cut;
     let critical = cut.critical();
 
-    // Forced alignment from the cached frame matrix — same wav bytes the
-    // gates scored, so this is a cache hit unless the cut code drifted.
-    // Failure loses the alignment block, never the clip.
-    let alignment = align_phonemes(ctx, audio_opus, clip, scored_start - cut_start).await;
+    // The mapper's stored WAV hash and exact labels name the response; no
+    // audio cut or identity probe is needed. Missing alignments are counted.
+    let alignment = align_phonemes(
+        ctx,
+        alignment_cache_failures,
+        clip,
+        scored_start - cut_start,
+    )
+    .await;
 
     let reused = reuse.is_some();
     let Loudness {
@@ -720,7 +738,7 @@ pub async fn publish(
     export_ffmpeg()?;
     println!("=== stage 1: clips re-map ===");
     let gate = crate::clips::Gate::default();
-    crate::clips::clips_all(out.clone(), 4, 0, None, langs.clone(), gate).await?;
+    crate::clips::clips_all(out.clone(), 4, 0, None, langs.clone(), gate, false).await?;
 
     println!("=== stage 2: video export ===");
     export_clips(out, dest.clone(), jobs, 0, None, langs.clone()).await?;
@@ -1046,6 +1064,81 @@ fn clean_context_end(boundary: i64, transcript: &[Spoken]) -> bool {
 mod tests {
     use super::*;
 
+    #[tokio::test]
+    async fn alignment_uses_shared_key_without_audio_and_counts_only_cache_failures() {
+        let root = tempfile::tempdir().unwrap();
+        let store = osmo::Store::open(root.path());
+        let http = reqwest::Client::new();
+        let words = std::collections::HashMap::new();
+        let ctx = VerifyContext::with_overrides(
+            &http,
+            store.clone(),
+            &words,
+            Language::French,
+            0.3,
+            None,
+        )
+        .unwrap();
+        let mut clip: Clip = serde_json::from_value(json!({
+            "model": null, "g2p": "old-renderer", "audio_hash": 42, "measured": true,
+            "sentence": "fixture", "imdb_id": "tt0", "start_ms": 0, "end_ms": 1000,
+            "pad_before_ms": 0, "pad_after_ms": 0, "repaired_before_ms": 0, "repaired_after_ms": 0,
+            "words": [], "speaker": null, "transcript_wer": 0.0, "audio_event_overlap": false,
+            "clear_before_ms": 0, "clear_after_ms": 0, "target_ipa": ["a"], "oov": [],
+            "ratio": 0.0, "logp_target_per_phoneme": -1.0, "edge_logp_start": -1.0, "edge_logp_end": -1.0,
+            "lead_speech": null, "tail_speech": null, "lead_rms": null, "voiced": 1.0,
+            "heard_ipa": ["a"], "passed": true, "reject": null
+        })).unwrap();
+        let failures = AtomicUsize::new(0);
+        assert!(align_phonemes(None, &failures, &clip, 0).await.is_none());
+        assert_eq!(failures.load(Ordering::Relaxed), 0);
+        assert!(align_phonemes(Some(&ctx), &failures, &clip, 0)
+            .await
+            .is_none());
+        assert_eq!(failures.load(Ordering::Relaxed), 1);
+        let key = crate::clips::clip_key(42, &clip.target_ipa);
+        store.write(&key, b"corrupt").await.unwrap();
+        assert!(align_phonemes(Some(&ctx), &failures, &clip, 0)
+            .await
+            .is_none());
+        assert_eq!(failures.load(Ordering::Relaxed), 2);
+        use base64::Engine;
+        use std::io::Write;
+        let mut encoder =
+            flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder.write_all(&[0x00, 0xc0, 0x00, 0xbc]).unwrap();
+        let response = json!({"response": {"phonemes": [], "frame_matrix": {
+            "shape": [1, 2], "dtype": "float16", "encoding": "zlib+base64", "blank_id": 0,
+            "vocab": ["<pad>", "a"], "data": base64::engine::general_purpose::STANDARD.encode(encoder.finish().unwrap())
+        }}});
+        store
+            .write(&key, &serde_json::to_vec(&response).unwrap())
+            .await
+            .unwrap();
+        let alignment = align_phonemes(Some(&ctx), &failures, &clip, 10)
+            .await
+            .unwrap();
+        assert_eq!(alignment[0]["ph"], "a");
+        assert_eq!(failures.load(Ordering::Relaxed), 2);
+        // A valid matrix with no alignable path is not a cache problem.
+        clip.target_ipa = vec!["a".into(), "a".into()];
+        store
+            .write(
+                &crate::clips::clip_key(42, &clip.target_ipa),
+                &serde_json::to_vec(&response).unwrap(),
+            )
+            .await
+            .unwrap();
+        assert!(align_phonemes(Some(&ctx), &failures, &clip, 0)
+            .await
+            .is_none());
+        clip.ratio = None;
+        assert!(align_phonemes(Some(&ctx), &failures, &clip, 0)
+            .await
+            .is_none());
+        assert_eq!(failures.load(Ordering::Relaxed), 2);
+    }
+
     fn example_args(mode: EncodeMode, hdr: bool) -> Vec<OsString> {
         rendition_args(
             mode,
@@ -1258,20 +1351,31 @@ mod tests {
 /// Per-phoneme spans in clip-relative ms, from the cached frame matrix.
 async fn align_phonemes(
     ctx: Option<&VerifyContext<'_>>,
-    audio_opus: &Path,
+    alignment_cache_failures: &AtomicUsize,
     clip: &Clip,
     scored_offset_ms: i64,
 ) -> Option<serde_json::Value> {
     let ctx = ctx?;
-    let wav = slice_wav_padded(
-        audio_opus,
-        clip.start_ms,
-        clip.end_ms,
-        clip.pad_before_ms,
-        clip.pad_after_ms,
-    )
-    .ok()?;
-    let frames = phoneme_verify::frame_matrix(ctx, &wav).await.ok()?;
+    if !clip.measured || clip.ratio.is_none() || clip.target_ipa.is_empty() {
+        return None;
+    }
+    let cached = match clip.audio_hash {
+        Some(hash) => {
+            phoneme_verify::cached_frame_matrix(
+                ctx,
+                &crate::clips::clip_key(hash, &clip.target_ipa),
+            )
+            .await
+        }
+        None => None,
+    };
+    let frames = match cached {
+        Some(Ok(frames)) => frames,
+        _ => {
+            alignment_cache_failures.fetch_add(1, Ordering::Relaxed);
+            return None;
+        }
+    };
     let present: Vec<&String> = clip
         .target_ipa
         .iter()

@@ -4,7 +4,7 @@
 //! For each clip we:
 //! 1. Hash the original WAV bytes and check the shared response cache. Default
 //!    keys depend on content, not the producer; model-varying evaluations opt
-//!    into model+audio keys, and the corpus supplies source/cut/label keys.
+//!    into model+audio keys, and the corpus supplies WAV-hash+label keys.
 //! 2. On cache miss, decode WAV → f32 mono 16kHz via ffmpeg and send it to
 //!    the Modal batch endpoint (lexide `pronunciation/modal/PRONUNCIATION_BATCHING.md`),
 //!    pooled with whatever other clips are in flight, then persist the
@@ -47,40 +47,23 @@ fn expected_deploy_marker() -> Option<String> {
         .filter(|s| !s.is_empty())
 }
 
-/// Identity and cache partition are frozen together on first production use.
-struct ResolvedModel {
-    identity: Option<ModelIdentity>,
-    version: String,
-}
+/// The live identity is discovered once; it does not partition production data.
+static PRODUCTION_MODEL: OnceLock<Result<ModelIdentity, String>> = OnceLock::new();
 
-static PRODUCTION_MODEL: OnceLock<Result<ResolvedModel, String>> = OnceLock::new();
-
-fn resolve_model(
-    override_version: Option<String>,
-    probe: impl FnOnce() -> Result<ModelIdentity>,
-) -> Result<ResolvedModel> {
-    if let Some(version) = override_version {
-        return Ok(ResolvedModel {
-            identity: None,
-            version,
-        });
-    }
+fn resolve_model(probe: impl FnOnce() -> Result<ModelIdentity>) -> Result<ModelIdentity> {
     let identity = probe()?;
     anyhow::ensure!(
         !identity.model_id.trim().is_empty() && !identity.model_revision.trim().is_empty(),
         "phonemizer probe returned empty model identity"
     );
     check_decoder(identity.decoder_version.as_deref())?;
-    Ok(ResolvedModel {
-        version: cache_version(&identity),
-        identity: Some(identity),
-    })
+    Ok(identity)
 }
 
 fn resolved_model_once(
-    cell: &OnceLock<Result<ResolvedModel, String>>,
-    initialize: impl FnOnce() -> Result<ResolvedModel>,
-) -> Result<&ResolvedModel> {
+    cell: &OnceLock<Result<ModelIdentity, String>>,
+    initialize: impl FnOnce() -> Result<ModelIdentity>,
+) -> Result<&ModelIdentity> {
     cell.get_or_init(|| {
         initialize().map_err(|error| format!("resolving phonemizer identity: {error:#}"))
     })
@@ -88,13 +71,8 @@ fn resolved_model_once(
     .map_err(|error| anyhow::anyhow!("{error}"))
 }
 
-fn production_model() -> Result<&'static ResolvedModel> {
-    resolved_model_once(&PRODUCTION_MODEL, || {
-        resolve_model(
-            std::env::var("WAV2VEC2_CACHE_VERSION_OVERRIDE").ok(),
-            probe_identity,
-        )
-    })
+fn production_model() -> Result<&'static ModelIdentity> {
+    resolved_model_once(&PRODUCTION_MODEL, || resolve_model(probe_identity))
 }
 
 fn probe_identity() -> Result<ModelIdentity> {
@@ -120,12 +98,6 @@ fn probe_identity() -> Result<ModelIdentity> {
     .map_err(|_| anyhow::anyhow!("phonemizer identity probe thread panicked"))?
 }
 
-/// The exact cache partition used by production contexts, including overrides.
-/// Discovery failures are fatal rather than falling back to stale provenance.
-pub fn production_cache_version() -> Result<String> {
-    Ok(production_model()?.version.clone())
-}
-
 /// Identity of the target renderer. Persist alongside model identity when caching scores.
 pub fn model_target_identity() -> String {
     g2p::identity()
@@ -141,14 +113,46 @@ pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonem
     Some(g2p::phonemize_lang(lang, text))
 }
 
-/// One artifact for every inference consumer, bound to the original WAV bytes.
+/// Full renderer output and the renderer that actually produced it. The key
+/// uses literal G2P inputs plus clip identity, never a renderer version.
+#[derive(Serialize, Deserialize)]
+pub struct CachedTarget {
+    pub phonemized: g2p::Phonemized,
+    pub renderer: String,
+}
+
+pub async fn cached_model_target(
+    store: &osmo::Store,
+    language: Language,
+    text: &str,
+    clip_hash: u64,
+    refresh: bool,
+) -> Result<CachedTarget> {
+    let lang = language.g2p_lang().context("no model label source")?;
+    let inputs = serde_json::to_vec(&(lang, text, clip_hash))?;
+    let key = format!("phoneme-target/{:016x}", xxh3_64(&inputs));
+    if !refresh
+        && let Some(bytes) = store.read(&key).await
+        && let Ok(target) = serde_json::from_slice::<CachedTarget>(&bytes)
+    {
+        return Ok(target);
+    }
+    let target = CachedTarget {
+        phonemized: g2p::phonemize_lang(lang, text)?,
+        renderer: model_target_identity(),
+    };
+    store.write(&key, &serde_json::to_vec(&target)?).await?;
+    Ok(target)
+}
+
+/// One artifact for every inference consumer. The original WAV hash belongs
+/// in the key (with exact target labels for corpus clips), not in this value.
 /// TODO(raw-response): temporary lossy retention until lexide publishes its raw
 /// client. Replace `response` here with untouched item + all envelope RawValues;
 /// typed serialization currently discards unknown wire fields. Do not run a
 /// corpus rewrite against this transitional representation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct CachedResponse {
-    audio_hash: u64,
     response: ModalResponse,
 }
 
@@ -266,6 +270,7 @@ impl ClipVerification {
     }
 }
 
+#[derive(Clone)]
 pub struct VerifyContext<'a> {
     pub http: &'a reqwest::Client,
     /// Shared response store. Keys default to original WAV content, independent
@@ -273,9 +278,9 @@ pub struct VerifyContext<'a> {
     store: osmo::Store,
     /// A caller may key a clip structurally instead of by WAV hash. Holding a
     /// producer constant while varying content calls for content keys (corpus:
-    /// source/cut/labels). The minority deliberately varying producers (model
+    /// WAV hash plus labels). The minority deliberately varying producers (model
     /// comparisons/evaluations) must include full model identity plus audio.
-    pub cache_key: Option<std::sync::Arc<dyn Fn(u64) -> String + Send + Sync>>,
+    cache_key: Option<std::sync::Arc<dyn Fn(u64) -> String + Send + Sync>>,
     expected_identity: Option<ModelIdentity>,
     /// word (lowercase) → accepted IPA pronunciations (main + alternates).
     /// The verifier passes a clip if the model's prediction is within
@@ -299,12 +304,17 @@ pub struct VerifyContext<'a> {
 }
 
 impl<'a> VerifyContext<'a> {
+    /// Supply a per-clip complete cache-key builder. Default keys use WAV hash;
+    /// corpus callers add exact labels, model-varying evaluations use key_by_model.
+    pub fn with_cache_key(mut self, key: impl Fn(u64) -> String + Send + Sync + 'static) -> Self {
+        self.cache_key = Some(std::sync::Arc::new(key));
+        self
+    }
+
     fn response_key(&self, hash: u64) -> String {
-        let key = self
-            .cache_key
+        self.cache_key
             .as_ref()
-            .map_or_else(|| format!("{hash:016x}"), |key| key(hash));
-        format!("phoneme-response/{key}")
+            .map_or_else(|| format!("phoneme-response/{hash:016x}"), |key| key(hash))
     }
 
     /// Model-varying evaluations are deliberately not production content keys.
@@ -318,18 +328,16 @@ impl<'a> VerifyContext<'a> {
         ))
         .expect("model identity is serializable");
         self.cache_key = Some(std::sync::Arc::new(move |hash| {
-            format!("model/{:016x}/{hash:016x}", xxh3_64(model.as_bytes()))
+            format!(
+                "phoneme-response/model/{:016x}/{hash:016x}",
+                xxh3_64(model.as_bytes())
+            )
         }));
     }
 
-    /// Discovered identity enforced on inference responses. Explicit overrides
-    /// (including `WAV2VEC2_CACHE_VERSION_OVERRIDE`) have no verified identity
-    /// and cannot be used to stamp trusted evaluation provenance.
-    pub fn verified_model_identity(&self) -> Result<&ModelIdentity> {
-        self.expected_identity.as_ref().context(
-            "verified model identity required; remove WAV2VEC2_CACHE_VERSION_OVERRIDE \
-             and use VerifyContext::new rather than with_overrides",
-        )
+    /// Identity enforced on live responses, not attributed to cached outputs.
+    pub fn expected_model_identity(&self) -> Result<&ModelIdentity> {
+        self.expected_identity.as_ref().context("resolved model identity required; use VerifyContext::new or an explicitly resolved evaluation identity")
     }
 
     /// Production constructor: discover and enforce the live model identity.
@@ -354,7 +362,7 @@ impl<'a> VerifyContext<'a> {
             threshold,
             expected_deploy_marker,
         )?;
-        ctx.expected_identity = model.identity.clone();
+        ctx.expected_identity = Some(model.clone());
         Ok(ctx)
     }
 
@@ -595,7 +603,10 @@ pub async fn verify_clip_bytes(
     };
 
     Ok(ClipVerification {
-        cache_version: model.as_ref().map(cache_version),
+        cache_version: model
+            .as_ref()
+            .filter(|model| model.decoder_version.is_some())
+            .map(cache_version),
         model,
         actor: actor.to_string(),
         text: text.to_string(),
@@ -806,16 +817,13 @@ fn check_marker(expected: Option<&str>, reported: Option<&str>) -> Result<()> {
     Ok(())
 }
 
-async fn cached_response(ctx: &VerifyContext<'_>, hash: u64) -> Option<Result<ModalResponse>> {
-    let bytes = ctx.store.read(&ctx.response_key(hash)).await?;
-    Some((|| {
-        let cached: CachedResponse = serde_json::from_slice(&bytes).context("cached response")?;
-        anyhow::ensure!(
-            cached.audio_hash == hash,
-            "cached response WAV hash mismatch"
-        );
-        Ok(cached.response)
-    })())
+async fn cached_response(ctx: &VerifyContext<'_>, key: &str) -> Option<Result<ModalResponse>> {
+    let bytes = ctx.store.read(key).await?;
+    Some(
+        serde_json::from_slice::<CachedResponse>(&bytes)
+            .context("cached response")
+            .map(|cached| cached.response),
+    )
 }
 
 /// Validate before writing: a malformed response never becomes a reusable hit.
@@ -829,22 +837,19 @@ async fn cache_response(
     ctx.store
         .write(
             &ctx.response_key(hash),
-            &serde_json::to_vec(&CachedResponse {
-                audio_hash: hash,
-                response,
-            })?,
+            &serde_json::to_vec(&CachedResponse { response })?,
         )
         .await?;
     Ok(frames)
 }
 
-/// Cache-only lookup, including a mandatory original-WAV hash check even when
-/// the caller keys structurally. Does not compare today's intended producer.
+/// Cache-only lookup by the caller's complete key, without cutting audio.
+/// Missing and malformed values never trigger inference in this reader.
 pub async fn cached_frame_matrix(
     ctx: &VerifyContext<'_>,
-    hash: u64,
+    key: &str,
 ) -> Option<Result<FrameMatrix>> {
-    cached_response(ctx, hash)
+    cached_response(ctx, key)
         .await
         .map(|response| response.and_then(|r| response_frames(&r)))
 }
@@ -854,7 +859,7 @@ async fn prediction_response(
     wav: &[u8],
 ) -> Result<(ModalResponse, FrameMatrix)> {
     let hash = xxh3_64(wav);
-    if let Some(Ok(response)) = cached_response(ctx, hash).await
+    if let Some(Ok(response)) = cached_response(ctx, &ctx.response_key(hash)).await
         && let Ok(frames) = response_frames(&response)
     {
         return Ok((response, frames));
@@ -968,8 +973,8 @@ async fn frame_matrices_at(
     let mut pending = Vec::new();
     for (index, wav) in wavs.iter().enumerate() {
         let hash = xxh3_64(wav);
-        if let Some(cached) = cached_frame_matrix(ctx, hash).await {
-            results[index] = Some(cached);
+        if let Some(Ok(frames)) = cached_frame_matrix(ctx, &ctx.response_key(hash)).await {
+            results[index] = Some(Ok(frames));
             continue;
         }
         if only_cache {
@@ -2167,6 +2172,10 @@ mod tests {
         assert!(!rejected_tts.passed());
         for row in [passed, missing] {
             assert_eq!(row.model.as_ref().unwrap().model_id, "actual-model");
+            assert!(
+                row.cache_version.is_none(),
+                "missing reported decoder is not today's decoder"
+            );
         }
         for row in [defective, rejected_tts] {
             assert!(row.model.is_none());
@@ -2196,7 +2205,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn response_cache_is_content_keyed_and_always_checks_audio_hash() {
+    async fn response_cache_is_content_keyed_and_ignores_producer_changes() {
         let dir = tempfile::tempdir().unwrap();
         let http = reqwest::Client::new();
         let words = HashMap::new();
@@ -2222,22 +2231,45 @@ mod tests {
         let batch = frame_matrices_at(&ctx, &[wav], Err(anyhow::anyhow!("offline")), true).await;
         assert_eq!(batch[0].as_ref().unwrap().frames, 3);
         assert_eq!(
-            response_identity(&cached_response(&ctx, hash).await.unwrap().unwrap())
-                .unwrap()
-                .model_id,
+            response_identity(
+                &cached_response(&ctx, &ctx.response_key(hash))
+                    .await
+                    .unwrap()
+                    .unwrap()
+            )
+            .unwrap()
+            .model_id,
             "actual"
         );
         ctx.expected_identity = None;
-        ctx.cache_key = Some(std::sync::Arc::new(|_| "structural-clip".into()));
-        assert!(cached_frame_matrix(&ctx, hash).await.is_none());
+        ctx = ctx.with_cache_key(|hash| format!("caller/{hash:016x}"));
+        assert!(
+            cached_frame_matrix(&ctx, &ctx.response_key(hash))
+                .await
+                .is_none()
+        );
         cache_response(&ctx, hash, response).await.unwrap();
-        assert!(cached_frame_matrix(&ctx, hash).await.unwrap().is_ok());
-        assert!(cached_frame_matrix(&ctx, hash + 1).await.unwrap().is_err());
+        assert!(
+            cached_frame_matrix(&ctx, &ctx.response_key(hash))
+                .await
+                .unwrap()
+                .is_ok()
+        );
+        assert!(
+            cached_frame_matrix(&ctx, &ctx.response_key(hash + 1))
+                .await
+                .is_none()
+        );
         ctx.store
             .write(&ctx.response_key(hash), b"corrupt")
             .await
             .unwrap();
-        assert!(cached_frame_matrix(&ctx, hash).await.unwrap().is_err());
+        assert!(
+            cached_frame_matrix(&ctx, &ctx.response_key(hash))
+                .await
+                .unwrap()
+                .is_err()
+        );
         let identity = ModelIdentity {
             model_id: "model/id".into(),
             model_revision: "123456789012-A".into(),
@@ -2298,18 +2330,24 @@ mod tests {
             }
         })).unwrap();
         cache_response(&ctx, 42, response.clone()).await.unwrap();
-        let cached = cached_response(&ctx, 42).await.unwrap().unwrap();
+        let cached = cached_response(&ctx, &ctx.response_key(42))
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(
             serde_json::to_value(&cached).unwrap(),
             serde_json::to_value(&response).unwrap()
         );
-        let frames = cached_frame_matrix(&ctx, 42).await.unwrap().unwrap();
+        let frames = cached_frame_matrix(&ctx, &ctx.response_key(42))
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(frames.heads.len(), 4);
         assert_eq!(frame_identity(&frames), Some(test_identity()));
         let mut conflicting = response;
         conflicting.model_revision = Some("not the matrix revision".into());
         assert!(cache_response(&ctx, 43, conflicting).await.is_err());
-        assert!(cached_response(&ctx, 43).await.is_none());
+        assert!(cached_response(&ctx, &ctx.response_key(43)).await.is_none());
     }
 
     fn batch_test_wav(seed: i16) -> Vec<u8> {
@@ -2351,17 +2389,10 @@ mod tests {
             None,
         )
         .unwrap();
-        assert!(ctx.verified_model_identity().is_err());
-        // Exercise the same resolved-state assignment as new(), without env
-        // mutation or a live discovery probe. Even a production-looking cache
-        // override has no validated identity.
-        let checked = resolve_model(None, || Ok(test_identity())).unwrap();
-        let unchecked =
-            resolve_model(Some(checked.version.clone()), || panic!("no probe")).unwrap();
-        ctx.expected_identity = unchecked.identity;
-        assert!(ctx.verified_model_identity().is_err());
-        ctx.expected_identity = checked.identity;
-        assert_eq!(ctx.verified_model_identity().unwrap(), &test_identity());
+        assert!(ctx.expected_model_identity().is_err());
+        // The explicit constructor is local; only a resolved identity can pin it.
+        ctx.expected_identity = Some(resolve_model(|| Ok(test_identity())).unwrap());
+        assert_eq!(ctx.expected_model_identity().unwrap(), &test_identity());
     }
 
     fn test_identity() -> ModelIdentity {
@@ -2376,25 +2407,22 @@ mod tests {
     #[test]
     fn resolved_state_is_shared_and_failure_is_not_reprobed() {
         let cell = OnceLock::new();
-        let first =
-            resolved_model_once(&cell, || resolve_model(None, || Ok(test_identity()))).unwrap();
+        let first = resolved_model_once(&cell, || resolve_model(|| Ok(test_identity()))).unwrap();
         let second = resolved_model_once(&cell, || panic!("must resolve only once")).unwrap();
         assert!(std::ptr::eq(first, second));
-        assert_eq!(first.version, second.version);
+        assert_eq!(first, second);
         let failed = OnceLock::new();
         assert!(resolved_model_once(&failed, || anyhow::bail!("offline")).is_err());
         assert!(resolved_model_once(&failed, || panic!("must not retry")).is_err());
     }
 
     #[test]
-    fn override_skips_probe_and_discovery_fails_closed() {
-        let model = resolve_model(Some("offline".into()), || panic!("must not probe")).unwrap();
-        assert_eq!(model.version, "offline");
-        assert!(model.identity.is_none());
-        let model = resolve_model(None, || Ok(test_identity())).unwrap();
-        assert_eq!(model.version, "test_model@1234567890ab__nonblank_v1");
-        assert_eq!(model.identity, Some(test_identity()));
-        assert!(resolve_model(None, || anyhow::bail!("offline")).is_err());
+    fn discovery_fails_closed() {
+        assert_eq!(
+            resolve_model(|| Ok(test_identity())).unwrap(),
+            test_identity()
+        );
+        assert!(resolve_model(|| anyhow::bail!("offline")).is_err());
         for field in ["model_id", "model_revision", "decoder_version"] {
             let mut identity = test_identity();
             match field {
@@ -2402,7 +2430,7 @@ mod tests {
                 "model_revision" => identity.model_revision.clear(),
                 _ => identity.decoder_version = Some("wrong".into()),
             }
-            assert!(resolve_model(None, || Ok(identity)).is_err());
+            assert!(resolve_model(|| Ok(identity)).is_err());
         }
         assert!(check_marker(Some("fresh"), Some("stale")).is_err());
     }
@@ -2474,7 +2502,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn corrupt_cached_matrix_is_an_error_not_an_inference_miss() {
+    async fn cache_only_reader_reports_corrupt_matrix_without_inference() {
         let dir = tempfile::tempdir().unwrap();
         let http = reqwest::Client::new();
         let empty = HashMap::new();
@@ -2496,11 +2524,11 @@ mod tests {
         };
         legacy.encoding = "broken".into();
         let bytes = serde_json::to_vec(&serde_json::json!({
-            "audio_hash": hash, "response": {"phonemes": [], "frame_matrix": payload}
+            "response": {"phonemes": [], "frame_matrix": payload}
         }))
         .unwrap();
         ctx.store.write(&key, &bytes).await.unwrap();
-        let cached = cached_frame_matrix(&ctx, hash)
+        let cached = cached_frame_matrix(&ctx, &ctx.response_key(hash))
             .await
             .expect("not a cache miss");
         assert!(
@@ -2513,7 +2541,7 @@ mod tests {
             &ctx,
             &[wav],
             Err(anyhow::anyhow!("inference must not run")),
-            false,
+            true,
         )
         .await;
         assert!(
@@ -2521,7 +2549,7 @@ mod tests {
                 .as_ref()
                 .unwrap_err()
                 .to_string()
-                .contains("unsupported frame matrix format")
+                .contains("cache-only mode")
         );
         assert_eq!(ctx.store.read(&key).await.unwrap(), bytes);
     }
@@ -2634,6 +2662,12 @@ mod tests {
         // it must not shrink the first otherwise-full request to 63 items.
         let mut wavs = vec![cached, b"invalid WAV".to_vec()];
         wavs.extend((0..129).map(batch_test_wav));
+        // Discovery treats corrupt artifacts as misses and replaces them on a
+        // successful inference, rather than leaving a permanent failed slot.
+        ctx.store
+            .write(&ctx.response_key(xxh3_64(&wavs[2])), b"corrupt")
+            .await
+            .unwrap();
         let refs: Vec<_> = wavs.iter().map(Vec::as_slice).collect();
         let client = PhonemizerClient::with_endpoints(http.clone(), &url, &url);
         let results = frame_matrices_at(&ctx, &refs, client, false).await;

@@ -28,8 +28,8 @@
 //! 4. Append one JSONL record per cue; print per-language separation stats
 //!    and the substitution confusion tallies at the end.
 //!
-//! Predictions are cached under the production cache partition (keyed by the
-//! WAV bytes), so re-runs and later analysis passes cost nothing.
+//! Predictions are keyed by full model identity plus WAV content, so changing
+//! the model cannot reuse production measurements or another evaluation model.
 //!
 //! Usage (from the repo root, so `.cache` resolves):
 //!     cargo run --release --bin phoneme-corpus-eval -- [--langs fra,deu] [--max-films 2]
@@ -87,7 +87,7 @@ struct Provenance {
 
 impl Provenance {
     fn new(ctx: &VerifyContext<'_>) -> Result<Self> {
-        Ok(Self::from_verified_identity(ctx.verified_model_identity()?))
+        Ok(Self::from_verified_identity(ctx.expected_model_identity()?))
     }
 
     fn from_verified_identity(model: &lexide::pronunciation::ModelIdentity) -> Self {
@@ -253,10 +253,10 @@ async fn main() -> Result<()> {
             &empty_pronunciations,
             language,
         )?;
-        // Fail closed if the unsafe cache override bypassed discovery. A cache
-        // namespace alone must never masquerade as verified model provenance.
+        // Resume uses the full desired identity; written rows below use the
+        // producer actually returned, never this expectation.
         let provenance = Provenance::new(&ctx)?;
-        let identity = ctx.verified_model_identity()?.clone();
+        let identity = ctx.expected_model_identity()?.clone();
         ctx.key_by_model(&identity);
         let done = completed_cues(&existing, code, &provenance);
 
@@ -883,7 +883,7 @@ mod tests {
             Provenance::new(&ctx)
                 .unwrap_err()
                 .to_string()
-                .contains("verified model identity required")
+                .contains("resolved model identity required")
         );
     }
 

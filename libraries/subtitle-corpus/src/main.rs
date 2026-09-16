@@ -480,6 +480,11 @@ enum Command_ {
         /// per-language cut.
         #[arg(long, allow_hyphen_values = true)]
         min_ratio: Option<f64>,
+        /// Regenerate selected films' G2P targets. Identical labels reuse audio
+        /// inference; changed labels get new keys. Any later run resumes an
+        /// interrupted refresh, even without this flag. Audio-only films skip it.
+        #[arg(long)]
+        refresh_g2p: bool,
     },
     /// Cut serve-ready video clips (two renditions + sidecar JSON) for every
     /// passing clip. See docs/clip-sidecar.md for the schema.
@@ -1349,7 +1354,7 @@ fn refresh(
         }),
         ("clips", {
             let out = out.clone();
-            Box::new(move || clips(out, 2, 0, None, None, None))
+            Box::new(move || clips(out, 2, 0, None, None, None, false))
         }),
         ("sidecars", {
             let out = out.clone();
@@ -3344,12 +3349,13 @@ async fn clips(
     imdb: Option<String>,
     langs: Option<Vec<String>>,
     min_ratio: Option<f64>,
+    refresh_g2p: bool,
 ) -> Result<()> {
     let gate = subtitle_corpus::clips::Gate {
         min_ratio,
         ..Default::default()
     };
-    subtitle_corpus::clips::clips_all(out, jobs, limit, imdb, langs, gate).await
+    subtitle_corpus::clips::clips_all(out, jobs, limit, imdb, langs, gate, refresh_g2p).await
 }
 
 #[tokio::main]
@@ -4480,7 +4486,8 @@ fn main() -> Result<()> {
             imdb,
             langs,
             min_ratio,
-        } => clips(out, jobs, limit, imdb, langs, min_ratio),
+            refresh_g2p,
+        } => clips(out, jobs, limit, imdb, langs, min_ratio, refresh_g2p),
         Command_::ExportClips {
             out,
             dest,
