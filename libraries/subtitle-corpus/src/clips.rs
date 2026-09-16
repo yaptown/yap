@@ -1073,7 +1073,6 @@ fn existing_work(
 /// Prepare only genuinely stale films. Current files and threshold-only changes
 /// return before the G2P canary, model discovery, segmentation or audio work.
 async fn prepare_film(
-    http: &reqwest::Client,
     store: &osmo::Store,
     movie: &Movie,
     dir: &Path,
@@ -1163,11 +1162,6 @@ async fn prepare_film(
         .context("no 16 ms speech profile (run speech-profiles)")?;
     let threshold = gate.speech_threshold as f32;
 
-    let empty = std::collections::HashMap::new();
-    let ctx = match min_ratio {
-        Some(_) => Some(VerifyContext::new(http, store.clone(), &empty, language)?),
-        None => None,
-    };
     let segmenter = SubtitleSegmenter::for_language(language)?;
     let transcript = load_transcript(&transcript_path)?;
     let sentences =
@@ -1325,7 +1319,6 @@ async fn prepare_film(
         })
         .buffered(concurrency.max(1))
         .then(|prepared| {
-            let ctx = &ctx;
             async move {
                 let (mut clip, needs_model) = prepared?;
                 let Some(()) = needs_model else {
@@ -1333,9 +1326,8 @@ async fn prepare_film(
                 };
                 let hash = clip.audio_hash.expect("cut recorded its hash");
                 let key = clip_key(hash, &clip.target_ipa);
-                let ctx = ctx.as_ref().expect("gated languages have a verify context");
                 // Corrupt/mismatched entries are misses, not permanent holes.
-                match phoneme_verify::cached_frame_matrix(ctx, &key).await {
+                match phoneme_verify::cached_frame_matrix(store, &key).await {
                     Some(Ok(frames)) => {
                         score_clip(&mut clip, &frames, min_ratio.unwrap(), gate);
                         Some((clip, None))
@@ -1712,12 +1704,9 @@ async fn prepare_pending<'a>(
     empty: &'a std::collections::HashMap<String, language_utils::Pronunciations>,
     cut: &AudioCut,
 ) -> Result<FrameInput<(VerifyContext<'a>, phoneme_verify::PreparedFrameRequest)>> {
-    let key = cut.key.clone();
-    let ctx = VerifyContext::new(http, store.clone(), empty, cut.language)?
-        .with_cache_key(move |_| key.clone());
     // Another batch/process may have filled this key since discovery. A
     // duplicate WAV still has its own slot, target and language-specific gate.
-    if let Some(Ok(frames)) = phoneme_verify::cached_frame_matrix(&ctx, &cut.key).await {
+    if let Some(Ok(frames)) = phoneme_verify::cached_frame_matrix(store, &cut.key).await {
         return Ok(FrameInput::Cached(Box::new(frames)));
     }
     anyhow::ensure!(
@@ -1732,6 +1721,9 @@ async fn prepare_pending<'a>(
             .context("re-cut task failed")??;
     check_recut_hash(&wav, cut.hash)?;
     let request = phoneme_verify::prepare_frame_request(wav).await?;
+    let key = cut.key.clone();
+    let ctx = VerifyContext::new(http, store.clone(), empty, cut.language)?
+        .with_cache_key(move |_| key.clone());
     Ok(FrameInput::Request((ctx, request)))
 }
 
@@ -1851,12 +1843,12 @@ pub async fn clips_all(
     let mut discovered = 0;
     let preparation = futures::stream::iter(queue.iter().enumerate())
         .map(|(index, movie)| {
-            let (http, store, out, gate) = (&http, &store, &out, &gate);
+            let (store, out, gate) = (&store, &out, &gate);
             async move {
                 let dir = out.join(&movie.imdb_id);
                 (
                     index,
-                    prepare_film(http, store, movie, &dir, gate, 8, refresh_g2p).await,
+                    prepare_film(store, movie, &dir, gate, 8, refresh_g2p).await,
                 )
             }
         })

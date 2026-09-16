@@ -3365,7 +3365,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 [[package]]
 name = "lexide"
 version = "0.3.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=c4c8647676467c6bd233ba2e4f2ea98dcf3c4c9e#c4c8647676467c6bd233ba2e4f2ea98dcf3c4c9e"
+source = "git+https://github.com/anchpop/lexide.git?rev=d6ddffe5cb42efd3212a432ba8aa94910899bfde#d6ddffe5cb42efd3212a432ba8aa94910899bfde"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3373,6 +3373,7 @@ dependencies = [
  "futures",
  "half",
  "hf-hub",
+ "http 1.3.1",
  "regex 1.12.4",
  "reqwest 0.13.4",
  "safetensors",

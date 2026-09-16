@@ -1,14 +1,12 @@
 //! Yap's endpoint configuration, audio padding, and retry policy for lexide's client.
 
 use anyhow::{Context, Result};
-use lexide::pronunciation::{
-    BatchResponse, BatchResult, PredictRequest, PredictResponse, remote::PhonemizerClient,
-};
+use lexide::pronunciation::{PredictRequest, RawBatchResponse, remote::PhonemizerClient};
 
 mod activity;
 pub use activity::{RequestActivity, RequestActivitySnapshot};
 
-use super::{check_decoder, merge_metadata};
+use super::{CachedResponse, check_decoder};
 
 const MODAL_PREDICT_URL_DEFAULT: &str =
     "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict.modal.run";
@@ -117,16 +115,16 @@ fn is_transient_error(error: &anyhow::Error) -> bool {
 /// a short backoff lets the container finish warming up. The outer `Err`
 /// is the whole request failing; an inner `Err` rejects just one clip and
 /// is not retried. lexide owns the wire format and batch-size validation.
-pub async fn predict_batch(
+pub(crate) async fn predict_batch(
     client: &PhonemizerClient,
     requests: &[PredictRequest],
     activity: Option<&RequestActivity>,
-) -> Result<Vec<Result<PredictResponse>>> {
+) -> Result<Vec<Result<CachedResponse>>> {
     let mut last_err: Option<anyhow::Error> = None;
     for attempt in 1..=MAX_ATTEMPTS {
         let response = {
             let _attempt = activity.map(|activity| activity.begin(attempt > 1));
-            client.predict_batch(requests).await
+            client.predict_batch_raw(requests).await
         };
         match response {
             Ok(batch) => return split_batch(batch),
@@ -149,39 +147,21 @@ pub async fn predict_batch(
         )))
 }
 
-/// One result per submitted clip, in order. The batch response stamps the
-/// deploy marker once; each item gets it so the per-context check applies.
-pub(crate) fn split_batch(batch: BatchResponse) -> Result<Vec<Result<PredictResponse>>> {
-    check_decoder(batch.decoder_version.as_deref())?;
-    Ok(batch
+/// Validate item views without rewriting their raw bytes or dropping unknown
+/// envelope metadata. Per-item errors keep their original request positions.
+pub(crate) fn split_batch(raw: RawBatchResponse) -> Result<Vec<Result<CachedResponse>>> {
+    check_decoder(raw.batch.decoder_version.as_deref())?;
+    Ok(raw
+        .batch
         .results
         .into_iter()
         .map(|item| {
-            let mut modal = match item {
-                BatchResult::Error { error } => anyhow::bail!(
-                    "Modal wav2vec2 rejected the clip: {}: {}",
-                    error.error_type,
-                    error.message
-                ),
-                BatchResult::Prediction(modal) => modal,
+            let response = CachedResponse {
+                item,
+                envelope: raw.envelope.clone(),
             };
-            merge_metadata("model id", &mut modal.model_id, &batch.model_id)?;
-            merge_metadata(
-                "model revision",
-                &mut modal.model_revision,
-                &batch.model_revision,
-            )?;
-            merge_metadata(
-                "decoder",
-                &mut modal.decoder_version,
-                &batch.decoder_version,
-            )?;
-            merge_metadata(
-                "deploy-marker",
-                &mut modal.deploy_marker,
-                &batch.deploy_marker,
-            )?;
-            Ok(modal)
+            response.decode()?;
+            Ok(response)
         })
         .collect())
 }
@@ -207,7 +187,7 @@ fn pad_to_min_length(samples: Vec<f32>, min_len: usize) -> Vec<f32> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use base64::Engine;
     use std::io::{BufRead, BufReader, Read, Write};
@@ -257,8 +237,8 @@ mod tests {
     type RecordedRequest = (String, serde_json::Value);
 
     /// Serve local requests and retain the path and body for wire assertions.
-    fn test_server(
-        responses: Vec<(u16, serde_json::Value)>,
+    pub(crate) fn test_server(
+        responses: Vec<(u16, impl ToString + Send + 'static)>,
     ) -> (String, std::thread::JoinHandle<Vec<RecordedRequest>>) {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}/batch", listener.local_addr().unwrap());
@@ -411,7 +391,13 @@ mod tests {
             "retry backoff is not HTTP activity"
         );
         assert_eq!(
-            results[0].as_ref().unwrap().deploy_marker.as_deref(),
+            results[0]
+                .as_ref()
+                .unwrap()
+                .decode()
+                .unwrap()
+                .deploy_marker
+                .as_deref(),
             Some("fresh")
         );
         assert!(
@@ -532,7 +518,7 @@ mod tests {
         assert_eq!(results.len(), 2);
         for result in results {
             assert!(
-                result.unwrap().deploy_marker.is_some(),
+                result.unwrap().decode().unwrap().deploy_marker.is_some(),
                 "batch marker not applied"
             );
         }

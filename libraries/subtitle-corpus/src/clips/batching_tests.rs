@@ -457,7 +457,6 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
         original_language: "French".into(),
         source: crate::library::Source::Missing,
     };
-    let http = reqwest::Client::new();
     let store = osmo::Store::open(root.path().join("cache"));
     // Tightening and relaxing a film gate retain the exact scored rows. No
     // valid transcript, audio/profile or endpoint exists in this fixture.
@@ -466,7 +465,7 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
             min_verbatim: Some(threshold),
             ..Gate::default()
         };
-        prepare_film(&http, &store, &movie, &dir, &gate, 1, false)
+        prepare_film(&store, &movie, &dir, &gate, 1, false)
             .await
             .unwrap();
         let rows = read_clips(&clips_path(&dir)).unwrap();
@@ -484,7 +483,7 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
         existing_work(&dir, &original).0,
         Work::Redo("audio stamp missing")
     );
-    assert!(prepare_film(&http, &store, &movie, &dir, &gate, 1, false)
+    assert!(prepare_film(&store, &movie, &dir, &gate, 1, false)
         .await
         .err()
         .unwrap()
@@ -691,10 +690,9 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         original_language: "Korean".into(),
         source: crate::library::Source::Missing,
     };
-    let http = reqwest::Client::new();
     let store = osmo::Store::open(root.path().join("cache"));
     assert!(matches!(
-        prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1, false)
+        prepare_film(&store, &movie, &dir, &Gate::default(), 1, false)
             .await
             .unwrap(),
         FilmWork::Current(_)
@@ -707,7 +705,7 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         serde_json::to_vec(&report).unwrap(),
     )
     .unwrap();
-    prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1, false)
+    prepare_film(&store, &movie, &dir, &Gate::default(), 1, false)
         .await
         .unwrap();
     let clips = read_clips(&clips_path(&dir)).unwrap();
@@ -724,7 +722,7 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         serde_json::to_vec(&report).unwrap(),
     )
     .unwrap();
-    prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1, false)
+    prepare_film(&store, &movie, &dir, &Gate::default(), 1, false)
         .await
         .unwrap();
     assert!(read_clips(&clips_path(&dir)).unwrap()[0].passed);

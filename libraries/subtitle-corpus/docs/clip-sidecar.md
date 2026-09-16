@@ -64,10 +64,14 @@ run resumes that interrupted refresh, even without the flag. `clip-models`
 reports actual producing-model row counts and separately counts no-model rows
 and unreadable/old-format/incomplete files, without network calls.
 
-The one response artifact is currently typed and **temporarily lossy for unknown
-wire fields** while lexide's raw-response client remains unpublished. Exact raw
-item/envelope retention and the new g2p pin are pending; do not run a corpus
-rewrite against this transitional cache.
+The one response artifact retains the selected item's untouched JSON and every
+raw envelope field value, including unknown fields, number representations,
+escaping, and whitespace inside those values. It never duplicates sibling
+matrices. Envelope key order/inter-field whitespace are not retained. Consumers
+decode a typed view on read. Requests always include the full frame matrix and
+all heads; live responses are validated before the original raw values are
+stored. `trained_against_g2p` is retained as reported, not used here as a generic
+renderer-compatibility assertion.
 
 An exported clip's renditions are reused only
 when the sidecar's `media.stamp` (encode recipe, source-video identity —
