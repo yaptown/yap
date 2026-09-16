@@ -584,6 +584,94 @@ async fn interrupted_refresh_preserves_rows_but_regenerates_old_target_values() 
     );
 }
 
+#[tokio::test]
+async fn report_repair_cannot_make_a_failed_redo_look_current() {
+    let root = tempfile::tempdir().unwrap();
+    let mut film = film(root.path(), 0, 1);
+    let dir = film.dir.clone();
+    let cues: Vec<_> = (0..30)
+        .map(|i| crate::sync::Cue {
+            start_ms: i * 5000 + 500,
+            end_ms: i * 5000 + 1700,
+            text: "Bonjour mon ami.".into(),
+        })
+        .collect();
+    std::fs::write(dir.join("subtitle.srt"), crate::sync::write_cues(&cues)).unwrap();
+    let mut transcript = String::new();
+    for cue in &cues {
+        for (i, text) in ["Bonjour", "mon", "ami"].into_iter().enumerate() {
+            transcript.push_str(
+                &serde_json::to_string(&Spoken {
+                    text: text.into(),
+                    at_ms: cue.start_ms + i as i64 * 400,
+                    until_ms: cue.start_ms + i as i64 * 400 + 300,
+                    kind: Kind::Word,
+                    speaker: None,
+                    logprob: None,
+                })
+                .unwrap(),
+            );
+            transcript.push('\n');
+        }
+    }
+    std::fs::write(dir.join("transcript.jsonl"), transcript).unwrap();
+    std::fs::write(dir.join("audio.opus"), b"must not be decoded").unwrap();
+    std::fs::write(
+        dir.join("audio.json"),
+        serde_json::to_vec(&crate::sync::AudioStamp {
+            filename: "fixture.mkv".into(),
+            duration_ms: 200000,
+            stream: crate::sync::AudioStreamIdentity {
+                stream_index: 0,
+                codec: "opus".into(),
+                channels: 2,
+                channel_layout: "stereo".into(),
+            },
+        })
+        .unwrap(),
+    )
+    .unwrap();
+    let gate = Gate::default();
+    film.provenance = current_provenance(&dir, Language::French, "fra", &gate).unwrap();
+    let original = film.provenance.clone();
+    film.clips[0].as_mut().unwrap().passed = true;
+    finish_film(FilmWork::Prepared(Box::new(film))).unwrap();
+    let before = std::fs::read_to_string(clips_path(&dir)).unwrap();
+    let old_rows = &before[before.find('\n').unwrap()..];
+    let movie = Movie {
+        imdb_id: "0".into(),
+        title: "fixture".into(),
+        year: None,
+        path: dir.clone(),
+        original_language: "French".into(),
+        source: crate::library::Source::Missing,
+    };
+    let store = osmo::Store::open(root.path().join("cache"));
+    assert_eq!(
+        existing_work(&dir, &original).0,
+        Work::Redo("verbatim measurement missing or stale")
+    );
+    // First run really regenerates a matching verbatim report, then fails
+    // preparation at the absent speech profile. The second is an ordinary retry.
+    for _ in 0..2 {
+        let error = prepare_film(&store, &movie, &dir, &gate, 1, false)
+            .await
+            .err()
+            .unwrap();
+        assert!(format!("{error:#}").contains("speech profile"), "{error:#}");
+        assert_eq!(
+            crate::verbatim::stored(&dir).unwrap().measure.verdict,
+            crate::verbatim::Verdict::Verbatim
+        );
+        assert_eq!(std::fs::read_to_string(clips_path(&dir)).unwrap(), old_rows);
+        assert!(matches!(existing_work(&dir, &original).0, Work::Redo(_)));
+        assert!(
+            !interrupted_refresh(&dir),
+            "ordinary retry must not force target refresh"
+        );
+    }
+}
+
 #[test]
 fn model_inventory_counts_observed_rows_and_unreadable_files() {
     let root = tempfile::tempdir().unwrap();

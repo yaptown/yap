@@ -50,8 +50,10 @@ missing/stale verbatim measurement is not a current cheap hit.
 
 A current header also requires `completion: "complete"`, its
 `expected_candidates` count, and a valid verdict on every row. Inference failures
-leave the film unfinished; cached successes survive retry. Old, malformed, or
-truncated manifests are not read through compatibility fallbacks.
+leave the film unfinished; cached successes survive retry. Every ordinary redo
+first invalidates the old header while retaining its rows for inspection, so
+repairing a missing transcript-check report cannot make a failed redo look current.
+Old, malformed, or truncated manifests are not read through compatibility fallbacks.
 
 Model and G2P identities record what **actually produced each row**; producer
 changes alone never invalidate it. Producer bugs require a deliberate refresh.

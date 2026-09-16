@@ -555,6 +555,25 @@ fn interrupted_refresh(dir: &Path) -> bool {
         .is_ok_and(|(header, _)| header.completion == Completion::RefreshG2p)
 }
 
+/// Ordinary redo retains old rows for inspection, but removes the completion
+/// claim before any work can make the old inputs look current again.
+fn invalidate_header(dir: &Path) -> Result<()> {
+    let path = clips_path(dir);
+    let bytes = match std::fs::read(&path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error.into()),
+    };
+    let rows = bytes
+        .iter()
+        .position(|&b| b == b'\n')
+        .unwrap_or(bytes.len());
+    let tmp = dir.join("clips.jsonl.tmp");
+    std::fs::write(&tmp, &bytes[rows..])?;
+    std::fs::rename(tmp, path)?;
+    Ok(())
+}
+
 /// Preserve old rows for inspection, but invalidate their completion claim
 /// before touching targets. A crash then forces regeneration on any next run.
 fn begin_refresh(dir: &Path, provenance: &Provenance) -> Result<()> {
@@ -1102,7 +1121,6 @@ async fn prepare_film(
         if interrupted {
             println!("{}: Resuming an interrupted refresh", movie.title);
         }
-        begin_refresh(dir, &provenance)?;
         (Work::Redo("G2P refresh"), None)
     } else {
         existing_work(dir, &provenance)
@@ -1130,15 +1148,16 @@ async fn prepare_film(
     }
     if let Work::Redo(reason) = work {
         println!("{}: remapping ({reason})", movie.title);
+        if refresh_g2p {
+            begin_refresh(dir, &provenance)?;
+        } else {
+            invalidate_header(dir)?;
+        }
     }
-    // No current file may survive changed inputs that fail film admissibility.
-    // An interrupted refresh keeps its non-current marker so a later ordinary
-    // run still regenerates targets rather than forgetting the refresh intent.
+    // Every redo is now non-current. Refresh intent survives any failure;
+    // ordinary invalidation never implies that target reuse should be bypassed.
     let check = crate::verbatim::check(dir, language, code, provenance.gate.min_verbatim).await?;
     if check.measure.verdict != crate::verbatim::Verdict::Verbatim {
-        if !refresh_g2p {
-            let _ = std::fs::remove_file(clips_path(dir));
-        }
         bail!(
             "subtitle not verbatim: {}",
             crate::verbatim::describe(&check.measure)
