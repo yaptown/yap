@@ -36,15 +36,14 @@
 //! with every score kept so the gate can be re-tuned from the file alone.
 
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
 
 use anyhow::{bail, Context, Result};
+use futures::StreamExt;
 use language_utils::Language;
 use movie_subtitles::segment::SubtitleSegmenter;
 use movie_subtitles::sentences::KeyedSentence;
 use movie_subtitles::{cleanup_subtitle_text, SubtitleLine};
-use phoneme_verify::VerifyContext;
+use phoneme_verify::{wav2vec2::RequestActivity, FrameMatrix, VerifyContext};
 use serde::{Deserialize, Serialize};
 
 use crate::cues::{
@@ -840,15 +839,38 @@ fn earshot_margins(
     }
 }
 
-/// Map one film. Returns the summary, or the reason nothing was done.
-async fn clips_one(
+/// Only descriptors survive discovery: corpus-wide WAVs and matrices would
+/// dwarf the clip metadata. Misses are re-cut with bounded batch preparation.
+struct PendingClip {
+    index: usize,
+    hash: u64,
+}
+
+struct PreparedFilm {
+    dir: PathBuf,
+    language: Language,
+    provenance: Provenance,
+    summary: FilmSummary,
+    // Stable slots until all descriptors have resolved; failures leave holes.
+    clips: Vec<Option<Clip>>,
+    pending: Vec<PendingClip>,
+}
+
+enum FilmWork {
+    Current(FilmSummary),
+    Prepared(Box<PreparedFilm>),
+}
+
+/// Prepare one film without phoneme inference. Preflight stays ahead of the
+/// provenance skip; a current file cannot hide a broken G2P or rewritten sub.
+async fn prepare_film(
     http: &reqwest::Client,
     store: &osmo::Store,
     movie: &Movie,
     dir: &Path,
     gate: &Gate,
     concurrency: usize,
-) -> Result<FilmSummary> {
+) -> Result<FilmWork> {
     let code = course_dir(&movie.original_language).context("unmapped language")?;
     let language = Language::from_code(code).context("unmapped course code")?;
     let subtitle = dir.join("subtitle.srt");
@@ -915,17 +937,12 @@ async fn clips_one(
     // Which phonemizer, and for Hindi which label convention, the targets
     // came from; either changing must re-score every clip. An audio-only
     // language has neither a phonemizer nor a model in its provenance.
-    let (model, g2p) = match (min_ratio, language) {
-        (None, _) => ("none".to_string(), "none".to_string()),
-        (Some(_), Language::Hindi) => (
+    let (model, g2p) = match min_ratio {
+        None => ("none".to_string(), "none".to_string()),
+        Some(_) => (
             phoneme_verify::production_cache_version()?,
-            format!(
-                "{} hindi={:?}",
-                g2p::identity(),
-                phoneme_verify::MODEL_HINDI_CANON
-            ),
+            phoneme_verify::model_target_identity(language),
         ),
-        (Some(_), _) => (phoneme_verify::production_cache_version()?, g2p::identity()),
     };
     let provenance = Provenance {
         format: FORMAT_VERSION,
@@ -947,13 +964,13 @@ async fn clips_one(
     let path = clips_path(dir);
     if stored_provenance(&path).as_ref() == Some(&provenance) {
         let clips = read_clips(&path)?;
-        return Ok(FilmSummary {
+        return Ok(FilmWork::Current(FilmSummary {
             sentences: clips.len(),
             aligned: clips.len(),
             scored: clips.len(),
             passed: clips.iter().filter(|c| c.passed).count(),
             median_ratio: median(clips.iter().filter_map(|c| c.ratio).collect()),
-        });
+        }));
     }
 
     // The margins come from the profile; without one there is nothing to
@@ -993,8 +1010,7 @@ async fn clips_one(
         .collect();
     summary.aligned = placed.len();
 
-    use futures::StreamExt;
-    let clips: Vec<Vec<Clip>> = futures::stream::iter(placed)
+    let prepared: Vec<Option<(Clip, Option<u64>)>> = futures::stream::iter(placed)
         .map(|(sentence, p)| {
             let audio = audio.clone();
             let imdb_id = movie.imdb_id.clone();
@@ -1114,93 +1130,111 @@ async fn clips_one(
             }
         })
         .buffered(concurrency.max(1))
-        // Collect prepared clips before inference so even low slicing
-        // concurrency can fill a batch. Cached matrices never go to Modal.
-        .chunks(64)
         .then(|prepared| {
             let ctx = &ctx;
             async move {
-                let mut prepared: Vec<_> = prepared.into_iter().flatten().collect();
-                let mut failed = std::collections::HashSet::new();
-                if let Some(min_ratio) = min_ratio {
-                    let ctx = ctx.as_ref().expect("gated languages have a verify context");
-                    let indices: Vec<_> = prepared
-                        .iter()
-                        .enumerate()
-                        .filter_map(|(i, (_, wav))| wav.as_ref().map(|_| i))
-                        .collect();
-                    let wavs: Vec<&[u8]> = indices
-                        .iter()
-                        .map(|&i| prepared[i].1.as_ref().unwrap().as_slice())
-                        .collect();
-                    let matrices = phoneme_verify::frame_matrices(ctx, &wavs).await;
-                    for (index, frames) in indices.into_iter().zip(matrices) {
-                        let clip = &mut prepared[index].0;
-                        let frames = match frames {
-                            Ok(frames) => frames,
-                            Err(error) => {
-                                eprintln!("  {}: {error:#}", clip.sentence);
-                                failed.insert(index);
-                                continue;
-                            }
-                        };
-                        let padded_ms = (clip.end_ms - clip.start_ms
-                            + clip.pad_before_ms
-                            + clip.pad_after_ms) as f64;
-                        let pad_before_ms = clip.pad_before_ms;
-                        let pad_after_ms = clip.pad_after_ms;
-                        // The pads under the model's ear: frames spread evenly
-                        // over the sliced audio, so the pad regions are the
-                        // first and last stretches of the matrix.
-                        let frame_ms = padded_ms / frames.frames as f64;
-                        let lead_frames = (pad_before_ms as f64 / frame_ms) as usize;
-                        let tail_frames = (pad_after_ms as f64 / frame_ms) as usize;
-                        clip.lead_speech = frames.speech_fraction(0, lead_frames);
-                        clip.tail_speech = frames.speech_fraction(
-                            frames.frames.saturating_sub(tail_frames),
-                            frames.frames,
-                        );
-                        let score = frames.score_target(&clip.target_ipa);
-                        clip.heard_ipa = frames
-                            .greedy_ids()
-                            .into_iter()
-                            .map(|id| frames.vocab[id].clone())
-                            .collect();
-                        clip.oov = score.oov;
-                        clip.ratio = score.ratio;
-                        clip.logp_target_per_phoneme = score.logp_target_per_phoneme;
-                        let ids: Vec<usize> = clip
-                            .target_ipa
-                            .iter()
-                            .filter_map(|t| frames.id(t))
-                            .collect();
-                        if let Some(spans) = frames.force_align(&ids) {
-                            let k = EDGE_PHONEMES.min(spans.len());
-                            let mean = |spans: &[phoneme_verify::AlignedPhoneme]| {
-                                spans.iter().map(|s| s.logp_mean).sum::<f64>() / spans.len() as f64
-                            };
-                            clip.edge_logp_start = Some(mean(&spans[..k]));
-                            clip.edge_logp_end = Some(mean(&spans[spans.len() - k..]));
-                        }
-                        if let Some(reason) = phoneme_reject(clip, min_ratio, gate) {
-                            clip.reject = Some(reason);
-                            continue;
-                        }
-
-                        clip.reject = audio_reject(clip, gate);
-                        clip.passed = clip.reject.is_none();
+                let (mut clip, wav) = prepared?;
+                let Some(wav) = wav else {
+                    return Some((clip, None));
+                };
+                let ctx = ctx.as_ref().expect("gated languages have a verify context");
+                let hash = xxhash_rust::xxh3::xxh3_64(&wav);
+                // Only a true cache miss becomes a descriptor. A cached matrix
+                // that cannot decode keeps the existing per-clip omission.
+                match phoneme_verify::cached_frame_matrix(ctx, hash).await {
+                    Some(Ok(frames)) => {
+                        score_clip(&mut clip, &frames, min_ratio.unwrap(), gate);
+                        Some((clip, None))
                     }
+                    Some(Err(error)) => {
+                        eprintln!("  {}: {error:#}", clip.sentence);
+                        None
+                    }
+                    None if phoneme_verify::cache_only() => {
+                        eprintln!(
+                            "  {}: frame-matrix cache miss; cache-only mode is enabled",
+                            clip.sentence
+                        );
+                        None
+                    }
+                    None => Some((clip, Some(hash))),
                 }
-                prepared
-                    .into_iter()
-                    .enumerate()
-                    .filter_map(|(i, (clip, _))| (!failed.contains(&i)).then_some(clip))
-                    .collect()
             }
         })
         .collect()
         .await;
 
+    let mut clips = Vec::with_capacity(prepared.len());
+    let mut pending = Vec::new();
+    for item in prepared {
+        let index = clips.len();
+        clips.push(item.map(|(clip, hash)| {
+            if let Some(hash) = hash {
+                pending.push(PendingClip { index, hash });
+            }
+            clip
+        }));
+    }
+    Ok(FilmWork::Prepared(Box::new(PreparedFilm {
+        dir: dir.to_owned(),
+        language,
+        provenance,
+        summary,
+        clips,
+        pending,
+    })))
+}
+
+fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate) {
+    let padded_ms = (clip.end_ms - clip.start_ms + clip.pad_before_ms + clip.pad_after_ms) as f64;
+    // Frames spread evenly over the sliced audio; the pads are its first and
+    // last stretches. Keep this identical for cached and newly inferred audio.
+    let frame_ms = padded_ms / frames.frames as f64;
+    let lead_frames = (clip.pad_before_ms as f64 / frame_ms) as usize;
+    let tail_frames = (clip.pad_after_ms as f64 / frame_ms) as usize;
+    clip.lead_speech = frames.speech_fraction(0, lead_frames);
+    clip.tail_speech =
+        frames.speech_fraction(frames.frames.saturating_sub(tail_frames), frames.frames);
+    let score = frames.score_target(&clip.target_ipa);
+    clip.heard_ipa = frames
+        .greedy_ids()
+        .into_iter()
+        .map(|id| frames.vocab[id].clone())
+        .collect();
+    clip.oov = score.oov;
+    clip.ratio = score.ratio;
+    clip.logp_target_per_phoneme = score.logp_target_per_phoneme;
+    let ids: Vec<usize> = clip
+        .target_ipa
+        .iter()
+        .filter_map(|t| frames.id(t))
+        .collect();
+    if let Some(spans) = frames.force_align(&ids) {
+        let k = EDGE_PHONEMES.min(spans.len());
+        let mean = |spans: &[phoneme_verify::AlignedPhoneme]| {
+            spans.iter().map(|s| s.logp_mean).sum::<f64>() / spans.len() as f64
+        };
+        clip.edge_logp_start = Some(mean(&spans[..k]));
+        clip.edge_logp_end = Some(mean(&spans[spans.len() - k..]));
+    }
+    clip.reject = phoneme_reject(clip, min_ratio, gate).or_else(|| audio_reject(clip, gate));
+    clip.passed = clip.reject.is_none();
+}
+
+/// Preserve the existing current-header semantics even when every inference
+/// failed: failed slots are omitted, not serialized as new reject verdicts.
+fn finish_film(work: FilmWork) -> Result<FilmSummary> {
+    let film = match work {
+        FilmWork::Current(summary) => return Ok(summary),
+        FilmWork::Prepared(film) => film,
+    };
+    let PreparedFilm {
+        dir,
+        provenance,
+        mut summary,
+        clips,
+        ..
+    } = *film;
     let clips: Vec<Clip> = clips.into_iter().flatten().collect();
     summary.scored = clips.len();
     summary.passed = clips.iter().filter(|c| c.passed).count();
@@ -1214,8 +1248,250 @@ async fn clips_one(
     }
     let tmp = dir.join("clips.jsonl.tmp");
     std::fs::write(&tmp, text)?;
-    std::fs::rename(&tmp, &path)?;
+    std::fs::rename(&tmp, clips_path(&dir))?;
     Ok(summary)
+}
+
+/// An owned cut lets bounded preparation run independently of mutable result
+/// slots. It is metadata only; the WAV exists only while filling a batch.
+struct AudioCut {
+    audio: PathBuf,
+    language: Language,
+    hash: u64,
+    start: i64,
+    end: i64,
+    before: i64,
+    after: i64,
+}
+
+enum FrameInput<P> {
+    Cached(FrameMatrix),
+    Request(P),
+}
+
+fn apply_frames(film: &mut PreparedFilm, index: usize, frames: Result<FrameMatrix>, gate: &Gate) {
+    let clip = film.clips[index].as_mut().expect("pending clip has a slot");
+    match frames {
+        Ok(frames) => score_clip(
+            clip,
+            &frames,
+            film.provenance
+                .min_ratio
+                .expect("pending clips have a phoneme gate"),
+            gate,
+        ),
+        Err(error) => {
+            eprintln!("  {}: {error:#}", clip.sentence);
+            film.clips[index] = None;
+        }
+    }
+}
+
+/// Keep a second full request queued remotely while the first runs, hiding
+/// round-trip/response gaps even with one server container. This is a bounded
+/// starting point, not a measured optimum; report HTTP idle time before tuning.
+const INFERENCE_REQUESTS_IN_FLIGHT: usize = 2;
+
+#[derive(Default)]
+struct InferenceProgress {
+    requests: usize,
+    submitted: usize,
+    completed: usize,
+    failed: usize,
+}
+
+impl InferenceProgress {
+    fn fill_rate(&self) -> f64 {
+        self.submitted as f64 / (self.requests * phoneme_verify::MODAL_BATCH_SIZE).max(1) as f64
+    }
+
+    fn clips_per_minute(&self, elapsed: std::time::Duration) -> f64 {
+        if elapsed.is_zero() {
+            0.0
+        } else {
+            self.completed as f64 * 60.0 / elapsed.as_secs_f64()
+        }
+    }
+
+    fn report(&self, activity: &RequestActivity) {
+        let snapshot = activity.snapshot();
+        let seconds = snapshot.elapsed.as_secs_f64();
+        let idle = if seconds == 0.0 {
+            0.0
+        } else {
+            snapshot.without_request.as_secs_f64() / seconds
+        };
+        println!(
+            "phoneme inference phase: {} clips completed ({} failed), {:.1} clips/min, \
+             HTTP request fill {:.1}%, no HTTP outstanding {:.1}% of {:.1}s \
+             ({} attempts, {} retries, peak {} outstanding)",
+            self.completed,
+            self.failed,
+            self.clips_per_minute(snapshot.elapsed),
+            self.fill_rate() * 100.0,
+            idle * 100.0,
+            seconds,
+            snapshot.attempts,
+            snapshot.retries,
+            snapshot.peak_requests,
+        );
+    }
+}
+
+/// The actual mapper scheduler, with I/O injected so its barrier, compaction,
+/// and routing can be exercised without film audio or a live endpoint.
+async fn map_staged<P>(
+    preparation: impl futures::Stream<Item = (usize, Result<FilmWork>)>,
+    prepare_request: impl AsyncFn(&AudioCut) -> Result<FrameInput<P>>,
+    infer: impl AsyncFn(Vec<P>, &RequestActivity) -> Vec<Result<FrameMatrix>>,
+    gate: &Gate,
+) -> Vec<(usize, Result<FilmWork>)> {
+    // Deliberate barrier: finish discovery over the entire selection first.
+    // Only metadata and cache-miss descriptors survive, never WAVs/matrices.
+    let mut films: Vec<_> = preparation.collect().await;
+    // The measured inference phase includes initial filling and tail handling,
+    // but excludes the deliberate all-films discovery barrier above.
+    let activity = RequestActivity::default();
+    let mut pending = Vec::new();
+    for (film_index, (_, outcome)) in films.iter().enumerate() {
+        if let Ok(FilmWork::Prepared(film)) = outcome {
+            for descriptor in &film.pending {
+                let clip = film.clips[descriptor.index]
+                    .as_ref()
+                    .expect("pending clip has a slot");
+                pending.push((
+                    film_index,
+                    descriptor.index,
+                    AudioCut {
+                        audio: film.dir.join("audio.opus"),
+                        language: film.language,
+                        hash: descriptor.hash,
+                        start: clip.start_ms,
+                        end: clip.end_ms,
+                        before: clip.pad_before_ms,
+                        after: clip.pad_after_ms,
+                    },
+                ));
+            }
+        }
+    }
+    println!(
+        "discovery complete: {} uncached clip candidates across {} selected films",
+        pending.len(),
+        films.len()
+    );
+    // 64 is the chosen HTTP cap, not measured GPU capacity. The endpoint
+    // groups only within a request (up to 8 clips, length ratio <= 1.25;
+    // group-norm checkpoints use single-clip forwards).
+    // Nearby durations help fill those forwards and reduce padding within
+    // each group, where every clip is padded to its longest neighbor.
+    // Different padding groups may cause tiny
+    // numerical differences; result slots, targets and gates remain unchanged.
+    pending.sort_by_key(|(_, _, cut)| cut.end + cut.after - (cut.start - cut.before).max(0));
+    let mut prepared = Box::pin(
+        futures::stream::iter(pending)
+            .map(|(film, clip, cut)| {
+                let prepare_request = &prepare_request;
+                async move { (film, clip, prepare_request(&cut).await) }
+            })
+            .buffered(8),
+    );
+    let mut in_flight = futures::stream::FuturesUnordered::new();
+    let mut requests = Vec::new();
+    let mut slots = Vec::new();
+    let mut preparation_done = false;
+    let mut progress = InferenceProgress::default();
+    let mut completed_batches = 0;
+    loop {
+        if !requests.is_empty()
+            && (requests.len() == phoneme_verify::MODAL_BATCH_SIZE || preparation_done)
+            && in_flight.len() < INFERENCE_REQUESTS_IN_FLIGHT
+        {
+            progress.requests += 1;
+            progress.submitted += requests.len();
+            let requests = std::mem::take(&mut requests);
+            let slots = std::mem::take(&mut slots);
+            let (infer, activity) = (&infer, &activity);
+            in_flight.push(async move { (slots, infer(requests, activity).await) });
+        }
+        if preparation_done && requests.is_empty() && in_flight.is_empty() {
+            break;
+        }
+        // At most two inference jobs, one ready/partial next batch, and eight
+        // local preparations. No future borrows film slots, so completions and
+        // cache/error outcomes can be applied immediately in either order.
+        tokio::select! {
+            prepared = prepared.next(), if !preparation_done && requests.len() < phoneme_verify::MODAL_BATCH_SIZE => {
+                let Some((film_index, clip_index, prepared)) = prepared else {
+                    preparation_done = true;
+                    continue;
+                };
+                let Ok(FilmWork::Prepared(film)) = &mut films[film_index].1 else { unreachable!() };
+                match prepared {
+                    Ok(FrameInput::Request(request)) => {
+                        requests.push(request);
+                        slots.push((film_index, clip_index));
+                    }
+                    Ok(FrameInput::Cached(frames)) => apply_frames(film, clip_index, Ok(frames), gate),
+                    Err(error) => apply_frames(film, clip_index, Err(error), gate),
+                }
+            }
+            result = in_flight.next(), if !in_flight.is_empty() => {
+                let (slots, results) = result.expect("an inference job was in flight");
+                assert_eq!(results.len(), slots.len(), "one result per prepared request");
+                progress.completed += results.len();
+                progress.failed += results.iter().filter(|result| result.is_err()).count();
+                completed_batches += 1;
+                for ((film_index, clip_index), frames) in slots.into_iter().zip(results) {
+                    let Ok(FilmWork::Prepared(film)) = &mut films[film_index].1 else { unreachable!() };
+                    apply_frames(film, clip_index, frames, gate);
+                }
+                if completed_batches % 25 == 0 {
+                    progress.report(&activity);
+                }
+            }
+        }
+    }
+    // Logical request fill is not GPU-forward fill. HTTP activity is measured
+    // around individual attempts, excluding backoff, local cache writes/scoring.
+    // Neither metric claims that an outstanding request was executing on GPU.
+    progress.report(&activity);
+    films
+}
+
+fn check_recut_hash(wav: &[u8], expected: u64) -> Result<()> {
+    anyhow::ensure!(
+        xxhash_rust::xxh3::xxh3_64(wav) == expected,
+        "re-cut WAV changed since discovery; refusing mismatched cache identity"
+    );
+    Ok(())
+}
+
+async fn prepare_pending<'a>(
+    http: &'a reqwest::Client,
+    store: &osmo::Store,
+    empty: &'a std::collections::HashMap<String, language_utils::Pronunciations>,
+    cut: &AudioCut,
+) -> Result<FrameInput<(VerifyContext<'a>, phoneme_verify::PreparedFrameRequest)>> {
+    let ctx = VerifyContext::new(http, store.clone(), empty, cut.language)?;
+    // Another batch/process may have filled this key since discovery. A
+    // duplicate WAV still has its own slot, target and language-specific gate.
+    if let Some(cached) = phoneme_verify::cached_frame_matrix(&ctx, cut.hash).await {
+        return cached.map(FrameInput::Cached);
+    }
+    anyhow::ensure!(
+        !phoneme_verify::cache_only(),
+        "frame-matrix cache miss; cache-only mode is enabled"
+    );
+    let (start, end, before, after) = (cut.start, cut.end, cut.before, cut.after);
+    let audio = cut.audio.clone();
+    let wav =
+        tokio::task::spawn_blocking(move || slice_wav_padded(&audio, start, end, before, after))
+            .await
+            .context("re-cut task failed")??;
+    check_recut_hash(&wav, cut.hash)?;
+    let request = phoneme_verify::prepare_frame_request(wav).await?;
+    Ok(FrameInput::Request((ctx, request)))
 }
 
 /// Map every transcribed film (or the ones selected), skipping films whose
@@ -1254,55 +1530,69 @@ pub async fn clips_all(
     }
     warm_segmentation(&out, &queue).await?;
 
-    let store = Arc::new(osmo::Store::open("./.cache"));
-    let http = Arc::new(
-        reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(120))
-            .build()?,
-    );
-    let out = Arc::new(out);
-    let gate = Arc::new(gate);
-    let progress = AtomicUsize::new(0);
-
-    use futures::StreamExt;
-    let totals: Vec<Option<FilmSummary>> = futures::stream::iter(queue)
-        .map(|movie| {
-            let (http, store, out, gate) = (
-                Arc::clone(&http),
-                Arc::clone(&store),
-                Arc::clone(&out),
-                Arc::clone(&gate),
-            );
-            let progress = &progress;
+    let store = osmo::Store::open("./.cache");
+    let http = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(120))
+        .build()?;
+    let empty = std::collections::HashMap::new();
+    let mut discovered = 0;
+    let preparation = futures::stream::iter(queue.iter().enumerate())
+        .map(|(index, movie)| {
+            let (http, store, out, gate) = (&http, &store, &out, &gate);
             async move {
                 let dir = out.join(&movie.imdb_id);
-                let outcome = clips_one(&http, &store, &movie, &dir, &gate, 8).await;
-                let n = progress.fetch_add(1, Ordering::Relaxed) + 1;
-                let title = crate::library::truncate(&movie.title, 34);
-                match &outcome {
-                    Ok(s) => {
-                        println!(
-                            "[{n}/{total}] {title} ✓ {} sentences → {} placed → {} scored → {} pass",
-                            s.sentences, s.aligned, s.scored, s.passed
-                        );
-                        if let Some(m) = s.median_ratio.filter(|m| *m < FOREIGN_AUDIO_RATIO) {
-                            println!(
-                                "    ⚠ median phoneme ratio {m:.2}: the audio does not sound like \
-                                 {} — another language or variety on this track?",
-                                movie.original_language
-                            );
-                        }
-                    }
-                    Err(e) => println!("[{n}/{total}] {title} ✗ {e:#}"),
-                }
-                outcome.ok()
+                (index, prepare_film(http, store, movie, &dir, gate, 8).await)
             }
         })
         .buffer_unordered(films_in_flight.max(1))
-        .collect()
-        .await;
+        .inspect(|(index, outcome)| {
+            discovered += 1;
+            if let Err(error) = outcome {
+                eprintln!("discovery {}: {error:#}", queue[*index].title);
+            }
+            if discovered % 25 == 0 || discovered == total {
+                println!("discovery: {discovered}/{total} films prepared");
+            }
+        });
+    let films = map_staged(
+        preparation,
+        async |cut| prepare_pending(&http, &store, &empty, cut).await,
+        async |requests, activity| {
+            let (contexts, requests): (Vec<_>, Vec<_>) = requests.into_iter().unzip();
+            phoneme_verify::infer_frame_batch(
+                contexts.iter().zip(requests).collect(),
+                Some(activity),
+            )
+            .await
+        },
+        &gate,
+    )
+    .await;
 
-    let done: Vec<FilmSummary> = totals.into_iter().flatten().collect();
+    let mut done = Vec::new();
+    for (n, (index, outcome)) in films.into_iter().enumerate() {
+        let n = n + 1;
+        let movie = &queue[index];
+        let title = crate::library::truncate(&movie.title, 34);
+        // Preparation and finalization failures belong to this film only.
+        match outcome.and_then(finish_film) {
+            Ok(s) => {
+                println!(
+                    "[{n}/{total}] {title} ✓ {} sentences → {} placed → {} scored → {} pass",
+                    s.sentences, s.aligned, s.scored, s.passed
+                );
+                if let Some(m) = s.median_ratio.filter(|m| *m < FOREIGN_AUDIO_RATIO) {
+                    println!(
+                        "    ⚠ median phoneme ratio {m:.2}: the audio does not sound like \
+                         {} — another language or variety on this track?",
+                        movie.original_language
+                    );
+                }
+                done.push(s);
+            }
+            Err(e) => println!("[{n}/{total}] {title} ✗ {e:#}"),
+        }
+    }
     println!(
         "\n{} films mapped: {} sentences, {} placed by the transcript, {} passed both gates",
         done.len(),
@@ -1312,6 +1602,9 @@ pub async fn clips_all(
     );
     Ok(())
 }
+
+#[cfg(test)]
+mod batching_tests;
 
 #[cfg(test)]
 mod margin_tests {

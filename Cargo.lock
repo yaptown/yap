@@ -6109,7 +6109,6 @@ dependencies = [
  "earshot",
  "flate2",
  "futures",
- "g2p",
  "google-speech",
  "image 0.25.10",
  "language-utils",

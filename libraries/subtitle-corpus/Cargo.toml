@@ -27,7 +27,6 @@ xxhash-rust = { workspace = true }
 tempfile = { workspace = true }
 google-speech = { path = "../google-speech" }
 phoneme-verify = { path = "../phoneme-verify" }
-g2p = { workspace = true }
 opensubtitles-downloader = { path = "../opensubtitles-downloader" }
 sha2 = "0.10"
 unicode-normalization = { workspace = true }

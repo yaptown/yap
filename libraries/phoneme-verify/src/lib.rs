@@ -573,8 +573,8 @@ const MODAL_SAMPLE_RATE: u32 = 16_000;
 /// analysis; trades off cache size linearly. 10 is comfortable for French.
 const MODAL_TOP_K: usize = 10;
 
-/// Clips per request the batch endpoint accepts.
-const MODAL_BATCH_SIZE: usize = 64;
+/// Clips per HTTP request the endpoint accepts, not its GPU microbatch size.
+pub const MODAL_BATCH_SIZE: usize = 64;
 
 /// How long the batch worker waits after the first queued clip for the
 /// other in-flight callers to enqueue theirs, so a batch carries the whole
@@ -613,7 +613,7 @@ async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
             .map(|item| std::mem::take(&mut item.payload))
             .collect();
         let results = match &client {
-            Ok(client) => wav2vec2::predict_batch(client, &payloads).await,
+            Ok(client) => wav2vec2::predict_batch(client, &payloads, None).await,
             Err(e) => Err(anyhow::anyhow!("{e:#}")),
         };
         match results {
@@ -794,7 +794,13 @@ pub(crate) fn frames_partition(version: &str) -> &str {
 // Previously shipped decoder partitions whose raw matrices can still be reused.
 const LEGACY_FRAME_DECODERS: &[&str] = &["greedy_v1"];
 
-async fn cached_frame_matrix(ctx: &VerifyContext<'_>, hash: u64) -> Option<Result<FrameMatrix>> {
+/// Cache-only lookup by the hash of the original WAV bytes. `None` is a miss;
+/// `Some(Err(_))` is a cached payload that failed to decode, not an inference
+/// request. This never contacts the endpoint, including in cache-only mode.
+pub async fn cached_frame_matrix(
+    ctx: &VerifyContext<'_>,
+    hash: u64,
+) -> Option<Result<FrameMatrix>> {
     let partition = frames_partition(&ctx.cache_version);
     let versions = [partition.to_owned(), ctx.cache_version.clone()]
         .into_iter()
@@ -812,6 +818,106 @@ async fn cached_frame_matrix(ctx: &VerifyContext<'_>, hash: u64) -> Option<Resul
         }
     }
     None
+}
+
+/// A decoded, padded request paired with the original WAV's cache identity.
+pub struct PreparedFrameRequest {
+    hash: u64,
+    payload: PredictRequest,
+}
+
+/// Prepare audio without inference. Batch callers count only successful
+/// preparations toward the endpoint's request limit.
+pub async fn prepare_frame_request(wav: Vec<u8>) -> Result<PreparedFrameRequest> {
+    let hash = xxh3_64(&wav);
+    let samples = tokio::task::spawn_blocking(move || decode_wav_to_f32(&wav))
+        .await
+        .context("audio decoding task failed")?
+        .context("decoding audio for batch")?;
+    Ok(PreparedFrameRequest {
+        hash,
+        payload: wav2vec2::Clip {
+            samples: &samples,
+            sample_rate: MODAL_SAMPLE_RATE,
+            top_k: MODAL_TOP_K,
+            return_frame_matrix: true,
+        }
+        .into_request(),
+    })
+}
+
+/// Submit one prepared batch, preserving each clip's identity checks and cache
+/// destination. Languages may differ: the model hears audio, not the target.
+/// Requests must already be cache misses. Results retain input order, and an
+/// item failure does not discard its neighbors. Transport/protocol failures
+/// affect this request only; callers may continue with later batches.
+pub async fn infer_frame_batch(
+    items: Vec<(&VerifyContext<'_>, PreparedFrameRequest)>,
+    activity: Option<&wav2vec2::RequestActivity>,
+) -> Vec<Result<FrameMatrix>> {
+    if cache_only() {
+        return items
+            .iter()
+            .map(|(_, request)| {
+                Err(anyhow::anyhow!(
+                    "frame-matrix cache miss for {:016x}; cache-only mode is enabled",
+                    request.hash
+                ))
+            })
+            .collect();
+    }
+    let Some((ctx, _)) = items.first() else {
+        return Vec::new();
+    };
+    let client = wav2vec2::batch_client(ctx.http.clone());
+    infer_frame_batch_at(items, &client, activity).await
+}
+
+async fn infer_frame_batch_at(
+    items: Vec<(&VerifyContext<'_>, PreparedFrameRequest)>,
+    client: &Result<PhonemizerClient>,
+    activity: Option<&wav2vec2::RequestActivity>,
+) -> Vec<Result<FrameMatrix>> {
+    let (destinations, requests): (Vec<_>, Vec<_>) = items
+        .into_iter()
+        .map(|(ctx, request)| ((ctx, request.hash), request.payload))
+        .unzip();
+    let response = match client {
+        Ok(client) => wav2vec2::predict_batch(client, &requests, activity).await,
+        Err(error) => Err(anyhow::anyhow!("{error:#}")),
+    };
+    let responses = match response {
+        Ok(responses) => responses,
+        Err(error) => {
+            return destinations
+                .iter()
+                .map(|_| Err(anyhow::anyhow!("{error:#}")))
+                .collect();
+        }
+    };
+    let mut results = Vec::with_capacity(destinations.len());
+    for ((ctx, hash), response) in destinations.into_iter().zip(responses) {
+        results.push(
+            async {
+                let modal = response?;
+                check_response_identity(ctx, &modal)?;
+                let payload = modal
+                    .frame_matrix
+                    .as_ref()
+                    .context("batch item has no frame matrix")?;
+                let frames = FrameMatrix::decode(payload)?;
+                cache_modal_prediction(ctx, hash, &modal).await?;
+                let key = format!(
+                    "wav2vec2-frames/{}/{hash:016x}",
+                    frames_partition(&ctx.cache_version)
+                );
+                ctx.store.write(&key, &serde_json::to_vec(payload)?).await?;
+                Ok(frames)
+            }
+            .await,
+        );
+    }
+    results
 }
 
 /// The model's per-frame log-prob matrix for a clip, from the cache or the
@@ -881,10 +987,6 @@ async fn frame_matrices_at(
     let mut pending = Vec::new();
     for (index, wav) in wavs.iter().enumerate() {
         let hash = xxh3_64(wav);
-        let key = format!(
-            "wav2vec2-frames/{}/{hash:016x}",
-            frames_partition(&ctx.cache_version)
-        );
         if let Some(cached) = cached_frame_matrix(ctx, hash).await {
             results[index] = Some(cached);
             continue;
@@ -895,66 +997,24 @@ async fn frame_matrices_at(
             )));
             continue;
         }
-        pending.push((index, hash, key));
+        pending.push(index);
     }
-    for chunk in pending.chunks(MODAL_BATCH_SIZE) {
-        let mut requests = Vec::new();
-        let mut valid = Vec::new();
-        for (index, hash, key) in chunk {
-            let wav = wavs[*index].to_vec();
-            let decoded = tokio::task::spawn_blocking(move || decode_wav_to_f32(&wav))
-                .await
-                .context("audio decoding task failed")
-                .and_then(|result| result);
-            match decoded {
-                Ok(samples) => {
-                    requests.push(
-                        wav2vec2::Clip {
-                            samples: &samples,
-                            sample_rate: MODAL_SAMPLE_RATE,
-                            top_k: MODAL_TOP_K,
-                            return_frame_matrix: true,
-                        }
-                        .into_request(),
-                    );
-                    valid.push((*index, *hash, key));
-                }
-                Err(error) => {
-                    results[*index] = Some(Err(error.context("decoding audio for batch")))
-                }
+    let mut pending = pending.into_iter().peekable();
+    let mut requests = Vec::new();
+    let mut indices = Vec::new();
+    while let Some(index) = pending.next() {
+        match prepare_frame_request(wavs[index].to_vec()).await {
+            Ok(request) => {
+                requests.push((ctx, request));
+                indices.push(index);
             }
+            Err(error) => results[index] = Some(Err(error)),
         }
-        if requests.is_empty() {
-            continue;
-        }
-        let items = match &client {
-            Ok(client) => wav2vec2::predict_batch(client, &requests).await,
-            Err(error) => Err(anyhow::anyhow!("{error:#}")),
-        };
-        match items {
-            Err(error) => {
-                for (index, _, _) in valid {
-                    results[index] = Some(Err(anyhow::anyhow!("{error:#}")));
-                }
-            }
-            Ok(items) => {
-                for ((index, hash, key), item) in valid.into_iter().zip(items) {
-                    results[index] = Some(
-                        async {
-                            let modal = item?;
-                            check_response_identity(ctx, &modal)?;
-                            let payload = modal
-                                .frame_matrix
-                                .as_ref()
-                                .context("batch item has no frame matrix")?;
-                            let frames = FrameMatrix::decode(payload)?;
-                            cache_modal_prediction(ctx, hash, &modal).await?;
-                            ctx.store.write(key, &serde_json::to_vec(payload)?).await?;
-                            Ok(frames)
-                        }
-                        .await,
-                    );
-                }
+        if !requests.is_empty() && (requests.len() == MODAL_BATCH_SIZE || pending.peek().is_none())
+        {
+            let frames = infer_frame_batch_at(std::mem::take(&mut requests), &client, None).await;
+            for (index, frames) in indices.drain(..).zip(frames) {
+                results[index] = Some(frames);
             }
         }
     }
@@ -2435,12 +2495,60 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn corrupt_cached_matrix_is_an_error_not_an_inference_miss() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let empty = HashMap::new();
+        let ctx = VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &empty,
+            Language::English,
+            "test__nonblank_v1".into(),
+            0.3,
+            None,
+        )
+        .unwrap();
+        let wav = b"not audio: neither decoding nor inference should run";
+        let hash = xxh3_64(wav);
+        let key = format!("wav2vec2-frames/test/{hash:016x}");
+        let mut payload = batch_test_payload(1);
+        payload.encoding = "broken".into();
+        let bytes = serde_json::to_vec(&payload).unwrap();
+        ctx.store.write(&key, &bytes).await.unwrap();
+        let cached = cached_frame_matrix(&ctx, hash)
+            .await
+            .expect("not a cache miss");
+        assert!(
+            cached
+                .unwrap_err()
+                .to_string()
+                .contains("unsupported frame matrix format")
+        );
+        let results = frame_matrices_at(
+            &ctx,
+            &[wav],
+            Err(anyhow::anyhow!("inference must not run")),
+            false,
+        )
+        .await;
+        assert!(
+            results[0]
+                .as_ref()
+                .unwrap_err()
+                .to_string()
+                .contains("unsupported frame matrix format")
+        );
+        assert_eq!(ctx.store.read(&key).await.unwrap(), bytes);
+    }
+
+    #[tokio::test]
     async fn batch_cache_misses_are_bounded_ordered_and_isolated() {
         use std::io::Read;
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}", listener.local_addr().unwrap());
         let server = std::thread::spawn(move || {
-            for count in [64, 1] {
+            for (batch, count) in [64, 64, 1].into_iter().enumerate() {
                 let (mut socket, _) = listener.accept().unwrap();
                 socket
                     .set_read_timeout(Some(std::time::Duration::from_secs(30)))
@@ -2479,9 +2587,30 @@ mod tests {
                         |item| item["audio_f32_b64"].is_string() && item.get("audio").is_none()
                     )
                 );
-                let results: Vec<_> = (0..count).map(|i| if count == 64 && i == 1 {
-                    serde_json::json!({"error": {"type": "ValueError", "message": "bad clip"}})
-                } else {
+                if batch == 1 {
+                    // A fatal request-wide error fails these 64 clips, not
+                    // the subsequent tail. It must not enter retry backoff.
+                    write!(
+                        socket,
+                        "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                    )
+                    .unwrap();
+                    continue;
+                }
+                let results: Vec<_> = (0..count).map(|i| {
+                    if batch == 0 {
+                        match i {
+                            1 => return serde_json::json!({"error": {"type": "ValueError", "message": "bad clip"}}),
+                            2 => return serde_json::json!({"phonemes": [], "frame_matrix": batch_test_payload(1), "deploy_marker": "wrong"}),
+                            3 => return serde_json::json!({"phonemes": []}),
+                            4 => {
+                                let mut invalid = batch_test_payload(1);
+                                invalid.encoding = "invalid".into();
+                                return serde_json::json!({"phonemes": [], "frame_matrix": invalid});
+                            }
+                            _ => {}
+                        }
+                    }
                     serde_json::json!({"phonemes": [], "frame_matrix": batch_test_payload(1)})
                 }).collect();
                 let body = serde_json::to_vec(
@@ -2512,29 +2641,31 @@ mod tests {
             .write(&key, &serde_json::to_vec(&batch_test_payload(2)).unwrap())
             .await
             .unwrap();
-        let mut wavs = vec![cached];
-        wavs.extend((0..65).map(batch_test_wav));
-        wavs.push(b"invalid WAV".to_vec());
+        // An early decode failure must be compacted out before chunking;
+        // it must not shrink the first otherwise-full request to 63 items.
+        let mut wavs = vec![cached, b"invalid WAV".to_vec()];
+        wavs.extend((0..129).map(batch_test_wav));
         let refs: Vec<_> = wavs.iter().map(Vec::as_slice).collect();
         let client = PhonemizerClient::with_endpoints(http.clone(), &url, &url);
         let results = frame_matrices_at(&ctx, &refs, client, false).await;
         server.join().unwrap();
-        assert_eq!(results.len(), 67);
+        assert_eq!(results.len(), 131);
         assert_eq!(results[0].as_ref().unwrap().frames, 2);
+        let expected_errors: Vec<_> = [1, 3, 4, 5, 6].into_iter().chain(66..130).collect();
         assert_eq!(
             results
                 .iter()
                 .enumerate()
                 .filter_map(|(i, r)| r.is_err().then_some(i))
                 .collect::<Vec<_>>(),
-            vec![2, 66]
+            expected_errors
         );
-        assert_eq!(results[65].as_ref().unwrap().frames, 1);
+        assert_eq!(results[130].as_ref().unwrap().frames, 1);
         // No endpoint required for cache hits; cache-only misses never make HTTP calls.
         let cached =
             frame_matrices_at(&ctx, &refs, Err(anyhow::anyhow!("no endpoint")), true).await;
-        assert_eq!(cached.iter().filter(|r| r.is_ok()).count(), 65);
-        let hash = xxh3_64(&wavs[1]);
+        assert_eq!(cached.iter().filter(|r| r.is_ok()).count(), 62);
+        let hash = xxh3_64(&wavs[2]);
         let prediction_key = format!("wav2vec2/test__nonblank_v1/{hash:016x}");
         assert!(ctx.store.read(&prediction_key).await.is_some());
         assert!(

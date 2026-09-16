@@ -1257,7 +1257,7 @@ async fn generate_pronunciation_feedback(
         eprintln!("Invalid Modal endpoint: {e}");
         StatusCode::BAD_GATEWAY
     })?;
-    let predictions = wav2vec2::predict_batch(&client, &[user, reference])
+    let predictions = wav2vec2::predict_batch(&client, &[user, reference], None)
         .await
         .map_err(|e| {
             eprintln!("Modal request failed: {e}");

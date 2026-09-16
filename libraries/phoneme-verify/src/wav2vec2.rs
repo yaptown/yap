@@ -5,6 +5,9 @@ use lexide::pronunciation::{
     BatchResponse, BatchResult, PredictRequest, PredictResponse, remote::PhonemizerClient,
 };
 
+mod activity;
+pub use activity::{RequestActivity, RequestActivitySnapshot};
+
 use super::{check_decoder, merge_metadata};
 
 const MODAL_PREDICT_URL_DEFAULT: &str =
@@ -117,10 +120,15 @@ fn is_transient_error(error: &anyhow::Error) -> bool {
 pub async fn predict_batch(
     client: &PhonemizerClient,
     requests: &[PredictRequest],
+    activity: Option<&RequestActivity>,
 ) -> Result<Vec<Result<PredictResponse>>> {
     let mut last_err: Option<anyhow::Error> = None;
     for attempt in 1..=MAX_ATTEMPTS {
-        match client.predict_batch(requests).await {
+        let response = {
+            let _attempt = activity.map(|activity| activity.begin(attempt > 1));
+            client.predict_batch(requests).await
+        };
+        match response {
             Ok(batch) => return split_batch(batch),
             Err(error) if !is_transient_error(&error) => return Err(error),
             Err(error) => last_err = Some(error),
@@ -353,7 +361,7 @@ mod tests {
             let request = PredictRequest::from_samples(&[0.0, 1.0, -0.5]);
             let error = tokio::time::timeout(
                 Duration::from_secs(2),
-                predict_batch(&client, std::slice::from_ref(&request)),
+                predict_batch(&client, std::slice::from_ref(&request), None),
             )
             .await
             .expect("fatal status must not enter the five-second backoff")
@@ -386,12 +394,24 @@ mod tests {
             PredictRequest::from_samples(&[1.0]),
         ];
         let start = std::time::Instant::now();
-        let results =
-            tokio::time::timeout(Duration::from_secs(10), predict_batch(&client, &requests))
-                .await
-                .unwrap()
-                .unwrap();
+        let activity = RequestActivity::default();
+        let results = tokio::time::timeout(
+            Duration::from_secs(10),
+            predict_batch(&client, &requests, Some(&activity)),
+        )
+        .await
+        .unwrap()
+        .unwrap();
         assert!(start.elapsed() >= Duration::from_secs(5));
+        let snapshot = activity.snapshot();
+        assert_eq!(snapshot.attempts, 2);
+        assert_eq!(snapshot.retries, 1);
+        assert_eq!(snapshot.active_requests, 0);
+        assert_eq!(snapshot.peak_requests, 1);
+        assert!(
+            snapshot.without_request >= Duration::from_secs(5),
+            "retry backoff is not HTTP activity"
+        );
         assert_eq!(
             results[0].as_ref().unwrap().deploy_marker.as_deref(),
             Some("fresh")
@@ -509,7 +529,7 @@ mod tests {
             return_frame_matrix: false,
         }
         .into_request();
-        let results = predict_batch(&client, &[silence.clone(), silence])
+        let results = predict_batch(&client, &[silence.clone(), silence], None)
             .await
             .unwrap();
         assert_eq!(results.len(), 2);
