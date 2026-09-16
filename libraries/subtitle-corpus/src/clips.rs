@@ -1077,6 +1077,9 @@ async fn clips_one(
                     clip.voiced = voiced_fraction(span_samples, 16_000);
                 }
                 if min_ratio.is_some() {
+                    // Raw CTC scores only the single default-voice target, without
+                    // accepted-variant readings (including Spanish seseo). A seseo
+                    // Spanish clip therefore scores worse than on the edit-distance path.
                     let target = match phoneme_verify::model_target(&sentence, language) {
                         Some(Ok(p)) if !p.phonemes.is_empty() => p.phonemes,
                         Some(Ok(_)) | None => {

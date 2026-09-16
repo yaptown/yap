@@ -58,11 +58,19 @@ impl Verdict {
     }
 }
 
-/// The language name a listener should judge the track against. Radarr says
-/// "Chinese" for every Chinese-language film; the course is Mandarin.
+/// The language name a listener should judge the track against. Radarr names
+/// the language, not the variety, and where a course teaches one variety the
+/// other is not usable: "Chinese" covers Cantonese films the Mandarin course
+/// cannot use, and "Portuguese" covers European films the Brazilian course
+/// cannot use. Narrow to the variety the course teaches, so a track in the
+/// other one comes back `expected_language_spoken: false` and is evicted.
+///
+/// Narrowing a language here invalidates the stored verdicts judged against
+/// the old name — see `audio_checked`, which compares this string.
 pub fn expected_language(original_language: &str) -> &str {
     match original_language {
         "Chinese" | "Mandarin" => "Mandarin Chinese",
+        "Portuguese" => "Brazilian Portuguese",
         other => other,
     }
 }

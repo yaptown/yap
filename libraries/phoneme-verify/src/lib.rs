@@ -985,6 +985,9 @@ pub async fn segment_timings(
     let mut ids = Vec::new();
     let mut spans = Vec::with_capacity(segments.len());
     for segment in segments {
+        // Raw CTC uses only the single default-voice target, not accepted-variant
+        // readings (including Spanish seseo). Seseo-pronounced Spanish therefore
+        // scores worse here than on the edit-distance path.
         let phonemized = model_target(segment, ctx.target_language)
             .ok_or_else(|| anyhow::anyhow!("no g2p for {:?}", ctx.target_language))?
             .with_context(|| format!("phonemizing {segment:?}"))?;
@@ -1893,6 +1896,10 @@ mod tests {
     #[test]
     fn split_canon_requires_resolved_g2p_before_0_4() {
         // Query the actual linked crate, not a duplicate hard-coded version.
+        // This tripwire is one-sided: it catches our g2p bump, not the deployed
+        // model moving to merged-token labels first (as it did while we pinned
+        // 0.3.0). Pinned lexide's ModelIdentity has id/revision/decoder/deploy-marker
+        // but no label-canon field; a runtime check needs that upstream first.
         let identity = g2p::identity();
         let version = identity
             .split_whitespace()
@@ -1904,7 +1911,10 @@ mod tests {
         let major_minor = (parts.next().unwrap(), parts.next().unwrap());
         assert!(
             major_minor < (0, 4),
-            "g2p {version}: flip split normalization together with the deployed model"
+            "g2p {version}: flip split normalization together with the deployed model. \
+             This only guards the local g2p bump, not a deployed-model canon change \
+             first (already seen while pinned to 0.3.0); pinned lexide's ModelIdentity \
+             has no label-canon field, so runtime detection needs an upstream change"
         );
     }
 
@@ -2733,6 +2743,57 @@ mod tests {
             assert!(readings.iter().all(|r| r.len() == 5));
             let phrase = model_target(text, Language::Portuguese).unwrap().unwrap();
             assert!(readings.iter().any(|r| r.concat() == phrase.phonemes));
+        }
+    }
+
+    #[test]
+    fn phoneme_label_source_mirror_matches_g2p() {
+        // Generate the list and an exhaustive identity match together: adding a
+        // Language variant must fail to compile rather than escape this check.
+        macro_rules! languages {
+            ($($language:ident),* $(,)?) => {
+                [$(Language::$language),*].map(|language| match language {
+                    $(Language::$language => Language::$language),*
+                })
+            };
+        }
+        for language in languages![
+            French,
+            English,
+            Spanish,
+            Korean,
+            German,
+            ChineseSimplified,
+            ChineseTraditional,
+            Japanese,
+            Russian,
+            Portuguese,
+            Italian,
+            Hindi,
+            Thai,
+        ] {
+            let mirror = language.phoneme_label_source();
+            let lang = language.g2p_lang();
+            assert_eq!(
+                mirror == PhonemeLabelSource::Unvalidated,
+                lang.is_none(),
+                "{language:?}: label-source mirror/support gate drifted from g2p; \
+                 fix Language::phoneme_label_source and Language::g2p_lang together"
+            );
+            let expected = match mirror {
+                PhonemeLabelSource::Espeak(voice) => Some(g2p::LabelSource::Espeak(voice)),
+                PhonemeLabelSource::Hindi => Some(g2p::LabelSource::Hindi),
+                PhonemeLabelSource::Mandarin => Some(g2p::LabelSource::Mandarin),
+                PhonemeLabelSource::Japanese => Some(g2p::LabelSource::Japanese),
+                PhonemeLabelSource::Thai => Some(g2p::LabelSource::Thai),
+                PhonemeLabelSource::Unvalidated => None,
+            };
+            assert_eq!(
+                expected,
+                lang.and_then(g2p::label_source),
+                "{language:?}: label-source mirror drifted from g2p::label_source; \
+                 fix Language::phoneme_label_source to match the pinned g2p table"
+            );
         }
     }
 

@@ -2921,6 +2921,12 @@ const TRADITIONAL_ONLY: &str = "國會這說對時們來學見還沒電車門問
 /// Mirrors lexide's `PHONEME_BACKENDS.md`; see
 /// [`Language::phoneme_label_source`] for why mixing sources is a
 /// correctness bug rather than a quality trade-off.
+///
+/// The `Espeak` voice string is documentation and a support gate only, not
+/// runtime voice selection: yap passes a language code to `phonemize_lang_with`,
+/// so the voice actually used comes from `g2p::label_source`. The
+/// `phoneme_label_source_mirror_matches_g2p` test in phoneme-verify keeps them
+/// in sync; language-utils cannot depend on g2p.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PhonemeLabelSource {
     /// espeak-ng fork, with this voice code, via the g2p crate. Must match
@@ -2984,6 +2990,14 @@ impl Language {
             // `LANG_TO_ESPEAK` exactly — including `pt-br`, not `pt`:
             // European Portuguese targets against Brazilian audio measured
             // 41% median phoneme distance where `pt-br` measured 31%.
+            //
+            // `pt-br` with no European variant is deliberate, and unlike
+            // Spanish: the course teaches Brazilian Portuguese, so European
+            // recordings are meant to be *excluded* rather than accepted as
+            // an alternative reading. Spanish gets a seseo variant because
+            // both readings are taught; Portuguese must not grow one without
+            // that product decision changing first. Corpus audio is filtered
+            // upstream by `audio_check::expected_language`.
             Language::French => PhonemeLabelSource::Espeak("fr-fr"),
             Language::English => PhonemeLabelSource::Espeak("en-us"),
             Language::Spanish => PhonemeLabelSource::Espeak("es"),

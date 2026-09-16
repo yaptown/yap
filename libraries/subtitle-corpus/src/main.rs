@@ -1633,10 +1633,16 @@ struct AudioCheck {
     verdict: audio_check::Verdict,
 }
 
-/// Whether the extracted track has already been heard by the current model.
-/// A rejected track is evicted on the spot, so a verdict that still matches
-/// the artifact is an acceptance.
-fn audio_checked(dir: &std::path::Path) -> bool {
+/// Whether the extracted track has already been heard by the current model,
+/// judged against the variety the course teaches now. A rejected track is
+/// evicted on the spot, so a verdict that still matches the artifact is an
+/// acceptance.
+///
+/// `expected` is part of the freshness test because it is part of the
+/// question: a track heard as "Portuguese" was never asked whether it was
+/// Brazilian, so narrowing `audio_check::expected_language` re-opens exactly
+/// the films whose verdict answered the older, broader question.
+fn audio_checked(dir: &std::path::Path, expected: &str) -> bool {
     let Some(stamp) = read_audio_stamp(dir) else {
         return false;
     };
@@ -1645,6 +1651,7 @@ fn audio_checked(dir: &std::path::Path) -> bool {
         .and_then(|b| serde_json::from_slice::<AudioCheck>(&b).ok())
         .is_some_and(|c| {
             c.model == audio_check::MODEL
+                && c.expected == expected
                 && c.filename == stamp.filename
                 && c.stream == stamp.stream
         })
@@ -1782,7 +1789,8 @@ async fn audio_check(out: PathBuf, jobs: usize, limit: usize, imdb: Option<Strin
         .filter(|m| imdb.as_deref().is_none_or(|id| m.imdb_id == id))
         .filter(|m| {
             let dir = out.join(&m.imdb_id);
-            extracted_audio(m, &dir).is_some() && !audio_checked(&dir)
+            extracted_audio(m, &dir).is_some()
+                && !audio_checked(&dir, audio_check::expected_language(&m.original_language))
         })
         .collect();
     if limit > 0 {
