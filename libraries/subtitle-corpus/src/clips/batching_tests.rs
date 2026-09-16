@@ -164,7 +164,7 @@ async fn global_batches_sort_compact_route_and_prefetch_after_discovery() {
             active.set(active.get() - 1);
             match cut.start / 1000 - 1 {
                 2 => bail!("invalid WAV"),
-                3 => return Ok(FrameInput::Cached(matrix(cut.hash))),
+                3 => return Ok(FrameInput::Cached(Box::new(matrix(cut.hash)))),
                 4 => bail!("cached matrix cannot decode"),
                 _ => {}
             }

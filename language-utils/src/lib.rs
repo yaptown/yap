@@ -2923,7 +2923,7 @@ const TRADITIONAL_ONLY: &str = "國會這說對時們來學見還沒電車門問
 /// correctness bug rather than a quality trade-off.
 ///
 /// The `Espeak` voice string is documentation and a support gate only, not
-/// runtime voice selection: yap passes a language code to `phonemize_lang_with`,
+/// runtime voice selection: yap passes a language code to `phonemize_lang`,
 /// so the voice actually used comes from `g2p::label_source`. The
 /// `phoneme_label_source_mirror_matches_g2p` test in phoneme-verify keeps them
 /// in sync; language-utils cannot depend on g2p.
@@ -2941,6 +2941,8 @@ pub enum PhonemeLabelSource {
     /// The g2p crate's Thai chain (vachana-thai as an embedded pinned Python
     /// project; needs `uv` on the machine that scores).
     Thai,
+    /// The g2p crate's Korean chain (g2pk2 + mecab-ko).
+    Korean,
     /// No validated label source. Scoring is not supported.
     Unvalidated,
 }
@@ -3019,19 +3021,14 @@ impl Language {
             // Traditional-script Mandarin has no corpus of its own; the
             // model never saw it, so there is no label source to name.
             Language::ChineseTraditional => PhonemeLabelSource::Unvalidated,
-            // The g2p crate labels Korean (g2pk2 + mecab-ko, 2026-09-03
-            // audit: 95.6% of Wiktionary words; espeak `ko` 47%), but the
-            // deployed model has never been trained on Korean — lexide has
-            // no Korean audio yet. Unvalidated until a model trained on the
-            // g2p-kor labels ships: refusing to score is honest, scoring
-            // against a model that never heard the language is not.
-            Language::Korean => PhonemeLabelSource::Unvalidated,
+            // g2pk2 + mecab-ko, the Korean training-label source.
+            Language::Korean => PhonemeLabelSource::Korean,
         }
     }
 
     /// The language code to hand `g2p::phonemize_lang`, but **only** for
     /// languages whose deployed-model labels the g2p crate produces. `None`
-    /// for the unvalidated languages (Korean, Traditional Mandarin), so a
+    /// for Traditional Mandarin, whose model labels are unvalidated, so a
     /// caller that reaches for a target there gets nothing rather than a
     /// plausible-looking wrong answer.
     pub fn g2p_lang(&self) -> Option<&'static str> {

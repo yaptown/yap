@@ -128,35 +128,19 @@ pub fn production_cache_version() -> Result<String> {
     Ok(production_model()?.version.clone())
 }
 
-/// The Hindi label convention the deployed model was trained on. The g2p
-/// crate's `Current` canon carries corrections (ə→[ɛ] beside ɦ and others)
-/// that lexide will relabel with before the next retrain; until a model
-/// trained on those ships, targets must use the convention the model
-/// learned, or 39% of Hindi rows would be scored against a vowel the model
-/// was taught to call something else. Review when deploying a new model.
-pub const MODEL_HINDI_CANON: g2p::HindiCanon = g2p::HindiCanon::Legacy;
-
-/// Identity of the target renderer, including the model's Hindi convention
-/// only for Hindi. Persist alongside model identity when caching scores.
-pub fn model_target_identity(language: Language) -> String {
-    let identity = g2p::identity();
-    if language == Language::Hindi {
-        format!("{identity} hindi={MODEL_HINDI_CANON:?}")
-    } else {
-        identity
-    }
+/// Identity of the target renderer. Persist alongside model identity when caching scores.
+pub fn model_target_identity() -> String {
+    g2p::identity()
 }
 
-/// The scoring target for `text` in `language`, in the deployed model's
-/// label space: espeak-fork phonemes for espeak-labeled languages, the Hindi
-/// chain at [`MODEL_HINDI_CANON`] for Hindi. `None` for languages the model
-/// has no g2p-produced labels for (see `Language::g2p_lang`).
+/// The scoring target for `text` in `language`, using g2p's training-label
+/// source. `None` for languages without validated model labels (see
+/// `Language::g2p_lang`).
 pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonemized, g2p::Error>> {
     // TODO(g2p): expose a disable-language-switch option, then use it here.
-    // The pinned API only accepts text/voice (and HindiCanon); French words
-    // such as polyuréthane and Giverny can currently switch to English.
+    // French words such as polyuréthane and Giverny can currently switch to English.
     let lang = language.g2p_lang()?;
-    Some(g2p::phonemize_lang_with(lang, text, MODEL_HINDI_CANON))
+    Some(g2p::phonemize_lang(lang, text))
 }
 
 /// The on-disk cache payload. Stores both the raw chosen phonemes and the
@@ -347,6 +331,7 @@ impl<'a> VerifyContext<'a> {
             | PhonemeLabelSource::Hindi
             | PhonemeLabelSource::Mandarin
             | PhonemeLabelSource::Japanese
+            | PhonemeLabelSource::Korean
             | PhonemeLabelSource::Thai => {}
             PhonemeLabelSource::Unvalidated => anyhow::bail!(
                 "{:?} has no validated phoneme label source — refusing to \
@@ -1159,9 +1144,8 @@ fn decode_wav_to_f32(wav_bytes: &[u8]) -> Result<Vec<f32>> {
 /// Expand a raw IPA token into the deployed model's comparable token sequence.
 /// Shared by expected readings, predictions, and top-k alternatives.
 ///
-/// The deployed model and g2p pin 3ae99aa (<0.4) use the OLD split canon.
-/// When upgrading the g2p pin to >=0.4, flip this normalization to the merged
-/// canon together with the deployed model; do not silently mix label spaces.
+/// TODO(g2p): the pending pin update must reconcile this split-token
+/// normalization with the deployed model's merged-token labels.
 /// Only explicit tie bars split tokens: preserve untied diphthongs/diacritics.
 pub fn normalize_phonemes(token: &str, language: Language) -> Vec<String> {
     token
@@ -1975,31 +1959,6 @@ pub fn cache_only() -> bool {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn split_canon_requires_resolved_g2p_before_0_4() {
-        // Query the actual linked crate, not a duplicate hard-coded version.
-        // This tripwire is one-sided: it catches our g2p bump, not the deployed
-        // model moving to merged-token labels first (as it did while we pinned
-        // 0.3.0). Pinned lexide's ModelIdentity has id/revision/decoder/deploy-marker
-        // but no label-canon field; a runtime check needs that upstream first.
-        let identity = g2p::identity();
-        let version = identity
-            .split_whitespace()
-            .next()
-            .unwrap()
-            .strip_prefix("g2p/")
-            .unwrap();
-        let mut parts = version.split('.').map(|part| part.parse::<u32>().unwrap());
-        let major_minor = (parts.next().unwrap(), parts.next().unwrap());
-        assert!(
-            major_minor < (0, 4),
-            "g2p {version}: flip split normalization together with the deployed model. \
-             This only guards the local g2p bump, not a deployed-model canon change \
-             first (already seen while pinned to 0.3.0); pinned lexide's ModelIdentity \
-             has no label-canon field, so runtime detection needs an upstream change"
-        );
-    }
-
-    #[test]
     fn tied_affricates_expand_symmetrically_in_every_language() {
         for language in [
             Language::German,
@@ -2348,12 +2307,8 @@ mod tests {
     }
 
     #[test]
-    fn model_target_identity_stamps_only_hindi_canon() {
-        assert_eq!(model_target_identity(Language::French), g2p::identity());
-        assert_eq!(
-            model_target_identity(Language::Hindi),
-            format!("{} hindi={MODEL_HINDI_CANON:?}", g2p::identity())
-        );
+    fn model_target_identity_is_the_g2p_identity() {
+        assert_eq!(model_target_identity(), g2p::identity());
     }
 
     #[test]
@@ -2754,7 +2709,8 @@ mod tests {
         wp.insert("bonjour".to_string(), ap("b ɔ̃ ʒ u ʁ", &[]));
         wp.insert("madame".to_string(), ap("m a d a m", &[]));
         let readings =
-            ground_truth_phoneme_variants("Bonjour madame", &wp, Language::Korean).unwrap();
+            ground_truth_phoneme_variants("Bonjour madame", &wp, Language::ChineseTraditional)
+                .unwrap();
         assert_eq!(
             readings,
             vec![vec![
@@ -2819,10 +2775,11 @@ mod tests {
         let mut wp = HashMap::new();
         wp.insert("bonjour".to_string(), ap("b ɔ̃ ʒ u ʁ", &[]));
         wp.insert("madame".to_string(), ap("m a d a m", &[]));
-        // Use a language without espeak support (Korean is disabled) so
+        // Use Traditional Mandarin, which has no validated g2p source, so
         // the test isolates the wikipron-only path; the espeak path is
         // covered by `ground_truth_includes_espeak_variant_for_supported_languages`.
-        let variants = flat_variants("Bonjour, madame!", &wp, Language::Korean).unwrap();
+        let variants =
+            flat_variants("Bonjour, madame!", &wp, Language::ChineseTraditional).unwrap();
         assert_eq!(variants.len(), 1);
         assert_eq!(
             variants[0],
@@ -2833,11 +2790,11 @@ mod tests {
     #[test]
     fn ground_truth_enumerates_per_word_variants() {
         // `mes` has both /me/ and /mɛ/ in wikipron — phrase "mes" alone
-        // should produce both candidate sequences. Use Korean to skip
+        // should produce both candidate sequences. Use Traditional Mandarin to skip
         // the espeak addition (which would inject a third candidate).
         let mut wp = HashMap::new();
         wp.insert("mes".to_string(), ap("m e", &["m ɛ"]));
-        let variants = flat_variants("mes", &wp, Language::Korean).unwrap();
+        let variants = flat_variants("mes", &wp, Language::ChineseTraditional).unwrap();
         assert_eq!(variants.len(), 2);
         assert!(variants.contains(&vec!["m".to_string(), "e".to_string()]));
         assert!(variants.contains(&vec!["m".to_string(), "ɛ".to_string()]));
@@ -2848,7 +2805,7 @@ mod tests {
         let mut wp = HashMap::new();
         wp.insert("mes".to_string(), ap("m e", &["m ɛ"]));
         wp.insert("amis".to_string(), ap("a m i", &["a m i z"]));
-        let variants = flat_variants("mes amis", &wp, Language::Korean).unwrap();
+        let variants = flat_variants("mes amis", &wp, Language::ChineseTraditional).unwrap();
         // 2 × 2 = 4 phrase candidates
         assert_eq!(variants.len(), 4);
     }
@@ -2857,7 +2814,7 @@ mod tests {
     fn ground_truth_returns_none_on_missing_word() {
         let mut wp = HashMap::new();
         wp.insert("bonjour".to_string(), ap("b ɔ̃ ʒ u ʁ", &[]));
-        assert!(flat_variants("bonjour madame", &wp, Language::Korean).is_none());
+        assert!(flat_variants("bonjour madame", &wp, Language::ChineseTraditional).is_none());
     }
 
     // One word wikipron lacks must not cost the phrase its wikipron variants
@@ -2882,12 +2839,12 @@ mod tests {
 
     #[test]
     fn ground_truth_caps_combinations_preserving_earlier_alternates() {
-        // Korean isolates the dictionary path. 2^100 would overflow usize;
+        // Traditional Mandarin isolates the dictionary path. 2^100 would overflow usize;
         // both phrases must instead keep the same bounded prefix choices.
         let wp = HashMap::from([("a".to_string(), ap("X", &["Y"]))]);
         for count in [5, 100] {
             let text = vec!["a"; count].join(" ");
-            let variants = flat_variants(&text, &wp, Language::Korean).unwrap();
+            let variants = flat_variants(&text, &wp, Language::ChineseTraditional).unwrap();
             assert_eq!(variants.len(), MAX_VARIANT_COMBINATIONS);
             for (index, variant) in variants.iter().enumerate() {
                 let expected: Vec<&str> = (0..count)
@@ -2903,7 +2860,7 @@ mod tests {
             }
             assert_eq!(
                 variants,
-                flat_variants(&text, &wp, Language::Korean).unwrap()
+                flat_variants(&text, &wp, Language::ChineseTraditional).unwrap()
             );
         }
     }
@@ -2980,12 +2937,13 @@ mod tests {
                 PhonemeLabelSource::Hindi => Some(g2p::LabelSource::Hindi),
                 PhonemeLabelSource::Mandarin => Some(g2p::LabelSource::Mandarin),
                 PhonemeLabelSource::Japanese => Some(g2p::LabelSource::Japanese),
+                PhonemeLabelSource::Korean => Some(g2p::LabelSource::Korean),
                 PhonemeLabelSource::Thai => Some(g2p::LabelSource::Thai),
                 PhonemeLabelSource::Unvalidated => None,
             };
             assert_eq!(
                 expected,
-                lang.and_then(g2p::label_source),
+                g2p::label_source(language.code()),
                 "{language:?}: label-source mirror drifted from g2p::label_source; \
                  fix Language::phoneme_label_source to match the pinned g2p table"
             );
@@ -3118,19 +3076,42 @@ mod tests {
     }
 
     #[test]
-    fn hindi_targets_use_the_deployed_models_label_canon() {
-        // The model was trained on lexide's legacy schwa-stress-hin labels
-        // (यह = /jəɦ/, no ə→ɛ raising); scoring against the corrected canon
-        // would mismatch on 39% of Hindi rows until a retrained model ships.
-        let target = model_target("यह शहर", Language::Hindi)
+    fn hindi_targets_use_g2p_training_labels() {
+        let target = model_target("यह शहर ज्ञान", Language::Hindi)
             .expect("Hindi is g2p-labeled")
             .expect("hindi chain runs");
-        assert_eq!(target.phonemes, ["j", "ə", "ɦ", "ʃ", "ə", "ɦ", "ə", "ɾ"]);
-        assert_eq!(target.word_spans, [(0, 3), (3, 8)]);
-        // Unvalidated languages get no target at all, never a
-        // plausible-looking wrong one.
+        assert_eq!(
+            target.phonemes,
+            ["j", "eː", "ʃ", "ɛː", "ɦ", "ɛː", "ɾ", "ɡ", "j", "aː", "n"]
+        );
+        assert_eq!(target.word_spans, [(0, 2), (2, 7), (7, 11)]);
+        // Refuse targets with holes where the recording still contains speech.
+        for text in ["19 वीं", "AOL अपनी"] {
+            assert!(model_target(text, Language::Hindi).unwrap().is_err());
+        }
         assert!(model_target("國家", Language::ChineseTraditional).is_none());
-        assert!(model_target("안녕", Language::Korean).is_none());
+    }
+
+    #[test]
+    fn korean_verification_accepts_the_g2p_label_source() {
+        assert_eq!(Language::Korean.g2p_lang(), Some("kor"));
+        assert_eq!(
+            Language::Korean.phoneme_label_source(),
+            PhonemeLabelSource::Korean
+        );
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let words = HashMap::new();
+        VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &words,
+            Language::Korean,
+            "test".into(),
+            0.3,
+            None,
+        )
+        .expect("Korean labels are supported without probing the endpoint");
     }
 
     #[test]

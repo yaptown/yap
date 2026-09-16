@@ -934,14 +934,13 @@ async fn prepare_film(
         }
         Some(min_ratio)
     };
-    // Which phonemizer, and for Hindi which label convention, the targets
-    // came from; either changing must re-score every clip. An audio-only
-    // language has neither a phonemizer nor a model in its provenance.
+    // Which phonemizer the targets came from; changing it must re-score every
+    // clip. An audio-only language has neither a phonemizer nor a model in its provenance.
     let (model, g2p) = match min_ratio {
         None => ("none".to_string(), "none".to_string()),
         Some(_) => (
             phoneme_verify::production_cache_version()?,
-            phoneme_verify::model_target_identity(language),
+            phoneme_verify::model_target_identity(),
         ),
     };
     let provenance = Provenance {
@@ -1265,7 +1264,7 @@ struct AudioCut {
 }
 
 enum FrameInput<P> {
-    Cached(FrameMatrix),
+    Cached(Box<FrameMatrix>),
     Request(P),
 }
 
@@ -1432,7 +1431,7 @@ async fn map_staged<P>(
                         requests.push(request);
                         slots.push((film_index, clip_index));
                     }
-                    Ok(FrameInput::Cached(frames)) => apply_frames(film, clip_index, Ok(frames), gate),
+                    Ok(FrameInput::Cached(frames)) => apply_frames(film, clip_index, Ok(*frames), gate),
                     Err(error) => apply_frames(film, clip_index, Err(error), gate),
                 }
             }
@@ -1477,7 +1476,7 @@ async fn prepare_pending<'a>(
     // Another batch/process may have filled this key since discovery. A
     // duplicate WAV still has its own slot, target and language-specific gate.
     if let Some(cached) = phoneme_verify::cached_frame_matrix(&ctx, cut.hash).await {
-        return cached.map(FrameInput::Cached);
+        return cached.map(|frames| FrameInput::Cached(Box::new(frames)));
     }
     anyhow::ensure!(
         !phoneme_verify::cache_only(),

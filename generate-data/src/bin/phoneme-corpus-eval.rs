@@ -87,23 +87,17 @@ struct Provenance {
 
 impl Provenance {
     fn new(ctx: &VerifyContext<'_>) -> Result<Self> {
-        Ok(Self::from_verified_identity(
-            ctx.verified_model_identity()?,
-            ctx.target_language,
-        ))
+        Ok(Self::from_verified_identity(ctx.verified_model_identity()?))
     }
 
-    fn from_verified_identity(
-        model: &lexide::pronunciation::ModelIdentity,
-        language: Language,
-    ) -> Self {
+    fn from_verified_identity(model: &lexide::pronunciation::ModelIdentity) -> Self {
         Self {
             model_id: model.model_id.clone(),
             model_revision: model.model_revision.clone(),
             // Production validates a reported decoder against this version,
             // and uses it for cache keys even when legacy endpoints omit it.
             decoder_version: lexide::pronunciation::DECODER_VERSION.into(),
-            g2p: phoneme_verify::model_target_identity(language),
+            g2p: phoneme_verify::model_target_identity(),
         }
     }
 }
@@ -680,12 +674,12 @@ fn print_group_summary<'a>(records: impl Iterator<Item = &'a EvalRecord>) {
 mod tests {
     use super::*;
 
-    fn provenance(language: Language) -> Provenance {
+    fn provenance() -> Provenance {
         Provenance {
             model_id: "test/model".into(),
             model_revision: "1234567890ab-full-revision".into(),
             decoder_version: lexide::pronunciation::DECODER_VERSION.into(),
-            g2p: phoneme_verify::model_target_identity(language),
+            g2p: phoneme_verify::model_target_identity(),
         }
     }
 
@@ -723,7 +717,7 @@ mod tests {
 
     #[test]
     fn resume_requires_full_model_decoder_and_target_identity() {
-        let current = provenance(Language::French);
+        let current = provenance();
         let records = vec![record(Some(current.clone()))];
         assert!(completed_cues(&records, "fra", &current).contains(&("tt1", 7)));
         assert!(completed_cues(&records, "hin", &current).is_empty());
@@ -758,17 +752,14 @@ mod tests {
             decoder_version: None,
             deploy_marker: Some("deployment-a".into()),
         };
-        let stamp = Provenance::from_verified_identity(&model, Language::French);
+        let stamp = Provenance::from_verified_identity(&model);
         assert_eq!(
             stamp.decoder_version,
             lexide::pronunciation::DECODER_VERSION
         );
         model.decoder_version = Some(lexide::pronunciation::DECODER_VERSION.into());
         model.deploy_marker = Some("deployment-b".into());
-        assert_eq!(
-            stamp,
-            Provenance::from_verified_identity(&model, Language::French)
-        );
+        assert_eq!(stamp, Provenance::from_verified_identity(&model));
         let records = vec![record(Some(stamp.clone()))];
         let mut next_decoder = stamp;
         next_decoder.decoder_version.push_str("-next");
@@ -776,17 +767,16 @@ mod tests {
     }
 
     #[test]
-    fn hindi_canon_is_language_aware_and_invalidates_resume() {
-        let current = provenance(Language::Hindi);
-        assert!(current.g2p.contains(" hindi="));
-        assert!(!provenance(Language::French).g2p.contains(" hindi="));
+    fn hindi_target_change_invalidates_old_resume() {
+        let current = provenance();
+        assert_eq!(current.g2p, phoneme_verify::model_target_identity());
         let mut r = record(Some(current.clone()));
         r.lang = "hin".into();
         let records = vec![r];
         assert_eq!(completed_cues(&records, "hin", &current).len(), 1);
-        let mut changed = current;
-        changed.g2p = format!("{} hindi=another-canon", provenance(Language::French).g2p);
-        assert!(completed_cues(&records, "hin", &changed).is_empty());
+        let mut historical = current;
+        historical.g2p.push_str(" hindi=Legacy");
+        assert!(completed_cues(&records, "hin", &historical).is_empty());
     }
 
     #[test]
@@ -794,7 +784,7 @@ mod tests {
         let records = vec![record(None)];
         assert!(records[0].ctc.is_none());
         assert!(records[0].verification.cache_version.is_none());
-        assert!(completed_cues(&records, "fra", &provenance(Language::French)).is_empty());
+        assert!(completed_cues(&records, "fra", &provenance()).is_empty());
         let (groups, unstamped) = summary_groups(&records);
         assert!(groups.is_empty());
         assert_eq!(unstamped, 1);
@@ -806,7 +796,7 @@ mod tests {
 
     #[test]
     fn summaries_separate_provenance_and_use_latest_matching_row() {
-        let first = provenance(Language::French);
+        let first = provenance();
         let mut other = first.clone();
         other.model_revision.push_str("-other");
         let mut old = record(Some(first.clone()));
