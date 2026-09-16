@@ -663,6 +663,8 @@ async fn export_one(
             "alignment": alignment.unwrap_or(serde_json::Value::Null),
         },
         "verification": {
+            "measured": clip.measured,
+            "audio_hash": clip.audio_hash,
             "passed": clip.passed,
             "reject": clip.reject,
             "transcript_wer": clip.transcript_wer,

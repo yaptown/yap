@@ -1735,6 +1735,59 @@ async fn prepare_pending<'a>(
     Ok(FrameInput::Request((ctx, request)))
 }
 
+#[derive(Default)]
+struct ModelCounts {
+    models: std::collections::BTreeMap<String, usize>,
+    no_model: usize,
+    unreadable_files: usize,
+}
+
+fn count_models(paths: impl IntoIterator<Item = PathBuf>) -> ModelCounts {
+    let mut counts = ModelCounts::default();
+    for path in paths {
+        match read_clips(&path) {
+            Ok(clips) => {
+                for clip in clips {
+                    match clip.producers.model {
+                        Some(model) => {
+                            *counts
+                                .models
+                                .entry(format!(
+                                    "{}@{} decoder={}",
+                                    model.model_id,
+                                    model.model_revision,
+                                    model.decoder_version.as_deref().unwrap_or("unknown")
+                                ))
+                                .or_default() += 1
+                        }
+                        None => counts.no_model += 1,
+                    }
+                }
+            }
+            Err(_) => counts.unreadable_files += 1,
+        }
+    }
+    counts
+}
+
+/// Inspect actual recorded producers locally; old formats are counted, not read
+/// through a compatibility layer or silently reported as zero successful rows.
+pub fn clip_models(out: &Path) -> Result<()> {
+    let paths = std::fs::read_dir(out)?
+        .map(|entry| entry.map(|entry| clips_path(&entry.path())))
+        .collect::<std::io::Result<Vec<_>>>()?;
+    let counts = count_models(paths.into_iter().filter(|path| path.exists()));
+    for (model, count) in counts.models {
+        println!("{count}\t{model}");
+    }
+    println!("{}\tno-model rows", counts.no_model);
+    println!(
+        "{}\tunreadable/old-format/incomplete files",
+        counts.unreadable_files
+    );
+    Ok(())
+}
+
 /// Map every transcribed film (or the ones selected), skipping films whose
 /// `clips.jsonl` is already current.
 pub async fn clips_all(

@@ -566,6 +566,41 @@ async fn interrupted_refresh_preserves_rows_but_regenerates_old_target_values() 
 }
 
 #[test]
+fn model_inventory_counts_observed_rows_and_unreadable_files() {
+    let root = tempfile::tempdir().unwrap();
+    let mut film = film(root.path(), 0, 3);
+    for clip in film.clips.iter_mut().flatten() {
+        clip.passed = true;
+    }
+    for clip in film.clips[..2].iter_mut().flatten() {
+        clip.producers.model = Some(phoneme_verify::ModelIdentity {
+            model_id: "actual/model".into(),
+            model_revision: "full-revision".into(),
+            decoder_version: Some("decoder".into()),
+            deploy_marker: Some(clip.sentence.clone()),
+        });
+    }
+    let path = clips_path(&film.dir);
+    finish_film(FilmWork::Prepared(Box::new(film))).unwrap();
+    let old = root.path().join("old.jsonl");
+    let corrupt = root.path().join("corrupt.jsonl");
+    std::fs::write(&old, "{\"format\":11,\"model\":\"not a row producer\"}\n").unwrap();
+    std::fs::write(&corrupt, "broken").unwrap();
+    let counts = count_models([path, old, corrupt]);
+    assert_eq!(
+        counts.models["actual/model@full-revision decoder=decoder"],
+        2
+    );
+    assert_eq!(
+        counts.models.len(),
+        1,
+        "deploy markers do not split a checkpoint"
+    );
+    assert_eq!(counts.no_model, 1);
+    assert_eq!(counts.unreadable_files, 2);
+}
+
+#[test]
 fn inference_metrics_use_logical_fill_and_completed_clips_over_phase_time() {
     let empty = InferenceProgress::default();
     assert_eq!(empty.fill_rate(), 0.0);

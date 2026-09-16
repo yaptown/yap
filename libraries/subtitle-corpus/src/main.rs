@@ -486,6 +486,11 @@ enum Command_ {
         #[arg(long)]
         refresh_g2p: bool,
     },
+    /// Count clip rows by actual producing model, locally without network calls.
+    ClipModels {
+        #[arg(long, default_value = "/data/andrep/subtitle-corpus")]
+        out: PathBuf,
+    },
     /// Cut serve-ready video clips (two renditions + sidecar JSON) for every
     /// passing clip. See docs/clip-sidecar.md for the schema.
     ExportClips {
@@ -4488,6 +4493,7 @@ fn main() -> Result<()> {
             min_ratio,
             refresh_g2p,
         } => clips(out, jobs, limit, imdb, langs, min_ratio, refresh_g2p),
+        Command_::ClipModels { out } => subtitle_corpus::clips::clip_models(&out),
         Command_::ExportClips {
             out,
             dest,

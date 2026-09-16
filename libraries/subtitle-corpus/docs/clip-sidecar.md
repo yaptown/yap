@@ -22,8 +22,11 @@ Principles:
   `transcript.rs`.)
 - **Context is display-only.** Neighbor cues never passed the gates:
   `context_verified: false` is categorical.
-- Phoneme alignment comes from the cached frame matrices; `target_ipa`
-  reproduces only under the `corpus-v1-labels` espeak build — pin it.
+- Phoneme alignment reads the shared response cache using the mapper's stored
+  WAV hash and exact `target_ipa` token vector; it never re-cuts audio or calls
+  the model. Producer versions do not key production responses. Missing/broken
+  expected alignment entries are counted in an aggregate export warning;
+  audio-only, unscored, and no-alignable-path clips are not cache failures.
 - Loudnorm is measured over the critical span, applied to the whole file, so a
   loud neighbor line can't duck the target sentence. Force a keyframe at or
   just before `critical.start_ms` at encode time (seeking is keyframe-accurate).
@@ -35,10 +38,38 @@ Principles:
   Gaps in the served set are fine. (Timing-based ids were rejected: repair /
   alignment changes shift `start_ms` across rebuilds.)
 
-Caching: every artifact skips on **provenance equality, never existence**.
-`clips.jsonl` re-maps when its provenance line (inputs digests, model, gate,
-G2P backend identity) differs; a G2P preflight canary fails a film loudly
-before anything is written. An exported clip's renditions are reused only
+Caching: `clips.jsonl` format 12 distinguishes **inputs**, **cut settings**,
+**gate thresholds**, and per-row **observed producers**. Inputs (subtitle and
+transcript digests, segmentation, language, and the extracted-audio stamp's
+filename/stream index/duration) or cut changes require remapping. Gate-only
+changes reuse stored measurements, including a matching `transcript-check.json`
+for `min_verbatim`, without G2P, model discovery, segmentation, or new cuts.
+Film-level verbatim rejection preserves scored rows, so loosening the gate is
+also cheap. Pre-gate failures remain failures. A missing audio stamp or
+missing/stale verbatim measurement is not a current cheap hit.
+
+A current header also requires `completion: "complete"`, its
+`expected_candidates` count, and a valid verdict on every row. Inference failures
+leave the film unfinished; cached successes survive retry. Old, malformed, or
+truncated manifests are not read through compatibility fallbacks.
+
+Model and G2P identities record what **actually produced each row**; producer
+changes alone never invalidate it. Producer bugs require a deliberate refresh.
+`clips --refresh-g2p` regenerates selected gated films' cached full G2P targets
+(keyed by literal language selector, exact text, and clip WAV hash). Identical
+labels retain the audio response key; changed token vectors infer afresh. This
+flag does **not** refresh model-only outputs, and Korean stays audio-only. Before
+refresh, the old rows are retained with `completion: "refresh_g2p"`; any subsequent
+run resumes that interrupted refresh, even without the flag. `clip-models`
+reports actual producing-model row counts and separately counts no-model rows
+and unreadable/old-format/incomplete files, without network calls.
+
+The one response artifact is currently typed and **temporarily lossy for unknown
+wire fields** while lexide's raw-response client remains unpublished. Exact raw
+item/envelope retention and the new g2p pin are pending; do not run a corpus
+rewrite against this transitional cache.
+
+An exported clip's renditions are reused only
 when the sidecar's `media.stamp` (encode recipe, source-video identity —
 filename, bytes, runtime, height, HDR, audio stream — and the cut: window
 and critical span) equals the one computed now — else delete and re-render.
@@ -98,7 +129,7 @@ trust a cache whose inputs may have moved.
   },
 
   "phonemes": {
-    "target_ipa": ["k", "ɔ", "m"],     // espeak target (corpus-v1-labels build)
+    "target_ipa": ["k", "ɔ", "m"],     // exact cached G2P tokens, boundaries preserved
     "heard_ipa":  ["k", "ɔ", "m"],     // model's free reading
     "oov": [],
     "alignment": [                     // forced alignment from the cached frame matrix
@@ -107,17 +138,23 @@ trust a cache whose inputs may have moved.
   },
 
   "verification": {                    // the Clip verdict block, verbatim
-    "passed": true, "reject": null,
+    "passed": true, "reject": null, "measured": true, "audio_hash": 123456789,
     "transcript_wer": 0.0, "ratio": 1.9, "logp_target_per_phoneme": -0.4,
     "edge_logp_start": -0.3, "edge_logp_end": -0.5,
     "lead_speech": 0.02, "tail_speech": 0.0, "lead_rms": 0.1, "voiced": 0.61,
     "audio_event_overlap": false, "clear_before_ms": 900, "clear_after_ms": 640,
     "pad_before_ms": 300, "pad_after_ms": 150,
-    "provenance": { "format": 11, "model": "…", "min_ratio": 0.0,
-                    "preferred_clear_ms": 100, "min_clear_ms": 0,
-                    "min_edge_logp": 0.0,
-                    "max_pad_speech": 0.0, "max_lead_rms": 1.0,
-                    "min_voiced": 0.25 }
+    "provenance": {
+      "inputs": { "format": 12, "subtitle_digest": "…", "transcript_digest": "…",
+                  "segmentation": "…", "language": "fra",
+                  "audio": { "filename": "film.mkv", "stream_index": 2, "duration_ms": 7126875 } },
+      "cut": { "preferred_clear_ms": 100, "min_clear_ms": 0, "speech_threshold": 0.7 },
+      "gate": { "min_ratio": -2.0, "min_edge_logp": -4.0, "max_pad_speech": 0.25,
+                "max_lead_rms": 1.0, "min_voiced": 0.25, "min_verbatim": 0.25 },
+      "producers": { "model": { "model_id": "…", "model_revision": "full revision",
+                                "decoder_version": "nonblank_v1", "deploy_marker": "…" },
+                     "g2p": "actual cached renderer identity" }
+    }
   },
 
   "media": {
