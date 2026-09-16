@@ -25,7 +25,7 @@ use anyhow::{Context, Result};
 use base64::Engine;
 use language_utils::{Language, PhonemeLabelSource};
 use lexide::pronunciation::{
-    DECODER_VERSION, ModelIdentity, PhonemeAlternative as RawPhonemeAlt, PredictRequest,
+    DECODER_VERSION, PhonemeAlternative as RawPhonemeAlt, PredictRequest,
     PredictResponse as ModalResponse, cache_version, remote::PhonemizerClient,
 };
 use serde::{Deserialize, Serialize};
@@ -38,7 +38,7 @@ use xxhash_rust::xxh3::xxh3_64;
 
 pub use lexide::pronunciation::{
     AlignedPhoneme, DecodedPath, FrameMatrix, FrameMatrixPayload, LegacyFrameMatrixPayload,
-    PhoneRun, TargetScore, decode_path, is_phone_token,
+    ModelIdentity, PhoneRun, TargetScore, decode_path, is_phone_token,
 };
 
 fn expected_deploy_marker() -> Option<String> {

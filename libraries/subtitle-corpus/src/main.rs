@@ -916,19 +916,7 @@ fn parked_note(parked: usize) -> String {
     }
 }
 
-/// Provenance for `audio.opus`: which file the track came out of and exactly
-/// which stream, so a video swap or an audio reshuffle inside a same-named
-/// remux evicts the extraction instead of being mistaken for it.
-#[derive(serde::Serialize, serde::Deserialize, PartialEq)]
-struct AudioStamp {
-    filename: String,
-    duration_ms: i64,
-    stream: sync::AudioStreamIdentity,
-}
-
-fn read_audio_stamp(dir: &std::path::Path) -> Option<AudioStamp> {
-    serde_json::from_slice(&std::fs::read(dir.join("audio.json")).ok()?).ok()
-}
+use sync::{read_audio_stamp, AudioStamp};
 
 /// The film's extracted original-language audio, when it is present and still
 /// belongs to the file on disk. File identity only — the per-stream probe is

@@ -22,6 +22,8 @@ fn matrix(hash: u64) -> FrameMatrix {
 
 fn clip(film: usize, index: usize, hash: u64) -> Clip {
     Clip {
+        producers: Producers::default(),
+        measured: false,
         sentence: format!("film {film} clip {index}"),
         imdb_id: film.to_string(),
         start_ms: (index as i64 + 1) * 1000,
@@ -82,21 +84,31 @@ fn film(root: &Path, index: usize, count: usize) -> PreparedFilm {
         dir,
         language,
         provenance: Provenance {
-            format: FORMAT_VERSION,
-            subtitle_digest: "subtitle".into(),
-            transcript_digest: "transcript".into(),
-            model: "test-model__nonblank_v1".into(),
-            g2p: "test-target".into(),
-            segmentation: "test-segmentation".into(),
-            language: code.into(),
-            min_ratio: Some(min_ratio),
-            preferred_clear_ms: gate.preferred_clear_ms,
-            min_clear_ms: gate.min_clear_ms,
-            min_edge_logp: gate.min_edge_logp,
-            max_pad_speech: gate.max_pad_speech,
-            max_lead_rms: gate.max_lead_rms,
-            min_voiced: gate.min_voiced,
-            speech_threshold: gate.speech_threshold,
+            inputs: Inputs {
+                format: FORMAT_VERSION,
+                subtitle_digest: "subtitle".into(),
+                transcript_digest: "transcript".into(),
+                segmentation: "test-segmentation".into(),
+                language: code.into(),
+                audio: AudioInput {
+                    filename: "film.mkv".into(),
+                    stream_index: 0,
+                    duration_ms: 100000,
+                },
+            },
+            cut: Cut {
+                preferred_clear_ms: gate.preferred_clear_ms,
+                min_clear_ms: gate.min_clear_ms,
+                speech_threshold: gate.speech_threshold,
+            },
+            gate: GateCuts {
+                min_ratio: Some(min_ratio),
+                min_edge_logp: gate.min_edge_logp,
+                max_pad_speech: gate.max_pad_speech,
+                max_lead_rms: gate.max_lead_rms,
+                min_voiced: gate.min_voiced,
+                min_verbatim: crate::verbatim::min_fraction(code),
+            },
         },
         summary: FilmSummary {
             sentences: count,
@@ -120,7 +132,7 @@ async fn global_batches_sort_compact_route_and_prefetch_after_discovery() {
         score_clip(
             cached,
             &matrix((index * 100) as u64),
-            film.provenance.min_ratio.unwrap(),
+            film.provenance.gate.min_ratio.unwrap(),
             &gate,
         );
         film.clips[1].as_mut().unwrap().reject = Some("cut: bad audio".into());
@@ -372,6 +384,113 @@ fn completeness_and_strict_reading_are_independent_of_provenance() {
     }
 }
 
+#[tokio::test]
+async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
+    let root = tempfile::tempdir().unwrap();
+    let mut film = film(root.path(), 0, 2);
+    let dir = film.dir.clone();
+    for name in ["subtitle.srt", "transcript.jsonl", "audio.opus"] {
+        std::fs::write(
+            dir.join(name),
+            b"not decodable; cheap paths must not read contents",
+        )
+        .unwrap();
+    }
+    let stamp = crate::sync::AudioStamp {
+        filename: "source.mkv".into(),
+        duration_ms: 100000,
+        stream: crate::sync::AudioStreamIdentity {
+            stream_index: 2,
+            codec: "opus".into(),
+            channels: 2,
+            channel_layout: "stereo".into(),
+        },
+    };
+    std::fs::write(dir.join("audio.json"), serde_json::to_vec(&stamp).unwrap()).unwrap();
+    let gate = Gate::default();
+    film.provenance = current_provenance(&dir, Language::French, "fra", &gate).unwrap();
+    let original = film.provenance.clone();
+    score_clip(film.clips[0].as_mut().unwrap(), &matrix(0), -2.0, &gate);
+    film.clips[0].as_mut().unwrap().producers.g2p = Some("older-renderer".into());
+    film.clips[1].as_mut().unwrap().reject = Some("cut: permanent failure".into());
+    let report = crate::verbatim::Report {
+        format: crate::verbatim::FORMAT,
+        subtitle_digest: original.inputs.subtitle_digest.clone(),
+        transcript_digest: original.inputs.transcript_digest.clone(),
+        min_fraction: 0.25,
+        measure: crate::verbatim::Measure {
+            eligible: 100,
+            placed: 50,
+            fraction: 0.5,
+            aligned: None,
+            verdict: crate::verbatim::Verdict::Verbatim,
+        },
+    };
+    std::fs::write(
+        crate::verbatim::report_path(&dir),
+        serde_json::to_vec(&report).unwrap(),
+    )
+    .unwrap();
+    finish_film(FilmWork::Prepared(Box::new(film))).unwrap();
+    assert_eq!(existing_work(&dir, &original).0, Work::Nothing);
+    let mut changed = original.clone();
+    changed.inputs.audio.stream_index += 1;
+    assert_eq!(original.work(&changed), Work::Redo("audio changed"));
+    changed = original.clone();
+    changed.inputs.transcript_digest.push('x');
+    assert_eq!(original.work(&changed), Work::Redo("transcript changed"));
+    changed = original.clone();
+    changed.inputs.segmentation.push('x');
+    assert_eq!(original.work(&changed), Work::Redo("inputs changed"));
+    changed = original.clone();
+    changed.cut.min_clear_ms += 1;
+    assert_eq!(original.work(&changed), Work::Redo("cut changed"));
+    changed = original.clone();
+    changed.gate.max_lead_rms += 1.0;
+    assert_eq!(original.work(&changed), Work::Regate);
+    let movie = Movie {
+        imdb_id: "0".into(),
+        title: "fixture".into(),
+        year: None,
+        path: dir.clone(),
+        original_language: "French".into(),
+        source: crate::library::Source::Missing,
+    };
+    let http = reqwest::Client::new();
+    let store = osmo::Store::open(root.path().join("cache"));
+    // Tightening and relaxing a film gate retain the exact scored rows. No
+    // valid transcript, audio/profile or endpoint exists in this fixture.
+    for (threshold, passed) in [(0.25, true), (0.75, false), (0.25, true)] {
+        let gate = Gate {
+            min_verbatim: Some(threshold),
+            ..Gate::default()
+        };
+        prepare_film(&http, &store, &movie, &dir, &gate, 1)
+            .await
+            .unwrap();
+        let rows = read_clips(&clips_path(&dir)).unwrap();
+        assert_eq!(rows[0].passed, passed);
+        assert_eq!(rows[0].producers.g2p.as_deref(), Some("older-renderer"));
+        assert_eq!(rows[1].reject.as_deref(), Some("cut: permanent failure"));
+    }
+    std::fs::remove_file(crate::verbatim::report_path(&dir)).unwrap();
+    assert_eq!(
+        existing_work(&dir, &original).0,
+        Work::Redo("verbatim measurement missing or stale")
+    );
+    std::fs::remove_file(dir.join("audio.json")).unwrap();
+    assert_eq!(
+        existing_work(&dir, &original).0,
+        Work::Redo("audio stamp missing")
+    );
+    assert!(prepare_film(&http, &store, &movie, &dir, &gate, 1)
+        .await
+        .err()
+        .unwrap()
+        .to_string()
+        .contains("audio stamp missing"));
+}
+
 #[test]
 fn inference_metrics_use_logical_fill_and_completed_clips_over_phase_time() {
     let empty = InferenceProgress::default();
@@ -401,32 +520,49 @@ fn recut_hash_must_match_discovery() {
 }
 
 #[tokio::test]
-async fn audio_only_current_film_skips_model_and_verbatim_failure_evicts_it() {
+async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
     use crate::verbatim::{Measure, Report, Verdict};
     let root = tempfile::tempdir().unwrap();
-    let mut film = film(root.path(), 0, 0);
+    let mut film = film(root.path(), 0, 1);
+    let clip = film.clips[0].as_mut().unwrap();
+    clip.measured = true;
+    clip.passed = true;
+    clip.target_ipa.clear();
     film.language = Language::Korean;
-    film.provenance.language = "kor".into();
-    film.provenance.min_ratio = None;
-    film.provenance.model = "none".into();
-    film.provenance.g2p = "none".into();
-    film.provenance.segmentation = movie_subtitles::segment::provenance(Language::Korean);
+    film.provenance.inputs.language = "kor".into();
+    film.provenance.gate.min_ratio = None;
+    film.provenance.inputs.segmentation = movie_subtitles::segment::provenance(Language::Korean);
     let dir = film.dir.clone();
+    std::fs::write(
+        dir.join("audio.json"),
+        serde_json::to_vec(&crate::sync::AudioStamp {
+            filename: film.provenance.inputs.audio.filename.clone(),
+            duration_ms: film.provenance.inputs.audio.duration_ms,
+            stream: crate::sync::AudioStreamIdentity {
+                stream_index: 0,
+                codec: "opus".into(),
+                channels: 2,
+                channel_layout: "stereo".into(),
+            },
+        })
+        .unwrap(),
+    )
+    .unwrap();
     for name in ["subtitle.srt", "transcript.jsonl", "audio.opus"] {
         std::fs::write(dir.join(name), b"fixture; must not be decoded").unwrap();
     }
-    film.provenance.subtitle_digest =
+    film.provenance.inputs.subtitle_digest =
         crate::transcript::source_digest(&dir.join("subtitle.srt")).unwrap();
-    film.provenance.transcript_digest =
+    film.provenance.inputs.transcript_digest =
         crate::transcript::source_digest(&dir.join("transcript.jsonl")).unwrap();
     let mut report = Report {
         format: crate::verbatim::FORMAT,
-        subtitle_digest: film.provenance.subtitle_digest.clone(),
-        transcript_digest: film.provenance.transcript_digest.clone(),
+        subtitle_digest: film.provenance.inputs.subtitle_digest.clone(),
+        transcript_digest: film.provenance.inputs.transcript_digest.clone(),
         min_fraction: crate::verbatim::min_fraction("kor"),
         measure: Measure {
-            eligible: 1,
-            placed: 1,
+            eligible: 30,
+            placed: 30,
             fraction: 1.0,
             aligned: None,
             verdict: Verdict::Verbatim,
@@ -454,19 +590,22 @@ async fn audio_only_current_film_skips_model_and_verbatim_failure_evicts_it() {
             .unwrap(),
         FilmWork::Current(_)
     ));
+    report.measure.fraction = 0.0;
+    report.measure.placed = 0;
     report.measure.verdict = Verdict::Paraphrase;
     std::fs::write(
         crate::verbatim::report_path(&dir),
         serde_json::to_vec(&report).unwrap(),
     )
     .unwrap();
-    assert!(
-        prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1)
-            .await
-            .is_err()
-    );
-    assert!(
-        !clips_path(&dir).exists(),
-        "non-verbatim gate must precede provenance skip"
-    );
+    prepare_film(&http, &store, &movie, &dir, &Gate::default(), 1)
+        .await
+        .unwrap();
+    let clips = read_clips(&clips_path(&dir)).unwrap();
+    assert!(!clips[0].passed);
+    assert!(clips[0]
+        .reject
+        .as_deref()
+        .unwrap()
+        .contains("film-level verbatim"));
 }

@@ -79,42 +79,96 @@ const EDGE_PHONEMES: usize = 3;
 /// starts. The tail keeps the shorter [`AUDIO_PAD_MS`].
 const LEAD_IN_MS: i64 = 300;
 
-/// What a film's `clips.jsonl` was computed from. A film is redone when any
-/// of it changes.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Freshness groups are compared independently; producers are observations on
+/// rows, not invalidation inputs. A producer bug requires deliberate refresh:
+/// `clips --refresh-g2p` refreshes targets, not unchanged-label model outputs.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Provenance {
+    pub inputs: Inputs,
+    pub cut: Cut,
+    pub gate: GateCuts,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Inputs {
     pub format: u32,
     pub subtitle_digest: String,
     pub transcript_digest: String,
-    /// The phoneme model's cache partition (model revision + decoder), or
-    /// "none" for an [`audio_only`] language.
-    pub model: String,
-    /// Identity of the G2P backend that rendered `target_ipa` (today the
-    /// espeak fork's binary digest for every gated language; other backends
-    /// per lexide's PHONEME_BACKENDS.md stamp here when their languages get
-    /// gates). A different phonemizer can never pose as current provenance.
-    pub g2p: String,
-    /// Which segmentation produced the sentences
-    /// ([`movie_subtitles::segment::provenance`]): a new prompt or model on
-    /// the model-segmented languages, or a bump of the rules, remaps.
     pub segmentation: String,
     pub language: String,
-    /// The gate the verdicts were made under. Frame matrices are cached, so
-    /// re-gating under a new cut is cheap — and must happen, or a loosened
-    /// cut would leave old verdicts standing. `None` for an [`audio_only`]
-    /// language: no phoneme gate at all.
-    pub min_ratio: Option<f64>,
-    /// Preferred pause length used to repair word-stamp boundaries from the
-    /// speech profile. Stored because changing it can change the cut.
+    pub audio: AudioInput,
+}
+
+/// Only this projection of the existing extracted-audio stamp identifies the
+/// recording. Never substitute a video path or the derived audio.opus pathname.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AudioInput {
+    pub filename: String,
+    pub stream_index: usize,
+    pub duration_ms: i64,
+}
+
+impl From<crate::sync::AudioStamp> for AudioInput {
+    fn from(stamp: crate::sync::AudioStamp) -> Self {
+        Self {
+            filename: stamp.filename,
+            stream_index: stamp.stream.stream_index,
+            duration_ms: stamp.duration_ms,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Cut {
     pub preferred_clear_ms: i64,
     pub min_clear_ms: i64,
+    pub speech_threshold: f64,
+}
+
+/// A threshold belongs here only when the measurement it acts on is persisted.
+/// min_verbatim uses the matching transcript-check report, not fresh segmentation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct GateCuts {
+    pub min_ratio: Option<f64>,
     pub min_edge_logp: f64,
     pub max_pad_speech: f64,
     pub max_lead_rms: f64,
     pub min_voiced: f64,
-    /// earshot score above which a 16 ms frame counts as speech when the
-    /// clear margins are measured from the film's speech profile.
-    pub speech_threshold: f64,
+    pub min_verbatim: f64,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct Producers {
+    pub model: Option<phoneme_verify::ModelIdentity>,
+    pub g2p: Option<String>,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Work {
+    Nothing,
+    Regate,
+    Redo(&'static str),
+}
+
+impl Provenance {
+    fn work(&self, current: &Self) -> Work {
+        if self.inputs.audio != current.inputs.audio {
+            return Work::Redo("audio changed");
+        }
+        if self.inputs.transcript_digest != current.inputs.transcript_digest {
+            return Work::Redo("transcript changed");
+        }
+        if self.inputs != current.inputs {
+            return Work::Redo("inputs changed");
+        }
+        if self.cut != current.cut {
+            return Work::Redo("cut changed");
+        }
+        if self.gate != current.gate {
+            return Work::Regate;
+        }
+        Work::Nothing
+    }
 }
 
 /// One transcript word inside a clip.
@@ -129,6 +183,10 @@ pub struct ClipWord {
 /// verdicts. `passed` is the mapping's answer; everything else is why.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Clip {
+    #[serde(flatten)]
+    pub producers: Producers,
+    /// False for pre-gate failures; re-gating must preserve their verdicts.
+    pub measured: bool,
     pub sentence: String,
     pub imdb_id: String,
     /// Clip bounds from the transcript's word stamps (unpadded).
@@ -447,6 +505,7 @@ struct Header {
     expected_candidates: usize,
 }
 
+#[cfg(test)]
 fn stored_provenance(path: &Path) -> Option<Provenance> {
     read_file(path).ok().map(|(provenance, _)| provenance)
 }
@@ -456,7 +515,7 @@ pub fn read_file(path: &Path) -> Result<(Provenance, Vec<Clip>)> {
     let mut lines = text.lines();
     let header: Header = serde_json::from_str(lines.next().context("missing clip header")?)?;
     anyhow::ensure!(
-        header.provenance.format == FORMAT_VERSION,
+        header.provenance.inputs.format == FORMAT_VERSION,
         "unsupported clip format"
     );
     let clips: Vec<Clip> = lines
@@ -889,8 +948,87 @@ enum FilmWork {
     Prepared(Box<PreparedFilm>),
 }
 
-/// Prepare one film without phoneme inference. Preflight stays ahead of the
-/// provenance skip; a current file cannot hide a broken G2P or rewritten sub.
+fn current_provenance(
+    dir: &Path,
+    language: Language,
+    code: &str,
+    gate: &Gate,
+) -> Result<Provenance> {
+    let audio = crate::sync::read_audio_stamp(dir)
+        .context("audio stamp missing (audio.json)")?
+        .into();
+    Ok(Provenance {
+        inputs: Inputs {
+            format: FORMAT_VERSION,
+            subtitle_digest: crate::transcript::source_digest(&dir.join("subtitle.srt"))?,
+            transcript_digest: crate::transcript::source_digest(&dir.join("transcript.jsonl"))?,
+            segmentation: movie_subtitles::segment::provenance(language),
+            language: code.into(),
+            audio,
+        },
+        cut: Cut {
+            preferred_clear_ms: gate.preferred_clear_ms,
+            min_clear_ms: gate.min_clear_ms,
+            speech_threshold: gate.speech_threshold,
+        },
+        gate: GateCuts {
+            min_ratio: if audio_only(code) {
+                None
+            } else {
+                Some(
+                    gate.min_ratio
+                        .or_else(|| default_min_ratio(code))
+                        .context("no calibrated phoneme gate")?,
+                )
+            },
+            min_edge_logp: gate.min_edge_logp,
+            max_pad_speech: gate.max_pad_speech,
+            max_lead_rms: gate.max_lead_rms,
+            min_voiced: gate.min_voiced,
+            min_verbatim: gate
+                .min_verbatim
+                .unwrap_or_else(|| crate::verbatim::min_fraction(code)),
+        },
+    })
+}
+
+/// No model/G2P discovery, audio cuts or segmentation in freshness inspection.
+fn existing_work(
+    dir: &Path,
+    current: &Provenance,
+) -> (Work, Option<(Vec<Clip>, crate::verbatim::Report)>) {
+    if crate::sync::read_audio_stamp(dir).is_none() {
+        return (Work::Redo("audio stamp missing"), None);
+    }
+    let Ok((stored, clips)) = read_file(&clips_path(dir)) else {
+        return (Work::Redo("missing or incomplete clips"), None);
+    };
+    let work = stored.work(current);
+    if matches!(work, Work::Redo(_)) {
+        return (work, None);
+    }
+    let Some(report) = crate::verbatim::matching(
+        dir,
+        &current.inputs.subtitle_digest,
+        &current.inputs.transcript_digest,
+        current.gate.min_verbatim,
+    ) else {
+        return (Work::Redo("verbatim measurement missing or stale"), None);
+    };
+    // Film admissibility can change even if a persisted report was corrected
+    // independently. Reapply the film gate, never trust its old verdict string.
+    let work = if report.measure.verdict != crate::verbatim::Verdict::Verbatim
+        && clips.iter().any(|c| c.passed)
+    {
+        Work::Regate
+    } else {
+        work
+    };
+    (work, Some((clips, report)))
+}
+
+/// Prepare only genuinely stale films. Current files and threshold-only changes
+/// return before the G2P canary, model discovery, segmentation or audio work.
 async fn prepare_film(
     http: &reqwest::Client,
     store: &osmo::Store,
@@ -913,18 +1051,31 @@ async fn prepare_film(
             bail!("no {what}");
         }
     }
-    // A subtitle that does not say what is said yields nothing worth the
-    // phoneme spend, and one on another clock places nothing at all.
-    let min_verbatim = gate
-        .min_verbatim
-        .unwrap_or_else(|| crate::verbatim::min_fraction(code));
-    let check = crate::verbatim::check(dir, language, code, min_verbatim).await?;
+    let provenance = current_provenance(dir, language, code, gate)?;
+    let min_ratio = provenance.gate.min_ratio;
+    let (work, stored) = existing_work(dir, &provenance);
+    if let Some((mut clips, report)) = stored {
+        if work == Work::Regate {
+            let verbatim = report.measure.verdict == crate::verbatim::Verdict::Verbatim;
+            for clip in &mut clips {
+                regate(clip, min_ratio, gate, verbatim);
+            }
+        }
+        let summary = FilmSummary {
+            sentences: clips.len(),
+            aligned: clips.len(),
+            ..Default::default()
+        };
+        if work == Work::Nothing {
+            return Ok(FilmWork::Current(summarize(&clips, summary)));
+        }
+        return Ok(FilmWork::Current(write_clips(
+            dir, provenance, &clips, summary,
+        )?));
+    }
+    // No current file may survive changed inputs that fail film admissibility.
+    let check = crate::verbatim::check(dir, language, code, provenance.gate.min_verbatim).await?;
     if check.measure.verdict != crate::verbatim::Verdict::Verbatim {
-        // A clips.jsonl mapped before this gate existed, or before the
-        // subtitle turned into a rewrite, is not evidence of anything now:
-        // left in place, export reads it as a film to serve (or fails the
-        // whole run on its old provenance line). Nothing downstream may
-        // trust a file this gate would not write today.
         let _ = std::fs::remove_file(clips_path(dir));
         bail!(
             "subtitle not verbatim: {}",
@@ -932,23 +1083,10 @@ async fn prepare_film(
         );
     }
 
-    let min_ratio = if audio_only(code) {
-        None
-    } else {
-        let min_ratio = gate
-            .min_ratio
-            .or_else(|| default_min_ratio(code))
-            .with_context(|| format!("no calibrated phoneme gate for {code}"))?;
+    if min_ratio.is_some() {
         if language.g2p_lang().is_none() {
             bail!("{code}: the g2p crate does not produce this language's model labels");
         }
-        // Fail fast if the G2P engine cannot run (its data unpacks into a
-        // cache dir on first use): a run that cannot phonemize must not
-        // write a clips.jsonl at all — a poisoned file with current
-        // provenance would be trusted by every later resume. (Seen live
-        // 2026-09-01, when espeak was still an external binary: absent from
-        // a nohup env, it produced an all-reject fra file that a re-run
-        // skipped as done.)
         let canary = match language {
             Language::Hindi => "नमस्ते",
             Language::ChineseSimplified => "你好",
@@ -960,44 +1098,6 @@ async fn prepare_film(
             Some(Ok(p)) if !p.phonemes.is_empty() => {}
             other => bail!("G2P preflight: g2p produced {other:?} for a canary word"),
         }
-        Some(min_ratio)
-    };
-    // Which phonemizer the targets came from; changing it must re-score every
-    // clip. An audio-only language has neither a phonemizer nor a model in its provenance.
-    let (model, g2p) = match min_ratio {
-        None => ("none".to_string(), "none".to_string()),
-        Some(_) => (
-            phoneme_verify::production_cache_version()?,
-            phoneme_verify::model_target_identity(),
-        ),
-    };
-    let provenance = Provenance {
-        format: FORMAT_VERSION,
-        subtitle_digest: crate::transcript::source_digest(&subtitle)?,
-        transcript_digest: crate::transcript::source_digest(&transcript_path)?,
-        model,
-        g2p,
-        segmentation: movie_subtitles::segment::provenance(language),
-        language: code.to_string(),
-        min_ratio,
-        preferred_clear_ms: gate.preferred_clear_ms,
-        min_clear_ms: gate.min_clear_ms,
-        min_edge_logp: gate.min_edge_logp,
-        max_pad_speech: gate.max_pad_speech,
-        max_lead_rms: gate.max_lead_rms,
-        min_voiced: gate.min_voiced,
-        speech_threshold: gate.speech_threshold,
-    };
-    let path = clips_path(dir);
-    if stored_provenance(&path).as_ref() == Some(&provenance) {
-        let clips = read_clips(&path)?;
-        return Ok(FilmWork::Current(FilmSummary {
-            sentences: clips.len(),
-            aligned: clips.len(),
-            scored: clips.len(),
-            passed: clips.iter().filter(|c| c.passed).count(),
-            median_ratio: median(clips.iter().filter_map(|c| c.ratio).collect()),
-        }));
     }
 
     // The margins come from the profile; without one there is nothing to
@@ -1057,6 +1157,8 @@ async fn prepare_film(
                 let pad_before_ms = pad(LEAD_IN_MS, clear_before_ms);
                 let pad_after_ms = pad(AUDIO_PAD_MS, clear_after_ms);
                 let mut clip = Clip {
+                    producers: Producers::default(),
+                    measured: false,
                     sentence: sentence.clone(),
                     imdb_id,
                     start_ms,
@@ -1138,6 +1240,7 @@ async fn prepare_film(
                         }
                     };
                     clip.target_ipa = target;
+                    clip.producers.g2p = Some(phoneme_verify::model_target_identity());
                     return Some((clip, Some(wav)));
                 } else {
                     // No model to listen to the pads: the earshot profile
@@ -1151,8 +1254,8 @@ async fn prepare_film(
                     clip.tail_speech =
                         profile_speech_fraction(profile, threshold, end_ms, end_ms + pad_after_ms);
                 }
-                clip.reject = audio_reject(&clip, gate);
-                clip.passed = clip.reject.is_none();
+                clip.measured = true;
+                regate(&mut clip, min_ratio, gate, true);
                 Some((clip, None))
             }
         })
@@ -1212,7 +1315,22 @@ async fn prepare_film(
     })))
 }
 
+fn regate(clip: &mut Clip, min_ratio: Option<f64>, gate: &Gate, verbatim: bool) {
+    if !clip.measured {
+        return;
+    }
+    clip.reject = if !verbatim {
+        Some("film-level verbatim gate rejected this subtitle".into())
+    } else {
+        min_ratio
+            .and_then(|ratio| phoneme_reject(clip, ratio, gate))
+            .or_else(|| audio_reject(clip, gate))
+    };
+    clip.passed = clip.reject.is_none();
+}
+
 fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate) {
+    clip.producers.model = phoneme_verify::frame_identity(frames);
     let padded_ms = (clip.end_ms - clip.start_ms + clip.pad_before_ms + clip.pad_after_ms) as f64;
     // Frames spread evenly over the sliced audio; the pads are its first and
     // last stretches. Keep this identical for cached and newly inferred audio.
@@ -1244,8 +1362,8 @@ fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate
         clip.edge_logp_start = Some(mean(&spans[..k]));
         clip.edge_logp_end = Some(mean(&spans[spans.len() - k..]));
     }
-    clip.reject = phoneme_reject(clip, min_ratio, gate).or_else(|| audio_reject(clip, gate));
-    clip.passed = clip.reject.is_none();
+    clip.measured = true;
+    regate(clip, Some(min_ratio), gate, true);
 }
 
 /// Failed inference leaves the film unfinished. Successful response cache writes
@@ -1258,7 +1376,7 @@ fn finish_film(work: FilmWork) -> Result<FilmSummary> {
     let PreparedFilm {
         dir,
         provenance,
-        mut summary,
+        summary,
         clips,
         ..
     } = *film;
@@ -1269,23 +1387,35 @@ fn finish_film(work: FilmWork) -> Result<FilmSummary> {
         "clip candidates unresolved; successful inference is cached, retry this film"
     );
     let clips: Vec<Clip> = clips.into_iter().flatten().collect();
+    write_clips(&dir, provenance, &clips, summary)
+}
+
+fn summarize(clips: &[Clip], mut summary: FilmSummary) -> FilmSummary {
     summary.scored = clips.len();
     summary.passed = clips.iter().filter(|c| c.passed).count();
     summary.median_ratio = median(clips.iter().filter_map(|c| c.ratio).collect());
+    summary
+}
 
+fn write_clips(
+    dir: &Path,
+    provenance: Provenance,
+    clips: &[Clip],
+    summary: FilmSummary,
+) -> Result<FilmSummary> {
     let mut text = serde_json::to_string(&Header {
         provenance,
         expected_candidates: clips.len(),
     })?;
     text.push('\n');
-    for clip in &clips {
+    for clip in clips {
         text.push_str(&serde_json::to_string(clip)?);
         text.push('\n');
     }
     let tmp = dir.join("clips.jsonl.tmp");
     std::fs::write(&tmp, text)?;
-    std::fs::rename(&tmp, clips_path(&dir))?;
-    Ok(summary)
+    std::fs::rename(&tmp, clips_path(dir))?;
+    Ok(summarize(clips, summary))
 }
 
 /// An owned cut lets bounded preparation run independently of mutable result
@@ -1312,6 +1442,7 @@ fn apply_frames(film: &mut PreparedFilm, index: usize, frames: Result<FrameMatri
             clip,
             &frames,
             film.provenance
+                .gate
                 .min_ratio
                 .expect("pending clips have a phoneme gate"),
             gate,
@@ -1564,7 +1695,22 @@ pub async fn clips_all(
     if total == 0 {
         return Ok(());
     }
-    warm_segmentation(&out, &queue).await?;
+    let redo: Vec<Movie> = queue
+        .iter()
+        .filter(|movie| {
+            let Some(code) = course_dir(&movie.original_language) else {
+                return false;
+            };
+            let Some(language) = Language::from_code(code) else {
+                return false;
+            };
+            let dir = out.join(&movie.imdb_id);
+            current_provenance(&dir, language, code, &gate)
+                .is_ok_and(|p| matches!(existing_work(&dir, &p).0, Work::Redo(_)))
+        })
+        .cloned()
+        .collect();
+    warm_segmentation(&out, &redo).await?;
 
     let store = osmo::Store::open("./.cache");
     let http = reqwest::Client::builder()

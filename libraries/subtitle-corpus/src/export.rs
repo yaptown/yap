@@ -23,7 +23,9 @@ use serde_json::json;
 use sha2::{Digest, Sha256};
 use unicode_normalization::UnicodeNormalization;
 
-use crate::clips::{clips_path, read_clips, subtitle_sentences, Clip, Provenance};
+use crate::clips::{
+    clips_path, read_file as read_clips_with_provenance, subtitle_sentences, Clip, Provenance,
+};
 use crate::cues::{load_transcript, parse_cues, repair_latin_homoglyphs, slice_wav_padded};
 use crate::library::{course_dir, read_plan, truncate, Movie};
 use crate::sync::{AudioStreamIdentity, Cue};
@@ -585,13 +587,13 @@ async fn export_one(
     let sidecar = json!({
         "format": SIDECAR_FORMAT,
         "id": id,
-        "language": provenance.language,
+        "language": provenance.inputs.language,
         "film": {
             "imdb_id": movie.imdb_id,
             "title": movie.title,
             "year": movie.year,
-            "subtitle_digest": provenance.subtitle_digest,
-            "transcript_digest": provenance.transcript_digest,
+            "subtitle_digest": provenance.inputs.subtitle_digest,
+            "transcript_digest": provenance.inputs.transcript_digest,
         },
         "source": {
             "sentence_start_ms": clip.start_ms,
@@ -660,15 +662,10 @@ async fn export_one(
             "pad_before_ms": clip.pad_before_ms,
             "pad_after_ms": clip.pad_after_ms,
             "provenance": {
-                "format": provenance.format,
-                "model": provenance.model,
-                "min_ratio": provenance.min_ratio,
-                "preferred_clear_ms": provenance.preferred_clear_ms,
-                "min_clear_ms": provenance.min_clear_ms,
-                "min_edge_logp": provenance.min_edge_logp,
-                "max_pad_speech": provenance.max_pad_speech,
-                "max_lead_rms": provenance.max_lead_rms,
-                "min_voiced": provenance.min_voiced,
+                "inputs": provenance.inputs,
+                "cut": provenance.cut,
+                "gate": provenance.gate,
+                "producers": clip.producers,
             },
         },
         "media": {
@@ -1701,13 +1698,6 @@ fn rendition_info(file: &Path, height: i64) -> serde_json::Value {
         "height": height,
         "bytes": std::fs::metadata(file).map(|m| m.len()).unwrap_or(0),
     })
-}
-
-fn read_clips_with_provenance(path: &Path) -> Result<(Provenance, Vec<Clip>)> {
-    let text = std::fs::read_to_string(path)?;
-    let first = text.lines().next().context("empty clips.jsonl")?;
-    let provenance: Provenance = serde_json::from_str(first).context("no provenance line")?;
-    Ok((provenance, read_clips(path)?))
 }
 
 /// One line per exported clip, rebuilt from the sidecars.

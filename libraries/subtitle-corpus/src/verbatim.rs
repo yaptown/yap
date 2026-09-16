@@ -139,6 +139,22 @@ pub struct Measure {
 }
 
 impl Measure {
+    pub fn verdict_at(&self, min_fraction: f64) -> Verdict {
+        if self.eligible < MIN_ELIGIBLE {
+            Verdict::Empty
+        } else if self.fraction >= min_fraction {
+            Verdict::Verbatim
+        } else if self
+            .aligned
+            .as_ref()
+            .is_some_and(|a| a.fraction >= min_fraction)
+        {
+            Verdict::Skewed
+        } else {
+            Verdict::Paraphrase
+        }
+    }
+
     /// The best placement fraction at any clock: what the subtitle would
     /// yield once re-timed.
     pub fn best_fraction(&self) -> f64 {
@@ -304,26 +320,37 @@ pub async fn measure(
         });
     }
 
-    let verdict = if eligible < MIN_ELIGIBLE {
-        Verdict::Empty
-    } else if fraction >= min_fraction {
-        Verdict::Verbatim
-    } else if aligned.as_ref().is_some_and(|a| a.fraction >= min_fraction) {
-        Verdict::Skewed
-    } else {
-        Verdict::Paraphrase
-    };
-    Ok(Measure {
+    let mut measure = Measure {
         eligible,
         placed,
         fraction,
         aligned,
-        verdict,
-    })
+        verdict: Verdict::Empty,
+    };
+    measure.verdict = measure.verdict_at(min_fraction);
+    Ok(measure)
 }
 
-/// The film's verdict, from `transcript-check.json` when it was computed
-/// from the same inputs under the same threshold, else measured and written.
+/// Reuse persisted measurements under a new threshold without segmentation.
+pub fn matching(
+    dir: &Path,
+    subtitle_digest: &str,
+    transcript_digest: &str,
+    min_fraction: f64,
+) -> Option<Report> {
+    let mut report = stored(dir)?;
+    if report.format != FORMAT
+        || report.subtitle_digest != subtitle_digest
+        || report.transcript_digest != transcript_digest
+    {
+        return None;
+    }
+    report.min_fraction = min_fraction;
+    report.measure.verdict = report.measure.verdict_at(min_fraction);
+    Some(report)
+}
+
+/// The film's verdict, rethresholding matching persisted measurements when present.
 pub async fn check(
     dir: &Path,
     language: Language,
@@ -334,14 +361,8 @@ pub async fn check(
     let transcript_path = dir.join("transcript.jsonl");
     let subtitle_digest = source_digest(&subtitle).context("subtitle digest")?;
     let transcript_digest = source_digest(&transcript_path).context("transcript digest")?;
-    if let Some(r) = stored(dir) {
-        if r.format == FORMAT
-            && r.subtitle_digest == subtitle_digest
-            && r.transcript_digest == transcript_digest
-            && r.min_fraction == min_fraction
-        {
-            return Ok(r);
-        }
+    if let Some(report) = matching(dir, &subtitle_digest, &transcript_digest, min_fraction) {
+        return Ok(report);
     }
     let transcript = load_transcript(&transcript_path)?;
     let srt = std::fs::read_to_string(&subtitle)?;

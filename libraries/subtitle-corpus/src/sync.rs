@@ -19,6 +19,20 @@ use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use whisper::{CloudflareWhisper, TranscribeRequest};
 
+/// Provenance for `audio.opus`: which file the track came out of and exactly
+/// which stream, so a video swap or an audio reshuffle inside a same-named
+/// remux evicts the extraction instead of being mistaken for it.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AudioStamp {
+    pub filename: String,
+    pub duration_ms: i64,
+    pub stream: AudioStreamIdentity,
+}
+
+pub fn read_audio_stamp(dir: &Path) -> Option<AudioStamp> {
+    serde_json::from_slice(&std::fs::read(dir.join("audio.json")).ok()?).ok()
+}
+
 /// One subtitle cue, text preserved exactly as written.
 ///
 /// Deliberately not the cleaned [`movie_subtitles::SubtitleLine`]: the output
