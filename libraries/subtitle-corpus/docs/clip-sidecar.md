@@ -63,7 +63,7 @@ labels retain the audio response key; changed token vectors infer afresh. This
 flag does **not** refresh model-only outputs, and Korean stays audio-only. Before
 refresh, the old rows are retained with `completion: "refresh_g2p"`; any subsequent
 run resumes that interrupted refresh, even without the flag. `clip-models`
-reports actual producing-model row counts and separately counts no-model rows
+reports producing-model row counts, rows with no recorded model identity,
 and unreadable/old-format/incomplete files, without network calls.
 
 The one response artifact retains the selected item's untouched JSON and every

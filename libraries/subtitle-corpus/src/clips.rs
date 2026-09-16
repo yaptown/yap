@@ -1798,7 +1798,7 @@ pub fn clip_models(out: &Path) -> Result<()> {
     for (model, count) in counts.models {
         println!("{count}\t{model}");
     }
-    println!("{}\tno-model rows", counts.no_model);
+    println!("{}\tno recorded model identity", counts.no_model);
     println!(
         "{}\tunreadable/old-format/incomplete files",
         counts.unreadable_files
