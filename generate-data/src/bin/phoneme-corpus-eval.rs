@@ -67,35 +67,53 @@ struct Args {
     /// Concurrent Modal predictions per film.
     #[arg(long, default_value_t = 8)]
     concurrency: usize,
-    /// Output JSONL (appended to; already-present cues are skipped).
+    /// Output JSONL (appended to; cues with matching provenance are skipped).
     #[arg(long, default_value = "out/phoneme-corpus-eval.jsonl")]
     out: PathBuf,
     /// Only print the summary of an existing output file; run nothing.
     #[arg(long, default_value_t = false)]
     summary_only: bool,
-    /// Short model marker to evaluate, e.g. `953461d76eb5` (production) or a
-    /// newly trained checkpoint's 12-char prefix. Selects the cache partition
-    /// AND is required to match the serving container's deploy marker, so a
-    /// stale container can't silently contribute another model's predictions.
-    #[arg(long, default_value = "edcbbbf43a7f")]
-    model_marker: String,
 }
 
-/// The cache partition for a given model marker. The production marker's
-/// partition is byte-identical to `audio_verification.rs`'s, so eval and
-/// production share predictions; any other marker gets its own partition.
-fn cache_version(model_marker: &str) -> String {
-    lexide::pronunciation::cache_version(&lexide::pronunciation::ModelIdentity {
-        model_id: "anchpop/lexide-pronunciation".into(),
-        model_revision: model_marker.into(),
-        decoder_version: None,
-        deploy_marker: Some(model_marker.into()),
-    })
+/// Equality, not a shortened cache key, decides whether scores are reusable.
+/// Deploy markers identify containers, not model revisions or target renderers.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+struct Provenance {
+    model_id: String,
+    model_revision: String,
+    decoder_version: String,
+    g2p: String,
+}
+
+impl Provenance {
+    fn new(ctx: &VerifyContext<'_>) -> Result<Self> {
+        Ok(Self::from_verified_identity(
+            ctx.verified_model_identity()?,
+            ctx.target_language,
+        ))
+    }
+
+    fn from_verified_identity(
+        model: &lexide::pronunciation::ModelIdentity,
+        language: Language,
+    ) -> Self {
+        Self {
+            model_id: model.model_id.clone(),
+            model_revision: model.model_revision.clone(),
+            // Production validates a reported decoder against this version,
+            // and uses it for cache keys even when legacy endpoints omit it.
+            decoder_version: lexide::pronunciation::DECODER_VERSION.into(),
+            g2p: phoneme_verify::model_target_identity(language),
+        }
+    }
 }
 
 /// One evaluated cue, as a line of the output JSONL.
 #[derive(Serialize, Deserialize)]
 struct EvalRecord {
+    /// Missing on historical rows: readable, but never reusable as current.
+    #[serde(default)]
+    provenance: Option<Provenance>,
     imdb_id: String,
     title: String,
     lang: String,
@@ -125,6 +143,27 @@ struct EvalRecord {
     ctc: Option<phoneme_verify::TargetScore>,
 }
 
+fn completed_cues<'a>(
+    records: &'a [EvalRecord],
+    lang: &str,
+    provenance: &Provenance,
+) -> HashSet<(&'a str, usize)> {
+    records
+        .iter()
+        .filter(|r| r.lang == lang && r.provenance.as_ref() == Some(provenance))
+        .map(|r| (r.imdb_id.as_str(), r.cue_index))
+        .collect()
+}
+
+fn read_records(out: &Path) -> Result<Vec<EvalRecord>> {
+    let text = std::fs::read_to_string(out)
+        .with_context(|| format!("no eval output at {}", out.display()))?;
+    Ok(text
+        .lines()
+        .filter_map(|line| serde_json::from_str(line).ok())
+        .collect())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::init();
@@ -142,15 +181,13 @@ async fn main() -> Result<()> {
 
     let plan = subtitle_corpus::library::read_plan(&args.corpus)?;
 
-    // Resume: skip cues already evaluated.
-    let mut done: HashSet<(String, usize)> = HashSet::new();
-    if let Ok(existing) = std::fs::read_to_string(&args.out) {
-        for line in existing.lines() {
-            if let Ok(r) = serde_json::from_str::<EvalRecord>(line) {
-                done.insert((r.imdb_id, r.cue_index));
-            }
-        }
-    }
+    // Old model/target scores remain in the append-only file, but cannot
+    // suppress a fresh evaluation. Summary uses the same provenance equality.
+    let existing = if args.out.exists() {
+        read_records(&args.out)?
+    } else {
+        Vec::new()
+    };
     if let Some(parent) = args.out.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -216,6 +253,17 @@ async fn main() -> Result<()> {
             continue;
         }
 
+        let ctx = VerifyContext::new(
+            &http,
+            generate_data::cache_remote::store(),
+            &empty_pronunciations,
+            language,
+        )?;
+        // Fail closed if the unsafe cache override bypassed discovery. A cache
+        // namespace alone must never masquerade as verified model provenance.
+        let provenance = Provenance::new(&ctx)?;
+        let done = completed_cues(&existing, code, &provenance);
+
         let picked: Vec<&Candidate> = sample(&candidates, CueLabel::Pos, args.per_film)
             .into_iter()
             .chain(sample(
@@ -229,7 +277,7 @@ async fn main() -> Result<()> {
                 args.per_film / 2,
             ))
             .chain(sample(&candidates, CueLabel::NegSilent, args.per_film / 2))
-            .filter(|c| !done.contains(&(entry.imdb_id.clone(), c.cue_index)))
+            .filter(|c| !done.contains(&(entry.imdb_id.as_str(), c.cue_index)))
             .collect();
 
         println!(
@@ -243,19 +291,10 @@ async fn main() -> Result<()> {
             continue;
         }
 
-        let ctx = VerifyContext::with_overrides(
-            &http,
-            generate_data::cache_remote::store(),
-            &empty_pronunciations,
-            language,
-            cache_version(&args.model_marker),
-            0.3,
-            Some(args.model_marker.clone()),
-        )?;
-
         use futures::StreamExt;
         let results: Vec<Option<EvalRecord>> = futures::stream::iter(picked.into_iter().map(|c| {
             let ctx = &ctx;
+            let provenance = &provenance;
             let audio = audio.clone();
             let entry_id = entry.imdb_id.clone();
             let entry_title = entry.title.clone();
@@ -309,6 +348,7 @@ async fn main() -> Result<()> {
                     _ => None,
                 };
                 Some(EvalRecord {
+                    provenance: Some(provenance.clone()),
                     imdb_id: entry_id,
                     title: entry_title,
                     lang: code.to_string(),
@@ -341,16 +381,52 @@ async fn main() -> Result<()> {
     print_summary(&args.out)
 }
 
-/// The CTC ratio's separation of transcript-verified cues from the rest,
-/// and what each candidate cut keeps: the table `subtitle-corpus clips`'
-/// `--min-ratio` is chosen from.
+#[derive(Default, Debug)]
+struct CtcStats {
+    ratios: Vec<f64>,
+    oov_rejects: usize,
+    unscorable_rejects: usize,
+    missing: usize,
+}
+
+impl CtcStats {
+    fn collect<'a>(records: impl Iterator<Item = &'a EvalRecord>) -> Self {
+        let mut stats = Self::default();
+        for r in records {
+            match &r.ctc {
+                None => stats.missing += 1,
+                Some(c) if !c.oov.is_empty() => stats.oov_rejects += 1,
+                Some(c) => match c.ratio.filter(|r| r.is_finite()) {
+                    Some(ratio) => stats.ratios.push(ratio),
+                    None => stats.unscorable_rejects += 1,
+                },
+            }
+        }
+        stats.ratios.sort_by(f64::total_cmp);
+        stats
+    }
+
+    fn evaluated(&self) -> usize {
+        self.ratios.len() + self.oov_rejects + self.unscorable_rejects
+    }
+
+    fn kept(&self, cut: f64) -> usize {
+        self.ratios.iter().filter(|&&r| r >= cut).count()
+    }
+}
+
+/// CTC-only separation and candidate cuts, not the other production acoustic
+/// gates (edges, voiced speech, padding, etc.) or full production clip yield.
 fn print_ctc_summary(by_lang: &BTreeMap<&str, Vec<&EvalRecord>>) {
     println!("\n=== CTC log-odds ratio (per phoneme, target vs free decode) by label ===");
     println!(
-        "{:<6} {:<14} {:>5}  {:>6} {:>6} {:>6} {:>6} {:>6}",
-        "lang", "label", "n", "p10", "p25", "p50", "p75", "p90"
+        "CTC gate only, not other production acoustic gates. OOV/unscorable scores are hard \
+         rejects; missing CTC scores are unevaluated. Quantiles/AUC exclude all three."
     );
-    let ratio = |r: &EvalRecord| r.ctc.as_ref().and_then(|c| c.ratio);
+    println!(
+        "{:<6} {:<14} {:>5} {:>5} {:>10} {:>7}  {:>6} {:>6} {:>6} {:>6} {:>6}",
+        "lang", "label", "n", "OOV", "unscorable", "missing", "p10", "p25", "p50", "p75", "p90"
+    );
     for (lang, rs) in by_lang {
         for label in [
             CueLabel::Pos,
@@ -358,21 +434,23 @@ fn print_ctc_summary(by_lang: &BTreeMap<&str, Vec<&EvalRecord>>) {
             CueLabel::NegMismatch,
             CueLabel::NegSilent,
         ] {
-            let mut xs: Vec<f64> = rs
-                .iter()
-                .filter(|r| r.label == label)
-                .filter_map(|r| ratio(r))
-                .collect();
-            if xs.is_empty() {
-                continue;
-            }
-            xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            let q = |p: f64| xs[((xs.len() - 1) as f64 * p) as usize];
+            let stats = CtcStats::collect(rs.iter().copied().filter(|r| r.label == label));
+            let xs = &stats.ratios;
+            let q = |p: f64| {
+                if xs.is_empty() {
+                    "n/a".to_string()
+                } else {
+                    format!("{:.2}", xs[((xs.len() - 1) as f64 * p) as usize])
+                }
+            };
             println!(
-                "{:<6} {:<14} {:>5}  {:>6.2} {:>6.2} {:>6.2} {:>6.2} {:>6.2}",
+                "{:<6} {:<14} {:>5} {:>5} {:>10} {:>7}  {:>6} {:>6} {:>6} {:>6} {:>6}",
                 lang,
                 format!("{label:?}"),
                 xs.len(),
+                stats.oov_rejects,
+                stats.unscorable_rejects,
+                stats.missing,
                 q(0.10),
                 q(0.25),
                 q(0.50),
@@ -380,66 +458,99 @@ fn print_ctc_summary(by_lang: &BTreeMap<&str, Vec<&EvalRecord>>) {
                 q(0.90),
             );
         }
-        let pos: Vec<f64> = rs
-            .iter()
-            .filter(|r| r.label == CueLabel::Pos)
-            .filter_map(|r| ratio(r))
-            .collect();
-        let neg: Vec<f64> = rs
-            .iter()
-            .filter(|r| r.label != CueLabel::Pos)
-            .filter_map(|r| ratio(r))
-            .collect();
-        if pos.is_empty() || neg.is_empty() {
-            continue;
-        }
-        let mut wins = 0f64;
-        for p in &pos {
-            for n in &neg {
-                wins += if p > n {
-                    1.0
-                } else if p == n {
-                    0.5
-                } else {
-                    0.0
-                };
+        let pos = CtcStats::collect(rs.iter().copied().filter(|r| r.label == CueLabel::Pos));
+        let neg = CtcStats::collect(rs.iter().copied().filter(|r| r.label != CueLabel::Pos));
+        if !pos.ratios.is_empty() && !neg.ratios.is_empty() {
+            let mut wins = 0f64;
+            for p in &pos.ratios {
+                for n in &neg.ratios {
+                    wins += if p > n {
+                        1.0
+                    } else if p == n {
+                        0.5
+                    } else {
+                        0.0
+                    };
+                }
             }
+            println!(
+                "{lang:<6} AUC(pos>neg) = {:.3}  ({} pos vs {} neg; in-vocabulary only)",
+                wins / (pos.ratios.len() * neg.ratios.len()) as f64,
+                pos.ratios.len(),
+                neg.ratios.len()
+            );
         }
-        println!(
-            "{lang:<6} AUC(pos>neg) = {:.3}  ({} pos vs {} neg)",
-            wins / (pos.len() * neg.len()) as f64,
-            pos.len(),
-            neg.len()
-        );
-        print!("{lang:<6} cut ≥ :");
+        print!("{lang:<6} CTC cut ≥ (kept/evaluated, including hard rejects):");
         for cut in [-2.0, -1.5, -1.0, -0.75, -0.5, -0.35, -0.25, -0.15] {
-            let keep =
-                |xs: &[f64]| xs.iter().filter(|&&x| x >= cut).count() as f64 / xs.len() as f64;
             print!(
-                "  {cut:>5.2} → pos {:>3.0}% neg {:>3.0}%",
-                keep(&pos) * 100.0,
-                keep(&neg) * 100.0
+                "  {cut:>5.2} → pos {}/{} neg {}/{}",
+                pos.kept(cut),
+                pos.evaluated(),
+                neg.kept(cut),
+                neg.evaluated()
             );
         }
         println!();
     }
 }
 
-/// Distribution + separation + confusion summary over the output JSONL.
+struct SummaryGroup<'a> {
+    provenance: &'a Provenance,
+    // Latest appended row per (language, film, cue), within this provenance.
+    records: BTreeMap<(&'a str, &'a str, usize), &'a EvalRecord>,
+}
+
+fn summary_groups(records: &[EvalRecord]) -> (Vec<SummaryGroup<'_>>, usize) {
+    let mut groups: Vec<SummaryGroup<'_>> = Vec::new();
+    let mut unstamped = 0;
+    for r in records {
+        let Some(provenance) = &r.provenance else {
+            unstamped += 1;
+            continue;
+        };
+        let index = groups.iter().position(|g| g.provenance == provenance);
+        let group = match index {
+            Some(i) => &mut groups[i],
+            None => {
+                groups.push(SummaryGroup {
+                    provenance,
+                    records: BTreeMap::new(),
+                });
+                groups.last_mut().unwrap()
+            }
+        };
+        group.records.insert((&r.lang, &r.imdb_id, r.cue_index), r);
+    }
+    (groups, unstamped)
+}
+
+/// Offline summary: never discover the currently serving model or pool model
+/// histories. Unstamped rows have unknown (possibly mixed) models and targets.
 fn print_summary(out: &Path) -> Result<()> {
-    let text = std::fs::read_to_string(out)
-        .with_context(|| format!("no eval output at {}", out.display()))?;
-    let records: Vec<EvalRecord> = text
-        .lines()
-        .filter_map(|l| serde_json::from_str(l).ok())
-        .collect();
+    let records = read_records(out)?;
     if records.is_empty() {
         println!("no records");
         return Ok(());
     }
+    let (groups, unstamped) = summary_groups(&records);
+    println!(
+        "Historical/unstamped: {unstamped} rows excluded from aggregates and resume \
+         (unknown model/target provenance)."
+    );
+    for group in groups {
+        println!(
+            "\n=== Recorded provenance (not asserted current): {} — {} unique cues ===",
+            serde_json::to_string(group.provenance)?,
+            group.records.len()
+        );
+        print_group_summary(group.records.values().copied());
+    }
+    Ok(())
+}
 
+fn print_group_summary<'a>(records: impl Iterator<Item = &'a EvalRecord>) {
     let mut by_lang: BTreeMap<&str, Vec<&EvalRecord>> = BTreeMap::new();
-    for r in &records {
+    for r in records {
         by_lang.entry(r.lang.as_str()).or_default().push(r);
     }
 
@@ -563,5 +674,226 @@ fn print_summary(out: &Path) -> Result<()> {
         }
         println!();
     }
-    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn provenance(language: Language) -> Provenance {
+        Provenance {
+            model_id: "test/model".into(),
+            model_revision: "1234567890ab-full-revision".into(),
+            decoder_version: lexide::pronunciation::DECODER_VERSION.into(),
+            g2p: phoneme_verify::model_target_identity(language),
+        }
+    }
+
+    fn record(provenance: Option<Provenance>) -> EvalRecord {
+        // A historical record deliberately omits provenance, cache_version,
+        // exact_wer and ctc. These all predate their respective stamps.
+        let mut r: EvalRecord = serde_json::from_value(serde_json::json!({
+            "imdb_id": "tt1", "title": "Film", "lang": "fra", "cue_index": 7,
+            "start_ms": 10, "end_ms": 20, "text": "bonjour", "cleaned_text": "bonjour",
+            "label": "pos", "agreement_wer": 0.0, "heard_text": "bonjour",
+            "audio_event_overlap": false, "neighbor_speech": false,
+            "verification": {
+                "actor": "tt1", "text": "bonjour", "wav_path": "tt1#7",
+                "predicted_raw": [], "predicted_normalized": [], "expected": null,
+                "edit_distance": null, "edit_distance_pct": null,
+                "alignment": null, "failure_reason": null
+            }
+        }))
+        .unwrap();
+        r.provenance = provenance;
+        r
+    }
+
+    fn score(ratio: Option<f64>, oov: &[&str]) -> phoneme_verify::TargetScore {
+        phoneme_verify::TargetScore {
+            logp_target: None,
+            logp_target_per_phoneme: None,
+            logp_free: None,
+            ratio,
+            target_len: 2,
+            free_len: 2,
+            oov: oov.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    #[test]
+    fn resume_requires_full_model_decoder_and_target_identity() {
+        let current = provenance(Language::French);
+        let records = vec![record(Some(current.clone()))];
+        assert!(completed_cues(&records, "fra", &current).contains(&("tt1", 7)));
+        assert!(completed_cues(&records, "hin", &current).is_empty());
+        for field in ["model", "revision", "decoder", "g2p"] {
+            let mut changed = current.clone();
+            match field {
+                "model" => changed.model_id.push_str("-new"),
+                // Same 12-character cache prefix is not the same full revision.
+                "revision" => changed.model_revision.push_str("-new"),
+                "decoder" => changed.decoder_version = "new-decoder".into(),
+                "g2p" => changed.g2p.push_str("-new"),
+                _ => unreachable!(),
+            }
+            assert!(
+                completed_cues(&records, "fra", &changed).is_empty(),
+                "{field}"
+            );
+        }
+        let mut missing_decoder = serde_json::to_value(&current).unwrap();
+        missing_decoder
+            .as_object_mut()
+            .unwrap()
+            .remove("decoder_version");
+        assert!(serde_json::from_value::<Provenance>(missing_decoder).is_err());
+    }
+
+    #[test]
+    fn effective_decoder_is_stamped_even_when_endpoint_omits_it() {
+        let mut model = lexide::pronunciation::ModelIdentity {
+            model_id: "test/model".into(),
+            model_revision: "revision".into(),
+            decoder_version: None,
+            deploy_marker: Some("deployment-a".into()),
+        };
+        let stamp = Provenance::from_verified_identity(&model, Language::French);
+        assert_eq!(
+            stamp.decoder_version,
+            lexide::pronunciation::DECODER_VERSION
+        );
+        model.decoder_version = Some(lexide::pronunciation::DECODER_VERSION.into());
+        model.deploy_marker = Some("deployment-b".into());
+        assert_eq!(
+            stamp,
+            Provenance::from_verified_identity(&model, Language::French)
+        );
+        let records = vec![record(Some(stamp.clone()))];
+        let mut next_decoder = stamp;
+        next_decoder.decoder_version.push_str("-next");
+        assert!(completed_cues(&records, "fra", &next_decoder).is_empty());
+    }
+
+    #[test]
+    fn hindi_canon_is_language_aware_and_invalidates_resume() {
+        let current = provenance(Language::Hindi);
+        assert!(current.g2p.contains(" hindi="));
+        assert!(!provenance(Language::French).g2p.contains(" hindi="));
+        let mut r = record(Some(current.clone()));
+        r.lang = "hin".into();
+        let records = vec![r];
+        assert_eq!(completed_cues(&records, "hin", &current).len(), 1);
+        let mut changed = current;
+        changed.g2p = format!("{} hindi=another-canon", provenance(Language::French).g2p);
+        assert!(completed_cues(&records, "hin", &changed).is_empty());
+    }
+
+    #[test]
+    fn legacy_rows_are_readable_but_never_current() {
+        let records = vec![record(None)];
+        assert!(records[0].ctc.is_none());
+        assert!(records[0].verification.cache_version.is_none());
+        assert!(completed_cues(&records, "fra", &provenance(Language::French)).is_empty());
+        let (groups, unstamped) = summary_groups(&records);
+        assert!(groups.is_empty());
+        assert_eq!(unstamped, 1);
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("eval.jsonl");
+        std::fs::write(&path, serde_json::to_string(&records[0]).unwrap()).unwrap();
+        print_summary(&path).unwrap(); // Pure file read, no discovery/client.
+    }
+
+    #[test]
+    fn summaries_separate_provenance_and_use_latest_matching_row() {
+        let first = provenance(Language::French);
+        let mut other = first.clone();
+        other.model_revision.push_str("-other");
+        let mut old = record(Some(first.clone()));
+        old.ctc = Some(score(Some(-2.0), &[]));
+        let mut latest = record(Some(first.clone()));
+        latest.ctc = Some(score(Some(-0.1), &[]));
+        let mut another_language = record(Some(first.clone()));
+        another_language.lang = "deu".into();
+        let records = vec![
+            old,
+            record(Some(other)),
+            record(None),
+            latest,
+            another_language,
+        ];
+        let (groups, unstamped) = summary_groups(&records);
+        assert_eq!(unstamped, 1);
+        assert_eq!(groups.len(), 2);
+        assert_eq!(groups[0].records.len(), 2);
+        assert_eq!(groups[1].records.len(), 1);
+        assert_eq!(
+            groups[0].records[&("fra", "tt1", 7)]
+                .ctc
+                .as_ref()
+                .unwrap()
+                .ratio,
+            Some(-0.1)
+        );
+        assert_eq!(completed_cues(&records, "fra", &first).len(), 1);
+        // All printed summaries, not just CTC, receive these isolated groups.
+        for group in groups {
+            print_group_summary(group.records.values().copied());
+        }
+    }
+
+    #[test]
+    fn oov_ratios_never_enter_statistics_or_pass_the_ctc_gate() {
+        let mut records: Vec<_> = (0..6).map(|_| record(None)).collect();
+        records[0].ctc = Some(score(Some(-0.2), &[]));
+        records[1].ctc = Some(score(Some(-2.0), &[]));
+        records[2].ctc = Some(score(Some(0.0), &["unknown"]));
+        records[3].ctc = Some(score(None, &["unknown"]));
+        records[4].ctc = Some(score(None, &[]));
+        let stats = CtcStats::collect(records.iter());
+        assert_eq!(stats.ratios, vec![-2.0, -0.2]);
+        assert_eq!(stats.oov_rejects, 2);
+        assert_eq!(stats.unscorable_rejects, 1);
+        assert_eq!(stats.missing, 1);
+        assert_eq!(stats.evaluated(), 5);
+        assert_eq!(stats.kept(-0.5), 1);
+        assert_eq!(stats.kept(-3.0), 2);
+        let all_oov = CtcStats::collect(records[2..4].iter());
+        assert!(all_oov.ratios.is_empty());
+        assert_eq!(all_oov.evaluated(), 2);
+        assert_eq!(all_oov.kept(-100.0), 0);
+    }
+
+    #[test]
+    fn explicit_cache_override_cannot_stamp_verified_provenance() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let words = HashMap::new();
+        let ctx = VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &words,
+            Language::French,
+            "looks-like-production".into(),
+            0.3,
+            Some("deploy-marker".into()),
+        )
+        .unwrap();
+        assert!(
+            Provenance::new(&ctx)
+                .unwrap_err()
+                .to_string()
+                .contains("verified model identity required")
+        );
+    }
+
+    #[test]
+    fn obsolete_model_marker_option_is_rejected() {
+        assert!(Args::try_parse_from(["eval", "--model-marker", "old-revision"]).is_err());
+        assert!(
+            Args::try_parse_from(["eval", "--summary-only"])
+                .unwrap()
+                .summary_only
+        );
+    }
 }

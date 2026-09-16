@@ -2080,7 +2080,6 @@ dependencies = [
  "dotenvy",
  "env_logger",
  "futures",
- "g2p",
  "gcp_auth",
  "google-speech",
  "half",

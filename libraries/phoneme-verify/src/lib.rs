@@ -136,6 +136,17 @@ pub fn production_cache_version() -> Result<String> {
 /// was taught to call something else. Review when deploying a new model.
 pub const MODEL_HINDI_CANON: g2p::HindiCanon = g2p::HindiCanon::Legacy;
 
+/// Identity of the target renderer, including the model's Hindi convention
+/// only for Hindi. Persist alongside model identity when caching scores.
+pub fn model_target_identity(language: Language) -> String {
+    let identity = g2p::identity();
+    if language == Language::Hindi {
+        format!("{identity} hindi={MODEL_HINDI_CANON:?}")
+    } else {
+        identity
+    }
+}
+
 /// The scoring target for `text` in `language`, in the deployed model's
 /// label space: espeak-fork phonemes for espeak-labeled languages, the Hindi
 /// chain at [`MODEL_HINDI_CANON`] for Hindi. `None` for languages the model
@@ -266,6 +277,16 @@ pub struct VerifyContext<'a> {
 }
 
 impl<'a> VerifyContext<'a> {
+    /// Discovered identity enforced on inference responses. Explicit overrides
+    /// (including `WAV2VEC2_CACHE_VERSION_OVERRIDE`) have no verified identity
+    /// and cannot be used to stamp trusted evaluation provenance.
+    pub fn verified_model_identity(&self) -> Result<&ModelIdentity> {
+        self.expected_identity.as_ref().context(
+            "verified model identity required; remove WAV2VEC2_CACHE_VERSION_OVERRIDE \
+             and use VerifyContext::new rather than with_overrides",
+        )
+    }
+
     /// Production / env-driven constructor. The cache version partitions
     /// predictions by the process-wide discovered (model, decoder),
     /// overridable via `WAV2VEC2_CACHE_VERSION_OVERRIDE`. Threshold and the
@@ -2264,6 +2285,43 @@ mod tests {
             wav.extend_from_slice(&seed.to_le_bytes());
         }
         wav
+    }
+
+    #[test]
+    fn model_target_identity_stamps_only_hindi_canon() {
+        assert_eq!(model_target_identity(Language::French), g2p::identity());
+        assert_eq!(
+            model_target_identity(Language::Hindi),
+            format!("{} hindi={MODEL_HINDI_CANON:?}", g2p::identity())
+        );
+    }
+
+    #[test]
+    fn verified_identity_rejects_unchecked_cache_overrides() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let words = HashMap::new();
+        let mut ctx = VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &words,
+            Language::French,
+            "unchecked".into(),
+            0.3,
+            None,
+        )
+        .unwrap();
+        assert!(ctx.verified_model_identity().is_err());
+        // Exercise the same resolved-state assignment as new(), without env
+        // mutation or a live discovery probe. Even a production-looking cache
+        // override has no validated identity.
+        let checked = resolve_model(None, || Ok(test_identity())).unwrap();
+        let unchecked =
+            resolve_model(Some(checked.version.clone()), || panic!("no probe")).unwrap();
+        ctx.expected_identity = unchecked.identity;
+        assert!(ctx.verified_model_identity().is_err());
+        ctx.expected_identity = checked.identity;
+        assert_eq!(ctx.verified_model_identity().unwrap(), &test_identity());
     }
 
     fn test_identity() -> ModelIdentity {
