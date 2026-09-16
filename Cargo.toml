@@ -67,6 +67,8 @@ abort-signal = { git = "https://github.com/anchpop/fetch-happen", rev = "65f9906
 # shared with lexide. The rev pins which espeak build's phonemes we score
 # against; it must match the labels the deployed pronunciation model was
 # trained on. Needs cmake + a C compiler to build.
+# TODO(g2p): update to the coordinator-supplied revision for the deployed model's
+# labels; the upcoming revision's release identity remains 0.4.0.
 g2p = { git = "https://github.com/anchpop/g2p", rev = "3ae99aa1d12dd23962bef1882cfaba57a95d98bd" }
 xxhash-rust = { version = "0.8.15", features = ["xxh3", "const_xxh3"] }
 indexmap = { version = "2" }
@@ -82,7 +84,7 @@ wasm-logger = "0.2.0"
 unicode-normalization = "0.1.25"
 # Shared browser/native named locks.
 weblocks = { git = "https://github.com/anchpop/weblocks", rev = "b4e7db5af829e357ab67407609e1fb896ee30cde" }
-lexide = { git = "https://github.com/anchpop/lexide.git", rev = "72712d7630cff84bec01cffe63f81c7ea668a4f2", default-features = false }
+lexide = { git = "https://github.com/anchpop/lexide.git", rev = "c4c8647676467c6bd233ba2e4f2ea98dcf3c4c9e", default-features = false }
 indicatif = "0.18"
 
 [workspace.dependencies.rkyv]

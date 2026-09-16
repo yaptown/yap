@@ -14,14 +14,14 @@ fn cached_matrix(rows: &[[f32; 4]]) -> FrameMatrix {
                 .unwrap();
         }
     }
-    let payload = FrameMatrixPayload {
+    let payload = FrameMatrixPayload::Legacy(phoneme_verify::LegacyFrameMatrixPayload {
         shape: vec![rows.len(), 4],
         dtype: "float16".into(),
         encoding: "zlib+base64".into(),
         blank_id: 0,
         vocab: ["<pad>", "a", "b", "c"].map(String::from).to_vec(),
         data: base64::engine::general_purpose::STANDARD.encode(encoder.finish().unwrap()),
-    };
+    });
     let cached = serde_json::to_vec(&payload).unwrap();
     FrameMatrix::decode(&serde_json::from_slice(&cached).unwrap()).unwrap()
 }

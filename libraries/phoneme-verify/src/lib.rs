@@ -39,8 +39,8 @@ use std::sync::{LazyLock, OnceLock};
 use xxhash_rust::xxh3::xxh3_64;
 
 pub use lexide::pronunciation::{
-    AlignedPhoneme, DecodedPath, FrameMatrix, FrameMatrixPayload, PhoneRun, TargetScore,
-    decode_path, is_phone_token,
+    AlignedPhoneme, DecodedPath, FrameMatrix, FrameMatrixPayload, LegacyFrameMatrixPayload,
+    PhoneRun, TargetScore, decode_path, is_phone_token,
 };
 
 fn expected_deploy_marker() -> Option<String> {
@@ -2248,14 +2248,14 @@ mod tests {
                     .unwrap();
             }
         }
-        FrameMatrixPayload {
+        FrameMatrixPayload::Legacy(LegacyFrameMatrixPayload {
             shape: vec![frames, 2],
             dtype: "float16".into(),
             encoding: "zlib+base64".into(),
             blank_id: 0,
             vocab: vec!["<pad>".into(), "a".into()],
             data: base64::engine::general_purpose::STANDARD.encode(encoder.finish().unwrap()),
-        }
+        })
     }
 
     #[test]
@@ -2513,7 +2513,10 @@ mod tests {
         let hash = xxh3_64(wav);
         let key = format!("wav2vec2-frames/test/{hash:016x}");
         let mut payload = batch_test_payload(1);
-        payload.encoding = "broken".into();
+        let FrameMatrixPayload::Legacy(legacy) = &mut payload else {
+            unreachable!("fixture uses the legacy wire format")
+        };
+        legacy.encoding = "broken".into();
         let bytes = serde_json::to_vec(&payload).unwrap();
         ctx.store.write(&key, &bytes).await.unwrap();
         let cached = cached_frame_matrix(&ctx, hash)
@@ -2605,7 +2608,10 @@ mod tests {
                             3 => return serde_json::json!({"phonemes": []}),
                             4 => {
                                 let mut invalid = batch_test_payload(1);
-                                invalid.encoding = "invalid".into();
+                                let FrameMatrixPayload::Legacy(legacy) = &mut invalid else {
+                                    unreachable!("fixture uses the legacy wire format")
+                                };
+                                legacy.encoding = "invalid".into();
                                 return serde_json::json!({"phonemes": [], "frame_matrix": invalid});
                             }
                             _ => {}

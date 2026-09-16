@@ -7,14 +7,16 @@ fn matrix(hash: u64) -> FrameMatrix {
     let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
     // fp16 -2 and -1: a single nonblank frame with a recognizable label.
     encoder.write_all(&[0x00, 0xc0, 0x00, 0xbc]).unwrap();
-    FrameMatrix::decode(&phoneme_verify::FrameMatrixPayload {
-        shape: vec![1, 2],
-        dtype: "float16".into(),
-        encoding: "zlib+base64".into(),
-        blank_id: 0,
-        vocab: vec!["<pad>".into(), format!("a{hash}")],
-        data: base64::engine::general_purpose::STANDARD.encode(encoder.finish().unwrap()),
-    })
+    FrameMatrix::decode(&phoneme_verify::FrameMatrixPayload::Legacy(
+        phoneme_verify::LegacyFrameMatrixPayload {
+            shape: vec![1, 2],
+            dtype: "float16".into(),
+            encoding: "zlib+base64".into(),
+            blank_id: 0,
+            vocab: vec!["<pad>".into(), format!("a{hash}")],
+            data: base64::engine::general_purpose::STANDARD.encode(encoder.finish().unwrap()),
+        },
+    ))
     .unwrap()
 }
 
