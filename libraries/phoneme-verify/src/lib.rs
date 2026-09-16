@@ -1409,7 +1409,11 @@ fn spanish_dialect_target(
     text: &str,
     language: Language,
 ) -> Option<Result<g2p::Phonemized, g2p::Error>> {
-    (language == Language::Spanish).then(|| g2p::phonemize(text, "es-419"))
+    (language == Language::Spanish).then(|| {
+        g2p::phonemize_language(
+            g2p::PhonemizeRequest::new("spa", text).variety(g2p::Variety::LatinAmerican),
+        )
+    })
 }
 
 fn add_spanish_dialect_word(text: &str, language: Language, variants: &mut Vec<Vec<String>>) {
@@ -2982,7 +2986,7 @@ mod tests {
                  fix Language::phoneme_label_source and Language::g2p_lang together"
             );
             let expected = match mirror {
-                PhonemeLabelSource::Espeak(voice) => Some(g2p::LabelSource::Espeak(voice)),
+                PhonemeLabelSource::Espeak(_) => Some(g2p::LabelSource::Espeak),
                 PhonemeLabelSource::Hindi => Some(g2p::LabelSource::Hindi),
                 PhonemeLabelSource::Mandarin => Some(g2p::LabelSource::Mandarin),
                 PhonemeLabelSource::Japanese => Some(g2p::LabelSource::Japanese),
@@ -2995,6 +2999,30 @@ mod tests {
                 g2p::label_source(language.code()),
                 "{language:?}: label-source mirror drifted from g2p::label_source; \
                  fix Language::phoneme_label_source to match the pinned g2p table"
+            );
+        }
+    }
+
+    #[test]
+    fn spanish_variety_labels_match_pre_upgrade_fixture() {
+        // Captured from g2p 3ae99aa's phonemize(text, "es-419") before the API bump.
+        for (text, expected) in [
+            ("cinco", vec!["s", "i", "n", "k", "o"]),
+            ("caza", vec!["k", "a", "s", "a"]),
+            (
+                "Gracias por la cerveza.",
+                vec![
+                    "ɡ", "ɾ", "a", "s", "j", "a", "s", "p", "o", "ɾ", "l", "a", "s", "e", "ɾ", "β",
+                    "e", "s", "a",
+                ],
+            ),
+        ] {
+            assert_eq!(
+                spanish_dialect_target(text, Language::Spanish)
+                    .unwrap()
+                    .unwrap()
+                    .phonemes,
+                expected
             );
         }
     }
@@ -3363,11 +3391,11 @@ mod letter_name_tests {
     fn letter_names_phonemize_as_spoken() {
         assert_eq!(
             phonemes(Language::German, "ü", "über"),
-            "u ʊ m l a ʊ t v i ɪ n y b ɜ"
+            "u ʊ m l aʊ t v i ɪ n y b ɜ"
         );
         assert_eq!(
             phonemes(Language::German, "ß", "Straße"),
-            "ɛ s t s ɛ t v i ɪ n ʃ t ɾ ɑ s ə"
+            "ɛ s ts ɛ t v i ɪ n ʃ t ɾ ɑ s ə"
         );
         assert_eq!(
             phonemes(Language::Spanish, "ñ", "niño"),
@@ -3375,7 +3403,7 @@ mod letter_name_tests {
         );
         assert_eq!(
             phonemes(Language::Portuguese, "ã", "pão"),
-            "a t ʃ i ʊ k o m w e\u{303} j p ɐ\u{303} ʊ\u{303}"
+            "a tʃ i ʊ k o m w e\u{303} j p ɐ\u{303}ʊ\u{303}"
         );
         assert_eq!(
             phonemes(Language::Russian, "щ", "борщ"),
@@ -3399,7 +3427,7 @@ mod letter_name_tests {
         // The `^` espeak leaves on царь is stripped, not scored.
         assert_eq!(
             phonemes(Language::Russian, "ц", "царь"),
-            "t s ɛ k ɑ k f t s ɑ r ɪ"
+            "ts ɛ k ɑ k f ts ɑ r ɪ"
         );
         assert_eq!(
             phonemes(Language::Russian, "ь", "соль"),

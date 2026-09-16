@@ -2027,11 +2027,12 @@ dependencies = [
 
 [[package]]
 name = "g2p"
-version = "0.3.0"
-source = "git+https://github.com/anchpop/g2p?rev=3ae99aa1d12dd23962bef1882cfaba57a95d98bd#3ae99aa1d12dd23962bef1882cfaba57a95d98bd"
+version = "0.4.0"
+source = "git+https://github.com/anchpop/g2p?rev=acaf547a338efee094f85b19c15226a2971f86da#acaf547a338efee094f85b19c15226a2971f86da"
 dependencies = [
  "cmake",
  "dirs",
+ "g2p-types",
  "jpreprocess",
  "libc",
  "serde",
@@ -2041,6 +2042,14 @@ dependencies = [
  "walkdir",
  "xxhash-rust",
  "zstd",
+]
+
+[[package]]
+name = "g2p-types"
+version = "0.4.0"
+source = "git+https://github.com/anchpop/g2p?rev=acaf547a338efee094f85b19c15226a2971f86da#acaf547a338efee094f85b19c15226a2971f86da"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

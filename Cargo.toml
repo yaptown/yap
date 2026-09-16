@@ -62,14 +62,11 @@ idb = { version = "0.6.5" }
 fetch-happen = { git = "https://github.com/anchpop/fetch-happen", rev = "65f9906d5d3a7b994c6145ee6db9d12b1dae92ae" }
 # The cross-platform abort mechanism, from the same fetch-happen revision.
 abort-signal = { git = "https://github.com/anchpop/fetch-happen", rev = "65f9906d5d3a7b994c6145ee6db9d12b1dae92ae" }
-# Grapheme-to-phoneme (github.com/anchpop/g2p): the anchpop/espeak-ng fork,
-# statically linked with its data embedded, plus the model-label tokenizer
-# shared with lexide. The rev pins which espeak build's phonemes we score
-# against; it must match the labels the deployed pronunciation model was
-# trained on. Needs cmake + a C compiler to build.
-# TODO(g2p): update to the coordinator-supplied revision for the deployed model's
-# labels; the upcoming revision's release identity remains 0.4.0.
-g2p = { git = "https://github.com/anchpop/g2p", rev = "3ae99aa1d12dd23962bef1882cfaba57a95d98bd" }
+# Grapheme-to-phoneme owns the language and variety defaults. This pin describes
+# the renderer, not an assertion that a deployed model used identical labels;
+# corpus response keys separate actual WAV content and exact target sequences.
+# Needs cmake + a C compiler to build the embedded espeak fork.
+g2p = { git = "https://github.com/anchpop/g2p", rev = "acaf547a338efee094f85b19c15226a2971f86da" }
 xxhash-rust = { version = "0.8.15", features = ["xxh3", "const_xxh3"] }
 indexmap = { version = "2" }
 chrono = "0.4.44"
