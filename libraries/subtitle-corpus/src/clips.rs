@@ -55,7 +55,7 @@ use crate::transcript::{Kind, Spoken};
 
 /// Bump when the record format or the gating logic changes in a way that
 /// makes existing `clips.jsonl` files not comparable.
-const FORMAT_VERSION: u32 = 11;
+const FORMAT_VERSION: u32 = 12;
 
 /// How late earshot flags speech after it begins. Measured 2026-09-02 on
 /// four films: with the profile allowed to trim inside the stamped words
@@ -438,20 +438,48 @@ pub fn clips_path(dir: &Path) -> PathBuf {
     dir.join("clips.jsonl")
 }
 
-fn stored_provenance(path: &Path) -> Option<Provenance> {
-    let file = std::fs::File::open(path).ok()?;
-    let mut first = String::new();
-    std::io::BufRead::read_line(&mut std::io::BufReader::new(file), &mut first).ok()?;
-    serde_json::from_str(&first).ok()
+/// Completeness is independent of provenance: a matching input header does not
+/// prove that every candidate received a verdict. Only complete files are written.
+#[derive(Serialize, Deserialize)]
+struct Header {
+    #[serde(flatten)]
+    provenance: Provenance,
+    expected_candidates: usize,
 }
 
-/// Every clip in a film's `clips.jsonl` (the provenance line is skipped).
-pub fn read_clips(path: &Path) -> Result<Vec<Clip>> {
+fn stored_provenance(path: &Path) -> Option<Provenance> {
+    read_file(path).ok().map(|(provenance, _)| provenance)
+}
+
+pub fn read_file(path: &Path) -> Result<(Provenance, Vec<Clip>)> {
     let text = std::fs::read_to_string(path)?;
-    Ok(text
-        .lines()
-        .filter_map(|l| serde_json::from_str::<Clip>(l).ok())
-        .collect())
+    let mut lines = text.lines();
+    let header: Header = serde_json::from_str(lines.next().context("missing clip header")?)?;
+    anyhow::ensure!(
+        header.provenance.format == FORMAT_VERSION,
+        "unsupported clip format"
+    );
+    let clips: Vec<Clip> = lines
+        .map(serde_json::from_str)
+        .collect::<std::result::Result<_, _>>()
+        .context("malformed clip row")?;
+    anyhow::ensure!(
+        clips.len() == header.expected_candidates,
+        "incomplete clip file"
+    );
+    anyhow::ensure!(clips.iter().all(Clip::resolved), "unresolved clip verdict");
+    Ok((header.provenance, clips))
+}
+
+/// Every clip, with strict format, row count and verdict validation.
+pub fn read_clips(path: &Path) -> Result<Vec<Clip>> {
+    read_file(path).map(|(_, clips)| clips)
+}
+
+impl Clip {
+    fn resolved(&self) -> bool {
+        self.passed != self.reject.is_some()
+    }
 }
 
 /// The sentences of a subtitle track, keyed exactly as course ingestion keys
@@ -1220,8 +1248,8 @@ fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate
     clip.passed = clip.reject.is_none();
 }
 
-/// Preserve the existing current-header semantics even when every inference
-/// failed: failed slots are omitted, not serialized as new reject verdicts.
+/// Failed inference leaves the film unfinished. Successful response cache writes
+/// survive, but no current header may hide failed or still-pending candidates.
 fn finish_film(work: FilmWork) -> Result<FilmSummary> {
     let film = match work {
         FilmWork::Current(summary) => return Ok(summary),
@@ -1234,12 +1262,21 @@ fn finish_film(work: FilmWork) -> Result<FilmSummary> {
         clips,
         ..
     } = *film;
+    anyhow::ensure!(
+        clips
+            .iter()
+            .all(|clip| clip.as_ref().is_some_and(Clip::resolved)),
+        "clip candidates unresolved; successful inference is cached, retry this film"
+    );
     let clips: Vec<Clip> = clips.into_iter().flatten().collect();
     summary.scored = clips.len();
     summary.passed = clips.iter().filter(|c| c.passed).count();
     summary.median_ratio = median(clips.iter().filter_map(|c| c.ratio).collect());
 
-    let mut text = serde_json::to_string(&provenance)?;
+    let mut text = serde_json::to_string(&Header {
+        provenance,
+        expected_candidates: clips.len(),
+    })?;
     text.push('\n');
     for clip in &clips {
         text.push_str(&serde_json::to_string(clip)?);

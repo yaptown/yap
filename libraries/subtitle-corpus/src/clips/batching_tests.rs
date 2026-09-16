@@ -260,40 +260,25 @@ async fn global_batches_sort_compact_route_and_prefetch_after_discovery() {
                 }
             }
         }
-        let expected_sentences: Vec<_> = match &work {
-            FilmWork::Prepared(film) => film
-                .clips
-                .iter()
-                .flatten()
-                .map(|clip| clip.sentence.clone())
-                .collect(),
-            FilmWork::Current(_) => Vec::new(),
-        };
-        let summary = finish_film(work).unwrap();
         let path = clips_path(&root.path().join(index.to_string()));
-        let clips = read_clips(&path).unwrap();
-        assert_eq!(summary.scored, clips.len());
-        assert_eq!(
-            clips
-                .iter()
-                .map(|clip| clip.sentence.clone())
-                .collect::<Vec<_>>(),
-            expected_sentences,
-            "persisted rows must match every surviving slot exactly"
-        );
-        assert!(stored_provenance(&path).is_some());
+        if index < 8 {
+            assert!(finish_film(work).is_err());
+            assert!(!path.exists(), "partial success must not publish a header");
+        } else {
+            finish_film(work).unwrap();
+            assert!(stored_provenance(&path).is_some());
+        }
     }
     assert_eq!(std::fs::read(current_path).unwrap(), current_bytes);
 }
 
 #[tokio::test]
-async fn all_inference_failures_still_write_headers_and_finalize_independently() {
+async fn all_inference_failures_leave_no_current_header() {
     let root = tempfile::tempdir().unwrap();
     let mut broken = film(root.path(), 0, 1);
-    // A finalization failure must not prevent the following film's header.
+    // Failed candidates must never produce a current header.
     broken.dir = root.path().join("missing-parent").join("film");
     let good = film(root.path(), 1, 1);
-    let expected = good.provenance.clone();
     let mapped = map_staged(
         futures::stream::iter(vec![
             (0, Ok(FilmWork::Prepared(Box::new(broken)))),
@@ -313,11 +298,8 @@ async fn all_inference_failures_still_write_headers_and_finalize_independently()
         .into_iter()
         .map(|(_, outcome)| outcome.and_then(finish_film))
         .collect();
-    assert!(results[0].is_err());
-    assert_eq!(results[1].as_ref().unwrap().scored, 0);
-    let path = clips_path(&root.path().join("1"));
-    assert_eq!(stored_provenance(&path), Some(expected));
-    assert_eq!(std::fs::read_to_string(&path).unwrap().lines().count(), 1);
+    assert!(results.iter().all(Result::is_err));
+    assert!(!clips_path(&root.path().join("1")).exists());
 }
 
 #[tokio::test]
@@ -355,8 +337,39 @@ async fn all_request_preparations_fail_without_an_empty_inference_request() {
     )
     .await;
     let (_, outcome) = mapped.into_iter().next().unwrap();
-    assert_eq!(finish_film(outcome.unwrap()).unwrap().scored, 0);
-    assert!(stored_provenance(&clips_path(&root.path().join("0"))).is_some());
+    assert!(finish_film(outcome.unwrap()).is_err());
+    assert!(!clips_path(&root.path().join("0")).exists());
+}
+
+#[test]
+fn completeness_and_strict_reading_are_independent_of_provenance() {
+    let root = tempfile::tempdir().unwrap();
+    let unresolved = film(root.path(), 0, 1);
+    let path = clips_path(&unresolved.dir);
+    assert!(finish_film(FilmWork::Prepared(Box::new(unresolved))).is_err());
+    assert!(!path.exists(), "pending Some(Clip) is not a verdict");
+
+    let mut complete = film(root.path(), 0, 2);
+    complete.clips[0].as_mut().unwrap().passed = true;
+    complete.clips[1].as_mut().unwrap().reject = Some("cut: explicit failure".into());
+    finish_film(FilmWork::Prepared(Box::new(complete))).unwrap();
+    let original = std::fs::read_to_string(&path).unwrap();
+    assert_eq!(read_clips(&path).unwrap().len(), 2);
+    let lines: Vec<_> = original.lines().collect();
+    for corrupt in [
+        lines[..2].join("\n"),
+        format!("{}\nmalformed\n{}\n", lines[0], lines[2]),
+        format!(
+            "{}\n{}\n{}\n",
+            lines[0],
+            lines[1],
+            lines[1].replace("\"passed\":true", "\"passed\":false")
+        ),
+    ] {
+        std::fs::write(&path, corrupt).unwrap();
+        assert!(read_clips(&path).is_err());
+        assert!(stored_provenance(&path).is_none());
+    }
 }
 
 #[test]
