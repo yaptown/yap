@@ -2395,7 +2395,7 @@ mod tests {
     #[tokio::test]
     async fn batch_cache_retains_exact_item_and_all_envelope_raw_values() {
         let matrix = serde_json::to_string(&batch_test_payload(1)).unwrap();
-        let unknown = r#"{ "integer":9007199254740993, "decimal":1.2300e+02, "escape":"a", "nested":[ 1, 2 ] }"#;
+        let unknown = r#"{ "integer":9007199254740993, "decimal":1.2300e+02, "escape":"a\/b", "nested":[ 1, 2 ] }"#;
         let item =
             format!(r#"{{ "phonemes": [], "frame_matrix": {matrix}, "future_item": {unknown} }}"#);
         let sibling =
