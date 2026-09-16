@@ -1247,7 +1247,6 @@ async fn generate_pronunciation_feedback(
                 samples: &samples,
                 sample_rate,
                 top_k: 5,
-                return_frame_matrix: false,
             }
             .into_request(),
         )
@@ -1264,6 +1263,7 @@ async fn generate_pronunciation_feedback(
             StatusCode::BAD_GATEWAY
         })?
         .into_iter()
+        .map(|response| response.and_then(|raw| raw.decode()))
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| {
             eprintln!("Modal prediction failed: {e}");

@@ -148,13 +148,13 @@ pub async fn cached_model_target(
 /// One lossless per-clip artifact: untouched selected item and every raw batch
 /// envelope value, never sibling matrices. Typed views are derived on read.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct CachedResponse {
+pub struct RawPrediction {
     pub item: Box<serde_json::value::RawValue>,
     pub envelope: std::collections::BTreeMap<String, Box<serde_json::value::RawValue>>,
 }
 
-impl CachedResponse {
-    fn decode(&self) -> Result<ModalResponse> {
+impl RawPrediction {
+    pub fn decode(&self) -> Result<ModalResponse> {
         let mut modal =
             match serde_json::from_str::<lexide::pronunciation::BatchResult>(self.item.get())? {
                 lexide::pronunciation::BatchResult::Prediction(response) => response,
@@ -179,7 +179,7 @@ impl CachedResponse {
 }
 
 #[cfg(test)]
-impl From<ModalResponse> for CachedResponse {
+impl From<ModalResponse> for RawPrediction {
     fn from(response: ModalResponse) -> Self {
         Self {
             item: serde_json::value::to_raw_value(&response).unwrap(),
@@ -672,7 +672,7 @@ const MODAL_BATCH_LINGER: std::time::Duration = std::time::Duration::from_millis
 
 struct BatchItem {
     payload: PredictRequest,
-    reply: tokio::sync::oneshot::Sender<Result<CachedResponse>>,
+    reply: tokio::sync::oneshot::Sender<Result<RawPrediction>>,
 }
 
 /// The process-wide queue feeding the batch worker. Spawned on first use,
@@ -723,7 +723,7 @@ async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
 
 /// Send one clip through the shared batch worker. The single cache writer
 /// validates the returned item and live producer before persisting raw bytes.
-async fn post_modal(payload: PredictRequest) -> Result<CachedResponse> {
+async fn post_modal(payload: PredictRequest) -> Result<RawPrediction> {
     let (reply, result) = tokio::sync::oneshot::channel();
     BATCH_QUEUE
         .send(BatchItem { payload, reply })
@@ -849,7 +849,7 @@ fn check_marker(expected: Option<&str>, reported: Option<&str>) -> Result<()> {
 async fn cached_response(store: &osmo::Store, key: &str) -> Option<Result<ModalResponse>> {
     let bytes = store.read(key).await?;
     Some(
-        serde_json::from_slice::<CachedResponse>(&bytes)
+        serde_json::from_slice::<RawPrediction>(&bytes)
             .context("cached response")
             .and_then(|cached| cached.decode()),
     )
@@ -859,7 +859,7 @@ async fn cached_response(store: &osmo::Store, key: &str) -> Option<Result<ModalR
 async fn cache_response(
     ctx: &VerifyContext<'_>,
     hash: u64,
-    response: CachedResponse,
+    response: RawPrediction,
 ) -> Result<(ModalResponse, FrameMatrix)> {
     let modal = response.decode()?;
     check_response_identity(ctx, &modal)?;
@@ -2462,7 +2462,7 @@ mod tests {
                 .unwrap()
         );
         let bytes = ctx.store.read(&ctx.response_key(42)).await.unwrap();
-        let mut cached: CachedResponse = serde_json::from_slice(&bytes).unwrap();
+        let mut cached: RawPrediction = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(cached.item.get(), item);
         assert_eq!(cached.envelope["future_envelope"].get(), unknown);
         assert_eq!(cached.envelope.len(), 5);

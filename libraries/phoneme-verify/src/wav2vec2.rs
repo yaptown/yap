@@ -6,7 +6,7 @@ use lexide::pronunciation::{PredictRequest, RawBatchResponse, remote::Phonemizer
 mod activity;
 pub use activity::{RequestActivity, RequestActivitySnapshot};
 
-use super::{CachedResponse, check_decoder};
+use super::{RawPrediction, check_decoder};
 
 const MODAL_PREDICT_URL_DEFAULT: &str =
     "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict.modal.run";
@@ -115,11 +115,11 @@ fn is_transient_error(error: &anyhow::Error) -> bool {
 /// a short backoff lets the container finish warming up. The outer `Err`
 /// is the whole request failing; an inner `Err` rejects just one clip and
 /// is not retried. lexide owns the wire format and batch-size validation.
-pub(crate) async fn predict_batch(
+pub async fn predict_batch(
     client: &PhonemizerClient,
     requests: &[PredictRequest],
     activity: Option<&RequestActivity>,
-) -> Result<Vec<Result<CachedResponse>>> {
+) -> Result<Vec<Result<RawPrediction>>> {
     let mut last_err: Option<anyhow::Error> = None;
     for attempt in 1..=MAX_ATTEMPTS {
         let response = {
@@ -149,14 +149,14 @@ pub(crate) async fn predict_batch(
 
 /// Validate item views without rewriting their raw bytes or dropping unknown
 /// envelope metadata. Per-item errors keep their original request positions.
-pub(crate) fn split_batch(raw: RawBatchResponse) -> Result<Vec<Result<CachedResponse>>> {
+pub(crate) fn split_batch(raw: RawBatchResponse) -> Result<Vec<Result<RawPrediction>>> {
     check_decoder(raw.batch.decoder_version.as_deref())?;
     Ok(raw
         .batch
         .results
         .into_iter()
         .map(|item| {
-            let response = CachedResponse {
+            let response = RawPrediction {
                 item,
                 envelope: raw.envelope.clone(),
             };
