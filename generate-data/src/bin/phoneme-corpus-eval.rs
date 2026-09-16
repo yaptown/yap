@@ -247,7 +247,7 @@ async fn main() -> Result<()> {
             continue;
         }
 
-        let ctx = VerifyContext::new(
+        let mut ctx = VerifyContext::new(
             &http,
             generate_data::cache_remote::store(),
             &empty_pronunciations,
@@ -256,6 +256,8 @@ async fn main() -> Result<()> {
         // Fail closed if the unsafe cache override bypassed discovery. A cache
         // namespace alone must never masquerade as verified model provenance.
         let provenance = Provenance::new(&ctx)?;
+        let identity = ctx.verified_model_identity()?.clone();
+        ctx.key_by_model(&identity);
         let done = completed_cues(&existing, code, &provenance);
 
         let picked: Vec<&Candidate> = sample(&candidates, CueLabel::Pos, args.per_film)
@@ -288,7 +290,6 @@ async fn main() -> Result<()> {
         use futures::StreamExt;
         let results: Vec<Option<EvalRecord>> = futures::stream::iter(picked.into_iter().map(|c| {
             let ctx = &ctx;
-            let provenance = &provenance;
             let audio = audio.clone();
             let entry_id = entry.imdb_id.clone();
             let entry_title = entry.title.clone();
@@ -328,11 +329,16 @@ async fn main() -> Result<()> {
                 };
                 // The CTC ratio scores the raw g2p sequence (the model's
                 // own label space).
+                let mut observed_model = verification.model.clone();
                 let ctc = match phoneme_verify::model_target(&c.cleaned_text, language) {
                     Some(Ok(p)) if !p.phonemes.is_empty() => {
                         let target = p.phonemes;
                         match phoneme_verify::frame_matrix(ctx, &wav).await {
-                            Ok(frames) => Some(frames.score_target(&target)),
+                            Ok(frames) => {
+                                observed_model =
+                                    phoneme_verify::frame_identity(&frames).or(observed_model);
+                                Some(frames.score_target(&target))
+                            }
                             Err(e) => {
                                 eprintln!("  cue {}: frame matrix: {e:#}", c.cue_index);
                                 None
@@ -342,7 +348,12 @@ async fn main() -> Result<()> {
                     _ => None,
                 };
                 Some(EvalRecord {
-                    provenance: Some(provenance.clone()),
+                    provenance: observed_model.as_ref().and_then(|model| {
+                        Some(Provenance {
+                            decoder_version: model.decoder_version.clone()?,
+                            ..Provenance::from_verified_identity(model)
+                        })
+                    }),
                     imdb_id: entry_id,
                     title: entry_title,
                     lang: code.to_string(),
@@ -864,7 +875,6 @@ mod tests {
             osmo::Store::open(dir.path()),
             &words,
             Language::French,
-            "looks-like-production".into(),
             0.3,
             Some("deploy-marker".into()),
         )

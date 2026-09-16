@@ -82,7 +82,6 @@ pub struct Clip<'a> {
     pub samples: &'a [f32],
     pub sample_rate: u32,
     pub top_k: usize,
-    pub return_frame_matrix: bool,
 }
 
 impl Clip<'_> {
@@ -92,7 +91,8 @@ impl Clip<'_> {
         PredictRequest {
             sample_rate: self.sample_rate,
             top_k: self.top_k,
-            return_frame_matrix: self.return_frame_matrix,
+            return_frame_matrix: true,
+            return_all_heads: true,
             ..PredictRequest::from_samples(&samples)
         }
     }
@@ -216,13 +216,12 @@ mod tests {
     #[test]
     fn clip_request_pads_at_native_rate_and_preserves_options() {
         for sample_rate in [16_000, 24_000, 44_100, 48_000] {
-            for return_frame_matrix in [false, true] {
+            {
                 let samples = [1.0, -0.5];
                 let request = Clip {
                     samples: &samples,
                     sample_rate,
                     top_k: 5,
-                    return_frame_matrix,
                 }
                 .into_request();
                 let bytes = base64::engine::general_purpose::STANDARD
@@ -240,7 +239,8 @@ mod tests {
                 assert!(bytes[lead * 4 + 8..].iter().all(|byte| *byte == 0));
                 assert_eq!(request.sample_rate, sample_rate);
                 assert_eq!(request.top_k, 5);
-                assert_eq!(request.return_frame_matrix, return_frame_matrix);
+                assert!(request.return_frame_matrix);
+                assert!(request.return_all_heads);
                 assert!(!request.return_frames);
                 assert!(request.language.is_none());
                 assert!(request.target_phonemes.is_none());
@@ -526,7 +526,6 @@ mod tests {
             samples: &[],
             sample_rate: 16_000,
             top_k: 10,
-            return_frame_matrix: false,
         }
         .into_request();
         let results = predict_batch(&client, &[silence.clone(), silence], None)

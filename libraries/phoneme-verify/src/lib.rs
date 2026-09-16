@@ -2,11 +2,9 @@
 //! phoneme model hosted on Modal.
 //!
 //! For each clip we:
-//! 1. Hash the raw .wav bytes (xxh3_64) and check the shared cache store at
-//!    `wav2vec2/<WAV2VEC2_CACHE_VERSION>/<hash>` — same caching philosophy
-//!    as `translate.rs` and the tysm chat clients (hash → response). The
-//!    model/decoder version is part of the key so a model swap can't
-//!    silently reuse stale predictions.
+//! 1. Hash the original WAV bytes and check the shared response cache. Default
+//!    keys depend on content, not the producer; model-varying evaluations opt
+//!    into model+audio keys, and the corpus supplies source/cut/label keys.
 //! 2. On cache miss, decode WAV → f32 mono 16kHz via ffmpeg and send it to
 //!    the Modal batch endpoint (lexide `pronunciation/modal/PRONUNCIATION_BATCHING.md`),
 //!    pooled with whatever other clips are in flight, then persist the
@@ -143,19 +141,53 @@ pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonem
     Some(g2p::phonemize_lang(lang, text))
 }
 
-/// The on-disk cache payload. Stores both the raw chosen phonemes and the
-/// per-position top-k alternatives so we can report probabilities for the
-/// expected and predicted phonemes when a clip fails verification.
-///
-/// `top_k` is required: cache entries written before this field existed
-/// fail to deserialize, which we handle by transparently re-fetching.
+/// One artifact for every inference consumer, bound to the original WAV bytes.
+/// TODO(raw-response): temporary lossy retention until lexide publishes its raw
+/// client. Replace `response` here with untouched item + all envelope RawValues;
+/// typed serialization currently discards unknown wire fields. Do not run a
+/// corpus rewrite against this transitional representation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct CachedPrediction {
-    raw_phonemes: Vec<String>,
-    /// Parallel to `raw_phonemes`. `top_k[i]` is the list of (phoneme,
-    /// probability) alternatives for position `i`, sorted by probability
-    /// descending.
-    top_k: Vec<Vec<RawPhonemeAlt>>,
+struct CachedResponse {
+    audio_hash: u64,
+    response: ModalResponse,
+}
+
+fn response_identity(response: &ModalResponse) -> Option<ModelIdentity> {
+    if let Some(FrameMatrixPayload::V1(payload)) = &response.frame_matrix {
+        let producer = &payload.producer;
+        return Some(ModelIdentity {
+            model_id: producer.model_id.clone(),
+            model_revision: producer.model_revision.clone(),
+            decoder_version: Some(producer.decoder_version.clone()),
+            deploy_marker: Some(producer.deploy_marker.clone()),
+        });
+    }
+    Some(ModelIdentity {
+        model_id: response.model_id.clone()?,
+        model_revision: response.model_revision.clone()?,
+        decoder_version: response.decoder_version.clone(),
+        deploy_marker: response.deploy_marker.clone(),
+    })
+}
+
+/// Producer recorded by the returned matrix, never the context's intention.
+pub fn frame_identity(frames: &FrameMatrix) -> Option<ModelIdentity> {
+    let p = frames.producer.as_ref()?;
+    Some(ModelIdentity {
+        model_id: p.model_id.clone(),
+        model_revision: p.model_revision.clone(),
+        decoder_version: Some(p.decoder_version.clone()),
+        deploy_marker: Some(p.deploy_marker.clone()),
+    })
+}
+
+fn response_frames(response: &ModalResponse) -> Result<FrameMatrix> {
+    FrameMatrix::decode(
+        response
+            .frame_matrix
+            .as_ref()
+            .context("response has no frame matrix")?,
+    )
 }
 
 /// One step of the optimal alignment between predicted and expected phoneme
@@ -192,10 +224,12 @@ pub enum AlignmentOp {
 /// passed and should be kept.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClipVerification {
-    /// Resolved model/decoder cache namespace used for this attempt, including
-    /// attempts rejected before inference. Absent only in historical rows.
+    /// Producer observed in the response; absent when rejected before inference
+    /// or when a historical response did not report its identity.
     #[serde(default)]
     pub cache_version: Option<String>,
+    #[serde(default)]
+    pub model: Option<ModelIdentity>,
     pub actor: String,
     pub text: String,
     pub wav_path: String,
@@ -234,10 +268,14 @@ impl ClipVerification {
 
 pub struct VerifyContext<'a> {
     pub http: &'a reqwest::Client,
-    /// The shared cache store; predictions live under `wav2vec2/{version}/{hash}`.
+    /// Shared response store. Keys default to original WAV content, independent
+    /// of the producing model or G2P version.
     store: osmo::Store,
-    /// Partitions predictions by (model, decoder) as part of the cache key.
-    cache_version: String,
+    /// A caller may key a clip structurally instead of by WAV hash. Holding a
+    /// producer constant while varying content calls for content keys (corpus:
+    /// source/cut/labels). The minority deliberately varying producers (model
+    /// comparisons/evaluations) must include full model identity plus audio.
+    pub cache_key: Option<std::sync::Arc<dyn Fn(u64) -> String + Send + Sync>>,
     expected_identity: Option<ModelIdentity>,
     /// word (lowercase) → accepted IPA pronunciations (main + alternates).
     /// The verifier passes a clip if the model's prediction is within
@@ -261,6 +299,29 @@ pub struct VerifyContext<'a> {
 }
 
 impl<'a> VerifyContext<'a> {
+    fn response_key(&self, hash: u64) -> String {
+        let key = self
+            .cache_key
+            .as_ref()
+            .map_or_else(|| format!("{hash:016x}"), |key| key(hash));
+        format!("phoneme-response/{key}")
+    }
+
+    /// Model-varying evaluations are deliberately not production content keys.
+    /// A deployment marker validates live responses, not checkpoint content.
+    pub fn key_by_model(&mut self, identity: &ModelIdentity) {
+        self.expected_identity = Some(identity.clone());
+        let model = serde_json::to_string(&(
+            &identity.model_id,
+            &identity.model_revision,
+            &identity.decoder_version,
+        ))
+        .expect("model identity is serializable");
+        self.cache_key = Some(std::sync::Arc::new(move |hash| {
+            format!("model/{:016x}/{hash:016x}", xxh3_64(model.as_bytes()))
+        }));
+    }
+
     /// Discovered identity enforced on inference responses. Explicit overrides
     /// (including `WAV2VEC2_CACHE_VERSION_OVERRIDE`) have no verified identity
     /// and cannot be used to stamp trusted evaluation provenance.
@@ -271,10 +332,8 @@ impl<'a> VerifyContext<'a> {
         )
     }
 
-    /// Production / env-driven constructor. The cache version partitions
-    /// predictions by the process-wide discovered (model, decoder),
-    /// overridable via `WAV2VEC2_CACHE_VERSION_OVERRIDE`. Threshold and the
-    /// expected deploy marker likewise come from env.
+    /// Production constructor: discover and enforce the live model identity.
+    /// Cache hits retain their own producer and do not trigger freshness checks.
     pub fn new(
         http: &'a reqwest::Client,
         store: osmo::Store,
@@ -292,7 +351,6 @@ impl<'a> VerifyContext<'a> {
             store,
             word_to_pronunciation,
             target_language,
-            model.version.clone(),
             threshold,
             expected_deploy_marker,
         )?;
@@ -300,17 +358,13 @@ impl<'a> VerifyContext<'a> {
         Ok(ctx)
     }
 
-    /// Explicit constructor for in-process callers (the compare-audio-models
-    /// tool) that drive many models in one run and need a distinct cache
-    /// partition + expected deploy marker per model — values that env vars
-    /// can't carry safely when mutated mid-run across async tasks.
-    #[allow(clippy::too_many_arguments)]
+    /// Explicit, no-probe constructor for local/cache-only callers and tests.
+    /// Evaluations also call `key_by_model` with their full resolved identity.
     pub fn with_overrides(
         http: &'a reqwest::Client,
         store: osmo::Store,
         word_to_pronunciation: &'a HashMap<String, language_utils::Pronunciations>,
         target_language: Language,
-        cache_version: String,
         mismatch_threshold: f64,
         expected_deploy_marker: Option<String>,
     ) -> Result<Self> {
@@ -343,7 +397,7 @@ impl<'a> VerifyContext<'a> {
         Ok(Self {
             http,
             store,
-            cache_version,
+            cache_key: None,
             expected_identity: None,
             word_to_pronunciation,
             mismatch_threshold,
@@ -435,7 +489,8 @@ pub async fn verify_clip_bytes(
         && let Some(defect) = audio_codec::samples_defect(&samples, MODAL_SAMPLE_RATE)
     {
         return Ok(ClipVerification {
-            cache_version: Some(ctx.cache_version.clone()),
+            cache_version: None,
+            model: None,
             actor: actor.to_string(),
             text: text.to_string(),
             wav_path: source_label.to_string(),
@@ -450,15 +505,20 @@ pub async fn verify_clip_bytes(
         });
     }
 
-    // Populate the frame-level distribution cache for every clip we verify.
-    // `frame_matrix` also stores the greedy prediction from the same Modal
-    // response, so a cold verification still costs only one inference call.
-    frame_matrix(ctx, audio_bytes)
-        .await
-        .with_context(|| format!("Failed to cache frame matrix for {source_label}"))?;
-    let (raw_phonemes, raw_top_k) = predict_phonemes(ctx, audio_bytes)
+    let (response, _) = prediction_response(ctx, audio_bytes)
         .await
         .with_context(|| format!("Failed to predict phonemes for {source_label}"))?;
+    let model = response_identity(&response);
+    let raw_phonemes = response
+        .phonemes
+        .iter()
+        .map(|p| p.phoneme.clone())
+        .collect::<Vec<_>>();
+    let raw_top_k = response
+        .phonemes
+        .iter()
+        .map(|p| p.top_k.clone())
+        .collect::<Vec<_>>();
     let (predicted_normalized, predicted_top_k) =
         normalize_with_topk(&raw_phonemes, &raw_top_k, ctx.target_language);
 
@@ -535,7 +595,8 @@ pub async fn verify_clip_bytes(
     };
 
     Ok(ClipVerification {
-        cache_version: Some(ctx.cache_version.clone()),
+        cache_version: model.as_ref().map(cache_version),
+        model,
         actor: actor.to_string(),
         text: text.to_string(),
         wav_path: source_label.to_string(),
@@ -664,6 +725,50 @@ fn merge_metadata(name: &str, item: &mut Option<String>, envelope: &Option<Strin
 /// response guarantees no later request was routed to a stale/contaminated
 /// warm container and silently cached under the wrong model's key.
 fn check_response_identity(ctx: &VerifyContext<'_>, modal: &ModalResponse) -> Result<()> {
+    // V1's matrix producer is authoritative, but must agree with any envelope
+    // metadata too. Never label a matrix using the context's desired producer.
+    let observed = response_identity(modal);
+    if let Some(observed) = &observed {
+        for (name, outer, inner) in [
+            (
+                "model id",
+                modal.model_id.as_deref(),
+                Some(observed.model_id.as_str()),
+            ),
+            (
+                "model revision",
+                modal.model_revision.as_deref(),
+                Some(observed.model_revision.as_str()),
+            ),
+            (
+                "decoder",
+                modal.decoder_version.as_deref(),
+                observed.decoder_version.as_deref(),
+            ),
+            (
+                "deploy-marker",
+                modal.deploy_marker.as_deref(),
+                observed.deploy_marker.as_deref(),
+            ),
+        ] {
+            anyhow::ensure!(
+                outer.is_none() || inner == outer,
+                "response {name} disagrees with matrix producer"
+            );
+        }
+        check_decoder(observed.decoder_version.as_deref())?;
+        check_marker(
+            ctx.expected_deploy_marker.as_deref(),
+            observed.deploy_marker.as_deref(),
+        )?;
+        if let Some(expected) = &ctx.expected_identity {
+            anyhow::ensure!(
+                observed.model_id == expected.model_id
+                    && observed.model_revision == expected.model_revision,
+                "matrix producer does not match expected model identity"
+            );
+        }
+    }
     check_decoder(modal.decoder_version.as_deref())?;
     if let Some(identity) = &ctx.expected_identity {
         for (name, reported, expected) in [
@@ -684,7 +789,10 @@ fn check_response_identity(ctx: &VerifyContext<'_>, modal: &ModalResponse) -> Re
     }
     check_marker(
         ctx.expected_deploy_marker.as_deref(),
-        modal.deploy_marker.as_deref(),
+        observed
+            .as_ref()
+            .and_then(|identity| identity.deploy_marker.as_deref())
+            .or(modal.deploy_marker.as_deref()),
     )
 }
 
@@ -698,111 +806,67 @@ fn check_marker(expected: Option<&str>, reported: Option<&str>) -> Result<()> {
     Ok(())
 }
 
-async fn predict_phonemes(
-    ctx: &VerifyContext<'_>,
-    wav_bytes: &[u8],
-) -> Result<(Vec<String>, Vec<Vec<RawPhonemeAlt>>)> {
-    let hash = xxh3_64(wav_bytes);
-    let cache_key = format!("wav2vec2/{}/{hash:016x}", ctx.cache_version);
-
-    if let Some(contents) = ctx.store.read(&cache_key).await
-        && let Ok(cached) = serde_json::from_slice::<CachedPrediction>(&contents)
-    {
-        return Ok((cached.raw_phonemes, cached.top_k));
-    }
-
-    if cache_only() {
-        anyhow::bail!(
-            "wav2vec2 cache miss for {hash:016x}; cache-only mode is enabled. \
-             Run without --cache-only to populate the cache."
+async fn cached_response(ctx: &VerifyContext<'_>, hash: u64) -> Option<Result<ModalResponse>> {
+    let bytes = ctx.store.read(&ctx.response_key(hash)).await?;
+    Some((|| {
+        let cached: CachedResponse = serde_json::from_slice(&bytes).context("cached response")?;
+        anyhow::ensure!(
+            cached.audio_hash == hash,
+            "cached response WAV hash mismatch"
         );
-    }
-
-    let samples =
-        decode_wav_to_f32(wav_bytes).context("Failed to decode WAV to f32 samples via ffmpeg")?;
-    let payload = wav2vec2::Clip {
-        samples: &samples,
-        sample_rate: MODAL_SAMPLE_RATE,
-        top_k: MODAL_TOP_K,
-        return_frame_matrix: false,
-    }
-    .into_request();
-    let modal = post_modal(ctx, payload).await?;
-    cache_modal_prediction(ctx, hash, &modal).await
+        Ok(cached.response)
+    })())
 }
 
-/// Persist and return the greedy/top-k prediction carried by a Modal response.
-/// Frame-matrix responses contain this data too, so sharing this path avoids a
-/// second request when both cache partitions are cold.
-async fn cache_modal_prediction(
+/// Validate before writing: a malformed response never becomes a reusable hit.
+async fn cache_response(
     ctx: &VerifyContext<'_>,
     hash: u64,
-    modal: &ModalResponse,
-) -> Result<(Vec<String>, Vec<Vec<RawPhonemeAlt>>)> {
-    check_response_identity(ctx, modal)?;
-    let raw_phonemes: Vec<String> = modal.phonemes.iter().map(|p| p.phoneme.clone()).collect();
-    let top_k: Vec<Vec<RawPhonemeAlt>> = modal
-        .phonemes
-        .iter()
-        .map(|p| {
-            let mut alts = p.top_k.clone();
-            alts.sort_by(|a, b| {
-                b.probability
-                    .partial_cmp(&a.probability)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            });
-            alts
-        })
-        .collect();
-    let cached = CachedPrediction {
-        raw_phonemes: raw_phonemes.clone(),
-        top_k: top_k.clone(),
-    };
-    let cache_key = format!("wav2vec2/{}/{hash:016x}", ctx.cache_version);
-    let serialized = serde_json::to_vec(&cached).context("Failed to serialize cache payload")?;
+    response: ModalResponse,
+) -> Result<FrameMatrix> {
+    check_response_identity(ctx, &response)?;
+    let frames = response_frames(&response)?;
     ctx.store
-        .write(&cache_key, &serialized)
-        .await
-        .with_context(|| format!("Failed to write cache entry {cache_key}"))?;
-    Ok((raw_phonemes, top_k))
+        .write(
+            &ctx.response_key(hash),
+            &serde_json::to_vec(&CachedResponse {
+                audio_hash: hash,
+                response,
+            })?,
+        )
+        .await?;
+    Ok(frames)
 }
 
-/// Raw frame matrices are decoder-independent: even `p_nonblank` is recoverable
-/// from the blank column. Strip only the final decoder suffix, preserving the
-/// exact model/revision prefix (which may itself contain `__`).
-pub(crate) fn frames_partition(version: &str) -> &str {
-    version
-        .rsplit_once("__")
-        .map_or(version, |(model, _)| model)
-}
-
-// Previously shipped decoder partitions whose raw matrices can still be reused.
-const LEGACY_FRAME_DECODERS: &[&str] = &["greedy_v1"];
-
-/// Cache-only lookup by the hash of the original WAV bytes. `None` is a miss;
-/// `Some(Err(_))` is a cached payload that failed to decode, not an inference
-/// request. This never contacts the endpoint, including in cache-only mode.
+/// Cache-only lookup, including a mandatory original-WAV hash check even when
+/// the caller keys structurally. Does not compare today's intended producer.
 pub async fn cached_frame_matrix(
     ctx: &VerifyContext<'_>,
     hash: u64,
 ) -> Option<Result<FrameMatrix>> {
-    let partition = frames_partition(&ctx.cache_version);
-    let versions = [partition.to_owned(), ctx.cache_version.clone()]
-        .into_iter()
-        .chain(
-            LEGACY_FRAME_DECODERS
-                .iter()
-                .map(|decoder| format!("{partition}__{decoder}")),
-        );
-    for version in versions {
-        let key = format!("wav2vec2-frames/{version}/{hash:016x}");
-        if let Some(bytes) = ctx.store.read(&key).await
-            && let Ok(payload) = serde_json::from_slice::<FrameMatrixPayload>(&bytes)
-        {
-            return Some(FrameMatrix::decode(&payload));
-        }
+    cached_response(ctx, hash)
+        .await
+        .map(|response| response.and_then(|r| response_frames(&r)))
+}
+
+async fn prediction_response(
+    ctx: &VerifyContext<'_>,
+    wav: &[u8],
+) -> Result<(ModalResponse, FrameMatrix)> {
+    let hash = xxh3_64(wav);
+    if let Some(Ok(response)) = cached_response(ctx, hash).await
+        && let Ok(frames) = response_frames(&response)
+    {
+        return Ok((response, frames));
     }
-    None
+    anyhow::ensure!(
+        !cache_only(),
+        "response cache miss for {hash:016x}; cache-only mode is enabled"
+    );
+    let request = prepare_frame_request(wav.to_vec()).await?;
+    let response = post_modal(ctx, request.payload).await?;
+    let frames = cache_response(ctx, hash, response.clone()).await?;
+    Ok((response, frames))
 }
 
 /// A decoded, padded request paired with the original WAV's cache identity.
@@ -825,7 +889,6 @@ pub async fn prepare_frame_request(wav: Vec<u8>) -> Result<PreparedFrameRequest>
             samples: &samples,
             sample_rate: MODAL_SAMPLE_RATE,
             top_k: MODAL_TOP_K,
-            return_frame_matrix: true,
         }
         .into_request(),
     })
@@ -882,86 +945,19 @@ async fn infer_frame_batch_at(
     };
     let mut results = Vec::with_capacity(destinations.len());
     for ((ctx, hash), response) in destinations.into_iter().zip(responses) {
-        results.push(
-            async {
-                let modal = response?;
-                check_response_identity(ctx, &modal)?;
-                let payload = modal
-                    .frame_matrix
-                    .as_ref()
-                    .context("batch item has no frame matrix")?;
-                let frames = FrameMatrix::decode(payload)?;
-                cache_modal_prediction(ctx, hash, &modal).await?;
-                let key = format!(
-                    "wav2vec2-frames/{}/{hash:016x}",
-                    frames_partition(&ctx.cache_version)
-                );
-                ctx.store.write(&key, &serde_json::to_vec(payload)?).await?;
-                Ok(frames)
-            }
-            .await,
-        );
+        results.push(async { cache_response(ctx, hash, response?).await }.await);
     }
     results
 }
 
-/// The model's per-frame log-prob matrix for a clip, from the cache or the
-/// endpoint. Cached under its own partition (`wav2vec2-frames/…`), keyed by
-/// the WAV bytes like predictions are; the compressed payload is stored as
-/// shipped, so a cache entry is ~24 KB per audio-second.
+/// The model's frame distribution, decoded from the same response artifact as
+/// greedy predictions. All heads are requested even if this caller uses only CTC.
 pub async fn frame_matrix(ctx: &VerifyContext<'_>, wav_bytes: &[u8]) -> Result<FrameMatrix> {
-    let hash = xxh3_64(wav_bytes);
-    let cache_key = format!(
-        "wav2vec2-frames/{}/{hash:016x}",
-        frames_partition(&ctx.cache_version)
-    );
-    if let Some(cached) = cached_frame_matrix(ctx, hash).await {
-        return cached;
-    }
-    if cache_only() {
-        anyhow::bail!(
-            "wav2vec2 frame-matrix cache miss for {hash:016x}; cache-only mode is enabled"
-        );
-    }
-    let samples =
-        decode_wav_to_f32(wav_bytes).context("Failed to decode WAV to f32 samples via ffmpeg")?;
-    let payload = wav2vec2::Clip {
-        samples: &samples,
-        sample_rate: MODAL_SAMPLE_RATE,
-        top_k: MODAL_TOP_K,
-        return_frame_matrix: true,
-    }
-    .into_request();
-    let modal = post_modal(ctx, payload).await?;
-    cache_modal_prediction(ctx, hash, &modal).await?;
-    let Some(payload) = modal.frame_matrix else {
-        anyhow::bail!(
-            "endpoint returned no frame matrix (does this deploy support return_frame_matrix?)"
-        );
-    };
-    let serialized = serde_json::to_string(&payload).context("serializing frame matrix")?;
-    ctx.store
-        .write(&cache_key, serialized.as_bytes())
-        .await
-        .with_context(|| format!("Failed to write cache entry {cache_key}"))?;
-    FrameMatrix::decode(&payload)
+    Ok(prediction_response(ctx, wav_bytes).await?.1)
 }
 
-/// Frame matrices for `wavs` in input order, from the cache or the endpoint,
-/// for a caller with a whole list in hand (the subtitle corpus). Only cache
-/// misses are sent, in requests of at most [`MODAL_BATCH_SIZE`], and a
-/// per-clip failure doesn't discard its neighbors. A caller verifying one
-/// clip at a time gets the same batching through the queue.
-pub async fn frame_matrices(ctx: &VerifyContext<'_>, wavs: &[&[u8]]) -> Vec<Result<FrameMatrix>> {
-    frame_matrices_at(
-        ctx,
-        wavs,
-        wav2vec2::batch_client(ctx.http.clone()),
-        cache_only(),
-    )
-    .await
-}
-
+// A test harness for cache-miss compaction and explicit-batch routing.
+#[cfg(test)]
 async fn frame_matrices_at(
     ctx: &VerifyContext<'_>,
     wavs: &[&[u8]],
@@ -1917,7 +1913,8 @@ pub async fn synthesize_verified(
     // flagged; surface the provider's note as the failure.
     if let Some(note) = tts_note {
         let verification = ClipVerification {
-            cache_version: Some(ctx.cache_version.clone()),
+            cache_version: None,
+            model: None,
             actor: actor.to_string(),
             text: spoken_text.to_string(),
             wav_path: label,
@@ -2101,7 +2098,7 @@ mod tests {
         let ctx = VerifyContext {
             http: &http,
             store: osmo::Store::open(dir.path()),
-            cache_version: "resolved-model-and-decoder".into(),
+            cache_key: None,
             expected_identity: None,
             word_to_pronunciation: &dictionary,
             mismatch_threshold: 0.3,
@@ -2119,24 +2116,13 @@ mod tests {
         // payloads below are cached, so there is no inference/network request.
         let audio = b"cached normalization regression";
         let hash = xxh3_64(audio);
-        ctx.store
-            .write(
-                &format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version),
-                &serde_json::to_vec(&batch_test_payload(1)).unwrap(),
-            )
-            .await
-            .unwrap();
-        ctx.store
-            .write(
-                &format!("wav2vec2/{}/{hash:016x}", ctx.cache_version),
-                &serde_json::to_vec(&CachedPrediction {
-                    raw_phonemes: word(&["ʔ", "t͜ʃ", "ɪ̯"]),
-                    top_k: vec![],
-                })
-                .unwrap(),
-            )
-            .await
-            .unwrap();
+        let response = serde_json::from_value(serde_json::json!({
+            "phonemes": [{"phoneme": "ʔ"}, {"phoneme": "t͜ʃ"}, {"phoneme": "ɪ̯"}],
+            "frame_matrix": batch_test_payload(1),
+            "model_id": "actual-model", "model_revision": "actual-revision"
+        }))
+        .unwrap();
+        cache_response(&ctx, hash, response).await.unwrap();
         let passed = verify_clip_bytes(&ctx, "test", "test", "cached", audio, Some(expected))
             .await
             .unwrap();
@@ -2179,20 +2165,12 @@ mod tests {
                 .await
                 .unwrap();
         assert!(!rejected_tts.passed());
-        for row in [passed, missing, defective, rejected_tts] {
-            assert_eq!(
-                row.cache_version.as_deref(),
-                Some(ctx.cache_version.as_str())
-            );
-            let mut json = serde_json::to_value(&row).unwrap();
-            assert_eq!(json["cache_version"], ctx.cache_version);
-            json.as_object_mut().unwrap().remove("cache_version");
-            assert!(
-                serde_json::from_value::<ClipVerification>(json)
-                    .unwrap()
-                    .cache_version
-                    .is_none()
-            );
+        for row in [passed, missing] {
+            assert_eq!(row.model.as_ref().unwrap().model_id, "actual-model");
+        }
+        for row in [defective, rejected_tts] {
+            assert!(row.model.is_none());
+            assert!(row.cache_version.is_none());
         }
     }
 
@@ -2217,22 +2195,8 @@ mod tests {
         })
     }
 
-    #[test]
-    fn frame_partition_strips_only_the_decoder() {
-        // The matrix is raw model output, so the decoder segment goes...
-        assert_eq!(frames_partition("model@rev__nonblank_v1"), "model@rev");
-        // ...but only the last one: a model whose own id carries `__` keeps it,
-        // so two different models can never share a partition.
-        assert_eq!(
-            frames_partition("model__name@rev__greedy_v1"),
-            "model__name@rev"
-        );
-        // An override with no decoder segment is already a partition.
-        assert_eq!(frames_partition("offline"), "offline");
-    }
-
     #[tokio::test]
-    async fn frame_cache_fallback_priority_and_revision_isolation() {
+    async fn response_cache_is_content_keyed_and_always_checks_audio_hash() {
         let dir = tempfile::tempdir().unwrap();
         let http = reqwest::Client::new();
         let words = HashMap::new();
@@ -2241,49 +2205,111 @@ mod tests {
             osmo::Store::open(dir.path()),
             &words,
             Language::English,
-            "model__name@rev1__nonblank_v1".into(),
             0.3,
             None,
         )
         .unwrap();
-        // Deliberately not WAV data: every hit must bypass decoding and HTTP.
         let wav = b"cached raw frames";
         let hash = xxh3_64(wav);
-        let partition = frames_partition(&ctx.cache_version).to_owned();
-        let new_key = format!("wav2vec2-frames/{partition}/{hash:016x}");
-        let current_key = format!("wav2vec2-frames/{}/{hash:016x}", ctx.cache_version);
-        let greedy_key = format!("wav2vec2-frames/{partition}__greedy_v1/{hash:016x}");
-        // Add entries from lowest to highest priority. Reads must never migrate
-        // the older payloads, and both entry points must use the same ordering.
-        for (key, frames) in [(&greedy_key, 1), (&current_key, 2), (&new_key, 3)] {
-            let bytes = serde_json::to_vec(&batch_test_payload(frames)).unwrap();
-            ctx.store.write(key, &bytes).await.unwrap();
-            assert_eq!(frame_matrix(&ctx, wav).await.unwrap().frames, frames);
-            let batch =
-                frame_matrices_at(&ctx, &[wav], Err(anyhow::anyhow!("offline")), true).await;
-            assert_eq!(batch[0].as_ref().unwrap().frames, frames);
-            assert_eq!(ctx.store.read(key).await.unwrap(), bytes);
-            if frames < 3 {
-                assert!(ctx.store.read(&new_key).await.is_none());
+        let response: ModalResponse = serde_json::from_value(serde_json::json!({
+            "phonemes": [], "frame_matrix": batch_test_payload(3),
+            "model_id": "actual", "model_revision": "revision"
+        }))
+        .unwrap();
+        cache_response(&ctx, hash, response.clone()).await.unwrap();
+        ctx.expected_identity = Some(test_identity()); // different from cached producer
+        assert_eq!(frame_matrix(&ctx, wav).await.unwrap().frames, 3);
+        let batch = frame_matrices_at(&ctx, &[wav], Err(anyhow::anyhow!("offline")), true).await;
+        assert_eq!(batch[0].as_ref().unwrap().frames, 3);
+        assert_eq!(
+            response_identity(&cached_response(&ctx, hash).await.unwrap().unwrap())
+                .unwrap()
+                .model_id,
+            "actual"
+        );
+        ctx.expected_identity = None;
+        ctx.cache_key = Some(std::sync::Arc::new(|_| "structural-clip".into()));
+        assert!(cached_frame_matrix(&ctx, hash).await.is_none());
+        cache_response(&ctx, hash, response).await.unwrap();
+        assert!(cached_frame_matrix(&ctx, hash).await.unwrap().is_ok());
+        assert!(cached_frame_matrix(&ctx, hash + 1).await.unwrap().is_err());
+        ctx.store
+            .write(&ctx.response_key(hash), b"corrupt")
+            .await
+            .unwrap();
+        assert!(cached_frame_matrix(&ctx, hash).await.unwrap().is_err());
+        let identity = ModelIdentity {
+            model_id: "model/id".into(),
+            model_revision: "123456789012-A".into(),
+            decoder_version: Some(DECODER_VERSION.into()),
+            deploy_marker: Some("first".into()),
+        };
+        ctx.key_by_model(&identity);
+        let key = ctx.response_key(hash);
+        let mut another = identity.clone();
+        another.deploy_marker = Some("second".into());
+        ctx.key_by_model(&another);
+        assert_eq!(ctx.response_key(hash), key);
+        another.model_revision = "123456789012-B".into();
+        ctx.key_by_model(&another);
+        assert_ne!(ctx.response_key(hash), key, "full revisions are key inputs");
+    }
+
+    #[tokio::test]
+    async fn v1_response_preserves_all_typed_heads_and_observed_producer() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = reqwest::Client::new();
+        let words = HashMap::new();
+        let ctx = VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &words,
+            Language::English,
+            0.3,
+            None,
+        )
+        .unwrap();
+        let FrameMatrixPayload::Legacy(phone) = batch_test_payload(1) else {
+            unreachable!()
+        };
+        let head = |shape: Vec<usize>, labels: Vec<&str>, semantics: &str| {
+            let mut encoder =
+                flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+            encoder
+                .write_all(&vec![0; shape.iter().product::<usize>() * 2])
+                .unwrap();
+            serde_json::json!({"shape": shape, "labels": labels, "dtype": "float16", "encoding": "zlib+base64", "value_semantics": semantics,
+                "data": base64::engine::general_purpose::STANDARD.encode(encoder.finish().unwrap())})
+        };
+        let mut tone = head(vec![1, 2], vec!["low", "high"], "probability");
+        tone["language"] = "zho".into();
+        tone["target"] = "tone".into();
+        let response: ModalResponse = serde_json::from_value(serde_json::json!({
+            "phonemes": [], "frame_matrix": {
+                "schema_version": 1, "producer": test_identity(), "trained_against_g2p": "training-label-renderer",
+                "sample_rate": 16000, "frame_rate_ms": 20.0,
+                "heads": {
+                    "phone": {"shape": phone.shape, "labels": phone.vocab, "blank_id": phone.blank_id,
+                        "dtype": phone.dtype, "encoding": phone.encoding, "data": phone.data, "value_semantics": "joint_log_probability"},
+                    "nonblank": head(vec![1], vec!["nonblank"], "sigmoid_probability"),
+                    "stress": head(vec![1, 3], vec!["none", "primary", "secondary"], "probability"),
+                    "tone_zho": tone
+                }
             }
-            if frames == 1 {
-                assert!(ctx.store.read(&current_key).await.is_none());
-            }
-        }
-        // Neither another revision nor another model may reuse these entries.
-        for version in ["model__name@rev2__nonblank_v1", "other@rev1__nonblank_v1"] {
-            ctx.cache_version = version.into();
-            assert!(cached_frame_matrix(&ctx, hash).await.is_none());
-            let batch =
-                frame_matrices_at(&ctx, &[wav], Err(anyhow::anyhow!("offline")), true).await;
-            assert!(
-                batch[0]
-                    .as_ref()
-                    .unwrap_err()
-                    .to_string()
-                    .contains("cache-only mode")
-            );
-        }
+        })).unwrap();
+        cache_response(&ctx, 42, response.clone()).await.unwrap();
+        let cached = cached_response(&ctx, 42).await.unwrap().unwrap();
+        assert_eq!(
+            serde_json::to_value(&cached).unwrap(),
+            serde_json::to_value(&response).unwrap()
+        );
+        let frames = cached_frame_matrix(&ctx, 42).await.unwrap().unwrap();
+        assert_eq!(frames.heads.len(), 4);
+        assert_eq!(frame_identity(&frames), Some(test_identity()));
+        let mut conflicting = response;
+        conflicting.model_revision = Some("not the matrix revision".into());
+        assert!(cache_response(&ctx, 43, conflicting).await.is_err());
+        assert!(cached_response(&ctx, 43).await.is_none());
     }
 
     fn batch_test_wav(seed: i16) -> Vec<u8> {
@@ -2321,7 +2347,6 @@ mod tests {
             osmo::Store::open(dir.path()),
             &words,
             Language::French,
-            "unchecked".into(),
             0.3,
             None,
         )
@@ -2393,7 +2418,6 @@ mod tests {
             osmo::Store::open(dir.path()),
             &words,
             Language::English,
-            "offline".into(),
             0.3,
             Some("fresh".into()),
         )
@@ -2459,20 +2483,22 @@ mod tests {
             osmo::Store::open(dir.path()),
             &empty,
             Language::English,
-            "test__nonblank_v1".into(),
             0.3,
             None,
         )
         .unwrap();
         let wav = b"not audio: neither decoding nor inference should run";
         let hash = xxh3_64(wav);
-        let key = format!("wav2vec2-frames/test/{hash:016x}");
+        let key = ctx.response_key(hash);
         let mut payload = batch_test_payload(1);
         let FrameMatrixPayload::Legacy(legacy) = &mut payload else {
             unreachable!("fixture uses the legacy wire format")
         };
         legacy.encoding = "broken".into();
-        let bytes = serde_json::to_vec(&payload).unwrap();
+        let bytes = serde_json::to_vec(&serde_json::json!({
+            "audio_hash": hash, "response": {"phonemes": [], "frame_matrix": payload}
+        }))
+        .unwrap();
         ctx.store.write(&key, &bytes).await.unwrap();
         let cached = cached_frame_matrix(&ctx, hash)
             .await
@@ -2589,7 +2615,7 @@ mod tests {
         let ctx = VerifyContext {
             http: &http,
             store,
-            cache_version: "test__nonblank_v1".into(),
+            cache_key: None,
             expected_identity: None,
             word_to_pronunciation: &empty,
             mismatch_threshold: 0.3,
@@ -2597,9 +2623,11 @@ mod tests {
             expected_deploy_marker: Some("test".into()),
         };
         let cached = b"cached without decoding".to_vec();
-        let key = format!("wav2vec2-frames/test/{:016x}", xxh3_64(&cached));
-        ctx.store
-            .write(&key, &serde_json::to_vec(&batch_test_payload(2)).unwrap())
+        let response = serde_json::from_value(serde_json::json!({
+            "phonemes": [], "frame_matrix": batch_test_payload(2), "deploy_marker": "test"
+        }))
+        .unwrap();
+        cache_response(&ctx, xxh3_64(&cached), response)
             .await
             .unwrap();
         // An early decode failure must be compacted out before chunking;
@@ -2627,20 +2655,7 @@ mod tests {
             frame_matrices_at(&ctx, &refs, Err(anyhow::anyhow!("no endpoint")), true).await;
         assert_eq!(cached.iter().filter(|r| r.is_ok()).count(), 62);
         let hash = xxh3_64(&wavs[2]);
-        let prediction_key = format!("wav2vec2/test__nonblank_v1/{hash:016x}");
-        assert!(ctx.store.read(&prediction_key).await.is_some());
-        assert!(
-            ctx.store
-                .read(&format!("wav2vec2-frames/test/{hash:016x}"))
-                .await
-                .is_some()
-        );
-        assert!(
-            ctx.store
-                .read(&format!("wav2vec2-frames/test__nonblank_v1/{hash:016x}"))
-                .await
-                .is_none()
-        );
+        assert!(ctx.store.read(&ctx.response_key(hash)).await.is_some());
     }
 
     #[test]
@@ -3107,7 +3122,6 @@ mod tests {
             osmo::Store::open(dir.path()),
             &words,
             Language::Korean,
-            "test".into(),
             0.3,
             None,
         )

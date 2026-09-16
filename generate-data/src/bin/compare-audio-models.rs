@@ -323,19 +323,19 @@ async fn verify_model(
     http: &reqwest::Client,
     word_to_pronunciation: &HashMap<String, Pronunciations>,
     language: Language,
-    cache_key: String,
+    identity: &lexide::pronunciation::ModelIdentity,
     expected_marker: Option<String>,
     contributors: &[PathBuf],
 ) -> Result<Vec<ClipVerification>> {
-    let ctx = VerifyContext::with_overrides(
+    let mut ctx = VerifyContext::with_overrides(
         http,
         generate_data::cache_remote::store(),
         word_to_pronunciation,
         language,
-        cache_key,
         COMPARE_THRESHOLD,
         expected_marker,
     )?;
+    ctx.key_by_model(identity);
     let mut results = Vec::new();
     for contrib in contributors {
         let actor = contrib
@@ -797,19 +797,18 @@ async fn run(args: Args) -> Result<()> {
             Some(deploy_and_verify(&http, &url, &sn, &model_id, &revision, &mut seq).await?)
         };
 
-        let cache_key =
-            lexide::pronunciation::cache_version(&lexide::pronunciation::ModelIdentity {
-                model_id: model_id.clone(),
-                model_revision: revision.clone(),
-                decoder_version: None,
-                deploy_marker: expected_marker.clone(),
-            });
-        println!("  → verifying clips (cache={cache_key})");
+        let identity = lexide::pronunciation::ModelIdentity {
+            model_id: model_id.clone(),
+            model_revision: revision.clone(),
+            decoder_version: Some(lexide::pronunciation::DECODER_VERSION.into()),
+            deploy_marker: expected_marker.clone(),
+        };
+        println!("  → verifying clips (model={model_id}@{revision})");
         let results = verify_model(
             &http,
             &word_to_pronunciation,
             language,
-            cache_key,
+            &identity,
             expected_marker,
             &contributors,
         )
