@@ -473,6 +473,26 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
         assert_eq!(rows[0].producers.g2p.as_deref(), Some("older-renderer"));
         assert_eq!(rows[1].reject.as_deref(), Some("cut: permanent failure"));
     }
+    let mut rejected_report = report;
+    rejected_report.measure.fraction = 0.0;
+    rejected_report.measure.placed = 0;
+    std::fs::write(
+        crate::verbatim::report_path(&dir),
+        serde_json::to_vec(&rejected_report).unwrap(),
+    )
+    .unwrap();
+    for requested in [true, false] {
+        assert!(prepare_film(&store, &movie, &dir, &gate, 1, requested)
+            .await
+            .is_err());
+        assert!(
+            interrupted_refresh(&dir),
+            "film-level preflight must not erase refresh intent"
+        );
+        assert_eq!(read_manifest(&clips_path(&dir)).unwrap().1.len(), 2);
+    }
+    let (_, rows) = read_manifest(&clips_path(&dir)).unwrap();
+    write_clips(&dir, original.clone(), &rows, FilmSummary::default()).unwrap();
     std::fs::remove_file(crate::verbatim::report_path(&dir)).unwrap();
     assert_eq!(
         existing_work(&dir, &original).0,

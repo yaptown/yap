@@ -71,7 +71,7 @@ const LO_AAC: &str = "96k";
 const UPLOAD_JOBS: usize = 8;
 
 /// Sidecar `format` field.
-const SIDECAR_FORMAT: u32 = 3;
+const SIDECAR_FORMAT: u32 = 4;
 
 /// Everything that shapes the rendered files, in one comparable string.
 /// Built from the constants so no tweak can be forgotten; anything that

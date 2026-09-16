@@ -187,7 +187,7 @@ pub struct Clip {
     pub producers: Producers,
     /// False for pre-gate failures; re-gating must preserve their verdicts.
     pub measured: bool,
-    /// Original padded WAV bytes; absent for failures before cutting. Export
+    /// xxh3 digest of the original padded WAV; absent for pre-cut failures. Export
     /// uses this with target_ipa to read the response cache without re-cutting.
     pub audio_hash: Option<u64>,
     pub sentence: String,
@@ -1128,10 +1128,17 @@ async fn prepare_film(
             dir, provenance, &clips, summary,
         )?));
     }
+    if let Work::Redo(reason) = work {
+        println!("{}: remapping ({reason})", movie.title);
+    }
     // No current file may survive changed inputs that fail film admissibility.
+    // An interrupted refresh keeps its non-current marker so a later ordinary
+    // run still regenerates targets rather than forgetting the refresh intent.
     let check = crate::verbatim::check(dir, language, code, provenance.gate.min_verbatim).await?;
     if check.measure.verdict != crate::verbatim::Verdict::Verbatim {
-        let _ = std::fs::remove_file(clips_path(dir));
+        if !refresh_g2p {
+            let _ = std::fs::remove_file(clips_path(dir));
+        }
         bail!(
             "subtitle not verbatim: {}",
             crate::verbatim::describe(&check.measure)

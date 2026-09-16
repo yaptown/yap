@@ -2922,15 +2922,15 @@ const TRADITIONAL_ONLY: &str = "國會這說對時們來學見還沒電車門問
 /// [`Language::phoneme_label_source`] for why mixing sources is a
 /// correctness bug rather than a quality trade-off.
 ///
-/// The `Espeak` voice string is documentation and a support gate only, not
-/// runtime voice selection: yap passes a language code to `phonemize_lang`,
-/// so the voice actually used comes from `g2p::label_source`. The
-/// `phoneme_label_source_mirror_matches_g2p` test in phoneme-verify keeps them
-/// in sync; language-utils cannot depend on g2p.
+/// The `Espeak` voice string documents the course variety; it does not select
+/// a runtime voice. Yap passes language/variety requests to g2p, which owns the
+/// defaults. `phoneme_label_source_mirror_matches_g2p` checks backend kinds only
+/// (upstream `LabelSource::Espeak` carries no voice). language-utils cannot
+/// depend on g2p.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PhonemeLabelSource {
-    /// espeak-ng fork, with this voice code, via the g2p crate. Must match
-    /// `g2p::label_source` for the language.
+    /// espeak-ng backend, with the documented course variety's voice code.
+    /// Runtime defaults and voice routing belong to g2p.
     Espeak(&'static str),
     /// The g2p crate's Hindi chain (lexide's `schwa-stress-hin`, ported).
     Hindi,
@@ -2987,9 +2987,8 @@ impl Language {
     /// consonant. The model was never the problem.
     pub fn phoneme_label_source(&self) -> PhonemeLabelSource {
         match self {
-            // espeak-ng's IPA is the training label source for these, using
-            // the fork at the pinned branch. Voices must match lexide's
-            // `LANG_TO_ESPEAK` exactly — including `pt-br`, not `pt`:
+            // espeak-ng is the training label source for these. g2p owns the
+            // course defaults, including Brazilian Portuguese:
             // European Portuguese targets against Brazilian audio measured
             // 41% median phoneme distance where `pt-br` measured 31%.
             //

@@ -1,4 +1,4 @@
-# Clip sidecar schema (format 3)
+# Clip sidecar schema (format 4)
 
 One JSON per served video clip, stored next to the mp4 (`<id>.json` beside
 `<id>.mp4`), immutable. Cut generously (neighbor sentences as context when the
@@ -87,7 +87,7 @@ trust a cache whose inputs may have moved.
 
 ```jsonc
 {
-  "format": 3,
+  "format": 4,
   "id": "tt0101700-3fa2c81d-0",        // imdb id + sentence hash + occurrence index (see above)
   "language": "fra",
 
