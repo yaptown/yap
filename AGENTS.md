@@ -21,11 +21,11 @@ Yap.Town is a language learning application with a Rust-based backend and React 
 - **generate-data**: Rust binary that extracts sentences from Anki decks and generates dictionary data using Python NLP
 - **language-utils**: Shared Rust library containing language processing types and utilities
 - **libraries/movie-subtitles**: Movie subtitle text handling — raw SRTs as source of truth, lossy cleaning at load time, CP1252 mojibake repair
-- **libraries/opensubtitles-downloader**: Downloads course subtitles from OpenSubtitles; its `recover-subtitles` binary re-fetches the raw SRTs the old pipeline threw away and adjudicates near-misses
+- **libraries/opensubtitles-downloader**: Downloads course subtitles from OpenSubtitles
 - **libraries/google-speech**: The one place Google speech APIs are called — Cloud Text-to-Speech, and a `GeminiClient` for native `generateContent` (Gemini TTS and any audio-in judging go through it)
 - **libraries/audio-codec**: Provider-agnostic audio codecs and signal sanity checks
 - **libraries/whisper**: Hosted Whisper transcription (Cloudflare Workers AI and Groq) shared by the backend's TTS verification gate and subtitle-corpus's sync; `libraries/phoneme-verify::wav2vec2` is the same for the Modal phoneme endpoint. Add new provider clients to these crates rather than beside a caller
-- **libraries/subtitle-corpus**: Builds a correctly-synced subtitle per film in the movie library (inventory → disc extract/OCR → Whisper/VAD/text-to-text sync → calibration), the substrate for cutting per-sentence clips
+- **libraries/subtitle-corpus**: Builds a correctly-synced subtitle per film in the movie library (inventory → disc extract/OCR → Whisper/VAD/text-to-text sync → transcription and clip verification), the substrate for cutting per-sentence clips
 - **generate-dictionary-data**: Rust binary that reads `.rkyv` language pack archives and outputs structured JSON for the public dictionary site
 - **static-site**: Astro static site generator that builds ~178k dictionary pages from the JSON data, using Tailwind CSS v4
 - **yap-ai-backend**: Rust backend service for AI features (deployed on Fly.io)

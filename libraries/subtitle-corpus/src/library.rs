@@ -87,10 +87,6 @@ pub enum Source {
     DiscBitmap { index: u32, codec: String },
     /// A downloaded SRT. Correct text, but timed to some other release.
     Downloaded { path: PathBuf },
-    /// A downloaded subtitle exists but only as pre-cleaned JSONL, whose
-    /// timings were truncated to whole seconds — too coarse to sync against.
-    /// `recover-subtitles` is refetching the originals.
-    AwaitingRecovery { path: PathBuf },
     /// Nothing to work from; would need a transcript.
     Missing,
     /// The rip carries no audio in the language the film was made in, so it
@@ -105,7 +101,6 @@ impl Source {
             Source::Sidecar { .. } => "sidecar text",
             Source::DiscBitmap { .. } => "disc bitmap (OCR)",
             Source::Downloaded { .. } => "downloaded (needs sync)",
-            Source::AwaitingRecovery { .. } => "awaiting SRT recovery",
             Source::Missing => "missing",
             Source::NoOriginalAudio => "no original audio",
         }
@@ -276,7 +271,7 @@ fn lang_of(s: &Stream) -> String {
 /// Maker's French subrip drifts +74s→+240s across the film (a TV edit's
 /// timing), while the disc's native PGS tracks sit exactly on the speech —
 /// verified by Whisper on both ends. Classification has no way to see this
-/// coming, so films the `check` command convicts of it are listed here and
+/// coming, so films known to have this defect are listed here and
 /// fall through to their PGS track instead.
 const TEXT_TRACK_UNTRUSTED: &[&str] = &[
     "tt35495035", // The Money Maker (2026) — subrip is the TV cut
@@ -385,10 +380,6 @@ pub fn classify(
         let raw = movies.join(format!("subtitles-raw/{imdb_id}.srt"));
         if raw.exists() {
             return Ok(Source::Downloaded { path: raw });
-        }
-        let derived = movies.join(format!("subtitles/{imdb_id}.jsonl"));
-        if derived.exists() {
-            return Ok(Source::AwaitingRecovery { path: derived });
         }
     }
     Ok(Source::Missing)

@@ -26,20 +26,16 @@ pub struct Cue {
 }
 
 impl Cue {
-    pub fn duration_ms(&self) -> u32 {
-        self.end_ms.saturating_sub(self.start_ms)
-    }
-
-    /// Composite onto a solid background.
+    /// Composite onto black.
     ///
     /// Subtitle glyphs are drawn with a soft alpha edge over transparency, so
     /// leaving them unflattened would hand an OCR model whatever happens to be
     /// behind them. Black matches how the text is authored to appear.
-    pub fn to_rgb(&self, background: [u8; 3]) -> image::RgbImage {
+    pub fn to_rgb(&self) -> image::RgbImage {
         let mut img = image::RgbImage::from_pixel(
             self.width as u32,
             self.height as u32,
-            image::Rgb(background),
+            image::Rgb([0, 0, 0]),
         );
         for y in 0..self.height as u32 {
             for x in 0..self.width as u32 {
@@ -49,16 +45,8 @@ impl Cue {
                     continue;
                 }
                 let f = a as f32 / 255.0;
-                let mix = |c: u8, bg: u8| (c as f32 * f + bg as f32 * (1.0 - f)) as u8;
-                img.put_pixel(
-                    x,
-                    y,
-                    image::Rgb([
-                        mix(r, background[0]),
-                        mix(g, background[1]),
-                        mix(b, background[2]),
-                    ]),
-                );
+                let mix = |c: u8| (c as f32 * f) as u8;
+                img.put_pixel(x, y, image::Rgb([mix(r), mix(g), mix(b)]));
             }
         }
         img
@@ -223,7 +211,7 @@ pub fn cues(data: &[u8]) -> Vec<Cue> {
     let mut palette: HashMap<u8, [u8; 4]> = HashMap::new();
     let mut set_pts = 0u32;
     let mut set_objects = 0u8;
-    let mut objects: Vec<(u8, u16, u16, Vec<u8>)> = Vec::new();
+    let mut objects: Vec<(u16, u16, Vec<u8>)> = Vec::new();
     let mut open: Option<usize> = None;
 
     for seg in segments(data) {
@@ -249,9 +237,9 @@ pub fn cues(data: &[u8]) -> Vec<Cue> {
                     }
                     let w = u16::from_be_bytes([seg.payload[7], seg.payload[8]]);
                     let h = u16::from_be_bytes([seg.payload[9], seg.payload[10]]);
-                    objects.push((seg.payload[0], w, h, seg.payload[11..].to_vec()));
+                    objects.push((w, h, seg.payload[11..].to_vec()));
                 } else if let Some(last) = objects.last_mut() {
-                    last.3.extend_from_slice(&seg.payload[4..]);
+                    last.2.extend_from_slice(&seg.payload[4..]);
                 }
             }
             0x80 => {
@@ -259,9 +247,9 @@ pub fn cues(data: &[u8]) -> Vec<Cue> {
                     out[i].end_ms = set_pts;
                 }
                 if set_objects > 0 && !objects.is_empty() {
-                    let (_, w, h, rle) = objects
+                    let (w, h, rle) = objects
                         .iter()
-                        .max_by_key(|(_, w, h, _)| *w as u32 * *h as u32)
+                        .max_by_key(|(w, h, _)| *w as u32 * *h as u32)
                         .unwrap();
                     out.push(Cue {
                         start_ms: set_pts,

@@ -12,7 +12,6 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::OnceLock;
 
 use anyhow::{bail, Context, Result};
 use language_utils::Language;
@@ -167,23 +166,6 @@ fn media_stamp(
     })
 }
 
-/// Sidecars written before `media.stamp` existed (2026-09) state the same
-/// facts under `export`, `source` and `critical` — height, HDR and runtime
-/// follow from the same file. Honouring them lets the first publish after
-/// the change reuse ~19k renditions instead of re-encoding them. Remove
-/// once every served sidecar carries `media.stamp`.
-fn legacy_stamp_matches(old: &serde_json::Value, stamp: &serde_json::Value) -> bool {
-    let (e, v) = (&old["export"], &old["export"]["video"]);
-    e["recipe"] == stamp["recipe"]
-        && v["filename"] == stamp["video"]["filename"]
-        && v["bytes"] == stamp["video"]["bytes"]
-        && v["audio_stream"] == stamp["video"]["audio_stream"]
-        && old["source"]["cut_start_ms"] == stamp["cut"]["start_ms"]
-        && old["source"]["cut_end_ms"] == stamp["cut"]["end_ms"]
-        && old["critical"]["start_ms"] == stamp["cut"]["critical_start_ms"]
-        && old["critical"]["end_ms"] == stamp["cut"]["critical_end_ms"]
-}
-
 /// Export clips with at most `jobs` concurrent clips (at least one). Each GPU
 /// attempt uses one NVENC session; the roughly 12 sessions available on this
 /// host are shared with Jellyfin, so leave headroom when choosing `jobs`.
@@ -196,7 +178,6 @@ pub async fn export_clips(
     imdb: Option<String>,
     langs: Option<Vec<String>>,
 ) -> Result<()> {
-    export_ffmpeg()?;
     let plan = read_plan(&out)?;
     let mut queue: Vec<Movie> = plan
         .into_iter()
@@ -350,7 +331,7 @@ async fn export_film(
                 .as_deref()
                 .and_then(|b| serde_json::from_slice::<serde_json::Value>(b).ok())
                 .filter(|m| {
-                    (m["media"]["stamp"] == stamp || legacy_stamp_matches(m, &stamp))
+                    m["media"]["stamp"] == stamp
                         && clip_dir.join("hi.mp4").exists()
                         && clip_dir.join("lo.mp4").exists()
                 })
@@ -719,10 +700,9 @@ pub async fn publish(
     langs: Option<Vec<String>>,
     bucket: String,
 ) -> Result<()> {
-    export_ffmpeg()?;
     println!("=== stage 1: clips re-map ===");
     let gate = crate::clips::Gate::default();
-    crate::clips::clips_all(out.clone(), 4, 0, None, langs.clone(), gate, false).await?;
+    crate::clips::clips_all(out.clone(), 4, 0, None, langs.clone(), gate).await?;
 
     println!("=== stage 2: video export ===");
     export_clips(out, dest.clone(), jobs, 0, None, langs.clone()).await?;
@@ -1221,26 +1201,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn gpu_capabilities_match_exact_name_columns() {
-        assert!(missing_gpu_capabilities(
-            " V....D h264_nvenc NVIDIA encoder",
-            " ... scale_cuda V->V CUDA scaler\n ... tonemap_cuda V->V CUDA tonemap"
-        )
-        .is_empty());
-        assert_eq!(
-            missing_gpu_capabilities(
-                " V....D other description h264_nvenc",
-                " ... scale_cuda_extra V->V\n ... tonemap V->V tonemap_cuda"
-            ),
-            ["h264_nvenc", "scale_cuda", "tonemap_cuda"]
-        );
-        assert_eq!(
-            missing_gpu_capabilities(" V....D h264_nvenc encoder", " ... scale_cuda V->V"),
-            ["tonemap_cuda"]
-        );
-    }
-
     #[cfg(unix)]
     #[test]
     fn rendition_paths_preserve_non_utf8() {
@@ -1482,7 +1442,7 @@ fn measure_loudness(
     start_ms: i64,
     dur_ms: i64,
 ) -> Result<(f64, f64)> {
-    let out = Command::new(export_ffmpeg()?)
+    let out = Command::new("ffmpeg")
         .args(["-nostats", "-hide_banner", "-ss"])
         .arg(format!("{:.3}", start_ms as f64 / 1000.0))
         .args(["-t", &format!("{:.3}", dur_ms as f64 / 1000.0), "-i"])
@@ -1516,89 +1476,6 @@ fn measure_loudness(
     Ok((i, tp))
 }
 
-/// Resolve PATH once and probe that same binary once, including failures. Keep
-/// the absolute PATH entry rather than canonicalizing symlinks: wrappers may
-/// rely on their invocation path. No dependency or machine-specific path needed.
-fn export_ffmpeg() -> Result<&'static Path> {
-    static FFMPEG: OnceLock<std::result::Result<PathBuf, String>> = OnceLock::new();
-    FFMPEG
-        .get_or_init(|| {
-            (|| -> Result<PathBuf> {
-                let path =
-                    std::env::var_os("PATH").context("cannot resolve ffmpeg: PATH is unset")?;
-                let cwd = std::env::current_dir().context("resolving ffmpeg from PATH")?;
-                let binary = std::env::split_paths(&path)
-                    .map(|dir| cwd.join(dir).join("ffmpeg"))
-                    .find(|candidate| {
-                        let Ok(metadata) = candidate.metadata() else {
-                            return false;
-                        };
-                        if !metadata.is_file() {
-                            return false;
-                        }
-                        #[cfg(unix)]
-                        {
-                            use std::os::unix::fs::PermissionsExt;
-                            metadata.permissions().mode() & 0o111 != 0
-                        }
-                        #[cfg(not(unix))]
-                        {
-                            true
-                        }
-                    })
-                    .context("cannot find executable ffmpeg on PATH")?;
-                let probe = |listing: &str| -> Result<String> {
-                    let output = Command::new(&binary)
-                        .args(["-hide_banner", listing])
-                        .output()
-                        .with_context(|| {
-                            format!("{} {listing} failed to start", binary.display())
-                        })?;
-                    if !output.status.success() {
-                        bail!(
-                            "{} {listing} failed ({}): {}",
-                            binary.display(),
-                            output.status,
-                            String::from_utf8_lossy(&output.stderr)
-                        );
-                    }
-                    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
-                };
-                let encoders = probe("-encoders")?;
-                let filters = probe("-filters")?;
-                let missing = missing_gpu_capabilities(&encoders, &filters);
-                if !missing.is_empty() {
-                    bail!(
-                        "ffmpeg {} missing required GPU capabilities: {}",
-                        binary.display(),
-                        missing.join(", ")
-                    );
-                }
-                Ok(binary)
-            })()
-            .map_err(|error| format!("{error:#}"))
-        })
-        .as_deref()
-        .map_err(|error| anyhow::anyhow!("{error}"))
-}
-
-fn missing_gpu_capabilities(encoders: &str, filters: &str) -> Vec<&'static str> {
-    // Match the name column, never descriptions or similarly named filters.
-    let has = |listing: &str, name: &str| {
-        listing
-            .lines()
-            .any(|line| line.split_whitespace().nth(1) == Some(name))
-    };
-    [
-        (encoders, "h264_nvenc"),
-        (filters, "scale_cuda"),
-        (filters, "tonemap_cuda"),
-    ]
-    .into_iter()
-    .filter_map(|(listing, name)| (!has(listing, name)).then_some(name))
-    .collect()
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum EncodeMode {
     Gpu,
@@ -1628,7 +1505,6 @@ fn encode_renditions(
     crit_s: f64,
     clip_dir: &Path,
 ) -> Result<()> {
-    let binary = export_ffmpeg()?;
     let mut failures = Vec::new();
     for mode in ENCODE_MODES {
         match mode {
@@ -1655,7 +1531,7 @@ fn encode_renditions(
             crit_s,
             clip_dir,
         );
-        match Command::new(binary).args(args).output() {
+        match Command::new("ffmpeg").args(args).output() {
             Ok(output) if output.status.success() => return Ok(()),
             Ok(output) => failures.push(format!(
                 "{mode:?} ({}): {}",
@@ -1666,8 +1542,7 @@ fn encode_renditions(
         }
     }
     bail!(
-        "ffmpeg {} encode failed for {} after GPU, CPU and CPU core-only attempts:\n{}",
-        binary.display(),
+        "ffmpeg encode failed for {} after GPU, CPU and CPU core-only attempts:\n{}",
         clip_dir.display(),
         failures.join("\n")
     );

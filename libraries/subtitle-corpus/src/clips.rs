@@ -43,7 +43,7 @@ use language_utils::Language;
 use movie_subtitles::segment::SubtitleSegmenter;
 use movie_subtitles::sentences::KeyedSentence;
 use movie_subtitles::{cleanup_subtitle_text, SubtitleLine};
-use phoneme_verify::{wav2vec2::RequestActivity, FrameMatrix, VerifyContext};
+use phoneme_verify::{FrameMatrix, VerifyContext};
 use serde::{Deserialize, Serialize};
 
 use crate::cues::{
@@ -55,7 +55,7 @@ use crate::transcript::{Kind, Spoken};
 
 /// Bump when the record format or the gating logic changes in a way that
 /// makes existing `clips.jsonl` files not comparable.
-const FORMAT_VERSION: u32 = 12;
+const FORMAT_VERSION: u32 = 13;
 
 /// How late earshot flags speech after it begins. Measured 2026-09-02 on
 /// four films: with the profile allowed to trim inside the stamped words
@@ -80,8 +80,7 @@ const EDGE_PHONEMES: usize = 3;
 const LEAD_IN_MS: i64 = 300;
 
 /// Freshness groups are compared independently; producers are observations on
-/// rows, not invalidation inputs. A producer bug requires deliberate refresh:
-/// `clips --refresh-g2p` refreshes targets, not unchanged-label model outputs.
+/// rows, not invalidation inputs.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Provenance {
     pub inputs: Inputs,
@@ -121,7 +120,6 @@ impl From<crate::sync::AudioStamp> for AudioInput {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Cut {
     pub preferred_clear_ms: i64,
-    pub min_clear_ms: i64,
     pub speech_threshold: f64,
 }
 
@@ -286,9 +284,6 @@ pub struct Gate {
     /// under 100 ms measured meaningfully worse, so the chosen preference is
     /// recorded in provenance even though a tighter margin is not rejected.
     pub preferred_clear_ms: i64,
-    /// Acceptance floor for the measured quiet adjacent to each boundary.
-    /// Zero keeps tight-margin clips; their padding naturally shrinks to zero.
-    pub min_clear_ms: i64,
     /// Lowest forced-alignment mean log-prob the first/last
     /// [`EDGE_PHONEMES`] may have — the test that the sentence's start and
     /// end are actually inside the cut.
@@ -329,7 +324,6 @@ impl Default for Gate {
             speech_threshold: 0.7,
             min_ratio: None,
             preferred_clear_ms: 100,
-            min_clear_ms: 0,
             min_edge_logp: -4.0,
             // An ear test (2026-08-30) found rejects at these thresholds
             // are often fine clips — but a bad clip in the deck costs far
@@ -341,7 +335,7 @@ impl Default for Gate {
     }
 }
 
-/// The CTC cut per language, from `phoneme-corpus-eval` on transcript-
+/// The CTC cut per language, from the retired film evaluation on transcript-
 /// verified vs transcript-rejected cues (model edcbbbf43a7f, 2026-08-29),
 /// choosing the loosest cut that still keeps ≤ ~5–10% of rejected cues —
 /// here the transcript has already thrown out the wrong-words cases, so
@@ -499,96 +493,25 @@ pub fn clips_path(dir: &Path) -> PathBuf {
     dir.join("clips.jsonl")
 }
 
-/// Completeness is independent of provenance: a matching input header does not
-/// prove that every candidate received a verdict. Only complete files are written.
-#[derive(Serialize, Deserialize)]
-struct Header {
-    #[serde(flatten)]
-    provenance: Provenance,
-    expected_candidates: usize,
-    completion: Completion,
-}
-
-#[derive(Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-enum Completion {
-    Complete,
-    RefreshG2p,
-}
-
 #[cfg(test)]
 fn stored_provenance(path: &Path) -> Option<Provenance> {
     read_file(path).ok().map(|(provenance, _)| provenance)
 }
 
 pub fn read_file(path: &Path) -> Result<(Provenance, Vec<Clip>)> {
-    let (header, clips) = read_manifest(path)?;
-    anyhow::ensure!(
-        header.completion == Completion::Complete,
-        "G2P refresh unfinished"
-    );
-    Ok((header.provenance, clips))
-}
-
-fn read_manifest(path: &Path) -> Result<(Header, Vec<Clip>)> {
     let text = std::fs::read_to_string(path)?;
     let mut lines = text.lines();
-    let header: Header = serde_json::from_str(lines.next().context("missing clip header")?)?;
+    let provenance: Provenance =
+        serde_json::from_str(lines.next().context("missing clip header")?)?;
     anyhow::ensure!(
-        header.provenance.inputs.format == FORMAT_VERSION,
+        provenance.inputs.format == FORMAT_VERSION,
         "unsupported clip format"
     );
-    let clips: Vec<Clip> = lines
+    let clips = lines
         .map(serde_json::from_str)
         .collect::<std::result::Result<_, _>>()
         .context("malformed clip row")?;
-    anyhow::ensure!(
-        clips.len() == header.expected_candidates,
-        "incomplete clip file"
-    );
-    anyhow::ensure!(clips.iter().all(Clip::resolved), "unresolved clip verdict");
-    Ok((header, clips))
-}
-
-fn interrupted_refresh(dir: &Path) -> bool {
-    read_manifest(&clips_path(dir))
-        .is_ok_and(|(header, _)| header.completion == Completion::RefreshG2p)
-}
-
-/// Ordinary redo retains old rows for inspection, but removes the completion
-/// claim before any work can make the old inputs look current again.
-fn invalidate_header(dir: &Path) -> Result<()> {
-    let path = clips_path(dir);
-    let bytes = match std::fs::read(&path) {
-        Ok(bytes) => bytes,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(error) => return Err(error.into()),
-    };
-    let rows = bytes
-        .iter()
-        .position(|&b| b == b'\n')
-        .unwrap_or(bytes.len());
-    let tmp = dir.join("clips.jsonl.tmp");
-    std::fs::write(&tmp, &bytes[rows..])?;
-    std::fs::rename(tmp, path)?;
-    Ok(())
-}
-
-/// Preserve old rows for inspection, but invalidate their completion claim
-/// before touching targets. A crash then forces regeneration on any next run.
-fn begin_refresh(dir: &Path, provenance: &Provenance) -> Result<()> {
-    let (mut header, clips) = read_manifest(&clips_path(dir)).unwrap_or_else(|_| {
-        (
-            Header {
-                provenance: provenance.clone(),
-                expected_candidates: 0,
-                completion: Completion::RefreshG2p,
-            },
-            Vec::new(),
-        )
-    });
-    header.completion = Completion::RefreshG2p;
-    write_manifest(dir, &header, &clips)
+    Ok((provenance, clips))
 }
 
 /// Writer/reader contract across mapper and export, in different runs: the
@@ -601,7 +524,7 @@ pub fn clip_key(audio_hash: u64, phonemes: &[String]) -> String {
     )
 }
 
-/// Every clip, with strict format, row count and verdict validation.
+/// Read clips with format validation.
 pub fn read_clips(path: &Path) -> Result<Vec<Clip>> {
     read_file(path).map(|(_, clips)| clips)
 }
@@ -997,11 +920,10 @@ fn earshot_margins(
     }
 }
 
-/// Only descriptors survive discovery: corpus-wide WAVs and matrices would
-/// dwarf the clip metadata. Misses are re-cut with bounded batch preparation.
+/// Uncached cuts wait on disk until their batch is prepared.
 struct PendingClip {
     index: usize,
-    hash: u64,
+    wav: tempfile::TempPath,
 }
 
 struct PreparedFilm {
@@ -1039,7 +961,6 @@ fn current_provenance(
         },
         cut: Cut {
             preferred_clear_ms: gate.preferred_clear_ms,
-            min_clear_ms: gate.min_clear_ms,
             speech_threshold: gate.speech_threshold,
         },
         gate: GateCuts {
@@ -1097,7 +1018,6 @@ async fn prepare_film(
     dir: &Path,
     gate: &Gate,
     concurrency: usize,
-    refresh_g2p: bool,
 ) -> Result<FilmWork> {
     let code = course_dir(&movie.original_language).context("unmapped language")?;
     let language = Language::from_code(code).context("unmapped course code")?;
@@ -1115,16 +1035,7 @@ async fn prepare_film(
     }
     let provenance = current_provenance(dir, language, code, gate)?;
     let min_ratio = provenance.gate.min_ratio;
-    let interrupted = interrupted_refresh(dir);
-    let refresh_g2p = min_ratio.is_some() && (refresh_g2p || interrupted);
-    let (mut work, stored) = if refresh_g2p {
-        if interrupted {
-            println!("{}: Resuming an interrupted refresh", movie.title);
-        }
-        (Work::Redo("G2P refresh"), None)
-    } else {
-        existing_work(dir, &provenance)
-    };
+    let (mut work, stored) = existing_work(dir, &provenance);
     if let Some((mut clips, report)) = stored {
         let verbatim = report.measure.verdict == crate::verbatim::Verdict::Verbatim;
         for clip in &mut clips {
@@ -1148,14 +1059,12 @@ async fn prepare_film(
     }
     if let Work::Redo(reason) = work {
         println!("{}: remapping ({reason})", movie.title);
-        if refresh_g2p {
-            begin_refresh(dir, &provenance)?;
-        } else {
-            invalidate_header(dir)?;
+        match std::fs::remove_file(clips_path(dir)) {
+            Ok(()) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+            Err(e) => return Err(e.into()),
         }
     }
-    // Every redo is now non-current. Refresh intent survives any failure;
-    // ordinary invalidation never implies that target reuse should be bypassed.
     let check = crate::verbatim::check(dir, language, code, provenance.gate.min_verbatim).await?;
     if check.measure.verdict != crate::verbatim::Verdict::Verbatim {
         bail!(
@@ -1213,7 +1122,7 @@ async fn prepare_film(
         .collect();
     summary.aligned = placed.len();
 
-    let prepared: Vec<Option<(Clip, Option<u64>)>> = futures::stream::iter(placed)
+    let prepared: Vec<Option<(Clip, Option<tempfile::TempPath>)>> = futures::stream::iter(placed)
         .map(|(sentence, p)| {
             let audio = audio.clone();
             let imdb_id = movie.imdb_id.clone();
@@ -1268,10 +1177,6 @@ async fn prepare_film(
                     clip.reject = Some("audio event inside the span".into());
                     return Some((clip, None));
                 }
-                if clear_before_ms < gate.min_clear_ms || clear_after_ms < gate.min_clear_ms {
-                    clip.reject = Some("neighbouring speech too close to cut clean".into());
-                    return Some((clip, None));
-                }
                 let wav = match tokio::task::spawn_blocking(move || {
                     slice_wav_padded(&audio, start_ms, end_ms, pad_before_ms, pad_after_ms)
                 })
@@ -1304,28 +1209,23 @@ async fn prepare_film(
                     // Raw CTC scores only the single default-voice target, without
                     // accepted-variant readings (including Spanish seseo). A seseo
                     // Spanish clip therefore scores worse than on the edit-distance path.
-                    let target = match phoneme_verify::cached_model_target(
-                        store,
-                        language,
-                        &sentence,
-                        hash,
-                        refresh_g2p,
-                    )
-                    .await
-                    {
-                        Ok(target) if !target.phonemized.phonemes.is_empty() => target,
-                        Ok(_) => {
-                            clip.reject = Some("g2p produced no phonemes".into());
-                            return Some((clip, None));
-                        }
-                        Err(e) => {
-                            clip.reject = Some(format!("g2p: {e:#}"));
-                            return Some((clip, None));
-                        }
-                    };
+                    let target =
+                        match phoneme_verify::cached_model_target(store, language, &sentence, hash)
+                            .await
+                        {
+                            Ok(target) if !target.phonemized.phonemes.is_empty() => target,
+                            Ok(_) => {
+                                clip.reject = Some("g2p produced no phonemes".into());
+                                return Some((clip, None));
+                            }
+                            Err(e) => {
+                                clip.reject = Some(format!("g2p: {e:#}"));
+                                return Some((clip, None));
+                            }
+                        };
                     clip.target_ipa = target.phonemized.phonemes;
                     clip.producers.g2p = Some(target.renderer);
-                    return Some((clip, Some(())));
+                    return Some((clip, Some(wav)));
                 } else {
                     // No model to listen to the pads: the earshot profile
                     // says whether anyone speaks in them.
@@ -1346,8 +1246,8 @@ async fn prepare_film(
         .buffered(concurrency.max(1))
         .then(|prepared| {
             async move {
-                let (mut clip, needs_model) = prepared?;
-                let Some(()) = needs_model else {
+                let (mut clip, wav) = prepared?;
+                let Some(wav) = wav else {
                     return Some((clip, None));
                 };
                 let hash = clip.audio_hash.expect("cut recorded its hash");
@@ -1358,14 +1258,13 @@ async fn prepare_film(
                         score_clip(&mut clip, &frames, min_ratio.unwrap(), gate);
                         Some((clip, None))
                     }
-                    _ if phoneme_verify::cache_only() => {
-                        eprintln!(
-                            "  {}: frame-matrix cache miss; cache-only mode is enabled",
-                            clip.sentence
-                        );
-                        None
-                    }
-                    _ => Some((clip, Some(hash))),
+                    _ => match save_cut(dir, &wav) {
+                        Ok(path) => Some((clip, Some(path))),
+                        Err(error) => {
+                            eprintln!("  {}: saving cut: {error:#}", clip.sentence);
+                            None
+                        }
+                    },
                 }
             }
         })
@@ -1376,9 +1275,9 @@ async fn prepare_film(
     let mut pending = Vec::new();
     for item in prepared {
         let index = clips.len();
-        clips.push(item.map(|(clip, hash)| {
-            if let Some(hash) = hash {
-                pending.push(PendingClip { index, hash });
+        clips.push(item.map(|(clip, wav)| {
+            if let Some(wav) = wav {
+                pending.push(PendingClip { index, wav });
             }
             clip
         }));
@@ -1481,20 +1380,7 @@ fn write_clips(
     clips: &[Clip],
     summary: FilmSummary,
 ) -> Result<FilmSummary> {
-    write_manifest(
-        dir,
-        &Header {
-            provenance,
-            expected_candidates: clips.len(),
-            completion: Completion::Complete,
-        },
-        clips,
-    )?;
-    Ok(summarize(clips, summary))
-}
-
-fn write_manifest(dir: &Path, header: &Header, clips: &[Clip]) -> Result<()> {
-    let mut text = serde_json::to_string(header)?;
+    let mut text = serde_json::to_string(&provenance)?;
     text.push('\n');
     for clip in clips {
         text.push_str(&serde_json::to_string(clip)?);
@@ -1503,25 +1389,25 @@ fn write_manifest(dir: &Path, header: &Header, clips: &[Clip]) -> Result<()> {
     let tmp = dir.join("clips.jsonl.tmp");
     std::fs::write(&tmp, text)?;
     std::fs::rename(&tmp, clips_path(dir))?;
-    Ok(())
+    Ok(summarize(clips, summary))
 }
 
-/// An owned cut lets bounded preparation run independently of mutable result
-/// slots. It is metadata only; the WAV exists only while filling a batch.
+/// Save only cache misses; dropping the path removes the temporary cut.
+fn save_cut(dir: &Path, wav: &[u8]) -> Result<tempfile::TempPath> {
+    use std::io::Write;
+    let mut file = tempfile::Builder::new()
+        .prefix("clip-")
+        .suffix(".wav")
+        .tempfile_in(dir)?;
+    file.write_all(wav)?;
+    Ok(file.into_temp_path())
+}
+
 struct AudioCut {
     key: String,
-    audio: PathBuf,
+    wav: tempfile::TempPath,
     language: Language,
-    hash: u64,
-    start: i64,
-    end: i64,
-    before: i64,
-    after: i64,
-}
-
-enum FrameInput<P> {
-    Cached(Box<FrameMatrix>),
-    Request(P),
+    duration_ms: i64,
 }
 
 fn apply_frames(film: &mut PreparedFilm, index: usize, frames: Result<FrameMatrix>, gate: &Gate) {
@@ -1545,73 +1431,24 @@ fn apply_frames(film: &mut PreparedFilm, index: usize, frames: Result<FrameMatri
 
 /// Keep a second full request queued remotely while the first runs, hiding
 /// round-trip/response gaps even with one server container. This is a bounded
-/// starting point, not a measured optimum; report HTTP idle time before tuning.
+/// starting point, not a measured optimum.
 const INFERENCE_REQUESTS_IN_FLIGHT: usize = 2;
-
-#[derive(Default)]
-struct InferenceProgress {
-    requests: usize,
-    submitted: usize,
-    completed: usize,
-    failed: usize,
-}
-
-impl InferenceProgress {
-    fn fill_rate(&self) -> f64 {
-        self.submitted as f64 / (self.requests * phoneme_verify::MODAL_BATCH_SIZE).max(1) as f64
-    }
-
-    fn clips_per_minute(&self, elapsed: std::time::Duration) -> f64 {
-        if elapsed.is_zero() {
-            0.0
-        } else {
-            self.completed as f64 * 60.0 / elapsed.as_secs_f64()
-        }
-    }
-
-    fn report(&self, activity: &RequestActivity) {
-        let snapshot = activity.snapshot();
-        let seconds = snapshot.elapsed.as_secs_f64();
-        let idle = if seconds == 0.0 {
-            0.0
-        } else {
-            snapshot.without_request.as_secs_f64() / seconds
-        };
-        println!(
-            "phoneme inference phase: {} clips completed ({} failed), {:.1} clips/min, \
-             HTTP request fill {:.1}%, no HTTP outstanding {:.1}% of {:.1}s \
-             ({} attempts, {} retries, peak {} outstanding)",
-            self.completed,
-            self.failed,
-            self.clips_per_minute(snapshot.elapsed),
-            self.fill_rate() * 100.0,
-            idle * 100.0,
-            seconds,
-            snapshot.attempts,
-            snapshot.retries,
-            snapshot.peak_requests,
-        );
-    }
-}
 
 /// The actual mapper scheduler, with I/O injected so its barrier, compaction,
 /// and routing can be exercised without film audio or a live endpoint.
 async fn map_staged<P>(
     preparation: impl futures::Stream<Item = (usize, Result<FilmWork>)>,
-    prepare_request: impl AsyncFn(&AudioCut) -> Result<FrameInput<P>>,
-    infer: impl AsyncFn(Vec<P>, &RequestActivity) -> Vec<Result<FrameMatrix>>,
+    prepare_request: impl AsyncFn(&AudioCut) -> Result<P>,
+    infer: impl AsyncFn(Vec<P>) -> Vec<Result<FrameMatrix>>,
     gate: &Gate,
 ) -> Vec<(usize, Result<FilmWork>)> {
     // Deliberate barrier: finish discovery over the entire selection first.
-    // Only metadata and cache-miss descriptors survive, never WAVs/matrices.
+    // WAVs wait on disk; only metadata stays in memory.
     let mut films: Vec<_> = preparation.collect().await;
-    // The measured inference phase includes initial filling and tail handling,
-    // but excludes the deliberate all-films discovery barrier above.
-    let activity = RequestActivity::default();
     let mut pending = Vec::new();
-    for (film_index, (_, outcome)) in films.iter().enumerate() {
+    for (film_index, (_, outcome)) in films.iter_mut().enumerate() {
         if let Ok(FilmWork::Prepared(film)) = outcome {
-            for descriptor in &film.pending {
+            for descriptor in film.pending.drain(..) {
                 let clip = film.clips[descriptor.index]
                     .as_ref()
                     .expect("pending clip has a slot");
@@ -1619,14 +1456,14 @@ async fn map_staged<P>(
                     film_index,
                     descriptor.index,
                     AudioCut {
-                        key: clip_key(descriptor.hash, &clip.target_ipa),
-                        audio: film.dir.join("audio.opus"),
+                        key: clip_key(
+                            clip.audio_hash.expect("cut recorded its hash"),
+                            &clip.target_ipa,
+                        ),
+                        wav: descriptor.wav,
                         language: film.language,
-                        hash: descriptor.hash,
-                        start: clip.start_ms,
-                        end: clip.end_ms,
-                        before: clip.pad_before_ms,
-                        after: clip.pad_after_ms,
+                        duration_ms: clip.end_ms + clip.pad_after_ms
+                            - (clip.start_ms - clip.pad_before_ms).max(0),
                     },
                 ));
             }
@@ -1644,7 +1481,7 @@ async fn map_staged<P>(
     // each group, where every clip is padded to its longest neighbor.
     // Different padding groups may cause tiny
     // numerical differences; result slots, targets and gates remain unchanged.
-    pending.sort_by_key(|(_, _, cut)| cut.end + cut.after - (cut.start - cut.before).max(0));
+    pending.sort_by_key(|(_, _, cut)| cut.duration_ms);
     let mut prepared = Box::pin(
         futures::stream::iter(pending)
             .map(|(film, clip, cut)| {
@@ -1657,19 +1494,15 @@ async fn map_staged<P>(
     let mut requests = Vec::new();
     let mut slots = Vec::new();
     let mut preparation_done = false;
-    let mut progress = InferenceProgress::default();
-    let mut completed_batches = 0;
     loop {
         if !requests.is_empty()
             && (requests.len() == phoneme_verify::MODAL_BATCH_SIZE || preparation_done)
             && in_flight.len() < INFERENCE_REQUESTS_IN_FLIGHT
         {
-            progress.requests += 1;
-            progress.submitted += requests.len();
             let requests = std::mem::take(&mut requests);
             let slots = std::mem::take(&mut slots);
-            let (infer, activity) = (&infer, &activity);
-            in_flight.push(async move { (slots, infer(requests, activity).await) });
+            let infer = &infer;
+            in_flight.push(async move { (slots, infer(requests).await) });
         }
         if preparation_done && requests.is_empty() && in_flight.is_empty() {
             break;
@@ -1685,43 +1518,24 @@ async fn map_staged<P>(
                 };
                 let Ok(FilmWork::Prepared(film)) = &mut films[film_index].1 else { unreachable!() };
                 match prepared {
-                    Ok(FrameInput::Request(request)) => {
+                    Ok(request) => {
                         requests.push(request);
                         slots.push((film_index, clip_index));
                     }
-                    Ok(FrameInput::Cached(frames)) => apply_frames(film, clip_index, Ok(*frames), gate),
                     Err(error) => apply_frames(film, clip_index, Err(error), gate),
                 }
             }
             result = in_flight.next(), if !in_flight.is_empty() => {
                 let (slots, results) = result.expect("an inference job was in flight");
                 assert_eq!(results.len(), slots.len(), "one result per prepared request");
-                progress.completed += results.len();
-                progress.failed += results.iter().filter(|result| result.is_err()).count();
-                completed_batches += 1;
                 for ((film_index, clip_index), frames) in slots.into_iter().zip(results) {
                     let Ok(FilmWork::Prepared(film)) = &mut films[film_index].1 else { unreachable!() };
                     apply_frames(film, clip_index, frames, gate);
                 }
-                if completed_batches % 25 == 0 {
-                    progress.report(&activity);
-                }
             }
         }
     }
-    // Logical request fill is not GPU-forward fill. HTTP activity is measured
-    // around individual attempts, excluding backoff, local cache writes/scoring.
-    // Neither metric claims that an outstanding request was executing on GPU.
-    progress.report(&activity);
     films
-}
-
-fn check_recut_hash(wav: &[u8], expected: u64) -> Result<()> {
-    anyhow::ensure!(
-        xxhash_rust::xxh3::xxh3_64(wav) == expected,
-        "re-cut WAV changed since discovery; refusing mismatched cache identity"
-    );
-    Ok(())
 }
 
 async fn prepare_pending<'a>(
@@ -1729,81 +1543,13 @@ async fn prepare_pending<'a>(
     store: &osmo::Store,
     empty: &'a std::collections::HashMap<String, language_utils::Pronunciations>,
     cut: &AudioCut,
-) -> Result<FrameInput<(VerifyContext<'a>, phoneme_verify::PreparedFrameRequest)>> {
-    // Another batch/process may have filled this key since discovery. A
-    // duplicate WAV still has its own slot, target and language-specific gate.
-    if let Some(Ok(frames)) = phoneme_verify::cached_frame_matrix(store, &cut.key).await {
-        return Ok(FrameInput::Cached(Box::new(frames)));
-    }
-    anyhow::ensure!(
-        !phoneme_verify::cache_only(),
-        "frame-matrix cache miss; cache-only mode is enabled"
-    );
-    let (start, end, before, after) = (cut.start, cut.end, cut.before, cut.after);
-    let audio = cut.audio.clone();
-    let wav =
-        tokio::task::spawn_blocking(move || slice_wav_padded(&audio, start, end, before, after))
-            .await
-            .context("re-cut task failed")??;
-    check_recut_hash(&wav, cut.hash)?;
+) -> Result<(VerifyContext<'a>, phoneme_verify::PreparedFrameRequest)> {
+    let wav = tokio::fs::read(&cut.wav).await.context("read saved cut")?;
     let request = phoneme_verify::prepare_frame_request(wav).await?;
     let key = cut.key.clone();
     let ctx = VerifyContext::new(http, store.clone(), empty, cut.language)?
         .with_cache_key(move |_| key.clone());
-    Ok(FrameInput::Request((ctx, request)))
-}
-
-#[derive(Default)]
-struct ModelCounts {
-    models: std::collections::BTreeMap<String, usize>,
-    no_model: usize,
-    unreadable_files: usize,
-}
-
-fn count_models(paths: impl IntoIterator<Item = PathBuf>) -> ModelCounts {
-    let mut counts = ModelCounts::default();
-    for path in paths {
-        match read_clips(&path) {
-            Ok(clips) => {
-                for clip in clips {
-                    match clip.producers.model {
-                        Some(model) => {
-                            *counts
-                                .models
-                                .entry(format!(
-                                    "{}@{} decoder={}",
-                                    model.model_id,
-                                    model.model_revision,
-                                    model.decoder_version.as_deref().unwrap_or("unknown")
-                                ))
-                                .or_default() += 1
-                        }
-                        None => counts.no_model += 1,
-                    }
-                }
-            }
-            Err(_) => counts.unreadable_files += 1,
-        }
-    }
-    counts
-}
-
-/// Inspect actual recorded producers locally; old formats are counted, not read
-/// through a compatibility layer or silently reported as zero successful rows.
-pub fn clip_models(out: &Path) -> Result<()> {
-    let paths = std::fs::read_dir(out)?
-        .map(|entry| entry.map(|entry| clips_path(&entry.path())))
-        .collect::<std::io::Result<Vec<_>>>()?;
-    let counts = count_models(paths.into_iter().filter(|path| path.exists()));
-    for (model, count) in counts.models {
-        println!("{count}\t{model}");
-    }
-    println!("{}\tno recorded model identity", counts.no_model);
-    println!(
-        "{}\tunreadable/old-format/incomplete files",
-        counts.unreadable_files
-    );
-    Ok(())
+    Ok((ctx, request))
 }
 
 /// Map every transcribed film (or the ones selected), skipping films whose
@@ -1815,7 +1561,6 @@ pub async fn clips_all(
     imdb: Option<String>,
     langs: Option<Vec<String>>,
     gate: Gate,
-    refresh_g2p: bool,
 ) -> Result<()> {
     let plan = read_plan(&out)?;
     let mut queue: Vec<Movie> = plan
@@ -1851,11 +1596,8 @@ pub async fn clips_all(
                 return false;
             };
             let dir = out.join(&movie.imdb_id);
-            current_provenance(&dir, language, code, &gate).is_ok_and(|p| {
-                (refresh_g2p && p.gate.min_ratio.is_some())
-                    || interrupted_refresh(&dir)
-                    || matches!(existing_work(&dir, &p).0, Work::Redo(_))
-            })
+            current_provenance(&dir, language, code, &gate)
+                .is_ok_and(|p| matches!(existing_work(&dir, &p).0, Work::Redo(_)))
         })
         .cloned()
         .collect();
@@ -1872,10 +1614,7 @@ pub async fn clips_all(
             let (store, out, gate) = (&store, &out, &gate);
             async move {
                 let dir = out.join(&movie.imdb_id);
-                (
-                    index,
-                    prepare_film(store, movie, &dir, gate, 8, refresh_g2p).await,
-                )
+                (index, prepare_film(store, movie, &dir, gate, 8).await)
             }
         })
         .buffer_unordered(films_in_flight.max(1))
@@ -1891,13 +1630,9 @@ pub async fn clips_all(
     let films = map_staged(
         preparation,
         async |cut| prepare_pending(&http, &store, &empty, cut).await,
-        async |requests, activity| {
+        async |requests| {
             let (contexts, requests): (Vec<_>, Vec<_>) = requests.into_iter().unzip();
-            phoneme_verify::infer_frame_batch(
-                contexts.iter().zip(requests).collect(),
-                Some(activity),
-            )
-            .await
+            phoneme_verify::infer_frame_batch(contexts.iter().zip(requests).collect(), None).await
         },
         &gate,
     )

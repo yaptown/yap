@@ -1,9 +1,4 @@
 //! Reading a disc's bitmap subtitle track back into text.
-//!
-//! Billing is per token, not per request, and a cue image's tokens scale with
-//! its pixels — so the only honest way to size the job is to measure a random
-//! sample and extrapolate. That is what [`sample`] exists for; run it before
-//! committing to the whole library.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -85,17 +80,13 @@ pub async fn retry_unreadable(
 pub struct ReadLines {
     /// `(start_ms, end_ms, text)` for every cue that read as dialogue.
     pub lines: Vec<(u32, u32, String)>,
-    /// Cues with no usable answer, after the fallback had its turn.
-    pub unreadable: usize,
     /// Cues re-asked of the fallback model, and how many of those it read.
     pub retried: usize,
     pub rescued: usize,
 }
 
 /// Turn a batch's per-cue results into subtitle lines, sending every corrupt
-/// answer through [`retry_unreadable`] first. A batch error and a fallback
-/// that also fails count the same: an unreadable cue the caller may refuse
-/// to write the film without.
+/// answer through [`retry_unreadable`] first. Skip cues that still fail.
 pub async fn read_lines<E>(
     fallback_client: &ChatClient,
     images: &[CueImage],
@@ -103,19 +94,16 @@ pub async fn read_lines<E>(
 ) -> ReadLines {
     let mut read = ReadLines {
         lines: Vec::new(),
-        unreadable: 0,
         retried: 0,
         rescued: 0,
     };
     for (img, result) in std::iter::zip(images, results) {
         let Ok(transcription) = result else {
-            read.unreadable += 1;
             continue;
         };
         let (result, did_retry) = retry_unreadable(fallback_client, &img.png, transcription).await;
         read.retried += usize::from(did_retry);
         let Ok(transcription) = result else {
-            read.unreadable += 1;
             continue;
         };
         read.rescued += usize::from(did_retry);
@@ -146,9 +134,7 @@ pub fn messages_for(png: &[u8]) -> Vec<ChatMessage> {
 
 /// Transcribe one cue image with a live request.
 ///
-/// Used by the sampler, where an answer is wanted in seconds. The full run goes
-/// through the Batch API instead — half the price, and a film's ~1,200 cues are
-/// naturally one batch.
+/// Used by the fallback model to retry corrupt batch responses.
 pub async fn transcribe(client: &ChatClient, png: &[u8]) -> Result<Transcription> {
     Ok(client.chat_with_messages(messages_for(png)).await?)
 }
@@ -184,8 +170,6 @@ pub struct CueImage {
     pub start_ms: u32,
     pub end_ms: u32,
     pub png: Vec<u8>,
-    pub width: u16,
-    pub height: u16,
 }
 
 /// Decode a `.sup` and render the cues that look like dialogue.
@@ -216,35 +200,16 @@ fn render_cues(
         if !looks_like_text(&cue) {
             continue;
         }
-        let img = cue.to_rgb([0, 0, 0]);
+        let img = cue.to_rgb();
         let mut png = std::io::Cursor::new(Vec::new());
         img.write_to(&mut png, image::ImageFormat::Png)?;
         out.push(CueImage {
             start_ms: cue.start_ms,
             end_ms: cue.end_ms,
             png: png.into_inner(),
-            width: cue.width,
-            height: cue.height,
         });
     }
     Ok(out)
-}
-
-/// Deterministically pick `n` items spread across `items`.
-///
-/// A fixed stride rather than a shuffle: the sample must be reproducible so a
-/// cost estimate can be re-checked, and cues early in a film (credits, titles)
-/// are unrepresentative of the rest.
-pub fn spread<T>(items: &[T], n: usize) -> Vec<&T> {
-    if items.is_empty() || n == 0 {
-        return vec![];
-    }
-    if n >= items.len() {
-        return items.iter().collect();
-    }
-    (0..n)
-        .map(|i| &items[i * items.len() / n + items.len() / (2 * n)])
-        .collect()
 }
 
 /// Render transcribed cues as an SRT, keeping the disc's own timings.

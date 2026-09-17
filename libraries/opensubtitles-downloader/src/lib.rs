@@ -1,5 +1,4 @@
-//! Shared OpenSubtitles API access for the downloader and the one-off
-//! `recover-subtitles` binary.
+//! Shared OpenSubtitles API access for the downloader and subtitle corpus.
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -9,9 +8,6 @@ use serde::Deserialize;
 
 /// Why OpenSubtitles refused to serve a download.
 ///
-/// Distinguished from ordinary failures because a long recovery run must stop
-/// cleanly and resumably when the daily allowance is gone, rather than burning
-/// through every remaining movie recording spurious "no match" verdicts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Throttled {
     /// 406 — the account's download allowance for the day is spent.

@@ -155,14 +155,6 @@ impl Measure {
         }
     }
 
-    /// The best placement fraction at any clock: what the subtitle would
-    /// yield once re-timed.
-    pub fn best_fraction(&self) -> f64 {
-        self.aligned
-            .as_ref()
-            .map_or(self.fraction, |a| a.fraction.max(self.fraction))
-    }
-
     /// Sentences placed at the better clock — the yield a subtitle offers,
     /// which is what one candidate is judged against another by: a short
     /// clean track with a high fraction still gives fewer clips than a long

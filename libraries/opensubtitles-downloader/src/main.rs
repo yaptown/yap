@@ -739,8 +739,7 @@ async fn download_movie_subtitles(
         // The SRT exactly as OpenSubtitles served it, written *first* and never
         // rewritten. Cleaning is lossy and the download quota is finite, so the
         // original is what has to survive; the JSONL below is only a derived
-        // cache of it. (Movies fetched before this existed have no raw file —
-        // `recover-subtitles` re-downloads and verifies those.)
+        // cache of it.
         if let Err(e) = movie_subtitles::write_raw_srt(movies_dir, imdb_id_str, &srt_content) {
             println!("  ✗ Failed to save raw SRT: {e}, trying next...");
             continue;
