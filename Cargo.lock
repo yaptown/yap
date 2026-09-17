@@ -2028,7 +2028,7 @@ dependencies = [
 [[package]]
 name = "g2p"
 version = "0.5.0"
-source = "git+https://github.com/anchpop/g2p?rev=ba35abc4545d7b18d2c517b5f181b0c9e27b447b#ba35abc4545d7b18d2c517b5f181b0c9e27b447b"
+source = "git+https://github.com/anchpop/g2p?rev=2eec7e1affb49ba1af91844039299730dd1d954e#2eec7e1affb49ba1af91844039299730dd1d954e"
 dependencies = [
  "cmake",
  "dirs",
@@ -2047,7 +2047,7 @@ dependencies = [
 [[package]]
 name = "g2p-types"
 version = "0.4.0"
-source = "git+https://github.com/anchpop/g2p?rev=ba35abc4545d7b18d2c517b5f181b0c9e27b447b#ba35abc4545d7b18d2c517b5f181b0c9e27b447b"
+source = "git+https://github.com/anchpop/g2p?rev=2eec7e1affb49ba1af91844039299730dd1d954e#2eec7e1affb49ba1af91844039299730dd1d954e"
 dependencies = [
  "serde",
 ]

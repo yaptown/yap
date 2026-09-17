@@ -1402,11 +1402,8 @@ fn spanish_dialect_target(
     text: &str,
     language: Language,
 ) -> Option<Result<g2p::Phonemized, g2p::Error>> {
-    (language == Language::Spanish).then(|| {
-        g2p::phonemize_language(
-            g2p::PhonemizeRequest::new("spa", text).variety(g2p::Variety::LatinAmerican),
-        )
-    })
+    (language == Language::Spanish)
+        .then(|| g2p::phonemize(g2p::Language::SpanishLatinAmerica, text))
 }
 
 fn add_spanish_dialect_word(text: &str, language: Language, variants: &mut Vec<Vec<String>>) {

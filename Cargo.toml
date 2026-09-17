@@ -66,7 +66,7 @@ abort-signal = { git = "https://github.com/anchpop/fetch-happen", rev = "65f9906
 # the renderer, not an assertion that a deployed model used identical labels;
 # corpus response keys separate actual WAV content and exact target sequences.
 # Needs cmake + a C compiler to build the embedded espeak fork.
-g2p = { git = "https://github.com/anchpop/g2p", rev = "ba35abc4545d7b18d2c517b5f181b0c9e27b447b" }
+g2p = { git = "https://github.com/anchpop/g2p", rev = "2eec7e1affb49ba1af91844039299730dd1d954e" }
 xxhash-rust = { version = "0.8.15", features = ["xxh3", "const_xxh3"] }
 indexmap = { version = "2" }
 chrono = "0.4.44"
