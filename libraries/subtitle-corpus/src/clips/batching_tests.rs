@@ -79,7 +79,10 @@ fn film(root: &Path, index: usize, count: usize) -> PreparedFilm {
             clip.pad_before_ms = 100;
         }
         clips.push(Some(clip));
-        pending.push(PendingClip { index: i, hash });
+        pending.push(PendingClip {
+            index: i,
+            wav: save_cut(&dir, &hash.to_le_bytes()).unwrap(),
+        });
     }
     PreparedFilm {
         dir,
@@ -99,7 +102,6 @@ fn film(root: &Path, index: usize, count: usize) -> PreparedFilm {
             },
             cut: Cut {
                 preferred_clear_ms: gate.preferred_clear_ms,
-                min_clear_ms: gate.min_clear_ms,
                 speech_threshold: gate.speech_threshold,
             },
             gate: GateCuts {
@@ -147,6 +149,17 @@ async fn global_batches_sort_compact_route_and_prefetch_after_discovery() {
     inputs.push((8, Ok(FilmWork::Current(current_summary))));
     inputs.push((9, Err(anyhow::anyhow!("film preparation failed"))));
 
+    let saved_cuts: Vec<PathBuf> = inputs
+        .iter()
+        .flat_map(|(_, outcome)| match outcome {
+            Ok(FilmWork::Prepared(film)) => {
+                film.pending.iter().map(|p| p.wav.to_path_buf()).collect()
+            }
+            _ => Vec::new(),
+        })
+        .collect();
+    assert!(saved_cuts.iter().all(|path| path.exists()));
+
     let discovered = Cell::new(0);
     let active = Cell::new(0);
     let peak = Cell::new(0);
@@ -175,22 +188,19 @@ async fn global_batches_sort_compact_route_and_prefetch_after_discovery() {
             peak.set(peak.get().max(active.get()));
             tokio::task::yield_now().await;
             active.set(active.get() - 1);
-            match cut.start / 1000 - 1 {
+            let hash = u64::from_le_bytes(std::fs::read(&cut.wav).unwrap().try_into().unwrap());
+            match hash % 100 {
                 2 => bail!("invalid WAV"),
-                3 => return Ok(FrameInput::Cached(Box::new(matrix(cut.hash)))),
-                4 => bail!("cached matrix cannot decode"),
+                4 => bail!("request preparation failed"),
                 _ => {}
             }
             request_count.set(request_count.get() + 1);
             if request_count.get() == 128 {
                 lookahead_ready.notify_one();
             }
-            Ok(FrameInput::Request((
-                cut.hash,
-                cut.end + cut.after - (cut.start - cut.before).max(0),
-            )))
+            Ok((hash, cut.duration_ms))
         },
-        async |requests: Vec<(u64, i64)>, _activity| {
+        async |requests: Vec<(u64, i64)>| {
             assert_eq!(discovered.get(), 10, "inference crossed discovery barrier");
             let ordinal = batches.borrow().len();
             requests_active.set(requests_active.get() + 1);
@@ -235,7 +245,11 @@ async fn global_batches_sort_compact_route_and_prefetch_after_discovery() {
         &gate,
     )
     .await;
-    assert_eq!(*batches.borrow(), [64, 64, 32]);
+    assert!(
+        saved_cuts.iter().all(|path| !path.exists()),
+        "prepared and failed cuts are removed"
+    );
+    assert_eq!(*batches.borrow(), [64, 64, 40]);
     assert_eq!(requests_peak.get(), INFERENCE_REQUESTS_IN_FLIGHT);
     assert_eq!(requests_active.get(), 0);
     assert_eq!(
@@ -249,7 +263,7 @@ async fn global_batches_sort_compact_route_and_prefetch_after_discovery() {
         "bounded concurrent preparation: {}",
         peak.get()
     );
-    assert_eq!(request_count.get(), 160);
+    assert_eq!(request_count.get(), 168);
     for (index, outcome) in mapped {
         if index == 9 {
             assert!(outcome.is_err());
@@ -297,8 +311,12 @@ async fn all_inference_failures_leave_no_current_header() {
             (0, Ok(FilmWork::Prepared(Box::new(broken)))),
             (1, Ok(FilmWork::Prepared(Box::new(good)))),
         ]),
-        async |cut| Ok(FrameInput::Request(cut.hash)),
-        async |requests: Vec<u64>, _activity| {
+        async |cut| {
+            Ok(u64::from_le_bytes(
+                std::fs::read(&cut.wav).unwrap().try_into().unwrap(),
+            ))
+        },
+        async |requests: Vec<u64>| {
             requests
                 .into_iter()
                 .map(|_| Err(anyhow::anyhow!("request-wide failure")))
@@ -328,8 +346,8 @@ async fn empty_or_resolved_selection_never_prepares_or_infers() {
     ] {
         map_staged(
             futures::stream::iter(inputs),
-            async |_| -> Result<FrameInput<()>> { panic!("nothing to prepare") },
-            async |_, _activity| panic!("nothing to infer"),
+            async |_| -> Result<()> { panic!("nothing to prepare") },
+            async |_| panic!("nothing to infer"),
             &Gate::default(),
         )
         .await;
@@ -344,8 +362,8 @@ async fn all_request_preparations_fail_without_an_empty_inference_request() {
             0,
             Ok(FilmWork::Prepared(Box::new(film(root.path(), 0, 4)))),
         )]),
-        async |_| -> Result<FrameInput<()>> { bail!("cached matrix or WAV failed to decode") },
-        async |_, _activity| panic!("failed preparations cannot trigger inference"),
+        async |_| -> Result<()> { bail!("saved WAV failed to decode") },
+        async |_| panic!("failed preparations cannot trigger inference"),
         &Gate::default(),
     )
     .await;
@@ -355,7 +373,7 @@ async fn all_request_preparations_fail_without_an_empty_inference_request() {
 }
 
 #[test]
-fn completeness_and_strict_reading_are_independent_of_provenance() {
+fn incomplete_work_is_not_written_and_malformed_json_is_rejected() {
     let root = tempfile::tempdir().unwrap();
     let unresolved = film(root.path(), 0, 1);
     let path = clips_path(&unresolved.dir);
@@ -369,20 +387,9 @@ fn completeness_and_strict_reading_are_independent_of_provenance() {
     let original = std::fs::read_to_string(&path).unwrap();
     assert_eq!(read_clips(&path).unwrap().len(), 2);
     let lines: Vec<_> = original.lines().collect();
-    for corrupt in [
-        lines[..2].join("\n"),
-        format!("{}\nmalformed\n{}\n", lines[0], lines[2]),
-        format!(
-            "{}\n{}\n{}\n",
-            lines[0],
-            lines[1],
-            lines[1].replace("\"passed\":true", "\"passed\":false")
-        ),
-    ] {
-        std::fs::write(&path, corrupt).unwrap();
-        assert!(read_clips(&path).is_err());
-        assert!(stored_provenance(&path).is_none());
-    }
+    std::fs::write(&path, format!("{}\nmalformed\n{}\n", lines[0], lines[2])).unwrap();
+    assert!(read_clips(&path).is_err());
+    assert!(stored_provenance(&path).is_none());
 }
 
 #[tokio::test]
@@ -444,7 +451,7 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
     changed.inputs.segmentation.push('x');
     assert_eq!(original.work(&changed), Work::Redo("inputs changed"));
     changed = original.clone();
-    changed.cut.min_clear_ms += 1;
+    changed.cut.preferred_clear_ms += 1;
     assert_eq!(original.work(&changed), Work::Redo("cut changed"));
     changed = original.clone();
     changed.gate.max_lead_rms += 1.0;
@@ -465,34 +472,12 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
             min_verbatim: Some(threshold),
             ..Gate::default()
         };
-        prepare_film(&store, &movie, &dir, &gate, 1, false)
-            .await
-            .unwrap();
+        prepare_film(&store, &movie, &dir, &gate, 1).await.unwrap();
         let rows = read_clips(&clips_path(&dir)).unwrap();
         assert_eq!(rows[0].passed, passed);
         assert_eq!(rows[0].producers.g2p.as_deref(), Some("older-renderer"));
         assert_eq!(rows[1].reject.as_deref(), Some("cut: permanent failure"));
     }
-    let mut rejected_report = report;
-    rejected_report.measure.fraction = 0.0;
-    rejected_report.measure.placed = 0;
-    std::fs::write(
-        crate::verbatim::report_path(&dir),
-        serde_json::to_vec(&rejected_report).unwrap(),
-    )
-    .unwrap();
-    for requested in [true, false] {
-        assert!(prepare_film(&store, &movie, &dir, &gate, 1, requested)
-            .await
-            .is_err());
-        assert!(
-            interrupted_refresh(&dir),
-            "film-level preflight must not erase refresh intent"
-        );
-        assert_eq!(read_manifest(&clips_path(&dir)).unwrap().1.len(), 2);
-    }
-    let (_, rows) = read_manifest(&clips_path(&dir)).unwrap();
-    write_clips(&dir, original.clone(), &rows, FilmSummary::default()).unwrap();
     std::fs::remove_file(crate::verbatim::report_path(&dir)).unwrap();
     assert_eq!(
         existing_work(&dir, &original).0,
@@ -503,7 +488,7 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
         existing_work(&dir, &original).0,
         Work::Redo("audio stamp missing")
     );
-    assert!(prepare_film(&store, &movie, &dir, &gate, 1, false)
+    assert!(prepare_film(&store, &movie, &dir, &gate, 1)
         .await
         .err()
         .unwrap()
@@ -520,68 +505,6 @@ fn clip_keys_use_audio_and_exact_token_boundaries_not_producers() {
     assert_eq!(clip_key(42, &clip.target_ipa), key);
     assert_ne!(clip_key(43, &clip.target_ipa), key);
     assert_ne!(clip_key(42, &["tʃ".into()]), key);
-}
-
-#[tokio::test]
-async fn interrupted_refresh_preserves_rows_but_regenerates_old_target_values() {
-    let root = tempfile::tempdir().unwrap();
-    let mut film = film(root.path(), 0, 1);
-    film.clips[0].as_mut().unwrap().passed = true;
-    let dir = film.dir.clone();
-    let provenance = film.provenance.clone();
-    finish_film(FilmWork::Prepared(Box::new(film))).unwrap();
-    let store = osmo::Store::open(root.path().join("cache"));
-    let mut old =
-        phoneme_verify::cached_model_target(&store, Language::French, "bonjour", 42, false)
-            .await
-            .unwrap();
-    old.renderer = "old-renderer".into();
-    old.phonemized.phonemes = vec!["old-label".into()];
-    let key = format!(
-        "phoneme-target/{:016x}",
-        xxhash_rust::xxh3::xxh3_64(
-            &serde_json::to_vec(&(Language::French.g2p_lang().unwrap(), "bonjour", 42_u64))
-                .unwrap()
-        )
-    );
-    store
-        .write(&key, &serde_json::to_vec(&old).unwrap())
-        .await
-        .unwrap();
-    assert_eq!(
-        phoneme_verify::cached_model_target(&store, Language::French, "bonjour", 42, false)
-            .await
-            .unwrap()
-            .renderer,
-        "old-renderer"
-    );
-    begin_refresh(&dir, &provenance).unwrap();
-    assert!(read_file(&clips_path(&dir)).is_err());
-    assert_eq!(read_manifest(&clips_path(&dir)).unwrap().1.len(), 1);
-    // A normal subsequent run sees the marker even without the CLI flag.
-    let refreshed = phoneme_verify::cached_model_target(
-        &store,
-        Language::French,
-        "bonjour",
-        42,
-        interrupted_refresh(&dir),
-    )
-    .await
-    .unwrap();
-    assert_eq!(refreshed.renderer, phoneme_verify::model_target_identity());
-    assert_ne!(refreshed.phonemized.phonemes, old.phonemized.phonemes);
-    let again = phoneme_verify::cached_model_target(&store, Language::French, "bonjour", 42, false)
-        .await
-        .unwrap();
-    assert_eq!(
-        serde_json::to_value(again).unwrap(),
-        serde_json::to_value(refreshed).unwrap()
-    );
-    std::fs::write(clips_path(&dir), "corrupt").unwrap();
-    assert!(
-        !interrupted_refresh(&dir),
-        "corruption is not a refresh request"
-    );
 }
 
 #[tokio::test]
@@ -636,8 +559,6 @@ async fn report_repair_cannot_make_a_failed_redo_look_current() {
     let original = film.provenance.clone();
     film.clips[0].as_mut().unwrap().passed = true;
     finish_film(FilmWork::Prepared(Box::new(film))).unwrap();
-    let before = std::fs::read_to_string(clips_path(&dir)).unwrap();
-    let old_rows = &before[before.find('\n').unwrap()..];
     let movie = Movie {
         imdb_id: "0".into(),
         title: "fixture".into(),
@@ -654,7 +575,7 @@ async fn report_repair_cannot_make_a_failed_redo_look_current() {
     // First run really regenerates a matching verbatim report, then fails
     // preparation at the absent speech profile. The second is an ordinary retry.
     for _ in 0..2 {
-        let error = prepare_film(&store, &movie, &dir, &gate, 1, false)
+        let error = prepare_film(&store, &movie, &dir, &gate, 1)
             .await
             .err()
             .unwrap();
@@ -663,76 +584,9 @@ async fn report_repair_cannot_make_a_failed_redo_look_current() {
             crate::verbatim::stored(&dir).unwrap().measure.verdict,
             crate::verbatim::Verdict::Verbatim
         );
-        assert_eq!(std::fs::read_to_string(clips_path(&dir)).unwrap(), old_rows);
+        assert!(!clips_path(&dir).exists());
         assert!(matches!(existing_work(&dir, &original).0, Work::Redo(_)));
-        assert!(
-            !interrupted_refresh(&dir),
-            "ordinary retry must not force target refresh"
-        );
     }
-}
-
-#[test]
-fn model_inventory_counts_observed_rows_and_unreadable_files() {
-    let root = tempfile::tempdir().unwrap();
-    let mut film = film(root.path(), 0, 3);
-    for clip in film.clips.iter_mut().flatten() {
-        clip.passed = true;
-    }
-    for clip in film.clips[..2].iter_mut().flatten() {
-        clip.producers.model = Some(phoneme_verify::ModelIdentity {
-            model_id: "actual/model".into(),
-            model_revision: "full-revision".into(),
-            decoder_version: Some("decoder".into()),
-            deploy_marker: Some(clip.sentence.clone()),
-        });
-    }
-    let path = clips_path(&film.dir);
-    finish_film(FilmWork::Prepared(Box::new(film))).unwrap();
-    let old = root.path().join("old.jsonl");
-    let corrupt = root.path().join("corrupt.jsonl");
-    std::fs::write(&old, "{\"format\":11,\"model\":\"not a row producer\"}\n").unwrap();
-    std::fs::write(&corrupt, "broken").unwrap();
-    let counts = count_models([path, old, corrupt]);
-    assert_eq!(
-        counts.models["actual/model@full-revision decoder=decoder"],
-        2
-    );
-    assert_eq!(
-        counts.models.len(),
-        1,
-        "deploy markers do not split a checkpoint"
-    );
-    assert_eq!(counts.no_model, 1);
-    assert_eq!(counts.unreadable_files, 2);
-}
-
-#[test]
-fn inference_metrics_use_logical_fill_and_completed_clips_over_phase_time() {
-    let empty = InferenceProgress::default();
-    assert_eq!(empty.fill_rate(), 0.0);
-    assert_eq!(empty.clips_per_minute(std::time::Duration::ZERO), 0.0);
-    let progress = InferenceProgress {
-        requests: 3,
-        submitted: 160,
-        completed: 128,
-        failed: 2,
-    };
-    assert_eq!(progress.fill_rate(), 160.0 / 192.0);
-    // Completed failed attempts count toward throughput and are also reported
-    // separately. In-flight submissions are not yet completed clips.
-    assert_eq!(
-        progress.clips_per_minute(std::time::Duration::from_secs(120)),
-        64.0
-    );
-}
-
-#[test]
-fn recut_hash_must_match_discovery() {
-    let wav = b"the exact original WAV";
-    let hash = xxhash_rust::xxh3::xxh3_64(wav);
-    check_recut_hash(wav, hash).unwrap();
-    assert!(check_recut_hash(b"a different cut", hash).is_err());
 }
 
 #[tokio::test]
@@ -800,7 +654,7 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
     };
     let store = osmo::Store::open(root.path().join("cache"));
     assert!(matches!(
-        prepare_film(&store, &movie, &dir, &Gate::default(), 1, false)
+        prepare_film(&store, &movie, &dir, &Gate::default(), 1)
             .await
             .unwrap(),
         FilmWork::Current(_)
@@ -813,7 +667,7 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         serde_json::to_vec(&report).unwrap(),
     )
     .unwrap();
-    prepare_film(&store, &movie, &dir, &Gate::default(), 1, false)
+    prepare_film(&store, &movie, &dir, &Gate::default(), 1)
         .await
         .unwrap();
     let clips = read_clips(&clips_path(&dir)).unwrap();
@@ -830,7 +684,7 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         serde_json::to_vec(&report).unwrap(),
     )
     .unwrap();
-    prepare_film(&store, &movie, &dir, &Gate::default(), 1, false)
+    prepare_film(&store, &movie, &dir, &Gate::default(), 1)
         .await
         .unwrap();
     assert!(read_clips(&clips_path(&dir)).unwrap()[0].passed);

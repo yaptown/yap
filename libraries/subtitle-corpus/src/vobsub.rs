@@ -133,12 +133,6 @@ pub fn cues(video: &Path, ffmpeg_index: u32) -> Result<Vec<Cue>> {
         open = Some(out.len() - 1);
     }
 
-    // A final cue nothing ever cleared: give it a typical dwell.
-    if let Some(i) = open {
-        if out[i].end_ms == 0 {
-            out[i].end_ms = out[i].start_ms + 4_000;
-        }
-    }
     out.retain(|c| c.end_ms > c.start_ms);
     Ok(out)
 }

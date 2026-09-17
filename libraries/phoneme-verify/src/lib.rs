@@ -126,13 +126,11 @@ pub async fn cached_model_target(
     language: Language,
     text: &str,
     clip_hash: u64,
-    refresh: bool,
 ) -> Result<CachedTarget> {
     let lang = language.g2p_lang().context("no model label source")?;
     let inputs = serde_json::to_vec(&(lang, text, clip_hash))?;
     let key = format!("phoneme-target/{:016x}", xxh3_64(&inputs));
-    if !refresh
-        && let Some(bytes) = store.read(&key).await
+    if let Some(bytes) = store.read(&key).await
         && let Ok(target) = serde_json::from_slice::<CachedTarget>(&bytes)
     {
         return Ok(target);

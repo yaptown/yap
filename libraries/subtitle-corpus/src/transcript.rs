@@ -1,8 +1,8 @@
 //! Transcribing a whole film, so a subtitle can be checked against what was
 //! said rather than merely against when someone was speaking.
 //!
-//! Everything else in this crate samples: `sync` and `check` transcribe a
-//! handful of 60s windows and fit an offset. That is enough to place a
+//! The early Whisper sync samples a handful of 60s windows and fits an
+//! offset. That is enough to place a
 //! subtitle, and nowhere near enough to judge one. A cue can sit on the right
 //! second and still carry a sound tag, a song lyric, a speaker label, or a
 //! sentence condensed to half of what the actor actually said. Answering that
@@ -19,8 +19,8 @@
 //!
 //! Two things make it affordable. The audio is already extracted to
 //! `audio.opus`, so nothing decodes a 30GB remux; and the responses are
-//! cached in the shared osmo store keyed by the chunk's *decoded samples*, so
-//! a re-run after any change upstream of the transcript costs nothing.
+//! cached in the shared osmo store by source digest, chunk boundaries and
+//! request settings. Cache hits need no audio decoding.
 //!
 //! # Where the cuts go
 //!
@@ -87,36 +87,6 @@ impl ScribeAccount {
 
     fn key(&self) -> &str {
         &self.key
-    }
-
-    /// Credits left in this billing period, straight from the account.
-    ///
-    /// The number that matters is the one ElevenLabs will bill on, not local
-    /// arithmetic, which drifts. Backs off on 429: the subscription endpoint
-    /// rate-limits well below one call per film, and a budget guard that
-    /// crashes is worse than no guard.
-    pub async fn remaining_credits(&self, http: &reqwest::Client) -> Result<i64> {
-        #[derive(serde::Deserialize)]
-        struct Subscription {
-            character_count: i64,
-            character_limit: i64,
-        }
-        let mut delay = std::time::Duration::from_secs(5);
-        for _ in 0..6 {
-            let response = http
-                .get("https://api.elevenlabs.io/v1/user/subscription")
-                .header("xi-api-key", self.key())
-                .send()
-                .await?;
-            if response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
-                tokio::time::sleep(delay).await;
-                delay *= 2;
-                continue;
-            }
-            let sub: Subscription = response.error_for_status()?.json().await?;
-            return Ok(sub.character_limit - sub.character_count);
-        }
-        anyhow::bail!("subscription endpoint still rate-limited after backoff")
     }
 }
 
@@ -336,12 +306,6 @@ struct ScribeWord {
 }
 
 /// Cut one chunk out of the extracted audio as raw 16kHz mono PCM.
-///
-/// PCM and not opus, because this is what the cache key is taken from and
-/// opus is *not reproducible*: ffmpeg stamps a random Ogg bitstream serial
-/// into every stream it writes, so encoding the same audio twice differs at
-/// byte 15 and every key would be a miss. Decoded samples are byte-identical
-/// run to run, which is what a content-addressed cache needs.
 fn slice_pcm(audio: &Path, start_ms: i64, end_ms: i64) -> Result<Vec<u8>> {
     let out = Command::new("ffmpeg")
         .args(["-v", "error", "-ss"])
@@ -489,35 +453,6 @@ struct RequestSpec<'a> {
     audio_end_ms: i64,
 }
 
-/// The key this chunk used before the audio was identified by its source.
-///
-/// Kept so the entries already paid for are still found. It hashes the decoded
-/// samples, so it can only be computed by decoding — but the caller has the
-/// samples in hand already, and a lookup under it happens only when the new
-/// key missed, which is exactly when the alternative is spending money.
-#[derive(Serialize)]
-struct LegacySpec<'a> {
-    endpoint: &'a str,
-    model_id: &'a str,
-    language_code: &'a str,
-    timestamps_granularity: &'a str,
-    diarize: bool,
-    no_verbatim: bool,
-    audio_xxh3: String,
-}
-
-impl LegacySpec<'_> {
-    fn key(&self) -> Result<String> {
-        let canonical = serde_json::to_vec(self)?;
-        Ok(format!(
-            "asr/{}/{}/{:016x}",
-            self.model_id,
-            self.language_code,
-            xxh3_64(&canonical)
-        ))
-    }
-}
-
 impl RequestSpec<'_> {
     fn key(&self) -> Result<String> {
         let canonical = serde_json::to_vec(self)?;
@@ -530,10 +465,9 @@ impl RequestSpec<'_> {
     }
 }
 
-/// One stretch of one film's audio: the samples to send, and the two ways of
-/// saying which audio they are.
+/// One stretch of an audio file, decoded only on a cache miss.
 struct Chunk<'a> {
-    pcm: &'a [u8],
+    audio: &'a Path,
     source_xxh3: &'a str,
     start_ms: i64,
     end_ms: i64,
@@ -565,33 +499,10 @@ async fn transcribe_chunk(
     };
     let key = spec.key()?;
 
-    let legacy = LegacySpec {
-        endpoint: SCRIBE_URL,
-        model_id: SCRIBE_MODEL,
-        language_code: language,
-        timestamps_granularity: GRANULARITY,
-        diarize: DIARIZE,
-        no_verbatim: NO_VERBATIM,
-        audio_xxh3: format!("{:016x}", xxh3_64(chunk.pcm)),
-    };
-
-    let cached = match store.read(&key).await {
-        Some(bytes) => Some(bytes),
-        // Only now, and only because the alternative is being billed: look
-        // under the old key and carry anything found forward, so the change of
-        // key costs nothing rather than re-buying what is already paid for.
-        None => match store.read(&legacy.key()?).await {
-            Some(bytes) => {
-                store.write(&key, &bytes).await.ok();
-                Some(bytes)
-            }
-            None => None,
-        },
-    };
-
-    let raw = match cached {
+    let raw = match store.read(&key).await {
         Some(bytes) => bytes,
         None => {
+            let pcm = slice_pcm(chunk.audio, chunk.start_ms, chunk.end_ms)?;
             let form = reqwest::multipart::Form::new()
                 .text("model_id", spec.model_id.to_string())
                 .text("language_code", spec.language_code.to_string())
@@ -603,7 +514,7 @@ async fn transcribe_chunk(
                 // Opus on the wire; see `encode_opus`. Scribe accepts ogg.
                 .part(
                     "file",
-                    reqwest::multipart::Part::bytes(encode_opus(chunk.pcm)?)
+                    reqwest::multipart::Part::bytes(encode_opus(&pcm)?)
                         .file_name("chunk.ogg")
                         .mime_str("audio/ogg")?,
                 );
@@ -638,7 +549,7 @@ async fn transcribe_chunk(
         .collect())
 }
 
-/// Transcribe a whole film into words timed from its start.
+/// Transcribe a film into words timed from its start, skipping failed chunks.
 pub async fn transcribe_film(
     http: &reqwest::Client,
     account: &ScribeAccount,
@@ -650,21 +561,12 @@ pub async fn transcribe_film(
 ) -> Result<Transcript> {
     let language = provenance.language.as_str();
     let mut words = Vec::new();
-    let mut failed = 0usize;
     let bounds = chunk_bounds(profile, film_ms);
     // Once per film, not once per chunk: it reads the whole file.
     let source_xxh3 = source_digest(audio)?;
     for (start_ms, end_ms) in &bounds {
-        let pcm = match slice_pcm(audio, *start_ms, *end_ms) {
-            Ok(o) => o,
-            Err(e) => {
-                eprintln!("      chunk at {}s could not be cut: {e}", start_ms / 1000);
-                failed += 1;
-                continue;
-            }
-        };
         let chunk = Chunk {
-            pcm: &pcm,
+            audio,
             source_xxh3: &source_xxh3,
             start_ms: *start_ms,
             end_ms: *end_ms,
@@ -692,14 +594,11 @@ pub async fn transcribe_film(
             })),
             Err(e) => {
                 eprintln!("      chunk at {}s failed: {e}", start_ms / 1000);
-                failed += 1;
             }
         }
     }
-    // A transcript with holes is worse than none: the holes are invisible
-    // downstream, and every cue inside one reads as dialogue nobody spoke.
-    if failed > 0 {
-        bail!("{failed} of {} chunks failed", bounds.len());
+    if words.is_empty() {
+        bail!("no transcript words recovered");
     }
     words.sort_by_key(|w| w.at_ms);
     Ok(Transcript { provenance, words })
@@ -728,23 +627,6 @@ mod tests {
             audio_end_ms: 600_000,
         };
         assert_eq!(spec.key().unwrap(), "asr/scribe_v2/en/375f151a696e4a16");
-    }
-
-    /// The legacy key must stay exactly where it was, or the fallback that
-    /// rescues already-paid-for entries looks in the wrong place and they are
-    /// bought a second time.
-    #[test]
-    fn legacy_key_still_resolves() {
-        let spec = LegacySpec {
-            endpoint: SCRIBE_URL,
-            model_id: SCRIBE_MODEL,
-            language_code: "en",
-            timestamps_granularity: GRANULARITY,
-            diarize: DIARIZE,
-            no_verbatim: NO_VERBATIM,
-            audio_xxh3: "0000000000000000".to_string(),
-        };
-        assert_eq!(spec.key().unwrap(), "asr/scribe_v2/en/25d1e40fd8719fb9");
     }
 
     /// One Ogg page carrying one packet, with a caller-chosen stream serial.

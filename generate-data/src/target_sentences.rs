@@ -413,7 +413,7 @@ async fn load_movie_sentences(
     if from_derived > 0 {
         println!(
             "  movies: {from_raw} cleaned from raw SRT, {from_derived} still on the pre-cleaned \
-             JSONL (run recover-subtitles to close the gap)"
+             JSONL"
         );
     } else if from_raw > 0 {
         println!("  movies: all {from_raw} cleaned from raw SRT");

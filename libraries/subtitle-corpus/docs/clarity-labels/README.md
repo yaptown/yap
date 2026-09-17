@@ -1,14 +1,10 @@
-# clarity-labels
+# Archived clarity labels
 
-Human audio-clarity labeling site for film clips, plus collected label data.
-Live instance runs from `/data/andrep/subtitle-corpus/clarity-labels/` on the
-NixOS box (`python server.py`, port 8765, exposed via Tailscale Funnel).
-This directory is a snapshot for safekeeping — the live dir is the source of
-truth while labeling is ongoing; re-copy `labels-*.json`, `labels-*.log.jsonl`
-and `corrections-*.json` here to update.
+Human audio-quality labels collected for film clips in August 2026.
+The labeling UI and server have been retired from this repository; these files
+are preserved unchanged for reference. The original live directory was
+`/data/andrep/subtitle-corpus/clarity-labels/` on the NixOS box.
 
-- `index.html` / `server.py` — the labeling UI and its merge-on-POST server
-  (POSTs merge into the file, incoming keys win; every POST journaled).
 - `manifest.json` — the 300-clip labeling set. Hidden band composition
   (labelers don't see this): pass-random 90, pass-borderline-voice 70,
   whisper-reject 55, ratio-marginal 55, pad-reject 30.
@@ -25,7 +21,5 @@ from greg before the evening of 2026-08-31 may mix in word difficulty.
 minor-noise/bothersome-noise split. `volume_db` records the playback gain the
 labeler had set when labeling.
 
-The mp3s themselves are not checked in: they are regenerated with
-`subtitle-corpus clips` from the corpus and then loudness-normalized
-(two-pass EBU R128 loudnorm, I=-18 linear). Originals live alongside the live
-dir in `clips-orig/`.
+Audio files are not included. The original clips lived alongside the live
+directory in `clips-orig/`.
