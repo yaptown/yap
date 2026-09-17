@@ -286,11 +286,31 @@ function supportsWasmExternref(): boolean {
   }
 }
 
+// Some browsers (older WebViews, storage disabled by the user or the
+// embedding app) expose `localStorage` as `null` rather than throwing on
+// access. Losing the cache there shouldn't fail the whole support check —
+// it just means we re-run the real OPFS test every time.
+function getOpfsTestCache(): string | null {
+  try {
+    return localStorage.getItem("opfs-test-passed");
+  } catch {
+    return null;
+  }
+}
+
+function setOpfsTestCache(): void {
+  try {
+    localStorage.setItem("opfs-test-passed", "true");
+  } catch {
+    // ignore — see getOpfsTestCache
+  }
+}
+
 async function checkBrowserSupport(
   setBrowserSupported: (browserSupported: boolean) => void,
 ) {
   try {
-    const opfsTestPassed = localStorage.getItem("opfs-test-passed");
+    const opfsTestPassed = getOpfsTestCache();
 
     // Reject browsers that don't support WebAssembly reference types
     // (externref). Our WASM module uses externref, so it can't compile on
@@ -332,7 +352,7 @@ async function checkBrowserSupport(
 
       if (isSupported) {
         // Store successful test result
-        localStorage.setItem("opfs-test-passed", "true");
+        setOpfsTestCache();
       }
     }
   } catch (error) {
