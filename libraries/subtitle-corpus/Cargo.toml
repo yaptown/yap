@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+g2p = { workspace = true }
 whisper = { path = "../whisper" }
 anyhow = "1.0"
 dotenvy = "0.15.7"

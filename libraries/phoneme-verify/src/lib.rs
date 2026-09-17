@@ -103,44 +103,11 @@ pub fn model_target_identity() -> String {
     g2p::identity()
 }
 
-/// The scoring target for `text` in `language`, using g2p's training-label
-/// source. `None` for languages without validated model labels (see
-/// `Language::g2p_lang`).
+/// Pronunciation target supplied by g2p. `None` for languages without
+/// validated model labels (see `Language::g2p_lang`).
 pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonemized, g2p::Error>> {
-    // TODO(g2p): expose a disable-language-switch option, then use it here.
-    // French words such as polyuréthane and Giverny can currently switch to English.
     let lang = language.g2p_lang()?;
     Some(g2p::phonemize_lang(lang, text))
-}
-
-/// Full renderer output and the renderer that actually produced it. The key
-/// uses literal G2P inputs plus clip identity, never a renderer version.
-#[derive(Serialize, Deserialize)]
-pub struct CachedTarget {
-    pub phonemized: g2p::Phonemized,
-    pub renderer: String,
-}
-
-pub async fn cached_model_target(
-    store: &osmo::Store,
-    language: Language,
-    text: &str,
-    clip_hash: u64,
-) -> Result<CachedTarget> {
-    let lang = language.g2p_lang().context("no model label source")?;
-    let inputs = serde_json::to_vec(&(lang, text, clip_hash))?;
-    let key = format!("phoneme-target/{:016x}", xxh3_64(&inputs));
-    if let Some(bytes) = store.read(&key).await
-        && let Ok(target) = serde_json::from_slice::<CachedTarget>(&bytes)
-    {
-        return Ok(target);
-    }
-    let target = CachedTarget {
-        phonemized: g2p::phonemize_lang(lang, text)?,
-        renderer: model_target_identity(),
-    };
-    store.write(&key, &serde_json::to_vec(&target)?).await?;
-    Ok(target)
 }
 
 /// One lossless per-clip artifact: untouched selected item and every raw batch
@@ -1173,8 +1140,6 @@ fn decode_wav_to_f32(wav_bytes: &[u8]) -> Result<Vec<f32>> {
 /// Expand a raw IPA token into the deployed model's comparable token sequence.
 /// Shared by expected readings, predictions, and top-k alternatives.
 ///
-/// TODO(g2p): the pending pin update must reconcile this split-token
-/// normalization with the deployed model's merged-token labels.
 /// Only explicit tie bars split tokens: preserve untied diphthongs/diacritics.
 pub fn normalize_phonemes(token: &str, language: Language) -> Vec<String> {
     token
