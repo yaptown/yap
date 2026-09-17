@@ -1073,10 +1073,8 @@ async fn prepare_film(
         );
     }
 
-    if min_ratio.is_some() {
-        if language.g2p_lang().is_none() {
-            bail!("{code}: the g2p crate does not produce this language's model labels");
-        }
+    let target_language = if min_ratio.is_some() {
+        let lang = language.g2p_lang().context("no model label source")?;
         let canary = match language {
             Language::Hindi => "नमस्ते",
             Language::ChineseSimplified => "你好",
@@ -1084,11 +1082,14 @@ async fn prepare_film(
             Language::Thai => "สวัสดี",
             _ => "bon",
         };
-        match phoneme_verify::model_target(canary, language) {
-            Some(Ok(p)) if !p.phonemes.is_empty() => {}
+        match g2p::phonemize_lang(lang, canary) {
+            Ok(p) if !p.phonemes.is_empty() => {}
             other => bail!("G2P preflight: g2p produced {other:?} for a canary word"),
         }
-    }
+        Some(lang)
+    } else {
+        None
+    };
 
     // The margins come from the profile; without one there is nothing to
     // cut against, and falling back to stamps would quietly change what a
@@ -1205,26 +1206,23 @@ async fn prepare_film(
                     }
                     clip.voiced = voiced_fraction(span_samples, 16_000);
                 }
-                if min_ratio.is_some() {
+                if let Some(lang) = target_language {
                     // Raw CTC scores only the single default-voice target, without
                     // accepted-variant readings (including Spanish seseo). A seseo
                     // Spanish clip therefore scores worse than on the edit-distance path.
-                    let target =
-                        match phoneme_verify::cached_model_target(store, language, &sentence, hash)
-                            .await
-                        {
-                            Ok(target) if !target.phonemized.phonemes.is_empty() => target,
-                            Ok(_) => {
-                                clip.reject = Some("g2p produced no phonemes".into());
-                                return Some((clip, None));
-                            }
-                            Err(e) => {
-                                clip.reject = Some(format!("g2p: {e:#}"));
-                                return Some((clip, None));
-                            }
-                        };
-                    clip.target_ipa = target.phonemized.phonemes;
-                    clip.producers.g2p = Some(target.renderer);
+                    let target = match g2p::phonemize_lang(lang, &sentence) {
+                        Ok(target) if !target.phonemes.is_empty() => target,
+                        Ok(_) => {
+                            clip.reject = Some("g2p produced no phonemes".into());
+                            return Some((clip, None));
+                        }
+                        Err(e) => {
+                            clip.reject = Some(format!("g2p: {e:#}"));
+                            return Some((clip, None));
+                        }
+                    };
+                    clip.target_ipa = target.phonemes;
+                    clip.producers.g2p = Some(phoneme_verify::model_target_identity());
                     return Some((clip, Some(wav)));
                 } else {
                     // No model to listen to the pads: the earshot profile

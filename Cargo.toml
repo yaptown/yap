@@ -66,7 +66,7 @@ abort-signal = { git = "https://github.com/anchpop/fetch-happen", rev = "65f9906
 # the renderer, not an assertion that a deployed model used identical labels;
 # corpus response keys separate actual WAV content and exact target sequences.
 # Needs cmake + a C compiler to build the embedded espeak fork.
-g2p = { git = "https://github.com/anchpop/g2p", rev = "acaf547a338efee094f85b19c15226a2971f86da" }
+g2p = { git = "https://github.com/anchpop/g2p", rev = "ba35abc4545d7b18d2c517b5f181b0c9e27b447b" }
 xxhash-rust = { version = "0.8.15", features = ["xxh3", "const_xxh3"] }
 indexmap = { version = "2" }
 chrono = "0.4.44"
@@ -81,7 +81,7 @@ wasm-logger = "0.2.0"
 unicode-normalization = "0.1.25"
 # Shared browser/native named locks.
 weblocks = { git = "https://github.com/anchpop/weblocks", rev = "b4e7db5af829e357ab67407609e1fb896ee30cde" }
-lexide = { git = "https://github.com/anchpop/lexide.git", rev = "d6ddffe5cb42efd3212a432ba8aa94910899bfde", default-features = false }
+lexide = { git = "https://github.com/anchpop/lexide.git", rev = "32d47dbb8debb4517f7ec2de7fc08d2c369e9ef9", default-features = false }
 indicatif = "0.18"
 
 [workspace.dependencies.rkyv]
