@@ -843,9 +843,8 @@ async fn autograde_translation(
 /// model-label tokenization exists for the pronunciation verifier, not
 /// for an LLM). Pure enrichment: if the g2p crate has no G2P for the
 /// language or anything fails, returns `None` and grading proceeds without
-/// the IPA line. In-process and a few milliseconds, so it runs inline. Uses
-/// the crate's current (corrected) Hindi labels: this is for reading, not
-/// for scoring against the model.
+/// the IPA line. Uses the same g2p pronunciation as scoring, retaining the
+/// readable raw IPA representation.
 fn readable_ipa(sentence: &str, language: Language) -> Option<String> {
     let lang = language.g2p_lang()?;
     match g2p::phonemize_lang(lang, sentence) {
