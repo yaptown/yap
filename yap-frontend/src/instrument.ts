@@ -66,6 +66,15 @@ Sentry.init({
       }
     }
 
+    // Filter the Howler.js sound-effect race: playSoundEffect() stops the
+    // previous effect before playing the next one, and if the previous
+    // effect's play() promise hadn't resolved yet, the browser rejects it
+    // with this AbortError. Expected when sound effects overlap in quick
+    // succession, not an app bug.
+    if (message.includes("play() request was interrupted by a call to pause()")) {
+      return null;
+    }
+
     // Filter cancelled/blocked WebAuthn ceremonies (user closed the passkey
     // sheet, tab lost focus, etc.). Match on exception type, not message —
     // WebAuthn error messages vary by browser and locale.
