@@ -260,7 +260,19 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
                         .text()
                         .await
                         .unwrap_or_else(|_| "Unknown error".to_string());
-                    log::error!("Failed to upload events: {status} - {error_body}");
+                    if error_body.contains("\"23505\"") {
+                        // Unique-constraint violation on insert: the event was
+                        // already written (e.g. a concurrent sync from this
+                        // device, or a retried request). That's exactly the
+                        // idempotency guarantee the constraint exists for —
+                        // the event is durably stored either way, so this
+                        // isn't a failure worth logging as an error.
+                        log::info!(
+                            "Some uploaded events were already present on the server: {error_body}"
+                        );
+                    } else {
+                        log::error!("Failed to upload events: {status} - {error_body}");
+                    }
                 } else {
                     log::info!("Successfully uploaded events");
                     sync_result.uploaded_to_supabase += events_to_upload.len();
