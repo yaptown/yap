@@ -381,10 +381,11 @@ impl ModelRun {
     }
 }
 
-fn norm_seq(tokens: &[String], language: Language) -> Vec<String> {
+fn norm_seq(tokens: &[phoneme_verify::Phoneme], language: Language) -> Vec<String> {
     tokens
         .iter()
-        .flat_map(|t| normalize_phonemes(t, language))
+        .flat_map(|t| normalize_phonemes(*t, language))
+        .map(|p| p.to_string())
         .collect()
 }
 
@@ -436,7 +437,7 @@ fn categorize_failure(exp: &[String], pred: &[String]) -> &'static str {
     if exp.len() > 6 {
         return "phrase_multi";
     }
-    if exp.iter().any(|t| t.contains(NASAL)) {
+    if exp.iter().any(|t| t.as_str().contains(NASAL)) {
         return "nasal_vowel";
     }
     if exp.iter().any(|t| t == "ə") {
@@ -583,7 +584,7 @@ fn render_summary(
             maps[0]
                 .get(*k)
                 .and_then(|v| v.expected.as_ref())
-                .is_some_and(|e| e.iter().any(|t| t.contains(NASAL)))
+                .is_some_and(|e| e.iter().any(|t| t.as_str().contains(NASAL)))
         })
         .copied()
         .collect();

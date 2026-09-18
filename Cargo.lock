@@ -2049,8 +2049,8 @@ dependencies = [
 
 [[package]]
 name = "g2p"
-version = "0.5.0"
-source = "git+https://github.com/anchpop/g2p?rev=2eec7e1affb49ba1af91844039299730dd1d954e#2eec7e1affb49ba1af91844039299730dd1d954e"
+version = "0.6.0"
+source = "git+https://github.com/anchpop/g2p?rev=ffe3fb9f3a42d0097e327d92fc8640f96b38255b#ffe3fb9f3a42d0097e327d92fc8640f96b38255b"
 dependencies = [
  "cmake",
  "dirs",
@@ -2069,9 +2069,10 @@ dependencies = [
 [[package]]
 name = "g2p-types"
 version = "0.4.0"
-source = "git+https://github.com/anchpop/g2p?rev=2eec7e1affb49ba1af91844039299730dd1d954e#2eec7e1affb49ba1af91844039299730dd1d954e"
+source = "git+https://github.com/anchpop/g2p?rev=ffe3fb9f3a42d0097e327d92fc8640f96b38255b#ffe3fb9f3a42d0097e327d92fc8640f96b38255b"
 dependencies = [
  "serde",
+ "unicode-normalization",
 ]
 
 [[package]]
@@ -3386,7 +3387,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 [[package]]
 name = "lexide"
 version = "0.3.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=2138dcbd54a9d750466afc30dbd88ac07c2e706e#2138dcbd54a9d750466afc30dbd88ac07c2e706e"
+source = "git+https://github.com/anchpop/lexide.git?rev=3e812c8236d694075295b412a59d3490ee992c66#3e812c8236d694075295b412a59d3490ee992c66"
 dependencies = [
  "anyhow",
  "async-stream",

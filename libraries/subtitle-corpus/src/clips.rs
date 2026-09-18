@@ -1220,7 +1220,7 @@ async fn prepare_film(
                             return Some((clip, None));
                         }
                     };
-                    clip.target_ipa = target.phonemes;
+                    clip.target_ipa = target.phonemes.iter().map(ToString::to_string).collect();
                     clip.producers.g2p = Some(phoneme_verify::model_target_identity());
                     return Some((clip, Some(wav)));
                 } else {
@@ -1252,8 +1252,13 @@ async fn prepare_film(
                 // Corrupt/mismatched entries are misses, not permanent holes.
                 match phoneme_verify::cached_frame_matrix(store, &key).await {
                     Some(Ok(frames)) => {
-                        score_clip(&mut clip, &frames, min_ratio.unwrap(), gate);
-                        Some((clip, None))
+                        match score_clip(&mut clip, &frames, min_ratio.unwrap(), gate) {
+                            Ok(()) => Some((clip, None)),
+                            Err(error) => {
+                                eprintln!("  {}: scoring: {error:#}", clip.sentence);
+                                None
+                            }
+                        }
                     }
                     _ => match save_cut(dir, &wav) {
                         Ok(path) => Some((clip, Some(path))),
@@ -1302,7 +1307,7 @@ fn regate(clip: &mut Clip, min_ratio: Option<f64>, gate: &Gate, verbatim: bool) 
     clip.passed = clip.reject.is_none();
 }
 
-fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate) {
+fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate) -> Result<()> {
     clip.producers.model = phoneme_verify::frame_identity(frames);
     let padded_ms = (clip.end_ms - clip.start_ms + clip.pad_before_ms + clip.pad_after_ms) as f64;
     // Frames spread evenly over the sliced audio; the pads are its first and
@@ -1313,13 +1318,14 @@ fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate
     clip.lead_speech = frames.speech_fraction(0, lead_frames);
     clip.tail_speech =
         frames.speech_fraction(frames.frames.saturating_sub(tail_frames), frames.frames);
-    let score = frames.score_target(&clip.target_ipa);
-    clip.heard_ipa = frames
-        .greedy_ids()
-        .into_iter()
-        .map(|id| frames.vocab[id].clone())
-        .collect();
-    clip.oov = score.oov;
+    let target = clip
+        .target_ipa
+        .iter()
+        .map(|p| p.parse())
+        .collect::<Result<Vec<g2p::Phoneme>, _>>()?;
+    let score = frames.score_target(&target);
+    clip.heard_ipa = frames.phonemes()?.iter().map(ToString::to_string).collect();
+    clip.oov = score.oov.iter().map(ToString::to_string).collect();
     clip.ratio = score.ratio;
     clip.logp_target_per_phoneme = score.logp_target_per_phoneme;
     let ids: Vec<usize> = clip
@@ -1337,6 +1343,7 @@ fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate
     }
     clip.measured = true;
     regate(clip, Some(min_ratio), gate, true);
+    Ok(())
 }
 
 /// Failed inference leaves the film unfinished. Successful response cache writes
@@ -1407,8 +1414,8 @@ struct AudioCut {
 
 fn apply_frames(film: &mut PreparedFilm, index: usize, frames: Result<FrameMatrix>, gate: &Gate) {
     let clip = film.clips[index].as_mut().expect("pending clip has a slot");
-    match frames {
-        Ok(frames) => score_clip(
+    let result = frames.and_then(|frames| {
+        score_clip(
             clip,
             &frames,
             film.provenance
@@ -1416,11 +1423,11 @@ fn apply_frames(film: &mut PreparedFilm, index: usize, frames: Result<FrameMatri
                 .min_ratio
                 .expect("pending clips have a phoneme gate"),
             gate,
-        ),
-        Err(error) => {
-            eprintln!("  {}: {error:#}", clip.sentence);
-            film.clips[index] = None;
-        }
+        )
+    });
+    if let Err(error) = result {
+        eprintln!("  {}: {error:#}", clip.sentence);
+        film.clips[index] = None;
     }
 }
 

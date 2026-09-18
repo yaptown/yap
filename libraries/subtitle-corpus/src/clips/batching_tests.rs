@@ -3,6 +3,10 @@ use base64::Engine;
 use std::cell::Cell;
 use std::io::Write;
 
+fn test_phone(hash: u64) -> String {
+    g2p::Phoneme::ALL[hash as usize % g2p::Phoneme::ALL.len()].to_string()
+}
+
 fn matrix(hash: u64) -> FrameMatrix {
     let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
     // fp16 -2 and -1: a single nonblank frame with a recognizable label.
@@ -13,7 +17,7 @@ fn matrix(hash: u64) -> FrameMatrix {
             dtype: "float16".into(),
             encoding: "zlib+base64".into(),
             blank_id: 0,
-            vocab: vec!["<pad>".into(), format!("a{hash}")],
+            vocab: vec!["<pad>".into(), test_phone(hash)],
             data: base64::engine::general_purpose::STANDARD.encode(encoder.finish().unwrap()),
         },
     ))
@@ -40,7 +44,7 @@ fn clip(film: usize, index: usize, hash: u64) -> Clip {
         audio_event_overlap: false,
         clear_before_ms: 300,
         clear_after_ms: 300,
-        target_ipa: vec![format!("a{hash}")],
+        target_ipa: vec![test_phone(hash)],
         oov: Vec::new(),
         ratio: None,
         logp_target_per_phoneme: None,
@@ -166,7 +170,7 @@ async fn discovery_precedes_inference_and_results_route_by_slot() {
             } else {
                 assert_eq!(
                     clip.as_ref().unwrap().heard_ipa,
-                    vec![format!("a{}", index * 100 + slot)]
+                    vec![test_phone((index * 100 + slot) as u64)]
                 );
             }
         }
@@ -235,7 +239,7 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
     let gate = Gate::default();
     film.provenance = current_provenance(&dir, Language::French, "fra", &gate).unwrap();
     let original = film.provenance.clone();
-    score_clip(film.clips[0].as_mut().unwrap(), &matrix(0), -2.0, &gate);
+    score_clip(film.clips[0].as_mut().unwrap(), &matrix(0), -2.0, &gate).unwrap();
     film.clips[0].as_mut().unwrap().producers.g2p = Some("older-renderer".into());
     film.clips[1].as_mut().unwrap().reject = Some("cut: permanent failure".into());
     let report = crate::verbatim::Report {
