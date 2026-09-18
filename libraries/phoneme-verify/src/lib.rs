@@ -2488,7 +2488,7 @@ mod letter_name_tests {
         );
         assert_eq!(
             phonemes(Language::Portuguese, "ã", "pão"),
-            "a tʃ i ʊ k o m w e\u{303} j p ɐ\u{303}ʊ\u{303}"
+            "a tʃ i ʊ k o m w ẽ j p ɐ\u{303}ʊ\u{303}"
         );
         assert_eq!(
             phonemes(Language::Russian, "щ", "борщ"),
@@ -2499,11 +2499,11 @@ mod letter_name_tests {
         // reduces to /ʌ/. Named, they are the letters.
         assert_eq!(
             phonemes(Language::Portuguese, "e", "cerveja"),
-            "ɛ k o m w e\u{303} j s e ɾ v e ʒ ɐ"
+            "ɛ k o m w ẽ j s e ɾ v e ʒ ɐ"
         );
         assert_eq!(
             phonemes(Language::Portuguese, "o", "ovo"),
-            "ɔ k o m w e\u{303} j o v ʊ"
+            "ɔ k o m w ẽ j o v ʊ"
         );
         assert_eq!(
             phonemes(Language::Russian, "о", "окно"),
