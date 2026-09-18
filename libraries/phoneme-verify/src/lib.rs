@@ -23,6 +23,7 @@ pub mod wav2vec2;
 
 use anyhow::{Context, Result};
 use base64::Engine;
+pub use g2p::Phoneme;
 use language_utils::{Language, PhonemeLabelSource};
 use lexide::pronunciation::remote::decode_audio_bytes as decode_wav_to_f32;
 #[cfg(test)]
@@ -97,14 +98,14 @@ pub struct ClipVerification {
     /// Raw phoneme tokens straight from the model.
     pub predicted_raw: Vec<String>,
     /// Phonemes after stripping suprasegmental markers.
-    pub predicted_normalized: Vec<String>,
+    pub predicted_normalized: Vec<Phoneme>,
     /// Ground-truth phonemes assembled from `word_to_pronunciation`. `None`
     /// when some word in `text` isn't in our pronunciation map. When a word
     /// has alternate accepted pronunciations, this is the variant that
     /// matched the model's prediction *most closely* — we pass if any
     /// variant is within threshold, and report the closest one for the
     /// alignment.
-    pub expected: Option<Vec<String>>,
+    pub expected: Option<Vec<Phoneme>>,
     /// Number of alternate (word, variant) combinations considered for
     /// `expected`. 1 when no variants exist; >1 when at least one word in
     /// the phrase has accepted alternates.
@@ -279,14 +280,11 @@ pub fn expected_phoneme_variants(
     override_transcription: Option<&str>,
 ) -> Option<Vec<g2p::Phonemized>> {
     if let Some(s) = override_transcription {
-        let target = g2p::Phonemized::from_ipa_tokens(s);
+        let target = import_ipa(s)?;
         return (!target.phonemes.is_empty()).then_some(vec![target]);
     }
     ground_truth_phoneme_variants(text, ctx.word_to_pronunciation, ctx.target_language)
 }
-
-// Internal cross-product of dictionary words; public targets use Phonemized.
-type Reading = Vec<Vec<String>>;
 
 /// Verify a clip against an explicit accepted-phoneme-sequence set.
 ///
@@ -384,8 +382,13 @@ pub async fn verify_clip_bytes(
             reason,
         )
     } else {
-        (raw_phonemes.iter().flat_map(|p| normalize_phonemes(p, ctx.target_language)).collect(), None, 0, None, None, None,
-                Some("no ground truth available (word missing from wikipron and espeak unsupported for this language)".into()))
+        let predicted = response
+            .phonemes()?
+            .into_iter()
+            .flat_map(|p| normalize_phonemes(p, ctx.target_language))
+            .collect();
+        let reason = "no ground truth available (word missing from wikipron and espeak unsupported for this language)";
+        (predicted, None, 0, None, None, None, Some(reason.into()))
     };
 
     Ok(ClipVerification {
@@ -675,7 +678,7 @@ pub async fn segment_timings(
 }
 
 /// Normalize a label for the deployed model's comparison rules.
-pub fn normalize_phonemes(token: &str, language: Language) -> Vec<String> {
+pub fn normalize_phonemes(token: Phoneme, language: Language) -> Vec<Phoneme> {
     lexide::pronunciation::normalize_phonemes(token, scoring_language(language))
 }
 
@@ -729,7 +732,7 @@ fn ground_truth_phoneme_variants(
     // `complete` flips to false when a word is missing from the dictionary
     // and g2p can't name it either; we then skip the cross-product and rely
     // on the phrase-level g2p variant (if available) as the sole ground truth.
-    let mut per_word: Vec<Vec<Vec<String>>> = Vec::new();
+    let mut per_word: Vec<Vec<Vec<Phoneme>>> = Vec::new();
     let mut complete = true;
     // `is_alphabetic` excludes some combining signs (notably Hindi nukta
     // and virama). Keep them attached in dictionary keys and g2p input,
@@ -746,7 +749,7 @@ fn ground_truth_phoneme_variants(
             continue;
         }
         let Some(accepted) = word_to_pronunciation.get(&cleaned) else {
-            let g2p_word: Vec<String> = match model_target(&cleaned, language) {
+            let g2p_word: Vec<Phoneme> = match model_target(&cleaned, language) {
                 Some(Ok(phonemized)) => phonemized.phonemes,
                 _ => Vec::new(),
             };
@@ -759,17 +762,17 @@ fn ground_truth_phoneme_variants(
             }
             continue;
         };
-        let mut word_variants: Vec<Vec<String>> = accepted
+        let mut word_variants: Vec<Vec<Phoneme>> = accepted
             .all()
-            .map(|ipa| g2p::Phonemized::from_ipa_tokens(ipa).phonemes)
+            .filter_map(|ipa| import_ipa(ipa).map(|target| target.phonemes))
             // Distinct sequences only — after normalization, different raw
             // wikipron entries can collapse to the same phoneme sequence.
             .fold(Vec::new(), |mut acc, v| {
-                if !acc.iter().any(|existing: &Vec<String>| {
+                if !acc.iter().any(|existing: &Vec<Phoneme>| {
                     existing
                         .iter()
-                        .flat_map(|p| normalize_phonemes(p, language))
-                        .eq(v.iter().flat_map(|p| normalize_phonemes(p, language)))
+                        .flat_map(|p| normalize_phonemes(*p, language))
+                        .eq(v.iter().flat_map(|p| normalize_phonemes(*p, language)))
                 }) {
                     acc.push(v);
                 }
@@ -779,11 +782,11 @@ fn ground_truth_phoneme_variants(
         per_word.push(word_variants);
     }
 
-    let mut candidates: Vec<Reading> = if !complete || per_word.is_empty() {
+    let candidates: Vec<Vec<Vec<Phoneme>>> = if !complete || per_word.is_empty() {
         // No per-word candidates — the phrase-level g2p below is our only shot.
         Vec::new()
     } else {
-        let mut acc: Vec<Reading> = vec![Vec::new()];
+        let mut acc: Vec<Vec<Vec<Phoneme>>> = vec![Vec::new()];
         for word_variants in &per_word {
             let mut next = Vec::with_capacity(MAX_VARIANT_COMBINATIONS);
             // Alternates outside, prefixes inside: earlier words vary
@@ -806,16 +809,8 @@ fn ground_truth_phoneme_variants(
 
     // These word-by-word dictionary combinations have no phrase prosody.
     let mut candidates: Vec<g2p::Phonemized> = candidates
-        .drain(..)
-        .map(|words| {
-            g2p::Phonemized::from_ipa_tokens(
-                &words
-                    .iter()
-                    .map(|w| w.join(" "))
-                    .collect::<Vec<_>>()
-                    .join(" | "),
-            )
-        })
+        .into_iter()
+        .map(g2p::Phonemized::from_words)
         .collect();
 
     // Add the phrase-level g2p variant in the model's own label space, for
@@ -832,22 +827,7 @@ fn ground_truth_phoneme_variants(
         match target {
             Ok(phonemized) => {
                 let flat = comparable(&phonemized, language);
-                if flat.is_empty() {
-                    continue;
-                }
-                if let Some(existing) = candidates
-                    .iter_mut()
-                    .find(|c| comparable(c, language) == flat)
-                {
-                    // Keep phrase prosody when the tokenization and word boundaries
-                    // agree. Otherwise preserve the earlier dictionary reading's
-                    // boundaries, which the missing-word gate depends on.
-                    if existing.phonemes == phonemized.phonemes
-                        && existing.word_spans == phonemized.word_spans
-                    {
-                        *existing = phonemized;
-                    }
-                } else {
+                if !flat.is_empty() && !candidates.iter().any(|c| comparable(c, language) == flat) {
                     candidates.push(phonemized);
                 }
             }
@@ -867,11 +847,21 @@ fn ground_truth_phoneme_variants(
     }
 }
 
-fn comparable(target: &g2p::Phonemized, language: Language) -> Vec<String> {
+fn import_ipa(ipa: &str) -> Option<g2p::Phonemized> {
+    match g2p::Phonemized::from_ipa_tokens(ipa) {
+        Ok(target) => Some(target),
+        Err(error) => {
+            log::warn!("cannot import pronunciation {ipa:?}: {error}");
+            None
+        }
+    }
+}
+
+fn comparable(target: &g2p::Phonemized, language: Language) -> Vec<Phoneme> {
     target
         .phonemes
         .iter()
-        .flat_map(|p| normalize_phonemes(p, language))
+        .flat_map(|p| normalize_phonemes(*p, language))
         .collect()
 }
 
@@ -885,14 +875,14 @@ fn spanish_dialect_target(
         .then(|| g2p::phonemize(g2p::Language::SpanishLatinAmerica, text))
 }
 
-fn add_spanish_dialect_word(text: &str, language: Language, variants: &mut Vec<Vec<String>>) {
+fn add_spanish_dialect_word(text: &str, language: Language, variants: &mut Vec<Vec<Phoneme>>) {
     if let Some(Ok(target)) = spanish_dialect_target(text, language) {
         let phones = target.phonemes;
         if !phones.is_empty()
             && !variants.iter().any(|v| {
                 v.iter()
-                    .flat_map(|p| normalize_phonemes(p, language))
-                    .eq(phones.iter().flat_map(|p| normalize_phonemes(p, language)))
+                    .flat_map(|p| normalize_phonemes(*p, language))
+                    .eq(phones.iter().flat_map(|p| normalize_phonemes(*p, language)))
             })
         {
             variants.push(phones);
@@ -1286,7 +1276,9 @@ mod tests {
         assert!(
             expected_phoneme_variants(&ctx, "test", None)
                 .unwrap()
-                .contains(&expected[0])
+                .iter()
+                .any(|candidate| candidate.phonemes == expected[0].phonemes
+                    && candidate.word_spans == expected[0].word_spans)
         );
         // Invalid bytes intentionally bypass ffmpeg's defect gate; both model
         // payloads below are cached, so there is no inference/network request.
@@ -1982,13 +1974,13 @@ mod tests {
         text: &str,
         wp: &HashMap<String, language_utils::Pronunciations>,
         language: Language,
-    ) -> Option<Vec<Vec<String>>> {
+    ) -> Option<Vec<Vec<Phoneme>>> {
         ground_truth_phoneme_variants(text, wp, language)
             .map(|readings| readings.iter().map(|r| comparable(r, language)).collect())
     }
 
-    fn word(phonemes: &[&str]) -> Vec<String> {
-        phonemes.iter().map(|p| p.to_string()).collect()
+    fn word(phonemes: &[&str]) -> Vec<Phoneme> {
+        phonemes.iter().map(|p| p.parse().unwrap()).collect()
     }
 
     #[test]
@@ -2027,7 +2019,7 @@ mod tests {
         assert_eq!(variants.len(), 1);
         assert_eq!(
             variants[0],
-            vec!["b", "ɔ̃", "ʒ", "u", "ʁ", "m", "a", "d", "a", "m"]
+            word(&["b", "ɔ̃", "ʒ", "u", "ʁ", "m", "a", "d", "a", "m"])
         );
     }
 
@@ -2040,8 +2032,8 @@ mod tests {
         wp.insert("mes".to_string(), ap("m e", &["m ɛ"]));
         let variants = flat_variants("mes", &wp, Language::ChineseTraditional).unwrap();
         assert_eq!(variants.len(), 2);
-        assert!(variants.contains(&vec!["m".to_string(), "e".to_string()]));
-        assert!(variants.contains(&vec!["m".to_string(), "ɛ".to_string()]));
+        assert!(variants.contains(&word(&["m", "e"])));
+        assert!(variants.contains(&word(&["m", "ɛ"])));
     }
 
     #[test]
@@ -2068,12 +2060,12 @@ mod tests {
         let mut wp = HashMap::new();
         wp.insert("cognac".to_string(), ap("k ɔ ɲ a k", &["k o ɲ a k"]));
         let variants = flat_variants("Cyrano cognac", &wp, Language::French).unwrap();
-        let cyrano = ["s", "i", "ʁ", "a", "n", "o"].map(str::to_string);
+        let cyrano = ["s", "i", "ʁ", "a", "n", "o"].map(|s| s.parse::<Phoneme>().unwrap());
         for accepted in [
-            ["k", "ɔ", "ɲ", "a", "k"].map(str::to_string),
-            ["k", "o", "ɲ", "a", "k"].map(str::to_string),
+            ["k", "ɔ", "ɲ", "a", "k"].map(|s| s.parse::<Phoneme>().unwrap()),
+            ["k", "o", "ɲ", "a", "k"].map(|s| s.parse::<Phoneme>().unwrap()),
         ] {
-            let expected: Vec<String> = cyrano.iter().chain(accepted.iter()).cloned().collect();
+            let expected: Vec<Phoneme> = cyrano.iter().chain(accepted.iter()).cloned().collect();
             assert!(
                 variants.contains(&expected),
                 "missing {expected:?} in {variants:?}"
@@ -2085,7 +2077,7 @@ mod tests {
     fn ground_truth_caps_combinations_preserving_earlier_alternates() {
         // Traditional Mandarin isolates the dictionary path. 2^100 would overflow usize;
         // both phrases must instead keep the same bounded prefix choices.
-        let wp = HashMap::from([("a".to_string(), ap("X", &["Y"]))]);
+        let wp = HashMap::from([("a".to_string(), ap("ʘ", &["ǀ"]))]);
         for count in [5, 100] {
             let text = vec!["a"; count].join(" ");
             let variants = flat_variants(&text, &wp, Language::ChineseTraditional).unwrap();
@@ -2094,13 +2086,13 @@ mod tests {
                 let expected: Vec<&str> = (0..count)
                     .map(|position| {
                         if position < 4 && index & (1 << position) != 0 {
-                            "Y"
+                            "ǀ"
                         } else {
-                            "X"
+                            "ʘ"
                         }
                     })
                     .collect();
-                assert_eq!(*variant, expected);
+                assert_eq!(*variant, word(&expected));
             }
             assert_eq!(
                 variants,
@@ -2221,7 +2213,7 @@ mod tests {
                     .unwrap()
                     .unwrap()
                     .phonemes,
-                expected
+                word(&expected)
             );
         }
     }
@@ -2239,8 +2231,14 @@ mod tests {
                 .phonemes,
             word(&["θ", "i", "n", "k", "o"])
         );
-        assert_eq!(normalize_phonemes("θ", Language::Spanish), word(&["θ"]));
-        assert_eq!(normalize_phonemes("s", Language::Spanish), word(&["s"]));
+        assert_eq!(
+            normalize_phonemes(Phoneme::Theta, Language::Spanish),
+            word(&["θ"])
+        );
+        assert_eq!(
+            normalize_phonemes(Phoneme::S, Language::Spanish),
+            word(&["s"])
+        );
         let empty = HashMap::new();
         let variants = flat_variants("cinco", &empty, Language::Spanish).unwrap();
         assert_eq!(
@@ -2252,7 +2250,7 @@ mod tests {
         );
         // Latin American per-word g2p also combines with dictionary-only
         // pronunciations, not merely a whole-phrase fallback.
-        let mut wp = HashMap::from([("nombre".to_string(), ap("X", &[]))]);
+        let mut wp = HashMap::from([("nombre".to_string(), ap("ʘ", &[]))]);
         for dictionary_cinco in [false, true] {
             if dictionary_cinco {
                 wp.insert("cinco".to_string(), ap("θ i n k o", &[]));
@@ -2262,7 +2260,7 @@ mod tests {
             assert!(
                 readings
                     .iter()
-                    .any(|r| r.phonemes == word(&["s", "i", "n", "k", "o", "X"])
+                    .any(|r| r.phonemes == word(&["s", "i", "n", "k", "o", "ʘ"])
                         && r.word_spans == [(0, 5), (5, 6)])
             );
         }
@@ -2287,16 +2285,16 @@ mod tests {
         for text in ["क्", "क़", "क्ष", "हिंदी", "क्\u{200d}ष"] {
             // A dictionary sentinel proves lookup sees the entire grapheme,
             // while an empty dictionary exercises g2p on the intact word.
-            let wp = HashMap::from([(text.to_string(), ap("X", &[]))]);
+            let wp = HashMap::from([(text.to_string(), ap("ʘ", &[]))]);
             let readings =
                 ground_truth_phoneme_variants(&format!("‘{text}।’"), &wp, Language::Hindi).unwrap();
-            assert_eq!(readings[0].phonemes, word(&["X"]));
-            let expected: Vec<String> = model_target(text, Language::Hindi)
+            assert_eq!(readings[0].phonemes, word(&["ʘ"]));
+            let expected: Vec<Phoneme> = model_target(text, Language::Hindi)
                 .unwrap()
                 .unwrap()
                 .phonemes
                 .iter()
-                .flat_map(|p| normalize_phonemes(p, Language::Hindi))
+                .flat_map(|p| normalize_phonemes(*p, Language::Hindi))
                 .collect();
             let readings =
                 ground_truth_phoneme_variants(text, &HashMap::new(), Language::Hindi).unwrap();
@@ -2326,7 +2324,7 @@ mod tests {
         // Must include the espeak liaison candidate that the per-word
         // cross-product can't reach.
         assert!(
-            variants.contains(&vec!["ɔ̃".to_string(), "n".to_string(), "ɛ".to_string()]),
+            variants.contains(&word(&["ɔ̃", "n", "ɛ"])),
             "expected espeak liaison candidate /ɔ̃ n ɛ/ in candidates: {variants:?}"
         );
     }
@@ -2348,7 +2346,7 @@ mod tests {
                 .unwrap()
                 .phonemes
                 .iter()
-                .flat_map(|p| normalize_phonemes(p, Language::French))
+                .flat_map(|p| normalize_phonemes(*p, Language::French))
                 .collect::<Vec<_>>()
                 .join(" ")
         };
@@ -2371,7 +2369,7 @@ mod tests {
             .expect("hindi chain runs");
         assert_eq!(
             target.phonemes,
-            ["j", "eː", "ʃ", "ɛː", "ɦ", "ɛː", "ɾ", "ɡ", "j", "aː", "n"]
+            word(&["j", "eː", "ʃ", "ɛː", "ɦ", "ɛː", "ɾ", "ɡ", "j", "aː", "n"])
         );
         assert_eq!(target.word_spans, [(0, 2), (2, 7), (7, 11)]);
         // Refuse targets with holes where the recording still contains speech.
@@ -2408,7 +2406,7 @@ mod tests {
             .expect("Japanese is g2p-labeled")
             .expect("japanese chain runs");
         // Sokuon becomes length on the following obstruent, not a token.
-        assert_eq!(target.phonemes, ["ɡ", "a", "kː", "o", "o"]);
+        assert_eq!(target.phonemes, word(&["ɡ", "a", "kː", "o", "o"]));
         assert!(target.pitch.iter().flatten().count() > 0);
     }
 
@@ -2417,7 +2415,7 @@ mod tests {
         let target = model_target("你好", Language::ChineseSimplified)
             .expect("Mandarin is g2p-labeled")
             .expect("mandarin chain runs");
-        assert_eq!(target.phonemes, ["n", "i", "x", "au̯"]);
+        assert_eq!(target.phonemes, word(&["n", "i", "x", "au̯"]));
         assert_eq!(target.tone, [None, Some(3), None, Some(3)]);
         // Digits would be spoken but unlabeled: refused, not silently cut.
         assert!(matches!(
@@ -2438,7 +2436,7 @@ mod letter_name_tests {
             .unwrap()
             .phonemes
             .iter()
-            .flat_map(|p| normalize_phonemes(p, language))
+            .flat_map(|p| normalize_phonemes(*p, language))
             .collect::<Vec<_>>()
             .join(" ")
     }
@@ -2464,7 +2462,7 @@ mod letter_name_tests {
             let phones = target
                 .phonemes
                 .iter()
-                .flat_map(|p| normalize_phonemes(p, language))
+                .flat_map(|p| normalize_phonemes(*p, language))
                 .collect::<Vec<_>>()
                 .join(" ");
             assert_eq!(phones, expected, "{language:?} {pattern}");
