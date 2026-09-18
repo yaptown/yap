@@ -290,7 +290,16 @@ async function checkBrowserSupport(
   setBrowserSupported: (browserSupported: boolean) => void,
 ) {
   try {
-    const opfsTestPassed = localStorage.getItem("opfs-test-passed");
+    // Some browsers (e.g. certain locked-down WebViews) expose no
+    // localStorage at all rather than throwing on access, so a bare read
+    // can throw "Cannot read properties of null". That's just a cache miss,
+    // not a reason to mark an otherwise-capable browser unsupported.
+    let opfsTestPassed: string | null = null;
+    try {
+      opfsTestPassed = localStorage.getItem("opfs-test-passed");
+    } catch (error) {
+      console.warn("Could not read cached OPFS test result:", error);
+    }
 
     // Reject browsers that don't support WebAssembly reference types
     // (externref). Our WASM module uses externref, so it can't compile on
@@ -332,7 +341,11 @@ async function checkBrowserSupport(
 
       if (isSupported) {
         // Store successful test result
-        localStorage.setItem("opfs-test-passed", "true");
+        try {
+          localStorage.setItem("opfs-test-passed", "true");
+        } catch (error) {
+          console.warn("Could not cache OPFS test result:", error);
+        }
       }
     }
   } catch (error) {

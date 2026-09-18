@@ -248,6 +248,16 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
                     .post(&upload_url)
                     .header("apikey", supabase_anon_key)
                     .header("Authorization", format!("Bearer {access_token}"))
+                    // A concurrent sync (another tab, or a retry racing the
+                    // clock refresh) can already have uploaded some of these
+                    // events. Without this, Postgres rejects the whole batch
+                    // atomically on the first row that collides with
+                    // `events_unique_stream_device_index`, so events in the
+                    // same batch that were genuinely new never get uploaded
+                    // either. This only skips inserting rows that already
+                    // exist under that identity — it never updates one, so
+                    // the append-only/no-mutation invariant still holds.
+                    .header("Prefer", "resolution=ignore-duplicates")
                     .json(&events_to_upload)
                     .map_err(|e| SyncError::new(format!("{e:?}")))?
                     .send()
