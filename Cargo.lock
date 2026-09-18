@@ -3386,7 +3386,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 [[package]]
 name = "lexide"
 version = "0.3.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=bf6a1cdd1520fbb761a99592ce57cdb4a625ae9f#bf6a1cdd1520fbb761a99592ce57cdb4a625ae9f"
+source = "git+https://github.com/anchpop/lexide.git?rev=2138dcbd54a9d750466afc30dbd88ac07c2e706e#2138dcbd54a9d750466afc30dbd88ac07c2e706e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3406,6 +3406,7 @@ dependencies = [
  "serde_plain",
  "tokio",
  "unicode-normalization",
+ "xxhash-rust",
 ]
 
 [[package]]

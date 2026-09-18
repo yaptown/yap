@@ -517,11 +517,11 @@ pub fn read_file(path: &Path) -> Result<(Provenance, Vec<Clip>)> {
 /// Writer/reader contract across mapper and export, in different runs: the
 /// original cut's WAV hash and exact G2P labels. Producer versions never key it.
 pub fn clip_key(audio_hash: u64, phonemes: &[String]) -> String {
-    let inputs = serde_json::to_vec(&(audio_hash, phonemes)).expect("clip key is serializable");
-    format!(
-        "phoneme-response/clip/{:016x}",
-        xxhash_rust::xxh3::xxh3_64(&inputs)
-    )
+    phoneme_verify::audio_cache_key(audio_hash, Some(&phoneme_cache_context(phonemes)))
+}
+
+fn phoneme_cache_context(phonemes: &[String]) -> String {
+    serde_json::to_string(phonemes).expect("phonemes are serializable")
 }
 
 /// Read clips with format validation.
@@ -1400,7 +1400,7 @@ fn save_cut(dir: &Path, wav: &[u8]) -> Result<tempfile::TempPath> {
 }
 
 struct AudioCut {
-    key: String,
+    cache_context: String,
     wav: tempfile::TempPath,
     duration_ms: i64,
 }
@@ -1443,10 +1443,7 @@ async fn map_staged<S: futures::Stream<Item = ((usize, usize), Result<FrameMatri
                 pending.push((
                     (film_index, descriptor.index),
                     AudioCut {
-                        key: clip_key(
-                            clip.audio_hash.expect("cut recorded its hash"),
-                            &clip.target_ipa,
-                        ),
+                        cache_context: phoneme_cache_context(&clip.target_ipa),
                         wav: descriptor.wav,
                         duration_ms: clip.end_ms + clip.pad_after_ms
                             - (clip.start_ms - clip.pad_before_ms).max(0),
@@ -1578,7 +1575,7 @@ pub async fn clips_all(
             let clips = pending
                 .into_iter()
                 .map(|(id, cut)| phoneme_verify::AudioClip {
-                    cache_key: Some(cut.key.clone()),
+                    cache_context: Some(cut.cache_context.clone()),
                     duration: std::time::Duration::from_millis(cut.duration_ms.max(0) as u64),
                     audio: phoneme_verify::AudioInput::File(cut.wav.to_path_buf()),
                     // Keep the temporary file alive until its response is handled.

@@ -65,7 +65,7 @@ pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonem
 /// One lossless per-clip artifact: untouched selected item and every raw batch
 /// envelope value, never sibling matrices. Typed views are derived on read.
 pub use lexide::pronunciation::RawPrediction;
-pub use lexide::pronunciation::remote::{AudioClip, AudioInput};
+pub use lexide::pronunciation::remote::{AudioClip, AudioInput, audio_cache_key};
 
 use lexide::pronunciation::remote::response_identity;
 
@@ -162,11 +162,8 @@ pub struct VerifyContext<'a> {
     /// Shared response store. Keys default to original WAV content, independent
     /// of the producing model or G2P version.
     store: osmo::Store,
-    /// A caller may key a clip structurally instead of by WAV hash. Holding a
-    /// producer constant while varying content calls for content keys (corpus:
-    /// WAV hash plus labels). The minority deliberately varying producers (model
-    /// comparisons/evaluations) must include full model identity plus audio.
-    cache_key: Option<std::sync::Arc<dyn Fn(u64) -> String + Send + Sync>>,
+    /// Optional extra cache identity. Lexide always hashes the audio itself.
+    cache_context: Option<String>,
     client: PhonemizerClient,
     /// word (lowercase) → accepted IPA pronunciations (main + alternates).
     /// The verifier passes a clip if the model's prediction is within
@@ -186,17 +183,15 @@ pub struct VerifyContext<'a> {
 }
 
 impl<'a> VerifyContext<'a> {
-    /// Supply a per-clip complete cache-key builder. Default keys use WAV hash;
-    /// corpus callers add exact labels, model-varying evaluations use key_by_model.
-    pub fn with_cache_key(mut self, key: impl Fn(u64) -> String + Send + Sync + 'static) -> Self {
-        self.cache_key = Some(std::sync::Arc::new(key));
+    /// Add expected labels or another discriminator to lexide's audio identity.
+    pub fn with_cache_context(mut self, context: impl Into<String>) -> Self {
+        self.cache_context = Some(context.into());
         self
     }
 
+    #[cfg(test)]
     fn response_key(&self, hash: u64) -> String {
-        self.cache_key
-            .as_ref()
-            .map_or_else(|| format!("phoneme-response/{hash:016x}"), |key| key(hash))
+        lexide::pronunciation::remote::audio_cache_key(hash, self.cache_context.as_deref())
     }
 
     /// Model-varying evaluations are deliberately not production content keys.
@@ -209,12 +204,7 @@ impl<'a> VerifyContext<'a> {
             &identity.decoder_version,
         ))
         .expect("model identity is serializable");
-        self.cache_key = Some(std::sync::Arc::new(move |hash| {
-            format!(
-                "phoneme-response/model/{:016x}/{hash:016x}",
-                xxh3_64(model.as_bytes())
-            )
-        }));
+        self.cache_context = Some(format!("model:{model}"));
     }
 
     /// Production constructor: discover the live identity lazily on a cache miss.
@@ -292,7 +282,7 @@ impl<'a> VerifyContext<'a> {
         Ok(Self {
             http,
             store,
-            cache_key: None,
+            cache_context: None,
             client,
             word_to_pronunciation,
             mismatch_threshold,
@@ -544,10 +534,12 @@ async fn prediction_response(
     ctx: &VerifyContext<'_>,
     wav: &[u8],
 ) -> Result<(ModalResponse, FrameMatrix)> {
-    let key = ctx.response_key(xxh3_64(wav));
     let raw = ctx
         .client
-        .predict_audio(AudioInput::Bytes(wav.to_vec()), Some(&key))
+        .predict_audio(
+            AudioInput::Bytes(wav.to_vec()),
+            ctx.cache_context.as_deref(),
+        )
         .await?;
     Ok((raw.decode()?, raw.frames()?))
 }
@@ -629,7 +621,7 @@ async fn infer_frame_batch_at(
                         .into_iter()
                         .enumerate()
                         .map(|(id, request)| AudioClip {
-                            cache_key: None,
+                            cache_context: None,
                             id,
                             duration: std::time::Duration::ZERO,
                             audio: AudioInput::Request(request),
@@ -1903,7 +1895,7 @@ mod tests {
         ctx.client = wav2vec2::batch_client(http.clone())
             .unwrap()
             .with_cache(ctx.store.clone());
-        ctx = ctx.with_cache_key(|hash| format!("caller/{hash:016x}"));
+        ctx = ctx.with_cache_context("caller");
         assert!(
             cached_frame_matrix(&ctx.store, &ctx.response_key(hash))
                 .await
