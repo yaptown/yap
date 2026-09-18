@@ -131,7 +131,10 @@ export function useOneSignalNotifications() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error("Must be logged in to subscribe");
+        // Reachable from onboarding, which runs before an account exists —
+        // not an error, just nothing to subscribe yet.
+        console.warn("Skipping notification subscribe: not logged in");
+        return;
       }
 
       const accepted = await window.OneSignal.Notifications.requestPermission();

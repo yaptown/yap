@@ -260,7 +260,19 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
                         .text()
                         .await
                         .unwrap_or_else(|_| "Unknown error".to_string());
-                    log::error!("Failed to upload events: {status} - {error_body}");
+                    // A duplicate-key conflict on this constraint means a previous
+                    // attempt already wrote these events server-side (e.g. the
+                    // upload succeeded but the response was lost before the local
+                    // clock refreshed); it's a benign re-send, not a failure.
+                    if status == 409
+                        && error_body.contains("23505")
+                        && error_body.contains("events_unique_stream_device_index")
+                    {
+                        log::info!("Events already uploaded (duplicate key), treating as success");
+                        sync_result.uploaded_to_supabase += events_to_upload.len();
+                    } else {
+                        log::error!("Failed to upload events: {status} - {error_body}");
+                    }
                 } else {
                     log::info!("Successfully uploaded events");
                     sync_result.uploaded_to_supabase += events_to_upload.len();
