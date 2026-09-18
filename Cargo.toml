@@ -81,7 +81,7 @@ wasm-logger = "0.2.0"
 unicode-normalization = "0.1.25"
 # Shared browser/native named locks.
 weblocks = { git = "https://github.com/anchpop/weblocks", rev = "b4e7db5af829e357ab67407609e1fb896ee30cde" }
-lexide = { git = "https://github.com/anchpop/lexide.git", rev = "d71a02faefa477a53cf0f1923566330299c26b53", default-features = false }
+lexide = { git = "https://github.com/anchpop/lexide.git", rev = "2138dcbd54a9d750466afc30dbd88ac07c2e706e", default-features = false }
 indicatif = "0.18"
 
 [workspace.dependencies.rkyv]

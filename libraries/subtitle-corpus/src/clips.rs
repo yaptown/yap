@@ -43,7 +43,7 @@ use language_utils::Language;
 use movie_subtitles::segment::SubtitleSegmenter;
 use movie_subtitles::sentences::KeyedSentence;
 use movie_subtitles::{cleanup_subtitle_text, SubtitleLine};
-use phoneme_verify::{FrameMatrix, VerifyContext};
+use phoneme_verify::FrameMatrix;
 use serde::{Deserialize, Serialize};
 
 use crate::cues::{
@@ -517,11 +517,11 @@ pub fn read_file(path: &Path) -> Result<(Provenance, Vec<Clip>)> {
 /// Writer/reader contract across mapper and export, in different runs: the
 /// original cut's WAV hash and exact G2P labels. Producer versions never key it.
 pub fn clip_key(audio_hash: u64, phonemes: &[String]) -> String {
-    let inputs = serde_json::to_vec(&(audio_hash, phonemes)).expect("clip key is serializable");
-    format!(
-        "phoneme-response/clip/{:016x}",
-        xxhash_rust::xxh3::xxh3_64(&inputs)
-    )
+    phoneme_verify::audio_cache_key(audio_hash, Some(&phoneme_cache_context(phonemes)))
+}
+
+fn phoneme_cache_context(phonemes: &[String]) -> String {
+    serde_json::to_string(phonemes).expect("phonemes are serializable")
 }
 
 /// Read clips with format validation.
@@ -928,7 +928,6 @@ struct PendingClip {
 
 struct PreparedFilm {
     dir: PathBuf,
-    language: Language,
     provenance: Provenance,
     summary: FilmSummary,
     // Stable slots until all descriptors have resolved; failures leave holes.
@@ -1282,7 +1281,6 @@ async fn prepare_film(
     }
     Ok(FilmWork::Prepared(Box::new(PreparedFilm {
         dir: dir.to_owned(),
-        language,
         provenance,
         summary,
         clips,
@@ -1402,10 +1400,8 @@ fn save_cut(dir: &Path, wav: &[u8]) -> Result<tempfile::TempPath> {
 }
 
 struct AudioCut {
-    hash: u64,
-    key: String,
+    cache_context: String,
     wav: tempfile::TempPath,
-    language: Language,
     duration_ms: i64,
 }
 
@@ -1447,13 +1443,8 @@ async fn map_staged<S: futures::Stream<Item = ((usize, usize), Result<FrameMatri
                 pending.push((
                     (film_index, descriptor.index),
                     AudioCut {
-                        hash: clip.audio_hash.expect("cut recorded its hash"),
-                        key: clip_key(
-                            clip.audio_hash.expect("cut recorded its hash"),
-                            &clip.target_ipa,
-                        ),
+                        cache_context: phoneme_cache_context(&clip.target_ipa),
                         wav: descriptor.wav,
-                        language: film.language,
                         duration_ms: clip.end_ms + clip.pad_after_ms
                             - (clip.start_ms - clip.pad_before_ms).max(0),
                     },
@@ -1548,7 +1539,6 @@ pub async fn clips_all(
     let http = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
         .build()?;
-    let empty = std::collections::HashMap::new();
     let mut discovered = 0;
     let preparation = futures::stream::iter(queue.iter().enumerate())
         .map(|(index, movie)| {
@@ -1568,33 +1558,33 @@ pub async fn clips_all(
                 println!("discovery: {discovered}/{total} films prepared");
             }
         });
-    let client = phoneme_verify::wav2vec2::batch_client(http.clone())?;
+    let mut client = phoneme_verify::wav2vec2::batch_client(http)?
+        .with_cache(store.clone())
+        .with_identity_check();
+    if let Ok(marker) = std::env::var("WAV2VEC2_EXPECTED_DEPLOY_MARKER") {
+        if !marker.is_empty() {
+            client = client.with_expected_deploy_marker(marker);
+        }
+    }
+    if phoneme_verify::cache_only() {
+        client = client.with_cached_only();
+    }
     let films = map_staged(
         preparation,
         |pending| {
             let clips = pending
                 .into_iter()
                 .map(|(id, cut)| phoneme_verify::AudioClip {
+                    cache_context: Some(cut.cache_context.clone()),
                     duration: std::time::Duration::from_millis(cut.duration_ms.max(0) as u64),
                     audio: phoneme_verify::AudioInput::File(cut.wav.to_path_buf()),
                     // Keep the temporary file alive until its response is handled.
                     id: (id, cut),
                 })
                 .collect();
-            client.predict_many(clips).then(|((id, cut), response)| {
-                let http = &http;
-                let store = &store;
-                let empty = &empty;
-                async move {
-                    let frames = async {
-                        let ctx = VerifyContext::new(http, store.clone(), empty, cut.language)?
-                            .with_cache_key(move |_| cut.key.clone());
-                        phoneme_verify::cache_frame_response(&ctx, cut.hash, response?).await
-                    }
-                    .await;
-                    (id, frames)
-                }
-            })
+            client
+                .predict_many(clips)
+                .map(|((id, _cut), response)| (id, response.and_then(|raw| raw.frames())))
         },
         &gate,
     )

@@ -1241,26 +1241,23 @@ async fn generate_pronunciation_feedback(
                 eprintln!("Failed to decode audio: {e}");
                 StatusCode::BAD_REQUEST
             })?;
-        Ok::<PredictRequest, StatusCode>(
-            wav2vec2::Clip {
-                samples: &samples,
-                sample_rate,
-                top_k: 5,
-            }
-            .into_request(),
-        )
+        Ok::<PredictRequest, StatusCode>(lexide::pronunciation::remote::request_from_samples(
+            &samples,
+            sample_rate,
+            5,
+        ))
     });
     let (user, reference) = (user?, reference?);
     let client: PhonemizerClient = wav2vec2::batch_client(http).map_err(|e| {
         eprintln!("Invalid Modal endpoint: {e}");
         StatusCode::BAD_GATEWAY
     })?;
-    let predictions = wav2vec2::predict_batch(&client, &[user, reference], None)
-        .await
-        .map_err(|e| {
-            eprintln!("Modal request failed: {e}");
-            StatusCode::BAD_GATEWAY
-        })?
+    use lexide::pronunciation::remote::AudioInput;
+    let (user, reference) = tokio::join!(
+        client.predict_audio(AudioInput::Request(user), None),
+        client.predict_audio(AudioInput::Request(reference), None),
+    );
+    let predictions = [user, reference]
         .into_iter()
         .map(|response| response.and_then(|raw| raw.decode()))
         .collect::<Result<Vec<_>, _>>()
