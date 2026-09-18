@@ -52,7 +52,8 @@ fn cached_split_mass_uses_shared_nonblank_first_decode() {
             },
         ]
     );
-    let score: TargetScore = matrix.score_target(&["a".into(), "a".into()]);
+    let score: TargetScore =
+        matrix.score_target(&lexide::pronunciation::Phonemized::from_ipa_tokens("a a"));
     assert_eq!(score.ratio, Some(0.0));
     assert_eq!(score.free_len, 2);
     assert_eq!(score.target_len, 2);

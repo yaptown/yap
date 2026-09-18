@@ -1313,7 +1313,10 @@ fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate
     clip.lead_speech = frames.speech_fraction(0, lead_frames);
     clip.tail_speech =
         frames.speech_fraction(frames.frames.saturating_sub(tail_frames), frames.frames);
-    let score = frames.score_target(&clip.target_ipa);
+    let score = frames.score_target(&g2p::Phonemized {
+        phonemes: clip.target_ipa.clone(),
+        ..Default::default()
+    });
     clip.heard_ipa = frames
         .greedy_ids()
         .into_iter()
