@@ -41,9 +41,9 @@ const LANGS: [(&str, &str, Option<Language>); 11] = [
     ("ita", "Italian", Some(Language::Italian)),
     ("jpn", "Japanese", Some(Language::Japanese)),
     ("kor", "Korean", Some(Language::Korean)),
-    ("por", "Portuguese", Some(Language::Portuguese)),
+    ("por", "Portuguese", Some(Language::PortugueseBrazil)),
     ("rus", "Russian", Some(Language::Russian)),
-    ("spa", "Spanish", Some(Language::Spanish)),
+    ("spa", "Spanish", Some(Language::SpanishEuro)),
     ("zho-hans", "Simplified Chinese", None),
 ];
 

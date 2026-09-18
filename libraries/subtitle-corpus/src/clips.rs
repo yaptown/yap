@@ -1402,6 +1402,7 @@ fn save_cut(dir: &Path, wav: &[u8]) -> Result<tempfile::TempPath> {
 }
 
 struct AudioCut {
+    hash: u64,
     key: String,
     wav: tempfile::TempPath,
     language: Language,
@@ -1427,17 +1428,10 @@ fn apply_frames(film: &mut PreparedFilm, index: usize, frames: Result<FrameMatri
     }
 }
 
-/// Keep a second full request queued remotely while the first runs, hiding
-/// round-trip/response gaps even with one server container. This is a bounded
-/// starting point, not a measured optimum.
-const INFERENCE_REQUESTS_IN_FLIGHT: usize = 2;
-
-/// The actual mapper scheduler, with I/O injected so its barrier, compaction,
-/// and routing can be exercised without film audio or a live endpoint.
-async fn map_staged<P>(
+/// Finish corpus discovery before handing all uncached file paths to lexide.
+async fn map_staged<S: futures::Stream<Item = ((usize, usize), Result<FrameMatrix>)>>(
     preparation: impl futures::Stream<Item = (usize, Result<FilmWork>)>,
-    prepare_request: impl AsyncFn(&AudioCut) -> Result<P>,
-    infer: impl AsyncFn(Vec<P>) -> Vec<Result<FrameMatrix>>,
+    infer: impl FnOnce(Vec<((usize, usize), AudioCut)>) -> S,
     gate: &Gate,
 ) -> Vec<(usize, Result<FilmWork>)> {
     // Deliberate barrier: finish discovery over the entire selection first.
@@ -1451,9 +1445,9 @@ async fn map_staged<P>(
                     .as_ref()
                     .expect("pending clip has a slot");
                 pending.push((
-                    film_index,
-                    descriptor.index,
+                    (film_index, descriptor.index),
                     AudioCut {
+                        hash: clip.audio_hash.expect("cut recorded its hash"),
                         key: clip_key(
                             clip.audio_hash.expect("cut recorded its hash"),
                             &clip.target_ipa,
@@ -1472,82 +1466,31 @@ async fn map_staged<P>(
         pending.len(),
         films.len()
     );
-    // 64 is the chosen HTTP cap, not measured GPU capacity. The endpoint
-    // groups only within a request (up to 8 clips, length ratio <= 1.25;
-    // group-norm checkpoints use single-clip forwards).
-    // Nearby durations help fill those forwards and reduce padding within
-    // each group, where every clip is padded to its longest neighbor.
-    // Different padding groups may cause tiny
-    // numerical differences; result slots, targets and gates remain unchanged.
-    pending.sort_by_key(|(_, _, cut)| cut.duration_ms);
-    let mut prepared = Box::pin(
-        futures::stream::iter(pending)
-            .map(|(film, clip, cut)| {
-                let prepare_request = &prepare_request;
-                async move { (film, clip, prepare_request(&cut).await) }
-            })
-            .buffered(8),
-    );
-    let mut in_flight = futures::stream::FuturesUnordered::new();
-    let mut requests = Vec::new();
-    let mut slots = Vec::new();
-    let mut preparation_done = false;
-    loop {
-        if !requests.is_empty()
-            && (requests.len() == phoneme_verify::MODAL_BATCH_SIZE || preparation_done)
-            && in_flight.len() < INFERENCE_REQUESTS_IN_FLIGHT
-        {
-            let requests = std::mem::take(&mut requests);
-            let slots = std::mem::take(&mut slots);
-            let infer = &infer;
-            in_flight.push(async move { (slots, infer(requests).await) });
+    if phoneme_verify::cache_only() {
+        for ((film_index, clip_index), _) in pending {
+            let Ok(FilmWork::Prepared(film)) = &mut films[film_index].1 else {
+                unreachable!()
+            };
+            apply_frames(
+                film,
+                clip_index,
+                Err(anyhow::anyhow!(
+                    "frame-matrix cache miss; cache-only mode is enabled"
+                )),
+                gate,
+            );
         }
-        if preparation_done && requests.is_empty() && in_flight.is_empty() {
-            break;
-        }
-        // At most two inference jobs, one ready/partial next batch, and eight
-        // local preparations. No future borrows film slots, so completions and
-        // cache/error outcomes can be applied immediately in either order.
-        tokio::select! {
-            prepared = prepared.next(), if !preparation_done && requests.len() < phoneme_verify::MODAL_BATCH_SIZE => {
-                let Some((film_index, clip_index, prepared)) = prepared else {
-                    preparation_done = true;
-                    continue;
-                };
-                let Ok(FilmWork::Prepared(film)) = &mut films[film_index].1 else { unreachable!() };
-                match prepared {
-                    Ok(request) => {
-                        requests.push(request);
-                        slots.push((film_index, clip_index));
-                    }
-                    Err(error) => apply_frames(film, clip_index, Err(error), gate),
-                }
-            }
-            result = in_flight.next(), if !in_flight.is_empty() => {
-                let (slots, results) = result.expect("an inference job was in flight");
-                assert_eq!(results.len(), slots.len(), "one result per prepared request");
-                for ((film_index, clip_index), frames) in slots.into_iter().zip(results) {
-                    let Ok(FilmWork::Prepared(film)) = &mut films[film_index].1 else { unreachable!() };
-                    apply_frames(film, clip_index, frames, gate);
-                }
-            }
+    } else if !pending.is_empty() {
+        let results = infer(pending);
+        futures::pin_mut!(results);
+        while let Some(((film_index, clip_index), frames)) = results.next().await {
+            let Ok(FilmWork::Prepared(film)) = &mut films[film_index].1 else {
+                unreachable!()
+            };
+            apply_frames(film, clip_index, frames, gate);
         }
     }
     films
-}
-
-async fn prepare_pending<'a>(
-    http: &'a reqwest::Client,
-    store: &osmo::Store,
-    empty: &'a std::collections::HashMap<String, language_utils::Pronunciations>,
-    cut: &AudioCut,
-) -> Result<(VerifyContext<'a>, phoneme_verify::PreparedFrameRequest)> {
-    let wav = tokio::fs::read(&cut.wav).await.context("read saved cut")?;
-    let request = phoneme_verify::prepare_frame_request(wav).await?;
-    let key = cut.key.clone();
-    let ctx = VerifyContext::new(http, store.clone(), empty, cut.language)?
-        .with_cache_key(move |_| key.clone());
-    Ok((ctx, request))
 }
 
 /// Map every transcribed film (or the ones selected), skipping films whose
@@ -1625,12 +1568,33 @@ pub async fn clips_all(
                 println!("discovery: {discovered}/{total} films prepared");
             }
         });
+    let client = phoneme_verify::wav2vec2::batch_client(http.clone())?;
     let films = map_staged(
         preparation,
-        async |cut| prepare_pending(&http, &store, &empty, cut).await,
-        async |requests| {
-            let (contexts, requests): (Vec<_>, Vec<_>) = requests.into_iter().unzip();
-            phoneme_verify::infer_frame_batch(contexts.iter().zip(requests).collect(), None).await
+        |pending| {
+            let clips = pending
+                .into_iter()
+                .map(|(id, cut)| phoneme_verify::AudioClip {
+                    duration: std::time::Duration::from_millis(cut.duration_ms.max(0) as u64),
+                    audio: phoneme_verify::AudioInput::File(cut.wav.to_path_buf()),
+                    // Keep the temporary file alive until its response is handled.
+                    id: (id, cut),
+                })
+                .collect();
+            client.predict_many(clips).then(|((id, cut), response)| {
+                let http = &http;
+                let store = &store;
+                let empty = &empty;
+                async move {
+                    let frames = async {
+                        let ctx = VerifyContext::new(http, store.clone(), empty, cut.language)?
+                            .with_cache_key(move |_| cut.key.clone());
+                        phoneme_verify::cache_frame_response(&ctx, cut.hash, response?).await
+                    }
+                    .await;
+                    (id, frames)
+                }
+            })
         },
         &gate,
     )
