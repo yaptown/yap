@@ -10,10 +10,12 @@
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
-        // Determine if we're in development or production
-        const isDevelopment = window.location.hostname === 'localhost' || 
+        // Determine if we're in development or production. Cloudflare
+        // Pages serves every deployment (including the real yap-beta
+        // channel) from a *.pages.dev domain, so a substring check on
+        // "dev" would misclassify that production traffic as local dev.
+        const isDevelopment = window.location.hostname === 'localhost' ||
                             window.location.hostname === '127.0.0.1' ||
-                            window.location.hostname.includes('dev') ||
                             window.location.port === '5173'; // Vite's default dev port
 
         const config = isDevelopment ? {
