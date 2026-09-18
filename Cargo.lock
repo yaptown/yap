@@ -3386,7 +3386,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 [[package]]
 name = "lexide"
 version = "0.3.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=d71a02faefa477a53cf0f1923566330299c26b53#d71a02faefa477a53cf0f1923566330299c26b53"
+source = "git+https://github.com/anchpop/lexide.git?rev=bf6a1cdd1520fbb761a99592ce57cdb4a625ae9f#bf6a1cdd1520fbb761a99592ce57cdb4a625ae9f"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3397,6 +3397,7 @@ dependencies = [
  "half",
  "hf-hub",
  "http 1.3.1",
+ "osmo",
  "regex 1.12.4",
  "reqwest 0.13.4",
  "safetensors",

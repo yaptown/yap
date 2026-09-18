@@ -12,7 +12,7 @@ const MODAL_PREDICT_URL_DEFAULT: &str =
 
 /// The batch endpoint every clip goes through: `WAV2VEC2_BATCH_ENDPOINT_URL`,
 /// else the batch sibling of `WAV2VEC2_ENDPOINT_URL`, else production.
-/// This client is for batch inference only; identity discovery uses predict.
+/// Inference uses batches; lazy identity discovery uses the predict URL.
 pub fn batch_client(http: reqwest::Client) -> Result<PhonemizerClient> {
     configured_batch_client(
         http,
@@ -27,9 +27,11 @@ fn configured_batch_client(
     batch: Option<&str>,
 ) -> Result<PhonemizerClient> {
     if let Some(batch) = batch {
-        // This client only sends batches. Reuse the explicit URL for its unused
-        // predict endpoint so an arbitrary batch URL needs no predict URL.
-        PhonemizerClient::with_endpoints(http, batch, batch)
+        // Derive the identity URL for Modal. Custom batch-only clients may omit
+        // predict; callers enabling identity discovery must supply its URL.
+        let predict =
+            identity_predict_url(predict, Some(batch)).unwrap_or_else(|_| batch.to_owned());
+        PhonemizerClient::with_endpoints(http, predict, batch)
     } else {
         Ok(
             PhonemizerClient::new(predict.unwrap_or(MODAL_PREDICT_URL_DEFAULT))
@@ -37,16 +39,6 @@ fn configured_batch_client(
                 .with_http_client(http),
         )
     }
-}
-
-pub(crate) fn identity_client(http: reqwest::Client) -> Result<PhonemizerClient> {
-    let batch = std::env::var("WAV2VEC2_BATCH_ENDPOINT_URL").ok();
-    let predict = identity_predict_url(
-        std::env::var("WAV2VEC2_ENDPOINT_URL").ok().as_deref(),
-        batch.as_deref(),
-    )?;
-    // Only identity() / check_identity() are used here, not batch inference.
-    PhonemizerClient::with_endpoints(http, &predict, &predict)
 }
 
 fn identity_predict_url(predict: Option<&str>, batch: Option<&str>) -> Result<String> {
@@ -192,33 +184,6 @@ pub(crate) mod tests {
                 .contains("batch returned 0 results for 1 clips")
         );
         server.join().unwrap();
-    }
-
-    #[tokio::test]
-    async fn probe_and_prediction_marker_errors_match() {
-        for reported in [None, Some("stale")] {
-            let (url, server) = test_server(vec![(
-                200,
-                serde_json::json!({
-                    "model_id": "m", "model_revision": "r", "deploy_marker": reported,
-                }),
-            )]);
-            let predict = url.replace("/batch", "/predict");
-            let client = PhonemizerClient::with_endpoints(local_http(), &predict, &url).unwrap();
-            assert_eq!(
-                client
-                    .check_identity("fresh")
-                    .await
-                    .unwrap_err()
-                    .to_string(),
-                crate::check_marker(Some("fresh"), reported)
-                    .unwrap_err()
-                    .to_string(),
-            );
-            let requests = server.join().unwrap();
-            assert_eq!(requests[0].0, "POST /predict HTTP/1.1\r\n");
-            assert_eq!(requests[0].1, serde_json::json!({"marker_only": true}));
-        }
     }
 
     #[tokio::test]

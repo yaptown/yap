@@ -60,10 +60,10 @@ fn film(root: &Path, index: usize, count: usize) -> PreparedFilm {
     let dir = root.join(index.to_string());
     std::fs::create_dir_all(&dir).unwrap();
     let gate = Gate::default();
-    let (language, code, min_ratio) = if index.is_multiple_of(2) {
-        (Language::French, "fra", -1000.0)
+    let (code, min_ratio) = if index.is_multiple_of(2) {
+        ("fra", -1000.0)
     } else {
-        (Language::German, "deu", 1000.0)
+        ("deu", 1000.0)
     };
     let mut clips = Vec::new();
     let mut pending = Vec::new();
@@ -86,7 +86,6 @@ fn film(root: &Path, index: usize, count: usize) -> PreparedFilm {
     }
     PreparedFilm {
         dir,
-        language,
         provenance: Provenance {
             inputs: Inputs {
                 format: FORMAT_VERSION,
@@ -147,7 +146,9 @@ async fn discovery_precedes_inference_and_results_route_by_slot() {
                 let result = if id == (1, 1) {
                     Err(anyhow::anyhow!("one clip failed"))
                 } else {
-                    Ok(matrix(cut.hash))
+                    Ok(matrix(u64::from_le_bytes(
+                        std::fs::read(&cut.wav).unwrap().try_into().unwrap(),
+                    )))
                 };
                 (id, result)
             }))
@@ -414,7 +415,6 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
     clip.measured = true;
     clip.passed = true;
     clip.target_ipa.clear();
-    film.language = Language::Korean;
     film.provenance.inputs.language = "kor".into();
     film.provenance.gate.min_ratio = None;
     film.provenance.inputs.segmentation = movie_subtitles::segment::provenance(Language::Korean);

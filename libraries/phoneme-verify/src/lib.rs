@@ -24,19 +24,19 @@ pub mod wav2vec2;
 use anyhow::{Context, Result};
 use base64::Engine;
 use language_utils::{Language, PhonemeLabelSource};
-#[cfg(test)]
-use lexide::pronunciation::PredictRequest;
 use lexide::pronunciation::remote::decode_audio_bytes as decode_wav_to_f32;
+#[cfg(test)]
+use lexide::pronunciation::{DECODER_VERSION, PredictRequest};
 use lexide::pronunciation::{
-    DECODER_VERSION, PhonemeAlternative as RawPhonemeAlt, PredictResponse as ModalResponse,
-    cache_version, remote::PhonemizerClient,
+    PhonemeAlternative as RawPhonemeAlt, PredictResponse as ModalResponse, cache_version,
+    remote::PhonemizerClient,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[cfg(test)]
 use std::io::Write;
 use std::path::Path;
-use std::sync::{LazyLock, OnceLock};
+use std::sync::LazyLock;
 use xxhash_rust::xxh3::xxh3_64;
 
 pub use lexide::pronunciation::{
@@ -48,57 +48,6 @@ fn expected_deploy_marker() -> Option<String> {
     std::env::var("WAV2VEC2_EXPECTED_DEPLOY_MARKER")
         .ok()
         .filter(|s| !s.is_empty())
-}
-
-/// The live identity is discovered once; it does not partition production data.
-static PRODUCTION_MODEL: OnceLock<Result<ModelIdentity, String>> = OnceLock::new();
-
-fn resolve_model(probe: impl FnOnce() -> Result<ModelIdentity>) -> Result<ModelIdentity> {
-    let identity = probe()?;
-    anyhow::ensure!(
-        !identity.model_id.trim().is_empty() && !identity.model_revision.trim().is_empty(),
-        "phonemizer probe returned empty model identity"
-    );
-    check_decoder(identity.decoder_version.as_deref())?;
-    Ok(identity)
-}
-
-fn resolved_model_once(
-    cell: &OnceLock<Result<ModelIdentity, String>>,
-    initialize: impl FnOnce() -> Result<ModelIdentity>,
-) -> Result<&ModelIdentity> {
-    cell.get_or_init(|| {
-        initialize().map_err(|error| format!("resolving phonemizer identity: {error:#}"))
-    })
-    .as_ref()
-    .map_err(|error| anyhow::anyhow!("{error}"))
-}
-
-fn production_model() -> Result<&'static ModelIdentity> {
-    resolved_model_once(&PRODUCTION_MODEL, || resolve_model(probe_identity))
-}
-
-fn probe_identity() -> Result<ModelIdentity> {
-    // Constructors are synchronous and may run inside a current-thread Tokio
-    // runtime. This thread owns and drops its runtime and HTTP client; never
-    // block_on a caller's runtime.
-    std::thread::spawn(|| {
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?
-            .block_on(async {
-                let http = reqwest::Client::builder()
-                    .timeout(std::time::Duration::from_secs(300))
-                    .build()?;
-                let client = wav2vec2::identity_client(http)?;
-                match expected_deploy_marker() {
-                    Some(marker) => client.check_identity(&marker).await,
-                    None => client.identity().await,
-                }
-            })
-    })
-    .join()
-    .map_err(|_| anyhow::anyhow!("phonemizer identity probe thread panicked"))?
 }
 
 /// Identity of the target renderer. Persist alongside model identity when caching scores.
@@ -118,23 +67,7 @@ pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonem
 pub use lexide::pronunciation::RawPrediction;
 pub use lexide::pronunciation::remote::{AudioClip, AudioInput};
 
-fn response_identity(response: &ModalResponse) -> Option<ModelIdentity> {
-    if let Some(FrameMatrixPayload::V1(payload)) = &response.frame_matrix {
-        let producer = &payload.producer;
-        return Some(ModelIdentity {
-            model_id: producer.model_id.clone(),
-            model_revision: producer.model_revision.clone(),
-            decoder_version: Some(producer.decoder_version.clone()),
-            deploy_marker: Some(producer.deploy_marker.clone()),
-        });
-    }
-    Some(ModelIdentity {
-        model_id: response.model_id.clone()?,
-        model_revision: response.model_revision.clone()?,
-        decoder_version: response.decoder_version.clone(),
-        deploy_marker: response.deploy_marker.clone(),
-    })
-}
+use lexide::pronunciation::remote::response_identity;
 
 /// Producer recorded by the returned matrix, never the context's intention.
 pub fn frame_identity(frames: &FrameMatrix) -> Option<ModelIdentity> {
@@ -145,15 +78,6 @@ pub fn frame_identity(frames: &FrameMatrix) -> Option<ModelIdentity> {
         decoder_version: Some(p.decoder_version.clone()),
         deploy_marker: Some(p.deploy_marker.clone()),
     })
-}
-
-fn response_frames(response: &ModalResponse) -> Result<FrameMatrix> {
-    FrameMatrix::decode(
-        response
-            .frame_matrix
-            .as_ref()
-            .context("response has no frame matrix")?,
-    )
 }
 
 /// One step of the optimal alignment between predicted and expected phoneme
@@ -243,7 +167,7 @@ pub struct VerifyContext<'a> {
     /// WAV hash plus labels). The minority deliberately varying producers (model
     /// comparisons/evaluations) must include full model identity plus audio.
     cache_key: Option<std::sync::Arc<dyn Fn(u64) -> String + Send + Sync>>,
-    expected_identity: Option<ModelIdentity>,
+    client: PhonemizerClient,
     /// word (lowercase) → accepted IPA pronunciations (main + alternates).
     /// The verifier passes a clip if the model's prediction is within
     /// threshold of *any* of these variants — alternates exist because
@@ -259,10 +183,6 @@ pub struct VerifyContext<'a> {
     /// Target language — drives per-language phoneme canonicalization (e.g.
     /// collapsing r↔ʁ for French).
     pub target_language: Language,
-    /// When set (`WAV2VEC2_EXPECTED_DEPLOY_MARKER`, by the eval harness), every
-    /// endpoint response must report this exact deploy marker or we bail rather
-    /// than cache a possibly-contaminated prediction. `None` in production.
-    expected_deploy_marker: Option<String>,
 }
 
 impl<'a> VerifyContext<'a> {
@@ -282,7 +202,7 @@ impl<'a> VerifyContext<'a> {
     /// Model-varying evaluations are deliberately not production content keys.
     /// A deployment marker validates live responses, not checkpoint content.
     pub fn key_by_model(&mut self, identity: &ModelIdentity) {
-        self.expected_identity = Some(identity.clone());
+        self.client = self.client.clone().with_expected_identity(identity.clone());
         let model = serde_json::to_string(&(
             &identity.model_id,
             &identity.model_revision,
@@ -297,12 +217,7 @@ impl<'a> VerifyContext<'a> {
         }));
     }
 
-    /// Identity enforced on live responses, not attributed to cached outputs.
-    pub fn expected_model_identity(&self) -> Result<&ModelIdentity> {
-        self.expected_identity.as_ref().context("resolved model identity required; use VerifyContext::new or an explicitly resolved evaluation identity")
-    }
-
-    /// Production constructor: discover and enforce the live model identity.
+    /// Production constructor: discover the live identity lazily on a cache miss.
     /// Cache hits retain their own producer and do not trigger freshness checks.
     pub fn new(
         http: &'a reqwest::Client,
@@ -310,7 +225,6 @@ impl<'a> VerifyContext<'a> {
         word_to_pronunciation: &'a HashMap<String, language_utils::Pronunciations>,
         target_language: Language,
     ) -> Result<Self> {
-        let model = production_model()?;
         let threshold = std::env::var("AUDIO_VERIFY_THRESHOLD")
             .ok()
             .and_then(|s| s.parse::<f64>().ok())
@@ -324,7 +238,7 @@ impl<'a> VerifyContext<'a> {
             threshold,
             expected_deploy_marker,
         )?;
-        ctx.expected_identity = Some(model.clone());
+        ctx.client = ctx.client.with_identity_check();
         Ok(ctx)
     }
 
@@ -364,15 +278,25 @@ impl<'a> VerifyContext<'a> {
                 target_language
             ),
         }
+        let mut client = BATCH_CLIENT
+            .as_ref()
+            .map_err(|error| anyhow::anyhow!("{error:#}"))?
+            .clone()
+            .with_cache(store.clone());
+        if let Some(marker) = expected_deploy_marker {
+            client = client.with_expected_deploy_marker(marker);
+        }
+        if cache_only() {
+            client = client.with_cached_only();
+        }
         Ok(Self {
             http,
             store,
             cache_key: None,
-            expected_identity: None,
+            client,
             word_to_pronunciation,
             mismatch_threshold,
             target_language,
-            expected_deploy_marker,
         })
     }
 }
@@ -594,172 +518,69 @@ const MODAL_SAMPLE_RATE: u32 = 16_000;
 const MODAL_TOP_K: usize = 10;
 
 /// Individual callers share lexide's coalescing queue and request limits.
-static BATCH_CLIENT: LazyLock<Result<PhonemizerClient>> =
-    LazyLock::new(|| wav2vec2::batch_client(reqwest::Client::new()));
-
-async fn post_modal(audio: AudioInput) -> Result<RawPrediction> {
-    let client = BATCH_CLIENT
-        .as_ref()
-        .map_err(|error| anyhow::anyhow!("{error:#}"))?;
-    client.predict_audio(audio).await
-}
-
-fn check_decoder(decoder: Option<&str>) -> Result<()> {
-    if let Some(decoder) = decoder {
-        anyhow::ensure!(
-            decoder == DECODER_VERSION,
-            "decoder mismatch: endpoint reported {decoder:?}, expected {DECODER_VERSION:?}"
-        );
-    }
-    Ok(())
-}
-
-/// Per-response freshness check: the one-shot marker_only probe only proves
-/// the *first* request hit a fresh container. Verifying the marker on every
-/// response guarantees no later request was routed to a stale/contaminated
-/// warm container and silently cached under the wrong model's key.
-fn check_response_identity(ctx: &VerifyContext<'_>, modal: &ModalResponse) -> Result<()> {
-    // V1's matrix producer is authoritative, but must agree with any envelope
-    // metadata too. Never label a matrix using the context's desired producer.
-    let observed = response_identity(modal);
-    if let Some(observed) = &observed {
-        for (name, outer, inner) in [
-            (
-                "model id",
-                modal.model_id.as_deref(),
-                Some(observed.model_id.as_str()),
-            ),
-            (
-                "model revision",
-                modal.model_revision.as_deref(),
-                Some(observed.model_revision.as_str()),
-            ),
-            (
-                "decoder",
-                modal.decoder_version.as_deref(),
-                observed.decoder_version.as_deref(),
-            ),
-            (
-                "deploy-marker",
-                modal.deploy_marker.as_deref(),
-                observed.deploy_marker.as_deref(),
-            ),
-        ] {
-            anyhow::ensure!(
-                outer.is_none() || inner == outer,
-                "response {name} disagrees with matrix producer"
-            );
-        }
-        check_decoder(observed.decoder_version.as_deref())?;
-        check_marker(
-            ctx.expected_deploy_marker.as_deref(),
-            observed.deploy_marker.as_deref(),
-        )?;
-        if let Some(expected) = &ctx.expected_identity {
-            anyhow::ensure!(
-                observed.model_id == expected.model_id
-                    && observed.model_revision == expected.model_revision,
-                "matrix producer does not match expected model identity"
-            );
-        }
-    }
-    check_decoder(modal.decoder_version.as_deref())?;
-    if let Some(identity) = &ctx.expected_identity {
-        for (name, reported, expected) in [
-            ("model id", modal.model_id.as_ref(), &identity.model_id),
-            (
-                "model revision",
-                modal.model_revision.as_ref(),
-                &identity.model_revision,
-            ),
-        ] {
-            if let Some(reported) = reported {
-                anyhow::ensure!(
-                    reported == expected,
-                    "{name} mismatch: endpoint reported {reported:?}, expected {expected:?} — refusing to cache prediction"
-                );
-            }
-        }
-    }
-    check_marker(
-        ctx.expected_deploy_marker.as_deref(),
-        observed
-            .as_ref()
-            .and_then(|identity| identity.deploy_marker.as_deref())
-            .or(modal.deploy_marker.as_deref()),
+static BATCH_CLIENT: LazyLock<Result<PhonemizerClient>> = LazyLock::new(|| {
+    wav2vec2::batch_client(
+        reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(300))
+            .build()?,
     )
-}
-
-fn check_marker(expected: Option<&str>, reported: Option<&str>) -> Result<()> {
-    if let Some(expected) = expected {
-        anyhow::ensure!(
-            reported == Some(expected),
-            "deploy-marker mismatch: endpoint reported {reported:?}, expected {expected:?}"
-        );
-    }
-    Ok(())
-}
-
-async fn cached_response(store: &osmo::Store, key: &str) -> Option<Result<ModalResponse>> {
-    let bytes = store.read(key).await?;
-    Some(
-        serde_json::from_slice::<RawPrediction>(&bytes)
-            .context("cached response")
-            .and_then(|cached| cached.decode()),
-    )
-}
-
-/// Validate before writing: a malformed response never becomes a reusable hit.
-async fn cache_response(
-    ctx: &VerifyContext<'_>,
-    hash: u64,
-    response: RawPrediction,
-) -> Result<(ModalResponse, FrameMatrix)> {
-    let modal = response.decode()?;
-    check_response_identity(ctx, &modal)?;
-    let frames = response_frames(&modal)?;
-    ctx.store
-        .write(&ctx.response_key(hash), &serde_json::to_vec(&response)?)
-        .await?;
-    Ok((modal, frames))
-}
-
-/// Validate and persist a result from lexide's file batch API using the
-/// caller's original audio hash and cache identity.
-pub async fn cache_frame_response(
-    ctx: &VerifyContext<'_>,
-    hash: u64,
-    response: RawPrediction,
-) -> Result<FrameMatrix> {
-    cache_response(ctx, hash, response)
-        .await
-        .map(|(_, frames)| frames)
-}
+});
 
 /// Cache-only lookup by the caller's complete key, without cutting audio.
-/// Missing and malformed values never trigger inference in this reader.
 pub async fn cached_frame_matrix(store: &osmo::Store, key: &str) -> Option<Result<FrameMatrix>> {
-    cached_response(store, key)
+    let client = BATCH_CLIENT
+        .as_ref()
+        .ok()?
+        .clone()
+        .with_cache(store.clone())
+        .with_cached_only();
+    client
+        .cached(key)
         .await
-        .map(|response| response.and_then(|r| response_frames(&r)))
+        .map(|raw| raw.and_then(|raw| raw.frames()))
 }
 
 async fn prediction_response(
     ctx: &VerifyContext<'_>,
     wav: &[u8],
 ) -> Result<(ModalResponse, FrameMatrix)> {
-    let hash = xxh3_64(wav);
-    if let Some(Ok(response)) = cached_response(&ctx.store, &ctx.response_key(hash)).await
-        && let Ok(frames) = response_frames(&response)
-    {
-        return Ok((response, frames));
-    }
-    anyhow::ensure!(
-        !cache_only(),
-        "response cache miss for {hash:016x}; cache-only mode is enabled"
-    );
-    let response = post_modal(AudioInput::Bytes(wav.to_vec())).await?;
-    cache_response(ctx, hash, response).await
+    let key = ctx.response_key(xxh3_64(wav));
+    let raw = ctx
+        .client
+        .predict_audio(AudioInput::Bytes(wav.to_vec()), Some(&key))
+        .await?;
+    Ok((raw.decode()?, raw.frames()?))
+}
+
+#[cfg(test)]
+fn check_response_identity(ctx: &VerifyContext<'_>, response: &ModalResponse) -> Result<()> {
+    ctx.client.validate_response(response)
+}
+
+#[cfg(test)]
+async fn cached_response(store: &osmo::Store, key: &str) -> Option<Result<ModalResponse>> {
+    let client = BATCH_CLIENT
+        .as_ref()
+        .ok()?
+        .clone()
+        .with_cache(store.clone());
+    client
+        .cached(key)
+        .await
+        .map(|raw| raw.and_then(|raw| raw.decode()))
+}
+
+#[cfg(test)]
+async fn cache_response(
+    ctx: &VerifyContext<'_>,
+    hash: u64,
+    raw: RawPrediction,
+) -> Result<(ModalResponse, FrameMatrix)> {
+    let raw = ctx
+        .client
+        .cache_response(Some(&ctx.response_key(hash)), raw)
+        .await?;
+    Ok((raw.decode()?, raw.frames()?))
 }
 
 /// A decoded, padded request paired with the original WAV's cache identity.
@@ -808,6 +629,7 @@ async fn infer_frame_batch_at(
                         .into_iter()
                         .enumerate()
                         .map(|(id, request)| AudioClip {
+                            cache_key: None,
                             id,
                             duration: std::time::Duration::ZERO,
                             audio: AudioInput::Request(request),
@@ -1934,16 +1756,15 @@ mod tests {
         let http = reqwest::Client::new();
         let mut dictionary = HashMap::new();
         dictionary.insert("test".into(), ap("ʔ t͡ʃ ɪ̯", &[]));
-        let ctx = VerifyContext {
-            http: &http,
-            store: osmo::Store::open(dir.path()),
-            cache_key: None,
-            expected_identity: None,
-            word_to_pronunciation: &dictionary,
-            mismatch_threshold: 0.3,
-            target_language: Language::German,
-            expected_deploy_marker: None,
-        };
+        let ctx = VerifyContext::with_overrides(
+            &http,
+            osmo::Store::open(dir.path()),
+            &dictionary,
+            Language::German,
+            0.3,
+            None,
+        )
+        .unwrap();
         let expected = expected_phoneme_variants(&ctx, "test", Some("ʔ t͡ʃ ɪ̯")).unwrap();
         assert_eq!(expected, vec![vec![word(&["t", "ʃ", "ɪ"])]]);
         assert!(
@@ -2064,7 +1885,7 @@ mod tests {
         cache_response(&ctx, hash, raw_prediction(response.clone()))
             .await
             .unwrap();
-        ctx.expected_identity = Some(test_identity()); // different from cached producer
+        ctx.client = ctx.client.clone().with_expected_identity(test_identity()); // different from cached producer
         assert_eq!(frame_matrix(&ctx, wav).await.unwrap().frames, 3);
         let batch = frame_matrices_at(&ctx, &[wav], Err(anyhow::anyhow!("offline")), true).await;
         assert_eq!(batch[0].as_ref().unwrap().frames, 3);
@@ -2079,7 +1900,9 @@ mod tests {
             .model_id,
             "actual"
         );
-        ctx.expected_identity = None;
+        ctx.client = wav2vec2::batch_client(http.clone())
+            .unwrap()
+            .with_cache(ctx.store.clone());
         ctx = ctx.with_cache_key(|hash| format!("caller/{hash:016x}"));
         assert!(
             cached_frame_matrix(&ctx.store, &ctx.response_key(hash))
@@ -2316,7 +2139,10 @@ mod tests {
         );
         // A producer expectation change cannot rewrite or reject persisted raw data.
         let mut changed = ctx;
-        changed.expected_identity = Some(test_identity());
+        changed.client = changed
+            .client
+            .clone()
+            .with_expected_identity(test_identity());
         assert_eq!(
             cached_response(&changed.store, &changed.response_key(42))
                 .await
@@ -2353,26 +2179,6 @@ mod tests {
         assert_eq!(model_target_identity(), g2p::identity());
     }
 
-    #[test]
-    fn verified_identity_rejects_unchecked_cache_overrides() {
-        let dir = tempfile::tempdir().unwrap();
-        let http = reqwest::Client::new();
-        let words = HashMap::new();
-        let mut ctx = VerifyContext::with_overrides(
-            &http,
-            osmo::Store::open(dir.path()),
-            &words,
-            Language::French,
-            0.3,
-            None,
-        )
-        .unwrap();
-        assert!(ctx.expected_model_identity().is_err());
-        // The explicit constructor is local; only a resolved identity can pin it.
-        ctx.expected_identity = Some(resolve_model(|| Ok(test_identity())).unwrap());
-        assert_eq!(ctx.expected_model_identity().unwrap(), &test_identity());
-    }
-
     fn test_identity() -> ModelIdentity {
         ModelIdentity {
             model_id: "test/model".into(),
@@ -2380,37 +2186,6 @@ mod tests {
             decoder_version: Some(DECODER_VERSION.into()),
             deploy_marker: Some("fresh".into()),
         }
-    }
-
-    #[test]
-    fn resolved_state_is_shared_and_failure_is_not_reprobed() {
-        let cell = OnceLock::new();
-        let first = resolved_model_once(&cell, || resolve_model(|| Ok(test_identity()))).unwrap();
-        let second = resolved_model_once(&cell, || panic!("must resolve only once")).unwrap();
-        assert!(std::ptr::eq(first, second));
-        assert_eq!(first, second);
-        let failed = OnceLock::new();
-        assert!(resolved_model_once(&failed, || anyhow::bail!("offline")).is_err());
-        assert!(resolved_model_once(&failed, || panic!("must not retry")).is_err());
-    }
-
-    #[test]
-    fn discovery_fails_closed() {
-        assert_eq!(
-            resolve_model(|| Ok(test_identity())).unwrap(),
-            test_identity()
-        );
-        assert!(resolve_model(|| anyhow::bail!("offline")).is_err());
-        for field in ["model_id", "model_revision", "decoder_version"] {
-            let mut identity = test_identity();
-            match field {
-                "model_id" => identity.model_id.clear(),
-                "model_revision" => identity.model_revision.clear(),
-                _ => identity.decoder_version = Some("wrong".into()),
-            }
-            assert!(resolve_model(|| Ok(identity)).is_err());
-        }
-        assert!(check_marker(Some("fresh"), Some("stale")).is_err());
     }
 
     fn raw_batch(value: serde_json::Value) -> lexide::pronunciation::RawBatchResponse {
@@ -2450,7 +2225,7 @@ mod tests {
             bad[field] = serde_json::json!(value);
             assert!(check_response_identity(&ctx, &response(bad)).is_err());
         }
-        ctx.expected_identity = Some(test_identity());
+        ctx.client = ctx.client.clone().with_expected_identity(test_identity());
         for field in [
             "model_id",
             "model_revision",
@@ -2489,7 +2264,9 @@ mod tests {
         assert!(check_response_identity(&ctx, &item).is_ok());
         assert_eq!(item.model_revision, Some(test_identity().model_revision));
         assert!(check_response_identity(&ctx, &response(serde_json::json!({}))).is_err());
-        ctx.expected_deploy_marker = None;
+        ctx.client = wav2vec2::batch_client(http.clone())
+            .unwrap()
+            .with_cache(ctx.store.clone());
         assert!(check_response_identity(&ctx, &response(serde_json::json!({}))).is_ok());
     }
 
@@ -2632,16 +2409,15 @@ mod tests {
         let store = osmo::Store::open(dir.path());
         let http = reqwest::Client::new();
         let empty = HashMap::new();
-        let ctx = VerifyContext {
-            http: &http,
+        let ctx = VerifyContext::with_overrides(
+            &http,
             store,
-            cache_key: None,
-            expected_identity: None,
-            word_to_pronunciation: &empty,
-            mismatch_threshold: 0.3,
-            target_language: Language::English,
-            expected_deploy_marker: Some("test".into()),
-        };
+            &empty,
+            Language::English,
+            0.3,
+            Some("test".into()),
+        )
+        .unwrap();
         let cached = b"cached without decoding".to_vec();
         let response: ModalResponse = serde_json::from_value(serde_json::json!({
             "phonemes": [], "frame_matrix": batch_test_payload(2), "deploy_marker": "test"
