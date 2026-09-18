@@ -1,12 +1,11 @@
-//! Yap's endpoint configuration, audio padding, and retry policy for lexide's client.
+//! Yap's endpoint configuration for lexide's pronunciation client.
 
 use anyhow::{Context, Result};
-use lexide::pronunciation::{PredictRequest, RawBatchResponse, remote::PhonemizerClient};
+#[cfg(test)]
+use lexide::pronunciation::PredictRequest;
+use lexide::pronunciation::remote::PhonemizerClient;
 
-mod activity;
-pub use activity::{RequestActivity, RequestActivitySnapshot};
-
-use super::{RawPrediction, check_decoder};
+pub use lexide::pronunciation::remote::{RequestActivity, RequestActivitySnapshot, min_samples};
 
 const MODAL_PREDICT_URL_DEFAULT: &str =
     "https://anchpop--wav2vec2-phoneme-wav2vec2phoneme-predict.modal.run";
@@ -63,127 +62,22 @@ fn identity_predict_url(predict: Option<&str>, batch: Option<&str>) -> Result<St
     }
 }
 
-/// Minimum seconds we send to Modal. wav2vec2's convolutional encoder needs
-/// roughly one full stride window of context (~320 samples at 16 kHz, but
-/// in practice the Modal endpoint 500s on anything below several hundred
-/// ms), so we pad with leading/trailing silence to stay safely above that
-/// floor. 0.6 s is comfortably past every minimum we've observed.
-const MIN_SECONDS: f64 = 0.6;
-
-/// Shared with frame timing so it subtracts exactly the silence we send.
-pub(crate) fn min_samples(sample_rate: u32) -> usize {
-    (f64::from(sample_rate) * MIN_SECONDS).ceil() as usize
-}
-
-/// One clip for the endpoint, at its native sample rate.
+#[cfg(test)]
 pub struct Clip<'a> {
     pub samples: &'a [f32],
     pub sample_rate: u32,
     pub top_k: usize,
 }
 
+#[cfg(test)]
 impl Clip<'_> {
-    /// Pad short clips at their native rate, then let lexide encode the samples.
     pub fn into_request(self) -> PredictRequest {
-        let samples = pad_to_min_length(self.samples.to_vec(), min_samples(self.sample_rate));
-        PredictRequest {
-            sample_rate: self.sample_rate,
-            top_k: self.top_k,
-            return_frame_matrix: true,
-            return_all_heads: true,
-            ..PredictRequest::from_samples(&samples)
-        }
+        lexide::pronunciation::remote::request_from_samples(
+            self.samples,
+            self.sample_rate,
+            self.top_k,
+        )
     }
-}
-
-/// How many times to attempt a single Modal prediction before giving up.
-/// Transient failures (cold-start 408s, rate limits, selected 5xx) are retried
-/// with a linear backoff; a non-transient status fails immediately.
-const MAX_ATTEMPTS: usize = 5;
-
-/// lexide preserves reqwest's status beneath its response-body context.
-/// Transport/parse failures without an HTTP status remain retryable.
-fn is_transient_error(error: &anyhow::Error) -> bool {
-    error
-        .chain()
-        .filter_map(|cause| cause.downcast_ref::<reqwest::Error>())
-        .find_map(reqwest::Error::status)
-        .is_none_or(|status| matches!(status.as_u16(), 408 | 425 | 429 | 500 | 502 | 503 | 504))
-}
-
-/// Send one batch with yap's retry policy. A cold-start 408 typically means
-/// a short backoff lets the container finish warming up. The outer `Err`
-/// is the whole request failing; an inner `Err` rejects just one clip and
-/// is not retried. lexide owns the wire format and batch-size validation.
-pub async fn predict_batch(
-    client: &PhonemizerClient,
-    requests: &[PredictRequest],
-    activity: Option<&RequestActivity>,
-) -> Result<Vec<Result<RawPrediction>>> {
-    let mut last_err: Option<anyhow::Error> = None;
-    for attempt in 1..=MAX_ATTEMPTS {
-        let response = {
-            let _attempt = activity.map(|activity| activity.begin(attempt > 1));
-            client.predict_batch_raw(requests).await
-        };
-        match response {
-            Ok(batch) => return split_batch(batch),
-            Err(error) if !is_transient_error(&error) => return Err(error),
-            Err(error) => last_err = Some(error),
-        }
-        if attempt < MAX_ATTEMPTS {
-            let delay = std::time::Duration::from_secs(5 * attempt as u64);
-            log::warn!(
-                "Modal call failed (attempt {attempt}/{MAX_ATTEMPTS}), retrying in {}s",
-                delay.as_secs()
-            );
-            tokio::time::sleep(delay).await;
-        }
-    }
-    Err(last_err
-        .unwrap_or_else(|| anyhow::anyhow!("Modal call failed"))
-        .context(format!(
-            "Modal wav2vec2 endpoint failed after {MAX_ATTEMPTS} attempts"
-        )))
-}
-
-/// Validate item views without rewriting their raw bytes or dropping unknown
-/// envelope metadata. Per-item errors keep their original request positions.
-pub(crate) fn split_batch(raw: RawBatchResponse) -> Result<Vec<Result<RawPrediction>>> {
-    check_decoder(raw.batch.decoder_version.as_deref())?;
-    Ok(raw
-        .batch
-        .results
-        .into_iter()
-        .map(|item| {
-            let response = RawPrediction {
-                item,
-                envelope: raw.envelope.clone(),
-            };
-            response.decode()?;
-            Ok(response)
-        })
-        .collect())
-}
-
-/// Pad `samples` symmetrically with zeros to reach at least `min_len`.
-/// wav2vec2 normally sees speech surrounded by silence, so leading/trailing
-/// zero-padding is a no-op for phoneme prediction on the speech we *do*
-/// care about — and it lifts very short clips (e.g. 0.2 s synthetic-TTS
-/// renders of single syllables) above the Modal endpoint's minimum-length
-/// floor.
-fn pad_to_min_length(samples: Vec<f32>, min_len: usize) -> Vec<f32> {
-    if samples.len() >= min_len {
-        return samples;
-    }
-    let needed = min_len - samples.len();
-    let lead = needed / 2;
-    let trail = needed - lead;
-    let mut padded = Vec::with_capacity(min_len);
-    padded.resize(lead, 0.0);
-    padded.extend_from_slice(&samples);
-    padded.resize(padded.len() + trail, 0.0);
-    padded
 }
 
 #[cfg(test)]
@@ -285,135 +179,6 @@ pub(crate) mod tests {
     }
 
     #[tokio::test]
-    async fn retry_classification_preserves_status_through_anyhow_context() {
-        for (status, retry) in [
-            (400, false),
-            (401, false),
-            (403, false),
-            (404, false),
-            (422, false),
-            (501, false),
-            (408, true),
-            (425, true),
-            (429, true),
-            (500, true),
-            (502, true),
-            (503, true),
-            (504, true),
-            // A malformed success has a parse error without an HTTP status.
-            (200, true),
-        ] {
-            let (url, server) = test_server(vec![(status, serde_json::json!([]))]);
-            let client = configured_batch_client(local_http(), None, Some(&url)).unwrap();
-            let error = client
-                .predict_batch(&[PredictRequest::from_samples(&[0.0])])
-                .await
-                .unwrap_err()
-                .context("inner")
-                .context("outer");
-            assert_eq!(
-                is_transient_error(&error),
-                retry,
-                "status {status}: {error:#}"
-            );
-            server.join().unwrap();
-        }
-        let transport = local_http().get("not a URL").send().await.unwrap_err();
-        assert!(is_transient_error(
-            &anyhow::Error::new(transport).context("transport")
-        ));
-        assert!(is_transient_error(&anyhow::anyhow!("unknown failure")));
-    }
-
-    #[tokio::test]
-    async fn fatal_statuses_fail_without_backoff_and_use_explicit_batch_endpoint() {
-        for status in [400, 401, 403, 404, 422, 501] {
-            let (url, server) =
-                test_server(vec![(status, serde_json::json!({"detail": "bad clip"}))]);
-            let client = configured_batch_client(
-                local_http(),
-                Some("invalid unused predict URL"),
-                Some(&url),
-            )
-            .unwrap();
-            let request = PredictRequest::from_samples(&[0.0, 1.0, -0.5]);
-            let error = tokio::time::timeout(
-                Duration::from_secs(2),
-                predict_batch(&client, std::slice::from_ref(&request), None),
-            )
-            .await
-            .expect("fatal status must not enter the five-second backoff")
-            .unwrap_err();
-            assert!(!is_transient_error(&error));
-            assert!(format!("{error:#}").contains("bad clip"));
-            let requests = server.join().unwrap();
-            assert_eq!(requests[0].0, "POST /batch HTTP/1.1\r\n");
-            assert_eq!(requests[0].1, serde_json::json!({"requests": [request]}));
-        }
-    }
-
-    #[tokio::test]
-    async fn transient_failure_retries_then_preserves_item_errors_and_metadata() {
-        let (url, server) = test_server(vec![
-            (503, serde_json::json!({"detail": "warming up"})),
-            (
-                200,
-                serde_json::json!({
-                    "deploy_marker": "fresh", "results": [
-                        {"phonemes": []},
-                        {"error": {"type": "ValueError", "message": "bad clip"}},
-                    ],
-                }),
-            ),
-        ]);
-        let client = configured_batch_client(local_http(), None, Some(&url)).unwrap();
-        let requests = [
-            PredictRequest::from_samples(&[0.0]),
-            PredictRequest::from_samples(&[1.0]),
-        ];
-        let start = std::time::Instant::now();
-        let activity = RequestActivity::default();
-        let results = tokio::time::timeout(
-            Duration::from_secs(10),
-            predict_batch(&client, &requests, Some(&activity)),
-        )
-        .await
-        .unwrap()
-        .unwrap();
-        assert!(start.elapsed() >= Duration::from_secs(5));
-        let snapshot = activity.snapshot();
-        assert_eq!(snapshot.attempts, 2);
-        assert_eq!(snapshot.retries, 1);
-        assert_eq!(snapshot.active_requests, 0);
-        assert_eq!(snapshot.peak_requests, 1);
-        assert!(
-            snapshot.without_request >= Duration::from_secs(5),
-            "retry backoff is not HTTP activity"
-        );
-        assert_eq!(
-            results[0]
-                .as_ref()
-                .unwrap()
-                .decode()
-                .unwrap()
-                .deploy_marker
-                .as_deref(),
-            Some("fresh")
-        );
-        assert!(
-            results[1]
-                .as_ref()
-                .unwrap_err()
-                .to_string()
-                .contains("ValueError: bad clip")
-        );
-        let wire = server.join().unwrap();
-        assert_eq!(wire.len(), 2);
-        assert_eq!(wire[0], wire[1]);
-        assert_eq!(wire[0].1, serde_json::json!({"requests": requests}));
-    }
-
-    #[tokio::test]
     async fn client_rejects_wrong_batch_result_count() {
         let (url, server) = test_server(vec![(200, serde_json::json!({"results": []}))]);
         let client = configured_batch_client(local_http(), None, Some(&url)).unwrap();
@@ -499,40 +264,5 @@ pub(crate) mod tests {
             .unwrap(),
             "http://localhost/single",
         );
-    }
-
-    // Talks to the production batch endpoint. Explicit opt-in only.
-    #[tokio::test]
-    #[ignore = "contacts the live Modal endpoint"]
-    async fn batch_endpoint_round_trip() {
-        let client = batch_client(reqwest::Client::new()).unwrap();
-        let silence = Clip {
-            samples: &[],
-            sample_rate: 16_000,
-            top_k: 10,
-        }
-        .into_request();
-        let results = predict_batch(&client, &[silence.clone(), silence], None)
-            .await
-            .unwrap();
-        assert_eq!(results.len(), 2);
-        for result in results {
-            assert!(
-                result.unwrap().decode().unwrap().deploy_marker.is_some(),
-                "batch marker not applied"
-            );
-        }
-    }
-
-    #[test]
-    fn pad_to_min_length_pads_symmetrically() {
-        assert_eq!(
-            pad_to_min_length(vec![1.0, 2.0, 3.0], 5),
-            vec![0.0, 1.0, 2.0, 3.0, 0.0]
-        );
-        let samples = vec![1.0, 2.0, 3.0];
-        assert_eq!(pad_to_min_length(samples.clone(), 3), samples);
-        assert_eq!(pad_to_min_length(samples.clone(), 2), samples);
-        assert_eq!(pad_to_min_length(vec![1.0], 4), vec![0.0, 1.0, 0.0, 0.0]);
     }
 }

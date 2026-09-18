@@ -24,15 +24,18 @@ pub mod wav2vec2;
 use anyhow::{Context, Result};
 use base64::Engine;
 use language_utils::{Language, PhonemeLabelSource};
+#[cfg(test)]
+use lexide::pronunciation::PredictRequest;
+use lexide::pronunciation::remote::decode_audio_bytes as decode_wav_to_f32;
 use lexide::pronunciation::{
-    DECODER_VERSION, PhonemeAlternative as RawPhonemeAlt, PredictRequest,
-    PredictResponse as ModalResponse, cache_version, remote::PhonemizerClient,
+    DECODER_VERSION, PhonemeAlternative as RawPhonemeAlt, PredictResponse as ModalResponse,
+    cache_version, remote::PhonemizerClient,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+#[cfg(test)]
 use std::io::Write;
 use std::path::Path;
-use std::process::{Command, Stdio};
 use std::sync::{LazyLock, OnceLock};
 use xxhash_rust::xxh3::xxh3_64;
 
@@ -112,46 +115,8 @@ pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonem
 
 /// One lossless per-clip artifact: untouched selected item and every raw batch
 /// envelope value, never sibling matrices. Typed views are derived on read.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RawPrediction {
-    pub item: Box<serde_json::value::RawValue>,
-    pub envelope: std::collections::BTreeMap<String, Box<serde_json::value::RawValue>>,
-}
-
-impl RawPrediction {
-    pub fn decode(&self) -> Result<ModalResponse> {
-        let mut modal =
-            match serde_json::from_str::<lexide::pronunciation::BatchResult>(self.item.get())? {
-                lexide::pronunciation::BatchResult::Prediction(response) => response,
-                lexide::pronunciation::BatchResult::Error { error } => anyhow::bail!(
-                    "Modal wav2vec2 rejected the clip: {}: {}",
-                    error.error_type,
-                    error.message
-                ),
-            };
-        for (name, field) in [
-            ("model_id", &mut modal.model_id),
-            ("model_revision", &mut modal.model_revision),
-            ("decoder_version", &mut modal.decoder_version),
-            ("deploy_marker", &mut modal.deploy_marker),
-        ] {
-            if let Some(raw) = self.envelope.get(name) {
-                merge_metadata(name, field, &serde_json::from_str(raw.get())?)?;
-            }
-        }
-        Ok(modal)
-    }
-}
-
-#[cfg(test)]
-impl From<ModalResponse> for RawPrediction {
-    fn from(response: ModalResponse) -> Self {
-        Self {
-            item: serde_json::value::to_raw_value(&response).unwrap(),
-            envelope: Default::default(),
-        }
-    }
-}
+pub use lexide::pronunciation::RawPrediction;
+pub use lexide::pronunciation::remote::{AudioClip, AudioInput};
 
 fn response_identity(response: &ModalResponse) -> Option<ModelIdentity> {
     if let Some(FrameMatrixPayload::V1(payload)) = &response.frame_matrix {
@@ -625,78 +590,18 @@ const MODAL_SAMPLE_RATE: u32 = 16_000;
 /// How many alternatives we ask Modal for at each position. Larger = more
 /// chance of catching the correct phoneme in the top-k for failure
 /// analysis; trades off cache size linearly. 10 is comfortable for French.
+#[cfg(test)]
 const MODAL_TOP_K: usize = 10;
 
-/// Clips per HTTP request the endpoint accepts, not its GPU microbatch size.
-pub const MODAL_BATCH_SIZE: usize = 64;
+/// Individual callers share lexide's coalescing queue and request limits.
+static BATCH_CLIENT: LazyLock<Result<PhonemizerClient>> =
+    LazyLock::new(|| wav2vec2::batch_client(reqwest::Client::new()));
 
-/// How long the batch worker waits after the first queued clip for the
-/// other in-flight callers to enqueue theirs, so a batch carries the whole
-/// concurrent front rather than one clip.
-const MODAL_BATCH_LINGER: std::time::Duration = std::time::Duration::from_millis(200);
-
-struct BatchItem {
-    payload: PredictRequest,
-    reply: tokio::sync::oneshot::Sender<Result<RawPrediction>>,
-}
-
-/// The process-wide queue feeding the batch worker. Spawned on first use,
-/// which is always inside the caller's tokio runtime.
-static BATCH_QUEUE: LazyLock<tokio::sync::mpsc::UnboundedSender<BatchItem>> = LazyLock::new(|| {
-    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-    tokio::spawn(batch_worker(rx));
-    tx
-});
-
-/// Drain the queue into requests of up to [`MODAL_BATCH_SIZE`] clips and
-/// hand each caller its own result. The endpoint groups similar lengths
-/// into GPU batches itself; this only pools what concurrent callers submit.
-async fn batch_worker(mut rx: tokio::sync::mpsc::UnboundedReceiver<BatchItem>) {
-    let client = wav2vec2::batch_client(reqwest::Client::new());
-    while let Some(first) = rx.recv().await {
-        let mut batch = vec![first];
-        tokio::time::sleep(MODAL_BATCH_LINGER).await;
-        while batch.len() < MODAL_BATCH_SIZE {
-            match rx.try_recv() {
-                Ok(item) => batch.push(item),
-                Err(_) => break,
-            }
-        }
-        let payloads: Vec<PredictRequest> = batch
-            .iter_mut()
-            .map(|item| std::mem::take(&mut item.payload))
-            .collect();
-        let results = match &client {
-            Ok(client) => wav2vec2::predict_batch(client, &payloads, None).await,
-            Err(e) => Err(anyhow::anyhow!("{e:#}")),
-        };
-        match results {
-            Ok(results) => {
-                for (item, result) in batch.into_iter().zip(results) {
-                    let _ = item.reply.send(result);
-                }
-            }
-            Err(e) => {
-                let message = format!("{e:#}");
-                for item in batch {
-                    let _ = item.reply.send(Err(anyhow::anyhow!("{message}")));
-                }
-            }
-        }
-    }
-}
-
-/// Send one clip through the shared batch worker. The single cache writer
-/// validates the returned item and live producer before persisting raw bytes.
-async fn post_modal(payload: PredictRequest) -> Result<RawPrediction> {
-    let (reply, result) = tokio::sync::oneshot::channel();
-    BATCH_QUEUE
-        .send(BatchItem { payload, reply })
-        .map_err(|_| anyhow::anyhow!("the Modal batch worker is gone"))?;
-    let modal = result
-        .await
-        .context("the Modal batch worker dropped the request")??;
-    Ok(modal)
+async fn post_modal(audio: AudioInput) -> Result<RawPrediction> {
+    let client = BATCH_CLIENT
+        .as_ref()
+        .map_err(|error| anyhow::anyhow!("{error:#}"))?;
+    client.predict_audio(audio).await
 }
 
 fn check_decoder(decoder: Option<&str>) -> Result<()> {
@@ -705,22 +610,6 @@ fn check_decoder(decoder: Option<&str>) -> Result<()> {
             decoder == DECODER_VERSION,
             "decoder mismatch: endpoint reported {decoder:?}, expected {DECODER_VERSION:?}"
         );
-    }
-    Ok(())
-}
-
-/// Never mask an item/envelope disagreement with the other layer's metadata.
-/// After merging, checking an item against its context also checks the envelope.
-fn merge_metadata(name: &str, item: &mut Option<String>, envelope: &Option<String>) -> Result<()> {
-    if let Some(envelope) = envelope {
-        if let Some(item) = item.as_ref() {
-            anyhow::ensure!(
-                item == envelope,
-                "batch {name} mismatch: item {item:?}, envelope {envelope:?}"
-            );
-        } else {
-            *item = Some(envelope.clone());
-        }
     }
     Ok(())
 }
@@ -835,6 +724,18 @@ async fn cache_response(
     Ok((modal, frames))
 }
 
+/// Validate and persist a result from lexide's file batch API using the
+/// caller's original audio hash and cache identity.
+pub async fn cache_frame_response(
+    ctx: &VerifyContext<'_>,
+    hash: u64,
+    response: RawPrediction,
+) -> Result<FrameMatrix> {
+    cache_response(ctx, hash, response)
+        .await
+        .map(|(_, frames)| frames)
+}
+
 /// Cache-only lookup by the caller's complete key, without cutting audio.
 /// Missing and malformed values never trigger inference in this reader.
 pub async fn cached_frame_matrix(store: &osmo::Store, key: &str) -> Option<Result<FrameMatrix>> {
@@ -857,20 +758,21 @@ async fn prediction_response(
         !cache_only(),
         "response cache miss for {hash:016x}; cache-only mode is enabled"
     );
-    let request = prepare_frame_request(wav.to_vec()).await?;
-    let response = post_modal(request.payload).await?;
+    let response = post_modal(AudioInput::Bytes(wav.to_vec())).await?;
     cache_response(ctx, hash, response).await
 }
 
 /// A decoded, padded request paired with the original WAV's cache identity.
-pub struct PreparedFrameRequest {
+#[cfg(test)]
+struct PreparedFrameRequest {
     hash: u64,
     payload: PredictRequest,
 }
 
 /// Prepare audio without inference. Batch callers count only successful
 /// preparations toward the endpoint's request limit.
-pub async fn prepare_frame_request(wav: Vec<u8>) -> Result<PreparedFrameRequest> {
+#[cfg(test)]
+async fn prepare_frame_request(wav: Vec<u8>) -> Result<PreparedFrameRequest> {
     let hash = xxh3_64(&wav);
     let samples = tokio::task::spawn_blocking(move || decode_wav_to_f32(&wav))
         .await
@@ -887,54 +789,43 @@ pub async fn prepare_frame_request(wav: Vec<u8>) -> Result<PreparedFrameRequest>
     })
 }
 
-/// Submit one prepared batch, preserving each clip's identity checks and cache
-/// destination. Languages may differ: the model hears audio, not the target.
-/// Requests must already be cache misses. Results retain input order, and an
-/// item failure does not discard its neighbors. Transport/protocol failures
-/// affect this request only; callers may continue with later batches.
-pub async fn infer_frame_batch(
-    items: Vec<(&VerifyContext<'_>, PreparedFrameRequest)>,
-    activity: Option<&wav2vec2::RequestActivity>,
-) -> Vec<Result<FrameMatrix>> {
-    if cache_only() {
-        return items
-            .iter()
-            .map(|(_, request)| {
-                Err(anyhow::anyhow!(
-                    "frame-matrix cache miss for {:016x}; cache-only mode is enabled",
-                    request.hash
-                ))
-            })
-            .collect();
-    }
-    let Some((ctx, _)) = items.first() else {
-        return Vec::new();
-    };
-    let client = wav2vec2::batch_client(ctx.http.clone());
-    infer_frame_batch_at(items, &client, activity).await
-}
-
+#[cfg(test)]
 async fn infer_frame_batch_at(
     items: Vec<(&VerifyContext<'_>, PreparedFrameRequest)>,
     client: &Result<PhonemizerClient>,
-    activity: Option<&wav2vec2::RequestActivity>,
+    _activity: Option<&wav2vec2::RequestActivity>,
 ) -> Vec<Result<FrameMatrix>> {
     let (destinations, requests): (Vec<_>, Vec<_>) = items
         .into_iter()
         .map(|(ctx, request)| ((ctx, request.hash), request.payload))
         .unzip();
-    let response = match client {
-        Ok(client) => wav2vec2::predict_batch(client, &requests, activity).await,
-        Err(error) => Err(anyhow::anyhow!("{error:#}")),
-    };
-    let responses = match response {
-        Ok(responses) => responses,
-        Err(error) => {
-            return destinations
-                .iter()
-                .map(|_| Err(anyhow::anyhow!("{error:#}")))
-                .collect();
+    let responses = match client {
+        Ok(client) => {
+            use futures::StreamExt;
+            let mut indexed = client
+                .predict_many(
+                    requests
+                        .into_iter()
+                        .enumerate()
+                        .map(|(id, request)| AudioClip {
+                            id,
+                            duration: std::time::Duration::ZERO,
+                            audio: AudioInput::Request(request),
+                        })
+                        .collect(),
+                )
+                .collect::<Vec<_>>()
+                .await;
+            indexed.sort_by_key(|(id, _)| *id);
+            indexed
+                .into_iter()
+                .map(|(_, response)| response)
+                .collect::<Vec<_>>()
         }
+        Err(error) => destinations
+            .iter()
+            .map(|_| Err(anyhow::anyhow!("{error:#}")))
+            .collect(),
     };
     let mut results = Vec::with_capacity(destinations.len());
     for ((ctx, hash), response) in destinations.into_iter().zip(responses) {
@@ -991,8 +882,7 @@ async fn frame_matrices_at(
             }
             Err(error) => results[index] = Some(Err(error)),
         }
-        if !requests.is_empty() && (requests.len() == MODAL_BATCH_SIZE || pending.peek().is_none())
-        {
+        if !requests.is_empty() && (pending.peek().is_none()) {
             let frames = infer_frame_batch_at(std::mem::take(&mut requests), &client, None).await;
             for (index, frames) in indices.drain(..).zip(frames) {
                 results[index] = Some(frames);
@@ -1076,64 +966,6 @@ pub async fn segment_timings(
                 ms(aligned[end - 1].end_frame + 1),
             )
         })
-        .collect())
-}
-
-/// Decode WAV bytes to mono f32 samples at 16 kHz by piping through ffmpeg.
-/// 16 kHz is the standard rate wav2vec2 phoneme models expect.
-fn decode_wav_to_f32(wav_bytes: &[u8]) -> Result<Vec<f32>> {
-    let mut child = Command::new("ffmpeg")
-        .args([
-            "-loglevel",
-            "error",
-            "-i",
-            "pipe:0",
-            "-f",
-            "f32le",
-            "-ar",
-            "16000",
-            "-ac",
-            "1",
-            "pipe:1",
-        ])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .context("Failed to spawn ffmpeg for WAV decoding")?;
-
-    // Write stdin from its own thread: ffmpeg streams output while it
-    // still has input left to read, so once the input is larger than the
-    // OS pipe buffers, writing it all before draining stdout deadlocks —
-    // ffmpeg blocks writing stdout, we block writing stdin. Short clips
-    // never hit this; a 12-second movie cue does. Same pattern as
-    // `subtitle-corpus`'s `encode_opus`.
-    let mut stdin = child.stdin.take().context("ffmpeg stdin not captured")?;
-    let owned_bytes = wav_bytes.to_vec();
-    let writer = std::thread::spawn(move || stdin.write_all(&owned_bytes));
-
-    let output = child
-        .wait_with_output()
-        .context("Failed to wait for ffmpeg")?;
-    writer
-        .join()
-        .map_err(|_| anyhow::anyhow!("ffmpeg stdin writer thread panicked"))?
-        .context("Failed to write WAV bytes to ffmpeg stdin")?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("ffmpeg decode failed ({}): {stderr}", output.status);
-    }
-
-    if output.stdout.len() % 4 != 0 {
-        anyhow::bail!(
-            "ffmpeg output is not a multiple of 4 bytes ({} bytes)",
-            output.stdout.len()
-        );
-    }
-    Ok(output
-        .stdout
-        .chunks_exact(4)
-        .map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]]))
         .collect())
 }
 
@@ -1953,6 +1785,14 @@ pub fn cache_only() -> bool {
     CACHE_ONLY.load(Ordering::Relaxed)
 }
 #[cfg(test)]
+fn raw_prediction(response: ModalResponse) -> RawPrediction {
+    RawPrediction {
+        item: serde_json::value::to_raw_value(&response).unwrap(),
+        envelope: Default::default(),
+    }
+}
+
+#[cfg(test)]
 mod tests {
     #[test]
     fn tied_affricates_expand_symmetrically_in_every_language() {
@@ -2121,7 +1961,9 @@ mod tests {
             "model_id": "actual-model", "model_revision": "actual-revision"
         }))
         .unwrap();
-        cache_response(&ctx, hash, response.into()).await.unwrap();
+        cache_response(&ctx, hash, raw_prediction(response))
+            .await
+            .unwrap();
         let passed = verify_clip_bytes(&ctx, "test", "test", "cached", audio, Some(expected))
             .await
             .unwrap();
@@ -2219,7 +2061,7 @@ mod tests {
             "model_id": "actual", "model_revision": "revision"
         }))
         .unwrap();
-        cache_response(&ctx, hash, response.clone().into())
+        cache_response(&ctx, hash, raw_prediction(response.clone()))
             .await
             .unwrap();
         ctx.expected_identity = Some(test_identity()); // different from cached producer
@@ -2244,7 +2086,9 @@ mod tests {
                 .await
                 .is_none()
         );
-        cache_response(&ctx, hash, response.into()).await.unwrap();
+        cache_response(&ctx, hash, raw_prediction(response))
+            .await
+            .unwrap();
         assert!(
             cached_frame_matrix(&ctx.store, &ctx.response_key(hash))
                 .await
@@ -2325,7 +2169,7 @@ mod tests {
                 }
             }
         })).unwrap();
-        cache_response(&ctx, 42, response.clone().into())
+        cache_response(&ctx, 42, raw_prediction(response.clone()))
             .await
             .unwrap();
         let cached = cached_response(&ctx.store, &ctx.response_key(42))
@@ -2344,7 +2188,11 @@ mod tests {
         assert_eq!(frame_identity(&frames), Some(test_identity()));
         let mut conflicting = response;
         conflicting.model_revision = Some("not the matrix revision".into());
-        assert!(cache_response(&ctx, 43, conflicting.into()).await.is_err());
+        assert!(
+            cache_response(&ctx, 43, raw_prediction(conflicting))
+                .await
+                .is_err()
+        );
         assert!(
             cached_response(&ctx.store, &ctx.response_key(43))
                 .await
@@ -2614,13 +2462,13 @@ mod tests {
             assert!(check_response_identity(&ctx, &response(bad.clone())).is_err());
             // A good per-item claim must not mask a bad envelope.
             bad["results"] = serde_json::json!([response(good.clone())]);
-            let split = wav2vec2::split_batch(raw_batch(bad));
+            let split = raw_batch(bad).into_predictions();
             assert!(split.is_err() || split.unwrap().remove(0).is_err());
             // Missing per-item metadata inherits the envelope and is checked.
             let mut envelope = good.clone();
             envelope[field] = serde_json::json!("wrong");
             envelope["results"] = serde_json::json!([{"phonemes": []}]);
-            match wav2vec2::split_batch(raw_batch(envelope)) {
+            match raw_batch(envelope).into_predictions() {
                 Err(_) => {}
                 Ok(mut items) => {
                     assert!(
@@ -2632,7 +2480,8 @@ mod tests {
         }
         let mut envelope = good.clone();
         envelope["results"] = serde_json::json!([{"phonemes": []}]);
-        let item = wav2vec2::split_batch(raw_batch(envelope))
+        let item = raw_batch(envelope)
+            .into_predictions()
             .unwrap()
             .remove(0)
             .unwrap();
@@ -2798,7 +2647,7 @@ mod tests {
             "phonemes": [], "frame_matrix": batch_test_payload(2), "deploy_marker": "test"
         }))
         .unwrap();
-        cache_response(&ctx, xxh3_64(&cached), response.into())
+        cache_response(&ctx, xxh3_64(&cached), raw_prediction(response))
             .await
             .unwrap();
         // An early decode failure must be compacted out before chunking;

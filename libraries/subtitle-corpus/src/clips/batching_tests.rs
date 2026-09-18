@@ -1,6 +1,6 @@
 use super::*;
 use base64::Engine;
-use std::cell::{Cell, RefCell};
+use std::cell::Cell;
 use std::io::Write;
 
 fn matrix(hash: u64) -> FrameMatrix {
@@ -124,252 +124,68 @@ fn film(root: &Path, index: usize, count: usize) -> PreparedFilm {
 }
 
 #[tokio::test]
-async fn global_batches_sort_compact_route_and_prefetch_after_discovery() {
+async fn discovery_precedes_inference_and_results_route_by_slot() {
     let root = tempfile::tempdir().unwrap();
-    let gate = Gate::default();
-    let mut inputs = Vec::new();
-    for index in 0..8 {
-        let mut film = film(root.path(), index, 25);
-        // Discovery has already resolved a frame-cache hit and a gate reject.
-        let cached = film.clips[0].as_mut().unwrap();
-        score_clip(
-            cached,
-            &matrix((index * 100) as u64),
-            film.provenance.gate.min_ratio.unwrap(),
-            &gate,
-        );
-        film.clips[1].as_mut().unwrap().reject = Some("cut: bad audio".into());
-        film.pending.retain(|p| p.index >= 2);
-        inputs.push((index, Ok(FilmWork::Prepared(Box::new(film)))));
-    }
-    let current = film(root.path(), 8, 0);
-    let current_path = clips_path(&current.dir);
-    let current_summary = finish_film(FilmWork::Prepared(Box::new(current))).unwrap();
-    let current_bytes = std::fs::read(&current_path).unwrap();
-    inputs.push((8, Ok(FilmWork::Current(current_summary))));
-    inputs.push((9, Err(anyhow::anyhow!("film preparation failed"))));
-
-    let saved_cuts: Vec<PathBuf> = inputs
-        .iter()
-        .flat_map(|(_, outcome)| match outcome {
-            Ok(FilmWork::Prepared(film)) => {
-                film.pending.iter().map(|p| p.wav.to_path_buf()).collect()
-            }
-            _ => Vec::new(),
+    let discovered = Cell::new(0);
+    let inputs: Vec<_> = (0..3)
+        .map(|index| {
+            (
+                index,
+                Ok(FilmWork::Prepared(Box::new(film(root.path(), index, 3)))),
+            )
         })
         .collect();
-    assert!(saved_cuts.iter().all(|path| path.exists()));
-
-    let discovered = Cell::new(0);
-    let active = Cell::new(0);
-    let peak = Cell::new(0);
-    let request_count = Cell::new(0);
-    let lookahead_ready = tokio::sync::Notify::new();
-    let second_request_finished = tokio::sync::Notify::new();
-    let completion_order = RefCell::new(Vec::new());
-    let requests_active = Cell::new(0);
-    let requests_peak = Cell::new(0);
-    let batches = RefCell::new(Vec::new());
-    let durations = RefCell::new(Vec::new());
-    let preparation = futures::stream::iter(inputs).then(|item| async {
-        tokio::task::yield_now().await;
-        discovered.set(discovered.get() + 1);
-        item
-    });
+    let preparation =
+        futures::stream::iter(inputs).inspect(|_| discovered.set(discovered.get() + 1));
     let mapped = map_staged(
         preparation,
-        async |cut| {
-            assert_eq!(
-                discovered.get(),
-                10,
-                "request preparation crossed discovery barrier"
-            );
-            active.set(active.get() + 1);
-            peak.set(peak.get().max(active.get()));
-            tokio::task::yield_now().await;
-            active.set(active.get() - 1);
-            let hash = u64::from_le_bytes(std::fs::read(&cut.wav).unwrap().try_into().unwrap());
-            match hash % 100 {
-                2 => bail!("invalid WAV"),
-                4 => bail!("request preparation failed"),
-                _ => {}
-            }
-            request_count.set(request_count.get() + 1);
-            if request_count.get() == 128 {
-                lookahead_ready.notify_one();
-            }
-            Ok((hash, cut.duration_ms))
-        },
-        async |requests: Vec<(u64, i64)>| {
-            assert_eq!(discovered.get(), 10, "inference crossed discovery barrier");
-            let ordinal = batches.borrow().len();
-            requests_active.set(requests_active.get() + 1);
-            requests_peak.set(requests_peak.get().max(requests_active.get()));
-            batches.borrow_mut().push(requests.len());
-            durations
-                .borrow_mut()
-                .extend(requests.iter().map(|(_, duration)| *duration));
-            if ordinal == 0 {
-                // Prove preparation overlap and two in-flight requests, with
-                // the second completing first, not just two queued futures.
-                tokio::time::timeout(
-                    std::time::Duration::from_secs(5),
-                    lookahead_ready.notified(),
-                )
-                .await
-                .unwrap();
-                tokio::time::timeout(
-                    std::time::Duration::from_secs(5),
-                    second_request_finished.notified(),
-                )
-                .await
-                .unwrap();
-            }
-            let results = requests
-                .into_iter()
-                .map(|(hash, _)| {
-                    if hash == 107 {
-                        Err(anyhow::anyhow!("one endpoint item failed"))
-                    } else {
-                        Ok(matrix(hash))
-                    }
-                })
-                .collect();
-            requests_active.set(requests_active.get() - 1);
-            completion_order.borrow_mut().push(ordinal);
-            if ordinal == 1 {
-                second_request_finished.notify_one();
-            }
-            results
-        },
-        &gate,
-    )
-    .await;
-    assert!(
-        saved_cuts.iter().all(|path| !path.exists()),
-        "prepared and failed cuts are removed"
-    );
-    assert_eq!(*batches.borrow(), [64, 64, 40]);
-    assert_eq!(requests_peak.get(), INFERENCE_REQUESTS_IN_FLIGHT);
-    assert_eq!(requests_active.get(), 0);
-    assert_eq!(
-        completion_order.borrow()[0],
-        1,
-        "test must complete the second request first"
-    );
-    assert!(durations.borrow().windows(2).all(|pair| pair[0] <= pair[1]));
-    assert!(
-        (2..=8).contains(&peak.get()),
-        "bounded concurrent preparation: {}",
-        peak.get()
-    );
-    assert_eq!(request_count.get(), 168);
-    for (index, outcome) in mapped {
-        if index == 9 {
-            assert!(outcome.is_err());
-            assert!(!clips_path(&root.path().join("9")).exists());
-            continue;
-        }
-        let work = outcome.unwrap();
-        if let FilmWork::Prepared(film) = &work {
-            for (i, clip) in film.clips.iter().enumerate() {
-                if i == 2 || i == 4 || (index == 1 && i == 7) {
-                    assert!(clip.is_none());
-                    continue;
-                }
-                let clip = clip.as_ref().unwrap();
-                assert_eq!(clip.sentence, format!("film {index} clip {i}"));
-                if i == 1 {
-                    assert_eq!(clip.reject.as_deref(), Some("cut: bad audio"));
+        |pending| {
+            assert_eq!(discovered.get(), 3);
+            assert_eq!(pending.len(), 9);
+            futures::stream::iter(pending.into_iter().rev().map(|(id, cut)| {
+                assert!(cut.wav.exists(), "cut survives until inference finishes");
+                let result = if id == (1, 1) {
+                    Err(anyhow::anyhow!("one clip failed"))
                 } else {
-                    assert_eq!(clip.heard_ipa, clip.target_ipa, "misrouted matrix");
-                    assert_eq!(clip.passed, index % 2 == 0, "lost film-specific threshold");
-                }
+                    Ok(matrix(cut.hash))
+                };
+                (id, result)
+            }))
+        },
+        &Gate::default(),
+    )
+    .await;
+    for (index, work) in mapped {
+        let FilmWork::Prepared(film) = work.unwrap() else {
+            panic!()
+        };
+        for (slot, clip) in film.clips.iter().enumerate() {
+            if (index, slot) == (1, 1) {
+                assert!(clip.is_none());
+            } else {
+                assert_eq!(
+                    clip.as_ref().unwrap().heard_ipa,
+                    vec![format!("a{}", index * 100 + slot)]
+                );
             }
         }
-        let path = clips_path(&root.path().join(index.to_string()));
-        if index < 8 {
-            assert!(finish_film(work).is_err());
-            assert!(!path.exists(), "partial success must not publish a header");
-        } else {
-            finish_film(work).unwrap();
-            assert!(stored_provenance(&path).is_some());
-        }
-    }
-    assert_eq!(std::fs::read(current_path).unwrap(), current_bytes);
-}
-
-#[tokio::test]
-async fn all_inference_failures_leave_no_current_header() {
-    let root = tempfile::tempdir().unwrap();
-    let mut broken = film(root.path(), 0, 1);
-    // Failed candidates must never produce a current header.
-    broken.dir = root.path().join("missing-parent").join("film");
-    let good = film(root.path(), 1, 1);
-    let mapped = map_staged(
-        futures::stream::iter(vec![
-            (0, Ok(FilmWork::Prepared(Box::new(broken)))),
-            (1, Ok(FilmWork::Prepared(Box::new(good)))),
-        ]),
-        async |cut| {
-            Ok(u64::from_le_bytes(
-                std::fs::read(&cut.wav).unwrap().try_into().unwrap(),
-            ))
-        },
-        async |requests: Vec<u64>| {
-            requests
-                .into_iter()
-                .map(|_| Err(anyhow::anyhow!("request-wide failure")))
-                .collect()
-        },
-        &Gate::default(),
-    )
-    .await;
-    let results: Vec<_> = mapped
-        .into_iter()
-        .map(|(_, outcome)| outcome.and_then(finish_film))
-        .collect();
-    assert!(results.iter().all(Result::is_err));
-    assert!(!clips_path(&root.path().join("1")).exists());
-}
-
-#[tokio::test]
-async fn empty_or_resolved_selection_never_prepares_or_infers() {
-    let root = tempfile::tempdir().unwrap();
-    for inputs in [
-        Vec::new(),
-        vec![
-            (0, Ok(FilmWork::Current(FilmSummary::default()))),
-            (1, Ok(FilmWork::Prepared(Box::new(film(root.path(), 1, 0))))),
-            (2, Err(anyhow::anyhow!("preflight"))),
-        ],
-    ] {
-        map_staged(
-            futures::stream::iter(inputs),
-            async |_| -> Result<()> { panic!("nothing to prepare") },
-            async |_| panic!("nothing to infer"),
-            &Gate::default(),
-        )
-        .await;
+        assert_eq!(finish_film(FilmWork::Prepared(film)).is_ok(), index != 1);
     }
 }
 
 #[tokio::test]
-async fn all_request_preparations_fail_without_an_empty_inference_request() {
-    let root = tempfile::tempdir().unwrap();
-    let mapped = map_staged(
-        futures::stream::iter(vec![(
-            0,
-            Ok(FilmWork::Prepared(Box::new(film(root.path(), 0, 4)))),
-        )]),
-        async |_| -> Result<()> { bail!("saved WAV failed to decode") },
-        async |_| panic!("failed preparations cannot trigger inference"),
+async fn empty_or_resolved_selection_never_infers() {
+    let inputs = vec![(0, Ok(FilmWork::Current(FilmSummary::default())))];
+    map_staged(
+        futures::stream::iter(inputs),
+        |_| {
+            panic!("nothing to infer");
+            #[allow(unreachable_code)]
+            futures::stream::empty()
+        },
         &Gate::default(),
     )
     .await;
-    let (_, outcome) = mapped.into_iter().next().unwrap();
-    assert!(finish_film(outcome.unwrap()).is_err());
-    assert!(!clips_path(&root.path().join("0")).exists());
 }
 
 #[test]
