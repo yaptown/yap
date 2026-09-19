@@ -1,4 +1,3 @@
-use crate::chat_retry::ChatRetry;
 use futures::StreamExt as _;
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::features::Morphology;
@@ -202,7 +201,7 @@ mod llm_morphology {
         // Issue concurrent requests for all applicable features
         let gender_future = async {
             if gender_applies {
-                let result: Result<GenderResponse, _> = chat_client.chat_with_system_prompt_retrying(
+                let result: Result<GenderResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
                     r#"Determine the grammatical gender of the provided {language} word
 Think about whether this word has a fixed grammatical gender. 
@@ -226,7 +225,7 @@ If the gender of the word is not uniquely determined, return null. Neuter is onl
 
         let politeness_future = async {
             if politeness_applies {
-                let result: Result<PoliteResponse, _> = chat_client.chat_with_system_prompt_retrying(
+                let result: Result<PoliteResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
                     r#"Determine the morphological politeness of the provided {language} word.
 Think about whether this word is morphologically formal, informal, elevated, or humble.
@@ -243,7 +242,7 @@ If it has a specific morphological politeness level, provide it. Otherwise, use 
 
         let tense_future = async {
             if tense_applies {
-                let result: Result<TenseResponse, _> = chat_client.chat_with_system_prompt_retrying(
+                let result: Result<TenseResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
                     r#"Determine the tense of the provided {language} word.
 Think about whether this word has a fixed tense. Options are:
@@ -265,7 +264,7 @@ If one of these options is applicable, provide it. If the tense varies or is not
 
         let person_future = async {
             if person_applies {
-                let result: Result<PersonResponse, _> = chat_client.chat_with_system_prompt_retrying(
+                let result: Result<PersonResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
                     r#"Determine the grammatical person of the provided {language} word.
 Think about whether this word has a fixed person (e.g., first person pronoun, third person verb).
@@ -289,7 +288,7 @@ If one of these options is applicable, provide it. If the person varies or is no
 
         let case_future = async {
             if case_applies {
-                let result: Result<CaseResponse, _> = chat_client.chat_with_system_prompt_retrying(
+                let result: Result<CaseResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
                     r#"Determine the grammatical case of the provided {language} word.
 Think about whether this word has a fixed case marking. Case helps specify the role of a noun phrase in the sentence.
@@ -325,7 +324,7 @@ If this word has a fixed grammatical case, provide it. If case is not applicable
 
         let number_future = async {
             if number_applies {
-                let result: Result<NumberResponse, _> = chat_client.chat_with_system_prompt_retrying(
+                let result: Result<NumberResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
                     r#"Determine the grammatical number of the provided {language} word.
 Think about whether this word has a fixed number marking.
@@ -359,7 +358,7 @@ If this word has a fixed grammatical number, provide it. If number is not applic
 
         let mood_future = async {
             if mood_applies {
-                let result: Result<MoodResponse, _> = chat_client.chat_with_system_prompt_retrying(
+                let result: Result<MoodResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
                     r#"Determine the mood of the provided {language} verb.
 Think about whether this verb has a fixed mood. Mood expresses modality and subclassifies finite verb forms.
@@ -394,7 +393,7 @@ If this verb has a fixed mood, provide it. If mood is not applicable or varies, 
 
         let aspect_future = async {
             if aspect_applies {
-                let result: Result<AspectResponse, _> = chat_client.chat_with_system_prompt_retrying(
+                let result: Result<AspectResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
                     r#"Determine the grammatical aspect of the provided {language} word.
 Aspect specifies the internal temporal structure of the action (duration, completion, habituality, etc.).

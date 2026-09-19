@@ -47,7 +47,7 @@ schemars = "1"
 futures = "0.3.32"
 env_logger = "0.11.10"
 tsify = { version = "0.5.6", features = ["js"], default-features = false }
-tysm = { git = "https://github.com/anchpop/tysm.git", rev = "74a425d6076b632564206b2c48fb7737f6dbf8e4", features = [
+tysm = { git = "https://github.com/anchpop/tysm.git", rev = "8656e1e7b1641780fd0e42018b7c284a558f5d9d", features = [
     "small-batch-optimization",
 ] }
 # Local-first KV cache store synced to R2 (github.com/anchpop/osmo). All of

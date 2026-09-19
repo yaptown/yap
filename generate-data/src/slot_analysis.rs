@@ -25,7 +25,6 @@
 //! realization)'s matches so the pipeline can drop realizations whose precision
 //! is bad — one call per pattern, not per sentence.
 
-use crate::chat_retry::ChatRetry;
 use language_utils::Course;
 use lexide::matching::{NodeMatcher, PatternNode};
 use lexide::pos::PartOfSpeech;
@@ -173,7 +172,7 @@ async fn placeholder_hints(
         include ordinary pronouns (je, tu, il...) or reflexive markers.";
 
     let abstract_response: PlaceholderHintsResponse = HINTS_CLIENT
-        .chat_with_system_prompt_retrying(
+        .chat_with_system_prompt(
             shared_instructions,
             format!("Language: {language}\nList the placeholder expressions."),
         )
@@ -205,7 +204,7 @@ async fn placeholder_hints(
     } else {
         Some(
             HINTS_CLIENT
-                .chat_with_system_prompt_retrying(
+                .chat_with_system_prompt(
                     format!(
                         "{shared_instructions}\n\nYou are given a sample of real {language} \
                          multiword terms from the dictionary, each with the lemma sequence \

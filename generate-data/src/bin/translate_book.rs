@@ -15,7 +15,6 @@
 //! default `eng`) skips translation and segments the original text — e.g. a Chinese-original
 //! book runs with `--source-lang zho-hans --only zho-hans`.
 
-use generate_data::chat_retry::ChatRetry;
 use std::collections::BTreeSet;
 use std::io::Write;
 use std::path::PathBuf;
@@ -223,7 +222,7 @@ async fn main() -> anyhow::Result<()> {
                         chunk.text.clone()
                     } else {
                         let response: ChunkTranslation = CHAT_CLIENT
-                            .chat_with_system_prompt_retrying(system_prompt, chunk.text.clone())
+                            .chat_with_system_prompt(system_prompt, chunk.text.clone())
                             .await
                             .with_context(|| format!("translate chunk {}", chunk.id))?;
                         response.translation

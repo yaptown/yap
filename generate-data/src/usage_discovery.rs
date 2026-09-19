@@ -64,7 +64,6 @@
 //! `wiktionary_terms::extra_multiword_terms`, which folds the discovered
 //! terms into the next run's multiword-term inventory as-is.
 
-use crate::chat_retry::ChatRetry;
 use anyhow::{Context, Result};
 use language_utils::{Atom, Gram, Language, SentenceInfo, WordType};
 use serde::{Deserialize, Serialize};
@@ -909,7 +908,7 @@ async fn probe_words(language: Language) -> Result<Vec<ProbeWord>> {
     let response: PolysemyProbeResponse = loop {
         attempt += 1;
         match PROBE_CLIENT
-            .chat_with_system_prompt_retrying(
+            .chat_with_system_prompt(
                 probe_system_prompt(language),
                 "Please list the words when ready!",
             )

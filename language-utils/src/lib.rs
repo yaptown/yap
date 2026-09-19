@@ -2896,6 +2896,43 @@ pub enum WritingSystem {
 }
 
 impl WritingSystem {
+    /// Whether a character belongs to this script's blocks. This is a spelling
+    /// sanity check, not language identification: shared scripts cannot tell a
+    /// foreign word from a native one, and Japanese also uses Han characters.
+    pub fn contains_char(&self, c: char) -> bool {
+        match self {
+            WritingSystem::Latin => {
+                c.is_ascii_alphabetic()
+                    || matches!(c, 'ª' | 'º')
+                    || (matches!(c, '\u{00C0}'..='\u{024F}') && c.is_alphabetic())
+            }
+            WritingSystem::Hangul => matches!(c,
+                '\u{AC00}'..='\u{D7A3}' | '\u{1100}'..='\u{11FF}' | '\u{3130}'..='\u{318F}'),
+            WritingSystem::Cyrillic => matches!(c, '\u{0400}'..='\u{04FF}'),
+            WritingSystem::Han => matches!(c,
+                '\u{4E00}'..='\u{9FFF}' | '\u{3400}'..='\u{4DBF}'
+                | '\u{20000}'..='\u{2A6DF}' | '\u{2A700}'..='\u{2B73F}'
+                | '\u{2B740}'..='\u{2B81F}' | '\u{2B820}'..='\u{2CEAF}'
+                | '\u{2CEB0}'..='\u{2EBEF}' | '\u{2EBF0}'..='\u{2EE5F}'
+                | '\u{30000}'..='\u{3134F}' | '\u{31350}'..='\u{323AF}'
+                | '\u{F900}'..='\u{FAFF}' | '\u{2F800}'..='\u{2FA1F}'),
+            WritingSystem::Japanese => {
+                matches!(c, '\u{3040}'..='\u{309F}' | '\u{30A0}'..='\u{30FF}')
+                    || WritingSystem::Han.contains_char(c)
+            }
+            WritingSystem::Devanagari => matches!(c, '\u{0900}'..='\u{097F}'),
+            WritingSystem::Thai => matches!(c, '\u{0E00}'..='\u{0E7F}'),
+        }
+    }
+
+    /// Whether text contains any of this script. Requiring its presence catches
+    /// romanized examples before they are spoken, without rejecting punctuation
+    /// or mixed-script spellings. Latin targets naturally also accept Latin
+    /// transliterations; callers must still check the spelling being taught.
+    pub fn appears_in(&self, text: &str) -> bool {
+        text.chars().any(|c| self.contains_char(c))
+    }
+
     /// Whether this script separates words with spaces. Scriptio continua
     /// systems (Han, Japanese, Thai) attach adjacent words directly; the
     /// spaces that do appear in such text (e.g. subtitle pause marks, Thai
@@ -5700,5 +5737,48 @@ mod pronunciation_challenge_audio_tests {
                 ("carte", "carte"),
             ]
         );
+    }
+}
+
+#[cfg(test)]
+mod writing_system_tests {
+    use super::WritingSystem;
+
+    #[test]
+    fn script_presence_rejects_romanizations() {
+        assert!(!WritingSystem::Devanagari.appears_in("Jaipur"));
+        assert!(WritingSystem::Devanagari.appears_in("जयपुर"));
+        assert!(WritingSystem::Japanese.appears_in("らんま"));
+        assert!(WritingSystem::Hangul.appears_in("김치"));
+        for (script, text) in [
+            (WritingSystem::Latin, "éŁǎ"),
+            (WritingSystem::Cyrillic, "Москва"),
+            (WritingSystem::Han, "漢"),
+            (WritingSystem::Thai, "ไทย"),
+        ] {
+            assert!(script.appears_in(text));
+            assert!(!script.appears_in("123 !"));
+            assert!(!script.appears_in(""));
+        }
+        assert!(!WritingSystem::Latin.appears_in("×÷µ"));
+        assert!(WritingSystem::Latin.contains_char('ª'));
+        assert!(WritingSystem::Latin.contains_char('º'));
+        assert!(!WritingSystem::Latin.appears_in("जयपुर"));
+    }
+
+    #[test]
+    fn script_blocks_include_jamo_katakana_and_extended_han() {
+        for c in ['ᄀ', 'ㄱ', '김'] {
+            assert!(WritingSystem::Hangul.contains_char(c));
+        }
+        for c in ['ら', 'ラ', 'ー', '漢', '\u{3400}', '\u{20000}', '\u{F900}'] {
+            assert!(WritingSystem::Japanese.contains_char(c));
+        }
+        for c in ['漢', '\u{3400}', '\u{20000}', '\u{30000}', '\u{F900}'] {
+            assert!(WritingSystem::Han.contains_char(c));
+        }
+        assert!(!WritingSystem::Han.contains_char('ら'));
+        assert!(!WritingSystem::Japanese.contains_char('a'));
+        assert!(!WritingSystem::Hangul.contains_char('a'));
     }
 }

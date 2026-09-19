@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 2724179
-Total errors: 56387
+Total predictions: 2724365
+Total errors: 56391
 Accuracy: 97.93%
 
 ## Error Patterns (sorted by frequency)
@@ -478,6 +478,14 @@ Accuracy: 97.93%
   - ここで待ってないと助けに来るのは あんたのためでしょ
   - このろくでなしは あんたが気に入ってるらしい
 
+### "も" + "何" (23 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - あいつは 俺のことも ローザのことも 何も知らない
+  - あなたはどこでも 何にでもなれる
+  - あんな作家や学者でも 何がインテリだ！
+
 ### "ハア" + "ハア" (23 occurrences)
 - Predicted: None
 - Actual: Space
@@ -517,14 +525,6 @@ Accuracy: 97.93%
   - あなたには すべてを話したわ
   - あなたの悪い行いは すべて許します
   - これは すべて僕のせいだ！
-
-### "も" + "何" (22 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - あいつは 俺のことも ローザのことも 何も知らない
-  - あなたはどこでも 何にでもなれる
-  - あんな作家や学者でも 何がインテリだ！
 
 ### "が" + "あなた" (21 occurrences)
 - Predicted: None
@@ -94413,6 +94413,12 @@ Accuracy: 97.93%
 - Examples:
   - なら 俺のため 力になってくれ イアン
 
+### "ため" + "建物" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 保健当局が安全のため 建物を封鎖しました
+
 ### "ため" + "彼女" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -182121,6 +182127,12 @@ Accuracy: 97.93%
 - Examples:
   - 奴を止める ーおれを おまえが?
 
+### "を" + "おゆるし" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 女の手を借りて戦とう艇を作るつみ深きわたしどもを おゆるしください
+
 ### "を" + "おりな" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -242024,6 +242036,12 @@ Accuracy: 97.93%
 - Actual: Space
 - Examples:
   - あんたは何の理由も無く 彼らを殺したんだ！
+
+### "無く" + "福祉" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 個人的資産無く 福祉向上か・・・
 
 ### "無ければ" + "これ" (1 occurrences)
 - Predicted: None
