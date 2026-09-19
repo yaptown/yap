@@ -4376,6 +4376,11 @@ pub struct FlashCard {
 pub struct PronunciationCue {
     pub audio: AudioRequest,
     pub segments: Vec<CueSegment>,
+    /// The connector in the learner's own language ("as in"), shown in place
+    /// of the target-language one until the clip plays. A learner meeting
+    /// Hindi's "जैसे" for the first time can't read the cue; hearing it
+    /// once is what makes the target-language word worth showing.
+    pub native_connector: String,
 }
 
 #[bridge(transparent)]

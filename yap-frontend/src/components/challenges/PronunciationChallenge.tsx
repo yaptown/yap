@@ -1,4 +1,5 @@
 import type {
+  CueSegment,
   PronunciationCue,
   Language,
   Rating,
@@ -6,7 +7,8 @@ import type {
 import Markdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
+import { languageToLangAttr } from "@/lib/utils";
 import { AudioButton } from "../AudioButton";
 import { CantSpeakButton } from "../CantSpeakButton";
 import { AudioErrorBanner } from "../AudioErrorBanner";
@@ -28,6 +30,7 @@ interface PronunciationChallengeProps {
   accessToken: string | undefined;
   onCantSpeak: () => void;
   targetLanguage: Language;
+  nativeLanguage: Language;
   isNew: boolean;
   showGuide: boolean;
 }
@@ -40,6 +43,7 @@ export function PronunciationChallenge({
   accessToken,
   onCantSpeak,
   targetLanguage,
+  nativeLanguage,
   isNew,
   showGuide,
 }: PronunciationChallengeProps) {
@@ -134,6 +138,7 @@ export function PronunciationChallenge({
                       pattern={pattern}
                       position={guide.position}
                       targetLanguage={targetLanguage}
+                      nativeLanguage={nativeLanguage}
                       accessToken={accessToken}
                       onError={() => setAudioError(true)}
                       onSuccess={() => setAudioError(false)}
@@ -207,6 +212,7 @@ function PronunciationRow({
   pattern,
   position,
   targetLanguage,
+  nativeLanguage,
   accessToken,
   onError,
   onSuccess,
@@ -216,13 +222,26 @@ function PronunciationRow({
   pattern: string;
   position: "Beginning" | "End" | "Anywhere";
   targetLanguage: Language;
+  nativeLanguage: Language;
   accessToken: string | undefined;
   onError: () => void;
   onSuccess: () => void;
 }) {
   const [positionMs, setPositionMs] = useState<number | null>(null);
+  // This row's connector reads as the learner's own "as in" until they play
+  // this row's clip, after which it stays as the word the voice used. It's per
+  // row because the swap is meant to be explained by the audio just heard.
+  const [connectorHeard, setConnectorHeard] = useState(false);
   const firstExample = cue.segments.findIndex(
     (segment) => segment.role === "Example",
+  );
+  // The connector words are one contiguous run, so the first index is enough
+  // to find them and to know where the swap goes.
+  const firstConnector = cue.segments.findIndex(
+    (segment) => segment.role === "Connector",
+  );
+  const connectorSegments = cue.segments.filter(
+    (segment) => segment.role === "Connector",
   );
   let lastExample = -1;
   let current = -1;
@@ -236,80 +255,121 @@ function PronunciationRow({
       current = index;
   });
 
+  // One word as the voice says it: dimmed until the playhead reaches it, lit
+  // while it's being said, with the pattern picked out inside example words.
+  const spokenWord = (segment: CueSegment, index: number) => {
+    let patternIndex = -1;
+    if (segment.role === "Example") {
+      const word = segment.text.toLowerCase();
+      const needle = pattern.toLowerCase();
+      if (
+        position === "Beginning" &&
+        index === firstExample &&
+        word.startsWith(needle)
+      ) {
+        patternIndex = 0;
+      } else if (
+        position === "End" &&
+        index === lastExample &&
+        word.endsWith(needle)
+      ) {
+        patternIndex = segment.text.length - pattern.length;
+      } else if (position === "Anywhere") {
+        patternIndex = word.indexOf(needle);
+      }
+    }
+    const timed = positionMs !== null && segment.start_ms != null;
+    const unspoken =
+      positionMs !== null &&
+      segment.start_ms != null &&
+      positionMs < segment.start_ms;
+    const style =
+      segment.role === "Pattern"
+        ? "font-medium"
+        : segment.role === "Connector"
+          ? ""
+          : "font-semibold";
+    const color =
+      timed && index === current
+        ? "text-primary"
+        : segment.role === "Connector"
+          ? "text-muted-foreground"
+          : "";
+    return (
+      <TargetLanguageText language={targetLanguage}>
+        <span
+          className={`${style} transition-[color,opacity] duration-100 ${unspoken ? "opacity-50" : ""} ${color}`}
+        >
+          {patternIndex < 0 ? (
+            segment.text
+          ) : (
+            <>
+              {segment.text.slice(0, patternIndex)}
+              <span className="bg-yellow-500/30 rounded px-0.5">
+                {segment.text.slice(
+                  patternIndex,
+                  patternIndex + pattern.length,
+                )}
+              </span>
+              {segment.text.slice(patternIndex + pattern.length)}
+            </>
+          )}
+        </span>
+      </TargetLanguageText>
+    );
+  };
+
+  // "as in" reads for a learner who has never met the target-language
+  // connector; the real word reads once they've heard it. Both sit in the same
+  // grid cell, so the cell is as wide as the wider of the two and swapping
+  // them moves nothing else on the line.
+  const connector = (
+    <span className="inline-grid items-baseline justify-items-center px-1 align-baseline">
+      <span
+        lang={languageToLangAttr(nativeLanguage)}
+        aria-hidden={connectorHeard}
+        className={`col-start-1 row-start-1 text-muted-foreground transition-opacity duration-300 ${connectorHeard ? "opacity-0" : ""}`}
+      >
+        {cue.native_connector}
+      </span>
+      <span
+        aria-hidden={!connectorHeard}
+        className={`col-start-1 row-start-1 transition-opacity duration-300 ${connectorHeard ? "" : "opacity-0"}`}
+      >
+        {connectorSegments.map((segment, offset) => (
+          <Fragment key={offset}>
+            {offset > 0 && " "}
+            {spokenWord(segment, firstConnector + offset)}
+          </Fragment>
+        ))}
+      </span>
+    </span>
+  );
+
   return (
     <div className="bg-muted/30 rounded p-3 flex items-center justify-between gap-3">
       <div className="flex-1 flex flex-col gap-1">
         <div className="text-base">
-          <TargetLanguageText language={targetLanguage}>
-            {cue.segments.map((segment, index) => {
-              let patternIndex = -1;
-              if (segment.role === "Example") {
-                const word = segment.text.toLowerCase();
-                const needle = pattern.toLowerCase();
-                if (
-                  position === "Beginning" &&
-                  index === firstExample &&
-                  word.startsWith(needle)
-                ) {
-                  patternIndex = 0;
-                } else if (
-                  position === "End" &&
-                  index === lastExample &&
-                  word.endsWith(needle)
-                ) {
-                  patternIndex = segment.text.length - pattern.length;
-                } else if (position === "Anywhere") {
-                  patternIndex = word.indexOf(needle);
-                }
-              }
-              const timed = positionMs !== null && segment.start_ms != null;
-              const unspoken =
-                positionMs !== null &&
-                segment.start_ms != null &&
-                positionMs < segment.start_ms;
-              const style =
-                segment.role === "Pattern"
-                  ? "font-medium"
-                  : segment.role === "Connector"
-                    ? ""
-                    : "font-semibold";
-              const color =
-                timed && index === current
-                  ? "text-primary"
-                  : segment.role === "Connector"
-                    ? "text-muted-foreground"
-                    : "";
-              const separated =
-                index > 0 &&
-                !(
-                  segment.role === "Pattern" &&
-                  cue.segments[index - 1].role === "Pattern"
-                );
-              return (
-                <span key={index}>
-                  {separated && " "}
-                  <span
-                    className={`${style} transition-[color,opacity] duration-100 ${unspoken ? "opacity-50" : ""} ${color}`}
-                  >
-                    {patternIndex < 0 ? (
-                      segment.text
-                    ) : (
-                      <>
-                        {segment.text.slice(0, patternIndex)}
-                        <span className="bg-yellow-500/30 rounded px-0.5">
-                          {segment.text.slice(
-                            patternIndex,
-                            patternIndex + pattern.length,
-                          )}
-                        </span>
-                        {segment.text.slice(patternIndex + pattern.length)}
-                      </>
-                    )}
-                  </span>
-                </span>
+          {cue.segments.map((segment, index) => {
+            // The connector run renders once, at its first word.
+            if (segment.role === "Connector" && index !== firstConnector) {
+              return null;
+            }
+            const separated =
+              index > 0 &&
+              !(
+                segment.role === "Pattern" &&
+                cue.segments[index - 1].role === "Pattern"
               );
-            })}
-          </TargetLanguageText>
+            return (
+              <Fragment key={index}>
+                {separated && " "}
+                {index === firstConnector
+                  ? connector
+                  : spokenWord(segment, index)}
+              </Fragment>
+            );
+          })}
         </div>
         {example.cultural_context && (
           <div className="text-xs text-muted-foreground">
@@ -321,7 +381,12 @@ function PronunciationRow({
         audioRequest={cue.audio}
         accessToken={accessToken}
         autoPlay={false}
-        onTimeUpdate={setPositionMs}
+        onTimeUpdate={(ms) => {
+          setPositionMs(ms);
+          // The first frame of playback is when the voice actually starts, so
+          // the connector turns over as the learner hears it.
+          if (ms !== null) setConnectorHeard(true);
+        }}
         onError={onError}
         onSuccess={onSuccess}
       />

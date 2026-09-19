@@ -66,6 +66,7 @@ export function WidgetPronunciationCard({
         accessToken={undefined}
         onCantSpeak={cantSpeak}
         targetLanguage={challenge.language}
+        nativeLanguage={challenge.native_language}
         isNew={challenge.is_new}
         showGuide={challenge.show_guide}
       />

@@ -1372,11 +1372,14 @@ impl YapMcp {
                 unreachable!("pronunciation_challenge builds a PronunciationChallenge");
             };
             let language = state.target_language_value();
+            let native_language = serde_json::to_value(state.context.course.native_language)
+                .expect("Language serializes");
             let structured = json!({
                 "challenge": {
                     "type": "pronunciation",
                     "nonce": presentation_nonce(),
                     "language": language,
+                    "native_language": native_language,
                     "is_new": is_new,
                     "show_guide": yap_frontend_rs::should_show_challenge_tutorial(times_type_seen),
                     "card": card,

@@ -1272,6 +1272,7 @@ function Review({
               accessToken={accessToken}
               onCantSpeak={handleCantSpeak}
               targetLanguage={targetLanguage}
+              nativeLanguage={nativeLanguage}
               isNew={currentChallenge.is_new}
               showGuide={should_show_challenge_tutorial(
                 currentChallenge.times_type_seen,

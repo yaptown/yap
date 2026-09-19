@@ -36,6 +36,8 @@ export interface FlashcardChallenge extends ChallengeBase {
 
 export interface PronunciationChallenge extends ChallengeBase {
   type: "pronunciation";
+  // The native language, for tagging the "as in" connector gloss.
+  native_language: Language;
   pattern: string;
   // The full guide the app renders (position, description, example words).
   // Type-only import; erases at build (no WASM in the bundle).

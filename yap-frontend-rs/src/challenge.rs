@@ -648,6 +648,7 @@ impl ReviewInfo {
         let pattern_str = guide.pattern.clone();
 
         let target_language = deck.context.course.target_language;
+        let native_language = deck.context.course.native_language;
         let cues = guide
             .example_words
             .iter()
@@ -682,6 +683,7 @@ impl ReviewInfo {
                         provider: TtsProvider::Gemini,
                     },
                     segments,
+                    native_connector: native_language.pronunciation_connector().to_string(),
                 }
             })
             .collect();
