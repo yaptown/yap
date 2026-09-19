@@ -185,6 +185,19 @@ const LANGUAGE_DATA_WRITE_ATTEMPTS: usize = 3;
 /// ~200 MB.
 const LANGUAGE_DATA_CHUNK_SIZE: usize = 16 * 1024 * 1024;
 
+/// How long `send()` may take before a chunk request is abandoned. In the
+/// browser `send()` resolves on response headers, so this is a first-byte
+/// deadline. The native fetch-happen transport buffers the whole body inside
+/// `send()`, so there it has to budget for the full chunk (16 MiB on a slow
+/// link) until that transport streams too.
+const LANGUAGE_DATA_SEND_TIMEOUT_MS: u32 = if cfg!(target_arch = "wasm32") {
+    30_000
+} else {
+    10 * 60_000
+};
+/// How long a chunk's body may go without delivering any bytes.
+const LANGUAGE_DATA_STALL_TIMEOUT_MS: u32 = 60_000;
+
 #[derive(serde::Serialize)]
 struct LanguageDataRequest {
     course: Course,
@@ -432,6 +445,9 @@ pub enum LanguageDataError {
     #[error("{0}")]
     InvalidData(String),
 
+    #[error("Timed out: {0}")]
+    Timeout(String),
+
     #[error("Unsupported course: {0:?}")]
     UnsupportedCourse(Course),
 }
@@ -600,12 +616,25 @@ async fn fetch_language_data_chunk(
         chunk_index,
         ..
     } = request;
-    let response = fetch_happen::Client
+    // A server that accepts the connection and never answers (a wedged
+    // local backend, a proxy black-holing the request) would otherwise
+    // hang the loading screen forever with no error to retry from.
+    let abort = bridgerton::AbortController::new();
+    let send = fetch_happen::Client
         .post(url)
         .json(&request)
         .map_err(LanguageDataError::AiServer)?
-        .send()
+        .abort_signal(abort.signal())
+        .send();
+    let response = bridgerton::platform::timeout(LANGUAGE_DATA_SEND_TIMEOUT_MS, send)
         .await
+        .ok_or_else(|| {
+            abort.abort();
+            LanguageDataError::Timeout(format!(
+                "no response from the language data server after {}s",
+                LANGUAGE_DATA_SEND_TIMEOUT_MS / 1000
+            ))
+        })?
         .map_err(LanguageDataError::AiServer)?;
 
     if !response.ok() {
@@ -626,7 +655,17 @@ async fn fetch_language_data_chunk(
     let mut last_logged_percent = downloaded_before_chunk * 100 / expected_total_size.max(1);
 
     loop {
-        match reader.read_chunk().await {
+        let next =
+            bridgerton::platform::timeout(LANGUAGE_DATA_STALL_TIMEOUT_MS, reader.read_chunk())
+                .await
+                .ok_or_else(|| {
+                    abort.abort();
+                    LanguageDataError::Timeout(format!(
+                        "language data download stalled for {}s",
+                        LANGUAGE_DATA_STALL_TIMEOUT_MS / 1000
+                    ))
+                })?;
+        match next {
             Ok(Some(chunk)) => {
                 chunk_bytes.extend_from_slice(&chunk);
                 let progress = ((downloaded_before_chunk + chunk_bytes.len()) as f64
@@ -854,5 +893,47 @@ mod native_tests {
                 assert!(matches!(result, Err(LanguageDataError::InvalidData(_))));
             }
         }
+    }
+
+    /// A server that accepts the connection and never answers must not hang
+    /// the load forever. The paused clock jumps straight to the deadline.
+    #[tokio::test(start_paused = true)]
+    async fn silent_server_times_out_before_first_byte() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (release, held) = tokio::sync::oneshot::channel::<()>();
+        let server = tokio::spawn(async move {
+            let (socket, _) = listener.accept().await.unwrap();
+            let _ = held.await;
+            drop(socket);
+        });
+        let started = tokio::time::Instant::now();
+        let result = fetch_language_data_chunk(
+            &format!("http://{address}/language-data"),
+            LanguageDataRequest {
+                course: Course {
+                    target_language: Language::French,
+                    native_language: Language::English,
+                },
+                part: PackPart::Core,
+                chunk_index: 0,
+                chunk_size: LANGUAGE_DATA_CHUNK_SIZE,
+            },
+            4,
+            0,
+            4,
+            &|_, _| {},
+        )
+        .await;
+        assert!(
+            matches!(result, Err(LanguageDataError::Timeout(_))),
+            "expected timeout, got {result:?}"
+        );
+        assert_eq!(
+            started.elapsed().as_millis(),
+            u128::from(LANGUAGE_DATA_SEND_TIMEOUT_MS)
+        );
+        release.send(()).unwrap();
+        server.await.unwrap();
     }
 }

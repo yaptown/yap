@@ -51,6 +51,21 @@ pub async fn sleep_ms(milliseconds: u32) {
     tokio::time::sleep(std::time::Duration::from_millis(milliseconds.into())).await;
 }
 
+/// Await `future`, giving up after `milliseconds`. Returns `None` on timeout,
+/// dropping the future; callers that hold an abort handle should fire it so
+/// the underlying work (a browser fetch, say) doesn't linger.
+pub async fn timeout<T>(
+    milliseconds: u32,
+    future: impl std::future::Future<Output = T>,
+) -> Option<T> {
+    let future = std::pin::pin!(future);
+    let deadline = std::pin::pin!(sleep_ms(milliseconds));
+    match futures::future::select(future, deadline).await {
+        futures::future::Either::Left((value, _)) => Some(value),
+        futures::future::Either::Right(((), _)) => None,
+    }
+}
+
 /// Run synchronous work on Tokio's blocking pool natively, or inline in the browser.
 ///
 /// The result is a join result; a fallible operation keeps its own inner `Result`.
