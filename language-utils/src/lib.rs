@@ -4077,12 +4077,22 @@ pub fn pronunciation_challenge_tts_instructions(language: Language) -> String {
     )
 }
 
+/// The part of a pronunciation cue a display segment belongs to.
+#[bridgerton::bridge(transparent)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum CueSegmentRole {
+    Pattern,
+    Connector,
+    Example,
+}
+
 /// One thing the voice says in a pronunciation clip, paired with what the
 /// learner sees for it. A letter of the pattern is shown as itself but
 /// spoken by name where [`Language::letter_name`] has one ("ü" / "u
 /// Umlaut"); connector and example words read the same both ways.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SpokenSegment {
+    pub role: CueSegmentRole,
     pub display: String,
     pub spoken: String,
 }
@@ -4125,21 +4135,26 @@ pub fn pronunciation_challenge_segments(
             _ => letters.push(SpokenSegment {
                 display: c.to_string(),
                 spoken,
+                role: CueSegmentRole::Pattern,
             }),
         }
     }
-    let words = |text: &str| {
+    let words = |text: &str, role| {
         text.split_whitespace()
             .map(|word| SpokenSegment {
                 display: word.to_string(),
                 spoken: word.to_string(),
+                role,
             })
             .collect::<Vec<_>>()
     };
     letters
         .into_iter()
-        .chain(words(language.pronunciation_connector()))
-        .chain(words(example))
+        .chain(words(
+            language.pronunciation_connector(),
+            CueSegmentRole::Connector,
+        ))
+        .chain(words(example, CueSegmentRole::Example))
         .collect()
 }
 
@@ -5574,6 +5589,9 @@ mod pronunciation_challenge_audio_tests {
     #[test]
     fn stress_marks_stay_attached_to_their_vowel() {
         let segments = pronunciation_challenge_segments(Language::Russian, "а\u{301}", "мама");
+        assert_eq!(segments[0].role, CueSegmentRole::Pattern);
+        assert_eq!(segments[1].role, CueSegmentRole::Connector);
+        assert_eq!(segments.last().unwrap().role, CueSegmentRole::Example);
         let pairs: Vec<(&str, &str)> = segments
             .iter()
             .map(|s| (s.display.as_str(), s.spoken.as_str()))

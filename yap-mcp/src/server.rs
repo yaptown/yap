@@ -1363,7 +1363,7 @@ impl YapMcp {
             let Challenge::PronunciationChallenge {
                 pattern,
                 guide,
-                audio_requests,
+                cues,
                 is_new,
                 times_type_seen,
                 ..
@@ -1382,10 +1382,7 @@ impl YapMcp {
                     "card": card,
                     "pattern": pattern,
                     "guide": guide,
-                    "audio_requests": audio_requests,
-                    // The spoken "as in" connector, precomputed here so the
-                    // widget needs no WASM to render the app's component.
-                    "connector": target_language.pronunciation_connector(),
+                    "cues": cues,
                 },
             });
             let mut result = CallToolResult::success(vec![ContentBlock::text(format!(

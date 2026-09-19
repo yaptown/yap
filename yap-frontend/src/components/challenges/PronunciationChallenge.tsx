@@ -1,13 +1,12 @@
 import type {
-  AudioRequest,
+  PronunciationCue,
   Language,
   Rating,
 } from "../../../../yap-frontend-rs/pkg";
 import Markdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AudioButton } from "../AudioButton";
 import { CantSpeakButton } from "../CantSpeakButton";
 import { AudioErrorBanner } from "../AudioErrorBanner";
@@ -24,15 +23,11 @@ interface PronunciationChallengeProps {
     description?: string;
     example_words?: { target: string; cultural_context?: string }[];
   };
-  audioRequests: AudioRequest[];
+  cues: PronunciationCue[];
   onRating: (rating: Rating) => void;
   accessToken: string | undefined;
   onCantSpeak: () => void;
   targetLanguage: Language;
-  // The language's spoken "as in" connector (get_pronunciation_connector).
-  // A prop so this component stays free of WASM value imports — the MCP
-  // widget reuses it and its build bans the WASM module.
-  connector: string;
   isNew: boolean;
   showGuide: boolean;
 }
@@ -40,12 +35,11 @@ interface PronunciationChallengeProps {
 export function PronunciationChallenge({
   pattern,
   guide,
-  audioRequests,
+  cues,
   onRating,
   accessToken,
   onCantSpeak,
   targetLanguage,
-  connector,
   isNew,
   showGuide,
 }: PronunciationChallengeProps) {
@@ -55,11 +49,14 @@ export function PronunciationChallenge({
   const leftLabel = isNew ? "Didn't know" : "Forgot";
   const rightLabel = isNew ? "Already knew" : "Remembered";
 
-  const rate = (rating: Rating) => {
-    bumpBackground(30.0);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    onRating(rating);
-  };
+  const rate = useCallback(
+    (rating: Rating) => {
+      bumpBackground(30.0);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      onRating(rating);
+    },
+    [bumpBackground, onRating],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,7 +78,7 @@ export function PronunciationChallenge({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [rate]);
 
   return (
     <div className="flex flex-col flex-1 justify-between">
@@ -129,95 +126,19 @@ export function PronunciationChallenge({
             {guide.example_words && guide.example_words.length > 0 && (
               <div className="space-y-3">
                 <div className="grid gap-3">
-                  {guide.example_words
-                    .slice(0, 3)
-                    .map(
-                      (
-                        example: { target: string; cultural_context?: string },
-                        index: number,
-                      ) => {
-                        const lowerPattern = pattern.toLowerCase();
-                        const lowerWord = example.target.toLowerCase();
-
-                        let patternIndex = -1;
-                        const matchLength = pattern.length;
-
-                        if (guide.position === "Beginning") {
-                          if (lowerWord.startsWith(lowerPattern)) {
-                            patternIndex = 0;
-                          }
-                        } else if (guide.position === "End") {
-                          if (lowerWord.endsWith(lowerPattern)) {
-                            patternIndex =
-                              example.target.length - pattern.length;
-                          }
-                        } else {
-                          patternIndex = lowerWord.indexOf(lowerPattern);
-                        }
-
-                        let highlightedWord;
-                        if (patternIndex !== -1) {
-                          const before = example.target.slice(0, patternIndex);
-                          const matched = example.target.slice(
-                            patternIndex,
-                            patternIndex + matchLength,
-                          );
-                          const after = example.target.slice(
-                            patternIndex + matchLength,
-                          );
-                          highlightedWord = (
-                            <>
-                              {before}
-                              <span className="bg-yellow-500/30 rounded px-0.5">
-                                {matched}
-                              </span>
-                              {after}
-                            </>
-                          );
-                        } else {
-                          highlightedWord = example.target;
-                        }
-
-                        return (
-                          <div
-                            key={index}
-                            className="bg-muted/30 rounded p-3 flex items-center justify-between"
-                          >
-                            <div className="flex-1">
-                              <div className="text-base">
-                                <span className="font-medium">
-                                  <TargetLanguageText language={targetLanguage}>
-                                    {pattern}
-                                  </TargetLanguageText>
-                                </span>
-                                <span className="text-muted-foreground mx-2">
-                                  {connector}
-                                </span>
-                                <span className="font-semibold">
-                                  <TargetLanguageText language={targetLanguage}>
-                                    {highlightedWord}
-                                  </TargetLanguageText>
-                                </span>
-                              </div>
-                              {example.cultural_context && (
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  {example.cultural_context}
-                                </div>
-                              )}
-                            </div>
-                            {audioRequests[index] && (
-                              <AudioButton
-                                audioRequest={audioRequests[index]}
-                                accessToken={accessToken}
-                                autoPlay={false}
-                                onError={() => setAudioError(true)}
-                                onSuccess={() => setAudioError(false)}
-                              />
-                            )}
-                          </div>
-                        );
-                      },
-                    )}
+                  {guide.example_words.slice(0, 3).map((example, index) => (
+                    <PronunciationRow
+                      key={index}
+                      cue={cues[index]}
+                      example={example}
+                      pattern={pattern}
+                      position={guide.position}
+                      targetLanguage={targetLanguage}
+                      accessToken={accessToken}
+                      onError={() => setAudioError(true)}
+                      onSuccess={() => setAudioError(false)}
+                    />
+                  ))}
                 </div>
               </div>
             )}
@@ -276,6 +197,134 @@ export function PronunciationChallenge({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PronunciationRow({
+  cue,
+  example,
+  pattern,
+  position,
+  targetLanguage,
+  accessToken,
+  onError,
+  onSuccess,
+}: {
+  cue: PronunciationCue;
+  example: { target: string; cultural_context?: string };
+  pattern: string;
+  position: "Beginning" | "End" | "Anywhere";
+  targetLanguage: Language;
+  accessToken: string | undefined;
+  onError: () => void;
+  onSuccess: () => void;
+}) {
+  const [positionMs, setPositionMs] = useState<number | null>(null);
+  const firstExample = cue.segments.findIndex(
+    (segment) => segment.role === "Example",
+  );
+  let lastExample = -1;
+  let current = -1;
+  cue.segments.forEach((segment, index) => {
+    if (segment.role === "Example") lastExample = index;
+    if (
+      positionMs !== null &&
+      segment.start_ms != null &&
+      positionMs >= segment.start_ms
+    )
+      current = index;
+  });
+
+  return (
+    <div className="bg-muted/30 rounded p-3 flex items-center justify-between gap-3">
+      <div className="flex-1 flex flex-col gap-1">
+        <div className="text-base">
+          <TargetLanguageText language={targetLanguage}>
+            {cue.segments.map((segment, index) => {
+              let patternIndex = -1;
+              if (segment.role === "Example") {
+                const word = segment.text.toLowerCase();
+                const needle = pattern.toLowerCase();
+                if (
+                  position === "Beginning" &&
+                  index === firstExample &&
+                  word.startsWith(needle)
+                ) {
+                  patternIndex = 0;
+                } else if (
+                  position === "End" &&
+                  index === lastExample &&
+                  word.endsWith(needle)
+                ) {
+                  patternIndex = segment.text.length - pattern.length;
+                } else if (position === "Anywhere") {
+                  patternIndex = word.indexOf(needle);
+                }
+              }
+              const timed = positionMs !== null && segment.start_ms != null;
+              const unspoken =
+                positionMs !== null &&
+                segment.start_ms != null &&
+                positionMs < segment.start_ms;
+              const style =
+                segment.role === "Pattern"
+                  ? "font-medium"
+                  : segment.role === "Connector"
+                    ? ""
+                    : "font-semibold";
+              const color =
+                timed && index === current
+                  ? "text-primary"
+                  : segment.role === "Connector"
+                    ? "text-muted-foreground"
+                    : "";
+              const separated =
+                index > 0 &&
+                !(
+                  segment.role === "Pattern" &&
+                  cue.segments[index - 1].role === "Pattern"
+                );
+              return (
+                <span key={index}>
+                  {separated && " "}
+                  <span
+                    className={`${style} transition-[color,opacity] duration-100 ${unspoken ? "opacity-50" : ""} ${color}`}
+                  >
+                    {patternIndex < 0 ? (
+                      segment.text
+                    ) : (
+                      <>
+                        {segment.text.slice(0, patternIndex)}
+                        <span className="bg-yellow-500/30 rounded px-0.5">
+                          {segment.text.slice(
+                            patternIndex,
+                            patternIndex + pattern.length,
+                          )}
+                        </span>
+                        {segment.text.slice(patternIndex + pattern.length)}
+                      </>
+                    )}
+                  </span>
+                </span>
+              );
+            })}
+          </TargetLanguageText>
+        </div>
+        {example.cultural_context && (
+          <div className="text-xs text-muted-foreground">
+            {example.cultural_context}
+          </div>
+        )}
+      </div>
+      <AudioButton
+        audioRequest={cue.audio}
+        accessToken={accessToken}
+        autoPlay={false}
+        onTimeUpdate={setPositionMs}
+        onError={onError}
+        onSuccess={onSuccess}
+      />
     </div>
   );
 }

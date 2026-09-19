@@ -8,6 +8,7 @@ import type {
   Language,
   Literal,
   PronunciationGuide,
+  PronunciationCue,
   Rating,
 } from "../../../yap-frontend-rs/pkg";
 
@@ -40,10 +41,7 @@ export interface PronunciationChallenge extends ChallengeBase {
   // Type-only import; erases at build (no WASM in the bundle).
   guide: PronunciationGuide;
   // One clip per example word ("<pattern> as in <word>").
-  audio_requests: AudioRequest[];
-  // The language's spoken "as in" connector, precomputed by the server so
-  // the widget doesn't need the WASM get_pronunciation_connector.
-  connector: string;
+  cues: PronunciationCue[];
   show_guide: boolean;
 }
 

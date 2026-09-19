@@ -28,7 +28,7 @@ export function App() {
         return;
       }
       if (challenge.type === "pronunciation") {
-        challenge.audio_requests.forEach(prefetchAudio);
+        challenge.cues.forEach((cue) => prefetchAudio(cue.audio));
       } else {
         prefetchAudio(challenge.audio);
       }

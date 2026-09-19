@@ -30,17 +30,13 @@ interface AudioButtonProps {
   className?: string;
   size?: "default" | "sm" | "lg" | "icon";
   variant?:
-    | "default"
-    | "destructive"
-    | "outline"
-    | "secondary"
-    | "ghost"
-    | "link";
+    "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   autoplayed?: boolean;
   setAutoplayed?: () => void;
   playPreAudio?: boolean;
   onError?: () => void;
   onSuccess?: () => void;
+  onTimeUpdate?: (positionMs: number | null) => void;
   visualizer?: boolean | "radial";
   temp?: boolean;
 }
@@ -118,6 +114,7 @@ export function AudioButton({
   playPreAudio = false,
   onError,
   onSuccess,
+  onTimeUpdate,
   visualizer = false,
   temp = false,
 }: AudioButtonProps) {
@@ -138,14 +135,26 @@ export function AudioButton({
   const kickRafRef = useRef<() => void>(() => {});
   const abortControllersRef = useRef<Set<AbortController>>(new Set());
 
+  const onTimeUpdateRef = useRef(onTimeUpdate);
+  const stopTimeUpdatesRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    onTimeUpdateRef.current = onTimeUpdate;
+  });
+
+  const stopTimeUpdates = useCallback(() => {
+    stopTimeUpdatesRef.current?.();
+    stopTimeUpdatesRef.current = null;
+  }, []);
+
   // Abort any in-flight audio fetch/playback when the component unmounts.
   useEffect(() => {
     const controllers = abortControllersRef.current;
     return () => {
       for (const c of controllers) c.abort();
       controllers.clear();
+      stopTimeUpdates();
     };
-  }, []);
+  }, [stopTimeUpdates]);
 
   const attachAnalyser = useCallback(async (audio: HTMLAudioElement) => {
     try {
@@ -180,6 +189,37 @@ export function AudioButton({
       console.warn("Failed to attach analyser:", err);
     }
   }, []);
+
+  const observeAudio = useCallback(
+    async (audio: HTMLAudioElement) => {
+      stopTimeUpdates();
+      let raf = 0;
+      let stopped = false;
+      const stop = () => {
+        if (stopped) return;
+        stopped = true;
+        cancelAnimationFrame(raf);
+        audio.removeEventListener("ended", stop);
+        audio.removeEventListener("pause", stop);
+        audio.removeEventListener("error", stop);
+        onTimeUpdateRef.current?.(null);
+      };
+      stopTimeUpdatesRef.current = stop;
+      audio.addEventListener("ended", stop);
+      audio.addEventListener("pause", stop);
+      audio.addEventListener("error", stop);
+      const tick = () => {
+        if (stopped) return;
+        if (isPlayingRef.current && !audio.paused) {
+          onTimeUpdateRef.current?.(audio.currentTime * 1000);
+        }
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+      if (!temp && visualizer) await attachAnalyser(audio);
+    },
+    [attachAnalyser, stopTimeUpdates, temp, visualizer],
+  );
 
   // Animate blob via rAF using real audio amplitude
   useEffect(() => {
@@ -239,9 +279,7 @@ export function AudioButton({
       if (waveContainer) {
         for (let p = 0; p < WAVE_BARS; p++) {
           const amp = waveHistoryRef.current[p];
-          const bar = waveContainer.children[p] as
-            | HTMLDivElement
-            | undefined;
+          const bar = waveContainer.children[p] as HTMLDivElement | undefined;
           if (bar) {
             const hoverWobble = hoverRef.current
               ? (Math.sin(t * 0.008 + p * 0.7) +
@@ -314,6 +352,7 @@ export function AudioButton({
       const isAbort = (error: unknown) =>
         error instanceof DOMException && error.name === "AbortError";
 
+      isPlayingRef.current = true;
       setIsPlaying(true);
       try {
         // Wait for any currently playing sound effects to finish
@@ -373,7 +412,7 @@ export function AudioButton({
         };
         await playAudio(audioRequest, accessToken, authCallback, {
           temporary: temp,
-          onAudioElement: !temp && visualizer ? attachAnalyser : undefined,
+          onAudioElement: observeAudio,
           signal,
           onVoiceActor,
         });
@@ -383,11 +422,20 @@ export function AudioButton({
         console.error("Failed to play audio:", error);
         onErrorRef.current?.();
       } finally {
+        stopTimeUpdates();
+        isPlayingRef.current = false;
         abortControllersRef.current.delete(controller);
         if (!signal.aborted) setIsPlaying(false);
       }
     },
-    [audioRequest, accessToken, playPreAudio, visualizer, attachAnalyser, temp],
+    [
+      audioRequest,
+      accessToken,
+      playPreAudio,
+      observeAudio,
+      stopTimeUpdates,
+      temp,
+    ],
   );
 
   // Read latest onSuccess/onError via refs so handlePlayAudio stays stable —

@@ -8,7 +8,7 @@ use tysm::chat_completions::ChatClient;
 use unicode_normalization::UnicodeNormalization;
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-sol"));
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct SoundsListResponse {
@@ -59,22 +59,23 @@ Examples of patterns:
         format!("Generate sounds for {language:?}"),
     ).await?;
 
-    // Process patterns to extract position information
-    let processed_sounds: Vec<(String, PatternPosition)> = response
-        .sounds
-        .into_iter()
-        .map(|sound| {
-            if let Some(stripped) = sound.strip_prefix('^') {
-                (stripped.to_string(), PatternPosition::Beginning)
-            } else if let Some(stripped) = sound.strip_suffix('$') {
-                (stripped.to_string(), PatternPosition::End)
-            } else {
-                (sound, PatternPosition::Anywhere)
-            }
-        })
-        .collect();
+    Ok(response.sounds.iter().map(|s| parse_sound(s)).collect())
+}
 
-    Ok(processed_sounds)
+/// Split a listed sound into its letters and position. The prompt asks for
+/// `^` as a prefix and `$` as a suffix, but the model sometimes puts a
+/// marker on the wrong end ("$ँ"); a marker anywhere counts, and never
+/// survives into the pattern, where the cue would show and speak it.
+fn parse_sound(sound: &str) -> (String, PatternPosition) {
+    let position = if sound.contains('^') {
+        PatternPosition::Beginning
+    } else if sound.contains('$') {
+        PatternPosition::End
+    } else {
+        PatternPosition::Anywhere
+    };
+    let pattern: String = sound.chars().filter(|c| !matches!(c, '^' | '$')).collect();
+    (pattern, position)
 }
 
 /// Generate pronunciation guides for each sound in a course
@@ -365,4 +366,24 @@ pub fn calculate_pattern_frequencies(
     }
 
     frequencies
+}
+
+#[cfg(test)]
+mod sound_tests {
+    use super::*;
+
+    #[test]
+    fn markers_anywhere_set_position_and_never_leak() {
+        assert_eq!(
+            parse_sound("^kn"),
+            ("kn".into(), PatternPosition::Beginning)
+        );
+        assert_eq!(parse_sound("ent$"), ("ent".into(), PatternPosition::End));
+        assert_eq!(parse_sound("$ँ"), ("ँ".into(), PatternPosition::End));
+        assert_eq!(
+            parse_sound("は^"),
+            ("は".into(), PatternPosition::Beginning)
+        );
+        assert_eq!(parse_sound("ch"), ("ch".into(), PatternPosition::Anywhere));
+    }
 }

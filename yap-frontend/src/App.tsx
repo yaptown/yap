@@ -34,7 +34,6 @@ import {
   type MovieMetadataBasic,
   type PartGraded,
   type Rating,
-  get_pronunciation_connector,
   get_audio_cache_version,
   get_clip_manifest_version,
   refresh_clip_manifest,
@@ -76,7 +75,10 @@ import { playSoundEffect } from "@/lib/sound-effects";
 import { registerSW } from "virtual:pwa-register";
 import { NoCardsReady } from "@/components/no-cards-ready";
 import { AccomplishmentScreen } from "@/components/AccomplishmentScreen";
-import { useSentenceList, sentenceListToSelection } from "@/hooks/useSentenceList";
+import {
+  useSentenceList,
+  sentenceListToSelection,
+} from "@/hooks/useSentenceList";
 import { SetDisplayName } from "@/components/SetDisplayName";
 
 import type { Dispatch, SetStateAction } from "react";
@@ -205,11 +207,14 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
   );
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    }).catch(() => {
-      setSession(null);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+      })
+      .catch(() => {
+        setSession(null);
+      });
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -450,7 +455,13 @@ function ReviewPage() {
         ))
         .with(
           { type: "deck", deck: P.not(P.nullish) },
-          ({ deck, targetLanguage, nativeLanguage, startingFresh, historyKnown }) => {
+          ({
+            deck,
+            targetLanguage,
+            nativeLanguage,
+            startingFresh,
+            historyKnown,
+          }) => {
             const totalReviewsCompleted = deck.get_total_reviews();
             const autoplayed = lastAutoPlayReviewCount == totalReviewsCompleted;
             const setAutoplayed = () =>
@@ -474,7 +485,9 @@ function ReviewPage() {
                     showSignupNag: deck !== null,
                     language: targetLanguage,
                     dailyGoalPercent:
-                      (deck.get_today_time_spent() / deck.get_daily_review_target()) * 100,
+                      (deck.get_today_time_spent() /
+                        deck.get_daily_review_target()) *
+                      100,
                   }}
                 >
                   <Review
@@ -789,8 +802,10 @@ function readChallengeRestrictions() {
     read("yap-cant-speak-timestamp"),
     Date.now(),
   );
-  if (!result.banned.includes("Listening")) localStorage.removeItem("yap-cant-listen-timestamp");
-  if (!result.banned.includes("Speaking")) localStorage.removeItem("yap-cant-speak-timestamp");
+  if (!result.banned.includes("Listening"))
+    localStorage.removeItem("yap-cant-listen-timestamp");
+  if (!result.banned.includes("Speaking"))
+    localStorage.removeItem("yap-cant-speak-timestamp");
   return result;
 }
 
@@ -807,7 +822,9 @@ function Review({
   setAutoplayed,
 }: ReviewProps) {
   const weapon = useWeapon();
-  const { sentenceList, setSentenceList } = useSentenceList(deck.get_sentence_list());
+  const { sentenceList, setSentenceList } = useSentenceList(
+    deck.get_sentence_list(),
+  );
 
   const network = useNetworkState();
   const [cardsBecameDue, setCardsBecameDue] = useState<number>(0);
@@ -839,7 +856,8 @@ function Review({
 
   const now = Date.now();
   const nextDueCard =
-    deck.get_all_cards_summary().find((card) => card.due_timestamp_ms > now) ?? null;
+    deck.get_all_cards_summary().find((card) => card.due_timestamp_ms > now) ??
+    null;
 
   // Filter movies to target language for sentence list selector
   const targetLanguageIso = languageToIso6391(targetLanguage);
@@ -918,7 +936,13 @@ function Review({
     // cardsBecameDue, audioCacheVersion, and clipManifestVersion are
     // intentionally included to trigger recalculation when cards become due,
     // audio finishes caching, or clip knowledge arrives
-  }, [deck, bannedChallengeTypes, cardsBecameDue, audioCacheVersion, clipManifestVersion]);
+  }, [
+    deck,
+    bannedChallengeTypes,
+    cardsBecameDue,
+    audioCacheVersion,
+    clipManifestVersion,
+  ]);
 
   useInterval(
     () => setCardsBecameDue((cardsBecameDue) => cardsBecameDue + 1),
@@ -959,14 +983,19 @@ function Review({
   useEffect(() => {
     if (currentChallenge) return;
     const restrictions = readChallengeRestrictions();
-    if (restrictions.banned.length !== bannedChallengeTypes.length ||
-        restrictions.banned.some((value, i) => value !== bannedChallengeTypes[i])) {
+    if (
+      restrictions.banned.length !== bannedChallengeTypes.length ||
+      restrictions.banned.some((value, i) => value !== bannedChallengeTypes[i])
+    ) {
       setBannedChallengeTypes(restrictions.banned);
     }
     if (restrictions.next_expiry_ms == null) return;
-    const timeout = setTimeout(() => {
-      setBannedChallengeTypes(readChallengeRestrictions().banned);
-    }, Math.max(0, restrictions.next_expiry_ms - Date.now()));
+    const timeout = setTimeout(
+      () => {
+        setBannedChallengeTypes(readChallengeRestrictions().banned);
+      },
+      Math.max(0, restrictions.next_expiry_ms - Date.now()),
+    );
     return () => clearTimeout(timeout);
   }, [currentChallenge, bannedChallengeTypes]);
 
@@ -986,12 +1015,18 @@ function Review({
 
   const sentenceListSelection = sentenceListToSelection(sentenceList);
 
-  const addEvent = useCallback((event: DeckEvent) => {
-    weapon.add_deck_event(event);
-  }, [weapon]);
+  const addEvent = useCallback(
+    (event: DeckEvent) => {
+      weapon.add_deck_event(event);
+    },
+    [weapon],
+  );
 
   const addSmartCards = useCallback(() => {
-    const info = deck.get_no_cards_ready_info(bannedChallengeTypes, sentenceListSelection);
+    const info = deck.get_no_cards_ready_info(
+      bannedChallengeTypes,
+      sentenceListSelection,
+    );
     if (info.smart_add_event) {
       weapon.add_deck_event(info.smart_add_event);
     }
@@ -1079,7 +1114,10 @@ function Review({
   );
 
   const handleTranscriptionComplete = useCallback(
-    (grade: /* comes from TranscriptionChallenge*/ PartGraded[], completedAtMs: number) => {
+    (
+      grade: /* comes from TranscriptionChallenge*/ PartGraded[],
+      completedAtMs: number,
+    ) => {
       if (
         !currentChallenge ||
         currentChallenge.type !== "TranscribeComprehensibleSentence"
@@ -1205,7 +1243,9 @@ function Review({
               const event = deck.set_daily_review_target(target);
               weapon.add_deck_event(event);
             }}
-            onDismiss={() => setDismissedAccomplishmentAtReview(totalReviewsCompleted)}
+            onDismiss={() =>
+              setDismissedAccomplishmentAtReview(totalReviewsCompleted)
+            }
           />
         ) : reviewInfo.due_count === 0 && !currentChallenge ? (
           <NoCardsReady
@@ -1227,12 +1267,11 @@ function Review({
             <PronunciationChallenge
               pattern={currentChallenge.pattern}
               guide={currentChallenge.guide}
-              audioRequests={currentChallenge.audio_requests}
+              cues={currentChallenge.cues}
               onRating={handleRating}
               accessToken={accessToken}
               onCantSpeak={handleCantSpeak}
               targetLanguage={targetLanguage}
-              connector={get_pronunciation_connector(targetLanguage)}
               isNew={currentChallenge.is_new}
               showGuide={should_show_challenge_tutorial(
                 currentChallenge.times_type_seen,
@@ -1513,10 +1552,7 @@ export function useDeckSelection():
 const LAST_COURSE_KEY = "yap-last-course";
 
 function getCourseKey(
-  course:
-    | Pick<Course, "nativeLanguage" | "targetLanguage">
-    | null
-    | undefined,
+  course: Pick<Course, "nativeLanguage" | "targetLanguage"> | null | undefined,
 ): string | null {
   if (!course) return null;
   return `${course.targetLanguage}:${course.nativeLanguage}`;
@@ -1765,7 +1801,8 @@ export function useDeck():
       // for exactly one thing: the placement test. If this user wouldn't see
       // it, stay on the loading screen until the sentence half arrives.
       if (!languagePackResult.full) {
-        const startingFresh = deck_selection.onboardingSelections?.startingFresh;
+        const startingFresh =
+          deck_selection.onboardingSelections?.startingFresh;
         const wouldShowPlacementTest =
           deck !== null &&
           deck.should_offer_placement_test(startingFresh, historyKnown);
@@ -1791,20 +1828,23 @@ export function useDeck():
       };
     } catch (error) {
       const errorMessage = getErrorMessage(error);
-      Sentry.captureException(error instanceof Error ? error : new Error(errorMessage), {
-        tags: {
-          "language-pack.target": course.targetLanguage,
-          "language-pack.native": course.nativeLanguage,
-          "language-pack.phase": "deck-state",
-        },
-        contexts: {
-          "language-pack": {
-            targetLanguage: course.targetLanguage,
-            nativeLanguage: course.nativeLanguage,
-            rawError: errorMessage,
+      Sentry.captureException(
+        error instanceof Error ? error : new Error(errorMessage),
+        {
+          tags: {
+            "language-pack.target": course.targetLanguage,
+            "language-pack.native": course.nativeLanguage,
+            "language-pack.phase": "deck-state",
+          },
+          contexts: {
+            "language-pack": {
+              targetLanguage: course.targetLanguage,
+              nativeLanguage: course.nativeLanguage,
+              rawError: errorMessage,
+            },
           },
         },
-      });
+      );
       return {
         type: "error",
         courseKey,

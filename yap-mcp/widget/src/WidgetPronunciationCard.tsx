@@ -61,12 +61,11 @@ export function WidgetPronunciationCard({
       <PronunciationChallenge
         pattern={challenge.pattern}
         guide={challenge.guide}
-        audioRequests={challenge.audio_requests}
+        cues={challenge.cues}
         onRating={(rating: Rating) => void grade(rating)}
         accessToken={undefined}
         onCantSpeak={cantSpeak}
         targetLanguage={challenge.language}
-        connector={challenge.connector}
         isNew={challenge.is_new}
         showGuide={challenge.show_guide}
       />

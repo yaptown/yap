@@ -56,6 +56,11 @@ fn main() {
         ("books", true, size_of(&pack.books)),
         ("human_audio", true, size_of(&pack.human_audio)),
         (
+            "pronunciation_audio",
+            false,
+            size_of(&pack.pronunciation_audio),
+        ),
+        (
             "words_to_heteronyms",
             false,
             size_of(&pack.words_to_heteronyms),

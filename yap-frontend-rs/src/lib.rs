@@ -4370,6 +4370,23 @@ pub struct FlashCard {
     pub audio: Option<AudioRequest>,
 }
 
+/// Display segments and optional pack alignment for one example's audio.
+#[bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct PronunciationCue {
+    pub audio: AudioRequest,
+    pub segments: Vec<CueSegment>,
+}
+
+#[bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct CueSegment {
+    pub text: String,
+    pub role: language_utils::CueSegmentRole,
+    /// Hold until the next segment starts; CTC end times run early.
+    pub start_ms: Option<u32>,
+}
+
 #[bridge(transparent)]
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
@@ -4384,7 +4401,7 @@ pub enum Challenge<G> {
         indicator: CardIndicator<G, String>,
         pattern: String,
         guide: PronunciationGuide,
-        audio_requests: Vec<AudioRequest>,
+        cues: Vec<PronunciationCue>,
         is_new: bool,
         times_type_seen: u32,
     },
@@ -4398,7 +4415,9 @@ impl<G> Challenge<G> {
             Challenge::FlashCardReview { flashcard, .. } => {
                 flashcard.audio.clone().into_iter().collect()
             }
-            Challenge::PronunciationChallenge { audio_requests, .. } => audio_requests.clone(),
+            Challenge::PronunciationChallenge { cues, .. } => {
+                cues.iter().map(|cue| cue.audio.clone()).collect()
+            }
             Challenge::TranslateComprehensibleSentence(translate_comprehensible_sentence) => {
                 vec![translate_comprehensible_sentence.audio.clone()]
             }
@@ -4627,11 +4646,6 @@ impl CardSummary {
     pub fn card_subtitle(&self) -> Option<String> {
         self.card_subtitle.clone()
     }
-}
-
-#[bridgerton::bridge]
-pub fn get_pronunciation_connector(language: Language) -> String {
-    language.pronunciation_connector().to_string()
 }
 
 #[bridge(transparent)]

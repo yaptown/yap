@@ -648,29 +648,41 @@ impl ReviewInfo {
         let pattern_str = guide.pattern.clone();
 
         let target_language = deck.context.course.target_language;
-        let audio_requests = guide
+        let cues = guide
             .example_words
             .iter()
-            .map(|example| AudioRequest {
-                // The precached, phoneme-verified clip is keyed by this same
-                // spoken text; only a pack without one falls through to the
-                // backend, where Gemini reads the cue under the same
-                // direction the pack's clips were made with.
-                request: TtsRequest {
-                    text: language_utils::pronunciation_challenge_spoken_text(
-                        target_language,
-                        &pattern_str,
-                        &example.target,
-                    ),
-                    language: target_language,
-                    is_ssml: false,
-                    instructions: Some(language_utils::pronunciation_challenge_tts_instructions(
-                        target_language,
-                    )),
-                    speed: 1.0,
-                    verification_hints: Vec::new(),
-                },
-                provider: TtsProvider::Gemini,
+            .map(|example| {
+                let segments = language_utils::pronunciation_challenge_segments(
+                    target_language,
+                    &pattern_str,
+                    &example.target,
+                );
+                let spoken = segments
+                    .iter()
+                    .map(|segment| segment.spoken.as_str())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                let segments =
+                    cue_segments(segments, language_pack.pronunciation_audio.get(&spoken));
+                crate::PronunciationCue {
+                    audio: AudioRequest {
+                        // The request and pack lookup share the exact spoken text.
+                        request: TtsRequest {
+                            text: spoken,
+                            language: target_language,
+                            is_ssml: false,
+                            instructions: Some(
+                                language_utils::pronunciation_challenge_tts_instructions(
+                                    target_language,
+                                ),
+                            ),
+                            speed: 1.0,
+                            verification_hints: Vec::new(),
+                        },
+                        provider: TtsProvider::Gemini,
+                    },
+                    segments,
+                }
             })
             .collect();
 
@@ -680,9 +692,98 @@ impl ReviewInfo {
                 .resolve(&language_pack.string_rodeo, &language_pack.gram_rodeo),
             pattern: pattern_str,
             guide,
-            audio_requests,
+            cues,
             is_new: ctx.is_new,
             times_type_seen: ctx.times_type_seen,
         })
+    }
+}
+
+/// Alignment is all-or-nothing: stale pack segments must never time the wrong text.
+fn cue_segments(
+    segments: Vec<language_utils::SpokenSegment>,
+    clip: Option<&language_utils::PronunciationClip>,
+) -> Vec<crate::CueSegment> {
+    let timings = clip.filter(|clip| {
+        if clip.segments.is_empty() {
+            return false;
+        }
+        if clip.segments.len() != segments.len() {
+            log::warn!(
+                "Pronunciation cue alignment has {} segments; expected {}",
+                clip.segments.len(),
+                segments.len()
+            );
+            return false;
+        }
+        true
+    });
+    segments
+        .into_iter()
+        .enumerate()
+        .map(|(index, segment)| crate::CueSegment {
+            text: segment.display,
+            role: segment.role,
+            start_ms: timings.map(|clip| clip.segments[index].start_ms),
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod cue_tests {
+    use super::*;
+    use language_utils::{Audio, CueSegmentRole, Language, PronunciationClip, TimedSegment};
+
+    #[test]
+    fn cue_roles_and_timings_preserve_display_segments() {
+        let segments =
+            language_utils::pronunciation_challenge_segments(Language::German, "ü", "über");
+        let clip = PronunciationClip {
+            audio: Audio { bytes: vec![] },
+            segments: segments
+                .iter()
+                .enumerate()
+                .map(|(index, segment)| TimedSegment {
+                    text: segment.display.clone(),
+                    start_ms: index as u32 * 100,
+                    end_ms: index as u32 * 100 + 20,
+                })
+                .collect(),
+        };
+        let cue = cue_segments(segments, Some(&clip));
+        assert_eq!(
+            cue.iter()
+                .map(|s| (s.text.as_str(), s.role, s.start_ms))
+                .collect::<Vec<_>>(),
+            vec![
+                ("ü", CueSegmentRole::Pattern, Some(0)),
+                ("wie", CueSegmentRole::Connector, Some(100)),
+                ("in", CueSegmentRole::Connector, Some(200)),
+                ("über", CueSegmentRole::Example, Some(300)),
+            ]
+        );
+    }
+
+    #[test]
+    fn absent_empty_or_mismatched_alignment_has_no_timings() {
+        let segments =
+            language_utils::pronunciation_challenge_segments(Language::French, "ch", "chat");
+        let empty = PronunciationClip {
+            audio: Audio { bytes: vec![] },
+            segments: vec![],
+        };
+        let mismatch = PronunciationClip {
+            audio: Audio { bytes: vec![] },
+            segments: vec![TimedSegment {
+                text: "c".into(),
+                start_ms: 0,
+                end_ms: 20,
+            }],
+        };
+        for clip in [None, Some(&empty), Some(&mismatch)] {
+            let cue = cue_segments(segments.clone(), clip);
+            assert_eq!(cue.len(), segments.len());
+            assert!(cue.iter().all(|s| s.start_ms.is_none()));
+        }
     }
 }
