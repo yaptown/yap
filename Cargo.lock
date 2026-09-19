@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "abort-signal"
 version = "0.1.0"
-source = "git+https://github.com/anchpop/fetch-happen?rev=65f9906d5d3a7b994c6145ee6db9d12b1dae92ae#65f9906d5d3a7b994c6145ee6db9d12b1dae92ae"
+source = "git+https://github.com/anchpop/fetch-happen?rev=9efae6b44b1d4bd4edb5caeb156591330c92da09#9efae6b44b1d4bd4edb5caeb156591330c92da09"
 dependencies = [
  "futures",
  "gloo-events",
@@ -1540,7 +1540,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -1855,8 +1855,8 @@ dependencies = [
 
 [[package]]
 name = "fetch-happen"
-version = "0.4.0"
-source = "git+https://github.com/anchpop/fetch-happen?rev=65f9906d5d3a7b994c6145ee6db9d12b1dae92ae#65f9906d5d3a7b994c6145ee6db9d12b1dae92ae"
+version = "0.5.0"
+source = "git+https://github.com/anchpop/fetch-happen?rev=9efae6b44b1d4bd4edb5caeb156591330c92da09#9efae6b44b1d4bd4edb5caeb156591330c92da09"
 dependencies = [
  "abort-signal",
  "js-sys",
@@ -2752,7 +2752,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "system-configuration 0.6.1",
  "tokio",
  "tower-service",
@@ -3894,7 +3894,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -5354,7 +5354,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -5434,7 +5434,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -5958,7 +5958,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -6307,7 +6307,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.1",
 ]
 
 [[package]]
@@ -7302,7 +7302,7 @@ version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0978bf7171b3d90bac376700cb56d606feb40f251a475a5d6634613564460b22"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

@@ -58,10 +58,10 @@ tokio = { version = "1.52.3", features = ["full"] }
 opfs = { git = "https://github.com/anchpop/opfs", rev = "c146fa85082b9d58861f6dd460dcdf812e4b3634" }
 idb = { version = "0.6.5" }
 # Native + wasm fetch wrapper (github.com/anchpop/fetch-happen). Git dep for
-# the native reqwest transport until 0.4 is published to crates.io.
-fetch-happen = { git = "https://github.com/anchpop/fetch-happen", rev = "65f9906d5d3a7b994c6145ee6db9d12b1dae92ae" }
+# the streaming native reqwest transport until 0.5 is published to crates.io.
+fetch-happen = { git = "https://github.com/anchpop/fetch-happen", rev = "9efae6b44b1d4bd4edb5caeb156591330c92da09" }
 # The cross-platform abort mechanism, from the same fetch-happen revision.
-abort-signal = { git = "https://github.com/anchpop/fetch-happen", rev = "65f9906d5d3a7b994c6145ee6db9d12b1dae92ae" }
+abort-signal = { git = "https://github.com/anchpop/fetch-happen", rev = "9efae6b44b1d4bd4edb5caeb156591330c92da09" }
 # Grapheme-to-phoneme owns the language and variety defaults. This pin describes
 # the renderer, not an assertion that a deployed model used identical labels;
 # corpus response keys separate actual WAV content and exact target sequences.
