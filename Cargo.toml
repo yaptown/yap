@@ -1,6 +1,7 @@
 [workspace]
 exclude = ["libraries/bridgerton/fuzz"]
 members = [
+    "publish-packs",
     "yap-ai-backend",
     "generate-data",
     "language-utils",

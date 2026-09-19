@@ -20,9 +20,9 @@ Use `--packs /path/to/packs` for a different asset location. The script builds
 Rust, generates Swift types and C declarations, runs the integration test, then
 compiles and ad-hoc signs `generated/Yap Prototype.app`. Omit `--open` to test and
 build without launching. The harness serves local packs over a loopback HTTP
-server using the backend's `/language-data` request format. With `--open`, it
+server using immutable, hash-addressed URLs and HTTP Range GETs. With `--open`, it
 keeps that server running until the app quits; keep the terminal open. Launching
-the app separately uses Yap's normal backend configuration. Deployment targets
+the app separately uses Yap's normal pack-hosting configuration. Deployment targets
 match the local Mac; this is not yet a redistributable package.
 
 For bindings alone, run the reusable bridge command:
@@ -94,8 +94,9 @@ own directory immediately.
   Support directory. The default macOS path remains `Application Support/Yap`.
 - Both platforms use the same pack-loading flow: chunked cache reads/writes,
   hash validation, core-first loading, progress callbacks, and full-pack upgrades.
-  Both download through `fetch_happen`; no local-file source lives in Yap.
-  The prototype harness supplies the native `YAP_AI_BACKEND_URL` runtime setting
+  Both download immutable, hash-addressed objects with HTTP Range GETs through
+  `fetch_happen`; no local-file source lives in Yap.
+  The prototype harness supplies the native `YAP_PACKS_URL` runtime setting
   before launch, pointing at its temporary loopback fixture server. Native hosts
   read that override once on first use; absent it, the existing feature and
   compile-time URL defaults apply. Native deserialization runs on Tokio's

@@ -2,9 +2,8 @@
 .cache/
 
 # Exclude the bulky generated data in out/, but keep the files that Rust
-# builds embed: the rkyv packs (ai-backend include_bytes!) plus the hash and
-# showcase files (yap-frontend-rs include_str!/include_bytes!, compiled as a
-# dependency of yap-mcp).
+# builds or MCP need: rkyv packs are loaded from disk by yap-mcp; hash and
+# showcase files are embedded by yap-frontend-rs (a dependency of yap-mcp).
 out/**/*.jsonl
 out/**/*.json
 out/**/*.hash

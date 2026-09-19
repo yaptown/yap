@@ -148,8 +148,8 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(reopened.get_stream_num_events(stream_id: "reviews") == reviewCount + 2)
         check(reopened.get_deck_selection_state() == selection)
         // Disable fixture downloads; reopening must use the shared chunk cache.
-        let backend = String(cString: getenv("YAP_AI_BACKEND_URL")!)
-        var offlineRequest = URLRequest(url: URL(string: "\(backend)/__offline")!)
+        let packsOrigin = String(cString: getenv("YAP_PACKS_URL")!)
+        var offlineRequest = URLRequest(url: URL(string: "\(packsOrigin)/__offline")!)
         offlineRequest.httpMethod = "POST"
         let (_, response) = try await URLSession.shared.data(for: offlineRequest)
         check((response as? HTTPURLResponse)?.statusCode == 204)

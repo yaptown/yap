@@ -108,6 +108,31 @@ pub fn ai_server_url() -> &'static str {
     }
 }
 
+/// Pack hosting is independent of AI services. Runtime overrides are native-only.
+pub fn packs_origin() -> &'static str {
+    static OVERRIDE: std::sync::LazyLock<Option<String>> =
+        std::sync::LazyLock::new(|| bridgerton::platform::runtime_env("YAP_PACKS_URL"));
+    select_packs_origin(
+        OVERRIDE.as_deref(),
+        cfg!(feature = "local-backend"),
+        option_env!("YAP_PACKS_URL"),
+    )
+}
+
+fn select_packs_origin<'a>(
+    runtime: Option<&'a str>,
+    local: bool,
+    compiled: Option<&'a str>,
+) -> &'a str {
+    runtime.unwrap_or_else(|| {
+        if local {
+            "http://localhost:21516/packs"
+        } else {
+            compiled.unwrap_or(language_utils::language_pack::PACKS_ORIGIN)
+        }
+    })
+}
+
 pub async fn hit_ai_server(
     method: fetch_happen::Method,
     path: &str,
@@ -137,4 +162,28 @@ pub async fn hit_ai_server(
     }
 
     req.send().await
+}
+
+#[cfg(test)]
+mod packs_origin_tests {
+    use super::*;
+    #[test]
+    fn precedence() {
+        assert_eq!(
+            select_packs_origin(Some("runtime"), true, Some("compiled")),
+            "runtime"
+        );
+        assert_eq!(
+            select_packs_origin(None, true, Some("compiled")),
+            "http://localhost:21516/packs"
+        );
+        assert_eq!(
+            select_packs_origin(None, false, Some("compiled")),
+            "compiled"
+        );
+        assert_eq!(
+            select_packs_origin(None, false, None),
+            language_utils::language_pack::PACKS_ORIGIN
+        );
+    }
 }

@@ -36,13 +36,13 @@ echo "Smoke testing $BASE"
 curl_smoke --output /dev/null "$BASE/health"
 echo "/health OK"
 
-# rkyv language data serving (both halves of the split pack)
+# Temporary legacy client bridge (2026-09-19): stream both halves from R2.
 for part in core sentences; do
   curl_smoke --output /dev/null -X POST "$BASE/language-data" \
     -H 'content-type: application/json' \
     -d '{"course":{"nativeLanguage":"English","targetLanguage":"French"},"part":"'"$part"'","chunk_index":0,"chunk_size":1024}'
 done
-echo "/language-data OK"
+echo "/language-data compatibility bridge OK"
 
 # All four TTS providers end-to-end, asserting we got real audio back (auth
 # is verified but not enforced on these endpoints, so a placeholder bearer

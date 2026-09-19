@@ -12,10 +12,11 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
 
-# Structure: checks + the three build jobs run in parallel; the deploy jobs
-# gate on ALL of them, so nothing deploys unless every check passes and every
-# artifact builds. (Pushing a :sha image to the Fly registry for a commit that
-# then fails tests is harmless — the image is only deployed by the gated jobs.)
+# Structure: checks, three build jobs, and immutable pack publishing run in parallel;
+# deploy jobs gate on ALL of them, so nothing deploys unless every check passes,
+# every artifact builds, and immutable packs are publicly available. Pushing a
+# :sha image for a commit that later fails tests is harmless — only the gated
+# jobs deploy it. Mutable pointers advance only inside the gated deploy job.
 jobs:
   # ===== TEST PHASE =====
   checks:
@@ -197,6 +198,39 @@ jobs:
           path: dictionary-data.tar
           retention-days: 3
 
+  publish-packs:
+    runs-on: big-runner
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: false
+      - name: Pull LFS rkyv files
+        run: git lfs pull --include="out/*_for_*/language_data_*.rkyv"
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.96.0"
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-publish-packs-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-publish-packs-
+            ${{ runner.os }}-cargo-
+      # Content-addressed and idempotent: objects already in the bucket are
+      # skipped, so this is cheap on every deploy and only ever uploads packs
+      # that were regenerated. The deploy jobs gate on it so a build can never
+      # ship referencing a pack hash that isn't publicly downloadable yet.
+      - name: Publish immutable language packs
+        run: cargo run --release --bin publish-packs
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+
   backend-image:
     runs-on: big-runner
     steps:
@@ -204,9 +238,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           lfs: false
-
-      - name: Pull LFS rkyv files
-        run: git lfs pull --include="out/*_for_*/language_data_*.rkyv"
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -312,17 +343,39 @@ jobs:
           cache-to: type=registry,ref=registry.fly.io/yap-mcp:cache,mode=max,ignore-error=true
 
   # ===== DEPLOY PHASE =====
-  # Sequential within the job: Fly first (safest to go early), then Cloudflare
-  # Pages, then Modal. Dictionary KV upload runs last since it's the least
-  # critical.
+  # Sequential within the job: advance legacy pack pointers first, then Fly,
+  # Cloudflare Pages, and dictionary KV. Pre-cutover clients follow these mutable
+  # pointers, so they must not move until every check/build/publication succeeds.
   deploy:
     runs-on: big-runner
-    needs: [checks, web-build, backend-image, mcp-image]
+    needs: [checks, web-build, backend-image, mcp-image, publish-packs]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
           lfs: false
+
+      # Metadata files are ordinary Git files: no archive/LFS download needed.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.96.0"
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-publish-packs-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-publish-packs-
+            ${{ runner.os }}-cargo-
+      - name: Publish pack pointers
+        run: cargo run --release --bin publish-packs -- --pointers
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
 
       - name: Setup Fly CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
@@ -390,7 +443,7 @@ jobs:
   #   flyctl secrets set --app yap-mcp SUPABASE_JWT_SECRET=...
   deploy-mcp:
     runs-on: big-runner
-    needs: [checks, web-build, backend-image, mcp-image]
+    needs: [checks, web-build, backend-image, mcp-image, publish-packs]
     steps:
       - name: Checkout
         uses: actions/checkout@v7

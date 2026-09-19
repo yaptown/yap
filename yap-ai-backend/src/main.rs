@@ -13,7 +13,7 @@ use axum_extra::{
 use base64::Engine;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use language_utils::{
-    Course, Language, TtsProvider, TtsRequest, autograde,
+    Language, TtsProvider, TtsRequest, autograde,
     profile::{
         FollowRequest, FollowResponse, FollowStatus, GetProfileQuery, Profile,
         UpdateLanguageStatsRequest, UpdateLanguageStatsResponse, UpdateProfileRequest,
@@ -28,10 +28,11 @@ use phoneme_verify::wav2vec2;
 use postgrest::Postgrest;
 use resend_rs::{Resend, types::CreateEmailBaseOptions};
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, sync::LazyLock};
+use std::sync::LazyLock;
 
 mod anki_tts;
 mod deck_token;
+mod packs;
 mod tts_cache;
 mod tts_verify;
 use tower_http::compression::CompressionLayer;
@@ -63,70 +64,6 @@ static TRANSLATION_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
 });
 
 const PERSONALITY: &str = r#"You are a helpful assistant that helps users learn languages. You are friendly and encouraging, and you always try to help the user learn from their mistakes. When correcting the user's mistakes, first congratulate them on the parts they did well on, and then explain the mistakes they made and how they can improve. But the main thing to do is to explain the mistakes in a helpful (but concise) way, and encourage the user. You speak conversationally, as if you were speaking to the user directly. You don't use bullet points or headings, but you do break concepts into individual lines as necessary."#;
-
-fn language_data_for_course(course: &Course, part: LanguageDataPart) -> Option<&'static [u8]> {
-    LANGUAGE_DATA.get(course).map(|parts| match part {
-        LanguageDataPart::Core => parts.core,
-        LanguageDataPart::Sentences => parts.sentences,
-    })
-}
-
-#[derive(Debug, Clone, Copy, Deserialize)]
-#[serde(rename_all = "snake_case")]
-enum LanguageDataPart {
-    Core,
-    Sentences,
-}
-
-#[derive(Debug, Deserialize)]
-struct LanguageDataRequest {
-    course: Course,
-    part: LanguageDataPart,
-    chunk_index: Option<usize>,
-    chunk_size: Option<usize>,
-}
-
-struct LanguageDataParts {
-    core: &'static [u8],
-    sentences: &'static [u8],
-}
-
-// Include the split language pack archives at compile time
-static LANGUAGE_DATA: LazyLock<BTreeMap<Course, LanguageDataParts>> = LazyLock::new(|| {
-    macro_rules! course {
-        ($map:ident, $native:ident, $target:ident, $dir:literal) => {
-            $map.insert(
-                Course {
-                    native_language: Language::$native,
-                    target_language: Language::$target,
-                },
-                LanguageDataParts {
-                    core: include_bytes!(concat!("../../out/", $dir, "/language_data_core.rkyv")),
-                    sentences: include_bytes!(concat!(
-                        "../../out/",
-                        $dir,
-                        "/language_data_sentences.rkyv"
-                    )),
-                },
-            );
-        };
-    }
-    let mut data = BTreeMap::new();
-    course!(data, English, French, "fra_for_eng");
-    course!(data, French, English, "eng_for_fra");
-    course!(data, English, Spanish, "spa_for_eng");
-    course!(data, English, Korean, "kor_for_eng");
-    course!(data, English, German, "deu_for_eng");
-    course!(data, English, Italian, "ita_for_eng");
-    course!(data, English, Portuguese, "por_for_eng");
-    course!(data, French, Portuguese, "por_for_fra");
-    course!(data, English, Russian, "rus_for_eng");
-    course!(data, English, Hindi, "hin_for_eng");
-    course!(data, English, Thai, "tha_for_eng");
-    course!(data, English, ChineseSimplified, "zho-hans_for_eng");
-    course!(data, English, Japanese, "jpn_for_eng");
-    data
-});
 
 #[derive(Serialize, Clone)]
 struct ElevenLabsRequest {
@@ -1719,53 +1656,6 @@ async fn update_language_stats(
     }
 }
 
-async fn serve_language_data(Json(request): Json<LanguageDataRequest>) -> Response {
-    if let Some(language_data) = language_data_for_course(&request.course, request.part) {
-        let body = match (request.chunk_index, request.chunk_size) {
-            (Some(chunk_index), Some(chunk_size)) => {
-                if chunk_size == 0 {
-                    return Response::builder()
-                        .status(StatusCode::BAD_REQUEST)
-                        .body(axum::body::Body::from("chunk_size must be positive"))
-                        .unwrap();
-                }
-
-                let start = chunk_index.saturating_mul(chunk_size);
-                if start >= language_data.len() {
-                    return Response::builder()
-                        .status(StatusCode::RANGE_NOT_SATISFIABLE)
-                        .body(axum::body::Body::from("chunk_index out of range"))
-                        .unwrap();
-                }
-
-                let end = (start + chunk_size).min(language_data.len());
-                &language_data[start..end]
-            }
-            (None, None) => language_data,
-            _ => {
-                return Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .body(axum::body::Body::from(
-                        "chunk_index and chunk_size must be provided together",
-                    ))
-                    .unwrap();
-            }
-        };
-
-        Response::builder()
-            .status(StatusCode::OK)
-            .header(header::CONTENT_TYPE, "application/octet-stream")
-            .header(header::CONTENT_LENGTH, body.len())
-            .body(axum::body::Body::from(body))
-            .unwrap()
-    } else {
-        Response::builder()
-            .status(StatusCode::NOT_FOUND)
-            .body(axum::body::Body::from("Not found"))
-            .unwrap()
-    }
-}
-
 async fn follow_user(
     TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
     Json(request): Json<FollowRequest>,
@@ -2332,7 +2222,6 @@ fn app() -> Router {
             "/pronunciation-feedback",
             post(generate_pronunciation_feedback),
         )
-        .route("/language-data", post(serve_language_data))
         .route("/clip/{lang}/sentences", get(serve_clip_sentences))
         .route("/anki/deck", post(mint_anki_deck))
         .route("/anki/tts", get(anki_tts::tts))
@@ -2349,12 +2238,15 @@ fn app() -> Router {
         .route("/follow-status", get(get_follow_status))
         .route("/sentry-tunnel", post(sentry_tunnel))
         .layer(CompressionLayer::new())
+        .route("/packs/{slug}/{filename}", get(packs::serve))
+        .route("/language-data", post(packs::legacy))
         .layer(cors)
 }
 
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
+    packs::log_availability();
 
     // Say out loud whether synthesized speech gets checked. The gate fails
     // open by design, so an unset secret produces no errors and no rejections
@@ -2704,26 +2596,6 @@ mod tests {
         for (path, body) in posts {
             let status = smoke("POST", path, Some(body)).await;
             assert!(status.is_server_error(), "{path} returned {status}");
-        }
-    }
-
-    #[tokio::test]
-    async fn language_data_serves_first_chunk_of_both_parts() {
-        for part in ["core", "sentences"] {
-            let body = serde_json::json!({
-                "course": Course {
-                    native_language: Language::English,
-                    target_language: Language::French,
-                },
-                "part": part,
-                "chunk_index": 0,
-                "chunk_size": 1024,
-            });
-            assert_eq!(
-                smoke("POST", "/language-data", Some(body)).await,
-                StatusCode::OK,
-                "part {part}"
-            );
         }
     }
 

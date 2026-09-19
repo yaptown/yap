@@ -3,7 +3,8 @@ use language_utils::{
     Course, Language,
     language_pack::{
         ArchivedLanguagePackCore, ArchivedLanguagePackSentences, LanguagePack, LanguagePackCore,
-        LanguagePackSentences,
+        LanguagePackSentences, PackMetadata, PackPart, PartMeta, course_directory_slug, pack_url,
+        parse_hash_metadata,
     },
 };
 use opfs::{
@@ -112,70 +113,20 @@ static LANGUAGE_DATA_HASHES: LazyLock<BTreeMap<Course, &'static str>> = LazyLock
     hashes
 });
 
-/// Which half of the split language pack a request refers to. The core
-/// (dictionary, frequencies, pronunciation) is a fraction of the size of the
-/// sentence data and is downloaded first, so the placement test can start
-/// before the sentences have arrived.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
-#[serde(rename_all = "snake_case")]
-pub(crate) enum PackPart {
-    Core,
-    Sentences,
+fn describe_part(part: PackPart, course: Course) -> String {
+    let kind = match part {
+        PackPart::Core => "dictionary",
+        PackPart::Sentences => "sentences",
+    };
+    format!("Downloading {:?} {kind}", course.target_language)
 }
 
-impl PackPart {
-    fn slug(self) -> &'static str {
-        match self {
-            PackPart::Core => "core",
-            PackPart::Sentences => "sentences",
-        }
-    }
-
-    fn describe(self, course: Course) -> String {
-        match self {
-            PackPart::Core => format!("Downloading {:?} dictionary", course.target_language),
-            PackPart::Sentences => format!("Downloading {:?} sentences", course.target_language),
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct PartMeta {
-    hash: u64,
-    size: usize,
-}
-
-/// Parses the two-line hash metadata file: line 1 is the core's
-/// `hash;size_in_bytes`, line 2 the sentences'.
-fn parse_hash_metadata(metadata: &str) -> (PartMeta, PartMeta) {
-    let mut parts = metadata.trim().lines().map(|line| {
-        let (hash_str, size_str) = line.trim().split_once(';').unwrap();
-        PartMeta {
-            hash: hash_str.parse().unwrap(),
-            size: size_str.parse().unwrap(),
-        }
-    });
-    let core = parts.next().unwrap();
-    let sentences = parts.next().unwrap();
-    (core, sentences)
-}
-
-fn language_data_hashes_for_course(
-    course: Course,
-) -> Result<(PartMeta, PartMeta), LanguageDataError> {
+fn language_data_hashes_for_course(course: Course) -> Result<PackMetadata, LanguageDataError> {
     LANGUAGE_DATA_HASHES
         .get(&course)
         .copied()
-        .map(parse_hash_metadata)
         .ok_or(LanguageDataError::UnsupportedCourse(course))
-}
-
-fn course_directory_slug(course: Course) -> String {
-    format!(
-        "{}_for_{}",
-        course.target_language.code(),
-        course.native_language.code()
-    )
+        .and_then(|metadata| parse_hash_metadata(metadata).map_err(LanguageDataError::InvalidData))
 }
 
 const LANGUAGE_DATA_WRITE_CHUNK_SIZE: usize = 1024 * 1024;
@@ -202,12 +153,10 @@ const LANGUAGE_DATA_DEADLINES: ChunkDeadlines = ChunkDeadlines {
     stall_ms: 60_000,
 };
 
-#[derive(serde::Serialize)]
-struct LanguageDataRequest {
+struct ChunkDescriptor {
     course: Course,
     part: PackPart,
     chunk_index: usize,
-    chunk_size: usize,
 }
 
 fn language_data_chunk_count(total_size: usize) -> usize {
@@ -265,7 +214,7 @@ pub(crate) async fn load_language_pack_core(
     set_loading_state: &impl Fn(&str, f32),
 ) -> Result<LanguagePack, LanguageDataError> {
     let _perf_timer = bridgerton::platform::PerfTimer::new("load_language_pack_core");
-    let (core_meta, _sentences_meta) = language_data_hashes_for_course(course)?;
+    let core_meta = language_data_hashes_for_course(course)?.core;
     let mut language_directory = course_data_directory(data_directory_handle, course).await?;
 
     let core = load_part(
@@ -287,7 +236,10 @@ pub(crate) async fn load_language_pack(
     set_loading_state: &impl Fn(&str, f32),
 ) -> Result<LanguagePack, LanguageDataError> {
     let _perf_timer = bridgerton::platform::PerfTimer::new("load_language_pack");
-    let (core_meta, sentences_meta) = language_data_hashes_for_course(course)?;
+    let PackMetadata {
+        core: core_meta,
+        sentences: sentences_meta,
+    } = language_data_hashes_for_course(course)?;
     let mut language_directory = course_data_directory(data_directory_handle, course).await?;
 
     let core = load_part(
@@ -436,8 +388,8 @@ pub enum LanguageDataError {
         rkyv::rancor::Error,
     ),
 
-    #[error("AI server error: {0}")]
-    AiServer(
+    #[error("Pack download error: {0}")]
+    Download(
         #[source]
         #[bridge(message)]
         fetch_happen::Error,
@@ -542,7 +494,7 @@ async fn download_and_cache_language_data(
             bytes.extend_from_slice(&chunk_bytes);
             downloaded_bytes += chunk_bytes.len();
             let progress = (downloaded_bytes as f64 / meta.size.max(1) as f64) * 100.0;
-            set_loading_state(&part.describe(course), progress as f32);
+            set_loading_state(&describe_part(part, course), progress as f32);
             continue;
         }
 
@@ -552,7 +504,7 @@ async fn download_and_cache_language_data(
             chunk_index,
             expected_chunk_len,
             downloaded_bytes,
-            meta.size,
+            meta,
             set_loading_state,
         )
         .await?;
@@ -585,23 +537,22 @@ async fn download_language_data_chunk(
     chunk_index: usize,
     expected_chunk_len: usize,
     downloaded_before_chunk: usize,
-    expected_total_size: usize,
+    meta: PartMeta,
     set_loading_state: &impl Fn(&str, f32),
 ) -> Result<Vec<u8>, LanguageDataError> {
-    let request = LanguageDataRequest {
+    let request = ChunkDescriptor {
         course,
         part,
         chunk_index,
-        chunk_size: LANGUAGE_DATA_CHUNK_SIZE,
     };
-    let url = format!("{}/language-data", crate::utils::ai_server_url());
+    let url = pack_url(crate::utils::packs_origin(), course, part, meta.hash);
     fetch_language_data_chunk(
         &url,
         request,
         LANGUAGE_DATA_DEADLINES,
         expected_chunk_len,
         downloaded_before_chunk,
-        expected_total_size,
+        meta.size,
         set_loading_state,
     )
     .await
@@ -609,14 +560,14 @@ async fn download_language_data_chunk(
 
 async fn fetch_language_data_chunk(
     url: &str,
-    request: LanguageDataRequest,
+    request: ChunkDescriptor,
     deadlines: ChunkDeadlines,
     expected_chunk_len: usize,
     downloaded_before_chunk: usize,
     expected_total_size: usize,
     set_loading_state: &impl Fn(&str, f32),
 ) -> Result<Vec<u8>, LanguageDataError> {
-    let LanguageDataRequest {
+    let ChunkDescriptor {
         course,
         part,
         chunk_index,
@@ -624,9 +575,15 @@ async fn fetch_language_data_chunk(
     } = request;
     let abort = bridgerton::AbortController::new();
     let send = fetch_happen::Client
-        .post(url)
-        .json(&request)
-        .map_err(LanguageDataError::AiServer)?
+        .get(url)
+        .header(
+            "Range",
+            format!(
+                "bytes={}-{}",
+                chunk_index * LANGUAGE_DATA_CHUNK_SIZE,
+                chunk_index * LANGUAGE_DATA_CHUNK_SIZE + expected_chunk_len - 1
+            ),
+        )
         .abort_signal(abort.signal())
         .send();
     let response = bridgerton::platform::timeout(deadlines.first_byte_ms, send)
@@ -638,7 +595,7 @@ async fn fetch_language_data_chunk(
                 deadlines.first_byte_ms
             ))
         })?
-        .map_err(LanguageDataError::AiServer)?;
+        .map_err(LanguageDataError::Download)?;
 
     if !response.ok() {
         log::error!(
@@ -650,9 +607,20 @@ async fn fetch_language_data_chunk(
         return Err(LanguageDataError::ServerError(response.status()));
     }
 
+    if response.status() != 206
+        && !(response.status() == 200
+            && chunk_index == 0
+            && expected_chunk_len == expected_total_size)
+    {
+        abort.abort();
+        return Err(LanguageDataError::InvalidData(
+            "server ignored pack byte range".into(),
+        ));
+    }
+
     let reader = response
         .stream_reader()
-        .map_err(LanguageDataError::AiServer)?;
+        .map_err(LanguageDataError::Download)?;
 
     let mut chunk_bytes = Vec::with_capacity(expected_chunk_len);
     let mut last_logged_percent = downloaded_before_chunk * 100 / expected_total_size.max(1);
@@ -669,18 +637,24 @@ async fn fetch_language_data_chunk(
             })?;
         match next {
             Ok(Some(chunk)) => {
+                if chunk.len() > expected_chunk_len.saturating_sub(chunk_bytes.len()) {
+                    abort.abort();
+                    return Err(LanguageDataError::InvalidData(
+                        "pack range response was oversized".into(),
+                    ));
+                }
                 chunk_bytes.extend_from_slice(&chunk);
                 let progress = ((downloaded_before_chunk + chunk_bytes.len()) as f64
                     / expected_total_size.max(1) as f64)
                     * 100.0;
                 let progress_int = progress as usize;
                 if progress_int > last_logged_percent {
-                    set_loading_state(&part.describe(course), progress as f32);
+                    set_loading_state(&describe_part(part, course), progress as f32);
                     last_logged_percent = progress_int;
                 }
             }
             Ok(None) => break,
-            Err(error) => return Err(LanguageDataError::AiServer(error)),
+            Err(error) => return Err(LanguageDataError::Download(error)),
         }
     }
 
@@ -832,57 +806,66 @@ mod native_tests {
             target_language: Language::French,
             native_language: Language::English,
         };
-        for (status, body, succeeds) in [
-            (200, b"pack".as_slice(), true),
-            (200, b"bad".as_slice(), false),
-            (503, b"busy".as_slice(), false),
+        for (status, body, chunk_index, total_size, succeeds) in [
+            (206, b"pack".as_slice(), 0, 4, true),
+            (
+                206,
+                b"pack".as_slice(),
+                1,
+                LANGUAGE_DATA_CHUNK_SIZE + 4,
+                true,
+            ),
+            (200, b"pack".as_slice(), 0, 4, true),
+            (200, b"pack".as_slice(), 0, 8, false),
+            (
+                200,
+                b"pack".as_slice(),
+                1,
+                LANGUAGE_DATA_CHUNK_SIZE + 4,
+                false,
+            ),
+            (200, b"oversized".as_slice(), 0, 4, false),
+            (200, b"bad".as_slice(), 0, 4, false),
+            (503, b"busy".as_slice(), 0, 4, false),
         ] {
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
             let address = listener.local_addr().unwrap();
             let server = tokio::spawn(async move {
                 let (mut socket, _) = listener.accept().await.unwrap();
                 let mut request = Vec::new();
-                let header_end = loop {
+                loop {
                     let mut byte = [0];
                     socket.read_exact(&mut byte).await.unwrap();
                     request.push(byte[0]);
                     if request.ends_with(b"\r\n\r\n") {
-                        break request.len();
+                        break;
                     }
-                };
+                }
                 let header = String::from_utf8(request.clone()).unwrap();
-                assert!(header.starts_with("POST /language-data HTTP/1.1"));
-                let length: usize = header
-                    .lines()
-                    .find_map(|line| {
-                        let (name, value) = line.split_once(':')?;
-                        name.eq_ignore_ascii_case("content-length")
-                            .then(|| value.trim().parse().unwrap())
-                    })
-                    .unwrap();
-                request.resize(header_end + length, 0);
-                socket.read_exact(&mut request[header_end..]).await.unwrap();
-                let request: serde_json::Value =
-                    serde_json::from_slice(&request[header_end..]).unwrap();
-                assert_eq!(request["part"], "core");
-                assert_eq!(request["chunk_index"], 0);
-                assert_eq!(request["chunk_size"], LANGUAGE_DATA_CHUNK_SIZE);
-                socket.write_all(format!("HTTP/1.1 {status} Test\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len()).as_bytes()).await.unwrap();
+                assert!(
+                    header.starts_with("GET /fra_for_eng/language_data_core_123.rkyv HTTP/1.1")
+                );
+                let start = chunk_index * LANGUAGE_DATA_CHUNK_SIZE;
+                assert!(
+                    header
+                        .to_ascii_lowercase()
+                        .contains(&format!("range: bytes={start}-{}", start + 3))
+                );
+                socket.write_all(format!("HTTP/1.1 {status} Partial Content\r\nContent-Range: bytes {start}-{end}/{total_size}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len(), end = start + 3).as_bytes()).await.unwrap();
                 socket.write_all(body).await.unwrap();
             });
             let progress = std::cell::RefCell::new(Vec::new());
             let result = fetch_language_data_chunk(
-                &format!("http://{address}/language-data"),
-                LanguageDataRequest {
+                &format!("http://{address}/fra_for_eng/language_data_core_123.rkyv"),
+                ChunkDescriptor {
                     course,
                     part: PackPart::Core,
-                    chunk_index: 0,
-                    chunk_size: LANGUAGE_DATA_CHUNK_SIZE,
+                    chunk_index,
                 },
                 LANGUAGE_DATA_DEADLINES,
                 4,
-                0,
-                4,
+                chunk_index * LANGUAGE_DATA_CHUNK_SIZE,
+                total_size,
                 &|_, percent| progress.borrow_mut().push(percent),
             )
             .await;
@@ -924,15 +907,14 @@ mod native_tests {
             let _ = held.await;
         });
         let result = fetch_language_data_chunk(
-            &format!("http://{address}/language-data"),
-            LanguageDataRequest {
+            &format!("http://{address}/fra_for_eng/language_data_core_123.rkyv"),
+            ChunkDescriptor {
                 course: Course {
                     target_language: Language::French,
                     native_language: Language::English,
                 },
                 part: PackPart::Core,
                 chunk_index: 0,
-                chunk_size: LANGUAGE_DATA_CHUNK_SIZE,
             },
             TEST_DEADLINES,
             4,
@@ -962,7 +944,7 @@ mod native_tests {
     /// trips the (longer) stall deadline instead of the first-byte one.
     #[tokio::test]
     async fn stalled_body_times_out() {
-        match fetch_from_stalled_server(b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\n").await {
+        match fetch_from_stalled_server(b"HTTP/1.1 206 Partial Content\r\nContent-Range: bytes 0-3/4\r\nContent-Length: 4\r\n\r\n").await {
             Err(LanguageDataError::Timeout(message)) => {
                 assert!(message.contains("stalled"), "{message}")
             }

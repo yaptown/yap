@@ -8,8 +8,8 @@
 //!
 //!   cargo run --release --example verify_pack_hashes
 
-use language_utils::language_pack::{CORE_FILENAME, SENTENCES_FILENAME};
-use xxhash_rust::xxh3::xxh3_64;
+use language_utils::language_pack::{PackPart, parse_hash_metadata};
+use xxhash_rust::const_xxh3::xxh3_64;
 
 fn main() {
     let mut failed = false;
@@ -34,15 +34,20 @@ fn main() {
     for dir in dirs {
         let pair = dir.file_name().unwrap().to_string_lossy().into_owned();
         let metadata = std::fs::read_to_string(dir.join("language_data.hash")).unwrap();
-        let mut lines = metadata.trim().lines();
-
-        for filename in [CORE_FILENAME, SENTENCES_FILENAME] {
-            let Some(line) = lines.next() else {
-                println!("{pair}: language_data.hash is missing the line for {filename}");
+        let metadata = match parse_hash_metadata(&metadata) {
+            Ok(parts) => parts,
+            Err(error) => {
+                println!("{pair}: {error}");
                 failed = true;
                 continue;
-            };
-            let (recorded_hash, recorded_size) = line.trim().split_once(';').unwrap();
+            }
+        };
+        for (part, meta) in [
+            (PackPart::Core, metadata.core),
+            (PackPart::Sentences, metadata.sentences),
+        ] {
+            let filename = part.filename();
+            let recorded_size = meta.size;
             let bytes = match std::fs::read(dir.join(filename)) {
                 Ok(bytes) => bytes,
                 Err(e) => {
@@ -51,22 +56,18 @@ fn main() {
                     continue;
                 }
             };
-            if recorded_size != bytes.len().to_string() {
+            if recorded_size != bytes.len() {
                 println!(
                     "{pair}: {filename} is {} bytes, hash file records {recorded_size}",
                     bytes.len()
                 );
                 failed = true;
-            } else if recorded_hash != xxh3_64(&bytes).to_string() {
+            } else if meta.hash != xxh3_64(&bytes) {
                 println!("{pair}: {filename} content does not match its recorded hash");
                 failed = true;
             } else {
                 checked += 1;
             }
-        }
-        if lines.next().is_some() {
-            println!("{pair}: language_data.hash has more than two lines");
-            failed = true;
         }
     }
 

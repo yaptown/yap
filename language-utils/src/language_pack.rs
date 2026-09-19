@@ -1675,3 +1675,142 @@ pub fn write_split_dir(dir: &std::path::Path, pack: LanguagePack) -> Result<(), 
     )?;
     Ok(())
 }
+
+/// Public, immutable language-pack objects (no learner data).
+pub const PACKS_ORIGIN: &str = "https://packs.yap.town";
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PackPart {
+    Core,
+    Sentences,
+}
+
+impl PackPart {
+    pub const ALL: [Self; 2] = [Self::Core, Self::Sentences];
+
+    pub fn slug(self) -> &'static str {
+        match self {
+            Self::Core => "core",
+            Self::Sentences => "sentences",
+        }
+    }
+
+    pub fn filename(self) -> &'static str {
+        match self {
+            Self::Core => CORE_FILENAME,
+            Self::Sentences => SENTENCES_FILENAME,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PartMeta {
+    pub hash: u64,
+    pub size: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PackMetadata {
+    pub core: PartMeta,
+    pub sentences: PartMeta,
+}
+
+impl PackMetadata {
+    pub fn part(self, part: PackPart) -> PartMeta {
+        match part {
+            PackPart::Core => self.core,
+            PackPart::Sentences => self.sentences,
+        }
+    }
+}
+
+/// Exactly two `hash;size` lines, core then sentences. Reject malformed or
+/// empty archives rather than manufacturing a URL from incomplete metadata.
+pub fn parse_hash_metadata(metadata: &str) -> Result<PackMetadata, String> {
+    let parse = |line: &str| -> Result<PartMeta, String> {
+        let (hash, size) = line.trim().split_once(';').ok_or("expected hash;size")?;
+        let hash = hash.parse().map_err(|_| "invalid pack hash")?;
+        let size = size.parse().map_err(|_| "invalid pack size")?;
+        if size == 0 {
+            return Err("empty pack".into());
+        }
+        Ok(PartMeta { hash, size })
+    };
+    let mut lines = metadata.trim().lines();
+    let core = parse(lines.next().ok_or("missing core metadata")?)?;
+    let sentences = parse(lines.next().ok_or("missing sentences metadata")?)?;
+    if lines.next().is_some() {
+        return Err("extra pack metadata".into());
+    }
+    Ok(PackMetadata { core, sentences })
+}
+
+pub fn course_directory_slug(course: Course) -> String {
+    format!(
+        "{}_for_{}",
+        course.target_language.code(),
+        course.native_language.code()
+    )
+}
+
+pub fn course_from_directory_slug(slug: &str) -> Option<Course> {
+    let (target, native) = slug.split_once("_for_")?;
+    let course = Course {
+        target_language: crate::Language::from_code(target)?,
+        native_language: crate::Language::from_code(native)?,
+    };
+    (course_directory_slug(course) == slug).then_some(course)
+}
+
+pub fn pack_key(course: Course, part: PackPart, hash: u64) -> String {
+    format!(
+        "{}/language_data_{}_{hash}.rkyv",
+        course_directory_slug(course),
+        part.slug()
+    )
+}
+
+pub fn pack_url(origin: &str, course: Course, part: PackPart, hash: u64) -> String {
+    format!(
+        "{}/{}",
+        origin.trim_end_matches('/'),
+        pack_key(course, part, hash)
+    )
+}
+
+#[cfg(test)]
+mod pack_metadata_tests {
+    use super::*;
+    #[test]
+    fn metadata_is_strict() {
+        assert_eq!(
+            parse_hash_metadata("12;34\n56;78\n").unwrap(),
+            PackMetadata {
+                core: PartMeta { hash: 12, size: 34 },
+                sentences: PartMeta { hash: 56, size: 78 }
+            }
+        );
+        for bad in [
+            "",
+            "1;2",
+            "1;0\n2;3",
+            "x;2\n3;4",
+            "1;2\n3;4\n5;6",
+            "1;2;3\n4;5",
+        ] {
+            assert!(parse_hash_metadata(bad).is_err(), "{bad}");
+        }
+    }
+    #[test]
+    fn keys_are_canonical() {
+        let course = course_from_directory_slug("fra_for_eng").unwrap();
+        assert_eq!(
+            pack_url("https://packs.yap.town/", course, PackPart::Core, 123),
+            "https://packs.yap.town/fra_for_eng/language_data_core_123.rkyv"
+        );
+        for bad in ["../fra_for_eng", "fra_for_eng/", "fra_for_unknown"] {
+            assert!(course_from_directory_slug(bad).is_none());
+        }
+    }
+}

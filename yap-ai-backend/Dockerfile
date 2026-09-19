@@ -47,10 +47,6 @@ COPY --from=planner /app/Cargo.toml Cargo.toml
 COPY Cargo.lock .
 # Build dependencies - this is the caching Docker layer!
 RUN cargo chef cook --release --recipe-path recipe.json
-# out/ before the sources: this layer (rkyv packs included) is huge and rarely
-# changes — keep it above the every-commit source layers so it isn't re-created
-# (and re-exported to the cache registry) on every deploy.
-COPY out out
 COPY yap-ai-backend yap-ai-backend
 COPY language-utils language-utils
 COPY libraries/audio-codec libraries/audio-codec

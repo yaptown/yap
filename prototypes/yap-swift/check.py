@@ -42,7 +42,7 @@ def main():
     link = (target / "libyap_swift_prototype.a", "-framework", "Security", "-framework", "SystemConfiguration")
     run(*swift, GENERATED / "Bridge.swift", HERE / "swift/Smoke.swift", *link, "-o", GENERATED / "smoke")
     with tempfile.TemporaryDirectory(prefix="yap-swift-smoke-") as data, serve_packs(packs) as server:
-        run(GENERATED / "smoke", HERE / "smoke", env={**os.environ, "YAP_DATA_DIR": data, "YAP_AI_BACKEND_URL": server.url})
+        run(GENERATED / "smoke", HERE / "smoke", env={**os.environ, "YAP_DATA_DIR": data, "YAP_PACKS_URL": server.url})
         assert {part for part, _ in server.downloads} == {"core", "sentences"}
         assert len(server.downloads) == len(set(server.downloads)), "a cached chunk was downloaded again"
         assert server.offline and server.offline_downloads == 0, "reopening attempted an HTTP download"
@@ -62,7 +62,7 @@ def main():
         with serve_packs(packs) as server:
             print(f"Serving fixture packs at {server.url} until the app quits", flush=True)
             subprocess.run([str(contents / "MacOS/YapPrototype")], cwd=ROOT,
-                           env={**os.environ, "YAP_AI_BACKEND_URL": server.url}, check=True)
+                           env={**os.environ, "YAP_PACKS_URL": server.url}, check=True)
 
 
 if __name__ == "__main__":
