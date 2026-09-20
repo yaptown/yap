@@ -1,11 +1,10 @@
 # Challenge parity fixtures
 
 `challenges/*.json` are real French challenges captured from the throwaway test
-account, plus the live dictation reducer state (or `null` for other challenges).
-Both hosts restore the same state and grading from these captures.
-The captured set covers empty/typed/perfect/wrong dictation, written/listening
-flashcards, and pronunciation. The test deck did not yield a translation challenge
-while advancing the written cards; add one when it does.
+account, plus the live reducer state for dictation and translation (`null` for
+the others). Both hosts restore the same state and grading from these captures.
+The captured set covers empty/typed/perfect/wrong dictation and translation,
+written/listening flashcards, and pronunciation.
 They are intentional test inputs: commit them, not generated bindings or screenshots.
 
 ## Capture on iOS
@@ -18,6 +17,10 @@ xcrun simctl launch --terminate-running-process <UDID> town.yap.ios \
 CONTAINER=$(xcrun simctl get_app_container <UDID> town.yap.ios data)
 printf 'dump-fixture my-name' > "$CONTAINER/tmp/yap-command"
 ```
+
+The test deck rarely schedules a translation challenge; `force-translation` poses
+one regardless of what is due, then `type`, `type-reference`, `submit`, and
+`continue` drive it before each `dump-fixture`.
 
 Wait for `fixture written` in `$CONTAINER/tmp/yap-test.log`, then copy
 `$CONTAINER/tmp/fixtures/my-name.json` into `fixtures/challenges/` unchanged.
