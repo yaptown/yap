@@ -1,0 +1,64 @@
+name: Yap
+options:
+  deploymentTarget:
+    iOS: '18.0'
+packages:
+  sentry-cocoa:
+    url: https://github.com/getsentry/sentry-cocoa
+    from: '9.29.0'
+  supabase-swift:
+    url: https://github.com/supabase/supabase-swift
+    from: '2.55.2'
+targets:
+  Yap:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - Assets.xcassets
+      - path: PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: Resources
+        buildPhase: resources
+      - Generated/Bindings/Bridge.swift
+    info:
+      path: Generated/Info.plist
+      properties:
+        SentryDSN: $(SENTRY_DSN)
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+    entitlements:
+      path: Yap.entitlements
+      properties:
+        application-identifier: $(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)
+    configFiles:
+      Debug: Generated/Link.xcconfig
+      Release: Generated/Link.xcconfig
+    dependencies:
+      - package: sentry-cocoa
+        product: Sentry
+      - package: supabase-swift
+        product: Supabase
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: town.yap.ios
+        DEVELOPMENT_TEAM: AF2CJ3G3ZU
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: '1'
+        ARCHS: arm64
+        SWIFT_VERSION: '6.0'
+        SWIFT_STRICT_CONCURRENCY: complete
+        SWIFT_INCLUDE_PATHS: '$(inherited) $(SRCROOT)/Generated/Bindings'
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Yap
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        MARKETING_VERSION: '1.0'
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CURRENT_PROJECT_VERSION: '1'
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        ALWAYS_SEARCH_USER_PATHS: NO

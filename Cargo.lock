@@ -7805,6 +7805,7 @@ checksum = "fdd20c5420375476fbd4394763288da7eb0cc0b8c11deed431a91562af7335d3"
 name = "yap-frontend-rs"
 version = "0.5.0"
 dependencies = [
+ "audio-codec",
  "autograde-core",
  "base64 0.22.1",
  "bridgerton",
@@ -7840,6 +7841,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "yap-ios-host"
+version = "0.0.0"
+dependencies = [
+ "bridgerton",
+ "chrono",
+ "opfs",
+ "serde_json",
+ "tokio",
+ "weapon",
+ "yap-frontend-rs",
+]
+
+[[package]]
 name = "yap-mcp"
 version = "0.1.0"
 dependencies = [
@@ -7866,19 +7880,6 @@ dependencies = [
  "sha2 0.10.9",
  "tokio",
  "tower-http",
- "weapon",
- "yap-frontend-rs",
-]
-
-[[package]]
-name = "yap-swift-prototype"
-version = "0.0.0"
-dependencies = [
- "bridgerton",
- "chrono",
- "opfs",
- "serde_json",
- "tokio",
  "weapon",
  "yap-frontend-rs",
 ]

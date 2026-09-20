@@ -1,0 +1,34 @@
+name: iOS
+on:
+  pull_request:
+    branches: [main, master]
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: false
+      - name: Pull LFS language packs
+        run: git lfs pull --include="out/*_for_*/language_data_*.rkyv"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-ios-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-ios-
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Build simulator app
+        run: python3 yap-ios/build.py --simulator-build-only
+      - name: Native Swift integration
+        run: python3 yap-ios/smoke/check.py

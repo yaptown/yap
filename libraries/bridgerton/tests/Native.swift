@@ -156,6 +156,8 @@ private struct RejectSecondObject: BridgeReturn {
         catch let error as BridgeError { check(error.description.contains("length"), "nested return budget is shared") }
 
         check(counter.echo_bytes(bytes: [0, 128, 255]) == [0, 128, 255], "byte values")
+        let audioSizedBytes = [UInt8](repeating: 173, count: 100_000)
+        check(counter.echo_bytes(bytes: audioSizedBytes) == audioSizedBytes, "audio-sized byte buffer round trip")
         check(counter.nested_bytes() == [[0, 128, 255], []], "nested byte values")
         let liveBefore = counter.live_counters()
         let owned = Counter()

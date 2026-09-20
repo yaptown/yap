@@ -30,7 +30,7 @@ members = [
     "libraries/whisper",
     "generate-dictionary-data",
     "yap-mcp",
-    "prototypes/yap-swift",
+    "yap-ios",
 ]
 resolver = "3"
 

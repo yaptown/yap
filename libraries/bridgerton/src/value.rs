@@ -8,6 +8,8 @@ pub const MAX_ITEMS: usize = 65_536;
 const MAX_DEPTH: usize = 64;
 
 pub trait Value: Sized {
+    /// Raw bytes are bounded by MAX_BYTES, not the collection item budget.
+    const IS_BYTE: bool = false;
     fn read(reader: &mut Reader<'_>) -> Result<Self, Error>;
     fn write(&self, writer: &mut Writer) -> Result<(), Error>;
 }
@@ -164,16 +166,31 @@ impl<T: Value> Value for Option<T> {
 impl<T: Value> Value for Vec<T> {
     fn read(reader: &mut Reader<'_>) -> Result<Self, Error> {
         reader.nested(|reader| {
-            let count = reader.length(reader.remaining_items)?;
-            reader.remaining_items -= count;
+            let count = reader.length(if T::IS_BYTE {
+                MAX_BYTES
+            } else {
+                reader.remaining_items
+            })?;
+            if !T::IS_BYTE {
+                reader.remaining_items -= count;
+            }
             // Don't reserve attacker-controlled capacity before validating elements.
             (0..count).map(|_| T::read(reader)).collect()
         })
     }
     fn write(&self, writer: &mut Writer) -> Result<(), Error> {
         writer.nested(|writer| {
-            writer.length(self.len(), writer.remaining_items)?;
-            writer.remaining_items -= self.len();
+            writer.length(
+                self.len(),
+                if T::IS_BYTE {
+                    MAX_BYTES
+                } else {
+                    writer.remaining_items
+                },
+            )?;
+            if !T::IS_BYTE {
+                writer.remaining_items -= self.len();
+            }
             for value in self {
                 value.write(writer)?;
             }
@@ -203,6 +220,15 @@ mod tests {
         assert!(encode(&vec![false; MAX_ITEMS + 1]).is_err());
         assert!(encode(&vec![vec![false; 256]; 256]).is_err());
     }
+    #[test]
+    fn audio_sized_byte_buffers_use_the_byte_budget() {
+        let bytes = vec![173u8; MAX_ITEMS + 1];
+        assert_eq!(decode::<Vec<u8>>(&encode(&bytes).unwrap()).unwrap(), bytes);
+        assert!(encode(&vec![0u8; MAX_BYTES]).is_err()); // length prefix also counts
+        assert!(decode::<Vec<u8>>(&[0, 1, 0, 1]).is_err()); // truncated bytes
+        assert!(encode(&vec![false; MAX_ITEMS + 1]).is_err());
+    }
+
     #[test]
     fn numeric_and_collection_wire_vectors() {
         use std::collections::{BTreeMap, BTreeSet};
@@ -279,7 +305,11 @@ impl<A: Value, B: Value> Value for (A, B) {
 }
 macro_rules! integer_value {
     ($ty:ty) => {
+        integer_value!($ty, false);
+    };
+    ($ty:ty, $is_byte:expr) => {
         impl Value for $ty {
+            const IS_BYTE: bool = $is_byte;
             fn read(r: &mut Reader<'_>) -> Result<Self, Error> {
                 Ok(Self::from_be_bytes(
                     r.take(std::mem::size_of::<Self>())?.try_into().unwrap(),
@@ -294,7 +324,7 @@ macro_rules! integer_value {
 integer_value!(i32);
 integer_value!(u64);
 
-integer_value!(u8);
+integer_value!(u8, true);
 integer_value!(u16);
 integer_value!(i8);
 integer_value!(i16);

@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective September 13, 2026.</p>
+            <p className="text-sm">Effective September 19, 2026.</p>
           </div>
         </Card>
 
@@ -56,7 +56,10 @@ export function PrivacyPage() {
               When you use pronunciation practice, your microphone recording is
               sent to our server and to AI providers to generate feedback. When
               you type answers to challenges, the answer is sent to AI
-              providers for grading. These are processed to give you feedback,
+              providers for grading. The iOS app also saves unfinished typed
+              answers, tapped-word hints, and grading results locally on your
+              device so you can resume an interrupted review. That pending
+              review is cleared when you continue. These are processed to give you feedback,
               not to build a profile of you. Audio we generate for sentences is
               kept in a shared cache on Cloudflare so it doesn't have to be
               generated again for the next learner; those clips are keyed by
@@ -74,11 +77,12 @@ export function PrivacyPage() {
             </p>
             <p>
               <span className="text-foreground">Technical.</span> We use Sentry
-              for error and performance monitoring so we can fix crashes. Error
+              for error and performance monitoring on the site and in the iOS app
+              so we can fix crashes. Error
               reports can include your IP address and device information, and a
-              sample of sessions is recorded as a session replay (a
+              sample of website sessions is recorded as a session replay (a
               reconstruction of what the app showed and where you clicked) to
-              help us debug.
+              help us debug. The iOS app does not record session replays.
             </p>
           </div>
         </Card>
@@ -148,7 +152,7 @@ export function PrivacyPage() {
               from your account's email address — we'll remove it from our live
               systems promptly, and from backups as they rotate out. The
               offline copy on your device is under your control; clearing your
-              browser's site data removes it.
+              browser's site data, or deleting the iOS app, removes it.
             </p>
             <p>
               You can also email us to access, export, or correct your data.

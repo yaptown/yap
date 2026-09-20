@@ -127,6 +127,13 @@ extension Optional: BridgeValue where Wrapped: BridgeValue {
 extension Array: BridgeValue where Element: BridgeValue {
     internal static func bridgeRead(_ reader: inout BridgeReader) throws -> Self {
         try reader.nested { reader in
+            if Element.self == UInt8.self {
+                let count = try reader.length(limit: bridgeMaxBytes)
+                guard count <= reader.data.count - reader.offset else { throw BridgeError(description: "truncated value") }
+                let range = reader.offset..<reader.offset + count
+                reader.offset = range.upperBound
+                return Array<UInt8>(reader.data[range]) as! Self
+            }
             let count = try reader.length(limit: reader.remainingItems)
             reader.remainingItems -= count
             return try (0..<count).map { _ in try Element.bridgeRead(&reader) }
@@ -134,6 +141,11 @@ extension Array: BridgeValue where Element: BridgeValue {
     }
     internal func bridgeWrite(_ writer: inout BridgeWriter) throws {
         try writer.nested { writer in
+            if Element.self == UInt8.self, let bytes = self as? [UInt8] {
+                try writer.length(count, limit: bridgeMaxBytes)
+                try writer.put(bytes)
+                return
+            }
             try writer.length(count, limit: writer.remainingItems)
             writer.remainingItems -= count
             for value in self { try value.bridgeWrite(&writer) }

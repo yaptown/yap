@@ -1,7 +1,11 @@
 //! Decode and encode provider containers to f32/i16 PCM, plus signal sanity checks.
 //! Provider-agnostic audio helpers.
 
+#[cfg(feature = "full")]
 use anyhow::{Context, Result};
+
+mod ogg_caf;
+pub use ogg_caf::ogg_opus_to_caf;
 
 // --- audio defect detection -------------------------------------------------
 
@@ -9,6 +13,7 @@ use anyhow::{Context, Result};
 /// retry, or `None` if it's acceptable. Only short clips (<1s) are inspected
 /// — longer outputs are assumed fine, since the failure modes we care about
 /// (silence, truncation) show up in short utterances.
+#[cfg(feature = "full")]
 pub fn audio_defect(audio_bytes: &[u8]) -> Option<&'static str> {
     let (samples, sample_rate) = match decode_audio_to_f32(audio_bytes) {
         Ok((s, sr)) if !s.is_empty() && sr > 0 => (s, sr),
@@ -132,6 +137,7 @@ pub fn pcm_to_wav(samples: &[i16], sample_rate: u32) -> Vec<u8> {
 /// hands back, so clips from every provider share one format in the packs
 /// and the caches. `sample_rate` must be one Opus accepts natively: 8, 12,
 /// 16, 24 or 48 kHz.
+#[cfg(feature = "full")]
 pub fn encode_ogg_opus(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>> {
     use ogg::writing::{PacketWriteEndInfo, PacketWriter};
 
@@ -210,6 +216,7 @@ pub fn encode_ogg_opus(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>> {
 /// Dispatches to the right decoder based on magic bytes. Handles the formats
 /// we actually see from our TTS providers and pipelines: OGG Opus (Google),
 /// WAV (Gemini), and MP3 (OpenAI and others).
+#[cfg(feature = "full")]
 pub fn decode_audio_to_f32(bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
     if bytes.starts_with(b"OggS") {
         decode_ogg_opus_to_f32(bytes)
@@ -221,6 +228,7 @@ pub fn decode_audio_to_f32(bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
 }
 
 /// Decodes WAV (any bit depth hound supports) to mono f32 samples.
+#[cfg(feature = "full")]
 pub fn decode_wav_to_f32(bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
     use std::io::Cursor;
 
@@ -256,6 +264,7 @@ pub fn decode_wav_to_f32(bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
     Ok((samples, spec.sample_rate))
 }
 
+#[cfg(feature = "full")]
 pub fn decode_mp3_to_f32(mp3_bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
     use std::io::Cursor;
 
@@ -287,6 +296,7 @@ pub fn decode_mp3_to_f32(mp3_bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
     Ok((samples, sample_rate))
 }
 
+#[cfg(feature = "full")]
 pub fn decode_ogg_opus_to_f32(bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
     use std::io::Cursor;
 
@@ -340,7 +350,7 @@ pub fn decode_ogg_opus_to_f32(bytes: &[u8]) -> Result<(Vec<f32>, u32), String> {
     Ok((samples, DECODE_RATE))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "full"))]
 mod tests {
     use super::*;
 

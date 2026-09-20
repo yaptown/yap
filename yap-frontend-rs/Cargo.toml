@@ -13,6 +13,7 @@ console_error_panic_hook = ["bridgerton/console_error_panic_hook"]
 local-backend = []
 
 [dependencies]
+audio-codec = { path = "../libraries/audio-codec", default-features = false }
 bridgerton.workspace = true
 serde.workspace = true
 schemars.workspace = true

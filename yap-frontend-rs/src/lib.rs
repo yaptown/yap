@@ -222,10 +222,8 @@ impl Weapon {
         // challenges whose clips aren't local (otherwise the first challenge
         // of a cold start races the directory enumeration and can slip
         // through unplayable). Failure just leaves the mirror unloaded,
-        // which degrades to not holding anything back. Wasm-only: on native
-        // (yap-mcp) there is no audio cache and the mirror must stay
-        // unloaded so nothing is ever filtered there.
-        #[cfg(target_arch = "wasm32")]
+        // which degrades to not holding anything back. Seed on every platform
+        // hosting a UI; yap-mcp uses Deck/Context directly, not Weapon::create.
         if let Err(e) = audio::AudioCache::new().await {
             log::warn!("Failed to seed audio cache mirror: {e:?}");
         }
@@ -236,8 +234,7 @@ impl Weapon {
         // sentences. This reads a few small local JSON files — it does not
         // touch the network (the frontend refreshes manifests in the
         // background separately) and must never block the first challenge on
-        // a fetch. Wasm-only for the same reason as above.
-        #[cfg(target_arch = "wasm32")]
+        // a fetch. Seed on every platform hosting a UI.
         match clips::ClipCache::new().await {
             Ok(cache) => cache.seed_manifests().await,
             Err(e) => log::warn!("Failed to seed clip manifests: {e:?}"),
@@ -3015,9 +3012,14 @@ impl Deck {
     pub fn get_today_summary(&self) -> TodaySummary {
         let language_pack = &self.context.language_pack;
 
+        // `stats.today` is the last studied day until a review rolls it over,
+        // so a summary opened the next morning must not present it as today.
+        let current_day = chrono::Utc::now()
+            .with_timezone(&self.context.timezone)
+            .date_naive();
         let today = match &self.stats.today {
-            Some(today) => today,
-            None => {
+            Some(today) if today.day == current_day => today,
+            _ => {
                 return TodaySummary {
                     reviews: 0,
                     time_spent_seconds: 0,
@@ -4467,8 +4469,9 @@ impl ReviewInfo {
     /// that is playable (or isn't an audio challenge): generating a challenge
     /// is expensive, and correctness only requires that the challenge the app
     /// will actually show — `due_cards[0]` — is playable. When the audio
-    /// cache mirror hasn't loaded (first moments of a session, native
-    /// builds), availability is unknown and nothing is held back.
+    /// cache mirror hasn't loaded (before UI startup, or in hosts such as
+    /// yap-mcp that don't create Weapon), availability is unknown and
+    /// nothing is held back.
     fn hold_back_audio_pending(&mut self, deck: &Deck) {
         if !audio::cached_clips_loaded() {
             return;
@@ -4688,6 +4691,18 @@ impl From<audio::FetchedAudio> for AudioResult {
             bytes: fetched.bytes,
             voice_actor: fetched.voice_actor,
         }
+    }
+}
+
+/// Remux cached Ogg Opus into CAF for Apple's native players. No audio is
+/// decoded, re-encoded, or written back to the cache; WAV/MP3 pass through.
+#[bridgerton::bridge]
+pub fn audio_for_native_playback(bytes: Vec<u8>) -> Result<Vec<u8>, bridgerton::Error> {
+    if audio_mime_type(&bytes) == "audio/ogg" {
+        audio_codec::ogg_opus_to_caf(&bytes)
+            .map_err(|error| bridgerton::Error::new(error.to_string()))
+    } else {
+        Ok(bytes)
     }
 }
 
@@ -5099,7 +5114,15 @@ pub async fn autograde_transcription(
             Err(e) => Some(e),
         };
 
-    // fall back to some heuristic grading
+    failed_transcription_review(submission, course)
+}
+
+/// Offline/manual review uses the same fallback as a failed network grade.
+#[bridgerton::bridge]
+pub fn failed_transcription_review(
+    submission: Vec<transcription_challenge::PartSubmitted>,
+    course: Course,
+) -> transcription_challenge::Grade {
     let results = submission
         .into_iter()
         .map(|part| match part {

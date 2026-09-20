@@ -3,9 +3,13 @@ name = "audio-codec"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = ["full"]
+full = ["dep:opus", "dep:minimp3", "dep:hound"]
+
 [dependencies]
 anyhow = "1"
-minimp3 = "0.6"
+minimp3 = { version = "0.6", optional = true }
 ogg = "0.9"
-opus = "0.3"
-hound = "3.5.1"
+opus = { version = "0.3", optional = true }
+hound = { version = "3.5.1", optional = true }

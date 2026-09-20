@@ -9,7 +9,7 @@ This is the workspace's binding layer. `src/` is the runtime (including the
 `cli/` the `cargo bridgerton` build command, and `fixture/` the test crate.
 Application crates depend on `bridgerton` alone: no `wasm-bindgen`, `tsify`,
 or `js-sys` declarations, no feature flags, and no `cfg(target_arch)` in their
-code. [Real Yap in SwiftUI](../../prototypes/yap-swift) exposes the existing
+code. [Real Yap in SwiftUI](../../yap-ios) exposes the existing
 `Weapon` and `Deck` APIs through it and runs a native screen.
 
 ## Start here
@@ -67,8 +67,7 @@ the `cli/` crate, so nothing needs installing:
 
 ```sh
 cargo bridgerton web --package yap-frontend-rs --release
-cargo bridgerton swift --package yap-swift-prototype --out-dir prototypes/yap-swift/generated
-cargo bridgerton package --bindings prototypes/yap-swift/generated --module Yap --out-dir dist/Yap
+cargo bridgerton swift --package yap-ios-host --out-dir yap-ios/Generated/Bindings
 ```
 
 `web` wraps wasm-pack (`--target web|nodejs|bundler`, `--out-dir`, `--release`,
@@ -455,10 +454,11 @@ It never moves confined futures onto Tokio workers. Binding generation needs no
 runtime setup. The real Yap integration exercises native file I/O and background
 pack loading; authenticated networking and other CPU-intensive APIs still need testing.
 
-The [real Yap host](../../prototypes/yap-swift) exercises platform I/O, existing
+The [real Yap host](../../yap-ios) exercises platform I/O, existing
 state and subscriptions, typed event creation, locked native persistence/reopen,
-and a running SwiftUI screen. `cargo bridgerton package` produces the
-XCFramework; `ForeignValue` and authenticated server sync validation remain deferred. Native
+and a running SwiftUI screen. Its XcodeGen app links iOS static libraries against
+host-generated bindings; no XCFramework is needed. `ForeignValue` and authenticated
+server sync validation remain deferred. Native
 foreign entry points are Apple-only; ordinary Rust APIs and source generation
 can compile elsewhere, but calling this native ABI on non-Apple hosts aborts.
 

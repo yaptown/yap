@@ -142,6 +142,36 @@ mod tests {
         }]
     }
     #[test]
+    fn offline_fallback_preserves_parts_and_allows_manual_correction() {
+        let course = language_utils::Course {
+            target_language: language_utils::Language::French,
+            native_language: language_utils::Language::English,
+        };
+        let submission = prepare_transcription_submission(
+            vec![
+                Part::Provided { part: literal() },
+                Part::AskedToTranscribe {
+                    parts: vec![literal()],
+                },
+            ],
+            vec![TranscriptionInput {
+                index: 1,
+                text: "chien".into(),
+            }],
+        );
+        let grade = crate::failed_transcription_review(submission.request, course);
+        assert!(grade.autograding_error.is_some());
+        assert!(matches!(&grade.results[0], PartGraded::Provided { .. }));
+        assert!(!transcription_is_perfect(grade.results.clone()));
+        assert!(transcription_is_perfect(apply_transcription_grade(
+            grade.results,
+            1,
+            0,
+            WordGrade::Perfect { wrote: None },
+        )));
+    }
+
+    #[test]
     fn only_requested_parts_need_answers_and_whitespace_matches_web() {
         let parts = vec![
             Part::Provided { part: literal() },

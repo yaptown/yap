@@ -67,6 +67,17 @@ impl Deck {
         search_query: Option<String>,
         limit: usize,
     ) -> Vec<GramDictionaryEntry> {
+        self.get_gram_dictionary_page(search_query, 0, limit)
+    }
+
+    /// A bounded page in the same relevance/frequency order as dictionary search.
+    /// Native callers must not transfer the whole dictionary through the bridge.
+    pub fn get_gram_dictionary_page(
+        &self,
+        search_query: Option<String>,
+        offset: usize,
+        limit: usize,
+    ) -> Vec<GramDictionaryEntry> {
         let language_pack = &self.context.language_pack;
         let target_language = self.context.course.target_language;
 
@@ -74,7 +85,7 @@ impl Deck {
             .filter(|q| !q.trim().is_empty())
             .map(|q| remove_accents_lowercase(&q));
 
-        let mut entries: Vec<((u8, usize), GramDictionaryEntry)> = language_pack
+        let mut entries: Vec<(u8, usize)> = language_pack
             .gram_frequencies
             .entries
             .iter()
@@ -115,18 +126,21 @@ impl Deck {
                     0
                 };
 
-                let entry = self.gram_dictionary_entry(frequency_index)?;
-                Some(((relevance, frequency_index), entry))
+                Some((relevance, frequency_index))
             })
             .collect();
 
-        if entries.len() > limit {
-            entries.select_nth_unstable_by_key(limit, |(key, _)| *key);
-            entries.truncate(limit);
+        let end = offset.saturating_add(limit).min(entries.len());
+        if end < entries.len() {
+            entries.select_nth_unstable(end);
+            entries.truncate(end);
         }
-        entries.sort_by_key(|(key, _)| *key);
-
-        entries.into_iter().map(|(_, entry)| entry).collect()
+        entries.sort_unstable();
+        entries
+            .into_iter()
+            .skip(offset)
+            .filter_map(|(_, index)| self.gram_dictionary_entry(index))
+            .collect()
     }
 
     /// Build the dictionary entry at a frequency index (None when out of

@@ -219,9 +219,7 @@ impl ClipCache {
     /// Called once at boot so the very first challenge selection can
     /// prioritize clip sentences from the previous session's knowledge,
     /// without waiting on the network.
-    // Only called from the wasm-gated boot path; native (yap-mcp) never
-    // seeds the mirror.
-    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+    // Seeded by Weapon::create on every platform hosting a UI.
     pub async fn seed_manifests(&self) {
         use futures::StreamExt;
         let Ok(mut entries) = self.clips_dir.entries().await else {
