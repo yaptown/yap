@@ -1,3 +1,5 @@
+#[cfg(feature = "fixtures")]
+use crate::Deck;
 use crate::{Challenge, Gram, TranscriptionState, TranslationState};
 
 /// A captured challenge with its live reducer snapshot.
@@ -48,5 +50,23 @@ mod tests {
             }
         }
         assert!(count > 0, "capture at least one challenge fixture");
+    }
+}
+
+/// Capture helpers for the debug driver.
+#[cfg(feature = "fixtures")]
+#[bridgerton::bridge]
+impl Deck {
+    /// Any translation challenge this deck can pose right now, regardless of
+    /// what's due. Lets the driver capture translation fixtures from a deck
+    /// whose schedule wouldn't otherwise offer one.
+    pub fn any_translation_challenge(&self) -> Option<Challenge<Gram<String>>> {
+        self.get_comprehensible_written_grams(false)
+            .iter()
+            .find_map(|gram| {
+                let sentence = self.pick_translation_sentence(gram)?;
+                self.translation_challenge_for_sentence(*gram, sentence)
+            })
+            .map(Challenge::TranslateComprehensibleSentence)
     }
 }

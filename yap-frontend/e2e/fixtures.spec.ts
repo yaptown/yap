@@ -6,8 +6,9 @@ test("capture challenge fixtures", async ({ page, request }) => {
   const response = await request.get("/__fixtures/index.json");
   expect(response.ok()).toBeTruthy();
   const names: string[] = await response.json();
+  const only = (process.env.YAP_FIXTURE ?? "").split(",").filter(Boolean);
   const selected = names.filter(
-    (name) => !process.env.YAP_FIXTURE || name === process.env.YAP_FIXTURE,
+    (name) => only.length === 0 || only.some((prefix) => name.startsWith(prefix)),
   );
   expect(selected.length).toBeGreaterThan(0);
   test.setTimeout(120_000 + selected.length * 10_000);

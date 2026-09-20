@@ -119,6 +119,7 @@ struct ReviewScreen: View {
             }
         case "cant-listen": model.cantListen()
         case "dismiss-step": model.session.dismissedAccomplishmentAtReview = model.deck.get_total_reviews()
+        case "force-translation": model.forceTranslation()
         case "cant-speak": model.cantSpeak()
         case "undo": model.undoRestrictions()
         case "add-listening", "add-pronunciation":

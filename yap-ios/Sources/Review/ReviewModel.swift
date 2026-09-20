@@ -28,6 +28,11 @@ enum ReviewStep: String, Hashable {
         reviewInfo = deck.get_review_info(banned_challenge_types: [], timestamp_ms: Self.now)
     }
     static var now: Double { Date().timeIntervalSince1970 * 1000 }
+    #if DEBUG
+    /// Driver hook: pose a translation challenge even when none is due, so
+    /// fixtures can be captured from the test deck.
+    func forceTranslation() { currentChallenge = deck.any_translation_challenge() }
+    #endif
     func start() {
         guard !active else { return }; active = true
         refreshRestrictions(); refresh()

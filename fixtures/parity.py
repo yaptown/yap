@@ -20,7 +20,7 @@ def run(*args, **kwargs):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=Path("/tmp/parity"))
-    parser.add_argument("--only")
+    parser.add_argument("--only", help="comma-separated fixture names or prefixes, e.g. translation")
     platforms = parser.add_mutually_exclusive_group()
     platforms.add_argument("--web-only", action="store_true")
     platforms.add_argument("--ios-only", action="store_true")
@@ -34,7 +34,8 @@ def main():
     if not args.web_only and not password:
         parser.error("Set YAP_TEST_USER_PASSWORD for the iOS test account")
     fixtures = sorted((ROOT / "fixtures/challenges").glob("*.json"))
-    fixtures = [p for p in fixtures if not args.only or p.stem == args.only]
+    only = args.only.split(",") if args.only else []
+    fixtures = [p for p in fixtures if not only or any(p.stem.startswith(o) for o in only)]
     if not fixtures:
         parser.error("No matching fixtures")
     out = args.out.resolve()
