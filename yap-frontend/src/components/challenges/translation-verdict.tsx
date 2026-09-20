@@ -4,17 +4,11 @@
 // `<word>`-tag divergence bug) lives here once, so the two containers can never
 // drift again. Everything imported here is `import type` from the pkg or a
 // wasm-free leaf; the widget's wasm-guard build enforces that.
-import type { Language, Literal } from "../../../../yap-frontend-rs/pkg";
+import type { Language, TranslationWordView } from "../../../../yap-frontend-rs/pkg";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
 import { FeedbackDisplay } from "@/components/FeedbackDisplay";
-
-// One normalized per-literal grade, aligned to the sentence's literals in order
-// (null = ungradable). The app maps its WASM `LiteralGrades` ("Remembered" /
-// "Forgot") into this once; the server already emits it lowercase. Having a
-// single casing kills the "remembered" vs "Remembered" mismatch at the boundary.
-export type LiteralGrade = "remembered" | "forgot" | null;
 
 /** The normalized data a graded verdict renders from — same shape both sides. */
 export interface TranslationVerdictData {
@@ -24,70 +18,30 @@ export interface TranslationVerdictData {
   encouragement: string | null;
   explanation: string | null;
   autogradingError: string | null;
+  submissionLabel?: string;
+  correctLabel?: string;
 }
 
 interface ChallengeSentenceProps {
-  literals: Literal<string>[];
-  grades?: LiteralGrade[];
-  isPerfect?: boolean;
+  words: TranslationWordView[];
   targetLanguage: Language;
-  // Tap-to-define is app-only; omit these in the widget and the words render
-  // as plain (non-interactive) colored text.
   onWordTap?: (index: number) => void;
-  tappedWords?: Set<number>;
-  literalGramIndices?: number[];
-  tappedGramGroups?: Set<number>;
 }
 
-const EMPTY_SET: Set<number> = new Set();
+const tintClasses = {
+  Neutral: "",
+  Perfect: "text-green-600 dark:text-green-400",
+  Remembered: "text-green-600 dark:text-green-400",
+  Tapped: "text-yellow-500 dark:text-yellow-400",
+  Forgot: "text-red-600 dark:text-red-400",
+};
 
-export function ChallengeSentence({
-  literals,
-  grades,
-  isPerfect,
-  targetLanguage,
-  onWordTap,
-  tappedWords = EMPTY_SET,
-  literalGramIndices = [],
-  tappedGramGroups = EMPTY_SET,
-}: ChallengeSentenceProps) {
-  const getLiteralColorClass = (literal: Literal<string>, i: number) => {
-    if (isPerfect) {
-      return "text-green-600 dark:text-green-400";
-    }
-
-    const isHeteronym =
-      (literal.word.word_type as { type?: string })?.type === "Heteronym";
-
-    // Highlight all literals in a tapped gram group
-    const gramGroup = literalGramIndices[i];
-    if (gramGroup !== undefined && tappedGramGroups.has(gramGroup)) {
-      return "text-yellow-500 dark:text-yellow-400";
-    }
-
-    // Also highlight individually tapped words (backwards compat)
-    if (isHeteronym && tappedWords.has(i)) {
-      return "text-yellow-500 dark:text-yellow-400";
-    }
-
-    if (!grades || !isHeteronym) {
-      return "";
-    }
-
-    const grade = grades[i];
-    if (grade === "remembered") return "text-green-600 dark:text-green-400";
-    if (grade === "forgot") return "text-red-600 dark:text-red-400";
-
-    return "";
-  };
-
+export function ChallengeSentence({ words, targetLanguage, onWordTap }: ChallengeSentenceProps) {
   return (
     <h2 className="text-2xl font-semibold">
-      {literals.map((literal: Literal<string>, i: number) => {
-        const colorClass = getLiteralColorClass(literal, i);
-        const isHeteronym =
-          (literal.word.word_type as { type?: string })?.type === "Heteronym";
-        const interactive = isHeteronym && !!onWordTap;
+      {words.map((word, i) => {
+        const colorClass = tintClasses[word.tint];
+        const interactive = word.tappable && !!onWordTap;
 
         return (
           <span key={i}>
@@ -105,10 +59,10 @@ export function ChallengeSentence({
               }}
             >
               <TargetLanguageText language={targetLanguage}>
-                {literal.word.text}
+                {word.text}
               </TargetLanguageText>
             </span>
-            {literal.whitespace}
+            {word.whitespace}
           </span>
         );
       })}
@@ -116,20 +70,20 @@ export function ChallengeSentence({
   );
 }
 
-export function YourTranslation({ userTranslation }: { userTranslation: string }) {
+export function YourTranslation({ userTranslation, label = "Your translation:" }: { userTranslation: string; label?: string }) {
   return (
     <div className="rounded-lg p-4 border">
-      <p className="text-sm font-medium mb-1">Your translation:</p>
+      <p className="text-sm font-medium mb-1">{label}</p>
       <p className="text-lg font-medium">{userTranslation}</p>
     </div>
   );
 }
 
-export function CorrectTranslation({ sentence }: { sentence: string }) {
+export function CorrectTranslation({ sentence, label = "Correct translation:" }: { sentence: string; label?: string }) {
   return (
     <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20">
       <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">
-        Correct translation:
+        {label}
       </p>
       <p className="text-lg font-medium">{sentence}</p>
     </div>
@@ -175,7 +129,7 @@ export function TranslationVerdict({
   if (verdict.isPerfect) {
     return (
       <div className="space-y-2">
-        <CorrectTranslation sentence={verdict.correctTranslation} />
+        <CorrectTranslation sentence={verdict.correctTranslation} label={verdict.correctLabel} />
         <FeedbackDisplay
           encouragement={verdict.encouragement ?? undefined}
           explanation={verdict.explanation ?? undefined}
@@ -189,8 +143,8 @@ export function TranslationVerdict({
   return (
     <>
       <div className="space-y-2">
-        <YourTranslation userTranslation={verdict.userTranslation} />
-        <CorrectTranslation sentence={verdict.correctTranslation} />
+        <YourTranslation userTranslation={verdict.userTranslation} label={verdict.submissionLabel} />
+        <CorrectTranslation sentence={verdict.correctTranslation} label={verdict.correctLabel} />
       </div>
 
       {verdict.autogradingError && <AutogradeError />}

@@ -25,7 +25,7 @@ struct SentenceVerdictView: View {
                 .background(.green.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
                 .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(.green.opacity(0.2)) }
             if error != nil {
-                Text("Your answer couldn't be graded automatically. Please grade the words below.").font(.footnote).foregroundStyle(.orange)
+                Text("Your submission could not be graded automatically. Please grade the words manually below.").font(.footnote).foregroundStyle(.orange)
             }
             if encouragement?.isEmpty == false || explanation?.isEmpty == false {
                 VStack(alignment: .leading, spacing: 8) {

@@ -203,7 +203,7 @@ struct TranscriptionChallengeView: View {
     private func debugCommand() {
         let command = DebugHarness.shared.command
         if command.hasPrefix("dump-fixture ") {
-            DebugHarness.dumpFixture(ChallengeFixture(challenge: .TranscribeComprehensibleSentence(sentence), transcription: state), name: String(command.dropFirst(13)))
+            DebugHarness.dumpFixture(ChallengeFixture(challenge: .TranscribeComprehensibleSentence(sentence), transcription: state, translation: nil), name: String(command.dropFirst(13)))
         }
         if command.hasPrefix("type "), editing, let index = focused ?? blanks.first { send(.InputChanged(index: UInt64(index), text: String(command.dropFirst(5)))) }
         if command == "type-reference", editing {

@@ -87,7 +87,7 @@ struct ReviewScreen: View {
         case let .PronunciationChallenge(indicator, pattern, guide, cues, isNew, timesSeen):
             PronunciationChallengeView(model: model, indicator: indicator, pattern: pattern, guide: guide, cues: cues, isNew: isNew, timesSeen: timesSeen)
         case let .TranslateComprehensibleSentence(sentence):
-            TranslationChallengeView(model: model, sentence: sentence)
+            if let course = model.course { TranslationChallengeView(model: model, sentence: sentence, course: course) }
         case let .TranscribeComprehensibleSentence(sentence):
             TranscriptionChallengeView(model: model, sentence: sentence)
         }
@@ -98,7 +98,8 @@ struct ReviewScreen: View {
         case let command where command.hasPrefix("dump-fixture "):
             guard let challenge = model.currentChallenge else { return }
             if case .TranscribeComprehensibleSentence = challenge { return }
-            DebugHarness.dumpFixture(ChallengeFixture(challenge: challenge, transcription: nil), name: String(command.dropFirst(13)))
+            if case .TranslateComprehensibleSentence = challenge { return }
+            DebugHarness.dumpFixture(ChallengeFixture(challenge: challenge, transcription: nil, translation: nil), name: String(command.dropFirst(13)))
         case "dismiss-keyboard": UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         case "status":
             DebugHarness.log("placement: startingFresh=\(String(describing: model.startingFresh)) historyKnown=\(model.historyKnown) taken=\(model.deck.has_taken_placement_test()) list=\(String(describing: model.deck.get_sentence_list()))")

@@ -1,11 +1,13 @@
-use crate::{Challenge, Gram, TranscriptionState};
+use crate::{Challenge, Gram, TranscriptionState, TranslationState};
 
-/// A captured challenge and, for dictation, its live reducer snapshot.
+/// A captured challenge with its live reducer snapshot.
 #[bridgerton::bridge(transparent)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct ChallengeFixture {
     pub challenge: Challenge<Gram<String>>,
     pub transcription: Option<TranscriptionState>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub translation: Option<TranslationState>,
 }
 
 #[cfg(any(feature = "fixtures", test))]

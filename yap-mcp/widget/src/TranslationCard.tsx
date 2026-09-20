@@ -106,9 +106,15 @@ export function TranslationCard({ challenge }: { challenge: TranslationChallenge
           />
 
           <ChallengeSentence
-            literals={sentence.literals}
-            grades={result?.literal_grades}
-            isPerfect={result?.perfect}
+            words={sentence.literals.map((literal, index) => ({
+              text: literal.word.text,
+              whitespace: literal.whitespace,
+              tappable: false,
+              tint: result?.perfect ? "Perfect" :
+                literal.word.word_type.type !== "Heteronym" ? "Neutral" :
+                result?.literal_grades[index] === "remembered" ? "Remembered" :
+                result?.literal_grades[index] === "forgot" ? "Forgot" : "Neutral",
+            }))}
             targetLanguage={challenge.language}
           />
 

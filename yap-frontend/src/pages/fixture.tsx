@@ -6,12 +6,14 @@ import { ChallengeView } from "@/components/challenges/ChallengeView";
 import type {
   ChallengeFixture,
   TranscriptionState,
+  TranslationState,
 } from "../../../yap-frontend-rs/pkg";
 
 // Captures use serde JSON; only reducer inputs need a bridge representation.
 function parseFixture(json: string): ChallengeFixture {
   const fixture = JSON.parse(json) as {
     challenge: ChallengeFixture["challenge"];
+    translation?: TranslationState | null;
     transcription:
       | (Omit<TranscriptionState, "inputs"> & {
           inputs: Record<string, string>;
@@ -20,6 +22,7 @@ function parseFixture(json: string): ChallengeFixture {
   };
   return {
     challenge: fixture.challenge,
+    translation: fixture.translation ?? undefined,
     transcription: fixture.transcription
       ? {
           ...fixture.transcription,
@@ -75,6 +78,7 @@ export function FixturePage() {
         key={name}
         challenge={loaded.fixture.challenge}
         initialState={loaded.fixture.transcription ?? undefined}
+        translationState={loaded.fixture.translation ?? undefined}
         deck={deck}
         targetLanguage={targetLanguage}
         nativeLanguage={nativeLanguage}
