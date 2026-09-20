@@ -29,24 +29,25 @@ struct TranscriptionChallengeView: View {
         ("Incorrect", .Incorrect(wrote: nil)), ("Missed", .Missed)
     ]
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 12) {
             StudyCard {
-                Text(sentence.second_chance ? "DICTATION · SECOND CHANCE" : "DICTATION").font(.caption).foregroundStyle(.secondary)
-                Text("Listen and fill in the blanks").font(.title2.bold())
-                AudioButton(request: sentence.audio, session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: true)
-                SentenceFlow(spacing: 0) {
-                    ForEach(Array(sentence.parts.enumerated()), id: \.offset) { index, part in
-                        switch part {
-                        case let .Provided(literal): Text(literal.word.text + literal.whitespace).font(.title3)
-                        case let .AskedToTranscribe(parts):
-                            TextField("What did you hear?", text: Binding(get: { draft.inputs[index] ?? "" }, set: { draft.inputs[index] = $0 }))
-                                .textFieldStyle(.roundedBorder).frame(width: 210).focused($focused, equals: index)
-                                .autocorrectionDisabled().textInputAutocapitalization(index == 0 ? .sentences : .never)
-                                .submitLabel(index == blanks.last ? .done : .next).onSubmit { advance(index) }
-                                .disabled(grading || result != nil)
-                            if let whitespace = parts.last?.whitespace, !whitespace.isEmpty { Text(whitespace) }
+                if sentence.second_chance { ReviewBadge(text: "Second chance") }
+                HStack(alignment: .center, spacing: 8) {
+                    AudioButton(request: sentence.audio, session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: true)
+                    SentenceFlow(spacing: 0, alignment: .center) {
+                        ForEach(Array(sentence.parts.enumerated()), id: \.offset) { index, part in
+                            switch part {
+                            case let .Provided(literal): Text(literal.word.text + literal.whitespace).font(.body)
+                            case let .AskedToTranscribe(parts):
+                                TextField("What did you hear?", text: Binding(get: { draft.inputs[index] ?? "" }, set: { draft.inputs[index] = $0 }))
+                                    .textFieldStyle(.roundedBorder).font(.body).frame(width: 150, height: 44).focused($focused, equals: index)
+                                    .autocorrectionDisabled().textInputAutocapitalization(index == 0 ? .sentences : .never)
+                                    .submitLabel(index == blanks.last ? .done : .next).onSubmit { advance(index) }
+                                    .disabled(grading || result != nil)
+                                if let whitespace = parts.last?.whitespace, !whitespace.isEmpty { Text(whitespace) }
+                            }
                         }
-                    }
+                        }.frame(maxWidth: .infinity)
                 }
                 VideoClipView(deck: model.deck, language: model.deck.get_target_language(), text: sentence.target_language,
                     session: model.session, reviewCount: model.deck.get_total_reviews(),
@@ -57,7 +58,7 @@ struct TranscriptionChallengeView: View {
                 if let result {
                     SentenceVerdictView(submission: draft.inputs.sorted { $0.key < $1.key }.map(\.value).joined(separator: " "),
                         correct: sentence.target_language, perfect: perfect, encouragement: result.encouragement,
-                        explanation: result.explanation, error: result.autograding_error)
+                        explanation: result.explanation, error: result.autograding_error, correctLabel: "Correct sentence:", submissionLabel: "Your answer:")
                     wordGrades(result)
                     if !result.compare.isEmpty {
                         Text(result.compare.joined(separator: " · "))
@@ -73,11 +74,11 @@ struct TranscriptionChallengeView: View {
                 }
             }
             if result == nil {
-                Button("Check answer") { submit() }.disabled(grading || !submission.all_blanks_filled)
+                Button { submit() } label: { Text("Check answer").frame(maxWidth: .infinity) }.disabled(grading || !submission.all_blanks_filled)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                Button("I can't listen right now") { model.cantListen() }.disabled(grading)
+                Button("I can't listen right now") { model.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(grading)
             } else {
-                Button(perfect ? "Nailed it!" : "Continue") { complete() }.disabled(model.submitting)
+                Button { complete() } label: { Text(perfect ? "Nailed it!" : "Continue").frame(maxWidth: .infinity) }.disabled(model.submitting)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             }
         }
@@ -111,15 +112,15 @@ struct TranscriptionChallengeView: View {
         ForEach(Array(grade.results.enumerated()), id: \.offset) { partIndex, part in
             if case let .AskedToTranscribe(parts, _) = part {
                 ForEach(Array(parts.enumerated()), id: \.offset) { wordIndex, word in
-                    HStack {
+                    HStack(spacing: 4) {
                         Text(word.heard.word.text).fontWeight(.semibold)
                         Spacer()
                         Picker("Grade \(word.heard.word.text)", selection: Binding(get: { gradeIndex(word.grade) }, set: { index in
                             setGrade(partIndex, wordIndex, gradeOptions[index].1)
                         })) {
                             ForEach(gradeOptions.indices, id: \.self) { index in Text(gradeOptions[index].0).tag(index) }
-                        }.pickerStyle(.menu)
-                    }
+                        }.pickerStyle(.menu).controlSize(.small)
+                    }.font(.subheadline)
                 }
             }
         }

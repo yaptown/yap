@@ -22,25 +22,12 @@ struct ReviewScreen: View {
     }
     var body: some View {
         let metadata = get_language_metadata(language: model.deck.get_target_language())
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) {
-                            // Some simulator runtimes omit the emoji font asset.
-                            if Theme.emojiFontAvailable {
-                                Text(metadata.flag).font(.system(size: 28))
-                            } else { Image(systemName: "globe").foregroundStyle(Color.yapAccent) }
-                            Text(metadata.common_name).font(.title.bold()).foregroundStyle(Color.yapText)
-                        }
-                        Text("Today: \(Int(model.deck.get_today_time_spent()) / 60) / \(model.deck.get_daily_review_target() / 60) minutes")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Switch course", systemImage: "globe") { model.session.choosingCourse = true }
-                        .labelStyle(.iconOnly).frame(width: 44, height: 44)
-                }
-                if !model.session.online { Label("Offline · changes stay on this device until you reconnect", systemImage: "wifi.slash").font(.caption) }
+        VStack(spacing: 0) {
+            ProgressView(value: min(Double(model.deck.get_today_time_spent()) / max(Double(model.deck.get_daily_review_target()), 1), 1))
+                .progressViewStyle(.linear).tint(Color.yapAccent).frame(height: 3)
+            ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                if !model.session.online { Label("Offline · changes stay on this device until you reconnect", systemImage: "wifi.slash").font(.caption).foregroundStyle(.secondary) }
                 if let error = model.session.packError {
                     HStack {
                         Text("Couldn't finish downloading the language pack: \(error)").font(.caption).foregroundStyle(.secondary)
@@ -50,7 +37,7 @@ struct ReviewScreen: View {
                 if let error = model.session.syncError {
                     Text("Sync will retry: \(error)").font(.caption).foregroundStyle(.secondary)
                 }
-                if let error = auth.error { Text(error).foregroundStyle(.red) }
+                if let error = auth.error { Text(error).font(.caption).foregroundStyle(.secondary) }
                 if let step {
                     switch step {
                     case .placementTest: PlacementTestView(model: model)
@@ -62,9 +49,24 @@ struct ReviewScreen: View {
                 } else if let challenge = model.currentChallenge {
                     challengeView(challenge).id(challenge)
                 } else { NoCardsReadyView(model: model) }
-            }.padding(20).frame(maxWidth: 600)
+            }.padding(12).frame(maxWidth: 600)
+            }
         }
         .background(Color(uiColor: .systemGroupedBackground))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack(spacing: 8) {
+                    if Theme.emojiFontAvailable { Text(metadata.flag) }
+                    else { Image(systemName: "globe").foregroundStyle(Color.yapAccent) }
+                    Text(metadata.common_name).foregroundStyle(Color.yapText)
+                }.font(.headline)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Switch course", systemImage: "globe") { model.session.choosingCourse = true }
+                    .labelStyle(.iconOnly).frame(width: 44, height: 44)
+            }
+        }
         .onDisappear { audio.stop() }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeTab == .learn else { return }; handleDebugCommand() }

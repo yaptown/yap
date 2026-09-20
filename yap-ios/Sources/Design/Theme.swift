@@ -21,9 +21,10 @@ extension Color {
 struct StudyCard<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) { content }
-            .frame(maxWidth: .infinity, alignment: .leading).padding(28)
-            .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 36))
+        VStack(alignment: .leading, spacing: 12) { content }
+            .frame(maxWidth: .infinity, alignment: .leading).padding(16)
+            .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
+            .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
     }
 }
 
@@ -35,4 +36,13 @@ struct StudyCard<Content: View>: View {
         guard let url = CTFontCopyAttribute(font, kCTFontURLAttribute) as? URL else { return false }
         return FileManager.default.fileExists(atPath: url.path)
     }()
+}
+
+struct ReviewBadge: View {
+    let text: String
+    var body: some View {
+        Text(text).font(.caption.weight(.semibold))
+            .foregroundStyle(Color.yapAccent).padding(.horizontal, 8).padding(.vertical, 4)
+            .background(Color.yapAccent.opacity(0.12), in: Capsule())
+    }
 }

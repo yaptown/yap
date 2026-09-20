@@ -25,18 +25,23 @@ struct TranslationChallengeView: View {
             tapped_words: draft.tapped, language: model.deck.get_target_language())
     }
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 12) {
             StudyCard {
-                Text(sentence.second_chance ? "TRANSLATION · SECOND CHANCE" : "TRANSLATION").font(.caption).foregroundStyle(.secondary)
-                SentenceFlow(spacing: 0) {
-                    ForEach(Array(sentence.target_language_literals.enumerated()), id: \.offset) { index, literal in
-                        let word = Text(literal.word.text + literal.whitespace).font(.title2.weight(.semibold)).foregroundStyle(wordColor(index))
-                        if result == nil && !grading {
-                            Button { tap(index) } label: { word }.buttonStyle(.plain)
-                        } else { word }
-                    }
+                if sentence.second_chance { ReviewBadge(text: "Second chance") }
+                HStack(alignment: .center, spacing: 8) {
+                    AudioButton(request: sentence.audio, session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: (grading || result != nil) && hasClip == false)
+                    SentenceFlow(spacing: 0, alignment: .center) {
+                        ForEach(Array(sentence.target_language_literals.enumerated()), id: \.offset) { index, literal in
+                            let heteronym = { if case .Heteronym = literal.word.word_type { return true }; return false }()
+                            let word = Text(literal.word.text + literal.whitespace)
+                                .underline(heteronym && result == nil, pattern: .dot)
+                                .font(.title2.weight(.semibold)).foregroundStyle(wordColor(index))
+                            if result == nil && !grading {
+                                Button { tap(index) } label: { word.frame(minHeight: 44) }.buttonStyle(.plain)
+                            } else { word }
+                        }
+                        }.frame(maxWidth: .infinity)
                 }
-                AudioButton(request: sentence.audio, session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: (grading || result != nil) && hasClip == false)
                 if let result {
                     verdict(result)
                     if manual != nil {
@@ -63,11 +68,11 @@ struct TranslationChallengeView: View {
                 ReviewDefinitionsView(definitions: feedback.definitions)
             }
             if result != nil {
-                Button(perfect ? "Nailed it!" : "Continue") { complete() }
+                Button { complete() } label: { Text(perfect ? "Nailed it!" : "Continue").frame(maxWidth: .infinity) }
                     .disabled(!feedback.can_continue || model.submitting)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             } else {
-                Button("Check answer") { submit() }.disabled(grading || draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Button { submit() } label: { Text("Check answer").frame(maxWidth: .infinity) }.disabled(grading || draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             }
         }
@@ -103,14 +108,14 @@ struct TranslationChallengeView: View {
     private func gradeRow(_ item: TranslationGradeItem, index: Int) -> some View {
         let display: String, status: Bool?
         switch item { case let .Literal(_, text, value), let .Phrase(_, text, value): display = text; status = value }
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: 4) {
             Text(display).fontWeight(.semibold)
             Picker("Grade \(display)", selection: Binding<Int>(get: { status.map { $0 ? 1 : 0 } ?? -1 }, set: { setGrade(index, remembered: $0 == 1) })) {
                 if status == nil { Text("Choose").tag(-1) }
                 Text("Forgot").tag(0)
                 Text("Remembered").tag(1)
-            }.pickerStyle(.segmented)
-        }
+            }.pickerStyle(.segmented).controlSize(.small)
+        }.font(.subheadline)
     }
     private func tap(_ index: Int) {
         guard !grading, result == nil, sentence.target_language_literals.indices.contains(index), !draft.tapped.contains(UInt64(index)) else { return }

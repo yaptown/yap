@@ -13,22 +13,25 @@ struct PronunciationChallengeView: View {
         switch guide.position { case .Beginning: pattern + "___"; case .End: "___" + pattern; case .Anywhere: pattern }
     }
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 12) {
             StudyCard {
-                Text("PRONUNCIATION").font(.caption).foregroundStyle(.secondary)
-                Text(positionedPattern).font(.largeTitle.bold())
-                if should_show_challenge_tutorial(times_type_seen: timesSeen) { Text("Listen, then practice saying the sound aloud.").foregroundStyle(.secondary) }
+                HStack(alignment: .center, spacing: 8) {
+                    Color.clear.frame(width: 44, height: 44)
+                    Text(positionedPattern).font(.title2.bold()).multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                    Color.clear.frame(width: 44, height: 44)
+                }
+                if should_show_challenge_tutorial(times_type_seen: timesSeen) { Text("Listen, then practice saying the sound aloud.").font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity) }
                 ForEach(Array(cues.prefix(3).enumerated()), id: \.offset) { index, cue in
                     PronunciationRow(model: model, cue: cue, pattern: pattern, position: guide.position,
                                      context: guide.example_words.indices.contains(index) ? guide.example_words[index].cultural_context : nil)
                 }
-                Text(markdown(guide.description))
+                Text(markdown(guide.description)).font(.subheadline)
             }
             HStack(spacing: 12) {
-                Button(isNew ? "Didn't know" : "Forgot") { rate(.Again) }.tint(.red)
-                Button(isNew ? "Already knew" : "Remembered") { rate(.Remembered) }
+                Button { rate(.Again) } label: { Text(isNew ? "Didn't know" : "Forgot").frame(maxWidth: .infinity) }.tint(.red)
+                Button { rate(.Remembered) } label: { Text(isNew ? "Already knew" : "Remembered").frame(maxWidth: .infinity) }
             }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(model.submitting)
-            Button("I can't speak right now") { model.cantSpeak() }
+            Button("I can't speak right now") { model.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
@@ -83,10 +86,12 @@ private struct PronunciationRow: View {
         return result
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(words).font(.title3)
-            if let context { Text(context).font(.caption).foregroundStyle(.secondary) }
+        HStack(alignment: .top, spacing: 8) {
             AudioButton(request: cue.audio, session: model.session, reviewCount: model.deck.get_total_reviews())
+            VStack(alignment: .leading, spacing: 4) {
+                Text(words).font(.body)
+                if let context { Text(context).font(.footnote).foregroundStyle(.secondary) }
+            }.frame(maxWidth: .infinity, alignment: .leading)
         }.onChange(of: playing) { _, playing in if playing { connectorHeard = true } }
     }
 }

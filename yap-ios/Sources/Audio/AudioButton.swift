@@ -11,16 +11,22 @@ struct AudioButton: View {
     @State private var playback: Task<Void, Never>?
     @State private var loading = false
     var body: some View {
-        VStack(spacing: 8) {
-            Button {
-                playback?.cancel()
-                playback = Task { await play() }
-            } label: {
-                Label(loading ? "Loading audio…" : audio.isPlaying && audio.currentRequest == request ? "Playing…" : "Play audio",
-                      systemImage: "speaker.wave.2.fill").frame(minHeight: 44)
-            }.buttonStyle(.bordered).disabled(loading)
-            if let error { Text(error).font(.caption).foregroundStyle(.red) }
-        }
+        // Icon-only like the web; a failure turns the icon into a red slash and
+        // tapping retries, so the caption never widens the card's header row.
+        Button {
+            playback?.cancel()
+            playback = Task { await play() }
+        } label: {
+            Group {
+                if loading { ProgressView().controlSize(.small) }
+                else if error != nil { Image(systemName: "speaker.slash.fill").foregroundStyle(.red) }
+                else {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .symbolEffect(.variableColor, isActive: audio.isPlaying && audio.currentRequest == request)
+                }
+            }.frame(width: 44, height: 44).contentShape(Rectangle())
+        }.buttonStyle(.plain).foregroundStyle(Color.yapAccent).disabled(loading)
+            .accessibilityLabel(error.map { "Play audio. \($0)" } ?? "Play audio")
         .task(id: autoplay) {
             guard autoplay, session.lastAutoPlayReviewCount != reviewCount else { return }
             session.lastAutoPlayReviewCount = reviewCount

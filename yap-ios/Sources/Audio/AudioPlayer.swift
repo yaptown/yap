@@ -30,16 +30,27 @@ import Observation
             try Task.checkCancellation()
             guard expected == generation else { return }
             try configure()
-            let bytes = try audio_for_native_playback(bytes: result.bytes)
+            let bytes: [UInt8]
+            do { bytes = try audio_for_native_playback(bytes: result.bytes) }
+            catch { throw PlaybackError.unreadable(String(describing: error), bytes: result.bytes.count) }
             try Task.checkCancellation()
             guard expected == generation else { return }
-            let audio = try AVAudioPlayer(data: Data(bytes))
+            let container = Self.container(of: bytes)
+            let audio: AVAudioPlayer
+            do { audio = try AVAudioPlayer(data: Data(bytes), fileTypeHint: container.hint) }
+            catch { throw PlaybackError.unreadable(String(describing: error), bytes: bytes.count) }
             if let actor = result.voice_actor { credit(actor) }
+            Telemetry.breadcrumb("audio", "Playing \(container.name), \(bytes.count) bytes, \(String(format: "%.2f", audio.duration))s")
             try await play(audio, generation: expected)
         } catch {
             guard expected == generation else { return }
             stop()
             if !(error is CancellationError), !Task.isCancelled {
+                Telemetry.breadcrumb("audio", "Playback failed: \(error)", failed: true)
+            }
+            // Only audio the decoder rejected is worth re-downloading; a refused
+            // start or an interruption says nothing about the cached bytes.
+            if case let playback as PlaybackError = error, playback.corrupt {
                 do { try await invalidate_audio_cache(request: request) }
                 catch { print("Yap audio cache invalidation failed: \(error)") }
             }
@@ -50,9 +61,11 @@ import Observation
         player = audio
         let delegate = PlaybackDelegate()
         audio.delegate = delegate
-        guard audio.play() else { throw PlaybackError.couldNotPlay }
+        guard audio.play() else {
+            let session = AVAudioSession.sharedInstance()
+            throw PlaybackError.refused(duration: audio.duration, category: session.category.rawValue, otherAudio: session.isOtherAudioPlaying)
+        }
         isPlaying = true
-        print("Yap: AVAudioPlayer started (\(audio.duration)s)")
         #if DEBUG
         DebugHarness.log("audio started duration=\(audio.duration)")
         #endif
@@ -66,7 +79,20 @@ import Observation
             currentTime = audio.currentTime
         }
         if let error = delegate.failure { throw error }
+        // A player that stops well short of its duration without a delegate error
+        // was interrupted (a phone call, another app taking the session).
+        if generation == expected, audio.currentTime > 0, audio.currentTime < audio.duration - 0.5 {
+            throw PlaybackError.interrupted(at: audio.currentTime, duration: audio.duration)
+        }
         withExtendedLifetime(delegate) {}
+    }
+    /// The cache stores WAV, MP3 and (remuxed) CAF under one extension; the
+    /// hint spares CoreAudio from guessing the parser from the bytes.
+    private static func container(of bytes: [UInt8]) -> (name: String, hint: String?) {
+        if bytes.starts(with: Array("RIFF".utf8)) { return ("wav", AVFileType.wav.rawValue) }
+        if bytes.starts(with: Array("caff".utf8)) { return ("caf", AVFileType.caf.rawValue) }
+        if bytes.starts(with: Array("ID3".utf8)) || bytes.first == 0xFF { return ("mp3", AVFileType.mp3.rawValue) }
+        return ("unknown", nil)
     }
     private func credit(_ actor: VoiceActorInfo) {
         let key = "voice-actor-toast:\(actor.name)"
@@ -125,9 +151,25 @@ import Observation
             if let effect, self.effectPlayer === effect { self.effectPlaying = false }
         }
     }
-    enum PlaybackError: LocalizedError {
-        case couldNotPlay
+    /// One generic message for the learner; the case and its payload are what
+    /// the breadcrumb records so a failure can be diagnosed afterwards.
+    enum PlaybackError: LocalizedError, CustomStringConvertible {
+        case unreadable(String, bytes: Int)
+        case refused(duration: TimeInterval, category: String, otherAudio: Bool)
+        case decode(String)
+        case stoppedEarly
+        case interrupted(at: TimeInterval, duration: TimeInterval)
         var errorDescription: String? { "Couldn't play this audio. Please try again." }
+        var corrupt: Bool { switch self { case .unreadable, .decode: true; default: false } }
+        var description: String {
+            switch self {
+            case let .unreadable(reason, bytes): "AVAudioPlayer rejected \(bytes) bytes: \(reason)"
+            case let .refused(duration, category, otherAudio): "play() returned false (duration \(duration)s, session \(category), other audio playing: \(otherAudio))"
+            case let .decode(reason): "decode error: \(reason)"
+            case .stoppedEarly: "finished with successfully=false"
+            case let .interrupted(at, duration): "stopped at \(at)s of \(duration)s without a delegate error"
+            }
+        }
     }
     isolated deinit { video?.pause(); player?.stop(); effectPlayer?.stop(); effectTask?.cancel(); creditTask?.cancel() }
 }
@@ -137,9 +179,10 @@ import Observation
 @MainActor private final class PlaybackDelegate: NSObject, AVAudioPlayerDelegate {
     var failure: Error?
     nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
-        Task { @MainActor [weak self] in self?.failure = error ?? AudioPlayer.PlaybackError.couldNotPlay }
+        let reason = error.map { String(describing: $0) } ?? "unknown"
+        Task { @MainActor [weak self] in self?.failure = AudioPlayer.PlaybackError.decode(reason) }
     }
     nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        if !flag { Task { @MainActor [weak self] in self?.failure = AudioPlayer.PlaybackError.couldNotPlay } }
+        if !flag { Task { @MainActor [weak self] in self?.failure = AudioPlayer.PlaybackError.stoppedEarly } }
     }
 }

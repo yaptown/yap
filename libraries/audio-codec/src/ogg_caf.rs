@@ -24,9 +24,8 @@ pub fn ogg_opus_to_caf(ogg: &[u8]) -> Result<Vec<u8>> {
     let _input_rate = u32::from_le_bytes(head.data[12..16].try_into()?);
     let tags = reader.read_packet_expected().context("reading OpusTags")?;
     ensure!(tags.data.starts_with(b"OpusTags"), "missing OpusTags");
-    let mut packet_table = Vec::new();
+    let mut packets = Vec::new();
     let mut audio = Vec::new();
-    let mut packet_count = 0i64;
     let mut total_frames = 0i64;
     // The final page's granule position counts every decoded sample that a
     // player should keep (pre-skip included); anything the packets carry
@@ -34,12 +33,26 @@ pub fn ogg_opus_to_caf(ogg: &[u8]) -> Result<Vec<u8>> {
     let mut final_granule = 0u64;
     while let Some(packet) = reader.read_packet().context("reading Opus packet")? {
         let frames = opus_packet_frames(&packet.data)?;
-        write_varint(&mut packet_table, packet.data.len() as u64);
-        write_varint(&mut packet_table, frames as u64);
+        packets.push((packet.data.len() as u64, frames));
         total_frames += i64::from(frames);
-        packet_count += 1;
         final_granule = packet.absgp_page();
         audio.extend_from_slice(&packet.data);
+    }
+    let packet_count = packets.len() as i64;
+    // AVAudioPlayer refuses to start an Opus stream described as having a
+    // variable packet duration, so when every packet is the same length (the
+    // norm for encoded speech) the description says so and the packet table
+    // lists only byte sizes, exactly as Apple's own encoder writes it.
+    let frames_per_packet = match packets.first() {
+        Some(&(_, frames)) if packets.iter().all(|&(_, f)| f == frames) => frames,
+        _ => 0,
+    };
+    let mut packet_table = Vec::new();
+    for &(bytes, frames) in &packets {
+        write_varint(&mut packet_table, bytes);
+        if frames_per_packet == 0 {
+            write_varint(&mut packet_table, u64::from(frames));
+        }
     }
     let final_granule = i64::try_from(final_granule).context("granule position")?;
     ensure!(
@@ -53,7 +66,7 @@ pub fn ogg_opus_to_caf(ogg: &[u8]) -> Result<Vec<u8>> {
     let mut desc = Vec::new();
     desc.extend_from_slice(&48000f64.to_be_bytes());
     desc.extend_from_slice(b"opus");
-    for value in [0u32, 0, 0, u32::from(channels), 0] {
+    for value in [0u32, 0, frames_per_packet, u32::from(channels), 0] {
         desc.extend_from_slice(&value.to_be_bytes());
     }
     write_chunk(&mut caf, b"desc", &desc);
@@ -157,6 +170,8 @@ mod tests {
         let desc = chunks[&b"desc"[..]];
         assert_eq!(desc.len(), 32);
         assert_eq!(&desc[8..12], b"opus");
+        let frames_per_packet = u32::from_be_bytes(desc[20..24].try_into().unwrap());
+        assert_eq!(frames_per_packet, 960, "libopus emits 20 ms packets");
         let table = chunks[&b"pakt"[..]];
         let packet_count = i64::from_be_bytes(table[..8].try_into().unwrap());
         let mut reader = PacketReader::new(Cursor::new(&ogg));
@@ -185,7 +200,8 @@ mod tests {
         while let Some(packet) = reader.read_packet().unwrap() {
             assert_eq!(read_varint(&mut table_offset), packet.data.len() as u64);
             let frames = opus_packet_frames(&packet.data).unwrap();
-            assert_eq!(read_varint(&mut table_offset), u64::from(frames));
+            // Constant-duration packets carry only their byte size in the table.
+            assert_eq!(frames, frames_per_packet);
             expected_frames += i64::from(frames);
             expected_count += 1;
             expected_audio.extend(packet.data);
