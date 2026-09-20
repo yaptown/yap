@@ -109,11 +109,14 @@ struct TranscriptionChallengeView: View {
     private let sentenceFont = Font.title2.weight(.semibold)
     /// A field that grows with what's typed (a hidden twin of the text sets the
     /// width) and is underlined with dots, tinted by its grade once checked.
+    /// The placeholder is drawn behind the field rather than inside it: an
+    /// empty centered field with its own prompt shows no caret on iOS.
     private func blank(_ index: Int) -> some View {
         let text = draft.inputs[index] ?? ""
-        return Text(text.isEmpty ? "Write what you hear" : text).font(sentenceFont).hidden()
+        return Text(text.isEmpty ? "Write what you hear" : text).font(sentenceFont)
+            .foregroundStyle(.secondary).opacity(text.isEmpty && focused != index ? 1 : 0)
             .overlay {
-                TextField("Write what you hear", text: Binding(get: { text }, set: { draft.inputs[index] = $0 }))
+                TextField("", text: Binding(get: { text }, set: { draft.inputs[index] = $0 }))
                     .textFieldStyle(.plain).font(sentenceFont).multilineTextAlignment(.center).focused($focused, equals: index)
                     .autocorrectionDisabled().textInputAutocapitalization(index == 0 ? .sentences : .never)
                     .submitLabel(index == blanks.last ? .done : .next).onSubmit { advance(index) }
@@ -122,11 +125,14 @@ struct TranscriptionChallengeView: View {
             .padding(.horizontal, 6)
             .background(alignment: .bottom) {
                 DottedUnderline().stroke(blankTint(index), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [0, 6])).frame(height: 3)
+                    .animation(.easeOut(duration: 0.15), value: focused)
             }
             .padding(.horizontal, 2)
     }
     private func blankTint(_ index: Int) -> Color {
-        guard let result, case let .AskedToTranscribe(parts, _) = result.results[index] else { return .secondary.opacity(0.4) }
+        guard let result, case let .AskedToTranscribe(parts, _) = result.results[index] else {
+            return focused == index ? Color.yapAccent : .secondary.opacity(0.4)
+        }
         let grades = parts.map(\.grade)
         if grades.allSatisfy({ if case .Perfect = $0 { true } else { false } }) { return .green }
         if grades.contains(where: { if case .PhoneticallyIdenticalButContextuallyIncorrect = $0 { true } else { false } }) { return .yellow }
