@@ -1,0 +1,12 @@
+[package]
+name = "yap-frontend-reducers"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+language-utils = { path = "../language-utils" }
+bridgerton.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

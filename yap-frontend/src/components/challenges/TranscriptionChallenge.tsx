@@ -7,13 +7,18 @@ import {
   get_app_version,
   type TranscribeComprehensibleSentence,
   type PartGraded,
-  prepare_transcription_submission,
-  transcription_is_perfect,
+  transcription_start,
+  transcription_resume,
+  transcription_transition,
+  transcription_view,
+  type TranscriptionState,
+  type TranscriptionEvent,
+  type TranscriptionStep,
+  type VerdictView,
+  type GradeOptionView,
   get_transcription_review_definitions,
-  apply_transcription_grade,
   type WordGrade,
   type Language,
-  type Course,
   type Deck,
   type DictionaryEntry,
   type PhrasebookDefinitionEntry,
@@ -21,8 +26,7 @@ import {
 
 // GramDefinition is missing from the .d.ts due to a type generator bug
 type GramDefinition =
-  | { Dictionary: DictionaryEntry }
-  | { Phrasebook: PhrasebookDefinitionEntry };
+  { Dictionary: DictionaryEntry } | { Phrasebook: PhrasebookDefinitionEntry };
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { languageToLangAttr } from "@/lib/utils";
@@ -106,19 +110,6 @@ function FeedbackSkeleton() {
   );
 }
 
-type GradingState =
-  | null // Not started
-  | { grading: null } // Grading in progress
-  | {
-      graded: {
-        results: PartGraded[];
-        encouragement: string | undefined;
-        explanation: string | undefined;
-        compare: string[];
-        autograding_error?: string;
-      };
-    };
-
 export function TranscriptionChallenge({
   challenge,
   onComplete,
@@ -148,20 +139,28 @@ export function TranscriptionChallenge({
         localStorage.removeItem(STORAGE_KEY);
         return null;
       }
-      return saved as {
-        gradingState: GradingState;
-        userInputs: [number, string][];
-        completedAtMs: number;
-      };
+      // Decode through the bridge too: discard obsolete or malformed snapshots.
+      return transcription_resume({
+        ...saved.state,
+        inputs: new Map(saved.state.inputs),
+      } as TranscriptionState).state;
     } catch {
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [challenge, totalReviewsCompleted]);
 
-  const [userInputs, setUserInputs] = useState<Map<number, string>>(
-    restored ? new Map(restored.userInputs) : new Map(),
+  const [state, setState] = useState<TranscriptionState>(
+    () => restored ?? transcription_start(challenge.parts),
   );
+  const stateRef = useRef(state);
+  const view = useMemo(() => transcription_view(state), [state]);
+  const userInputs = useMemo(
+    () => new Map(view.blanks.map((blank) => [blank.index, blank.text])),
+    [view.blanks],
+  );
+  const editing = state.phase.type === "Editing";
+  const verdict = view.verdict;
   const [audioError, setAudioError] = useState(false);
 
   const movieData = useMemo(() => {
@@ -171,11 +170,8 @@ export function TranscriptionChallenge({
     const movieIds = challenge.movie_titles.map(([id]) => id);
     return getMovieMetadata(deck, movieIds);
   }, [challenge.movie_titles, deck]);
-  const [gradingState, setGradingState] = useState<GradingState>(restored?.gradingState ?? null);
   const gradingGenerationRef = useRef(0);
-  const completedAtMsRef = useRef<number | undefined>(restored?.completedAtMs);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [isTranslationRevealed, setIsTranslationRevealed] = useState(false);
   const [focusedInputIndex, setFocusedInputIndex] = useState<number | null>(
     null,
   );
@@ -195,18 +191,20 @@ export function TranscriptionChallenge({
   }, [challenge]);
 
   const wrongGramEntries = useMemo(() => {
-    if (!gradingState || !("graded" in gradingState)) return [];
-    return get_transcription_review_definitions(challenge, gradingState.graded.results) as {
+    if (state.phase.type !== "Graded") return [];
+    return get_transcription_review_definitions(
+      challenge,
+      state.phase.grade.results,
+    ) as {
       definition: GramDefinition;
       breakdown: BreakdownRow[] | null | undefined;
     }[];
-  }, [gradingState, challenge]);
+  }, [state.phase, challenge]);
 
-  // Save grade to localStorage when grading completes so it survives navigation
-  useEffect(() => {
-    if (gradingState && "graded" in gradingState) {
-      const timestamp = completedAtMsRef.current ?? Date.now();
-      completedAtMsRef.current = timestamp;
+  const applyStep = useCallback(
+    function apply(step: TranscriptionStep) {
+      stateRef.current = step.state;
+      setState(step.state);
       try {
         localStorage.setItem(
           STORAGE_KEY,
@@ -214,18 +212,84 @@ export function TranscriptionChallenge({
             version: get_app_version(),
             challenge,
             totalReviewsCompleted: Number(totalReviewsCompleted),
-            gradingState,
-            userInputs: [...userInputs.entries()],
-            completedAtMs: timestamp,
+            // The bridge exposes BTreeMap as a JS Map, which JSON cannot encode.
+            state: { ...step.state, inputs: [...step.state.inputs] },
           }),
         );
       } catch {
-        // localStorage full or unavailable — not critical
+        /* Storage full or unavailable: the review still works. */
       }
-    }
-  }, [gradingState, challenge, userInputs]);
+      for (const effect of step.effects) {
+        switch (effect.type) {
+          case "Autograde": {
+            bumpBackground(30.0);
+            const generation = ++gradingGenerationRef.current;
+            void autograde_transcription(
+              effect.submission,
+              accessToken,
+              {
+                targetLanguage,
+                nativeLanguage,
+              },
+              challenge.movie_titles,
+            ).then((grade) => {
+              if (generation !== gradingGenerationRef.current) return;
+              if (grade.autograding_error)
+                reportAutogradeFailure(
+                  "transcription",
+                  grade.autograding_error,
+                );
+              apply(
+                transcription_transition(stateRef.current, {
+                  type: "Graded",
+                  grade,
+                }),
+              );
+            });
+            break;
+          }
+          case "PlaySound":
+            playSoundEffect(
+              effect.sound === "AiDoneGrading" ? "aiDoneGrading" : "perfect",
+            );
+            break;
+          case "Complete":
+            localStorage.removeItem(STORAGE_KEY);
+            bumpBackground(30.0);
+            onComplete(effect.results, effect.completed_at_ms);
+            break;
+        }
+      }
+    },
+    [
+      accessToken,
+      bumpBackground,
+      challenge,
+      nativeLanguage,
+      onComplete,
+      targetLanguage,
+      totalReviewsCompleted,
+    ],
+  );
+  const send = useCallback(
+    (event: TranscriptionEvent) => {
+      if (event.type === "CancelGrading") gradingGenerationRef.current++;
+      applyStep(transcription_transition(stateRef.current, event));
+    },
+    [applyStep],
+  );
 
-  // Focus first input on mount and reset translation reveal
+  // The host keys this component by challenge; resume only its initial snapshot.
+  const resumeStep = useRef(applyStep);
+  useEffect(() => {
+    const generation = gradingGenerationRef;
+    resumeStep.current(transcription_resume(stateRef.current));
+    return () => {
+      generation.current++;
+    };
+  }, []);
+
+  // Focus first input on mount
   useEffect(() => {
     const firstBlankIndex = blankIndices[0];
     if (firstBlankIndex !== undefined) {
@@ -233,8 +297,6 @@ export function TranscriptionChallenge({
         inputRefs.current[firstBlankIndex]?.focus();
       }, 100);
     }
-    // Reset translation reveal state for new challenge
-    setIsTranslationRevealed(false);
   }, [blankIndices]);
 
   // Track shift key state for uppercase accent keyboard
@@ -268,9 +330,7 @@ export function TranscriptionChallenge({
   }, [shiftHeld, focusedInputIndex, blankIndices, userInputs]);
 
   const handleInputChange = (index: number, value: string) => {
-    const newInputs = new Map(userInputs);
-    newInputs.set(index, value);
-    setUserInputs(newInputs);
+    send({ type: "InputChanged", index, text: value });
   };
 
   const handleCharacterInsert = (char: string) => {
@@ -305,65 +365,15 @@ export function TranscriptionChallenge({
     }
   };
 
-  const submission = useMemo(() => prepare_transcription_submission(
-    challenge.parts,
-    [...userInputs].map(([index, text]) => ({ index, text })),
-  ), [challenge.parts, userInputs]);
-  const allBlanksFilledOut = submission.all_blanks_filled;
-
-  const handleSubmit = useCallback(async () => {
-    if (gradingState !== null) return;
-
-    completedAtMsRef.current = Date.now();
-    bumpBackground(30.0);
-    const generation = ++gradingGenerationRef.current;
-    setGradingState({ grading: null });
-
-    const course: Course = {
-      targetLanguage: targetLanguage,
-      nativeLanguage: nativeLanguage,
-    };
-
-    const graded = await autograde_transcription(
-      submission.request,
-      accessToken,
-      course,
-      challenge.movie_titles,
-    );
-    if (generation !== gradingGenerationRef.current) return;
-
-    if (graded.autograding_error) {
-      reportAutogradeFailure("transcription", graded.autograding_error);
-    }
-
-    const isAllCorrect = transcription_is_perfect(graded.results);
-
-    setGradingState({
-      graded,
-    });
-
-    playSoundEffect("aiDoneGrading");
-
-    if (isAllCorrect) {
-      playSoundEffect("perfect");
-    }
-  }, [
-    gradingState,
-    submission.request,
-    accessToken,
-    targetLanguage,
-    nativeLanguage,
-    challenge.movie_titles,
-    bumpBackground,
-  ]);
-
-  const handleTranscriptionContinue = useCallback(() => {
-    if (gradingState && "graded" in gradingState) {
-      localStorage.removeItem(STORAGE_KEY);
-      bumpBackground(30.0);
-      onComplete(gradingState.graded.results, completedAtMsRef.current!);
-    }
-  }, [gradingState, onComplete, bumpBackground]);
+  const allBlanksFilledOut = view.can_submit;
+  const handleSubmit = useCallback(
+    () => send({ type: "Submit", now_ms: Date.now() }),
+    [send],
+  );
+  const handleTranscriptionContinue = useCallback(
+    () => send({ type: "Continue" }),
+    [send],
+  );
 
   // Global keyboard handler for Enter key
   useEffect(() => {
@@ -392,19 +402,14 @@ export function TranscriptionChallenge({
           if (nextBlankIndex !== undefined) {
             // Focus next input
             inputRefs.current[nextBlankIndex]?.focus();
-          } else if (gradingState === null && allBlanksFilledOut) {
+          } else if (editing && allBlanksFilledOut) {
             handleSubmit();
           }
-        } else if (gradingState && "graded" in gradingState) {
+        } else if (verdict) {
           e.preventDefault();
           handleTranscriptionContinue();
         }
-      } else if (
-        e.key === "ArrowRight" &&
-        gradingState &&
-        "graded" in gradingState &&
-        !isInputFocused
-      ) {
+      } else if (e.key === "ArrowRight" && verdict && !isInputFocused) {
         e.preventDefault();
         handleTranscriptionContinue();
       }
@@ -413,16 +418,13 @@ export function TranscriptionChallenge({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
-    gradingState,
+    verdict,
+    editing,
     handleTranscriptionContinue,
     blankIndices,
     allBlanksFilledOut,
     handleSubmit,
   ]);
-
-  const isAllCorrect = gradingState && "graded" in gradingState
-    ? transcription_is_perfect(gradingState.graded.results)
-    : false;
 
   // The sentence with the same words elided as the challenge's blanks, for
   // the video caption before grading — built from the challenge parts (the
@@ -459,6 +461,7 @@ export function TranscriptionChallenge({
           throw new Error("AskedToTranscribe part has no parts");
         }
         const end_whitespace = item.parts[item.parts.length - 1].whitespace;
+        const blank = view.blanks.find((blank) => blank.index === index)!;
 
         return (
           <span key={index}>
@@ -466,14 +469,14 @@ export function TranscriptionChallenge({
               ref={(el) => {
                 inputRefs.current[index] = el;
               }}
-              value={userInputs.get(index) || ""}
+              value={blank.text}
               onChange={(e) => handleInputChange(index, e.target.value)}
               onFocus={() => setFocusedInputIndex(index)}
               onBlur={() => {
                 // Keep track of last focused input but allow blur
                 // The accent keyboard will refocus when clicked
               }}
-              disabled={gradingState !== null}
+              disabled={!blank.editable}
               lang={languageToLangAttr(targetLanguage)}
               autoCorrect="off"
               autoCapitalize={index === 0 ? "sentences" : "off"}
@@ -483,7 +486,7 @@ export function TranscriptionChallenge({
               } mx-1 text-center resize-none text-l font-semibold ${getInputClassName(
                 index,
               )} border-0 border-b-3 border-dotted`}
-              placeholder="Write what you hear"
+              placeholder={view.placeholder}
             />
             <span>{end_whitespace}</span>
           </span>
@@ -501,42 +504,15 @@ export function TranscriptionChallenge({
     });
   };
 
-  const getInputClassName = (index: number) => {
-    if (gradingState && "graded" in gradingState) {
-      const result = gradingState.graded.results[index];
-
-      if (result && result.type === "AskedToTranscribe") {
-        const allPerfect = result.parts.every(
-          (part) => part.grade.type === "Perfect",
-        );
-        const hasMissed = result.parts.some(
-          (part) => part.grade.type === "Missed",
-        );
-        const hasIncorrect = result.parts.some(
-          (part) => part.grade.type === "Incorrect",
-        );
-        const hasPhoneticallySimilar = result.parts.some(
-          (part) =>
-            part.grade.type === "PhoneticallySimilarButContextuallyIncorrect",
-        );
-        const hasPhoneticallyIdentical = result.parts.some(
-          (part) =>
-            part.grade.type === "PhoneticallyIdenticalButContextuallyIncorrect",
-        );
-
-        if (allPerfect) {
-          return "border-green-500 bg-green-50 dark:bg-green-950";
-        } else if (hasPhoneticallyIdentical) {
-          return "border-yellow-500 bg-yellow-50 dark:bg-yellow-950";
-        } else if (hasPhoneticallySimilar) {
-          return "border-orange-500 bg-orange-50 dark:bg-orange-950";
-        } else if (hasIncorrect || hasMissed) {
-          return "border-red-500 bg-red-50 dark:bg-red-950";
-        }
-      }
-    }
-    return "border-muted-foreground/30";
-  };
+  const getInputClassName = (index: number) =>
+    ({
+      Neutral: "border-muted-foreground/30",
+      Perfect: "border-green-500 bg-green-50 dark:bg-green-950",
+      PhoneticallyIdentical:
+        "border-yellow-500 bg-yellow-50 dark:bg-yellow-950",
+      PhoneticallySimilar: "border-orange-500 bg-orange-50 dark:bg-orange-950",
+      Wrong: "border-red-500 bg-red-50 dark:bg-red-950",
+    })[view.blanks.find((blank) => blank.index === index)!.tint];
 
   return (
     <div className="flex flex-col flex-1 justify-between">
@@ -579,7 +555,7 @@ export function TranscriptionChallenge({
                   visualizer
                 />
                 <p className="text-sm text-muted-foreground">
-                  Listen and fill in the blanks
+                  {view.instructions}
                 </p>
               </div>
               <div className="text-center pt-4">
@@ -599,7 +575,7 @@ export function TranscriptionChallenge({
               accessToken={accessToken}
               deck={deck}
               renderSentenceCue={(text) =>
-                gradingState === null ? (
+                editing ? (
                   <TargetLanguageText language={targetLanguage}>
                     {maskedSentenceCaption}
                   </TargetLanguageText>
@@ -611,7 +587,7 @@ export function TranscriptionChallenge({
               }
             />
 
-            {gradingState === null && (
+            {editing && (
               <ProperNounDefinitions
                 definitions={challenge.proper_noun_definitions}
                 targetLanguage={targetLanguage}
@@ -619,12 +595,12 @@ export function TranscriptionChallenge({
             )}
 
             {/* Result feedback */}
-            {gradingState && (
+            {!editing && (
               <div className="space-y-2 animate-feedback-in">
                 {/* Show correct answer immediately when grading starts */}
                 <div className="rounded-lg p-4 border bg-green-500/10 border-green-500/20">
                   <p className="text-sm font-medium mb-1 text-green-600 dark:text-green-400">
-                    Correct answer:
+                    {verdict?.correct_label ?? "Correct sentence:"}
                   </p>
                   <p className="text-lg font-medium">
                     <TargetLanguageText language={targetLanguage}>
@@ -634,42 +610,43 @@ export function TranscriptionChallenge({
                 </div>
 
                 {/* Show skeleton while grading */}
-                {"grading" in gradingState && <FeedbackSkeleton />}
+                {view.is_grading && <FeedbackSkeleton />}
 
                 {/* Only show these when grading is complete */}
-                {"graded" in gradingState && (
+                {verdict && (
                   <>
-                    {"autograding_error" in gradingState.graded &&
-                      gradingState.graded.autograding_error && (
-                        <AutogradeError />
-                      )}
+                    {"autograding_error" in verdict &&
+                      verdict.autograding_error && <AutogradeError />}
 
                     <WordGrades
-                      wordGrades={gradingState.graded.results}
-                      setGrade={(results) => {
-                        setGradingState({
-                          ...gradingState,
-                          graded: { ...gradingState.graded, results: results },
-                        });
-                      }}
+                      verdict={verdict}
+                      gradeOptions={view.grade_options}
+                      setGrade={(part_index, word_index, grade) =>
+                        send({
+                          type: "WordGradeChanged",
+                          part_index,
+                          word_index,
+                          grade,
+                        })
+                      }
                       open_by_default={
-                        "autograding_error" in gradingState.graded &&
-                        gradingState.graded.autograding_error !== undefined
+                        "autograding_error" in verdict &&
+                        verdict.autograding_error !== undefined
                       }
                       targetLanguage={targetLanguage}
                     />
 
                     <FeedbackDisplay
-                      encouragement={gradingState.graded.encouragement}
-                      explanation={gradingState.graded.explanation}
-                      perfect={isAllCorrect ?? undefined}
+                      encouragement={verdict.encouragement}
+                      explanation={verdict.explanation}
+                      perfect={verdict.perfect}
                       targetLanguage={targetLanguage}
                     />
 
-                    {Array.isArray(gradingState.graded.compare) &&
-                      gradingState.graded.compare.length > 0 &&
+                    {Array.isArray(verdict.compare) &&
+                      verdict.compare.length > 0 &&
                       (() => {
-                        const words = gradingState.graded.compare;
+                        const words = verdict.compare;
 
                         const ttsText = words.map((w) => `${w};`).join(" ");
 
@@ -710,16 +687,14 @@ export function TranscriptionChallenge({
 
                     <div
                       className="rounded-lg p-4 border cursor-pointer select-none"
-                      onClick={() =>
-                        setIsTranslationRevealed(!isTranslationRevealed)
-                      }
+                      onClick={() => send({ type: "TranslationToggled" })}
                     >
                       <p className="text-sm font-medium mb-1">
                         English translation (click to reveal):
                       </p>
                       <p
                         className={`text-lg font-medium transition-all duration-100 ${
-                          isTranslationRevealed ? "" : "blur-sm"
+                          verdict.translation_revealed ? "" : "blur-sm"
                         }`}
                       >
                         {challenge.native_language}
@@ -745,12 +720,12 @@ export function TranscriptionChallenge({
           </div>
         </Card>
 
-        {audioError && onCantListen && gradingState === null && (
+        {audioError && onCantListen && editing && (
           <AudioErrorBanner onSkip={onCantListen} />
         )}
 
         {/* Accented character keyboard - show when not graded, language supports it, and not on small screens */}
-        {gradingState === null &&
+        {editing &&
           (targetLanguage === "French" ||
             targetLanguage === "Spanish" ||
             targetLanguage === "German") && (
@@ -763,29 +738,21 @@ export function TranscriptionChallenge({
           )}
 
         {/* Mobile keyboard tip - show on small screens when conditions are met */}
-        {gradingState === null && totalCount < 60 && (
+        {editing && totalCount < 60 && (
           <MobileKeyboardTip language={targetLanguage} />
         )}
 
         {/* Movie posters - hidden after grading */}
-        {gradingState === null && (
-          <MoviePosterGrid movieData={movieData} deck={deck} />
-        )}
+        {editing && <MoviePosterGrid movieData={movieData} deck={deck} />}
       </div>
 
       <div className="mt-4 flex flex-col gap-2 sticky bottom-0">
-        {onCantListen && gradingState === null && (
-          <CantListenButton onClick={onCantListen} />
-        )}
+        {onCantListen && editing && <CantListenButton onClick={onCantListen} />}
 
         <div>
-          {gradingState !== null && "grading" in gradingState ? (
+          {view.is_grading ? (
             <div className="flex gap-2">
-              <Button
-                className="flex-1 h-14 text-lg"
-                size="lg"
-                disabled
-              >
+              <Button className="flex-1 h-14 text-lg" size="lg" disabled>
                 AI is grading...
               </Button>
               <Button
@@ -793,8 +760,7 @@ export function TranscriptionChallenge({
                 size="icon"
                 className="h-14 w-14"
                 onClick={() => {
-                  gradingGenerationRef.current++;
-                  setGradingState(null);
+                  send({ type: "CancelGrading" });
                 }}
               >
                 <X className="h-5 w-5" />
@@ -802,30 +768,21 @@ export function TranscriptionChallenge({
             </div>
           ) : (
             <Button
-              onClick={
-                gradingState && "graded" in gradingState
-                  ? handleTranscriptionContinue
-                  : handleSubmit
-              }
-              disabled={
-                (gradingState === null && !allBlanksFilledOut) ||
-                (gradingState !== null && "error" in gradingState)
-              }
+              onClick={verdict ? handleTranscriptionContinue : handleSubmit}
+              disabled={editing && !view.can_submit}
               className="w-full h-14 text-lg"
               size="lg"
             >
-              {gradingState === null ? (
+              {editing ? (
                 <span className="relative flex items-center justify-center">
-                  Check Answer
+                  {view.submit_label}
                   <span className="absolute left-full ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">
                     (⏎)
                   </span>
                 </span>
-              ) : "error" in gradingState ? (
-                "Error"
               ) : (
                 <span className="relative flex items-center justify-center">
-                  {isAllCorrect ? "Nailed it!" : "Continue"}
+                  {verdict?.continue_label}
                   <span className="absolute left-full ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">
                     (⏎)
                   </span>
@@ -847,57 +804,22 @@ export function TranscriptionChallenge({
 }
 
 interface WordGradesProps {
-  wordGrades: PartGraded[];
-  setGrade: (results: PartGraded[]) => void;
+  verdict: VerdictView;
+  gradeOptions: GradeOptionView[];
+  setGrade: (partIndex: number, wordIndex: number, grade: WordGrade) => void;
   open_by_default: boolean;
   targetLanguage: Language;
 }
 
 function WordGrades({
-  wordGrades,
+  verdict,
+  gradeOptions,
   setGrade,
   open_by_default,
   targetLanguage,
 }: WordGradesProps) {
   const [isOpen, setIsOpen] = useState(open_by_default);
-
-  const gradeOptions = [
-    { value: "Perfect", label: "Perfect" },
-    { value: "CorrectWithTypo", label: "Correct with Typo" },
-    {
-      value: "PhoneticallyIdenticalButContextuallyIncorrect",
-      label: "Phonetically Identical",
-    },
-    {
-      value: "PhoneticallySimilarButContextuallyIncorrect",
-      label: "Phonetically Similar",
-    },
-    { value: "Incorrect", label: "Incorrect" },
-    { value: "Missed", label: "Missed" },
-  ];
-
-  const getGradeKey = (grade: WordGrade): string => {
-    return grade.type;
-  };
-
-  const handleGradeChange = (
-    partIndex: number,
-    wordIndex: number,
-    newGradeKey: string,
-  ) => {
-    setGrade(apply_transcription_grade(wordGrades, partIndex, wordIndex, { type: newGradeKey } as WordGrade));
-  };
-
-  const transcribedParts = wordGrades.filter(
-    (part) => part.type === "AskedToTranscribe",
-  );
-
-  if (transcribedParts.length === 0) {
-    return null;
-  }
-
-  console.log(wordGrades);
-
+  if (verdict.word_grades.length === 0) return null;
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
@@ -909,55 +831,46 @@ function WordGrades({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mt-3 space-y-3">
-          {wordGrades.map((part, partIndex) => {
-            if (part.type === "AskedToTranscribe") {
-              return (
-                <div key={partIndex} className="space-y-2">
-                  <div className="text-sm text-muted-foreground">
-                    Your answer: "{part.submission}"
-                  </div>
-                  <div className="grid gap-2">
-                    {part.parts.map((wordPart, wordIndex) => (
-                      <div
-                        key={wordIndex}
-                        className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
-                      >
-                        <div className="flex-1">
-                          <span className="font-medium">
-                            <TargetLanguageText language={targetLanguage}>
-                              {wordPart.heard.word.text}
-                            </TargetLanguageText>
-                          </span>
-                        </div>
-                        <Select
-                          value={getGradeKey(wordPart.grade)}
-                          onValueChange={(value: string) =>
-                            handleGradeChange(partIndex, wordIndex, value)
-                          }
-                        >
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {gradeOptions.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            }
-            return null;
-          })}
+        <div className="pt-3 space-y-3">
+          <div className="text-sm text-muted-foreground">
+            {verdict.submission_label}{" "}
+            <TargetLanguageText language={targetLanguage}>
+              {verdict.submission_text}
+            </TargetLanguageText>
+          </div>
+          {verdict.word_grades.map((word) => (
+            <div
+              key={`${word.part_index}-${word.word_index}`}
+              className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
+            >
+              <div className="flex-1 font-medium">
+                <TargetLanguageText language={targetLanguage}>
+                  {word.heard}
+                </TargetLanguageText>
+              </div>
+              <Select
+                value={String(word.selected)}
+                onValueChange={(value) =>
+                  setGrade(
+                    word.part_index,
+                    word.word_index,
+                    gradeOptions[Number(value)].grade,
+                  )
+                }
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {gradeOptions.map((option, index) => (
+                    <SelectItem key={index} value={String(index)}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
         </div>
       </CollapsibleContent>
     </Collapsible>
