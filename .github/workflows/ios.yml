@@ -13,8 +13,11 @@ jobs:
           lfs: false
       - name: Pull LFS language packs
         run: git lfs pull --include="out/*_for_*/language_data_*.rkyv"
-      - uses: dtolnay/rust-toolchain@stable
+      # Must match rust-toolchain.toml: cargo uses that pinned toolchain, so
+      # targets installed on any other channel are invisible to it.
+      - uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: "1.96.0"
           targets: aarch64-apple-ios,aarch64-apple-ios-sim
       - uses: actions/cache@v6
         with:
