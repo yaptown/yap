@@ -105,6 +105,7 @@ struct ReviewScreen: View {
                 model.session.addDeckEvent(model.deck.set_daily_review_target(daily_review_target: options[i].value))
             }
         case "cant-listen": model.cantListen()
+        case "dismiss-step": model.session.dismissedAccomplishmentAtReview = model.deck.get_total_reviews()
         case "cant-speak": model.cantSpeak()
         case "undo": model.undoRestrictions()
         case "add-listening", "add-pronunciation":

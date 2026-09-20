@@ -136,19 +136,24 @@ struct SentenceFlow: Layout {
     private func arrange(width: CGFloat, subviews: Subviews) -> (size: CGSize, points: [CGPoint]) {
         var x: CGFloat = 0, y: CGFloat = 0, row: CGFloat = 0
         var points: [CGPoint] = []
+        var sizes: [CGSize] = []
         var rowStart = 0
-        func centerRow() {
-            guard alignment == .center else { return }
-            let offset = max(0, (width - max(0, x - spacing)) / 2)
-            for index in rowStart..<points.count { points[index].x += offset }
+        // Center each finished row horizontally when asked, and always center its
+        // items vertically so an inline field sits level with the words beside it.
+        func finishRow() {
+            let offset = alignment == .center ? max(0, (width - max(0, x - spacing)) / 2) : 0
+            for index in rowStart..<points.count {
+                points[index].x += offset
+                points[index].y += (row - sizes[index].height) / 2
+            }
         }
         for view in subviews {
             let ideal = view.sizeThatFits(.unspecified)
             let size = view.sizeThatFits(ProposedViewSize(width: min(width, ideal.width), height: nil))
-            if x > 0 && x + size.width > width { centerRow(); rowStart = points.count; x = 0; y += row + spacing; row = 0 }
-            points.append(CGPoint(x: x, y: y)); x += size.width + spacing; row = max(row, size.height)
+            if x > 0 && x + size.width > width { finishRow(); rowStart = points.count; x = 0; y += row + spacing; row = 0 }
+            points.append(CGPoint(x: x, y: y)); sizes.append(size); x += size.width + spacing; row = max(row, size.height)
         }
-        centerRow()
+        finishRow()
         return (CGSize(width: width, height: y + row), points)
     }
 }

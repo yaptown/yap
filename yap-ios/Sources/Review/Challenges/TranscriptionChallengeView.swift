@@ -32,23 +32,21 @@ struct TranscriptionChallengeView: View {
         VStack(spacing: 12) {
             StudyCard {
                 if sentence.second_chance { ReviewBadge(text: "Second chance") }
-                HStack(alignment: .center, spacing: 8) {
-                    AudioButton(request: sentence.audio, session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: true)
-                    SentenceFlow(spacing: 0, alignment: .center) {
-                        ForEach(Array(sentence.parts.enumerated()), id: \.offset) { index, part in
-                            switch part {
-                            case let .Provided(literal): Text(literal.word.text + literal.whitespace).font(.body)
-                            case let .AskedToTranscribe(parts):
-                                TextField("What did you hear?", text: Binding(get: { draft.inputs[index] ?? "" }, set: { draft.inputs[index] = $0 }))
-                                    .textFieldStyle(.roundedBorder).font(.body).frame(width: 150, height: 44).focused($focused, equals: index)
-                                    .autocorrectionDisabled().textInputAutocapitalization(index == 0 ? .sentences : .never)
-                                    .submitLabel(index == blanks.last ? .done : .next).onSubmit { advance(index) }
-                                    .disabled(grading || result != nil)
-                                if let whitespace = parts.last?.whitespace, !whitespace.isEmpty { Text(whitespace) }
-                            }
+                // Like the web: a big speaker on top, then the sentence with its blanks inline.
+                VStack(spacing: 4) {
+                    AudioButton(request: sentence.audio, session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: true, hero: true)
+                    Text("Listen and fill in the blanks").font(.footnote).foregroundStyle(.secondary)
+                }.frame(maxWidth: .infinity)
+                SentenceFlow(spacing: 0, alignment: .center) {
+                    ForEach(Array(sentence.parts.enumerated()), id: \.offset) { index, part in
+                        switch part {
+                        case let .Provided(literal): Text(literal.word.text + literal.whitespace).font(sentenceFont)
+                        case let .AskedToTranscribe(parts):
+                            blank(index)
+                            if let whitespace = parts.last?.whitespace, !whitespace.isEmpty { Text(whitespace).font(sentenceFont) }
                         }
-                        }.frame(maxWidth: .infinity)
-                }
+                    }
+                }.frame(maxWidth: .infinity).padding(.top, 4)
                 VideoClipView(deck: model.deck, language: model.deck.get_target_language(), text: sentence.target_language,
                     session: model.session, reviewCount: model.deck.get_total_reviews(),
                     maskedSentence: result == nil && !grading ? sentence.parts.map { part in
@@ -107,6 +105,33 @@ struct TranscriptionChallengeView: View {
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeTab == .learn else { return }; debugCommand() }
         #endif
+    }
+    private let sentenceFont = Font.title2.weight(.semibold)
+    /// A field that grows with what's typed (a hidden twin of the text sets the
+    /// width) and is underlined with dots, tinted by its grade once checked.
+    private func blank(_ index: Int) -> some View {
+        let text = draft.inputs[index] ?? ""
+        return Text(text.isEmpty ? "Write what you hear" : text).font(sentenceFont).hidden()
+            .overlay {
+                TextField("Write what you hear", text: Binding(get: { text }, set: { draft.inputs[index] = $0 }))
+                    .textFieldStyle(.plain).font(sentenceFont).multilineTextAlignment(.center).focused($focused, equals: index)
+                    .autocorrectionDisabled().textInputAutocapitalization(index == 0 ? .sentences : .never)
+                    .submitLabel(index == blanks.last ? .done : .next).onSubmit { advance(index) }
+                    .disabled(grading || result != nil)
+            }
+            .padding(.horizontal, 6)
+            .background(alignment: .bottom) {
+                DottedUnderline().stroke(blankTint(index), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [0, 6])).frame(height: 3)
+            }
+            .padding(.horizontal, 2)
+    }
+    private func blankTint(_ index: Int) -> Color {
+        guard let result, case let .AskedToTranscribe(parts, _) = result.results[index] else { return .secondary.opacity(0.4) }
+        let grades = parts.map(\.grade)
+        if grades.allSatisfy({ if case .Perfect = $0 { true } else { false } }) { return .green }
+        if grades.contains(where: { if case .PhoneticallyIdenticalButContextuallyIncorrect = $0 { true } else { false } }) { return .yellow }
+        if grades.contains(where: { if case .PhoneticallySimilarButContextuallyIncorrect = $0 { true } else { false } }) { return .orange }
+        return .red
     }
     @ViewBuilder private func wordGrades(_ grade: Grade) -> some View {
         ForEach(Array(grade.results.enumerated()), id: \.offset) { partIndex, part in
@@ -190,6 +215,12 @@ struct TranscriptionChallengeView: View {
         }
     }
     #endif
+}
+
+private struct DottedUnderline: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { $0.move(to: CGPoint(x: rect.minX, y: rect.midY)); $0.addLine(to: CGPoint(x: rect.maxX, y: rect.midY)) }
+    }
 }
 
 extension UIResponder {

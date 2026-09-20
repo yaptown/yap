@@ -7,6 +7,9 @@ struct AudioButton: View {
     let session: YapSession
     let reviewCount: UInt64
     var autoplay = false
+    /// The web's dictation card leads with a large ringed speaker; everywhere
+    /// else the button is a 44pt icon inline with the text it plays.
+    var hero = false
     @State private var error: String?
     @State private var playback: Task<Void, Never>?
     @State private var loading = false
@@ -17,14 +20,21 @@ struct AudioButton: View {
             playback?.cancel()
             playback = Task { await play() }
         } label: {
+            // `play` doesn't return until playback ends, so the spinner has to
+            // stop at the moment the player reports this request is playing.
+            let playing = audio.isPlaying && audio.currentRequest == request
             Group {
-                if loading { ProgressView().controlSize(.small) }
+                if loading && !playing { ProgressView().controlSize(hero ? .regular : .small) }
                 else if error != nil { Image(systemName: "speaker.slash.fill").foregroundStyle(.red) }
                 else {
                     Image(systemName: "speaker.wave.2.fill")
-                        .symbolEffect(.variableColor, isActive: audio.isPlaying && audio.currentRequest == request)
+                        .symbolEffect(.variableColor, isActive: playing)
                 }
-            }.frame(width: 44, height: 44).contentShape(Rectangle())
+            }
+            .font(hero ? .title : .body)
+            .frame(width: hero ? 72 : 44, height: hero ? 72 : 44)
+            .background { if hero { Circle().strokeBorder(Color.yapAccent.opacity(0.6), lineWidth: 2) } }
+            .contentShape(Rectangle())
         }.buttonStyle(.plain).foregroundStyle(Color.yapAccent).disabled(loading)
             .accessibilityLabel(error.map { "Play audio. \($0)" } ?? "Play audio")
         .task(id: autoplay) {
