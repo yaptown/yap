@@ -78,6 +78,9 @@ enum ReviewStep: String, Hashable {
         reviewInfo = deck.get_review_info(banned_challenge_types: banned, timestamp_ms: now)
         lockupOffer = deck.get_lockup_offer(banned_challenge_types: banned, timestamp_ms: now)
         // Non-nil challenges are held for this Deck's lifetime, even as caches change.
+        #if DEBUG
+        if let fixture = DebugHarness.shared.fixture { currentChallenge = fixture.challenge }
+        #endif
         if currentChallenge == nil { currentChallenge = reviewInfo.get_next_challenge(deck: deck) }
         prefetch?.cancel()
         prefetch = Task { [deck, banned, session] in

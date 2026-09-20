@@ -8,7 +8,11 @@ pub mod deck_selection;
 pub mod dictionary;
 mod directories;
 mod disclosure;
+mod fixtures;
 mod human_audio;
+pub use fixtures::ChallengeFixture;
+#[cfg(any(feature = "fixtures", test))]
+pub use fixtures::{challenge_fixture_json, parse_challenge_fixture};
 mod language_pack;
 mod learning_metadata;
 pub use learning_metadata::{

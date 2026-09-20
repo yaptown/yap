@@ -1,0 +1,330 @@
+{
+  "challenge": {
+    "type": "TranscribeComprehensibleSentence",
+    "target_language": "Merci à Dieu !",
+    "audio": {
+      "request": {
+        "text": "Merci à Dieu !",
+        "language": "French",
+        "is_ssml": false,
+        "speed": 1.0,
+        "verification_hints": [
+          "Dieu"
+        ]
+      },
+      "provider": "Gemini"
+    },
+    "native_language": "Thank God!",
+    "parts": [
+      {
+        "type": "AskedToTranscribe",
+        "parts": [
+          {
+            "word": {
+              "text": "Merci",
+              "word_type": {
+                "type": "Heteronym",
+                "word": "merci",
+                "lemma": "merci",
+                "pos": "NOUN"
+              }
+            },
+            "whitespace": " "
+          },
+          {
+            "word": {
+              "text": "à",
+              "word_type": {
+                "type": "Heteronym",
+                "word": "à",
+                "lemma": "à",
+                "pos": "ADP"
+              }
+            },
+            "whitespace": " "
+          }
+        ]
+      },
+      {
+        "type": "Provided",
+        "part": {
+          "word": {
+            "text": "Dieu",
+            "word_type": {
+              "type": "Other",
+              "other_tag": "PROPN"
+            }
+          },
+          "whitespace": " "
+        }
+      },
+      {
+        "type": "Provided",
+        "part": {
+          "word": {
+            "text": "!",
+            "word_type": {
+              "type": "Other",
+              "other_tag": "PUNCT"
+            }
+          },
+          "whitespace": ""
+        }
+      }
+    ],
+    "part_gram_indices": [
+      [
+        0,
+        1
+      ],
+      [
+        2
+      ],
+      [
+        3
+      ]
+    ],
+    "gram_definitions_for_lookup": [
+      {
+        "Dictionary": {
+          "target_language_word": "merci",
+          "definitions": [
+            {
+              "native": "thanks, thank you",
+              "note": "Often used by itself to mean \"thank you.\"",
+              "example_sentence_target_language": "Un grand merci pour votre aide.",
+              "example_sentence_native_language": "A big thank-you for your help.",
+              "cognate": false,
+              "false_cognate": true
+            }
+          ],
+          "morphology": [
+            {
+              "gender": "Feminine",
+              "number": null,
+              "politeness": null,
+              "tense": null,
+              "person": null,
+              "case": null,
+              "mood": null,
+              "aspect": null
+            }
+          ],
+          "segments": [
+            {
+              "surface": "merci",
+              "canonical": "merci"
+            }
+          ]
+        }
+      },
+      {
+        "Dictionary": {
+          "target_language_word": "à",
+          "definitions": [
+            {
+              "native": "to, at, in",
+              "note": "A very common preposition; the exact meaning depends on context.",
+              "example_sentence_target_language": "Je vais à l'école.",
+              "example_sentence_native_language": "I am going to school.",
+              "cognate": false,
+              "false_cognate": false
+            }
+          ],
+          "morphology": [
+            {
+              "gender": null,
+              "number": null,
+              "politeness": null,
+              "tense": null,
+              "person": null,
+              "case": null,
+              "mood": null,
+              "aspect": null
+            }
+          ],
+          "segments": [
+            {
+              "surface": "à",
+              "canonical": "à"
+            }
+          ]
+        }
+      },
+      null,
+      null
+    ],
+    "gram_breakdowns_for_lookup": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "movie_titles": [
+      [
+        "tt0108500",
+        "Les Visiteurs"
+      ]
+    ],
+    "proper_noun_definitions": [
+      [
+        "Dieu",
+        {
+          "is_person_name": false,
+          "is_place_name": false,
+          "is_organization_name": false,
+          "is_other": true,
+          "learner_native_language_translation": "God",
+          "description": null
+        }
+      ]
+    ],
+    "second_chance": false
+  },
+  "transcription": {
+    "parts": [
+      {
+        "type": "AskedToTranscribe",
+        "parts": [
+          {
+            "word": {
+              "text": "Merci",
+              "word_type": {
+                "type": "Heteronym",
+                "word": "merci",
+                "lemma": "merci",
+                "pos": "NOUN"
+              }
+            },
+            "whitespace": " "
+          },
+          {
+            "word": {
+              "text": "à",
+              "word_type": {
+                "type": "Heteronym",
+                "word": "à",
+                "lemma": "à",
+                "pos": "ADP"
+              }
+            },
+            "whitespace": " "
+          }
+        ]
+      },
+      {
+        "type": "Provided",
+        "part": {
+          "word": {
+            "text": "Dieu",
+            "word_type": {
+              "type": "Other",
+              "other_tag": "PROPN"
+            }
+          },
+          "whitespace": " "
+        }
+      },
+      {
+        "type": "Provided",
+        "part": {
+          "word": {
+            "text": "!",
+            "word_type": {
+              "type": "Other",
+              "other_tag": "PUNCT"
+            }
+          },
+          "whitespace": ""
+        }
+      }
+    ],
+    "inputs": {
+      "0": "banane"
+    },
+    "phase": {
+      "type": "Graded",
+      "completed_at_ms": 1789904065595.0962,
+      "grade": {
+        "encouragement": "Good effort—you recognized that the phrase directly addressed or referred to God, which fits the scene’s exclamation.",
+        "explanation": "The missing phrase is <word>Merci à</word>, meaning “Thanks to.” <word>Banane</word> sounds quite different from <word>Merci</word>, and you also missed the short preposition <word>à</word>. Together, the complete expression is <word>Merci à Dieu !</word> (“Thank God!”).",
+        "results": [
+          {
+            "type": "AskedToTranscribe",
+            "parts": [
+              {
+                "heard": {
+                  "word": {
+                    "text": "Merci",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "merci",
+                      "lemma": "merci",
+                      "pos": "NOUN"
+                    }
+                  },
+                  "whitespace": " "
+                },
+                "grade": {
+                  "type": "Incorrect",
+                  "wrote": "banane"
+                }
+              },
+              {
+                "heard": {
+                  "word": {
+                    "text": "à",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "à",
+                      "lemma": "à",
+                      "pos": "ADP"
+                    }
+                  },
+                  "whitespace": " "
+                },
+                "grade": {
+                  "type": "Missed"
+                }
+              }
+            ],
+            "submission": "banane"
+          },
+          {
+            "type": "Provided",
+            "part": {
+              "word": {
+                "text": "Dieu",
+                "word_type": {
+                  "type": "Other",
+                  "other_tag": "PROPN"
+                }
+              },
+              "whitespace": " "
+            }
+          },
+          {
+            "type": "Provided",
+            "part": {
+              "word": {
+                "text": "!",
+                "word_type": {
+                  "type": "Other",
+                  "other_tag": "PUNCT"
+                }
+              },
+              "whitespace": ""
+            }
+          }
+        ],
+        "compare": [
+          "Merci",
+          "banane",
+          "à"
+        ],
+        "autograding_error": null
+      },
+      "translation_revealed": false
+    }
+  }
+}

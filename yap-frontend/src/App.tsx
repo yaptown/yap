@@ -1,3 +1,4 @@
+import { ChallengeView } from "@/components/challenges/ChallengeView";
 import * as Sentry from "@sentry/react";
 import {
   useState,
@@ -37,10 +38,8 @@ import {
   get_audio_cache_version,
   get_clip_manifest_version,
   refresh_clip_manifest,
-  get_flashcard_disclosure,
   get_review_prompts,
   get_challenge_restrictions,
-  should_show_challenge_tutorial,
 } from "../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
@@ -51,12 +50,9 @@ import { RouteErrorScreen } from "@/components/route-error-screen";
 import { supabase } from "@/lib/supabase";
 import type { Session as SupabaseSession } from "@supabase/supabase-js";
 import { useInterval, useNetworkState } from "react-use";
-import { Flashcard } from "@/components/Flashcard";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { ReportIssueModal } from "@/components/challenges/ReportIssueModal";
 import { Simulate } from "@/components/Simulate";
-import { TranslationChallenge } from "@/components/challenges/TranslationChallenge";
-import { PronunciationChallenge } from "@/components/challenges/PronunciationChallenge";
 import { languageToIso6391 } from "@/lib/utils";
 import { ResetPassword } from "@/pages/reset-password";
 import { ConfirmEmail } from "@/pages/confirm-email";
@@ -91,7 +87,6 @@ declare module "virtual:pwa-register/react" {
   };
 }
 import { useRegisterSW } from "virtual:pwa-register/react";
-import { TranscriptionChallenge } from "./components/challenges/TranscriptionChallenge";
 import { LanguageSelector } from "./components/LanguageSelector";
 import {
   WeaponProvider,
@@ -1263,74 +1258,27 @@ function Review({
             hasPimsleur={hasPimsleur}
           />
         ) : currentChallenge ? (
-          currentChallenge.type === "PronunciationChallenge" ? (
-            <PronunciationChallenge
-              pattern={currentChallenge.pattern}
-              guide={currentChallenge.guide}
-              cues={currentChallenge.cues}
-              onRating={handleRating}
-              accessToken={accessToken}
-              onCantSpeak={handleCantSpeak}
-              targetLanguage={targetLanguage}
-              nativeLanguage={nativeLanguage}
-              isNew={currentChallenge.is_new}
-              showGuide={should_show_challenge_tutorial(
-                currentChallenge.times_type_seen,
-              )}
-              key={totalReviewsCompleted}
-            />
-          ) : currentChallenge.type === "FlashCardReview" ? (
-            <Flashcard
-              audioRequest={currentChallenge.flashcard.audio}
-              content={currentChallenge.flashcard.content}
-              isNew={currentChallenge.is_new}
-              disclosure={get_flashcard_disclosure(
-                reviewInfo.total_count,
-                currentChallenge.times_type_seen,
-              )}
-              onRating={handleRating}
-              accessToken={accessToken}
-              key={totalReviewsCompleted}
-              onCantListen={handleCantListen}
-              targetLanguage={targetLanguage}
-              nativeLanguage={nativeLanguage}
-              autoplayed={autoplayed}
-              setAutoplayed={setAutoplayed}
-              menuExtras={
-                <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-                  Report an Issue
-                </DropdownMenuItem>
-              }
-            />
-          ) : currentChallenge.type === "TranslateComprehensibleSentence" ? (
-            <TranslationChallenge
-              sentence={currentChallenge}
-              onComplete={handleTranslationComplete}
-              accessToken={accessToken}
-              key={totalReviewsCompleted}
-              targetLanguage={targetLanguage}
-              nativeLanguage={nativeLanguage}
-              autoplayed={autoplayed}
-              setAutoplayed={setAutoplayed}
-              deck={deck}
-              totalReviewsCompleted={totalReviewsCompleted}
-            />
-          ) : (
-            <TranscriptionChallenge
-              challenge={currentChallenge}
-              onComplete={handleTranscriptionComplete}
-              totalCount={reviewInfo.total_count}
-              accessToken={accessToken}
-              key={`${totalReviewsCompleted}:${currentChallenge.target_language}`}
-              onCantListen={handleCantListen}
-              targetLanguage={targetLanguage}
-              nativeLanguage={nativeLanguage}
-              autoplayed={autoplayed}
-              setAutoplayed={setAutoplayed}
-              deck={deck}
-              totalReviewsCompleted={totalReviewsCompleted}
-            />
-          )
+          <ChallengeView
+            challenge={currentChallenge}
+            onRating={handleRating}
+            onTranslationComplete={handleTranslationComplete}
+            onTranscriptionComplete={handleTranscriptionComplete}
+            onCantSpeak={handleCantSpeak}
+            onCantListen={handleCantListen}
+            accessToken={accessToken}
+            targetLanguage={targetLanguage}
+            nativeLanguage={nativeLanguage}
+            totalReviewsCompleted={totalReviewsCompleted}
+            totalCount={reviewInfo.total_count}
+            autoplayed={autoplayed}
+            setAutoplayed={setAutoplayed}
+            deck={deck}
+            menuExtras={
+              <DropdownMenuItem onClick={() => setShowReportModal(true)}>
+                Report an Issue
+              </DropdownMenuItem>
+            }
+          />
         ) : (
           <div>
             Unexpected challenge state. This is a bug. currentChallenge:{" "}
@@ -1388,6 +1336,15 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <LandingPage /> },
           { path: "learn", element: <ReviewPage /> },
+          ...(import.meta.env.DEV
+            ? [{
+                path: "fixture/:name",
+                lazy: async () => {
+                  const { FixturePage } = await import("./pages/fixture");
+                  return { Component: FixturePage };
+                },
+              }]
+            : []),
           { path: "dictionary", element: <DictionaryPage /> },
           { path: "leeches", element: <LeechesPage /> },
           { path: "simulate", element: <SimulatePage /> },

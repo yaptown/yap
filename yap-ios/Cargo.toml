@@ -9,7 +9,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dependencies]
 opfs.workspace = true
-yap-frontend-rs = { path = "../yap-frontend-rs" }
+yap-frontend-rs = { path = "../yap-frontend-rs", features = ["fixtures"] }
 bridgerton.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "time", "net", "fs"] }
 

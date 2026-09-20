@@ -17,7 +17,12 @@ struct TranscriptionChallengeView: View {
         _state = State(initialValue: state)
         _view = State(initialValue: transcription_view(state: state))
     }
-    private var storage: PendingReview { PendingReview(kind: "transcription", challenge: sentence, model: model) }
+    private var storage: PendingReview? {
+        #if DEBUG
+        if DebugHarness.shared.fixture != nil { return nil }
+        #endif
+        return PendingReview(kind: "transcription", challenge: sentence, model: model)
+    }
     private var blanks: [Int] { view.blanks.map { Int($0.index) } }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
@@ -88,7 +93,10 @@ struct TranscriptionChallengeView: View {
             }
         }
         .onAppear {
-            if let data = storage.load(Data.self), let saved = try? PendingReview.decode(data, as: TranscriptionState.self) {
+            #if DEBUG
+            if let saved = DebugHarness.shared.fixture?.transcription { state = saved }
+            #endif
+            if let data = storage?.load(Data.self), let saved = try? PendingReview.decode(data, as: TranscriptionState.self) {
                 state = saved
             }
             if editing { focused = blanks.first }
@@ -161,7 +169,7 @@ struct TranscriptionChallengeView: View {
     private func apply(_ step: TranscriptionStep) {
         state = step.state
         view = transcription_view(state: state)
-        if let data = try? PendingReview.encode(state) { storage.save(data) }
+        if let data = try? PendingReview.encode(state) { storage?.save(data) }
         for effect in step.effects {
             switch effect {
             case let .Autograde(submission):
@@ -185,7 +193,7 @@ struct TranscriptionChallengeView: View {
                 case .Success: audio.playEffect("success-1")
                 }
             case let .Complete(results, completedAtMs):
-                if model.completeTranscription(results, completedAtMs: completedAtMs) { storage.clear(); audio.stop() }
+                if model.completeTranscription(results, completedAtMs: completedAtMs) { storage?.clear(); audio.stop() }
             }
         }
     }
@@ -194,6 +202,9 @@ struct TranscriptionChallengeView: View {
     #if DEBUG
     private func debugCommand() {
         let command = DebugHarness.shared.command
+        if command.hasPrefix("dump-fixture ") {
+            DebugHarness.dumpFixture(ChallengeFixture(challenge: .TranscribeComprehensibleSentence(sentence), transcription: state), name: String(command.dropFirst(13)))
+        }
         if command.hasPrefix("type "), editing, let index = focused ?? blanks.first { send(.InputChanged(index: UInt64(index), text: String(command.dropFirst(5)))) }
         if command == "type-reference", editing {
             for index in blanks { if case let .AskedToTranscribe(parts) = sentence.parts[index] { send(.InputChanged(index: UInt64(index), text: gramText(parts))) } }

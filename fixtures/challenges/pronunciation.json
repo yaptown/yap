@@ -1,0 +1,189 @@
+{
+  "challenge": {
+    "type": "PronunciationChallenge",
+    "indicator": {
+      "type": "LetterPronunciation",
+      "pattern": "s",
+      "position": "Anywhere"
+    },
+    "pattern": "s",
+    "guide": {
+      "pattern": "s",
+      "position": "Anywhere",
+      "description": "Most often, French “s” sounds like English /s/ (as in “see”). A single “s” between two vowel sounds is usually voiced to /z/ (like English “z” in “zoo”), e.g., ro-se. At the end of many words, “s” is often silent (especially plural -s), though it can reappear as a /z/ sound in liaison before a vowel in the next word.",
+      "familiarity": "MaybeAlreadyKnows",
+      "difficulty": "Medium",
+      "example_words": [
+        {
+          "target": "souvenir",
+          "native": "souvenir (memento/keepsake)",
+          "position": "Beginning",
+          "cultural_context": "Common in English as a borrowed word meaning a memento."
+        },
+        {
+          "target": "rose",
+          "native": "rose",
+          "position": "Middle",
+          "cultural_context": "Same flower name in English; in French the “s” is typically /z/ here."
+        },
+        {
+          "target": "Paris",
+          "native": "Paris",
+          "position": "End",
+          "cultural_context": "Famous French capital; the final “s” is usually silent in French."
+        },
+        {
+          "target": "croissant",
+          "native": "croissant (crescent-shaped pastry)",
+          "position": "Multiple",
+          "cultural_context": "Very common French pastry word used in English; the double “ss” is a clear /s/ sound."
+        }
+      ]
+    },
+    "cues": [
+      {
+        "audio": {
+          "request": {
+            "text": "s comme dans souvenir",
+            "language": "French",
+            "is_ssml": false,
+            "instructions": "Read this short French pronunciation cue aloud for a flashcard, in a clear, warm, natural French voice, at a normal conversational pace with no long pauses. Say the letter names as a quick spelled-out sequence, then the connecting words, then the example word as a normal word. Say nothing else.",
+            "speed": 1.0
+          },
+          "provider": "Gemini"
+        },
+        "segments": [
+          {
+            "text": "s",
+            "role": "Pattern",
+            "start_ms": 420
+          },
+          {
+            "text": "comme",
+            "role": "Connector",
+            "start_ms": 1300
+          },
+          {
+            "text": "dans",
+            "role": "Connector",
+            "start_ms": 1580
+          },
+          {
+            "text": "souvenir",
+            "role": "Example",
+            "start_ms": 2140
+          }
+        ],
+        "native_connector": "as in"
+      },
+      {
+        "audio": {
+          "request": {
+            "text": "s comme dans rose",
+            "language": "French",
+            "is_ssml": false,
+            "instructions": "Read this short French pronunciation cue aloud for a flashcard, in a clear, warm, natural French voice, at a normal conversational pace with no long pauses. Say the letter names as a quick spelled-out sequence, then the connecting words, then the example word as a normal word. Say nothing else.",
+            "speed": 1.0
+          },
+          "provider": "Gemini"
+        },
+        "segments": [
+          {
+            "text": "s",
+            "role": "Pattern",
+            "start_ms": 360
+          },
+          {
+            "text": "comme",
+            "role": "Connector",
+            "start_ms": 1480
+          },
+          {
+            "text": "dans",
+            "role": "Connector",
+            "start_ms": 1740
+          },
+          {
+            "text": "rose",
+            "role": "Example",
+            "start_ms": 2820
+          }
+        ],
+        "native_connector": "as in"
+      },
+      {
+        "audio": {
+          "request": {
+            "text": "s comme dans Paris",
+            "language": "French",
+            "is_ssml": false,
+            "instructions": "Read this short French pronunciation cue aloud for a flashcard, in a clear, warm, natural French voice, at a normal conversational pace with no long pauses. Say the letter names as a quick spelled-out sequence, then the connecting words, then the example word as a normal word. Say nothing else.",
+            "speed": 1.0
+          },
+          "provider": "Gemini"
+        },
+        "segments": [
+          {
+            "text": "s",
+            "role": "Pattern",
+            "start_ms": 580
+          },
+          {
+            "text": "comme",
+            "role": "Connector",
+            "start_ms": 1820
+          },
+          {
+            "text": "dans",
+            "role": "Connector",
+            "start_ms": 2220
+          },
+          {
+            "text": "Paris",
+            "role": "Example",
+            "start_ms": 3140
+          }
+        ],
+        "native_connector": "as in"
+      },
+      {
+        "audio": {
+          "request": {
+            "text": "s comme dans croissant",
+            "language": "French",
+            "is_ssml": false,
+            "instructions": "Read this short French pronunciation cue aloud for a flashcard, in a clear, warm, natural French voice, at a normal conversational pace with no long pauses. Say the letter names as a quick spelled-out sequence, then the connecting words, then the example word as a normal word. Say nothing else.",
+            "speed": 1.0
+          },
+          "provider": "Gemini"
+        },
+        "segments": [
+          {
+            "text": "s",
+            "role": "Pattern",
+            "start_ms": 360
+          },
+          {
+            "text": "comme",
+            "role": "Connector",
+            "start_ms": 1320
+          },
+          {
+            "text": "dans",
+            "role": "Connector",
+            "start_ms": 1620
+          },
+          {
+            "text": "croissant",
+            "role": "Example",
+            "start_ms": 2320
+          }
+        ],
+        "native_connector": "as in"
+      }
+    ],
+    "is_new": true,
+    "times_type_seen": 7
+  },
+  "transcription": null
+}

@@ -11,6 +11,7 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 console_error_panic_hook = ["bridgerton/console_error_panic_hook"]
 local-backend = []
+fixtures = []
 
 [dependencies]
 yap-frontend-reducers = { path = "../yap-frontend-reducers" }
