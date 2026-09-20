@@ -297,7 +297,9 @@ impl Swift {
             .args(["rustc", "--manifest-path"])
             .arg(&self.build.manifest_path)
             .args(["--package", &self.build.package, "--lib"])
-            .arg("--message-format=json-render-diagnostics");
+            .arg("--message-format=json-render-diagnostics")
+            // Colors would wrap the native-static-libs note parsed below.
+            .env("CARGO_TERM_COLOR", "never");
         if let Some(target) = &self.target {
             command.args(["--target", target]);
         }
