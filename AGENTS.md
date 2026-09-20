@@ -18,6 +18,8 @@ Yap.Town is a language learning application with a Rust-based backend and React 
 
 - **yap-frontend-rs**: WASM module built with Rust providing core language learning logic, spaced repetition (FSRS), and offline data storage via OPFS
 - **yap-frontend**: React/TypeScript frontend using Vite, with Tailwind CSS and Radix UI components
+- **yap-ios**: Native SwiftUI app, bridged to the same Rust core through `libraries/bridgerton`
+- **yap-frontend-reducers**: Pure per-challenge state machines (state + events → new state + effects-as-data, plus a `view(state)` function) shared by both frontends and, eventually, the MCP widget
 - **generate-data**: Rust binary that extracts sentences from Anki decks and generates dictionary data using Python NLP
 - **language-utils**: Shared Rust library containing language processing types and utilities
 - **libraries/movie-subtitles**: Movie subtitle text handling — raw SRTs as source of truth, lossy cleaning at load time, CP1252 mojibake repair
@@ -143,6 +145,10 @@ enforced mechanically — no human vigilance required.
 - **OPFS**: Browser-based persistent file storage for offline data
 - **lexide**: NLP base layer for sentence analysis (POS, lemmas, dependencies) — fine-tuned Gemma 3 1B in a sibling repo, served via Modal
 - **FSRS**: Spaced repetition algorithm implementation
+
+### Two frontends, one source of truth
+
+The web app and the iOS app must behave identically, so the rule for where code lives is: **if a difference between the platforms would be a bug, it goes in Rust.** That means state transitions and everything derived from state (labels, copy, tints, which options appear, whether a button is enabled), plus shared constants like the color palette (`yap-frontend-reducers/src/palette.rs`). Challenge logic lives in `yap-frontend-reducers` as reducers; deck-dependent screens get a view struct from `yap-frontend-rs/src/screens.rs`. What stays native is arrangement: layout, spacing, animation, platform controls, and platform-local state like focus and keyboard handling. Those may differ and often should. When you touch a challenge or screen on one platform, the change should usually be in Rust with both hosts picking it up; `fixtures/parity.py` renders the captured fixtures side by side to check.
 
 ### Important Notes
 
