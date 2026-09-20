@@ -30,3 +30,6 @@ screenshots-out/
 e2e/.playwright-artifacts/
 playwright-report/
 test-results/
+
+# Generated design colors
+/src/tokens.css

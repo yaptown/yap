@@ -1,21 +1,25 @@
 import SwiftUI
 import CoreText
 
+extension DynamicColor {
+    var color: Color {
+        Color(uiColor: UIColor { traits in
+            let rgba = traits.userInterfaceStyle == .dark ? dark : light
+            return UIColor(red: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        })
+    }
+}
+
+@MainActor enum Tokens {
+    static let palette = design_palette()
+}
+
 extension Color {
     static let yapOnAccent = Color(uiColor: UIColor { traits in
         traits.userInterfaceStyle == .dark ? .black : .white
     })
-    // sRGB conversions of the web's OKLCH hue-328 palette. Dynamic for contrast.
-    static let yapAccent = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.9462, green: 0.6264, blue: 0.9292, alpha: 1)
-            : UIColor(red: 0.573, green: 0.220, blue: 0.541, alpha: 1)
-    })
-    static let yapText = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.9409, green: 0.8507, blue: 0.9331, alpha: 1)
-            : UIColor.label
-    })
+    @MainActor static let yapAccent = Tokens.palette.accent_foreground.color
+    @MainActor static let yapText = Tokens.palette.foreground.color
 }
 
 struct StudyCard<Content: View>: View {
