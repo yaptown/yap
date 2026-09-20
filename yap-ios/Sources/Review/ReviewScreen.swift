@@ -6,6 +6,9 @@ struct ReviewScreen: View {
     let model: ReviewModel
     @AppStorage("yap-skipped-set-display-name") private var displayNameDismissed = false
     private var step: ReviewStep? {
+        #if DEBUG
+        if DebugHarness.shared.fixture != nil { return nil }
+        #endif
         let session = model.session
         if model.deck.should_offer_placement_test(starting_fresh: model.startingFresh, history_known: model.historyKnown) { return .placementTest }
         if model.lockupOffer != nil { return .lockupOffer }
@@ -48,6 +51,11 @@ struct ReviewScreen: View {
                     }
                 } else if let challenge = model.currentChallenge {
                     challengeView(challenge).id(challenge)
+                        .onAppear {
+                            #if DEBUG
+                            if DebugHarness.shared.fixture != nil { DebugHarness.log("fixture rendered \(DebugHarness.shared.fixtureName)") }
+                            #endif
+                        }
                 } else { NoCardsReadyView(model: model) }
             }.padding(12).frame(maxWidth: 600)
             }
@@ -87,6 +95,10 @@ struct ReviewScreen: View {
     #if DEBUG
     private func handleDebugCommand() {
         switch DebugHarness.shared.command {
+        case let command where command.hasPrefix("dump-fixture "):
+            guard let challenge = model.currentChallenge else { return }
+            if case .TranscribeComprehensibleSentence = challenge { return }
+            DebugHarness.dumpFixture(ChallengeFixture(challenge: challenge, transcription: nil), name: String(command.dropFirst(13)))
         case "dismiss-keyboard": UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         case "status":
             DebugHarness.log("placement: startingFresh=\(String(describing: model.startingFresh)) historyKnown=\(model.historyKnown) taken=\(model.deck.has_taken_placement_test()) list=\(String(describing: model.deck.get_sentence_list()))")

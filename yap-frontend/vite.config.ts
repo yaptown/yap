@@ -1,6 +1,6 @@
 import fs from "fs"
 import path from "path"
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import wasm from "vite-plugin-wasm";
 import tailwindcss from "@tailwindcss/vite"
@@ -23,6 +23,26 @@ function staticSitePlugin() {
           }
         }
         next();
+      });
+    },
+  };
+}
+
+// Captured fixtures are development inputs, never production assets.
+function challengeFixturesPlugin(): Plugin {
+  const directory = path.resolve(__dirname, "../fixtures/challenges");
+  return {
+    name: "challenge-fixtures",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.method !== "GET" || !req.url?.startsWith("/__fixtures/")) return next();
+        const names = fs.readdirSync(directory).filter(name => name.endsWith(".json"));
+        const name = req.url.slice("/__fixtures/".length);
+        res.setHeader("Content-Type", "application/json");
+        if (name === "index.json") res.end(JSON.stringify(names.map(name => name.slice(0, -5)).sort()));
+        else if (names.includes(name)) res.end(fs.readFileSync(path.join(directory, name)));
+        else { res.writeHead(404); res.end(JSON.stringify({ error: "Unknown fixture" })); }
       });
     },
   };
@@ -62,6 +82,7 @@ export default defineConfig({
   plugins: [
     localBackendGuardPlugin(),
     staticSitePlugin(),
+    challengeFixturesPlugin(),
     VitePWA({ 
       registerType: 'autoUpdate',
       devOptions: {

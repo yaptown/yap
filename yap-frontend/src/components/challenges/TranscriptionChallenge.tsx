@@ -71,6 +71,7 @@ import { type BreakdownRow } from "../MorphemeBreakdown";
 
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence;
+  initialState?: TranscriptionState;
   onComplete: (grade: PartGraded[], completedAtMs: number) => void;
   totalCount: number;
   accessToken: string | undefined;
@@ -111,6 +112,7 @@ function FeedbackSkeleton() {
 }
 
 export function TranscriptionChallenge({
+  initialState,
   challenge,
   onComplete,
   totalCount,
@@ -127,6 +129,7 @@ export function TranscriptionChallenge({
 
   // Try to restore a saved grade from localStorage
   const restored = useMemo(() => {
+    if (initialState) return initialState;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
@@ -148,7 +151,7 @@ export function TranscriptionChallenge({
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }
-  }, [challenge, totalReviewsCompleted]);
+  }, [challenge, totalReviewsCompleted, initialState]);
 
   const [state, setState] = useState<TranscriptionState>(
     () => restored ?? transcription_start(challenge.parts),
@@ -206,16 +209,18 @@ export function TranscriptionChallenge({
       stateRef.current = step.state;
       setState(step.state);
       try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            version: get_app_version(),
-            challenge,
-            totalReviewsCompleted: Number(totalReviewsCompleted),
-            // The bridge exposes BTreeMap as a JS Map, which JSON cannot encode.
-            state: { ...step.state, inputs: [...step.state.inputs] },
-          }),
-        );
+        if (!initialState) {
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+              version: get_app_version(),
+              challenge,
+              totalReviewsCompleted: Number(totalReviewsCompleted),
+              // The bridge exposes BTreeMap as a JS Map, which JSON cannot encode.
+              state: { ...step.state, inputs: [...step.state.inputs] },
+            }),
+          );
+        }
       } catch {
         /* Storage full or unavailable: the review still works. */
       }
@@ -254,7 +259,7 @@ export function TranscriptionChallenge({
             );
             break;
           case "Complete":
-            localStorage.removeItem(STORAGE_KEY);
+            if (!initialState) localStorage.removeItem(STORAGE_KEY);
             bumpBackground(30.0);
             onComplete(effect.results, effect.completed_at_ms);
             break;
@@ -262,6 +267,7 @@ export function TranscriptionChallenge({
       }
     },
     [
+      initialState,
       accessToken,
       bumpBackground,
       challenge,

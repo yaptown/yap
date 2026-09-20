@@ -1,0 +1,130 @@
+{
+  "challenge": {
+    "type": "FlashCardReview",
+    "indicator": {
+      "type": "WrittenGram",
+      "gram": [
+        {
+          "Tok": {
+            "text": "j'",
+            "word_type": {
+              "type": "Heteronym",
+              "word": "je",
+              "lemma": "je",
+              "pos": "PRON"
+            }
+          }
+        },
+        {
+          "Tok": {
+            "text": "ai",
+            "word_type": {
+              "type": "Heteronym",
+              "word": "ai",
+              "lemma": "avoir",
+              "pos": "VERB"
+            }
+          }
+        },
+        {
+          "Tok": {
+            "text": "une",
+            "word_type": {
+              "type": "Heteronym",
+              "word": "une",
+              "lemma": "un",
+              "pos": "DET"
+            }
+          }
+        }
+      ]
+    },
+    "flashcard": {
+      "content": {
+        "type": "Gram",
+        "gram": [
+          {
+            "word": {
+              "text": "j'",
+              "word_type": {
+                "type": "Heteronym",
+                "word": "je",
+                "lemma": "je",
+                "pos": "PRON"
+              }
+            },
+            "whitespace": ""
+          },
+          {
+            "word": {
+              "text": "ai",
+              "word_type": {
+                "type": "Heteronym",
+                "word": "ai",
+                "lemma": "avoir",
+                "pos": "VERB"
+              }
+            },
+            "whitespace": " "
+          },
+          {
+            "word": {
+              "text": "une",
+              "word_type": {
+                "type": "Heteronym",
+                "word": "une",
+                "lemma": "un",
+                "pos": "DET"
+              }
+            },
+            "whitespace": ""
+          }
+        ],
+        "definition": {
+          "Phrasebook": {
+            "target_language_multi_word_term": "j'ai une",
+            "meaning": "I have a",
+            "additional_notes": "This is a common sentence opening meaning “I have a/an…”; une is used before a feminine singular noun.",
+            "target_language_example": "J'ai une question à vous poser.",
+            "native_language_example": "I have a question to ask you.",
+            "informal": false,
+            "compositional": true,
+            "cognate": false,
+            "false_cognate": false,
+            "can_be_translated_literally": true
+          }
+        },
+        "prefix": null,
+        "breakdown": [
+          [
+            "j'",
+            "je",
+            "I"
+          ],
+          [
+            "ai",
+            "avoir",
+            "have"
+          ],
+          [
+            "une",
+            "un",
+            "a, an"
+          ]
+        ]
+      },
+      "audio": {
+        "request": {
+          "text": "j'ai une",
+          "language": "French",
+          "is_ssml": false,
+          "speed": 1.0
+        },
+        "provider": "Google"
+      }
+    },
+    "is_new": true,
+    "times_type_seen": 57
+  },
+  "transcription": null
+}
