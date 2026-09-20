@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import type { Deck } from "../../../yap-frontend-rs/pkg";
+import type { DayProgress } from "../../../yap-frontend-rs/pkg";
 import {
   Tooltip,
   TooltipTrigger,
@@ -8,28 +7,13 @@ import {
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
-function useMidnightTick() {
-  const [day, setDay] = useState(() => new Date().toDateString());
-  useEffect(() => {
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    const ms = midnight.getTime() - now.getTime();
-    const timer = setTimeout(() => setDay(new Date().toDateString()), ms);
-    return () => clearTimeout(timer);
-  }, [day]);
-  return day;
-}
-
 export function WeekProgressStrip({
-  deck,
+  week,
   className = "",
 }: {
-  deck: Deck;
+  week: DayProgress[];
   className?: string;
 }) {
-  const day = useMidnightTick();
-  const week = useMemo(() => deck.get_current_week_progress(), [deck, day]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className={`flex w-full items-stretch ${className}`}>
       {week.map((day, i) => (
@@ -39,7 +23,7 @@ export function WeekProgressStrip({
   );
 }
 
-function DayCell({ day, index }: { day: { seconds: number; target_seconds: number; reviews: number; new_cards: number; learned_cards: number; locked_in_cards: number; met_goal: boolean; is_today: boolean; is_future: boolean }; index: number }) {
+function DayCell({ day, index }: { day: DayProgress; index: number }) {
   const fillPercent = day.is_future || day.target_seconds === 0
     ? 0
     : Math.min(100, (day.seconds / day.target_seconds) * 100);

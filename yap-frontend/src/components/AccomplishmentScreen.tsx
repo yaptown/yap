@@ -1,5 +1,4 @@
-import { get_daily_goal_options } from "../../../yap-frontend-rs/pkg";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,9 +9,9 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import type {
-  Deck,
+  AccomplishmentView,
+  DeckEvent,
   DailyReviewTarget,
-  Language,
 } from "../../../yap-frontend-rs/pkg";
 import { Trophy, ChevronDown, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -58,32 +57,27 @@ function streakMessage(streak: number): string {
 }
 
 interface AccomplishmentScreenProps {
-  deck: Deck;
-  targetLanguage: Language;
-  dailyReviewTarget: DailyReviewTarget;
-  onChangeDailyReviewTarget: (target: DailyReviewTarget) => void;
+  view: AccomplishmentView;
+  addEvent: (event: DeckEvent) => void;
   onDismiss: () => void;
 }
 
 export function AccomplishmentScreen({
-  deck,
-  targetLanguage,
-  dailyReviewTarget,
-  onChangeDailyReviewTarget,
+  view,
+  addEvent,
   onDismiss,
 }: AccomplishmentScreenProps) {
+  const targetLanguage = view.target_language;
+  const dailyReviewTarget = view.target;
   const [goalOpen, setGoalOpen] = useState(false);
   const [pendingTarget, setPendingTarget] =
     useState<DailyReviewTarget>(dailyReviewTarget);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const confettiRef = useRef<confetti.CreateTypes | null>(null);
 
-  const summary = useMemo(() => deck.get_today_summary(), [deck]);
-  const streak = deck.get_daily_streak();
-  const wordsKnown = useMemo(() => {
-    const pct = deck.get_percent_of_words_known();
-    return Math.round(pct * deck.num_cards_added());
-  }, [deck]);
+  const summary = view.today;
+  const streak = view.streak;
+  const wordsKnown = view.words_known;
 
   // Create confetti instance bound to our canvas
   useEffect(() => {
@@ -179,19 +173,19 @@ export function AccomplishmentScreen({
           </CollapsibleTrigger>
           <CollapsibleContent className="flex flex-col items-center gap-3 mt-3">
             <div className="flex rounded-lg border overflow-hidden">
-              {get_daily_goal_options().map((opt) => (
+              {view.goals.map((opt) => (
                 <button
-                  key={opt.value}
-                  onClick={() => setPendingTarget(opt.value)}
+                  key={opt.target}
+                  onClick={() => setPendingTarget(opt.target)}
                   className={cn(
                     "flex-1 px-3 py-2 text-sm font-medium transition-colors",
                     "border-r last:border-r-0",
-                    opt.value === pendingTarget
+                    opt.target === pendingTarget
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted",
                   )}
                 >
-                  <div>{opt.value}</div>
+                  <div>{opt.target}</div>
                   <div className="text-xs opacity-70">{opt.minutes}m</div>
                 </button>
               ))}
@@ -200,7 +194,8 @@ export function AccomplishmentScreen({
               size="sm"
               disabled={pendingTarget === dailyReviewTarget}
               onClick={() => {
-                onChangeDailyReviewTarget(pendingTarget);
+                const goal = view.goals.find(option => option.target === pendingTarget);
+                if (goal) addEvent(goal.event);
                 setGoalOpen(false);
               }}
             >

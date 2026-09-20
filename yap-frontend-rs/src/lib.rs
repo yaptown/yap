@@ -10,9 +10,9 @@ mod directories;
 mod disclosure;
 mod fixtures;
 mod human_audio;
-pub use fixtures::ChallengeFixture;
+pub use fixtures::{ChallengeFixture, Fixture};
 #[cfg(any(feature = "fixtures", test))]
-pub use fixtures::{challenge_fixture_json, parse_challenge_fixture};
+pub use fixtures::{fixture_json, parse_fixture};
 mod language_pack;
 mod learning_metadata;
 pub use learning_metadata::{
@@ -30,7 +30,9 @@ pub use placement_session::{
     PlacementSession, PlacementSessionInfo, get_placement_session_info, toggle_placement_word,
 };
 pub mod profile;
+mod screens;
 pub mod simulation;
+pub use screens::*;
 mod study_options;
 mod supabase;
 pub use study_options::{IdleStudyState, get_idle_study_state, next_progress_milestone};
@@ -2923,21 +2925,11 @@ impl Deck {
     }
 
     pub fn get_daily_streak(&self) -> u32 {
-        match &self.stats.daily_streak {
-            None => 0,
-            Some(streak) => {
-                let today = chrono::Utc::now()
-                    .with_timezone(&self.context.timezone)
-                    .date_naive();
-                let days_since_active = (today - streak.last_active_day).num_days();
-
-                if days_since_active <= 1 {
-                    streak.streak_count
-                } else {
-                    0
-                }
-            }
-        }
+        self.get_daily_streak_on(
+            Utc::now()
+                .with_timezone(&self.context.timezone)
+                .date_naive(),
+        )
     }
 
     pub fn get_today_reviews(&self) -> u32 {
@@ -2958,130 +2950,19 @@ impl Deck {
 
     /// Today's estimated time spent reviewing, in seconds.
     pub fn get_today_time_spent(&self) -> u32 {
-        match &self.stats.today {
-            Some(today) => {
-                let current_day = chrono::Utc::now()
-                    .with_timezone(&self.context.timezone)
-                    .date_naive();
-                if today.day == current_day {
-                    today.time_spent_seconds
-                } else {
-                    0
-                }
-            }
-            None => 0,
-        }
+        self.get_today_time_spent_on(
+            Utc::now()
+                .with_timezone(&self.context.timezone)
+                .date_naive(),
+        )
     }
 
     pub fn get_today_summary(&self) -> TodaySummary {
-        let language_pack = &self.context.language_pack;
-
-        // `stats.today` is the last studied day until a review rolls it over,
-        // so a summary opened the next morning must not present it as today.
-        let current_day = chrono::Utc::now()
-            .with_timezone(&self.context.timezone)
-            .date_naive();
-        let today = match &self.stats.today {
-            Some(today) if today.day == current_day => today,
-            _ => {
-                return TodaySummary {
-                    reviews: 0,
-                    time_spent_seconds: 0,
-                    new_cards: vec![],
-                    learned_cards: vec![],
-                    locked_in_cards: vec![],
-                    reviewed_words: vec![],
-                    recall_percent: None,
-                    day_of_week: chrono::Utc::now()
-                        .with_timezone(&self.context.timezone)
-                        .date_naive()
-                        .format("%A")
-                        .to_string(),
-                };
-            }
-        };
-
-        let total = today.remembered + today.forgot;
-        let recall_percent = if total > 0 {
-            Some((today.remembered as f64 / total as f64 * 100.0) as u32)
-        } else {
-            None
-        };
-        let day_of_week = today.day.format("%A").to_string();
-
-        let resolve_card_text = |card: &CardIndicator<SpurGram, Spur>| -> String {
-            match card {
-                CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => {
-                    language_pack
-                        .gram_rodeo
-                        .resolve(gram)
-                        .resolve(&language_pack.string_rodeo)
-                        .to_display_string(self.context.course.target_language)
-                }
-                CardIndicator::LetterPronunciation { pattern, .. } => {
-                    format!("[{}]", language_pack.string_rodeo.resolve(pattern))
-                }
-            }
-        };
-
-        let resolve_translation = |card: &CardIndicator<SpurGram, Spur>| -> String {
-            let gram = match card {
-                CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => gram,
-                _ => return String::new(),
-            };
-            match language_pack.gram_definitions.get(gram) {
-                Some(language_utils::GramDefinition::Dictionary(dict)) => dict
-                    .definitions
-                    .first()
-                    .map(|d| d.native.clone())
-                    .unwrap_or_default(),
-                Some(language_utils::GramDefinition::Phrasebook(pb)) => pb.meaning.clone(),
-                None => String::new(),
-            }
-        };
-
-        let resolve_card_type = |card: &CardIndicator<SpurGram, Spur>| -> String {
-            match card {
-                CardIndicator::WrittenGram { .. } => "reading".to_string(),
-                CardIndicator::ListeningGram { .. } => "listening".to_string(),
-                CardIndicator::LetterPronunciation { .. } => "pronunciation".to_string(),
-            }
-        };
-
-        let to_new_card = |card: &CardIndicator<SpurGram, Spur>| TodayNewCard {
-            word: resolve_card_text(card),
-            translation: resolve_translation(card),
-            card_type: resolve_card_type(card),
-        };
-
-        let new_cards: Vec<TodayNewCard> = today.new_cards.iter().map(to_new_card).collect();
-
-        let learned_cards: Vec<TodayNewCard> = today
-            .learned_cards
-            .iter()
-            .filter(|card| !today.new_cards.contains(card))
-            .map(to_new_card)
-            .collect();
-
-        let locked_in_cards: Vec<TodayNewCard> = today
-            .locked_in_cards
-            .iter()
-            .filter(|card| !today.new_cards.contains(card))
-            .map(to_new_card)
-            .collect();
-
-        let reviewed_words = today.reviewed_cards.iter().map(resolve_card_text).collect();
-
-        TodaySummary {
-            reviews: today.reviews,
-            time_spent_seconds: today.time_spent_seconds,
-            new_cards,
-            learned_cards,
-            locked_in_cards,
-            reviewed_words,
-            recall_percent,
-            day_of_week,
-        }
+        self.get_today_summary_on(
+            Utc::now()
+                .with_timezone(&self.context.timezone)
+                .date_naive(),
+        )
     }
 
     /// Daily goal target in seconds.
@@ -3091,37 +2972,11 @@ impl Deck {
 
     /// Progress for each day of the current week (Monday → Sunday) in the user's local timezone.
     pub fn get_current_week_progress(&self) -> Vec<DayProgress> {
-        use chrono::Datelike;
-        let timezone = &self.context.timezone;
-        let today = Utc::now().with_timezone(timezone).date_naive();
-        let weekday_from_monday = today.weekday().num_days_from_monday() as i64;
-        let monday = today - chrono::Duration::days(weekday_from_monday);
-        let target = self.daily_review_target.target_seconds();
-
-        (0..7)
-            .map(|offset| {
-                let date = monday + chrono::Duration::days(offset);
-                let day_index = date.num_days_from_ce() as i64;
-                let summary = self.stats.past_days.get(&day_index);
-                let seconds = summary.map_or(0, |s| s.time_spent_seconds);
-                let reviews = summary.map_or(0, |s| s.reviews);
-                let new_cards = summary.map_or(0, |s| s.new_cards);
-                let learned_cards = summary.map_or(0, |s| s.learned_cards);
-                let locked_in_cards = summary.map_or(0, |s| s.locked_in_cards);
-                DayProgress {
-                    weekday: date.weekday().num_days_from_monday() as u8,
-                    seconds,
-                    target_seconds: target,
-                    reviews,
-                    new_cards,
-                    learned_cards,
-                    locked_in_cards,
-                    met_goal: target > 0 && seconds >= target,
-                    is_today: date == today,
-                    is_future: date > today,
-                }
-            })
-            .collect()
+        self.get_current_week_progress_on(
+            Utc::now()
+                .with_timezone(&self.context.timezone)
+                .date_naive(),
+        )
     }
 
     pub fn get_movie_stats(&self) -> Vec<MovieStats> {
@@ -4580,41 +4435,35 @@ impl Deck {
     }
 }
 
-#[bridge(opaque)]
-#[derive(Clone)]
+#[bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CardSummary {
-    card_indicator: CardIndicator<Gram<String>, String>,
-    due_timestamp_ms: f64,
-    state: String,
+    pub card_indicator: CardIndicator<Gram<String>, String>,
+    pub due_timestamp_ms: f64,
+    pub state: String,
     /// Primary display text for the card (e.g., the word or phrase)
-    card_text: String,
+    pub card_text: String,
     /// Optional subtitle for disambiguation (e.g., POS tag when multiple cards have same text)
-    card_subtitle: Option<String>,
+    pub card_subtitle: Option<String>,
 }
 
-#[bridge]
 impl CardSummary {
-    #[bridge(getter)]
     pub fn card_indicator(&self) -> CardIndicator<Gram<String>, String> {
         self.card_indicator.clone()
     }
 
-    #[bridge(getter)]
     pub fn due_timestamp_ms(&self) -> f64 {
         self.due_timestamp_ms
     }
 
-    #[bridge(getter)]
     pub fn state(&self) -> String {
         self.state.clone()
     }
 
-    #[bridge(getter)]
     pub fn card_text(&self) -> String {
         self.card_text.clone()
     }
 
-    #[bridge(getter)]
     pub fn card_subtitle(&self) -> Option<String> {
         self.card_subtitle.clone()
     }
@@ -5014,6 +4863,167 @@ pub fn get_courses() -> Vec<language_utils::Course> {
     language_utils::COURSES.to_vec()
 }
 
+impl Deck {
+    fn get_today_summary_on(&self, current_day: chrono::NaiveDate) -> TodaySummary {
+        let language_pack = &self.context.language_pack;
+
+        // `stats.today` is the last studied day until a review rolls it over,
+        // so a summary opened the next morning must not present it as today.
+        let today = match &self.stats.today {
+            Some(today) if today.day == current_day => today,
+            _ => {
+                return TodaySummary {
+                    reviews: 0,
+                    time_spent_seconds: 0,
+                    new_cards: vec![],
+                    learned_cards: vec![],
+                    locked_in_cards: vec![],
+                    reviewed_words: vec![],
+                    recall_percent: None,
+                    day_of_week: current_day.format("%A").to_string(),
+                };
+            }
+        };
+
+        let total = today.remembered + today.forgot;
+        let recall_percent = if total > 0 {
+            Some((today.remembered as f64 / total as f64 * 100.0) as u32)
+        } else {
+            None
+        };
+        let day_of_week = today.day.format("%A").to_string();
+
+        let resolve_card_text = |card: &CardIndicator<SpurGram, Spur>| -> String {
+            match card {
+                CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => {
+                    language_pack
+                        .gram_rodeo
+                        .resolve(gram)
+                        .resolve(&language_pack.string_rodeo)
+                        .to_display_string(self.context.course.target_language)
+                }
+                CardIndicator::LetterPronunciation { pattern, .. } => {
+                    format!("[{}]", language_pack.string_rodeo.resolve(pattern))
+                }
+            }
+        };
+
+        let resolve_translation = |card: &CardIndicator<SpurGram, Spur>| -> String {
+            let gram = match card {
+                CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => gram,
+                _ => return String::new(),
+            };
+            match language_pack.gram_definitions.get(gram) {
+                Some(language_utils::GramDefinition::Dictionary(dict)) => dict
+                    .definitions
+                    .first()
+                    .map(|d| d.native.clone())
+                    .unwrap_or_default(),
+                Some(language_utils::GramDefinition::Phrasebook(pb)) => pb.meaning.clone(),
+                None => String::new(),
+            }
+        };
+
+        let resolve_card_type = |card: &CardIndicator<SpurGram, Spur>| -> String {
+            match card {
+                CardIndicator::WrittenGram { .. } => "reading".to_string(),
+                CardIndicator::ListeningGram { .. } => "listening".to_string(),
+                CardIndicator::LetterPronunciation { .. } => "pronunciation".to_string(),
+            }
+        };
+
+        let to_new_card = |card: &CardIndicator<SpurGram, Spur>| TodayNewCard {
+            word: resolve_card_text(card),
+            translation: resolve_translation(card),
+            card_type: resolve_card_type(card),
+        };
+
+        let new_cards: Vec<TodayNewCard> = today.new_cards.iter().map(to_new_card).collect();
+
+        let learned_cards: Vec<TodayNewCard> = today
+            .learned_cards
+            .iter()
+            .filter(|card| !today.new_cards.contains(card))
+            .map(to_new_card)
+            .collect();
+
+        let locked_in_cards: Vec<TodayNewCard> = today
+            .locked_in_cards
+            .iter()
+            .filter(|card| !today.new_cards.contains(card))
+            .map(to_new_card)
+            .collect();
+
+        let reviewed_words = today.reviewed_cards.iter().map(resolve_card_text).collect();
+
+        TodaySummary {
+            reviews: today.reviews,
+            time_spent_seconds: today.time_spent_seconds,
+            new_cards,
+            learned_cards,
+            locked_in_cards,
+            reviewed_words,
+            recall_percent,
+            day_of_week,
+        }
+    }
+
+    fn get_current_week_progress_on(&self, today: chrono::NaiveDate) -> Vec<DayProgress> {
+        use chrono::Datelike;
+        let weekday_from_monday = today.weekday().num_days_from_monday() as i64;
+        let monday = today - chrono::Duration::days(weekday_from_monday);
+        let target = self.daily_review_target.target_seconds();
+
+        (0..7)
+            .map(|offset| {
+                let date = monday + chrono::Duration::days(offset);
+                let day_index = date.num_days_from_ce() as i64;
+                let summary = self.stats.past_days.get(&day_index);
+                let seconds = summary.map_or(0, |s| s.time_spent_seconds);
+                let reviews = summary.map_or(0, |s| s.reviews);
+                let new_cards = summary.map_or(0, |s| s.new_cards);
+                let learned_cards = summary.map_or(0, |s| s.learned_cards);
+                let locked_in_cards = summary.map_or(0, |s| s.locked_in_cards);
+                DayProgress {
+                    weekday: date.weekday().num_days_from_monday() as u8,
+                    seconds,
+                    target_seconds: target,
+                    reviews,
+                    new_cards,
+                    learned_cards,
+                    locked_in_cards,
+                    met_goal: target > 0 && seconds >= target,
+                    is_today: date == today,
+                    is_future: date > today,
+                }
+            })
+            .collect()
+    }
+
+    fn get_daily_streak_on(&self, today: chrono::NaiveDate) -> u32 {
+        match &self.stats.daily_streak {
+            None => 0,
+            Some(streak) => {
+                let days_since_active = (today - streak.last_active_day).num_days();
+
+                if days_since_active <= 1 {
+                    streak.streak_count
+                } else {
+                    0
+                }
+            }
+        }
+    }
+
+    fn get_today_time_spent_on(&self, current_day: chrono::NaiveDate) -> u32 {
+        self.stats
+            .today
+            .as_ref()
+            .filter(|today| today.day == current_day)
+            .map_or(0, |today| today.time_spent_seconds)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -5233,6 +5243,113 @@ mod tests {
             }
         }
         deck
+    }
+
+    #[test]
+    fn idle_screen_selects_empty_exhausted_and_future_branches() {
+        let now = Utc::now();
+        let timestamp = now.timestamp_millis() as f64;
+        let deck = Deck::default();
+        let IdleScreenView::Idle(first) =
+            deck.idle_screen_view(vec![], None, true, true, timestamp)
+        else {
+            panic!("expected idle")
+        };
+        assert_eq!(first.kind, IdleKind::FirstRun);
+        assert!(first.info.smart_add_event.is_some());
+        assert!(!first.manual_add_options.is_empty());
+        let IdleScreenView::Idle(exhausted) = deck.idle_screen_view(
+            vec![
+                ChallengeRequirements::Text,
+                ChallengeRequirements::Listening,
+                ChallengeRequirements::Speaking,
+            ],
+            None,
+            false,
+            false,
+            timestamp,
+        ) else {
+            panic!("expected idle")
+        };
+        assert_eq!(exhausted.kind, IdleKind::NothingToDo);
+        assert!(exhausted.info.smart_add_event.is_none());
+
+        let deck = deck_with_n_due_cards(1, now - chrono::Duration::hours(1));
+        let cards = deck.get_review_info(vec![], timestamp).due_cards;
+        let future =
+            review_cards_to_future(deck.clone(), &cards, now - chrono::Duration::minutes(10));
+        let IdleScreenView::Idle(caught_up) =
+            future.idle_screen_view(vec![], None, true, true, timestamp)
+        else {
+            panic!("expected idle")
+        };
+        assert_eq!(caught_up.kind, IdleKind::AllCaughtUp);
+        assert!(caught_up.next_due.is_some());
+        let card = cards[0].resolve(
+            &deck.context.language_pack.string_rodeo,
+            &deck.context.language_pack.gram_rodeo,
+        );
+        let event = deck.review_card(card, Rating::Easy).unwrap();
+        let known = apply_deck_event(deck, event, now);
+        let IdleScreenView::Idle(more) =
+            known.idle_screen_view(vec![], None, true, true, timestamp)
+        else {
+            panic!("expected idle")
+        };
+        assert_eq!(more.kind, IdleKind::NeedsMoreCards);
+    }
+
+    #[test]
+    fn accomplishment_snapshot_uses_its_requested_local_day() {
+        let now = Utc::now();
+        let mut deck = deck_with_n_due_cards(1, now);
+        deck.accomplishment = Some(Accomplishment::DailyGoalReached);
+        let today = deck.stats.today.as_mut().unwrap();
+        today.time_spent_seconds = 300;
+        let snapshot = deck
+            .accomplishment_view(now.timestamp_millis() as f64)
+            .unwrap();
+        assert_eq!(snapshot.today.time_spent_seconds, 300);
+        assert_eq!(snapshot.target_language, Language::French);
+        assert_eq!(snapshot.goals.len(), get_daily_goal_options().len());
+        assert_eq!(snapshot.days.iter().filter(|day| day.is_today).count(), 1);
+        assert!(
+            deck.accomplishment_view((now + chrono::Duration::days(1)).timestamp_millis() as f64)
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn idle_screen_release_plan_and_completion() {
+        let now = Utc::now();
+        let timestamp = now.timestamp_millis() as f64;
+        let deck = deck_with_n_due_cards(25, now - chrono::Duration::days(1));
+        let offer = deck.get_lockup_offer(vec![], timestamp).unwrap();
+        let deck = apply_deck_event(
+            deck,
+            offer.lock_event(),
+            now - chrono::Duration::minutes(20),
+        );
+        assert!(matches!(
+            deck.idle_screen_view(vec![], None, true, true, timestamp),
+            IdleScreenView::ReviewPlanOffer(_)
+        ));
+        let cards = deck.get_review_info(vec![], timestamp).due_cards;
+        let deck = review_cards_to_future(deck, &cards, now - chrono::Duration::minutes(10));
+        let IdleScreenView::StudyPlanComplete { title, plan, .. } =
+            deck.idle_screen_view(vec![], None, true, true, timestamp)
+        else {
+            panic!("expected completed plan")
+        };
+        assert!(title.starts_with("You completed the study plan in "));
+        assert_eq!(plan.cards.len(), 10);
+        let released = apply_deck_event(deck.clone(), plan.event, now);
+        assert_eq!(released.locked_count(), 0);
+        let old_plan = (now + chrono::Duration::hours(37)).timestamp_millis() as f64;
+        assert!(matches!(
+            deck.idle_screen_view(vec![], None, true, true, old_plan),
+            IdleScreenView::ReviewPlanOffer(_)
+        ));
     }
 
     #[test]

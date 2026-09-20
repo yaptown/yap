@@ -22,17 +22,14 @@ import {
 } from "react-router-dom";
 import {
   Deck,
-  type Accomplishment,
   type DeckEvent,
   type Challenge,
   type ChallengeRequirements,
   type Course,
-  type DailyReviewTarget,
   type Heteronym,
   type Language,
   type LiteralGrades,
   type Gram,
-  type MovieMetadataBasic,
   type PartGraded,
   type Rating,
   get_audio_cache_version,
@@ -491,7 +488,6 @@ function ReviewPage() {
                     deck={deck}
                     targetLanguage={targetLanguage}
                     nativeLanguage={nativeLanguage}
-                    moviesWithMetadata={moviesWithMetadata}
                     startingFresh={startingFresh}
                     historyKnown={historyKnown}
                     autoplayed={autoplayed}
@@ -766,19 +762,12 @@ function LeechesPage() {
   );
 }
 
-interface MovieWithMetadata extends MovieMetadataBasic {
-  percent_known: number;
-  all_available_learned: boolean;
-  cards_to_next_milestone: number | null | undefined;
-}
-
 interface ReviewProps {
   userInfo: UserInfo | undefined;
   accessToken: string | undefined;
   deck: Deck;
   targetLanguage: Language;
   nativeLanguage: Language;
-  moviesWithMetadata: MovieWithMetadata[];
   startingFresh: boolean | undefined;
   historyKnown: boolean;
   autoplayed: boolean;
@@ -810,7 +799,6 @@ function Review({
   deck,
   targetLanguage,
   nativeLanguage,
-  moviesWithMetadata,
   startingFresh,
   historyKnown,
   autoplayed,
@@ -830,7 +818,9 @@ function Review({
 
   const totalReviewsCompleted = deck.get_total_reviews();
 
-  const accomplishment: Accomplishment | undefined = deck.get_accomplishment();
+  // eslint-disable-next-line react-hooks/purity -- point-in-time snapshot, refreshed with the review screen
+  const now = Date.now();
+  const accomplishment = deck.accomplishment_view(now);
   const [dismissedAccomplishmentAtReview, setDismissedAccomplishmentAtReview] =
     useState<bigint | null>(null);
   const dismissedAccomplishment =
@@ -849,22 +839,9 @@ function Review({
     return () => clearTimeout(timer);
   }, [accomplishment, dismissedAccomplishment, totalReviewsCompleted]);
 
-  const now = Date.now();
   const nextDueCard =
     deck.get_all_cards_summary().find((card) => card.due_timestamp_ms > now) ??
     null;
-
-  // Filter movies to target language for sentence list selector
-  const targetLanguageIso = languageToIso6391(targetLanguage);
-  const targetLanguageMovies = useMemo(() => {
-    return moviesWithMetadata.filter(
-      (m) => m.original_language === targetLanguageIso,
-    );
-  }, [moviesWithMetadata, targetLanguageIso]);
-
-  const hasPimsleur = useMemo(() => {
-    return deck.get_pimsleur_stats().length > 0;
-  }, [deck]);
 
   useEffect(() => {
     if (accessToken && userInfo?.id) {
@@ -926,7 +903,7 @@ function Review({
       reviewInfo: deck.get_review_info(bannedChallengeTypes, now),
       // The daily lockup offer: when a review backlog builds up, keep the
       // most-due cards active and set the rest aside
-      lockupOffer: deck.get_lockup_offer(bannedChallengeTypes, now),
+      lockupOffer: deck.lockup_screen_view(bannedChallengeTypes, now),
     };
     // cardsBecameDue, audioCacheVersion, and clipManifestVersion are
     // intentionally included to trigger recalculation when cards become due,
@@ -1016,16 +993,6 @@ function Review({
     },
     [weapon],
   );
-
-  const addSmartCards = useCallback(() => {
-    const info = deck.get_no_cards_ready_info(
-      bannedChallengeTypes,
-      sentenceListSelection,
-    );
-    if (info.smart_add_event) {
-      weapon.add_deck_event(info.smart_add_event);
-    }
-  }, [deck, weapon, bannedChallengeTypes, sentenceListSelection]);
 
   const handleRating = async (rating: Rating) => {
     if (
@@ -1151,33 +1118,6 @@ function Review({
     );
   };
 
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      // Don't handle shortcuts if user is typing in an input field
-      const target = event.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT"
-      ) {
-        return;
-      }
-
-      if (event.code === "Space" || event.code === "Enter") {
-        if (deck.num_cards_added() === 0) {
-          event.preventDefault();
-          addSmartCards();
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [addSmartCards, deck]);
-
   const reviewPrompts = get_review_prompts(
     totalReviewsCompleted,
     reviewInfo.total_count,
@@ -1215,8 +1155,6 @@ function Review({
         ) : lockupOffer ? (
           <LockupOfferScreen
             offer={lockupOffer}
-            deck={deck}
-            targetLanguage={targetLanguage}
             onAccept={addEvent}
           />
         ) : reviewPrompts.offer_display_name ? (
@@ -1231,31 +1169,24 @@ function Review({
           />
         ) : accomplishment && !dismissedAccomplishment ? (
           <AccomplishmentScreen
-            deck={deck}
-            targetLanguage={targetLanguage}
-            dailyReviewTarget={deck.get_daily_review_target_setting()}
-            onChangeDailyReviewTarget={(target: DailyReviewTarget) => {
-              const event = deck.set_daily_review_target(target);
-              weapon.add_deck_event(event);
-            }}
+            view={accomplishment}
+            addEvent={addEvent}
             onDismiss={() =>
               setDismissedAccomplishmentAtReview(totalReviewsCompleted)
             }
           />
         ) : reviewInfo.due_count === 0 && !currentChallenge ? (
           <NoCardsReady
-            nextDueCard={nextDueCard}
+            view={deck.idle_screen_view(bannedChallengeTypes, sentenceListSelection, network.online === true, userInfo !== undefined, now)}
+            undoRestrictions={() => {
+              localStorage.removeItem("yap-cant-listen-timestamp");
+              localStorage.removeItem("yap-cant-speak-timestamp");
+              setBannedChallengeTypes([]);
+            }}
             addEvent={addEvent}
             showEngagementPrompts={reviewPrompts.offer_engagement}
-            targetLanguage={targetLanguage}
             deck={deck}
-            bannedChallengeTypes={bannedChallengeTypes}
-            audioPendingCount={reviewInfo.due_but_audio_pending_count}
-            userInfo={userInfo}
-            sentenceList={sentenceList}
             setSentenceList={setSentenceList}
-            moviesWithMetadata={targetLanguageMovies}
-            hasPimsleur={hasPimsleur}
           />
         ) : currentChallenge ? (
           <ChallengeView

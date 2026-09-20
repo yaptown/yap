@@ -10,7 +10,7 @@ pub enum SentenceListCategory {
 }
 
 #[bridgerton::bridge(transparent)]
-#[derive(serde::Serialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SentenceListNavigation {
     pub categories: Vec<SentenceListCategory>,
     pub selection: Option<SentenceListSelection>,
@@ -45,7 +45,7 @@ pub fn get_sentence_list_navigation(
 }
 
 #[bridgerton::bridge(transparent)]
-#[derive(serde::Serialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SentenceListProgress {
     pub percent_known: f64,
     pub all_available_learned: bool,

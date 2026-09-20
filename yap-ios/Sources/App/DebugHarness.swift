@@ -7,7 +7,10 @@ import Observation
 /// may receive test review/add events. No credentials are written to disk or logs.
 @Observable @MainActor final class DebugHarness {
     static let shared = DebugHarness()
-    var fixture: ChallengeFixture?
+    var fixture: Fixture?
+    var challengeFixture: ChallengeFixture? {
+        if case let .Challenge(view) = fixture { view } else { nil }
+    }
     var fixtureName = ""
     var command = ""
     var commandID = 0
@@ -21,7 +24,7 @@ import Observation
         let prior = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
         try? (prior + text + "\n").write(to: url, atomically: true, encoding: .utf8)
     }
-    static func dumpFixture(_ fixture: ChallengeFixture, name: String) {
+    static func dumpFixture(_ fixture: Fixture, name: String) {
         guard !name.isEmpty, name.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "-" }) else {
             log("invalid fixture name"); return
         }
@@ -29,7 +32,7 @@ import Observation
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent("fixtures")
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             let url = directory.appendingPathComponent(name + ".json")
-            try challenge_fixture_json(fixture: fixture).write(to: url, atomically: true, encoding: .utf8)
+            try fixture_json(fixture: fixture).write(to: url, atomically: true, encoding: .utf8)
             log("fixture written \(url.path)")
         } catch { log("fixture write failed: \(error)") }
     }
@@ -39,7 +42,7 @@ import Observation
         if let i = args.firstIndex(of: "--fixture"), args.count > i + 1 {
             let url = URL(fileURLWithPath: args[i + 1])
             do {
-                fixture = try parse_challenge_fixture(json: String(contentsOf: url, encoding: .utf8))
+                fixture = try parse_fixture(json: String(contentsOf: url, encoding: .utf8))
                 fixtureName = url.deletingPathExtension().lastPathComponent
             } catch { Self.log("fixture failed: \(error)") }
         }

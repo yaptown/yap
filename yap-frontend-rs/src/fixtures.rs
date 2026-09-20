@@ -1,6 +1,8 @@
 #[cfg(feature = "fixtures")]
 use crate::Deck;
-use crate::{Challenge, Gram, TranscriptionState, TranslationState};
+use crate::{
+    AccomplishmentView, Challenge, Gram, IdleScreenView, TranscriptionState, TranslationState,
+};
 
 /// A captured challenge with its live reducer snapshot.
 #[bridgerton::bridge(transparent)]
@@ -12,16 +14,26 @@ pub struct ChallengeFixture {
     pub translation: Option<TranslationState>,
 }
 
+/// A captured screen; the nested view keeps screen and challenge tags distinct.
+#[bridgerton::bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type", content = "view")]
+pub enum Fixture {
+    Challenge(Box<ChallengeFixture>),
+    Idle(Box<IdleScreenView>),
+    Accomplishment(Box<AccomplishmentView>),
+}
+
 #[cfg(any(feature = "fixtures", test))]
 #[bridgerton::bridge]
-pub fn parse_challenge_fixture(json: String) -> Result<ChallengeFixture, bridgerton::Error> {
+pub fn parse_fixture(json: String) -> Result<Fixture, bridgerton::Error> {
     serde_json::from_str(&json).map_err(|error| bridgerton::Error::new(error.to_string()))
 }
 
 #[cfg(any(feature = "fixtures", test))]
 #[bridgerton::bridge]
-pub fn challenge_fixture_json(fixture: ChallengeFixture) -> String {
-    serde_json::to_string_pretty(&fixture).expect("challenge fixtures are JSON serializable")
+pub fn fixture_json(fixture: Fixture) -> String {
+    serde_json::to_string_pretty(&fixture).expect("screen fixtures are JSON serializable")
 }
 
 #[cfg(test)]
@@ -30,23 +42,25 @@ mod tests {
 
     #[test]
     fn captured_fixtures_round_trip() {
-        let directory =
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures/challenges");
+        let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures");
         let mut count = 0;
-        for entry in std::fs::read_dir(directory).unwrap() {
+        for entry in ["challenges", "screens"]
+            .into_iter()
+            .flat_map(|name| std::fs::read_dir(directory.join(name)).unwrap())
+        {
             let path = entry.unwrap().path();
             if path
                 .extension()
                 .is_some_and(|extension| extension == "json")
             {
-                let json = std::fs::read_to_string(path).unwrap();
-                let fixture = parse_challenge_fixture(json.clone()).unwrap();
-                let encoded = challenge_fixture_json(fixture);
+                count += 1;
+                let json = std::fs::read_to_string(&path).unwrap();
+                let fixture = parse_fixture(json.clone()).unwrap();
+                let encoded = fixture_json(fixture);
                 assert_eq!(
                     serde_json::from_str::<serde_json::Value>(&json).unwrap(),
                     serde_json::from_str::<serde_json::Value>(&encoded).unwrap()
                 );
-                count += 1;
             }
         }
         assert!(count > 0, "capture at least one challenge fixture");

@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type {
   CardSummary,
-  Deck,
+  DayProgress,
   DeckEvent,
   Language,
-  LockupOffer,
+  ReviewPlanView,
 } from "../../../yap-frontend-rs/pkg";
 import { TargetLanguageText } from "./TargetLanguageText";
 import { WeekProgressStrip } from "./WeekProgressStrip";
@@ -21,7 +21,7 @@ interface ReviewPlanCardProps {
   cards: CardSummary[];
   buttonLabel: string;
   onCommit: () => void;
-  deck: Deck;
+  week: DayProgress[];
   targetLanguage: Language;
 }
 
@@ -33,7 +33,7 @@ export function ReviewPlanCard({
   cards,
   buttonLabel,
   onCommit,
-  deck,
+  week,
   targetLanguage,
 }: ReviewPlanCardProps) {
   const byType = new Map<string, CardSummary[]>();
@@ -76,15 +76,13 @@ export function ReviewPlanCard({
         </Button>
       </Card>
 
-      <WeekProgressStrip deck={deck} className="mt-auto mb-2" />
+      <WeekProgressStrip week={week} className="mt-auto mb-2" />
     </div>
   );
 }
 
 interface LockupOfferScreenProps {
-  offer: LockupOffer;
-  deck: Deck;
-  targetLanguage: Language;
+  offer: ReviewPlanView;
   onAccept: (event: DeckEvent) => void;
 }
 
@@ -92,13 +90,10 @@ interface LockupOfferScreenProps {
 /// due cards active and sets the rest aside ("lockup").
 export function LockupOfferScreen({
   offer,
-  deck,
-  targetLanguage,
   onAccept,
 }: LockupOfferScreenProps) {
-  // wasm getters clone on every access, so read them once
-  const preview = offer.keep_preview;
-  const lockEvent = offer.lock_event;
+  const preview = offer.cards;
+  const lockEvent = offer.event;
 
   return (
     <ReviewPlanCard
@@ -106,8 +101,8 @@ export function LockupOfferScreen({
       cards={preview}
       buttonLabel="Let's go!"
       onCommit={() => onAccept(lockEvent)}
-      deck={deck}
-      targetLanguage={targetLanguage}
+      week={offer.week}
+      targetLanguage={offer.target_language}
     />
   );
 }

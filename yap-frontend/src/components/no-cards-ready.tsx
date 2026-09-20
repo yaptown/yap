@@ -1,14 +1,14 @@
-import { get_idle_study_state, next_progress_milestone, get_sentence_list_navigation, type SentenceListCategory } from "../../../yap-frontend-rs/pkg";
+import { next_progress_milestone } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button";
 import TimeAgo from "react-timeago";
 import { EngagementPrompts } from "@/components/engagement-prompts";
 import type {
   CardSummary,
-  ChallengeRequirements,
+  IdleScreenView,
+  IdleView,
   DeckEvent,
   Deck,
   Language,
-  ManualAddOption,
   MovieMetadataBasic,
 } from "../../../yap-frontend-rs/pkg";
 import {
@@ -32,13 +32,12 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import type { UserInfo } from "@/App";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { Poster } from "@/components/Poster";
 import { TargetLanguageText } from "./TargetLanguageText";
 import { ReviewPlanCard } from "./LockupOffer";
 import { WeekProgressStrip } from "./WeekProgressStrip";
-import { sentenceListSelectionToSentenceList, sentenceListToSelection, type SentenceList } from "@/hooks/useSentenceList";
+import { sentenceListSelectionToSentenceList, type SentenceList } from "@/hooks/useSentenceList";
 import { useNavigate } from "react-router-dom";
 
 export interface MovieWithMetadata extends MovieMetadataBasic {
@@ -48,97 +47,67 @@ export interface MovieWithMetadata extends MovieMetadataBasic {
 }
 
 interface NoCardsReadyProps {
-  nextDueCard: CardSummary | null;
+  view: IdleScreenView;
   showEngagementPrompts: boolean;
   addEvent: (event: DeckEvent) => void;
-  targetLanguage: Language;
+  undoRestrictions: () => void;
   deck: Deck;
-  bannedChallengeTypes: ChallengeRequirements[];
-  /// Due cards held back because their audio hasn't downloaded yet — they'll
-  /// appear as challenges once the background prefetcher catches up.
-  audioPendingCount: number;
-  userInfo: UserInfo | undefined;
-  sentenceList: SentenceList;
   setSentenceList: (sentenceList: SentenceList) => void;
-  moviesWithMetadata: MovieWithMetadata[];
-  hasPimsleur: boolean;
 }
 
-export const NoCardsReady = memo(function NoCardsReady({
-  nextDueCard,
-  showEngagementPrompts,
-  addEvent,
-  targetLanguage,
-  deck,
-  bannedChallengeTypes,
-  audioPendingCount,
-  userInfo,
-  sentenceList,
-  setSentenceList,
-  moviesWithMetadata,
-  hasPimsleur,
-}: NoCardsReadyProps) {
-  const navigate = useNavigate();
-  const [pimsleurAcknowledged, setPimsleurAcknowledged] = useState(
-    () => localStorage.getItem("yap-pimsleur-acknowledged") === "true",
-  );
-  const sentenceListSelection = useMemo(() => sentenceListToSelection(sentenceList), [sentenceList]);
-
-  // One memoized call that does the expensive next_unknown_cards computation
-  const info = useMemo(
-    () => deck.get_no_cards_ready_info(bannedChallengeTypes, sentenceListSelection),
-    [deck, bannedChallengeTypes, sentenceListSelection],
-  );
-
-  // Manual add options — computed lazily on dropdown open
-  const [manualAddOptions, setManualAddOptions] = useState<ManualAddOption[]>([]);
-  const loadManualAddOptions = useCallback(() => {
-    if (manualAddOptions.length > 0) return;
-    const options = deck.get_manual_add_options(sentenceListSelection, userInfo !== undefined);
-    setManualAddOptions(options);
-  }, [deck, sentenceListSelection, userInfo, manualAddOptions.length]);
-
-  const addSmartCards = useCallback(() => {
-    if (info.smart_add_event) {
-      addEvent(info.smart_add_event);
-    }
-  }, [info.smart_add_event, addEvent]);
-
-  // While any locked cards are DUE, adding new cards is suppressed and
-  // replaced by releasing the next batch from lockup. Locked cards scheduled
-  // for the future don't trigger this — they're morally just future cards.
-  // nextDueCard is a fresh object every parent render, so this re-evaluates
-  // as time passes (e.g. when a locked card comes due).
-  const releaseOffer = useMemo(
-    // eslint-disable-next-line react-hooks/purity -- point-in-time check; re-evaluated as the parent re-renders
-    () => deck.get_release_offer(Date.now()),
-    [deck, nextDueCard], // eslint-disable-line react-hooks/exhaustive-deps
-  );
-  const releaseLockedCards = useCallback(() => {
-    if (releaseOffer) {
-      addEvent(releaseOffer.unlock_event);
-    }
-  }, [releaseOffer, addEvent]);
-  // Shortly after accepting a plan, show its completion screen before offering
-  // another plan. Older plans go straight to the next plan.
+export const NoCardsReady = memo(function NoCardsReady(props: NoCardsReadyProps) {
+  const { view, deck, addEvent } = props;
   const [showReleasePlan, setShowReleasePlan] = useState(false);
-  // eslint-disable-next-line react-hooks/purity -- point-in-time check; parent re-renders every minute
-  const recentlyAcceptedStudyPlan = deck.study_plan_was_recently_accepted(Date.now());
-  const releasePlanShown =
-    releaseOffer !== undefined &&
-    (deck.get_today_time_spent() === 0 ||
-      !recentlyAcceptedStudyPlan ||
-      showReleasePlan);
-  const nextDueSoon = useMemo(
-    () =>
-      nextDueCard !== null &&
-      // eslint-disable-next-line react-hooks/purity -- point-in-time check; parent re-renders every minute
-      nextDueCard.due_timestamp_ms - Date.now() < 30 * 60 * 1000,
-    [nextDueCard],
-  );
+  const plan = view.type === "ReviewPlanOffer" ? view : view.type === "StudyPlanComplete" ? view.plan : undefined;
+  useEffect(() => {
+    if (!plan) return;
+    const key = (event: KeyboardEvent) => {
+      if ((event.target as HTMLElement).closest("input, textarea, select, button")) return;
+      if (event.code !== "Space" && event.code !== "Enter") return;
+      event.preventDefault();
+      if (view.type === "StudyPlanComplete" && !showReleasePlan) setShowReleasePlan(true);
+      else addEvent(plan.event);
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [plan, view.type, showReleasePlan, addEvent]);
+  switch (view.type) {
+    case "AudioPending": return (
+      <div className="flex flex-col flex-1 gap-4 pt-4">
+        <div className="flex flex-col gap-2 text-center">
+          <p className="text-2xl font-bold">Just a moment…</p>
+          <p className="text-muted-foreground">Downloading the audio for your next challenge.</p>
+          {!view.online && <p>Reconnect to download audio.</p>}
+        </div>
+        <div className="flex justify-center py-4"><LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        <WeekProgressStrip week={view.week} className="mt-auto mb-2" />
+      </div>
+    );
+    case "StudyPlanComplete":
+      if (!showReleasePlan) return (
+        <div className="flex flex-col flex-1 gap-4 pt-4">
+          <div className="flex flex-col gap-2 text-center">
+            <p className="text-2xl font-bold">{view.title}</p>
+            {view.next_due && <NextReviewLine nextDueCard={view.next_due} targetLanguage={view.plan.target_language} />}
+          </div>
+          <div className="flex justify-center"><Button onClick={() => setShowReleasePlan(true)} size="lg" variant="outline">Study more</Button></div>
+          <WeekProgressStrip week={view.plan.week} className="mt-auto mb-2" />
+        </div>
+      );
+      return <ReviewPlanCard title="Today's review plan:" cards={view.plan.cards} buttonLabel="Let's go!" onCommit={() => addEvent(view.plan.event)} week={view.plan.week} targetLanguage={view.plan.target_language} />;
+    case "ReviewPlanOffer": return <ReviewPlanCard title="Today's review plan:" cards={view.cards} buttonLabel="Let's go!" onCommit={() => addEvent(view.event)} week={view.week} targetLanguage={view.target_language} />;
+    case "Idle": return <IdleContent {...props} view={view} deck={deck} />;
+  }
+});
 
+function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, deck, setSentenceList }: Omit<NoCardsReadyProps, "view"> & { view: IdleView }) {
+  const navigate = useNavigate();
+  const [pimsleurAcknowledged, setPimsleurAcknowledged] = useState(() => localStorage.getItem("yap-pimsleur-acknowledged") === "true");
+  const targetLanguage = view.target_language;
+  const info = view.info;
+  const manualAddOptions = view.manual_add_options;
+  const addSmartCards = useCallback(() => { if (info.smart_add_event) addEvent(info.smart_add_event); }, [info.smart_add_event, addEvent]);
   const showLightWorkloadNotification = info.recommend_more_cards;
-
   const targetLanguageSpan = (
     <span style={{ fontWeight: "bold" }}>{targetLanguage} → English</span>
   );
@@ -149,56 +118,20 @@ export const NoCardsReady = memo(function NoCardsReady({
     <span style={{ fontWeight: "bold" }}>{targetLanguage} pronunciation</span>
   );
 
-  const {
-    no_schedulable_cards: noSchedulableCards,
-    nothing_to_do: nothingToDo,
-    has_never_studied: hasNeverStudied,
-  } = get_idle_study_state(nextDueCard !== null, deck.num_cards_added(), info.smart_add_count);
-
-  // Keyboard shortcut to add cards
+  const nothingToDo = view.kind === "NothingToDo";
+  const hasNeverStudied = view.kind === "FirstRun";
+  const noSchedulableCards = view.kind !== "AllCaughtUp";
   useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT"
-      ) {
-        return;
-      }
-
-      if (event.code === "Space" || event.code === "Enter") {
-        if (releaseOffer) {
-          event.preventDefault();
-          if (releasePlanShown) {
-            releaseLockedCards();
-          } else {
-            setShowReleasePlan(true);
-          }
-        } else if (info.smart_add_event) {
-          event.preventDefault();
-          addSmartCards();
-        }
+    const key = (event: KeyboardEvent) => {
+      if ((event.target as HTMLElement).closest("input, textarea, select, button")) return;
+      if ((event.code === "Space" || event.code === "Enter") && info.smart_add_event) {
+        event.preventDefault(); addSmartCards();
       }
     };
-
-    window.addEventListener("keydown", handleKeyPress);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [
-    addSmartCards,
-    info.smart_add_event,
-    releaseOffer,
-    releaseLockedCards,
-    releasePlanShown,
-  ]);
-
-  const navigation = useMemo(
-    () => get_sentence_list_navigation(sentenceListSelection, moviesWithMetadata.length > 0, hasPimsleur),
-    [sentenceListSelection, moviesWithMetadata, hasPimsleur],
-  );
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [info.smart_add_event, addSmartCards]);
+  const navigation = view.navigation;
   const categories = navigation.categories;
   const effectiveIndex = navigation.selected_index;
   const effectiveSentenceList = sentenceListSelectionToSentenceList(navigation.selection);
@@ -206,36 +139,18 @@ export const NoCardsReady = memo(function NoCardsReady({
   const canGoLeft = effectiveIndex > 0;
   const canGoRight = effectiveIndex < categories.length - 1;
 
-  const sentenceListForCategory = (category: SentenceListCategory): SentenceList =>
-    sentenceListSelectionToSentenceList(deck.get_sentence_list_for_category(category, moviesWithMetadata[0]?.id));
-
   const navigateSentenceList = (direction: "left" | "right") => {
     const nextIndex =
       direction === "left" ? effectiveIndex - 1 : effectiveIndex + 1;
     if (nextIndex >= 0 && nextIndex < categories.length) {
-      setSentenceList(sentenceListForCategory(categories[nextIndex]));
+      setSentenceList(sentenceListSelectionToSentenceList(view.sentence_list_options[nextIndex].selection));
     }
   };
 
   // Sentence list progress info
   const tierInfo = info.tier_info;
-  const { percent_known: sentenceListPercentKnown, all_available_learned: sentenceListDone } =
-    useMemo(() => deck.get_sentence_list_progress(navigation.selection, tierInfo.percent_known),
-      [deck, navigation.selection, tierInfo.percent_known]);
-
-  const sentenceListLabel = (() => {
-    switch (effectiveSentenceList.type) {
-      case "essential":
-        return `${tierInfo.name} ${targetLanguage} Level ${tierInfo.level}`;
-      case "movie":
-        return (
-          moviesWithMetadata.find((m) => m.id === effectiveSentenceList.movieId)
-            ?.title ?? "Movie"
-        );
-      case "pimsleur":
-        return `Pimsleur Level ${effectiveSentenceList.level}, Lesson ${effectiveSentenceList.lesson}`;
-    }
-  })();
+  const { percent_known: sentenceListPercentKnown, all_available_learned: sentenceListDone } = view.progress;
+  const sentenceListLabel = view.sentence_list_label;
 
   const thresholdTarget = next_progress_milestone(sentenceListPercentKnown, info.percent_known_after) ?? null;
 
@@ -250,112 +165,16 @@ export const NoCardsReady = memo(function NoCardsReady({
     }
   })();
 
-  // Due challenges exist but their audio hasn't downloaded yet (the review
-  // screen only offers challenges the user can actually complete). This
-  // normally resolves within seconds as the background prefetcher lands
-  // clips — but it can persist offline, which is why it explains itself
-  // rather than showing a bare spinner.
-  if (audioPendingCount > 0) {
-    return (
-      <div className="flex flex-col flex-1 gap-4 pt-4">
-        <div className="flex flex-col gap-2 text-center">
-          <p className="text-2xl font-bold">Just a moment…</p>
-          <p className="text-muted-foreground">
-            Downloading the audio for your next challenge.
-          </p>
-        </div>
-        <div className="flex justify-center py-4">
-          <LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-        <WeekProgressStrip deck={deck} className="mt-auto mb-2" />
-      </div>
-    );
-  }
-
-  // While cards remain set aside in lockup, the whole add-cards area is
-  // replaced by releasing the next batch. Never says "all caught up" — that's
-  // only true once nothing is locked. Two phases: a rest screen after today's
-  // reviews, then the same review-plan page as the lockup offer.
-  if (releaseOffer) {
-    const minutesToday = Math.round(deck.get_today_time_spent() / 60);
-    if (releasePlanShown) {
-      return (
-        <ReviewPlanCard
-          title="Today's review plan:"
-          cards={releaseOffer.release_preview}
-          buttonLabel="Let's go!"
-          onCommit={releaseLockedCards}
-          deck={deck}
-          targetLanguage={targetLanguage}
-        />
-      );
-    }
-
-    return (
-      <div className="flex flex-col flex-1 gap-4 pt-4">
-        <div className="flex flex-col gap-2 text-center">
-          <p className="text-2xl font-bold">
-            You completed the study plan in{" "}
-            {minutesToday < 1
-              ? "less than a minute"
-              : `${minutesToday} ${minutesToday === 1 ? "minute" : "minutes"}`}!
-          </p>
-          {nextDueSoon && (
-            <NextReviewLine
-              nextDueCard={nextDueCard}
-              targetLanguage={targetLanguage}
-            />
-          )}
-        </div>
-        <div className="flex justify-center">
-          <Button
-            onClick={() => setShowReleasePlan(true)}
-            size="lg"
-            variant="outline"
-          >
-            Study more
-          </Button>
-        </div>
-        <WeekProgressStrip deck={deck} className="mt-auto mb-2" />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col flex-1 gap-4">
       <div className="text-center py-4">
         <div className="flex flex-col gap-2">
           <p className="text-2xl font-bold">
-            {nothingToDo
-              ? "All done!"
-              : hasNeverStudied
-                ? "Ready to start learning?"
-                : noSchedulableCards
-                  ? info.smart_add_regime === "Easy"
-                    ? "Adding cards is how you learn more!"
-                    : "Ready for more?"
-                  : "All caught up!"}
+            {view.title}
           </p>
-          {nothingToDo ? (
-            <p className="text-muted-foreground">
-              You've learned all available words!
-            </p>
-          ) : hasNeverStudied ? (
-            <p className="text-muted-foreground">
-              We'll start with a couple words you might know.
-            </p>
-          ) : noSchedulableCards ? (
-            <p className="text-muted-foreground">
-              {info.smart_add_regime === "Easy" && info.easy_cards_remaining > 0
-                ? `${info.easy_cards_remaining} more easy ${info.easy_cards_remaining === 1 ? "word" : "words"}, then we'll add harder ones.`
-                : "Add some cards to keep building your vocabulary."}
-            </p>
-          ) : (
-            <NextReviewLine
-              nextDueCard={nextDueCard}
-              targetLanguage={targetLanguage}
-            />
-          )}
+          {view.body ? <p className="text-muted-foreground">{view.body}</p> : <NextReviewLine nextDueCard={view.next_due ?? null} targetLanguage={targetLanguage} />}
+          {view.banned_notice && <><p className="text-muted-foreground">{view.banned_notice}</p><Button variant="outline" onClick={undoRestrictions}>Undo restrictions</Button></>}
+
         </div>
       </div>
 
@@ -459,39 +278,11 @@ export const NoCardsReady = memo(function NoCardsReady({
                     {sentenceListDone ? (
                       (() => {
                         // Show "next lesson" / "next movie" button when sentence list is complete
-                        const nextSentenceList = (() => {
-                          switch (effectiveSentenceList.type) {
-                            case "pimsleur": {
-                              const best = deck.get_best_pimsleur_sentence_list();
-                              if (best && best.type === "PimsleurLesson") {
-                                return {
-                                  sentenceList: {
-                                    type: "pimsleur" as const,
-                                    level: best.level,
-                                    lesson: best.lesson,
-                                  },
-                                  label: "Next lesson",
-                                };
-                              }
-                              return null;
-                            }
-                            case "movie": {
-                              const best = deck.get_best_movie_sentence_list();
-                              if (best && best.type === "Movie") {
-                                return {
-                                  sentenceList: {
-                                    type: "movie" as const,
-                                    movieId: best.id,
-                                  },
-                                  label: "Next movie",
-                                };
-                              }
-                              return null;
-                            }
-                            case "essential":
-                              return null;
-                          }
-                        })();
+                        const nextSentenceList = view.next_sentence_list ? {
+                          sentenceList: sentenceListSelectionToSentenceList(view.next_sentence_list),
+                          label: view.next_sentence_list.type === "Movie" ? "Next movie" : "Next lesson",
+                        } : null;
+
 
                         return nextSentenceList ? (
                           <Button
@@ -535,7 +326,7 @@ export const NoCardsReady = memo(function NoCardsReady({
                             </TooltipContent>
                           )}
                         </Tooltip>
-                        <DropdownMenu onOpenChange={(open) => { if (open) loadManualAddOptions(); }}>
+                        <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="default"
@@ -640,11 +431,11 @@ export const NoCardsReady = memo(function NoCardsReady({
       {showEngagementPrompts && <EngagementPrompts language={targetLanguage} />}
 
       {!noSchedulableCards && (
-        <WeekProgressStrip deck={deck} className="mt-auto mb-2" />
+        <WeekProgressStrip week={view.week} className="mt-auto mb-2" />
       )}
     </div>
   );
-});
+}
 
 /// "You'll review <word> in 2 minutes." / "Your next review is soon."
 function NextReviewLine({

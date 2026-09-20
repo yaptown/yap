@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture the same saved challenges on web and iOS, with a side-by-side gallery."""
+"""Capture the same saved screens on web and iOS, with a side-by-side gallery."""
 import argparse
 import html
 import os
@@ -33,7 +33,7 @@ def main():
     password = os.environ.get("YAP_TEST_USER_PASSWORD")
     if not args.web_only and not password:
         parser.error("Set YAP_TEST_USER_PASSWORD for the iOS test account")
-    fixtures = sorted((ROOT / "fixtures/challenges").glob("*.json"))
+    fixtures = sorted((ROOT / "fixtures").glob("*/*.json"))
     only = args.only.split(",") if args.only else []
     fixtures = [p for p in fixtures if not only or any(p.stem.startswith(o) for o in only)]
     if not fixtures:
@@ -75,7 +75,7 @@ def main():
         name = html.escape(fixture.stem)
         images = "".join(f'<figure><figcaption>{p}</figcaption><img src="{name}-{p}.png"></figure>' for p in platforms)
         rows.append(f"<section><h2>{name}</h2><div>{images}</div></section>")
-    (out / "index.html").write_text("<!doctype html><meta charset='utf-8'><title>Challenge parity</title>"
+    (out / "index.html").write_text("<!doctype html><meta charset='utf-8'><title>Screen parity</title>"
         "<style>body{font-family:system-ui;margin:2rem}section>div{display:flex;gap:1rem}"
         "figure{margin:0;max-width:45%}img{width:100%;max-width:430px}</style>"
         + "".join(rows))

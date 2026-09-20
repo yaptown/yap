@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Both initial lockup and subsequent release offers commit the shared Rust plan.
-struct ReviewPlanView: View {
+struct ReviewPlanScreen: View {
     let cards: [CardSummary]
     let onAccept: () -> Void
     private func group(_ card: CardSummary) -> String {
