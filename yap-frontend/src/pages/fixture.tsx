@@ -2,16 +2,21 @@
 import { useEffect, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { type AppContextType, useDeck } from "@/App";
+import { NoCardsReady } from "@/components/no-cards-ready";
+import { AccomplishmentScreen } from "@/components/AccomplishmentScreen";
 import { ChallengeView } from "@/components/challenges/ChallengeView";
 import type {
   ChallengeFixture,
+  Fixture,
   TranscriptionState,
   TranslationState,
 } from "../../../yap-frontend-rs/pkg";
 
 // Captures use serde JSON; only reducer inputs need a bridge representation.
-function parseFixture(json: string): ChallengeFixture {
-  const fixture = JSON.parse(json) as {
+function parseFixture(json: string): Fixture {
+  const parsed = JSON.parse(json) as Fixture;
+  if (parsed.type !== "Challenge") return parsed;
+  const fixture = parsed.view as unknown as {
     challenge: ChallengeFixture["challenge"];
     translation?: TranslationState | null;
     transcription:
@@ -20,7 +25,7 @@ function parseFixture(json: string): ChallengeFixture {
         })
       | null;
   };
-  return {
+  return { type: "Challenge", view: {
     challenge: fixture.challenge,
     translation: fixture.translation ?? undefined,
     transcription: fixture.transcription
@@ -33,7 +38,7 @@ function parseFixture(json: string): ChallengeFixture {
           ),
         }
       : undefined,
-  };
+  } };
 }
 
 const log = (...args: unknown[]) => console.log("fixture action", ...args);
@@ -44,7 +49,7 @@ export function FixturePage() {
   const deckState = useDeck();
   const [loaded, setLoaded] = useState<{
     name: string;
-    fixture: ChallengeFixture;
+    fixture: Fixture;
   }>();
   const [error, setError] = useState<{
     name: string | undefined;
@@ -72,13 +77,18 @@ export function FixturePage() {
   )
     return <p>Loading fixture…</p>;
   const { deck, targetLanguage, nativeLanguage } = deckState;
+  const fixture = loaded.fixture;
   return (
     <div data-fixture-rendered={name} className="flex flex-col gap-6">
-      <ChallengeView
+      {fixture.type === "Idle" ? (
+        <NoCardsReady key={name} view={fixture.view} deck={deck} addEvent={log} undoRestrictions={log} setSentenceList={log} showEngagementPrompts={false} />
+      ) : fixture.type === "Accomplishment" ? (
+        <AccomplishmentScreen key={name} view={fixture.view} addEvent={log} onDismiss={log} />
+      ) : <ChallengeView
         key={name}
-        challenge={loaded.fixture.challenge}
-        initialState={loaded.fixture.transcription ?? undefined}
-        translationState={loaded.fixture.translation ?? undefined}
+        challenge={fixture.view.challenge}
+        initialState={fixture.view.transcription ?? undefined}
+        translationState={fixture.view.translation ?? undefined}
         deck={deck}
         targetLanguage={targetLanguage}
         nativeLanguage={nativeLanguage}
@@ -92,7 +102,7 @@ export function FixturePage() {
         onTranscriptionComplete={log}
         onCantListen={log}
         onCantSpeak={log}
-      />
+      />}
     </div>
   );
 }

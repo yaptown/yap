@@ -30,18 +30,19 @@ function staticSitePlugin() {
 
 // Captured fixtures are development inputs, never production assets.
 function challengeFixturesPlugin(): Plugin {
-  const directory = path.resolve(__dirname, "../fixtures/challenges");
+  const directories = ["challenges", "screens"].map(name => path.resolve(__dirname, "../fixtures", name));
   return {
     name: "challenge-fixtures",
     apply: "serve",
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if (req.method !== "GET" || !req.url?.startsWith("/__fixtures/")) return next();
-        const names = fs.readdirSync(directory).filter(name => name.endsWith(".json"));
+        const files = new Map(directories.flatMap(directory => fs.readdirSync(directory).filter(name => name.endsWith(".json")).map(name => [name, path.join(directory, name)] as const)));
+        const names = [...files.keys()];
         const name = req.url.slice("/__fixtures/".length);
         res.setHeader("Content-Type", "application/json");
         if (name === "index.json") res.end(JSON.stringify(names.map(name => name.slice(0, -5)).sort()));
-        else if (names.includes(name)) res.end(fs.readFileSync(path.join(directory, name)));
+        else if (names.includes(name)) res.end(fs.readFileSync(files.get(name)!));
         else { res.writeHead(404); res.end(JSON.stringify({ error: "Unknown fixture" })); }
       });
     },

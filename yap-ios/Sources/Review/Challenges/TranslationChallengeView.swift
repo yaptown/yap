@@ -86,7 +86,7 @@ struct TranslationChallengeView: View {
         }
         .onAppear {
             #if DEBUG
-            if let saved = DebugHarness.shared.fixture?.translation { state = saved }
+            if let saved = DebugHarness.shared.challengeFixture?.translation { state = saved }
             #endif
             if let data = storage?.load(Data.self), let saved = try? PendingReview.decode(data, as: TranslationState.self) { state = saved }
             focused = editing
@@ -172,7 +172,7 @@ struct TranslationChallengeView: View {
     private func debugCommand() {
         let command = DebugHarness.shared.command
         if command.hasPrefix("dump-fixture ") {
-            DebugHarness.dumpFixture(ChallengeFixture(challenge: .TranslateComprehensibleSentence(sentence), transcription: nil, translation: state), name: String(command.dropFirst(13)))
+            DebugHarness.dumpFixture(.Challenge(ChallengeFixture(challenge: .TranslateComprehensibleSentence(sentence), transcription: nil, translation: state)), name: String(command.dropFirst(13)))
         }
         if command.hasPrefix("type ") { send(.TextChanged(text: String(command.dropFirst(5)))) }
         if command == "type-reference" { send(.TextChanged(text: sentence.native_translations.first ?? "")) }

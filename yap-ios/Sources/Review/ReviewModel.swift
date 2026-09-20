@@ -15,7 +15,9 @@ enum ReviewStep: String, Hashable {
     var historyKnown: Bool
     private(set) var banned: [ChallengeRequirements] = []
     private(set) var reviewInfo: ReviewInfo
-    private(set) var lockupOffer: LockupOffer?
+    private(set) var idleView: IdleScreenView?
+    private(set) var accomplishmentView: AccomplishmentView?
+    private(set) var lockupOffer: ReviewPlanView?
     private(set) var currentChallenge: Challenge_Gram_String?
     private(set) var submitting = false
     private var tasks: [Task<Void, Never>] = []
@@ -26,6 +28,7 @@ enum ReviewStep: String, Hashable {
     init(deck: Deck, session: YapSession, startingFresh: Bool?, historyKnown: Bool) {
         self.deck = deck; self.session = session; self.startingFresh = startingFresh; self.historyKnown = historyKnown
         reviewInfo = deck.get_review_info(banned_challenge_types: [], timestamp_ms: Self.now)
+        accomplishmentView = deck.accomplishment_view(timestamp_ms: Self.now)
     }
     static var now: Double { Date().timeIntervalSince1970 * 1000 }
     #if DEBUG
@@ -81,12 +84,17 @@ enum ReviewStep: String, Hashable {
         guard active else { return }
         let now = Self.now
         reviewInfo = deck.get_review_info(banned_challenge_types: banned, timestamp_ms: now)
-        lockupOffer = deck.get_lockup_offer(banned_challenge_types: banned, timestamp_ms: now)
+        accomplishmentView = deck.accomplishment_view(timestamp_ms: now)
+        lockupOffer = deck.lockup_screen_view(banned: banned, timestamp_ms: now)
         // Non-nil challenges are held for this Deck's lifetime, even as caches change.
         #if DEBUG
-        if let fixture = DebugHarness.shared.fixture { currentChallenge = fixture.challenge }
+        if DebugHarness.shared.fixture != nil {
+            currentChallenge = DebugHarness.shared.challengeFixture?.challenge
+            return
+        }
         #endif
         if currentChallenge == nil { currentChallenge = reviewInfo.get_next_challenge(deck: deck) }
+        idleView = currentChallenge == nil ? deck.idle_screen_view(banned: banned, sentence_list: deck.get_sentence_list(), online: session.online, is_signed_in: true, timestamp_ms: now) : nil
         prefetch?.cancel()
         prefetch = Task { [deck, banned, session] in
             guard session.online else { return }
@@ -108,6 +116,9 @@ enum ReviewStep: String, Hashable {
         refreshRestrictions()
     }
     func rate(_ indicator: CardIndicator_Gram_String_String, _ rating: Rating) {
+        #if DEBUG
+        guard DebugHarness.shared.fixture == nil else { return }
+        #endif
         guard active, !submitting, let event = deck.review_card(reviewed: indicator, rating: rating) else { return }
         submitting = true
         session.addDeckEvent(event)
@@ -133,6 +144,9 @@ enum ReviewStep: String, Hashable {
         completeSentence(deck.transcribe_sentence(challenge: parts), at: completedAtMs)
     }
     private func completeSentence(_ event: DeckEvent?, at timestamp: Double) -> Bool {
+        #if DEBUG
+        guard DebugHarness.shared.fixture == nil else { return false }
+        #endif
         guard active, !submitting, let event else { return false }
         submitting = true
         session.addDeckEventAt(event, timestampMs: timestamp)

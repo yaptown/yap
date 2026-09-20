@@ -20,7 +20,7 @@ struct ReviewScreen: View {
                 is_online: session.online, is_signed_in: true, needs_display_name: auth.needsDisplayName,
                 display_name_dismissed: displayNameDismissed, has_access_token: auth.accessToken != nil))
         if prompts.offer_display_name { return .setDisplayName }
-        if model.deck.get_accomplishment() != nil, session.dismissedAccomplishmentAtReview != model.deck.get_total_reviews() { return .accomplishment }
+        if model.accomplishmentView != nil, session.dismissedAccomplishmentAtReview != model.deck.get_total_reviews() { return .accomplishment }
         return nil
     }
     var body: some View {
@@ -41,22 +41,20 @@ struct ReviewScreen: View {
                     Text("Sync will retry: \(error)").font(.caption).foregroundStyle(.secondary)
                 }
                 if let error = auth.error { Text(error).font(.caption).foregroundStyle(.secondary) }
-                if let step {
+                if hasFixture {
+                    fixtureView
+                } else if let step {
                     switch step {
                     case .placementTest: PlacementTestView(model: model)
                     case .lockupOffer:
-                        if let offer = model.lockupOffer { ReviewPlanView(cards: offer.keep_preview) { model.session.addDeckEvent(offer.lock_event) } }
+                        if let offer = model.lockupOffer { ReviewPlanScreen(cards: offer.cards) { model.session.addDeckEvent(offer.event) } }
                     case .setDisplayName: SetDisplayNameView(reviewCount: model.deck.get_total_reviews())
-                    case .accomplishment: AccomplishmentView(model: model)
+                    case .accomplishment:
+                        if let view = model.accomplishmentView { AccomplishmentScreen(view: view, addEvent: model.session.addDeckEvent, onDismiss: dismissAccomplishment) }
                     }
                 } else if let challenge = model.currentChallenge {
                     challengeView(challenge).id(challenge)
-                        .onAppear {
-                            #if DEBUG
-                            if DebugHarness.shared.fixture != nil { DebugHarness.log("fixture rendered \(DebugHarness.shared.fixtureName)") }
-                            #endif
-                        }
-                } else { NoCardsReadyView(model: model) }
+                } else if let view = model.idleView { NoCardsReadyView(model: model, view: view) }
             }.padding(12).frame(maxWidth: 600)
             }
         }
@@ -80,6 +78,26 @@ struct ReviewScreen: View {
         .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeTab == .learn else { return }; handleDebugCommand() }
         #endif
     }
+    private func dismissAccomplishment() { model.session.dismissedAccomplishmentAtReview = model.deck.get_total_reviews() }
+    private var hasFixture: Bool {
+        #if DEBUG
+        DebugHarness.shared.fixture != nil
+        #else
+        false
+        #endif
+    }
+    @ViewBuilder private var fixtureView: some View {
+        #if DEBUG
+        Group {
+            switch DebugHarness.shared.fixture {
+            case let .Challenge(view): challengeView(view.challenge)
+            case let .Idle(view): NoCardsReadyView(model: model, view: view, isFixture: true)
+            case let .Accomplishment(view): AccomplishmentScreen(view: view, addEvent: { _ in }, onDismiss: {})
+            case nil: EmptyView()
+            }
+        }.onAppear { DebugHarness.log("fixture rendered \(DebugHarness.shared.fixtureName)") }
+        #endif
+    }
     @ViewBuilder private func challengeView(_ challenge: Challenge_Gram_String) -> some View {
         switch challenge {
         case let .FlashCardReview(indicator, flashcard, isNew, timesSeen):
@@ -96,13 +114,27 @@ struct ReviewScreen: View {
     private func handleDebugCommand() {
         switch DebugHarness.shared.command {
         case let command where command.hasPrefix("dump-fixture "):
-            guard let challenge = model.currentChallenge else { return }
-            if case .TranscribeComprehensibleSentence = challenge { return }
-            if case .TranslateComprehensibleSentence = challenge { return }
-            DebugHarness.dumpFixture(ChallengeFixture(challenge: challenge, transcription: nil, translation: nil), name: String(command.dropFirst(13)))
+            let name = String(command.dropFirst(13))
+            if case let .Accomplishment(view) = DebugHarness.shared.fixture {
+                DebugHarness.dumpFixture(.Accomplishment(view), name: name)
+                return
+            }
+            if step == .lockupOffer, let plan = model.lockupOffer {
+                DebugHarness.dumpFixture(.Idle(.ReviewPlanOffer(plan)), name: name)
+            } else if step == .accomplishment, let view = model.accomplishmentView {
+                DebugHarness.dumpFixture(.Accomplishment(view), name: name)
+            } else if step == nil, let challenge = model.currentChallenge {
+                if case .TranscribeComprehensibleSentence = challenge { return }
+                if case .TranslateComprehensibleSentence = challenge { return }
+                DebugHarness.dumpFixture(.Challenge(ChallengeFixture(challenge: challenge, transcription: nil, translation: nil)), name: name)
+            } else if step == nil {
+                // The mounted idle view captures its local plan-expansion state.
+                return
+            } else { DebugHarness.log("fixture unsupported step \(step?.rawValue ?? "none")") }
         case "dismiss-keyboard": UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         case "status":
             DebugHarness.log("placement: startingFresh=\(String(describing: model.startingFresh)) historyKnown=\(model.historyKnown) taken=\(model.deck.has_taken_placement_test()) list=\(String(describing: model.deck.get_sentence_list()))")
+            DebugHarness.log("today: seconds=\(model.deck.get_today_time_spent()) target=\(model.deck.get_daily_review_target())")
             let info = model.reviewInfo
             DebugHarness.log("review: due=\(info.due_count) total=\(info.total_count) banned=\(info.due_but_banned_count) audioPending=\(info.due_but_audio_pending_count) locked=\(info.due_but_locked_count) step=\(step?.rawValue ?? "none")")
             switch model.currentChallenge {
@@ -128,8 +160,7 @@ struct ReviewScreen: View {
             if let event = options.first(where: { $0.card_type == type })?.event { model.session.addDeckEvent(event) }
         case "add":
             guard model.currentChallenge == nil, step == nil else { return }
-            let info = model.deck.get_no_cards_ready_info(banned_challenge_types: model.banned, sentence_list: model.deck.get_sentence_list())
-            if let event = info.smart_add_event { model.session.addDeckEvent(event) }
+            if case let .Idle(view) = model.idleView, let event = view.info.smart_add_event { model.session.addDeckEvent(event) }
         default: break
         }
     }

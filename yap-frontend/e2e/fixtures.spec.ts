@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { fakeLogin, seedFrenchDeck } from "./helpers";
+import type { Fixture, IdleKind } from "../../yap-frontend-rs/pkg";
 
-test("capture challenge fixtures", async ({ page, request }) => {
+test("capture screen and challenge fixtures", async ({ page, request }) => {
   const response = await request.get("/__fixtures/index.json");
   expect(response.ok()).toBeTruthy();
   const names: string[] = await response.json();
@@ -16,11 +17,32 @@ test("capture challenge fixtures", async ({ page, request }) => {
   await page.goto("/");
   await seedFrenchDeck(page);
   await page.waitForTimeout(4000); // flush deck selection to OPFS before navigation
+  const idleKinds: Record<string, IdleKind> = {
+    "idle-first-run": "FirstRun",
+    "idle-needs-more-cards": "NeedsMoreCards",
+    "idle-all-caught-up": "AllCaughtUp",
+  };
   for (const name of selected) {
+    const captureResponse = await request.get(`/__fixtures/${name}.json`);
+    expect(captureResponse.ok()).toBeTruthy();
+    const fixture = await captureResponse.json() as Fixture;
+    if (name in idleKinds) {
+      expect(fixture.type).toBe("Idle");
+      if (fixture.type === "Idle") {
+        expect(fixture.view.type).toBe("Idle");
+        if (fixture.view.type === "Idle") expect(fixture.view.kind).toBe(idleKinds[name]);
+      }
+    }
     await page.goto(`/fixture/${name}`);
     await expect(
       page.locator(`[data-fixture-rendered="${name}"]`),
     ).toBeVisible();
+    if (fixture.type === "Idle" && fixture.view.type === "Idle") {
+      await expect(page.getByText(fixture.view.title, { exact: true })).toBeVisible();
+    }
+    if (fixture.type === "Accomplishment") {
+      await expect(page.getByRole("heading", { name: /Goal Reached!/ })).toBeVisible();
+    }
     await page.waitForTimeout(2500);
     await page.screenshot({
       path: path.resolve("screenshots-out/fixtures", `${name}-web.png`),

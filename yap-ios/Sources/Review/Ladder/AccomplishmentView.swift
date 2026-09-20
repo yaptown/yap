@@ -41,15 +41,17 @@ struct DailyGoalEditor: View {
     }
 }
 
-struct AccomplishmentView: View {
-    let model: ReviewModel
+struct AccomplishmentScreen: View {
+    let view: AccomplishmentView
+    let addEvent: (DeckEvent) -> Void
+    let onDismiss: () -> Void
     var body: some View {
-        let summary = model.deck.get_today_summary()
+        let summary = view.today
         StudyCard {
             Label("Goal reached!", systemImage: "trophy.fill").font(.title.bold())
             Text("You studied \(summary.time_spent_seconds / 60) min! (\(summary.reviews) challenges)")
-            Text("\(model.deck.get_daily_streak()) day streak").font(.headline)
-            DailyGoalEditor(model: model)
+            Text("\(view.streak) day streak").font(.headline)
+            SnapshotGoalEditor(target: view.target, goals: view.goals, addEvent: addEvent)
             cards("New today", summary.new_cards)
             cards("Learned", summary.learned_cards)
             cards("Back on track", summary.locked_in_cards)
@@ -58,7 +60,7 @@ struct AccomplishmentView: View {
                 Text(summary.reviewed_words.joined(separator: " · "))
             }
             if let recall = summary.recall_percent { Text("\(recall)% recall") }
-            Text("\(Int((model.deck.get_percent_of_words_known() * Double(model.deck.num_cards_added())).rounded())) words known")
+            Text("\(view.words_known) words known")
             Button("Continue", action: dismiss).buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
         }
         .task {
@@ -88,5 +90,20 @@ struct AccomplishmentView: View {
             }
         }
     }
-    private func dismiss() { model.session.dismissedAccomplishmentAtReview = model.deck.get_total_reviews() }
+    private func dismiss() { onDismiss() }
+}
+
+/// The review screens use captured goal options, including their actions.
+struct SnapshotGoalEditor: View {
+    let target: DailyReviewTarget
+    let goals: [GoalOptionView]
+    let addEvent: (DeckEvent) -> Void
+    var body: some View {
+        DisclosureGroup("Change daily goal") {
+            ForEach(Array(goals.enumerated()), id: \.offset) { _, goal in
+                Button("\(goal.minutes) min/day — \(String(describing: goal.target))") { addEvent(goal.event) }
+                    .disabled(goal.target == target)
+            }
+        }
+    }
 }
