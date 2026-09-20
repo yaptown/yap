@@ -33,11 +33,8 @@ pub use study_options::{IdleStudyState, get_idle_study_state, next_progress_mile
 mod sentence_lists;
 mod tiers;
 mod transcription_review;
-pub use transcription_review::{
-    TranscriptionInput, TranscriptionSubmission, apply_transcription_grade,
-    get_transcription_review_definitions, prepare_transcription_submission,
-    transcription_is_perfect,
-};
+pub use transcription_review::get_transcription_review_definitions;
+pub use yap_frontend_reducers::*;
 mod translation_review;
 pub use sentence_lists::{
     SentenceListCategory, SentenceListNavigation, SentenceListProgress,
@@ -5117,87 +5114,6 @@ pub async fn autograde_transcription(
     failed_transcription_review(submission, course)
 }
 
-/// Offline/manual review uses the same fallback as a failed network grade.
-#[bridgerton::bridge]
-pub fn failed_transcription_review(
-    submission: Vec<transcription_challenge::PartSubmitted>,
-    course: Course,
-) -> transcription_challenge::Grade {
-    let results = submission
-        .into_iter()
-        .map(|part| match part {
-            transcription_challenge::PartSubmitted::AskedToTranscribe { parts, submission } => {
-                let submitted_words = submission.split_whitespace().collect::<Vec<_>>();
-                if submitted_words.len() != parts.len() {
-                    return transcription_challenge::PartGraded::AskedToTranscribe {
-                        parts: parts
-                            .iter()
-                            .map(|part| transcription_challenge::PartGradedPart {
-                                heard: part.clone(),
-                                grade: transcription_challenge::WordGrade::Missed {},
-                            })
-                            .collect(),
-                        submission: submission.clone(),
-                    };
-                }
-
-                transcription_challenge::PartGraded::AskedToTranscribe {
-                    parts: parts
-                        .iter()
-                        .zip(submitted_words.iter())
-                        .map(|(part, &submission)| {
-                            let part_text =
-                                normalize_for_grading(&part.word.text, course.target_language)
-                                    .trim()
-                                    .to_string();
-                            let submission =
-                                normalize_for_grading(submission, course.target_language)
-                                    .trim()
-                                    .to_string();
-                            if part_text == submission {
-                                transcription_challenge::PartGradedPart {
-                                    heard: part.clone(),
-                                    grade: transcription_challenge::WordGrade::Perfect {
-                                        wrote: Some(submission.to_string()),
-                                    },
-                                }
-                            } else if remove_accents(&part_text) == remove_accents(&submission) {
-                                transcription_challenge::PartGradedPart {
-                                    heard: part.clone(),
-                                    grade: transcription_challenge::WordGrade::CorrectWithTypo {
-                                        wrote: Some(submission.to_string()),
-                                    },
-                                }
-                            // todo: check if word entered is in the set of homophones
-                            // and if so, grade is as correct PhoneticallyIdenticalButContextuallyIncorrect
-                            } else {
-                                transcription_challenge::PartGradedPart {
-                                    heard: part.clone(),
-                                    grade: transcription_challenge::WordGrade::Incorrect {
-                                        wrote: Some(submission.to_string()),
-                                    },
-                                }
-                            }
-                        })
-                        .collect(),
-                    submission: submission.clone(),
-                }
-            }
-            transcription_challenge::PartSubmitted::Provided { part } => {
-                transcription_challenge::PartGraded::Provided { part }
-            }
-        })
-        .collect();
-
-    transcription_challenge::Grade {
-        encouragement: None,
-        explanation: None,
-        results,
-        compare: Vec::new(),
-        autograding_error: Some("The LLM was not able to grade this transcription".to_string()),
-    }
-}
-
 #[bridgerton::bridge]
 pub async fn autograde_transcription_llm(
     submission: Vec<transcription_challenge::PartSubmitted>,
@@ -5293,14 +5209,6 @@ pub async fn autograde_transcription_llm(
         .map_err(|e| bridgerton::Error::new(format!("Response parsing error: {e:?}")))?;
 
     Ok(response)
-}
-
-fn remove_accents(s: &str) -> String {
-    use unicode_normalization::UnicodeNormalization;
-
-    s.nfd()
-        .filter(|c| !unicode_normalization::char::is_combining_mark(*c))
-        .collect()
 }
 
 #[bridgerton::bridge]

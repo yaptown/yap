@@ -1,62 +1,6 @@
 use crate::{ReviewDefinition, TranscribeComprehensibleSentence};
-use language_utils::transcription_challenge::{Part, PartGraded, PartSubmitted, WordGrade};
-use std::collections::{BTreeMap, BTreeSet};
-
-#[bridgerton::bridge(transparent)]
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct TranscriptionInput {
-    pub index: usize,
-    pub text: String,
-}
-
-#[bridgerton::bridge(transparent)]
-#[derive(serde::Serialize)]
-pub struct TranscriptionSubmission {
-    pub request: Vec<PartSubmitted>,
-    pub all_blanks_filled: bool,
-}
-
-// Match the previous JavaScript trim operation, including BOM whitespace and
-// excluding the Unicode NEXT LINE character (which Rust's trim would remove).
-fn trim_submission(text: &str) -> &str {
-    text.trim_matches(|c: char| c == '\u{feff}' || (c.is_whitespace() && c != '\u{0085}'))
-}
-
-#[bridgerton::bridge]
-pub fn prepare_transcription_submission(
-    parts: Vec<Part>,
-    inputs: Vec<TranscriptionInput>,
-) -> TranscriptionSubmission {
-    let inputs: BTreeMap<_, _> = inputs.into_iter().map(|i| (i.index, i.text)).collect();
-    let mut all_blanks_filled = true;
-    let request = parts
-        .into_iter()
-        .enumerate()
-        .map(|(i, part)| match part {
-            Part::Provided { part } => PartSubmitted::Provided { part },
-            Part::AskedToTranscribe { parts } => {
-                let submission =
-                    trim_submission(inputs.get(&i).map_or("", String::as_str)).to_string();
-                all_blanks_filled &= !submission.is_empty();
-                PartSubmitted::AskedToTranscribe { parts, submission }
-            }
-        })
-        .collect();
-    TranscriptionSubmission {
-        request,
-        all_blanks_filled,
-    }
-}
-
-#[bridgerton::bridge]
-pub fn transcription_is_perfect(results: Vec<PartGraded>) -> bool {
-    results.iter().all(|result| match result {
-        PartGraded::Provided { .. } => true,
-        PartGraded::AskedToTranscribe { parts, .. } => parts
-            .iter()
-            .all(|p| matches!(p.grade, WordGrade::Perfect { .. })),
-    })
-}
+use language_utils::transcription_challenge::{PartGraded, WordGrade};
+use std::collections::BTreeSet;
 
 fn wrong_gram_groups(results: &[PartGraded], indices: &[Vec<usize>]) -> Vec<usize> {
     let mut seen = BTreeSet::new();
@@ -105,27 +49,11 @@ pub fn get_transcription_review_definitions(
         .collect()
 }
 
-/// Operates on an owned snapshot: changing a grade must not mutate earlier
-/// React state objects or a saved draft through a shared nested reference.
-#[bridgerton::bridge]
-pub fn apply_transcription_grade(
-    mut results: Vec<PartGraded>,
-    part_index: usize,
-    word_index: usize,
-    grade: WordGrade,
-) -> Vec<PartGraded> {
-    if let Some(PartGraded::AskedToTranscribe { parts, .. }) = results.get_mut(part_index)
-        && let Some(part) = parts.get_mut(word_index)
-    {
-        part.grade = grade;
-    }
-    results
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use language_utils::{Literal, transcription_challenge::PartGradedPart};
+    use yap_frontend_reducers::transcription_is_perfect;
     fn literal() -> Literal<String> {
         serde_json::from_value(serde_json::json!({"word":{"text":"chat","word_type":{"type":"Heteronym","word":"chat","lemma":"chat","pos":"NOUN"}},"whitespace":""})).unwrap()
     }
@@ -142,61 +70,6 @@ mod tests {
         }]
     }
     #[test]
-    fn offline_fallback_preserves_parts_and_allows_manual_correction() {
-        let course = language_utils::Course {
-            target_language: language_utils::Language::French,
-            native_language: language_utils::Language::English,
-        };
-        let submission = prepare_transcription_submission(
-            vec![
-                Part::Provided { part: literal() },
-                Part::AskedToTranscribe {
-                    parts: vec![literal()],
-                },
-            ],
-            vec![TranscriptionInput {
-                index: 1,
-                text: "chien".into(),
-            }],
-        );
-        let grade = crate::failed_transcription_review(submission.request, course);
-        assert!(grade.autograding_error.is_some());
-        assert!(matches!(&grade.results[0], PartGraded::Provided { .. }));
-        assert!(!transcription_is_perfect(grade.results.clone()));
-        assert!(transcription_is_perfect(apply_transcription_grade(
-            grade.results,
-            1,
-            0,
-            WordGrade::Perfect { wrote: None },
-        )));
-    }
-
-    #[test]
-    fn only_requested_parts_need_answers_and_whitespace_matches_web() {
-        let parts = vec![
-            Part::Provided { part: literal() },
-            Part::AskedToTranscribe {
-                parts: vec![literal()],
-            },
-        ];
-        assert!(!prepare_transcription_submission(parts.clone(), vec![]).all_blanks_filled);
-        let input = prepare_transcription_submission(
-            parts,
-            vec![TranscriptionInput {
-                index: 1,
-                text: "\u{feff} chat \u{a0}".into(),
-            }],
-        );
-        assert!(input.all_blanks_filled);
-        assert!(
-            matches!(&input.request[1], PartSubmitted::AskedToTranscribe { submission, .. } if submission == "chat")
-        );
-        assert_eq!(
-            trim_submission("\u{0085}chat\u{0085}"),
-            "\u{0085}chat\u{0085}"
-        );
-    }
-    #[test]
     fn typo_is_not_perfect_but_does_not_request_a_definition() {
         let grades = result(vec![
             WordGrade::CorrectWithTypo {
@@ -208,19 +81,5 @@ mod tests {
         assert!(!transcription_is_perfect(grades.clone()));
         assert_eq!(wrong_gram_groups(&grades, &[vec![0, 2, 2]]), vec![2]);
         assert_eq!(wrong_gram_groups(&grades, &[vec![0, 2, 1]]), vec![2, 1]);
-    }
-    #[test]
-    fn corrections_leave_prior_snapshot_unchanged_and_ignore_invalid_indices() {
-        let before = result(vec![WordGrade::Incorrect {
-            wrote: Some("chien".into()),
-        }]);
-        let after =
-            apply_transcription_grade(before.clone(), 0, 0, WordGrade::Perfect { wrote: None });
-        assert!(!transcription_is_perfect(before.clone()));
-        assert!(transcription_is_perfect(after));
-        assert_eq!(
-            apply_transcription_grade(before.clone(), 2, 0, WordGrade::Missed {}),
-            before
-        );
     }
 }

@@ -1321,7 +1321,7 @@ function Review({
               onComplete={handleTranscriptionComplete}
               totalCount={reviewInfo.total_count}
               accessToken={accessToken}
-              key={totalReviewsCompleted}
+              key={`${totalReviewsCompleted}:${currentChallenge.target_language}`}
               onCantListen={handleCantListen}
               targetLanguage={targetLanguage}
               nativeLanguage={nativeLanguage}
