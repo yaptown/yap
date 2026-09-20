@@ -14,6 +14,7 @@ pub mod export;
 pub mod library;
 pub mod ocr;
 pub mod pgs;
+mod r2;
 pub mod sync;
 pub mod transcript;
 pub mod vad;

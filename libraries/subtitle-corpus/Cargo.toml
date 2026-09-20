@@ -31,3 +31,5 @@ phoneme-verify = { path = "../phoneme-verify" }
 opensubtitles-downloader = { path = "../opensubtitles-downloader" }
 sha2 = "0.10"
 unicode-normalization = { workspace = true }
+object_store = { version = "0.14.2", features = ["aws"] }
+md-5 = "0.11.0"

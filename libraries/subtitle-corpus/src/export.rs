@@ -11,10 +11,12 @@
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use anyhow::{bail, Context, Result};
+use futures::{stream, TryStreamExt};
 use language_utils::Language;
+use md5::{Digest as _, Md5};
 use movie_subtitles::cleanup_subtitle_text;
 use movie_subtitles::segment::SubtitleSegmenter;
 use serde_json::json;
@@ -67,7 +69,7 @@ const LO_CRF: u32 = 27;
 const LO_PRESET: &str = "veryfast";
 const LO_AAC: &str = "96k";
 /// R2 puts in flight at once during upload (see `upload_lang`).
-const UPLOAD_JOBS: usize = 8;
+const UPLOAD_JOBS: usize = 64;
 
 /// Sidecar `format` field.
 const SIDECAR_FORMAT: u32 = 4;
@@ -689,8 +691,8 @@ async fn export_one(
 
 /// The full serve pipeline, [`crate::clips`]-style resumable at every stage:
 /// re-map clips (skips films whose provenance is current), export videos
-/// (skips clip dirs with a finished sidecar), upload to R2 (skips `.uploaded`
-/// markers). Safe to re-run after any interruption.
+/// (skips clip dirs with a finished sidecar), upload to R2 over S3 (skips matching `.uploaded`
+/// hashes and verifies stale files against bucket ETags). Safe to re-run after any interruption.
 /// `jobs` is the export concurrency / NVENC session budget (see [`export_clips`]);
 /// it does not change re-map or upload concurrency.
 pub async fn publish(
@@ -716,149 +718,135 @@ pub async fn publish(
             .filter_map(|e| e.file_name().into_string().ok())
             .collect(),
     };
+    let r2 = crate::r2::R2::from_env(&bucket).await?;
     for code in codes {
-        upload_lang(&dest.join(&code), &code, &bucket)?;
+        upload_lang(&dest.join(&code), &code, &r2).await?;
     }
     Ok(())
 }
 
-/// Upload one language's exported clips via wrangler. A `.uploaded` marker is
-/// written per clip dir once all three objects land; marked dirs are skipped,
-/// so re-runs only pay for what's new. Objects are immutable by id and get a
-/// forever cache; the index gets a short one.
-fn upload_lang(lang_dir: &Path, code: &str, bucket: &str) -> Result<()> {
+/// Upload one language's exported clips over S3, with SDK-managed retries.
+/// A `.uploaded` marker records each file's xxh3 hash once all three objects
+/// land. Matching markers skip work; stale files already matching bucket MD5
+/// ETags need no put. Objects are immutable by id and get a forever cache;
+/// the index gets a short one.
+async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<()> {
     const IMMUTABLE: &str = "public, max-age=31536000, immutable";
-    // Cloudflare's API answers a small fraction of puts with a 502; over the
-    // ~50k objects of a full publish one such blip is near-certain, and a
-    // failed put costs the whole run (2026-09-06: died at 1,575 of 18k clips).
-    // Retry with growing waits before giving up on a key.
-    const RETRY_WAITS: [u64; 4] = [5, 30, 120, 300];
-    let put = |file: &Path, key: &str, content_type: &str, cache: &str| -> Result<()> {
-        let mut attempt = 0;
-        loop {
-            let status = Command::new("wrangler")
-                .args(["r2", "object", "put", &format!("{bucket}/{key}")])
-                .arg("--file")
-                .arg(file)
-                .args(["--content-type", content_type, "--cache-control", cache])
-                .arg("--remote")
-                .stdout(std::process::Stdio::null())
-                .status()
-                .context("wrangler failed to start")?;
-            if status.success() {
-                return Ok(());
-            }
-            let Some(wait) = RETRY_WAITS.get(attempt) else {
-                bail!("upload failed for {key} after {} attempts", attempt + 1);
-            };
-            eprintln!(
-                "  upload of {key} failed (attempt {}), retrying in {wait}s",
-                attempt + 1
-            );
-            std::thread::sleep(std::time::Duration::from_secs(*wait));
-            attempt += 1;
-        }
-    };
+    let etags = r2.list_etags(&format!("{code}/")).await?;
+    println!("{code}: listed {} keys in bucket", etags.len());
     let mut dirs: Vec<PathBuf> = std::fs::read_dir(lang_dir)?
         .flatten()
         .map(|e| e.path())
         .filter(|p| p.is_dir())
         .collect();
     dirs.sort();
-    let uploaded = AtomicUsize::new(0);
-    let skipped = AtomicUsize::new(0);
-    let upload_dir = |dir: &Path| -> Result<()> {
-        let id = dir.file_name().and_then(|s| s.to_str()).unwrap_or_default();
-        if !dir.join("meta.json").exists() {
-            return Ok(()); // half-written export
-        }
-        // The marker records what was uploaded, not that something was:
-        // each file goes up only when it no longer hashes to what went up.
-        // A refreshed sidecar costs one small put, a re-rendered clip all
-        // three; a stale marker never wins.
-        let files = [
-            ("hi", "hi.mp4", "video/mp4"),
-            ("lo", "lo.mp4", "video/mp4"),
-            ("meta", "meta.json", "application/json"),
-        ];
-        let mut hashes = serde_json::Map::new();
-        for (key, name, _) in files {
-            hashes.insert(key.into(), file_hash(&dir.join(name))?.into());
-        }
-        let marked = std::fs::read(dir.join(".uploaded"))
-            .ok()
-            .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
-            .unwrap_or_default();
-        let stale: Vec<_> = files
-            .iter()
-            .filter(|(key, _, _)| marked[*key] != hashes[*key])
-            .collect();
-        if stale.is_empty() {
-            skipped.fetch_add(1, Ordering::Relaxed);
-            return Ok(());
-        }
-        for (_, name, content_type) in stale {
-            put(
-                &dir.join(name),
-                &format!("{code}/{id}/{name}"),
-                content_type,
-                IMMUTABLE,
-            )?;
-        }
-        std::fs::write(dir.join(".uploaded"), serde_json::to_vec(&hashes)?)?;
-        let n = uploaded.fetch_add(1, Ordering::Relaxed) + 1;
-        if n.is_multiple_of(25) {
-            println!("  {n} uploaded (last: {id})");
-        }
-        Ok(())
-    };
-    // Each put is a whole `wrangler` process — mostly Node start-up, ~2s
-    // for a few MB — so one at a time meant ~700 clips/h and a day per
-    // publish. Workers take clip dirs in order; a dir's marker lands only
-    // after all three objects do, so a killed run redoes at most UPLOAD_JOBS
-    // dirs. The first failure stops the rest at their next dir.
-    let next = AtomicUsize::new(0);
-    let failed = AtomicBool::new(false);
-    std::thread::scope(|scope| -> Result<()> {
-        let workers: Vec<_> = (0..UPLOAD_JOBS)
-            .map(|_| {
-                scope.spawn(|| -> Result<()> {
-                    loop {
-                        if failed.load(Ordering::Relaxed) {
-                            return Ok(());
-                        }
-                        let Some(dir) = dirs.get(next.fetch_add(1, Ordering::Relaxed)) else {
-                            return Ok(());
-                        };
-                        if let Err(e) = upload_dir(dir) {
-                            failed.store(true, Ordering::Relaxed);
-                            return Err(e);
-                        }
-                    }
-                })
-            })
-            .collect();
-        let mut first_error = None;
-        for worker in workers {
-            if let Err(e) = worker.join().expect("upload worker panicked") {
-                first_error.get_or_insert(e);
+    let mut uploaded = 0;
+    let mut verified = 0;
+    let mut skipped = 0;
+    // No detached tasks: the first error drops the remaining futures. Markers
+    // only land after all three files are up, so interrupted dirs are retried.
+    let mut uploads = stream::iter(dirs.iter().map(|dir| {
+        let etags = &etags;
+        Ok::<_, anyhow::Error>(async move {
+            let id = dir.file_name().and_then(|s| s.to_str()).unwrap_or_default();
+            if !dir.join("meta.json").exists() {
+                return Ok(None); // half-written export
             }
+            let files = [
+                ("hi", "hi.mp4", "video/mp4"),
+                ("lo", "lo.mp4", "video/mp4"),
+                ("meta", "meta.json", "application/json"),
+            ];
+            // Hashing reads ~9 MB per dir; keep it off the stream's task so
+            // dirs hash in parallel instead of one after another.
+            let hashes = {
+                let dir = dir.clone();
+                tokio::task::spawn_blocking(move || -> Result<serde_json::Map<_, _>> {
+                    let mut hashes = serde_json::Map::new();
+                    for (key, name, _) in files {
+                        hashes.insert(key.into(), file_hash(&dir.join(name))?.into());
+                    }
+                    Ok(hashes)
+                })
+                .await??
+            };
+            let marked = tokio::fs::read(dir.join(".uploaded"))
+                .await
+                .ok()
+                .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
+                .unwrap_or_default();
+            let stale: Vec<_> = files
+                .iter()
+                .filter(|(key, _, _)| marked[*key] != hashes[*key])
+                .collect();
+            if stale.is_empty() {
+                return Ok(Some(UploadOutcome::Skipped));
+            }
+            let mut did_upload = false;
+            for (_, name, content_type) in stale {
+                let key = format!("{code}/{id}/{name}");
+                let bytes = tokio::fs::read(dir.join(name))
+                    .await
+                    .with_context(|| format!("reading {key}"))?;
+                if !etag_matches(etags.get(&key).map(String::as_str), &bytes) {
+                    r2.put(&key, bytes, content_type, IMMUTABLE).await?;
+                    did_upload = true;
+                }
+            }
+            tokio::fs::write(dir.join(".uploaded"), serde_json::to_vec(&hashes)?).await?;
+            Ok(Some(if did_upload {
+                UploadOutcome::Uploaded
+            } else {
+                UploadOutcome::Verified
+            }))
+        })
+    }))
+    .try_buffer_unordered(UPLOAD_JOBS);
+    while let Some(outcome) = uploads.try_next().await? {
+        match outcome {
+            Some(UploadOutcome::Uploaded) => uploaded += 1,
+            Some(UploadOutcome::Verified) => verified += 1,
+            Some(UploadOutcome::Skipped) => skipped += 1,
+            None => continue,
         }
-        first_error.map_or(Ok(()), Err)
-    })?;
-    let uploaded = uploaded.into_inner();
-    let skipped = skipped.into_inner();
+        let done: usize = uploaded + verified + skipped;
+        if done.is_multiple_of(250) {
+            println!("  {done} processed: {uploaded} uploaded, {verified} verified, {skipped} already up");
+        }
+    }
     let index = lang_dir.join("index.jsonl");
     if index.exists() {
-        put(
-            &index,
+        r2.put(
             &format!("{code}/index.jsonl"),
+            tokio::fs::read(&index).await?,
             "application/x-ndjson",
             "public, max-age=60",
-        )?;
+        )
+        .await?;
     }
-    println!("{code}: {uploaded} clip dirs uploaded, {skipped} already up");
+    println!("{code}: {uploaded} clip dirs uploaded, {verified} verified in bucket, {skipped} already up");
     Ok(())
+}
+
+/// Counts are per directory: any put makes it uploaded, otherwise all stale
+/// files were verified against the listing (or the marker already matched).
+enum UploadOutcome {
+    Uploaded,
+    Verified,
+    Skipped,
+}
+
+fn etag_matches(etag: Option<&str>, bytes: &[u8]) -> bool {
+    etag.is_some_and(|etag| {
+        !etag.contains('-')
+            && etag
+                .bytes()
+                .map(|b| b.to_ascii_lowercase())
+                .eq(Md5::digest(bytes).iter().flat_map(|b| {
+                    let hex = |n: u8| b"0123456789abcdef"[n as usize];
+                    [hex(b >> 4), hex(b & 0xf)]
+                }))
+    })
 }
 
 /// Extend the scored cut to neighboring subtitle lines within [`CTX_GAP_MS`].
@@ -1691,4 +1679,24 @@ fn write_index(lang_dir: &Path) -> Result<usize> {
     let body: String = rows.into_iter().map(|(_, v)| format!("{v}\n")).collect();
     std::fs::write(lang_dir.join("index.jsonl"), body)?;
     Ok(n)
+}
+
+#[cfg(test)]
+mod upload_tests {
+    use super::etag_matches;
+
+    #[test]
+    fn listing_etag_matches_only_identical_single_part_bytes() {
+        let etag = "900150983cd24fb0d6963f7d28e17f72";
+        assert!(etag_matches(Some(etag), b"abc"));
+        assert!(!etag_matches(Some(etag), b"changed"));
+        assert!(!etag_matches(None, b"abc"));
+        assert!(!etag_matches(Some(&format!("{etag}-1")), b"abc"));
+        assert!(!etag_matches(Some(""), b"abc"));
+    }
+
+    #[test]
+    fn md5_keeps_leading_zeroes() {
+        assert!(etag_matches(Some("0cc175b9c0f1b6a831c399e269772661"), b"a"));
+    }
 }
