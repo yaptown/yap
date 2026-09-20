@@ -24,7 +24,8 @@ def build_rust(target, release):
     built = run("cargo", "rustc", "-p", "yap-ios-host", "--lib", "--locked",
                 *(["--release"] if release else []), "--target", target,
                 "--message-format=json-render-diagnostics", "--", "--print=native-static-libs",
-                env={**os.environ, "IPHONEOS_DEPLOYMENT_TARGET": "18.0"},
+                # Colors would wrap the native-static-libs note parsed below.
+                env={**os.environ, "IPHONEOS_DEPLOYMENT_TARGET": "18.0", "CARGO_TERM_COLOR": "never"},
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     print(built.stderr, flush=True)
     artifacts = [json.loads(line) for line in built.stdout.splitlines() if line.startswith("{")]
