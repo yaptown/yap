@@ -24,6 +24,7 @@ type Props = Omit<
     typeof TranscriptionChallenge
   >["onComplete"];
   menuExtras?: ReactNode;
+  translationState?: ComponentProps<typeof TranslationChallenge>["initialState"];
 };
 
 export function ChallengeView({
@@ -43,6 +44,7 @@ export function ChallengeView({
   deck,
   menuExtras,
   initialState,
+  translationState,
 }: Props) {
   return currentChallenge.type === "PronunciationChallenge" ? (
     <PronunciationChallenge
@@ -81,6 +83,7 @@ export function ChallengeView({
     />
   ) : currentChallenge.type === "TranslateComprehensibleSentence" ? (
     <TranslationChallenge
+      initialState={translationState}
       sentence={currentChallenge}
       onComplete={onTranslationComplete}
       accessToken={accessToken}

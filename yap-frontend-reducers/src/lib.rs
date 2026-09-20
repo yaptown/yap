@@ -14,3 +14,14 @@ pub enum Sound {
     AiDoneGrading,
     Success,
 }
+
+pub mod translation;
+pub use translation::*;
+
+use language_utils::{TtsProvider, TtsRequest};
+#[bridgerton::bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct AudioRequest {
+    pub request: TtsRequest,
+    pub provider: TtsProvider,
+}

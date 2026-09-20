@@ -37,18 +37,12 @@ pub use study_options::{IdleStudyState, get_idle_study_state, next_progress_mile
 mod sentence_lists;
 mod tiers;
 mod transcription_review;
-pub use transcription_review::get_transcription_review_definitions;
-pub use yap_frontend_reducers::*;
-mod translation_review;
 pub use sentence_lists::{
     SentenceListCategory, SentenceListNavigation, SentenceListProgress,
     get_sentence_list_navigation,
 };
-pub use translation_review::{
-    ManualTranslationGrade, ReviewDefinition, TranslationGradeItem, TranslationReviewFeedback,
-    TranslationReviewResult, apply_translation_grade, failed_translation_review,
-    get_translation_review_feedback, prepare_translation_review,
-};
+pub use transcription_review::get_transcription_review_definitions;
+pub use yap_frontend_reducers::*;
 mod utils;
 
 pub use audio::{
@@ -78,12 +72,11 @@ use deck_selection::DailyReviewTarget;
 use deck_selection::DeckSelectionEvent;
 use language_utils::Frequency;
 use language_utils::Literal;
-use language_utils::TtsProvider;
 use language_utils::TtsRequest;
 use language_utils::autograde;
 use language_utils::features::WordPrefix;
 use language_utils::language_pack::LanguagePack;
-use language_utils::text_cleanup::{find_closest_match, normalize_for_grading};
+use language_utils::text_cleanup::normalize_for_grading;
 use language_utils::transcription_challenge;
 use language_utils::{Course, Language};
 use language_utils::{
@@ -745,36 +738,6 @@ impl<'a> Drop for FlushLater<'a> {
     fn drop(&mut self) {
         self.weapon.flush_notifications();
     }
-}
-
-#[bridgerton::bridge(transparent)]
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct TranslateComprehensibleSentence {
-    pub audio: AudioRequest,
-    pub target_language: String,
-    pub target_language_literals: Vec<Literal<String>>,
-    /// For each literal, the index of the gram group it belongs to.
-    pub literal_gram_indices: Vec<usize>,
-    /// Definition for each gram group (indexed by group number). None if no definition is available.
-    pub gram_definitions_for_lookup: Vec<Option<GramDefinition>>,
-    /// Morpheme/word breakdown for each gram group (parallel to
-    /// `gram_definitions_for_lookup`). None when the gram has no useful
-    /// breakdown (e.g. unknown word, no morpheme data).
-    #[allow(clippy::type_complexity)]
-    pub gram_breakdowns_for_lookup: Vec<Option<Vec<(String, Option<String>, Option<String>)>>>,
-    pub unique_target_language_phrases: Vec<Gram<String>>,
-    /// Definition for each phrase in unique_target_language_phrases (indexed in parallel).
-    pub phrase_definitions: Vec<Option<GramDefinition>>,
-    /// Breakdown for each phrase (parallel to `unique_target_language_phrases`).
-    #[allow(clippy::type_complexity)]
-    pub phrase_breakdowns: Vec<Option<Vec<(String, Option<String>, Option<String>)>>>,
-    pub native_translations: Vec<String>,
-    pub movie_titles: Vec<(String, String)>,
-    pub proper_noun_definitions: Vec<(String, ProperNounDefinition)>,
-    /// The gram that motivated this challenge (the one being reviewed via spaced repetition).
-    pub primary_expression: Gram<String>,
-    /// True if the user recently got this sentence wrong in a translation challenge.
-    pub second_chance: bool,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -4657,13 +4620,6 @@ impl CardSummary {
     }
 }
 
-#[bridge(transparent)]
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct AudioRequest {
-    request: TtsRequest,
-    provider: TtsProvider,
-}
-
 /// Audio bytes plus a sidecar identifying the voice actor, when the clip
 /// came from a human recording rather than TTS.
 #[bridgerton::bridge(opaque)]
@@ -4847,55 +4803,6 @@ pub fn gram_to_display_string(gram: Gram<String>, language: Language) -> String 
     gram.to_display_string(language)
 }
 
-#[bridgerton::bridge]
-pub fn find_closest_translation(
-    user_translation: String,
-    candidates: Vec<String>,
-    language: Language,
-) -> Option<String> {
-    find_closest_match(&user_translation, &candidates, language)
-}
-
-/// Grade a translation locally when the submission exactly matches one of
-/// the accepted translations (after normalization): every heteronym counts
-/// as remembered and every phrase as remembered. Returns None when the
-/// submission doesn't exactly match, i.e. when real grading is needed.
-pub fn autograde_perfect_match(
-    user_sentence: &str,
-    native_translations: &[String],
-    literals: &[Literal<String>],
-    phrases: &[Gram<String>],
-    native_language: Language,
-) -> Option<autograde::AutoGradeTranslationResponse> {
-    let normalized_user = normalize_for_grading(user_sentence, native_language);
-    let is_perfect = native_translations
-        .iter()
-        .any(|translation| normalize_for_grading(translation, native_language) == normalized_user);
-    if !is_perfect {
-        return None;
-    }
-
-    // One entry per literal: Some(Remembered) for heteronyms, None for Other types
-    let literal_grades = literals
-        .iter()
-        .map(|lit| {
-            lit.word
-                .heteronym()
-                .is_some()
-                .then_some(autograde::Remembered::Remembered)
-        })
-        .collect();
-
-    Some(autograde::AutoGradeTranslationResponse {
-        literal_grades,
-        phrases_remembered: phrases.to_vec(),
-        phrases_forgot: vec![],
-        encouragement: Some("Perfect! You translated it correctly!".to_string()),
-        explanation: None,
-        autograding_error: None,
-    })
-}
-
 #[allow(clippy::too_many_arguments)]
 #[bridgerton::bridge]
 pub async fn autograde_translation(
@@ -4979,124 +4886,6 @@ pub async fn autograde_translation(
                 error_msg,
             )
         }
-    }
-}
-
-/// Whether an autograde response should count the whole sentence as
-/// perfectly translated: no phrase forgotten, every heteronym affirmatively
-/// graded Remembered, and a real (non-heuristic) grading. An indeterminate
-/// or missing grade for a heteronym is not perfect — promoting that would
-/// credit a word the user never demonstrated. Shared by the app's
-/// TranslationChallenge and yap-mcp's grade_translation so the promotion
-/// rule lives in exactly one place.
-#[bridgerton::bridge]
-pub fn translation_is_perfect(
-    literals: Vec<Literal<String>>,
-    response: autograde::AutoGradeTranslationResponse,
-) -> bool {
-    response.autograding_error.is_none()
-        && response.phrases_forgot.is_empty()
-        && literals.iter().enumerate().all(|(i, literal)| {
-            literal.word.heteronym().is_none()
-                || response.literal_grades.get(i) == Some(&Some(autograde::Remembered::Remembered))
-        })
-}
-
-fn extract_native_words(definition: &GramDefinition) -> Vec<String> {
-    match definition {
-        GramDefinition::Dictionary(entry) => {
-            entry.definitions.iter().map(|d| d.native.clone()).collect()
-        }
-        GramDefinition::Phrasebook(entry) => {
-            // The meaning field is the native translation for phrasebook entries
-            vec![entry.meaning.clone()]
-        }
-    }
-}
-
-#[allow(clippy::too_many_arguments)]
-pub fn heuristic_grade_translation(
-    user_sentence: &str,
-    literals: &[Literal<String>],
-    phrases: &[Gram<String>],
-    gram_definitions: &[Option<GramDefinition>],
-    literal_gram_indices: &[usize],
-    phrase_definitions: &[Option<GramDefinition>],
-    native_language: Language,
-    error_msg: String,
-) -> autograde::AutoGradeTranslationResponse {
-    let normalized_user = normalize_for_grading(user_sentence, native_language);
-    let user_words: Vec<&str> = normalized_user.split_whitespace().collect();
-
-    // Grade each literal
-    let literal_grades = literals
-        .iter()
-        .enumerate()
-        .map(|(i, lit)| {
-            // Only grade heteronyms
-            lit.word.heteronym()?;
-
-            let gram_idx = literal_gram_indices.get(i)?;
-            let Some(definition) = gram_definitions.get(*gram_idx)? else {
-                return None;
-            };
-
-            let native_words = extract_native_words(definition);
-            if native_words.is_empty() {
-                return None;
-            }
-
-            let found = native_words.iter().any(|native| {
-                let normalized_native = normalize_for_grading(native, native_language);
-                normalized_native
-                    .split_whitespace()
-                    .any(|word| user_words.contains(&word))
-            });
-
-            if found {
-                Some(autograde::Remembered::Remembered)
-            } else {
-                Some(autograde::Remembered::Forgot)
-            }
-        })
-        .collect();
-
-    // Grade phrases
-    let mut phrases_remembered = Vec::new();
-    let mut phrases_forgot = Vec::new();
-
-    for (i, phrase) in phrases.iter().enumerate() {
-        let Some(Some(definition)) = phrase_definitions.get(i) else {
-            // No definition available — can't grade, skip (won't appear in either list)
-            continue;
-        };
-
-        let native_words = extract_native_words(definition);
-        if native_words.is_empty() {
-            continue;
-        }
-
-        let found = native_words.iter().any(|native| {
-            let normalized_native = normalize_for_grading(native, native_language);
-            normalized_native
-                .split_whitespace()
-                .any(|word| user_words.contains(&word))
-        });
-
-        if found {
-            phrases_remembered.push(phrase.clone());
-        } else {
-            phrases_forgot.push(phrase.clone());
-        }
-    }
-
-    autograde::AutoGradeTranslationResponse {
-        encouragement: None,
-        explanation: None,
-        literal_grades,
-        phrases_remembered,
-        phrases_forgot,
-        autograding_error: Some(error_msg),
     }
 }
 

@@ -19,16 +19,16 @@ import {
   type PhrasebookDefinitionEntry,
   type TargetToNativeWord,
   autograde_translation,
-  prepare_translation_review,
-  failed_translation_review,
-  apply_translation_grade,
-  get_translation_review_feedback,
-  type ManualTranslationGrade,
-  type TranslationGradeItem,
-  find_closest_translation,
+  translation_start,
+  translation_resume,
+  translation_transition,
+  translation_view,
+  type TranslationState,
+  type TranslationEvent,
+  type TranslationStep,
+  type TranslationGradeItemView,
   get_app_version,
   type Language,
-  type Course,
   type Deck,
   type Heteronym,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
@@ -77,12 +77,12 @@ import {
   FeedbackSkeleton,
   TranslationVerdict,
   YourTranslation,
-  type LiteralGrade,
   type TranslationVerdictData,
 } from "./translation-verdict";
 
 interface SentenceChallengeProps {
   sentence: TranslateComprehensibleSentence;
+  initialState?: TranslationState;
   onComplete: (
     grade:
       | {
@@ -104,11 +104,11 @@ interface SentenceChallengeProps {
   totalReviewsCompleted: bigint;
 }
 
-type GradeItem = TranslationGradeItem;
+type GradeItem = TranslationGradeItemView;
 
 interface SwipeablePhraseProps {
   item: GradeItem;
-  onSwipe: (item: GradeItem, remembered: boolean) => void;
+  onSwipe: (remembered: boolean) => void;
   isSelected?: boolean;
   targetLanguage: Language;
 }
@@ -119,7 +119,7 @@ export interface SwipeableWordHandle {
 
 const SwipeablePhrase = forwardRef<SwipeableWordHandle, SwipeablePhraseProps>(
   ({ item, onSwipe, isSelected = false, targetLanguage }, ref) => {
-    const status = item.status;
+    const status = item.grade === undefined ? undefined : item.grade === "Remembered";
     const x = useMotionValue(0);
     const controls = animationControls();
     const { bumpBackground } = useBackground();
@@ -143,14 +143,14 @@ const SwipeablePhrase = forwardRef<SwipeableWordHandle, SwipeablePhraseProps>(
           info.offset.x < -positionThreshold)
       ) {
         await controls.start({ x: -60 });
-        onSwipe(item, false);
+        onSwipe(false);
       } else if (
         info.velocity.x > velocityThreshold ||
         (info.velocity.x < -velocityThreshold &&
           info.offset.x > positionThreshold)
       ) {
         await controls.start({ x: 60 });
-        onSwipe(item, true);
+        onSwipe(true);
       }
     };
 
@@ -159,13 +159,13 @@ const SwipeablePhrase = forwardRef<SwipeableWordHandle, SwipeablePhraseProps>(
         bumpBackground(30.0);
         if (remembered) {
           await controls.start({ x: 60 });
-          onSwipe(item, true);
+          onSwipe(true);
         } else {
           await controls.start({ x: -60 });
-          onSwipe(item, false);
+          onSwipe(false);
         }
       },
-      [controls, onSwipe, item, bumpBackground],
+      [controls, onSwipe, bumpBackground],
     );
 
     useImperativeHandle(
@@ -215,7 +215,7 @@ const SwipeablePhrase = forwardRef<SwipeableWordHandle, SwipeablePhraseProps>(
           >
             <p className="text-lg font-medium text-center">
               <TargetLanguageText language={targetLanguage}>
-                {item.display}
+                {item.label}
               </TargetLanguageText>
             </p>
           </motion.div>
@@ -240,8 +240,10 @@ interface PhraseStatusesProps {
   setSelectedPhraseIndex: (index: number) => void;
   gradeItems: GradeItem[];
   phraseRefs: React.RefObject<Map<number, SwipeableWordHandle>>;
-  handleGradeSwipe: (item: GradeItem, remembered: boolean) => void;
+  handleGradeSwipe: (index: number, remembered: boolean) => void;
   openByDefault: boolean;
+  title: string;
+  subtitle: string;
   targetLanguage: Language;
 }
 
@@ -252,6 +254,8 @@ function PhraseStatuses({
   phraseRefs,
   handleGradeSwipe,
   openByDefault,
+  title,
+  subtitle,
   targetLanguage,
 }: PhraseStatusesProps) {
   const [isAnswerOpen, setIsAnswerOpen] = useState(openByDefault);
@@ -271,7 +275,7 @@ function PhraseStatuses({
     <Collapsible open={isAnswerOpen} onOpenChange={setIsAnswerOpen}>
       <CollapsibleTrigger asChild>
         <Button variant="ghost" className="w-full justify-between p-0">
-          <span className="text-sm font-medium">Grade Words</span>
+          <span className="text-sm font-medium">{title}</span>
           <span className="text-xs text-muted-foreground">
             {isAnswerOpen ? "Hide" : "Show"}
           </span>
@@ -280,7 +284,7 @@ function PhraseStatuses({
       <CollapsibleContent>
         <div className="text-center space-y-1">
           <p className="text-sm font-medium text-muted-foreground pb-2">
-            Mark as remembered (✓) or forgot (✗).
+            {subtitle}
           </p>
         </div>
 
@@ -296,7 +300,7 @@ function PhraseStatuses({
                   }
                 }}
                 item={item}
-                onSwipe={handleGradeSwipe}
+                onSwipe={(remembered) => handleGradeSwipe(index, remembered)}
                 isSelected={selectedPhraseIndex === index}
                 targetLanguage={targetLanguage}
               />
@@ -537,6 +541,7 @@ export function GramDefinitionDisplay({
 
 export function TranslationChallenge({
   sentence,
+  initialState,
   onComplete,
   accessToken,
   targetLanguage,
@@ -546,287 +551,129 @@ export function TranslationChallenge({
   deck,
   totalReviewsCompleted,
 }: SentenceChallengeProps) {
-  "use memo";
-  const [userTranslation, setUserTranslation] = useState("");
-
-  const movieData = useMemo(() => {
-    if (!sentence.movie_titles || sentence.movie_titles.length === 0) {
-      return [];
-    }
-    const movieIds = sentence.movie_titles.map(([id]: [string, string]) => id);
-    return getMovieMetadata(deck, movieIds);
-  }, [sentence.movie_titles, deck]);
-  const [correctTranslation, setCorrectTranslation] = useState(
-    sentence.native_translations[0] ?? "",
-  );
-  const [selectedPhraseIndex, setSelectedPhraseIndex] = useState<number>(-1);
-  const [showReportModal, setShowReportModal] = useState(false);
-  // Whether a movie clip exists for this sentence. Decides who owns
-  // autoplay: the video when available, the TTS AudioButton otherwise.
-  const [hasClip, setHasClip] = useState(false);
-  const [tappedWords, setTappedWords] = useState<Set<number>>(new Set());
   const STORAGE_KEY = "yap-pending-translation-grade";
-
-  type GradeState =
-    | {
-        graded:
-          | ManualTranslationGrade
-          | {
-              perfect: string | null;
-              encouragement?: string;
-              explanation?: string;
-            };
-      }
-    | { grading: null }
-    | null;
-
-  // Try to restore a saved grade from localStorage
-  const restored = useMemo(() => {
+  const [state, setState] = useState<TranslationState>(() => {
+    if (initialState) return initialState;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const saved = JSON.parse(raw);
-      if (
-        saved.version !== get_app_version() ||
-        saved.totalReviewsCompleted !== Number(totalReviewsCompleted) ||
-        JSON.stringify(saved.challenge) !== JSON.stringify(sentence)
-      ) {
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.version === get_app_version() &&
+            saved.totalReviewsCompleted === Number(totalReviewsCompleted) &&
+            JSON.stringify(saved.challenge) === JSON.stringify(sentence)) {
+          return translation_resume(saved.state).state;
+        }
         localStorage.removeItem(STORAGE_KEY);
-        return null;
       }
-      return saved as {
-        grade: GradeState;
-        userTranslation: string;
-        tappedWords: number[];
-        completedAtMs: number;
-        correctTranslation: string;
-      };
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const [grade, setGrade] = useState<GradeState>(restored?.grade ?? null);
+    } catch { /* Unavailable storage or obsolete draft: start afresh. */ }
+    return translation_start(sentence, { targetLanguage, nativeLanguage });
+  });
+  const stateRef = useRef(state);
+  const view = useMemo(() => translation_view(state), [state]);
+  const editing = state.phase.type === "Editing";
+  const userTranslation = state.text;
+  const correctTranslation = view.correct_translation ?? "";
+  const gradeItems = view.grade_section?.items ?? [];
+  const canContinue = view.can_continue;
+  const tappedDefinitions = view.definitions as { definition: GramDefinition; breakdown: BreakdownRow[] | null | undefined }[];
+  const verdict: TranslationVerdictData | null = view.verdict ? {
+    userTranslation: view.verdict.submission,
+    correctTranslation: view.verdict.correct_translation,
+    isPerfect: view.verdict.perfect,
+    encouragement: view.verdict.encouragement ?? null,
+    explanation: view.verdict.explanation ?? null,
+    autogradingError: view.verdict.autograding_error ?? null,
+    submissionLabel: view.verdict.submission_label,
+    correctLabel: view.verdict.correct_label,
+  } : null;
+  const movieData = useMemo(() => getMovieMetadata(deck, sentence.movie_titles.map(([id]) => id)), [sentence.movie_titles, deck]);
+  const [selectedPhraseIndex, setSelectedPhraseIndex] = useState(-1);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [hasClip, setHasClip] = useState(false);
   const gradingGenerationRef = useRef(0);
-  const completedAtMsRef = useRef<number | undefined>(restored?.completedAtMs);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const phraseRefs = useRef<Map<number, SwipeableWordHandle>>(new Map());
   const { bumpBackground } = useBackground();
-
-  // Restore saved state
-  useEffect(() => {
-    if (restored) {
-      setUserTranslation(restored.userTranslation);
-      setTappedWords(new Set(restored.tappedWords));
-      setCorrectTranslation(restored.correctTranslation);
-    }
-  }, [restored]);
-
-  // Save grade to localStorage when grading completes so it survives navigation
-  useEffect(() => {
-    if (grade && "graded" in grade) {
-      const timestamp = completedAtMsRef.current ?? Date.now();
-      completedAtMsRef.current = timestamp;
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            version: get_app_version(),
-            challenge: sentence,
-            totalReviewsCompleted: Number(totalReviewsCompleted),
-            grade,
-            userTranslation,
-            tappedWords: [...tappedWords],
-            completedAtMs: timestamp,
-            correctTranslation,
-          }),
-        );
-      } catch {
-        // localStorage full or unavailable — not critical
+  const applyStep = useCallback(function apply(step: TranslationStep) {
+    stateRef.current = step.state;
+    setState(step.state);
+    try {
+      if (!initialState) localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        version: get_app_version(), challenge: sentence,
+        totalReviewsCompleted: Number(totalReviewsCompleted), state: step.state,
+      }));
+    } catch { /* Storage full or unavailable: the review still works. */ }
+    for (const effect of step.effects) {
+      switch (effect.type) {
+        case "Autograde": {
+          bumpBackground(30.0);
+          const generation = ++gradingGenerationRef.current;
+          void autograde_translation(
+            sentence.target_language, effect.submission, sentence.native_translations,
+            sentence.target_language_literals, sentence.unique_target_language_phrases,
+            accessToken, step.state.course, sentence.gram_definitions_for_lookup,
+            new Uint32Array(sentence.literal_gram_indices), sentence.phrase_definitions,
+            sentence.primary_expression, sentence.movie_titles,
+          ).then(response => {
+            if (generation !== gradingGenerationRef.current) return;
+            if (response.autograding_error) reportAutogradeFailure("translation", response.autograding_error);
+            apply(translation_transition(stateRef.current, { type: "Graded", response }));
+          }).catch(error => {
+            if (generation !== gradingGenerationRef.current) return;
+            const message = error instanceof Error ? error.message : "Failed to grade automatically";
+            reportAutogradeFailure("translation", message);
+            apply(translation_transition(stateRef.current, { type: "GradingFailed", message }));
+          });
+          break;
+        }
+        case "PlaySound":
+          playSoundEffect(effect.sound === "AiDoneGrading" ? "aiDoneGrading" : "perfect");
+          break;
+        case "Complete":
+          try { if (!initialState) localStorage.removeItem(STORAGE_KEY); } catch { /* Storage unavailable. */ }
+          bumpBackground(30.0);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          onComplete(effect.outcome.type === "Perfect" ? { perfect: null } : effect.outcome.grade,
+            effect.heteronyms_tapped, effect.submission, effect.completed_at_ms);
+          break;
       }
     }
-  }, [grade, sentence, userTranslation, tappedWords, correctTranslation]);
-
-  const literalGramIndices: number[] = sentence.literal_gram_indices;
-  const handleWordTap = (index: number) => {
-    if (!grade) {
-      setTappedWords((prev) => new Set(prev).add(index));
-    }
-  };
-
-  const feedback = useMemo(() => get_translation_review_feedback(
-    sentence,
-    grade && "graded" in grade && "literalGrades" in grade.graded ? grade.graded : undefined,
-    !!(grade && "graded" in grade && "perfect" in grade.graded),
-    new Uint32Array([...tappedWords]),
-    targetLanguage,
-  ), [sentence, grade, tappedWords, targetLanguage]);
-  const tappedGramGroups = useMemo(() => new Set(feedback.tapped_gram_groups), [feedback]);
-  const tappedDefinitions = feedback.definitions as { definition: GramDefinition; breakdown: BreakdownRow[] | null | undefined }[];
-  const gradeItems = feedback.grade_items;
-  const canContinue = feedback.can_continue;
-
-  // Normalize the WASM grade shape into the single shared verdict presentation
-  // (lowercase grades, one boundary). Null while grading is in flight/unstarted.
-  const gradedState = grade && "graded" in grade ? grade.graded : null;
-  const isPerfect = gradedState !== null && "perfect" in gradedState;
-  const normalizedGrades: LiteralGrade[] | undefined =
-    gradedState && "literalGrades" in gradedState
-      ? gradedState.literalGrades.map((g) =>
-          g === "Remembered" ? "remembered" : g === "Forgot" ? "forgot" : null,
-        )
-      : undefined;
-  const verdict: TranslationVerdictData | null = gradedState
-    ? {
-        userTranslation,
-        correctTranslation,
-        isPerfect,
-        encouragement: gradedState.encouragement ?? null,
-        explanation: gradedState.explanation ?? null,
-        autogradingError:
-          "autogradingError" in gradedState
-            ? (gradedState.autogradingError ?? null)
-            : null,
-      }
-    : null;
-
+  }, [initialState, sentence, totalReviewsCompleted, accessToken, bumpBackground, onComplete]);
+  const send = useCallback((event: TranslationEvent) => {
+    if (event.type === "CancelGrading") gradingGenerationRef.current++;
+    applyStep(translation_transition(stateRef.current, event));
+  }, [applyStep]);
+  const resumeStep = useRef(applyStep);
   useEffect(() => {
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
+    const generation = gradingGenerationRef;
+    resumeStep.current(translation_resume(stateRef.current));
+    return () => { generation.current++; };
+  }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => inputRef.current?.focus(), 100);
     return () => clearTimeout(timer);
   }, [sentence.target_language]);
-
-  const handleCheckAnswer = useCallback(async () => {
-    if (userTranslation.trim()) {
-      completedAtMsRef.current = Date.now();
-      bumpBackground(30.0);
-      const closest =
-        find_closest_translation(
-          userTranslation,
-          sentence.native_translations,
-          nativeLanguage,
-        ) ?? sentence.native_translations[0] ?? "";
-      setCorrectTranslation(closest);
-      const generation = ++gradingGenerationRef.current;
-      setGrade({ grading: null });
-
-      try {
-        const course: Course = {
-          targetLanguage: targetLanguage,
-          nativeLanguage: nativeLanguage,
-        };
-
-        const response = await autograde_translation(
-          sentence.target_language,
-          userTranslation,
-          sentence.native_translations,
-          sentence.target_language_literals,
-          sentence.unique_target_language_phrases,
-          accessToken,
-          course,
-          sentence.gram_definitions_for_lookup,
-          new Uint32Array(sentence.literal_gram_indices),
-          sentence.phrase_definitions,
-          sentence.primary_expression,
-          sentence.movie_titles,
-        );
-
-        if (generation !== gradingGenerationRef.current) return;
-
-        playSoundEffect("aiDoneGrading");
-        if (response.autograding_error) reportAutogradeFailure("translation", response.autograding_error);
-        const result = prepare_translation_review(sentence.target_language_literals, response);
-        if (result.type === "Perfect") {
-          setGrade({ graded: { perfect: null, encouragement: result.encouragement, explanation: result.explanation } });
-          playSoundEffect("perfect");
-        } else {
-          setGrade({ graded: result.grade });
-        }
-      } catch (error) {
-        if (generation !== gradingGenerationRef.current) return;
-        console.error("Autograde failed:", error);
-        playSoundEffect("aiDoneGrading");
-        setGrade({ graded: failed_translation_review(
-          sentence.target_language_literals.length,
-          error instanceof Error ? error.message : "Failed to grade automatically",
-        ) });
-      }
-    }
-  }, [
-    sentence,
-    userTranslation,
-    accessToken,
-    targetLanguage,
-    nativeLanguage,
-    bumpBackground,
-  ]);
-
-  const heteronymsTapped = feedback.heteronyms_tapped;
-
-  const handleContinue = useCallback(() => {
-    if (canContinue) {
-      if (grade && "graded" in grade) {
-        localStorage.removeItem(STORAGE_KEY);
-        bumpBackground(30.0);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        const completedAtMs = completedAtMsRef.current!;
-        if ("perfect" in grade.graded) {
-          onComplete(
-            { perfect: grade.graded.perfect },
-            heteronymsTapped,
-            userTranslation,
-            completedAtMs,
-          );
-        } else {
-          onComplete(
-            {
-              literalGrades: grade.graded.literalGrades,
-              phrasesRemembered: grade.graded.phrasesRemembered,
-              phrasesForgot: grade.graded.phrasesForgot,
-            },
-            heteronymsTapped,
-            userTranslation,
-            completedAtMs,
-          );
-        }
-      }
-    }
-  }, [
-    canContinue,
-    onComplete,
-    grade,
-    userTranslation,
-    heteronymsTapped,
-    bumpBackground,
-  ]);
-
-  const handleGradeSwipe = useCallback(
-    (item: GradeItem, remembered: boolean) => {
-      setGrade((previous) => {
-        if (!previous || !("graded" in previous) || !("literalGrades" in previous.graded)) return previous;
-        return { graded: apply_translation_grade(previous.graded, item, remembered, sentence.target_language_literals.length) };
-      });
-    },
-    [sentence.target_language_literals.length],
-  );
+  const handleWordTap = (index: number) => send({ type: "WordTapped", index });
+  const handleCheckAnswer = useCallback(() => send({ type: "Submit", now_ms: Date.now() }), [send]);
+  const handleContinue = useCallback(() => send({ type: "Continue" }), [send]);
+  const handleGradeSwipe = useCallback((index: number, remembered: boolean) => {
+    send({ type: "ItemGraded", item_index: index, grade: remembered ? "Remembered" : "Forgot" });
+  }, [send]);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && grade === null) {
+      if (e.key === "Enter" && editing) {
         e.preventDefault();
         if (userTranslation.trim()) {
           handleCheckAnswer();
         }
-      } else if (e.key === "Enter" && grade && "graded" in grade) {
+      } else if (e.key === "Enter" && view.verdict) {
         e.preventDefault();
         handleContinue();
       } else if (
         e.key === "ArrowRight" &&
-        grade &&
-        "graded" in grade &&
+        view.verdict &&
         canContinue
       ) {
         e.preventDefault();
@@ -835,9 +682,8 @@ export function TranslationChallenge({
       }
 
       const hasGradeItems =
-        grade &&
-        "graded" in grade &&
-        "literalGrades" in grade.graded &&
+        view.verdict &&
+        view.grade_section &&
         gradeItems.length > 0;
 
       if (hasGradeItems) {
@@ -888,7 +734,9 @@ export function TranslationChallenge({
     canContinue,
     userTranslation,
     handleCheckAnswer,
-    grade,
+    editing,
+    view.verdict,
+    view.grade_section,
     gradeItems.length,
   ]);
 
@@ -896,9 +744,9 @@ export function TranslationChallenge({
     <div className="flex flex-col flex-1 justify-between">
       <div>
         <Card animate className="pt-3 pb-3 pl-3 pr-3 relative gap-2">
-          {sentence.second_chance && (
+          {view.badge && (
             <Badge className="absolute -top-2 -left-2 -rotate-12 z-10 shadow-sm text-sm">
-              Second Chance!
+              {view.badge}
             </Badge>
           )}
           <div className="space-y-6">
@@ -907,20 +755,15 @@ export function TranslationChallenge({
                 <AudioButton
                   audioRequest={sentence.audio}
                   accessToken={accessToken}
-                  autoPlay={grade !== null && !hasClip}
+                  autoPlay={!editing && !hasClip}
                   autoplayed={autoplayed}
                   setAutoplayed={setAutoplayed}
                 />
 
                 <div className="flex flex-col items-center gap-1">
                   <ChallengeSentence
-                    literals={sentence.target_language_literals}
+                    words={view.words}
                     onWordTap={handleWordTap}
-                    grades={normalizedGrades}
-                    isPerfect={isPerfect}
-                    tappedWords={tappedWords}
-                    literalGramIndices={literalGramIndices}
-                    tappedGramGroups={tappedGramGroups}
                     targetLanguage={targetLanguage}
                   />
                 </div>
@@ -940,26 +783,26 @@ export function TranslationChallenge({
               </div>
             </div>
 
-            {grade === null ? (
+            {editing ? (
               <>
                 <Textarea
                   ref={inputRef}
                   lang={languageToLangAttr(nativeLanguage)}
-                  placeholder="Translation..."
+                  placeholder={view.placeholder}
                   value={userTranslation}
-                  onChange={(e) => setUserTranslation(e.target.value)}
+                  onChange={(e) => send({ type: "TextChanged", text: e.target.value })}
                   className="text-lg min-h-0"
                   rows={1}
                 />
 
                 <ProperNounDefinitions
-                  definitions={sentence.proper_noun_definitions}
+                  definitions={view.proper_nouns}
                   targetLanguage={targetLanguage}
                 />
               </>
             ) : (
               <div className="space-y-4 mt-4 animate-feedback-in">
-                {"grading" in grade ? (
+                {view.is_grading ? (
                   <div className="space-y-2">
                     <YourTranslation userTranslation={userTranslation} />
                     <CorrectTranslation sentence={correctTranslation} />
@@ -972,18 +815,16 @@ export function TranslationChallenge({
                       targetLanguage={targetLanguage}
                     />
 
-                    {!verdict.isPerfect && (
+                    {view.grade_section && (
                       <PhraseStatuses
                         gradeItems={gradeItems}
                         phraseRefs={phraseRefs}
                         handleGradeSwipe={handleGradeSwipe}
                         selectedPhraseIndex={selectedPhraseIndex}
                         setSelectedPhraseIndex={setSelectedPhraseIndex}
-                        openByDefault={
-                          "graded" in grade &&
-                          "autogradingError" in grade.graded &&
-                          grade.graded.autogradingError !== undefined
-                        }
+                        openByDefault={view.grade_section.open_by_default}
+                        title={view.grade_section.title}
+                        subtitle={view.grade_section.subtitle}
                         targetLanguage={targetLanguage}
                       />
                     )}
@@ -998,7 +839,7 @@ export function TranslationChallenge({
               language={targetLanguage}
               text={sentence.target_language}
               accessToken={accessToken}
-              autoPlay={grade !== null}
+              autoPlay={!editing}
               autoplayed={autoplayed}
               setAutoplayed={setAutoplayed}
               onAvailabilityChange={setHasClip}
@@ -1020,37 +861,36 @@ export function TranslationChallenge({
         </Card>
 
         {/* Movie posters - hidden after grading */}
-        {grade === null && (
+        {editing && (
           <MoviePosterGrid movieData={movieData} deck={deck} />
         )}
       </div>
 
       <div className="sticky bottom-0">
-        {grade === null ? (
+        {editing ? (
           <Button
             onClick={handleCheckAnswer}
             className="w-full mt-4 h-14 text-lg"
             size="lg"
-            disabled={!userTranslation.trim()}
+            disabled={!view.can_submit}
           >
-            Check Answer
+            {view.submit_label}
           </Button>
-        ) : "grading" in grade ? (
+        ) : view.is_grading ? (
           <div className="flex gap-2">
             <Button
               className="flex-1 h-14 text-lg"
               size="lg"
               disabled
             >
-              AI is grading...
+              {view.submit_label}
             </Button>
             <Button
               variant="ghost"
               size="icon"
               className="h-14 w-14"
               onClick={() => {
-                gradingGenerationRef.current++;
-                setGrade(null);
+                send({ type: "CancelGrading" });
               }}
             >
               <X className="h-5 w-5" />
@@ -1064,7 +904,7 @@ export function TranslationChallenge({
             disabled={!canContinue}
           >
             <span className="relative flex items-center justify-center">
-              {"perfect" in grade.graded ? "Nailed it!" : "Continue"}
+              {view.continue_label}
               <span className="absolute left-full ml-2 text-sm text-muted-foreground hide-keyboard-hint-mobile">
                 (⏎)
               </span>
