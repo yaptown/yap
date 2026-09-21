@@ -13,7 +13,10 @@ fn main() {
     println!("cargo::rerun-if-changed={out}");
     // Builds without the web tree beside us (the yap-mcp Docker image) have
     // nothing to keep in step.
-    if !std::path::Path::new(out).parent().is_some_and(|dir| dir.is_dir()) {
+    if !std::path::Path::new(out)
+        .parent()
+        .is_some_and(|dir| dir.is_dir())
+    {
         return;
     }
     let css = palette::render_css();
