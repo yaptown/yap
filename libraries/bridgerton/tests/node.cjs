@@ -38,7 +38,7 @@ const { Counter, Snapshot } = require('../generated/node/bridge_fixture.js');
   });
   assert.equal(counter.add(7), 7);
   assert.equal(observed, 7);
-  assert.equal(counter.label(), 'Yap 語 — 7');
+  assert.equal(counter.label(), 'Bridge 語 — 7');
   const snapshot = counter.snapshot();
   const laterSnapshot = await counter.snapshot_later();
   const made = await Snapshot.create(91);

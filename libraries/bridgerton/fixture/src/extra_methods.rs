@@ -5,6 +5,6 @@ use bridgerton::bridge;
 #[bridge]
 impl Counter {
     pub fn label(&self) -> String {
-        format!("Yap 語 — {}", self.value.get())
+        format!("Bridge 語 — {}", self.value.get())
     }
 }

@@ -1,10 +1,8 @@
-// Uses the repo's existing Playwright installation; no application server or account needed.
-const { createRequire } = require('node:module');
+// Uses the Playwright from this directory's package.json; no application server or account needed.
 const { createServer } = require('node:http');
 const { readFile } = require('node:fs/promises');
 const path = require('node:path');
-const requireFrontend = createRequire(path.resolve(__dirname, '../../../yap-frontend/package.json'));
-const { chromium } = requireFrontend('@playwright/test');
+const { chromium } = require('@playwright/test');
 const root = path.resolve(__dirname, '..');
 
 (async () => {
@@ -42,7 +40,7 @@ const root = path.resolve(__dirname, '..');
         counter.clear_observer();
       });
       check(counter.add(7) === 7 && callbackValue === 7, 'callback');
-      check(counter.label() === 'Yap 語 — 7', 'UTF-8');
+      check(counter.label() === 'Bridge 語 — 7', 'UTF-8');
       const token = new AbortController();
       check(await counter.add_later(3, 5, token.signal) === 10, 'async');
       const cancelledToken = new AbortController();

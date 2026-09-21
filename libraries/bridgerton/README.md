@@ -9,8 +9,8 @@ This is the workspace's binding layer. `src/` is the runtime (including the
 `cli/` the `cargo bridgerton` build command, and `fixture/` the test crate.
 Application crates depend on `bridgerton` alone: no `wasm-bindgen`, `tsify`,
 or `js-sys` declarations, no feature flags, and no `cfg(target_arch)` in their
-code. [Real Yap in SwiftUI](../../yap-ios) exposes the existing
-`Weapon` and `Deck` APIs through it and runs a native screen.
+code. A real SwiftUI application can expose its existing Rust objects
+through it and run native screens against them.
 
 ## Start here
 
@@ -66,8 +66,8 @@ One command builds either platform. A cargo alias in `.cargo/config.toml` runs
 the `cli/` crate, so nothing needs installing:
 
 ```sh
-cargo bridgerton web --package yap-frontend-rs --release
-cargo bridgerton swift --package yap-ios-host --out-dir yap-ios/Generated/Bindings
+cargo bridgerton web --package my-app-core --release
+cargo bridgerton swift --package my-app-host --out-dir MyApp/Generated/Bindings
 ```
 
 `web` wraps wasm-pack (`--target web|nodejs|bundler`, `--out-dir`, `--release`,
@@ -87,13 +87,13 @@ futures retain their existing thread confinement.
 
 ## Existing wasm-bindgen APIs
 
-Yap's main impl now uses one attribute:
+An existing wasm-bindgen impl needs one attribute:
 
 ```rust
 use bridgerton::bridge;
 
 #[bridge]
-impl Weapon {
+impl Session {
     pub async fn create(/* existing arguments */) -> Result<Self, Error> { /* ... */ }
 
     #[bridge(getter)]
@@ -106,16 +106,16 @@ leaves private helpers alone. On WASM it emits wasm-bindgen functions; values
 decode inside the method body so an error releases borrowed objects normally.
 Collections are adapted automatically, including nested nullable elements, and
 byte vectors keep their `Uint8Array` ABI. TypeScript collection declarations
-support concrete generic types such as `Heteronym<string>`. On native it also
+support concrete generic types such as `Card<string>`. On native it also
 generates the Swift/C bindings. Getters become Swift properties
-(`weapon.device_id`); only getters returning `Result` throw. There is no method
+(`session.device_id`); only getters returning `Result` throw. There is no method
 allowlist to keep in sync; `#[bridge(only(...))]` exports a subset of an impl.
 
 Method-level conditional compilation works with the same Rust attributes:
 
 ```rust
 #[bridge]
-impl Weapon {
+impl Session {
     pub fn device_id(&self) -> String { /* ... */ }
 
     #[cfg(target_os = "macos")]
@@ -287,9 +287,9 @@ python3 libraries/bridgerton/check.py
 ```
 
 Requires macOS, Rust with `wasm32-unknown-unknown`, Swift 6.2+, wasm-pack, and Node. TypeScript checks use
-Yap's installed TypeScript compiler. The browser check uses Yap's existing
-Playwright installation and Chromium; use `--skip-browser` if
-those are unavailable. Generated Swift, C headers, WASM packages, and executables
+the TypeScript compiler from this directory's `package.json` (`pnpm install`
+here first). The browser check uses the same package's Playwright and Chromium;
+use `--skip-browser` if those are unavailable. Generated Swift, C headers, WASM packages, and executables
 go in the ignored `generated/` directory.
 
 The checks cover:
@@ -423,11 +423,11 @@ listener on completion, cancellation, or drop. The small `abort-signal` crate
 shared with fetch-happen owns the platform mechanism (Tokio cancellation tokens
 natively), while bridgerton owns only its language bindings.
 
-For example, Swift can call Yap's nonthrowing prefetch API without managing a token:
+For example, Swift can call a nonthrowing prefetch method without managing a token:
 
 ```swift
 let work = Task { @MainActor in
-    await deck.cache_challenge_audio(banned_challenge_types: [], access_token: nil)
+    await library.prefetch_audio(access_token: nil)
 }
 work.cancel()
 ```
@@ -451,10 +451,10 @@ handle is rejected so suspended operations cannot switch runtimes.
 When a handle is installed, the bridge enters its context during native calls,
 polls, and drops, restoring the prior context on return (including reentrant calls).
 It never moves confined futures onto Tokio workers. Binding generation needs no
-runtime setup. The real Yap integration exercises native file I/O and background
-pack loading; authenticated networking and other CPU-intensive APIs still need testing.
+runtime setup. The workspace's iOS host exercises native file I/O and background
+data loading; authenticated networking and other CPU-intensive APIs still need testing.
 
-The [real Yap host](../../yap-ios) exercises platform I/O, existing
+The workspace's iOS host exercises platform I/O, existing
 state and subscriptions, typed event creation, locked native persistence/reopen,
 and a running SwiftUI screen. Its XcodeGen app links iOS static libraries against
 host-generated bindings; no XCFramework is needed. `ForeignValue` and authenticated
@@ -462,11 +462,11 @@ server sync validation remain deferred. Native
 foreign entry points are Apple-only; ordinary Rust APIs and source generation
 can compile elsewhere, but calling this native ABI on non-Apple hosts aborts.
 
-`ListenerKey` in Yap is an opaque `#[bridge(opaque)]` object on both platforms. It
-requires no slotmap-token codec or native type alias. Returning it or delivering
-it in a callback transfers a wrapper to Swift; passing it to `unsubscribe` or
-as a sync modifier consumes that wrapper. Rust's internal `Copy` behavior is
-unchanged, and no persisted event format is involved.
+A subscription token can be an opaque `#[bridge(opaque)]` object on both platforms,
+even if it is a small `Copy` type in Rust. It needs no codec or native type alias.
+Returning it or delivering it in a callback transfers a wrapper to Swift; passing
+it back to an `unsubscribe` method consumes that wrapper. Rust's internal `Copy`
+behavior is unchanged.
 
 The runtime's `AbortSignal` intentionally retains its existing non-consuming
 argument conversion and task-cancellation wiring. The low-level
@@ -476,7 +476,7 @@ objects use `#[bridge(opaque)]` and need no such configuration.
 
 Free functions take the same bare `#[bridge]` as impls and are exported on both
 platforms: real wasm-bindgen functions for JavaScript and main-actor functions
-for Swift. Yap's rule is that every type or function crossing the boundary
+for Swift. The recommended rule is that every type or function crossing the boundary
 carries an unconditional `#[bridge(transparent)]`, `#[bridge(opaque)]`, or
 `#[bridge]`; anything else is plain Rust. Application code never gates a bridge
 attribute on `target_arch`, and no `JsValue` appears in an exported signature.

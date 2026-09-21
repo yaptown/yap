@@ -1,0 +1,9 @@
+{
+  "name": "bridgerton-checks",
+  "private": true,
+  "description": "Node-side dependencies for check.py: the TypeScript compiler and Playwright for the browser check",
+  "devDependencies": {
+    "@playwright/test": "1.61.0",
+    "typescript": "~5.8.3"
+  }
+}

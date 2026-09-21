@@ -132,7 +132,7 @@ private struct RejectSecondObject: BridgeReturn {
         check(Witness.alive == 1, "Rust retains the Swift closure")
         check(try counter.add(amount: 7) == 7, "sync result")
         check(Witness.alive == 0, "callback is released after reentrant unregister")
-        check(counter.label() == "Yap 語 — 7", "UTF-8 result")
+        check(counter.label() == "Bridge 語 — 7", "UTF-8 result")
         let snapshot = counter.snapshot()
         let laterSnapshot = try await counter.snapshot_later()
         let made = await Snapshot.create(value: 91)

@@ -26,7 +26,7 @@ def run(*args, expect_failure=None, expect_crash=False):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--skip-browser", action="store_true", help="omit Chromium (requires yap-frontend Playwright)")
+    parser.add_argument("--skip-browser", action="store_true", help="omit Chromium (requires the Playwright from package.json)")
     args = parser.parse_args()
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     run("cargo", "fmt", "--all", "--", "--check")
@@ -59,7 +59,7 @@ def main():
     run(*BRIDGERTON, "web", "--package", "bridge-fixture", "--target", "nodejs", "--out-dir", "../generated/node", "--locked")
     run("cargo", "clippy", "-p", "bridge-fixture", "--lib", "--target", "wasm32-unknown-unknown", "--locked", "--", "-D", "warnings")
     run("node", "tests/node.cjs")
-    run("node", "../../yap-frontend/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "es2022", "--module", "commonjs", "--moduleResolution", "node", "--lib", "es2022,dom,esnext.disposable", "tests/types.ts")
+    run("node", "node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "es2022", "--module", "commonjs", "--moduleResolution", "node", "--lib", "es2022,dom,esnext.disposable", "tests/types.ts")
     # Descriptor interpretation must also survive optimizer/LTO transformations.
     ENV["CARGO_PROFILE_RELEASE_LTO"] = "true"
     run(*BRIDGERTON, "web", "--package", "bridge-fixture", "--target", "nodejs", "--out-dir", "../generated/node", "--release", "--locked")
