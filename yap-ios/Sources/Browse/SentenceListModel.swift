@@ -47,7 +47,7 @@ struct SentenceListProgressView: View {
 }
 
 struct MoviePoster: View {
-    let deck: Deck
+    @Environment(\.reviewHost!) private var host
     let id: String
     let title: String
     @State private var image: UIImage?
@@ -57,6 +57,6 @@ struct MoviePoster: View {
             else { Image(systemName: "film").resizable().scaledToFit().padding(8).foregroundStyle(.secondary) }
         }.frame(width: 48, height: 72).clipShape(RoundedRectangle(cornerRadius: 6))
             .accessibilityLabel("Poster for \(title)")
-            .task(id: id) { image = deck.get_movie_poster(movie_id: id).flatMap { UIImage(data: Data($0)) } }
+            .task(id: id) { image = host.deck.get_movie_poster(movie_id: id).flatMap { UIImage(data: Data($0)) } }
     }
 }

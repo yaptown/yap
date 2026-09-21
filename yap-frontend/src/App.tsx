@@ -1,4 +1,4 @@
-import { ChallengeView } from "@/components/challenges/ChallengeView";
+import { ReviewScreen } from "@/components/ReviewScreen";
 import * as Sentry from "@sentry/react";
 import {
   useState,
@@ -31,11 +31,12 @@ import {
   type LiteralGrades,
   type Gram,
   type PartGraded,
+  type PlacementSession,
   type Rating,
   get_audio_cache_version,
   get_clip_manifest_version,
   refresh_clip_manifest,
-  get_review_prompts,
+  update_profile,
   get_challenge_restrictions,
 } from "../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button.tsx";
@@ -66,13 +67,10 @@ import { NotFoundPage } from "@/pages/not-found";
 import { SentenceListsPage } from "@/pages/sentence-lists";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { registerSW } from "virtual:pwa-register";
-import { NoCardsReady } from "@/components/no-cards-ready";
-import { AccomplishmentScreen } from "@/components/AccomplishmentScreen";
 import {
   useSentenceList,
   sentenceListToSelection,
 } from "@/hooks/useSentenceList";
-import { SetDisplayName } from "@/components/SetDisplayName";
 
 import type { Dispatch, SetStateAction } from "react";
 import type { RegisterSWOptions } from "vite-plugin-pwa/types";
@@ -105,8 +103,6 @@ import { ErrorMessage } from "@/components/ui/error-message";
 import { BackgroundShader } from "@/components/BackgroundShader";
 import { Movies } from "@/components/Movies";
 import { getMovieMetadata } from "@/lib/movie-cache";
-import { PlacementTest } from "@/components/PlacementTest";
-import { LockupOfferScreen } from "@/components/LockupOffer";
 
 // Essential user info to persist for offline functionality
 export interface UserInfo {
@@ -244,10 +240,7 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
 
   // Fetch display name from Supabase when logged in
   useEffect(() => {
-    if (!session?.user.id) {
-      setDisplayName(undefined);
-      return;
-    }
+    if (!session?.user.id) return;
 
     // Fetch initial display name
     const fetchDisplayName = async () => {
@@ -450,7 +443,6 @@ function ReviewPage() {
           ({
             deck,
             targetLanguage,
-            nativeLanguage,
             startingFresh,
             historyKnown,
           }) => {
@@ -470,30 +462,16 @@ function ReviewPage() {
 
             return (
               <>
-                <TopPageLayout
+                <Review
                   userInfo={userInfo}
-                  headerProps={{
-                    onChangeLanguage: () => navigate("/select-language"),
-                    showSignupNag: deck !== null,
-                    language: targetLanguage,
-                    dailyGoalPercent:
-                      (deck.get_today_time_spent() /
-                        deck.get_daily_review_target()) *
-                      100,
-                  }}
-                >
-                  <Review
-                    userInfo={userInfo}
-                    accessToken={accessToken}
-                    deck={deck}
-                    targetLanguage={targetLanguage}
-                    nativeLanguage={nativeLanguage}
-                    startingFresh={startingFresh}
-                    historyKnown={historyKnown}
-                    autoplayed={autoplayed}
-                    setAutoplayed={setAutoplayed}
-                  />
-                </TopPageLayout>
+                  accessToken={accessToken}
+                  deck={deck}
+                  targetLanguage={targetLanguage}
+                  startingFresh={startingFresh}
+                  historyKnown={historyKnown}
+                  autoplayed={autoplayed}
+                  setAutoplayed={setAutoplayed}
+                />
                 <Tools deck={deck} />
                 <Movies
                   moviesWithMetadata={moviesWithMetadata}
@@ -767,7 +745,6 @@ interface ReviewProps {
   accessToken: string | undefined;
   deck: Deck;
   targetLanguage: Language;
-  nativeLanguage: Language;
   startingFresh: boolean | undefined;
   historyKnown: boolean;
   autoplayed: boolean;
@@ -798,19 +775,31 @@ function Review({
   accessToken,
   deck,
   targetLanguage,
-  nativeLanguage,
   startingFresh,
   historyKnown,
   autoplayed,
   setAutoplayed,
 }: ReviewProps) {
   const weapon = useWeapon();
+  const navigate = useNavigate();
   const { sentenceList, setSentenceList } = useSentenceList(
     deck.get_sentence_list(),
   );
 
   const network = useNetworkState();
-  const [cardsBecameDue, setCardsBecameDue] = useState<number>(0);
+  const [readiness, setReadiness] = useState(() => ({
+    deck,
+    timestamp_ms: Date.now(),
+    audioVersion: get_audio_cache_version(),
+    clipVersion: get_clip_manifest_version(),
+  }));
+  if (readiness.deck !== deck) {
+    setReadiness((previous) => ({
+      ...previous,
+      deck,
+      timestamp_ms: Date.now(),
+    }));
+  }
   const [showReportModal, setShowReportModal] = useState(false);
   const [dismissedSetDisplayName, setDismissedSetDisplayName] = useState(() => {
     return localStorage.getItem("yap-skipped-set-display-name") === "true";
@@ -818,27 +807,11 @@ function Review({
 
   const totalReviewsCompleted = deck.get_total_reviews();
 
-  // eslint-disable-next-line react-hooks/purity -- point-in-time snapshot, refreshed with the review screen
-  const now = Date.now();
-  const accomplishment = deck.accomplishment_view(now);
+  const now = readiness.timestamp_ms;
   const [dismissedAccomplishmentAtReview, setDismissedAccomplishmentAtReview] =
     useState<bigint | null>(null);
   const dismissedAccomplishment =
     dismissedAccomplishmentAtReview === totalReviewsCompleted;
-  // Auto-dismiss at midnight
-  useEffect(() => {
-    if (!accomplishment || dismissedAccomplishment) return;
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    const ms = midnight.getTime() - now.getTime();
-    const timer = setTimeout(
-      () => setDismissedAccomplishmentAtReview(totalReviewsCompleted),
-      ms,
-    );
-    return () => clearTimeout(timer);
-  }, [accomplishment, dismissedAccomplishment, totalReviewsCompleted]);
-
   const nextDueCard =
     deck.get_all_cards_summary().find((card) => card.due_timestamp_ms > now) ??
     null;
@@ -865,7 +838,10 @@ function Review({
       if (timeUntilDueMs > 0 && timeUntilDueMs < 24 * 60 * 60 * 1000) {
         // Only schedule if within 24 hours
         const timeout = setTimeout(() => {
-          setCardsBecameDue((cardsBecameDue) => cardsBecameDue + 1000);
+          setReadiness((previous) => ({
+            ...previous,
+            timestamp_ms: Date.now(),
+          }));
         }, timeUntilDueMs + 1);
 
         return () => clearTimeout(timeout);
@@ -881,45 +857,24 @@ function Review({
   // get_review_info; poll the cache version so they surface as soon as the
   // background prefetcher lands their clips. Same-value updates bail out of
   // the state change, so the steady state costs no re-renders.
-  const [audioCacheVersion, setAudioCacheVersion] = useState(0);
-  useInterval(() => setAudioCacheVersion(get_audio_cache_version()), 2000);
+  useInterval(() => {
+    const timestamp_ms = Date.now();
+    const audioVersion = get_audio_cache_version();
+    const clipVersion = get_clip_manifest_version();
+    setReadiness((previous) =>
+      previous.audioVersion !== audioVersion ||
+      previous.clipVersion !== clipVersion ||
+      timestamp_ms - previous.timestamp_ms >= 60_000
+        ? { ...previous, timestamp_ms, audioVersion, clipVersion }
+        : previous,
+    );
+  }, 2000);
 
-  // Sentence selection prioritizes sentences with movie clips, which it
-  // learns from the per-language clip manifest: the OPFS-cached copy is
-  // seeded at boot, and this refreshes it from the server in the background.
-  // Neither blocks anything — until a manifest lands, selection just doesn't
-  // prioritize. The version poll re-runs selection once one does.
-  const [clipManifestVersion, setClipManifestVersion] = useState(0);
-  useInterval(() => setClipManifestVersion(get_clip_manifest_version()), 2000);
   useEffect(() => {
     refresh_clip_manifest(targetLanguage, accessToken).catch((error) => {
       console.warn("Failed to refresh clip manifest:", error);
     });
   }, [targetLanguage, accessToken]);
-
-  const { reviewInfo, lockupOffer } = useMemo(() => {
-    const now = Date.now();
-    return {
-      reviewInfo: deck.get_review_info(bannedChallengeTypes, now),
-      // The daily lockup offer: when a review backlog builds up, keep the
-      // most-due cards active and set the rest aside
-      lockupOffer: deck.lockup_screen_view(bannedChallengeTypes, now),
-    };
-    // cardsBecameDue, audioCacheVersion, and clipManifestVersion are
-    // intentionally included to trigger recalculation when cards become due,
-    // audio finishes caching, or clip knowledge arrives
-  }, [
-    deck,
-    bannedChallengeTypes,
-    cardsBecameDue,
-    audioCacheVersion,
-    clipManifestVersion,
-  ]);
-
-  useInterval(
-    () => setCardsBecameDue((cardsBecameDue) => cardsBecameDue + 1),
-    60000,
-  );
 
   // A challenge, once on screen, stays until the deck itself changes.
   // reviewInfo recomputes underneath for many reasons (a clip manifest
@@ -932,44 +887,103 @@ function Review({
   // restrictions mid-challenge (the can't-listen/can't-speak buttons) must
   // also swap immediately. A held "no challenge" never sticks, so newly due
   // cards still surface from idle.
-  const heldChallenge = useRef<{
+  const [placement, setPlacement] = useState<PlacementSession>();
+  const [heldChallenge, setHeldChallenge] = useState<{
     deck: Deck;
     banned: ChallengeRequirements[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    challenge: Challenge<any>;
-  } | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentChallenge: Challenge<any> | undefined = useMemo(() => {
-    const held = heldChallenge.current;
-    if (held && held.deck === deck && held.banned === bannedChallengeTypes) {
-      return held.challenge;
-    }
-    const next = reviewInfo.get_next_challenge(deck);
-    heldChallenge.current =
-      next === undefined
-        ? null
-        : { deck, banned: bannedChallengeTypes, challenge: next };
+    challenge: Challenge<Gram<string>> | undefined;
+  }>({ deck, banned: bannedChallengeTypes, challenge: undefined });
+  const online = network.online === true;
+  const view = useMemo(() => {
+    const held = heldChallenge;
+    const next = deck.review_screen_view({
+      banned: bannedChallengeTypes,
+      sentence_list: sentenceListToSelection(sentenceList),
+      online,
+      is_signed_in: userInfo !== undefined,
+      needs_display_name: userInfo?.displayName === null,
+      display_name_dismissed: dismissedSetDisplayName,
+      has_access_token: accessToken !== undefined,
+      starting_fresh: startingFresh,
+      history_known: historyKnown,
+      dismissed_accomplishment_at_review:
+        dismissedAccomplishmentAtReview === null
+          ? undefined
+          : Number(dismissedAccomplishmentAtReview),
+      placement,
+      current_challenge:
+        held?.deck === deck && held.banned === bannedChallengeTypes
+          ? held.challenge
+          : undefined,
+      timestamp_ms: readiness.timestamp_ms,
+    });
     return next;
-  }, [reviewInfo, deck, bannedChallengeTypes]);
+  }, [
+    deck,
+    bannedChallengeTypes,
+    sentenceList,
+    online,
+    userInfo,
+    dismissedSetDisplayName,
+    accessToken,
+    startingFresh,
+    historyKnown,
+    dismissedAccomplishmentAtReview,
+    readiness,
+    heldChallenge,
+    placement,
+  ]);
+  const currentChallenge =
+    view.step.type === "Challenge" ? view.step.view.challenge : undefined;
+  // Adjust held state before React commits this render, never in an effect.
+  // An empty selection may become ready without a new Deck or restriction set.
+  if (
+    heldChallenge.deck !== deck ||
+    heldChallenge.banned !== bannedChallengeTypes ||
+    (heldChallenge.challenge === undefined && currentChallenge !== undefined)
+  ) {
+    setHeldChallenge({
+      deck,
+      banned: bannedChallengeTypes,
+      challenge: currentChallenge,
+    });
+  }
+
+  // Auto-dismiss at midnight
+  useEffect(() => {
+    if (view.step.type !== "Accomplishment" || dismissedAccomplishment) return;
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const ms = midnight.getTime() - now.getTime();
+    const timer = setTimeout(
+      () => setDismissedAccomplishmentAtReview(totalReviewsCompleted),
+      ms,
+    );
+    return () => clearTimeout(timer);
+  }, [view.step.type, dismissedAccomplishment, totalReviewsCompleted]);
 
   useEffect(() => {
-    if (currentChallenge) return;
-    const restrictions = readChallengeRestrictions();
     if (
+      currentChallenge ||
+      (heldChallenge.deck === deck &&
+        heldChallenge.banned === bannedChallengeTypes &&
+        heldChallenge.challenge !== undefined)
+    )
+      return;
+    const restrictions = readChallengeRestrictions();
+    const changed =
       restrictions.banned.length !== bannedChallengeTypes.length ||
-      restrictions.banned.some((value, i) => value !== bannedChallengeTypes[i])
-    ) {
-      setBannedChallengeTypes(restrictions.banned);
-    }
-    if (restrictions.next_expiry_ms == null) return;
+      restrictions.banned.some((value, i) => value !== bannedChallengeTypes[i]);
+    if (!changed && restrictions.next_expiry_ms == null) return;
     const timeout = setTimeout(
       () => {
         setBannedChallengeTypes(readChallengeRestrictions().banned);
       },
-      Math.max(0, restrictions.next_expiry_ms - Date.now()),
+      changed ? 0 : Math.max(0, restrictions.next_expiry_ms! - Date.now()),
     );
     return () => clearTimeout(timeout);
-  }, [currentChallenge, bannedChallengeTypes]);
+  }, [currentChallenge, heldChallenge, deck, bannedChallengeTypes]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -983,9 +997,7 @@ function Review({
     return () => {
       abortController.abort();
     };
-  }, [deck, accessToken, reviewInfo, bannedChallengeTypes]);
-
-  const sentenceListSelection = sentenceListToSelection(sentenceList);
+  }, [deck, accessToken, view, bannedChallengeTypes]);
 
   const addEvent = useCallback(
     (event: DeckEvent) => {
@@ -1118,106 +1130,57 @@ function Review({
     );
   };
 
-  const reviewPrompts = get_review_prompts(
-    totalReviewsCompleted,
-    reviewInfo.total_count,
-    {
-      is_idle: reviewInfo.due_count === 0 && !currentChallenge,
-      is_online: network.online === true,
-      is_signed_in: userInfo !== undefined,
-      needs_display_name: userInfo?.displayName === null,
-      display_name_dismissed: dismissedSetDisplayName,
-      has_access_token: accessToken !== undefined,
-    },
-  );
-
-  const shouldShowPlacementTest = deck.should_offer_placement_test(
-    startingFresh,
-    historyKnown,
-  );
-
   return (
-    <>
-      {/* main content */}
-      <div className="flex flex-col flex-1 gap-2">
-        {shouldShowPlacementTest ? (
-          <PlacementTest
-            deck={deck}
-            targetLanguage={targetLanguage}
-            onComplete={({ knownWords, unknownWords }) => {
-              const event = deck.complete_placement_test(
-                knownWords,
-                unknownWords,
-              );
-              weapon.add_deck_event(event);
-            }}
-          />
-        ) : lockupOffer ? (
-          <LockupOfferScreen
-            offer={lockupOffer}
-            onAccept={addEvent}
-          />
-        ) : reviewPrompts.offer_display_name ? (
-          <SetDisplayName
-            accessToken={accessToken!}
-            totalReviewsCompleted={totalReviewsCompleted}
-            onComplete={() => setDismissedSetDisplayName(true)}
-            onSkip={() => {
-              localStorage.setItem("yap-skipped-set-display-name", "true");
-              setDismissedSetDisplayName(true);
-            }}
-          />
-        ) : accomplishment && !dismissedAccomplishment ? (
-          <AccomplishmentScreen
-            view={accomplishment}
-            addEvent={addEvent}
-            onDismiss={() =>
-              setDismissedAccomplishmentAtReview(totalReviewsCompleted)
-            }
-          />
-        ) : reviewInfo.due_count === 0 && !currentChallenge ? (
-          <NoCardsReady
-            view={deck.idle_screen_view(bannedChallengeTypes, sentenceListSelection, network.online === true, userInfo !== undefined, now)}
-            undoRestrictions={() => {
-              localStorage.removeItem("yap-cant-listen-timestamp");
-              localStorage.removeItem("yap-cant-speak-timestamp");
-              setBannedChallengeTypes([]);
-            }}
-            addEvent={addEvent}
-            showEngagementPrompts={reviewPrompts.offer_engagement}
-            deck={deck}
-            setSentenceList={setSentenceList}
-          />
-        ) : currentChallenge ? (
-          <ChallengeView
-            challenge={currentChallenge}
-            onRating={handleRating}
-            onTranslationComplete={handleTranslationComplete}
-            onTranscriptionComplete={handleTranscriptionComplete}
-            onCantSpeak={handleCantSpeak}
-            onCantListen={handleCantListen}
-            accessToken={accessToken}
-            targetLanguage={targetLanguage}
-            nativeLanguage={nativeLanguage}
-            totalReviewsCompleted={totalReviewsCompleted}
-            totalCount={reviewInfo.total_count}
-            autoplayed={autoplayed}
-            setAutoplayed={setAutoplayed}
-            deck={deck}
-            menuExtras={
-              <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-                Report an Issue
-              </DropdownMenuItem>
-            }
-          />
-        ) : (
-          <div>
-            Unexpected challenge state. This is a bug. currentChallenge:{" "}
-            {JSON.stringify(currentChallenge)}
-          </div>
-        )}
-      </div>
-      {/* /main content */}
+    <TopPageLayout
+      userInfo={userInfo}
+      headerProps={{
+        onChangeLanguage: () => navigate("/select-language"),
+        showSignupNag: true,
+        language: view.target_language,
+        dailyGoalPercent: view.progress * 100,
+      }}
+    >
+      <ReviewScreen
+        view={view}
+        host={{
+          deck,
+          accessToken,
+          autoplayed,
+          setAutoplayed,
+          menuExtras: (
+            <DropdownMenuItem onClick={() => setShowReportModal(true)}>
+              Report an Issue
+            </DropdownMenuItem>
+          ),
+        }}
+        actions={{
+          setPlacement,
+          addEvent,
+          onRating: handleRating,
+          onTranslationComplete: handleTranslationComplete,
+          onTranscriptionComplete: handleTranscriptionComplete,
+          onCantListen: handleCantListen,
+          onCantSpeak: handleCantSpeak,
+          setSentenceList,
+          undoRestrictions: () => {
+            localStorage.removeItem("yap-cant-listen-timestamp");
+            localStorage.removeItem("yap-cant-speak-timestamp");
+            setBannedChallengeTypes([]);
+          },
+          dismissAccomplishment: () =>
+            setDismissedAccomplishmentAtReview(totalReviewsCompleted),
+          completePlacementTest: ({ known_words, unknown_words }) =>
+            addEvent(deck.complete_placement_test(known_words, unknown_words)),
+          saveDisplayName: async (name) => {
+            await update_profile(name, null, accessToken!);
+            setDismissedSetDisplayName(true);
+          },
+          skipDisplayName: () => {
+            localStorage.setItem("yap-skipped-set-display-name", "true");
+            setDismissedSetDisplayName(true);
+          },
+        }}
+      />
 
       <ReportIssueModal
         context={
@@ -1229,7 +1192,7 @@ function Review({
         onOpenChange={setShowReportModal}
         targetLanguage={targetLanguage}
       />
-    </>
+    </TopPageLayout>
   );
 }
 
@@ -1268,13 +1231,15 @@ const router = createBrowserRouter([
           { index: true, element: <LandingPage /> },
           { path: "learn", element: <ReviewPage /> },
           ...(import.meta.env.DEV
-            ? [{
-                path: "fixture/:name",
-                lazy: async () => {
-                  const { FixturePage } = await import("./pages/fixture");
-                  return { Component: FixturePage };
+            ? [
+                {
+                  path: "fixture/:name",
+                  lazy: async () => {
+                    const { FixturePage } = await import("./pages/fixture");
+                    return { Component: FixturePage };
+                  },
                 },
-              }]
+              ]
             : []),
           { path: "dictionary", element: <DictionaryPage /> },
           { path: "leeches", element: <LeechesPage /> },

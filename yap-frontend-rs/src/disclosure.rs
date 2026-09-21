@@ -25,7 +25,6 @@ pub fn should_show_challenge_tutorial(times_type_seen: u32) -> bool {
     times_type_seen < 2
 }
 
-#[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct ReviewPromptContext {
     /// No due challenges and no current challenge.
@@ -38,7 +37,6 @@ pub struct ReviewPromptContext {
     pub has_access_token: bool,
 }
 
-#[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct ReviewPrompts {
     pub offer_display_name: bool,
@@ -47,7 +45,6 @@ pub struct ReviewPrompts {
     pub offer_engagement: bool,
 }
 
-#[bridgerton::bridge]
 pub fn get_review_prompts(
     total_reviews_completed: u64,
     total_card_count: usize,

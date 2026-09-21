@@ -2,7 +2,8 @@ import SwiftUI
 import Charts
 
 struct StatsScreen: View {
-    let deck: Deck
+    @Environment(\.reviewHost!) private var host
+    private var deck: Deck { host.deck }
     let session: YapSession
     @State private var lists: SentenceListModel?
     @State private var points: [FrequencyKnowledgePoint] = []
@@ -61,7 +62,7 @@ struct StatsScreen: View {
                         let sorted = lists.movies.sorted { (lists.metadata[$0.id]?.original_language == language ? 0 : 1) < (lists.metadata[$1.id]?.original_language == language ? 0 : 1) }
                         ForEach(allMovies ? sorted : Array(sorted.prefix(8)), id: \.id) { movie in
                             HStack(spacing: 14) {
-                                MoviePoster(deck: deck, id: movie.id, title: lists.metadata[movie.id]?.title ?? movie.id)
+                                MoviePoster(id: movie.id, title: lists.metadata[movie.id]?.title ?? movie.id)
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text(lists.metadata[movie.id]?.title ?? movie.id).font(.headline)
                                     Text("\(Int(movie.percent_known))% known").font(.caption)

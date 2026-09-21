@@ -4,7 +4,6 @@ struct DailyGoalEditor: View {
     let deck: Deck
     let session: YapSession
     init(deck: Deck, session: YapSession) { self.deck = deck; self.session = session }
-    init(model: ReviewModel) { self.init(deck: model.deck, session: model.session) }
     @State private var expanded = false
     #if DEBUG
     @State private var visible = false

@@ -1,4 +1,4 @@
-//! Serializable snapshots of the non-challenge review screens.
+//! Serializable snapshots of the complete review screen.
 //! Hosts own presentation state, never the choice of screen or deck actions.
 use crate::*;
 
@@ -90,7 +90,6 @@ pub struct AccomplishmentView {
     pub days: Vec<DayProgress>,
 }
 
-#[bridgerton::bridge]
 impl Deck {
     /// Initial backlog plan, rendered by the same plan view as a release offer.
     pub fn lockup_screen_view(
@@ -328,5 +327,139 @@ impl Deck {
                 event: self.set_daily_review_target(option.value),
             })
             .collect()
+    }
+}
+
+/// Host-owned context and the challenge held until the deck or restrictions change.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ReviewScreenInputs {
+    pub banned: Vec<ChallengeRequirements>,
+    pub sentence_list: Option<SentenceListSelection>,
+    pub online: bool,
+    pub is_signed_in: bool,
+    pub needs_display_name: bool,
+    pub display_name_dismissed: bool,
+    pub has_access_token: bool,
+    pub starting_fresh: Option<bool>,
+    pub history_known: bool,
+    pub dismissed_accomplishment_at_review: Option<u64>,
+    pub placement: Option<PlacementSession>,
+    pub current_challenge: Option<Challenge<Gram<String>>>,
+    pub timestamp_ms: f64,
+}
+
+/// A challenge and optional captured reducer state. Live selections start fresh.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ChallengeView {
+    pub challenge: Challenge<Gram<String>>,
+    pub transcription: Option<TranscriptionState>,
+    pub translation: Option<TranslationState>,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "type", content = "view")]
+pub enum ReviewStep {
+    PlacementTest(PlacementSession),
+    ReviewPlan(Box<ReviewPlanView>),
+    SetDisplayName,
+    Accomplishment(Box<AccomplishmentView>),
+    Challenge(Box<ChallengeView>),
+    Idle(Box<IdleScreenView>),
+}
+
+/// The entire review screen, also the on-disk parity fixture format.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ReviewScreenView {
+    pub native_language: Language,
+    pub target_language: Language,
+    pub step: ReviewStep,
+    pub progress: f64,
+    pub total_reviews: u64,
+    pub total_count: u64,
+    pub offer_engagement: bool,
+    pub online: bool,
+}
+
+#[bridgerton::bridge]
+impl Deck {
+    /// Selects PlacementTest → ReviewPlan → SetDisplayName → Accomplishment
+    /// → held (or next) Challenge → Idle, in that priority order on both hosts.
+    /// A held challenge takes precedence over idle even when nothing is due.
+    /// Hosts retain a selected challenge until the deck or restrictions change;
+    /// `None` is never held, so newly ready challenges can surface from idle.
+    pub fn review_screen_view(&self, inputs: ReviewScreenInputs) -> ReviewScreenView {
+        let review = self.get_review_info(inputs.banned.clone(), inputs.timestamp_ms);
+        let total_reviews = self.get_total_reviews();
+        let prompts = get_review_prompts(
+            total_reviews,
+            review.total_count(),
+            ReviewPromptContext {
+                is_idle: review.due_count() == 0 && inputs.current_challenge.is_none(),
+                is_online: inputs.online,
+                is_signed_in: inputs.is_signed_in,
+                needs_display_name: inputs.needs_display_name,
+                display_name_dismissed: inputs.display_name_dismissed,
+                has_access_token: inputs.has_access_token,
+            },
+        );
+        let step = if self.should_offer_placement_test(inputs.starting_fresh, inputs.history_known)
+        {
+            ReviewStep::PlacementTest(
+                inputs
+                    .placement
+                    .map(|session| {
+                        self.refresh_placement_session(session.clone())
+                            .unwrap_or(session)
+                    })
+                    .unwrap_or_else(|| self.start_placement_session()),
+            )
+        } else if let Some(plan) =
+            self.lockup_screen_view(inputs.banned.clone(), inputs.timestamp_ms)
+        {
+            ReviewStep::ReviewPlan(Box::new(plan))
+        } else if prompts.offer_display_name {
+            ReviewStep::SetDisplayName
+        } else if let Some(accomplishment) = self.accomplishment_view(inputs.timestamp_ms)
+            && inputs.dismissed_accomplishment_at_review != Some(total_reviews)
+        {
+            ReviewStep::Accomplishment(Box::new(accomplishment))
+        } else if let Some(challenge) = inputs
+            .current_challenge
+            .or_else(|| review.get_next_challenge(self))
+        {
+            ReviewStep::Challenge(Box::new(ChallengeView {
+                challenge,
+                transcription: None,
+                translation: None,
+            }))
+        } else {
+            ReviewStep::Idle(Box::new(self.idle_screen_view(
+                inputs.banned,
+                inputs.sentence_list,
+                inputs.online,
+                inputs.is_signed_in,
+                inputs.timestamp_ms,
+            )))
+        };
+        let day = DateTime::<Utc>::from_timestamp_millis(inputs.timestamp_ms as i64)
+            .unwrap_or_else(Utc::now)
+            .with_timezone(&self.context.timezone)
+            .date_naive();
+        ReviewScreenView {
+            native_language: self.context.course.native_language,
+            target_language: self.get_target_language(),
+            step,
+            progress: (f64::from(self.get_today_time_spent_on(day))
+                / f64::from(self.get_daily_review_target()).max(1.0))
+            .clamp(0.0, 1.0),
+            total_reviews,
+            total_count: review.total_count() as u64,
+            offer_engagement: prompts.offer_engagement,
+            online: inputs.online,
+        }
     }
 }

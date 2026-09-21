@@ -1,133 +1,79 @@
 {
-  "type": "Idle",
-  "view": {
+  "native_language": "English",
+  "target_language": "German",
+  "step": {
     "type": "Idle",
-    "target_language": "German",
-    "target": "Regular",
-    "goals": [
-      {
-        "target": "Casual",
-        "minutes": 5,
-        "event": {
-          "type": "Language",
-          "target_language": "German",
-          "native_language": "English",
-          "content": {
-            "type": "SetDailyReviewTarget",
-            "daily_review_target": "Casual"
-          }
-        }
-      },
-      {
-        "target": "Regular",
-        "minutes": 10,
-        "event": {
-          "type": "Language",
-          "target_language": "German",
-          "native_language": "English",
-          "content": {
-            "type": "SetDailyReviewTarget",
-            "daily_review_target": "Regular"
-          }
-        }
-      },
-      {
-        "target": "Serious",
-        "minutes": 15,
-        "event": {
-          "type": "Language",
-          "target_language": "German",
-          "native_language": "English",
-          "content": {
-            "type": "SetDailyReviewTarget",
-            "daily_review_target": "Serious"
-          }
-        }
-      },
-      {
-        "target": "Intense",
-        "minutes": 20,
-        "event": {
-          "type": "Language",
-          "target_language": "German",
-          "native_language": "English",
-          "content": {
-            "type": "SetDailyReviewTarget",
-            "daily_review_target": "Intense"
-          }
-        }
-      }
-    ],
-    "kind": "NeedsMoreCards",
-    "title": "Ready for more?",
-    "body": "Add some cards to keep building your vocabulary.",
-    "info": {
-      "smart_add_count": 2,
-      "smart_add_regime": "SingleWord",
-      "easy_cards_remaining": 0,
-      "preview": [
-        "wurde",
-        "zum"
-      ],
-      "percent_known_after": 6.69397558648373,
-      "smart_add_event": {
-        "type": "Language",
-        "target_language": "German",
-        "native_language": "English",
-        "content": {
-          "type": "AddCards",
-          "cards": [
-            {
-              "type": "WrittenGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "wurde",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "wurde",
-                      "lemma": "werden",
-                      "pos": "AUX"
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "type": "WrittenGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "zum",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "zum",
-                      "lemma": "zum",
-                      "pos": "ADP"
-                    }
-                  }
-                }
-              ]
+    "view": {
+      "type": "Idle",
+      "target_language": "German",
+      "target": "Regular",
+      "goals": [
+        {
+          "target": "Casual",
+          "minutes": 5,
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "SetDailyReviewTarget",
+              "daily_review_target": "Casual"
             }
-          ],
-          "sentence_list": null
+          }
+        },
+        {
+          "target": "Regular",
+          "minutes": 10,
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "SetDailyReviewTarget",
+              "daily_review_target": "Regular"
+            }
+          }
+        },
+        {
+          "target": "Serious",
+          "minutes": 15,
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "SetDailyReviewTarget",
+              "daily_review_target": "Serious"
+            }
+          }
+        },
+        {
+          "target": "Intense",
+          "minutes": 20,
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "SetDailyReviewTarget",
+              "daily_review_target": "Intense"
+            }
+          }
         }
-      },
-      "tier_info": {
-        "tier": 2,
-        "name": "Core",
-        "level": 1,
-        "total_levels": 10,
-        "percent_known": 3.352745698022571,
-        "percent_of_usage": 25.719179142205668
-      },
-      "recommend_more_cards": true
-    },
-    "manual_add_options": [
-      {
-        "count": 2,
-        "card_type": "TargetLanguage",
-        "event": {
+      ],
+      "kind": "NeedsMoreCards",
+      "title": "Ready for more?",
+      "body": "Add some cards to keep building your vocabulary.",
+      "info": {
+        "smart_add_count": 2,
+        "smart_add_regime": "SingleWord",
+        "easy_cards_remaining": 0,
+        "preview": [
+          "wurde",
+          "zum"
+        ],
+        "percent_known_after": 6.69397558648373,
+        "smart_add_event": {
           "type": "Language",
           "target_language": "German",
           "native_language": "English",
@@ -169,239 +115,302 @@
             ],
             "sentence_list": null
           }
-        }
-      },
-      {
-        "count": 2,
-        "card_type": "Listening",
-        "event": {
-          "type": "Language",
-          "target_language": "German",
-          "native_language": "English",
-          "content": {
-            "type": "AddCards",
-            "cards": [
-              {
-                "type": "ListeningGram",
-                "gram": [
-                  {
-                    "Tok": {
-                      "text": "man",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "man",
-                        "lemma": "man",
-                        "pos": "PRON"
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "type": "ListeningGram",
-                "gram": [
-                  {
-                    "Tok": {
-                      "text": "Ihnen",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "ihnen",
-                        "lemma": "sie",
-                        "pos": "PRON"
-                      }
-                    }
-                  }
-                ]
-              }
-            ],
-            "sentence_list": null
-          }
-        }
-      },
-      {
-        "count": 2,
-        "card_type": "LetterPronunciation",
-        "event": {
-          "type": "Language",
-          "target_language": "German",
-          "native_language": "English",
-          "content": {
-            "type": "AddCards",
-            "cards": [
-              {
-                "type": "LetterPronunciation",
-                "pattern": "lich",
-                "position": "End"
-              },
-              {
-                "type": "LetterPronunciation",
-                "pattern": "ig",
-                "position": "End"
-              }
-            ],
-            "sentence_list": null
-          }
-        }
-      }
-    ],
-    "next_due": null,
-    "banned_notice": null,
-    "week": [
-      {
-        "weekday": 0,
-        "seconds": 0,
-        "target_seconds": 600,
-        "reviews": 0,
-        "new_cards": 0,
-        "learned_cards": 0,
-        "locked_in_cards": 0,
-        "met_goal": false,
-        "is_today": false,
-        "is_future": false
-      },
-      {
-        "weekday": 1,
-        "seconds": 0,
-        "target_seconds": 600,
-        "reviews": 0,
-        "new_cards": 0,
-        "learned_cards": 0,
-        "locked_in_cards": 0,
-        "met_goal": false,
-        "is_today": false,
-        "is_future": false
-      },
-      {
-        "weekday": 2,
-        "seconds": 0,
-        "target_seconds": 600,
-        "reviews": 0,
-        "new_cards": 0,
-        "learned_cards": 0,
-        "locked_in_cards": 0,
-        "met_goal": false,
-        "is_today": false,
-        "is_future": false
-      },
-      {
-        "weekday": 3,
-        "seconds": 0,
-        "target_seconds": 600,
-        "reviews": 0,
-        "new_cards": 0,
-        "learned_cards": 0,
-        "locked_in_cards": 0,
-        "met_goal": false,
-        "is_today": false,
-        "is_future": false
-      },
-      {
-        "weekday": 4,
-        "seconds": 0,
-        "target_seconds": 600,
-        "reviews": 0,
-        "new_cards": 0,
-        "learned_cards": 0,
-        "locked_in_cards": 0,
-        "met_goal": false,
-        "is_today": false,
-        "is_future": false
-      },
-      {
-        "weekday": 5,
-        "seconds": 907,
-        "target_seconds": 600,
-        "reviews": 85,
-        "new_cards": 0,
-        "learned_cards": 0,
-        "locked_in_cards": 0,
-        "met_goal": true,
-        "is_today": false,
-        "is_future": false
-      },
-      {
-        "weekday": 6,
-        "seconds": 1509,
-        "target_seconds": 600,
-        "reviews": 73,
-        "new_cards": 0,
-        "learned_cards": 0,
-        "locked_in_cards": 0,
-        "met_goal": true,
-        "is_today": true,
-        "is_future": false
-      }
-    ],
-    "navigation": {
-      "categories": [
-        "essential",
-        "movie",
-        "pimsleur"
-      ],
-      "selection": null,
-      "selected_index": 0
-    },
-    "sentence_list_options": [
-      {
-        "category": "essential",
-        "selection": null,
-        "event": {
-          "type": "Language",
-          "target_language": "German",
-          "native_language": "English",
-          "content": {
-            "type": "SetSentenceList",
-            "sentence_list": null
-          }
-        }
-      },
-      {
-        "category": "movie",
-        "selection": {
-          "type": "Movie",
-          "id": "tt0022100"
         },
-        "event": {
-          "type": "Language",
-          "target_language": "German",
-          "native_language": "English",
-          "content": {
-            "type": "SetSentenceList",
-            "sentence_list": {
-              "type": "Movie",
-              "id": "tt0022100"
-            }
-          }
-        }
-      },
-      {
-        "category": "pimsleur",
-        "selection": {
-          "type": "PimsleurLesson",
+        "tier_info": {
+          "tier": 2,
+          "name": "Core",
           "level": 1,
-          "lesson": 1
+          "total_levels": 10,
+          "percent_known": 3.352745698022571,
+          "percent_of_usage": 25.719179142205668
         },
-        "event": {
-          "type": "Language",
-          "target_language": "German",
-          "native_language": "English",
-          "content": {
-            "type": "SetSentenceList",
-            "sentence_list": {
-              "type": "PimsleurLesson",
-              "level": 1,
-              "lesson": 1
+        "recommend_more_cards": true
+      },
+      "manual_add_options": [
+        {
+          "count": 2,
+          "card_type": "TargetLanguage",
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "AddCards",
+              "cards": [
+                {
+                  "type": "WrittenGram",
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "wurde",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "wurde",
+                          "lemma": "werden",
+                          "pos": "AUX"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "WrittenGram",
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "zum",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "zum",
+                          "lemma": "zum",
+                          "pos": "ADP"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "sentence_list": null
+            }
+          }
+        },
+        {
+          "count": 2,
+          "card_type": "Listening",
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "AddCards",
+              "cards": [
+                {
+                  "type": "ListeningGram",
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "man",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "man",
+                          "lemma": "man",
+                          "pos": "PRON"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "ListeningGram",
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "Ihnen",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "ihnen",
+                          "lemma": "sie",
+                          "pos": "PRON"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "sentence_list": null
+            }
+          }
+        },
+        {
+          "count": 2,
+          "card_type": "LetterPronunciation",
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "AddCards",
+              "cards": [
+                {
+                  "type": "LetterPronunciation",
+                  "pattern": "lich",
+                  "position": "End"
+                },
+                {
+                  "type": "LetterPronunciation",
+                  "pattern": "ig",
+                  "position": "End"
+                }
+              ],
+              "sentence_list": null
             }
           }
         }
-      }
-    ],
-    "progress": {
-      "percent_known": 3.352745698022571,
-      "all_available_learned": false
-    },
-    "sentence_list_label": "Core German Level 1",
-    "next_sentence_list": null,
-    "next_sentence_list_event": null
-  }
+      ],
+      "next_due": null,
+      "banned_notice": null,
+      "week": [
+        {
+          "weekday": 0,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": false
+        },
+        {
+          "weekday": 1,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": false
+        },
+        {
+          "weekday": 2,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": false
+        },
+        {
+          "weekday": 3,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": false
+        },
+        {
+          "weekday": 4,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": false
+        },
+        {
+          "weekday": 5,
+          "seconds": 907,
+          "target_seconds": 600,
+          "reviews": 85,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": true,
+          "is_today": false,
+          "is_future": false
+        },
+        {
+          "weekday": 6,
+          "seconds": 1509,
+          "target_seconds": 600,
+          "reviews": 73,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": true,
+          "is_today": true,
+          "is_future": false
+        }
+      ],
+      "navigation": {
+        "categories": [
+          "essential",
+          "movie",
+          "pimsleur"
+        ],
+        "selection": null,
+        "selected_index": 0
+      },
+      "sentence_list_options": [
+        {
+          "category": "essential",
+          "selection": null,
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "SetSentenceList",
+              "sentence_list": null
+            }
+          }
+        },
+        {
+          "category": "movie",
+          "selection": {
+            "type": "Movie",
+            "id": "tt0022100"
+          },
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "SetSentenceList",
+              "sentence_list": {
+                "type": "Movie",
+                "id": "tt0022100"
+              }
+            }
+          }
+        },
+        {
+          "category": "pimsleur",
+          "selection": {
+            "type": "PimsleurLesson",
+            "level": 1,
+            "lesson": 1
+          },
+          "event": {
+            "type": "Language",
+            "target_language": "German",
+            "native_language": "English",
+            "content": {
+              "type": "SetSentenceList",
+              "sentence_list": {
+                "type": "PimsleurLesson",
+                "level": 1,
+                "lesson": 1
+              }
+            }
+          }
+        }
+      ],
+      "progress": {
+        "percent_known": 3.352745698022571,
+        "all_available_learned": false
+      },
+      "sentence_list_label": "Core German Level 1",
+      "next_sentence_list": null,
+      "next_sentence_list_event": null
+    }
+  },
+  "progress": 0.0,
+  "total_reviews": 0,
+  "total_count": 0,
+  "offer_engagement": false,
+  "online": true
 }

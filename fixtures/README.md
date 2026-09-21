@@ -1,8 +1,11 @@
 # Screen parity fixtures
 
 `challenges/*.json` and `screens/*.json` are real screens captured from the
-throwaway test account. Each file is a tagged Rust `Fixture` (`type` plus `view`):
-`Challenge`, `Idle`, or `Accomplishment`. Challenge captures include the live
+throwaway test account. Each file is a Rust `ReviewScreenView`: target language, progress, review/card
+counts, connectivity, engagement eligibility, and an adjacent-tagged `step`
+(`type` plus `view`). The step is `PlacementTest`, `ReviewPlan`, `SetDisplayName`,
+`Accomplishment`, `Challenge`, or `Idle`, in that priority order. Both hosts render
+the same screen component for live snapshots and fixtures. Challenge captures include optional live
 reducer state for dictation and translation. Screen captures contain the entire
 Rust view, including preview cards, progress, copy, and button events. They are
 intentional test inputs: commit them, not generated bindings or screenshots.
@@ -52,7 +55,7 @@ driver reviews append real, immutable events to that test account.
   `--fixture <absolute-path-to-json>`. The driver logs `fixture rendered <name>`.
   Screen actions are no-ops, and challenge fixtures cannot append review events
   or overwrite normal pending-review storage. iOS enables Rust's `fixtures`
-  feature for `parse_fixture` / `fixture_json`; the transparent view and fixture
+  feature for `parse_fixture` / `fixture_json`; the transparent view
   types are always available. Fixture rendering still uses the live app shell.
 
 ## Side-by-side screenshots

@@ -6,7 +6,9 @@ func gramText(_ gram: [Literal_String]) -> String {
 
 struct FlashcardView: View {
     @Environment(AudioPlayer.self) private var audio
-    let model: ReviewModel
+    @Environment(\.reviewScreen!) private var screen
+    @Environment(\.reviewHost!) private var host
+    @Environment(\.reviewActions!) private var actions
     let indicator: CardIndicator_Gram_String_String
     let flashcard: FlashCard
     let isNew: Bool
@@ -14,13 +16,10 @@ struct FlashcardView: View {
     @State private var revealed = false
     @State private var hasOpened = false
     private var disclosure: FlashcardDisclosure {
-        get_flashcard_disclosure(total_card_count: model.reviewInfo.total_count, times_type_seen: timesTypeSeen)
+        get_flashcard_disclosure(total_card_count: screen.total_count, times_type_seen: timesTypeSeen)
     }
     private var canGrade: Bool { hasOpened || revealed || !disclosure.require_answer_reveal }
     private var listening: Bool { if case .Listening = flashcard.content { true } else { false } }
-    private var exampleAudio: ExampleAudio {
-        ExampleAudio(session: model.session, reviewCount: model.deck.get_total_reviews(), language: model.deck.get_target_language())
-    }
     var body: some View {
         VStack(spacing: 12) {
             StudyCard {
@@ -28,7 +27,7 @@ struct FlashcardView: View {
                 // Like the web card: audio at the leading edge, the word centered, the menu trailing.
                 HStack(alignment: .center, spacing: 8) {
                     if let request = flashcard.audio {
-                        AudioButton(request: request, session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: listening || revealed)
+                        AudioButton(request: request, reviewCount: screen.total_reviews, autoplay: listening || revealed)
                     } else { Color.clear.frame(width: 44, height: 44) }
                     Group {
                         switch flashcard.content {
@@ -46,7 +45,7 @@ struct FlashcardView: View {
                         Button("Easy") { rate(.Easy) }
                     } label: {
                         Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
-                    }.disabled(!canGrade || model.submitting).accessibilityLabel("More grades")
+                    }.disabled(!canGrade || actions.submitting).accessibilityLabel("More grades")
                 }
                 if disclosure.show_tutorial && should_show_challenge_tutorial(times_type_seen: timesTypeSeen) {
                     Text(listening ? "Listen, then guess what's being said." : "Guess the meaning, then reveal the answer.")
@@ -71,10 +70,10 @@ struct FlashcardView: View {
                         .tint(.red).keyboardShortcut(.leftArrow, modifiers: [])
                     Button { rate(.Remembered) } label: { Text(isNew ? "Already knew" : "Remembered").frame(maxWidth: .infinity) }
                         .keyboardShortcut(.rightArrow, modifiers: [])
-                }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(model.submitting)
+                }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(actions.submitting)
             }
             if listening {
-                Button("I can't listen right now") { model.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
+                Button("I can't listen right now") { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
             }
         }
         #if DEBUG
@@ -87,7 +86,7 @@ struct FlashcardView: View {
             case "audio":
                 if let request = flashcard.audio {
                     Task {
-                        do { try await audio.play(request: request, accessToken: model.session.accessToken()); DebugHarness.log("audio completed") }
+                        do { try await audio.play(request: request, accessToken: host.accessToken); DebugHarness.log("audio completed") }
                         catch { DebugHarness.log("audio failed: \(error)") }
                     }
                 }
@@ -100,7 +99,7 @@ struct FlashcardView: View {
     @ViewBuilder private var answer: some View {
         switch flashcard.content {
         case let .Gram(_, definition, _, breakdown):
-            DefinitionView(definition: definition, exampleAudio: exampleAudio)
+            DefinitionView(definition: definition)
             if let breakdown, !breakdown.isEmpty { MorphemeBreakdownView(parts: breakdown, alignment: .center) }
         case let .Listening(possible):
             if possible.count > 1 { Text("It could have been any of these words:").font(.footnote).foregroundStyle(.secondary) }
@@ -111,45 +110,36 @@ struct FlashcardView: View {
                         if entry.first { Text("(known)").font(.footnote).foregroundStyle(.green) }
                     }
                     ForEach(Array(entry.third.enumerated()), id: \.offset) { _, definition in
-                        DefinitionView(definition: definition, exampleAudio: exampleAudio)
+                        DefinitionView(definition: definition)
                     }
                 }
             }
         }
     }
     private func rate(_ rating: Rating) {
-        guard canGrade, !model.submitting else { return }
+        guard canGrade, !actions.submitting else { return }
         audio.stop()
-        model.rate(indicator, rating)
+        actions.rate(indicator, rating)
         if rating != .Again { audio.playEffect("success-\(Int.random(in: 1...3))") }
     }
-}
-
-/// What an example sentence needs to be played aloud from a definition box.
-struct ExampleAudio {
-    let session: YapSession
-    let reviewCount: UInt64
-    let language: Language
 }
 
 /// The web's CardBack: each sense in its own muted box, the morphology trailing
 /// the meaning, the example quoted with a small play button beside it.
 struct DefinitionView: View {
+    @Environment(\.reviewHost!) private var host
     private enum Content {
         case dictionary([TargetToNativeWord], [Morphology])
         case phrase(String, String, String, String)
     }
     private let content: Content
-    private let exampleAudio: ExampleAudio?
-    init(definition: GramDefinition, exampleAudio: ExampleAudio? = nil) {
-        self.exampleAudio = exampleAudio
+    init(definition: GramDefinition) {
         switch definition {
         case let .Dictionary(entry): content = .dictionary(entry.definitions, entry.morphology)
         case let .Phrasebook(entry): content = .phrase(entry.meaning, entry.additional_notes, entry.target_language_example, entry.native_language_example)
         }
     }
-    init(entry: GramDictionaryEntry, exampleAudio: ExampleAudio? = nil) {
-        self.exampleAudio = exampleAudio
+    init(entry: GramDictionaryEntry) {
         switch entry.definition {
         case let .Dictionary(definitions): content = .dictionary(definitions, entry.morphology.map { [$0] } ?? [])
         case let .Phrasebook(meaning, target, native): content = .phrase(meaning, "", target ?? "", native ?? "")
@@ -179,12 +169,10 @@ struct DefinitionView: View {
             if !note.isEmpty { Text(note).font(.footnote).foregroundStyle(.secondary) }
             if !target.isEmpty {
                 HStack(alignment: .top, spacing: 4) {
-                    if let exampleAudio {
-                        AudioButton(request: AudioRequest(request: TtsRequest(text: target, language: exampleAudio.language, is_ssml: false,
-                            instructions: nil, speed: 1, verification_hints: []), provider: .ElevenLabs),
-                            session: exampleAudio.session, reviewCount: exampleAudio.reviewCount)
-                    }
-                    DefinitionExamples(target: target, native: native).frame(minHeight: exampleAudio == nil ? 0 : 44, alignment: .center)
+                    AudioButton(request: AudioRequest(request: TtsRequest(text: target, language: host.deck.get_target_language(), is_ssml: false,
+                        instructions: nil, speed: 1, verification_hints: []), provider: .ElevenLabs),
+                        reviewCount: host.deck.get_total_reviews())
+                    DefinitionExamples(target: target, native: native).frame(minHeight: 44, alignment: .center)
                 }
             }
         }

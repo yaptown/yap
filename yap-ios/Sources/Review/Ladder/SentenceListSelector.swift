@@ -1,11 +1,10 @@
 import SwiftUI
 
 struct SentenceListSelector: View {
-    let model: ReviewModel
+    @Environment(\.reviewHost!) private var host
+    @Environment(\.reviewActions!) private var actions
     let view: IdleView
-    var isFixture = false
     @AppStorage("yap-pimsleur-acknowledged") private var pimsleurAcknowledged = false
-    private var deck: Deck { model.deck }
     private var info: NoCardsReadyInfo { view.info }
     private var navigation: SentenceListNavigation { view.navigation }
     private var title: String { view.sentence_list_label }
@@ -17,7 +16,7 @@ struct SentenceListSelector: View {
             }.pickerStyle(.segmented)
             Text(title).font(.headline)
             if case let .Movie(id) = navigation.selection,
-               let bytes = deck.get_movie_poster(movie_id: id), let image = UIImage(data: Data(bytes)) {
+               let bytes = host.deck.get_movie_poster(movie_id: id), let image = UIImage(data: Data(bytes)) {
                 Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 220).clipShape(RoundedRectangle(cornerRadius: 12)).accessibilityLabel("Poster for \(title)")
             }
             if case .PimsleurLesson = navigation.selection, !pimsleurAcknowledged {
@@ -29,7 +28,7 @@ struct SentenceListSelector: View {
                     Text("You're all done with \(title)!")
                     if let event = view.next_sentence_list_event {
                         Button("Next \(isMovie ? "movie" : "lesson")") {
-                            if !isFixture { model.session.addDeckEvent(event) }
+                            actions.addEvent(event)
                         }
                     }
                 } else if let milestone = next_progress_milestone(current: progress.percent_known, projected: info.percent_known_after) {
@@ -56,9 +55,8 @@ struct SentenceListSelector: View {
     }
     private var isMovie: Bool { if case .Movie = navigation.selection { true } else { false } }
     private func select(_ category: SentenceListCategory) {
-        guard !isFixture,
-              let option = view.sentence_list_options.first(where: { $0.category == category }),
+        guard let option = view.sentence_list_options.first(where: { $0.category == category }),
               option.selection != view.navigation.selection else { return }
-        model.session.addDeckEvent(option.event)
+        actions.addEvent(option.event)
     }
 }

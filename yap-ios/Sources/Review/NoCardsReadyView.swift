@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct NoCardsReadyView: View {
-    let model: ReviewModel
+    @Environment(\.reviewScreen!) private var screen
+    @Environment(\.reviewActions!) private var actions
     let view: IdleScreenView
-    var isFixture = false
     @State private var showReleasePlan = false
     @AppStorage("yap-pimsleur-acknowledged") private var pimsleurAcknowledged = false
-    private func addEvent(_ event: DeckEvent) { if !isFixture { model.session.addDeckEvent(event) } }
+    private func addEvent(_ event: DeckEvent) { actions.addEvent(event) }
     var body: some View {
         Group {
             switch view {
@@ -44,7 +44,9 @@ struct NoCardsReadyView: View {
             let capture: IdleScreenView
             if case let .StudyPlanComplete(_, _, plan) = view, showReleasePlan { capture = .ReviewPlanOffer(plan) }
             else { capture = view }
-            DebugHarness.dumpFixture(.Idle(capture), name: String(command.dropFirst(13)))
+            var snapshot = screen
+            snapshot.step = .Idle(capture)
+            DebugHarness.dumpFixture(snapshot, name: String(command.dropFirst(13)))
         }
         #endif
     }
@@ -55,9 +57,9 @@ struct NoCardsReadyView: View {
             if !idle.body.isEmpty { Text(idle.body) } else { nextReview(idle.next_due) }
             if let notice = idle.banned_notice {
                 Text(notice)
-                Button("Undo restrictions") { if !isFixture { model.undoRestrictions() } }
+                Button("Undo restrictions") { actions.undoRestrictions() }
             }
-            SentenceListSelector(model: model, view: idle, isFixture: isFixture)
+            SentenceListSelector(view: idle)
             if !awaitingAcknowledgement, let event = idle.info.smart_add_event {
                 Text(idle.info.preview.joined(separator: " · ")).foregroundStyle(.secondary)
                 Button(idle.kind == .FirstRun ? "Start learning" : "Learn \(idle.info.smart_add_count) new cards") { addEvent(event) }

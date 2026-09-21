@@ -7,14 +7,10 @@ import Observation
 /// may receive test review/add events. No credentials are written to disk or logs.
 @Observable @MainActor final class DebugHarness {
     static let shared = DebugHarness()
-    var fixture: Fixture?
-    var challengeFixture: ChallengeFixture? {
-        if case let .Challenge(view) = fixture { view } else { nil }
-    }
+    var fixture: ReviewScreenView?
     var fixtureName = ""
     var command = ""
     var commandID = 0
-    var forceDisplayName = false
     var activeTab: CourseTab = .learn
     private var started = false
     static func log(_ text: String) {
@@ -24,7 +20,7 @@ import Observation
         let prior = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
         try? (prior + text + "\n").write(to: url, atomically: true, encoding: .utf8)
     }
-    static func dumpFixture(_ fixture: Fixture, name: String) {
+    static func dumpFixture(_ fixture: ReviewScreenView, name: String) {
         guard !name.isEmpty, name.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "-" }) else {
             log("invalid fixture name"); return
         }

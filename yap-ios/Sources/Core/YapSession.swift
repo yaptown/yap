@@ -25,7 +25,7 @@ enum DeckState {
     var syncError: String?
     /// The full pack failed to download after the core was already usable.
     var packError: String?
-    var lastAutoPlayReviewCount: UInt64?
+    let autoplay = AutoplayClaim()
     // These flows must survive immutable Deck snapshot replacements.
     var placementSession: PlacementSession?
     var choosingCourse = false
@@ -198,9 +198,6 @@ enum DeckState {
                     }
                     return
                 }
-                if let placement = self.placementSession {
-                    self.placementSession = deck.refresh_placement_session(session: placement) ?? placement
-                }
                 self.deckState = .deck(deck, course: selected, startingFresh: startingFresh, historyKnown: weapon.reviews_history_known())
             } catch {
                 guard let self, self.active, self.snapshotGeneration == expected, !Task.isCancelled else { return }
@@ -234,7 +231,7 @@ enum DeckState {
     func addDeckEventAt(_ event: DeckEvent, timestampMs: Double) { guard active else { return }; weapon?.add_deck_event_at(event: event, timestamp_ms: timestampMs) }
     func addDeckSelectionEvent(_ event: DeckSelectionEvent) {
         guard active else { return }
-        lastAutoPlayReviewCount = nil
+        autoplay.reviewCount = nil
         weapon?.add_deck_selection_event(event: event)
     }
     func prefetchPack(_ course: Course) {
