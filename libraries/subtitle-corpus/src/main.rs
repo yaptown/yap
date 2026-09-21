@@ -18,8 +18,12 @@ use std::sync::Mutex;
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 use language_utils::Language;
-use library::{plan_path, read_plan, truncate, Movie, Source};
+use library::{
+    disc_track, film_filename, film_stamp, output_is_fresh, plan_path, read_plan, subtitle_stamp,
+    truncate, FilmStamp, Movie, Source,
+};
 use serde::{Deserialize, Serialize};
+use subtitle_corpus::export::export_yap;
 use whisper::CloudflareWhisper;
 
 #[derive(Parser, Debug)]
@@ -331,13 +335,16 @@ enum Command_ {
         #[arg(long, value_delimiter = ',')]
         langs: Option<Vec<String>>,
     },
-    /// The whole serve pipeline in order — clips, export-clips, R2 upload —
+    /// The whole serve pipeline in order — clips, export-clips, R2 upload, export-yap —
     /// each stage resumable and skipping finished work (like refresh).
     Publish {
         #[arg(long, default_value = "/data/andrep/subtitle-corpus")]
         out: PathBuf,
         #[arg(long, default_value = "/data/andrep/subtitle-corpus/export")]
         dest: PathBuf,
+        /// Root of Yap's language data, containing each course's sentence sources.
+        #[arg(long, default_value = "./generate-data/data")]
+        data_root: PathBuf,
         /// Clips encoded at once (each is one ffmpeg run).
         #[arg(long, default_value_t = 8)]
         jobs: usize,
@@ -465,50 +472,6 @@ fn subtitle_source(
     None
 }
 
-/// Which inputs a finished subtitle was derived from, recorded next to it as
-/// `film.json`. For the video: filename and duration, not byte size — a
-/// re-encode keeps its timing but not its bytes. For the subtitle source (a
-/// downloaded raw SRT or a sidecar; absent for disc-derived outputs):
-/// filename and byte size, since subtitle files are replaced, not re-encoded.
-/// When `inventory` sees either input no longer matching the stamp, the
-/// derived artifacts are evicted and the film re-enters the queues — all of
-/// them if the video changed, just the subtitle if only its source did (the
-/// speech profile and reference timings depend on the video alone).
-#[derive(serde::Serialize, serde::Deserialize)]
-struct FilmStamp {
-    filename: String,
-    duration_ms: i64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    subtitle: Option<SubtitleStamp>,
-    /// The disc stream a disc-derived subtitle was read from. A re-ranking
-    /// of the tracks (2026-09-08: Day for Night's 18-cue "For non-French
-    /// dialogue" track gave way to the full VobSub one) is a source change
-    /// the filename-based `subtitle` stamp cannot see.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    track: Option<u32>,
-}
-
-/// The disc stream the plan reads the film's subtitle from, if any.
-fn disc_track(movie: &Movie) -> Option<u32> {
-    match movie.source {
-        Source::DiscText { index, .. } | Source::DiscBitmap { index, .. } => Some(index),
-        _ => None,
-    }
-}
-
-#[derive(serde::Serialize, serde::Deserialize, PartialEq, Clone)]
-struct SubtitleStamp {
-    filename: String,
-    bytes: u64,
-}
-
-fn subtitle_stamp(path: &std::path::Path) -> Option<SubtitleStamp> {
-    Some(SubtitleStamp {
-        filename: path.file_name()?.to_string_lossy().into_owned(),
-        bytes: std::fs::metadata(path).ok()?.len(),
-    })
-}
-
 /// What a writer knows about the subtitle source it derived from.
 enum StampSource<'a> {
     /// The subtitle came off the disc itself; there is no separate source.
@@ -538,32 +501,6 @@ fn expected_subtitle_source(
         Source::DiscText { .. } | Source::DiscBitmap { .. } => None,
         _ => subtitle_source(movie, dir, data_root),
     }
-}
-
-impl FilmStamp {
-    /// Same film for subtitle purposes: identical name, and a duration within
-    /// 250ms (a remux of the same cut wobbles by frames; anything that moved
-    /// the length by more than that has probably retimed the content too).
-    fn matches(&self, other: &FilmStamp) -> bool {
-        self.filename == other.filename && (self.duration_ms - other.duration_ms).abs() <= 250
-    }
-}
-
-fn film_filename(movie: &Movie) -> String {
-    movie
-        .path
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default()
-}
-
-fn film_stamp(movie: &Movie) -> Result<FilmStamp> {
-    Ok(FilmStamp {
-        filename: film_filename(movie),
-        duration_ms: sync::duration_ms(&movie.path)?,
-        subtitle: None,
-        track: None,
-    })
 }
 
 /// The film's speech profile, from the per-film cache when present.
@@ -934,24 +871,6 @@ fn inventory(library: PathBuf, data_root: PathBuf, out: PathBuf, jobs: usize) ->
     Ok(())
 }
 
-/// Is this film's finished subtitle verified against the file on disk?
-///
-/// Read-only twin of [`freshen_output`]: an unstamped output is not fresh
-/// and must be rebuilt, and a changed film is not fresh
-/// (the next `inventory` will evict it).
-fn output_is_fresh(movie: &Movie, dir: &std::path::Path) -> bool {
-    if !dir.join("subtitle.srt").exists() {
-        return false;
-    }
-    let Ok(current) = film_stamp(movie) else {
-        return false;
-    };
-    std::fs::read(dir.join("film.json"))
-        .ok()
-        .and_then(|b| serde_json::from_slice::<FilmStamp>(&b).ok())
-        .is_some_and(|stored| stored.matches(&current))
-}
-
 /// Publish verified subtitles as `<video>.yap.<lang>.srt` sidecars, and
 /// retract the ones the corpus no longer stands behind.
 fn export_sidecars(out: PathBuf) -> Result<()> {
@@ -997,171 +916,6 @@ fn export_sidecars(out: PathBuf) -> Result<()> {
         }
     }
     println!("{written} sidecars written, {kept} already current, {removed} retracted");
-    Ok(())
-}
-
-/// Missing files are expected on first export; other read failures must not
-/// masquerade as missing metadata or an outdated subtitle.
-fn read_optional(path: &std::path::Path) -> Result<Option<Vec<u8>>> {
-    match std::fs::read(path) {
-        Ok(bytes) => Ok(Some(bytes)),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
-        Err(e) => Err(e).with_context(|| format!("reading {}", path.display())),
-    }
-}
-
-/// Append only missing IDs, retaining every existing byte (including unknown
-/// fields and blank lines). Return whether a row was/would be appended.
-fn append_movie_metadata(
-    path: &std::path::Path,
-    movie: &language_utils::MovieMetadataBasic,
-    dry_run: bool,
-) -> Result<bool> {
-    use std::io::Write;
-
-    #[derive(Deserialize)]
-    struct Id {
-        id: String,
-    }
-
-    let existing = read_optional(path)?.unwrap_or_default();
-    for line in existing.split(|&b| b == b'\n') {
-        if line.iter().all(u8::is_ascii_whitespace) {
-            continue;
-        }
-        let row: Id =
-            serde_json::from_slice(line).with_context(|| format!("parsing {}", path.display()))?;
-        if row.id == movie.id {
-            return Ok(false);
-        }
-    }
-    if !dry_run {
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        let mut row = serde_json::to_vec(movie)?;
-        row.push(b'\n');
-        let mut file = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)?;
-        if !existing.is_empty() && !existing.ends_with(b"\n") {
-            file.write_all(b"\n")?;
-        }
-        file.write_all(&row)?;
-    }
-    Ok(true)
-}
-
-/// The corpus subtitle as yap must receive it: re-serialised from the cues the
-/// corpus itself reads. Disc and sidecar tracks are copied verbatim into
-/// `subtitle.srt`, and some carry a blank line inside a two-speaker cue;
-/// [`parse_cues`] drops the orphaned half, so no clip was ever cut for it,
-/// but yap's stricter parser fails the whole file — and a raw SRT that
-/// fails to parse takes the entire course build down with it.
-fn current_verdict(
-    dir: &std::path::Path,
-    course: &str,
-) -> Option<subtitle_corpus::verbatim::Verdict> {
-    use subtitle_corpus::{transcript::source_digest, verbatim};
-    let subtitle = source_digest(&dir.join("subtitle.srt")).ok()?;
-    let transcript = source_digest(&dir.join("transcript.jsonl")).ok()?;
-    Some(
-        verbatim::matching(dir, &subtitle, &transcript, verbatim::min_fraction(course))?
-            .measure
-            .verdict,
-    )
-}
-
-fn yap_srt(srt: &str) -> Result<String> {
-    let normalized = sync::write_cues(&sync::parse_cues(srt));
-    movie_subtitles::parse_srt(&normalized)
-        .context("normalised subtitle is not parseable by yap")?;
-    Ok(normalized)
-}
-
-fn export_yap(
-    out: PathBuf,
-    data_root: PathBuf,
-    langs: Option<Vec<String>>,
-    dry_run: bool,
-) -> Result<()> {
-    use subtitle_corpus::verbatim::Verdict;
-
-    // Every sentence handed to yap is paid for again when generate-data
-    // rebuilds that course, and the English course has no learners
-    // (Andre, 2026-09-19) — so eng is opt-in rather than default.
-    let wanted = |course: &str| match &langs {
-        Some(langs) => langs.iter().any(|l| l == course),
-        None => course != "eng",
-    };
-
-    let (mut written, mut kept, mut downloaded, mut unverified, mut rows) = (0, 0, 0, 0, 0);
-    for movie in read_plan(&out)? {
-        let Some(course) = library::course_dir(&movie.original_language) else {
-            continue;
-        };
-        if !wanted(course) {
-            continue;
-        }
-        // Writing a synced download back to its raw input invalidates its
-        // source stamp on the next inventory, causing perpetual re-syncing.
-        if matches!(movie.source, Source::Downloaded { .. }) {
-            downloaded += 1;
-            continue;
-        }
-        let dir = out.join(&movie.imdb_id);
-        // Same test `clips` applies: a report about the current subtitle and
-        // transcript, at the course's bar — a replaced subtitle or a fresh
-        // transcript leaves a stale verdict that must not authorise an export.
-        let verified = output_is_fresh(&movie, &dir)
-            && current_verdict(&dir, course) == Some(Verdict::Verbatim);
-        if !verified {
-            unverified += 1;
-            continue;
-        }
-        let language = Language::from_code(course).context("unknown course language")?;
-        let movies = data_root.join(course).join("sentence-sources/movies");
-        let dest = movies
-            .join("subtitles-raw")
-            .join(format!("{}.srt", movie.imdb_id));
-        let srt = yap_srt(&std::fs::read_to_string(dir.join("subtitle.srt"))?)
-            .with_context(|| format!("{}: subtitle.srt", movie.imdb_id))?;
-        let identical = read_optional(&dest)?.as_deref() == Some(srt.as_bytes());
-        let metadata = language_utils::MovieMetadataBasic {
-            id: movie.imdb_id.clone(),
-            title: movie.title.clone(),
-            year: movie.year,
-            original_language: Some(language.iso_639_1().to_owned()),
-            rotten_tomatoes_score: None,
-        };
-        let appended = append_movie_metadata(&movies.join("metadata.jsonl"), &metadata, dry_run)?;
-        rows += usize::from(appended);
-        if identical {
-            kept += 1;
-        } else {
-            if !dry_run {
-                std::fs::create_dir_all(dest.parent().context("subtitle destination parent")?)?;
-                std::fs::write(&dest, srt)?;
-            }
-            written += 1;
-        }
-        if dry_run {
-            println!(
-                "  {} {} ({}) — {} {}; metadata {}",
-                movie.imdb_id,
-                movie.title,
-                course,
-                if identical { "keep" } else { "write" },
-                dest.display(),
-                if appended { "append" } else { "keep" },
-            );
-        }
-    }
-    println!(
-        "{}{written} subtitles written, {kept} kept, {downloaded} downloaded skipped, {unverified} unverified skipped, {rows} metadata rows appended",
-        if dry_run { "dry-run (would): " } else { "" },
-    );
     Ok(())
 }
 
@@ -2711,11 +2465,12 @@ async fn export_clips(
 async fn publish(
     out: PathBuf,
     dest: PathBuf,
+    data_root: PathBuf,
     jobs: usize,
     langs: Option<Vec<String>>,
     bucket: String,
 ) -> Result<()> {
-    subtitle_corpus::export::publish(out, dest, jobs, langs, bucket).await
+    subtitle_corpus::export::publish(out, dest, data_root, jobs, langs, bucket).await
 }
 
 /// Align by speech activity the films that word-matching could not place.
@@ -3211,10 +2966,11 @@ fn main() -> Result<()> {
         Command_::Publish {
             out,
             dest,
+            data_root,
             jobs,
             langs,
             bucket,
-        } => publish(out, dest, jobs, langs, bucket),
+        } => publish(out, dest, data_root, jobs, langs, bucket),
         Command_::ExportSidecars { out } => export_sidecars(out),
         Command_::ExportYap {
             out,
@@ -3226,74 +2982,8 @@ fn main() -> Result<()> {
 }
 
 #[cfg(test)]
-mod export_yap_tests {
+mod tests {
     use super::*;
-    use language_utils::MovieMetadataBasic;
-
-    fn movie() -> MovieMetadataBasic {
-        MovieMetadataBasic {
-            id: "tt1234567".into(),
-            title: "A title\nwith a newline".into(),
-            year: Some(2001),
-            original_language: Some("fr".into()),
-            rotten_tomatoes_score: None,
-        }
-    }
-
-    #[test]
-    fn existing_metadata_is_byte_preserved() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("metadata.jsonl");
-        let original =
-            b"\n {\"id\":\"tt1234567\", \"title\":\"Hand curated\", \"extra\":42}\r\n \t\n";
-        std::fs::write(&path, original).unwrap();
-        assert!(!append_movie_metadata(&path, &movie(), false).unwrap());
-        assert_eq!(std::fs::read(&path).unwrap(), original);
-    }
-
-    #[test]
-    fn new_metadata_is_one_line_and_preserves_existing_bytes() {
-        for original in [
-            b"".as_slice(),
-            b"\n \t\n{\"id\":\"other\",\"extra\":true}\n",
-            b"\n{\"id\":\"other\"}",
-        ] {
-            let dir = tempfile::tempdir().unwrap();
-            let path = dir.path().join("metadata.jsonl");
-            std::fs::write(&path, original).unwrap();
-            assert!(append_movie_metadata(&path, &movie(), false).unwrap());
-            let bytes = std::fs::read(&path).unwrap();
-            assert!(bytes.starts_with(original));
-            let suffix = &bytes[original.len()..];
-            let suffix = if !original.is_empty() && !original.ends_with(b"\n") {
-                assert_eq!(suffix[0], b'\n');
-                &suffix[1..]
-            } else {
-                suffix
-            };
-            assert_eq!(suffix.iter().filter(|&&b| b == b'\n').count(), 1);
-            assert!(suffix.ends_with(b"\n"));
-            assert_eq!(
-                serde_json::from_slice::<MovieMetadataBasic>(suffix).unwrap(),
-                movie()
-            );
-            assert!(!append_movie_metadata(&path, &movie(), false).unwrap());
-            assert_eq!(std::fs::read(&path).unwrap(), bytes);
-        }
-    }
-
-    #[test]
-    fn metadata_dry_run_does_not_create_or_modify_files() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("missing/metadata.jsonl");
-        assert!(append_movie_metadata(&path, &movie(), true).unwrap());
-        assert!(!path.parent().unwrap().exists());
-        let path = dir.path().join("metadata.jsonl");
-        let original = b"{\"id\":\"other\"}";
-        std::fs::write(&path, original).unwrap();
-        assert!(append_movie_metadata(&path, &movie(), true).unwrap());
-        assert_eq!(std::fs::read(&path).unwrap(), original);
-    }
 
     #[test]
     fn sidecar_outranks_the_course_raw_it_was_exported_as() {
@@ -3320,26 +3010,5 @@ mod export_yap_tests {
             subtitle_source(&movie, &out, &dir.path().join("data")),
             Some(sidecar)
         );
-    }
-
-    #[test]
-    fn yap_srt_drops_orphan_blocks_and_parses() {
-        // A disc track with a blank line inside a two-speaker cue: the corpus
-        // reads two cues and an orphan; yap's parser rejects the file outright.
-        let raw = "1\n00:00:01,000 --> 00:00:02,000\n-Tu as de la fièvre.\n\n-Non, j'ai chaud.\n\n2\n00:00:03,000 --> 00:00:04,000\nBonjour tout le monde.\n\n";
-        assert!(movie_subtitles::parse_srt(raw).is_err());
-        let normalized = yap_srt(raw).unwrap();
-        assert_eq!(normalized, "1\n00:00:01,000 --> 00:00:02,000\n-Tu as de la fièvre.\n\n2\n00:00:03,000 --> 00:00:04,000\nBonjour tout le monde.\n\n");
-        assert_eq!(movie_subtitles::parse_srt(&normalized).unwrap().len(), 2);
-    }
-
-    #[test]
-    fn invalid_or_unreadable_metadata_is_not_treated_as_missing() {
-        let dir = tempfile::tempdir().unwrap();
-        assert!(append_movie_metadata(dir.path(), &movie(), false).is_err());
-        let path = dir.path().join("metadata.jsonl");
-        std::fs::write(&path, b"not json\n").unwrap();
-        assert!(append_movie_metadata(&path, &movie(), false).is_err());
-        assert_eq!(std::fs::read(&path).unwrap(), b"not json\n");
     }
 }

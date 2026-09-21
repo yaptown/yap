@@ -593,3 +593,106 @@ pub fn truncate(s: &str, n: usize) -> String {
         s.chars().take(n).collect::<String>() + "…"
     }
 }
+
+/// Which inputs a finished subtitle was derived from, recorded next to it as
+/// `film.json`. For the video: filename and duration, not byte size — a
+/// re-encode keeps its timing but not its bytes. For the subtitle source (a
+/// downloaded raw SRT or a sidecar; absent for disc-derived outputs):
+/// filename and byte size, since subtitle files are replaced, not re-encoded.
+/// When `inventory` sees either input no longer matching the stamp, the
+/// derived artifacts are evicted and the film re-enters the queues — all of
+/// them if the video changed, just the subtitle if only its source did (the
+/// speech profile and reference timings depend on the video alone).
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct FilmStamp {
+    pub filename: String,
+    pub duration_ms: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subtitle: Option<SubtitleStamp>,
+    /// The disc stream a disc-derived subtitle was read from. A re-ranking
+    /// of the tracks (2026-09-08: Day for Night's 18-cue "For non-French
+    /// dialogue" track gave way to the full VobSub one) is a source change
+    /// the filename-based `subtitle` stamp cannot see.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub track: Option<u32>,
+}
+
+/// The disc stream the plan reads the film's subtitle from, if any.
+pub fn disc_track(movie: &Movie) -> Option<u32> {
+    match movie.source {
+        Source::DiscText { index, .. } | Source::DiscBitmap { index, .. } => Some(index),
+        _ => None,
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize, PartialEq, Clone)]
+pub struct SubtitleStamp {
+    pub filename: String,
+    pub bytes: u64,
+}
+
+pub fn subtitle_stamp(path: &std::path::Path) -> Option<SubtitleStamp> {
+    Some(SubtitleStamp {
+        filename: path.file_name()?.to_string_lossy().into_owned(),
+        bytes: std::fs::metadata(path).ok()?.len(),
+    })
+}
+
+impl FilmStamp {
+    /// Same film for subtitle purposes: identical name, and a duration within
+    /// 250ms (a remux of the same cut wobbles by frames; anything that moved
+    /// the length by more than that has probably retimed the content too).
+    pub fn matches(&self, other: &FilmStamp) -> bool {
+        self.filename == other.filename && (self.duration_ms - other.duration_ms).abs() <= 250
+    }
+}
+
+pub fn film_filename(movie: &Movie) -> String {
+    movie
+        .path
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default()
+}
+
+pub fn film_stamp(movie: &Movie) -> Result<FilmStamp> {
+    Ok(FilmStamp {
+        filename: film_filename(movie),
+        duration_ms: crate::sync::duration_ms(&movie.path)?,
+        subtitle: None,
+        track: None,
+    })
+}
+
+/// Is this film's finished subtitle verified against the file on disk?
+///
+/// Read-only twin of the inventory freshness check: an unstamped output is not fresh
+/// and must be rebuilt, and a changed film is not fresh
+/// (the next `inventory` will evict it).
+pub fn output_is_fresh(movie: &Movie, dir: &std::path::Path) -> bool {
+    if !dir.join("subtitle.srt").exists() {
+        return false;
+    }
+    let Ok(current) = film_stamp(movie) else {
+        return false;
+    };
+    std::fs::read(dir.join("film.json"))
+        .ok()
+        .and_then(|b| serde_json::from_slice::<FilmStamp>(&b).ok())
+        .is_some_and(|stored| stored.matches(&current))
+}
+
+/// Verdict for the current subtitle and transcript at the course's acceptance bar.
+pub(crate) fn current_verdict(
+    dir: &std::path::Path,
+    course: &str,
+) -> Option<crate::verbatim::Verdict> {
+    use crate::{transcript::source_digest, verbatim};
+    let subtitle = source_digest(&dir.join("subtitle.srt")).ok()?;
+    let transcript = source_digest(&dir.join("transcript.jsonl")).ok()?;
+    Some(
+        verbatim::matching(dir, &subtitle, &transcript, verbatim::min_fraction(course))?
+            .measure
+            .verdict,
+    )
+}

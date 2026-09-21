@@ -27,7 +27,9 @@ use crate::clips::{
     clips_path, read_file as read_clips_with_provenance, subtitle_sentences, Clip, Provenance,
 };
 use crate::cues::{load_transcript, parse_cues, repair_latin_homoglyphs};
-use crate::library::{course_dir, read_plan, truncate, Movie};
+use crate::library::{
+    course_dir, current_verdict, output_is_fresh, read_plan, truncate, Movie, Source,
+};
 use crate::sync::{AudioStreamIdentity, Cue};
 use crate::transcript::{Kind, Spoken};
 use movie_subtitles::sentences::KeyedSentence;
@@ -692,12 +694,16 @@ async fn export_one(
 /// The full serve pipeline, [`crate::clips`]-style resumable at every stage:
 /// re-map clips (skips films whose provenance is current), export videos
 /// (skips clip dirs with a finished sidecar), upload to R2 over S3 (skips matching `.uploaded`
-/// hashes and verifies stale files against bucket ETags). Safe to re-run after any interruption.
+/// hashes and verifies stale files against bucket ETags), then export subtitles into yap.
+/// The yap export runs last so its freshness/verbatim gates see the verdicts
+/// recomputed by the clip re-map, not those from the previous run.
+/// Safe to re-run after any interruption.
 /// `jobs` is the export concurrency / NVENC session budget (see [`export_clips`]);
 /// it does not change re-map or upload concurrency.
 pub async fn publish(
     out: PathBuf,
     dest: PathBuf,
+    data_root: PathBuf,
     jobs: usize,
     langs: Option<Vec<String>>,
     bucket: String,
@@ -707,7 +713,7 @@ pub async fn publish(
     crate::clips::clips_all(out.clone(), 4, 0, None, langs.clone(), gate).await?;
 
     println!("=== stage 2: video export ===");
-    export_clips(out, dest.clone(), jobs, 0, None, langs.clone()).await?;
+    export_clips(out.clone(), dest.clone(), jobs, 0, None, langs.clone()).await?;
 
     println!("=== stage 3: upload to {bucket} ===");
     let codes: Vec<String> = match &langs {
@@ -722,6 +728,9 @@ pub async fn publish(
     for code in codes {
         upload_lang(&dest.join(&code), &code, &r2).await?;
     }
+
+    println!("=== stage 4: subtitles into yap ===");
+    export_yap(out, data_root, langs, false)?;
     Ok(())
 }
 
@@ -1698,5 +1707,248 @@ mod upload_tests {
     #[test]
     fn md5_keeps_leading_zeroes() {
         assert!(etag_matches(Some("0cc175b9c0f1b6a831c399e269772661"), b"a"));
+    }
+}
+
+/// Missing files are expected on first export; other read failures must not
+/// masquerade as missing metadata or an outdated subtitle.
+fn read_optional(path: &std::path::Path) -> Result<Option<Vec<u8>>> {
+    match std::fs::read(path) {
+        Ok(bytes) => Ok(Some(bytes)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e).with_context(|| format!("reading {}", path.display())),
+    }
+}
+
+/// Append only missing IDs, retaining every existing byte (including unknown
+/// fields and blank lines). Return whether a row was/would be appended.
+fn append_movie_metadata(
+    path: &std::path::Path,
+    movie: &language_utils::MovieMetadataBasic,
+    dry_run: bool,
+) -> Result<bool> {
+    use std::io::Write;
+
+    #[derive(serde::Deserialize)]
+    struct Id {
+        id: String,
+    }
+
+    let existing = read_optional(path)?.unwrap_or_default();
+    for line in existing.split(|&b| b == b'\n') {
+        if line.iter().all(u8::is_ascii_whitespace) {
+            continue;
+        }
+        let row: Id =
+            serde_json::from_slice(line).with_context(|| format!("parsing {}", path.display()))?;
+        if row.id == movie.id {
+            return Ok(false);
+        }
+    }
+    if !dry_run {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        let mut row = serde_json::to_vec(movie)?;
+        row.push(b'\n');
+        let mut file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)?;
+        if !existing.is_empty() && !existing.ends_with(b"\n") {
+            file.write_all(b"\n")?;
+        }
+        file.write_all(&row)?;
+    }
+    Ok(true)
+}
+
+/// The corpus subtitle as yap must receive it: re-serialised from the cues the
+/// corpus itself reads. Disc and sidecar tracks are copied verbatim into
+/// `subtitle.srt`, and some carry a blank line inside a two-speaker cue;
+/// [`parse_cues`] drops the orphaned half, so no clip was ever cut for it,
+/// but yap's stricter parser fails the whole file — and a raw SRT that
+/// fails to parse takes the entire course build down with it.
+fn yap_srt(srt: &str) -> Result<String> {
+    let normalized = crate::sync::write_cues(&crate::sync::parse_cues(srt));
+    movie_subtitles::parse_srt(&normalized)
+        .context("normalised subtitle is not parseable by yap")?;
+    Ok(normalized)
+}
+
+pub fn export_yap(
+    out: PathBuf,
+    data_root: PathBuf,
+    langs: Option<Vec<String>>,
+    dry_run: bool,
+) -> Result<()> {
+    use crate::verbatim::Verdict;
+
+    // Every sentence handed to yap is paid for again when generate-data
+    // rebuilds that course, and the English course has no learners
+    // (Andre, 2026-09-19) — so eng is opt-in rather than default.
+    let wanted = |course: &str| match &langs {
+        Some(langs) => langs.iter().any(|l| l == course),
+        None => course != "eng",
+    };
+
+    let (mut written, mut kept, mut downloaded, mut unverified, mut rows) = (0, 0, 0, 0, 0);
+    for movie in read_plan(&out)? {
+        let Some(course) = course_dir(&movie.original_language) else {
+            continue;
+        };
+        if !wanted(course) {
+            continue;
+        }
+        // Writing a synced download back to its raw input invalidates its
+        // source stamp on the next inventory, causing perpetual re-syncing.
+        if matches!(movie.source, Source::Downloaded { .. }) {
+            downloaded += 1;
+            continue;
+        }
+        let dir = out.join(&movie.imdb_id);
+        // Same test `clips` applies: a report about the current subtitle and
+        // transcript, at the course's bar — a replaced subtitle or a fresh
+        // transcript leaves a stale verdict that must not authorise an export.
+        let verified = output_is_fresh(&movie, &dir)
+            && current_verdict(&dir, course) == Some(Verdict::Verbatim);
+        if !verified {
+            unverified += 1;
+            continue;
+        }
+        let language = Language::from_code(course).context("unknown course language")?;
+        let movies = data_root.join(course).join("sentence-sources/movies");
+        let dest = movies
+            .join("subtitles-raw")
+            .join(format!("{}.srt", movie.imdb_id));
+        let srt = yap_srt(&std::fs::read_to_string(dir.join("subtitle.srt"))?)
+            .with_context(|| format!("{}: subtitle.srt", movie.imdb_id))?;
+        let identical = read_optional(&dest)?.as_deref() == Some(srt.as_bytes());
+        let metadata = language_utils::MovieMetadataBasic {
+            id: movie.imdb_id.clone(),
+            title: movie.title.clone(),
+            year: movie.year,
+            original_language: Some(language.iso_639_1().to_owned()),
+            rotten_tomatoes_score: None,
+        };
+        let appended = append_movie_metadata(&movies.join("metadata.jsonl"), &metadata, dry_run)?;
+        rows += usize::from(appended);
+        if identical {
+            kept += 1;
+        } else {
+            if !dry_run {
+                std::fs::create_dir_all(dest.parent().context("subtitle destination parent")?)?;
+                std::fs::write(&dest, srt)?;
+            }
+            written += 1;
+        }
+        if dry_run {
+            println!(
+                "  {} {} ({}) — {} {}; metadata {}",
+                movie.imdb_id,
+                movie.title,
+                course,
+                if identical { "keep" } else { "write" },
+                dest.display(),
+                if appended { "append" } else { "keep" },
+            );
+        }
+    }
+    println!(
+        "{}{written} subtitles written, {kept} kept, {downloaded} downloaded skipped, {unverified} unverified skipped, {rows} metadata rows appended",
+        if dry_run { "dry-run (would): " } else { "" },
+    );
+    Ok(())
+}
+
+#[cfg(test)]
+mod export_yap_tests {
+    use super::*;
+    use language_utils::MovieMetadataBasic;
+
+    fn movie() -> MovieMetadataBasic {
+        MovieMetadataBasic {
+            id: "tt1234567".into(),
+            title: "A title\nwith a newline".into(),
+            year: Some(2001),
+            original_language: Some("fr".into()),
+            rotten_tomatoes_score: None,
+        }
+    }
+
+    #[test]
+    fn existing_metadata_is_byte_preserved() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("metadata.jsonl");
+        let original =
+            b"\n {\"id\":\"tt1234567\", \"title\":\"Hand curated\", \"extra\":42}\r\n \t\n";
+        std::fs::write(&path, original).unwrap();
+        assert!(!append_movie_metadata(&path, &movie(), false).unwrap());
+        assert_eq!(std::fs::read(&path).unwrap(), original);
+    }
+
+    #[test]
+    fn new_metadata_is_one_line_and_preserves_existing_bytes() {
+        for original in [
+            b"".as_slice(),
+            b"\n \t\n{\"id\":\"other\",\"extra\":true}\n",
+            b"\n{\"id\":\"other\"}",
+        ] {
+            let dir = tempfile::tempdir().unwrap();
+            let path = dir.path().join("metadata.jsonl");
+            std::fs::write(&path, original).unwrap();
+            assert!(append_movie_metadata(&path, &movie(), false).unwrap());
+            let bytes = std::fs::read(&path).unwrap();
+            assert!(bytes.starts_with(original));
+            let suffix = &bytes[original.len()..];
+            let suffix = if !original.is_empty() && !original.ends_with(b"\n") {
+                assert_eq!(suffix[0], b'\n');
+                &suffix[1..]
+            } else {
+                suffix
+            };
+            assert_eq!(suffix.iter().filter(|&&b| b == b'\n').count(), 1);
+            assert!(suffix.ends_with(b"\n"));
+            assert_eq!(
+                serde_json::from_slice::<MovieMetadataBasic>(suffix).unwrap(),
+                movie()
+            );
+            assert!(!append_movie_metadata(&path, &movie(), false).unwrap());
+            assert_eq!(std::fs::read(&path).unwrap(), bytes);
+        }
+    }
+
+    #[test]
+    fn metadata_dry_run_does_not_create_or_modify_files() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("missing/metadata.jsonl");
+        assert!(append_movie_metadata(&path, &movie(), true).unwrap());
+        assert!(!path.parent().unwrap().exists());
+        let path = dir.path().join("metadata.jsonl");
+        let original = b"{\"id\":\"other\"}";
+        std::fs::write(&path, original).unwrap();
+        assert!(append_movie_metadata(&path, &movie(), true).unwrap());
+        assert_eq!(std::fs::read(&path).unwrap(), original);
+    }
+
+    #[test]
+    fn yap_srt_drops_orphan_blocks_and_parses() {
+        // A disc track with a blank line inside a two-speaker cue: the corpus
+        // reads two cues and an orphan; yap's parser rejects the file outright.
+        let raw = "1\n00:00:01,000 --> 00:00:02,000\n-Tu as de la fièvre.\n\n-Non, j'ai chaud.\n\n2\n00:00:03,000 --> 00:00:04,000\nBonjour tout le monde.\n\n";
+        assert!(movie_subtitles::parse_srt(raw).is_err());
+        let normalized = yap_srt(raw).unwrap();
+        assert_eq!(normalized, "1\n00:00:01,000 --> 00:00:02,000\n-Tu as de la fièvre.\n\n2\n00:00:03,000 --> 00:00:04,000\nBonjour tout le monde.\n\n");
+        assert_eq!(movie_subtitles::parse_srt(&normalized).unwrap().len(), 2);
+    }
+
+    #[test]
+    fn invalid_or_unreadable_metadata_is_not_treated_as_missing() {
+        let dir = tempfile::tempdir().unwrap();
+        assert!(append_movie_metadata(dir.path(), &movie(), false).is_err());
+        let path = dir.path().join("metadata.jsonl");
+        std::fs::write(&path, b"not json\n").unwrap();
+        assert!(append_movie_metadata(&path, &movie(), false).is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), b"not json\n");
     }
 }
