@@ -63,13 +63,19 @@ export function calculateColors(theme: ShaderTheme) {
   return { colors, numBands };
 }
 
-export const FALLBACK_BAND_INDEX = 1;
+/** The first color painted — behind the canvas in CSS, and as the clear color
+ *  while the shaders compile — so the handoff to the live shader is seamless.
+ *  Light draws metaballs over its band palette, so a mid band is right there.
+ *  The dark themes draw mountains instead and never touch the bands: their
+ *  fallback is the scene's unlit base (`baseCol * 0.45` in the fragment shader). */
+export function getFallbackRgb(theme: ShaderTheme): [number, number, number] {
+  if (theme === "dark") return [6 / 255, 3 / 255, 7 / 255];
+  if (theme === "oled") return [0, 0, 0];
+  const { colors } = calculateColors(theme);
+  return [colors[3], colors[4], colors[5]];
+}
 
 export function getShaderBackgroundCss(theme: ShaderTheme): string {
-  const { colors } = calculateColors(theme);
-  const offset = FALLBACK_BAND_INDEX * 3;
-  const r = Math.round(colors[offset] * 255);
-  const g = Math.round(colors[offset + 1] * 255);
-  const b = Math.round(colors[offset + 2] * 255);
+  const [r, g, b] = getFallbackRgb(theme).map((c) => Math.round(c * 255));
   return `rgb(${r}, ${g}, ${b})`;
 }

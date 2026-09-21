@@ -2,7 +2,7 @@
 
 import {
   calculateColors,
-  FALLBACK_BAND_INDEX,
+  getFallbackRgb,
   type ShaderTheme,
 } from "../lib/shader-colors";
 
@@ -146,11 +146,11 @@ function initWebGL(
     return;
   }
 
-  // Immediately clear to the middle band color so the canvas isn't black while shaders compile
+  // Immediately clear to the theme's fallback color so the canvas isn't black
+  // while the shaders compile
   {
-    const { colors } = calculateColors(theme);
-    const offset = FALLBACK_BAND_INDEX * 3;
-    gl.clearColor(colors[offset], colors[offset + 1], colors[offset + 2], 1.0);
+    const [r, g, b] = getFallbackRgb(theme);
+    gl.clearColor(r, g, b, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
@@ -185,22 +185,16 @@ function initWebGL(
       return t * t;
     }
 
-    // A shared slow wave that all layers ride on, creating coherent large-scale
-    // swells. Two sines at different low frequencies, moving in opposite directions.
+    // Single gentle swell shared by all layers.
     float sharedWave(float x, float t) {
-      return 0.07 * sin(x * 8.8 + t * 0.12)
-           + 0.05 * sin(x * 4.8 - t * 0.08);
+      return 0.04 * sin(x * 4.8 - t * 0.08);
     }
 
-    // Multi-octave sine ridge: three octaves with decreasing amplitude and
-    // staggered phases so crests don't align into a pure sine.
+    // Two-octave sine ridge.
     float layerHeight(float x, float baseY, float amp, float freq, float phase) {
-      float h = 0.0;
-      h += 1.00 * sin(x * freq        + phase);
-      h += 0.50 * sin(x * freq * 2.17 + phase * 1.7 + 1.3);
-      h += 0.25 * sin(x * freq * 4.31 + phase * 2.3 + 2.9);
-      h /= (1.00 + 0.50 + 0.25);
-      return baseY + amp * h;
+      float h = sin(x * freq + phase)
+              + 0.4 * sin(x * freq * 2.17 + phase * 1.7 + 1.3);
+      return baseY + amp * h / 1.4;
     }
 
     // Map a 0..1 point into the same aspect-corrected space used by uvAspect,
@@ -253,102 +247,87 @@ function initWebGL(
       float value = 0.0;
 
       if (u_isDark > 0.5) {
-        // ===== Dark theme: layered sine mountains lit from the upper-right =====
+        // ===== Dark theme: layered sine mountains lit by the cursor =====
         // u_time accumulates in ms-scale via the render loop's speed factor;
         // convert to a seconds-ish scale for the per-layer drift.
         float iTime = t * 0.001;
 
-        vec3 baseCol = mix(vec3(34.0, 21.0, 40.0) / 255.0, vec3(0.0), u_oled);
-        vec3 haloCol = vec3(168.0, 77.0, 74.0) / 255.0;
-        vec3 hotCol  = vec3(248.0, 150.0, 112.0) / 255.0;
-        vec3 lineCol = vec3(228.0, 119.0, 91.0) / 255.0;
+        vec3 baseCol = mix(vec3(14.0, 7.0, 16.0) / 255.0, vec3(0.0), u_oled);
+        vec3 haloCol = vec3(128.0, 46.0, 84.0) / 255.0;
+        vec3 hotCol  = vec3(226.0, 128.0, 162.0) / 255.0;
+        vec3 lineCol = vec3(210.0, 108.0, 146.0) / 255.0;
 
         vec2 lightAnchor = toAspect(u_mouse, aspect);
         float lightDist = distance(uvAspect, lightAnchor);
         // Tighter falloff for OLED — keeps most of the screen pure black.
-        float haloRadius = mix(1.3, 0.55, u_oled);
-        float coreRadius = mix(0.4, 0.22, u_oled);
+        float haloRadius = mix(1.0, 0.5, u_oled);
+        float coreRadius = mix(0.28, 0.18, u_oled);
         float lightInfluence = 1.0 - smoothstep(0.0, haloRadius, lightDist);
-        lightInfluence = lightInfluence * lightInfluence;
-
+        lightInfluence *= lightInfluence;
         float lightCore = 1.0 - smoothstep(0.0, coreRadius, lightDist);
         lightCore = lightCore * lightCore * lightCore;
 
-        vec3 col = baseCol * 0.35;
+        vec3 col = baseCol * 0.45;
 
-        float baseY[5];  float amp[5];  float freq[5];  float phase[5];
-        float speed[5]; float rimDepth[5]; float rimBoost[5];
+        float baseY[4]; float amp[4]; float freq[4]; float phase[4];
+        float rimDepth[4]; float rimBoost[4];
 
-        speed[0] =  0.07; speed[1] = -0.11; speed[2] =  0.13; speed[3] = -0.05; speed[4] =  0.17;
+        baseY[0] = 0.70; amp[0] = 0.16; freq[0] = 1.4; phase[0] = 0.3 + iTime * 0.07;
+        baseY[1] = 0.40; amp[1] = 0.07; freq[1] = 3.6; phase[1] = 1.7 - iTime * 0.11;
+        baseY[2] = 0.28; amp[2] = 0.07; freq[2] = 3.0; phase[2] = 0.9 - iTime * 0.05;
+        baseY[3] = 0.17; amp[3] = 0.05; freq[3] = 4.6; phase[3] = 4.2 + iTime * 0.13;
 
-        // Layer 0 is the "mega-mountain" that sweeps across the upper half.
-        baseY[0] = 0.75; amp[0] = 0.25; freq[0] = 1.4; phase[0] = 0.3 + iTime * speed[0];
-        baseY[1] = 0.42; amp[1] = 0.09; freq[1] = 4.0; phase[1] = 1.7 + iTime * speed[1];
-        baseY[2] = 0.34; amp[2] = 0.07; freq[2] = 5.5; phase[2] = 2.9 + iTime * speed[2];
-        baseY[3] = 0.26; amp[3] = 0.10; freq[3] = 3.5; phase[3] = 0.9 + iTime * speed[3];
-        baseY[4] = 0.18; amp[4] = 0.06; freq[4] = 6.0; phase[4] = 4.2 + iTime * speed[4];
+        rimDepth[0] = 0.12; rimDepth[1] = 0.07; rimDepth[2] = 0.07; rimDepth[3] = 0.06;
+        rimBoost[0] = 0.11; rimBoost[1] = 0.06; rimBoost[2] = 0.07; rimBoost[3] = 0.08;
 
-        rimDepth[0] = 0.20; rimDepth[1] = 0.09; rimDepth[2] = 0.08; rimDepth[3] = 0.10; rimDepth[4] = 0.07;
-        rimBoost[0] = 0.30; rimBoost[1] = 0.12; rimBoost[2] = 0.14; rimBoost[3] = 0.16; rimBoost[4] = 0.18;
-
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 4; i++) {
           float h = layerHeight(uv.x, baseY[i], amp[i], freq[i], phase[i]) + sharedWave(uv.x, iTime);
 
-          // Numerical slope of the full ridge (all fBm octaves + shared wave).
+          // Numerical slope of the full ridge (both octaves + shared wave).
           // Cheaper to write than to differentiate by hand and automatically
           // correct if layerHeight or sharedWave changes.
           float eps = 0.001;
           float hLeft  = layerHeight(uv.x - eps, baseY[i], amp[i], freq[i], phase[i]) + sharedWave(uv.x - eps, iTime);
           float hRight = layerHeight(uv.x + eps, baseY[i], amp[i], freq[i], phase[i]) + sharedWave(uv.x + eps, iTime);
-          float dhdx = (hRight - hLeft) / (2.0 * eps);
-          vec2 normal = normalize(vec2(-dhdx, 1.0));
+          vec2 normal = normalize(vec2(-(hRight - hLeft) / (2.0 * eps), 1.0));
 
           // Direction from the ridge point toward the light (aspect-corrected).
-          vec2 ridgePoint = toAspect(vec2(uv.x, h), aspect);
-          vec2 toLight = normalize(lightAnchor - ridgePoint);
+          vec2 toLight = normalize(lightAnchor - toAspect(vec2(uv.x, h), aspect));
           float facing = max(dot(normal, toLight), 0.0);
 
-          // Halo: brighten pixels just above the ridge, modulated by light and facing.
+          // Rim glow just above the ridge.
           if (uv.y >= h && uv.y < h + rimDepth[i]) {
             float ht = 1.0 - clamp((uv.y - h) / rimDepth[i], 0.0, 1.0);
-            ht = ht * ht * ht * ht;
-            float haloFactor = 0.05 + 2.0 * lightInfluence * facing;
-            vec3 localHaloCol = mix(haloCol, hotCol, lightCore);
-            col += localHaloCol * (rimBoost[i] * ht * haloFactor);
+            ht = ht * ht * ht;
+            float haloFactor = 0.02 + 1.1 * lightInfluence * facing;
+            col += mix(haloCol, hotCol, lightCore * 0.6) * (rimBoost[i] * ht * haloFactor);
           }
 
-          // Body: fill below the ridge with a depth-weighted warm lift.
+          // Mountain body.
           if (uv.y < h) {
-            float depth = float(i) / 4.0;
-            float depthWeight = 0.3 + 0.9 * depth;
-            float gradDepth = clamp((h - uv.y) / 0.25, 0.0, 1.0);
-            float gradMul = 0.7 + 0.3 * gradDepth;
-
+            float depthWeight = 0.4 + 0.6 * (float(i) / 3.0);
+            float gradMul = 0.75 + 0.25 * clamp((h - uv.y) / 0.25, 0.0, 1.0);
             vec3 body = baseCol * gradMul;
             // Warm body-lift is purple-theme only — in OLED the body stays black
             // so only the ridge halos read as the "sun".
-            float bodyLift = 1.0 - u_oled;
-            body += haloCol * lightInfluence * 0.35 * depthWeight * bodyLift;
-            body += hotCol * lightCore * 0.2 * depthWeight * bodyLift;
+            body += haloCol * lightInfluence * 0.08 * depthWeight * (1.0 - u_oled);
             col = body;
           }
 
-          // Crisp ridge line — only on slopes facing the light.
+          // Thin hairline ridge, only on light-facing slopes.
           float lineFalloff = lightInfluence * facing;
-          lineFalloff = lineFalloff * lineFalloff;
-          float lineWidth = (0.1 + 0.6 * lineFalloff) / u_resolution.y;
-          float lineSoftEdge = 6.0 / u_resolution.y;
-          float dist = abs(uv.y - h);
-          float lineMask = 1.0 - smoothstep(lineWidth, lineWidth + lineSoftEdge, dist);
-          col = mix(col, lineCol, lineMask * lineFalloff * 0.8);
+          lineFalloff *= lineFalloff;
+          float lineWidth = 0.35 / u_resolution.y;
+          float lineSoftEdge = 2.5 / u_resolution.y;
+          float lineMask = 1.0 - smoothstep(lineWidth, lineWidth + lineSoftEdge, abs(uv.y - h));
+          col = mix(col, lineCol, lineMask * lineFalloff * 0.38);
         }
 
-        // Atmospheric haze: low-frequency fBm noise that slightly lifts darks
-        // and varies smoothly across the image. Cool purple in unlit areas,
-        // warm red near the light (approximates scattering through mist).
-        float haze = fbm(uv * 3.0 + vec2(iTime * 0.02, 0.0));
-        vec3 hazeTint = mix(baseCol * 0.6, haloCol * 0.5, lightInfluence * 0.6);
-        col += hazeTint * haze * 0.15;
+        // Faint atmospheric haze: low-frequency fBm that slightly lifts darks,
+        // cool in unlit areas and warm near the light.
+        float haze = fbm(uv * 2.5 + vec2(iTime * 0.02, 0.0));
+        vec3 hazeTint = mix(baseCol * 0.5, haloCol * 0.35, lightInfluence * 0.5);
+        col += hazeTint * haze * 0.05;
 
         gl_FragColor = vec4(col, 1.0);
         return;
