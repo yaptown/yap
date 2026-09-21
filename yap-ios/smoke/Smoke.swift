@@ -69,6 +69,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
             try await weapon.load_language_pack(course: unsupported, on_progress: nil)
             fatalError("expected unsupported course")
         } catch LanguageDataError.UnsupportedCourse(let actual) { check(actual == unsupported) }
+        let noPackInputs = weapon.deck_inputs_key(course: course)
         var progressCalls = 0
         try await weapon.load_language_pack_core(course: course) { message, percent in
             check(!message.isEmpty && percent >= 0 && percent <= 100)
@@ -76,6 +77,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
             progressCalls += 1
         }
         check(!weapon.is_language_pack_fully_loaded(course: course) && progressCalls > 0)
+        check(weapon.deck_inputs_key(course: course) != noPackInputs)
         // A core-only deck is withheld unless the learner would see the placement test.
         check(try await weapon.get_deck_state(course: course, utc_offset_seconds: 0) == nil)
         weapon.request_deck_selection()
@@ -91,7 +93,9 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         placement = coreDeck.advance_placement_session(session: placement)
         let knownBeforeFullPack = placement.known_words
         let unknownBeforeFullPack = placement.unknown_words
+        let coreInputs = weapon.deck_inputs_key(course: course)
         try await weapon.load_language_pack(course: course, on_progress: nil)
+        check(weapon.deck_inputs_key(course: course) != coreInputs)
         check(weapon.is_language_pack_fully_loaded(course: course))
         let original = try await deck(weapon, course)
         placement = original.refresh_placement_session(session: placement) ?? placement
@@ -164,10 +168,12 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(weapon.num_events_on_remote_as_of_last_sync(target: .Supabase) == 0)
         let earliest = weapon.get_timestamp_of_earliest_unsynced_event(target: .Supabase)!
         check(earliest.timestamp.seconds > 0 && earliest.timestamp.nanoseconds < 1_000_000_000)
+        let beforeSyncInputs = weapon.deck_inputs_key(course: course)
         // Offline sync runs the same load/save pipeline against native storage.
         try await weapon.sync(stream_id: "reviews", access_token: nil, attempt_supabase: false, modifier: nil, upload: false)
         try await weapon.sync(stream_id: "deck_selection", access_token: nil, attempt_supabase: false, modifier: nil, upload: false)
         try await weapon.sync_with_supabase(access_token: "unused-offline", modifier: nil, upload: false)
+        check(weapon.deck_inputs_key(course: course) == beforeSyncInputs)
         let reopened = try await Weapon.create(user_id: nil) { _, _ in }
         check(reopened.device_id == device)
         reopened.request_reviews()
@@ -224,7 +230,9 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(review.get_next_challenge(deck: withCards) != nil)
         let reviewed = withCards.review_card(reviewed: cards[0].card_indicator, rating: .Good)
         check(reviewed != nil)
+        let beforeReviewInputs = reopened.deck_inputs_key(course: course)
         reopened.add_deck_event(event: reviewed!)
+        check(reopened.deck_inputs_key(course: course) != beforeReviewInputs)
         let afterReview = try await deck(reopened, course)
         check(afterReview.get_total_reviews() == withCards.get_total_reviews() + 1)
         reopened.add_deck_event(event: afterReview.complete_placement_test(known_words: placement.known_words, unknown_words: placement.unknown_words))

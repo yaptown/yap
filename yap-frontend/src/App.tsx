@@ -1556,6 +1556,13 @@ export function useDeck():
   const course = courseParts ?? cachedCourse;
   const courseKey = getCourseKey(course);
 
+  const deckInputsSnapshot = useCallback(
+    () => (course ? weapon.deck_inputs_key(course) : null),
+    [weapon, course],
+  );
+  const deckInputsKey = useSyncExternalStore(subscribe, deckInputsSnapshot);
+  const streamsReady = numEvents !== null;
+
   // Fetch language pack — only re-runs when course changes, not when numEvents
   // changes. Two-stage: the core half (dictionary + frequencies) loads first
   // so the placement test can start immediately; when the sentence half lands
@@ -1625,9 +1632,9 @@ export function useDeck():
     return null;
   }, [weapon, courseKey, retryCount]);
 
-  // Build deck — re-runs when language pack is ready or streams change
+  // Build deck when Rust says its inputs changed (or pack loading reports an error).
   const state = useAsyncMemo(async () => {
-    if (numEvents === null) return null;
+    if (!streamsReady) return null;
 
     if (!deck_selection?.targetLanguage || !deck_selection?.nativeLanguage) {
       return { type: "noLanguageSelected" } as { type: "noLanguageSelected" };
@@ -1739,14 +1746,11 @@ export function useDeck():
     }
   }, [
     weapon,
-    numEvents,
-    historyKnown,
+    deckInputsKey,
+    streamsReady,
     courseKey,
     languagePackResult,
     retryCount,
-    deck_selection?.targetLanguage,
-    deck_selection?.nativeLanguage,
-    deck_selection?.onboardingSelections?.startingFresh,
   ]);
 
   const currentState =

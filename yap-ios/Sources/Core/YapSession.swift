@@ -41,7 +41,7 @@ enum DeckState {
     private var monitor: NWPathMonitor?
     private var course: Course?
     private var coreReady = false
-    private var builtEventCount: Int?
+    private var builtDeckInputs: String?
     private var generation = 0
     private var snapshotGeneration = 0
 
@@ -109,14 +109,12 @@ enum DeckState {
         "\(course.target_language):\(course.native_language)"
     }
 
-    /// Like the web, the Deck snapshot is rebuilt only when events land (or the
-    /// pack changes); a foreground or a no-op sync must not replace the deck and
-    /// with it the challenge the learner is in the middle of.
-    private func recompute(rebuild: Bool = false) {
+    /// Rust owns the Deck inputs: rebuild only when its key changes, so a
+    /// foreground or no-op sync cannot replace the learner's current challenge.
+    private func recompute() {
         guard active, let weapon,
-              let reviews = weapon.get_stream_num_events(stream_id: "reviews"),
-              let selections = weapon.get_stream_num_events(stream_id: "deck_selection") else { return }
-        let eventCount = Int(reviews + selections)
+              weapon.get_stream_num_events(stream_id: "reviews") != nil,
+              weapon.get_stream_num_events(stream_id: "deck_selection") != nil else { return }
         let selection = weapon.get_deck_selection_state()
         let onboarded = selection?.onboarded_languages ?? []
         let heard = selection?.heard_about != nil
@@ -132,12 +130,8 @@ enum DeckState {
         UserDefaults.standard.set(Self.courseKey(selected), forKey: "yap-last-course")
         if selected != course { loadPack(selected) }
         guard coreReady else { return }
-        if rebuild || eventCount != builtEventCount {
-            rebuildDeck(eventCount: eventCount)
-        } else if case let .deck(deck, deckCourse, startingFresh, historyKnown) = deckState,
-                  historyKnown != weapon.reviews_history_known() {
-            deckState = .deck(deck, course: deckCourse, startingFresh: startingFresh, historyKnown: weapon.reviews_history_known())
-        }
+        let inputs = weapon.deck_inputs_key(course: selected)
+        if inputs != builtDeckInputs { rebuildDeck(inputs: inputs) }
     }
 
     private func loadPack(_ selected: Course) {
@@ -147,7 +141,7 @@ enum DeckState {
         let expected = generation
         packTask?.cancel(); snapshotTask?.cancel(); snapshotGeneration += 1
         if course != selected { placementSession = nil; dismissedAccomplishmentAtReview = nil }
-        course = selected; coreReady = false; builtEventCount = nil; packError = nil
+        course = selected; coreReady = false; builtDeckInputs = nil; packError = nil
         deckState = .loading(message: "Downloading language pack…", progress: 0)
         packTask = Task { [weak self] in
             let progress: @MainActor (String, Float) -> Void = { [weak self] message, percent in
@@ -160,7 +154,7 @@ enum DeckState {
             do {
                 try await weapon.load_language_pack_core(course: selected, on_progress: progress)
                 guard let self, self.active, self.generation == expected, !Task.isCancelled else { return }
-                self.coreReady = true; self.recompute(rebuild: true)
+                self.coreReady = true; self.recompute()
                 for attempt in 0...5 {
                     do { try await weapon.load_language_pack(course: selected, on_progress: progress); break }
                     catch {
@@ -170,7 +164,7 @@ enum DeckState {
                     }
                 }
                 guard self.active, self.generation == expected, !Task.isCancelled else { return }
-                self.recompute(rebuild: true)
+                self.recompute()
                 Telemetry.breadcrumb("language-pack", "Full language pack loaded")
                 print("Yap: full language pack loaded")
             } catch {
@@ -183,10 +177,10 @@ enum DeckState {
         }
     }
 
-    private func rebuildDeck(eventCount: Int) {
+    private func rebuildDeck(inputs: String) {
         guard let weapon, case let .languageSelected(selected, startingFresh, _, _) = deckSelection,
               selected == course else { return }
-        builtEventCount = eventCount
+        builtDeckInputs = inputs
         snapshotGeneration += 1
         let expected = snapshotGeneration
         snapshotTask?.cancel()

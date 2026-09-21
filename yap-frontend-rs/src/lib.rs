@@ -319,6 +319,33 @@ impl Weapon {
             })
     }
 
+    /// Identifies everything `get_deck_state` reads for this course: the review
+    /// and deck-selection logs, which half of the pack is loaded, and whether the
+    /// review history is known. Hosts rebuild their Deck snapshot when this
+    /// differs from the one they built against, and never otherwise, so a no-op
+    /// sync can't replace the deck (and the challenge) a learner is in the
+    /// middle of.
+    pub fn deck_inputs_key(&self, course: Course) -> String {
+        let store = self.store.borrow();
+        let count = |stream: &str| {
+            store
+                .get_raw(stream.to_string())
+                .map_or(0, |s| s.num_events())
+        };
+        let packs = self.language_pack.borrow();
+        let pack = match packs.get(&course) {
+            None => "none",
+            Some(loaded) if loaded.full => "full",
+            Some(_) => "core",
+        };
+        format!(
+            "reviews={} selections={} pack={pack} history={}",
+            count("reviews"),
+            count("deck_selection"),
+            self.reviews_history_known(),
+        )
+    }
+
     /// Fold the review log into a deck for this course.
     ///
     /// Returns `None` while only the core half of the pack is loaded and the
