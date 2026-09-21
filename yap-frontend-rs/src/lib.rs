@@ -5357,6 +5357,7 @@ mod tests {
             starting_fresh: None,
             history_known: true,
             dismissed_accomplishment_at_review: None,
+            placement: None,
             current_challenge: None,
             timestamp_ms: now.timestamp_millis() as f64,
         }
@@ -5379,10 +5380,21 @@ mod tests {
         let mut inputs = review_screen_inputs(Utc::now());
         inputs.starting_fresh = Some(false);
         inputs.current_challenge = Some(captured_challenge());
-        assert!(matches!(
-            deck.review_screen_view(inputs.clone()).step,
-            ReviewStep::PlacementTest
-        ));
+        let ReviewStep::PlacementTest(mut session) = deck.review_screen_view(inputs.clone()).step
+        else {
+            panic!("expected placement session");
+        };
+        // An unchanged/finished session must not be replaced with a fresh test.
+        session.known_words.push("remembered".into());
+        inputs.placement = Some(session.clone());
+        let ReviewStep::PlacementTest(resumed) = deck.review_screen_view(inputs.clone()).step
+        else {
+            panic!("expected resumed placement session");
+        };
+        assert_eq!(
+            serde_json::to_value(session).unwrap(),
+            serde_json::to_value(resumed).unwrap()
+        );
         inputs.history_known = false;
         assert!(matches!(
             deck.review_screen_view(inputs.clone()).step,

@@ -2,8 +2,8 @@ import SwiftUI
 
 struct PronunciationChallengeView: View {
     @Environment(AudioPlayer.self) private var audio
-    let screen: ReviewScreenView
-    let actions: ReviewActions
+    @Environment(\.reviewHost!) private var host
+    @Environment(\.reviewActions!) private var actions
     let indicator: CardIndicator_Gram_String_String
     let pattern: String
     let guide: PronunciationGuide
@@ -23,7 +23,7 @@ struct PronunciationChallengeView: View {
                 }
                 if should_show_challenge_tutorial(times_type_seen: timesSeen) { Text("Listen, then practice saying the sound aloud.").font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity) }
                 ForEach(Array(cues.prefix(3).enumerated()), id: \.offset) { index, cue in
-                    PronunciationRow(screen: screen, actions: actions, cue: cue, pattern: pattern, position: guide.position,
+                    PronunciationRow(cue: cue, pattern: pattern, position: guide.position,
                                      context: guide.example_words.indices.contains(index) ? guide.example_words[index].cultural_context : nil)
                 }
                 Text(markdown(guide.description)).font(.subheadline)
@@ -40,7 +40,7 @@ struct PronunciationChallengeView: View {
             let command = DebugHarness.shared.command
             if command == "pron-grade" || command == "grade" { rate(.Remembered) }
             if command == "audio", let cue = cues.first {
-                Task { try? await audio.play(request: cue.audio, accessToken: actions.media.accessToken) }
+                Task { try? await audio.play(request: cue.audio, accessToken: host.accessToken) }
             }
         }
         #endif
@@ -54,8 +54,7 @@ struct PronunciationChallengeView: View {
 
 private struct PronunciationRow: View {
     @Environment(AudioPlayer.self) private var audio
-    let screen: ReviewScreenView
-    let actions: ReviewActions
+    @Environment(\.reviewScreen!) private var screen
     let cue: PronunciationCue
     let pattern: String
     let position: PatternPosition
@@ -89,7 +88,7 @@ private struct PronunciationRow: View {
     }
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            AudioButton(request: cue.audio, media: actions.media, reviewCount: screen.total_reviews)
+            AudioButton(request: cue.audio, reviewCount: screen.total_reviews)
             VStack(alignment: .leading, spacing: 4) {
                 Text(words).font(.body)
                 if let context { Text(context).font(.footnote).foregroundStyle(.secondary) }

@@ -344,6 +344,7 @@ pub struct ReviewScreenInputs {
     pub starting_fresh: Option<bool>,
     pub history_known: bool,
     pub dismissed_accomplishment_at_review: Option<u64>,
+    pub placement: Option<PlacementSession>,
     pub current_challenge: Option<Challenge<Gram<String>>>,
     pub timestamp_ms: f64,
 }
@@ -361,7 +362,7 @@ pub struct ChallengeView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "type", content = "view")]
 pub enum ReviewStep {
-    PlacementTest,
+    PlacementTest(PlacementSession),
     ReviewPlan(Box<ReviewPlanView>),
     SetDisplayName,
     Accomplishment(Box<AccomplishmentView>),
@@ -373,6 +374,7 @@ pub enum ReviewStep {
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ReviewScreenView {
+    pub native_language: Language,
     pub target_language: Language,
     pub step: ReviewStep,
     pub progress: f64,
@@ -406,7 +408,15 @@ impl Deck {
         );
         let step = if self.should_offer_placement_test(inputs.starting_fresh, inputs.history_known)
         {
-            ReviewStep::PlacementTest
+            ReviewStep::PlacementTest(
+                inputs
+                    .placement
+                    .map(|session| {
+                        self.refresh_placement_session(session.clone())
+                            .unwrap_or(session)
+                    })
+                    .unwrap_or_else(|| self.start_placement_session()),
+            )
         } else if let Some(plan) =
             self.lockup_screen_view(inputs.banned.clone(), inputs.timestamp_ms)
         {
@@ -440,6 +450,7 @@ impl Deck {
             .with_timezone(&self.context.timezone)
             .date_naive();
         ReviewScreenView {
+            native_language: self.context.course.native_language,
             target_language: self.get_target_language(),
             step,
             progress: (f64::from(self.get_today_time_spent_on(day))

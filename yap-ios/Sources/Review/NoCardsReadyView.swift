@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct NoCardsReadyView: View {
-    let screen: ReviewScreenView
-    let actions: ReviewActions
+    @Environment(\.reviewScreen!) private var screen
+    @Environment(\.reviewActions!) private var actions
     let view: IdleScreenView
     @State private var showReleasePlan = false
     @AppStorage("yap-pimsleur-acknowledged") private var pimsleurAcknowledged = false
@@ -59,7 +59,7 @@ struct NoCardsReadyView: View {
                 Text(notice)
                 Button("Undo restrictions") { actions.undoRestrictions() }
             }
-            SentenceListSelector(actions: actions, view: idle)
+            SentenceListSelector(view: idle)
             if !awaitingAcknowledgement, let event = idle.info.smart_add_event {
                 Text(idle.info.preview.joined(separator: " · ")).foregroundStyle(.secondary)
                 Button(idle.kind == .FirstRun ? "Start learning" : "Learn \(idle.info.smart_add_count) new cards") { addEvent(event) }

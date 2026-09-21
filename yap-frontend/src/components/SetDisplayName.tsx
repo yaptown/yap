@@ -124,14 +124,12 @@ function generateRandomName(): string {
 
 interface SetDisplayNameProps {
   onSave: (name: string) => Promise<void> | void;
-  onComplete: () => void;
   onSkip: () => void;
   totalReviewsCompleted: bigint;
 }
 
 export function SetDisplayName({
   onSave,
-  onComplete,
   onSkip,
   totalReviewsCompleted,
 }: SetDisplayNameProps) {
@@ -148,17 +146,12 @@ export function SetDisplayName({
       setSaving(true);
       await onSave(displayName.trim());
       toast.success("Display name set!");
-      onComplete();
     } catch (err) {
       console.error("Error setting display name:", err);
       toast.error("Failed to set display name. Please try again.");
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleSkip = () => {
-    onSkip();
   };
 
   return (
@@ -192,7 +185,7 @@ export function SetDisplayName({
 
           <div className="flex gap-2">
             <Button
-              onClick={handleSkip}
+              onClick={onSkip}
               variant="outline"
               className="flex-1"
               disabled={saving}

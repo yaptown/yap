@@ -31,6 +31,7 @@ import {
   type LiteralGrades,
   type Gram,
   type PartGraded,
+  type PlacementSession,
   type Rating,
   get_audio_cache_version,
   get_clip_manifest_version,
@@ -239,10 +240,7 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
 
   // Fetch display name from Supabase when logged in
   useEffect(() => {
-    if (!session?.user.id) {
-      setDisplayName(undefined);
-      return;
-    }
+    if (!session?.user.id) return;
 
     // Fetch initial display name
     const fetchDisplayName = async () => {
@@ -445,7 +443,6 @@ function ReviewPage() {
           ({
             deck,
             targetLanguage,
-            nativeLanguage,
             startingFresh,
             historyKnown,
           }) => {
@@ -470,7 +467,6 @@ function ReviewPage() {
                   accessToken={accessToken}
                   deck={deck}
                   targetLanguage={targetLanguage}
-                  nativeLanguage={nativeLanguage}
                   startingFresh={startingFresh}
                   historyKnown={historyKnown}
                   autoplayed={autoplayed}
@@ -749,7 +745,6 @@ interface ReviewProps {
   accessToken: string | undefined;
   deck: Deck;
   targetLanguage: Language;
-  nativeLanguage: Language;
   startingFresh: boolean | undefined;
   historyKnown: boolean;
   autoplayed: boolean;
@@ -780,7 +775,6 @@ function Review({
   accessToken,
   deck,
   targetLanguage,
-  nativeLanguage,
   startingFresh,
   historyKnown,
   autoplayed,
@@ -893,6 +887,7 @@ function Review({
   // restrictions mid-challenge (the can't-listen/can't-speak buttons) must
   // also swap immediately. A held "no challenge" never sticks, so newly due
   // cards still surface from idle.
+  const [placement, setPlacement] = useState<PlacementSession>();
   const [heldChallenge, setHeldChallenge] = useState<{
     deck: Deck;
     banned: ChallengeRequirements[];
@@ -915,6 +910,7 @@ function Review({
         dismissedAccomplishmentAtReview === null
           ? undefined
           : Number(dismissedAccomplishmentAtReview),
+      placement,
       current_challenge:
         held?.deck === deck && held.banned === bannedChallengeTypes
           ? held.challenge
@@ -935,6 +931,7 @@ function Review({
     dismissedAccomplishmentAtReview,
     readiness,
     heldChallenge,
+    placement,
   ]);
   const currentChallenge =
     view.step.type === "Challenge" ? view.step.view.challenge : undefined;
@@ -1145,12 +1142,19 @@ function Review({
     >
       <ReviewScreen
         view={view}
-        actions={{
+        host={{
           deck,
-          nativeLanguage,
           accessToken,
           autoplayed,
           setAutoplayed,
+          menuExtras: (
+            <DropdownMenuItem onClick={() => setShowReportModal(true)}>
+              Report an Issue
+            </DropdownMenuItem>
+          ),
+        }}
+        actions={{
+          setPlacement,
           addEvent,
           onRating: handleRating,
           onTranslationComplete: handleTranslationComplete,
@@ -1165,21 +1169,16 @@ function Review({
           },
           dismissAccomplishment: () =>
             setDismissedAccomplishmentAtReview(totalReviewsCompleted),
-          completePlacementTest: ({ knownWords, unknownWords }) =>
-            addEvent(deck.complete_placement_test(knownWords, unknownWords)),
+          completePlacementTest: ({ known_words, unknown_words }) =>
+            addEvent(deck.complete_placement_test(known_words, unknown_words)),
           saveDisplayName: async (name) => {
             await update_profile(name, null, accessToken!);
+            setDismissedSetDisplayName(true);
           },
-          completeDisplayName: () => setDismissedSetDisplayName(true),
           skipDisplayName: () => {
             localStorage.setItem("yap-skipped-set-display-name", "true");
             setDismissedSetDisplayName(true);
           },
-          menuExtras: (
-            <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-              Report an Issue
-            </DropdownMenuItem>
-          ),
         }}
       />
 

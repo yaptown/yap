@@ -1,4 +1,5 @@
 {
+  "native_language": "English",
   "target_language": "French",
   "step": {
     "type": "Idle",

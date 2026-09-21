@@ -82,7 +82,7 @@ export function FixturePage() {
     !deckState.deck
   )
     return <p>Loading fixture…</p>;
-  const { deck, nativeLanguage } = deckState;
+  const { deck } = deckState;
   const fixture = loaded.fixture;
   return (
     // Mirror ReviewPage's shell so captures show the same header and progress
@@ -106,12 +106,14 @@ export function FixturePage() {
         <ReviewScreen
           key={name}
           view={fixture}
-          actions={{
+          host={{
             deck,
-            nativeLanguage,
             accessToken,
             autoplayed: true,
             setAutoplayed: log,
+          }}
+          actions={{
+            setPlacement: log,
             onRating: log,
             onTranslationComplete: log,
             onTranscriptionComplete: log,
@@ -123,7 +125,6 @@ export function FixturePage() {
             dismissAccomplishment: log,
             completePlacementTest: log,
             saveDisplayName: log,
-            completeDisplayName: log,
             skipDisplayName: log,
           }}
         />

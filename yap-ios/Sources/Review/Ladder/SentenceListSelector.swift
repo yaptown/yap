@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct SentenceListSelector: View {
-    let actions: ReviewActions
+    @Environment(\.reviewHost!) private var host
+    @Environment(\.reviewActions!) private var actions
     let view: IdleView
     @AppStorage("yap-pimsleur-acknowledged") private var pimsleurAcknowledged = false
     private var info: NoCardsReadyInfo { view.info }
@@ -15,7 +16,7 @@ struct SentenceListSelector: View {
             }.pickerStyle(.segmented)
             Text(title).font(.headline)
             if case let .Movie(id) = navigation.selection,
-               let bytes = actions.media.moviePoster(id), let image = UIImage(data: Data(bytes)) {
+               let bytes = host.deck.get_movie_poster(movie_id: id), let image = UIImage(data: Data(bytes)) {
                 Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 220).clipShape(RoundedRectangle(cornerRadius: 12)).accessibilityLabel("Poster for \(title)")
             }
             if case .PimsleurLesson = navigation.selection, !pimsleurAcknowledged {

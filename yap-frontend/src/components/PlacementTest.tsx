@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, TriangleAlert } from "lucide-react";
 import type {
   Deck,
   Language,
+  PlacementSession,
 } from "../../../yap-frontend-rs/pkg";
 import { Progress } from "@/components/ui/progress";
 import { TargetLanguageText } from "./TargetLanguageText";
@@ -14,29 +14,25 @@ import { get_placement_session_info, toggle_placement_word } from "../../../yap-
 interface PlacementTestProps {
   deck: Deck;
   targetLanguage: Language;
-  onComplete: (results: {
-    knownWords: string[];
-    unknownWords: string[];
-  }) => void;
+  session: PlacementSession;
+  setSession: (session: PlacementSession) => void;
+  onComplete: (session: PlacementSession) => void;
 }
 
 export function PlacementTest({
   deck,
   targetLanguage,
   onComplete,
+  session,
+  setSession,
 }: PlacementTestProps) {
-  const [session, setSession] = useState(() => deck.start_placement_session());
   const info = get_placement_session_info(session);
-  const { round, words, known_words: knownWords, unknown_words: unknownWords } = session;
+  const { round, words } = session;
   const selectedWords = new Set(session.selected_words);
   const tooAdvanced = info.too_advanced;
 
-  useEffect(() => {
-    setSession((previous) => deck.refresh_placement_session(previous) ?? previous);
-  }, [deck]);
-
-  const toggleWord = (word: string) => setSession((previous) => toggle_placement_word(previous, word));
-  const handleNext = () => setSession((previous) => deck.advance_placement_session(previous));
+  const toggleWord = (word: string) => setSession(toggle_placement_word(session, word));
+  const handleNext = () => setSession(deck.advance_placement_session(session));
   const handleBack = () => setSession(deck.start_placement_session());
 
   return (
@@ -66,7 +62,7 @@ export function PlacementTest({
                     : "We've analyzed your knowledge level and will tailor your learning experience."}
                 </p>
                 <Button
-                  onClick={() => onComplete({ knownWords, unknownWords })}
+                  onClick={() => onComplete(session)}
                   size="lg"
                   className="w-full"
                 >

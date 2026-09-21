@@ -2,8 +2,9 @@ import SwiftUI
 
 struct TranslationChallengeView: View {
     @Environment(AudioPlayer.self) private var audio
-    let screen: ReviewScreenView
-    let actions: ReviewActions
+    @Environment(\.reviewScreen!) private var screen
+    @Environment(\.reviewHost!) private var host
+    @Environment(\.reviewActions!) private var actions
     let sentence: TranslateComprehensibleSentence
     @State private var state: TranslationState
     @State private var view: TranslationView
@@ -12,10 +13,9 @@ struct TranslationChallengeView: View {
     @State private var focused = false
     @State private var gradesExpanded = false
 
-    init(screen: ReviewScreenView, actions: ReviewActions, sentence: TranslateComprehensibleSentence, initialState: TranslationState?) {
-        self.screen = screen; self.actions = actions
+    init(sentence: TranslateComprehensibleSentence, initialState: TranslationState) {
         self.sentence = sentence
-        let state = initialState ?? translation_start(sentence: sentence, course: Course(native_language: actions.nativeLanguage, target_language: screen.target_language))
+        let state = initialState
         _state = State(initialValue: state)
         _view = State(initialValue: translation_view(state: state))
     }
@@ -29,7 +29,7 @@ struct TranslationChallengeView: View {
             StudyCard {
                 if let badge = view.badge { ReviewBadge(text: badge) }
                 HStack(alignment: .center, spacing: 8) {
-                    AudioButton(request: sentence.audio, media: actions.media, reviewCount: screen.total_reviews, autoplay: !editing && hasClip == false)
+                    AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: !editing && hasClip == false)
                     SentenceFlow(spacing: 0, alignment: .center) {
                         ForEach(Array(view.words.enumerated()), id: \.offset) { index, word in
                             let text = Text(word.text + word.whitespace)
@@ -68,7 +68,7 @@ struct TranslationChallengeView: View {
                     }
                 }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
-                    media: actions.media, reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip)
+                    reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip)
                 ReviewDefinitionsView(definitions: view.definitions)
             }
             if view.verdict != nil {
@@ -134,7 +134,7 @@ struct TranslationChallengeView: View {
                     if screen.online {
                         let response = await autograde_translation(challenge_sentence: sentence.target_language, user_sentence: submission,
                             native_translations: sentence.native_translations, literals: sentence.target_language_literals,
-                            phrases: sentence.unique_target_language_phrases, access_token: actions.media.accessToken, course: course,
+                            phrases: sentence.unique_target_language_phrases, access_token: host.accessToken, course: course,
                             gram_definitions: GramDefinitions(value: sentence.gram_definitions_for_lookup), literal_gram_indices: sentence.literal_gram_indices,
                             phrase_definitions: GramDefinitions(value: sentence.phrase_definitions), primary_expression: sentence.primary_expression,
                             movie_titles: MovieTitles(value: sentence.movie_titles))

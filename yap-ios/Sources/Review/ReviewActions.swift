@@ -1,27 +1,23 @@
-import Foundation
+import SwiftUI
 
-/// Host capabilities, kept separate from the captured screen's data.
-@MainActor struct ReviewMedia {
-    var accessToken: String?
-    var claimAutoplay: (UInt64) -> Bool = { _ in false }
-    var releaseAutoplay: () -> Void = {}
-    var movieMetadata: (String) -> MovieMetadataBasic? = { _ in nil }
-    var moviePoster: (String) -> [UInt8]? = { _ in nil }
+@MainActor final class AutoplayClaim { var reviewCount: UInt64? }
 
-    static func live(deck: Deck, session: YapSession) -> Self {
-        Self(accessToken: session.accessToken(), claimAutoplay: { count in
-            guard session.lastAutoPlayReviewCount != count else { return false }
-            session.lastAutoPlayReviewCount = count
-            return true
-        }, releaseAutoplay: { session.lastAutoPlayReviewCount = nil },
-        movieMetadata: { deck.get_movie_metadata(movie_ids: [$0]).first },
-        moviePoster: { deck.get_movie_poster(movie_id: $0) })
-    }
+@MainActor struct ReviewHost {
+    let deck: Deck
+    let accessToken: String?
+    let autoplay: AutoplayClaim
+    let packError: String?
+    let syncError: String?
+    let authError: String?
+}
+
+extension EnvironmentValues {
+    @Entry var reviewHost: ReviewHost?
+    @Entry var reviewScreen: ReviewScreenView?
+    @Entry var reviewActions: ReviewActions?
 }
 
 @MainActor struct ReviewActions {
-    var media = ReviewMedia()
-    var nativeLanguage: Language = .English
     var submitting = false
     /// Account/course scope; nil means reducer drafts cannot touch persistence.
     var pendingReviewKey: String?
@@ -34,22 +30,14 @@ import Foundation
     var undoRestrictions: () -> Void = { log("undo restrictions") }
     var addEvent: (DeckEvent) -> Void = { _ in log("add event") }
     var dismissAccomplishment: () -> Void = { log("dismiss accomplishment") }
-    var startPlacement: () -> PlacementSession? = { log("start placement"); return nil }
-    var advancePlacement: (PlacementSession) -> PlacementSession = { log("advance placement"); return $0 }
-    var savePlacement: (PlacementSession) -> Void = { _ in log("save placement") }
-    var placement: PlacementSession?
+    var setPlacement: (PlacementSession) -> Void = { _ in log("set placement") }
     var completePlacementTest: (PlacementSession) -> Void = { _ in log("complete placement") }
     var retryPack: () -> Void = { log("retry pack") }
     var switchCourse: () -> Void = { log("switch course") }
     var saveDisplayName: (String) async throws -> Void = { _ in log("save display name") }
-    var dismissDisplayName: () -> Void = { log("dismiss display name") }
-    var packError: String?
-    var syncError: String?
-    var authError: String?
+    var skipDisplayName: () -> Void = { log("dismiss display name") }
     static var inert: Self { Self() }
     private static func log(_ action: String) {
-        #if DEBUG
-        DebugHarness.log("fixture action \(action)")
-        #endif
+        print("fixture action \(action)")
     }
 }

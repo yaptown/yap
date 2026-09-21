@@ -3,7 +3,7 @@ import SwiftUI
 struct AudioButton: View {
     @Environment(AudioPlayer.self) private var audio
     let request: AudioRequest
-    let media: ReviewMedia
+    @Environment(\.reviewHost!) private var host
     let reviewCount: UInt64
     var autoplay = false
     /// The web's dictation card leads with a large ringed speaker; everywhere
@@ -37,7 +37,8 @@ struct AudioButton: View {
         }.buttonStyle(.plain).foregroundStyle(Color.yapAccent).disabled(loading)
             .accessibilityLabel(error.map { "Play audio. \($0)" } ?? "Play audio")
         .task(id: autoplay) {
-            guard autoplay, media.claimAutoplay(reviewCount) else { return }
+            guard autoplay, host.autoplay.reviewCount != reviewCount else { return }
+            host.autoplay.reviewCount = reviewCount
             await play()
         }
         .onDisappear { playback?.cancel(); if audio.currentRequest == request { audio.stop() } }
@@ -45,7 +46,7 @@ struct AudioButton: View {
     private func play() async {
         error = nil; loading = true
         defer { loading = false }
-        do { try await audio.play(request: request, accessToken: media.accessToken) }
+        do { try await audio.play(request: request, accessToken: host.accessToken) }
         catch { if !Task.isCancelled { self.error = error.localizedDescription } }
     }
 }

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SetDisplayNameView: View {
     let reviewCount: UInt64
-    let actions: ReviewActions
+    @Environment(\.reviewActions!) private var actions
     @State private var name = "CuriousLearner\(Int.random(in: 0..<1000))"
     @State private var saving = false
     @State private var error: String?
@@ -15,7 +15,7 @@ struct SetDisplayNameView: View {
             Text("You can change this at any time.").font(.caption).foregroundStyle(.secondary)
             if let error { Text(error).foregroundStyle(.red) }
             HStack(spacing: 16) {
-                Button("Skip") { actions.dismissDisplayName() }.buttonStyle(.bordered)
+                Button("Skip") { actions.skipDisplayName() }.buttonStyle(.bordered)
                 Button(saving ? "Saving…" : "Save") { Task { await save() } }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
             }.disabled(saving).controlSize(.large)
@@ -26,7 +26,7 @@ struct SetDisplayNameView: View {
             let command = DebugHarness.shared.command
             if command.hasPrefix("type ") { name = String(command.dropFirst(5).prefix(50)) }
             if command == "next" { Task { await save() } }
-            if command == "skip" { actions.dismissDisplayName() }
+            if command == "skip" { actions.skipDisplayName() }
         }
         #endif
     }

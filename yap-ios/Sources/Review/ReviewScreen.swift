@@ -2,8 +2,9 @@ import SwiftUI
 
 struct ReviewScreen: View {
     @Environment(AudioPlayer.self) private var audio
+    @Environment(\.reviewHost!) private var host
     let view: ReviewScreenView
-    let actions: ReviewActions
+    @Environment(\.reviewActions!) private var actions
     var body: some View {
         let metadata = get_language_metadata(language: view.target_language)
         VStack(spacing: 0) {
@@ -12,25 +13,26 @@ struct ReviewScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     if !view.online { Label("Offline · changes stay on this device until you reconnect", systemImage: "wifi.slash").font(.caption).foregroundStyle(.secondary) }
-                    if let error = actions.packError {
+                    if let error = host.packError {
                         HStack {
                             Text("Couldn't finish downloading the language pack: \(error)").font(.caption).foregroundStyle(.secondary)
                             Button("Retry", action: actions.retryPack).font(.caption)
                         }
                     }
-                    if let error = actions.syncError { Text("Sync will retry: \(error)").font(.caption).foregroundStyle(.secondary) }
-                    if let error = actions.authError { Text(error).font(.caption).foregroundStyle(.secondary) }
+                    if let error = host.syncError { Text("Sync will retry: \(error)").font(.caption).foregroundStyle(.secondary) }
+                    if let error = host.authError { Text(error).font(.caption).foregroundStyle(.secondary) }
                     switch view.step {
-                    case .PlacementTest: PlacementTestView(actions: actions)
+                    case let .PlacementTest(placement): PlacementTestView(placement: placement)
                     case let .ReviewPlan(plan): ReviewPlanScreen(cards: plan.cards) { actions.addEvent(plan.event) }
-                    case .SetDisplayName: SetDisplayNameView(reviewCount: view.total_reviews, actions: actions)
+                    case .SetDisplayName: SetDisplayNameView(reviewCount: view.total_reviews)
                     case let .Accomplishment(accomplishment): AccomplishmentScreen(view: accomplishment, addEvent: actions.addEvent, onDismiss: actions.dismissAccomplishment)
                     case let .Challenge(challenge): challengeView(challenge).id(challenge.challenge)
-                    case let .Idle(idle): NoCardsReadyView(screen: view, actions: actions, view: idle)
+                    case let .Idle(idle): NoCardsReadyView(view: idle)
                     }
                 }.padding(12).frame(maxWidth: 600)
             }
         }
+        .environment(\.reviewScreen, view)
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -66,13 +68,13 @@ struct ReviewScreen: View {
     @ViewBuilder private func challengeView(_ challenge: ChallengeView) -> some View {
         switch challenge.challenge {
         case let .FlashCardReview(indicator, flashcard, isNew, timesSeen):
-            FlashcardView(screen: view, actions: actions, indicator: indicator, flashcard: flashcard, isNew: isNew, timesTypeSeen: timesSeen)
+            FlashcardView(indicator: indicator, flashcard: flashcard, isNew: isNew, timesTypeSeen: timesSeen)
         case let .PronunciationChallenge(indicator, pattern, guide, cues, isNew, timesSeen):
-            PronunciationChallengeView(screen: view, actions: actions, indicator: indicator, pattern: pattern, guide: guide, cues: cues, isNew: isNew, timesSeen: timesSeen)
+            PronunciationChallengeView(indicator: indicator, pattern: pattern, guide: guide, cues: cues, isNew: isNew, timesSeen: timesSeen)
         case let .TranslateComprehensibleSentence(sentence):
-            TranslationChallengeView(screen: view, actions: actions, sentence: sentence, initialState: challenge.translation)
+            TranslationChallengeView(sentence: sentence, initialState: challenge.translation ?? translation_start(sentence: sentence, course: Course(native_language: view.native_language, target_language: view.target_language)))
         case let .TranscribeComprehensibleSentence(sentence):
-            TranscriptionChallengeView(screen: view, actions: actions, sentence: sentence, initialState: challenge.transcription)
+            TranscriptionChallengeView(sentence: sentence, initialState: challenge.transcription)
         }
     }
 }

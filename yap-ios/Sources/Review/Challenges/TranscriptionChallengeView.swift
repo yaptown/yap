@@ -2,8 +2,9 @@ import SwiftUI
 
 struct TranscriptionChallengeView: View {
     @Environment(AudioPlayer.self) private var audio
-    let screen: ReviewScreenView
-    let actions: ReviewActions
+    @Environment(\.reviewScreen!) private var screen
+    @Environment(\.reviewHost!) private var host
+    @Environment(\.reviewActions!) private var actions
     let sentence: TranscribeComprehensibleSentence
     @State private var state: TranscriptionState
     // Recomputed once per step rather than on every access, since each call crosses the bridge.
@@ -11,8 +12,7 @@ struct TranscriptionChallengeView: View {
     @State private var hasClip: Bool?
     @State private var gradingTask: Task<Void, Never>?
     @FocusState private var focused: Int?
-    init(screen: ReviewScreenView, actions: ReviewActions, sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
-        self.screen = screen; self.actions = actions
+    init(sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
         self.sentence = sentence
         let state = initialState ?? transcription_start(parts: sentence.parts)
         _state = State(initialValue: state)
@@ -30,7 +30,7 @@ struct TranscriptionChallengeView: View {
                 if sentence.second_chance { ReviewBadge(text: "Second chance") }
                 // Like the web: a big speaker on top, then the sentence with its blanks inline.
                 VStack(spacing: 4) {
-                    AudioButton(request: sentence.audio, media: actions.media, reviewCount: screen.total_reviews, autoplay: true, hero: true)
+                    AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: true, hero: true)
                     Text(view.instructions).font(.footnote).foregroundStyle(.secondary)
                 }.frame(maxWidth: .infinity)
                 SentenceFlow(spacing: 0, alignment: .center) {
@@ -44,7 +44,7 @@ struct TranscriptionChallengeView: View {
                     }
                 }.frame(maxWidth: .infinity).padding(.top, 4)
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
-                    media: actions.media, reviewCount: screen.total_reviews,
+                    reviewCount: screen.total_reviews,
                     maskedSentence: editing ? sentence.parts.map { part in
                         switch part { case let .Provided(literal): literal.word.text + literal.whitespace
                         case let .AskedToTranscribe(parts): parts.map { "____" + $0.whitespace }.joined() }
@@ -59,7 +59,7 @@ struct TranscriptionChallengeView: View {
                         Text(verdict.compare.joined(separator: " · "))
                         AudioButton(request: AudioRequest(request: TtsRequest(text: verdict.compare.map { $0 + ";" }.joined(separator: " "),
                             language: screen.target_language, is_ssml: false, instructions: nil, speed: 0.8, verification_hints: []), provider: .Google),
-                            media: actions.media, reviewCount: screen.total_reviews)
+                            reviewCount: screen.total_reviews)
                     }
                     DisclosureGroup("Translation", isExpanded: Binding(get: { verdict.translation_revealed }, set: { _ in send(.TranslationToggled) })) { Text(sentence.native_language) }
                     if case let .Graded(_, grade, _) = state.phase {
@@ -169,13 +169,13 @@ struct TranscriptionChallengeView: View {
         for effect in step.effects {
             switch effect {
             case let .Autograde(submission):
-                let course = Course(native_language: actions.nativeLanguage, target_language: screen.target_language)
+                let course = Course(native_language: screen.native_language, target_language: screen.target_language)
                 focused = nil
                 gradingTask?.cancel()
                 gradingTask = Task { @MainActor in
                     let grade: Grade
                     if screen.online {
-                        grade = await autograde_transcription(submission: submission, access_token: actions.media.accessToken, course: course, movie_titles: MovieTitles(value: sentence.movie_titles))
+                        grade = await autograde_transcription(submission: submission, access_token: host.accessToken, course: course, movie_titles: MovieTitles(value: sentence.movie_titles))
                     } else { grade = failed_transcription_review(submission: submission, course: course) }
                     guard !Task.isCancelled else { return }
                     send(.Graded(grade: grade))

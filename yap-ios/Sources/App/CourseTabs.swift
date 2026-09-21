@@ -29,11 +29,11 @@ struct CourseTabs: View {
             NavigationStack {
                 reviewScreen.id(ObjectIdentifier(review.deck))
             }.tabItem { Label("Learn", systemImage: CourseTab.learn.icon) }.tag(CourseTab.learn)
-            NavigationStack { StatsScreen(deck: deck, session: session) }
+            NavigationStack { StatsScreen(session: session) }
                 .tabItem { Label("Stats", systemImage: CourseTab.stats.icon) }.tag(CourseTab.stats)
-            NavigationStack { DictionaryScreen(deck: deck, session: session) }
+            NavigationStack { DictionaryScreen(session: session) }
                 .tabItem { Label("Dictionary", systemImage: CourseTab.dictionary.icon) }.tag(CourseTab.dictionary)
-            NavigationStack { SentenceListsScreen(deck: deck, session: session) { select(.learn) } }
+            NavigationStack { SentenceListsScreen(session: session) { select(.learn) } }
                 .tabItem { Label("Lists", systemImage: CourseTab.lists.icon) }.tag(CourseTab.lists)
             NavigationStack { SettingsScreen(session: session) }
                 .tabItem { Label("Settings", systemImage: CourseTab.settings.icon) }.tag(CourseTab.settings)
@@ -61,7 +61,7 @@ struct CourseTabs: View {
             if let text = debugClip {
                 VStack(spacing: 20) {
                     Text(text)
-                    VideoClipView( language: deck.get_target_language(), text: text, media: .live(deck: deck, session: session),
+                    VideoClipView( language: deck.get_target_language(), text: text,
                         reviewCount: deck.get_total_reviews(), available: $debugClipAvailable)
                     Button("Done") { debugClip = nil }
                 }.padding()
@@ -82,11 +82,13 @@ struct CourseTabs: View {
             if command == "status" { DebugHarness.log("tab=\(tab.rawValue) audioPlaying=\(audio.isPlaying)") }
         }
         #endif
+        .environment(\.reviewHost, review.host)
+        .environment(\.reviewActions, review.actions)
     }
     @ViewBuilder private var reviewScreen: some View {
         #if DEBUG
         if let fixture = DebugHarness.shared.fixture {
-            ReviewScreen(view: fixture, actions: .inert)
+            ReviewScreen(view: fixture).environment(\.reviewActions, ReviewActions.inert)
                 .onAppear { DebugHarness.log("fixture rendered \(DebugHarness.shared.fixtureName)") }
         } else {
             liveReview
@@ -96,7 +98,7 @@ struct CourseTabs: View {
         #endif
     }
     private var liveReview: some View {
-        ReviewScreen(view: review.view, actions: review.actions)
+        ReviewScreen(view: review.view)
         #if DEBUG
             .onChange(of: DebugHarness.shared.commandID) { _, _ in
                 guard DebugHarness.shared.activeTab == .learn else { return }

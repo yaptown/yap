@@ -6,8 +6,9 @@ func gramText(_ gram: [Literal_String]) -> String {
 
 struct FlashcardView: View {
     @Environment(AudioPlayer.self) private var audio
-    let screen: ReviewScreenView
-    let actions: ReviewActions
+    @Environment(\.reviewScreen!) private var screen
+    @Environment(\.reviewHost!) private var host
+    @Environment(\.reviewActions!) private var actions
     let indicator: CardIndicator_Gram_String_String
     let flashcard: FlashCard
     let isNew: Bool
@@ -19,9 +20,6 @@ struct FlashcardView: View {
     }
     private var canGrade: Bool { hasOpened || revealed || !disclosure.require_answer_reveal }
     private var listening: Bool { if case .Listening = flashcard.content { true } else { false } }
-    private var exampleAudio: ExampleAudio {
-        ExampleAudio(media: actions.media, reviewCount: screen.total_reviews, language: screen.target_language)
-    }
     var body: some View {
         VStack(spacing: 12) {
             StudyCard {
@@ -29,7 +27,7 @@ struct FlashcardView: View {
                 // Like the web card: audio at the leading edge, the word centered, the menu trailing.
                 HStack(alignment: .center, spacing: 8) {
                     if let request = flashcard.audio {
-                        AudioButton(request: request, media: actions.media, reviewCount: screen.total_reviews, autoplay: listening || revealed)
+                        AudioButton(request: request, reviewCount: screen.total_reviews, autoplay: listening || revealed)
                     } else { Color.clear.frame(width: 44, height: 44) }
                     Group {
                         switch flashcard.content {
@@ -88,7 +86,7 @@ struct FlashcardView: View {
             case "audio":
                 if let request = flashcard.audio {
                     Task {
-                        do { try await audio.play(request: request, accessToken: actions.media.accessToken); DebugHarness.log("audio completed") }
+                        do { try await audio.play(request: request, accessToken: host.accessToken); DebugHarness.log("audio completed") }
                         catch { DebugHarness.log("audio failed: \(error)") }
                     }
                 }
@@ -101,7 +99,7 @@ struct FlashcardView: View {
     @ViewBuilder private var answer: some View {
         switch flashcard.content {
         case let .Gram(_, definition, _, breakdown):
-            DefinitionView(definition: definition, exampleAudio: exampleAudio)
+            DefinitionView(definition: definition)
             if let breakdown, !breakdown.isEmpty { MorphemeBreakdownView(parts: breakdown, alignment: .center) }
         case let .Listening(possible):
             if possible.count > 1 { Text("It could have been any of these words:").font(.footnote).foregroundStyle(.secondary) }
@@ -112,7 +110,7 @@ struct FlashcardView: View {
                         if entry.first { Text("(known)").font(.footnote).foregroundStyle(.green) }
                     }
                     ForEach(Array(entry.third.enumerated()), id: \.offset) { _, definition in
-                        DefinitionView(definition: definition, exampleAudio: exampleAudio)
+                        DefinitionView(definition: definition)
                     }
                 }
             }
@@ -126,31 +124,22 @@ struct FlashcardView: View {
     }
 }
 
-/// What an example sentence needs to be played aloud from a definition box.
-struct ExampleAudio {
-    let media: ReviewMedia
-    let reviewCount: UInt64
-    let language: Language
-}
-
 /// The web's CardBack: each sense in its own muted box, the morphology trailing
 /// the meaning, the example quoted with a small play button beside it.
 struct DefinitionView: View {
+    @Environment(\.reviewHost!) private var host
     private enum Content {
         case dictionary([TargetToNativeWord], [Morphology])
         case phrase(String, String, String, String)
     }
     private let content: Content
-    private let exampleAudio: ExampleAudio?
-    init(definition: GramDefinition, exampleAudio: ExampleAudio? = nil) {
-        self.exampleAudio = exampleAudio
+    init(definition: GramDefinition) {
         switch definition {
         case let .Dictionary(entry): content = .dictionary(entry.definitions, entry.morphology)
         case let .Phrasebook(entry): content = .phrase(entry.meaning, entry.additional_notes, entry.target_language_example, entry.native_language_example)
         }
     }
-    init(entry: GramDictionaryEntry, exampleAudio: ExampleAudio? = nil) {
-        self.exampleAudio = exampleAudio
+    init(entry: GramDictionaryEntry) {
         switch entry.definition {
         case let .Dictionary(definitions): content = .dictionary(definitions, entry.morphology.map { [$0] } ?? [])
         case let .Phrasebook(meaning, target, native): content = .phrase(meaning, "", target ?? "", native ?? "")
@@ -180,12 +169,10 @@ struct DefinitionView: View {
             if !note.isEmpty { Text(note).font(.footnote).foregroundStyle(.secondary) }
             if !target.isEmpty {
                 HStack(alignment: .top, spacing: 4) {
-                    if let exampleAudio {
-                        AudioButton(request: AudioRequest(request: TtsRequest(text: target, language: exampleAudio.language, is_ssml: false,
-                            instructions: nil, speed: 1, verification_hints: []), provider: .ElevenLabs),
-                            media: exampleAudio.media, reviewCount: exampleAudio.reviewCount)
-                    }
-                    DefinitionExamples(target: target, native: native).frame(minHeight: exampleAudio == nil ? 0 : 44, alignment: .center)
+                    AudioButton(request: AudioRequest(request: TtsRequest(text: target, language: host.deck.get_target_language(), is_ssml: false,
+                        instructions: nil, speed: 1, verification_hints: []), provider: .ElevenLabs),
+                        reviewCount: host.deck.get_total_reviews())
+                    DefinitionExamples(target: target, native: native).frame(minHeight: 44, alignment: .center)
                 }
             }
         }

@@ -139,12 +139,14 @@ import Observation
             is_signed_in: true, needs_display_name: auth.needsDisplayName,
             display_name_dismissed: UserDefaults.standard.bool(forKey: "yap-skipped-set-display-name"),
             has_access_token: auth.accessToken != nil, starting_fresh: startingFresh, history_known: historyKnown,
-            dismissed_accomplishment_at_review: session.dismissedAccomplishmentAtReview, current_challenge: challenge, timestamp_ms: now)
+            dismissed_accomplishment_at_review: session.dismissedAccomplishmentAtReview, placement: session.placementSession, current_challenge: challenge, timestamp_ms: now)
+    }
+    var host: ReviewHost {
+        ReviewHost(deck: deck, accessToken: session.accessToken(), autoplay: session.autoplay,
+            packError: session.packError, syncError: session.syncError, authError: auth.error)
     }
     var actions: ReviewActions {
         var actions = ReviewActions()
-        actions.media = .live(deck: deck, session: session)
-        actions.nativeLanguage = course?.native_language ?? .English
         actions.submitting = submitting
         actions.pendingReviewKey = "\(session.userId)-\(String(describing: course))"
         actions.rate = rate
@@ -154,20 +156,16 @@ import Observation
         actions.cantListen = cantListen; actions.cantSpeak = cantSpeak; actions.undoRestrictions = undoRestrictions
         actions.addEvent = session.addDeckEvent
         actions.dismissAccomplishment = { self.session.dismissedAccomplishmentAtReview = self.view.total_reviews; self.refresh() }
-        actions.placement = session.placementSession
-        actions.startPlacement = { self.deck.start_placement_session() }
-        actions.advancePlacement = { self.deck.advance_placement_session(session: $0) }
-        actions.savePlacement = { self.session.placementSession = $0 }
+        actions.setPlacement = { self.session.placementSession = $0; self.refresh() }
         actions.completePlacementTest = { self.session.addDeckEvent(self.deck.complete_placement_test(known_words: $0.known_words, unknown_words: $0.unknown_words)) }
         actions.retryPack = session.retry
         actions.switchCourse = { self.session.choosingCourse = true }
-        actions.dismissDisplayName = { UserDefaults.standard.set(true, forKey: "yap-skipped-set-display-name"); self.refresh() }
+        actions.skipDisplayName = { UserDefaults.standard.set(true, forKey: "yap-skipped-set-display-name"); self.refresh() }
         actions.saveDisplayName = { name in
             guard let token = self.auth.accessToken else { return }
             _ = try await update_profile(display_name: name, bio: nil, access_token: token)
             self.auth.displayName = name; self.auth.needsDisplayName = false; self.refresh()
         }
-        actions.packError = session.packError; actions.syncError = session.syncError; actions.authError = auth.error
         return actions
     }
     func stop() {

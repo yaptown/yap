@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct DictionaryScreen: View {
-    let deck: Deck
+    @Environment(\.reviewHost!) private var host
+    private var deck: Deck { host.deck }
     let session: YapSession
     @State private var query = ""
     @State private var entries: [GramDictionaryEntry] = []
@@ -31,7 +32,7 @@ struct DictionaryScreen: View {
         .navigationTitle("Dictionary")
         .searchable(text: $query, prompt: "Search words or meanings")
         .navigationDestination(isPresented: Binding(get: { !path.isEmpty }, set: { if !$0 { path = [] } })) {
-            if let index = path.last { DictionaryDetail(deck: deck, session: session, index: index) }
+            if let index = path.last { DictionaryDetail(session: session, index: index) }
         }
         .task(id: query) {
             do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
@@ -61,7 +62,8 @@ struct DictionaryScreen: View {
 }
 
 private struct DictionaryDetail: View {
-    let deck: Deck
+    @Environment(\.reviewHost!) private var host
+    private var deck: Deck { host.deck }
     let session: YapSession
     let index: UInt64
     @State private var added = false
@@ -72,8 +74,8 @@ private struct DictionaryDetail: View {
                 StudyCard {
                     Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).font(.largeTitle.bold())
                     if entry.is_phrase { Text("Phrase").font(.caption).foregroundStyle(.secondary) }
-                    AudioButton(request: entry.audio_request, media: .live(deck: deck, session: session), reviewCount: deck.get_total_reviews())
-                    DefinitionView(entry: entry, exampleAudio: ExampleAudio(media: .live(deck: deck, session: session), reviewCount: deck.get_total_reviews(), language: deck.get_target_language()))
+                    AudioButton(request: entry.audio_request, reviewCount: deck.get_total_reviews())
+                    DefinitionView(entry: entry)
                     Button(added || entry.is_in_deck ? "In your deck" : "Add to deck", systemImage: added || entry.is_in_deck ? "checkmark.circle" : "plus.circle") { add() }
                         .buttonStyle(.borderedProminent).foregroundStyle(added || entry.is_in_deck ? Color(uiColor: .secondaryLabel) : Color.yapOnAccent)
                         .disabled(added || entry.is_in_deck)

@@ -9,7 +9,7 @@ struct VideoClipView: View {
     @Environment(AudioPlayer.self) private var audio
     let language: Language
     let text: String
-    let media: ReviewMedia
+    @Environment(\.reviewHost!) private var host
     let reviewCount: UInt64
     var autoplay = false
     var maskedSentence: String?
@@ -27,7 +27,7 @@ struct VideoClipView: View {
                 VStack(spacing: 8) {
                     if let movie {
                         HStack(spacing: 10) {
-                            MoviePoster(poster: media.moviePoster, id: movie.id, title: movie.title)
+                            MoviePoster(id: movie.id, title: movie.title)
                             Text(movie.title).font(.subheadline.weight(.semibold))
                             if let year = movie.year { Text(String(year)).font(.caption).foregroundStyle(.secondary) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
@@ -64,7 +64,8 @@ struct VideoClipView: View {
             while audio.isPlaying || audio.effectPlaying {
                 do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
             }
-            guard !Task.isCancelled, media.claimAutoplay(reviewCount) else { return }
+            guard !Task.isCancelled, host.autoplay.reviewCount != reviewCount else { return }
+            host.autoplay.reviewCount = reviewCount
             play(player)
         }
         #if DEBUG
@@ -92,7 +93,7 @@ struct VideoClipView: View {
             if player == nil && version != latest {
                 version = latest
                 do {
-                    let result = try await get_clip(language: language, text: text, access_token: media.accessToken)
+                    let result = try await get_clip(language: language, text: text, access_token: host.accessToken)
                     try Task.checkCancellation()
                     #if DEBUG
                     DebugHarness.log("get_clip returned \(result == nil ? "none" : "clip") for \(text)")
@@ -102,7 +103,7 @@ struct VideoClipView: View {
                         let url = FileManager.default.temporaryDirectory.appendingPathComponent("yap-clip-\(hash).mp4")
                         file = url
                         if !FileManager.default.fileExists(atPath: url.path) { try Data(result.bytes).write(to: url, options: .atomic) }
-                        movie = media.movieMetadata(result.movie_id)
+                        movie = host.deck.get_movie_metadata(movie_ids: [result.movie_id]).first
                         cues = result.subtitles
                         let next = AVPlayer(url: url)
                         await next.seek(to: CMTime(seconds: Double(result.critical_start_ms) / 1000, preferredTimescale: 1000))
@@ -120,7 +121,7 @@ struct VideoClipView: View {
                     audio.stopVideo(player)
                     self.player = nil; available = false
                     // Release the shared autoplay claim so the TTS fallback runs.
-                    if autoplay { media.releaseAutoplay() }
+                    if autoplay { host.autoplay.reviewCount = nil }
                     do { try await invalidate_clip_cache(language: language, text: text) }
                     catch { print("Yap clip invalidation failed: \(error)") }
                     return
