@@ -319,20 +319,28 @@ impl Weapon {
             })
     }
 
+    /// Fold the review log into a deck for this course.
+    ///
+    /// Returns `None` while only the core half of the pack is loaded and the
+    /// learner would not be offered the placement test: sentence reviews
+    /// can't be folded without the sentence half, so that deck would be a
+    /// stale one. Hosts keep showing their loading state and call again once
+    /// `load_language_pack` completes.
     pub async fn get_deck_state(
         &self,
         course: Course,
         utc_offset_seconds: i32,
-    ) -> Result<Deck, bridgerton::Error> {
-        let language_pack = self
+    ) -> Result<Option<Deck>, bridgerton::Error> {
+        let (language_pack, full) = self
             .language_pack
             .borrow()
             .get(&course)
-            .map(|loaded| loaded.pack.clone())
+            .map(|loaded| (loaded.pack.clone(), loaded.full))
             .ok_or_else(|| bridgerton::Error::new("language pack not loaded for this course"))?;
+        let selection = self.get_deck_selection_state();
         let target_language = course.target_language;
-        let native_language = self
-            .get_deck_selection_state()
+        let native_language = selection
+            .as_ref()
             .and_then(|s| s.native_language)
             .unwrap_or(course.native_language);
 
@@ -346,12 +354,22 @@ impl Weapon {
             },
             timezone,
         };
+        let history_known = self.reviews_history_known();
         let initial_state = DeckState::new();
-        let store = self.store.borrow_mut();
-        let Some(stream) = store.get::<EventType<DeckEvent>>("reviews".to_string()) else {
-            return Ok(Deck::finalize(initial_state, &context));
+        let store = self.store.borrow();
+        let deck = match store.get::<EventType<DeckEvent>>("reviews".to_string()) {
+            Some(stream) => stream.state(initial_state, &context),
+            None => Deck::finalize(initial_state, &context),
         };
-        Ok(stream.state(initial_state, &context))
+        if !full {
+            let starting_fresh = selection
+                .and_then(|s| s.onboarding_selections)
+                .map(|o| o.starting_fresh);
+            if !deck.should_offer_placement_test(starting_fresh, history_known) {
+                return Ok(None);
+            }
+        }
+        Ok(Some(deck))
     }
 
     pub async fn sync_with_supabase(

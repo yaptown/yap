@@ -153,7 +153,7 @@ enum DeckState {
             let progress: @MainActor (String, Float) -> Void = { [weak self] message, percent in
                 guard let self, self.active, self.generation == expected else { return }
                 Telemetry.breadcrumb("language-pack", "\(message) (\(Int(percent.rounded()))%)")
-                guard !self.coreReady else { return }
+                if case .deck = self.deckState { return }
                 if case .noLanguageSelected = self.deckSelection { return }
                 self.deckState = .loading(message: message, progress: Double(percent) / 100)
             }
@@ -176,8 +176,9 @@ enum DeckState {
             } catch {
                 guard let self, self.active, self.generation == expected, !Task.isCancelled else { return }
                 Telemetry.breadcrumb("language-pack", "Loading failed: \(error)", failed: true)
-                // A usable core deck stays usable; only the upgrade is reported.
-                if self.coreReady { self.packError = String(describing: error) } else { self.deckState = .error(String(describing: error)) }
+                // A deck already on screen stays usable; only the upgrade is reported.
+                self.packError = String(describing: error)
+                if case .deck = self.deckState {} else { self.deckState = .error(String(describing: error)) }
             }
         }
     }
@@ -193,6 +194,16 @@ enum DeckState {
             do {
                 let deck = try await weapon.get_deck_state(course: selected, utc_offset_seconds: Int32(TimeZone.current.secondsFromGMT()))
                 guard let self, self.active, self.snapshotGeneration == expected, !Task.isCancelled else { return }
+                // nil while only the core half of the pack is loaded and this
+                // learner would not see the placement test; the loading screen
+                // stays up and the full pack triggers another rebuild.
+                guard let deck else {
+                    if case .deck = self.deckState {
+                        // The sentence download is either still running or has already failed.
+                        self.deckState = self.packError.map { .error($0) } ?? .loading(message: "Downloading sentences…", progress: 0)
+                    }
+                    return
+                }
                 if let placement = self.placementSession {
                     self.placementSession = deck.refresh_placement_session(session: placement) ?? placement
                 }

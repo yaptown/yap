@@ -1559,9 +1559,9 @@ export function useDeck():
   // Fetch language pack — only re-runs when course changes, not when numEvents
   // changes. Two-stage: the core half (dictionary + frequencies) loads first
   // so the placement test can start immediately; when the sentence half lands
-  // the result flips to full and the deck below is rebuilt against it.
+  // a fresh result is published and the deck below is rebuilt against it.
   type LanguagePackResult =
-    | { courseKey: string; ok: true; full: boolean }
+    | { courseKey: string; ok: true }
     | { courseKey: string; ok: false; error: unknown };
   const [languagePackResult, setLanguagePackResult] =
     useState<LanguagePackResult | null>(null);
@@ -1597,11 +1597,7 @@ export function useDeck():
       return null;
     }
     if (!alive()) return null;
-    setLanguagePackResult({
-      courseKey,
-      ok: true,
-      full: weapon.is_language_pack_fully_loaded(course),
-    });
+    setLanguagePackResult({ courseKey, ok: true });
     // The sentence half downloads in the background, possibly while the
     // placement test is already underway — a transient failure must not tear
     // down that usable core-only state. Retries are cheap (already-downloaded
@@ -1625,7 +1621,7 @@ export function useDeck():
     }
     if (!alive()) return null;
     setLoadingState(null);
-    setLanguagePackResult({ courseKey, ok: true, full: true });
+    setLanguagePackResult({ courseKey, ok: true });
     return null;
   }, [weapon, courseKey, retryCount]);
 
@@ -1686,17 +1682,10 @@ export function useDeck():
         new Date().getTimezoneOffset() * -60,
       );
 
-      // While only the core half of the pack is loaded, the deck is usable
-      // for exactly one thing: the placement test. If this user wouldn't see
-      // it, stay on the loading screen until the sentence half arrives.
-      if (!languagePackResult.full) {
-        const startingFresh =
-          deck_selection.onboardingSelections?.startingFresh;
-        const wouldShowPlacementTest =
-          deck !== null &&
-          deck.should_offer_placement_test(startingFresh, historyKnown);
-        if (!wouldShowPlacementTest) return null;
-      }
+      // null while only the core half of the pack is loaded and this user
+      // would not see the placement test; the sentence half publishes a new
+      // pack result and this re-runs.
+      if (!deck) return null;
 
       return {
         type: "deck",

@@ -1,6 +1,11 @@
 import Foundation
 
 private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #line) { precondition(condition, file: file, line: line) }
+/// The deck once it is available: after the full pack loads, or while the core half alone would offer the placement test.
+@MainActor private func deck(_ weapon: Weapon, _ course: Course, file: StaticString = #file, line: UInt = #line) async throws -> Deck {
+    guard let deck = try await weapon.get_deck_state(course: course, utc_offset_seconds: 0) else { fatalError("expected a deck", file: file, line: line) }
+    return deck
+}
 
 @main struct YapSmoke {
     @MainActor static func main() async throws {
@@ -71,7 +76,14 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
             progressCalls += 1
         }
         check(!weapon.is_language_pack_fully_loaded(course: course) && progressCalls > 0)
-        let coreDeck = try await weapon.get_deck_state(course: course, utc_offset_seconds: 0)
+        // A core-only deck is withheld unless the learner would see the placement test.
+        check(try await weapon.get_deck_state(course: course, utc_offset_seconds: 0) == nil)
+        weapon.request_deck_selection()
+        try weapon.add_deck_selection_event(event: .SelectBothLanguages(native: course.native_language, target: course.target_language))
+        try weapon.add_deck_selection_event(event: .SetOnboardingSelections(
+            selections: OnboardingSelections(starting_fresh: false, motivation: nil, experience_level: nil, study_goal: nil),
+            target_language: course.target_language))
+        let coreDeck = try await deck(weapon, course)
         var placement = coreDeck.start_placement_session()
         check(!placement.words.isEmpty)
         placement = toggle_placement_word(session: placement, word: placement.words[0].word)
@@ -81,7 +93,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         let unknownBeforeFullPack = placement.unknown_words
         try await weapon.load_language_pack(course: course, on_progress: nil)
         check(weapon.is_language_pack_fully_loaded(course: course))
-        let original = try await weapon.get_deck_state(course: course, utc_offset_seconds: 0)
+        let original = try await deck(weapon, course)
         placement = original.refresh_placement_session(session: placement) ?? placement
         check(placement.known_words == knownBeforeFullPack && placement.unknown_words == unknownBeforeFullPack)
         for _ in 0..<20 {
@@ -118,7 +130,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         let before = notifications
         try weapon.add_remote_event(device_id: "swift-prototype-fixture", stream_id: "reviews", event: event)
         check(notifications == before + 1)
-        let changed = try await weapon.get_deck_state(course: course, utc_offset_seconds: 0)
+        let changed = try await deck(weapon, course)
         check(changed.get_daily_review_target() == 1200)
         check(original.get_daily_review_target() == 600) // independent Deck snapshots
         weapon.unsubscribe(key: listener)
@@ -126,7 +138,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         let secondEvent = try String(contentsOf: root.appendingPathComponent("event-1.json"), encoding: .utf8)
         try weapon.add_remote_event(device_id: "swift-prototype-fixture", stream_id: "reviews", event: secondEvent)
         check(notifications == after)
-        let latest = try await weapon.get_deck_state(course: course, utc_offset_seconds: 0)
+        let latest = try await deck(weapon, course)
         check(latest.get_daily_review_target() == 300)
         // The full Weapon impl is exported: Swift creates typed events directly.
         check(weapon.user_id == nil)
@@ -171,7 +183,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         let (_, response) = try await URLSession.shared.data(for: offlineRequest)
         check((response as? HTTPURLResponse)?.statusCode == 204)
         try await reopened.cache_language_pack(course: course)
-        let persisted = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+        let persisted = try await deck(reopened, course)
         check(persisted.get_daily_review_target() == 1200)
         do {
             _ = try await weapon.get_deck_state(course: course, utc_offset_seconds: 100_000)
@@ -199,7 +211,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         let add = persisted.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil)
         check(add.count > 0 && add.event != nil)
         reopened.add_deck_event(event: add.event!)
-        let withCards = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+        let withCards = try await deck(reopened, course)
         let cards = withCards.get_all_cards_summary()
         check(cards.count == Int(add.count) && !cards[0].card_text.isEmpty)
         check(cards[0].due_timestamp_ms.isFinite && !cards[0].state.isEmpty)
@@ -213,10 +225,10 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         let reviewed = withCards.review_card(reviewed: cards[0].card_indicator, rating: .Good)
         check(reviewed != nil)
         reopened.add_deck_event(event: reviewed!)
-        let afterReview = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+        let afterReview = try await deck(reopened, course)
         check(afterReview.get_total_reviews() == withCards.get_total_reviews() + 1)
         reopened.add_deck_event(event: afterReview.complete_placement_test(known_words: placement.known_words, unknown_words: placement.unknown_words))
-        let placed = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+        let placed = try await deck(reopened, course)
         check(placed.has_taken_placement_test())
         check(!placed.should_offer_placement_test(starting_fresh: false, history_known: true))
         let onboarding = OnboardingSelections(starting_fresh: false, motivation: .JustForFun, experience_level: .CommonWords, study_goal: .Casual)
@@ -226,37 +238,37 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(onboarded.onboarded_languages.contains(.French) && onboarded.onboarding_selections == onboarding && onboarded.heard_about == .Other)
         if let movie = placed.get_best_movie_sentence_list() {
             reopened.add_deck_event(event: placed.change_sentence_list(sentence_list: movie))
-            let movieDeck = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+            let movieDeck = try await deck(reopened, course)
             check(movieDeck.get_sentence_list() == movie)
             reopened.add_deck_event(event: movieDeck.change_sentence_list(sentence_list: nil))
-            let essentialDeck = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+            let essentialDeck = try await deck(reopened, course)
             check(essentialDeck.get_sentence_list() == nil)
         }
         // Build a real backlog and verify the exact previews/events rendered by
         // ReviewPlanView, rather than fabricating bridge object handles.
-        var backlog = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+        var backlog = try await deck(reopened, course)
         for _ in 0..<30 {
             if backlog.get_all_cards_summary().count > 20 { break }
             guard let event = backlog.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil).event else { break }
             reopened.add_deck_event(event: event)
-            backlog = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+            backlog = try await deck(reopened, course)
         }
         let dueAt = (backlog.get_all_cards_summary().map(\.due_timestamp_ms).max() ?? future) + 1
         let plan = backlog.get_lockup_offer(banned_challenge_types: [], timestamp_ms: dueAt)
         check(plan != nil && !plan!.keep_preview.isEmpty)
         check(plan!.keep_preview.allSatisfy { !$0.card_text.isEmpty })
         reopened.add_deck_event(event: plan!.lock_event)
-        let locked = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+        let locked = try await deck(reopened, course)
         check(locked.locked_count() > 0)
         let release = locked.get_release_offer(timestamp_ms: dueAt)
         check(release != nil && release!.release_count == UInt64(release!.release_preview.count))
         reopened.add_deck_event(event: release!.unlock_event)
-        let released = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+        let released = try await deck(reopened, course)
         check(released.locked_count() < locked.locked_count())
         let word = persisted.get_gram_dictionary_page(search_query: "bonjour", offset: 0, limit: 1).first!
         let beforeDictionaryAdd = reopened.num_events
         reopened.add_deck_event(event: persisted.add_gram_by_frequency_index(frequency_index: word.frequency_index)!)
-        let dictionaryDeck = try await reopened.get_deck_state(course: course, utc_offset_seconds: 0)
+        let dictionaryDeck = try await deck(reopened, course)
         check(reopened.num_events == beforeDictionaryAdd + 1)
         check(dictionaryDeck.gram_dictionary_entry(frequency_index: word.frequency_index)!.is_in_deck)
         print("PASS: bounded dictionary pages, relevance order, empty/overflow offsets, add-word event")
