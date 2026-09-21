@@ -32,9 +32,11 @@ pub struct SentenceListOptionView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct IdleView {
     pub target_language: Language,
-    pub target: DailyReviewTarget,
-    pub goals: Vec<GoalOptionView>,
     pub kind: IdleKind,
+    /// The prominent call-to-action shown right under the title when there is nothing schedulable.
+    pub smart_add_label: Option<String>,
+    /// Whether the sentence-list panel (progress, learn/next buttons, manual add) appears.
+    pub show_sentence_list: bool,
     pub title: String,
     pub body: String,
     pub info: NoCardsReadyInfo,
@@ -212,6 +214,25 @@ impl Deck {
         } else {
             (IdleKind::AllCaughtUp, "All caught up!", String::new())
         };
+        let smart_add_label = match kind {
+            IdleKind::FirstRun => Some("Start learning".into()),
+            IdleKind::NeedsMoreCards => Some(format!(
+                "Add {} {}{}",
+                info.smart_add_count,
+                if info.smart_add_regime == SmartAddRegime::Easy {
+                    "easy "
+                } else {
+                    ""
+                },
+                if info.smart_add_count == 1 {
+                    "card"
+                } else {
+                    "cards"
+                },
+            )),
+            IdleKind::NothingToDo | IdleKind::AllCaughtUp => None,
+        };
+        let show_sentence_list = kind == IdleKind::AllCaughtUp;
         let progress = self
             .get_sentence_list_progress(navigation.selection.clone(), info.tier_info.percent_known);
         let sentence_list_label = match &navigation.selection {
@@ -264,10 +285,10 @@ impl Deck {
             .as_ref()
             .map(|selection| self.change_sentence_list(Some(selection.clone())));
         IdleScreenView::Idle(Box::new(IdleView {
-            target: self.get_daily_review_target_setting(),
-            goals: self.goal_options_view(),
             target_language: self.get_target_language(),
             kind,
+            smart_add_label,
+            show_sentence_list,
             title: title.into(),
             body,
             manual_add_options: self

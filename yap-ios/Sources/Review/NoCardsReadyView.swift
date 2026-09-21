@@ -59,24 +59,29 @@ struct NoCardsReadyView: View {
                 Text(notice)
                 Button("Undo restrictions") { actions.undoRestrictions() }
             }
-            SentenceListSelector(view: idle)
-            if !awaitingAcknowledgement, let event = idle.info.smart_add_event {
-                Text(idle.info.preview.joined(separator: " · ")).foregroundStyle(.secondary)
-                Button(idle.kind == .FirstRun ? "Start learning" : "Learn \(idle.info.smart_add_count) new cards") { addEvent(event) }
+            if let label = idle.smart_add_label, let event = idle.info.smart_add_event {
+                Button(label) { addEvent(event) }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             }
-            if !awaitingAcknowledgement {
-                DisclosureGroup("Choose cards to add") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        ForEach(Array(idle.manual_add_options.enumerated()), id: \.offset) { _, option in
-                            Button("Add \(option.count) \(label(option.card_type)) cards") {
-                                if let event = option.event { addEvent(event) }
-                            }.disabled(option.event == nil).frame(minHeight: 44)
+            if idle.show_sentence_list {
+                SentenceListSelector(view: idle)
+                if !awaitingAcknowledgement, let event = idle.info.smart_add_event {
+                    Text(idle.info.preview.joined(separator: " · ")).foregroundStyle(.secondary)
+                    Button("Learn \(idle.info.smart_add_count) new cards") { addEvent(event) }
+                        .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
+                }
+                if !awaitingAcknowledgement {
+                    DisclosureGroup("Choose cards to add") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            ForEach(Array(idle.manual_add_options.enumerated()), id: \.offset) { _, option in
+                                Button("Add \(option.count) \(label(option.card_type)) cards") {
+                                    if let event = option.event { addEvent(event) }
+                                }.disabled(option.event == nil).frame(minHeight: 44)
+                            }
                         }
                     }
                 }
             }
-            SnapshotGoalEditor(target: idle.target, goals: idle.goals, addEvent: addEvent)
         }
     }
     @ViewBuilder private func nextReview(_ card: CardSummary?) -> some View {

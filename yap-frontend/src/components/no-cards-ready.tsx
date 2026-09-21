@@ -118,9 +118,6 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
     <span style={{ fontWeight: "bold" }}>{targetLanguage} pronunciation</span>
   );
 
-  const nothingToDo = view.kind === "NothingToDo";
-  const hasNeverStudied = view.kind === "FirstRun";
-  const noSchedulableCards = view.kind !== "AllCaughtUp";
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).closest("input, textarea, select, button")) return;
@@ -178,7 +175,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
         </div>
       </div>
 
-      {nothingToDo ? null : noSchedulableCards ? (
+      {view.smart_add_label && (
         <div className="flex justify-center">
           <Button
             onClick={addSmartCards}
@@ -188,12 +185,12 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
             <Sparkles className="h-5 w-5 mr-2 animate-pulse" />
-            {hasNeverStudied
-              ? "Start learning"
-              : `Add ${info.smart_add_count} ${info.smart_add_regime === "Easy" ? "easy " : ""}${info.smart_add_count === 1 ? "card" : "cards"}`}
+            {view.smart_add_label}
           </Button>
         </div>
-      ) : (
+      )}
+
+      {view.show_sentence_list && (
         <Card className="overflow-hidden px-2 py-4 gap-2" animate>
           <p className="text-lg font-semibold px-4 sm:px-8 text-center">
             {sentenceListDone ? (
@@ -430,7 +427,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
 
       {showEngagementPrompts && <EngagementPrompts language={targetLanguage} />}
 
-      {!noSchedulableCards && (
+      {view.show_sentence_list && (
         <WeekProgressStrip week={view.week} className="mt-auto mb-2" />
       )}
     </div>

@@ -6,62 +6,9 @@
     "view": {
       "type": "Idle",
       "target_language": "German",
-      "target": "Regular",
-      "goals": [
-        {
-          "target": "Casual",
-          "minutes": 5,
-          "event": {
-            "type": "Language",
-            "target_language": "German",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Casual"
-            }
-          }
-        },
-        {
-          "target": "Regular",
-          "minutes": 10,
-          "event": {
-            "type": "Language",
-            "target_language": "German",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Regular"
-            }
-          }
-        },
-        {
-          "target": "Serious",
-          "minutes": 15,
-          "event": {
-            "type": "Language",
-            "target_language": "German",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Serious"
-            }
-          }
-        },
-        {
-          "target": "Intense",
-          "minutes": 20,
-          "event": {
-            "type": "Language",
-            "target_language": "German",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Intense"
-            }
-          }
-        }
-      ],
       "kind": "NeedsMoreCards",
+      "smart_add_label": "Add 2 cards",
+      "show_sentence_list": false,
       "title": "Ready for more?",
       "body": "Add some cards to keep building your vocabulary.",
       "info": {

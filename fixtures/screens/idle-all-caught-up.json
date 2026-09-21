@@ -6,62 +6,9 @@
     "view": {
       "type": "Idle",
       "target_language": "French",
-      "target": "Casual",
-      "goals": [
-        {
-          "target": "Casual",
-          "minutes": 5,
-          "event": {
-            "type": "Language",
-            "target_language": "French",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Casual"
-            }
-          }
-        },
-        {
-          "target": "Regular",
-          "minutes": 10,
-          "event": {
-            "type": "Language",
-            "target_language": "French",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Regular"
-            }
-          }
-        },
-        {
-          "target": "Serious",
-          "minutes": 15,
-          "event": {
-            "type": "Language",
-            "target_language": "French",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Serious"
-            }
-          }
-        },
-        {
-          "target": "Intense",
-          "minutes": 20,
-          "event": {
-            "type": "Language",
-            "target_language": "French",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Intense"
-            }
-          }
-        }
-      ],
       "kind": "AllCaughtUp",
+      "smart_add_label": null,
+      "show_sentence_list": true,
       "title": "All caught up!",
       "body": "",
       "info": {

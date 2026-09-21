@@ -6,62 +6,9 @@
     "view": {
       "type": "Idle",
       "target_language": "Italian",
-      "target": "Regular",
-      "goals": [
-        {
-          "target": "Casual",
-          "minutes": 5,
-          "event": {
-            "type": "Language",
-            "target_language": "Italian",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Casual"
-            }
-          }
-        },
-        {
-          "target": "Regular",
-          "minutes": 10,
-          "event": {
-            "type": "Language",
-            "target_language": "Italian",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Regular"
-            }
-          }
-        },
-        {
-          "target": "Serious",
-          "minutes": 15,
-          "event": {
-            "type": "Language",
-            "target_language": "Italian",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Serious"
-            }
-          }
-        },
-        {
-          "target": "Intense",
-          "minutes": 20,
-          "event": {
-            "type": "Language",
-            "target_language": "Italian",
-            "native_language": "English",
-            "content": {
-              "type": "SetDailyReviewTarget",
-              "daily_review_target": "Intense"
-            }
-          }
-        }
-      ],
       "kind": "FirstRun",
+      "smart_add_label": "Start learning",
+      "show_sentence_list": false,
       "title": "Ready to start learning?",
       "body": "We'll start with a couple words you might know.",
       "info": {
