@@ -1,8 +1,9 @@
 [package]
 name = "cargo-bridgerton"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
-publish = false
+license = "MIT"
+repository = "https://github.com/yaptown/yap"
 description = "One build entry point for bridged crates: the JavaScript package and the Swift bindings"
 
 [[bin]]

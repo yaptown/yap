@@ -5,7 +5,8 @@ version = 4
 [[package]]
 name = "abort-signal"
 version = "0.1.0"
-source = "git+https://github.com/anchpop/fetch-happen?rev=9efae6b44b1d4bd4edb5caeb156591330c92da09#9efae6b44b1d4bd4edb5caeb156591330c92da09"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "026bec2e5bcaf35abeb8e02f1e183a32cec723d5b5cd14cbadf831a432cf7965"
 dependencies = [
  "futures",
  "gloo-events",
@@ -566,7 +567,7 @@ dependencies = [
 
 [[package]]
 name = "bridgerton"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "abort-signal",
  "bridgerton-macros",
@@ -593,7 +594,7 @@ dependencies = [
 
 [[package]]
 name = "bridgerton-macros"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -686,7 +687,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-bridgerton"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "clap",
  "libloading",
@@ -1879,7 +1880,8 @@ dependencies = [
 [[package]]
 name = "fetch-happen"
 version = "0.5.0"
-source = "git+https://github.com/anchpop/fetch-happen?rev=9efae6b44b1d4bd4edb5caeb156591330c92da09#9efae6b44b1d4bd4edb5caeb156591330c92da09"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e358e9362582f052d26763b13e24e6f5f5ca1d95f6d895845ccd934795db221"
 dependencies = [
  "abort-signal",
  "js-sys",
@@ -7465,7 +7467,7 @@ version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0978bf7171b3d90bac376700cb56d606feb40f251a475a5d6634613564460b22"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

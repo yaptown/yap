@@ -1,8 +1,10 @@
 [package]
 name = "bridgerton-macros"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
-publish = false
+license = "MIT"
+repository = "https://github.com/yaptown/yap"
+description = "Attribute macro for bridgerton: one Rust impl, wasm-bindgen and Swift bindings"
 
 [lib]
 proc-macro = true
