@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { update_profile } from "../../../yap-frontend-rs/pkg";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
 
@@ -124,20 +123,19 @@ function generateRandomName(): string {
 }
 
 interface SetDisplayNameProps {
-  accessToken: string;
+  onSave: (name: string) => Promise<void> | void;
   onComplete: () => void;
   onSkip: () => void;
   totalReviewsCompleted: bigint;
 }
 
 export function SetDisplayName({
-  accessToken,
+  onSave,
   onComplete,
   onSkip,
   totalReviewsCompleted,
 }: SetDisplayNameProps) {
-  const randomName = useMemo(() => generateRandomName(), []);
-  const [displayName, setDisplayName] = useState(randomName);
+  const [displayName, setDisplayName] = useState(generateRandomName);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -148,7 +146,7 @@ export function SetDisplayName({
 
     try {
       setSaving(true);
-      await update_profile(displayName.trim(), null, accessToken);
+      await onSave(displayName.trim());
       toast.success("Display name set!");
       onComplete();
     } catch (err) {

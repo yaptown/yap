@@ -2,7 +2,8 @@ import SwiftUI
 
 struct TranscriptionChallengeView: View {
     @Environment(AudioPlayer.self) private var audio
-    let model: ReviewModel
+    let screen: ReviewScreenView
+    let actions: ReviewActions
     let sentence: TranscribeComprehensibleSentence
     @State private var state: TranscriptionState
     // Recomputed once per step rather than on every access, since each call crosses the bridge.
@@ -10,18 +11,16 @@ struct TranscriptionChallengeView: View {
     @State private var hasClip: Bool?
     @State private var gradingTask: Task<Void, Never>?
     @FocusState private var focused: Int?
-    init(model: ReviewModel, sentence: TranscribeComprehensibleSentence) {
-        self.model = model
+    init(screen: ReviewScreenView, actions: ReviewActions, sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
+        self.screen = screen; self.actions = actions
         self.sentence = sentence
-        let state = transcription_start(parts: sentence.parts)
+        let state = initialState ?? transcription_start(parts: sentence.parts)
         _state = State(initialValue: state)
         _view = State(initialValue: transcription_view(state: state))
     }
     private var storage: PendingReview? {
-        #if DEBUG
-        if DebugHarness.shared.fixture != nil { return nil }
-        #endif
-        return PendingReview(kind: "transcription", challenge: sentence, model: model)
+        guard let scope = actions.pendingReviewKey else { return nil }
+        return PendingReview(kind: "transcription", challenge: sentence, scope: scope, reviewCount: screen.total_reviews)
     }
     private var blanks: [Int] { view.blanks.map { Int($0.index) } }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
@@ -31,7 +30,7 @@ struct TranscriptionChallengeView: View {
                 if sentence.second_chance { ReviewBadge(text: "Second chance") }
                 // Like the web: a big speaker on top, then the sentence with its blanks inline.
                 VStack(spacing: 4) {
-                    AudioButton(request: sentence.audio, session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: true, hero: true)
+                    AudioButton(request: sentence.audio, media: actions.media, reviewCount: screen.total_reviews, autoplay: true, hero: true)
                     Text(view.instructions).font(.footnote).foregroundStyle(.secondary)
                 }.frame(maxWidth: .infinity)
                 SentenceFlow(spacing: 0, alignment: .center) {
@@ -44,8 +43,8 @@ struct TranscriptionChallengeView: View {
                         }
                     }
                 }.frame(maxWidth: .infinity).padding(.top, 4)
-                VideoClipView(deck: model.deck, language: model.deck.get_target_language(), text: sentence.target_language,
-                    session: model.session, reviewCount: model.deck.get_total_reviews(),
+                VideoClipView( language: screen.target_language, text: sentence.target_language,
+                    media: actions.media, reviewCount: screen.total_reviews,
                     maskedSentence: editing ? sentence.parts.map { part in
                         switch part { case let .Provided(literal): literal.word.text + literal.whitespace
                         case let .AskedToTranscribe(parts): parts.map { "____" + $0.whitespace }.joined() }
@@ -59,8 +58,8 @@ struct TranscriptionChallengeView: View {
                     if !verdict.compare.isEmpty {
                         Text(verdict.compare.joined(separator: " · "))
                         AudioButton(request: AudioRequest(request: TtsRequest(text: verdict.compare.map { $0 + ";" }.joined(separator: " "),
-                            language: model.deck.get_target_language(), is_ssml: false, instructions: nil, speed: 0.8, verification_hints: []), provider: .Google),
-                            session: model.session, reviewCount: model.deck.get_total_reviews())
+                            language: screen.target_language, is_ssml: false, instructions: nil, speed: 0.8, verification_hints: []), provider: .Google),
+                            media: actions.media, reviewCount: screen.total_reviews)
                     }
                     DisclosureGroup("Translation", isExpanded: Binding(get: { verdict.translation_revealed }, set: { _ in send(.TranslationToggled) })) { Text(sentence.native_language) }
                     if case let .Graded(_, grade, _) = state.phase {
@@ -74,9 +73,9 @@ struct TranscriptionChallengeView: View {
             if view.verdict == nil {
                 Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                Button("I can't listen right now") { model.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(view.is_grading)
+                Button("I can't listen right now") { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(view.is_grading)
             } else {
-                Button { complete() } label: { Text(view.verdict?.continue_label ?? "").frame(maxWidth: .infinity) }.disabled(model.submitting)
+                Button { complete() } label: { Text(view.verdict?.continue_label ?? "").frame(maxWidth: .infinity) }.disabled(actions.submitting)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             }
         }
@@ -84,7 +83,7 @@ struct TranscriptionChallengeView: View {
             ToolbarItemGroup(placement: .keyboard) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
-                        ForEach(get_language_metadata(language: model.deck.get_target_language()).accented_characters, id: \.self) { character in
+                        ForEach(get_language_metadata(language: screen.target_language).accented_characters, id: \.self) { character in
                             Button(character) { insertAccent(character) }
                         }
                     }
@@ -93,9 +92,6 @@ struct TranscriptionChallengeView: View {
             }
         }
         .onAppear {
-            #if DEBUG
-            if let saved = DebugHarness.shared.challengeFixture?.transcription { state = saved }
-            #endif
             if let data = storage?.load(Data.self), let saved = try? PendingReview.decode(data, as: TranscriptionState.self) {
                 state = saved
             }
@@ -173,13 +169,13 @@ struct TranscriptionChallengeView: View {
         for effect in step.effects {
             switch effect {
             case let .Autograde(submission):
-                guard let course = model.course else { continue }
+                let course = Course(native_language: actions.nativeLanguage, target_language: screen.target_language)
                 focused = nil
                 gradingTask?.cancel()
                 gradingTask = Task { @MainActor in
                     let grade: Grade
-                    if model.session.online {
-                        grade = await autograde_transcription(submission: submission, access_token: model.session.accessToken(), course: course, movie_titles: MovieTitles(value: sentence.movie_titles))
+                    if screen.online {
+                        grade = await autograde_transcription(submission: submission, access_token: actions.media.accessToken, course: course, movie_titles: MovieTitles(value: sentence.movie_titles))
                     } else { grade = failed_transcription_review(submission: submission, course: course) }
                     guard !Task.isCancelled else { return }
                     send(.Graded(grade: grade))
@@ -193,17 +189,19 @@ struct TranscriptionChallengeView: View {
                 case .Success: audio.playEffect("success-1")
                 }
             case let .Complete(results, completedAtMs):
-                if model.completeTranscription(results, completedAtMs: completedAtMs) { storage?.clear(); audio.stop() }
+                if actions.completeTranscription(results, completedAtMs) { storage?.clear(); audio.stop() }
             }
         }
     }
-    private func submit() { send(.Submit(now_ms: ReviewModel.now)) }
+    private func submit() { send(.Submit(now_ms: Date().timeIntervalSince1970 * 1000)) }
     private func complete() { send(.Continue) }
     #if DEBUG
     private func debugCommand() {
         let command = DebugHarness.shared.command
         if command.hasPrefix("dump-fixture ") {
-            DebugHarness.dumpFixture(.Challenge(ChallengeFixture(challenge: .TranscribeComprehensibleSentence(sentence), transcription: state, translation: nil)), name: String(command.dropFirst(13)))
+            var capture = screen
+            capture.step = .Challenge(ChallengeView(challenge: .TranscribeComprehensibleSentence(sentence), transcription: state, translation: nil))
+            DebugHarness.dumpFixture(capture, name: String(command.dropFirst(13)))
         }
         if command.hasPrefix("type "), editing, let index = focused ?? blanks.first { send(.InputChanged(index: UInt64(index), text: String(command.dropFirst(5)))) }
         if command == "type-reference", editing {

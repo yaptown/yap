@@ -69,7 +69,7 @@ struct SentenceListsScreen: View {
     private func row(_ selection: SentenceListSelection?, lists: SentenceListModel) -> some View {
         Button { choose(selection, lists: lists) } label: {
             HStack(spacing: 14) {
-                if case let .Movie(id) = selection { MoviePoster(deck: deck, id: id, title: lists.title(selection)) }
+                if case let .Movie(id) = selection { MoviePoster(poster: { deck.get_movie_poster(movie_id: $0) }, id: id, title: lists.title(selection)) }
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text(lists.title(selection)).foregroundStyle(Color.yapText)

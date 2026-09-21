@@ -2,22 +2,21 @@
 import { useEffect, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
 import { type AppContextType, useDeck } from "@/App";
-import { NoCardsReady } from "@/components/no-cards-ready";
-import { AccomplishmentScreen } from "@/components/AccomplishmentScreen";
-import { ChallengeView } from "@/components/challenges/ChallengeView";
+import { ReviewScreen } from "@/components/ReviewScreen";
+import { TopPageLayout } from "@/components/TopPageLayout";
 import type {
-  ChallengeFixture,
-  Fixture,
+  ChallengeView,
+  ReviewScreenView,
   TranscriptionState,
   TranslationState,
 } from "../../../yap-frontend-rs/pkg";
 
 // Captures use serde JSON; only reducer inputs need a bridge representation.
-function parseFixture(json: string): Fixture {
-  const parsed = JSON.parse(json) as Fixture;
-  if (parsed.type !== "Challenge") return parsed;
-  const fixture = parsed.view as unknown as {
-    challenge: ChallengeFixture["challenge"];
+function parseFixture(json: string): ReviewScreenView {
+  const parsed = JSON.parse(json) as ReviewScreenView;
+  if (parsed.step.type !== "Challenge") return parsed;
+  const fixture = parsed.step.view as unknown as {
+    challenge: ChallengeView["challenge"];
     translation?: TranslationState | null;
     transcription:
       | (Omit<TranscriptionState, "inputs"> & {
@@ -25,31 +24,37 @@ function parseFixture(json: string): Fixture {
         })
       | null;
   };
-  return { type: "Challenge", view: {
-    challenge: fixture.challenge,
-    translation: fixture.translation ?? undefined,
-    transcription: fixture.transcription
-      ? {
-          ...fixture.transcription,
-          inputs: new Map(
-            Object.entries(fixture.transcription.inputs).map(
-              ([index, text]) => [Number(index), text],
-            ),
-          ),
-        }
-      : undefined,
-  } };
+  return {
+    ...parsed,
+    step: {
+      type: "Challenge",
+      view: {
+        challenge: fixture.challenge,
+        translation: fixture.translation ?? undefined,
+        transcription: fixture.transcription
+          ? {
+              ...fixture.transcription,
+              inputs: new Map(
+                Object.entries(fixture.transcription.inputs).map(
+                  ([index, text]) => [Number(index), text],
+                ),
+              ),
+            }
+          : undefined,
+      },
+    },
+  };
 }
 
 const log = (...args: unknown[]) => console.log("fixture action", ...args);
 
 export function FixturePage() {
   const { name } = useParams();
-  const { accessToken } = useOutletContext<AppContextType>();
+  const { accessToken, userInfo } = useOutletContext<AppContextType>();
   const deckState = useDeck();
   const [loaded, setLoaded] = useState<{
     name: string;
-    fixture: Fixture;
+    fixture: ReviewScreenView;
   }>();
   const [error, setError] = useState<{
     name: string | undefined;
@@ -59,7 +64,8 @@ export function FixturePage() {
     const abort = new AbortController();
     void fetch(`/__fixtures/${name}.json`, { signal: abort.signal })
       .then(async (response) => {
-        if (!response.ok) throw new Error(`Fixture: ${response.status}`);
+        if (!response.ok)
+          throw new Error(`ReviewScreenView: ${response.status}`);
         const fixture = parseFixture(await response.text());
         if (!abort.signal.aborted) setLoaded({ name: name!, fixture });
       })
@@ -76,33 +82,52 @@ export function FixturePage() {
     !deckState.deck
   )
     return <p>Loading fixture…</p>;
-  const { deck, targetLanguage, nativeLanguage } = deckState;
+  const { deck, nativeLanguage } = deckState;
   const fixture = loaded.fixture;
   return (
-    <div data-fixture-rendered={name} className="flex flex-col gap-6">
-      {fixture.type === "Idle" ? (
-        <NoCardsReady key={name} view={fixture.view} deck={deck} addEvent={log} undoRestrictions={log} setSentenceList={log} showEngagementPrompts={false} />
-      ) : fixture.type === "Accomplishment" ? (
-        <AccomplishmentScreen key={name} view={fixture.view} addEvent={log} onDismiss={log} />
-      ) : <ChallengeView
-        key={name}
-        challenge={fixture.view.challenge}
-        initialState={fixture.view.transcription ?? undefined}
-        translationState={fixture.view.translation ?? undefined}
-        deck={deck}
-        targetLanguage={targetLanguage}
-        nativeLanguage={nativeLanguage}
-        accessToken={accessToken}
-        totalCount={deck.get_all_cards_summary().length}
-        totalReviewsCompleted={deck.get_total_reviews()}
-        autoplayed={true}
-        setAutoplayed={log}
-        onRating={log}
-        onTranslationComplete={log}
-        onTranscriptionComplete={log}
-        onCantListen={log}
-        onCantSpeak={log}
-      />}
-    </div>
+    // Mirror ReviewPage's shell so captures show the same header and progress
+    // bar the real screen does — iOS renders the whole app, so a bare fixture
+    // would make every web/iOS pair differ by the chrome alone. The signup nag
+    // stays off: it varies with auth state and would make captures unstable.
+    <TopPageLayout
+      userInfo={userInfo}
+      headerProps={{
+        onChangeLanguage: log,
+        showSignupNag: false,
+        language: fixture.target_language,
+        dailyGoalPercent: fixture.progress * 100,
+      }}
+    >
+      {/* Same container Review uses. flex-1 is load-bearing: it stretches this
+          to TopPageLayout's 100dvh, which is what gives the challenges'
+          `sticky bottom-0` action bars a containing block reaching the viewport
+          bottom. Without it they sit directly under the card instead. */}
+      <div data-fixture-rendered={name} className="flex flex-col flex-1 gap-2">
+        <ReviewScreen
+          key={name}
+          view={fixture}
+          actions={{
+            deck,
+            nativeLanguage,
+            accessToken,
+            autoplayed: true,
+            setAutoplayed: log,
+            onRating: log,
+            onTranslationComplete: log,
+            onTranscriptionComplete: log,
+            onCantListen: log,
+            onCantSpeak: log,
+            addEvent: log,
+            undoRestrictions: log,
+            setSentenceList: log,
+            dismissAccomplishment: log,
+            completePlacementTest: log,
+            saveDisplayName: log,
+            completeDisplayName: log,
+            skipDisplayName: log,
+          }}
+        />
+      </div>
+    </TopPageLayout>
   );
 }

@@ -2,7 +2,8 @@ import SwiftUI
 
 struct PronunciationChallengeView: View {
     @Environment(AudioPlayer.self) private var audio
-    let model: ReviewModel
+    let screen: ReviewScreenView
+    let actions: ReviewActions
     let indicator: CardIndicator_Gram_String_String
     let pattern: String
     let guide: PronunciationGuide
@@ -22,7 +23,7 @@ struct PronunciationChallengeView: View {
                 }
                 if should_show_challenge_tutorial(times_type_seen: timesSeen) { Text("Listen, then practice saying the sound aloud.").font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity) }
                 ForEach(Array(cues.prefix(3).enumerated()), id: \.offset) { index, cue in
-                    PronunciationRow(model: model, cue: cue, pattern: pattern, position: guide.position,
+                    PronunciationRow(screen: screen, actions: actions, cue: cue, pattern: pattern, position: guide.position,
                                      context: guide.example_words.indices.contains(index) ? guide.example_words[index].cultural_context : nil)
                 }
                 Text(markdown(guide.description)).font(.subheadline)
@@ -30,8 +31,8 @@ struct PronunciationChallengeView: View {
             HStack(spacing: 12) {
                 Button { rate(.Again) } label: { Text(isNew ? "Didn't know" : "Forgot").frame(maxWidth: .infinity) }.tint(.red)
                 Button { rate(.Remembered) } label: { Text(isNew ? "Already knew" : "Remembered").frame(maxWidth: .infinity) }
-            }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(model.submitting)
-            Button("I can't speak right now") { model.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
+            }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(actions.submitting)
+            Button("I can't speak right now") { actions.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
@@ -39,21 +40,22 @@ struct PronunciationChallengeView: View {
             let command = DebugHarness.shared.command
             if command == "pron-grade" || command == "grade" { rate(.Remembered) }
             if command == "audio", let cue = cues.first {
-                Task { try? await audio.play(request: cue.audio, accessToken: model.session.accessToken()) }
+                Task { try? await audio.play(request: cue.audio, accessToken: actions.media.accessToken) }
             }
         }
         #endif
     }
     private func rate(_ rating: Rating) {
-        guard !model.submitting else { return }
-        audio.stop(); model.rate(indicator, rating)
+        guard !actions.submitting else { return }
+        audio.stop(); actions.rate(indicator, rating)
         if rating != .Again { audio.playEffect("success-2") }
     }
 }
 
 private struct PronunciationRow: View {
     @Environment(AudioPlayer.self) private var audio
-    let model: ReviewModel
+    let screen: ReviewScreenView
+    let actions: ReviewActions
     let cue: PronunciationCue
     let pattern: String
     let position: PatternPosition
@@ -87,7 +89,7 @@ private struct PronunciationRow: View {
     }
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            AudioButton(request: cue.audio, session: model.session, reviewCount: model.deck.get_total_reviews())
+            AudioButton(request: cue.audio, media: actions.media, reviewCount: screen.total_reviews)
             VStack(alignment: .leading, spacing: 4) {
                 Text(words).font(.body)
                 if let context { Text(context).font(.footnote).foregroundStyle(.secondary) }

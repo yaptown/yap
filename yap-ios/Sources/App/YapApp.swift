@@ -51,7 +51,7 @@ struct SessionRoot: View {
                             Label("Couldn't open your deck", systemImage: "exclamationmark.triangle")
                         } description: { Text(message) } actions: { Button("Try again") { session.retry() } }
                     case let .deck(deck, _, startingFresh, historyKnown):
-                        CourseTabs(deck: deck, session: session, startingFresh: startingFresh, historyKnown: historyKnown)
+                        CourseTabs(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown)
                     }
                 }
             }
@@ -70,7 +70,7 @@ struct SessionRoot: View {
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
             switch DebugHarness.shared.command {
             case "switch-course": session.choosingCourse = true
-            case "force-display-name": DebugHarness.shared.forceDisplayName = true; auth.needsDisplayName = true; UserDefaults.standard.removeObject(forKey: "yap-skipped-set-display-name")
+            case "force-display-name": auth.needsDisplayName = true; UserDefaults.standard.removeObject(forKey: "yap-skipped-set-display-name")
             case "sync": if DebugHarness.shared.activeTab != .settings { session.syncSoon() }
             case "status":
                 if let weapon = session.weapon {

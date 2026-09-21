@@ -10,7 +10,6 @@ mod directories;
 mod disclosure;
 mod fixtures;
 mod human_audio;
-pub use fixtures::{ChallengeFixture, Fixture};
 #[cfg(any(feature = "fixtures", test))]
 pub use fixtures::{fixture_json, parse_fixture};
 mod language_pack;
@@ -3458,6 +3457,7 @@ impl Deck {
     /// anonymous user). See `Weapon::reviews_history_known`. A locally
     /// visible completed test is proof by itself; the absence of one is only
     /// proof once the history is known.
+    #[bridge(skip)]
     pub fn should_offer_placement_test(
         &self,
         starting_fresh: Option<bool>,
@@ -4387,6 +4387,7 @@ impl ReviewInfo {
 
 #[bridge]
 impl ReviewInfo {
+    #[bridge(skip)]
     pub fn get_next_challenge(&self, deck: &Deck) -> Option<Challenge<Gram<String>>> {
         if let Some(due_card) = self.due_cards.first() {
             Some(self.get_challenge_for_card(deck, *due_card)?)
@@ -5342,6 +5343,154 @@ mod tests {
             panic!("expected idle")
         };
         assert_eq!(more.kind, IdleKind::NeedsMoreCards);
+    }
+
+    fn review_screen_inputs(now: DateTime<Utc>) -> ReviewScreenInputs {
+        ReviewScreenInputs {
+            banned: vec![],
+            sentence_list: None,
+            online: true,
+            is_signed_in: true,
+            needs_display_name: false,
+            display_name_dismissed: false,
+            has_access_token: true,
+            starting_fresh: None,
+            history_known: true,
+            dismissed_accomplishment_at_review: None,
+            current_challenge: None,
+            timestamp_ms: now.timestamp_millis() as f64,
+        }
+    }
+
+    fn captured_challenge() -> Challenge<Gram<String>> {
+        let fixture = parse_fixture(
+            include_str!("../../fixtures/challenges/flashcard-written.json").to_owned(),
+        )
+        .unwrap();
+        let ReviewStep::Challenge(view) = fixture.step else {
+            panic!("expected challenge")
+        };
+        view.challenge
+    }
+
+    #[test]
+    fn review_screen_placement_precedes_held_challenge_and_requires_known_history() {
+        let deck = Deck::default();
+        let mut inputs = review_screen_inputs(Utc::now());
+        inputs.starting_fresh = Some(false);
+        inputs.current_challenge = Some(captured_challenge());
+        assert!(matches!(
+            deck.review_screen_view(inputs.clone()).step,
+            ReviewStep::PlacementTest
+        ));
+        inputs.history_known = false;
+        assert!(matches!(
+            deck.review_screen_view(inputs.clone()).step,
+            ReviewStep::Challenge(_)
+        ));
+        inputs.history_known = true;
+        inputs.starting_fresh = Some(true);
+        assert!(matches!(
+            deck.review_screen_view(inputs).step,
+            ReviewStep::Challenge(_)
+        ));
+    }
+
+    #[test]
+    fn review_screen_plan_precedes_accomplishment_and_held_challenge() {
+        let now = Utc::now();
+        let mut deck = deck_with_n_due_cards(25, now - chrono::Duration::hours(1));
+        deck.accomplishment = Some(Accomplishment::DailyGoalReached);
+        let mut inputs = review_screen_inputs(now);
+        inputs.current_challenge = Some(captured_challenge());
+        assert!(matches!(
+            deck.review_screen_view(inputs).step,
+            ReviewStep::ReviewPlan(_)
+        ));
+    }
+
+    #[test]
+    fn review_screen_display_name_precedes_accomplishment_and_respects_host_flags() {
+        let now = Utc::now();
+        let deck = deck_with_n_due_cards(1, now - chrono::Duration::minutes(10));
+        let cards = deck
+            .get_review_info(vec![], now.timestamp_millis() as f64)
+            .due_cards;
+        let mut deck = review_cards_to_future(deck, &cards, now);
+        deck.stats.total_reviews = 25;
+        deck.accomplishment = Some(Accomplishment::DailyGoalReached);
+        let mut inputs = review_screen_inputs(now);
+        inputs.needs_display_name = true;
+        assert!(matches!(
+            deck.review_screen_view(inputs.clone()).step,
+            ReviewStep::SetDisplayName
+        ));
+        for flag in 0..3 {
+            let mut suppressed = inputs.clone();
+            match flag {
+                0 => suppressed.online = false,
+                1 => suppressed.has_access_token = false,
+                _ => suppressed.display_name_dismissed = true,
+            }
+            assert!(matches!(
+                deck.review_screen_view(suppressed).step,
+                ReviewStep::Accomplishment(_)
+            ));
+        }
+        inputs.current_challenge = Some(captured_challenge());
+        assert!(matches!(
+            deck.review_screen_view(inputs.clone()).step,
+            ReviewStep::Accomplishment(_)
+        ));
+        inputs.dismissed_accomplishment_at_review = Some(25);
+        assert!(matches!(
+            deck.review_screen_view(inputs.clone()).step,
+            ReviewStep::Challenge(_)
+        ));
+        inputs.current_challenge = None;
+        inputs.display_name_dismissed = true;
+        assert!(matches!(
+            deck.review_screen_view(inputs.clone()).step,
+            ReviewStep::Idle(_)
+        ));
+        inputs.dismissed_accomplishment_at_review = Some(24);
+        assert!(matches!(
+            deck.review_screen_view(inputs).step,
+            ReviewStep::Accomplishment(_)
+        ));
+    }
+
+    #[test]
+    fn review_screen_held_challenge_beats_idle_and_newly_due_challenges_surface() {
+        let now = Utc::now();
+        let deck = Deck::default();
+        let mut inputs = review_screen_inputs(now);
+        assert!(matches!(
+            deck.review_screen_view(inputs.clone()).step,
+            ReviewStep::Idle(_)
+        ));
+        inputs.current_challenge = Some(captured_challenge());
+        let view = deck.review_screen_view(inputs.clone());
+        let ReviewStep::Challenge(challenge) = view.step else {
+            panic!("held challenge must win over idle")
+        };
+        assert_eq!(
+            serde_json::to_value(&challenge.challenge).unwrap(),
+            serde_json::to_value(inputs.current_challenge.unwrap()).unwrap()
+        );
+        assert!(challenge.transcription.is_none() && challenge.translation.is_none());
+        assert_eq!(view.progress, 0.0);
+        let mut deck = deck_with_n_due_cards(1, now - chrono::Duration::minutes(10));
+        deck.stats.today.as_mut().unwrap().time_spent_seconds = 100_000;
+        let view = deck.review_screen_view(review_screen_inputs(now));
+        assert!(matches!(view.step, ReviewStep::Challenge(_)));
+        assert_eq!(view.progress, 1.0);
+        assert_eq!(view.total_count, 1);
+        assert_eq!(view.total_reviews, deck.get_total_reviews());
+        assert_eq!(view.target_language, Language::French);
+        let next_day =
+            deck.review_screen_view(review_screen_inputs(now + chrono::Duration::days(1)));
+        assert_eq!(next_day.progress, 0.0);
     }
 
     #[test]

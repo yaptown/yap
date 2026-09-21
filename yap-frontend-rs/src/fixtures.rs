@@ -1,38 +1,17 @@
+#[cfg(any(feature = "fixtures", test))]
+use crate::ReviewScreenView;
 #[cfg(feature = "fixtures")]
-use crate::Deck;
-use crate::{
-    AccomplishmentView, Challenge, Gram, IdleScreenView, TranscriptionState, TranslationState,
-};
-
-/// A captured challenge with its live reducer snapshot.
-#[bridgerton::bridge(transparent)]
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct ChallengeFixture {
-    pub challenge: Challenge<Gram<String>>,
-    pub transcription: Option<TranscriptionState>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub translation: Option<TranslationState>,
-}
-
-/// A captured screen; the nested view keeps screen and challenge tags distinct.
-#[bridgerton::bridge(transparent)]
-#[derive(serde::Serialize, serde::Deserialize)]
-#[serde(tag = "type", content = "view")]
-pub enum Fixture {
-    Challenge(Box<ChallengeFixture>),
-    Idle(Box<IdleScreenView>),
-    Accomplishment(Box<AccomplishmentView>),
-}
+use crate::{Challenge, Deck, Gram};
 
 #[cfg(any(feature = "fixtures", test))]
 #[bridgerton::bridge]
-pub fn parse_fixture(json: String) -> Result<Fixture, bridgerton::Error> {
+pub fn parse_fixture(json: String) -> Result<ReviewScreenView, bridgerton::Error> {
     serde_json::from_str(&json).map_err(|error| bridgerton::Error::new(error.to_string()))
 }
 
 #[cfg(any(feature = "fixtures", test))]
 #[bridgerton::bridge]
-pub fn fixture_json(fixture: Fixture) -> String {
+pub fn fixture_json(fixture: ReviewScreenView) -> String {
     serde_json::to_string_pretty(&fixture).expect("screen fixtures are JSON serializable")
 }
 

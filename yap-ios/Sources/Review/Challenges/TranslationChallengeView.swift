@@ -2,7 +2,8 @@ import SwiftUI
 
 struct TranslationChallengeView: View {
     @Environment(AudioPlayer.self) private var audio
-    let model: ReviewModel
+    let screen: ReviewScreenView
+    let actions: ReviewActions
     let sentence: TranslateComprehensibleSentence
     @State private var state: TranslationState
     @State private var view: TranslationView
@@ -11,18 +12,16 @@ struct TranslationChallengeView: View {
     @State private var focused = false
     @State private var gradesExpanded = false
 
-    init(model: ReviewModel, sentence: TranslateComprehensibleSentence, course: Course) {
-        self.model = model
+    init(screen: ReviewScreenView, actions: ReviewActions, sentence: TranslateComprehensibleSentence, initialState: TranslationState?) {
+        self.screen = screen; self.actions = actions
         self.sentence = sentence
-        let state = translation_start(sentence: sentence, course: course)
+        let state = initialState ?? translation_start(sentence: sentence, course: Course(native_language: actions.nativeLanguage, target_language: screen.target_language))
         _state = State(initialValue: state)
         _view = State(initialValue: translation_view(state: state))
     }
     private var storage: PendingReview? {
-        #if DEBUG
-        if DebugHarness.shared.fixture != nil { return nil }
-        #endif
-        return PendingReview(kind: "translation", challenge: sentence, model: model)
+        guard let scope = actions.pendingReviewKey else { return nil }
+        return PendingReview(kind: "translation", challenge: sentence, scope: scope, reviewCount: screen.total_reviews)
     }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
@@ -30,7 +29,7 @@ struct TranslationChallengeView: View {
             StudyCard {
                 if let badge = view.badge { ReviewBadge(text: badge) }
                 HStack(alignment: .center, spacing: 8) {
-                    AudioButton(request: sentence.audio, session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: !editing && hasClip == false)
+                    AudioButton(request: sentence.audio, media: actions.media, reviewCount: screen.total_reviews, autoplay: !editing && hasClip == false)
                     SentenceFlow(spacing: 0, alignment: .center) {
                         ForEach(Array(view.words.enumerated()), id: \.offset) { index, word in
                             let text = Text(word.text + word.whitespace)
@@ -68,13 +67,13 @@ struct TranslationChallengeView: View {
                         if let description = entry.second.description { Text(description).font(.caption) }
                     }
                 }
-                VideoClipView(deck: model.deck, language: model.deck.get_target_language(), text: sentence.target_language,
-                    session: model.session, reviewCount: model.deck.get_total_reviews(), autoplay: !editing, available: $hasClip)
+                VideoClipView( language: screen.target_language, text: sentence.target_language,
+                    media: actions.media, reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip)
                 ReviewDefinitionsView(definitions: view.definitions)
             }
             if view.verdict != nil {
                 Button { send(.Continue) } label: { Text(view.continue_label).frame(maxWidth: .infinity) }
-                    .disabled(!view.can_continue || model.submitting)
+                    .disabled(!view.can_continue || actions.submitting)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             } else {
                 HStack {
@@ -85,9 +84,6 @@ struct TranslationChallengeView: View {
             }
         }
         .onAppear {
-            #if DEBUG
-            if let saved = DebugHarness.shared.challengeFixture?.translation { state = saved }
-            #endif
             if let data = storage?.load(Data.self), let saved = try? PendingReview.decode(data, as: TranslationState.self) { state = saved }
             focused = editing
             apply(translation_resume(state: state))
@@ -135,10 +131,10 @@ struct TranslationChallengeView: View {
                 gradingTask?.cancel()
                 let course = state.course
                 gradingTask = Task { @MainActor in
-                    if model.session.online {
+                    if screen.online {
                         let response = await autograde_translation(challenge_sentence: sentence.target_language, user_sentence: submission,
                             native_translations: sentence.native_translations, literals: sentence.target_language_literals,
-                            phrases: sentence.unique_target_language_phrases, access_token: model.session.accessToken(), course: course,
+                            phrases: sentence.unique_target_language_phrases, access_token: actions.media.accessToken, course: course,
                             gram_definitions: GramDefinitions(value: sentence.gram_definitions_for_lookup), literal_gram_indices: sentence.literal_gram_indices,
                             phrase_definitions: GramDefinitions(value: sentence.phrase_definitions), primary_expression: sentence.primary_expression,
                             movie_titles: MovieTitles(value: sentence.movie_titles))
@@ -160,19 +156,21 @@ struct TranslationChallengeView: View {
             case let .Complete(outcome, tapped, submission, completedAtMs):
                 let completed: Bool
                 switch outcome {
-                case .Perfect: completed = model.completeTranslationPerfect(sentence.target_language, tapped: tapped, completedAtMs: completedAtMs)
-                case let .Manual(grade): completed = model.completeTranslationWrong(sentence.target_language, submission: submission, grade: grade, tapped: tapped, completedAtMs: completedAtMs)
+                case .Perfect: completed = actions.completeTranslationPerfect(sentence.target_language, tapped, completedAtMs)
+                case let .Manual(grade): completed = actions.completeTranslationWrong(sentence.target_language, submission, grade, tapped, completedAtMs)
                 }
                 if completed { storage?.clear(); audio.stop() }
             }
         }
     }
-    private func submit() { send(.Submit(now_ms: ReviewModel.now)) }
+    private func submit() { send(.Submit(now_ms: Date().timeIntervalSince1970 * 1000)) }
     #if DEBUG
     private func debugCommand() {
         let command = DebugHarness.shared.command
         if command.hasPrefix("dump-fixture ") {
-            DebugHarness.dumpFixture(.Challenge(ChallengeFixture(challenge: .TranslateComprehensibleSentence(sentence), transcription: nil, translation: state)), name: String(command.dropFirst(13)))
+            var capture = screen
+            capture.step = .Challenge(ChallengeView(challenge: .TranslateComprehensibleSentence(sentence), transcription: nil, translation: state))
+            DebugHarness.dumpFixture(capture, name: String(command.dropFirst(13)))
         }
         if command.hasPrefix("type ") { send(.TextChanged(text: String(command.dropFirst(5)))) }
         if command == "type-reference" { send(.TextChanged(text: sentence.native_translations.first ?? "")) }

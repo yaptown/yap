@@ -72,8 +72,8 @@ private struct DictionaryDetail: View {
                 StudyCard {
                     Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).font(.largeTitle.bold())
                     if entry.is_phrase { Text("Phrase").font(.caption).foregroundStyle(.secondary) }
-                    AudioButton(request: entry.audio_request, session: session, reviewCount: deck.get_total_reviews())
-                    DefinitionView(entry: entry, exampleAudio: ExampleAudio(session: session, reviewCount: deck.get_total_reviews(), language: deck.get_target_language()))
+                    AudioButton(request: entry.audio_request, media: .live(deck: deck, session: session), reviewCount: deck.get_total_reviews())
+                    DefinitionView(entry: entry, exampleAudio: ExampleAudio(media: .live(deck: deck, session: session), reviewCount: deck.get_total_reviews(), language: deck.get_target_language()))
                     Button(added || entry.is_in_deck ? "In your deck" : "Add to deck", systemImage: added || entry.is_in_deck ? "checkmark.circle" : "plus.circle") { add() }
                         .buttonStyle(.borderedProminent).foregroundStyle(added || entry.is_in_deck ? Color(uiColor: .secondaryLabel) : Color.yapOnAccent)
                         .disabled(added || entry.is_in_deck)

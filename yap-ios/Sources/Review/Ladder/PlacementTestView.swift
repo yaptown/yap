@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct PlacementTestView: View {
-    let model: ReviewModel
+    let actions: ReviewActions
+    @State private var placement: PlacementSession?
     var body: some View {
         StudyCard {
-            if let placement = model.session.placementSession {
+            if let placement {
                 let info = get_placement_session_info(session: placement)
                 ProgressView(value: info.progress_percent, total: 100)
                 if info.finished {
@@ -29,29 +30,30 @@ struct PlacementTestView: View {
                         }
                     }
                     Button("Next", action: next).buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                    if info.can_restart { Button("Start over") { model.session.placementSession = model.deck.start_placement_session() } }
+                    if info.can_restart { Button("Start over") { self.placement = actions.startPlacement() } }
                 }
             }
         }
-        .onAppear { if model.session.placementSession == nil { model.session.placementSession = model.deck.start_placement_session() } }
+        .onAppear { if placement == nil { placement = actions.placement ?? actions.startPlacement() } }
+        .onChange(of: placement) { _, value in if let value { actions.savePlacement(value) } }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
             guard DebugHarness.shared.activeTab == .learn else { return }
             let command = DebugHarness.shared.command
             if command == "next" { next() }
-            if command == "back" { model.session.placementSession = model.deck.start_placement_session() }
-            if command.hasPrefix("choose "), let i = Int(command.dropFirst(7)), let placement = model.session.placementSession, placement.words.indices.contains(i) { toggle(placement.words[i].word) }
+            if command == "back" { placement = actions.startPlacement() }
+            if command.hasPrefix("choose "), let i = Int(command.dropFirst(7)), let placement = placement, placement.words.indices.contains(i) { toggle(placement.words[i].word) }
         }
         #endif
     }
     private func toggle(_ word: String) {
-        guard let placement = model.session.placementSession else { return }
-        model.session.placementSession = toggle_placement_word(session: placement, word: word)
+        guard let placement else { return }
+        self.placement = toggle_placement_word(session: placement, word: word)
     }
     private func next() {
-        guard let placement = model.session.placementSession else { return }
+        guard let placement = placement else { return }
         if get_placement_session_info(session: placement).finished {
-            model.session.addDeckEvent(model.deck.complete_placement_test(known_words: placement.known_words, unknown_words: placement.unknown_words))
-        } else { model.session.placementSession = model.deck.advance_placement_session(session: placement) }
+            actions.completePlacementTest(placement)
+        } else { self.placement = actions.advancePlacement(placement) }
     }
 }

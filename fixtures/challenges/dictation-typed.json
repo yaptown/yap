@@ -1,290 +1,299 @@
 {
-  "type": "Challenge",
-  "view": {
-    "challenge": {
-      "type": "TranscribeComprehensibleSentence",
-      "target_language": "Pas pour ta vie.",
-      "audio": {
-        "request": {
-          "text": "Pas pour ta vie.",
-          "language": "French",
-          "is_ssml": false,
-          "speed": 1.0
+  "target_language": "French",
+  "step": {
+    "type": "Challenge",
+    "view": {
+      "challenge": {
+        "type": "TranscribeComprehensibleSentence",
+        "target_language": "Pas pour ta vie.",
+        "audio": {
+          "request": {
+            "text": "Pas pour ta vie.",
+            "language": "French",
+            "is_ssml": false,
+            "speed": 1.0
+          },
+          "provider": "Gemini"
         },
-        "provider": "Gemini"
-      },
-      "native_language": "Not on your life.",
-      "parts": [
-        {
-          "type": "AskedToTranscribe",
-          "parts": [
-            {
-              "word": {
-                "text": "Pas",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "pas",
-                  "lemma": "pas",
-                  "pos": "ADV"
-                }
+        "native_language": "Not on your life.",
+        "parts": [
+          {
+            "type": "AskedToTranscribe",
+            "parts": [
+              {
+                "word": {
+                  "text": "Pas",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "pas",
+                    "lemma": "pas",
+                    "pos": "ADV"
+                  }
+                },
+                "whitespace": " "
               },
-              "whitespace": " "
-            },
-            {
-              "word": {
-                "text": "pour",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "pour",
-                  "lemma": "pour",
-                  "pos": "ADP"
-                }
+              {
+                "word": {
+                  "text": "pour",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "pour",
+                    "lemma": "pour",
+                    "pos": "ADP"
+                  }
+                },
+                "whitespace": " "
               },
-              "whitespace": " "
-            },
-            {
-              "word": {
-                "text": "ta",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "ta",
-                  "lemma": "ton",
-                  "pos": "DET"
-                }
+              {
+                "word": {
+                  "text": "ta",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ta",
+                    "lemma": "ton",
+                    "pos": "DET"
+                  }
+                },
+                "whitespace": " "
               },
-              "whitespace": " "
-            },
-            {
+              {
+                "word": {
+                  "text": "vie",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "vie",
+                    "lemma": "vie",
+                    "pos": "NOUN"
+                  }
+                },
+                "whitespace": ""
+              }
+            ]
+          },
+          {
+            "type": "Provided",
+            "part": {
               "word": {
-                "text": "vie",
+                "text": ".",
                 "word_type": {
-                  "type": "Heteronym",
-                  "word": "vie",
-                  "lemma": "vie",
-                  "pos": "NOUN"
+                  "type": "Other",
+                  "other_tag": "PUNCT"
                 }
               },
               "whitespace": ""
             }
-          ]
-        },
-        {
-          "type": "Provided",
-          "part": {
-            "word": {
-              "text": ".",
-              "word_type": {
-                "type": "Other",
-                "other_tag": "PUNCT"
-              }
-            },
-            "whitespace": ""
           }
-        }
-      ],
-      "part_gram_indices": [
-        [
-          0,
-          1,
-          2,
-          2
         ],
-        [
-          3
-        ]
-      ],
-      "gram_definitions_for_lookup": [
-        {
-          "Dictionary": {
-            "target_language_word": "pas",
-            "definitions": [
-              {
-                "native": "not",
-                "note": "Usually used with ne in standard French to make a negative sentence; in everyday speech, ne is often dropped.",
-                "example_sentence_target_language": "Je ne veux pas sortir ce soir.",
-                "example_sentence_native_language": "I don't want to go out tonight.",
-                "cognate": false,
-                "false_cognate": false
-              }
-            ],
-            "morphology": [
-              {
-                "gender": null,
-                "number": null,
-                "politeness": null,
-                "tense": null,
-                "person": null,
-                "case": null,
-                "mood": null,
-                "aspect": null
-              }
-            ],
-            "segments": [
-              {
-                "surface": "pas",
-                "canonical": "pas"
-              }
-            ]
-          }
-        },
-        {
-          "Dictionary": {
-            "target_language_word": "pour",
-            "definitions": [
-              {
-                "native": "for",
-                "note": null,
-                "example_sentence_target_language": "J'ai un cadeau pour toi.",
-                "example_sentence_native_language": "I have a gift for you.",
-                "cognate": false,
-                "false_cognate": true
-              },
-              {
-                "native": "in order to, to",
-                "note": "used before an infinitive to express purpose",
-                "example_sentence_target_language": "Je viens pour aider.",
-                "example_sentence_native_language": "I am coming to help.",
-                "cognate": false,
-                "false_cognate": true
-              }
-            ],
-            "morphology": [
-              {
-                "gender": null,
-                "number": null,
-                "politeness": null,
-                "tense": null,
-                "person": null,
-                "case": null,
-                "mood": null,
-                "aspect": null
-              }
-            ],
-            "segments": [
-              {
-                "surface": "pour",
-                "canonical": "pour"
-              }
-            ]
-          }
-        },
-        {
-          "Phrasebook": {
-            "target_language_multi_word_term": "ta vie",
-            "meaning": "your life",
-            "additional_notes": "Possessive form of vie. In the phrase gagner ta vie, it means “to earn a living.”",
-            "target_language_example": "Protège ta vie.",
-            "native_language_example": "Protect your life.",
-            "informal": false,
-            "compositional": true,
-            "cognate": false,
-            "false_cognate": false,
-            "can_be_translated_literally": true
-          }
-        },
-        null
-      ],
-      "gram_breakdowns_for_lookup": [
-        null,
-        null,
-        [
+        "part_gram_indices": [
           [
-            "ta",
-            "ton",
-            "your"
+            0,
+            1,
+            2,
+            2
           ],
           [
-            "vie",
-            null,
-            "life"
+            3
           ]
         ],
-        null
-      ],
-      "movie_titles": [
-        [
-          "tt33244668",
-          "Anaconda"
-        ]
-      ],
-      "proper_noun_definitions": [],
-      "second_chance": false
-    },
-    "transcription": {
-      "parts": [
-        {
-          "type": "AskedToTranscribe",
-          "parts": [
-            {
-              "word": {
-                "text": "Pas",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "pas",
-                  "lemma": "pas",
-                  "pos": "ADV"
+        "gram_definitions_for_lookup": [
+          {
+            "Dictionary": {
+              "target_language_word": "pas",
+              "definitions": [
+                {
+                  "native": "not",
+                  "note": "Usually used with ne in standard French to make a negative sentence; in everyday speech, ne is often dropped.",
+                  "example_sentence_target_language": "Je ne veux pas sortir ce soir.",
+                  "example_sentence_native_language": "I don't want to go out tonight.",
+                  "cognate": false,
+                  "false_cognate": false
                 }
-              },
-              "whitespace": " "
-            },
-            {
-              "word": {
-                "text": "pour",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "pour",
-                  "lemma": "pour",
-                  "pos": "ADP"
+              ],
+              "morphology": [
+                {
+                  "gender": null,
+                  "number": null,
+                  "politeness": null,
+                  "tense": null,
+                  "person": null,
+                  "case": null,
+                  "mood": null,
+                  "aspect": null
                 }
-              },
-              "whitespace": " "
-            },
-            {
-              "word": {
-                "text": "ta",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "ta",
-                  "lemma": "ton",
-                  "pos": "DET"
+              ],
+              "segments": [
+                {
+                  "surface": "pas",
+                  "canonical": "pas"
                 }
+              ]
+            }
+          },
+          {
+            "Dictionary": {
+              "target_language_word": "pour",
+              "definitions": [
+                {
+                  "native": "for",
+                  "note": null,
+                  "example_sentence_target_language": "J'ai un cadeau pour toi.",
+                  "example_sentence_native_language": "I have a gift for you.",
+                  "cognate": false,
+                  "false_cognate": true
+                },
+                {
+                  "native": "in order to, to",
+                  "note": "used before an infinitive to express purpose",
+                  "example_sentence_target_language": "Je viens pour aider.",
+                  "example_sentence_native_language": "I am coming to help.",
+                  "cognate": false,
+                  "false_cognate": true
+                }
+              ],
+              "morphology": [
+                {
+                  "gender": null,
+                  "number": null,
+                  "politeness": null,
+                  "tense": null,
+                  "person": null,
+                  "case": null,
+                  "mood": null,
+                  "aspect": null
+                }
+              ],
+              "segments": [
+                {
+                  "surface": "pour",
+                  "canonical": "pour"
+                }
+              ]
+            }
+          },
+          {
+            "Phrasebook": {
+              "target_language_multi_word_term": "ta vie",
+              "meaning": "your life",
+              "additional_notes": "Possessive form of vie. In the phrase gagner ta vie, it means “to earn a living.”",
+              "target_language_example": "Protège ta vie.",
+              "native_language_example": "Protect your life.",
+              "informal": false,
+              "compositional": true,
+              "cognate": false,
+              "false_cognate": false,
+              "can_be_translated_literally": true
+            }
+          },
+          null
+        ],
+        "gram_breakdowns_for_lookup": [
+          null,
+          null,
+          [
+            [
+              "ta",
+              "ton",
+              "your"
+            ],
+            [
+              "vie",
+              null,
+              "life"
+            ]
+          ],
+          null
+        ],
+        "movie_titles": [
+          [
+            "tt33244668",
+            "Anaconda"
+          ]
+        ],
+        "proper_noun_definitions": [],
+        "second_chance": false
+      },
+      "transcription": {
+        "parts": [
+          {
+            "type": "AskedToTranscribe",
+            "parts": [
+              {
+                "word": {
+                  "text": "Pas",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "pas",
+                    "lemma": "pas",
+                    "pos": "ADV"
+                  }
+                },
+                "whitespace": " "
               },
-              "whitespace": " "
-            },
-            {
+              {
+                "word": {
+                  "text": "pour",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "pour",
+                    "lemma": "pour",
+                    "pos": "ADP"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "ta",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ta",
+                    "lemma": "ton",
+                    "pos": "DET"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "vie",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "vie",
+                    "lemma": "vie",
+                    "pos": "NOUN"
+                  }
+                },
+                "whitespace": ""
+              }
+            ]
+          },
+          {
+            "type": "Provided",
+            "part": {
               "word": {
-                "text": "vie",
+                "text": ".",
                 "word_type": {
-                  "type": "Heteronym",
-                  "word": "vie",
-                  "lemma": "vie",
-                  "pos": "NOUN"
+                  "type": "Other",
+                  "other_tag": "PUNCT"
                 }
               },
               "whitespace": ""
             }
-          ]
-        },
-        {
-          "type": "Provided",
-          "part": {
-            "word": {
-              "text": ".",
-              "word_type": {
-                "type": "Other",
-                "other_tag": "PUNCT"
-              }
-            },
-            "whitespace": ""
           }
+        ],
+        "inputs": {
+          "0": "v"
+        },
+        "phase": {
+          "type": "Editing"
         }
-      ],
-      "inputs": {
-        "0": "v"
       },
-      "phase": {
-        "type": "Editing"
-      }
+      "translation": null
     }
-  }
+  },
+  "progress": 0.0,
+  "total_reviews": 0,
+  "total_count": 0,
+  "offer_engagement": false,
+  "online": true
 }

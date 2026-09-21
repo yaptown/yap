@@ -227,7 +227,13 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         let reviewTime = cards.map(\.due_timestamp_ms).max()! + 1
         let review = withCards.get_review_info(banned_challenge_types: [.Listening, .Speaking], timestamp_ms: reviewTime)
         check(review.total_count == UInt64(cards.count) && review.due_count > 0)
-        check(review.get_next_challenge(deck: withCards) != nil)
+        var screenInputs = ReviewScreenInputs(banned: [.Listening, .Speaking], sentence_list: nil,
+            online: false, is_signed_in: false, needs_display_name: false, display_name_dismissed: false,
+            has_access_token: false, starting_fresh: nil, history_known: true,
+            dismissed_accomplishment_at_review: withCards.get_total_reviews(), current_challenge: nil, timestamp_ms: reviewTime)
+        let screen = withCards.review_screen_view(inputs: screenInputs)
+        check(screen.total_count == UInt64(cards.count) && screen.target_language == .French)
+        if case .Challenge = screen.step {} else { fatalError("expected a challenge") }
         let reviewed = withCards.review_card(reviewed: cards[0].card_indicator, rating: .Good)
         check(reviewed != nil)
         let beforeReviewInputs = reopened.deck_inputs_key(course: course)
@@ -238,7 +244,8 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         reopened.add_deck_event(event: afterReview.complete_placement_test(known_words: placement.known_words, unknown_words: placement.unknown_words))
         let placed = try await deck(reopened, course)
         check(placed.has_taken_placement_test())
-        check(!placed.should_offer_placement_test(starting_fresh: false, history_known: true))
+        screenInputs.starting_fresh = false
+        if case .PlacementTest = placed.review_screen_view(inputs: screenInputs).step { fatalError("placement must not repeat") }
         let onboarding = OnboardingSelections(starting_fresh: false, motivation: .JustForFun, experience_level: .CommonWords, study_goal: .Casual)
         reopened.add_deck_selection_event(event: .SetOnboardingSelections(selections: onboarding, target_language: .French))
         reopened.add_deck_selection_event(event: .SetHeardAbout(heard_about: .Other))
