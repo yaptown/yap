@@ -5,3 +5,4 @@ rustflags = ["--cfg=web_sys_unstable_apis"]
 # installing the binary; see libraries/bridgerton/README.md.
 [alias]
 bridgerton = "run -p cargo-bridgerton --quiet --"
+xtask = "run -p xtask --quiet --"

@@ -13,7 +13,7 @@ but do not yet have live captures.
 
 ## Capture on iOS
 
-Build with `python3 yap-ios/build.py --debug --simulator <UDID>`, then launch:
+Build with `cargo xtask ios --debug --simulator <UDID>`, then launch:
 
 ```sh
 xcrun simctl launch --terminate-running-process <UDID> town.yap.ios \
@@ -57,21 +57,22 @@ driver reviews append real, immutable events to that test account.
 
 ## Side-by-side screenshots
 
-From the repo root (requires built WASM, pnpm dependencies, Xcode, and the
+From the repo root (requires pnpm dependencies, Xcode, and the
 simulator):
 
 ```sh
 (cd yap-frontend && pnpm exec playwright install chromium)
-YAP_TEST_USER_PASSWORD=... python3 fixtures/parity.py --out /tmp/parity
-YAP_TEST_USER_PASSWORD=... python3 fixtures/parity.py --out /tmp/parity-screens \
+YAP_TEST_USER_PASSWORD=... cargo xtask parity --out /tmp/parity
+YAP_TEST_USER_PASSWORD=... cargo xtask parity --out /tmp/parity-screens \
   --only idle,accomplishment --no-build
 open /tmp/parity/index.html
 ```
 
-The script discovers both directories, builds/installs iOS, runs Playwright, and
-writes `<name>-web.png`, `<name>-ios.png`, and `index.html`. Options: `--only`
-(comma-separated names/prefixes), `--web-only`, `--ios-only`, `--no-build`, and
-`--simulator <UDID>`. Names must be unique across both fixture directories.
+The task discovers both directories, builds WASM and iOS, installs the iOS app,
+runs Playwright, and writes `<name>-web.png`, `<name>-ios.png`, and `index.html`. Options: `--only`
+(comma-separated names/prefixes), `--web-only`, `--ios-only`, `--no-build`,
+`--simulator <UDID>`, and `--email` (restricted to the throwaway test account).
+`--no-build` skips both WASM and iOS builds. Names must be unique across both fixture directories.
 
 These are visual comparisons, not pixel-equality assertions. Platform-local
 pickers, posters, acknowledgements, confetti, engagement prompts, chrome, and

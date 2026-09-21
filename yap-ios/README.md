@@ -42,21 +42,21 @@ and the `aarch64-apple-ios` and `aarch64-apple-ios-sim` Rust targets. Run from t
 repository root:
 
 ```sh
-python3 yap-ios/build.py                         # libraries, bindings, Xcode project
-python3 yap-ios/build.py --simulator             # install/launch on the booted simulator
-python3 yap-ios/build.py --simulator SIMULATOR_UUID
-python3 yap-ios/build.py --simulator-build-only  # ad-hoc signed build; no booted simulator needed
-python3 yap-ios/build.py --device IPHONE_UDID
+cargo xtask ios                         # libraries, bindings, Xcode project
+cargo xtask ios --simulator             # install/launch on the booted simulator
+cargo xtask ios --simulator SIMULATOR_UUID
+cargo xtask ios --simulator-build-only  # ad-hoc signed build; no booted simulator needed
+cargo xtask ios --device IPHONE_UDID
 ```
 
 Release is the default (`--release`); `--debug` selects debug Rust and Xcode
 builds. Device builds use automatic signing with team `AF2CJ3G3ZU`; configure the
 account in Xcode and enable Developer Mode on a paired iPhone. `--device` accepts
-either its CoreDevice UUID or hardware UDID; the script resolves the Xcode destination. Simulator builds use ad-hoc signing with Keychain entitlements (no Apple account
+either its CoreDevice UUID or hardware UDID; the task resolves the Xcode destination. Simulator builds use ad-hoc signing with Keychain entitlements (no Apple account
 required). Disabling signing prevents the auth SDK from persisting its session.
 The app supports iPhone on iOS 18+. Supabase SwiftPM handles Keychain session persistence and token refresh.
 
-The script builds both iOS static libraries, reads their actual paths and system
+The task builds both iOS static libraries, reads their actual paths and system
 link flags from Cargo, generates `Generated/Link.xcconfig`, and runs XcodeGen.
 `Yap.xcodeproj`, `DerivedData`, and `Generated` are disposable, ignored outputs.
 Regenerate after Rust API changes before building in Xcode.
@@ -109,8 +109,8 @@ drift. No XCFramework or on-device generation bootstrap is needed.
 With the French core and sentence packs present under `out/fra_for_eng`:
 
 ```sh
-python3 yap-ios/smoke/check.py
-# Or: python3 yap-ios/smoke/check.py --packs /path/to/packs
+cargo xtask smoke
+# Or: cargo xtask smoke --packs /path/to/packs
 ```
 
 The harness builds the host Rust libraries, generates bindings, compiles
@@ -240,7 +240,7 @@ modification dates). No disk-space or boot-time API is used by the app. SDKs
 supply their own privacy manifests. HTTPS-only encryption is declared exempt.
 
 ```sh
-python3 yap-ios/build.py --archive
+cargo xtask ios --archive
 ```
 
 This makes a Release archive at `DerivedData/Yap.xcarchive`, then exports with

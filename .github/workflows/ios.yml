@@ -32,6 +32,6 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Build simulator app
-        run: python3 yap-ios/build.py --simulator-build-only
+        run: cargo xtask ios --simulator-build-only
       - name: Native Swift integration
-        run: python3 yap-ios/smoke/check.py
+        run: cargo xtask smoke

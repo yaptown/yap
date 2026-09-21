@@ -32,6 +32,7 @@ members = [
     "generate-dictionary-data",
     "yap-mcp",
     "yap-ios",
+    "xtask",
 ]
 resolver = "3"
 
