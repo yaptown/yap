@@ -58,7 +58,7 @@ tysm = { git = "https://github.com/anchpop/tysm.git", rev = "8656e1e7b1641780fd0
 osmo = { git = "https://github.com/anchpop/osmo" }
 reqwest = { version = "0.13", features = ["json", "query", "multipart"] }
 tokio = { version = "1.52.3", features = ["full"] }
-opfs = { git = "https://github.com/anchpop/opfs", rev = "c146fa85082b9d58861f6dd460dcdf812e4b3634" }
+opfs = "0.3"
 idb = { version = "0.6.5" }
 # Native + wasm fetch wrapper and its cross-platform abort mechanism.
 fetch-happen = "0.5.0"
