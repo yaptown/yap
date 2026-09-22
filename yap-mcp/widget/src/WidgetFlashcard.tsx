@@ -84,7 +84,6 @@ export function WidgetFlashcard({ challenge }: { challenge: FlashcardChallenge }
         key={retryKey}
         audioRequest={challenge.audio}
         content={challenge.content}
-        morphologyLabel={challenge.morphology_label}
         disclosure={challenge.disclosure}
         isNew={challenge.is_new}
         targetLanguage={challenge.language}

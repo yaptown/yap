@@ -31,8 +31,7 @@ use weapon::data_model::{EventStore, EventType};
 use yap_frontend_rs::{
     CardContext, CardIndicator, CardSummary, Challenge, Context, Deck, DeckEvent, LanguageEvent,
     LanguageEventContent, Rating, TranslateComprehensibleSentence, autograde_translation,
-    dictionary::{GramDictionaryDefinition, GramDictionaryEntry},
-    translation_is_perfect,
+    dictionary::GramDictionaryEntry, translation_is_perfect,
 };
 
 use crate::deck::{PackCache, build_deck, detect_course, insert_rows, new_store};
@@ -597,15 +596,14 @@ const DICTIONARY_BASE_URL: &str = "https://yap.town/d";
 
 /// A short native-language gloss for titles/citations.
 fn entry_gloss(entry: &GramDictionaryEntry) -> String {
-    match entry.definition() {
-        GramDictionaryDefinition::Dictionary { definitions } => definitions
-            .iter()
-            .take(2)
-            .map(|d| d.native.clone())
-            .collect::<Vec<_>>()
-            .join("; "),
-        GramDictionaryDefinition::Phrasebook { meaning, .. } => meaning,
-    }
+    entry
+        .definition()
+        .senses
+        .iter()
+        .take(2)
+        .map(|sense| sense.meaning.as_str())
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 fn entry_title(entry: &GramDictionaryEntry) -> String {
@@ -1078,7 +1076,7 @@ impl YapMcp {
                     gram,
                     display_text: entry.display_text(),
                     frequency_rank: entry.frequency_index() + 1,
-                    is_phrase: entry.is_phrase(),
+                    is_phrase: entry.definition().is_phrase,
                     in_deck: entry.is_in_deck(),
                     definition: entry.definition(),
                 }
@@ -1446,19 +1444,6 @@ impl YapMcp {
             )
         };
 
-        // The widget cannot import WASM values, so supply the shared Rust label.
-        let morphology_label = match &flashcard.content {
-            yap_frontend_rs::CardContent::Gram {
-                definition: language_utils::GramDefinition::Dictionary(entry),
-                ..
-            } => entry
-                .morphology
-                .first()
-                .cloned()
-                .map(yap_frontend_rs::morphology_label)
-                .unwrap_or_default(),
-            _ => String::new(),
-        };
         let language = state.target_language_value();
         let native_language = serde_json::to_value(state.context.course.native_language)
             .expect("Language serializes");
@@ -1473,7 +1458,6 @@ impl YapMcp {
                 "disclosure": disclosure,
                 "card": card,
                 "content": serde_json::to_value(&flashcard.content).expect("content serializes"),
-                "morphology_label": morphology_label,
                 "audio": serde_json::to_value(&flashcard.audio).expect("audio serializes"),
             },
         });
@@ -2073,33 +2057,14 @@ impl YapMcp {
         use std::fmt::Write as _;
         let mut text = String::new();
         let _ = writeln!(text, "{display}");
-        match entry.definition() {
-            GramDictionaryDefinition::Dictionary { definitions } => {
-                for def in &definitions {
-                    let _ = write!(text, "• {}", def.native);
-                    if let Some(note) = &def.note {
-                        let _ = write!(text, " ({note})");
-                    }
-                    let _ = writeln!(text);
-                    if !def.example_sentence_target_language.is_empty() {
-                        let _ = writeln!(
-                            text,
-                            "  e.g. “{}” — “{}”",
-                            def.example_sentence_target_language,
-                            def.example_sentence_native_language
-                        );
-                    }
-                }
+        for sense in entry.definition().senses {
+            let _ = write!(text, "• {}", sense.meaning);
+            if let Some(note) = sense.note {
+                let _ = write!(text, " ({note})");
             }
-            GramDictionaryDefinition::Phrasebook {
-                meaning,
-                target_language_example,
-                native_language_example,
-            } => {
-                let _ = writeln!(text, "• {meaning}");
-                if let (Some(t), Some(n)) = (target_language_example, native_language_example) {
-                    let _ = writeln!(text, "  e.g. “{t}” — “{n}”");
-                }
+            let _ = writeln!(text);
+            if let Some(example) = sense.example {
+                let _ = writeln!(text, "  e.g. “{}” — “{}”", example.target, example.native);
             }
         }
         let _ = writeln!(
@@ -2149,7 +2114,7 @@ impl YapMcp {
                 gram: Some(gram_value),
                 frequency_rank: entry.frequency_index() + 1,
                 in_deck: entry.is_in_deck(),
-                is_phrase: entry.is_phrase(),
+                is_phrase: entry.definition().is_phrase,
             },
         })
     }

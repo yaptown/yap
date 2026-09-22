@@ -88,18 +88,19 @@
                 }
               ],
               "definition": {
-                "Phrasebook": {
-                  "target_language_multi_word_term": "j'ai une",
-                  "meaning": "I have a",
-                  "additional_notes": "This is a common sentence opening meaning “I have a/an…”; une is used before a feminine singular noun.",
-                  "target_language_example": "J'ai une question à vous poser.",
-                  "native_language_example": "I have a question to ask you.",
-                  "informal": false,
-                  "compositional": true,
-                  "cognate": false,
-                  "false_cognate": false,
-                  "can_be_translated_literally": true
-                }
+                "headword": "j'ai une",
+                "is_phrase": true,
+                "morphology_label": "",
+                "senses": [
+                  {
+                    "meaning": "I have a",
+                    "note": null,
+                    "example": {
+                      "target": "J'ai une question à vous poser.",
+                      "native": "I have a question to ask you."
+                    }
+                  }
+                ]
               },
               "prefix": null,
               "breakdown": [

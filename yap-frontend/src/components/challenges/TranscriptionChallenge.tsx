@@ -22,13 +22,8 @@ import {
   type WordGrade,
   type Language,
   type Deck,
-  type DictionaryEntry,
-  type PhrasebookDefinitionEntry,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 
-// GramDefinition is missing from the .d.ts due to a type generator bug
-type GramDefinition =
-  { Dictionary: DictionaryEntry } | { Phrasebook: PhrasebookDefinitionEntry };
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { languageToLangAttr } from "@/lib/utils";
@@ -69,7 +64,6 @@ import {
   GramDefinitionDisplay,
 } from "./TranslationChallenge";
 import { TargetLanguageText } from "../TargetLanguageText";
-import { type BreakdownRow } from "../MorphemeBreakdown";
 
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence;
@@ -183,10 +177,7 @@ export function TranscriptionChallenge({
     return get_transcription_review_definitions(
       challenge,
       state.phase.grade.results,
-    ) as {
-      definition: GramDefinition;
-      breakdown: BreakdownRow[] | null | undefined;
-    }[];
+    );
   }, [state.phase, challenge]);
 
   const applyStep = useCallback(

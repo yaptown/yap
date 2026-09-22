@@ -99,7 +99,7 @@ struct FlashcardView: View {
     @ViewBuilder private var answer: some View {
         switch flashcard.content {
         case let .Gram(_, definition, _, breakdown):
-            DefinitionView(definition: definition)
+            DefinitionBoxesView(definition: definition)
             if let breakdown, !breakdown.isEmpty { MorphemeBreakdownView(parts: breakdown, alignment: .center) }
         case let .Listening(possible):
             if possible.count > 1 { Text("It could have been any of these words:").font(.footnote).foregroundStyle(.secondary) }
@@ -110,7 +110,7 @@ struct FlashcardView: View {
                         if entry.first { Text("(known)").font(.footnote).foregroundStyle(.green) }
                     }
                     ForEach(Array(entry.third.enumerated()), id: \.offset) { _, definition in
-                        DefinitionView(definition: definition)
+                        DefinitionBoxesView(definition: definition)
                     }
                 }
             }
@@ -126,53 +126,31 @@ struct FlashcardView: View {
 
 /// The web's CardBack: each sense in its own muted box, the morphology trailing
 /// the meaning, the example quoted with a small play button beside it.
-struct DefinitionView: View {
+struct DefinitionBoxesView: View {
     @Environment(\.reviewHost!) private var host
-    private enum Content {
-        case dictionary([TargetToNativeWord], [Morphology])
-        case phrase(String, String, String, String)
-    }
-    private let content: Content
-    init(definition: GramDefinition) {
-        switch definition {
-        case let .Dictionary(entry): content = .dictionary(entry.definitions, entry.morphology)
-        case let .Phrasebook(entry): content = .phrase(entry.meaning, entry.additional_notes, entry.target_language_example, entry.native_language_example)
-        }
-    }
-    init(entry: GramDictionaryEntry) {
-        switch entry.definition {
-        case let .Dictionary(definitions): content = .dictionary(definitions, entry.morphology.map { [$0] } ?? [])
-        case let .Phrasebook(meaning, target, native): content = .phrase(meaning, "", target ?? "", native ?? "")
-        }
-    }
+    let definition: DefinitionView
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            switch content {
-            case let .dictionary(definitions, morphologies):
-                let morphology = morphologies.first.map { morphology_label(morphology: $0) }.flatMap { $0.isEmpty ? nil : $0 }
-                ForEach(Array(definitions.enumerated()), id: \.offset) { _, item in
-                    box(meaning: item.native, trailing: morphology, note: item.note ?? "",
-                        target: item.example_sentence_target_language, native: item.example_sentence_native_language)
-                }
-            case let .phrase(meaning, notes, target, native):
-                box(meaning: meaning, trailing: nil, note: notes, target: target, native: native)
+            ForEach(Array(definition.senses.enumerated()), id: \.offset) { _, sense in
+                box(sense: sense, trailing: definition.morphology_label.isEmpty ? nil : definition.morphology_label)
             }
         }
     }
-    private func box(meaning: String, trailing: String?, note: String, target: String, native: String) -> some View {
+    private func box(sense: DefinitionSense, trailing: String?) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(meaning).font(.title3.weight(.medium))
+                Text(sense.meaning).font(.title3.weight(.medium))
                 Spacer(minLength: 0)
                 if let trailing { Text(trailing).font(.caption).italic().foregroundStyle(.secondary).multilineTextAlignment(.trailing) }
             }
-            if !note.isEmpty { Text(note).font(.footnote).foregroundStyle(.secondary) }
-            if !target.isEmpty {
+            if let note = sense.note { Text(note).font(.footnote).foregroundStyle(.secondary) }
+            if let example = sense.example {
                 HStack(alignment: .top, spacing: 4) {
-                    AudioButton(request: AudioRequest(request: TtsRequest(text: target, language: host.deck.get_target_language(), is_ssml: false,
+                    AudioButton(request: AudioRequest(request: TtsRequest(text: example.target, language: host.deck.get_target_language(), is_ssml: false,
                         instructions: nil, speed: 1, verification_hints: []), provider: .ElevenLabs),
                         reviewCount: host.deck.get_total_reviews())
-                    DefinitionExamples(target: target, native: native).frame(minHeight: 44, alignment: .center)
+                    DefinitionExamples(example: example).frame(minHeight: 44, alignment: .center)
                 }
             }
         }

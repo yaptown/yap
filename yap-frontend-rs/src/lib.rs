@@ -4146,7 +4146,7 @@ impl Regressions {
 pub enum CardContent {
     Gram {
         gram: Vec<Literal<String>>,
-        definition: GramDefinition,
+        definition: DefinitionView,
         /// Pre-computed grammatical prefix (e.g., article for nouns, subject pronoun
         /// for verbs). Computed server-side so the frontend doesn't have to call
         /// into the WASM module just to render the card front.
@@ -4160,7 +4160,7 @@ pub enum CardContent {
         breakdown: Option<Vec<(String, Option<String>, Option<String>)>>,
     },
     Listening {
-        possible_grams: Vec<(bool, Vec<Literal<String>>, Vec<GramDefinition>)>,
+        possible_grams: Vec<(bool, Vec<Literal<String>>, Vec<DefinitionView>)>,
     },
 }
 

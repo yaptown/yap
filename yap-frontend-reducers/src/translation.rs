@@ -1,6 +1,6 @@
 //! Translation review decisions. Browser request cancellation and draft storage
 //! remain host adapters; this module never writes or modifies deck events.
-use crate::{AudioRequest, Sound};
+use crate::{AudioRequest, DefinitionView, Sound, definition_view};
 use language_utils::{
     Course, ProperNounDefinition, autograde,
     text_cleanup::{find_closest_match, normalize_for_grading},
@@ -182,7 +182,7 @@ pub fn apply_translation_grade(
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct ReviewDefinition {
-    pub definition: GramDefinition,
+    pub definition: DefinitionView,
     #[allow(clippy::type_complexity)]
     pub breakdown: Option<Vec<(String, Option<String>, Option<String>)>>,
 }
@@ -248,7 +248,7 @@ pub fn get_translation_review_feedback(
     for group in groups {
         if let Some(Some(definition)) = sentence.gram_definitions_for_lookup.get(group) {
             definitions.push(ReviewDefinition {
-                definition: definition.clone(),
+                definition: definition_view(definition.clone()),
                 breakdown: sentence
                     .gram_breakdowns_for_lookup
                     .get(group)
@@ -266,7 +266,7 @@ pub fn get_translation_review_feedback(
                 && let Some(Some(definition)) = sentence.phrase_definitions.get(i)
             {
                 definitions.push(ReviewDefinition {
-                    definition: definition.clone(),
+                    definition: definition_view(definition.clone()),
                     breakdown: sentence.phrase_breakdowns.get(i).cloned().flatten(),
                 });
             }

@@ -46,72 +46,34 @@
                   ],
                   [
                     {
-                      "Dictionary": {
-                        "target_language_word": "ta",
-                        "definitions": [
-                          {
-                            "native": "your",
-                            "note": "informal singular; used before a feminine singular noun",
-                            "example_sentence_target_language": "Ta voiture est rouge.",
-                            "example_sentence_native_language": "Your car is red.",
-                            "cognate": false,
-                            "false_cognate": false
+                      "headword": "ta",
+                      "is_phrase": false,
+                      "morphology_label": "2nd-person, feminine, informal",
+                      "senses": [
+                        {
+                          "meaning": "your",
+                          "note": "informal singular; used before a feminine singular noun",
+                          "example": {
+                            "target": "Ta voiture est rouge.",
+                            "native": "Your car is red."
                           }
-                        ],
-                        "morphology": [
-                          {
-                            "gender": "Feminine",
-                            "number": "Singular",
-                            "politeness": "Informal",
-                            "tense": null,
-                            "person": "Second",
-                            "case": null,
-                            "mood": null,
-                            "aspect": null
-                          }
-                        ],
-                        "segments": [
-                          {
-                            "surface": "ta",
-                            "canonical": "ton",
-                            "tag": "2sg.f.inf"
-                          }
-                        ]
-                      }
+                        }
+                      ]
                     },
                     {
-                      "Dictionary": {
-                        "target_language_word": "ta",
-                        "definitions": [
-                          {
-                            "native": "your",
-                            "note": "Informal singular; used before a feminine singular noun beginning with a consonant.",
-                            "example_sentence_target_language": "Où est ta voiture ?",
-                            "example_sentence_native_language": "Where is your car?",
-                            "cognate": false,
-                            "false_cognate": false
+                      "headword": "ta",
+                      "is_phrase": false,
+                      "morphology_label": "2nd-person, feminine, informal",
+                      "senses": [
+                        {
+                          "meaning": "your",
+                          "note": "Informal singular; used before a feminine singular noun beginning with a consonant.",
+                          "example": {
+                            "target": "Où est ta voiture ?",
+                            "native": "Where is your car?"
                           }
-                        ],
-                        "morphology": [
-                          {
-                            "gender": "Feminine",
-                            "number": "Singular",
-                            "politeness": "Informal",
-                            "tense": null,
-                            "person": "Second",
-                            "case": null,
-                            "mood": null,
-                            "aspect": null
-                          }
-                        ],
-                        "segments": [
-                          {
-                            "surface": "ta",
-                            "canonical": "ton",
-                            "tag": "2sg.f.inf"
-                          }
-                        ]
-                      }
+                        }
+                      ]
                     }
                   ]
                 ],
@@ -133,45 +95,27 @@
                   ],
                   [
                     {
-                      "Dictionary": {
-                        "target_language_word": "tas",
-                        "definitions": [
-                          {
-                            "native": "pile, heap",
-                            "note": null,
-                            "example_sentence_target_language": "Il y a un tas de vêtements sur le lit.",
-                            "example_sentence_native_language": "There’s a pile of clothes on the bed.",
-                            "cognate": false,
-                            "false_cognate": false
-                          },
-                          {
-                            "native": "a lot of",
-                            "note": "Common in the phrase « un tas de + noun » (informal).",
-                            "example_sentence_target_language": "On a un tas de choses à faire aujourd’hui.",
-                            "example_sentence_native_language": "We have a lot of things to do today.",
-                            "cognate": false,
-                            "false_cognate": false
+                      "headword": "tas",
+                      "is_phrase": false,
+                      "morphology_label": "masculine",
+                      "senses": [
+                        {
+                          "meaning": "pile, heap",
+                          "note": null,
+                          "example": {
+                            "target": "Il y a un tas de vêtements sur le lit.",
+                            "native": "There’s a pile of clothes on the bed."
                           }
-                        ],
-                        "morphology": [
-                          {
-                            "gender": "Masculine",
-                            "number": null,
-                            "politeness": null,
-                            "tense": null,
-                            "person": null,
-                            "case": null,
-                            "mood": null,
-                            "aspect": null
+                        },
+                        {
+                          "meaning": "a lot of",
+                          "note": "Common in the phrase « un tas de + noun » (informal).",
+                          "example": {
+                            "target": "On a un tas de choses à faire aujourd’hui.",
+                            "native": "We have a lot of things to do today."
                           }
-                        ],
-                        "segments": [
-                          {
-                            "surface": "tas",
-                            "canonical": "tas"
-                          }
-                        ]
-                      }
+                        }
+                      ]
                     }
                   ]
                 ]

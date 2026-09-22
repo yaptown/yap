@@ -16,9 +16,7 @@ import {
   type ProperNounDefinition,
   type LiteralGrades,
   type Gram,
-  type DictionaryEntry,
-  type PhrasebookDefinitionEntry,
-  type TargetToNativeWord,
+  type DefinitionView,
   autograde_translation,
   translation_pending_slot,
   translation_start,
@@ -35,10 +33,6 @@ import {
   type Heteronym,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 
-// GramDefinition is missing from the .d.ts due to a type generator bug
-type GramDefinition =
-  | { Dictionary: DictionaryEntry }
-  | { Phrasebook: PhrasebookDefinitionEntry };
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -457,15 +451,12 @@ export function GramDefinitionDisplay({
   breakdown,
   targetLanguage,
 }: {
-  definition: GramDefinition;
+  definition: DefinitionView;
   breakdown?: BreakdownRow[] | null;
   targetLanguage: Language;
 }) {
   const hasBreakdown = !!breakdown && breakdown.length > 0;
-  const wordText =
-    "Dictionary" in definition
-      ? definition.Dictionary.target_language_word
-      : definition.Phrasebook.target_language_multi_word_term;
+  const wordText = definition.headword;
 
   const header = (
     <div className="flex items-start min-w-0 max-w-full">
@@ -486,50 +477,30 @@ export function GramDefinitionDisplay({
     </div>
   );
 
-  const body =
-    "Dictionary" in definition ? (
-      <div className="space-y-2 grow basis-56 min-w-0">
-        {definition.Dictionary.definitions.map(
-          (def: TargetToNativeWord, i: number) => (
-            <div key={i}>
-              <p className="text-sm">
-                {def.native}
-                {def.note && (
-                  <span className="text-go as text-muted-foreground">
-                    {" "}
-                    {def.note}
-                  </span>
-                )}
+  const body = (
+    <div className="space-y-2 grow basis-56 min-w-0">
+      {definition.senses.map((sense, index) => (
+        <div key={index} className="flex flex-col gap-1">
+          <p className="text-sm">
+            {sense.meaning}
+            {sense.note && (
+              <span className="text-muted-foreground"> {sense.note}</span>
+            )}
+          </p>
+          {sense.example && (
+            <div className="text-xs text-muted-foreground">
+              <p className="italic">
+                <TargetLanguageText language={targetLanguage}>
+                  "{sense.example.target}"
+                </TargetLanguageText>
               </p>
-              {def.example_sentence_target_language && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  <p className="italic">
-                    <TargetLanguageText language={targetLanguage}>
-                      "{def.example_sentence_target_language}"
-                    </TargetLanguageText>
-                  </p>
-                  <p>"{def.example_sentence_native_language}"</p>
-                </div>
-              )}
+              <p>"{sense.example.native}"</p>
             </div>
-          ),
-        )}
-      </div>
-    ) : (
-      <div className="grow basis-56 min-w-0">
-        <p className="text-sm">{definition.Phrasebook.meaning}</p>
-        {definition.Phrasebook.target_language_example && (
-          <div className="text-xs text-muted-foreground mt-1">
-            <p className="italic">
-              <TargetLanguageText language={targetLanguage}>
-                "{definition.Phrasebook.target_language_example}"
-              </TargetLanguageText>
-            </p>
-            <p>"{definition.Phrasebook.native_language_example}"</p>
-          </div>
-        )}
-      </div>
-    );
+          )}
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     // Wrapping row: the definition sits beside the word when it can still get a
@@ -569,7 +540,7 @@ export function TranslationChallenge({
   const correctTranslation = view.correct_translation ?? "";
   const gradeItems = view.grade_section?.items ?? [];
   const canContinue = view.can_continue;
-  const tappedDefinitions = view.definitions as { definition: GramDefinition; breakdown: BreakdownRow[] | null | undefined }[];
+  const tappedDefinitions = view.definitions;
   const verdict: TranslationVerdictData | null = view.verdict ? {
     userTranslation: view.verdict.submission,
     correctTranslation: view.verdict.correct_translation,

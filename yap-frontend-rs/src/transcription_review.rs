@@ -1,6 +1,7 @@
 use crate::{ReviewDefinition, TranscribeComprehensibleSentence};
 use language_utils::transcription_challenge::{PartGraded, WordGrade};
 use std::collections::BTreeSet;
+use yap_frontend_reducers::definition_view;
 
 fn wrong_gram_groups(results: &[PartGraded], indices: &[Vec<usize>]) -> Vec<usize> {
     let mut seen = BTreeSet::new();
@@ -38,7 +39,7 @@ pub fn get_transcription_review_definitions(
                 .get(group)?
                 .as_ref()
                 .map(|definition| ReviewDefinition {
-                    definition: definition.clone(),
+                    definition: definition_view(definition.clone()),
                     breakdown: challenge
                         .gram_breakdowns_for_lookup
                         .get(group)

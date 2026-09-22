@@ -6,7 +6,7 @@
 use language_utils::Language;
 use schemars::JsonSchema;
 use serde::Serialize;
-use yap_frontend_rs::{VoiceActorInfo, dictionary::GramDictionaryDefinition};
+use yap_frontend_rs::{DefinitionView, VoiceActorInfo};
 
 /// One card as listed by get_due_cards / unlock_cards.
 #[derive(Serialize, JsonSchema)]
@@ -80,7 +80,7 @@ pub struct DictionaryMatchOut {
     pub is_phrase: bool,
     /// Whether the user's deck already has a card for this entry.
     pub in_deck: bool,
-    pub definition: GramDictionaryDefinition,
+    pub definition: DefinitionView,
 }
 
 #[derive(Serialize, JsonSchema)]

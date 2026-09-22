@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use yap_frontend_reducers::{DefinitionView, definition_view};
 
 use language_utils::{
     Atom, Gram, GramDefinition, Heteronym, Literal, PatternPosition, SentenceGram, SpurGram,
@@ -10,7 +11,7 @@ use lasso::Spur;
 use crate::{
     AudioRequest, CardContent, CardIndicator, Challenge, ComprehensibleSentence, Deck, FlashCard,
     ReviewInfo, SentenceChallengeType, TranscribeComprehensibleSentence,
-    TranslateComprehensibleSentence, dictionary::compute_word_prefix_and_morphology,
+    TranslateComprehensibleSentence, dictionary::compute_word_prefix,
 };
 
 /// The proper nouns from a sentence, in the shape [`TtsRequest`] wants for its
@@ -72,67 +73,80 @@ impl ReviewInfo {
             _ => None,
         };
 
-        let possible_grams: Vec<(
-            bool,
-            Vec<Literal<String>>,
-            Vec<language_utils::GramDefinition>,
-        )> = if let Some(heteronym) = single_heteronym {
-            let pronunciation = language_pack
-                .word_to_pronunciation
-                .get(&heteronym.word)
-                .copied();
+        let possible_grams: Vec<(bool, Vec<Literal<String>>, Vec<DefinitionView>)> =
+            if let Some(heteronym) = single_heteronym {
+                let pronunciation = language_pack
+                    .word_to_pronunciation
+                    .get(&heteronym.word)
+                    .copied();
 
-            if let Some(pronunciation) = pronunciation {
-                let homophone_words = language_pack
-                    .pronunciation_to_words
-                    .get(&pronunciation)
-                    .cloned()
-                    .unwrap_or_default();
+                if let Some(pronunciation) = pronunciation {
+                    let homophone_words = language_pack
+                        .pronunciation_to_words
+                        .get(&pronunciation)
+                        .cloned()
+                        .unwrap_or_default();
 
-                homophone_words
-                    .iter()
-                    .flat_map(|word| {
-                        language_pack
-                            .words_to_heteronyms
-                            .get(word)
-                            .into_iter()
-                            .flatten()
-                    })
-                    .flat_map(|het| {
-                        language_pack
-                            .heteronym_to_grams
-                            .get(het)
-                            .into_iter()
-                            .flatten()
-                            .copied()
-                    })
-                    .collect::<std::collections::BTreeSet<_>>()
-                    .into_iter()
-                    .map(|other_gram| {
-                        let gram_known = deck
-                            .cards
-                            .get(&CardIndicator::WrittenGram { gram: other_gram })
-                            .is_some_and(|card_data| !card_data.is_new());
+                    homophone_words
+                        .iter()
+                        .flat_map(|word| {
+                            language_pack
+                                .words_to_heteronyms
+                                .get(word)
+                                .into_iter()
+                                .flatten()
+                        })
+                        .flat_map(|het| {
+                            language_pack
+                                .heteronym_to_grams
+                                .get(het)
+                                .into_iter()
+                                .flatten()
+                                .copied()
+                        })
+                        .collect::<std::collections::BTreeSet<_>>()
+                        .into_iter()
+                        .map(|other_gram| {
+                            let gram_known = deck
+                                .cards
+                                .get(&CardIndicator::WrittenGram { gram: other_gram })
+                                .is_some_and(|card_data| !card_data.is_new());
 
-                        let gram_resolved = language_pack
-                            .gram_rodeo
-                            .resolve(&other_gram)
-                            .resolve(&language_pack.string_rodeo);
-                        let literals = atoms_to_literals(
-                            gram_resolved.as_ref(),
-                            deck.context.course.target_language,
-                        );
+                            let gram_resolved = language_pack
+                                .gram_rodeo
+                                .resolve(&other_gram)
+                                .resolve(&language_pack.string_rodeo);
+                            let literals = atoms_to_literals(
+                                gram_resolved.as_ref(),
+                                deck.context.course.target_language,
+                            );
 
-                        let definitions = language_pack
-                            .gram_definitions
-                            .get(&other_gram)
-                            .cloned()
-                            .into_iter()
-                            .collect();
+                            let definitions = language_pack
+                                .gram_definitions
+                                .get(&other_gram)
+                                .cloned()
+                                .into_iter()
+                                .map(definition_view)
+                                .collect();
 
-                        (gram_known, literals, definitions)
-                    })
-                    .collect()
+                            (gram_known, literals, definitions)
+                        })
+                        .collect()
+                } else {
+                    let gram_resolved = gram_atoms.resolve(&language_pack.string_rodeo);
+                    let literals = atoms_to_literals(
+                        gram_resolved.as_ref(),
+                        deck.context.course.target_language,
+                    );
+                    let definitions = language_pack
+                        .gram_definitions
+                        .get(&gram)
+                        .cloned()
+                        .into_iter()
+                        .map(definition_view)
+                        .collect();
+                    vec![(true, literals, definitions)]
+                }
             } else {
                 let gram_resolved = gram_atoms.resolve(&language_pack.string_rodeo);
                 let literals =
@@ -142,31 +156,16 @@ impl ReviewInfo {
                     .get(&gram)
                     .cloned()
                     .into_iter()
+                    .map(definition_view)
                     .collect();
                 vec![(true, literals, definitions)]
-            }
-        } else {
-            let gram_resolved = gram_atoms.resolve(&language_pack.string_rodeo);
-            let literals =
-                atoms_to_literals(gram_resolved.as_ref(), deck.context.course.target_language);
-            let definitions = language_pack
-                .gram_definitions
-                .get(&gram)
-                .cloned()
-                .into_iter()
-                .collect();
-            vec![(true, literals, definitions)]
-        };
+            };
 
         // Deduplicate by display text, preserving order, keeping known=true if any duplicate is known
         let possible_grams = {
             let mut seen: std::collections::HashMap<String, usize> =
                 std::collections::HashMap::new();
-            let mut deduped: Vec<(
-                bool,
-                Vec<Literal<String>>,
-                Vec<language_utils::GramDefinition>,
-            )> = Vec::new();
+            let mut deduped: Vec<(bool, Vec<Literal<String>>, Vec<DefinitionView>)> = Vec::new();
             for (known, literals, definitions) in possible_grams {
                 let display = literals_to_text(&literals);
                 if let Some(&idx) = seen.get(&display) {
@@ -416,7 +415,7 @@ impl ReviewInfo {
         let literals =
             atoms_to_literals(gram_resolved.as_ref(), deck.context.course.target_language);
 
-        let (prefix, _morphology) = compute_word_prefix_and_morphology(
+        let prefix = compute_word_prefix(
             &gram_resolved,
             &definition,
             deck.context.course.target_language,
@@ -429,7 +428,7 @@ impl ReviewInfo {
 
         let content = CardContent::Gram {
             gram: literals,
-            definition,
+            definition: definition_view(definition),
             prefix,
             breakdown,
         };

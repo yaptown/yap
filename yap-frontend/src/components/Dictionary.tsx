@@ -5,7 +5,6 @@ import {
   type Weapon,
   type Language,
   type GramDictionaryEntry,
-  morphology_label,
 } from "../../../yap-frontend-rs/pkg";
 import { CirclePlus, CircleCheckBig } from "lucide-react";
 import { toast } from "sonner";
@@ -80,9 +79,7 @@ export function Dictionary({
       <div className="flex-1 overflow-y-auto p-2">
         <div className="space-y-4">
           {entries.map((entry) => {
-            const morphologyText = entry.morphology
-              ? morphology_label(entry.morphology)
-              : "";
+            const definition = entry.definition;
 
             return (
               <Card key={entry.frequency_index} className="p-4 relative gap-0">
@@ -103,94 +100,57 @@ export function Dictionary({
                         )}
                         {entry.display_text}
                       </TargetLanguageText>
-                      {entry.is_phrase && (
+                      {definition.is_phrase && (
                         <span className="text-sm text-muted-foreground/60 font-normal ml-2">
                           (phrase)
                         </span>
                       )}
                     </h2>
                   </div>
-                  {morphologyText && (
+                  {definition.morphology_label && (
                     <span className="text-sm text-muted-foreground italic">
-                      {morphologyText}
+                      {definition.morphology_label}
                     </span>
                   )}
                 </div>
 
                 <div className="space-y-3">
-                  {"Dictionary" in entry.definition ? (
-                    entry.definition.Dictionary.definitions.map(
-                      (def, defIndex) => (
-                        <div
-                          key={defIndex}
-                          className="pl-4 border-l-2 border-muted"
-                        >
-                          <div className="font-medium text-primary">
-                            {def.native}
-                          </div>
-                          {def.note && (
-                            <div className="text-sm text-muted-foreground italic mt-1">
-                              {def.note}
-                            </div>
-                          )}
-                          <div className="mt-2 text-sm space-y-1">
-                            <div className="text-foreground">
-                              <span className="text-muted-foreground">
-                                {targetLangCode}:
-                              </span>{" "}
-                              <TargetLanguageText language={targetLanguage}>
-                                {highlightTermInSentence(
-                                  def.example_sentence_target_language,
-                                  entry.display_text,
-                                )}
-                              </TargetLanguageText>
-                            </div>
-                            <div className="text-muted-foreground">
-                              <span>{nativeLangCode}:</span>{" "}
-                              {def.example_sentence_native_language}
-                            </div>
-                          </div>
+                  {definition.senses.map((sense, index) => (
+                    <div
+                      key={index}
+                      className="pl-4 border-l-2 border-muted flex flex-col gap-2"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <div className="font-medium text-primary">
+                          {sense.meaning}
                         </div>
-                      ),
-                    )
-                  ) : (
-                    <div className="pl-4 border-l-2 border-muted">
-                      <div className="font-medium text-primary">
-                        {entry.definition.Phrasebook.meaning}
+                        {sense.note && (
+                          <div className="text-sm text-muted-foreground italic">
+                            {sense.note}
+                          </div>
+                        )}
                       </div>
-                      {(entry.definition.Phrasebook.target_language_example ||
-                        entry.definition.Phrasebook
-                          .native_language_example) && (
-                        <div className="mt-2 text-sm space-y-1">
-                          {entry.definition.Phrasebook
-                            .target_language_example && (
-                            <div className="text-foreground">
-                              <span className="text-muted-foreground">
-                                {targetLangCode}:
-                              </span>{" "}
-                              <TargetLanguageText language={targetLanguage}>
-                                {highlightTermInSentence(
-                                  entry.definition.Phrasebook
-                                    .target_language_example,
-                                  entry.display_text,
-                                )}
-                              </TargetLanguageText>
-                            </div>
-                          )}
-                          {entry.definition.Phrasebook
-                            .native_language_example && (
-                            <div className="text-muted-foreground">
-                              <span>{nativeLangCode}:</span>{" "}
-                              {
-                                entry.definition.Phrasebook
-                                  .native_language_example
-                              }
-                            </div>
-                          )}
+                      {sense.example && (
+                        <div className="text-sm space-y-1">
+                          <div className="text-foreground">
+                            <span className="text-muted-foreground">
+                              {targetLangCode}:
+                            </span>{" "}
+                            <TargetLanguageText language={targetLanguage}>
+                              {highlightTermInSentence(
+                                sense.example.target,
+                                entry.display_text,
+                              )}
+                            </TargetLanguageText>
+                          </div>
+                          <div className="text-muted-foreground">
+                            <span>{nativeLangCode}:</span>{" "}
+                            {sense.example.native}
+                          </div>
                         </div>
                       )}
                     </div>
-                  )}
+                  ))}
                 </div>
 
                 <div className="absolute bottom-3 right-3">

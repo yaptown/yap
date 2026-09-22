@@ -63,12 +63,7 @@ struct ReviewDefinitionsView: View {
 
 private struct CompactDefinitionRow: View {
     let entry: ReviewDefinition
-    private var word: String {
-        switch entry.definition {
-        case let .Dictionary(value): value.target_language_word
-        case let .Phrasebook(value): value.target_language_multi_word_term
-        }
-    }
+    private var word: String { entry.definition.headword }
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: 8) {
@@ -92,29 +87,24 @@ private struct CompactDefinitionRow: View {
     }
     @ViewBuilder private var definitionBody: some View {
         VStack(alignment: .leading, spacing: 8) {
-            switch entry.definition {
-            case let .Dictionary(value):
-                ForEach(Array(value.definitions.enumerated()), id: \.offset) { _, item in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.native) + Text(item.note.map { " " + $0 } ?? "").foregroundColor(.secondary)
-                        DefinitionExamples(target: item.example_sentence_target_language, native: item.example_sentence_native_language)
+            ForEach(Array(entry.definition.senses.enumerated()), id: \.offset) { _, sense in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(sense.meaning) + Text(sense.note.map { " " + $0 } ?? "").foregroundColor(.secondary)
+                    if let example = sense.example {
+                        DefinitionExamples(example: example)
                     }
                 }
-            case let .Phrasebook(value):
-                Text(value.meaning)
-                DefinitionExamples(target: value.target_language_example, native: value.native_language_example)
             }
         }
     }
 }
 
 struct DefinitionExamples: View {
-    let target: String
-    let native: String
+    let example: SenseExample
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if !target.isEmpty { Text("\"\(target)\"").italic() }
-            if !native.isEmpty { Text("\"\(native)\"") }
+            Text("\"\(example.target)\"").italic()
+            Text("\"\(example.native)\"")
         }.font(.footnote).foregroundStyle(.secondary)
     }
 }

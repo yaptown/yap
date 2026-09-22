@@ -22,7 +22,7 @@ struct DictionaryScreen: View {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).foregroundStyle(Color.yapText)
-                                if entry.is_phrase { Text("Phrase").font(.caption).foregroundStyle(.secondary) }
+                                if entry.definition.is_phrase { Text("(phrase)").font(.caption).foregroundStyle(.secondary) }
                             }
                             Spacer()
                             if entry.is_in_deck { Image(systemName: "checkmark.circle").accessibilityLabel("In deck") }
@@ -82,9 +82,9 @@ private struct DictionaryDetail: View {
             if let entry {
                 StudyCard {
                     Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).font(.largeTitle.bold())
-                    if entry.is_phrase { Text("Phrase").font(.caption).foregroundStyle(.secondary) }
+                    if entry.definition.is_phrase { Text("(phrase)").font(.caption).foregroundStyle(.secondary) }
                     AudioButton(request: entry.audio_request, reviewCount: deck.get_total_reviews())
-                    DefinitionView(entry: entry)
+                    DefinitionBoxesView(definition: entry.definition)
                     Button(added || entry.is_in_deck ? "In your deck" : "Add to deck", systemImage: added || entry.is_in_deck ? "checkmark.circle" : "plus.circle") { add() }
                         .buttonStyle(.borderedProminent).foregroundStyle(added || entry.is_in_deck ? Color(uiColor: .secondaryLabel) : Color.yapOnAccent)
                         .disabled(added || entry.is_in_deck)

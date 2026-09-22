@@ -1,13 +1,11 @@
 import {
   type AudioRequest,
   type CardContent,
-  type DictionaryEntry,
+  type DefinitionView,
   type FlashcardDisclosure,
   type Language,
   type Literal,
-  type PhrasebookDefinitionEntry,
   type Rating,
-  type TargetToNativeWord,
 } from "../../../yap-frontend-rs/pkg";
 import {
   DropdownMenu,
@@ -39,11 +37,6 @@ import { highlightTermInSentence } from "@/utils/highlightTermInSentence";
 import { TargetLanguageText } from "./TargetLanguageText";
 import { MorphemeBreakdown, type BreakdownRow } from "./MorphemeBreakdown";
 
-// GramDefinition is missing from the .d.ts due to a type generator bug
-type GramDefinition =
-  | { Dictionary: DictionaryEntry }
-  | { Phrasebook: PhrasebookDefinitionEntry };
-
 function gramDisplayText(gram: Literal<string>[]): string {
   return gram
     .map((l) => l.word.text + l.whitespace)
@@ -54,8 +47,6 @@ function gramDisplayText(gram: Literal<string>[]): string {
 interface FlashcardProps {
   audioRequest: AudioRequest | undefined;
   content: CardContent;
-  /** Computed in Rust by the host; this component is also used without WASM. */
-  morphologyLabel: string;
   disclosure: FlashcardDisclosure;
   onRating?: (rating: Rating) => void;
   accessToken: string | undefined;
@@ -81,10 +72,10 @@ const CardFront = ({
       return null;
     })
     .with({ type: "Gram" }, (content) => {
-      const definition = content.definition as GramDefinition;
+      const definition = content.definition;
       const text = gramDisplayText(content.gram);
 
-      if ("Dictionary" in definition) {
+      if (!definition.is_phrase) {
         const wordPrefix = content.prefix;
         return (
           <h2 className="text-3xl font-semibold">
@@ -118,8 +109,8 @@ const CardFrontSubtitle = ({ content }: { content: CardContent }) => {
       <span className="text-sm text-muted-foreground">Guess what's being said!</span>
     ))
     .with({ type: "Gram" }, (content) => {
-      const definition = content.definition as GramDefinition;
-      if ("Dictionary" in definition) {
+      const definition = content.definition;
+      if (!definition.is_phrase) {
         const firstHeteronym = content.gram
           .map((l) => l.word.word_type)
           .find((wt) => wt.type === "Heteronym");
@@ -158,12 +149,10 @@ const CardFrontSubtitle = ({ content }: { content: CardContent }) => {
 
 const CardBack = ({
   content,
-  morphologyLabel,
   targetLanguage,
   accessToken,
 }: {
   content: CardContent;
-  morphologyLabel: string;
   targetLanguage: Language;
   accessToken: string | undefined;
 }) => {
@@ -171,25 +160,15 @@ const CardBack = ({
     .with({ type: "Listening" }, (content) => {
       const possibleGrams = content.possible_grams;
 
-      const definitionsGloss = (
-        definitions: GramDefinition[],
-      ): string | null => {
-        const parts = definitions.flatMap((definition) => {
-          if ("Dictionary" in definition) {
-            return definition.Dictionary.definitions
-              .map((d: TargetToNativeWord) => d.native)
-              .filter(Boolean);
-          }
-          return definition.Phrasebook.meaning
-            ? [definition.Phrasebook.meaning]
-            : [];
-        });
-        return parts.length > 0 ? parts.join(", ") : null;
-      };
+      const definitionsGloss = (definitions: DefinitionView[]): string =>
+        definitions
+          .flatMap((definition) => definition.senses.map((sense) => sense.meaning))
+          .filter(Boolean)
+          .join(", ");
 
       if (possibleGrams.length === 1) {
         const [, gram, definitions] = possibleGrams[0];
-        const gloss = definitionsGloss(definitions as GramDefinition[]);
+        const gloss = definitionsGloss(definitions);
         return (
           <div className="space-y-2">
             <div className="text-3xl font-medium">
@@ -211,7 +190,7 @@ const CardBack = ({
           </div>
           <div className="grid grid-cols-2 gap-2">
             {possibleGrams.map(([isKnown, gram, definitions], index: number) => {
-              const gloss = definitionsGloss(definitions as GramDefinition[]);
+              const gloss = definitionsGloss(definitions);
               return (
                 <div
                   key={index}
@@ -246,113 +225,77 @@ const CardBack = ({
       );
     })
     .with({ type: "Gram" }, (content) => {
-      const definition = content.definition as GramDefinition;
+      const definition = content.definition;
       const term = gramDisplayText(content.gram);
 
-      if ("Dictionary" in definition) {
-        const dict = definition.Dictionary;
-
-        return (
-          <>
-            {dict.definitions.map((def: TargetToNativeWord, index: number) => (
+      return (
+        <>
+          {definition.senses.map((sense, index) => (
+            <div
+              key={index}
+              className={cn(
+                "text-left rounded-lg p-4 space-y-2",
+                definition.is_phrase ? "bg-muted/30" : "border border-card/50 bg-card/30",
+              )}
+            >
               <div
-                key={index}
-                className="text-left border border-card/50 bg-card/30 rounded-lg p-4 space-y-2"
+                className={cn(
+                  "flex items-baseline gap-2",
+                  !definition.is_phrase && "justify-between",
+                )}
               >
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-xl font-medium">{def.native}</span>
-                  {morphologyLabel && (
-                    <span className="text-sm text-muted-foreground italic">
-                      {morphologyLabel}
-                    </span>
-                  )}
-                </div>
-
-                {def.example_sentence_target_language && (
-                  <div className="space-y-1 text-sm">
-                    <div className="flex items-start gap-2">
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <AudioButton
-                          audioRequest={{
-                            request: {
-                              text: def.example_sentence_target_language,
-                              language: targetLanguage,
-                            },
-                            provider: "ElevenLabs",
-                          }}
-                          accessToken={accessToken}
-                          className="h-8 w-8"
-                          size="icon"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground italic flex-1">
-                          <TargetLanguageText language={targetLanguage}>
-                            "
-                            {highlightTermInSentence(
-                              def.example_sentence_target_language,
-                              term,
-                            )}
-                            "
-                          </TargetLanguageText>
-                        </p>
-                        <p className="text-muted-foreground">
-                          "{def.example_sentence_native_language}"
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                <span className="text-xl font-medium">{sense.meaning}</span>
+                {definition.morphology_label && (
+                  <span className="text-sm text-muted-foreground italic">
+                    {definition.morphology_label}
+                  </span>
                 )}
               </div>
-            ))}
-          </>
-        );
-      } else {
-        const pb = definition.Phrasebook;
-        return (
-          <div className="text-left bg-muted/30 rounded-lg p-4 space-y-2">
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-medium">{pb.meaning}</span>
-            </div>
 
-            {pb.target_language_example && (
-              <div className="text-sm">
-                <div className="flex items-start gap-2">
-                  <div>
-                    <p className="text-muted-foreground italic">
-                      <TargetLanguageText language={targetLanguage}>
-                        "
-                        {highlightTermInSentence(
-                          pb.target_language_example,
-                          term,
+              {sense.example && (
+                <div
+                  className={cn("text-sm", !definition.is_phrase && "space-y-1")}
+                >
+                  <div className="flex items-start gap-2">
+                    <div
+                      className={definition.is_phrase ? "order-last" : undefined}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <AudioButton
+                        audioRequest={{
+                          request: {
+                            text: sense.example.target,
+                            language: targetLanguage,
+                          },
+                          provider: "ElevenLabs",
+                        }}
+                        accessToken={accessToken}
+                        className="h-8 w-8"
+                        size="icon"
+                      />
+                    </div>
+                    <div>
+                      <p
+                        className={cn(
+                          "text-muted-foreground italic",
+                          !definition.is_phrase && "flex-1",
                         )}
-                        "
-                      </TargetLanguageText>
-                    </p>
-                    <p className="text-muted-foreground">
-                      "{pb.native_language_example}"
-                    </p>
-                  </div>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <AudioButton
-                      audioRequest={{
-                        request: {
-                          text: pb.target_language_example,
-                          language: targetLanguage,
-                        },
-                        provider: "ElevenLabs",
-                      }}
-                      accessToken={accessToken}
-                      className="h-8 w-8"
-                      size="icon"
-                    />
+                      >
+                        <TargetLanguageText language={targetLanguage}>
+                          "{highlightTermInSentence(sense.example.target, term)}"
+                        </TargetLanguageText>
+                      </p>
+                      <p className="text-muted-foreground">
+                        "{sense.example.native}"
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        );
-      }
+              )}
+            </div>
+          ))}
+        </>
+      );
     })
     .exhaustive();
 };
@@ -360,7 +303,6 @@ const CardBack = ({
 export const Flashcard = function Flashcard({
   audioRequest,
   content,
-  morphologyLabel,
   disclosure,
   onRating,
   accessToken,
@@ -746,7 +688,6 @@ export const Flashcard = function Flashcard({
                 <div className="space-y-6 animate-feedback-in">
                   <CardBack
                     content={content}
-                    morphologyLabel={morphologyLabel}
                     targetLanguage={targetLanguage}
                     accessToken={accessToken}
                   />
