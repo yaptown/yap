@@ -21,7 +21,7 @@ import {
   useOutletContext,
   ScrollRestoration,
 } from "react-router-dom";
-import { Deck, type Language } from "../../yap-frontend-rs/pkg";
+import { Deck, type DeckEvent, type Language } from "../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Card } from "@/components/ui/card";
@@ -483,11 +483,15 @@ function Review({
   setAutoplayed,
 }: ReviewProps) {
   const navigate = useNavigate();
-  const { sentenceList, setSentenceList } = useSentenceList(
+  const { sentenceList, setSentenceList, clearSentenceList } = useSentenceList(
     deck.get_sentence_list(),
   );
   const study = useCourseStudy();
   const view = study.getReviewView(sentenceListToSelection(sentenceList));
+  const commitSentenceList = (event: DeckEvent) => {
+    study.actions.addEvent(event);
+    clearSentenceList();
+  };
   const currentChallenge = study.currentChallenge;
   const [showReportModal, setShowReportModal] = useState(false);
 
@@ -514,7 +518,7 @@ function Review({
             </DropdownMenuItem>
           ),
         }}
-        actions={{ ...study.actions, setSentenceList }}
+        actions={{ ...study.actions, setSentenceList, commitSentenceList }}
       />
 
       <ReportIssueModal

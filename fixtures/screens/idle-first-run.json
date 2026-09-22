@@ -216,59 +216,25 @@
         "sentence_list_options": [
           {
             "category": "essential",
-            "selection": null,
-            "event": {
-              "type": "Language",
-              "target_language": "Italian",
-              "native_language": "English",
-              "content": {
-                "type": "SetSentenceList",
-                "sentence_list": null
-              }
-            },
-            "label": "Essential"
+            "label": "Essential",
+            "selection": null
           },
           {
             "category": "movie",
+            "label": "Movies",
             "selection": {
               "type": "Movie",
               "id": "tt0038890"
-            },
-            "event": {
-              "type": "Language",
-              "target_language": "Italian",
-              "native_language": "English",
-              "content": {
-                "type": "SetSentenceList",
-                "sentence_list": {
-                  "type": "Movie",
-                  "id": "tt0038890"
-                }
-              }
-            },
-            "label": "Movies"
+            }
           },
           {
             "category": "pimsleur",
+            "label": "Pimsleur",
             "selection": {
               "type": "PimsleurLesson",
               "level": 1,
               "lesson": 1
-            },
-            "event": {
-              "type": "Language",
-              "target_language": "Italian",
-              "native_language": "English",
-              "content": {
-                "type": "SetSentenceList",
-                "sentence_list": {
-                  "type": "PimsleurLesson",
-                  "level": 1,
-                  "lesson": 1
-                }
-              }
-            },
-            "label": "Pimsleur"
+            }
           }
         ],
         "progress": {
@@ -277,7 +243,7 @@
         },
         "sentence_list_label": "Basic Italian Level 3",
         "next_sentence_list": null,
-        "next_sentence_list_event": null
+        "switch_curriculum": null
       }
     },
     "progress": 0.0,

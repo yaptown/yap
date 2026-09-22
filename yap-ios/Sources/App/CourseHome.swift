@@ -40,7 +40,8 @@ struct CourseHome: View {
         }
         // The shell, not Review's visibility, owns background readiness.
         .onAppear { review.start() }
-        .onChange(of: path) { _, _ in audio.stop() }
+        // Leaving a route drops any browsed-but-uncommitted curriculum, as web's page state does.
+        .onChange(of: path) { _, _ in audio.stop(); session.curriculumDraft = nil; review.refresh() }
         .onDisappear { review.stop(); audio.stop() }
         .onChange(of: auth.needsDisplayName) { _, _ in review.refresh() }
         .onChange(of: auth.accessToken) { _, _ in review.refresh() }

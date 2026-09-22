@@ -28,6 +28,7 @@ export type ReviewActions = {
   addEvent: (event: DeckEvent) => void;
   undoRestrictions: () => void;
   setSentenceList: (list: SentenceList) => void;
+  commitSentenceList: (event: DeckEvent) => void;
   dismissAccomplishment: () => void;
   setPlacement: (session: PlacementSession) => void;
   completePlacementTest: (session: PlacementSession) => void;
@@ -91,6 +92,7 @@ export function ReviewScreen({
                 addEvent={actions.addEvent}
                 undoRestrictions={actions.undoRestrictions}
                 setSentenceList={actions.setSentenceList}
+                commitSentenceList={actions.commitSentenceList}
                 showEngagementPrompts={view.offer_engagement}
               />
             );

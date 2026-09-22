@@ -8,6 +8,10 @@ enum DeckSelectionState {
     case languageSelected(course: Course, startingFresh: Bool?, onboardedLanguages: [Language], hasHeardAbout: Bool)
 }
 
+/// A curriculum the learner has browsed to but not committed (YAP-85). Wrapped
+/// so that "Essential" (`selection == nil`) is distinguishable from "no draft".
+struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
+
 @Observable @MainActor final class YapSession {
     let userId: String
     let accessToken: () -> String?
@@ -23,6 +27,9 @@ enum DeckSelectionState {
     let autoplay = AutoplayClaim()
     // These flows must survive immutable Deck snapshot replacements.
     var placementSession: PlacementSession?
+    /// Browsed-but-uncommitted curriculum; lives here so deck snapshot
+    /// replacements keep it, and a course change drops it.
+    var curriculumDraft: CurriculumDraft?
     var choosingCourse = false
     var onboardingCourse: Course?
     var onboardingHasHeardAbout = false
@@ -136,7 +143,7 @@ enum DeckSelectionState {
         guard active else { return }
         if case let .CourseChanged(key) = event, key != deckLoad.course_key {
             generation += 1; packTask?.cancel()
-            placementSession = nil; dismissedAccomplishmentAtReview = nil
+            placementSession = nil; dismissedAccomplishmentAtReview = nil; curriculumDraft = nil
         }
         // Reject a pending B even if the inputs revert to already-built A and
         // Rust (correctly) emits no new BuildDeck effect for A.

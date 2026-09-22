@@ -26,9 +26,9 @@ struct SentenceListSelector: View {
                 SentenceListProgressView(progress: progress)
                 if progress.all_available_learned {
                     Text("You're all done with \(title)!")
-                    if let event = view.next_sentence_list_event {
+                    if let next = view.next_sentence_list {
                         Button("Next \(isMovie ? "movie" : "lesson")") {
-                            actions.setSentenceList(event)
+                            actions.setSentenceList(next)
                         }
                     }
                 } else if let milestone = next_progress_milestone(current: progress.percent_known, projected: info.percent_known_after) {
@@ -57,6 +57,6 @@ struct SentenceListSelector: View {
     private func select(_ category: SentenceListCategory) {
         guard let option = view.sentence_list_options.first(where: { $0.category == category }),
               option.selection != view.navigation.selection else { return }
-        actions.setSentenceList(option.event)
+        actions.setSentenceList(option.selection)
     }
 }

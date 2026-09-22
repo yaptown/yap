@@ -153,6 +153,7 @@ export function FixturePage() {
             addEvent: log,
             undoRestrictions: log,
             setSentenceList: log,
+            commitSentenceList: log,
             dismissAccomplishment: log,
             completePlacementTest: log,
             saveDisplayName: log,

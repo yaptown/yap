@@ -41,6 +41,8 @@ export function useSentenceList(deckSentenceList: SentenceListSelection | undefi
   const setSentenceList = useCallback((sl: SentenceList) => {
     setSentenceListOverride(sl);
   }, []);
+  // After the switch event is appended, the deck's own selection takes over.
+  const clearSentenceList = useCallback(() => setSentenceListOverride(null), []);
 
-  return { sentenceList, setSentenceList };
+  return { sentenceList, setSentenceList, clearSentenceList };
 }

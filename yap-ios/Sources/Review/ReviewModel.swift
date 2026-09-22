@@ -20,7 +20,7 @@ import Observation
     init(deck: Deck, session: YapSession, auth: AuthStore, startingFresh: Bool?, historyKnown: Bool) {
         self.deck = deck; self.session = session; self.auth = auth; self.startingFresh = startingFresh; self.historyKnown = historyKnown
         reviewInfo = deck.get_review_info(banned_challenge_types: [], timestamp_ms: Self.now)
-        view = deck.review_screen_view(inputs: Self.inputs(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown, banned: [], challenge: nil))
+        view = deck.review_screen_view(inputs: Self.inputs(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown, sentenceList: deck.get_sentence_list(), banned: [], challenge: nil))
         if case let .Challenge(challenge) = view.step { currentChallenge = challenge.challenge }
     }
     static var now: Double { Date().timeIntervalSince1970 * 1000 }
@@ -88,7 +88,8 @@ import Observation
         guard active else { return }
         let now = Self.now
         reviewInfo = deck.get_review_info(banned_challenge_types: banned, timestamp_ms: now)
-        view = deck.review_screen_view(inputs: Self.inputs(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown, banned: banned, challenge: currentChallenge))
+        view = deck.review_screen_view(inputs: Self.inputs(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown,
+            sentenceList: session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list(), banned: banned, challenge: currentChallenge))
         // Non-nil challenges are held for this Deck's lifetime, even as caches change.
         if case let .Challenge(challenge) = view.step { currentChallenge = challenge.challenge }
         prefetch?.cancel()
@@ -145,8 +146,9 @@ import Observation
         #endif
         return true
     }
-    private static func inputs(deck: Deck, session: YapSession, auth: AuthStore, startingFresh: Bool?, historyKnown: Bool, banned: [ChallengeRequirements], challenge: Challenge_Gram_String?) -> ReviewScreenInputs {
-        ReviewScreenInputs(banned: banned, sentence_list: deck.get_sentence_list(), online: session.online,
+    private static func inputs(deck: Deck, session: YapSession, auth: AuthStore, startingFresh: Bool?, historyKnown: Bool,
+                               sentenceList: SentenceListSelection?, banned: [ChallengeRequirements], challenge: Challenge_Gram_String?) -> ReviewScreenInputs {
+        ReviewScreenInputs(banned: banned, sentence_list: sentenceList, online: session.online,
             is_signed_in: true, needs_display_name: auth.needsDisplayName,
             display_name_dismissed: UserDefaults.standard.bool(forKey: "yap-skipped-set-display-name"),
             has_access_token: auth.accessToken != nil, starting_fresh: startingFresh, history_known: historyKnown,
@@ -169,7 +171,8 @@ import Observation
         actions.completeTranscription = { self.completeTranscription($0, completedAtMs: $1) }
         actions.cantListen = cantListen; actions.cantSpeak = cantSpeak; actions.undoRestrictions = undoRestrictions
         actions.addEvent = session.addDeckEvent
-        actions.setSentenceList = session.addDeckEvent
+        actions.setSentenceList = { self.session.curriculumDraft = CurriculumDraft(selection: $0); self.refresh() }
+        actions.commitSentenceList = { self.session.addDeckEvent($0); self.session.curriculumDraft = nil; self.refresh() }
         actions.dismissAccomplishment = { self.session.dismissedAccomplishmentAtReview = self.view.total_reviews; self.refresh() }
         actions.setPlacement = { self.session.placementSession = $0; self.refresh() }
         actions.completePlacementTest = { self.session.addDeckEvent(self.deck.complete_placement_test(known_words: $0.known_words, unknown_words: $0.unknown_words)) }

@@ -3,14 +3,13 @@ import SwiftUI
 /// One immutable snapshot shared by the inline selector and the full browser.
 @MainActor struct SentenceListModel {
     let deck: Deck
-    let session: YapSession
     let tier: TierInfo
     let navigation: SentenceListNavigation
     let movies: [MovieStats]
     let metadata: [String: MovieMetadataBasic]
     let lessons: [PimsleurStats]
-    init(deck: Deck, session: YapSession) {
-        self.deck = deck; self.session = session
+    init(deck: Deck) {
+        self.deck = deck
         tier = deck.get_current_tier()
         movies = deck.get_movie_stats()
         lessons = deck.get_pimsleur_stats()
@@ -23,16 +22,6 @@ import SwiftUI
         case let .PimsleurLesson(level, lesson): "Pimsleur Level \(level), Lesson \(lesson)"
         case nil: "\(tier.name) \(get_language_metadata(language: deck.get_target_language()).common_name) Level \(tier.level)"
         }
-    }
-    func select(_ category: SentenceListCategory) {
-        guard navigation.categories.contains(category) else { return }
-        let fallback: String?
-        if case let .Movie(id) = deck.get_best_movie_sentence_list() { fallback = id } else { fallback = nil }
-        change(deck.get_sentence_list_for_category(category: category, fallback_movie_id: fallback))
-    }
-    func change(_ selection: SentenceListSelection?) {
-        guard selection != deck.get_sentence_list() else { return }
-        session.addDeckEvent(deck.change_sentence_list(sentence_list: selection))
     }
 }
 

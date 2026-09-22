@@ -303,16 +303,7 @@
           {
             "category": "essential",
             "label": "Essential",
-            "selection": null,
-            "event": {
-              "type": "Language",
-              "target_language": "German",
-              "native_language": "English",
-              "content": {
-                "type": "SetSentenceList",
-                "sentence_list": null
-              }
-            }
+            "selection": null
           },
           {
             "category": "movie",
@@ -320,18 +311,6 @@
             "selection": {
               "type": "Movie",
               "id": "tt0022100"
-            },
-            "event": {
-              "type": "Language",
-              "target_language": "German",
-              "native_language": "English",
-              "content": {
-                "type": "SetSentenceList",
-                "sentence_list": {
-                  "type": "Movie",
-                  "id": "tt0022100"
-                }
-              }
             }
           },
           {
@@ -341,19 +320,6 @@
               "type": "PimsleurLesson",
               "level": 1,
               "lesson": 1
-            },
-            "event": {
-              "type": "Language",
-              "target_language": "German",
-              "native_language": "English",
-              "content": {
-                "type": "SetSentenceList",
-                "sentence_list": {
-                  "type": "PimsleurLesson",
-                  "level": 1,
-                  "lesson": 1
-                }
-              }
             }
           }
         ],
@@ -363,7 +329,7 @@
         },
         "sentence_list_label": "Core German Level 1",
         "next_sentence_list": null,
-        "next_sentence_list_event": null
+        "switch_curriculum": null
       }
     },
     "goal": {

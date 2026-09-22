@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { UserInfo } from "@/App";
 import type {
   Deck as DeckType,
+  DeckEvent,
   GoalsScreenView,
 } from "../../../yap-frontend-rs/pkg";
 import { DeckPage } from "@/components/DeckPage";
@@ -25,8 +26,9 @@ import { getMovieMetadata } from "@/lib/movie-cache";
 import {
   sentenceListSelectionToSentenceList,
   sentenceListToSelection,
-  type SentenceList,
+  useSentenceList,
 } from "@/hooks/useSentenceList";
+import { SwitchCurriculumButton } from "@/components/SwitchCurriculumButton";
 import { useStudyScreenInputs } from "@/hooks/useStudyScreenInputs";
 import { useWeapon } from "@/weapon";
 
@@ -46,8 +48,15 @@ export function GoalsScreen({
   const navigate = useNavigate();
   const weapon = useWeapon();
   const inputs = useStudyScreenInputs(!injectedView);
+  // Browsing only moves this draft; Rust offers the one event that commits it.
+  const {
+    sentenceList: draft,
+    setSentenceList,
+    clearSentenceList,
+  } = useSentenceList(inputs.sentence_list);
   const view =
-    injectedView ?? deck.goals_screen_view(inputs.banned, inputs.sentence_list);
+    injectedView ??
+    deck.goals_screen_view(inputs.banned, sentenceListToSelection(draft));
   const curriculum = view.curriculum;
   const sentenceList = sentenceListSelectionToSentenceList(
     curriculum.navigation.selection,
@@ -58,8 +67,10 @@ export function GoalsScreen({
   const addEvent = (event: Parameters<typeof weapon.add_deck_event>[0]) => {
     if (!injectedView) weapon.add_deck_event(event);
   };
-  const setSentenceList = (sl: SentenceList) =>
-    addEvent(deck.change_sentence_list(sentenceListToSelection(sl)));
+  const commitSentenceList = (event: DeckEvent) => {
+    addEvent(event);
+    clearSentenceList();
+  };
   // These optional lists are not part of GoalsScreenView; never substitute live
   // deck data into a capture. The captured curriculum card still renders above.
   const movieStats = injectedView ? [] : deck.get_movie_stats();
@@ -115,7 +126,10 @@ export function GoalsScreen({
                 const option = curriculum.sentence_list_options.find(
                   (option) => option.category === category,
                 );
-                if (option) addEvent(option.event);
+                if (option)
+                  setSentenceList(
+                    sentenceListSelectionToSentenceList(option.selection),
+                  );
               }}
               className="gap-4"
             >
@@ -140,14 +154,18 @@ export function GoalsScreen({
                   showPercentage
                   aria-label={curriculum.sentence_list_label}
                 />
-                {curriculum.next_sentence_list_event && (
+                {curriculum.next_sentence_list && (
                   <Button
                     variant="outline"
                     onClick={() =>
-                      addEvent(curriculum.next_sentence_list_event!)
+                      setSentenceList(
+                        sentenceListSelectionToSentenceList(
+                          curriculum.next_sentence_list,
+                        ),
+                      )
                     }
                   >
-                    {curriculum.next_sentence_list?.type === "Movie"
+                    {curriculum.next_sentence_list.type === "Movie"
                       ? "Next movie"
                       : "Next lesson"}
                   </Button>
@@ -257,6 +275,10 @@ export function GoalsScreen({
               </TabsContent>
             </Tabs>
           </Card>
+          <SwitchCurriculumButton
+            commit={curriculum.switch_curriculum}
+            onCommit={commitSentenceList}
+          />
         </section>
       </main>
     </TopPageLayout>

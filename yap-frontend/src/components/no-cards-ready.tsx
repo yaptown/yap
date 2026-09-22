@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/tooltip";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Poster } from "@/components/Poster";
+import { SwitchCurriculumButton } from "@/components/SwitchCurriculumButton";
 import { TargetLanguageText } from "./TargetLanguageText";
 import { ReviewPlanCard } from "./LockupOffer";
 import { WeekProgressStrip } from "./WeekProgressStrip";
@@ -53,6 +54,7 @@ interface NoCardsReadyProps {
   undoRestrictions: () => void;
   deck: Deck;
   setSentenceList: (sentenceList: SentenceList) => void;
+  commitSentenceList: (event: DeckEvent) => void;
 }
 
 export const NoCardsReady = memo(function NoCardsReady(props: NoCardsReadyProps) {
@@ -100,7 +102,7 @@ export const NoCardsReady = memo(function NoCardsReady(props: NoCardsReadyProps)
   }
 });
 
-function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, deck, setSentenceList }: Omit<NoCardsReadyProps, "view"> & { view: IdleView }) {
+function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, deck, setSentenceList, commitSentenceList }: Omit<NoCardsReadyProps, "view"> & { view: IdleView }) {
   const navigate = useNavigate();
   const [pimsleurAcknowledged, setPimsleurAcknowledged] = useState(() => localStorage.getItem("yap-pimsleur-acknowledged") === "true");
   const targetLanguage = view.target_language;
@@ -424,6 +426,8 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
           </div>
         </Card>
       )}
+
+      <SwitchCurriculumButton commit={view.switch_curriculum} onCommit={commitSentenceList} />
 
       {showEngagementPrompts && <EngagementPrompts language={targetLanguage} />}
 

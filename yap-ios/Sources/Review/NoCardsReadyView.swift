@@ -66,6 +66,10 @@ struct NoCardsReadyView: View {
             }
             if idle.show_sentence_list {
                 SentenceListSelector(view: idle)
+                if let commit = idle.switch_curriculum {
+                    Button(commit.label) { actions.commitSentenceList(commit.event) }
+                        .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
+                }
                 if !awaitingAcknowledgement, let event = idle.info.smart_add_event {
                     Text(idle.info.preview.joined(separator: " · ")).foregroundStyle(.secondary)
                     Button("Learn \(idle.info.smart_add_count) new cards") { addEvent(event) }

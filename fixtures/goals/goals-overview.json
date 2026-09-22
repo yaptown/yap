@@ -91,59 +91,25 @@
       "sentence_list_options": [
         {
           "category": "essential",
-          "selection": null,
-          "event": {
-            "type": "Language",
-            "target_language": "French",
-            "native_language": "English",
-            "content": {
-              "type": "SetSentenceList",
-              "sentence_list": null
-            }
-          },
-          "label": "Essential"
+          "label": "Essential",
+          "selection": null
         },
         {
           "category": "movie",
+          "label": "Movies",
           "selection": {
             "type": "Movie",
             "id": "tt0097904"
-          },
-          "event": {
-            "type": "Language",
-            "target_language": "French",
-            "native_language": "English",
-            "content": {
-              "type": "SetSentenceList",
-              "sentence_list": {
-                "type": "Movie",
-                "id": "tt0097904"
-              }
-            }
-          },
-          "label": "Movies"
+          }
         },
         {
           "category": "pimsleur",
+          "label": "Pimsleur",
           "selection": {
             "type": "PimsleurLesson",
             "level": 1,
             "lesson": 1
-          },
-          "event": {
-            "type": "Language",
-            "target_language": "French",
-            "native_language": "English",
-            "content": {
-              "type": "SetSentenceList",
-              "sentence_list": {
-                "type": "PimsleurLesson",
-                "level": 1,
-                "lesson": 1
-              }
-            }
-          },
-          "label": "Pimsleur"
+          }
         }
       ],
       "progress": {
@@ -152,7 +118,7 @@
       },
       "sentence_list_label": "Advanced French Level 11",
       "next_sentence_list": null,
-      "next_sentence_list_event": null,
+      "switch_curriculum": null,
       "has_movies": true,
       "has_pimsleur": true
     }

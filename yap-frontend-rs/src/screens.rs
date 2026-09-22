@@ -26,6 +26,14 @@ pub struct SentenceListOptionView {
     pub category: SentenceListCategory,
     pub label: String,
     pub selection: Option<SentenceListSelection>,
+}
+
+/// The floating commit for a curriculum the learner has browsed to but not
+/// chosen yet: present iff the draft differs from the persisted selection.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SwitchCurriculumView {
+    pub label: String,
     pub event: DeckEvent,
 }
 
@@ -50,7 +58,7 @@ pub struct IdleView {
     pub progress: SentenceListProgress,
     pub sentence_list_label: String,
     pub next_sentence_list: Option<SentenceListSelection>,
-    pub next_sentence_list_event: Option<DeckEvent>,
+    pub switch_curriculum: Option<SwitchCurriculumView>,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -172,7 +180,7 @@ impl Deck {
             progress,
             sentence_list_label,
             next_sentence_list,
-            next_sentence_list_event,
+            switch_curriculum,
             ..
         } = curriculum;
         let manual_add_options =
@@ -244,7 +252,7 @@ impl Deck {
             progress,
             sentence_list_label,
             next_sentence_list,
-            next_sentence_list_event,
+            switch_curriculum,
         }))
     }
 
@@ -275,7 +283,10 @@ impl Deck {
     }
 }
 
-/// Curriculum content shared by Idle and Goals; selecting an option only emits an event.
+/// Curriculum content shared by Idle and Goals. Browsing (tabs, lessons,
+/// movies, "next lesson") only moves the host's draft selection — the
+/// `sentence_list` input — and `switch_curriculum` carries the one event that
+/// commits it, so a `SetSentenceList` is appended exactly once per real switch.
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CurriculumView {
@@ -285,7 +296,7 @@ pub struct CurriculumView {
     pub progress: SentenceListProgress,
     pub sentence_list_label: String,
     pub next_sentence_list: Option<SentenceListSelection>,
-    pub next_sentence_list_event: Option<DeckEvent>,
+    pub switch_curriculum: Option<SwitchCurriculumView>,
     pub has_movies: bool,
     pub has_pimsleur: bool,
 }
@@ -385,14 +396,15 @@ impl Deck {
                 SentenceListOptionView {
                     category: *category,
                     label: sentence_list_category_label(*category).into(),
-                    event: self.change_sentence_list(selection.clone()),
                     selection,
                 }
             })
             .collect();
-        let next_sentence_list_event = next_sentence_list
-            .as_ref()
-            .map(|selection| self.change_sentence_list(Some(selection.clone())));
+        let switch_curriculum =
+            (navigation.selection != self.get_sentence_list()).then(|| SwitchCurriculumView {
+                label: format!("Switch curriculum to {sentence_list_label}"),
+                event: self.change_sentence_list(navigation.selection.clone()),
+            });
         (
             CurriculumView {
                 title: "Curriculum".into(),
@@ -401,7 +413,7 @@ impl Deck {
                 progress,
                 sentence_list_label,
                 next_sentence_list,
-                next_sentence_list_event,
+                switch_curriculum,
                 has_movies,
                 has_pimsleur,
             },
@@ -1016,9 +1028,24 @@ mod tests {
                     idle.sentence_list_label
                 );
                 assert_eq!(
-                    json(goals.curriculum.next_sentence_list_event),
-                    json(idle.next_sentence_list_event)
+                    json(&goals.curriculum.switch_curriculum),
+                    json(&idle.switch_curriculum)
                 );
+                // The floating commit exists exactly when the browsed draft
+                // differs from the deck's persisted curriculum.
+                assert_eq!(
+                    goals.curriculum.switch_curriculum.is_some(),
+                    goals.curriculum.navigation.selection != deck.get_sentence_list()
+                );
+                if let Some(switch) = &goals.curriculum.switch_curriculum {
+                    assert_eq!(
+                        switch.label,
+                        format!(
+                            "Switch curriculum to {}",
+                            goals.curriculum.sentence_list_label
+                        )
+                    );
+                }
                 assert_eq!(
                     json(deck.get_manual_add_options(
                         goals.curriculum.navigation.selection.clone(),

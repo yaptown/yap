@@ -45,7 +45,7 @@ export function HomeScreen({
 
 function LiveHomeScreen({ deck, userInfo }: HomeProps) {
   const study = useCourseStudy();
-  const { sentenceList, setSentenceList } = useSentenceList(
+  const { sentenceList, setSentenceList, clearSentenceList } = useSentenceList(
     deck.get_sentence_list(),
   );
   const { getHomeView } = study;
@@ -59,6 +59,11 @@ function LiveHomeScreen({ deck, userInfo }: HomeProps) {
     // Adding cards from Home means "I want to study these now".
     navigate("/learn");
   };
+  // Switching curriculum is not adding cards: it stays on Home.
+  const commitSentenceList = (event: DeckEvent) => {
+    study.actions.addEvent(event);
+    clearSentenceList();
+  };
   return (
     <HomeContent
       deck={deck}
@@ -67,6 +72,7 @@ function LiveHomeScreen({ deck, userInfo }: HomeProps) {
       addEvent={addEvent}
       undoRestrictions={study.actions.undoRestrictions}
       setSentenceList={setSentenceList}
+      commitSentenceList={commitSentenceList}
     />
   );
 }
@@ -79,12 +85,14 @@ function HomeContent({
   addEvent = () => {},
   undoRestrictions = () => {},
   setSentenceList = () => {},
+  commitSentenceList = () => {},
 }: HomeProps & {
   view: HomeScreenView;
   inert?: boolean;
   addEvent?: (event: DeckEvent) => void;
   undoRestrictions?: () => void;
   setSentenceList?: (selection: SentenceList) => void;
+  commitSentenceList?: (event: DeckEvent) => void;
 }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -122,6 +130,7 @@ function HomeContent({
               addEvent={addEvent}
               undoRestrictions={undoRestrictions}
               setSentenceList={setSentenceList}
+              commitSentenceList={commitSentenceList}
               showEngagementPrompts={false}
             />
           ) : (

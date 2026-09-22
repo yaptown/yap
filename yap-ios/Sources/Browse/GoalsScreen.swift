@@ -9,7 +9,7 @@ struct GoalsScreen: View {
     @State private var showAllMovies = false
     @AppStorage("yap-pimsleur-acknowledged") private var acknowledged = false
     var body: some View {
-        let view = self.view ?? deck.goals_screen_view(banned: review.banned, sentence_list: deck.get_sentence_list())
+        let view = self.view ?? deck.goals_screen_view(banned: review.banned, sentence_list: selected)
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
@@ -24,10 +24,16 @@ struct GoalsScreen: View {
                     curriculum(view)
                 }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
             }.background(Color(uiColor: .systemGroupedBackground)).navigationTitle(view.title)
+                .safeAreaInset(edge: .bottom) {
+                    if let commit = view.curriculum.switch_curriculum {
+                        Button(commit.label) { actions.commitSentenceList(commit.event) }
+                            .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).padding()
+                    }
+                }
                 .task(id: ObjectIdentifier(deck)) {
                     // Movie/Pimsleur lists are not captured in GoalsScreenView.
                     guard self.view == nil else { return }
-                    lists = SentenceListModel(deck: deck, session: review.session)
+                    lists = SentenceListModel(deck: deck)
                 }
             #if DEBUG
             .onAppear { DebugHarness.shared.activeScreen = .goals }
@@ -41,13 +47,15 @@ struct GoalsScreen: View {
             #endif
         }
     }
+    /// The draft the learner is browsing, or the persisted selection when idle.
+    private var selected: SentenceListSelection? { review.session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list() }
     private func curriculum(_ view: GoalsScreenView) -> some View {
         let curriculum = view.curriculum
         let selectedIndex = Int(curriculum.navigation.selected_index)
         return StudyCard {
             Picker(curriculum.title, selection: Binding(
                 get: { selectedIndex },
-                set: { actions.setSentenceList(curriculum.sentence_list_options[$0].event) }
+                set: { actions.setSentenceList(curriculum.sentence_list_options[$0].selection) }
             )) {
                 ForEach(Array(curriculum.sentence_list_options.enumerated()), id: \.offset) { index, option in
                     Text(option.label).tag(index)
@@ -57,8 +65,8 @@ struct GoalsScreen: View {
             case .Essential:
                 Text(curriculum.sentence_list_label).font(.headline)
                 SentenceListProgressView(progress: curriculum.progress)
-                if let event = curriculum.next_sentence_list_event {
-                    Button(nextLabel(curriculum.next_sentence_list)) { actions.setSentenceList(event) }.buttonStyle(.bordered)
+                if let next = curriculum.next_sentence_list {
+                    Button(nextLabel(next)) { actions.setSentenceList(next) }.buttonStyle(.bordered)
                 }
             case .Movie:
                 if self.view == nil, let lists { movies(lists).id("movies") }
@@ -98,14 +106,14 @@ struct GoalsScreen: View {
         }
     }
     private func row(_ selection: SentenceListSelection, lists: SentenceListModel) -> some View {
-        Button { lists.change(selection) } label: {
+        Button { actions.setSentenceList(selection) } label: {
             HStack(spacing: 14) {
                 if case let .Movie(id) = selection { MoviePoster(id: id, title: lists.title(selection)) }
                 else { Image(systemName: "headphones") }
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text(rowTitle(selection, lists: lists)).foregroundStyle(Color.yapText)
-                        if selection == deck.get_sentence_list() { Image(systemName: "checkmark.circle.fill").accessibilityLabel("Selected") }
+                        if selection == selected { Image(systemName: "checkmark.circle.fill").accessibilityLabel("Selected") }
                     }
                     if case let .Movie(id) = selection {
                         if let year = lists.metadata[id]?.year { Text(String(year)).font(.caption).foregroundStyle(.secondary) }
@@ -132,16 +140,16 @@ struct GoalsScreen: View {
         guard view == nil, let lists else { return }
         let command = DebugHarness.shared.command
         if command == "acknowledge-pimsleur" { acknowledged = true }
-        if command == "select-list essential" { lists.change(nil) }
-        if command == "select-list movie", let best = deck.get_best_movie_sentence_list() { lists.change(best) }
-        if command == "select-list pimsleur", acknowledged, let best = deck.get_best_pimsleur_sentence_list() { lists.change(best) }
+        if command == "select-list essential" { actions.setSentenceList(nil) }
+        if command == "select-list movie", let best = deck.get_best_movie_sentence_list() { actions.setSentenceList(best) }
+        if command == "select-list pimsleur", acknowledged, let best = deck.get_best_pimsleur_sentence_list() { actions.setSentenceList(best) }
         if command.hasPrefix("select-list movie ") {
             let id = String(command.dropFirst(18))
-            if lists.movies.contains(where: { $0.id == id }) { lists.change(.Movie(id: id)) }
+            if lists.movies.contains(where: { $0.id == id }) { actions.setSentenceList(.Movie(id: id)) }
         }
         if command.hasPrefix("select-list pimsleur "), acknowledged {
             let numbers = command.dropFirst(21).split(separator: " ").compactMap { UInt32($0) }
-            if numbers.count == 2, lists.lessons.contains(where: { $0.level == numbers[0] && $0.lesson == numbers[1] }) { lists.change(.PimsleurLesson(level: numbers[0], lesson: numbers[1])) }
+            if numbers.count == 2, lists.lessons.contains(where: { $0.level == numbers[0] && $0.lesson == numbers[1] }) { actions.setSentenceList(.PimsleurLesson(level: numbers[0], lesson: numbers[1])) }
         }
     }
     #endif
