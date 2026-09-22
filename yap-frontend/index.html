@@ -28,6 +28,19 @@
           safari_web_id: "web.onesignal.auto.29ad6177-53c3-46b5-8017-0e7b95131b37"
         };
 
+        // Each OneSignal app is locked to a single origin in the OneSignal
+        // dashboard (http://localhost:5173 for dev, https://yap.town for
+        // prod). A deployment served from any other origin -- e.g. the
+        // yap-beta.pages.dev preview channel, which is real reachable
+        // traffic but neither of those -- can't use either app, and
+        // OneSignal.init() throws "Can only be used on: ..." on every load
+        // (Sentry JAVASCRIPT-REACT-3T/3V). Skip init there instead.
+        const expectedOrigin = isDevelopment ? 'http://localhost:5173' : 'https://yap.town';
+        if (window.location.origin !== expectedOrigin) {
+          console.log(`Skipping OneSignal init: ${window.location.origin} is not ${expectedOrigin}`);
+          return;
+        }
+
         console.log(`OneSignal initializing in ${isDevelopment ? 'development' : 'production'} mode`);
 
         await OneSignal.init({
