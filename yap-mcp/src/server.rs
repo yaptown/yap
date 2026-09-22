@@ -1446,6 +1446,19 @@ impl YapMcp {
             )
         };
 
+        // The widget cannot import WASM values, so supply the shared Rust label.
+        let morphology_label = match &flashcard.content {
+            yap_frontend_rs::CardContent::Gram {
+                definition: language_utils::GramDefinition::Dictionary(entry),
+                ..
+            } => entry
+                .morphology
+                .first()
+                .cloned()
+                .map(yap_frontend_rs::morphology_label)
+                .unwrap_or_default(),
+            _ => String::new(),
+        };
         let language = state.target_language_value();
         let native_language = serde_json::to_value(state.context.course.native_language)
             .expect("Language serializes");
@@ -1460,6 +1473,7 @@ impl YapMcp {
                 "disclosure": disclosure,
                 "card": card,
                 "content": serde_json::to_value(&flashcard.content).expect("content serializes"),
+                "morphology_label": morphology_label,
                 "audio": serde_json::to_value(&flashcard.audio).expect("audio serializes"),
             },
         });

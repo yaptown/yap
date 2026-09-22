@@ -30,6 +30,8 @@ export interface FlashcardChallenge extends ChallengeBase {
   // The exact CardContent the app builds — rendered by the app's Flashcard
   // component verbatim. Type-only import; erases at build (no WASM in the bundle).
   content: CardContent;
+  // Precomputed with the shared Rust formatter; no WASM needed in the widget.
+  morphology_label: string;
   // Product policy computed by Rust, shared with the web app.
   disclosure: FlashcardDisclosure;
 }

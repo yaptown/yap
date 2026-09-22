@@ -149,7 +149,7 @@ struct DefinitionView: View {
         VStack(alignment: .leading, spacing: 8) {
             switch content {
             case let .dictionary(definitions, morphologies):
-                let morphology = morphologies.first.map(morphologyText).flatMap { $0.isEmpty ? nil : $0 }
+                let morphology = morphologies.first.map { morphology_label(morphology: $0) }.flatMap { $0.isEmpty ? nil : $0 }
                 ForEach(Array(definitions.enumerated()), id: \.offset) { _, item in
                     box(meaning: item.native, trailing: morphology, note: item.note ?? "",
                         target: item.example_sentence_target_language, native: item.example_sentence_native_language)
@@ -178,12 +178,5 @@ struct DefinitionView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading).padding(12)
         .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
-    }
-    private func morphologyText(_ value: Morphology) -> String {
-        [value.gender.map { String(describing: $0) }, value.number.map { String(describing: $0) },
-         value.tense.map { String(describing: $0) }, value.person.map { String(describing: $0) },
-         value.case.map { String(describing: $0) }, value.mood.map { String(describing: $0) },
-         value.aspect.map { String(describing: $0) }, value.politeness.map { String(describing: $0) }]
-            .compactMap { $0 }.joined(separator: " · ")
     }
 }

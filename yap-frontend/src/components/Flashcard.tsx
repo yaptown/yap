@@ -32,7 +32,6 @@ import { CantListenButton } from "./CantListenButton";
 import { AudioErrorBanner } from "./AudioErrorBanner";
 import { toast } from "sonner";
 import { match } from "ts-pattern";
-import { formatMorphology } from "@/utils/formatMorphology";
 import { useBackground } from "./background-context";
 import { PlayfulArrow } from "./PlayfulArrow";
 import { cn } from "@/lib/utils";
@@ -55,6 +54,8 @@ function gramDisplayText(gram: Literal<string>[]): string {
 interface FlashcardProps {
   audioRequest: AudioRequest | undefined;
   content: CardContent;
+  /** Computed in Rust by the host; this component is also used without WASM. */
+  morphologyLabel: string;
   disclosure: FlashcardDisclosure;
   onRating?: (rating: Rating) => void;
   accessToken: string | undefined;
@@ -157,10 +158,12 @@ const CardFrontSubtitle = ({ content }: { content: CardContent }) => {
 
 const CardBack = ({
   content,
+  morphologyLabel,
   targetLanguage,
   accessToken,
 }: {
   content: CardContent;
+  morphologyLabel: string;
   targetLanguage: Language;
   accessToken: string | undefined;
 }) => {
@@ -248,10 +251,6 @@ const CardBack = ({
 
       if ("Dictionary" in definition) {
         const dict = definition.Dictionary;
-        const morphologyText =
-          dict.morphology.length > 0
-            ? formatMorphology(dict.morphology[0])
-            : null;
 
         return (
           <>
@@ -262,9 +261,9 @@ const CardBack = ({
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="text-xl font-medium">{def.native}</span>
-                  {morphologyText && (
+                  {morphologyLabel && (
                     <span className="text-sm text-muted-foreground italic">
-                      {morphologyText}
+                      {morphologyLabel}
                     </span>
                   )}
                 </div>
@@ -361,6 +360,7 @@ const CardBack = ({
 export const Flashcard = function Flashcard({
   audioRequest,
   content,
+  morphologyLabel,
   disclosure,
   onRating,
   accessToken,
@@ -746,6 +746,7 @@ export const Flashcard = function Flashcard({
                 <div className="space-y-6 animate-feedback-in">
                   <CardBack
                     content={content}
+                    morphologyLabel={morphologyLabel}
                     targetLanguage={targetLanguage}
                     accessToken={accessToken}
                   />

@@ -3,6 +3,8 @@
 //! this crate must also support a small standalone WASM for the MCP widget.
 #[macro_use]
 pub mod palette;
+pub mod definition;
+pub use definition::*;
 pub mod design;
 pub use design::*;
 pub mod pending;

@@ -1,8 +1,10 @@
 import type { ComponentProps, ReactNode } from "react";
 import {
+  type CardContent,
   type Challenge,
   type Gram,
   get_flashcard_disclosure,
+  morphology_label,
   should_show_challenge_tutorial,
 } from "../../../../yap-frontend-rs/pkg";
 import { Flashcard } from "../Flashcard";
@@ -26,6 +28,14 @@ type Props = Omit<
   menuExtras?: ReactNode;
   translationState?: ComponentProps<typeof TranslationChallenge>["initialState"];
 };
+
+function cardMorphologyLabel(content: CardContent): string {
+  if (content.type !== "Gram" || !("Dictionary" in content.definition)) {
+    return "";
+  }
+  const morphology = content.definition.Dictionary.morphology[0];
+  return morphology ? morphology_label(morphology) : "";
+}
 
 export function ChallengeView({
   challenge: currentChallenge,
@@ -67,6 +77,7 @@ export function ChallengeView({
     <Flashcard
       audioRequest={currentChallenge.flashcard.audio}
       content={currentChallenge.flashcard.content}
+      morphologyLabel={cardMorphologyLabel(currentChallenge.flashcard.content)}
       isNew={currentChallenge.is_new}
       disclosure={get_flashcard_disclosure(
         totalCount,

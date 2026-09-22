@@ -5,10 +5,10 @@ import {
   type Weapon,
   type Language,
   type GramDictionaryEntry,
+  morphology_label,
 } from "../../../yap-frontend-rs/pkg";
 import { CirclePlus, CircleCheckBig } from "lucide-react";
 import { toast } from "sonner";
-import { formatMorphology } from "@/utils/formatMorphology";
 import { highlightTermInSentence } from "@/utils/highlightTermInSentence";
 import { Card } from "@/components/ui/card";
 import { LANGUAGES } from "@/lib/languages";
@@ -81,7 +81,7 @@ export function Dictionary({
         <div className="space-y-4">
           {entries.map((entry) => {
             const morphologyText = entry.morphology
-              ? formatMorphology(entry.morphology)
+              ? morphology_label(entry.morphology)
               : "";
 
             return (
