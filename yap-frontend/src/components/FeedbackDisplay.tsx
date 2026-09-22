@@ -39,18 +39,18 @@ export function FeedbackDisplay({
   }
 
   return (
-    <div className="rounded-lg p-4 border bg-blue-500/10 border-blue-500/20">
-      <p className="text-sm font-medium mb-1 text-blue-600 dark:text-blue-400">
+    <div className="rounded-lg p-4 border bg-info-surface border-info-border">
+      <p className="text-sm font-medium mb-1 text-info-foreground">
         Feedback:
       </p>
       <div className="space-y-3">
         {encouragement && (
-          <div className="animate-fade-in px-3 py-2 rounded-md bg-gradient-to-r from-green-500/5 to-emerald-500/5 border-l-2 border-green-500/40">
+          <div className="animate-fade-in px-3 py-2 rounded-md bg-positive-surface border-l-2 border-positive-border">
             <div className="flex items-start gap-2">
               <span className="text-lg leading-none">
                 {perfect ? "🎉" : "☀️"}
               </span>
-              <div className="flex-1 font-medium text-green-700 dark:text-green-300">
+              <div className="flex-1 font-medium text-positive-foreground">
                 <Markdown rehypePlugins={[rehypeRaw]} components={components}>
                   {encouragement}
                 </Markdown>

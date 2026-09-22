@@ -82,10 +82,10 @@ interface TranscriptionChallengeProps {
 function AutogradeError() {
   return (
     <div
-      className={`rounded-lg p-4 border bg-yellow-500/10 border-yellow-500/20`}
+      className={`rounded-lg p-4 border bg-caution-surface border-caution-border`}
     >
       <p
-        className={`text-sm font-medium mb-1 text-yellow-600 dark:text-yellow-400`}
+        className={`text-sm font-medium mb-1 text-caution-foreground`}
       >
         Your submission could not be graded automatically. Please grade the
         words manually below.
@@ -481,11 +481,11 @@ export function TranscriptionChallenge({
   const getInputClassName = (index: number) =>
     ({
       Neutral: "border-muted-foreground/30",
-      Perfect: "border-green-500 bg-green-50 dark:bg-green-950",
+      Perfect: "border-positive bg-positive-field",
       PhoneticallyIdentical:
-        "border-yellow-500 bg-yellow-50 dark:bg-yellow-950",
-      PhoneticallySimilar: "border-orange-500 bg-orange-50 dark:bg-orange-950",
-      Wrong: "border-red-500 bg-red-50 dark:bg-red-950",
+        "border-caution bg-caution-field",
+      PhoneticallySimilar: "border-warning bg-warning-field",
+      Wrong: "border-negative bg-negative-field",
     })[view.blanks.find((blank) => blank.index === index)!.tint];
 
   return (
@@ -572,8 +572,8 @@ export function TranscriptionChallenge({
             {!editing && (
               <div className="space-y-2 animate-feedback-in">
                 {/* Show correct answer immediately when grading starts */}
-                <div className="rounded-lg p-4 border bg-green-500/10 border-green-500/20">
-                  <p className="text-sm font-medium mb-1 text-green-600 dark:text-green-400">
+                <div className="rounded-lg p-4 border bg-positive-surface border-positive-border">
+                  <p className="text-sm font-medium mb-1 text-positive-foreground">
                     {verdict?.correct_label ?? "Correct sentence:"}
                   </p>
                   <p className="text-lg font-medium">

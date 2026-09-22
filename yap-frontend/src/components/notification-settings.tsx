@@ -135,7 +135,7 @@ export function NotificationSettings() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <div className="flex items-center gap-2 text-positive-foreground">
                   <Bell className="h-5 w-5" />
                   <span className="text-sm font-medium">
                     Browser notifications enabled

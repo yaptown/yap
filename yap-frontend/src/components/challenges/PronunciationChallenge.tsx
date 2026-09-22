@@ -282,7 +282,7 @@ function PronunciationRow({
           ) : (
             <>
               {segment.text.slice(0, patternIndex)}
-              <span className="bg-yellow-500/30 rounded px-0.5">
+              <span className="bg-caution/30 rounded px-0.5">
                 {segment.text.slice(
                   patternIndex,
                   patternIndex + pattern.length,

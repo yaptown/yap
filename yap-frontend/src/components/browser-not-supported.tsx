@@ -10,9 +10,9 @@ export function BrowserNotSupported() {
             <div className="bg-background/50 backdrop-blur-lg flex items-center justify-center p-4 rounded-lg">
               <div className="text-center space-y-6">
                 <div className="space-y-2">
-                  <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 bg-warning-surface rounded-full flex items-center justify-center mx-auto">
                     <svg
-                      className="w-8 h-8 text-orange-600 dark:text-orange-400"
+                      className="w-8 h-8 text-warning-foreground"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -35,8 +35,8 @@ export function BrowserNotSupported() {
                 </div>
 
                 {isSafari && (
-                  <div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-left space-y-2">
-                    <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
+                  <div className="bg-caution-surface border border-caution-border rounded-lg p-4 text-left space-y-2">
+                    <p className="text-sm font-semibold text-caution-foreground mb-1">
                       Apple Users: Update Required
                     </p>
                     <p className="text-sm">
@@ -56,22 +56,22 @@ export function BrowserNotSupported() {
                   </p>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center gap-2">
-                      <span className="text-green-500">✓</span>
+                      <span className="text-positive">✓</span>
                       <span>Google Chrome (version 86+)</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-green-500">✓</span>
+                      <span className="text-positive">✓</span>
                       <span>Microsoft Edge (version 86+)</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-green-500">✓</span>
+                      <span className="text-positive">✓</span>
                       <span>
                         Safari (version 26.0+ - requires iOS/macOS 18, currently
                         in beta)
                       </span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-green-500">✓</span>
+                      <span className="text-positive">✓</span>
                       <span>Firefox (version 111+)</span>
                     </li>
                   </ul>

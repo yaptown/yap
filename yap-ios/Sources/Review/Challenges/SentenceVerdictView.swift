@@ -19,29 +19,30 @@ struct SentenceVerdictView: View {
                     .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color(uiColor: .separator)) }
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text(correctLabel).font(.footnote.weight(.medium)).foregroundStyle(.green)
+                Text(correctLabel).font(.footnote.weight(.medium)).foregroundStyle(Color.yapPositiveForeground)
                 Text(correct).font(.body.weight(.medium)).textSelection(.enabled)
             }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
-                .background(.green.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
-                .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(.green.opacity(0.2)) }
+                .background(Color.yapPositiveSurface, in: RoundedRectangle(cornerRadius: 10))
+                .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.yapPositiveBorder) }
             if error != nil {
-                Text("Your submission could not be graded automatically. Please grade the words manually below.").font(.footnote).foregroundStyle(.orange)
+                Text("Your submission could not be graded automatically. Please grade the words manually below.").font(.footnote).foregroundStyle(Color.yapCautionForeground)
             }
             if encouragement?.isEmpty == false || explanation?.isEmpty == false {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Feedback:").font(.footnote.weight(.medium)).foregroundStyle(.blue)
+                    Text("Feedback:").font(.footnote.weight(.medium)).foregroundStyle(Color.yapInfoForeground)
                     if let encouragement, !encouragement.isEmpty {
                         HStack(alignment: .top, spacing: 8) {
                             if Theme.emojiFontAvailable { Text(perfect ? "🎉" : "☀️") }
                             else { Image(systemName: perfect ? "party.popper" : "sun.max") }
                             Text(markdown(encouragement))
-                        }.font(.subheadline.weight(.medium)).foregroundStyle(.green).padding(8)
-                            .overlay(alignment: .leading) { Rectangle().fill(.green.opacity(0.4)).frame(width: 2) }
+                        }.font(.subheadline.weight(.medium)).foregroundStyle(Color.yapPositiveForeground).padding(8)
+                            .background(Color.yapPositiveSurface, in: RoundedRectangle(cornerRadius: 6))
+                            .overlay(alignment: .leading) { Rectangle().fill(Color.yapPositiveBorder).frame(width: 2) }
                     }
                     if let explanation, !explanation.isEmpty { Text(markdown(explanation)).font(.subheadline) }
                 }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
-                    .background(.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
-                    .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(.blue.opacity(0.2)) }
+                    .background(Color.yapInfoSurface, in: RoundedRectangle(cornerRadius: 10))
+                    .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.yapInfoBorder) }
             }
         }
     }

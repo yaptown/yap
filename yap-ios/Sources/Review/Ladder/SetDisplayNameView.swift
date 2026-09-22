@@ -13,7 +13,7 @@ struct SetDisplayNameView: View {
             TextField("Display name", text: $name).textFieldStyle(.roundedBorder).disabled(saving)
                 .onChange(of: name) { _, value in name = String(value.prefix(50)) }
             Text("You can change this at any time.").font(.caption).foregroundStyle(.secondary)
-            if let error { Text(error).foregroundStyle(.red) }
+            if let error { Text(error).foregroundStyle(Color.yapNegativeForeground) }
             HStack(spacing: 16) {
                 Button("Skip") { actions.skipDisplayName() }.buttonStyle(.bordered)
                 Button(saving ? "Saving…" : "Save") { Task { await save() } }

@@ -35,7 +35,7 @@ struct PronunciationChallengeView: View {
                 Text(prompt).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
             HStack(spacing: 12) {
-                Button { rate(.Again) } label: { Text(view.again_label).frame(maxWidth: .infinity) }.tint(.red)
+                Button { rate(.Again) } label: { Text(view.again_label).frame(maxWidth: .infinity) }.tint(Tokens.palette.destructive.color).foregroundStyle(Color.yapDestructiveForeground)
                 Button { rate(.Remembered) } label: { Text(view.remembered_label).frame(maxWidth: .infinity) }
             }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(actions.submitting)
             Button(view.cant_speak_label) { actions.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
@@ -85,7 +85,7 @@ private struct PronunciationRow: View {
                 if let range = word.range(of: pattern, options: options),
                    position == .Anywhere || (position == .Beginning && index == firstExample && range.lowerBound == word.startIndex)
                     || (position == .End && index == lastExample && range.upperBound == word.endIndex) {
-                    word[range].backgroundColor = .yellow.opacity(0.3)
+                    word[range].backgroundColor = .yapCaution.opacity(0.3)
                 }
             }
             result += word

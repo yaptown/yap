@@ -121,11 +121,12 @@ const SwipeablePhrase = forwardRef<SwipeableWordHandle, SwipeablePhraseProps>(
     const controls = animationControls();
     const { bumpBackground } = useBackground();
 
-    const background = useTransform(
-      x,
-      [-150, 0, 150],
-      ["rgba(239, 68, 68, 0.2)", "rgba(0, 0, 0, 0)", "rgba(34, 197, 94, 0.2)"],
-    );
+    // Interpolate only the opacity; CSS resolves the shared palette hue.
+    const background = useTransform(x, (value) => {
+      const color = value < 0 ? "--negative" : "--positive";
+      const opacity = Math.min(Math.abs(value) / 150, 1) * 20;
+      return `color-mix(in oklch, var(${color}) ${opacity}%, transparent)`;
+    });
 
     const handleDragEnd = async (
       _event: MouseEvent | TouchEvent | PointerEvent,
@@ -193,10 +194,10 @@ const SwipeablePhrase = forwardRef<SwipeableWordHandle, SwipeablePhraseProps>(
       >
         <button
           onClick={() => handleButtonClick(false)}
-          className="p-2 rounded-full hover:bg-green-500/10 transition-colors"
+          className="p-2 rounded-full hover:bg-negative-surface transition-colors"
           aria-label="Mark as Forgot"
         >
-          <X className="w-5 h-5 text-red-500" />
+          <X className="w-5 h-5 text-negative" />
         </button>
 
         <div className="flex-1 relative overflow-hidden">
@@ -220,10 +221,10 @@ const SwipeablePhrase = forwardRef<SwipeableWordHandle, SwipeablePhraseProps>(
 
         <button
           onClick={() => handleButtonClick(true)}
-          className="p-2 rounded-full hover:bg-red-500/10 transition-colors"
+          className="p-2 rounded-full hover:bg-positive-surface transition-colors"
           aria-label="Mark as remembered"
         >
-          <Check className="w-5 h-5 text-green-500" />
+          <Check className="w-5 h-5 text-positive" />
         </button>
       </motion.div>
     );

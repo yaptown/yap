@@ -236,7 +236,7 @@ export function AuthDialog({
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-negative">{error}</p>}
               <Button
                 className="w-full"
                 disabled={loading}
@@ -300,7 +300,7 @@ export function AuthDialog({
                       disabled={loading}
                     />
                   </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
+                  {error && <p className="text-sm text-negative">{error}</p>}
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Signing in..." : "Sign In"}
                   </Button>
@@ -362,7 +362,7 @@ export function AuthDialog({
                       disabled={loading}
                     />
                   </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
+                  {error && <p className="text-sm text-negative">{error}</p>}
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Creating account..." : "Create Account"}
                   </Button>

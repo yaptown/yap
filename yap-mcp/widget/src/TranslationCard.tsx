@@ -154,7 +154,7 @@ export function TranslationCard({ challenge }: { challenge: TranslationChallenge
                 targetLanguage={challenge.language}
               />
               {result.phrases_forgot.length > 0 && (
-                <p className="text-sm text-red-600 dark:text-red-400">
+                <p className="text-sm text-negative-foreground">
                   phrases missed: {result.phrases_forgot.join(", ")}
                 </p>
               )}

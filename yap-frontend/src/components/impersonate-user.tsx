@@ -163,26 +163,26 @@ export function ImpersonateUser() {
   // ── Currently impersonating ──────────────────────────────
   if (isImpersonating) {
     return (
-      <div className="p-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-800 rounded-lg space-y-2">
-        <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+      <div className="p-3 bg-warning-field border border-warning-border rounded-lg space-y-2">
+        <div className="flex items-center gap-2 text-warning-foreground">
           <UserRoundCog className="w-4 h-4" />
           <span className="text-sm font-medium">
             Currently impersonating a user
           </span>
         </div>
-        <p className="text-xs text-orange-600 dark:text-orange-400/80">
+        <p className="text-xs text-warning-foreground/80">
           Sync uploads are paused. Changes will not be pushed to the server
           unless you use the button below.
         </p>
         {error && (
-          <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-xs text-negative-foreground">{error}</p>
         )}
         <Button
           size="sm"
           variant="outline"
           onClick={handleForcePush}
           disabled={pushing}
-          className="w-full border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-400"
+          className="w-full border-warning-border text-warning-foreground"
         >
           <Upload className="w-3 h-3 mr-1" />
           {pushing ? "Pushing..." : "Force Push to Server"}
@@ -192,7 +192,7 @@ export function ImpersonateUser() {
           variant="outline"
           onClick={handleStopImpersonating}
           disabled={loading}
-          className="w-full border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-400"
+          className="w-full border-warning-border text-warning-foreground"
         >
           <X className="w-3 h-3 mr-1" />
           {loading ? "Restoring..." : "Stop Impersonating"}
@@ -231,7 +231,7 @@ export function ImpersonateUser() {
         />
       </div>
       {error && (
-        <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-xs text-negative-foreground">{error}</p>
       )}
       <Button
         size="sm"

@@ -134,8 +134,8 @@ export function AccomplishmentScreen({
       />
       {/* Header */}
       <div className="flex flex-col items-center text-center gap-2 pt-4">
-        <div className="rounded-xl bg-yellow-100 dark:bg-yellow-900/30 p-4">
-          <Trophy className="h-10 w-10 text-yellow-500" />
+        <div className="rounded-xl bg-caution-surface p-4">
+          <Trophy className="h-10 w-10 text-caution" />
         </div>
         <h2 className="text-2xl font-bold">
           Goal Reached! {dayMessage(summary.day_of_week)}
@@ -147,7 +147,7 @@ export function AccomplishmentScreen({
         {streak > 0 && (
           <Badge
             variant="outline"
-            className="border-red-400/50 text-muted-foreground font-normal text-sm"
+            className="border-negative/50 text-muted-foreground font-normal text-sm"
           >
             🔥 {streak} day streak — {streakMessage(streak)}
           </Badge>

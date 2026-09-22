@@ -30,10 +30,10 @@ interface ChallengeSentenceProps {
 
 const tintClasses = {
   Neutral: "",
-  Perfect: "text-green-600 dark:text-green-400",
-  Remembered: "text-green-600 dark:text-green-400",
-  Tapped: "text-yellow-500 dark:text-yellow-400",
-  Forgot: "text-red-600 dark:text-red-400",
+  Perfect: "text-positive-foreground",
+  Remembered: "text-positive-foreground",
+  Tapped: "text-caution-foreground",
+  Forgot: "text-negative-foreground",
 };
 
 export function ChallengeSentence({ words, targetLanguage, onWordTap }: ChallengeSentenceProps) {
@@ -81,8 +81,8 @@ export function YourTranslation({ userTranslation, label = "Your translation:" }
 
 export function CorrectTranslation({ sentence, label = "Correct translation:" }: { sentence: string; label?: string }) {
   return (
-    <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20">
-      <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">
+    <div className="bg-positive-surface rounded-lg p-4 border border-positive-border">
+      <p className="text-sm font-medium text-positive-foreground mb-1">
         {label}
       </p>
       <p className="text-lg font-medium">{sentence}</p>
@@ -104,8 +104,8 @@ export function FeedbackSkeleton() {
 
 export function AutogradeError() {
   return (
-    <div className="rounded-lg p-4 border bg-yellow-500/10 border-yellow-500/20">
-      <p className="text-sm font-medium mb-1 text-yellow-600 dark:text-yellow-400">
+    <div className="rounded-lg p-4 border bg-caution-surface border-caution-border">
+      <p className="text-sm font-medium mb-1 text-caution-foreground">
         Your submission could not be graded automatically. Please grade the
         words manually below.
       </p>

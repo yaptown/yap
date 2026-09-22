@@ -68,7 +68,7 @@ struct TranscriptionChallengeView: View {
                         ReviewDefinitionsView(definitions: get_transcription_review_definitions(challenge: sentence, results: grade.results))
                     }
                 } else if view.is_grading {
-                    Text(sentence.target_language).foregroundStyle(.green)
+                    Text(sentence.target_language).foregroundStyle(Color.yapPositiveForeground)
                     ProgressView("Grading your answer…")
                 }
             }
@@ -132,10 +132,10 @@ struct TranscriptionChallengeView: View {
     private func tint(_ tint: BlankTint, focused: Bool) -> Color {
         switch tint {
         case .Neutral: focused ? Color.yapAccent : .secondary.opacity(0.4)
-        case .Perfect: .green
-        case .PhoneticallyIdentical: .yellow
-        case .PhoneticallySimilar: .orange
-        case .Wrong: .red
+        case .Perfect: .yapPositive
+        case .PhoneticallyIdentical: .yapCaution
+        case .PhoneticallySimilar: .yapWarning
+        case .Wrong: .yapNegative
         }
     }
     @ViewBuilder private func wordGrades(_ verdict: VerdictView) -> some View {

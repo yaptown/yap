@@ -23,7 +23,7 @@ export function highlightTermInSentence(
   return (
     <>
       {before}
-      <span className="bg-yellow-500/30 rounded px-0.5">{matched}</span>
+      <span className="bg-caution/30 rounded px-0.5">{matched}</span>
       {after}
     </>
   );

@@ -23,7 +23,7 @@ struct SignInView: View {
                         }
                     }.disabled(auth.busy || email.isEmpty || password.isEmpty)
                     if auth.busy { ProgressView() }
-                    if let error = auth.error { Text(error).foregroundStyle(.red) }
+                    if let error = auth.error { Text(error).foregroundStyle(Color.yapNegativeForeground) }
                     Button(creating ? "Already have an account? Sign in" : "New here? Create an account") { creating.toggle() }
                     Link("Forgot password?", destination: URL(string: "https://yap.town/forgot-password")!)
                 }

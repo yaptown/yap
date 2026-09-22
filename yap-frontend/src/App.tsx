@@ -311,8 +311,8 @@ function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
       <div>
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <Card className="max-w-md w-full p-6 text-center gap-0">
-            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-red-600 dark:text-red-400 text-xl">⚠</span>
+            <div className="w-12 h-12 bg-negative-surface rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-negative-foreground text-xl">⚠</span>
             </div>
             <h2 className="text-lg font-semibold mb-2">
               Failed to Initialize Deck
@@ -456,8 +456,8 @@ function ReviewPage() {
           >
             <div className="flex-1 flex items-center justify-center p-4">
               <Card className="max-w-md w-full p-6 gap-0">
-                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-red-600 dark:text-red-400 text-xl">
+                <div className="w-12 h-12 bg-negative-surface rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-negative-foreground text-xl">
                     ⚠
                   </span>
                 </div>

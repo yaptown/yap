@@ -154,7 +154,7 @@ const CardBack = ({
                   key={index}
                   className={`text-left p-2 rounded-md ${
                     isKnown
-                      ? "bg-green-500/10 border border-green-500/20"
+                      ? "bg-positive-surface border border-positive-border"
                       : "bg-muted/30 border border-muted/20"
                   }`}
                 >
@@ -165,7 +165,7 @@ const CardBack = ({
                       </TargetLanguageText>
                     </span>
                     {isKnown && (
-                      <span className="text-sm text-green-600 ml-2">
+                      <span className="text-sm text-positive-foreground ml-2">
                         {view.known_label}
                       </span>
                     )}
@@ -488,23 +488,23 @@ export const Flashcard = function Flashcard({
           >
             {/* Swipe feedback overlays */}
             <motion.div
-              className="absolute inset-0 bg-red-500/20 pointer-events-none"
+              className="absolute inset-0 bg-negative/20 pointer-events-none"
               style={{ opacity: leftOverlayOpacity }}
             />
             <motion.div
-              className="absolute inset-0 bg-green-500/20 pointer-events-none"
+              className="absolute inset-0 bg-positive/20 pointer-events-none"
               style={{ opacity: rightOverlayOpacity }}
             />
 
             {/* Swipe indicators */}
             <motion.div
-              className="absolute top-8 left-8 text-red-500 font-bold text-2xl rotate-[-30deg] pointer-events-none"
+              className="absolute top-8 left-8 text-negative font-bold text-2xl rotate-[-30deg] pointer-events-none"
               style={{ opacity: leftOverlayOpacity }}
             >
               {view.again_label.toUpperCase()}
             </motion.div>
             <motion.div
-              className="absolute top-8 right-8 text-green-500 font-bold text-2xl rotate-[30deg] pointer-events-none"
+              className="absolute top-8 right-8 text-positive font-bold text-2xl rotate-[30deg] pointer-events-none"
               style={{ opacity: rightOverlayOpacity }}
             >
               {view.remembered_label.toUpperCase()}

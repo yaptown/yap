@@ -115,16 +115,16 @@ export function SyncStatusDialog() {
   if (!isOnline) {
     statusIcon = <Cloud className="w-2 h-2" />;
     statusText = "Offline";
-    statusColor = "text-gray-600 dark:text-gray-400";
+    statusColor = "text-muted-foreground";
   } else if (lastSyncError) {
     statusIcon = <X className="w-2 h-2" />;
     statusText = "Sync error";
-    statusColor = "text-red-600 dark:text-red-400";
+    statusColor = "text-negative-foreground";
   } else if (isOnline) {
     if (unsyncedStale) {
       statusIcon = <RefreshCw className="w-2 h-2" />;
       statusText = "Unsynced";
-      statusColor = "text-yellow-700 dark:text-yellow-400";
+      statusColor = "text-caution-foreground";
     } else {
       statusIcon = <Check className="w-2 h-2" />;
       statusText = "Synced";
@@ -144,11 +144,11 @@ export function SyncStatusDialog() {
           <span
             className={`w-2 h-2 rounded-full ${
               !isOnline
-                ? "bg-gray-500 dark:bg-gray-400"
+                ? "bg-muted-foreground"
                 : lastSyncError
-                  ? "bg-red-500 dark:bg-red-400"
+                  ? "bg-negative"
                   : unsyncedStale
-                    ? "bg-yellow-600 dark:bg-yellow-400"
+                    ? "bg-caution"
                     : ""
             } transition-colors duration-300`}
           ></span>
@@ -252,8 +252,8 @@ export function SyncStatusDialog() {
           {impersonationActivated && <ImpersonateUser />}
 
           {!isOnline && (
-            <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <p className="text-sm text-yellow-600 dark:text-yellow-400">
+            <div className="p-3 bg-caution-field border border-caution-border rounded-lg">
+              <p className="text-sm text-caution-foreground">
                 You're currently offline. Changes will sync when you reconnect.
               </p>
             </div>

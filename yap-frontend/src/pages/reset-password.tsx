@@ -104,7 +104,7 @@ export function ResetPassword() {
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold text-green-500">
+              <CardTitle className="text-2xl font-bold text-positive">
                 Password Updated!
               </CardTitle>
               <CardDescription>

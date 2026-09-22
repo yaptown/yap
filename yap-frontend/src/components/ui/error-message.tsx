@@ -75,14 +75,14 @@ export function ErrorMessage({
   return (
     <div
       className={cn(
-        "p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg overflow-hidden flex flex-col gap-2",
+        "p-3 bg-negative-field border border-negative-border rounded-lg overflow-hidden flex flex-col gap-2",
         className,
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <p
           className={cn(
-            "text-sm text-red-600 dark:text-red-400 flex-1 line-clamp-3 break-all min-w-0",
+            "text-sm text-negative-foreground flex-1 line-clamp-3 break-all min-w-0",
             variant === "compact" ? "line-clamp-3" : "line-clamp-5",
           )}
         >
@@ -96,7 +96,7 @@ export function ErrorMessage({
           title={copied ? "Copied!" : "Copy full error message"}
         >
           {copied ? (
-            <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+            <Check className="h-3 w-3 text-positive-foreground" />
           ) : (
             <Copy className="h-3 w-3" />
           )}

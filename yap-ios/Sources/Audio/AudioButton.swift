@@ -24,7 +24,7 @@ struct AudioButton: View {
             let playing = audio.isPlaying && audio.currentRequest == request
             Group {
                 if loading && !playing { ProgressView().controlSize(hero ? .regular : .small) }
-                else if error != nil { Image(systemName: "speaker.slash.fill").foregroundStyle(.red) }
+                else if error != nil { Image(systemName: "speaker.slash.fill").foregroundStyle(Color.yapNegativeForeground) }
                 else {
                     Image(systemName: "speaker.wave.2.fill")
                         .symbolEffect(.variableColor, isActive: playing)

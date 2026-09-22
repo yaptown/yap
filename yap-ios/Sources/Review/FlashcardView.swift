@@ -80,7 +80,7 @@ struct FlashcardChallengeView: View {
             if canGrade {
                 HStack(spacing: 12) {
                     Button { rate(.Again) } label: { Text(view.again_label).frame(maxWidth: .infinity) }
-                        .tint(.red).keyboardShortcut(.leftArrow, modifiers: [])
+                        .tint(Tokens.palette.destructive.color).foregroundStyle(Color.yapDestructiveForeground).keyboardShortcut(.leftArrow, modifiers: [])
                     Button { rate(.Remembered) } label: { Text(view.remembered_label).frame(maxWidth: .infinity) }
                         .keyboardShortcut(.rightArrow, modifiers: [])
                 }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(actions.submitting)
@@ -117,7 +117,7 @@ struct FlashcardChallengeView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(gramText(entry.second)).font(.title3.weight(.medium))
-                        if possible.count > 1 && entry.first { Text(view.known_label).font(.footnote).foregroundStyle(.green) }
+                        if possible.count > 1 && entry.first { Text(view.known_label).font(.footnote).foregroundStyle(Color.yapPositiveForeground) }
                     }
                     ForEach(Array(entry.third.enumerated()), id: \.offset) { _, definition in
                         DefinitionBoxesView(definition: definition)

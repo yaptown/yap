@@ -20,6 +20,32 @@ extension Color {
     })
     @MainActor static let yapAccent = Tokens.palette.accent_foreground.color
     @MainActor static let yapText = Tokens.palette.foreground.color
+    @MainActor static let yapDestructiveForeground = Tokens.palette.destructive_foreground.color
+    @MainActor static let yapPositiveForeground = Tokens.palette.positive_foreground.color
+    @MainActor static let yapPositive = Tokens.palette.positive.color
+    @MainActor static let yapPositiveSurface = Tokens.palette.positive_surface.color
+    @MainActor static let yapPositiveBorder = Tokens.palette.positive_border.color
+    @MainActor static let yapPositiveField = Tokens.palette.positive_field.color
+    @MainActor static let yapCautionForeground = Tokens.palette.caution_foreground.color
+    @MainActor static let yapCaution = Tokens.palette.caution.color
+    @MainActor static let yapCautionSurface = Tokens.palette.caution_surface.color
+    @MainActor static let yapCautionBorder = Tokens.palette.caution_border.color
+    @MainActor static let yapCautionField = Tokens.palette.caution_field.color
+    @MainActor static let yapWarningForeground = Tokens.palette.warning_foreground.color
+    @MainActor static let yapWarning = Tokens.palette.warning.color
+    @MainActor static let yapWarningSurface = Tokens.palette.warning_surface.color
+    @MainActor static let yapWarningBorder = Tokens.palette.warning_border.color
+    @MainActor static let yapWarningField = Tokens.palette.warning_field.color
+    @MainActor static let yapNegativeForeground = Tokens.palette.negative_foreground.color
+    @MainActor static let yapNegative = Tokens.palette.negative.color
+    @MainActor static let yapNegativeSurface = Tokens.palette.negative_surface.color
+    @MainActor static let yapNegativeBorder = Tokens.palette.negative_border.color
+    @MainActor static let yapNegativeField = Tokens.palette.negative_field.color
+    @MainActor static let yapInfoForeground = Tokens.palette.info_foreground.color
+    @MainActor static let yapInfo = Tokens.palette.info.color
+    @MainActor static let yapInfoSurface = Tokens.palette.info_surface.color
+    @MainActor static let yapInfoBorder = Tokens.palette.info_border.color
+    @MainActor static let yapInfoField = Tokens.palette.info_field.color
 }
 
 struct StudyCard<Content: View>: View {

@@ -69,7 +69,119 @@ mod tests {
                         .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
             }));
         }
-        assert_eq!(names.len(), 31);
+        assert_eq!(names.len(), 57);
+    }
+
+    #[test]
+    fn feedback_roles_match_css_and_preserve_mode_and_alpha() {
+        let palette = design_palette();
+        let tokens = css_tokens();
+        let rgba = |color: Rgba| [color.r, color.g, color.b, color.a];
+        for (family, roles) in [
+            (
+                "positive",
+                [
+                    palette.positive,
+                    palette.positive_foreground,
+                    palette.positive_surface,
+                    palette.positive_border,
+                    palette.positive_field,
+                ],
+            ),
+            (
+                "caution",
+                [
+                    palette.caution,
+                    palette.caution_foreground,
+                    palette.caution_surface,
+                    palette.caution_border,
+                    palette.caution_field,
+                ],
+            ),
+            (
+                "warning",
+                [
+                    palette.warning,
+                    palette.warning_foreground,
+                    palette.warning_surface,
+                    palette.warning_border,
+                    palette.warning_field,
+                ],
+            ),
+            (
+                "negative",
+                [
+                    palette.negative,
+                    palette.negative_foreground,
+                    palette.negative_surface,
+                    palette.negative_border,
+                    palette.negative_field,
+                ],
+            ),
+            (
+                "info",
+                [
+                    palette.info,
+                    palette.info_foreground,
+                    palette.info_surface,
+                    palette.info_border,
+                    palette.info_field,
+                ],
+            ),
+        ] {
+            for (suffix, color) in ["", "-foreground", "-surface", "-border", "-field"]
+                .into_iter()
+                .zip(roles)
+            {
+                let name = format!("--{family}{suffix}");
+                let token = tokens.iter().find(|token| token.name == name).unwrap();
+                assert_eq!(rgba(color.light), rgba(token.light.into()), "{name} light");
+                assert_eq!(rgba(color.dark), rgba(token.dark.into()), "{name} dark");
+                let expected_alpha = match suffix {
+                    "-surface" => 0.1,
+                    "-border" => 0.2,
+                    _ => 1.0,
+                };
+                assert_eq!(color.light.a, expected_alpha, "{name} light alpha");
+                assert_eq!(color.dark.a, expected_alpha, "{name} dark alpha");
+            }
+            let [solid, _, surface, border, _] = roles;
+            assert_eq!(rgba(solid.light), rgba(solid.dark), "{family} solid");
+            for (color, alpha) in [(surface, 0.1), (border, 0.2)] {
+                let expected = [solid.light.r, solid.light.g, solid.light.b, alpha];
+                assert_eq!(rgba(color.light), expected, "{family} light tint");
+                assert_eq!(rgba(color.dark), expected, "{family} dark tint");
+            }
+            let foreground = tokens
+                .iter()
+                .find(|t| t.name == format!("--{family}-foreground"))
+                .unwrap();
+            let field = tokens
+                .iter()
+                .find(|t| t.name == format!("--{family}-field"))
+                .unwrap();
+            assert!(
+                foreground.light.l < foreground.dark.l,
+                "{family} foreground adapts"
+            );
+            assert!(field.light.l > field.dark.l, "{family} field adapts");
+        }
+    }
+
+    #[test]
+    fn destructive_foreground_is_always_white() {
+        let color = design_palette().destructive_foreground;
+        for mode in [color.light, color.dark] {
+            for channel in [mode.r, mode.g, mode.b, mode.a] {
+                assert!((channel - 1.0).abs() < 1e-6);
+            }
+        }
+        assert_eq!(
+            render_css()
+                .matches("--destructive-foreground: oklch(1 0 0);")
+                .count(),
+            2
+        );
     }
 
     #[test]

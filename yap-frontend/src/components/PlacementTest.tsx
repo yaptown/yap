@@ -49,7 +49,7 @@ export function PlacementTest({
                 <div className="space-y-2">
                   <h2 className="text-xl font-semibold flex items-center gap-2">
                     {tooAdvanced && (
-                      <TriangleAlert className="w-5 h-5 text-yellow-500" />
+                      <TriangleAlert className="w-5 h-5 text-caution" />
                     )}
                     {tooAdvanced
                       ? "You might be too advanced"

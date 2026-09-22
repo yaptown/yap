@@ -56,7 +56,7 @@ struct TranslationChallengeView: View {
                     }
                 } else if view.is_grading {
                     Text(state.text)
-                    Text(view.correct_translation ?? "").foregroundStyle(.green)
+                    Text(view.correct_translation ?? "").foregroundStyle(Color.yapPositiveForeground)
                     ProgressView(view.submit_label)
                 } else {
                     SubmissionTextView(text: Binding(get: { state.text }, set: { send(.TextChanged(text: $0)) }), focused: $focused, onSubmit: submit)
@@ -94,9 +94,9 @@ struct TranslationChallengeView: View {
     private func tint(_ tint: TranslationWordTint) -> Color {
         switch tint {
         case .Neutral: .yapText
-        case .Perfect, .Remembered: .green
-        case .Tapped: .yellow
-        case .Forgot: .red
+        case .Perfect, .Remembered: .yapPositiveForeground
+        case .Tapped: .yapCautionForeground
+        case .Forgot: .yapNegativeForeground
         }
     }
     private func gradeRow(_ item: TranslationGradeItemView, index: Int) -> some View {

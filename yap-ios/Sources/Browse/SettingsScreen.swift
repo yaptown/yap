@@ -17,7 +17,7 @@ struct SettingsScreen: View {
                             Label(!session.online ? "Offline" : state.last_sync_error != nil ? "Sync error" : isRunning(state) ? "Syncing…" : weapon.get_timestamp_of_earliest_unsynced_event(target: .Supabase) != nil ? "Changes pending" : "Synced", systemImage: !session.online ? "wifi.slash" : "arrow.triangle.2.circlepath")
                             timestamp("Started", state.last_sync_started)
                             timestamp("Finished", state.last_sync_finished)
-                            if let error = state.last_sync_error { Text(error).font(.caption).foregroundStyle(.red) }
+                            if let error = state.last_sync_error { Text(error).font(.caption).foregroundStyle(Color.yapNegativeForeground) }
                             LabeledContent("Local events", value: "\(weapon.num_events)")
                             LabeledContent("Server events", value: "\(weapon.num_events_on_remote_as_of_last_sync(target: .Supabase))")
                             timestamp("Earliest pending", weapon.get_timestamp_of_earliest_unsynced_event(target: .Supabase)?.timestamp)
@@ -29,16 +29,16 @@ struct SettingsScreen: View {
                 Button(syncing ? "Syncing…" : "Sync now") { sync() }.disabled(syncing || !session.online)
                 Button("Push pending events") { sync() }.disabled(syncing || !session.online)
                 Text("Sync downloads updates and uploads missing events. Pushing never overwrites remote history.").font(.caption).foregroundStyle(.secondary)
-                if let error = session.syncError { Text(error).foregroundStyle(.red) }
+                if let error = session.syncError { Text(error).foregroundStyle(Color.yapNegativeForeground) }
             }
             Section("Account") {
                 LabeledContent("Email", value: auth.session?.user.email ?? "")
                 Text(session.userId).font(.caption.monospaced()).textSelection(.enabled)
                 TextField("Display name", text: $name).onChange(of: name) { _, value in name = String(value.prefix(50)) }
                 Button(saving ? "Saving…" : "Save display name") { Task { await save() } }.disabled(saving || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                if let error { Text(error).foregroundStyle(.red) }
+                if let error { Text(error).foregroundStyle(Color.yapNegativeForeground) }
                 Button("Sign out", role: .destructive) { Task { await auth.signOut() } }.disabled(auth.busy)
-                if let error = auth.error { Text(error).foregroundStyle(.red) }
+                if let error = auth.error { Text(error).foregroundStyle(Color.yapNegativeForeground) }
             }
             Section("Course") { Button("Switch course") { session.choosingCourse = true } }
             Section("About") {
