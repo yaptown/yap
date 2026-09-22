@@ -43,7 +43,7 @@ export function ThemeProvider({
   animatedBackgroundStorageKey = "yap-animated-background",
   defaultAnimatedBackground = true,
   mouseFollowStorageKey = "yap-mouse-follow",
-  defaultMouseFollow = false,
+  defaultMouseFollow = true,
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
