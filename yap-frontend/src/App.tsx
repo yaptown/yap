@@ -408,6 +408,7 @@ function ReviewPage() {
           <TopPageLayout
             userInfo={userInfo}
             headerProps={{
+              title: "Review",
               backButton: { label: "Home", onBack: () => navigate("/home") },
               showSignupNag: false,
             }}
@@ -419,6 +420,7 @@ function ReviewPage() {
           <TopPageLayout
             userInfo={userInfo}
             headerProps={{
+              title: "Review",
               backButton: { label: "Home", onBack: () => navigate("/home") },
               showSignupNag: false,
             }}
@@ -456,6 +458,7 @@ function ReviewPage() {
           <TopPageLayout
             userInfo={userInfo}
             headerProps={{
+              title: "Review",
               backButton: { label: "Home", onBack: () => navigate("/home") },
               showSignupNag: false,
             }}
@@ -471,6 +474,7 @@ function ReviewPage() {
           <TopPageLayout
             userInfo={userInfo}
             headerProps={{
+              title: "Review",
               backButton: { label: "Home", onBack: () => navigate("/home") },
               showSignupNag: false,
             }}
@@ -505,6 +509,7 @@ function ReviewPage() {
           <TopPageLayout
             userInfo={userInfo}
             headerProps={{
+              title: "Review",
               backButton: { label: "Home", onBack: () => navigate("/home") },
               showSignupNag: false,
             }}
