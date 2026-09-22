@@ -770,7 +770,10 @@ export function LandingPage() {
     }
   }, [deckSelection, navigate]);
 
-  if (deckSelection?.type === "languageSelected") {
+  // `null` means the deck_selection stream hasn't been read from OPFS yet.
+  // Rendering the hero in that window flashes it at signed-in users before
+  // the redirect above fires, so wait until we know.
+  if (deckSelection === null || deckSelection.type === "languageSelected") {
     return null;
   }
 
