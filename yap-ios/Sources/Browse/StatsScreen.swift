@@ -58,23 +58,32 @@ struct StatsScreen: View {
 private struct KnowledgeChart: View {
     @Environment(\.colorScheme) private var scheme
     let points: [FrequencyKnowledgePoint]
-    @State private var frequency: Double?
-    private var selected: FrequencyKnowledgePoint? { frequency.flatMap { x in points.min { abs($0.frequency - x) < abs($1.frequency - x) } } }
+    @State private var frequency: String?
+    private var selected: FrequencyKnowledgePoint? { frequency.flatMap { x in points.first { String($0.frequency) == x } } }
     private var ink: Color { scheme == .dark ? Color(red: 192 / 255, green: 112 / 255, blue: 186 / 255) : .yapAccent }
     var body: some View {
         Text("Yap uses this estimate to avoid teaching words you already know.").font(.caption).foregroundStyle(.secondary)
         if points.isEmpty { Text("No frequency data available") }
         else {
             Chart(points, id: \.frequency) { point in
-                LineMark(x: .value("Frequency rank", point.frequency), y: .value("Predicted knowledge (%)", point.predicted_knowledge * 100))
+                let rank = String(point.frequency)
+                LineMark(x: .value("Frequency rank", rank), y: .value("Predicted knowledge (%)", point.predicted_knowledge * 100))
                     .foregroundStyle(ink).lineStyle(StrokeStyle(lineWidth: 2))
                 if let selected, selected.frequency == point.frequency {
-                    RuleMark(x: .value("Frequency", point.frequency)).foregroundStyle(.secondary)
-                    PointMark(x: .value("Frequency rank", point.frequency), y: .value("Predicted knowledge (%)", point.predicted_knowledge * 100)).symbolSize(64).foregroundStyle(ink)
+                    RuleMark(x: .value("Frequency rank", rank)).foregroundStyle(.secondary)
+                    PointMark(x: .value("Frequency rank", rank), y: .value("Predicted knowledge (%)", point.predicted_knowledge * 100)).symbolSize(64).foregroundStyle(ink)
                 }
-            }.chartYScale(domain: 0...100)
+            }.chartXScale(domain: points.map { String($0.frequency) })
+                .chartYScale(domain: 0...100)
                 .chartYAxis { AxisMarks(values: [0, 25, 50, 75, 100]) { _ in AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)); AxisValueLabel() } }
-                .chartXAxis { AxisMarks { _ in AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)); AxisValueLabel() } }
+                .chartXAxis {
+                    AxisMarks { value in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                        AxisValueLabel {
+                            if let category = value.as(String.self), let rank = Double(category) { Text(rank.formatted()) }
+                        }
+                    }
+                }
                 .chartXAxisLabel("Word frequency rank").chartYAxisLabel("Knowledge (%)")
                 .chartXSelection(value: $frequency).frame(height: 240)
             if let selected {

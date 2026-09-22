@@ -131,19 +131,14 @@ struct TranslationChallengeView: View {
                 gradingTask?.cancel()
                 let course = state.course
                 gradingTask = Task { @MainActor in
-                    if screen.online {
-                        let response = await autograde_translation(challenge_sentence: sentence.target_language, user_sentence: submission,
-                            native_translations: sentence.native_translations, literals: sentence.target_language_literals,
-                            phrases: sentence.unique_target_language_phrases, access_token: host.accessToken, course: course,
-                            gram_definitions: GramDefinitions(value: sentence.gram_definitions_for_lookup), literal_gram_indices: sentence.literal_gram_indices,
-                            phrase_definitions: GramDefinitions(value: sentence.phrase_definitions), primary_expression: sentence.primary_expression,
-                            movie_titles: MovieTitles(value: sentence.movie_titles))
-                        guard !Task.isCancelled else { return }
-                        send(.Graded(response: response))
-                    } else {
-                        guard !Task.isCancelled else { return }
-                        send(.GradingFailed(message: "You're offline"))
-                    }
+                    let response = await autograde_translation(challenge_sentence: sentence.target_language, user_sentence: submission,
+                        native_translations: sentence.native_translations, literals: sentence.target_language_literals,
+                        phrases: sentence.unique_target_language_phrases, access_token: host.accessToken, course: course,
+                        gram_definitions: GramDefinitions(value: sentence.gram_definitions_for_lookup), literal_gram_indices: sentence.literal_gram_indices,
+                        phrase_definitions: GramDefinitions(value: sentence.phrase_definitions), primary_expression: sentence.primary_expression,
+                        movie_titles: MovieTitles(value: sentence.movie_titles))
+                    guard !Task.isCancelled else { return }
+                    send(.Graded(response: response))
                     #if DEBUG
                     DebugHarness.log("translation graded: perfect=\(view.verdict?.perfect ?? false)")
                     #endif

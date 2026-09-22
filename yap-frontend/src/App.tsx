@@ -2,17 +2,15 @@ import { HomePage } from "@/pages/home";
 import { GoalsPage } from "@/pages/goals";
 import { StatsPage } from "@/pages/stats";
 import { DueWordsPage } from "@/pages/due";
-import { readChallengeRestrictions } from "@/lib/challenge-restrictions";
+import {
+  CourseRoutes,
+  useCourseDeck,
+  useCourseStudy,
+} from "@/contexts/course-study";
+import { useDeckSelection } from "@/hooks/useDeck";
 import { ReviewScreen } from "@/components/ReviewScreen";
 import * as Sentry from "@sentry/react";
-import {
-  useState,
-  useEffect,
-  useSyncExternalStore,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import { useState, useEffect } from "react";
 import { useZeno } from "@/hooks/useZeno";
 import { AuthDialogProvider } from "@/components/auth-dialog-provider";
 import {
@@ -23,25 +21,7 @@ import {
   useOutletContext,
   ScrollRestoration,
 } from "react-router-dom";
-import {
-  Deck,
-  type DeckEvent,
-  type Challenge,
-  type ChallengeRequirements,
-  type Course,
-  type Heteronym,
-  type Language,
-  type LanguageDataError,
-  type LiteralGrades,
-  type Gram,
-  type PartGraded,
-  type PlacementSession,
-  type Rating,
-  get_audio_cache_version,
-  get_clip_manifest_version,
-  refresh_clip_manifest,
-  update_profile,
-} from "../../yap-frontend-rs/pkg";
+import { Deck, type Language } from "../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,7 +30,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { RouteErrorScreen } from "@/components/route-error-screen";
 import { supabase } from "@/lib/supabase";
 import type { Session as SupabaseSession } from "@supabase/supabase-js";
-import { useInterval, useNetworkState } from "react-use";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { ReportIssueModal } from "@/components/challenges/ReportIssueModal";
 import { ResetPassword } from "@/pages/reset-password";
@@ -65,7 +44,6 @@ import { TermsPage } from "@/pages/terms";
 import { McpDocsPage } from "@/pages/mcp-docs";
 import { LandingPage } from "@/pages/landing";
 import { NotFoundPage } from "@/pages/not-found";
-import { playSoundEffect } from "@/lib/sound-effects";
 import { registerSW } from "virtual:pwa-register";
 import {
   useSentenceList,
@@ -85,7 +63,6 @@ import { useRegisterSW } from "virtual:pwa-register/react";
 import { LanguageSelector } from "./components/LanguageSelector";
 import {
   WeaponProvider,
-  useAsyncMemo,
   useWeapon,
   useWeaponState,
   useWeaponSupport,
@@ -388,7 +365,7 @@ function LoadingProgress({
 
 function ReviewPage() {
   const { userInfo, accessToken } = useOutletContext<AppContextType>();
-  const deck = useDeck();
+  const deck = useCourseDeck();
   const deckSelection = useDeckSelection();
   const navigate = useNavigate();
   const [lastAutoPlayReviewCount, setLastAutoPlayReviewCount] = useState<
@@ -434,7 +411,7 @@ function ReviewPage() {
         ))
         .with(
           { type: "deck", deck: P.not(P.nullish) },
-          ({ deck, targetLanguage, startingFresh, historyKnown }) => {
+          ({ deck, targetLanguage }) => {
             const totalReviewsCompleted = deck.get_total_reviews();
             const autoplayed = lastAutoPlayReviewCount == totalReviewsCompleted;
             const setAutoplayed = () =>
@@ -446,8 +423,6 @@ function ReviewPage() {
                 accessToken={accessToken}
                 deck={deck}
                 targetLanguage={targetLanguage}
-                startingFresh={startingFresh}
-                historyKnown={historyKnown}
                 autoplayed={autoplayed}
                 setAutoplayed={setAutoplayed}
               />
@@ -526,7 +501,7 @@ function ReviewPage() {
 
 function DictionaryPage() {
   const { userInfo, accessToken } = useOutletContext<AppContextType>();
-  const deck = useDeck();
+  const deck = useCourseDeck();
   const weapon = useWeapon();
   const navigate = useNavigate();
 
@@ -593,8 +568,6 @@ interface ReviewProps {
   accessToken: string | undefined;
   deck: Deck;
   targetLanguage: Language;
-  startingFresh: boolean | undefined;
-  historyKnown: boolean;
   autoplayed: boolean;
   setAutoplayed: () => void;
 }
@@ -604,360 +577,17 @@ function Review({
   accessToken,
   deck,
   targetLanguage,
-  startingFresh,
-  historyKnown,
   autoplayed,
   setAutoplayed,
 }: ReviewProps) {
-  const weapon = useWeapon();
   const navigate = useNavigate();
   const { sentenceList, setSentenceList } = useSentenceList(
     deck.get_sentence_list(),
   );
-
-  const network = useNetworkState();
-  const [readiness, setReadiness] = useState(() => ({
-    deck,
-    timestamp_ms: Date.now(),
-    audioVersion: get_audio_cache_version(),
-    clipVersion: get_clip_manifest_version(),
-  }));
-  if (readiness.deck !== deck) {
-    setReadiness((previous) => ({
-      ...previous,
-      deck,
-      timestamp_ms: Date.now(),
-    }));
-  }
+  const study = useCourseStudy();
+  const view = study.getReviewView(sentenceListToSelection(sentenceList));
+  const currentChallenge = study.currentChallenge;
   const [showReportModal, setShowReportModal] = useState(false);
-  const [dismissedSetDisplayName, setDismissedSetDisplayName] = useState(() => {
-    return localStorage.getItem("yap-skipped-set-display-name") === "true";
-  });
-
-  const totalReviewsCompleted = deck.get_total_reviews();
-
-  const now = readiness.timestamp_ms;
-  const [dismissedAccomplishmentAtReview, setDismissedAccomplishmentAtReview] =
-    useState<bigint | null>(null);
-  const dismissedAccomplishment =
-    dismissedAccomplishmentAtReview === totalReviewsCompleted;
-  const nextDueCard =
-    deck.get_all_cards_summary().find((card) => card.due_timestamp_ms > now) ??
-    null;
-
-  useEffect(() => {
-    if (accessToken && userInfo?.id) {
-      deck
-        .submit_push_notifications(accessToken, userInfo?.id)
-        .catch((e) =>
-          console.error("Failed to update notification schedule:", e),
-        );
-      deck
-        .submit_language_stats(accessToken)
-        .catch((e) => console.error("Failed to update language stats:", e));
-    }
-  }, [deck, userInfo?.id, accessToken]);
-
-  // Schedule re-render when next card becomes due
-  useEffect(() => {
-    const next_due_timestamp_ms = nextDueCard?.due_timestamp_ms;
-    if (next_due_timestamp_ms) {
-      const timeUntilDueMs = next_due_timestamp_ms - Date.now();
-
-      if (timeUntilDueMs > 0 && timeUntilDueMs < 24 * 60 * 60 * 1000) {
-        // Only schedule if within 24 hours
-        const timeout = setTimeout(() => {
-          setReadiness((previous) => ({
-            ...previous,
-            timestamp_ms: Date.now(),
-          }));
-        }, timeUntilDueMs + 1);
-
-        return () => clearTimeout(timeout);
-      }
-    }
-  }, [nextDueCard?.due_timestamp_ms]);
-
-  const [bannedChallengeTypes, setBannedChallengeTypes] = useState<
-    ChallengeRequirements[]
-  >(() => readChallengeRestrictions().banned);
-
-  // Challenges whose audio isn't cached yet are held back by
-  // get_review_info; poll the cache version so they surface as soon as the
-  // background prefetcher lands their clips. Same-value updates bail out of
-  // the state change, so the steady state costs no re-renders.
-  useInterval(() => {
-    const timestamp_ms = Date.now();
-    const audioVersion = get_audio_cache_version();
-    const clipVersion = get_clip_manifest_version();
-    setReadiness((previous) =>
-      previous.audioVersion !== audioVersion ||
-      previous.clipVersion !== clipVersion ||
-      timestamp_ms - previous.timestamp_ms >= 60_000
-        ? { ...previous, timestamp_ms, audioVersion, clipVersion }
-        : previous,
-    );
-  }, 2000);
-
-  useEffect(() => {
-    refresh_clip_manifest(targetLanguage, accessToken).catch((error) => {
-      console.warn("Failed to refresh clip manifest:", error);
-    });
-  }, [targetLanguage, accessToken]);
-
-  // A challenge, once on screen, stays until the deck itself changes.
-  // reviewInfo recomputes underneath for many reasons (a clip manifest
-  // arriving, cards becoming due, prefetched audio landing) and can pick a
-  // different sentence for the same card — swapping it mid-answer would
-  // strand the user's typed input (and their grade) against the wrong
-  // sentence. The deck object is rebuilt exactly when events land
-  // (completing a review, accepting a lockup offer, a remote sync), which
-  // are the moments a re-pick is legitimate; the user changing challenge
-  // restrictions mid-challenge (the can't-listen/can't-speak buttons) must
-  // also swap immediately. A held "no challenge" never sticks, so newly due
-  // cards still surface from idle.
-  const [placement, setPlacement] = useState<PlacementSession>();
-  const [heldChallenge, setHeldChallenge] = useState<{
-    deck: Deck;
-    banned: ChallengeRequirements[];
-    challenge: Challenge<Gram<string>> | undefined;
-  }>({ deck, banned: bannedChallengeTypes, challenge: undefined });
-  const online = network.online === true;
-  const view = useMemo(() => {
-    const held = heldChallenge;
-    const next = deck.review_screen_view({
-      banned: bannedChallengeTypes,
-      sentence_list: sentenceListToSelection(sentenceList),
-      online,
-      is_signed_in: userInfo !== undefined,
-      needs_display_name: userInfo?.displayName === null,
-      display_name_dismissed: dismissedSetDisplayName,
-      has_access_token: accessToken !== undefined,
-      starting_fresh: startingFresh,
-      history_known: historyKnown,
-      dismissed_accomplishment_at_review:
-        dismissedAccomplishmentAtReview === null
-          ? undefined
-          : Number(dismissedAccomplishmentAtReview),
-      placement,
-      current_challenge:
-        held?.deck === deck && held.banned === bannedChallengeTypes
-          ? held.challenge
-          : undefined,
-      timestamp_ms: readiness.timestamp_ms,
-    });
-    return next;
-  }, [
-    deck,
-    bannedChallengeTypes,
-    sentenceList,
-    online,
-    userInfo,
-    dismissedSetDisplayName,
-    accessToken,
-    startingFresh,
-    historyKnown,
-    dismissedAccomplishmentAtReview,
-    readiness,
-    heldChallenge,
-    placement,
-  ]);
-  const currentChallenge =
-    view.step.type === "Challenge" ? view.step.view.challenge : undefined;
-  // Adjust held state before React commits this render, never in an effect.
-  // An empty selection may become ready without a new Deck or restriction set.
-  if (
-    heldChallenge.deck !== deck ||
-    heldChallenge.banned !== bannedChallengeTypes ||
-    (heldChallenge.challenge === undefined && currentChallenge !== undefined)
-  ) {
-    setHeldChallenge({
-      deck,
-      banned: bannedChallengeTypes,
-      challenge: currentChallenge,
-    });
-  }
-
-  // Auto-dismiss at midnight
-  useEffect(() => {
-    if (view.step.type !== "Accomplishment" || dismissedAccomplishment) return;
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    const ms = midnight.getTime() - now.getTime();
-    const timer = setTimeout(
-      () => setDismissedAccomplishmentAtReview(totalReviewsCompleted),
-      ms,
-    );
-    return () => clearTimeout(timer);
-  }, [view.step.type, dismissedAccomplishment, totalReviewsCompleted]);
-
-  useEffect(() => {
-    if (
-      currentChallenge ||
-      (heldChallenge.deck === deck &&
-        heldChallenge.banned === bannedChallengeTypes &&
-        heldChallenge.challenge !== undefined)
-    )
-      return;
-    const restrictions = readChallengeRestrictions();
-    const changed =
-      restrictions.banned.length !== bannedChallengeTypes.length ||
-      restrictions.banned.some((value, i) => value !== bannedChallengeTypes[i]);
-    if (!changed && restrictions.next_expiry_ms == null) return;
-    const timeout = setTimeout(
-      () => {
-        setBannedChallengeTypes(readChallengeRestrictions().banned);
-      },
-      changed ? 0 : Math.max(0, restrictions.next_expiry_ms! - Date.now()),
-    );
-    return () => clearTimeout(timeout);
-  }, [currentChallenge, heldChallenge, deck, bannedChallengeTypes]);
-
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    deck.cache_challenge_audio(
-      bannedChallengeTypes,
-      accessToken,
-      abortController.signal,
-    );
-
-    return () => {
-      abortController.abort();
-    };
-  }, [deck, accessToken, view, bannedChallengeTypes]);
-
-  const addEvent = useCallback(
-    (event: DeckEvent) => {
-      weapon.add_deck_event(event);
-    },
-    [weapon],
-  );
-
-  const handleRating = async (rating: Rating) => {
-    if (
-      !currentChallenge ||
-      (currentChallenge.type !== "FlashCardReview" &&
-        currentChallenge.type !== "PronunciationChallenge")
-    ) {
-      console.error(
-        "handleRating called with no current challenge or incompatible challenge type",
-      );
-      return;
-    }
-
-    // Play sound effect in background based on rating
-    if (rating === "again") {
-      playSoundEffect("fail"); // Don't await - play in background
-    } else {
-      playSoundEffect("success"); // Don't await - play in background
-    }
-
-    window.scrollTo({ top: 0 });
-
-    const event = deck.review_card(currentChallenge.indicator, rating);
-    if (event) {
-      weapon.add_deck_event(event);
-    }
-  };
-
-  const handleTranslationComplete = useCallback(
-    async (
-      grade:
-        | {
-            literalGrades: LiteralGrades;
-            phrasesRemembered: Gram<string>[];
-            phrasesForgot: Gram<string>[];
-          }
-        | { perfect: string | null },
-      wordsTapped: Heteronym<string>[],
-      submission: string,
-      completedAtMs: number,
-    ) => {
-      if (
-        !currentChallenge ||
-        currentChallenge.type !== "TranslateComprehensibleSentence"
-      ) {
-        console.error(
-          "handleTranslationComplete called with no current challenge or no TranslateComprehensibleSentence in current challenge",
-        );
-        return;
-      }
-
-      // Play success sound in background for sentence completion (regardless of perfect or errors)
-      playSoundEffect("success"); // Don't await - play in background
-      window.scrollTo({ top: 0 });
-
-      if ("perfect" in grade) {
-        // Perfect sentence review
-        const event = deck.translate_sentence_perfect(
-          wordsTapped,
-          currentChallenge.target_language,
-        );
-        if (event) {
-          weapon.add_deck_event_at(event, completedAtMs);
-        }
-      } else {
-        // Wrong sentence review - pass literal grades directly to Rust
-        const event = deck.translate_sentence_wrong(
-          currentChallenge.target_language,
-          submission,
-          grade.literalGrades,
-          wordsTapped,
-          grade.phrasesRemembered,
-          grade.phrasesForgot,
-        );
-        if (event) {
-          weapon.add_deck_event_at(event, completedAtMs);
-        }
-      }
-    },
-    [deck, currentChallenge, weapon],
-  );
-
-  const handleTranscriptionComplete = useCallback(
-    (
-      grade: /* comes from TranscriptionChallenge*/ PartGraded[],
-      completedAtMs: number,
-    ) => {
-      if (
-        !currentChallenge ||
-        currentChallenge.type !== "TranscribeComprehensibleSentence"
-      ) {
-        console.error(
-          "handleTranscriptionComplete called with no current challenge or no TranscribeComprehensibleSentence in current challenge",
-        );
-        return;
-      }
-
-      // Play success sound in background for sentence completion (regardless of perfect or errors)
-      playSoundEffect("success"); // Don't await - play in background
-      window.scrollTo({ top: 0 });
-
-      const event = deck.transcribe_sentence(grade);
-      if (event) {
-        weapon.add_deck_event_at(event, completedAtMs);
-      }
-    },
-    [deck, currentChallenge, weapon],
-  );
-
-  const handleCantListen = () => {
-    const timestamp = Date.now();
-    localStorage.setItem("yap-cant-listen-timestamp", timestamp.toString());
-    setBannedChallengeTypes((banned) =>
-      banned.includes("Listening") ? banned : [...banned, "Listening"],
-    );
-  };
-
-  const handleCantSpeak = () => {
-    const timestamp = Date.now();
-    localStorage.setItem("yap-cant-speak-timestamp", timestamp.toString());
-    setBannedChallengeTypes((banned) =>
-      banned.includes("Speaking") ? banned : [...banned, "Speaking"],
-    );
-  };
 
   return (
     <TopPageLayout
@@ -982,33 +612,7 @@ function Review({
             </DropdownMenuItem>
           ),
         }}
-        actions={{
-          setPlacement,
-          addEvent,
-          onRating: handleRating,
-          onTranslationComplete: handleTranslationComplete,
-          onTranscriptionComplete: handleTranscriptionComplete,
-          onCantListen: handleCantListen,
-          onCantSpeak: handleCantSpeak,
-          setSentenceList,
-          undoRestrictions: () => {
-            localStorage.removeItem("yap-cant-listen-timestamp");
-            localStorage.removeItem("yap-cant-speak-timestamp");
-            setBannedChallengeTypes([]);
-          },
-          dismissAccomplishment: () =>
-            setDismissedAccomplishmentAtReview(totalReviewsCompleted),
-          completePlacementTest: ({ known_words, unknown_words }) =>
-            addEvent(deck.complete_placement_test(known_words, unknown_words)),
-          saveDisplayName: async (name) => {
-            await update_profile(name, null, accessToken!);
-            setDismissedSetDisplayName(true);
-          },
-          skipDisplayName: () => {
-            localStorage.setItem("yap-skipped-set-display-name", "true");
-            setDismissedSetDisplayName(true);
-          },
-        }}
+        actions={{ ...study.actions, setSentenceList }}
       />
 
       <ReportIssueModal
@@ -1058,10 +662,18 @@ const router = createBrowserRouter([
         errorElement: <RouteErrorScreen />,
         children: [
           { index: true, element: <LandingPage /> },
-          { path: "learn", element: <ReviewPage /> },
-          { path: "home", element: <HomePage /> },
-          { path: "stats", element: <StatsPage /> },
-          { path: "due", element: <DueWordsPage /> },
+          {
+            element: <CourseRoutes />,
+            children: [
+              { path: "learn", element: <ReviewPage /> },
+              { path: "home", element: <HomePage /> },
+              { path: "stats", element: <StatsPage /> },
+              { path: "due", element: <DueWordsPage /> },
+              { path: "dictionary", element: <DictionaryPage /> },
+              { path: "goals", element: <GoalsPage /> },
+              { path: "select-language", element: <SelectLanguagePage /> },
+            ],
+          },
           ...(import.meta.env.DEV
             ? [
                 {
@@ -1073,9 +685,6 @@ const router = createBrowserRouter([
                 },
               ]
             : []),
-          { path: "dictionary", element: <DictionaryPage /> },
-          { path: "goals", element: <GoalsPage /> },
-          { path: "select-language", element: <SelectLanguagePage /> },
           { path: "user/id/:id", element: <UserProfilePage /> },
           { path: "*", element: <NotFoundPage /> },
         ],
@@ -1170,397 +779,6 @@ function SelectLanguagePage() {
     .exhaustive();
 }
 
-export function useDeckSelection():
-  | {
-      type: "languageSelected";
-      nativeLanguage: Language;
-      targetLanguage: Language;
-      startingFresh: boolean | undefined;
-      hasHeardAbout: boolean;
-      onboardedLanguages: Language[];
-    }
-  | {
-      type: "noLanguageSelected";
-      hasHeardAbout: boolean;
-      onboardedLanguages: Language[];
-    }
-  | null {
-  const weapon = useWeapon();
-
-  useEffect(() => {
-    weapon.request_deck_selection();
-  }, [weapon]);
-
-  const getSnapshot = useCallback(() => {
-    try {
-      return weapon.get_stream_num_events("deck_selection") ?? null;
-    } catch {
-      return null;
-    }
-  }, [weapon]);
-
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      const handle = weapon.subscribe_to_stream("deck_selection", () => {
-        callback();
-      });
-      return () => {
-        weapon.unsubscribe(handle);
-      };
-    },
-    [weapon],
-  );
-
-  const numEvents = useSyncExternalStore(subscribe, getSnapshot);
-
-  if (numEvents === null) return null;
-
-  const deckSelection = weapon.get_deck_selection_state();
-  const hasHeardAbout = deckSelection?.heardAbout != null;
-  const onboardedLanguages = deckSelection?.onboardedLanguages ?? [];
-
-  if (!deckSelection?.targetLanguage || !deckSelection?.nativeLanguage) {
-    return { type: "noLanguageSelected", hasHeardAbout, onboardedLanguages };
-  }
-
-  return {
-    type: "languageSelected",
-    nativeLanguage: deckSelection.nativeLanguage,
-    targetLanguage: deckSelection.targetLanguage,
-    startingFresh: deckSelection.onboardingSelections?.startingFresh,
-    hasHeardAbout,
-    onboardedLanguages,
-  };
-}
-
-const LAST_COURSE_KEY = "yap-last-course";
-
-function getCourseKey(
-  course: Pick<Course, "nativeLanguage" | "targetLanguage"> | null | undefined,
-): string | null {
-  if (!course) return null;
-  return `${course.targetLanguage}:${course.nativeLanguage}`;
-}
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-export function useDeck():
-  | {
-      type: "deck";
-      nativeLanguage: Language;
-      targetLanguage: Language;
-      deck: Deck | null;
-      startingFresh: boolean | undefined;
-      historyKnown: boolean;
-    }
-  | { type: "noLanguageSelected" }
-  | { type: "error"; message: string; retry: () => void; retryCount: number }
-  | { type: "loading"; message: string; progress: number }
-  | null {
-  const weapon = useWeapon();
-  const [retryCount, setRetryCount] = useState(0);
-  const [loadingState, setLoadingState] = useState<{
-    message: string;
-    progress: number;
-  } | null>(null);
-
-  useEffect(() => {
-    weapon.request_deck_selection();
-    weapon.request_reviews();
-  }, [weapon]);
-
-  const getSnapshot = useCallback(() => {
-    try {
-      const num_reviews = weapon.get_stream_num_events("reviews");
-      const num_deck_selection = weapon.get_stream_num_events("deck_selection");
-      if (num_reviews === undefined || num_deck_selection === undefined) {
-        return null;
-      }
-      return num_reviews + num_deck_selection;
-    } catch {
-      return null;
-    }
-  }, [weapon]);
-
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      const handle_reviews = weapon.subscribe_to_stream("reviews", () => {
-        callback();
-      });
-      const handle_deck_selection = weapon.subscribe_to_stream(
-        "deck_selection",
-        () => {
-          callback();
-        },
-      );
-
-      return () => {
-        weapon.unsubscribe(handle_reviews);
-        weapon.unsubscribe(handle_deck_selection);
-      };
-    },
-    [weapon],
-  );
-
-  const numEvents = useSyncExternalStore(subscribe, getSnapshot);
-
-  // Whether the reviews stream has been confirmed against the server (or
-  // the user is anonymous and local is the whole truth). The placement-test
-  // decision reads absence-of-an-event as "never took it", which is only
-  // sound once this is true — before then, a fresh device's empty local
-  // store would re-offer the test to someone who already took it. Shares
-  // the stream subscription: completing a sync marks the stream dirty, so
-  // the flip re-renders even when zero events came down.
-  const historyKnownSnapshot = useCallback(
-    () => weapon.reviews_history_known(),
-    [weapon],
-  );
-  const historyKnown = useSyncExternalStore(subscribe, historyKnownSnapshot);
-
-  const retry = useCallback(() => {
-    setRetryCount((count) => count + 1);
-  }, []);
-
-  // Determine course: from weapon streams if ready, else from localStorage cache
-  const deck_selection = weapon.get_deck_selection_state();
-  const courseParts =
-    numEvents !== null &&
-    deck_selection?.targetLanguage &&
-    deck_selection?.nativeLanguage
-      ? {
-          nativeLanguage: deck_selection.nativeLanguage,
-          targetLanguage: deck_selection.targetLanguage,
-        }
-      : null;
-  if (courseParts) {
-    localStorage.setItem(LAST_COURSE_KEY, JSON.stringify(courseParts));
-  }
-  const cachedCourse = useMemo<Course | null>(() => {
-    try {
-      const cached = localStorage.getItem(LAST_COURSE_KEY);
-      if (!cached) return null;
-      const parsed = JSON.parse(cached);
-      if (parsed.nativeLanguage && parsed.targetLanguage) return parsed;
-    } catch {
-      /* ignore */
-    }
-    return null;
-  }, []);
-  const course = courseParts ?? cachedCourse;
-  const courseKey = getCourseKey(course);
-
-  const deckInputsSnapshot = useCallback(
-    () => (course ? weapon.deck_inputs_key(course) : null),
-    [weapon, course],
-  );
-  const deckInputsKey = useSyncExternalStore(subscribe, deckInputsSnapshot);
-  const streamsReady = numEvents !== null;
-
-  // Fetch language pack — only re-runs when course changes, not when numEvents
-  // changes. Two-stage: the core half (dictionary + frequencies) loads first
-  // so the placement test can start immediately; when the sentence half lands
-  // a fresh result is published and the deck below is rebuilt against it.
-  type LanguagePackResult =
-    | { courseKey: string; ok: true }
-    | { courseKey: string; ok: false; error: unknown };
-  const [languagePackResult, setLanguagePackResult] =
-    useState<LanguagePackResult | null>(null);
-  // Generation counter so a superseded load (course switch, retry) can't
-  // clobber the current one's result after the fact — a stale write here
-  // would strand the app on the loading screen, since no further updates
-  // ever arrive once both loads have finished.
-  const packLoadGeneration = useRef(0);
-  useAsyncMemo(async () => {
-    const generation = ++packLoadGeneration.current;
-    const alive = () => packLoadGeneration.current === generation;
-    setLanguagePackResult(null);
-    if (!course || !courseKey) return null;
-    Sentry.addBreadcrumb({
-      category: "language-pack",
-      message: `Loading language pack: ${course.targetLanguage} → ${course.nativeLanguage}`,
-      level: "info",
-    });
-    const onProgress = (message: string, progress: number) => {
-      Sentry.addBreadcrumb({
-        category: "language-pack",
-        message: `${message} (${Math.round(progress)}%)`,
-        level: "info",
-      });
-      if (alive()) setLoadingState({ message, progress });
-    };
-    try {
-      await weapon.load_language_pack_core(course, onProgress);
-    } catch (error) {
-      if (!alive()) return null;
-      setLoadingState(null);
-      setLanguagePackResult({ courseKey, ok: false, error });
-      return null;
-    }
-    if (!alive()) return null;
-    setLanguagePackResult({ courseKey, ok: true });
-    // The sentence half downloads in the background, possibly while the
-    // placement test is already underway. Rust retries transient chunk failures
-    // for both halves before surfacing an error to the host.
-    try {
-      await weapon.load_language_pack(course, onProgress);
-    } catch (error) {
-      if (!alive()) return null;
-      setLoadingState(null);
-      setLanguagePackResult({ courseKey, ok: false, error });
-      return null;
-    }
-    if (!alive()) return null;
-    setLoadingState(null);
-    setLanguagePackResult({ courseKey, ok: true });
-    return null;
-  }, [weapon, courseKey, retryCount]);
-
-  // Build deck when Rust says its inputs changed (or pack loading reports an error).
-  const state = useAsyncMemo(async () => {
-    if (!streamsReady) return null;
-
-    if (!deck_selection?.targetLanguage || !deck_selection?.nativeLanguage) {
-      return { type: "noLanguageSelected" } as { type: "noLanguageSelected" };
-    }
-
-    if (!course || !courseKey || !languagePackResult) return null;
-    if (languagePackResult.courseKey !== courseKey) return null;
-
-    if (!languagePackResult.ok) {
-      const error = languagePackResult.error;
-      console.error("Failed to fetch language pack:", error);
-      const errorMessage = getErrorMessage(error);
-      const detail = (error as Partial<LanguageDataError> | null)?.detail;
-      const isNetworkError =
-        detail?.type === "Download" || detail?.type === "Timeout";
-      if (!isNetworkError) {
-        // Only report non-network errors to Sentry. Network failures are expected
-        // on flaky mobile connections and the user already sees a retry UI.
-        Sentry.captureException(
-          error instanceof Error ? error : new Error(errorMessage),
-          {
-            tags: {
-              "language-pack.target": course.targetLanguage,
-              "language-pack.native": course.nativeLanguage,
-            },
-            contexts: {
-              "language-pack": {
-                targetLanguage: course.targetLanguage,
-                nativeLanguage: course.nativeLanguage,
-                rawError: errorMessage,
-              },
-            },
-          },
-        );
-      }
-      return {
-        type: "error",
-        courseKey,
-        message: errorMessage,
-        retry,
-        retryCount,
-      } as {
-        type: "error";
-        courseKey: string;
-        message: string;
-        retry: () => void;
-        retryCount: number;
-      };
-    }
-
-    try {
-      const deck = await weapon.get_deck_state(
-        course,
-        new Date().getTimezoneOffset() * -60,
-      );
-
-      // null while only the core half of the pack is loaded and this user
-      // would not see the placement test; the sentence half publishes a new
-      // pack result and this re-runs.
-      if (!deck) return null;
-
-      return {
-        type: "deck",
-        courseKey,
-        startingFresh: deck_selection.onboardingSelections?.startingFresh,
-        historyKnown,
-        nativeLanguage: course.nativeLanguage,
-        targetLanguage: course.targetLanguage,
-        deck,
-      } as {
-        type: "deck";
-        courseKey: string;
-        nativeLanguage: Language;
-        targetLanguage: Language;
-        deck: Deck | null;
-        startingFresh: boolean | undefined;
-        historyKnown: boolean;
-      };
-    } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      Sentry.captureException(
-        error instanceof Error ? error : new Error(errorMessage),
-        {
-          tags: {
-            "language-pack.target": course.targetLanguage,
-            "language-pack.native": course.nativeLanguage,
-            "language-pack.phase": "deck-state",
-          },
-          contexts: {
-            "language-pack": {
-              targetLanguage: course.targetLanguage,
-              nativeLanguage: course.nativeLanguage,
-              rawError: errorMessage,
-            },
-          },
-        },
-      );
-      return {
-        type: "error",
-        courseKey,
-        message: errorMessage,
-        retry,
-        retryCount,
-      } as {
-        type: "error";
-        courseKey: string;
-        message: string;
-        retry: () => void;
-        retryCount: number;
-      };
-    }
-  }, [
-    weapon,
-    deckInputsKey,
-    streamsReady,
-    courseKey,
-    languagePackResult,
-    retryCount,
-  ]);
-
-  const currentState =
-    state &&
-    (state.type === "deck" || state.type === "error") &&
-    state.courseKey !== courseKey
-      ? null
-      : state;
-
-  if (currentState?.type === "error" && currentState.retryCount < retryCount) {
-    return null;
-  }
-
-  // If we're loading and have progress info, return loading state
-  if (loadingState && (currentState === null || currentState === undefined)) {
-    return {
-      type: "loading",
-      message: loadingState.message,
-      progress: loadingState.progress,
-    };
-  }
-
-  return currentState ?? null;
-}
+export { useDeck, useDeckSelection } from "@/hooks/useDeck";
 
 export default App;

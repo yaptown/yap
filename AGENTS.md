@@ -150,6 +150,8 @@ enforced mechanically — no human vigilance required.
 
 The web app and the iOS app must behave identically, so the rule for where code lives is: **if a difference between the platforms would be a bug, it goes in Rust.** That means state transitions and everything derived from state (labels, copy, tints, which options appear, whether a button is enabled), plus shared constants like the color palette (`yap-frontend-reducers/src/palette.rs`). Challenge logic lives in `yap-frontend-reducers` as reducers; deck-dependent screens get a view struct from `yap-frontend-rs/src/screens.rs`. What stays native is arrangement: layout, spacing, animation, platform controls, and platform-local state like focus and keyboard handling. Those may differ and often should. When you touch a challenge or screen on one platform, the change should usually be in Rust with both hosts picking it up; `cargo xtask parity` renders the captured fixtures side by side to check.
 
+**When delegating a both-platforms change to subagents, use one subagent for the whole change — never a separate subagent per platform.** A big cause of web/iOS drift is splitting a single feature across two subagents (one for web, one for iOS): they make design and naming decisions independently and the two hosts diverge in ways that would be bugs. So a change that touches both platforms is one subagent's responsibility end to end, so a single mind makes the shared decisions (and lifts what it can into Rust). This does not apply to genuinely independent changes to a single tree — e.g. an iOS-only fix that aligns iOS to behavior web already has — which can run in parallel.
+
 ### Important Notes
 
 - The build process is complex and requires multiple tools: Rust, wasm-pack, uv (Python), and pnpm

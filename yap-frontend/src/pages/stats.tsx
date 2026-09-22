@@ -19,11 +19,7 @@ export function StatsScreen({
   deck: Deck;
   userInfo: UserInfo | undefined;
 }) {
-  const { inputs } = useStudyScreenInputs(
-    deck,
-    userInfo !== undefined,
-    !injectedView,
-  );
+  const inputs = useStudyScreenInputs(!injectedView);
   const view =
     injectedView ?? deck.stats_screen_view(inputs.banned, inputs.timestamp_ms);
   const navigate = useNavigate();

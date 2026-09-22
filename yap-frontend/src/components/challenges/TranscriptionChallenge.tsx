@@ -295,15 +295,19 @@ export function TranscriptionChallenge({
     };
   }, []);
 
-  // Focus first input on mount
+  // Focus the first input on mount, and only on mount. `challenge` is a fresh
+  // object every time the host recomputes its view (a clip landing, the
+  // readiness tick), so depending on anything derived from it would steal the
+  // caret back to the first blank mid-answer.
+  const firstBlankIndexRef = useRef(blankIndices[0]);
   useEffect(() => {
-    const firstBlankIndex = blankIndices[0];
-    if (firstBlankIndex !== undefined) {
-      setTimeout(() => {
-        inputRefs.current[firstBlankIndex]?.focus();
-      }, 100);
-    }
-  }, [blankIndices]);
+    const firstBlankIndex = firstBlankIndexRef.current;
+    if (firstBlankIndex === undefined) return;
+    const timeout = setTimeout(() => {
+      inputRefs.current[firstBlankIndex]?.focus();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, []);
 
   // Track shift key state for uppercase accent keyboard
   useEffect(() => {

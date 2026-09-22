@@ -120,16 +120,21 @@ import Observation
         video.pause()
         if self.video === video { self.video = nil }
     }
+    /// Interrupt speech/video on playback changes or navigation, but let a chime finish.
     func stop() {
         video?.pause(); video = nil
         generation += 1
-        effectTask?.cancel(); effectTask = nil
-        effectPlayer?.stop(); effectPlayer = nil; effectPlaying = false
         player?.stop(); player = nil
         isPlaying = false; currentTime = 0; currentRequest = nil
     }
-    /// Effects have their own player so a grading sound never interrupts the
-    /// sentence audio that is still playing (the web layers them the same way).
+    /// Full teardown when the playback owner or signed-in session goes away.
+    func stopAll() {
+        stop()
+        effectTask?.cancel(); effectTask = nil
+        effectPlayer?.stop(); effectPlayer = nil; effectPlaying = false
+    }
+    /// Effects and sentence audio have independent players: neither channel
+    /// interrupts the other (the web keeps them separate too).
     func playEffect(_ name: String) {
         effectTask?.cancel(); effectPlayer?.stop()
         guard let url = Bundle.main.url(forResource: name, withExtension: "mp3") else { return }
@@ -171,7 +176,7 @@ import Observation
             }
         }
     }
-    isolated deinit { video?.pause(); player?.stop(); effectPlayer?.stop(); effectTask?.cancel(); creditTask?.cancel() }
+    isolated deinit { stopAll(); creditTask?.cancel() }
 }
 
 /// Delegate entry points are nonisolated; only Sendable error values cross to the

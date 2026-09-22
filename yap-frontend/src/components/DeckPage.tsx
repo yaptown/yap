@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Navigate, useNavigate, useOutletContext } from "react-router-dom";
-import { useDeck, type AppContextType } from "@/App";
+import type { AppContextType } from "@/App";
+import { useCourseDeck } from "@/contexts/course-study";
 import type { Deck, Language } from "../../../yap-frontend-rs/pkg";
 import { TopPageLayout } from "./TopPageLayout";
 import { Card } from "./ui/card";
@@ -16,7 +17,7 @@ export function DeckPage({
   ) => ReactNode;
 }) {
   const context = useOutletContext<AppContextType>();
-  const state = useDeck();
+  const state = useCourseDeck();
   const navigate = useNavigate();
   if (state?.type === "noLanguageSelected") return <Navigate to="/" replace />;
   if (state?.type === "deck" && state.deck) {

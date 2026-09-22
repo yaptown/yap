@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UserInfo } from "@/App";
-import type { Deck as DeckType, GoalsScreenView } from "../../../yap-frontend-rs/pkg";
+import type {
+  Deck as DeckType,
+  GoalsScreenView,
+} from "../../../yap-frontend-rs/pkg";
 import { DeckPage } from "@/components/DeckPage";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { GoalProgress } from "@/components/GoalProgress";
@@ -42,14 +45,9 @@ export function GoalsScreen({
 }) {
   const navigate = useNavigate();
   const weapon = useWeapon();
-  const { inputs } = useStudyScreenInputs(
-    deck,
-    userInfo !== undefined,
-    !injectedView,
-  );
+  const inputs = useStudyScreenInputs(!injectedView);
   const view =
-    injectedView ??
-    deck.goals_screen_view(inputs.banned, inputs.sentence_list);
+    injectedView ?? deck.goals_screen_view(inputs.banned, inputs.sentence_list);
   const curriculum = view.curriculum;
   const sentenceList = sentenceListSelectionToSentenceList(
     curriculum.navigation.selection,
@@ -133,7 +131,9 @@ export function GoalsScreen({
                 ))}
               </TabsList>
               <TabsContent value="essential" className="space-y-4">
-                <h3 className="font-semibold">{curriculum.sentence_list_label}</h3>
+                <h3 className="font-semibold">
+                  {curriculum.sentence_list_label}
+                </h3>
                 <Progress
                   className="h-6"
                   value={curriculum.progress.percent_known}
@@ -143,7 +143,9 @@ export function GoalsScreen({
                 {curriculum.next_sentence_list_event && (
                   <Button
                     variant="outline"
-                    onClick={() => addEvent(curriculum.next_sentence_list_event!)}
+                    onClick={() =>
+                      addEvent(curriculum.next_sentence_list_event!)
+                    }
                   >
                     {curriculum.next_sentence_list?.type === "Movie"
                       ? "Next movie"
@@ -158,7 +160,9 @@ export function GoalsScreen({
                     targetLanguageIso={languageToIso6391(view.target_language)}
                     deck={deck}
                     selectedMovieId={
-                      sentenceList.type === "movie" ? sentenceList.movieId : undefined
+                      sentenceList.type === "movie"
+                        ? sentenceList.movieId
+                        : undefined
                     }
                     onSelectMovie={(id) =>
                       setSentenceList({ type: "movie", movieId: id })
@@ -180,7 +184,10 @@ export function GoalsScreen({
                         <Button
                           variant="default"
                           onClick={() => {
-                            localStorage.setItem("yap-pimsleur-acknowledged", "true");
+                            localStorage.setItem(
+                              "yap-pimsleur-acknowledged",
+                              "true",
+                            );
                             setPimsleurAcknowledged(true);
                           }}
                         >

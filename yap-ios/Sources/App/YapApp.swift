@@ -65,7 +65,7 @@ struct SessionRoot: View {
         .task { await session.start() }
         .onChange(of: auth.accessToken) { _, _ in session.tokenChanged() }
         .onChange(of: scenePhase) { _, phase in if phase == .active { session.sceneBecameActive() } }
-        .onDisappear { session.stop(); audio.stop() }
+        .onDisappear { session.stop(); audio.stopAll() }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
             switch DebugHarness.shared.command {

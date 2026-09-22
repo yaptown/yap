@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-import type { Deck, DeckEvent, HomeScreenView } from "../../../yap-frontend-rs/pkg";
+import type {
+  Deck,
+  DeckEvent,
+  HomeScreenView,
+} from "../../../yap-frontend-rs/pkg";
 import type { UserInfo } from "@/App";
 import { DeckPage } from "@/components/DeckPage";
 import { TopPageLayout } from "@/components/TopPageLayout";
@@ -12,56 +16,77 @@ import { GoalProgress } from "@/components/GoalProgress";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
 import { About } from "@/components/about";
 import { NoCardsReady } from "@/components/no-cards-ready";
-import { sentenceListToSelection, useSentenceList } from "@/hooks/useSentenceList";
-import { useStudyScreenInputs } from "@/hooks/useStudyScreenInputs";
-import { useWeapon } from "@/weapon";
+import {
+  sentenceListToSelection,
+  useSentenceList,
+  type SentenceList,
+} from "@/hooks/useSentenceList";
+import { useCourseStudy } from "@/contexts/course-study";
 
 export function HomePage() {
   return <DeckPage>{(props) => <HomeScreen {...props} />}</DeckPage>;
 }
 
-export function HomeScreen({
-  deck,
-  userInfo,
-  view: injectedView,
-}: {
-  view?: HomeScreenView;
+type HomeProps = {
   deck: Deck;
   userInfo: UserInfo | undefined;
-}) {
-  const { inputs, refresh } = useStudyScreenInputs(
-    deck,
-    userInfo !== undefined,
-    !injectedView,
+};
+
+export function HomeScreen({
+  view,
+  ...props
+}: HomeProps & { view?: HomeScreenView }) {
+  return view ? (
+    <HomeContent {...props} view={view} inert />
+  ) : (
+    <LiveHomeScreen {...props} />
   );
+}
+
+function LiveHomeScreen({ deck, userInfo }: HomeProps) {
+  const study = useCourseStudy();
   const { sentenceList, setSentenceList } = useSentenceList(
     deck.get_sentence_list(),
   );
+  const { getHomeView } = study;
   const view = useMemo(
-    () =>
-      injectedView ??
-      deck.home_screen_view({
-        ...inputs,
-        sentence_list: sentenceListToSelection(sentenceList),
-      }),
-    [deck, injectedView, inputs, sentenceList],
+    () => getHomeView(sentenceListToSelection(sentenceList)),
+    [getHomeView, sentenceList],
   );
   const navigate = useNavigate();
-  const weapon = useWeapon();
   const addEvent = (event: DeckEvent) => {
-    if (injectedView) return;
-    weapon.add_deck_event(event);
-    // Adding cards from Home means "I want to study these now" — take the user
-    // straight to Review so they can learn the cards they just committed to.
+    study.actions.addEvent(event);
+    // Adding cards from Home means "I want to study these now".
     navigate("/learn");
   };
-  const undoRestrictions = () => {
-    if (injectedView) return;
-    localStorage.removeItem("yap-cant-listen-timestamp");
-    localStorage.removeItem("yap-cant-speak-timestamp");
-    // Recompute inputs now so the restriction notice clears immediately.
-    refresh();
-  };
+  return (
+    <HomeContent
+      deck={deck}
+      userInfo={userInfo}
+      view={view}
+      addEvent={addEvent}
+      undoRestrictions={study.actions.undoRestrictions}
+      setSentenceList={setSentenceList}
+    />
+  );
+}
+
+function HomeContent({
+  deck,
+  userInfo,
+  view,
+  inert = false,
+  addEvent = () => {},
+  undoRestrictions = () => {},
+  setSentenceList = () => {},
+}: HomeProps & {
+  view: HomeScreenView;
+  inert?: boolean;
+  addEvent?: (event: DeckEvent) => void;
+  undoRestrictions?: () => void;
+  setSentenceList?: (selection: SentenceList) => void;
+}) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const upNext = view.up_next;
 
@@ -71,20 +96,23 @@ export function HomeScreen({
         userInfo={userInfo}
         headerProps={{
           title: "Yap.Town",
-          showSignupNag: injectedView ? false : undefined,
+          showSignupNag: inert ? false : undefined,
         }}
       >
         <main className="flex flex-col gap-4 py-4" aria-label={view.title}>
           <button
             type="button"
             onClick={() => {
-              if (!injectedView) navigate("/select-language");
+              if (!inert) navigate("/select-language");
             }}
             className="text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Card className="p-5 flex-row items-center justify-between gap-3 hover:bg-muted/50 transition-colors">
               <h2 className="text-lg font-semibold">{view.course_label}</h2>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden />
+              <ChevronRight
+                className="h-5 w-5 text-muted-foreground"
+                aria-hidden
+              />
             </Card>
           </button>
           {upNext.idle ? (
@@ -93,7 +121,7 @@ export function HomeScreen({
               deck={deck}
               addEvent={addEvent}
               undoRestrictions={undoRestrictions}
-              setSentenceList={injectedView ? () => {} : setSentenceList}
+              setSentenceList={setSentenceList}
               showEngagementPrompts={false}
             />
           ) : (
@@ -169,7 +197,7 @@ export function HomeScreen({
               onSubmit={(event) => {
                 event.preventDefault();
                 // Keep searches out of URLs, request logs, and navigation telemetry.
-                navigate("/dictionary", { state: { query } });
+                if (!inert) navigate("/dictionary", { state: { query } });
               }}
             >
               <Input

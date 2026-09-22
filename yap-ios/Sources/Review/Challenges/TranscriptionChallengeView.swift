@@ -173,10 +173,7 @@ struct TranscriptionChallengeView: View {
                 focused = nil
                 gradingTask?.cancel()
                 gradingTask = Task { @MainActor in
-                    let grade: Grade
-                    if screen.online {
-                        grade = await autograde_transcription(submission: submission, access_token: host.accessToken, course: course, movie_titles: MovieTitles(value: sentence.movie_titles))
-                    } else { grade = failed_transcription_review(submission: submission, course: course) }
+                    let grade = await autograde_transcription(submission: submission, access_token: host.accessToken, course: course, movie_titles: MovieTitles(value: sentence.movie_titles))
                     guard !Task.isCancelled else { return }
                     send(.Graded(grade: grade))
                     #if DEBUG
