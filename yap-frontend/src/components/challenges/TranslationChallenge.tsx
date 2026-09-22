@@ -11,9 +11,9 @@ import { PendingReview } from "@/lib/pending-review";
 import { getMovieMetadata } from "@/lib/movie-cache";
 import { reportAutogradeFailure } from "@/instrument";
 import { MoviePosterGrid } from "./MoviePosterGrid";
+import { ProperNounGroups } from "./ProperNounGroups";
 import {
   type TranslateComprehensibleSentence,
-  type ProperNounDefinition,
   type LiteralGrades,
   type Gram,
   type DefinitionView,
@@ -306,143 +306,6 @@ function PhraseStatuses({
         </div>
       </CollapsibleContent>
     </Collapsible>
-  );
-}
-
-function ProperNounDefinitionCard({
-  words,
-  type_singular,
-  type_plural,
-  targetLanguage,
-}: {
-  words: string[];
-  type_singular: string;
-  type_plural: string;
-  targetLanguage: Language;
-}) {
-  return (
-    <div className="p-3 border border-card/50 bg-card/30 rounded-md">
-      <span className="font-semibold">
-        {words.map((word, index) => (
-          <span key={word}>
-            <TargetLanguageText language={targetLanguage}>
-              {word}
-            </TargetLanguageText>
-            <span className="text-muted-foreground">
-              {index < words.length - 1
-                ? index === words.length - 2
-                  ? " and "
-                  : ", "
-                : ""}
-            </span>
-          </span>
-        ))}
-      </span>
-      <span className="text-muted-foreground">
-        : {words.length === 1 ? type_singular : type_plural}
-      </span>
-    </div>
-  );
-}
-
-export function ProperNounDefinitions({
-  definitions,
-  targetLanguage,
-}: {
-  definitions: [string, ProperNounDefinition][];
-  targetLanguage: Language;
-}) {
-  if (!definitions || definitions.length === 0) {
-    return null;
-  }
-
-  const personNames: string[] = [];
-  const placeNames: string[] = [];
-  const organizationNames: string[] = [];
-  const transliterations: Array<[string, string]> = [];
-  const transliterationAndDescription: Array<[string, string, string]> = [];
-  const descriptionOnly: Array<[string, string]> = [];
-
-  definitions.forEach(([noun, def]) => {
-    if (def.learner_native_language_translation === noun) {
-      if (def.description) {
-        descriptionOnly.push([noun, def.description]);
-      } else if (def.is_person_name) {
-        personNames.push(def.learner_native_language_translation);
-      } else if (def.is_place_name) {
-        placeNames.push(def.learner_native_language_translation);
-      } else if (def.is_organization_name) {
-        organizationNames.push(def.learner_native_language_translation);
-      }
-    } else {
-      if (def.description) {
-        transliterationAndDescription.push([
-          noun,
-          def.learner_native_language_translation,
-          def.description,
-        ]);
-      } else {
-        transliterations.push([noun, def.learner_native_language_translation]);
-      }
-    }
-  });
-
-  return (
-    <div className="text-sm space-y-1">
-      {personNames.length > 0 && (
-        <ProperNounDefinitionCard
-          words={personNames}
-          type_singular="person"
-          type_plural="people"
-          targetLanguage={targetLanguage}
-        />
-      )}
-      {placeNames.length > 0 && (
-        <ProperNounDefinitionCard
-          words={placeNames}
-          type_singular="place"
-          type_plural="places"
-          targetLanguage={targetLanguage}
-        />
-      )}
-      {organizationNames.length > 0 && (
-        <ProperNounDefinitionCard
-          words={organizationNames}
-          type_singular="organization"
-          type_plural="organizations"
-          targetLanguage={targetLanguage}
-        />
-      )}
-      {transliterationAndDescription.map(
-        ([noun, transliteration, description]) => (
-          <ProperNounDefinitionCard
-            key={noun}
-            words={[noun]}
-            type_singular={`${transliteration} (${description})`}
-            type_plural=""
-            targetLanguage={targetLanguage}
-          />
-        ),
-      )}
-      {transliterations.map(([noun, transliteration]) => (
-        <ProperNounDefinitionCard
-          key={noun}
-          words={[noun]}
-          type_singular={transliteration}
-          type_plural=""
-          targetLanguage={targetLanguage}
-        />
-      ))}
-      {descriptionOnly.map(([noun, description]) => (
-        <ProperNounDefinitionCard
-          key={noun}
-          words={[noun]}
-          type_singular={description}
-          type_plural=""
-          targetLanguage={targetLanguage}
-        />
-      ))}
-    </div>
   );
 }
 
@@ -758,8 +621,8 @@ export function TranslationChallenge({
                   rows={1}
                 />
 
-                <ProperNounDefinitions
-                  definitions={view.proper_nouns}
+                <ProperNounGroups
+                  groups={view.proper_nouns}
                   targetLanguage={targetLanguage}
                 />
               </>

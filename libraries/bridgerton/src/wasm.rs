@@ -139,6 +139,51 @@ impl IntoWasm for () {
     }
 }
 
+impl<A: WasmType, B: WasmType> WasmType for (A, B) {
+    const INPUT_LEN: u32 = A::INPUT_LEN + B::INPUT_LEN + 4;
+    const OUTPUT_LEN: u32 = A::ELEMENT_LEN + B::ELEMENT_LEN + 4;
+    fn describe_name<const INPUT: bool>() {
+        crate::__describe!("[");
+        if INPUT {
+            A::describe_name::<true>();
+        } else {
+            A::describe_element();
+        }
+        crate::__describe!(", ");
+        if INPUT {
+            B::describe_name::<true>();
+        } else {
+            B::describe_element();
+        }
+        crate::__describe!("]");
+    }
+}
+impl<A: FromWasm + WasmType, B: FromWasm + WasmType> FromWasm for (A, B) {
+    type Input = TypedJs<Self, true>;
+    fn from_wasm(value: Self::Input) -> Result<Self, JsValue> {
+        Self::from_js(value.0)
+    }
+    fn from_js(value: JsValue) -> Result<Self, JsValue> {
+        if !js_sys::Array::is_array(&value) {
+            return Err(JsValue::from_str("expected a pair"));
+        }
+        let pair = js_sys::Array::from(&value);
+        if pair.length() != 2 {
+            return Err(JsValue::from_str("expected a pair"));
+        }
+        Ok((A::from_js(pair.get(0))?, B::from_js(pair.get(1))?))
+    }
+}
+impl<A: IntoWasm + WasmType, B: IntoWasm + WasmType> IntoWasm for (A, B) {
+    type Output = TypedJs<Self, false>;
+    fn into_wasm(self) -> Result<Self::Output, JsValue> {
+        let pair = js_sys::Array::new();
+        pair.push(&self.0.into_element()?);
+        pair.push(&self.1.into_element()?);
+        Ok(JsValue::from(pair).into())
+    }
+}
+
 impl<T: WasmType> WasmType for Vec<T> {
     const INPUT_LEN: u32 = T::ARRAY_INPUT_LEN;
     const OUTPUT_LEN: u32 = T::ARRAY_OUTPUT_LEN;

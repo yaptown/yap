@@ -14,7 +14,7 @@ struct TranscriptionChallengeView: View {
     @FocusState private var focused: Int?
     init(sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
         self.sentence = sentence
-        let state = initialState ?? transcription_start(parts: sentence.parts)
+        let state = initialState ?? transcription_start(parts: sentence.parts, proper_noun_definitions: sentence.proper_noun_definitions)
         _state = State(initialValue: state)
         _view = State(initialValue: transcription_view(state: state))
     }
@@ -44,6 +44,7 @@ struct TranscriptionChallengeView: View {
                         }
                     }
                 }.frame(maxWidth: .infinity).padding(.top, 4)
+                if editing { ProperNounGroupsView(groups: view.proper_nouns) }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
                     reviewCount: screen.total_reviews,
                     maskedSentence: editing ? sentence.parts.map { part in
@@ -74,7 +75,7 @@ struct TranscriptionChallengeView: View {
             if view.verdict == nil {
                 Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                Button("I can't listen right now") { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(view.is_grading)
+                Button(view.cant_listen_label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(view.is_grading)
             } else {
                 Button { complete() } label: { Text(view.verdict?.continue_label ?? "").frame(maxWidth: .infinity) }.disabled(!view.can_continue || actions.submitting)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)

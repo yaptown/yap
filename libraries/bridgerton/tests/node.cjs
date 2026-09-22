@@ -11,6 +11,15 @@ const { Counter, Snapshot } = require('../generated/node/bridge_fixture.js');
   assert.deepEqual(api.keyword_value({type: "keyword"}), {type: "keyword"});
   assert.deepEqual(api.generic_values({value: [42, undefined]}), {value: [42, undefined]});
   assert.deepEqual(api.configured_values({value: [18446744073709551615n, null]}), {value: [18446744073709551615n, null]});
+  const pairs = [['A', {text: '語', gloss: undefined}], ['B', null]];
+  assert.deepEqual(api.echo_pairs(pairs), pairs);
+  assert.deepEqual(api.echo_pairs([['A', undefined]]), [['A', null]]);
+  assert.deepEqual(api.echo_pairs([]), []);
+  for (const pair of [null, {}, [], ['A'], ['A', null, 'extra']]) {
+    assert.throws(() => api.echo_pairs([pair]), error => String(error).includes('expected a pair'));
+  }
+  assert.throws(() => api.echo_pairs([[42, null]]));
+  assert.throws(() => api.echo_pairs([['A', {text: false}]]));
   const terms = [{text: '語', gloss: undefined}];
   assert.deepEqual(await api.echo_terms(terms), terms);
   assert.equal(await api.echo_terms(), undefined);

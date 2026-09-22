@@ -62,3 +62,13 @@ const configuredSerde: ConfiguredEnvelope<(bigint | null)[]> = configured_values
 // @ts-expect-error serde vectors in records are arrays, not typed arrays
 const wrongSerde: Envelope<Uint32Array> = generic_values({value: [42]});
 void [genericSerde, configuredSerde, wrongSerde];
+
+import { echo_pairs } from "../generated/node/bridge_fixture";
+const pairs: [string, Term | null][] = echo_pairs([["A", term], ["B", undefined]]);
+// @ts-expect-error a pair must contain exactly two entries
+echo_pairs([["A"]]);
+// @ts-expect-error tuple elements retain their types
+echo_pairs([[42, term]]);
+// @ts-expect-error output must not silently become any
+const wrongPair: number = echo_pairs([]);
+void [pairs, wrongPair];

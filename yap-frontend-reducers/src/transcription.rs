@@ -1,6 +1,6 @@
-use crate::Sound;
+use crate::{ProperNounGroup, Sound, proper_noun_groups};
 use language_utils::{
-    Course,
+    Course, ProperNounDefinition,
     text_cleanup::{normalize_for_grading, remove_accents_lowercase},
     transcription_challenge::{self, Grade, Part, PartGraded, PartSubmitted, WordGrade},
 };
@@ -160,6 +160,8 @@ pub fn failed_transcription_review(
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct TranscriptionState {
     pub parts: Vec<Part>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub proper_noun_definitions: Vec<(String, ProperNounDefinition)>,
     pub inputs: BTreeMap<usize, String>,
     pub phase: TranscriptionPhase,
 }
@@ -282,6 +284,8 @@ pub struct VerdictView {
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct TranscriptionView {
+    pub proper_nouns: Vec<ProperNounGroup>,
+    pub cant_listen_label: String,
     pub instructions: String,
     pub placeholder: String,
     pub blanks: Vec<BlankView>,
@@ -309,9 +313,13 @@ impl TranscriptionState {
 }
 
 #[bridgerton::bridge]
-pub fn transcription_start(parts: Vec<Part>) -> TranscriptionState {
+pub fn transcription_start(
+    parts: Vec<Part>,
+    proper_noun_definitions: Vec<(String, ProperNounDefinition)>,
+) -> TranscriptionState {
     TranscriptionState {
         parts,
+        proper_noun_definitions,
         inputs: BTreeMap::new(),
         phase: TranscriptionPhase::Editing,
     }
@@ -552,6 +560,12 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
         None
     };
     TranscriptionView {
+        proper_nouns: if editing {
+            proper_noun_groups(&state.proper_noun_definitions)
+        } else {
+            vec![]
+        },
+        cant_listen_label: "Can't listen now".into(),
         instructions: "Listen and fill in the blanks".into(),
         placeholder: "Write what you hear".into(),
         can_submit: editing && state.submission().all_blanks_filled,
@@ -579,13 +593,50 @@ mod reducer_tests {
         serde_json::from_value(serde_json::json!({"word":{"text":"chat","word_type":{"type":"Heteronym","word":"chat","lemma":"chat","pos":"NOUN"}},"whitespace":""})).unwrap()
     }
     fn start() -> TranscriptionState {
-        transcription_start(vec![
-            Part::Provided { part: literal() },
-            Part::AskedToTranscribe {
-                parts: vec![literal()],
-            },
-        ])
+        transcription_start(
+            vec![
+                Part::Provided { part: literal() },
+                Part::AskedToTranscribe {
+                    parts: vec![literal()],
+                },
+            ],
+            vec![],
+        )
     }
+    #[test]
+    fn proper_nouns_and_skip_copy_are_shared_and_hints_are_editing_only() {
+        let definitions = vec![(
+            "Paris".into(),
+            ProperNounDefinition {
+                is_person_name: false,
+                is_place_name: true,
+                is_organization_name: false,
+                is_other: false,
+                learner_native_language_translation: "Paris".into(),
+                description: None,
+            },
+        )];
+        let mut state = transcription_start(start().parts, definitions.clone());
+        let view = transcription_view(state.clone());
+        assert_eq!(view.proper_nouns, proper_noun_groups(&definitions));
+        assert_eq!(view.cant_listen_label, "Can't listen now");
+        state.phase = grading().phase;
+        assert!(transcription_view(state.clone()).proper_nouns.is_empty());
+        state.phase = graded().phase;
+        assert!(transcription_view(state).proper_nouns.is_empty());
+    }
+
+    #[test]
+    fn old_state_without_proper_nouns_still_deserializes() {
+        let mut json = serde_json::to_value(start()).unwrap();
+        json.as_object_mut()
+            .unwrap()
+            .remove("proper_noun_definitions");
+        let state: TranscriptionState = serde_json::from_value(json.clone()).unwrap();
+        assert!(state.proper_noun_definitions.is_empty());
+        assert_eq!(serde_json::to_value(state).unwrap(), json);
+    }
+
     fn filled() -> TranscriptionState {
         transcription_transition(
             start(),

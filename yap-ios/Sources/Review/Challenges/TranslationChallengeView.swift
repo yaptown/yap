@@ -63,10 +63,7 @@ struct TranslationChallengeView: View {
                         .overlay(alignment: .topLeading) {
                             if state.text.isEmpty { Text(view.placeholder).foregroundStyle(.secondary).padding(12).allowsHitTesting(false) }
                         }
-                    ForEach(Array(view.proper_nouns.enumerated()), id: \.offset) { _, entry in
-                        Text("\(entry.first): \(entry.second.learner_native_language_translation)").font(.subheadline)
-                        if let description = entry.second.description { Text(description).font(.caption) }
-                    }
+                    ProperNounGroupsView(groups: view.proper_nouns)
                 }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
                     reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip)

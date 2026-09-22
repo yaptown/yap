@@ -90,6 +90,11 @@ pub async fn echo_terms(terms: MaybeTerms) -> TermsResult {
     Ok(terms)
 }
 
+#[bridge]
+pub fn echo_pairs(pairs: Vec<(String, Option<super::Term>)>) -> Vec<(String, Option<super::Term>)> {
+    pairs
+}
+
 pub type Numbers = Vec<u32>;
 #[bridge]
 pub fn echo_numbers(numbers: Numbers) -> Numbers {

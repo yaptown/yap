@@ -1,6 +1,8 @@
 //! Translation review decisions. Browser request cancellation and draft storage
 //! remain host adapters; this module never writes or modifies deck events.
-use crate::{AudioRequest, DefinitionView, Sound, definition_view};
+use crate::{
+    AudioRequest, DefinitionView, ProperNounGroup, Sound, definition_view, proper_noun_groups,
+};
 use language_utils::{
     Course, ProperNounDefinition, autograde,
     text_cleanup::{find_closest_match, normalize_for_grading},
@@ -612,7 +614,7 @@ pub struct TranslationView {
     pub badge: Option<String>,
     pub placeholder: String,
     pub words: Vec<TranslationWordView>,
-    pub proper_nouns: Vec<(String, ProperNounDefinition)>,
+    pub proper_nouns: Vec<ProperNounGroup>,
     pub verdict: Option<TranslationVerdictView>,
     pub correct_translation: Option<String>,
     pub is_grading: bool,
@@ -893,7 +895,7 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
         placeholder: "Translation...".into(),
         words,
         proper_nouns: if editing {
-            state.sentence.proper_noun_definitions
+            proper_noun_groups(&state.sentence.proper_noun_definitions)
         } else {
             vec![]
         },
@@ -1240,7 +1242,21 @@ mod reducer_tests {
         let view = translation_view(state.clone());
         assert_eq!(view.placeholder, "Translation...");
         assert_eq!(view.submit_label, "Check Answer");
-        assert_eq!(view.proper_nouns.len(), 1);
+        assert_eq!(
+            view.proper_nouns,
+            vec![ProperNounGroup {
+                spans: vec![
+                    crate::TextSpan {
+                        text: "Paris".into(),
+                        target_language: true
+                    },
+                    crate::TextSpan {
+                        text: ": place".into(),
+                        target_language: false
+                    },
+                ],
+            }]
+        );
         assert_eq!(view.words[0].tint, TranslationWordTint::Neutral);
         let state = translation_transition(state, TranslationEvent::WordTapped { index: 0 }).state;
         assert_eq!(translation_view(state.clone()).definitions.len(), 1);

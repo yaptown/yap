@@ -9,6 +9,8 @@ pub mod design;
 pub use design::*;
 pub mod pending;
 pub use pending::*;
+pub mod proper_nouns;
+pub use proper_nouns::*;
 pub mod transcription;
 pub use transcription::*;
 

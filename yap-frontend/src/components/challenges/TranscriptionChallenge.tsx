@@ -59,10 +59,8 @@ import { MoreVertical, X } from "lucide-react";
 import { ReportIssueModal } from "./ReportIssueModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InlineTextarea } from "../ui/textarea";
-import {
-  ProperNounDefinitions,
-  GramDefinitionDisplay,
-} from "./TranslationChallenge";
+import { GramDefinitionDisplay } from "./TranslationChallenge";
+import { ProperNounGroups } from "./ProperNounGroups";
 import { TargetLanguageText } from "../TargetLanguageText";
 
 interface TranscriptionChallengeProps {
@@ -133,7 +131,10 @@ export function TranscriptionChallenge({
     (state) => ({ ...state, inputs: [...state.inputs] }),
   ));
   const [state, setState] = useState<TranscriptionState>(
-    () => initialState ?? storage?.load() ?? transcription_start(challenge.parts),
+    () =>
+      initialState ??
+      storage?.load() ??
+      transcription_start(challenge.parts, challenge.proper_noun_definitions),
   );
   const stateRef = useRef(state);
   const view = useMemo(() => transcription_view(state), [state]);
@@ -561,8 +562,8 @@ export function TranscriptionChallenge({
             />
 
             {editing && (
-              <ProperNounDefinitions
-                definitions={challenge.proper_noun_definitions}
+              <ProperNounGroups
+                groups={view.proper_nouns}
                 targetLanguage={targetLanguage}
               />
             )}
@@ -720,7 +721,9 @@ export function TranscriptionChallenge({
       </div>
 
       <div className="mt-4 flex flex-col gap-2 sticky bottom-0">
-        {onCantListen && editing && <CantListenButton onClick={onCantListen} label="Can't listen now" />}
+        {onCantListen && editing && (
+          <CantListenButton onClick={onCantListen} label={view.cant_listen_label} />
+        )}
 
         <div>
           {view.is_grading ? (
