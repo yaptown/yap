@@ -958,6 +958,7 @@ function Review({
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
+        title: "Review",
         showSignupNag: true,
         dailyGoalPercent: view.progress * 100,
         backButton: { label: "Home", onBack: () => navigate("/home") },

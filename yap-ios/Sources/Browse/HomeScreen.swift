@@ -98,7 +98,7 @@ struct HomeScreen: View {
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height)
                 }
             }.background(Color(uiColor: .systemGroupedBackground))
-                .navigationTitle("Yap")
+                .navigationTitle("Yap.Town")
                 #if DEBUG
                 .onChange(of: DebugHarness.shared.commandID) { _, _ in
                     let command = DebugHarness.shared.command

@@ -70,7 +70,7 @@ export function HomeScreen({
       <TopPageLayout
         userInfo={userInfo}
         headerProps={{
-          title: "Yap",
+          title: "Yap.Town",
           showSignupNag: injectedView ? false : undefined,
         }}
       >

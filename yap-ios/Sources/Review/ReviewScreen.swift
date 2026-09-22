@@ -33,6 +33,7 @@ struct ReviewScreen: View {
         }
         .environment(\.reviewScreen, view)
         .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle("Review")
         .navigationBarTitleDisplayMode(.inline)
         .onDisappear { audio.stop() }
         #if DEBUG
