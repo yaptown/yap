@@ -155,14 +155,7 @@ enum DeckState {
                 try await weapon.load_language_pack_core(course: selected, on_progress: progress)
                 guard let self, self.active, self.generation == expected, !Task.isCancelled else { return }
                 self.coreReady = true; self.recompute()
-                for attempt in 0...5 {
-                    do { try await weapon.load_language_pack(course: selected, on_progress: progress); break }
-                    catch {
-                        guard self.active, self.generation == expected, !Task.isCancelled else { return }
-                        if attempt == 5 { throw error }
-                        try await Task.sleep(for: .seconds(min(30, 2 << attempt)))
-                    }
-                }
+                try await weapon.load_language_pack(course: selected, on_progress: progress)
                 guard self.active, self.generation == expected, !Task.isCancelled else { return }
                 self.recompute()
                 Telemetry.breadcrumb("language-pack", "Full language pack loaded")

@@ -28,6 +28,7 @@ import {
   type Course,
   type Heteronym,
   type Language,
+  type LanguageDataError,
   type LiteralGrades,
   type Gram,
   type PartGraded,
@@ -1571,25 +1572,15 @@ export function useDeck():
     if (!alive()) return null;
     setLanguagePackResult({ courseKey, ok: true });
     // The sentence half downloads in the background, possibly while the
-    // placement test is already underway — a transient failure must not tear
-    // down that usable core-only state. Retries are cheap (already-downloaded
-    // chunks are cached in OPFS), so retry with backoff and only surface an
-    // error if it keeps failing.
-    for (let attempt = 0; ; attempt++) {
-      try {
-        await weapon.load_language_pack(course, onProgress);
-        break;
-      } catch (error) {
-        if (!alive()) return null;
-        if (attempt >= 5) {
-          setLoadingState(null);
-          setLanguagePackResult({ courseKey, ok: false, error });
-          return null;
-        }
-        await new Promise((resolve) =>
-          setTimeout(resolve, Math.min(30_000, 2_000 * 2 ** attempt)),
-        );
-      }
+    // placement test is already underway. Rust retries transient chunk failures
+    // for both halves before surfacing an error to the host.
+    try {
+      await weapon.load_language_pack(course, onProgress);
+    } catch (error) {
+      if (!alive()) return null;
+      setLoadingState(null);
+      setLanguagePackResult({ courseKey, ok: false, error });
+      return null;
     }
     if (!alive()) return null;
     setLoadingState(null);
@@ -1612,7 +1603,9 @@ export function useDeck():
       const error = languagePackResult.error;
       console.error("Failed to fetch language pack:", error);
       const errorMessage = getErrorMessage(error);
-      const isNetworkError = errorMessage.startsWith("Network error:");
+      const detail = (error as Partial<LanguageDataError> | null)?.detail;
+      const isNetworkError =
+        detail?.type === "Download" || detail?.type === "Timeout";
       if (!isNetworkError) {
         // Only report non-network errors to Sentry. Network failures are expected
         // on flaky mobile connections and the user already sees a retry UI.

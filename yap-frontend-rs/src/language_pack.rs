@@ -148,6 +148,44 @@ struct ChunkDeadlines {
     stall_ms: u32,
 }
 
+#[derive(Clone, Copy)]
+struct ChunkRetryPolicy {
+    delays_ms: &'static [u32],
+}
+
+impl ChunkRetryPolicy {
+    async fn download(
+        self,
+        part: PackPart,
+        chunk_index: usize,
+        mut fetch: impl AsyncFnMut() -> Result<Vec<u8>, LanguageDataError>,
+    ) -> Result<Vec<u8>, LanguageDataError> {
+        let mut delays = self.delays_ms.iter().enumerate();
+        loop {
+            match fetch().await {
+                Err(
+                    error @ (LanguageDataError::Download { .. } | LanguageDataError::Timeout(_)),
+                ) => {
+                    let Some((attempt, &delay_ms)) = delays.next() else {
+                        return Err(error);
+                    };
+                    log::warn!(
+                        "Retrying language data {} chunk {chunk_index} after attempt {}: {error}",
+                        part.slug(),
+                        attempt + 1,
+                    );
+                    bridgerton::platform::sleep_ms(delay_ms).await;
+                }
+                result => return result,
+            }
+        }
+    }
+}
+
+const LANGUAGE_DATA_RETRY_POLICY: ChunkRetryPolicy = ChunkRetryPolicy {
+    delays_ms: &[2_000, 4_000, 8_000, 16_000, 30_000],
+};
+
 const LANGUAGE_DATA_DEADLINES: ChunkDeadlines = ChunkDeadlines {
     first_byte_ms: 30_000,
     stall_ms: 60_000,
@@ -388,12 +426,13 @@ pub enum LanguageDataError {
         rkyv::rancor::Error,
     ),
 
-    #[error("Pack download error: {0}")]
-    Download(
+    #[error("Pack download error for {url}: {source}")]
+    Download {
+        url: String,
         #[source]
         #[bridge(message)]
-        fetch_happen::Error,
-    ),
+        source: fetch_happen::Error,
+    },
 
     #[error("Server returned HTTP {0}")]
     ServerError(u16),
@@ -498,16 +537,20 @@ async fn download_and_cache_language_data(
             continue;
         }
 
-        let chunk_bytes = download_language_data_chunk(
-            course,
-            part,
-            chunk_index,
-            expected_chunk_len,
-            downloaded_bytes,
-            meta,
-            set_loading_state,
-        )
-        .await?;
+        let chunk_bytes = LANGUAGE_DATA_RETRY_POLICY
+            .download(part, chunk_index, async || {
+                download_language_data_chunk(
+                    course,
+                    part,
+                    chunk_index,
+                    expected_chunk_len,
+                    downloaded_bytes,
+                    meta,
+                    set_loading_state,
+                )
+                .await
+            })
+            .await?;
 
         cache_language_data_bytes(language_directory_handle, filename, &chunk_bytes).await?;
         bytes.extend_from_slice(&chunk_bytes);
@@ -595,7 +638,10 @@ async fn fetch_language_data_chunk(
                 deadlines.first_byte_ms
             ))
         })?
-        .map_err(LanguageDataError::Download)?;
+        .map_err(|source| LanguageDataError::Download {
+            url: url.to_owned(),
+            source,
+        })?;
 
     if !response.ok() {
         log::error!(
@@ -620,7 +666,10 @@ async fn fetch_language_data_chunk(
 
     let reader = response
         .stream_reader()
-        .map_err(LanguageDataError::Download)?;
+        .map_err(|source| LanguageDataError::Download {
+            url: url.to_owned(),
+            source,
+        })?;
 
     let mut chunk_bytes = Vec::with_capacity(expected_chunk_len);
     let mut last_logged_percent = downloaded_before_chunk * 100 / expected_total_size.max(1);
@@ -654,7 +703,12 @@ async fn fetch_language_data_chunk(
                 }
             }
             Ok(None) => break,
-            Err(error) => return Err(LanguageDataError::Download(error)),
+            Err(source) => {
+                return Err(LanguageDataError::Download {
+                    url: url.to_owned(),
+                    source,
+                });
+            }
         }
     }
 
@@ -879,6 +933,86 @@ mod native_tests {
                 assert!(matches!(result, Err(LanguageDataError::InvalidData(_))));
             }
         }
+    }
+
+    const TEST_RETRY_POLICY: ChunkRetryPolicy = ChunkRetryPolicy { delays_ms: &[0; 5] };
+
+    async fn check_chunk_retries(close_first_connection: bool) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (stop, stopped) = tokio::sync::oneshot::channel::<()>();
+        let server = tokio::spawn(async move {
+            tokio::pin!(stopped);
+            let mut connections = 0;
+            loop {
+                let (mut socket, _) = tokio::select! {
+                    accepted = listener.accept() => accepted.unwrap(),
+                    _ = &mut stopped => break,
+                };
+                connections += 1;
+                let mut request = Vec::new();
+                while !request.ends_with(b"\r\n\r\n") {
+                    request.push(socket.read_u8().await.unwrap());
+                }
+                if close_first_connection && connections == 1 {
+                    continue;
+                }
+                let response = if close_first_connection {
+                    "HTTP/1.1 206 Partial Content\r\nContent-Range: bytes 0-3/4\r\nContent-Length: 4\r\nConnection: close\r\n\r\npack"
+                } else {
+                    "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 4\r\nConnection: close\r\n\r\nbusy"
+                };
+                socket.write_all(response.as_bytes()).await.unwrap();
+            }
+            connections
+        });
+        let url = format!("http://{address}/fra_for_eng/language_data_core_123.rkyv");
+        let mut attempts = 0;
+        let result = TEST_RETRY_POLICY
+            .download(PackPart::Core, 0, async || {
+                attempts += 1;
+                fetch_language_data_chunk(
+                    &url,
+                    ChunkDescriptor {
+                        course: Course {
+                            target_language: Language::French,
+                            native_language: Language::English,
+                        },
+                        part: PackPart::Core,
+                        chunk_index: 0,
+                    },
+                    LANGUAGE_DATA_DEADLINES,
+                    4,
+                    0,
+                    4,
+                    &|_, _| {},
+                )
+                .await
+            })
+            .await;
+        stop.send(()).unwrap();
+        let connections = server.await.unwrap();
+        if close_first_connection {
+            assert_eq!(result.unwrap(), b"pack");
+            // Count wrapper calls too: transport-internal retries must not make
+            // this test pass without exercising our policy.
+            assert_eq!(attempts, 2);
+            assert_eq!(connections, 2);
+        } else {
+            assert!(matches!(result, Err(LanguageDataError::ServerError(503))));
+            assert_eq!(attempts, 1);
+            assert_eq!(connections, 1);
+        }
+    }
+
+    #[tokio::test]
+    async fn chunk_download_retries_transport_failure() {
+        check_chunk_retries(true).await;
+    }
+
+    #[tokio::test]
+    async fn chunk_download_does_not_retry_server_error() {
+        check_chunk_retries(false).await;
     }
 
     /// Short real deadlines. The error message says which one fired; wall
