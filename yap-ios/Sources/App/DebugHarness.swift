@@ -2,16 +2,20 @@
 import Foundation
 import Observation
 
+enum DebugScreen: String {
+    case review, home, stats, goals, dictionary, due, settings
+}
+
 /// Explicit opt-in simulator driver. Never compiled into release builds. Commands
 /// exercise the same view actions as taps; only the designated throwaway account
 /// may receive test review/add events. No credentials are written to disk or logs.
 @Observable @MainActor final class DebugHarness {
     static let shared = DebugHarness()
-    var fixture: ReviewScreenView?
+    var fixture: Fixture?
     var fixtureName = ""
     var command = ""
     var commandID = 0
-    var activeTab: CourseTab = .learn
+    var activeScreen: DebugScreen = .review
     private var started = false
     static func log(_ text: String) {
         print("Yap test: \(text)")
@@ -20,7 +24,7 @@ import Observation
         let prior = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
         try? (prior + text + "\n").write(to: url, atomically: true, encoding: .utf8)
     }
-    static func dumpFixture(_ fixture: ReviewScreenView, name: String) {
+    static func dumpFixture(_ fixture: Fixture, name: String) {
         guard !name.isEmpty, name.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "-" }) else {
             log("invalid fixture name"); return
         }

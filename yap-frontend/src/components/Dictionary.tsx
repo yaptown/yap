@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   type Deck,
   type Weapon,
@@ -29,7 +30,10 @@ export function Dictionary({
   nativeLanguage: Language;
   accessToken: string | undefined;
 }) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const location = useLocation();
+  const [searchQuery, setSearchQuery] = useState<string>(() =>
+    typeof location.state?.query === "string" ? location.state.query : "",
+  );
   const [justAdded, setJustAdded] = useState<Set<number>>(new Set());
 
   const totalCount = deck.get_gram_dictionary_count();

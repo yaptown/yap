@@ -1,39 +1,31 @@
 import SwiftUI
 
 struct DailyGoalEditor: View {
-    let deck: Deck
-    let session: YapSession
-    init(deck: Deck, session: YapSession) { self.deck = deck; self.session = session }
-    @State private var expanded = false
-    #if DEBUG
-    @State private var visible = false
-    #endif
+    let target: DailyReviewTarget
+    let options: [GoalOptionView]
+    let addEvent: (DeckEvent) -> Void
+    @State private var pendingTarget: DailyReviewTarget
+    init(target: DailyReviewTarget, options: [GoalOptionView], addEvent: @escaping (DeckEvent) -> Void) {
+        self.target = target; self.options = options; self.addEvent = addEvent
+        _pendingTarget = State(initialValue: target)
+    }
     var body: some View {
-        DisclosureGroup("Change daily goal", isExpanded: $expanded) {
-            VStack(spacing: 12) {
-                ForEach(get_daily_goal_options(), id: \.value) { goal in
-                    Button {
-                        session.addDeckEvent(deck.set_daily_review_target(daily_review_target: goal.value))
-                    } label: {
-                        HStack {
-                            Text("\(goal.minutes) min/day — \(String(describing: goal.value))")
-                            Spacer()
-                            if deck.get_daily_review_target_setting() == goal.value { Image(systemName: "checkmark") }
-                        }.frame(minHeight: 44)
-                    }
+        VStack(spacing: 12) {
+            Picker("Daily goal", selection: $pendingTarget) {
+                ForEach(options, id: \.target) { goal in
+                    Text("\(String(describing: goal.target)) · \(goal.minutes)m").tag(goal.target)
                 }
-            }
+            }.pickerStyle(.menu)
+            Button("Set goal") {
+                if let goal = options.first(where: { $0.target == pendingTarget }) { addEvent(goal.event) }
+            }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).disabled(pendingTarget == target)
         }
         #if DEBUG
-        .onAppear { visible = true }.onDisappear { visible = false }
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            guard visible else { return }
-            if DebugHarness.shared.command == "edit-goal" { expanded = true }
-            // Learn routes this command through ReviewScreen; Stats owns its editor.
+            guard DebugHarness.shared.activeScreen == .goals else { return }
             let command = DebugHarness.shared.command
-            if DebugHarness.shared.activeTab == .stats, command.hasPrefix("goal "), let index = Int(command.dropFirst(5)) {
-                let goals = get_daily_goal_options()
-                if goals.indices.contains(index) { session.addDeckEvent(deck.set_daily_review_target(daily_review_target: goals[index].value)) }
+            if command.hasPrefix("goal "), let index = Int(command.dropFirst(5)), options.indices.contains(index) {
+                addEvent(options[index].event)
             }
         }
         #endif
@@ -69,7 +61,7 @@ struct AccomplishmentScreen: View {
             dismiss()
         }
         #if DEBUG
-        .onChange(of: DebugHarness.shared.commandID) { _, _ in if DebugHarness.shared.activeTab == .learn && DebugHarness.shared.command == "next" { dismiss() } }
+        .onChange(of: DebugHarness.shared.commandID) { _, _ in if DebugHarness.shared.activeScreen == .review && DebugHarness.shared.command == "next" { dismiss() } }
         #endif
     }
     @ViewBuilder private func cards(_ title: String, _ cards: [TodayNewCard]) -> some View {

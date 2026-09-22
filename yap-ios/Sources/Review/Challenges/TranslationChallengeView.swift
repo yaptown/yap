@@ -90,7 +90,7 @@ struct TranslationChallengeView: View {
         }
         .onDisappear { gradingTask?.cancel() }
         #if DEBUG
-        .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeTab == .learn else { return }; debugCommand() }
+        .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeScreen == .review else { return }; debugCommand() }
         #endif
     }
     private func tint(_ tint: TranslationWordTint) -> Color {
@@ -170,7 +170,7 @@ struct TranslationChallengeView: View {
         if command.hasPrefix("dump-fixture ") {
             var capture = screen
             capture.step = .Challenge(ChallengeView(challenge: .TranslateComprehensibleSentence(sentence), transcription: nil, translation: state))
-            DebugHarness.dumpFixture(capture, name: String(command.dropFirst(13)))
+            DebugHarness.dumpFixture(.Review(capture), name: String(command.dropFirst(13)))
         }
         if command.hasPrefix("type ") { send(.TextChanged(text: String(command.dropFirst(5)))) }
         if command == "type-reference" { send(.TextChanged(text: sentence.native_translations.first ?? "")) }

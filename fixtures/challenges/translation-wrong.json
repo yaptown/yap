@@ -1,164 +1,13 @@
 {
-  "native_language": "English",
-  "target_language": "French",
-  "step": {
-    "type": "Challenge",
-    "view": {
-      "challenge": {
-        "type": "TranslateComprehensibleSentence",
-        "audio": {
-          "request": {
-            "text": "C'est Mardi Gras ?",
-            "language": "French",
-            "is_ssml": false,
-            "speed": 1.0,
-            "verification_hints": [
-              "Mardi Gras"
-            ]
-          },
-          "provider": "ElevenLabs"
-        },
-        "target_language": "C'est Mardi Gras ?",
-        "target_language_literals": [
-          {
-            "word": {
-              "text": "C'",
-              "word_type": {
-                "type": "Heteronym",
-                "word": "ce",
-                "lemma": "ce",
-                "pos": "PRON"
-              }
-            },
-            "whitespace": ""
-          },
-          {
-            "word": {
-              "text": "est",
-              "word_type": {
-                "type": "Heteronym",
-                "word": "est",
-                "lemma": "être",
-                "pos": "VERB"
-              }
-            },
-            "whitespace": " "
-          },
-          {
-            "word": {
-              "text": "Mardi Gras",
-              "word_type": {
-                "type": "Other",
-                "other_tag": "PROPN"
-              }
-            },
-            "whitespace": " "
-          },
-          {
-            "word": {
-              "text": "?",
-              "word_type": {
-                "type": "Other",
-                "other_tag": "PUNCT"
-              }
-            },
-            "whitespace": ""
-          }
-        ],
-        "literal_gram_indices": [
-          0,
-          0,
-          1,
-          2
-        ],
-        "gram_definitions_for_lookup": [
-          {
-            "Phrasebook": {
-              "target_language_multi_word_term": "c'est",
-              "meaning": "it's",
-              "additional_notes": "Contraction of ce + est. Very common for identifying or presenting someone or something, and often used before nouns: C'est Superman, C'est un hôpital. Depending on context, it can also mean 'that is'.",
-              "target_language_example": "C'est une bonne idée.",
-              "native_language_example": "It's a good idea.",
-              "informal": false,
-              "compositional": true,
-              "cognate": false,
-              "false_cognate": false,
-              "can_be_translated_literally": true
-            }
-          },
-          null,
-          null
-        ],
-        "gram_breakdowns_for_lookup": [
-          [
-            [
-              "c'",
-              "ce",
-              "this, that"
-            ],
-            [
-              "est",
-              "être",
-              "is"
-            ]
-          ],
-          null,
-          null
-        ],
-        "unique_target_language_phrases": [],
-        "phrase_definitions": [],
-        "phrase_breakdowns": [],
-        "native_translations": [
-          "Is it Mardi Gras?"
-        ],
-        "movie_titles": [
-          [
-            "tt0108500",
-            "Les Visiteurs"
-          ]
-        ],
-        "proper_noun_definitions": [
-          [
-            "Mardi Gras",
-            {
-              "is_person_name": false,
-              "is_place_name": false,
-              "is_organization_name": false,
-              "is_other": true,
-              "learner_native_language_translation": "Mardi Gras",
-              "description": "A carnival celebration, especially associated with the day before Ash Wednesday."
-            }
-          ]
-        ],
-        "primary_expression": [
-          {
-            "Tok": {
-              "text": "c'",
-              "word_type": {
-                "type": "Heteronym",
-                "word": "ce",
-                "lemma": "ce",
-                "pos": "PRON"
-              }
-            }
-          },
-          {
-            "Tok": {
-              "text": "est",
-              "word_type": {
-                "type": "Heteronym",
-                "word": "est",
-                "lemma": "être",
-                "pos": "VERB"
-              }
-            }
-          }
-        ],
-        "second_chance": false
-      },
-      "transcription": null,
-      "translation": {
-        "sentence": {
+  "screen": "Review",
+  "view": {
+    "native_language": "English",
+    "target_language": "French",
+    "step": {
+      "type": "Challenge",
+      "view": {
+        "challenge": {
+          "type": "TranslateComprehensibleSentence",
           "audio": {
             "request": {
               "text": "C'est Mardi Gras ?",
@@ -309,38 +158,192 @@
           ],
           "second_chance": false
         },
-        "course": {
-          "nativeLanguage": "English",
-          "targetLanguage": "French"
-        },
-        "text": "The dog eats bread.",
-        "tapped": [],
-        "phase": {
-          "type": "Graded",
-          "completed_at_ms": 1789936715972.445,
-          "correct_translation": "Is it Mardi Gras?",
-          "result": {
-            "type": "Manual",
-            "grade": {
-              "literalGrades": [
-                "Forgot",
-                "Forgot",
-                null,
-                null
+        "transcription": null,
+        "translation": {
+          "sentence": {
+            "audio": {
+              "request": {
+                "text": "C'est Mardi Gras ?",
+                "language": "French",
+                "is_ssml": false,
+                "speed": 1.0,
+                "verification_hints": [
+                  "Mardi Gras"
+                ]
+              },
+              "provider": "ElevenLabs"
+            },
+            "target_language": "C'est Mardi Gras ?",
+            "target_language_literals": [
+              {
+                "word": {
+                  "text": "C'",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ce",
+                    "lemma": "ce",
+                    "pos": "PRON"
+                  }
+                },
+                "whitespace": ""
+              },
+              {
+                "word": {
+                  "text": "est",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "est",
+                    "lemma": "être",
+                    "pos": "VERB"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "Mardi Gras",
+                  "word_type": {
+                    "type": "Other",
+                    "other_tag": "PROPN"
+                  }
+                },
+                "whitespace": " "
+              },
+              {
+                "word": {
+                  "text": "?",
+                  "word_type": {
+                    "type": "Other",
+                    "other_tag": "PUNCT"
+                  }
+                },
+                "whitespace": ""
+              }
+            ],
+            "literal_gram_indices": [
+              0,
+              0,
+              1,
+              2
+            ],
+            "gram_definitions_for_lookup": [
+              {
+                "Phrasebook": {
+                  "target_language_multi_word_term": "c'est",
+                  "meaning": "it's",
+                  "additional_notes": "Contraction of ce + est. Very common for identifying or presenting someone or something, and often used before nouns: C'est Superman, C'est un hôpital. Depending on context, it can also mean 'that is'.",
+                  "target_language_example": "C'est une bonne idée.",
+                  "native_language_example": "It's a good idea.",
+                  "informal": false,
+                  "compositional": true,
+                  "cognate": false,
+                  "false_cognate": false,
+                  "can_be_translated_literally": true
+                }
+              },
+              null,
+              null
+            ],
+            "gram_breakdowns_for_lookup": [
+              [
+                [
+                  "c'",
+                  "ce",
+                  "this, that"
+                ],
+                [
+                  "est",
+                  "être",
+                  "is"
+                ]
               ],
-              "phrasesRemembered": [],
-              "phrasesForgot": [],
-              "encouragement": "It's always worth taking a guess, and I'm glad you gave it a try!",
-              "explanation": "It looks like you might have gotten a bit off track with this one. The phrase <word>C'est</word> means 'It is' (or 'Is it' when asking a question), and <word>Mardi Gras</word> is the carnival holiday, so the sentence translates to 'Is it Mardi Gras?'"
+              null,
+              null
+            ],
+            "unique_target_language_phrases": [],
+            "phrase_definitions": [],
+            "phrase_breakdowns": [],
+            "native_translations": [
+              "Is it Mardi Gras?"
+            ],
+            "movie_titles": [
+              [
+                "tt0108500",
+                "Les Visiteurs"
+              ]
+            ],
+            "proper_noun_definitions": [
+              [
+                "Mardi Gras",
+                {
+                  "is_person_name": false,
+                  "is_place_name": false,
+                  "is_organization_name": false,
+                  "is_other": true,
+                  "learner_native_language_translation": "Mardi Gras",
+                  "description": "A carnival celebration, especially associated with the day before Ash Wednesday."
+                }
+              ]
+            ],
+            "primary_expression": [
+              {
+                "Tok": {
+                  "text": "c'",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ce",
+                    "lemma": "ce",
+                    "pos": "PRON"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "est",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "est",
+                    "lemma": "être",
+                    "pos": "VERB"
+                  }
+                }
+              }
+            ],
+            "second_chance": false
+          },
+          "course": {
+            "nativeLanguage": "English",
+            "targetLanguage": "French"
+          },
+          "text": "The dog eats bread.",
+          "tapped": [],
+          "phase": {
+            "type": "Graded",
+            "completed_at_ms": 1789936715972.445,
+            "correct_translation": "Is it Mardi Gras?",
+            "result": {
+              "type": "Manual",
+              "grade": {
+                "literalGrades": [
+                  "Forgot",
+                  "Forgot",
+                  null,
+                  null
+                ],
+                "phrasesRemembered": [],
+                "phrasesForgot": [],
+                "encouragement": "It's always worth taking a guess, and I'm glad you gave it a try!",
+                "explanation": "It looks like you might have gotten a bit off track with this one. The phrase <word>C'est</word> means 'It is' (or 'Is it' when asking a question), and <word>Mardi Gras</word> is the carnival holiday, so the sentence translates to 'Is it Mardi Gras?'"
+              }
             }
           }
         }
       }
-    }
-  },
-  "progress": 0.0,
-  "total_reviews": 0,
-  "total_count": 0,
-  "offer_engagement": false,
-  "online": true
+    },
+    "progress": 0.0,
+    "total_reviews": 0,
+    "total_count": 0,
+    "offer_engagement": false,
+    "online": true
+  }
 }

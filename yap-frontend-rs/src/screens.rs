@@ -1,5 +1,5 @@
-//! Serializable snapshots of the complete review screen.
-//! Hosts own presentation state, never the choice of screen or deck actions.
+//! Serializable screen snapshots. Rust owns content and deck actions;
+//! hosts own navigation and presentation state.
 use crate::*;
 
 #[bridgerton::bridge(transparent)]
@@ -24,6 +24,7 @@ pub struct ReviewPlanView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SentenceListOptionView {
     pub category: SentenceListCategory,
+    pub label: String,
     pub selection: Option<SentenceListSelection>,
     pub event: DeckEvent,
 }
@@ -164,13 +165,18 @@ impl Deck {
                 plan: Box::new(plan),
             };
         }
-        let movies = self.get_movie_stats();
-        let navigation = get_sentence_list_navigation(
-            sentence_list,
-            !movies.is_empty(),
-            !self.get_pimsleur_stats().is_empty(),
-        );
-        let info = self.get_no_cards_ready_info(banned, navigation.selection.clone());
+        let (curriculum, info) = self.curriculum_view(banned, sentence_list);
+        let CurriculumView {
+            navigation,
+            sentence_list_options,
+            progress,
+            sentence_list_label,
+            next_sentence_list,
+            next_sentence_list_event,
+            ..
+        } = curriculum;
+        let manual_add_options =
+            self.get_manual_add_options(navigation.selection.clone(), is_signed_in);
         let idle = get_idle_study_state(
             next_due.is_some(),
             self.num_cards_added(),
@@ -214,76 +220,8 @@ impl Deck {
         } else {
             (IdleKind::AllCaughtUp, "All caught up!", String::new())
         };
-        let smart_add_label = match kind {
-            IdleKind::FirstRun => Some("Start learning".into()),
-            IdleKind::NeedsMoreCards => Some(format!(
-                "Add {} {}{}",
-                info.smart_add_count,
-                if info.smart_add_regime == SmartAddRegime::Easy {
-                    "easy "
-                } else {
-                    ""
-                },
-                if info.smart_add_count == 1 {
-                    "card"
-                } else {
-                    "cards"
-                },
-            )),
-            IdleKind::NothingToDo | IdleKind::AllCaughtUp => None,
-        };
+        let smart_add_label = smart_add_label(&kind, &info);
         let show_sentence_list = kind == IdleKind::AllCaughtUp;
-        let progress = self
-            .get_sentence_list_progress(navigation.selection.clone(), info.tier_info.percent_known);
-        let sentence_list_label = match &navigation.selection {
-            None => format!(
-                "{} {} Level {}",
-                info.tier_info.name,
-                get_language_metadata(self.get_target_language()).common_name,
-                info.tier_info.level
-            ),
-            Some(SentenceListSelection::Movie { id }) => self
-                .get_movie_metadata(vec![id.clone()])
-                .first()
-                .map(|m| m.title.clone())
-                .unwrap_or_else(|| "Movie".into()),
-            Some(SentenceListSelection::PimsleurLesson { level, lesson }) => {
-                format!("Pimsleur Level {level}, Lesson {lesson}")
-            }
-        };
-        let next_sentence_list = if progress.all_available_learned {
-            match navigation.selection {
-                Some(SentenceListSelection::Movie { .. }) => self.get_best_movie_sentence_list(),
-                Some(SentenceListSelection::PimsleurLesson { .. }) => {
-                    self.get_best_pimsleur_sentence_list()
-                }
-                None => None,
-            }
-        } else {
-            None
-        };
-        let sentence_list_options = navigation
-            .categories
-            .iter()
-            .map(|category| {
-                let selection = if navigation.categories[navigation.selected_index] == *category {
-                    navigation.selection.clone()
-                } else {
-                    self.get_sentence_list_for_category(
-                        *category,
-                        movies.first().map(|movie| movie.id.clone()),
-                    )
-                };
-                SentenceListOptionView {
-                    category: *category,
-                    event: self.change_sentence_list(selection.clone()),
-                    selection,
-                }
-            })
-            .collect();
-        let next_sentence_list_event = next_sentence_list
-            .as_ref()
-            .map(|selection| self.change_sentence_list(Some(selection.clone())));
         IdleScreenView::Idle(Box::new(IdleView {
             target_language: self.get_target_language(),
             kind,
@@ -291,8 +229,7 @@ impl Deck {
             show_sentence_list,
             title: title.into(),
             body,
-            manual_add_options: self
-                .get_manual_add_options(navigation.selection.clone(), is_signed_in),
+            manual_add_options,
             info,
             next_due,
             banned_notice: (review.due_but_banned_count() > 0).then(|| {
@@ -338,7 +275,140 @@ impl Deck {
     }
 }
 
+/// Curriculum content shared by Idle and Goals; selecting an option only emits an event.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CurriculumView {
+    pub title: String,
+    pub navigation: SentenceListNavigation,
+    pub sentence_list_options: Vec<SentenceListOptionView>,
+    pub progress: SentenceListProgress,
+    pub sentence_list_label: String,
+    pub next_sentence_list: Option<SentenceListSelection>,
+    pub next_sentence_list_event: Option<DeckEvent>,
+    pub has_movies: bool,
+    pub has_pimsleur: bool,
+}
+
+fn sentence_list_category_label(category: SentenceListCategory) -> &'static str {
+    match category {
+        SentenceListCategory::Essential => "Essential",
+        SentenceListCategory::Movie => "Movies",
+        SentenceListCategory::Pimsleur => "Pimsleur",
+    }
+}
+
+fn smart_add_label(kind: &IdleKind, info: &NoCardsReadyInfo) -> Option<String> {
+    match kind {
+        IdleKind::FirstRun => Some("Start learning".into()),
+        IdleKind::NeedsMoreCards => Some(format!(
+            "Add {} {}{}",
+            info.smart_add_count,
+            if info.smart_add_regime == SmartAddRegime::Easy {
+                "easy "
+            } else {
+                ""
+            },
+            if info.smart_add_count == 1 {
+                "card"
+            } else {
+                "cards"
+            },
+        )),
+        IdleKind::NothingToDo | IdleKind::AllCaughtUp => None,
+    }
+}
+
 impl Deck {
+    fn curriculum_navigation(
+        &self,
+        sentence_list: Option<SentenceListSelection>,
+    ) -> (SentenceListNavigation, Option<String>) {
+        let movies = self.get_movie_stats();
+        let navigation = get_sentence_list_navigation(
+            sentence_list,
+            !movies.is_empty(),
+            !self.get_pimsleur_stats().is_empty(),
+        );
+        (navigation, movies.first().map(|movie| movie.id.clone()))
+    }
+
+    fn curriculum_view(
+        &self,
+        banned: Vec<ChallengeRequirements>,
+        sentence_list: Option<SentenceListSelection>,
+    ) -> (CurriculumView, NoCardsReadyInfo) {
+        let (navigation, fallback_movie_id) = self.curriculum_navigation(sentence_list);
+        let has_movies = navigation.categories.contains(&SentenceListCategory::Movie);
+        let has_pimsleur = navigation
+            .categories
+            .contains(&SentenceListCategory::Pimsleur);
+        let info = self.get_no_cards_ready_info(banned, navigation.selection.clone());
+        let progress = self
+            .get_sentence_list_progress(navigation.selection.clone(), info.tier_info.percent_known);
+        let sentence_list_label = match &navigation.selection {
+            None => format!(
+                "{} {} Level {}",
+                info.tier_info.name,
+                get_language_metadata(self.get_target_language()).common_name,
+                info.tier_info.level
+            ),
+            Some(SentenceListSelection::Movie { id }) => self
+                .get_movie_metadata(vec![id.clone()])
+                .first()
+                .map(|m| m.title.clone())
+                .unwrap_or_else(|| "Movie".into()),
+            Some(SentenceListSelection::PimsleurLesson { level, lesson }) => {
+                format!("Pimsleur Level {level}, Lesson {lesson}")
+            }
+        };
+        let next_sentence_list = if progress.all_available_learned {
+            match navigation.selection {
+                Some(SentenceListSelection::Movie { .. }) => self.get_best_movie_sentence_list(),
+                Some(SentenceListSelection::PimsleurLesson { .. }) => {
+                    self.get_best_pimsleur_sentence_list()
+                }
+                None => None,
+            }
+        } else {
+            None
+        };
+        let sentence_list_options = navigation
+            .categories
+            .iter()
+            .map(|category| {
+                let selection = if navigation.categories[navigation.selected_index] == *category {
+                    navigation.selection.clone()
+                } else {
+                    self.get_sentence_list_for_category(*category, fallback_movie_id.clone())
+                };
+                SentenceListOptionView {
+                    category: *category,
+                    label: sentence_list_category_label(*category).into(),
+                    event: self.change_sentence_list(selection.clone()),
+                    selection,
+                }
+            })
+            .collect();
+        let next_sentence_list_event = next_sentence_list
+            .as_ref()
+            .map(|selection| self.change_sentence_list(Some(selection.clone())));
+        (
+            CurriculumView {
+                title: "Curriculum".into(),
+                navigation,
+                sentence_list_options,
+                progress,
+                sentence_list_label,
+                next_sentence_list,
+                next_sentence_list_event,
+                has_movies,
+                has_pimsleur,
+            },
+            info,
+        )
+    }
+
     fn goal_options_view(&self) -> Vec<GoalOptionView> {
         get_daily_goal_options()
             .into_iter()
@@ -348,6 +418,390 @@ impl Deck {
                 event: self.set_daily_review_target(option.value),
             })
             .collect()
+    }
+}
+
+/// Home needs scheduling context, not Review's onboarding and held-challenge state.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct HomeScreenInputs {
+    pub banned: Vec<ChallengeRequirements>,
+    pub sentence_list: Option<SentenceListSelection>,
+    pub online: bool,
+    pub is_signed_in: bool,
+    pub timestamp_ms: f64,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UpNextView {
+    pub title: String,
+    pub headline: String,
+    pub kind_label: String,
+    pub due_count: u64,
+    pub ready_label: String,
+    /// Present when the scheduler has no challenge, including audio and plan states.
+    pub idle: Option<IdleScreenView>,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GoalCardView {
+    pub title: String,
+    pub tier_name: String,
+    pub level: u32,
+    pub total_levels: u32,
+    /// Progress within this level, on a 0–100 scale (not overall vocabulary coverage).
+    pub percent: f64,
+    pub percent_label: String,
+    pub subtitle: String,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StreakCardView {
+    pub title: String,
+    pub days: u32,
+    pub days_label: String,
+    pub today_label: String,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StatsCardView {
+    pub title: String,
+    pub total_cards: u64,
+    pub cards_label: String,
+    /// Overall vocabulary coverage, on the accessor's 0–1 scale.
+    pub percent_known: f64,
+    pub percent_known_label: String,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DictionaryCardView {
+    pub title: String,
+    pub search_placeholder: String,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct HomeScreenView {
+    pub title: String,
+    pub course_label: String,
+    pub native_language: Language,
+    pub target_language: Language,
+    pub up_next: UpNextView,
+    pub goal: GoalCardView,
+    pub streak: StreakCardView,
+    pub stats: StatsCardView,
+    pub dictionary: DictionaryCardView,
+    pub due_count: u64,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DueSummaryView {
+    pub title: String,
+    pub ready_now: u64,
+    pub total: u64,
+    pub label: String,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StatsScreenView {
+    pub target_language: Language,
+    pub title: String,
+    pub xp: f64,
+    pub xp_label: String,
+    pub total_reviews: u64,
+    pub total_reviews_label: String,
+    pub streak: StreakCardView,
+    pub percent_known: f64,
+    pub percent_known_label: String,
+    pub due: DueSummaryView,
+    pub leeches: Vec<CardSummary>,
+    pub leech_count: u64,
+    pub leeches_label: String,
+    pub frequency_knowledge_chart_data: Vec<FrequencyKnowledgePoint>,
+    pub frequency_knowledge_chart_title: String,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GoalsScreenView {
+    pub title: String,
+    pub target_language: Language,
+    pub tier_info: TierInfo,
+    pub goal: GoalCardView,
+    pub daily_goal_title: String,
+    pub daily_goal: DailyReviewTarget,
+    pub daily_goal_label: String,
+    pub daily_goal_options: Vec<GoalOptionView>,
+    pub curriculum: CurriculumView,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DueWordsScreenView {
+    pub target_language: Language,
+    pub title: String,
+    pub ready_now: u64,
+    pub total: u64,
+    pub summary_label: String,
+    pub cards: Vec<CardSummary>,
+}
+
+impl Deck {
+    fn goal_card_view(&self, tier: &TierInfo) -> GoalCardView {
+        let language = get_language_metadata(self.get_target_language()).common_name;
+        GoalCardView {
+            title: format!("{} {language} Level {}", tier.name, tier.level),
+            tier_name: tier.name.clone(),
+            level: tier.level,
+            total_levels: tier.total_levels,
+            percent: tier.percent_known,
+            percent_label: format!("{:.0}%", tier.percent_known),
+            subtitle: format!(
+                "Level {} of {} · unlocks {:.1}% of everyday {language}",
+                tier.level, tier.total_levels, tier.percent_of_usage,
+            ),
+        }
+    }
+
+    fn streak_card_view(&self, timestamp_ms: f64) -> StreakCardView {
+        let day = DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64)
+            .unwrap_or_else(Utc::now)
+            .with_timezone(&self.context.timezone)
+            .date_naive();
+        let days = self.get_daily_streak_on(day);
+        StreakCardView {
+            title: "Streak".into(),
+            days,
+            days_label: format!("{days} {}", if days == 1 { "day" } else { "days" }),
+            today_label: format!(
+                "{} / {} min today",
+                self.get_today_time_spent_on(day) / 60,
+                self.get_daily_review_target() / 60,
+            ),
+        }
+    }
+
+    fn stats_card_view(&self) -> StatsCardView {
+        let total_cards = self.get_all_cards_summary().len() as u64;
+        let percent_known = self.get_percent_of_words_known();
+        StatsCardView {
+            title: "Stats".into(),
+            total_cards,
+            cards_label: format!(
+                "{total_cards} {}",
+                if total_cards == 1 { "card" } else { "cards" }
+            ),
+            percent_known,
+            percent_known_label: format!(
+                "{:.1}% of everyday {}",
+                percent_known * 100.0,
+                get_language_metadata(self.get_target_language()).common_name,
+            ),
+        }
+    }
+
+    fn due_summary_view(&self, ready_now: u64, total: u64) -> DueSummaryView {
+        DueSummaryView {
+            title: "Due words".into(),
+            ready_now,
+            total,
+            label: format!(
+                "{ready_now} ready now · {total} {}",
+                if total == 1 { "card" } else { "cards" }
+            ),
+        }
+    }
+}
+
+/// Only projects the selected challenge; it never chooses a card or sentence.
+fn challenge_preview(challenge: &Challenge<Gram<String>>, language: Language) -> (String, String) {
+    match challenge {
+        Challenge::FlashCardReview { indicator, .. } => match indicator {
+            CardIndicator::WrittenGram { gram } => {
+                (gram.to_display_string(language), "Flashcard".into())
+            }
+            CardIndicator::ListeningGram { .. } => {
+                ("Listen to the word".into(), "Listening".into())
+            }
+            CardIndicator::LetterPronunciation { pattern, .. } => {
+                (pattern.clone(), "Pronunciation".into())
+            }
+        },
+        Challenge::PronunciationChallenge { pattern, .. } => {
+            (pattern.clone(), "Pronunciation".into())
+        }
+        Challenge::TranslateComprehensibleSentence(sentence) => {
+            (sentence.target_language.clone(), "Translation".into())
+        }
+        Challenge::TranscribeComprehensibleSentence(_) => (
+            "Listen and fill in the blanks".into(),
+            "Transcription".into(),
+        ),
+    }
+}
+
+#[bridgerton::bridge]
+impl Deck {
+    pub fn home_screen_view(&self, inputs: HomeScreenInputs) -> HomeScreenView {
+        let review = self.get_review_info(inputs.banned.clone(), inputs.timestamp_ms);
+        let due_count = review.due_count() as u64;
+        let (navigation, _) = self.curriculum_navigation(inputs.sentence_list.clone());
+        let info = self.get_no_cards_ready_info(inputs.banned.clone(), navigation.selection);
+        let (headline, kind_label, idle) = if let Some(challenge) = review.get_next_challenge(self)
+        {
+            let (headline, kind_label) = challenge_preview(&challenge, self.get_target_language());
+            (headline, kind_label, None)
+        } else {
+            let idle = self.idle_screen_view(
+                inputs.banned,
+                inputs.sentence_list,
+                inputs.online,
+                inputs.is_signed_in,
+                inputs.timestamp_ms,
+            );
+            let (headline, kind_label) = match &idle {
+                IdleScreenView::Idle(view) => (view.title.clone(), "Review"),
+                IdleScreenView::AudioPending { online, .. } => (
+                    if *online {
+                        "Preparing audio…"
+                    } else {
+                        "Connect to download audio"
+                    }
+                    .into(),
+                    "Audio pending",
+                ),
+                IdleScreenView::ReviewPlanOffer(_) => {
+                    ("Your study plan is ready".into(), "Study plan")
+                }
+                IdleScreenView::StudyPlanComplete { title, .. } => (title.clone(), "Study plan"),
+            };
+            (headline, kind_label.into(), Some(idle))
+        };
+        HomeScreenView {
+            title: "Home".into(),
+            course_label: format!(
+                "Learning {}",
+                get_language_metadata(self.get_target_language()).common_name
+            ),
+            native_language: self.context.course.native_language,
+            target_language: self.get_target_language(),
+            up_next: UpNextView {
+                title: "Up next".into(),
+                headline,
+                kind_label,
+                due_count,
+                ready_label: format!(
+                    "{due_count} {} ready",
+                    if due_count == 1 { "card" } else { "cards" }
+                ),
+                idle,
+            },
+            goal: self.goal_card_view(&info.tier_info),
+            streak: self.streak_card_view(inputs.timestamp_ms),
+            stats: self.stats_card_view(),
+            dictionary: DictionaryCardView {
+                title: "Dictionary".into(),
+                search_placeholder: format!(
+                    "Search {} or {}",
+                    get_language_metadata(self.get_target_language()).common_name,
+                    get_language_metadata(self.context.course.native_language).common_name,
+                ),
+            },
+            due_count,
+        }
+    }
+
+    pub fn stats_screen_view(
+        &self,
+        banned: Vec<ChallengeRequirements>,
+        timestamp_ms: f64,
+    ) -> StatsScreenView {
+        let stats = self.stats_card_view();
+        let review = self.get_review_info(banned, timestamp_ms);
+        let leeches = self.get_leeches();
+        let leech_count = leeches.len() as u64;
+        let xp = self.get_xp();
+        let total_reviews = self.get_total_reviews();
+        StatsScreenView {
+            target_language: self.get_target_language(),
+            title: stats.title,
+            xp,
+            xp_label: format!("{xp:.0} XP"),
+            total_reviews,
+            total_reviews_label: format!(
+                "{total_reviews} {}",
+                if total_reviews == 1 {
+                    "review"
+                } else {
+                    "reviews"
+                }
+            ),
+            streak: self.streak_card_view(timestamp_ms),
+            percent_known: stats.percent_known,
+            percent_known_label: stats.percent_known_label,
+            due: self.due_summary_view(review.due_count() as u64, stats.total_cards),
+            leeches,
+            leech_count,
+            leeches_label: format!(
+                "{leech_count} {}",
+                if leech_count == 1 { "leech" } else { "leeches" }
+            ),
+            frequency_knowledge_chart_data: self.get_frequency_knowledge_chart_data(),
+            frequency_knowledge_chart_title: "Word knowledge by frequency".into(),
+        }
+    }
+
+    pub fn goals_screen_view(
+        &self,
+        banned: Vec<ChallengeRequirements>,
+        sentence_list: Option<SentenceListSelection>,
+    ) -> GoalsScreenView {
+        let (curriculum, info) = self.curriculum_view(banned, sentence_list);
+        GoalsScreenView {
+            title: "Goals".into(),
+            target_language: self.get_target_language(),
+            goal: self.goal_card_view(&info.tier_info),
+            tier_info: info.tier_info,
+            daily_goal_title: "Daily goal".into(),
+            daily_goal: self.get_daily_review_target_setting(),
+            daily_goal_label: format!("{} min per day", self.get_daily_review_target() / 60),
+            daily_goal_options: self.goal_options_view(),
+            curriculum,
+        }
+    }
+
+    pub fn due_words_view(
+        &self,
+        banned: Vec<ChallengeRequirements>,
+        timestamp_ms: f64,
+    ) -> DueWordsScreenView {
+        let review = self.get_review_info(banned, timestamp_ms);
+        let summary = self.due_summary_view(
+            review.due_count() as u64,
+            self.get_all_cards_summary().len() as u64,
+        );
+        // Use the same scheduled list as Review (including bans, locks and audio
+        // readiness), rather than filtering cards by their timestamps ourselves.
+        let cards = review
+            .due_cards
+            .iter()
+            .filter_map(|indicator| self.card_to_summary(indicator, self.cards.get(indicator)?))
+            .collect();
+        DueWordsScreenView {
+            target_language: self.get_target_language(),
+            title: summary.title,
+            ready_now: summary.ready_now,
+            total: summary.total,
+            summary_label: summary.label,
+            cards,
+        }
     }
 }
 
@@ -391,7 +845,7 @@ pub enum ReviewStep {
     Idle(Box<IdleScreenView>),
 }
 
-/// The entire review screen, also the on-disk parity fixture format.
+/// The entire review screen, captured by the Review fixture variant.
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ReviewScreenView {
@@ -482,5 +936,335 @@ impl Deck {
             offer_engagement: prompts.offer_engagement,
             online: inputs.online,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    fn inputs() -> HomeScreenInputs {
+        HomeScreenInputs {
+            banned: vec![],
+            sentence_list: None,
+            online: true,
+            is_signed_in: true,
+            timestamp_ms: Utc
+                .with_ymd_and_hms(2026, 9, 21, 12, 0, 0)
+                .unwrap()
+                .timestamp_millis() as f64,
+        }
+    }
+
+    fn with_due_cards() -> Deck {
+        let deck = Deck::default();
+        let event = deck
+            .get_no_cards_ready_info(vec![], None)
+            .smart_add_event
+            .unwrap();
+        let context = deck.context.clone();
+        let state = <Deck as weapon::AppState>::process_event(
+            DeckState::from(deck),
+            &context,
+            &weapon::data_model::Timestamped {
+                timestamp: DateTime::from_timestamp_millis(inputs().timestamp_ms as i64).unwrap(),
+                within_device_events_index: 0,
+                timezone: Some(context.timezone),
+                event,
+            },
+        );
+        <Deck as weapon::AppState>::finalize(state, &context)
+    }
+
+    fn json(value: impl Serialize) -> serde_json::Value {
+        serde_json::to_value(value).unwrap()
+    }
+
+    #[test]
+    fn home_idle_and_goals_share_curriculum_and_smart_add() {
+        let deck = Deck::default();
+        for selection in [
+            None,
+            Some(SentenceListSelection::Movie {
+                id: "unavailable".into(),
+            }),
+            Some(SentenceListSelection::PimsleurLesson {
+                level: 1,
+                lesson: 1,
+            }),
+        ] {
+            for signed_in in [false, true] {
+                let mut inputs = inputs();
+                inputs.sentence_list = selection.clone();
+                inputs.is_signed_in = signed_in;
+                let home = deck.home_screen_view(inputs.clone());
+                let goals = deck.goals_screen_view(vec![], selection.clone());
+                let IdleScreenView::Idle(idle) = home.up_next.idle.unwrap() else {
+                    panic!("new deck should be idle");
+                };
+                assert_eq!(home.up_next.headline, idle.title);
+                assert_eq!(json(home.goal), json(goals.goal));
+                assert_eq!(json(&goals.curriculum.navigation), json(idle.navigation));
+                assert_eq!(
+                    json(goals.curriculum.sentence_list_options),
+                    json(idle.sentence_list_options)
+                );
+                assert_eq!(json(goals.curriculum.progress), json(idle.progress));
+                assert_eq!(
+                    goals.curriculum.sentence_list_label,
+                    idle.sentence_list_label
+                );
+                assert_eq!(
+                    json(goals.curriculum.next_sentence_list_event),
+                    json(idle.next_sentence_list_event)
+                );
+                assert_eq!(
+                    json(deck.get_manual_add_options(
+                        goals.curriculum.navigation.selection.clone(),
+                        signed_in,
+                    )),
+                    json(idle.manual_add_options)
+                );
+                assert_eq!(
+                    goals.curriculum.has_movies,
+                    goals
+                        .curriculum
+                        .navigation
+                        .categories
+                        .contains(&SentenceListCategory::Movie)
+                );
+                assert_eq!(
+                    goals.curriculum.has_pimsleur,
+                    goals
+                        .curriculum
+                        .navigation
+                        .categories
+                        .contains(&SentenceListCategory::Pimsleur)
+                );
+                assert_eq!(
+                    json(goals.daily_goal_options),
+                    json(deck.goal_options_view())
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn home_and_curriculum_labels_are_shared_display_copy() {
+        let home = Deck::default().home_screen_view(inputs());
+        assert_eq!(home.title, "Home");
+        assert_eq!(home.course_label, "Learning French");
+        assert_eq!(home.up_next.ready_label, "0 cards ready");
+
+        let deck = with_due_cards();
+        let home = deck.home_screen_view(inputs());
+        assert_eq!(home.up_next.due_count, 1);
+        assert_eq!(home.up_next.ready_label, "1 card ready");
+
+        for (category, expected) in [
+            (SentenceListCategory::Essential, "Essential"),
+            (SentenceListCategory::Movie, "Movies"),
+            (SentenceListCategory::Pimsleur, "Pimsleur"),
+        ] {
+            assert_eq!(sentence_list_category_label(category), expected);
+        }
+        let goals = deck.goals_screen_view(vec![], None);
+        for option in goals.curriculum.sentence_list_options {
+            assert_eq!(option.label, sentence_list_category_label(option.category));
+        }
+    }
+
+    #[test]
+    fn home_previews_the_review_scheduler_and_due_screens_agree() {
+        let deck = with_due_cards();
+        let inputs = inputs();
+        let review = deck.get_review_info(vec![], inputs.timestamp_ms);
+        let challenge = review
+            .get_next_challenge(&deck)
+            .expect("added cards should be ready");
+        let home = deck.home_screen_view(inputs.clone());
+        let (headline, kind) = challenge_preview(&challenge, deck.get_target_language());
+        assert_eq!(home.up_next.headline, headline);
+        assert_eq!(home.up_next.kind_label, kind);
+        assert!(home.up_next.idle.is_none());
+        assert_eq!(home.due_count, review.due_count() as u64);
+        assert_eq!(home.up_next.due_count, home.due_count);
+        assert!(home.stats.percent_known > 0.0);
+        assert_eq!(
+            home.stats.percent_known_label,
+            format!(
+                "{:.1}% of everyday French",
+                home.stats.percent_known * 100.0
+            ),
+        );
+        let due = deck.due_words_view(vec![], inputs.timestamp_ms);
+        assert_eq!(
+            json(&due.cards),
+            json(deck.due_card_summaries(inputs.timestamp_ms))
+        );
+        assert_eq!(due.ready_now, due.cards.len() as u64);
+        for banned in [
+            vec![],
+            vec![
+                ChallengeRequirements::Text,
+                ChallengeRequirements::Listening,
+                ChallengeRequirements::Speaking,
+            ],
+        ] {
+            let stats = deck.stats_screen_view(banned.clone(), inputs.timestamp_ms);
+            let due = deck.due_words_view(banned.clone(), inputs.timestamp_ms);
+            let home = deck.home_screen_view(HomeScreenInputs {
+                banned,
+                ..inputs.clone()
+            });
+            assert_eq!(stats.due.ready_now, due.ready_now);
+            assert_eq!(home.due_count, due.ready_now);
+            assert_eq!(stats.due.total, due.total);
+            assert_eq!(due.total, deck.get_all_cards_summary().len() as u64);
+            assert_eq!(stats.xp, deck.get_xp());
+            assert_eq!(stats.total_reviews, deck.get_total_reviews());
+            assert_eq!(stats.percent_known, deck.get_percent_of_words_known());
+            assert_eq!(stats.leech_count, stats.leeches.len() as u64);
+            assert_eq!(json(stats.leeches), json(deck.get_leeches()));
+            assert_eq!(
+                json(stats.frequency_knowledge_chart_data),
+                json(deck.get_frequency_knowledge_chart_data())
+            );
+        }
+    }
+
+    #[test]
+    fn locked_cards_stay_in_totals_but_not_ready_counts() {
+        let mut deck = with_due_cards();
+        deck.locked_cards.extend(deck.cards.keys().copied());
+        let inputs = HomeScreenInputs {
+            timestamp_ms: inputs().timestamp_ms + 60_000.0,
+            ..inputs()
+        };
+        let home = deck.home_screen_view(inputs.clone());
+        let due = deck.due_words_view(vec![], inputs.timestamp_ms);
+        let stats = deck.stats_screen_view(vec![], inputs.timestamp_ms);
+        assert_eq!(due.ready_now, 0);
+        assert!(due.cards.is_empty());
+        assert!(due.total > 0);
+        assert_eq!(stats.due.total, due.total);
+        assert_eq!(stats.due.ready_now, 0);
+        assert_eq!(home.due_count, 0);
+        assert_eq!(home.up_next.headline, "Your study plan is ready");
+        assert!(matches!(
+            home.up_next.idle,
+            Some(IdleScreenView::ReviewPlanOffer(_))
+        ));
+    }
+
+    #[test]
+    fn streak_cards_use_the_requested_local_day() {
+        let mut deck = with_due_cards();
+        deck.context.timezone = chrono::FixedOffset::east_opt(2 * 60 * 60).unwrap();
+        deck.stats.today.as_mut().unwrap().time_spent_seconds = 125;
+        let before_midnight = Utc
+            .with_ymd_and_hms(2026, 9, 21, 21, 59, 0)
+            .unwrap()
+            .timestamp_millis() as f64;
+        let after_midnight = before_midnight + 60_000.0;
+        let today = deck.streak_card_view(before_midnight);
+        let tomorrow = deck.streak_card_view(after_midnight);
+        assert_eq!(
+            today.today_label,
+            format!("2 / {} min today", deck.get_daily_review_target() / 60)
+        );
+        assert_eq!(
+            tomorrow.today_label,
+            format!("0 / {} min today", deck.get_daily_review_target() / 60)
+        );
+        let home = deck.home_screen_view(HomeScreenInputs {
+            timestamp_ms: after_midnight,
+            ..inputs()
+        });
+        let stats = deck.stats_screen_view(vec![], after_midnight);
+        assert_eq!(json(home.streak), json(&tomorrow));
+        assert_eq!(json(stats.streak), json(tomorrow));
+    }
+
+    #[test]
+    fn challenge_previews_cover_every_kind_without_revealing_listening_answers() {
+        for (fixture, expected_kind, expected_prompt) in [
+            (
+                include_str!("../../fixtures/challenges/flashcard-written.json"),
+                "Flashcard",
+                None,
+            ),
+            (
+                include_str!("../../fixtures/challenges/flashcard-listening.json"),
+                "Listening",
+                Some("Listen to the word"),
+            ),
+            (
+                include_str!("../../fixtures/challenges/pronunciation.json"),
+                "Pronunciation",
+                None,
+            ),
+            (
+                include_str!("../../fixtures/challenges/translation-empty.json"),
+                "Translation",
+                None,
+            ),
+            (
+                include_str!("../../fixtures/challenges/dictation-empty.json"),
+                "Transcription",
+                Some("Listen and fill in the blanks"),
+            ),
+        ] {
+            let Fixture::Review(view) = parse_fixture(fixture.into()).unwrap() else {
+                panic!("expected review fixture")
+            };
+            let ReviewStep::Challenge(challenge) = view.step else {
+                panic!("expected challenge")
+            };
+            let (headline, kind) = challenge_preview(&challenge.challenge, view.target_language);
+            assert_eq!(kind, expected_kind);
+            assert!(!headline.is_empty());
+            if let Some(prompt) = expected_prompt {
+                assert_eq!(headline, prompt);
+            }
+        }
+    }
+
+    #[test]
+    fn goal_and_overall_coverage_use_their_distinct_percentage_scales() {
+        let deck = Deck::default();
+        let goal = deck.goal_card_view(&TierInfo {
+            tier: 1,
+            name: "Elementary".into(),
+            level: 5,
+            total_levels: 7,
+            percent_known: 70.0,
+            percent_of_usage: 24.8,
+        });
+        assert_eq!(goal.title, "Elementary French Level 5");
+        assert_eq!(goal.percent_label, "70%");
+        assert_eq!(
+            goal.subtitle,
+            "Level 5 of 7 · unlocks 24.8% of everyday French"
+        );
+        let home = deck.home_screen_view(inputs());
+        assert_eq!(home.stats.cards_label, "0 cards");
+        assert_eq!(
+            home.stats.percent_known_label,
+            format!(
+                "{:.1}% of everyday French",
+                deck.get_percent_of_words_known() * 100.0
+            )
+        );
+        assert_eq!(
+            home.dictionary.search_placeholder,
+            "Search French or English"
+        );
+        assert_eq!(home.streak.days, 0);
+        assert_eq!(
+            home.streak.today_label,
+            format!("0 / {} min today", deck.get_daily_review_target() / 60)
+        );
     }
 }

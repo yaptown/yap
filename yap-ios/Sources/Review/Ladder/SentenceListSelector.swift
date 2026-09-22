@@ -28,7 +28,7 @@ struct SentenceListSelector: View {
                     Text("You're all done with \(title)!")
                     if let event = view.next_sentence_list_event {
                         Button("Next \(isMovie ? "movie" : "lesson")") {
-                            actions.addEvent(event)
+                            actions.setSentenceList(event)
                         }
                     }
                 } else if let milestone = next_progress_milestone(current: progress.percent_known, projected: info.percent_known_after) {
@@ -42,7 +42,7 @@ struct SentenceListSelector: View {
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            guard DebugHarness.shared.activeTab == .learn else { return }
+            guard DebugHarness.shared.activeScreen == .review else { return }
             switch DebugHarness.shared.command {
             case "acknowledge-pimsleur": pimsleurAcknowledged = true
             case "list essential": select(.Essential)
@@ -57,6 +57,6 @@ struct SentenceListSelector: View {
     private func select(_ category: SentenceListCategory) {
         guard let option = view.sentence_list_options.first(where: { $0.category == category }),
               option.selection != view.navigation.selection else { return }
-        actions.addEvent(option.event)
+        actions.setSentenceList(option.event)
     }
 }

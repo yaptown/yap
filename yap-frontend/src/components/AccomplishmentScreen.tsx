@@ -11,13 +11,11 @@ import {
 import type {
   AccomplishmentView,
   DeckEvent,
-  DailyReviewTarget,
 } from "../../../yap-frontend-rs/pkg";
 import { Trophy, ChevronDown, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DailyGoalEditor } from "./DailyGoalEditor";
 import { TargetLanguageText } from "./TargetLanguageText";
-
-
 
 function formatMinutes(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -70,8 +68,6 @@ export function AccomplishmentScreen({
   const targetLanguage = view.target_language;
   const dailyReviewTarget = view.target;
   const [goalOpen, setGoalOpen] = useState(false);
-  const [pendingTarget, setPendingTarget] =
-    useState<DailyReviewTarget>(dailyReviewTarget);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const confettiRef = useRef<confetti.CreateTypes | null>(null);
 
@@ -172,35 +168,13 @@ export function AccomplishmentScreen({
             />
           </CollapsibleTrigger>
           <CollapsibleContent className="flex flex-col items-center gap-3 mt-3">
-            <div className="flex rounded-lg border overflow-hidden">
-              {view.goals.map((opt) => (
-                <button
-                  key={opt.target}
-                  onClick={() => setPendingTarget(opt.target)}
-                  className={cn(
-                    "flex-1 px-3 py-2 text-sm font-medium transition-colors",
-                    "border-r last:border-r-0",
-                    opt.target === pendingTarget
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted",
-                  )}
-                >
-                  <div>{opt.target}</div>
-                  <div className="text-xs opacity-70">{opt.minutes}m</div>
-                </button>
-              ))}
-            </div>
-            <Button
-              size="sm"
-              disabled={pendingTarget === dailyReviewTarget}
-              onClick={() => {
-                const goal = view.goals.find(option => option.target === pendingTarget);
-                if (goal) addEvent(goal.event);
-                setGoalOpen(false);
-              }}
-            >
-              Set goal
-            </Button>
+            <DailyGoalEditor
+              key={dailyReviewTarget}
+              target={dailyReviewTarget}
+              options={view.goals}
+              addEvent={addEvent}
+              onSave={() => setGoalOpen(false)}
+            />
           </CollapsibleContent>
         </Collapsible>
       </div>

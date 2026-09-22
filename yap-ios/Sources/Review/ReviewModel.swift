@@ -30,6 +30,9 @@ import Observation
     func forceTranslation() { currentChallenge = deck.any_translation_challenge(); refresh() }
     #endif
     func start() {
+        #if DEBUG
+        guard DebugHarness.shared.fixture == nil else { return }
+        #endif
         guard !active else { return }; active = true
         refreshRestrictions(); refresh()
         tasks.append(Task { [weak self] in
@@ -41,7 +44,7 @@ import Observation
                 guard let self else { return }
                 ticks += 1
                 let audio = get_audio_cache_version(), clip = get_clip_manifest_version()
-                if self.currentChallenge == nil { self.refreshRestrictions() }
+                self.refreshRestrictions(preservingChallenge: true)
                 if audio != audioVersion || clip != clipVersion || ticks % 30 == 0 { self.refresh() }
                 audioVersion = audio; clipVersion = clip
             }
@@ -69,11 +72,19 @@ import Observation
             speaking_since: defaults.object(forKey: "yap-cant-speak-timestamp") as? Double,
             now_ms: Self.now)
     }
-    private func refreshRestrictions() {
+    private func refreshRestrictions(preservingChallenge: Bool = false) {
         let next = restrictions().banned
-        if next != banned { banned = next; currentChallenge = nil; refresh() }
+        if next != banned {
+            banned = next
+            // Expiry updates the hub's inputs without discarding an in-progress review.
+            if !preservingChallenge { currentChallenge = nil }
+            refresh()
+        }
     }
     func refresh() {
+        #if DEBUG
+        guard DebugHarness.shared.fixture == nil else { return }
+        #endif
         guard active else { return }
         let now = Self.now
         reviewInfo = deck.get_review_info(banned_challenge_types: banned, timestamp_ms: now)
@@ -146,6 +157,9 @@ import Observation
             packError: session.packError, syncError: session.syncError, authError: auth.error)
     }
     var actions: ReviewActions {
+        #if DEBUG
+        if DebugHarness.shared.fixture != nil { return .inert }
+        #endif
         var actions = ReviewActions()
         actions.submitting = submitting
         actions.pendingReviewKey = "\(session.userId)-\(String(describing: course))"
@@ -155,6 +169,7 @@ import Observation
         actions.completeTranscription = { self.completeTranscription($0, completedAtMs: $1) }
         actions.cantListen = cantListen; actions.cantSpeak = cantSpeak; actions.undoRestrictions = undoRestrictions
         actions.addEvent = session.addDeckEvent
+        actions.setSentenceList = session.addDeckEvent
         actions.dismissAccomplishment = { self.session.dismissedAccomplishmentAtReview = self.view.total_reviews; self.refresh() }
         actions.setPlacement = { self.session.placementSession = $0; self.refresh() }
         actions.completePlacementTest = { self.session.addDeckEvent(self.deck.complete_placement_test(known_words: $0.known_words, unknown_words: $0.unknown_words)) }

@@ -6,7 +6,6 @@ struct ReviewScreen: View {
     let view: ReviewScreenView
     @Environment(\.reviewActions!) private var actions
     var body: some View {
-        let metadata = get_language_metadata(language: view.target_language)
         VStack(spacing: 0) {
             ProgressView(value: view.progress)
                 .progressViewStyle(.linear).tint(Color.yapAccent).frame(height: 3)
@@ -35,23 +34,11 @@ struct ReviewScreen: View {
         .environment(\.reviewScreen, view)
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack(spacing: 8) {
-                    if Theme.emojiFontAvailable { Text(metadata.flag) }
-                    else { Image(systemName: "globe").foregroundStyle(Color.yapAccent) }
-                    Text(metadata.common_name).foregroundStyle(Color.yapText)
-                }.font(.headline)
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Switch course", systemImage: "globe", action: actions.switchCourse)
-                    .labelStyle(.iconOnly).frame(width: 44, height: 44)
-            }
-        }
         .onDisappear { audio.stop() }
         #if DEBUG
+        .onAppear { DebugHarness.shared.activeScreen = .review }
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            guard DebugHarness.shared.activeTab == .learn else { return }
+            guard DebugHarness.shared.activeScreen == .review else { return }
             let command = DebugHarness.shared.command
             if command == "dismiss-keyboard" { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
             guard command.hasPrefix("dump-fixture ") else { return }
@@ -61,7 +48,7 @@ struct ReviewScreen: View {
                 if case .TranscribeComprehensibleSentence = challenge.challenge { return }
             }
             if case .Idle = view.step { return }
-            DebugHarness.dumpFixture(view, name: String(command.dropFirst(13)))
+            DebugHarness.dumpFixture(.Review(view), name: String(command.dropFirst(13)))
         }
         #endif
     }

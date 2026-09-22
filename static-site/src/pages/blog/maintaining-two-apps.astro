@@ -1,0 +1,50 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Author from '../../components/Author.astro';
+
+---
+
+<Layout title="How I maintain two apps" description="As a solo dev, figuring out how to maintain a native iOS app and a PWA was challenging, but with Rust we can make it feasible.">
+  <article class="prose prose-invert [&_code]:before:content-none [&_code]:after:content-none">
+    <h1 class="text-3xl font-bold mb-2">How I maintain two apps</h1>
+    <p class="text-sm text-muted-foreground mb-8">September 21, 2026</p>
+    <p>
+      One thing I love about Rust is that it's nearly a "run-anywhere" language. Rust code can be compiled to run on microcontrollers or to WASM to run in the browser. This applies even to async code, amazingly enough. Rust achieves this by being low-level enough that it doesn't need to impose many requirements on the environment it's running in.
+    </p>
+    <p>
+      Still, it's absolutely crazy that it works at all. My mind was blown when I found out that I could write an async function in Rust, then compile it to wasm with wasm-bindgen, then call it from JavaScript like any other async function. But it's a consequence of Rust's async being a very powerful and flexible primitive, despite the hate it gets.
+    </p>
+    <p>
+      Anyway, this "run-anywhere" property can really simplify your life. The backstory is that Yap has a web version and an iOS version. <a href="https://chadnauseam.com/coding/tips/rust-and-react#Rust+%2B+Vite%2FReact+is+an+insanely+slick+combination">The web app uses React</a>, while the iOS app is native and uses SwiftUI. Anyone who's been in this situation can tell you that it's usually a nightmare to keep both codebases in sync. Hundreds of frameworks have tried to alleviate this issue by providing an abstraction over the UI that works on multiple platforms, but in my opinion none of these work very well.
+    </p>
+    <p>
+      For Yap, I think I stumbled on a novel and powerful point in the design space. I would put it like this:
+    </p>
+    <ol>
+      <li>All business logic is written in Rust, and reused on all platforms.</li>
+      <li>All UI logic is written in whatever language is best-supported by the target platform (JavaScript or Swift).</li>
+      <li>The shared Rust layer and the platform-specific JavaScript/Swift layers communicate via FFI.</li>
+    </ol>
+    <p>
+      This architecture has a huge number of advantages. The fact that the business logic is in Rust means that you get nearly the best possible performance for that part. (This is important for Yap, which has some needs that are very computationally demanding.) The business logic is shared between both platforms and that means that it cannot drift. And using the best-supported language for UI on both platforms gives you the ability to create a no-compromises UX.
+    </p>
+    <p>
+      Hopefully the benefits are clear. The cost, of course, is that the UI code has to be written twice. And if you vibe-code it, it <strong>will</strong> drift. Even frontier models like Astra will introduce discrepancies between the two codebases. But there are some ways to minimize how much of an issue this is. 
+    </p>
+    <p>
+      The first thing to do is obvious. Just move as much code into Rust, which can be shared. In addition to the core Yap business logic, we have a crate for reducers, so that components with complicated state transitions can encode those in Rust.
+    </p>
+    <p>
+      Another example is that I have a single Rust function that retrieves and returns all the information needed to render a screen. (I don't know the technical term for this but I got the idea from the Elm architecture). What this means is that the information available to each platform is the same, which makes it simpler to keep both halves in sync. The other benefit is that by having one struct per screen that contains everything needed to render it, you can mock your UI by simply constructing that struct by some other means, which makes it easier to render a particular screen of your app on demand.
+    </p>
+    <p>
+      That last bit is especially important, because if you have Rust structs that hold the info needed to render every screen of your app, you can render them on every platform and see how each screen looks on each platform. That makes it very easy for you (or your agent) to verify that all screens are visually consistent. 
+    </p>
+    <p>
+      For the bindings themselves. Swift has some nice features that make it work well. The main advantage is the ability to return non-Send futures. Since Swift 6.2, you've been able to annotate classes with @MainActor, which forces all callers to call their methods only from the main thread including the deinitializer. By annotating our generated futures like that, we can guarantee that they will only be called from the main thread, and therefore do not need to be Send or Sync. For the web, we get the same guarantee because browser JavaScript runtimes are single-threaded. The binding-generator crate can be found <a href="https://crates.io/crates/bridgerton">as `Bridgerton` on crates.io</a>.
+    </p>
+  </article>
+  <Author />
+</Layout>

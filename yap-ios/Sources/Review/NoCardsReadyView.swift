@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct NoCardsReadyView: View {
-    @Environment(\.reviewScreen!) private var screen
+    @Environment(\.reviewScreen) private var screen: ReviewScreenView?
     @Environment(\.reviewActions!) private var actions
     let view: IdleScreenView
     @State private var showReleasePlan = false
@@ -29,7 +29,7 @@ struct NoCardsReadyView: View {
                     }
                     #if DEBUG
                     .onChange(of: DebugHarness.shared.commandID) { _, _ in
-                        guard DebugHarness.shared.activeTab == .learn else { return }
+                        guard DebugHarness.shared.activeScreen == .review else { return }
                         if DebugHarness.shared.command == "next" { showReleasePlan = true }
                     }
                     #endif
@@ -40,13 +40,14 @@ struct NoCardsReadyView: View {
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
             let command = DebugHarness.shared.command
-            guard DebugHarness.shared.activeTab == .learn, command.hasPrefix("dump-fixture ") else { return }
+            guard DebugHarness.shared.activeScreen == .review, command.hasPrefix("dump-fixture ") else { return }
+            guard let screen else { return }
             let capture: IdleScreenView
             if case let .StudyPlanComplete(_, _, plan) = view, showReleasePlan { capture = .ReviewPlanOffer(plan) }
             else { capture = view }
             var snapshot = screen
             snapshot.step = .Idle(capture)
-            DebugHarness.dumpFixture(snapshot, name: String(command.dropFirst(13)))
+            DebugHarness.dumpFixture(.Review(snapshot), name: String(command.dropFirst(13)))
         }
         #endif
     }

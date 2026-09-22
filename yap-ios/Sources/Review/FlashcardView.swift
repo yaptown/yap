@@ -78,7 +78,7 @@ struct FlashcardView: View {
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            guard DebugHarness.shared.activeTab == .learn else { return }
+            guard DebugHarness.shared.activeScreen == .review else { return }
             switch DebugHarness.shared.command {
             case "reveal": revealed = true; hasOpened = true
             case "grade": rate(.Remembered)

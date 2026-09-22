@@ -62,7 +62,7 @@ export const NoCardsReady = memo(function NoCardsReady(props: NoCardsReadyProps)
   useEffect(() => {
     if (!plan) return;
     const key = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).closest("input, textarea, select, button")) return;
+      if ((event.target as HTMLElement).closest("input, textarea, select, button, a")) return;
       if (event.code !== "Space" && event.code !== "Enter") return;
       event.preventDefault();
       if (view.type === "StudyPlanComplete" && !showReleasePlan) setShowReleasePlan(true);
@@ -120,7 +120,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
 
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).closest("input, textarea, select, button")) return;
+      if ((event.target as HTMLElement).closest("input, textarea, select, button, a")) return;
       if ((event.code === "Space" || event.code === "Enter") && info.smart_add_event) {
         event.preventDefault(); addSmartCards();
       }
@@ -250,7 +250,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
               ) : (
                 <>
                   <div
-                    onClick={() => navigate("/sentence-lists")}
+                    onClick={() => navigate("/goals")}
                     className="hidden sm:block sm:order-first w-24 h-36 flex-shrink-0 rounded-lg border border-border/50 overflow-hidden cursor-pointer hover:scale-105 transition-all"
                   >
                     {sentenceListImage?.type === "url" ? (
@@ -382,7 +382,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
                     )}
 
                     <button
-                      onClick={() => navigate("/sentence-lists")}
+                      onClick={() => navigate("/goals")}
                       className="text-xs text-foreground/60 hover:text-foreground underline underline-offset-2 transition-colors text-left"
                     >
                       change sentence list

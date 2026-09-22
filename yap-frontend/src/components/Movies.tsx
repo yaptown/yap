@@ -11,12 +11,16 @@ interface MoviesProps {
   moviesWithMetadata: MovieWithMetadata[];
   targetLanguageIso?: string;
   deck: Deck;
+  selectedMovieId?: string;
+  onSelectMovie: (id: string) => void;
 }
 
 export const Movies = memo(function Movies({
   moviesWithMetadata: moviesWithMetadataProp,
   targetLanguageIso,
   deck,
+  selectedMovieId,
+  onSelectMovie,
 }: MoviesProps) {
   const moviesWithMetadata = useDeferredValue(moviesWithMetadataProp);
   const [showAllMovies, setShowAllMovies] = useState(false);
@@ -35,9 +39,9 @@ export const Movies = memo(function Movies({
   }
 
   return (
-    <div className="mt-6">
-      <h2 className="text-2xl font-semibold mb-3">Movies</h2>
-      <p className="text-sm text-muted-foreground mb-4">
+    <div className="flex flex-col gap-4">
+      <h2 className="text-2xl font-semibold">Movies</h2>
+      <p className="text-sm text-muted-foreground">
         You can usually watch a movie comfortably once you know 95% of the
         words.
       </p>
@@ -47,6 +51,7 @@ export const Movies = memo(function Movies({
             key={movie.id}
             movie={movie}
             deck={deck}
+            className={`relative ${selectedMovieId === movie.id ? "ring-2 ring-primary" : ""}`}
             overlayExtra={
               movie.cards_to_next_milestone !== null &&
               movie.cards_to_next_milestone !== undefined && (
@@ -58,6 +63,13 @@ export const Movies = memo(function Movies({
               )
             }
           >
+            <button
+              type="button"
+              className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+              aria-label={movie.title}
+              aria-pressed={selectedMovieId === movie.id}
+              onClick={() => onSelectMovie(movie.id)}
+            />
             <div className="p-2 text-center relative overflow-hidden">
               <div
                 className="absolute inset-0 bg-foreground/10"
@@ -72,8 +84,8 @@ export const Movies = memo(function Movies({
           </MoviePosterCard>
         ))}
       </div>
-      {!showAllMovies && sortedMovies.length > 10 && (
-        <div className="mt-4">
+      {!showAllMovies && sortedMovies.length > visibleMovies.length && (
+        <div>
           <button
             onClick={() => setShowAllMovies(true)}
             className="w-full py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200 font-medium rounded-md border border-border"

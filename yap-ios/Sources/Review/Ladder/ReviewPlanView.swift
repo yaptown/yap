@@ -24,7 +24,7 @@ struct ReviewPlanScreen: View {
             Button("Let's go!", action: onAccept).buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
         }
         #if DEBUG
-        .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeTab == .learn else { return }; if DebugHarness.shared.command == "next" { onAccept() } }
+        .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeScreen == .review else { return }; if DebugHarness.shared.command == "next" { onAccept() } }
         #endif
     }
 }

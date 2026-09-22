@@ -100,7 +100,7 @@ struct TranscriptionChallengeView: View {
         }
         .onDisappear { gradingTask?.cancel() }
         #if DEBUG
-        .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeTab == .learn else { return }; debugCommand() }
+        .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeScreen == .review else { return }; debugCommand() }
         #endif
     }
     private let sentenceFont = Font.title2.weight(.semibold)
@@ -201,7 +201,7 @@ struct TranscriptionChallengeView: View {
         if command.hasPrefix("dump-fixture ") {
             var capture = screen
             capture.step = .Challenge(ChallengeView(challenge: .TranscribeComprehensibleSentence(sentence), transcription: state, translation: nil))
-            DebugHarness.dumpFixture(capture, name: String(command.dropFirst(13)))
+            DebugHarness.dumpFixture(.Review(capture), name: String(command.dropFirst(13)))
         }
         if command.hasPrefix("type "), editing, let index = focused ?? blanks.first { send(.InputChanged(index: UInt64(index), text: String(command.dropFirst(5)))) }
         if command == "type-reference", editing {

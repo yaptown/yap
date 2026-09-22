@@ -1,0 +1,44 @@
+{
+  "screen": "Home",
+  "view": {
+    "title": "Home",
+    "course_label": "Learning French",
+    "native_language": "English",
+    "target_language": "French",
+    "up_next": {
+      "title": "Up next",
+      "headline": "Ziri peut partir.",
+      "kind_label": "Translation",
+      "due_count": 2,
+      "idle": null,
+      "ready_label": "2 cards ready"
+    },
+    "goal": {
+      "title": "Advanced French Level 11",
+      "tier_name": "Advanced",
+      "level": 11,
+      "total_levels": 30,
+      "percent": 3.2445668809305177,
+      "percent_label": "3%",
+      "subtitle": "Level 11 of 30 · unlocks 67.1% of everyday French"
+    },
+    "streak": {
+      "title": "Streak",
+      "days": 2,
+      "days_label": "2 days",
+      "today_label": "0 / 5 min today"
+    },
+    "stats": {
+      "title": "Stats",
+      "total_cards": 6,
+      "cards_label": "6 cards",
+      "percent_known": 0.10246544526835043,
+      "percent_known_label": "10.2% of everyday French"
+    },
+    "dictionary": {
+      "title": "Dictionary",
+      "search_placeholder": "Search French or English"
+    },
+    "due_count": 2
+  }
+}

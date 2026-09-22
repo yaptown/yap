@@ -35,7 +35,7 @@ struct PlacementTestView: View {
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            guard DebugHarness.shared.activeTab == .learn else { return }
+            guard DebugHarness.shared.activeScreen == .review else { return }
             let command = DebugHarness.shared.command
             if command == "next" { next() }
             if command == "back" { actions.setPlacement(host.deck.start_placement_session()) }

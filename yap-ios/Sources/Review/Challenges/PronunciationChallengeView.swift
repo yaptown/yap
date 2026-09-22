@@ -36,7 +36,7 @@ struct PronunciationChallengeView: View {
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            guard DebugHarness.shared.activeTab == .learn else { return }
+            guard DebugHarness.shared.activeScreen == .review else { return }
             let command = DebugHarness.shared.command
             if command == "pron-grade" || command == "grade" { rate(.Remembered) }
             if command == "audio", let cue = cues.first {

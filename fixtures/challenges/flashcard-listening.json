@@ -1,200 +1,203 @@
 {
-  "native_language": "English",
-  "target_language": "French",
-  "step": {
-    "type": "Challenge",
-    "view": {
-      "challenge": {
-        "type": "FlashCardReview",
-        "indicator": {
-          "type": "ListeningGram",
-          "gram": [
-            {
-              "Tok": {
-                "text": "ta",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "ta",
-                  "lemma": "ton",
-                  "pos": "DET"
+  "screen": "Review",
+  "view": {
+    "native_language": "English",
+    "target_language": "French",
+    "step": {
+      "type": "Challenge",
+      "view": {
+        "challenge": {
+          "type": "FlashCardReview",
+          "indicator": {
+            "type": "ListeningGram",
+            "gram": [
+              {
+                "Tok": {
+                  "text": "ta",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ta",
+                    "lemma": "ton",
+                    "pos": "DET"
+                  }
                 }
               }
-            }
-          ]
-        },
-        "flashcard": {
-          "content": {
-            "type": "Listening",
-            "possible_grams": [
-              [
-                true,
-                [
-                  {
-                    "word": {
-                      "text": "ta",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "ta",
-                        "lemma": "ton",
-                        "pos": "DET"
-                      }
-                    },
-                    "whitespace": ""
-                  }
-                ],
-                [
-                  {
-                    "Dictionary": {
-                      "target_language_word": "ta",
-                      "definitions": [
-                        {
-                          "native": "your",
-                          "note": "informal singular; used before a feminine singular noun",
-                          "example_sentence_target_language": "Ta voiture est rouge.",
-                          "example_sentence_native_language": "Your car is red.",
-                          "cognate": false,
-                          "false_cognate": false
-                        }
-                      ],
-                      "morphology": [
-                        {
-                          "gender": "Feminine",
-                          "number": "Singular",
-                          "politeness": "Informal",
-                          "tense": null,
-                          "person": "Second",
-                          "case": null,
-                          "mood": null,
-                          "aspect": null
-                        }
-                      ],
-                      "segments": [
-                        {
-                          "surface": "ta",
-                          "canonical": "ton",
-                          "tag": "2sg.f.inf"
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "Dictionary": {
-                      "target_language_word": "ta",
-                      "definitions": [
-                        {
-                          "native": "your",
-                          "note": "Informal singular; used before a feminine singular noun beginning with a consonant.",
-                          "example_sentence_target_language": "Où est ta voiture ?",
-                          "example_sentence_native_language": "Where is your car?",
-                          "cognate": false,
-                          "false_cognate": false
-                        }
-                      ],
-                      "morphology": [
-                        {
-                          "gender": "Feminine",
-                          "number": "Singular",
-                          "politeness": "Informal",
-                          "tense": null,
-                          "person": "Second",
-                          "case": null,
-                          "mood": null,
-                          "aspect": null
-                        }
-                      ],
-                      "segments": [
-                        {
-                          "surface": "ta",
-                          "canonical": "ton",
-                          "tag": "2sg.f.inf"
-                        }
-                      ]
-                    }
-                  }
-                ]
-              ],
-              [
-                false,
-                [
-                  {
-                    "word": {
-                      "text": "tas",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "tas",
-                        "lemma": "tas",
-                        "pos": "NOUN"
-                      }
-                    },
-                    "whitespace": ""
-                  }
-                ],
-                [
-                  {
-                    "Dictionary": {
-                      "target_language_word": "tas",
-                      "definitions": [
-                        {
-                          "native": "pile, heap",
-                          "note": null,
-                          "example_sentence_target_language": "Il y a un tas de vêtements sur le lit.",
-                          "example_sentence_native_language": "There’s a pile of clothes on the bed.",
-                          "cognate": false,
-                          "false_cognate": false
-                        },
-                        {
-                          "native": "a lot of",
-                          "note": "Common in the phrase « un tas de + noun » (informal).",
-                          "example_sentence_target_language": "On a un tas de choses à faire aujourd’hui.",
-                          "example_sentence_native_language": "We have a lot of things to do today.",
-                          "cognate": false,
-                          "false_cognate": false
-                        }
-                      ],
-                      "morphology": [
-                        {
-                          "gender": "Masculine",
-                          "number": null,
-                          "politeness": null,
-                          "tense": null,
-                          "person": null,
-                          "case": null,
-                          "mood": null,
-                          "aspect": null
-                        }
-                      ],
-                      "segments": [
-                        {
-                          "surface": "tas",
-                          "canonical": "tas"
-                        }
-                      ]
-                    }
-                  }
-                ]
-              ]
             ]
           },
-          "audio": {
-            "request": {
-              "text": "ta",
-              "language": "French",
-              "is_ssml": false,
-              "speed": 1.0
+          "flashcard": {
+            "content": {
+              "type": "Listening",
+              "possible_grams": [
+                [
+                  true,
+                  [
+                    {
+                      "word": {
+                        "text": "ta",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "ta",
+                          "lemma": "ton",
+                          "pos": "DET"
+                        }
+                      },
+                      "whitespace": ""
+                    }
+                  ],
+                  [
+                    {
+                      "Dictionary": {
+                        "target_language_word": "ta",
+                        "definitions": [
+                          {
+                            "native": "your",
+                            "note": "informal singular; used before a feminine singular noun",
+                            "example_sentence_target_language": "Ta voiture est rouge.",
+                            "example_sentence_native_language": "Your car is red.",
+                            "cognate": false,
+                            "false_cognate": false
+                          }
+                        ],
+                        "morphology": [
+                          {
+                            "gender": "Feminine",
+                            "number": "Singular",
+                            "politeness": "Informal",
+                            "tense": null,
+                            "person": "Second",
+                            "case": null,
+                            "mood": null,
+                            "aspect": null
+                          }
+                        ],
+                        "segments": [
+                          {
+                            "surface": "ta",
+                            "canonical": "ton",
+                            "tag": "2sg.f.inf"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "Dictionary": {
+                        "target_language_word": "ta",
+                        "definitions": [
+                          {
+                            "native": "your",
+                            "note": "Informal singular; used before a feminine singular noun beginning with a consonant.",
+                            "example_sentence_target_language": "Où est ta voiture ?",
+                            "example_sentence_native_language": "Where is your car?",
+                            "cognate": false,
+                            "false_cognate": false
+                          }
+                        ],
+                        "morphology": [
+                          {
+                            "gender": "Feminine",
+                            "number": "Singular",
+                            "politeness": "Informal",
+                            "tense": null,
+                            "person": "Second",
+                            "case": null,
+                            "mood": null,
+                            "aspect": null
+                          }
+                        ],
+                        "segments": [
+                          {
+                            "surface": "ta",
+                            "canonical": "ton",
+                            "tag": "2sg.f.inf"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                ],
+                [
+                  false,
+                  [
+                    {
+                      "word": {
+                        "text": "tas",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "tas",
+                          "lemma": "tas",
+                          "pos": "NOUN"
+                        }
+                      },
+                      "whitespace": ""
+                    }
+                  ],
+                  [
+                    {
+                      "Dictionary": {
+                        "target_language_word": "tas",
+                        "definitions": [
+                          {
+                            "native": "pile, heap",
+                            "note": null,
+                            "example_sentence_target_language": "Il y a un tas de vêtements sur le lit.",
+                            "example_sentence_native_language": "There’s a pile of clothes on the bed.",
+                            "cognate": false,
+                            "false_cognate": false
+                          },
+                          {
+                            "native": "a lot of",
+                            "note": "Common in the phrase « un tas de + noun » (informal).",
+                            "example_sentence_target_language": "On a un tas de choses à faire aujourd’hui.",
+                            "example_sentence_native_language": "We have a lot of things to do today.",
+                            "cognate": false,
+                            "false_cognate": false
+                          }
+                        ],
+                        "morphology": [
+                          {
+                            "gender": "Masculine",
+                            "number": null,
+                            "politeness": null,
+                            "tense": null,
+                            "person": null,
+                            "case": null,
+                            "mood": null,
+                            "aspect": null
+                          }
+                        ],
+                        "segments": [
+                          {
+                            "surface": "tas",
+                            "canonical": "tas"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                ]
+              ]
             },
-            "provider": "Google"
-          }
+            "audio": {
+              "request": {
+                "text": "ta",
+                "language": "French",
+                "is_ssml": false,
+                "speed": 1.0
+              },
+              "provider": "Google"
+            }
+          },
+          "is_new": true,
+          "times_type_seen": 11
         },
-        "is_new": true,
-        "times_type_seen": 11
-      },
-      "transcription": null,
-      "translation": null
-    }
-  },
-  "progress": 0.0,
-  "total_reviews": 0,
-  "total_count": 0,
-  "offer_engagement": false,
-  "online": true
+        "transcription": null,
+        "translation": null
+      }
+    },
+    "progress": 0.0,
+    "total_reviews": 0,
+    "total_count": 0,
+    "offer_engagement": false,
+    "online": true
+  }
 }

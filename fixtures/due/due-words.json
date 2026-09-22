@@ -1,0 +1,78 @@
+{
+  "screen": "Due",
+  "view": {
+    "target_language": "French",
+    "title": "Due words",
+    "ready_now": 2,
+    "total": 6,
+    "summary_label": "2 ready now · 6 cards",
+    "cards": [
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": [
+            {
+              "Tok": {
+                "text": "peut",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "peut",
+                  "lemma": "pouvoir",
+                  "pos": "AUX"
+                }
+              }
+            }
+          ]
+        },
+        "due_timestamp_ms": 1789960232175.0,
+        "state": "review",
+        "card_text": "peut",
+        "card_subtitle": "auxiliary"
+      },
+      {
+        "card_indicator": {
+          "type": "WrittenGram",
+          "gram": [
+            {
+              "Tok": {
+                "text": "mais",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "mais",
+                  "lemma": "mais",
+                  "pos": "CCONJ"
+                }
+              }
+            },
+            {
+              "Tok": {
+                "text": "c'",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "ce",
+                  "lemma": "ce",
+                  "pos": "PRON"
+                }
+              }
+            },
+            {
+              "Tok": {
+                "text": "est",
+                "word_type": {
+                  "type": "Heteronym",
+                  "word": "est",
+                  "lemma": "être",
+                  "pos": "VERB"
+                }
+              }
+            }
+          ]
+        },
+        "due_timestamp_ms": 1790046384453.0,
+        "state": "review",
+        "card_text": "mais c'est",
+        "card_subtitle": "coordinating conjunction"
+      }
+    ]
+  }
+}

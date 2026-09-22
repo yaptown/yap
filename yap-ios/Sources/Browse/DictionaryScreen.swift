@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct DictionaryScreen: View {
+    @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewHost!) private var host
     private var deck: Deck { host.deck }
     let session: YapSession
@@ -9,6 +10,10 @@ struct DictionaryScreen: View {
     @State private var path: [UInt64] = []
     @State private var hasMore = false
     private let pageSize: UInt64 = 200
+    init(session: YapSession, initialQuery: String? = nil) {
+        self.session = session
+        _query = State(initialValue: initialQuery ?? "")
+    }
     var body: some View {
         List {
             Section {
@@ -39,8 +44,11 @@ struct DictionaryScreen: View {
             reload()
         }
         .onChange(of: ObjectIdentifier(deck)) { _, _ in reload(preservingPageCount: true) }
+        .onDisappear { audio.stop() }
         #if DEBUG
+        .onAppear { DebugHarness.shared.activeScreen = .dictionary }
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
+            guard DebugHarness.shared.activeScreen == .dictionary else { return }
             let command = DebugHarness.shared.command
             if command.hasPrefix("search ") { path = []; query = String(command.dropFirst(7)) }
             if command.hasPrefix("open "), let index = Int(command.dropFirst(5)), entries.indices.contains(index) { path = [entries[index].frequency_index] }
@@ -62,6 +70,7 @@ struct DictionaryScreen: View {
 }
 
 private struct DictionaryDetail: View {
+    @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewHost!) private var host
     private var deck: Deck { host.deck }
     let session: YapSession
@@ -82,8 +91,9 @@ private struct DictionaryDetail: View {
                 }.padding(20)
             }
         }.background(Color(uiColor: .systemGroupedBackground)).navigationTitle("Definition").navigationBarTitleDisplayMode(.inline)
+        .onDisappear { audio.stop() }
         #if DEBUG
-        .onChange(of: DebugHarness.shared.commandID) { _, _ in if DebugHarness.shared.command == "add-word" { add() } }
+        .onChange(of: DebugHarness.shared.commandID) { _, _ in if DebugHarness.shared.activeScreen == .dictionary && DebugHarness.shared.command == "add-word" { add() } }
         #endif
     }
     private func add() {

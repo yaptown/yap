@@ -1,0 +1,160 @@
+{
+  "screen": "Goals",
+  "view": {
+    "title": "Goals",
+    "target_language": "French",
+    "tier_info": {
+      "tier": 8,
+      "name": "Advanced",
+      "level": 11,
+      "total_levels": 30,
+      "percent_known": 3.2445668809305177,
+      "percent_of_usage": 67.10443441627044
+    },
+    "goal": {
+      "title": "Advanced French Level 11",
+      "tier_name": "Advanced",
+      "level": 11,
+      "total_levels": 30,
+      "percent": 3.2445668809305177,
+      "percent_label": "3%",
+      "subtitle": "Level 11 of 30 · unlocks 67.1% of everyday French"
+    },
+    "daily_goal_title": "Daily goal",
+    "daily_goal": "Casual",
+    "daily_goal_label": "5 min per day",
+    "daily_goal_options": [
+      {
+        "target": "Casual",
+        "minutes": 5,
+        "event": {
+          "type": "Language",
+          "target_language": "French",
+          "native_language": "English",
+          "content": {
+            "type": "SetDailyReviewTarget",
+            "daily_review_target": "Casual"
+          }
+        }
+      },
+      {
+        "target": "Regular",
+        "minutes": 10,
+        "event": {
+          "type": "Language",
+          "target_language": "French",
+          "native_language": "English",
+          "content": {
+            "type": "SetDailyReviewTarget",
+            "daily_review_target": "Regular"
+          }
+        }
+      },
+      {
+        "target": "Serious",
+        "minutes": 15,
+        "event": {
+          "type": "Language",
+          "target_language": "French",
+          "native_language": "English",
+          "content": {
+            "type": "SetDailyReviewTarget",
+            "daily_review_target": "Serious"
+          }
+        }
+      },
+      {
+        "target": "Intense",
+        "minutes": 20,
+        "event": {
+          "type": "Language",
+          "target_language": "French",
+          "native_language": "English",
+          "content": {
+            "type": "SetDailyReviewTarget",
+            "daily_review_target": "Intense"
+          }
+        }
+      }
+    ],
+    "curriculum": {
+      "title": "Curriculum",
+      "navigation": {
+        "categories": [
+          "essential",
+          "movie",
+          "pimsleur"
+        ],
+        "selection": null,
+        "selected_index": 0
+      },
+      "sentence_list_options": [
+        {
+          "category": "essential",
+          "selection": null,
+          "event": {
+            "type": "Language",
+            "target_language": "French",
+            "native_language": "English",
+            "content": {
+              "type": "SetSentenceList",
+              "sentence_list": null
+            }
+          },
+          "label": "Essential"
+        },
+        {
+          "category": "movie",
+          "selection": {
+            "type": "Movie",
+            "id": "tt0097904"
+          },
+          "event": {
+            "type": "Language",
+            "target_language": "French",
+            "native_language": "English",
+            "content": {
+              "type": "SetSentenceList",
+              "sentence_list": {
+                "type": "Movie",
+                "id": "tt0097904"
+              }
+            }
+          },
+          "label": "Movies"
+        },
+        {
+          "category": "pimsleur",
+          "selection": {
+            "type": "PimsleurLesson",
+            "level": 1,
+            "lesson": 1
+          },
+          "event": {
+            "type": "Language",
+            "target_language": "French",
+            "native_language": "English",
+            "content": {
+              "type": "SetSentenceList",
+              "sentence_list": {
+                "type": "PimsleurLesson",
+                "level": 1,
+                "lesson": 1
+              }
+            }
+          },
+          "label": "Pimsleur"
+        }
+      ],
+      "progress": {
+        "percent_known": 3.2445668809305177,
+        "all_available_learned": false
+      },
+      "sentence_list_label": "Advanced French Level 11",
+      "next_sentence_list": null,
+      "next_sentence_list_event": null,
+      "has_movies": true,
+      "has_pimsleur": true
+    }
+  }
+}

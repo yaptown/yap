@@ -1,0 +1,271 @@
+{
+  "screen": "Stats",
+  "view": {
+    "target_language": "French",
+    "title": "Stats",
+    "xp": 197.0,
+    "xp_label": "197 XP",
+    "total_reviews": 171,
+    "total_reviews_label": "171 reviews",
+    "streak": {
+      "title": "Streak",
+      "days": 2,
+      "days_label": "2 days",
+      "today_label": "0 / 5 min today"
+    },
+    "percent_known": 0.10246544526835043,
+    "percent_known_label": "10.2% of everyday French",
+    "due": {
+      "title": "Due words",
+      "ready_now": 2,
+      "total": 6,
+      "label": "2 ready now · 6 cards"
+    },
+    "leeches": [],
+    "leech_count": 0,
+    "leeches_label": "0 leeches",
+    "frequency_knowledge_chart_data": [
+      {
+        "frequency": 1.0,
+        "predicted_knowledge": 0.0,
+        "word_count": 5,
+        "example_words": "Plus, Anneaux, c', Quatre, D'"
+      },
+      {
+        "frequency": 2.0,
+        "predicted_knowledge": 0.0,
+        "word_count": 33,
+        "example_words": "mr, Ce, Chambre, Alors, Feu"
+      },
+      {
+        "frequency": 3.0,
+        "predicted_knowledge": 0.0,
+        "word_count": 1915,
+        "example_words": "hautbois, cintre, sous-titres, combien de temps êtes-vous restée, des masses"
+      },
+      {
+        "frequency": 4.0,
+        "predicted_knowledge": 0.0011883785482496023,
+        "word_count": 4431,
+        "example_words": "m'sieur, canular, quarts, branleurs, tracasser"
+      },
+      {
+        "frequency": 5.0,
+        "predicted_knowledge": 0.00461922911927104,
+        "word_count": 6097,
+        "example_words": "attrapes, je n'en reviens pas, sac de couchage, bienveillante, réjouir"
+      },
+      {
+        "frequency": 6.0,
+        "predicted_knowledge": 0.009087789803743362,
+        "word_count": 6795,
+        "example_words": "jusque-là, grossiers, perdrais, je m'en souviendrai, cachées"
+      },
+      {
+        "frequency": 7.0,
+        "predicted_knowledge": 0.014034348540008068,
+        "word_count": 6201,
+        "example_words": "châteaux, renards, paraît-il, comptoir, jambon"
+      },
+      {
+        "frequency": 8.0,
+        "predicted_knowledge": 0.019157715141773224,
+        "word_count": 7184,
+        "example_words": "une peur bleue, gémit, parle-t-on, croisement, foutez le camp"
+      },
+      {
+        "frequency": 9.0,
+        "predicted_knowledge": 0.025530166923999786,
+        "word_count": 6298,
+        "example_words": "lourds, vous feriez mieux d', poulailler, pourquoi n'êtes-vous pas, dommage"
+      },
+      {
+        "frequency": 10.0,
+        "predicted_knowledge": 0.03504040837287903,
+        "word_count": 5933,
+        "example_words": "pleines, un inconnu, une tranche de, une demi-heure, essaies-tu de"
+      },
+      {
+        "frequency": 15.0,
+        "predicted_knowledge": 0.08953124284744263,
+        "word_count": 6050,
+        "example_words": "vous habitez, entendit, énigme, habitue, chauffer"
+      },
+      {
+        "frequency": 20.0,
+        "predicted_knowledge": 0.12918789684772491,
+        "word_count": 7469,
+        "example_words": "en tant qu', époux, voyais, chaussures, perdus"
+      },
+      {
+        "frequency": 30.0,
+        "predicted_knowledge": 0.18508075177669525,
+        "word_count": 9829,
+        "example_words": "attire, amies, endormi, en bois, bagnole"
+      },
+      {
+        "frequency": 40.0,
+        "predicted_knowledge": 0.22473739087581635,
+        "word_count": 11342,
+        "example_words": "sourit, écrivain, je ne parviens pas à, cache, réveille"
+      },
+      {
+        "frequency": 50.0,
+        "predicted_knowledge": 0.25549745559692383,
+        "word_count": 11294,
+        "example_words": "route, penses-tu que, mangez, comme, lance"
+      },
+      {
+        "frequency": 60.0,
+        "predicted_knowledge": 0.28063032031059265,
+        "word_count": 11972,
+        "example_words": "pousse, fait, emmène, évidemment, traduire"
+      },
+      {
+        "frequency": 70.0,
+        "predicted_knowledge": 0.30187973380088806,
+        "word_count": 11281,
+        "example_words": "chambre, mentir, rejoindre, flic, morte"
+      },
+      {
+        "frequency": 80.0,
+        "predicted_knowledge": 0.32028692960739136,
+        "word_count": 10876,
+        "example_words": "rencontrer, adore, corps, au fond, j'aurais aimé"
+      },
+      {
+        "frequency": 90.0,
+        "predicted_knowledge": 0.336523175239563,
+        "word_count": 10470,
+        "example_words": "dois-je, formidable, c'est fini, en haut, t'as pas"
+      },
+      {
+        "frequency": 100.0,
+        "predicted_knowledge": 0.35104700922966003,
+        "word_count": 9947,
+        "example_words": "j'aurais, mettez, j'ai essayé de, ce que vous voulez, je suis vraiment"
+      },
+      {
+        "frequency": 150.0,
+        "predicted_knowledge": 0.40693986415863037,
+        "word_count": 8771,
+        "example_words": "moi-même, avant que, n'oublie pas, laisser, nous étions"
+      },
+      {
+        "frequency": 200.0,
+        "predicted_knowledge": 0.44659653306007385,
+        "word_count": 7459,
+        "example_words": "jeune, toutes, t'aider, gagner, j'ai trouvé"
+      },
+      {
+        "frequency": 300.0,
+        "predicted_knowledge": 0.49919092655181885,
+        "word_count": 6213,
+        "example_words": "tu crois, trouver, faites, penser à, pas été"
+      },
+      {
+        "frequency": 400.0,
+        "predicted_knowledge": 0.5320234298706055,
+        "word_count": 5191,
+        "example_words": "M., a demandé, jusqu'à, arrêter de, vu"
+      },
+      {
+        "frequency": 500.0,
+        "predicted_knowledge": 0.5549231171607971,
+        "word_count": 4762,
+        "example_words": "te plaire, il veut, les gens, c'est mon, le même"
+      },
+      {
+        "frequency": 600.0,
+        "predicted_knowledge": 0.5722242593765259,
+        "word_count": 4403,
+        "example_words": "m'être, faut que, je ne veux pas, vous savez, je me suis"
+      },
+      {
+        "frequency": 700.0,
+        "predicted_knowledge": 0.5826259851455688,
+        "word_count": 3906,
+        "example_words": "il n'y a, il y a un, je fais, donc, monsieur"
+      },
+      {
+        "frequency": 800.0,
+        "predicted_knowledge": 0.5908457040786743,
+        "word_count": 3628,
+        "example_words": "ce n'est pas, je vois, s'il vous plaît, je ne peux, n'est-ce pas"
+      },
+      {
+        "frequency": 900.0,
+        "predicted_knowledge": 0.6003539562225342,
+        "word_count": 3353,
+        "example_words": "a des, allez, très, demain, ils"
+      },
+      {
+        "frequency": 1000.0,
+        "predicted_knowledge": 0.6106182336807251,
+        "word_count": 3191,
+        "example_words": "t'es, aurais jamais, comme, comme, en avoir"
+      },
+      {
+        "frequency": 1500.0,
+        "predicted_knowledge": 0.6520870923995972,
+        "word_count": 2416,
+        "example_words": "moi, il faut, du, penser que, ne jamais"
+      },
+      {
+        "frequency": 2000.0,
+        "predicted_knowledge": 0.6815096139907837,
+        "word_count": 2008,
+        "example_words": "pourquoi, alors, maintenant, quelque chose, c'est le"
+      },
+      {
+        "frequency": 3000.0,
+        "predicted_knowledge": 0.7229785919189453,
+        "word_count": 1433,
+        "example_words": "elle, dans le, un, les, d'"
+      },
+      {
+        "frequency": 4000.0,
+        "predicted_knowledge": 0.7524012923240662,
+        "word_count": 978,
+        "example_words": "que je, j'ai, ne sont pas, le, y avoir"
+      },
+      {
+        "frequency": 5000.0,
+        "predicted_knowledge": 0.7752232551574707,
+        "word_count": 666,
+        "example_words": "pour, sois pas, ça, est un, ce que"
+      },
+      {
+        "frequency": 6000.0,
+        "predicted_knowledge": 0.7938702702522278,
+        "word_count": 477,
+        "example_words": "je suis, est, ne soit, mais, pour"
+      },
+      {
+        "frequency": 7000.0,
+        "predicted_knowledge": 0.8096359372138977,
+        "word_count": 372,
+        "example_words": "à, j'ai, je suis, est, ne soit"
+      },
+      {
+        "frequency": 8000.0,
+        "predicted_knowledge": 0.8232929110527039,
+        "word_count": 295,
+        "example_words": "pas, à, j'ai, je suis, est"
+      },
+      {
+        "frequency": 9000.0,
+        "predicted_knowledge": 0.8353390693664551,
+        "word_count": 220,
+        "example_words": "je ne, pas, à, j'ai, je suis"
+      },
+      {
+        "frequency": 10000.0,
+        "predicted_knowledge": 0.8461149334907532,
+        "word_count": 184,
+        "example_words": "je ne, pas, à, j'ai, je suis"
+      }
+    ],
+    "frequency_knowledge_chart_title": "Word knowledge by frequency"
+  }
+}

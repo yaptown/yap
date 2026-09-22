@@ -1,17 +1,31 @@
-#[cfg(any(feature = "fixtures", test))]
-use crate::ReviewScreenView;
 #[cfg(feature = "fixtures")]
 use crate::{Challenge, Deck, Gram};
+use crate::{
+    DueWordsScreenView, GoalsScreenView, HomeScreenView, ReviewScreenView, StatsScreenView,
+};
+use serde::{Deserialize, Serialize};
+
+/// A captured screen, shared by both hosts even without the fixture JSON codecs.
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "screen", content = "view")]
+pub enum Fixture {
+    Review(ReviewScreenView),
+    Home(HomeScreenView),
+    Stats(StatsScreenView),
+    Goals(GoalsScreenView),
+    Due(DueWordsScreenView),
+}
 
 #[cfg(any(feature = "fixtures", test))]
 #[bridgerton::bridge]
-pub fn parse_fixture(json: String) -> Result<ReviewScreenView, bridgerton::Error> {
+pub fn parse_fixture(json: String) -> Result<Fixture, bridgerton::Error> {
     serde_json::from_str(&json).map_err(|error| bridgerton::Error::new(error.to_string()))
 }
 
 #[cfg(any(feature = "fixtures", test))]
 #[bridgerton::bridge]
-pub fn fixture_json(fixture: ReviewScreenView) -> String {
+pub fn fixture_json(fixture: Fixture) -> String {
     serde_json::to_string_pretty(&fixture).expect("screen fixtures are JSON serializable")
 }
 
@@ -23,15 +37,23 @@ mod tests {
     fn captured_fixtures_round_trip() {
         let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures");
         let mut count = 0;
-        for entry in ["challenges", "screens"]
-            .into_iter()
-            .flat_map(|name| std::fs::read_dir(directory.join(name)).unwrap())
+        let mut names = std::collections::HashSet::new();
+        for entry in std::fs::read_dir(&directory)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .filter(|path| path.is_dir())
+            .flat_map(|path| std::fs::read_dir(path).unwrap())
         {
             let path = entry.unwrap().path();
             if path
                 .extension()
                 .is_some_and(|extension| extension == "json")
             {
+                assert!(
+                    names.insert(path.file_stem().unwrap().to_os_string()),
+                    "duplicate fixture name: {}",
+                    path.display()
+                );
                 count += 1;
                 let json = std::fs::read_to_string(&path).unwrap();
                 let fixture = parse_fixture(json.clone()).unwrap();
@@ -42,7 +64,7 @@ mod tests {
                 );
             }
         }
-        assert!(count > 0, "capture at least one challenge fixture");
+        assert!(count > 0, "capture at least one screen fixture");
     }
 }
 

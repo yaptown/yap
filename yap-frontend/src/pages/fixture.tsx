@@ -4,18 +4,23 @@ import { useOutletContext, useParams } from "react-router-dom";
 import { type AppContextType, useDeck } from "@/App";
 import { ReviewScreen } from "@/components/ReviewScreen";
 import { TopPageLayout } from "@/components/TopPageLayout";
+import { HomeScreen } from "./home";
+import { StatsScreen } from "./stats";
+import { GoalsScreen } from "./goals";
+import { DueWordsScreen } from "./due";
 import type {
   ChallengeView,
-  ReviewScreenView,
+  Fixture,
   TranscriptionState,
   TranslationState,
 } from "../../../yap-frontend-rs/pkg";
 
 // Captures use serde JSON; only reducer inputs need a bridge representation.
-function parseFixture(json: string): ReviewScreenView {
-  const parsed = JSON.parse(json) as ReviewScreenView;
-  if (parsed.step.type !== "Challenge") return parsed;
-  const fixture = parsed.step.view as unknown as {
+function parseFixture(json: string): Fixture {
+  const parsed = JSON.parse(json) as Fixture;
+  if (parsed.screen !== "Review" || parsed.view.step.type !== "Challenge")
+    return parsed;
+  const fixture = parsed.view.step.view as unknown as {
     challenge: ChallengeView["challenge"];
     translation?: TranslationState | null;
     transcription:
@@ -26,21 +31,24 @@ function parseFixture(json: string): ReviewScreenView {
   };
   return {
     ...parsed,
-    step: {
-      type: "Challenge",
-      view: {
-        challenge: fixture.challenge,
-        translation: fixture.translation ?? undefined,
-        transcription: fixture.transcription
-          ? {
-              ...fixture.transcription,
-              inputs: new Map(
-                Object.entries(fixture.transcription.inputs).map(
-                  ([index, text]) => [Number(index), text],
+    view: {
+      ...parsed.view,
+      step: {
+        type: "Challenge",
+        view: {
+          challenge: fixture.challenge,
+          translation: fixture.translation ?? undefined,
+          transcription: fixture.transcription
+            ? {
+                ...fixture.transcription,
+                inputs: new Map(
+                  Object.entries(fixture.transcription.inputs).map(
+                    ([index, text]) => [Number(index), text],
+                  ),
                 ),
-              ),
-            }
-          : undefined,
+              }
+            : undefined,
+        },
       },
     },
   };
@@ -54,7 +62,7 @@ export function FixturePage() {
   const deckState = useDeck();
   const [loaded, setLoaded] = useState<{
     name: string;
-    fixture: ReviewScreenView;
+    fixture: Fixture;
   }>();
   const [error, setError] = useState<{
     name: string | undefined;
@@ -65,7 +73,7 @@ export function FixturePage() {
     void fetch(`/__fixtures/${name}.json`, { signal: abort.signal })
       .then(async (response) => {
         if (!response.ok)
-          throw new Error(`ReviewScreenView: ${response.status}`);
+          throw new Error(`Fixture: ${response.status}`);
         const fixture = parseFixture(await response.text());
         if (!abort.signal.aborted) setLoaded({ name: name!, fixture });
       })
@@ -83,7 +91,27 @@ export function FixturePage() {
   )
     return <p>Loading fixture…</p>;
   const { deck } = deckState;
-  const fixture = loaded.fixture;
+  const snapshot = loaded.fixture;
+  if (snapshot.screen !== "Review") {
+    const props = { deck, userInfo };
+    return (
+      <div data-fixture-rendered={name} inert>
+        {snapshot.screen === "Home" && (
+          <HomeScreen {...props} view={snapshot.view} />
+        )}
+        {snapshot.screen === "Stats" && (
+          <StatsScreen {...props} view={snapshot.view} />
+        )}
+        {snapshot.screen === "Goals" && (
+          <GoalsScreen {...props} view={snapshot.view} />
+        )}
+        {snapshot.screen === "Due" && (
+          <DueWordsScreen {...props} view={snapshot.view} />
+        )}
+      </div>
+    );
+  }
+  const fixture = snapshot.view;
   return (
     // Mirror ReviewPage's shell so captures show the same header and progress
     // bar the real screen does — iOS renders the whole app, so a bare fixture
@@ -92,9 +120,8 @@ export function FixturePage() {
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
-        onChangeLanguage: log,
+        backButton: { label: "Home", onBack: log },
         showSignupNag: false,
-        language: fixture.target_language,
         dailyGoalPercent: fixture.progress * 100,
       }}
     >

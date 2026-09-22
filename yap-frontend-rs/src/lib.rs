@@ -10,6 +10,7 @@ mod directories;
 mod disclosure;
 mod fixtures;
 mod human_audio;
+pub use fixtures::Fixture;
 #[cfg(any(feature = "fixtures", test))]
 pub use fixtures::{fixture_json, parse_fixture};
 mod language_pack;
@@ -5368,6 +5369,9 @@ mod tests {
             include_str!("../../fixtures/challenges/flashcard-written.json").to_owned(),
         )
         .unwrap();
+        let Fixture::Review(fixture) = fixture else {
+            panic!("expected review fixture")
+        };
         let ReviewStep::Challenge(view) = fixture.step else {
             panic!("expected challenge")
         };

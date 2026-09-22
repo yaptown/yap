@@ -15,15 +15,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { SyncStatusDialog } from "@/components/sync-status-dialog";
 import type { UserInfo } from "@/App";
 import { useAuthDialog } from "@/components/auth-dialog-provider";
-import type { Language } from "../../../yap-frontend-rs/pkg";
-import { LANGUAGES } from "@/lib/languages";
 
 interface HeaderProps {
   userInfo: UserInfo | undefined;
   onSignOut: () => void;
-  onChangeLanguage?: () => void;
   showSignupNag?: boolean;
-  language?: Language;
   backButton?: {
     label: string;
     onBack: () => void;
@@ -32,16 +28,10 @@ interface HeaderProps {
   dailyGoalPercent?: number;
 }
 
-function getLanguageEmoji(language: Language | undefined): string {
-  return language ? LANGUAGES[language].flag : "🌍";
-}
-
 export function Header({
   userInfo,
   onSignOut,
-  onChangeLanguage,
   showSignupNag = false,
-  language,
   backButton,
   title = "Yap.Town",
   dailyGoalPercent,
@@ -59,52 +49,29 @@ export function Header({
       )}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-4">
-          {backButton ? (
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            {backButton && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={backButton.onBack}
                 className="h-8 w-10"
-                title="Go back"
+                title={backButton.label}
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">
-                {backButton.label}
-              </h1>
+            )}
+            <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">
+              <Link to="/about">
+                <span className="hidden sm:inline">{title}</span>
+              </Link>
+              <span className="sm:hidden">{title.split(".")[0]}</span>
+            </h1>
+          </div>
+          {!backButton && userInfo && (
+            <div className="animate-fade-in-delayed">
+              <SyncStatusDialog />
             </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-2">
-                {onChangeLanguage ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onChangeLanguage}
-                    className="h-8 w-10 text-2xl"
-                    title="Change language"
-                  >
-                    {getLanguageEmoji(language)}
-                  </Button>
-                ) : (
-                  <div className="h-8 w-10 flex items-center justify-center text-2xl">
-                    {getLanguageEmoji(language)}
-                  </div>
-                )}
-                <h1 className="text-2xl font-bold drop-shadow-[0_0px_8px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0px_8px_rgba(0,0,0,1)]">
-                  <Link to="/about">
-                    <span className="hidden sm:inline">{title}</span>
-                  </Link>
-                  <span className="sm:hidden">{title.split(".")[0]}</span>
-                </h1>
-              </div>
-              {userInfo && (
-                <div className="animate-fade-in-delayed">
-                  <SyncStatusDialog />
-                </div>
-              )}
-            </>
           )}
         </div>
         <div className="flex items-center gap-2">

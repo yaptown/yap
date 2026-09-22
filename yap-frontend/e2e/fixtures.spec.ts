@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import { fakeLogin, seedFrenchDeck } from "./helpers";
-import type { ReviewScreenView, IdleKind } from "../../yap-frontend-rs/pkg";
+import type { Fixture, IdleKind } from "../../yap-frontend-rs/pkg";
 
 test("capture screen and challenge fixtures", async ({ page, request }) => {
   const response = await request.get("/__fixtures/index.json");
@@ -26,11 +26,11 @@ test("capture screen and challenge fixtures", async ({ page, request }) => {
   for (const name of selected) {
     const captureResponse = await request.get(`/__fixtures/${name}.json`);
     expect(captureResponse.ok()).toBeTruthy();
-    const { step: fixture } =
-      (await captureResponse.json()) as ReviewScreenView;
-    if (name in idleKinds) {
-      expect(fixture.type).toBe("Idle");
-      if (fixture.type === "Idle") {
+    const capture = (await captureResponse.json()) as Fixture;
+    const fixture = capture.screen === "Review" ? capture.view.step : undefined;
+    if (fixture && name in idleKinds) {
+      expect(fixture?.type).toBe("Idle");
+      if (fixture?.type === "Idle") {
         expect(fixture.view.type).toBe("Idle");
         if (fixture.view.type === "Idle")
           expect(fixture.view.kind).toBe(idleKinds[name]);
@@ -40,12 +40,12 @@ test("capture screen and challenge fixtures", async ({ page, request }) => {
     await expect(
       page.locator(`[data-fixture-rendered="${name}"]`),
     ).toBeVisible();
-    if (fixture.type === "Idle" && fixture.view.type === "Idle") {
+    if (fixture?.type === "Idle" && fixture.view.type === "Idle") {
       await expect(
         page.getByText(fixture.view.title, { exact: true }),
       ).toBeVisible();
     }
-    if (fixture.type === "Accomplishment") {
+    if (fixture?.type === "Accomplishment") {
       await expect(
         page.getByRole("heading", { name: /Goal Reached!/ }),
       ).toBeVisible();

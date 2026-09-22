@@ -1,23 +1,12 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Header } from "@/components/header";
 import { supabase } from "@/lib/supabase";
 import type { UserInfo } from "@/App";
-import type { Language } from "../../../yap-frontend-rs/pkg";
 
 interface TopPageLayoutProps {
   userInfo: UserInfo | undefined;
   children: ReactNode;
-  headerProps?: {
-    onChangeLanguage?: () => void;
-    showSignupNag?: boolean;
-    language?: Language;
-    backButton?: {
-      label: string;
-      onBack: () => void;
-    };
-    title?: string;
-    dailyGoalPercent?: number;
-  };
+  headerProps?: Omit<ComponentProps<typeof Header>, "userInfo" | "onSignOut">;
 }
 
 export function TopPageLayout({

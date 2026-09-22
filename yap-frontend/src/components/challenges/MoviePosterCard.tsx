@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Poster } from "@/components/Poster";
+import { TargetLanguageText } from "@/components/TargetLanguageText";
 import type { Deck, MovieMetadataBasic } from "../../../../yap-frontend-rs/pkg";
 
 interface MoviePosterCardProps {
@@ -35,7 +36,9 @@ export function MoviePosterCard({
           )}
           <div className="absolute bottom-0 left-0 right-0 p-3">
             <div className="text-white text-sm font-semibold line-clamp-2">
-              {movie.title}
+              <TargetLanguageText language={deck.get_target_language()}>
+                {movie.title}
+              </TargetLanguageText>
             </div>
             {movie.year && (
               <div className="text-white/70 text-xs mt-1">{movie.year}</div>

@@ -9,16 +9,17 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import { sentryVitePlugin } from "@sentry/vite-plugin"
 
 // Serve static site pages (dictionary, blog) without SPA fallback intercepting
-function staticSitePlugin() {
+function staticSitePlugin(): Plugin {
   return {
     name: 'static-site',
-    configureServer(server: any) {
-      server.middlewares.use((req: any, _res: any, next: any) => {
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
         if (req.url?.startsWith('/d/') || req.url === '/d' ||
             req.url?.startsWith('/blog/') || req.url === '/blog') {
           // Rewrite directory requests to their index.html
           if (!req.url.includes('.')) {
             const path = req.url.endsWith('/') ? req.url : req.url + '/';
+            // eslint-disable-next-line no-param-reassign -- Connect middleware rewrites the URL before static serving.
             req.url = path + 'index.html';
           }
         }
@@ -29,15 +30,25 @@ function staticSitePlugin() {
 }
 
 // Captured fixtures are development inputs, never production assets.
-function challengeFixturesPlugin(): Plugin {
-  const directories = ["challenges", "screens"].map(name => path.resolve(__dirname, "../fixtures", name));
+function screenFixturesPlugin(): Plugin {
+  const root = path.resolve(__dirname, "../fixtures");
   return {
-    name: "challenge-fixtures",
+    name: "screen-fixtures",
     apply: "serve",
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if (req.method !== "GET" || !req.url?.startsWith("/__fixtures/")) return next();
-        const files = new Map(directories.flatMap(directory => fs.readdirSync(directory).filter(name => name.endsWith(".json")).map(name => [name, path.join(directory, name)] as const)));
+        const directories = fs.readdirSync(root, { withFileTypes: true })
+          .filter(entry => entry.isDirectory())
+          .map(entry => path.join(root, entry.name));
+        const files = new Map<string, string>();
+        for (const directory of directories) {
+          for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+            if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+            if (files.has(entry.name)) throw new Error(`Duplicate fixture name: ${entry.name}`);
+            files.set(entry.name, path.join(directory, entry.name));
+          }
+        }
         const names = [...files.keys()];
         const name = req.url.slice("/__fixtures/".length);
         res.setHeader("Content-Type", "application/json");
@@ -83,7 +94,7 @@ export default defineConfig({
   plugins: [
     localBackendGuardPlugin(),
     staticSitePlugin(),
-    challengeFixturesPlugin(),
+    screenFixturesPlugin(),
     VitePWA({ 
       registerType: 'autoUpdate',
       devOptions: {

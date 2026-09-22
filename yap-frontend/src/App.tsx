@@ -1,9 +1,13 @@
+import { HomePage } from "@/pages/home";
+import { GoalsPage } from "@/pages/goals";
+import { StatsPage } from "@/pages/stats";
+import { DueWordsPage } from "@/pages/due";
+import { readChallengeRestrictions } from "@/lib/challenge-restrictions";
 import { ReviewScreen } from "@/components/ReviewScreen";
 import * as Sentry from "@sentry/react";
 import {
   useState,
   useEffect,
-  memo,
   useSyncExternalStore,
   useMemo,
   useCallback,
@@ -15,7 +19,6 @@ import {
   createBrowserRouter,
   RouterProvider,
   Outlet,
-  useLocation,
   useNavigate,
   useOutletContext,
   ScrollRestoration,
@@ -38,7 +41,6 @@ import {
   get_clip_manifest_version,
   refresh_clip_manifest,
   update_profile,
-  get_challenge_restrictions,
 } from "../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
@@ -51,8 +53,6 @@ import type { Session as SupabaseSession } from "@supabase/supabase-js";
 import { useInterval, useNetworkState } from "react-use";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { ReportIssueModal } from "@/components/challenges/ReportIssueModal";
-import { Simulate } from "@/components/Simulate";
-import { languageToIso6391 } from "@/lib/utils";
 import { ResetPassword } from "@/pages/reset-password";
 import { ConfirmEmail } from "@/pages/confirm-email";
 import { AcceptInvite } from "@/pages/accept-invite";
@@ -65,7 +65,6 @@ import { TermsPage } from "@/pages/terms";
 import { McpDocsPage } from "@/pages/mcp-docs";
 import { LandingPage } from "@/pages/landing";
 import { NotFoundPage } from "@/pages/not-found";
-import { SentenceListsPage } from "@/pages/sentence-lists";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { registerSW } from "virtual:pwa-register";
 import {
@@ -94,16 +93,11 @@ import {
 } from "./weapon";
 import { Toaster } from "sonner";
 import { BrowserNotSupported } from "@/components/browser-not-supported";
-import { Stats } from "@/components/stats";
-import { About } from "@/components/about";
 import { Dictionary } from "@/components/Dictionary";
-import { Leeches } from "@/components/Leeches";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { match, P } from "ts-pattern";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { BackgroundShader } from "@/components/BackgroundShader";
-import { Movies } from "@/components/Movies";
-import { getMovieMetadata } from "@/lib/movie-cache";
 
 // Essential user info to persist for offline functionality
 export interface UserInfo {
@@ -360,15 +354,12 @@ function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
 }
 
 function AppContent({ userInfo, accessToken }: AppContextType) {
-  // The landing page is full-bleed and carries its own footer.
-  const onLanding = useLocation().pathname === "/";
   return (
     <div className="px-2 overflow-x-clip">
       <div className="min-h-screen text-foreground">
         <div className="max-w-2xl mx-auto">
           <AuthDialogProvider>
             <Outlet context={{ userInfo, accessToken }} />
-            {!onLanding && <About />}
           </AuthDialogProvider>
           <div className="p-2"></div>
         </div>
@@ -417,7 +408,7 @@ function ReviewPage() {
           <TopPageLayout
             userInfo={userInfo}
             headerProps={{
-              onChangeLanguage: () => navigate("/select-language"),
+              backButton: { label: "Home", onBack: () => navigate("/home") },
               showSignupNag: false,
             }}
           >
@@ -428,7 +419,7 @@ function ReviewPage() {
           <TopPageLayout
             userInfo={userInfo}
             headerProps={{
-              onChangeLanguage: () => navigate("/select-language"),
+              backButton: { label: "Home", onBack: () => navigate("/home") },
               showSignupNag: false,
             }}
           >
@@ -441,53 +432,33 @@ function ReviewPage() {
         ))
         .with(
           { type: "deck", deck: P.not(P.nullish) },
-          ({
-            deck,
-            targetLanguage,
-            startingFresh,
-            historyKnown,
-          }) => {
+          ({ deck, targetLanguage, startingFresh, historyKnown }) => {
             const totalReviewsCompleted = deck.get_total_reviews();
             const autoplayed = lastAutoPlayReviewCount == totalReviewsCompleted;
             const setAutoplayed = () =>
               setLastAutoPlayReviewCount(totalReviewsCompleted);
 
-            const movieStats = deck.get_movie_stats();
-            const movieIds = movieStats.map((s) => s.id);
-            const metadata = getMovieMetadata(deck, movieIds);
-            const metadataMap = new Map(metadata.map((m) => [m.id, m]));
-            const moviesWithMetadata = movieStats.flatMap((stat) => {
-              const meta = metadataMap.get(stat.id);
-              return meta ? [{ ...meta, ...stat }] : [];
-            });
-
             return (
-              <>
-                <Review
-                  userInfo={userInfo}
-                  accessToken={accessToken}
-                  deck={deck}
-                  targetLanguage={targetLanguage}
-                  startingFresh={startingFresh}
-                  historyKnown={historyKnown}
-                  autoplayed={autoplayed}
-                  setAutoplayed={setAutoplayed}
-                />
-                <Tools deck={deck} />
-                <Movies
-                  moviesWithMetadata={moviesWithMetadata}
-                  targetLanguageIso={languageToIso6391(targetLanguage)}
-                  deck={deck}
-                />
-                <Stats deck={deck} targetLanguage={targetLanguage} />
-              </>
+              <Review
+                userInfo={userInfo}
+                accessToken={accessToken}
+                deck={deck}
+                targetLanguage={targetLanguage}
+                startingFresh={startingFresh}
+                historyKnown={historyKnown}
+                autoplayed={autoplayed}
+                setAutoplayed={setAutoplayed}
+              />
             );
           },
         )
         .with({ type: "noLanguageSelected" }, () => (
           <TopPageLayout
             userInfo={userInfo}
-            headerProps={{ showSignupNag: false }}
+            headerProps={{
+              backButton: { label: "Home", onBack: () => navigate("/home") },
+              showSignupNag: false,
+            }}
           >
             <div className="flex-1 flex items-center justify-center">
               <p className="text-muted-foreground animate-fade-in-delayed">
@@ -500,7 +471,7 @@ function ReviewPage() {
           <TopPageLayout
             userInfo={userInfo}
             headerProps={{
-              onChangeLanguage: () => navigate("/select-language"),
+              backButton: { label: "Home", onBack: () => navigate("/home") },
               showSignupNag: false,
             }}
           >
@@ -533,7 +504,10 @@ function ReviewPage() {
         .with(null, () => (
           <TopPageLayout
             userInfo={userInfo}
-            headerProps={{ showSignupNag: false }}
+            headerProps={{
+              backButton: { label: "Home", onBack: () => navigate("/home") },
+              showSignupNag: false,
+            }}
           >
             <div className="flex items-center justify-center p-4 animate-fade-in-delayed">
               <Skeleton className="h-48 w-full max-w-2xl" />
@@ -542,81 +516,6 @@ function ReviewPage() {
         ))
         .exhaustive()}
     </div>
-  );
-}
-
-const Tools = memo(function Tools({ deck: _deck }: { deck: Deck }) {
-  const navigate = useNavigate();
-
-  return (
-    <div className="">
-      <h2 className="text-2xl font-semibold animate-fade-in-delay-2">Tools</h2>
-      <Card className="p-4 mt-3 space-y-2 gap-0" animate>
-        <button
-          onClick={() => navigate("/dictionary")}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors mb-0"
-        >
-          <span>📖 Dictionary</span>
-          <span className="text-muted-foreground">→</span>
-        </button>
-        <button
-          onClick={() => navigate("/leeches")}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors"
-        >
-          <span>🩹 Leeches</span>
-          <span className="text-muted-foreground">→</span>
-        </button>
-        <button
-          onClick={() => navigate("/simulate")}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted transition-colors"
-        >
-          <span>🔮 Simulate</span>
-          <span className="text-muted-foreground">→</span>
-        </button>
-      </Card>
-    </div>
-  );
-});
-
-function SimulatePage() {
-  const { userInfo } = useOutletContext<AppContextType>();
-  const deck = useDeck();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (deck?.type === "noLanguageSelected") {
-      navigate("/", { replace: true });
-    }
-  }, [deck, navigate]);
-
-  if (deck?.type === "noLanguageSelected") {
-    return null;
-  }
-
-  if (deck?.type !== "deck" || !deck.deck) {
-    return (
-      <TopPageLayout
-        userInfo={userInfo}
-        headerProps={{
-          backButton: { label: "Simulate", onBack: () => navigate("/learn") },
-        }}
-      >
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </TopPageLayout>
-    );
-  }
-
-  return (
-    <TopPageLayout
-      userInfo={userInfo}
-      headerProps={{
-        backButton: { label: "Simulate", onBack: () => navigate("/learn") },
-      }}
-    >
-      <Simulate deck={deck.deck} targetLanguage={deck.targetLanguage} />
-    </TopPageLayout>
   );
 }
 
@@ -641,7 +540,7 @@ function DictionaryPage() {
       <TopPageLayout
         userInfo={userInfo}
         headerProps={{
-          backButton: { label: "Dictionary", onBack: () => navigate("/learn") },
+          backButton: { label: "Home", onBack: () => navigate("/home") },
         }}
       >
         <div className="flex-1 flex items-center justify-center">
@@ -656,7 +555,7 @@ function DictionaryPage() {
       <TopPageLayout
         userInfo={userInfo}
         headerProps={{
-          backButton: { label: "Dictionary", onBack: () => navigate("/learn") },
+          backButton: { label: "Home", onBack: () => navigate("/home") },
         }}
       >
         <div className="flex-1 bg-background flex items-center justify-center">
@@ -670,7 +569,7 @@ function DictionaryPage() {
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
-        backButton: { label: "Dictionary", onBack: () => navigate("/learn") },
+        backButton: { label: "Home", onBack: () => navigate("/home") },
       }}
     >
       <Dictionary
@@ -684,63 +583,6 @@ function DictionaryPage() {
   );
 }
 
-function LeechesPage() {
-  const { userInfo } = useOutletContext<AppContextType>();
-  const deck = useDeck();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (deck?.type === "noLanguageSelected") {
-      navigate("/", { replace: true });
-    }
-  }, [deck, navigate]);
-
-  if (deck?.type === "noLanguageSelected") {
-    return null;
-  }
-
-  if (deck?.type !== "deck") {
-    return (
-      <TopPageLayout
-        userInfo={userInfo}
-        headerProps={{
-          backButton: { label: "Leeches", onBack: () => navigate("/learn") },
-        }}
-      >
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </TopPageLayout>
-    );
-  }
-
-  if (!deck.deck) {
-    return (
-      <TopPageLayout
-        userInfo={userInfo}
-        headerProps={{
-          backButton: { label: "Leeches", onBack: () => navigate("/learn") },
-        }}
-      >
-        <div className="flex-1 bg-background flex items-center justify-center">
-          <p className="text-muted-foreground">Loading leeches...</p>
-        </div>
-      </TopPageLayout>
-    );
-  }
-
-  return (
-    <TopPageLayout
-      userInfo={userInfo}
-      headerProps={{
-        backButton: { label: "Leeches", onBack: () => navigate("/learn") },
-      }}
-    >
-      <Leeches deck={deck.deck} targetLanguage={deck.targetLanguage} />
-    </TopPageLayout>
-  );
-}
-
 interface ReviewProps {
   userInfo: UserInfo | undefined;
   accessToken: string | undefined;
@@ -750,25 +592,6 @@ interface ReviewProps {
   historyKnown: boolean;
   autoplayed: boolean;
   setAutoplayed: () => void;
-}
-
-// Browser adapter: keep the existing device-local keys, and let Rust
-// decide which restrictions remain active and when to refresh them.
-function readChallengeRestrictions() {
-  const read = (key: string) => {
-    const raw = localStorage.getItem(key);
-    return raw ? parseInt(raw, 10) : undefined;
-  };
-  const result = get_challenge_restrictions(
-    read("yap-cant-listen-timestamp"),
-    read("yap-cant-speak-timestamp"),
-    Date.now(),
-  );
-  if (!result.banned.includes("Listening"))
-    localStorage.removeItem("yap-cant-listen-timestamp");
-  if (!result.banned.includes("Speaking"))
-    localStorage.removeItem("yap-cant-speak-timestamp");
-  return result;
 }
 
 function Review({
@@ -1135,10 +958,9 @@ function Review({
     <TopPageLayout
       userInfo={userInfo}
       headerProps={{
-        onChangeLanguage: () => navigate("/select-language"),
         showSignupNag: true,
-        language: view.target_language,
         dailyGoalPercent: view.progress * 100,
+        backButton: { label: "Home", onBack: () => navigate("/home") },
       }}
     >
       <ReviewScreen
@@ -1231,6 +1053,9 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <LandingPage /> },
           { path: "learn", element: <ReviewPage /> },
+          { path: "home", element: <HomePage /> },
+          { path: "stats", element: <StatsPage /> },
+          { path: "due", element: <DueWordsPage /> },
           ...(import.meta.env.DEV
             ? [
                 {
@@ -1243,9 +1068,7 @@ const router = createBrowserRouter([
               ]
             : []),
           { path: "dictionary", element: <DictionaryPage /> },
-          { path: "leeches", element: <LeechesPage /> },
-          { path: "simulate", element: <SimulatePage /> },
-          { path: "sentence-lists", element: <SentenceListsPage /> },
+          { path: "goals", element: <GoalsPage /> },
           { path: "select-language", element: <SelectLanguagePage /> },
           { path: "user/id/:id", element: <UserProfilePage /> },
           { path: "*", element: <NotFoundPage /> },

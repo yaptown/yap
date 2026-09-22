@@ -29,6 +29,10 @@ extension EnvironmentValues {
     var cantSpeak: () -> Void = { log("can't speak") }
     var undoRestrictions: () -> Void = { log("undo restrictions") }
     var addEvent: (DeckEvent) -> Void = { _ in log("add event") }
+    /// Changing the active curriculum. Kept separate from `addEvent` because it
+    /// does not add cards — Home wraps `addEvent` to jump into Review, and a
+    /// curriculum change must not trigger that jump (mirrors web's split props).
+    var setSentenceList: (DeckEvent) -> Void = { _ in log("set sentence list") }
     var dismissAccomplishment: () -> Void = { log("dismiss accomplishment") }
     var setPlacement: (PlacementSession) -> Void = { _ in log("set placement") }
     var completePlacementTest: (PlacementSession) -> Void = { _ in log("complete placement") }

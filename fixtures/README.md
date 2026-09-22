@@ -1,8 +1,21 @@
 # Screen parity fixtures
 
-`challenges/*.json` and `screens/*.json` are real screens captured from the
-throwaway test account. Each file is a Rust `ReviewScreenView`: target language, progress, review/card
-counts, connectivity, engagement eligibility, and an adjacent-tagged `step`
+Every `fixtures/*/*.json` is a Rust `Fixture`, an adjacent-tagged envelope:
+
+```json
+{ "screen": "Review", "view": { "...": "the screen's Rust snapshot" } }
+```
+
+`screen` is `Review`, `Home`, `Stats`, `Goals`, or `Due`; `view` is respectively
+`ReviewScreenView`, `HomeScreenView`, `StatsScreenView`, `GoalsScreenView`, or
+`DueWordsScreenView`. Directory names organize captures, not dispatch. Discovery
+visits every immediate fixture subdirectory; names must be unique across them.
+All captures are real (no synthetic data): `home/`, `stats/`, `goals/`, and
+`due/` now hold live snapshots alongside `challenges/` and `screens/`.
+
+The current `challenges/*.json` and `screens/*.json` are real Review screens
+captured from the throwaway test account. Their view contains target language,
+progress, review/card counts, connectivity, engagement eligibility, and an adjacent-tagged `step`
 (`type` plus `view`). The step is `PlacementTest`, `ReviewPlan`, `SetDisplayName`,
 `Accomplishment`, `Challenge`, or `Idle`, in that priority order. Both hosts render
 the same screen component for live snapshots and fixtures. Challenge captures include optional live
@@ -10,9 +23,14 @@ reducer state for dictation and translation. Screen captures contain the entire
 Rust view, including preview cards, progress, copy, and button events. They are
 intentional test inputs: commit them, not generated bindings or screenshots.
 
-Screen coverage: French caught-up and review-plan views, Italian first-run, and
-German needs-more-cards. Audio-pending and accomplishment variants are supported
-but do not yet have live captures.
+Review-screen coverage: French caught-up and review-plan views, Italian
+first-run, and German needs-more-cards. Audio-pending and accomplishment
+variants are supported but do not yet have live captures.
+
+Home-screen coverage (`home/`): `home-cards-ready` (Up Next previewing a due
+challenge, French), plus the three idle states mirroring the Review idle trio —
+`home-first-run` (Italian), `home-needs-more-cards` (German), and
+`home-all-caught-up` (French).
 
 ## Capture on iOS
 
@@ -25,7 +43,9 @@ CONTAINER=$(xcrun simctl get_app_container <UDID> town.yap.ios data)
 printf 'dump-fixture my-name' > "$CONTAINER/tmp/yap-command"
 ```
 
-`dump-fixture` captures the visible challenge, idle screen, review plan (including
+`dump-fixture` captures the active Home, Stats, Goals, Due, or Review screen.
+Use `tab home`, `tab stats`, `tab goals`, `tab due`, or `tab review` first.
+Review captures include the visible challenge, idle screen, review plan (including
 an expanded "Study more" plan), or accomplishment. Wait for `fixture written` in
 `$CONTAINER/tmp/yap-test.log`, then copy `$CONTAINER/tmp/fixtures/my-name.json`
 unchanged into the appropriate directory. Re-query the container after installing
@@ -56,7 +76,15 @@ driver reviews append real, immutable events to that test account.
   Screen actions are no-ops, and challenge fixtures cannot append review events
   or overwrite normal pending-review storage. iOS enables Rust's `fixtures`
   feature for `parse_fixture` / `fixture_json`; the transparent view
-  types are always available. Fixture rendering still uses the live app shell.
+  types (including `Fixture`) are always available. Fixture rendering still uses
+  each screen's live app shell; Home stays at the navigation root.
+
+Injected Home/Stats/Goals/Due screens are inert and cannot append deck events.
+Goals captures cover the goal, daily-goal editor, and curriculum card; the extra
+movie/Pimsleur browsing lists are still derived from the live deck, not included
+in `GoalsScreenView`, and are deliberately omitted during fixture rendering on
+both hosts. Those extras are **not** captured coverage. Existing app-level auth
+and synchronization still run; fixture mode is not an offline sandbox.
 
 ## Side-by-side screenshots
 
@@ -71,11 +99,11 @@ YAP_TEST_USER_PASSWORD=... cargo xtask parity --out /tmp/parity-screens \
 open /tmp/parity/index.html
 ```
 
-The task discovers both directories, builds WASM and iOS, installs the iOS app,
+The task discovers every immediate fixture subdirectory, builds WASM and iOS, installs the iOS app,
 runs Playwright, and writes `<name>-web.png`, `<name>-ios.png`, and `index.html`. Options: `--only`
 (comma-separated names/prefixes), `--web-only`, `--ios-only`, `--no-build`,
 `--simulator <UDID>`, and `--email` (restricted to the throwaway test account).
-`--no-build` skips both WASM and iOS builds. Names must be unique across both fixture directories.
+`--no-build` skips both WASM and iOS builds. Names must be unique across all fixture directories.
 
 These are visual comparisons, not pixel-equality assertions. Platform-local
 pickers, posters, acknowledgements, confetti, engagement prompts, chrome, and

@@ -2,26 +2,30 @@ import { useMemo } from "react";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 import { Line, LineChart, XAxis, YAxis, CartesianGrid } from "recharts";
-import type { Deck } from "../../../yap-frontend-rs/pkg";
+import type {
+  FrequencyKnowledgePoint,
+  Language,
+} from "../../../yap-frontend-rs/pkg";
+import { TargetLanguageText } from "./TargetLanguageText";
 
 interface FrequencyKnowledgeChartProps {
-  deck: Deck;
+  points: FrequencyKnowledgePoint[];
+  targetLanguage: Language;
 }
 
 const chartConfig = {
   knowledge: {
     label: "Predicted Knowledge",
-    color: "hsl(var(--chart-1))",
+    color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
 
 export function FrequencyKnowledgeChart({
-  deck,
+  points,
+  targetLanguage,
 }: FrequencyKnowledgeChartProps) {
-  // Compute data only when this component renders
   const data = useMemo(() => {
-    const rawData = deck.get_frequency_knowledge_chart_data();
-    return rawData.map((point) => ({
+    return points.map((point) => ({
       frequency: point.frequency,
       knowledge: point.predicted_knowledge * 100, // Convert to percentage
       label:
@@ -31,7 +35,7 @@ export function FrequencyKnowledgeChart({
       words: point.example_words,
       wordCount: point.word_count,
     }));
-  }, [deck]);
+  }, [points]);
 
   if (data.length === 0) {
     return (
@@ -73,7 +77,11 @@ export function FrequencyKnowledgeChart({
                     <p className="text-sm text-muted-foreground mt-1">
                       Examples ({data.wordCount} words):
                     </p>
-                    <p className="text-sm font-medium">{data.words}</p>
+                    <p className="text-sm font-medium">
+                      <TargetLanguageText language={targetLanguage}>
+                        {data.words}
+                      </TargetLanguageText>
+                    </p>
                   </>
                 )}
               </div>
@@ -83,6 +91,7 @@ export function FrequencyKnowledgeChart({
         <Line
           type="monotone"
           dataKey="knowledge"
+          stroke="var(--color-knowledge)"
           strokeWidth={2}
           dot={{
             r: 4,

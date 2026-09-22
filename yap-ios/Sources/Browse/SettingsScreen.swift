@@ -50,8 +50,10 @@ struct SettingsScreen: View {
             .onAppear { name = auth.displayName ?? "" }
             .onChange(of: auth.displayName) { old, new in if name == (old ?? "") { name = new ?? "" } }
         #if DEBUG
+        .onAppear { DebugHarness.shared.activeScreen = .settings }
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            if DebugHarness.shared.activeTab == .settings, ["sync", "force-push"].contains(DebugHarness.shared.command) { sync() }
+            guard DebugHarness.shared.activeScreen == .settings else { return }
+            if ["sync", "force-push"].contains(DebugHarness.shared.command) { sync() }
             if DebugHarness.shared.command == "status", let state = session.weapon?.get_sync_state(target: .Supabase) { DebugHarness.log("settings finished=\(String(describing: state.last_sync_finished?.date))") }
         }
         #endif

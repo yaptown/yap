@@ -22,7 +22,7 @@ struct SetDisplayNameView: View {
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            guard DebugHarness.shared.activeTab == .learn else { return }
+            guard DebugHarness.shared.activeScreen == .review else { return }
             let command = DebugHarness.shared.command
             if command.hasPrefix("type ") { name = String(command.dropFirst(5).prefix(50)) }
             if command == "next" { Task { await save() } }
