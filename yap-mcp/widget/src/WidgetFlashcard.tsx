@@ -34,7 +34,7 @@ export function WidgetFlashcard({ challenge }: { challenge: FlashcardChallenge }
   const remount = useCallback(() => setRetryKey((k) => k + 1), []);
 
   const display = contentDisplay(challenge.content);
-  const leftLabel = challenge.is_new ? "didn't know" : "forgot";
+  const leftLabel = challenge.view.again_label.toLowerCase();
   const { grading, graded, gradeError, grade, claim } = useLogReview(
     challenge,
     display,
@@ -84,10 +84,8 @@ export function WidgetFlashcard({ challenge }: { challenge: FlashcardChallenge }
         key={retryKey}
         audioRequest={challenge.audio}
         content={challenge.content}
-        disclosure={challenge.disclosure}
-        isNew={challenge.is_new}
+        view={challenge.view}
         targetLanguage={challenge.language}
-        nativeLanguage={challenge.native_language}
         accessToken={undefined}
         autoplayed={autoplayed}
         setAutoplayed={() => setAutoplayed(true)}

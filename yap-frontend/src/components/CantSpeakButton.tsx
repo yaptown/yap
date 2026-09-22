@@ -3,9 +3,10 @@ import { MicOff } from "lucide-react";
 
 interface CantSpeakButtonProps {
   onClick: () => void;
+  label: string;
 }
 
-export function CantSpeakButton({ onClick }: CantSpeakButtonProps) {
+export function CantSpeakButton({ onClick, label }: CantSpeakButtonProps) {
   return (
     <Button
       onClick={onClick}
@@ -14,7 +15,7 @@ export function CantSpeakButton({ onClick }: CantSpeakButtonProps) {
     >
       <span className="relative flex items-center justify-center">
         <MicOff className="absolute right-full mr-2 h-5 w-5" />
-        Can't speak now
+        {label}
       </span>
     </Button>
   );

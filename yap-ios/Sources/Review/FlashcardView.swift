@@ -4,7 +4,7 @@ func gramText(_ gram: [Literal_String]) -> String {
     gram.map { $0.word.text + $0.whitespace }.joined().trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
-struct FlashcardView: View {
+struct FlashcardChallengeView: View {
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewScreen!) private var screen
     @Environment(\.reviewHost!) private var host
@@ -15,19 +15,24 @@ struct FlashcardView: View {
     let timesTypeSeen: UInt32
     @State private var revealed = false
     @State private var hasOpened = false
-    private var disclosure: FlashcardDisclosure {
-        get_flashcard_disclosure(total_card_count: screen.total_count, times_type_seen: timesTypeSeen)
+    private var view: FlashcardView {
+        flashcard_view(flashcard: flashcard, is_new: isNew, total_card_count: screen.total_count,
+                       times_type_seen: timesTypeSeen, target_language: screen.target_language,
+                       native_language: screen.native_language)
     }
-    private var canGrade: Bool { hasOpened || revealed || !disclosure.require_answer_reveal }
+    private var canGrade: Bool { hasOpened || revealed || !view.require_answer_reveal }
     private var listening: Bool { if case .Listening = flashcard.content { true } else { false } }
     var body: some View {
         VStack(spacing: 12) {
+            if !revealed, let prompt = view.tutorial_prompt {
+                TutorialPromptText(prompt: prompt)
+            }
             StudyCard {
-                if isNew { ReviewBadge(text: "New word") }
                 // Like the web card: audio at the leading edge, the word centered, the menu trailing.
                 HStack(alignment: .center, spacing: 8) {
                     if let request = flashcard.audio {
                         AudioButton(request: request, reviewCount: screen.total_reviews, autoplay: listening || revealed)
+                            .frame(maxWidth: listening ? .infinity : nil)
                     } else { Color.clear.frame(width: 44, height: 44) }
                     Group {
                         switch flashcard.content {
@@ -35,45 +40,50 @@ struct FlashcardView: View {
                             Text((prefix.map { $0.prefix + $0.separator } ?? "") + gramText(gram))
                                 .font(.system(size: 28, weight: .semibold, design: .rounded)).textSelection(.enabled)
                         case .Listening:
-                            Text("What do you hear?").font(.title2.bold())
+                            EmptyView()
                         }
-                    }.multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                    }.multilineTextAlignment(.center).frame(maxWidth: listening ? nil : .infinity)
                     // The web's main row is always Again/Remembered; Hard/Good/Easy live in its menu.
                     Menu {
-                        Button("Hard") { rate(.Hard) }
-                        Button("Good") { rate(.Good) }
-                        Button("Easy") { rate(.Easy) }
+                        ForEach(Array(view.menu_grades.enumerated()), id: \.offset) { _, grade in
+                            Button(grade.label) { rate(grade.rating) }
+                        }
                     } label: {
                         Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
                     }.disabled(!canGrade || actions.submitting).accessibilityLabel("More grades")
                 }
-                if disclosure.show_tutorial && should_show_challenge_tutorial(times_type_seen: timesTypeSeen) {
-                    Text(listening ? "Listen, then guess what's being said." : "Guess the meaning, then reveal the answer.")
-                        .font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                if let subtitle = view.subtitle {
+                    Text(subtitle).font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity)
                 }
                 Divider()
                 if revealed {
                     answer
                 } else {
-                    Label("Tap to reveal answer", systemImage: "chevron.down")
-                        .font(.subheadline.weight(disclosure.require_answer_reveal ? .bold : .regular))
-                        .foregroundStyle(disclosure.require_answer_reveal ? .primary : .secondary)
+                    Label(view.reveal_label, systemImage: "chevron.down")
+                        .font(.subheadline.weight(view.require_answer_reveal ? .bold : .regular))
+                        .foregroundStyle(view.require_answer_reveal ? .primary : .secondary)
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
             }
             .contentShape(Rectangle())
             .onTapGesture { toggle() }
             .accessibilityAction(named: revealed ? "Hide answer" : "Reveal answer") { toggle() }
+            if !revealed, let hint = view.tutorial_hidden_hint {
+                Text(hint).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            if revealed, let hint = view.tutorial_revealed_hint {
+                Text(hint).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            if !revealed, let label = view.cant_listen_label {
+                Button(label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
+            }
             if canGrade {
                 HStack(spacing: 12) {
-                    Button { rate(.Again) } label: { Text(isNew ? "Didn't know" : "Forgot").frame(maxWidth: .infinity) }
+                    Button { rate(.Again) } label: { Text(view.again_label).frame(maxWidth: .infinity) }
                         .tint(.red).keyboardShortcut(.leftArrow, modifiers: [])
-                    Button { rate(.Remembered) } label: { Text(isNew ? "Already knew" : "Remembered").frame(maxWidth: .infinity) }
+                    Button { rate(.Remembered) } label: { Text(view.remembered_label).frame(maxWidth: .infinity) }
                         .keyboardShortcut(.rightArrow, modifiers: [])
                 }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(actions.submitting)
-            }
-            if listening {
-                Button("I can't listen right now") { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
             }
         }
         #if DEBUG
@@ -102,12 +112,12 @@ struct FlashcardView: View {
             DefinitionBoxesView(definition: definition)
             if let breakdown, !breakdown.isEmpty { MorphemeBreakdownView(parts: breakdown, alignment: .center) }
         case let .Listening(possible):
-            if possible.count > 1 { Text("It could have been any of these words:").font(.footnote).foregroundStyle(.secondary) }
+            if let header = view.listening_header { Text(header).font(.footnote).foregroundStyle(.secondary) }
             ForEach(Array(possible.enumerated()), id: \.offset) { _, entry in
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(gramText(entry.second)).font(.title3.weight(.medium))
-                        if entry.first { Text("(known)").font(.footnote).foregroundStyle(.green) }
+                        if possible.count > 1 && entry.first { Text(view.known_label).font(.footnote).foregroundStyle(.green) }
                     }
                     ForEach(Array(entry.third.enumerated()), id: \.offset) { _, definition in
                         DefinitionBoxesView(definition: definition)
@@ -121,6 +131,16 @@ struct FlashcardView: View {
         audio.stop()
         actions.rate(indicator, rating)
         if rating != .Again { audio.playEffect("success-\(Int.random(in: 1...3))") }
+    }
+}
+
+struct TutorialPromptText: View {
+    let prompt: TutorialPrompt
+
+    var body: some View {
+        Text(prompt.before + (prompt.target ?? "") + prompt.after)
+            .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
     }
 }
 

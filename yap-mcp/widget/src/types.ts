@@ -4,11 +4,10 @@
 import type {
   AudioRequest,
   CardContent,
-  FlashcardDisclosure,
+  FlashcardView,
   Language,
   Literal,
-  PronunciationGuide,
-  PronunciationCue,
+  PronunciationView,
   Rating,
 } from "../../../yap-frontend-rs/pkg";
 
@@ -17,7 +16,6 @@ interface ChallengeBase {
   // idempotency token so a retried/re-rendered submit records it once.
   nonce: string;
   language: Language;
-  is_new: boolean;
   card: unknown;
 }
 
@@ -25,26 +23,18 @@ export interface FlashcardChallenge extends ChallengeBase {
   type: "flashcard";
   kind: "written" | "listening";
   audio: AudioRequest;
-  // The native language, for the app Flashcard's "Show {nativeLanguage}" label.
-  native_language: Language;
   // The exact CardContent the app builds — rendered by the app's Flashcard
   // component verbatim. Type-only import; erases at build (no WASM in the bundle).
   content: CardContent;
   // Product policy computed by Rust, shared with the web app.
-  disclosure: FlashcardDisclosure;
+  view: FlashcardView;
 }
 
 export interface PronunciationChallenge extends ChallengeBase {
   type: "pronunciation";
   // The native language, for tagging the "as in" connector gloss.
   native_language: Language;
-  pattern: string;
-  // The full guide the app renders (position, description, example words).
-  // Type-only import; erases at build (no WASM in the bundle).
-  guide: PronunciationGuide;
-  // One clip per example word ("<pattern> as in <word>").
-  cues: PronunciationCue[];
-  show_guide: boolean;
+  view: PronunciationView;
 }
 
 export interface TranslationChallenge extends ChallengeBase {

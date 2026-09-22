@@ -1378,12 +1378,8 @@ impl YapMcp {
                     "nonce": presentation_nonce(),
                     "language": language,
                     "native_language": native_language,
-                    "is_new": is_new,
-                    "show_guide": yap_frontend_rs::should_show_challenge_tutorial(times_type_seen),
                     "card": card,
-                    "pattern": pattern,
-                    "guide": guide,
-                    "cues": cues,
+                    "view": yap_frontend_rs::pronunciation_view(pattern.clone(), guide, cues, is_new, times_type_seen),
                 },
             });
             let mut result = CallToolResult::success(vec![ContentBlock::text(format!(
@@ -1410,7 +1406,7 @@ impl YapMcp {
         // component verbatim (full card back, morphology, homophone grid) with
         // no widget-specific projection of the content.
         let now_ms = Utc::now().timestamp_millis() as f64;
-        let (flashcard, is_new, disclosure) = {
+        let (flashcard, view) = {
             let deck = state.deck();
             let review_info = deck.get_review_info(vec![], now_ms);
             let interned_indicator = match &card {
@@ -1434,28 +1430,25 @@ impl YapMcp {
                 }
                 CardIndicator::LetterPronunciation { .. } => unreachable!("returned above"),
             };
-            (
-                flashcard,
+            let view = yap_frontend_rs::flashcard_view(
+                flashcard.clone(),
                 ctx.is_new,
-                yap_frontend_rs::get_flashcard_disclosure(
-                    review_info.total_count(),
-                    ctx.times_type_seen,
-                ),
-            )
+                review_info.total_count(),
+                ctx.times_type_seen,
+                target_language,
+                state.context.course.native_language,
+            );
+            (flashcard, view)
         };
 
         let language = state.target_language_value();
-        let native_language = serde_json::to_value(state.context.course.native_language)
-            .expect("Language serializes");
         let structured = json!({
             "challenge": {
                 "type": "flashcard",
                 "nonce": presentation_nonce(),
                 "language": language,
-                "native_language": native_language,
                 "kind": kind,
-                "is_new": is_new,
-                "disclosure": disclosure,
+                "view": view,
                 "card": card,
                 "content": serde_json::to_value(&flashcard.content).expect("content serializes"),
                 "audio": serde_json::to_value(&flashcard.audio).expect("audio serializes"),

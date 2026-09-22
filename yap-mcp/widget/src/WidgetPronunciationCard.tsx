@@ -18,7 +18,7 @@ export function WidgetPronunciationCard({
   const [skipped, setSkipped] = useState(false);
   const { grading, graded, gradeError, grade, claim } = useLogReview(
     challenge,
-    challenge.pattern,
+    challenge.view.pattern,
   );
 
   const cantSpeak = useCallback(() => {
@@ -32,12 +32,12 @@ export function WidgetPronunciationCard({
         content: [
           {
             type: "text",
-            text: `user can't speak right now — skipped the pronunciation card «${challenge.pattern}» without logging a review; don't present more pronunciation cards this session`,
+            text: `user can't speak right now — skipped the pronunciation card «${challenge.view.pattern}» without logging a review; don't present more pronunciation cards this session`,
           },
         ],
       })
       .catch(() => {});
-  }, [challenge.pattern, claim]);
+  }, [challenge.view.pattern, claim]);
 
   if (skipped) {
     return (
@@ -48,7 +48,7 @@ export function WidgetPronunciationCard({
   }
 
   if (graded) {
-    const leftLabel = challenge.is_new ? "didn't know" : "forgot";
+    const leftLabel = challenge.view.again_label.toLowerCase();
     return (
       <p className="text-sm text-muted-foreground text-center font-mono py-6">
         graded — {graded === "again" ? leftLabel : graded}
@@ -59,16 +59,12 @@ export function WidgetPronunciationCard({
   return (
     <div className="max-w-md mx-auto min-h-[24rem] flex flex-col">
       <PronunciationChallenge
-        pattern={challenge.pattern}
-        guide={challenge.guide}
-        cues={challenge.cues}
+        view={challenge.view}
         onRating={(rating: Rating) => void grade(rating)}
         accessToken={undefined}
         onCantSpeak={cantSpeak}
         targetLanguage={challenge.language}
         nativeLanguage={challenge.native_language}
-        isNew={challenge.is_new}
-        showGuide={challenge.show_guide}
       />
       {grading && (
         <p className="text-sm text-muted-foreground text-center font-mono pt-2">

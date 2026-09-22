@@ -2,6 +2,8 @@
 
 mod audio;
 mod challenge;
+pub mod challenge_views;
+pub use challenge_views::*;
 mod clips;
 mod deck_event;
 pub mod deck_selection;
@@ -4239,7 +4241,7 @@ pub struct FlashCard {
 
 /// Display segments and optional pack alignment for one example's audio.
 #[bridge(transparent)]
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct PronunciationCue {
     pub audio: AudioRequest,
     pub segments: Vec<CueSegment>,
@@ -4251,7 +4253,7 @@ pub struct PronunciationCue {
 }
 
 #[bridge(transparent)]
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
 pub struct CueSegment {
     pub text: String,
     pub role: language_utils::CueSegmentRole,

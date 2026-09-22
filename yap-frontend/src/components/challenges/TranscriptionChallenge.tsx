@@ -720,7 +720,7 @@ export function TranscriptionChallenge({
       </div>
 
       <div className="mt-4 flex flex-col gap-2 sticky bottom-0">
-        {onCantListen && editing && <CantListenButton onClick={onCantListen} />}
+        {onCantListen && editing && <CantListenButton onClick={onCantListen} label="Can't listen now" />}
 
         <div>
           {view.is_grading ? (

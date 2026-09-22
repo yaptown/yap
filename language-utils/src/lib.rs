@@ -4562,7 +4562,7 @@ impl HomophonePractice<lasso::Spur> {
     }
 }
 #[bridgerton::bridge(transparent)]
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, schemars::JsonSchema)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, schemars::JsonSchema)]
 pub struct TtsRequest {
     pub text: String,
     pub language: Language,

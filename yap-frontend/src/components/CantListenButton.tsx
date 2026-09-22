@@ -3,9 +3,10 @@ import { VolumeX } from "lucide-react";
 
 interface CantListenButtonProps {
   onClick: () => void;
+  label: string;
 }
 
-export function CantListenButton({ onClick }: CantListenButtonProps) {
+export function CantListenButton({ onClick, label }: CantListenButtonProps) {
   return (
     <Button
       onClick={onClick}
@@ -14,7 +15,7 @@ export function CantListenButton({ onClick }: CantListenButtonProps) {
     >
       <span className="relative flex items-center justify-center">
         <VolumeX className="absolute right-full mr-2 h-5 w-5" />
-        Can't listen now
+        {label}
       </span>
     </Button>
   );

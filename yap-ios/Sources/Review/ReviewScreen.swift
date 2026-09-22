@@ -56,7 +56,7 @@ struct ReviewScreen: View {
     @ViewBuilder private func challengeView(_ challenge: ChallengeView) -> some View {
         switch challenge.challenge {
         case let .FlashCardReview(indicator, flashcard, isNew, timesSeen):
-            FlashcardView(indicator: indicator, flashcard: flashcard, isNew: isNew, timesTypeSeen: timesSeen)
+            FlashcardChallengeView(indicator: indicator, flashcard: flashcard, isNew: isNew, timesTypeSeen: timesSeen)
         case let .PronunciationChallenge(indicator, pattern, guide, cues, isNew, timesSeen):
             PronunciationChallengeView(indicator: indicator, pattern: pattern, guide: guide, cues: cues, isNew: isNew, timesSeen: timesSeen)
         case let .TranslateComprehensibleSentence(sentence):

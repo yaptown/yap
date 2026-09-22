@@ -10,29 +10,35 @@ struct PronunciationChallengeView: View {
     let cues: [PronunciationCue]
     let isNew: Bool
     let timesSeen: UInt32
-    private var positionedPattern: String {
-        switch guide.position { case .Beginning: pattern + "___"; case .End: "___" + pattern; case .Anywhere: pattern }
+    private var view: PronunciationView {
+        pronunciation_view(pattern: pattern, guide: guide, cues: cues, is_new: isNew, times_type_seen: timesSeen)
     }
     var body: some View {
         VStack(spacing: 12) {
+            if let prompt = view.tutorial_prompt { TutorialPromptText(prompt: prompt) }
             StudyCard {
                 HStack(alignment: .center, spacing: 8) {
                     Color.clear.frame(width: 44, height: 44)
-                    Text(positionedPattern).font(.title2.bold()).multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                    Text(view.positioned_pattern).font(.title2.bold()).multilineTextAlignment(.center).frame(maxWidth: .infinity)
                     Color.clear.frame(width: 44, height: 44)
                 }
-                if should_show_challenge_tutorial(times_type_seen: timesSeen) { Text("Listen, then practice saying the sound aloud.").font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity) }
-                ForEach(Array(cues.prefix(3).enumerated()), id: \.offset) { index, cue in
-                    PronunciationRow(cue: cue, pattern: pattern, position: guide.position,
-                                     context: guide.example_words.indices.contains(index) ? guide.example_words[index].cultural_context : nil)
+                if let note = view.position_note {
+                    Text(note).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
                 }
-                Text(markdown(guide.description)).font(.subheadline)
+                ForEach(Array(view.examples.enumerated()), id: \.offset) { _, example in
+                    PronunciationRow(cue: example.cue, pattern: view.pattern, position: view.position,
+                                     context: example.cultural_context)
+                }
+                if let description = view.description { Text(markdown(description)).font(.subheadline) }
+            }
+            if let prompt = view.tutorial_grade_prompt {
+                Text(prompt).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
             HStack(spacing: 12) {
-                Button { rate(.Again) } label: { Text(isNew ? "Didn't know" : "Forgot").frame(maxWidth: .infinity) }.tint(.red)
-                Button { rate(.Remembered) } label: { Text(isNew ? "Already knew" : "Remembered").frame(maxWidth: .infinity) }
+                Button { rate(.Again) } label: { Text(view.again_label).frame(maxWidth: .infinity) }.tint(.red)
+                Button { rate(.Remembered) } label: { Text(view.remembered_label).frame(maxWidth: .infinity) }
             }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(actions.submitting)
-            Button("I can't speak right now") { actions.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
+            Button(view.cant_speak_label) { actions.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in

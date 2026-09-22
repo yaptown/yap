@@ -2,7 +2,7 @@ import {
   type AudioRequest,
   type CardContent,
   type DefinitionView,
-  type FlashcardDisclosure,
+  type FlashcardView,
   type Language,
   type Literal,
   type Rating,
@@ -47,13 +47,11 @@ function gramDisplayText(gram: Literal<string>[]): string {
 interface FlashcardProps {
   audioRequest: AudioRequest | undefined;
   content: CardContent;
-  disclosure: FlashcardDisclosure;
+  view: FlashcardView;
   onRating?: (rating: Rating) => void;
   accessToken: string | undefined;
   onCantListen?: () => void;
-  isNew: boolean;
   targetLanguage: Language;
-  nativeLanguage: Language;
   autoplayed: boolean;
   setAutoplayed: () => void;
   /** Extra dropdown-menu items (e.g. "Report an Issue"), owned by the caller. */
@@ -103,56 +101,14 @@ const CardFront = ({
     .exhaustive();
 };
 
-const CardFrontSubtitle = ({ content }: { content: CardContent }) => {
-  return match(content)
-    .with({ type: "Listening" }, () => (
-      <span className="text-sm text-muted-foreground">Guess what's being said!</span>
-    ))
-    .with({ type: "Gram" }, (content) => {
-      const definition = content.definition;
-      if (!definition.is_phrase) {
-        const firstHeteronym = content.gram
-          .map((l) => l.word.word_type)
-          .find((wt) => wt.type === "Heteronym");
-        const partOfSpeech =
-          firstHeteronym && firstHeteronym.type === "Heteronym"
-            ? match(firstHeteronym.pos)
-                .with("ADJ", () => "Adjective")
-                .with("ADP", () => "Adposition")
-                .with("ADV", () => "Adverb")
-                .with("AUX", () => "Auxiliary")
-                .with("CCONJ", () => "Conjunction")
-                .with("DET", () => "Determiner")
-                .with("INTJ", () => "Interjection")
-                .with("NOUN", () => "Noun")
-                .with("NUM", () => "Number")
-                .with("PART", () => "Particle")
-                .with("PRON", () => "Pronoun")
-                .with("SCONJ", () => "Subordinating Conjunction")
-                .with("SYM", () => "Symbol")
-                .with("VERB", () => "Verb")
-                .exhaustive()
-            : null;
-        return partOfSpeech ? (
-          <span className="text-sm text-muted-foreground">
-            ({partOfSpeech})
-          </span>
-        ) : null;
-      } else {
-        return (
-          <span className="text-sm text-muted-foreground">(Multiword)</span>
-        );
-      }
-    })
-    .exhaustive();
-};
-
 const CardBack = ({
   content,
+  view,
   targetLanguage,
   accessToken,
 }: {
   content: CardContent;
+  view: FlashcardView;
   targetLanguage: Language;
   accessToken: string | undefined;
 }) => {
@@ -185,9 +141,11 @@ const CardBack = ({
 
       return (
         <div className="space-y-4">
-          <div className="text-sm text-muted-foreground">
-            It could have been any of these words:
-          </div>
+          {view.listening_header && (
+            <div className="text-sm text-muted-foreground">
+              {view.listening_header}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             {possibleGrams.map(([isKnown, gram, definitions], index: number) => {
               const gloss = definitionsGloss(definitions);
@@ -208,7 +166,7 @@ const CardBack = ({
                     </span>
                     {isKnown && (
                       <span className="text-sm text-green-600 ml-2">
-                        (known)
+                        {view.known_label}
                       </span>
                     )}
                   </div>
@@ -303,13 +261,11 @@ const CardBack = ({
 export const Flashcard = function Flashcard({
   audioRequest,
   content,
-  disclosure,
+  view,
   onRating,
   accessToken,
   onCantListen,
-  isNew,
   targetLanguage,
-  nativeLanguage,
   autoplayed,
   setAutoplayed,
   menuExtras,
@@ -322,38 +278,12 @@ export const Flashcard = function Flashcard({
   const [audioError, setAudioError] = useState(false);
   const { bumpBackground } = useBackground();
 
-  const toggleAnswer = useCallback(
-    () => setShowAnswer(!showAnswer),
-    [showAnswer],
-  );
+  const toggleAnswer = useCallback(() => {
+    setShowAnswer((shown) => !shown);
+    setHasBeenOpened(true);
+  }, []);
 
-  const leftLabel = isNew ? "Didn't know" : "Forgot";
-  const rightLabel = isNew ? "Already knew" : "Remembered";
-
-  const requireShowAnswer = disclosure.require_answer_reveal;
-  const canGrade = hasBeenOpened || showAnswer || !requireShowAnswer;
-
-  const showTutorial = disclosure.show_tutorial;
-
-  const tutorialText = match(content)
-    .with({ type: "Gram" }, (c) => (
-      <>
-        Guess what "
-        <TargetLanguageText language={targetLanguage}>
-          {gramDisplayText(c.gram)}
-        </TargetLanguageText>
-        " means…
-      </>
-    ))
-    .with({ type: "Listening" }, () => (
-      <>Guess what {targetLanguage} word is missing</>
-    ))
-    .exhaustive();
-
-  const showAnswerText = match(content)
-    .with({ type: "Gram" }, () => `Show ${nativeLanguage}`)
-    .with({ type: "Listening" }, () => `Show ${targetLanguage} word`)
-    .exhaustive();
+  const canGrade = hasBeenOpened || showAnswer || !view.require_answer_reveal;
 
   const rotate = useTransform(x, [-200, 200], [-30, 30]);
 
@@ -406,13 +336,6 @@ export const Flashcard = function Flashcard({
       });
     }
   };
-
-  // Track if card has been opened
-  useEffect(() => {
-    if (showAnswer && !hasBeenOpened) {
-      setHasBeenOpened(true);
-    }
-  }, [showAnswer, hasBeenOpened]);
 
   // Reset position and animate in
   useEffect(() => {
@@ -490,7 +413,7 @@ export const Flashcard = function Flashcard({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showAnswer, canGrade, toggleAnswer, onRating, isNew, bumpBackground]);
+  }, [showAnswer, canGrade, toggleAnswer, onRating, bumpBackground]);
 
   const copyWord = () => {
     const word = match(content)
@@ -516,7 +439,7 @@ export const Flashcard = function Flashcard({
     <div className="flex flex-col flex-1 justify-between">
       <div className="flex flex-col gap-2">
         {/* Tutorial text above card */}
-        {showTutorial && (
+        {view.tutorial_prompt && (
           <div
             className={cn(
               "grid transition-all duration-300",
@@ -528,7 +451,15 @@ export const Flashcard = function Flashcard({
             <div className="overflow-hidden">
               <div className="text-center mt-4 text-2xl font-semibold text-muted-foreground animate-fade-in flex flex-row justify-center items-start gap-1">
                 <PlayfulArrow direction="down" flipStart size={70} />
-                <div>{tutorialText}</div>
+                <div>
+                  {view.tutorial_prompt.before}
+                  {view.tutorial_prompt.target && (
+                    <TargetLanguageText language={targetLanguage}>
+                      {view.tutorial_prompt.target}
+                    </TargetLanguageText>
+                  )}
+                  {view.tutorial_prompt.after}
+                </div>
                 <PlayfulArrow direction="down" size={70} />
               </div>
             </div>
@@ -570,13 +501,13 @@ export const Flashcard = function Flashcard({
               className="absolute top-8 left-8 text-red-500 font-bold text-2xl rotate-[-30deg] pointer-events-none"
               style={{ opacity: leftOverlayOpacity }}
             >
-              {leftLabel.toUpperCase()}
+              {view.again_label.toUpperCase()}
             </motion.div>
             <motion.div
               className="absolute top-8 right-8 text-green-500 font-bold text-2xl rotate-[30deg] pointer-events-none"
               style={{ opacity: rightOverlayOpacity }}
             >
-              {rightLabel.toUpperCase()}
+              {view.remembered_label.toUpperCase()}
             </motion.div>
 
             <div className="text-center relative z-10 flex flex-col gap-6">
@@ -644,30 +575,19 @@ export const Flashcard = function Flashcard({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              bumpBackground(30.0);
-                              onRating("easy");
-                            }}
-                          >
-                            Easy
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              bumpBackground(30.0);
-                              onRating("good");
-                            }}
-                          >
-                            Good
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              bumpBackground(30.0);
-                              onRating("hard");
-                            }}
-                          >
-                            Hard
-                          </DropdownMenuItem>
+                          {view.menu_grades.map((grade) => (
+                            <DropdownMenuItem
+                              key={grade.rating}
+                              disabled={!canGrade}
+                              onClick={() => {
+                                if (!canGrade) return;
+                                bumpBackground(30.0);
+                                onRating(grade.rating);
+                              }}
+                            >
+                              {grade.label}
+                            </DropdownMenuItem>
+                          ))}
                           <DropdownMenuItem onClick={copyWord}>
                             Copy word
                           </DropdownMenuItem>
@@ -679,7 +599,9 @@ export const Flashcard = function Flashcard({
                     )}
                   </div>
                 </div>
-                <CardFrontSubtitle content={content} />
+                {view.subtitle && (
+                  <span className="text-sm text-muted-foreground">{view.subtitle}</span>
+                )}
               </div>
 
               <hr className="" />
@@ -688,6 +610,7 @@ export const Flashcard = function Flashcard({
                 <div className="space-y-6 animate-feedback-in">
                   <CardBack
                     content={content}
+                    view={view}
                     targetLanguage={targetLanguage}
                     accessToken={accessToken}
                   />
@@ -696,10 +619,10 @@ export const Flashcard = function Flashcard({
                 <div className="flex flex-col items-center gap-2">
                   <div
                     className={` ${
-                      requireShowAnswer ? "font-bold" : "text-muted-foreground"
+                      view.require_answer_reveal ? "font-bold" : "text-muted-foreground"
                     }`}
                   >
-                    {showAnswerText}
+                    {view.reveal_label}
                   </div>
                   <kbd className="h-6 w-6 text-xs font-semibold border rounded bg-muted/20 border flex items-center justify-center hide-kbd-border-mobile">
                     <ArrowDown className="h-3 w-3 text-muted-foreground" />
@@ -724,10 +647,10 @@ export const Flashcard = function Flashcard({
           )}
 
         {/* Tutorial text below card */}
-        {showTutorial && !showAnswer && (
+        {view.tutorial_hidden_hint && !showAnswer && (
           <div className="text-center mt-2 text-2xl font-semibold text-muted-foreground flex flex-row justify-center items-end animate-fade-in-delayed">
             <PlayfulArrow direction="up" size={70} />
-            <span>Then, tap to see if you're right!</span>
+            <span>{view.tutorial_hidden_hint}</span>
             <PlayfulArrow direction="up" flipStart size={70} />
           </div>
         )}
@@ -735,10 +658,10 @@ export const Flashcard = function Flashcard({
 
       <div className="flex flex-col sticky bottom-0">
         {/* Tutorial text above buttons */}
-        {showTutorial && showAnswer && (
+        {view.tutorial_revealed_hint && showAnswer && (
           <div className="text-center mt-4 text-2xl font-semibold text-muted-foreground flex flex-row justify-center items-start animate-fade-in-delayed">
             <PlayfulArrow direction="down" flipStart size={96} />
-            <span>Were you right?</span>
+            <span>{view.tutorial_revealed_hint}</span>
             <PlayfulArrow direction="down" size={96} />
           </div>
         )}
@@ -752,8 +675,8 @@ export const Flashcard = function Flashcard({
                 {audioError && onCantListen && content.type === "Listening" && (
                   <AudioErrorBanner onSkip={onCantListen} />
                 )}
-                {onCantListen && content.type === "Listening" && (
-                  <CantListenButton onClick={onCantListen} />
+                {onCantListen && view.cant_listen_label && (
+                  <CantListenButton onClick={onCantListen} label={view.cant_listen_label} />
                 )}
               </>
             )}
@@ -775,7 +698,7 @@ export const Flashcard = function Flashcard({
                     <kbd className="absolute right-full mr-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowLeft className="h-3 w-3" />
                     </kbd>
-                    {leftLabel}
+                    {view.again_label}
                   </span>
                 </Button>
                 <Button
@@ -791,7 +714,7 @@ export const Flashcard = function Flashcard({
                   disabled={!canGrade}
                 >
                   <span className="relative flex items-center justify-center">
-                    {rightLabel}
+                    {view.remembered_label}
                     <kbd className="absolute left-full ml-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowRight className="h-3 w-3" />
                     </kbd>

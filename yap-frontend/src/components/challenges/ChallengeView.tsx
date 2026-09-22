@@ -2,8 +2,8 @@ import type { ComponentProps, ReactNode } from "react";
 import {
   type Challenge,
   type Gram,
-  get_flashcard_disclosure,
-  should_show_challenge_tutorial,
+  flashcard_view,
+  pronunciation_view,
 } from "../../../../yap-frontend-rs/pkg";
 import { Flashcard } from "../Flashcard";
 import { PronunciationChallenge } from "./PronunciationChallenge";
@@ -49,35 +49,37 @@ export function ChallengeView({
 }: Props) {
   return currentChallenge.type === "PronunciationChallenge" ? (
     <PronunciationChallenge
-      pattern={currentChallenge.pattern}
-      guide={currentChallenge.guide}
-      cues={currentChallenge.cues}
+      view={pronunciation_view(
+        currentChallenge.pattern,
+        currentChallenge.guide,
+        currentChallenge.cues,
+        currentChallenge.is_new,
+        currentChallenge.times_type_seen,
+      )}
       onRating={onRating}
       accessToken={accessToken}
       onCantSpeak={onCantSpeak}
       targetLanguage={targetLanguage}
       nativeLanguage={nativeLanguage}
-      isNew={currentChallenge.is_new}
-      showGuide={should_show_challenge_tutorial(
-        currentChallenge.times_type_seen,
-      )}
       key={totalReviewsCompleted}
     />
   ) : currentChallenge.type === "FlashCardReview" ? (
     <Flashcard
       audioRequest={currentChallenge.flashcard.audio}
       content={currentChallenge.flashcard.content}
-      isNew={currentChallenge.is_new}
-      disclosure={get_flashcard_disclosure(
+      view={flashcard_view(
+        currentChallenge.flashcard,
+        currentChallenge.is_new,
         totalCount,
         currentChallenge.times_type_seen,
+        targetLanguage,
+        nativeLanguage,
       )}
       onRating={onRating}
       accessToken={accessToken}
       key={totalReviewsCompleted}
       onCantListen={onCantListen}
       targetLanguage={targetLanguage}
-      nativeLanguage={nativeLanguage}
       autoplayed={autoplayed}
       setAutoplayed={setAutoplayed}
       menuExtras={menuExtras}
