@@ -11,6 +11,8 @@ pub mod pending;
 pub use pending::*;
 pub mod proper_nouns;
 pub use proper_nouns::*;
+pub mod sync_status;
+pub use sync_status::*;
 pub mod transcription;
 pub use transcription::*;
 

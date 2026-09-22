@@ -540,6 +540,38 @@ impl Weapon {
             .unwrap_or_default()
     }
 
+    pub fn sync_status(
+        &self,
+        online: bool,
+        now_ms: f64,
+        manual_sync_in_flight: bool,
+        host_sync_error: Option<String>,
+    ) -> SyncStatusView {
+        let state = self.get_sync_state(weapon::data_model::SyncTarget::Supabase);
+        sync_status_view(SyncStatusInputs {
+            online,
+            now_ms,
+            manual_sync_in_flight,
+            host_sync_error,
+            last_sync_started_ms: state
+                .last_sync_started
+                .map(|time| time.timestamp_millis() as f64),
+            last_sync_finished_ms: state
+                .last_sync_finished
+                .map(|time| time.timestamp_millis() as f64),
+            last_sync_error: state.last_sync_error,
+            earliest_unsynced_ms: self
+                .store
+                .borrow()
+                .get_timestamp_of_earliest_unsynced_event(weapon::data_model::SyncTarget::Supabase)
+                .map(|time| time.timestamp_millis() as f64),
+            local_events: self.num_events() as u64,
+            server_events: self
+                .num_events_on_remote_as_of_last_sync(weapon::data_model::SyncTarget::Supabase)
+                as u64,
+        })
+    }
+
     /// Flush pending store/stream notifications safely, avoiding RefCell re-borrows during callbacks.
     fn flush_notifications(&self) {
         // do it like this to avoid holding the borrow while we call the callbacks

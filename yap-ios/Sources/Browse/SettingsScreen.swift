@@ -9,27 +9,32 @@ struct SettingsScreen: View {
     @State private var error: String?
     var body: some View {
         Form {
-            Section("Sync status") {
-                TimelineView(.periodic(from: .now, by: 1)) { _ in
-                    if let weapon = session.weapon {
-                        let state = weapon.get_sync_state(target: .Supabase)
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                if let weapon = session.weapon {
+                    let view = weapon.sync_status(online: session.online, now_ms: context.date.timeIntervalSince1970 * 1000,
+                        manual_sync_in_flight: syncing, host_sync_error: session.syncError)
+                    Section {
                         VStack(alignment: .leading, spacing: 14) {
-                            Label(!session.online ? "Offline" : state.last_sync_error != nil ? "Sync error" : isRunning(state) ? "Syncing…" : weapon.get_timestamp_of_earliest_unsynced_event(target: .Supabase) != nil ? "Changes pending" : "Synced", systemImage: !session.online ? "wifi.slash" : "arrow.triangle.2.circlepath")
-                            timestamp("Started", state.last_sync_started)
-                            timestamp("Finished", state.last_sync_finished)
-                            if let error = state.last_sync_error { Text(error).font(.caption).foregroundStyle(Color.yapNegativeForeground) }
-                            LabeledContent("Local events", value: "\(weapon.num_events)")
-                            LabeledContent("Server events", value: "\(weapon.num_events_on_remote_as_of_last_sync(target: .Supabase))")
-                            timestamp("Earliest pending", weapon.get_timestamp_of_earliest_unsynced_event(target: .Supabase)?.timestamp)
-                            Text("Device ID").font(.caption).foregroundStyle(.secondary)
+                            Label(view.label, systemImage: view.status == .Offline ? "wifi.slash" : "arrow.triangle.2.circlepath")
+                                .foregroundStyle(statusColor(view.severity))
+                            if let label = view.last_sync_label, let finished = view.last_sync_finished_ms {
+                                Text("\(label) \(Date(timeIntervalSince1970: finished / 1000).formatted(date: .omitted, time: .standard))")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                            if let error = view.error { Text(error).font(.caption).foregroundStyle(Color.yapNegativeForeground) }
+                            LabeledContent(view.local_events_label, value: "\(view.local_events)")
+                            LabeledContent(view.server_events_label, value: "\(view.server_events)")
+                            Text(view.device_id_label).font(.caption).foregroundStyle(.secondary)
                             Text(weapon.device_id).font(.caption.monospaced()).textSelection(.enabled)
+                            if let banner = view.offline_banner { Text(banner).font(.caption).foregroundStyle(Color.yapCautionForeground) }
                         }
+                        Button(view.sync_button_label) { sync() }.disabled(!view.sync_button_enabled)
+                    } header: {
+                        Text(view.title)
+                    } footer: {
+                        Text(view.description)
                     }
                 }
-                Button(syncing ? "Syncing…" : "Sync now") { sync() }.disabled(syncing || !session.online)
-                Button("Push pending events") { sync() }.disabled(syncing || !session.online)
-                Text("Sync downloads updates and uploads missing events. Pushing never overwrites remote history.").font(.caption).foregroundStyle(.secondary)
-                if let error = session.syncError { Text(error).foregroundStyle(Color.yapNegativeForeground) }
             }
             Section("Account") {
                 LabeledContent("Email", value: auth.session?.user.email ?? "")
@@ -58,12 +63,12 @@ struct SettingsScreen: View {
         }
         #endif
     }
-    private func isRunning(_ state: SyncState_String_String) -> Bool {
-        guard let started = state.last_sync_started else { return false }
-        return state.last_sync_finished.map { started.date > $0.date } ?? true
-    }
-    private func timestamp(_ label: String, _ value: BridgeTimestamp?) -> some View {
-        LabeledContent(label, value: value?.date.formatted(date: .abbreviated, time: .standard) ?? "None")
+    private func statusColor(_ severity: SyncSeverity) -> Color {
+        switch severity {
+        case .Neutral: .secondary
+        case .Caution: .yapCautionForeground
+        case .Negative: .yapNegativeForeground
+        }
     }
     private func sync() {
         guard !syncing else { return }

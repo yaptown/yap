@@ -11,14 +11,22 @@ struct ReviewScreen: View {
                 .progressViewStyle(.linear).tint(Color.yapAccent).frame(height: 3)
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    if !view.online { Label("Offline · changes stay on this device until you reconnect", systemImage: "wifi.slash").font(.caption).foregroundStyle(.secondary) }
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        if let weapon = host.weapon {
+                            let sync = weapon.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,
+                                manual_sync_in_flight: false, host_sync_error: host.syncError)
+                            VStack(alignment: .leading, spacing: 12) {
+                                if let banner = sync.offline_banner { Label(banner, systemImage: "wifi.slash").font(.caption).foregroundStyle(.secondary) }
+                                if let error = sync.error { Text(error).font(.caption).foregroundStyle(Color.yapNegativeForeground) }
+                            }
+                        }
+                    }
                     if let error = host.packError {
                         HStack {
                             Text("Couldn't finish downloading the language pack: \(error)").font(.caption).foregroundStyle(.secondary)
                             Button("Retry", action: actions.retryPack).font(.caption)
                         }
                     }
-                    if let error = host.syncError { Text("Sync will retry: \(error)").font(.caption).foregroundStyle(.secondary) }
                     if let error = host.authError { Text(error).font(.caption).foregroundStyle(.secondary) }
                     switch view.step {
                     case let .PlacementTest(placement): PlacementTestView(placement: placement)

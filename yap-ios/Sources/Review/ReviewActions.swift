@@ -4,6 +4,8 @@ import SwiftUI
 
 @MainActor struct ReviewHost {
     let deck: Deck
+    let weapon: Weapon?
+    let online: Bool
     let accessToken: String?
     let autoplay: AutoplayClaim
     let packError: String?

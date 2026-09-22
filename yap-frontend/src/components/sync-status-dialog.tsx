@@ -1,5 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
-import { useInterval } from "react-use";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,11 +18,7 @@ import {
   Baby,
   CupSoda,
 } from "lucide-react";
-import {
-  get_app_version,
-  type EarliestUnsyncedEvent,
-  type SyncState,
-} from "../../../yap-frontend-rs/pkg";
+import { get_app_version } from "../../../yap-frontend-rs/pkg";
 import { useWeapon, useSyncActions } from "@/weapon";
 import { useNetworkState } from "react-use";
 import { ErrorMessage } from "@/components/ui/error-message";
@@ -39,55 +34,29 @@ export function SyncStatusDialog() {
   const { activated: impersonationActivated, handleActivationClick } =
     useImpersonationActivation();
 
-  // Poll sync state and earliest unsynced timestamp every second
-  const [lastSyncFinishedAt, setLastSyncFinishedAt] = useState<number | null>(
-    null,
-  );
-  const [lastSyncError, setLastSyncError] = useState<string | null>(null);
-  const [earliestUnsyncedAt, setEarliestUnsyncedAt] = useState<number | null>(
-    null,
-  );
-  const [syncInProgress, setSyncInProgress] = useState<boolean>(false);
-  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
-
-  useInterval(
-    () => {
-      setCurrentTimestamp(Date.now());
-    },
-    1000, // Update every second
+  const [manualSyncInFlight, setManualSyncInFlight] = useState(false);
+  const [view, setView] = useState(() =>
+    weapon.sync_status(!!isOnline, Date.now(), false, undefined),
   );
 
   useEffect(() => {
     const update = () => {
-      try {
-        const s: SyncState<string, string> = weapon.get_sync_state("supabase");
-        const started = s.lastSyncStarted;
-        const finished = s.lastSyncFinished;
-        setLastSyncFinishedAt(finished);
-        setLastSyncError(s.lastSyncError ?? null);
-        setSyncInProgress(!!started && (!finished || started > finished));
-
-        const earliest: EarliestUnsyncedEvent | undefined =
-          weapon.get_timestamp_of_earliest_unsynced_event("supabase");
-        if (earliest && earliest.timestamp) {
-          const timestampMs = new Date(earliest.timestamp).getTime();
-          setEarliestUnsyncedAt(timestampMs);
-        } else {
-          setEarliestUnsyncedAt(null);
-        }
-      } catch (e) {
-        // ignore polling errors
-        console.error("Error polling sync status:", e);
-      }
+      setView(
+        weapon.sync_status(!!isOnline, Date.now(), manualSyncInFlight, undefined),
+      );
     };
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, [weapon]);
+  }, [weapon, isOnline, manualSyncInFlight]);
 
   const handleManualSync = async () => {
-    setSyncInProgress(true);
-    await syncNow();
+    setManualSyncInFlight(true);
+    try {
+      await syncNow();
+    } finally {
+      setManualSyncInFlight(false);
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -97,40 +66,25 @@ export function SyncStatusDialog() {
     }
   };
 
-  const localEventCount = weapon.num_events;
-  const remoteEventCount =
-    weapon.num_events_on_remote_as_of_last_sync("supabase");
-
-  // Determine sync status
-  const unsyncedStale = useMemo(() => {
-    return (
-      earliestUnsyncedAt != null && currentTimestamp - earliestUnsyncedAt > 5000
-    );
-  }, [earliestUnsyncedAt, currentTimestamp]);
-
-  let statusIcon;
-  let statusText;
-  let statusColor;
-
-  if (!isOnline) {
-    statusIcon = <Cloud className="w-2 h-2" />;
-    statusText = "Offline";
-    statusColor = "text-muted-foreground";
-  } else if (lastSyncError) {
-    statusIcon = <X className="w-2 h-2" />;
-    statusText = "Sync error";
-    statusColor = "text-negative-foreground";
-  } else if (isOnline) {
-    if (unsyncedStale) {
-      statusIcon = <RefreshCw className="w-2 h-2" />;
-      statusText = "Unsynced";
-      statusColor = "text-caution-foreground";
-    } else {
-      statusIcon = <Check className="w-2 h-2" />;
-      statusText = "Synced";
-      statusColor = "text-muted-foreground";
-    }
-  }
+  const statusColor = {
+    Neutral: "text-muted-foreground",
+    Caution: "text-caution-foreground",
+    Negative: "text-negative-foreground",
+  }[view.severity];
+  const dotColor =
+    view.status === "Synced"
+      ? ""
+      : {
+          Neutral: "bg-muted-foreground",
+          Caution: "bg-caution",
+          Negative: "bg-negative",
+        }[view.severity];
+  const StatusIcon = {
+    Offline: Cloud,
+    Error: X,
+    Unsynced: RefreshCw,
+    Synced: Check,
+  }[view.status];
 
   return (
     <Dialog onOpenChange={handleOpenChange}>
@@ -139,45 +93,37 @@ export function SyncStatusDialog() {
           <span
             className={`hidden sm:inline text-sm ${statusColor} transition-colors duration-300`}
           >
-            {statusText}
+            {view.label}
           </span>
           <span
-            className={`w-2 h-2 rounded-full ${
-              !isOnline
-                ? "bg-muted-foreground"
-                : lastSyncError
-                  ? "bg-negative"
-                  : unsyncedStale
-                    ? "bg-caution"
-                    : ""
-            } transition-colors duration-300`}
+            className={`w-2 h-2 rounded-full ${dotColor} transition-colors duration-300`}
           ></span>
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sync Status</DialogTitle>
-          <DialogDescription>
-            Yap.town keeps your data synchronized across your devices.
-          </DialogDescription>
+          <DialogTitle>{view.title}</DialogTitle>
+          <DialogDescription>{view.description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
-              {statusIcon}
-              <span className={`font-medium ${statusColor}`}>{statusText}</span>
+              <StatusIcon className="w-2 h-2" />
+              <span className={`font-medium ${statusColor}`}>{view.label}</span>
             </div>
-            {lastSyncFinishedAt && (
-              <span className="text-sm text-muted-foreground">
-                Last sync: {new Date(lastSyncFinishedAt).toLocaleTimeString()}
-              </span>
-            )}
+            {view.last_sync_label != null &&
+              view.last_sync_finished_ms != null && (
+                <span className="text-sm text-muted-foreground">
+                  {view.last_sync_label}{" "}
+                  {new Date(view.last_sync_finished_ms).toLocaleTimeString()}
+                </span>
+              )}
           </div>
 
-          {lastSyncError && (
+          {view.error != null && (
             <ErrorMessage
-              title="Sync Error"
-              message={lastSyncError}
+              title={view.error_title}
+              message={view.error}
               variant="compact"
             />
           )}
@@ -187,22 +133,22 @@ export function SyncStatusDialog() {
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-foreground">
-                  Local Events
+                  {view.local_events_label}
                 </span>
               </div>
               <span className="text-sm text-muted-foreground">
-                {localEventCount}
+                {view.local_events}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-foreground">
-                  Server Events
+                  {view.server_events_label}
                 </span>
               </div>
               <span className="text-sm text-muted-foreground">
-                {remoteEventCount}
+                {view.server_events}
               </span>
             </div>
 
@@ -215,13 +161,13 @@ export function SyncStatusDialog() {
               <div className="flex items-center gap-2">
                 <CupSoda className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-foreground">
-                  User ID
+                  {view.user_id_label}
                 </span>
               </div>
               <span className="text-sm text-muted-foreground font-mono">
                 {weapon.user_id
                   ? weapon.user_id.substring(0, 16)
-                  : "Logged out"}
+                  : view.logged_out_label}
                 ...
               </span>
             </div>
@@ -229,7 +175,7 @@ export function SyncStatusDialog() {
               <div className="flex items-center gap-2">
                 <CupSoda className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-foreground">
-                  Device ID
+                  {view.device_id_label}
                 </span>
               </div>
               <span className="text-sm text-muted-foreground font-mono">
@@ -240,7 +186,7 @@ export function SyncStatusDialog() {
               <div className="flex items-center gap-2">
                 <Baby className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-foreground">
-                  Yap.Town version
+                  {view.version_label}
                 </span>
               </div>
               <span className="text-sm text-muted-foreground font-mono">
@@ -251,10 +197,10 @@ export function SyncStatusDialog() {
 
           {impersonationActivated && <ImpersonateUser />}
 
-          {!isOnline && (
+          {view.offline_banner != null && (
             <div className="p-3 bg-caution-field border border-caution-border rounded-lg">
               <p className="text-sm text-caution-foreground">
-                You're currently offline. Changes will sync when you reconnect.
+                {view.offline_banner}
               </p>
             </div>
           )}
@@ -262,13 +208,13 @@ export function SyncStatusDialog() {
         <DialogFooter>
           <Button
             onClick={handleManualSync}
-            disabled={!isOnline || syncInProgress || syncInProgress}
+            disabled={!view.sync_button_enabled}
             className="w-full"
           >
             <RefreshCw
-              className={`mr-2 h-4 w-4 ${syncInProgress ? "animate-spin" : ""}`}
+              className={`mr-2 h-4 w-4 ${view.running ? "animate-spin" : ""}`}
             />
-            {syncInProgress ? "Syncing..." : "Sync Now"}
+            {view.sync_button_label}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -153,7 +153,7 @@ import Observation
             dismissed_accomplishment_at_review: session.dismissedAccomplishmentAtReview, placement: session.placementSession, current_challenge: challenge, timestamp_ms: now)
     }
     var host: ReviewHost {
-        ReviewHost(deck: deck, accessToken: session.accessToken(), autoplay: session.autoplay,
+        ReviewHost(deck: deck, weapon: session.weapon, online: session.online, accessToken: session.accessToken(), autoplay: session.autoplay,
             packError: session.packError, syncError: session.syncError, authError: auth.error)
     }
     var actions: ReviewActions {
