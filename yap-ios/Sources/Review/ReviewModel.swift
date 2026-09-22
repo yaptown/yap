@@ -154,7 +154,7 @@ import Observation
     }
     var host: ReviewHost {
         ReviewHost(deck: deck, weapon: session.weapon, online: session.online, accessToken: session.accessToken(), autoplay: session.autoplay,
-            packError: session.packError, syncError: session.syncError, authError: auth.error)
+            packBanner: session.deckLoadView.pack_banner, syncError: session.syncError, authError: auth.error)
     }
     var actions: ReviewActions {
         #if DEBUG

@@ -1,18 +1,28 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
 import * as Sentry from "@sentry/react";
-import { useAsyncMemo, useWeapon } from "@/weapon";
+import { useWeapon } from "@/weapon";
 import type {
   Course,
   Deck,
   Language,
   LanguageDataError,
+  DeckLoadState,
+  DeckLoadEvent,
+  DeckLoadView,
+} from "../../../yap-frontend-rs/pkg";
+
+import {
+  deck_load_start,
+  deck_load_transition,
+  deck_load_view,
 } from "../../../yap-frontend-rs/pkg";
 
 export function useDeckSelection():
@@ -91,25 +101,21 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function useDeck():
-  | {
-      type: "deck";
-      nativeLanguage: Language;
-      targetLanguage: Language;
-      deck: Deck | null;
-      startingFresh: boolean | undefined;
-      historyKnown: boolean;
-    }
-  | { type: "noLanguageSelected" }
-  | { type: "error"; message: string; retry: () => void; retryCount: number }
-  | { type: "loading"; message: string; progress: number }
-  | null {
+export function useDeck(): {
+  view: DeckLoadView;
+  deck: Deck | null;
+  course: Course | null;
+  startingFresh: boolean | undefined;
+  historyKnown: boolean;
+  retry: () => void;
+} {
   const weapon = useWeapon();
-  const [retryCount, setRetryCount] = useState(0);
-  const [loadingState, setLoadingState] = useState<{
-    message: string;
-    progress: number;
-  } | null>(null);
+  const [snapshot, setSnapshot] = useState<{
+    load: DeckLoadState;
+    deck: Deck | null;
+  }>(() => ({ load: deck_load_start(), deck: null }));
+  const dispatchRef = useRef<(event: DeckLoadEvent) => void>(() => {});
+  const selectedCourse = useRef<Course | null>(null);
 
   useEffect(() => {
     weapon.request_deck_selection();
@@ -118,292 +124,247 @@ export function useDeck():
 
   const getSnapshot = useCallback(() => {
     try {
-      const num_reviews = weapon.get_stream_num_events("reviews");
-      const num_deck_selection = weapon.get_stream_num_events("deck_selection");
-      if (num_reviews === undefined || num_deck_selection === undefined) {
-        return null;
-      }
-      return num_reviews + num_deck_selection;
+      const reviews = weapon.get_stream_num_events("reviews");
+      const selection = weapon.get_stream_num_events("deck_selection");
+      return reviews === undefined || selection === undefined
+        ? null
+        : reviews + selection;
     } catch {
       return null;
     }
   }, [weapon]);
-
   const subscribe = useCallback(
     (callback: () => void) => {
-      const handle_reviews = weapon.subscribe_to_stream("reviews", () => {
-        callback();
-      });
-      const handle_deck_selection = weapon.subscribe_to_stream(
-        "deck_selection",
-        () => {
-          callback();
-        },
-      );
-
+      const reviews = weapon.subscribe_to_stream("reviews", callback);
+      const selection = weapon.subscribe_to_stream("deck_selection", callback);
       return () => {
-        weapon.unsubscribe(handle_reviews);
-        weapon.unsubscribe(handle_deck_selection);
+        weapon.unsubscribe(reviews);
+        weapon.unsubscribe(selection);
       };
     },
     [weapon],
   );
-
   const numEvents = useSyncExternalStore(subscribe, getSnapshot);
-
-  // Whether the reviews stream has been confirmed against the server (or
-  // the user is anonymous and local is the whole truth). The placement-test
-  // decision reads absence-of-an-event as "never took it", which is only
-  // sound once this is true — before then, a fresh device's empty local
-  // store would re-offer the test to someone who already took it. Shares
-  // the stream subscription: completing a sync marks the stream dirty, so
-  // the flip re-renders even when zero events came down.
   const historyKnownSnapshot = useCallback(
     () => weapon.reviews_history_known(),
     [weapon],
   );
   const historyKnown = useSyncExternalStore(subscribe, historyKnownSnapshot);
-
-  const retry = useCallback(() => {
-    setRetryCount((count) => count + 1);
-  }, []);
-
-  // Determine course: from weapon streams if ready, else from localStorage cache
-  const deck_selection = weapon.get_deck_selection_state();
-  const courseParts =
-    numEvents !== null &&
-    deck_selection?.targetLanguage &&
-    deck_selection?.nativeLanguage
-      ? {
-          nativeLanguage: deck_selection.nativeLanguage,
-          targetLanguage: deck_selection.targetLanguage,
-        }
-      : null;
-  if (courseParts) {
-    localStorage.setItem(LAST_COURSE_KEY, JSON.stringify(courseParts));
-  }
+  const selection = weapon.get_deck_selection_state();
+  const nativeLanguage = selection?.nativeLanguage;
+  const targetLanguage = selection?.targetLanguage;
   const cachedCourse = useMemo<Course | null>(() => {
     try {
-      const cached = localStorage.getItem(LAST_COURSE_KEY);
-      if (!cached) return null;
-      const parsed = JSON.parse(cached);
-      if (parsed.nativeLanguage && parsed.targetLanguage) return parsed;
+      const parsed = JSON.parse(
+        localStorage.getItem(LAST_COURSE_KEY) ?? "null",
+      );
+      return parsed?.nativeLanguage && parsed?.targetLanguage ? parsed : null;
     } catch {
-      /* ignore */
+      return null;
     }
-    return null;
   }, []);
-  const course = courseParts ?? cachedCourse;
+  // Once the streams are ready, an empty selection supersedes the cached course.
+  const course = useMemo(
+    () =>
+      numEvents === null
+        ? cachedCourse
+        : nativeLanguage && targetLanguage
+          ? { nativeLanguage, targetLanguage }
+          : null,
+    [numEvents, nativeLanguage, targetLanguage, cachedCourse],
+  );
   const courseKey = getCourseKey(course);
-
+  const streamsReady = numEvents !== null;
+  const languageSelected = !!(nativeLanguage && targetLanguage);
   const deckInputsSnapshot = useCallback(
     () => (course ? weapon.deck_inputs_key(course) : null),
     [weapon, course],
   );
   const deckInputsKey = useSyncExternalStore(subscribe, deckInputsSnapshot);
-  const streamsReady = numEvents !== null;
 
-  // Fetch language pack — only re-runs when course changes, not when numEvents
-  // changes. Two-stage: the core half (dictionary + frequencies) loads first
-  // so the placement test can start immediately; when the sentence half lands
-  // a fresh result is published and the deck below is rebuilt against it.
-  type LanguagePackResult =
-    | { courseKey: string; ok: true }
-    | { courseKey: string; ok: false; error: unknown };
-  const [languagePackResult, setLanguagePackResult] =
-    useState<LanguagePackResult | null>(null);
-  // Generation counter so a superseded load (course switch, retry) can't
-  // clobber the current one's result after the fact — a stale write here
-  // would strand the app on the loading screen, since no further updates
-  // ever arrive once both loads have finished.
-  const packLoadGeneration = useRef(0);
-  useAsyncMemo(async () => {
-    const generation = ++packLoadGeneration.current;
-    const alive = () => packLoadGeneration.current === generation;
-    setLanguagePackResult(null);
-    if (!course || !courseKey) return null;
-    Sentry.addBreadcrumb({
-      category: "language-pack",
-      message: `Loading language pack: ${course.targetLanguage} → ${course.nativeLanguage}`,
-      level: "info",
-    });
-    const onProgress = (message: string, progress: number) => {
-      Sentry.addBreadcrumb({
-        category: "language-pack",
-        message: `${message} (${Math.round(progress)}%)`,
-        level: "info",
-      });
-      if (alive()) setLoadingState({ message, progress });
-    };
-    try {
-      await weapon.load_language_pack_core(course, onProgress);
-    } catch (error) {
-      if (!alive()) return null;
-      setLoadingState(null);
-      setLanguagePackResult({ courseKey, ok: false, error });
-      return null;
-    }
-    if (!alive()) return null;
-    setLanguagePackResult({ courseKey, ok: true });
-    // The sentence half downloads in the background, possibly while the
-    // placement test is already underway. Rust retries transient chunk failures
-    // for both halves before surfacing an error to the host.
-    try {
-      await weapon.load_language_pack(course, onProgress);
-    } catch (error) {
-      if (!alive()) return null;
-      setLoadingState(null);
-      setLanguagePackResult({ courseKey, ok: false, error });
-      return null;
-    }
-    if (!alive()) return null;
-    setLoadingState(null);
-    setLanguagePackResult({ courseKey, ok: true });
-    return null;
-  }, [weapon, courseKey, retryCount]);
-
-  // Build deck when Rust says its inputs changed (or pack loading reports an error).
-  const state = useAsyncMemo(async () => {
-    if (!streamsReady) return null;
-
-    if (!deck_selection?.targetLanguage || !deck_selection?.nativeLanguage) {
-      return { type: "noLanguageSelected" } as { type: "noLanguageSelected" };
-    }
-
-    if (!course || !courseKey || !languagePackResult) return null;
-    if (languagePackResult.courseKey !== courseKey) return null;
-
-    if (!languagePackResult.ok) {
-      const error = languagePackResult.error;
-      console.error("Failed to fetch language pack:", error);
-      const errorMessage = getErrorMessage(error);
-      const detail = (error as Partial<LanguageDataError> | null)?.detail;
-      const isNetworkError =
-        detail?.type === "Download" || detail?.type === "Timeout";
-      if (!isNetworkError) {
-        // Only report non-network errors to Sentry. Network failures are expected
-        // on flaky mobile connections and the user already sees a retry UI.
-        Sentry.captureException(
-          error instanceof Error ? error : new Error(errorMessage),
-          {
-            tags: {
-              "language-pack.target": course.targetLanguage,
-              "language-pack.native": course.nativeLanguage,
-            },
-            contexts: {
-              "language-pack": {
-                targetLanguage: course.targetLanguage,
-                nativeLanguage: course.nativeLanguage,
-                rawError: errorMessage,
-              },
-            },
-          },
-        );
+  // One native execution lifetime. StrictMode cleanup cancels it, and replay
+  // starts a fresh reducer so same-course dedup cannot strand a cancelled load.
+  useLayoutEffect(() => {
+    let active = true;
+    let load = deck_load_start();
+    let deck: Deck | null = null;
+    let packGeneration = 0;
+    let buildGeneration = 0;
+    let pendingInputs: string | null = null;
+    const dispatch = (event: DeckLoadEvent) => {
+      if (!active) return;
+      if (
+        event.type === "CourseChanged" &&
+        (event.key ?? null) !== (load.course_key ?? null)
+      ) {
+        ++packGeneration;
       }
-      return {
-        type: "error",
-        courseKey,
-        message: errorMessage,
-        retry,
-        retryCount,
-      } as {
-        type: "error";
-        courseKey: string;
-        message: string;
-        retry: () => void;
-        retryCount: number;
-      };
-    }
+      // Also invalidate B when inputs revert to already-built A: Rust correctly
+      // emits no BuildDeck for A, but B must not be allowed to replace it later.
+      if (event.type === "InputsChanged" && event.key !== pendingInputs) {
+        ++buildGeneration;
+        pendingInputs = null;
+      }
+      const step = deck_load_transition(load, event);
+      load = step.state;
+      for (const effect of step.effects) {
+        switch (effect.type) {
+          case "ClearDeck":
+            ++buildGeneration;
+            pendingInputs = null;
+            deck = null;
+            break;
+          case "LoadPack": {
+            const selected = selectedCourse.current;
+            if (!selected || getCourseKey(selected) !== effect.course_key)
+              break;
+            const generation = ++packGeneration;
+            const alive = () => active && generation === packGeneration;
+            Sentry.addBreadcrumb({
+              category: "language-pack",
+              message:
+                "Loading language pack: " +
+                selected.targetLanguage +
+                " → " +
+                selected.nativeLanguage,
+              level: "info",
+            });
+            const onProgress = (message: string, percent: number) => {
+              if (!alive()) return;
+              Sentry.addBreadcrumb({
+                category: "language-pack",
+                message: message + " (" + Math.round(percent) + "%)",
+                level: "info",
+              });
+              dispatch({ type: "PackProgress", message, percent });
+            };
+            void (async () => {
+              try {
+                if (effect.from.type === "None") {
+                  await weapon.load_language_pack_core(selected, onProgress);
+                  if (!alive()) return;
+                  dispatch({ type: "CoreLoaded" });
+                }
+                await weapon.load_language_pack(selected, onProgress);
+                if (alive()) dispatch({ type: "FullLoaded" });
+              } catch (error) {
+                if (!alive()) return;
+                const detail = (error as Partial<LanguageDataError> | null)
+                  ?.detail;
+                dispatch({
+                  type: "PackFailed",
+                  message: getErrorMessage(error),
+                  network:
+                    detail?.type === "Download" || detail?.type === "Timeout",
+                });
+              }
+            })();
+            break;
+          }
+          case "RefreshInputs": {
+            const selected = selectedCourse.current;
+            if (selected)
+              dispatch({
+                type: "InputsChanged",
+                key: weapon.deck_inputs_key(selected),
+              });
+            break;
+          }
+          case "BuildDeck": {
+            const selected = selectedCourse.current;
+            if (!selected || pendingInputs === effect.inputs) break;
+            const inputs = effect.inputs;
+            pendingInputs = inputs;
+            const generation = ++buildGeneration;
+            const alive = () =>
+              active &&
+              generation === buildGeneration &&
+              weapon.deck_inputs_key(selected) === inputs;
+            void (async () => {
+              try {
+                const next = await weapon.get_deck_state(
+                  selected,
+                  new Date().getTimezoneOffset() * -60,
+                );
+                if (!alive()) return;
+                pendingInputs = null;
+                deck = next ?? null;
+                dispatch({ type: "DeckBuilt", present: deck !== null, inputs });
+              } catch (error) {
+                if (!alive()) return;
+                pendingInputs = null;
+                dispatch({
+                  type: "DeckBuildFailed",
+                  message: getErrorMessage(error),
+                });
+              }
+            })();
+            break;
+          }
+          case "ReportError": {
+            if (effect.phase === "pack" && effect.network) break;
+            const selected = selectedCourse.current;
+            Sentry.captureException(new Error(effect.message), {
+              tags: {
+                "language-pack.target": selected?.targetLanguage,
+                "language-pack.native": selected?.nativeLanguage,
+                "language-pack.phase": effect.phase,
+              },
+              contexts: {
+                "language-pack": {
+                  targetLanguage: selected?.targetLanguage,
+                  nativeLanguage: selected?.nativeLanguage,
+                  rawError: effect.message,
+                },
+              },
+            });
+            break;
+          }
+        }
+      }
+      setSnapshot({ load, deck });
+    };
+    dispatchRef.current = dispatch;
+    setSnapshot({ load, deck });
+    return () => {
+      active = false;
+      ++packGeneration;
+      ++buildGeneration;
+      dispatchRef.current = () => {};
+    };
+  }, [weapon]);
 
-    try {
-      const deck = await weapon.get_deck_state(
-        course,
-        new Date().getTimezoneOffset() * -60,
-      );
-
-      // null while only the core half of the pack is loaded and this user
-      // would not see the placement test; the sentence half publishes a new
-      // pack result and this re-runs.
-      if (!deck) return null;
-
-      return {
-        type: "deck",
-        courseKey,
-        startingFresh: deck_selection.onboardingSelections?.startingFresh,
-        historyKnown,
-        nativeLanguage: course.nativeLanguage,
-        targetLanguage: course.targetLanguage,
-        deck,
-      } as {
-        type: "deck";
-        courseKey: string;
-        nativeLanguage: Language;
-        targetLanguage: Language;
-        deck: Deck | null;
-        startingFresh: boolean | undefined;
-        historyKnown: boolean;
-      };
-    } catch (error) {
-      const errorMessage = getErrorMessage(error);
-      Sentry.captureException(
-        error instanceof Error ? error : new Error(errorMessage),
-        {
-          tags: {
-            "language-pack.target": course.targetLanguage,
-            "language-pack.native": course.nativeLanguage,
-            "language-pack.phase": "deck-state",
-          },
-          contexts: {
-            "language-pack": {
-              targetLanguage: course.targetLanguage,
-              nativeLanguage: course.nativeLanguage,
-              rawError: errorMessage,
-            },
-          },
-        },
-      );
-      return {
-        type: "error",
-        courseKey,
-        message: errorMessage,
-        retry,
-        retryCount,
-      } as {
-        type: "error";
-        courseKey: string;
-        message: string;
-        retry: () => void;
-        retryCount: number;
-      };
-    }
+  useLayoutEffect(() => {
+    selectedCourse.current = course;
+    if (streamsReady && course)
+      localStorage.setItem(LAST_COURSE_KEY, JSON.stringify(course));
+    const dispatch = dispatchRef.current;
+    dispatch({ type: "CourseChanged", key: courseKey ?? undefined });
+    if (streamsReady)
+      dispatch({ type: "StreamsReady", language_selected: languageSelected });
+    // Core may already be cached by the time the event streams become ready.
+    if (deckInputsKey !== null)
+      dispatch({ type: "InputsChanged", key: deckInputsKey });
   }, [
     weapon,
-    deckInputsKey,
-    streamsReady,
+    course,
     courseKey,
-    languagePackResult,
-    retryCount,
+    streamsReady,
+    languageSelected,
+    deckInputsKey,
   ]);
 
-  const currentState =
-    state &&
-    (state.type === "deck" || state.type === "error") &&
-    state.courseKey !== courseKey
-      ? null
-      : state;
-
-  if (currentState?.type === "error" && currentState.retryCount < retryCount) {
-    return null;
-  }
-
-  // If we're loading and have progress info, return loading state
-  if (loadingState && (currentState === null || currentState === undefined)) {
-    return {
-      type: "loading",
-      message: loadingState.message,
-      progress: loadingState.progress,
-    };
-  }
-
-  return currentState ?? null;
+  const retry = useCallback(() => dispatchRef.current({ type: "Retry" }), []);
+  const current =
+    (snapshot.load.course_key ?? null) === courseKey
+      ? snapshot
+      : { load: deck_load_start(), deck: null };
+  return {
+    view: deck_load_view(current.load),
+    deck: current.deck,
+    course,
+    startingFresh: selection?.onboardingSelections?.startingFresh,
+    historyKnown,
+    retry,
+  };
 }

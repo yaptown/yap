@@ -24,7 +24,6 @@ import {
 import { Deck, type Language } from "../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { ThemeProvider } from "@/components/theme-provider";
 import { RouteErrorScreen } from "@/components/route-error-screen";
@@ -72,8 +71,8 @@ import { Toaster } from "sonner";
 import { BrowserNotSupported } from "@/components/browser-not-supported";
 import { Dictionary } from "@/components/Dictionary";
 import { TopPageLayout } from "@/components/TopPageLayout";
-import { match, P } from "ts-pattern";
-import { ErrorMessage } from "@/components/ui/error-message";
+import { match } from "ts-pattern";
+import { DeckLoadStatus } from "@/components/DeckPage";
 import { BackgroundShader } from "@/components/BackgroundShader";
 
 // Essential user info to persist for offline functionality
@@ -365,137 +364,60 @@ function LoadingProgress({
 
 function ReviewPage() {
   const { userInfo, accessToken } = useOutletContext<AppContextType>();
-  const deck = useCourseDeck();
-  const deckSelection = useDeckSelection();
+  const state = useCourseDeck();
   const navigate = useNavigate();
   const [lastAutoPlayReviewCount, setLastAutoPlayReviewCount] = useState<
     bigint | null
   >(null);
-
+  const phase = state.view.phase;
   useEffect(() => {
-    if (deckSelection?.type === "noLanguageSelected") {
-      navigate("/", { replace: true });
-    }
-  }, [deckSelection, navigate]);
-
+    if (phase.type === "NoLanguageSelected") navigate("/", { replace: true });
+  }, [phase.type, navigate]);
+  if (phase.type === "Ready" && state.deck && state.course) {
+    const totalReviewsCompleted = state.deck.get_total_reviews();
+    return (
+      <div className="flex flex-col gap-6">
+        {state.view.pack_banner && (
+          <div
+            className="flex items-center justify-between gap-4 p-4 text-sm text-muted-foreground"
+            role="status"
+          >
+            <p>{state.view.pack_banner.message}</p>
+            <Button variant="outline" onClick={state.retry}>
+              {state.view.pack_banner.retry_label}
+            </Button>
+          </div>
+        )}
+        <Review
+          userInfo={userInfo}
+          accessToken={accessToken}
+          deck={state.deck}
+          targetLanguage={state.course.targetLanguage}
+          autoplayed={lastAutoPlayReviewCount === totalReviewsCompleted}
+          setAutoplayed={() =>
+            setLastAutoPlayReviewCount(totalReviewsCompleted)
+          }
+        />
+      </div>
+    );
+  }
   return (
-    <div className="flex flex-col gap-6">
-      {match(deck)
-        .with({ type: "loading" }, ({ message, progress }) => (
-          <TopPageLayout
-            userInfo={userInfo}
-            headerProps={{
-              title: "Review",
-              backButton: { label: "Home", onBack: () => navigate("/home") },
-              showSignupNag: false,
-            }}
-          >
-            <LoadingProgress message={message} progress={progress} />
-          </TopPageLayout>
-        ))
-        .with({ type: "deck", deck: null }, () => (
-          <TopPageLayout
-            userInfo={userInfo}
-            headerProps={{
-              title: "Review",
-              backButton: { label: "Home", onBack: () => navigate("/home") },
-              showSignupNag: false,
-            }}
-          >
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-muted-foreground animate-fade-in-delayed">
-                Loading...
-              </p>
-            </div>
-          </TopPageLayout>
-        ))
-        .with(
-          { type: "deck", deck: P.not(P.nullish) },
-          ({ deck, targetLanguage }) => {
-            const totalReviewsCompleted = deck.get_total_reviews();
-            const autoplayed = lastAutoPlayReviewCount == totalReviewsCompleted;
-            const setAutoplayed = () =>
-              setLastAutoPlayReviewCount(totalReviewsCompleted);
-
-            return (
-              <Review
-                userInfo={userInfo}
-                accessToken={accessToken}
-                deck={deck}
-                targetLanguage={targetLanguage}
-                autoplayed={autoplayed}
-                setAutoplayed={setAutoplayed}
-              />
-            );
-          },
-        )
-        .with({ type: "noLanguageSelected" }, () => (
-          <TopPageLayout
-            userInfo={userInfo}
-            headerProps={{
-              title: "Review",
-              backButton: { label: "Home", onBack: () => navigate("/home") },
-              showSignupNag: false,
-            }}
-          >
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-muted-foreground animate-fade-in-delayed">
-                Loading...
-              </p>
-            </div>
-          </TopPageLayout>
-        ))
-        .with({ type: "error" }, ({ message, retry }) => (
-          <TopPageLayout
-            userInfo={userInfo}
-            headerProps={{
-              title: "Review",
-              backButton: { label: "Home", onBack: () => navigate("/home") },
-              showSignupNag: false,
-            }}
-          >
-            <div className="flex-1 flex items-center justify-center p-4">
-              <Card className="max-w-md w-full p-6 gap-0">
-                <div className="w-12 h-12 bg-negative-surface rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-negative-foreground text-xl">
-                    ⚠
-                  </span>
-                </div>
-                <h2 className="text-lg font-semibold mb-2 text-center">
-                  Failed to Load Language Data
-                </h2>
-                <p className="text-muted-foreground mb-4 text-center">
-                  Unable to load the language pack right now. Try again to retry
-                  the download.
-                </p>
-                <ErrorMessage
-                  message={message}
-                  title="Failed to load language data"
-                  className="mb-4"
-                />
-                <Button onClick={retry} variant="outline" className="w-full">
-                  Try Again
-                </Button>
-              </Card>
-            </div>
-          </TopPageLayout>
-        ))
-        .with(null, () => (
-          <TopPageLayout
-            userInfo={userInfo}
-            headerProps={{
-              title: "Review",
-              backButton: { label: "Home", onBack: () => navigate("/home") },
-              showSignupNag: false,
-            }}
-          >
-            <div className="flex items-center justify-center p-4 animate-fade-in-delayed">
-              <Skeleton className="h-48 w-full max-w-2xl" />
-            </div>
-          </TopPageLayout>
-        ))
-        .exhaustive()}
-    </div>
+    <TopPageLayout
+      userInfo={userInfo}
+      headerProps={{
+        title: "Review",
+        backButton: { label: "Home", onBack: () => navigate("/home") },
+        showSignupNag: false,
+      }}
+    >
+      {phase.type === "Loading" ? (
+        <LoadingProgress message={phase.message} progress={phase.percent} />
+      ) : (
+        <div className="flex-1 flex items-center justify-center p-4">
+          <DeckLoadStatus phase={phase} retry={state.retry} />
+        </div>
+      )}
+    </TopPageLayout>
   );
 }
 
@@ -505,17 +427,12 @@ function DictionaryPage() {
   const weapon = useWeapon();
   const navigate = useNavigate();
 
+  const phase = deck.view.phase;
   useEffect(() => {
-    if (deck?.type === "noLanguageSelected") {
-      navigate("/", { replace: true });
-    }
-  }, [deck, navigate]);
-
-  if (deck?.type === "noLanguageSelected") {
-    return null;
-  }
-
-  if (deck?.type !== "deck") {
+    if (phase.type === "NoLanguageSelected") navigate("/", { replace: true });
+  }, [phase.type, navigate]);
+  if (phase.type === "NoLanguageSelected") return null;
+  if (phase.type !== "Ready" || !deck.deck || !deck.course) {
     return (
       <TopPageLayout
         userInfo={userInfo}
@@ -523,23 +440,8 @@ function DictionaryPage() {
           backButton: { label: "Home", onBack: () => navigate("/home") },
         }}
       >
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </TopPageLayout>
-    );
-  }
-
-  if (!deck.deck) {
-    return (
-      <TopPageLayout
-        userInfo={userInfo}
-        headerProps={{
-          backButton: { label: "Home", onBack: () => navigate("/home") },
-        }}
-      >
-        <div className="flex-1 bg-background flex items-center justify-center">
-          <p className="text-muted-foreground">Loading dictionary...</p>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <DeckLoadStatus phase={phase} retry={deck.retry} />
         </div>
       </TopPageLayout>
     );
@@ -555,8 +457,8 @@ function DictionaryPage() {
       <Dictionary
         deck={deck.deck}
         weapon={weapon}
-        targetLanguage={deck.targetLanguage}
-        nativeLanguage={deck.nativeLanguage}
+        targetLanguage={deck.course.targetLanguage}
+        nativeLanguage={deck.course.nativeLanguage}
         accessToken={accessToken}
       />
     </TopPageLayout>

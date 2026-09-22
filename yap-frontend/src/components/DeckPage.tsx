@@ -2,7 +2,11 @@ import type { ReactNode } from "react";
 import { Navigate, useNavigate, useOutletContext } from "react-router-dom";
 import type { AppContextType } from "@/App";
 import { useCourseDeck } from "@/contexts/course-study";
-import type { Deck, Language } from "../../../yap-frontend-rs/pkg";
+import type {
+  Deck,
+  Language,
+  DeckLoadPhase,
+} from "../../../yap-frontend-rs/pkg";
 import { TopPageLayout } from "./TopPageLayout";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -19,12 +23,13 @@ export function DeckPage({
   const context = useOutletContext<AppContextType>();
   const state = useCourseDeck();
   const navigate = useNavigate();
-  if (state?.type === "noLanguageSelected") return <Navigate to="/" replace />;
-  if (state?.type === "deck" && state.deck) {
+  if (state.view.phase.type === "NoLanguageSelected")
+    return <Navigate to="/" replace />;
+  if (state.view.phase.type === "Ready" && state.deck && state.course) {
     return children({
       ...context,
       deck: state.deck,
-      targetLanguage: state.targetLanguage,
+      targetLanguage: state.course.targetLanguage,
     });
   }
   return (
@@ -35,25 +40,37 @@ export function DeckPage({
       }}
     >
       <div className="flex flex-1 items-center justify-center">
-        {state?.type === "error" ? (
-          <Card className="w-full p-4">
-            <ErrorMessage
-              message={state.message}
-              title="Failed to load language data"
-            />
-            <Button onClick={state.retry} variant="outline">
-              Try Again
-            </Button>
-          </Card>
-        ) : (
-          <div className="flex w-full max-w-md flex-col gap-4 text-center">
-            <p className="text-muted-foreground">
-              {state?.type === "loading" ? state.message : "Loading..."}
-            </p>
-            {state?.type === "loading" && <Progress value={state.progress} />}
-          </div>
-        )}
+        <DeckLoadStatus phase={state.view.phase} retry={state.retry} />
       </div>
     </TopPageLayout>
   );
+}
+
+// Hosts render the projection; loading/error copy lives only in Rust.
+export function DeckLoadStatus({
+  phase,
+  retry,
+}: {
+  phase: DeckLoadPhase;
+  retry: () => void;
+}) {
+  if (phase.type === "Error")
+    return (
+      <Card className="w-full max-w-md p-6 gap-4">
+        <h2 className="text-lg font-semibold text-center">{phase.heading}</h2>
+        <p className="text-muted-foreground text-center">{phase.body}</p>
+        <ErrorMessage message={phase.message} title={phase.title} />
+        <Button onClick={retry} variant="outline">
+          {phase.retry_label}
+        </Button>
+      </Card>
+    );
+  if (phase.type === "Loading")
+    return (
+      <div className="flex w-full max-w-md flex-col gap-4 text-center">
+        <p className="text-muted-foreground">{phase.message}</p>
+        <Progress value={phase.percent} />
+      </div>
+    );
+  return null;
 }

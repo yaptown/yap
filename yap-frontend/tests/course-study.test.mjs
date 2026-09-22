@@ -122,9 +122,9 @@ function harness() {
     review_card: (indicator, rating) => eventAvailable ? { indicator, rating } : undefined,
   });
   let state = {
-    type: "deck",
+    view: { phase: { type: "Ready" } },
     deck: makeDeck(),
-    targetLanguage: "French",
+    course: { targetLanguage: "French", nativeLanguage: "English" },
     historyKnown: true,
   };
   const exports = {};
@@ -167,7 +167,7 @@ function harness() {
         return {
           useDeckSelection: () => ({
             type: "languageSelected",
-            targetLanguage: state.targetLanguage,
+            targetLanguage: state.course.targetLanguage,
             nativeLanguage: "English",
           }),
         };
@@ -241,7 +241,7 @@ function harness() {
       context.userInfo = id === undefined ? undefined : { id, displayName: "Learner" };
     },
     setCourse: (course) => {
-      state.targetLanguage = course;
+      state.course.targetLanguage = course;
     },
     select: (value) => {
       selected = value;

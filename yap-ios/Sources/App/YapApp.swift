@@ -42,16 +42,16 @@ struct SessionRoot: View {
                 } else if session.onboardingCourse != nil {
                     NavigationStack { CoursePickerView(session: session) }
                 } else {
-                    switch session.deckState {
-                    case let .loading(message, progress):
-                        VStack(spacing: 20) { ProgressView(value: progress); Text(message) }.padding(32)
-                    case .noLanguageSelected: NavigationStack { CoursePickerView(session: session) }
-                    case let .error(message):
+                    switch session.deckLoadView.phase {
+                    case let .Loading(message, percent):
+                        VStack(spacing: 20) { ProgressView(value: Double(percent) / 100); Text(message) }.padding(32)
+                    case .NoLanguageSelected: NavigationStack { CoursePickerView(session: session) }
+                    case let .Error(_, _, title, message, retryLabel):
                         ContentUnavailableView {
-                            Label("Couldn't open your deck", systemImage: "exclamationmark.triangle")
-                        } description: { Text(message) } actions: { Button("Try again") { session.retry() } }
-                    case let .deck(deck, _, startingFresh, historyKnown):
-                        CourseHome(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown)
+                            Label(title, systemImage: "exclamationmark.triangle")
+                        } description: { Text(message) } actions: { Button(retryLabel) { session.retry() } }
+                    case .Ready:
+                        CourseHome(deck: session.deck!, session: session, auth: auth, startingFresh: session.startingFresh, historyKnown: session.historyKnown)
                     }
                 }
             }

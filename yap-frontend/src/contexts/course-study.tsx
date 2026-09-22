@@ -93,18 +93,16 @@ function useStudyController(
   { userInfo, accessToken }: AppContextType,
   pendingReviewScope: string,
 ) {
-  const deck = state?.type === "deck" ? state.deck : null;
+  const deck = state.view.phase.type === "Ready" ? state.deck : null;
   const submitting = useRef({ deck, inFlight: false });
   // Reset before child resume effects run, and only for a new snapshot (not
   // StrictMode's repeated effect setup). Old snapshot callbacks stay rejected.
   useLayoutEffect(() => {
     if (submitting.current.deck !== deck) submitting.current = { deck, inFlight: false };
   }, [deck]);
-  const targetLanguage =
-    state?.type === "deck" ? state.targetLanguage : undefined;
-  const startingFresh =
-    state?.type === "deck" ? state.startingFresh : undefined;
-  const historyKnown = state?.type === "deck" && state.historyKnown;
+  const targetLanguage = deck ? state.course?.targetLanguage : undefined;
+  const startingFresh = state.startingFresh;
+  const historyKnown = state.historyKnown;
   const weapon = useWeapon();
   const network = useNetworkState();
   const [readiness, setReadiness] = useState(() => ({

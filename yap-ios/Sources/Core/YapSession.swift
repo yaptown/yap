@@ -8,23 +8,18 @@ enum DeckSelectionState {
     case languageSelected(course: Course, startingFresh: Bool?, onboardedLanguages: [Language], hasHeardAbout: Bool)
 }
 
-enum DeckState {
-    case loading(message: String, progress: Double)
-    case noLanguageSelected
-    case deck(Deck, course: Course, startingFresh: Bool?, historyKnown: Bool)
-    case error(String)
-}
-
 @Observable @MainActor final class YapSession {
     let userId: String
     let accessToken: () -> String?
     private(set) var weapon: Weapon?
     private(set) var deckSelection: DeckSelectionState = .loading
-    private(set) var deckState: DeckState = .loading(message: "Opening your deck…", progress: 0)
+    private(set) var deckLoad = deck_load_start()
+    private(set) var deck: Deck?
+    var deckLoadView: DeckLoadView { deck_load_view(state: deckLoad) }
+    private(set) var startingFresh: Bool?
+    private(set) var historyKnown = false
     private(set) var online = true
     var syncError: String?
-    /// The full pack failed to download after the core was already usable.
-    var packError: String?
     let autoplay = AutoplayClaim()
     // These flows must survive immutable Deck snapshot replacements.
     var placementSession: PlacementSession?
@@ -39,9 +34,8 @@ enum DeckState {
     private var packTask: Task<Void, Never>?
     private var snapshotTask: Task<Void, Never>?
     private var monitor: NWPathMonitor?
-    private var course: Course?
-    private var coreReady = false
-    private var builtDeckInputs: String?
+    private(set) var course: Course?
+    private var pendingInputs: String?
     private var generation = 0
     private var snapshotGeneration = 0
 
@@ -86,7 +80,8 @@ enum DeckState {
             // Start cached-course downloads before reading either event stream.
             if let key = UserDefaults.standard.string(forKey: "yap-last-course"),
                let cached = get_available_courses().first(where: { Self.courseKey($0) == key }) {
-                loadPack(cached)
+                course = cached
+                dispatch(.CourseChanged(key: Self.courseKey(cached)))
             }
             for stream in ["reviews", "deck_selection"] {
                 listeners.append(weapon.subscribe_to_stream(stream_id: stream) { [weak self] in self?.recompute() })
@@ -102,15 +97,14 @@ enum DeckState {
                     await self?.syncWithSupabase()
                 }
             }
-        } catch { if active { deckState = .error(String(describing: error)) } }
+        } catch { if active { dispatch(.DeckBuildFailed(message: String(describing: error))) } }
     }
 
     private static func courseKey(_ course: Course) -> String {
         "\(course.target_language):\(course.native_language)"
     }
 
-    /// Rust owns the Deck inputs: rebuild only when its key changes, so a
-    /// foreground or no-op sync cannot replace the learner's current challenge.
+    /// Streams and pack callbacks feed facts; Rust alone decides whether to rebuild.
     private func recompute() {
         guard active, let weapon,
               weapon.get_stream_num_events(stream_id: "reviews") != nil,
@@ -118,87 +112,112 @@ enum DeckState {
         let selection = weapon.get_deck_selection_state()
         let onboarded = selection?.onboarded_languages ?? []
         let heard = selection?.heard_about != nil
+        startingFresh = selection?.onboarding_selections?.starting_fresh
+        historyKnown = weapon.reviews_history_known()
         guard let native = selection?.native_language, let target = selection?.target_language else {
             deckSelection = .noLanguageSelected(onboardedLanguages: onboarded, hasHeardAbout: heard)
-            deckState = .noLanguageSelected
-            snapshotGeneration += 1; snapshotTask?.cancel()
+            course = nil
+            dispatch(.CourseChanged(key: nil))
+            dispatch(.StreamsReady(language_selected: false))
             return
         }
         let selected = Course(native_language: native, target_language: target)
-        deckSelection = .languageSelected(course: selected, startingFresh: selection?.onboarding_selections?.starting_fresh,
+        deckSelection = .languageSelected(course: selected, startingFresh: startingFresh,
                                           onboardedLanguages: onboarded, hasHeardAbout: heard)
         UserDefaults.standard.set(Self.courseKey(selected), forKey: "yap-last-course")
-        if selected != course { loadPack(selected) }
-        guard coreReady else { return }
-        let inputs = weapon.deck_inputs_key(course: selected)
-        if inputs != builtDeckInputs { rebuildDeck(inputs: inputs) }
+        course = selected
+        dispatch(.CourseChanged(key: Self.courseKey(selected)))
+        dispatch(.StreamsReady(language_selected: true))
+        // A cached pack can arrive before StreamsReady, so always refresh after it.
+        dispatch(.InputsChanged(key: weapon.deck_inputs_key(course: selected)))
     }
 
-    private func loadPack(_ selected: Course) {
+    private func dispatch(_ event: DeckLoadEvent) {
+        guard active else { return }
+        if case let .CourseChanged(key) = event, key != deckLoad.course_key {
+            generation += 1; packTask?.cancel()
+            placementSession = nil; dismissedAccomplishmentAtReview = nil
+        }
+        // Reject a pending B even if the inputs revert to already-built A and
+        // Rust (correctly) emits no new BuildDeck effect for A.
+        if case let .InputsChanged(key) = event, key != pendingInputs {
+            snapshotGeneration += 1; snapshotTask?.cancel(); pendingInputs = nil
+        }
+        let step = deck_load_transition(state: deckLoad, event: event)
+        deckLoad = step.state
+        for effect in step.effects {
+            switch effect {
+            case .ClearDeck:
+                snapshotGeneration += 1; snapshotTask?.cancel(); pendingInputs = nil
+                deck = nil
+            case let .LoadPack(key, from):
+                if let course, Self.courseKey(course) == key { loadPack(course, from: from) }
+            case .RefreshInputs:
+                if let weapon, let course { dispatch(.InputsChanged(key: weapon.deck_inputs_key(course: course))) }
+            case let .BuildDeck(inputs): rebuildDeck(inputs: inputs)
+            case let .ReportError(phase, message, network):
+                if !network { Telemetry.breadcrumb("language-pack", "\(phase) failed: \(message)", failed: true) }
+            }
+        }
+    }
+
+    private func loadPack(_ selected: Course, from: PackStage) {
         guard let weapon else { return }
         Telemetry.breadcrumb("language-pack", "Loading language pack: \(selected.target_language) → \(selected.native_language)")
         generation += 1
         let expected = generation
-        packTask?.cancel(); snapshotTask?.cancel(); snapshotGeneration += 1
-        if course != selected { placementSession = nil; dismissedAccomplishmentAtReview = nil }
-        course = selected; coreReady = false; builtDeckInputs = nil; packError = nil
-        deckState = .loading(message: "Downloading language pack…", progress: 0)
+        packTask?.cancel()
         packTask = Task { [weak self] in
             let progress: @MainActor (String, Float) -> Void = { [weak self] message, percent in
                 guard let self, self.active, self.generation == expected else { return }
                 Telemetry.breadcrumb("language-pack", "\(message) (\(Int(percent.rounded()))%)")
-                if case .deck = self.deckState { return }
-                if case .noLanguageSelected = self.deckSelection { return }
-                self.deckState = .loading(message: message, progress: Double(percent) / 100)
+                self.dispatch(.PackProgress(message: message, percent: percent))
             }
             do {
-                try await weapon.load_language_pack_core(course: selected, on_progress: progress)
-                guard let self, self.active, self.generation == expected, !Task.isCancelled else { return }
-                self.coreReady = true; self.recompute()
+                if from == .None {
+                    try await weapon.load_language_pack_core(course: selected, on_progress: progress)
+                    guard let self, self.active, self.generation == expected, !Task.isCancelled else { return }
+                    self.dispatch(.CoreLoaded)
+                }
                 try await weapon.load_language_pack(course: selected, on_progress: progress)
-                guard self.active, self.generation == expected, !Task.isCancelled else { return }
-                self.recompute()
+                guard let self, self.active, self.generation == expected, !Task.isCancelled else { return }
+                self.dispatch(.FullLoaded)
                 Telemetry.breadcrumb("language-pack", "Full language pack loaded")
-                print("Yap: full language pack loaded")
             } catch {
                 guard let self, self.active, self.generation == expected, !Task.isCancelled else { return }
-                Telemetry.breadcrumb("language-pack", "Loading failed: \(error)", failed: true)
-                // A deck already on screen stays usable; only the upgrade is reported.
-                self.packError = String(describing: error)
-                if case .deck = self.deckState {} else { self.deckState = .error(String(describing: error)) }
+                let network: Bool
+                switch error as? LanguageDataError {
+                case .Download, .Timeout: network = true
+                default: network = false
+                }
+                self.dispatch(.PackFailed(message: String(describing: error), network: network))
             }
         }
     }
 
     private func rebuildDeck(inputs: String) {
-        guard let weapon, case let .languageSelected(selected, startingFresh, _, _) = deckSelection,
-              selected == course else { return }
-        builtDeckInputs = inputs
+        guard let weapon, let selected = course, pendingInputs != inputs else { return }
+        pendingInputs = inputs
         snapshotGeneration += 1
         let expected = snapshotGeneration
         snapshotTask?.cancel()
         snapshotTask = Task { [weak self] in
             do {
                 let deck = try await weapon.get_deck_state(course: selected, utc_offset_seconds: Int32(TimeZone.current.secondsFromGMT()))
-                guard let self, self.active, self.snapshotGeneration == expected, !Task.isCancelled else { return }
-                // nil while only the core half of the pack is loaded and this
-                // learner would not see the placement test; the loading screen
-                // stays up and the full pack triggers another rebuild.
-                guard let deck else {
-                    if case .deck = self.deckState {
-                        // The sentence download is either still running or has already failed.
-                        self.deckState = self.packError.map { .error($0) } ?? .loading(message: "Downloading sentences…", progress: 0)
-                    }
-                    return
-                }
-                self.deckState = .deck(deck, course: selected, startingFresh: startingFresh, historyKnown: weapon.reviews_history_known())
+                guard let self, self.active, self.snapshotGeneration == expected, !Task.isCancelled,
+                      weapon.deck_inputs_key(course: selected) == inputs else { return }
+                self.pendingInputs = nil
+                self.deck = deck
+                self.dispatch(.DeckBuilt(present: deck != nil, inputs: inputs))
             } catch {
-                guard let self, self.active, self.snapshotGeneration == expected, !Task.isCancelled else { return }
-                self.deckState = .error(String(describing: error))
+                guard let self, self.active, self.snapshotGeneration == expected, !Task.isCancelled,
+                      weapon.deck_inputs_key(course: selected) == inputs else { return }
+                self.pendingInputs = nil
+                self.dispatch(.DeckBuildFailed(message: String(describing: error)))
             }
         }
     }
-    func retry() { if let course { loadPack(course) } }
+    func retry() { dispatch(.Retry) }
     func sceneBecameActive() { recompute(); syncSoon() }
     func tokenChanged() { syncSoon() }
     func syncSoon() { run { [weak self] in await self?.syncWithSupabase() } }
@@ -242,6 +261,7 @@ enum DeckState {
         tasks.values.forEach { $0.cancel() }; tasks.removeAll()
         if let weapon { for key in listeners { weapon.unsubscribe(key: key) } }
         listeners.removeAll(); weapon = nil
+        deckLoad = deck_load_start(); deck = nil; course = nil; pendingInputs = nil
     }
     isolated deinit { stop() }
 }

@@ -21,10 +21,10 @@ struct ReviewScreen: View {
                             }
                         }
                     }
-                    if let error = host.packError {
+                    if let banner = host.packBanner {
                         HStack {
-                            Text("Couldn't finish downloading the language pack: \(error)").font(.caption).foregroundStyle(.secondary)
-                            Button("Retry", action: actions.retryPack).font(.caption)
+                            Text(banner.message).font(.caption).foregroundStyle(.secondary)
+                            Button(banner.retry_label, action: actions.retryPack).font(.caption)
                         }
                     }
                     if let error = host.authError { Text(error).font(.caption).foregroundStyle(.secondary) }

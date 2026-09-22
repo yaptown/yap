@@ -8,7 +8,7 @@ import SwiftUI
     let online: Bool
     let accessToken: String?
     let autoplay: AutoplayClaim
-    let packError: String?
+    let packBanner: PackBanner?
     let syncError: String?
     let authError: String?
 }

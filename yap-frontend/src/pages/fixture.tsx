@@ -1,6 +1,7 @@
 /* eslint-disable no-console -- fixture interactions deliberately do not write review events */
 import { useEffect, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
+import { DeckLoadStatus } from "@/components/DeckPage";
 import { type AppContextType, useDeck } from "@/App";
 import { ReviewScreen } from "@/components/ReviewScreen";
 import { TopPageLayout } from "@/components/TopPageLayout";
@@ -84,10 +85,11 @@ export function FixturePage() {
     return () => abort.abort();
   }, [name]);
   if (error?.name === name) return <p>{error?.message}</p>;
+  if (deckState.view.phase.type !== "Ready")
+    return <DeckLoadStatus phase={deckState.view.phase} retry={deckState.retry} />;
   if (
     loaded?.name !== name ||
     !loaded ||
-    deckState?.type !== "deck" ||
     !deckState.deck
   )
     return <p>Loading fixture…</p>;
