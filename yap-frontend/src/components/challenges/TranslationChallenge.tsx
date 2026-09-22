@@ -7,6 +7,7 @@ import {
   useImperativeHandle,
   useMemo,
 } from "react";
+import { PendingReview } from "@/lib/pending-review";
 import { getMovieMetadata } from "@/lib/movie-cache";
 import { reportAutogradeFailure } from "@/instrument";
 import { MoviePosterGrid } from "./MoviePosterGrid";
@@ -19,6 +20,7 @@ import {
   type PhrasebookDefinitionEntry,
   type TargetToNativeWord,
   autograde_translation,
+  translation_pending_slot,
   translation_start,
   translation_resume,
   translation_transition,
@@ -94,7 +96,8 @@ interface SentenceChallengeProps {
     heteronymsTapped: Heteronym<string>[],
     submission: string,
     completedAtMs: number,
-  ) => void;
+  ) => boolean;
+  pendingReviewScope: string;
   accessToken: string | undefined;
   targetLanguage: Language;
   nativeLanguage: Language;
@@ -550,24 +553,15 @@ export function TranslationChallenge({
   setAutoplayed,
   deck,
   totalReviewsCompleted,
+  pendingReviewScope,
 }: SentenceChallengeProps) {
-  const STORAGE_KEY = "yap-pending-translation-grade";
-  const [state, setState] = useState<TranslationState>(() => {
-    if (initialState) return initialState;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        if (saved.version === get_app_version() &&
-            saved.totalReviewsCompleted === Number(totalReviewsCompleted) &&
-            JSON.stringify(saved.challenge) === JSON.stringify(sentence)) {
-          return translation_resume(saved.state).state;
-        }
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    } catch { /* Unavailable storage or obsolete draft: start afresh. */ }
-    return translation_start(sentence, { targetLanguage, nativeLanguage });
-  });
+  const [storage] = useState(() => initialState ? undefined : new PendingReview<TranslationState>(
+    translation_pending_slot(sentence, pendingReviewScope, get_app_version(), totalReviewsCompleted),
+    (payload) => translation_resume(payload as TranslationState).state,
+  ));
+  const [state, setState] = useState<TranslationState>(() =>
+    initialState ?? storage?.load() ?? translation_start(sentence, { targetLanguage, nativeLanguage }),
+  );
   const stateRef = useRef(state);
   const view = useMemo(() => translation_view(state), [state]);
   const editing = state.phase.type === "Editing";
@@ -597,12 +591,7 @@ export function TranslationChallenge({
   const applyStep = useCallback(function apply(step: TranslationStep) {
     stateRef.current = step.state;
     setState(step.state);
-    try {
-      if (!initialState) localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        version: get_app_version(), challenge: sentence,
-        totalReviewsCompleted: Number(totalReviewsCompleted), state: step.state,
-      }));
-    } catch { /* Storage full or unavailable: the review still works. */ }
+    storage?.save(step.state);
     for (const effect of step.effects) {
       switch (effect.type) {
         case "Autograde": {
@@ -629,16 +618,19 @@ export function TranslationChallenge({
         case "PlaySound":
           playSoundEffect(effect.sound === "AiDoneGrading" ? "aiDoneGrading" : "perfect");
           break;
-        case "Complete":
-          try { if (!initialState) localStorage.removeItem(STORAGE_KEY); } catch { /* Storage unavailable. */ }
-          bumpBackground(30.0);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          onComplete(effect.outcome.type === "Perfect" ? { perfect: null } : effect.outcome.grade,
+        case "Complete": {
+          const accepted = onComplete(effect.outcome.type === "Perfect" ? { perfect: null } : effect.outcome.grade,
             effect.heteronyms_tapped, effect.submission, effect.completed_at_ms);
+          if (accepted) {
+            storage?.clear();
+            bumpBackground(30.0);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
           break;
+        }
       }
     }
-  }, [initialState, sentence, totalReviewsCompleted, accessToken, bumpBackground, onComplete]);
+  }, [storage, sentence, accessToken, bumpBackground, onComplete]);
   const send = useCallback((event: TranslationEvent) => {
     if (event.type === "CancelGrading") gradingGenerationRef.current++;
     applyStep(translation_transition(stateRef.current, event));

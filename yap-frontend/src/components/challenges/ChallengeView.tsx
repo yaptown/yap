@@ -45,6 +45,7 @@ export function ChallengeView({
   menuExtras,
   initialState,
   translationState,
+  pendingReviewScope,
 }: Props) {
   return currentChallenge.type === "PronunciationChallenge" ? (
     <PronunciationChallenge
@@ -87,12 +88,13 @@ export function ChallengeView({
       sentence={currentChallenge}
       onComplete={onTranslationComplete}
       accessToken={accessToken}
-      key={totalReviewsCompleted}
+      key={`${totalReviewsCompleted}:${currentChallenge.target_language}`}
       targetLanguage={targetLanguage}
       nativeLanguage={nativeLanguage}
       autoplayed={autoplayed}
       setAutoplayed={setAutoplayed}
       deck={deck}
+      pendingReviewScope={pendingReviewScope}
       totalReviewsCompleted={totalReviewsCompleted}
     />
   ) : (
@@ -109,6 +111,7 @@ export function ChallengeView({
       autoplayed={autoplayed}
       setAutoplayed={setAutoplayed}
       deck={deck}
+      pendingReviewScope={pendingReviewScope}
       totalReviewsCompleted={totalReviewsCompleted}
     />
   );

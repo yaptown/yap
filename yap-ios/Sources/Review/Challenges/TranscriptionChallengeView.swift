@@ -20,7 +20,8 @@ struct TranscriptionChallengeView: View {
     }
     private var storage: PendingReview? {
         guard let scope = actions.pendingReviewKey else { return nil }
-        return PendingReview(kind: "transcription", challenge: sentence, scope: scope, reviewCount: screen.total_reviews)
+        let slot = transcription_pending_slot(parts: sentence.parts, scope: scope, app_version: get_app_version(), review_count: screen.total_reviews)
+        return PendingReview(key: slot.key, identity: slot.identity)
     }
     private var blanks: [Int] { view.blanks.map { Int($0.index) } }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
@@ -62,7 +63,7 @@ struct TranscriptionChallengeView: View {
                             reviewCount: screen.total_reviews)
                     }
                     DisclosureGroup("Translation", isExpanded: Binding(get: { verdict.translation_revealed }, set: { _ in send(.TranslationToggled) })) { Text(sentence.native_language) }
-                    if case let .Graded(_, grade, _) = state.phase {
+                    if case let .Graded(_, grade, _, _) = state.phase {
                         ReviewDefinitionsView(definitions: get_transcription_review_definitions(challenge: sentence, results: grade.results))
                     }
                 } else if view.is_grading {
@@ -75,7 +76,7 @@ struct TranscriptionChallengeView: View {
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
                 Button("I can't listen right now") { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(view.is_grading)
             } else {
-                Button { complete() } label: { Text(view.verdict?.continue_label ?? "").frame(maxWidth: .infinity) }.disabled(actions.submitting)
+                Button { complete() } label: { Text(view.verdict?.continue_label ?? "").frame(maxWidth: .infinity) }.disabled(!view.can_continue || actions.submitting)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             }
         }

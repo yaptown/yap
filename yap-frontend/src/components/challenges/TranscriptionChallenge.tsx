@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { PendingReview } from "@/lib/pending-review";
 import { getMovieMetadata } from "@/lib/movie-cache";
 import { reportAutogradeFailure } from "@/instrument";
 import { MoviePosterGrid } from "./MoviePosterGrid";
@@ -7,6 +8,7 @@ import {
   get_app_version,
   type TranscribeComprehensibleSentence,
   type PartGraded,
+  transcription_pending_slot,
   transcription_start,
   transcription_resume,
   transcription_transition,
@@ -72,7 +74,8 @@ import { type BreakdownRow } from "../MorphemeBreakdown";
 interface TranscriptionChallengeProps {
   challenge: TranscribeComprehensibleSentence;
   initialState?: TranscriptionState;
-  onComplete: (grade: PartGraded[], completedAtMs: number) => void;
+  onComplete: (grade: PartGraded[], completedAtMs: number) => boolean;
+  pendingReviewScope: string;
   totalCount: number;
   accessToken: string | undefined;
   onCantListen?: () => void;
@@ -124,37 +127,19 @@ export function TranscriptionChallenge({
   setAutoplayed,
   deck,
   totalReviewsCompleted,
+  pendingReviewScope,
 }: TranscriptionChallengeProps) {
-  const STORAGE_KEY = "yap-pending-transcription-grade";
-
-  // Try to restore a saved grade from localStorage
-  const restored = useMemo(() => {
-    if (initialState) return initialState;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const saved = JSON.parse(raw);
-      if (
-        saved.version !== get_app_version() ||
-        saved.totalReviewsCompleted !== Number(totalReviewsCompleted) ||
-        JSON.stringify(saved.challenge) !== JSON.stringify(challenge)
-      ) {
-        localStorage.removeItem(STORAGE_KEY);
-        return null;
-      }
-      // Decode through the bridge too: discard obsolete or malformed snapshots.
-      return transcription_resume({
-        ...saved.state,
-        inputs: new Map(saved.state.inputs),
-      } as TranscriptionState).state;
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
-  }, [challenge, totalReviewsCompleted, initialState]);
-
+  const [storage] = useState(() => initialState ? undefined : new PendingReview<TranscriptionState>(
+    transcription_pending_slot(challenge.parts, pendingReviewScope, get_app_version(), totalReviewsCompleted),
+    (payload) => {
+      const saved = payload as Omit<TranscriptionState, "inputs"> & { inputs: [number, string][] };
+      return transcription_resume({ ...saved, inputs: new Map(saved.inputs) }).state;
+    },
+    // The bridge exposes BTreeMap as a JS Map, which JSON cannot encode.
+    (state) => ({ ...state, inputs: [...state.inputs] }),
+  ));
   const [state, setState] = useState<TranscriptionState>(
-    () => restored ?? transcription_start(challenge.parts),
+    () => initialState ?? storage?.load() ?? transcription_start(challenge.parts),
   );
   const stateRef = useRef(state);
   const view = useMemo(() => transcription_view(state), [state]);
@@ -208,22 +193,7 @@ export function TranscriptionChallenge({
     function apply(step: TranscriptionStep) {
       stateRef.current = step.state;
       setState(step.state);
-      try {
-        if (!initialState) {
-          localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({
-              version: get_app_version(),
-              challenge,
-              totalReviewsCompleted: Number(totalReviewsCompleted),
-              // The bridge exposes BTreeMap as a JS Map, which JSON cannot encode.
-              state: { ...step.state, inputs: [...step.state.inputs] },
-            }),
-          );
-        }
-      } catch {
-        /* Storage full or unavailable: the review still works. */
-      }
+      storage?.save(step.state);
       for (const effect of step.effects) {
         switch (effect.type) {
           case "Autograde": {
@@ -258,23 +228,25 @@ export function TranscriptionChallenge({
               effect.sound === "AiDoneGrading" ? "aiDoneGrading" : "perfect",
             );
             break;
-          case "Complete":
-            if (!initialState) localStorage.removeItem(STORAGE_KEY);
-            bumpBackground(30.0);
-            onComplete(effect.results, effect.completed_at_ms);
+          case "Complete": {
+            const accepted = onComplete(effect.results, effect.completed_at_ms);
+            if (accepted) {
+              storage?.clear();
+              bumpBackground(30.0);
+            }
             break;
+          }
         }
       }
     },
     [
-      initialState,
+      storage,
       accessToken,
       bumpBackground,
       challenge,
       nativeLanguage,
       onComplete,
       targetLanguage,
-      totalReviewsCompleted,
     ],
   );
   const send = useCallback(
@@ -779,7 +751,7 @@ export function TranscriptionChallenge({
           ) : (
             <Button
               onClick={verdict ? handleTranscriptionContinue : handleSubmit}
-              disabled={editing && !view.can_submit}
+              disabled={editing ? !view.can_submit : !view.can_continue}
               className="w-full h-14 text-lg"
               size="lg"
             >

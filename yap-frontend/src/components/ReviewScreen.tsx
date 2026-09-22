@@ -16,12 +16,13 @@ export type ReviewHost = {
   menuExtras?: ReactNode;
 };
 export type ReviewActions = {
-  onRating: (rating: Rating) => void;
+  pendingReviewScope: string;
+  onRating: (rating: Rating) => boolean;
   onTranslationComplete: (
     grade: { literalGrades: LiteralGrades; phrasesRemembered: Gram<string>[]; phrasesForgot: Gram<string>[] } | { perfect: string | null },
     tapped: Heteronym<string>[], submission: string, completedAtMs: number,
-  ) => void;
-  onTranscriptionComplete: (grade: PartGraded[], completedAtMs: number) => void;
+  ) => boolean;
+  onTranscriptionComplete: (grade: PartGraded[], completedAtMs: number) => boolean;
   onCantListen: () => void;
   onCantSpeak: () => void;
   addEvent: (event: DeckEvent) => void;
@@ -97,6 +98,7 @@ export function ReviewScreen({
             return (
               <ChallengeView
                 {...host}
+                pendingReviewScope={actions.pendingReviewScope}
                 onRating={actions.onRating}
                 onTranslationComplete={actions.onTranslationComplete}
                 onTranscriptionComplete={actions.onTranscriptionComplete}

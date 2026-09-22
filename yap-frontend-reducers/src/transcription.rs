@@ -176,6 +176,8 @@ pub enum TranscriptionPhase {
         completed_at_ms: f64,
         grade: Grade,
         translation_revealed: bool,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        completing: bool,
     },
 }
 
@@ -284,6 +286,7 @@ pub struct TranscriptionView {
     pub placeholder: String,
     pub blanks: Vec<BlankView>,
     pub can_submit: bool,
+    pub can_continue: bool,
     pub submit_label: String,
     pub is_grading: bool,
     pub verdict: Option<VerdictView>,
@@ -321,9 +324,25 @@ pub fn transcription_resume(state: TranscriptionState) -> TranscriptionStep {
             submission: state.submission().request,
         }]
     } else {
-        vec![]
+        transcription_completion(&state).into_iter().collect()
     };
     TranscriptionStep { state, effects }
+}
+
+fn transcription_completion(state: &TranscriptionState) -> Option<TranscriptionEffect> {
+    let TranscriptionPhase::Graded {
+        grade,
+        completed_at_ms,
+        completing: true,
+        ..
+    } = &state.phase
+    else {
+        return None;
+    };
+    Some(TranscriptionEffect::Complete {
+        results: grade.results.clone(),
+        completed_at_ms: *completed_at_ms,
+    })
 }
 
 #[bridgerton::bridge]
@@ -331,8 +350,16 @@ pub fn transcription_transition(
     mut state: TranscriptionState,
     event: TranscriptionEvent,
 ) -> TranscriptionStep {
+    let can_continue = matches!(event, TranscriptionEvent::Continue)
+        && transcription_view(state.clone()).can_continue;
     let mut effects = vec![];
     match (&mut state.phase, event) {
+        (
+            TranscriptionPhase::Graded {
+                completing: true, ..
+            },
+            _,
+        ) => {}
         (TranscriptionPhase::Editing, TranscriptionEvent::InputChanged { index, text }) => {
             if matches!(state.parts.get(index), Some(Part::AskedToTranscribe { .. })) {
                 state.inputs.insert(index, text);
@@ -365,6 +392,7 @@ pub fn transcription_transition(
                 completed_at_ms: *completed_at_ms,
                 grade,
                 translation_revealed: false,
+                completing: false,
             };
         }
         (
@@ -389,17 +417,12 @@ pub fn transcription_transition(
             },
             TranscriptionEvent::TranslationToggled,
         ) => *translation_revealed = !*translation_revealed,
-        (
-            TranscriptionPhase::Graded {
-                grade,
-                completed_at_ms,
-                ..
-            },
-            TranscriptionEvent::Continue,
-        ) => effects.push(TranscriptionEffect::Complete {
-            results: grade.results.clone(),
-            completed_at_ms: *completed_at_ms,
-        }),
+        (TranscriptionPhase::Graded { completing, .. }, TranscriptionEvent::Continue)
+            if can_continue =>
+        {
+            *completing = true;
+            effects.extend(transcription_completion(&state));
+        }
         _ => {}
     }
     TranscriptionStep { state, effects }
@@ -532,6 +555,13 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
         instructions: "Listen and fill in the blanks".into(),
         placeholder: "Write what you hear".into(),
         can_submit: editing && state.submission().all_blanks_filled,
+        can_continue: matches!(
+            state.phase,
+            TranscriptionPhase::Graded {
+                completing: false,
+                ..
+            }
+        ),
         submit_label: "Check answer".into(),
         is_grading: matches!(state.phase, TranscriptionPhase::Grading { .. }),
         blanks,
@@ -740,7 +770,30 @@ mod reducer_tests {
         );
         let complete =
             transcription_transition(toggled.state.clone(), TranscriptionEvent::Continue);
-        assert_eq!(complete.state, toggled.state);
+        let before_view = transcription_view(toggled.state.clone());
+        let mut expected = toggled.state;
+        if let TranscriptionPhase::Graded { completing, .. } = &mut expected.phase {
+            *completing = true;
+        }
+        assert_eq!(complete.state, expected);
+        let mut completing_view = transcription_view(complete.state.clone());
+        assert!(!completing_view.can_continue);
+        completing_view.can_continue = true;
+        assert_eq!(completing_view, before_view);
+        for event in [
+            TranscriptionEvent::Continue,
+            TranscriptionEvent::TranslationToggled,
+            TranscriptionEvent::WordGradeChanged {
+                part_index: 1,
+                word_index: 0,
+                grade: WordGrade::Perfect { wrote: None },
+            },
+        ] {
+            unchanged(&complete.state, event);
+        }
+        let restored =
+            serde_json::from_str(&serde_json::to_string(&complete.state).unwrap()).unwrap();
+        assert_eq!(transcription_resume(restored), complete);
         assert!(
             matches!(&complete.effects[..], [TranscriptionEffect::Complete { completed_at_ms: 1234.0, results }] if matches!(&results[1], PartGraded::AskedToTranscribe { parts, .. } if matches!(parts[0].grade, WordGrade::Missed {})))
         );

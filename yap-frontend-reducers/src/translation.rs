@@ -501,6 +501,8 @@ pub enum TranslationPhase {
         completed_at_ms: f64,
         correct_translation: String,
         result: TranslationReviewResult,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        completing: bool,
     },
 }
 
@@ -644,9 +646,34 @@ pub fn translation_resume(state: TranslationState) -> TranslationStep {
             submission: state.text.clone(),
         }]
     } else {
-        vec![]
+        translation_completion(&state).into_iter().collect()
     };
     TranslationStep { state, effects }
+}
+
+fn translation_completion(state: &TranslationState) -> Option<TranslationEffect> {
+    let TranslationPhase::Graded {
+        result,
+        completed_at_ms,
+        completing: true,
+        ..
+    } = &state.phase
+    else {
+        return None;
+    };
+    let feedback = get_translation_review_feedback(
+        state.sentence.clone(),
+        None,
+        false,
+        state.tapped.clone(),
+        state.course.target_language,
+    );
+    Some(TranslationEffect::Complete {
+        outcome: result.clone(),
+        heteronyms_tapped: feedback.heteronyms_tapped,
+        submission: state.text.clone(),
+        completed_at_ms: *completed_at_ms,
+    })
 }
 
 #[bridgerton::bridge]
@@ -658,6 +685,12 @@ pub fn translation_transition(
         matches!(event, TranslationEvent::Continue) && translation_view(state.clone()).can_continue;
     let mut effects = vec![];
     match (&mut state.phase, event) {
+        (
+            TranslationPhase::Graded {
+                completing: true, ..
+            },
+            _,
+        ) => {}
         (TranslationPhase::Editing, TranslationEvent::TextChanged { text }) => state.text = text,
         (TranslationPhase::Editing, TranslationEvent::WordTapped { index }) => {
             if state
@@ -723,6 +756,7 @@ pub fn translation_transition(
                 completed_at_ms: *completed_at_ms,
                 correct_translation: correct_translation.clone(),
                 result,
+                completing: false,
             };
         }
         (
@@ -750,27 +784,11 @@ pub fn translation_transition(
                 );
             }
         }
-        (
-            TranslationPhase::Graded {
-                result,
-                completed_at_ms,
-                ..
-            },
-            TranslationEvent::Continue,
-        ) if can_continue => {
-            let feedback = get_translation_review_feedback(
-                state.sentence.clone(),
-                None,
-                false,
-                state.tapped.clone(),
-                state.course.target_language,
-            );
-            effects.push(TranslationEffect::Complete {
-                outcome: result.clone(),
-                heteronyms_tapped: feedback.heteronyms_tapped,
-                submission: state.text.clone(),
-                completed_at_ms: *completed_at_ms,
-            });
+        (TranslationPhase::Graded { completing, .. }, TranslationEvent::Continue)
+            if can_continue =>
+        {
+            *completing = true;
+            effects.extend(translation_completion(&state));
         }
         _ => {}
     }
@@ -918,7 +936,14 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
                 })
                 .collect(),
         }),
-        can_continue: feedback.can_continue,
+        can_continue: feedback.can_continue
+            && matches!(
+                state.phase,
+                TranslationPhase::Graded {
+                    completing: false,
+                    ..
+                }
+            ),
         continue_label: if perfect { "Nailed it!" } else { "Continue" }.into(),
         autograde_error,
         definitions: feedback.definitions,
@@ -1111,7 +1136,36 @@ mod reducer_tests {
             },
         );
         assert_eq!(snapshot(&ignored.state), snapshot(&state));
+        assert!(translation_resume(state.clone()).effects.is_empty());
+        assert!(snapshot(&state)["phase"].get("completing").is_none());
+        let restored: TranslationState = serde_json::from_value(snapshot(&state)).unwrap();
+        assert!(translation_view(restored).can_continue);
+        let mut before_view = serde_json::to_value(translation_view(state.clone())).unwrap();
         let step = translation_transition(state, TranslationEvent::Continue);
+        assert!(!translation_view(step.state.clone()).can_continue);
+        before_view["can_continue"] = json!(false);
+        assert_eq!(
+            before_view,
+            serde_json::to_value(translation_view(step.state.clone())).unwrap()
+        );
+        for event in [
+            TranslationEvent::Continue,
+            TranslationEvent::ItemGraded {
+                item_index: 0,
+                grade: Remembered::Remembered,
+            },
+            TranslationEvent::WordTapped { index: 0 },
+            TranslationEvent::CancelGrading,
+        ] {
+            let ignored = translation_transition(step.state.clone(), event);
+            assert_eq!(snapshot(&ignored.state), snapshot(&step.state));
+            assert!(ignored.effects.is_empty());
+        }
+        let restored = serde_json::from_value(snapshot(&step.state)).unwrap();
+        assert_eq!(
+            serde_json::to_value(translation_resume(restored)).unwrap(),
+            serde_json::to_value(&step).unwrap()
+        );
         assert!(
             matches!(&step.effects[..], [TranslationEffect::Complete { outcome: TranslationReviewResult::Manual { .. }, completed_at_ms: 1234.0, submission, heteronyms_tapped }] if submission == "a cat" && heteronyms_tapped.len() == 1)
         );

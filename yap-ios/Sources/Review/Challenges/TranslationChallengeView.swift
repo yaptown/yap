@@ -21,7 +21,8 @@ struct TranslationChallengeView: View {
     }
     private var storage: PendingReview? {
         guard let scope = actions.pendingReviewKey else { return nil }
-        return PendingReview(kind: "translation", challenge: sentence, scope: scope, reviewCount: screen.total_reviews)
+        let slot = translation_pending_slot(sentence: sentence, scope: scope, app_version: get_app_version(), review_count: screen.total_reviews)
+        return PendingReview(key: slot.key, identity: slot.identity)
     }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {

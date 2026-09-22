@@ -42,6 +42,7 @@ function harness() {
   let accomplishment = false;
   let placement = false;
   let session;
+  let eventAvailable = true;
   const context = { userInfo: { id: "one", displayName: "Learner" } };
   const localStorage = {
     getItem: (key) => storage.get(key) ?? null,
@@ -70,6 +71,12 @@ function harness() {
         },
       ];
     },
+    useRef(initial) {
+      return react.useState(() => ({ current: initial }))[0];
+    },
+    useLayoutEffect(effect, deps) {
+      react.useEffect(effect, deps);
+    },
     useMemo(calculate, deps) {
       const index = cursor++;
       if (!slots[index] || !sameDeps(slots[index].deps, deps))
@@ -84,7 +91,7 @@ function harness() {
       if (!slots[index] || !sameDeps(slots[index].deps, deps)) {
         pendingEffects.push(() => {
           slots[index]?.cleanup?.();
-          slots[index] = { deps, cleanup: effect() };
+          slots[index] = { deps, effect, cleanup: effect() };
         });
       }
     },
@@ -109,7 +116,10 @@ function harness() {
               }
             : { type: "Idle", view: { sentence_list: inputs.sentence_list } },
     }),
-    translate_sentence_perfect: (tapped, sentence) => ({ sentence, tapped }),
+    translate_sentence_perfect: (tapped, sentence) => eventAvailable ? { sentence, tapped } : undefined,
+    translate_sentence_wrong: (sentence, submission) => eventAvailable ? { sentence, submission } : undefined,
+    transcribe_sentence: (grade) => eventAvailable ? { grade } : undefined,
+    review_card: (indicator, rating) => eventAvailable ? { indicator, rating } : undefined,
   });
   let state = {
     type: "deck",
@@ -203,7 +213,7 @@ function harness() {
       dirty = false;
       cursor = 0;
       pendingEffects = [];
-      session = exports.useStudyController(state, context);
+      session = exports.useStudyController(state, context, exports.CourseRoutes().props.pendingReviewScope);
     } while (dirty);
     pendingEffects.forEach((run) => run());
     return session;
@@ -226,8 +236,9 @@ function harness() {
       return [...timers.values()].map((timer) => timer.at);
     },
     routeKey: () => exports.CourseRoutes().key,
+    setEventAvailable: (value) => { eventAvailable = value; },
     setUser: (id) => {
-      context.userInfo.id = id;
+      context.userInfo = id === undefined ? undefined : { id, displayName: "Learner" };
     },
     setCourse: (course) => {
       state.targetLanguage = course;
@@ -269,6 +280,9 @@ function harness() {
       }
       return render();
     },
+    replayEffects: () => slots.forEach((slot) => {
+      if (slot.effect) { slot.cleanup?.(); slot.cleanup = slot.effect(); }
+    }),
     unmount: () => slots.forEach((slot) => slot.cleanup?.()),
   };
 }
@@ -375,7 +389,39 @@ test("course session key ignores deck replacement and resets for user or course 
   const userKey = h.routeKey();
   h.setCourse("Spanish");
   assert.notEqual(h.routeKey(), userKey);
+  assert.equal(h.render().actions.pendingReviewScope, "two:Spanish:English");
+  h.setUser(undefined);
+  assert.equal(h.render().actions.pendingReviewScope, "anon:Spanish:English");
 });
+
+for (const [kind, complete] of [
+  ["TranslateComprehensibleSentence", (actions) => actions.onTranslationComplete({ perfect: null }, [], "answer", 1234)],
+  ["TranslateComprehensibleSentence", (actions) => actions.onTranslationComplete({ literalGrades: [], phrasesRemembered: [], phrasesForgot: [] }, [], "answer", 1234)],
+  ["TranscribeComprehensibleSentence", (actions) => actions.onTranscriptionComplete([], 1234)],
+  ["FlashCardReview", (actions) => actions.onRating("good")],
+  ["PronunciationChallenge", (actions) => actions.onRating("again")],
+]) {
+  test(`${kind} acknowledges once per deck snapshot and rejects stale callbacks`, () => {
+    const h = harness();
+    h.select({ type: kind, target_language: "sentence", indicator: "card" });
+    const oldActions = h.render().actions;
+    h.setEventAvailable(false);
+    assert.equal(complete(oldActions), false);
+    h.setEventAvailable(true);
+    assert.equal(complete(oldActions), true);
+    assert.equal(complete(oldActions), false);
+    assert.equal(h.events.length, 1);
+    h.replayEffects();
+    assert.equal(complete(h.session.actions), false, "StrictMode replay must not release the guard");
+    h.tick(60_000, { audioChanged: true, clipsChanged: true });
+    assert.equal(complete(h.session.actions), false);
+    const newActions = h.replaceDeck().actions;
+    assert.equal(complete(oldActions), false);
+    assert.equal(complete(newActions), true);
+    assert.equal(complete(newActions), false);
+    assert.equal(h.events.length, 2);
+  });
+}
 
 test("Home owns prefetch too; readiness/reconnect abort superseded work and unmount cleans up", () => {
   const h = harness();

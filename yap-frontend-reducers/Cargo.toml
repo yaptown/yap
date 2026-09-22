@@ -7,6 +7,6 @@ edition = "2024"
 language-utils = { path = "../language-utils" }
 bridgerton.workspace = true
 serde.workspace = true
-
-[dev-dependencies]
+sha2 = "0.11.0"
+hex = "0.4.3"
 serde_json.workspace = true

@@ -7939,9 +7939,11 @@ name = "yap-frontend-reducers"
 version = "0.1.0"
 dependencies = [
  "bridgerton",
+ "hex",
  "language-utils",
  "serde",
  "serde_json",
+ "sha2 0.11.0",
 ]
 
 [[package]]

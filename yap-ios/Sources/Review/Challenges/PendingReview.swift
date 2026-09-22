@@ -1,5 +1,4 @@
 import Foundation
-import CryptoKit
 
 /// Disposable UI state, not event storage. The bridge codec avoids a second
 /// model of Rust's grades. Version, full challenge, account, course and review
@@ -10,12 +9,6 @@ import CryptoKit
     let key: String
     let identity: String
     private struct Slot: Codable { let identity: String; let payload: Data }
-    init<T: BridgeValue>(kind: String, challenge: T, scope: String, reviewCount: UInt64) {
-        let encoded = (try? Self.encode(challenge)) ?? Data()
-        let digest = SHA256.hash(data: encoded).map { String(format: "%02x", $0) }.joined()
-        key = "yap-pending-\(kind)-\(scope)"
-        identity = "v1-\(get_app_version())-\(reviewCount)-\(digest)"
-    }
     static func encode<T: BridgeValue>(_ value: T) throws -> Data {
         var writer = BridgeWriter()
         try value.bridgeWrite(&writer)

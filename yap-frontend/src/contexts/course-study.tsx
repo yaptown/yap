@@ -3,6 +3,8 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
+  useRef,
   useMemo,
   useState,
 } from "react";
@@ -47,17 +49,19 @@ export function CourseRoutes() {
     selection?.type === "languageSelected"
       ? `${selection.targetLanguage}:${selection.nativeLanguage}`
       : "unselected";
+  const pendingReviewScope = `${context.userInfo?.id ?? "anon"}:${courseKey}`;
   return (
     <CourseSession
-      key={`${context.userInfo?.id ?? "anonymous"}:${courseKey}`}
+      key={pendingReviewScope}
+      pendingReviewScope={pendingReviewScope}
       context={context}
     />
   );
 }
 
-function CourseSession({ context }: { context: AppContextType }) {
+function CourseSession({ context, pendingReviewScope }: { context: AppContextType; pendingReviewScope: string }) {
   const state = useDeck();
-  const study = useStudyController(state, context);
+  const study = useStudyController(state, context, pendingReviewScope);
   return (
     <DeckContext.Provider value={state}>
       <StudyContext.Provider value={study}>
@@ -87,8 +91,15 @@ export function useCourseStudy() {
 function useStudyController(
   state: ReturnType<typeof useDeck>,
   { userInfo, accessToken }: AppContextType,
+  pendingReviewScope: string,
 ) {
   const deck = state?.type === "deck" ? state.deck : null;
+  const submitting = useRef({ deck, inFlight: false });
+  // Reset before child resume effects run, and only for a new snapshot (not
+  // StrictMode's repeated effect setup). Old snapshot callbacks stay rejected.
+  useLayoutEffect(() => {
+    if (submitting.current.deck !== deck) submitting.current = { deck, inFlight: false };
+  }, [deck]);
   const targetLanguage =
     state?.type === "deck" ? state.targetLanguage : undefined;
   const startingFresh =
@@ -311,7 +322,8 @@ function useStudyController(
     (event: DeckEvent) => weapon.add_deck_event(event),
     [weapon],
   );
-  const onRating = async (rating: Rating) => {
+  const onRating = (rating: Rating): boolean => {
+    if (submitting.current.deck !== deck || submitting.current.inFlight) return false;
     if (
       !deck ||
       !currentChallenge ||
@@ -321,14 +333,17 @@ function useStudyController(
       console.error(
         "handleRating called with no current challenge or incompatible challenge type",
       );
-      return;
+      return false;
     }
+    const event = deck.review_card(currentChallenge.indicator, rating);
+    if (!event) return false;
+    submitting.current.inFlight = true;
+    addEvent(event);
     playSoundEffect(rating === "again" ? "fail" : "success");
     window.scrollTo({ top: 0 });
-    const event = deck.review_card(currentChallenge.indicator, rating);
-    if (event) addEvent(event);
+    return true;
   };
-  const onTranslationComplete = async (
+  const onTranslationComplete = (
     grade:
       | {
           literalGrades: LiteralGrades;
@@ -339,15 +354,14 @@ function useStudyController(
     wordsTapped: Heteronym<string>[],
     submission: string,
     completedAtMs: number,
-  ) => {
+  ): boolean => {
+    if (submitting.current.deck !== deck || submitting.current.inFlight) return false;
     if (!deck || currentChallenge?.type !== "TranslateComprehensibleSentence") {
       console.error(
         "handleTranslationComplete called with no current challenge or no TranslateComprehensibleSentence in current challenge",
       );
-      return;
+      return false;
     }
-    playSoundEffect("success");
-    window.scrollTo({ top: 0 });
     const event =
       "perfect" in grade
         ? deck.translate_sentence_perfect(
@@ -362,12 +376,18 @@ function useStudyController(
             grade.phrasesRemembered,
             grade.phrasesForgot,
           );
-    if (event) weapon.add_deck_event_at(event, completedAtMs);
+    if (!event) return false;
+    submitting.current.inFlight = true;
+    weapon.add_deck_event_at(event, completedAtMs);
+    playSoundEffect("success");
+    window.scrollTo({ top: 0 });
+    return true;
   };
   const onTranscriptionComplete = (
     grade: PartGraded[],
     completedAtMs: number,
-  ) => {
+  ): boolean => {
+    if (submitting.current.deck !== deck || submitting.current.inFlight) return false;
     if (
       !deck ||
       currentChallenge?.type !== "TranscribeComprehensibleSentence"
@@ -375,12 +395,15 @@ function useStudyController(
       console.error(
         "handleTranscriptionComplete called with no current challenge or no TranscribeComprehensibleSentence in current challenge",
       );
-      return;
+      return false;
     }
+    const event = deck.transcribe_sentence(grade);
+    if (!event) return false;
+    submitting.current.inFlight = true;
+    weapon.add_deck_event_at(event, completedAtMs);
     playSoundEffect("success");
     window.scrollTo({ top: 0 });
-    const event = deck.transcribe_sentence(grade);
-    if (event) weapon.add_deck_event_at(event, completedAtMs);
+    return true;
   };
   const restrict = (kind: "listen" | "speak") => {
     localStorage.setItem(`yap-cant-${kind}-timestamp`, Date.now().toString());
@@ -402,6 +425,7 @@ function useStudyController(
     getHomeView,
     currentChallenge,
     actions: {
+      pendingReviewScope,
       setPlacement,
       addEvent,
       onRating,

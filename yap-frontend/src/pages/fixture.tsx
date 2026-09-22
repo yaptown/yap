@@ -55,6 +55,7 @@ function parseFixture(json: string): Fixture {
 }
 
 const log = (...args: unknown[]) => console.log("fixture action", ...args);
+const rejectCompletion = (...args: unknown[]) => { log(...args); return false; };
 
 export function FixturePage() {
   const { name } = useParams();
@@ -140,10 +141,11 @@ export function FixturePage() {
             setAutoplayed: log,
           }}
           actions={{
+            pendingReviewScope: "fixture",
             setPlacement: log,
-            onRating: log,
-            onTranslationComplete: log,
-            onTranscriptionComplete: log,
+            onRating: rejectCompletion,
+            onTranslationComplete: rejectCompletion,
+            onTranscriptionComplete: rejectCompletion,
             onCantListen: log,
             onCantSpeak: log,
             addEvent: log,
