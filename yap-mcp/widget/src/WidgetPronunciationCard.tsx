@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { PronunciationChallenge } from "@/components/challenges/PronunciationChallenge";
+import { PronunciationChallenge } from "@/review/challenges/PronunciationChallenge";
 import { app } from "./bridge";
 import { useLogReview } from "./useLogReview";
 import type { PronunciationChallenge as PronunciationChallengeData, Rating } from "./types";

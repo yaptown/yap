@@ -1,12 +1,12 @@
 import { useCallback, useState } from "react";
-import { Flashcard } from "@/components/Flashcard";
+import { FlashcardChallenge } from "@/review/challenges/FlashcardChallenge";
 import { app } from "./bridge";
 import { useLogReview } from "./useLogReview";
-import type { FlashcardChallenge, Rating } from "./types";
+import type { FlashcardChallenge as FlashcardChallengeData, Rating } from "./types";
 import type { CardContent, Literal } from "../../../yap-frontend-rs/pkg";
 
 // The widget owns no flashcard UI of its own: it renders the app's real
-// Flashcard component (full card back, morphology, homophone grid, drag-to-grade)
+// FlashcardChallenge component (full card back, morphology, homophone grid, drag-to-grade)
 // and only adapts the one forced difference — grading, via useLogReview.
 
 function literalsText(gram: Literal<string>[]): string {
@@ -22,7 +22,7 @@ function contentDisplay(content: CardContent): string {
   return first ? literalsText(first[1]) : "the card";
 }
 
-export function WidgetFlashcard({ challenge }: { challenge: FlashcardChallenge }) {
+export function WidgetFlashcard({ challenge }: { challenge: FlashcardChallengeData }) {
   const [autoplayed, setAutoplayed] = useState(false);
   const [skipped, setSkipped] = useState(false);
   // A drag-grade flings the card off-screen (framer-motion x:300) before
@@ -80,7 +80,7 @@ export function WidgetFlashcard({ challenge }: { challenge: FlashcardChallenge }
 
   return (
     <div className="max-w-md mx-auto min-h-[24rem] flex flex-col">
-      <Flashcard
+      <FlashcardChallenge
         key={retryKey}
         audioRequest={challenge.audio}
         content={challenge.content}

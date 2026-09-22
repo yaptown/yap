@@ -18,7 +18,7 @@ const { instance } = await WebAssembly.instantiate(
 reducers.__wbg_set_wasm(instance.exports);
 instance.exports.__wbindgen_start();
 const source = ts.transpileModule(
-  readFileSync(new URL("../src/hooks/useDeck.ts", import.meta.url), "utf8"),
+  readFileSync(new URL("../src/core/useDeck.ts", import.meta.url), "utf8"),
   {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
@@ -124,7 +124,7 @@ function harness({ ready = true, cached = false } = {}) {
     },
     require(path) {
       if (path === "react") return react;
-      if (path === "@/weapon") return { useWeapon: () => weapon };
+      if (path === "@/core/weapon") return { useWeapon: () => weapon };
       if (path === "@sentry/react")
         return {
           addBreadcrumb() {},

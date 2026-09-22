@@ -2,12 +2,12 @@ import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { AudioButton } from "@/components/AudioButton";
+import { AudioButton } from "@/audio/AudioButton";
 import {
   ChallengeSentence,
   TranslationVerdict,
   type TranslationVerdictData,
-} from "@/components/challenges/translation-verdict";
+} from "@/review/challenges/translation-verdict";
 import { app, resultText } from "./bridge";
 import type { GradeResult, TranslationChallenge } from "./types";
 

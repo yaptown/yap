@@ -49,6 +49,8 @@
   },
   "include": [
     "src",
-    "../../yap-frontend/src/components/**/*"
+    "../../yap-frontend/src/components/**/*",
+    "../../yap-frontend/src/review/**/*",
+    "../../yap-frontend/src/audio/**/*"
   ]
 }

@@ -34,7 +34,7 @@ struct ReviewScreen: View {
                     case .SetDisplayName: SetDisplayNameView(reviewCount: view.total_reviews)
                     case let .Accomplishment(accomplishment): AccomplishmentScreen(view: accomplishment, addEvent: actions.addEvent, onDismiss: actions.dismissAccomplishment)
                     case let .Challenge(challenge): challengeView(challenge).id(challenge.challenge)
-                    case let .Idle(idle): NoCardsReadyView(view: idle)
+                    case let .Idle(idle): IdleScreen(view: idle)
                     }
                 }.padding(12).frame(maxWidth: 600)
             }

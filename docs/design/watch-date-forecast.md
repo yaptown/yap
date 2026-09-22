@@ -95,7 +95,7 @@ The forecast is a pure function of (deck event count, calibration params, senten
 
 ## 5. Surfaces
 
-### 5.1 The forecast chart — on the add-new-cards page (`no-cards-ready.tsx`)
+### 5.1 The forecast chart — on the add-new-cards page (`review/IdleScreen.tsx`)
 
 Andre's call, and the right one: this page already shows the single-step projection (`percent_known_after`) and it's where the pace decision is made. The chart generalizes that projection:
 

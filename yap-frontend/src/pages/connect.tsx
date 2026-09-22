@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThemeProvider } from "@/components/theme-provider";
-import { AuthDialog } from "@/components/auth-dialog";
+import { AuthDialog } from "@/auth/auth-dialog";
 
 // The only MCP servers we will ever hand the user's session proof to. A
 // malicious link can't redirect approval anywhere else.

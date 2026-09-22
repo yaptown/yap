@@ -1,4 +1,4 @@
-import "./instrument"; // Sentry must init before anything else
+import "./core/instrument"; // Sentry must init before anything else
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -7,7 +7,7 @@ import { get_ai_server_url } from "../../yap-frontend-rs/pkg";
 import "@fontsource-variable/nunito";
 import "@fontsource-variable/nunito-sans";
 import "./index.css";
-import App from "./App.tsx";
+import App from "./app/App.tsx";
 
 // A WASM built with the `local-backend` feature points every AI-backend call
 // at localhost — if that build is running on a real domain, autograde/TTS are

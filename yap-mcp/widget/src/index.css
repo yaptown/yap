@@ -8,6 +8,12 @@
    never be generated — the card renders as a bare outline and the grade
    buttons lose their fill. Point Tailwind at the reused component tree too. */
 @source "../../../yap-frontend/src/components";
+@source "../../../yap-frontend/src/app";
+@source "../../../yap-frontend/src/audio";
+@source "../../../yap-frontend/src/auth";
+@source "../../../yap-frontend/src/browse";
+@source "../../../yap-frontend/src/onboarding";
+@source "../../../yap-frontend/src/review";
 
 /* MCP Apps hosts render the widget inline in the conversation; a transparent
    body lets it sit on the host's surface (Claude's transparent-theming

@@ -23,7 +23,7 @@ export interface FlashcardChallenge extends ChallengeBase {
   type: "flashcard";
   kind: "written" | "listening";
   audio: AudioRequest;
-  // The exact CardContent the app builds — rendered by the app's Flashcard
+  // The exact CardContent the app builds — rendered by the app's FlashcardChallenge
   // component verbatim. Type-only import; erases at build (no WASM in the bundle).
   content: CardContent;
   // Product policy computed by Rust, shared with the web app.

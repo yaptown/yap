@@ -103,7 +103,7 @@ pub struct AccomplishmentView {
 
 impl Deck {
     /// Initial backlog plan, rendered by the same plan view as a release offer.
-    pub fn lockup_screen_view(
+    pub fn review_plan_view(
         &self,
         banned: Vec<ChallengeRequirements>,
         timestamp_ms: f64,
@@ -904,8 +904,7 @@ impl Deck {
                     })
                     .unwrap_or_else(|| self.start_placement_session()),
             )
-        } else if let Some(plan) =
-            self.lockup_screen_view(inputs.banned.clone(), inputs.timestamp_ms)
+        } else if let Some(plan) = self.review_plan_view(inputs.banned.clone(), inputs.timestamp_ms)
         {
             ReviewStep::ReviewPlan(Box::new(plan))
         } else if prompts.offer_display_name {

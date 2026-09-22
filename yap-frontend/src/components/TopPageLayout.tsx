@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import { Header } from "@/components/header";
 import { supabase } from "@/lib/supabase";
-import type { UserInfo } from "@/App";
+import type { UserInfo } from "@/app/context";
 
 interface TopPageLayoutProps {
   userInfo: UserInfo | undefined;

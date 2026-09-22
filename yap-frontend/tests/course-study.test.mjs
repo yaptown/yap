@@ -8,7 +8,7 @@ import ts from "typescript";
 // following audio.test.mjs's transpile/VM pattern. No WASM/network/browser needed.
 const source = ts.transpileModule(
   readFileSync(
-    new URL("../src/contexts/course-study.tsx", import.meta.url),
+    new URL("../src/review/course-study.tsx", import.meta.url),
     "utf8",
   ) + "\nexport { useStudyController };",
   {
@@ -163,7 +163,7 @@ function harness() {
             poll = fn;
           },
         };
-      if (path === "@/hooks/useDeck")
+      if (path === "@/core/useDeck")
         return {
           useDeckSelection: () => ({
             type: "languageSelected",
@@ -171,7 +171,7 @@ function harness() {
             nativeLanguage: "English",
           }),
         };
-      if (path === "@/weapon")
+      if (path === "@/core/weapon")
         return {
           useWeapon: () => ({
             add_deck_event: (event) => events.push(event),

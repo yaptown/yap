@@ -15,7 +15,7 @@ import {
   canCreatePasskey,
   isCancelled,
   registerPasskeyCeremony,
-} from "@/lib/passkey";
+} from "@/auth/passkey";
 
 export function ConfirmEmail() {
   const [searchParams] = useSearchParams();

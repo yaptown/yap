@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UserRoundCog, X, Upload } from "lucide-react";
-import { useSyncActions } from "@/weapon";
+import { useSyncActions } from "@/core/weapon";
 
 const SUPABASE_URL = "https://eearwzqotpfoderpfrqx.supabase.co";
 const ORIGINAL_SESSION_KEY = "yap-impersonation-original-session";

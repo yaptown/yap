@@ -22,7 +22,7 @@ import {
 import { Pencil, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { getLanguageFlag, getLanguageName } from "@/lib/utils";
-import type { AppContextType } from "@/App";
+import type { AppContextType } from "@/app/context";
 
 export function UserProfilePage() {
   const { id } = useParams<{ id: string }>();

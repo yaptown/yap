@@ -1,14 +1,15 @@
 /* eslint-disable no-console -- fixture interactions deliberately do not write review events */
 import { useEffect, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
-import { DeckLoadStatus } from "@/components/DeckPage";
-import { type AppContextType, useDeck } from "@/App";
-import { ReviewScreen } from "@/components/ReviewScreen";
+import { DeckLoadStatus } from "@/app/DeckPage";
+import type { AppContextType } from "@/app/context";
+import { useDeck } from "@/core/useDeck";
+import { ReviewScreen } from "@/review/ReviewScreen";
 import { TopPageLayout } from "@/components/TopPageLayout";
-import { HomeScreen } from "./home";
-import { StatsScreen } from "./stats";
-import { GoalsScreen } from "./goals";
-import { DueWordsScreen } from "./due";
+import { HomeScreen } from "../browse/HomeScreen";
+import { StatsScreen } from "../browse/StatsScreen";
+import { GoalsScreen } from "../browse/GoalsScreen";
+import { DueWordsScreen } from "../browse/DueWordsScreen";
 import type {
   ChallengeView,
   Fixture,

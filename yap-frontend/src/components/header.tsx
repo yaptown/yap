@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ModeToggle } from "@/components/mode-toggle";
+import { ModeToggle } from "@/browse/mode-toggle";
 import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -8,13 +8,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { NotificationSettings } from "@/components/notification-settings";
-import { PasskeySettings } from "@/components/passkey-settings";
+import { NotificationSettings } from "@/browse/notification-settings";
+import { PasskeySettings } from "@/browse/passkey-settings";
 import { LogOut, AlertTriangle, ArrowLeft, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { SyncStatusDialog } from "@/components/sync-status-dialog";
-import type { UserInfo } from "@/App";
-import { useAuthDialog } from "@/components/auth-dialog-provider";
+import { SyncStatusDialog } from "@/browse/sync-status-dialog";
+import type { UserInfo } from "@/app/context";
+import { useAuthDialog } from "@/auth/auth-dialog-provider";
 
 interface HeaderProps {
   userInfo: UserInfo | undefined;

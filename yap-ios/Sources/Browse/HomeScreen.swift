@@ -39,7 +39,7 @@ struct HomeScreen: View {
                             }
                         }.buttonStyle(.plain)
                         if let idle = view.up_next.idle {
-                            NoCardsReadyView(view: idle)
+                            IdleScreen(view: idle)
                                 .environment(\.reviewActions, addingGoesToReview)
                         } else {
                             StudyCard {

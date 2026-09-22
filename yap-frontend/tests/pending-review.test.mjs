@@ -20,7 +20,7 @@ function storageHarness() {
     setItem: (key, value) => data.set(key, value),
     removeItem: (key) => data.delete(key),
   };
-  const { PendingReview } = load("../src/lib/pending-review.ts", { localStorage });
+  const { PendingReview } = load("../src/review/challenges/pending-review.ts", { localStorage });
   return { data, localStorage, PendingReview };
 }
 
@@ -52,7 +52,7 @@ test("draft slots isolate accounts/courses and discard mismatched or malformed s
 
 test("storage failures never prevent review or completion", () => {
   const unavailable = () => { throw Error("storage blocked"); };
-  const { PendingReview } = load("../src/lib/pending-review.ts", {
+  const { PendingReview } = load("../src/review/challenges/pending-review.ts", {
     localStorage: { getItem: unavailable, setItem: unavailable, removeItem: unavailable },
   });
   const storage = new PendingReview({ key: "slot", identity: "identity" }, (state) => state);
@@ -102,15 +102,15 @@ for (const kind of ["Translation", "Transcription"]) {
         }),
         get_transcription_review_definitions: () => [],
       };
-      const components = load(`../src/components/challenges/${kind}Challenge.tsx`, {
+      const components = load(`../src/review/challenges/${kind}Challenge.tsx`, {
         Map, console, localStorage, window: { scrollTo: noop },
         require(path) {
           if (path === "react") return react;
           if (path === "react/jsx-runtime") return { jsx: noop, jsxs: noop };
           if (path.includes("yap-frontend-rs/pkg")) return bridge;
-          if (path === "@/lib/pending-review") return { PendingReview };
+          if (path === "@/review/challenges/pending-review") return { PendingReview };
           if (path === "@/lib/movie-cache") return { getMovieMetadata: () => [] };
-          if (path === "../background-context") return { useBackground: () => ({ bumpBackground: noop }) };
+          if (path === "../../components/background-context") return { useBackground: () => ({ bumpBackground: noop }) };
           return new Proxy({}, { get: () => noop });
         },
       });

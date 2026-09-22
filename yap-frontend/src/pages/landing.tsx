@@ -20,8 +20,8 @@ import { Moon, MoreVertical, Volume2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { mountFx, type OrbitGeometry } from "@/lib/landing-fx";
-import type { AppContextType } from "@/App";
-import { useDeckSelection } from "@/App";
+import type { AppContextType } from "@/app/context";
+import { useDeckSelection } from "@/core/useDeck";
 import "./landing.css";
 
 // ---------------------------------------------------------------------------

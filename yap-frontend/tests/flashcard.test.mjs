@@ -7,7 +7,7 @@ import ts from "typescript";
 // Exercise the actual menu handlers and reveal state, not a copy of the gate.
 // Like pending-review.test.mjs, rendering/browser dependencies are stubbed.
 const source = ts.transpileModule(
-  readFileSync(new URL("../src/components/Flashcard.tsx", import.meta.url), "utf8"),
+  readFileSync(new URL("../src/review/challenges/FlashcardChallenge.tsx", import.meta.url), "utf8"),
   { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } },
 ).outputText;
 
@@ -40,7 +40,7 @@ function harness(requireReveal) {
         useTransform: noop,
         useAnimation: () => ({ set: noop, start: noop }),
       };
-      if (path === "./background-context") return { useBackground: () => ({ bumpBackground: noop }) };
+      if (path === "../../components/background-context") return { useBackground: () => ({ bumpBackground: noop }) };
       if (path === "@/lib/utils") return { cn: (...values) => values.join(" ") };
       // JSX is retained as a tree; child components are not executed.
       return new Proxy({}, { get: (_, name) => name });
@@ -58,7 +58,7 @@ function harness(requireReveal) {
   const render = () => {
     cursor = 0;
     effects.length = 0;
-    const tree = exports.Flashcard(props);
+    const tree = exports.FlashcardChallenge(props);
     effects.forEach((effect) => effect());
     return tree;
   };
