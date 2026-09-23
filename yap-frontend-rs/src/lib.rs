@@ -3284,6 +3284,19 @@ impl Deck {
         movies
     }
 
+    /// Keep sentence attribution without repeating the film already shown in the clip header.
+    #[bridgerton::stable]
+    pub fn sentence_posters(
+        &self,
+        movie_ids: Vec<String>,
+        shown_in_clip: Option<String>,
+    ) -> Vec<MovieMetadataBasic> {
+        self.get_movie_metadata(movie_ids)
+            .into_iter()
+            .filter(|movie| Some(&movie.id) != shown_in_clip.as_ref())
+            .collect()
+    }
+
     #[bridgerton::stable(strong)]
     pub fn get_movie_poster(&self, movie_id: String) -> Option<Vec<u8>> {
         self.context
@@ -5209,6 +5222,40 @@ mod tests {
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
         };
         Deck::finalize(DeckState::new(), &context)
+    }
+
+    #[test]
+    fn sentence_posters_exclude_only_the_clip_and_preserve_order() {
+        let mut deck = daily_review_target_deck(None);
+        let movies = &mut Arc::get_mut(&mut deck.context.language_pack)
+            .unwrap()
+            .movies;
+        for id in ["first", "clip", "last"] {
+            movies.insert(
+                id.to_owned(),
+                language_utils::MovieMetadata {
+                    id: id.to_owned(),
+                    title: id.to_owned(),
+                    year: None,
+                    original_language: None,
+                    rotten_tomatoes_score: None,
+                    poster_bytes: None,
+                },
+            );
+        }
+        let ids = ["last", "missing", "clip", "first"]
+            .map(str::to_owned)
+            .to_vec();
+        let all = deck.get_movie_metadata(ids.clone());
+        assert_eq!(deck.sentence_posters(ids.clone(), None), all);
+        assert_eq!(
+            deck.sentence_posters(ids.clone(), Some("other".into())),
+            all
+        );
+        assert_eq!(
+            deck.sentence_posters(ids, Some("clip".into())),
+            vec![all[0].clone(), all[2].clone()]
+        );
     }
 
     #[test]

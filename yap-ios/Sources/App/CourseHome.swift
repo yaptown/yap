@@ -59,7 +59,7 @@ struct CourseHome: View {
                 VStack(spacing: 20) {
                     Text(text)
                     VideoClipView( language: deck.get_target_language(), text: text,
-                        reviewCount: deck.get_total_reviews(), available: $debugClipAvailable)
+                        reviewCount: deck.get_total_reviews(), available: $debugClipAvailable, movieId: .constant(nil))
                     Button("Done") { debugClip = nil }
                 }.padding()
             }

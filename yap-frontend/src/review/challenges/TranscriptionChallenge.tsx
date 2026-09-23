@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { PendingReview } from "@/review/challenges/pending-review";
-import { getMovieMetadata } from "@/lib/movie-cache";
 import { reportAutogradeFailure } from "@/core/instrument";
 import { MoviePosterGrid } from "./MoviePosterGrid";
 import {
@@ -146,13 +145,8 @@ export function TranscriptionChallenge({
   const verdict = view.verdict;
   const [audioError, setAudioError] = useState(false);
 
-  const movieData = useMemo(() => {
-    if (!challenge.movie_titles || challenge.movie_titles.length === 0) {
-      return [];
-    }
-    const movieIds = challenge.movie_titles.map(([id]) => id);
-    return getMovieMetadata(deck, movieIds);
-  }, [challenge.movie_titles, deck]);
+  const [clipMovieId, setClipMovieId] = useState<string | null>(null);
+  const movieData = deck.sentence_posters(challenge.movie_titles.map(([id]) => id), clipMovieId ?? undefined);
   const gradingGenerationRef = useRef(0);
   const [showReportModal, setShowReportModal] = useState(false);
   const [focusedInputIndex, setFocusedInputIndex] = useState<number | null>(
@@ -548,6 +542,7 @@ export function TranscriptionChallenge({
               text={challenge.target_language}
               accessToken={accessToken}
               deck={deck}
+              onClipChange={setClipMovieId}
               renderSentenceCue={(text) =>
                 editing ? (
                   <TargetLanguageText language={targetLanguage}>

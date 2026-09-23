@@ -30,10 +30,10 @@ interface VideoClipPlayerProps {
   autoplayed?: boolean;
   setAutoplayed?: () => void;
   /**
-   * Reports whether a clip exists for this sentence, so the parent can
+   * Reports the clip’s film (or null), so the parent can avoid duplicate posters and
    * decide who owns autoplay (video when available, AudioButton otherwise).
    */
-  onAvailabilityChange?: (available: boolean) => void;
+  onClipChange?: (movieId: string | null) => void;
   /**
    * Custom rendering for the target sentence's own caption cue (the
    * `"sentence"` role) — e.g. the transcription challenge masks the blanked
@@ -75,7 +75,7 @@ export function VideoClipPlayer({
   autoPlay = false,
   autoplayed,
   setAutoplayed,
-  onAvailabilityChange,
+  onClipChange,
   renderSentenceCue,
   deck,
 }: VideoClipPlayerProps) {
@@ -86,9 +86,9 @@ export function VideoClipPlayer({
   const unregisterRef = useRef<(() => void) | undefined>(undefined);
   const hasPlayedRef = useRef(false);
 
-  const onAvailabilityChangeRef = useRef(onAvailabilityChange);
+  const onClipChangeRef = useRef(onClipChange);
   useEffect(() => {
-    onAvailabilityChangeRef.current = onAvailabilityChange;
+    onClipChangeRef.current = onClipChange;
   });
 
   // "No clip" can mean "no manifest yet": on a fresh session the challenge
@@ -116,7 +116,7 @@ export function VideoClipPlayer({
         if (cancelled) return;
         if (result === undefined || result === null) {
           setClip({ status: "unavailable" });
-          onAvailabilityChangeRef.current?.(false);
+          onClipChangeRef.current?.(null);
           return;
         }
         // Copy into a fresh Uint8Array: the wasm-bindgen bytes are typed
@@ -131,12 +131,12 @@ export function VideoClipPlayer({
           subtitles: result.subtitles,
           movieId: result.movie_id,
         });
-        onAvailabilityChangeRef.current?.(true);
+        onClipChangeRef.current?.(result.movie_id);
       } catch (error) {
         console.error("Failed to fetch movie clip:", error);
         if (!cancelled) {
           setClip({ status: "unavailable" });
-          onAvailabilityChangeRef.current?.(false);
+          onClipChangeRef.current?.(null);
         }
       }
     })();
@@ -237,7 +237,7 @@ export function VideoClipPlayer({
           // Cached bytes the element can't decode: forget them so the next
           // load refetches, and drop back to the audio-only layout.
           setClip({ status: "unavailable" });
-          onAvailabilityChangeRef.current?.(false);
+          onClipChangeRef.current?.(null);
           void invalidate_clip_cache(language, text).catch((error) => {
             console.error("Failed to invalidate clip cache:", error);
           });

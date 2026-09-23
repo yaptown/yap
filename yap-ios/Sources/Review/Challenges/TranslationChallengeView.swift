@@ -9,6 +9,7 @@ struct TranslationChallengeView: View {
     @State private var state: TranslationState
     @State private var view: TranslationView
     @State private var hasClip: Bool?
+    @State private var clipMovieId: String?
     @State private var gradingTask: Task<Void, Never>?
     @State private var focused = false
     @State private var gradesExpanded = false
@@ -66,8 +67,11 @@ struct TranslationChallengeView: View {
                     ProperNounGroupsView(groups: view.proper_nouns)
                 }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
-                    reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip)
+                    reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip, movieId: $clipMovieId)
                 ReviewDefinitionsView(definitions: view.definitions)
+            }
+            if editing {
+                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId))
             }
             if view.verdict != nil {
                 Button { send(.Continue) } label: { Text(view.continue_label).frame(maxWidth: .infinity) }

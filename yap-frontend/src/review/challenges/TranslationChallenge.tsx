@@ -8,7 +8,6 @@ import {
   useMemo,
 } from "react";
 import { PendingReview } from "@/review/challenges/pending-review";
-import { getMovieMetadata } from "@/lib/movie-cache";
 import { reportAutogradeFailure } from "@/core/instrument";
 import { MoviePosterGrid } from "./MoviePosterGrid";
 import { ProperNounGroups } from "./ProperNounGroups";
@@ -409,10 +408,11 @@ export function TranslationChallenge({
     submissionLabel: view.verdict.submission_label,
     correctLabel: view.verdict.correct_label,
   } : null;
-  const movieData = useMemo(() => getMovieMetadata(deck, sentence.movie_titles.map(([id]) => id)), [sentence.movie_titles, deck]);
+  const [clipMovieId, setClipMovieId] = useState<string | null>(null);
+  const hasClip = clipMovieId !== null;
+  const movieData = deck.sentence_posters(sentence.movie_titles.map(([id]) => id), clipMovieId ?? undefined);
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState(-1);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [hasClip, setHasClip] = useState(false);
   const gradingGenerationRef = useRef(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const phraseRefs = useRef<Map<number, SwipeableWordHandle>>(new Map());
@@ -663,7 +663,7 @@ export function TranslationChallenge({
               autoPlay={!editing}
               autoplayed={autoplayed}
               setAutoplayed={setAutoplayed}
-              onAvailabilityChange={setHasClip}
+              onClipChange={setClipMovieId}
               deck={deck}
             />
           </div>

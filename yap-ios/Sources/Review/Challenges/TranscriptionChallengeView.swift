@@ -10,6 +10,7 @@ struct TranscriptionChallengeView: View {
     // Recomputed once per step rather than on every access, since each call crosses the bridge.
     @State private var view: TranscriptionView
     @State private var hasClip: Bool?
+    @State private var clipMovieId: String?
     @State private var gradingTask: Task<Void, Never>?
     @FocusState private var focused: Int?
     init(sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
@@ -50,7 +51,7 @@ struct TranscriptionChallengeView: View {
                     maskedSentence: editing ? sentence.parts.map { part in
                         switch part { case let .Provided(literal): literal.word.text + literal.whitespace
                         case let .AskedToTranscribe(parts): parts.map { "____" + $0.whitespace }.joined() }
-                    }.joined() : nil, available: $hasClip)
+                    }.joined() : nil, available: $hasClip, movieId: $clipMovieId)
                 if let verdict = view.verdict {
                     SentenceVerdictView(submission: verdict.submission_text,
                         correct: sentence.target_language, perfect: verdict.perfect, encouragement: verdict.encouragement,
@@ -71,6 +72,9 @@ struct TranscriptionChallengeView: View {
                     Text(sentence.target_language).foregroundStyle(Color.yapPositiveForeground)
                     ProgressView("Grading your answer…")
                 }
+            }
+            if editing {
+                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId))
             }
             if view.verdict == nil {
                 Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)

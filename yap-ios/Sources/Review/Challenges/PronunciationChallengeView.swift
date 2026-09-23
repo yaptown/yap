@@ -67,36 +67,51 @@ private struct PronunciationRow: View {
     let context: String?
     @State private var connectorHeard = false
     private var playing: Bool { audio.currentRequest == cue.audio && audio.isPlaying }
-    private var words: AttributedString {
+    private var firstConnector: Int? { cue.segments.firstIndex { $0.role == .Connector } }
+    private func trailingSpace(_ index: Int) -> String {
+        guard index + 1 < cue.segments.count else { return "" }
+        return cue.segments[index].role == .Pattern && cue.segments[index + 1].role == .Pattern ? "" : " "
+    }
+    private func spokenWord(_ index: Int) -> AttributedString {
+        let segment = cue.segments[index]
         let current = playing ? cue.segments.lastIndex { $0.start_ms.map { Double($0) <= audio.currentTime * 1000 } ?? false } : nil
         let firstExample = cue.segments.firstIndex { $0.role == .Example }
         let lastExample = cue.segments.lastIndex { $0.role == .Example }
-        let firstConnector = cue.segments.firstIndex { $0.role == .Connector }
-        var result = AttributedString()
-        for (index, segment) in cue.segments.enumerated() {
-            if segment.role == .Connector && !connectorHeard && index != firstConnector { continue }
-            if index > 0 && !(segment.role == .Pattern && cue.segments[index - 1].role == .Pattern) { result += AttributedString(" ") }
-            var word = AttributedString(segment.role == .Connector && !connectorHeard ? cue.native_connector : segment.text)
-            word.foregroundColor = current == index ? .yapAccent : segment.role == .Connector ? .secondary : .yapText
-            word.font = .body.weight(segment.role == .Example ? .semibold : .regular)
-            if playing, let start = segment.start_ms, audio.currentTime * 1000 < Double(start) { word.foregroundColor = .secondary.opacity(0.5) }
-            if segment.role == .Example {
-                let options: String.CompareOptions = position == .End ? [.caseInsensitive, .backwards] : [.caseInsensitive]
-                if let range = word.range(of: pattern, options: options),
-                   position == .Anywhere || (position == .Beginning && index == firstExample && range.lowerBound == word.startIndex)
-                    || (position == .End && index == lastExample && range.upperBound == word.endIndex) {
-                    word[range].backgroundColor = .yapCaution.opacity(0.3)
-                }
+        var word = AttributedString(segment.text)
+        word.foregroundColor = current == index ? .yapAccent : segment.role == .Connector ? .secondary : .yapText
+        word.font = .body.weight(segment.role == .Example ? .semibold : .regular)
+        if playing, let start = segment.start_ms, audio.currentTime * 1000 < Double(start) { word.foregroundColor = .secondary.opacity(0.5) }
+        if segment.role == .Example {
+            let options: String.CompareOptions = position == .End ? [.caseInsensitive, .backwards] : [.caseInsensitive]
+            if let range = word.range(of: pattern, options: options),
+               position == .Anywhere || (position == .Beginning && index == firstExample && range.lowerBound == word.startIndex)
+                || (position == .End && index == lastExample && range.upperBound == word.endIndex) {
+                word[range].backgroundColor = .yapCaution.opacity(0.3)
             }
-            result += word
         }
-        return result
+        word += AttributedString(trailingSpace(index))
+        return word
+    }
+    private var connector: some View {
+        let indices = cue.segments.indices.filter { cue.segments[$0].role == .Connector }
+        let target = indices.reduce(into: AttributedString()) { $0 += spokenWord($1) }
+        let native = cue.native_connector + (indices.last.map { trailingSpace($0) } ?? "")
+        return ZStack {
+            Text(native).foregroundStyle(.secondary).opacity(connectorHeard ? 0 : 1).accessibilityHidden(connectorHeard)
+            Text(target).opacity(connectorHeard ? 1 : 0).accessibilityHidden(!connectorHeard)
+        }.animation(.easeInOut(duration: 0.3), value: connectorHeard)
     }
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             AudioButton(request: cue.audio, reviewCount: screen.total_reviews)
             VStack(alignment: .leading, spacing: 4) {
-                Text(words).font(.body)
+                SentenceFlow(spacing: 0) {
+                    ForEach(cue.segments.indices, id: \.self) { index in
+                        if cue.segments[index].role == .Connector {
+                            if index == firstConnector { connector }
+                        } else { Text(spokenWord(index)) }
+                    }
+                }.font(.body)
                 if let context { Text(context).font(.footnote).foregroundStyle(.secondary) }
             }.frame(maxWidth: .infinity, alignment: .leading)
         }.onChange(of: playing) { _, playing in if playing { connectorHeard = true } }
