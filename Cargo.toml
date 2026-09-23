@@ -5,6 +5,7 @@ members = [
     "yap-ai-backend",
     "generate-data",
     "language-utils",
+    "libraries/stroke-order",
     "yap-frontend-rs",
     "yap-frontend-reducers",
     "libraries/autograde-core",
