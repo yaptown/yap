@@ -354,6 +354,19 @@ enum Command_ {
         #[arg(long, default_value = "yap-clips")]
         bucket: String,
     },
+    /// Review the previous publish's orphan candidates; dry run unless --apply.
+    Prune {
+        #[arg(long, default_value = "/data/andrep/subtitle-corpus/export")]
+        dest: PathBuf,
+        #[arg(long, default_value = "yap-clips")]
+        bucket: String,
+        /// Candidate manifest; defaults to <dest>/orphan-candidates.json.
+        #[arg(long)]
+        manifest: Option<PathBuf>,
+        /// Delete the listed local clip dirs and R2 objects.
+        #[arg(long)]
+        apply: bool,
+    },
     /// Publish finished subtitles next to their films as media-server sidecars.
     ///
     /// Writes `<video>.yap.<lang>.srt` beside each film whose corpus subtitle
@@ -2456,7 +2469,9 @@ async fn clips(
         min_ratio,
         ..Default::default()
     };
-    subtitle_corpus::clips::clips_all(out, jobs, limit, imdb, langs, gate).await
+    subtitle_corpus::clips::clips_all(out, jobs, limit, imdb, langs, gate)
+        .await
+        .map(drop)
 }
 
 #[tokio::main]
@@ -2468,7 +2483,9 @@ async fn export_clips(
     imdb: Option<String>,
     langs: Option<Vec<String>>,
 ) -> Result<()> {
-    subtitle_corpus::export::export_clips(out, dest, jobs, limit, imdb, langs).await
+    subtitle_corpus::export::export_clips(out, dest, jobs, limit, imdb, langs, Default::default())
+        .await
+        .map(drop)
 }
 
 #[tokio::main]
@@ -2481,6 +2498,11 @@ async fn publish(
     bucket: String,
 ) -> Result<()> {
     subtitle_corpus::export::publish(out, dest, data_root, jobs, langs, bucket).await
+}
+
+#[tokio::main]
+async fn prune(dest: PathBuf, bucket: String, manifest: PathBuf, apply: bool) -> Result<()> {
+    subtitle_corpus::export::prune(dest, bucket, manifest, apply).await
 }
 
 /// Align by speech activity the films that word-matching could not place.
@@ -2981,6 +3003,15 @@ fn main() -> Result<()> {
             langs,
             bucket,
         } => publish(out, dest, data_root, jobs, langs, bucket),
+        Command_::Prune {
+            dest,
+            bucket,
+            manifest,
+            apply,
+        } => {
+            let manifest = manifest.unwrap_or_else(|| dest.join("orphan-candidates.json"));
+            prune(dest, bucket, manifest, apply)
+        }
         Command_::ExportSidecars { out } => export_sidecars(out),
         Command_::ExportYap {
             out,

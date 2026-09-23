@@ -8,6 +8,7 @@
 //! forced alignment only reads cached responses, so export neither probes
 //! the model nor spends inference, including when an alignment is missing.
 
+use std::collections::{BTreeMap, HashSet};
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -88,7 +89,7 @@ fn encode_recipe() -> String {
          hi aac{HI_AAC} le{MAX_HEIGHT}p | \
          lo libx264 crf{LO_CRF} {LO_PRESET} aac{LO_AAC} le{LO_HEIGHT}p | \
          loudnorm I{TARGET_I} TP{TP_CEIL} critical linear stereo 48000Hz | \
-         keyframe@critical faststart"
+         keyframe@critical faststart no-chapters"
     )
 }
 
@@ -170,6 +171,14 @@ fn media_stamp(
     })
 }
 
+/// Successful clip ids and operational failures, for publish's orphan candidates.
+pub struct ExportOutcome {
+    /// Current passing clip ids by course code.
+    pub valid: BTreeMap<String, HashSet<String>>,
+    /// IMDb ids whose remap or export failed; their clip ids remain unknown.
+    pub failed: HashSet<String>,
+}
+
 /// Export clips with at most `jobs` concurrent clips (at least one). Each GPU
 /// attempt uses one NVENC session; the roughly 12 sessions available on this
 /// host are shared with Jellyfin, so leave headroom when choosing `jobs`.
@@ -181,7 +190,26 @@ pub async fn export_clips(
     limit: usize,
     imdb: Option<String>,
     langs: Option<Vec<String>>,
-) -> Result<()> {
+    // Films whose stage-1 remap failed: their clips.jsonl may be gone, so they
+    // drop out of the queue below and would otherwise look like clean orphans.
+    // Exclude them from publish's orphan candidates.
+    remap_failed: HashSet<String>,
+) -> Result<ExportOutcome> {
+    // Per-clip CPU fallback is for a GPU hiccup, not a whole run: an ffmpeg
+    // without the CUDA filters (stock nixpkgs, outside the dev shell) would
+    // otherwise quietly turn a publish into days of CPU encoding.
+    let filters = Command::new("ffmpeg")
+        .args(["-hide_banner", "-filters"])
+        .output()
+        .context("running ffmpeg")?
+        .stdout;
+    let filters = String::from_utf8_lossy(&filters);
+    if !["scale_cuda", "tonemap_cuda"]
+        .iter()
+        .all(|f| filters.contains(f))
+    {
+        bail!("the ffmpeg on PATH lacks scale_cuda/tonemap_cuda; run from the dev shell (jellyfin-ffmpeg)");
+    }
     let plan = read_plan(&out)?;
     let mut queue: Vec<Movie> = plan
         .into_iter()
@@ -201,9 +229,10 @@ pub async fn export_clips(
     let store = osmo::Store::open("./.cache");
     let alignment_cache_failures = AtomicUsize::new(0);
     let (mut rendered, mut refreshed, mut unchanged) = (0usize, 0usize, 0usize);
-    let mut failed: std::collections::HashSet<&str> = std::collections::HashSet::new();
-    let mut valid: std::collections::HashMap<String, std::collections::HashSet<String>> =
-        std::collections::HashMap::new();
+    // Films that failed either stage cannot be judged for orphan candidates.
+    // Seeded with stage-1 remap failures, extended with stage-2 export failures.
+    let mut failed = remap_failed;
+    let mut valid: BTreeMap<String, HashSet<String>> = BTreeMap::new();
     for movie in &queue {
         let title = truncate(&movie.title, 34);
         match export_film(&store, movie, &out, &dest, jobs, &alignment_cache_failures).await {
@@ -218,7 +247,7 @@ pub async fn export_clips(
                 valid.entry(f.code).or_default().extend(f.ids);
             }
             Err(e) => {
-                failed.insert(&movie.imdb_id);
+                failed.insert(movie.imdb_id.clone());
                 println!("{title} ✗ {e:#}");
             }
         }
@@ -227,32 +256,6 @@ pub async fn export_clips(
     let missing = alignment_cache_failures.load(Ordering::Relaxed);
     if missing > 0 {
         eprintln!("warning: {missing} expected phoneme alignments omitted due to missing or invalid cached responses");
-    }
-
-    // Orphan sweep: a clip dir whose id no longer exists (sentence re-keyed,
-    // gate change, film dropped from the plan or its clips evicted) must not
-    // linger looking servable. Only on unfiltered runs — a partial run
-    // cannot know the full id set — and judged film by film: a film that
-    // failed this run has an unknown id set, so its dirs are kept, but one
-    // failure must not shield every other film's leftovers (2026-09-08:
-    // seven stale films kept 99 orphans in the served index for a week).
-    if imdb.is_none() && limit == 0 {
-        for (code, ids) in &valid {
-            let lang_dir = dest.join(code);
-            let mut swept = 0usize;
-            for entry in std::fs::read_dir(&lang_dir).into_iter().flatten().flatten() {
-                let path = entry.path();
-                let name = entry.file_name().to_string_lossy().into_owned();
-                let film = name.split('-').next().unwrap_or_default();
-                if path.is_dir() && !ids.contains(&name) && !failed.contains(film) {
-                    std::fs::remove_dir_all(&path)?;
-                    swept += 1;
-                }
-            }
-            if swept > 0 {
-                println!("swept {swept} orphaned clip dirs from {code}");
-            }
-        }
     }
 
     // The index is rebuilt from the sidecars on every run, so resumed and
@@ -265,7 +268,7 @@ pub async fn export_clips(
         let n = write_index(&dest.join(lang))?;
         println!("index: {lang} {n} clips");
     }
-    Ok(())
+    Ok(ExportOutcome { valid, failed })
 }
 
 async fn export_film(
@@ -408,7 +411,7 @@ async fn export_film(
     })
 }
 
-/// What one film's export produced, for totals and the orphan sweep.
+/// What one film's export produced, for totals and orphan candidates.
 struct FilmExport {
     /// Clip dirs whose renditions were (re-)encoded.
     rendered: usize,
@@ -691,10 +694,37 @@ async fn export_one(
     })
 }
 
+/// Clip ids no longer valid, excluding films with an operational failure.
+fn orphan_ids(
+    present: impl IntoIterator<Item = String>,
+    valid: &HashSet<String>,
+    failed: &HashSet<String>,
+) -> Vec<String> {
+    let mut ids: Vec<_> = present
+        .into_iter()
+        .filter(|id| {
+            !valid.contains(id) && !failed.contains(id.split('-').next().unwrap_or_default())
+        })
+        .collect();
+    ids.sort();
+    ids.dedup();
+    ids
+}
+
+/// Candidates from a completed publish, reviewed and deleted separately by prune.
+#[derive(serde::Serialize, serde::Deserialize, Default)]
+pub struct OrphanManifest {
+    /// Generation timestamp, in seconds since the Unix epoch.
+    pub generated: String,
+    /// Sorted, deduplicated clip ids by course code; excludes operational failures.
+    pub orphans: BTreeMap<String, Vec<String>>,
+}
+
 /// The full serve pipeline, [`crate::clips`]-style resumable at every stage:
 /// re-map clips (skips films whose provenance is current), export videos
 /// (skips clip dirs with a finished sidecar), upload to R2 over S3 (skips matching `.uploaded`
-/// hashes and verifies stale files against bucket ETags), then export subtitles into yap.
+/// hashes and verifies stale files against bucket ETags), records orphan candidates,
+/// then exports subtitles into yap. Orphan deletion requires a separate [`prune`].
 /// The yap export runs last so its freshness/verbatim gates see the verdicts
 /// recomputed by the clip re-map, not those from the previous run.
 /// Safe to re-run after any interruption.
@@ -710,10 +740,20 @@ pub async fn publish(
 ) -> Result<()> {
     println!("=== stage 1: clips re-map ===");
     let gate = crate::clips::Gate::default();
-    crate::clips::clips_all(out.clone(), 4, 0, None, langs.clone(), gate).await?;
+    let remap_failed =
+        crate::clips::clips_all(out.clone(), 4, 0, None, langs.clone(), gate).await?;
 
     println!("=== stage 2: video export ===");
-    export_clips(out.clone(), dest.clone(), jobs, 0, None, langs.clone()).await?;
+    let ExportOutcome { valid, failed } = export_clips(
+        out.clone(),
+        dest.clone(),
+        jobs,
+        0,
+        None,
+        langs.clone(),
+        remap_failed,
+    )
+    .await?;
 
     println!("=== stage 3: upload to {bucket} ===");
     let codes: Vec<String> = match &langs {
@@ -725,12 +765,112 @@ pub async fn publish(
             .collect(),
     };
     let r2 = crate::r2::R2::from_env(&bucket).await?;
+    let mut manifest = OrphanManifest {
+        generated: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_secs()
+            .to_string(),
+        ..Default::default()
+    };
+    let empty = HashSet::new();
     for code in codes {
-        upload_lang(&dest.join(&code), &code, &r2).await?;
+        let lang_dir = dest.join(&code);
+        let r2_ids = upload_lang(&lang_dir, &code, &r2).await?;
+        let local_ids = std::fs::read_dir(&lang_dir)?
+            .flatten()
+            .filter(|e| e.path().is_dir())
+            .map(|e| e.file_name().to_string_lossy().into_owned());
+        let ids = orphan_ids(
+            local_ids.chain(r2_ids),
+            valid.get(&code).unwrap_or(&empty),
+            &failed,
+        );
+        println!("{code}: {} orphan candidates", ids.len());
+        if !ids.is_empty() {
+            manifest.orphans.insert(code, ids);
+        }
     }
+    let manifest_path = dest.join("orphan-candidates.json");
+    std::fs::write(&manifest_path, serde_json::to_vec_pretty(&manifest)?)
+        .with_context(|| format!("writing {}", manifest_path.display()))?;
+    let total: usize = manifest.orphans.values().map(Vec::len).sum();
+    println!(
+        "{total} orphan candidates written to {}; nothing deleted (review with prune)",
+        manifest_path.display()
+    );
 
     println!("=== stage 4: subtitles into yap ===");
     export_yap(out, data_root, langs, false)?;
+    Ok(())
+}
+
+/// Review a previous publish's candidates; deletion requires explicit `apply`.
+pub async fn prune(dest: PathBuf, bucket: String, manifest: PathBuf, apply: bool) -> Result<()> {
+    let bytes = match std::fs::read(&manifest) {
+        Ok(bytes) => bytes,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            println!(
+                "No orphan manifest at {}; run publish first.",
+                manifest.display()
+            );
+            return Ok(());
+        }
+        Err(e) => return Err(e).with_context(|| format!("reading {}", manifest.display())),
+    };
+    let manifest: OrphanManifest = serde_json::from_slice(&bytes)
+        .with_context(|| format!("parsing {}", manifest.display()))?;
+    if !apply {
+        println!("DRY RUN — pass --apply to delete");
+    }
+    println!(
+        "Orphan candidates generated at {} (Unix seconds)",
+        manifest.generated
+    );
+    let r2 = crate::r2::R2::from_env(&bucket).await?;
+    let (mut local_total, mut r2_total) = (0usize, 0usize);
+    for (code, ids) in manifest.orphans {
+        let want: HashSet<&str> = ids.iter().map(String::as_str).collect();
+        let prefix = format!("{code}/");
+        let keys: Vec<String> = r2
+            .list_etags(&prefix)
+            .await?
+            .into_keys()
+            .filter(|key| {
+                key.strip_prefix(&prefix)
+                    .and_then(|rest| rest.split_once('/'))
+                    .is_some_and(|(id, _)| want.contains(id))
+            })
+            .collect();
+        let dirs: Vec<PathBuf> = want
+            .iter()
+            .map(|id| dest.join(&code).join(id))
+            .filter(|p| p.is_dir())
+            .collect();
+        println!(
+            "{code}: {} local dirs, {} R2 objects; sample ids: {}",
+            dirs.len(),
+            keys.len(),
+            ids.iter()
+                .take(5)
+                .map(String::as_str)
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        local_total += dirs.len();
+        r2_total += keys.len();
+        if apply {
+            r2.delete(keys).await?;
+            for dir in dirs {
+                std::fs::remove_dir_all(&dir)
+                    .with_context(|| format!("removing {}", dir.display()))?;
+            }
+        }
+    }
+    if apply {
+        println!("Pruned {local_total} local dirs and {r2_total} R2 objects");
+    } else {
+        println!("DRY RUN: would delete {local_total} local dirs and {r2_total} R2 objects; nothing deleted");
+    }
     Ok(())
 }
 
@@ -739,7 +879,7 @@ pub async fn publish(
 /// land. Matching markers skip work; stale files already matching bucket MD5
 /// ETags need no put. Objects are immutable by id and get a forever cache;
 /// the index gets a short one.
-async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<()> {
+async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<HashSet<String>> {
     const IMMUTABLE: &str = "public, max-age=31536000, immutable";
     let etags = r2.list_etags(&format!("{code}/")).await?;
     println!("{code}: listed {} keys in bucket", etags.len());
@@ -834,7 +974,12 @@ async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<
         .await?;
     }
     println!("{code}: {uploaded} clip dirs uploaded, {verified} verified in bucket, {skipped} already up");
-    Ok(())
+    let prefix = format!("{code}/");
+    Ok(etags
+        .keys()
+        .filter_map(|key| key.strip_prefix(&prefix)?.split_once('/'))
+        .map(|(id, _)| id.to_owned())
+        .collect())
 }
 
 /// Counts are per directory: any put makes it uploaded, otherwise all stale
@@ -1025,6 +1170,25 @@ fn clean_context_end(boundary: i64, transcript: &[Spoken]) -> bool {
 mod tests {
     use super::*;
 
+    #[test]
+    fn orphan_candidates_exclude_valid_and_failed_and_are_sorted_unique() {
+        let present = [
+            "tt3-old-0",
+            "tt1-old-0",
+            "tt2-current-0",
+            "tt4-transient-0",
+            "tt3-old-0",
+            "tt40-old-0",
+        ]
+        .map(String::from);
+        let valid = HashSet::from(["tt2-current-0".to_owned()]);
+        let failed = HashSet::from(["tt4".to_owned()]);
+        assert_eq!(
+            orphan_ids(present, &valid, &failed),
+            ["tt1-old-0", "tt3-old-0", "tt40-old-0"]
+        );
+    }
+
     #[tokio::test]
     async fn alignment_uses_shared_key_without_audio_and_counts_only_cache_failures() {
         let root = tempfile::tempdir().unwrap();
@@ -1168,6 +1332,8 @@ mod tests {
                     "0.456",
                     "-movflags",
                     "+faststart",
+                    "-map_chapters",
+                    "-1",
                     "/clips/test/hi.mp4",
                     "-map",
                     "[vl]",
@@ -1187,6 +1353,8 @@ mod tests {
                     "0.456",
                     "-movflags",
                     "+faststart",
+                    "-map_chapters",
+                    "-1",
                     "/clips/test/lo.mp4",
                 ]);
                 assert_eq!(
@@ -1628,6 +1796,11 @@ fn rendition_args(
                 &key,
                 "-movflags",
                 "+faststart",
+                // ffmpeg copies the film's chapters into every output
+                // regardless of -map; MP4 stores them as a text track as long
+                // as the film, which AVPlayer takes as the clip's duration.
+                "-map_chapters",
+                "-1",
             ]
             .map(OsString::from),
         );

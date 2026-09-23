@@ -359,7 +359,7 @@ async fn report_repair_cannot_make_a_failed_redo_look_current() {
         }
     }
     std::fs::write(dir.join("transcript.jsonl"), transcript).unwrap();
-    std::fs::write(dir.join("audio.opus"), b"must not be decoded").unwrap();
+    std::fs::write(dir.join("audio.opus"), b"deliberately corrupt audio").unwrap();
     std::fs::write(
         dir.join("audio.json"),
         serde_json::to_vec(&crate::sync::AudioStamp {
@@ -394,13 +394,16 @@ async fn report_repair_cannot_make_a_failed_redo_look_current() {
         Work::Redo("verbatim measurement missing or stale")
     );
     // First run really regenerates a matching verbatim report, then fails
-    // preparation at the absent speech profile. The second is an ordinary retry.
+    // the cut canary on corrupt audio. The second is an ordinary retry.
     for _ in 0..2 {
         let error = prepare_film(&store, &movie, &dir, &gate, 1)
             .await
             .err()
             .unwrap();
-        assert!(format!("{error:#}").contains("speech profile"), "{error:#}");
+        assert!(
+            format!("{error:#}").contains("cut canary failed"),
+            "{error:#}"
+        );
         assert_eq!(
             crate::verbatim::stored(&dir).unwrap().measure.verdict,
             crate::verbatim::Verdict::Verbatim

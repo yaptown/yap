@@ -938,6 +938,11 @@ struct PreparedFilm {
 enum FilmWork {
     Current(FilmSummary),
     Prepared(Box<PreparedFilm>),
+    /// The film-level verbatim gate rejected the subtitle: a deliberate "no
+    /// usable clips" verdict, not an operational failure. It yields zero
+    /// passing clips so the export sweeps drop any previously published ones,
+    /// unlike an error (which protects the film's artifacts for a retry).
+    Rejected,
 }
 
 fn current_provenance(
@@ -1066,10 +1071,12 @@ async fn prepare_film(
     }
     let check = crate::verbatim::check(dir, language, code, provenance.gate.min_verbatim).await?;
     if check.measure.verdict != crate::verbatim::Verdict::Verbatim {
-        bail!(
-            "subtitle not verbatim: {}",
+        println!(
+            "{}: rejected — subtitle not verbatim: {}",
+            movie.title,
             crate::verbatim::describe(&check.measure)
         );
+        return Ok(FilmWork::Rejected);
     }
 
     let target_language = if min_ratio.is_some() {
@@ -1089,6 +1096,11 @@ async fn prepare_film(
     } else {
         None
     };
+
+    // Missing ffmpeg or corrupt audio is an operational failure, not a run
+    // of per-clip cut rejections that would turn existing clips into orphans.
+    slice_wav_padded(&audio, 0, 1_000, 0, 0)
+        .with_context(|| format!("cut canary failed for {}", audio.display()))?;
 
     // The margins come from the profile; without one there is nothing to
     // cut against, and falling back to stamps would quietly change what a
@@ -1351,6 +1363,9 @@ fn score_clip(clip: &mut Clip, frames: &FrameMatrix, min_ratio: f64, gate: &Gate
 fn finish_film(work: FilmWork) -> Result<FilmSummary> {
     let film = match work {
         FilmWork::Current(summary) => return Ok(summary),
+        // A rejected film has no clips to write; its zero-pass summary lets the
+        // export sweeps drop any clips it had published under a prior verdict.
+        FilmWork::Rejected => return Ok(FilmSummary::default()),
         FilmWork::Prepared(film) => film,
     };
     let PreparedFilm {
@@ -1500,7 +1515,7 @@ pub async fn clips_all(
     imdb: Option<String>,
     langs: Option<Vec<String>>,
     gate: Gate,
-) -> Result<()> {
+) -> Result<std::collections::HashSet<String>> {
     let plan = read_plan(&out)?;
     let mut queue: Vec<Movie> = plan
         .into_iter()
@@ -1523,7 +1538,7 @@ pub async fn clips_all(
     let total = queue.len();
     println!("{total} transcribed films to map");
     if total == 0 {
-        return Ok(());
+        return Ok(std::collections::HashSet::new());
     }
     let redo: Vec<Movie> = queue
         .iter()
@@ -1598,6 +1613,7 @@ pub async fn clips_all(
     .await;
 
     let mut done = Vec::new();
+    let mut failed = std::collections::HashSet::new();
     for (n, (index, outcome)) in films.into_iter().enumerate() {
         let n = n + 1;
         let movie = &queue[index];
@@ -1618,7 +1634,17 @@ pub async fn clips_all(
                 }
                 done.push(s);
             }
-            Err(e) => println!("[{n}/{total}] {title} ✗ {e:#}"),
+            Err(e) => {
+                // Operational failure (IO, g2p preflight, model inference): a
+                // redo may have removed clips.jsonl before bailing (see
+                // prepare_film), so this film drops out of the export queue.
+                // Report it so the export sweeps leave its already-published
+                // artifacts alone for a retry, rather than treating it as
+                // dropped. A deliberate verbatim rejection is not an error and
+                // is swept normally (see FilmWork::Rejected).
+                failed.insert(movie.imdb_id.clone());
+                println!("[{n}/{total}] {title} ✗ {e:#}");
+            }
         }
     }
     println!(
@@ -1628,7 +1654,7 @@ pub async fn clips_all(
         done.iter().map(|s| s.aligned).sum::<usize>(),
         done.iter().map(|s| s.passed).sum::<usize>()
     );
-    Ok(())
+    Ok(failed)
 }
 
 #[cfg(test)]

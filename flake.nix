@@ -40,6 +40,13 @@
             libopus
             libopus.dev
 
+            # subtitle-corpus cuts clips on the GPU (scale_cuda + tonemap_cuda
+            # for HDR->SDR), which stock ffmpeg lacks. jellyfin-ffmpeg is built
+            # with CUDA, so pinning it here means the `ffmpeg` on the dev shell's
+            # PATH always has the GPU filters — publish can't silently fall back
+            # to a day of CPU encoding just because the system ffmpeg changed.
+            jellyfin-ffmpeg
+
             # Node / frontend
             nodejs_22
             pnpm
