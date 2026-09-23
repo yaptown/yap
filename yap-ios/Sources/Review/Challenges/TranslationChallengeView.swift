@@ -27,7 +27,7 @@ struct TranslationChallengeView: View {
     }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
-        VStack(spacing: 12) {
+        ReviewStepScrollView {
             StudyCard {
                 if let badge = view.badge { ReviewBadge(text: badge) }
                 HStack(alignment: .center, spacing: 8) {
@@ -73,6 +73,7 @@ struct TranslationChallengeView: View {
             if editing {
                 MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId))
             }
+        } actions: {
             if view.verdict != nil {
                 Button { send(.Continue) } label: { Text(view.continue_label).frame(maxWidth: .infinity) }
                     .disabled(!view.can_continue || actions.submitting)

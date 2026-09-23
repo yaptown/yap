@@ -14,7 +14,7 @@ struct PronunciationChallengeView: View {
         pronunciation_view(pattern: pattern, guide: guide, cues: cues, is_new: isNew, times_type_seen: timesSeen)
     }
     var body: some View {
-        VStack(spacing: 12) {
+        ReviewStepScrollView {
             if let prompt = view.tutorial_prompt { TutorialPromptText(prompt: prompt) }
             StudyCard {
                 HStack(alignment: .center, spacing: 8) {
@@ -34,6 +34,7 @@ struct PronunciationChallengeView: View {
             if let prompt = view.tutorial_grade_prompt {
                 Text(prompt).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
+        } actions: {
             HStack(spacing: 12) {
                 Button { rate(.Again) } label: { Text(view.again_label).frame(maxWidth: .infinity) }.tint(Tokens.palette.destructive.color).foregroundStyle(Color.yapDestructiveForeground)
                 Button { rate(.Remembered) } label: { Text(view.remembered_label).frame(maxWidth: .infinity) }

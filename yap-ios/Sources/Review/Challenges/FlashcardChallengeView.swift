@@ -23,7 +23,7 @@ struct FlashcardChallengeView: View {
     private var canGrade: Bool { hasOpened || revealed || !view.require_answer_reveal }
     private var listening: Bool { if case .Listening = flashcard.content { true } else { false } }
     var body: some View {
-        VStack(spacing: 12) {
+        ReviewStepScrollView {
             if !revealed, let prompt = view.tutorial_prompt {
                 TutorialPromptText(prompt: prompt)
             }
@@ -71,6 +71,7 @@ struct FlashcardChallengeView: View {
             if !revealed, let hint = view.tutorial_hidden_hint {
                 Text(hint).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
+        } actions: {
             if revealed, let hint = view.tutorial_revealed_hint {
                 Text(hint).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }

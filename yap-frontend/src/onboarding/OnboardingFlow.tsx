@@ -334,7 +334,7 @@ const srsStudies = [
   },
 ];
 
-function SrsTeaserScreen({ onNext }: { onNext: () => void }) {
+function SrsTeaserScreen() {
   return (
     <ScreenWrapper screenKey="srs-teaser">
       <h2
@@ -398,18 +398,13 @@ function SrsTeaserScreen({ onNext }: { onNext: () => void }) {
           Spaced repetition.
         </motion.h3>
       </div>
-      <Button size="lg" onClick={onNext} className="px-8 text-base">
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
     </ScreenWrapper>
   );
 }
 
 // Screen: SRS Intro
-function SrsIntroScreen({ onNext }: { onNext: () => void }) {
+function SrsIntroScreen({ reviewCount }: { reviewCount: number }) {
   // 0 = nothing shown, 1/2/3 = curves visible, 4 = "word learned" state
-  const [reviewCount, setReviewCount] = useState(0);
   const totalCurves = 3;
   const learned = reviewCount > totalCurves;
 
@@ -468,27 +463,6 @@ function SrsIntroScreen({ onNext }: { onNext: () => void }) {
             </motion.div>
           )}
         </AnimatePresence>
-
-        <Button
-          size="lg"
-          className="mt-2 px-8 text-base"
-          onClick={() => {
-            if (learned) {
-              onNext();
-            } else {
-              setReviewCount((c) => c + 1);
-            }
-          }}
-        >
-          {learned ? (
-            <>
-              Continue
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </>
-          ) : (
-            "Review"
-          )}
-        </Button>
       </Card>
     </ScreenWrapper>
   );
@@ -573,7 +547,7 @@ function GrowthChart() {
   );
 }
 
-function SrsConclusionScreen({ onNext }: { onNext: () => void }) {
+function SrsConclusionScreen() {
   return (
     <ScreenWrapper screenKey="srs-conclusion">
       <h2
@@ -583,18 +557,18 @@ function SrsConclusionScreen({ onNext }: { onNext: () => void }) {
         That's why if you study a little bit every day, you'll learn a lot.
       </h2>
       <GrowthChart />
-      <Button size="lg" onClick={onNext} className="px-8 text-base">
-        Set a goal
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
     </ScreenWrapper>
   );
 }
 
 // Screen 2: How did you hear about Yap?
-function HeardAboutScreen({ onSelect }: { onSelect: (v: HeardAbout) => void }) {
-  const [selected, setSelected] = useState<HeardAbout | null>(null);
-
+function HeardAboutScreen({
+  selected,
+  onSelect,
+}: {
+  selected: HeardAbout | null;
+  onSelect: (v: HeardAbout) => void;
+}) {
   const options: Array<{ key: HeardAbout; label: string; icon: LucideIcon }> = [
     { key: "FriendsOrFamily", label: "Friends or family", icon: Users },
     { key: "Reddit", label: "Reddit", icon: Globe },
@@ -619,19 +593,10 @@ function HeardAboutScreen({ onSelect }: { onSelect: (v: HeardAbout) => void }) {
             label={opt.label}
             icon={opt.icon}
             selected={selected === opt.key}
-            onClick={() => setSelected(opt.key)}
+            onClick={() => onSelect(opt.key)}
           />
         ))}
       </div>
-      <Button
-        size="lg"
-        disabled={!selected}
-        onClick={() => selected && onSelect(selected)}
-        className="mt-2 px-8 text-base"
-      >
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
     </ScreenWrapper>
   );
 }
@@ -640,12 +605,10 @@ function HeardAboutScreen({ onSelect }: { onSelect: (v: HeardAbout) => void }) {
 function MotivationScreen({
   value,
   onChange,
-  onNext,
   targetLanguage,
 }: {
   value: Motivation | null;
   onChange: (v: Motivation) => void;
-  onNext: () => void;
   targetLanguage: Language;
 }) {
   const options: Array<{ key: Motivation; label: string; icon: LucideIcon }> = [
@@ -685,15 +648,6 @@ function MotivationScreen({
           />
         ))}
       </div>
-      <Button
-        size="lg"
-        disabled={!value}
-        onClick={onNext}
-        className="mt-2 px-8 text-base"
-      >
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
     </ScreenWrapper>
   );
 }
@@ -702,12 +656,10 @@ function MotivationScreen({
 function ExperienceScreen({
   value,
   onChange,
-  onNext,
   targetLanguage,
 }: {
   value: ExperienceLevel | null;
   onChange: (v: ExperienceLevel) => void;
-  onNext: () => void;
   targetLanguage: Language;
 }) {
   const options: Array<{
@@ -757,21 +709,12 @@ function ExperienceScreen({
           />
         ))}
       </div>
-      <Button
-        size="lg"
-        disabled={!value}
-        onClick={onNext}
-        className="mt-2 px-8 text-base"
-      >
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
     </ScreenWrapper>
   );
 }
 
 // Screen 5: What you can achieve
-function AchievementsScreen({ onNext }: { onNext: () => void }) {
+function AchievementsScreen() {
   const items = [
     { icon: "💬", text: "Converse with confidence" },
     { icon: "📚", text: "Build a large vocabulary" },
@@ -794,10 +737,6 @@ function AchievementsScreen({ onNext }: { onNext: () => void }) {
           </Card>
         ))}
       </div>
-      <Button size="lg" onClick={onNext} className="mt-2 px-8 text-base">
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
     </ScreenWrapper>
   );
 }
@@ -806,11 +745,9 @@ function AchievementsScreen({ onNext }: { onNext: () => void }) {
 function DailyReviewTargetScreen({
   value,
   onChange,
-  onNext,
 }: {
   value: DailyReviewTarget | null;
   onChange: (v: DailyReviewTarget) => void;
-  onNext: () => void;
 }) {
   const icons: Record<DailyReviewTarget, LucideIcon> = {
     Casual: SignalLow, Regular: SignalMedium, Serious: SignalHigh, Intense: Signal,
@@ -852,15 +789,6 @@ function DailyReviewTargetScreen({
           </motion.p>
         )}
       </AnimatePresence>
-      <Button
-        size="lg"
-        disabled={!value}
-        onClick={onNext}
-        className="mt-2 px-8 text-base"
-      >
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
     </ScreenWrapper>
   );
 }
@@ -962,34 +890,15 @@ function ReadyScreen({
         </p>
       )}
 
-      {isNew ? (
+      {!isNew && (
         <Button
           size="lg"
-          className="mt-2 px-8 text-base bg-primary hover:bg-primary/90"
+          variant="outline"
+          className="w-full max-w-sm"
           onClick={() => onComplete(true)}
         >
-          {LANGUAGES[targetLanguage].letsGo}
-          <ArrowRight className="h-4 w-4 ml-2" />
+          Start from scratch
         </Button>
-      ) : (
-        <div className="flex flex-col gap-3 w-full max-w-sm">
-          <Button
-            size="lg"
-            className="w-full bg-primary hover:bg-primary/90"
-            onClick={() => onComplete(false)}
-          >
-            Find my level
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="w-full"
-            onClick={() => onComplete(true)}
-          >
-            Start from scratch
-          </Button>
-        </div>
       )}
     </ScreenWrapper>
   );
@@ -1026,6 +935,8 @@ export function OnboardingFlow({
   onBack,
 }: OnboardingFlowProps) {
   const [step, setStep] = useState(0);
+  const [heardAbout, setHeardAbout] = useState<HeardAbout | null>(null);
+  const [reviewCount, setReviewCount] = useState(0);
   const [data, setData] = useState<OnboardingData>({
     motivation: null,
     experience: null,
@@ -1058,10 +969,16 @@ export function OnboardingFlow({
   const currentScreen = screens[step];
 
   const next = useCallback(
-    () => setStep((s) => Math.min(s + 1, totalSteps - 1)),
+    () => {
+      setStep((s) => Math.min(s + 1, totalSteps - 1));
+      setHeardAbout(null);
+      setReviewCount(0);
+    },
     [totalSteps],
   );
   const prev = useCallback(() => {
+    setHeardAbout(null);
+    setReviewCount(0);
     if (step === 0) {
       onBack();
     } else {
@@ -1081,8 +998,49 @@ export function OnboardingFlow({
     [onComplete, data],
   );
 
+  const reviewing = currentScreen === "srs-intro" && reviewCount <= 3;
+  const primary = (() => {
+    switch (currentScreen) {
+      case "notifications":
+        return null;
+      case "heard-about":
+        return {
+          label: "Continue",
+          disabled: !heardAbout,
+          onClick: () => {
+            if (heardAbout) {
+              onHeardAbout(heardAbout);
+              next();
+            }
+          },
+        };
+      case "motivation":
+        return { label: "Continue", disabled: !data.motivation, onClick: next };
+      case "experience":
+        return { label: "Continue", disabled: !data.experience, onClick: next };
+      case "study-goal":
+        return { label: "Continue", disabled: !data.studyGoal, onClick: next };
+      case "srs-intro":
+        return {
+          label: reviewing ? "Review" : "Continue",
+          onClick: reviewing ? () => setReviewCount((c) => c + 1) : next,
+        };
+      case "srs-conclusion":
+        return { label: "Set a goal", onClick: next };
+      case "ready":
+        return {
+          label: data.experience === "New"
+            ? LANGUAGES[targetLanguage].letsGo
+            : "Find my level",
+          onClick: () => handleComplete(data.experience === "New"),
+        };
+      default:
+        return { label: "Continue", onClick: next };
+    }
+  })();
+
   return (
-    <div className="w-full flex flex-col items-center px-4 py-8 overflow-x-clip">
+    <div className="w-full flex flex-col items-center px-4 pt-8 pb-28 overflow-x-clip">
       <OnboardingProgress current={step} total={totalSteps} />
 
       {/* Back button */}
@@ -1099,24 +1057,19 @@ export function OnboardingFlow({
       </div>
 
       {/* Screen content */}
-      {currentScreen === "srs-teaser" && <SrsTeaserScreen onNext={next} />}
-      {currentScreen === "srs-intro" && <SrsIntroScreen onNext={next} />}
-      {currentScreen === "srs-conclusion" && (
-        <SrsConclusionScreen onNext={next} />
-      )}
+      {currentScreen === "srs-teaser" && <SrsTeaserScreen />}
+      {currentScreen === "srs-intro" && <SrsIntroScreen reviewCount={reviewCount} />}
+      {currentScreen === "srs-conclusion" && <SrsConclusionScreen />}
       {currentScreen === "heard-about" && (
         <HeardAboutScreen
-          onSelect={(v) => {
-            onHeardAbout(v);
-            next();
-          }}
+          selected={heardAbout}
+          onSelect={setHeardAbout}
         />
       )}
       {currentScreen === "motivation" && (
         <MotivationScreen
           value={data.motivation}
           onChange={(v) => setData((d) => ({ ...d, motivation: v }))}
-          onNext={next}
           targetLanguage={targetLanguage}
         />
       )}
@@ -1124,16 +1077,14 @@ export function OnboardingFlow({
         <ExperienceScreen
           value={data.experience}
           onChange={(v) => setData((d) => ({ ...d, experience: v }))}
-          onNext={next}
           targetLanguage={targetLanguage}
         />
       )}
-      {currentScreen === "achievements" && <AchievementsScreen onNext={next} />}
+      {currentScreen === "achievements" && <AchievementsScreen />}
       {currentScreen === "study-goal" && (
         <DailyReviewTargetScreen
           value={data.studyGoal}
           onChange={(v) => setData((d) => ({ ...d, studyGoal: v }))}
-          onNext={next}
         />
       )}
       {currentScreen === "notifications" && (
@@ -1145,6 +1096,21 @@ export function OnboardingFlow({
           experience={data.experience}
           onComplete={handleComplete}
         />
+      )}
+      {primary && (
+        <div className="fixed inset-x-0 bottom-0 z-20 bg-background px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:pointer-events-none md:bg-transparent">
+          <div className="mx-auto flex w-full max-w-lg md:justify-end">
+            <Button
+              size="lg"
+              disabled={primary.disabled}
+              onClick={primary.onClick}
+              className="w-full px-8 text-base md:pointer-events-auto md:w-auto"
+            >
+              {primary.label}
+              {!reviewing && <ArrowRight className="h-4 w-4 ml-2" />}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

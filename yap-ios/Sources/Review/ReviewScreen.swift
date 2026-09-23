@@ -9,34 +9,40 @@ struct ReviewScreen: View {
         VStack(spacing: 0) {
             ProgressView(value: view.progress)
                 .progressViewStyle(.linear).tint(Color.yapAccent).frame(height: 3)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    TimelineView(.periodic(from: .now, by: 1)) { context in
-                        if let weapon = host.weapon {
-                            let sync = weapon.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,
-                                manual_sync_in_flight: false, host_sync_error: host.syncError)
-                            VStack(alignment: .leading, spacing: 12) {
-                                if let banner = sync.offline_banner { Label(banner, systemImage: "wifi.slash").font(.caption).foregroundStyle(.secondary) }
-                                if let error = sync.error { Text(error).font(.caption).foregroundStyle(Color.yapNegativeForeground) }
-                            }
+            VStack(alignment: .leading, spacing: 12) {
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    if let weapon = host.weapon {
+                        let sync = weapon.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,
+                            manual_sync_in_flight: false, host_sync_error: host.syncError)
+                        VStack(alignment: .leading, spacing: 12) {
+                            if let banner = sync.offline_banner { Label(banner, systemImage: "wifi.slash").font(.caption).foregroundStyle(.secondary) }
+                            if let error = sync.error { Text(error).font(.caption).foregroundStyle(Color.yapNegativeForeground) }
                         }
                     }
-                    if let banner = host.packBanner {
-                        HStack {
-                            Text(banner.message).font(.caption).foregroundStyle(.secondary)
-                            Button(banner.retry_label, action: actions.retryPack).font(.caption)
+                }
+                if let banner = host.packBanner {
+                    HStack {
+                        Text(banner.message).font(.caption).foregroundStyle(.secondary)
+                        Button(banner.retry_label, action: actions.retryPack).font(.caption)
+                    }
+                }
+                if let error = host.authError { Text(error).font(.caption).foregroundStyle(.secondary) }
+            }.padding(.horizontal, 12).frame(maxWidth: 600)
+            switch view.step {
+            case let .Challenge(challenge): challengeView(challenge).id(challenge.challenge)
+            case let .Accomplishment(accomplishment): AccomplishmentScreen(view: accomplishment, addEvent: actions.addEvent, onDismiss: actions.dismissAccomplishment)
+            default:
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        switch view.step {
+                        case let .PlacementTest(placement): PlacementTestView(placement: placement)
+                        case let .ReviewPlan(plan): ReviewPlanScreen(cards: plan.cards) { actions.addEvent(plan.event) }
+                        case .SetDisplayName: SetDisplayNameView(reviewCount: view.total_reviews)
+                        case let .Idle(idle): IdleScreen(view: idle)
+                        default: EmptyView()
                         }
-                    }
-                    if let error = host.authError { Text(error).font(.caption).foregroundStyle(.secondary) }
-                    switch view.step {
-                    case let .PlacementTest(placement): PlacementTestView(placement: placement)
-                    case let .ReviewPlan(plan): ReviewPlanScreen(cards: plan.cards) { actions.addEvent(plan.event) }
-                    case .SetDisplayName: SetDisplayNameView(reviewCount: view.total_reviews)
-                    case let .Accomplishment(accomplishment): AccomplishmentScreen(view: accomplishment, addEvent: actions.addEvent, onDismiss: actions.dismissAccomplishment)
-                    case let .Challenge(challenge): challengeView(challenge).id(challenge.challenge)
-                    case let .Idle(idle): IdleScreen(view: idle)
-                    }
-                }.padding(12).frame(maxWidth: 600)
+                    }.padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                }
             }
         }
         .environment(\.reviewScreen, view)
@@ -71,6 +77,19 @@ struct ReviewScreen: View {
             TranslationChallengeView(sentence: sentence, initialState: challenge.translation ?? translation_start(sentence: sentence, course: Course(native_language: view.native_language, target_language: view.target_language)))
         case let .TranscribeComprehensibleSentence(sentence):
             TranscriptionChallengeView(sentence: sentence, initialState: challenge.transcription)
+        }
+    }
+}
+
+struct ReviewStepScrollView<Content: View, Actions: View>: View {
+    @ViewBuilder let content: () -> Content
+    @ViewBuilder let actions: () -> Actions
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 12, content: content).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
+        }.safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 12, content: actions).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                .background(Color(uiColor: .systemGroupedBackground))
         }
     }
 }

@@ -32,13 +32,15 @@ struct OnboardingFlowView: View {
                     ProgressView(value: Double(step + 1), total: Double(screens.count)).accessibilityLabel("Step \(step + 1) of \(screens.count)").id("top")
                     Button("Back", systemImage: "chevron.left", action: back)
                     StudyCard { content }
-                    Button(buttonTitle, action: next)
-                        .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                        .frame(maxWidth: .infinity).disabled(!canContinue)
                     if screen == "ready", experience != .New {
                         Button("Start from scratch") { finish(startingFresh: true) }.controlSize(.large)
                     }
-                }.padding(20).frame(maxWidth: 600)
+                }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+            }.safeAreaInset(edge: .bottom, spacing: 0) {
+                Button(action: next) { Text(buttonTitle).frame(maxWidth: .infinity) }
+                    .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(!canContinue)
+                    .padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                    .background(Color(uiColor: .systemGroupedBackground))
             }.onChange(of: step) { _, _ in proxy.scrollTo("top", anchor: .top) }
         }
         .background(Color(uiColor: .systemGroupedBackground))

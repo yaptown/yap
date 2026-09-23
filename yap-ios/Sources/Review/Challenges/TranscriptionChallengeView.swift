@@ -27,7 +27,7 @@ struct TranscriptionChallengeView: View {
     private var blanks: [Int] { view.blanks.map { Int($0.index) } }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
-        VStack(spacing: 12) {
+        ReviewStepScrollView {
             StudyCard {
                 if sentence.second_chance { ReviewBadge(text: "Second chance") }
                 // Like the web: a big speaker on top, then the sentence with its blanks inline.
@@ -76,6 +76,7 @@ struct TranscriptionChallengeView: View {
             if editing {
                 MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId))
             }
+        } actions: {
             if view.verdict == nil {
                 Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
