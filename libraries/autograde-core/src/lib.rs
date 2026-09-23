@@ -45,6 +45,43 @@ pub enum GradeError {
     Llm(String),
 }
 
+/// Convert zero-based literal positions to the grader's one-based indices.
+/// Never fall back to matching text: a repeated form can have another sense.
+fn primary_expression_instruction(
+    primary_expression: &language_utils::TaggedGram<language_utils::Gram<String>>,
+    primary_literal_indices: &[usize],
+    index_to_position: &[usize],
+    primary_is_phrase: bool,
+    target_language: language_utils::Language,
+) -> String {
+    let display = primary_expression.to_display_string(target_language);
+    let indices = index_to_position
+        .iter()
+        .enumerate()
+        .filter(|(_, position)| primary_literal_indices.contains(position))
+        .map(|(index, _)| (index + 1).to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    if primary_is_phrase {
+        let occurrence = if indices.is_empty() {
+            String::new()
+        } else {
+            format!(" at literal grading indices {indices}")
+        };
+        format!(
+            "The phrase \"{display}\"{occurrence} motivated this challenge, so please always include it in either phrases_remembered or phrases_forgot."
+        )
+    } else if indices.is_empty() {
+        // Older requests or unmatched expressions have no reliable occurrence.
+        // Do not force a grade on an arbitrary word with the same spelling.
+        String::new()
+    } else {
+        format!(
+            "The expression \"{display}\" at literal grading indices {indices} motivated this challenge, so please always grade these occurrences as Remembered or Forgot (not null) in literal_grades. Other occurrences of the same text are not the primary expression."
+        )
+    }
+}
+
 /// Grade a user's translation attempt, identifying which words/phrases they
 /// remembered vs. forgot. Pure logic: pass in whichever [`ChatClient`] you want
 /// to use (reasoning effort, model, endpoint are all configured on the client).
@@ -59,6 +96,7 @@ pub async fn grade_translation(
         phrases,
         course,
         primary_expression,
+        primary_literal_indices,
         context,
     } = request;
 
@@ -157,38 +195,13 @@ pub async fn grade_translation(
             .join("\n")
     };
 
-    let primary_expression_system_instruction = if primary_is_phrase {
-        let display = primary_expression.to_display_string(target_language);
-        format!(
-            "The phrase \"{display}\" motivated this challenge, so please always include it in either phrases_remembered or phrases_forgot."
-        )
-    } else {
-        let words: Vec<&str> = primary_expression
-            .gram
-            .0
-            .iter()
-            .filter_map(|atom| match atom {
-                language_utils::Atom::Tok(word) => Some(word.text.as_str()),
-                _ => None,
-            })
-            .collect();
-        if words.len() == 1 {
-            format!(
-                "The word \"{}\" motivated this challenge, so please always grade it as Remembered or Forgot (not null) in literal_grades.",
-                words[0]
-            )
-        } else {
-            format!(
-                "The words {words} motivated this challenge, so please always grade at least one of them as Remembered or Forgot (not null) in literal_grades. If you mark at least one of them as \"forgot\", the user will be shown more words with the words \"{display}\".",
-                words = words
-                    .iter()
-                    .map(|w| format!("\"{w}\""))
-                    .collect::<Vec<_>>()
-                    .join(", "),
-                display = primary_expression.to_display_string(target_language)
-            )
-        }
-    };
+    let primary_expression_system_instruction = primary_expression_instruction(
+        primary_expression,
+        primary_literal_indices,
+        &index_to_position,
+        primary_is_phrase,
+        target_language,
+    );
 
     let system_prompt = format!(
         r#"{PERSONALITY}The user is learning {target_language_name}. They were challenged to translate a {target_language_name} sentence to {native_language_name}. Your goal is to identify which {target_language_name} words or phrases they remembered, and which ones they forgot. If they translated the sentence correctly, that means they remembered everything! But if they translated the sentence incorrectly, we need to figure out what words and phrases they seemed to have remembered correctly, and which ones they seem to have remembered incorrectly. This will be used as part of a spaced-repetition system, which will help users study the words they need to.
@@ -373,6 +386,41 @@ Phrases:
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn primary_instruction_names_the_repeated_occurrence_not_its_spelling() {
+        use language_utils::{Atom, Gram, Heteronym, Language, PartOfSpeech, TaggedGram, Word};
+        let primary = TaggedGram {
+            gram: Gram(vec![Atom::Tok(Word {
+                text: "bank".into(),
+                word_type: language_utils::WordType::Heteronym(Heteronym {
+                    word: "bank".into(),
+                    lemma: "bank".into(),
+                    pos: PartOfSpeech::Noun,
+                }),
+            })]),
+            sense: std::num::NonZeroU32::new(2),
+        };
+        // Literals are [bank, comma, bank]; only positions 0 and 2 are
+        // gradable, so the second bank is grading index 2, not 3.
+        let instruction =
+            primary_expression_instruction(&primary, &[2], &[0, 2], false, Language::English);
+        assert!(instruction.contains("\"bank\" at literal grading indices 2"));
+        assert!(!instruction.contains("indices 1"));
+        assert!(!instruction.contains("indices 3"));
+        assert!(
+            instruction
+                .contains("Other occurrences of the same text are not the primary expression")
+        );
+        let phrase =
+            primary_expression_instruction(&primary, &[0, 2], &[0, 2], true, Language::English);
+        assert!(phrase.contains("indices 1, 2"));
+        assert!(phrase.contains("phrases_remembered or phrases_forgot"));
+        assert!(
+            primary_expression_instruction(&primary, &[], &[0, 2], false, Language::English)
+                .is_empty()
+        );
+    }
 
     #[test]
     fn grader_context_renders_only_when_present() {

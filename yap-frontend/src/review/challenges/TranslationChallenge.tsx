@@ -29,7 +29,6 @@ import {
   get_app_version,
   type Language,
   type Deck,
-  type Heteronym,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 
 import { Badge } from "@/components/ui/badge";
@@ -82,7 +81,7 @@ interface SentenceChallengeProps {
     grade:
       | ManualTranslationGrade
       | { perfect: string | null },
-    heteronymsTapped: Heteronym<string>[],
+    hintedLiteralIndices: number[],
     submission: string,
     completedAtMs: number,
   ) => boolean;
@@ -432,7 +431,7 @@ export function TranslationChallenge({
             sentence.target_language_literals, sentence.unique_target_language_phrases,
             accessToken, step.state.course, sentence.gram_definitions_for_lookup,
             new Uint32Array(sentence.literal_gram_indices), sentence.phrase_definitions,
-            sentence.primary_expression, sentence.movie_titles,
+            sentence.primary_expression, new Uint32Array(sentence.primary_literal_indices ?? []), sentence.movie_titles,
           ).then(response => {
             if (generation !== gradingGenerationRef.current) return;
             if (response.autograding_error) reportAutogradeFailure("translation", response.autograding_error);
@@ -450,7 +449,7 @@ export function TranslationChallenge({
           break;
         case "Complete": {
           const accepted = onComplete(effect.outcome.type === "Perfect" ? { perfect: null } : effect.outcome.grade,
-            effect.heteronyms_tapped, effect.submission, effect.completed_at_ms);
+            effect.hinted_literal_indices, effect.submission, effect.completed_at_ms);
           if (accepted) {
             storage?.clear();
             bumpBackground(30.0);

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { SentenceList } from "@/browse/useSentenceList";
-import type { Deck, DeckEvent, PlacementSession, Rating, PartGraded, ManualTranslationGrade, Heteronym } from "../../../yap-frontend-rs/pkg";
+import type { Deck, DeckEvent, PlacementSession, Rating, PartGraded, ManualTranslationGrade } from "../../../yap-frontend-rs/pkg";
 
 export type ReviewHost = {
   deck: Deck;
@@ -14,7 +14,7 @@ export type ReviewActions = {
   onRating: (rating: Rating) => boolean;
   onTranslationComplete: (
     grade: ManualTranslationGrade | { perfect: string | null },
-    tapped: Heteronym<string>[], submission: string, completedAtMs: number,
+    tapped: number[], submission: string, completedAtMs: number,
   ) => boolean;
   onTranscriptionComplete: (grade: PartGraded[], completedAtMs: number) => boolean;
   onCantListen: () => void;

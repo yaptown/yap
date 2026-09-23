@@ -506,3 +506,315 @@ mod tests {
         assert!(word.senses[1].is_in_deck);
     }
 }
+
+#[cfg(test)]
+mod translation_sense_tests {
+    use super::*;
+    use crate::{CardData, Context, DeckEvent, DeckState};
+    use language_utils::{
+        ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyEntry, GramFrequencyList,
+        GramVocabEntry, Heteronym, MultiwordTermMatch, PartOfSpeech, SentenceGram, SentenceGrams,
+        TaggedGram, TargetToNativeWord, Word,
+        autograde::{LiteralGrades, Remembered},
+        language_pack::LanguagePack,
+    };
+    use std::{num::NonZeroU32, sync::Arc};
+
+    fn gram(text: &str, sense: u32) -> TaggedGram<Gram<String>> {
+        TaggedGram {
+            gram: Gram(
+                text.split_whitespace()
+                    .map(|word| {
+                        Atom::Tok(Word {
+                            text: word.into(),
+                            word_type: WordType::Heteronym(Heteronym {
+                                word: word.into(),
+                                lemma: word.into(),
+                                pos: PartOfSpeech::Noun,
+                            }),
+                        })
+                    })
+                    .collect(),
+            ),
+            sense: NonZeroU32::new(sense),
+        }
+    }
+
+    fn deck() -> Deck {
+        // Sense 1 is deliberately first in the inventory; sense 2 must never
+        // silently become sense 1 when grading an occurrence or an inner word.
+        let entries = [
+            gram("bank", 1),
+            gram("bank", 2),
+            gram("river", 0),
+            gram("river bank", 0),
+        ];
+        let encoded = |grams, multiword_terms| SentenceGrams {
+            grams,
+            capitalize_first: true,
+            multiword_terms,
+            low_confidence_multiword_terms: vec![],
+        };
+        let sentences: Vec<(String, SentenceGrams<TaggedGram<Gram<String>>>)> = vec![
+            (
+                "Bank".into(),
+                encoded(vec![SentenceGram::Learnable(gram("bank", 2))], vec![]),
+            ),
+            (
+                "Bank bank".into(),
+                encoded(
+                    vec![
+                        SentenceGram::Learnable(gram("bank", 1)),
+                        SentenceGram::Learnable(gram("bank", 2)),
+                    ],
+                    vec![],
+                ),
+            ),
+            (
+                "River bank".into(),
+                encoded(vec![SentenceGram::Learnable(gram("river bank", 0))], vec![]),
+            ),
+            (
+                "Bank river bank".into(),
+                encoded(
+                    vec![
+                        SentenceGram::Learnable(gram("bank", 1)),
+                        SentenceGram::Learnable(gram("river", 0)),
+                        SentenceGram::Learnable(gram("bank", 2)),
+                    ],
+                    vec![MultiwordTermMatch {
+                        gram: gram("river bank", 0),
+                        matched_word_indices: vec![1, 2],
+                    }],
+                ),
+            ),
+        ];
+        let course = Course {
+            target_language: Language::English,
+            native_language: Language::French,
+        };
+        let data = ConsolidatedLanguageData {
+            target_language_sentences: sentences.iter().map(|(text, _)| text.clone()).collect(),
+            translations: sentences
+                .iter()
+                .map(|(text, _)| (text.clone(), vec!["Une traduction".into()]))
+                .collect(),
+            encoded_sentences: sentences,
+            gram_vocabulary: entries
+                .iter()
+                .map(|g| GramVocabEntry {
+                    atoms: g.gram.clone(),
+                    frequency: 10,
+                })
+                .collect(),
+            gram_frequencies: GramFrequencyList {
+                entries: entries
+                    .iter()
+                    .map(|g| GramFrequencyEntry {
+                        gram: g.clone(),
+                        count: if *g == gram("bank", 1) { 30 } else { 10 },
+                        direct_count: if *g == gram("bank", 1) { 30 } else { 10 },
+                        disambiguation_key: 0,
+                    })
+                    .collect(),
+                total_count: 60,
+            },
+            gram_dictionary: entries
+                .iter()
+                .map(|g| {
+                    (
+                        g.clone(),
+                        DictionaryEntry {
+                            target_language_word: g.to_display_string(Language::English),
+                            definitions: vec![TargetToNativeWord {
+                                native: "meaning".into(),
+                                note: None,
+                                example_sentence_target_language: String::new(),
+                                example_sentence_native_language: String::new(),
+                                cognate: false,
+                                false_cognate: false,
+                            }],
+                            morphology: vec![],
+                            segments: vec![],
+                        },
+                    )
+                })
+                .collect(),
+            ..Default::default()
+        };
+        let context = Context {
+            study_goal: None,
+            language_pack: Arc::new(LanguagePack::new(data, course)),
+            course,
+            timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+        };
+        <Deck as weapon::AppState>::finalize(DeckState::new(), &context)
+    }
+
+    fn replay(deck: Deck, event: DeckEvent) -> Deck {
+        let context = deck.context.clone();
+        let event = weapon::data_model::Timestamped {
+            timestamp: chrono::Utc::now(),
+            within_device_events_index: 0,
+            timezone: Some(context.timezone),
+            event,
+        };
+        let state =
+            <Deck as weapon::AppState>::process_event(DeckState::from(deck), &context, &event);
+        <Deck as weapon::AppState>::finalize(state, &context)
+    }
+
+    fn indicator(
+        deck: &Deck,
+        text: &str,
+        sense: u32,
+    ) -> CardIndicator<language_utils::SpurGram, lasso::Spur> {
+        CardIndicator::WrittenGram {
+            gram: deck
+                .context
+                .language_pack
+                .resolve_entry(&gram(text, sense))
+                .unwrap(),
+        }
+    }
+
+    fn hold(mut deck: Deck, text: &str, sense: u32) -> Deck {
+        let CardIndicator::WrittenGram { gram: entry } = indicator(&deck, text, sense) else {
+            unreachable!()
+        };
+        let index = deck
+            .context
+            .language_pack
+            .gram_frequencies
+            .entries
+            .get_index_of(&entry)
+            .unwrap();
+        let event = deck.add_gram_by_frequency_index(index).unwrap();
+        deck = replay(deck, event);
+        let event = deck
+            .review_card(
+                CardIndicator::WrittenGram {
+                    gram: gram(text, sense),
+                },
+                crate::Rating::Remembered,
+            )
+            .unwrap();
+        replay(deck, event)
+    }
+
+    fn card(deck: &Deck, text: &str, sense: u32) -> rs_fsrs::Card {
+        match &deck.cards[&indicator(deck, text, sense)] {
+            CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => fsrs_card.clone(),
+        }
+    }
+
+    fn grade(deck: Deck, sentence: &str, hints: Vec<usize>) -> Deck {
+        let literals = deck
+            .context
+            .language_pack
+            .sentence_to_literals(
+                &deck
+                    .context
+                    .language_pack
+                    .string_rodeo
+                    .get(sentence)
+                    .unwrap(),
+                Language::English,
+            )
+            .unwrap();
+        let event = deck
+            .translate_sentence_wrong(
+                sentence.into(),
+                "translation".into(),
+                LiteralGrades(vec![Some(Remembered::Remembered); literals.len()]),
+                hints,
+                vec![],
+                vec![],
+            )
+            .unwrap();
+        replay(deck, event)
+    }
+
+    #[test]
+    fn exact_sentence_sense_updates_only_its_card() {
+        let deck = hold(hold(deck(), "bank", 1), "bank", 2);
+        assert_eq!(
+            deck.context.language_pack.resolve_entry(&gram("bank", 0)),
+            deck.context.language_pack.resolve_entry(&gram("bank", 1))
+        );
+        let before = [card(&deck, "bank", 1), card(&deck, "bank", 2)];
+        let deck = grade(deck, "Bank", vec![]);
+        assert_eq!(card(&deck, "bank", 1).reps, before[0].reps);
+        assert_eq!(card(&deck, "bank", 2).reps, before[1].reps + 1);
+    }
+
+    #[test]
+    fn inner_word_uses_unique_held_sense_but_skips_ambiguity() {
+        for held_senses in [vec![], vec![2], vec![1, 2]] {
+            let mut deck = deck();
+            for &sense in &held_senses {
+                deck = hold(deck, "bank", sense);
+            }
+            deck = hold(deck, "river bank", 0);
+            let before_unit = card(&deck, "river bank", 0).reps;
+            let before: Vec<_> = held_senses
+                .iter()
+                .map(|&sense| card(&deck, "bank", sense).reps)
+                .collect();
+            let deck = grade(deck, "River bank", vec![]);
+            assert_eq!(card(&deck, "river bank", 0).reps, before_unit + 1);
+            // The single-sense inventory is safe even without an Added card.
+            assert_eq!(card(&deck, "river", 0).reps, 1);
+            for (&sense, reps) in held_senses.iter().zip(before) {
+                assert_eq!(
+                    card(&deck, "bank", sense).reps,
+                    reps + i32::from(held_senses.len() == 1)
+                );
+            }
+            if held_senses.len() < 2 {
+                assert!(!deck.cards.contains_key(&indicator(&deck, "bank", 1)));
+            }
+            if held_senses.is_empty() {
+                assert!(!deck.cards.contains_key(&indicator(&deck, "bank", 2)));
+            }
+        }
+    }
+
+    #[test]
+    fn repeated_word_hint_only_fails_the_tapped_sense() {
+        for perfect in [false, true] {
+            let deck = hold(hold(deck(), "bank", 1), "bank", 2);
+            let before = [card(&deck, "bank", 1), card(&deck, "bank", 2)];
+            let deck = if perfect {
+                let event = deck
+                    .translate_sentence_perfect(vec![0], "Bank bank".into())
+                    .unwrap();
+                replay(deck, event)
+            } else {
+                grade(deck, "Bank bank", vec![0])
+            };
+            assert_eq!(card(&deck, "bank", 1).lapses, before[0].lapses + 1);
+            assert_eq!(card(&deck, "bank", 2).lapses, before[1].lapses);
+            assert_eq!(card(&deck, "bank", 2).reps, before[1].reps + 1);
+        }
+    }
+
+    #[test]
+    fn primary_positions_use_tagged_occurrences_and_phrase_matches() {
+        let deck = deck();
+        for (sentence, text, sense, indices) in [
+            ("Bank bank", "bank", 2, vec![1]),
+            ("River bank", "river bank", 0, vec![0, 1]),
+            ("Bank river bank", "river bank", 0, vec![1, 2]),
+        ] {
+            let pack = &deck.context.language_pack;
+            let challenge = deck
+                .translation_challenge_for_sentence(
+                    pack.resolve_entry(&gram(text, sense)).unwrap(),
+                    pack.string_rodeo.get(sentence).unwrap(),
+                )
+                .unwrap();
+            assert_eq!(challenge.primary_literal_indices, indices);
+        }
+    }
+}

@@ -133,7 +133,7 @@ struct TranslationChallengeView: View {
                         native_translations: sentence.native_translations, literals: sentence.target_language_literals,
                         phrases: sentence.unique_target_language_phrases, access_token: host.accessToken, course: course,
                         gram_definitions: GramDefinitions(value: sentence.gram_definitions_for_lookup), literal_gram_indices: sentence.literal_gram_indices,
-                        phrase_definitions: GramDefinitions(value: sentence.phrase_definitions), primary_expression: sentence.primary_expression,
+                        phrase_definitions: GramDefinitions(value: sentence.phrase_definitions), primary_expression: sentence.primary_expression, primary_literal_indices: sentence.primary_literal_indices,
                         movie_titles: MovieTitles(value: sentence.movie_titles))
                     guard !Task.isCancelled else { return }
                     send(.Graded(response: response))

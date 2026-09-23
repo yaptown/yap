@@ -25,7 +25,6 @@ import {
   type Deck,
   type DeckEvent,
   type Gram,
-  type Heteronym,
   type ManualTranslationGrade,
   type PartGraded,
   type PlacementSession,
@@ -342,7 +341,7 @@ function useStudyController(
     grade:
       | ManualTranslationGrade
       | { perfect: string | null },
-    wordsTapped: Heteronym<string>[],
+    wordsTapped: number[],
     submission: string,
     completedAtMs: number,
   ): boolean => {
@@ -356,14 +355,14 @@ function useStudyController(
     const event =
       "perfect" in grade
         ? deck.translate_sentence_perfect(
-            wordsTapped,
+            new Uint32Array(wordsTapped),
             currentChallenge.target_language,
           )
         : deck.translate_sentence_wrong(
             currentChallenge.target_language,
             submission,
             grade.literalGrades,
-            wordsTapped,
+            new Uint32Array(wordsTapped),
             grade.phrasesRemembered,
             grade.phrasesForgot,
           );

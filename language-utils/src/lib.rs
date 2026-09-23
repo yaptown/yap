@@ -1535,6 +1535,9 @@ pub mod autograde {
         pub phrases: Vec<TaggedGram<Gram<String>>>,
         /// The gram that motivated this challenge — the LLM must always grade it.
         pub primary_expression: TaggedGram<Gram<String>>,
+        /// Zero-based positions in `literals` belonging to the primary expression.
+        #[serde(default)]
+        pub primary_literal_indices: Vec<usize>,
         #[serde(default)]
         pub context: GraderContext,
     }
@@ -5630,12 +5633,18 @@ mod autograde_request_compat_tests {
                 gram: Gram(vec![]),
                 sense: None,
             },
+            primary_literal_indices: vec![],
             context: Default::default(),
         };
         let mut old_json = serde_json::to_value(&translation).unwrap();
         old_json.as_object_mut().unwrap().remove("context");
+        old_json
+            .as_object_mut()
+            .unwrap()
+            .remove("primary_literal_indices");
         let parsed: AutoGradeTranslationRequest = serde_json::from_value(old_json).unwrap();
         assert!(parsed.context.is_empty());
+        assert!(parsed.primary_literal_indices.is_empty());
 
         let transcription = AutoGradeTranscriptionRequest {
             course,

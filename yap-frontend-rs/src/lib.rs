@@ -1523,7 +1523,25 @@ impl weapon::AppState for Deck {
                                 let gram = Gram(vec![Atom::Tok(literal.word)]);
                                 if let Some(gram) =
                                     context.language_pack.gram_rodeo.get(&gram).and_then(|g| {
-                                        context.language_pack.senses_of(g).first().copied()
+                                        // The unit carries a sense, but its inner literals do not.
+                                        // Credit only a uniquely held written sense, or a
+                                        // single-sense inventory; never choose an arbitrary sense.
+                                        let senses = context.language_pack.senses_of(g);
+                                        let mut held = senses.iter().filter(|sense| {
+                                            matches!(
+                                                deck.cards.get(&CardIndicator::WrittenGram {
+                                                    gram: **sense
+                                                }),
+                                                Some(CardData::Added { .. })
+                                            )
+                                        });
+                                        match (held.next(), held.next()) {
+                                            (Some(sense), None) => Some(*sense),
+                                            _ => match senses {
+                                                [sense] => Some(*sense),
+                                                _ => None,
+                                            },
+                                        }
                                     })
                                 {
                                     if *hinted || *remembered == Some(false) {
@@ -3574,10 +3592,10 @@ impl Deck {
 
     pub fn translate_sentence_perfect(
         &self,
-        words_tapped: Vec<Heteronym<String>>,
+        hinted_literal_indices: Vec<usize>,
         challenge_sentence: String,
     ) -> Option<DeckEvent> {
-        let hinted_heteronyms: BTreeSet<Heteronym<String>> = words_tapped.into_iter().collect();
+        let hinted_literal_indices: BTreeSet<usize> = hinted_literal_indices.into_iter().collect();
 
         let cleaned_sentence = language_utils::text_cleanup::cleanup_sentence(
             challenge_sentence.clone(),
@@ -3595,9 +3613,10 @@ impl Deck {
 
         let literals = sentence_literals
             .into_iter()
-            .map(|literal| {
+            .enumerate()
+            .map(|(index, literal)| {
                 let hinted = match &literal.word.word_type {
-                    WordType::Heteronym(h) => Some(hinted_heteronyms.contains(h)),
+                    WordType::Heteronym(_) => Some(hinted_literal_indices.contains(&index)),
                     WordType::Other(_) => None,
                 };
                 (literal, hinted)
@@ -3630,12 +3649,12 @@ impl Deck {
         challenge_sentence: String,
         submission: String,
         literal_grades: autograde::LiteralGrades,
-        words_tapped: Vec<Heteronym<String>>,
+        hinted_literal_indices: Vec<usize>,
         phrases_remembered: Vec<TaggedGram<Gram<String>>>,
         phrases_forgot: Vec<TaggedGram<Gram<String>>>,
     ) -> Option<DeckEvent> {
         let literal_grades = literal_grades.0;
-        let hinted_heteronyms: BTreeSet<Heteronym<String>> = words_tapped.into_iter().collect();
+        let hinted_literal_indices: BTreeSet<usize> = hinted_literal_indices.into_iter().collect();
 
         let cleaned_sentence = language_utils::text_cleanup::cleanup_sentence(
             challenge_sentence.clone(),
@@ -3655,17 +3674,18 @@ impl Deck {
         let literals: Vec<_> = sentence_literals
             .into_iter()
             .zip(literal_grades.iter())
-            .map(|(literal, grade)| {
+            .enumerate()
+            .map(|(index, (literal, grade))| {
                 let result = match (&literal.word.word_type, grade) {
-                    (WordType::Heteronym(h), Some(remembered)) => Some(current::LiteralResult {
+                    (WordType::Heteronym(_), Some(remembered)) => Some(current::LiteralResult {
                         remembered: Some(*remembered == autograde::Remembered::Remembered),
-                        hinted: hinted_heteronyms.contains(h),
+                        hinted: hinted_literal_indices.contains(&index),
                     }),
-                    (WordType::Heteronym(h), None) => {
+                    (WordType::Heteronym(_), None) => {
                         // Grade is unknown/indeterminate
                         Some(current::LiteralResult {
                             remembered: None,
-                            hinted: hinted_heteronyms.contains(h),
+                            hinted: hinted_literal_indices.contains(&index),
                         })
                     }
                     (WordType::Other(_), _) => None,
@@ -4779,6 +4799,7 @@ pub async fn autograde_translation(
     literal_gram_indices: Vec<usize>,
     phrase_definitions: autograde::GramDefinitions,
     primary_expression: TaggedGram<Gram<String>>,
+    primary_literal_indices: Vec<usize>,
     movie_titles: autograde::MovieTitles,
 ) -> autograde::AutoGradeTranslationResponse {
     let gram_definitions = gram_definitions.0;
@@ -4806,6 +4827,7 @@ pub async fn autograde_translation(
         phrases: phrases.clone(),
         course,
         primary_expression,
+        primary_literal_indices,
         context,
     };
 
@@ -7390,34 +7412,32 @@ mod tests {
                 .filter_map(|(disp, _)| disp2gram.get(disp).cloned())
                 .collect();
 
-            // primary_expression: prefer a forgotten phrase, else a forgotten
-            // heteronym literal, else the first gradable literal.
-            let primary_expression = case
+            // The legacy eval chooses a new primary expression, rather than
+            // recovering the original challenge. Preserve the selected literal
+            // occurrence; legacy phrase records have no occurrence positions.
+            let (primary_expression, primary_literal_indices) = case
                 .phrases
                 .iter()
                 .find(|(_, g)| *g == Some(false))
                 .and_then(|(disp, _)| disp2gram.get(disp).cloned())
+                .map(|gram| (gram, vec![]))
                 .or_else(|| {
                     case.literals
                         .iter()
-                        .find(|(l, r)| {
+                        .enumerate()
+                        .find(|(_, (l, r))| {
                             l.word.heteronym().is_some()
                                 && matches!(r, Some(lr) if lr.remembered == Some(false))
                         })
-                        .map(|(l, _)| literal_to_gram(l))
+                        .or_else(|| {
+                            case.literals
+                                .iter()
+                                .enumerate()
+                                .find(|(_, (l, _))| l.word.heteronym().is_some())
+                        })
+                        .map(|(index, (literal, _))| (literal_to_gram(literal), vec![index]))
                 })
-                .or_else(|| {
-                    case.literals
-                        .iter()
-                        .find(|(l, _)| l.word.heteronym().is_some())
-                        .map(|(l, _)| literal_to_gram(l))
-                })
-                .unwrap_or_else(|| {
-                    case.literals
-                        .first()
-                        .map(|(l, _)| literal_to_gram(l))
-                        .unwrap_or(language_utils::Gram(vec![]))
-                });
+                .unwrap_or((language_utils::Gram(vec![]), vec![]));
 
             let request = autograde::AutoGradeTranslationRequest {
                 course,
@@ -7432,6 +7452,7 @@ mod tests {
                     gram: primary_expression,
                     sense: None,
                 },
+                primary_literal_indices,
                 context: Default::default(),
             };
             requests.push((case, request));

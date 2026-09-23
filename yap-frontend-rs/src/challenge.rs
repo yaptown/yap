@@ -493,6 +493,9 @@ impl Deck {
         let mut literal_gram_indices = Vec::new();
         let mut gram_definitions_for_lookup = Vec::new();
         let mut gram_breakdowns_for_lookup = Vec::new();
+        // Recorded while flattening, where each literal's gram is known exactly;
+        // matching back by spelling could pick another occurrence of the word.
+        let mut primary_literal_indices = Vec::new();
 
         for sentence_gram in sentence_grams_with_literals {
             let (gram_spur, literals) = match sentence_gram {
@@ -506,10 +509,31 @@ impl Deck {
             gram_breakdowns_for_lookup.push(breakdown);
 
             for literal in literals {
+                if gram_spur == gram {
+                    primary_literal_indices.push(target_language_literals.len());
+                }
                 literal_gram_indices.push(group_index);
                 target_language_literals.push(literal);
             }
         }
+
+        // Phrase matches already carry occurrence positions, including gaps in
+        // discontinuous phrases. Do not reconstruct those from surface text.
+        let encoded = language_pack.encoded_sentences.get(&sentence)?;
+        primary_literal_indices.extend(
+            encoded
+                .multiword_terms
+                .iter()
+                .chain(&encoded.low_confidence_multiword_terms)
+                .filter(|term| term.gram == gram)
+                .flat_map(|term| {
+                    term.matched_word_indices
+                        .iter()
+                        .map(|&index| usize::from(index))
+                }),
+        );
+        primary_literal_indices.sort_unstable();
+        primary_literal_indices.dedup();
 
         let movie_titles = language_pack
             .sentence_sources
@@ -598,6 +622,7 @@ impl Deck {
             primary_expression: gram
                 .resolve(&language_pack.gram_rodeo)
                 .resolve(&language_pack.string_rodeo),
+            primary_literal_indices,
             second_chance,
         })
     }

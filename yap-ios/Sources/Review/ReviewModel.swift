@@ -122,14 +122,14 @@ import Observation
         return nil
     }
     @discardableResult
-    func completeTranslationPerfect(_ sentence: String, tapped: [Heteronym_String], completedAtMs: Double) -> Bool {
-        completeSentence(deck.translate_sentence_perfect(words_tapped: tapped, challenge_sentence: sentence), at: completedAtMs)
+    func completeTranslationPerfect(_ sentence: String, tapped: [UInt64], completedAtMs: Double) -> Bool {
+        completeSentence(deck.translate_sentence_perfect(hinted_literal_indices: tapped, challenge_sentence: sentence), at: completedAtMs)
     }
     @discardableResult
     func completeTranslationWrong(_ sentence: String, submission: String, grade: ManualTranslationGrade,
-                                  tapped: [Heteronym_String], completedAtMs: Double) -> Bool {
+                                  tapped: [UInt64], completedAtMs: Double) -> Bool {
         completeSentence(deck.translate_sentence_wrong(challenge_sentence: sentence, submission: submission,
-            literal_grades: LiteralGrades(value: grade.literal_grades), words_tapped: tapped,
+            literal_grades: LiteralGrades(value: grade.literal_grades), hinted_literal_indices: tapped,
             phrases_remembered: grade.phrases_remembered, phrases_forgot: grade.phrases_forgot), at: completedAtMs)
     }
     @discardableResult

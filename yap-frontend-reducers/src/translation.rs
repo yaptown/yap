@@ -9,7 +9,7 @@ use language_utils::{
     text_cleanup::{find_closest_match, normalize_for_grading},
 };
 use language_utils::{
-    Gram, GramDefinition, Heteronym, Language, Literal,
+    Gram, GramDefinition, Language, Literal,
     autograde::{AutoGradeTranslationResponse, Remembered},
 };
 use std::collections::BTreeSet;
@@ -197,7 +197,7 @@ pub struct TranslationReviewFeedback {
     pub can_continue: bool,
     pub definitions: Vec<ReviewDefinition>,
     pub tapped_gram_groups: Vec<usize>,
-    pub heteronyms_tapped: Vec<Heteronym<String>>,
+    pub hinted_literal_indices: Vec<usize>,
 }
 
 #[bridgerton::bridge]
@@ -221,14 +221,14 @@ pub fn get_translation_review_feedback(
         .unwrap_or_default();
     let mut seen = BTreeSet::new();
     let mut tapped_gram_groups = vec![];
-    let mut heteronyms_tapped = vec![];
+    let mut hinted_literal_indices = vec![];
     for index in tapped_words {
-        if let Some(heteronym) = sentence
+        if sentence
             .target_language_literals
             .get(index)
-            .and_then(|l| l.word.heteronym())
+            .is_some_and(|l| l.word.heteronym().is_some())
         {
-            heteronyms_tapped.push(heteronym.clone());
+            hinted_literal_indices.push(index);
         }
         if let Some(&group) = sentence.literal_gram_indices.get(index)
             && seen.insert(group)
@@ -280,7 +280,7 @@ pub fn get_translation_review_feedback(
         grade_items: items,
         definitions,
         tapped_gram_groups,
-        heteronyms_tapped,
+        hinted_literal_indices,
     }
 }
 
@@ -310,6 +310,9 @@ pub struct TranslateComprehensibleSentence {
     pub proper_noun_definitions: Vec<(String, ProperNounDefinition)>,
     /// The gram that motivated this challenge (the one being reviewed via spaced repetition).
     pub primary_expression: TaggedGram<Gram<String>>,
+    /// Zero-based positions of the primary expression in target_language_literals.
+    #[serde(default)]
+    pub primary_literal_indices: Vec<usize>,
     /// True if the user recently got this sentence wrong in a translation challenge.
     pub second_chance: bool,
 }
@@ -548,7 +551,7 @@ pub enum TranslationEffect {
     },
     Complete {
         outcome: TranslationReviewResult,
-        heteronyms_tapped: Vec<Heteronym<String>>,
+        hinted_literal_indices: Vec<usize>,
         submission: String,
         completed_at_ms: f64,
     },
@@ -673,7 +676,7 @@ fn translation_completion(state: &TranslationState) -> Option<TranslationEffect>
     );
     Some(TranslationEffect::Complete {
         outcome: result.clone(),
-        heteronyms_tapped: feedback.heteronyms_tapped,
+        hinted_literal_indices: feedback.hinted_literal_indices,
         submission: state.text.clone(),
         completed_at_ms: *completed_at_ms,
     })
@@ -1006,6 +1009,23 @@ mod reducer_tests {
     }
 
     #[test]
+    fn completion_keeps_the_tapped_occurrence_of_a_repeated_word() {
+        let mut state = editing();
+        let repeated = state.sentence.target_language_literals[0].clone();
+        state.sentence.target_language_literals.push(repeated);
+        state.sentence.literal_gram_indices.push(1);
+        state = translation_transition(state, TranslationEvent::WordTapped { index: 2 }).state;
+        state = translation_transition(state, TranslationEvent::Submit { now_ms: 1234.0 }).state;
+        let mut grades = response();
+        grades.literal_grades.push(Some(Remembered::Remembered));
+        state = translation_transition(state, TranslationEvent::Graded { response: grades }).state;
+        let step = translation_transition(state, TranslationEvent::Continue);
+        assert!(
+            matches!(&step.effects[..], [TranslationEffect::Complete { hinted_literal_indices, .. }] if hinted_literal_indices == &[2])
+        );
+    }
+
+    #[test]
     fn editing_taps_are_heteronyms_only_deduplicated_and_group_tinted() {
         let mut state = start();
         for index in [0, 0, 1, usize::MAX] {
@@ -1170,7 +1190,7 @@ mod reducer_tests {
             serde_json::to_value(&step).unwrap()
         );
         assert!(
-            matches!(&step.effects[..], [TranslationEffect::Complete { outcome: TranslationReviewResult::Manual { .. }, completed_at_ms: 1234.0, submission, heteronyms_tapped }] if submission == "a cat" && heteronyms_tapped.len() == 1)
+            matches!(&step.effects[..], [TranslationEffect::Complete { outcome: TranslationReviewResult::Manual { .. }, completed_at_ms: 1234.0, submission, hinted_literal_indices }] if submission == "a cat" && hinted_literal_indices == &[0])
         );
     }
     #[test]
