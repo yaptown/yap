@@ -18,14 +18,15 @@ struct IdleScreen: View {
                 }
             case let .ReviewPlanOffer(plan):
                 ReviewPlanScreen(cards: plan.cards) { addEvent(plan.event) }
-            case let .StudyPlanComplete(title, nextDue, plan):
+            case let .StudyPlanComplete(title, nextReview, plan):
                 if showReleasePlan {
                     ReviewPlanScreen(cards: plan.cards) { addEvent(plan.event) }
                 } else {
                     StudyCard {
                         Text(title).font(.title2.bold())
-                        nextReview(nextDue)
+                        if let nextReview { NextReviewLine(line: nextReview, language: plan.target_language) }
                         Button("Study more") { showReleasePlan = true }.buttonStyle(.bordered).controlSize(.large)
+                        WeekProgressStrip(week: plan.week)
                     }
                     #if DEBUG
                     .onChange(of: DebugHarness.shared.commandID) { _, _ in
@@ -55,7 +56,7 @@ struct IdleScreen: View {
         let awaitingAcknowledgement = if case .PimsleurLesson = idle.navigation.selection { !pimsleurAcknowledged } else { false }
         StudyCard {
             Text(idle.title).font(.title2.bold())
-            if !idle.body.isEmpty { Text(idle.body) } else { nextReview(idle.next_due) }
+            if !idle.body.isEmpty { Text(idle.body) } else if let line = idle.next_review { NextReviewLine(line: line, language: idle.target_language) }
             if let notice = idle.banned_notice {
                 Text(notice)
                 Button("Undo restrictions") { actions.undoRestrictions() }
@@ -70,9 +71,8 @@ struct IdleScreen: View {
                     Button(commit.label) { actions.commitSentenceList(commit.event) }
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
                 }
-                if !awaitingAcknowledgement, let event = idle.info.smart_add_event {
-                    Text(idle.info.preview.joined(separator: " · ")).foregroundStyle(.secondary)
-                    Button("Learn \(idle.info.smart_add_count) new cards") { addEvent(event) }
+                if !awaitingAcknowledgement, let label = idle.curriculum_learn_label, let event = idle.info.smart_add_event {
+                    Button(label) { addEvent(event) }
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
                 }
                 if !awaitingAcknowledgement {
@@ -86,13 +86,18 @@ struct IdleScreen: View {
                         }
                     }
                 }
+                WeekProgressStrip(week: idle.week)
             }
         }
     }
-    @ViewBuilder private func nextReview(_ card: CardSummary?) -> some View {
-        if let card {
-            Text("You'll review \(card.card_text) \(Date(timeIntervalSince1970: card.due_timestamp_ms / 1000), style: .relative).")
-                .foregroundStyle(.secondary)
-        }
+}
+
+/// Rust builds the sentence; the emphasized run is the target-language word.
+struct NextReviewLine: View {
+    let line: EmphasizedText
+    let language: Language
+    var body: some View {
+        (Text(line.before) + Text(line.emphasis).bold() + Text(line.after))
+            .foregroundStyle(.secondary)
     }
 }

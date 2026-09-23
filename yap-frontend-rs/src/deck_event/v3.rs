@@ -377,6 +377,7 @@ mod tests {
         };
         (
             crate::Context {
+                study_goal: None,
                 language_pack: Arc::new(LanguagePack::new(data, course)),
                 course,
                 timezone: chrono::FixedOffset::east_opt(0).unwrap(),

@@ -6,7 +6,6 @@
     "step": {
       "type": "Idle",
       "view": {
-        "type": "Idle",
         "target_language": "French",
         "kind": "AllCaughtUp",
         "smart_add_label": null,
@@ -520,31 +519,20 @@
             }
           }
         ],
-        "next_due": {
-          "card_indicator": {
-            "type": "WrittenGram",
-            "gram": {
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "peut",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "peut",
-                      "lemma": "pouvoir",
-                      "pos": "AUX"
-                    }
-                  }
-                }
-              ],
-              "sense": null
-            }
-          },
-          "due_timestamp_ms": 1789960232175.0,
-          "state": "review",
-          "card_text": "peut",
-          "card_subtitle": "auxiliary"
+        "next_review": {
+          "before": "You'll review ",
+          "emphasis": "peut",
+          "after": " 2 days from now."
         },
+        "curriculum_headline": {
+          "before": "You're doing great on",
+          "emphasis": "Advanced French Level 11",
+          "after": "!"
+        },
+        "curriculum_learn_label": "Learn 5 new cards to hit 10%",
+        "next_sentence_list_label": null,
+        "all_learned_note": null,
+        "level_note": "When you complete this level, you'll understand 67.1% of everyday French.",
         "banned_notice": null,
         "week": [
           {
@@ -671,7 +659,8 @@
         },
         "sentence_list_label": "Advanced French Level 11",
         "next_sentence_list": null,
-        "switch_curriculum": null
+        "switch_curriculum": null,
+        "type": "Idle"
       }
     },
     "progress": 0.0,

@@ -37,6 +37,17 @@ pub struct SwitchCurriculumView {
     pub event: DeckEvent,
 }
 
+/// A sentence with one emphasized run, so hosts can style the run (a
+/// target-language word, an uppercased curriculum name) without owning the
+/// words around it. `emphasis` may be empty.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct EmphasizedText {
+    pub before: String,
+    pub emphasis: String,
+    pub after: String,
+}
+
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct IdleView {
@@ -51,7 +62,18 @@ pub struct IdleView {
     pub info: NoCardsReadyInfo,
     pub manual_add_heading: String,
     pub manual_add_options: Vec<ManualAddOption>,
-    pub next_due: Option<CardSummary>,
+    /// "You'll review <word> 2 days from now." Shown when `body` is empty.
+    pub next_review: Option<EmphasizedText>,
+    /// "Soon you'll hit 10% on <CURRICULUM>!" atop the sentence-list panel.
+    pub curriculum_headline: EmphasizedText,
+    /// "Learn 5 new cards to hit 10%": the smart-add button inside the panel.
+    pub curriculum_learn_label: Option<String>,
+    /// "Next movie" / "Next lesson", once the curriculum is exhausted.
+    pub next_sentence_list_label: Option<String>,
+    /// Shown instead of a next-list button when nothing is left anywhere.
+    pub all_learned_note: Option<String>,
+    /// Essential-course footnote about everyday-language coverage.
+    pub level_note: Option<String>,
     pub banned_notice: Option<String>,
     pub week: Vec<DayProgress>,
     pub navigation: SentenceListNavigation,
@@ -74,7 +96,7 @@ pub enum IdleScreenView {
     ReviewPlanOffer(ReviewPlanView),
     StudyPlanComplete {
         title: String,
-        next_due: Option<CardSummary>,
+        next_review: Option<EmphasizedText>,
         plan: Box<ReviewPlanView>,
     },
     Idle(Box<IdleView>),
@@ -102,6 +124,125 @@ pub struct AccomplishmentView {
     pub target: DailyReviewTarget,
     pub goals: Vec<GoalOptionView>,
     pub days: Vec<DayProgress>,
+}
+
+/// Relative time the way web's react-timeago renders it: round to the largest
+/// unit under a minute/hour/day/week/30-day month/365-day year, then
+/// "2 days from now" or "3 hours ago".
+pub fn relative_time(from_ms: f64, to_ms: f64) -> String {
+    const MINUTE: f64 = 60.0;
+    const HOUR: f64 = 60.0 * MINUTE;
+    const DAY: f64 = 24.0 * HOUR;
+    const WEEK: f64 = 7.0 * DAY;
+    const MONTH: f64 = 30.0 * DAY;
+    const YEAR: f64 = 365.0 * DAY;
+    let seconds = ((to_ms - from_ms).abs() / 1000.0).round();
+    let (value, unit) = if seconds < MINUTE {
+        (seconds, "second")
+    } else if seconds < HOUR {
+        ((seconds / MINUTE).round(), "minute")
+    } else if seconds < DAY {
+        ((seconds / HOUR).round(), "hour")
+    } else if seconds < WEEK {
+        ((seconds / DAY).round(), "day")
+    } else if seconds < MONTH {
+        ((seconds / WEEK).round(), "week")
+    } else if seconds < YEAR {
+        ((seconds / MONTH).round(), "month")
+    } else {
+        ((seconds / YEAR).round(), "year")
+    };
+    let plural = if value == 1.0 { "" } else { "s" };
+    let suffix = if to_ms >= from_ms { "from now" } else { "ago" };
+    format!("{value} {unit}{plural} {suffix}")
+}
+
+struct CurriculumCopy {
+    curriculum_headline: EmphasizedText,
+    curriculum_learn_label: Option<String>,
+    next_sentence_list_label: Option<String>,
+    all_learned_note: Option<String>,
+    level_note: Option<String>,
+}
+
+/// The sentence-list panel's copy, in web's words.
+fn curriculum_copy(
+    progress: &SentenceListProgress,
+    info: &NoCardsReadyInfo,
+    sentence_list_label: &str,
+    next_sentence_list: Option<&SentenceListSelection>,
+    selection: Option<&SentenceListSelection>,
+    target_language: Language,
+) -> CurriculumCopy {
+    let done = progress.all_available_learned;
+    let milestone =
+        next_progress_milestone(progress.percent_known, info.percent_known_after).map(|m| m as u32);
+    let curriculum_headline = EmphasizedText {
+        before: match (done, info.recommend_more_cards, milestone) {
+            (true, _, _) => "You're all done with".into(),
+            (false, true, Some(m)) => format!("Soon you'll hit {m}% on"),
+            (false, true, None) => "Keep up the momentum on".into(),
+            (false, false, _) => "You're doing great on".into(),
+        },
+        emphasis: sentence_list_label.into(),
+        after: "!".into(),
+    };
+    let curriculum_learn_label = (!done && info.smart_add_count > 0).then(|| {
+        let mut label = format!(
+            "Learn {} new {}",
+            info.smart_add_count,
+            if info.smart_add_count == 1 {
+                "card"
+            } else {
+                "cards"
+            }
+        );
+        if let (Some(m), false) = (milestone, info.recommend_more_cards) {
+            label.push_str(&format!(" to hit {m}%"));
+        }
+        label
+    });
+    let next_sentence_list_label =
+        done.then_some(next_sentence_list)
+            .flatten()
+            .map(|next| match next {
+                SentenceListSelection::Movie { .. } => "Next movie".into(),
+                SentenceListSelection::PimsleurLesson { .. } => "Next lesson".into(),
+            });
+    let all_learned_note = (done && next_sentence_list.is_none())
+        .then(|| "You've learned all available words!".into());
+    let level_note = selection.is_none().then(|| {
+        format!(
+            "When you complete this level, you'll understand {:.1}% of everyday {}.",
+            info.tier_info.percent_of_usage,
+            get_language_metadata(target_language).common_name
+        )
+    });
+    CurriculumCopy {
+        curriculum_headline,
+        curriculum_learn_label,
+        next_sentence_list_label,
+        all_learned_note,
+        level_note,
+    }
+}
+
+/// "You'll review <word> 2 days from now." for a written card, otherwise
+/// "Your next review is 2 days from now." (web copy).
+fn next_review_line(card: &CardSummary, now_ms: f64) -> EmphasizedText {
+    let when = relative_time(now_ms, card.due_timestamp_ms);
+    match card.card_indicator {
+        CardIndicator::WrittenGram { .. } => EmphasizedText {
+            before: "You'll review ".into(),
+            emphasis: card.card_text.clone(),
+            after: format!(" {when}."),
+        },
+        _ => EmphasizedText {
+            before: format!("Your next review is {when}."),
+            emphasis: String::new(),
+            after: String::new(),
+        },
+    }
 }
 
 impl Deck {
@@ -171,8 +312,9 @@ impl Deck {
             };
             return IdleScreenView::StudyPlanComplete {
                 title: format!("You completed the study plan in {duration}!"),
-                next_due: next_due
-                    .filter(|card| card.due_timestamp_ms - timestamp_ms < 30.0 * 60.0 * 1000.0),
+                next_review: next_due
+                    .filter(|card| card.due_timestamp_ms - timestamp_ms < 30.0 * 60.0 * 1000.0)
+                    .map(|card| next_review_line(&card, timestamp_ms)),
                 plan: Box::new(plan),
             };
         }
@@ -233,6 +375,20 @@ impl Deck {
         };
         let smart_add_label = smart_add_label(&kind, &info);
         let show_sentence_list = kind == IdleKind::AllCaughtUp;
+        let CurriculumCopy {
+            curriculum_headline,
+            curriculum_learn_label,
+            next_sentence_list_label,
+            all_learned_note,
+            level_note,
+        } = curriculum_copy(
+            &progress,
+            &info,
+            &sentence_list_label,
+            next_sentence_list.as_ref(),
+            navigation.selection.as_ref(),
+            self.get_target_language(),
+        );
         IdleScreenView::Idle(Box::new(IdleView {
             target_language: self.get_target_language(),
             kind,
@@ -243,7 +399,12 @@ impl Deck {
             manual_add_heading: MANUAL_ADD_HEADING.into(),
             manual_add_options,
             info,
-            next_due,
+            next_review: next_due.map(|card| next_review_line(&card, timestamp_ms)),
+            curriculum_headline,
+            curriculum_learn_label,
+            next_sentence_list_label,
+            all_learned_note,
+            level_note,
             banned_notice: (review.due_but_banned_count() > 0).then(|| {
                 format!(
                     "{} cards paused by listening/speaking restrictions",
@@ -1015,6 +1176,64 @@ mod tests {
                 .unwrap()
                 .timestamp_millis() as f64,
         }
+    }
+
+    #[test]
+    fn relative_time_matches_react_timeago() {
+        let now = 1_700_000_000_000.0;
+        let s = 1000.0;
+        for (delta, expected) in [
+            (0.0, "0 seconds from now"),
+            (1.0 * s, "1 second from now"),
+            (59.0 * s, "59 seconds from now"),
+            (60.0 * s, "1 minute from now"),
+            (90.0 * s, "2 minutes from now"),
+            (3600.0 * s, "1 hour from now"),
+            (23.0 * 3600.0 * s, "23 hours from now"),
+            (39.0 * 3600.0 * s, "2 days from now"),
+            (6.0 * 86400.0 * s, "6 days from now"),
+            (7.0 * 86400.0 * s, "1 week from now"),
+            (29.0 * 86400.0 * s, "4 weeks from now"),
+            (45.0 * 86400.0 * s, "2 months from now"),
+            (400.0 * 86400.0 * s, "1 year from now"),
+            (-3.0 * 3600.0 * s, "3 hours ago"),
+        ] {
+            assert_eq!(relative_time(now, now + delta), expected, "delta {delta}");
+        }
+    }
+
+    #[test]
+    fn next_review_line_names_written_cards_only() {
+        let now = inputs().timestamp_ms;
+        let deck = with_due_cards();
+        let mut card = deck.get_all_cards_summary().into_iter().next().unwrap();
+        card.due_timestamp_ms = now + 2.0 * 86_400_000.0;
+        let line = next_review_line(&card, now);
+        match card.card_indicator {
+            CardIndicator::WrittenGram { .. } => {
+                assert_eq!(line.before, "You'll review ");
+                assert_eq!(line.emphasis, card.card_text);
+                assert_eq!(line.after, " 2 days from now.");
+            }
+            _ => {
+                assert_eq!(line.before, "Your next review is 2 days from now.");
+                assert!(line.emphasis.is_empty() && line.after.is_empty());
+            }
+        }
+        let listening = CardSummary {
+            card_indicator: CardIndicator::ListeningGram {
+                gram: match card.card_indicator {
+                    CardIndicator::WrittenGram { gram } => gram.gram,
+                    CardIndicator::ListeningGram { gram } => gram,
+                    other => panic!("unexpected {other:?}"),
+                },
+            },
+            ..card
+        };
+        assert_eq!(
+            next_review_line(&listening, now).before,
+            "Your next review is 2 days from now."
+        );
     }
 
     #[test]

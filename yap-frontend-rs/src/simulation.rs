@@ -508,6 +508,7 @@ mod tests {
             validate_language_pack(&language_pack, course);
 
             let context = crate::Context {
+                study_goal: None,
                 language_pack,
                 course: *course,
                 timezone: chrono::FixedOffset::east_opt(0).unwrap(),
@@ -551,6 +552,7 @@ mod tests {
         }
 
         let context = crate::Context {
+            study_goal: None,
             language_pack,
             course: language_utils::Course {
                 target_language: language_utils::Language::French,

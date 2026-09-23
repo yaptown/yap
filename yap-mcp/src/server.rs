@@ -155,7 +155,7 @@ impl YapState {
         let mut store = new_store();
         insert_rows(&mut store, rows);
 
-        let course = detect_course(&store)?;
+        let (course, study_goal) = detect_course(&store)?;
         log::info!(
             "detected course: {} for {} speakers",
             course.target_language,
@@ -165,6 +165,7 @@ impl YapState {
         let language_pack = packs.get(&course).await?;
         let timezone = *chrono::Local::now().offset();
         let context = Context {
+            study_goal,
             language_pack,
             course,
             timezone,

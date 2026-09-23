@@ -12,7 +12,6 @@
       "due_count": 0,
       "ready_label": "0 cards ready",
       "idle": {
-        "type": "Idle",
         "target_language": "German",
         "kind": "NeedsMoreCards",
         "smart_add_label": "Add 2 cards",
@@ -218,7 +217,16 @@
             }
           }
         ],
-        "next_due": null,
+        "next_review": null,
+        "curriculum_headline": {
+          "before": "Soon you'll hit 5% on",
+          "emphasis": "Core German Level 1",
+          "after": "!"
+        },
+        "curriculum_learn_label": "Learn 2 new cards",
+        "next_sentence_list_label": null,
+        "all_learned_note": null,
+        "level_note": "When you complete this level, you'll understand 25.7% of everyday German.",
         "banned_notice": null,
         "week": [
           {
@@ -345,7 +353,8 @@
         },
         "sentence_list_label": "Core German Level 1",
         "next_sentence_list": null,
-        "switch_curriculum": null
+        "switch_curriculum": null,
+        "type": "Idle"
       }
     },
     "goal": {

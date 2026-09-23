@@ -36,6 +36,7 @@ fn load_deck_from_test_data() -> Deck {
     }
 
     let context = Context {
+        study_goal: None,
         language_pack,
         course: Course {
             target_language: Language::French,

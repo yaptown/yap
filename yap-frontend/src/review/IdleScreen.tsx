@@ -1,9 +1,7 @@
-import { next_progress_milestone } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button";
-import TimeAgo from "react-timeago";
 import { EngagementPrompts } from "@/review/engagement-prompts";
 import type {
-  CardSummary,
+  EmphasizedText,
   IdleScreenView,
   IdleView,
   DeckEvent,
@@ -90,7 +88,7 @@ export const IdleScreen = memo(function IdleScreen(props: IdleScreenProps) {
         <div className="flex flex-col flex-1 gap-4 pt-4">
           <div className="flex flex-col gap-2 text-center">
             <p className="text-2xl font-bold">{view.title}</p>
-            {view.next_due && <NextReviewLine nextDueCard={view.next_due} targetLanguage={view.plan.target_language} />}
+            {view.next_review && <NextReviewLine line={view.next_review} targetLanguage={view.plan.target_language} />}
           </div>
           <div className="flex justify-center"><Button onClick={() => setShowReleasePlan(true)} size="lg" variant="outline">Study more</Button></div>
           <WeekProgressStrip week={view.plan.week} className="mt-auto mb-2" />
@@ -109,7 +107,6 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
   const info = view.info;
   const manualAddOptions = view.manual_add_options;
   const addSmartCards = useCallback(() => { if (info.smart_add_event) addEvent(info.smart_add_event); }, [info.smart_add_event, addEvent]);
-  const showLightWorkloadNotification = info.recommend_more_cards;
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).closest("input, textarea, select, button, a")) return;
@@ -137,11 +134,8 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
   };
 
   // Sentence list progress info
-  const tierInfo = info.tier_info;
   const { percent_known: sentenceListPercentKnown, all_available_learned: sentenceListDone } = view.progress;
   const sentenceListLabel = view.sentence_list_label;
-
-  const thresholdTarget = next_progress_milestone(sentenceListPercentKnown, info.percent_known_after) ?? null;
 
   const sentenceListImage = (() => {
     switch (effectiveSentenceList.type) {
@@ -161,7 +155,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
           <p className="text-2xl font-bold">
             {view.title}
           </p>
-          {view.body ? <p className="text-muted-foreground">{view.body}</p> : <NextReviewLine nextDueCard={view.next_due ?? null} targetLanguage={targetLanguage} />}
+          {view.body ? <p className="text-muted-foreground">{view.body}</p> : view.next_review && <NextReviewLine line={view.next_review} targetLanguage={targetLanguage} />}
           {view.banned_notice && <><p className="text-muted-foreground">{view.banned_notice}</p><Button variant="outline" onClick={undoRestrictions}>Undo restrictions</Button></>}
 
         </div>
@@ -185,31 +179,9 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
       {view.show_sentence_list && (
         <Card className="overflow-hidden px-2 py-4 gap-2" animate>
           <p className="text-lg font-semibold px-4 sm:px-8 text-center">
-            {sentenceListDone ? (
-              <>
-                You're all done with
-                <br />
-                <span className="uppercase font-bold">{sentenceListLabel}!</span>
-              </>
-            ) : showLightWorkloadNotification && thresholdTarget !== null ? (
-              <>
-                Soon you'll hit {thresholdTarget}% on
-                <br />
-                <span className="uppercase font-bold">{sentenceListLabel}!</span>
-              </>
-            ) : showLightWorkloadNotification ? (
-              <>
-                Keep up the momentum on
-                <br />
-                <span className="uppercase font-bold">{sentenceListLabel}!</span>
-              </>
-            ) : (
-              <>
-                You're doing great on
-                <br />
-                <span className="uppercase font-bold">{sentenceListLabel}!</span>
-              </>
-            )}
+            {view.curriculum_headline.before}
+            <br />
+            <span className="uppercase font-bold">{view.curriculum_headline.emphasis}{view.curriculum_headline.after}</span>
           </p>
           <div className="flex items-center justify-between gap-0">
             <button
@@ -264,32 +236,19 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
                     )}
                   </div>
                   <div className="order-1 sm:order-last flex-1 flex flex-col items-center sm:items-start gap-3 min-w-0 w-full sm:w-auto">
-                    {sentenceListDone ? (
-                      (() => {
-                        // Show "next lesson" / "next movie" button when sentence list is complete
-                        const nextSentenceList = view.next_sentence_list ? {
-                          sentenceList: sentenceListSelectionToSentenceList(view.next_sentence_list),
-                          label: view.next_sentence_list.type === "Movie" ? "Next movie" : "Next lesson",
-                        } : null;
-
-
-                        return nextSentenceList ? (
-                          <Button
-                            onClick={() => setSentenceList(nextSentenceList.sentenceList)}
-                            variant="default"
-                            size="lg"
-                            className="group relative overflow-hidden transition-all hover:scale-105 hover:shadow-lg"
-                          >
-                            <ChevronRight className="h-5 w-5 mr-2" />
-                            {nextSentenceList.label}
-                          </Button>
-                        ) : (
-                          <p className="text-sm">
-                            You've learned all available words!
-                          </p>
-                        );
-                      })()
-                    ) : info.smart_add_count > 0 ? (
+                    {view.next_sentence_list_label && view.next_sentence_list ? (
+                      <Button
+                        onClick={() => setSentenceList(sentenceListSelectionToSentenceList(view.next_sentence_list!))}
+                        variant="default"
+                        size="lg"
+                        className="group relative overflow-hidden transition-all hover:scale-105 hover:shadow-lg"
+                      >
+                        <ChevronRight className="h-5 w-5 mr-2" />
+                        {view.next_sentence_list_label}
+                      </Button>
+                    ) : view.all_learned_note ? (
+                      <p className="text-sm">{view.all_learned_note}</p>
+                    ) : view.curriculum_learn_label ? (
                       <div className="flex">
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -301,12 +260,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
                             >
                               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></span>
                               <Sparkles className="h-5 w-5 mr-2 animate-pulse" />
-                              Learn {info.smart_add_count} new{" "}
-                              {info.smart_add_count === 1 ? "card" : "cards"}
-                              {thresholdTarget !== null &&
-                                !showLightWorkloadNotification && (
-                                  <> to hit {thresholdTarget}%</>
-                                )}
+                              {view.curriculum_learn_label}
                             </Button>
                           </TooltipTrigger>
                           {info.preview.length > 0 && (
@@ -358,11 +312,9 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
                       className="h-6"
                     />
 
-                    {effectiveSentenceList.type === "essential" && (
+                    {view.level_note && (
                       <p className="text-xs text-muted-foreground text-center sm:text-left">
-                        When you complete this level, you'll understand{" "}
-                        {tierInfo.percent_of_usage.toFixed(1)}% of everyday{" "}
-                        {targetLanguage}.
+                        {view.level_note}
                       </p>
                     )}
 
@@ -421,47 +373,25 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
   );
 }
 
-/// "You'll review <word> in 2 minutes." / "Your next review is soon."
+/// Rust builds the sentence; the emphasized run is the target-language word.
 function NextReviewLine({
-  nextDueCard,
+  line,
   targetLanguage,
 }: {
-  nextDueCard: CardSummary | null;
+  line: EmphasizedText;
   targetLanguage: Language;
 }) {
-  let nextTargetLanguageWord: string | null = null;
-  if (nextDueCard?.card_indicator.type === "WrittenGram") {
-    nextTargetLanguageWord = nextDueCard.card_text;
-  }
-
   return (
     <p className="text-muted-foreground">
-      {nextTargetLanguageWord ? (
-        <>
-          You'll review{" "}
-          <span className="font-semibold">
-            <TargetLanguageText language={targetLanguage}>
-              {nextTargetLanguageWord}
-            </TargetLanguageText>
-          </span>{" "}
-          {nextDueCard ? (
-            <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
-          ) : (
-            "soon"
-          )}
-          .
-        </>
-      ) : (
-        <>
-          Your next review is{" "}
-          {nextDueCard ? (
-            <TimeAgo date={new Date(nextDueCard.due_timestamp_ms)} />
-          ) : (
-            "soon"
-          )}
-          .
-        </>
+      {line.before}
+      {line.emphasis && (
+        <span className="font-semibold">
+          <TargetLanguageText language={targetLanguage}>
+            {line.emphasis}
+          </TargetLanguageText>
+        </span>
       )}
+      {line.after}
     </p>
   );
 }

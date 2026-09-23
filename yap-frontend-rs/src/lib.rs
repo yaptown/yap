@@ -376,6 +376,11 @@ impl Weapon {
         let timezone = chrono::FixedOffset::east_opt(utc_offset_seconds)
             .ok_or_else(|| bridgerton::Error::new("invalid timezone offset"))?;
         let context = Context {
+            study_goal: selection
+                .as_ref()
+                .filter(|s| s.target_language == Some(target_language))
+                .and_then(|s| s.onboarding_selections.as_ref())
+                .and_then(|s| s.study_goal.clone()),
             language_pack,
             course: Course {
                 target_language,
@@ -1076,6 +1081,8 @@ pub struct TodaySummary {
 /// Context contains the language-specific configuration
 #[derive(Clone, Debug)]
 pub struct Context {
+    /// Onboarding goal, used until a daily review target is explicitly set.
+    pub study_goal: Option<DailyReviewTarget>,
     pub language_pack: Arc<LanguagePack>,
     pub course: Course,
     /// User's timezone offset from UTC
@@ -1136,8 +1143,8 @@ pub struct DeckState {
     sentence_list: Option<SentenceListSelection>,
     /// The current accomplishment to display (cleared on each review, set when earned)
     accomplishment: Option<Accomplishment>,
-    /// The user's daily study intensity
-    daily_review_target: DailyReviewTarget,
+    /// The user's explicitly chosen daily study intensity, if any.
+    daily_review_target: Option<DailyReviewTarget>,
     /// Cards set aside ("locked up") and hidden from the review queue
     locked_cards: FxHashSet<CardIndicator<SpurGram, Spur>>,
     /// The user's local day of the most recent LockCardsExcept event
@@ -1162,8 +1169,8 @@ pub struct Deck {
     sentence_list: Option<SentenceListSelection>,
     /// The current accomplishment to display (cleared on each review, set when earned)
     accomplishment: Option<Accomplishment>,
-    /// The user's daily study intensity
-    daily_review_target: DailyReviewTarget,
+    /// The user's explicitly chosen daily study intensity, if any.
+    daily_review_target: Option<DailyReviewTarget>,
     /// Cards set aside ("locked up") and hidden from the review queue
     locked_cards: FxHashSet<CardIndicator<SpurGram, Spur>>,
     /// The user's local day of the most recent LockCardsExcept event
@@ -1311,7 +1318,9 @@ impl weapon::AppState for Deck {
             deck.stats.total_reviews += 1;
 
             if let Some(today) = &deck.stats.today {
-                let target = deck.daily_review_target.target_seconds();
+                let target = context
+                    .daily_review_target_setting(deck.daily_review_target.as_ref())
+                    .target_seconds();
                 if time_before < target && today.time_spent_seconds >= target {
                     deck.accomplishment = Some(Accomplishment::DailyGoalReached);
                 }
@@ -1864,7 +1873,7 @@ impl weapon::AppState for Deck {
             LanguageEventContent::SetDailyReviewTarget {
                 daily_review_target,
             } => {
-                deck.daily_review_target = daily_review_target.clone();
+                deck.daily_review_target = Some(daily_review_target.clone());
             }
             LanguageEventContent::LockCardsExcept { keep } => {
                 let keep: FxHashSet<_> = keep
@@ -2125,7 +2134,7 @@ impl DeckState {
             leeches: BTreeMap::new(),
             sentence_list: None,
             accomplishment: None,
-            daily_review_target: DailyReviewTarget::Regular,
+            daily_review_target: None,
             locked_cards: FxHashSet::default(),
             last_lock_day: None,
             last_lock_timestamp: None,
@@ -2927,7 +2936,8 @@ impl Deck {
     }
 
     pub fn get_daily_review_target_setting(&self) -> DailyReviewTarget {
-        self.daily_review_target.clone()
+        self.context
+            .daily_review_target_setting(self.daily_review_target.as_ref())
     }
 
     pub fn set_daily_review_target(&self, daily_review_target: DailyReviewTarget) -> DeckEvent {
@@ -3050,7 +3060,7 @@ impl Deck {
 
     /// Daily goal target in seconds.
     pub fn get_daily_review_target(&self) -> u32 {
-        self.daily_review_target.target_seconds()
+        self.get_daily_review_target_setting().target_seconds()
     }
 
     /// Progress for each day of the current week (Monday → Sunday) in the user's local timezone.
@@ -3953,6 +3963,16 @@ impl Deck {
 }
 
 impl Context {
+    fn daily_review_target_setting(
+        &self,
+        explicit_target: Option<&DailyReviewTarget>,
+    ) -> DailyReviewTarget {
+        explicit_target
+            .or(self.study_goal.as_ref())
+            .cloned()
+            .unwrap_or(DailyReviewTarget::Regular)
+    }
+
     /// Check if a card is valid and can be added to the deck
     /// For lexeme cards: checks if they exist in word_frequencies (which guarantees they have definitions)
     /// For listening cards: checks if the pronunciation exists
@@ -5073,7 +5093,7 @@ impl Deck {
         use chrono::Datelike;
         let weekday_from_monday = today.weekday().num_days_from_monday() as i64;
         let monday = today - chrono::Duration::days(weekday_from_monday);
-        let target = self.daily_review_target.target_seconds();
+        let target = self.get_daily_review_target_setting().target_seconds();
 
         (0..7)
             .map(|offset| {
@@ -5141,6 +5161,7 @@ mod tests {
             let language_pack = Arc::new(language_pack);
 
             let context = Context {
+                study_goal: None,
                 language_pack,
                 course: Course {
                     target_language: Language::French,
@@ -5151,6 +5172,52 @@ mod tests {
             let state = DeckState::new();
             <Deck as weapon::AppState>::finalize(state, &context)
         }
+    }
+
+    fn daily_review_target_deck(study_goal: Option<DailyReviewTarget>) -> Deck {
+        let course = Course {
+            target_language: Language::French,
+            native_language: Language::English,
+        };
+        let context = Context {
+            study_goal,
+            language_pack: Arc::new(LanguagePack::new(Default::default(), course)),
+            course,
+            timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+        };
+        Deck::finalize(DeckState::new(), &context)
+    }
+
+    #[test]
+    fn daily_review_target_defaults_to_onboarding_goal() {
+        let deck = daily_review_target_deck(Some(DailyReviewTarget::Serious));
+        assert_eq!(
+            deck.get_daily_review_target_setting(),
+            DailyReviewTarget::Serious
+        );
+        assert_eq!(deck.get_daily_review_target(), 15 * 60);
+    }
+
+    #[test]
+    fn daily_review_target_explicit_event_overrides_onboarding_goal() {
+        let deck = daily_review_target_deck(Some(DailyReviewTarget::Serious));
+        let event = deck.set_daily_review_target(DailyReviewTarget::Casual);
+        let deck = apply_deck_event(deck, event, Utc::now());
+        assert_eq!(
+            deck.get_daily_review_target_setting(),
+            DailyReviewTarget::Casual
+        );
+        assert_eq!(deck.get_daily_review_target(), 5 * 60);
+    }
+
+    #[test]
+    fn daily_review_target_without_onboarding_goal_is_regular() {
+        let deck = daily_review_target_deck(None);
+        assert_eq!(
+            deck.get_daily_review_target_setting(),
+            DailyReviewTarget::Regular
+        );
+        assert_eq!(deck.get_daily_review_target(), 10 * 60);
     }
 
     #[test]
@@ -5385,7 +5452,7 @@ mod tests {
             panic!("expected idle")
         };
         assert_eq!(caught_up.kind, IdleKind::AllCaughtUp);
-        assert!(caught_up.next_due.is_some());
+        assert!(caught_up.next_review.is_some());
         let card = cards[0].resolve(
             &deck.context.language_pack.string_rodeo,
             &deck.context.language_pack.gram_rodeo,
@@ -6121,6 +6188,7 @@ mod tests {
         }
 
         let context = Context {
+            study_goal: None,
             language_pack,
             course: Course {
                 target_language: Language::French,
@@ -6234,6 +6302,7 @@ mod tests {
         }
 
         let context = Context {
+            study_goal: None,
             language_pack: language_pack.clone(),
             course: Course {
                 target_language: Language::French,
@@ -6449,6 +6518,7 @@ mod tests {
             native_language: native,
         };
         let context = Context {
+            study_goal: None,
             language_pack,
             course,
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
@@ -6957,6 +7027,7 @@ mod tests {
             return vec![];
         };
         let context = Context {
+            study_goal: None,
             language_pack: pack.clone(),
             course,
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),

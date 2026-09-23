@@ -22,6 +22,7 @@ fn create_deck_for_course(course: Course) -> Result<Deck> {
     let language_pack = std::sync::Arc::new(language_pack);
 
     let context = yap_frontend_rs::Context {
+        study_goal: None,
         language_pack,
         course,
         timezone: chrono::FixedOffset::east_opt(0).unwrap(),

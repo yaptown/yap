@@ -6,7 +6,6 @@
     "step": {
       "type": "Idle",
       "view": {
-        "type": "Idle",
         "target_language": "Italian",
         "kind": "FirstRun",
         "smart_add_label": "Start learning",
@@ -120,7 +119,16 @@
             }
           }
         ],
-        "next_due": null,
+        "next_review": null,
+        "curriculum_headline": {
+          "before": "Keep up the momentum on",
+          "emphasis": "Basic Italian Level 3",
+          "after": "!"
+        },
+        "curriculum_learn_label": "Learn 1 new card",
+        "next_sentence_list_label": null,
+        "all_learned_note": null,
+        "level_note": "When you complete this level, you'll understand 37.4% of everyday Italian.",
         "banned_notice": null,
         "week": [
           {
@@ -247,7 +255,8 @@
         },
         "sentence_list_label": "Basic Italian Level 3",
         "next_sentence_list": null,
-        "switch_curriculum": null
+        "switch_curriculum": null,
+        "type": "Idle"
       }
     },
     "progress": 0.0,

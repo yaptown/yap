@@ -420,6 +420,7 @@ mod tests {
             course,
         );
         let context = Context {
+            study_goal: None,
             language_pack: Arc::new(pack),
             course,
             timezone: chrono::FixedOffset::east_opt(0).unwrap(),
