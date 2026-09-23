@@ -20,6 +20,7 @@ fn apply_event(deck: Deck, event: &Timestamped<crate::DeckEvent>) -> Deck {
 /// Call `next_day()` to get a `DayChallengeIterator` for one day's challenges,
 /// then call `finish_day()` on it to advance to the next day.
 pub struct DailySimulationIterator {
+    last_introduced: Vec<crate::CardIndicator<language_utils::SpurGram, lasso::Spur>>,
     deck: Deck,
     current_time: DateTime<Utc>,
     event_index: usize,
@@ -37,6 +38,7 @@ pub struct DailySimulationIterator {
 impl DailySimulationIterator {
     pub fn new(deck: Deck, current_time: DateTime<Utc>) -> Self {
         Self {
+            last_introduced: Vec::new(),
             deck,
             current_time,
             event_index: 0,
@@ -44,6 +46,16 @@ impl DailySimulationIterator {
             banned_challenge_types: Vec::new(),
             include_locked: true,
         }
+    }
+
+    pub(crate) fn deck(&self) -> &Deck {
+        &self.deck
+    }
+
+    pub(crate) fn last_introduced(
+        &self,
+    ) -> &[crate::CardIndicator<language_utils::SpurGram, lasso::Spur>] {
+        &self.last_introduced
     }
 
     /// Override how many new cards are added per simulated day.
@@ -116,6 +128,7 @@ impl DayChallengeIterator {
         // sentence list (the AddCards event records the list, and replaying it
         // with None would reset the deck's selection).
         let sentence_list = deck.get_sentence_list();
+        let mut last_introduced = Vec::new();
         let event = match self.new_cards_per_day {
             Some(count) => {
                 let cards: Vec<_> = deck
@@ -126,6 +139,7 @@ impl DayChallengeIterator {
                     )
                     .take(count)
                     .collect();
+                last_introduced = cards.clone();
                 deck.cards_to_event(&cards, &sentence_list)
             }
             None => {
@@ -145,6 +159,7 @@ impl DayChallengeIterator {
         }
 
         DailySimulationIterator {
+            last_introduced,
             deck,
             current_time: self.current_time + Duration::days(1),
             event_index: self.event_index,

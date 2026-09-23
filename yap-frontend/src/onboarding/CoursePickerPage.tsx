@@ -1,3 +1,4 @@
+import { CourseAudioPrefetch } from "@/review/course-study";
 import { useDeckSelection } from "@/core/useDeck";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { CoursePicker } from "./CoursePicker";
@@ -12,7 +13,9 @@ export function SelectLanguagePage() {
   const deckSelection = useDeckSelection();
   const navigate = useNavigate();
 
-  return match(deckSelection)
+  return <>
+    <CourseAudioPrefetch />
+    {match(deckSelection)
     .with(
       { type: "languageSelected" },
       ({ targetLanguage, hasHeardAbout, onboardedLanguages }) => (
@@ -85,5 +88,6 @@ export function SelectLanguagePage() {
         </div>
       </TopPageLayout>
     ))
-    .exhaustive();
+    .exhaustive()}
+  </>;
 }

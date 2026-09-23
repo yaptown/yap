@@ -1,4 +1,4 @@
-import { useCourseDeck, useCourseStudy } from "@/review/course-study";
+import { CourseAudioPrefetch, useCourseDeck, useCourseStudy } from "@/review/course-study";
 import { ReviewScreen } from "@/review/ReviewScreen";
 import { useState, useEffect } from "react";
 import { useZeno } from "@/hooks/useZeno";
@@ -49,6 +49,7 @@ export function ReviewPage() {
     const totalReviewsCompleted = state.deck.get_total_reviews();
     return (
       <div className="flex flex-col gap-6">
+        <CourseAudioPrefetch />
         {state.view.pack_banner && (
           <div
             className="flex items-center justify-between gap-4 p-4 text-sm text-muted-foreground"

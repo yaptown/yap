@@ -87,6 +87,18 @@ export function useCourseStudy() {
   return study;
 }
 
+// Mount only on screens that need study audio; unmounting cancels prefetch.
+export function CourseAudioPrefetch() {
+  const { deck, accessToken, banned, readiness, online } = useCourseStudy().audioPrefetch;
+  useEffect(() => {
+    if (!deck) return;
+    const controller = new AbortController();
+    deck.cache_challenge_audio(banned, accessToken, controller.signal);
+    return () => controller.abort();
+  }, [deck, accessToken, banned, readiness, online]);
+  return null;
+}
+
 function useStudyController(
   state: ReturnType<typeof useDeck>,
   { userInfo, accessToken }: AppContextType,
@@ -176,13 +188,6 @@ function useStudyController(
       console.warn("Failed to refresh clip manifest:", error);
     });
   }, [targetLanguage, accessToken]);
-
-  useEffect(() => {
-    if (!deck) return;
-    const controller = new AbortController();
-    deck.cache_challenge_audio(banned, accessToken, controller.signal);
-    return () => controller.abort();
-  }, [deck, accessToken, banned, readiness, network.online]);
 
   useEffect(() => {
     if (deck && accessToken && userInfo?.id) {
@@ -410,6 +415,7 @@ function useStudyController(
   };
 
   return {
+    audioPrefetch: { deck, accessToken, banned, readiness, online: network.online },
     inputs,
     getReviewView,
     getHomeView,

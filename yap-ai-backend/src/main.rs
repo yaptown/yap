@@ -1,10 +1,10 @@
 use axum::{
     Router,
     body::Bytes,
-    extract::{Json, Path},
+    extract::{DefaultBodyLimit, Json, Path},
     http::{StatusCode, header},
     response::Response,
-    routing::{get, post},
+    routing::{get, post, put},
 };
 use axum_extra::{
     TypedHeader,
@@ -30,6 +30,7 @@ use resend_rs::{Resend, types::CreateEmailBaseOptions};
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 
+mod anki_package;
 mod anki_tts;
 mod deck_token;
 mod packs;
@@ -2222,6 +2223,10 @@ fn app() -> Router {
         .route("/clip/{lang}/sentences", get(serve_clip_sentences))
         .route("/anki/deck", post(mint_anki_deck))
         .route("/anki/tts", get(anki_tts::tts))
+        .route(
+            "/anki/deck/{deck_id}/package",
+            put(anki_package::upload).layer(DefaultBodyLimit::max(anki_package::MAX_PACKAGE_BYTES)),
+        )
         .route("/clip/{lang}/{clip_id}/lo.mp4", get(serve_clip_video))
         .route(
             "/clip/{lang}/{clip_id}/subtitles",

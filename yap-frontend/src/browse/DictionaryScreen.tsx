@@ -1,4 +1,4 @@
-import { useCourseDeck } from "@/review/course-study";
+import { CourseAudioPrefetch, useCourseDeck } from "@/review/course-study";
 import { useWeapon } from "../core/weapon";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { DeckLoadStatus } from "@/app/DeckPage";
@@ -234,6 +234,7 @@ export function DictionaryPage() {
         backButton: { label: "Home", onBack: () => navigate("/home") },
       }}
     >
+      <CourseAudioPrefetch />
       <Dictionary
         deck={deck.deck}
         weapon={weapon}

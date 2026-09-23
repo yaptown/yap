@@ -1,6 +1,8 @@
 #![deny(clippy::string_slice)]
 
+pub mod anki_export;
 mod audio;
+pub use anki_export::*;
 mod challenge;
 pub mod challenge_views;
 pub use challenge_views::*;

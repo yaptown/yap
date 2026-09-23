@@ -720,6 +720,7 @@ function Footer() {
       <Wordmark className="text-[24px]" />
       <div className="flex flex-wrap gap-x-6 gap-y-2 text-[15px] text-(--fg-dim)">
         <a href="/d/">Dictionary</a>
+        <Link to="/anki">Anki decks</Link>
         <Link to="/select-language">Languages</Link>
         <a href="/blog/">Blog</a>
         <Link to="/about">About</Link>

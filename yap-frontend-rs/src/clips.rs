@@ -131,6 +131,10 @@ pub(crate) fn publish_manifest(language: Language, rows: Vec<ClipRow>) {
     CLIP_MANIFEST_VERSION.with(|v| v.set(v.get().wrapping_add(1)));
 }
 
+pub(crate) fn manifest_loaded(language: Language) -> bool {
+    CLIP_MANIFESTS.with(|m| m.borrow().contains_key(&language))
+}
+
 pub(crate) fn clip_manifest_version() -> u32 {
     CLIP_MANIFEST_VERSION.with(|v| v.get())
 }

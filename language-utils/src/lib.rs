@@ -4850,6 +4850,12 @@ pub fn tts_cache_filename(request: &TtsRequest, provider: &TtsProvider) -> Strin
 /// written, so a hit is always a verified clip.
 pub const TTS_CACHE_ORIGIN: &str = "https://ttscache.yap.town";
 
+/// Public origin of published movie clips.
+pub const CLIPS_ORIGIN: &str = "https://clips.yap.town";
+
+/// Public origin of temporary exported Anki packages (eight-day retention).
+pub const ANKI_DECKS_ORIGIN: &str = "https://anki-decks.yap.town";
+
 /// Where the shared cache would serve the clip for `cache_filename`.
 pub fn tts_cache_url(cache_filename: &str) -> String {
     format!("{TTS_CACHE_ORIGIN}/{cache_filename}")
