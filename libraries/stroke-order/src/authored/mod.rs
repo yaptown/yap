@@ -82,6 +82,19 @@ macro_rules! strokes {
 }
 pub(crate) use strokes;
 
+/// (min x, max x, min y, max y) of the ink.
+pub fn bounds(strokes: &[Vec<Pt>]) -> (f64, f64, f64, f64) {
+    strokes.iter().flatten().fold(
+        (
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        ),
+        |(a, b, c, d), p| (a.min(p.0), b.max(p.0), c.min(p.1), d.max(p.1)),
+    )
+}
+
 pub fn dist(a: Pt, b: Pt) -> f64 {
     (a.0 - b.0).hypot(a.1 - b.1)
 }

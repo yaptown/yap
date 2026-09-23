@@ -39,16 +39,19 @@ enum Pack {
     /// The 40 Korean jamo; syllables are composed from them on demand.
     Hangul(Glyphs),
     Devanagari(authored::devanagari::Devanagari),
+    Thai(authored::thai::Thai),
 }
 
 impl StrokePack {
     /// The writable units of `text`, in order and skipping nothing: whitespace
     /// and characters the pack cannot draw are units too, with no glyph. One
     /// character per unit, except Hindi, whose unit is the akshara (a
-    /// consonant cluster or vowel with its marks).
+    /// consonant cluster or vowel with its marks), and Thai, whose unit is a
+    /// consonant with its stacked marks.
     pub fn segment<'a>(&self, text: &'a str) -> Vec<&'a str> {
         match &self.0 {
             Pack::Devanagari(_) => authored::devanagari::segment(text),
+            Pack::Thai(_) => authored::thai::segment(text),
             Pack::Chars(_) | Pack::Hangul(_) => text
                 .char_indices()
                 .map(|(i, c)| &text[i..i + c.len_utf8()])
@@ -66,6 +69,7 @@ impl StrokePack {
             (Pack::Chars(forms), Some(c)) => forms.get(&c).cloned().unwrap_or_default(),
             (Pack::Hangul(jamo), Some(c)) => korean::glyph(c, jamo).into_iter().collect(),
             (Pack::Devanagari(devanagari), _) => devanagari.glyphs(unit),
+            (Pack::Thai(thai), _) => thai.glyphs(unit),
             (Pack::Chars(_) | Pack::Hangul(_), None) => Vec::new(),
         }
     }
@@ -85,7 +89,7 @@ where
     Ok(StrokePack(match language {
         Language::Korean => Pack::Hangul(parse_scribing(&fetch(SCRIBING_URL).await?)?),
         Language::Hindi => Pack::Devanagari(Default::default()),
-        Language::Thai => Pack::Chars(authored::thai::glyphs()),
+        Language::Thai => Pack::Thai(Default::default()),
         Language::Russian => Pack::Chars(authored::cyrillic::glyphs()),
         Language::French
         | Language::English
@@ -411,12 +415,24 @@ mod tests {
         .unwrap();
         assert_eq!(map.segment("नमस्ते"), ["न", "म", "स्ते"]);
         assert_eq!(map.glyphs("स्ते")[0].standard, StrokeStandard::Devanagari);
+        let map = load(Language::Thai, |_| async {
+            panic!("authored packs are embedded, not fetched")
+        })
+        .await
+        .unwrap();
+        assert_eq!(map.segment("ครับ"), ["ค", "รั", "บ"]);
+        assert_eq!(map.glyphs("รั").len(), 1);
+        assert_eq!(map.glyphs("รั")[0].standard, StrokeStandard::Thai);
     }
 
     #[test]
     fn authored_packs_build() {
         for (glyphs, standard, min) in [
-            (authored::thai::glyphs(), StrokeStandard::Thai, 80),
+            (
+                authored::thai::Thai::default().units,
+                StrokeStandard::Thai,
+                81,
+            ),
             (authored::latin::glyphs(), StrokeStandard::Latin, 122),
             (authored::cyrillic::glyphs(), StrokeStandard::Cyrillic, 66),
         ] {

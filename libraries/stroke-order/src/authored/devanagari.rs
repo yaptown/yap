@@ -101,7 +101,7 @@
 //!   headline; then nuktas, the marks above and below in text order, reph, and
 //!   ं ँ.
 //! - रु and रू attach to the middle of र, as every Hindi primer shows them.
-use super::{Ends, Pt, Strokes, centripetal, glyph, group, strokes};
+use super::{Ends, Pt, Strokes, bounds, centripetal, glyph, group, strokes};
 use crate::{StrokeGlyph, StrokeStandard};
 use rustc_hash::FxHashMap;
 
@@ -434,11 +434,6 @@ impl Fit {
         let headline = f64::from(HEADLINE);
         (500.0 + (x - self.cx) * self.scale, headline + (y - headline) * self.scale)
     }
-}
-
-/// (min x, max x, min y, max y) of the ink.
-fn bounds(strokes: &[Vec<Pt>]) -> (f64, f64, f64, f64) {
-    strokes.iter().flatten().fold((f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY), |(a, b, c, d), p| (a.min(p.0), b.max(p.0), c.min(p.1), d.max(p.1)))
 }
 
 fn shift(strokes: &mut Strokes, dx: f64, dy: f64) {
