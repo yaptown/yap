@@ -154,6 +154,7 @@ The web app and the iOS app must behave identically, so the rule for where code 
 
 ### Important Notes
 
+- Language packs ship in two parts (`language-utils/src/language_pack.rs`): `language_data_core.rkyv` holds only what the placement test needs so it can run while the rest is still downloading; everything else goes in `language_data_sentences.rkyv` (or a new part). Do not add a field to `LanguagePackCore` just because it is small.
 - The build process is complex and requires multiple tools: Rust, wasm-pack, uv (Python), and pnpm
 - WASM module must be rebuilt after changes to `yap-frontend-rs`
 - Sentence tokenization goes through lexide's Modal endpoint (results cached in per-language `*_tokenization.jsonl` files)
