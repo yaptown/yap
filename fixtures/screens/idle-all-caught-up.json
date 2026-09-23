@@ -519,11 +519,6 @@
             }
           }
         ],
-        "next_review": {
-          "before": "You'll review ",
-          "emphasis": "peut",
-          "after": " 2 days from now."
-        },
         "curriculum_headline": {
           "before": "You're doing great on",
           "emphasis": "Advanced French Level 11",
@@ -660,7 +655,32 @@
         "sentence_list_label": "Advanced French Level 11",
         "next_sentence_list": null,
         "switch_curriculum": null,
-        "type": "Idle"
+        "type": "Idle",
+        "next_due": {
+          "card_indicator": {
+            "type": "WrittenGram",
+            "gram": {
+              "gram": [
+                {
+                  "Tok": {
+                    "text": "peut",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "peut",
+                      "lemma": "pouvoir",
+                      "pos": "AUX"
+                    }
+                  }
+                }
+              ],
+              "sense": null
+            }
+          },
+          "due_timestamp_ms": 1789960232175.0,
+          "state": "review",
+          "card_text": "peut",
+          "card_subtitle": "auxiliary"
+        }
       }
     },
     "progress": 0.0,

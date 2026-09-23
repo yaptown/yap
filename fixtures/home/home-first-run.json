@@ -125,7 +125,6 @@
             }
           }
         ],
-        "next_review": null,
         "curriculum_headline": {
           "before": "Keep up the momentum on",
           "emphasis": "Basic Italian Level 3",
@@ -262,7 +261,8 @@
         "sentence_list_label": "Basic Italian Level 3",
         "next_sentence_list": null,
         "switch_curriculum": null,
-        "type": "Idle"
+        "type": "Idle",
+        "next_due": null
       }
     },
     "goal": {

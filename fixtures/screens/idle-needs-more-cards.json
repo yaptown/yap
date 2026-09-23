@@ -211,7 +211,6 @@
             }
           }
         ],
-        "next_review": null,
         "curriculum_headline": {
           "before": "Soon you'll hit 5% on",
           "emphasis": "Core German Level 1",
@@ -348,7 +347,8 @@
         "sentence_list_label": "Core German Level 1",
         "next_sentence_list": null,
         "switch_curriculum": null,
-        "type": "Idle"
+        "type": "Idle",
+        "next_due": null
       }
     },
     "progress": 0.0,

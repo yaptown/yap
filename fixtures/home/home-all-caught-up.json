@@ -525,11 +525,6 @@
             }
           }
         ],
-        "next_review": {
-          "before": "Your next review is 2 days from now.",
-          "emphasis": "",
-          "after": ""
-        },
         "curriculum_headline": {
           "before": "Soon you'll hit 10% on",
           "emphasis": "Advanced French Level 11",
@@ -666,7 +661,29 @@
         "sentence_list_label": "Advanced French Level 11",
         "next_sentence_list": null,
         "switch_curriculum": null,
-        "type": "Idle"
+        "type": "Idle",
+        "next_due": {
+          "card_indicator": {
+            "type": "ListeningGram",
+            "gram": [
+              {
+                "Tok": {
+                  "text": "merci",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "merci",
+                    "lemma": "merci",
+                    "pos": "NOUN"
+                  }
+                }
+              }
+            ]
+          },
+          "due_timestamp_ms": 1790200658728.0,
+          "state": "review",
+          "card_text": "merci",
+          "card_subtitle": "listening"
+        }
       }
     },
     "goal": {

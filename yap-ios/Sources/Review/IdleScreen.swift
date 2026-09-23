@@ -18,13 +18,13 @@ struct IdleScreen: View {
                 }
             case let .ReviewPlanOffer(plan):
                 ReviewPlanScreen(cards: plan.cards) { addEvent(plan.event) }
-            case let .StudyPlanComplete(title, nextReview, plan):
+            case let .StudyPlanComplete(title, nextDue, plan):
                 if showReleasePlan {
                     ReviewPlanScreen(cards: plan.cards) { addEvent(plan.event) }
                 } else {
                     StudyCard {
                         Text(title).font(.title2.bold())
-                        if let nextReview { NextReviewLine(line: nextReview, language: plan.target_language) }
+                        if let nextDue { NextReviewLine(card: nextDue) }
                         Button("Study more") { showReleasePlan = true }.buttonStyle(.bordered).controlSize(.large)
                         WeekProgressStrip(week: plan.week)
                     }
@@ -56,7 +56,7 @@ struct IdleScreen: View {
         let awaitingAcknowledgement = if case .PimsleurLesson = idle.navigation.selection { !pimsleurAcknowledged } else { false }
         StudyCard {
             Text(idle.title).font(.title2.bold())
-            if !idle.body.isEmpty { Text(idle.body) } else if let line = idle.next_review { NextReviewLine(line: line, language: idle.target_language) }
+            if !idle.body.isEmpty { Text(idle.body) } else if let card = idle.next_due { NextReviewLine(card: card) }
             if let notice = idle.banned_notice {
                 Text(notice)
                 Button("Undo restrictions") { actions.undoRestrictions() }
@@ -92,12 +92,20 @@ struct IdleScreen: View {
     }
 }
 
-/// Rust builds the sentence; the emphasized run is the target-language word.
+/// Rust builds the sentence, rounds the countdown, and says when the words
+/// would next change; this schedules exactly that one refresh.
 struct NextReviewLine: View {
-    let line: EmphasizedText
-    let language: Language
+    let card: CardSummary
+    @State private var now = Date()
     var body: some View {
-        (Text(line.before) + Text(line.emphasis).bold() + Text(line.after))
+        let live = next_review_line(card: card, now_ms: now.timeIntervalSince1970 * 1000)
+        (Text(live.text.before) + Text(live.text.emphasis).bold() + Text(live.text.after))
             .foregroundStyle(.secondary)
+            .onChange(of: card.due_timestamp_ms) { _, _ in now = Date() }
+            .task(id: live.refresh_at_ms) {
+                let delay = live.refresh_at_ms / 1000 - Date().timeIntervalSince1970
+                try? await Task.sleep(for: .seconds(max(0, delay)))
+                if !Task.isCancelled { now = Date() }
+            }
     }
 }

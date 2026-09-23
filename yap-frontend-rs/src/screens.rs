@@ -62,8 +62,8 @@ pub struct IdleView {
     pub info: NoCardsReadyInfo,
     pub manual_add_heading: String,
     pub manual_add_options: Vec<ManualAddOption>,
-    /// "You'll review <word> 2 days from now." Shown when `body` is empty.
-    pub next_review: Option<EmphasizedText>,
+    /// Feeds `next_review_line` on the hosts' own tick when `body` is empty.
+    pub next_due: Option<CardSummary>,
     /// "Soon you'll hit 10% on <CURRICULUM>!" atop the sentence-list panel.
     pub curriculum_headline: EmphasizedText,
     /// "Learn 5 new cards to hit 10%": the smart-add button inside the panel.
@@ -96,7 +96,7 @@ pub enum IdleScreenView {
     ReviewPlanOffer(ReviewPlanView),
     StudyPlanComplete {
         title: String,
-        next_review: Option<EmphasizedText>,
+        next_due: Option<CardSummary>,
         plan: Box<ReviewPlanView>,
     },
     Idle(Box<IdleView>),
@@ -126,35 +126,60 @@ pub struct AccomplishmentView {
     pub days: Vec<DayProgress>,
 }
 
+/// Text that depends on the clock, with the instant it would next change so a
+/// host can schedule exactly one refresh instead of polling.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct LiveText {
+    pub text: EmphasizedText,
+    pub refresh_at_ms: f64,
+}
+
 /// Relative time the way web's react-timeago renders it: round to the largest
 /// unit under a minute/hour/day/week/30-day month/365-day year, then
-/// "2 days from now" or "3 hours ago".
-pub fn relative_time(from_ms: f64, to_ms: f64) -> String {
+/// "2 days from now" or "3 hours ago". Also returns when the string would
+/// next change (always at least a second after `from_ms`).
+pub fn relative_time(from_ms: f64, to_ms: f64) -> (String, f64) {
     const MINUTE: f64 = 60.0;
     const HOUR: f64 = 60.0 * MINUTE;
     const DAY: f64 = 24.0 * HOUR;
     const WEEK: f64 = 7.0 * DAY;
     const MONTH: f64 = 30.0 * DAY;
     const YEAR: f64 = 365.0 * DAY;
+    // (lower bound of the tier, unit, name)
+    const TIERS: [(f64, f64, &str); 7] = [
+        (0.0, 1.0, "second"),
+        (MINUTE, MINUTE, "minute"),
+        (HOUR, HOUR, "hour"),
+        (DAY, DAY, "day"),
+        (WEEK, WEEK, "week"),
+        (MONTH, MONTH, "month"),
+        (YEAR, YEAR, "year"),
+    ];
+    let future = to_ms >= from_ms;
     let seconds = ((to_ms - from_ms).abs() / 1000.0).round();
-    let (value, unit) = if seconds < MINUTE {
-        (seconds, "second")
-    } else if seconds < HOUR {
-        ((seconds / MINUTE).round(), "minute")
-    } else if seconds < DAY {
-        ((seconds / HOUR).round(), "hour")
-    } else if seconds < WEEK {
-        ((seconds / DAY).round(), "day")
-    } else if seconds < MONTH {
-        ((seconds / WEEK).round(), "week")
-    } else if seconds < YEAR {
-        ((seconds / MONTH).round(), "month")
-    } else {
-        ((seconds / YEAR).round(), "year")
-    };
+    let tier = TIERS
+        .iter()
+        .rposition(|(lower, _, _)| seconds >= *lower)
+        .unwrap_or(0);
+    let (lower, unit, name) = TIERS[tier];
+    let value = (seconds / unit).round();
     let plural = if value == 1.0 { "" } else { "s" };
-    let suffix = if to_ms >= from_ms { "from now" } else { "ago" };
-    format!("{value} {unit}{plural} {suffix}")
+    let suffix = if future { "from now" } else { "ago" };
+    let text = format!("{value} {name}{plural} {suffix}");
+    // The text is a function of the whole-second count `seconds`: it changes
+    // when that count crosses the rounded-value threshold or the tier bound.
+    // Work in whole seconds, then convert back to the raw instant (a raw
+    // value rounds to a different whole second half a second early).
+    let refresh_at_ms = if future {
+        let threshold = ((value - 0.5) * unit).max(lower);
+        to_ms - (threshold.ceil() - 0.5) * 1000.0 + 1.0
+    } else {
+        let upper = TIERS.get(tier + 1).map_or(f64::INFINITY, |t| t.0);
+        let threshold = ((value + 0.5) * unit).min(upper);
+        to_ms + (threshold.ceil() - 0.5) * 1000.0 + 1.0
+    };
+    (text, refresh_at_ms.max(from_ms + 1000.0))
 }
 
 struct CurriculumCopy {
@@ -228,10 +253,13 @@ fn curriculum_copy(
 }
 
 /// "You'll review <word> 2 days from now." for a written card, otherwise
-/// "Your next review is 2 days from now." (web copy).
-fn next_review_line(card: &CardSummary, now_ms: f64) -> EmphasizedText {
-    let when = relative_time(now_ms, card.due_timestamp_ms);
-    match card.card_indicator {
+/// "Your next review is 2 days from now." (web copy). Hosts re-ask at
+/// `refresh_at_ms` so the countdown stays live without polling; the words and
+/// rounding are Rust's so both platforms agree.
+#[bridgerton::bridge]
+pub fn next_review_line(card: CardSummary, now_ms: f64) -> LiveText {
+    let (when, refresh_at_ms) = relative_time(now_ms, card.due_timestamp_ms);
+    let text = match card.card_indicator {
         CardIndicator::WrittenGram { .. } => EmphasizedText {
             before: "You'll review ".into(),
             emphasis: card.card_text.clone(),
@@ -242,6 +270,10 @@ fn next_review_line(card: &CardSummary, now_ms: f64) -> EmphasizedText {
             emphasis: String::new(),
             after: String::new(),
         },
+    };
+    LiveText {
+        text,
+        refresh_at_ms,
     }
 }
 
@@ -312,9 +344,8 @@ impl Deck {
             };
             return IdleScreenView::StudyPlanComplete {
                 title: format!("You completed the study plan in {duration}!"),
-                next_review: next_due
-                    .filter(|card| card.due_timestamp_ms - timestamp_ms < 30.0 * 60.0 * 1000.0)
-                    .map(|card| next_review_line(&card, timestamp_ms)),
+                next_due: next_due
+                    .filter(|card| card.due_timestamp_ms - timestamp_ms < 30.0 * 60.0 * 1000.0),
                 plan: Box::new(plan),
             };
         }
@@ -399,7 +430,7 @@ impl Deck {
             manual_add_heading: MANUAL_ADD_HEADING.into(),
             manual_add_options,
             info,
-            next_review: next_due.map(|card| next_review_line(&card, timestamp_ms)),
+            next_due,
             curriculum_headline,
             curriculum_learn_label,
             next_sentence_list_label,
@@ -1198,8 +1229,48 @@ mod tests {
             (400.0 * 86400.0 * s, "1 year from now"),
             (-3.0 * 3600.0 * s, "3 hours ago"),
         ] {
-            assert_eq!(relative_time(now, now + delta), expected, "delta {delta}");
+            assert_eq!(relative_time(now, now + delta).0, expected, "delta {delta}");
         }
+    }
+
+    #[test]
+    fn relative_time_refreshes_exactly_when_the_text_changes() {
+        let now = 1_700_000_000_000.0;
+        let hour = 3_600_000.0;
+        for delta_ms in [
+            30_000.0,
+            59_400.0,
+            61_000.0,
+            90_000.0,
+            5.0 * hour,
+            39.0 * hour,
+            8.0 * 24.0 * hour,
+            -3.0 * hour,
+        ] {
+            let to = now + delta_ms;
+            let (text, refresh_at) = relative_time(now, to);
+            assert!(refresh_at >= now + 1000.0, "{text}: refresh in the future");
+            let floored = refresh_at == now + 1000.0;
+            // Unchanged right up to the refresh instant (unless the 1s floor
+            // moved it past a sub-second rounding boundary)…
+            if !floored {
+                assert_eq!(
+                    relative_time(refresh_at - 2.0, to).0,
+                    text,
+                    "{text}: stable before"
+                );
+            }
+            // …and different at it.
+            let (after, _) = relative_time(refresh_at, to);
+            assert!(
+                after != text || floored,
+                "{text} did not change at its refresh instant ({after})"
+            );
+        }
+        assert_eq!(
+            relative_time(now, now + 39.0 * hour).1,
+            now + 3.0 * hour + 501.0
+        );
     }
 
     #[test]
@@ -1208,7 +1279,7 @@ mod tests {
         let deck = with_due_cards();
         let mut card = deck.get_all_cards_summary().into_iter().next().unwrap();
         card.due_timestamp_ms = now + 2.0 * 86_400_000.0;
-        let line = next_review_line(&card, now);
+        let line = next_review_line(card.clone(), now).text;
         match card.card_indicator {
             CardIndicator::WrittenGram { .. } => {
                 assert_eq!(line.before, "You'll review ");
@@ -1231,7 +1302,7 @@ mod tests {
             ..card
         };
         assert_eq!(
-            next_review_line(&listening, now).before,
+            next_review_line(listening, now).text.before,
             "Your next review is 2 days from now."
         );
     }

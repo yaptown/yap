@@ -5474,7 +5474,7 @@ mod tests {
             panic!("expected idle")
         };
         assert_eq!(caught_up.kind, IdleKind::AllCaughtUp);
-        assert!(caught_up.next_review.is_some());
+        assert!(caught_up.next_due.is_some());
         let card = cards[0].resolve(
             &deck.context.language_pack.string_rodeo,
             &deck.context.language_pack.gram_rodeo,

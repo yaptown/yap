@@ -1,7 +1,8 @@
+import { next_review_line } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button";
 import { EngagementPrompts } from "@/review/engagement-prompts";
 import type {
-  EmphasizedText,
+  CardSummary,
   IdleScreenView,
   IdleView,
   DeckEvent,
@@ -88,7 +89,7 @@ export const IdleScreen = memo(function IdleScreen(props: IdleScreenProps) {
         <div className="flex flex-col flex-1 gap-4 pt-4">
           <div className="flex flex-col gap-2 text-center">
             <p className="text-2xl font-bold">{view.title}</p>
-            {view.next_review && <NextReviewLine line={view.next_review} targetLanguage={view.plan.target_language} />}
+            {view.next_due && <NextReviewLine key={view.next_due.due_timestamp_ms} card={view.next_due} targetLanguage={view.plan.target_language} />}
           </div>
           <div className="flex justify-center"><Button onClick={() => setShowReleasePlan(true)} size="lg" variant="outline">Study more</Button></div>
           <WeekProgressStrip week={view.plan.week} className="mt-auto mb-2" />
@@ -155,7 +156,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
           <p className="text-2xl font-bold">
             {view.title}
           </p>
-          {view.body ? <p className="text-muted-foreground">{view.body}</p> : view.next_review && <NextReviewLine line={view.next_review} targetLanguage={targetLanguage} />}
+          {view.body ? <p className="text-muted-foreground">{view.body}</p> : view.next_due && <NextReviewLine key={view.next_due.due_timestamp_ms} card={view.next_due} targetLanguage={targetLanguage} />}
           {view.banned_notice && <><p className="text-muted-foreground">{view.banned_notice}</p><Button variant="outline" onClick={undoRestrictions}>Undo restrictions</Button></>}
 
         </div>
@@ -373,14 +374,24 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
   );
 }
 
-/// Rust builds the sentence; the emphasized run is the target-language word.
+/// Rust builds the sentence, rounds the countdown, and says when the words
+/// would next change; this schedules exactly that one refresh. Keyed on the
+/// due time by callers so a new card starts from a fresh clock.
 function NextReviewLine({
-  line,
+  card,
   targetLanguage,
 }: {
-  line: EmphasizedText;
+  card: CardSummary;
   targetLanguage: Language;
 }) {
+  const [now, setNow] = useState(() => Date.now());
+  const { text: line, refresh_at_ms } = next_review_line(card, now);
+  useEffect(() => {
+    // Browsers treat delays over 2^31-1 ms as 0; clamp and let the refresh re-arm.
+    const delay = Math.min(Math.max(0, refresh_at_ms - now), 2 ** 31 - 1);
+    const timer = setTimeout(() => setNow(Date.now()), delay);
+    return () => clearTimeout(timer);
+  }, [refresh_at_ms, now]);
   return (
     <p className="text-muted-foreground">
       {line.before}
