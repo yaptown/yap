@@ -1,7 +1,7 @@
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { strToU8, zipSync } from "fflate";
-import type { AnkiAudio, AnkiDeckPlan, AnkiMediaSource, AnkiNote } from "../../../yap-frontend-rs/pkg";
+import type { AnkiDeckPlan, AnkiMediaSource, AnkiNote } from "../../../yap-frontend-rs/pkg";
 import { languageToLangAttr } from "../lib/pure";
 
 export type MediaProgress = { done: number; total: number };
@@ -23,7 +23,7 @@ CREATE INDEX ix_notes_csum ON notes (csum);
 
 const sentenceFields = [
   "Sentence", "Translation", "TargetWord", "TargetGloss", "Glosses", "Source",
-  "ClipUrl", "TtsBundled", "TtsUrl", "IncludeReading", "IncludeListening",
+  "ClipUrl", "TtsBundled", "IncludeReading", "IncludeListening",
 ];
 const css = `
 .card { font-family: sans-serif; text-align: center; line-height: 1.5; padding: 20px; }
@@ -36,7 +36,6 @@ a { color: inherit; }
 .source { color: #777; font-size: 14px; margin: 8px 0 16px; }
 .source img { display: block; max-height: 90px; margin: 0 auto 4px; }
 video { display: block; width: 100%; max-width: 480px; margin: 16px auto 0; background: #000; }
-audio { max-width: 100%; }
 `;
 
 function templates(lang: string): { name: string; ord: number; qfmt: string; afmt: string }[] {
@@ -49,7 +48,7 @@ function templates(lang: string): { name: string; ord: number; qfmt: string; afm
   // (poster + title) sits under it on both sides so the front says which movie.
   const side = (name: "Reading" | "Listening", back: boolean) => `
 <div class="eyebrow">${name === "Reading" ? "Translate" : "Listening"}</div>
-{{#TtsBundled}}{{TtsBundled}}{{/TtsBundled}}{{^TtsBundled}}<audio src="{{TtsUrl}}" controls autoplay preload="none"></audio>{{/TtsBundled}}
+{{TtsBundled}}
 ${name === "Reading" ? sentence : ""}
 <hr id="answer">
 ${back ? (name === "Listening" ? sentence : "") + answer : '<p class="hint">Tap to reveal the answer</p>'}
@@ -78,13 +77,12 @@ function audioFilename(filename: string, bytes: Uint8Array): string {
   return filename.replace(/\.[^.]+$/, `.${ext}`);
 }
 
-type PackedAudio = { sound: string; url: string };
-type Fetched = { bytes: Uint8Array; filename: string } | { fallbackUrl: string };
+type Fetched = { bytes: Uint8Array; filename: string } | undefined;
 
-function fieldsFor(note: AnkiNote, audio: (value: AnkiAudio) => PackedAudio, lang: string): string[] {
+function fieldsFor(note: AnkiNote, audio: (filename: string) => string, lang: string): string[] {
   if (note.type === "Word") {
     const media = audio(note.audio);
-    return [escapeHtml(note.word), escapeHtml(note.definition), media.sound, escapeHtml(media.url)];
+    return [escapeHtml(note.word), escapeHtml(note.definition), media];
   }
   const media = audio(note.tts);
   const glosses = note.glosses.map(({ text, gloss, url }) => {
@@ -95,8 +93,8 @@ function fieldsFor(note: AnkiNote, audio: (value: AnkiAudio) => PackedAudio, lan
     + escapeHtml(note.source.title) + (note.source.year ? ` (${note.source.year})` : "");
   return [
     escapeHtml(note.sentence), escapeHtml(note.translation), escapeHtml(note.target_word),
-    escapeHtml(note.target_gloss), glosses, source, escapeHtml(note.clip_url), media.sound,
-    escapeHtml(media.url), note.include_reading ? "1" : "", note.include_listening ? "1" : "",
+    escapeHtml(note.target_gloss), glosses, source, escapeHtml(note.clip_url), media,
+    note.include_reading ? "1" : "", note.include_listening && media ? "1" : "",
   ];
 }
 
@@ -111,11 +109,11 @@ export async function buildApkg(
 ): Promise<Blob> {
   const files: Record<string, Uint8Array> = {};
   const media: Record<string, string> = {};
-  const audioFiles = new Map<string, PackedAudio>();
+  const audioFiles = new Map<string, string>();
   let done = 0;
   let mediaIndex = 0;
   onProgress({ done, total: plan.bundled.length });
-  // Four at a time keeps the first 50 renditions quick without flooding the TTS gate.
+  // Four at a time downloads recordings quickly without flooding the TTS gate.
   for (let start = 0; start < plan.bundled.length; start += 4) {
     const batch = plan.bundled.slice(start, start + 4);
     const results = await Promise.all(batch.map(async ({ filename, source }): Promise<Fetched> => {
@@ -132,25 +130,22 @@ export async function buildApkg(
         if (!bytes.length) throw new Error("Audio response was empty");
         return { bytes, filename: audioFilename(filename, bytes) };
       } catch {
-        return { fallbackUrl: source.url }; // The note keeps its token-bearing streamed URL.
+        return undefined;
       } finally {
         onProgress({ done: ++done, total: plan.bundled.length });
       }
     }));
     batch.forEach((item, index) => {
       const result = results[index];
-      if ("bytes" in result) {
+      if (result) {
         const key = String(mediaIndex++);
         media[key] = result.filename;
         files[key] = result.bytes;
-        audioFiles.set(item.filename, { sound: `[sound:${result.filename}]`, url: result.filename });
-      } else {
-        audioFiles.set(item.filename, { sound: "", url: result.fallbackUrl });
+        audioFiles.set(item.filename, `[sound:${result.filename}]`);
       }
     });
   }
-  const audio = (value: AnkiAudio): PackedAudio => value.type === "Streamed"
-    ? { sound: "", url: value.url } : audioFiles.get(value.filename)!;
+  const audio = (filename: string): string => audioFiles.get(filename) ?? "";
   const SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
   const db = new SQL.Database();
   const now = Date.now();
@@ -167,11 +162,11 @@ export async function buildApkg(
     req, vers: [], tags: [], latexPre: "", latexPost: "",
   });
   const models = {
-    [sentenceId]: model(sentenceId, `Yap ${plan.course_code} sentences`, sentenceFields, templates(lang), [[0, "all", [9]], [1, "all", [10]]]),
-    [wordId]: model(wordId, `Yap ${plan.course_code} words`, ["Word", "Definition", "AudioBundled", "AudioUrl"], [{
+    [sentenceId]: model(sentenceId, `Yap ${plan.course_code} sentences`, sentenceFields, templates(lang), [[0, "all", [8]], [1, "all", [9]]]),
+    [wordId]: model(wordId, `Yap ${plan.course_code} words`, ["Word", "Definition", "AudioBundled"], [{
       name: "Word", ord: 0,
       qfmt: `<div class="sentence" lang="${lang}">{{Word}}</div>`,
-      afmt: `<div class="sentence" lang="${lang}">{{Word}}</div><div class="translation">{{Definition}}</div>{{#AudioBundled}}{{AudioBundled}}{{/AudioBundled}}{{^AudioBundled}}<audio src="{{AudioUrl}}" controls autoplay preload="none"></audio>{{/AudioBundled}}`,
+      afmt: `<div class="sentence" lang="${lang}">{{Word}}</div><div class="translation">{{Definition}}</div>{{AudioBundled}}`,
     }], [[0, "all", [0]]]),
   };
   const deck = (id: number, name: string) => ({
@@ -204,7 +199,7 @@ export async function buildApkg(
         ` yap yap::${plan.course_code} yap::level-${plan.stats.level} `, fields.join("\x1f"), text, checksum,
       ]);
       const ordinals = note.type === "Word" ? [0]
-        : [note.include_reading ? 0 : undefined, note.include_listening ? 1 : undefined].filter((ord) => ord !== undefined);
+        : [fields[8] ? 0 : undefined, fields[9] ? 1 : undefined].filter((ord) => ord !== undefined);
       for (const ordinal of ordinals) {
         db.run("INSERT INTO cards VALUES (?, ?, ?, ?, ?, -1, 0, 0, ?, 0, 0, 0, 0, 0, 0, 0, 0, '')", [
           Number(note.card_id) + ordinal, Number(note.note_id), deckId, ordinal, modified, index + 1,

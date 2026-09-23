@@ -76,7 +76,7 @@ pub enum AnkiNote {
         glosses: Vec<AnkiGloss>,
         source: AnkiSource,
         clip_url: String,
-        tts: AnkiAudio,
+        tts: String,
         include_reading: bool,
         include_listening: bool,
     },
@@ -86,7 +86,7 @@ pub enum AnkiNote {
         card_id: i64,
         word: String,
         definition: String,
-        audio: AnkiAudio,
+        audio: String,
     },
 }
 
@@ -105,14 +105,6 @@ pub struct AnkiSource {
     pub year: Option<u16>,
     pub imdb_id: String,
     pub poster_filename: Option<String>,
-}
-
-#[bridgerton::bridge(transparent)]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-pub enum AnkiAudio {
-    Bundled { filename: String },
-    Streamed { url: String },
 }
 
 #[bridgerton::bridge(transparent)]
@@ -223,11 +215,16 @@ fn word_note(
                 text: word.to_owned(),
             },
         });
-        AnkiAudio::Bundled { filename }
+        filename
     } else {
-        AnkiAudio::Streamed {
-            url: tts_url(course.target_language, word, &[], token),
-        }
+        let filename = format!("yap-word-{}.mp3", guid(course, "word", word));
+        bundled.push(AnkiBundledMedia {
+            filename: filename.clone(),
+            source: AnkiMediaSource::Tts {
+                url: tts_url(course.target_language, word, &[], token),
+            },
+        });
+        filename
     };
     AnkiNote::Word {
         guid: guid(course, "word", word),
@@ -508,20 +505,16 @@ impl Deck {
                     &challenge.audio.request.verification_hints,
                     &token,
                 );
-                // A Listening card cannot be answered without its audio, so
-                // every sentence with one ships its recording; Reading-only
-                // decks bundle the first 50 and stream the rest.
+                // Every sentence ships its recording: a Listening card cannot
+                // be answered without it, and the Translate card shares the
+                // same file, so there is nothing to save by streaming.
+                let filename = format!("yap-sentence-{}.mp3", guid(course, "sentence", &text));
+                bundled.push(AnkiBundledMedia {
+                    filename: filename.clone(),
+                    source: AnkiMediaSource::Tts { url },
+                });
+                let tts = filename;
                 let include_listening = !matches!(options.card_types, AnkiCardTypes::Reading);
-                let tts = if include_listening || used_sentences.len() < 50 {
-                    let filename = format!("yap-sentence-{}.mp3", guid(course, "sentence", &text));
-                    bundled.push(AnkiBundledMedia {
-                        filename: filename.clone(),
-                        source: AnkiMediaSource::Tts { url },
-                    });
-                    AnkiAudio::Bundled { filename }
-                } else {
-                    AnkiAudio::Streamed { url }
-                };
                 let glosses = sentence_glosses(
                     &challenge.target_language_literals,
                     &challenge.literal_gram_indices,
@@ -829,30 +822,18 @@ mod tests {
         assert_eq!(a.stats.sentence_count, 55);
         assert_eq!(a.stats.word_count, 55);
         assert_eq!(a.stats.card_count, 165);
-        // Listening cards need their audio offline: every sentence's TTS is
-        // bundled. A Reading-only deck bundles the first 50 and streams the rest.
-        let bundled_tts = |plan: &AnkiDeckPlan| {
-            plan.bundled
+        // Every sentence and word recording is bundled, whatever the card types.
+        assert_eq!(
+            a.bundled
                 .iter()
                 .filter(|m| matches!(m.source, AnkiMediaSource::Tts { .. }))
-                .count()
-        };
-        assert_eq!(bundled_tts(&a), 55);
-        let reading = deck
-            .anki_deck_plan(
-                AnkiDeckOptions {
-                    size: 55,
-                    card_types: AnkiCardTypes::Reading,
-                },
-                "t".into(),
-                1_700_000_000_000.0,
-            )
-            .unwrap();
-        assert_eq!(bundled_tts(&reading), 50);
+                .count(),
+            110
+        );
         let mut sentences = BTreeSet::new();
         let mut ids = BTreeSet::new();
         for pair in a.notes.chunks_exact(2) {
-            let AnkiNote::Word { word, .. } = &pair[0] else {
+            let AnkiNote::Word { word, audio, .. } = &pair[0] else {
                 panic!("word first")
             };
             let AnkiNote::Sentence {
@@ -870,6 +851,17 @@ mod tests {
             };
             assert!(sentences.insert(sentence));
             assert_eq!(word, sentence, "shortest sentence wins");
+            let entry = a.bundled.iter().find(|m| &m.filename == audio).unwrap();
+            assert_eq!(
+                audio,
+                &format!(
+                    "yap-word-{}.mp3",
+                    super::guid(deck.context.course, "word", word)
+                )
+            );
+            assert!(
+                matches!(&entry.source, AnkiMediaSource::Tts { url } if url == &tts_url(Language::English, word, &[], "a+b&雪"))
+            );
             assert!(clip_url.starts_with("https://clips.yap.town/eng/"));
             assert!(clip_url.ends_with("?d=a%2Bb%26%E9%9B%AA"));
             assert!(!guid.contains(['+', '/', '=']));
@@ -885,15 +877,9 @@ mod tests {
                     .unwrap()
                     .starts_with("https://yap.town/d/")
             );
-            let url = match tts {
-                AnkiAudio::Bundled { filename } => {
-                    let entry = a.bundled.iter().find(|m| &m.filename == filename).unwrap();
-                    let AnkiMediaSource::Tts { url } = &entry.source else {
-                        panic!("bundled sentence audio is fetched TTS")
-                    };
-                    url
-                }
-                AnkiAudio::Streamed { url } => url,
+            let entry = a.bundled.iter().find(|m| &m.filename == tts).unwrap();
+            let AnkiMediaSource::Tts { url } = &entry.source else {
+                panic!("bundled sentence audio is fetched TTS")
             };
             assert!(url.contains("language=English&text="));
             assert!(!url.contains("&hint="));
@@ -1014,6 +1000,7 @@ mod tests {
             1
         );
         let filename = human_filename(deck.context.course, "word00");
+        assert!(plan.notes.iter().any(|note| matches!(note, AnkiNote::Word { word, audio, .. } if word == "word00" && audio == &filename)));
         assert!(plan.bundled.iter().any(|m| m.filename == filename
             && matches!(&m.source, AnkiMediaSource::HumanAudio { text } if text == "word00")));
         assert_eq!(

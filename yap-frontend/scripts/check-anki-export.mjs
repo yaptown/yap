@@ -63,7 +63,6 @@ try {
 // Serialized as the bundle entry so the test calls the production export directly.
 async function writeFixtures(buildApkg, output) {
   const hostileText = '<img src=x onerror="alert(1)"> & "é"';
-  const streamedUrl = "https://mock.invalid/tts?d=fake&text=hello";
   // Container headers suffice: this test checks packaging, not audio decoding.
   const wav = new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0, 87, 65, 86, 69, 1, 2, 3]);
   const bundled = new Map([
@@ -73,7 +72,7 @@ async function writeFixtures(buildApkg, output) {
   let fetched = [];
   globalThis.fetch = async url => {
     fetched.push(url);
-    if (url === "https://mock.invalid/bundle") return new Response(wav);
+    if (url === "https://mock.invalid/bundle" || url === "https://mock.invalid/word") return new Response(wav);
     if (url === "https://mock.invalid/fail") return new Response("", { status: 503 });
     throw new Error(`Unexpected network request: ${url}`);
   };
@@ -99,17 +98,18 @@ async function writeFixtures(buildApkg, output) {
     deck_id: 9007199254740988, sentence_model_id: 9007199254740984, word_model_id: 9007199254740980,
     notes: [
       { type: "Word", ...identity(0), word: `Mot ${hostileText}`, definition: hostileText,
-        audio: { type: "Bundled", filename: "human.ogg" } },
+        audio: "human.ogg" },
       { type: "Word", ...identity(1), word: `Autre ${hostileText}`, definition: hostileText,
-        audio: { type: "Streamed", url: streamedUrl } },
-      sentence(2, { type: "Bundled", filename: "tts.mp3" }),
-      sentence(3, { type: "Streamed", url: streamedUrl }),
-      sentence(4, { type: "Bundled", filename: "failed.mp3" }),
+        audio: "word.mp3" },
+      sentence(2, "tts.mp3"),
+      sentence(3, "tts.mp3"),
+      sentence(4, "failed.mp3"),
     ],
     bundled: [
       { filename: "human.ogg", source: { type: "HumanAudio", text: `Mot ${hostileText}` } },
       { filename: "poster.jpg", source: { type: "Poster", imdb_id: "tt0001" } },
       { filename: "tts.mp3", source: { type: "Tts", url: "https://mock.invalid/bundle" } },
+      { filename: "word.mp3", source: { type: "Tts", url: "https://mock.invalid/word" } },
       { filename: "failed.mp3", source: { type: "Tts", url: "https://mock.invalid/fail" } },
     ],
     stats: { level: 2, total_levels: 10, sentence_count: 3, word_count: 2, card_count: 8 },
@@ -138,12 +138,12 @@ async function writeFixtures(buildApkg, output) {
         assert(source.type !== "Tts");
         return bundled.get(filename);
       }, value => progress.push(value));
-      assert.deepEqual(fetched, ["https://mock.invalid/bundle", "https://mock.invalid/fail"]);
-      assert.deepEqual(progress.map(value => value.done), [0, 1, 2, 3, 4]);
-      assert(progress.every(value => value.total === 4));
+      assert.deepEqual(fetched, ["https://mock.invalid/bundle", "https://mock.invalid/word", "https://mock.invalid/fail"]);
+      assert.deepEqual(progress.map(value => value.done), [0, 1, 2, 3, 4, 5]);
+      assert(progress.every(value => value.total === 5));
       writeFileSync(path.join(output, `${variant}.apkg`), Buffer.from(await blob.arrayBuffer()));
       writeFileSync(path.join(output, `${variant}.json`), JSON.stringify(plan));
-      console.log(`Wrote ${variant}: ${plan.notes.length} notes, ${plan.stats.card_count} cards`);
+      console.log(`Wrote ${variant}: ${plan.notes.length} notes, ${plan.stats.card_count - Number(listening)} cards`);
     }
   } finally {
     Date.now = realNow;

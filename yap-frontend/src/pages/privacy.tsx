@@ -73,10 +73,9 @@ export function PrivacyPage() {
               Our servers store the exported package for 8 days so you can import
               it with a download link, then delete it. Anyone with the link can
               download the package during that time.
-              Some audio is bundled in the download; the remaining audio streams
-              through our backend, and movie clips stream from clips.yap.town.
-              Streamed URLs include a per-deck token. Each time a card makes us
-              generate a clip that wasn't already cached we log which text
+              Audio is generated and bundled when the deck is built; movie clips
+              stream from clips.yap.town with a per-deck token. Each time building
+              a deck generates audio that was not already cached, we log which text
               it was and when, tied to that deck. We use this to keep the cost
               of generating audio in check and to switch off a deck that is
               being shared in ways it shouldn't be.

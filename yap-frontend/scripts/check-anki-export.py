@@ -63,9 +63,9 @@ def counts(collection):
 
 def check_sql(package, plan, directory):
     with zipfile.ZipFile(package) as archive:
-        assert set(archive.namelist()) == {"collection.anki2", "media", "0", "1", "2"}
+        assert set(archive.namelist()) == {"collection.anki2", "media", "0", "1", "2", "3"}
         media = json.loads(archive.read("media"))
-        assert set(media.values()) == {"human.ogg", "poster.jpg", "tts.wav"}, media
+        assert set(media.values()) == {"human.ogg", "poster.jpg", "tts.wav", "word.wav"}, media
         for key in media:
             assert archive.read(key)
         archive.extract("collection.anki2", directory)
@@ -79,7 +79,12 @@ def check_sql(package, plan, directory):
         assert "1" in json.loads(col["dconf"])
         assert json.loads(col["conf"])["nextPos"] > len(plan["notes"])
         model = json.loads(col["models"])[str(plan["sentence_model_id"])]
-        assert len(model["flds"]) == 11
+        assert len(model["flds"]) == 10
+        word_model = json.loads(col["models"])[str(plan["word_model_id"])]
+        assert len(word_model["flds"]) == 3
+        for model_type in (model, word_model):
+            for template in model_type["tmpls"]:
+                assert all("<audio" not in template[side] for side in ("qfmt", "afmt"))
         for ordinal, template in enumerate(model["tmpls"]):
             name = ["Reading", "Listening"][ordinal]
             assert template["name"] == name and template["ord"] == ordinal
@@ -96,8 +101,7 @@ def check_sql(package, plan, directory):
                 assert video["preload"] == "metadata"
                 assert "controls" in video and "playsinline" in video
                 autoplay = [(tag, attrs) for tag, attrs in tags if "autoplay" in attrs]
-                assert len(autoplay) == 1
-                assert autoplay[0][0] == "audio" and autoplay[0][1]["src"] == "{{TtsUrl}}"
+                assert not autoplay
                 assert '<hr id="answer">' in markup
             assert "Tap to reveal the answer" in template["qfmt"]
             assert "Tap to reveal the answer" not in template["afmt"]
@@ -119,11 +123,11 @@ def check_sql(package, plan, directory):
                     assert html.unescape(fields[field]) == note[key]
                 assert "<img src=x" not in fields[4]
                 if index == 2:
-                    assert fields[7] == "[sound:tts.wav]" and fields[8] == "tts.wav"
+                    assert fields[7] == "[sound:tts.wav]"
                 if index == 4:
-                    assert fields[7] == "" and fields[8] == "https://mock.invalid/fail"
+                    assert fields[7] == "" and fields[9] == ""
                 wanted_ordinals = ([0] if note["include_reading"] else []) + (
-                    [1] if note["include_listening"] else []
+                    [1] if note["include_listening"] and index != 4 else []
                 )
             rows = db.execute(
                 "select id,did,ord,due,queue,type from cards where nid=? order by ord",
@@ -149,7 +153,7 @@ def check_variant(root, variant):
         try:
             for iteration in range(2):
                 result = import_package(collection, package)
-                assert counts(collection) == (5, plan["stats"]["card_count"])
+                assert counts(collection) == (5, plan["stats"]["card_count"] - int(variant != "reading"))
                 assert len(result.log.new) == (5 if iteration == 0 else 0)
                 assert len(result.log.duplicate) == (0 if iteration == 0 else 5)
                 # Anki may normalize timestamp-shaped IDs; GUID identity must still merge.
@@ -172,12 +176,9 @@ def check_variant(root, variant):
                 is_word = note["type"] == "Word"
                 assert_safe(render.question_text)
                 assert_safe(render.answer_text)
-                assert autoplay_sources(render, "question") == int(not is_word)
-                bundled = (
-                    note["audio"]["type"] == "Bundled" if is_word else
-                    note["tts"]["type"] == "Bundled" and note["tts"]["filename"] == "tts.mp3"
-                )
-                assert autoplay_sources(render, "answer") == 1
+                bundled = is_word or note["tts"] != "failed.mp3"
+                assert autoplay_sources(render, "question") == int(bundled and not is_word)
+                assert autoplay_sources(render, "answer") == int(bundled)
                 assert len(render.question_av_tags) == int(bundled and not is_word)
                 assert len(render.answer_av_tags) == int(bundled)
                 if not is_word:
@@ -185,12 +186,7 @@ def check_variant(root, variant):
                         videos = [attrs for tag, attrs in Tags(markup).tags if tag == "video"]
                         assert len(videos) == 1 and "autoplay" not in videos[0]
                         assert "poster" not in videos[0]
-                        if not bundled:
-                            audio = [attrs for tag, attrs in Tags(markup).tags if tag == "audio"]
-                            assert len(audio) == 1 and "autoplay" in audio[0]
-                            expected_url = "https://mock.invalid/fail" if note["tts"]["type"] == "Bundled" else note["tts"]["url"]
-                            assert audio[0]["src"] == expected_url
-                            assert audio[0]["preload"] == "none" and "controls" in audio[0]
+                        assert all(tag != "audio" for tag, _ in Tags(markup).tags)
             media = collection.media.check()
             assert not media.missing and not media.unused, media
             print(f"PASS {variant}: repeat import, SQL, escaping, AV/autoplay, media")
@@ -204,7 +200,7 @@ def check_reexport(root, always):
         try:
             for variant in ("reading", "both", "listening"):
                 import_package(collection, root / f"{variant}.apkg", always)
-                assert counts(collection) == (5, 5 if variant == "reading" else 8)
+                assert counts(collection) == (5, 5 if variant == "reading" else 7)
                 flags = [
                     collection.get_note(note_id).fields[-2:]
                     for note_id in collection.find_notes('note:"Yap fra-eng sentences"')
@@ -212,7 +208,10 @@ def check_reexport(root, always):
                 expected = {
                     "reading": ["1", ""], "both": ["1", "1"], "listening": ["", "1"],
                 }[variant]
-                assert len(flags) == 3 and all(flag == expected for flag in flags), flags
+                assert len(flags) == 3, flags
+                assert flags.count(expected) == (3 if variant == "reading" else 2), flags
+                if variant != "reading":
+                    assert flags.count([expected[0], ""]) == 1, flags
                 # Anki adds newly enabled card types, but never deletes existing cards
                 # when their conditional fields become empty. Narrowing Both -> Listening
                 # therefore retains three Reading cards with blank-front warnings.
