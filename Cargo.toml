@@ -50,12 +50,12 @@ schemars = "1"
 futures = "0.3.32"
 env_logger = "0.11.10"
 tsify = { version = "0.5.6", features = ["js"], default-features = false }
-tysm = { git = "https://github.com/anchpop/tysm.git", rev = "8656e1e7b1641780fd0e42018b7c284a558f5d9d", features = [
+tysm = { git = "https://github.com/anchpop/tysm.git", rev = "0f818af44ea36535e73c8a09a0373f04c2485fec", features = [
     "small-batch-optimization",
 ] }
 # Local-first KV cache store synced to R2 (github.com/anchpop/osmo). All of
-# generate-data's caches live in one store at .cache. Git dep until published.
-osmo = { git = "https://github.com/anchpop/osmo" }
+# generate-data's caches live in one store at .cache.
+osmo = "0.2.0"
 reqwest = { version = "0.13", features = ["json", "query", "multipart"] }
 tokio = { version = "1.52.3", features = ["full"] }
 opfs = "0.3"
@@ -82,7 +82,7 @@ wasm-logger = "0.2.0"
 unicode-normalization = "0.1.25"
 # Shared browser/native named locks.
 weblocks = { git = "https://github.com/anchpop/weblocks", rev = "b4e7db5af829e357ab67407609e1fb896ee30cde" }
-lexide = { git = "https://github.com/anchpop/lexide.git", rev = "88b53dfa02457c537bec7bd8746fc49bfd505b62", default-features = false }
+lexide = { git = "https://github.com/anchpop/lexide.git", rev = "096c4e4e86af0d512b9fb4a3b960c29548a9f085", default-features = false }
 indicatif = "0.18"
 
 [workspace.dependencies.rkyv]
@@ -119,9 +119,3 @@ opt-level = 3
 inherits = "release"
 debug = true
 strip = "none"
-
-# Temporary: the cached-only batch fix (per-item CacheMiss instead of failing
-# the batch) lives on the local tysm checkout until it is pushed and the rev
-# above is bumped.
-[patch."https://github.com/anchpop/tysm.git"]
-tysm = { path = "../tysm" }

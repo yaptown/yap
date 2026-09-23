@@ -1564,7 +1564,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -3433,7 +3433,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 [[package]]
 name = "lexide"
 version = "0.3.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=88b53dfa02457c537bec7bd8746fc49bfd505b62#88b53dfa02457c537bec7bd8746fc49bfd505b62"
+source = "git+https://github.com/anchpop/lexide.git?rev=096c4e4e86af0d512b9fb4a3b960c29548a9f085#096c4e4e86af0d512b9fb4a3b960c29548a9f085"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3810,6 +3810,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "model-prices"
+version = "0.1.1"
+source = "git+https://github.com/anchpop/tysm.git?rev=0f818af44ea36535e73c8a09a0373f04c2485fec#0f818af44ea36535e73c8a09a0373f04c2485fec"
+
+[[package]]
 name = "monostate"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3952,7 +3957,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4293,7 +4298,8 @@ dependencies = [
 [[package]]
 name = "osmo"
 version = "0.2.0"
-source = "git+https://github.com/anchpop/osmo#d82edc991542b400a5c56c1832ea8f0aca951be4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70f0e61c2e364a9acc133e1bb7ba28c6066498c36873bfc054e461e1a00489f4"
 dependencies = [
  "dashmap",
  "futures",
@@ -5481,7 +5487,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5561,7 +5567,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6085,7 +6091,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6442,7 +6448,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6858,7 +6864,8 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "tysm"
-version = "0.20.0"
+version = "0.22.0"
+source = "git+https://github.com/anchpop/tysm.git?rev=0f818af44ea36535e73c8a09a0373f04c2485fec#0f818af44ea36535e73c8a09a0373f04c2485fec"
 dependencies = [
  "base64 0.22.1",
  "dashmap",
@@ -6867,6 +6874,7 @@ dependencies = [
  "itertools 0.14.0",
  "log 0.4.31",
  "lru",
+ "model-prices",
  "osmo",
  "reqwest 0.11.27",
  "schemars",

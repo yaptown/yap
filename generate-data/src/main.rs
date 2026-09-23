@@ -17,11 +17,14 @@ use generate_data::morphology_analysis;
 use generate_data::target_sentences::TargetSentences;
 use generate_data::translate::{TranslationBackend, Translator};
 
-/// Loaded inputs and in-flight work for a course's sequential pipeline.
+/// A course's inputs, loading in the background: the corpus first (subtitle
+/// segmentation batches included), then the translation warmup spawned from
+/// it, so every course's batch latency overlaps everything else.
 struct CourseWarmup {
     course: Course,
-    sentence_corpus: TargetSentences,
-    translator: tokio::task::JoinHandle<Translator>,
+    loaded: tokio::task::JoinHandle<
+        anyhow::Result<(TargetSentences, tokio::task::JoinHandle<Translator>)>,
+    >,
 }
 
 #[tokio::main]
@@ -113,58 +116,66 @@ async fn main() -> anyhow::Result<()> {
         })
         .collect();
 
-    // Pay batch latency once, concurrently, rather than once per course. Other
-    // pipeline stages should move toward this all-courses fan-out shape over time.
+    // Pay batch latency once, concurrently, rather than once per course: every
+    // course loads and submits its translation batch up front, and phase 2
+    // below picks each up in order. Courses sharing a corpus (`spa` for both
+    // Spanish dialects, `por` for por_for_eng and por_for_fra) read and refresh
+    // the same out/<corpus>/ files, so those load one at a time. Other pipeline
+    // stages should move toward this all-courses fan-out shape over time.
     println!("Warming translation caches for {} courses…", courses.len());
-    let mut warmups = Vec::with_capacity(courses.len());
-    for course in courses {
-        let sentence_corpus = generate_data::target_sentences::get_target_sentences(course)
-            .await
-            .context("Failed to get target sentences")?;
-        let targets: Vec<String> = sentence_corpus
-            .app_sentences
-            .iter()
-            .map(|(target, _, _)| target.clone())
-            .collect();
-        let translator = Translator::new(
-            course.target_language, // translate from target to native
-            course.native_language,
-            cache_remote::store(),
-            // Luna over the OpenAI Batch API is ~50x cheaper than Google's
-            // translation-llm; anything already in the Google cache is
-            // still reused (see translate.rs). Swap in
-            // `TranslationBackend::Google` to go back.
-            TranslationBackend::OpenAi {
-                model: "gpt-6-luna".to_string(),
-            },
-        )
-        .await
-        .context("Failed to create translator")?;
-
-        let translator = tokio::spawn(async move {
-            translator.prime(&targets).await;
-            println!(
-                "translations {} → {}: cache warmup complete (~${:.4})",
-                course.target_language.iso_639_1(),
-                course.native_language.iso_639_1(),
-                translator.cost_estimate_usd(),
-            );
-            translator
-        });
-        warmups.push(CourseWarmup {
-            course,
-            sentence_corpus,
-            translator,
-        });
-    }
+    let mut corpus_locks: HashMap<&'static str, std::sync::Arc<tokio::sync::Mutex<()>>> =
+        HashMap::new();
+    let warmups: Vec<CourseWarmup> = courses
+        .iter()
+        .map(|&course| {
+            let corpus_lock = corpus_locks
+                .entry(course.target_language.corpus_code())
+                .or_default()
+                .clone();
+            let loaded = tokio::spawn(async move {
+                let sentence_corpus = {
+                    let _corpus = corpus_lock.lock().await;
+                    generate_data::target_sentences::get_target_sentences(course)
+                        .await
+                        .context("Failed to get target sentences")?
+                };
+                let targets: Vec<String> = sentence_corpus
+                    .app_sentences
+                    .iter()
+                    .map(|(target, _, _)| target.clone())
+                    .collect();
+                let translator = Translator::new(
+                    course.target_language, // translate from target to native
+                    course.native_language,
+                    cache_remote::store(),
+                    // Luna over the OpenAI Batch API is ~50x cheaper than Google's
+                    // translation-llm; anything already in the Google cache is
+                    // still reused (see translate.rs). Swap in
+                    // `TranslationBackend::Google` to go back.
+                    TranslationBackend::OpenAi {
+                        model: "gpt-6-luna".to_string(),
+                    },
+                )
+                .await
+                .context("Failed to create translator")?;
+                let translator = tokio::spawn(async move {
+                    translator.prime(&targets).await;
+                    println!(
+                        "translations {} → {}: cache warmup complete (~${:.4})",
+                        course.target_language.iso_639_1(),
+                        course.native_language.iso_639_1(),
+                        translator.cost_estimate_usd(),
+                    );
+                    translator
+                });
+                anyhow::Ok((sentence_corpus, translator))
+            });
+            CourseWarmup { course, loaded }
+        })
+        .collect();
 
     println!("Processing warmed courses…");
-    for CourseWarmup {
-        course,
-        sentence_corpus,
-        translator,
-    } in warmups
-    {
+    for CourseWarmup { course, loaded } in warmups {
         let course = &course;
 
         println!();
@@ -175,6 +186,7 @@ async fn main() -> anyhow::Result<()> {
         );
         println!("================================================");
 
+        let (sentence_corpus, translator) = loaded.await.context("Course warmup task failed")??;
         let generate_data::pipeline::SegmentedCorpus {
             mut nlp_sentences,
             mut restricted_nlp_sentences,
