@@ -28,8 +28,10 @@ const root = path.resolve(__dirname, '..');
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     await page.addScriptTag({ url: '/tests/values.js' });
     const report = await page.evaluate(async () => {
-      const { default: init, Counter } = await import('/generated/web/bridge_fixture.js');
+      const api = await import('/generated/web/bridge_fixture.js');
+      const { default: init, Counter } = api;
       await init();
+      testStable(api);
       const check = (condition, message) => { if (!condition) throw Error(message); };
       const counter = new Counter();
       await testValues(counter);

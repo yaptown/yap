@@ -32,6 +32,8 @@ private struct RejectSecondObject: BridgeReturn {
 
 @main struct NativeTests {
     @MainActor static func main() async throws {
+        try testStableReturns()
+        try testStableCache()
         check(echo_text(text: "語 🦀") == "語 🦀", "borrowed text alias")
         let text = await text_later(text: "owned across suspension")
         check(text == "owned across suspension", "async borrowed string")

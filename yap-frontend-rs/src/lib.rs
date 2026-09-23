@@ -3284,6 +3284,7 @@ impl Deck {
         movies
     }
 
+    #[bridgerton::stable(strong)]
     pub fn get_movie_poster(&self, movie_id: String) -> Option<Vec<u8>> {
         self.context
             .language_pack

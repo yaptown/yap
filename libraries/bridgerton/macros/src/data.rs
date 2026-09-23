@@ -165,6 +165,8 @@ pub fn transparent(item: Item, options: TransparentOptions) -> syn::Result<Token
             }
         }
         #[cfg(target_arch = "wasm32")]
+        impl #out_generics ::bridgerton::StableValue for #name #ty_generics #out_where {}
+        #[cfg(target_arch = "wasm32")]
         impl #out_generics ::bridgerton::WasmError for #name #ty_generics #out_where {
             fn into_js_error(self) -> ::bridgerton::__wasm_bindgen::JsValue {
                 let message = ::bridgerton::__serde_json::to_string(&self).unwrap_or_default();

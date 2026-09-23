@@ -57,6 +57,8 @@ pub struct BridgeResult {
     pub value: u32,
     pub status: u32,
     pub data: Buffer,
+    pub hash_lo: u64,
+    pub hash_hi: u64,
 }
 
 /// Borrowed bytes, valid only for the duration of a generated C call.
@@ -98,6 +100,8 @@ impl BridgeResult {
             value: 0,
             status,
             data: Buffer::empty(),
+            hash_lo: 0,
+            hash_hi: 0,
         }
     }
     fn error(status: u32, message: String) -> Self {
@@ -113,7 +117,7 @@ mod callbacks;
 mod returns;
 pub use bindings::{
     NativeArgument, NativeBorrowed, NativeError, NativeObject, NativeOptionalArgument,
-    NativeReturn, return_method,
+    NativeReturn, StableReturn, return_method,
 };
 pub use callbacks::{CallbackArguments, callback_arguments};
 

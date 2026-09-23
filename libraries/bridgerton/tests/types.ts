@@ -72,3 +72,19 @@ echo_pairs([[42, term]]);
 // @ts-expect-error output must not silently become any
 const wrongPair: number = echo_pairs([]);
 void [pairs, wrongPair];
+
+import { stable_term, stable_bytes, stable_number, stable_text, stable_result, stable_unit, stable_typed_result } from '../generated/node/bridge_fixture';
+const stableCard: Card = counter.stable_card;
+const maybeStableCard: Card | undefined = counter.stable_optional();
+const stableTerm: Term = stable_term('term');
+const stableBytes: Uint8Array | undefined = stable_bytes(1);
+const stableNumber: number = stable_number(42);
+const stableText: string = stable_text('text');
+const stableResult: string = stable_result('result');
+const stableTypedResult: Term = stable_typed_result(false);
+const stableUnit: void = stable_unit();
+// @ts-expect-error stable getter remains a property, not a method
+counter.stable_card();
+// @ts-expect-error stable bytes retain their typed array ABI
+const stableArray: number[] = stable_bytes(1);
+void [stableCard, maybeStableCard, stableTerm, stableBytes, stableNumber, stableText, stableResult, stableTypedResult, stableUnit, stableArray];

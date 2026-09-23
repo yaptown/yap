@@ -34,6 +34,96 @@ pub fn __describe(input: TokenStream) -> TokenStream {
     }
 }
 
+fn attribute_is(attr: &syn::Attribute, name: &str) -> bool {
+    attr.path()
+        .segments
+        .last()
+        .is_some_and(|segment| segment.ident == name)
+}
+
+#[derive(Clone, Copy, Default)]
+enum Stability {
+    #[default]
+    None,
+    Weak,
+    Strong,
+}
+impl Stability {
+    fn parse(attr: &syn::Attribute) -> syn::Result<Self> {
+        match &attr.meta {
+            syn::Meta::Path(_) => Ok(Self::Weak),
+            syn::Meta::List(list) if list.tokens.to_string() == "strong" => Ok(Self::Strong),
+            _ => Err(syn::Error::new_spanned(
+                attr,
+                "expected #[bridgerton::stable] or #[bridgerton::stable(strong)]",
+            )),
+        }
+    }
+    fn take(attrs: &mut Vec<syn::Attribute>) -> syn::Result<Self> {
+        let mut mode = Self::None;
+        let mut remaining = Vec::new();
+        for attr in std::mem::take(attrs) {
+            if attribute_is(&attr, "stable") {
+                if !matches!(mode, Self::None) {
+                    return Err(syn::Error::new_spanned(attr, "duplicate stable attribute"));
+                }
+                mode = Self::parse(&attr)?;
+            } else {
+                remaining.push(attr);
+            }
+        }
+        *attrs = remaining;
+        Ok(mode)
+    }
+    fn enabled(self) -> bool {
+        !matches!(self, Self::None)
+    }
+    fn validate(self, signature: &syn::Signature) -> syn::Result<()> {
+        if self.enabled() && signature.asyncness.is_some() {
+            return Err(syn::Error::new_spanned(
+                signature,
+                "stable supports synchronous bridged functions and methods only",
+            ));
+        }
+        Ok(())
+    }
+}
+
+/// Intern a synchronous bridged return value by content, without skipping Rust execution.
+#[proc_macro_attribute]
+pub fn stable(attributes: TokenStream, input: TokenStream) -> TokenStream {
+    // When stable is outermost, let bridge consume it just as it does on methods.
+    let result = (|| {
+        let mut item: syn::ItemFn = syn::parse(input).map_err(|error| {
+            syn::Error::new(
+                error.span(),
+                "stable supports synchronous bridged functions and methods only",
+            )
+        })?;
+        let Some(index) = item
+            .attrs
+            .iter()
+            .position(|attr| attribute_is(attr, "bridge"))
+        else {
+            return Err(syn::Error::new_spanned(
+                item.sig,
+                "stable requires #[bridgerton::bridge] on a free function or its enclosing impl",
+            ));
+        };
+        let bridge = item.attrs.remove(index);
+        let attributes: Tokens = attributes.into();
+        let stable: syn::Attribute = if attributes.is_empty() {
+            syn::parse_quote! { #[::bridgerton::stable] }
+        } else {
+            syn::parse_quote! { #[::bridgerton::stable(#attributes)] }
+        };
+        Stability::parse(&stable)?;
+        item.attrs.insert(0, stable);
+        Ok(quote! { #bridge #item })
+    })();
+    result.unwrap_or_else(syn::Error::into_compile_error).into()
+}
+
 /// Export Rust objects, methods, and values through one public attribute.
 #[proc_macro_attribute]
 pub fn bridge(attributes: TokenStream, input: TokenStream) -> TokenStream {
@@ -119,14 +209,17 @@ pub fn __native_function(_: TokenStream, input: TokenStream) -> TokenStream {
         .into()
 }
 
-fn native_free_function(item: syn::ItemFn) -> syn::Result<Tokens> {
+fn native_free_function(mut item: syn::ItemFn) -> syn::Result<Tokens> {
     let name = &item.sig.ident;
     let marker = format_ident!(
         "__BridgertonFunction_{}",
         name.to_string().trim_start_matches("r#")
     );
     let signature = &item.sig;
-    let method: ItemImpl = syn::parse_quote! { impl #marker { pub #signature { unreachable!() } } };
+    let attrs = &item.attrs;
+    let method: ItemImpl =
+        syn::parse_quote! { impl #marker { #(#attrs)* pub #signature { unreachable!() } } };
+    Stability::take(&mut item.attrs)?;
     let exports = expand_impl_kind(method, Options::default(), Some(name.clone()))?;
     Ok(quote! { #item #[allow(non_camel_case_types)] struct #marker; #exports })
 }
@@ -195,7 +288,7 @@ fn wasm_impl(item: ItemImpl) -> syn::Result<Tokens> {
         if let ImplItem::Fn(method) = &mut entry {
             let mut attrs = Vec::new();
             for attr in std::mem::take(&mut method.attrs) {
-                if !attr.path().is_ident("bridge") {
+                if !attribute_is(&attr, "bridge") {
                     attrs.push(attr);
                     continue;
                 }
@@ -215,15 +308,20 @@ fn wasm_impl(item: ItemImpl) -> syn::Result<Tokens> {
             }
             method.attrs = attrs;
         }
-        if skip {
+        if skip
+            || matches!(&entry, ImplItem::Fn(method) if !matches!(method.vis, Visibility::Public(_)))
+        {
+            if let ImplItem::Fn(method) = &mut entry {
+                Stability::take(&mut method.attrs)?;
+            }
             rust_only.items.push(entry);
         } else if let ImplItem::Fn(method) = &entry
             && let Some(wrapper) = wasm_methods::adapt(method)?
         {
             let mut original = method.clone();
-            original
-                .attrs
-                .retain(|attr| !attr.path().is_ident("wasm_bindgen"));
+            original.attrs.retain(|attr| {
+                !attr.path().is_ident("wasm_bindgen") && !attribute_is(attr, "stable")
+            });
             rust_only.items.push(ImplItem::Fn(original));
             exported.push(ImplItem::Fn(wrapper));
         } else {
@@ -267,7 +365,9 @@ fn native_when_enabled(attributes: TokenStream, input: TokenStream) -> TokenStre
         }
         for entry in &mut item.items {
             if let ImplItem::Fn(method) = entry {
-                method.attrs.retain(|attr| !attr.path().is_ident("bridge"));
+                method
+                    .attrs
+                    .retain(|attr| !attribute_is(attr, "bridge") && !attribute_is(attr, "stable"));
             }
         }
         plain = quote! { #item };
@@ -373,7 +473,9 @@ fn expand_bridge(attributes: TokenStream, input: TokenStream, gate_native: bool)
                 if let ImplItem::Fn(method) = entry
                     && !names.contains(&method.sig.ident.to_string())
                 {
-                    method.attrs.retain(|a| !a.path().is_ident("bridge"));
+                    method
+                        .attrs
+                        .retain(|a| !attribute_is(a, "bridge") && !attribute_is(a, "stable"));
                     method.attrs.push(syn::parse_quote! { #[bridge(skip)] });
                 }
             }
@@ -579,12 +681,13 @@ fn expand_impl_kind(
                 "only methods are supported in a bridged impl",
             ));
         };
+        let stability = Stability::take(&mut method.attrs)?;
         let mut constructor = false;
         let mut skip = false;
         let mut getter = false;
         let mut remaining = Vec::new();
         for attr in std::mem::take(&mut method.attrs) {
-            if attr.path().is_ident("bridge") {
+            if attribute_is(&attr, "bridge") {
                 attr.parse_nested_meta(|meta| {
                     if meta.path.is_ident("constructor") {
                         constructor = true;
@@ -623,6 +726,9 @@ fn expand_impl_kind(
                 "generic/unsafe methods are not supported",
             ));
         }
+        stability.validate(&method.sig)?;
+        let stable = stability.enabled();
+        let strong = matches!(stability, Stability::Strong);
         let method_name = &method.sig.ident;
         let method_label = method_name.to_string().trim_start_matches("r#").to_owned();
         let symbol_name = if free_function.is_some() {
@@ -727,8 +833,11 @@ fn expand_impl_kind(
         } else {
             quote! { object.#method_name(#(#native_values),*) #await_tokens }
         };
-        let native_body =
-            quote! { ::bridgerton::native::NativeReturn::into_native_return(#native_invoke) };
+        let native_body = if stable {
+            quote! { ::bridgerton::native::StableReturn::into_stable_return(#native_invoke) }
+        } else {
+            quote! { ::bridgerton::native::NativeReturn::into_native_return(#native_invoke) }
+        };
         let native_body = if is_async {
             quote! { Ok(::bridgerton::native::task(async move { #native_body })) }
         } else {
@@ -791,7 +900,7 @@ fn expand_impl_kind(
                 #(#wraps)*
                 let (method_header, invocation) = ::bridgerton::native::qualify_export(&method_header, &invocation, concat!(module_path!(), "::", #class_name), #symbol_name);
                 header.push_str(&method_header);
-                let method = ::bridgerton::native::return_method::<#output>(&mut types, #method_label, &args, &invocation, #is_async, #is_static, #getter, #constructor, #class_name, &task_signals);
+                let method = ::bridgerton::native::return_method::<#output>(&mut types, #method_label, &args, &invocation, #is_async, #is_static, #getter, #constructor, #class_name, &task_signals, #stable, #strong);
                 swift = swift.replace(#placeholder, &method);
             }
         });

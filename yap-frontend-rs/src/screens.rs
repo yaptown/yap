@@ -257,6 +257,7 @@ fn curriculum_copy(
 /// `refresh_at_ms` so the countdown stays live without polling; the words and
 /// rounding are Rust's so both platforms agree.
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn next_review_line(card: CardSummary, now_ms: f64) -> LiveText {
     let (when, refresh_at_ms) = relative_time(now_ms, card.due_timestamp_ms);
     let text = match card.card_indicator {
@@ -848,6 +849,7 @@ fn challenge_preview(challenge: &Challenge<Gram<String>>, language: Language) ->
 
 #[bridgerton::bridge]
 impl Deck {
+    #[bridgerton::stable]
     pub fn home_screen_view(&self, inputs: ReviewScreenInputs) -> HomeScreenView {
         let (step, review, _) = self.review_step(inputs.clone());
         let due_count = review.due_count() as u64;
@@ -1081,6 +1083,7 @@ impl Deck {
     /// A held challenge takes precedence over idle even when nothing is due.
     /// Hosts retain a selected challenge until the deck or restrictions change;
     /// `None` is never held, so newly ready challenges can surface from idle.
+    #[bridgerton::stable]
     pub fn review_screen_view(&self, inputs: ReviewScreenInputs) -> ReviewScreenView {
         let (step, review, prompts) = self.review_step(inputs.clone());
         let total_reviews = self.get_total_reviews();

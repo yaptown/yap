@@ -85,6 +85,72 @@ The collector checks names and constructors across impls and orders output
 deterministically. Only metadata factories are shared: application objects and
 futures retain their existing thread confinement.
 
+## Stable return values
+
+Opt in to content-addressed return interning on synchronous methods, getters,
+associated functions, or free functions:
+
+```rust
+#[bridgerton::bridge]
+impl Deck {
+    #[bridgerton::stable]
+    pub fn review_view(&self) -> ReviewView { /* derive the current view */ }
+
+    #[bridgerton::bridge(getter)]
+    #[bridgerton::stable]
+    pub fn summary(&self) -> Summary { /* derive the current summary */ }
+
+    #[bridgerton::stable(strong)]
+    pub fn poster(&self, movie_id: String) -> Option<Vec<u8>> { /* read bytes */ }
+}
+
+#[bridgerton::stable] // Either attribute order works on free functions.
+#[bridgerton::bridge]
+pub fn label(input: Input) -> Label { /* derive the label */ }
+```
+
+**Rust always executes.** This is not argument memoization: mutated Rust state,
+time, and side effects still matter. After execution, the return value is hashed
+with XXH3-128. Each exported function has its own cache, shared across instances;
+identical content can reuse a previous host value even after intermediate changes.
+Errors are never cached. TypeScript signatures and normal return conversions are
+unchanged, including `Option<Vec<u8>>` returning `Uint8Array | undefined`.
+
+- **`stable` (default):** JavaScript stores `WeakRef`s, cleaned up by a
+  `FinalizationRegistry`. Equal objects retain `===` identity while a caller still
+  holds them; they can be collected when no caller does. Swift keeps at most 16
+  decoded values per function (FIFO eviction).
+- **`stable(strong)`:** JavaScript and Swift retain every distinct result for the
+  lifetime of the module. Use only for a finite, small result set, such as movie
+  posters. Use default `stable` for streams of changing screen state, not `strong`:
+  an unbounded stream would leak memory by design. Strong web caches need no
+  finalization registry.
+
+Returns must be transparent bridge data: generated `#[bridge(transparent)]`
+records/enums, supported scalars, `Vec`, `Option`, and pairs, optionally wrapped in
+`Result` with an ordinary supported bridge error. Nested collections in generated
+records/enums follow their normal serde representation. Direct opaque handles,
+including opaque values inside return containers, are rejected at compile time;
+async stable calls are rejected too. This attribute does not expand the ordinary
+bridge's supported type surface (for example, serde maps inside transparent
+records do not imply a direct WASM map-return ABI).
+
+**Treat stable JavaScript results as read-only.** Mutating an interned object
+corrupts what every caller sees. Debug builds recursively freeze plain objects and
+arrays to catch mistakes. Typed arrays, ArrayBuffers, Map and Set are not frozen;
+those still require caller discipline, as do all results in release builds. Swift
+receives generated value types and retains ordinary copy-on-write/value semantics,
+so mutating a returned copy cannot mutate the cached value.
+
+Costs are proportional to the returned data on every call. WASM streams
+serde values into a tagged, allocation-free XXH3 sink that preserves floating-point
+bits, nested boundaries, and arbitrary map keys, then skips JavaScript conversion
+on a cache hit. Native code hashes the existing encoded
+binary buffer and Swift skips decoding on a hit, freeing the fresh buffer either
+way. Serialization/encoding and Rust execution are not skipped. Content identity
+assumes no XXH3-128 collision; this is a performance cache, not a cryptographic
+integrity check. Use deterministic serialization for reliable cache hits.
+
 ## Existing wasm-bindgen APIs
 
 An existing wasm-bindgen impl needs one attribute:
@@ -180,7 +246,11 @@ resolves its crate names through the bridge's re-exports.
 
 Conversions run inside generated method bodies and return errors normally,
 allowing Rust locals to be dropped even for malformed JS input. Arrays preserve
-each element's configured conversion.
+each element's configured conversion. Values returned by
+[`#[bridgerton::stable]`](#stable-return-values) are shared, read-only snapshots
+on JavaScript: debug builds freeze plain objects/arrays, while release builds
+and typed arrays rely on callers not mutating them. Swift keeps its usual value
+semantics; changing a returned copy cannot change the cached value.
 
 There is no feature switch. Native builds always generate Swift metadata, so
 every bridged declaration is checked for both platforms on every build, and
@@ -295,6 +365,11 @@ go in the ignored `generated/` directory.
 The checks cover:
 
 - Rust formatting, unit tests, and warning-free native/WASM Clippy.
+- Streaming XXH3-128 hashes, stable dev/release JS identity, state changes and
+  restoration, None, strong typed arrays, errors, and debug recursive freezing.
+- Stable Swift scalar/value decoding, nil, copy-on-write mutation, 16-entry
+  eviction and unbounded strong caches; Rust still runs on host cache hits.
+- Native/WASM rejection of stable opaque/async returns and unchanged TypeScript types.
 - Swift 6 complete concurrency checking, including an intentionally invalid
   off-actor call that must fail compilation.
 - A raw C call from the wrong thread that must abort.
@@ -346,8 +421,12 @@ write the collection type directly in exported signatures.
 Generic methods/objects, lifetime or const generic data parameters, overloads,
 and arbitrary foreign values are not supported. Impl method annotations support
 constructors, getters, and skipping exports; other wasm-bindgen method options
-need explicit support before use. There is one public macro,
-`#[bridgerton::bridge]`, or `#[bridge]` after `use bridgerton::bridge`.
+need explicit support before use. `#[bridgerton::stable]` is a separate attribute
+for synchronous transparent returns, combinable with getters, free functions,
+and associated functions. `stable(strong)` retains all distinct results; plain
+`stable` uses weak JS references and bounded Swift storage. Opaque handles and
+async stable returns are rejected. `#[bridgerton::bridge]` (or `#[bridge]` after
+`use bridgerton::bridge`) continues to select the exported surface.
 
 Swift fallibility follows the Rust signature: `Result<T, E>` becomes `throws`,
 and `T` becomes nonthrowing. This applies to constructors, getters, and async
@@ -476,7 +555,10 @@ objects use `#[bridge(opaque)]` and need no such configuration.
 
 Free functions take the same bare `#[bridge]` as impls and are exported on both
 platforms: real wasm-bindgen functions for JavaScript and main-actor functions
-for Swift. The recommended rule is that every type or function crossing the boundary
+for Swift. Add `#[bridgerton::stable]` in either attribute order to intern
+transparent results, or `#[bridgerton::stable(strong)]` for finite, small result
+sets; see [stable return values](#stable-return-values). The recommended rule is
+that every type or function crossing the boundary
 carries an unconditional `#[bridge(transparent)]`, `#[bridge(opaque)]`, or
 `#[bridge]`; anything else is plain Rust. Application code never gates a bridge
 attribute on `target_arch`, and no `JsValue` appears in an exported signature.

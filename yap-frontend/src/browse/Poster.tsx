@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { getPosterDataUrl } from "@/lib/poster-utils";
 import type { Deck } from "../../../yap-frontend-rs/pkg";
 
@@ -10,17 +10,13 @@ interface PosterProps {
 
 export function Poster({ movieId, deck, alt }: PosterProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [posterDataUrl, setPosterDataUrl] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const bytes = visible ? deck.get_movie_poster(movieId) : undefined;
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- Bridgerton stable returns preserve byte identity.
+  const posterDataUrl = useMemo(() => getPosterDataUrl(bytes), [bytes]);
 
   useEffect(() => {
-    // Reset state when movieId/deck changes
-    setLoaded(false);
-    setPosterDataUrl(null);
-  }, [movieId, deck]);
-
-  useEffect(() => {
-    if (loaded) return;
+    if (visible) return;
 
     const el = ref.current;
     if (!el) return;
@@ -28,9 +24,7 @@ export function Poster({ movieId, deck, alt }: PosterProps) {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          const bytes = deck.get_movie_poster(movieId);
-          setPosterDataUrl(getPosterDataUrl(bytes));
-          setLoaded(true);
+          setVisible(true);
           observer.disconnect();
         }
       },
@@ -38,9 +32,9 @@ export function Poster({ movieId, deck, alt }: PosterProps) {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [movieId, deck, loaded]);
+  }, [visible]);
 
-  if (!loaded) {
+  if (!visible) {
     return <div ref={ref} className="w-full h-full" />;
   }
 

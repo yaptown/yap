@@ -6,6 +6,8 @@ pub fn adapt(method: &syn::ImplItemFn) -> syn::Result<Option<syn::ImplItemFn>> {
         return Ok(None);
     }
     let mut wrapper = method.clone();
+    let stability = Stability::take(&mut wrapper.attrs)?;
+    stability.validate(&method.sig)?;
     let mut setup = Vec::new();
     let mut arguments = Vec::new();
     for argument in &mut wrapper.sig.inputs {
@@ -40,7 +42,20 @@ pub fn adapt(method: &syn::ImplItemFn) -> syn::Result<Option<syn::ImplItemFn>> {
         .push(syn::parse_quote! { #[wasm_bindgen(js_name = #name)] });
     wrapper.sig.ident = format_ident!("__bridgerton_{}", name.to_string().trim_start_matches("r#"));
     wrapper.sig.output = syn::parse_quote! { -> Result<<#output as ::bridgerton::IntoWasm>::Output, ::bridgerton::__wasm_bindgen::JsValue> };
-    wrapper.block = syn::parse_quote! {{ #(#setup)* <#output as ::bridgerton::IntoWasm>::into_wasm(#invoke(#(#arguments),*) #await_) }};
+    wrapper.block = if stability.enabled() {
+        let strong = matches!(stability, Stability::Strong);
+        syn::parse_quote! {{
+            #(#setup)*
+            ::std::thread_local! {
+                static CACHE: ::bridgerton::StableCache = ::bridgerton::StableCache::new(#strong);
+            }
+            let result = #invoke(#(#arguments),*);
+            CACHE.with(|cache| <#output as ::bridgerton::StableReturn>::into_stable_wasm(result, cache))
+        }}
+    } else {
+        syn::parse_quote! {{ #(#setup)* <#output as ::bridgerton::IntoWasm>::into_wasm(#invoke(#(#arguments),*) #await_) }}
+    };
+
     Ok(Some(wrapper))
 }
 
@@ -59,6 +74,8 @@ pub fn free_function(item: syn::ItemFn) -> syn::Result<Tokens> {
             "exported functions must be public",
         ));
     };
+    let mut wasm_item = item.clone();
+    Stability::take(&mut wasm_item.attrs)?;
     let name = &item.sig.ident;
     // Replace only the invocation's Self path using the AST, not application text.
     struct FreeCall<'a>(&'a syn::Ident);
@@ -87,7 +104,7 @@ pub fn free_function(item: syn::ItemFn) -> syn::Result<Tokens> {
         }
     });
     Ok(quote! {
-        #[cfg(target_arch = "wasm32")] #item
+        #[cfg(target_arch = "wasm32")] #wasm_item
         #[cfg(target_arch = "wasm32")]
         #[cfg(target_arch = "wasm32")] #[allow(unused_imports)] use ::bridgerton::__wasm::*;
         #[cfg(target_arch = "wasm32")]

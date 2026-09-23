@@ -231,6 +231,8 @@ struct BridgeResult {
     value: u32,
     status: u32,
     data: Buffer,
+    hash_lo: u64,
+    hash_hi: u64,
 }
 
 fn generate(library: &Path, output: &Path) -> Result<()> {

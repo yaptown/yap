@@ -22,8 +22,10 @@ struct Probe;
 struct ReturnedOnly;
 #[bridge]
 impl Probe {
+    #[bridgerton::stable]
     pub fn value(&self) -> Choice { Choice::Value(Payload { value: 42 }) }
     #[cfg_attr(all(), bridge(skip))]
+    #[bridgerton::stable]
     pub fn identity<T>(&self, value: T) -> T { value }
     #[cfg(any())]
     pub unsafe fn missing<T>(&self, value: MissingType<T>) -> MissingType<T> { value }
@@ -56,9 +58,20 @@ impl Probe {
 #[bridge(only(selected))]
 impl Probe {
     #[cfg_attr(all(), cfg(feature = "extra"))]
+    #[bridgerton::stable]
     pub fn selected(&self) -> u32 { 2 }
     #[cfg_attr(all(), bridge(skip))]
+    #[bridgerton::stable]
     pub fn private_generic<T>(&self, value: T) -> T { value }
+}
+#[bridge(only(value))]
+impl ReturnedOnly {
+    #[bridgerton::stable]
+    pub fn value(&self) -> u32 { 1 }
+    #[bridgerton::stable]
+    pub fn unselected<T>(&self, value: T) -> T { value }
+    #[bridgerton::stable]
+    fn private<T>(&self, value: T) -> T { value }
 }
 fn main() {
     let Choice::Value(value) = Probe.value();
@@ -79,9 +92,9 @@ def main():
         source = directory / "src/main.rs"
         env = dict(os.environ)
 
-        def check(text, *args, failure=None):
+        def check(text, *args, failure=None, command="run"):
             source.write_text(text)
-            result = subprocess.run(["cargo", "run", "--offline", "--quiet", *args],
+            result = subprocess.run(["cargo", command, "--offline", "--quiet", *args],
                                     cwd=directory, env=env, capture_output=True, text=True, timeout=180)
             if failure:
                 assert result.returncode != 0 and failure in result.stderr, result.stderr
@@ -127,6 +140,12 @@ def main():
             check(SOURCE + f'#[bridge({mode})] struct Obsolete;', failure="unknown bridge option")
         check(SOURCE + '#[bridge] struct Ambiguous;', failure="choose bridge(transparent) or bridge(opaque)")
         check(SOURCE + '#[bridge(transparent)] struct Unserialized { value: u32 } fn assert_serializable() { fn requires<T: bridgerton::serde::Serialize>() {} requires::<Unserialized>(); }', failure="Serialize")
+        for target in ((), ("--target", "wasm32-unknown-unknown")):
+            check(SOURCE + '#[bridge] impl Probe { #[bridgerton::stable] pub fn bad_stable(&self) -> ReturnedOnly { ReturnedOnly } }', *target, command="check", failure='stable returns must be transparent bridge values')
+            check(SOURCE + '#[bridge] #[bridgerton::stable] pub fn bad_free() -> ReturnedOnly { ReturnedOnly }', *target, command="check", failure='stable returns must be transparent bridge values')
+            check(SOURCE + '#[bridge] #[bridgerton::stable] pub async fn bad_async() -> u32 { 1 }', *target, command="check", failure='stable supports synchronous')
+            check(SOURCE + '#[bridgerton::stable] struct Unsupported;', *target, command="check", failure='stable supports synchronous')
+            check(SOURCE + '#[bridgerton::stable] pub fn unbridged() -> u32 { 1 }', *target, command="check", failure='stable requires')
         print("PASS: ordinary Rust, conditional methods/constructors and type discovery with features on/off, Swift typechecking, and rejected obsolete modes")
 
 

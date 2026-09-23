@@ -3,6 +3,7 @@ const { Counter, Snapshot } = require('../generated/node/bridge_fixture.js');
 
 (async () => {
   const api = require('../generated/node/bridge_fixture.js');
+  console.log(require('./values.js').testStable(api));
   assert.equal(api.echo_text('語 🦀'), '語 🦀');
   assert.equal(await api.text_later('owned across suspension'), 'owned across suspension');
   assert.equal(await api.sum_later(new Uint32Array([1, 2, 3])), 6);
