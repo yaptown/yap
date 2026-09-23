@@ -462,7 +462,11 @@ fn subtitle_source(
     }
     if let Some(course) = library::course_dir(&movie.original_language) {
         let raw = data_root
-            .join(course)
+            .join(
+                language_utils::Language::from_code(course)
+                    .unwrap()
+                    .corpus_code(),
+            )
             .join("sentence-sources/movies")
             .join(format!("subtitles-raw/{}.srt", movie.imdb_id));
         if raw.exists() {
@@ -2355,7 +2359,13 @@ async fn adopt_candidate(
 
     let mut candidates: Vec<(String, PathBuf)> = Vec::new();
     if let Some(course) = library::course_dir(&movie.original_language) {
-        let movies = data_root.join(course).join("sentence-sources/movies");
+        let movies = data_root
+            .join(
+                language_utils::Language::from_code(course)
+                    .unwrap()
+                    .corpus_code(),
+            )
+            .join("sentence-sources/movies");
         let path = movies
             .join("subtitles-raw")
             .join(format!("{}.srt", movie.imdb_id));

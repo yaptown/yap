@@ -86,7 +86,7 @@ show(f"get_sentences wrong language (error={err}, want True)", body)
 
 # A fabricated gram (real word, wrong lemma) must be rejected
 fake = copy.deepcopy(top["gram"])
-fake[0]["Tok"]["word_type"]["lemma"] = "zzznotalemma"
+fake["gram"][0]["Tok"]["word_type"]["lemma"] = "zzznotalemma"
 err, body = tool("get_sentences", {"language": top["language"], "gram": fake})
 show(f"get_sentences fake gram (error={err}, want True)", body)
 

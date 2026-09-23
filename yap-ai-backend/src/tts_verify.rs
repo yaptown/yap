@@ -52,10 +52,12 @@ use whisper::{CloudflareWhisper, GroqWhisper, TranscribeRequest};
 fn whisper_language(language: Language) -> Option<&'static str> {
     match language {
         Language::French
-        | Language::Spanish
+        | Language::SpanishMexican
+        | Language::SpanishPeninsular
         | Language::German
         | Language::Italian
-        | Language::Portuguese => Some(whisper::language_code(language)),
+        | Language::PortugueseBrazilian
+        | Language::PortugueseEuropean => Some(whisper::language_code(language)),
         // Not yet calibrated — see the note above. English and Russian are
         // plausible next additions; the CJK/Thai courses need a different
         // comparison entirely.
@@ -314,7 +316,7 @@ mod tests {
     #[test]
     fn only_calibrated_languages_are_gated() {
         assert_eq!(whisper_language(Language::French), Some("fr"));
-        assert_eq!(whisper_language(Language::Portuguese), Some("pt"));
+        assert_eq!(whisper_language(Language::PortugueseBrazilian), Some("pt"));
         // Orthography comparison isn't meaningful here yet.
         assert_eq!(whisper_language(Language::Japanese), None);
         assert_eq!(whisper_language(Language::ChineseSimplified), None);

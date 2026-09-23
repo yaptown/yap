@@ -40,131 +40,7 @@
               "cards": [
                 {
                   "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "bois",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "bois",
-                          "lemma": "boire",
-                          "pos": "VERB"
-                        }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "ecoute",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "ecoute",
-                          "lemma": "écouter",
-                          "pos": "VERB"
-                        }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "vécu",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "vécu",
-                          "lemma": "vivre",
-                          "pos": "VERB"
-                        }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "dépêche",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "dépêche",
-                          "lemma": "dépêcher",
-                          "pos": "VERB"
-                        }
-                      }
-                    },
-                    {
-                      "Tok": {
-                        "text": "-",
-                        "word_type": {
-                          "type": "Other",
-                          "other_tag": "PUNCT"
-                        }
-                      }
-                    },
-                    {
-                      "Tok": {
-                        "text": "toi",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "toi",
-                          "lemma": "toi",
-                          "pos": "PRON"
-                        }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "commencé",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "commencé",
-                          "lemma": "commencer",
-                          "pos": "VERB"
-                        }
-                      }
-                    }
-                  ]
-                }
-              ],
-              "sentence_list": null
-            }
-          },
-          "tier_info": {
-            "tier": 8,
-            "name": "Advanced",
-            "level": 11,
-            "total_levels": 30,
-            "percent_known": 3.2445668809305177,
-            "percent_of_usage": 67.10443441627044
-          },
-          "recommend_more_cards": true
-        },
-        "manual_add_options": [
-          {
-            "count": 5,
-            "card_type": "TargetLanguage",
-            "event": {
-              "type": "Language",
-              "target_language": "French",
-              "native_language": "English",
-              "content": {
-                "type": "AddCards",
-                "cards": [
-                  {
-                    "type": "WrittenGram",
+                  "gram": {
                     "gram": [
                       {
                         "Tok": {
@@ -177,10 +53,13 @@
                           }
                         }
                       }
-                    ]
-                  },
-                  {
-                    "type": "WrittenGram",
+                    ],
+                    "sense": null
+                  }
+                },
+                {
+                  "type": "WrittenGram",
+                  "gram": {
                     "gram": [
                       {
                         "Tok": {
@@ -193,10 +72,13 @@
                           }
                         }
                       }
-                    ]
-                  },
-                  {
-                    "type": "WrittenGram",
+                    ],
+                    "sense": null
+                  }
+                },
+                {
+                  "type": "WrittenGram",
+                  "gram": {
                     "gram": [
                       {
                         "Tok": {
@@ -209,10 +91,13 @@
                           }
                         }
                       }
-                    ]
-                  },
-                  {
-                    "type": "WrittenGram",
+                    ],
+                    "sense": null
+                  }
+                },
+                {
+                  "type": "WrittenGram",
+                  "gram": {
                     "gram": [
                       {
                         "Tok": {
@@ -245,10 +130,13 @@
                           }
                         }
                       }
-                    ]
-                  },
-                  {
-                    "type": "WrittenGram",
+                    ],
+                    "sense": null
+                  }
+                },
+                {
+                  "type": "WrittenGram",
+                  "gram": {
                     "gram": [
                       {
                         "Tok": {
@@ -261,7 +149,149 @@
                           }
                         }
                       }
-                    ]
+                    ],
+                    "sense": null
+                  }
+                }
+              ],
+              "sentence_list": null
+            }
+          },
+          "tier_info": {
+            "tier": 8,
+            "name": "Advanced",
+            "level": 11,
+            "total_levels": 30,
+            "percent_known": 3.2445668809305177,
+            "percent_of_usage": 67.10443441627044
+          },
+          "recommend_more_cards": true
+        },
+        "manual_add_options": [
+          {
+            "count": 5,
+            "card_type": "TargetLanguage",
+            "event": {
+              "type": "Language",
+              "target_language": "French",
+              "native_language": "English",
+              "content": {
+                "type": "AddCards",
+                "cards": [
+                  {
+                    "type": "WrittenGram",
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "bois",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "bois",
+                              "lemma": "boire",
+                              "pos": "VERB"
+                            }
+                          }
+                        }
+                      ],
+                      "sense": null
+                    }
+                  },
+                  {
+                    "type": "WrittenGram",
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "ecoute",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "ecoute",
+                              "lemma": "écouter",
+                              "pos": "VERB"
+                            }
+                          }
+                        }
+                      ],
+                      "sense": null
+                    }
+                  },
+                  {
+                    "type": "WrittenGram",
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "vécu",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "vécu",
+                              "lemma": "vivre",
+                              "pos": "VERB"
+                            }
+                          }
+                        }
+                      ],
+                      "sense": null
+                    }
+                  },
+                  {
+                    "type": "WrittenGram",
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "dépêche",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "dépêche",
+                              "lemma": "dépêcher",
+                              "pos": "VERB"
+                            }
+                          }
+                        },
+                        {
+                          "Tok": {
+                            "text": "-",
+                            "word_type": {
+                              "type": "Other",
+                              "other_tag": "PUNCT"
+                            }
+                          }
+                        },
+                        {
+                          "Tok": {
+                            "text": "toi",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "toi",
+                              "lemma": "toi",
+                              "pos": "PRON"
+                            }
+                          }
+                        }
+                      ],
+                      "sense": null
+                    }
+                  },
+                  {
+                    "type": "WrittenGram",
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "commencé",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "commencé",
+                              "lemma": "commencer",
+                              "pos": "VERB"
+                            }
+                          }
+                        }
+                      ],
+                      "sense": null
+                    }
                   }
                 ],
                 "sentence_list": null

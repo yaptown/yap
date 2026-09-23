@@ -469,3 +469,10 @@ impl<A: SerdeType<B, N, O>, Z: SerdeType<B, N, O>, const B: bool, const N: bool,
         crate::__describe!("]");
     }
 }
+
+impl<const B: bool, const N: bool, const O: bool> SerdeType<B, N, O> for std::num::NonZeroU32 {
+    const LEN: u32 = <u32 as SerdeType<B, N, O>>::LEN;
+    fn describe() {
+        <u32 as SerdeType<B, N, O>>::describe();
+    }
+}

@@ -174,7 +174,10 @@ async fn placeholder_hints(
     let abstract_response: PlaceholderHintsResponse = HINTS_CLIENT
         .chat_with_system_prompt(
             shared_instructions,
-            format!("Language: {language}\nList the placeholder expressions."),
+            format!(
+                "Language: {}\nList the placeholder expressions.",
+                language.prompt_name()
+            ),
         )
         .await?;
 
@@ -211,7 +214,8 @@ async fn placeholder_hints(
                          our tokenizer produced. Report every placeholder expression that \
                          appears in any of them, quoting the lemma forms exactly as they \
                          appear in the sample. Also report placeholder expressions you know \
-                         the language uses even if absent from this sample."
+                         the language uses even if absent from this sample.",
+                        language = language.prompt_name()
                     ),
                     format!("Terms:\n{}", sampled.join("\n")),
                 )
@@ -296,7 +300,8 @@ For each candidate placeholder token in the citation form, decide:
 2. role: direct_object (bare object of the verb), case_marked_argument (object of a preposition/case marker), possessive ("of someone" / "someone's"), infinitive_complement (dummy verb phrase standing for an open infinitive clause), or other.
 3. clitic_pronoun_lemmas: which clitic/weak pronoun lemmas can fill this slot in real sentences. For French: dative slots ("à quelqu'un") -> ["me","te","lui","nous","vous","leur","se"]; direct-object slots -> ["le","la","les","me","te","nous","vous","se"]; inanimate "de X" -> ["en"]; inanimate "à X" -> ["y"]; possessive "de quelqu'un" -> possessive determiner lemmas ["mon","ton","son","notre","votre","leur"]. Other languages: use that language's clitic/weak pronoun system, or an empty list if the language has no such pronouns for this slot. Use the lemma forms a UD lemmatizer would output. Empty list if pronominalization is impossible or would destroy the idiom, and always empty for infinitive_complement slots.
 
-Only report tokens that are placeholder candidates (indefinite pronouns / "quelque chose"-type phrases / dummy verbs heading a verbal placeholder). Report the index of the HEAD token of the placeholder phrase (e.g. "chose" in "quelque chose", but "faire" in "faire quelque chose")."#
+Only report tokens that are placeholder candidates (indefinite pronouns / "quelque chose"-type phrases / dummy verbs heading a verbal placeholder). Report the index of the HEAD token of the placeholder phrase (e.g. "chose" in "quelque chose", but "faire" in "faire quelque chose")."#,
+        language = language.prompt_name()
     );
 
     let progress = indicatif::ProgressBar::new(candidates.len() as u64);

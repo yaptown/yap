@@ -111,7 +111,9 @@ Output JSON format:
     "is_other": true/false,
     "learner_native_language_translation": "concise translation here",
     "description": null or "brief explanation if needed"
-}}"#
+}}"#,
+        native_language = native_language.prompt_name(),
+        target_language = target_language.prompt_name()
     );
     let prompts = proper_noun_to_sentences
         .iter()

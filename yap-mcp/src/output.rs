@@ -3,7 +3,7 @@
 //! (schemars) — so the schema and the payload cannot drift. Doc comments
 //! become schema descriptions the model can read.
 
-use language_utils::Language;
+use language_utils::{Gram, Language, TaggedGram};
 use schemars::JsonSchema;
 use serde::Serialize;
 use yap_frontend_rs::{DefinitionView, VoiceActorInfo};
@@ -70,10 +70,10 @@ pub struct AddCardsOut {
 #[derive(Serialize, JsonSchema)]
 pub struct DictionaryMatchOut {
     pub language: Language,
-    /// The exact gram (word + lemma + part-of-speech token sequence)
+    /// The exact gram (word + lemma + part-of-speech token sequence plus sense number)
     /// identifying this entry — opaque; pass verbatim to add_cards,
     /// get_sentences, or log_review.
-    pub gram: Option<serde_json::Value>,
+    pub gram: Option<TaggedGram<Gram<String>>>,
     pub display_text: String,
     /// 1 is the most common word in the course.
     pub frequency_rank: usize,
@@ -232,7 +232,7 @@ pub struct FetchMetadataOut {
     pub language: Language,
     /// The exact gram identifying this entry in deck tools — opaque; pass
     /// verbatim to add_cards, get_sentences, or log_review.
-    pub gram: Option<serde_json::Value>,
+    pub gram: Option<TaggedGram<Gram<String>>>,
     pub frequency_rank: usize,
     pub in_deck: bool,
     pub is_phrase: bool,

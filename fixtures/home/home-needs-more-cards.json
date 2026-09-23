@@ -37,35 +37,41 @@
               "cards": [
                 {
                   "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "wurde",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "wurde",
-                          "lemma": "werden",
-                          "pos": "AUX"
+                  "gram": {
+                    "gram": [
+                      {
+                        "Tok": {
+                          "text": "wurde",
+                          "word_type": {
+                            "type": "Heteronym",
+                            "word": "wurde",
+                            "lemma": "werden",
+                            "pos": "AUX"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ],
+                    "sense": null
+                  }
                 },
                 {
                   "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "zum",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "zum",
-                          "lemma": "zum",
-                          "pos": "ADP"
+                  "gram": {
+                    "gram": [
+                      {
+                        "Tok": {
+                          "text": "zum",
+                          "word_type": {
+                            "type": "Heteronym",
+                            "word": "zum",
+                            "lemma": "zum",
+                            "pos": "ADP"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ],
+                    "sense": null
+                  }
                 }
               ],
               "sentence_list": null
@@ -94,35 +100,41 @@
                 "cards": [
                   {
                     "type": "WrittenGram",
-                    "gram": [
-                      {
-                        "Tok": {
-                          "text": "wurde",
-                          "word_type": {
-                            "type": "Heteronym",
-                            "word": "wurde",
-                            "lemma": "werden",
-                            "pos": "AUX"
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "wurde",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "wurde",
+                              "lemma": "werden",
+                              "pos": "AUX"
+                            }
                           }
                         }
-                      }
-                    ]
+                      ],
+                      "sense": null
+                    }
                   },
                   {
                     "type": "WrittenGram",
-                    "gram": [
-                      {
-                        "Tok": {
-                          "text": "zum",
-                          "word_type": {
-                            "type": "Heteronym",
-                            "word": "zum",
-                            "lemma": "zum",
-                            "pos": "ADP"
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "zum",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "zum",
+                              "lemma": "zum",
+                              "pos": "ADP"
+                            }
                           }
                         }
-                      }
-                    ]
+                      ],
+                      "sense": null
+                    }
                   }
                 ],
                 "sentence_list": null

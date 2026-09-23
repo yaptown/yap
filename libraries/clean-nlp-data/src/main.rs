@@ -206,14 +206,14 @@ fn print_usage() {
     eprintln!("Language codes (ISO 639-3):");
     eprintln!("  fra - French");
     eprintln!("  deu - German");
-    eprintln!("  spa - Spanish");
+    eprintln!("  spa - Spanish (Mexico), spa-es - Spanish (Spain)");
     eprintln!("  eng - English");
     eprintln!("  kor - Korean");
-    eprintln!("  por - Portuguese");
+    eprintln!("  por - Portuguese (Brazil), por-pt - Portuguese (Portugal)");
     eprintln!("  ita - Italian");
     eprintln!("  jpn - Japanese");
     eprintln!("  rus - Russian");
-    eprintln!("  zho - Chinese");
+    eprintln!("  zho-hans - Chinese (Simplified), zho-hant - Chinese (Traditional)");
     eprintln!("  hin - Hindi");
     eprintln!();
     eprintln!("Examples:");
@@ -223,31 +223,15 @@ fn print_usage() {
 }
 
 fn parse_language_code(code: &str) -> anyhow::Result<Language> {
-    match code.to_lowercase().as_str() {
-        "fra" => Ok(Language::French),
-        "deu" => Ok(Language::German),
-        "spa" => Ok(Language::Spanish),
-        "eng" => Ok(Language::English),
-        "kor" => Ok(Language::Korean),
-        "por" => Ok(Language::Portuguese),
-        "ita" => Ok(Language::Italian),
-        "rus" => Ok(Language::Russian),
-        "zho-hans" => Ok(Language::ChineseSimplified),
-        "zho-hant" => Ok(Language::ChineseTraditional),
-        "jpn" => Ok(Language::Japanese),
-        "hin" => Ok(Language::Hindi),
-        "tha" => Ok(Language::Thai),
-        _ => Err(anyhow!(
-            "Unknown language code '{code}'. Supported codes: fra, deu, spa, eng, kor, por, ita, rus, zho-hans, zho-hant, jpn, hin, tha"
-        )),
-    }
+    Language::from_code(&code.to_lowercase())
+        .ok_or_else(|| anyhow!("Unknown language code: {code}"))
 }
 
 /// Load manual sentences for a language (these should never be filtered)
 fn load_manual_sentences(language: Language) -> anyhow::Result<std::collections::HashSet<String>> {
     let manual_file = PathBuf::from(format!(
         "./generate-data/data/{}/sentence-sources/extra/manual.txt",
-        language.code()
+        language.corpus_code()
     ));
 
     let mut manual_sentences = std::collections::HashSet::new();
@@ -480,7 +464,8 @@ For each token, provide:
 
 CRITICAL: when you concatenate all tokens' text + whitespace in order, you MUST exactly reproduce the original sentence. Every character must be accounted for.
 
-The lemma should be the form a learner would look up in a dictionary.{tips}"#
+The lemma should be the form a learner would look up in a dictionary.{tips}"#,
+            language = language.prompt_name()
         );
 
         let pb = ProgressBar::new(uncached.len() as u64);
@@ -841,10 +826,12 @@ async fn clean_all_languages() -> anyhow::Result<()> {
     let languages = vec![
         Language::French,
         Language::German,
-        Language::Spanish,
+        Language::SpanishMexican,
+        Language::SpanishPeninsular,
         Language::English,
         Language::Korean,
-        Language::Portuguese,
+        Language::PortugueseBrazilian,
+        Language::PortugueseEuropean,
         Language::Italian,
         Language::Russian,
         // Simplified only: the corpora and the HanLP segmentation path (see

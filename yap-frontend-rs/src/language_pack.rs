@@ -36,7 +36,7 @@ static LANGUAGE_DATA_HASHES: LazyLock<BTreeMap<Course, &'static str>> = LazyLock
     hashes.insert(
         Course {
             native_language: Language::English,
-            target_language: Language::Spanish,
+            target_language: Language::SpanishMexican,
         },
         include_str!("../../out/spa_for_eng/language_data.hash"),
     );
@@ -64,14 +64,14 @@ static LANGUAGE_DATA_HASHES: LazyLock<BTreeMap<Course, &'static str>> = LazyLock
     hashes.insert(
         Course {
             native_language: Language::English,
-            target_language: Language::Portuguese,
+            target_language: Language::PortugueseBrazilian,
         },
         include_str!("../../out/por_for_eng/language_data.hash"),
     );
     hashes.insert(
         Course {
             native_language: Language::French,
-            target_language: Language::Portuguese,
+            target_language: Language::PortugueseBrazilian,
         },
         include_str!("../../out/por_for_fra/language_data.hash"),
     );
@@ -118,7 +118,7 @@ fn describe_part(part: PackPart, course: Course) -> String {
         PackPart::Core => "dictionary",
         PackPart::Sentences => "sentences",
     };
-    format!("Downloading {:?} {kind}", course.target_language)
+    format!("Downloading {} {kind}", course.target_language)
 }
 
 fn language_data_hashes_for_course(course: Course) -> Result<PackMetadata, LanguageDataError> {

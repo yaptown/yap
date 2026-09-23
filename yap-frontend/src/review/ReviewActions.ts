@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { SentenceList } from "@/browse/useSentenceList";
-import type { Deck, DeckEvent, PlacementSession, Rating, PartGraded, LiteralGrades, Gram, Heteronym } from "../../../yap-frontend-rs/pkg";
+import type { Deck, DeckEvent, PlacementSession, Rating, PartGraded, ManualTranslationGrade, Heteronym } from "../../../yap-frontend-rs/pkg";
 
 export type ReviewHost = {
   deck: Deck;
@@ -13,7 +13,7 @@ export type ReviewActions = {
   pendingReviewScope: string;
   onRating: (rating: Rating) => boolean;
   onTranslationComplete: (
-    grade: { literalGrades: LiteralGrades; phrasesRemembered: Gram<string>[]; phrasesForgot: Gram<string>[] } | { perfect: string | null },
+    grade: ManualTranslationGrade | { perfect: string | null },
     tapped: Heteronym<string>[], submission: string, completedAtMs: number,
   ) => boolean;
   onTranscriptionComplete: (grade: PartGraded[], completedAtMs: number) => boolean;

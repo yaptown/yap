@@ -59,10 +59,9 @@
 //! linguistic re-analysis (lemmas, POS grouping) happens here — whatever
 //! units the gram system defines are the units mined.
 //!
-//! Run by the standalone `usage_discovery` binary; nothing in the main
-//! generate-data pipeline consumes these files except
-//! `wiktionary_terms::extra_multiword_terms`, which folds the discovered
-//! terms into the next run's multiword-term inventory as-is.
+//! The standalone `usage_discovery` binary writes these inventories. The pack
+//! build consumes them in `assign_senses` after embedding the segmented corpus;
+//! `wiktionary_terms::extra_multiword_terms` also adopts discovered expressions.
 
 use anyhow::{Context, Result};
 use language_utils::{Atom, Gram, Language, SentenceInfo, WordType};
@@ -252,7 +251,7 @@ fn index_sentence(
         .sentence
         .tokens
         .iter()
-        .flat_map(|&key| interners.atoms(key).iter().copied())
+        .flat_map(|&key| interners.atoms(key.gram).iter().copied())
         .filter(|a| matches!(a, Atom::Tok(_)))
         .collect();
     debug_assert_eq!(atom_seq.len(), words.len());
@@ -861,6 +860,7 @@ struct PolysemyProbeResponse {
 }
 
 fn probe_system_prompt(language: Language) -> String {
+    let language = language.prompt_name();
     format!(
         "We are building a course for {language} learners, and we split each \
         vocabulary word into distinct \"usages\" so we can introduce them to the \
@@ -931,6 +931,7 @@ async fn probe_words(language: Language) -> Result<Vec<ProbeWord>> {
 }
 
 fn adjudication_system_prompt(language: Language) -> String {
+    let language = language.prompt_name();
     format!(
         "You are auditing a language-learning vocabulary built from a {language} \
         sentence corpus. What we have done is taken all the known occurrences of a \
@@ -1159,6 +1160,7 @@ struct OpacityJudgeResponse {
 }
 
 fn opacity_system_prompt(language: Language) -> String {
+    let language = language.prompt_name();
     format!(
         "You are curating multiword entries for a {language} vocabulary-learning \
         app. Each request shows a candidate multiword expression mined from a \
@@ -1221,6 +1223,7 @@ struct ParadigmResponse {
 }
 
 fn paradigm_system_prompt(language: Language) -> String {
+    let language = language.prompt_name();
     format!(
         "You are curating multiword entries for a {language} vocabulary-learning \
         app. Each request shows one expression mined from a sentence corpus, with \
@@ -1318,7 +1321,7 @@ fn normalize_term(s: &str) -> String {
 /// Path of a language's committed discovery record.
 fn discovered_terms_path(language: Language) -> std::path::PathBuf {
     Path::new("./generate-data/data")
-        .join(language.code())
+        .join(language.corpus_code())
         .join("discovered_multiword_terms.jsonl")
 }
 
@@ -1465,6 +1468,10 @@ pub struct UsageEntry {
 
 /// A gram's usage inventory: the pedagogical units it splits into, with
 /// enough labeled data to classify any occurrence of the gram.
+///
+/// Usage positions are persistent sense ids (one-based). On regeneration,
+/// matching glosses keep their slots, new glosses append, and missing usages
+/// retain their slots with empty anchors. Never sort or compact `usages`.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UsageInventory {
     /// Human-readable display of the mined gram.
@@ -1486,6 +1493,34 @@ pub struct UsageInventory {
     pub absorbers: Vec<UsageEntry>,
     pub silhouette: f64,
     pub source: String,
+}
+
+impl UsageInventory {
+    fn retire_usages(&mut self) {
+        for usage in &mut self.usages {
+            usage.anchors.clear();
+            usage.n_gold = 0;
+            usage.n_assigned = 0;
+            usage.loo_correct = 0;
+        }
+    }
+
+    /// Preserve ids even when the judge reorders or stops returning a usage.
+    fn keep_sense_ids(&mut self, mut previous: Self) {
+        previous.retire_usages();
+        for usage in std::mem::take(&mut self.usages) {
+            if let Some(slot) = previous
+                .usages
+                .iter_mut()
+                .find(|old| old.gloss == usage.gloss)
+            {
+                *slot = usage;
+            } else {
+                previous.usages.push(usage);
+            }
+        }
+        self.usages = previous.usages;
+    }
 }
 
 /// One per-occurrence corpus label, as written to
@@ -2507,7 +2542,7 @@ pub async fn discover(
     // pipeline already knows — by normalized surface against the
     // multiword-terms inventory, or because the concatenated gram sequence
     // is itself already a gram.
-    let data_dir = format!("./generate-data/data/{}", language.code());
+    let data_dir = format!("./generate-data/data/{}", language.corpus_code());
     let known_terms: HashSet<String> = {
         let path = Path::new("./out")
             .join(language.code())
@@ -2652,9 +2687,32 @@ pub async fn discover(
 
     std::fs::create_dir_all(&data_dir).context("Failed to create data dir")?;
     let inventory_path = Path::new(&data_dir).join("usage_inventories.jsonl");
+    let previous = match std::fs::read_to_string(&inventory_path) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(error).context("Failed to read usage_inventories.jsonl"),
+    };
+    let mut previous: BTreeMap<Gram<String>, UsageInventory> = previous
+        .lines()
+        .map(|line| {
+            let inventory: UsageInventory = serde_json::from_str(line)?;
+            Ok((inventory.gram.clone(), inventory))
+        })
+        .collect::<Result<_>>()?;
+    for (row, _, _) in &mut inventory_rows {
+        if let Some(old) = previous.remove(&row.gram) {
+            row.keep_sense_ids(old);
+        }
+    }
     let mut f =
         File::create(&inventory_path).context("Failed to create usage_inventories.jsonl")?;
     for (row, _, _) in &inventory_rows {
+        writeln!(f, "{}", serde_json::to_string(row)?)?;
+    }
+    // Append retired inventories so current corpus labels retain their row
+    // indices, while a gram returning in a later run still has its old ids.
+    for row in previous.values_mut() {
+        row.retire_usages();
         writeln!(f, "{}", serde_json::to_string(row)?)?;
     }
     // The usage inventory replaces the old cluster-grouped sense file
@@ -2667,7 +2725,7 @@ pub async fn discover(
     println!(
         "usage-discovery[{}]: wrote {} usage inventories to {}",
         language.code(),
-        inventory_rows.len(),
+        inventory_rows.len() + previous.len(),
         inventory_path.display()
     );
 
@@ -2785,7 +2843,117 @@ pub async fn discover(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn overlays_and_uncached_tokens_use_the_same_fallback() {
+        use language_utils::{
+            EncodedSentence, GramInterners, MultiwordTermMatch, MultiwordTerms, TaggedGram,
+        };
+        use std::num::NonZeroU32;
+        let gram: Gram<String> = serde_json::from_str::<DiscoveredTerm>(LEGACY_RECORD)
+            .unwrap()
+            .gram;
+        let mut strings = lasso::Rodeo::default();
+        let atoms = gram.get_or_intern(&mut strings);
+        let mut grams = lasso::Rodeo::default();
+        let key = grams.get_or_intern(atoms);
+        let interners = GramInterners {
+            strings: strings.into_reader(),
+            grams: grams.into_reader(),
+        };
+        let term = MultiwordTermMatch {
+            gram: TaggedGram { gram, sense: None },
+            matched_word_indices: vec![0, 1],
+        };
+        let mut info = SentenceInfo {
+            sentence: EncodedSentence {
+                tokens: vec![
+                    TaggedGram {
+                        gram: key,
+                        sense: None,
+                    },
+                    TaggedGram {
+                        gram: key,
+                        sense: NonZeroU32::new(1),
+                    },
+                ],
+                capitalize_first: false,
+            },
+            multiword_terms: MultiwordTerms {
+                high_confidence: vec![term.clone()],
+                low_confidence: vec![term],
+            },
+        };
+        let sense = NonZeroU32::new(2).unwrap();
+        let defaults = HashMap::from([(key, sense)]);
+        assert_eq!(apply_sense_fallbacks(&mut info, &interners, &defaults), 1);
+        assert_eq!(info.sentence.tokens[0].sense, Some(sense));
+        assert_eq!(info.sentence.tokens[1].sense, NonZeroU32::new(1));
+        assert_eq!(
+            info.multiword_terms.high_confidence[0].gram.sense,
+            Some(sense)
+        );
+        assert_eq!(
+            info.multiword_terms.low_confidence[0].gram.sense,
+            Some(sense)
+        );
+        assert_eq!(apply_sense_fallbacks(&mut info, &interners, &defaults), 0);
+    }
+
     use super::*;
+
+    #[test]
+    fn inventory_merge_keeps_sense_ids() {
+        fn inventory(glosses: &[&str]) -> UsageInventory {
+            UsageInventory {
+                key: "test".into(),
+                gram: Gram(vec![]),
+                n: 1,
+                n_expression: 0,
+                usages: glosses
+                    .iter()
+                    .map(|gloss| UsageEntry {
+                        kind: "meaning".into(),
+                        gloss: (*gloss).into(),
+                        n_gold: 1,
+                        n_assigned: 1,
+                        loo_correct: 1,
+                        anchors: vec![UsageAnchor {
+                            sentence: "anchor".into(),
+                            spans: vec![(0, 6)],
+                            gold: true,
+                        }],
+                    })
+                    .collect(),
+                absorbers: vec![],
+                silhouette: 0.0,
+                source: "test".into(),
+            }
+        }
+        let previous = inventory(&["first", "second", "third"]);
+        let mut next = inventory(&["third", "first", "new"]);
+        next.keep_sense_ids(previous);
+        assert_eq!(
+            next.usages
+                .iter()
+                .map(|u| u.gloss.as_str())
+                .collect::<Vec<_>>(),
+            ["first", "second", "third", "new"]
+        );
+        assert!(next.usages[1].anchors.is_empty());
+        assert_eq!(next.usages[1].n_assigned, 0);
+        assert_eq!(next.usages[0].anchors.len(), 1);
+        // A removed usage can return without changing its original id.
+        let mut returned = inventory(&["second", "new"]);
+        returned.keep_sense_ids(next);
+        assert_eq!(returned.usages[1].gloss, "second");
+        assert_eq!(returned.usages[1].anchors.len(), 1);
+        assert!(returned.usages[0].anchors.is_empty());
+        assert_eq!(returned.usages.len(), 4);
+        // Losing an entire inventory does not discard its slots either.
+        returned.retire_usages();
+        assert!(returned.usages.iter().all(|u| u.anchors.is_empty()));
+        assert_eq!(returned.usages.len(), 4);
+    }
 
     fn vec2(x: f32, y: f32) -> Vec<f32> {
         let mut v = vec![x, y];
@@ -2917,4 +3085,204 @@ mod tests {
         let sil = cosine_silhouette(&refs, &labels);
         assert!(sil < 0.9, "one blob should not look cleanly separable");
     }
+}
+
+/// Classify exact gram occurrences and assign their most frequent sense to
+/// missing-vector occurrences and lemma-loosened overlays.
+/// Retains inventory slots so the one-based sense ids survive retired usages.
+pub async fn assign_senses(
+    language: Language,
+    app: &mut BTreeMap<String, SentenceInfo>,
+    restricted: &mut BTreeMap<String, SentenceInfo>,
+    interners: &language_utils::GramInterners,
+    store: &osmo::Store,
+) -> Result<BTreeMap<Gram<String>, UsageInventory>> {
+    use language_utils::SpurGram;
+    use std::num::NonZeroU32;
+    let path = format!(
+        "./generate-data/data/{}/usage_inventories.jsonl",
+        language.corpus_code()
+    );
+    let contents = match std::fs::read_to_string(&path) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(error).context("Failed to read usage inventories"),
+    };
+    let corpus: HashSet<String> = app
+        .values()
+        .chain(restricted.values())
+        .map(|info| index_sentence(info, interners, language).0)
+        .collect();
+    let mut inventories = BTreeMap::new();
+    struct Classifier {
+        centroids: Vec<(NonZeroU32, Vec<f32>)>,
+        counts: Vec<u32>,
+        historical: Vec<usize>,
+    }
+    let mut classifiers: HashMap<SpurGram, Classifier> = HashMap::new();
+    let mut skipped = 0usize;
+    for line in contents.lines() {
+        let mut inventory: UsageInventory = serde_json::from_str(line)?;
+        let Some(gram) = inventory
+            .gram
+            .get_interned(&interners.strings)
+            .and_then(|gram| gram.get_interned(&interners.grams))
+        else {
+            log::warn!(
+                "sense-assignment[{}]: {:?}: no classifier (gram absent from segmented vocabulary)",
+                language.code(),
+                inventory.key
+            );
+            continue;
+        };
+        let mut centroids = Vec::new();
+        for (index, usage) in inventory.usages.iter_mut().enumerate() {
+            usage
+                .anchors
+                .retain(|anchor| corpus.contains(&anchor.sentence));
+            match entry_centroid(store, language, &inventory.key, usage).await {
+                Ok(vector) => {
+                    centroids.push((NonZeroU32::new(u32::try_from(index + 1)?).unwrap(), vector))
+                }
+                Err(_) => {
+                    usage.anchors.clear();
+                    skipped += 1;
+                }
+            }
+        }
+        if !centroids.is_empty() {
+            classifiers.insert(
+                gram,
+                Classifier {
+                    centroids,
+                    counts: vec![0; inventory.usages.len()],
+                    historical: inventory
+                        .usages
+                        .iter()
+                        .map(|usage| usage.n_assigned)
+                        .collect(),
+                },
+            );
+            inventories.insert(inventory.gram.clone(), inventory);
+        } else {
+            log::warn!(
+                "sense-assignment[{}]: {:?}: no classifier (all senses lack cached corpus anchors)",
+                language.code(),
+                inventory.key
+            );
+        }
+    }
+    let mut tagged = 0usize;
+    // First classify all cached occurrences, then use their most frequent
+    // sense for missing vectors; traversal order cannot affect fallback ids.
+    for info in app.values_mut().chain(restricted.values_mut()) {
+        let (text, index) = index_sentence(info, interners, language);
+        let mut word_index = 0usize;
+        for token in &mut info.sentence.tokens {
+            let word_count = interners
+                .atoms(token.gram)
+                .iter()
+                .filter(|a| matches!(a, Atom::Tok(_)))
+                .count();
+            let spans: Vec<_> = index.words[word_index..word_index + word_count]
+                .iter()
+                .filter(|w| w.is_heteronym)
+                .map(|w| w.char_span)
+                .collect();
+            word_index += word_count;
+            let Some(Classifier {
+                centroids, counts, ..
+            }) = classifiers.get_mut(&token.gram)
+            else {
+                continue;
+            };
+            if spans.is_empty() {
+                continue;
+            }
+            let Some(vectors) =
+                token_embeddings::read_word_vectors(store, language, &text, &spans).await
+            else {
+                continue;
+            };
+            let vector = mean_normalized(&vectors.iter().collect::<Vec<_>>());
+            let sense = centroids
+                .iter()
+                .max_by(|a, b| dot(&vector, &a.1).total_cmp(&dot(&vector, &b.1)))
+                .unwrap()
+                .0;
+            token.sense = Some(sense);
+            tagged += 1;
+            counts[sense.get() as usize - 1] += 1;
+        }
+    }
+    let defaults: HashMap<_, _> = classifiers
+        .iter()
+        .map(|(gram, classifier)| {
+            let sense = classifier
+                .centroids
+                .iter()
+                .max_by_key(|(sense, _)| {
+                    let index = sense.get() as usize - 1;
+                    (
+                        classifier.counts[index],
+                        classifier.historical[index],
+                        std::cmp::Reverse(*sense),
+                    )
+                })
+                .unwrap()
+                .0;
+            (*gram, sense)
+        })
+        .collect();
+    let fallbacks: usize = app
+        .values_mut()
+        .chain(restricted.values_mut())
+        .map(|info| apply_sense_fallbacks(info, interners, &defaults))
+        .sum();
+    tagged += fallbacks;
+    if skipped > 0 {
+        log::warn!(
+            "sense-assignment[{}]: skipped {skipped} senses without cached corpus anchors",
+            language.code()
+        );
+    }
+    println!(
+        "sense-assignment[{}]: {tagged} tagged occurrences, {fallbacks} fallback assignments, {skipped} skipped senses",
+        language.code()
+    );
+    Ok(inventories)
+}
+
+/// Missing-vector tokens and overlays share one frozen frequency-based choice.
+/// Only actual token assignments contribute to the occurrence statistics.
+fn apply_sense_fallbacks(
+    info: &mut SentenceInfo,
+    interners: &language_utils::GramInterners,
+    defaults: &HashMap<language_utils::SpurGram, std::num::NonZeroU32>,
+) -> usize {
+    let mut assigned = 0;
+    for token in &mut info.sentence.tokens {
+        if token.sense.is_none()
+            && let Some(&sense) = defaults.get(&token.gram)
+        {
+            token.sense = Some(sense);
+            assigned += 1;
+        }
+    }
+    for term in info
+        .multiword_terms
+        .high_confidence
+        .iter_mut()
+        .chain(&mut info.multiword_terms.low_confidence)
+    {
+        if let Some(gram) = term
+            .gram
+            .get_interned(&interners.strings)
+            .and_then(|gram| gram.get_interned(&interners.grams))
+            && let Some(&sense) = defaults.get(&gram.gram)
+        {
+            term.gram.sense = Some(sense);
+        }
+    }
+    assigned
 }

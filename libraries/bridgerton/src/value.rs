@@ -433,3 +433,12 @@ impl<A: Value, B: Value, C: Value> Value for (A, B, C) {
         self.2.write(w)
     }
 }
+
+impl Value for std::num::NonZeroU32 {
+    fn read(reader: &mut Reader<'_>) -> Result<Self, Error> {
+        Self::new(u32::read(reader)?).ok_or_else(|| Error::new("expected a nonzero integer"))
+    }
+    fn write(&self, writer: &mut Writer) -> Result<(), Error> {
+        self.get().write(writer)
+    }
+}

@@ -388,13 +388,16 @@ fn heteronym_from_lexide_token(
 
     let expand_word: ExpandWordFn = match language {
         language_utils::Language::French => expand_french_word,
-        language_utils::Language::Spanish => expand_spanish_word,
+        language_utils::Language::SpanishMexican | language_utils::Language::SpanishPeninsular => {
+            expand_spanish_word
+        }
         language_utils::Language::English => expand_english_word,
         language_utils::Language::Korean => expand_korean_word,
         language_utils::Language::German => expand_german_word,
         // For unsupported languages, use a simple normalizer
         language_utils::Language::Italian
-        | language_utils::Language::Portuguese
+        | language_utils::Language::PortugueseBrazilian
+        | language_utils::Language::PortugueseEuropean
         | language_utils::Language::Russian
         | language_utils::Language::ChineseSimplified
         | language_utils::Language::ChineseTraditional

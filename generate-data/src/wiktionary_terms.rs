@@ -73,7 +73,7 @@ pub async fn ensure_multiword_terms_file(
     };
     let banned_terms = match target_language {
         Language::French => vec!["de le", "de les", "à le", "à les", "fait que", "aller y"],
-        Language::Spanish => vec!["de el", "a el"], // Spanish contractions that become "del" and "al"
+        Language::SpanishMexican | Language::SpanishPeninsular => vec!["de el", "a el"], // Spanish contractions that become "del" and "al"
         Language::English => vec!["me thinketh"],
         Language::Korean => vec![],
         Language::German => vec!["daß"],
@@ -82,7 +82,8 @@ pub async fn ensure_multiword_terms_file(
         | Language::ChineseTraditional
         | Language::Japanese
         | Language::Russian
-        | Language::Portuguese => vec![],
+        | Language::PortugueseBrazilian
+        | Language::PortugueseEuropean => vec![],
         Language::Italian => vec![],
         Language::Hindi => vec![],
         Language::Thai => vec![],
@@ -112,7 +113,7 @@ pub async fn ensure_multiword_terms_file(
 /// original extra_multiword_terms files). These patterns have gaps where other tokens
 /// appear between the anchors (e.g., French "ne...que", German "weder...noch").
 pub fn get_discontinuous_terms(course: &Course) -> BTreeSet<String> {
-    let language_code = course.target_language.code();
+    let language_code = course.target_language.corpus_code();
     let mut discontinuous = BTreeSet::new();
 
     for suffix in ["extra_multiword_terms.txt"] {
@@ -135,7 +136,7 @@ pub fn get_discontinuous_terms(course: &Course) -> BTreeSet<String> {
 }
 
 async fn extra_multiword_terms(language: Language) -> anyhow::Result<Vec<String>> {
-    let language_code = language.code();
+    let language_code = language.corpus_code();
     let mut terms = Vec::new();
 
     // Read manually curated extra multiword terms
@@ -173,7 +174,7 @@ async fn download_multiword_terms(language: Language) -> anyhow::Result<Vec<Stri
     let category = match language {
         Language::French => "French_multiword_terms",
         Language::English => "English_multiword_terms",
-        Language::Spanish => "Spanish_multiword_terms",
+        Language::SpanishMexican | Language::SpanishPeninsular => "Spanish_multiword_terms",
         Language::Korean => {
             // Korean multiword terms are not supported yet. The wiktionary page seems very barebones.
             return Ok(vec![]);
@@ -225,7 +226,9 @@ async fn download_multiword_terms(language: Language) -> anyhow::Result<Vec<Stri
             return Ok(terms);
         }
         Language::Russian => "Russian_multiword_terms",
-        Language::Portuguese => "Portuguese_multiword_terms",
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => {
+            "Portuguese_multiword_terms"
+        }
         Language::Italian => "Italian_multiword_terms",
         Language::Hindi => "Hindi_multiword_terms",
     };

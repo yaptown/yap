@@ -26,7 +26,7 @@ import {
   type DeckEvent,
   type Gram,
   type Heteronym,
-  type LiteralGrades,
+  type ManualTranslationGrade,
   type PartGraded,
   type PlacementSession,
   type Rating,
@@ -343,11 +343,7 @@ function useStudyController(
   };
   const onTranslationComplete = (
     grade:
-      | {
-          literalGrades: LiteralGrades;
-          phrasesRemembered: Gram<string>[];
-          phrasesForgot: Gram<string>[];
-        }
+      | ManualTranslationGrade
       | { perfect: string | null },
     wordsTapped: Heteronym<string>[],
     submission: string,

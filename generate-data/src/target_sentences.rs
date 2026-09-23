@@ -61,7 +61,7 @@ pub fn contains_xprotect_tripwire(s: &str) -> bool {
 pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSentences> {
     let source_data_path = PathBuf::from(format!(
         "./generate-data/data/{}",
-        course.target_language.code()
+        course.target_language.corpus_code()
     ));
 
     let banned_sentences = load_banned_sentences(&source_data_path, course.target_language)?;

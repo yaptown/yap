@@ -279,8 +279,10 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
 
     // display_text → representative single-word gram, for morpheme breakdown.
     // First (most frequent) single-word occurrence wins.
-    let mut display_text_to_main_gram: FxHashMap<String, language_utils::SpurGram> =
-        FxHashMap::default();
+    let mut display_text_to_main_gram: FxHashMap<
+        String,
+        language_utils::TaggedGram<language_utils::SpurGram>,
+    > = FxHashMap::default();
 
     for (frequency_index, (spur_gram, freq)) in
         language_pack.gram_frequencies.entries.iter().enumerate()
@@ -290,7 +292,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
             None => continue,
         };
 
-        let gram = gram_rodeo.resolve(spur_gram);
+        let gram = gram_rodeo.resolve(&spur_gram.gram);
         let resolved = gram.resolve(string_rodeo);
         let display_text = resolved.to_display_string(target_language);
 
@@ -580,7 +582,7 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
         let Some(main_gram) = display_text_to_main_gram.get(&page.display_text) else {
             continue;
         };
-        let Some(segments) = language_pack.compute_breakdown(*main_gram) else {
+        let Some(segments) = language_pack.compute_breakdown(main_gram.gram) else {
             continue;
         };
         page.morpheme_breakdown = segments
@@ -594,9 +596,12 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
     }
 
     // Build SpurGram → (slug, gloss) lookup for cross-linking sentences.
-    let mut gram_to_info: FxHashMap<language_utils::SpurGram, GramInfo> = FxHashMap::default();
+    let mut gram_to_info: FxHashMap<
+        language_utils::TaggedGram<language_utils::SpurGram>,
+        GramInfo,
+    > = FxHashMap::default();
     for (spur_gram, _freq) in language_pack.gram_frequencies.entries.iter() {
-        let gram = gram_rodeo.resolve(spur_gram);
+        let gram = gram_rodeo.resolve(&spur_gram.gram);
         let resolved = gram.resolve(string_rodeo);
         let dt = resolved.to_display_string(target_language);
         let slug = display_text_to_slug.get(&dt).cloned();
@@ -732,7 +737,7 @@ fn resolve_sentence(
     language_pack: &LanguagePack,
     sentence_spur: &Spur,
     language: language_utils::Language,
-    gram_to_info: &FxHashMap<language_utils::SpurGram, GramInfo>,
+    gram_to_info: &FxHashMap<language_utils::TaggedGram<language_utils::SpurGram>, GramInfo>,
 ) -> Option<ExampleSentence> {
     let sentence_grams = language_pack.encoded_sentences.get(sentence_spur)?;
     let string_rodeo = &language_pack.string_rodeo;
@@ -748,7 +753,7 @@ fn resolve_sentence(
         let info = gram_to_info.get(spur_gram);
         let slug = info.and_then(|i| i.slug.clone());
         let gloss = info.and_then(|i| i.gloss.clone());
-        let gram = gram_rodeo.resolve(spur_gram).resolve(string_rodeo);
+        let gram = gram_rodeo.resolve(&spur_gram.gram).resolve(string_rodeo);
         for atom in gram.iter() {
             if let Atom::Tok(word) = atom {
                 word_entries.push((word.clone(), slug.clone(), gloss.clone()));
@@ -838,7 +843,7 @@ fn single_line(text: &str) -> String {
 /// `chinese-simplified`), so the URL stays copy-pasteable.
 fn language_file_slug(language: Language) -> String {
     let mut slug = String::new();
-    for ch in language.to_string().to_lowercase().chars() {
+    for ch in language.dictionary_name().chars() {
         if ch.is_ascii_alphanumeric() {
             slug.push(ch);
         } else if !slug.is_empty() && !slug.ends_with('-') {
@@ -1307,7 +1312,7 @@ mod tests {
     fn spanish_ser_conjugation() {
         let course = Course {
             native_language: Language::English,
-            target_language: Language::Spanish,
+            target_language: Language::SpanishMexican,
         };
         let data = load_and_extract(&course);
         let page = find_page_by_display(&data, "es");
@@ -1382,7 +1387,7 @@ mod tests {
     fn portuguese_ser_conjugation() {
         let course = Course {
             native_language: Language::English,
-            target_language: Language::Portuguese,
+            target_language: Language::PortugueseBrazilian,
         };
         let data = load_and_extract(&course);
         let page = find_page_by_display(&data, "é");

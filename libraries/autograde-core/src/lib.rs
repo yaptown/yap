@@ -66,7 +66,7 @@ pub async fn grade_translation(
     let native_language = course.native_language;
 
     // Dedup phrases
-    let phrases: Vec<language_utils::Gram<String>> = phrases
+    let phrases: Vec<language_utils::TaggedGram<language_utils::Gram<String>>> = phrases
         .iter()
         .cloned()
         .collect::<std::collections::BTreeSet<_>>()
@@ -74,16 +74,19 @@ pub async fn grade_translation(
         .collect();
 
     // Build display string → gram map for converting LLM output back to grams
+    // The model only sees display text, not sense identities. Its judgement
+    // therefore applies to every sense sharing that text in this challenge.
     let phrase_display_strings: Vec<String> = phrases
         .iter()
         .map(|g| g.to_display_string(target_language))
         .collect();
-    let display_to_gram: std::collections::HashMap<&str, &language_utils::Gram<String>> =
-        phrase_display_strings
-            .iter()
-            .zip(phrases.iter())
-            .map(|(s, g)| (s.as_str(), g))
-            .collect();
+    let mut display_to_gram: std::collections::HashMap<
+        &str,
+        Vec<&language_utils::TaggedGram<language_utils::Gram<String>>>,
+    > = std::collections::HashMap::new();
+    for (display, gram) in phrase_display_strings.iter().zip(phrases.iter()) {
+        display_to_gram.entry(display).or_default().push(gram);
+    }
 
     // Check whether the primary expression is a phrase or a literal-level gram
     let primary_is_phrase = phrases.contains(primary_expression);
@@ -107,8 +110,8 @@ pub async fn grade_translation(
         });
     }
 
-    let target_language_name = target_language.to_string();
-    let native_language_name = native_language.to_string();
+    let target_language_name = target_language.prompt_name();
+    let native_language_name = native_language.prompt_name();
 
     // Build the literals list with indices for gradable words, _ for ungradable
     // Track which literal positions have gradable words (for mapping indices back)
@@ -161,6 +164,7 @@ pub async fn grade_translation(
         )
     } else {
         let words: Vec<&str> = primary_expression
+            .gram
             .0
             .iter()
             .filter_map(|atom| match atom {
@@ -322,22 +326,37 @@ Phrases:
     // Sanitize phrase outputs:
     // 1. Map LLM display strings back to Gram<String> using the display_to_gram map (filters unknown phrases)
     // 2. Resolve contradictions: if same phrase in both, keep in forgot (forgot takes precedence)
-    let mut phrases_forgot: Vec<language_utils::Gram<String>> = llm_response
-        .phrases_forgot
-        .into_iter()
-        .filter_map(|p| display_to_gram.get(p.as_str()).map(|g| (*g).clone()))
-        .collect();
+    let mut phrases_forgot: Vec<language_utils::TaggedGram<language_utils::Gram<String>>> =
+        llm_response
+            .phrases_forgot
+            .into_iter()
+            .flat_map(|p| {
+                display_to_gram
+                    .get(p.as_str())
+                    .into_iter()
+                    .flatten()
+                    .map(|g| (*g).clone())
+            })
+            .collect();
     phrases_forgot.sort();
     phrases_forgot.dedup();
 
-    let forgot_set: std::collections::BTreeSet<&language_utils::Gram<String>> =
-        phrases_forgot.iter().collect();
-    let mut phrases_remembered: Vec<language_utils::Gram<String>> = llm_response
-        .phrases_remembered
-        .into_iter()
-        .filter_map(|p| display_to_gram.get(p.as_str()).map(|g| (*g).clone()))
-        .filter(|p| !forgot_set.contains(p))
-        .collect();
+    let forgot_set: std::collections::BTreeSet<
+        &language_utils::TaggedGram<language_utils::Gram<String>>,
+    > = phrases_forgot.iter().collect();
+    let mut phrases_remembered: Vec<language_utils::TaggedGram<language_utils::Gram<String>>> =
+        llm_response
+            .phrases_remembered
+            .into_iter()
+            .flat_map(|p| {
+                display_to_gram
+                    .get(p.as_str())
+                    .into_iter()
+                    .flatten()
+                    .map(|g| (*g).clone())
+            })
+            .filter(|p| !forgot_set.contains(p))
+            .collect();
     phrases_remembered.sort();
     phrases_remembered.dedup();
 

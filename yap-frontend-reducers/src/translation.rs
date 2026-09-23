@@ -3,6 +3,7 @@
 use crate::{
     AudioRequest, DefinitionView, ProperNounGroup, Sound, definition_view, proper_noun_groups,
 };
+use language_utils::TaggedGram;
 use language_utils::{
     Course, ProperNounDefinition, autograde,
     text_cleanup::{find_closest_match, normalize_for_grading},
@@ -19,8 +20,8 @@ use std::collections::BTreeSet;
 #[serde(rename_all = "camelCase")]
 pub struct ManualTranslationGrade {
     pub literal_grades: Vec<Option<Remembered>>,
-    pub phrases_remembered: Vec<Gram<String>>,
-    pub phrases_forgot: Vec<Gram<String>>,
+    pub phrases_remembered: Vec<TaggedGram<Gram<String>>>,
+    pub phrases_forgot: Vec<TaggedGram<Gram<String>>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub encouragement: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -89,7 +90,7 @@ pub enum TranslationGradeItem {
         status: Option<bool>,
     },
     Phrase {
-        gram: Gram<String>,
+        gram: TaggedGram<Gram<String>>,
         display: String,
         status: Option<bool>,
     },
@@ -104,7 +105,7 @@ impl TranslationGradeItem {
 
 fn grade_items(
     literals: &[Literal<String>],
-    phrases: &[Gram<String>],
+    phrases: &[TaggedGram<Gram<String>>],
     grade: &ManualTranslationGrade,
     language: Language,
 ) -> Vec<TranslationGradeItem> {
@@ -298,7 +299,7 @@ pub struct TranslateComprehensibleSentence {
     /// breakdown (e.g. unknown word, no morpheme data).
     #[allow(clippy::type_complexity)]
     pub gram_breakdowns_for_lookup: Vec<Option<Vec<(String, Option<String>, Option<String>)>>>,
-    pub unique_target_language_phrases: Vec<Gram<String>>,
+    pub unique_target_language_phrases: Vec<TaggedGram<Gram<String>>>,
     /// Definition for each phrase in unique_target_language_phrases (indexed in parallel).
     pub phrase_definitions: Vec<Option<GramDefinition>>,
     /// Breakdown for each phrase (parallel to `unique_target_language_phrases`).
@@ -308,7 +309,7 @@ pub struct TranslateComprehensibleSentence {
     pub movie_titles: Vec<(String, String)>,
     pub proper_noun_definitions: Vec<(String, ProperNounDefinition)>,
     /// The gram that motivated this challenge (the one being reviewed via spaced repetition).
-    pub primary_expression: Gram<String>,
+    pub primary_expression: TaggedGram<Gram<String>>,
     /// True if the user recently got this sentence wrong in a translation challenge.
     pub second_chance: bool,
 }
@@ -330,7 +331,7 @@ pub fn autograde_perfect_match(
     user_sentence: &str,
     native_translations: &[String],
     literals: &[Literal<String>],
-    phrases: &[Gram<String>],
+    phrases: &[TaggedGram<Gram<String>>],
     native_language: Language,
 ) -> Option<autograde::AutoGradeTranslationResponse> {
     let normalized_user = normalize_for_grading(user_sentence, native_language);
@@ -398,7 +399,7 @@ fn extract_native_words(definition: &GramDefinition) -> Vec<String> {
 pub fn heuristic_grade_translation(
     user_sentence: &str,
     literals: &[Literal<String>],
-    phrases: &[Gram<String>],
+    phrases: &[TaggedGram<Gram<String>>],
     gram_definitions: &[Option<GramDefinition>],
     literal_gram_indices: &[usize],
     phrase_definitions: &[Option<GramDefinition>],
@@ -968,7 +969,7 @@ mod reducer_tests {
             "literal_gram_indices":[0,0], "gram_definitions_for_lookup":[], "gram_breakdowns_for_lookup":[],
             "unique_target_language_phrases":[], "phrase_definitions":[], "phrase_breakdowns":[],
             "native_translations":["cat", "a cat"], "movie_titles":[], "proper_noun_definitions":[],
-            "primary_expression":[], "second_chance":true
+            "primary_expression":{"gram":[],"sense":null}, "second_chance":true
         })).unwrap();
         translation_start(
             sentence,
@@ -1346,7 +1347,10 @@ mod tests {
     }
     #[test]
     fn corrections_are_idempotent_and_support_missing_literal_grades() {
-        let phrase = Gram::new(vec![language_utils::Atom::Tok(literal().word)]);
+        let phrase = TaggedGram {
+            gram: Gram::new(vec![language_utils::Atom::Tok(literal().word)]),
+            sense: None,
+        };
         let item = TranslationGradeItem::Phrase {
             gram: phrase.clone(),
             display: "chat".into(),

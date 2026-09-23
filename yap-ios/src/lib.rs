@@ -57,7 +57,7 @@ mod tests {
             serde_json::json!({"type":"SetDailyReviewTarget", "daily_review_target":"Intense"}),
             serde_json::json!({"type":"TranslationChallenge", "review":{
                 "type":"Graded", "challenge":"bonjour", "submission":"salut",
-                "literals":[], "phrases":[["語", true], ["a", null]]
+                "literals":[], "phrases":[[{"gram":[],"sense":1}, true], [{"gram":[],"sense":null}, null]]
             }}),
         ] {
             let json = serde_json::json!({"type":"Language", "target_language":"French",

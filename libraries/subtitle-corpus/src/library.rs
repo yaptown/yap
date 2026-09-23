@@ -376,7 +376,13 @@ pub fn classify(
     }
 
     if let Some(course) = course_dir(original_language) {
-        let movies = data_root.join(course).join("sentence-sources/movies");
+        let movies = data_root
+            .join(
+                language_utils::Language::from_code(course)
+                    .unwrap()
+                    .corpus_code(),
+            )
+            .join("sentence-sources/movies");
         let raw = movies.join(format!("subtitles-raw/{imdb_id}.srt"));
         if raw.exists() {
             return Ok(Source::Downloaded { path: raw });

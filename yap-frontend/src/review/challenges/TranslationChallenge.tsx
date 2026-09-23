@@ -14,8 +14,7 @@ import { MoviePosterGrid } from "./MoviePosterGrid";
 import { ProperNounGroups } from "./ProperNounGroups";
 import {
   type TranslateComprehensibleSentence,
-  type LiteralGrades,
-  type Gram,
+  type ManualTranslationGrade,
   type DefinitionView,
   autograde_translation,
   translation_pending_slot,
@@ -81,11 +80,7 @@ interface SentenceChallengeProps {
   initialState?: TranslationState;
   onComplete: (
     grade:
-      | {
-          literalGrades: LiteralGrades;
-          phrasesRemembered: Gram<string>[];
-          phrasesForgot: Gram<string>[];
-        }
+      | ManualTranslationGrade
       | { perfect: string | null },
     heteronymsTapped: Heteronym<string>[],
     submission: string,

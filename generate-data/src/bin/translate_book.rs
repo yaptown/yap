@@ -32,7 +32,7 @@ use tysm::chat_completions::ChatClient;
 /// Simplified Chinese has no `lexide::Language` variant, so it segments locally with
 /// [`segment_chinese`] — the parsley `/segment` serve filters out content it judges
 /// nontextual (by design), but book prose is all textual and we want it lossless.
-const LANGS: [(&str, &str, Option<Language>); 11] = [
+const LANGS: [(&str, &str, Option<Language>); 13] = [
     ("deu", "German", Some(Language::German)),
     ("eng", "English", Some(Language::English)),
     ("fra", "French", Some(Language::French)),
@@ -41,8 +41,10 @@ const LANGS: [(&str, &str, Option<Language>); 11] = [
     ("jpn", "Japanese", Some(Language::Japanese)),
     ("kor", "Korean", Some(Language::Korean)),
     ("por", "Portuguese", Some(Language::PortugueseBrazil)),
+    ("por-pt", "Portuguese", Some(Language::PortugueseBrazil)),
     ("rus", "Russian", Some(Language::Russian)),
     ("spa", "Spanish", Some(Language::SpanishEuro)),
+    ("spa-es", "Spanish", Some(Language::SpanishEuro)),
     ("zho-hans", "Simplified Chinese", None),
 ];
 
@@ -142,6 +144,9 @@ async fn main() -> anyhow::Result<()> {
         .iter()
         .find(|(code, _, _)| *code == source_lang)
         .with_context(|| format!("unknown --source-lang {source_lang}"))?;
+    let source_corpus = language_utils::Language::from_code(&source_lang)
+        .unwrap()
+        .corpus_code();
 
     let all_chunks: Vec<Chunk> = std::fs::read_to_string(&chunks_path)
         .with_context(|| format!("read {chunks_path}"))?
@@ -171,8 +176,11 @@ async fn main() -> anyhow::Result<()> {
         {
             continue;
         }
+        let corpus = language_utils::Language::from_code(code)
+            .unwrap()
+            .corpus_code();
         let out_dir = PathBuf::from(format!(
-            "./generate-data/data/{code}/sentence-sources/books/{series}"
+            "./generate-data/data/{corpus}/sentence-sources/books/{series}"
         ));
         std::fs::create_dir_all(&out_dir)?;
         let out_path = out_dir.join(format!("{book}.jsonl"));
@@ -216,9 +224,8 @@ async fn main() -> anyhow::Result<()> {
             .map(|chunk| {
                 let system_prompt = system_prompt.clone();
                 let segmenter = &segmenter;
-                let source_lang = source_lang.clone();
                 async move {
-                    let text = if code == source_lang {
+                    let text = if corpus == source_corpus {
                         chunk.text.clone()
                     } else {
                         let response: ChunkTranslation = CHAT_CLIENT

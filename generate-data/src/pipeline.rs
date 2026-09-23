@@ -172,7 +172,7 @@ pub fn load_banned_words(
 ) -> anyhow::Result<HashSet<language_utils::Heteronym<String>>> {
     let path = format!(
         "./generate-data/data/{}/banned_words.jsonl",
-        course.target_language.code()
+        course.target_language.corpus_code()
     );
     let path = Path::new(&path);
     if !path.exists() {
@@ -199,7 +199,10 @@ pub fn initial_gram_frequencies(
             count: entry.frequency,
             direct_count: entry.frequency,
             disambiguation_key: entry.atoms.disambiguation_key(),
-            gram: entry.atoms.clone(),
+            gram: language_utils::TaggedGram {
+                gram: entry.atoms.clone(),
+                sense: None,
+            },
         })
         .collect();
     frequencies.sort_by_key(|entry| std::cmp::Reverse(entry.clone()));
@@ -878,7 +881,14 @@ pub async fn segment_corpus(
                     text.clone(),
                     SentenceInfo {
                         sentence: sentence.clone(),
-                        multiword_terms: matches.remove(text).unwrap_or_else(empty_terms),
+                        multiword_terms: matches.remove(text).unwrap_or_else(empty_terms).map(
+                            |term| {
+                                term.map(|gram| language_utils::TaggedGram {
+                                    gram: gram.clone(),
+                                    sense: None,
+                                })
+                            },
+                        ),
                     },
                 );
             }

@@ -23,8 +23,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use language_utils::{
-    Course, Gram, Language, SpurGram, TtsProvider, TtsRequest, autograde, dictionary_entry_slug,
-    language_pack::LanguagePack, text_cleanup::find_closest_match,
+    Course, Gram, Language, SpurGram, TaggedGram, TtsProvider, TtsRequest, autograde,
+    dictionary_entry_slug, language_pack::LanguagePack, text_cleanup::find_closest_match,
 };
 use lasso::Spur;
 use weapon::data_model::{EventStore, EventType};
@@ -404,14 +404,17 @@ impl YapState {
     }
 
     /// Parse a gram (the word/lemma/part-of-speech token sequence that uniquely
-    /// identifies a dictionary entry) from tool input, requiring it to name a
-    /// gram that actually exists in this course — the server never guesses.
-    fn resolve_gram(&self, gram: &Gram<String>) -> Result<SpurGram, String> {
-        match self.pack().course_gram(gram) {
+    /// and sense number identify a dictionary entry) from tool input, requiring it to name a
+    /// gram that actually exists in this course; missing senses use the most frequent sense.
+    fn resolve_gram(
+        &self,
+        gram: &TaggedGram<Gram<String>>,
+    ) -> Result<TaggedGram<SpurGram>, String> {
+        match self.pack().resolve_entry(gram) {
             Some(interned) => Ok(interned),
             None => Err(format!(
                 "no dictionary entry in this course matches that gram for '{}' — the full \
-                 word/lemma/part-of-speech sequence must match exactly. Use search_dictionary \
+                 word/lemma/part-of-speech sequence must match; absent or stale sense numbers select the most frequent sense. Use search_dictionary \
                  to find real entries.",
                 gram.to_display_string(self.context.course.target_language)
             )),
@@ -435,7 +438,7 @@ impl YapState {
             );
         };
         let display = gram.to_display_string(self.context.course.target_language);
-        let Some(interned) = self.pack().course_gram(gram) else {
+        let Some(interned) = self.pack().resolve_entry(gram) else {
             return Err("that card's gram isn't a dictionary entry in this course".to_string());
         };
         let spur = match sentence {
@@ -514,7 +517,11 @@ impl YapState {
     /// Sample sentences containing an interned gram: up to `count` composed
     /// only of words the user already knows, and up to `count` more from the
     /// whole corpus, each rendered with translations and attribution.
-    fn sample_sentences(&mut self, interned: SpurGram, count: usize) -> SampledSentences {
+    fn sample_sentences(
+        &mut self,
+        interned: TaggedGram<SpurGram>,
+        count: usize,
+    ) -> SampledSentences {
         let comprehensible_pool = {
             let deck = self.deck();
             let comprehensible = deck.comprehensible_written_grams(false);
@@ -757,8 +764,8 @@ pub struct AddCardsParams {
     language: String,
     /// The grams (words/phrases) to add, each the exact gram JSON returned by
     /// search_dictionary: a sequence of tokens with word, lemma, and part of
-    /// speech.
-    grams: Vec<Verbatim<Gram<String>>>,
+    /// speech, wrapped as {gram, sense}.
+    grams: Vec<Verbatim<TaggedGram<Gram<String>>>>,
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]
@@ -790,7 +797,7 @@ pub struct GetSentencesParams {
     /// The target language of the gram, e.g. "French".
     language: String,
     /// The exact gram JSON returned by search_dictionary or get_due_cards.
-    gram: Verbatim<Gram<String>>,
+    gram: Verbatim<TaggedGram<Gram<String>>>,
     /// How many sentences of each kind to return (default 5, max 20).
     #[serde(default)]
     count: Option<usize>,
@@ -1030,7 +1037,7 @@ impl YapMcp {
     #[tool(
         title = "Search the dictionary",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::SearchDictionaryOut>(),
-        description = "Search the yap dictionary for words and phrases. Each match includes its language and gram — the token sequence (word + lemma + part of speech) that uniquely identifies it. Other tools take these verbatim; search first rather than constructing grams by hand.",
+        description = "Search the yap dictionary for words and phrases. Each match includes its language and gram — the token sequence (word + lemma + part of speech) plus its sense number that uniquely identifies it. Other tools take these verbatim; search first rather than constructing grams by hand.",
         annotations(
             title = "Search the dictionary",
             read_only_hint = true,
@@ -1068,9 +1075,7 @@ impl YapMcp {
                     .gram_frequencies
                     .entries
                     .get_index(entry.frequency_index())
-                    .map(|(spur, _)| {
-                        serde_json::to_value(pack.resolve_gram(spur)).expect("gram serializes")
-                    });
+                    .map(|(spur, _)| spur.map(|gram| pack.resolve_gram(&gram)));
                 DictionaryMatchOut {
                     language,
                     gram,
@@ -1128,7 +1133,7 @@ impl YapMcp {
         let mut errors = Vec::new();
         for Verbatim(gram) in params.grams {
             match state.resolve_gram(&gram) {
-                Ok(_) => resolved.push(gram),
+                Ok(entry) => resolved.push(entry.map(|gram| state.pack().resolve_gram(&gram))),
                 Err(e) => errors.push(e),
             }
         }
@@ -1390,14 +1395,16 @@ impl YapMcp {
         }
 
         let gram = match &card {
-            CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => {
-                gram.clone()
-            }
+            CardIndicator::WrittenGram { gram } => gram.clone(),
+            CardIndicator::ListeningGram { gram } => TaggedGram {
+                gram: gram.clone(),
+                sense: None,
+            },
             CardIndicator::LetterPronunciation { .. } => unreachable!("returned above"),
         };
         let display = gram.to_display_string(target_language);
         let kind = card_kind(&card);
-        let Some(interned) = state.pack().course_gram(&gram) else {
+        let Some(interned) = state.pack().resolve_entry(&gram) else {
             return error("that card's gram isn't a dictionary entry in this course");
         };
 
@@ -1411,9 +1418,9 @@ impl YapMcp {
             let review_info = deck.get_review_info(vec![], now_ms);
             let interned_indicator = match &card {
                 CardIndicator::WrittenGram { .. } => CardIndicator::WrittenGram { gram: interned },
-                CardIndicator::ListeningGram { .. } => {
-                    CardIndicator::ListeningGram { gram: interned }
-                }
+                CardIndicator::ListeningGram { .. } => CardIndicator::ListeningGram {
+                    gram: interned.gram,
+                },
                 CardIndicator::LetterPronunciation { .. } => unreachable!("returned above"),
             };
             let Some(ctx) = CardContext::new(deck, interned_indicator) else {
@@ -1426,7 +1433,7 @@ impl YapMcp {
                     review_info.written_gram_flashcard(deck, interned)
                 }
                 CardIndicator::ListeningGram { .. } => {
-                    review_info.listening_gram_flashcard(deck, interned)
+                    review_info.listening_gram_flashcard(deck, interned.gram)
                 }
                 CardIndicator::LetterPronunciation { .. } => unreachable!("returned above"),
             };
@@ -2033,15 +2040,14 @@ impl YapMcp {
             );
         };
 
-        let interned: SpurGram = *state
+        let interned: TaggedGram<SpurGram> = *state
             .pack()
             .gram_frequencies
             .entries
             .get_index(index)
             .expect("index valid: entry was just built from it")
             .0;
-        let gram_value =
-            serde_json::to_value(state.pack().resolve_gram(&interned)).expect("gram serializes");
+        let gram_value = interned.map(|gram| state.pack().resolve_gram(&gram));
         let language = state.context.course.target_language;
         let sampled = state.sample_sentences(interned, 3);
 
@@ -2207,7 +2213,7 @@ impl ServerHandler for YapMcp {
              understand), then log_review with an honest rating.\n\
              \n\
              Words are identified by (language, gram), where a gram is the exact token \
-             sequence — word + lemma + part of speech — returned by search_dictionary and \
+             sequence — word + lemma + part of speech — plus its sense number, returned by search_dictionary and \
              get_due_cards. Pass those objects back verbatim; the server rejects anything \
              that doesn't name a real dictionary entry. To add new words: search_dictionary \
              first, show the user what you found, then pass the matches' language + gram to \
@@ -2280,9 +2286,9 @@ mod tests {
         check::<FetchParams>();
 
         let sentences = check::<GetSentencesParams>();
-        assert_eq!(sentences["properties"]["gram"]["type"], "array");
+        assert_eq!(sentences["properties"]["gram"]["type"], "object");
         let add = check::<AddCardsParams>();
-        assert_eq!(add["properties"]["grams"]["items"]["type"], "array");
+        assert_eq!(add["properties"]["grams"]["items"]["type"], "object");
 
         let card = &check::<PresentCardParams>()["properties"]["card"];
         assert_eq!(card["type"], "object");

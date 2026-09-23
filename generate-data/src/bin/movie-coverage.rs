@@ -81,7 +81,7 @@ async fn main() -> Result<()> {
 
     let movies_dir = args
         .data_root
-        .join(target.code())
+        .join(target.corpus_code())
         .join("sentence-sources/movies");
     let metadata = std::fs::read_to_string(movies_dir.join("metadata.jsonl"))
         .with_context(|| format!("reading {}", movies_dir.join("metadata.jsonl").display()))?;

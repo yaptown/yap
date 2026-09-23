@@ -596,3 +596,9 @@ impl<T: crate::value::Value + NativeType> crate::native::NativeOptionalArgument 
 impl<T: crate::value::Value + NativeType> crate::native::NativeOptionalArgument for Option<T> {
     crate::__native_optional_value_argument!();
 }
+
+impl NativeType for std::num::NonZeroU32 {
+    fn native_type(registry: &mut Registry) -> Type {
+        u32::native_type(registry)
+    }
+}

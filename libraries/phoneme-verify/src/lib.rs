@@ -683,7 +683,7 @@ pub fn normalize_phonemes(token: Phoneme, language: Language) -> Vec<Phoneme> {
 }
 
 fn scoring_language(language: Language) -> Option<g2p::Language> {
-    g2p::Language::from_code(language.code())
+    language.g2p_lang().and_then(g2p::Language::from_code)
 }
 
 /// Hard cap on combinatorial expansion of word-level pronunciation
@@ -871,8 +871,12 @@ fn spanish_dialect_target(
     text: &str,
     language: Language,
 ) -> Option<Result<g2p::Phonemized, g2p::Error>> {
-    (language == Language::Spanish)
-        .then(|| g2p::phonemize(g2p::Language::SpanishLatinAmerica, text))
+    // YAP-87: accept seseo for both Spanish courses until dialect scoring diverges.
+    matches!(
+        language,
+        Language::SpanishMexican | Language::SpanishPeninsular
+    )
+    .then(|| g2p::phonemize(g2p::Language::SpanishLatinAmerica, text))
 }
 
 fn add_spanish_dialect_word(text: &str, language: Language, variants: &mut Vec<Vec<Phoneme>>) {
@@ -924,7 +928,7 @@ pub fn default_voice_for(language: Language) -> Option<TtsVoice> {
             language_code: "fr-FR",
             voice_name: "fr-FR-Chirp3-HD-Achernar",
         },
-        Language::Spanish => TtsVoice {
+        Language::SpanishMexican | Language::SpanishPeninsular => TtsVoice {
             language_code: "es-US",
             voice_name: "es-US-Chirp3-HD-Achernar",
         },
@@ -940,7 +944,7 @@ pub fn default_voice_for(language: Language) -> Option<TtsVoice> {
             language_code: "it-IT",
             voice_name: "it-IT-Chirp3-HD-Achernar",
         },
-        Language::Portuguese => TtsVoice {
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => TtsVoice {
             language_code: "pt-BR",
             voice_name: "pt-BR-Chirp3-HD-Achernar",
         },
@@ -2116,13 +2120,14 @@ mod tests {
             ),
         ]);
         let spoken = language_utils::pronunciation_challenge_spoken_text(
-            Language::Portuguese,
+            Language::PortugueseBrazilian,
             "ce",
             "cerveja",
         );
         assert_eq!(spoken, "c é como em cerveja");
         for (text, count) in [(spoken.as_str(), 6), ("c e como em cerveja", 16)] {
-            let readings = ground_truth_phoneme_variants(text, &wp, Language::Portuguese).unwrap();
+            let readings =
+                ground_truth_phoneme_variants(text, &wp, Language::PortugueseBrazilian).unwrap();
             assert_eq!(readings.len(), count + 1); // phrase g2p is outside the cap
             let expected = word(&[
                 "s", "e", "ɛ", "k", "o", "m", "u", "ɐ̃", "j̃", "s", "ɨ", "ɾ", "v", "e", "ʒ", "ɐ",
@@ -2130,14 +2135,16 @@ mod tests {
             assert!(
                 readings
                     .iter()
-                    .any(|r| comparable(r, Language::Portuguese) == expected)
+                    .any(|r| comparable(r, Language::PortugueseBrazilian) == expected)
             );
             assert!(readings.iter().all(|r| r.word_spans.len() == 5));
-            let phrase = model_target(text, Language::Portuguese).unwrap().unwrap();
+            let phrase = model_target(text, Language::PortugueseBrazilian)
+                .unwrap()
+                .unwrap();
             assert!(
                 readings
                     .iter()
-                    .any(|r| comparable(r, Language::Portuguese) == phrase.phonemes)
+                    .any(|r| comparable(r, Language::PortugueseBrazilian) == phrase.phonemes)
             );
         }
     }
@@ -2156,14 +2163,16 @@ mod tests {
         for language in languages![
             French,
             English,
-            Spanish,
+            SpanishMexican,
+            SpanishPeninsular,
             Korean,
             German,
             ChineseSimplified,
             ChineseTraditional,
             Japanese,
             Russian,
-            Portuguese,
+            PortugueseBrazilian,
+            PortugueseEuropean,
             Italian,
             Hindi,
             Thai,
@@ -2187,7 +2196,7 @@ mod tests {
             };
             assert_eq!(
                 expected,
-                g2p::label_source(language.code()),
+                language.g2p_lang().and_then(g2p::label_source),
                 "{language:?}: label-source mirror drifted from g2p::label_source; \
                  fix Language::phoneme_label_source to match the pinned g2p table"
             );
@@ -2209,7 +2218,7 @@ mod tests {
             ),
         ] {
             assert_eq!(
-                spanish_dialect_target(text, Language::Spanish)
+                spanish_dialect_target(text, Language::SpanishMexican)
                     .unwrap()
                     .unwrap()
                     .phonemes,
@@ -2221,26 +2230,26 @@ mod tests {
     #[test]
     fn spanish_accepts_seseo_without_changing_training_labels() {
         assert!(matches!(
-            Language::Spanish.phoneme_label_source(),
+            Language::SpanishMexican.phoneme_label_source(),
             PhonemeLabelSource::Espeak("es")
         ));
         assert_eq!(
-            model_target("cinco", Language::Spanish)
+            model_target("cinco", Language::SpanishMexican)
                 .unwrap()
                 .unwrap()
                 .phonemes,
             word(&["θ", "i", "n", "k", "o"])
         );
         assert_eq!(
-            normalize_phonemes(Phoneme::Theta, Language::Spanish),
+            normalize_phonemes(Phoneme::Theta, Language::SpanishMexican),
             word(&["θ"])
         );
         assert_eq!(
-            normalize_phonemes(Phoneme::S, Language::Spanish),
+            normalize_phonemes(Phoneme::S, Language::SpanishMexican),
             word(&["s"])
         );
         let empty = HashMap::new();
-        let variants = flat_variants("cinco", &empty, Language::Spanish).unwrap();
+        let variants = flat_variants("cinco", &empty, Language::SpanishMexican).unwrap();
         assert_eq!(
             variants,
             vec![
@@ -2256,7 +2265,8 @@ mod tests {
                 wp.insert("cinco".to_string(), ap("θ i n k o", &[]));
             }
             let readings =
-                ground_truth_phoneme_variants("cinco nombre", &wp, Language::Spanish).unwrap();
+                ground_truth_phoneme_variants("cinco nombre", &wp, Language::SpanishMexican)
+                    .unwrap();
             assert!(
                 readings
                     .iter()
@@ -2267,13 +2277,14 @@ mod tests {
         // The cap must not prevent a pure seseo phrase reading when later
         // words' per-word alternates are truncated.
         let text = ["cinco"; 6].join(" ");
-        let readings = ground_truth_phoneme_variants(&text, &empty, Language::Spanish).unwrap();
+        let readings =
+            ground_truth_phoneme_variants(&text, &empty, Language::SpanishMexican).unwrap();
         assert_eq!(readings.len(), MAX_VARIANT_COMBINATIONS + 1);
         assert!(readings.iter().any(|r| r.phonemes
             == vec![word(&["s", "i", "n", "k", "o"]); 6].concat()
             && r.word_spans.len() == 6));
         assert_eq!(
-            flat_variants("niño", &empty, Language::Spanish)
+            flat_variants("niño", &empty, Language::SpanishMexican)
                 .unwrap()
                 .len(),
             1
@@ -2483,11 +2494,11 @@ mod letter_name_tests {
             "ɛ s ts ɛ t v i ɪ n ʃ t ɾ ɑ s ə"
         );
         assert_eq!(
-            phonemes(Language::Spanish, "ñ", "niño"),
+            phonemes(Language::SpanishMexican, "ñ", "niño"),
             "e ɲ e k o m o e n n i ɲ o"
         );
         assert_eq!(
-            phonemes(Language::Portuguese, "ã", "pão"),
+            phonemes(Language::PortugueseBrazilian, "ã", "pão"),
             "a tʃ i ʊ k o m w ẽ j p ɐ\u{303}ʊ\u{303}"
         );
         assert_eq!(
@@ -2498,11 +2509,11 @@ mod letter_name_tests {
         // the conjunction /i/ and "o" the article /u/; a bare Russian "о"
         // reduces to /ʌ/. Named, they are the letters.
         assert_eq!(
-            phonemes(Language::Portuguese, "e", "cerveja"),
+            phonemes(Language::PortugueseBrazilian, "e", "cerveja"),
             "ɛ k o m w ẽ j s e ɾ v e ʒ ɐ"
         );
         assert_eq!(
-            phonemes(Language::Portuguese, "o", "ovo"),
+            phonemes(Language::PortugueseBrazilian, "o", "ovo"),
             "ɔ k o m w ẽ j o v ʊ"
         );
         assert_eq!(

@@ -385,8 +385,8 @@ impl Default for Gate {
 /// the film.
 pub fn default_min_ratio(code: &str) -> Option<f64> {
     Some(match code {
-        "spa" | "fra" | "ita" | "eng" | "rus" | "hin" | "zho-hans" => -2.0,
-        "deu" | "por" | "tha" => -2.5,
+        "spa" | "spa-es" | "fra" | "ita" | "eng" | "rus" | "hin" | "zho-hans" => -2.0,
+        "deu" | "por" | "por-pt" | "tha" => -2.5,
         "jpn" => -1.5,
         _ => return None,
     })

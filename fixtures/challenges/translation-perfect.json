@@ -170,30 +170,33 @@
               }
             ]
           ],
-          "primary_expression": [
-            {
-              "Tok": {
-                "text": "c'",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "ce",
-                  "lemma": "ce",
-                  "pos": "PRON"
+          "primary_expression": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "c'",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ce",
+                    "lemma": "ce",
+                    "pos": "PRON"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "est",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "est",
+                    "lemma": "être",
+                    "pos": "VERB"
+                  }
                 }
               }
-            },
-            {
-              "Tok": {
-                "text": "est",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "est",
-                  "lemma": "être",
-                  "pos": "VERB"
-                }
-              }
-            }
-          ],
+            ],
+            "sense": null
+          },
           "second_chance": false
         },
         "transcription": null,
@@ -361,30 +364,33 @@
                 }
               ]
             ],
-            "primary_expression": [
-              {
-                "Tok": {
-                  "text": "c'",
-                  "word_type": {
-                    "type": "Heteronym",
-                    "word": "ce",
-                    "lemma": "ce",
-                    "pos": "PRON"
+            "primary_expression": {
+              "gram": [
+                {
+                  "Tok": {
+                    "text": "c'",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "ce",
+                      "lemma": "ce",
+                      "pos": "PRON"
+                    }
+                  }
+                },
+                {
+                  "Tok": {
+                    "text": "est",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "est",
+                      "lemma": "être",
+                      "pos": "VERB"
+                    }
                   }
                 }
-              },
-              {
-                "Tok": {
-                  "text": "est",
-                  "word_type": {
-                    "type": "Heteronym",
-                    "word": "est",
-                    "lemma": "être",
-                    "pos": "VERB"
-                  }
-                }
-              }
-            ],
+              ],
+              "sense": null
+            },
             "second_chance": false
           },
           "course": {

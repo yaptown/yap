@@ -7,6 +7,8 @@
 //! `"{\"type\":\"WrittenGram\",...}"` instead of the object. `Verbatim<T>`
 //! closes that off in both directions: its schema is `T`'s real schema, and
 //! its deserializer still accepts a JSON-encoded string, parsing it first.
+//! Pre-sense bare gram arrays are normalized to {gram, sense: null}; the
+//! language pack then resolves the most frequent current sense.
 
 use std::borrow::Cow;
 
@@ -33,11 +35,32 @@ impl<T: DeserializeOwned> Verbatim<T> {
             Ok(inner) => return Ok(Verbatim(inner)),
             Err(e) => e,
         };
+        let migrated = match &value {
+            serde_json::Value::Array(_) => Some(serde_json::json!({"gram": value, "sense": null})),
+            serde_json::Value::Object(object)
+                if object.get("type").and_then(|v| v.as_str()) == Some("WrittenGram")
+                    && object.get("gram").is_some_and(|g| g.is_array()) =>
+            {
+                let mut object = object.clone();
+                let gram = object.remove("gram").unwrap();
+                object.insert(
+                    "gram".into(),
+                    serde_json::json!({"gram": gram, "sense": null}),
+                );
+                Some(serde_json::Value::Object(object))
+            }
+            _ => None,
+        };
+        if let Some(value) = migrated
+            && let Ok(inner) = serde_json::from_value(value)
+        {
+            return Ok(Verbatim(inner));
+        }
         if let serde_json::Value::String(text) = &value
             && let Ok(unwrapped) = serde_json::from_str::<serde_json::Value>(text)
             && !unwrapped.is_string()
         {
-            return serde_json::from_value(unwrapped).map(Verbatim);
+            return Self::from_value(unwrapped);
         }
         Err(direct)
     }
@@ -117,5 +140,27 @@ mod tests {
         let schema = schemars::schema_for!(Verbatim<Point>);
         let value = serde_json::to_value(schema).unwrap();
         assert_eq!(value["type"], "object");
+    }
+}
+
+#[cfg(test)]
+mod sense_tests {
+    use super::*;
+    use language_utils::{Gram, TaggedGram};
+
+    #[test]
+    fn accepts_pre_sense_gram_arrays_and_written_cards() {
+        let entry: Verbatim<TaggedGram<Gram<String>>> =
+            serde_json::from_value(serde_json::json!([])).unwrap();
+        assert!(entry.sense.is_none());
+        let card: Verbatim<crate::server::Card> =
+            serde_json::from_value(serde_json::json!({"type":"WrittenGram", "gram":[]})).unwrap();
+        let yap_frontend_rs::CardIndicator::WrittenGram { gram } = card.0 else {
+            panic!("written card")
+        };
+        assert_eq!(gram, entry.0);
+        let wrapped: Verbatim<TaggedGram<Gram<String>>> =
+            serde_json::from_value(serde_json::json!("[]")).unwrap();
+        assert_eq!(wrapped.0, entry.0);
     }
 }

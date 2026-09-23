@@ -511,15 +511,15 @@ async fn elevenlabs_synthesize(
     // Select voice based on language
     let voice_id = match request.language {
         Language::French => "ohItIVrXTBI80RrUECOD", // Existing French voice
-        Language::Spanish => "8mBRP99B2Ng2QwsJMFQl", // Mexican Spanish voice
+        Language::SpanishMexican | Language::SpanishPeninsular => "8mBRP99B2Ng2QwsJMFQl", // Mexican Spanish voice
         Language::English => "ohItIVrXTBI80RrUECOD", // Default to French voice for now
-        Language::Korean => "nbrxrAz3eYm9NgojrmFK", // Korean
-        Language::German => "IWm8DnJ4NGjFI7QAM5lM", // Stephan - German voice
+        Language::Korean => "nbrxrAz3eYm9NgojrmFK",  // Korean
+        Language::German => "IWm8DnJ4NGjFI7QAM5lM",  // Stephan - German voice
         Language::Italian => "sKbNSlHXq99bttvf8rRF", // Nicola Lorusso - Italian voice
-        Language::Portuguese => "tS45q0QcrDHqHoaWdCDR", // Lax - Portuguese voice
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => "tS45q0QcrDHqHoaWdCDR", // Lax - Portuguese voice
         Language::Russian => "hLjwV7lYzk15SWLUmhEH", // Russian voice
         Language::Japanese => "GxhGYQesaQaYKePCZDEC", // Japanese voice
-        Language::Hindi => "K24eC7JpUgk8zMtQYrpV",  // Hindi voice
+        Language::Hindi => "K24eC7JpUgk8zMtQYrpV",   // Hindi voice
 
         // Haoran (Beijing Mandarin) and Anna Su (Taiwan Mandarin). One voice
         // could cover both, since the model reads Traditional and Simplified
@@ -804,8 +804,8 @@ async fn autograde_transcription(
 
     let target_language = request.course.target_language;
     let native_language = request.course.native_language;
-    let target_language_name = target_language.to_string();
-    let native_language_name = native_language.to_string();
+    let target_language_name = target_language.prompt_name();
+    let native_language_name = native_language.prompt_name();
 
     let language_specific_phonetic_note = match target_language {
         Language::Korean => {
@@ -852,7 +852,7 @@ The input may include a Context block naming the film the sentence comes from an
         match target_language {
             Language::French =>
                 r#"For example, if the user confused "de" and "des", you could generate ["de", "des"] in the compare array."#,
-            Language::Spanish =>
+            Language::SpanishMexican | Language::SpanishPeninsular =>
                 r#"For example, if the user confused "esta" and "está", you could generate ["esta", "está"] in the compare array."#,
             Language::English =>
                 r#"For example, if the user confused "then" and "than", you could generate ["then", "than"] in the compare array."#,
@@ -862,7 +862,7 @@ The input may include a Context block naming the film the sentence comes from an
                 r#"For example, if the user confused "der" and "die", you could generate ["der", "die"] in the compare array."#,
             Language::Italian =>
                 r#"For example, if the user confused "anno" and "hanno", or "pena" and "penna", you could generate ["anno", "hanno"] or ["pena", "penna"] in the compare array."#,
-            Language::Portuguese =>
+            Language::PortugueseBrazilian | Language::PortugueseEuropean =>
                 r#"For example, if the user confused "avô" and "avó", or "coser" and "cozer", you could generate ["avô", "avó"] or ["coser", "cozer"] in the compare array."#,
             Language::Russian =>
                 r#"For example, if the user confused "компания" and "кампания", or "предать" and "придать", you could generate ["компания", "кампания"] or ["предать", "придать"] in the compare array."#,
@@ -1591,9 +1591,6 @@ async fn update_language_stats(
 
     let client = service_role_client()?;
 
-    // Serialize the language to a string for the database
-    let language_str = request.language.to_string();
-
     // Build the upsert payload
     let mut upsert_data = serde_json::Map::new();
     upsert_data.insert(
@@ -1602,7 +1599,7 @@ async fn update_language_stats(
     );
     upsert_data.insert(
         "language".to_string(),
-        serde_json::Value::String(language_str),
+        serde_json::to_value(request.language).unwrap(),
     );
     upsert_data.insert(
         "total_count".to_string(),

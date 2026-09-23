@@ -102,7 +102,8 @@ Output format:
     "3. makes_sense_standalone": true/false,
     "4. issues": ["list", "of", "specific", "issues", "if", "any"],
     "5. corrected_sentence": "corrected version if there are minor typographical issues, otherwise null"
-}}"#
+}}"#,
+        language = language.prompt_name()
     );
 
     let user_prompt = format!("Sentence: {sentence}");
@@ -138,7 +139,8 @@ Output format:
 {{
     "1. thoughts": "Brief analysis of what multiword terms might be missing",
     "2. missing_multiword_terms": ["list", "of", "missing", "multiword", "terms"]
-}}"#
+}}"#,
+        language = language.prompt_name()
     );
 
     let user_prompt = format!(
@@ -423,7 +425,7 @@ fn write_results_to_files(analyses: &[CourseAnalysis]) -> Result<()> {
             analysis.all_issues.len()
         );
 
-        let lang_dir = analysis.course.target_language.code();
+        let lang_dir = analysis.course.target_language.corpus_code();
         // Use absolute path from current working directory
         let data_dir = PathBuf::from(format!("./generate-data/data/{lang_dir}"));
 

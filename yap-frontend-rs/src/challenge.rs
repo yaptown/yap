@@ -3,7 +3,7 @@ use yap_frontend_reducers::{DefinitionView, definition_view};
 
 use language_utils::{
     Atom, Gram, GramDefinition, Heteronym, Literal, PatternPosition, SentenceGram, SpurGram,
-    TtsProvider, TtsRequest, WordType, atoms_to_literals, language_pack::LanguagePack,
+    TaggedGram, TtsProvider, TtsRequest, WordType, atoms_to_literals, language_pack::LanguagePack,
     literals_to_text, transcription_challenge,
 };
 use lasso::Spur;
@@ -104,6 +104,7 @@ impl ReviewInfo {
                                 .flatten()
                                 .copied()
                         })
+                        .flat_map(|gram| language_pack.senses_of(gram).iter().copied())
                         .collect::<std::collections::BTreeSet<_>>()
                         .into_iter()
                         .map(|other_gram| {
@@ -114,7 +115,7 @@ impl ReviewInfo {
 
                             let gram_resolved = language_pack
                                 .gram_rodeo
-                                .resolve(&other_gram)
+                                .resolve(&other_gram.gram)
                                 .resolve(&language_pack.string_rodeo);
                             let literals = atoms_to_literals(
                                 gram_resolved.as_ref(),
@@ -139,10 +140,9 @@ impl ReviewInfo {
                         deck.context.course.target_language,
                     );
                     let definitions = language_pack
-                        .gram_definitions
-                        .get(&gram)
-                        .cloned()
-                        .into_iter()
+                        .senses_of(gram)
+                        .iter()
+                        .filter_map(|entry| language_pack.gram_definitions.get(entry).cloned())
                         .map(definition_view)
                         .collect();
                     vec![(true, literals, definitions)]
@@ -152,10 +152,9 @@ impl ReviewInfo {
                 let literals =
                     atoms_to_literals(gram_resolved.as_ref(), deck.context.course.target_language);
                 let definitions = language_pack
-                    .gram_definitions
-                    .get(&gram)
-                    .cloned()
-                    .into_iter()
+                    .senses_of(gram)
+                    .iter()
+                    .filter_map(|entry| language_pack.gram_definitions.get(entry).cloned())
                     .map(definition_view)
                     .collect();
                 vec![(true, literals, definitions)]
@@ -207,28 +206,21 @@ impl ReviewInfo {
         gram: SpurGram,
     ) -> Option<Challenge<Gram<String>>> {
         let language_pack: &Arc<LanguagePack> = &deck.context.language_pack;
-        let sentence = {
-            let comprehensible_grams = deck.get_comprehensible_written_grams(false);
-            let sentence = deck.get_comprehensible_sentence_containing(
-                Some(&gram),
-                comprehensible_grams,
+        let sentence = language_pack.senses_of(gram).iter().find_map(|entry| {
+            deck.get_comprehensible_sentence_containing(
+                Some(entry),
+                deck.get_comprehensible_written_grams(false),
                 &deck.stats.sentences_reviewed,
                 language_pack,
-            )?;
-            // Only use sentences where the gram is a regular sentence gram,
-            // not just a multiword term. The transcription event handler only
-            // reviews regular grams, so multiword-term-only matches would
-            // never mark the card as reviewed.
-            if !sentence
-                .target_language_sentence_grams
-                .grams
-                .iter()
-                .any(|g| g.learnable() == Some(&gram))
-            {
-                return None;
-            }
-            sentence
-        };
+            )
+            .filter(|sentence| {
+                sentence
+                    .target_language_sentence_grams
+                    .grams
+                    .iter()
+                    .any(|g| g.learnable().is_some_and(|entry| entry.gram == gram))
+            })
+        })?;
 
         let sentence_grams = sentence.target_language_sentence_grams.to_literals(
             &language_pack.string_rodeo,
@@ -241,19 +233,19 @@ impl ReviewInfo {
         let mut part_gram_indices = Vec::<Vec<usize>>::new();
         let mut gram_definitions_for_lookup = Vec::<Option<GramDefinition>>::new();
         let mut gram_breakdowns_for_lookup = Vec::<Option<Breakdown>>::new();
-        let register_gram = |gram_spur: &SpurGram,
+        let register_gram = |gram_spur: &TaggedGram<SpurGram>,
                              defs: &mut Vec<Option<GramDefinition>>,
                              breakdowns: &mut Vec<Option<Breakdown>>|
          -> usize {
             let idx = defs.len();
             defs.push(language_pack.gram_definitions.get(gram_spur).cloned());
-            breakdowns.push(language_pack.compute_breakdown(*gram_spur));
+            breakdowns.push(language_pack.compute_breakdown(gram_spur.gram));
             idx
         };
         for sentence_gram in sentence_grams {
             match sentence_gram {
                 SentenceGram::Learnable((sentence_gram, literals))
-                    if sentence_gram == gram
+                    if sentence_gram.gram == gram
                         || deck.is_listened_gram_comprehensible(&sentence_gram, false) =>
                 {
                     let gram_idx = register_gram(
@@ -389,7 +381,7 @@ impl ReviewInfo {
         }
     }
 
-    pub fn written_gram_flashcard(&self, deck: &Deck, gram: SpurGram) -> FlashCard {
+    pub fn written_gram_flashcard(&self, deck: &Deck, gram: TaggedGram<SpurGram>) -> FlashCard {
         let language_pack: &Arc<LanguagePack> = &deck.context.language_pack;
 
         let definition = language_pack
@@ -399,7 +391,7 @@ impl ReviewInfo {
             .unwrap_or_else(|| {
                 let resolved = language_pack
                     .gram_rodeo
-                    .resolve(&gram)
+                    .resolve(&gram.gram)
                     .resolve(&language_pack.string_rodeo);
                 panic!(
                     "Gram {:?} (display: {:?}) has no definition",
@@ -410,7 +402,7 @@ impl ReviewInfo {
 
         let gram_resolved = language_pack
             .gram_rodeo
-            .resolve(&gram)
+            .resolve(&gram.gram)
             .resolve(&language_pack.string_rodeo);
         let literals =
             atoms_to_literals(gram_resolved.as_ref(), deck.context.course.target_language);
@@ -424,7 +416,7 @@ impl ReviewInfo {
         // Morpheme-level breakdown for single heteronyms, word-level for
         // multi-atom grams. Punctuation atoms in multi-word grams render with
         // `None` gloss.
-        let breakdown = language_pack.compute_breakdown(gram);
+        let breakdown = language_pack.compute_breakdown(gram.gram);
 
         let content = CardContent::Gram {
             gram: literals,
@@ -455,7 +447,7 @@ impl ReviewInfo {
     pub fn translation_challenge(
         &self,
         deck: &Deck,
-        gram: SpurGram,
+        gram: TaggedGram<SpurGram>,
     ) -> Option<Challenge<Gram<String>>> {
         let sentence = deck.pick_translation_sentence(&gram)?;
         Some(Challenge::TranslateComprehensibleSentence(
@@ -473,7 +465,7 @@ impl Deck {
     /// so an unrelated sentence would grade the wrong word.
     pub fn translation_challenge_for_sentence(
         &self,
-        gram: SpurGram,
+        gram: TaggedGram<SpurGram>,
         sentence: Spur,
     ) -> Option<TranslateComprehensibleSentence> {
         let language_pack: &Arc<LanguagePack> = &self.context.language_pack;
@@ -510,7 +502,7 @@ impl Deck {
             let group_index = gram_definitions_for_lookup.len();
             let definition = language_pack.gram_definitions.get(&gram_spur).cloned();
             gram_definitions_for_lookup.push(definition);
-            let breakdown = language_pack.compute_breakdown(gram_spur);
+            let breakdown = language_pack.compute_breakdown(gram_spur.gram);
             gram_breakdowns_for_lookup.push(breakdown);
 
             for literal in literals {
@@ -571,9 +563,7 @@ impl Deck {
             unique_target_language_phrases: unique_target_language_phrases
                 .iter()
                 .map(|p| {
-                    language_pack
-                        .gram_rodeo
-                        .resolve(p)
+                    p.resolve(&language_pack.gram_rodeo)
                         .resolve(&language_pack.string_rodeo)
                 })
                 .collect(),
@@ -583,7 +573,7 @@ impl Deck {
                 .collect(),
             phrase_breakdowns: unique_target_language_phrases
                 .iter()
-                .map(|p| language_pack.compute_breakdown(*p))
+                .map(|p| language_pack.compute_breakdown(p.gram))
                 .collect(),
             native_translations: native_languages
                 .iter()
@@ -605,9 +595,8 @@ impl Deck {
             },
             movie_titles,
             proper_noun_definitions,
-            primary_expression: language_pack
-                .gram_rodeo
-                .resolve(&gram)
+            primary_expression: gram
+                .resolve(&language_pack.gram_rodeo)
                 .resolve(&language_pack.string_rodeo),
             second_chance,
         })
@@ -619,7 +608,7 @@ impl ReviewInfo {
         &self,
         deck: &Deck,
         ctx: &CardContext,
-        gram: SpurGram,
+        gram: TaggedGram<SpurGram>,
     ) -> Challenge<Gram<String>> {
         if !ctx.is_new
             && let Some(challenge) = self.translation_challenge(deck, gram)

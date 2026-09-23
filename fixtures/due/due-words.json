@@ -10,19 +10,22 @@
       {
         "card_indicator": {
           "type": "WrittenGram",
-          "gram": [
-            {
-              "Tok": {
-                "text": "peut",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "peut",
-                  "lemma": "pouvoir",
-                  "pos": "AUX"
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "peut",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "peut",
+                    "lemma": "pouvoir",
+                    "pos": "AUX"
+                  }
                 }
               }
-            }
-          ]
+            ],
+            "sense": null
+          }
         },
         "due_timestamp_ms": 1789960232175.0,
         "state": "review",
@@ -32,41 +35,44 @@
       {
         "card_indicator": {
           "type": "WrittenGram",
-          "gram": [
-            {
-              "Tok": {
-                "text": "mais",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "mais",
-                  "lemma": "mais",
-                  "pos": "CCONJ"
+          "gram": {
+            "gram": [
+              {
+                "Tok": {
+                  "text": "mais",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "mais",
+                    "lemma": "mais",
+                    "pos": "CCONJ"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "c'",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "ce",
+                    "lemma": "ce",
+                    "pos": "PRON"
+                  }
+                }
+              },
+              {
+                "Tok": {
+                  "text": "est",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "est",
+                    "lemma": "être",
+                    "pos": "VERB"
+                  }
                 }
               }
-            },
-            {
-              "Tok": {
-                "text": "c'",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "ce",
-                  "lemma": "ce",
-                  "pos": "PRON"
-                }
-              }
-            },
-            {
-              "Tok": {
-                "text": "est",
-                "word_type": {
-                  "type": "Heteronym",
-                  "word": "est",
-                  "lemma": "être",
-                  "pos": "VERB"
-                }
-              }
-            }
-          ]
+            ],
+            "sense": null
+          }
         },
         "due_timestamp_ms": 1790046384453.0,
         "state": "review",

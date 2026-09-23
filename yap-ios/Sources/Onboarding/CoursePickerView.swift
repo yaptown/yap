@@ -14,7 +14,7 @@ struct CoursePickerView: View {
     }
     private var targets: [Course] {
         courses.filter { $0.native_language == native }.sorted {
-            get_language_metadata(language: $0.target_language).common_name < get_language_metadata(language: $1.target_language).common_name
+            get_language_metadata(language: $0.target_language).english_name < get_language_metadata(language: $1.target_language).english_name
         }
     }
     var body: some View {
@@ -59,7 +59,7 @@ struct CoursePickerView: View {
             HStack(spacing: 12) {
                 let metadata = get_language_metadata(language: course.target_language)
                 if Theme.emojiFontAvailable { Text(metadata.flag) }
-                Text((resume ? "Resume " : "") + metadata.common_name)
+                Text((resume ? "Resume " : "") + metadata.english_name)
                 Spacer(); Image(systemName: "chevron.right")
             }.frame(minHeight: 52)
         }

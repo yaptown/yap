@@ -10,3 +10,4 @@ chrono = { workspace = true }
 serde_json = { workspace = true }
 dotenvy = "0.15"
 anyhow = "1.0"
+language-utils = { path = "../../language-utils" }

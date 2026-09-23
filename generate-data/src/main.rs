@@ -1,5 +1,6 @@
 use anyhow::Context;
 use itertools::Itertools;
+use language_utils::TaggedGram;
 use language_utils::{
     Atom, COURSES, EncodedSentence, Gram, GramFrequencyEntry, GramVocabEntry, HomophonePractice,
     SentenceGram, SentenceGrams,
@@ -113,7 +114,7 @@ async fn main() -> anyhow::Result<()> {
             .context("Failed to get target sentences")?;
         let generate_data::pipeline::SegmentedCorpus {
             mut nlp_sentences,
-            restricted_nlp_sentences,
+            mut restricted_nlp_sentences,
             gram_vocabulary,
             interners,
             patterns:
@@ -125,6 +126,22 @@ async fn main() -> anyhow::Result<()> {
                 },
             encoder,
         } = generate_data::pipeline::segment_corpus(course, &sentence_corpus).await?;
+        generate_data::token_embeddings::ensure_token_embeddings(
+            course.target_language,
+            nlp_sentences.iter().chain(restricted_nlp_sentences.iter()),
+            &interners,
+            &generate_data::cache_remote::store(),
+        )
+        .await
+        .context("Failed to ensure token embeddings")?;
+        let inventories = generate_data::usage_discovery::assign_senses(
+            course.target_language,
+            &mut nlp_sentences,
+            &mut restricted_nlp_sentences,
+            &interners,
+            &generate_data::cache_remote::store(),
+        )
+        .await?;
         let translations_map =
             generate_data::pipeline::translate_sentences(course, &sentence_corpus)
                 .await
@@ -138,7 +155,10 @@ async fn main() -> anyhow::Result<()> {
             generate_data::pipeline::initial_gram_frequencies(&gram_vocabulary);
         let restricted_sentences = sentence_corpus.restricted_sentences;
         let lang = course.target_language;
-        let source_data_path = format!("./generate-data/data/{}", course.target_language.code());
+        let source_data_path = format!(
+            "./generate-data/data/{}",
+            course.target_language.corpus_code()
+        );
         let source_data_path = Path::new(source_data_path.as_str());
 
         // The encoded-sentence views the phases below consume: app-only, and
@@ -160,24 +180,29 @@ async fn main() -> anyhow::Result<()> {
         // Helper closure: convert encoded sentences to SentenceGrams using gram vocabulary + NLP data
         let convert_to_grams = |sentences: &[(String, EncodedSentence)],
                                 nlp: &BTreeMap<String, language_utils::SentenceInfo>|
-         -> Vec<(String, SentenceGrams<Gram<String>>)> {
+         -> Vec<(String, SentenceGrams<TaggedGram<Gram<String>>>)> {
             sentences
                 .iter()
                 .map(|(text, encoded)| {
-                    let grams: Vec<SentenceGram<Gram<String>>> = encoded
+                    let grams: Vec<SentenceGram<TaggedGram<Gram<String>>>> = encoded
                         .tokens
                         .iter()
                         .filter_map(|&token_key| {
                             use lasso::Key;
                             gram_vocabulary
-                                .get(token_key.into_usize())
-                                .map(|entry| SentenceGram::from(entry.atoms.clone()))
+                                .get(token_key.gram.into_usize())
+                                .map(|entry| {
+                                    SentenceGram::from(entry.atoms.clone()).map(|gram| TaggedGram {
+                                        gram,
+                                        sense: token_key.sense,
+                                    })
+                                })
                         })
                         .collect();
                     let sentence_gram_set: std::collections::HashSet<&Gram<String>> = grams
                         .iter()
                         .map(|sg| match sg {
-                            SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
+                            SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => &g.gram,
                         })
                         .collect();
                     let (multiword_terms, low_confidence_multiword_terms) = nlp
@@ -187,13 +212,13 @@ async fn main() -> anyhow::Result<()> {
                                 info.multiword_terms
                                     .high_confidence
                                     .iter()
-                                    .filter(|m| !sentence_gram_set.contains(&m.gram))
+                                    .filter(|m| !sentence_gram_set.contains(&m.gram.gram))
                                     .cloned()
                                     .collect(),
                                 info.multiword_terms
                                     .low_confidence
                                     .iter()
-                                    .filter(|m| !sentence_gram_set.contains(&m.gram))
+                                    .filter(|m| !sentence_gram_set.contains(&m.gram.gram))
                                     .cloned()
                                     .collect(),
                             )
@@ -213,12 +238,14 @@ async fn main() -> anyhow::Result<()> {
         };
 
         // Convert app-only encoded sentences to grams
-        let encoded_sentences_with_grams: Vec<(String, SentenceGrams<Gram<String>>)> =
+        let encoded_sentences_with_grams: Vec<(String, SentenceGrams<TaggedGram<Gram<String>>>)> =
             convert_to_grams(&encoded_sentences, &nlp_sentences);
 
         // Convert ALL encoded sentences (including restricted) to grams for per-source frequencies
-        let all_encoded_sentences_with_grams: Vec<(String, SentenceGrams<Gram<String>>)> =
-            convert_to_grams(&all_encoded_sentences, &nlp_sentences);
+        let all_encoded_sentences_with_grams: Vec<(
+            String,
+            SentenceGrams<TaggedGram<Gram<String>>>,
+        )> = convert_to_grams(&all_encoded_sentences, &nlp_sentences);
 
         // Filter initial gram frequencies to only include those with count > 3 (like regular dictionary)
         let filtered_initial_gram_frequencies: Vec<GramFrequencyEntry<String>> =
@@ -232,7 +259,7 @@ async fn main() -> anyhow::Result<()> {
         let filtered_gram_set: std::collections::HashSet<Gram<String>> =
             filtered_initial_gram_frequencies
                 .iter()
-                .map(|entry| entry.gram.clone())
+                .map(|entry| entry.gram.gram.clone())
                 .collect();
 
         // Save unfiltered sentences (including restricted) for computing accurate per-source total gram counts
@@ -240,21 +267,23 @@ async fn main() -> anyhow::Result<()> {
 
         // Filter encoded sentences to only include those where we have all the learnable grams
         let encoded_sentences_count_before = encoded_sentences_with_grams.len();
-        let mut encoded_sentences_with_grams: Vec<(String, SentenceGrams<Gram<String>>)> =
-            encoded_sentences_with_grams
-                .into_iter()
-                .filter(|(_, sentence_grams)| {
-                    // Check if all learnable grams in this sentence are in the filtered set
-                    sentence_grams.grams.iter().all(|sg| {
-                        match sg {
-                            // Learnable grams must be in the filtered set
-                            SentenceGram::Learnable(gram) => filtered_gram_set.contains(gram),
-                            // Obvious (non-learnable) grams are always OK
-                            SentenceGram::Obvious(_) => true,
-                        }
-                    })
+        let mut encoded_sentences_with_grams: Vec<(
+            String,
+            SentenceGrams<TaggedGram<Gram<String>>>,
+        )> = encoded_sentences_with_grams
+            .into_iter()
+            .filter(|(_, sentence_grams)| {
+                // Check if all learnable grams in this sentence are in the filtered set
+                sentence_grams.grams.iter().all(|sg| {
+                    match sg {
+                        // Learnable grams must be in the filtered set
+                        SentenceGram::Learnable(gram) => filtered_gram_set.contains(&gram.gram),
+                        // Obvious (non-learnable) grams are always OK
+                        SentenceGram::Obvious(_) => true,
+                    }
                 })
-                .collect();
+            })
+            .collect();
 
         println!(
             "Filtered {} encoded sentences with uncommon grams ({} -> {} sentences)",
@@ -315,9 +344,9 @@ async fn main() -> anyhow::Result<()> {
                 // Count how many multi-atom grams share each display text
                 let mut display_text_counts: BTreeMap<String, u32> = BTreeMap::new();
                 for entry in &filtered_gram_frequencies {
-                    if entry.gram.len() > 1 {
+                    if entry.gram.gram.len() > 1 {
                         *display_text_counts
-                            .entry(entry.gram.to_display_string(lang))
+                            .entry(entry.gram.gram.to_display_string(lang))
                             .or_default() += 1;
                     }
                 }
@@ -325,12 +354,12 @@ async fn main() -> anyhow::Result<()> {
                 // Only migrate monosemantic entries
                 let mut migrated = BTreeMap::new();
                 for entry in &filtered_gram_frequencies {
-                    if entry.gram.len() > 1 {
-                        let display_text = entry.gram.to_display_string(lang);
+                    if entry.gram.gram.len() > 1 {
+                        let display_text = entry.gram.gram.to_display_string(lang);
                         let is_monosemantic =
                             display_text_counts.get(&display_text).copied().unwrap_or(0) <= 1;
                         if is_monosemantic && let Some(sentences) = old_format.get(&display_text) {
-                            migrated.insert(entry.gram.clone(), sentences.clone());
+                            migrated.insert(entry.gram.gram.clone(), sentences.clone());
                         }
                     }
                 }
@@ -392,8 +421,13 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // Build phrasebook from gram phrasebook entries
-        let phrasebook: BTreeMap<Gram<String>, language_utils::PhrasebookDefinitionEntry> =
-            gram_phrasebook.into_iter().collect();
+        let mut phrasebook: BTreeMap<
+            TaggedGram<Gram<String>>,
+            language_utils::PhrasebookDefinitionEntry,
+        > = gram_phrasebook
+            .into_iter()
+            .map(|(gram, entry)| (TaggedGram { gram, sense: None }, entry))
+            .collect();
 
         // Generate proper noun definitions
         let proper_noun_definitions_file =
@@ -424,7 +458,7 @@ async fn main() -> anyhow::Result<()> {
         // Build set of frequent words from gram_frequencies for pronunciation filtering
         let frequent_heteronym_words: std::collections::HashSet<String> = gram_frequencies
             .iter()
-            .filter_map(|entry| entry.gram.heteronym())
+            .filter_map(|entry| entry.gram.gram.heteronym())
             .filter(|h| !banned_words.contains(h))
             .map(|h| h.word.clone())
             .collect();
@@ -489,7 +523,7 @@ async fn main() -> anyhow::Result<()> {
         // fills for anything uncovered.
         let golden_morphemes_path = PathBuf::from(format!(
             "generate-data/data/{}/golden_morphemes.jsonl",
-            course.target_language.code()
+            course.target_language.corpus_code()
         ));
         let etymology_segmentations = if golden_morphemes_path.exists() {
             // Extract learnable single-word grams as the word list (sorted by
@@ -497,10 +531,10 @@ async fn main() -> anyhow::Result<()> {
             let learnable_words: Vec<String> = filtered_gram_frequencies
                 .iter()
                 .filter_map(|entry| {
-                    if entry.gram.0.len() != 1 {
+                    if entry.gram.gram.0.len() != 1 {
                         return None;
                     }
-                    match &entry.gram.0[0] {
+                    match &entry.gram.gram.0[0] {
                         Atom::Tok(word) if word.heteronym().is_some() => Some(word.text.clone()),
                         _ => None,
                     }
@@ -560,10 +594,10 @@ async fn main() -> anyhow::Result<()> {
                 filtered_gram_frequencies
                     .iter()
                     .filter_map(|entry| {
-                        if entry.gram.0.len() != 1 {
+                        if entry.gram.gram.0.len() != 1 {
                             return None;
                         }
-                        match &entry.gram.0[0] {
+                        match &entry.gram.gram.0[0] {
                             Atom::Tok(word) => {
                                 let het = word.heteronym()?;
                                 Some((word.text.clone(), (het.lemma.clone(), het.pos)))
@@ -658,7 +692,14 @@ async fn main() -> anyhow::Result<()> {
 
         // Generate conjugations/declensions JSONL
         {
-            let morphology_groups = morphology_analysis::analyze_morphology(&gram_dictionary);
+            let shared_morphology = filtered_gram_frequencies
+                .iter()
+                .filter_map(|entry| {
+                    let heteronym = entry.gram.gram.heteronym()?;
+                    Some((heteronym.clone(), morphology.get(heteronym)?.clone()))
+                })
+                .collect();
+            let morphology_groups = morphology_analysis::analyze_morphology(&shared_morphology);
 
             let conjugations_path = native_specific_dir.join("conjugations.jsonl");
             morphology_analysis::write_conjugations_jsonl(&morphology_groups, &conjugations_path)
@@ -666,6 +707,29 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // Build set of grams that have definitions
+        let (sense_definitions, sense_phrases) = generate_data::dict::create_sense_definitions(
+            *course,
+            &filtered_gram_frequencies,
+            &inventories,
+        )
+        .await?;
+        phrasebook.extend(sense_phrases);
+        let sense_dictionary: BTreeMap<_, _> = sense_definitions
+            .into_iter()
+            .filter_map(|(gram, definition)| {
+                let heteronym = gram.gram.heteronym()?;
+                let entry = language_utils::DictionaryEntry {
+                    target_language_word: definition.target_language_word,
+                    definitions: definition.definitions,
+                    morphology: morphology.get(heteronym)?.clone(),
+                    segments: etymology_segmentations
+                        .get(&heteronym.word)
+                        .cloned()
+                        .unwrap_or_default(),
+                };
+                Some((gram, entry))
+            })
+            .collect();
         let gram_dictionary_set: std::collections::HashSet<_> =
             gram_dictionary.keys().cloned().collect();
 
@@ -675,12 +739,16 @@ async fn main() -> anyhow::Result<()> {
             .into_iter()
             .filter(|entry| {
                 let gram = &entry.gram;
-                if gram.len() == 1 {
+                if gram.gram.len() == 1 {
                     // Single-atom gram: check if the heteronym is in gram_dictionary
-                    if let Some(Atom::Tok(word)) = gram.first()
+                    if let Some(Atom::Tok(word)) = gram.gram.first()
                         && let language_utils::WordType::Heteronym(heteronym) = &word.word_type
                     {
-                        return gram_dictionary_set.contains(heteronym);
+                        return if gram.sense.is_some() {
+                            sense_dictionary.contains_key(gram)
+                        } else {
+                            gram_dictionary_set.contains(heteronym)
+                        };
                     }
                     false
                 } else {
@@ -700,12 +768,15 @@ async fn main() -> anyhow::Result<()> {
 
         // Build gram-keyed dictionary from filtered gram_frequencies
         // For each single-atom gram, look up its heteronym in gram_dictionary
-        let gram_keyed_dictionary: BTreeMap<Gram<String>, language_utils::DictionaryEntry> = {
+        let mut gram_keyed_dictionary: BTreeMap<
+            TaggedGram<Gram<String>>,
+            language_utils::DictionaryEntry,
+        > = {
             let mut map = BTreeMap::new();
             for entry in &gram_frequencies {
                 let gram = &entry.gram;
-                if gram.len() == 1
-                    && let Some(Atom::Tok(word)) = gram.first()
+                if gram.gram.len() == 1
+                    && let Some(Atom::Tok(word)) = gram.gram.first()
                     && let language_utils::WordType::Heteronym(heteronym) = &word.word_type
                     && let Some(dict_entry) = gram_dictionary.get(heteronym)
                 {
@@ -715,15 +786,20 @@ async fn main() -> anyhow::Result<()> {
             map
         };
 
+        gram_keyed_dictionary.extend(sense_dictionary);
+
         // Filter gram_vocabulary to remove learnable grams without definitions
-        let defined_gram_set: std::collections::HashSet<Gram<String>> = gram_frequencies
-            .iter()
-            .map(|entry| entry.gram.clone())
-            .collect();
+        let defined_gram_set: std::collections::HashSet<TaggedGram<Gram<String>>> =
+            gram_frequencies
+                .iter()
+                .map(|entry| entry.gram.clone())
+                .collect();
+        let defined_atoms: std::collections::HashSet<_> =
+            defined_gram_set.iter().map(|entry| &entry.gram).collect();
         let gram_vocabulary_count_before = gram_vocabulary.len();
         let gram_vocabulary: Vec<GramVocabEntry<String>> = gram_vocabulary
             .into_iter()
-            .filter(|entry| !entry.atoms.is_learnable() || defined_gram_set.contains(&entry.atoms))
+            .filter(|entry| !entry.atoms.is_learnable() || defined_atoms.contains(&entry.atoms))
             .collect();
         let removed_vocab_count = gram_vocabulary_count_before - gram_vocabulary.len();
         if removed_vocab_count > 0 {
@@ -738,23 +814,12 @@ async fn main() -> anyhow::Result<()> {
             let mut missing_grams = Vec::new();
             for entry in &gram_frequencies {
                 let gram = &entry.gram;
-                let has_definition = if gram.len() == 1 {
-                    if let Some(Atom::Tok(word)) = gram.first() {
-                        if let language_utils::WordType::Heteronym(heteronym) = &word.word_type {
-                            gram_dictionary_set.contains(heteronym)
-                        } else {
-                            false
-                        }
-                    } else {
-                        false
-                    }
-                } else {
-                    phrasebook.contains_key(gram)
-                };
+                let has_definition =
+                    gram_keyed_dictionary.contains_key(gram) || phrasebook.contains_key(gram);
                 if !has_definition {
                     missing_grams.push(format!(
                         "Gram: {}",
-                        gram.to_display_string(course.target_language)
+                        gram.gram.to_display_string(course.target_language)
                     ));
                 }
             }
@@ -781,9 +846,9 @@ async fn main() -> anyhow::Result<()> {
                 let before_high = sg.multiword_terms.len();
                 let before_low = sg.low_confidence_multiword_terms.len();
                 sg.multiword_terms
-                    .retain(|term| vocab_gram_set.contains(&term.gram));
+                    .retain(|term| vocab_gram_set.contains(&term.gram.gram));
                 sg.low_confidence_multiword_terms
-                    .retain(|term| vocab_gram_set.contains(&term.gram));
+                    .retain(|term| vocab_gram_set.contains(&term.gram.gram));
                 removed_high += before_high - sg.multiword_terms.len();
                 removed_low += before_low - sg.low_confidence_multiword_terms.len();
             }
@@ -815,7 +880,7 @@ async fn main() -> anyhow::Result<()> {
             let mut seen = std::collections::HashSet::<String>::new();
             let mut lines = Vec::new();
             for entry in &sorted {
-                let display = entry.gram.to_display_string(lang);
+                let display = entry.gram.gram.to_display_string(lang);
                 if seen.insert(display.clone()) {
                     lines.push(display);
                     if lines.len() >= 200 {
@@ -909,7 +974,7 @@ async fn main() -> anyhow::Result<()> {
             let word_max_freq: std::collections::HashMap<&str, u32> = gram_frequencies
                 .iter()
                 .filter_map(|entry| {
-                    let h = entry.gram.heteronym()?;
+                    let h = entry.gram.gram.heteronym()?;
                     Some((h.word.as_str(), entry.count))
                 })
                 .into_group_map()
@@ -1048,12 +1113,18 @@ async fn main() -> anyhow::Result<()> {
                     text.clone(),
                     language_utils::SentenceInfo {
                         sentence,
-                        multiword_terms: homophone_matches.remove(text).unwrap_or(
-                            language_utils::MultiwordTerms {
+                        multiword_terms: homophone_matches
+                            .remove(text)
+                            .unwrap_or(language_utils::MultiwordTerms {
                                 high_confidence: Vec::new(),
                                 low_confidence: Vec::new(),
-                            },
-                        ),
+                            })
+                            .map(|term| {
+                                term.map(|gram| TaggedGram {
+                                    gram: gram.clone(),
+                                    sense: None,
+                                })
+                            }),
                     },
                 );
             }
@@ -1221,15 +1292,16 @@ async fn main() -> anyhow::Result<()> {
         };
 
         // Build set of grams that have definitions (gram_frequencies was already filtered above)
-        let defined_gram_set: std::collections::HashSet<Gram<String>> = gram_frequencies
-            .iter()
-            .map(|entry| entry.gram.clone())
-            .collect();
+        let defined_gram_set: std::collections::HashSet<TaggedGram<Gram<String>>> =
+            gram_frequencies
+                .iter()
+                .map(|entry| entry.gram.clone())
+                .collect();
 
         // Filter sentences that contain grams not in the defined set
         let (nlp_sentences, _removed_sentences): (Vec<_>, Vec<_>) = {
             // Build a map from sentence text to its encoded grams for lookup
-            let sentence_to_grams: FxHashMap<&str, &SentenceGrams<Gram<String>>> =
+            let sentence_to_grams: FxHashMap<&str, &SentenceGrams<TaggedGram<Gram<String>>>> =
                 encoded_sentences_with_grams
                     .iter()
                     .map(|(text, grams)| (text.as_str(), grams))
@@ -1283,7 +1355,7 @@ async fn main() -> anyhow::Result<()> {
                         if let SentenceGram::Learnable(g) = gram
                             && !defined_gram_set.contains(g)
                         {
-                            missing_grams.push(g.to_display_string(course.target_language));
+                            missing_grams.push(g.gram.to_display_string(course.target_language));
                         }
                     }
                 }
@@ -1300,23 +1372,10 @@ async fn main() -> anyhow::Result<()> {
             }
         }
 
-        // Per-token contextual embeddings for the final sentence set, cached in
-        // the osmo store (keyed per target language, so shared sentences across
-        // courses embed once). Nothing consumes them yet — substrate for sense
-        // discrimination. See generate_data::token_embeddings.
-        generate_data::token_embeddings::ensure_token_embeddings(
-            course.target_language,
-            nlp_sentences.iter().map(|(s, info)| (s, info)),
-            &interners,
-            &generate_data::cache_remote::store(),
-        )
-        .await
-        .context("Failed to ensure token embeddings")?;
-
         let (pronunciation_to_words, word_to_pronunciation) = {
             let words_set = gram_frequencies
                 .iter()
-                .filter_map(|entry| entry.gram.heteronym())
+                .filter_map(|entry| entry.gram.gram.heteronym())
                 .map(|h| h.word.clone())
                 .collect::<std::collections::HashSet<_>>();
             let pronunciation_to_words = pronunciation_to_words
@@ -1346,7 +1405,7 @@ async fn main() -> anyhow::Result<()> {
             let word_max_freq: std::collections::HashMap<&str, u32> = gram_frequencies
                 .iter()
                 .filter_map(|entry| {
-                    let h = entry.gram.heteronym()?;
+                    let h = entry.gram.gram.heteronym()?;
                     Some((h.word.as_str(), entry.count))
                 })
                 .into_group_map()
@@ -1381,7 +1440,7 @@ async fn main() -> anyhow::Result<()> {
         // Load movie metadata and subtitles
         let source_data_path = std::path::PathBuf::from(format!(
             "./generate-data/data/{}",
-            course.target_language.code()
+            course.target_language.corpus_code()
         ));
         // Load movie metadata
         let movies_dir = source_data_path.join("sentence-sources/movies");
@@ -1497,7 +1556,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         // Build sentence_to_sources map for per-source frequency computation
-        let master_gram_set: std::collections::HashSet<Gram<String>> = gram_frequencies
+        let master_gram_set: std::collections::HashSet<TaggedGram<Gram<String>>> = gram_frequencies
             .iter()
             .map(|entry| entry.gram.clone())
             .collect();
@@ -1580,7 +1639,7 @@ async fn main() -> anyhow::Result<()> {
                 let gram = &entry.gram;
 
                 // Get definition
-                let definition = if gram.len() > 1 {
+                let definition = if gram.gram.len() > 1 {
                     phrasebook.get(gram).map(|p| p.meaning.clone())
                 } else if let Some(dict_entry) = gram_keyed_dictionary.get(gram) {
                     dict_entry.definitions.first().map(|d| d.native.clone())
@@ -1592,7 +1651,7 @@ async fn main() -> anyhow::Result<()> {
                 };
 
                 // Get example sentences with translations
-                let Some(sentences) = gram_sentences.get(gram) else {
+                let Some(sentences) = gram_sentences.get(&gram.gram) else {
                     continue;
                 };
                 let examples: Vec<language_utils::ShowcaseExampleSentence> = sentences
@@ -1612,7 +1671,7 @@ async fn main() -> anyhow::Result<()> {
                 }
 
                 showcase_phrases.push(language_utils::ShowcasePhrase {
-                    display_text: gram.to_display_string(lang),
+                    display_text: gram.gram.to_display_string(lang),
                     definition,
                     examples,
                 });

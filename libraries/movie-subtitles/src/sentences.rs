@@ -363,9 +363,11 @@ pub fn is_proper_sentence(text: &str, language: Language) -> bool {
     match language {
         Language::English
         | Language::French
-        | Language::Spanish
+        | Language::SpanishMexican
+        | Language::SpanishPeninsular
         | Language::German
-        | Language::Portuguese
+        | Language::PortugueseBrazilian
+        | Language::PortugueseEuropean
         | Language::Italian => {
             // Must start with uppercase letter
             if !first_char.is_uppercase() || !first_char.is_alphabetic() {

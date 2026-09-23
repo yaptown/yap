@@ -1,7 +1,7 @@
 use futures::StreamExt as _;
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::features::Morphology;
-use language_utils::{DictionaryEntry, GramFrequencyEntry, Heteronym, Language, PartOfSpeech};
+use language_utils::{GramFrequencyEntry, Heteronym, Language, PartOfSpeech};
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Write;
@@ -32,7 +32,7 @@ pub async fn create_morphology(
     // Process sentences to get unique words and track occurrences
     let mut target_language_heteronyms = BTreeMap::new();
     for entry in gram_frequencies {
-        if let Some(heteronym) = entry.gram.heteronym() {
+        if let Some(heteronym) = entry.gram.gram.heteronym() {
             target_language_heteronyms
                 .entry(heteronym.clone())
                 .or_insert(entry.count);
@@ -197,13 +197,14 @@ mod llm_morphology {
         let case_applies = Case::applies_to(language, pos);
         let mood_applies = Mood::applies_to(language, pos);
         let aspect_applies = Aspect::applies_to(language, pos);
+        let language_name = language.prompt_name();
 
         // Issue concurrent requests for all applicable features
         let gender_future = async {
             if gender_applies {
                 let result: Result<GenderResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    r#"Determine the grammatical gender of the provided {language} word
+                    r#"Determine the grammatical gender of the provided {language_name} word
 Think about whether this word has a fixed grammatical gender. 
 If it does, provide it. If the gender varies or is not applicable, return null.
 Options are:
@@ -215,7 +216,7 @@ Additionally, some languages do not distinguish masculine/feminine most of the t
 - Common
 
 If the gender of the word is not uniquely determined, return null. Neuter is only applicable in languages that have a neuter gender. Like Common, it is not a placeholder for when the gender is not known. If the grammatical gender is ambiguous or not specified, use `"2. gender": null`. (Respond with JSON, using "1. thoughts" then "2. gender".)"# ),
-                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
                 result.ok().and_then(|r| r.gender)
             } else {
@@ -227,12 +228,12 @@ If the gender of the word is not uniquely determined, return null. Neuter is onl
             if politeness_applies {
                 let result: Result<PoliteResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    r#"Determine the morphological politeness of the provided {language} word.
+                    r#"Determine the morphological politeness of the provided {language_name} word.
 Think about whether this word is morphologically formal, informal, elevated, or humble.
 If it has a specific morphological politeness level, provide it. Otherwise, use `"2. politeness": null`. (Respond with JSON, using "1. thoughts" then "2. politeness".){}"#,
                 if language.tv_politeness() {"\nPoliteness should only be non-null in the second person as this is a language with T-V distinction. Literary/archaic forms are not related to politeness."} else {""},
                 ),
-                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
                 result.ok().and_then(|r| r.politeness)
             } else {
@@ -244,7 +245,7 @@ If it has a specific morphological politeness level, provide it. Otherwise, use 
             if tense_applies {
                 let result: Result<TenseResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    r#"Determine the tense of the provided {language} word.
+                    r#"Determine the tense of the provided {language_name} word.
 Think about whether this word has a fixed tense. Options are:
 - Past
 - Present
@@ -254,7 +255,7 @@ Think about whether this word has a fixed tense. Options are:
 
 If one of these options is applicable, provide it. If the tense varies or is not applicable, use `"2. tense": null`. (Respond with JSON, using "1. thoughts" then "2. tense".)"#,
                 ),
-                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
                 result.ok().and_then(|r| r.tense)
             } else {
@@ -266,7 +267,7 @@ If one of these options is applicable, provide it. If the tense varies or is not
             if person_applies {
                 let result: Result<PersonResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    r#"Determine the grammatical person of the provided {language} word.
+                    r#"Determine the grammatical person of the provided {language_name} word.
 Think about whether this word has a fixed person (e.g., first person pronoun, third person verb).
 If it does, provide it. If the person varies or is not applicable, return null.
 
@@ -278,7 +279,7 @@ Additionally, some language have more than three persons. So Zeroth and Fourth a
 
 If one of these options is applicable, provide it. If the person varies or is not applicable, use `"2. person": null`. (Respond with JSON, using "1. thoughts" then "2. person".)"#,
                 ),
-                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
                 result.ok().and_then(|r| r.person)
             } else {
@@ -290,7 +291,7 @@ If one of these options is applicable, provide it. If the person varies or is no
             if case_applies {
                 let result: Result<CaseResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    r#"Determine the grammatical case of the provided {language} word.
+                    r#"Determine the grammatical case of the provided {language_name} word.
 Think about whether this word has a fixed case marking. Case helps specify the role of a noun phrase in the sentence.
 
 Common cases include:
@@ -314,7 +315,7 @@ Other cases (mainly in specific language families):
 
 If this word has a fixed grammatical case, provide it. If case is not applicable or varies, use `"2. case": null`. (Respond with JSON, using "1. thoughts" then "2. case".)"#,
                 ),
-                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
                 result.ok().and_then(|r| r.case)
             } else {
@@ -326,7 +327,7 @@ If this word has a fixed grammatical case, provide it. If case is not applicable
             if number_applies {
                 let result: Result<NumberResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    r#"Determine the grammatical number of the provided {language} word.
+                    r#"Determine the grammatical number of the provided {language_name} word.
 Think about whether this word has a fixed number marking.
 
 Common number values:
@@ -348,7 +349,7 @@ Less common number values (use only if applicable):
 
 If this word has a fixed grammatical number, provide it. If number is not applicable, is ambiguous, or varies, use `"2. number": null`. (Respond with JSON, using "1. thoughts" then "2. number".)"#,
                 ),
-                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
                 result.ok().and_then(|r| r.number)
             } else {
@@ -360,7 +361,7 @@ If this word has a fixed grammatical number, provide it. If number is not applic
             if mood_applies {
                 let result: Result<MoodResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    r#"Determine the mood of the provided {language} verb.
+                    r#"Determine the mood of the provided {language_name} verb.
 Think about whether this verb has a fixed mood. Mood expresses modality and subclassifies finite verb forms.
 
 Common moods:
@@ -383,7 +384,7 @@ Less common moods (use only if applicable):
 
 If this verb has a fixed mood, provide it. If mood is not applicable or varies, use `"2. mood": null`. (Respond with JSON, using "1. thoughts" then "2. mood".)"#,
                 ),
-                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
                 result.ok().and_then(|r| r.mood)
             } else {
@@ -395,7 +396,7 @@ If this verb has a fixed mood, provide it. If mood is not applicable or varies, 
             if aspect_applies {
                 let result: Result<AspectResponse, _> = chat_client.chat_with_system_prompt(
                 format!(
-                    r#"Determine the grammatical aspect of the provided {language} word.
+                    r#"Determine the grammatical aspect of the provided {language_name} word.
 Aspect specifies the internal temporal structure of the action (duration, completion, habituality, etc.).
 
 Common values:
@@ -408,7 +409,7 @@ Common values:
 
 If this word has a fixed grammatical aspect, provide it. If aspect is not applicable or varies, use `"2. aspect": null`. (Respond with JSON, using "1. thoughts" then "2. aspect".)"#,
                 ),
-                format!("{language} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
+                format!("{language_name} word: {} (lemma: {}) (POS: {pos:?})", heteronym.word, heteronym.lemma)
             ).await;
                 result.ok().and_then(|r| r.aspect)
             } else {
@@ -457,7 +458,7 @@ pub struct WordForm {
 
 /// Analyzes morphological coverage by grouping words by lemma and POS
 pub fn analyze_morphology(
-    dictionary: &BTreeMap<Heteronym<String>, DictionaryEntry>,
+    dictionary: &BTreeMap<Heteronym<String>, Vec<Morphology>>,
 ) -> Vec<LemmaGroup> {
     // Group dictionary entries by (lemma, pos)
     let mut lemma_map: BTreeMap<(String, PartOfSpeech), Vec<WordForm>> = BTreeMap::new();
@@ -466,7 +467,7 @@ pub fn analyze_morphology(
         let key = (heteronym.lemma.clone(), heteronym.pos);
         lemma_map.entry(key).or_default().push(WordForm {
             word: heteronym.word.clone(),
-            morphology: entry.morphology.clone(),
+            morphology: entry.clone(),
         });
     }
 
@@ -506,9 +507,11 @@ pub mod gold_morphology {
     ) -> anyhow::Result<BTreeMap<Heteronym<String>, Vec<Morphology>>> {
         match language {
             Language::French => french::create_french_morphology(gram_frequencies).await,
-            Language::Spanish => spanish::create_spanish_morphology(gram_frequencies).await,
+            Language::SpanishMexican | Language::SpanishPeninsular => {
+                spanish::create_spanish_morphology(gram_frequencies).await
+            }
             Language::German => german::create_german_morphology(gram_frequencies).await,
-            Language::Portuguese => {
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => {
                 portuguese::create_portuguese_morphology(gram_frequencies).await
             }
             Language::Italian => italian::create_italian_morphology(gram_frequencies).await,
@@ -586,7 +589,7 @@ pub mod gold_morphology {
             let mut verb_lemmas = HashSet::new();
             let mut noun_lemmas = HashSet::new();
             for entry in gram_frequencies {
-                if let Some(heteronym) = entry.gram.heteronym() {
+                if let Some(heteronym) = entry.gram.gram.heteronym() {
                     match heteronym.pos {
                         PartOfSpeech::Verb | PartOfSpeech::Aux => {
                             verb_lemmas.insert(heteronym.lemma.clone());
@@ -992,7 +995,7 @@ pub mod gold_morphology {
             let mut verb_lemmas = HashSet::new();
             let mut noun_lemmas = HashSet::new();
             for entry in gram_frequencies {
-                if let Some(heteronym) = entry.gram.heteronym() {
+                if let Some(heteronym) = entry.gram.gram.heteronym() {
                     match heteronym.pos {
                         PartOfSpeech::Verb => {
                             verb_lemmas.insert(heteronym.lemma.clone());
@@ -1313,7 +1316,7 @@ pub mod gold_morphology {
             let mut verb_lemmas = HashSet::new();
             let mut noun_lemmas = HashSet::new();
             for entry in gram_frequencies {
-                if let Some(heteronym) = entry.gram.heteronym() {
+                if let Some(heteronym) = entry.gram.gram.heteronym() {
                     match heteronym.pos {
                         PartOfSpeech::Verb => {
                             verb_lemmas.insert(heteronym.lemma.clone());
@@ -1638,7 +1641,7 @@ pub mod gold_morphology {
             let mut verb_lemmas = HashSet::new();
             let mut noun_lemmas = HashSet::new();
             for entry in gram_frequencies {
-                if let Some(heteronym) = entry.gram.heteronym() {
+                if let Some(heteronym) = entry.gram.gram.heteronym() {
                     match heteronym.pos {
                         PartOfSpeech::Verb => {
                             verb_lemmas.insert(heteronym.lemma.clone());
@@ -1934,7 +1937,7 @@ pub mod gold_morphology {
             let mut noun_lemmas = HashSet::new();
 
             for entry in gram_frequencies {
-                if let Some(heteronym) = entry.gram.heteronym() {
+                if let Some(heteronym) = entry.gram.gram.heteronym() {
                     match heteronym.pos {
                         PartOfSpeech::Verb => {
                             verb_lemmas.insert(heteronym.lemma.clone());
@@ -2320,7 +2323,7 @@ pub mod gold_morphology {
             // Extract verb lemmas
             let mut verb_lemmas = HashSet::new();
             for entry in gram_frequencies {
-                if let Some(heteronym) = entry.gram.heteronym() {
+                if let Some(heteronym) = entry.gram.gram.heteronym() {
                     match heteronym.pos {
                         PartOfSpeech::Verb | PartOfSpeech::Aux => {
                             verb_lemmas.insert(heteronym.lemma.clone());
@@ -2469,7 +2472,7 @@ pub mod gold_morphology {
             let mut det_lemmas = HashSet::new();
 
             for entry in gram_frequencies {
-                if let Some(heteronym) = entry.gram.heteronym() {
+                if let Some(heteronym) = entry.gram.gram.heteronym() {
                     match heteronym.pos {
                         PartOfSpeech::Verb => {
                             verb_lemmas.insert(heteronym.lemma.clone());
@@ -3163,7 +3166,7 @@ pub mod gold_morphology {
             let mut noun_lemmas: HashSet<String> = HashSet::new();
             let mut adj_lemmas: HashSet<String> = HashSet::new();
             for entry in gram_frequencies {
-                if let Some(heteronym) = entry.gram.heteronym() {
+                if let Some(heteronym) = entry.gram.gram.heteronym() {
                     match heteronym.pos {
                         PartOfSpeech::Verb | PartOfSpeech::Aux => {
                             verb_lemmas.insert(heteronym.lemma.clone());
@@ -3691,7 +3694,7 @@ pub mod gold_morphology {
             let mut verb_lemmas: HashSet<String> = HashSet::new();
             let mut adj_lemmas: HashSet<String> = HashSet::new();
             for entry in gram_frequencies {
-                if let Some(heteronym) = entry.gram.heteronym() {
+                if let Some(heteronym) = entry.gram.gram.heteronym() {
                     match heteronym.pos {
                         // Auxiliary uses of real verbs (いる, ある, くる...) share
                         // the verb's conjugation, so both POS go through the same

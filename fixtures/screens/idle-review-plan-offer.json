@@ -133,19 +133,22 @@
           {
             "card_indicator": {
               "type": "WrittenGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "peut",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "peut",
-                      "lemma": "pouvoir",
-                      "pos": "AUX"
+              "gram": {
+                "gram": [
+                  {
+                    "Tok": {
+                      "text": "peut",
+                      "word_type": {
+                        "type": "Heteronym",
+                        "word": "peut",
+                        "lemma": "pouvoir",
+                        "pos": "AUX"
+                      }
                     }
                   }
-                }
-              ]
+                ],
+                "sense": null
+              }
             },
             "due_timestamp_ms": 1789873460830.0,
             "state": "learning",
@@ -155,41 +158,44 @@
           {
             "card_indicator": {
               "type": "WrittenGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "mais",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "mais",
-                      "lemma": "mais",
-                      "pos": "CCONJ"
+              "gram": {
+                "gram": [
+                  {
+                    "Tok": {
+                      "text": "mais",
+                      "word_type": {
+                        "type": "Heteronym",
+                        "word": "mais",
+                        "lemma": "mais",
+                        "pos": "CCONJ"
+                      }
+                    }
+                  },
+                  {
+                    "Tok": {
+                      "text": "c'",
+                      "word_type": {
+                        "type": "Heteronym",
+                        "word": "ce",
+                        "lemma": "ce",
+                        "pos": "PRON"
+                      }
+                    }
+                  },
+                  {
+                    "Tok": {
+                      "text": "est",
+                      "word_type": {
+                        "type": "Heteronym",
+                        "word": "est",
+                        "lemma": "être",
+                        "pos": "VERB"
+                      }
                     }
                   }
-                },
-                {
-                  "Tok": {
-                    "text": "c'",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "ce",
-                      "lemma": "ce",
-                      "pos": "PRON"
-                    }
-                  }
-                },
-                {
-                  "Tok": {
-                    "text": "est",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "est",
-                      "lemma": "être",
-                      "pos": "VERB"
-                    }
-                  }
-                }
-              ]
+                ],
+                "sense": null
+              }
             },
             "due_timestamp_ms": 1789873463984.0,
             "state": "learning",
@@ -199,41 +205,44 @@
           {
             "card_indicator": {
               "type": "WrittenGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "c'",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "ce",
-                      "lemma": "ce",
-                      "pos": "PRON"
+              "gram": {
+                "gram": [
+                  {
+                    "Tok": {
+                      "text": "c'",
+                      "word_type": {
+                        "type": "Heteronym",
+                        "word": "ce",
+                        "lemma": "ce",
+                        "pos": "PRON"
+                      }
+                    }
+                  },
+                  {
+                    "Tok": {
+                      "text": "est",
+                      "word_type": {
+                        "type": "Heteronym",
+                        "word": "est",
+                        "lemma": "être",
+                        "pos": "VERB"
+                      }
+                    }
+                  },
+                  {
+                    "Tok": {
+                      "text": "ça",
+                      "word_type": {
+                        "type": "Heteronym",
+                        "word": "ça",
+                        "lemma": "cela",
+                        "pos": "PRON"
+                      }
                     }
                   }
-                },
-                {
-                  "Tok": {
-                    "text": "est",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "est",
-                      "lemma": "être",
-                      "pos": "VERB"
-                    }
-                  }
-                },
-                {
-                  "Tok": {
-                    "text": "ça",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "ça",
-                      "lemma": "cela",
-                      "pos": "PRON"
-                    }
-                  }
-                }
-              ]
+                ],
+                "sense": null
+              }
             },
             "due_timestamp_ms": 1789873829703.0,
             "state": "learning",
@@ -495,95 +504,104 @@
               },
               {
                 "type": "WrittenGram",
-                "gram": [
-                  {
-                    "Tok": {
-                      "text": "peut",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "peut",
-                        "lemma": "pouvoir",
-                        "pos": "AUX"
+                "gram": {
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "peut",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "peut",
+                          "lemma": "pouvoir",
+                          "pos": "AUX"
+                        }
                       }
                     }
-                  }
-                ]
+                  ],
+                  "sense": null
+                }
               },
               {
                 "type": "WrittenGram",
-                "gram": [
-                  {
-                    "Tok": {
-                      "text": "mais",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "mais",
-                        "lemma": "mais",
-                        "pos": "CCONJ"
+                "gram": {
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "mais",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "mais",
+                          "lemma": "mais",
+                          "pos": "CCONJ"
+                        }
+                      }
+                    },
+                    {
+                      "Tok": {
+                        "text": "c'",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "ce",
+                          "lemma": "ce",
+                          "pos": "PRON"
+                        }
+                      }
+                    },
+                    {
+                      "Tok": {
+                        "text": "est",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "est",
+                          "lemma": "être",
+                          "pos": "VERB"
+                        }
                       }
                     }
-                  },
-                  {
-                    "Tok": {
-                      "text": "c'",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "ce",
-                        "lemma": "ce",
-                        "pos": "PRON"
-                      }
-                    }
-                  },
-                  {
-                    "Tok": {
-                      "text": "est",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "est",
-                        "lemma": "être",
-                        "pos": "VERB"
-                      }
-                    }
-                  }
-                ]
+                  ],
+                  "sense": null
+                }
               },
               {
                 "type": "WrittenGram",
-                "gram": [
-                  {
-                    "Tok": {
-                      "text": "c'",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "ce",
-                        "lemma": "ce",
-                        "pos": "PRON"
+                "gram": {
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "c'",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "ce",
+                          "lemma": "ce",
+                          "pos": "PRON"
+                        }
+                      }
+                    },
+                    {
+                      "Tok": {
+                        "text": "est",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "est",
+                          "lemma": "être",
+                          "pos": "VERB"
+                        }
+                      }
+                    },
+                    {
+                      "Tok": {
+                        "text": "ça",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "ça",
+                          "lemma": "cela",
+                          "pos": "PRON"
+                        }
                       }
                     }
-                  },
-                  {
-                    "Tok": {
-                      "text": "est",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "est",
-                        "lemma": "être",
-                        "pos": "VERB"
-                      }
-                    }
-                  },
-                  {
-                    "Tok": {
-                      "text": "ça",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "ça",
-                        "lemma": "cela",
-                        "pos": "PRON"
-                      }
-                    }
-                  }
-                ]
+                  ],
+                  "sense": null
+                }
               },
               {
                 "type": "ListeningGram",

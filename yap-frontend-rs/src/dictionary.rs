@@ -84,7 +84,7 @@ impl Deck {
             .enumerate()
             .filter_map(|(frequency_index, (spur_gram, _freq))| {
                 let gram_def = language_pack.gram_definitions.get(spur_gram)?;
-                let resolved_gram = language_pack.resolve_gram(spur_gram);
+                let resolved_gram = language_pack.resolve_gram(&spur_gram.gram);
                 let display_text = resolved_gram.to_display_string(target_language);
 
                 // Filter by search query if provided, and compute relevance
@@ -145,7 +145,7 @@ impl Deck {
             .entries
             .get_index(frequency_index)?;
         let gram_def = language_pack.gram_definitions.get(spur_gram)?;
-        let resolved_gram = language_pack.resolve_gram(spur_gram);
+        let resolved_gram = language_pack.resolve_gram(&spur_gram.gram);
         let display_text = resolved_gram.to_display_string(target_language);
 
         let card = CardIndicator::WrittenGram { gram: *spur_gram };

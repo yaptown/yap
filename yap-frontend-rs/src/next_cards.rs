@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use rustc_hash::FxHashMap;
 
 use chrono::Utc;
-use language_utils::{Atom, SpurGram, Word, grm};
+use language_utils::{Atom, SpurGram, TaggedGram, Word, grm};
 use lasso::Spur;
 use ordered_float::NotNan;
 
@@ -49,15 +49,15 @@ pub(crate) struct NextCardsIterator {
     added_count: usize,
     card_type_counts: FxHashMap<CardType, u32>,
     // Precomputed sorted lists (value desc)
-    text_values: Vec<(NotNan<f32>, SpurGram)>,
+    text_values: Vec<(NotNan<f32>, TaggedGram<SpurGram>)>,
     /// Single-word grams sorted by value descending (only if added_count < 20).
     /// Single-word is a hard onboarding constraint, but the order *within* the
     /// constraint set respects the regression so the placement test influences
     /// onboarding instead of being silently overridden by frequency order.
-    single_word_grams: Option<Vec<(NotNan<f32>, SpurGram)>>,
+    single_word_grams: Option<Vec<(NotNan<f32>, TaggedGram<SpurGram>)>>,
     /// Easy single-word grams sorted by value descending (only if added_count < 5
     /// and !teaches_new_writing_system). Same reasoning as `single_word_grams`.
-    easy_single_word_grams: Option<Vec<(NotNan<f32>, SpurGram)>>,
+    easy_single_word_grams: Option<Vec<(NotNan<f32>, TaggedGram<SpurGram>)>>,
     listening_values: Vec<(NotNan<f32>, SpurGram)>,
     pronunciation_values: Vec<(NotNan<f32>, CardIndicator<SpurGram, Spur>)>,
 }
@@ -147,22 +147,22 @@ impl NextCardsIterator {
         let need_single_word = added_count < 20;
         let need_easy_single_word = added_count < 5 && !context.course.teaches_new_writing_system();
 
-        let mut text_values: Vec<(NotNan<f32>, SpurGram)> = Vec::new();
+        let mut text_values: Vec<(NotNan<f32>, TaggedGram<SpurGram>)> = Vec::new();
         let mut text_top_n: std::collections::BinaryHeap<std::cmp::Reverse<NotNan<f32>>> =
             std::collections::BinaryHeap::new();
-        let mut single_word_values: Vec<(NotNan<f32>, SpurGram)> = Vec::new();
+        let mut single_word_values: Vec<(NotNan<f32>, TaggedGram<SpurGram>)> = Vec::new();
         let mut single_top_n: std::collections::BinaryHeap<std::cmp::Reverse<NotNan<f32>>> =
             std::collections::BinaryHeap::new();
-        let mut easy_single_word_values: Vec<(NotNan<f32>, SpurGram)> = Vec::new();
+        let mut easy_single_word_values: Vec<(NotNan<f32>, TaggedGram<SpurGram>)> = Vec::new();
         let mut easy_top_n: std::collections::BinaryHeap<std::cmp::Reverse<NotNan<f32>>> =
             std::collections::BinaryHeap::new();
 
         // Inline helper to push a candidate into a (Vec, top-N heap) pair, maintaining
         // the heap as a min-heap of size at most early_term_n.
         let push_top_n =
-            |values: &mut Vec<(NotNan<f32>, SpurGram)>,
+            |values: &mut Vec<(NotNan<f32>, TaggedGram<SpurGram>)>,
              top_n: &mut std::collections::BinaryHeap<std::cmp::Reverse<NotNan<f32>>>,
-             gram: SpurGram,
+             gram: TaggedGram<SpurGram>,
              value: NotNan<f32>| {
                 values.push((value, gram));
                 if top_n.len() < early_term_n {
@@ -212,7 +212,8 @@ impl NextCardsIterator {
             let easy_active = need_easy_single_word && !easy_saturated;
             if single_active || easy_active {
                 let is_single_word =
-                    gram_single_word(context.language_pack.gram_rodeo.resolve(gram)).is_some();
+                    gram_single_word(context.language_pack.gram_rodeo.resolve(&gram.gram))
+                        .is_some();
                 if is_single_word {
                     if single_active {
                         push_top_n(&mut single_word_values, &mut single_top_n, *gram, value);
@@ -243,14 +244,15 @@ impl NextCardsIterator {
         // Pre-filter by comprehensible_written so the partial sort only contains
         // usable values (otherwise the comprehensible filter in next_listening_card
         // can skip past the sorted portion).
+        let mut listening_seen = std::collections::HashSet::new();
         let mut listening_values: Vec<(NotNan<f32>, SpurGram)> = gram_source
             .entries
             .iter()
-            .filter_map(|(gram, frequency)| {
-                if !comprehensible_written.contains(gram) {
+            .filter_map(|(gram, _)| {
+                if !comprehensible_written.contains(gram) || !listening_seen.insert(gram.gram) {
                     return None;
                 }
-                let card = CardIndicator::ListeningGram { gram: *gram };
+                let card = CardIndicator::ListeningGram { gram: gram.gram };
                 if matches!(cards.get(&card), Some(CardData::Added { .. })) {
                     return None;
                 }
@@ -258,9 +260,9 @@ impl NextCardsIterator {
                     &card,
                     cards.get(&card),
                     regressions,
-                    *frequency,
+                    context.language_pack.gram_frequency_total(gram.gram)?,
                 )?;
-                Some((value, *gram))
+                Some((value, gram.gram))
             })
             .collect();
         partial_sort_desc(&mut listening_values, early_term_n);
@@ -354,7 +356,10 @@ impl NextCardsIterator {
         })
     }
 
-    fn first_unadded_gram(&self, grams: &[(NotNan<f32>, SpurGram)]) -> Option<SpurGram> {
+    fn first_unadded_gram(
+        &self,
+        grams: &[(NotNan<f32>, TaggedGram<SpurGram>)],
+    ) -> Option<TaggedGram<SpurGram>> {
         grams.iter().find_map(|&(_value, gram)| {
             let card = CardIndicator::WrittenGram { gram };
             if self.is_added(&card) {
@@ -514,7 +519,8 @@ mod tests {
                 panic!("expected written card during early onboarding");
             };
             assert!(
-                gram_single_word(deck.context.language_pack.gram_rodeo.resolve(&gram)).is_some()
+                gram_single_word(deck.context.language_pack.gram_rodeo.resolve(&gram.gram))
+                    .is_some()
             );
         }
     }

@@ -1,15 +1,15 @@
 use language_utils::language_pack::LanguagePack;
-use language_utils::{Atom, Literal, SentenceGrams, SpurGram};
+use language_utils::{Atom, Literal, SentenceGrams, SpurGram, TaggedGram};
 use lasso::Spur;
 use opfs::{DirectoryHandle as _, FileHandle as _, WritableFileStream as _, persistent};
 
 /// Match learnable grams to literal statuses, using each literal at most once.
 #[allow(clippy::type_complexity)]
 pub fn match_grams_to_literals<'a, T>(
-    encoded_sentence: &SentenceGrams<SpurGram>,
+    encoded_sentence: &SentenceGrams<TaggedGram<SpurGram>>,
     literals: &'a [(Literal<Spur>, T)],
     language_pack: &LanguagePack,
-) -> Vec<(SpurGram, Vec<(Literal<Spur>, &'a T)>)> {
+) -> Vec<(TaggedGram<SpurGram>, Vec<(Literal<Spur>, &'a T)>)> {
     let mut used_literals = vec![false; literals.len()];
     let mut results = Vec::new();
 
@@ -18,7 +18,7 @@ pub fn match_grams_to_literals<'a, T>(
             continue;
         };
 
-        let gram = language_pack.gram_rodeo.resolve(&gram_spur);
+        let gram = language_pack.gram_rodeo.resolve(&gram_spur.gram);
 
         let mut matched_statuses = Vec::new();
 

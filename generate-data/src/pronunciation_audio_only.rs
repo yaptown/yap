@@ -124,7 +124,7 @@ fn load_inputs(
                 "{} missing: using local TSV pronunciation variants (curated main first, otherwise lexicographic; no LLM selection)",
                 pronunciation_path.display()
             );
-            tsv_pronunciations(&sources.join(course.target_language.code()))?
+            tsv_pronunciations(&sources.join(course.target_language.corpus_code()))?
         }
         Err(e) => {
             return Err(e).with_context(|| format!("reading {}", pronunciation_path.display()));

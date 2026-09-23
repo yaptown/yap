@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use language_utils::SpurGram;
+use language_utils::{SpurGram, TaggedGram};
 use serde::{Deserialize, Serialize};
 
 /// Tier definitions for the frequency list. Each tier covers a range of the most frequent grams.
@@ -43,7 +43,7 @@ pub(crate) struct TierLevelSlice<'a> {
     tier_name: &'static str,
     level_idx: usize,
     total_levels_in_tier: usize,
-    grams: &'a [SpurGram],
+    grams: &'a [TaggedGram<SpurGram>],
     total_freq: u64,
 }
 
@@ -55,8 +55,8 @@ impl TierLevelSlice<'_> {
     pub(crate) fn known_pct(
         &self,
         freq_list: &language_utils::language_pack::FrequencyList,
-        written: &BTreeSet<SpurGram>,
-        listening: &BTreeSet<SpurGram>,
+        written: &BTreeSet<TaggedGram<SpurGram>>,
+        listening: &BTreeSet<TaggedGram<SpurGram>>,
     ) -> f64 {
         if self.total_freq == 0 {
             return 100.0;
@@ -98,7 +98,7 @@ impl TierLevelSlice<'_> {
 
 /// Build all tier level slices with pre-summed total frequencies.
 pub(crate) fn tier_level_slices<'a>(
-    all_grams: &'a [SpurGram],
+    all_grams: &'a [TaggedGram<SpurGram>],
     freq_list: &language_utils::language_pack::FrequencyList,
 ) -> Vec<TierLevelSlice<'a>> {
     let mut levels = Vec::new();
@@ -142,10 +142,10 @@ pub(crate) fn tier_level_slices<'a>(
 pub(crate) fn best_tier_level_idx(
     levels: &[TierLevelSlice<'_>],
     freq_list: &language_utils::language_pack::FrequencyList,
-    current_written: &BTreeSet<SpurGram>,
-    current_listening: &BTreeSet<SpurGram>,
-    projected_written: &BTreeSet<SpurGram>,
-    projected_listening: &BTreeSet<SpurGram>,
+    current_written: &BTreeSet<TaggedGram<SpurGram>>,
+    current_listening: &BTreeSet<TaggedGram<SpurGram>>,
+    projected_written: &BTreeSet<TaggedGram<SpurGram>>,
+    projected_listening: &BTreeSet<TaggedGram<SpurGram>>,
 ) -> usize {
     // Find the earliest level where adding cards makes any progress
     levels
@@ -170,10 +170,10 @@ pub(crate) fn best_tier_level_idx(
 /// Used for the "essential" (no goal) path when we only have one set of grams.
 pub(crate) fn first_incomplete_level_pct(
     frequency_list: &language_utils::language_pack::FrequencyList,
-    known_written: &BTreeSet<SpurGram>,
-    known_listening: &BTreeSet<SpurGram>,
+    known_written: &BTreeSet<TaggedGram<SpurGram>>,
+    known_listening: &BTreeSet<TaggedGram<SpurGram>>,
 ) -> f64 {
-    let all_grams: Vec<SpurGram> = frequency_list.entries.keys().copied().collect();
+    let all_grams: Vec<TaggedGram<SpurGram>> = frequency_list.entries.keys().copied().collect();
     let levels = tier_level_slices(&all_grams, frequency_list);
     for level in &levels {
         let pct = level.known_pct(frequency_list, known_written, known_listening);

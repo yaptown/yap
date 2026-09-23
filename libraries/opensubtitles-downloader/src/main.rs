@@ -628,7 +628,8 @@ async fn passes_llm_quality_check(lines: &[SubtitleLine], language: Language) ->
            Greek lookalike characters mixed into Latin text\n\
          - Formatting artifacts: {{\\an8}}, SSA/ASS tags, HTML tags\n\n\
          A few minor issues in individual lines are OK — flag it only if there's a \
-         SYSTEMIC problem affecting many lines.\n\n{sample}"
+         SYSTEMIC problem affecting many lines.\n\n{sample}",
+        language = language.prompt_name()
     );
 
     match QUALITY_CHECK_CLIENT
@@ -962,7 +963,7 @@ async fn process_movie(
 fn parse_language(s: &str) -> Result<Language, String> {
     Language::from_code(s).ok_or_else(|| {
         format!(
-            "unsupported language code '{s}'. Supported: fra, eng, spa, deu, kor, zho, jpn, rus, por, ita, hin, tha"
+            "unsupported language code '{s}'. Supported: fra, eng, spa, spa-es, deu, kor, zho-hans, zho-hant, jpn, rus, por, por-pt, ita, hin, tha"
         )
     })
 }
@@ -971,7 +972,7 @@ fn parse_language(s: &str) -> Result<Language, String> {
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Language codes (ISO 639-3: fra, eng, spa, deu, kor, zho, jpn, rus, por, ita, hin, tha)
+    /// Language codes (ISO 639-3: fra, eng, spa, spa-es, deu, kor, zho-hans, zho-hant, jpn, rus, por, por-pt, ita, hin, tha)
     #[arg(short, long, num_args = 1.., value_parser = parse_language)]
     language: Vec<Language>,
 
@@ -1019,7 +1020,7 @@ async fn main() -> Result<()> {
 
     // Process each language
     for language in languages {
-        let language_iso639_3 = language.code();
+        let language_iso639_3 = language.corpus_code();
         let language_iso639_1 = language.opensubtitles_languages();
         let tmdb_language = language.tmdb_language_code();
 

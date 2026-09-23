@@ -36,19 +36,22 @@
               "cards": [
                 {
                   "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "probabilmente",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "probabilmente",
-                          "lemma": "probabilmente",
-                          "pos": "ADV"
+                  "gram": {
+                    "gram": [
+                      {
+                        "Tok": {
+                          "text": "probabilmente",
+                          "word_type": {
+                            "type": "Heteronym",
+                            "word": "probabilmente",
+                            "lemma": "probabilmente",
+                            "pos": "ADV"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ],
+                    "sense": null
+                  }
                 }
               ],
               "sentence_list": null
@@ -77,19 +80,22 @@
                 "cards": [
                   {
                     "type": "WrittenGram",
-                    "gram": [
-                      {
-                        "Tok": {
-                          "text": "probabilmente",
-                          "word_type": {
-                            "type": "Heteronym",
-                            "word": "probabilmente",
-                            "lemma": "probabilmente",
-                            "pos": "ADV"
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "probabilmente",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "probabilmente",
+                              "lemma": "probabilmente",
+                              "pos": "ADV"
+                            }
                           }
                         }
-                      }
-                    ]
+                      ],
+                      "sense": null
+                    }
                   }
                 ],
                 "sentence_list": null

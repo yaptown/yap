@@ -499,10 +499,10 @@ pub fn calculate_pattern_frequencies(
     // Sum up frequencies for each pattern based on word occurrences
     for freq_entry in gram_frequencies {
         // Get the word text from the gram
-        let word: String = if let Some(heteronym) = freq_entry.gram.heteronym() {
+        let word: String = if let Some(heteronym) = freq_entry.gram.gram.heteronym() {
             heteronym.word.clone()
         } else {
-            freq_entry.gram.to_display_string(language)
+            freq_entry.gram.gram.to_display_string(language)
         };
         let word_normalized = normalize_word(&word, language);
 

@@ -1817,7 +1817,9 @@ pub fn export_yap(
             continue;
         }
         let language = Language::from_code(course).context("unknown course language")?;
-        let movies = data_root.join(course).join("sentence-sources/movies");
+        let movies = data_root
+            .join(language.corpus_code())
+            .join("sentence-sources/movies");
         let dest = movies
             .join("subtitles-raw")
             .join(format!("{}.srt", movie.imdb_id));

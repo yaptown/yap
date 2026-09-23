@@ -67,7 +67,7 @@ use language_utils::HomophoneSentencePair;
 use language_utils::HomophoneWordPair;
 use language_utils::ProperNounDefinition;
 use language_utils::SentenceGrams;
-use language_utils::SpurGram;
+use language_utils::{SpurGram, TaggedGram};
 pub use simulation::{DailySimulationIterator, DayChallengeIterator};
 
 use bridgerton::{AbortSignal, Callback, bridge};
@@ -1166,9 +1166,9 @@ pub(crate) struct Regressions {
 #[derive(Clone, Debug)]
 pub(crate) struct ComprehensibleGrams {
     /// Only cards that have actually been reviewed to Review state.
-    pub now: BTreeSet<SpurGram>,
+    pub now: BTreeSet<TaggedGram<SpurGram>>,
     /// Includes Added cards that haven't been reviewed yet.
-    pub now_and_planned: BTreeSet<SpurGram>,
+    pub now_and_planned: BTreeSet<TaggedGram<SpurGram>>,
 }
 
 /// Cached comprehensible grams for both modalities.
@@ -1180,8 +1180,8 @@ pub(crate) struct CachedComprehensibleGrams {
 
 struct ComprehensibleSentence {
     target_language: Spur,
-    target_language_sentence_grams: SentenceGrams<SpurGram>,
-    unique_target_language_phrases: Vec<SpurGram>,
+    target_language_sentence_grams: SentenceGrams<TaggedGram<SpurGram>>,
+    unique_target_language_phrases: Vec<TaggedGram<SpurGram>>,
     native_languages: Vec<Spur>,
 }
 
@@ -1344,10 +1344,7 @@ impl weapon::AppState for Deck {
             } => {
                 deck.sentence_list = sentence_list.clone();
                 for (index, card) in cards.iter().enumerate() {
-                    if let Some(card) = card.get_interned(
-                        &context.language_pack.string_rodeo,
-                        &context.language_pack.gram_rodeo,
-                    ) {
+                    if let Some(card) = card.get_interned(&context.language_pack) {
                         // Make sure the card is valid and can be added
                         if !context.is_card_valid(&card) {
                             continue;
@@ -1375,10 +1372,7 @@ impl weapon::AppState for Deck {
                 }
             }
             LanguageEventContent::ReviewCard { reviewed, rating } => {
-                if let Some(reviewed) = reviewed.get_interned(
-                    &context.language_pack.string_rodeo,
-                    &context.language_pack.gram_rodeo,
-                ) {
+                if let Some(reviewed) = reviewed.get_interned(&context.language_pack) {
                     // Track flashcard type for tutorial purposes
                     if let Some(flashcard_type) = reviewed.get_flashcard_type() {
                         *deck
@@ -1470,7 +1464,7 @@ impl weapon::AppState for Deck {
                         &literals,
                         &context.language_pack,
                     ) {
-                        let resolved_gram = context.language_pack.gram_rodeo.resolve(&gram);
+                        let resolved_gram = context.language_pack.gram_rodeo.resolve(&gram.gram);
 
                         // A literal can fail to match (interning miss above, or
                         // tokenization drift between the event's pack and the current
@@ -1502,7 +1496,11 @@ impl weapon::AppState for Deck {
                                 };
 
                                 let gram = Gram(vec![Atom::Tok(literal.word)]);
-                                if let Some(gram) = context.language_pack.gram_rodeo.get(&gram) {
+                                if let Some(gram) =
+                                    context.language_pack.gram_rodeo.get(&gram).and_then(|g| {
+                                        context.language_pack.senses_of(g).first().copied()
+                                    })
+                                {
                                     if *hinted || *remembered == Some(false) {
                                         forgotten_grams.insert(gram);
                                     } else if *remembered == Some(true) {
@@ -1527,28 +1525,14 @@ impl weapon::AppState for Deck {
                         }
                         current::SentenceReviewResult::Graded { phrases, .. } => {
                             for (phrase, remembered) in phrases {
-                                let matching_gram = encoded_sentence
-                                    .multiword_terms
-                                    .iter()
-                                    .chain(encoded_sentence.low_confidence_multiword_terms.iter())
-                                    .map(|term| &term.gram)
-                                    .find(|gram_spur| {
-                                        let resolved = context
-                                            .language_pack
-                                            .gram_rodeo
-                                            .resolve(gram_spur)
-                                            .resolve(&context.language_pack.string_rodeo);
-                                        let display = resolved
-                                            .to_display_string(context.course.target_language);
-                                        display == *phrase
-                                    });
+                                let matching_gram = context.language_pack.resolve_entry(phrase);
                                 if let Some(gram_spur) = matching_gram {
                                     match remembered {
                                         Some(true) => {
-                                            remembered_grams.insert(*gram_spur);
+                                            remembered_grams.insert(gram_spur);
                                         }
                                         Some(false) => {
-                                            forgotten_grams.insert(*gram_spur);
+                                            forgotten_grams.insert(gram_spur);
                                         }
                                         None => {}
                                     }
@@ -1572,6 +1556,10 @@ impl weapon::AppState for Deck {
                                         continue;
                                     };
                                     let Some(gram) = grams.first() else {
+                                        continue;
+                                    };
+                                    let Some(gram) = context.language_pack.senses_of(*gram).first()
+                                    else {
                                         continue;
                                     };
                                     remembered_grams.insert(*gram);
@@ -1602,6 +1590,10 @@ impl weapon::AppState for Deck {
                                     let Some(gram) = grams.first() else {
                                         continue;
                                     };
+                                    let Some(gram) = context.language_pack.senses_of(*gram).first()
+                                    else {
+                                        continue;
+                                    };
                                     forgotten_grams.insert(*gram);
                                 }
                                 language_utils::Lexeme::Multiword { phrase } => {
@@ -1626,6 +1618,9 @@ impl weapon::AppState for Deck {
                                 continue;
                             };
                             let Some(gram) = grams.first() else {
+                                continue;
+                            };
+                            let Some(gram) = context.language_pack.senses_of(*gram).first() else {
                                 continue;
                             };
                             forgotten_grams.insert(*gram);
@@ -1753,19 +1748,20 @@ impl weapon::AppState for Deck {
                                 match grade {
                                     transcription_challenge::WordGrade::Perfect { .. }
                                     | transcription_challenge::WordGrade::CorrectWithTypo { .. } => {
-                                        remembered_grams.insert(gram);
+                                        remembered_grams.insert(gram.gram);
                                     }
                                     transcription_challenge::WordGrade::PhoneticallyIdenticalButContextuallyIncorrect { .. } => {
-                                        hard_grams.insert(gram);
+                                        hard_grams.insert(gram.gram);
                                     }
                                     _ => {
-                                        again_grams.insert(gram);
+                                        again_grams.insert(gram.gram);
                                     }
                                 };
                             }
 
                             // Also categorize individual words from multi-word grams
-                            let resolved_gram = context.language_pack.gram_rodeo.resolve(&gram);
+                            let resolved_gram =
+                                context.language_pack.gram_rodeo.resolve(&gram.gram);
                             if resolved_gram.len() > 1 {
                                 for (literal, grade) in matched {
                                     let language_utils::WordType::Heteronym(_) =
@@ -1857,12 +1853,7 @@ impl weapon::AppState for Deck {
             LanguageEventContent::LockCardsExcept { keep } => {
                 let keep: FxHashSet<_> = keep
                     .iter()
-                    .filter_map(|card| {
-                        card.get_interned(
-                            &context.language_pack.string_rodeo,
-                            &context.language_pack.gram_rodeo,
-                        )
-                    })
+                    .filter_map(|card| card.get_interned(&context.language_pack))
                     .collect();
                 // Lock every schedulable added card outside the kept set —
                 // leeches and already-known cards never enter the review
@@ -1882,10 +1873,7 @@ impl weapon::AppState for Deck {
             }
             LanguageEventContent::UnlockCards { cards } => {
                 for card in cards {
-                    if let Some(card) = card.get_interned(
-                        &context.language_pack.string_rodeo,
-                        &context.language_pack.gram_rodeo,
-                    ) {
+                    if let Some(card) = card.get_interned(&context.language_pack) {
                         deck.locked_cards.remove(&card);
                     }
                 }
@@ -2037,7 +2025,7 @@ impl weapon::AppState for Deck {
                 }
 
                 // Listening
-                let listening_indicator = CardIndicator::ListeningGram { gram: *gram };
+                let listening_indicator = CardIndicator::ListeningGram { gram: gram.gram };
                 let listening_card = state.cards.get(&listening_indicator);
                 if context.is_comprehensible(
                     &listening_indicator,
@@ -2331,7 +2319,7 @@ impl Deck {
             // Compute card_text and card_subtitle based on card type
             let (card_text, card_subtitle) = match card_indicator {
                 CardIndicator::WrittenGram { gram } => {
-                    let gram_resolved = self.context.language_pack.resolve_gram(gram);
+                    let gram_resolved = self.context.language_pack.resolve_gram(&gram.gram);
                     let text = gram_resolved.to_display_string(self.context.course.target_language);
                     let subtitle = gram_resolved.0.first().and_then(|atom| {
                         if let language_utils::Atom::Tok(word) = atom
@@ -2396,7 +2384,7 @@ impl Deck {
     fn get_comprehensible_written_grams(
         &self,
         count_added_as_comprehensible: bool,
-    ) -> &BTreeSet<SpurGram> {
+    ) -> &BTreeSet<TaggedGram<SpurGram>> {
         if count_added_as_comprehensible {
             &self.comprehensible.written.now_and_planned
         } else {
@@ -2408,7 +2396,7 @@ impl Deck {
     fn get_comprehensible_listening_grams(
         &self,
         count_added_as_comprehensible: bool,
-    ) -> &BTreeSet<SpurGram> {
+    ) -> &BTreeSet<TaggedGram<SpurGram>> {
         if count_added_as_comprehensible {
             &self.comprehensible.listening.now_and_planned
         } else {
@@ -2421,8 +2409,8 @@ impl Deck {
     /// or half if known in only one. 100% = all grams known in both modalities.
     fn percent_known_in(
         frequency_list: &language_utils::language_pack::FrequencyList,
-        known_written: &BTreeSet<SpurGram>,
-        known_listening: &BTreeSet<SpurGram>,
+        known_written: &BTreeSet<TaggedGram<SpurGram>>,
+        known_listening: &BTreeSet<TaggedGram<SpurGram>>,
     ) -> ComprehensionScore {
         let total = frequency_list.total_count;
         if total == 0 {
@@ -2463,8 +2451,8 @@ impl Deck {
     /// Compute the percent known within the first incomplete tier level.
     fn tier_percent_known_with(
         frequency_list: &language_utils::language_pack::FrequencyList,
-        known_written: &BTreeSet<SpurGram>,
-        known_listening: &BTreeSet<SpurGram>,
+        known_written: &BTreeSet<TaggedGram<SpurGram>>,
+        known_listening: &BTreeSet<TaggedGram<SpurGram>>,
     ) -> f64 {
         tiers::first_incomplete_level_pct(frequency_list, known_written, known_listening)
     }
@@ -2484,8 +2472,8 @@ impl Deck {
     fn sentence_list_percent_known_with(
         &self,
         sentence_list: &Option<SentenceListSelection>,
-        known_written: &BTreeSet<SpurGram>,
-        known_listening: &BTreeSet<SpurGram>,
+        known_written: &BTreeSet<TaggedGram<SpurGram>>,
+        known_listening: &BTreeSet<TaggedGram<SpurGram>>,
     ) -> ComprehensionScore {
         match sentence_list {
             Some(selection) => {
@@ -2940,7 +2928,7 @@ impl Deck {
     /// Falls back to the first incomplete level if no cards improve any level.
     pub fn get_current_tier(&self) -> TierInfo {
         let freq_list = &self.context.language_pack.gram_frequencies;
-        let all_grams: Vec<SpurGram> = freq_list.entries.keys().copied().collect();
+        let all_grams: Vec<TaggedGram<SpurGram>> = freq_list.entries.keys().copied().collect();
         let levels = tiers::tier_level_slices(&all_grams, freq_list);
 
         let current_written = self.get_comprehensible_written_grams(true);
@@ -2965,7 +2953,7 @@ impl Deck {
                     projected_written.insert(*gram);
                 }
                 CardIndicator::ListeningGram { gram } => {
-                    projected_listening.insert(*gram);
+                    projected_listening.extend(self.context.language_pack.senses_of(*gram));
                 }
                 CardIndicator::LetterPronunciation { .. } => {}
             }
@@ -3106,7 +3094,7 @@ impl Deck {
 
                 if words_needed > 0 {
                     // Collect unknown grams with their frequencies.
-                    let mut unknown_words: Vec<(SpurGram, u64)> = movie_frequencies
+                    let mut unknown_words: Vec<(TaggedGram<SpurGram>, u64)> = movie_frequencies
                         .entries
                         .iter()
                         .filter_map(|(gram, frequency)| {
@@ -3341,7 +3329,7 @@ impl Deck {
                     projected_written.insert(*gram);
                 }
                 CardIndicator::ListeningGram { gram } => {
-                    projected_listening.insert(*gram);
+                    projected_listening.extend(self.context.language_pack.senses_of(*gram));
                 }
                 CardIndicator::LetterPronunciation { .. } => {}
             }
@@ -3358,7 +3346,8 @@ impl Deck {
             }
             None => {
                 let freq_list = &self.context.language_pack.gram_frequencies;
-                let all_grams: Vec<SpurGram> = freq_list.entries.keys().copied().collect();
+                let all_grams: Vec<TaggedGram<SpurGram>> =
+                    freq_list.entries.keys().copied().collect();
                 let levels = tiers::tier_level_slices(&all_grams, freq_list);
                 let current_written = self.get_comprehensible_written_grams(true);
                 let current_listening = self.get_comprehensible_listening_grams(true);
@@ -3378,11 +3367,16 @@ impl Deck {
         let preview: Vec<String> = smart_add_cards
             .iter()
             .map(|card| match card {
-                CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => self
+                CardIndicator::ListeningGram { gram } => self
+                    .context
+                    .language_pack
+                    .resolve_gram(gram)
+                    .to_display_string(self.context.course.target_language),
+                CardIndicator::WrittenGram { gram } => self
                     .context
                     .language_pack
                     .gram_rodeo
-                    .resolve(gram)
+                    .resolve(&gram.gram)
                     .resolve(&self.context.language_pack.string_rodeo)
                     .to_display_string(self.context.course.target_language),
                 CardIndicator::LetterPronunciation { pattern, .. } => self
@@ -3400,7 +3394,7 @@ impl Deck {
         // Tier info (reuses the projected grams we already computed)
         let tier_info = {
             let freq_list = &self.context.language_pack.gram_frequencies;
-            let all_grams: Vec<SpurGram> = freq_list.entries.keys().copied().collect();
+            let all_grams: Vec<TaggedGram<SpurGram>> = freq_list.entries.keys().copied().collect();
             let levels = tiers::tier_level_slices(&all_grams, freq_list);
             let current_written = self.get_comprehensible_written_grams(true);
             let current_listening = self.get_comprehensible_listening_grams(true);
@@ -3534,10 +3528,11 @@ impl Deck {
         reviewed: CardIndicator<Gram<String>, String>,
         rating: Rating,
     ) -> Option<DeckEvent> {
-        let indicator = reviewed.get_interned(
+        let indicator = reviewed.get_interned(&self.context.language_pack)?;
+        let reviewed = indicator.resolve(
             &self.context.language_pack.string_rodeo,
             &self.context.language_pack.gram_rodeo,
-        )?;
+        );
         self.cards.get(&indicator).map(|_| {
             DeckEvent::Language(LanguageEvent {
                 target_language: self.context.course.target_language,
@@ -3606,8 +3601,8 @@ impl Deck {
         submission: String,
         literal_grades: autograde::LiteralGrades,
         words_tapped: Vec<Heteronym<String>>,
-        phrases_remembered: Vec<Gram<String>>,
-        phrases_forgot: Vec<Gram<String>>,
+        phrases_remembered: Vec<TaggedGram<Gram<String>>>,
+        phrases_forgot: Vec<TaggedGram<Gram<String>>>,
     ) -> Option<DeckEvent> {
         let literal_grades = literal_grades.0;
         let hinted_heteronyms: BTreeSet<Heteronym<String>> = words_tapped.into_iter().collect();
@@ -3649,19 +3644,16 @@ impl Deck {
             })
             .collect();
 
-        let target_language = self.context.course.target_language;
-
         // Build phrases list - forgot takes precedence over remembered
-        // Deck event stores display strings for backward compatibility
-        let forgot_set: BTreeSet<&Gram<String>> = phrases_forgot.iter().collect();
+        let forgot_set: BTreeSet<&TaggedGram<Gram<String>>> = phrases_forgot.iter().collect();
         let phrases: Vec<_> = phrases_forgot
             .iter()
-            .map(|p| (p.to_display_string(target_language), Some(false)))
+            .map(|p| (p.clone(), Some(false)))
             .chain(
                 phrases_remembered
                     .iter()
                     .filter(|p| !forgot_set.contains(p))
-                    .map(|p| (p.to_display_string(target_language), Some(true))),
+                    .map(|p| (p.clone(), Some(true))),
             )
             .collect();
 
@@ -3799,7 +3791,7 @@ impl Deck {
                             .context
                             .language_pack
                             .gram_rodeo
-                            .resolve(gram)
+                            .resolve(&gram.gram)
                             .resolve(&self.context.language_pack.string_rodeo)
                             .to_display_string(self.context.course.target_language);
                         examples.push(display_text);
@@ -3879,8 +3871,8 @@ impl Deck {
     /// least-reviewed — clip knowledge improves selection but never gates it.
     fn pick_comprehensible_sentence(
         &self,
-        required_gram: Option<&SpurGram>,
-        comprehensible_grams: &BTreeSet<SpurGram>,
+        required_gram: Option<&TaggedGram<SpurGram>>,
+        comprehensible_grams: &BTreeSet<TaggedGram<SpurGram>>,
         sentences_reviewed: &BTreeMap<Spur, u32>,
         language_pack: &LanguagePack,
     ) -> Option<Spur> {
@@ -3899,8 +3891,8 @@ impl Deck {
 
     fn get_comprehensible_sentence_containing(
         &self,
-        required_gram: Option<&SpurGram>,
-        comprehensible_grams: &BTreeSet<SpurGram>,
+        required_gram: Option<&TaggedGram<SpurGram>>,
+        comprehensible_grams: &BTreeSet<TaggedGram<SpurGram>>,
         sentences_reviewed: &BTreeMap<Spur, u32>,
         language_pack: &LanguagePack,
     ) -> Option<ComprehensibleSentence> {
@@ -3915,7 +3907,7 @@ impl Deck {
 
     /// Pick the least-reviewed comprehensible sentence containing `gram`, if
     /// any exists — the same selection the app's translation challenges use.
-    pub fn pick_translation_sentence(&self, gram: &SpurGram) -> Option<Spur> {
+    pub fn pick_translation_sentence(&self, gram: &TaggedGram<SpurGram>) -> Option<Spur> {
         self.pick_comprehensible_sentence(
             Some(gram),
             self.get_comprehensible_written_grams(false),
@@ -3926,10 +3918,10 @@ impl Deck {
 
     fn is_listened_gram_comprehensible(
         &self,
-        gram: &SpurGram,
+        gram: &TaggedGram<SpurGram>,
         count_added_as_comprehensible: bool,
     ) -> bool {
-        let card_indicator = CardIndicator::ListeningGram { gram: *gram };
+        let card_indicator = CardIndicator::ListeningGram { gram: gram.gram };
         let card_data = self.cards.get(&card_indicator);
         self.context.is_comprehensible(
             &card_indicator,
@@ -3947,8 +3939,9 @@ impl Context {
     /// For letter pronunciation cards: checks if the pattern exists in the frequency map
     pub fn is_card_valid(&self, card: &CardIndicator<SpurGram, Spur>) -> bool {
         match card {
-            CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => {
-                self.language_pack.is_course_gram(gram)
+            CardIndicator::WrittenGram { gram } => self.language_pack.is_course_gram(gram),
+            CardIndicator::ListeningGram { gram } => {
+                !self.language_pack.senses_of(*gram).is_empty()
             }
             CardIndicator::LetterPronunciation { pattern, position } => self
                 .language_pack
@@ -4078,7 +4071,8 @@ impl Context {
     /// Get the frequency count for a card (used for isotonic regression)
     fn get_card_frequency(&self, card: &CardIndicator<SpurGram, Spur>) -> Option<Frequency> {
         match card {
-            CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => self
+            CardIndicator::ListeningGram { gram } => self.language_pack.gram_frequency_total(*gram),
+            CardIndicator::WrittenGram { gram } => self
                 .language_pack
                 .gram_frequencies
                 .entries
@@ -4130,6 +4124,7 @@ impl Context {
             for heteronym in heteronyms {
                 if let Some(grams) = self.language_pack.heteronym_to_grams.get(heteronym)
                     && let Some(gram) = grams.first()
+                    && let Some(gram) = self.language_pack.senses_of(*gram).first()
                     && let Some(freq) = self.language_pack.gram_frequencies.entries.get(gram)
                 {
                     return Some((*heteronym, *freq));
@@ -4484,7 +4479,7 @@ impl Deck {
     pub fn comprehensible_written_grams(
         &self,
         count_added_as_comprehensible: bool,
-    ) -> &BTreeSet<SpurGram> {
+    ) -> &BTreeSet<TaggedGram<SpurGram>> {
         self.get_comprehensible_written_grams(count_added_as_comprehensible)
     }
 
@@ -4507,10 +4502,7 @@ impl Deck {
         &self,
         card: &CardIndicator<Gram<String>, String>,
     ) -> Option<CardSummary> {
-        let card = card.get_interned(
-            &self.context.language_pack.string_rodeo,
-            &self.context.language_pack.gram_rodeo,
-        )?;
+        let card = card.get_interned(&self.context.language_pack)?;
         let card_data = self.cards.get(&card)?;
         self.card_to_summary(&card, card_data)
     }
@@ -4740,13 +4732,13 @@ pub async fn autograde_translation(
     user_sentence: String,
     native_translations: Vec<String>,
     literals: Vec<Literal<String>>,
-    phrases: Vec<Gram<String>>,
+    phrases: Vec<TaggedGram<Gram<String>>>,
     access_token: Option<String>,
     course: Course,
     gram_definitions: autograde::GramDefinitions,
     literal_gram_indices: Vec<usize>,
     phrase_definitions: autograde::GramDefinitions,
-    primary_expression: Gram<String>,
+    primary_expression: TaggedGram<Gram<String>>,
     movie_titles: autograde::MovieTitles,
 ) -> autograde::AutoGradeTranslationResponse {
     let gram_definitions = gram_definitions.0;
@@ -4976,13 +4968,15 @@ impl Deck {
 
         let resolve_card_text = |card: &CardIndicator<SpurGram, Spur>| -> String {
             match card {
-                CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => {
-                    language_pack
-                        .gram_rodeo
-                        .resolve(gram)
-                        .resolve(&language_pack.string_rodeo)
-                        .to_display_string(self.context.course.target_language)
-                }
+                CardIndicator::WrittenGram { gram } => gram
+                    .to_owned()
+                    .map(|g| language_pack.resolve_gram(&g))
+                    .to_display_string(self.context.course.target_language),
+                CardIndicator::ListeningGram { gram } => language_pack
+                    .gram_rodeo
+                    .resolve(gram)
+                    .resolve(&language_pack.string_rodeo)
+                    .to_display_string(self.context.course.target_language),
                 CardIndicator::LetterPronunciation { pattern, .. } => {
                     format!("[{}]", language_pack.string_rodeo.resolve(pattern))
                 }
@@ -4991,7 +4985,13 @@ impl Deck {
 
         let resolve_translation = |card: &CardIndicator<SpurGram, Spur>| -> String {
             let gram = match card {
-                CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => gram,
+                CardIndicator::WrittenGram { gram } => gram,
+                CardIndicator::ListeningGram { gram } => {
+                    match language_pack.senses_of(*gram).first() {
+                        Some(entry) => entry,
+                        None => return String::new(),
+                    }
+                }
                 _ => return String::new(),
             };
             match language_pack.gram_definitions.get(gram) {
@@ -5733,7 +5733,7 @@ mod tests {
                 if !frequency.easy {
                     return None;
                 }
-                let resolved = deck.context.language_pack.gram_rodeo.resolve(gram);
+                let resolved = deck.context.language_pack.gram_rodeo.resolve(&gram.gram);
                 let single_word = resolved
                     .iter()
                     .filter(|atom| matches!(atom, language_utils::Atom::Tok(_)))
@@ -5911,19 +5911,23 @@ mod tests {
             .collect();
         assert!(!after_cards.is_empty(), "should still have cards to teach");
 
-        let resolve_word = |gram: &SpurGram| -> String {
+        let resolve_word = |gram: &TaggedGram<SpurGram>| -> String {
             deck.context
                 .language_pack
                 .gram_rodeo
-                .resolve(gram)
+                .resolve(&gram.gram)
                 .resolve(&deck.context.language_pack.string_rodeo)
                 .to_display_string(deck.context.course.target_language)
         };
         let card_word = |c: &CardIndicator<SpurGram, Spur>| -> Option<String> {
             match c {
-                CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => {
-                    Some(resolve_word(gram))
-                }
+                CardIndicator::WrittenGram { gram } => Some(resolve_word(gram)),
+                CardIndicator::ListeningGram { gram } => deck
+                    .context
+                    .language_pack
+                    .senses_of(*gram)
+                    .first()
+                    .map(resolve_word),
                 _ => None,
             }
         };
@@ -6230,7 +6234,7 @@ mod tests {
             .find(|g| {
                 let resolved = language_pack
                     .gram_rodeo
-                    .resolve(g)
+                    .resolve(&g.gram)
                     .resolve(&language_pack.string_rodeo);
                 format!("{resolved:?}").contains("Adp")
             })
@@ -6255,7 +6259,9 @@ mod tests {
         // The listening challenge should produce a transcription, not a flashcard
         let review_info =
             deck.get_review_info(vec![], chrono::Utc::now().timestamp_millis() as f64);
-        let listening_card = CardIndicator::ListeningGram { gram: *adp_gram };
+        let listening_card = CardIndicator::ListeningGram {
+            gram: adp_gram.gram,
+        };
         let challenge = review_info.get_challenge_for_card(&deck, listening_card);
         assert!(
             matches!(
@@ -6497,12 +6503,19 @@ mod tests {
                 .collect();
             for (i, card) in smart_add_cards.iter().enumerate() {
                 let (display, gram) = match card {
-                    CardIndicator::WrittenGram { gram } | CardIndicator::ListeningGram { gram } => {
+                    CardIndicator::ListeningGram { gram } => (
+                        deck.context
+                            .language_pack
+                            .resolve_gram(gram)
+                            .to_display_string(deck.context.course.target_language),
+                        deck.context.language_pack.senses_of(*gram).first(),
+                    ),
+                    CardIndicator::WrittenGram { gram } => {
                         let resolved = deck
                             .context
                             .language_pack
                             .gram_rodeo
-                            .resolve(gram)
+                            .resolve(&gram.gram)
                             .resolve(&deck.context.language_pack.string_rodeo);
                         (
                             resolved.to_display_string(deck.context.course.target_language),
@@ -6555,10 +6568,10 @@ mod tests {
                         format!("Ghost(state={:?})", fsrs_card.state)
                     }
                 };
-                let report = |gram: &SpurGram, kind: &str| {
+                let report = |gram: &TaggedGram<SpurGram>, kind: &str| {
                     let display = lp
                         .gram_rodeo
-                        .resolve(gram)
+                        .resolve(&gram.gram)
                         .resolve(&lp.string_rodeo)
                         .to_display_string(deck.context.course.target_language);
                     let in_freq = lp.gram_frequencies.entries.contains_key(gram);
@@ -6566,12 +6579,12 @@ mod tests {
                     let l_now = deck.comprehensible.listening.now.contains(gram);
                     let l_card = deck
                         .cards
-                        .get(&CardIndicator::ListeningGram { gram: *gram })
+                        .get(&CardIndicator::ListeningGram { gram: gram.gram })
                         .map(&card_state_str);
                     let l_prob = deck
                         .context
                         .get_card_knowledge_probability(
-                            &CardIndicator::ListeningGram { gram: *gram },
+                            &CardIndicator::ListeningGram { gram: gram.gram },
                             &deck.regressions,
                         )
                         .map(|(p, f)| format!("{p:.3} (count={})", f.count));
@@ -6973,7 +6986,10 @@ mod tests {
                 challenge,
                 submission,
                 literals,
-                phrases,
+                phrases: phrases
+                    .into_iter()
+                    .map(|(g, r)| (g.to_display_string(event_course.target_language), r))
+                    .collect(),
             });
         }
         out
@@ -7317,8 +7333,14 @@ mod tests {
                 challenge_sentence: case.challenge.clone(),
                 user_sentence: case.submission.clone(),
                 literals,
-                phrases,
-                primary_expression,
+                phrases: phrases
+                    .into_iter()
+                    .map(|gram| TaggedGram { gram, sense: None })
+                    .collect(),
+                primary_expression: TaggedGram {
+                    gram: primary_expression,
+                    sense: None,
+                },
                 context: Default::default(),
             };
             requests.push((case, request));
