@@ -78,14 +78,20 @@ async fn main() -> Result<()> {
                     .await?;
             let sampled: Vec<char> = ('가'..='힣').step_by(97).chain(['힣']).collect();
             for &c in &sampled {
-                let glyph = pack.glyph(&c.to_string()).context("syllable")?;
+                let glyph = pack
+                    .glyphs(&c.to_string())
+                    .into_iter()
+                    .next()
+                    .context("syllable")?;
                 stroke_order::validate(&glyph).with_context(|| format!("{c}"))?;
             }
             println!(
                 "scribing: 40 jamo; {} sampled syllables compose and validate; Unihan comparison skipped",
                 sampled.len()
             );
-            samples(&samples_out, name, |c| pack.glyph(&c.to_string()))?;
+            samples(&samples_out, name, |c| {
+                pack.glyphs(&c.to_string()).into_iter().next()
+            })?;
         } else {
             geometry(name, &map)?;
             samples(&samples_out, name, |c| map.get(&c).cloned())?;

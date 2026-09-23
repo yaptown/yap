@@ -22,7 +22,7 @@
 use super::{
     CORNER, Draw, Ends, Item, Pt, Strokes, centripetal, collect, corner_runs, glyph, items, pts,
 };
-use crate::{Glyphs, StrokeStandard};
+use crate::{Forms, StrokeStandard};
 
 /// Writing units -> 1000-unit box.
 const SCALE: f64 = 0.7;
@@ -40,7 +40,7 @@ const DESCENDER: i32 = -199;
 const CW: bool = true;
 const CCW: bool = false;
 
-pub fn glyphs() -> Glyphs {
+pub fn glyphs() -> Forms {
     let consonants: [(char, Draw); 46] = [
         ('ก', ko_kai),
         ('ข', kho_khai),

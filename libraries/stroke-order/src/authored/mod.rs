@@ -11,6 +11,16 @@
 //! was drawn with (angle direction, sampling density, how joins are handled),
 //! passed in explicitly rather than unified, because changing them would
 //! change the reviewed geometry.
+//!
+//! # Accepted letterforms
+//!
+//! A handwriting check grades a learner against whichever accepted form of a
+//! letter is closest to what they wrote, so a letter carries every common
+//! form, not just the taught one. A letter table lists an alternative as a
+//! second row for the same character, right after the taught form (see
+//! [`group`]); each script's docs list its alternatives and where they come
+//! from. Letters built from others (accented Latin letters, nukta letters,
+//! aksharas) take every form of what they are built from.
 pub mod cyrillic;
 // The Devanagari and Thai letter tables keep one row of waypoints per line, as
 // they were drawn; rustfmt would put every point on its own line.
@@ -20,7 +30,8 @@ pub mod latin;
 #[rustfmt::skip]
 pub mod thai;
 
-use crate::{Glyphs, Stroke, StrokeGlyph, StrokeStandard, validate};
+use crate::{Forms, Stroke, StrokeGlyph, StrokeStandard, validate};
+use rustc_hash::FxHashMap;
 
 pub type Pt = (f64, f64);
 /// A letter's strokes in writing order, each a polyline in pen direction.
@@ -257,14 +268,26 @@ pub fn glyph(standard: StrokeStandard, strokes: Strokes, to_box: impl Fn(Pt) -> 
     StrokeGlyph { standard, strokes }
 }
 
-/// Collects `(char, glyph)` pairs. Panics on a duplicate character or a
-/// stroke that collapses or leaves the box: the letters are constants, and the
-/// tests build every pack.
-pub fn collect(glyphs: impl IntoIterator<Item = (char, StrokeGlyph)>) -> Glyphs {
-    let mut out = Glyphs::default();
-    for (c, g) in glyphs {
-        validate(&g).unwrap_or_else(|e| panic!("{:?} {c}: {e}", g.standard));
-        assert!(out.insert(c, g).is_none(), "{c} drawn twice");
+/// Groups a letter table's `(char, form)` rows into each character's accepted
+/// forms. A character listed again right after itself gains an accepted
+/// alternative; its first row is the taught form. Panics on a character
+/// listed twice apart, which is a mistake rather than a variant.
+pub fn group<T>(rows: impl IntoIterator<Item = (char, T)>) -> FxHashMap<char, Vec<T>> {
+    let mut out = FxHashMap::<char, Vec<T>>::default();
+    let mut last = None;
+    for (c, form) in rows {
+        let forms = out.entry(c).or_default();
+        assert!(forms.is_empty() || last == Some(c), "{c} drawn twice");
+        forms.push(form);
+        last = Some(c);
     }
     out
+}
+
+/// [`group`]s `(char, glyph)` rows. Panics on a stroke that collapses or
+/// leaves the box: the letters are constants, and the tests build every pack.
+pub fn collect(glyphs: impl IntoIterator<Item = (char, StrokeGlyph)>) -> Forms {
+    group(glyphs.into_iter().inspect(|(c, g)| {
+        validate(g).unwrap_or_else(|e| panic!("{:?} {c}: {e}", g.standard));
+    }))
 }

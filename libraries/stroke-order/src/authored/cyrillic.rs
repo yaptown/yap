@@ -15,8 +15,17 @@
 //!
 //! Lowercase letters that are small capitals in print (в г д ж з и й к л м н
 //! п т х ц ч ш щ ъ ы ь э ю я) reuse the capital's function at x-height.
+//!
+//! Accepted alternatives, each the other form common in Russian print and
+//! handwriting (index 0 is the formation above):
+//! - а: two-storey, as in typeset text, one stroke like the Latin one;
+//! - б: the bowl first, then the flag rising right as its own stroke;
+//! - Д д: a straight upright left leg (the Ц-like print form) instead of the
+//!   curved one;
+//! - Ж ж: five strokes (stem, then each arm on its own);
+//! - К к: three strokes (stem, arm, then the leg from the same point).
 use super::{Pt, Strokes, collect, glyph};
-use crate::{Glyphs, StrokeStandard};
+use crate::{Forms, StrokeStandard};
 
 // Writing frame (y down).
 /// Ascender line: б flag, ф stem, lowercase dots and breve.
@@ -34,7 +43,7 @@ const MARK: f64 = 70.0;
 /// Every letter is centred horizontally.
 const CX: f64 = 500.0;
 
-pub fn glyphs() -> Glyphs {
+pub fn glyphs() -> Forms {
     collect(
         letters()
             .into_iter()
@@ -49,13 +58,16 @@ fn letters() -> Vec<(char, Strokes)> {
         ('В', cap(ve, 420.0)),
         ('Г', cap(ghe, 340.0)),
         ('Д', de(CAP, BASE, 540.0, DESC)),
+        ('Д', de_straight(CAP, BASE, 540.0, DESC)),
         ('Е', cap(ie, 380.0)),
         ('Ё', [cap(ie, 380.0), dots(MARK)].concat()),
         ('Ж', cap(zhe, 680.0)),
+        ('Ж', cap(zhe_five, 680.0)),
         ('З', cap(ze, 400.0)),
         ('И', cap(i, 460.0)),
         ('Й', [cap(i, 460.0), breve(MARK, 200.0)].concat()),
         ('К', cap(ka, 440.0)),
+        ('К', cap(ka_three, 440.0)),
         ('Л', cap(el, 460.0)),
         ('М', cap(em, 560.0)),
         ('Н', cap(en, 460.0)),
@@ -78,17 +90,22 @@ fn letters() -> Vec<(char, Strokes)> {
         ('Ю', cap(yu, 680.0)),
         ('Я', cap(ya, 420.0)),
         ('а', a_small(380.0)),
+        ('а', a_two_storey(380.0)),
         ('б', be_small(400.0)),
+        ('б', be_small_flag(400.0)),
         ('в', small(ve, 340.0)),
         ('г', small(ghe, 280.0)),
         ('д', de(XH, BASE, 440.0, DESC)),
+        ('д', de_straight(XH, BASE, 440.0, DESC)),
         ('е', ie_small(400.0)),
         ('ё', [ie_small(400.0), dots(XH - 110.0)].concat()),
         ('ж', small(zhe, 560.0)),
+        ('ж', small(zhe_five, 560.0)),
         ('з', small(ze, 340.0)),
         ('и', small(i, 380.0)),
         ('й', [small(i, 380.0), breve(XH - 110.0, 180.0)].concat()),
         ('к', small(ka, 360.0)),
+        ('к', small(ka_three, 360.0)),
         ('л', small(el, 380.0)),
         ('м', small(em, 460.0)),
         ('н', small(en, 380.0)),
@@ -240,6 +257,20 @@ fn de(t: f64, b: f64, w: f64, foot: f64) -> Strokes {
     ]
 }
 
+/// Д with a straight upright left leg (the Ц-like print form), then the same
+/// stem, roof and feet.
+fn de_straight(t: f64, b: f64, w: f64, foot: f64) -> Strokes {
+    let (l, r) = (CX - w / 2.0, CX + w / 2.0);
+    let stem = r - w * 0.12;
+    let leg = l + w * 0.18;
+    vec![
+        line([(leg, t), (leg, b)]),
+        line([(stem, t), (stem, b)]),
+        line([(leg, t), (stem, t)]),
+        line([(l, foot), (l, b), (r, b), (r, foot)]),
+    ]
+}
+
 fn ie(t: f64, b: f64, w: f64) -> Strokes {
     let (l, r) = (CX - w / 2.0, CX + w / 2.0);
     let m = t + (b - t) * 0.48;
@@ -260,6 +291,21 @@ fn zhe(t: f64, b: f64, w: f64) -> Strokes {
         line([(CX, t), (CX, b)]),
         line([left_top, (CX, m), (l, b)]),
         line([right_top, (CX, m), (r, b)]),
+    ]
+}
+
+/// Central stem, then each of the four arms on its own: the left arm in to
+/// the stem and the left leg out, then the right pair.
+fn zhe_five(t: f64, b: f64, w: f64) -> Strokes {
+    let (l, r) = (CX - w / 2.0, CX + w / 2.0);
+    let m = t + (b - t) * 0.48;
+    let (left_top, right_top) = ((l + w * 0.03, t), (r - w * 0.03, t));
+    vec![
+        line([(CX, t), (CX, b)]),
+        line([left_top, (CX, m)]),
+        line([(CX, m), (l, b)]),
+        line([right_top, (CX, m)]),
+        line([(CX, m), (r, b)]),
     ]
 }
 
@@ -296,6 +342,17 @@ fn ka(t: f64, b: f64, w: f64) -> Strokes {
     vec![
         line([(l, t), (l, b)]),
         line([(r - w * 0.04, t), (l, m), (r, b)]),
+    ]
+}
+
+/// Stem, the arm in to it, then the leg out from the same point.
+fn ka_three(t: f64, b: f64, w: f64) -> Strokes {
+    let (l, r) = (CX - w / 2.0, CX + w / 2.0);
+    let m = t + (b - t) * 0.55;
+    vec![
+        line([(l, t), (l, b)]),
+        line([(r - w * 0.04, t), (l, m)]),
+        line([(l, m), (r, b)]),
     ]
 }
 
@@ -517,6 +574,20 @@ fn a_small(w: f64) -> Strokes {
     ])]
 }
 
+/// Two-storey а, one stroke: the hook over the top, down the stem, round
+/// the bowl anticlockwise from the stem back to it, down to the baseline.
+fn a_two_storey(w: f64) -> Strokes {
+    let r = CX + w * 0.42;
+    let (brx, bry) = (w * 0.4, 110.0);
+    let by = BASE - bry;
+    vec![path([
+        arc(CX, XH + 125.0, w * 0.42, 120.0, 150.0, 0.0),
+        line([(r, XH + 125.0), (r, by - bry * 20f64.to_radians().sin())]),
+        arc(r - brx, by, brx, bry, 20.0, 360.0),
+        line([(r, by), (r, BASE)]),
+    ])]
+}
+
 /// One stroke like the digit 6: a short flag down into the left side, then
 /// the bowl anticlockwise.
 fn be_small(w: f64) -> Strokes {
@@ -532,6 +603,25 @@ fn be_small(w: f64) -> Strokes {
         line([(l, ASC + 170.0), (l, cy)]),
         arc(CX, cy, w / 2.0, ry, 180.0, 530.0),
     ])]
+}
+
+/// The bowl and its left side as one stroke from the top, then the flag
+/// rising to the right as a stroke of its own.
+fn be_small_flag(w: f64) -> Strokes {
+    let l = CX - w / 2.0;
+    let (cy, ry) = ((XH + BASE) / 2.0, (BASE - XH) / 2.0);
+    vec![
+        path([
+            line([(l, ASC + 60.0), (l, cy)]),
+            arc(CX, cy, w / 2.0, ry, 180.0, 530.0),
+        ]),
+        curve(
+            (l, ASC + 60.0),
+            (l + w * 0.3, ASC + 20.0),
+            (l + w * 0.75, ASC),
+            8,
+        ),
+    ]
 }
 
 /// Bar left to right, then over the top and round anticlockwise.

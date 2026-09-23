@@ -47,6 +47,12 @@ conjuncts are composed by our own code from the authored letters (half forms,
 reph, rakar, stacks, anchored vowel signs), following the conjunct rules of
 the Cambridge Introduction to Sanskrit primer; the few ligatures with a shape
 of their own (क्ष त्र ज्ञ श्र द्ध द्व द्य ह्म त्त) are drawn here too.
+Besides the taught form, the packs carry accepted alternative letterforms a
+learner may write instead (for example double-storey a and g, open-top 4,
+two-storey Cyrillic а, the full-headline अ and the older Uttara झ), drawn
+here in the same way, with the published glyph images named in the module
+docs as references only; composed letters and aksharas take every
+combination of their letters' forms.
 Scribing's MIT English pack informed the Latin order but no geometry was copied. Noto
 fonts were used only as a visual check while drawing; no font outlines are
 redistributed. These packs are covered by the application's own license and

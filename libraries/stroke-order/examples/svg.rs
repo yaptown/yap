@@ -5,7 +5,8 @@
 //!
 //! Each argument after the language code is one line. Strokes are numbered at
 //! their start and animate in writing order; opening the SVG in a browser
-//! plays it, a rasteriser shows the static numbered view.
+//! plays it, a rasteriser shows the static numbered view. A unit with
+//! accepted alternative forms shows them in extra rows under its line.
 use anyhow::{Context, Result, ensure};
 use language_utils::Language;
 use std::{fmt::Write, path::PathBuf};
@@ -50,11 +51,21 @@ async fn main() -> Result<()> {
         "<style>path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:5}",
     );
     let mut t = 0.0;
-    for (row, line) in lines.iter().enumerate() {
-        for (col, unit) in pack.segment(line).into_iter().enumerate() {
-            let Some(glyph) = pack.glyph(unit) else {
-                continue;
-            };
+    let mut row = 0;
+    for line in lines {
+        let units: Vec<_> = pack
+            .segment(line)
+            .into_iter()
+            .map(|unit| pack.glyphs(unit))
+            .collect();
+        let forms = units.iter().map(Vec::len).max().unwrap_or(0).max(1);
+        let cells = units.iter().enumerate().flat_map(|(col, glyphs)| {
+            glyphs
+                .iter()
+                .enumerate()
+                .map(move |(form, glyph)| (col, row + form, glyph))
+        });
+        for (col, row, glyph) in cells {
             let (ox, oy) = (col as f64 * cell, row as f64 * cell);
             write!(
                 svg,
@@ -98,9 +109,10 @@ async fn main() -> Result<()> {
                 )?;
             }
         }
+        row += forms;
     }
     style.push_str("@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}</style>");
-    let height = lines.len() as f64 * cell;
+    let height = row as f64 * cell;
     std::fs::write(
         &args[1],
         format!(

@@ -16,6 +16,28 @@
 //! the consonant instead of being centred: they are drawn around a notional प
 //! whose origin is x=0, placed where a centred प would sit.
 //!
+//! # Accepted letterforms
+//!
+//! A letter listed twice in [`letters`] has an accepted alternative form
+//! (index 0 is the taught, Noto-like form):
+//! - अ आ ओ औ ऑ: the headline over the whole letter, the "3" below it, as
+//!   many hands write it (Noto keeps it over the stem only). थ ध भ get no
+//!   such form on purpose: their headline gap is what tells them from य घ म.
+//! - ख: the left part closed into a loop where it turns (vs Noto's open
+//!   hook).
+//! - झ: the older Uttara (northern) form from Wikipedia's "Jha (Indic)" /
+//!   Commons `Devanagari_jh_old.svg`: a hooked left stroke with a bar to the
+//!   stem, and a क-like hook right of the stem.
+//! - छ: the headline over the right bowl only, leaving the upper loop open.
+//!
+//! Nukta letters take every form of their base. An akshara's forms are the
+//! product of its letters' forms, the first letter varying slowest, so index
+//! 0 is every letter's taught form.
+//!
+//! ळ (Marathi, also Konkani and Rajasthani) is drawn against Noto Sans
+//! Devanagari: a stub from the headline into a figure-eight lying on its
+//! side, no stem; ऩ ऱ ऴ are न र ळ with the nukta.
+//!
 //! # The writable unit: the akshara
 //!
 //! Hindi is written in aksharas, not letters: [`segment`] splits text into
@@ -55,7 +77,7 @@
 //!   ह्म त्त. क्त and च्छ are taught and printed as the half-form rule, so
 //!   they compose; so do श्व and श्च (the half श, not the loop variant some
 //!   fonts use).
-//! - **Stemless first consonants** (ट ठ ड ढ द ह छ ङ र, and the stemless
+//! - **Stemless first consonants** (ट ठ ड ढ द ह छ ङ र ळ, and the stemless
 //!   nukta letters) stack only in ट्ट ट्ठ ड्ड ड्ढ (the lower letter, smaller
 //!   and without its headline, hangs under the upper one's stub). Every other
 //!   stemless first consonant outside the ligatures is written in full with an
@@ -79,7 +101,7 @@
 //!   headline; then nuktas, the marks above and below in text order, reph, and
 //!   ं ँ.
 //! - रु and रू attach to the middle of र, as every Hindi primer shows them.
-use super::{Ends, Pt, Strokes, centripetal, glyph, strokes};
+use super::{Ends, Pt, Strokes, centripetal, glyph, group, strokes};
 use crate::{StrokeGlyph, StrokeStandard};
 use rustc_hash::FxHashMap;
 
@@ -160,21 +182,22 @@ pub fn segment(text: &str) -> Vec<&str> {
 /// The Devanagari letters, built once; aksharas are composed from them on
 /// demand.
 pub struct Devanagari {
-    letters: FxHashMap<char, Letter>,
-    ligatures: FxHashMap<(char, char), Letter>,
+    /// Every accepted form of each letter, the taught form first.
+    letters: FxHashMap<char, Vec<Letter>>,
+    ligatures: FxHashMap<(char, char), Vec<Letter>>,
 }
 
 impl Default for Devanagari {
     fn default() -> Self {
-        let mut letters: FxHashMap<char, Letter> = letters().into_iter().collect();
+        let mut letters = group(letters());
         for (c, base, x, y) in NUKTA_LETTERS {
-            let letter = letters[&base].clone().nukta(x, y);
-            assert!(letters.insert(c, letter).is_none());
+            let forms = letters[&base].iter().map(|l| l.clone().nukta(x, y)).collect();
+            assert!(letters.insert(c, forms).is_none());
         }
-        let mut ligatures: FxHashMap<(char, char), Letter> = ligatures().into_iter().collect();
+        let mut ligatures: FxHashMap<(char, char), Vec<Letter>> = ligatures().into_iter().map(|(pair, l)| (pair, vec![l])).collect();
         for (top, bottom) in STACKS {
-            let letter = stack(&letters[&top], &letters[&bottom]);
-            assert!(ligatures.insert((top, bottom), letter).is_none());
+            let forms = letters[&top].iter().flat_map(|t| letters[&bottom].iter().map(|b| stack(t, b))).collect();
+            assert!(ligatures.insert((top, bottom), forms).is_none());
         }
         Devanagari { letters, ligatures }
     }
@@ -182,7 +205,10 @@ impl Default for Devanagari {
 
 /// Nukta letters: the base letter, then the dot below (added once the
 /// letter, headline included, is complete).
-const NUKTA_LETTERS: [(char, char, i32, i32); 8] = [
+const NUKTA_LETTERS: [(char, char, i32, i32); 11] = [
+    ('\u{929}', 'न', 220, 800), // ऩ
+    ('\u{931}', 'र', 150, 800), // ऱ
+    ('\u{934}', 'ळ', 400, 800), // ऴ
     ('\u{958}', 'क', 150, 800), // क़
     ('\u{959}', 'ख', 120, 800), // ख़
     ('\u{95a}', 'ग', 160, 800), // ग़
@@ -197,7 +223,15 @@ const NUKTA_LETTERS: [(char, char, i32, i32); 8] = [
 const STACKS: [(char, char); 4] = [('ट', 'ट'), ('ट', 'ठ'), ('ड', 'ड'), ('ड', 'ढ')];
 
 /// One consonant, ligature or stack of a cluster, or the base of any other
-/// akshara.
+/// akshara, with every form it may be written in.
+struct Slot<'a> {
+    forms: &'a [Letter],
+    consonant: Option<char>,
+    /// The next consonant follows a virama + ZWNJ.
+    before_zwnj: bool,
+}
+
+/// A slot written in one of its forms.
 struct Part<'a> {
     letter: &'a Letter,
     /// The plain consonant, for the shapes that depend on it (रु, द्र).
@@ -208,27 +242,30 @@ struct Part<'a> {
 }
 
 impl Devanagari {
-    /// The strokes of one unit from [`segment`], or `None` if it is not a
-    /// Devanagari akshara this pack can draw. ZWJ is ignored; ZWNJ after a
-    /// virama keeps the virama visible.
-    pub fn glyph(&self, unit: &str) -> Option<StrokeGlyph> {
-        let (strokes, fit) = self.draw(unit)?;
-        Some(glyph(StrokeStandard::Devanagari, strokes, |p| fit.to_box(p)))
+    /// Every accepted form of one unit from [`segment`], the taught form
+    /// first; empty if it is not a Devanagari akshara this pack can draw.
+    /// ZWJ is ignored; ZWNJ after a virama keeps the virama visible.
+    pub fn glyphs(&self, unit: &str) -> Vec<StrokeGlyph> {
+        let forms = self.draw(unit).unwrap_or_default();
+        forms.into_iter().map(|(strokes, fit)| glyph(StrokeStandard::Devanagari, strokes, |p| fit.to_box(p))).collect()
     }
 
-    /// The unit's strokes in design units, and where they go in the box.
-    fn draw(&self, unit: &str) -> Option<(Strokes, Fit)> {
+    /// Each form of the unit in design units, and where it goes in the box.
+    /// An akshara's forms are every combination of its letters' forms, the
+    /// first letter's choice varying slowest; the first is all taught forms.
+    fn draw(&self, unit: &str) -> Option<Vec<(Strokes, Fit)>> {
         let chars: Vec<char> = unit.chars().filter(|&c| c != ZWJ).collect();
         if let [c] = chars[..]
             && let Some((pre, head, post)) = mark(c, &Frame::NOTIONAL_PA)
         {
             let strokes = strokes![..pre, ..head.map(|(a, b)| vec![(a, 150.0), (b, 150.0)]), ..post];
-            return Some((strokes, Fit::MARK));
+            return Some(vec![(strokes, Fit::MARK)]);
         }
         let mut chars = chars.into_iter().peekable();
         let first = chars.next()?;
-        let mut parts = Vec::new();
+        let mut slots = Vec::new();
         let mut reph = false;
+        let mut rakar = false;
         if is_consonant(first) {
             // (consonant, preceded by virama + ZWNJ)
             let mut cluster = vec![(with_nukta(first, &mut chars)?, false)];
@@ -251,7 +288,7 @@ impl Devanagari {
                 cluster.remove(0);
             }
             let n = cluster.len();
-            let rakar = n > 1 && cluster[n - 1] == ('र', false) && !self.ligatures.contains_key(&(cluster[n - 2].0, 'र'));
+            rakar = n > 1 && cluster[n - 1] == ('र', false) && !self.ligatures.contains_key(&(cluster[n - 2].0, 'र'));
             if rakar {
                 cluster.pop();
             }
@@ -259,27 +296,38 @@ impl Devanagari {
             while i < cluster.len() {
                 let (c, _) = cluster[i];
                 let ligature = cluster.get(i + 1).filter(|next| !next.1).and_then(|next| self.ligatures.get(&(c, next.0)));
-                let letter = match ligature {
+                let forms = match ligature {
                     Some(l) => l,
                     None => self.letters.get(&c)?,
                 };
                 i += if ligature.is_some() { 2 } else { 1 };
-                let next_zwnj = cluster.get(i).is_some_and(|next| next.1);
-                parts.push(Part {
-                    letter,
-                    consonant: ligature.is_none().then_some(c),
-                    virama: i < cluster.len() && (letter.stem.is_none() || next_zwnj),
-                    rakar: false,
-                });
+                slots.push(Slot { forms, consonant: ligature.is_none().then_some(c), before_zwnj: cluster.get(i).is_some_and(|next| next.1) });
             }
-            parts.last_mut().unwrap().rakar = rakar;
         } else {
-            parts.push(Part { letter: self.letters.get(&first)?, consonant: None, virama: false, rakar: false });
+            slots.push(Slot { forms: self.letters.get(&first)?, consonant: None, before_zwnj: false });
         }
         let marks: Vec<char> = chars.filter(|&c| c != ZWNJ).collect();
-        let strokes = compose(&parts, reph, &marks)?;
-        let fit = Fit::new(&strokes);
-        Some((strokes, fit))
+        let choices = slots.iter().fold(vec![vec![]], |choices: Vec<Vec<usize>>, slot| {
+            choices.into_iter().flat_map(|choice| (0..slot.forms.len()).map(move |k| [choice.as_slice(), &[k]].concat())).collect()
+        });
+        choices
+            .into_iter()
+            .map(|choice| {
+                let parts: Vec<Part> = slots
+                    .iter()
+                    .zip(choice)
+                    .enumerate()
+                    .map(|(i, (slot, k))| {
+                        let letter = &slot.forms[k];
+                        let last = i + 1 == slots.len();
+                        Part { letter, consonant: slot.consonant, virama: !last && (letter.stem.is_none() || slot.before_zwnj), rakar: last && rakar }
+                    })
+                    .collect();
+                let strokes = compose(&parts, reph, &marks)?;
+                let fit = Fit::new(&strokes);
+                Some((strokes, fit))
+            })
+            .collect()
     }
 
     /// Every single-character unit this pack draws: letters and marks.
@@ -670,6 +718,31 @@ fn a_body() -> Strokes {
     ]
 }
 
+/// An अ-family letter with its headline over the whole letter instead of
+/// only the stem: the "3" and connector (the first two strokes) squeezed
+/// down from the headline, their foot kept.
+fn full_head(l: Letter) -> Letter {
+    let mut body = l.body;
+    for p in body[..2].iter_mut().flatten() {
+        p.1 = 690.0 - (690.0 - p.1) * (690.0 - 190.0) / (690.0 - 120.0);
+    }
+    Letter { body, head: l.head.map(|(_, x1)| (0.0, x1)), ..l }
+}
+
+/// The right-hand bowl of ख, from its top end round to the stem.
+fn kha_bowl() -> Vec<Pt> {
+    curve(&[(610, 300), (520, 285), (430, 300), (385, 370), (400, 440), (470, 470), (580, 450), (686, 400)])
+}
+
+/// छ without its headline: upper loop, lower bowl curling in, the stub.
+fn chha_body() -> Strokes {
+    vec![
+        curve(&[(290, 272), (200, 262), (130, 292), (115, 352), (160, 420), (230, 465), (300, 478)]),
+        curve(&[(200, 480), (140, 530), (120, 610), (170, 690), (290, 725), (430, 700), (560, 620), (625, 500), (620, 390), (570, 320), (495, 300), (440, 330), (425, 400), (460, 470), (515, 505)]),
+        line(&[(494, HEADLINE), (494, 300)]),
+    ]
+}
+
 /// इ without its headline: short stem, bar, S, loop and tail in one stroke.
 fn i_body() -> Vec<Pt> {
     join([
@@ -724,11 +797,21 @@ fn knob_bar(x: i32, y: i32, bar_to: i32) -> Vec<Pt> {
 
 // --- letters (design units) ------------------------------------------------
 
+/// Every letter in writing order; a letter listed again right after itself
+/// is an accepted alternative form (see the module docs).
 fn letters() -> Vec<(char, Letter)> {
+    // अ and the vowels built on it, which share its headline.
+    let a = letter(a_body()).stem(632).head(520, 776);
+    let aa = letter(strokes![..a_body(), stem(632)]).stem(890).head(520, 1030);
+    let o = aa.clone().tail(strokes![curve(&[(720, 50), (785, 30), (840, 65), (875, 110), (890, 150)])]);
+    let au = aa.clone().tail(strokes![curve(&[(700, 105), (760, 88), (815, 108), (855, 150)]), curve(&[(720, 45), (790, 25), (850, 65), (890, 150)])]);
+    let candra_o = aa.clone().tail(strokes![chandra(775, 30, 110, 95)]);
     vec![
         // Independent vowels
-        ('अ', letter(a_body()).stem(632).head(520, 776)),
-        ('आ', letter(strokes![..a_body(), stem(632)]).stem(890).head(520, 1030)),
+        ('अ', a.clone()),
+        ('अ', full_head(a)),
+        ('आ', aa.clone()),
+        ('आ', full_head(aa)),
         ('इ', letter(strokes![i_body()]).head(0, 505)),
         ('ई', letter(strokes![i_body(), curve(&[(380, 150), (348, 95), (365, 45), (420, 22), (470, 38), (490, 75)])]).head(0, 505)),
         ('उ', letter(strokes![u_body()]).head(0, 560)),
@@ -742,18 +825,23 @@ fn letters() -> Vec<(char, Letter)> {
             .head(0, 863)),
         ('ए', letter(e_body()).head(0, 568)),
         ('ऐ', letter(strokes![..e_body(), curve(&[(200, 45), (270, 25), (345, 55), (400, 110), (425, 150)])]).head(0, 568)),
-        ('ओ', letter(strokes![..a_body(), stem(632)]).stem(890).tail(strokes![curve(&[(720, 50), (785, 30), (840, 65), (875, 110), (890, 150)])]).head(520, 1030)),
-        ('औ', letter(strokes![..a_body(), stem(632)])
-            .stem(890)
-            .tail(strokes![curve(&[(700, 105), (760, 88), (815, 108), (855, 150)]), curve(&[(720, 45), (790, 25), (850, 65), (890, 150)])])
-            .head(520, 1030)),
-        ('ऑ', letter(strokes![..a_body(), stem(632)]).stem(890).tail(strokes![chandra(775, 30, 110, 95)]).head(520, 1030)),
+        ('ओ', o.clone()),
+        ('ओ', full_head(o)),
+        ('औ', au.clone()),
+        ('औ', full_head(au)),
+        ('ऑ', candra_o.clone()),
+        ('ऑ', full_head(candra_o)),
         // Consonants
         ('क', letter(strokes![curve(&[(345, 282), (245, 270), (150, 300), (100, 380), (110, 470), (170, 545), (250, 585), (330, 560), (418, 500)])])
             .stem(418).tail(strokes![ka_hook(418)]).head(0, 783).half_stem(520)),
         ('ख', letter(strokes![
             curve(&[(255, 150), (275, 240), (245, 320), (170, 380), (100, 400), (65, 435), (80, 490), (140, 580), (240, 665), (380, 715), (530, 700), (686, 620)]),
-            curve(&[(610, 300), (520, 285), (430, 300), (385, 370), (400, 440), (470, 470), (580, 450), (686, 400)]),
+            kha_bowl(),
+        ]).stem(686).head(0, 830)),
+        // The left part closed into a loop where it turns, as many hands write it.
+        ('ख', letter(strokes![
+            curve(&[(255, 150), (275, 240), (250, 330), (190, 390), (120, 405), (70, 370), (62, 318), (100, 295), (145, 325), (165, 395), (205, 490), (280, 590), (390, 660), (530, 665), (686, 600)]),
+            kha_bowl(),
         ]).stem(686).head(0, 830)),
         ('ग', letter(strokes![join([line(&[(168, HEADLINE), (168, 500)]), curve(&[(168, 500), (158, 550), (115, 560), (78, 520), (82, 462), (125, 440), (165, 465)])])]).stem(435).head(0, 577)),
         ('घ', letter(strokes![
@@ -765,13 +853,17 @@ fn letters() -> Vec<(char, Letter)> {
             line(&[(40, 325), (390, 325)]),
             curve(&[(230, 330), (160, 390), (140, 470), (180, 550), (270, 595), (380, 570), (503, 480)]),
         ]).stem(503).head(0, 647)),
-        ('छ', letter(strokes![
-            curve(&[(290, 272), (200, 262), (130, 292), (115, 352), (160, 420), (230, 465), (300, 478)]),
-            curve(&[(200, 480), (140, 530), (120, 610), (170, 690), (290, 725), (430, 700), (560, 620), (625, 500), (620, 390), (570, 320), (495, 300), (440, 330), (425, 400), (460, 470), (515, 505)]),
-            line(&[(494, HEADLINE), (494, 300)]),
-        ]).head(0, 713)),
+        ('छ', letter(chha_body()).head(0, 713)),
+        // The headline only over the right bowl, leaving the upper loop open above.
+        ('छ', letter(chha_body()).head(380, 713)),
         ('ज', letter(strokes![join([curve(&[(60, 330), (110, 450), (180, 580), (290, 640), (400, 615), (445, 530), (420, 440), (365, 375)]), line(&[(365, 375), (611, 375)])])]).stem(611).head(0, 755)),
         ('झ', letter(strokes![i_body(), curve(&[(330, 475), (420, 492), (520, 488), (625, 470)])]).stem(625).head(0, 771)),
+        // The older (Uttara) झ: a hooked left stroke and its bar to the stem,
+        // then a hook hanging right of the stem like क's.
+        ('झ', letter(strokes![
+            curve(&[(110, HEADLINE), (160, 250), (172, 360), (150, 450), (105, 510), (60, 535)]),
+            line(&[(130, 495), (440, 495)]),
+        ]).stem(440).tail(strokes![curve(&[(440, 420), (530, 405), (600, 450), (615, 540), (580, 630), (505, 690)])]).head(0, 640)),
         ('ञ', letter(strokes![
             join([curve(&[(195, 325), (270, 295), (360, 300), (435, 345), (478, 440)]), curve(&[(478, 440), (440, 535), (340, 610), (220, 600), (130, 510), (40, 390)])]),
             line(&[(478, 450), (612, 450)]),
@@ -813,6 +905,12 @@ fn letters() -> Vec<(char, Letter)> {
             curve(&[(270, 725), (170, 650), (90, 560), (80, 450), (125, 360), (210, 325), (285, 350), (320, 420), (325, 520)]),
             curve(&[(325, 520), (360, 420), (410, 350), (470, 320), (548, 320)]),
         ])]).stem(548).head(0, 692)),
+        // ळ (Marathi): a stub down from the headline into a figure-eight lying
+        // on its side, round the left loop first; stemless, like ठ.
+        ('ळ', letter(strokes![join([
+            line(&[(518, HEADLINE), (518, 345)]),
+            curve(&[(518, 345), (460, 360), (420, 420), (400, 505), (380, 590), (340, 645), (300, 660), (255, 635), (232, 575), (232, 440), (255, 375), (300, 348), (345, 360), (380, 420), (400, 505), (420, 590), (460, 645), (505, 660), (550, 640), (578, 580), (580, 440), (555, 370), (505, 345)]),
+        ])]).head(0, 775)),
         ('व', letter(strokes![va_loop(424)]).stem(424).head(0, 568)),
         ('श', letter(strokes![curve(&[(250, 340), (140, 310), (85, 250), (110, 185), (200, 160), (300, 175), (360, 240), (355, 330), (300, 410), (200, 460), (110, 480), (65, 520), (90, 565), (150, 565), (220, 630), (330, 735)])]).stem(550).head(40, 695)),
         ('ष', letter(strokes![
@@ -949,10 +1047,50 @@ mod tests {
     fn atomic_units_draw() {
         let d = Devanagari::default();
         let units = d.atomic_units();
-        assert!(units.len() >= 82, "{}", units.len());
+        assert!(units.len() >= 86, "{}", units.len());
         for c in units {
-            let g = d.glyph(&c.to_string()).unwrap_or_else(|| panic!("{c}"));
-            validate(&g).unwrap_or_else(|e| panic!("{c}: {e}"));
+            let forms = d.glyphs(&c.to_string());
+            assert!(!forms.is_empty(), "{c}");
+            for g in forms {
+                validate(&g).unwrap_or_else(|e| panic!("{c}: {e}"));
+            }
+        }
+    }
+
+    #[test]
+    fn variant_counts() {
+        let d = Devanagari::default();
+        for (unit, forms) in [
+            ("अ", 2),
+            ("ओ", 2),
+            ("क", 1),
+            ("ख", 2),
+            ("ख़", 2),
+            ("ळ", 1),
+            ("ऴ", 1),
+            ("ळ\u{93c}", 1),
+            ("न\u{93c}", 1),
+            ("क्ळ", 1),
+            ("ळी", 1),
+            // two letters with two forms each
+            ("ख्झ", 4),
+            ("ख्य", 2),
+        ] {
+            assert_eq!(d.glyphs(unit).len(), forms, "{unit}");
+        }
+        // Decomposed nukta is the precomposed letter, in clusters too.
+        assert_eq!(d.glyphs("ळ\u{93c}"), d.glyphs("\u{934}"));
+        assert_eq!(d.glyphs("क्ळ\u{93c}"), d.glyphs("क्\u{934}"));
+        // The product is ordered: the first letter's choice varies slowest,
+        // and index 0 is every letter's taught form.
+        // Half ख (2 strokes), झ (3, or 4 with the old form's hook), headline.
+        let product = d.glyphs("ख्झ");
+        assert_eq!(product.iter().map(|g| g.strokes.len()).collect::<Vec<_>>(), [6, 7, 6, 7]);
+        assert_ne!(product[0], product[2]);
+        for unit in ["क्ळ", "ळी", "ऴ", "ऩ", "ऱ", "ऩ्य", "ऱ्य", "ळ्य", "र्ळ", "ळ्र"] {
+            for g in d.glyphs(unit) {
+                validate(&g).unwrap_or_else(|e| panic!("{unit}: {e}"));
+            }
         }
     }
 
@@ -964,13 +1102,16 @@ mod tests {
             ह्म ट्ठ ड्ड ड्ढ ड्र फ़्र स्त्र ष्ट्र र्त्त र्र द्द द्भ ट्स ह्न क्\u{200c}ष";
         let d = Devanagari::default();
         for c in clusters.split_whitespace() {
-            let g = d.glyph(c).unwrap_or_else(|| panic!("{c}"));
-            validate(&g).unwrap_or_else(|e| panic!("{c}: {e}"));
+            let forms = d.glyphs(c);
+            assert!(!forms.is_empty(), "{c}");
+            for g in forms {
+                validate(&g).unwrap_or_else(|e| panic!("{c}: {e}"));
+            }
         }
         // Decomposed nukta is the precomposed letter.
-        assert_eq!(d.glyph("ज\u{93c}्य"), d.glyph("\u{95b}्य"));
-        assert_eq!(d.glyph("x"), None);
-        assert_eq!(d.glyph("कऽ"), None);
+        assert_eq!(d.glyphs("ज\u{93c}्य"), d.glyphs("\u{95b}्य"));
+        assert!(d.glyphs("x").is_empty());
+        assert!(d.glyphs("कऽ").is_empty());
     }
 
     #[test]
@@ -988,7 +1129,7 @@ mod tests {
             // ज्ञ (bar, S, stem), ा stem, headline
             ("ज्ञा", 5),
         ] {
-            assert_eq!(d.glyph(unit).unwrap().strokes.len(), strokes, "{unit}");
+            assert_eq!(d.glyphs(unit)[0].strokes.len(), strokes, "{unit}");
         }
     }
 }

@@ -7,6 +7,26 @@
 //! composed from their Unicode decomposition: base letter first, then the
 //! marks, the way a learner dots an i.
 //!
+//! Accepted alternatives (index 0 is always the ball-and-stick form above),
+//! drawn in the same frame after the common print and typographic forms:
+//! - a: double-storey, one stroke (hook, down the stem, round the bowl back
+//!   to the stem, push up and pull down the stem);
+//! - g: double-storey (the bowl, then the stem into the closed lower loop);
+//! - y: curved tail, one stroke (a u whose right stem runs into g's tail);
+//! - t: stem curving right at the foot, then the crossbar;
+//! - k, K: three strokes (stem, arm, leg from the middle of the arm);
+//! - M: stem, V, stem as three strokes; and one zigzag up from the left foot;
+//! - N: stem, diagonal, stem as three strokes; and one zigzag up from the
+//!   left foot;
+//! - I: the bare stem; J: with a top bar; z, Z, 7: with a crossbar;
+//! - Q: a tail hanging below the circle;
+//! - ß: one stroke from the baseline, up the stem and down through the bumps;
+//! - 1: the bare stroke, and flag and foot;
+//! - 4: open top, the down stroke and bar apart from the stem.
+//!
+//! Accented letters take every form of their base (à has both a's, ÿ both
+//! y's); ª and º keep the taught form.
+//!
 //! Frame (1000 em, y down): ascender 150, capitals and digits 190..850 (a
 //! little below the ascender to leave room for accents), x-height 450,
 //! baseline 850, descender 975. Arc angles are in degrees,
@@ -14,7 +34,7 @@
 //! increasing angles draw a counterclockwise ("circle back") curve and
 //! decreasing ones a clockwise ("circle forward") curve.
 use super::{Coord, Pt, collect, dist, glyph, pt};
-use crate::{Glyphs, StrokeStandard};
+use crate::{Forms, StrokeStandard};
 use unicode_normalization::UnicodeNormalization;
 
 const ASC: i32 = 150;
@@ -27,12 +47,14 @@ const X_MID: i32 = (X + BASE) / 2; // 650
 
 const ACCENTED: &str = "àáâäãåçèéêëìíîïñòóôöõùúûüÿÀÁÂÄÃÅÇÈÉÊËÌÍÎÏÑÒÓÔÖÕÙÚÛÜŸ";
 
-pub fn glyphs() -> Glyphs {
+pub fn glyphs() -> Forms {
     let bases = BASES
         .iter()
         .filter(|(c, _)| *c != 'ı')
         .map(|&(c, draw)| (c, draw()));
-    let accented = ACCENTED.chars().map(|c| (c, compose(c)));
+    let accented = ACCENTED
+        .chars()
+        .flat_map(|c| compose(c).into_iter().map(move |form| (c, form)));
     collect(bases.chain(accented).map(|(c, strokes)| {
         let strokes = strokes.into_iter().map(|pen| pen.0).collect();
         (c, glyph(StrokeStandard::Latin, strokes, |p| p))
@@ -141,11 +163,21 @@ fn ordinal(c: char) -> Vec<Pen> {
     small.chain([line([(395, 460), (605, 460)])]).collect()
 }
 
-fn base(c: char) -> Vec<Pen> {
-    BASES.iter().find(|(b, _)| *b == c).unwrap().1()
+/// Every accepted form of a letter in [`BASES`], the taught one first.
+fn forms(c: char) -> impl Iterator<Item = Vec<Pen>> {
+    BASES
+        .iter()
+        .filter(move |(b, _)| *b == c)
+        .map(|(_, draw)| draw())
 }
 
-/// Every letter drawn directly, in writing order.
+/// The taught form of a letter in [`BASES`].
+fn base(c: char) -> Vec<Pen> {
+    forms(c).next().unwrap()
+}
+
+/// Every letter drawn directly, in writing order. A letter listed again right
+/// after itself is an accepted alternative form (see the module docs).
 ///
 /// Capitals: stems first, bars top to bottom, round letters start at 2 o'clock
 /// (O and Q at 12 o'clock, as taught for the capital circle).
@@ -219,6 +251,7 @@ const BASES: &[(char, Draw)] = &[
             line([(370, BASE), (630, BASE)]),
         ]
     }),
+    ('I', || vec![line([(500, CAP), (500, BASE)])]),
     ('J', || {
         vec![
             Pen::at((640, CAP))
@@ -226,10 +259,23 @@ const BASES: &[(char, Draw)] = &[
                 .arc(470, 680, 170, 170, 0, -175),
         ]
     }),
+    ('J', || {
+        let mut j = base('J');
+        j.push(line([(480, CAP), (780, CAP)]));
+        j
+    }),
     ('K', || {
         vec![
             line([(300, CAP), (300, BASE)]),
             line([(700, CAP), (305, 570), (710, BASE)]),
+        ]
+    }),
+    // Stem, arm, then the leg from the middle of the arm.
+    ('K', || {
+        vec![
+            line([(300, CAP), (300, BASE)]),
+            line([(700, CAP), (305, 570)]),
+            line([(440, 440), (710, BASE)]),
         ]
     }),
     ('L', || vec![line([(310, CAP), (310, BASE), (680, BASE)])]),
@@ -239,11 +285,39 @@ const BASES: &[(char, Draw)] = &[
             line([(240, CAP), (500, BASE), (760, CAP), (760, BASE)]),
         ]
     }),
+    ('M', || {
+        vec![
+            line([(240, CAP), (240, BASE)]),
+            line([(240, CAP), (500, BASE), (760, CAP)]),
+            line([(760, CAP), (760, BASE)]),
+        ]
+    }),
+    // One zigzag, up from the foot of the left stem.
+    ('M', || {
+        vec![line([
+            (240, BASE),
+            (240, CAP),
+            (500, BASE),
+            (760, CAP),
+            (760, BASE),
+        ])]
+    }),
     ('N', || {
         vec![
             line([(280, CAP), (280, BASE)]),
             line([(280, CAP), (720, BASE), (720, CAP)]),
         ]
+    }),
+    ('N', || {
+        vec![
+            line([(280, CAP), (280, BASE)]),
+            line([(280, CAP), (720, BASE)]),
+            line([(720, CAP), (720, BASE)]),
+        ]
+    }),
+    // One zigzag, up from the foot of the left stem.
+    ('N', || {
+        vec![line([(280, BASE), (280, CAP), (720, BASE), (720, CAP)])]
     }),
     ('O', || {
         vec![Pen::new().arc(500, CAP_MID, 280, 330, 90, 450)]
@@ -261,6 +335,13 @@ const BASES: &[(char, Draw)] = &[
         vec![
             Pen::new().arc(500, CAP_MID, 280, 330, 90, 450),
             line([(590, 720), (770, 900)]),
+        ]
+    }),
+    // A tail hanging below the circle.
+    ('Q', || {
+        vec![
+            Pen::new().arc(500, CAP_MID, 280, 330, 90, 450),
+            Pen::at((470, 820)).curve([(560, 900), (660, 945), (770, 945)]),
         ]
     }),
     ('R', || {
@@ -325,7 +406,32 @@ const BASES: &[(char, Draw)] = &[
     ('Z', || {
         vec![line([(290, CAP), (710, CAP), (290, BASE), (710, BASE)])]
     }),
+    ('Z', || {
+        let mut z = base('Z');
+        z.push(line([(380, CAP_MID), (620, CAP_MID)]));
+        z
+    }),
     ('a', || vec![ball(480, 170).line([(650, X), (650, BASE)])]),
+    // Double-storey a, one stroke: the hook over the top, down the stem to
+    // the bowl, round the bowl back to the stem, push up the stem and pull
+    // down to the baseline.
+    ('a', || {
+        vec![
+            Pen::new()
+                .arc(500, 575, 145, 120, 150, 0)
+                .line([(645, 635)])
+                .curve([
+                    (520, 625),
+                    (395, 650),
+                    (345, 740),
+                    (385, 825),
+                    (495, 852),
+                    (595, 832),
+                    (645, 790),
+                ])
+                .line([(645, 635), (645, BASE)]),
+        ]
+    }),
     ('b', || {
         vec![
             Pen::at((330, ASC))
@@ -359,6 +465,23 @@ const BASES: &[(char, Draw)] = &[
                 .arc(495, 880, 155, 95, 0, -170),
         ]
     }),
+    // Double-storey g: the bowl, then from its foot the stem down into the
+    // lower loop, round and closed.
+    ('g', || {
+        vec![
+            Pen::new().arc(490, 575, 140, 125, 30, 390),
+            Pen::at((450, 700)).line([(410, 760)]).curve([
+                (560, 760),
+                (660, 800),
+                (680, 880),
+                (600, 955),
+                (460, 965),
+                (340, 925),
+                (330, 850),
+                (410, 760),
+            ]),
+        ]
+    }),
     ('h', || {
         vec![hump(Pen::at((330, ASC)).line([(330, BASE)]), 330, 670)]
     }),
@@ -379,6 +502,14 @@ const BASES: &[(char, Draw)] = &[
         vec![
             line([(330, ASC), (330, BASE)]),
             line([(640, X), (335, 670), (660, BASE)]),
+        ]
+    }),
+    // Stem, arm, then the leg from the middle of the arm.
+    ('k', || {
+        vec![
+            line([(330, ASC), (330, BASE)]),
+            line([(640, X), (335, 670)]),
+            line([(470, 585), (660, BASE)]),
         ]
     }),
     ('l', || vec![line([(500, ASC), (500, BASE)])]),
@@ -423,6 +554,15 @@ const BASES: &[(char, Draw)] = &[
     ('t', || {
         vec![line([(490, 230), (490, BASE)]), line([(370, X), (620, X)])]
     }),
+    // The stem curves right at the foot, then the crossbar.
+    ('t', || {
+        vec![
+            Pen::at((490, 230))
+                .line([(490, 770)])
+                .arc(570, 770, 80, 80, 180, 300),
+            line([(370, X), (620, X)]),
+        ]
+    }),
     ('u', || {
         vec![
             Pen::at((330, X))
@@ -447,8 +587,23 @@ const BASES: &[(char, Draw)] = &[
     ('y', || {
         vec![line([(320, X), (500, BASE)]), line([(680, X), (445, DESC)])]
     }),
+    // Curved-tail y, one stroke: a u whose right stem runs on into g's tail.
+    ('y', || {
+        vec![
+            Pen::at((330, X))
+                .line([(330, 680)])
+                .arc(500, 680, 170, 170, 180, 360)
+                .line([(670, X), (670, 880)])
+                .arc(515, 880, 155, 95, 0, -170),
+        ]
+    }),
     ('z', || {
         vec![line([(330, X), (670, X), (330, BASE), (670, BASE)])]
+    }),
+    ('z', || {
+        let mut z = base('z');
+        z.push(line([(410, X_MID), (590, X_MID)]));
+        z
     }),
     // Letters without a decomposition.
     ('Æ', || {
@@ -503,6 +658,23 @@ const BASES: &[(char, Draw)] = &[
         ]);
         vec![line([(330, 310), (330, BASE)]), bumps]
     }),
+    // One stroke from the baseline: up the stem, over, down through the bumps.
+    ('ß', || {
+        vec![
+            Pen::at((330, BASE))
+                .line([(330, 310)])
+                .arc(465, 310, 135, 160, 180, 0)
+                .curve([
+                    (570, 410),
+                    (490, 470),
+                    (610, 510),
+                    (675, 620),
+                    (665, 760),
+                    (575, 845),
+                    (450, 845),
+                ]),
+        ]
+    }),
     ('ẞ', || {
         let bowl = Pen::at((320, CAP)).line([(680, CAP), (490, 470)]).curve([
             (630, 500),
@@ -519,6 +691,12 @@ const BASES: &[(char, Draw)] = &[
         vec![Pen::new().arc(500, CAP_MID, 200, 330, 90, 450)]
     }),
     ('1', || vec![line([(390, 310), (540, CAP), (540, BASE)])]),
+    ('1', || vec![line([(500, CAP), (500, BASE)])]),
+    ('1', || {
+        let mut one = base('1');
+        one.push(line([(400, BASE), (680, BASE)]));
+        one
+    }),
     ('2', || {
         vec![
             Pen::at((330, 320))
@@ -561,6 +739,13 @@ const BASES: &[(char, Draw)] = &[
             line([(590, CAP), (590, BASE)]),
         ]
     }),
+    // Open top: the down stroke and bar, then the stem apart from it.
+    ('4', || {
+        vec![
+            line([(360, CAP), (300, 650), (720, 650)]),
+            line([(600, CAP), (600, BASE)]),
+        ]
+    }),
     ('5', || {
         let bowl = Pen::at((365, CAP)).line([(345, 480)]).curve([
             (460, 440),
@@ -592,6 +777,11 @@ const BASES: &[(char, Draw)] = &[
         ])]
     }),
     ('7', || vec![line([(310, CAP), (690, CAP), (430, BASE)])]),
+    ('7', || {
+        let mut seven = base('7');
+        seven.push(line([(440, CAP_MID), (680, CAP_MID)]));
+        seven
+    }),
     ('8', || {
         vec![Pen::at((640, 280)).curve([
             (560, 198),
@@ -664,12 +854,19 @@ fn cedilla(x: f64, top: f64) -> Vec<Pen> {
     ]
 }
 
-/// Base letter first, then its marks. Marks above sit in a band above cap
-/// height for capitals and above the x-height for lowercase.
-fn compose(c: char) -> Vec<Pen> {
+/// Base letter first, then its marks, once for every form of the base letter.
+/// Marks above sit in a band above cap height for capitals and above the
+/// x-height for lowercase.
+fn compose(c: char) -> Vec<Vec<Pen>> {
     let mut chars = c.nfd();
     let letter = chars.next().unwrap();
-    let mut strokes = base(if letter == 'i' { 'ı' } else { letter });
+    let marks: Vec<char> = chars.collect();
+    forms(if letter == 'i' { 'ı' } else { letter })
+        .map(|strokes| add_marks(c, letter, strokes, &marks))
+        .collect()
+}
+
+fn add_marks(c: char, letter: char, mut strokes: Vec<Pen>, marks: &[char]) -> Vec<Pen> {
     let pts: Vec<Pt> = strokes.iter().flat_map(|pen| pen.0.clone()).collect();
     let xs = pts.iter().map(|p| p.0);
     let centre =
@@ -679,7 +876,7 @@ fn compose(c: char) -> Vec<Pen> {
     } else {
         (275.0, 385.0)
     };
-    for mark in chars {
+    for &mark in marks {
         strokes.extend(match mark {
             '\u{300}' => grave(centre, top, bottom),
             '\u{301}' => acute(centre, top, bottom),
