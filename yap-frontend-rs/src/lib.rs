@@ -23,6 +23,8 @@ pub use learning_metadata::{
 };
 mod next_cards;
 mod notifications;
+pub mod onboarding;
+pub use onboarding::*;
 mod restrictions;
 pub use restrictions::{ChallengeRestrictions, get_challenge_restrictions};
 pub mod opfs_test;
