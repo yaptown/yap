@@ -53,6 +53,13 @@ two-storey Cyrillic а, the full-headline अ and the older Uttara झ), drawn
 here in the same way, with the published glyph images named in the module
 docs as references only; composed letters and aksharas take every
 combination of their letters' forms.
+The Latin pack's cursive-derived print alternatives (looped ascenders, entry
+strokes and exit tails, the French p, ʒ-like z, retraced-stem capitals) were
+informed by the school handwriting models documented by Primarium
+(https://primarium.info/handwriting-models/, CC BY-SA 4.0): Écriture A and B,
+Méthode Dumont, Cuadernos Rubio and Santillana, Porto Editora, Letra
+Brasileira, Corsivo tradizionale and Italica. Their images were referenced
+only; no geometry was copied.
 Scribing's MIT English pack informed the Latin order but no geometry was copied. Noto
 fonts were used only as a visual check while drawing; no font outlines are
 redistributed. These packs are covered by the application's own license and

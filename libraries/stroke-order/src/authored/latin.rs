@@ -24,8 +24,37 @@
 //! - 1: the bare stroke, and flag and foot;
 //! - 4: open top, the down stroke and bar apart from the stem.
 //!
-//! Accented letters take every form of their base (à has both a's, ÿ both
-//! y's); ª and º keep the taught form.
+//! After those comes the cursive-derived print family, what writers schooled
+//! in France, Spain, Portugal, Italy and Latin America produce: the Lund
+//! University block-letter allograph study's "Lower-3" (one arc per letter,
+//! with connectors protruding from the ends) and "Upper-2" (the capital's
+//! stem drawn down and back up before the rest of the letter). The letters
+//! stay unjoined but keep their connectors:
+//! - entry strokes into i ı j m n r t u w y and exit tails out of a d h i l m
+//!   n t u; c e o v w start or end in a hook or knot;
+//! - looped ascenders drawn in one stroke on b d f h k l (b and d as in
+//!   a handwriting sample), looped descenders on f g j y and a looped q;
+//! - a from its flat top with a plain stem, and with the stem as a small
+//!   loop; the cursive loop e; k with a knot at the waist; the French p (the
+//!   stem from half-way up the ascender, the bowl open at the bottom); the
+//!   cursive r and s; x as two crossed arcs; z as ʒ and the italic z, with
+//!   and without a bar; f with a looped top and a straight stem and bar;
+//!   crossed q; the print r with an entry stroke;
+//! - capitals B D E F M N P R with the retraced stem, H and K retracing to
+//!   the bar or joint, A in one stroke from the lower left, L and Z with a
+//!   loop at the foot (Z also barred), and the hooked I, J, S and T.
+//!
+//! The family's references are the school handwriting models documented by
+//! Primarium (<https://primarium.info/handwriting-models/>, CC BY-SA 4.0):
+//! Écriture A and B and Méthode Dumont (France), Cuadernos Rubio and
+//! Santillana (Spain), Porto Editora (Portugal), Letra Brasileira (Brazil),
+//! Corsivo tradizionale and Italica (Italy); and Wikipedia's "Regional
+//! handwriting variation" for the French p, crossed q, looped k and the Z
+//! with a bottom loop. The geometry is drawn here; none is copied. Each
+//! form's comment names the models it follows.
+//!
+//! Accented letters take every form of their base (à has all four a's, ÿ all
+//! three y's); ª and º keep the taught form.
 //!
 //! Frame (1000 em, y down): ascender 150, capitals and digits 190..850 (a
 //! little below the ascender to leave room for accents), x-height 450,
@@ -151,6 +180,84 @@ fn hump(pen: Pen, left: i32, right: i32) -> Pen {
         .line([(right, BASE)])
 }
 
+/// The entry stroke of the cursive-derived forms: from low on the left up to
+/// the top of a stem at `(x, top)`.
+fn entry(x: i32, top: i32) -> Pen {
+    Pen::at((x - 130, top + 190)).curve([(x - 55, top + 80), (x, top)])
+}
+
+/// The rounded arch of the cursive-derived h, m and n: from the foot of the
+/// stem at `left` back up it, over, and down onto a leg at `right`, ending
+/// part-way down the leg.
+fn arch(pen: Pen, left: i32, right: i32) -> Pen {
+    pen.curve([
+        (left + 5, 640),
+        (left + 60, 490),
+        ((left + right) / 2, 455),
+        (right - 45, 490),
+        (right, 580),
+        (right, 660),
+    ])
+}
+
+/// Down a stem at `x` and out along the baseline in the exit tail.
+fn tail(pen: Pen, x: i32) -> Pen {
+    pen.line([(x, BASE - 70)])
+        .curve([(x + 25, BASE - 12), (x + 80, BASE), (x + 140, BASE - 40)])
+}
+
+/// A looped ascender in one stroke: up from the lower left across the stem
+/// line, up the right side of a narrow loop, over the top and down its left
+/// side, which is the stem at `x`. Ends on the stem at x-height.
+fn looped_ascender(x: i32) -> Pen {
+    Pen::at((x - 90, 820)).curve([
+        (x + 5, 650),
+        (x + 55, 450),
+        (x + 65, 280),
+        (x + 35, ASC + 5),
+        (x - 5, 200),
+        (x - 10, 330),
+        (x, X),
+    ])
+}
+
+/// A looped descender closing on the stem at `x` near the baseline: down the
+/// stem, round to the left and back up, then out to the right.
+fn looped_descender(pen: Pen, x: i32) -> Pen {
+    pen.line([(x, 915)]).curve([
+        (x - 25, 966),
+        (x - 80, 978),
+        (x - 130, 950),
+        (x - 135, 885),
+        (x - 85, 830),
+        (x, 805),
+        (x + 70, 790),
+        (x + 130, 760),
+    ])
+}
+
+/// The "Upper-2" capital: the stem drawn down and back up the same line, then
+/// on into the rest of the letter without lifting. `base(c)`'s second stroke
+/// must start at the top of its stem.
+fn retraced(c: char) -> Vec<Pen> {
+    let mut strokes = base(c).into_iter();
+    let (stem, rest) = (strokes.next().unwrap(), strokes.next().unwrap());
+    assert_eq!(
+        stem.0[0], rest.0[0],
+        "{c}: the stroke after the stem starts elsewhere"
+    );
+    let back = stem.0.iter().rev().skip(1).copied();
+    let merged = stem
+        .0
+        .iter()
+        .copied()
+        .chain(back)
+        .chain(rest.0.into_iter().skip(1));
+    std::iter::once(Pen(merged.collect()))
+        .chain(strokes)
+        .collect()
+}
+
 /// ª and º: a small raised letter over an underline.
 fn ordinal(c: char) -> Vec<Pen> {
     let small = base(c).into_iter().map(|pen| {
@@ -176,6 +283,11 @@ fn base(c: char) -> Vec<Pen> {
     forms(c).next().unwrap()
 }
 
+/// Form `n` of a letter in [`BASES`].
+fn form(c: char, n: usize) -> Vec<Pen> {
+    forms(c).nth(n).unwrap()
+}
+
 /// Every letter drawn directly, in writing order. A letter listed again right
 /// after itself is an accepted alternative form (see the module docs).
 ///
@@ -194,6 +306,17 @@ const BASES: &[(char, Draw)] = &[
             line([(345, 640), (655, 640)]),
         ]
     }),
+    // One stroke from the lower left: up, down the right leg, back up it to
+    // the bar and across (Lund "Upper-2" family; Écriture A, Cuadernos Rubio).
+    ('A', || {
+        vec![line([
+            (270, BASE),
+            (500, CAP),
+            (730, BASE),
+            (657, 640),
+            (343, 640),
+        ])]
+    }),
     ('B', || {
         let bumps = Pen::at((300, CAP))
             .line([(480, CAP)])
@@ -203,6 +326,8 @@ const BASES: &[(char, Draw)] = &[
             .line([(300, BASE)]);
         vec![line([(300, CAP), (300, BASE)]), bumps]
     }),
+    // The stem down and back up, then the bumps (Upper-2; Écriture A, Rubio).
+    ('B', || retraced('B')),
     ('C', || {
         vec![Pen::new().arc(520, CAP_MID, 250, 330, 45, 318)]
     }),
@@ -215,6 +340,8 @@ const BASES: &[(char, Draw)] = &[
                 .line([(300, BASE)]),
         ]
     }),
+    // The stem down and back up, then the bowl (Upper-2; Écriture A, Rubio).
+    ('D', || retraced('D')),
     ('E', || {
         vec![
             line([(310, CAP), (310, BASE)]),
@@ -223,6 +350,8 @@ const BASES: &[(char, Draw)] = &[
             line([(310, BASE), (690, BASE)]),
         ]
     }),
+    // The stem down and back up into the top bar (Upper-2; Écriture A, Rubio).
+    ('E', || retraced('E')),
     ('F', || {
         vec![
             line([(320, CAP), (320, BASE)]),
@@ -230,6 +359,8 @@ const BASES: &[(char, Draw)] = &[
             line([(320, CAP_MID), (640, CAP_MID)]),
         ]
     }),
+    // The stem down and back up into the top bar (Upper-2; Écriture A, Rubio).
+    ('F', || retraced('F')),
     ('G', || {
         vec![
             Pen::new()
@@ -244,6 +375,14 @@ const BASES: &[(char, Draw)] = &[
             line([(290, CAP_MID), (710, CAP_MID)]),
         ]
     }),
+    // The left stem down and back up to the bar, across, then the right stem
+    // (Upper-2; Écriture A, Rubio).
+    ('H', || {
+        vec![
+            line([(290, CAP), (290, BASE), (290, CAP_MID), (710, CAP_MID)]),
+            line([(710, CAP), (710, BASE)]),
+        ]
+    }),
     ('I', || {
         vec![
             line([(500, CAP), (500, BASE)]),
@@ -252,6 +391,20 @@ const BASES: &[(char, Draw)] = &[
         ]
     }),
     ('I', || vec![line([(500, CAP), (500, BASE)])]),
+    // One stroke: a hook into the top of the stem, down, and a curl to the
+    // left at the foot (Italica, Porto Editora).
+    ('I', || {
+        vec![Pen::at((330, 300)).curve([
+            (360, 215),
+            (450, CAP),
+            (510, 245),
+            (510, 500),
+            (500, 760),
+            (460, 840),
+            (380, 850),
+            (330, 800),
+        ])]
+    }),
     ('J', || {
         vec![
             Pen::at((640, CAP))
@@ -263,6 +416,16 @@ const BASES: &[(char, Draw)] = &[
         let mut j = base('J');
         j.push(line([(480, CAP), (780, CAP)]));
         j
+    }),
+    // One stroke: a hook into the top bar, then down the stem into the hook
+    // at the foot (Italica, Porto Editora).
+    ('J', || {
+        vec![
+            Pen::at((400, 280))
+                .curve([(410, 215), (470, CAP)])
+                .line([(640, CAP), (640, 680)])
+                .arc(470, 680, 170, 170, 0, -175),
+        ]
     }),
     ('K', || {
         vec![
@@ -278,7 +441,30 @@ const BASES: &[(char, Draw)] = &[
             line([(440, 440), (710, BASE)]),
         ]
     }),
+    // The stem down and back up to the joint, the leg, then the arm (Upper-2;
+    // Écriture A, Rubio).
+    ('K', || {
+        vec![
+            line([(300, CAP), (300, BASE), (300, 570), (710, BASE)]),
+            line([(700, CAP), (305, 570)]),
+        ]
+    }),
     ('L', || vec![line([(310, CAP), (310, BASE), (680, BASE)])]),
+    // One stroke: the stem down into a small loop at the corner, then the
+    // foot (Écriture A, Méthode Dumont).
+    ('L', || {
+        vec![Pen::at((330, CAP)).line([(330, 700)]).curve([
+            (315, 790),
+            (265, 848),
+            (205, 835),
+            (205, 780),
+            (275, 770),
+            (360, 820),
+            (460, 850),
+            (570, 850),
+            (690, 850),
+        ])]
+    }),
     ('M', || {
         vec![
             line([(240, CAP), (240, BASE)]),
@@ -302,6 +488,9 @@ const BASES: &[(char, Draw)] = &[
             (760, BASE),
         ])]
     }),
+    // The left stem down and back up, then on through the V and right stem
+    // (Upper-2; Écriture A, Rubio).
+    ('M', || retraced('M')),
     ('N', || {
         vec![
             line([(280, CAP), (280, BASE)]),
@@ -319,6 +508,9 @@ const BASES: &[(char, Draw)] = &[
     ('N', || {
         vec![line([(280, BASE), (280, CAP), (720, BASE), (720, CAP)])]
     }),
+    // The left stem down and back up, then the diagonal and right stem
+    // (Upper-2; Écriture A, Rubio).
+    ('N', || retraced('N')),
     ('O', || {
         vec![Pen::new().arc(500, CAP_MID, 280, 330, 90, 450)]
     }),
@@ -331,6 +523,8 @@ const BASES: &[(char, Draw)] = &[
                 .line([(310, 550)]),
         ]
     }),
+    // The stem down and back up, then the bowl (Upper-2; Écriture A, Rubio).
+    ('P', || retraced('P')),
     ('Q', || {
         vec![
             Pen::new().arc(500, CAP_MID, 280, 330, 90, 450),
@@ -351,6 +545,9 @@ const BASES: &[(char, Draw)] = &[
             .line([(310, 550), (710, BASE)]);
         vec![line([(310, CAP), (310, BASE)]), bowl]
     }),
+    // The stem down and back up, then the bowl and leg (Upper-2; Écriture A,
+    // Rubio).
+    ('R', || retraced('R')),
     ('S', || {
         vec![Pen::at((700, 280)).curve([
             (600, 200),
@@ -367,10 +564,40 @@ const BASES: &[(char, Draw)] = &[
             (295, 760),
         ])]
     }),
+    // Narrow S with a curl at each end, one stroke (Porto Editora, Écriture
+    // A).
+    ('S', || {
+        vec![Pen::at((560, 300)).curve([
+            (625, 240),
+            (590, CAP),
+            (490, 200),
+            (410, 255),
+            (405, 355),
+            (480, 445),
+            (590, 525),
+            (645, 645),
+            (615, 775),
+            (515, 850),
+            (395, 845),
+            (330, 790),
+            (345, 735),
+            (410, 745),
+        ])]
+    }),
     ('T', || {
         vec![
             line([(500, CAP), (500, BASE)]),
             line([(270, CAP), (730, CAP)]),
+        ]
+    }),
+    // The top bar from a hook at its left end, then the stem with a curl to
+    // the left at the foot (Italica).
+    ('T', || {
+        vec![
+            Pen::at((300, 290)).curve([(280, 225), (330, CAP), (450, 212), (580, 200), (730, CAP)]),
+            Pen::at((500, 205))
+                .line([(500, 770)])
+                .curve([(470, 840), (400, 850), (340, 810)]),
         ]
     }),
     ('U', || {
@@ -411,6 +638,27 @@ const BASES: &[(char, Draw)] = &[
         z.push(line([(380, CAP_MID), (620, CAP_MID)]));
         z
     }),
+    // One stroke, the top bar and diagonal running into a small loop at the
+    // bottom left before the foot (Écriture A, France).
+    ('Z', || {
+        vec![Pen::at((290, CAP)).line([(710, CAP), (360, 760)]).curve([
+            (315, 818),
+            (265, 850),
+            (220, 830),
+            (225, 785),
+            (290, 780),
+            (370, 825),
+            (470, 850),
+            (580, 850),
+            (710, 845),
+        ])]
+    }),
+    // The same with a crossbar (Écriture A, Italica, Cuadernos Rubio).
+    ('Z', || {
+        let mut z = form('Z', 2);
+        z.push(line([(380, CAP_MID), (620, CAP_MID)]));
+        z
+    }),
     ('a', || vec![ball(480, 170).line([(650, X), (650, BASE)])]),
     // Double-storey a, one stroke: the hook over the top, down the stem to
     // the bowl, round the bowl back to the stem, push up the stem and pull
@@ -432,6 +680,48 @@ const BASES: &[(char, Draw)] = &[
                 .line([(645, 635), (645, BASE)]),
         ]
     }),
+    // Cursive-derived, one stroke: the flat top of the bowl drawn leftwards,
+    // round it, up to the top and down the stem into the exit tail (a handwriting
+    // sample; Écriture A, Cuadernos Rubio).
+    ('a', || {
+        let bowl = Pen::at((630, 460)).curve([
+            (530, 452),
+            (420, 465),
+            (345, 540),
+            (330, 665),
+            (370, 790),
+            (465, 850),
+            (570, 835),
+            (635, 765),
+            (655, 620),
+            (655, X),
+        ]);
+        vec![tail(bowl, 655)]
+    }),
+    // The same with the stem drawn as a small loop at the top, crossing back
+    // down into the tail (a handwriting sample).
+    ('a', || {
+        vec![Pen::at((600, 458)).curve([
+            (500, 452),
+            (400, 470),
+            (340, 550),
+            (330, 670),
+            (370, 790),
+            (460, 848),
+            (560, 835),
+            (630, 770),
+            (650, 650),
+            (650, 530),
+            (670, 462),
+            (712, 470),
+            (722, 530),
+            (700, 625),
+            (648, 745),
+            (672, 820),
+            (740, 850),
+            (810, 830),
+        ])]
+    }),
     ('b', || {
         vec![
             Pen::at((330, ASC))
@@ -439,10 +729,67 @@ const BASES: &[(char, Draw)] = &[
                 .arc(500, X_MID, 170, 200, 165, -165),
         ]
     }),
+    // Looped ascender, one stroke: up the loop, down the stem, round the bowl
+    // back to the stem (a handwriting sample; Écriture A, Rubio).
+    ('b', || {
+        vec![looped_ascender(340).line([(340, 770)]).curve([
+            (380, 835),
+            (480, 852),
+            (590, 815),
+            (645, 710),
+            (620, 580),
+            (530, 500),
+            (420, 510),
+            (345, 570),
+        ])]
+    }),
     ('c', || vec![Pen::new().arc(510, X_MID, 170, 200, 45, 318)]),
+    // A hooked start at the top, round, and out in the exit tail (Rubio,
+    // Porto Editora).
+    ('c', || {
+        vec![Pen::at((565, 545)).curve([
+            (615, 530),
+            (630, 475),
+            (590, 452),
+            (530, 452),
+            (420, 470),
+            (350, 550),
+            (335, 680),
+            (380, 800),
+            (480, 850),
+            (600, 840),
+            (700, 790),
+        ])]
+    }),
     ('d', || vec![ball(480, 170).line([(650, ASC), (650, BASE)])]),
     // The bar sits above the centre so the eye is the smaller upper part, and
     // the sweep stops short of the bar's height so the tail stays open.
+    // One stroke: the bowl from its flat top, up into a tall narrow loop and
+    // down it into the exit tail (a handwriting sample; Écriture A, Rubio).
+    ('d', || {
+        vec![Pen::at((630, 460)).curve([
+            (520, 452),
+            (410, 465),
+            (345, 540),
+            (330, 670),
+            (375, 800),
+            (470, 850),
+            (570, 830),
+            (630, 770),
+            (640, 640),
+            (625, 450),
+            (610, 280),
+            (625, 165),
+            (655, 155),
+            (680, 240),
+            (680, 450),
+            (662, 650),
+            (648, 765),
+            (690, 835),
+            (760, 850),
+            (820, 820),
+        ])]
+    }),
     ('e', || {
         vec![
             Pen::at((355, 610))
@@ -450,12 +797,41 @@ const BASES: &[(char, Draw)] = &[
                 .arc(510, X_MID, 170, 200, 11.5, 300),
         ]
     }),
+    // The cursive loop e: up from the lower left, over the loop and round
+    // into the exit tail (Écriture A, Rubio, Porto Editora).
+    ('e', || {
+        vec![Pen::at((330, 700)).curve([
+            (460, 665),
+            (590, 600),
+            (635, 520),
+            (580, 458),
+            (480, 462),
+            (400, 530),
+            (365, 650),
+            (395, 780),
+            (490, 848),
+            (610, 845),
+            (710, 790),
+        ])]
+    }),
     ('f', || {
         vec![
             Pen::new()
                 .arc(540, 270, 120, 120, 30, 180)
                 .line([(420, BASE)]),
             line([(320, X), (620, X)]),
+        ]
+    }),
+    // One stroke: looped ascender, the stem down into a loop below the
+    // baseline that closes on the stem and leaves to the right (Rubio,
+    // Écriture A).
+    ('f', || vec![looped_descender(looped_ascender(445), 445)]),
+    // Looped ascender and a straight stem to the descender, then the
+    // crossbar (Italica).
+    ('f', || {
+        vec![
+            looped_ascender(445).line([(445, DESC)]),
+            line([(330, X), (600, X)]),
         ]
     }),
     ('g', || {
@@ -482,13 +858,31 @@ const BASES: &[(char, Draw)] = &[
             ]),
         ]
     }),
+    // The ball and stem, the stem running into a loop below the baseline
+    // (Écriture A, Rubio, Porto Editora).
+    ('g', || {
+        vec![looped_descender(ball(480, 170).line([(650, X)]), 650)]
+    }),
     ('h', || {
         vec![hump(Pen::at((330, ASC)).line([(330, BASE)]), 330, 670)]
     }),
     // Dotless i: the base of i and of ì í î ï.
+    // Looped ascender down to the baseline, back up into the arch and out in
+    // the exit tail (Écriture A, Rubio).
+    ('h', || {
+        vec![tail(
+            arch(looped_ascender(330).line([(330, BASE)]), 330, 650),
+            650,
+        )]
+    }),
     ('ı', || vec![line([(500, X), (500, BASE)])]),
+    // The entry stroke, down and out in the exit tail (Rubio, Écriture A).
+    ('ı', || vec![tail(entry(500, X), 500)]),
     ('i', || {
         base('ı').into_iter().chain([dot(500, 335)]).collect()
+    }),
+    ('i', || {
+        form('ı', 1).into_iter().chain([dot(500, 335)]).collect()
     }),
     ('j', || {
         vec![
@@ -497,6 +891,11 @@ const BASES: &[(char, Draw)] = &[
                 .arc(410, 880, 150, 95, 0, -170),
             dot(560, 335),
         ]
+    }),
+    // The entry stroke, down into a loop below the baseline, then the dot
+    // (Écriture A, Rubio).
+    ('j', || {
+        vec![looped_descender(entry(520, X), 520), dot(520, 335)]
     }),
     ('k', || {
         vec![
@@ -512,15 +911,65 @@ const BASES: &[(char, Draw)] = &[
             line([(470, 585), (660, BASE)]),
         ]
     }),
+    // One stroke: looped ascender to the baseline, back up into a small knot
+    // at the waist and out along the leg (Écriture A, Méthode Dumont).
+    ('k', || {
+        vec![
+            looped_ascender(330)
+                .line([(330, BASE)])
+                .curve([
+                    (335, 660),
+                    (410, 510),
+                    (510, 460),
+                    (590, 500),
+                    (580, 590),
+                    (480, 650),
+                    (380, 665),
+                ])
+                .curve([(470, 690), (560, 790), (620, 845), (690, 850), (750, 815)]),
+        ]
+    }),
     ('l', || vec![line([(500, ASC), (500, BASE)])]),
+    // Looped ascender and exit tail, one stroke (Écriture A, Rubio).
+    ('l', || vec![tail(looped_ascender(470), 470)]),
     ('m', || {
         let pen = hump(Pen::at((250, X)).line([(250, BASE)]), 250, 500);
         vec![hump(pen, 500, 750)]
     }),
+    // The entry stroke, the stem, two rounded arches and the exit tail
+    // (Écriture A, Italica).
+    ('m', || {
+        let first = arch(entry(250, X).line([(250, BASE)]), 250, 500);
+        vec![tail(arch(first.line([(500, BASE)]), 500, 745), 745)]
+    }),
     ('n', || {
         vec![hump(Pen::at((330, X)).line([(330, BASE)]), 330, 670)]
     }),
+    // The entry stroke, the stem, a rounded arch and the exit tail (Écriture
+    // A, Italica).
+    ('n', || {
+        vec![tail(arch(entry(340, X).line([(340, BASE)]), 340, 655), 655)]
+    }),
     ('o', || vec![Pen::new().arc(500, X_MID, 180, 200, 30, 390)]),
+    // Round from the top, closed with a small knot and out to the right at
+    // the top (Rubio, Porto Editora).
+    ('o', || {
+        vec![Pen::at((580, 462)).curve([
+            (480, 452),
+            (380, 500),
+            (335, 630),
+            (370, 780),
+            (480, 850),
+            (600, 815),
+            (655, 690),
+            (635, 550),
+            (580, 470),
+            (540, 482),
+            (580, 510),
+            (670, 500),
+            (750, 462),
+        ])]
+    }),
     ('p', || {
         vec![
             Pen::at((330, X))
@@ -528,10 +977,68 @@ const BASES: &[(char, Draw)] = &[
                 .arc(500, X_MID, 170, 200, 165, -165),
         ]
     }),
+    // French p: the stem starts half-way up the ascender and runs to the
+    // descender, back up into an arch whose bowl stays open at the bottom
+    // (Écriture A, Méthode Dumont; Wikipedia).
+    ('p', || {
+        vec![entry(360, 300).line([(360, DESC), (360, 580)]).curve([
+            (420, 480),
+            (520, 455),
+            (620, 500),
+            (655, 620),
+            (630, 760),
+            (560, 840),
+            (470, 850),
+            (405, 820),
+        ])]
+    }),
     ('q', || vec![ball(480, 170).line([(650, X), (650, DESC)])]),
+    // Crossed descender (block letters across Europe; Wikipedia).
+    ('q', || {
+        let mut q = base('q');
+        q.push(line([(570, 915), (730, 915)]));
+        q
+    }),
+    // The stem ends in a loop to the right that closes near the baseline and
+    // leaves to the right (Écriture A, Méthode Dumont).
+    ('q', || {
+        vec![ball(480, 170).line([(650, X), (650, 900)]).curve([
+            (670, 960),
+            (715, 975),
+            (745, 940),
+            (725, 885),
+            (670, 850),
+            (740, 830),
+            (810, 800),
+        ])]
+    }),
     ('r', || {
         vec![
             Pen::at((370, X))
+                .line([(370, BASE)])
+                .arc(520, X + 150, 150, 150, 180, 40),
+        ]
+    }),
+    // Cursive r: up from the lower left, a small shoulder across the top,
+    // down and out in the exit tail (Écriture A, Porto Editora).
+    ('r', || {
+        vec![Pen::at((300, 720)).curve([
+            (370, 570),
+            (425, 430),
+            (470, 462),
+            (520, 470),
+            (575, 440),
+            (580, 560),
+            (575, 720),
+            (605, 830),
+            (675, 850),
+            (740, 815),
+        ])]
+    }),
+    // The print r with the entry stroke (Rubio, Italica).
+    ('r', || {
+        vec![
+            entry(370, X)
                 .line([(370, BASE)])
                 .arc(520, X + 150, 150, 150, 180, 40),
         ]
@@ -551,6 +1058,25 @@ const BASES: &[(char, Draw)] = &[
             (340, 800),
         ])]
     }),
+    // Cursive s: up from the lower left to a point, down round the belly and
+    // back to the left, then out along the baseline (Écriture A, Rubio).
+    ('s', || {
+        vec![Pen::at((290, 790)).curve([
+            (400, 650),
+            (480, 450),
+            (540, 520),
+            (620, 630),
+            (640, 750),
+            (580, 835),
+            (480, 852),
+            (390, 825),
+            (370, 780),
+            (420, 800),
+            (530, 845),
+            (650, 830),
+            (720, 790),
+        ])]
+    }),
     ('t', || {
         vec![line([(490, 230), (490, BASE)]), line([(370, X), (620, X)])]
     }),
@@ -563,6 +1089,11 @@ const BASES: &[(char, Draw)] = &[
             line([(370, X), (620, X)]),
         ]
     }),
+    // The entry stroke up to the top, down the stem into the exit tail, then
+    // the crossbar (Écriture A, Rubio).
+    ('t', || {
+        vec![tail(entry(490, 230), 490), line([(370, X), (620, X)])]
+    }),
     ('u', || {
         vec![
             Pen::at((330, X))
@@ -571,7 +1102,35 @@ const BASES: &[(char, Draw)] = &[
                 .line([(670, X), (670, BASE)]),
         ]
     }),
+    // The entry stroke, round the bottom, up and down the right stem into the
+    // exit tail (Écriture A, Rubio).
+    ('u', || {
+        let cup = entry(340, X).line([(340, 700)]).curve([
+            (385, 815),
+            (490, 850),
+            (590, 810),
+            (645, 700),
+            (655, X),
+        ]);
+        vec![tail(cup, 655)]
+    }),
     ('v', || vec![line([(320, X), (500, BASE), (680, X)])]),
+    // Rounded at the bottom, from an entry hook to a small knot and exit at
+    // the top (Rubio, Porto Editora).
+    ('v', || {
+        vec![Pen::at((260, 560)).curve([
+            (320, X),
+            (370, 580),
+            (440, 800),
+            (500, 850),
+            (560, 800),
+            (630, 590),
+            (660, X),
+            (635, 485),
+            (665, 505),
+            (770, 470),
+        ])]
+    }),
     ('w', || {
         vec![line([
             (210, X),
@@ -581,8 +1140,55 @@ const BASES: &[(char, Draw)] = &[
             (790, X),
         ])]
     }),
+    // The entry stroke, two rounded valleys, and a knot and exit at the top
+    // (Rubio, Italica).
+    ('w', || {
+        vec![
+            entry(230, X)
+                .curve([
+                    (240, 650),
+                    (290, 810),
+                    (360, 850),
+                    (440, 810),
+                    (490, 650),
+                    (500, X),
+                ])
+                .curve([
+                    (505, 650),
+                    (555, 810),
+                    (630, 850),
+                    (710, 810),
+                    (760, 640),
+                    (770, X),
+                    (745, 490),
+                    (780, 510),
+                    (860, 470),
+                ]),
+        ]
+    }),
     ('x', || {
         vec![line([(330, X), (670, BASE)]), line([(670, X), (330, BASE)])]
+    }),
+    // Two arcs back to back, crossing at the waist (Italica, Écriture A).
+    ('x', || {
+        vec![
+            Pen::at((330, 480)).curve([
+                (430, 452),
+                (510, 530),
+                (525, 650),
+                (500, 770),
+                (430, 845),
+                (330, 830),
+            ]),
+            Pen::at((690, 480)).curve([
+                (590, 452),
+                (505, 530),
+                (490, 650),
+                (515, 770),
+                (590, 845),
+                (690, 830),
+            ]),
+        ]
     }),
     ('y', || {
         vec![line([(320, X), (500, BASE)]), line([(680, X), (445, DESC)])]
@@ -597,6 +1203,18 @@ const BASES: &[(char, Draw)] = &[
                 .arc(515, 880, 155, 95, 0, -170),
         ]
     }),
+    // The entry stroke, round the bottom, up the right stem and down into a
+    // loop below the baseline (Écriture A, Rubio).
+    ('y', || {
+        let cup = entry(340, X).line([(340, 700)]).curve([
+            (385, 815),
+            (490, 850),
+            (590, 810),
+            (645, 700),
+            (655, X),
+        ]);
+        vec![looped_descender(cup, 655)]
+    }),
     ('z', || {
         vec![line([(330, X), (670, X), (330, BASE), (670, BASE)])]
     }),
@@ -606,6 +1224,40 @@ const BASES: &[(char, Draw)] = &[
         z
     }),
     // Letters without a decomposition.
+    // Cursive z as ʒ: over the top into a knot at the waist, then the tail
+    // curling below the baseline (Porto Editora, Écriture A).
+    ('z', || {
+        vec![
+            Pen::at((340, 480))
+                .curve([(400, 452), (520, 460), (630, 455)])
+                .line([(450, 680)])
+                .curve([
+                    (550, 685),
+                    (625, 750),
+                    (630, 850),
+                    (580, 940),
+                    (490, 978),
+                    (410, 955),
+                    (385, 905),
+                ]),
+        ]
+    }),
+    // Italic z: across the top, down the diagonal and out in a curved foot
+    // (Cuadernos Rubio).
+    ('z', || {
+        vec![
+            Pen::at((340, 470))
+                .curve([(400, 450), (500, 460), (560, 455), (640, 450)])
+                .line([(360, 830)])
+                .curve([(430, 810), (520, 845), (600, 850), (670, 820)]),
+        ]
+    }),
+    // Italic z with a crossbar (Italica).
+    ('z', || {
+        let mut z = form('z', 3);
+        z.push(line([(410, X_MID), (590, X_MID)]));
+        z
+    }),
     ('Æ', || {
         // The middle bar is the A's crossbar and the E's middle bar in one
         // stroke, starting on the left diagonal.
