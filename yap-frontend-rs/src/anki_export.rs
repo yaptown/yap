@@ -508,7 +508,11 @@ impl Deck {
                     &challenge.audio.request.verification_hints,
                     &token,
                 );
-                let tts = if used_sentences.len() < 50 {
+                // A Listening card cannot be answered without its audio, so
+                // every sentence with one ships its recording; Reading-only
+                // decks bundle the first 50 and stream the rest.
+                let include_listening = !matches!(options.card_types, AnkiCardTypes::Reading);
+                let tts = if include_listening || used_sentences.len() < 50 {
                     let filename = format!("yap-sentence-{}.mp3", guid(course, "sentence", &text));
                     bundled.push(AnkiBundledMedia {
                         filename: filename.clone(),
@@ -547,7 +551,7 @@ impl Deck {
                     ),
                     tts,
                     include_reading: !matches!(options.card_types, AnkiCardTypes::Listening),
-                    include_listening: !matches!(options.card_types, AnkiCardTypes::Reading),
+                    include_listening,
                 });
                 used_sentences.insert(sentence);
                 if used_sentences.len() == options.size as usize {
@@ -825,13 +829,26 @@ mod tests {
         assert_eq!(a.stats.sentence_count, 55);
         assert_eq!(a.stats.word_count, 55);
         assert_eq!(a.stats.card_count, 165);
-        assert_eq!(
-            a.bundled
+        // Listening cards need their audio offline: every sentence's TTS is
+        // bundled. A Reading-only deck bundles the first 50 and streams the rest.
+        let bundled_tts = |plan: &AnkiDeckPlan| {
+            plan.bundled
                 .iter()
                 .filter(|m| matches!(m.source, AnkiMediaSource::Tts { .. }))
-                .count(),
-            50
-        );
+                .count()
+        };
+        assert_eq!(bundled_tts(&a), 55);
+        let reading = deck
+            .anki_deck_plan(
+                AnkiDeckOptions {
+                    size: 55,
+                    card_types: AnkiCardTypes::Reading,
+                },
+                "t".into(),
+                1_700_000_000_000.0,
+            )
+            .unwrap();
+        assert_eq!(bundled_tts(&reading), 50);
         let mut sentences = BTreeSet::new();
         let mut ids = BTreeSet::new();
         for pair in a.notes.chunks_exact(2) {

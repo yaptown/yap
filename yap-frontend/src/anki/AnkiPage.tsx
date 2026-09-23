@@ -159,7 +159,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                 </Tabs>
               </div>
             </fieldset>
-            <p className="text-sm text-muted-foreground">The first 50 sentence recordings are downloaded when available, along with human word recordings. Movie clips and the remaining audio need an internet connection.</p>
+            <p className="text-sm text-muted-foreground">{cardTypes === "Reading" ? "The first 50 sentence recordings are downloaded, along with human word recordings. Movie clips and the remaining audio need an internet connection." : "Every sentence recording is downloaded so listening cards work offline, along with human word recordings. Movie clips and other word audio need an internet connection."}</p>
             <p className="text-sm text-muted-foreground">Re-downloading updates matching notes. If you remove a card type, use Tools → Empty Cards in Anki to remove the old cards.</p>
             {view.manifest === "error" ? (
               <Button type="button" variant="outline" onClick={() => { setManifest("loading"); setRetry((value) => value + 1); }}>Retry loading movie clips</Button>
