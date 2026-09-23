@@ -149,7 +149,7 @@ static JUDGE_CLIENT: LazyLock<ChatClient> =
 // whole language. service_tier is excluded from tysm's cache key, so every
 // probe response cached under flex still hits.
 static PROBE_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-sol").with_service_tier("default"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-sol").with_service_tier("default"));
 
 /// How many times to try the probe call before giving up on the language.
 const PROBE_ATTEMPTS: u32 = 4;

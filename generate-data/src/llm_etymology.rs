@@ -18,7 +18,7 @@ use tysm::chat_completions::ChatClient;
 use crate::etymology::AlignedEntry;
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct EtymologyResponse {
@@ -215,7 +215,7 @@ fn language_specific_notes(language: Language) -> &'static str {
   - `ge-` prefix: `[ptcp]` (past participle: gemacht) vs `[coll]` collective-noun derivation (Gebirge, Gerede)
 - Separable prefixes like auf-, aus-, ein-, mit- are productive morphemes and don't usually need tags."
         }
-        Language::SpanishMexican | Language::SpanishPeninsular => {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
             "\n\nExtra Spanish-specific guidance:
 - Plural / gender / verb endings share surfaces. Tag to disambiguate:
   - `a (a)`: `[f.sg]` (casa) vs `[3sg.prs]` for -ar verbs (habla) vs `[3sg.sbjv]` for -er/-ir verbs (coma, viva) vs `[impv.2sg]` for -ar verbs (habla! command)

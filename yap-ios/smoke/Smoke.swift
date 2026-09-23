@@ -214,9 +214,9 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(persisted.get_movie_poster(movie_id: "missing-smoke-movie") == nil)
         let ready = persisted.get_no_cards_ready_info(banned_challenge_types: [.Listening, .Speaking], sentence_list: nil)
         check(ready.smart_add_count > 0 && ready.smart_add_event != nil)
-        let add = persisted.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil)
-        check(add.count > 0 && add.event != nil)
-        reopened.add_deck_event(event: add.event!)
+        let add = persisted.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil)!
+        check(add.count > 0 && !add.label.isEmpty)
+        reopened.add_deck_event(event: add.event)
         let withCards = try await deck(reopened, course)
         let cards = withCards.get_all_cards_summary()
         check(cards.count == Int(add.count) && !cards[0].card_text.isEmpty)
@@ -264,7 +264,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         var backlog = try await deck(reopened, course)
         for _ in 0..<30 {
             if backlog.get_all_cards_summary().count > 20 { break }
-            guard let event = backlog.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil).event else { break }
+            guard let event = backlog.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil)?.event else { break }
             reopened.add_deck_event(event: event)
             backlog = try await deck(reopened, course)
         }

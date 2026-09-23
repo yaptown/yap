@@ -618,7 +618,7 @@ def process_sentences(sentences_file: str, output_file: str, language_code: str)
 def main():
     if len(sys.argv) != 4:
         print("Usage: python main.py <language_code> <sentences.jsonl> <output.jsonl>")
-        print("Language code should be ISO 639-3 (e.g., 'fra' for French, 'spa' for Spanish (Mexico))")
+        print("Language code should be ISO 639-3 (e.g., 'fra' for French, 'spa' for Spanish (Latin America))")
         sys.exit(1)
 
     language_code = sys.argv[1]

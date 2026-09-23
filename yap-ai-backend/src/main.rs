@@ -511,7 +511,7 @@ async fn elevenlabs_synthesize(
     // Select voice based on language
     let voice_id = match request.language {
         Language::French => "ohItIVrXTBI80RrUECOD", // Existing French voice
-        Language::SpanishMexican | Language::SpanishPeninsular => "8mBRP99B2Ng2QwsJMFQl", // Mexican Spanish voice
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => "8mBRP99B2Ng2QwsJMFQl", // Latin American Spanish voice
         Language::English => "ohItIVrXTBI80RrUECOD", // Default to French voice for now
         Language::Korean => "nbrxrAz3eYm9NgojrmFK",  // Korean
         Language::German => "IWm8DnJ4NGjFI7QAM5lM",  // Stephan - German voice
@@ -852,7 +852,7 @@ The input may include a Context block naming the film the sentence comes from an
         match target_language {
             Language::French =>
                 r#"For example, if the user confused "de" and "des", you could generate ["de", "des"] in the compare array."#,
-            Language::SpanishMexican | Language::SpanishPeninsular =>
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular =>
                 r#"For example, if the user confused "esta" and "está", you could generate ["esta", "está"] in the compare array."#,
             Language::English =>
                 r#"For example, if the user confused "then" and "than", you could generate ["then", "than"] in the compare array."#,

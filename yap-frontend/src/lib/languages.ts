@@ -40,9 +40,9 @@ export const LANGUAGES: Record<Language, LanguageMeta> = {
       gradient: "linear-gradient(90deg, #002395 33%, #FFFFFF 33% 66%, #ED2939 66%)",
     },
   },
-  SpanishMexican: {
-    ...LANGUAGE_METADATA.SpanishMexican,
-    browserCodes: ["es", "es-mx", "es-us"],
+  SpanishLatinAmerican: {
+    ...LANGUAGE_METADATA.SpanishLatinAmerican,
+    browserCodes: ["es", "es-419", "es-mx", "es-us"],
     colors: {
       primary: "#C60B1E",
       secondary: "#FFC400",

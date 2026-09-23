@@ -6,7 +6,7 @@
 -- Events stay immutable; Language's serde aliases read their original names.
 UPDATE public.user_language_stats
 SET language = CASE language
-    WHEN 'Spanish' THEN 'SpanishMexican'
+    WHEN 'Spanish' THEN 'SpanishLatinAmerican'
     WHEN 'Portuguese' THEN 'PortugueseBrazilian'
     WHEN 'Chinese' THEN 'ChineseSimplified'
     WHEN 'Chinese (Simplified)' THEN 'ChineseSimplified'

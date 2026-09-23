@@ -15,7 +15,7 @@ use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
@@ -100,7 +100,7 @@ fn language_examples(language: Language) -> &'static str {
 - Derivational: "re-" (again), "-ation" (N-forming), "-able", "-ment" (adv-forming), "-té"
 - Inflectional: plural "-s", feminine "-e", verb endings "-ons", "-ez", "-ent", "-ais", "-era""#
         }
-        Language::SpanishMexican | Language::SpanishPeninsular => {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
             r#"- Free: "casa", "rojo", "comer"
 - Bound: "-logía", "-cidio", "-fobia"
 - Derivational: "re-", "des-", "-ción", "-mente", "-dor", "-ito" (diminutive)
@@ -223,7 +223,7 @@ fn lookup_examples(language: Language) -> &'static str {
 - morpheme "heureu" with candidates "heureux (lemma: heureux, pos: ADJ)", "heureuse" → {"word": "heureux", "lemma": "heureux", "pos": "ADJ"}
 - morpheme "chat" with candidates "chat (lemma: chat, pos: NOUN)", "chats" → {"word": "chat", "lemma": "chat", "pos": "NOUN"}"#
         }
-        Language::SpanishMexican | Language::SpanishPeninsular => {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
             r#"- morpheme "habl" with candidates "hablar (lemma: hablar, pos: VERB)", "habla", "hablamos" → {"word": "hablar", "lemma": "hablar", "pos": "VERB"}
 - morpheme "cas" with candidates "casa (lemma: casa, pos: NOUN)", "casas" → {"word": "casa", "lemma": "casa", "pos": "NOUN"}"#
         }
@@ -296,7 +296,7 @@ fn conjugation_in(native_language: Language) -> &'static str {
     match native_language {
         Language::English => "conjugation",
         Language::French => "conjugaison",
-        Language::SpanishMexican | Language::SpanishPeninsular => "conjugación",
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => "conjugación",
         Language::Italian => "coniugazione",
         Language::PortugueseBrazilian | Language::PortugueseEuropean => "conjugação",
         Language::German => "Konjugation",

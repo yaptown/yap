@@ -110,16 +110,6 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
   const manualAddOptions = view.manual_add_options;
   const addSmartCards = useCallback(() => { if (info.smart_add_event) addEvent(info.smart_add_event); }, [info.smart_add_event, addEvent]);
   const showLightWorkloadNotification = info.recommend_more_cards;
-  const targetLanguageSpan = (
-    <span style={{ fontWeight: "bold" }}>{targetLanguage} → English</span>
-  );
-  const listeningSpan = (
-    <span style={{ fontWeight: "bold" }}>{targetLanguage} listening</span>
-  );
-  const pronunciationSpan = (
-    <span style={{ fontWeight: "bold" }}>{targetLanguage} pronunciation</span>
-  );
-
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).closest("input, textarea, select, button, a")) return;
@@ -331,27 +321,20 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
                               variant="default"
                               size="lg"
                               className="rounded-l-none border-l border-l-primary-foreground/20 px-2"
+                              aria-label={view.manual_add_heading}
                             >
                               <ChevronDown className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {manualAddOptions.filter(o => o.count > 0).map((option) => (
+                            {manualAddOptions.map((option) => (
                               <DropdownMenuItem
                                 key={option.card_type}
-                                onClick={() => option.event && addEvent(option.event)}
+                                onClick={() => addEvent(option.event)}
                                 className="cursor-pointer"
                               >
                                 <Sparkles className="h-4 w-4 mr-2" />
-                                Learn {option.count}{" "}
-                                {option.card_type === "TargetLanguage"
-                                  ? targetLanguageSpan
-                                  : option.card_type === "Listening"
-                                    ? listeningSpan
-                                    : option.card_type === "LetterPronunciation"
-                                      ? pronunciationSpan
-                                      : ""}{" "}
-                                {option.count === 1 ? "card" : "cards"}
+                                {option.label}
                               </DropdownMenuItem>
                             ))}
                           </DropdownMenuContent>

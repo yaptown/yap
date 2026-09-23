@@ -52,7 +52,7 @@ use whisper::{CloudflareWhisper, GroqWhisper, TranscribeRequest};
 fn whisper_language(language: Language) -> Option<&'static str> {
     match language {
         Language::French
-        | Language::SpanishMexican
+        | Language::SpanishLatinAmerican
         | Language::SpanishPeninsular
         | Language::German
         | Language::Italian

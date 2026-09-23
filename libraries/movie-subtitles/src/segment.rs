@@ -22,7 +22,9 @@ pub fn lexide_language(language: Language) -> Option<lexide::Language> {
     Some(match language {
         Language::French => lexide::Language::French,
         Language::English => lexide::Language::English,
-        Language::SpanishMexican | Language::SpanishPeninsular => lexide::Language::SpanishEuro,
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
+            lexide::Language::SpanishEuro
+        }
         Language::Korean => lexide::Language::Korean,
         Language::German => lexide::Language::German,
         Language::Italian => lexide::Language::Italian,

@@ -13,7 +13,7 @@ pub type PolysemousWord = (&'static str, &'static [Meaning]);
 pub fn polysemous_words(language: Language) -> &'static [PolysemousWord] {
     match language {
         Language::French => FRENCH,
-        Language::SpanishMexican | Language::SpanishPeninsular => SPANISH,
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => SPANISH,
         Language::German => GERMAN,
         Language::Italian => ITALIAN,
         Language::PortugueseBrazilian | Language::PortugueseEuropean => PORTUGUESE,

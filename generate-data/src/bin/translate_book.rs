@@ -54,7 +54,7 @@ static MODEL: LazyLock<String> = LazyLock::new(|| {
         .windows(2)
         .find(|w| w[0] == "--model")
         .map(|w| w[1].clone())
-        .unwrap_or_else(|| "gpt-5.6-luna".to_string())
+        .unwrap_or_else(|| "gpt-6-luna".to_string())
 });
 
 static CHAT_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {

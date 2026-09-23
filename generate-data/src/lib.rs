@@ -123,11 +123,31 @@ fn base_chat_client(model: &str) -> tysm::chat_completions::ChatClient {
     }
 }
 
+/// The model a current-generation model replaced. Its cache is consulted
+/// first among the fallbacks, so bumping a model never regenerates what the
+/// previous generation already answered.
+fn previous_generation(model: &str) -> Option<&'static str> {
+    match model {
+        "gpt-6-luna" => Some("gpt-5.6-luna"),
+        "gpt-6-sol" => Some("gpt-5.6-sol"),
+        _ => None,
+    }
+}
+
 /// A current generation client whose cache is checked first, followed by historical model
 /// configurations newest-to-oldest. Only the current model may make an API request.
 pub fn migrating_chat_client(model: &str) -> tysm::chat_completions::ChatClient {
+    let mut client = cached_chat_client(model, "low");
+    if let Some(previous) = previous_generation(model) {
+        // Checked before the older fallbacks. Both service tiers, since some
+        // call sites override the default "flex" and the tier is part of the
+        // cache key.
+        client = client
+            .with_cache_fallback(cached_chat_client(previous, "low"))
+            .with_cache_fallback(cached_chat_client(previous, "low").with_service_tier("default"));
+    }
     apply_cache_only(
-        cached_chat_client(model, "low")
+        client
             .with_cache_fallback(cached_chat_client("gpt-5.4", "high"))
             .with_cache_fallback(cached_chat_client("gpt-5.4", "low"))
             .with_cache_fallback(cached_chat_client("gpt-5.4-mini", "low"))

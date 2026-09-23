@@ -22,27 +22,6 @@ function formatMinutes(seconds: number): string {
   return `${mins} min`;
 }
 
-function dayMessage(day: string): string {
-  switch (day) {
-    case "Monday":
-      return "Monday can't stop you!";
-    case "Tuesday":
-      return "Solid Tuesday session!";
-    case "Wednesday":
-      return "Midweek momentum!";
-    case "Thursday":
-      return "Thursday well spent!";
-    case "Friday":
-      return "Happy Friday!";
-    case "Saturday":
-      return "Weekend warrior!";
-    case "Sunday":
-      return "So much for the day of rest!";
-    default:
-      return "Nice!";
-  }
-}
-
 function streakMessage(streak: number): string {
   if (streak <= 1) return "you're just getting started";
   if (streak <= 3) return "keep it up!";
@@ -138,7 +117,7 @@ export function AccomplishmentScreen({
           <Trophy className="h-10 w-10 text-caution" />
         </div>
         <h2 className="text-2xl font-bold">
-          Goal Reached! {dayMessage(summary.day_of_week)}
+          {view.heading}
         </h2>
         <p className="text-muted-foreground">
           You studied {formatMinutes(summary.time_spent_seconds)}! (

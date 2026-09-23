@@ -290,7 +290,7 @@ fn language_from_dir(lang_dir: &Path) -> Result<(Language, String)> {
     let language = match code.as_str() {
         "fra" => Language::French,
         "eng" => Language::English,
-        "spa" => Language::SpanishMexican,
+        "spa" => Language::SpanishLatinAmerican,
         "deu" => Language::German,
         "ita" => Language::Italian,
         "por" => Language::PortugueseBrazilian,

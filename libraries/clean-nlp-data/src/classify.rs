@@ -94,7 +94,7 @@ fn contraction_lemma(
             "des" => Some("des"),
             _ => None,
         },
-        Language::SpanishMexican | Language::SpanishPeninsular => match text_lower {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => match text_lower {
             "al" => Some("al"),
             "del" => Some("del"),
             _ => None,
@@ -230,7 +230,7 @@ pub fn get_classifier(language: Language) -> Box<dyn SentenceClassifier> {
     match language {
         Language::French => Box::new(FrenchClassifier),
         Language::German => Box::new(GermanClassifier),
-        Language::SpanishMexican | Language::SpanishPeninsular => Box::new(SpanishClassifier),
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => Box::new(SpanishClassifier),
         Language::PortugueseBrazilian | Language::PortugueseEuropean => {
             Box::new(PortugueseClassifier)
         }
@@ -250,7 +250,7 @@ pub fn get_corrector(language: Language) -> Box<dyn WordCorrector> {
     match language {
         Language::French => Box::new(FrenchCorrector),
         Language::German => Box::new(GermanCorrector),
-        Language::SpanishMexican | Language::SpanishPeninsular => Box::new(SpanishCorrector),
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => Box::new(SpanishCorrector),
         Language::PortugueseBrazilian | Language::PortugueseEuropean => {
             Box::new(PortugueseCorrector)
         }
@@ -934,7 +934,7 @@ impl SentenceClassifier for SpanishClassifier {
             }
 
             // Check polysemous words
-            if let Some(reason) = check_polysemous(Language::SpanishMexican, &text_lower) {
+            if let Some(reason) = check_polysemous(Language::SpanishLatinAmerican, &text_lower) {
                 reasons.push(reason);
             }
         }
@@ -1067,7 +1067,7 @@ impl WordCorrector for SpanishCorrector {
 
             // Contractions keep their contracted form as lemma
             if let Some(expected) =
-                contraction_lemma(Language::SpanishMexican, &text_lower, token.pos)
+                contraction_lemma(Language::SpanishLatinAmerican, &text_lower, token.pos)
                 && token.lemma != expected
             {
                 corrections.push(format!(
@@ -1131,7 +1131,7 @@ impl WordCorrector for SpanishCorrector {
             }
 
             if let Some(expected) =
-                contraction_lemma(Language::SpanishMexican, &text_lower, token.pos)
+                contraction_lemma(Language::SpanishLatinAmerican, &text_lower, token.pos)
                 && token.lemma != expected
             {
                 token.lemma = expected.to_string();
@@ -9917,7 +9917,7 @@ The formal pronoun "Sie" (you, formal) should have lemma "Sie" (capitalized) to 
 
 "haben" as auxiliary: please make sure the lemma is "haben" — we've seen a corrupted lemma "Haen" appear for "haben" forms. Double-check that "hast", "hat", "hatte", etc. all get lemma "haben"."#
         }
-        Language::SpanishMexican | Language::SpanishPeninsular => {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
             r#"
 
 Spanish-specific rules — please follow these carefully, as they address systematic issues we've seen in past analyses:

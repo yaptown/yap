@@ -49,6 +49,7 @@ pub struct IdleView {
     pub title: String,
     pub body: String,
     pub info: NoCardsReadyInfo,
+    pub manual_add_heading: String,
     pub manual_add_options: Vec<ManualAddOption>,
     pub next_due: Option<CardSummary>,
     pub banned_notice: Option<String>,
@@ -91,6 +92,8 @@ pub struct GoalOptionView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AccomplishmentView {
     pub target_language: Language,
+    /// "Goal Reached! …" with the weekday message; Home's Up Next repeats it.
+    pub heading: String,
     pub accomplishment: Accomplishment,
     pub today: TodaySummary,
     pub streak: u32,
@@ -237,6 +240,7 @@ impl Deck {
             show_sentence_list,
             title: title.into(),
             body,
+            manual_add_heading: MANUAL_ADD_HEADING.into(),
             manual_add_options,
             info,
             next_due,
@@ -268,10 +272,12 @@ impl Deck {
         {
             return None;
         }
+        let today = self.get_today_summary_on(day);
         Some(AccomplishmentView {
             target_language: self.get_target_language(),
+            heading: accomplishment_heading(&today.day_of_week),
             accomplishment: self.get_accomplishment()?,
-            today: self.get_today_summary_on(day),
+            today,
             streak: self.get_daily_streak_on(day),
             percent_known: self.get_percent_of_words_known(),
             words_known: (self.get_percent_of_words_known() * self.num_cards_added() as f64).round()
@@ -431,17 +437,6 @@ impl Deck {
             })
             .collect()
     }
-}
-
-/// Home needs scheduling context, not Review's onboarding and held-challenge state.
-#[bridgerton::bridge(transparent)]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct HomeScreenInputs {
-    pub banned: Vec<ChallengeRequirements>,
-    pub sentence_list: Option<SentenceListSelection>,
-    pub online: bool,
-    pub is_signed_in: bool,
-    pub timestamp_ms: f64,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -661,40 +656,56 @@ fn challenge_preview(challenge: &Challenge<Gram<String>>, language: Language) ->
 
 #[bridgerton::bridge]
 impl Deck {
-    pub fn home_screen_view(&self, inputs: HomeScreenInputs) -> HomeScreenView {
-        let review = self.get_review_info(inputs.banned.clone(), inputs.timestamp_ms);
+    pub fn home_screen_view(&self, inputs: ReviewScreenInputs) -> HomeScreenView {
+        let (step, review, _) = self.review_step(inputs.clone());
         let due_count = review.due_count() as u64;
         let (navigation, _) = self.curriculum_navigation(inputs.sentence_list.clone());
         let info = self.get_no_cards_ready_info(inputs.banned.clone(), navigation.selection);
-        let (headline, kind_label, idle) = if let Some(challenge) = review.get_next_challenge(self)
-        {
-            let (headline, kind_label) = challenge_preview(&challenge, self.get_target_language());
-            (headline, kind_label, None)
-        } else {
-            let idle = self.idle_screen_view(
-                inputs.banned,
-                inputs.sentence_list,
-                inputs.online,
-                inputs.is_signed_in,
-                inputs.timestamp_ms,
-            );
-            let (headline, kind_label) = match &idle {
-                IdleScreenView::Idle(view) => (view.title.clone(), "Review"),
-                IdleScreenView::AudioPending { online, .. } => (
-                    if *online {
-                        "Preparing audio…"
-                    } else {
-                        "Connect to download audio"
+        let (headline, kind_label, idle) = match step {
+            ReviewStep::Challenge(view) => {
+                let (headline, kind_label) =
+                    challenge_preview(&view.challenge, self.get_target_language());
+                (headline, kind_label, None)
+            }
+            ReviewStep::PlacementTest(session) => {
+                let info = get_placement_session_info(session);
+                let headline = if !info.finished {
+                    "Placement Test"
+                } else if info.too_advanced {
+                    "You might be too advanced"
+                } else {
+                    "Ready to Start!"
+                };
+                (headline.into(), "Placement test".into(), None)
+            }
+            ReviewStep::ReviewPlan(_) => {
+                ("Your study plan is ready".into(), "Study plan".into(), None)
+            }
+            ReviewStep::SetDisplayName => {
+                ("Choose Your Display Name".into(), "Profile".into(), None)
+            }
+            ReviewStep::Accomplishment(view) => (view.heading, "Accomplishment".into(), None),
+            ReviewStep::Idle(idle) => {
+                let (headline, kind_label) = match idle.as_ref() {
+                    IdleScreenView::Idle(view) => (view.title.clone(), "Review"),
+                    IdleScreenView::AudioPending { online, .. } => (
+                        if *online {
+                            "Preparing audio…"
+                        } else {
+                            "Connect to download audio"
+                        }
+                        .into(),
+                        "Audio pending",
+                    ),
+                    IdleScreenView::ReviewPlanOffer(_) => {
+                        ("Your study plan is ready".into(), "Study plan")
                     }
-                    .into(),
-                    "Audio pending",
-                ),
-                IdleScreenView::ReviewPlanOffer(_) => {
-                    ("Your study plan is ready".into(), "Study plan")
-                }
-                IdleScreenView::StudyPlanComplete { title, .. } => (title.clone(), "Study plan"),
-            };
-            (headline, kind_label.into(), Some(idle))
+                    IdleScreenView::StudyPlanComplete { title, .. } => {
+                        (title.clone(), "Study plan")
+                    }
+                };
+                (headline, kind_label.into(), Some(*idle))
+            }
         };
         HomeScreenView {
             title: "Home".into(),
@@ -879,6 +890,37 @@ impl Deck {
     /// Hosts retain a selected challenge until the deck or restrictions change;
     /// `None` is never held, so newly ready challenges can surface from idle.
     pub fn review_screen_view(&self, inputs: ReviewScreenInputs) -> ReviewScreenView {
+        let (step, review, prompts) = self.review_step(inputs.clone());
+        let total_reviews = self.get_total_reviews();
+        let day = DateTime::<Utc>::from_timestamp_millis(inputs.timestamp_ms as i64)
+            .unwrap_or_else(Utc::now)
+            .with_timezone(&self.context.timezone)
+            .date_naive();
+        ReviewScreenView {
+            native_language: self.context.course.native_language,
+            target_language: self.get_target_language(),
+            step,
+            progress: (f64::from(self.get_today_time_spent_on(day))
+                / f64::from(self.get_daily_review_target()).max(1.0))
+            .clamp(0.0, 1.0),
+            total_reviews,
+            total_count: review.total_count() as u64,
+            offer_engagement: prompts.offer_engagement,
+            online: inputs.online,
+        }
+    }
+}
+
+impl Deck {
+    /// Selects PlacementTest → ReviewPlan → SetDisplayName → Accomplishment
+    /// → held (or next) Challenge → Idle, in that priority order on both hosts.
+    /// A held challenge takes precedence over idle even when nothing is due.
+    /// Hosts retain a selected challenge until the deck or restrictions change;
+    /// `None` is never held, so newly ready challenges can surface from idle.
+    fn review_step(
+        &self,
+        inputs: ReviewScreenInputs,
+    ) -> (ReviewStep, ReviewInfo, disclosure::ReviewPrompts) {
         let review = self.get_review_info(inputs.banned.clone(), inputs.timestamp_ms);
         let total_reviews = self.get_total_reviews();
         let prompts = get_review_prompts(
@@ -931,23 +973,22 @@ impl Deck {
                 inputs.timestamp_ms,
             )))
         };
-        let day = DateTime::<Utc>::from_timestamp_millis(inputs.timestamp_ms as i64)
-            .unwrap_or_else(Utc::now)
-            .with_timezone(&self.context.timezone)
-            .date_naive();
-        ReviewScreenView {
-            native_language: self.context.course.native_language,
-            target_language: self.get_target_language(),
-            step,
-            progress: (f64::from(self.get_today_time_spent_on(day))
-                / f64::from(self.get_daily_review_target()).max(1.0))
-            .clamp(0.0, 1.0),
-            total_reviews,
-            total_count: review.total_count() as u64,
-            offer_engagement: prompts.offer_engagement,
-            online: inputs.online,
-        }
+        (step, review, prompts)
     }
+}
+
+fn accomplishment_heading(day: &str) -> String {
+    let message = match day {
+        "Monday" => "Monday can't stop you!",
+        "Tuesday" => "Solid Tuesday session!",
+        "Wednesday" => "Midweek momentum!",
+        "Thursday" => "Thursday well spent!",
+        "Friday" => "Happy Friday!",
+        "Saturday" => "Weekend warrior!",
+        "Sunday" => "So much for the day of rest!",
+        _ => "Nice!",
+    };
+    format!("Goal Reached! {message}")
 }
 
 #[cfg(test)]
@@ -955,17 +996,140 @@ mod tests {
     use super::*;
     use chrono::TimeZone;
 
-    fn inputs() -> HomeScreenInputs {
-        HomeScreenInputs {
+    fn inputs() -> ReviewScreenInputs {
+        ReviewScreenInputs {
             banned: vec![],
             sentence_list: None,
             online: true,
             is_signed_in: true,
+            needs_display_name: false,
+            display_name_dismissed: false,
+            has_access_token: true,
+            starting_fresh: Some(true),
+            history_known: true,
+            dismissed_accomplishment_at_review: None,
+            placement: None,
+            current_challenge: None,
             timestamp_ms: Utc
                 .with_ymd_and_hms(2026, 9, 21, 12, 0, 0)
                 .unwrap()
                 .timestamp_millis() as f64,
         }
+    }
+
+    #[test]
+    fn home_and_review_agree_on_onboarding_steps() {
+        let mut deck = Deck::default();
+        deck.stats.total_reviews = 25;
+        let profile_inputs = ReviewScreenInputs {
+            needs_display_name: true,
+            ..inputs()
+        };
+        assert!(matches!(
+            deck.review_screen_view(profile_inputs.clone()).step,
+            ReviewStep::SetDisplayName
+        ));
+        let home = deck.home_screen_view(profile_inputs);
+        assert!(home.up_next.idle.is_none());
+        assert_eq!(home.up_next.headline, "Choose Your Display Name");
+        assert_eq!(home.up_next.kind_label, "Profile");
+
+        let deck = Deck::default();
+        let placement_inputs = ReviewScreenInputs {
+            starting_fresh: Some(false),
+            ..inputs()
+        };
+        assert!(matches!(
+            deck.review_screen_view(placement_inputs.clone()).step,
+            ReviewStep::PlacementTest(_)
+        ));
+        let home = deck.home_screen_view(placement_inputs);
+        assert!(home.up_next.idle.is_none());
+        assert_eq!(home.up_next.headline, "Placement Test");
+        assert_eq!(home.up_next.kind_label, "Placement test");
+    }
+
+    #[test]
+    fn home_previews_the_challenge_held_by_review() {
+        let deck = Deck::default();
+        let ready_deck = with_due_cards();
+        let held = ready_deck
+            .get_review_info(vec![], inputs().timestamp_ms)
+            .get_next_challenge(&ready_deck)
+            .unwrap();
+        let inputs = ReviewScreenInputs {
+            current_challenge: Some(held.clone()),
+            ..inputs()
+        };
+        let review = deck.review_screen_view(inputs.clone());
+        let ReviewStep::Challenge(view) = review.step else {
+            panic!("held challenge should win over idle")
+        };
+        assert_eq!(json(&view.challenge), json(&held));
+        let home = deck.home_screen_view(inputs);
+        let (headline, kind) = challenge_preview(&held, deck.get_target_language());
+        assert_eq!(home.up_next.headline, headline);
+        assert_eq!(home.up_next.kind_label, kind);
+        assert!(home.up_next.idle.is_none());
+        assert_eq!(home.due_count, 0);
+    }
+
+    #[test]
+    fn manual_add_options_have_web_copy_and_actionable_events() {
+        for (kind, singular, plural) in [
+            (
+                CardType::TargetLanguage,
+                "Learn 1 French → English card",
+                "Learn 2 French → English cards",
+            ),
+            (
+                CardType::Listening,
+                "Learn 1 French listening card",
+                "Learn 2 French listening cards",
+            ),
+            (
+                CardType::LetterPronunciation,
+                "Learn 1 French pronunciation card",
+                "Learn 2 French pronunciation cards",
+            ),
+        ] {
+            let course = Deck::default().context.course;
+            assert_eq!(manual_add_label(1, kind, course), singular);
+            assert_eq!(manual_add_label(2, kind, course), plural);
+        }
+        let deck = Deck::default();
+        assert!(
+            deck.get_manual_add_option(CardType::Listening, None)
+                .is_none()
+        );
+        for signed_in in [false, true] {
+            let options = deck.get_manual_add_options(None, signed_in);
+            assert!(!options.is_empty());
+            for option in options {
+                assert!(option.count > 0);
+                assert_eq!(
+                    option.label,
+                    manual_add_label(option.count, option.card_type, deck.context.course)
+                );
+                if !signed_in {
+                    assert_ne!(option.card_type, CardType::Listening);
+                }
+                let DeckEvent::Language(LanguageEvent {
+                    content: LanguageEventContent::AddCards { cards, .. },
+                    ..
+                }) = option.event
+                else {
+                    panic!("manual add must add cards");
+                };
+                assert_eq!(cards.len(), option.count as usize);
+            }
+        }
+        let IdleScreenView::Idle(idle) =
+            deck.idle_screen_view(vec![], None, true, true, inputs().timestamp_ms)
+        else {
+            panic!("new deck should be idle");
+        };
+        assert_eq!(idle.manual_add_heading, MANUAL_ADD_HEADING);
     }
 
     fn with_due_cards() -> Deck {
@@ -1140,7 +1304,7 @@ mod tests {
         ] {
             let stats = deck.stats_screen_view(banned.clone(), inputs.timestamp_ms);
             let due = deck.due_words_view(banned.clone(), inputs.timestamp_ms);
-            let home = deck.home_screen_view(HomeScreenInputs {
+            let home = deck.home_screen_view(ReviewScreenInputs {
                 banned,
                 ..inputs.clone()
             });
@@ -1164,7 +1328,7 @@ mod tests {
     fn locked_cards_stay_in_totals_but_not_ready_counts() {
         let mut deck = with_due_cards();
         deck.locked_cards.extend(deck.cards.keys().copied());
-        let inputs = HomeScreenInputs {
+        let inputs = ReviewScreenInputs {
             timestamp_ms: inputs().timestamp_ms + 60_000.0,
             ..inputs()
         };
@@ -1204,7 +1368,7 @@ mod tests {
             tomorrow.today_label,
             format!("0 / {} min today", deck.get_daily_review_target() / 60)
         );
-        let home = deck.home_screen_view(HomeScreenInputs {
+        let home = deck.home_screen_view(ReviewScreenInputs {
             timestamp_ms: after_midnight,
             ..inputs()
         });

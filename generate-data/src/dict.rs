@@ -10,7 +10,7 @@ use std::{collections::BTreeMap, sync::LazyLock};
 use tysm::chat_completions::{ChatClient, ChatMessage};
 
 static CHAT_CLIENT_LUNA: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 static CHAT_CLIENT_TERRA: LazyLock<ChatClient> =
     LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-terra"));
@@ -501,24 +501,36 @@ pub async fn create_sense_definitions(
             } else {
                 &*CHAT_CLIENT_LUNA
             };
-            if gram.gram.len() == 1 {
-                let definition: DictionaryDefinition =
-                    client.chat_with_system_prompt(system, prompt).await?;
-                Ok((gram.clone(), Some(definition), None))
+            // A failed sense (or a cache miss in cache-only mode) is skipped
+            // like every other definition stage, not fatal to the run.
+            let result = if gram.gram.len() == 1 {
+                client
+                    .chat_with_system_prompt::<DictionaryDefinition>(system, prompt)
+                    .await
+                    .map(|definition| (gram.clone(), Some(definition), None))
             } else {
-                let definition: PhrasebookDefinitionEntry =
-                    client.chat_with_system_prompt(system, prompt).await?;
-                Ok((gram.clone(), None, Some(definition)))
-            }
+                client
+                    .chat_with_system_prompt::<PhrasebookDefinitionEntry>(system, prompt)
+                    .await
+                    .map(|definition| (gram.clone(), None, Some(definition)))
+            };
+            result
+                .inspect_err(|e| {
+                    eprintln!(
+                        "sense definition failed for '{}' sense {}: {e}",
+                        gram.gram.to_display_string(course.target_language),
+                        gram.sense.unwrap()
+                    )
+                })
+                .ok()
         }
     })
     .buffer_unordered(32)
-    .collect::<Vec<anyhow::Result<_>>>()
+    .collect::<Vec<Option<_>>>()
     .await;
     let mut dictionary = BTreeMap::new();
     let mut phrasebook = BTreeMap::new();
-    for entry in entries {
-        let (gram, definition, phrase) = entry?;
+    for (gram, definition, phrase) in entries.into_iter().flatten() {
         if let Some(definition) = definition {
             dictionary.insert(gram.clone(), definition);
         }

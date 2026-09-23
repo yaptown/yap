@@ -206,7 +206,7 @@ fn print_usage() {
     eprintln!("Language codes (ISO 639-3):");
     eprintln!("  fra - French");
     eprintln!("  deu - German");
-    eprintln!("  spa - Spanish (Mexico), spa-es - Spanish (Spain)");
+    eprintln!("  spa - Spanish (Latin America), spa-es - Spanish (Spain)");
     eprintln!("  eng - English");
     eprintln!("  kor - Korean");
     eprintln!("  por - Portuguese (Brazil), por-pt - Portuguese (Portugal)");
@@ -826,7 +826,7 @@ async fn clean_all_languages() -> anyhow::Result<()> {
     let languages = vec![
         Language::French,
         Language::German,
-        Language::SpanishMexican,
+        Language::SpanishLatinAmerican,
         Language::SpanishPeninsular,
         Language::English,
         Language::Korean,

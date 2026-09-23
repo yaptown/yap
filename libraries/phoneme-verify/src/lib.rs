@@ -874,7 +874,7 @@ fn spanish_dialect_target(
     // YAP-87: accept seseo for both Spanish courses until dialect scoring diverges.
     matches!(
         language,
-        Language::SpanishMexican | Language::SpanishPeninsular
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular
     )
     .then(|| g2p::phonemize(g2p::Language::SpanishLatinAmerica, text))
 }
@@ -928,7 +928,7 @@ pub fn default_voice_for(language: Language) -> Option<TtsVoice> {
             language_code: "fr-FR",
             voice_name: "fr-FR-Chirp3-HD-Achernar",
         },
-        Language::SpanishMexican | Language::SpanishPeninsular => TtsVoice {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => TtsVoice {
             language_code: "es-US",
             voice_name: "es-US-Chirp3-HD-Achernar",
         },
@@ -2163,7 +2163,7 @@ mod tests {
         for language in languages![
             French,
             English,
-            SpanishMexican,
+            SpanishLatinAmerican,
             SpanishPeninsular,
             Korean,
             German,
@@ -2218,7 +2218,7 @@ mod tests {
             ),
         ] {
             assert_eq!(
-                spanish_dialect_target(text, Language::SpanishMexican)
+                spanish_dialect_target(text, Language::SpanishLatinAmerican)
                     .unwrap()
                     .unwrap()
                     .phonemes,
@@ -2230,26 +2230,26 @@ mod tests {
     #[test]
     fn spanish_accepts_seseo_without_changing_training_labels() {
         assert!(matches!(
-            Language::SpanishMexican.phoneme_label_source(),
+            Language::SpanishLatinAmerican.phoneme_label_source(),
             PhonemeLabelSource::Espeak("es")
         ));
         assert_eq!(
-            model_target("cinco", Language::SpanishMexican)
+            model_target("cinco", Language::SpanishLatinAmerican)
                 .unwrap()
                 .unwrap()
                 .phonemes,
             word(&["θ", "i", "n", "k", "o"])
         );
         assert_eq!(
-            normalize_phonemes(Phoneme::Theta, Language::SpanishMexican),
+            normalize_phonemes(Phoneme::Theta, Language::SpanishLatinAmerican),
             word(&["θ"])
         );
         assert_eq!(
-            normalize_phonemes(Phoneme::S, Language::SpanishMexican),
+            normalize_phonemes(Phoneme::S, Language::SpanishLatinAmerican),
             word(&["s"])
         );
         let empty = HashMap::new();
-        let variants = flat_variants("cinco", &empty, Language::SpanishMexican).unwrap();
+        let variants = flat_variants("cinco", &empty, Language::SpanishLatinAmerican).unwrap();
         assert_eq!(
             variants,
             vec![
@@ -2265,7 +2265,7 @@ mod tests {
                 wp.insert("cinco".to_string(), ap("θ i n k o", &[]));
             }
             let readings =
-                ground_truth_phoneme_variants("cinco nombre", &wp, Language::SpanishMexican)
+                ground_truth_phoneme_variants("cinco nombre", &wp, Language::SpanishLatinAmerican)
                     .unwrap();
             assert!(
                 readings
@@ -2278,13 +2278,13 @@ mod tests {
         // words' per-word alternates are truncated.
         let text = ["cinco"; 6].join(" ");
         let readings =
-            ground_truth_phoneme_variants(&text, &empty, Language::SpanishMexican).unwrap();
+            ground_truth_phoneme_variants(&text, &empty, Language::SpanishLatinAmerican).unwrap();
         assert_eq!(readings.len(), MAX_VARIANT_COMBINATIONS + 1);
         assert!(readings.iter().any(|r| r.phonemes
             == vec![word(&["s", "i", "n", "k", "o"]); 6].concat()
             && r.word_spans.len() == 6));
         assert_eq!(
-            flat_variants("niño", &empty, Language::SpanishMexican)
+            flat_variants("niño", &empty, Language::SpanishLatinAmerican)
                 .unwrap()
                 .len(),
             1
@@ -2494,7 +2494,7 @@ mod letter_name_tests {
             "ɛ s ts ɛ t v i ɪ n ʃ t ɾ ɑ s ə"
         );
         assert_eq!(
-            phonemes(Language::SpanishMexican, "ñ", "niño"),
+            phonemes(Language::SpanishLatinAmerican, "ñ", "niño"),
             "e ɲ e k o m o e n n i ɲ o"
         );
         assert_eq!(

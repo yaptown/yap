@@ -31,7 +31,7 @@ use weapon::data_model::{EventStore, EventType};
 use yap_frontend_rs::{
     CardContext, CardIndicator, CardSummary, Challenge, Context, Deck, DeckEvent, LanguageEvent,
     LanguageEventContent, Rating, TranslateComprehensibleSentence, autograde_translation,
-    dictionary::GramDictionaryEntry, translation_is_perfect,
+    dictionary::DictionaryWord, translation_is_perfect,
 };
 
 use crate::deck::{PackCache, build_deck, detect_course, insert_rows, new_store};
@@ -601,20 +601,17 @@ fn ok_typed<T: Serialize>(value: &T) -> CallToolResult {
 /// The public dictionary, canonical regardless of where the server runs.
 const DICTIONARY_BASE_URL: &str = "https://yap.town/d";
 
-/// A short native-language gloss for titles/citations.
-fn entry_gloss(entry: &GramDictionaryEntry) -> String {
-    entry
-        .definition()
-        .senses
-        .iter()
-        .take(2)
-        .map(|sense| sense.meaning.as_str())
-        .collect::<Vec<_>>()
-        .join("; ")
+fn dictionary_sense_gram(pack: &LanguagePack, index: usize) -> TaggedGram<Gram<String>> {
+    let (spur, _) = pack
+        .gram_frequencies
+        .entries
+        .get_index(index)
+        .expect("dictionary senses come from this pack's frequency index");
+    spur.map(|gram| pack.resolve_gram(&gram))
 }
 
-fn entry_title(entry: &GramDictionaryEntry) -> String {
-    let gloss = entry_gloss(entry);
+fn entry_title(entry: &DictionaryWord) -> String {
+    let gloss = entry.gloss();
     if gloss.is_empty() {
         entry.display_text()
     } else {
@@ -623,7 +620,7 @@ fn entry_title(entry: &GramDictionaryEntry) -> String {
 }
 
 /// Stable id for the search/fetch pair, e.g. "french-to-english:42".
-fn entry_id(course: &Course, entry: &GramDictionaryEntry) -> String {
+fn entry_id(course: &Course, entry: &DictionaryWord) -> String {
     format!("{}:{}", course.dictionary_slug(), entry.frequency_index())
 }
 
@@ -1037,7 +1034,7 @@ impl YapMcp {
     #[tool(
         title = "Search the dictionary",
         output_schema = rmcp::handler::server::common::schema_for_type::<crate::output::SearchDictionaryOut>(),
-        description = "Search the yap dictionary for words and phrases. Each match includes its language and gram — the token sequence (word + lemma + part of speech) plus its sense number that uniquely identifies it. Other tools take these verbatim; search first rather than constructing grams by hand.",
+        description = "Search the yap dictionary for words and phrases, grouped by word with nested senses. Each sense includes its exact gram — the token sequence (word + lemma + part of speech) plus sense number. Pass the word's language and the chosen sense's gram verbatim to deck tools; search first rather than constructing grams by hand.",
         annotations(
             title = "Search the dictionary",
             read_only_hint = true,
@@ -1070,27 +1067,27 @@ impl YapMcp {
         let entries = deck.get_gram_dictionary_entries(Some(query.clone()), limit);
         let results: Vec<DictionaryMatchOut> = entries
             .iter()
-            .map(|entry| {
-                let gram = pack
-                    .gram_frequencies
-                    .entries
-                    .get_index(entry.frequency_index())
-                    .map(|(spur, _)| spur.map(|gram| pack.resolve_gram(&gram)));
-                DictionaryMatchOut {
-                    language,
-                    gram,
-                    display_text: entry.display_text(),
-                    frequency_rank: entry.frequency_index() + 1,
-                    is_phrase: entry.definition().is_phrase,
-                    in_deck: entry.is_in_deck(),
-                    definition: entry.definition(),
-                }
+            .map(|entry| DictionaryMatchOut {
+                language,
+                display_text: entry.display_text(),
+                is_phrase: entry.is_phrase(),
+                senses: entry
+                    .senses()
+                    .into_iter()
+                    .map(|sense| DictionarySenseMatchOut {
+                        gram: dictionary_sense_gram(pack, sense.frequency_index),
+                        gloss: sense.gloss,
+                        frequency_rank: sense.frequency_index + 1,
+                        in_deck: sense.is_in_deck,
+                        definition: sense.definition,
+                    })
+                    .collect(),
             })
             .collect();
         ok_typed(&SearchDictionaryOut {
             query,
             results,
-            note: "frequency_rank 1 is the most common word in the course. Pass language + gram verbatim to add_cards or get_sentences.".to_string(),
+            note: "frequency_rank 1 is the most common sense in the course. Pass the word's language + a chosen sense's gram verbatim to add_cards or get_sentences.".to_string(),
         })
     }
 
@@ -2044,10 +2041,11 @@ impl YapMcp {
             .pack()
             .gram_frequencies
             .entries
-            .get_index(index)
+            .get_index(entry.frequency_index())
             .expect("index valid: entry was just built from it")
             .0;
-        let gram_value = interned.map(|gram| state.pack().resolve_gram(&gram));
+        let senses = entry.senses();
+        let in_deck = senses.iter().any(|sense| sense.is_in_deck);
         let language = state.context.course.target_language;
         let sampled = state.sample_sentences(interned, 3);
 
@@ -2056,21 +2054,32 @@ impl YapMcp {
         use std::fmt::Write as _;
         let mut text = String::new();
         let _ = writeln!(text, "{display}");
-        for sense in entry.definition().senses {
-            let _ = write!(text, "• {}", sense.meaning);
-            if let Some(note) = sense.note {
-                let _ = write!(text, " ({note})");
+        for (index, sense) in senses.iter().enumerate() {
+            let _ = writeln!(
+                text,
+                "\nSense {} (frequency rank {}):",
+                index + 1,
+                sense.frequency_index + 1
+            );
+            if !sense.definition.morphology_label.is_empty() {
+                let _ = writeln!(text, "{}", sense.definition.morphology_label);
             }
-            let _ = writeln!(text);
-            if let Some(example) = sense.example {
-                let _ = writeln!(text, "  e.g. “{}” — “{}”", example.target, example.native);
+            for meaning in &sense.definition.senses {
+                let _ = write!(text, "• {}", meaning.meaning);
+                if let Some(note) = &meaning.note {
+                    let _ = write!(text, " ({note})");
+                }
+                let _ = writeln!(text);
+                if let Some(example) = &meaning.example {
+                    let _ = writeln!(text, "  e.g. “{}” — “{}”", example.target, example.native);
+                }
             }
         }
         let _ = writeln!(
             text,
             "\nFrequency rank {} (1 = most common in this course). {}",
             entry.frequency_index() + 1,
-            if entry.is_in_deck() {
+            if in_deck {
                 "Already in the user's deck."
             } else {
                 "Not in the user's deck."
@@ -2104,16 +2113,24 @@ impl YapMcp {
         let _ = writeln!(text, "\nDictionary page: {url}");
 
         ok_typed(&FetchOut {
-            id: params.id,
+            id: entry_id(&course, &entry),
             title: entry_title(&entry),
             text,
             url,
             metadata: FetchMetadataOut {
                 language,
-                gram: Some(gram_value),
+                senses: senses
+                    .into_iter()
+                    .map(|sense| FetchSenseOut {
+                        gram: dictionary_sense_gram(state.pack(), sense.frequency_index),
+                        gloss: sense.gloss,
+                        frequency_rank: sense.frequency_index + 1,
+                        in_deck: sense.is_in_deck,
+                    })
+                    .collect(),
                 frequency_rank: entry.frequency_index() + 1,
-                in_deck: entry.is_in_deck(),
-                is_phrase: entry.definition().is_phrase,
+                in_deck,
+                is_phrase: entry.is_phrase(),
             },
         })
     }

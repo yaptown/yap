@@ -363,7 +363,7 @@ pub fn is_proper_sentence(text: &str, language: Language) -> bool {
     match language {
         Language::English
         | Language::French
-        | Language::SpanishMexican
+        | Language::SpanishLatinAmerican
         | Language::SpanishPeninsular
         | Language::German
         | Language::PortugueseBrazilian

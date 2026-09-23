@@ -87,8 +87,10 @@
           },
           "recommend_more_cards": true
         },
+        "manual_add_heading": "Choose cards to add",
         "manual_add_options": [
           {
+            "label": "Learn 2 German → English cards",
             "count": 2,
             "card_type": "TargetLanguage",
             "event": {
@@ -142,6 +144,7 @@
             }
           },
           {
+            "label": "Learn 2 German listening cards",
             "count": 2,
             "card_type": "Listening",
             "event": {
@@ -189,6 +192,7 @@
             }
           },
           {
+            "label": "Learn 2 German pronunciation cards",
             "count": 2,
             "card_type": "LetterPronunciation",
             "event": {

@@ -76,12 +76,12 @@ struct IdleScreen: View {
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
                 }
                 if !awaitingAcknowledgement {
-                    DisclosureGroup("Choose cards to add") {
+                    DisclosureGroup(idle.manual_add_heading) {
                         VStack(alignment: .leading, spacing: 12) {
                             ForEach(Array(idle.manual_add_options.enumerated()), id: \.offset) { _, option in
-                                Button("Add \(option.count) \(label(option.card_type)) cards") {
-                                    if let event = option.event { addEvent(event) }
-                                }.disabled(option.event == nil).frame(minHeight: 44)
+                                Button(option.label) {
+                                    addEvent(option.event)
+                                }.frame(minHeight: 44)
                             }
                         }
                     }
@@ -94,8 +94,5 @@ struct IdleScreen: View {
             Text("You'll review \(card.card_text) \(Date(timeIntervalSince1970: card.due_timestamp_ms / 1000), style: .relative).")
                 .foregroundStyle(.secondary)
         }
-    }
-    private func label(_ type: CardType) -> String {
-        switch type { case .TargetLanguage: "vocabulary"; case .Listening: "listening"; case .LetterPronunciation: "pronunciation" }
     }
 }

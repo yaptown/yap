@@ -73,7 +73,7 @@ pub async fn ensure_multiword_terms_file(
     };
     let banned_terms = match target_language {
         Language::French => vec!["de le", "de les", "à le", "à les", "fait que", "aller y"],
-        Language::SpanishMexican | Language::SpanishPeninsular => vec!["de el", "a el"], // Spanish contractions that become "del" and "al"
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => vec!["de el", "a el"], // Spanish contractions that become "del" and "al"
         Language::English => vec!["me thinketh"],
         Language::Korean => vec![],
         Language::German => vec!["daß"],
@@ -174,7 +174,7 @@ async fn download_multiword_terms(language: Language) -> anyhow::Result<Vec<Stri
     let category = match language {
         Language::French => "French_multiword_terms",
         Language::English => "English_multiword_terms",
-        Language::SpanishMexican | Language::SpanishPeninsular => "Spanish_multiword_terms",
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => "Spanish_multiword_terms",
         Language::Korean => {
             // Korean multiword terms are not supported yet. The wiktionary page seems very barebones.
             return Ok(vec![]);

@@ -230,15 +230,12 @@ function useStudyController(
       ? heldChallenge.challenge
       : undefined;
   const { inputs, reviewView, getReviewView, getHomeView } = useMemo(() => {
-    const inputs = {
+    const reviewInputs = {
       banned,
       sentence_list: deck?.get_sentence_list(),
       online: network.online === true,
       is_signed_in: userInfo !== undefined,
       timestamp_ms: readiness.timestamp_ms,
-    };
-    const reviewInputs = {
-      ...inputs,
       needs_display_name: userInfo?.displayName === null,
       display_name_dismissed: dismissedSetDisplayName,
       has_access_token: accessToken !== undefined,
@@ -264,9 +261,9 @@ function useStudyController(
     };
     const getHomeView = (sentence_list: SentenceListSelection | undefined) => {
       if (!deck) throw new Error("Home requires a ready deck");
-      return deck.home_screen_view({ ...inputs, sentence_list });
+      return deck.home_screen_view({ ...reviewInputs, sentence_list });
     };
-    return { inputs, reviewView, getReviewView, getHomeView };
+    return { inputs: reviewInputs, reviewView, getReviewView, getHomeView };
   }, [
     deck,
     banned,

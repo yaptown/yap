@@ -6,7 +6,7 @@ use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct PronunciationResponse {

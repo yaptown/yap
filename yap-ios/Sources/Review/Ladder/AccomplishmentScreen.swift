@@ -7,7 +7,7 @@ struct AccomplishmentScreen: View {
     var body: some View {
         let summary = view.today
         StudyCard {
-            Label("Goal reached!", systemImage: "trophy.fill").font(.title.bold())
+            Label(view.heading, systemImage: "trophy.fill").font(.title.bold())
             Text("You studied \(summary.time_spent_seconds / 60) min! (\(summary.reviews) challenges)")
             Text("\(view.streak) day streak").font(.headline)
             SnapshotGoalEditor(target: view.target, goals: view.goals, addEvent: addEvent)

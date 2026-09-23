@@ -893,9 +893,25 @@ pub struct NoCardsReadyInfo {
 #[bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct ManualAddOption {
+    pub label: String,
     pub count: u32,
     pub card_type: CardType,
-    pub event: Option<DeckEvent>,
+    pub event: DeckEvent,
+}
+
+const MANUAL_ADD_HEADING: &str = "Choose cards to add";
+
+fn manual_add_label(count: u32, card_type: CardType, course: Course) -> String {
+    let target = course.target_language;
+    let kind = match card_type {
+        CardType::TargetLanguage => format!("{target} → {}", course.native_language),
+        CardType::Listening => format!("{target} listening"),
+        CardType::LetterPronunciation => format!("{target} pronunciation"),
+    };
+    format!(
+        "Learn {count} {kind} {}",
+        if count == 1 { "card" } else { "cards" }
+    )
 }
 
 pub use deck_event::current::CardIndicator;
@@ -3452,8 +3468,7 @@ impl Deck {
         CARD_TYPES
             .into_iter()
             .filter(|kind| is_signed_in || *kind != CardType::Listening)
-            .map(|kind| self.get_manual_add_option(kind, sentence_list.clone()))
-            .filter(|option| is_signed_in || option.count > 0)
+            .filter_map(|kind| self.get_manual_add_option(kind, sentence_list.clone()))
             .collect()
     }
 
@@ -3462,7 +3477,7 @@ impl Deck {
         &self,
         card_type: CardType,
         sentence_list: Option<SentenceListSelection>,
-    ) -> ManualAddOption {
+    ) -> Option<ManualAddOption> {
         let max_cards_to_add = self.max_cards_to_add();
         let cards: Vec<_> = self
             .next_unknown_cards(
@@ -3472,12 +3487,17 @@ impl Deck {
             )
             .take(max_cards_to_add)
             .collect();
-        let event = self.cards_to_event(&cards, &sentence_list);
-        ManualAddOption {
-            count: cards.len() as u32,
+        if cards.is_empty() {
+            return None;
+        }
+        let event = self.cards_to_event(&cards, &sentence_list)?;
+        let count = cards.len() as u32;
+        Some(ManualAddOption {
+            label: manual_add_label(count, card_type, self.context.course),
+            count,
             card_type,
             event,
-        }
+        })
     }
 
     /// `history_known` says whether this deck's event replay can be trusted

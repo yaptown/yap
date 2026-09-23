@@ -29,10 +29,9 @@ use std::hash::Hash;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 
-use crate::cache_remote;
 use crate::target_sentences::TargetSentences;
 use crate::tokenize::{SentenceEncoder, TrainedEncoding};
-use crate::translate::{TranslationBackend, Translator};
+use crate::translate::Translator;
 use language_utils::GramInterners;
 
 struct PhraseDetectionData {
@@ -927,46 +926,20 @@ pub async fn segment_corpus(
 }
 
 /// Translate every sentence_corpus app sentence into the course's native language
-/// (osmo-cached; primed in batches first). Returns text → translations —
+/// (osmo-cached; warmed before this stage). Returns text → translations —
 /// sentences with no usable translation are absent from the map, which is
 /// how downstream pack assembly excludes them. Also writes the translations
 /// file as a pure output.
 pub async fn translate_sentences(
     course: &Course,
     sentence_corpus: &TargetSentences,
+    translator: Translator,
 ) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
     let course = *course;
     let CourseDirs {
         native_specific_dir,
         ..
     } = course_dirs(&course)?;
-
-    let translator = Translator::new(
-        course.target_language, // translate from target to native
-        course.native_language,
-        cache_remote::store(),
-        // Luna over the OpenAI Batch API is ~50x cheaper than Google's
-        // translation-llm; anything already in the Google cache is
-        // still reused (see translate.rs). Swap in
-        // `TranslationBackend::Google` to go back.
-        TranslationBackend::OpenAi {
-            model: "gpt-5.6-luna".to_string(),
-        },
-    )
-    .await
-    .context("Failed to create translator")?;
-
-    // Warm the cache in batched requests first. The Translation LLM quota
-    // is requests-per-minute, so translating the misses in bulk here means
-    // the per-sentence pass below is (almost) all cache hits. Prime shows
-    // its own progress bar, so set up the per-sentence bar afterwards to
-    // avoid two live bars fighting over the terminal.
-    let targets: Vec<String> = sentence_corpus
-        .app_sentences
-        .iter()
-        .map(|(target, _, _)| target.clone())
-        .collect();
-    translator.prime(&targets).await;
 
     let total = sentence_corpus.app_sentences.len() as u64;
     let translate_label = format!(

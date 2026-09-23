@@ -2948,9 +2948,9 @@ pub struct PronunciationData {
 pub enum Language {
     French,
     English,
-    /// Spanish as spoken in Mexico (es-MX).
+    /// Spanish as spoken in Latin America (es-419).
     #[serde(alias = "Spanish")]
-    SpanishMexican,
+    SpanishLatinAmerican,
     /// Spanish as spoken in Spain (es-ES).
     SpanishPeninsular,
     Korean,
@@ -3131,7 +3131,7 @@ impl Language {
             // 41% median phoneme distance where `pt-br` measured 31%.
             Language::French => PhonemeLabelSource::Espeak("fr-fr"),
             Language::English => PhonemeLabelSource::Espeak("en-us"),
-            Language::SpanishMexican | Language::SpanishPeninsular => {
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
                 PhonemeLabelSource::Espeak("es")
             }
             Language::German => PhonemeLabelSource::Espeak("de"),
@@ -3177,7 +3177,7 @@ impl Language {
         match self {
             Language::French => "fra",
             Language::English => "eng",
-            Language::SpanishMexican => "spa",
+            Language::SpanishLatinAmerican => "spa",
             Language::SpanishPeninsular => "spa-es",
             Language::Korean => "kor",
             Language::German => "deu",
@@ -3208,13 +3208,13 @@ impl Language {
     /// it doesn't say which script, and the whole point of the split is to
     /// make that ambiguity a loud error instead of a silent default. Bare
     /// "spa" and "por" stay valid because they have always named the courses
-    /// that Mexican Spanish and Brazilian Portuguese inherited, and every
+    /// that Latin American Spanish and Brazilian Portuguese inherited, and every
     /// published clip, pack and cache is keyed by them.
     pub fn from_code(code: &str) -> Option<Self> {
         Some(match code {
             "fra" => Language::French,
             "eng" => Language::English,
-            "spa" => Language::SpanishMexican,
+            "spa" => Language::SpanishLatinAmerican,
             "spa-es" => Language::SpanishPeninsular,
             "kor" => Language::Korean,
             "deu" => Language::German,
@@ -3246,7 +3246,7 @@ impl Language {
         match self {
             Language::French => "french",
             Language::English => "english",
-            Language::SpanishMexican => "spanish",
+            Language::SpanishLatinAmerican => "spanish",
             Language::SpanishPeninsular => "spanish-spain",
             Language::Korean => "korean",
             Language::German => "german",
@@ -3272,7 +3272,7 @@ impl Language {
         match self {
             Language::French => "French",
             Language::English => "English",
-            Language::SpanishMexican | Language::SpanishPeninsular => "Spanish",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "Spanish",
             Language::Korean => "Korean",
             Language::German => "German",
             Language::ChineseSimplified => "Chinese (Simplified)",
@@ -3290,7 +3290,7 @@ impl Language {
         match self {
             Language::French => "fr",
             Language::English => "en",
-            Language::SpanishMexican | Language::SpanishPeninsular => "es",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "es",
             Language::Korean => "ko",
             Language::German => "de",
             Language::ChineseSimplified | Language::ChineseTraditional => "zh",
@@ -3307,7 +3307,7 @@ impl Language {
         match self {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::PortugueseBrazilian
@@ -3336,7 +3336,7 @@ impl Language {
         matches!(
             self,
             Language::French
-                | Language::SpanishMexican | Language::SpanishPeninsular
+                | Language::SpanishLatinAmerican | Language::SpanishPeninsular
                 | Language::German
                 | Language::PortugueseBrazilian | Language::PortugueseEuropean
                 | Language::Italian
@@ -3352,7 +3352,7 @@ impl Language {
     pub fn pronunciation_connector(&self) -> &'static str {
         match self {
             Language::French => "comme dans",
-            Language::SpanishMexican | Language::SpanishPeninsular => "como en",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "como en",
             Language::Korean => "\u{cc98}\u{b7fc}",
             Language::English => "as in",
             Language::German => "wie in",
@@ -3433,7 +3433,7 @@ impl Language {
                 'ü' => "u trema",
                 _ => return None,
             },
-            Language::SpanishMexican | Language::SpanishPeninsular => match letter {
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => match letter {
                 'y' => "i griega",
                 'ñ' => "eñe",
                 'á' => "a con acento",
@@ -3653,7 +3653,7 @@ impl Language {
     pub fn google_tts_voice(&self) -> (&'static str, &'static str) {
         match self {
             Language::French => ("fr-FR", "fr-FR-Chirp3-HD-Achernar"),
-            Language::SpanishMexican | Language::SpanishPeninsular => {
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
                 ("es-US", "es-US-Chirp3-HD-Achernar")
             }
             Language::English => ("en-US", "en-US-Chirp3-HD-Achernar"),
@@ -3685,7 +3685,7 @@ impl Language {
             Language::PortugueseBrazilian | Language::PortugueseEuropean => "pt-br",
             Language::ChineseSimplified => "zh-cn",
             Language::ChineseTraditional => "zh-tw",
-            Language::SpanishMexican | Language::SpanishPeninsular => "es,sp,ea",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "es,sp,ea",
             other => other.iso_639_1(),
         }
     }
@@ -3695,7 +3695,7 @@ impl Language {
         match self {
             Language::French => "fr-FR",
             Language::English => "en-US",
-            Language::SpanishMexican | Language::SpanishPeninsular => "es-ES",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "es-ES",
             Language::German => "de-DE",
             Language::Korean => "ko-KR",
             Language::ChineseSimplified => "zh-CN",
@@ -3716,7 +3716,9 @@ impl Language {
         match self {
             Language::French => &["le", "de", "pas", "je"],
             Language::English => &["the", "to", "you", "is"],
-            Language::SpanishMexican | Language::SpanishPeninsular => &["el", "de", "no", "que"],
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
+                &["el", "de", "no", "que"]
+            }
             Language::German => &["ich", "das", "nicht", "du"],
             Language::Korean => &["이", "는", "을", "에"],
             // 的/了/是/不 are written identically in both scripts.
@@ -3783,7 +3785,7 @@ impl Language {
                 (" lf ", " If "),
             ],
             // t→r corruption: "está"→"esrá", "todo"→"rodo", "tiene"→"riene"
-            Language::SpanishMexican | Language::SpanishPeninsular => &[
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => &[
                 ("esrá", "está"),
                 ("esro", "esto"),
                 ("riene", "tiene"),
@@ -4104,8 +4106,10 @@ impl Language {
         }
 
         // 11. Spanish: missing inverted punctuation ¿ and ¡
-        if matches!(self, Language::SpanishMexican | Language::SpanishPeninsular)
-            && total_lines >= 100
+        if matches!(
+            self,
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular
+        ) && total_lines >= 100
         {
             let questions = all_text.matches('?').count();
             let inv_questions = all_text.matches('¿').count();
@@ -4387,7 +4391,7 @@ impl std::fmt::Display for Language {
         match self {
             Language::French => write!(f, "French"),
             Language::English => write!(f, "English"),
-            Language::SpanishMexican => write!(f, "Spanish (Mexico)"),
+            Language::SpanishLatinAmerican => write!(f, "Spanish (Latin America)"),
             Language::SpanishPeninsular => write!(f, "Spanish (Spain)"),
             Language::Korean => write!(f, "Korean"),
             Language::German => write!(f, "German"),
@@ -4462,7 +4466,7 @@ pub const COURSES: &[Course] = &[
     },
     Course {
         native_language: Language::English,
-        target_language: Language::SpanishMexican,
+        target_language: Language::SpanishLatinAmerican,
     },
     Course {
         native_language: Language::English,
@@ -4516,7 +4520,7 @@ pub const COURSES: &[Course] = &[
 
 pub const LANGUAGES: &[Language] = &[
     Language::French,
-    Language::SpanishMexican,
+    Language::SpanishLatinAmerican,
     Language::SpanishPeninsular,
     Language::English,
     Language::Korean,
@@ -4898,7 +4902,7 @@ mod tts_cache_key_tests {
                 ..base.clone()
             },
             TtsRequest {
-                language: Language::SpanishMexican,
+                language: Language::SpanishLatinAmerican,
                 ..base.clone()
             },
             TtsRequest {
@@ -5676,7 +5680,7 @@ mod pronunciation_challenge_audio_tests {
             "s c h wie in Schule"
         );
         assert_eq!(
-            pronunciation_challenge_spoken_text(Language::SpanishMexican, "ñ", "niño"),
+            pronunciation_challenge_spoken_text(Language::SpanishLatinAmerican, "ñ", "niño"),
             "eñe como en niño"
         );
         assert_eq!(
@@ -5975,11 +5979,29 @@ mod dialect_tests {
     use super::*;
 
     #[test]
+    fn latin_american_spanish_preserves_frozen_identity() {
+        let language = Language::SpanishLatinAmerican;
+        assert_eq!(language.to_string(), "Spanish (Latin America)");
+        assert_eq!(language.code(), "spa");
+        assert_eq!(language.dictionary_name(), "spanish");
+        assert_eq!(language.prompt_name(), "Spanish");
+        assert_eq!(
+            language.google_tts_voice(),
+            ("es-US", "es-US-Chirp3-HD-Achernar")
+        );
+        assert_eq!(language.tmdb_language_code(), "es-ES");
+        assert_eq!(
+            serde_json::from_value::<Language>(serde_json::json!("SpanishLatinAmerican")).unwrap(),
+            language
+        );
+    }
+
+    #[test]
     fn frozen_audio_language_keys() {
         let expected = [
             (Language::French, "French"),
             (Language::English, "English"),
-            (Language::SpanishMexican, "Spanish"),
+            (Language::SpanishLatinAmerican, "Spanish"),
             (Language::SpanishPeninsular, "Spanish"),
             (Language::Korean, "Korean"),
             (Language::German, "German"),
@@ -6006,7 +6028,11 @@ mod dialect_tests {
         }
         assert_eq!(Language::from_code("zho"), None);
         for (old, language, slug) in [
-            ("Spanish", Language::SpanishMexican, "spanish-to-english"),
+            (
+                "Spanish",
+                Language::SpanishLatinAmerican,
+                "spanish-to-english",
+            ),
             (
                 "Portuguese",
                 Language::PortugueseBrazilian,
@@ -6027,7 +6053,11 @@ mod dialect_tests {
             );
         }
         for (inherited, new, corpus) in [
-            (Language::SpanishMexican, Language::SpanishPeninsular, "spa"),
+            (
+                Language::SpanishLatinAmerican,
+                Language::SpanishPeninsular,
+                "spa",
+            ),
             (
                 Language::PortugueseBrazilian,
                 Language::PortugueseEuropean,
@@ -6048,8 +6078,8 @@ mod dialect_tests {
         assert_eq!(Language::PortugueseBrazilian.g2p_lang(), Some("por"));
         assert_eq!(Language::PortugueseEuropean.g2p_lang(), None);
         assert_eq!(
-            serde_json::to_value(Language::SpanishMexican).unwrap(),
-            "SpanishMexican"
+            serde_json::to_value(Language::SpanishLatinAmerican).unwrap(),
+            "SpanishLatinAmerican"
         );
         assert_eq!(
             serde_json::to_value(Language::PortugueseBrazilian).unwrap(),

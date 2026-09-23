@@ -1,6 +1,7 @@
 use language_utils::features::{Morphology, WordPrefix};
 use language_utils::text_cleanup::remove_accents_lowercase;
 use language_utils::{Atom, Gram, GramDefinition, Language, WordType};
+use rustc_hash::{FxHashMap, FxHashSet};
 use yap_frontend_reducers::{DefinitionView, definition_view};
 
 use crate::{
@@ -50,7 +51,7 @@ pub(crate) fn compute_word_prefix(
     }
 }
 
-/// Get gram dictionary entries ordered by frequency (most common first).
+/// Get dictionary words ordered by frequency (most common first).
 /// Optionally filters by search query (accent-insensitive) and limits results.
 #[bridgerton::bridge]
 impl Deck {
@@ -58,7 +59,7 @@ impl Deck {
         &self,
         search_query: Option<String>,
         limit: usize,
-    ) -> Vec<GramDictionaryEntry> {
+    ) -> Vec<DictionaryWord> {
         self.get_gram_dictionary_page(search_query, 0, limit)
     }
 
@@ -69,7 +70,7 @@ impl Deck {
         search_query: Option<String>,
         offset: usize,
         limit: usize,
-    ) -> Vec<GramDictionaryEntry> {
+    ) -> Vec<DictionaryWord> {
         let language_pack = &self.context.language_pack;
         let target_language = self.context.course.target_language;
 
@@ -77,49 +78,54 @@ impl Deck {
             .filter(|q| !q.trim().is_empty())
             .map(|q| remove_accents_lowercase(&q));
 
-        let mut entries: Vec<(u8, usize)> = language_pack
-            .gram_frequencies
-            .entries
-            .iter()
-            .enumerate()
-            .filter_map(|(frequency_index, (spur_gram, _freq))| {
-                let gram_def = language_pack.gram_definitions.get(spur_gram)?;
-                let resolved_gram = language_pack.resolve_gram(&spur_gram.gram);
-                let display_text = resolved_gram.to_display_string(target_language);
-
-                // Filter by search query if provided, and compute relevance
-                // 0 = exact match, 1 = starts with, 2 = contains
-                let relevance = if let Some(q) = &query {
-                    let normalized_display = remove_accents_lowercase(&display_text);
-                    let display_exact = normalized_display == *q;
-                    let display_starts = normalized_display.starts_with(q.as_str());
-                    let display_contains = normalized_display.contains(q.as_str());
-                    let definition_contains = match gram_def {
-                        GramDefinition::Dictionary(dict_def) => dict_def
-                            .definitions
-                            .iter()
-                            .any(|d| remove_accents_lowercase(&d.native).contains(q.as_str())),
-                        GramDefinition::Phrasebook(pb_def) => {
-                            remove_accents_lowercase(&pb_def.meaning).contains(q.as_str())
-                        }
-                    };
-                    if !display_contains && !definition_contains {
-                        return None;
+        // Preserve the primary index even when only a later sense matches.
+        let mut words = FxHashMap::default();
+        for (frequency_index, (spur_gram, _)) in
+            language_pack.gram_frequencies.entries.iter().enumerate()
+        {
+            let Some(gram_def) = language_pack.gram_definitions.get(spur_gram) else {
+                continue;
+            };
+            let word = words
+                .entry(spur_gram.gram)
+                .or_insert((frequency_index, None));
+            // All matching senses have the same display-based relevance.
+            if word.1.is_some() {
+                continue;
+            }
+            let relevance = if let Some(q) = &query {
+                let display_text = language_pack
+                    .resolve_gram(&spur_gram.gram)
+                    .to_display_string(target_language);
+                let normalized_display = remove_accents_lowercase(&display_text);
+                let definition_contains = match gram_def {
+                    GramDefinition::Dictionary(dict_def) => dict_def
+                        .definitions
+                        .iter()
+                        .any(|d| remove_accents_lowercase(&d.native).contains(q.as_str())),
+                    GramDefinition::Phrasebook(pb_def) => {
+                        remove_accents_lowercase(&pb_def.meaning).contains(q.as_str())
                     }
-                    if display_exact {
-                        0
-                    } else if display_starts {
-                        1
-                    } else {
-                        2
-                    }
-                } else {
-                    // No query — all entries have equal relevance
-                    0
                 };
-
-                Some((relevance, frequency_index))
-            })
+                if !normalized_display.contains(q.as_str()) && !definition_contains {
+                    continue;
+                }
+                // Exact match, starts-with, then contains (including definition-only).
+                if normalized_display == *q {
+                    0
+                } else if normalized_display.starts_with(q.as_str()) {
+                    1
+                } else {
+                    2
+                }
+            } else {
+                0
+            };
+            word.1 = Some(relevance);
+        }
+        let mut entries: Vec<(u8, usize)> = words
+            .into_values()
+            .filter_map(|(index, relevance)| relevance.map(|relevance| (relevance, index)))
             .collect();
 
         let end = offset.saturating_add(limit).min(entries.len());
@@ -135,35 +141,59 @@ impl Deck {
             .collect()
     }
 
-    /// Build the dictionary entry at a frequency index (None when out of
-    /// range or the gram has no definition).
-    pub fn gram_dictionary_entry(&self, frequency_index: usize) -> Option<GramDictionaryEntry> {
+    /// Build the whole word containing any member sense's frequency index.
+    /// Returns None for an invalid index or a word with no defined senses.
+    pub fn gram_dictionary_entry(&self, frequency_index: usize) -> Option<DictionaryWord> {
         let language_pack = &self.context.language_pack;
         let target_language = self.context.course.target_language;
-        let (spur_gram, _freq) = language_pack
+        let (spur_gram, _) = language_pack
             .gram_frequencies
             .entries
             .get_index(frequency_index)?;
-        let gram_def = language_pack.gram_definitions.get(spur_gram)?;
+        let mut senses: Vec<_> = language_pack
+            .senses_of(spur_gram.gram)
+            .iter()
+            .filter_map(|sense_gram| {
+                let definition =
+                    definition_view(language_pack.gram_definitions.get(sense_gram)?.clone());
+                let frequency_index = language_pack
+                    .gram_frequencies
+                    .entries
+                    .get_index_of(sense_gram)?;
+                let card = CardIndicator::WrittenGram { gram: *sense_gram };
+                Some(DictionarySense {
+                    frequency_index,
+                    is_in_deck: matches!(self.cards.get(&card), Some(CardData::Added { .. })),
+                    gloss: definition
+                        .senses
+                        .iter()
+                        .take(2)
+                        .map(|sense| sense.meaning.as_str())
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                    definition,
+                })
+            })
+            .collect();
+        senses.sort_unstable_by_key(|sense| sense.frequency_index);
+        let primary = senses.first()?;
+        let (primary_gram, _) = language_pack
+            .gram_frequencies
+            .entries
+            .get_index(primary.frequency_index)?;
+        let gram_def = language_pack.gram_definitions.get(primary_gram)?;
         let resolved_gram = language_pack.resolve_gram(&spur_gram.gram);
-        let display_text = resolved_gram.to_display_string(target_language);
-
-        let card = CardIndicator::WrittenGram { gram: *spur_gram };
-        let is_in_deck = matches!(self.cards.get(&card), Some(CardData::Added { .. }));
-
-        let prefix = compute_word_prefix(&resolved_gram, gram_def, target_language);
-
-        Some(GramDictionaryEntry {
-            display_text,
-            frequency_index,
-            is_in_deck,
-            prefix,
-            definition: definition_view(gram_def.clone()),
+        Some(DictionaryWord {
+            display_text: resolved_gram.to_display_string(target_language),
+            frequency_index: primary.frequency_index,
+            prefix: compute_word_prefix(&resolved_gram, gram_def, target_language),
+            is_phrase: primary.definition.is_phrase,
             target_language,
+            senses,
         })
     }
 
-    /// Get the total number of gram dictionary entries (for "Showing X of Y" display)
+    /// Count distinct words with at least one defined sense.
     pub fn get_gram_dictionary_count(&self) -> usize {
         let language_pack = &self.context.language_pack;
         language_pack
@@ -171,7 +201,9 @@ impl Deck {
             .entries
             .iter()
             .filter(|(spur_gram, _)| language_pack.gram_definitions.contains_key(spur_gram))
-            .count()
+            .map(|(spur_gram, _)| spur_gram.gram)
+            .collect::<FxHashSet<_>>()
+            .len()
     }
 
     /// Create a DeckEvent for adding a gram/phrase by its frequency index
@@ -198,17 +230,26 @@ impl Deck {
 
 #[derive(Debug, Clone)]
 #[bridgerton::bridge(opaque)]
-pub struct GramDictionaryEntry {
+pub struct DictionaryWord {
     display_text: String,
     frequency_index: usize,
-    is_in_deck: bool,
     prefix: Option<WordPrefix>,
-    definition: DefinitionView,
+    is_phrase: bool,
     target_language: Language,
+    senses: Vec<DictionarySense>,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct DictionarySense {
+    pub frequency_index: usize,
+    pub is_in_deck: bool,
+    pub gloss: String,
+    pub definition: DefinitionView,
 }
 
 #[bridgerton::bridge]
-impl GramDictionaryEntry {
+impl DictionaryWord {
     #[bridge(getter)]
     pub fn display_text(&self) -> String {
         self.display_text.clone()
@@ -220,8 +261,13 @@ impl GramDictionaryEntry {
     }
 
     #[bridge(getter)]
-    pub fn is_in_deck(&self) -> bool {
-        self.is_in_deck
+    pub fn is_phrase(&self) -> bool {
+        self.is_phrase
+    }
+
+    #[bridge(getter)]
+    pub fn target_language(&self) -> Language {
+        self.target_language
     }
 
     #[bridge(getter)]
@@ -230,8 +276,20 @@ impl GramDictionaryEntry {
     }
 
     #[bridge(getter)]
-    pub fn definition(&self) -> DefinitionView {
-        self.definition.clone()
+    pub fn senses(&self) -> Vec<DictionarySense> {
+        self.senses.clone()
+    }
+
+    /// A short word-level summary, taking the first meaning of up to two senses.
+    #[bridge(getter)]
+    pub fn gloss(&self) -> String {
+        self.senses
+            .iter()
+            .filter_map(|sense| sense.definition.senses.first())
+            .take(2)
+            .map(|sense| sense.meaning.as_str())
+            .collect::<Vec<_>>()
+            .join("; ")
     }
 
     #[bridge(getter)]
@@ -247,5 +305,203 @@ impl GramDictionaryEntry {
             },
             provider: TtsProvider::Google,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{Context, DeckState};
+    use language_utils::{
+        ConsolidatedLanguageData, Course, DictionaryEntry, GramFrequencyEntry, GramFrequencyList,
+        GramVocabEntry, Heteronym, PartOfSpeech, PronunciationData, TaggedGram, TargetToNativeWord,
+        Word, language_pack::LanguagePack,
+    };
+    use std::{collections::BTreeMap, num::NonZeroU32, sync::Arc};
+
+    // Entirely synthetic: these tests must never load the regenerating packs on disk.
+    fn deck() -> Deck {
+        let rows: &[(&str, u32, &[&str])] = &[
+            ("bank", 3, &[]),
+            ("bank", 2, &["finance", "credit", "lender"]),
+            ("river", 0, &["water beside a bank"]),
+            ("bank", 1, &["shore", "slope"]),
+            ("banked", 0, &["deposited"]),
+            ("embankment", 0, &["wall"]),
+            ("missing", 0, &[]),
+        ];
+        let gram = |word: &str| {
+            Gram(vec![Atom::Tok(Word {
+                text: word.into(),
+                word_type: WordType::Heteronym(Heteronym {
+                    word: word.into(),
+                    lemma: word.into(),
+                    pos: PartOfSpeech::Noun,
+                }),
+            })])
+        };
+        let tagged = |word: &str, sense| TaggedGram {
+            gram: gram(word),
+            sense: NonZeroU32::new(sense),
+        };
+        let course = Course {
+            target_language: Language::English,
+            native_language: Language::French,
+        };
+        let pack = LanguagePack::new(
+            ConsolidatedLanguageData {
+                target_language_sentences: vec![],
+                translations: vec![],
+                nlp_sentences: vec![],
+                phrasebook: BTreeMap::new(),
+                proper_noun_definitions: BTreeMap::new(),
+                source_gram_frequencies: FxHashMap::default(),
+                word_to_pronunciation: vec![],
+                pronunciation_to_words: vec![],
+                minimal_pairs: vec![],
+                pronunciation_data: PronunciationData {
+                    sounds: vec![],
+                    guides: vec![],
+                    pattern_frequencies: vec![],
+                },
+                homophone_practice: BTreeMap::new(),
+                movies: FxHashMap::default(),
+                books: FxHashMap::default(),
+                sentence_sources: vec![],
+                gram_vocabulary: ["bank", "river", "banked", "embankment", "missing"]
+                    .into_iter()
+                    .map(|word| GramVocabEntry {
+                        atoms: gram(word),
+                        frequency: 10,
+                    })
+                    .collect(),
+                gram_frequencies: GramFrequencyList {
+                    entries: rows
+                        .iter()
+                        .map(|(word, sense, _)| GramFrequencyEntry {
+                            count: 10,
+                            direct_count: 10,
+                            disambiguation_key: 0,
+                            gram: tagged(word, *sense),
+                        })
+                        .collect(),
+                    total_count: 70,
+                },
+                encoded_sentences: vec![],
+                gram_dictionary: rows
+                    .iter()
+                    .filter(|(_, _, meanings)| !meanings.is_empty())
+                    .map(|(word, sense, meanings)| {
+                        (
+                            tagged(word, *sense),
+                            DictionaryEntry {
+                                target_language_word: (*word).into(),
+                                definitions: meanings
+                                    .iter()
+                                    .map(|meaning| TargetToNativeWord {
+                                        native: (*meaning).into(),
+                                        note: None,
+                                        example_sentence_target_language: String::new(),
+                                        example_sentence_native_language: String::new(),
+                                        cognate: false,
+                                        false_cognate: false,
+                                    })
+                                    .collect(),
+                                morphology: vec![],
+                                segments: vec![],
+                            },
+                        )
+                    })
+                    .collect(),
+                morphemes: BTreeMap::new(),
+                human_audio: FxHashMap::default(),
+                pronunciation_audio: FxHashMap::default(),
+            },
+            course,
+        );
+        let context = Context {
+            language_pack: Arc::new(pack),
+            course,
+            timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+        };
+        <Deck as weapon::AppState>::finalize(DeckState::new(), &context)
+    }
+
+    #[test]
+    fn pages_and_lookup_group_defined_senses_by_word() {
+        let deck = deck();
+        assert_eq!(deck.get_gram_dictionary_count(), 4);
+        let indices = |entries: Vec<DictionaryWord>| {
+            entries
+                .iter()
+                .map(DictionaryWord::frequency_index)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            indices(deck.get_gram_dictionary_entries(None, 100)),
+            [1, 2, 4, 5]
+        );
+        assert_eq!(indices(deck.get_gram_dictionary_page(None, 1, 2)), [2, 4]);
+        assert!(
+            deck.get_gram_dictionary_page(None, usize::MAX, 1)
+                .is_empty()
+        );
+        assert!(deck.get_gram_dictionary_page(None, 0, 0).is_empty());
+        for index in [0, 1, 3] {
+            let word = deck.gram_dictionary_entry(index).unwrap();
+            assert_eq!(word.frequency_index(), 1);
+            assert_eq!(word.display_text(), "bank");
+            assert_eq!(
+                word.senses
+                    .iter()
+                    .map(|sense| sense.frequency_index)
+                    .collect::<Vec<_>>(),
+                [1, 3]
+            );
+            assert_eq!(word.senses[0].gloss, "finance; credit");
+            assert_eq!(word.gloss(), "finance; shore");
+        }
+        assert!(deck.gram_dictionary_entry(6).is_none());
+        assert!(deck.gram_dictionary_entry(usize::MAX).is_none());
+    }
+
+    #[test]
+    fn search_matches_any_sense_but_keeps_the_primary_index() {
+        let deck = deck();
+        let words = deck.get_gram_dictionary_entries(Some("SHÔRE".into()), 10);
+        assert_eq!(words.len(), 1);
+        assert_eq!(words[0].frequency_index(), 1);
+        assert_eq!(words[0].senses.len(), 2);
+        let words = deck.get_gram_dictionary_entries(Some("bank".into()), 10);
+        assert_eq!(
+            words
+                .iter()
+                .map(DictionaryWord::frequency_index)
+                .collect::<Vec<_>>(),
+            [1, 4, 2, 5]
+        );
+        assert!(
+            deck.get_gram_dictionary_entries(Some("absent".into()), 10)
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn adding_a_sense_leaves_its_siblings_unadded() {
+        let deck = deck();
+        let event = deck.add_gram_by_frequency_index(3).unwrap();
+        let context = deck.context.clone();
+        let event = weapon::data_model::Timestamped {
+            timestamp: chrono::Utc::now(),
+            within_device_events_index: 0,
+            timezone: Some(context.timezone),
+            event,
+        };
+        let state =
+            <Deck as weapon::AppState>::process_event(DeckState::from(deck), &context, &event);
+        let deck = <Deck as weapon::AppState>::finalize(state, &context);
+        let word = deck.gram_dictionary_entry(1).unwrap();
+        assert!(!word.senses[0].is_in_deck);
+        assert!(word.senses[1].is_in_deck);
     }
 }

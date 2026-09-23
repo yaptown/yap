@@ -18,7 +18,7 @@ pub fn language_code(language: Language) -> &'static str {
         Language::English => "en",
         Language::French => "fr",
         Language::German => "de",
-        Language::SpanishMexican | Language::SpanishPeninsular => "es",
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => "es",
         Language::Italian => "it",
         Language::PortugueseBrazilian | Language::PortugueseEuropean => "pt",
         Language::Russian => "ru",

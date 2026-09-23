@@ -99,12 +99,12 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             yaptown_name: "Yap.Ville".into(),
             lets_go: "Allons-y !".into(),
         },
-        SpanishMexican | SpanishPeninsular => LanguageMetadata {
+        SpanishLatinAmerican | SpanishPeninsular => LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Stable,
-            flag: if language == SpanishMexican {
-                "🇲🇽"
+            flag: if language == SpanishLatinAmerican {
+                "🌎"
             } else {
                 "🇪🇸"
             }
@@ -113,8 +113,8 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             english_name: language.to_string(),
             common_name: "Spanish".into(),
             people: "Spanish".into(),
-            badge: if language == SpanishMexican {
-                "MX"
+            badge: if language == SpanishLatinAmerican {
+                "LATAM"
             } else {
                 "ES"
             }

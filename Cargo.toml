@@ -119,3 +119,9 @@ opt-level = 3
 inherits = "release"
 debug = true
 strip = "none"
+
+# Temporary: the cached-only batch fix (per-item CacheMiss instead of failing
+# the batch) lives on the local tysm checkout until it is pushed and the rev
+# above is bumped.
+[patch."https://github.com/anchpop/tysm.git"]
+tysm = { path = "../tysm" }

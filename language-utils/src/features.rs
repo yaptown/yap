@@ -563,7 +563,7 @@ impl FeatureSet for PronType {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -610,7 +610,7 @@ impl FeatureSet for NumType {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -662,7 +662,7 @@ impl FeatureSet for Poss {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -711,7 +711,7 @@ impl FeatureSet for Reflex {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -754,7 +754,7 @@ impl FeatureSet for Clusivity {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -782,7 +782,7 @@ impl FeatureSet for Gender {
         match language {
             Language::English => matches!(pos, PartOfSpeech::Pron),
             Language::French
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::PortugueseBrazilian
             | Language::PortugueseEuropean
@@ -862,7 +862,7 @@ impl FeatureSet for Animacy {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -901,7 +901,7 @@ impl FeatureSet for NounClass {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -938,7 +938,7 @@ impl FeatureSet for Number {
                 )
             }
             Language::French
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::PortugueseBrazilian
             | Language::PortugueseEuropean
@@ -1036,7 +1036,7 @@ impl FeatureSet for Case {
                 matches!(pos, PartOfSpeech::Part)
             }
             Language::French
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::PortugueseBrazilian
             | Language::PortugueseEuropean
@@ -1086,7 +1086,7 @@ impl FeatureSet for Definite {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1122,7 +1122,7 @@ impl FeatureSet for Deixis {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1173,7 +1173,7 @@ impl FeatureSet for DeixisRef {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1224,7 +1224,7 @@ impl FeatureSet for Degree {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1264,7 +1264,7 @@ impl FeatureSet for VerbForm {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1315,7 +1315,7 @@ impl FeatureSet for Mood {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1347,7 +1347,7 @@ impl FeatureSet for Tense {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1398,7 +1398,7 @@ impl FeatureSet for Aspect {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1455,7 +1455,7 @@ impl FeatureSet for Voice {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1504,7 +1504,7 @@ impl FeatureSet for Evident {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1532,7 +1532,7 @@ impl FeatureSet for Polarity {
         match language {
             Language::French
             | Language::English
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
@@ -1625,7 +1625,7 @@ impl FeatureSet for Person {
                 )
             }
             Language::French
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::German
             | Language::PortugueseBrazilian
@@ -1678,7 +1678,7 @@ impl FeatureSet for Polite {
         match language {
             // T-V distinction languages (tu/vous, du/Sie, tú/usted)
             Language::German
-            | Language::SpanishMexican
+            | Language::SpanishLatinAmerican
             | Language::SpanishPeninsular
             | Language::French
             | Language::PortugueseBrazilian
@@ -2020,14 +2020,14 @@ impl Morphology {
                 self.get_french_verb_prefix(word)
             }
             (Language::French, _) => None,
-            (Language::SpanishMexican | Language::SpanishPeninsular, PartOfSpeech::Noun) => {
+            (Language::SpanishLatinAmerican | Language::SpanishPeninsular, PartOfSpeech::Noun) => {
                 self.get_spanish_noun_prefix()
             }
             (
-                Language::SpanishMexican | Language::SpanishPeninsular,
+                Language::SpanishLatinAmerican | Language::SpanishPeninsular,
                 PartOfSpeech::Verb | PartOfSpeech::Aux,
             ) => self.get_spanish_verb_prefix(),
-            (Language::SpanishMexican | Language::SpanishPeninsular, _) => None,
+            (Language::SpanishLatinAmerican | Language::SpanishPeninsular, _) => None,
             (Language::German, PartOfSpeech::Noun) => self.get_german_noun_prefix(),
             (Language::German, PartOfSpeech::Verb | PartOfSpeech::Aux) => {
                 self.get_german_verb_prefix()

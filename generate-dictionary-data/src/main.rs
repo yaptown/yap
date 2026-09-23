@@ -1312,7 +1312,7 @@ mod tests {
     fn spanish_ser_conjugation() {
         let course = Course {
             native_language: Language::English,
-            target_language: Language::SpanishMexican,
+            target_language: Language::SpanishLatinAmerican,
         };
         let data = load_and_extract(&course);
         let page = find_page_by_display(&data, "es");

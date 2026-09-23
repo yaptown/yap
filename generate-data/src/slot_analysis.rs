@@ -41,7 +41,7 @@ use tysm::chat_completions::ChatClient;
 /// fractions of a cent here and its capacity outages would otherwise block
 /// the whole segmentation run.
 static HINTS_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-sol").with_service_tier("default"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-sol").with_service_tier("default"));
 
 /// The two judgment steps: deciding slot-vs-literal per term, and grading a
 /// pattern's matches. Both are only a few hundred calls per language, and

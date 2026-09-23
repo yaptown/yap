@@ -22,10 +22,8 @@ struct HomeScreen: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 10)) { _ in
             let deck = review.deck
-            let view = self.view ?? deck.home_screen_view(inputs: HomeScreenInputs(
-                banned: review.banned, sentence_list: review.session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list(),
-                online: review.session.online, is_signed_in: review.auth.session != nil,
-                timestamp_ms: ReviewModel.now))
+            let view = self.view ?? deck.home_screen_view(inputs: review.inputs(
+                sentenceList: review.session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list()))
             GeometryReader { geometry in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {

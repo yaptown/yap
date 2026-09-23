@@ -88,8 +88,7 @@ import Observation
         guard active else { return }
         let now = Self.now
         reviewInfo = deck.get_review_info(banned_challenge_types: banned, timestamp_ms: now)
-        view = deck.review_screen_view(inputs: Self.inputs(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown,
-            sentenceList: session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list(), banned: banned, challenge: currentChallenge))
+        view = deck.review_screen_view(inputs: inputs(sentenceList: session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list()))
         // Non-nil challenges are held for this Deck's lifetime, even as caches change.
         if case let .Challenge(challenge) = view.step { currentChallenge = challenge.challenge }
         prefetch?.cancel()
@@ -145,6 +144,10 @@ import Observation
         DebugHarness.log("sentence appended: events=\(session.weapon?.num_events ?? 0) completedAtMs=\(timestamp)")
         #endif
         return true
+    }
+    func inputs(sentenceList: SentenceListSelection?) -> ReviewScreenInputs {
+        Self.inputs(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown,
+            sentenceList: sentenceList, banned: banned, challenge: currentChallenge)
     }
     private static func inputs(deck: Deck, session: YapSession, auth: AuthStore, startingFresh: Bool?, historyKnown: Bool,
                                sentenceList: SentenceListSelection?, banned: [ChallengeRequirements], challenge: Challenge_Gram_String?) -> ReviewScreenInputs {

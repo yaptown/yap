@@ -14,7 +14,7 @@ fn to_lexide_language(lang: Language) -> Option<lexide::Language> {
     match lang {
         Language::French => Some(lexide::Language::French),
         Language::English => Some(lexide::Language::English),
-        Language::SpanishMexican | Language::SpanishPeninsular => {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
             Some(lexide::Language::SpanishEuro)
         }
         Language::Korean => Some(lexide::Language::Korean),

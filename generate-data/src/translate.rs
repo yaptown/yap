@@ -30,6 +30,11 @@ const MAX_RETRIES: u32 = 5;
 /// Keep chunk order stable so tysm can resume matching Batch API jobs.
 const OPENAI_BATCH_CHUNK: usize = 10_000;
 
+/// OpenAI models the translator ran under before the current one. Their cache
+/// entries are read (never written) so a model bump does not re-translate the
+/// corpus; the legacy Google key is consulted after these.
+const PREVIOUS_OPENAI_MODELS: &[&str] = &["gpt-5.6-luna"];
+
 /// After process spend reaches TRANSLATE_BUDGET_USD, apply each pair's
 /// TRANSLATE_BUDGET_PER_LANGUAGE_USD cap. Zero disables a stage.
 /// Only usage reported by the backend counts toward these per-run limits.
@@ -46,7 +51,7 @@ pub enum TranslationBackend {
     // Currently unselected in main.rs, kept so it can be swapped back in.
     #[allow(dead_code)]
     Google,
-    /// An OpenAI chat model (e.g. `"gpt-5.6-luna"`) via tysm, one sentence
+    /// An OpenAI chat model (e.g. `"gpt-6-luna"`) via tysm, one sentence
     /// per request, bulk-warmed through the OpenAI Batch API. Reads its own
     /// model-specific cache key, falling back to the legacy Google key.
     OpenAi { model: String },
@@ -277,14 +282,16 @@ impl Translator {
     fn primary_hash(&self, text: &str) -> u64 {
         match &self.backend {
             Backend::Google { .. } => self.google_hash(text),
-            Backend::OpenAi { client, .. } => {
-                let hash_input = format!(
-                    "{}::{}::{}::{text}",
-                    self.source_code, self.target_code, client.model
-                );
-                xxh3_64(hash_input.as_bytes())
-            }
+            Backend::OpenAi { client, .. } => self.openai_hash(&client.model, text),
         }
+    }
+
+    fn openai_hash(&self, model: &str, text: &str) -> u64 {
+        let hash_input = format!(
+            "{}::{}::{model}::{text}",
+            self.source_code, self.target_code
+        );
+        xxh3_64(hash_input.as_bytes())
     }
 
     async fn cached_by_hash(&self, hash: u64) -> Option<String> {
@@ -302,6 +309,11 @@ impl Translator {
             return Some(t);
         }
         if matches!(self.backend, Backend::OpenAi { .. }) {
+            for model in PREVIOUS_OPENAI_MODELS {
+                if let Some(t) = self.cached_by_hash(self.openai_hash(model, text)).await {
+                    return Some(t);
+                }
+            }
             return self.cached_by_hash(self.google_hash(text)).await;
         }
         None
@@ -546,17 +558,8 @@ impl Translator {
             return;
         }
 
-        let pb = indicatif::ProgressBar::new(pending.len() as u64);
-        pb.set_style(
-            indicatif::ProgressStyle::default_bar()
-                .template(
-                    "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} priming translation cache ({per_sec}, {msg}, {eta})",
-                )
-                .unwrap()
-                .progress_chars("#>-"),
-        );
-        pb.set_message("~$0.0000");
-        pb.enable_steady_tick(Duration::from_millis(100));
+        // Warmups for several courses run concurrently, alongside other stages' bars.
+        let pb = indicatif::ProgressBar::hidden();
 
         match &self.backend {
             Backend::Google { .. } => self.prime_google(pending, &pb).await,
@@ -587,7 +590,7 @@ impl Translator {
             batches.push(cur);
         }
 
-        futures::stream::iter(batches.into_iter().map(|batch| {
+        let jobs = batches.into_iter().map(|batch| {
             let pb = pb.clone();
             async move {
                 if self.over_budget() {
@@ -609,10 +612,11 @@ impl Translator {
                 pb.inc(batch.len() as u64);
                 pb.set_message(format!("~${:.4}", self.cost_estimate_usd()));
             }
-        }))
-        .buffer_unordered(BATCH_CONCURRENCY)
-        .collect::<Vec<()>>()
-        .await;
+        });
+        futures::stream::iter(jobs.collect::<Vec<_>>())
+            .buffer_unordered(BATCH_CONCURRENCY)
+            .collect::<Vec<()>>()
+            .await;
     }
 
     async fn prime_openai(&self, pending: Vec<&str>, pb: &indicatif::ProgressBar) {
@@ -684,7 +688,7 @@ impl Translator {
 mod tests {
     use super::*;
 
-    const SMOKE_MODEL: &str = "gpt-5.6-luna";
+    const SMOKE_MODEL: &str = "gpt-6-luna";
 
     async fn smoke_translator(cache_dir: &std::path::Path) -> Option<Translator> {
         dotenvy::dotenv().ok();
@@ -743,6 +747,54 @@ mod tests {
                 .cache
                 .contains_key(&translator.primary_hash(text)),
             "legacy hit must not be copied under the model key"
+        );
+    }
+
+    /// Offline: a translation cached under the previous model's key is a hit
+    /// after a model bump, without copying it under the new key or touching
+    /// the network — otherwise a bump would re-translate the corpus.
+    #[tokio::test]
+    async fn openai_falls_back_to_previous_model_cache() {
+        let cache_dir = tempfile::tempdir().unwrap();
+        let translator = Translator {
+            backend: Backend::OpenAi {
+                client: Box::new(ChatClient::new("unused", SMOKE_MODEL).with_cached_only()),
+                recorded_micro: std::sync::Mutex::new(0),
+            },
+            source_language: Language::French,
+            target_language: Language::English,
+            source_code: "fr".into(),
+            target_code: "en".into(),
+            cache: DashMap::new(),
+            store: osmo::Store::open(cache_dir.path()),
+            api_calls: AtomicU64::new(0),
+            spent_micro: AtomicU64::new(0),
+            global_threshold_micro: 0,
+            per_language_budget_micro: 0,
+            budget_warned: AtomicBool::new(false),
+        };
+
+        let text = "Une phrase traduite par le modèle précédent.";
+        let previous = PREVIOUS_OPENAI_MODELS[0];
+        assert_ne!(
+            previous, SMOKE_MODEL,
+            "the test needs a distinct previous model"
+        );
+        translator
+            .store(
+                translator.openai_hash(previous, text),
+                "cached by the previous model",
+            )
+            .await;
+
+        let got = translator.translate(text).await.unwrap();
+        assert_eq!(got, "cached by the previous model");
+        assert_eq!(translator.api_calls(), 0, "must not hit the network");
+        assert!(
+            !translator
+                .cache
+                .contains_key(&translator.primary_hash(text)),
+            "previous-model hit must not be copied under the current key"
         );
     }
 

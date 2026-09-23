@@ -2,8 +2,8 @@ use anyhow::Context;
 use itertools::Itertools;
 use language_utils::TaggedGram;
 use language_utils::{
-    Atom, COURSES, EncodedSentence, Gram, GramFrequencyEntry, GramVocabEntry, HomophonePractice,
-    SentenceGram, SentenceGrams,
+    Atom, COURSES, Course, EncodedSentence, Gram, GramFrequencyEntry, GramVocabEntry,
+    HomophonePractice, SentenceGram, SentenceGrams,
 };
 use rustc_hash::FxHashMap;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -14,6 +14,15 @@ use std::path::{Path, PathBuf};
 use generate_data::cache_remote;
 
 use generate_data::morphology_analysis;
+use generate_data::target_sentences::TargetSentences;
+use generate_data::translate::{TranslationBackend, Translator};
+
+/// Loaded inputs and in-flight work for a course's sequential pipeline.
+struct CourseWarmup {
+    course: Course,
+    sentence_corpus: TargetSentences,
+    translator: tokio::task::JoinHandle<Translator>,
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -96,10 +105,67 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    for course in COURSES {
-        if !lang_filter.is_empty() && !lang_filter.contains(course.target_language.code()) {
-            continue;
-        }
+    let courses: Vec<Course> = COURSES
+        .iter()
+        .copied()
+        .filter(|course| {
+            lang_filter.is_empty() || lang_filter.contains(course.target_language.code())
+        })
+        .collect();
+
+    // Pay batch latency once, concurrently, rather than once per course. Other
+    // pipeline stages should move toward this all-courses fan-out shape over time.
+    println!("Warming translation caches for {} courses…", courses.len());
+    let mut warmups = Vec::with_capacity(courses.len());
+    for course in courses {
+        let sentence_corpus = generate_data::target_sentences::get_target_sentences(course)
+            .await
+            .context("Failed to get target sentences")?;
+        let targets: Vec<String> = sentence_corpus
+            .app_sentences
+            .iter()
+            .map(|(target, _, _)| target.clone())
+            .collect();
+        let translator = Translator::new(
+            course.target_language, // translate from target to native
+            course.native_language,
+            cache_remote::store(),
+            // Luna over the OpenAI Batch API is ~50x cheaper than Google's
+            // translation-llm; anything already in the Google cache is
+            // still reused (see translate.rs). Swap in
+            // `TranslationBackend::Google` to go back.
+            TranslationBackend::OpenAi {
+                model: "gpt-6-luna".to_string(),
+            },
+        )
+        .await
+        .context("Failed to create translator")?;
+
+        let translator = tokio::spawn(async move {
+            translator.prime(&targets).await;
+            println!(
+                "translations {} → {}: cache warmup complete (~${:.4})",
+                course.target_language.iso_639_1(),
+                course.native_language.iso_639_1(),
+                translator.cost_estimate_usd(),
+            );
+            translator
+        });
+        warmups.push(CourseWarmup {
+            course,
+            sentence_corpus,
+            translator,
+        });
+    }
+
+    println!("Processing warmed courses…");
+    for CourseWarmup {
+        course,
+        sentence_corpus,
+        translator,
+    } in warmups
+    {
+        let course = &course;
 
         println!();
         println!();
@@ -109,9 +175,6 @@ async fn main() -> anyhow::Result<()> {
         );
         println!("================================================");
 
-        let sentence_corpus = generate_data::target_sentences::get_target_sentences(*course)
-            .await
-            .context("Failed to get target sentences")?;
         let generate_data::pipeline::SegmentedCorpus {
             mut nlp_sentences,
             mut restricted_nlp_sentences,
@@ -142,8 +205,11 @@ async fn main() -> anyhow::Result<()> {
             &generate_data::cache_remote::store(),
         )
         .await?;
+        let translator = translator
+            .await
+            .context("Translation cache warmup task failed")?;
         let translations_map =
-            generate_data::pipeline::translate_sentences(course, &sentence_corpus)
+            generate_data::pipeline::translate_sentences(course, &sentence_corpus, translator)
                 .await
                 .context("Failed to translate sentences")?;
         let generate_data::pipeline::CourseDirs {

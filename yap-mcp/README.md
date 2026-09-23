@@ -15,16 +15,18 @@ One binary, two modes:
 
 ## Tools
 
-Words are identified by `(language, gram)`, where a gram is the token sequence
-— word + lemma + part of speech — that uniquely discriminates a dictionary
-entry (it's exactly what deck events store). Tools that take grams or cards
+Cards are identified by `(language, gram)`, where a gram is the token sequence
+— word + lemma + part of speech — plus a sense number, identifying a specific
+sense of a word (it's exactly what deck events store). Tools that take grams or cards
 validate them by interning against the language pack **and** checking
 membership in the master frequency list — the rodeos intern more than real
 entries, so the dictionary is the real check. Anything that doesn't name a
 real course entry is rejected; the server never guesses.
 
-- `search_dictionary` — find words/phrases; returns each match's `language` +
-  `gram` (plus display text, frequency rank, definition).
+- `search_dictionary` — find words/phrases; returns each word's `language`,
+  `display_text`, `is_phrase`, and `senses` (each with `gram`, `gloss`,
+  `frequency_rank`, `in_deck`, and `definition`). Pass the word's language and
+  the chosen sense's gram to deck tools.
 - `add_cards` — add words to the deck as flashcards, by `(language, gram)`.
 - `get_due_cards` — list due cards; each entry carries its `language` + `card`
   object to pass back to `log_review`.
@@ -64,7 +66,9 @@ real course entry is rejected; the server never guesses.
   pages as `{id, title, url}`; `fetch` takes an `id`
   (`"<course-slug>:<frequency-index>"`) and returns the entry as readable
   text with a citable `url` into the public dictionary at `yap.town/d/`, plus
-  the exact gram in `metadata`. URLs are best-effort: colliding display texts
+  each sense's exact gram in `metadata.senses[].gram`. Words use their most
+  frequent defined sense's frequency index as the id; fetching any member
+  sense's index returns the whole word. URLs are best-effort: colliding display texts
   get a numeric suffix at site build time we can't reproduce, so rare
   homographs may 404 (sampled hit rate: 39/39).
 

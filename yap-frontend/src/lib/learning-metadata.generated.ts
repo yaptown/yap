@@ -53,16 +53,16 @@ export const LANGUAGE_METADATA = {
     yaptownName: 'Yap.Ville',
     letsGo: 'Allons-y !'
   },
-  SpanishMexican: {
+  SpanishLatinAmerican: {
     isoCode: 'spa',
     iso6391: 'es',
     status: 'stable',
-    flag: '🇲🇽',
+    flag: '🌎',
     nativeName: 'Español',
-    englishName: 'Spanish (Mexico)',
+    englishName: 'Spanish (Latin America)',
     commonName: 'Spanish',
     people: 'Spanish',
-    badge: 'MX',
+    badge: 'LATAM',
     script: undefined,
     accentedCharacters: [
       'á',

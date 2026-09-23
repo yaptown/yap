@@ -507,7 +507,7 @@ pub mod gold_morphology {
     ) -> anyhow::Result<BTreeMap<Heteronym<String>, Vec<Morphology>>> {
         match language {
             Language::French => french::create_french_morphology(gram_frequencies).await,
-            Language::SpanishMexican | Language::SpanishPeninsular => {
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
                 spanish::create_spanish_morphology(gram_frequencies).await
             }
             Language::German => german::create_german_morphology(gram_frequencies).await,

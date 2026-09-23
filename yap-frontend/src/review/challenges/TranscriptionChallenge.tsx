@@ -701,7 +701,7 @@ export function TranscriptionChallenge({
         {/* Accented character keyboard - show when not graded, language supports it, and not on small screens */}
         {editing &&
           (targetLanguage === "French" ||
-            targetLanguage === "SpanishMexican" ||
+            targetLanguage === "SpanishLatinAmerican" ||
             targetLanguage === "SpanishPeninsular" ||
             targetLanguage === "German") && (
             <AccentedCharacterKeyboard

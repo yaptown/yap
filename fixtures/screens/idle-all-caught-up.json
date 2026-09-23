@@ -161,8 +161,10 @@
           },
           "recommend_more_cards": false
         },
+        "manual_add_heading": "Choose cards to add",
         "manual_add_options": [
           {
+            "label": "Learn 5 French → English cards",
             "count": 5,
             "card_type": "TargetLanguage",
             "event": {
@@ -293,6 +295,7 @@
             }
           },
           {
+            "label": "Learn 5 French listening cards",
             "count": 5,
             "card_type": "Listening",
             "event": {
@@ -476,6 +479,7 @@
             }
           },
           {
+            "label": "Learn 5 French pronunciation cards",
             "count": 5,
             "card_type": "LetterPronunciation",
             "event": {

@@ -67,8 +67,10 @@
           },
           "recommend_more_cards": true
         },
+        "manual_add_heading": "Choose cards to add",
         "manual_add_options": [
           {
+            "label": "Learn 1 Italian → English card",
             "count": 1,
             "card_type": "TargetLanguage",
             "event": {
@@ -103,11 +105,7 @@
             }
           },
           {
-            "count": 0,
-            "card_type": "Listening",
-            "event": null
-          },
-          {
+            "label": "Learn 1 Italian pronunciation card",
             "count": 1,
             "card_type": "LetterPronunciation",
             "event": {

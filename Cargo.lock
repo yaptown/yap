@@ -6859,7 +6859,6 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 [[package]]
 name = "tysm"
 version = "0.20.0"
-source = "git+https://github.com/anchpop/tysm.git?rev=8656e1e7b1641780fd0e42018b7c284a558f5d9d#8656e1e7b1641780fd0e42018b7c284a558f5d9d"
 dependencies = [
  "base64 0.22.1",
  "dashmap",
@@ -7027,6 +7026,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "dotenvy",
+ "language-utils",
  "reqwest 0.13.4",
  "serde_json",
  "tokio",
