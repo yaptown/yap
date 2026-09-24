@@ -14,7 +14,9 @@ use std::path::Path;
 /// run are adopted without any manual cache-busting. Discovery runs with no
 /// human review step; a load-if-exists cache here would silently freeze
 /// adoption. The merged file is still written each time: it's committed
-/// provenance, and usage_discovery reads it for its novelty check.
+/// provenance, and usage_discovery reads it for its novelty check. Simplified
+/// Chinese lists (including cached ones) are also filtered for Mandarin readings;
+/// the filtered Wiktionary cache is rewritten automatically.
 pub async fn ensure_multiword_terms_file(
     course: &Course,
     base_path: &Path,
@@ -29,7 +31,7 @@ pub async fn ensure_multiword_terms_file(
         .await
         .context("Failed to get extra multiword terms")?;
 
-    let terms: Vec<String> = if wiktionary_cache.exists() {
+    let mut terms: Vec<String> = if wiktionary_cache.exists() {
         let content = std::fs::read_to_string(&wiktionary_cache)
             .context("Failed to read wiktionary terms cache")?;
         content
@@ -71,6 +73,18 @@ pub async fn ensure_multiword_terms_file(
         }
         downloaded
     };
+    if *target_language == Language::ChineseSimplified {
+        // Apply this to cached/bootstrap lists too: the pan-lect Chinese categories
+        // include Cantonese-only entries. Reuse the alt-form fetch and cache so
+        // the later alt-form pass doesn't download these pages again.
+        let (_, mandarin_readings) = download_term_metadata(&terms, base_path, true).await?;
+        terms.retain(|term| mandarin_readings.get(term) != Some(&false));
+        let mut file = File::create(&wiktionary_cache)?;
+        for term in &terms {
+            writeln!(file, "{term}")?;
+        }
+    }
+
     let banned_terms = match target_language {
         Language::French => vec!["de le", "de les", "à le", "à les", "fait que", "aller y"],
         Language::SpanishLatinAmerican | Language::SpanishPeninsular => vec!["de el", "a el"], // Spanish contractions that become "del" and "al"
@@ -248,10 +262,21 @@ pub async fn download_alt_forms(
     terms: &[String],
     cache_dir: &Path,
 ) -> anyhow::Result<BTreeMap<String, String>> {
+    Ok(download_term_metadata(terms, cache_dir, false).await?.0)
+}
+
+/// Cache both checks from a single wikitext fetch. Old alt-form records remain
+/// usable, but need one refetch when Mandarin pronunciation metadata is required.
+async fn download_term_metadata(
+    terms: &[String],
+    cache_dir: &Path,
+    require_mandarin: bool,
+) -> anyhow::Result<(BTreeMap<String, String>, BTreeMap<String, bool>)> {
     let cache_file = cache_dir.join("multiword_alt_forms.jsonl");
 
     // Load cached results
     let mut alt_forms: BTreeMap<String, String> = BTreeMap::new();
+    let mut mandarin_readings = BTreeMap::new();
     let mut already_checked: BTreeSet<String> = BTreeSet::new();
     if cache_file.exists() {
         let file = File::open(&cache_file)?;
@@ -261,9 +286,14 @@ pub async fn download_alt_forms(
             if let Ok(entry) = serde_json::from_str::<Value>(&line)
                 && let Some(term) = entry["term"].as_str()
             {
+                if let Some(has_mandarin) = entry["has_mandarin_reading"].as_bool() {
+                    mandarin_readings.insert(term.to_string(), has_mandarin);
+                }
                 already_checked.insert(term.to_string());
                 if let Some(canonical) = entry["canonical"].as_str() {
                     alt_forms.insert(term.to_string(), canonical.to_string());
+                } else {
+                    alt_forms.remove(term);
                 }
             }
         }
@@ -271,11 +301,16 @@ pub async fn download_alt_forms(
 
     let to_check: Vec<&String> = terms
         .iter()
-        .filter(|t| !already_checked.contains(*t))
+        .filter(|t| {
+            !already_checked.contains(*t)
+                || (require_mandarin && !mandarin_readings.contains_key(*t))
+        })
+        .collect::<BTreeSet<_>>()
+        .into_iter()
         .collect();
 
     if to_check.is_empty() {
-        return Ok(alt_forms);
+        return Ok((alt_forms, mandarin_readings));
     }
 
     let pb = ProgressBar::new(to_check.len() as u64);
@@ -364,15 +399,19 @@ pub async fn download_alt_forms(
                     .unwrap_or_default();
 
                 let canonical = parse_alt_form_wikitext(wikitext);
-                let entry = if let Some(ref canonical) = canonical {
-                    serde_json::json!({"term": *term, "canonical": canonical})
-                } else {
-                    serde_json::json!({"term": *term})
-                };
+                let has_mandarin = has_mandarin_reading(wikitext);
+                let entry = serde_json::json!({
+                    "term": *term,
+                    "canonical": canonical,
+                    "has_mandarin_reading": has_mandarin,
+                });
                 writeln!(writer, "{}", serde_json::to_string(&entry)?)?;
 
+                mandarin_readings.insert(term.to_string(), has_mandarin);
                 if let Some(canonical) = canonical {
                     alt_forms.insert(term.to_string(), canonical);
+                } else {
+                    alt_forms.remove(*term);
                 }
 
                 pb.inc(1);
@@ -386,7 +425,28 @@ pub async fn download_alt_forms(
     writer.flush()?;
     pb.finish_and_clear();
 
-    Ok(alt_forms)
+    Ok((alt_forms, mandarin_readings))
+}
+
+/// Reject pages with pronunciation templates but no standard Mandarin reading.
+/// Keep pages without zh-pron, including zh-see soft redirects to Traditional
+/// forms: absence of a pronunciation section is not evidence of another lect.
+fn has_mandarin_reading(wikitext: &str) -> bool {
+    static ZH_PRON: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+        regex::Regex::new(r"\{\{\s*zh-pron\s*\|([\s\S]*?)\}\}").unwrap()
+    });
+    let mut found_pronunciation = false;
+    for template in ZH_PRON.captures_iter(wikitext) {
+        found_pronunciation = true;
+        if template[1].split('|').any(|parameter| {
+            parameter
+                .split_once('=')
+                .is_some_and(|(key, value)| key.trim() == "m" && !value.trim().is_empty())
+        }) {
+            return true;
+        }
+    }
+    !found_pronunciation
 }
 
 /// Parse wikitext for {{alternative form of|LANG|TARGET}} or {{misconstruction of|LANG|TARGET}}
@@ -489,4 +549,32 @@ async fn download_category(category_name: &str) -> anyhow::Result<Vec<String>> {
     }
 
     Ok(all_pages)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::has_mandarin_reading;
+
+    #[test]
+    fn wiktionary_mandarin_readings() {
+        assert!(has_mandarin_reading(
+            "{{zh-pron|m=yī shí èr niǎo|c=jat1 sek6 ji6 niu5}}"
+        ));
+        assert!(has_mandarin_reading(
+            "{{zh-pron\n|m = zěnme huí shì\n|c=zam2 mo1 wui4 si6\n}}"
+        ));
+        assert!(!has_mandarin_reading("{{zh-pron\n|c=mou5 dak1 king1\n}}"));
+        assert!(!has_mandarin_reading(
+            "{{zh-pron|m-s=some reading|c=some reading}}"
+        ));
+        assert!(!has_mandarin_reading("{{zh-pron|m= |c=mou5}}"));
+        assert!(!has_mandarin_reading(
+            "{{zh-pron|c=mou5}}\n{{other|m=not a reading}}"
+        ));
+        assert!(has_mandarin_reading("{{zh-pron|c=mou5}}\n{{zh-pron|m=wú}}"));
+        assert!(has_mandarin_reading("==Chinese==\n{{zh-see|一石二鳥|s}}"));
+        assert!(has_mandarin_reading(
+            "==Chinese==\n# An idiom without a pronunciation section."
+        ));
+    }
 }
