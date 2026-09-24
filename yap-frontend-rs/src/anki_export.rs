@@ -13,7 +13,7 @@ use std::collections::BTreeSet;
 use unicode_normalization::UnicodeNormalization;
 use xxhash_rust::xxh3::xxh3_64;
 
-use crate::{Deck, clips, human_audio, utils};
+use crate::{Deck, clips, get_language_metadata, human_audio, utils};
 
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -26,7 +26,6 @@ pub enum AnkiCardTypes {
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AnkiDeckOptions {
-    pub size: u32,
     pub card_types: AnkiCardTypes,
 }
 
@@ -59,8 +58,6 @@ pub struct AnkiDeckPlan {
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AnkiDeckStats {
-    pub level: u32,
-    pub total_levels: u32,
     pub sentence_count: u32,
     pub word_count: u32,
     pub card_count: u32,
@@ -134,12 +131,15 @@ pub enum AnkiMediaSource {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AnkiExportView {
     pub title: String,
+    pub subtitle: String,
     pub needs_placement: bool,
-    pub level_line: String,
-    /// What the level number means, for someone who has never seen one.
-    pub level_gloss: String,
-    pub level: u32,
-    pub total_levels: u32,
+    pub placement_intro: String,
+    /// "Essential French": what `percent_known` is a percentage of. The deck
+    /// deliberately says nothing about levels.
+    pub progress_label: String,
+    /// How much of the whole frequency list the learner knows, weighted by
+    /// frequency, as the app's curriculum bars count it.
+    pub percent_known: f64,
     pub too_advanced: bool,
     pub too_advanced_message: Option<String>,
     pub clips_loaded: bool,
@@ -151,26 +151,24 @@ pub struct AnkiExportView {
     pub placement_complete_label: String,
     /// Why the deck exists, read while it builds.
     pub backstory: String,
-    /// Shown once the deck is downloaded: the placement test already set
-    /// this browser's level, so the app picks up where the deck stops.
+    /// Shown once the deck is downloaded: the placement test already set up
+    /// this browser's deck, so the app picks up where the Anki deck stops.
     pub keep_going_heading: String,
     pub keep_going_body: String,
     pub keep_going_label: String,
+    /// Only for anonymous visitors.
+    pub sign_up_label: String,
 }
 
-fn validate(options: &AnkiDeckOptions) -> Result<(), Error> {
-    if options.size == 0 {
-        return Err(Error::new("Choose at least one sentence."));
-    }
-    Ok(())
-}
+/// Sentence notes per deck. Not a choice yet: one good default beats a
+/// number nobody knows how to pick.
+const DECK_SIZE: usize = 300;
 
 #[bridgerton::bridge]
 pub async fn mint_anki_deck(
     options: AnkiDeckOptions,
     access_token: Option<String>,
 ) -> Result<MintedAnkiDeck, Error> {
-    validate(&options)?;
     let response = utils::hit_ai_server(
         fetch_happen::Method::POST,
         "/anki/deck",
@@ -327,46 +325,34 @@ fn poster_filename(imdb: &str) -> String {
     format!("yap-poster-{imdb}.jpg")
 }
 
+// The page never talks about "your level": Yap's level system is due a
+// rethink, so the deck is described by the words it teaches instead.
 const TITLE: &str = "Sentence mining, already done";
-const TOO_ADVANCED: &str = "You're past the top level. The deck will still catch gaps, but Yap's app will serve you better.";
+const SUBTITLE: &str = "Movie sentences that use words you already know, plus a few new ones each, with clips, audio, and word definitions.";
+const PLACEMENT_INTRO: &str = "First, tell us which words you know. No account needed.";
+const TOO_ADVANCED: &str = "You already know nearly every word Yap teaches. The deck will still catch gaps, but Yap's app will serve you better.";
 const CLIPS_LOADING: &str = "Movie clips are still loading. Please try again.";
-const NO_SENTENCES: &str = "No comprehensible movie-clip sentences were found at your level.";
+const NO_SENTENCES: &str = "No movie-clip sentences use only words you know yet.";
 const PLACEMENT_COMPLETE_LABEL: &str = "Generate Anki deck";
 // Shown while the deck is being built; the page has a minute or two to fill.
-const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I still think the app is the best way to learn, but the same technology, real movie lines picked for your level, each with its clip and a recording, makes a really good Anki deck too. Yours is being built right now.";
-const KEEP_GOING_HEADING: &str = "Your level is saved here too";
-const KEEP_GOING_BODY: &str = "The placement test you just took is the same one Yap uses, so the app starts exactly where this deck does: no second test. When the deck runs out, Yap keeps adding sentences at your level.";
+const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I still think the app is the best way to learn, but the same technology, real movie lines built from the words you know, each with its clip and a recording, makes a really good Anki deck too. Yours is being built right now.";
+const KEEP_GOING_HEADING: &str = "Yap picks up where the deck stops";
+const KEEP_GOING_BODY: &str = "The words you marked are already in Yap on this browser, so there's no second test. When the deck runs out, Yap keeps adding new sentences built from what you know.";
 const KEEP_GOING_LABEL: &str = "Keep going in Yap";
-const DECK_DESCRIPTION: &str = "Made with Yap (https://yap.town/anki): real movie lines at your level, each with its clip and a recording.\n\nWhen these run out, Yap keeps going at https://yap.town.";
+const SIGN_UP_LABEL: &str = "Create an account to update your deck in the future";
+const DECK_DESCRIPTION: &str = "Made with Yap (https://yap.town/anki): real movie lines built from words you know, each with its clip and a recording.\n\nWhen these run out, Yap keeps going at https://yap.town.";
 
 #[bridgerton::bridge]
 impl Deck {
     pub fn anki_export_view(&self) -> AnkiExportView {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;
-        let tier = (!pack.gram_frequencies.entries.is_empty()).then(|| self.get_current_tier());
-        let (level, total_levels) = tier
-            .as_ref()
-            .map_or((1, 1), |tier| (tier.level, tier.total_levels));
-        let level_line = tier.as_ref().map_or_else(
-            || format!("Level {level} of {total_levels}"),
-            |tier| format!("{} · level {level} of {total_levels}", tier.name),
+        let known = Self::percent_known_in(
+            &pack.gram_frequencies,
+            self.get_comprehensible_written_grams(true),
+            self.get_comprehensible_listening_grams(true),
         );
-        // A newcomer has no idea what "level 3" is; how much of a film's
-        // dialogue the words up to here cover is something they can feel.
-        let level_gloss = tier.as_ref().map_or_else(String::new, |tier| {
-            format!(
-                "The words up to this level cover about {:.0}% of what is said in {language} films.",
-                tier.percent_of_usage
-            )
-        });
-        let too_advanced = !pack.gram_frequencies.entries.is_empty()
-            && Self::percent_known_in(
-                &pack.gram_frequencies,
-                self.get_comprehensible_written_grams(true),
-                self.get_comprehensible_listening_grams(true),
-            )
-            .all_available_learned;
+        let too_advanced = !pack.gram_frequencies.entries.is_empty() && known.all_available_learned;
         let clip_sentence_count = pack
             .comprehensible_sentences(None, |_| true)
             .into_iter()
@@ -376,11 +362,11 @@ impl Deck {
             .count() as u32;
         AnkiExportView {
             title: TITLE.into(),
+            subtitle: SUBTITLE.into(),
             needs_placement: !self.has_taken_placement_test() && self.num_cards_added() < 3,
-            level_line,
-            level_gloss,
-            level,
-            total_levels,
+            placement_intro: PLACEMENT_INTRO.into(),
+            progress_label: format!("Essential {}", get_language_metadata(language).common_name),
+            percent_known: known.percent_known,
             too_advanced,
             too_advanced_message: too_advanced.then(|| TOO_ADVANCED.into()),
             clips_loaded: clips::manifest_loaded(language),
@@ -392,6 +378,7 @@ impl Deck {
             keep_going_heading: KEEP_GOING_HEADING.into(),
             keep_going_body: KEEP_GOING_BODY.into(),
             keep_going_label: KEEP_GOING_LABEL.into(),
+            sign_up_label: SIGN_UP_LABEL.into(),
         }
     }
 
@@ -414,7 +401,19 @@ impl Deck {
         token: String,
         timestamp_ms: f64,
     ) -> Result<AnkiDeckPlan, Error> {
-        validate(&options)?;
+        self.plan_anki_deck(options, DECK_SIZE, token, timestamp_ms)
+    }
+}
+
+impl Deck {
+    /// `size` is separate from the options so tests can plan small decks.
+    fn plan_anki_deck(
+        &self,
+        options: AnkiDeckOptions,
+        size: usize,
+        token: String,
+        timestamp_ms: f64,
+    ) -> Result<AnkiDeckPlan, Error> {
         let course = self.context.course;
         let language = course.target_language;
         if !clips::manifest_loaded(language) {
@@ -489,7 +488,7 @@ impl Deck {
         // comprehensible once the simulated learner has reviewed them.
         let mut pending: Vec<TaggedGram<SpurGram>> = Vec::new();
         let mut empty_days = 0;
-        while used_sentences.len() < options.size as usize && empty_days < 60 {
+        while used_sentences.len() < size && empty_days < 60 {
             let mut day = simulation.next_day();
             for _ in day.by_ref() {}
             simulation = day.finish_day();
@@ -642,7 +641,7 @@ impl Deck {
                     include_listening,
                 });
                 used_sentences.insert(sentence);
-                if used_sentences.len() == options.size as usize {
+                if used_sentences.len() == size {
                     break;
                 }
             }
@@ -673,8 +672,6 @@ impl Deck {
             notes,
             bundled,
             stats: AnkiDeckStats {
-                level: view.level,
-                total_levels: view.total_levels,
                 sentence_count,
                 word_count,
                 card_count: word_count
@@ -701,9 +698,8 @@ mod tests {
     use std::sync::Arc;
     use weapon::AppState;
 
-    fn options(size: u32) -> AnkiDeckOptions {
+    fn options() -> AnkiDeckOptions {
         AnkiDeckOptions {
-            size,
             card_types: AnkiCardTypes::Both,
         }
     }
@@ -905,10 +901,10 @@ mod tests {
         let deck = fixture();
         publish(&deck.context.language_pack, deck.context.course);
         let a = deck
-            .anki_deck_plan(options(55), "a+b&雪".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 55, "a+b&雪".into(), 1_700_000_000_000.0)
             .unwrap();
         let b = deck
-            .anki_deck_plan(options(55), "a+b&雪".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 55, "a+b&雪".into(), 1_700_000_000_000.0)
             .unwrap();
         assert_eq!(
             serde_json::to_value(&a).unwrap(),
@@ -982,11 +978,11 @@ mod tests {
             assert!(!url.contains("&hint="));
         }
         let reading = deck
-            .anki_deck_plan(
+            .plan_anki_deck(
                 AnkiDeckOptions {
-                    size: 55,
                     card_types: AnkiCardTypes::Reading,
                 },
+                55,
                 "new token".into(),
                 1_700_000_000_000.0,
             )
@@ -1020,14 +1016,10 @@ mod tests {
     #[test]
     fn anki_errors_and_view() {
         let deck = fixture();
-        assert!(
-            deck.anki_deck_plan(options(0), "token".into(), 1_700_000_000_000.0)
-                .is_err()
-        );
         // A different language has no manifest in this test's thread-local mirror.
         assert!(!deck.anki_export_view().clips_loaded);
         assert!(
-            deck.anki_deck_plan(options(1), "token".into(), 1_700_000_000_000.0)
+            deck.plan_anki_deck(options(), 1, "token".into(), 1_700_000_000_000.0)
                 .is_err()
         );
         clips::publish_manifest(Language::English, vec![]);
@@ -1035,7 +1027,7 @@ mod tests {
         assert_eq!(deck.anki_export_view().clip_sentence_count, 0);
         assert!(deck.anki_export_view().needs_placement);
         assert!(
-            deck.anki_deck_plan(options(1), "token".into(), 1_700_000_000_000.0)
+            deck.plan_anki_deck(options(), 1, "token".into(), 1_700_000_000_000.0)
                 .is_err()
         );
         assert!(
@@ -1087,7 +1079,7 @@ mod tests {
         human_audio::register(Language::English, &deck.context.language_pack);
         publish(&deck.context.language_pack, deck.context.course);
         let plan = deck
-            .anki_deck_plan(options(3), "token".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 3, "token".into(), 1_700_000_000_000.0)
             .unwrap();
         assert_eq!(
             plan.bundled
@@ -1441,7 +1433,7 @@ mod tests {
         let deck = Deck::default();
         publish(&deck.context.language_pack, deck.context.course);
         let plan = deck
-            .anki_deck_plan(options(10), "offline-test".into(), 1_700_000_000_000.0)
+            .plan_anki_deck(options(), 10, "offline-test".into(), 1_700_000_000_000.0)
             .unwrap();
         assert_eq!(plan.stats.sentence_count, 10);
         println!("FIRST TEN ANKI NOTES (real French pack, offline manifest fixture):");

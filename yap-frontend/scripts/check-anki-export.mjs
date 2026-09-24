@@ -112,7 +112,7 @@ async function writeFixtures(buildApkg, output) {
       { filename: "word.mp3", source: { type: "Tts", url: "https://mock.invalid/word" } },
       { filename: "failed.mp3", source: { type: "Tts", url: "https://mock.invalid/fail" } },
     ],
-    stats: { level: 2, total_levels: 10, sentence_count: 3, word_count: 2, card_count: 8 },
+    stats: { sentence_count: 3, word_count: 2, card_count: 8 },
   };
   const realNow = Date.now;
   try {

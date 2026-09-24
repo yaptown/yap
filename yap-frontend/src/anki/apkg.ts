@@ -208,7 +208,7 @@ export async function buildApkg(
       const checksum = new DataView(hash).getUint32(0);
       db.run("INSERT INTO notes VALUES (?, ?, ?, ?, -1, ?, ?, ?, ?, 0, '')", [
         Number(note.note_id), note.guid, note.type === "Word" ? wordId : sentenceId, modified,
-        ` yap yap::${plan.course_code} yap::level-${plan.stats.level} `, fields.join("\x1f"), text, checksum,
+        ` yap yap::${plan.course_code} `, fields.join("\x1f"), text, checksum,
       ]);
       const ordinals = note.type === "Word" ? [0]
         : [fields[8] ? 0 : undefined, fields[9] ? 1 : undefined].filter((ord) => ord !== undefined);

@@ -61,7 +61,6 @@ function AnkiPlacement({ deck, targetLanguage, completeLabel }: { deck: Deck; ta
 function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextType & { deck: Deck; targetLanguage: Language }) {
   const navigate = useNavigate();
   const { openSignUp } = useAuthDialog();
-  const [size, setSize] = useState("300");
   const [cardTypes, setCardTypes] = useState<AnkiCardTypes>("Both");
   const [manifest, setManifest] = useState<"loading" | "ready" | "error">("loading");
   const [retry, setRetry] = useState(0);
@@ -71,8 +70,6 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const [downloadLink, setDownloadLink] = useState<string>();
   const busy = phase !== undefined;
   const view = useMemo(() => ({ ...deck.anki_export_view(), manifest }), [deck, manifest]);
-  const maximum = view.clip_sentence_count;
-  const displayedSize = size !== "" && maximum > 0 ? String(Math.min(Number(size), maximum)) : size;
 
   useEffect(() => {
     let active = true;
@@ -93,7 +90,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     setResult(undefined);
     setDownloadLink(undefined);
     try {
-      const options = { size: Number(displayedSize), card_types: cardTypes };
+      const options = { card_types: cardTypes };
       const minted = await mint_anki_deck(options, accessToken);
       // Let the preparation status paint before entering the synchronous WASM planner.
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -133,26 +130,22 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
         <div className="flex flex-col gap-2">
           <p className="font-mono text-xs text-muted-foreground">Anki · {view.language_name}</p>
           <h1 className="text-2xl font-semibold">{view.title}</h1>
-          <p className="text-muted-foreground">Movie sentences picked for your level, with clips, audio, and word definitions.</p>
+          <p className="text-muted-foreground">{view.subtitle}</p>
         </div>
         {view.needs_placement ? (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-muted-foreground">First, find your starting level. No account needed.</p>
+            <p className="text-sm text-muted-foreground">{view.placement_intro}</p>
             <AnkiPlacement deck={deck} targetLanguage={targetLanguage} completeLabel={view.placement_complete_label} />
           </div>
         ) : (
           <form className="flex flex-col gap-6" onSubmit={(event) => { event.preventDefault(); void download(); }}>
-            <div className="flex flex-col gap-2 border-y py-4">
-              <p className="font-mono text-sm">{view.level_line}</p>
-              {view.level_gloss && <p className="text-sm text-muted-foreground">{view.level_gloss}</p>}
+            {/* Same bar as the Essential tab on the goals screen. */}
+            <div className="flex flex-col gap-3 border-y py-4">
+              <h2 className="font-semibold">{view.progress_label}</h2>
+              <Progress className="h-6" value={view.percent_known} showPercentage aria-label={view.progress_label} />
               {view.too_advanced_message && <p className="text-sm text-muted-foreground">{view.too_advanced_message}</p>}
             </div>
             <fieldset className="flex flex-col gap-5" disabled={busy}>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="anki-size">Sentence notes</Label>
-                <Input id="anki-size" className="max-w-40" type="number" min={1} max={maximum || undefined} step={1} required value={displayedSize} onChange={(event) => setSize(event.target.value)} />
-                <p className="text-sm text-muted-foreground">New words get their own notes, before the sentence that uses them. The final deck may be smaller if there aren’t enough suitable clips.</p>
-              </div>
               <div className="flex flex-col gap-2">
                 <span id="anki-types-label" className="text-sm font-medium">Sentence cards</span>
                 <Tabs value={cardTypes} onValueChange={(value) => setCardTypes(value as AnkiCardTypes)}>
@@ -169,11 +162,11 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
             {view.manifest === "error" ? (
               <Button type="button" variant="outline" onClick={() => { setManifest("loading"); setRetry((value) => value + 1); }}>Retry loading movie clips</Button>
             ) : (
-              <Button type="submit" disabled={busy || view.manifest !== "ready" || maximum === 0}>{view.download_label}</Button>
+              <Button type="submit" disabled={busy || view.manifest !== "ready" || view.clip_sentence_count === 0}>{view.download_label}</Button>
             )}
             <div className="flex flex-col gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
               {view.manifest === "loading" && <p>Loading movie clips…</p>}
-              {view.manifest === "ready" && maximum === 0 && <p>No movie clips are available for this course.</p>}
+              {view.manifest === "ready" && view.clip_sentence_count === 0 && <p>No movie clips are available for this course.</p>}
               {busy && <p>{progress && progress.done < progress.total ? `Fetching media ${progress.done.toLocaleString()} of ${progress.total.toLocaleString()}` : phase}</p>}
               {busy && progress && <Progress value={progress.total ? 100 * progress.done / progress.total : 100} />}
               {busy && <p className="border-l-2 pl-4 text-foreground">{view.backstory}</p>}
@@ -200,7 +193,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                 <p className="text-sm text-muted-foreground">{view.keep_going_body}</p>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" onClick={() => navigate("/learn")}>{view.keep_going_label}</Button>
-                  {!userInfo && <Button type="button" variant="outline" onClick={openSignUp}>Create an account to keep your level</Button>}
+                  {!userInfo && <Button type="button" variant="outline" onClick={openSignUp}>{view.sign_up_label}</Button>}
                 </div>
               </Card>
             )}
