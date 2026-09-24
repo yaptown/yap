@@ -262,14 +262,21 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
             Err(_) => return Ok(()),
         };
 
-        // Merge every stream into the account, which may already have history
-        // on this device. Anonymous events carry their own device id, so they
-        // never collide with the account's; skipping what the target already
-        // holds per device makes a retried import after a crash a no-op.
+        // Only import into an account with no history on this device. The
+        // import exists so creating an account doesn't lose the progress made
+        // before it. Signing into an account that already lives here is
+        // different: the anonymous session may have been someone else's (the
+        // owner signed out to hand the device over), so it isn't assumed to be
+        // theirs and is left where it is.
+        let mut existing_streams = current_user_directory.event_stream_directories().await?;
+        if existing_streams.next().await.is_some() {
+            return Ok(());
+        }
+
         let mut streams = logged_out_directory.event_stream_directories().await?;
         while let Some((stream_id, stream_dir)) = streams.next().await {
-            // Same lock as `save_to_local_storage`, so the counts we skip by
-            // can't go stale before the append lands.
+            // Same lock as `save_to_local_storage`, so the append can't
+            // interleave with a save from another tab.
             let _save = weblocks::acquire(
                 &format!("opfs-save-to-local-storage-{stream_id}"),
                 weblocks::AcquireOptions::exclusive(),
@@ -283,7 +290,7 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
             let events = stream_dir
                 .get_event_log_file()
                 .await?
-                .read_records(&target_log.device_counts().await?)
+                .read_records(&BTreeMap::new())
                 .await
                 .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?;
             target_log.append_records(&events).await?;
