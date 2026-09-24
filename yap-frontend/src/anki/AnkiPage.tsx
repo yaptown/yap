@@ -186,7 +186,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                     }
                   }}>Copy</Button>
                 </div>
-                <p>In AnkiMobile: Decks → Add → Download link. The link works for 8 days.</p>
+                <p>In AnkiMobile: Decks → Add → Download link. On AnkiDroid or desktop, open the downloaded file instead. The link works for 8 days.</p>
               </div>}
               {result && <p>Downloaded {result}</p>}
             </div>
