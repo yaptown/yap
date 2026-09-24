@@ -94,7 +94,7 @@ async function writeFixtures(buildApkg, output) {
     include_reading: true, include_listening: true,
   });
   const base = {
-    language: "French", course_code: "fra-eng", deck_name: "Yap test",
+    language: "French", course_code: "fra-eng", deck_name: "Yap test", deck_description: "Made with Yap (https://yap.town/anki)",
     deck_id: 9007199254740988, sentence_model_id: 9007199254740984, word_model_id: 9007199254740980,
     notes: [
       { type: "Word", ...identity(0), word: `Mot ${hostileText}`, definition: hostileText,

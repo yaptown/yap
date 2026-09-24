@@ -13,8 +13,10 @@ import {
 } from "../../../yap-frontend-rs/pkg";
 import type { AppContextType } from "@/app/context";
 import { DeckPage } from "@/app/DeckPage";
+import { useAuthDialog } from "@/auth/auth-dialog-provider";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -58,6 +60,7 @@ function AnkiPlacement({ deck, targetLanguage, completeLabel }: { deck: Deck; ta
 
 function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextType & { deck: Deck; targetLanguage: Language }) {
   const navigate = useNavigate();
+  const { openSignUp } = useAuthDialog();
   const [size, setSize] = useState("300");
   const [cardTypes, setCardTypes] = useState<AnkiCardTypes>("Both");
   const [manifest, setManifest] = useState<"loading" | "ready" | "error">("loading");
@@ -125,7 +128,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   }
 
   return (
-    <TopPageLayout userInfo={userInfo} headerProps={{ backButton: { label: "Home", onBack: () => navigate("/home") } }}>
+    <TopPageLayout userInfo={userInfo} headerProps={{ backButton: { label: "Yap.Town", onBack: () => navigate("/") } }}>
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-5 py-8">
         <div className="flex flex-col gap-2">
           <p className="font-mono text-xs text-muted-foreground">Anki · {view.language_name}</p>
@@ -141,6 +144,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
           <form className="flex flex-col gap-6" onSubmit={(event) => { event.preventDefault(); void download(); }}>
             <div className="flex flex-col gap-2 border-y py-4">
               <p className="font-mono text-sm">{view.level_line}</p>
+              {view.level_gloss && <p className="text-sm text-muted-foreground">{view.level_gloss}</p>}
               {view.too_advanced_message && <p className="text-sm text-muted-foreground">{view.too_advanced_message}</p>}
             </div>
             <fieldset className="flex flex-col gap-5" disabled={busy}>
@@ -190,6 +194,16 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
               </div>}
               {result && <p>Downloaded {result}</p>}
             </div>
+            {result && (
+              <Card className="gap-3 p-5">
+                <h2 className="text-lg font-semibold">{view.keep_going_heading}</h2>
+                <p className="text-sm text-muted-foreground">{view.keep_going_body}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" onClick={() => navigate("/learn")}>{view.keep_going_label}</Button>
+                  {!userInfo && <Button type="button" variant="outline" onClick={openSignUp}>Create an account to keep your level</Button>}
+                </div>
+              </Card>
+            )}
           </form>
         )}
       </main>

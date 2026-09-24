@@ -1,6 +1,6 @@
 import { CourseAudioPrefetch } from "@/review/course-study";
 import { useDeckSelection } from "@/core/useDeck";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { CoursePicker } from "./CoursePicker";
 import { useWeapon } from "../core/weapon";
 import { TopPageLayout } from "@/components/TopPageLayout";
@@ -12,6 +12,10 @@ export function SelectLanguagePage() {
   const weapon = useWeapon();
   const deckSelection = useDeckSelection();
   const navigate = useNavigate();
+  // Where to go once a course is chosen. Only same-app paths are honored.
+  const [searchParams] = useSearchParams();
+  const requested = searchParams.get("next");
+  const next = requested?.startsWith("/") && !requested.startsWith("//") ? requested : "/learn";
 
   return <>
     <CourseAudioPrefetch />
@@ -22,12 +26,12 @@ export function SelectLanguagePage() {
         <CoursePicker
           currentTargetLanguage={targetLanguage}
           showResumeButton={true}
-          onResume={() => navigate("/learn")}
+          onResume={() => navigate(next)}
           onLanguagesConfirmed={(native, target) => {
             weapon.add_deck_selection_event({
               SelectBothLanguages: { native, target },
             });
-            navigate("/learn");
+            navigate(next);
           }}
           onOnboardingComplete={(selections, language) => {
             weapon.add_deck_selection_event({
@@ -43,7 +47,7 @@ export function SelectLanguagePage() {
           }}
           onboardedLanguages={onboardedLanguages}
           userInfo={userInfo}
-          onBack={() => navigate("/learn")}
+          onBack={() => navigate(next)}
         />
       ),
     )
@@ -55,7 +59,7 @@ export function SelectLanguagePage() {
             weapon.add_deck_selection_event({
               SelectBothLanguages: { native, target },
             });
-            navigate("/learn");
+            navigate(next);
           }}
           onOnboardingComplete={(selections, language) => {
             weapon.add_deck_selection_event({

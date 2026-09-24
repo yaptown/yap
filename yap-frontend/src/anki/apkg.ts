@@ -181,8 +181,8 @@ export async function buildApkg(
 <div class="translation">{{Definition}}</div>`,
     }], [[0, "all", [0]]]),
   };
-  const deck = (id: number, name: string) => ({
-    id, name, mod: modified, usn: -1, desc: "", collapsed: false, browserCollapsed: false,
+  const deck = (id: number, name: string, desc: string) => ({
+    id, name, mod: modified, usn: -1, desc, collapsed: false, browserCollapsed: false,
     dyn: 0, conf: 1, extendNew: 0, extendRev: 0,
     lrnToday: [0, 0], revToday: [0, 0], newToday: [0, 0], timeToday: [0, 0],
   });
@@ -197,7 +197,7 @@ export async function buildApkg(
     db.run("INSERT INTO col VALUES (?, ?, ?, ?, 11, 0, -1, 0, ?, ?, ?, ?, '{}')", [
       1, modified, now, now,
       JSON.stringify({ nextPos: plan.notes.length + 1, curDeck: deckId, activeDecks: [deckId], curModel: sentenceId, schedVer: 2, newSpread: 0 }),
-      JSON.stringify(models), JSON.stringify({ 1: deck(1, "Default"), [deckId]: deck(deckId, plan.deck_name) }),
+      JSON.stringify(models), JSON.stringify({ 1: deck(1, "Default", ""), [deckId]: deck(deckId, plan.deck_name, plan.deck_description) }),
       JSON.stringify({ 1: defaultConfig }),
     ]);
     db.run("BEGIN");

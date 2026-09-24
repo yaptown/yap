@@ -45,6 +45,9 @@ pub struct AnkiDeckPlan {
     /// types, tags, and the package file.
     pub course_code: String,
     pub deck_name: String,
+    /// Anki shows this on the deck's overview screen; the only place the
+    /// deck itself can point back at Yap.
+    pub deck_description: String,
     pub deck_id: i64,
     pub sentence_model_id: i64,
     pub word_model_id: i64,
@@ -133,6 +136,8 @@ pub struct AnkiExportView {
     pub title: String,
     pub needs_placement: bool,
     pub level_line: String,
+    /// What the level number means, for someone who has never seen one.
+    pub level_gloss: String,
     pub level: u32,
     pub total_levels: u32,
     pub too_advanced: bool,
@@ -146,6 +151,11 @@ pub struct AnkiExportView {
     pub placement_complete_label: String,
     /// Why the deck exists, read while it builds.
     pub backstory: String,
+    /// Shown once the deck is downloaded: the placement test already set
+    /// this browser's level, so the app picks up where the deck stops.
+    pub keep_going_heading: String,
+    pub keep_going_body: String,
+    pub keep_going_label: String,
 }
 
 fn validate(options: &AnkiDeckOptions) -> Result<(), Error> {
@@ -324,6 +334,10 @@ const NO_SENTENCES: &str = "No comprehensible movie-clip sentences were found at
 const PLACEMENT_COMPLETE_LABEL: &str = "Generate Anki deck";
 // Shown while the deck is being built; the page has a minute or two to fill.
 const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I still think the app is the best way to learn, but the same technology, real movie lines picked for your level, each with its clip and a recording, makes a really good Anki deck too. Yours is being built right now.";
+const KEEP_GOING_HEADING: &str = "Your level is saved here too";
+const KEEP_GOING_BODY: &str = "The placement test you just took is the same one Yap uses, so the app starts exactly where this deck does: no second test. When the deck runs out, Yap keeps adding sentences at your level.";
+const KEEP_GOING_LABEL: &str = "Keep going in Yap";
+const DECK_DESCRIPTION: &str = "Made with Yap (https://yap.town/anki): real movie lines at your level, each with its clip and a recording.\n\nWhen these run out, Yap keeps going at https://yap.town.";
 
 #[bridgerton::bridge]
 impl Deck {
@@ -331,7 +345,21 @@ impl Deck {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;
         let tier = (!pack.gram_frequencies.entries.is_empty()).then(|| self.get_current_tier());
-        let (level, total_levels) = tier.map_or((1, 1), |tier| (tier.level, tier.total_levels));
+        let (level, total_levels) = tier
+            .as_ref()
+            .map_or((1, 1), |tier| (tier.level, tier.total_levels));
+        let level_line = tier.as_ref().map_or_else(
+            || format!("Level {level} of {total_levels}"),
+            |tier| format!("{} · level {level} of {total_levels}", tier.name),
+        );
+        // A newcomer has no idea what "level 3" is; how much of a film's
+        // dialogue the words up to here cover is something they can feel.
+        let level_gloss = tier.as_ref().map_or_else(String::new, |tier| {
+            format!(
+                "The words up to this level cover about {:.0}% of what is said in {language} films.",
+                tier.percent_of_usage
+            )
+        });
         let too_advanced = !pack.gram_frequencies.entries.is_empty()
             && Self::percent_known_in(
                 &pack.gram_frequencies,
@@ -349,7 +377,8 @@ impl Deck {
         AnkiExportView {
             title: TITLE.into(),
             needs_placement: !self.has_taken_placement_test() && self.num_cards_added() < 3,
-            level_line: format!("Level {level} of {total_levels}"),
+            level_line,
+            level_gloss,
             level,
             total_levels,
             too_advanced,
@@ -360,6 +389,9 @@ impl Deck {
             download_label: format!("Download the {language} deck"),
             placement_complete_label: PLACEMENT_COMPLETE_LABEL.into(),
             backstory: BACKSTORY.into(),
+            keep_going_heading: KEEP_GOING_HEADING.into(),
+            keep_going_body: KEEP_GOING_BODY.into(),
+            keep_going_label: KEEP_GOING_LABEL.into(),
         }
     }
 
@@ -634,6 +666,7 @@ impl Deck {
             } else {
                 format!("Yap • {language} ({})", course.native_language)
             },
+            deck_description: DECK_DESCRIPTION.into(),
             deck_id: id(course, "deck", ""),
             sentence_model_id: id(course, "sentence-model", ""),
             word_model_id: id(course, "word-model", ""),
