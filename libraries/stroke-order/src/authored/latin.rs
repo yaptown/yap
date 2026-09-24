@@ -66,15 +66,22 @@ use super::{Coord, Pt, collect, dist, glyph, pt};
 use crate::{Forms, StrokeStandard};
 use unicode_normalization::UnicodeNormalization;
 
-const ASC: i32 = 150;
-const CAP: i32 = 190;
-const X: i32 = 450;
-const BASE: i32 = 850;
-const DESC: i32 = 975;
-const CAP_MID: i32 = (CAP + BASE) / 2; // 520
-const X_MID: i32 = (X + BASE) / 2; // 650
+pub(super) const ASC: i32 = 150;
+pub(super) const CAP: i32 = 190;
+pub(super) const X: i32 = 450;
+pub(super) const BASE: i32 = 850;
+pub(super) const DESC: i32 = 975;
+pub(super) const CAP_MID: i32 = (CAP + BASE) / 2; // 520
+pub(super) const X_MID: i32 = (X + BASE) / 2; // 650
 
-const ACCENTED: &str = "àáâäãåçèéêëìíîïñòóôöõùúûüÿÀÁÂÄÃÅÇÈÉÊËÌÍÎÏÑÒÓÔÖÕÙÚÛÜŸ";
+/// The accented letters of the course languages, then the ones their texts
+/// borrow from other Latin orthographies and transliterations (Polish,
+/// Czech, Romanian, Hungarian, Lithuanian, Turkish, Maltese, romanised
+/// Japanese and Indic): every letter whose decomposition is a drawn base and
+/// drawn marks.
+const ACCENTED: &str = "àáâäãåçèéêëìíîïñòóôöõùúûüÿÀÁÂÄÃÅÇÈÉÊËÌÍÎÏÑÒÓÔÖÕÙÚÛÜŸ\
+āēīōūĀĒĪŌŪăĕğĭŏŭĂĔĞĬŎŬċėġżĊĖĠŻąęįųĄĘĮŲčďěňřšťžľČĎĚŇŘŠŤŽĽőűŐŰćńśźĆŃŚŹ\
+ḍḥḷṃṇṛṣṭẓḌḤḶṂṆṚṢṬẒșțȘȚģķļņĢĶĻŅýỳŷÝỲŶỹỸẽẼĩĨũŨ";
 
 pub fn glyphs() -> Forms {
     let bases = BASES
@@ -91,27 +98,27 @@ pub fn glyphs() -> Forms {
 }
 
 /// One pen-down motion. Each method continues from the current point.
-struct Pen(Vec<Pt>);
+pub(super) struct Pen(pub(super) Vec<Pt>);
 
 type Draw = fn() -> Vec<Pen>;
 
 impl Pen {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         Pen(Vec::new())
     }
 
-    fn at(start: (impl Coord, impl Coord)) -> Self {
+    pub(super) fn at(start: (impl Coord, impl Coord)) -> Self {
         Pen(vec![pt(start)])
     }
 
-    fn line<A: Coord, B: Coord, const N: usize>(mut self, pts: [(A, B); N]) -> Self {
+    pub(super) fn line<A: Coord, B: Coord, const N: usize>(mut self, pts: [(A, B); N]) -> Self {
         self.0.extend(pts.map(pt));
         self
     }
 
     /// Elliptical arc; draws a straight join from the current point to the
     /// arc's start if they differ (e.g. the push-up retrace in b, h, n).
-    fn arc(
+    pub(super) fn arc(
         mut self,
         cx: impl Coord,
         cy: impl Coord,
@@ -132,7 +139,7 @@ impl Pen {
     }
 
     /// Catmull-Rom spline from the current point through `pts`.
-    fn curve<A: Coord, B: Coord, const N: usize>(mut self, pts: [(A, B); N]) -> Self {
+    pub(super) fn curve<A: Coord, B: Coord, const N: usize>(mut self, pts: [(A, B); N]) -> Self {
         let start = *self.0.last().unwrap();
         let ctrl: Vec<Pt> = [start, start]
             .into_iter()
@@ -158,12 +165,12 @@ impl Pen {
     }
 }
 
-fn line<A: Coord, B: Coord, const N: usize>(pts: [(A, B); N]) -> Pen {
+pub(super) fn line<A: Coord, B: Coord, const N: usize>(pts: [(A, B); N]) -> Pen {
     Pen::new().line(pts)
 }
 
 /// A dot is a tap: a stroke too short to see as a line.
-fn dot(x: impl Coord, y: impl Coord) -> Pen {
+pub(super) fn dot(x: impl Coord, y: impl Coord) -> Pen {
     let (x, y) = pt((x, y));
     line([(x, y - 6.0), (x, y + 6.0)])
 }
@@ -1497,6 +1504,41 @@ fn ring(x: f64, top: f64, bottom: f64) -> Vec<Pen> {
     vec![Pen::new().arc(x, top + r, r * 0.9, r, 90, 450)]
 }
 
+fn macron(x: f64, top: f64, bottom: f64) -> Vec<Pen> {
+    let y = (top + bottom) / 2.0;
+    vec![line([(x - 90.0, y), (x + 90.0, y)])]
+}
+
+fn breve(x: f64, top: f64, bottom: f64) -> Vec<Pen> {
+    let r = (bottom - top) / 2.0;
+    vec![Pen::new().arc(x, top + r * 0.6, r * 1.4, r, 180, 360)]
+}
+
+fn caron(x: f64, top: f64, bottom: f64) -> Vec<Pen> {
+    vec![line([(x - 85.0, top), (x, bottom), (x + 85.0, top)])]
+}
+
+fn double_acute(x: f64, top: f64, bottom: f64) -> Vec<Pen> {
+    vec![
+        line([(x + 5.0, top), (x - 85.0, bottom)]),
+        line([(x + 105.0, top), (x + 15.0, bottom)]),
+    ]
+}
+
+fn dot_above(x: f64, top: f64, bottom: f64) -> Vec<Pen> {
+    vec![dot(x, (top + bottom) / 2.0)]
+}
+
+/// A tail curling left from the foot of the letter at `(x, top)`, as on ą ę.
+fn ogonek(x: f64, top: f64) -> Vec<Pen> {
+    vec![Pen::at((x, top)).arc(x + 40.0, top + 45.0, 40, 45, 180, 340)]
+}
+
+/// A short comma under the letter, as on ș ț.
+fn comma_below(x: f64, top: f64) -> Vec<Pen> {
+    vec![line([(x + 15.0, top + 40.0), (x - 15.0, top + 95.0)])]
+}
+
 /// Hangs from the bottom of the letter's curve at `(x, top)`.
 fn cedilla(x: f64, top: f64) -> Vec<Pen> {
     vec![
@@ -1507,13 +1549,14 @@ fn cedilla(x: f64, top: f64) -> Vec<Pen> {
 }
 
 /// Base letter first, then its marks, once for every form of the base letter.
-/// Marks above sit in a band above cap height for capitals and above the
-/// x-height for lowercase.
 fn compose(c: char) -> Vec<Vec<Pen>> {
     let mut chars = c.nfd();
     let letter = chars.next().unwrap();
     let marks: Vec<char> = chars.collect();
-    forms(if letter == 'i' { 'ı' } else { letter })
+    // A mark above replaces the dot of i; a mark below (į) leaves it.
+    let below = |m: &char| matches!(m, '\u{323}' | '\u{326}' | '\u{327}' | '\u{328}');
+    let dotless = letter == 'i' && !marks.iter().all(below);
+    forms(if dotless { 'ı' } else { letter })
         .map(|strokes| add_marks(c, letter, strokes, &marks))
         .collect()
 }
@@ -1523,26 +1566,35 @@ fn add_marks(c: char, letter: char, mut strokes: Vec<Pen>, marks: &[char]) -> Ve
     let xs = pts.iter().map(|p| p.0);
     let centre =
         (xs.clone().fold(f64::INFINITY, f64::min) + xs.fold(f64::NEG_INFINITY, f64::max)) / 2.0;
-    let (top, bottom) = if letter.is_uppercase() {
+    // Marks above sit over the x-height, or over the ascender line for
+    // capitals and for lowercase letters that reach above the x-height.
+    let reaches_up = pts.iter().any(|p| p.1 < f64::from(X) - 60.0);
+    let (top, bottom) = if letter.is_uppercase() || reaches_up {
         (40.0, 150.0)
     } else {
         (275.0, 385.0)
     };
+    // The first lowest point of the letter, where marks below attach.
+    let lowest = pts
+        .iter()
+        .fold(pts[0], |a, &p| if p.1 > a.1 { p } else { a });
     for &mark in marks {
         strokes.extend(match mark {
             '\u{300}' => grave(centre, top, bottom),
             '\u{301}' => acute(centre, top, bottom),
             '\u{302}' => circumflex(centre, top, bottom),
             '\u{303}' => tilde(centre, top, bottom),
+            '\u{304}' => macron(centre, top, bottom),
+            '\u{306}' => breve(centre, top, bottom),
+            '\u{307}' => dot_above(centre, top, bottom),
             '\u{308}' => diaeresis(centre, top, bottom),
             '\u{30a}' => ring(centre, top, bottom),
-            '\u{327}' => {
-                // The first lowest point of the letter.
-                let lowest = pts
-                    .iter()
-                    .fold(pts[0], |a, &p| if p.1 > a.1 { p } else { a });
-                cedilla(lowest.0, f64::from(BASE))
-            }
+            '\u{30b}' => double_acute(centre, top, bottom),
+            '\u{30c}' => caron(centre, top, bottom),
+            '\u{323}' => vec![dot(centre, f64::from(BASE) + 70.0)],
+            '\u{326}' => comma_below(lowest.0, f64::from(BASE)),
+            '\u{327}' => cedilla(lowest.0, f64::from(BASE)),
+            '\u{328}' => ogonek(lowest.0, f64::from(BASE)),
             _ => panic!("no drawing for mark U+{:04X} in {c}", u32::from(mark)),
         });
     }

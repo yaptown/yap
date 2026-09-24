@@ -27,11 +27,20 @@ pub mod cyrillic;
 #[rustfmt::skip]
 pub mod devanagari;
 pub mod latin;
+pub mod punctuation;
 #[rustfmt::skip]
 pub mod thai;
 
 use crate::{Forms, Stroke, StrokeGlyph, StrokeStandard, validate};
 use rustc_hash::FxHashMap;
+
+/// What text in any language contains besides its script: Latin letters,
+/// digits and punctuation.
+pub fn common() -> Forms {
+    let mut forms = latin::glyphs();
+    forms.extend(punctuation::glyphs());
+    forms
+}
 
 pub type Pt = (f64, f64);
 /// A letter's strokes in writing order, each a polyline in pen direction.

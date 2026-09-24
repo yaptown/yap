@@ -4,8 +4,35 @@
 //! (ตัวอักษรแบบกระทรวงศึกษาธิการ, "หัวกลมตัวมน"): a letter with a head loop (หัว)
 //! starts inside the head, goes around it and continues to the end of the
 //! letter without lifting the pen; letters without a head start where the
-//! guide starts them. Stroke order and direction were checked against
-//! ActiveThai's start/end-dot practice sheets.
+//! guide starts them. Stroke order and direction were reviewed against
+//! thai-notes.com's recorded pen trajectories (nearly every character),
+//! ActiveThai's numbered start/end-dot worksheets, the Ministry's handwriting
+//! handbook (ลายมือสวย) rules, and a published list of which heads run
+//! clockwise. Where they disagree, the forms the others use are kept as
+//! alternatives.
+//!
+//! # Alternatives
+//!
+//! Accepted forms after the taught one (see [`super`]'s "Accepted
+//! letterforms"):
+//!
+//! - ศ ส: the tail drawn inward, from its tip (thai-notes; the taught
+//!   outward one is ActiveThai's).
+//! - บ ป ษ: a pen lift at the bottom-left corner (ActiveThai).
+//! - ฆ ซ: thai-notes' letterform with the head low on the left and two humps
+//!   on top. Its ฑ trace has ฆ's loop, so ฑ gets no such form.
+//! - ๆ: the tail kinked left partway down (thai-notes).
+//! - ๙: a ๑-style head spiralling out from inside the bowl (thai-notes).
+//! - ำ ํ: the circle anticlockwise (taught clockwise, per thai-notes).
+//! - ิ: drawn the other way, from the arch's right end (ActiveThai).
+//! - ี: one stroke, ิ then back up into the tick (ActiveThai).
+//! - ึ: taught as ิ going on into an anticlockwise circle (thai-notes); also
+//!   circle first, then base leftwards and the arch back to it, and
+//!   ActiveThai's circle, arch leftwards, then the base.
+//! - ็: the head anticlockwise (taught clockwise, per thai-notes).
+//! - ๋: the bar first (taught vertical first, per thai-notes).
+//!
+//! A composed unit takes every combination of its parts' forms.
 //!
 //! Glyphs are drawn in "writing units": the Thai writing grid with the
 //! baseline at y=0, the top line of a consonant body at about y=560 and y
@@ -23,7 +50,7 @@
 //! spacing vowels (ะ า ำ เ แ โ ใ ไ ๅ; ำ follows the cluster, so น้ำ is น้
 //! then ำ), digits, ฯ ๆ, spaces, and a mark with no consonant before it. There
 //! is no word segmentation: the units are the syllable's written pieces.
-//! Single characters keep exactly the glyph they were drawn and reviewed
+//! Single characters keep exactly the glyphs they were drawn and reviewed
 //! with; [`Thai::glyphs`] composes the rest. ฺ and ๎ are not drawn, so a unit
 //! carrying one has no glyph (neither occurs in the course corpus).
 //!
@@ -49,9 +76,12 @@
 //!   the consonant's left edge (the wide ึ over ฝ, anything over ฬ's loop),
 //!   they rise over the ascender instead. Noto swaps in a narrower ึ and a
 //!   short ฬ there; this pack has one form of each.
-//! - **Descenders.** A below-vowel under ฎ ฏ ฐ ญ ฤ ฦ drops below the
-//!   descender. Noto drops it for ฎ ฏ ฤ but uses descender-less ญ and ฐ; we
-//!   keep the letters whole, as they were drawn.
+//! - **Descenders.** ญ and ฐ are written without their เชิง (their last
+//!   stroke) over a below-vowel, which then sits as under any consonant, as
+//!   Thai writes them and Noto sets them ([`FOOTED`]). Under ฎ ฏ ฤ ฦ, which
+//!   keep their descenders, it drops below the descender.
+//! - **ื.** A tone mark on ื sits midway between its two ticks
+//!   ([`UEE_TONE_DX`]).
 //! - **Clearance.** Moved marks keep [`CLEARANCE`] from the ink they clear,
 //!   measured between centerlines.
 //! - **Box.** A composed unit that would leave the box (a descender stack, a
@@ -64,7 +94,7 @@
 //! turn there instead of a smooth one. [`head`] gives the waypoints of a head
 //! loop and [`ring`] those of a closed loop in the middle of a stroke.
 use super::{
-    CORNER, Draw, Ends, Item, Pt, Strokes, bounds, centripetal, collect, corner_runs, glyph, items, pts,
+    CORNER, Draw, Ends, Item, Pt, Strokes, bounds, centripetal, collect, corner_runs, glyph, group, items, pts,
 };
 use crate::{Forms, StrokeGlyph, StrokeStandard};
 use rustc_hash::FxHashMap;
@@ -96,6 +126,12 @@ const DESCENDS: f64 = -40.0;
 const CLEARANCE: f64 = 100.0;
 /// A composed unit is kept this far inside the 1000-unit box.
 const INSET: f64 = 20.0;
+/// The consonants written without their เชิง (their last stroke) over a
+/// below-vowel.
+const FOOTED: [char; 2] = ['ญ', 'ฐ'];
+/// A tone mark on ื moves this far left, to midway between its ticks
+/// (OBEC's rule 19); on the plain tier it sits over the right tick.
+const UEE_TONE_DX: f64 = -32.0;
 
 /// Where a combining mark stacks.
 #[derive(Clone, Copy, PartialEq)]
@@ -142,64 +178,87 @@ pub struct Thai {
     /// Every character drawn on its own: spacing letters centred on their ink,
     /// a lone mark on the notional อ.
     pub(crate) units: Forms,
-    /// Consonants in writing units.
-    consonants: FxHashMap<char, Strokes>,
-    /// Combining marks in writing units, drawn relative to the end of their
-    /// base (tone marks unlifted).
-    marks: FxHashMap<char, (Tier, Strokes)>,
+    /// Every accepted form of each consonant, in writing units.
+    consonants: FxHashMap<char, Vec<Strokes>>,
+    /// Every accepted form of each combining mark, in writing units, drawn
+    /// relative to the end of its base (tone marks unlifted).
+    marks: FxHashMap<char, (Tier, Vec<Strokes>)>,
     /// The notional อ's anchor, relative to its ink centre.
     notional_anchor: f64,
 }
 
 impl Default for Thai {
     fn default() -> Self {
-        let consonants: FxHashMap<char, Strokes> = consonants().into_iter().map(|(c, draw)| (c, draw())).collect();
-        let marks: FxHashMap<char, (Tier, Strokes)> = marks().into_iter().map(|(c, tier, draw)| (c, (tier, draw()))).collect();
+        let consonants = group(consonants().into_iter().map(|(c, draw)| (c, draw())));
+        let marks: FxHashMap<char, (Tier, Vec<Strokes>)> = group(marks().into_iter().map(|(c, tier, draw)| (c, (tier, draw()))))
+            .into_iter()
+            .map(|(c, forms)| (c, (forms[0].0, forms.into_iter().map(|f| f.1).collect())))
+            .collect();
         // Spacing characters are centred on their own ink.
-        let spacing = consonants.iter().map(|(&c, s)| (c, s.clone())).chain(others().into_iter().map(|(c, draw)| (c, draw()))).map(|(c, strokes)| {
+        let spacing = consonants.iter().flat_map(|(&c, forms)| forms.iter().map(move |s| (c, s.clone()))).chain(others().into_iter().map(|(c, draw)| (c, draw()))).map(|(c, strokes)| {
             let dx = -centre(&strokes);
             (c, glyph(StrokeStandard::Thai, strokes, to_box(dx)))
         });
-        let lone_marks = marks.iter().map(|(&c, (tier, strokes))| {
+        let lone_marks = marks.iter().flat_map(|(&c, (tier, forms))| {
             let lift = if *tier == Tier::Tone { TONE_LIFT } else { 0.0 };
-            let strokes = strokes.iter().map(|s| shift(s.clone(), 0.0, lift)).collect();
-            (c, glyph(StrokeStandard::Thai, strokes, to_box(MARK_BASE_CENTRE)))
+            forms.iter().map(move |form| {
+                let strokes = form.iter().map(|s| shift(s.clone(), 0.0, lift)).collect();
+                (c, glyph(StrokeStandard::Thai, strokes, to_box(MARK_BASE_CENTRE)))
+            })
         });
         let units = collect(spacing.chain(lone_marks));
-        let o = &consonants[&'อ'];
+        let o = &consonants[&'อ'][0];
         let notional_anchor = anchor(o) - centre(o);
         Thai { units, consonants, marks, notional_anchor }
     }
 }
 
 impl Thai {
-    /// The glyph of one unit from [`segment`], as its only form; empty if the
-    /// pack cannot draw it.
+    /// Every accepted form of one unit from [`segment`], the taught form
+    /// first; empty if the pack cannot draw it.
     pub fn glyphs(&self, unit: &str) -> Vec<StrokeGlyph> {
         let mut chars = unit.chars();
         match (chars.next(), chars.next()) {
             (Some(c), None) => self.units.get(&c).cloned().unwrap_or_default(),
-            _ => self.compose(unit).into_iter().collect(),
+            _ => self.compose(unit),
         }
     }
 
-    /// A consonant with its marks: the consonant where it sits on its own,
-    /// then each mark in text order, anchored to the consonant's right edge
-    /// and stacked (see the module docs).
-    fn compose(&self, unit: &str) -> Option<StrokeGlyph> {
+    /// A consonant with its marks, in every combination of its parts' forms,
+    /// the taught forms first.
+    fn compose(&self, unit: &str) -> Vec<StrokeGlyph> {
         let mut chars = unit.chars();
-        let base = self.consonants.get(&chars.next()?)?;
-        let marks: Vec<&(Tier, Strokes)> = chars.map(|c| self.marks.get(&c)).collect::<Option<_>>()?;
-        let lift = if marks.iter().any(|m| m.0 == Tier::Above) { TONE_LIFT } else { 0.0 };
+        let Some((c, bases)) = chars.next().and_then(|c| Some((c, self.consonants.get(&c)?))) else {
+            return Vec::new();
+        };
+        let Some(marks) = chars.map(|m| self.marks.get(&m).map(|(tier, forms)| (m, *tier, forms))).collect::<Option<Vec<_>>>() else {
+            return Vec::new();
+        };
+        let mut combos: Vec<Vec<&Strokes>> = bases.iter().map(|b| vec![b]).collect();
+        for (_, _, forms) in &marks {
+            combos = combos.into_iter().flat_map(|combo| forms.iter().map(move |f| [combo.clone(), vec![f]].concat())).collect();
+        }
+        combos.into_iter().map(|combo| self.place(c, &marks, &combo)).collect()
+    }
+
+    /// One combination: the consonant where it sits on its own, then each
+    /// mark in text order, anchored to the consonant's right edge and stacked
+    /// (see the module docs).
+    fn place(&self, consonant: char, marks: &[(char, Tier, &Vec<Strokes>)], forms: &[&Strokes]) -> StrokeGlyph {
+        let (base, mark_forms) = forms.split_first().unwrap();
+        let lift = if marks.iter().any(|m| m.1 == Tier::Above) { TONE_LIFT } else { 0.0 };
+        let tone_dx = if marks.iter().any(|m| m.0 == 'ื') { UEE_TONE_DX } else { 0.0 };
         let c = centre(base);
-        let base: Strokes = base.iter().map(|s| shift(s.clone(), -c, 0.0)).collect();
+        let footless = FOOTED.contains(&consonant) && marks.iter().any(|m| m.1 == Tier::Below);
+        let base: Strokes = base[..base.len() - usize::from(footless)].iter().map(|s| shift(s.clone(), -c, 0.0)).collect();
         // Exactly MARK_BASE_CENTRE on อ, so its marks land where they do alone.
         let dx = MARK_BASE_CENTRE + (anchor(&base) - self.notional_anchor);
         let mut placed: Vec<(bool, Strokes)> = marks
             .iter()
-            .map(|(tier, strokes)| {
-                let dy = if *tier == Tier::Tone { lift } else { 0.0 };
-                (*tier != Tier::Below, strokes.iter().map(|s| shift(s.clone(), dx, dy)).collect())
+            .zip(mark_forms)
+            .map(|(&(_, tier, _), strokes)| {
+                let (tx, dy) = if tier == Tier::Tone { (tone_dx, lift) } else { (0.0, 0.0) };
+                (tier != Tier::Below, strokes.iter().map(|s| shift(s.clone(), dx + tx, dy)).collect())
             })
             .collect();
         for above in [true, false] {
@@ -214,7 +273,7 @@ impl Thai {
         }
         let strokes: Strokes = base.into_iter().chain(placed.into_iter().flat_map(|m| m.1)).collect();
         let fit = Fit::new(&strokes);
-        Some(glyph(StrokeStandard::Thai, strokes, |p| fit.apply(to_box(0.0)(p))))
+        glyph(StrokeStandard::Thai, strokes, |p| fit.apply(to_box(0.0)(p)))
     }
 }
 
@@ -295,7 +354,7 @@ impl Fit {
     }
 }
 
-fn consonants() -> [(char, Draw); 46] {
+fn consonants() -> [(char, Draw); 53] {
     [
         ('ก', ko_kai),
         ('ข', kho_khai),
@@ -303,11 +362,13 @@ fn consonants() -> [(char, Draw); 46] {
         ('ค', kho_khwai),
         ('ฅ', kho_khon),
         ('ฆ', kho_rakhang),
+        ('ฆ', kho_rakhang_humps),
         ('ง', ngo_ngu),
         ('จ', cho_chan),
         ('ฉ', cho_ching),
         ('ช', cho_chang),
         ('ซ', so_so),
+        ('ซ', so_so_humps),
         ('ฌ', cho_choe),
         ('ญ', yo_ying),
         ('ฎ', do_chada),
@@ -323,7 +384,9 @@ fn consonants() -> [(char, Draw); 46] {
         ('ธ', tho_thong),
         ('น', no_nu),
         ('บ', || bo_baimai(515)),
+        ('บ', || lift_at(bo_baimai(515), (196, 36))),
         ('ป', || bo_baimai(715)),
+        ('ป', || lift_at(bo_baimai(715), (196, 36))),
         ('ผ', || pho_phueng(515)),
         ('ฝ', || pho_phueng(715)),
         ('พ', || pho_phan(515)),
@@ -337,8 +400,11 @@ fn consonants() -> [(char, Draw); 46] {
         ('ฦ', || pho_samphao(DESCENDER)),
         ('ว', wo_waen),
         ('ศ', so_sala),
+        ('ศ', || reversed(so_sala(), 1)),
         ('ษ', so_ruesi),
+        ('ษ', || lift_at(so_ruesi(), (192, 36))),
         ('ส', so_suea),
+        ('ส', || reversed(so_suea(), 1)),
         ('ห', ho_hip),
         ('ฬ', lo_chula),
         ('อ', o_ang),
@@ -346,12 +412,13 @@ fn consonants() -> [(char, Draw); 46] {
     ]
 }
 
-fn others() -> [(char, Draw); 21] {
+fn others() -> [(char, Draw); 24] {
     [
         ('ฯ', paiyannoi),
         ('ะ', sara_a),
         ('า', || sara_aa(40)),
-        ('ำ', sara_am),
+        ('ำ', || sara_am(CW)),
+        ('ำ', || sara_am(CCW)),
         ('เ', || sara_e(0)),
         ('แ', sara_ae),
         ('โ', sara_o),
@@ -359,6 +426,7 @@ fn others() -> [(char, Draw); 21] {
         ('ไ', sara_ai_maimalai),
         ('ๅ', || sara_aa(-190)),
         ('ๆ', mai_yamok),
+        ('ๆ', mai_yamok_kinked),
         ('๐', digit_0),
         ('๑', digit_1),
         ('๒', digit_2),
@@ -369,25 +437,33 @@ fn others() -> [(char, Draw); 21] {
         ('๗', digit_7),
         ('๘', digit_8),
         ('๙', digit_9),
+        ('๙', digit_9_spiral),
     ]
 }
 
-fn marks() -> [(char, Tier, Draw); 14] {
+fn marks() -> [(char, Tier, Draw); 21] {
     use Tier::*;
     [
         ('ั', Above, mai_han_akat),
         ('ิ', Above, sara_i),
+        ('ิ', Above, || reversed(sara_i(), 0)),
         ('ี', Above, sara_ii),
+        ('ี', Above, sara_ii_one_stroke),
         ('ึ', Above, sara_ue),
+        ('ึ', Above, sara_ue_circle_first),
+        ('ึ', Above, sara_ue_circle_arch_base),
         ('ื', Above, sara_uee),
-        ('็', Above, mai_taikhu),
-        ('ํ', Above, || vec![nikhahit()]),
+        ('็', Above, || mai_taikhu(CW)),
+        ('็', Above, || mai_taikhu(CCW)),
+        ('ํ', Above, || vec![nikhahit(CW)]),
+        ('ํ', Above, || vec![nikhahit(CCW)]),
         ('ุ', Below, sara_u),
         ('ู', Below, sara_uu),
         ('่', Tone, mai_ek),
         ('้', Tone, mai_tho),
         ('๊', Tone, mai_tri),
         ('๋', Tone, mai_chattawa),
+        ('๋', Tone, || mai_chattawa().into_iter().rev().collect()),
         ('์', Tone, thanthakhat),
     ]
 }
@@ -454,6 +530,26 @@ macro_rules! stroke {
 
 fn shift(pts: Vec<Pt>, dx: f64, dy: f64) -> Vec<Pt> {
     pts.into_iter().map(|(x, y)| (x + dx, y + dy)).collect()
+}
+
+/// The same letter written with a pen lift at `corner`, a [`CORNER`]
+/// waypoint of one of its strokes: that stroke ends there and the next
+/// starts there.
+fn lift_at(strokes: Strokes, corner: (i32, i32)) -> Strokes {
+    let corner = super::pt(corner);
+    strokes
+        .into_iter()
+        .flat_map(|s| match s.iter().position(|&p| super::dist(p, corner) < 0.5) {
+            Some(i) => vec![s[..=i].to_vec(), s[i..].to_vec()],
+            None => vec![s],
+        })
+        .collect()
+}
+
+/// The same letter with stroke `i` drawn the other way.
+fn reversed(mut strokes: Strokes, i: usize) -> Strokes {
+    strokes[i].reverse();
+    strokes
 }
 
 // --- glyphs ----------------------------------------------------------------
@@ -557,6 +653,25 @@ fn kho_rakhang() -> Strokes {
     ]
 }
 
+/// ฆ as thai-notes writes it: head low on the left, up into two humps, down
+/// a middle stem into a clockwise loop, diagonal, up the right
+fn kho_rakhang_humps() -> Strokes {
+    vec![
+        stroke![
+            head((211, 357), 180, CW),
+            (158, 440), (190, 482), (250, 527),
+            CORNER,
+            (299, 484),
+            CORNER,
+            (342, 529), (400, 500), (433, 444), (431, 390), (400, 335), (375, 280), (372, 200),
+            ring_r((300, 112), 0, -300, 72),
+            (440, 190), (540, 125), (610, 64), (646, 40),
+            CORNER,
+            (650, 120), (650, 515),
+        ]
+    ]
+}
+
 /// ง: head top-right, down, along the bottom, up the diagonal
 fn ngo_ngu() -> Strokes {
     vec![
@@ -621,6 +736,25 @@ fn so_so() -> Strokes {
     ]
 }
 
+/// ซ as thai-notes writes it: head low on the left, up into two humps, down
+/// the left stem, along the bottom, up the right, flick
+fn so_so_humps() -> Strokes {
+    vec![
+        stroke![
+            head((100, 366), 180, CW),
+            (48, 455), (80, 500), (130, 529),
+            CORNER,
+            (179, 480),
+            CORNER,
+            (220, 528), (270, 514), (297, 458), (298, 400), (265, 343), (237, 290), (236, 200), (236, 36),
+            CORNER,
+            (385, 36), (412, 48), (420, 90), (421, 340), (400, 400), (350, 450),
+            CORNER,
+            (392, 505), (440, 542), (481, 590),
+        ]
+    ]
+}
+
 /// ฌ: head bottom-left, ก-like left half, loop, diagonal, up the right
 fn cho_choe() -> Strokes {
     vec![
@@ -651,11 +785,12 @@ fn yo_ying() -> Strokes {
     ]
 }
 
-/// shared by ฎ ฏ: head, notch, arch, right stem down below the line
+/// shared by ฎ ฏ: head (anticlockwise, like ภ), up from its right side,
+/// notch, arch, right stem down below the line
 fn cha_da_body() -> Vec<Item> {
     items![
-        head((122, 94), 125, CW),
-        (175, 245), (205, 300), (250, 332), (292, 350),
+        head((122, 94), 20, CCW),
+        (190, 205), (205, 285), (240, 325), (292, 350),
         arch_after_notch(495, -150),
         (488, -188),
     ]
@@ -981,16 +1116,16 @@ fn so_suea() -> Strokes {
     ]
 }
 
-/// ห: head, down, diagonal up into the right loop, down the right
+/// ห: head, down, diagonal up to just left of the stem, then a closed
+/// anticlockwise loop (up its right side, over, down its left, back right
+/// through the crossing), down the right stem
 fn ho_hip() -> Strokes {
     vec![
         stroke![
             head((120, 466), -15, CW),
             (181, 400), (181, 300), (181, 40),
             CORNER,
-            (235, 160), (295, 295), (355, 385), (405, 430),
-            ring((469, 466), 205, -240),
-            (514, 350), (514, 40),
+            (235, 160), (295, 295), (350, 375), (400, 418), (455, 425), (505, 462), (500, 522), (448, 544), (396, 515), (388, 462), (425, 428), (480, 400), (514, 340), (514, 40),
         ]
     ]
 }
@@ -1045,26 +1180,31 @@ fn sara_aa(bottom: i32) -> Strokes {
     vec![stroke![(25, 500), (90, 522), (167, 530), (240, 512), (280, 460), (289, 400), (289, bottom)]]
 }
 
-/// the small circle of ำ, anticlockwise from the top
-fn nikhahit() -> Vec<Pt> {
-    stroke![ring_r((-130, 727), 90, 360, 70)]
+/// the small circle of ำ, from the top, clockwise (taught) or anticlockwise
+fn nikhahit(cw: bool) -> Vec<Pt> {
+    stroke![ring_r((-130, 727), 90, if cw { -360 } else { 360 }, 70)]
 }
 
 /// ำ: circle over the consonant, then า
-fn sara_am() -> Strokes {
-    [vec![nikhahit()], sara_aa(40)].concat()
+fn sara_am(cw: bool) -> Strokes {
+    [vec![nikhahit(cw)], sara_aa(40)].concat()
 }
 
 /// ◌ิ is written from the right end of its base (the consonant's back line)
 /// leftwards, then up and over the arch. ◌ี ◌ื add strokes that come down onto
-/// the arch's end; ◌ึ starts at its head on the right.
+/// the arch's end; ◌ึ goes on from ◌ิ into a circle on the arch's end.
 fn arch() -> Vec<Pt> {
     pts![(-478, 720), (-445, 760), (-380, 785), (-300, 792)]
 }
 
+/// ิ, from the base's right end round to where it started
+fn sara_i_items() -> Vec<Item> {
+    items![(-135, 665), (-485, 665), CORNER, arch(), (-210, 778), (-160, 752), (-138, 705), (-134, 668)]
+}
+
 /// ิ
 fn sara_i() -> Strokes {
-    vec![stroke![(-135, 665), (-485, 665), CORNER, arch(), (-210, 778), (-160, 752), (-138, 705), (-134, 668)]]
+    vec![stroke(sara_i_items())]
 }
 
 fn sara_ii_arch() -> Vec<Pt> {
@@ -1076,8 +1216,30 @@ fn sara_ii() -> Strokes {
     vec![sara_ii_arch(), stroke![(-126, 805), (-126, 700)]]
 }
 
-/// ึ: head on the right, along the base, arch back to the head
+/// ี in one stroke: ิ, then straight back up into the tick
+fn sara_ii_one_stroke() -> Strokes {
+    vec![stroke![sara_i_items(), CORNER, (-126, 805)]]
+}
+
+/// ึ: ิ, then back up into an anticlockwise circle on the arch's end
 fn sara_ue() -> Strokes {
+    vec![stroke![sara_i_items(), CORNER, ring_r((-112, 795), -115, 360, 62)]]
+}
+
+/// ึ: circle on the right, over the arch leftwards, then the base rightwards
+fn sara_ue_circle_arch_base() -> Strokes {
+    vec![
+        stroke![
+            head_r((-136, 735), 90, CCW, 60),
+            (-220, 788), (-300, 792), (-380, 785), (-445, 760), (-478, 720),
+            CORNER,
+            (-485, 665), (-135, 665),
+        ]
+    ]
+}
+
+/// ึ: head on the right, along the base, arch back to the head
+fn sara_ue_circle_first() -> Strokes {
     vec![
         stroke![
             head_r((-136, 735), -100, CW, 60),
@@ -1158,11 +1320,13 @@ fn mai_han_akat() -> Strokes {
     vec![stroke![head_r((-282, 737), -75, CCW, 58), (-200, 672), (-106, 700), (-35, 745), (-5, 812)]]
 }
 
-/// ็: head on the right, zigzag, round up the left, wavy top
-fn mai_taikhu() -> Strokes {
+/// ็: head on the right, zigzag, round up the left, wavy top. Taught with the
+/// head clockwise, leaving from its bottom heading left.
+fn mai_taikhu(cw: bool) -> Strokes {
+    let head = if cw { head_r((-179, 713), -100, CW, 48) } else { head_r((-179, 713), 190, CCW, 48) };
     vec![
         stroke![
-            head_r((-179, 713), 190, CCW, 48),
+            head,
             (-265, 676),
             CORNER, (-320, 742), CORNER,
             (-360, 672), (-410, 665), (-440, 720), (-440, 780), (-405, 850), (-315, 872), (-213, 866), (-124, 872), (-101, 900),
@@ -1199,9 +1363,9 @@ fn mai_tri() -> Strokes {
     ]
 }
 
-/// ๋: across, then down
+/// ๋: down, then across
 fn mai_chattawa() -> Strokes {
-    vec![stroke![(-265, 750), (-15, 750)], stroke![(-140, 855), (-140, 645)]]
+    vec![stroke![(-140, 855), (-140, 645)], stroke![(-265, 750), (-15, 750)]]
 }
 
 /// ์: head, flick up to the right
@@ -1229,6 +1393,18 @@ fn mai_yamok() -> Strokes {
             (100, 370), (86, 420), (100, 470), (150, 518), (191, 510), (248, 469),
             CORNER,
             (320, 508), (360, 520), (400, 492), (420, 420), (421, -185),
+        ]
+    ]
+}
+
+/// ๆ with the tail kinked left partway down (thai-notes)
+fn mai_yamok_kinked() -> Strokes {
+    vec![
+        stroke![
+            head((169, 292), 165, CW),
+            (100, 370), (86, 420), (100, 470), (150, 518), (191, 510), (248, 469),
+            CORNER,
+            (320, 508), (360, 520), (400, 492), (420, 420), (421, 200), (405, 145), (340, 40), (292, -45), (276, -110), (275, -185),
         ]
     ]
 }
@@ -1351,6 +1527,16 @@ fn digit_9() -> Strokes {
     ]
 }
 
+/// ๙ with a ๑-style head (thai-notes): spiral out clockwise from inside the
+/// bowl, down its right side, round the bowl, down the diagonal; then the
+/// second hump and flick
+fn digit_9_spiral() -> Strokes {
+    vec![
+        stroke![head_r((262, 300), -20, CW, 58), (318, 210), (290, 110), (230, 45), (160, 38), (118, 100), (111, 200), (125, 330), (170, 440), (244, 489), (300, 478), (356, 417), (389, 392), (420, 320), (533, 40), (560, 20)],
+        digit_9()[1].clone(),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1378,12 +1564,11 @@ mod tests {
     #[test]
     fn composes_syllables() {
         let t = Thai::default();
-        for (unit, strokes) in [("รั", 2), ("ห้", 2), ("น้", 2), ("ที่", 4), ("ปั", 2), ("ญุ", 3), ("ดื้", 5), ("ปั้", 3), ("นํ้", 3)] {
-            let glyphs = t.glyphs(unit);
-            assert_eq!(glyphs.len(), 1, "{unit}");
-            assert_eq!(glyphs[0].strokes.len(), strokes, "{unit}");
-            validate(&glyphs[0]).unwrap_or_else(|e| panic!("{unit}: {e}"));
+        // Taught stroke counts.
+        for (unit, strokes) in [("รั", 2), ("ห้", 2), ("น้", 2), ("ที่", 4), ("ปั", 2), ("ญุ", 2), ("ฐู", 2), ("ฎุ", 2), ("ดื้", 5), ("ปั้", 3), ("นํ้", 3)] {
+            assert_eq!(t.glyphs(unit)[0].strokes.len(), strokes, "{unit}");
         }
+        // The taught form.
         let one = |unit: &str| t.glyphs(unit).remove(0);
         // The consonant is drawn first, exactly as on its own.
         assert_eq!(one("รั").strokes[..1], one("ร").strokes[..]);
@@ -1399,9 +1584,23 @@ mod tests {
         let pa = one("ปั");
         assert!(xs(&pa, 1..).1 < xs(&pa, ..1).1 - 0.05);
         assert_eq!(ys(&pa, 1..), ys(&one("บั"), 1..));
-        // ุ drops below ญ's เชิง.
-        let yo = one("ญุ");
-        assert!(ys(&yo, 2..).0 > ys(&yo, ..2).1);
+        // ุ drops below ฎ's foot.
+        let da = one("ฎุ");
+        assert!(ys(&da, 1..).0 > ys(&da, ..1).1);
+        // ญ loses its เชิง instead, and ุ sits where it does under น.
+        assert_eq!(one("ญุ").strokes[..1], one("ญ").strokes[..1]);
+        assert_eq!(ys(&one("ญุ"), 1..), ys(&one("นุ"), 1..));
+        // A tone mark on ื sits midway between its ticks.
+        let (ticks, tone) = (xs(&one("ดื"), 2..), xs(&one("ดื่"), 4..));
+        assert!(((ticks.0 + ticks.1) / 2.0 - tone.0).abs() < 0.005, "{ticks:?} {tone:?}");
+        // Marks with alternatives multiply the forms, the taught ones first.
+        let forms = t.glyphs("กํ๋");
+        assert_eq!(forms.len(), 4);
+        assert_eq!(forms[0].strokes[..2], one("กํ").strokes[..]);
+        let width = |g: &StrokeGlyph| xs(g, 2..3).1 - xs(g, 2..3).0;
+        // Taught ๋ starts with its vertical stroke; the alternative with the bar.
+        assert!(width(&forms[0]) < 0.01 && width(&forms[1]) > 0.1);
+        assert_ne!(forms[2].strokes[1], forms[0].strokes[1]);
     }
 
     #[test]
@@ -1426,9 +1625,12 @@ mod tests {
         for &c in t.consonants.keys() {
             for (b, a, n) in below().flat_map(|b| above().flat_map(move |a| tone().map(move |n| (b, a, n)))) {
                 let unit: String = [Some(c), b, a, n].into_iter().flatten().collect();
+                let forms: usize = unit.chars().skip(1).map(|m| t.marks[&m].1.len()).product::<usize>() * t.consonants[&c].len();
                 let glyphs = t.glyphs(&unit);
-                assert_eq!(glyphs.len(), 1, "{unit}");
-                validate(&glyphs[0]).unwrap_or_else(|e| panic!("{unit}: {e}"));
+                assert_eq!(glyphs.len(), forms, "{unit}");
+                for g in &glyphs {
+                    validate(g).unwrap_or_else(|e| panic!("{unit}: {e}"));
+                }
             }
         }
     }

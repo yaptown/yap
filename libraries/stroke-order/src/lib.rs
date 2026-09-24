@@ -31,7 +31,12 @@ pub type Forms = FxHashMap<char, Vec<StrokeGlyph>>;
 
 /// A language's stroke order: how its text splits into writable units, and
 /// the strokes of each unit.
-pub struct StrokePack(Pack);
+pub struct StrokePack {
+    script: Pack,
+    /// What every language's text contains besides its script: Latin letters,
+    /// digits and punctuation. Consulted when the script has no glyph.
+    common: Forms,
+}
 
 enum Pack {
     /// The glyphs of each character.
@@ -49,7 +54,7 @@ impl StrokePack {
     /// consonant cluster or vowel with its marks), and Thai, whose unit is a
     /// consonant with its stacked marks.
     pub fn segment<'a>(&self, text: &'a str) -> Vec<&'a str> {
-        match &self.0 {
+        match &self.script {
             Pack::Devanagari(_) => authored::devanagari::segment(text),
             Pack::Thai(_) => authored::thai::segment(text),
             Pack::Chars(_) | Pack::Hangul(_) => text
@@ -65,19 +70,50 @@ impl StrokePack {
     pub fn glyphs(&self, unit: &str) -> Vec<StrokeGlyph> {
         let mut chars = unit.chars();
         let single = chars.next().filter(|_| chars.next().is_none());
-        match (&self.0, single) {
+        let found = match (&self.script, single) {
             (Pack::Chars(forms), Some(c)) => forms.get(&c).cloned().unwrap_or_default(),
             (Pack::Hangul(jamo), Some(c)) => korean::glyph(c, jamo).into_iter().collect(),
             (Pack::Devanagari(devanagari), _) => devanagari.glyphs(unit),
             (Pack::Thai(thai), _) => thai.glyphs(unit),
             (Pack::Chars(_) | Pack::Hangul(_), None) => Vec::new(),
+        };
+        if !found.is_empty() {
+            return found;
+        }
+        let Some(c) = single else {
+            return Vec::new();
+        };
+        if let Some(forms) = self.common.get(&c) {
+            return forms.clone();
+        }
+        // A compatibility form (fullwidth Ａ, halfwidth ｱ, ｢) is written like
+        // the character it is compatible with.
+        match fold(c) {
+            Some(base) if base != c => self.glyphs(base.encode_utf8(&mut [0; 4])),
+            _ => Vec::new(),
         }
     }
 }
 
-/// A single-form source as a pack's forms.
-fn single_forms(glyphs: Glyphs) -> Forms {
-    glyphs.into_iter().map(|(c, g)| (c, vec![g])).collect()
+/// The base character of a compatibility character, if it has exactly one.
+fn fold(c: char) -> Option<char> {
+    use unicode_normalization::UnicodeNormalization;
+    let mut folded = c.nfkc();
+    folded.next().filter(|_| folded.next().is_none())
+}
+
+/// Sources in priority order as one map: a character's glyph comes from the
+/// first source that has it. Later sources fill gaps in the national one
+/// (old forms in subtitles, characters only another standard covers), each
+/// glyph keeping the [`StrokeStandard`] it was drawn to.
+fn chain(sources: impl IntoIterator<Item = Glyphs>) -> Forms {
+    let mut forms = Forms::default();
+    for source in sources {
+        for (c, glyph) in source {
+            forms.entry(c).or_insert_with(|| vec![glyph]);
+        }
+    }
+    forms
 }
 
 /// The caller owns networking and caching; immutable source URLs are cache keys.
@@ -86,7 +122,7 @@ where
     F: FnMut(&'static str) -> Fut,
     Fut: Future<Output = Result<Vec<u8>>>,
 {
-    Ok(StrokePack(match language {
+    let script = match language {
         Language::Korean => Pack::Hangul(parse_scribing(&fetch(SCRIBING_URL).await?)?),
         Language::Hindi => Pack::Devanagari(Default::default()),
         Language::Thai => Pack::Thai(Default::default()),
@@ -99,20 +135,28 @@ where
         | Language::PortugueseBrazilian
         | Language::PortugueseEuropean
         | Language::Italian => Pack::Chars(authored::latin::glyphs()),
-        Language::Japanese => Pack::Chars(single_forms(parse_kanjivg(&fetch(KANJIVG_URL).await?)?)),
-        Language::ChineseSimplified => Pack::Chars(single_forms(parse_medians(
-            &fetch(MMAH_URL).await?,
-            StrokeStandard::Prc,
-        )?)),
-        Language::ChineseTraditional => {
-            let mut glyphs = parse_medians(&fetch(MMAH_URL).await?, StrokeStandard::Prc)?;
-            glyphs.extend(parse_medians(
-                &fetch(ANIMCJK_URL).await?,
-                StrokeStandard::Taiwan,
-            )?);
-            Pack::Chars(single_forms(glyphs))
+        Language::Japanese => {
+            let japan = parse_kanjivg(&fetch(KANJIVG_URL).await?)?;
+            let prc = parse_medians(&fetch(MMAH_URL).await?, StrokeStandard::Prc)?;
+            Pack::Chars(chain([japan, prc]))
         }
-    }))
+        Language::ChineseSimplified => {
+            let prc = parse_medians(&fetch(MMAH_URL).await?, StrokeStandard::Prc)?;
+            let taiwan = parse_medians(&fetch(ANIMCJK_URL).await?, StrokeStandard::Taiwan)?;
+            let japan = parse_kanjivg(&fetch(KANJIVG_URL).await?)?;
+            Pack::Chars(chain([prc, taiwan, japan]))
+        }
+        Language::ChineseTraditional => {
+            let taiwan = parse_medians(&fetch(ANIMCJK_URL).await?, StrokeStandard::Taiwan)?;
+            let prc = parse_medians(&fetch(MMAH_URL).await?, StrokeStandard::Prc)?;
+            let japan = parse_kanjivg(&fetch(KANJIVG_URL).await?)?;
+            Pack::Chars(chain([taiwan, prc, japan]))
+        }
+    };
+    Ok(StrokePack {
+        script,
+        common: authored::common(),
+    })
 }
 
 pub fn validate(glyph: &StrokeGlyph) -> Result<()> {
@@ -375,33 +419,58 @@ mod tests {
         assert_eq!(map[&'一'].standard, StrokeStandard::Japan);
     }
 
+    /// A KanjiVG archive with the one character `一`.
+    fn kanjivg_zip() -> Vec<u8> {
+        use std::io::Write;
+        let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
+        let svg = r#"<svg xmlns="http://www.w3.org/2000/svg"><g id="kvg:StrokePaths_04e00"><path d="M10,50 C30,50 60,50 90,50"/></g></svg>"#;
+        zip.start_file(
+            format!("kanjivg-{KANJIVG_COMMIT}/kanji/04e00.svg"),
+            zip::write::SimpleFileOptions::default(),
+        )
+        .unwrap();
+        zip.write_all(svg.as_bytes()).unwrap();
+        zip.finish().unwrap().into_inner()
+    }
+
     #[tokio::test]
     async fn national_sources_and_fallback_tags() {
-        let prc = r#"{"character":"一","medians":[[[100,388],[900,388]]]}
-{"character":"二","medians":[[[100,388],[900,388]]]}"#;
-        let taiwan = r#"{"character":"一","medians":[[[110,388],[910,388]]]}"#;
+        let prc = r#"{"character":"二","medians":[[[100,388],[900,388]]]}
+{"character":"三","medians":[[[100,388],[900,388]]]}"#;
+        let taiwan = r#"{"character":"二","medians":[[[110,388],[910,388]]]}"#;
+        let source = |url: &str| {
+            std::future::ready(Ok(match url {
+                MMAH_URL => prc.as_bytes().to_vec(),
+                ANIMCJK_URL => taiwan.as_bytes().to_vec(),
+                _ => kanjivg_zip(),
+            }))
+        };
         let mut urls = Vec::new();
         let map = load(Language::ChineseTraditional, |url| {
             urls.push(url);
-            std::future::ready(Ok(if url == MMAH_URL { prc } else { taiwan }
-                .as_bytes()
-                .to_vec()))
+            source(url)
         })
         .await
         .unwrap();
-        assert_eq!(urls, [MMAH_URL, ANIMCJK_URL]);
-        assert_eq!(map.glyphs("一")[0].standard, StrokeStandard::Taiwan);
-        assert_eq!(map.glyphs("二")[0].standard, StrokeStandard::Prc);
+        assert_eq!(urls, [ANIMCJK_URL, MMAH_URL, KANJIVG_URL]);
+        assert_eq!(map.glyphs("二")[0].standard, StrokeStandard::Taiwan);
+        assert_eq!(map.glyphs("三")[0].standard, StrokeStandard::Prc);
+        assert_eq!(map.glyphs("一")[0].standard, StrokeStandard::Japan);
         assert_eq!(map.segment("一二 x"), ["一", "二", " ", "x"]);
         assert!(map.glyphs("一二").is_empty());
         assert!(map.glyphs(" ").is_empty());
-        let map = load(Language::ChineseSimplified, |url| {
-            assert_eq!(url, MMAH_URL);
-            std::future::ready(Ok(prc.as_bytes().to_vec()))
-        })
-        .await
-        .unwrap();
-        assert_eq!(map.glyphs("一")[0].standard, StrokeStandard::Prc);
+        let map = load(Language::ChineseSimplified, source).await.unwrap();
+        assert_eq!(map.glyphs("二")[0].standard, StrokeStandard::Prc);
+        assert_eq!(map.glyphs("一")[0].standard, StrokeStandard::Japan);
+        let map = load(Language::Japanese, source).await.unwrap();
+        assert_eq!(map.glyphs("一")[0].standard, StrokeStandard::Japan);
+        assert_eq!(map.glyphs("二")[0].standard, StrokeStandard::Prc);
+        // Text in any script contains Latin letters and digits, and
+        // compatibility forms are written like their base character.
+        assert_eq!(map.glyphs("A")[0].standard, StrokeStandard::Latin);
+        assert_eq!(map.glyphs("Ａ"), map.glyphs("A"));
+        assert_eq!(map.glyphs("３"), map.glyphs("3"));
+        assert!(map.glyphs("ｱ").is_empty());
         let map = load(Language::English, |_| async {
             panic!("authored packs are embedded, not fetched")
         })
@@ -415,6 +484,7 @@ mod tests {
         .unwrap();
         assert_eq!(map.segment("नमस्ते"), ["न", "म", "स्ते"]);
         assert_eq!(map.glyphs("स्ते")[0].standard, StrokeStandard::Devanagari);
+        assert_eq!(map.glyphs("7")[0].standard, StrokeStandard::Latin);
         let map = load(Language::Thai, |_| async {
             panic!("authored packs are embedded, not fetched")
         })
@@ -435,6 +505,7 @@ mod tests {
             ),
             (authored::latin::glyphs(), StrokeStandard::Latin, 122),
             (authored::cyrillic::glyphs(), StrokeStandard::Cyrillic, 66),
+            (authored::punctuation::glyphs(), StrokeStandard::Latin, 94),
         ] {
             assert!(glyphs.len() >= min, "{standard:?}: {} glyphs", glyphs.len());
             for (c, forms) in &glyphs {
@@ -479,16 +550,50 @@ mod tests {
             (&latin, "M", 4),
             (&latin, "Z", 4),
             (&cyrillic, "а", 2),
-            (&cyrillic, "о", 1),
+            (&cyrillic, "о", 2),
+            (&cyrillic, "т", 3),
+            (&cyrillic, "ш", 3),
+            (&cyrillic, "д", 5),
+            (&cyrillic, "Д", 4),
+            (&cyrillic, "б", 3),
+            (&cyrillic, "Т", 2),
+            (&latin, "ō", 2),
+            (&latin, "ď", 2),
+            (&latin, "ș", 2),
             (&hindi, "अ", 2),
             (&hindi, "क्ळ", 1),
             (&hindi, "ऴ", 1),
+            (&latin, "?", 1),
+            (&latin, "…", 2),
+            (&latin, "‥", 2),
+            (&latin, "&", 2),
+            (&latin, "。", 1),
+            (&cyrillic, "«", 1),
+            (&hindi, "!", 1),
         ] {
             let glyphs = pack.glyphs(unit);
             assert_eq!(glyphs.len(), forms, "{unit}");
             for glyph in &glyphs {
                 validate(glyph).unwrap_or_else(|e| panic!("{unit}: {e}"));
             }
+        }
+        // Aliases are written exactly like the mark they name, and fullwidth
+        // and halfwidth punctuation folds onto the drawn marks.
+        for (alias, mark) in [
+            ("≪", "《"),
+            ("⸺", "—"),
+            ("〜", "~"),
+            ("‑", "-"),
+            ("！", "!"),
+            ("？", "?"),
+            ("（", "("),
+            ("，", ","),
+            ("～", "~"),
+            ("｢", "「"),
+            ("･", "・"),
+        ] {
+            assert!(!latin.glyphs(mark).is_empty(), "{mark}");
+            assert_eq!(latin.glyphs(alias), latin.glyphs(mark), "{alias}");
         }
         // An accent composes onto every form of its letter, the taught one first.
         let (a, grave) = (latin.glyphs("a"), latin.glyphs("à"));

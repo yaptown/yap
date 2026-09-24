@@ -63,6 +63,13 @@ informed by the school handwriting models documented by Primarium
 Méthode Dumont, Cuadernos Rubio and Santillana, Porto Editora, Letra
 Brasileira, Corsivo tradizionale and Italica. Their images were referenced
 only; no geometry was copied.
+The Cyrillic pack's cursive-derived print alternatives (т as m, д as ∂, the
+looped ц щ у, retraced-stem capitals, the bars under ш and over т) follow the
+standard Russian school cursive alphabet (школьные прописи) as charted on
+Wikipedia's "Russian cursive" and Wikimedia Commons, referenced only.
+Punctuation (western and CJK marks) and the accent marks beyond the course
+languages' own (macron, caron, breve, ogonek, dots, double acute, comma
+below) are drawn here in the same way.
 Scribing's MIT English pack informed the Latin order but no geometry was copied. Noto
 fonts were used only as a visual check while drawing; no font outlines are
 redistributed. These packs are covered by the application's own license and

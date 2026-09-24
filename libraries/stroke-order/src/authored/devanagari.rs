@@ -30,9 +30,35 @@
 //!   stem, and a क-like hook right of the stem.
 //! - छ: the headline over the right bowl only, leaving the upper loop open.
 //!
+//! A review against more references added these. Sources: TM = TuitMob
+//! worksheets; OP, JP, SM = the Wikimedia Commons stroke-order sets by
+//! Opiaterein (CC BY 3.0), JackPotte (CC BY-SA 3.0) and Saurmandal (CC BY-SA
+//! 3.0); UT = UT Austin Hindi Urdu Flagship's handwriting video of the vowel
+//! signs. Each rests on one or two sources, so the taught forms stay:
+//! - ई's hook and ऐ's sign after the headline (TM).
+//! - ऐ ओ औ with their signs drawn up from the headline (SM, UT).
+//! - ऊ with its tail after the headline (JP).
+//! - श with the headline over the stem only (OP, JP).
+//! - ग: the knob first, then the short stem up to the headline (OP).
+//! - ल: the stem first, then the body from it round to the tail (JP).
+//! - ष: the diagonal after the stem (JP).
+//!
+//! Vowel signs and signs above have their own alternatives ([`mark`]):
+//! - ि in one stroke, up the stem from its foot into the hook (UT).
+//! - ी in one stroke, the hook from over the consonant's stem, then on down
+//!   the stem of ी (UT).
+//! - ु from its left end, sweeping right and curling up under the stem (UT).
+//! - ू in one stroke, round the loop and out along the tail (UT).
+//! - े ै ो ौ drawn up from the headline (SM, UT).
+//! - ं ः before the headline (TM), and ँ with them (arc and dot, as one sign).
+//!
+//! The review also claimed the loops of थ ध भ turn the other way in OP and JP;
+//! frame by frame both turn them as we do (थ भ clockwise, ध anticlockwise) and
+//! differ only in where the loop starts, so no form was added for that.
+//!
 //! Nukta letters take every form of their base. An akshara's forms are the
-//! product of its letters' forms, the first letter varying slowest, so index
-//! 0 is every letter's taught form.
+//! product of its letters' forms and then its marks' forms, the first letter
+//! varying slowest, so index 0 is every taught form.
 //!
 //! ळ (Marathi, also Konkani and Rajasthani) is drawn against Noto Sans
 //! Devanagari: a stub from the headline into a figure-eight lying on its
@@ -53,7 +79,8 @@
 //! drawn after the stem (the hook of क and फ, the signs of ओ औ ऑ), its
 //! headline extent (which leaves the gaps of अ थ ध भ) and, for nukta letters,
 //! the dot. The full letter is body, stem, tail, headline, nukta, the order the
-//! worksheets teach. Marks are anchored to a [`Frame`] measured from what they
+//! worksheets teach; an alternative form may draw its stem first or put
+//! strokes after the headline (before the nukta). Marks are anchored to a [`Frame`] measured from what they
 //! attach to: the left edge (ि), the right stem (े ै ं ँ), the right edge
 //! (ा ी ो ौ ॉ ः) and the foot of the last consonant (ु ू ृ ्).
 //!
@@ -70,8 +97,11 @@
 //!
 //! None of the references teach a stroke order for conjuncts, so the order
 //! below extends the single-letter rule (bodies left to right, headline after
-//! the bodies). Judgment calls, from the CIS list of forms to memorise and
-//! from Noto Sans Devanagari as a check on the shapes:
+//! the bodies). The review confirmed the letter bodies against TM, OP, JP and
+//! SM; the structure of the vowel signs rests on UT alone; the digits, the
+//! nukta letters, ळ and most conjuncts are still unverified by any source.
+//! Judgment calls, from the CIS list of forms to memorise and from Noto Sans
+//! Devanagari as a check on the shapes:
 //!
 //! - **Ligatures** drawn as their own letters: क्ष त्र ज्ञ श्र द्ध द्व द्य
 //!   ह्म त्त. क्त and च्छ are taught and printed as the half-form rule, so
@@ -256,10 +286,10 @@ impl Devanagari {
     fn draw(&self, unit: &str) -> Option<Vec<(Strokes, Fit)>> {
         let chars: Vec<char> = unit.chars().filter(|&c| c != ZWJ).collect();
         if let [c] = chars[..]
-            && let Some((pre, head, post)) = mark(c, &Frame::NOTIONAL_PA)
+            && let Some(forms) = mark(c, &Frame::NOTIONAL_PA)
         {
-            let strokes = strokes![..pre, ..head.map(|(a, b)| vec![(a, 150.0), (b, 150.0)]), ..post];
-            return Some(vec![(strokes, Fit::MARK)]);
+            let forms = forms.into_iter().map(|(pre, head, post)| (strokes![..pre, ..head.map(|(a, b)| vec![(a, 150.0), (b, 150.0)]), ..post], Fit::MARK));
+            return Some(forms.collect());
         }
         let mut chars = chars.into_iter().peekable();
         let first = chars.next()?;
@@ -310,7 +340,7 @@ impl Devanagari {
         let choices = slots.iter().fold(vec![vec![]], |choices: Vec<Vec<usize>>, slot| {
             choices.into_iter().flat_map(|choice| (0..slot.forms.len()).map(move |k| [choice.as_slice(), &[k]].concat())).collect()
         });
-        choices
+        let forms = choices
             .into_iter()
             .map(|choice| {
                 let parts: Vec<Part> = slots
@@ -323,11 +353,13 @@ impl Devanagari {
                         Part { letter, consonant: slot.consonant, virama: !last && (letter.stem.is_none() || slot.before_zwnj), rakar: last && rakar }
                     })
                     .collect();
-                let strokes = compose(&parts, reph, &marks)?;
-                let fit = Fit::new(&strokes);
-                Some((strokes, fit))
+                compose(&parts, reph, &marks)
             })
-            .collect()
+            .collect::<Option<Vec<_>>>()?;
+        Some(forms.into_iter().flatten().map(|strokes| {
+            let fit = Fit::new(&strokes);
+            (strokes, fit)
+        }).collect())
     }
 
     /// Every single-character unit this pack draws: letters and marks.
@@ -346,8 +378,9 @@ fn with_nukta(c: char, chars: &mut std::iter::Peekable<impl Iterator<Item = char
     NUKTA_LETTERS.iter().find(|n| n.1 == c).map(|n| n.0)
 }
 
-/// Lays out an akshara's parts and marks in design units, in stroke order.
-fn compose(parts: &[Part], reph: bool, marks: &[char]) -> Option<Strokes> {
+/// Lays out an akshara's parts and marks in design units, in stroke order:
+/// one stroke list per combination of the marks' forms.
+fn compose(parts: &[Part], reph: bool, marks: &[char]) -> Option<Vec<Strokes>> {
     let mut before_head = Strokes::new();
     let mut heads = Vec::new();
     let mut after_head = Strokes::new();
@@ -363,13 +396,14 @@ fn compose(parts: &[Part], reph: bool, marks: &[char]) -> Option<Strokes> {
             strokes.push(rakar(&letter, part.consonant));
         }
         if part.virama {
-            strokes.extend(mark(VIRAMA, &letter.frame())?.2);
+            strokes.extend(mark(VIRAMA, &letter.frame())?.swap_remove(0).2);
         }
         let ink = bounds(&strokes);
         right_ink = Some(ink.1);
         if let Some((h0, h1)) = letter.head {
             heads.push((h0, if half { ink.1 } else { h1 }));
         }
+        after_head.extend(letter.above.clone());
         after_head.extend(letter.nukta.map(|(x, y)| dot(x, y)));
         before_head.extend(strokes);
         last = Some(letter);
@@ -380,32 +414,52 @@ fn compose(parts: &[Part], reph: bool, marks: &[char]) -> Option<Strokes> {
     if parts.len() == 1 && parts[0].consonant == Some('र') && !parts[0].rakar {
         frame.ra = true;
     }
+    // One draft per combination of mark forms so far, earlier marks varying
+    // slowest.
+    let mut drafts = vec![(before_head, heads, after_head)];
     let (dots, marks): (Vec<char>, Vec<char>) = marks.iter().partition(|&&m| m == 'ं' || m == 'ँ');
     for m in marks {
-        let (pre, head, post) = mark(m, &frame)?;
-        before_head.extend(pre);
-        heads.extend(head);
-        after_head.extend(post);
+        drafts = fan(drafts, &mark(m, &frame)?);
         frame.advance(m);
     }
     if reph {
         let x = frame.reph;
-        after_head.push(curve_f(&[(x + 5.0, 150.0), (x - 30.0, 105.0), (x - 42.0, 60.0), (x - 22.0, 28.0), (x + 22.0, 18.0)]));
+        let reph = curve_f(&[(x + 5.0, 150.0), (x - 30.0, 105.0), (x - 42.0, 60.0), (x - 22.0, 28.0), (x + 22.0, 18.0)]);
+        drafts = fan(drafts, &[(vec![], None, vec![reph])]);
         frame.top = frame.top.max(x + 110.0);
     }
     for m in dots {
-        after_head.extend(mark(m, &frame)?.2);
+        drafts = fan(drafts, &mark(m, &frame)?);
     }
-    heads.sort_by(|a, b| a.0.total_cmp(&b.0));
-    let mut merged: Vec<(f64, f64)> = Vec::new();
-    for (a, b) in heads {
-        match merged.last_mut() {
-            Some(last) if a <= last.1 + HEAD_GAP => last.1 = last.1.max(b),
-            _ => merged.push((a, b)),
+    let finish = |(before_head, mut heads, after_head): Draft| {
+        heads.sort_by(|a, b| a.0.total_cmp(&b.0));
+        let mut merged: Vec<(f64, f64)> = Vec::new();
+        for (a, b) in heads {
+            match merged.last_mut() {
+                Some(last) if a <= last.1 + HEAD_GAP => last.1 = last.1.max(b),
+                _ => merged.push((a, b)),
+            }
         }
-    }
-    let head_lines = merged.into_iter().map(|(a, b)| vec![(a, 150.0), (b, 150.0)]);
-    Some(strokes![..before_head, ..head_lines, ..after_head])
+        let head_lines = merged.into_iter().map(|(a, b)| vec![(a, 150.0), (b, 150.0)]);
+        strokes![..before_head, ..head_lines, ..after_head]
+    };
+    Some(drafts.into_iter().map(finish).collect())
+}
+
+/// An akshara being composed: strokes before the headline, the headline
+/// pieces, strokes after it.
+type Draft = (Strokes, Vec<(f64, f64)>, Strokes);
+
+/// Every draft written with each of a mark's forms.
+fn fan(drafts: Vec<Draft>, forms: &[MarkStrokes]) -> Vec<Draft> {
+    drafts
+        .into_iter()
+        .flat_map(|(before, heads, after)| {
+            forms.iter().map(move |(pre, head, post)| {
+                (strokes![..before.clone(), ..pre.clone()], heads.iter().copied().chain(*head).collect(), strokes![..after.clone(), ..post.clone()])
+            })
+        })
+        .collect()
 }
 
 /// Maps design units into the 1000 box: `cx` goes to the box centre and
@@ -458,6 +512,10 @@ struct Letter {
     /// Drawn after the stem, before the headline.
     tail: Strokes,
     head: Option<(f64, f64)>,
+    /// Drawn after the headline (ई's hook, ऊ's tail in some hands).
+    above: Strokes,
+    /// The stem is drawn before the body instead of after it.
+    stem_first: bool,
     /// क and फ: where the stem stops in the half form, which keeps the hook.
     half_stem: Option<f64>,
     nukta: Option<Pt>,
@@ -477,6 +535,12 @@ impl Letter {
     fn head(self, x0: i32, x1: i32) -> Self {
         Letter { head: Some((x0.into(), x1.into())), ..self }
     }
+    fn above(self, above: Strokes) -> Self {
+        Letter { above, ..self }
+    }
+    fn stem_first(self) -> Self {
+        Letter { stem_first: true, ..self }
+    }
     fn half_stem(self, y: i32) -> Self {
         Letter { half_stem: Some(y.into()), ..self }
     }
@@ -487,15 +551,23 @@ impl Letter {
     /// Body, stem and tail: everything drawn before the headline.
     fn before_head(&self) -> Strokes {
         let stem = self.stem.map(|x| vec![(x, 150.0), (x, 740.0)]);
-        strokes![..self.body.clone(), ..stem, ..self.tail.clone()]
+        if self.stem_first {
+            strokes![..stem, ..self.body.clone(), ..self.tail.clone()]
+        } else {
+            strokes![..self.body.clone(), ..stem, ..self.tail.clone()]
+        }
     }
 
     /// The form a consonant takes before another: no stem, or for क and फ a
-    /// short one that still carries the hook.
+    /// short one that still carries the hook. Other tail strokes that hang
+    /// from the stem go with it; the rest (ष's diagonal) stay.
     fn half(&self) -> Strokes {
         match (self.stem, self.half_stem) {
             (Some(x), Some(y)) => strokes![..self.body.clone(), vec![(x, 150.0), (x, y)], ..self.tail.clone()],
-            _ => self.body.clone(),
+            (x, _) => {
+                let off_stem = self.tail.iter().filter(|s| x.is_none_or(|x| (s[0].0 - x).abs() > 10.0)).cloned();
+                strokes![..self.body.clone(), ..off_stem]
+            }
         }
     }
 
@@ -505,6 +577,8 @@ impl Letter {
             stem: self.stem.map(|x| x + dx),
             tail: shifted(self.tail.clone(), dx, 0.0),
             head: self.head.map(|(a, b)| (a + dx, b + dx)),
+            above: shifted(self.above.clone(), dx, 0.0),
+            stem_first: self.stem_first,
             half_stem: self.half_stem,
             nukta: self.nukta.map(|(x, y)| (x + dx, y)),
         }
@@ -602,61 +676,100 @@ impl Frame {
 /// and its strokes drawn after.
 type MarkStrokes = (Strokes, Option<(f64, f64)>, Strokes);
 
-/// A dependent mark's strokes around `f`.
-fn mark(c: char, f: &Frame) -> Option<MarkStrokes> {
+/// Every accepted form of a dependent mark around `f`, the taught form first
+/// (see the module docs for the alternatives).
+fn mark(c: char, f: &Frame) -> Option<Vec<MarkStrokes>> {
     // The templates are drawn around the notional प; anchors move them.
     let right = f.right - 582.0;
     let on_stem = f.stem - 438.0;
     let (bx, by) = (f.below.0 - 438.0, f.below.1 - 740.0);
     let top = f.top - 440.0;
     let head = |a: i32, b: i32, dx: f64| Some((f64::from(a) + dx, f64::from(b) + dx));
+    // Signs hanging from the headline: as taught, and drawn up from it.
+    let hanging = |signs: Strokes, pre: Strokes, head: Option<(f64, f64)>, dx: f64| -> Vec<MarkStrokes> {
+        let up: Strokes = signs.iter().cloned().map(rev).collect();
+        [signs, up].map(|signs| {
+            let signs = shifted(signs, dx, 0.0);
+            if pre.is_empty() { (vec![], None, signs) } else { (strokes![..pre.clone(), ..signs], head, vec![]) }
+        }).into()
+    };
+    // Signs above: after the headline as taught, or before it.
+    let above = |signs: Strokes| vec![(vec![], None, signs.clone()), (signs, None, vec![])];
     Some(match c {
-        'ा' => (shifted(strokes![stem(AA_STEM)], right, 0.0), head(560, 760, right), vec![]),
+        'ा' => vec![(shifted(strokes![stem(AA_STEM)], right, 0.0), head(560, 760, right), vec![])],
         'ि' => {
             // stem left of everything, hook stretched to reach the right stem
             let (s, t) = (f.left - 120.0, f.stem + 2.0);
             let stretch = |x: f64| s + (x + 120.0) * ((t - s) / 560.0);
             let hook = curve(&[(-120, 150), (-140, 90), (-100, 40), (0, 20), (150, 20), (300, 45), (400, 95), (440, 150)]);
-            let hook = hook.into_iter().map(|(x, y)| (stretch(x), y)).collect();
-            (strokes![vec![(s, 150.0), (s, 740.0)], hook], head(-150, 20, f.left), vec![])
+            let hook: Vec<Pt> = hook.into_iter().map(|(x, y)| (stretch(x), y)).collect();
+            let stem = vec![(s, 150.0), (s, 740.0)];
+            vec![
+                (strokes![stem.clone(), hook.clone()], head(-150, 20, f.left), vec![]),
+                // one stroke: up the stem from its foot and on into the hook
+                (vec![join([rev(stem), hook])], head(-150, 20, f.left), vec![]),
+            ]
         }
         'ी' => {
             // hook from over the right stem to the stem of ी
             let (s, t) = (f.stem - 38.0, f.right + 118.0);
             let stretch = |x: f64| s + (x - 400.0) * ((t - s) / 300.0);
             let hook = curve(&[(400, 150), (385, 95), (420, 40), (500, 20), (600, 35), (670, 85), (AA_STEM, 150)]);
-            let hook = hook.into_iter().map(|(x, y)| (stretch(x), y)).collect();
-            (strokes![vec![(t, 150.0), (t, 740.0)], hook], head(560, 760, right), vec![])
+            let hook: Vec<Pt> = hook.into_iter().map(|(x, y)| (stretch(x), y)).collect();
+            let stem = vec![(t, 150.0), (t, 740.0)];
+            vec![
+                (strokes![stem.clone(), hook.clone()], head(560, 760, right), vec![]),
+                // one stroke: the hook, then straight on down the stem
+                (vec![join([hook, stem])], head(560, 760, right), vec![]),
+            ]
         }
-        'ु' if f.ra => (vec![], None, vec![curve(&[(318, 420), (380, 360), (450, 345), (500, 390), (500, 460), (455, 525)])]),
-        'ू' if f.ra => (vec![], None, vec![curve(&[(318, 420), (390, 365), (480, 330), (580, 350), (625, 420), (610, 500), (560, 540)])]),
-        'ु' => (vec![], None, shifted(strokes![curve(&[(380, 770), (470, 760), (545, 805), (545, 885), (470, 940), (340, 945), (220, 905), (130, 840)])], bx, by)),
-        'ू' => (vec![], None, shifted(strokes![
-            curve(&[(440, 745), (360, 770), (300, 830), (310, 910), (380, 960), (480, 960)]),
-            curve(&[(440, 745), (540, 830), (620, 915), (660, 965)]),
-        ], bx, by)),
-        'ृ' => (vec![], None, shifted(strokes![curve(&[(460, 760), (390, 790), (345, 850), (370, 925), (460, 950), (575, 915)])], bx, by)),
-        'े' => (vec![], None, shifted(strokes![curve(&[(250, 50), (310, 25), (370, 45), (415, 95), (440, 150)])], on_stem, 0.0)),
-        'ै' => (vec![], None, shifted(strokes![
+        'ु' if f.ra => below_both(curve(&[(318, 420), (380, 360), (450, 345), (500, 390), (500, 460), (455, 525)])),
+        'ू' if f.ra => vec![(vec![], None, vec![curve(&[(318, 420), (390, 365), (480, 330), (580, 350), (625, 420), (610, 500), (560, 540)])])],
+        // as taught, and from the left end sweeping right to curl up under the stem
+        'ु' => below_both(shifted(strokes![curve(&[(380, 770), (470, 760), (545, 805), (545, 885), (470, 940), (340, 945), (220, 905), (130, 840)])], bx, by).remove(0)),
+        'ू' => vec![
+            (vec![], None, shifted(strokes![
+                curve(&[(440, 745), (360, 770), (300, 830), (310, 910), (380, 960), (480, 960)]),
+                curve(&[(440, 745), (540, 830), (620, 915), (660, 965)]),
+            ], bx, by)),
+            // one stroke: round the loop, then out along the tail
+            (vec![], None, shifted(strokes![join([
+                curve(&[(440, 745), (360, 770), (300, 830), (310, 910), (380, 960), (480, 960), (535, 910), (530, 840)]),
+                curve(&[(530, 840), (600, 895), (660, 965)]),
+            ])], bx, by)),
+        ],
+        'ृ' => vec![(vec![], None, shifted(strokes![curve(&[(460, 760), (390, 790), (345, 850), (370, 925), (460, 950), (575, 915)])], bx, by))],
+        'े' => hanging(strokes![curve(&[(250, 50), (310, 25), (370, 45), (415, 95), (440, 150)])], vec![], None, on_stem),
+        'ै' => hanging(strokes![
             curve(&[(190, 105), (250, 85), (310, 100), (360, 122), (400, 150)]),
             curve(&[(250, 40), (320, 18), (385, 50), (420, 100), (440, 150)]),
-        ], on_stem, 0.0)),
-        'ो' => (shifted(strokes![stem(AA_STEM), curve(&[(480, 50), (545, 25), (610, 50), (660, 95), (AA_STEM, 150)])], right, 0.0), head(560, 760, right), vec![]),
-        'ौ' => (shifted(strokes![
-            stem(AA_STEM),
+        ], vec![], None, on_stem),
+        'ो' => hanging(strokes![curve(&[(480, 50), (545, 25), (610, 50), (660, 95), (AA_STEM, 150)])], shifted(strokes![stem(AA_STEM)], right, 0.0), head(560, 760, right), right),
+        'ौ' => hanging(strokes![
             curve(&[(430, 105), (495, 85), (560, 100), (615, 125), (655, 150)]),
             curve(&[(480, 40), (555, 18), (625, 50), (670, 100), (AA_STEM, 150)]),
-        ], right, 0.0), head(560, 760, right), vec![]),
-        'ॉ' => (shifted(strokes![stem(AA_STEM), chandra(650, 35, 112, 90)], right, 0.0), head(560, 760, right), vec![]),
+        ], shifted(strokes![stem(AA_STEM)], right, 0.0), head(560, 760, right), right),
+        'ॉ' => vec![(shifted(strokes![stem(AA_STEM), chandra(650, 35, 112, 90)], right, 0.0), head(560, 760, right), vec![])],
         // candra e (बॅंक): ँ's arc without the dot, where े would be
-        'ॅ' => (vec![], None, shifted(strokes![chandra(440, 30, 115, 110)], on_stem, 0.0)),
-        'ं' => (vec![], None, shifted(strokes![dot(440, 65)], top, 0.0)),
-        'ः' => (vec![], None, shifted(strokes![dot(668, 357), dot(668, 605)], right, 0.0)),
-        'ँ' => (vec![], None, shifted(strokes![chandra(440, 30, 115, 110), dot(440, 52)], top, 0.0)),
-        '़' => (vec![], None, strokes![nukta(170, 800)]),
-        VIRAMA => (vec![], None, shifted(strokes![curve(&[(410, 790), (480, 790), (540, 830), (620, 930)])], bx, by)),
+        'ॅ' => vec![(vec![], None, shifted(strokes![chandra(440, 30, 115, 110)], on_stem, 0.0))],
+        'ं' => above(shifted(strokes![dot(440, 65)], top, 0.0)),
+        'ः' => above(shifted(strokes![dot(668, 357), dot(668, 605)], right, 0.0)),
+        'ँ' => above(shifted(strokes![chandra(440, 30, 115, 110), dot(440, 52)], top, 0.0)),
+        '़' => vec![(vec![], None, strokes![nukta(170, 800)])],
+        VIRAMA => vec![(vec![], None, shifted(strokes![curve(&[(410, 790), (480, 790), (540, 830), (620, 930)])], bx, by))],
         _ => return None,
     })
+}
+
+/// A sign below, as drawn and in reverse.
+fn below_both(sign: Vec<Pt>) -> Vec<MarkStrokes> {
+    vec![(vec![], None, vec![sign.clone()]), (vec![], None, vec![rev(sign)])]
+}
+
+/// The same path in the other pen direction.
+fn rev(mut points: Vec<Pt>) -> Vec<Pt> {
+    points.reverse();
+    points
 }
 
 // --- drawing toolkit -------------------------------------------------------
@@ -798,9 +911,25 @@ fn letters() -> Vec<(char, Letter)> {
     // अ and the vowels built on it, which share its headline.
     let a = letter(a_body()).stem(632).head(520, 776);
     let aa = letter(strokes![..a_body(), stem(632)]).stem(890).head(520, 1030);
-    let o = aa.clone().tail(strokes![curve(&[(720, 50), (785, 30), (840, 65), (875, 110), (890, 150)])]);
-    let au = aa.clone().tail(strokes![curve(&[(700, 105), (760, 88), (815, 108), (855, 150)]), curve(&[(720, 45), (790, 25), (850, 65), (890, 150)])]);
+    let o_sign = || strokes![curve(&[(720, 50), (785, 30), (840, 65), (875, 110), (890, 150)])];
+    let au_signs = || strokes![curve(&[(700, 105), (760, 88), (815, 108), (855, 150)]), curve(&[(720, 45), (790, 25), (850, 65), (890, 150)])];
+    let up = |signs: Strokes| signs.into_iter().map(rev).collect::<Strokes>();
+    let o = aa.clone().tail(o_sign());
+    let o_up = aa.clone().tail(up(o_sign()));
+    let au = aa.clone().tail(au_signs());
+    let au_up = aa.clone().tail(up(au_signs()));
     let candra_o = aa.clone().tail(strokes![chandra(775, 30, 110, 95)]);
+    let ii_hook = || curve(&[(380, 150), (348, 95), (365, 45), (420, 22), (470, 38), (490, 75)]);
+    let uu_tail = || curve(&[(460, 520), (520, 430), (610, 410), (690, 460), (720, 560), (690, 660), (620, 730)]);
+    let ai_sign = || curve(&[(200, 45), (270, 25), (345, 55), (400, 110), (425, 150)]);
+    let ga = || join([line(&[(168, HEADLINE), (168, 500)]), curve(&[(168, 500), (158, 550), (115, 560), (78, 520), (82, 462), (125, 440), (165, 465)])]);
+    let la = || join([
+        curve(&[(270, 725), (170, 650), (90, 560), (80, 450), (125, 360), (210, 325), (285, 350), (320, 420), (325, 520)]),
+        curve(&[(325, 520), (360, 420), (410, 350), (470, 320), (548, 320)]),
+    ]);
+    let sha = || curve(&[(250, 340), (140, 310), (85, 250), (110, 185), (200, 160), (300, 175), (360, 240), (355, 330), (300, 410), (200, 460), (110, 480), (65, 520), (90, 565), (150, 565), (220, 630), (330, 735)]);
+    let ssa_body = || join([line(&[(120, HEADLINE), (120, 390)]), curve(&[(120, 390), (145, 470), (210, 530), (300, 530), (380, 490), (447, 440)])]);
+    let ssa_diagonal = || line(&[(170, 200), (390, 480)]);
     vec![
         // Independent vowels
         ('अ', a.clone()),
@@ -808,9 +937,11 @@ fn letters() -> Vec<(char, Letter)> {
         ('आ', aa.clone()),
         ('आ', full_head(aa)),
         ('इ', letter(strokes![i_body()]).head(0, 505)),
-        ('ई', letter(strokes![i_body(), curve(&[(380, 150), (348, 95), (365, 45), (420, 22), (470, 38), (490, 75)])]).head(0, 505)),
+        ('ई', letter(strokes![i_body(), ii_hook()]).head(0, 505)),
+        ('ई', letter(strokes![i_body()]).above(strokes![ii_hook()]).head(0, 505)),
         ('उ', letter(strokes![u_body()]).head(0, 560)),
-        ('ऊ', letter(strokes![u_body(), curve(&[(460, 520), (520, 430), (610, 410), (690, 460), (720, 560), (690, 660), (620, 730)])]).head(0, 798)),
+        ('ऊ', letter(strokes![u_body(), uu_tail()]).head(0, 798)),
+        ('ऊ', letter(strokes![u_body()]).above(strokes![uu_tail()]).head(0, 798)),
         ('ऋ', letter(strokes![join([curve(&[(30, 330), (120, 292), (210, 290), (300, 345), (410, 440)]), line(&[(410, 440), (70, 650)])])])
             .stem(422)
             .tail(strokes![join([
@@ -819,13 +950,21 @@ fn letters() -> Vec<(char, Letter)> {
             ])])
             .head(0, 863)),
         ('ए', letter(e_body()).head(0, 568)),
-        ('ऐ', letter(strokes![..e_body(), curve(&[(200, 45), (270, 25), (345, 55), (400, 110), (425, 150)])]).head(0, 568)),
+        ('ऐ', letter(strokes![..e_body(), ai_sign()]).head(0, 568)),
+        ('ऐ', letter(strokes![..e_body(), rev(ai_sign())]).head(0, 568)),
+        ('ऐ', letter(e_body()).above(strokes![ai_sign()]).head(0, 568)),
+        ('ऐ', letter(e_body()).above(strokes![rev(ai_sign())]).head(0, 568)),
         ('ओ', o.clone()),
         ('ओ', full_head(o)),
+        ('ओ', o_up.clone()),
+        ('ओ', full_head(o_up)),
         ('औ', au.clone()),
         ('औ', full_head(au)),
+        ('औ', au_up.clone()),
+        ('औ', full_head(au_up)),
         ('ऑ', candra_o.clone()),
         ('ऑ', full_head(candra_o)),
+        ('ऍ', letter(e_body()).tail(strokes![chandra(440, 30, 115, 110)]).head(0, 568)),
         // Consonants
         ('क', letter(strokes![curve(&[(345, 282), (245, 270), (150, 300), (100, 380), (110, 470), (170, 545), (250, 585), (330, 560), (418, 500)])])
             .stem(418).tail(strokes![ka_hook(418)]).head(0, 783).half_stem(520)),
@@ -838,7 +977,8 @@ fn letters() -> Vec<(char, Letter)> {
             curve(&[(255, 150), (275, 240), (250, 330), (190, 390), (120, 405), (70, 370), (62, 318), (100, 295), (145, 325), (165, 395), (205, 490), (280, 590), (390, 660), (530, 665), (686, 600)]),
             kha_bowl(),
         ]).stem(686).head(0, 830)),
-        ('ग', letter(strokes![join([line(&[(168, HEADLINE), (168, 500)]), curve(&[(168, 500), (158, 550), (115, 560), (78, 520), (82, 462), (125, 440), (165, 465)])])]).stem(435).head(0, 577)),
+        ('ग', letter(strokes![ga()]).stem(435).head(0, 577)),
+        ('ग', letter(strokes![rev(ga())]).stem(435).head(0, 577)),
         ('घ', letter(strokes![
             curve(&[(110, 150), (75, 210), (80, 275), (140, 325), (220, 335), (300, 330)]),
             curve(&[(150, 340), (105, 400), (100, 480), (150, 560), (240, 590), (350, 560), (461, 480)]),
@@ -896,10 +1036,8 @@ fn letters() -> Vec<(char, Letter)> {
         ('म', letter(strokes![join([line(&[(167, HEADLINE), (167, 450)]), knob_bar(167, 450, 467)])]).stem(467).head(0, 611)),
         ('य', letter(strokes![join([curve(&[(220, 150), (255, 220), (245, 300), (170, 360), (40, 395)]), curve(&[(40, 395), (80, 480), (160, 560), (270, 590), (370, 550), (449, 470)])])]).stem(449).head(0, 593)),
         ('र', letter(strokes![curve(&[(310, 150), (335, 240), (310, 320), (240, 375), (160, 392), (100, 368), (60, 395), (72, 450), (130, 472), (200, 545), (330, 730)])]).head(0, 424)),
-        ('ल', letter(strokes![join([
-            curve(&[(270, 725), (170, 650), (90, 560), (80, 450), (125, 360), (210, 325), (285, 350), (320, 420), (325, 520)]),
-            curve(&[(325, 520), (360, 420), (410, 350), (470, 320), (548, 320)]),
-        ])]).stem(548).head(0, 692)),
+        ('ल', letter(strokes![la()]).stem(548).head(0, 692)),
+        ('ल', letter(strokes![rev(la())]).stem(548).stem_first().head(0, 692)),
         // ळ (Marathi): a stub down from the headline into a figure-eight lying
         // on its side, round the left loop first; stemless, like ठ.
         ('ळ', letter(strokes![join([
@@ -907,11 +1045,10 @@ fn letters() -> Vec<(char, Letter)> {
             curve(&[(518, 345), (460, 360), (420, 420), (400, 505), (380, 590), (340, 645), (300, 660), (255, 635), (232, 575), (232, 440), (255, 375), (300, 348), (345, 360), (380, 420), (400, 505), (420, 590), (460, 645), (505, 660), (550, 640), (578, 580), (580, 440), (555, 370), (505, 345)]),
         ])]).head(0, 775)),
         ('व', letter(strokes![va_loop(424)]).stem(424).head(0, 568)),
-        ('श', letter(strokes![curve(&[(250, 340), (140, 310), (85, 250), (110, 185), (200, 160), (300, 175), (360, 240), (355, 330), (300, 410), (200, 460), (110, 480), (65, 520), (90, 565), (150, 565), (220, 630), (330, 735)])]).stem(550).head(40, 695)),
-        ('ष', letter(strokes![
-            join([line(&[(120, HEADLINE), (120, 390)]), curve(&[(120, 390), (145, 470), (210, 530), (300, 530), (380, 490), (447, 440)])]),
-            line(&[(170, 200), (390, 480)]),
-        ]).stem(447).head(0, 591)),
+        ('श', letter(strokes![sha()]).stem(550).head(40, 695)),
+        ('श', letter(strokes![sha()]).stem(550).head(400, 695)),
+        ('ष', letter(strokes![ssa_body(), ssa_diagonal()]).stem(447).head(0, 591)),
+        ('ष', letter(strokes![ssa_body()]).stem(447).tail(strokes![ssa_diagonal()]).head(0, 591)),
         ('स', letter(strokes![
             curve(&[(250, 150), (275, 240), (250, 320), (190, 370), (120, 378), (72, 395), (62, 440), (100, 470), (160, 480), (230, 570), (314, 725)]),
             curve(&[(180, 440), (270, 460), (410, 460), (546, 445)]),
@@ -925,6 +1062,11 @@ fn letters() -> Vec<(char, Letter)> {
         ]).head(0, 543)),
         // Other signs
         ('।', letter(strokes![line(&[(231, 120), (231, BASELINE)])])),
+        // ऽ hangs from the headline like an S: the top bowl curls back to the
+        // right, the lower one sweeps out to the baseline on the left.
+        ('ऽ', letter(strokes![curve(&[(400, HEADLINE), (300, 175), (210, 240), (200, 320), (270, 375), (370, 400), (430, 470), (400, 580), (300, 670), (150, 720)])]).head(0, 470)),
+        // ॰ (abbreviation sign) is a small ring at mid height.
+        ('॰', letter(strokes![arc(240, 480, 75, 75, -90, -450, 24)])),
         ('ॐ', letter(strokes![
             join([
                 curve(&[(150, 160), (230, 125), (310, 118), (375, 160), (385, 240), (340, 315), (230, 380)]),
@@ -1057,7 +1199,8 @@ mod tests {
         let d = Devanagari::default();
         for (unit, forms) in [
             ("अ", 2),
-            ("ओ", 2),
+            // headline extent times sign direction
+            ("ओ", 4),
             ("क", 1),
             ("ख", 2),
             ("ख़", 2),
@@ -1066,10 +1209,37 @@ mod tests {
             ("ळ\u{93c}", 1),
             ("न\u{93c}", 1),
             ("क्ळ", 1),
-            ("ळी", 1),
+            // ी as taught or in one stroke
+            ("ळी", 2),
             // two letters with two forms each
             ("ख्झ", 4),
             ("ख्य", 2),
+            // every vowel sign and sign above has a second form
+            ("कि", 2),
+            ("की", 2),
+            ("कु", 2),
+            ("कू", 2),
+            ("के", 2),
+            ("कै", 2),
+            ("को", 2),
+            ("कौ", 2),
+            ("कं", 2),
+            ("कः", 2),
+            ("कँ", 2),
+            ("रु", 2),
+            ("रू", 1),
+            ("कृ", 1),
+            // letter forms times mark forms
+            ("खों", 8),
+            ("ई", 2),
+            ("ऊ", 2),
+            ("ऐ", 4),
+            ("औ", 4),
+            ("श", 2),
+            ("ग", 2),
+            ("ल", 2),
+            ("ष", 2),
+            ("थ", 1),
         ] {
             assert_eq!(d.glyphs(unit).len(), forms, "{unit}");
         }
@@ -1096,13 +1266,21 @@ mod tests {
         let clusters = "क्य म्ह च्छ स्त प्र क्ष त्र त्त स्ट च्च स्व न्ह ट्र स्क प्य र्म क्त क्र ग्र ल्द ल्ल द्ध न्य व्य ल्क म्म ध्य स्थ स्प त्म र्य ष्ट ब्र प्त क्स स्स द्र र्ट ज्ञ श्व र्त न्न श्च त्य ज़्य र्व र्द ट्ट र्थ द्य ज्य र्ज न्ग क्क र्ड श्क ख्य र्क द्व न्द श्र \
             ह्म ट्ठ ड्ड ड्ढ ड्र फ़्र स्त्र ष्ट्र र्त्त र्र द्द द्भ ट्स ह्न क्\u{200c}ष";
         let d = Devanagari::default();
+        let mut most = (0, String::new());
         for c in clusters.split_whitespace() {
-            let forms = d.glyphs(c);
-            assert!(!forms.is_empty(), "{c}");
-            for g in forms {
-                validate(&g).unwrap_or_else(|e| panic!("{c}: {e}"));
+            // bare, and under the busiest common marks
+            for unit in [c.to_string(), format!("{c}ों"), format!("{c}िं"), format!("{c}ीं")] {
+                let forms = d.glyphs(&unit);
+                assert!(!forms.is_empty(), "{unit}");
+                most = most.max((forms.len(), unit.clone()));
+                for g in forms {
+                    validate(&g).unwrap_or_else(|e| panic!("{unit}: {e}"));
+                }
             }
         }
+        // Forms multiply; keep the product small enough to grade against.
+        assert!(most.0 <= 32, "{most:?}");
+        println!("most forms: {most:?}");
         // Decomposed nukta is the precomposed letter.
         assert_eq!(d.glyphs("ज\u{93c}्य"), d.glyphs("\u{95b}्य"));
         assert!(d.glyphs("x").is_empty());
