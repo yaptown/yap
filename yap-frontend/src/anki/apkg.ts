@@ -168,8 +168,17 @@ export async function buildApkg(
     [sentenceId]: model(sentenceId, `Yap ${plan.course_code} sentences`, sentenceFields, templates(lang), [[0, "all", [8]], [1, "all", [9]]]),
     [wordId]: model(wordId, `Yap ${plan.course_code} words`, ["Word", "Definition", "AudioBundled"], [{
       name: "Word", ord: 0,
-      qfmt: `<div class="sentence" lang="${lang}">{{Word}}</div>`,
-      afmt: `<div class="sentence" lang="${lang}">{{Word}}</div><div class="translation">{{Definition}}</div>{{AudioBundled}}`,
+      // Same shape as the sentence cards: the recording plays on both sides.
+      qfmt: `<div class="eyebrow">Word</div>
+{{AudioBundled}}
+<div class="sentence" lang="${lang}">{{Word}}</div>
+<hr id="answer">
+<p class="hint">Tap to reveal the answer</p>`,
+      afmt: `<div class="eyebrow">Word</div>
+{{AudioBundled}}
+<div class="sentence" lang="${lang}">{{Word}}</div>
+<hr id="answer">
+<div class="translation">{{Definition}}</div>`,
     }], [[0, "all", [0]]]),
   };
   const deck = (id: number, name: string) => ({

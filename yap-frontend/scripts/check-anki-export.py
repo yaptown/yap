@@ -176,10 +176,11 @@ def check_variant(root, variant):
                 is_word = note["type"] == "Word"
                 assert_safe(render.question_text)
                 assert_safe(render.answer_text)
+                # Word cards play their recording on both sides, like sentence cards.
                 bundled = is_word or note["tts"] != "failed.mp3"
-                assert autoplay_sources(render, "question") == int(bundled and not is_word)
+                assert autoplay_sources(render, "question") == int(bundled)
                 assert autoplay_sources(render, "answer") == int(bundled)
-                assert len(render.question_av_tags) == int(bundled and not is_word)
+                assert len(render.question_av_tags) == int(bundled)
                 assert len(render.answer_av_tags) == int(bundled)
                 if not is_word:
                     for markup in (render.question_text, render.answer_text):
