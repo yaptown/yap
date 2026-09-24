@@ -2170,6 +2170,7 @@ dependencies = [
  "libc",
  "log 0.4.31",
  "markdown-tables",
+ "movie-metadata",
  "movie-subtitles",
  "omnigram",
  "osmo",
@@ -3866,6 +3867,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "movie-metadata"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "language-utils",
+ "movie-subtitles",
+ "reqwest 0.13.4",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "movie-subtitles"
 version = "0.1.0"
 dependencies = [
@@ -4262,6 +4277,7 @@ dependencies = [
  "dotenv",
  "futures",
  "language-utils",
+ "movie-metadata",
  "movie-subtitles",
  "reqwest 0.13.4",
  "rustc-hash",
@@ -6356,6 +6372,7 @@ dependencies = [
  "language-utils",
  "matroska-demuxer",
  "md-5",
+ "movie-metadata",
  "movie-subtitles",
  "object_store",
  "opensubtitles-downloader",

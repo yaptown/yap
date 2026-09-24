@@ -23,6 +23,7 @@ members = [
     "libraries/enumap",
     "libraries/opensubtitles-downloader",
     "libraries/movie-subtitles",
+    "libraries/movie-metadata",
     "libraries/subtitle-corpus",
     "libraries/phoneme-verify",
     "libraries/omnigram",

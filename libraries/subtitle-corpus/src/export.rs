@@ -1893,49 +1893,6 @@ fn read_optional(path: &std::path::Path) -> Result<Option<Vec<u8>>> {
     }
 }
 
-/// Append only missing IDs, retaining every existing byte (including unknown
-/// fields and blank lines). Return whether a row was/would be appended.
-fn append_movie_metadata(
-    path: &std::path::Path,
-    movie: &language_utils::MovieMetadataBasic,
-    dry_run: bool,
-) -> Result<bool> {
-    use std::io::Write;
-
-    #[derive(serde::Deserialize)]
-    struct Id {
-        id: String,
-    }
-
-    let existing = read_optional(path)?.unwrap_or_default();
-    for line in existing.split(|&b| b == b'\n') {
-        if line.iter().all(u8::is_ascii_whitespace) {
-            continue;
-        }
-        let row: Id =
-            serde_json::from_slice(line).with_context(|| format!("parsing {}", path.display()))?;
-        if row.id == movie.id {
-            return Ok(false);
-        }
-    }
-    if !dry_run {
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        let mut row = serde_json::to_vec(movie)?;
-        row.push(b'\n');
-        let mut file = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)?;
-        if !existing.is_empty() && !existing.ends_with(b"\n") {
-            file.write_all(b"\n")?;
-        }
-        file.write_all(&row)?;
-    }
-    Ok(true)
-}
-
 /// The corpus subtitle as yap must receive it: re-serialised from the cues the
 /// corpus itself reads. Disc and sidecar tracks are copied verbatim into
 /// `subtitle.srt`, and some carry a blank line inside a two-speaker cue;
@@ -2006,7 +1963,11 @@ pub fn export_yap(
             original_language: Some(language.iso_639_1().to_owned()),
             rotten_tomatoes_score: None,
         };
-        let appended = append_movie_metadata(&movies.join("metadata.jsonl"), &metadata, dry_run)?;
+        let appended = movie_metadata::append_movie_metadata(
+            &movies.join("metadata.jsonl"),
+            &metadata,
+            dry_run,
+        )?;
         rows += usize::from(appended);
         if identical {
             kept += 1;
@@ -2039,72 +2000,6 @@ pub fn export_yap(
 #[cfg(test)]
 mod export_yap_tests {
     use super::*;
-    use language_utils::MovieMetadataBasic;
-
-    fn movie() -> MovieMetadataBasic {
-        MovieMetadataBasic {
-            id: "tt1234567".into(),
-            title: "A title\nwith a newline".into(),
-            year: Some(2001),
-            original_language: Some("fr".into()),
-            rotten_tomatoes_score: None,
-        }
-    }
-
-    #[test]
-    fn existing_metadata_is_byte_preserved() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("metadata.jsonl");
-        let original =
-            b"\n {\"id\":\"tt1234567\", \"title\":\"Hand curated\", \"extra\":42}\r\n \t\n";
-        std::fs::write(&path, original).unwrap();
-        assert!(!append_movie_metadata(&path, &movie(), false).unwrap());
-        assert_eq!(std::fs::read(&path).unwrap(), original);
-    }
-
-    #[test]
-    fn new_metadata_is_one_line_and_preserves_existing_bytes() {
-        for original in [
-            b"".as_slice(),
-            b"\n \t\n{\"id\":\"other\",\"extra\":true}\n",
-            b"\n{\"id\":\"other\"}",
-        ] {
-            let dir = tempfile::tempdir().unwrap();
-            let path = dir.path().join("metadata.jsonl");
-            std::fs::write(&path, original).unwrap();
-            assert!(append_movie_metadata(&path, &movie(), false).unwrap());
-            let bytes = std::fs::read(&path).unwrap();
-            assert!(bytes.starts_with(original));
-            let suffix = &bytes[original.len()..];
-            let suffix = if !original.is_empty() && !original.ends_with(b"\n") {
-                assert_eq!(suffix[0], b'\n');
-                &suffix[1..]
-            } else {
-                suffix
-            };
-            assert_eq!(suffix.iter().filter(|&&b| b == b'\n').count(), 1);
-            assert!(suffix.ends_with(b"\n"));
-            assert_eq!(
-                serde_json::from_slice::<MovieMetadataBasic>(suffix).unwrap(),
-                movie()
-            );
-            assert!(!append_movie_metadata(&path, &movie(), false).unwrap());
-            assert_eq!(std::fs::read(&path).unwrap(), bytes);
-        }
-    }
-
-    #[test]
-    fn metadata_dry_run_does_not_create_or_modify_files() {
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("missing/metadata.jsonl");
-        assert!(append_movie_metadata(&path, &movie(), true).unwrap());
-        assert!(!path.parent().unwrap().exists());
-        let path = dir.path().join("metadata.jsonl");
-        let original = b"{\"id\":\"other\"}";
-        std::fs::write(&path, original).unwrap();
-        assert!(append_movie_metadata(&path, &movie(), true).unwrap());
-        assert_eq!(std::fs::read(&path).unwrap(), original);
-    }
 
     #[test]
     fn yap_srt_drops_orphan_blocks_and_parses() {
@@ -2115,15 +2010,5 @@ mod export_yap_tests {
         let normalized = yap_srt(raw).unwrap();
         assert_eq!(normalized, "1\n00:00:01,000 --> 00:00:02,000\n-Tu as de la fièvre.\n\n2\n00:00:03,000 --> 00:00:04,000\nBonjour tout le monde.\n\n");
         assert_eq!(movie_subtitles::parse_srt(&normalized).unwrap().len(), 2);
-    }
-
-    #[test]
-    fn invalid_or_unreadable_metadata_is_not_treated_as_missing() {
-        let dir = tempfile::tempdir().unwrap();
-        assert!(append_movie_metadata(dir.path(), &movie(), false).is_err());
-        let path = dir.path().join("metadata.jsonl");
-        std::fs::write(&path, b"not json\n").unwrap();
-        assert!(append_movie_metadata(&path, &movie(), false).is_err());
-        assert_eq!(std::fs::read(&path).unwrap(), b"not json\n");
     }
 }

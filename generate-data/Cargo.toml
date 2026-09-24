@@ -54,3 +54,4 @@ phoneme-verify = { path = "../libraries/phoneme-verify" }
 half = "2.7.1"
 hdbscan = "0.12.0"
 rayon = "1.12.0"
+movie-metadata = { path = "../libraries/movie-metadata" }

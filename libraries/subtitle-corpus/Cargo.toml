@@ -33,3 +33,4 @@ sha2 = "0.10"
 unicode-normalization = { workspace = true }
 object_store = { version = "0.14.2", features = ["aws"] }
 md-5 = "0.11.0"
+movie-metadata = { path = "../movie-metadata" }

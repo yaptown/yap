@@ -1,12 +1,11 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
-use language_utils::{Language, MovieMetadataBasic};
+use language_utils::Language;
+use movie_metadata::{OmdbClient, TmdbClient};
 use movie_subtitles::SubtitleLine;
 use opensubtitles_downloader::{rank_by_quality, OpenSubtitlesClient};
-use rustc_hash::FxHashMap;
 use serde::Deserialize;
 use std::fs;
-use std::io::Write;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
@@ -17,13 +16,6 @@ static QUALITY_CHECK_CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
         .with_cache_directory("./.cache")
         .with_service_tier("flex")
 });
-
-/// Fetch an image from a URL and return the bytes
-async fn fetch_image_bytes(client: &reqwest::Client, url: &str) -> Result<Vec<u8>> {
-    let response = client.get(url).send().await?;
-    let bytes = response.bytes().await?;
-    Ok(bytes.to_vec())
-}
 
 /// Hand-picked movies to fetch subtitles for, on top of whatever
 /// `discover/popular` returns. Every ID here was resolved against TMDB and the
@@ -452,121 +444,6 @@ const EXCLUDED_MOVIES: &[&str] = &[
     "tt0017136", // Metropolis (1927): silent — intertitles, no speech to clip
 ];
 
-/// OMDB API response
-#[derive(Debug, Deserialize)]
-struct OmdbResponse {
-    #[serde(rename = "Ratings", default)]
-    ratings: Vec<OmdbRating>,
-    /// OMDb reports failures (bad key, unknown id) as 200s with this set.
-    #[serde(rename = "Error")]
-    error: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct OmdbRating {
-    #[serde(rename = "Source")]
-    source: String,
-    #[serde(rename = "Value")]
-    value: String,
-}
-
-struct OmdbClient {
-    api_key: String,
-    client: reqwest::Client,
-}
-
-impl OmdbClient {
-    fn new(api_key: String) -> Self {
-        Self {
-            api_key,
-            client: reqwest::Client::new(),
-        }
-    }
-
-    async fn get_rotten_tomatoes_score(&self, imdb_id: &str) -> Option<u8> {
-        let url = format!(
-            "https://www.omdbapi.com/?i={}&apikey={}",
-            imdb_id, self.api_key
-        );
-        let omdb: OmdbResponse =
-            match async { self.client.get(&url).send().await?.json().await }.await {
-                Ok(omdb) => omdb,
-                Err(e) => {
-                    println!("  ⚠ OMDb request failed for {imdb_id}: {e}");
-                    return None;
-                }
-            };
-        if let Some(error) = &omdb.error {
-            // An invalid key fails every film the same way; without this the
-            // run just quietly writes nulls for every score.
-            println!("  ⚠ OMDb error for {imdb_id}: {error}");
-            return None;
-        }
-        for rating in &omdb.ratings {
-            if rating.source == "Rotten Tomatoes" {
-                return rating.value.trim_end_matches('%').parse().ok();
-            }
-        }
-        None
-    }
-}
-
-/// TMDB API Movie Response
-#[derive(Debug, Deserialize)]
-struct TmdbMovie {
-    title: String,
-    release_date: Option<String>,
-    poster_path: Option<String>,
-    /// Normalized to real ISO 639-1 on the way in, so freshly written
-    /// metadata never carries TMDB's `cn`.
-    #[serde(
-        default,
-        deserialize_with = "language_utils::deserialize_original_language"
-    )]
-    original_language: Option<String>,
-}
-
-/// TMDB Find API Response
-#[derive(Debug, Deserialize)]
-struct TmdbFindResponse {
-    movie_results: Vec<TmdbMovie>,
-}
-
-struct TmdbClient {
-    api_key: String,
-    client: reqwest::Client,
-}
-
-impl TmdbClient {
-    fn new(api_key: String) -> Self {
-        Self {
-            api_key,
-            client: reqwest::Client::new(),
-        }
-    }
-
-    async fn get_movie(&self, imdb_id: &str, language: &str) -> Result<TmdbMovie> {
-        // Use the find endpoint to search by IMDB ID
-        let url = format!(
-            "https://api.themoviedb.org/3/find/{}?api_key={}&external_source=imdb_id&language={}",
-            imdb_id, self.api_key, language
-        );
-
-        let response = self.client.get(&url).send().await?;
-        let response_text = response.text().await?;
-        let find_response: TmdbFindResponse = serde_json::from_str(&response_text)?;
-
-        if find_response.movie_results.is_empty() {
-            return Err(anyhow!("No movie found for IMDB ID {imdb_id}"));
-        }
-
-        // Rate limiting: wait 300ms between requests (TMDB allows ~40 req/10s)
-        tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
-
-        Ok(find_response.movie_results.into_iter().next().unwrap())
-    }
-}
-
 /// Check if subtitle lines pass the language sanity check.
 fn passes_language_sanity_check(lines: &[SubtitleLine], language: Language) -> bool {
     match language.check_subtitle_sanity(lines.iter().map(|l| l.sentence.as_str()), &[]) {
@@ -649,20 +526,15 @@ async fn passes_llm_quality_check(lines: &[SubtitleLine], language: Language) ->
     }
 }
 
-/// Download subtitles for a single movie and return metadata
-#[allow(clippy::too_many_arguments)]
+/// Download subtitles for a single movie.
 async fn download_movie_subtitles(
     opensub_client: &OpenSubtitlesClient,
-    tmdb_client: &TmdbClient,
-    omdb_client: &OmdbClient,
     imdb_id: u64,
     imdb_id_str: &str,
     language_iso639_1: &str,
-    tmdb_language: &str,
     movies_dir: &std::path::Path,
-    posters_dir: &std::path::Path,
     language: Language,
-) -> Result<Option<(Vec<SubtitleLine>, MovieMetadataBasic)>> {
+) -> Result<Option<Vec<SubtitleLine>>> {
     let subtitle_path = &movie_subtitles::derived_jsonl_path(movies_dir, imdb_id_str);
 
     // Search for subtitles
@@ -753,144 +625,22 @@ async fn download_movie_subtitles(
 
         println!("  ✓ Saved to {}", subtitle_path.display());
 
-        // Fetch metadata from TMDB
-        println!("  Fetching metadata from TMDB...");
-        let (title, year, original_language) =
-            match tmdb_client.get_movie(imdb_id_str, tmdb_language).await {
-                Ok(tmdb_data) => {
-                    let title = tmdb_data.title;
-                    let year = tmdb_data
-                        .release_date
-                        .and_then(|d| d.split('-').next().and_then(|y| y.parse::<u16>().ok()));
-                    let original_language = tmdb_data.original_language;
-
-                    // Fetch and save poster if available (skip if already exists)
-                    let poster_file = posters_dir.join(format!("{imdb_id_str}.jpg"));
-                    if !poster_file.exists() {
-                        if let Some(poster_path) = tmdb_data.poster_path {
-                            println!("  Fetching poster image...");
-                            let poster_url =
-                                format!("https://image.tmdb.org/t/p/w500{poster_path}");
-                            match fetch_image_bytes(&opensub_client.client, &poster_url).await {
-                                Ok(bytes) => {
-                                    if let Err(e) = fs::write(&poster_file, &bytes) {
-                                        println!("  ⚠ Failed to save poster: {e}");
-                                    } else {
-                                        println!("  ✓ Saved poster to {}", poster_file.display());
-                                    }
-                                }
-                                Err(e) => {
-                                    println!("  ⚠ Failed to fetch poster: {e}");
-                                }
-                            }
-                        }
-                    }
-
-                    (title, year, original_language)
-                }
-                Err(e) => {
-                    println!("  ⚠ Could not fetch TMDB metadata: {e:?}");
-                    ("Unknown".to_string(), None, None)
-                }
-            };
-
-        // Fetch Rotten Tomatoes score from OMDB
-        let rotten_tomatoes_score = omdb_client.get_rotten_tomatoes_score(imdb_id_str).await;
-        if let Some(score) = rotten_tomatoes_score {
-            println!("  ✓ Rotten Tomatoes: {score}%");
-        }
-
-        let movie = MovieMetadataBasic {
-            id: imdb_id_str.to_string(),
-            title,
-            year,
-            original_language,
-            rotten_tomatoes_score,
-        };
-
-        return Ok(Some((subtitle_lines, movie)));
+        return Ok(Some(subtitle_lines));
     }
 
     Ok(None)
 }
 
-/// Fetch movie metadata from TMDB
-async fn fetch_tmdb_metadata(
-    tmdb_client: &TmdbClient,
-    omdb_client: &OmdbClient,
-    imdb_id_str: &str,
-    tmdb_language: &str,
-    opensub_client: &OpenSubtitlesClient,
-    posters_dir: &std::path::Path,
-) -> Result<MovieMetadataBasic> {
-    let (tmdb_title, tmdb_year, tmdb_original_language) =
-        match tmdb_client.get_movie(imdb_id_str, tmdb_language).await {
-            Ok(tmdb_data) => {
-                let tmdb_title = tmdb_data.title;
-                let tmdb_year = tmdb_data
-                    .release_date
-                    .and_then(|d| d.split('-').next().and_then(|y| y.parse::<u16>().ok()));
-                let tmdb_original_language = tmdb_data.original_language;
-
-                // Fetch and save poster if available (skip if already exists)
-                let poster_file = posters_dir.join(format!("{imdb_id_str}.jpg"));
-                if !poster_file.exists() {
-                    if let Some(poster_path) = tmdb_data.poster_path {
-                        println!("  Fetching poster image...");
-                        let poster_url = format!("https://image.tmdb.org/t/p/w500{poster_path}");
-                        match fetch_image_bytes(&opensub_client.client, &poster_url).await {
-                            Ok(bytes) => {
-                                if let Err(e) = fs::write(&poster_file, &bytes) {
-                                    println!("  ⚠ Failed to save poster: {e}");
-                                } else {
-                                    println!("  ✓ Saved poster to {}", poster_file.display());
-                                }
-                            }
-                            Err(e) => {
-                                println!("  ⚠ Failed to fetch poster: {e}");
-                            }
-                        }
-                    }
-                }
-
-                (tmdb_title, tmdb_year, tmdb_original_language)
-            }
-            Err(e) => {
-                println!("  ⚠ Could not fetch TMDB metadata: {e}");
-                return Err(anyhow!("Failed to fetch TMDB metadata: {e}"));
-            }
-        };
-
-    // Fetch Rotten Tomatoes score from OMDB
-    let rotten_tomatoes_score = omdb_client.get_rotten_tomatoes_score(imdb_id_str).await;
-    if let Some(score) = rotten_tomatoes_score {
-        println!("  ✓ Rotten Tomatoes: {score}%");
-    }
-
-    Ok(MovieMetadataBasic {
-        id: imdb_id_str.to_string(),
-        title: tmdb_title,
-        year: tmdb_year,
-        original_language: tmdb_original_language,
-        rotten_tomatoes_score,
-    })
-}
-
-/// Process a single movie: download subtitle if needed, fetch metadata if needed
-/// Returns (metadata, is_new_download)
-#[allow(clippy::too_many_arguments)]
+/// Make sure a movie's subtitles are on disk, downloading them if needed.
+/// Returns whether this was a new download. Metadata and posters are filled
+/// in afterwards by `movie_metadata::refresh`.
 async fn process_movie(
     imdb_id_str: &str,
     opensub_client: &OpenSubtitlesClient,
-    tmdb_client: &TmdbClient,
-    omdb_client: &OmdbClient,
-    existing_metadata: &FxHashMap<String, MovieMetadataBasic>,
     language_iso639_1: &str,
-    tmdb_language: &str,
     output_dir: &std::path::Path,
-    posters_dir: &std::path::Path,
     language: Language,
-) -> Result<(MovieMetadataBasic, bool)> {
+) -> Result<bool> {
     let subtitle_path = movie_subtitles::derived_jsonl_path(output_dir, imdb_id_str);
     let raw_path = movie_subtitles::raw_srt_path(output_dir, imdb_id_str);
     let imdb_id = imdb_id_str.strip_prefix("tt").unwrap().parse::<u64>()?;
@@ -904,59 +654,30 @@ async fn process_movie(
         movie_subtitles::write_derived_jsonl(&subtitle_path, &lines)?;
     }
 
-    let (is_new_download, maybe_metadata) = if subtitle_path.exists() {
+    if subtitle_path.exists() {
         println!("  ✓ Subtitle already downloaded");
-        (false, None)
-    } else {
-        println!("  Searching for subtitles...");
-        match download_movie_subtitles(
-            opensub_client,
-            tmdb_client,
-            omdb_client,
-            imdb_id,
-            imdb_id_str,
-            language_iso639_1,
-            tmdb_language,
-            output_dir,
-            posters_dir,
-            language,
-        )
-        .await?
-        {
-            Some((_, movie)) => {
-                println!("  ✓ Downloaded successfully");
-                (true, Some(movie))
-            }
-            None => {
-                println!("  ✗ Failed to download subtitles");
-                return Err(anyhow!("No subtitles available"));
-            }
-        }
-    };
-
-    // If we got metadata from download, use it. Otherwise check existing or fetch from TMDB
-    let metadata = if let Some(meta) = maybe_metadata {
-        meta
-    } else if let Some(existing) = existing_metadata
-        .get(imdb_id_str)
-        .filter(|m| m.original_language.is_some() && m.rotten_tomatoes_score.is_some())
+        return Ok(false);
+    }
+    println!("  Searching for subtitles...");
+    match download_movie_subtitles(
+        opensub_client,
+        imdb_id,
+        imdb_id_str,
+        language_iso639_1,
+        output_dir,
+        language,
+    )
+    .await?
     {
-        println!("  ✓ Using existing metadata");
-        existing.clone()
-    } else {
-        println!("  Fetching metadata from TMDB...");
-        fetch_tmdb_metadata(
-            tmdb_client,
-            omdb_client,
-            imdb_id_str,
-            tmdb_language,
-            opensub_client,
-            posters_dir,
-        )
-        .await?
-    };
-
-    Ok((metadata, is_new_download))
+        Some(_) => {
+            println!("  ✓ Downloaded successfully");
+            Ok(true)
+        }
+        None => {
+            println!("  ✗ Failed to download subtitles");
+            Err(anyhow!("No subtitles available"))
+        }
+    }
 }
 
 /// Parse a Language from an ISO 639-3 code for clap
@@ -1022,7 +743,6 @@ async fn main() -> Result<()> {
     for language in languages {
         let language_iso639_3 = language.corpus_code();
         let language_iso639_1 = language.opensubtitles_languages();
-        let tmdb_language = language.tmdb_language_code();
 
         println!(
             "\n========================================\nDownloading {count} subtitles for language: {language_iso639_3}\n========================================"
@@ -1034,24 +754,6 @@ async fn main() -> Result<()> {
         ));
         fs::create_dir_all(&output_dir)?;
         fs::create_dir_all(output_dir.join("subtitles"))?;
-        let posters_dir = output_dir.join("posters");
-        fs::create_dir_all(&posters_dir)?;
-
-        // Read existing metadata to avoid re-fetching OMDB data
-        let metadata_path = output_dir.join("metadata.jsonl");
-        let mut existing_metadata: FxHashMap<String, MovieMetadataBasic> = FxHashMap::default();
-        if metadata_path.exists() {
-            let metadata_content = fs::read_to_string(&metadata_path)?;
-            for line in metadata_content.lines() {
-                if line.trim().is_empty() {
-                    continue;
-                }
-                if let Ok(movie) = serde_json::from_str::<MovieMetadataBasic>(line) {
-                    existing_metadata.insert(movie.id.clone(), movie);
-                }
-            }
-            println!("Loaded metadata for {} movies", existing_metadata.len());
-        }
 
         // Count already downloaded movies
         let subtitles_dir = output_dir.join("subtitles");
@@ -1078,7 +780,6 @@ async fn main() -> Result<()> {
 
         println!("Found {} popular movies", popular_movies.len());
 
-        let mut movies = Vec::new();
         let mut downloaded_count = 0;
 
         for popular_movie in popular_movies.iter() {
@@ -1108,26 +809,15 @@ async fn main() -> Result<()> {
             match process_movie(
                 &imdb_id_str,
                 &opensub_client,
-                &tmdb_client,
-                &omdb_client,
-                &existing_metadata,
                 language_iso639_1,
-                tmdb_language,
                 &output_dir,
-                &posters_dir,
                 language,
             )
             .await
             {
-                Ok((movie, is_new)) => {
-                    movies.push(movie);
-                    if is_new {
-                        downloaded_count += 1;
-                    }
-                }
-                Err(e) => {
-                    println!("  ✗ Error: {e}");
-                }
+                Ok(true) => downloaded_count += 1,
+                Ok(false) => {}
+                Err(e) => println!("  ✗ Error: {e}"),
             }
         }
 
@@ -1143,94 +833,31 @@ async fn main() -> Result<()> {
         for &imdb_id_str in EXTRA_MOVIES {
             println!("\n  Processing {imdb_id_str}...");
 
-            match process_movie(
+            if let Err(e) = process_movie(
                 imdb_id_str,
                 &opensub_client,
-                &tmdb_client,
-                &omdb_client,
-                &existing_metadata,
                 language_iso639_1,
-                tmdb_language,
                 &output_dir,
-                &posters_dir,
                 language,
             )
             .await
             {
-                Ok((movie, _)) => {
-                    movies.push(movie);
-                }
-                Err(e) => {
-                    println!("  ✗ Error: {e}");
-                }
+                println!("  ✗ Error: {e}");
             }
         }
 
-        // Ensure metadata exists for all movies with downloaded subtitles
-        let processed_ids: rustc_hash::FxHashSet<String> =
-            movies.iter().map(|m| m.id.clone()).collect();
-        let subtitle_files: Vec<_> = fs::read_dir(&subtitles_dir)?
-            .filter_map(|e| e.ok())
-            .filter(|e| e.path().extension().is_some_and(|ext| ext == "jsonl"))
-            .filter_map(|e| {
-                e.path()
-                    .file_stem()
-                    .and_then(|s| s.to_str().map(|s| s.to_string()))
-            })
-            .filter(|id| !processed_ids.contains(id))
-            .collect();
-
-        if !subtitle_files.is_empty() {
-            println!(
-                "\nFetching metadata for {} movies with existing subtitles...",
-                subtitle_files.len()
+        // Metadata rows and posters for every subtitle on disk, new or old.
+        let report =
+            movie_metadata::refresh(&output_dir, language, &tmdb_client, &omdb_client).await?;
+        println!("Movie metadata refresh: {report}");
+        if !report.no_metadata.is_empty() || !report.no_poster.is_empty() {
+            eprintln!(
+                "⚠ WARNING: missing movie metadata: {:?}; missing posters: {:?}",
+                report.no_metadata, report.no_poster
             );
-            for imdb_id_str in &subtitle_files {
-                println!("  Processing {imdb_id_str}...");
-                if let Some(existing) = existing_metadata
-                    .get(imdb_id_str)
-                    .filter(|m| m.original_language.is_some() && m.rotten_tomatoes_score.is_some())
-                {
-                    println!("  ✓ Using existing metadata");
-                    movies.push(existing.clone());
-                } else {
-                    match fetch_tmdb_metadata(
-                        &tmdb_client,
-                        &omdb_client,
-                        imdb_id_str,
-                        tmdb_language,
-                        &opensub_client,
-                        &posters_dir,
-                    )
-                    .await
-                    {
-                        Ok(movie) => {
-                            println!("  ✓ Fetched metadata: {}", movie.title);
-                            movies.push(movie);
-                        }
-                        Err(e) => {
-                            println!("  ✗ Error: {e}");
-                        }
-                    }
-                }
-            }
         }
 
-        // Save metadata
-        let metadata_path = output_dir.join("metadata.jsonl");
-        let metadata_file = fs::File::create(&metadata_path)?;
-        for movie in &movies {
-            serde_json::to_writer(&metadata_file, &movie)?;
-            writeln!(&metadata_file)?;
-        }
-
-        println!("\nMetadata saved to {}", metadata_path.display());
-        println!(
-            "Done! Downloaded {} new movies for {} (total: {} movies)",
-            downloaded_count,
-            language_iso639_3,
-            movies.len()
-        );
+        println!("\nDone! Downloaded {downloaded_count} new movies for {language_iso639_3}");
     }
 
     println!("\n========================================");

@@ -294,6 +294,32 @@ async fn load_movie_sentences(
         return Ok(vec![]);
     }
 
+    // Films reach this directory by several routes (the OpenSubtitles
+    // downloader, subtitle-corpus exports, by hand), so fill in any missing
+    // metadata rows and posters here, before the films are enumerated, rather
+    // than trusting whoever wrote the subtitle to have done it.
+    // Without the keys (e.g. clean-nlp-data, which does not read .env) the
+    // films on disk are used as they are.
+    let keys = (std::env::var("TMDB_API_KEY"), std::env::var("OMDB_API_KEY"));
+    if crate::cache_only() {
+        println!("  Skipping movie metadata refresh (cache-only)");
+    } else if let (Ok(tmdb_key), Ok(omdb_key)) = keys {
+        let tmdb = movie_metadata::TmdbClient::new(tmdb_key);
+        let omdb = movie_metadata::OmdbClient::new(omdb_key);
+        let report = movie_metadata::refresh(&movies_dir, language, &tmdb, &omdb)
+            .await
+            .context("Failed to refresh movie metadata and posters")?;
+        println!("  Movie metadata refresh: {report}");
+        if !report.no_metadata.is_empty() || !report.no_poster.is_empty() {
+            eprintln!(
+                "⚠ WARNING: missing movie metadata: {:?}; missing posters: {:?}",
+                report.no_metadata, report.no_poster
+            );
+        }
+    } else {
+        eprintln!("⚠ WARNING: TMDB_API_KEY or OMDB_API_KEY not set; not refreshing movie metadata");
+    }
+
     let metadata_file = movies_dir.join("metadata.jsonl");
     if !metadata_file.exists() {
         return Ok(vec![]);
