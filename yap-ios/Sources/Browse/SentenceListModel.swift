@@ -30,7 +30,7 @@ struct SentenceListProgressView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ProgressView(value: progress.percent_known, total: 100)
-            Text(progress.all_available_learned ? "Done!" : "\(Int(progress.percent_known))% known").font(.caption).foregroundStyle(Color(uiColor: .secondaryLabel))
+            Text(progress.caption).font(.caption).foregroundStyle(Color(uiColor: .secondaryLabel))
         }
     }
 }

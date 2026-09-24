@@ -4,17 +4,30 @@
     "target_language": "French",
     "title": "Stats",
     "xp": 197.0,
-    "xp_label": "197 XP",
     "total_reviews": 171,
-    "total_reviews_label": "171 reviews",
-    "streak": {
-      "title": "Streak",
-      "days": 2,
-      "days_label": "2 days",
-      "today_label": "0 / 5 min today"
-    },
+    "tiles": [
+      {
+        "eyebrow": "XP",
+        "value": "197",
+        "caption": null
+      },
+      {
+        "eyebrow": "Reviews",
+        "value": "171",
+        "caption": null
+      },
+      {
+        "eyebrow": "Streak",
+        "value": "2 days",
+        "caption": "0 / 5 min today"
+      },
+      {
+        "eyebrow": "Vocabulary",
+        "value": "10.2%",
+        "caption": "of everyday French"
+      }
+    ],
     "percent_known": 0.10246544526835043,
-    "percent_known_label": "10.2% of everyday French",
     "due": {
       "title": "Due words",
       "ready_now": 2,

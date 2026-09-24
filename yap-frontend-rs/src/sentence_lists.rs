@@ -49,6 +49,21 @@ pub fn get_sentence_list_navigation(
 pub struct SentenceListProgress {
     pub percent_known: f64,
     pub all_available_learned: bool,
+    pub caption: String,
+}
+
+impl SentenceListProgress {
+    fn new(percent_known: f64, all_available_learned: bool) -> Self {
+        Self {
+            percent_known,
+            all_available_learned,
+            caption: if all_available_learned {
+                "Done!".into()
+            } else {
+                format!("{:.0}% known", percent_known.floor())
+            },
+        }
+    }
 }
 
 #[bridgerton::bridge]
@@ -76,10 +91,7 @@ impl Deck {
     ) -> SentenceListProgress {
         let source = match &selection {
             None => {
-                return SentenceListProgress {
-                    percent_known: essential_percent_known,
-                    all_available_learned: false,
-                };
+                return SentenceListProgress::new(essential_percent_known, false);
             }
             Some(SentenceListSelection::Movie { id }) => {
                 language_utils::FrequencySourceId::Movie(id.clone())
@@ -98,22 +110,23 @@ impl Deck {
             .get(&source)
             .is_some_and(|f| !f.entries.is_empty() && f.total_count > 0);
         if !available {
-            return SentenceListProgress {
-                percent_known: 0.0,
-                all_available_learned: false,
-            };
+            return SentenceListProgress::new(0.0, false);
         }
         let score = self.sentence_list_percent_known(&selection);
-        SentenceListProgress {
-            percent_known: score.percent_known,
-            all_available_learned: score.all_available_learned,
-        }
+        SentenceListProgress::new(score.percent_known, score.all_available_learned)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn progress_caption_is_shared_and_floored() {
+        assert_eq!(SentenceListProgress::new(69.9, false).caption, "69% known");
+        assert_eq!(SentenceListProgress::new(0.0, false).caption, "0% known");
+        assert_eq!(SentenceListProgress::new(69.9, true).caption, "Done!");
+    }
+
     #[test]
     fn unavailable_category_falls_back_without_losing_available_selection() {
         let selection = Some(SentenceListSelection::Movie { id: "film".into() });

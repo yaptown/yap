@@ -209,6 +209,8 @@ pub enum IdleScreenView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GoalOptionView {
     pub target: DailyReviewTarget,
+    pub label: String,
+    pub duration_label: String,
     pub minutes: u32,
     pub event: DeckEvent,
 }
@@ -727,6 +729,8 @@ impl Deck {
         get_daily_goal_options()
             .into_iter()
             .map(|option| GoalOptionView {
+                label: format!("{:?}", option.value),
+                duration_label: format!("{}m", option.minutes),
                 target: option.value.clone(),
                 minutes: option.minutes,
                 event: self.set_daily_review_target(option.value),
@@ -813,16 +817,51 @@ pub struct DueSummaryView {
 
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StatTileView {
+    pub eyebrow: String,
+    pub value: String,
+    pub caption: Option<String>,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct FrequencyKnowledgeTick {
+    pub value: f64,
+    pub label: String,
+}
+
+#[bridgerton::bridge]
+pub fn frequency_rank_label(rank: f64) -> String {
+    if rank >= 1000.0 {
+        format!("{:.1}k", rank / 1000.0)
+    } else {
+        format!("{rank:.0}")
+    }
+}
+
+/// Both hosts use the same rank ticks and compact labels.
+#[bridgerton::bridge]
+pub fn frequency_knowledge_ticks() -> Vec<FrequencyKnowledgeTick> {
+    [
+        2.0, 4.0, 6.0, 8.0, 15.0, 50.0, 90.0, 300.0, 700.0, 1500.0, 5000.0, 10000.0,
+    ]
+    .into_iter()
+    .map(|value| FrequencyKnowledgeTick {
+        value,
+        label: frequency_rank_label(value),
+    })
+    .collect()
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StatsScreenView {
     pub target_language: Language,
     pub title: String,
     pub xp: f64,
-    pub xp_label: String,
     pub total_reviews: u64,
-    pub total_reviews_label: String,
-    pub streak: StreakCardView,
+    pub tiles: Vec<StatTileView>,
     pub percent_known: f64,
-    pub percent_known_label: String,
     pub due: DueSummaryView,
     pub leeches: Vec<CardSummary>,
     pub leech_count: u64,
@@ -1049,23 +1088,38 @@ impl Deck {
         let leech_count = leeches.len() as u64;
         let xp = self.get_xp();
         let total_reviews = self.get_total_reviews();
+        let streak = self.streak_card_view(timestamp_ms);
         StatsScreenView {
             target_language: self.get_target_language(),
             title: stats.title,
             xp,
-            xp_label: format!("{xp:.0} XP"),
             total_reviews,
-            total_reviews_label: format!(
-                "{total_reviews} {}",
-                if total_reviews == 1 {
-                    "review"
-                } else {
-                    "reviews"
-                }
-            ),
-            streak: self.streak_card_view(timestamp_ms),
+            tiles: vec![
+                StatTileView {
+                    eyebrow: "XP".into(),
+                    value: format!("{xp:.0}"),
+                    caption: None,
+                },
+                StatTileView {
+                    eyebrow: "Reviews".into(),
+                    value: total_reviews.to_string(),
+                    caption: None,
+                },
+                StatTileView {
+                    eyebrow: streak.title,
+                    value: streak.days_label,
+                    caption: Some(streak.today_label),
+                },
+                StatTileView {
+                    eyebrow: "Vocabulary".into(),
+                    value: format!("{:.1}%", stats.percent_known * 100.0),
+                    caption: Some(format!(
+                        "of everyday {}",
+                        get_language_metadata(self.get_target_language()).common_name
+                    )),
+                },
+            ],
             percent_known: stats.percent_known,
-            percent_known_label: stats.percent_known_label,
             due: self.due_summary_view(review.due_count() as u64, stats.total_cards),
             leeches,
             leech_count,
@@ -1721,6 +1775,51 @@ mod tests {
     }
 
     #[test]
+    fn stats_tiles_separate_labels_values_and_captions() {
+        let deck = Deck::default();
+        let view = deck.stats_screen_view(vec![], inputs().timestamp_ms);
+        assert_eq!(
+            view.tiles
+                .iter()
+                .map(|tile| tile.eyebrow.as_str())
+                .collect::<Vec<_>>(),
+            ["XP", "Reviews", "Streak", "Vocabulary"]
+        );
+        assert_eq!(view.tiles[0].value, "0");
+        assert_eq!(view.tiles[1].value, "0");
+        assert!(view.tiles[0].caption.is_none());
+        assert!(view.tiles[1].caption.is_none());
+        assert_eq!(
+            view.tiles[3].value,
+            format!("{:.1}%", view.percent_known * 100.0)
+        );
+        assert_eq!(view.tiles[3].caption.as_deref(), Some("of everyday French"));
+        let options = deck.goal_options_view();
+        assert_eq!(options[0].label, "Casual");
+        assert_eq!(options[0].duration_label, "5m");
+    }
+
+    #[test]
+    fn chart_ticks_share_numeric_values_and_compact_labels() {
+        let ticks = frequency_knowledge_ticks();
+        assert_eq!(
+            ticks.iter().map(|tick| tick.value).collect::<Vec<_>>(),
+            [
+                2.0, 4.0, 6.0, 8.0, 15.0, 50.0, 90.0, 300.0, 700.0, 1500.0, 5000.0, 10000.0
+            ]
+        );
+        assert_eq!(
+            ticks
+                .iter()
+                .map(|tick| tick.label.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "2", "4", "6", "8", "15", "50", "90", "300", "700", "1.5k", "5.0k", "10.0k"
+            ]
+        );
+    }
+
+    #[test]
     fn home_and_curriculum_labels_are_shared_display_copy() {
         let home = Deck::default().home_screen_view(inputs());
         assert_eq!(home.title, "Home");
@@ -1854,7 +1953,9 @@ mod tests {
         });
         let stats = deck.stats_screen_view(vec![], after_midnight);
         assert_eq!(json(home.streak), json(&tomorrow));
-        assert_eq!(json(stats.streak), json(tomorrow));
+        assert_eq!(stats.tiles[2].eyebrow, tomorrow.title);
+        assert_eq!(stats.tiles[2].value, tomorrow.days_label);
+        assert_eq!(stats.tiles[2].caption, Some(tomorrow.today_label));
     }
 
     #[test]

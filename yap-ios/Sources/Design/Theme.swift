@@ -48,6 +48,24 @@ extension Color {
     @MainActor static let yapInfoField = Tokens.palette.info_field.color
 }
 
+/// The one card surface, shared by study and browse screens in both schemes.
+private struct CardSurface: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    func body(content: Content) -> some View {
+        content
+            .background(Tokens.palette.card.color.opacity(0.18), in: RoundedRectangle(cornerRadius: 20))
+            .background {
+                RoundedRectangle(cornerRadius: 20).fill(.ultraThinMaterial)
+                    .opacity(reduceTransparency ? 1 : 0.65)
+            }
+            .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
+    }
+}
+
+extension View {
+    func cardSurface() -> some View { modifier(CardSurface()) }
+}
+
 struct StudyCard<Content: View>: View {
     var alignment: HorizontalAlignment = .leading
     var spacing: CGFloat = 12
@@ -55,8 +73,7 @@ struct StudyCard<Content: View>: View {
     var body: some View {
         VStack(alignment: alignment, spacing: spacing) { content }
             .frame(maxWidth: .infinity, alignment: Alignment(horizontal: alignment, vertical: .center)).padding(16)
-            .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
-            .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
+            .cardSurface()
     }
 }
 

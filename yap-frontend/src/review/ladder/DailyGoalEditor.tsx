@@ -35,8 +35,8 @@ export function DailyGoalEditor({
                 : "hover:bg-muted",
             )}
           >
-            <div>{option.target}</div>
-            <div className="text-xs opacity-70">{option.minutes}m</div>
+            <div>{option.label}</div>
+            <div className="text-xs opacity-70">{option.duration_label}</div>
           </button>
         ))}
       </div>

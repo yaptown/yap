@@ -22,10 +22,7 @@
           "smart_add_count": 2,
           "smart_add_regime": "SingleWord",
           "easy_cards_remaining": 0,
-          "preview": [
-            "wurde",
-            "zum"
-          ],
+          "preview": ["wurde", "zum"],
           "percent_known_after": 6.69397558648373,
           "smart_add_event": {
             "type": "Language",
@@ -314,11 +311,7 @@
           }
         ],
         "navigation": {
-          "categories": [
-            "essential",
-            "movie",
-            "pimsleur"
-          ],
+          "categories": ["essential", "movie", "pimsleur"],
           "selection": null,
           "selected_index": 0
         },
@@ -348,6 +341,7 @@
         ],
         "progress": {
           "percent_known": 3.352745698022571,
+          "caption": "3% known",
           "all_available_learned": false
         },
         "sentence_list_label": "Core German Level 1",

@@ -22,9 +22,7 @@
           "smart_add_count": 1,
           "smart_add_regime": "Easy",
           "easy_cards_remaining": 5,
-          "preview": [
-            "probabilmente"
-          ],
+          "preview": ["probabilmente"],
           "percent_known_after": 1.5813253012048192,
           "smart_add_event": {
             "type": "Language",
@@ -222,11 +220,7 @@
           }
         ],
         "navigation": {
-          "categories": [
-            "essential",
-            "movie",
-            "pimsleur"
-          ],
+          "categories": ["essential", "movie", "pimsleur"],
           "selection": null,
           "selected_index": 0
         },
@@ -256,6 +250,7 @@
         ],
         "progress": {
           "percent_known": 0.0,
+          "caption": "0% known",
           "all_available_learned": false
         },
         "sentence_list_label": "Basic Italian Level 3",

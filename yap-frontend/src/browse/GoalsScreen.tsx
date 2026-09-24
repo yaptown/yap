@@ -149,11 +149,13 @@ export function GoalsScreen({
                   {curriculum.sentence_list_label}
                 </h3>
                 <Progress
-                  className="h-6"
                   value={curriculum.progress.percent_known}
-                  showPercentage
                   aria-label={curriculum.sentence_list_label}
+                  aria-valuetext={curriculum.progress.caption}
                 />
+                <p className="text-sm text-muted-foreground">
+                  {curriculum.progress.caption}
+                </p>
                 {curriculum.next_sentence_list && (
                   <Button
                     variant="outline"

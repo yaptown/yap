@@ -54,7 +54,7 @@ struct HomeScreen: View {
                                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
                             }
                             Button("\(view.up_next.ready_label) →") { navigate(.due) }
-                                .font(.subheadline).frame(maxWidth: .infinity)
+                                .font(.subheadline).foregroundStyle(Color.yapText).frame(maxWidth: .infinity)
                         }
                         Button { navigate(.goals) } label: {
                             StudyCard { GoalProgress(goal: view.goal) }
@@ -62,19 +62,19 @@ struct HomeScreen: View {
                         HStack(alignment: .top, spacing: 16) {
                             StudyCard {
                                 Text(view.streak.title).font(.subheadline).foregroundStyle(.secondary)
-                                Text(view.streak.days_label).font(.title2.bold())
+                                Text(view.streak.days_label).font(.title2.bold()).foregroundStyle(Color.yapText)
                                 Text(view.streak.today_label).font(.subheadline).foregroundStyle(.secondary)
                             }
                             Button { navigate(.stats) } label: {
                                 StudyCard {
                                     Text(view.stats.title).font(.subheadline).foregroundStyle(.secondary)
-                                    Text(view.stats.cards_label).font(.title2.bold())
+                                    Text(view.stats.cards_label).font(.title2.bold()).foregroundStyle(Color.yapText)
                                     Text(view.stats.percent_known_label).font(.subheadline).foregroundStyle(.secondary)
                                 }
                             }.buttonStyle(.plain)
                         }
                         StudyCard {
-                            Button(view.dictionary.title) { navigate(.dictionary()) }.font(.headline)
+                            Button(view.dictionary.title) { navigate(.dictionary()) }.font(.headline).foregroundStyle(Color.yapText)
                             HStack {
                                 TextField(view.dictionary.search_placeholder, text: $query)
                                     .textFieldStyle(.roundedBorder).submitLabel(.search)
@@ -129,7 +129,7 @@ struct GoalProgress: View {
     let goal: GoalCardView
     var body: some View {
         HStack {
-            Text(goal.title).font(.headline)
+            Text(goal.title).font(.headline).foregroundStyle(Color.yapText)
             Spacer()
             Text(goal.percent_label).font(.subheadline).foregroundStyle(.secondary)
         }

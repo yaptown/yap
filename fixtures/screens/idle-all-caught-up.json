@@ -17,13 +17,7 @@
           "smart_add_count": 5,
           "smart_add_regime": "General",
           "easy_cards_remaining": 0,
-          "preview": [
-            "bois",
-            "ecoute",
-            "vécu",
-            "dépêche-toi",
-            "commencé"
-          ],
+          "preview": ["bois", "ecoute", "vécu", "dépêche-toi", "commencé"],
           "percent_known_after": 11.27946127946128,
           "smart_add_event": {
             "type": "Language",
@@ -617,11 +611,7 @@
           }
         ],
         "navigation": {
-          "categories": [
-            "essential",
-            "movie",
-            "pimsleur"
-          ],
+          "categories": ["essential", "movie", "pimsleur"],
           "selection": null,
           "selected_index": 0
         },
@@ -651,6 +641,7 @@
         ],
         "progress": {
           "percent_known": 3.2445668809305177,
+          "caption": "3% known",
           "all_available_learned": false
         },
         "sentence_list_label": "Advanced French Level 11",
