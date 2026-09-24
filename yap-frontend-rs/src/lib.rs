@@ -6027,6 +6027,55 @@ mod tests {
         assert_eq!(added, 1);
     }
 
+    /// A `reviews` event written by a newer client (a higher `version` tag this build doesn't
+    /// know about yet) used to fail deserialization outright with "unknown variant". Because
+    /// per-device event indices must stay contiguous, that failure blocked every other event in
+    /// the same sync batch from ever being stored — not just the unrecognized one.
+    #[test]
+    fn future_versioned_deck_event_does_not_block_the_rest_of_the_batch() {
+        use weapon::data_model::{Event, EventType, LocalEventStore as EventStore, Timestamped};
+
+        let known_event = current::DeckEvent::Language(current::LanguageEvent {
+            target_language: language_utils::Language::French,
+            native_language: language_utils::Language::English,
+            content: current::LanguageEventContent::AddCards {
+                cards: Vec::new(),
+                sentence_list: None,
+            },
+        });
+        let known_value =
+            serde_json::to_value(EventType::User(known_event.to_versioned())).unwrap();
+
+        // Simulate an event written by a newer client with a schema this build doesn't know
+        // about yet (the real-world trigger: `beta.yap.town` running ahead of this build).
+        let mut future_value = known_value.clone();
+        future_value["User"]["version"] = serde_json::json!("V4");
+
+        let make_timestamped = |event: serde_json::Value, index: usize| Timestamped {
+            timestamp: Utc::now(),
+            within_device_events_index: index,
+            timezone: None,
+            event,
+        };
+
+        let mut store: EventStore<String, String> = EventStore::default();
+        store.get_or_insert_default::<EventType<DeckEvent>>("reviews".to_string(), None);
+
+        let added = store.add_device_events_jsons(
+            "reviews".to_string(),
+            "other-device".to_string(),
+            vec![
+                make_timestamped(known_value, 0),
+                make_timestamped(future_value, 1),
+            ],
+            None,
+        );
+        assert_eq!(
+            added, 2,
+            "the known event should not be dropped just because a later event in the same batch has an unrecognized version"
+        );
+    }
+
     /// E2E integration test: loads real weapon event data from disk,
     /// replays all events through the state machine, and verifies
     /// the computed deck state is sane.
