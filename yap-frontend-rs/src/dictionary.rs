@@ -495,7 +495,7 @@ mod tests {
         let event = weapon::data_model::Timestamped {
             timestamp: chrono::Utc::now(),
             within_device_events_index: 0,
-            timezone: Some(context.timezone),
+            timezone: context.timezone,
             event,
         };
         let state =
@@ -656,7 +656,7 @@ mod translation_sense_tests {
         let event = weapon::data_model::Timestamped {
             timestamp: chrono::Utc::now(),
             within_device_events_index: 0,
-            timezone: Some(context.timezone),
+            timezone: context.timezone,
             event,
         };
         let state =

@@ -400,7 +400,7 @@ impl<
             event: EventType::User(event.to_versioned()),
             timestamp,
             within_device_events_index,
-            timezone: Some(timezone),
+            timezone,
         };
 
         self.add_device_event(stream, device, versioned_event, modifier);

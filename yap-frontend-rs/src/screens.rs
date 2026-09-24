@@ -1438,7 +1438,7 @@ mod tests {
             &weapon::data_model::Timestamped {
                 timestamp: DateTime::from_timestamp_millis(inputs().timestamp_ms as i64).unwrap(),
                 within_device_events_index: 0,
-                timezone: Some(context.timezone),
+                timezone: context.timezone,
                 event,
             },
         );

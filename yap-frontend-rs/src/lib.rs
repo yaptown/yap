@@ -1271,10 +1271,7 @@ impl weapon::AppState for Deck {
         } = event;
         // Bucket this event by the user's local day *at the time it was created*, using the
         // timezone recorded on the event. This is more accurate than the current timezone for
-        // historical events (e.g. ones synced from another device or another locale). Events
-        // recorded before timezones existed have no offset; fall back to the deck's current
-        // timezone for those, preserving the pre-timezone bucketing of already-persisted history.
-        let timezone = timezone.unwrap_or(context.timezone);
+        // historical events (e.g. ones synced from another device or another locale).
 
         let DeckEvent::Language(LanguageEvent {
             target_language: event_language,
@@ -1297,7 +1294,7 @@ impl weapon::AppState for Deck {
             // Clear accomplishment on each review
             deck.accomplishment = None;
 
-            let day = timestamp.with_timezone(&timezone).date_naive();
+            let day = timestamp.with_timezone(timezone).date_naive();
             let time_before = deck
                 .stats
                 .today
@@ -1305,7 +1302,7 @@ impl weapon::AppState for Deck {
                 .filter(|t| t.day == day)
                 .map_or(0, |t| t.time_spent_seconds);
 
-            deck.update_daily_activity(timestamp, &timezone);
+            deck.update_daily_activity(timestamp, timezone);
             deck.stats.total_reviews += 1;
 
             if let Some(today) = &deck.stats.today {
@@ -1332,7 +1329,7 @@ impl weapon::AppState for Deck {
             LanguageEventContent::TranslationChallenge { .. }
             | LanguageEventContent::TranscriptionChallenge { .. } => {
                 let days_since_epoch = timestamp
-                    .with_timezone(&timezone)
+                    .with_timezone(timezone)
                     .date_naive()
                     .num_days_from_ce() as i64;
                 *deck
@@ -1902,7 +1899,7 @@ impl weapon::AppState for Deck {
                         deck.locked_cards.insert(*card);
                     }
                 }
-                deck.last_lock_day = Some(timestamp.with_timezone(&timezone).date_naive());
+                deck.last_lock_day = Some(timestamp.with_timezone(timezone).date_naive());
                 deck.last_lock_timestamp = Some(*timestamp);
             }
             LanguageEventContent::UnlockCards { cards } => {
@@ -5252,7 +5249,7 @@ mod tests {
         let ts = weapon::data_model::Timestamped {
             timestamp,
             within_device_events_index: 0,
-            timezone: Some(deck.context.timezone),
+            timezone: deck.context.timezone,
             event,
         };
         let context = deck.context.clone();
