@@ -1,15 +1,14 @@
-//! Run from the repo root: cargo run -p stroke-order --example diagnostics --
+//! Run from the repo root: cargo run -p stroke-order-sources --example diagnostics --
 //! <cache-dir> <samples-out-dir>
 use anyhow::{Context, Result, ensure};
-use language_utils::Language;
+use language_utils::{Language, StrokeGlyph, StrokeStandard};
 use std::{
     collections::BTreeMap,
     fmt::Write,
     io::{Cursor, Read},
     path::{Path, PathBuf},
 };
-use stroke_order::{ANIMCJK_URL, Glyphs, KANJIVG_URL, MMAH_URL, SCRIBING_URL};
-use stroke_order::{StrokeGlyph, StrokeStandard};
+use stroke_order_sources::{ANIMCJK_URL, Glyphs, KANJIVG_URL, MMAH_URL, SCRIBING_URL};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -47,10 +46,10 @@ async fn main() -> Result<()> {
         let filename = format!(
             "{name}-{}.bin",
             match standard {
-                StrokeStandard::Japan => stroke_order::KANJIVG_COMMIT,
-                StrokeStandard::Prc => stroke_order::MMAH_COMMIT,
-                StrokeStandard::Taiwan => stroke_order::ANIMCJK_COMMIT,
-                StrokeStandard::Korea => stroke_order::SCRIBING_COMMIT,
+                StrokeStandard::Japan => stroke_order_sources::KANJIVG_COMMIT,
+                StrokeStandard::Prc => stroke_order_sources::MMAH_COMMIT,
+                StrokeStandard::Taiwan => stroke_order_sources::ANIMCJK_COMMIT,
+                StrokeStandard::Korea => stroke_order_sources::SCRIBING_COMMIT,
                 StrokeStandard::Devanagari
                 | StrokeStandard::Thai
                 | StrokeStandard::Latin
@@ -59,11 +58,11 @@ async fn main() -> Result<()> {
         );
         let bytes = fetch(filename, url).await?;
         let map = if standard == StrokeStandard::Japan {
-            stroke_order::parse_kanjivg(&bytes)?
+            stroke_order_sources::parse_kanjivg(&bytes)?
         } else if standard == StrokeStandard::Korea {
-            stroke_order::parse_scribing(&bytes)?
+            stroke_order_sources::parse_scribing(&bytes)?
         } else {
-            stroke_order::parse_medians(&bytes, standard)?
+            stroke_order_sources::parse_medians(&bytes, standard)?
         };
         println!(
             "{name}: {} glyphs, {} strokes; all points finite/in box, all strokes >=2 points",
@@ -72,11 +71,16 @@ async fn main() -> Result<()> {
         );
         if standard == StrokeStandard::Korea {
             ensure!(map.len() == 40, "Korean jamo");
-            // Syllables are composed on demand: check a spread of them.
-            let pack =
-                stroke_order::load(Language::Korean, |_| std::future::ready(Ok(bytes.clone())))
-                    .await?;
+            // Compose a spread of syllables and the rendered samples at build time.
             let sampled: Vec<char> = ('가'..='힣').step_by(97).chain(['힣']).collect();
+            let text: String = sampled.iter().collect();
+            let table = stroke_order_sources::table(
+                Language::Korean,
+                [text.as_str(), sample_chars(name)],
+                |_| std::future::ready(Ok(bytes.clone())),
+            )
+            .await?;
+            let pack = stroke_order::StrokePack::new(Language::Korean.writing_system(), table);
             for &c in &sampled {
                 let glyph = pack
                     .glyphs(&c.to_string())
@@ -192,12 +196,7 @@ fn samples(out: &Path, name: &str, glyph: impl Fn(char) -> Option<StrokeGlyph>) 
         _ => "Taiwan",
     });
     std::fs::create_dir_all(&dir)?;
-    let chars = match name {
-        "kanjivg" => "一丨あア永語",
-        "mmah" => "一丨永你国汉",
-        "scribing" => "ㄱㅏ한글뭐왜꽃닭값앉훑쒜",
-        _ => "一丨永你國漢",
-    };
+    let chars = sample_chars(name);
     for c in chars.chars() {
         let glyph = glyph(c).context("missing sample glyph")?;
         let svg = render_svg(c, &glyph)?;
@@ -238,4 +237,13 @@ fn render_svg(c: char, glyph: &StrokeGlyph) -> Result<String> {
         glyph.standard
     )?;
     Ok(svg)
+}
+
+fn sample_chars(name: &str) -> &'static str {
+    match name {
+        "kanjivg" => "一丨あア永語",
+        "mmah" => "一丨永你国汉",
+        "scribing" => "ㄱㅏ한글뭐왜꽃닭값앉훑쒜",
+        _ => "一丨永你國漢",
+    }
 }

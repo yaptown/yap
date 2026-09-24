@@ -56,3 +56,10 @@ pub struct StrokeGlyph {
     pub standard: StrokeStandard,
     pub strokes: Vec<Stroke>,
 }
+
+/// The stroke data a language pack carries: each writable unit (see
+/// `stroke_order::segment`) that a downloaded source draws, with every
+/// accepted form, the taught form first. Scripts drawn in code (Devanagari,
+/// Thai, Latin, Cyrillic, punctuation) are not stored; `stroke_order`
+/// regenerates them.
+pub type StrokeTable = rustc_hash::FxHashMap<String, Vec<StrokeGlyph>>;

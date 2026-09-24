@@ -4,7 +4,9 @@ pub mod language_pack;
 pub use language_pack::PACKS_ORIGIN;
 pub mod minimal_pairs;
 pub mod profile;
+pub mod strokes;
 pub mod text_cleanup;
+pub use strokes::{Stroke, StrokeGlyph, StrokeStandard, StrokeTable};
 
 use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;

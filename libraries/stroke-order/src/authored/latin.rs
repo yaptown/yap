@@ -63,7 +63,8 @@
 //! increasing angles draw a counterclockwise ("circle back") curve and
 //! decreasing ones a clockwise ("circle forward") curve.
 use super::{Coord, Pt, collect, dist, glyph, pt};
-use crate::{Forms, StrokeStandard};
+use crate::Forms;
+use language_utils::StrokeStandard;
 use unicode_normalization::UnicodeNormalization;
 
 pub(super) const ASC: i32 = 150;

@@ -6277,17 +6277,25 @@ name = "stroke-order"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bridgerton",
+ "language-utils",
+ "rustc-hash",
+ "unicode-normalization",
+]
+
+[[package]]
+name = "stroke-order-sources"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
  "language-utils",
  "reqwest 0.13.4",
- "rkyv 0.8.14",
  "roxmltree",
  "rustc-hash",
  "serde",
  "serde_json",
+ "stroke-order",
  "svgtypes",
  "tokio",
- "unicode-normalization",
  "zip",
 ]
 

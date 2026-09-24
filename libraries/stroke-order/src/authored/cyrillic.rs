@@ -73,7 +73,8 @@
 //! differs from print only by joining strokes (а к н о с ф э ю я, Г П) have
 //! no form of their own.
 use super::{Pt, Strokes, collect, glyph};
-use crate::{Forms, StrokeStandard};
+use crate::Forms;
+use language_utils::StrokeStandard;
 
 // Writing frame (y down).
 /// Ascender line: б flag, ф stem, lowercase dots and breve.

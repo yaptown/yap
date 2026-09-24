@@ -96,7 +96,8 @@
 use super::{
     CORNER, Draw, Ends, Item, Pt, Strokes, bounds, centripetal, collect, corner_runs, glyph, group, items, pts,
 };
-use crate::{Forms, StrokeGlyph, StrokeStandard};
+use crate::Forms;
+use language_utils::{StrokeGlyph, StrokeStandard};
 use rustc_hash::FxHashMap;
 
 /// Writing units -> 1000-unit box.
@@ -1553,11 +1554,11 @@ mod tests {
     }
 
     /// The box y range of some of a glyph's strokes.
-    fn ys(g: &StrokeGlyph, strokes: impl std::slice::SliceIndex<[crate::Stroke], Output = [crate::Stroke]>) -> (f32, f32) {
+    fn ys(g: &StrokeGlyph, strokes: impl std::slice::SliceIndex<[language_utils::Stroke], Output = [language_utils::Stroke]>) -> (f32, f32) {
         g.strokes[strokes].iter().flat_map(|s| &s.points).fold((1.0, 0.0), |(a, b), p| (a.min(p.1), b.max(p.1)))
     }
 
-    fn xs(g: &StrokeGlyph, strokes: impl std::slice::SliceIndex<[crate::Stroke], Output = [crate::Stroke]>) -> (f32, f32) {
+    fn xs(g: &StrokeGlyph, strokes: impl std::slice::SliceIndex<[language_utils::Stroke], Output = [language_utils::Stroke]>) -> (f32, f32) {
         g.strokes[strokes].iter().flat_map(|s| &s.points).fold((1.0, 0.0), |(a, b), p| (a.min(p.0), b.max(p.0)))
     }
 

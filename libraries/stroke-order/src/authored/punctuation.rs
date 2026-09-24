@@ -40,7 +40,8 @@
 //! out.
 use super::latin::{ASC, BASE, CAP, DESC, Pen, X_MID, dot, line};
 use super::{Pt, collect, glyph};
-use crate::{Forms, StrokeStandard};
+use crate::Forms;
+use language_utils::StrokeStandard;
 
 pub fn glyphs() -> Forms {
     let mut forms = collect(MARKS.iter().map(|&(c, draw)| {

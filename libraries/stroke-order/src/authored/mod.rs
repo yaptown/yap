@@ -31,7 +31,8 @@ pub mod punctuation;
 #[rustfmt::skip]
 pub mod thai;
 
-use crate::{Forms, Stroke, StrokeGlyph, StrokeStandard, validate};
+use crate::{Forms, validate};
+use language_utils::{Stroke, StrokeGlyph, StrokeStandard};
 use rustc_hash::FxHashMap;
 
 /// What text in any language contains besides its script: Latin letters,

@@ -132,7 +132,7 @@
 //!   ं ँ.
 //! - रु and रू attach to the middle of र, as every Hindi primer shows them.
 use super::{Ends, Pt, Strokes, bounds, centripetal, glyph, group, strokes};
-use crate::{StrokeGlyph, StrokeStandard};
+use language_utils::{StrokeGlyph, StrokeStandard};
 use rustc_hash::FxHashMap;
 
 const HEADLINE: i32 = 150;

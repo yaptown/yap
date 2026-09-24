@@ -1,6 +1,8 @@
-use crate::{Glyphs, Stroke, StrokeGlyph, StrokeStandard, validate};
+use crate::Glyphs;
 use anyhow::{Context, Result, ensure};
+use language_utils::{Stroke, StrokeGlyph, StrokeStandard};
 use serde::Deserialize;
+use stroke_order::validate;
 
 const INITIALS: &str = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
 const MEDIALS: &str = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ";

@@ -1,7 +1,7 @@
 //! Renders a text's writable units as an SVG that draws each stroke in
 //! order, so a pack can be eyeballed without any host app.
 //!
-//! cargo run -p stroke-order --example svg -- <cache-dir> <out.svg> <lang code> <text>...
+//! cargo run -p stroke-order-sources --example svg -- <cache-dir> <out.svg> <lang code> <text>...
 //!
 //! Each argument after the language code is one line. Strokes are numbered at
 //! their start and animate in writing order; opening the SVG in a browser
@@ -25,19 +25,21 @@ async fn main() -> Result<()> {
     let cache = PathBuf::from(&args[0]);
     std::fs::create_dir_all(&cache)?;
     let language = Language::from_code(&args[2]).context("unknown language code")?;
-    let pack = stroke_order::load(language, |url| {
-        let path = cache.join(url.rsplit('/').next().unwrap());
-        async move {
-            if path.exists() {
-                return Ok(std::fs::read(path)?);
+    let table =
+        stroke_order_sources::table(language, args[3..].iter().map(String::as_str), |url| {
+            let path = cache.join(url.rsplit('/').next().unwrap());
+            async move {
+                if path.exists() {
+                    return Ok(std::fs::read(path)?);
+                }
+                let bytes = reqwest::get(url).await?.error_for_status()?.bytes().await?;
+                std::fs::write(&path, &bytes)?;
+                Ok(bytes.to_vec())
             }
-            let bytes = reqwest::get(url).await?.error_for_status()?.bytes().await?;
-            std::fs::write(&path, &bytes)?;
-            Ok(bytes.to_vec())
-        }
-    })
-    .await?;
+        })
+        .await?;
 
+    let pack = stroke_order::StrokePack::new(language.writing_system(), table);
     let lines = &args[3..];
     let cell = 100.0;
     let width = lines

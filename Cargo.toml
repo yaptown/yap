@@ -6,6 +6,7 @@ members = [
     "generate-data",
     "language-utils",
     "libraries/stroke-order",
+    "libraries/stroke-order-sources",
     "yap-frontend-rs",
     "yap-frontend-reducers",
     "libraries/autograde-core",
