@@ -5,6 +5,7 @@ func gramText(_ gram: [Literal_String]) -> String {
 }
 
 struct FlashcardChallengeView: View {
+    @Environment(BackgroundController.self) private var background
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewScreen!) private var screen
     @Environment(\.reviewHost!) private var host
@@ -129,6 +130,7 @@ struct FlashcardChallengeView: View {
     }
     private func rate(_ rating: Rating) {
         guard canGrade, !actions.submitting else { return }
+        background.bump(30)
         audio.stop()
         actions.rate(indicator, rating)
         if rating != .Again { audio.playEffect("success-\(Int.random(in: 1...3))") }

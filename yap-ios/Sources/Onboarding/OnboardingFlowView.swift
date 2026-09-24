@@ -39,11 +39,11 @@ struct OnboardingFlowView: View {
                     }
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(!primary.enabled)
                         .padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-                        .background(Color(uiColor: .systemGroupedBackground))
+                        .background(.ultraThinMaterial)
                 }
             }.onChange(of: state.step_index) { _, _ in proxy.scrollTo("top", anchor: .top) }
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(.clear)
         .navigationTitle(view.navigation_title)
         .navigationBarTitleDisplayMode(.inline)
         #if DEBUG

@@ -97,7 +97,7 @@ struct HomeScreen: View {
                     }.padding(20).frame(maxWidth: 600)
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height)
                 }
-            }.background(Color(uiColor: .systemGroupedBackground))
+            }.background(.clear)
                 .navigationTitle("Yap.Town")
                 #if DEBUG
                 .onChange(of: DebugHarness.shared.commandID) { _, _ in

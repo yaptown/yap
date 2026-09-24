@@ -23,7 +23,7 @@ struct GoalsScreen: View {
                     Text(view.curriculum.title).font(.title2.bold())
                     curriculum(view)
                 }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-            }.background(Color(uiColor: .systemGroupedBackground)).navigationTitle(view.title)
+            }.background(.clear).navigationTitle(view.title)
                 .safeAreaInset(edge: .bottom) {
                     if let commit = view.curriculum.switch_curriculum {
                         Button(commit.label) { actions.commitSentenceList(commit.event) }

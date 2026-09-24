@@ -56,7 +56,7 @@ struct ReviewScreen: View {
             }
         }
         .environment(\.reviewScreen, view)
-        .background(Color(uiColor: .systemGroupedBackground))
+        .background(.clear)
         .navigationTitle("Review")
         .navigationBarTitleDisplayMode(.inline)
         .onDisappear { audio.stop() }
@@ -99,7 +99,7 @@ struct ReviewStepScrollView<Content: View, Actions: View>: View {
             VStack(spacing: 12, content: content).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
         }.safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 12, content: actions).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
-                .background(Color(uiColor: .systemGroupedBackground))
+                .background(.ultraThinMaterial)
         }
     }
 }

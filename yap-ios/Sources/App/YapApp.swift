@@ -3,6 +3,7 @@ import SwiftUI
 @main struct YapApp: App {
     @State private var auth: AuthStore
     @State private var audio: AudioPlayer
+    @State private var background = BackgroundController()
     @State private var authSheet = AuthSheet()
     @State private var sessions = SessionLifecycle()
     init() {
@@ -14,6 +15,7 @@ import SwiftUI
     var body: some Scene {
         WindowGroup {
             ZStack {
+                AnimatedBackground()
                 if auth.restoring { ProgressView("Restoring your session…") }
                 else if let session = sessions.session {
                     SessionRoot(session: session, auth: auth).id(session.userId ?? "anon")
@@ -27,7 +29,7 @@ import SwiftUI
                 sessions.changeIdentity(auth: auth)
             }
             .sheet(isPresented: $authSheet.isPresented) { SignInView() }
-            .environment(auth).environment(audio).environment(authSheet).tint(.yapAccent)
+            .environment(background).environment(auth).environment(audio).environment(authSheet).tint(.yapAccent)
             #if DEBUG
             .task { await DebugHarness.shared.start(auth: auth) }
             .onChange(of: DebugHarness.shared.commandID) { _, _ in
@@ -52,7 +54,7 @@ struct SessionRoot: View {
         Group {
             Group {
                 if session.choosingCourse {
-                    Color(uiColor: .systemGroupedBackground)
+                    Color.clear
                 } else if session.onboardingCourse != nil {
                     NavigationStack { CoursePickerView(session: session) }
                 } else {

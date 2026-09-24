@@ -12,7 +12,7 @@ struct DueWordsScreen: View {
                     Text(view.summary_label).foregroundStyle(.secondary)
                     CardSummaryList(cards: view.cards, timestampMs: now)
                 }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-            }.background(Color(uiColor: .systemGroupedBackground)).navigationTitle(view.title)
+            }.background(.clear).navigationTitle(view.title)
             #if DEBUG
             .onChange(of: DebugHarness.shared.commandID) { _, _ in
                 let command = DebugHarness.shared.command

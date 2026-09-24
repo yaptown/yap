@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TranscriptionChallengeView: View {
+    @Environment(BackgroundController.self) private var background
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewScreen!) private var screen
     @Environment(\.reviewHost!) private var host
@@ -176,6 +177,7 @@ struct TranscriptionChallengeView: View {
         for effect in step.effects {
             switch effect {
             case let .Autograde(submission):
+                background.bump(30)
                 let course = Course(native_language: screen.native_language, target_language: screen.target_language)
                 focused = nil
                 gradingTask?.cancel()
@@ -193,7 +195,7 @@ struct TranscriptionChallengeView: View {
                 case .Success: audio.playEffect("success-1")
                 }
             case let .Complete(results, completedAtMs):
-                if actions.completeTranscription(results, completedAtMs) { storage?.clear(); audio.stop() }
+                if actions.completeTranscription(results, completedAtMs) { background.bump(30); storage?.clear(); audio.stop() }
             }
         }
     }

@@ -36,6 +36,7 @@ struct DictionaryScreen: View {
                 if entries.isEmpty { ContentUnavailableView.search(text: query) }
             } header: { Text("\(entries.count) results · \(deck.get_gram_dictionary_count()) dictionary entries") }
         }
+        .scrollContentBackground(.hidden)
         .navigationTitle("Dictionary")
         .searchable(text: $query, prompt: "Search words or meanings")
         .navigationDestination(isPresented: Binding(get: { !path.isEmpty }, set: { if !$0 { path = [] } })) {
@@ -97,7 +98,7 @@ private struct DictionaryDetail: View {
                     }
                 }.padding(20)
             }
-        }.background(Color(uiColor: .systemGroupedBackground)).navigationTitle("Definition").navigationBarTitleDisplayMode(.inline)
+        }.background(.clear).navigationTitle("Definition").navigationBarTitleDisplayMode(.inline)
         .onDisappear { audio.stop() }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in

@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsScreen: View {
     @Environment(AuthStore.self) private var auth
     @Environment(AuthSheet.self) private var authSheet
+    @AppStorage("yap-animated-background") private var animatedBackground = true
     let session: YapSession
     @State private var name = ""
     @State private var saving = false
@@ -50,13 +51,14 @@ struct SettingsScreen: View {
             } else {
                 Section { Button(account_copy().sign_in_action) { authSheet.present(tab: .signIn) } }
             }
+            Section("Appearance") { Toggle("Animated background", isOn: $animatedBackground) }
             Section("Course") { Button("Switch course") { session.choosingCourse = true } }
             Section("About") {
                 LabeledContent("Yap version", value: get_app_version())
                 Link("Privacy policy", destination: URL(string: "https://yap.town/privacy")!)
                 Link("Terms", destination: URL(string: "https://yap.town/terms")!)
             }
-        }.navigationTitle("Settings")
+        }.scrollContentBackground(.hidden).navigationTitle("Settings")
             .onAppear { name = auth.displayName ?? "" }
             .onChange(of: auth.displayName) { old, new in if name == (old ?? "") { name = new ?? "" } }
         #if DEBUG

@@ -1,15 +1,14 @@
 // Background shader worker - handles all canvas rendering off the main thread
 
-import {
-  calculateColors,
-  getFallbackRgb,
-  type ShaderTheme,
-} from "../lib/shader-colors";
+import type { ShaderTheme } from "../lib/shader-colors";
+import type { BackgroundPalette } from "yap-frontend-rs";
+import fragmentShaderSrc from "./background.generated.frag?raw";
 
 interface WorkerMessage {
   type: string;
   canvas?: OffscreenCanvas;
   theme?: ShaderTheme;
+  palette?: BackgroundPalette;
   width?: number;
   height?: number;
   devicePixelRatio?: number;
@@ -18,7 +17,7 @@ interface WorkerMessage {
   y?: number;
 }
 
-let gl: WebGLRenderingContext | null = null;
+let gl: WebGL2RenderingContext | null = null;
 let canvas: OffscreenCanvas | null = null;
 let currentTheme: ShaderTheme = "dark";
 let animationFrameId: number | null = null;
@@ -76,7 +75,7 @@ function zeno(
 }
 
 function createShader(
-  gl: WebGLRenderingContext,
+  gl: WebGL2RenderingContext,
   type: number,
   source: string,
 ): WebGLShader | null {
@@ -93,7 +92,7 @@ function createShader(
 }
 
 function createProgram(
-  gl: WebGLRenderingContext,
+  gl: WebGL2RenderingContext,
   vertexShader: WebGLShader,
   fragmentShader: WebGLShader,
 ): WebGLProgram | null {
@@ -124,15 +123,20 @@ function fit(width: number, height: number, devicePixelRatio: number) {
 function initWebGL(
   offscreenCanvas: OffscreenCanvas,
   theme: ShaderTheme,
+  palette: BackgroundPalette,
   width: number,
   height: number,
   devicePixelRatio: number,
 ) {
   canvas = offscreenCanvas;
   currentTheme = theme;
+  canvas.addEventListener("webglcontextlost", () => {
+    if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+    self.postMessage({ type: "unavailable" });
+  });
   fit(width, height, devicePixelRatio);
 
-  gl = canvas.getContext("webgl", {
+  gl = canvas.getContext("webgl2", {
     alpha: false,
     antialias: false,
     depth: false,
@@ -149,241 +153,17 @@ function initWebGL(
   // Immediately clear to the theme's fallback color so the canvas isn't black
   // while the shaders compile
   {
-    const [r, g, b] = getFallbackRgb(theme);
+    const { r, g, b } = palette.fallback;
     gl.clearColor(r, g, b, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
-  const vertexShaderSrc = `
-    attribute vec2 a_position;
-    varying vec2 v_uv;
+  const vertexShaderSrc = `#version 300 es
+    in vec2 a_position;
+    out vec2 _vs2fs_location0;
     void main() {
-      v_uv = a_position * 0.5 + 0.5;
+      _vs2fs_location0 = a_position * 0.5 + 0.5;
       gl_Position = vec4(a_position, 0.0, 1.0);
-    }
-  `;
-
-  const fragmentShaderSrc = `
-    precision mediump float;
-
-    varying vec2 v_uv;
-    uniform float u_time;
-    uniform vec2 u_resolution;
-    uniform float u_numBands;
-    uniform vec3 u_colors[16]; // Pre-calculated colors (max 16 bands)
-    uniform float u_isDark; // 1.0 for waves+glow (dark/oled), 0.0 for metaballs (light)
-    uniform float u_oled; // 1.0 for OLED (pure black base), 0.0 otherwise
-    uniform vec2 u_mouse; // Normalized mouse position (0..1), drives the sun anchor
-
-    #define PI 3.14159265359
-    #define TAU 6.28318530718
-
-    // === Smooth blob with extended tail (light/oled themes) ===
-    float blob(vec2 uv, vec2 center, float radius) {
-      float d = distance(uv, center);
-      float t = 1.0 - smoothstep(0.0, radius * 2.0, d);
-      return t * t;
-    }
-
-    // Single gentle swell shared by all layers.
-    float sharedWave(float x, float t) {
-      return 0.04 * sin(x * 4.8 - t * 0.08);
-    }
-
-    // Two-octave sine ridge.
-    float layerHeight(float x, float baseY, float amp, float freq, float phase) {
-      float h = sin(x * freq + phase)
-              + 0.4 * sin(x * freq * 2.17 + phase * 1.7 + 1.3);
-      return baseY + amp * h / 1.4;
-    }
-
-    // Map a 0..1 point into the same aspect-corrected space used by uvAspect,
-    // so distances are measured on a common coordinate system regardless of
-    // orientation. Keep everything that feeds into lightDist/facing going
-    // through this helper.
-    vec2 toAspect(vec2 p, float aspect) {
-      return aspect > 1.0 ? vec2(p.x * aspect, p.y) : vec2(p.x, p.y / aspect);
-    }
-
-    // Deterministic pseudo-random in [0, 1) from a 2D coordinate.
-    float hash21(vec2 p) {
-      p = fract(p * vec2(443.897, 441.423));
-      p += dot(p, p + 19.19);
-      return fract(p.x * p.y);
-    }
-
-    // Smooth value noise: bilinear interpolation of hash values on a grid,
-    // with smoothstep-eased interpolation weights.
-    float valueNoise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
-      f = f * f * (3.0 - 2.0 * f);
-      float a = hash21(i);
-      float b = hash21(i + vec2(1.0, 0.0));
-      float c = hash21(i + vec2(0.0, 1.0));
-      float d = hash21(i + vec2(1.0, 1.0));
-      return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-    }
-
-    // Fractal Brownian motion: 4 octaves of value noise at halving amplitude
-    // and doubling frequency — smoothly varying low-frequency noise.
-    float fbm(vec2 p) {
-      float v = 0.0;
-      float a = 0.5;
-      for (int i = 0; i < 4; i++) {
-        v += a * valueNoise(p);
-        p *= 2.0;
-        a *= 0.5;
-      }
-      return v;
-    }
-
-    void main() {
-      vec2 uv = v_uv;
-      float aspect = u_resolution.x / u_resolution.y;
-      vec2 uvAspect = toAspect(uv, aspect);
-
-      float t = u_time;
-      float value = 0.0;
-
-      if (u_isDark > 0.5) {
-        // ===== Dark theme: layered sine mountains lit by the cursor =====
-        // u_time accumulates in ms-scale via the render loop's speed factor;
-        // convert to a seconds-ish scale for the per-layer drift.
-        float iTime = t * 0.001;
-
-        vec3 baseCol = mix(vec3(14.0, 7.0, 16.0) / 255.0, vec3(0.0), u_oled);
-        vec3 haloCol = vec3(128.0, 46.0, 84.0) / 255.0;
-        vec3 hotCol  = vec3(226.0, 128.0, 162.0) / 255.0;
-        vec3 lineCol = vec3(210.0, 108.0, 146.0) / 255.0;
-
-        vec2 lightAnchor = toAspect(u_mouse, aspect);
-        float lightDist = distance(uvAspect, lightAnchor);
-        // Tighter falloff for OLED — keeps most of the screen pure black.
-        float haloRadius = mix(1.0, 0.5, u_oled);
-        float coreRadius = mix(0.28, 0.18, u_oled);
-        float lightInfluence = 1.0 - smoothstep(0.0, haloRadius, lightDist);
-        lightInfluence *= lightInfluence;
-        float lightCore = 1.0 - smoothstep(0.0, coreRadius, lightDist);
-        lightCore = lightCore * lightCore * lightCore;
-
-        vec3 col = baseCol * 0.45;
-
-        float baseY[4]; float amp[4]; float freq[4]; float phase[4];
-        float rimDepth[4]; float rimBoost[4];
-
-        baseY[0] = 0.70; amp[0] = 0.16; freq[0] = 1.4; phase[0] = 0.3 + iTime * 0.07;
-        baseY[1] = 0.40; amp[1] = 0.07; freq[1] = 3.6; phase[1] = 1.7 - iTime * 0.11;
-        baseY[2] = 0.28; amp[2] = 0.07; freq[2] = 3.0; phase[2] = 0.9 - iTime * 0.05;
-        baseY[3] = 0.17; amp[3] = 0.05; freq[3] = 4.6; phase[3] = 4.2 + iTime * 0.13;
-
-        rimDepth[0] = 0.12; rimDepth[1] = 0.07; rimDepth[2] = 0.07; rimDepth[3] = 0.06;
-        rimBoost[0] = 0.11; rimBoost[1] = 0.06; rimBoost[2] = 0.07; rimBoost[3] = 0.08;
-
-        for (int i = 0; i < 4; i++) {
-          float h = layerHeight(uv.x, baseY[i], amp[i], freq[i], phase[i]) + sharedWave(uv.x, iTime);
-
-          // Numerical slope of the full ridge (both octaves + shared wave).
-          // Cheaper to write than to differentiate by hand and automatically
-          // correct if layerHeight or sharedWave changes.
-          float eps = 0.001;
-          float hLeft  = layerHeight(uv.x - eps, baseY[i], amp[i], freq[i], phase[i]) + sharedWave(uv.x - eps, iTime);
-          float hRight = layerHeight(uv.x + eps, baseY[i], amp[i], freq[i], phase[i]) + sharedWave(uv.x + eps, iTime);
-          vec2 normal = normalize(vec2(-(hRight - hLeft) / (2.0 * eps), 1.0));
-
-          // Direction from the ridge point toward the light (aspect-corrected).
-          vec2 toLight = normalize(lightAnchor - toAspect(vec2(uv.x, h), aspect));
-          float facing = max(dot(normal, toLight), 0.0);
-
-          // Rim glow just above the ridge.
-          if (uv.y >= h && uv.y < h + rimDepth[i]) {
-            float ht = 1.0 - clamp((uv.y - h) / rimDepth[i], 0.0, 1.0);
-            ht = ht * ht * ht;
-            float haloFactor = 0.02 + 1.1 * lightInfluence * facing;
-            col += mix(haloCol, hotCol, lightCore * 0.6) * (rimBoost[i] * ht * haloFactor);
-          }
-
-          // Mountain body.
-          if (uv.y < h) {
-            float depthWeight = 0.4 + 0.6 * (float(i) / 3.0);
-            float gradMul = 0.75 + 0.25 * clamp((h - uv.y) / 0.25, 0.0, 1.0);
-            vec3 body = baseCol * gradMul;
-            // Warm body-lift is purple-theme only — in OLED the body stays black
-            // so only the ridge halos read as the "sun".
-            body += haloCol * lightInfluence * 0.08 * depthWeight * (1.0 - u_oled);
-            col = body;
-          }
-
-          // Thin hairline ridge, only on light-facing slopes.
-          float lineFalloff = lightInfluence * facing;
-          lineFalloff *= lineFalloff;
-          float lineWidth = 0.35 / u_resolution.y;
-          float lineSoftEdge = 2.5 / u_resolution.y;
-          float lineMask = 1.0 - smoothstep(lineWidth, lineWidth + lineSoftEdge, abs(uv.y - h));
-          col = mix(col, lineCol, lineMask * lineFalloff * 0.38);
-        }
-
-        // Faint atmospheric haze: low-frequency fBm that slightly lifts darks,
-        // cool in unlit areas and warm near the light.
-        float haze = fbm(uv * 2.5 + vec2(iTime * 0.02, 0.0));
-        vec3 hazeTint = mix(baseCol * 0.5, haloCol * 0.35, lightInfluence * 0.5);
-        col += hazeTint * haze * 0.05;
-
-        gl_FragColor = vec4(col, 1.0);
-        return;
-      }
-
-      // ===== Light / OLED themes: original metaballs =====
-      const int NUM_BLOBS = 6;
-      vec2 basePos[6];
-      float radius[6];
-      vec2 phase[6];
-      float weight[6];
-
-      basePos[0] = vec2(0.3, 0.3);   radius[0] = 0.35; phase[0] = vec2(0.0, 0.5);   weight[0] = 1.0;
-      basePos[1] = vec2(0.75, 0.35); radius[1] = 0.32; phase[1] = vec2(1.0, 0.0);   weight[1] = 0.95;
-      basePos[2] = vec2(0.5, 0.75);  radius[2] = 0.34; phase[2] = vec2(2.0, 1.5);   weight[2] = 1.0;
-      basePos[3] = vec2(0.18, 0.65); radius[3] = 0.3;  phase[3] = vec2(0.5, 2.0);   weight[3] = 0.9;
-      basePos[4] = vec2(0.85, 0.8);  radius[4] = 0.32; phase[4] = vec2(1.5, 0.3);   weight[4] = 0.9;
-      basePos[5] = vec2(0.12, 0.15); radius[5] = 0.28; phase[5] = vec2(2.2, 1.8);   weight[5] = 0.85;
-
-      for (int i = 0; i < NUM_BLOBS; i++) {
-        vec2 offset = vec2(
-          sin(t * 0.0003 + phase[i].x) * 0.14,
-          cos(t * 0.00025 + phase[i].y) * 0.14
-        );
-
-        vec2 pos = toAspect(basePos[i] + offset, aspect);
-
-        float influence = blob(uvAspect, pos, radius[i]);
-        value += influence * weight[i];
-      }
-
-      // Slow-moving background variation
-      float bgWave = sin(uv.x * 2.5 + t * 0.00008) * 0.5 + 0.5;
-      bgWave *= sin(uv.y * 2.0 + t * 0.00006) * 0.5 + 0.5;
-      float baseVariation = bgWave * 0.4;
-
-      value = max(value, baseVariation * (1.0 - value * 0.8));
-      value = clamp(value, 0.0, 0.99);
-
-      float band = floor(value * u_numBands) / u_numBands;
-      int bandIndex = int(band * u_numBands);
-
-      vec3 color = u_colors[0];
-      if (bandIndex == 1) color = u_colors[1];
-      else if (bandIndex == 2) color = u_colors[2];
-      else if (bandIndex == 3) color = u_colors[3];
-      else if (bandIndex == 4) color = u_colors[4];
-      else if (bandIndex == 5) color = u_colors[5];
-      else if (bandIndex == 6) color = u_colors[6];
-      else if (bandIndex == 7) color = u_colors[7];
-      else if (bandIndex >= 8) color = u_colors[7];
-
-      float vignette = 1.0 - smoothstep(0.5, 1.5, length(v_uv - 0.5) * 1.3);
-      color *= 0.94 + 0.06 * vignette;
-
-      gl_FragColor = vec4(color, 1.0);
     }
   `;
 
@@ -407,13 +187,50 @@ function initWebGL(
   );
 
   const positionLocation = gl.getAttribLocation(program, "a_position");
-  const timeLocation = gl.getUniformLocation(program, "u_time");
-  const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
-  const numBandsLocation = gl.getUniformLocation(program, "u_numBands");
-  const colorsLocation = gl.getUniformLocation(program, "u_colors");
-  const isDarkLocation = gl.getUniformLocation(program, "u_isDark");
-  const oledLocation = gl.getUniformLocation(program, "u_oled");
-  const mouseLocation = gl.getUniformLocation(program, "u_mouse");
+  // Naga emits one std140 Params block. Reflect its size/offsets on the
+  // actual GL driver, rather than relying only on WGSL's matching layout.
+  const offsets: Record<string, number> = {
+    time: 0,
+    resolution: 8,
+    mouse: 16,
+    is_dark: 24,
+    oled: 28,
+    num_bands: 32,
+    "colors[0]": 48,
+  };
+  if (
+    gl.getProgramParameter(program, gl.ACTIVE_UNIFORM_BLOCKS) !== 1 ||
+    gl.getActiveUniformBlockParameter(
+      program,
+      0,
+      gl.UNIFORM_BLOCK_DATA_SIZE,
+    ) !== 176
+  ) {
+    throw new Error("Generated background uniform block layout changed");
+  }
+  const indices = Array.from(
+    gl.getActiveUniformBlockParameter(
+      program,
+      0,
+      gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
+    ) as Uint32Array,
+  );
+  const actualOffsets = gl.getActiveUniforms(
+    program,
+    indices,
+    gl.UNIFORM_OFFSET,
+  ) as number[];
+  for (const [i, index] of indices.entries()) {
+    const name = gl.getActiveUniform(program, index)!.name.split(".").pop()!;
+    if (offsets[name] !== actualOffsets[i])
+      throw new Error("Generated background uniform offset changed: " + name);
+  }
+  const uniforms = new Float32Array(44);
+  const uniformBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.UNIFORM_BUFFER, uniformBuffer);
+  gl.bufferData(gl.UNIFORM_BUFFER, uniforms.byteLength, gl.DYNAMIC_DRAW);
+  gl.uniformBlockBinding(program, 0, 0);
+  gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, uniformBuffer);
 
   let elapsedTime = 0;
   let lastFrameTime = performance.now();
@@ -424,10 +241,10 @@ function initWebGL(
   const SPEED_THRESHOLD = 0.0005;
   const COLOR_THRESHOLD = 0.001;
 
-  const initialColorData = calculateColors(currentTheme);
+  const initialColorData = palette;
   let targetColors = initialColorData.colors;
   let currentColors = [...targetColors]; // Start with target colors
-  let numBands = initialColorData.numBands;
+  let numBands = initialColorData.num_bands;
 
   // Mouse-driven sun anchor (normalized 0..1, y is up). Default is horizontally
   // centered so touch / no-mouse users see the sun behind the landing composition.
@@ -460,16 +277,19 @@ function initWebGL(
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-    gl.uniform1f(timeLocation, elapsedTime);
-    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
-    gl.uniform1f(numBandsLocation, numBands);
-    gl.uniform3fv(colorsLocation, currentColors);
-    gl.uniform1f(
-      isDarkLocation,
-      currentTheme === "dark" || currentTheme === "oled" ? 1.0 : 0.0,
-    );
-    gl.uniform1f(oledLocation, currentTheme === "oled" ? 1.0 : 0.0);
-    gl.uniform2f(mouseLocation, currentMouse[0], currentMouse[1]);
+    uniforms[0] = elapsedTime;
+    uniforms[2] = canvas.width;
+    uniforms[3] = canvas.height;
+    uniforms[4] = currentMouse[0];
+    uniforms[5] = currentMouse[1];
+    uniforms[6] = currentTheme === "light" ? 0 : 1;
+    uniforms[7] = currentTheme === "oled" ? 1 : 0;
+    uniforms[8] = numBands;
+    for (let i = 0; i < numBands; i++) {
+      uniforms.set(currentColors.slice(i * 3, i * 3 + 3), 12 + i * 4);
+    }
+    gl.bindBuffer(gl.UNIFORM_BUFFER, uniformBuffer);
+    gl.bufferSubData(gl.UNIFORM_BUFFER, 0, uniforms);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
@@ -508,20 +328,19 @@ function initWebGL(
   // Expose updateColors for theme changes
   (
     self as typeof self & {
-      updateShaderColors?: () => void;
+      updateShaderColors?: (palette: BackgroundPalette) => void;
       bumpSpeed?: (multiplier?: number) => void;
     }
-  ).updateShaderColors = () => {
-    const newColorData = calculateColors(currentTheme);
+  ).updateShaderColors = (newColorData) => {
     targetColors = newColorData.colors;
-    numBands = newColorData.numBands;
+    numBands = newColorData.num_bands;
     ensureAnimating();
   };
 
   // Expose ensureAnimating for resize redraws
   (
     self as typeof self & {
-      updateShaderColors?: () => void;
+      updateShaderColors?: (palette: BackgroundPalette) => void;
       bumpSpeed?: (multiplier?: number) => void;
       ensureAnimating?: () => void;
     }
@@ -530,7 +349,7 @@ function initWebGL(
   // Expose bumpSpeed function
   (
     self as typeof self & {
-      updateShaderColors?: () => void;
+      updateShaderColors?: (palette: BackgroundPalette) => void;
       bumpSpeed?: (multiplier?: number) => void;
     }
   ).bumpSpeed = (multiplier = 3.0) => {
@@ -562,6 +381,7 @@ self.addEventListener("message", (event: MessageEvent<WorkerMessage>) => {
     type,
     canvas: offscreenCanvas,
     theme,
+    palette,
     width,
     height,
     devicePixelRatio,
@@ -572,11 +392,19 @@ self.addEventListener("message", (event: MessageEvent<WorkerMessage>) => {
       if (
         offscreenCanvas &&
         theme &&
+        palette &&
         width !== undefined &&
         height !== undefined &&
         devicePixelRatio !== undefined
       ) {
-        initWebGL(offscreenCanvas, theme, width, height, devicePixelRatio);
+        initWebGL(
+          offscreenCanvas,
+          theme,
+          palette,
+          width,
+          height,
+          devicePixelRatio,
+        );
       }
       break;
     }
@@ -601,13 +429,15 @@ self.addEventListener("message", (event: MessageEvent<WorkerMessage>) => {
     }
 
     case "theme": {
-      if (theme) {
+      if (theme && palette) {
         currentTheme = theme;
         const updateColors = (
-          self as typeof self & { updateShaderColors?: () => void }
+          self as typeof self & {
+            updateShaderColors?: (palette: BackgroundPalette) => void;
+          }
         ).updateShaderColors;
         if (updateColors) {
-          updateColors();
+          updateColors(palette);
         }
       }
       break;

@@ -1,6 +1,7 @@
 mod ios;
 mod packs;
 mod parity;
+mod shaders;
 mod smoke;
 
 use clap::{Parser, Subcommand};
@@ -21,6 +22,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Task {
+    /// Regenerate web and SwiftUI shaders from the shared WGSL.
+    Shaders,
     /// Build Rust libraries, host-generated bindings, and the XcodeGen iOS app.
     Ios(ios::Args),
     /// Run the real offline Swift integration test (macOS, Swift 6.2+).
@@ -31,6 +34,7 @@ enum Task {
 
 fn main() {
     let result = match Cli::parse().task {
+        Task::Shaders => shaders::run(),
         Task::Ios(args) => ios::run(args),
         Task::Smoke(args) => smoke::run(args),
         Task::Parity(args) => parity::run(args),

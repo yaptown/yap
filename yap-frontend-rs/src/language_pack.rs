@@ -672,7 +672,9 @@ async fn fetch_language_data_chunk(
         })?;
 
     let mut chunk_bytes = Vec::with_capacity(expected_chunk_len);
-    let mut last_logged_percent = downloaded_before_chunk * 100 / expected_total_size.max(1);
+    // WASM usize is 32-bit: multiplying pack byte counts by 100 overflows.
+    let mut last_logged_percent =
+        (downloaded_before_chunk as f64 / expected_total_size.max(1) as f64 * 100.0) as usize;
 
     loop {
         let next = bridgerton::platform::timeout(deadlines.stall_ms, reader.read_chunk())

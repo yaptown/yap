@@ -39,7 +39,7 @@ struct StatsScreen: View {
                             if !view.leeches.isEmpty { CardSummaryList(cards: view.leeches, timestampMs: now) }
                         }.id("leeches")
                     }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-                }.background(Color(uiColor: .systemGroupedBackground)).navigationTitle(view.title)
+                }.background(.clear).navigationTitle(view.title)
                 #if DEBUG
                 .onAppear { DebugHarness.shared.activeScreen = .stats }
                 .onChange(of: DebugHarness.shared.commandID) { _, _ in

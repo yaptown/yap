@@ -8,6 +8,8 @@ pub use deck_load::*;
 
 pub mod definition;
 pub use definition::*;
+pub mod background;
+pub use background::*;
 pub mod design;
 pub use design::*;
 pub mod pending;

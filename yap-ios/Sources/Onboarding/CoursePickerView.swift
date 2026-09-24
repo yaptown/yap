@@ -40,9 +40,10 @@ struct CoursePickerView: View {
                             ForEach(targets.filter { !onboarded.contains($0.target_language) && get_language_metadata(language: $0.target_language).status == maturity }, id: \.self) { course in courseButton(course, resume: false) }
                         }
                     }
-                }.navigationTitle("Choose a course")
+                }.scrollContentBackground(.hidden).navigationTitle("Choose a course")
             }
         }
+        .containerBackground(.clear, for: .navigation)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 if auth.userId == nil && !session.choosingCourse {

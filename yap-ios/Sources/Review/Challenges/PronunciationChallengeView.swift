@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PronunciationChallengeView: View {
+    @Environment(BackgroundController.self) private var background
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewHost!) private var host
     @Environment(\.reviewActions!) private var actions
@@ -54,6 +55,7 @@ struct PronunciationChallengeView: View {
     }
     private func rate(_ rating: Rating) {
         guard !actions.submitting else { return }
+        background.bump(30)
         audio.stop(); actions.rate(indicator, rating)
         if rating != .Again { audio.playEffect("success-2") }
     }

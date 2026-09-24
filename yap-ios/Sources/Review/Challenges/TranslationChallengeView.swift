@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TranslationChallengeView: View {
+    @Environment(BackgroundController.self) private var background
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewScreen!) private var screen
     @Environment(\.reviewHost!) private var host
@@ -118,6 +119,7 @@ struct TranslationChallengeView: View {
         }.font(.subheadline)
     }
     private func send(_ event: TranslationEvent) {
+        if case .ItemGraded = event { background.bump(30) }
         if case .CancelGrading = event { gradingTask?.cancel() }
         apply(translation_transition(state: state, event: event))
     }
@@ -130,6 +132,7 @@ struct TranslationChallengeView: View {
         for effect in step.effects {
             switch effect {
             case let .Autograde(submission):
+                background.bump(30)
                 focused = false
                 gradingTask?.cancel()
                 let course = state.course
@@ -157,7 +160,7 @@ struct TranslationChallengeView: View {
                 case .Perfect: completed = actions.completeTranslationPerfect(sentence.target_language, tapped, completedAtMs)
                 case let .Manual(grade): completed = actions.completeTranslationWrong(sentence.target_language, submission, grade, tapped, completedAtMs)
                 }
-                if completed { storage?.clear(); audio.stop() }
+                if completed { background.bump(30); storage?.clear(); audio.stop() }
             }
         }
     }

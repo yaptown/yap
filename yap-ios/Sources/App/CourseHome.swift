@@ -27,15 +27,18 @@ struct CourseHome: View {
     var body: some View {
         NavigationStack(path: $path) {
             homeScreen
+                .containerBackground(.clear, for: .navigation)
                 .navigationDestination(for: CourseRoute.self) { route in
-                    switch route {
-                    case .review: reviewScreen.id(ObjectIdentifier(review.deck))
-                    case .goals: GoalsScreen(review: review)
-                    case .stats: StatsScreen(review: review) { navigate(.due) }
-                    case let .dictionary(query): DictionaryScreen(session: session, initialQuery: query)
-                    case .due: DueWordsScreen(review: review)
-                    case .settings: SettingsScreen(session: session)
-                    }
+                    Group {
+                        switch route {
+                        case .review: reviewScreen.id(ObjectIdentifier(review.deck))
+                        case .goals: GoalsScreen(review: review)
+                        case .stats: StatsScreen(review: review) { navigate(.due) }
+                        case let .dictionary(query): DictionaryScreen(session: session, initialQuery: query)
+                        case .due: DueWordsScreen(review: review)
+                        case .settings: SettingsScreen(session: session)
+                        }
+                    }.containerBackground(.clear, for: .navigation)
                 }
         }
         // The shell, not Review's visibility, owns background readiness.

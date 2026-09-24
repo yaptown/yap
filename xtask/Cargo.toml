@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 clap = { version = "4.6.7", features = ["derive"] }
+naga = { version = "30.0.1", features = ["wgsl-in", "glsl-out", "msl-out"] }
 serde_json.workspace = true
 tempfile.workspace = true
 tiny_http = "0.12.0"
