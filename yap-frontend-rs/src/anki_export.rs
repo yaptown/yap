@@ -139,6 +139,11 @@ pub struct AnkiExportView {
     pub clip_sentence_count: u32,
     pub language_name: String,
     pub download_label: String,
+    /// Replaces the placement test's "Begin Learning": finishing it here
+    /// leads to a deck, not to the app.
+    pub placement_complete_label: String,
+    /// Why the deck exists, read while it builds.
+    pub backstory: String,
 }
 
 fn validate(options: &AnkiDeckOptions) -> Result<(), Error> {
@@ -314,6 +319,9 @@ const TITLE: &str = "Sentence mining, already done";
 const TOO_ADVANCED: &str = "You're past the top level. The deck will still catch gaps, but Yap's app will serve you better.";
 const CLIPS_LOADING: &str = "Movie clips are still loading. Please try again.";
 const NO_SENTENCES: &str = "No comprehensible movie-clip sentences were found at your level.";
+const PLACEMENT_COMPLETE_LABEL: &str = "Generate Anki deck";
+// Shown while the deck is being built; the page has a minute or two to fill.
+const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I still think the app is the best way to learn, but the same technology, real movie lines picked for your level, each with its clip and a recording, makes a really good Anki deck too. Yours is being built right now.";
 
 #[bridgerton::bridge]
 impl Deck {
@@ -348,6 +356,8 @@ impl Deck {
             clip_sentence_count,
             language_name: language.to_string(),
             download_label: format!("Download the {language} deck"),
+            placement_complete_label: PLACEMENT_COMPLETE_LABEL.into(),
+            backstory: BACKSTORY.into(),
         }
     }
 

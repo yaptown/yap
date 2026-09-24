@@ -41,7 +41,7 @@ export function AnkiPage() {
   return <DeckPage prefetchAudio={false}>{(props) => <AnkiScreen key={props.targetLanguage} {...props} />}</DeckPage>;
 }
 
-function AnkiPlacement({ deck, targetLanguage }: { deck: Deck; targetLanguage: Language }) {
+function AnkiPlacement({ deck, targetLanguage, completeLabel }: { deck: Deck; targetLanguage: Language; completeLabel: string }) {
   const weapon = useWeapon();
   const [session, setSession] = useState<PlacementSession>(() => deck.start_placement_session());
   return <PlacementTest
@@ -49,6 +49,7 @@ function AnkiPlacement({ deck, targetLanguage }: { deck: Deck; targetLanguage: L
     targetLanguage={targetLanguage}
     session={session}
     setSession={setSession}
+    completeLabel={completeLabel}
     onComplete={({ known_words, unknown_words }) => {
       weapon.add_deck_event(deck.complete_placement_test(known_words, unknown_words));
     }}
@@ -134,7 +135,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
         {view.needs_placement ? (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">First, find your starting level. No account needed.</p>
-            <AnkiPlacement deck={deck} targetLanguage={targetLanguage} />
+            <AnkiPlacement deck={deck} targetLanguage={targetLanguage} completeLabel={view.placement_complete_label} />
           </div>
         ) : (
           <form className="flex flex-col gap-6" onSubmit={(event) => { event.preventDefault(); void download(); }}>
@@ -171,6 +172,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
               {view.manifest === "ready" && maximum === 0 && <p>No movie clips are available for this course.</p>}
               {busy && <p>{progress && progress.done < progress.total ? `Fetching media ${progress.done.toLocaleString()} of ${progress.total.toLocaleString()}` : phase}</p>}
               {busy && progress && <Progress value={progress.total ? 100 * progress.done / progress.total : 100} />}
+              {busy && <p className="border-l-2 pl-4 text-foreground">{view.backstory}</p>}
               {downloadLink && <div className="flex flex-col gap-2">
                 <Label htmlFor="anki-download-link">Download link</Label>
                 <div className="flex gap-2">
