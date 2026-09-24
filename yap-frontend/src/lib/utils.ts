@@ -1,4 +1,6 @@
 import {
+  account_copy,
+  type AccountCopy,
   get_audio,
   get_temp_audio,
   invalidate_audio_cache,
@@ -18,8 +20,13 @@ export * from "./pure";
 export async function playAudio(
   audioRequest: AudioRequest,
   accessToken: string | undefined,
-  needsAuth: () => void,
-  { temporary = false, onAudioElement, signal, onVoiceActor }: PlaybackOptions = {},
+  needsAuth: (copy: AccountCopy) => void,
+  {
+    temporary = false,
+    onAudioElement,
+    signal,
+    onVoiceActor,
+  }: PlaybackOptions = {},
 ): Promise<void> {
   const abortError = () => new DOMException("Aborted", "AbortError");
   if (signal?.aborted) throw abortError();
@@ -94,7 +101,8 @@ export async function playAudio(
     void start().catch((error) => {
       if (settled) return;
       finish(error ?? new Error("Audio preparation failed"));
-      if (typeof error === "string" && error.includes("400")) needsAuth();
+      if (typeof error === "string" && error.includes("400"))
+        needsAuth(account_copy());
       console.error("Failed to prepare audio:", error);
     });
   });

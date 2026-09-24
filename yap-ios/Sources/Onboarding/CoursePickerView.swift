@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct CoursePickerView: View {
+    @Environment(AuthStore.self) private var auth
+    @Environment(AuthSheet.self) private var authSheet
     let session: YapSession
     var onSelected: () -> Void = {}
     @State private var native: Language = .English
@@ -39,6 +41,13 @@ struct CoursePickerView: View {
                         }
                     }
                 }.navigationTitle("Choose a course")
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if auth.userId == nil && !session.choosingCourse {
+                    Button(account_copy().sign_in_action) { authSheet.present(tab: .signIn) }
+                }
             }
         }
         .onAppear {

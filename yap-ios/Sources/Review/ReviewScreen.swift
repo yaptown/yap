@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ReviewScreen: View {
+    @Environment(AuthSheet.self) private var authSheet
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewHost!) private var host
     let view: ReviewScreenView
@@ -10,6 +11,15 @@ struct ReviewScreen: View {
             ProgressView(value: view.progress)
                 .progressViewStyle(.linear).tint(Color.yapAccent).frame(height: 3)
             VStack(alignment: .leading, spacing: 12) {
+                if view.show_account_prompt {
+                    let copy = account_copy()
+                    StudyCard {
+                        Text(copy.prompt_title).font(.subheadline).foregroundStyle(.secondary)
+                        Text(copy.prompt_body).font(.caption).foregroundStyle(.secondary)
+                        Button(copy.prompt_action) { authSheet.present(tab: .signUp) }
+                            .buttonStyle(.bordered)
+                    }.padding(.top, 12)
+                }
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     if let weapon = host.weapon {
                         let sync = weapon.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,

@@ -1,3 +1,4 @@
+import { account_copy } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ModeToggle } from "@/browse/mode-toggle";
@@ -38,6 +39,7 @@ export function Header({
 }: HeaderProps) {
   const { openSignIn, openSignUp } = useAuthDialog();
   const navigate = useNavigate();
+  const copy = account_copy();
 
   return (
     <div className="space-y-2">
@@ -102,7 +104,7 @@ export function Header({
             </DropdownMenu>
           ) : (
             <Button variant="ghost" size="sm" onClick={openSignIn}>
-              Sign In
+              {copy.sign_in_action}
             </Button>
           )}
           <ModeToggle />
@@ -116,12 +118,9 @@ export function Header({
         >
           <AlertTriangle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium">
-              Log in or create an account to make sure you don't lose your
-              progress!
-            </p>
+            <p className="text-sm font-medium">{copy.prompt_title}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Your learning data is currently only stored on this device.
+              {copy.prompt_body}
             </p>
           </div>
           <Button
@@ -130,7 +129,7 @@ export function Header({
             size="sm"
             className="flex-shrink-0"
           >
-            Create Account
+            {copy.prompt_action}
           </Button>
         </Card>
       )}

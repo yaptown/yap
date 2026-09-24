@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct HomeScreen: View {
+    @Environment(AuthStore.self) private var auth
+    @Environment(AuthSheet.self) private var authSheet
     @Environment(\.reviewActions!) private var actions
     let review: ReviewModel
     let navigate: (CourseRoute) -> Void
@@ -106,6 +108,11 @@ struct HomeScreen: View {
                 #endif
         }
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if auth.userId == nil {
+                    Button(account_copy().sign_in_action) { authSheet.present(tab: .signIn) }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Settings", systemImage: "gearshape") { navigate(.settings) }
                     .labelStyle(.iconOnly)

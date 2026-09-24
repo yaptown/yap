@@ -241,6 +241,13 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
         mut user_events_directory: DirectoryHandle,
         current_user_directory: &UserDirectory,
     ) -> Result<(), persistent::Error> {
+        // One import at a time across tabs; a tab that waited finds the
+        // logged-out directory already gone and does nothing.
+        let _import = weblocks::acquire(
+            "opfs-import-logged-out-user-data",
+            weblocks::AcquireOptions::exclusive(),
+        )
+        .await?;
         // Attempt to get the logged-out directory. If it doesn't exist, there's nothing to do.
         let logged_out_directory = match user_events_directory
             .get_directory_handle_with_options(
@@ -255,29 +262,30 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
             Err(_) => return Ok(()),
         };
 
-        // If the current user directory already has data, skip the import.
-        let mut existing_streams = current_user_directory.event_stream_directories().await?;
-        if existing_streams.next().await.is_some() {
-            return Ok(());
-        }
-
-        // Move all streams/devices/events from the logged-out directory.
+        // Merge every stream into the account, which may already have history
+        // on this device. Anonymous events carry their own device id, so they
+        // never collide with the account's; skipping what the target already
+        // holds per device makes a retried import after a crash a no-op.
         let mut streams = logged_out_directory.event_stream_directories().await?;
         while let Some((stream_id, stream_dir)) = streams.next().await {
-            let target_stream_dir = current_user_directory
+            // Same lock as `save_to_local_storage`, so the counts we skip by
+            // can't go stale before the append lands.
+            let _save = weblocks::acquire(
+                &format!("opfs-save-to-local-storage-{stream_id}"),
+                weblocks::AcquireOptions::exclusive(),
+            )
+            .await?;
+            let target_log = current_user_directory
                 .get_stream_directory(&stream_id)
+                .await?
+                .get_event_log_file()
                 .await?;
-            let source_log = stream_dir.get_event_log_file().await?;
-            let events = source_log
-                .read_records(&BTreeMap::new())
+            let events = stream_dir
+                .get_event_log_file()
+                .await?
+                .read_records(&target_log.device_counts().await?)
                 .await
                 .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?;
-
-            if events.is_empty() {
-                continue;
-            }
-
-            let target_log = target_stream_dir.get_event_log_file().await?;
             target_log.append_records(&events).await?;
         }
 

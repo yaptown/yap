@@ -1,3 +1,4 @@
+import { account_copy } from "../../../yap-frontend-rs/pkg";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -69,6 +70,7 @@ export function AuthDialog({
   view,
   onViewChange,
 }: AuthDialogProps) {
+  const copy = account_copy();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -258,11 +260,8 @@ export function AuthDialog({
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Welcome to Yap.Town</DialogTitle>
-              <DialogDescription>
-                Sign in or create an account to sync your progress across
-                devices
-              </DialogDescription>
+              <DialogTitle>{copy.dialog_title}</DialogTitle>
+              <DialogDescription>{copy.dialog_description}</DialogDescription>
             </DialogHeader>
             <Tabs
               value={view}
@@ -270,13 +269,13 @@ export function AuthDialog({
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signin">{copy.sign_in_tab}</TabsTrigger>
+                <TabsTrigger value="signup">{copy.sign_up_tab}</TabsTrigger>
               </TabsList>
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-email">{copy.email_label}</Label>
                     <Input
                       id="signin-email"
                       type="email"
@@ -289,7 +288,9 @@ export function AuthDialog({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="signin-password">
+                      {copy.password_label}
+                    </Label>
                     <Input
                       id="signin-password"
                       type="password"
@@ -302,7 +303,7 @@ export function AuthDialog({
                   </div>
                   {error && <p className="text-sm text-negative">{error}</p>}
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Signing in..." : "Sign In"}
+                    {loading ? copy.signing_in_button : copy.sign_in_button}
                   </Button>
                   {browserSupportsWebAuthn() && (
                     <>
@@ -331,7 +332,7 @@ export function AuthDialog({
                       onClick={() => handleOpenChange(false)}
                       className="text-sm text-muted-foreground hover:text-foreground underline"
                     >
-                      Forgot your password?
+                      {copy.forgot_password}
                     </Link>
                   </div>
                 </form>
@@ -339,7 +340,7 @@ export function AuthDialog({
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{copy.email_label}</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -351,7 +352,9 @@ export function AuthDialog({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">
+                      {copy.password_label}
+                    </Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -364,7 +367,7 @@ export function AuthDialog({
                   </div>
                   {error && <p className="text-sm text-negative">{error}</p>}
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Creating account..." : "Create Account"}
+                    {loading ? copy.signing_up_button : copy.sign_up_button}
                   </Button>
                 </form>
               </TabsContent>

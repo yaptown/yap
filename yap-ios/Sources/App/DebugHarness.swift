@@ -7,7 +7,7 @@ enum DebugScreen: String {
 }
 
 /// Explicit opt-in simulator driver. Never compiled into release builds. Commands
-/// exercise the same view actions as taps; only the designated throwaway account
+/// exercise the same view actions as taps; only anonymous sessions and the designated throwaway account
 /// may receive test review/add events. No credentials are written to disk or logs.
 @Observable @MainActor final class DebugHarness {
     static let shared = DebugHarness()
@@ -58,7 +58,7 @@ enum DebugScreen: String {
             try? FileManager.default.removeItem(at: commandURL)
             let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
             if value == "signout" { await auth.signOut(); Self.log(auth.userId == nil ? "signed out" : "signout failed"); continue }
-            guard auth.session?.user.email == "yap-mcp-test@popovit.ch" else {
+            guard auth.userId == nil || auth.session?.user.email == "yap-mcp-test@popovit.ch" else {
                 Self.log("Ignoring test action outside throwaway account"); continue
             }
             command = value; commandID += 1

@@ -2,6 +2,55 @@
 //! hosts own navigation and presentation state.
 use crate::*;
 
+/// Account encouragement and authentication copy shared by both hosts.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AccountCopy {
+    pub prompt_title: String,
+    pub prompt_body: String,
+    pub prompt_action: String,
+    pub sign_in_action: String,
+    pub dialog_title: String,
+    pub dialog_description: String,
+    pub sign_in_tab: String,
+    pub sign_up_tab: String,
+    pub email_label: String,
+    pub password_label: String,
+    pub sign_in_button: String,
+    pub signing_in_button: String,
+    pub sign_up_button: String,
+    pub signing_up_button: String,
+    pub forgot_password: String,
+    pub audio_needs_account_title: String,
+    pub audio_needs_account_body: String,
+}
+
+#[bridgerton::bridge]
+pub fn account_copy() -> AccountCopy {
+    AccountCopy {
+        prompt_title: "Log in or create an account to make sure you don't lose your progress!"
+            .into(),
+        prompt_body: "Your learning data is currently only stored on this device.".into(),
+        prompt_action: "Create Account".into(),
+        sign_in_action: "Sign In".into(),
+        dialog_title: "Welcome to Yap.Town".into(),
+        dialog_description: "Sign in or create an account to sync your progress across devices"
+            .into(),
+        sign_in_tab: "Sign In".into(),
+        sign_up_tab: "Sign Up".into(),
+        email_label: "Email".into(),
+        password_label: "Password".into(),
+        sign_in_button: "Sign In".into(),
+        signing_in_button: "Signing in...".into(),
+        sign_up_button: "Create Account".into(),
+        signing_up_button: "Creating account...".into(),
+        forgot_password: "Forgot your password?".into(),
+        audio_needs_account_title: "Please log in to play audio".into(),
+        audio_needs_account_body:
+            "Audio playback requires an account to access the text-to-speech service.".into(),
+    }
+}
+
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum IdleKind {
@@ -1120,6 +1169,7 @@ pub enum ReviewStep {
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ReviewScreenView {
+    pub show_account_prompt: bool,
     pub native_language: Language,
     pub target_language: Language,
     pub step: ReviewStep,
@@ -1146,6 +1196,7 @@ impl Deck {
             .with_timezone(&self.context.timezone)
             .date_naive();
         ReviewScreenView {
+            show_account_prompt: !inputs.is_signed_in,
             native_language: self.context.course.native_language,
             target_language: self.get_target_language(),
             step,
@@ -1246,6 +1297,14 @@ mod tests {
     use chrono::TimeZone;
 
     #[test]
+    fn account_copy_matches_web() {
+        let copy = account_copy();
+        assert_eq!(copy.prompt_action, "Create Account");
+        assert_eq!(copy.dialog_title, "Welcome to Yap.Town");
+        assert_eq!(copy.signing_in_button, "Signing in...");
+    }
+
+    #[test]
     fn review_plan_groups_cards_by_type_in_a_fixed_order() {
         let card = |card_indicator, text: &str| CardSummary {
             card_indicator,
@@ -1320,6 +1379,23 @@ mod tests {
                 .with_ymd_and_hms(2026, 9, 21, 12, 0, 0)
                 .unwrap()
                 .timestamp_millis() as f64,
+        }
+    }
+
+    #[test]
+    fn account_prompt_tracks_identity_even_offline() {
+        let deck = with_due_cards();
+        for is_signed_in in [true, false] {
+            for online in [true, false] {
+                let mut inputs = inputs();
+                inputs.is_signed_in = is_signed_in;
+                inputs.has_access_token = is_signed_in;
+                inputs.online = online;
+                assert_eq!(
+                    deck.review_screen_view(inputs).show_account_prompt,
+                    !is_signed_in
+                );
+            }
         }
     }
 

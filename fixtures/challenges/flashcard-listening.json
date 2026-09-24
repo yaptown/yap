@@ -1,6 +1,7 @@
 {
   "screen": "Review",
   "view": {
+    "show_account_prompt": false,
     "native_language": "English",
     "target_language": "French",
     "step": {

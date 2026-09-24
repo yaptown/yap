@@ -6,6 +6,8 @@ import Observation
     private(set) var currentTime: TimeInterval = 0
     private(set) var currentRequest: AudioRequest?
     private(set) var voiceCredit: String?
+    private(set) var needsAccount = false
+    private var accountPromptTask: Task<Void, Never>?
     private var creditTask: Task<Void, Never>?
     private var player: AVAudioPlayer?
     private var video: AVPlayer?
@@ -46,6 +48,14 @@ import Observation
             guard expected == generation else { return }
             stop()
             if !(error is CancellationError), !Task.isCancelled {
+                if accessToken == nil, String(describing: error).contains("400") {
+                    needsAccount = true
+                    accountPromptTask?.cancel()
+                    accountPromptTask = Task { [weak self] in
+                        do { try await Task.sleep(for: .seconds(5)) } catch { return }
+                        self?.needsAccount = false
+                    }
+                }
                 Telemetry.breadcrumb("audio", "Playback failed: \(error)", failed: true)
             }
             // Only audio the decoder rejected is worth re-downloading; a refused
@@ -130,6 +140,7 @@ import Observation
     /// Full teardown when the playback owner or signed-in session goes away.
     func stopAll() {
         stop()
+        accountPromptTask?.cancel(); accountPromptTask = nil; needsAccount = false
         effectTask?.cancel(); effectTask = nil
         effectPlayer?.stop(); effectPlayer = nil; effectPlaying = false
     }

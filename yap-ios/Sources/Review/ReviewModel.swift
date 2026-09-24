@@ -54,9 +54,9 @@ import Observation
             do { try await refresh_clip_manifest(language: self.deck.get_target_language(), access_token: self.session.accessToken()) }
             catch { if !Task.isCancelled { print("Yap manifest: \(error)") } }
         })
-        if session.online, let token = session.accessToken() {
-            tasks.append(Task { [deck, session] in
-                do { try await deck.submit_push_notifications(access_token: token, user_id: session.userId) }
+        if session.online, let userId = session.userId, let token = session.accessToken() {
+            tasks.append(Task { [deck] in
+                do { try await deck.submit_push_notifications(access_token: token, user_id: userId) }
                 catch { if !Task.isCancelled { print("Yap notification schedule: \(error)") } }
             })
             tasks.append(Task { [deck] in
@@ -152,7 +152,7 @@ import Observation
     private static func inputs(deck: Deck, session: YapSession, auth: AuthStore, startingFresh: Bool?, historyKnown: Bool,
                                sentenceList: SentenceListSelection?, banned: [ChallengeRequirements], challenge: Challenge_Gram_String?) -> ReviewScreenInputs {
         ReviewScreenInputs(banned: banned, sentence_list: sentenceList, online: session.online,
-            is_signed_in: true, needs_display_name: auth.needsDisplayName,
+            is_signed_in: auth.userId != nil, needs_display_name: auth.needsDisplayName,
             display_name_dismissed: UserDefaults.standard.bool(forKey: "yap-skipped-set-display-name"),
             has_access_token: auth.accessToken != nil, starting_fresh: startingFresh, history_known: historyKnown,
             dismissed_accomplishment_at_review: session.dismissedAccomplishmentAtReview, placement: session.placementSession, current_challenge: challenge, timestamp_ms: now)
@@ -167,7 +167,7 @@ import Observation
         #endif
         var actions = ReviewActions()
         actions.submitting = submitting
-        actions.pendingReviewKey = "\(session.userId)-\(String(describing: course))"
+        actions.pendingReviewKey = "\(session.userId ?? "anon")-\(String(describing: course))"
         actions.rate = rate
         actions.completeTranslationPerfect = { self.completeTranslationPerfect($0, tapped: $1, completedAtMs: $2) }
         actions.completeTranslationWrong = { self.completeTranslationWrong($0, submission: $1, grade: $2, tapped: $3, completedAtMs: $4) }
@@ -221,7 +221,7 @@ import Observation
         case "undo": undoRestrictions()
         case "add-listening", "add-pronunciation":
             let type: CardType = DebugHarness.shared.command == "add-listening" ? .Listening : .LetterPronunciation
-            let options = deck.get_manual_add_options(sentence_list: deck.get_sentence_list(), is_signed_in: true)
+            let options = deck.get_manual_add_options(sentence_list: deck.get_sentence_list(), is_signed_in: auth.userId != nil)
             if let event = options.first(where: { $0.card_type == type })?.event { session.addDeckEvent(event) }
         case "add":
             guard currentChallenge == nil else { return }
