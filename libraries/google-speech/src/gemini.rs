@@ -180,7 +180,7 @@ impl GeminiResponse {
 
 /// The model every TTS caller uses. Preview models come and go; keeping the
 /// name in one place makes the swap a one-line change.
-pub const GEMINI_TTS_MODEL: &str = "gemini-3.1-flash-tts-preview";
+pub const GEMINI_TTS_MODEL: &str = "gemini-3.8-flash-tts";
 
 /// The voice used unless a caller asks for another. Achernar reads cues and
 /// sentences cleanly across every course language; Zephyr is the older

@@ -51,14 +51,22 @@ fn cache_control(verified: bool) -> &'static str {
 pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
     let token = params.d.clone();
     let request = params.request();
-    let cache_filename = tts_cache_filename(&request, &TtsProvider::ElevenLabs);
     let http = reqwest::Client::new();
-    if tts_cache::exists(&http, &cache_filename).await {
-        return Ok((
-            StatusCode::FOUND,
-            [(header::LOCATION, tts_cache_url(&cache_filename))],
-        )
-            .into_response());
+    // Gemini is the deck voice (about an eighth of ElevenLabs' price per
+    // recording), but a clip the app already verified with either voice is
+    // free, so serve whichever the shared cache has before synthesizing.
+    let cache_filename = tts_cache_filename(&request, &TtsProvider::Gemini);
+    for filename in [
+        &cache_filename,
+        &tts_cache_filename(&request, &TtsProvider::ElevenLabs),
+    ] {
+        if tts_cache::exists(&http, filename).await {
+            return Ok((
+                StatusCode::FOUND,
+                [(header::LOCATION, tts_cache_url(filename))],
+            )
+                .into_response());
+        }
     }
 
     // Playback from the cache above needed no secret; only new spend does.
@@ -98,10 +106,13 @@ pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
     }
 
     // A deck export fires hundreds of these in minutes; see `Transcribers`.
+    // ElevenLabs is the only fallback: Google's voice would be a step down
+    // for a card the learner keeps.
     let synthesized = synthesize_checked_bytes(
         &http,
         &request,
-        TtsProvider::ElevenLabs,
+        TtsProvider::Gemini,
+        &[TtsProvider::ElevenLabs],
         Transcribers::CloudflareOnly,
     )
     .await?;

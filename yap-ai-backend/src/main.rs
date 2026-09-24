@@ -132,7 +132,15 @@ enum SynthError {
 ///
 /// SSML gets no fallback at all: only Google interprets it, and handing raw
 /// markup to a provider that doesn't would have it read the tags aloud.
-fn fallback_chain(primary: TtsProvider, request: &TtsRequest) -> Vec<TtsProvider> {
+/// What a learner's request may fall back to when the requested provider
+/// can't get the words right: substituting a voice is fine.
+const INTERACTIVE_FALLBACKS: [TtsProvider; 2] = [TtsProvider::ElevenLabs, TtsProvider::Google];
+
+fn fallback_chain(
+    primary: TtsProvider,
+    fallbacks: &[TtsProvider],
+    request: &TtsRequest,
+) -> Vec<TtsProvider> {
     if request.is_ssml {
         return vec![primary];
     }
@@ -150,8 +158,9 @@ fn fallback_chain(primary: TtsProvider, request: &TtsRequest) -> Vec<TtsProvider
 
     std::iter::once(primary)
         .chain(
-            [TtsProvider::ElevenLabs, TtsProvider::Google]
-                .into_iter()
+            fallbacks
+                .iter()
+                .copied()
                 .filter(|p| *p != primary && honors_request(p)),
         )
         .collect()
@@ -281,7 +290,14 @@ async fn synthesize_checked(
     primary: TtsProvider,
 ) -> Result<String, StatusCode> {
     // A learner is waiting on this one: lowest latency wins.
-    let result = synthesize_checked_bytes(http, request, primary, Transcribers::Race).await?;
+    let result = synthesize_checked_bytes(
+        http,
+        request,
+        primary,
+        &INTERACTIVE_FALLBACKS,
+        Transcribers::Race,
+    )
+    .await?;
     Ok(base64::engine::general_purpose::STANDARD.encode(&result.audio))
 }
 
@@ -327,6 +343,7 @@ async fn synthesize_checked_bytes(
     http: &reqwest::Client,
     request: &TtsRequest,
     primary: TtsProvider,
+    fallbacks: &[TtsProvider],
     transcribers: Transcribers,
 ) -> Result<Synthesized, StatusCode> {
     let cache_filename = language_utils::tts_cache_filename(request, &primary);
@@ -364,7 +381,7 @@ async fn synthesize_checked_bytes(
             }
         };
 
-    let chain = fallback_chain(primary, request);
+    let chain = fallback_chain(primary, fallbacks, request);
     if chain.len() > 1 {
         eprintln!("{primary:?} TTS: racing {} providers", chain.len());
     }
@@ -2448,7 +2465,7 @@ mod tests {
             TtsProvider::Google,
             TtsProvider::OpenAI,
         ] {
-            let chain = fallback_chain(primary, &tts_request("bonjour"));
+            let chain = fallback_chain(primary, &INTERACTIVE_FALLBACKS, &tts_request("bonjour"));
             assert_eq!(chain.first(), Some(&primary));
             // A provider must never be tried twice.
             let mut seen = chain.clone();
@@ -2471,14 +2488,18 @@ mod tests {
             TtsProvider::Google,
             TtsProvider::OpenAI,
         ] {
-            let chain = fallback_chain(primary, &tts_request("bonjour"));
+            let chain = fallback_chain(primary, &INTERACTIVE_FALLBACKS, &tts_request("bonjour"));
             assert!(
                 !chain.contains(&TtsProvider::Gemini),
                 "{primary:?} fell back to Gemini: {chain:?}"
             );
         }
         // As a primary it's still tried first, then handed off to faithful ones.
-        let chain = fallback_chain(TtsProvider::Gemini, &tts_request("bonjour"));
+        let chain = fallback_chain(
+            TtsProvider::Gemini,
+            &INTERACTIVE_FALLBACKS,
+            &tts_request("bonjour"),
+        );
         assert_eq!(
             chain,
             vec![
@@ -2495,7 +2516,7 @@ mod tests {
         let mut request = tts_request("<speak>bonjour</speak>");
         request.is_ssml = true;
         assert_eq!(
-            fallback_chain(TtsProvider::Google, &request),
+            fallback_chain(TtsProvider::Google, &INTERACTIVE_FALLBACKS, &request),
             vec![TtsProvider::Google]
         );
     }
@@ -2504,14 +2525,18 @@ mod tests {
     fn a_slowed_request_excludes_the_provider_with_no_rate_control() {
         let mut request = tts_request("bonjour");
         request.speed = 0.8;
-        let chain = fallback_chain(TtsProvider::Gemini, &request);
+        let chain = fallback_chain(TtsProvider::Gemini, &INTERACTIVE_FALLBACKS, &request);
         // Not merely ranked last — absent. Ordering means nothing in a race,
         // so an ElevenLabs clip could win and arrive at full speed.
         assert!(!chain.contains(&TtsProvider::ElevenLabs));
         assert!(chain.contains(&TtsProvider::Google));
 
         // At default speed it has nothing to drop, so it races.
-        let chain = fallback_chain(TtsProvider::Gemini, &tts_request("bonjour"));
+        let chain = fallback_chain(
+            TtsProvider::Gemini,
+            &INTERACTIVE_FALLBACKS,
+            &tts_request("bonjour"),
+        );
         assert!(chain.contains(&TtsProvider::ElevenLabs));
     }
 
