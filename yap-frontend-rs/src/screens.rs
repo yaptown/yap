@@ -11,13 +11,67 @@ pub enum IdleKind {
     AllCaughtUp,
 }
 
+/// One card type's share of a review plan: "3 reading cards" over the words.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReviewPlanGroup {
+    pub heading: String,
+    pub cards: Vec<String>,
+}
+
+/// The set of reviews the learner commits to with one button: today's lockup
+/// offer, or releasing more cards later in the day.
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ReviewPlanView {
     pub target_language: Language,
-    pub cards: Vec<CardSummary>,
+    pub title: String,
+    /// Reading, then listening, then pronunciation; empty groups are omitted.
+    pub groups: Vec<ReviewPlanGroup>,
+    pub accept_label: String,
     pub event: DeckEvent,
     pub week: Vec<DayProgress>,
+}
+
+impl ReviewPlanView {
+    fn new(
+        target_language: Language,
+        cards: Vec<CardSummary>,
+        event: DeckEvent,
+        week: Vec<DayProgress>,
+    ) -> Self {
+        let label = |card: &CardSummary| match card.card_indicator {
+            CardIndicator::WrittenGram { .. } => "reading",
+            CardIndicator::ListeningGram { .. } => "listening",
+            CardIndicator::LetterPronunciation { .. } => "pronunciation",
+        };
+        let groups = ["reading", "listening", "pronunciation"]
+            .into_iter()
+            .filter_map(|group| {
+                let cards: Vec<String> = cards
+                    .iter()
+                    .filter(|card| label(card) == group)
+                    .map(|card| card.card_text.clone())
+                    .collect();
+                (!cards.is_empty()).then(|| ReviewPlanGroup {
+                    heading: format!(
+                        "{} {group} {}",
+                        cards.len(),
+                        if cards.len() == 1 { "card" } else { "cards" }
+                    ),
+                    cards,
+                })
+            })
+            .collect();
+        ReviewPlanView {
+            target_language,
+            title: "Today's review plan:".into(),
+            groups,
+            accept_label: "Let's go!".into(),
+            event,
+            week,
+        }
+    }
 }
 
 #[bridgerton::bridge(transparent)]
@@ -289,12 +343,12 @@ impl Deck {
         let day = DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64)?
             .with_timezone(&self.context.timezone)
             .date_naive();
-        Some(ReviewPlanView {
-            target_language: self.get_target_language(),
-            cards: offer.keep_preview(),
-            event: offer.lock_event(),
-            week: self.get_current_week_progress_on(day),
-        })
+        Some(ReviewPlanView::new(
+            self.get_target_language(),
+            offer.keep_preview(),
+            offer.lock_event(),
+            self.get_current_week_progress_on(day),
+        ))
     }
 
     /// `is_signed_in` is distinct from connectivity: offline signed-in learners
@@ -326,12 +380,12 @@ impl Deck {
             .filter(|card| card.due_timestamp_ms > timestamp_ms)
             .min_by(|a, b| a.due_timestamp_ms.total_cmp(&b.due_timestamp_ms));
         if let Some(offer) = self.get_release_offer(timestamp_ms) {
-            let plan = ReviewPlanView {
-                target_language: self.get_target_language(),
-                cards: offer.release_preview(),
-                event: offer.unlock_event(),
+            let plan = ReviewPlanView::new(
+                self.get_target_language(),
+                offer.release_preview(),
+                offer.unlock_event(),
                 week,
-            };
+            );
             if self.get_today_time_spent_on(day) == 0
                 || !self.study_plan_was_recently_accepted(timestamp_ms)
             {
@@ -1190,6 +1244,63 @@ fn accomplishment_heading(day: &str) -> String {
 mod tests {
     use super::*;
     use chrono::TimeZone;
+
+    #[test]
+    fn review_plan_groups_cards_by_type_in_a_fixed_order() {
+        let card = |card_indicator, text: &str| CardSummary {
+            card_indicator,
+            due_timestamp_ms: 0.0,
+            state: "new".into(),
+            card_text: text.into(),
+            card_subtitle: None,
+        };
+        let gram = Gram(vec![]);
+        let plan = ReviewPlanView::new(
+            Language::French,
+            vec![
+                card(CardIndicator::ListeningGram { gram: gram.clone() }, "de"),
+                card(
+                    CardIndicator::LetterPronunciation {
+                        pattern: "ch".into(),
+                        position: language_utils::PatternPosition::Anywhere,
+                    },
+                    "[ch]",
+                ),
+                card(CardIndicator::ListeningGram { gram: gram.clone() }, "et"),
+                card(
+                    CardIndicator::WrittenGram {
+                        gram: TaggedGram { gram, sense: None },
+                    },
+                    "peut",
+                ),
+            ],
+            DeckEvent::Language(LanguageEvent {
+                target_language: Language::French,
+                native_language: Language::English,
+                content: LanguageEventContent::LockCardsExcept { keep: vec![] },
+            }),
+            vec![],
+        );
+        assert_eq!(plan.title, "Today's review plan:");
+        assert_eq!(plan.accept_label, "Let's go!");
+        assert_eq!(
+            plan.groups,
+            vec![
+                ReviewPlanGroup {
+                    heading: "1 reading card".into(),
+                    cards: vec!["peut".into()],
+                },
+                ReviewPlanGroup {
+                    heading: "2 listening cards".into(),
+                    cards: vec!["de".into(), "et".into()],
+                },
+                ReviewPlanGroup {
+                    heading: "1 pronunciation card".into(),
+                    cards: vec!["[ch]".into()],
+                },
+            ]
+        );
+    }
 
     fn inputs() -> ReviewScreenInputs {
         ReviewScreenInputs {

@@ -31,14 +31,14 @@ struct ReviewScreen: View {
             switch view.step {
             case let .Challenge(challenge): challengeView(challenge).id(challenge.challenge)
             case let .Accomplishment(accomplishment): AccomplishmentScreen(view: accomplishment, addEvent: actions.addEvent, onDismiss: actions.dismissAccomplishment)
+            case let .ReviewPlan(plan): ReviewPlanScreen(plan: plan) { actions.addEvent(plan.event) }
+            case let .Idle(idle): IdleScreen(view: idle)
             default:
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
                         switch view.step {
                         case let .PlacementTest(placement): PlacementTestView(placement: placement)
-                        case let .ReviewPlan(plan): ReviewPlanScreen(cards: plan.cards) { actions.addEvent(plan.event) }
                         case .SetDisplayName: SetDisplayNameView(reviewCount: view.total_reviews)
-                        case let .Idle(idle): IdleScreen(view: idle)
                         default: EmptyView()
                         }
                     }.padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)

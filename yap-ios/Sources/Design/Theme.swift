@@ -49,10 +49,12 @@ extension Color {
 }
 
 struct StudyCard<Content: View>: View {
+    var alignment: HorizontalAlignment = .leading
+    var spacing: CGFloat = 12
     @ViewBuilder var content: Content
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) { content }
-            .frame(maxWidth: .infinity, alignment: .leading).padding(16)
+        VStack(alignment: alignment, spacing: spacing) { content }
+            .frame(maxWidth: .infinity, alignment: Alignment(horizontal: alignment, vertical: .center)).padding(16)
             .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
             .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
     }

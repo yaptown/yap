@@ -10,22 +10,29 @@ struct IdleScreen: View {
     var body: some View {
         Group {
             switch view {
-            case let .AudioPending(_, online, _):
-                StudyCard {
-                    Text("Just a moment…").font(.title2.bold())
-                    ProgressView("Downloading the audio for your next challenge.")
-                    if !online { Text("Reconnect to download audio.") }
+            case let .AudioPending(_, online, week):
+                ReviewStepScrollView {
+                    StudyCard {
+                        Text("Just a moment…").font(.title2.bold())
+                        ProgressView("Downloading the audio for your next challenge.")
+                        if !online { Text("Reconnect to download audio.") }
+                    }
+                } actions: {
+                    WeekProgressStrip(week: week)
                 }
             case let .ReviewPlanOffer(plan):
-                ReviewPlanScreen(cards: plan.cards) { addEvent(plan.event) }
+                ReviewPlanScreen(plan: plan) { addEvent(plan.event) }
             case let .StudyPlanComplete(title, nextDue, plan):
                 if showReleasePlan {
-                    ReviewPlanScreen(cards: plan.cards) { addEvent(plan.event) }
+                    ReviewPlanScreen(plan: plan) { addEvent(plan.event) }
                 } else {
-                    StudyCard {
-                        Text(title).font(.title2.bold())
-                        if let nextDue { NextReviewLine(card: nextDue) }
-                        Button("Study more") { showReleasePlan = true }.buttonStyle(.bordered).controlSize(.large)
+                    ReviewStepScrollView {
+                        StudyCard {
+                            Text(title).font(.title2.bold())
+                            if let nextDue { NextReviewLine(card: nextDue) }
+                            Button("Study more") { showReleasePlan = true }.buttonStyle(.bordered).controlSize(.large)
+                        }
+                    } actions: {
                         WeekProgressStrip(week: plan.week)
                     }
                     #if DEBUG
@@ -54,6 +61,7 @@ struct IdleScreen: View {
     }
     @ViewBuilder private func idleContent(_ idle: IdleView) -> some View {
         let awaitingAcknowledgement = if case .PimsleurLesson = idle.navigation.selection { !pimsleurAcknowledged } else { false }
+        ReviewStepScrollView {
         StudyCard {
             Text(idle.title).font(.title2.bold())
             if !idle.body.isEmpty { Text(idle.body) } else if let card = idle.next_due { NextReviewLine(card: card) }
@@ -86,8 +94,10 @@ struct IdleScreen: View {
                         }
                     }
                 }
-                WeekProgressStrip(week: idle.week)
             }
+        }
+        } actions: {
+            if idle.show_sentence_list { WeekProgressStrip(week: idle.week) }
         }
     }
 }

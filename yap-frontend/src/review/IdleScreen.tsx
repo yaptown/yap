@@ -95,8 +95,8 @@ export const IdleScreen = memo(function IdleScreen(props: IdleScreenProps) {
           <WeekProgressStrip week={view.plan.week} className="mt-auto mb-2" />
         </div>
       );
-      return <ReviewPlanCard title="Today's review plan:" cards={view.plan.cards} buttonLabel="Let's go!" onCommit={() => addEvent(view.plan.event)} week={view.plan.week} targetLanguage={view.plan.target_language} />;
-    case "ReviewPlanOffer": return <ReviewPlanCard title="Today's review plan:" cards={view.cards} buttonLabel="Let's go!" onCommit={() => addEvent(view.event)} week={view.week} targetLanguage={view.target_language} />;
+      return <ReviewPlanCard plan={view.plan} onCommit={() => addEvent(view.plan.event)} />;
+    case "ReviewPlanOffer": return <ReviewPlanCard plan={view} onCommit={() => addEvent(view.event)} />;
     case "Idle": return <IdleContent {...props} view={view} deck={deck} />;
   }
 });

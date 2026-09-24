@@ -5678,7 +5678,13 @@ mod tests {
             panic!("expected completed plan")
         };
         assert!(title.starts_with("You completed the study plan in "));
-        assert_eq!(plan.cards.len(), 10);
+        assert_eq!(
+            plan.groups
+                .iter()
+                .map(|group| group.cards.len())
+                .sum::<usize>(),
+            10
+        );
         let released = apply_deck_event(deck.clone(), plan.event, now);
         assert_eq!(released.locked_count(), 0);
         let old_plan = (now + chrono::Duration::hours(37)).timestamp_millis() as f64;
