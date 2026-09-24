@@ -12,7 +12,9 @@ use language_utils::{
 use postgrest::Postgrest;
 use serde::Deserialize;
 
-use crate::{deck_token, service_role_client, synthesize_checked_bytes, tts_cache};
+use crate::{
+    deck_token, service_role_client, synthesize_checked_bytes, tts_cache, tts_verify::Transcribers,
+};
 
 #[derive(Debug, Deserialize)]
 pub struct Params {
@@ -95,7 +97,14 @@ pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
         return Err(StatusCode::FORBIDDEN);
     }
 
-    let synthesized = synthesize_checked_bytes(&http, &request, TtsProvider::ElevenLabs).await?;
+    // A deck export fires hundreds of these in minutes; see `Transcribers`.
+    let synthesized = synthesize_checked_bytes(
+        &http,
+        &request,
+        TtsProvider::ElevenLabs,
+        Transcribers::CloudflareOnly,
+    )
+    .await?;
     // Another request may have populated the bucket between our HEAD and the
     // pipeline's lookup. That playback did not spend anything for this deck.
     if synthesized.synthesized {

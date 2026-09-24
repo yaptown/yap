@@ -113,9 +113,12 @@ export async function buildApkg(
   let done = 0;
   let mediaIndex = 0;
   onProgress({ done, total: plan.bundled.length });
-  // Four at a time downloads recordings quickly without flooding the TTS gate.
-  for (let start = 0; start < plan.bundled.length; start += 4) {
-    const batch = plan.bundled.slice(start, start + 4);
+  // Eight at a time. The backend verifies deck audio with Cloudflare alone
+  // (720 Whisper requests a minute), so the ceiling is ElevenLabs' own
+  // concurrency limit, not the transcription gate.
+  const concurrency = 8;
+  for (let start = 0; start < plan.bundled.length; start += concurrency) {
+    const batch = plan.bundled.slice(start, start + concurrency);
     const results = await Promise.all(batch.map(async ({ filename, source }): Promise<Fetched> => {
       if (source.type !== "Tts") {
         const bytes = await fetchBundled(source);

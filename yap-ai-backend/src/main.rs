@@ -38,6 +38,7 @@ mod tts_cache;
 mod tts_verify;
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
+use tts_verify::Transcribers;
 use tysm::chat_completions::ChatClient;
 
 static CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
@@ -192,11 +193,12 @@ async fn audio_rejection(
     http: &reqwest::Client,
     request: &TtsRequest,
     audio: &[u8],
+    transcribers: Transcribers,
 ) -> Option<(Rejection, String)> {
     if let Some(defect) = audio_codec::audio_defect(audio) {
         return Some((Rejection::Defective, defect.to_string()));
     }
-    let reason = tts_verify::content_defect(http, request, audio).await?;
+    let reason = tts_verify::content_defect(http, request, audio, transcribers).await?;
     Some((Rejection::WrongWords, reason))
 }
 
@@ -217,6 +219,7 @@ async fn synthesize_provider_checked(
     request: &TtsRequest,
     provider: TtsProvider,
     max_attempts: usize,
+    transcribers: Transcribers,
 ) -> Result<Vec<u8>, ProviderFailure> {
     let mut rejected: Option<(Rejection, Vec<u8>)> = None;
     let mut status = StatusCode::BAD_GATEWAY;
@@ -246,7 +249,7 @@ async fn synthesize_provider_checked(
             }
         };
 
-        match audio_rejection(http, request, &audio).await {
+        match audio_rejection(http, request, &audio, transcribers).await {
             None => return Ok(audio),
             Some((grade, reason)) => {
                 eprintln!("{provider:?} TTS: rejected attempt {n} ({reason}), retrying");
@@ -277,7 +280,8 @@ async fn synthesize_checked(
     request: &TtsRequest,
     primary: TtsProvider,
 ) -> Result<String, StatusCode> {
-    let result = synthesize_checked_bytes(http, request, primary).await?;
+    // A learner is waiting on this one: lowest latency wins.
+    let result = synthesize_checked_bytes(http, request, primary, Transcribers::Race).await?;
     Ok(base64::engine::general_purpose::STANDARD.encode(&result.audio))
 }
 
@@ -323,6 +327,7 @@ async fn synthesize_checked_bytes(
     http: &reqwest::Client,
     request: &TtsRequest,
     primary: TtsProvider,
+    transcribers: Transcribers,
 ) -> Result<Synthesized, StatusCode> {
     let cache_filename = language_utils::tts_cache_filename(request, &primary);
     if let Some(audio) = tts_cache::lookup(http, &cache_filename).await {
@@ -350,13 +355,14 @@ async fn synthesize_checked_bytes(
     // rather than first-wins, so a silent clip can't beat an audible one.
     let mut salvage: Vec<(Rejection, bool, Vec<u8>)> = Vec::new();
 
-    let mut failure_status = match synthesize_provider_checked(http, request, primary, 1).await {
-        Ok(audio) => return verified(audio),
-        Err(failure) => {
-            salvage.extend(failure.rejected.map(|(grade, audio)| (grade, true, audio)));
-            failure.status
-        }
-    };
+    let mut failure_status =
+        match synthesize_provider_checked(http, request, primary, 1, transcribers).await {
+            Ok(audio) => return verified(audio),
+            Err(failure) => {
+                salvage.extend(failure.rejected.map(|(grade, audio)| (grade, true, audio)));
+                failure.status
+            }
+        };
 
     let chain = fallback_chain(primary, request);
     if chain.len() > 1 {
@@ -371,8 +377,14 @@ async fn synthesize_checked_bytes(
         let http = http.clone();
         let request = request.clone();
         racers.spawn(async move {
-            let outcome =
-                synthesize_provider_checked(&http, &request, provider, TTS_MAX_ATTEMPTS).await;
+            let outcome = synthesize_provider_checked(
+                &http,
+                &request,
+                provider,
+                TTS_MAX_ATTEMPTS,
+                transcribers,
+            )
+            .await;
             (provider, outcome)
         });
     }
