@@ -17,6 +17,17 @@
         const isDevelopment = window.location.hostname === 'localhost' ||
                             window.location.hostname === '127.0.0.1' ||
                             window.location.port === '5173'; // Vite's default dev port
+        const isProduction = window.location.hostname === 'yap.town';
+
+        if (!isDevelopment && !isProduction) {
+          // The "Production" OneSignal app below is only registered for the
+          // https://yap.town origin. Every other origin we're served from
+          // (beta.yap.town, Cloudflare Pages previews, ...) makes OneSignal
+          // throw "Can only be used on: https://yap.town" as soon as init()
+          // runs, since push notifications can't work there anyway.
+          console.log(`OneSignal skipped: unsupported origin ${window.location.hostname}`);
+          return;
+        }
 
         const config = isDevelopment ? {
           // Local development
