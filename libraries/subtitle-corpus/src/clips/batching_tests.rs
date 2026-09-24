@@ -3,6 +3,44 @@ use base64::Engine;
 use std::cell::Cell;
 use std::io::Write;
 
+#[test]
+fn corrections_only_invalidate_affected_films() {
+    let root = tempfile::tempdir().unwrap();
+    let current = film(root.path(), 0, 0).provenance;
+    let mut json = serde_json::to_value(&current).unwrap();
+    json["inputs"]
+        .as_object_mut()
+        .unwrap()
+        .remove("corrections");
+    let old: Provenance = serde_json::from_value(json).unwrap();
+    assert_eq!(old.work(&current), Work::Nothing);
+    let mut corrected = current.clone();
+    corrected.inputs.corrections = "film-specific-digest".into();
+    assert_eq!(old.work(&corrected), Work::Redo("inputs changed"));
+
+    let dir = root.path().join("0");
+    let report = serde_json::json!({
+        "format": crate::verbatim::FORMAT,
+        "subtitle_digest": "subtitle", "transcript_digest": "transcript",
+        "min_fraction": 0.25, "eligible": 20, "placed": 20,
+        "fraction": 1.0, "aligned": null, "verdict": crate::verbatim::Verdict::Verbatim
+    });
+    std::fs::write(
+        crate::verbatim::report_path(&dir),
+        serde_json::to_vec(&report).unwrap(),
+    )
+    .unwrap();
+    assert!(crate::verbatim::matching(&dir, "subtitle", "transcript", "", 0.25).is_some());
+    assert!(crate::verbatim::matching(
+        &dir,
+        "subtitle",
+        "transcript",
+        "film-specific-digest",
+        0.25
+    )
+    .is_none());
+}
+
 fn test_phone(hash: u64) -> String {
     g2p::Phoneme::ALL[hash as usize % g2p::Phoneme::ALL.len()].to_string()
 }
@@ -96,6 +134,7 @@ fn film(root: &Path, index: usize, count: usize) -> PreparedFilm {
                 subtitle_digest: "subtitle".into(),
                 transcript_digest: "transcript".into(),
                 segmentation: "test-segmentation".into(),
+                corrections: String::new(),
                 language: code.into(),
                 audio: AudioInput {
                     filename: "film.mkv".into(),
@@ -246,6 +285,7 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
         format: crate::verbatim::FORMAT,
         subtitle_digest: original.inputs.subtitle_digest.clone(),
         transcript_digest: original.inputs.transcript_digest.clone(),
+        corrections_digest: String::new(),
         min_fraction: 0.25,
         measure: crate::verbatim::Measure {
             eligible: 100,
@@ -452,6 +492,7 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         format: crate::verbatim::FORMAT,
         subtitle_digest: film.provenance.inputs.subtitle_digest.clone(),
         transcript_digest: film.provenance.inputs.transcript_digest.clone(),
+        corrections_digest: String::new(),
         min_fraction: crate::verbatim::min_fraction("kor"),
         measure: Measure {
             eligible: 30,

@@ -27,9 +27,10 @@ pub enum Tokenization {
 
 /// The tokenization a pronunciation-corpus lang code needs.
 pub fn tokenization_for(code: &str) -> Tokenization {
-    match code {
-        "jpn" | "zho-hans" | "tha" | "kor" => Tokenization::Chars,
-        _ => Tokenization::Words,
+    if movie_subtitles::corrections::uses_chars(code) {
+        Tokenization::Chars
+    } else {
+        Tokenization::Words
     }
 }
 

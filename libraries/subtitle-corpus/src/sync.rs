@@ -66,6 +66,8 @@ fn format_stamp(ms: i64) -> String {
     )
 }
 
+/// Raw timing cues, intentionally without the correction overlay: sync moves
+/// the source track's clock, while sentence ingestion uses clips::subtitle_lines.
 pub fn parse_cues(srt: &str) -> Vec<Cue> {
     // Course raw SRTs are LF, but a Bazarr sidecar keeps whatever the uploader
     // used — usually CRLF, where blank lines are `\r\n\r\n` and a `\n\n` block

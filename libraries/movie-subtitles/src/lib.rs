@@ -51,13 +51,18 @@ pub fn derived_jsonl_path(movies_dir: &Path, imdb_id: &str) -> PathBuf {
 /// `Ok(None)` means neither file exists. A raw SRT that fails to parse is an
 /// error rather than a silent fallback: the JSONL beside it was derived from
 /// *some* SRT, and quietly serving that instead would hide a corrupt file.
-pub fn load(movies_dir: &Path, imdb_id: &str) -> Result<Option<(Vec<SubtitleLine>, Source)>> {
+pub fn load(
+    movies_dir: &Path,
+    imdb_id: &str,
+    language: language_utils::Language,
+) -> Result<Option<(Vec<SubtitleLine>, Source)>> {
     let raw = raw_srt_path(movies_dir, imdb_id);
     if raw.exists() {
         let srt = std::fs::read_to_string(&raw)
             .with_context(|| format!("Failed to read raw subtitle {}", raw.display()))?;
-        let lines = parse_srt(&srt)
+        let mut lines = parse_srt(&srt)
             .with_context(|| format!("Failed to parse raw subtitle {}", raw.display()))?;
+        corrections::apply(&mut lines, language, imdb_id);
         return Ok(Some((lines, Source::RawSrt)));
     }
 
@@ -65,7 +70,8 @@ pub fn load(movies_dir: &Path, imdb_id: &str) -> Result<Option<(Vec<SubtitleLine
     if !derived.exists() {
         return Ok(None);
     }
-    let lines = read_derived_jsonl(&derived)?;
+    let mut lines = read_derived_jsonl(&derived)?;
+    corrections::apply(&mut lines, language, imdb_id);
     Ok(Some((lines, Source::DerivedJsonl)))
 }
 
@@ -293,6 +299,7 @@ pub fn strip_html_tags(text: &str) -> String {
     HTML_TAGS.replace_all(text, "").to_string()
 }
 
+pub mod corrections;
 pub mod llm_segment;
 pub mod segment;
 pub mod sentences;

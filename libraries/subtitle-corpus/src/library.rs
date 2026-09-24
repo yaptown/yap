@@ -697,8 +697,17 @@ pub(crate) fn current_verdict(
     let subtitle = source_digest(&dir.join("subtitle.srt")).ok()?;
     let transcript = source_digest(&dir.join("transcript.jsonl")).ok()?;
     Some(
-        verbatim::matching(dir, &subtitle, &transcript, verbatim::min_fraction(course))?
-            .measure
-            .verdict,
+        verbatim::matching(
+            dir,
+            &subtitle,
+            &transcript,
+            &movie_subtitles::corrections::film_digest(
+                language_utils::Language::from_code(course)?,
+                dir.file_name()?.to_str()?,
+            ),
+            verbatim::min_fraction(course),
+        )?
+        .measure
+        .verdict,
     )
 }

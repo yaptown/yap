@@ -18,7 +18,6 @@ use anyhow::{bail, Context, Result};
 use futures::{stream, TryStreamExt};
 use language_utils::Language;
 use md5::{Digest as _, Md5};
-use movie_subtitles::cleanup_subtitle_text;
 use movie_subtitles::segment::SubtitleSegmenter;
 use serde_json::json;
 use sha2::{Digest, Sha256};
@@ -27,7 +26,7 @@ use unicode_normalization::UnicodeNormalization;
 use crate::clips::{
     clips_path, read_file as read_clips_with_provenance, subtitle_sentences, Clip, Provenance,
 };
-use crate::cues::{load_transcript, parse_cues, repair_latin_homoglyphs};
+use crate::cues::{load_transcript, repair_latin_homoglyphs};
 use crate::library::{
     course_dir, current_verdict, output_is_fresh, read_plan, truncate, Movie, Source,
 };
@@ -287,14 +286,20 @@ async fn export_film(
     }
 
     let (provenance, clips) = read_clips_with_provenance(&clips_path(&dir))?;
+    if provenance.inputs.corrections
+        != movie_subtitles::corrections::film_digest(language, &movie.imdb_id)
+    {
+        bail!("subtitle corrections changed; remap clips before exporting");
+    }
     let srt = std::fs::read_to_string(dir.join("subtitle.srt"))?;
     let segmenter = SubtitleSegmenter::for_language(language)?;
-    let sentences = subtitle_sentences(&srt, language, &segmenter).await?;
-    let cues: Vec<Cue> = parse_cues(&srt)
+    let sentences = subtitle_sentences(&srt, language, &movie.imdb_id, &segmenter).await?;
+    let cues: Vec<Cue> = crate::clips::subtitle_lines(&srt, language, &movie.imdb_id)
         .into_iter()
-        .filter_map(|c| {
-            let text = repair_latin_homoglyphs(&cleanup_subtitle_text(&c.text));
-            (!text.is_empty()).then_some(Cue { text, ..c })
+        .map(|line| Cue {
+            text: repair_latin_homoglyphs(&line.sentence),
+            start_ms: i64::from(line.start_ms),
+            end_ms: i64::from(line.end_ms),
         })
         .collect();
     let transcript = load_transcript(&dir.join("transcript.jsonl"))?;
@@ -1900,6 +1905,8 @@ fn read_optional(path: &std::path::Path) -> Result<Option<Vec<u8>>> {
 /// but yap's stricter parser fails the whole file — and a raw SRT that
 /// fails to parse takes the entire course build down with it.
 fn yap_srt(srt: &str) -> Result<String> {
+    // This is a raw-file export, not sentence ingestion. Keep corrections out
+    // of the bytes on disk; movie_subtitles::load applies them in memory.
     let normalized = crate::sync::write_cues(&crate::sync::parse_cues(srt));
     movie_subtitles::parse_srt(&normalized)
         .context("normalised subtitle is not parseable by yap")?;

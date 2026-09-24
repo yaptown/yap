@@ -114,7 +114,8 @@ async fn main() -> Result<()> {
             movies
                 .par_iter()
                 .map(|movie| {
-                    let Some((subtitles, _)) = movie_subtitles::load(&movies_dir, &movie.id)?
+                    let Some((subtitles, _)) =
+                        movie_subtitles::load(&movies_dir, &movie.id, target)?
                     else {
                         return Ok(None);
                     };
@@ -130,7 +131,8 @@ async fn main() -> Result<()> {
         Segmenter::Llm(_) => {
             let mut segmented = Vec::with_capacity(movies.len());
             for movie in &movies {
-                let Some((subtitles, _)) = movie_subtitles::load(&movies_dir, &movie.id)? else {
+                let Some((subtitles, _)) = movie_subtitles::load(&movies_dir, &movie.id, target)?
+                else {
                     segmented.push(None);
                     continue;
                 };

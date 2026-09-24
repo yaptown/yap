@@ -35,6 +35,25 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command_ {
+    /// Detect single-word disagreements and review spelling versus audio mismatches.
+    WordCheck {
+        #[arg(long, default_value = "/data/andrep/subtitle-corpus")]
+        out: PathBuf,
+        /// Course language code (for example fra or zho-hans).
+        #[arg(long)]
+        language: Option<String>,
+        #[arg(long)]
+        imdb: Option<String>,
+        /// Stop after this many films (0 = all).
+        #[arg(long, default_value_t = 0)]
+        limit: usize,
+        /// Write candidates without calling the judge or changing corrections.
+        #[arg(long)]
+        dry_run: bool,
+        /// Judge hand-labeled JSONL through the production path, without applying.
+        #[arg(long)]
+        eval: Option<PathBuf>,
+    },
     /// Probe every movie and decide where its subtitle will come from.
     Inventory {
         /// JSON from `arr radarr raw GET /movie`.
@@ -2423,7 +2442,15 @@ async fn adopt_candidate(
     let mut best: Option<(String, String, verbatim::Measure)> = None;
     for (label, path) in candidates {
         let text = String::from_utf8_lossy(&std::fs::read(&path)?).into_owned();
-        let measure = verbatim::measure(&text, &transcript, language, code, min_verbatim).await?;
+        let measure = verbatim::measure(
+            &text,
+            &transcript,
+            language,
+            code,
+            &movie.imdb_id,
+            min_verbatim,
+        )
+        .await?;
         println!("      {label:24} {}", verbatim::describe(&measure));
         let bar = best.as_ref().map_or(to_beat, |b| b.2.best_placed());
         if matches!(measure.verdict, Verdict::Verbatim | Verdict::Skewed)
@@ -2898,6 +2925,14 @@ fn main() -> Result<()> {
     // variable away from a run that quietly verifies nothing.
     dotenvy::dotenv().ok();
     match Args::parse().command {
+        Command_::WordCheck {
+            out,
+            language,
+            imdb,
+            limit,
+            dry_run,
+            eval,
+        } => subtitle_corpus::word_check::run(out, language, imdb, limit, dry_run, eval),
         Command_::Inventory {
             library,
             data_root,

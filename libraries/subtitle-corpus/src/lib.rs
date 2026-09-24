@@ -20,3 +20,4 @@ pub mod transcript;
 pub mod vad;
 pub mod verbatim;
 pub mod vobsub;
+pub mod word_check;

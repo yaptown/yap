@@ -346,7 +346,9 @@ async fn load_movie_sentences(
             // Prefer the raw SRT and clean it here, in memory, so improvements to
             // the cleaning rules reach every course on the next build. Movies whose
             // raw SRT was never kept fall back to the pre-cleaned JSONL.
-            let Some((subtitles, source)) = movie_subtitles::load(&movies_dir, &movie.id)? else {
+            let Some((subtitles, source)) =
+                movie_subtitles::load(&movies_dir, &movie.id, language)?
+            else {
                 return Ok(None);
             };
 

@@ -55,7 +55,7 @@ use crate::transcript::{Kind, Spoken};
 
 /// Bump when the record format or the gating logic changes in a way that
 /// makes existing `clips.jsonl` files not comparable.
-const FORMAT_VERSION: u32 = 13;
+pub(crate) const FORMAT_VERSION: u32 = 13;
 
 /// How late earshot flags speech after it begins. Measured 2026-09-02 on
 /// four films: with the profile allowed to trim inside the stamped words
@@ -94,6 +94,8 @@ pub struct Inputs {
     pub subtitle_digest: String,
     pub transcript_digest: String,
     pub segmentation: String,
+    #[serde(default)]
+    pub corrections: String,
     pub language: String,
     pub audio: AudioInput,
 }
@@ -542,9 +544,15 @@ impl Clip {
 pub async fn subtitle_sentences(
     srt: &str,
     language: Language,
+    imdb: &str,
     segmenter: &SubtitleSegmenter,
 ) -> Result<Vec<KeyedSentence>> {
-    movie_subtitles::sentences::keyed_sentences(&subtitle_lines(srt), language, segmenter).await
+    movie_subtitles::sentences::keyed_sentences(
+        &subtitle_lines(srt, language, imdb),
+        language,
+        segmenter,
+    )
+    .await
 }
 
 /// Segment every model-segmented film in `films` in one Batch API round
@@ -600,8 +608,9 @@ pub fn llm_tracks(
             Some(
                 std::fs::read_to_string(&path)
                     .map(|srt| {
-                        let lines =
-                            movie_subtitles::sentences::prepared_lines(&subtitle_lines(&srt));
+                        let lines = movie_subtitles::sentences::prepared_lines(&subtitle_lines(
+                            &srt, language, &m.imdb_id,
+                        ));
                         (i, language, lines)
                     })
                     .with_context(|| format!("read {}", path.display())),
@@ -611,7 +620,18 @@ pub fn llm_tracks(
 }
 
 /// A subtitle text as the cleaned cue lines segmentation starts from.
-pub fn subtitle_lines(srt: &str) -> Vec<SubtitleLine> {
+pub fn subtitle_lines(srt: &str, language: Language, imdb: &str) -> Vec<SubtitleLine> {
+    let mut lines = uncorrected_subtitle_lines(srt);
+    movie_subtitles::corrections::apply(&mut lines, language, imdb);
+    lines
+}
+
+/// Only for identifying correction keys against the source text. Sentence
+/// ingestion must use subtitle_lines, which requires the film and language.
+pub(crate) fn uncorrected_subtitle_lines(srt: &str) -> Vec<SubtitleLine> {
+    // Both parsers repair mojibake before cleanup. This is the shared cue key,
+    // before prepared_lines repairs homoglyphs. Keep the tolerant corpus parser
+    // (some disc tracks have malformed blocks).
     parse_cues(srt)
         .into_iter()
         .filter_map(|cue| {
@@ -960,6 +980,10 @@ fn current_provenance(
             subtitle_digest: crate::transcript::source_digest(&dir.join("subtitle.srt"))?,
             transcript_digest: crate::transcript::source_digest(&dir.join("transcript.jsonl"))?,
             segmentation: movie_subtitles::segment::provenance(language),
+            corrections: movie_subtitles::corrections::film_digest(
+                language,
+                dir.file_name().unwrap().to_str().unwrap(),
+            ),
             language: code.into(),
             audio,
         },
@@ -1007,6 +1031,7 @@ fn existing_work(
         dir,
         &current.inputs.subtitle_digest,
         &current.inputs.transcript_digest,
+        &current.inputs.corrections,
         current.gate.min_verbatim,
     ) else {
         return (Work::Redo("verbatim measurement missing or stale"), None);
@@ -1111,8 +1136,13 @@ async fn prepare_film(
 
     let segmenter = SubtitleSegmenter::for_language(language)?;
     let transcript = load_transcript(&transcript_path)?;
-    let sentences =
-        subtitle_sentences(&std::fs::read_to_string(&subtitle)?, language, &segmenter).await?;
+    let sentences = subtitle_sentences(
+        &std::fs::read_to_string(&subtitle)?,
+        language,
+        &movie.imdb_id,
+        &segmenter,
+    )
+    .await?;
 
     let mut summary = FilmSummary {
         sentences: sentences.len(),
@@ -1185,6 +1215,14 @@ async fn prepare_film(
                     passed: false,
                     reject: None,
                 };
+                if movie_subtitles::corrections::audio_mismatch(
+                    language,
+                    &clip.imdb_id,
+                    &clip.sentence,
+                ) {
+                    clip.reject = Some("audio-mismatch".into());
+                    return Some((clip, None));
+                }
                 if clip.audio_event_overlap {
                     clip.reject = Some("audio event inside the span".into());
                     return Some((clip, None));

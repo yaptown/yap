@@ -172,6 +172,8 @@ pub struct Report {
     pub format: u32,
     pub subtitle_digest: String,
     pub transcript_digest: String,
+    #[serde(default)]
+    pub corrections_digest: String,
     pub min_fraction: f64,
     #[serde(flatten)]
     pub measure: Measure,
@@ -203,10 +205,11 @@ async fn score(
     transcript: &[Spoken],
     language: Language,
     code: &str,
+    imdb: &str,
     segmenter: &SubtitleSegmenter,
 ) -> Result<(usize, usize)> {
     let (mut eligible, mut placed) = (0usize, 0usize);
-    for k in subtitle_sentences(srt, language, segmenter).await? {
+    for k in subtitle_sentences(srt, language, imdb, segmenter).await? {
         match place(
             &k.sentence,
             k.start_ms.into(),
@@ -275,10 +278,11 @@ pub async fn measure(
     transcript: &[Spoken],
     language: Language,
     code: &str,
+    imdb: &str,
     min_fraction: f64,
 ) -> Result<Measure> {
     let segmenter = SubtitleSegmenter::for_language(language)?;
-    let (eligible, placed) = score(srt, transcript, language, code, &segmenter).await?;
+    let (eligible, placed) = score(srt, transcript, language, code, imdb, &segmenter).await?;
     let fraction = if eligible == 0 {
         0.0
     } else {
@@ -296,7 +300,7 @@ pub async fn measure(
     let mut aligned = None;
     if let Some(a) = candidate {
         let srt = sync::write_cues(&retimed(&cues, &a));
-        let (n, placed) = score(&srt, transcript, language, code, &segmenter).await?;
+        let (n, placed) = score(&srt, transcript, language, code, imdb, &segmenter).await?;
         aligned = Some(Fit {
             offset_ms: a.offset_ms,
             rate: a.rate,
@@ -328,12 +332,14 @@ pub fn matching(
     dir: &Path,
     subtitle_digest: &str,
     transcript_digest: &str,
+    corrections_digest: &str,
     min_fraction: f64,
 ) -> Option<Report> {
     let mut report = stored(dir)?;
     if report.format != FORMAT
         || report.subtitle_digest != subtitle_digest
         || report.transcript_digest != transcript_digest
+        || report.corrections_digest != corrections_digest
     {
         return None;
     }
@@ -353,16 +359,25 @@ pub async fn check(
     let transcript_path = dir.join("transcript.jsonl");
     let subtitle_digest = source_digest(&subtitle).context("subtitle digest")?;
     let transcript_digest = source_digest(&transcript_path).context("transcript digest")?;
-    if let Some(report) = matching(dir, &subtitle_digest, &transcript_digest, min_fraction) {
+    let imdb = dir.file_name().unwrap().to_str().unwrap();
+    let corrections_digest = movie_subtitles::corrections::film_digest(language, imdb);
+    if let Some(report) = matching(
+        dir,
+        &subtitle_digest,
+        &transcript_digest,
+        &corrections_digest,
+        min_fraction,
+    ) {
         return Ok(report);
     }
     let transcript = load_transcript(&transcript_path)?;
     let srt = std::fs::read_to_string(&subtitle)?;
-    let measure = measure(&srt, &transcript, language, code, min_fraction).await?;
+    let measure = measure(&srt, &transcript, language, code, imdb, min_fraction).await?;
     let report = Report {
         format: FORMAT,
         subtitle_digest,
         transcript_digest,
+        corrections_digest,
         min_fraction,
         measure,
     };

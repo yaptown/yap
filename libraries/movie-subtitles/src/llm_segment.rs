@@ -80,8 +80,8 @@ pub fn joiner(language: Language) -> &'static str {
 /// breaks account-side — as it did on 2026-08-28, when every batch started
 /// failing validation with "Cannot find file <its own freshly uploaded
 /// input>" — a run simply cannot finish, however healthy the rest of the
-/// pipeline is. Sending live costs about double and runs the misses
-/// sequentially, so this is an escape hatch to be switched off again once
+/// pipeline is. Sending live costs about double and runs the misses only 16
+/// at a time per call, so this is an escape hatch to be switched off again once
 /// batching recovers, not a default.
 pub fn no_batch() -> bool {
     std::env::var("YAP_NO_BATCH").is_ok_and(|v| !v.is_empty() && v != "0")
