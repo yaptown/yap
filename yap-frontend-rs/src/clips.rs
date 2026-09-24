@@ -161,6 +161,21 @@ pub(crate) fn sentence_has_clip(language: Language, text: &str) -> bool {
     })
 }
 
+/// Every sentence with a published clip, mapped through `f`. Walks the
+/// manifest (tens of thousands of rows) rather than the pack (hundreds of
+/// thousands of sentences) when a caller wants the clip sentences.
+pub(crate) fn map_clip_sentences<T>(
+    language: Language,
+    f: impl FnMut(&str) -> Option<T>,
+) -> Vec<T> {
+    CLIP_MANIFESTS.with(|m| {
+        m.borrow()
+            .get(&language)
+            .map(|rows| rows.keys().map(String::as_str).filter_map(f).collect())
+            .unwrap_or_default()
+    })
+}
+
 fn manifest_filename(language: Language) -> String {
     format!("manifest_{}.json", language.code())
 }

@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use crate::comprehensible::GramMembership;
 
 use language_utils::{SpurGram, TaggedGram};
 use serde::{Deserialize, Serialize};
@@ -55,8 +55,8 @@ impl TierLevelSlice<'_> {
     pub(crate) fn known_pct(
         &self,
         freq_list: &language_utils::language_pack::FrequencyList,
-        written: &BTreeSet<TaggedGram<SpurGram>>,
-        listening: &BTreeSet<TaggedGram<SpurGram>>,
+        written: impl GramMembership,
+        listening: impl GramMembership,
     ) -> f64 {
         if self.total_freq == 0 {
             return 100.0;
@@ -142,10 +142,10 @@ pub(crate) fn tier_level_slices<'a>(
 pub(crate) fn best_tier_level_idx(
     levels: &[TierLevelSlice<'_>],
     freq_list: &language_utils::language_pack::FrequencyList,
-    current_written: &BTreeSet<TaggedGram<SpurGram>>,
-    current_listening: &BTreeSet<TaggedGram<SpurGram>>,
-    projected_written: &BTreeSet<TaggedGram<SpurGram>>,
-    projected_listening: &BTreeSet<TaggedGram<SpurGram>>,
+    current_written: impl GramMembership,
+    current_listening: impl GramMembership,
+    projected_written: impl GramMembership,
+    projected_listening: impl GramMembership,
 ) -> usize {
     // Find the earliest level where adding cards makes any progress
     levels
@@ -170,8 +170,8 @@ pub(crate) fn best_tier_level_idx(
 /// Used for the "essential" (no goal) path when we only have one set of grams.
 pub(crate) fn first_incomplete_level_pct(
     frequency_list: &language_utils::language_pack::FrequencyList,
-    known_written: &BTreeSet<TaggedGram<SpurGram>>,
-    known_listening: &BTreeSet<TaggedGram<SpurGram>>,
+    known_written: impl GramMembership,
+    known_listening: impl GramMembership,
 ) -> f64 {
     let all_grams: Vec<TaggedGram<SpurGram>> = frequency_list.entries.keys().copied().collect();
     let levels = tier_level_slices(&all_grams, frequency_list);

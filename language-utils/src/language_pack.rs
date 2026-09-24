@@ -10,6 +10,70 @@ use crate::{
 use lasso::Spur;
 use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
+use std::hash::Hash;
+
+/// Runtime-only index, independent of the pack's frequency ordering.
+#[derive(Debug)]
+pub struct EaseOrder<K> {
+    entries: Vec<(K, f32)>,
+    ranks: FxHashMap<K, u32>,
+}
+
+impl<K: Copy + Eq + Hash + Ord> EaseOrder<K> {
+    fn new(entries: impl Iterator<Item = (K, f32)>) -> Self {
+        let mut entries: Vec<_> = entries.collect();
+        entries.sort_unstable_by(|(a, x), (b, y)| x.total_cmp(y).then_with(|| a.cmp(b)));
+        let ranks = entries
+            .iter()
+            .enumerate()
+            .map(|(i, (key, _))| (*key, i as u32))
+            .collect();
+        Self { entries, ranks }
+    }
+
+    pub fn rank(&self, key: &K) -> Option<u32> {
+        self.ranks.get(key).copied()
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    pub fn ease_at(&self, rank: u32) -> Option<f32> {
+        self.entries.get(rank as usize).map(|(_, ease)| *ease)
+    }
+
+    pub fn iter_from(&self, rank: u32) -> impl Iterator<Item = K> + '_ {
+        self.entries[rank as usize..].iter().map(|(key, _)| *key)
+    }
+
+    pub fn partition_point(&self, mut predicate: impl FnMut(f32) -> bool) -> u32 {
+        self.entries.partition_point(|(_, ease)| predicate(*ease)) as u32
+    }
+}
+
+fn ease_orders(
+    frequencies: &FrequencyList,
+) -> (EaseOrder<TaggedGram<SpurGram>>, EaseOrder<SpurGram>) {
+    let written = EaseOrder::new(
+        frequencies
+            .entries
+            .iter()
+            .map(|(key, frequency)| (*key, frequency.ease)),
+    );
+    let mut listening: FxHashMap<SpurGram, f32> = FxHashMap::default();
+    for (key, frequency) in frequencies.entries.iter() {
+        listening
+            .entry(key.gram)
+            .and_modify(|ease| *ease = ease.max(frequency.ease))
+            .or_insert(frequency.ease);
+    }
+    (written, EaseOrder::new(listening.into_iter()))
+}
 
 /// A frequency list with its total count (interned version for the language pack).
 #[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
@@ -24,6 +88,8 @@ pub struct FrequencyList {
 /// back together by [`LanguagePack::from_parts`].
 #[derive(Debug)]
 pub struct LanguagePack {
+    pub written_ease_order: EaseOrder<TaggedGram<SpurGram>>,
+    pub listening_ease_order: EaseOrder<SpurGram>,
     senses: FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>>,
     pub string_rodeo: lasso::RodeoReader,
     pub gram_rodeo: lasso::RodeoReader<Gram<Spur>>,
@@ -77,7 +143,7 @@ pub struct LanguagePack {
 
 impl LanguagePack {
     /// Listening cards represent the sound of a bare gram across all senses.
-    /// Retain the leading sense's ease/flags; sum both occurrence counts.
+    /// Use the maximum sense ease, retain leading flags, and sum occurrence counts.
     pub fn gram_frequency_total(&self, gram: SpurGram) -> Option<Frequency> {
         let mut frequencies = self
             .senses_of(gram)
@@ -87,6 +153,7 @@ impl LanguagePack {
         for frequency in frequencies {
             total.count += frequency.count;
             total.direct_count += frequency.direct_count;
+            total.ease = total.ease.max(frequency.ease);
         }
         Some(total)
     }
@@ -158,58 +225,55 @@ impl LanguagePack {
         is_comprehensible: impl Fn(&TaggedGram<SpurGram>) -> bool,
     ) -> Vec<Spur> {
         // Search through all sentences - if we have a required gram, only look at sentences containing it
-        let candidate_sentences: Vec<Spur> = if let Some(required) = required_gram {
+        let candidate_sentences: &[Spur] = if let Some(required) = required_gram {
             match self.sentences_containing_gram_index.get(required) {
-                Some(sentences) => sentences.clone(),
+                Some(sentences) => sentences,
                 None => return Vec::new(),
             }
         } else {
             // If no required gram/phrase, consider all sentences
-            self.translations.keys().cloned().collect()
+            &self.translations.keys().copied().collect::<Vec<_>>()
         };
+        candidate_sentences
+            .iter()
+            .copied()
+            .filter(|&sentence| {
+                self.sentence_is_comprehensible(sentence, required_gram, &is_comprehensible)
+            })
+            .collect()
+    }
 
+    /// Whether one sentence is fully comprehensible: every learnable gram and
+    /// multiword term satisfies `is_comprehensible` (the required gram itself
+    /// always counts) and the sentence has a translation. This is the hot
+    /// check behind [`Self::comprehensible_sentences`]; callers that already
+    /// know their candidates use it directly.
+    pub fn sentence_is_comprehensible(
+        &self,
+        sentence: Spur,
+        required_gram: Option<&TaggedGram<SpurGram>>,
+        is_comprehensible: &impl Fn(&TaggedGram<SpurGram>) -> bool,
+    ) -> bool {
         let is_comprehensible = |gram: &TaggedGram<SpurGram>| {
             is_comprehensible(gram) || required_gram.is_some_and(|req| req == gram)
         };
-
-        let mut possible_sentences = Vec::new();
-
-        // Warning: this loop is HOT!
-        'checkSentences: for sentence in candidate_sentences {
-            let Some(sentence_grams) = self.encoded_sentences.get(&sentence) else {
-                continue;
-            };
-
-            for sentence_gram in &sentence_grams.grams {
-                if let SentenceGram::Learnable(gram) = sentence_gram
-                    && !is_comprehensible(gram)
-                {
-                    continue 'checkSentences; // Early exit!
-                }
-            }
-
-            for multiword_gram in sentence_grams
-                .multiword_terms
-                .iter()
-                .chain(sentence_grams.low_confidence_multiword_terms.iter())
-            {
-                if !is_comprehensible(&multiword_gram.gram) {
-                    continue 'checkSentences; // Early exit!
-                }
-            }
-
-            if self
+        let Some(sentence_grams) = self.encoded_sentences.get(&sentence) else {
+            return false;
+        };
+        let learnable = sentence_grams.grams.iter().filter_map(|g| match g {
+            SentenceGram::Learnable(gram) => Some(gram),
+            SentenceGram::Obvious(_) => None,
+        });
+        let multiword = sentence_grams
+            .multiword_terms
+            .iter()
+            .chain(&sentence_grams.low_confidence_multiword_terms)
+            .map(|term| &term.gram);
+        learnable.chain(multiword).all(is_comprehensible)
+            && self
                 .translations
                 .get(&sentence)
-                .is_none_or(|t| t.is_empty())
-            {
-                continue 'checkSentences;
-            }
-
-            possible_sentences.push(sentence);
-        }
-
-        possible_sentences
+                .is_some_and(|t| !t.is_empty())
     }
 
     /// Get all lexemes for words that share a pronunciation
@@ -815,6 +879,7 @@ impl LanguagePack {
         };
 
         let senses = sense_index(&gram_frequencies);
+        let (written_ease_order, listening_ease_order) = ease_orders(&gram_frequencies);
         let heteronym_to_grams: FxHashMap<Heteronym<Spur>, Vec<SpurGram>> = {
             let mut map: FxHashMap<Heteronym<Spur>, Vec<(SpurGram, Frequency)>> =
                 FxHashMap::default();
@@ -996,6 +1061,8 @@ impl LanguagePack {
 
         Self {
             senses,
+            written_ease_order,
+            listening_ease_order,
             string_rodeo: rodeo,
             gram_rodeo,
             translations,
@@ -1238,6 +1305,8 @@ impl LanguagePack {
     pub fn split(self) -> (LanguagePackCore, LanguagePackSentences) {
         let LanguagePack {
             senses: _,
+            written_ease_order: _,
+            listening_ease_order: _,
             string_rodeo,
             gram_rodeo,
             translations,
@@ -1596,9 +1665,13 @@ impl LanguagePack {
             );
         }
 
+        let (written_ease_order, listening_ease_order) = ease_orders(&gram_frequencies);
+
         let Some(sentences) = sentences else {
             return LanguagePack {
                 senses: sense_index(&gram_frequencies),
+                written_ease_order,
+                listening_ease_order,
                 string_rodeo,
                 gram_rodeo,
                 translations: FxHashMap::default(),
@@ -1672,6 +1745,8 @@ impl LanguagePack {
 
         LanguagePack {
             senses: sense_index(&gram_frequencies),
+            written_ease_order,
+            listening_ease_order,
             string_rodeo,
             gram_rodeo,
             translations: sentences.translations,
@@ -1912,6 +1987,79 @@ fn sense_index(frequencies: &FrequencyList) -> FxHashMap<SpurGram, Vec<TaggedGra
 
 #[cfg(test)]
 mod sense_tests {
+    #[test]
+    fn ease_order_is_deterministic_and_independent_of_frequency_order() {
+        let entries = [(3, 4.0), (2, 1.0), (1, 4.0)];
+        let a = EaseOrder::new(entries.into_iter());
+        let b = EaseOrder::new(entries.into_iter().rev());
+        assert_eq!(a.iter_from(0).collect::<Vec<_>>(), vec![2, 1, 3]);
+        assert_eq!(
+            a.iter_from(0).collect::<Vec<_>>(),
+            b.iter_from(0).collect::<Vec<_>>()
+        );
+        assert_eq!(a.rank(&1), Some(1));
+        assert_eq!(a.rank(&4), None);
+        assert_eq!(a.ease_at(1), Some(4.0));
+        assert_eq!(a.ease_at(3), None);
+        assert_eq!(a.partition_point(|ease| ease < 4.0), 1);
+        assert_eq!(a.partition_point(|ease| ease < 0.0), 0);
+        assert_eq!(a.partition_point(|ease| ease < 5.0), 3);
+        assert_eq!(a.iter_from(3).count(), 0);
+        let empty = EaseOrder::<u32>::new(std::iter::empty());
+        assert_eq!(empty.partition_point(|_| true), 0);
+        assert_eq!(empty.iter_from(0).count(), 0);
+    }
+
+    #[test]
+    fn listening_ease_uses_easiest_sense_in_both_runtime_constructors() {
+        let pack = pack();
+        let bare = pack.intern_gram(&gram("bank")).unwrap();
+        let written_order: Vec<_> = pack.written_ease_order.iter_from(0).collect();
+        assert_eq!(
+            written_order,
+            pack.senses_of(bare)
+                .iter()
+                .rev()
+                .copied()
+                .collect::<Vec<_>>()
+        );
+        let (mut core, sentences) = pack.split();
+        // The rarer sense is easier: the first entry is deliberately not the maximum.
+        core.gram_frequencies
+            .entries
+            .get_index_mut(1)
+            .unwrap()
+            .1
+            .ease = 10.0;
+        let original_order: Vec<_> = core.gram_frequencies.entries.keys().copied().collect();
+        {
+            let pack = LanguagePack::from_parts(core, Some(sentences));
+            assert_eq!(
+                pack.gram_frequencies
+                    .entries
+                    .keys()
+                    .copied()
+                    .collect::<Vec<_>>(),
+                original_order
+            );
+            let bare = pack.intern_gram(&gram("bank")).unwrap();
+            assert_eq!(pack.gram_frequency_total(bare).unwrap().ease, 10.0);
+            assert_eq!(pack.gram_frequency_total(bare).unwrap().count, 30);
+            assert_eq!(
+                pack.listening_ease_order.iter_from(0).collect::<Vec<_>>(),
+                vec![bare]
+            );
+            assert_eq!(pack.listening_ease_order.ease_at(0), Some(10.0));
+            assert_eq!(pack.written_ease_order.ease_at(1), Some(10.0));
+            let (core, _) = pack.split();
+            let pack = LanguagePack::from_parts(core, None);
+            let bare = pack.intern_gram(&gram("bank")).unwrap();
+            assert_eq!(pack.gram_frequency_total(bare).unwrap().ease, 10.0);
+            assert_eq!(pack.listening_ease_order.ease_at(0), Some(10.0));
+            assert_eq!(pack.written_ease_order.ease_at(1), Some(10.0));
+        }
+    }
+
     #[test]
     fn listening_frequency_sums_all_sense_counts() {
         let mut pack = pack();

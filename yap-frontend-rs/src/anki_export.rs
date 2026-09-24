@@ -5,7 +5,9 @@ use language_utils::{
     CLIPS_ORIGIN, Course, GramDefinition, Language, Literal, SentenceGram, SpurGram, TaggedGram,
     dictionary_entry_slug, language_pack::LanguagePack,
 };
+use lasso::Spur;
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
+use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use unicode_normalization::UnicodeNormalization;
@@ -396,9 +398,49 @@ impl Deck {
                 .resolve(&pack.string_rodeo)
                 .to_display_string(language)
         };
+        // Every translated sentence with a clip, as the ease ranks of its
+        // grams: the search below tests thousands of sentences per pending
+        // gram per day, so membership is a bit test rather than a hash lookup.
+        // A sentence with an unranked gram can never become comprehensible.
+        let order = &pack.written_ease_order;
+        let mut clip_sentence_ranks: FxHashMap<Spur, Vec<u32>> = FxHashMap::default();
+        // The clip sentences each gram occurs in, so a pending gram's search
+        // touches only sentences that can qualify.
+        let mut clip_sentences_of: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>> =
+            FxHashMap::default();
+        for (sentence, encoded) in clips::map_clip_sentences(language, |text| {
+            let sentence = pack.string_rodeo.get(text)?;
+            pack.translations
+                .get(&sentence)
+                .is_some_and(|t| !t.is_empty())
+                .then_some(())?;
+            Some((sentence, pack.encoded_sentences.get(&sentence)?))
+        }) {
+            let learnable = encoded.grams.iter().filter_map(|g| match g {
+                SentenceGram::Learnable(g) => Some(g),
+                SentenceGram::Obvious(_) => None,
+            });
+            let multiword = encoded
+                .multiword_terms
+                .iter()
+                .chain(&encoded.low_confidence_multiword_terms)
+                .map(|m| &m.gram);
+            let grams: Vec<&TaggedGram<SpurGram>> = learnable.chain(multiword).collect();
+            let Some(ranks) = grams
+                .iter()
+                .map(|g| order.rank(g))
+                .collect::<Option<Vec<u32>>>()
+            else {
+                continue;
+            };
+            for gram in grams {
+                clip_sentences_of.entry(*gram).or_default().push(sentence);
+            }
+            clip_sentence_ranks.insert(sentence, ranks);
+        }
         // What the learner already understands going in; everything else a
         // sentence needs gets a word note first.
-        let known = self.get_comprehensible_written_grams(false).clone();
+        let known = self.get_comprehensible_written_grams(false);
         let mut notes = Vec::new();
         let mut bundled = Vec::new();
         let mut used_sentences = BTreeSet::new();
@@ -427,16 +469,27 @@ impl Deck {
             );
             let deck = simulation.deck();
             let before = used_sentences.len();
+            let known_now = deck.get_comprehensible_written_grams(false).rank_bitset();
             let mut still_pending = Vec::new();
             for gram in pending {
                 let word = display(gram);
-                let mut candidates = pack.comprehensible_sentences(Some(&gram), |g| {
-                    deck.get_comprehensible_written_grams(false).contains(g)
-                });
-                candidates.retain(|s| {
-                    !used_sentences.contains(s)
-                        && clips::sentence_has_clip(language, pack.string_rodeo.resolve(s))
-                });
+                let Some(gram_rank) = order.rank(&gram) else {
+                    continue;
+                };
+                // A candidate is a clip sentence containing the gram whose
+                // every other gram the learner already knows.
+                let mut candidates: Vec<Spur> = clip_sentences_of
+                    .get(&gram)
+                    .into_iter()
+                    .flatten()
+                    .copied()
+                    .filter(|s| !used_sentences.contains(s))
+                    .filter(|s| {
+                        clip_sentence_ranks[s]
+                            .iter()
+                            .all(|&r| r == gram_rank || known_now.contains(r))
+                    })
+                    .collect();
                 candidates.sort_by_key(|s| {
                     (
                         deck.stats.sentences_reviewed.get(s).copied().unwrap_or(0),
@@ -606,6 +659,7 @@ impl Deck {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::CardIndicator;
     use language_utils::{
         Atom, ConsolidatedLanguageData, Course, DictionaryEntry, Gram, GramFrequencyEntry,
         GramFrequencyList, GramVocabEntry, Heteronym, PartOfSpeech, SentenceGram, SentenceGrams,
@@ -1031,16 +1085,21 @@ mod tests {
     #[test]
     fn anki_advanced_means_all_available_not_all_unfiltered_words() {
         let mut deck = fixture();
-        let grams: BTreeSet<_> = deck
-            .context
-            .language_pack
-            .gram_frequencies
-            .entries
-            .keys()
-            .copied()
-            .collect();
-        deck.comprehensible.written.now_and_planned = grams.clone();
-        deck.comprehensible.listening.now_and_planned = grams;
+        let mut state = crate::DeckState::new();
+        for gram in deck.context.language_pack.gram_frequencies.entries.keys() {
+            for indicator in [
+                CardIndicator::WrittenGram { gram: *gram },
+                CardIndicator::ListeningGram { gram: gram.gram },
+            ] {
+                state.cards.insert(
+                    indicator,
+                    crate::CardData::Added {
+                        fsrs_card: rs_fsrs::Card::new(chrono::Utc::now()),
+                    },
+                );
+            }
+        }
+        deck = Deck::finalize(state, &deck.context);
         // The corpus denominator includes grams outside this pack's teachable inventory.
         Arc::get_mut(&mut deck.context.language_pack)
             .unwrap()
@@ -1049,6 +1108,297 @@ mod tests {
         assert!(deck.get_percent_of_words_known() < 1.0);
         assert!(deck.anki_export_view().too_advanced);
         assert!(deck.anki_export_view().too_advanced_message.is_some());
+    }
+
+    fn assert_comprehensible_matches_brute_force(deck: &Deck) {
+        let pack = &deck.context.language_pack;
+        for planned in [false, true] {
+            let written = deck.get_comprehensible_written_grams(planned);
+            let listening = deck.get_comprehensible_listening_grams(planned);
+            let mut expected_written = BTreeSet::new();
+            let mut expected_listening = BTreeSet::new();
+            for gram in pack.gram_frequencies.entries.keys() {
+                for (indicator, expected, actual) in [
+                    (
+                        crate::CardIndicator::WrittenGram { gram: *gram },
+                        &mut expected_written,
+                        written.contains(gram),
+                    ),
+                    (
+                        crate::CardIndicator::ListeningGram { gram: gram.gram },
+                        &mut expected_listening,
+                        listening.contains(gram),
+                    ),
+                ] {
+                    let known = deck.context.is_comprehensible(
+                        &indicator,
+                        deck.cards.get(&indicator),
+                        &deck.regressions,
+                        planned,
+                    );
+                    assert_eq!(actual, known, "{indicator:?}, planned={planned}");
+                    if known {
+                        expected.insert(*gram);
+                    }
+                }
+            }
+            let written_items: Vec<_> = written.iter().collect();
+            let listening_items: Vec<_> = listening.iter().collect();
+            assert_eq!(
+                written_items.len(),
+                expected_written.len(),
+                "no duplicate written entries"
+            );
+            assert_eq!(
+                listening_items.len(),
+                expected_listening.len(),
+                "no duplicate listening senses"
+            );
+            assert_eq!(
+                written_items.into_iter().collect::<BTreeSet<_>>(),
+                expected_written
+            );
+            assert_eq!(
+                listening_items.into_iter().collect::<BTreeSet<_>>(),
+                expected_listening
+            );
+        }
+    }
+
+    fn exercise_comprehensibility(deck: Deck) {
+        use crate::{CardData, CardIndicator, DeckState, PlacementTest};
+        use lasso::Key;
+
+        // No regression means no predictions, not an all-known suffix.
+        assert!(deck.regressions.target_language_regression.is_none());
+        assert!(deck.regressions.listening_regression.is_none());
+        assert_comprehensible_matches_brute_force(&deck);
+        let pack = &deck.context.language_pack;
+        let order: Vec<_> = pack.written_ease_order.iter_from(0).collect();
+        let mut state = DeckState::new();
+        let mut placement = PlacementTest {
+            known_words: vec![],
+            unknown_words: vec![],
+        };
+        for (i, gram) in order.iter().enumerate().step_by((order.len() / 100).max(1)) {
+            let text = pack
+                .resolve_gram(&gram.gram)
+                .to_display_string(deck.context.course.target_language);
+            if i < order.len() / 2 {
+                placement.unknown_words.push(text);
+            } else {
+                placement.known_words.push(text);
+            }
+        }
+        // The synthetic Anki fixture has no NLP word lookup. Reviewed cards
+        // also train the real finalize path directly from their gram eases.
+        for (i, gram) in order.iter().enumerate().step_by(3) {
+            let mut fsrs_card = rs_fsrs::Card::new(chrono::Utc::now());
+            fsrs_card.state = rs_fsrs::State::Review;
+            fsrs_card.early_lapses = i32::from(i < order.len() / 2);
+            let card = CardData::Added { fsrs_card };
+            state
+                .cards
+                .insert(CardIndicator::WrittenGram { gram: *gram }, card.clone());
+            state
+                .cards
+                .insert(CardIndicator::ListeningGram { gram: gram.gram }, card);
+        }
+        state.placement_test_results = Some(placement);
+        let predicted = Deck::finalize(state.clone(), &deck.context);
+        assert_comprehensible_matches_brute_force(&predicted);
+        assert!(
+            predicted
+                .get_comprehensible_written_grams(false)
+                .iter()
+                .any(|gram| !predicted
+                    .cards
+                    .contains_key(&CardIndicator::WrittenGram { gram })),
+            "exercise a nonempty prediction suffix"
+        );
+        assert!(
+            predicted
+                .get_comprehensible_listening_grams(false)
+                .iter()
+                .any(|gram| !predicted
+                    .cards
+                    .contains_key(&CardIndicator::ListeningGram { gram: gram.gram }))
+        );
+        let regression = predicted
+            .regressions
+            .target_language_regression
+            .as_ref()
+            .unwrap();
+        let probabilities: Vec<_> = order
+            .iter()
+            .map(|gram| {
+                let rank = pack.written_ease_order.rank(gram).unwrap();
+                regression
+                    .interpolate(pack.written_ease_order.ease_at(rank).unwrap())
+                    .unwrap()
+            })
+            .collect();
+        for pair in probabilities.windows(2) {
+            // f32 box integration can introduce rounding at the last bit.
+            assert!(
+                pair[0] <= pair[1] + 1e-6,
+                "nonmonotone interpolation: {pair:?}"
+            );
+        }
+
+        // Every FSRS state, both Added and Ghost, at both ends of the ease order.
+        // In particular a present New/Ghost card overrides a positive prediction.
+        for (i, gram) in order
+            .iter()
+            .take(8)
+            .chain(order.iter().rev().take(8))
+            .enumerate()
+        {
+            let mut fsrs_card = rs_fsrs::Card::new(chrono::Utc::now());
+            fsrs_card.state = [
+                rs_fsrs::State::New,
+                rs_fsrs::State::Learning,
+                rs_fsrs::State::Relearning,
+                rs_fsrs::State::Review,
+            ][i % 4];
+            let card = if i % 8 < 4 {
+                CardData::Added { fsrs_card }
+            } else {
+                CardData::Ghost { fsrs_card }
+            };
+            state
+                .cards
+                .insert(CardIndicator::WrittenGram { gram: *gram }, card.clone());
+            state
+                .cards
+                .insert(CardIndicator::ListeningGram { gram: gram.gram }, card);
+        }
+        let absent = TaggedGram {
+            gram: language_utils::SpurGram::try_from_usize(1_000_000).unwrap(),
+            sense: None,
+        };
+        let stale_sense = TaggedGram {
+            gram: order[0].gram,
+            sense: std::num::NonZeroU32::new(u32::MAX),
+        };
+        for indicator in [
+            CardIndicator::WrittenGram { gram: absent },
+            CardIndicator::ListeningGram { gram: absent.gram },
+            CardIndicator::WrittenGram { gram: stale_sense },
+            CardIndicator::LetterPronunciation {
+                pattern: lasso::Spur::try_from_usize(1_000_000).unwrap(),
+                position: language_utils::PatternPosition::Anywhere,
+            },
+        ] {
+            state.cards.insert(
+                indicator,
+                CardData::Added {
+                    fsrs_card: rs_fsrs::Card::new(chrono::Utc::now()),
+                },
+            );
+        }
+        let deck = Deck::finalize(state, &deck.context);
+        assert_comprehensible_matches_brute_force(&deck);
+        for planned in [false, true] {
+            for absent in [absent, stale_sense] {
+                assert!(
+                    !deck
+                        .get_comprehensible_written_grams(planned)
+                        .contains(&absent)
+                );
+                assert!(
+                    !deck
+                        .get_comprehensible_listening_grams(planned)
+                        .contains(&absent)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn comprehensible_prediction_threshold_is_inclusive() {
+        use pav_regression::{IsotonicRegression, Point, SmoothRegression, UnitWeight};
+        let mut deck = fixture();
+        for probability in [0.0, 0.799, 0.80, 1.0] {
+            let points =
+                [-10.0, 20.0].map(|ease| Point::new_with_weight(ease, probability, UnitWeight));
+            let regression = SmoothRegression::from_regression(
+                IsotonicRegression::new_ascending(&points).unwrap(),
+                1.0,
+            );
+            deck.regressions = crate::Regressions {
+                target_language_regression: Some(regression.clone()),
+                listening_regression: Some(regression),
+            };
+            deck.comprehensible = crate::CachedComprehensibleGrams::new(
+                &deck.context.language_pack,
+                &deck.regressions,
+                deck.cards.iter(),
+            );
+            assert_comprehensible_matches_brute_force(&deck);
+            let expected = if probability >= 0.80 {
+                deck.context.language_pack.gram_frequencies.entries.len()
+            } else {
+                0
+            };
+            for planned in [false, true] {
+                assert_eq!(
+                    deck.get_comprehensible_written_grams(planned)
+                        .iter()
+                        .count(),
+                    expected
+                );
+                assert_eq!(
+                    deck.get_comprehensible_listening_grams(planned)
+                        .iter()
+                        .count(),
+                    expected
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn comprehensible_views_match_synthetic_anki_pack() {
+        let mut deck = fixture();
+        // Add senses with different eases and an equal-ease tie. Build the runtime
+        // indices through the same from_parts path used by real pack loading.
+        let pack = Arc::try_unwrap(deck.context.language_pack).unwrap();
+        let (mut core, sentences) = pack.split();
+        // Give the tiny fixture a broad ease range so its fitted regressions
+        // predict both known and unknown unadded entries after smoothing.
+        for i in 0..core.gram_frequencies.entries.len() {
+            let (_, frequency) = core.gram_frequencies.entries.get_index_mut(i).unwrap();
+            frequency.ease = frequency.count as f32 / 5.0;
+        }
+        let (first, frequency) = core.gram_frequencies.entries.get_index(0).unwrap();
+        let mut frequency = *frequency;
+        let mut sense = *first;
+        sense.sense = std::num::NonZeroU32::new(1);
+        frequency.count = 1;
+        frequency.direct_count = 1;
+        frequency.ease += 2.0;
+        core.gram_frequencies.entries.insert(sense, frequency);
+        sense.sense = std::num::NonZeroU32::new(2);
+        core.gram_frequencies.entries.insert(sense, frequency);
+        let pack = LanguagePack::from_parts(core, Some(sentences));
+        assert_eq!(
+            pack.gram_frequency_total(sense.gram).unwrap().ease,
+            frequency.ease
+        );
+        assert_eq!(
+            pack.listening_ease_order
+                .ease_at(pack.listening_ease_order.rank(&sense.gram).unwrap()),
+            Some(frequency.ease)
+        );
+        deck.context.language_pack = Arc::new(pack);
+        deck = Deck::finalize(crate::DeckState::new(), &deck.context);
+        exercise_comprehensibility(deck);
+    }
+
+    #[test]
+    fn comprehensible_views_match_real_french_pack() {
+        exercise_comprehensibility(Deck::default());
     }
 
     #[test]
