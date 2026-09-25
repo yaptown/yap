@@ -15,7 +15,9 @@ struct SentenceListSelector: View {
             HStack(spacing: 0) {
                 chevron(-1)
                 (Text(view.curriculum_headline.before + "\n") + Text(view.curriculum_headline.emphasis.uppercased()).bold() + Text(view.curriculum_headline.after))
-                    .font(.headline).multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                    .font(.headline).multilineTextAlignment(.center)
+                    // Beside the fixed-height chevrons, SwiftUI otherwise offers one line and truncates at the break.
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity)
                 chevron(1)
             }
             if case let .Movie(id) = navigation.selection,
