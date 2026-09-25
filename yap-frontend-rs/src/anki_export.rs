@@ -456,7 +456,7 @@ const CLIPS_LOADING: &str = "Movie clips are still loading. Please try again.";
 const NO_SENTENCES: &str = "No movie-clip sentences use only words you know yet.";
 const PLACEMENT_COMPLETE_LABEL: &str = "Generate Anki deck";
 // Shown while the deck is being built; the page has a minute or two to fill.
-const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I still think the app is the best way to learn, but the same technology makes a really good Anki deck too. Yours is being built right now.";
+const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I think Yap is the best way to learn, but the same technology makes a really good Anki deck too. Yours is being built right now.";
 const TRY_YAP_BODY: &str = "My goal with Yap was to combine spaced repetition with comprehensible input. Your placement test is saved, so if you start using Yap it'll pick up where you left off.";
 const SAVE_DECK_BODY: &str = "If you create an account, I'll save your placement test so you can easily come back here and modify your deck (or update it with new cards).";
 const DECK_DESCRIPTION: &str = "Made with Yap (https://yap.town/anki): real movie lines built from words you know, each with its clip and a recording.\n\nWhen these run out, Yap keeps going at https://yap.town.";
