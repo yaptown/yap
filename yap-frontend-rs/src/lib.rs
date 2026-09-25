@@ -780,12 +780,54 @@ impl Weapon {
             return Ok(());
         }
 
+        // A new Weapon (signing in creates one) often wants the course the
+        // previous Weapon has loaded: reuse it instead of re-reading hundreds
+        // of megabytes.
+        let recent = RECENT_PACK.with(|recent| {
+            let recent = recent.borrow();
+            let (recent_course, full, pack) = recent.as_ref()?;
+            (*recent_course == course && (*full || core_only))
+                .then(|| Some((pack.upgrade()?, *full)))?
+        });
+        let (language_pack, full) = if let Some(recent) = recent {
+            recent
+        } else {
+            (
+                Arc::new(
+                    self.read_language_pack(course, on_progress, core_only)
+                        .await?,
+                ),
+                !core_only,
+            )
+        };
+        RECENT_PACK.with(|recent| {
+            *recent.borrow_mut() = Some((course, full, Arc::downgrade(&language_pack)));
+        });
+        // Register before the move below: the registry holds only a Weak, so
+        // the inserted Arc remains the sole owner.
+        human_audio::register(course.target_language, &language_pack);
+        self.language_pack.borrow_mut().insert(
+            course,
+            LoadedLanguagePack {
+                pack: language_pack,
+                full,
+            },
+        );
+        Ok(())
+    }
+
+    async fn read_language_pack(
+        &self,
+        course: Course,
+        on_progress: Option<Callback<(String, f32)>>,
+        core_only: bool,
+    ) -> Result<LanguagePack, language_pack::LanguageDataError> {
         let set_loading_state = |message: &str, progress: f32| {
             if let Some(ref callback) = on_progress {
                 let _ = callback.call((message.to_owned(), progress));
             }
         };
-        let language_pack = if core_only {
+        Ok(if core_only {
             language_pack::load_language_pack_core(
                 &self.directories.data_directory_handle,
                 course,
@@ -799,20 +841,16 @@ impl Weapon {
                 &set_loading_state,
             )
             .await?
-        };
-        let language_pack = Arc::new(language_pack);
-        // Register before the move below: the registry holds only a Weak, so
-        // the inserted Arc remains the sole owner.
-        human_audio::register(course.target_language, &language_pack);
-        self.language_pack.borrow_mut().insert(
-            course,
-            LoadedLanguagePack {
-                pack: language_pack,
-                full: !core_only,
-            },
-        );
-        Ok(())
+        })
     }
+}
+
+thread_local! {
+    /// The most recently loaded pack, and whether it includes the sentence
+    /// half. Weak: it never keeps a course in memory by itself, only lets a
+    /// new Weapon pick up a pack something still holds.
+    static RECENT_PACK: RefCell<Option<(Course, bool, std::sync::Weak<LanguagePack>)>> =
+        const { RefCell::new(None) };
 }
 
 /// A language pack in the per-course cache, with whether it includes the
