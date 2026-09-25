@@ -18,6 +18,14 @@ pub enum VersionedDeckEvent {
     V1(v1::DeckEvent),
     V2(v2::DeckEvent),
     V3(current::DeckEvent),
+    /// Catches any `version` this build doesn't know about (e.g. an event written by a newer
+    /// device, or by a build that shipped and was later rolled back). Without this, a single
+    /// event we can't recognize fails JSON deserialization, which aborts the whole batch it's
+    /// in (see `add_device_event_jsons`) and blocks sync for every other event from that
+    /// device. Keeping the slot (rather than dropping it) preserves the device's contiguous
+    /// `within_device_events_index` sequence; `from_versioned` below skips it as a no-op.
+    #[serde(other)]
+    Unknown,
 }
 
 impl Event for current::DeckEvent {
@@ -33,6 +41,7 @@ impl Event for current::DeckEvent {
             VersionedDeckEvent::V1(event) => event.clone().into_v2()?.into_v3(context),
             VersionedDeckEvent::V2(event) => event.clone().into_v3(context),
             VersionedDeckEvent::V3(event) => Some(event.clone()),
+            VersionedDeckEvent::Unknown => None,
         }
     }
 }

@@ -6027,6 +6027,48 @@ mod tests {
         assert_eq!(added, 1);
     }
 
+    /// Production events have shown up tagged `"version":"V4"` — a version this build has never
+    /// heard of (JAVASCRIPT-REACT-4K/4J), most likely written by a build that got rolled back.
+    /// A single event with an unrecognized `version` used to fail JSON deserialization for the
+    /// whole batch, which — because per-device event indices must be contiguous — permanently
+    /// blocked every *other* event from that device from ever syncing. Unknown versions must
+    /// decode (as a no-op) instead, so the rest of the batch still lands.
+    #[test]
+    fn remote_event_with_unknown_version_does_not_block_the_rest_of_the_batch() {
+        use weapon::data_model::{EventType, LocalEventStore as EventStore, Timestamped};
+
+        let known_version_event: Timestamped<serde_json::Value> = serde_json::from_str(
+            r#"{"event":{"User":{"version":"V3","type":"Language","target_language":"French","native_language":"English","content":{"type":"SetDailyReviewTarget","daily_review_target":"Regular"}}},"timezone":0,"timestamp":"2026-09-24T00:00:00.000Z","within_device_events_index":0}"#,
+        )
+        .unwrap();
+        let unknown_version_event: Timestamped<serde_json::Value> = serde_json::from_str(
+            r#"{"event":{"User":{"version":"V4","type":"Language","target_language":"French","native_language":"English","content":{"type":"SetDailyReviewTarget","daily_review_target":"Intense"}}},"timezone":0,"timestamp":"2026-09-24T00:00:01.000Z","within_device_events_index":1}"#,
+        )
+        .unwrap();
+
+        // The unknown version decodes to `VersionedDeckEvent::Unknown` instead of erroring.
+        assert!(
+            serde_json::from_value::<EventType<VersionedDeckEvent>>(
+                unknown_version_event.event.clone()
+            )
+            .is_ok()
+        );
+
+        let mut store: EventStore<String, String> = EventStore::default();
+        store.get_or_insert_default::<EventType<DeckEvent>>("reviews".to_string(), None);
+        let added = store.add_device_events_jsons(
+            "reviews".to_string(),
+            "other-device".to_string(),
+            vec![known_version_event, unknown_version_event],
+            None,
+        );
+        assert_eq!(
+            added, 2,
+            "both events (including the unrecognized one) must be stored so the device's index \
+             sequence stays contiguous and later, recognized events from it aren't blocked forever"
+        );
+    }
+
     /// E2E integration test: loads real weapon event data from disk,
     /// replays all events through the state machine, and verifies
     /// the computed deck state is sane.

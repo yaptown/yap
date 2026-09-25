@@ -136,7 +136,13 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
           localStorage.removeItem("yap-user-info");
 
           if (window.OneSignal) {
-            window.OneSignal.logout();
+            // logout() returns a promise; OneSignal's internal state can be
+            // uninitialized at this point (e.g. it never finished loading),
+            // which makes it reject. Uncaught, that's an unhandled rejection
+            // (JAVASCRIPT-REACT-2N) — sign-out itself doesn't depend on it.
+            window.OneSignal.logout().catch((err: unknown) => {
+              console.warn("OneSignal logout failed:", err);
+            });
           }
 
           setSession(null);
