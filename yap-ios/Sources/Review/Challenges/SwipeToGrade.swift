@@ -34,6 +34,9 @@ private struct SwipeToGrade: ViewModifier {
             }
             .offset(x: offset)
             .rotationEffect(.degrees(30 * progress))
+            // If the same card comes straight back, swiping re-enables on this
+            // view once grading finishes; bring the card back to rest then.
+            .onChange(of: enabled) { _, enabled in if enabled { offset = 0 } }
             .simultaneousGesture(
                 DragGesture(minimumDistance: 12)
                     .onChanged { value in
@@ -52,8 +55,8 @@ private struct SwipeToGrade: ViewModifier {
     }
 
     private func fling(to target: CGFloat, rating: Rating) {
-        // Grading usually replaces this view; if it doesn't, come back to rest.
-        withAnimation(.easeIn(duration: 0.2)) { offset = target } completion: { rate(rating); offset = 0 }
+        // Stay off screen: grading replaces this view with the next card.
+        withAnimation(.easeIn(duration: 0.2)) { offset = target } completion: { rate(rating) }
     }
 
     private func stamp(_ label: String, color: Color, angle: Double, alignment: Alignment) -> some View {
