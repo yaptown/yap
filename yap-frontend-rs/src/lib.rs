@@ -17,6 +17,7 @@ mod directories;
 mod disclosure;
 mod fixtures;
 mod human_audio;
+mod issues;
 pub use fixtures::Fixture;
 #[cfg(any(feature = "fixtures", test))]
 pub use fixtures::{fixture_json, parse_fixture};

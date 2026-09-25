@@ -43,6 +43,7 @@ struct TranslationChallengeView: View {
                             } else { text }
                         }
                     }.frame(maxWidth: .infinity)
+                    ReportIssueMenu(subject: .Translation(sentence))
                 }
                 if let verdict = view.verdict {
                     SentenceVerdictView(submission: verdict.submission, correct: verdict.correct_translation,

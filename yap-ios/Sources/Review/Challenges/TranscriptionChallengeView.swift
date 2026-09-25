@@ -36,6 +36,7 @@ struct TranscriptionChallengeView: View {
                     AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: true, hero: true)
                     Text(view.instructions).font(.footnote).foregroundStyle(.secondary)
                 }.frame(maxWidth: .infinity)
+                    .overlay(alignment: .topTrailing) { ReportIssueMenu(subject: .Transcription(sentence)) }
                 SentenceFlow(spacing: 0, alignment: .center) {
                     ForEach(Array(sentence.parts.enumerated()), id: \.offset) { index, part in
                         switch part {

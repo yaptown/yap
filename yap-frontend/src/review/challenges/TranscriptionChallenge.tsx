@@ -21,6 +21,7 @@ import {
   type WordGrade,
   type Language,
   type Deck,
+  report_issue_copy,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 
 import { Badge } from "@/components/ui/badge";
@@ -501,7 +502,7 @@ export function TranscriptionChallenge({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-                  Report an Issue
+                  {report_issue_copy().menu_label}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -766,7 +767,7 @@ export function TranscriptionChallenge({
       </div>
 
       <ReportIssueModal
-        context={`Transcription challenge: ${JSON.stringify(challenge)}`}
+        subject={{ Transcription: challenge }}
         open={showReportModal}
         onOpenChange={setShowReportModal}
         targetLanguage={targetLanguage}

@@ -11,6 +11,7 @@ import {
   Deck,
   type DeckEvent,
   type Language,
+  report_issue_copy,
 } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
@@ -151,23 +152,21 @@ function Review({
           setAutoplayed,
           menuExtras: (
             <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-              Report an Issue
+              {report_issue_copy().menu_label}
             </DropdownMenuItem>
           ),
         }}
         actions={{ ...study.actions, setSentenceList, commitSentenceList }}
       />
 
-      <ReportIssueModal
-        context={
-          currentChallenge?.type === "FlashCardReview"
-            ? JSON.stringify(currentChallenge.flashcard.content)
-            : ""
-        }
-        open={showReportModal}
-        onOpenChange={setShowReportModal}
-        targetLanguage={targetLanguage}
-      />
+      {currentChallenge?.type === "FlashCardReview" && (
+        <ReportIssueModal
+          subject={{ Flashcard: currentChallenge.flashcard.content }}
+          open={showReportModal}
+          onOpenChange={setShowReportModal}
+          targetLanguage={targetLanguage}
+        />
+      )}
     </TopPageLayout>
   );
 }

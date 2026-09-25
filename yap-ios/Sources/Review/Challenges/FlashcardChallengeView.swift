@@ -16,6 +16,7 @@ struct FlashcardChallengeView: View {
     let timesTypeSeen: UInt32
     @State private var revealed = false
     @State private var hasOpened = false
+    @State private var reporting = false
     private var view: FlashcardView {
         flashcard_view(flashcard: flashcard, is_new: isNew, total_card_count: screen.total_count,
                        times_type_seen: timesTypeSeen, target_language: screen.target_language,
@@ -47,11 +48,14 @@ struct FlashcardChallengeView: View {
                     // The web's main row is always Again/Remembered; Hard/Good/Easy live in its menu.
                     Menu {
                         ForEach(Array(view.menu_grades.enumerated()), id: \.offset) { _, grade in
-                            Button(grade.label) { rate(grade.rating) }
+                            Button(grade.label) { rate(grade.rating) }.disabled(!canGrade || actions.submitting)
                         }
+                        Divider()
+                        Button(report_issue_copy().menu_label, systemImage: "exclamationmark.bubble") { reporting = true }
                     } label: {
                         Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
-                    }.disabled(!canGrade || actions.submitting).accessibilityLabel("More grades")
+                    }.accessibilityLabel("More")
+                    .reportIssueSheet(isPresented: $reporting, subject: .Flashcard(flashcard.content))
                 }
                 if let subtitle = view.subtitle {
                     Text(subtitle).font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity)

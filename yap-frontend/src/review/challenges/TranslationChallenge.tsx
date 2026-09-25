@@ -28,6 +28,7 @@ import {
   get_app_version,
   type Language,
   type Deck,
+  report_issue_copy,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 
 import { Badge } from "@/components/ui/badge";
@@ -597,7 +598,7 @@ export function TranslationChallenge({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-                      Report an Issue
+                      {report_issue_copy().menu_label}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -735,7 +736,7 @@ export function TranslationChallenge({
       </div>
 
       <ReportIssueModal
-        context={`Sentence challenge: ${JSON.stringify(sentence)}"`}
+        subject={{ Translation: sentence }}
         open={showReportModal}
         onOpenChange={setShowReportModal}
         targetLanguage={targetLanguage}
