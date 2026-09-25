@@ -402,6 +402,38 @@ fn punctuation_marks(text: &str, language: Language) -> Vec<(usize, char)> {
     marks
 }
 
+/// Each ellipsis in order (a run of 2+ dots or "…"), true when it is the
+/// malformed two-dot form. Once the marks match by position, these line up
+/// one to one with the input's, so each can be checked against its own.
+fn two_dot_ellipses(text: &str) -> Vec<bool> {
+    let mut ellipses = Vec::new();
+    let mut dots = 0;
+    for ch in text.chars().chain([' ']) {
+        if ch == '.' {
+            dots += 1;
+            continue;
+        }
+        if dots >= 2 {
+            ellipses.push(dots == 2);
+        }
+        dots = 0;
+        if ch == '…' {
+            ellipses.push(false);
+        }
+    }
+    ellipses
+}
+
+/// Whether a change degrades any ellipsis to the two-dot form. The mark guard
+/// folds every dot run into one ellipsis, so it can't see "..." shortened to
+/// "..": the first full run did exactly that to ~3,400 Russian cues.
+fn shortens_an_ellipsis(input: &str, corrected: &str) -> bool {
+    two_dot_ellipses(input)
+        .iter()
+        .zip(two_dot_ellipses(corrected))
+        .any(|(&was_two, is_two)| is_two && !was_two)
+}
+
 /// Preserve the cue's unambiguous house style without rejecting a real fix.
 fn restore_quote_style(input: &str, corrected: &str) -> String {
     let mut corrected = corrected.to_owned();
@@ -462,6 +494,8 @@ fn audit(chunk: &Chunk, answer: Answer) -> Vec<Audited> {
                     != punctuation_marks(input, language)
                 {
                     Some("punctuation marks changed or moved")
+                } else if shortens_an_ellipsis(input, &change.corrected) {
+                    Some("ellipsis shortened to two dots")
                 } else {
                     None
                 }
@@ -1144,6 +1178,17 @@ mod tests {
             // Symbols carry meaning and are frozen like letters.
             ("Growth rate is at 27%.", "Growth rate is at 27.", false),
             ("12.000€!", "12.000$!", false),
+            // Ellipses may be repaired, never degraded.
+            ("Вот доказательство...", "Вот доказательство..", false),
+            ("Дай угадаю с трех раз..", "Дай угадаю с трех раз...", true),
+            // Each ellipsis is checked against its own: repairing one can't
+            // cover for degrading another.
+            (
+                "- Я тут... Вопрос.. - Какой?",
+                "- Я тут.. Вопрос... - Какой?",
+                false,
+            ),
+            ("Попробуй…", "Попробуй..", false),
         ] {
             let chunk = chunks(
                 Language::French,
