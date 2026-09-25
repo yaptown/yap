@@ -108,7 +108,12 @@ pub fn slice_wav_padded(
         .args(["-t", &format!("{:.3}", dur as f64 / 1000.0)])
         .arg("-i")
         .arg(audio)
-        .args(["-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", "-f", "wav"])
+        .args(["-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le"])
+        // Bitexact drops the encoder tag ffmpeg writes into the WAV header
+        // (`Lavf62.12.100`), so an ffmpeg upgrade leaves the bytes, and every
+        // cache key built on them, unchanged. The samples themselves did not
+        // move between ffmpeg 7.1, 8.x and 9.0 (checked 2026-09-24).
+        .args(["-fflags", "+bitexact", "-flags:a", "+bitexact", "-f", "wav"])
         .arg(tmp.path())
         .status()
         .context("ffmpeg failed to start")?;
