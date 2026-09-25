@@ -22,12 +22,13 @@ import { CoursePill } from "@/components/CoursePill";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { useWeapon } from "@/core/weapon";
 import { PlacementTest } from "@/review/ladder/PlacementTest";
 import { Backstory } from "./Backstory";
+import { ExportResult } from "./ExportResult";
+import { saveFile } from "./save-file";
 import { DeckBuilding } from "./DeckBuilding";
 import { addNotes } from "./deck-build";
 import { claimExports, startExport, useAnkiExport } from "./export-store";
@@ -44,17 +45,6 @@ async function uploadPackage(minted: MintedAnkiDeck, languageCode: string, blob:
   if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
   const { url } = (await response.json()) as { url: string };
   return url;
-}
-
-function saveFile({ blob, name }: { blob: Blob; name: string }) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = name;
-  document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 export function AnkiPage() {
@@ -122,8 +112,15 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const [manifest, setManifest] = useState<"loading" | "ready" | "error">("loading");
   const [retry, setRetry] = useState(0);
   const view = useMemo(() => ({ ...deck.anki_export_view(), manifest }), [deck, manifest]);
-  const { phase, progress, build, run, choosing, finishMessage, summary, downloadLink } = useAnkiExport(view.course_code, userInfo?.id);
-  useEffect(() => claimExports(userInfo?.id), [userInfo?.id]);
+  const { owner, phase, progress, build, run, choosing, finishMessage, summary, downloadLink, file } = useAnkiExport(view.course_code, userInfo?.id);
+  // A deck finished while signed out and now seen signed in means they just
+  // created an account (the page remounts when that happens): show the
+  // signed-in ending in a dialog so it isn't missed below the fold.
+  const [welcome, setWelcome] = useState(false);
+  useEffect(() => {
+    if (userInfo && owner === undefined && summary) setWelcome(true);
+    claimExports(userInfo?.id);
+  }, [userInfo, owner, summary]);
   const busy = phase !== undefined;
   const status = useRef<HTMLDivElement>(null);
 
@@ -254,35 +251,18 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                   {busy && <Backstory text={view.backstory} signature={view.backstory_signature} />}
                 </div>
               )}
-              {downloadLink && <div className="flex flex-col gap-2">
-                <Label htmlFor="anki-download-link">Download link</Label>
-                <div className="flex gap-2">
-                  <Input id="anki-download-link" readOnly value={downloadLink} className="min-w-0 font-mono" />
-                  <Button type="button" variant="outline" onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(downloadLink);
-                      toast.success("Link copied");
-                    } catch {
-                      toast.error("Could not copy the link. Select and copy it manually.");
-                    }
-                  }}>Copy</Button>
-                </div>
-                <p>In AnkiMobile: Decks → Add → Download link. On AnkiDroid or desktop, open the downloaded file instead. The link works for 8 days.</p>
-              </div>}
               {summary && <p>Downloaded {summary}</p>}
             </div>
             {summary && (
-              <Card className="gap-3 p-5">
-                <h2 className="text-lg font-semibold">{view.keep_going_heading}</h2>
-                <p className="text-sm text-muted-foreground">{view.keep_going_body}</p>
-                <div className="flex flex-wrap gap-2">
-                  {/* One call to action: saving the deck for signed-out visitors, the app for everyone else. */}
-                  {userInfo
-                    ? <Button type="button" onClick={() => navigate("/learn")}>{view.keep_going_label}</Button>
-                    : <Button type="button" className="h-auto min-h-9 max-w-full shrink whitespace-normal py-2" onClick={openSignUp}>{view.sign_up_label}</Button>}
-                </div>
+              <Card className="p-5">
+                <ExportResult view={view} signedIn={!!userInfo} file={file} downloadLink={downloadLink} onSignUp={openSignUp} onGoToYap={() => navigate("/learn")} />
               </Card>
             )}
+            <Dialog open={welcome} onOpenChange={setWelcome}>
+              <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
+                <ExportResult view={view} signedIn file={file} downloadLink={downloadLink} onSignUp={openSignUp} onGoToYap={() => navigate("/learn")} Title={DialogTitle} Body={DialogDescription} />
+              </DialogContent>
+            </Dialog>
           </form>
         )}
       </main>

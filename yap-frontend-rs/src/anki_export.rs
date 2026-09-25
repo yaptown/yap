@@ -181,13 +181,19 @@ pub struct AnkiExportView {
     /// Why the deck exists, read while it builds.
     pub backstory: String,
     pub backstory_signature: String,
-    /// Shown once the deck is downloaded: the placement test already set up
-    /// this browser's deck, so the app picks up where the Anki deck stops.
-    pub keep_going_heading: String,
-    pub keep_going_body: String,
-    pub keep_going_label: String,
-    /// Only for anonymous visitors.
+    /// Once the deck is downloaded, signed-in learners are invited into the
+    /// app, which already has their placement test.
+    pub try_yap_heading: String,
+    pub try_yap_body: String,
+    pub try_yap_label: String,
+    pub enjoy_deck: String,
+    /// Signed-out visitors are asked to save their deck instead: one call to
+    /// action, not two.
+    pub save_deck_heading: String,
+    pub save_deck_body: String,
     pub sign_up_label: String,
+    /// The deck downloads by itself once built; this saves it again.
+    pub download_again_label: String,
 }
 
 /// Sentence notes per deck. Not a choice yet: one good default beats a
@@ -366,11 +372,9 @@ const CLIPS_LOADING: &str = "Movie clips are still loading. Please try again.";
 const NO_SENTENCES: &str = "No movie-clip sentences use only words you know yet.";
 const PLACEMENT_COMPLETE_LABEL: &str = "Generate Anki deck";
 // Shown while the deck is being built; the page has a minute or two to fill.
-const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I still think the app is the best way to learn, but the same technology, real movie lines built from the words you know, each with its clip and a recording, makes a really good Anki deck too. Yours is being built right now.";
-const KEEP_GOING_HEADING: &str = "Yap picks up where the deck stops";
-const KEEP_GOING_BODY: &str = "The words you marked are already in Yap on this browser, so there's no second test. When the deck runs out, Yap keeps adding new sentences built from what you know.";
-const KEEP_GOING_LABEL: &str = "Keep going in Yap";
-const SIGN_UP_LABEL: &str = "Create an account to update your deck in the future";
+const BACKSTORY: &str = "I wanted language learning to be easier, so I made Yap. I still think the app is the best way to learn, but the same technology makes a really good Anki deck too. Yours is being built right now.";
+const TRY_YAP_BODY: &str = "My goal with Yap was to combine spaced repetition with comprehensible input. Your placement test is saved, so if you start using Yap it'll pick up where you left off.";
+const SAVE_DECK_BODY: &str = "If you create an account, I'll save your placement test so you can easily come back here and modify your deck (or update it with new cards).";
 const DECK_DESCRIPTION: &str = "Made with Yap (https://yap.town/anki): real movie lines built from words you know, each with its clip and a recording.\n\nWhen these run out, Yap keeps going at https://yap.town.";
 
 #[bridgerton::bridge]
@@ -426,11 +430,15 @@ impl Deck {
             download_label: format!("Generate {language} deck"),
             placement_complete_label: PLACEMENT_COMPLETE_LABEL.into(),
             backstory: BACKSTORY.into(),
-            backstory_signature: "Andre, who made Yap".into(),
-            keep_going_heading: KEEP_GOING_HEADING.into(),
-            keep_going_body: KEEP_GOING_BODY.into(),
-            keep_going_label: KEEP_GOING_LABEL.into(),
-            sign_up_label: SIGN_UP_LABEL.into(),
+            backstory_signature: "Andre".into(),
+            try_yap_heading: "If you like the deck, consider trying Yap".into(),
+            try_yap_body: TRY_YAP_BODY.into(),
+            try_yap_label: "Go to Yap".into(),
+            enjoy_deck: "In the meantime, enjoy your Anki deck!".into(),
+            save_deck_heading: "Save your deck".into(),
+            save_deck_body: SAVE_DECK_BODY.into(),
+            sign_up_label: "Create an account".into(),
+            download_again_label: "Download again".into(),
         }
     }
 
