@@ -33,7 +33,6 @@ import {
 } from "@/components/ui/tooltip";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Poster } from "@/browse/Poster";
-import { SwitchCurriculumButton } from "@/review/SwitchCurriculumButton";
 import { TargetLanguageText } from "../components/TargetLanguageText";
 import { ReviewPlanCard } from "./ladder/ReviewPlanScreen";
 import { WeekProgressStrip } from "./WeekProgressStrip";
@@ -107,7 +106,13 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
   const targetLanguage = view.target_language;
   const info = view.info;
   const manualAddOptions = view.manual_add_options;
-  const addSmartCards = useCallback(() => { if (info.smart_add_event) addEvent(info.smart_add_event); }, [info.smart_add_event, addEvent]);
+  // Adding cards from a browsed curriculum is what commits it.
+  const commit = view.commit_curriculum;
+  const add = useCallback((event: DeckEvent) => {
+    if (commit) commitSentenceList(commit);
+    addEvent(event);
+  }, [commit, commitSentenceList, addEvent]);
+  const addSmartCards = useCallback(() => { if (info.smart_add_event) add(info.smart_add_event); }, [info.smart_add_event, add]);
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).closest("input, textarea, select, button, a")) return;
@@ -285,7 +290,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
                             {manualAddOptions.map((option) => (
                               <DropdownMenuItem
                                 key={option.card_type}
-                                onClick={() => addEvent(option.event)}
+                                onClick={() => add(option.event)}
                                 className="cursor-pointer"
                               >
                                 <Sparkles className="h-4 w-4 mr-2" />
@@ -362,8 +367,6 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
           </div>
         </Card>
       )}
-
-      <SwitchCurriculumButton commit={view.switch_curriculum} onCommit={commitSentenceList} />
 
       {showEngagementPrompts && <EngagementPrompts language={targetLanguage} />}
 

@@ -5,7 +5,6 @@ struct IdleScreen: View {
     @Environment(\.reviewActions!) private var actions
     let view: IdleScreenView
     @State private var showReleasePlan = false
-    @AppStorage("yap-pimsleur-acknowledged") private var pimsleurAcknowledged = false
     private func addEvent(_ event: DeckEvent) { actions.addEvent(event) }
     var body: some View {
         Group {
@@ -60,42 +59,25 @@ struct IdleScreen: View {
         #endif
     }
     @ViewBuilder private func idleContent(_ idle: IdleView) -> some View {
-        let awaitingAcknowledgement = if case .PimsleurLesson = idle.navigation.selection { !pimsleurAcknowledged } else { false }
+        // Adding cards from a browsed curriculum is what commits it.
+        let add: (DeckEvent) -> Void = { event in
+            if let commit = idle.commit_curriculum { actions.commitSentenceList(commit) }
+            addEvent(event)
+        }
         ReviewStepScrollView {
-        StudyCard {
-            Text(idle.title).font(.title2.bold())
-            if !idle.body.isEmpty { Text(idle.body) } else if let card = idle.next_due { NextReviewLine(card: card) }
-            if let notice = idle.banned_notice {
-                Text(notice)
-                Button("Undo restrictions") { actions.undoRestrictions() }
-            }
+            VStack(spacing: 8) {
+                Text(idle.title).font(.title2.bold())
+                if !idle.body.isEmpty { Text(idle.body).foregroundStyle(.secondary) } else if let card = idle.next_due { NextReviewLine(card: card) }
+                if let notice = idle.banned_notice {
+                    Text(notice).foregroundStyle(.secondary)
+                    Button("Undo restrictions") { actions.undoRestrictions() }.buttonStyle(.bordered)
+                }
+            }.multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.vertical, 12)
             if let label = idle.smart_add_label, let event = idle.info.smart_add_event {
-                Button(label) { addEvent(event) }
+                Button { add(event) } label: { Label(label, systemImage: "sparkles") }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             }
-            if idle.show_sentence_list {
-                SentenceListSelector(view: idle)
-                if let commit = idle.switch_curriculum {
-                    Button(commit.label) { actions.commitSentenceList(commit.event) }
-                        .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                }
-                if !awaitingAcknowledgement, let label = idle.curriculum_learn_label, let event = idle.info.smart_add_event {
-                    Button(label) { addEvent(event) }
-                        .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                }
-                if !awaitingAcknowledgement {
-                    DisclosureGroup(idle.manual_add_heading) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            ForEach(Array(idle.manual_add_options.enumerated()), id: \.offset) { _, option in
-                                Button(option.label) {
-                                    addEvent(option.event)
-                                }.frame(minHeight: 44)
-                            }
-                        }
-                    }
-                }
-            }
-        }
+            if idle.show_sentence_list { SentenceListSelector(view: idle, add: add) }
         } actions: {
             if idle.show_sentence_list { WeekProgressStrip(week: idle.week) }
         }

@@ -651,7 +651,7 @@
         },
         "sentence_list_label": "Advanced French Level 11",
         "next_sentence_list": null,
-        "switch_curriculum": null,
+        "commit_curriculum": null,
         "type": "Idle",
         "next_due": {
           "card_indicator": {

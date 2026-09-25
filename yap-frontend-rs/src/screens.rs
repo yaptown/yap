@@ -184,7 +184,10 @@ pub struct IdleView {
     pub progress: SentenceListProgress,
     pub sentence_list_label: String,
     pub next_sentence_list: Option<SentenceListSelection>,
-    pub switch_curriculum: Option<SwitchCurriculumView>,
+    /// Commits the browsed curriculum. Hosts append it just before any add
+    /// from this view, so adding cards is what switches — there is no
+    /// separate switch button here (Goals keeps one).
+    pub commit_curriculum: Option<DeckEvent>,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -554,7 +557,7 @@ impl Deck {
             progress,
             sentence_list_label,
             next_sentence_list,
-            switch_curriculum,
+            commit_curriculum: switch_curriculum.map(|switch| switch.event),
         }))
     }
 
@@ -1725,8 +1728,14 @@ mod tests {
                     idle.sentence_list_label
                 );
                 assert_eq!(
-                    json(&goals.curriculum.switch_curriculum),
-                    json(&idle.switch_curriculum)
+                    json(
+                        goals
+                            .curriculum
+                            .switch_curriculum
+                            .as_ref()
+                            .map(|switch| &switch.event)
+                    ),
+                    json(&idle.commit_curriculum)
                 );
                 // The floating commit exists exactly when the browsed draft
                 // differs from the deck's persisted curriculum.
