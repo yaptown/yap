@@ -25,7 +25,14 @@ import {
   deck_load_view,
 } from "../../../yap-frontend-rs/pkg";
 
-export function useDeckSelection():
+export function useDeckSelection() {
+  const selection = useCurrentDeckSelection();
+  const [previous, setPrevious] = useState(selection);
+  if (selection !== null && selection !== previous) setPrevious(selection);
+  return selection ?? previous;
+}
+
+function useCurrentDeckSelection():
   | {
       type: "languageSelected";
       nativeLanguage: Language;
@@ -68,24 +75,29 @@ export function useDeckSelection():
 
   const numEvents = useSyncExternalStore(subscribe, getSnapshot);
 
-  if (numEvents === null) return null;
+  const deckSelection = useMemo(
+    () => numEvents === null ? null : weapon.get_deck_selection_state(),
+    [weapon, numEvents],
+  );
+  return useMemo(() => {
+    if (numEvents === null) return null;
 
-  const deckSelection = weapon.get_deck_selection_state();
-  const hasHeardAbout = deckSelection?.heardAbout != null;
-  const onboardedLanguages = deckSelection?.onboardedLanguages ?? [];
+    const hasHeardAbout = deckSelection?.heardAbout != null;
+    const onboardedLanguages = deckSelection?.onboardedLanguages ?? [];
 
-  if (!deckSelection?.targetLanguage || !deckSelection?.nativeLanguage) {
-    return { type: "noLanguageSelected", hasHeardAbout, onboardedLanguages };
-  }
+    if (!deckSelection?.targetLanguage || !deckSelection?.nativeLanguage) {
+      return { type: "noLanguageSelected", hasHeardAbout, onboardedLanguages };
+    }
 
-  return {
-    type: "languageSelected",
-    nativeLanguage: deckSelection.nativeLanguage,
-    targetLanguage: deckSelection.targetLanguage,
-    startingFresh: deckSelection.onboardingSelections?.startingFresh,
-    hasHeardAbout,
-    onboardedLanguages,
-  };
+    return {
+      type: "languageSelected",
+      nativeLanguage: deckSelection.nativeLanguage,
+      targetLanguage: deckSelection.targetLanguage,
+      startingFresh: deckSelection.onboardingSelections?.startingFresh,
+      hasHeardAbout,
+      onboardedLanguages,
+    };
+  }, [deckSelection, numEvents]);
 }
 
 const LAST_COURSE_KEY = "yap-last-course";
@@ -108,12 +120,22 @@ export function useDeck(): {
   startingFresh: boolean | undefined;
   historyKnown: boolean;
   retry: () => void;
+  switching: boolean;
 } {
   const weapon = useWeapon();
   const [snapshot, setSnapshot] = useState<{
+    weapon: typeof weapon;
     load: DeckLoadState;
     deck: Deck | null;
-  }>(() => ({ load: deck_load_start(), deck: null }));
+  }>(() => ({ weapon, load: deck_load_start(), deck: null }));
+  const [previous, setPrevious] = useState<{
+    weapon: typeof weapon;
+    view: DeckLoadView;
+    deck: Deck;
+    course: Course;
+    startingFresh: boolean | undefined;
+    historyKnown: boolean;
+  } | null>(null);
   const dispatchRef = useRef<(event: DeckLoadEvent) => void>(() => {});
   const selectedCourse = useRef<Course | null>(null);
 
@@ -322,10 +344,10 @@ export function useDeck(): {
           }
         }
       }
-      setSnapshot({ load, deck });
+      setSnapshot({ weapon, load, deck });
     };
     dispatchRef.current = dispatch;
-    setSnapshot({ load, deck });
+    setSnapshot({ weapon, load, deck });
     return () => {
       active = false;
       ++packGeneration;
@@ -356,15 +378,27 @@ export function useDeck(): {
 
   const retry = useCallback(() => dispatchRef.current({ type: "Retry" }), []);
   const current =
-    (snapshot.load.course_key ?? null) === courseKey
+    snapshot.weapon === weapon && (snapshot.load.course_key ?? null) === courseKey
       ? snapshot
       : { load: deck_load_start(), deck: null };
+  const view = deck_load_view(current.load);
+  const startingFresh = selection?.onboardingSelections?.startingFresh;
+  if (view.phase.type === "Ready" && current.deck && course &&
+      (previous?.deck !== current.deck || previous.weapon !== weapon)) {
+    setPrevious({ weapon, view, deck: current.deck, course, startingFresh, historyKnown });
+  }
+  // Only bridge account replacement, not course changes or failed loads.
+  // Deck snapshots own their Rust data; retaining one does not borrow Weapon.
+  if (previous && previous.weapon !== weapon && view.phase.type === "Loading") {
+    return { ...previous, retry, switching: true };
+  }
   return {
-    view: deck_load_view(current.load),
+    view,
     deck: current.deck,
     course,
-    startingFresh: selection?.onboardingSelections?.startingFresh,
+    startingFresh,
     historyKnown,
     retry,
+    switching: false,
   };
 }

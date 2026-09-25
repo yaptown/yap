@@ -38,6 +38,13 @@ export function Dictionary({
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [justAdded, setJustAdded] = useState<Set<number>>(new Set());
+  const [optimisticDeck, setOptimisticDeck] = useState(deck);
+  // Keep the search, but let each fresh snapshot replace optimistic badges.
+  // In particular, an addition to the old account must not disable the new one's button.
+  if (optimisticDeck !== deck) {
+    setOptimisticDeck(deck);
+    setJustAdded(new Set());
+  }
 
   const totalCount = deck.get_gram_dictionary_count();
   const entries = deck.get_gram_dictionary_entries(

@@ -2,6 +2,8 @@ import {
   useState,
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   createContext,
   useContext,
@@ -22,7 +24,7 @@ export type WeaponToken = {
 type WeaponState =
   | { type: "loading" }
   | { type: "error"; message: string }
-  | { type: "ready"; weapon: Weapon };
+  | { type: "ready"; weapon: Weapon; userId: string | undefined; switching: boolean };
 
 const WeaponContext = createContext<WeaponState | undefined>(undefined);
 
@@ -44,19 +46,28 @@ export function WeaponProvider({
   userId: string | undefined;
   accessToken: string | undefined;
 }>) {
-  const [state, setState] = useState<WeaponState>({ type: "loading" });
+  const [loaded, setState] = useState<WeaponState>({ type: "loading" });
+  // Derive this during render so no child can use the previous store with
+  // the new account's credentials before the loading effect runs.
+  const state = useMemo<WeaponState>(() => loaded.type === "ready" && loaded.userId !== userId
+    ? userId === undefined
+      ? { type: "loading" }
+      : { ...loaded, switching: true }
+    : loaded, [loaded, userId]);
   const stateRef = useRef(state);
   const accessTokenRef = useRef<string | undefined>(accessToken);
   const networkState = useNetworkState();
   const networkStateRef = useRef(networkState);
-  stateRef.current = state;
-  accessTokenRef.current = accessToken;
-  networkStateRef.current = networkState;
+  useLayoutEffect(() => {
+    stateRef.current = state;
+    accessTokenRef.current = accessToken;
+    networkStateRef.current = networkState;
+  }, [state, accessToken, networkState]);
 
   const sync = useCallback(
     async (listenerId: ListenerKey | undefined, streamId: string) => {
       const current = stateRef.current;
-      if (current.type !== "ready") return;
+      if (current.type !== "ready" || current.switching) return;
       try {
         await current.weapon.sync(
           streamId,
@@ -76,16 +87,20 @@ export function WeaponProvider({
     const abortController = new AbortController();
 
     async function loadWeapon() {
-      setState({ type: "loading" });
+      setState((previous) => userId !== undefined && previous.type === "ready"
+        ? { ...previous, switching: true }
+        : { type: "loading" });
 
       try {
-        const weapon = await Weapon.create(userId, sync);
+        const weapon = await Weapon.create(userId, (listenerId: ListenerKey | undefined, streamId: string) => {
+          if (!abortController.signal.aborted) return sync(listenerId, streamId);
+        });
         if (!abortController.signal.aborted) {
-          setState({ type: "ready", weapon });
+          setState({ type: "ready", weapon, userId, switching: false });
         }
-      } catch (err: any) {
-        if (err.name !== "AbortError") {
-          setState({ type: "error", message: err.message });
+      } catch (err: unknown) {
+        if (!abortController.signal.aborted) {
+          setState({ type: "error", message: err instanceof Error ? err.message : String(err) });
         }
       }
     }
@@ -109,7 +124,7 @@ export function WeaponProvider({
 
   const syncWithSupabase = useCallback(
     async (forceUpload?: boolean) => {
-      if (stateRef.current.type !== "ready") return;
+      if (stateRef.current.type !== "ready" || stateRef.current.switching) return;
       if (accessTokenRef.current === undefined) return;
       try {
         if (networkStateRef.current.online) {
@@ -206,6 +221,7 @@ export function WeaponProvider({
             const current = stateRef.current;
             if (
               current.type === "ready" &&
+              !current.switching && current.userId === userId &&
               device_id !== current.weapon.device_id
             ) {
               console.log(

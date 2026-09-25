@@ -12,7 +12,8 @@ import { Outlet, useMatch, useOutletContext } from "react-router-dom";
 import { useInterval, useNetworkState } from "react-use";
 import type { AppContextType } from "@/app/context";
 import { useDeck, useDeckSelection } from "@/core/useDeck";
-import { useWeapon } from "@/core/weapon";
+import { useWeapon, useWeaponState } from "@/core/weapon";
+import { AccountSwitchOverlay } from "@/core/AccountSwitchOverlay";
 import { readChallengeRestrictions } from "@/lib/challenge-restrictions";
 import { playSoundEffect } from "@/lib/sound-effects";
 import {
@@ -39,11 +40,18 @@ const StudyContext = createContext<ReturnType<
   typeof useStudyController
 > | null>(null);
 
-// The key is the session identity, never the Deck snapshot or the current route.
-// In particular, visiting the language picker and resuming this course preserves it.
+// Changing course starts a new session, and so does one signed-in account
+// replacing another (its answers must not carry over). Signing in from a
+// signed-out session replaces the store, not the mounted screens; visiting the
+// language picker also preserves it.
 export function CourseRoutes() {
   const context = useOutletContext<AppContextType>();
   const selection = useDeckSelection();
+  const user = context.userInfo?.id;
+  const [account, setAccount] = useState({ user, epoch: 0 });
+  if (account.user !== user) {
+    setAccount({ user, epoch: account.user !== undefined && user !== undefined ? account.epoch + 1 : account.epoch });
+  }
   const courseKey =
     selection?.type === "languageSelected"
       ? `${selection.targetLanguage}:${selection.nativeLanguage}`
@@ -51,7 +59,7 @@ export function CourseRoutes() {
   const pendingReviewScope = `${context.userInfo?.id ?? "anon"}:${courseKey}`;
   return (
     <CourseSession
-      key={pendingReviewScope}
+      key={`${account.epoch}:${courseKey}`}
       pendingReviewScope={pendingReviewScope}
       context={context}
     />
@@ -65,6 +73,7 @@ function CourseSession({ context, pendingReviewScope }: { context: AppContextTyp
     <DeckContext.Provider value={state}>
       <StudyContext.Provider value={study}>
         <Outlet context={context} />
+        <AccountSwitchOverlay active={state.switching} />
       </StudyContext.Provider>
     </DeckContext.Provider>
   );
@@ -116,6 +125,17 @@ function useStudyController(
   const startingFresh = state.startingFresh;
   const historyKnown = state.historyKnown;
   const weapon = useWeapon();
+  const weaponState = useWeaponState();
+  const switching = state.switching || (weaponState.type === "ready" && weaponState.switching);
+  const activeStore = useRef({ weapon, switching });
+  useLayoutEffect(() => {
+    activeStore.current = { weapon, switching };
+    return () => { activeStore.current.switching = true; };
+  }, [weapon, switching]);
+  const canWrite = useCallback(
+    () => activeStore.current.weapon === weapon && !activeStore.current.switching,
+    [weapon],
+  );
   const network = useNetworkState();
   const [polledReadiness, setReadiness] = useState(() => ({
     timestamp_ms: Date.now(),
@@ -190,7 +210,7 @@ function useStudyController(
   }, [targetLanguage, accessToken]);
 
   useEffect(() => {
-    if (deck && accessToken && userInfo?.id) {
+    if (!switching && deck && accessToken && userInfo?.id) {
       deck
         .submit_push_notifications(accessToken, userInfo.id)
         .catch((error) =>
@@ -202,7 +222,7 @@ function useStudyController(
           console.error("Failed to update language stats:", error),
         );
     }
-  }, [deck, accessToken, userInfo?.id]);
+  }, [deck, accessToken, userInfo?.id, switching]);
 
   const [dismissedSetDisplayName, setDismissedSetDisplayName] = useState(
     () => localStorage.getItem("yap-skipped-set-display-name") === "true",
@@ -339,11 +359,11 @@ function useStudyController(
   ]);
 
   const addEvent = useCallback(
-    (event: DeckEvent) => weapon.add_deck_event(event),
-    [weapon],
+    (event: DeckEvent) => { if (canWrite()) weapon.add_deck_event(event); },
+    [weapon, canWrite],
   );
   const onRating = (rating: Rating): boolean => {
-    if (submitting.current.deck !== deck || submitting.current.inFlight) return false;
+    if (!canWrite() || submitting.current.deck !== deck || submitting.current.inFlight) return false;
     if (
       !deck ||
       !currentChallenge ||
@@ -371,7 +391,7 @@ function useStudyController(
     submission: string,
     completedAtMs: number,
   ): boolean => {
-    if (submitting.current.deck !== deck || submitting.current.inFlight) return false;
+    if (!canWrite() || submitting.current.deck !== deck || submitting.current.inFlight) return false;
     if (!deck || currentChallenge?.type !== "TranslateComprehensibleSentence") {
       console.error(
         "handleTranslationComplete called with no current challenge or no TranslateComprehensibleSentence in current challenge",
@@ -403,7 +423,7 @@ function useStudyController(
     grade: PartGraded[],
     completedAtMs: number,
   ): boolean => {
-    if (submitting.current.deck !== deck || submitting.current.inFlight) return false;
+    if (!canWrite() || submitting.current.deck !== deck || submitting.current.inFlight) return false;
     if (
       !deck ||
       currentChallenge?.type !== "TranscribeComprehensibleSentence"

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -32,8 +32,21 @@ import { Backstory } from "./Backstory";
 import { ExportResult } from "./ExportResult";
 import { saveFile } from "./save-file";
 import { DeckBuilding } from "./DeckBuilding";
-import { addNotes } from "./deck-build";
-import { claimExports, startExport, useAnkiExport } from "./export-store";
+import { addNotes, emptyBuild, type DeckBuild } from "./deck-build";
+import type { MediaProgress } from "./apkg";
+
+type AnkiExport = {
+  phase?: string;
+  progress?: MediaProgress;
+  choosing: boolean;
+  build: DeckBuild;
+  run: number;
+  finishMessage?: string;
+  summary?: string;
+  downloadLink?: string;
+  file?: { blob: Blob; name: string };
+};
+const idleExport: AnkiExport = { choosing: false, build: emptyBuild, run: 0 };
 
 // Stores the built package so it can be fetched by link (AnkiMobile's
 // "Download link"). The backend keeps it for 8 days.
@@ -118,15 +131,25 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const deckSelection = useDeckSelection();
   const startingFresh = deckSelection?.type === "languageSelected" ? deckSelection.startingFresh : undefined;
   const view = useMemo(() => ({ ...deck.anki_export_view(startingFresh), manifest }), [deck, manifest, startingFresh]);
-  const { owner, phase, progress, build, run, choosing, finishMessage, summary, downloadLink, file } = useAnkiExport(view.course_code, userInfo?.id);
-  // A deck finished while signed out and now seen signed in means they just
-  // created an account (the page remounts when that happens): show the
-  // signed-in ending in a dialog so it isn't missed below the fold.
+  const [exportState, setExport] = useState(idleExport);
+  const { phase, progress, build, run, choosing, finishMessage, summary, downloadLink, file } = exportState;
+  const generation = useRef(0);
+  const previousUser = useRef(userInfo?.id);
   const [welcome, setWelcome] = useState(false);
-  useEffect(() => {
-    if (userInfo && owner === undefined && summary) setWelcome(true);
-    claimExports(userInfo?.id);
-  }, [userInfo, owner, summary]);
+  useLayoutEffect(() => {
+    const user = userInfo?.id;
+    if (previousUser.current === user) return;
+    if (previousUser.current === undefined) {
+      if (user && summary) setWelcome(true);
+    } else {
+      // Direct account-to-account changes must not expose another user's file.
+      ++generation.current;
+      setExport(idleExport);
+      setWelcome(false);
+    }
+    previousUser.current = user;
+  }, [userInfo?.id, summary]);
+  useEffect(() => () => { ++generation.current; }, []);
   const busy = phase !== undefined;
   const status = useRef<HTMLDivElement>(null);
 
@@ -143,11 +166,15 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     return () => { active = false; };
   }, [targetLanguage, accessToken, retry]);
 
-  // Writes go to the export store, not component state, so the build carries
-  // on (and its result stays) if the page remounts under it.
+  // The async run owns its immutable deck snapshot. Account replacement does
+  // not free it; navigation or a newer Generate invalidates this run instead.
   async function download(cardTypes: AnkiCardTypes) {
-    const update = startExport(view.course_code, userInfo?.id);
-    update((current) => ({ ...current, phase: "Preparing deck…" }));
+    const run = ++generation.current;
+    const active = () => generation.current === run;
+    const update = (change: (current: AnkiExport) => AnkiExport) => {
+      setExport((current) => active() && current.run === run ? change(current) : current);
+    };
+    setExport({ ...idleExport, run, phase: "Preparing deck…" });
     // On a phone the status sits below the fold; bring it (and the backstory) up.
     requestAnimationFrame(() => status.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     try {
@@ -155,11 +182,13 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
       const minted = await mint_anki_deck(options, accessToken);
       update((current) => ({ ...current, phase: "Choosing sentences…", choosing: true }));
       await new Promise((resolve) => setTimeout(resolve, 0));
+      if (!active()) return;
       const planner = deck.start_anki_deck_plan(options, minted.token, Date.now());
       let plan: AnkiDeckPlan;
       try {
         let done = false;
         while (!done) {
+          if (!active()) return;
           const deadline = performance.now() + 12;
           const added: AnkiNote[] = [];
           let step;
@@ -183,20 +212,22 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
       const blob = await buildApkg(plan, (source) => deck.anki_bundled_media(source), (progress) => {
         update((current) => ({ ...current, progress, phase: progress.done === progress.total ? "Writing Anki package…" : current.phase }));
       });
+      if (!active()) return;
       update((current) => ({ ...current, phase: "Uploading deck…" }));
       let downloadLink: string | undefined;
       try {
         downloadLink = await uploadPackage(minted, plan.course_code, blob, accessToken);
       } catch (error) {
-        toast.error(`Could not create a download link. Your deck will still download. ${String(error)}`);
+        if (active()) toast.error(`Could not create a download link. Your deck will still download. ${String(error)}`);
       }
+      if (!active()) return;
       const file = { blob, name: `yap-${plan.course_code}.apkg` };
       saveFile(file);
       const notes = `${plan.stats.sentence_count.toLocaleString()} sentence notes${plan.stats.word_count ? ` + ${plan.stats.word_count.toLocaleString()} word notes` : ""}`;
       const summary = `${notes} · ${(blob.size / 1024 / 1024).toFixed(1)} MB`;
       update((current) => ({ ...current, downloadLink, file, summary }));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      if (active()) toast.error(error instanceof Error ? error.message : String(error));
     } finally {
       update((current) => ({ ...current, phase: undefined, progress: undefined }));
     }

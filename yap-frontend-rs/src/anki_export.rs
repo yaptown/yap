@@ -165,9 +165,6 @@ pub struct AnkiExportView {
     pub too_advanced_message: Option<String>,
     pub clips_loaded: bool,
     pub clip_sentence_count: u32,
-    /// `fra-eng`: identifies the course's export, since two courses can
-    /// share a target language.
-    pub course_code: String,
     /// The course pill: tapping it picks another course for the deck.
     pub course_flag: String,
     pub course_label: String,
@@ -507,7 +504,6 @@ impl Deck {
             too_advanced_message: too_advanced.then(|| TOO_ADVANCED.into()),
             clips_loaded: clips::manifest_loaded(language),
             clip_sentence_count,
-            course_code: course_code(self.context.course),
             course_flag: get_language_metadata(language).flag.clone(),
             course_label: language.to_string(),
             card_types_label: "Card types".into(),
