@@ -69,6 +69,10 @@ struct FlashcardChallengeView: View {
             .contentShape(Rectangle())
             .onTapGesture { toggle() }
             .accessibilityAction(named: revealed ? "Hide answer" : "Reveal answer") { toggle() }
+            // Like the web, the breakdown sits under the card rather than inside it.
+            if revealed, case let .Gram(_, _, _, breakdown) = flashcard.content, let breakdown, !breakdown.isEmpty {
+                MorphemeBreakdownView(parts: breakdown, alignment: .center, revealDelay: 1.5).padding(.top, 12)
+            }
             if !revealed, let hint = view.tutorial_hidden_hint {
                 Text(hint).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
@@ -106,9 +110,8 @@ struct FlashcardChallengeView: View {
     private func toggle() { revealed.toggle(); hasOpened = true }
     @ViewBuilder private var answer: some View {
         switch flashcard.content {
-        case let .Gram(_, definition, _, breakdown):
+        case let .Gram(_, definition, _, _):
             DefinitionBoxesView(definition: definition)
-            if let breakdown, !breakdown.isEmpty { MorphemeBreakdownView(parts: breakdown, alignment: .center) }
         case let .Listening(possible):
             if let header = view.listening_header { Text(header).font(.footnote).foregroundStyle(.secondary) }
             ForEach(Array(possible.enumerated()), id: \.offset) { _, entry in
