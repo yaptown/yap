@@ -36,9 +36,9 @@ struct PronunciationChallengeView: View {
             if let prompt = view.tutorial_grade_prompt {
                 TutorialHint(text: prompt, pointing: .down, arrowSize: 96).fadeIn(duration: 0.3, delay: 1.5)
             }
+            Button(view.cant_speak_label) { actions.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
             GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
                 .disabled(actions.submitting)
-            Button(view.cant_speak_label) { actions.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in

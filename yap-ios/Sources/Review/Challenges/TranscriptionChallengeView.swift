@@ -47,7 +47,10 @@ struct TranscriptionChallengeView: View {
                         }
                     }
                 }.frame(maxWidth: .infinity).padding(.top, 4)
-                if editing { ProperNounGroupsView(groups: view.proper_nouns) }
+                if editing {
+                    accentKeys
+                    ProperNounGroupsView(groups: view.proper_nouns)
+                }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
                     reviewCount: screen.total_reviews,
                     maskedSentence: editing ? sentence.parts.map { part in
@@ -80,24 +83,12 @@ struct TranscriptionChallengeView: View {
             }
         } actions: {
             if view.verdict == nil {
+                Button(view.cant_listen_label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(view.is_grading)
                 Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                Button(view.cant_listen_label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(view.is_grading)
             } else {
                 Button { complete() } label: { Text(view.verdict?.continue_label ?? "").frame(maxWidth: .infinity) }.disabled(!view.can_continue || actions.submitting)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-            }
-        }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
-                        ForEach(get_language_metadata(language: screen.target_language).accented_characters, id: \.self) { character in
-                            Button(character) { insertAccent(character) }
-                        }
-                    }
-                }
-                Button("Done") { focused = nil }
             }
         }
         .onAppear {
@@ -156,6 +147,21 @@ struct TranscriptionChallengeView: View {
                     ForEach(view.grade_options.indices, id: \.self) { index in Text(view.grade_options[index].label).tag(index) }
                 }.pickerStyle(.menu).controlSize(.small)
             }.font(.subheadline)
+        }
+    }
+    /// Like the web's accented-character keyboard, but right under the
+    /// sentence so it stays above the system keyboard. Buttons never take
+    /// focus, so the blank being typed in stays active.
+    @ViewBuilder private var accentKeys: some View {
+        let characters = get_language_metadata(language: screen.target_language).accented_characters
+        if !characters.isEmpty {
+            SentenceFlow(spacing: 6, alignment: .center) {
+                ForEach(characters, id: \.self) { character in
+                    Button { insertAccent(character) } label: {
+                        Text(character).frame(minWidth: 34, minHeight: 34).insetSurface(cornerRadius: 8)
+                    }.buttonStyle(.plain).disabled(focused == nil)
+                }
+            }.frame(maxWidth: .infinity)
         }
     }
     private func insertAccent(_ character: String) {
