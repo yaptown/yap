@@ -227,12 +227,34 @@ fn validated(cue: &str, answer: CueSplit) -> Option<CueSplit> {
     })
 }
 
+/// Whether a per-request error is a model answer that can't be used (off
+/// schema, or a refusal) rather than a request that never got an answer.
+pub fn unusable_answer(error: &tysm::chat_completions::IndividualChatError) -> bool {
+    use tysm::chat_completions::IndividualChatError as E;
+    matches!(
+        error,
+        E::ResponseNotConformantToSchema { .. } | E::Refusal(_)
+    )
+}
+
 fn checked_split(
     cue: &str,
     answer: Result<CueSplit, tysm::chat_completions::IndividualChatError>,
     show_rejection: bool,
 ) -> Result<Option<CueSplit>, tysm::chat_completions::IndividualChatError> {
-    let answer = answer?;
+    let answer = match answer {
+        Ok(answer) => answer,
+        // The model answered, just unusably. That is the same case as an
+        // answer that fails the letter-for-letter check, so it falls back;
+        // only a failed request (transport, API) fails the pass.
+        Err(error) if unusable_answer(&error) => {
+            if show_rejection {
+                eprintln!("segmentation answer unusable for {cue:?}: {error:#}");
+            }
+            return Ok(None);
+        }
+        Err(error) => return Err(error),
+    };
     let split = validated(cue, answer.clone());
     if split.is_none() && show_rejection {
         eprintln!(
@@ -441,10 +463,23 @@ mod tests {
             checked_split("original", Ok(CueSplit::per_cue("changed")), false).unwrap(),
             None
         );
+        // A refusal is still an answer, just an unusable one: fall back.
+        assert_eq!(
+            checked_split(
+                "original",
+                Err(tysm::chat_completions::IndividualChatError::Refusal(
+                    "test".into()
+                )),
+                false
+            )
+            .unwrap(),
+            None
+        );
+        // A request that never got an answer fails the pass.
         assert!(checked_split(
             "original",
-            Err(tysm::chat_completions::IndividualChatError::Refusal(
-                "test".into()
+            Err(tysm::chat_completions::IndividualChatError::Other(
+                "connection reset".into()
             )),
             false
         )

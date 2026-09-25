@@ -588,6 +588,15 @@ async fn judge<T: DeserializeOwned + schemars::JsonSchema>(
                 for (chunk, answer) in answers {
                     match answer {
                         Ok(answer) => rows.push((chunk, answer)),
+                        // An off-schema answer or a refusal proposes nothing,
+                        // which is always safe: this chunk simply goes
+                        // unchanged, as if the model had found no errors.
+                        Err(error) if movie_subtitles::llm_segment::unusable_answer(&error) => {
+                            eprintln!(
+                                "proofread answer unusable, chunk left as is: {} {}: {error:#}",
+                                chunk.language, chunk.imdb
+                            );
+                        }
                         Err(error) => {
                             failed += 1;
                             eprintln!(
