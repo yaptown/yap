@@ -3,8 +3,6 @@
   "view": {
     "title": "Home",
     "course_flag": "🇮🇹",
-    "course_label": "Learning Italian",
-    "greeting": "A little Italian, every day.",
     "native_language": "English",
     "target_language": "Italian",
     "up_next": {
@@ -383,6 +381,9 @@
       "title": "Find a word",
       "search_placeholder": "Search Italian or English"
     },
-    "due_count": 0
+    "due_count": 0,
+    "greeting_lead": "A little",
+    "course_name": "Italian",
+    "greeting_tail": ", every day."
   }
 }

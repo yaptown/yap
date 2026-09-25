@@ -40,19 +40,10 @@ struct HomeScreen: View {
             GeometryReader { geometry in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        Button(action: actions.switchCourse) {
-                            // The quietest thing on the page: bare text, no surface.
-                            HStack(spacing: 6) {
-                                if Theme.emojiFontAvailable { Text(view.course_flag) }
-                                Text(view.course_label)
-                                Image(systemName: "chevron.down").font(.caption2.weight(.semibold))
-                            }
-                            .font(.subheadline).foregroundStyle(.secondary)
-                            .padding(.vertical, 6).contentShape(Rectangle())
-                        }.buttonStyle(.plain)
                         // A tagline, not a headline: Up Next's word is the page's one headline.
-                        Text(view.greeting).font(.title2.weight(.medium)).foregroundStyle(Color.yapText)
-                            .fixedSize(horizontal: false, vertical: true)
+                        // The course inside it is the course switcher.
+                        Button(action: actions.switchCourse) { HomeGreeting(view: view) }
+                            .buttonStyle(.plain).padding(.top, 8)
                         if let idle = view.up_next.idle {
                             IdleScreen(view: idle)
                                 .environment(\.reviewActions, addingGoesToReview)
@@ -157,6 +148,19 @@ struct GoalProgress: View {
         ProgressView(value: goal.percent, total: 100)
             .accessibilityLabel(goal.title).accessibilityValue(goal.percent_label)
         Text(goal.subtitle).font(.subheadline).foregroundStyle(.secondary)
+    }
+}
+
+/// "A little 🇫🇷 French ⌄, every day." as one run of text, so it wraps like a sentence.
+private struct HomeGreeting: View {
+    let view: HomeScreenView
+    var body: some View {
+        let flag = Theme.emojiFontAvailable ? Text("\(view.course_flag) ") : Text("")
+        (Text("\(view.greeting_lead) ") + flag + Text(view.course_name).fontWeight(.semibold)
+            + Text(" \(Image(systemName: "chevron.down"))").font(.headline).foregroundStyle(.secondary)
+            + Text(view.greeting_tail))
+            .font(.title2.weight(.medium)).foregroundStyle(Color.yapText)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 

@@ -3,8 +3,6 @@
   "view": {
     "title": "Home",
     "course_flag": "🇫🇷",
-    "course_label": "Learning French",
-    "greeting": "A little French, every day.",
     "native_language": "English",
     "target_language": "French",
     "up_next": {
@@ -130,6 +128,9 @@
       "title": "Find a word",
       "search_placeholder": "Search French or English"
     },
-    "due_count": 2
+    "due_count": 2,
+    "greeting_lead": "A little",
+    "course_name": "French",
+    "greeting_tail": ", every day."
   }
 }

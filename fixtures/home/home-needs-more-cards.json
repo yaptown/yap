@@ -3,8 +3,6 @@
   "view": {
     "title": "Home",
     "course_flag": "🇩🇪",
-    "course_label": "Learning German",
-    "greeting": "A little German, every day.",
     "native_language": "English",
     "target_language": "German",
     "up_next": {
@@ -475,6 +473,9 @@
       "title": "Find a word",
       "search_placeholder": "Search German or English"
     },
-    "due_count": 0
+    "due_count": 0,
+    "greeting_lead": "A little",
+    "course_name": "German",
+    "greeting_tail": ", every day."
   }
 }

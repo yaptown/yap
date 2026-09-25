@@ -863,10 +863,12 @@ pub struct DictionaryCardView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct HomeScreenView {
     pub title: String,
+    /// "A little [🇫🇷 French ⌄], every day.": the course name sits inside the
+    /// greeting and is the course switcher, so Home names the language once.
+    pub greeting_lead: String,
     pub course_flag: String,
-    pub course_label: String,
-    /// "A little French, every day."
-    pub greeting: String,
+    pub course_name: String,
+    pub greeting_tail: String,
     pub native_language: Language,
     pub target_language: Language,
     pub up_next: UpNextView,
@@ -1153,9 +1155,10 @@ impl Deck {
             .date_naive();
         HomeScreenView {
             title: "Home".into(),
+            greeting_lead: "A little".into(),
             course_flag: language.flag.clone(),
-            course_label: format!("Learning {}", language.common_name),
-            greeting: format!("A little {}, every day.", language.common_name),
+            course_name: language.common_name.clone(),
+            greeting_tail: ", every day.".into(),
             native_language: self.context.course.native_language,
             target_language: self.get_target_language(),
             up_next: UpNextView {
@@ -1964,7 +1967,7 @@ mod tests {
     fn home_and_curriculum_labels_are_shared_display_copy() {
         let home = Deck::default().home_screen_view(inputs());
         assert_eq!(home.title, "Home");
-        assert_eq!(home.course_label, "Learning French");
+        assert_eq!(home.course_name, "French");
         assert_eq!(home.up_next.action_label, "Continue");
 
         let deck = with_due_cards();
@@ -2165,7 +2168,13 @@ mod tests {
         assert_eq!(goal.subtitle, "Unlocks 24.8% of everyday French");
         let home = deck.home_screen_view(inputs());
         assert_eq!(home.course_flag, "🇫🇷");
-        assert_eq!(home.greeting, "A little French, every day.");
+        assert_eq!(
+            format!(
+                "{} {}{}",
+                home.greeting_lead, home.course_name, home.greeting_tail
+            ),
+            "A little French, every day."
+        );
         assert_eq!(home.cards.value, "0");
         assert_eq!(home.cards.caption, "Cards studied");
         assert_eq!(

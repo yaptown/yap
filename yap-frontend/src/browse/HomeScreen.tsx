@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BookOpen,
+  ChevronDown,
   Headphones,
   Keyboard,
   Languages,
@@ -23,7 +24,6 @@ import type {
 import type { UserInfo } from "@/app/context";
 import { DeckPage } from "@/app/DeckPage";
 import { TopPageLayout } from "@/components/TopPageLayout";
-import { CoursePill } from "@/components/CoursePill";
 import { Card } from "@/components/ui/card";
 import { GoalProgress } from "@/browse/GoalProgress";
 import { WeekProgressStrip } from "@/review/WeekProgressStrip";
@@ -121,16 +121,25 @@ function HomeContent({
         }}
       >
         <main className="flex flex-col gap-4 py-4" aria-label={view.title}>
-          <CoursePill
-            flag={view.course_flag}
-            label={view.course_label}
-            onClick={() => {
-              if (!inert) navigate("/select-language");
-            }}
-          />
-          {/* A tagline, not a headline: Up Next's word is the page's one headline. */}
-          <h1 className="pt-2 text-2xl font-medium tracking-tight">
-            {view.greeting}
+          {/* A tagline, not a headline: Up Next's word is the page's one
+              headline. The course inside it is the course switcher. */}
+          <h1 className="pt-4 text-2xl font-medium tracking-tight">
+            {view.greeting_lead}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                if (!inert) navigate("/select-language");
+              }}
+              className="inline-flex items-baseline gap-1.5 rounded-md font-semibold decoration-muted-foreground/50 decoration-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span aria-hidden>{view.course_flag}</span>
+              {view.course_name}
+              <ChevronDown
+                className="h-4 w-4 self-center text-muted-foreground"
+                aria-hidden
+              />
+            </button>
+            {view.greeting_tail}
           </h1>
           {upNext.idle ? (
             <IdleScreen
