@@ -96,13 +96,13 @@ pub async fn generate_pronunciation_audio(
                 let candidates = [
                     TtsSynthesis::Gemini {
                         voice: GEMINI_VOICE.to_string(),
-                        instructions: instructions.clone(),
+                        style: instructions.clone(),
                         text: spoken.clone(),
                         attempt: 1,
                     },
                     TtsSynthesis::Gemini {
                         voice: GEMINI_VOICE.to_string(),
-                        instructions: instructions.clone(),
+                        style: instructions.clone(),
                         text: spoken.clone(),
                         attempt: 2,
                     },

@@ -102,7 +102,7 @@ fn normalize(text: &str) -> String {
 /// the numerals, so every such clip would fail the comparison and burn its
 /// full retry budget for nothing.
 ///
-/// Isolated single words are excluded for a deeper reason: which homophone was
+/// Isolated single words cannot be checked for exact spelling: which homophone was
 /// *spelled* is not recoverable from the audio, by anyone. French "verre",
 /// "vert" and "vers" are all /vɛʁ/, so Whisper can only fall back on raw word
 /// frequency and returns whichever is commonest. Measured on correct Google
@@ -112,13 +112,44 @@ fn normalize(text: &str) -> String {
 ///
 /// A single function word of context is enough to fix all four: "un verre",
 /// "le maire", "le foie" and "la foi" each came back exactly. So the line is
-/// drawn precisely where the evidence puts it — at two words. Dictionary and
-/// single-gram audio goes unchecked, which is the honest outcome, since for
-/// those the check was never measuring pronunciation in the first place.
-fn is_checkable(request: &TtsRequest) -> bool {
-    !request.is_ssml
-        && !request.text.chars().any(|c| c.is_numeric())
-        && normalize(&request.text).split_whitespace().count() >= 2
+/// drawn precisely where the evidence puts it — at two words. Single words
+/// still need an extra-speech check: Gemini 3.8 read the direction line aloud
+/// in six of six draws. Allowing two extra normalized words tolerates homophones
+/// and ASR splitting without accepting a whole spoken delivery instruction.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ContentCheck {
+    None,
+    ExtraSpeechOnly,
+    Exact,
+}
+
+impl ContentCheck {
+    fn for_request(request: &TtsRequest) -> Self {
+        if request.is_ssml
+            || request.text.chars().any(|c| c.is_numeric())
+            || whisper_language(request.language).is_none()
+        {
+            return Self::None;
+        }
+        match normalize(&request.text).split_whitespace().count() {
+            0 => Self::None,
+            1 => Self::ExtraSpeechOnly,
+            _ => Self::Exact,
+        }
+    }
+
+    fn defect(self, expected: &str, heard: &str) -> Option<String> {
+        let expected = normalize(expected);
+        let heard = normalize(heard);
+        let rejected = match self {
+            Self::None => false,
+            Self::ExtraSpeechOnly => {
+                heard.split_whitespace().count() > expected.split_whitespace().count() + 2
+            }
+            Self::Exact => heard != expected,
+        };
+        rejected.then(|| format!("expected {expected:?}, heard {heard:?}"))
+    }
 }
 
 /// The transcription hosts that can actually run, by name — for the boot log.
@@ -241,18 +272,13 @@ pub async fn content_defect(
     audio: &[u8],
     transcribers: Transcribers,
 ) -> Option<String> {
-    if !is_checkable(request) {
+    let check = ContentCheck::for_request(request);
+    if check == ContentCheck::None {
         return None;
     }
     let language = whisper_language(request.language)?;
     let transcript = transcribe(http, request, audio, language, transcribers).await?;
-
-    let expected = normalize(&request.text);
-    let heard = normalize(&transcript);
-    if heard == expected {
-        return None;
-    }
-    Some(format!("expected {expected:?}, heard {heard:?}"))
+    check.defect(&request.text, &transcript)
 }
 
 #[cfg(test)]
@@ -296,39 +322,67 @@ mod tests {
     }
 
     #[test]
-    fn ssml_and_numerals_are_not_checkable() {
+    fn ssml_numerals_and_empty_text_are_not_checkable() {
         let mut ssml = request("<speak>bonjour</speak>", Language::French);
         ssml.is_ssml = true;
-        assert!(!is_checkable(&ssml));
-
-        // TTS says "mille neuf cent soixante-quatre"; our text says "1964".
-        assert!(!is_checkable(&request(
-            "Nous sommes en 1964.",
-            Language::French
-        )));
-
-        // Nothing to compare against.
-        assert!(!is_checkable(&request("...", Language::French)));
-
-        assert!(is_checkable(&request("Les Baxter ici ?", Language::French)));
+        assert_eq!(ContentCheck::for_request(&ssml), ContentCheck::None);
+        for text in ["Nous sommes en 1964.", "..."] {
+            assert_eq!(
+                ContentCheck::for_request(&request(text, Language::French)),
+                ContentCheck::None
+            );
+        }
     }
 
     #[test]
-    fn isolated_words_are_not_checkable_but_two_words_are() {
-        // Measured: correct Google clips of these came back as "vert",
-        // "mère" and "fois" respectively. Which homophone was spelled simply
-        // isn't in the audio, so checking one would reject good pronunciation.
-        for word in ["verre", "maire", "foie", "foi"] {
-            assert!(!is_checkable(&request(word, Language::French)));
+    fn single_words_allow_homophones_and_splitting_but_not_directions() {
+        for (expected, heard) in [
+            ("verre", "vert"),
+            ("maire", "mère"),
+            ("foie", "fois"),
+            ("foi", "fois"),
+            ("Bonjour !", "bon jour"),
+            ("Trouvé.", "un deux trois"),
+        ] {
+            let check = ContentCheck::for_request(&request(expected, Language::French));
+            assert_eq!(check, ContentCheck::ExtraSpeechOnly);
+            assert_eq!(check.defect(expected, heard), None);
         }
+        let check = ContentCheck::for_request(&request("Trouvé.", Language::French));
+        assert!(
+            check
+                .defect("Trouvé.", "Read aloud in a warm welcoming tone. Trouvé.")
+                .is_some()
+        );
+        assert!(check.defect("Trouvé.", "un deux trois quatre").is_some());
+    }
 
-        // One function word of context was enough to fix every one of them.
-        for phrase in ["un verre", "le maire", "le foie", "la foi"] {
-            assert!(is_checkable(&request(phrase, Language::French)));
+    #[test]
+    fn two_words_still_require_an_exact_normalized_match() {
+        for phrase in [
+            "un verre",
+            "le maire",
+            "le foie",
+            "la foi",
+            "Les Baxter ici ?",
+        ] {
+            let check = ContentCheck::for_request(&request(phrase, Language::French));
+            assert_eq!(check, ContentCheck::Exact);
+            assert_eq!(check.defect(phrase, phrase), None);
         }
-
-        // Punctuation is not a word — this is still one.
-        assert!(!is_checkable(&request("Bonjour !", Language::French)));
+        assert!(
+            ContentCheck::Exact
+                .defect("Les Baxter ici ?", "Laisse Baxter ici.")
+                .is_some()
+        );
+        assert_eq!(
+            ContentCheck::Exact.defect("Les Baxter ici ?", "les baxter, ici!"),
+            None
+        );
+        assert_eq!(
+            ContentCheck::for_request(&request("hello", Language::English)),
+            ContentCheck::None
+        );
     }
 
     #[test]

@@ -1,8 +1,8 @@
-//! Gemini's native generateContent client and prompt-driven TTS, the sibling of
+//! Gemini's native generateContent client and Interactions TTS, the sibling of
 //! the Cloud Text-to-Speech client in the crate root. Unlike Cloud TTS it has
 //! no per-language voice list — one voice speaks every language, picked from
-//! the text itself — no SSML, and no `speakingRate` knob, so delivery is steered
-//! entirely by the direction line that precedes the text in the prompt.
+//! the text itself — no SSML, and no `speakingRate` knob. Speech metadata steers
+//! delivery separately from the transcript, which is spoken verbatim.
 
 use anyhow::{Context, Result};
 use base64::Engine;
@@ -33,8 +33,6 @@ pub enum Output {
     Text,
     /// JSON conforming to a Gemini response schema.
     Json { schema: Value },
-    /// Spoken audio from a prebuilt voice.
-    Audio { voice: String },
 }
 
 impl Serialize for Output {
@@ -44,15 +42,6 @@ impl Serialize for Output {
             Self::Json { schema } => json!({
                 "responseMimeType": "application/json",
                 "responseSchema": schema,
-            }),
-            Self::Audio { voice } => json!({
-                "responseModalities": ["audio"],
-                "temperature": 1,
-                "speech_config": {
-                    "voice_config": {
-                        "prebuilt_voice_config": { "voice_name": voice }
-                    }
-                }
             }),
         }
         .serialize(serializer)
@@ -189,19 +178,88 @@ pub const DEFAULT_VOICE: &str = "Achernar";
 
 #[derive(Debug, Clone)]
 pub struct GeminiTtsRequest {
-    /// Direction for the model ("Read aloud in a warm welcoming tone"),
-    /// spoken by nobody; the text follows it on its own line.
-    pub instructions: String,
-    /// The words to voice.
+    /// Delivery tone and pace, separate from the verbatim transcript.
+    pub style: String,
+    /// The words to voice verbatim.
     pub text: String,
     /// A prebuilt voice name, e.g. [`DEFAULT_VOICE`].
     pub voice: String,
 }
 
-impl GeminiTtsRequest {
-    /// The prompt as sent: direction, newline, text.
-    pub fn prompt(&self) -> String {
-        format!("{}\n{}", self.instructions, self.text)
+impl Serialize for GeminiTtsRequest {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut content = json!({"type": "text", "text": self.text});
+        if !self.style.is_empty() {
+            content["annotations"] = json!([{"type": "speech_metadata", "style": self.style}]);
+        }
+        json!({
+            "model": GEMINI_TTS_MODEL,
+            "input": [{"type": "user_input", "content": [content]}],
+            "response_format": {"type": "audio", "mime_type": "audio/l16", "sample_rate": 24000},
+            "generation_config": {"speech_config": [{"voice": self.voice}]},
+        })
+        .serialize(serializer)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct InteractionResponse {
+    #[serde(default)]
+    steps: Vec<InteractionStep>,
+}
+
+#[derive(Debug, Deserialize)]
+struct InteractionStep {
+    #[serde(default)]
+    content: Vec<InteractionContent>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "type")]
+enum InteractionContent {
+    #[serde(rename = "audio")]
+    Audio {
+        mime_type: String,
+        sample_rate: u32,
+        #[serde(deserialize_with = "deserialize_base64")]
+        data: Vec<u8>,
+    },
+    #[serde(other)]
+    Other,
+}
+
+impl InteractionResponse {
+    /// The audio parts, joined. We ask for raw PCM, and anything else is an
+    /// error rather than something to decode as PCM: when the model's
+    /// default quietly became WAV, its header and trailing C2PA chunk played
+    /// as a click and a burst of static.
+    fn audio(self) -> Result<Option<GeminiTtsAudio>> {
+        let mut audio: Option<GeminiTtsAudio> = None;
+        for content in self.steps.into_iter().flat_map(|step| step.content) {
+            let InteractionContent::Audio {
+                mime_type,
+                sample_rate,
+                data,
+            } = content
+            else {
+                continue;
+            };
+            anyhow::ensure!(
+                mime_type.starts_with("audio/l16"),
+                "Unexpected Gemini audio MIME type: {mime_type}"
+            );
+            audio
+                .get_or_insert_with(|| GeminiTtsAudio {
+                    samples: Vec::new(),
+                    sample_rate,
+                })
+                .samples
+                .extend(
+                    data.chunks_exact(2)
+                        .map(|pair| i16::from_le_bytes([pair[0], pair[1]])),
+                );
+        }
+        Ok(audio.filter(|audio| !audio.samples.is_empty()))
     }
 }
 
@@ -299,13 +357,21 @@ impl GeminiClient {
             "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent",
             request.model
         );
+        self.post_json(&url, request).await
+    }
+
+    async fn post_json<T: serde::de::DeserializeOwned>(
+        &self,
+        url: &str,
+        request: &impl Serialize,
+    ) -> std::result::Result<T, GeminiError> {
         let mut attempt = 0;
         loop {
             attempt += 1;
             crate::telemetry::record_request(crate::telemetry::Backend::Gemini);
             let response = self
                 .http
-                .post(&url)
+                .post(url)
                 .header("x-goog-api-key", &self.api_key)
                 .header("Content-Type", "application/json")
                 .json(request)
@@ -355,40 +421,13 @@ impl GeminiClient {
         &self,
         request: &GeminiTtsRequest,
     ) -> std::result::Result<Option<GeminiTtsAudio>, GeminiError> {
-        let response = self
-            .generate(&GenerateContent {
-                model: GEMINI_TTS_MODEL.to_owned(),
-                parts: vec![Part::Text(request.prompt())],
-                output: Output::Audio {
-                    voice: request.voice.clone(),
-                },
-            })
+        let response: InteractionResponse = self
+            .post_json(
+                "https://generativelanguage.googleapis.com/v1beta/interactions",
+                request,
+            )
             .await?;
-
-        // Audio arrives as one or more inlineData parts of raw linear16 PCM.
-        let mut pcm = Vec::new();
-        let mut sample_rate = 24_000;
-        for (mime, bytes) in response.inline_data() {
-            if let Some(rate) = mime
-                .split("rate=")
-                .nth(1)
-                .and_then(|rate| rate.parse::<u32>().ok())
-            {
-                sample_rate = rate;
-            }
-            pcm.extend(
-                bytes
-                    .chunks_exact(2)
-                    .map(|pair| i16::from_le_bytes([pair[0], pair[1]])),
-            );
-        }
-        if pcm.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(GeminiTtsAudio {
-            samples: pcm,
-            sample_rate,
-        }))
+        response.audio().map_err(GeminiError::Other)
     }
 }
 
@@ -443,25 +482,67 @@ mod tests {
     }
 
     #[test]
-    fn serializes_audio_request() {
-        let request = GenerateContent {
-            model: GEMINI_TTS_MODEL.into(),
-            parts: vec![Part::Text("Read aloud\nHello".into())],
-            output: Output::Audio {
-                voice: "Achernar".into(),
-            },
+    fn serializes_speech_metadata_separately_from_transcript() {
+        let mut request = GeminiTtsRequest {
+            style: "warm and welcoming".into(),
+            text: "Trouvé.".into(),
+            voice: "Zephyr".into(),
         };
         assert_eq!(
-            serde_json::to_value(request).unwrap(),
+            serde_json::to_value(&request).unwrap(),
             json!({
-                "contents": [{"role": "user", "parts": [{"text": "Read aloud\nHello"}]}],
-                "generationConfig": {
-                    "responseModalities": ["audio"],
-                    "temperature": 1,
-                    "speech_config": {"voice_config": {"prebuilt_voice_config": {"voice_name": "Achernar"}}},
-                },
+                "model": GEMINI_TTS_MODEL,
+                "input": [{"type": "user_input", "content": [{"type": "text", "text": "Trouvé.",
+                    "annotations": [{"type": "speech_metadata", "style": "warm and welcoming"}]}]}],
+                "response_format": {"type": "audio", "mime_type": "audio/l16", "sample_rate": 24000},
+                "generation_config": {"speech_config": [{"voice": "Zephyr"}]},
             })
         );
+        request.style.clear();
+        assert_eq!(
+            serde_json::to_value(&request).unwrap()["input"][0]["content"][0],
+            json!({"type": "text", "text": "Trouvé."})
+        );
+    }
+
+    #[test]
+    fn parses_interaction_pcm() {
+        let response: InteractionResponse = serde_json::from_value(json!({
+            "steps": [{"type": "model_output", "content": [
+                {"type": "text", "text": "ignored"},
+                {"type": "audio", "data": "AAH+/w==", "channels": 1,
+                 "sample_rate": 24000, "mime_type": "audio/l16; rate=24000; channels=1"}
+            ]}]
+        }))
+        .unwrap();
+        let audio = response.audio().unwrap().unwrap();
+        assert_eq!(audio.sample_rate, 24000);
+        assert_eq!(audio.samples, [256, -2]);
+    }
+
+    #[test]
+    fn rejects_non_pcm_audio() {
+        for mime in ["audio/wav", "audio/ogg"] {
+            let response: InteractionResponse = serde_json::from_value(json!({
+                "steps": [{"content": [{"type": "audio", "data": "AAH+/w==", "mime_type": mime, "sample_rate": 24000}]}]
+            }))
+            .unwrap();
+            assert_eq!(
+                response.audio().unwrap_err().to_string(),
+                format!("Unexpected Gemini audio MIME type: {mime}")
+            );
+        }
+    }
+
+    #[test]
+    fn interaction_without_audio_is_none() {
+        for fixture in [
+            json!({}),
+            json!({"steps": [{"content": [{"type": "text", "text": "declined"}]}]}),
+        ] {
+            let response: InteractionResponse = serde_json::from_value(fixture).unwrap();
+            assert!(response.audio().unwrap().is_none());
+        }
     }
 
     #[test]

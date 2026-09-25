@@ -675,7 +675,7 @@ async fn gemini_synthesize(
     let api_key = std::env::var("GEMINI_API_KEY").map_err(|_| SynthError::Unsupported)?;
     let client = google_speech::gemini::GeminiClient::with_http(api_key, http.clone());
     let gemini_request = google_speech::gemini::GeminiTtsRequest {
-        instructions: gemini_tts_instructions(request),
+        style: gemini_tts_style(request),
         text: request.text.clone(),
         voice: GEMINI_TTS_VOICE.to_string(),
     };
@@ -754,15 +754,15 @@ fn wrap_pcm_in_wav(
 const GEMINI_TTS_VOICE: &str = "Zephyr";
 
 /// House style for Gemini TTS when the caller doesn't ask for something else.
-const GEMINI_TTS_DEFAULT_INSTRUCTIONS: &str = "Read aloud in a warm welcoming tone";
+const GEMINI_TTS_DEFAULT_STYLE: &str = "warm and welcoming";
 
-/// The direction line Gemini speaks under. Gemini has no rate parameter, so
-/// the speaking rate is expressed here too.
-fn gemini_tts_instructions(request: &TtsRequest) -> String {
-    let instructions = request
+/// Delivery metadata, separate from the transcript. Gemini has no rate
+/// parameter, so the speaking rate is expressed here too.
+fn gemini_tts_style(request: &TtsRequest) -> String {
+    let style = request
         .instructions
         .as_deref()
-        .unwrap_or(GEMINI_TTS_DEFAULT_INSTRUCTIONS);
+        .unwrap_or(GEMINI_TTS_DEFAULT_STYLE);
 
     let pace = if request.speed < 0.95 {
         ", speaking slowly and deliberately"
@@ -772,7 +772,7 @@ fn gemini_tts_instructions(request: &TtsRequest) -> String {
         ""
     };
 
-    format!("{instructions}{pace}")
+    format!("{style}{pace}")
 }
 
 async fn gemini_text_to_speech(

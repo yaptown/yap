@@ -4279,21 +4279,17 @@ impl Language {
     }
 }
 
-/// The direction a prompt-driven voice (Gemini TTS) is given ahead of a
-/// pronunciation cue. Delivery is the only thing left to the prompt — the
-/// words come from [`pronunciation_challenge_spoken_text`] — and the pace
-/// matters: unprompted, the model leaves a second of silence between
+/// Delivery style for a pronunciation cue, sent as Gemini speech metadata
+/// separately from the words in [`pronunciation_challenge_spoken_text`]. Pace
+/// matters: without guidance the model leaves a second of silence between
 /// spelled letters. Named in English because it addresses the model, not
 /// the learner.
 pub fn pronunciation_challenge_tts_instructions(language: Language) -> String {
-    // Keep voice instructions (and the audio keys containing them) unchanged
-    // while the dialect courses share voices.
     let language = language.prompt_name();
     format!(
-        "Read this short {language} pronunciation cue aloud for a flashcard, in a clear, warm, \
-         natural {language} voice, at a normal conversational pace with no long pauses. Say the \
-         letter names as a quick spelled-out sequence, then the connecting words, then the \
-         example word as a normal word. Say nothing else."
+        "Clear, warm, natural {language} pronunciation at a normal conversational pace with no \
+         long pauses. Letter names in a quick spelled-out sequence, connecting words naturally, \
+         and the example word as a normal word."
     )
 }
 
@@ -4794,7 +4790,10 @@ fn default_speed() -> f64 {
 ///
 /// - 1: Chirp3-HD started eating the text next to a `<break>`, so pronunciation
 ///   cards had cached audio that omitted the very letter they exist to teach.
-const TTS_SYNTHESIS_REVISION: u32 = 1;
+/// - 2: gemini-3.8-flash-tts read the direction line aloud and its WAV output's
+///   trailing C2PA chunk was decoded as PCM static; every Gemini clip cached
+///   since then is bad.
+const TTS_SYNTHESIS_REVISION: u32 = 2;
 
 /// Cache filename for a TTS request. The key must include *every* input that
 /// changes the synthesized audio — otherwise a request differing only in, say,
@@ -4901,7 +4900,7 @@ mod tts_cache_key_tests {
         // ever changes without a revision bump, every cached clip goes dark.
         assert_eq!(
             tts_cache_filename(&request("Bonjour tout le monde."), &TtsProvider::ElevenLabs),
-            "5553454482266024564.mp3"
+            "14207068618693472137.mp3"
         );
     }
 
@@ -5868,8 +5867,8 @@ mod pronunciation_challenge_audio_tests {
     #[test]
     fn tts_instructions_name_the_language() {
         let instructions = pronunciation_challenge_tts_instructions(Language::PortugueseBrazilian);
-        assert!(instructions.contains("Portuguese pronunciation cue"));
-        assert!(instructions.ends_with("Say nothing else."));
+        assert!(instructions.contains("natural Portuguese pronunciation"));
+        assert!(instructions.contains("normal conversational pace"));
     }
 
     #[test]

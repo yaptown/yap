@@ -1015,12 +1015,12 @@ impl TtsKeys {
 pub enum TtsSynthesis {
     /// Cloud TTS: a fixed per-language voice reading `text` literally.
     Google { voice: TtsVoice, text: String },
-    /// Gemini reading `text` under `instructions`. The model is stochastic,
+    /// Gemini reading `text` under `style`. The model is stochastic,
     /// so `attempt` distinguishes repeated draws of the same prompt in the
     /// cache — a second draw is a genuinely different clip.
     Gemini {
         voice: String,
-        instructions: String,
+        style: String,
         text: String,
         attempt: u32,
     },
@@ -1041,17 +1041,16 @@ impl TtsSynthesis {
             }
             TtsSynthesis::Gemini {
                 voice,
-                instructions,
+                style,
                 text,
                 attempt,
             } => {
                 let seed = format!(
-                    "{}|{voice}|{instructions}|{text}|{attempt}",
+                    "{}|{voice}|{style}|{text}|{attempt}",
                     google_speech::gemini::GEMINI_TTS_MODEL
                 );
-                // v2: clips encoded with the lookahead flushed; v1 entries
-                // lost their last few milliseconds to the encoder delay.
-                format!("gemini-tts/v2/{:016x}", xxh3_64(seed.as_bytes()))
+                // v2's 3.8 generateContent clips contain spoken directions and trailing C2PA noise.
+                format!("gemini-tts/v3/{:016x}", xxh3_64(seed.as_bytes()))
             }
         }
     }
@@ -1137,10 +1136,7 @@ pub async fn synthesize_verified(
                     (outcome.audio_bytes, outcome.attempts, passed, last_defect)
                 }
                 TtsSynthesis::Gemini {
-                    voice,
-                    instructions,
-                    text,
-                    ..
+                    voice, style, text, ..
                 } => {
                     let api_key = keys.gemini.as_deref().ok_or_else(|| {
                         anyhow::anyhow!("GEMINI_API_KEY is required for uncached Gemini TTS audio")
@@ -1150,7 +1146,7 @@ pub async fn synthesize_verified(
                         ctx.http.clone(),
                     );
                     let request = google_speech::gemini::GeminiTtsRequest {
-                        instructions: instructions.clone(),
+                        style: style.clone(),
                         text: text.clone(),
                         voice: voice.clone(),
                     };
