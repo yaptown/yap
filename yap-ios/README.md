@@ -137,7 +137,7 @@ Build with `--debug`, then opt into the debug-only driver:
 
 ```sh
 xcrun simctl launch --terminate-running-process SIMULATOR_UUID town.yap.ios \
-  --test-credentials yap-mcp-test@popovit.ch "$YAP_TEST_USER_PASSWORD" --test-driver
+  --test-credentials yap-mcp-test@popovit.ch yap-mcp-smoke-test-pw-1 --test-driver
 container=$(xcrun simctl get_app_container SIMULATOR_UUID town.yap.ios data)
 printf 'status' > "$container/tmp/yap-command"
 cat "$container/tmp/yap-test.log"

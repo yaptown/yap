@@ -59,17 +59,11 @@ fn command(program: impl AsRef<std::ffi::OsStr>) -> Command {
 }
 
 fn echo(cmd: &Command) -> Result<String> {
-    let mut args: Vec<_> = std::iter::once(cmd.get_program())
+    let display = std::iter::once(cmd.get_program())
         .chain(cmd.get_args())
-        .map(|arg| arg.to_string_lossy().into_owned())
-        .collect();
-    // Launch commands contain the test-account password; never echo it.
-    if let Some(i) = args.iter().position(|arg| arg == "--test-credentials")
-        && let Some(password) = args.get_mut(i + 2)
-    {
-        *password = "<redacted>".into();
-    }
-    let display = args.join(" ");
+        .map(|arg| arg.to_string_lossy())
+        .collect::<Vec<_>>()
+        .join(" ");
     println!("+ {display}");
     std::io::stdout().flush()?;
     Ok(display)

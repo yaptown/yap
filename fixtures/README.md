@@ -38,7 +38,7 @@ Build with `cargo xtask ios --debug --simulator <UDID>`, then launch:
 
 ```sh
 xcrun simctl launch --terminate-running-process <UDID> town.yap.ios \
-  --test-credentials yap-mcp-test@popovit.ch "$YAP_TEST_USER_PASSWORD" --test-driver
+  --test-credentials yap-mcp-test@popovit.ch yap-mcp-smoke-test-pw-1 --test-driver
 CONTAINER=$(xcrun simctl get_app_container <UDID> town.yap.ios data)
 printf 'dump-fixture my-name' > "$CONTAINER/tmp/yap-command"
 ```
@@ -93,8 +93,8 @@ simulator):
 
 ```sh
 (cd yap-frontend && pnpm exec playwright install chromium)
-YAP_TEST_USER_PASSWORD=... cargo xtask parity --out /tmp/parity
-YAP_TEST_USER_PASSWORD=... cargo xtask parity --out /tmp/parity-screens \
+cargo xtask parity --out /tmp/parity
+cargo xtask parity --out /tmp/parity-screens \
   --only idle,accomplishment --no-build
 open /tmp/parity/index.html
 ```
