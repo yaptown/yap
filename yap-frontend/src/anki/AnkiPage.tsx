@@ -279,7 +279,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                 <p className="text-sm text-muted-foreground">{view.keep_going_body}</p>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" onClick={() => navigate("/learn")}>{view.keep_going_label}</Button>
-                  {!userInfo && <Button type="button" variant="outline" className="h-auto min-h-9 whitespace-normal" onClick={openSignUp}>{view.sign_up_label}</Button>}
+                  {!userInfo && <Button type="button" variant="outline" className="h-auto min-h-9 max-w-full shrink whitespace-normal py-2" onClick={openSignUp}>{view.sign_up_label}</Button>}
                 </div>
               </Card>
             )}
