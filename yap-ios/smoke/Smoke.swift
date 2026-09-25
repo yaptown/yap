@@ -285,7 +285,9 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         reopened.add_deck_event(event: persisted.add_gram_by_frequency_index(frequency_index: word.frequency_index)!)
         let dictionaryDeck = try await deck(reopened, course)
         check(reopened.num_events == beforeDictionaryAdd + 1)
-        check(dictionaryDeck.gram_dictionary_entry(frequency_index: word.frequency_index)!.is_in_deck)
+        // The word's index is its primary sense's; adding by it adds that sense.
+        check(dictionaryDeck.gram_dictionary_entry(frequency_index: word.frequency_index)!.senses
+            .first { $0.frequency_index == word.frequency_index }!.is_in_deck)
         print("PASS: bounded dictionary pages, relevance order, empty/overflow offsets, add-word event")
         print("PASS: lockup/release previews and immutable plan events")
         print("PASS: placement survives core/full rebuild; completion, onboarding, referral and sentence-list events fold")
