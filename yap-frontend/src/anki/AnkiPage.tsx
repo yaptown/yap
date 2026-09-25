@@ -66,12 +66,18 @@ function AnkiPlacement({ deck, targetLanguage, completeLabel }: { deck: Deck; ta
 }
 
 // Drifts sideways forever: the list is drawn twice and the track slides by
-// exactly one copy, so the seam never shows.
-function PosterStrip({ films, deck }: { films: MovieMetadataBasic[]; deck: Deck }) {
-  if (films.length === 0) return null;
+// exactly one copy, so the seam never shows. While the clip manifest loads,
+// blank tiles hold its place so the page doesn't jump when posters arrive.
+function PosterStrip({ films, deck, loading }: { films: MovieMetadataBasic[]; deck: Deck; loading: boolean }) {
+  if (films.length === 0 && !loading) return null;
   return (
     <div className="poster-strip -mx-5 overflow-hidden py-1 [mask-image:linear-gradient(to_right,transparent,black_3rem,black_calc(100%-3rem),transparent)]">
-      <div className="poster-strip-track flex w-max">
+      <div className={`flex w-max ${films.length ? "poster-strip-track" : ""}`}>
+        {films.length === 0 && Array.from({ length: 8 }, (_, index) => (
+          <div key={index} className="shrink-0 pr-3" aria-hidden>
+            <div className="h-36 w-24 animate-pulse rounded-md border border-border/50 bg-muted/40" />
+          </div>
+        ))}
         {[...films, ...films].map((film, index) => (
           <div key={index} className="shrink-0 pr-3" aria-hidden={index >= films.length} title={film.year ? `${film.title} (${film.year})` : film.title}>
             <div className="h-36 w-24 overflow-hidden rounded-md border border-border/50 bg-muted shadow-sm">
@@ -207,7 +213,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
           <CoursePill flag={view.course_flag} label={view.course_label} onClick={() => navigate(`/select-language?next=${encodeURIComponent("/anki")}`)} />
           <h1 className="text-2xl font-semibold" style={{ textWrap: "balance" }}>{view.title}</h1>
         </div>
-        <PosterStrip films={view.films} deck={deck} />
+        <PosterStrip films={view.films} deck={deck} loading={view.manifest === "loading"} />
         {view.needs_placement ? (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">{view.placement_intro}</p>
