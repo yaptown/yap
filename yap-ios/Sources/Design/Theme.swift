@@ -21,6 +21,7 @@ extension Color {
     /// Saturated enough to read as "on" for switches, which near-white would not be in dark mode.
     @MainActor static let yapSwitchTint = Tokens.palette.accent_foreground.color
     @MainActor static let yapText = Tokens.palette.foreground.color
+    @MainActor static let yapMuted = Tokens.palette.muted_foreground.color
     @MainActor static let yapDestructiveForeground = Tokens.palette.destructive_foreground.color
     @MainActor static let yapPositiveForeground = Tokens.palette.positive_foreground.color
     @MainActor static let yapPositive = Tokens.palette.positive.color
@@ -77,13 +78,6 @@ extension EnvironmentValues {
 
 extension View {
     func cardSurface() -> some View { modifier(CardSurface()) }
-
-    /// A small tappable surface outside cards (the course pill): interactive glass on iOS 26.
-    @ViewBuilder func controlSurface() -> some View {
-        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
-        if #available(iOS 26, *) { glassEffect(.regular.interactive(), in: shape) }
-        else { background(.ultraThinMaterial, in: shape).overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.5)) } }
-    }
 
     /// A lighter surface than a card, for secondary panels that shouldn't compete
     /// with the card beside them (the web's `light` card variant).

@@ -776,14 +776,14 @@ impl Deck {
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct UpNextView {
-    pub title: String,
+    /// "Up next · Flashcard"
+    pub eyebrow: String,
     pub headline: String,
-    /// Picks the hosts' illustration icon; `kind_label` is the words.
+    /// Picks the hosts' icon beside the eyebrow.
     pub kind: UpNextKind,
-    pub kind_label: String,
+    /// "Review 4 cards": the only place Home states the due count.
     pub action_label: String,
     pub due_count: u64,
-    pub ready_label: String,
     /// Present when the scheduler has no challenge, including audio and plan states.
     pub idle: Option<IdleScreenView>,
 }
@@ -867,9 +867,6 @@ pub struct HomeScreenView {
     pub course_label: String,
     /// "A little French, every day."
     pub greeting: String,
-    /// "Your next card is ready." — only when a challenge is up; idle states
-    /// bring their own title.
-    pub greeting_detail: Option<String>,
     pub native_language: Language,
     pub target_language: Language,
     pub up_next: UpNextView,
@@ -1159,33 +1156,23 @@ impl Deck {
             course_flag: language.flag.clone(),
             course_label: format!("Learning {}", language.common_name),
             greeting: format!("A little {}, every day.", language.common_name),
-            greeting_detail: is_challenge.then(|| {
-                if due_count <= 1 {
-                    "Your next card is ready.".into()
-                } else {
-                    format!("{due_count} cards are ready for you.")
-                }
-            }),
             native_language: self.context.course.native_language,
             target_language: self.get_target_language(),
             up_next: UpNextView {
-                title: "Up next".into(),
+                eyebrow: format!("Up next · {kind_label}"),
                 headline,
                 kind,
-                kind_label,
                 action_label: if !is_challenge {
-                    "Continue"
-                } else if due_count <= 1 {
-                    "Review card"
+                    "Continue".into()
                 } else {
-                    "Start review"
-                }
-                .into(),
+                    // A held challenge can outlive the due queue, but it's still a card.
+                    let count = due_count.max(1);
+                    format!(
+                        "Review {count} {}",
+                        if count == 1 { "card" } else { "cards" }
+                    )
+                },
                 due_count,
-                ready_label: format!(
-                    "{due_count} {} ready",
-                    if due_count == 1 { "card" } else { "cards" }
-                ),
                 idle,
             },
             goal: goal_tier_info.map(|tier_info| self.goal_card_view(&tier_info)),
@@ -1711,7 +1698,7 @@ mod tests {
         let home = deck.home_screen_view(profile_inputs);
         assert!(home.up_next.idle.is_none());
         assert_eq!(home.up_next.headline, "Choose Your Display Name");
-        assert_eq!(home.up_next.kind_label, "Profile");
+        assert_eq!(home.up_next.eyebrow, "Up next · Profile");
 
         let deck = Deck::default();
         let placement_inputs = ReviewScreenInputs {
@@ -1725,7 +1712,7 @@ mod tests {
         let home = deck.home_screen_view(placement_inputs);
         assert!(home.up_next.idle.is_none());
         assert_eq!(home.up_next.headline, "Placement Test");
-        assert_eq!(home.up_next.kind_label, "Placement test");
+        assert_eq!(home.up_next.eyebrow, "Up next · Placement test");
     }
 
     #[test]
@@ -1749,9 +1736,10 @@ mod tests {
         let (headline, kind, kind_label) = challenge_preview(&held, deck.get_target_language());
         assert_eq!(home.up_next.headline, headline);
         assert_eq!(home.up_next.kind, kind);
-        assert_eq!(home.up_next.kind_label, kind_label);
+        assert_eq!(home.up_next.eyebrow, format!("Up next · {kind_label}"));
         assert!(home.up_next.idle.is_none());
         assert_eq!(home.due_count, 0);
+        assert_eq!(home.up_next.action_label, "Review 1 card");
     }
 
     #[test]
@@ -1977,12 +1965,12 @@ mod tests {
         let home = Deck::default().home_screen_view(inputs());
         assert_eq!(home.title, "Home");
         assert_eq!(home.course_label, "Learning French");
-        assert_eq!(home.up_next.ready_label, "0 cards ready");
+        assert_eq!(home.up_next.action_label, "Continue");
 
         let deck = with_due_cards();
         let home = deck.home_screen_view(inputs());
         assert_eq!(home.up_next.due_count, 1);
-        assert_eq!(home.up_next.ready_label, "1 card ready");
+        assert_eq!(home.up_next.action_label, "Review 1 card");
 
         for (category, expected) in [
             (SentenceListCategory::Essential, "Essential"),
@@ -2010,20 +1998,14 @@ mod tests {
             challenge_preview(&challenge, deck.get_target_language());
         assert_eq!(home.up_next.headline, headline);
         assert_eq!(home.up_next.kind, kind);
-        assert_eq!(home.up_next.kind_label, kind_label);
+        assert_eq!(home.up_next.eyebrow, format!("Up next · {kind_label}"));
         assert!(home.up_next.idle.is_none());
         assert_eq!(home.due_count, review.due_count() as u64);
         assert_eq!(home.up_next.due_count, home.due_count);
-        let (action, detail) = if home.due_count == 1 {
-            ("Review card", "Your next card is ready.".to_owned())
-        } else {
-            (
-                "Start review",
-                format!("{} cards are ready for you.", home.due_count),
-            )
-        };
-        assert_eq!(home.up_next.action_label, action);
-        assert_eq!(home.greeting_detail, Some(detail));
+        assert_eq!(
+            home.up_next.action_label,
+            format!("Review {} card", home.due_count)
+        );
         let percent_known = deck.get_percent_of_words_known();
         assert!(percent_known > 0.0);
         assert_eq!(

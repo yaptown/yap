@@ -5,17 +5,13 @@
     "course_flag": "🇮🇹",
     "course_label": "Learning Italian",
     "greeting": "A little Italian, every day.",
-    "greeting_detail": null,
     "native_language": "English",
     "target_language": "Italian",
     "up_next": {
-      "title": "Up next",
       "headline": "Ready to start learning?",
       "kind": "Other",
-      "kind_label": "Review",
       "action_label": "Continue",
       "due_count": 0,
-      "ready_label": "0 cards ready",
       "idle": {
         "target_language": "Italian",
         "kind": "FirstRun",
@@ -27,7 +23,9 @@
           "smart_add_count": 1,
           "smart_add_regime": "Easy",
           "easy_cards_remaining": 5,
-          "preview": ["probabilmente"],
+          "preview": [
+            "probabilmente"
+          ],
           "percent_known_after": 1.5813253012048192,
           "smart_add_event": {
             "type": "Language",
@@ -225,7 +223,11 @@
           }
         ],
         "navigation": {
-          "categories": ["essential", "movie", "pimsleur"],
+          "categories": [
+            "essential",
+            "movie",
+            "pimsleur"
+          ],
           "selection": null,
           "selected_index": 0
         },
@@ -263,7 +265,8 @@
         "commit_curriculum": null,
         "type": "Idle",
         "next_due": null
-      }
+      },
+      "eyebrow": "Up next · Review"
     },
     "goal": {
       "title": "Basic Italian Level 3",

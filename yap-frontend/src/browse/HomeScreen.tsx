@@ -128,16 +128,10 @@ function HomeContent({
               if (!inert) navigate("/select-language");
             }}
           />
-          <div className="flex flex-col gap-1 pt-2 pb-1">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              {view.greeting}
-            </h1>
-            {view.greeting_detail && (
-              <p className="text-lg text-muted-foreground">
-                {view.greeting_detail}
-              </p>
-            )}
-          </div>
+          {/* A tagline, not a headline: Up Next's word is the page's one headline. */}
+          <h1 className="pt-2 text-2xl font-medium tracking-tight">
+            {view.greeting}
+          </h1>
           {upNext.idle ? (
             <IdleScreen
               view={upNext.idle}
@@ -155,28 +149,23 @@ function HomeContent({
               to="/learn"
               className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Card className="p-6 flex-row items-stretch gap-4 transition-colors group-hover:bg-muted/40">
-                <div className="flex flex-col gap-1 min-w-0 flex-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    {upNext.title}
-                  </p>
-                  <p className="text-3xl sm:text-4xl font-bold break-words">
-                    <TargetLanguageText language={view.target_language}>
-                      {upNext.headline}
-                    </TargetLanguageText>
-                  </p>
-                  <p className="text-muted-foreground">{upNext.kind_label}</p>
-                  <span className="mt-4 self-start inline-flex items-center gap-2 h-11 px-5 rounded-lg bg-primary/85 text-primary-foreground font-medium shadow-xs transition-all group-hover:bg-primary/95 group-hover:gap-3">
-                    {upNext.action_label}
-                    <ArrowRight className="h-4 w-4" aria-hidden />
-                  </span>
-                </div>
-                <div className="flex flex-col items-end justify-between gap-3 shrink-0">
-                  <CardStack kind={upNext.kind} />
-                  <p className="text-sm text-muted-foreground whitespace-nowrap">
-                    {upNext.ready_label}
-                  </p>
-                </div>
+              <Card className="p-6 gap-0 transition-colors group-hover:bg-muted/40">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                  <KindIcon kind={upNext.kind} />
+                  {upNext.eyebrow}
+                </p>
+                <p className="mt-1.5 text-4xl font-bold break-words">
+                  <TargetLanguageText language={view.target_language}>
+                    {upNext.headline}
+                  </TargetLanguageText>
+                </p>
+                <span className="mt-5 flex items-center justify-between gap-2 h-12 px-5 rounded-xl bg-primary text-primary-foreground font-medium shadow-xs transition-all group-hover:bg-primary/90">
+                  {upNext.action_label}
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </span>
               </Card>
             </Link>
           )}
@@ -241,17 +230,9 @@ const KIND_ICONS: Record<UpNextKind, LucideIcon> = {
   Other: Sparkles,
 };
 
-/** Two tilted cards with the challenge's icon: Up Next's illustration. */
-function CardStack({ kind }: { kind: UpNextKind }) {
+function KindIcon({ kind }: { kind: UpNextKind }) {
   const Icon = KIND_ICONS[kind];
-  return (
-    <div className="relative w-24 h-28 sm:w-28 sm:h-32" aria-hidden>
-      <div className="absolute inset-0 translate-x-3 rotate-[10deg] rounded-2xl border border-border/60 bg-card/30 backdrop-blur-sm" />
-      <div className="absolute inset-0 -rotate-6 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-sm flex items-center justify-center transition-transform group-hover:-rotate-3">
-        <Icon className="h-9 w-9 text-muted-foreground" strokeWidth={1.5} />
-      </div>
-    </div>
-  );
+  return <Icon className="h-3.5 w-3.5" aria-hidden />;
 }
 
 function HomeStat({ stat, icon: Icon }: { stat: HomeStatView; icon: LucideIcon }) {

@@ -5,18 +5,15 @@
     "course_flag": "🇫🇷",
     "course_label": "Learning French",
     "greeting": "A little French, every day.",
-    "greeting_detail": "2 cards are ready for you.",
     "native_language": "English",
     "target_language": "French",
     "up_next": {
-      "title": "Up next",
       "headline": "Ziri peut partir.",
       "kind": "Translation",
-      "kind_label": "Translation",
-      "action_label": "Start review",
+      "action_label": "Review 2 cards",
       "due_count": 2,
       "idle": null,
-      "ready_label": "2 cards ready"
+      "eyebrow": "Up next · Translation"
     },
     "goal": {
       "title": "Advanced French Level 11",

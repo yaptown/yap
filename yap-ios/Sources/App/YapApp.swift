@@ -30,6 +30,9 @@ import SwiftUI
             }
             .sheet(isPresented: $authSheet.isPresented) { SignInView() }
             .environment(background).environment(auth).environment(audio).environment(authSheet).tint(.yapAccent)
+            // `.secondary` is the web's muted-foreground plum, not the system's translucent
+            // gray, which turns muddy over the animated background's saturated blobs.
+            .foregroundStyle(Color.yapText, Color.yapMuted, Color.yapMuted)
             #if DEBUG
             .task { await DebugHarness.shared.start(auth: auth) }
             .onChange(of: DebugHarness.shared.commandID) { _, _ in

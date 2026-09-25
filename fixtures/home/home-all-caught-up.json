@@ -5,17 +5,13 @@
     "course_flag": "🇫🇷",
     "course_label": "Learning French",
     "greeting": "A little French, every day.",
-    "greeting_detail": null,
     "native_language": "English",
     "target_language": "French",
     "up_next": {
-      "title": "Up next",
       "headline": "All caught up!",
       "kind": "Other",
-      "kind_label": "Review",
       "action_label": "Continue",
       "due_count": 0,
-      "ready_label": "0 cards ready",
       "idle": {
         "target_language": "French",
         "kind": "AllCaughtUp",
@@ -27,7 +23,13 @@
           "smart_add_count": 5,
           "smart_add_regime": "General",
           "easy_cards_remaining": 0,
-          "preview": ["bois", "ecoute", "vécu", "dépêche-toi", "commencé"],
+          "preview": [
+            "bois",
+            "ecoute",
+            "vécu",
+            "dépêche-toi",
+            "commencé"
+          ],
           "percent_known_after": 11.27946127946128,
           "smart_add_event": {
             "type": "Language",
@@ -621,7 +623,11 @@
           }
         ],
         "navigation": {
-          "categories": ["essential", "movie", "pimsleur"],
+          "categories": [
+            "essential",
+            "movie",
+            "pimsleur"
+          ],
           "selection": null,
           "selected_index": 0
         },
@@ -680,7 +686,8 @@
           "card_text": "merci",
           "card_subtitle": "listening"
         }
-      }
+      },
+      "eyebrow": "Up next · Review"
     },
     "goal": null,
     "week": {

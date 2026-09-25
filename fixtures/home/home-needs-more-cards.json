@@ -5,17 +5,13 @@
     "course_flag": "🇩🇪",
     "course_label": "Learning German",
     "greeting": "A little German, every day.",
-    "greeting_detail": null,
     "native_language": "English",
     "target_language": "German",
     "up_next": {
-      "title": "Up next",
       "headline": "Ready for more?",
       "kind": "Other",
-      "kind_label": "Review",
       "action_label": "Continue",
       "due_count": 0,
-      "ready_label": "0 cards ready",
       "idle": {
         "target_language": "German",
         "kind": "NeedsMoreCards",
@@ -27,7 +23,10 @@
           "smart_add_count": 2,
           "smart_add_regime": "SingleWord",
           "easy_cards_remaining": 0,
-          "preview": ["wurde", "zum"],
+          "preview": [
+            "wurde",
+            "zum"
+          ],
           "percent_known_after": 6.69397558648373,
           "smart_add_event": {
             "type": "Language",
@@ -316,7 +315,11 @@
           }
         ],
         "navigation": {
-          "categories": ["essential", "movie", "pimsleur"],
+          "categories": [
+            "essential",
+            "movie",
+            "pimsleur"
+          ],
           "selection": null,
           "selected_index": 0
         },
@@ -354,7 +357,8 @@
         "commit_curriculum": null,
         "type": "Idle",
         "next_due": null
-      }
+      },
+      "eyebrow": "Up next · Review"
     },
     "goal": {
       "title": "Core German Level 1",

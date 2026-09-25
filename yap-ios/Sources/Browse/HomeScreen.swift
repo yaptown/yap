@@ -41,21 +41,18 @@ struct HomeScreen: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         Button(action: actions.switchCourse) {
-                            HStack(spacing: 8) {
+                            // The quietest thing on the page: bare text, no surface.
+                            HStack(spacing: 6) {
                                 if Theme.emojiFontAvailable { Text(view.course_flag) }
-                                Text(view.course_label).font(.subheadline.weight(.medium)).foregroundStyle(Color.yapText)
-                                Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                                Text(view.course_label)
+                                Image(systemName: "chevron.down").font(.caption2.weight(.semibold))
                             }
-                            .padding(.horizontal, 12).padding(.vertical, 8)
-                            .controlSurface()
+                            .font(.subheadline).foregroundStyle(.secondary)
+                            .padding(.vertical, 6).contentShape(Rectangle())
                         }.buttonStyle(.plain)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(view.greeting).font(.system(.largeTitle, weight: .bold)).foregroundStyle(Color.yapText)
-                                .fixedSize(horizontal: false, vertical: true)
-                            if let detail = view.greeting_detail {
-                                Text(detail).font(.title3).foregroundStyle(.secondary)
-                            }
-                        }
+                        // A tagline, not a headline: Up Next's word is the page's one headline.
+                        Text(view.greeting).font(.title2.weight(.medium)).foregroundStyle(Color.yapText)
+                            .fixedSize(horizontal: false, vertical: true)
                         if let idle = view.up_next.idle {
                             IdleScreen(view: idle)
                                 .environment(\.reviewActions, addingGoesToReview)
@@ -178,39 +175,12 @@ struct DictionarySearchBar: View {
     }
 }
 
-/// Up Next's headline card, with the web's tilted card-stack illustration.
+/// Up Next: the page's one headline and its one saturated control. It sits on the
+/// same surface as the panel below, so it stands out by content, not by glow.
 private struct UpNextCard: View {
     let upNext: UpNextView
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(upNext.title.uppercased()).font(.caption.weight(.semibold)).tracking(2).foregroundStyle(.secondary)
-                Text(upNext.headline).font(.system(size: 30, weight: .bold)).foregroundStyle(Color.yapText)
-                    .minimumScaleFactor(0.6).fixedSize(horizontal: false, vertical: true)
-                Text(upNext.kind_label).foregroundStyle(.secondary)
-                HStack(spacing: 8) {
-                    Text(upNext.action_label)
-                    Image(systemName: "arrow.right")
-                }
-                .font(.headline).foregroundStyle(Tokens.palette.primary_foreground.color)
-                .padding(.horizontal, 18).frame(height: 44)
-                .background(Tokens.palette.primary.color.opacity(0.85), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .padding(.top, 12)
-            }.frame(maxWidth: .infinity, alignment: .leading)
-            VStack(alignment: .trailing, spacing: 12) {
-                CardStack(kind: upNext.kind)
-                Spacer(minLength: 0)
-                Text(upNext.ready_label).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
-            }
-        }
-        .padding(20).cardSurface().contentShape(Rectangle())
-    }
-}
-
-private struct CardStack: View {
-    let kind: UpNextKind
     private var symbol: String {
-        switch kind {
+        switch upNext.kind {
         case .Flashcard: "text.bubble"
         case .Listening: "headphones"
         case .Pronunciation: "mic"
@@ -220,16 +190,24 @@ private struct CardStack: View {
         }
     }
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
-        ZStack {
-            shape.fill(.ultraThinMaterial.opacity(0.5)).overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.6)) }
-                .rotationEffect(.degrees(10)).offset(x: 10)
-            shape.fill(.ultraThinMaterial).overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.6)) }
-                .overlay { Image(systemName: symbol).font(.system(size: 30, weight: .light)).foregroundStyle(.secondary) }
-                .rotationEffect(.degrees(-6))
+        VStack(alignment: .leading, spacing: 0) {
+            Label(upNext.eyebrow.uppercased(), systemImage: symbol)
+                .font(.caption.weight(.semibold)).tracking(1.5).foregroundStyle(.secondary)
+            Text(upNext.headline).font(.system(size: 34, weight: .bold)).foregroundStyle(Color.yapText)
+                .minimumScaleFactor(0.6).fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 6)
+            HStack {
+                Text(upNext.action_label)
+                Spacer(minLength: 8)
+                Image(systemName: "arrow.right")
+            }
+            .font(.headline).foregroundStyle(Color.yapOnAccent)
+            .padding(.horizontal, 18).frame(height: 50)
+            .background(Color.yapAccent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.top, 20)
         }
-        .frame(width: 84, height: 100).padding(.trailing, 8).padding(.top, 6)
-        .accessibilityHidden(true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20).quietSurface().contentShape(Rectangle())
     }
 }
 
