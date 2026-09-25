@@ -49,6 +49,9 @@ interface CoursePickerProps {
   onResume?: () => void;
   userInfo?: UserInfo;
   onBack?: () => void;
+  /** Replaces "What language will you speak next?" when the picker is a
+   * detour on the way somewhere else, e.g. an Anki deck. */
+  targetHeading?: string;
 }
 
 export function CoursePicker({
@@ -62,6 +65,7 @@ export function CoursePicker({
   onResume,
   userInfo,
   onBack,
+  targetHeading = "What language will you speak next?",
 }: CoursePickerProps) {
   const [selectionState, setSelectionState] = useState<LanguageSelectionState>({
     stage: "selectingNative",
@@ -233,7 +237,7 @@ export function CoursePicker({
                   style={{ textWrap: "balance" }}
                 >
                   <span className="highlight animate-fade-in">
-                    What language will you speak next?
+                    {targetHeading}
                   </span>
                 </h1>
               </div>
