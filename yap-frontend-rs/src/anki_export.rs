@@ -2,8 +2,8 @@
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use bridgerton::Error;
 use language_utils::{
-    CLIPS_ORIGIN, Course, GramDefinition, Language, Literal, SentenceGram, SpurGram, TaggedGram,
-    dictionary_entry_slug, language_pack::LanguagePack,
+    CLIPS_ORIGIN, Course, GramDefinition, Language, Literal, MovieMetadataBasic, SentenceGram,
+    SpurGram, TaggedGram, dictionary_entry_slug, language_pack::LanguagePack,
 };
 use lasso::Spur;
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
@@ -131,7 +131,11 @@ pub enum AnkiMediaSource {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AnkiExportView {
     pub title: String,
-    pub subtitle: String,
+    /// Films the deck's clips come from, most clips first; only films with
+    /// a poster, since the page shows them as a strip of posters.
+    pub films: Vec<MovieMetadataBasic>,
+    /// Sits between the posters and the progress bar, which it introduces.
+    pub intro: String,
     pub needs_placement: bool,
     pub placement_intro: String,
     /// "Essential French": what `percent_known` is a percentage of. The deck
@@ -145,6 +149,11 @@ pub struct AnkiExportView {
     pub clips_loaded: bool,
     pub clip_sentence_count: u32,
     pub language_name: String,
+    pub card_types_label: String,
+    pub reading_label: String,
+    pub reading_description: String,
+    pub listening_label: String,
+    pub listening_description: String,
     pub download_label: String,
     /// Replaces the placement test's "Begin Learning": finishing it here
     /// leads to a deck, not to the app.
@@ -327,8 +336,9 @@ fn poster_filename(imdb: &str) -> String {
 
 // The page never talks about "your level": Yap's level system is due a
 // rethink, so the deck is described by the words it teaches instead.
-const TITLE: &str = "Sentence mining, already done";
-const SUBTITLE: &str = "Movie sentences that use words you already know, plus a few new ones each, with clips, audio, and word definitions.";
+const INTRO: &str = "At first, the cards will introduce new words, and then they'll be reinforced with cards showing clips from these films. We'll pick words that are right for your knowledge level:";
+/// How many posters the page shows.
+const FILM_COUNT: usize = 24;
 const PLACEMENT_INTRO: &str = "First, tell us which words you know. No account needed.";
 const TOO_ADVANCED: &str = "You already know nearly every word Yap teaches. The deck will still catch gaps, but Yap's app will serve you better.";
 const CLIPS_LOADING: &str = "Movie clips are still loading. Please try again.";
@@ -360,9 +370,22 @@ impl Deck {
                 clips::sentence_has_clip(language, pack.string_rodeo.resolve(sentence))
             })
             .count() as u32;
+        let films = self
+            .get_movie_metadata(clips::films_by_clip_count(language))
+            .into_iter()
+            .filter(|film| {
+                pack.movies
+                    .get(&film.id)
+                    .is_some_and(|m| m.poster_bytes.is_some())
+            })
+            .take(FILM_COUNT)
+            .collect();
         AnkiExportView {
-            title: TITLE.into(),
-            subtitle: SUBTITLE.into(),
+            title: format!(
+                "Build a custom Anki deck that reinforces your {language} with clips from famous movies."
+            ),
+            films,
+            intro: INTRO.into(),
             needs_placement: !self.has_taken_placement_test() && self.num_cards_added() < 3,
             placement_intro: PLACEMENT_INTRO.into(),
             progress_label: format!("Essential {}", get_language_metadata(language).common_name),
@@ -372,7 +395,12 @@ impl Deck {
             clips_loaded: clips::manifest_loaded(language),
             clip_sentence_count,
             language_name: language.to_string(),
-            download_label: format!("Download the {language} deck"),
+            card_types_label: "Card types".into(),
+            reading_label: "Reading".into(),
+            reading_description: "The card shows the subtitle, and you try to translate it.".into(),
+            listening_label: "Listening".into(),
+            listening_description: "No subtitle. Try to understand what you hear.".into(),
+            download_label: format!("Generate {language} deck"),
             placement_complete_label: PLACEMENT_COMPLETE_LABEL.into(),
             backstory: BACKSTORY.into(),
             keep_going_heading: KEEP_GOING_HEADING.into(),
@@ -578,7 +606,7 @@ impl Deck {
                 }
                 let text = challenge.target_language;
                 let clip = clips::clip_for_sentence(language, &text).unwrap();
-                let imdb = clip.clip_id.split('-').next().unwrap().to_owned();
+                let imdb = clips::clip_film(&clip.clip_id).to_owned();
                 let movie = pack.movies.get(&imdb);
                 let poster = movie
                     .and_then(|m| m.poster_bytes.as_ref())

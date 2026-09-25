@@ -188,6 +188,23 @@ ol {
   }
 }
 
+@keyframes poster-strip {
+  to { transform: translateX(-50%); }
+}
+
+.poster-strip-track {
+  animation: poster-strip 90s linear infinite;
+}
+
+.poster-strip:hover .poster-strip-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster-strip { overflow-x: auto; }
+  .poster-strip-track { animation: none; }
+}
+
 .animate-slide-in-from-right {
   animation: slide-in-from-right 0.25s ease-out;
 }

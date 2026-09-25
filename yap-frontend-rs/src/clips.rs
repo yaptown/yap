@@ -176,6 +176,29 @@ pub(crate) fn map_clip_sentences<T>(
     })
 }
 
+/// IMDb id of the film a clip was cut from: clip ids are
+/// `imdb_id - sentence hash - occurrence`.
+pub(crate) fn clip_film(clip_id: &str) -> &str {
+    clip_id.split('-').next().unwrap_or_default()
+}
+
+/// Films with published clips, most clips first.
+pub(crate) fn films_by_clip_count(language: Language) -> Vec<String> {
+    CLIP_MANIFESTS.with(|m| {
+        let manifests = m.borrow();
+        let Some(rows) = manifests.get(&language) else {
+            return Vec::new();
+        };
+        let mut counts: HashMap<&str, usize> = HashMap::new();
+        for row in rows.values() {
+            *counts.entry(clip_film(&row.clip_id)).or_default() += 1;
+        }
+        let mut films: Vec<(&str, usize)> = counts.into_iter().collect();
+        films.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
+        films.into_iter().map(|(film, _)| film.to_owned()).collect()
+    })
+}
+
 fn manifest_filename(language: Language) -> String {
     format!("manifest_{}.json", language.code())
 }
@@ -546,10 +569,7 @@ pub(crate) async fn grader_context(
     let mut context = language_utils::autograde::GraderContext::default();
     let clip = clip_for_sentence(language, text);
 
-    let clip_imdb = clip
-        .as_ref()
-        .and_then(|row| row.clip_id.split('-').next())
-        .map(str::to_string);
+    let clip_imdb = clip.as_ref().map(|row| clip_film(&row.clip_id).to_string());
     context.movie_title = match &clip_imdb {
         Some(imdb) => movie_titles
             .iter()

@@ -4659,12 +4659,7 @@ impl ClipResult {
     /// clip id), for showing the movie's poster next to the video.
     #[bridge(getter)]
     pub fn movie_id(&self) -> String {
-        self.clip
-            .clip_id
-            .split('-')
-            .next()
-            .unwrap_or_default()
-            .to_string()
+        clips::clip_film(&self.clip.clip_id).to_string()
     }
 }
 
