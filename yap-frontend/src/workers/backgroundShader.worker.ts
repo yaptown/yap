@@ -238,7 +238,10 @@ function initWebGL(
   let speed = 0.09; // Start with bump-like energy for initial lava-lamp effect
   let isAnimating = true;
 
-  const SPEED_THRESHOLD = 0.0005;
+  // The decay still to come from speed s moves the scene by 2000·s time units,
+  // which below this is under one canvas pixel even on a 1.5x desktop canvas —
+  // drawing it would burn frames on motion nobody can see.
+  const SPEED_THRESHOLD = 0.005;
   const COLOR_THRESHOLD = 0.001;
 
   const initialColorData = palette;

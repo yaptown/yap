@@ -33,7 +33,9 @@ import Metal
         time += delta * 1000 * speed
         let alpha = 1 - exp(-18 * delta)
         colors = zip(colors, targetColors).map { $0 + alpha * ($1 - $0) }
-        if speed < 0.0005 && zip(colors, targetColors).allSatisfy({ abs($0 - $1) <= 0.001 }) {
+        // Same stopping rule as the web worker: below this speed the rest of the
+        // decay drifts the bands by under a pixel, so stop drawing instead.
+        if speed < 0.005 && zip(colors, targetColors).allSatisfy({ abs($0 - $1) <= 0.001 }) {
             speed = 0
             settled = true
         }
