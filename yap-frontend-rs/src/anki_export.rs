@@ -9,8 +9,9 @@ use crate::{
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use bridgerton::Error;
 use language_utils::{
-    CLIPS_ORIGIN, Course, GramDefinition, Language, Literal, MovieMetadataBasic, SentenceGram,
-    SpurGram, TaggedGram, dictionary_entry_slug, language_pack::LanguagePack,
+    Atom, CLIPS_ORIGIN, Course, GramDefinition, Language, Literal, MovieMetadataBasic, OtherWord,
+    OtherWordType, SentenceGram, SpurGram, TaggedGram, Word, WordType, dictionary_entry_slug,
+    language_pack::LanguagePack,
 };
 use lasso::Spur;
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
@@ -63,8 +64,9 @@ pub struct AnkiDeckPlan {
     pub notes: Vec<AnkiNote>,
     pub bundled: Vec<AnkiBundledMedia>,
     /// How much of everyday language (the Essential bar's measure) the
-    /// learner will understand once they know every word the deck teaches.
-    pub finish_message: String,
+    /// learner will understand once they know every word the deck teaches;
+    /// only when that's a gain worth mentioning.
+    pub finish_message: Option<String>,
     pub stats: AnkiDeckStats,
 }
 
@@ -490,6 +492,9 @@ struct PlannerState {
     size: usize,
     unindexed: Vec<Spur>,
     clip_sentence_ranks: FxHashMap<Spur, Vec<u32>>,
+    /// Proper nouns per clip sentence. They count as known, so a beginner's
+    /// shortest candidates are often a word plus a name ("De Niort ?").
+    clip_sentence_names: FxHashMap<Spur, usize>,
     clip_sentences_of: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
     simulation: Option<DailySimulationIterator>,
     day: Option<DayChallengeIterator>,
@@ -535,6 +540,7 @@ impl AnkiDeckPlanner {
                 size,
                 unindexed,
                 clip_sentence_ranks: FxHashMap::default(),
+                clip_sentence_names: FxHashMap::default(),
                 clip_sentences_of: FxHashMap::default(),
                 simulation: None,
                 day: Some(
@@ -585,6 +591,17 @@ impl AnkiDeckPlanner {
         }
         state.plan()
     }
+}
+
+/// A deck that barely moves the number isn't worth bragging about: an
+/// advanced learner's new words are rare ones, so 300 sentences can add a
+/// single point.
+fn finish_message(before: f64, after: f64, name: &str) -> Option<String> {
+    (after - before >= 3.0).then(|| {
+        format!(
+            "Once you finish this deck, you'll understand {after}% of everyday {name}, up from {before}%."
+        )
+    })
 }
 
 /// Known going in, or taught by the deck: every word note ships audio, so a
@@ -642,6 +659,27 @@ impl PlannerState {
                     .push(sentence);
             }
             self.clip_sentence_ranks.insert(sentence, ranks);
+            let names = encoded
+                .grams
+                .iter()
+                .filter(|g| match g {
+                    SentenceGram::Obvious(g) => {
+                        g.resolve(&pack.gram_rodeo).gram.iter().any(|atom| {
+                            matches!(
+                                atom,
+                                Atom::Tok(Word {
+                                    word_type: WordType::Other(OtherWord {
+                                        other_tag: OtherWordType::Propn
+                                    }),
+                                    ..
+                                })
+                            )
+                        })
+                    }
+                    SentenceGram::Learnable(_) => false,
+                })
+                .count();
+            self.clip_sentence_names.insert(sentence, names);
         }
         if self.unindexed.is_empty() && self.clip_sentence_ranks.is_empty() {
             self.done = true;
@@ -709,6 +747,7 @@ impl PlannerState {
         let Self {
             clip_sentences_of,
             clip_sentence_ranks,
+            clip_sentence_names,
             used_sentences,
             used_words,
             taught,
@@ -741,6 +780,7 @@ impl PlannerState {
         candidates.sort_by_key(|s| {
             (
                 deck.stats.sentences_reviewed.get(s).copied().unwrap_or(0),
+                clip_sentence_names[s],
                 pack.string_rodeo.resolve(s).chars().count(),
                 pack.string_rodeo.resolve(s),
             )
@@ -877,14 +917,8 @@ impl PlannerState {
                 .round()
         };
         let (before, after) = (everyday(&FxHashSet::default()), everyday(&self.taught));
-        let name = &get_language_metadata(language).common_name;
-        let finish_message = if after > before {
-            format!(
-                "Once you finish this deck, you'll understand {after}% of everyday {name}, up from {before}%."
-            )
-        } else {
-            format!("Once you finish this deck, you'll understand {after}% of everyday {name}.")
-        };
+        let finish_message =
+            finish_message(before, after, &get_language_metadata(language).common_name);
         Ok(AnkiDeckPlan {
             language,
             course_code: course_code(course),
@@ -1243,6 +1277,17 @@ mod tests {
         }
     }
     #[test]
+    fn finish_message_only_for_real_gains() {
+        assert_eq!(finish_message(90.0, 92.0, "French"), None);
+        assert_eq!(
+            finish_message(0.0, 24.0, "French").as_deref(),
+            Some(
+                "Once you finish this deck, you'll understand 24% of everyday French, up from 0%."
+            )
+        );
+    }
+
+    #[test]
     fn anki_steps_preserve_note_order_and_plan() {
         let deck = fixture();
         publish(&deck.context.language_pack, deck.context.course);
@@ -1264,12 +1309,6 @@ mod tests {
             }
         }
         let plan = planner.finish().unwrap();
-        assert!(
-            plan.finish_message
-                .starts_with("Once you finish this deck, you'll understand "),
-            "{}",
-            plan.finish_message
-        );
         assert_eq!(
             serde_json::to_value(notes).unwrap(),
             serde_json::to_value(&plan.notes).unwrap()
