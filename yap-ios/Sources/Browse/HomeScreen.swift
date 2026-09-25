@@ -36,8 +36,7 @@ struct HomeScreen: View {
                                 Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                             }
                             .padding(.horizontal, 12).padding(.vertical, 8)
-                            .background(.ultraThinMaterial.opacity(0.6), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .overlay { RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
+                            .controlSurface()
                         }.buttonStyle(.plain)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(view.greeting).font(.system(.largeTitle, weight: .bold)).foregroundStyle(Color.yapText)

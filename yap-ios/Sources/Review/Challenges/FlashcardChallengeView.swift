@@ -177,6 +177,6 @@ struct DefinitionBoxesView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading).padding(12)
-        .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
+        .insetSurface()
     }
 }

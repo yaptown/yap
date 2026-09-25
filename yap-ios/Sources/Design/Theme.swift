@@ -48,22 +48,40 @@ extension Color {
     @MainActor static let yapInfoField = Tokens.palette.info_field.color
 }
 
-/// The one card surface, shared by study and browse screens in both schemes.
+/// The one card surface, shared by study and browse screens in both schemes:
+/// Liquid Glass on iOS 26, a translucent material before it.
 private struct CardSurface: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     func body(content: Content) -> some View {
-        content
-            .background(Tokens.palette.card.color.opacity(0.18), in: RoundedRectangle(cornerRadius: 20))
-            .background {
-                RoundedRectangle(cornerRadius: 20).fill(.ultraThinMaterial)
-                    .opacity(reduceTransparency ? 1 : 0.65)
-            }
-            .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
+        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+        if #available(iOS 26, *) {
+            content.glassEffect(.regular.tint(Tokens.palette.card.color.opacity(0.12)), in: shape)
+        } else {
+            content
+                .background(Tokens.palette.card.color.opacity(0.18), in: shape)
+                .background { shape.fill(.ultraThinMaterial).opacity(reduceTransparency ? 1 : 0.65) }
+                .overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
+        }
     }
 }
 
 extension View {
     func cardSurface() -> some View { modifier(CardSurface()) }
+
+    /// A small tappable surface outside cards (the course pill): interactive glass on iOS 26.
+    @ViewBuilder func controlSurface() -> some View {
+        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+        if #available(iOS 26, *) { glassEffect(.regular.interactive(), in: shape) }
+        else { background(.ultraThinMaterial, in: shape).overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.5)) } }
+    }
+
+    /// A box inside a card (a sense, a word tile): a translucent wash with a
+    /// hairline, so the glass behind it still shows through.
+    func insetSurface(cornerRadius: CGFloat = 12, fill: Color = Color(uiColor: .systemBackground).opacity(0.35)) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        return background(fill, in: shape)
+            .overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.4)) }
+    }
 
     /// Pins controls below a scroll view without a hard-edged backdrop, so the
     /// animated background runs unbroken to the bottom of the screen. On iOS 26
