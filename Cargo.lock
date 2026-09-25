@@ -6462,6 +6462,7 @@ dependencies = [
  "opensubtitles-downloader",
  "osmo",
  "phoneme-verify",
+ "rayon",
  "reqwest 0.13.4",
  "schemars",
  "serde",

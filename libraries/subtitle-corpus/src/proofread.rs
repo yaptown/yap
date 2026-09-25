@@ -712,30 +712,50 @@ async fn sentence_chunks(
         splits
     }
     .into_iter();
-    let mut segmenters = BTreeMap::new();
+    // Rule segmentation is CPU-bound (parsley takes tens of seconds on a long
+    // film) and there are thousands of tracks, so it runs across every core,
+    // as generate-data does; one core took most of a night.
+    let mut rules = BTreeMap::new();
+    for track in &selected {
+        if !movie_subtitles::llm_segment::uses_llm(track.language)
+            && !rules.contains_key(&track.language)
+        {
+            let SubtitleSegmenter::Rules(segmenter) =
+                SubtitleSegmenter::for_language(track.language)?
+            else {
+                unreachable!("rule languages get a rule segmenter")
+            };
+            rules.insert(track.language, segmenter);
+        }
+    }
+    let mut ruled: Vec<Option<Vec<KeyedSentence>>> = {
+        use rayon::prelude::*;
+        selected
+            .par_iter()
+            .zip(&prepared)
+            .map(|(track, lines)| {
+                rules.get(&track.language).map(|segmenter| {
+                    movie_subtitles::sentences::keyed_sentences_by_rules(
+                        lines,
+                        track.language,
+                        &track.imdb,
+                        segmenter,
+                    )
+                })
+            })
+            .collect()
+    };
     let mut seen = BTreeMap::<(Language, &str), BTreeSet<String>>::new();
     let mut result = Vec::new();
-    for (track, lines) in selected.into_iter().zip(&prepared) {
-        let sentences = if movie_subtitles::llm_segment::uses_llm(track.language) {
-            movie_subtitles::sentences::keyed_sentences_from_splits(
+    for ((track, lines), ruled) in selected.into_iter().zip(&prepared).zip(&mut ruled) {
+        let sentences = match ruled.take() {
+            Some(sentences) => sentences,
+            None => movie_subtitles::sentences::keyed_sentences_from_splits(
                 lines,
                 &splits.next().expect("one split result per LLM track"),
                 track.language,
                 &track.imdb,
-            )
-        } else {
-            if let std::collections::btree_map::Entry::Vacant(entry) =
-                segmenters.entry(track.language)
-            {
-                entry.insert(SubtitleSegmenter::for_language(track.language)?);
-            }
-            movie_subtitles::sentences::keyed_sentences(
-                lines,
-                track.language,
-                &track.imdb,
-                &segmenters[&track.language],
-            )
-            .await?
+            ),
         };
         result.extend(
             chunks(
