@@ -98,6 +98,7 @@ pub enum AnkiNote {
         tts: String,
         include_reading: bool,
         include_listening: bool,
+        tags: Vec<String>,
     },
     Word {
         guid: String,
@@ -106,6 +107,7 @@ pub enum AnkiNote {
         word: String,
         definition: String,
         audio: String,
+        tags: Vec<String>,
     },
 }
 
@@ -315,6 +317,35 @@ fn word_note(
         });
         filename
     };
+    let mut tags = note_tags(course, "word");
+    let resolved = gram.resolve(&pack.gram_rodeo);
+    match resolved.gram.0.as_slice() {
+        [
+            Atom::Tok(Word {
+                word_type: WordType::Heteronym(heteronym),
+                ..
+            }),
+        ] => {
+            let pos = serde_json::to_value(heteronym.pos).unwrap();
+            tags.push(format!(
+                "yap::pos::{}",
+                pos.as_str().unwrap().to_lowercase()
+            ));
+        }
+        [_, _, ..] => tags.push("yap::pos::phrase".into()),
+        _ => {}
+    }
+    // gram_frequencies is sorted most frequent first.
+    let band = match pack.gram_frequencies.entries.get_index_of(&gram) {
+        Some(rank) if rank < 100 => "top-100",
+        Some(rank) if rank < 500 => "top-500",
+        Some(rank) if rank < 1000 => "top-1000",
+        Some(rank) if rank < 2000 => "top-2000",
+        Some(rank) if rank < 5000 => "top-5000",
+        Some(rank) if rank < 10000 => "top-10000",
+        _ => "rare",
+    };
+    tags.push(format!("yap::frequency::{band}"));
     AnkiNote::Word {
         guid: guid(course, "word", word),
         note_id: id(course, "word-note", word),
@@ -322,7 +353,26 @@ fn word_note(
         word: word.to_owned(),
         definition,
         audio,
+        tags,
     }
+}
+
+/// Tags every note gets: the source, the course, and the note kind, so a
+/// learner can filter or suspend by any of them in Anki's browser.
+fn note_tags(course: Course, kind: &str) -> Vec<String> {
+    vec![
+        "yap".into(),
+        format!("yap::{}", course_code(course)),
+        format!("yap::{kind}"),
+    ]
+}
+
+/// Anki tags are space-separated and `::` nests them.
+fn tag_segment(text: &str) -> String {
+    text.split_whitespace()
+        .collect::<Vec<_>>()
+        .join("_")
+        .replace("::", ":")
 }
 
 // RFC 3986 unreserved characters stay literal; everything else (including
@@ -878,6 +928,13 @@ impl PlannerState {
         let clip = clips::clip_for_sentence(language, &text).unwrap();
         let imdb = clips::clip_film(&clip.clip_id).to_owned();
         let movie = pack.movies.get(&imdb);
+        let film_tag = match movie {
+            Some(movie) => match movie.year {
+                Some(year) => format!("{} {year}", movie.title),
+                None => movie.title.clone(),
+            },
+            None => imdb.clone(),
+        };
         let poster = movie
             .and_then(|m| m.poster_bytes.as_ref())
             .map(|_| poster_filename(&imdb));
@@ -937,6 +994,11 @@ impl PlannerState {
             tts,
             include_reading: !matches!(options.card_types, AnkiCardTypes::Listening),
             include_listening,
+            tags: {
+                let mut tags = note_tags(course, "sentence");
+                tags.push(format!("yap::film::{}", tag_segment(&film_tag)));
+                tags
+            },
         });
         used_sentences.insert(sentence);
     }
@@ -1334,6 +1396,36 @@ mod tests {
                 "Once you finish this deck, you'll understand 24% of everyday French, up from 0%."
             )
         );
+    }
+
+    #[test]
+    fn anki_notes_are_tagged() {
+        assert_eq!(
+            tag_segment("Star Wars: Episode  IV::X 1977"),
+            "Star_Wars:_Episode_IV:X_1977"
+        );
+        let deck = fixture();
+        publish(&deck.context.language_pack, deck.context.course);
+        let plan = deck
+            .plan_anki_deck(options(), 55, "token".into(), 1_700_000_000_000.0)
+            .unwrap();
+        for note in &plan.notes {
+            let (tags, kind) = match note {
+                AnkiNote::Sentence { tags, .. } => (tags, "yap::sentence"),
+                AnkiNote::Word { tags, .. } => (tags, "yap::word"),
+            };
+            assert!(
+                tags.iter().all(|tag| !tag.contains(char::is_whitespace)),
+                "{tags:?}"
+            );
+            assert!(tags.contains(&"yap::eng-fra".into()), "{tags:?}");
+            assert!(tags.contains(&kind.into()), "{tags:?}");
+            let specific = match note {
+                AnkiNote::Sentence { .. } => "yap::film::",
+                AnkiNote::Word { .. } => "yap::frequency::",
+            };
+            assert!(tags.iter().any(|tag| tag.starts_with(specific)), "{tags:?}");
+        }
     }
 
     #[test]

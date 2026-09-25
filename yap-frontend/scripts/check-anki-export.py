@@ -112,6 +112,7 @@ def check_sql(package, plan, directory):
             assert row["mid"] == (plan["word_model_id"] if note["type"] == "Word" else plan["sentence_model_id"])
             assert row["sfld"] == raw
             assert row["csum"] == int(hashlib.sha1(raw.encode()).hexdigest()[:8], 16)
+            assert row["tags"].split() == note["tags"]
             fields = row["flds"].split("\x1f")
             assert_safe(row["flds"])
             assert html.unescape(fields[0]) == raw
@@ -155,6 +156,9 @@ def check_variant(root, variant):
                 result = import_package(collection, package)
                 assert counts(collection) == (5, plan["stats"]["card_count"] - int(variant != "reading"))
                 assert len(result.log.new) == (5 if iteration == 0 else 0)
+                for note in plan["notes"]:
+                    imported = collection.get_note(collection.db.scalar("select id from notes where guid=?", note["guid"]))
+                    assert sorted(imported.tags) == sorted(note["tags"]), (imported.tags, note["tags"])
                 assert len(result.log.duplicate) == (0 if iteration == 0 else 5)
                 # Anki may normalize timestamp-shaped IDs; GUID identity must still merge.
                 snapshot = (

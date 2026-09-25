@@ -94,15 +94,16 @@ async function writeFixtures(buildApkg, output) {
     source: { title: hostileText, year: 2001, imdb_id: "tt0001", poster_filename: "poster.jpg" },
     clip_url: "https://mock.invalid/video.mp4?d=fake&v=1", tts,
     include_reading: true, include_listening: true,
+    tags: ["yap", "yap::fra-eng", "yap::sentence", "yap::film::Amélie_2001"],
   });
   const base = {
     language: "French", course_code: "fra-eng", deck_name: "Yap test", deck_description: "Made with Yap (https://yap.town/anki)",
     deck_id: 9007199254740988, sentence_model_id: 9007199254740984, word_model_id: 9007199254740980,
     notes: [
       { type: "Word", ...identity(0), word: `Mot ${hostileText}`, definition: hostileText,
-        audio: "human.ogg" },
+        audio: "human.ogg", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::noun", "yap::frequency::top-100"] },
       { type: "Word", ...identity(1), word: `Autre ${hostileText}`, definition: hostileText,
-        audio: "word.mp3" },
+        audio: "word.mp3", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::phrase", "yap::frequency::rare"] },
       sentence(2, "tts.mp3"),
       sentence(3, "tts.mp3"),
       sentence(4, "failed.mp3"),
