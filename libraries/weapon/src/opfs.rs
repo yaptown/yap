@@ -755,6 +755,14 @@ pub fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
 
         let entry = counts.entry(device_id.clone()).or_insert(0);
         let expected = *entry;
+        // Logs written before `jsons` selected by index can repeat an index after a backdated
+        // event; skip the repeat exactly as `load_from_local_storage` does.
+        if within_device_index < expected {
+            log::error!(
+                "OPFS duplicate index for device {device_id}: expected {expected}, found {within_device_index}"
+            );
+            continue;
+        }
         if within_device_index != expected {
             log::error!(
                 "OPFS index gap for device {device_id}: expected {expected}, found {within_device_index}"
@@ -778,4 +786,31 @@ pub fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
     }
 
     counts
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn device_counts_skip_repeated_index_from_positional_export_bug() {
+        let record = |index| EventLogRecord {
+            device_id: "a".into(),
+            within_device_events_index: index,
+            event: Timestamped {
+                timestamp: chrono::DateTime::from_timestamp(0, 0).unwrap(),
+                timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+                within_device_events_index: index,
+                event: serde_json::Value::Null,
+            },
+        };
+        let mut bytes = event_log_header_bytes();
+        for index in [0, 0, 1] {
+            bytes.extend(encode_event_log_record(&record(index)).unwrap());
+        }
+        assert_eq!(
+            parse_device_counts(&bytes),
+            BTreeMap::from([("a".into(), 2)])
+        );
+    }
 }
