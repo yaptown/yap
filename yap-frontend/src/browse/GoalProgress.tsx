@@ -4,9 +4,12 @@ import { Progress } from "../components/ui/progress";
 export function GoalProgress({ goal }: { goal: GoalCardView }) {
   return (
     <>
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold">{goal.title}</h2>
-        <span className="text-sm tabular-nums text-muted-foreground">
+      <div className="flex items-center gap-3">
+        <h2 className="text-lg font-semibold">{goal.name}</h2>
+        <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground whitespace-nowrap">
+          {goal.level_label}
+        </span>
+        <span className="ml-auto text-lg font-semibold tabular-nums">
           {goal.percent_label}
         </span>
       </div>

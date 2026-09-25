@@ -747,7 +747,10 @@ impl Deck {
 pub struct UpNextView {
     pub title: String,
     pub headline: String,
+    /// Picks the hosts' illustration icon; `kind_label` is the words.
+    pub kind: UpNextKind,
     pub kind_label: String,
+    pub action_label: String,
     pub due_count: u64,
     pub ready_label: String,
     /// Present when the scheduler has no challenge, including audio and plan states.
@@ -755,9 +758,23 @@ pub struct UpNextView {
 }
 
 #[bridgerton::bridge(transparent)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum UpNextKind {
+    Flashcard,
+    Listening,
+    Pronunciation,
+    Translation,
+    Transcription,
+    Other,
+}
+
+#[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GoalCardView {
     pub title: String,
+    /// "Advanced French": the title without its level, which `level_label` badges.
+    pub name: String,
+    pub level_label: String,
     pub tier_name: String,
     pub level: u32,
     pub total_levels: u32,
@@ -787,6 +804,23 @@ pub struct StatsCardView {
     pub percent_known_label: String,
 }
 
+/// A big number with a caption under it, like Home's XP and card tiles.
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct HomeStatView {
+    pub value: String,
+    pub caption: String,
+    pub note: Option<String>,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WeekCardView {
+    pub title: String,
+    pub today_label: String,
+    pub days: Vec<DayProgress>,
+}
+
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DictionaryCardView {
@@ -798,13 +832,20 @@ pub struct DictionaryCardView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct HomeScreenView {
     pub title: String,
+    pub course_flag: String,
     pub course_label: String,
+    /// "A little French, every day."
+    pub greeting: String,
+    /// "Your next card is ready." — only when a challenge is up; idle states
+    /// bring their own title.
+    pub greeting_detail: Option<String>,
     pub native_language: Language,
     pub target_language: Language,
     pub up_next: UpNextView,
     pub goal: GoalCardView,
-    pub streak: StreakCardView,
-    pub stats: StatsCardView,
+    pub week: WeekCardView,
+    pub xp: HomeStatView,
+    pub cards: HomeStatView,
     pub dictionary: DictionaryCardView,
     pub due_count: u64,
 }
@@ -903,14 +944,16 @@ impl Deck {
         let language = get_language_metadata(self.get_target_language()).common_name;
         GoalCardView {
             title: format!("{} {language} Level {}", tier.name, tier.level),
+            name: format!("{} {language}", tier.name),
+            level_label: format!("Level {} of {}", tier.level, tier.total_levels),
             tier_name: tier.name.clone(),
             level: tier.level,
             total_levels: tier.total_levels,
             percent: tier.percent_known,
             percent_label: format!("{:.0}%", tier.percent_known),
             subtitle: format!(
-                "Level {} of {} · unlocks {:.1}% of everyday {language}",
-                tier.level, tier.total_levels, tier.percent_of_usage,
+                "Unlocks {:.1}% of everyday {language}",
+                tier.percent_of_usage,
             ),
         }
     }
@@ -966,30 +1009,41 @@ impl Deck {
 }
 
 /// Only projects the selected challenge; it never chooses a card or sentence.
-fn challenge_preview(challenge: &Challenge<Gram<String>>, language: Language) -> (String, String) {
-    match challenge {
+fn challenge_preview(
+    challenge: &Challenge<Gram<String>>,
+    language: Language,
+) -> (String, UpNextKind, String) {
+    let (headline, kind, label) = match challenge {
         Challenge::FlashCardReview { indicator, .. } => match indicator {
-            CardIndicator::WrittenGram { gram } => {
-                (gram.to_display_string(language), "Flashcard".into())
-            }
-            CardIndicator::ListeningGram { .. } => {
-                ("Listen to the word".into(), "Listening".into())
-            }
+            CardIndicator::WrittenGram { gram } => (
+                gram.to_display_string(language),
+                UpNextKind::Flashcard,
+                "Flashcard",
+            ),
+            CardIndicator::ListeningGram { .. } => (
+                "Listen to the word".into(),
+                UpNextKind::Listening,
+                "Listening",
+            ),
             CardIndicator::LetterPronunciation { pattern, .. } => {
-                (pattern.clone(), "Pronunciation".into())
+                (pattern.clone(), UpNextKind::Pronunciation, "Pronunciation")
             }
         },
         Challenge::PronunciationChallenge { pattern, .. } => {
-            (pattern.clone(), "Pronunciation".into())
+            (pattern.clone(), UpNextKind::Pronunciation, "Pronunciation")
         }
-        Challenge::TranslateComprehensibleSentence(sentence) => {
-            (sentence.target_language.clone(), "Translation".into())
-        }
+        Challenge::TranslateComprehensibleSentence(sentence) => (
+            sentence.target_language.clone(),
+            UpNextKind::Translation,
+            "Translation",
+        ),
         Challenge::TranscribeComprehensibleSentence(_) => (
             "Listen and fill in the blanks".into(),
-            "Transcription".into(),
+            UpNextKind::Transcription,
+            "Transcription",
         ),
-    }
+    };
+    (headline, kind, label.into())
 }
 
 #[bridgerton::bridge]
@@ -1000,10 +1054,13 @@ impl Deck {
         let due_count = review.due_count() as u64;
         let (navigation, _) = self.curriculum_navigation(inputs.sentence_list.clone());
         let info = self.get_no_cards_ready_info(inputs.banned.clone(), navigation.selection);
+        let is_challenge = matches!(step, ReviewStep::Challenge(_));
+        let mut kind = UpNextKind::Other;
         let (headline, kind_label, idle) = match step {
             ReviewStep::Challenge(view) => {
-                let (headline, kind_label) =
+                let (headline, challenge_kind, kind_label) =
                     challenge_preview(&view.challenge, self.get_target_language());
+                kind = challenge_kind;
                 (headline, kind_label, None)
             }
             ReviewStep::PlacementTest(session) => {
@@ -1046,18 +1103,40 @@ impl Deck {
                 (headline, kind_label.into(), Some(*idle))
             }
         };
+        let language = get_language_metadata(self.get_target_language());
+        let streak = self.streak_card_view(inputs.timestamp_ms);
+        let stats = self.stats_card_view();
+        let day = DateTime::<Utc>::from_timestamp_millis(inputs.timestamp_ms as i64)
+            .unwrap_or_else(Utc::now)
+            .with_timezone(&self.context.timezone)
+            .date_naive();
         HomeScreenView {
             title: "Home".into(),
-            course_label: format!(
-                "Learning {}",
-                get_language_metadata(self.get_target_language()).common_name
-            ),
+            course_flag: language.flag.clone(),
+            course_label: format!("Learning {}", language.common_name),
+            greeting: format!("A little {}, every day.", language.common_name),
+            greeting_detail: is_challenge.then(|| {
+                if due_count <= 1 {
+                    "Your next card is ready.".into()
+                } else {
+                    format!("{due_count} cards are ready for you.")
+                }
+            }),
             native_language: self.context.course.native_language,
             target_language: self.get_target_language(),
             up_next: UpNextView {
                 title: "Up next".into(),
                 headline,
+                kind,
                 kind_label,
+                action_label: if !is_challenge {
+                    "Continue"
+                } else if due_count <= 1 {
+                    "Review card"
+                } else {
+                    "Start review"
+                }
+                .into(),
                 due_count,
                 ready_label: format!(
                     "{due_count} {} ready",
@@ -1066,10 +1145,28 @@ impl Deck {
                 idle,
             },
             goal: self.goal_card_view(&info.tier_info),
-            streak: self.streak_card_view(inputs.timestamp_ms),
-            stats: self.stats_card_view(),
+            week: WeekCardView {
+                title: "This week".into(),
+                today_label: streak.today_label,
+                days: self.get_current_week_progress_on(day),
+            },
+            xp: HomeStatView {
+                value: format!("{:.0}", self.get_xp()),
+                caption: "XP earned".into(),
+                note: None,
+            },
+            cards: HomeStatView {
+                value: stats.total_cards.to_string(),
+                caption: if stats.total_cards == 1 {
+                    "Card studied"
+                } else {
+                    "Cards studied"
+                }
+                .into(),
+                note: Some(stats.percent_known_label),
+            },
             dictionary: DictionaryCardView {
-                title: "Dictionary".into(),
+                title: "Find a word".into(),
                 search_placeholder: format!(
                     "Search {} or {}",
                     get_language_metadata(self.get_target_language()).common_name,
@@ -1604,9 +1701,10 @@ mod tests {
         };
         assert_eq!(json(&view.challenge), json(&held));
         let home = deck.home_screen_view(inputs);
-        let (headline, kind) = challenge_preview(&held, deck.get_target_language());
+        let (headline, kind, kind_label) = challenge_preview(&held, deck.get_target_language());
         assert_eq!(home.up_next.headline, headline);
-        assert_eq!(home.up_next.kind_label, kind);
+        assert_eq!(home.up_next.kind, kind);
+        assert_eq!(home.up_next.kind_label, kind_label);
         assert!(home.up_next.idle.is_none());
         assert_eq!(home.due_count, 0);
     }
@@ -1862,19 +1960,29 @@ mod tests {
             .get_next_challenge(&deck)
             .expect("added cards should be ready");
         let home = deck.home_screen_view(inputs.clone());
-        let (headline, kind) = challenge_preview(&challenge, deck.get_target_language());
+        let (headline, kind, kind_label) =
+            challenge_preview(&challenge, deck.get_target_language());
         assert_eq!(home.up_next.headline, headline);
-        assert_eq!(home.up_next.kind_label, kind);
+        assert_eq!(home.up_next.kind, kind);
+        assert_eq!(home.up_next.kind_label, kind_label);
         assert!(home.up_next.idle.is_none());
         assert_eq!(home.due_count, review.due_count() as u64);
         assert_eq!(home.up_next.due_count, home.due_count);
-        assert!(home.stats.percent_known > 0.0);
+        let (action, detail) = if home.due_count == 1 {
+            ("Review card", "Your next card is ready.".to_owned())
+        } else {
+            (
+                "Start review",
+                format!("{} cards are ready for you.", home.due_count),
+            )
+        };
+        assert_eq!(home.up_next.action_label, action);
+        assert_eq!(home.greeting_detail, Some(detail));
+        let percent_known = deck.get_percent_of_words_known();
+        assert!(percent_known > 0.0);
         assert_eq!(
-            home.stats.percent_known_label,
-            format!(
-                "{:.1}% of everyday French",
-                home.stats.percent_known * 100.0
-            ),
+            home.cards.note,
+            Some(format!("{:.1}% of everyday French", percent_known * 100.0)),
         );
         let due = deck.due_words_view(vec![], inputs.timestamp_ms);
         assert_eq!(
@@ -1961,7 +2069,7 @@ mod tests {
             ..inputs()
         });
         let stats = deck.stats_screen_view(vec![], after_midnight);
-        assert_eq!(json(home.streak), json(&tomorrow));
+        assert_eq!(home.week.today_label, tomorrow.today_label);
         assert_eq!(stats.tiles[2].eyebrow, tomorrow.title);
         assert_eq!(stats.tiles[2].value, tomorrow.days_label);
         assert_eq!(stats.tiles[2].caption, Some(tomorrow.today_label));
@@ -2002,7 +2110,7 @@ mod tests {
             let ReviewStep::Challenge(challenge) = view.step else {
                 panic!("expected challenge")
             };
-            let (headline, kind) = challenge_preview(&challenge.challenge, view.target_language);
+            let (headline, _, kind) = challenge_preview(&challenge.challenge, view.target_language);
             assert_eq!(kind, expected_kind);
             assert!(!headline.is_empty());
             if let Some(prompt) = expected_prompt {
@@ -2024,26 +2132,29 @@ mod tests {
         });
         assert_eq!(goal.title, "Elementary French Level 5");
         assert_eq!(goal.percent_label, "70%");
-        assert_eq!(
-            goal.subtitle,
-            "Level 5 of 7 · unlocks 24.8% of everyday French"
-        );
+        assert_eq!(goal.name, "Elementary French");
+        assert_eq!(goal.level_label, "Level 5 of 7");
+        assert_eq!(goal.subtitle, "Unlocks 24.8% of everyday French");
         let home = deck.home_screen_view(inputs());
-        assert_eq!(home.stats.cards_label, "0 cards");
+        assert_eq!(home.course_flag, "🇫🇷");
+        assert_eq!(home.greeting, "A little French, every day.");
+        assert_eq!(home.cards.value, "0");
+        assert_eq!(home.cards.caption, "Cards studied");
         assert_eq!(
-            home.stats.percent_known_label,
-            format!(
+            home.cards.note,
+            Some(format!(
                 "{:.1}% of everyday French",
                 deck.get_percent_of_words_known() * 100.0
-            )
+            ))
         );
         assert_eq!(
             home.dictionary.search_placeholder,
             "Search French or English"
         );
-        assert_eq!(home.streak.days, 0);
+        assert_eq!(home.xp.value, "0");
+        assert_eq!(home.week.days.len(), 7);
         assert_eq!(
-            home.streak.today_label,
+            home.week.today_label,
             format!("0 / {} min today", deck.get_daily_review_target() / 60)
         );
     }

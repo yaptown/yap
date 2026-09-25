@@ -48,6 +48,8 @@ export interface MovieWithMetadata extends MovieMetadataBasic {
 interface IdleScreenProps {
   view: IdleScreenView;
   showEngagementPrompts: boolean;
+  /** Home draws the week in its own card. */
+  showWeek?: boolean;
   addEvent: (event: DeckEvent) => void;
   undoRestrictions: () => void;
   deck: Deck;
@@ -56,7 +58,7 @@ interface IdleScreenProps {
 }
 
 export const IdleScreen = memo(function IdleScreen(props: IdleScreenProps) {
-  const { view, deck, addEvent } = props;
+  const { view, deck, addEvent, showWeek = true } = props;
   const [showReleasePlan, setShowReleasePlan] = useState(false);
   const plan = view.type === "ReviewPlanOffer" ? view : view.type === "StudyPlanComplete" ? view.plan : undefined;
   useEffect(() => {
@@ -80,7 +82,7 @@ export const IdleScreen = memo(function IdleScreen(props: IdleScreenProps) {
           {!view.online && <p>Reconnect to download audio.</p>}
         </div>
         <div className="flex justify-center py-4"><LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-        <WeekProgressStrip week={view.week} className="mt-auto mb-2" />
+        {showWeek && <WeekProgressStrip week={view.week} className="mt-auto mb-2" />}
       </div>
     );
     case "StudyPlanComplete":
@@ -91,16 +93,16 @@ export const IdleScreen = memo(function IdleScreen(props: IdleScreenProps) {
             {view.next_due && <NextReviewLine key={view.next_due.due_timestamp_ms} card={view.next_due} targetLanguage={view.plan.target_language} />}
           </div>
           <div className="flex justify-center"><Button onClick={() => setShowReleasePlan(true)} size="lg" variant="outline">Study more</Button></div>
-          <WeekProgressStrip week={view.plan.week} className="mt-auto mb-2" />
+          {showWeek && <WeekProgressStrip week={view.plan.week} className="mt-auto mb-2" />}
         </div>
       );
-      return <ReviewPlanCard plan={view.plan} onCommit={() => addEvent(view.plan.event)} />;
-    case "ReviewPlanOffer": return <ReviewPlanCard plan={view} onCommit={() => addEvent(view.event)} />;
+      return <ReviewPlanCard plan={view.plan} onCommit={() => addEvent(view.plan.event)} showWeek={showWeek} />;
+    case "ReviewPlanOffer": return <ReviewPlanCard plan={view} onCommit={() => addEvent(view.event)} showWeek={showWeek} />;
     case "Idle": return <IdleContent {...props} view={view} deck={deck} />;
   }
 });
 
-function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, deck, setSentenceList, commitSentenceList }: Omit<IdleScreenProps, "view"> & { view: IdleView }) {
+function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, undoRestrictions, deck, setSentenceList, commitSentenceList }: Omit<IdleScreenProps, "view"> & { view: IdleView }) {
   const navigate = useNavigate();
   const [pimsleurAcknowledged, setPimsleurAcknowledged] = useState(() => localStorage.getItem("yap-pimsleur-acknowledged") === "true");
   const targetLanguage = view.target_language;
@@ -370,7 +372,7 @@ function IdleContent({ view, showEngagementPrompts, addEvent, undoRestrictions, 
 
       {showEngagementPrompts && <EngagementPrompts language={targetLanguage} />}
 
-      {view.show_sentence_list && (
+      {showWeek && view.show_sentence_list && (
         <WeekProgressStrip week={view.week} className="mt-auto mb-2" />
       )}
     </div>

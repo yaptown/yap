@@ -91,10 +91,24 @@ struct ReviewScreen: View {
     }
 }
 
+extension EnvironmentValues {
+    /// Set by Home, which embeds idle and plan steps in its own scroll view and
+    /// draws the week itself (the only thing those steps pin below).
+    @Entry var embeddedInHome = false
+}
+
 struct ReviewStepScrollView<Content: View, Actions: View>: View {
+    @Environment(\.embeddedInHome) private var embeddedInHome
     @ViewBuilder let content: () -> Content
     @ViewBuilder let actions: () -> Actions
     var body: some View {
+        if embeddedInHome {
+            VStack(spacing: 12, content: content)
+        } else {
+            scrolling
+        }
+    }
+    private var scrolling: some View {
         ScrollView {
             VStack(spacing: 12, content: content).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
         }.bottomBar {

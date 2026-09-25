@@ -13,9 +13,11 @@ import { WeekProgressStrip } from "../WeekProgressStrip";
 export function ReviewPlanCard({
   plan,
   onCommit,
+  showWeek = true,
 }: {
   plan: ReviewPlanView;
   onCommit: () => void;
+  showWeek?: boolean;
 }) {
   return (
     <div className="flex flex-col flex-1 gap-4">
@@ -47,7 +49,7 @@ export function ReviewPlanCard({
         </Button>
       </Card>
 
-      <WeekProgressStrip week={plan.week} className="mt-auto mb-2" />
+      {showWeek && <WeekProgressStrip week={plan.week} className="mt-auto mb-2" />}
     </div>
   );
 }

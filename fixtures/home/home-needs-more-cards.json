@@ -2,13 +2,18 @@
   "screen": "Home",
   "view": {
     "title": "Home",
+    "course_flag": "🇩🇪",
     "course_label": "Learning German",
+    "greeting": "A little German, every day.",
+    "greeting_detail": null,
     "native_language": "English",
     "target_language": "German",
     "up_next": {
       "title": "Up next",
       "headline": "Ready for more?",
+      "kind": "Other",
       "kind_label": "Review",
+      "action_label": "Continue",
       "due_count": 0,
       "ready_label": "0 cards ready",
       "idle": {
@@ -353,28 +358,117 @@
     },
     "goal": {
       "title": "Core German Level 1",
+      "name": "Core German",
+      "level_label": "Level 1 of 10",
       "tier_name": "Core",
       "level": 1,
       "total_levels": 10,
       "percent": 3.352745698022571,
       "percent_label": "3%",
-      "subtitle": "Level 1 of 10 · unlocks 25.7% of everyday German"
+      "subtitle": "Unlocks 25.7% of everyday German"
     },
-    "streak": {
-      "title": "Streak",
-      "days": 2,
-      "days_label": "2 days",
-      "today_label": "0 / 10 min today"
+    "week": {
+      "title": "This week",
+      "today_label": "0 / 10 min today",
+      "days": [
+        {
+          "weekday": 0,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": true,
+          "is_future": false
+        },
+        {
+          "weekday": 1,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 2,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 3,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 4,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 5,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 6,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        }
+      ]
     },
-    "stats": {
-      "title": "Stats",
-      "total_cards": 0,
-      "cards_label": "0 cards",
-      "percent_known": 0.0007141996528979433,
-      "percent_known_label": "0.1% of everyday German"
+    "xp": {
+      "value": "0",
+      "caption": "XP earned",
+      "note": null
+    },
+    "cards": {
+      "value": "0",
+      "caption": "Cards studied",
+      "note": "0.1% of everyday German"
     },
     "dictionary": {
-      "title": "Dictionary",
+      "title": "Find a word",
       "search_placeholder": "Search German or English"
     },
     "due_count": 0

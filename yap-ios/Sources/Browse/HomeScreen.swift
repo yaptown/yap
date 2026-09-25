@@ -30,57 +30,62 @@ struct HomeScreen: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         Button(action: actions.switchCourse) {
-                            StudyCard {
-                                HStack {
-                                    Text(view.course_label).font(.headline).foregroundStyle(Color.yapText)
-                                    Spacer()
-                                    Image(systemName: "chevron.right").foregroundStyle(.secondary)
-                                }
+                            HStack(spacing: 8) {
+                                if Theme.emojiFontAvailable { Text(view.course_flag) }
+                                Text(view.course_label).font(.subheadline.weight(.medium)).foregroundStyle(Color.yapText)
+                                Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                             }
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .background(.ultraThinMaterial.opacity(0.6), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay { RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
                         }.buttonStyle(.plain)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(view.greeting).font(.system(.largeTitle, weight: .bold)).foregroundStyle(Color.yapText)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if let detail = view.greeting_detail {
+                                Text(detail).font(.title3).foregroundStyle(.secondary)
+                            }
+                        }
                         if let idle = view.up_next.idle {
                             IdleScreen(view: idle)
                                 .environment(\.reviewActions, addingGoesToReview)
+                                .environment(\.embeddedInHome, true)
                         } else {
-                            StudyCard {
-                                Text(view.up_next.title).font(.subheadline).foregroundStyle(.secondary)
-                                Button { navigate(.review) } label: {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text(view.up_next.headline).font(.title2.bold()).foregroundStyle(Color.yapText)
-                                        Text(view.up_next.kind_label).font(.subheadline).foregroundStyle(.secondary)
-                                    }.frame(maxWidth: .infinity, alignment: .leading)
-                                }.buttonStyle(.plain)
-                                Button("Review") { navigate(.review) }
-                                    .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
-                            }
-                            Button("\(view.up_next.ready_label) →") { navigate(.due) }
-                                .font(.subheadline).foregroundStyle(Color.yapText).frame(maxWidth: .infinity)
+                            // The whole card starts the review, not just its button.
+                            Button { navigate(.review) } label: { UpNextCard(upNext: view.up_next) }
+                                .buttonStyle(.plain)
                         }
                         Button { navigate(.goals) } label: {
                             StudyCard { GoalProgress(goal: view.goal) }
                         }.buttonStyle(.plain)
-                        HStack(alignment: .top, spacing: 16) {
-                            StudyCard {
-                                Text(view.streak.title).font(.subheadline).foregroundStyle(.secondary)
-                                Text(view.streak.days_label).font(.title2.bold()).foregroundStyle(Color.yapText)
-                                Text(view.streak.today_label).font(.subheadline).foregroundStyle(.secondary)
+                        StudyCard(spacing: 16) {
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(view.week.title).font(.headline).foregroundStyle(Color.yapText)
+                                Spacer()
+                                Text(view.week.today_label).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
                             }
-                            Button { navigate(.stats) } label: {
-                                StudyCard {
-                                    Text(view.stats.title).font(.subheadline).foregroundStyle(.secondary)
-                                    Text(view.stats.cards_label).font(.title2.bold()).foregroundStyle(Color.yapText)
-                                    Text(view.stats.percent_known_label).font(.subheadline).foregroundStyle(.secondary)
-                                }
-                            }.buttonStyle(.plain)
+                            WeekProgressStrip(week: view.week.days)
                         }
+                        HStack(alignment: .top, spacing: 16) {
+                            Button { navigate(.stats) } label: { HomeStatTile(stat: view.xp, systemImage: "bolt") }
+                            Button { navigate(.stats) } label: { HomeStatTile(stat: view.cards, systemImage: "book") }
+                        }.buttonStyle(.plain).fixedSize(horizontal: false, vertical: true)
                         StudyCard {
                             Button(view.dictionary.title) { navigate(.dictionary()) }.font(.headline).foregroundStyle(Color.yapText)
-                            HStack {
-                                TextField(view.dictionary.search_placeholder, text: $query)
-                                    .textFieldStyle(.roundedBorder).submitLabel(.search)
-                                    .onSubmit { navigate(.dictionary(query: query)) }
-                                Button { navigate(.dictionary(query: query)) } label: { Image(systemName: "arrow.right") }
-                                    .buttonStyle(.bordered).accessibilityLabel(view.dictionary.title)
+                            HStack(spacing: 8) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                                    TextField(view.dictionary.search_placeholder, text: $query)
+                                        .submitLabel(.search)
+                                        .onSubmit { navigate(.dictionary(query: query)) }
+                                }
+                                .padding(.horizontal, 12).frame(height: 44)
+                                .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .overlay { RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
+                                Button { navigate(.dictionary(query: query)) } label: {
+                                    Image(systemName: "arrow.right").frame(width: 44, height: 44)
+                                        .overlay { RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
+                                }.buttonStyle(.plain).foregroundStyle(Color.yapText).accessibilityLabel(view.dictionary.title)
                             }
                         }
                         Spacer(minLength: 0)
@@ -134,13 +139,88 @@ struct HomeScreen: View {
 struct GoalProgress: View {
     let goal: GoalCardView
     var body: some View {
-        HStack {
-            Text(goal.title).font(.headline).foregroundStyle(Color.yapText)
-            Spacer()
-            Text(goal.percent_label).font(.subheadline).foregroundStyle(.secondary)
+        HStack(spacing: 10) {
+            Text(goal.name).font(.headline).foregroundStyle(Color.yapText)
+            Text(goal.level_label).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .overlay { Capsule().strokeBorder(Color(uiColor: .separator)) }
+            Spacer(minLength: 0)
+            Text(goal.percent_label).font(.headline.monospacedDigit()).foregroundStyle(Color.yapText)
         }
         ProgressView(value: goal.percent, total: 100)
             .accessibilityLabel(goal.title).accessibilityValue(goal.percent_label)
         Text(goal.subtitle).font(.subheadline).foregroundStyle(.secondary)
+    }
+}
+
+/// Up Next's headline card, with the web's tilted card-stack illustration.
+private struct UpNextCard: View {
+    let upNext: UpNextView
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(upNext.title.uppercased()).font(.caption.weight(.semibold)).tracking(2).foregroundStyle(.secondary)
+                Text(upNext.headline).font(.system(size: 30, weight: .bold)).foregroundStyle(Color.yapText)
+                    .minimumScaleFactor(0.6).fixedSize(horizontal: false, vertical: true)
+                Text(upNext.kind_label).foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Text(upNext.action_label)
+                    Image(systemName: "arrow.right")
+                }
+                .font(.headline).foregroundStyle(Tokens.palette.primary_foreground.color)
+                .padding(.horizontal, 18).frame(height: 44)
+                .background(Tokens.palette.primary.color.opacity(0.85), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.top, 12)
+            }.frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .trailing, spacing: 12) {
+                CardStack(kind: upNext.kind)
+                Spacer(minLength: 0)
+                Text(upNext.ready_label).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+            }
+        }
+        .padding(20).cardSurface().contentShape(Rectangle())
+    }
+}
+
+private struct CardStack: View {
+    let kind: UpNextKind
+    private var symbol: String {
+        switch kind {
+        case .Flashcard: "text.bubble"
+        case .Listening: "headphones"
+        case .Pronunciation: "mic"
+        case .Translation: "character.bubble"
+        case .Transcription: "keyboard"
+        case .Other: "sparkles"
+        }
+    }
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+        ZStack {
+            shape.fill(.ultraThinMaterial.opacity(0.5)).overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.6)) }
+                .rotationEffect(.degrees(10)).offset(x: 10)
+            shape.fill(.ultraThinMaterial).overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.6)) }
+                .overlay { Image(systemName: symbol).font(.system(size: 30, weight: .light)).foregroundStyle(.secondary) }
+                .rotationEffect(.degrees(-6))
+        }
+        .frame(width: 84, height: 100).padding(.trailing, 8).padding(.top, 6)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct HomeStatTile: View {
+    let stat: HomeStatView
+    let systemImage: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Image(systemName: systemImage).font(.title3).foregroundStyle(.secondary)
+                Text(stat.value).font(.title2.bold().monospacedDigit()).foregroundStyle(Color.yapText)
+            }
+            Text(stat.caption).font(.subheadline).foregroundStyle(.secondary)
+            if let note = stat.note { Text(note).font(.caption).foregroundStyle(.secondary).padding(.top, 2) }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(16).cardSurface()
     }
 }

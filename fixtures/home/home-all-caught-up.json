@@ -2,13 +2,18 @@
   "screen": "Home",
   "view": {
     "title": "Home",
+    "course_flag": "🇫🇷",
     "course_label": "Learning French",
+    "greeting": "A little French, every day.",
+    "greeting_detail": null,
     "native_language": "English",
     "target_language": "French",
     "up_next": {
       "title": "Up next",
       "headline": "All caught up!",
+      "kind": "Other",
       "kind_label": "Review",
+      "action_label": "Continue",
       "due_count": 0,
       "ready_label": "0 cards ready",
       "idle": {
@@ -679,28 +684,117 @@
     },
     "goal": {
       "title": "Advanced French Level 11",
+      "name": "Advanced French",
+      "level_label": "Level 11 of 30",
       "tier_name": "Advanced",
       "level": 11,
       "total_levels": 30,
       "percent": 3.2445668809305177,
       "percent_label": "3%",
-      "subtitle": "Level 11 of 30 · unlocks 67.1% of everyday French"
+      "subtitle": "Unlocks 67.1% of everyday French"
     },
-    "streak": {
-      "title": "Streak",
-      "days": 3,
-      "days_label": "3 days",
-      "today_label": "0 / 5 min today"
+    "week": {
+      "title": "This week",
+      "today_label": "0 / 5 min today",
+      "days": [
+        {
+          "weekday": 0,
+          "seconds": 46,
+          "target_seconds": 300,
+          "reviews": 2,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": true,
+          "is_future": false
+        },
+        {
+          "weekday": 1,
+          "seconds": 0,
+          "target_seconds": 300,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 2,
+          "seconds": 0,
+          "target_seconds": 300,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 3,
+          "seconds": 0,
+          "target_seconds": 300,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 4,
+          "seconds": 0,
+          "target_seconds": 300,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 5,
+          "seconds": 0,
+          "target_seconds": 300,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 6,
+          "seconds": 0,
+          "target_seconds": 300,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        }
+      ]
     },
-    "stats": {
-      "title": "Stats",
-      "total_cards": 6,
-      "cards_label": "6 cards",
-      "percent_known": 0.10246544526835044,
-      "percent_known_label": "10.2% of everyday French"
+    "xp": {
+      "value": "197",
+      "caption": "XP earned",
+      "note": null
+    },
+    "cards": {
+      "value": "6",
+      "caption": "Cards studied",
+      "note": "10.2% of everyday French"
     },
     "dictionary": {
-      "title": "Dictionary",
+      "title": "Find a word",
       "search_placeholder": "Search French or English"
     },
     "due_count": 0

@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "screen", content = "view")]
+// One fixture is rendered at a time; boxing would only complicate the bindings.
+#[allow(clippy::large_enum_variant)]
 pub enum Fixture {
     Review(ReviewScreenView),
     Home(HomeScreenView),

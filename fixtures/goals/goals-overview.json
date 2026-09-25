@@ -13,12 +13,14 @@
     },
     "goal": {
       "title": "Advanced French Level 11",
+      "name": "Advanced French",
+      "level_label": "Level 11 of 30",
       "tier_name": "Advanced",
       "level": 11,
       "total_levels": 30,
       "percent": 3.2445668809305177,
       "percent_label": "3%",
-      "subtitle": "Level 11 of 30 · unlocks 67.1% of everyday French"
+      "subtitle": "Unlocks 67.1% of everyday French"
     },
     "daily_goal_title": "Daily goal",
     "daily_goal": "Casual",
