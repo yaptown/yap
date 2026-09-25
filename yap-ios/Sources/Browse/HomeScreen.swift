@@ -98,7 +98,6 @@ struct HomeScreen: View {
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height)
                 }
             }.background(.clear)
-                .navigationTitle("Yap.Town")
                 #if DEBUG
                 .onChange(of: DebugHarness.shared.commandID) { _, _ in
                     let command = DebugHarness.shared.command
@@ -107,7 +106,14 @@ struct HomeScreen: View {
                 }
                 #endif
         }
+        // The wordmark sits in the bar, level with the trailing buttons, like the web
+        // header on a phone; pushed screens inherit the inline title mode.
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Text("Yap").font(.title2.bold()).foregroundStyle(Color.yapText).fixedSize()
+                    .accessibilityAddTraits(.isHeader)
+            }.hidingSharedBackground()
             ToolbarItem(placement: .topBarTrailing) {
                 if auth.userId == nil {
                     Button(account_copy().sign_in_action) { authSheet.present(tab: .signIn) }

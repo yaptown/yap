@@ -103,3 +103,10 @@ struct ReviewBadge: View {
             .background(Color.yapAccent.opacity(0.12), in: Capsule())
     }
 }
+
+extension ToolbarItem {
+    /// Plain content in the bar (a wordmark, not a control) without iOS 26's glass capsule.
+    @ToolbarContentBuilder func hidingSharedBackground() -> some ToolbarContent {
+        if #available(iOS 26, *) { sharedBackgroundVisibility(.hidden) } else { self }
+    }
+}
