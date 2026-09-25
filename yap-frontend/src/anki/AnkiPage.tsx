@@ -284,8 +284,10 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                 <h2 className="text-lg font-semibold">{view.keep_going_heading}</h2>
                 <p className="text-sm text-muted-foreground">{view.keep_going_body}</p>
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" onClick={() => navigate("/learn")}>{view.keep_going_label}</Button>
-                  {!userInfo && <Button type="button" variant="outline" className="h-auto min-h-9 max-w-full shrink whitespace-normal py-2" onClick={openSignUp}>{view.sign_up_label}</Button>}
+                  {/* One call to action: saving the deck for signed-out visitors, the app for everyone else. */}
+                  {userInfo
+                    ? <Button type="button" onClick={() => navigate("/learn")}>{view.keep_going_label}</Button>
+                    : <Button type="button" className="h-auto min-h-9 max-w-full shrink whitespace-normal py-2" onClick={openSignUp}>{view.sign_up_label}</Button>}
                 </div>
               </Card>
             )}
