@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BookOpen,
-  ChevronDown,
   Headphones,
   Keyboard,
   Languages,
@@ -24,6 +23,7 @@ import type {
 import type { UserInfo } from "@/app/context";
 import { DeckPage } from "@/app/DeckPage";
 import { TopPageLayout } from "@/components/TopPageLayout";
+import { CoursePill } from "@/components/CoursePill";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,19 +124,13 @@ function HomeContent({
         }}
       >
         <main className="flex flex-col gap-4 py-4" aria-label={view.title}>
-          <button
-            type="button"
+          <CoursePill
+            flag={view.course_flag}
+            label={view.course_label}
             onClick={() => {
               if (!inert) navigate("/select-language");
             }}
-            className="self-start flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 backdrop-blur-sm hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <span className="text-lg leading-none" aria-hidden>
-              {view.course_flag}
-            </span>
-            <span className="font-medium">{view.course_label}</span>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden />
-          </button>
+          />
           <div className="flex flex-col gap-1 pt-2 pb-1">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
               {view.greeting}
