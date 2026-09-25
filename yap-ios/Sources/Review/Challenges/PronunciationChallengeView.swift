@@ -16,7 +16,7 @@ struct PronunciationChallengeView: View {
     }
     var body: some View {
         ReviewStepScrollView {
-            if let prompt = view.tutorial_prompt { TutorialPromptText(prompt: prompt) }
+            if let prompt = view.tutorial_prompt { TutorialHint(prompt: prompt) }
             StudyCard {
                 HStack(alignment: .center, spacing: 8) {
                     Color.clear.frame(width: 44, height: 44)
@@ -32,10 +32,10 @@ struct PronunciationChallengeView: View {
                 }
                 if let description = view.description { Text(markdown(description)).font(.subheadline) }
             }
-            if let prompt = view.tutorial_grade_prompt {
-                Text(prompt).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-            }
         } actions: {
+            if let prompt = view.tutorial_grade_prompt {
+                TutorialHint(text: prompt, pointing: .down, arrowSize: 96)
+            }
             GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
                 .disabled(actions.submitting)
             Button(view.cant_speak_label) { actions.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)

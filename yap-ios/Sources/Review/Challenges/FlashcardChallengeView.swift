@@ -27,7 +27,7 @@ struct FlashcardChallengeView: View {
     var body: some View {
         ReviewStepScrollView {
             if !revealed, let prompt = view.tutorial_prompt {
-                TutorialPromptText(prompt: prompt)
+                TutorialHint(prompt: prompt)
             }
             StudyCard {
                 // Like the web card: audio at the leading edge, the word centered, the menu trailing.
@@ -78,11 +78,11 @@ struct FlashcardChallengeView: View {
                 MorphemeBreakdownView(parts: breakdown, alignment: .center, revealDelay: 1.5).padding(.top, 12)
             }
             if !revealed, let hint = view.tutorial_hidden_hint {
-                Text(hint).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                TutorialHint(text: hint, pointing: .up)
             }
         } actions: {
             if revealed, let hint = view.tutorial_revealed_hint {
-                Text(hint).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                TutorialHint(text: hint, pointing: .down, arrowSize: 96)
             }
             if !revealed, let label = view.cant_listen_label {
                 Button(label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
@@ -137,16 +137,6 @@ struct FlashcardChallengeView: View {
         audio.stop()
         actions.rate(indicator, rating)
         if rating != .Again { audio.playEffect("success-\(Int.random(in: 1...3))") }
-    }
-}
-
-struct TutorialPromptText: View {
-    let prompt: TutorialPrompt
-
-    var body: some View {
-        Text(prompt.before + (prompt.target ?? "") + prompt.after)
-            .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
     }
 }
 
