@@ -6,15 +6,18 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use axum_extra::extract::Query;
-use language_utils::{
-    Language, TtsProvider, TtsRequest, audio_mime_type, tts_cache_filename, tts_cache_url,
-};
+use language_utils::{Language, TtsProvider, TtsRequest, audio_mime_type, tts_cache_filename};
 use postgrest::Postgrest;
 use serde::Deserialize;
+use std::sync::LazyLock;
 
 use crate::{
     deck_token, service_role_client, synthesize_checked_bytes, tts_cache, tts_verify::Transcribers,
 };
+
+// A deck makes hundreds of requests to the same cache origin. Reuse the
+// connection pool instead of paying DNS/TLS setup for every recording.
+static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 #[derive(Debug, Deserialize)]
 pub struct Params {
@@ -51,7 +54,7 @@ fn cache_control(verified: bool) -> &'static str {
 pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
     let token = params.d.clone();
     let request = params.request();
-    let http = reqwest::Client::new();
+    let http = &*HTTP;
     // Gemini is the deck voice (about an eighth of ElevenLabs' price per
     // recording), but a clip the app already verified with either voice is
     // free, so serve whichever the shared cache has before synthesizing.
@@ -60,12 +63,8 @@ pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
         &cache_filename,
         &tts_cache_filename(&request, &TtsProvider::ElevenLabs),
     ] {
-        if tts_cache::exists(&http, filename).await {
-            return Ok((
-                StatusCode::FOUND,
-                [(header::LOCATION, tts_cache_url(filename))],
-            )
-                .into_response());
+        if let Some(url) = tts_cache::existing_url(http, filename).await {
+            return Ok((StatusCode::FOUND, [(header::LOCATION, url)]).into_response());
         }
     }
 
@@ -109,7 +108,7 @@ pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
     // ElevenLabs is the only fallback: Google's voice would be a step down
     // for a card the learner keeps.
     let synthesized = synthesize_checked_bytes(
-        &http,
+        http,
         &request,
         TtsProvider::Gemini,
         &[TtsProvider::ElevenLabs],

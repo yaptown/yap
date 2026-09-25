@@ -22,6 +22,7 @@ try {
         import assert from "node:assert/strict";
         import { writeFileSync } from "node:fs";
         import path from "node:path";
+        import { unzipSync, strFromU8 } from "fflate";
         import { buildApkg } from ${JSON.stringify(path.join(frontend, "src/anki/apkg.ts"))};
         import { nextModificationTime } from ${JSON.stringify(path.join(frontend, "src/anki/apkg-client.ts"))};
         (${writeFixtures.toString()})((...args) => buildApkg(...args, nextModificationTime()), ${JSON.stringify(output)})
@@ -149,4 +150,36 @@ async function writeFixtures(buildApkg, output) {
   } finally {
     Date.now = realNow;
   }
+
+  // A slow first request must not hold the other seven workers idle.
+  const pending = new Map();
+  const started = [];
+  globalThis.fetch = url => new Promise(resolve => {
+    started.push(url);
+    pending.set(url, resolve);
+  });
+  const plan = { ...base, bundled: Array.from({ length: 10 }, (_, i) => ({
+    filename: `pool-${i}.mp3`, source: { type: "Tts", url: `https://mock.invalid/${i}` },
+  })) };
+  const progress = [];
+  const building = buildApkg(plan, () => assert.fail("only TTS"), value => progress.push(value));
+  assert.equal(started.length, 8, "bounded initial concurrency");
+  for (const i of [1, 2]) {
+    pending.get(`https://mock.invalid/${i}`)(new Response(wav));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(started.length, 8 + i, "replace a finished request without waiting for request zero");
+  }
+  // Finish out of order, with one failure. Media indices still follow the plan.
+  for (const i of [9, 8, 7, 6, 5, 4, 3, 0]) {
+    pending.get(`https://mock.invalid/${i}`)(i === 7 ? new Response("", { status: 503 }) : new Response(wav));
+  }
+  const blob = await building;
+  const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
+  assert.deepEqual(Object.values(JSON.parse(strFromU8(files.media))),
+    [0, 1, 2, 3, 4, 5, 6, 8, 9].map(i => `pool-${i}.wav`));
+  assert.deepEqual(progress.map(value => value.done), Array.from({ length: 11 }, (_, i) => i));
+  assert(progress.every(value => value.total === 10));
+  assert.equal(new Set(started).size, 10, "each request runs once");
+  await assert.rejects(buildApkg(base, () => undefined, () => {}), /Bundled media missing/);
+  console.log("Media pool: bounded concurrency, straggler refill, ordered output and failure handling passed");
 }

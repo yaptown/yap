@@ -111,41 +111,45 @@ export async function buildApkg(
   let done = 0;
   let mediaIndex = 0;
   onProgress({ done, total: plan.bundled.length });
-  // Eight at a time. The backend verifies deck audio with Cloudflare alone
-  // (720 Whisper requests a minute), so the ceiling is ElevenLabs' own
-  // concurrency limit, not the transcription gate.
+  // Keep eight requests in flight, rather than letting one slow synthesis
+  // stall an entire batch of cache hits. Keep the synthesis concurrency cap:
+  // cache misses can reach ElevenLabs, not just Cloudflare's Whisper gate.
   const concurrency = 8;
-  for (let start = 0; start < plan.bundled.length; start += concurrency) {
-    const batch = plan.bundled.slice(start, start + concurrency);
-    const results = await Promise.all(batch.map(async ({ filename, source }): Promise<Fetched> => {
+  const results: Fetched[] = new Array(plan.bundled.length);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(concurrency, plan.bundled.length) }, async () => {
+    while (next < plan.bundled.length) {
+      const index = next++;
+      const { filename, source } = plan.bundled[index];
       if (source.type !== "Tts") {
         const bytes = await fetchBundled(source);
         if (!bytes) throw new Error(`Bundled media missing: ${filename}`);
+        results[index] = { bytes, filename };
         onProgress({ done: ++done, total: plan.bundled.length });
-        return { bytes, filename };
+        continue;
       }
       try {
         const response = await fetch(source.url);
         if (!response.ok) throw new Error(`Audio request failed (${response.status})`);
         const bytes = new Uint8Array(await response.arrayBuffer());
         if (!bytes.length) throw new Error("Audio response was empty");
-        return { bytes, filename: audioFilename(filename, bytes) };
+        results[index] = { bytes, filename: audioFilename(filename, bytes) };
       } catch {
-        return undefined;
+        // An unavailable recording omits its audio and listening card.
       } finally {
         onProgress({ done: ++done, total: plan.bundled.length });
       }
-    }));
-    batch.forEach((item, index) => {
-      const result = results[index];
-      if (result) {
-        const key = String(mediaIndex++);
-        media[key] = result.filename;
-        files[key] = result.bytes;
-        audioFiles.set(item.filename, `[sound:${result.filename}]`);
-      }
-    });
-  }
+    }
+  }));
+  // Completion order must not change the package's media identities.
+  results.forEach((result, index) => {
+    if (result) {
+      const key = String(mediaIndex++);
+      media[key] = result.filename;
+      files[key] = result.bytes;
+      audioFiles.set(plan.bundled[index].filename, `[sound:${result.filename}]`);
+    }
+  });
   const audio = (filename: string): string => audioFiles.get(filename) ?? "";
   const SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
   const db = new SQL.Database();

@@ -2587,10 +2587,13 @@ impl Deck {
             let due_timestamp = ordered_float::NotNan::new(card_data.due_timestamp_ms()).unwrap();
             (due_timestamp, *card_indicator)
         };
-        due_cards.sort_by_key(sort_key);
-        due_but_banned_cards.sort_by_key(sort_key);
-        due_but_locked_cards.sort_by_key(sort_key);
-        future_cards.sort_by_key(sort_key);
+        // Computing a key looks up the card and converts its timestamp. In a
+        // simulation these queues are sorted after every answer; calculate each
+        // key once, not for every comparison (especially for future cards).
+        due_cards.sort_by_cached_key(sort_key);
+        due_but_banned_cards.sort_by_cached_key(sort_key);
+        due_but_locked_cards.sort_by_cached_key(sort_key);
+        future_cards.sort_by_cached_key(sort_key);
 
         ReviewInfo {
             due_cards,
