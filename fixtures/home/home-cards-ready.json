@@ -2,16 +2,19 @@
   "screen": "Home",
   "view": {
     "title": "Home",
+    "greeting_lead": "A little",
     "course_flag": "🇫🇷",
+    "course_name": "French",
+    "greeting_tail": ", every day.",
     "native_language": "English",
     "target_language": "French",
     "up_next": {
+      "eyebrow": "Up next · Translation",
       "headline": "Ziri peut partir.",
       "kind": "Translation",
       "action_label": "Review 2 cards",
       "due_count": 2,
-      "idle": null,
-      "eyebrow": "Up next · Translation"
+      "idle": null
     },
     "goal": {
       "title": "Advanced French Level 11",
@@ -128,9 +131,6 @@
       "title": "Find a word",
       "search_placeholder": "Search French or English"
     },
-    "due_count": 2,
-    "greeting_lead": "A little",
-    "course_name": "French",
-    "greeting_tail": ", every day."
+    "due_count": 2
   }
 }

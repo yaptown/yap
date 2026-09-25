@@ -2,15 +2,20 @@
   "screen": "Home",
   "view": {
     "title": "Home",
+    "greeting_lead": "A little",
     "course_flag": "🇫🇷",
+    "course_name": "French",
+    "greeting_tail": ", every day.",
     "native_language": "English",
     "target_language": "French",
     "up_next": {
+      "eyebrow": "Up next · Review",
       "headline": "All caught up!",
       "kind": "Other",
       "action_label": "Continue",
       "due_count": 0,
       "idle": {
+        "type": "Idle",
         "target_language": "French",
         "kind": "AllCaughtUp",
         "smart_add_label": null,
@@ -524,6 +529,28 @@
             }
           }
         ],
+        "next_due": {
+          "card_indicator": {
+            "type": "ListeningGram",
+            "gram": [
+              {
+                "Tok": {
+                  "text": "merci",
+                  "word_type": {
+                    "type": "Heteronym",
+                    "word": "merci",
+                    "lemma": "merci",
+                    "pos": "NOUN"
+                  }
+                }
+              }
+            ]
+          },
+          "due_timestamp_ms": 1790200658728.0,
+          "state": "review",
+          "card_text": "merci",
+          "card_subtitle": "listening"
+        },
         "curriculum_headline": {
           "before": "Soon you'll hit 10% on",
           "emphasis": "Advanced French Level 11",
@@ -655,37 +682,13 @@
         ],
         "progress": {
           "percent_known": 3.2445668809305177,
-          "caption": "3% known",
-          "all_available_learned": false
+          "all_available_learned": false,
+          "caption": "3% known"
         },
         "sentence_list_label": "Advanced French Level 11",
         "next_sentence_list": null,
-        "commit_curriculum": null,
-        "type": "Idle",
-        "next_due": {
-          "card_indicator": {
-            "type": "ListeningGram",
-            "gram": [
-              {
-                "Tok": {
-                  "text": "merci",
-                  "word_type": {
-                    "type": "Heteronym",
-                    "word": "merci",
-                    "lemma": "merci",
-                    "pos": "NOUN"
-                  }
-                }
-              }
-            ]
-          },
-          "due_timestamp_ms": 1790200658728.0,
-          "state": "review",
-          "card_text": "merci",
-          "card_subtitle": "listening"
-        }
-      },
-      "eyebrow": "Up next · Review"
+        "commit_curriculum": null
+      }
     },
     "goal": null,
     "week": {
@@ -792,9 +795,6 @@
       "title": "Find a word",
       "search_placeholder": "Search French or English"
     },
-    "due_count": 0,
-    "greeting_lead": "A little",
-    "course_name": "French",
-    "greeting_tail": ", every day."
+    "due_count": 0
   }
 }

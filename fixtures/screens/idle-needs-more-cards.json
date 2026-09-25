@@ -7,6 +7,7 @@
     "step": {
       "type": "Idle",
       "view": {
+        "type": "Idle",
         "target_language": "German",
         "kind": "NeedsMoreCards",
         "smart_add_label": "Add 2 cards",
@@ -17,7 +18,10 @@
           "smart_add_count": 2,
           "smart_add_regime": "SingleWord",
           "easy_cards_remaining": 0,
-          "preview": ["wurde", "zum"],
+          "preview": [
+            "wurde",
+            "zum"
+          ],
           "percent_known_after": 6.69397558648373,
           "smart_add_event": {
             "type": "Language",
@@ -209,6 +213,7 @@
             }
           }
         ],
+        "next_due": null,
         "curriculum_headline": {
           "before": "Soon you'll hit 5% on",
           "emphasis": "Core German Level 1",
@@ -306,7 +311,11 @@
           }
         ],
         "navigation": {
-          "categories": ["essential", "movie", "pimsleur"],
+          "categories": [
+            "essential",
+            "movie",
+            "pimsleur"
+          ],
           "selection": null,
           "selected_index": 0
         },
@@ -336,14 +345,12 @@
         ],
         "progress": {
           "percent_known": 3.352745698022571,
-          "caption": "3% known",
-          "all_available_learned": false
+          "all_available_learned": false,
+          "caption": "3% known"
         },
         "sentence_list_label": "Core German Level 1",
         "next_sentence_list": null,
-        "commit_curriculum": null,
-        "type": "Idle",
-        "next_due": null
+        "commit_curriculum": null
       }
     },
     "progress": 0.0,

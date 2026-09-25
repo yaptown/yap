@@ -90,7 +90,11 @@
     "curriculum": {
       "title": "Curriculum",
       "navigation": {
-        "categories": ["essential", "movie", "pimsleur"],
+        "categories": [
+          "essential",
+          "movie",
+          "pimsleur"
+        ],
         "selection": null,
         "selected_index": 0
       },
@@ -120,8 +124,8 @@
       ],
       "progress": {
         "percent_known": 3.2445668809305177,
-        "caption": "3% known",
-        "all_available_learned": false
+        "all_available_learned": false,
+        "caption": "3% known"
       },
       "sentence_list_label": "Advanced French Level 11",
       "next_sentence_list": null,

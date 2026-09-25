@@ -198,6 +198,7 @@
             ],
             "sense": null
           },
+          "primary_literal_indices": [],
           "second_chance": false
         },
         "transcription": null,
@@ -392,6 +393,7 @@
               ],
               "sense": null
             },
+            "primary_literal_indices": [],
             "second_chance": false
           },
           "course": {

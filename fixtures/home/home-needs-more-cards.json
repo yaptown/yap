@@ -2,15 +2,20 @@
   "screen": "Home",
   "view": {
     "title": "Home",
+    "greeting_lead": "A little",
     "course_flag": "🇩🇪",
+    "course_name": "German",
+    "greeting_tail": ", every day.",
     "native_language": "English",
     "target_language": "German",
     "up_next": {
+      "eyebrow": "Up next · Review",
       "headline": "Ready for more?",
       "kind": "Other",
       "action_label": "Continue",
       "due_count": 0,
       "idle": {
+        "type": "Idle",
         "target_language": "German",
         "kind": "NeedsMoreCards",
         "smart_add_label": "Add 2 cards",
@@ -216,6 +221,7 @@
             }
           }
         ],
+        "next_due": null,
         "curriculum_headline": {
           "before": "Soon you'll hit 5% on",
           "emphasis": "Core German Level 1",
@@ -347,16 +353,13 @@
         ],
         "progress": {
           "percent_known": 3.352745698022571,
-          "caption": "3% known",
-          "all_available_learned": false
+          "all_available_learned": false,
+          "caption": "3% known"
         },
         "sentence_list_label": "Core German Level 1",
         "next_sentence_list": null,
-        "commit_curriculum": null,
-        "type": "Idle",
-        "next_due": null
-      },
-      "eyebrow": "Up next · Review"
+        "commit_curriculum": null
+      }
     },
     "goal": {
       "title": "Core German Level 1",
@@ -473,9 +476,6 @@
       "title": "Find a word",
       "search_placeholder": "Search German or English"
     },
-    "due_count": 0,
-    "greeting_lead": "A little",
-    "course_name": "German",
-    "greeting_tail": ", every day."
+    "due_count": 0
   }
 }

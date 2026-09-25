@@ -2,15 +2,20 @@
   "screen": "Home",
   "view": {
     "title": "Home",
+    "greeting_lead": "A little",
     "course_flag": "🇮🇹",
+    "course_name": "Italian",
+    "greeting_tail": ", every day.",
     "native_language": "English",
     "target_language": "Italian",
     "up_next": {
+      "eyebrow": "Up next · Review",
       "headline": "Ready to start learning?",
       "kind": "Other",
       "action_label": "Continue",
       "due_count": 0,
       "idle": {
+        "type": "Idle",
         "target_language": "Italian",
         "kind": "FirstRun",
         "smart_add_label": "Start learning",
@@ -124,6 +129,7 @@
             }
           }
         ],
+        "next_due": null,
         "curriculum_headline": {
           "before": "Keep up the momentum on",
           "emphasis": "Basic Italian Level 3",
@@ -255,16 +261,13 @@
         ],
         "progress": {
           "percent_known": 0.0,
-          "caption": "0% known",
-          "all_available_learned": false
+          "all_available_learned": false,
+          "caption": "0% known"
         },
         "sentence_list_label": "Basic Italian Level 3",
         "next_sentence_list": null,
-        "commit_curriculum": null,
-        "type": "Idle",
-        "next_due": null
-      },
-      "eyebrow": "Up next · Review"
+        "commit_curriculum": null
+      }
     },
     "goal": {
       "title": "Basic Italian Level 3",
@@ -381,9 +384,6 @@
       "title": "Find a word",
       "search_placeholder": "Search Italian or English"
     },
-    "due_count": 0,
-    "greeting_lead": "A little",
-    "course_name": "Italian",
-    "greeting_tail": ", every day."
+    "due_count": 0
   }
 }

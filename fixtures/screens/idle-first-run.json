@@ -7,6 +7,7 @@
     "step": {
       "type": "Idle",
       "view": {
+        "type": "Idle",
         "target_language": "Italian",
         "kind": "FirstRun",
         "smart_add_label": "Start learning",
@@ -17,7 +18,9 @@
           "smart_add_count": 1,
           "smart_add_regime": "Easy",
           "easy_cards_remaining": 5,
-          "preview": ["probabilmente"],
+          "preview": [
+            "probabilmente"
+          ],
           "percent_known_after": 1.5813253012048192,
           "smart_add_event": {
             "type": "Language",
@@ -118,6 +121,7 @@
             }
           }
         ],
+        "next_due": null,
         "curriculum_headline": {
           "before": "Keep up the momentum on",
           "emphasis": "Basic Italian Level 3",
@@ -215,7 +219,11 @@
           }
         ],
         "navigation": {
-          "categories": ["essential", "movie", "pimsleur"],
+          "categories": [
+            "essential",
+            "movie",
+            "pimsleur"
+          ],
           "selection": null,
           "selected_index": 0
         },
@@ -245,14 +253,12 @@
         ],
         "progress": {
           "percent_known": 0.0,
-          "caption": "0% known",
-          "all_available_learned": false
+          "all_available_learned": false,
+          "caption": "0% known"
         },
         "sentence_list_label": "Basic Italian Level 3",
         "next_sentence_list": null,
-        "commit_curriculum": null,
-        "type": "Idle",
-        "next_due": null
+        "commit_curriculum": null
       }
     },
     "progress": 0.0,
