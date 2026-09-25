@@ -80,12 +80,8 @@ struct FlashcardChallengeView: View {
                 Button(label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
             }
             if canGrade {
-                HStack(spacing: 12) {
-                    Button { rate(.Again) } label: { Text(view.again_label).frame(maxWidth: .infinity) }
-                        .tint(Tokens.palette.destructive.color).foregroundStyle(Color.yapDestructiveForeground).keyboardShortcut(.leftArrow, modifiers: [])
-                    Button { rate(.Remembered) } label: { Text(view.remembered_label).frame(maxWidth: .infinity) }
-                        .keyboardShortcut(.rightArrow, modifiers: [])
-                }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(actions.submitting)
+                GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
+                    .disabled(actions.submitting)
             }
         }
         #if DEBUG

@@ -36,10 +36,8 @@ struct PronunciationChallengeView: View {
                 Text(prompt).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
         } actions: {
-            HStack(spacing: 12) {
-                Button { rate(.Again) } label: { Text(view.again_label).frame(maxWidth: .infinity) }.tint(Tokens.palette.destructive.color).foregroundStyle(Color.yapDestructiveForeground)
-                Button { rate(.Remembered) } label: { Text(view.remembered_label).frame(maxWidth: .infinity) }
-            }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(actions.submitting)
+            GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
+                .disabled(actions.submitting)
             Button(view.cant_speak_label) { actions.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
         }
         #if DEBUG
