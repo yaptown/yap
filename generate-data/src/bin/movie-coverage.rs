@@ -120,7 +120,7 @@ async fn main() -> Result<()> {
                         return Ok(None);
                     };
                     let now: HashSet<String> =
-                        subtitle_sentences_by_rules(&subtitles, target, rules)
+                        subtitle_sentences_by_rules(&subtitles, target, &movie.id, rules)
                             .into_iter()
                             .map(|s| cleanup_sentence(s, target))
                             .collect();
@@ -136,11 +136,12 @@ async fn main() -> Result<()> {
                     segmented.push(None);
                     continue;
                 };
-                let now: HashSet<String> = subtitle_sentences(&subtitles, target, &segmenter)
-                    .await?
-                    .into_iter()
-                    .map(|s| cleanup_sentence(s, target))
-                    .collect();
+                let now: HashSet<String> =
+                    subtitle_sentences(&subtitles, target, &movie.id, &segmenter)
+                        .await?
+                        .into_iter()
+                        .map(|s| cleanup_sentence(s, target))
+                        .collect();
                 segmented.push(Some((subtitles, now)));
             }
             segmented
@@ -154,7 +155,7 @@ async fn main() -> Result<()> {
         if let Some(needle) = &args.trace {
             match &segmenter {
                 Segmenter::Rules(rules) => {
-                    for passage in subtitle_passages(&subtitles) {
+                    for passage in subtitle_passages(&subtitles, target) {
                         if !passage.contains(needle.as_str()) {
                             continue;
                         }

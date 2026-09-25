@@ -550,6 +550,7 @@ pub async fn subtitle_sentences(
     movie_subtitles::sentences::keyed_sentences(
         &subtitle_lines(srt, language, imdb),
         language,
+        imdb,
         segmenter,
     )
     .await
@@ -1032,6 +1033,7 @@ fn existing_work(
         &current.inputs.subtitle_digest,
         &current.inputs.transcript_digest,
         &current.inputs.corrections,
+        &current.inputs.segmentation,
         current.gate.min_verbatim,
     ) else {
         return (Work::Redo("verbatim measurement missing or stale"), None);

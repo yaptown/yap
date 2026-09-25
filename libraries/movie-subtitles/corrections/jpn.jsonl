@@ -182,7 +182,7 @@
 {"kind":"spelling","imdb":"tt8075192","cue":"がわいいよ","from":"が","to":"か","reason":"The surrounding cues are about something cute, and the standard phrase is 「かわいいよ」. The audio decode also supports か rather than が."}
 {"kind":"spelling","imdb":"tt8075192","cue":"でも おばあちゃんいは 今度 話す","from":"い","to":"に","reason":"「おばあちゃんいは」は不自然な誤記です。この文では「おばあちゃんには」が自然で、後続の話し言葉も「に」を示しています。"}
 {"kind":"spelling","imdb":"tt8075192","cue":"どおりで 最近 見かけないと思った","from":"お","to":"う","reason":"この文脈の「どうりで」は「なるほど、それで」の意味で、通常「どうりで」と書きます。発音だけでは「お」と「う」の表記は区別できませんが、字幕の「どおりで」は綴りの誤りです。"}
-{"kind":"spelling","imdb":"tt8075192","cue":"（治）おい ほら セミ待って 風呂行け 風呂行け","from":"待","to":"持","reason":"「セミ持って風呂行け」は「蝉を持って風呂へ行け」という自然な指示です。字幕の「待って」では文脈に合わず、 transcriptの「持って」が適切です。"}
+{"kind":"spelling","imdb":"tt8075192","cue":"おい ほら セミ待って 風呂行け 風呂行け","from":"待","to":"持","reason":"「セミ持って風呂行け」は「蝉を持って風呂へ行け」という自然な指示です。字幕の「待って」では文脈に合わず、 transcriptの「持って」が適切です。"}
 {"kind":"spelling","imdb":"tt9426210","cue":"お前もしようもないこと グズグズ考えてねえで","from":"よ","to":"ょ","reason":"「しょうもないこと」は「つまらないこと」を意味する定型表現なので、小さい「ょ」が必要です。"}
 {"kind":"spelling","imdb":"tt9426210","cue":"すいませーん 電話した森鴨です","from":"鴨","to":"島","reason":"The audio supports “Morishima” (/shima/), not “Morikamo.” Replacing 鴨 with 島 gives the plausible surname 森島 and matches the transcript."}
 {"kind":"audio_mismatch","imdb":"tt9426210","sentence":"それって… あ！","reason":"The subtitle’s 「あ！」 is a natural interjection, but both the transcript and heard IPA indicate a different sound at the end (approximately 「おき」), not 「あ」. The exact spoken word is unclear, so I would not substitute a guessed spelling."}

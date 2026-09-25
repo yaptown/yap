@@ -9,6 +9,7 @@ use futures::StreamExt;
 use gcp_auth::TokenProvider;
 use html_escape::decode_html_entities;
 use language_utils::Language;
+use movie_subtitles::llm_segment::batch_jobs::SMALL_BATCH_THRESHOLD;
 use rand::RngExt;
 use std::collections::VecDeque;
 use std::sync::Arc;
@@ -185,6 +186,7 @@ impl Translator {
                 // guards, before any request is made).
                 let client = ChatClient::from_env(&model)
                     .context("OPENAI_API_KEY not set for the OpenAI translation backend")?
+                    .with_small_batch_threshold(SMALL_BATCH_THRESHOLD)
                     .with_reasoning_effort("low");
                 Backend::OpenAi {
                     client: Box::new(client),

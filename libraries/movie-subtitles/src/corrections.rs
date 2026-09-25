@@ -6,6 +6,8 @@ use std::{collections::BTreeMap, ops::Range, path::Path, sync::LazyLock};
 use anyhow::{Context, Result};
 use language_utils::Language;
 use serde::{Deserialize, Serialize};
+use unicode_general_category::{get_general_category, GeneralCategory};
+use unicode_normalization::UnicodeNormalization;
 
 use crate::SubtitleLine;
 
@@ -30,6 +32,18 @@ pub enum Correction {
         to: String,
         reason: String,
     },
+    Proofread {
+        imdb: String,
+        cue: String,
+        input: String,
+        corrected: String,
+        reason: String,
+    },
+    Incoherent {
+        imdb: String,
+        sentence: String,
+        reason: String,
+    },
     AudioMismatch {
         imdb: String,
         sentence: String,
@@ -40,7 +54,10 @@ pub enum Correction {
 impl Correction {
     pub fn imdb(&self) -> &str {
         match self {
-            Self::Spelling { imdb, .. } | Self::AudioMismatch { imdb, .. } => imdb,
+            Self::Spelling { imdb, .. }
+            | Self::Proofread { imdb, .. }
+            | Self::Incoherent { imdb, .. }
+            | Self::AudioMismatch { imdb, .. } => imdb,
         }
     }
 
@@ -49,6 +66,8 @@ impl Correction {
             Self::Spelling {
                 imdb, cue, from, ..
             } => (imdb, cue, "spelling", from),
+            Self::Proofread { imdb, cue, .. } => (imdb, cue, "proofread", ""),
+            Self::Incoherent { imdb, sentence, .. } => (imdb, sentence, "incoherent", ""),
             Self::AudioMismatch { imdb, sentence, .. } => (imdb, sentence, "audio_mismatch", ""),
         }
     }
@@ -123,6 +142,27 @@ pub fn audio_mismatch(language: Language, imdb: &str, sentence: &str) -> bool {
     film_entries(language, imdb).any(|entry| matches!(entry, Correction::AudioMismatch { sentence: rejected, .. } if rejected == sentence))
 }
 
+/// Sentence keys are the final course spelling, after cue edits and cleanup.
+/// A later text fix naturally stops matching an obsolete exclusion.
+pub(crate) fn apply_sentence_flags(
+    sentences: &mut [crate::sentences::KeyedSentence],
+    language: Language,
+    imdb: &str,
+) {
+    apply_sentence_flag_entries(sentences, &film_entries(language, imdb).collect::<Vec<_>>());
+}
+
+fn apply_sentence_flag_entries(
+    sentences: &mut [crate::sentences::KeyedSentence],
+    entries: &[&Correction],
+) {
+    for sentence in sentences {
+        if entries.iter().any(|entry| matches!(entry, Correction::Incoherent { sentence: rejected, .. } if rejected == &sentence.sentence)) {
+            sentence.course_worthy = false;
+        }
+    }
+}
+
 /// Whether a corpus language code compares text character by character
 /// rather than word by word. The one list both the subtitle↔transcript matcher
 /// and the overlay use, so a flagged run and its replacement agree on units.
@@ -168,6 +208,96 @@ pub fn unique_occurrence(text: &str, from: &str, chars: bool) -> Option<Range<us
     Some(start..start + value.len())
 }
 
+/// A sentence or clause mark, folded to one class per kind across scripts, so
+/// 「？」→「。」 is a boundary change while ?→？ (width) is not.
+pub fn sentence_mark(ch: char) -> Option<char> {
+    Some(match ch {
+        '.' | '。' | '．' | '।' | '॥' => '.',
+        ',' | '，' | '、' => ',',
+        '!' | '！' => '!',
+        '?' | '？' => '?',
+        ';' | '；' => ';',
+        ':' | '：' => ':',
+        '…' | '♪' | '♫' | '#' => ch,
+        _ => return None,
+    })
+}
+
+/// Compare only what the course's orthographic rules allow to change.
+/// Never use compatibility normalization: it changes Thai vowels and CJK glyphs.
+pub fn skeleton(text: &str, language: Language) -> String {
+    let normalized: String = match language {
+        Language::English
+        | Language::French
+        | Language::SpanishLatinAmerican
+        | Language::SpanishPeninsular
+        | Language::PortugueseBrazilian
+        | Language::PortugueseEuropean
+        | Language::Italian
+        | Language::German => text
+            .nfd()
+            .filter(|&ch| get_general_category(ch) != GeneralCategory::NonspacingMark)
+            .collect(),
+        Language::Russian => text.nfd().filter(|&ch| ch != '\u{0301}').nfc().collect(),
+        Language::Hindi => text
+            .nfc()
+            .filter(|&ch| !matches!(ch, '\u{0901}' | '\u{0902}'))
+            .collect(),
+        Language::Korean => text.nfc().collect(),
+        Language::Thai
+        | Language::Japanese
+        | Language::ChineseSimplified
+        | Language::ChineseTraditional => text.to_owned(),
+    };
+    // Everything is frozen except what orthography may touch: spacing,
+    // hyphens and dashes, apostrophes and quotes, Spanish ¿¡, and the
+    // sentence marks (which the proofreader pins by position instead). So a
+    // "27%" or "€" can no more change than a letter.
+    let skeleton: String = normalized
+        .chars()
+        .filter(|&ch| {
+            use GeneralCategory::*;
+            !(ch.is_whitespace()
+                || matches!(
+                    get_general_category(ch),
+                    DashPunctuation | InitialPunctuation | FinalPunctuation
+                )
+                || matches!(ch, '\'' | '"' | '¿' | '¡')
+                || sentence_mark(ch).is_some())
+        })
+        .flat_map(char::to_lowercase)
+        .map(|ch| {
+            if language == Language::Russian && ch == 'ё' {
+                'е'
+            } else {
+                ch
+            }
+        })
+        .collect();
+    match language {
+        Language::English
+        | Language::French
+        | Language::SpanishLatinAmerican
+        | Language::SpanishPeninsular
+        | Language::PortugueseBrazilian
+        | Language::PortugueseEuropean
+        | Language::Italian
+        | Language::German => skeleton.replace('œ', "oe").replace('æ', "ae"),
+        _ => skeleton,
+    }
+}
+
+/// The proofreader judges spelling-only input, never its own previous output.
+pub fn apply_spelling(lines: &mut [SubtitleLine], language: Language, imdb: &str) {
+    apply_entries(
+        lines,
+        uses_chars(language.code()),
+        &film_entries(language, imdb)
+            .filter(|entry| matches!(entry, Correction::Spelling { .. }))
+            .collect::<Vec<_>>(),
+    );
+}
+
 fn apply_entries(lines: &mut [SubtitleLine], chars: bool, entries: &[&Correction]) {
     for line in lines {
         // All keys refer to the original cleaned cue, even when two separately
@@ -188,8 +318,22 @@ fn apply_entries(lines: &mut [SubtitleLine], chars: bool, entries: &[&Correction
         if edits.windows(2).any(|pair| pair[0].0.end > pair[1].0.start) {
             continue;
         }
+        let proofread = entries.iter().find_map(|entry| match entry {
+            Correction::Proofread {
+                cue,
+                input,
+                corrected,
+                ..
+            } if cue == original => Some((input, corrected)),
+            _ => None,
+        });
         for (range, to) in edits.into_iter().rev() {
             line.sentence.replace_range(range, to);
+        }
+        if let Some((input, corrected)) = proofread {
+            if input == &line.sentence {
+                line.sentence.clone_from(corrected);
+            }
         }
     }
 }
@@ -250,6 +394,154 @@ mod tests {
         assert_eq!(merged, vec![first, new]);
         assert!(film_digest(Language::French, "not-a-film").is_empty());
     }
+    #[test]
+    fn orthography_skeleton_keeps_letters_and_spacing_marks() {
+        for (input, corrected) in [
+            ("fais tu ?", "fais-tu ?"),
+            ("A tout", "À tout"),
+            ("donde", "dónde"),
+            ("jusque là", "jusque-là"),
+            ("c est", "c'est"),
+        ] {
+            assert_eq!(
+                skeleton(input, Language::French),
+                skeleton(corrected, Language::French)
+            );
+        }
+        for (input, corrected) in [
+            ("tu", "toi"),
+            ("suffit", "suffi"),
+            ("et", "est"),
+            ("क", "का"),
+        ] {
+            assert_ne!(
+                skeleton(input, Language::Hindi),
+                skeleton(corrected, Language::Hindi)
+            );
+        }
+    }
+
+    #[test]
+    fn script_specific_guards_preserve_meaningful_letters_and_marks() {
+        for (language, a, b) in [
+            (Language::French, "sœur", "soeur"),
+            (Language::French, "Æ", "ae"),
+            (Language::Russian, "всё", "все"),
+            (Language::Russian, "за́ рубежом", "зарубежом"),
+            (Language::Hindi, "मे", "में"),
+            (Language::Hindi, "हां", "हाँ"),
+            (Language::Korean, "하는거야", "하는 거야"),
+            (Language::Thai, "ครอบ ครัว", "ครอบครัว"),
+            (Language::Japanese, "”名前”", "“名前”"),
+        ] {
+            assert_eq!(skeleton(a, language), skeleton(b, language));
+        }
+        for (language, a, b) in [
+            (Language::German, "ß", "ss"),
+            (Language::Russian, "й", "и"),
+            (Language::Russian, "ь", "ъ"),
+            (Language::Hindi, "कि", "की"),
+            (Language::Hindi, "क", "क़"),
+            (Language::Hindi, "क", "क्"),
+            (Language::Thai, "ค", "คี"),
+            (Language::Thai, "ๆ", ""),
+            (Language::Thai, "ฯ", ""),
+            (Language::Thai, "ำ", "ํา"),
+            (Language::Japanese, "神", "神"),
+            (Language::ChineseSimplified, "什麽", "什么"),
+            (Language::Korean, "가", "까"),
+        ] {
+            assert_ne!(skeleton(a, language), skeleton(b, language));
+        }
+    }
+
+    fn proofread(input: &str, corrected: &str) -> Correction {
+        Correction::Proofread {
+            imdb: "tt1".into(),
+            cue: "déposé moi là".into(),
+            input: input.into(),
+            corrected: corrected.into(),
+            reason: "hyphen".into(),
+        }
+    }
+
+    #[test]
+    fn proofread_follows_spelling_and_stale_input_is_skipped() {
+        for (input, expected) in [
+            ("déposer moi là", "déposer-moi là"),
+            ("déposé moi là", "déposer moi là"),
+        ] {
+            let mut lines = vec![SubtitleLine {
+                sentence: "déposé moi là".into(),
+                start_ms: 0,
+                end_ms: 1,
+            }];
+            apply_entries(
+                &mut lines,
+                false,
+                &[
+                    &proofread(input, "déposer-moi là"),
+                    &spelling("déposé moi là", "déposé", "déposer"),
+                ],
+            );
+            assert_eq!(lines[0].sentence, expected);
+        }
+    }
+
+    #[test]
+    fn proofread_merge_upserts_by_raw_cue_not_input() {
+        let old = proofread("old input", "old correction");
+        let new = proofread("new input", "new correction");
+        let spelling = spelling("déposé moi là", "déposé", "déposer");
+        let merged = merge(vec![old, spelling.clone()], vec![new.clone()]);
+        assert_eq!(merged.len(), 2);
+        assert!(merged.contains(&spelling));
+        assert!(merged.contains(&new));
+        assert_eq!(
+            parse(&serde_json::to_string(&new).unwrap()).unwrap(),
+            vec![new]
+        );
+    }
+
+    #[test]
+    fn incoherence_excludes_both_segmentation_paths_without_changing_text() {
+        let lines = vec![SubtitleLine {
+            sentence: "Bonjour bonjour.".into(),
+            start_ms: 0,
+            end_ms: 1,
+        }];
+        let flag = Correction::Incoherent {
+            imdb: "tt1".into(),
+            sentence: "Bonjour bonjour.".into(),
+            reason: "test flag".into(),
+        };
+        let rules = crate::sentences::keyed_sentences_by_rules(
+            &lines,
+            Language::French,
+            "tt1",
+            &crate::segment::RuleSegmenter::PerCue,
+        );
+        let splits = crate::sentences::keyed_sentences_from_splits(
+            &lines,
+            &[crate::llm_segment::CueSplit {
+                sentences: vec!["Bonjour bonjour.".into()],
+                unfinished: false,
+            }],
+            Language::French,
+            "tt1",
+        );
+        for mut sentences in [rules, splits] {
+            assert!(sentences[0].course_worthy);
+            apply_sentence_flag_entries(&mut sentences, &[&flag]);
+            assert!(!sentences[0].course_worthy);
+            assert_eq!(sentences[0].sentence, "Bonjour bonjour.");
+            sentences[0].sentence = "Bonjour.".into();
+            sentences[0].course_worthy = true;
+            apply_sentence_flag_entries(&mut sentences, &[&flag]);
+            assert!(sentences[0].course_worthy);
+        }
+    }
+
     #[test]
     fn multiple_edits_use_original_cue_key() {
         let mut lines = vec![SubtitleLine {

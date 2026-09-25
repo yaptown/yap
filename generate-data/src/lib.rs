@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod db_info;
 
+use movie_subtitles::llm_segment::batch_jobs::SMALL_BATCH_THRESHOLD;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static CACHE_ONLY: AtomicBool = AtomicBool::new(false);
@@ -114,10 +115,10 @@ impl StageTimer {
 fn base_chat_client(model: &str) -> tysm::chat_completions::ChatClient {
     let client = tysm::chat_completions::ChatClient::from_env(model)
         .unwrap()
-        .with_cache_directory("./.cache");
+        .with_cache_directory("./.cache")
+        .with_small_batch_threshold(SMALL_BATCH_THRESHOLD);
     if movie_subtitles::llm_segment::no_batch() {
-        // Every batch is "small", so tysm sends its cache misses live.
-        client.with_small_batch_threshold(usize::MAX)
+        client.with_no_batch()
     } else {
         client
     }

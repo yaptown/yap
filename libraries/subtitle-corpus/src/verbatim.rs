@@ -174,6 +174,7 @@ pub struct Report {
     pub transcript_digest: String,
     #[serde(default)]
     pub corrections_digest: String,
+    pub segmentation: String,
     pub min_fraction: f64,
     #[serde(flatten)]
     pub measure: Measure,
@@ -333,6 +334,7 @@ pub fn matching(
     subtitle_digest: &str,
     transcript_digest: &str,
     corrections_digest: &str,
+    segmentation: &str,
     min_fraction: f64,
 ) -> Option<Report> {
     let mut report = stored(dir)?;
@@ -340,6 +342,7 @@ pub fn matching(
         || report.subtitle_digest != subtitle_digest
         || report.transcript_digest != transcript_digest
         || report.corrections_digest != corrections_digest
+        || report.segmentation != segmentation
     {
         return None;
     }
@@ -361,11 +364,13 @@ pub async fn check(
     let transcript_digest = source_digest(&transcript_path).context("transcript digest")?;
     let imdb = dir.file_name().unwrap().to_str().unwrap();
     let corrections_digest = movie_subtitles::corrections::film_digest(language, imdb);
+    let segmentation = movie_subtitles::segment::provenance(language);
     if let Some(report) = matching(
         dir,
         &subtitle_digest,
         &transcript_digest,
         &corrections_digest,
+        &segmentation,
         min_fraction,
     ) {
         return Ok(report);
@@ -378,6 +383,7 @@ pub async fn check(
         subtitle_digest,
         transcript_digest,
         corrections_digest,
+        segmentation,
         min_fraction,
         measure,
     };

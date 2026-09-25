@@ -696,15 +696,14 @@ pub(crate) fn current_verdict(
     use crate::{transcript::source_digest, verbatim};
     let subtitle = source_digest(&dir.join("subtitle.srt")).ok()?;
     let transcript = source_digest(&dir.join("transcript.jsonl")).ok()?;
+    let language = language_utils::Language::from_code(course)?;
     Some(
         verbatim::matching(
             dir,
             &subtitle,
             &transcript,
-            &movie_subtitles::corrections::film_digest(
-                language_utils::Language::from_code(course)?,
-                dir.file_name()?.to_str()?,
-            ),
+            &movie_subtitles::corrections::film_digest(language, dir.file_name()?.to_str()?),
+            &movie_subtitles::segment::provenance(language),
             verbatim::min_fraction(course),
         )?
         .measure

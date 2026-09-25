@@ -415,7 +415,7 @@ async fn judge(candidates: &[Candidate]) -> Result<Vec<Judged<'_>>> {
     let client = ChatClient::from_env(MODEL)?
         .with_cache_directory("./.cache")
         .with_reasoning_effort("medium")
-        .with_small_batch_threshold(usize::MAX);
+        .with_no_batch();
     let chunk_len = candidates.len().div_ceil(LIVE_CALLS);
     let jobs = candidates.chunks(chunk_len).map(|chunk| {
         client.batch_chat_with_system_prompt_fn::<_, _, Judgment>(

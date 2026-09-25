@@ -3871,7 +3871,7 @@ dependencies = [
 [[package]]
 name = "model-prices"
 version = "0.1.1"
-source = "git+https://github.com/anchpop/tysm.git?rev=9086b26cbc1f66d78d90cc248cbaf935af72b035#9086b26cbc1f66d78d90cc248cbaf935af72b035"
+source = "git+https://github.com/anchpop/tysm.git?rev=f6d4ab3b4d3ec8266235a5134aae8cc474f4cc34#f6d4ab3b4d3ec8266235a5134aae8cc474f4cc34"
 
 [[package]]
 name = "monostate"
@@ -3922,7 +3922,11 @@ dependencies = [
  "serde",
  "serde_json",
  "subparse",
+ "tokio",
  "tysm",
+ "unicode-general-category",
+ "unicode-normalization",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -7037,8 +7041,8 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "tysm"
-version = "0.22.1"
-source = "git+https://github.com/anchpop/tysm.git?rev=9086b26cbc1f66d78d90cc248cbaf935af72b035#9086b26cbc1f66d78d90cc248cbaf935af72b035"
+version = "0.24.0"
+source = "git+https://github.com/anchpop/tysm.git?rev=f6d4ab3b4d3ec8266235a5134aae8cc474f4cc34#f6d4ab3b4d3ec8266235a5134aae8cc474f4cc34"
 dependencies = [
  "base64 0.22.1",
  "dashmap",

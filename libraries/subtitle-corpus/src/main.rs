@@ -35,6 +35,8 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command_ {
+    /// Proofread orthography and flag incoherent course sentences.
+    Proofread(subtitle_corpus::proofread::Options),
     /// Detect single-word disagreements and review spelling versus audio mismatches.
     WordCheck {
         #[arg(long, default_value = "/data/andrep/subtitle-corpus")]
@@ -1641,6 +1643,7 @@ async fn segment_all(out: PathBuf, all: bool, limit: usize, imdb: Option<String>
             lines.as_slice(),
             splits,
             *language,
+            &m.imdb_id,
         );
         let worthy = keyed.iter().filter(|k| k.course_worthy).count();
         println!(
@@ -2925,6 +2928,7 @@ fn main() -> Result<()> {
     // variable away from a run that quietly verifies nothing.
     dotenvy::dotenv().ok();
     match Args::parse().command {
+        Command_::Proofread(options) => subtitle_corpus::proofread::run(options),
         Command_::WordCheck {
             out,
             language,

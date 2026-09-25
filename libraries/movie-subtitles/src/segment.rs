@@ -103,11 +103,18 @@ impl SubtitleSegmenter {
 /// The rules half is versioned by hand: bump it when the passage builder or
 /// the sentence filter changes what comes out.
 pub fn provenance(language: Language) -> String {
-    if crate::llm_segment::uses_llm(language) {
+    let segmentation = if crate::llm_segment::uses_llm(language) {
         crate::llm_segment::provenance()
+    } else if language == Language::German {
+        "rules/3".to_string()
     } else {
         "rules/2".to_string()
-    }
+    };
+    format!(
+        "cleanup/{}/sentences/{}/{segmentation}",
+        crate::CLEANUP_VERSION,
+        crate::sentences::SENTENCE_VERSION
+    )
 }
 
 impl RuleSegmenter {
@@ -149,11 +156,120 @@ impl RuleSegmenter {
                 if cursor < chars.len() {
                     claim_gap(&mut out, cursor, chars.len());
                 }
-                out
+                if *language == lexide::Language::German {
+                    merge_german_ordinals(out)
+                } else {
+                    out
+                }
             }
             Self::PerCue => passage.lines().map(str::to_string).collect(),
         }
     }
+}
+
+/// An ordinal's period is not a boundary, including when the display cue ends
+/// there. Constrain uppercase lookahead so real boundaries after numbers survive.
+fn german_ordinal_continues(before: &str, after: &str) -> bool {
+    let Some(body) = before.trim_end().strip_suffix('.') else {
+        return false;
+    };
+    let mut words = body.split_whitespace().rev();
+    let Some(digits) = words.next() else {
+        return false;
+    };
+    if !digits.chars().all(|ch| ch.is_ascii_digit()) {
+        return false;
+    }
+    let next = after
+        .trim_start()
+        .split(|ch: char| !ch.is_alphabetic())
+        .next()
+        .unwrap_or("");
+    if next.chars().next().is_some_and(char::is_lowercase)
+        || matches!(
+            next,
+            "Januar"
+                | "Februar"
+                | "März"
+                | "April"
+                | "Mai"
+                | "Juni"
+                | "Juli"
+                | "August"
+                | "September"
+                | "Oktober"
+                | "November"
+                | "Dezember"
+        )
+    {
+        return true;
+    }
+    // German capitalizes nouns and sentence starts alike, so a capitalized next
+    // word only continues an ordinal phrase ("im 2. Stock") when it isn't a
+    // common sentence opener: "Das ist schon der 32. Wir müssen…" ends there.
+    const SENTENCE_OPENERS: &[&str] = &[
+        "Ich", "Du", "Er", "Sie", "Es", "Wir", "Ihr", "Man", "Das", "Die", "Der", "Dies", "Diese",
+        "Dieser", "Und", "Aber", "Oder", "Denn", "Dann", "Da", "Doch", "Also", "Ja", "Nein",
+        "Nicht", "Kein", "Keine", "Was", "Wie", "Wo", "Wer", "Warum", "Wann", "Wieso", "Ein",
+        "Eine", "Mein", "Dein", "Sein", "Unser", "Hier", "Dort", "Jetzt", "Nun", "So", "Zu", "Na",
+        "Oh", "Ach", "Gut", "Okay", "Bitte", "Danke", "Hey", "Hallo",
+    ];
+    if SENTENCE_OPENERS.contains(&next) {
+        return false;
+    }
+    let previous = words.next().unwrap_or("").to_lowercase();
+    matches!(
+        previous.as_str(),
+        "am" | "im"
+            | "zum"
+            | "zur"
+            | "vom"
+            | "beim"
+            | "ins"
+            | "ans"
+            | "der"
+            | "die"
+            | "das"
+            | "dem"
+            | "den"
+            | "des"
+            | "ein"
+            | "eine"
+            | "einem"
+            | "einen"
+            | "einer"
+            | "eines"
+            // Not bare prepositions (ab, bis, seit, vor, nach, zwischen): they
+            // take plain numbers as often as ordinals ("bis 1973.", "1 bis 9."),
+            // and a real sentence end follows those. "ab dem 18." is still
+            // caught by its article.
+            | "jeden"
+            | "jede"
+            | "jedes"
+    ) || ["sein", "ihr", "mein", "dein", "unser", "euer", "eur"]
+        .iter()
+        .any(|stem| {
+            previous
+                .strip_prefix(stem)
+                .is_some_and(|ending| matches!(ending, "" | "e" | "em" | "en" | "er" | "es"))
+        })
+}
+
+fn merge_german_ordinals(sentences: Vec<String>) -> Vec<String> {
+    let mut joined: Vec<String> = Vec::new();
+    for sentence in sentences {
+        if joined
+            .last()
+            .is_some_and(|previous| german_ordinal_continues(previous, &sentence))
+        {
+            let previous = joined.last_mut().unwrap();
+            previous.push(' ');
+            previous.push_str(&sentence);
+        } else {
+            joined.push(sentence);
+        }
+    }
+    joined
 }
 
 /// Could this passage hold more than one sentence? True when a terminal mark
@@ -187,8 +303,8 @@ pub(crate) fn speaker_turns(cue: &str) -> Vec<String> {
 /// small: the segmenter is trained on prose, and given a whole scene of
 /// staccato dialogue it will happily keep `Si. Non !` as one sentence, so it
 /// is only ever asked to split what a single turn contains.
-pub fn subtitle_passages(subtitles: &[SubtitleLine]) -> Vec<String> {
-    timed_passages(subtitles)
+pub fn subtitle_passages(subtitles: &[SubtitleLine], language: Language) -> Vec<String> {
+    timed_passages(subtitles, language)
         .into_iter()
         .map(|p| p.text)
         .collect()
@@ -205,7 +321,7 @@ pub struct Passage {
 /// [`subtitle_passages`], keeping each passage's cue timing — a consumer
 /// that goes back to the audio (the subtitle corpus's clip mapping) needs
 /// to know roughly *when* a passage was spoken.
-pub fn timed_passages(subtitles: &[SubtitleLine]) -> Vec<Passage> {
+pub fn timed_passages(subtitles: &[SubtitleLine], language: Language) -> Vec<Passage> {
     let mut passages = Vec::new();
     let mut passage = Passage {
         text: String::new(),
@@ -236,14 +352,18 @@ pub fn timed_passages(subtitles: &[SubtitleLine]) -> Vec<Passage> {
             // an unpunctuated caption followed by a capitalised line — starts
             // its own passage, so the segmenter only ever sees text that
             // belongs together.
+            // German ordinal periods are not closing punctuation; their noun
+            // or month may start with a capital even across display cues.
             let continues = t == 0
                 && !passage.text.is_empty()
-                && !passage.text.ends_with(TERMINALS)
                 && cue.start_ms.saturating_sub(prev_end_ms) <= PASSAGE_GAP_MS
-                && turn
-                    .chars()
-                    .next()
-                    .is_some_and(|c| !c.is_uppercase() && !c.is_numeric());
+                && ((language == Language::German
+                    && german_ordinal_continues(&passage.text, &turn))
+                    || (!passage.text.ends_with(TERMINALS)
+                        && turn
+                            .chars()
+                            .next()
+                            .is_some_and(|c| !c.is_uppercase() && !c.is_numeric())));
             if continues {
                 passage.text.push(' ');
             } else {
@@ -268,6 +388,61 @@ mod tests {
             sentence: sentence.to_string(),
             start_ms,
             end_ms,
+        }
+    }
+
+    #[test]
+    fn german_ordinals_are_not_sentence_or_cue_boundaries() {
+        for (before, after) in [
+            (
+                "Laut der Notverordnung, die ab dem 18.",
+                "Mai gilt, ist das Kriegsrecht in Kraft.",
+            ),
+            ("Er wohnt im 2.", "Stock."),
+            ("Das war der 3.", "Versuch."),
+            ("Schon zum 100.", "Mal."),
+            ("Wir wurden 3.", "und waren zufrieden."),
+            ("Das ist mein 3.", "Versuch."),
+        ] {
+            let expected = format!("{before} {after}");
+            assert_eq!(
+                merge_german_ordinals(vec![before.into(), after.into()]),
+                [expected.clone()]
+            );
+            let cues = [cue(before, 0, 1000), cue(after, 1100, 2000)];
+            let joined = timed_passages(&cues, Language::German);
+            assert_eq!(joined.len(), 1);
+            assert_eq!(joined[0].text, expected);
+            assert_eq!((joined[0].start_ms, joined[0].end_ms), (0, 2000));
+        }
+        // Cardinals after a preposition end real sentences (tt27847051, tt6751668).
+        for pair in [
+            ["Er kam um 10.", "Dann ging er."],
+            ["Das ging so bis 1973.", "Zu viele Tote."],
+            ["Versuch die Ziffern 1 bis 9.", "Hab ich schon."],
+            // A complete ordinal ends a sentence when a new one opens (tt1954470).
+            [
+                "Das ist schon der 32.",
+                "Wir müssen die ganze Grube füllen.",
+            ],
+        ] {
+            let pair: Vec<String> = pair.map(str::to_owned).to_vec();
+            assert_eq!(merge_german_ordinals(pair.clone()), pair);
+        }
+        let separate = vec!["Er kam um 10.".to_owned(), "Dann ging er.".to_owned()];
+        assert_eq!(
+            timed_passages(
+                &[cue(&separate[0], 0, 1000), cue(&separate[1], 1100, 2000)],
+                Language::German
+            )
+            .len(),
+            2
+        );
+        assert_ne!(provenance(Language::German), provenance(Language::French));
+        for language in [Language::French, Language::Korean] {
+            assert!(
+                provenance(language).starts_with(&format!("cleanup/{}/", crate::CLEANUP_VERSION))
+            );
         }
     }
 
@@ -299,7 +474,7 @@ mod tests {
             cue("bois.", 21_100, 22_000),
         ];
         assert_eq!(
-            subtitle_passages(&cues),
+            subtitle_passages(&cues, Language::French),
             vec![
                 "Il était entouré de vaillants chevaliers qui croyaient en Dieu et aux forces du Mal.",
                 // An unpunctuated caption followed by a capitalised line is
@@ -317,7 +492,7 @@ mod tests {
             cue("Mais je veux bien vous donner votre chance,", 0, 1_000),
             cue("mais va falloir bosser.", 1_000 + PASSAGE_GAP_MS + 1, 5_000),
         ];
-        assert_eq!(subtitle_passages(&cues).len(), 2);
+        assert_eq!(subtitle_passages(&cues, Language::French).len(), 2);
     }
 
     #[test]
@@ -327,7 +502,7 @@ mod tests {
             cue("- mais va falloir bosser. - oui.", 1_100, 2_000),
         ];
         assert_eq!(
-            subtitle_passages(&cues),
+            subtitle_passages(&cues, Language::French),
             vec![
                 "Je veux bien vous donner votre chance, mais va falloir bosser.",
                 "oui."

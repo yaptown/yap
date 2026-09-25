@@ -22,7 +22,7 @@ Yap.Town is a language learning application with a Rust-based backend and React 
 - **yap-frontend-reducers**: Pure per-challenge state machines (state + events → new state + effects-as-data, plus a `view(state)` function) shared by both frontends and, eventually, the MCP widget
 - **generate-data**: Rust binary that extracts sentences from Anki decks and generates dictionary data using Python NLP
 - **language-utils**: Shared Rust library containing language processing types and utilities
-- **libraries/movie-subtitles**: Movie subtitle text handling — raw SRTs as source of truth, lossy cleaning at load time, CP1252 mojibake repair, and a word-correction overlay (`corrections/<code>.jsonl`, keyed by imdb + raw cleaned cue text, written by `subtitle-corpus word-check`) applied in memory by both the course and corpus loaders
+- **libraries/movie-subtitles**: Movie subtitle text handling — raw SRTs as source of truth, lossy cleaning at load time, CP1252 mojibake repair, and a word-correction overlay (`corrections/<code>.jsonl`, keyed by imdb + raw cleaned cue text, written by `subtitle-corpus word-check` and `subtitle-corpus proofread`) applied in memory by both the course and corpus loaders
 - **libraries/opensubtitles-downloader**: Downloads course subtitles from OpenSubtitles
 - **libraries/google-speech**: The one place Google speech APIs are called — Cloud Text-to-Speech, and a `GeminiClient` for native `generateContent` (Gemini TTS and any audio-in judging go through it)
 - **libraries/audio-codec**: Provider-agnostic audio codecs and signal sanity checks

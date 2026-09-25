@@ -22,6 +22,7 @@ fn corrections_only_invalidate_affected_films() {
     let report = serde_json::json!({
         "format": crate::verbatim::FORMAT,
         "subtitle_digest": "subtitle", "transcript_digest": "transcript",
+        "segmentation": "test-segmentation",
         "min_fraction": 0.25, "eligible": 20, "placed": 20,
         "fraction": 1.0, "aligned": null, "verdict": crate::verbatim::Verdict::Verbatim
     });
@@ -30,12 +31,30 @@ fn corrections_only_invalidate_affected_films() {
         serde_json::to_vec(&report).unwrap(),
     )
     .unwrap();
-    assert!(crate::verbatim::matching(&dir, "subtitle", "transcript", "", 0.25).is_some());
+    assert!(crate::verbatim::matching(
+        &dir,
+        "subtitle",
+        "transcript",
+        "",
+        "test-segmentation",
+        0.25
+    )
+    .is_some());
+    assert!(crate::verbatim::matching(
+        &dir,
+        "subtitle",
+        "transcript",
+        "",
+        "new-cleanup-or-segmentation",
+        0.25
+    )
+    .is_none());
     assert!(crate::verbatim::matching(
         &dir,
         "subtitle",
         "transcript",
         "film-specific-digest",
+        "test-segmentation",
         0.25
     )
     .is_none());
@@ -286,6 +305,7 @@ async fn freshness_tiers_regate_without_probes_and_preserve_failures() {
         subtitle_digest: original.inputs.subtitle_digest.clone(),
         transcript_digest: original.inputs.transcript_digest.clone(),
         corrections_digest: String::new(),
+        segmentation: original.inputs.segmentation.clone(),
         min_fraction: 0.25,
         measure: crate::verbatim::Measure {
             eligible: 100,
@@ -493,6 +513,7 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         subtitle_digest: film.provenance.inputs.subtitle_digest.clone(),
         transcript_digest: film.provenance.inputs.transcript_digest.clone(),
         corrections_digest: String::new(),
+        segmentation: film.provenance.inputs.segmentation.clone(),
         min_fraction: crate::verbatim::min_fraction("kor"),
         measure: Measure {
             eligible: 30,

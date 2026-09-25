@@ -381,7 +381,7 @@ async fn load_movie_sentences(
             .par_iter()
             .map(|(movie, source, subtitles)| {
                 let keyed = movie_subtitles::sentences::keyed_sentences_by_rules(
-                    subtitles, language, rules,
+                    subtitles, language, &movie.id, rules,
                 );
                 (*source, attributed(keyed, &movie.id))
             })
@@ -420,7 +420,7 @@ async fn load_movie_sentences(
                 .zip(&splits)
                 .map(|(((movie, source, _), lines), splits)| {
                     let keyed = movie_subtitles::sentences::keyed_sentences_from_splits(
-                        lines, splits, language,
+                        lines, splits, language, &movie.id,
                     );
                     (*source, attributed(keyed, &movie.id))
                 })
@@ -594,10 +594,11 @@ fn sanity_check_skip_markers(language: Language, movie_id: &str) -> Vec<&'static
 pub async fn subtitle_sentences(
     subtitles: &[SubtitleLine],
     language: Language,
+    imdb: &str,
     segmenter: &SubtitleSegmenter,
 ) -> anyhow::Result<Vec<String>> {
     Ok(course_sentences(
-        movie_subtitles::sentences::keyed_sentences(subtitles, language, segmenter).await?,
+        movie_subtitles::sentences::keyed_sentences(subtitles, language, imdb, segmenter).await?,
     ))
 }
 
@@ -605,10 +606,11 @@ pub async fn subtitle_sentences(
 pub fn subtitle_sentences_by_rules(
     subtitles: &[SubtitleLine],
     language: Language,
+    imdb: &str,
     segmenter: &RuleSegmenter,
 ) -> Vec<String> {
     course_sentences(movie_subtitles::sentences::keyed_sentences_by_rules(
-        subtitles, language, segmenter,
+        subtitles, language, imdb, segmenter,
     ))
 }
 
@@ -694,7 +696,7 @@ mod tests {
             cue("- Où est mon Daniel ? - Il est là.", 3_100, 4_000),
         ];
         assert_eq!(
-            subtitle_sentences_by_rules(&cues, Language::French, &segmenter),
+            subtitle_sentences_by_rules(&cues, Language::French, "test", &segmenter),
             vec![
                 "On va la dépecer vive !",
                 "Lui arracher la langue !",
