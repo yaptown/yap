@@ -54,32 +54,39 @@ struct HomeScreen: View {
                             Button { navigate(.review) } label: { UpNextCard(upNext: view.up_next) }
                                 .buttonStyle(.plain)
                         }
-                        if let goal = view.goal {
-                            Button { navigate(.goals) } label: {
-                                StudyCard { GoalProgress(goal: goal) }
-                            }.buttonStyle(.plain)
-                        }
-                        StudyCard(spacing: 16) {
-                            HStack(alignment: .firstTextBaseline) {
-                                Text(view.week.title).font(.headline).foregroundStyle(Color.yapText)
-                                Spacer()
-                                Text(view.week.today_label).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                        // Everything below Up Next is one quiet panel of progress, so
+                        // the next thing to study stays the only card that stands out.
+                        VStack(alignment: .leading, spacing: 0) {
+                            if let goal = view.goal {
+                                Button { navigate(.goals) } label: {
+                                    VStack(alignment: .leading, spacing: 12) { GoalProgress(goal: goal) }
+                                        .padding(16).contentShape(Rectangle())
+                                }.buttonStyle(.plain)
+                                Divider()
                             }
-                            WeekProgressStrip(week: view.week.days)
-                        }
-                        HStack(alignment: .top, spacing: 16) {
-                            Button { navigate(.stats) } label: { HomeStatTile(stat: view.xp, systemImage: "bolt") }
-                            Button { navigate(.stats) } label: { HomeStatTile(stat: view.cards, systemImage: "book") }
-                        }.buttonStyle(.plain).fixedSize(horizontal: false, vertical: true)
-                        StudyCard {
-                            Button(view.dictionary.title) { navigate(.dictionary()) }.font(.headline).foregroundStyle(Color.yapText)
-                            // Not a real field: it zooms into the dictionary, whose
-                            // search bar takes the focus and shows live results.
-                            Button { navigate(.dictionary(searching: true)) } label: {
-                                DictionarySearchBar(placeholder: view.dictionary.search_placeholder)
+                            VStack(spacing: 16) {
+                                HStack(alignment: .firstTextBaseline) {
+                                    Text(view.week.title).font(.headline).foregroundStyle(Color.yapText)
+                                    Spacer()
+                                    Text(view.week.today_label).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                                }
+                                WeekProgressStrip(week: view.week.days)
+                            }.padding(16)
+                            Divider()
+                            Button { navigate(.stats) } label: {
+                                HStack(alignment: .top, spacing: 16) {
+                                    HomeStat(stat: view.xp, systemImage: "bolt")
+                                    HomeStat(stat: view.cards, systemImage: "book")
+                                }.padding(16).contentShape(Rectangle())
                             }.buttonStyle(.plain)
-                                .matchedTransitionSource(id: DictionarySearchBar.id, in: searchTransition)
                         }
+                        .quietSurface()
+                        // Not a real field: it zooms into the dictionary, whose
+                        // search bar takes the focus and shows live results.
+                        Button { navigate(.dictionary(searching: true)) } label: {
+                            DictionarySearchBar(placeholder: view.dictionary.search_placeholder)
+                        }.buttonStyle(.plain).accessibilityLabel(view.dictionary.title)
+                            .matchedTransitionSource(id: DictionarySearchBar.id, in: searchTransition)
                         Spacer(minLength: 0)
                         VStack(spacing: 8) {
                             Text("yap.town is created by [André Popovitch](https://twitter.com/chadnauseam).")
@@ -155,10 +162,8 @@ struct DictionarySearchBar: View {
             Spacer(minLength: 0)
         }
         .foregroundStyle(.secondary)
-        .padding(.horizontal, 12).frame(height: 44)
-        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay { RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
-        .contentShape(Rectangle())
+        .padding(.horizontal, 14).frame(height: 44)
+        .quietSurface(cornerRadius: 14)
     }
 }
 
@@ -217,7 +222,7 @@ private struct CardStack: View {
     }
 }
 
-private struct HomeStatTile: View {
+private struct HomeStat: View {
     let stat: HomeStatView
     let systemImage: String
     var body: some View {
@@ -229,7 +234,6 @@ private struct HomeStatTile: View {
             Text(stat.caption).font(.subheadline).foregroundStyle(.secondary)
             if let note = stat.note { Text(note).font(.caption).foregroundStyle(.secondary).padding(.top, 2) }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(16).cardSurface()
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 }

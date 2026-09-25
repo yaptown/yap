@@ -180,50 +180,51 @@ function HomeContent({
               </Card>
             </Link>
           )}
-          {view.goal && (
-            <Link
-              to="/goals"
-              className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Card className="p-5 gap-3 hover:bg-muted/50 transition-colors">
+          {/* Everything below Up Next is one quiet panel of progress, so the
+              next thing to study stays the only card that stands out. */}
+          <Card variant="light" className="p-0 gap-0 divide-y divide-border/60 overflow-hidden">
+            {view.goal && (
+              <Link
+                to="/goals"
+                className="flex flex-col gap-3 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
+              >
                 <GoalProgress goal={view.goal} />
-              </Card>
-            </Link>
-          )}
-          <Card className="p-5 gap-4">
-            <div className="flex items-baseline justify-between gap-4">
-              <h2 className="text-lg font-semibold">{view.week.title}</h2>
-              <span className="text-sm tabular-nums text-muted-foreground">
-                {view.week.today_label}
-              </span>
-            </div>
-            <WeekProgressStrip week={view.week.days} />
-          </Card>
-          <div className="grid grid-cols-2 gap-4">
-            <StatTile stat={view.xp} icon={Zap} />
-            <StatTile stat={view.cards} icon={BookOpen} />
-          </div>
-          <Card className="p-5 gap-3">
-            <h2 className="text-lg font-semibold">
-              <Link to="/dictionary">{view.dictionary.title}</Link>
-            </h2>
-            {/* Not a real field: tapping it morphs into the dictionary's search
-                bar (same view-transition-name), where typing gets live results. */}
-            <button
-              type="button"
-              onClick={() => {
-                if (!inert)
-                  navigate("/dictionary", {
-                    viewTransition: true,
-                    state: { focusSearch: true },
-                  });
-              }}
-              className="dictionary-search flex h-10 w-full items-center gap-2 rounded-lg border border-input bg-foreground/5 px-3 text-left text-muted-foreground hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              </Link>
+            )}
+            <section className="flex flex-col gap-4 p-5">
+              <div className="flex items-baseline justify-between gap-4">
+                <h2 className="text-lg font-semibold">{view.week.title}</h2>
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {view.week.today_label}
+                </span>
+              </div>
+              <WeekProgressStrip week={view.week.days} />
+            </section>
+            <Link
+              to="/stats"
+              className="grid grid-cols-2 gap-4 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
             >
-              <Search className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="truncate">{view.dictionary.search_placeholder}</span>
-            </button>
+              <HomeStat stat={view.xp} icon={Zap} />
+              <HomeStat stat={view.cards} icon={BookOpen} />
+            </Link>
           </Card>
+          {/* Not a real field: tapping it morphs into the dictionary's search
+              bar (same view-transition-name), where typing gets live results. */}
+          <button
+            type="button"
+            aria-label={view.dictionary.title}
+            onClick={() => {
+              if (!inert)
+                navigate("/dictionary", {
+                  viewTransition: true,
+                  state: { focusSearch: true },
+                });
+            }}
+            className="dictionary-search flex h-11 w-full items-center gap-2 rounded-xl border border-border/60 bg-foreground/5 px-4 text-left text-muted-foreground backdrop-blur-sm hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Search className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">{view.dictionary.search_placeholder}</span>
+          </button>
         </main>
       </TopPageLayout>
       <About />
@@ -253,22 +254,17 @@ function CardStack({ kind }: { kind: UpNextKind }) {
   );
 }
 
-function StatTile({ stat, icon: Icon }: { stat: HomeStatView; icon: LucideIcon }) {
+function HomeStat({ stat, icon: Icon }: { stat: HomeStatView; icon: LucideIcon }) {
   return (
-    <Link
-      to="/stats"
-      className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <Card className="h-full p-5 flex-row items-start gap-3 hover:bg-muted/50 transition-colors">
-        <Icon className="h-6 w-6 mt-1 shrink-0 text-muted-foreground" aria-hidden />
-        <div className="flex flex-col min-w-0">
-          <p className="text-2xl font-bold tabular-nums">{stat.value}</p>
-          <p className="text-sm text-muted-foreground">{stat.caption}</p>
-          {stat.note && (
-            <p className="mt-1 text-xs text-muted-foreground">{stat.note}</p>
-          )}
-        </div>
-      </Card>
-    </Link>
+    <div className="flex items-start gap-3 min-w-0">
+      <Icon className="h-5 w-5 mt-1.5 shrink-0 text-muted-foreground" aria-hidden />
+      <div className="flex flex-col min-w-0">
+        <p className="text-2xl font-bold tabular-nums">{stat.value}</p>
+        <p className="text-sm text-muted-foreground">{stat.caption}</p>
+        {stat.note && (
+          <p className="mt-1 text-xs text-muted-foreground">{stat.note}</p>
+        )}
+      </div>
+    </div>
   );
 }

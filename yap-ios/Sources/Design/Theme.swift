@@ -85,6 +85,14 @@ extension View {
         else { background(.ultraThinMaterial, in: shape).overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.5)) } }
     }
 
+    /// A lighter surface than a card, for secondary panels that shouldn't compete
+    /// with the card beside them (the web's `light` card variant).
+    func quietSurface(cornerRadius: CGFloat = 20) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        return background { shape.fill(.ultraThinMaterial).opacity(0.5) }
+            .overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
+    }
+
     /// A box inside a card (a sense, a word tile): a translucent wash with a
     /// hairline, so the glass behind it still shows through.
     func insetSurface(cornerRadius: CGFloat = 12, fill: Color = Color(uiColor: .systemBackground).opacity(0.35)) -> some View {
