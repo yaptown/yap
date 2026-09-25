@@ -73,6 +73,8 @@ struct FlashcardChallengeView: View {
             .contentShape(Rectangle())
             .onTapGesture { toggle() }
             .accessibilityAction(named: revealed ? "Hide answer" : "Reveal answer") { toggle() }
+            .swipeToGrade(enabled: canGrade && !actions.submitting, againLabel: view.again_label,
+                          rememberedLabel: view.remembered_label, rate: rate)
             // Like the web, the breakdown sits under the card rather than inside it.
             if revealed, case let .Gram(_, _, _, breakdown) = flashcard.content, let breakdown, !breakdown.isEmpty {
                 MorphemeBreakdownView(parts: breakdown, alignment: .center, revealDelay: 1.5).padding(.top, 12)

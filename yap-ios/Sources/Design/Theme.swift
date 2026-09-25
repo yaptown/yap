@@ -53,17 +53,26 @@ extension Color {
 /// Liquid Glass on iOS 26, a translucent material before it.
 private struct CardSurface: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.cardGlass) private var glass
     func body(content: Content) -> some View {
+        // Only the surface switches, so the card's contents keep their identity.
+        content.background { surface }
+    }
+    @ViewBuilder private var surface: some View {
         let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
-        if #available(iOS 26, *) {
-            content.glassEffect(.regular.tint(Tokens.palette.card.color.opacity(0.12)), in: shape)
+        if #available(iOS 26, *), glass {
+            Color.clear.glassEffect(.regular.tint(Tokens.palette.card.color.opacity(0.12)), in: shape)
         } else {
-            content
-                .background(Tokens.palette.card.color.opacity(0.18), in: shape)
+            shape.fill(Tokens.palette.card.color.opacity(0.18))
                 .background { shape.fill(.ultraThinMaterial).opacity(reduceTransparency ? 1 : 0.65) }
                 .overlay { shape.strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
         }
     }
+}
+
+extension EnvironmentValues {
+    /// Glass doesn't follow a rotated view, so a card being swiped turns it off.
+    @Entry var cardGlass = true
 }
 
 extension View {
