@@ -98,14 +98,12 @@ function fieldsFor(note: AnkiNote, audio: (filename: string) => string, lang: st
   ];
 }
 
-// Anki compares whole seconds; two quick exports must still update conditional fields.
-let lastModified = 0;
-
-/** Package the Rust recipe; no learner state or sentence selection lives here. */
+/** Worker-side package assembly; no learner state or sentence selection lives here. */
 export async function buildApkg(
   plan: AnkiDeckPlan,
   fetchBundled: (source: AnkiMediaSource) => Uint8Array | undefined | Promise<Uint8Array | undefined>,
   onProgress: (progress: MediaProgress) => void,
+  modified: number,
 ): Promise<Blob> {
   const files: Record<string, Uint8Array> = {};
   const media: Record<string, string> = {};
@@ -152,8 +150,6 @@ export async function buildApkg(
   const SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
   const db = new SQL.Database();
   const now = Date.now();
-  const modified = Math.max(Math.floor(now / 1000), lastModified + 1);
-  lastModified = modified;
   const deckId = Number(plan.deck_id);
   const lang = escapeHtml(languageToLangAttr(plan.language));
   const sentenceId = Number(plan.sentence_model_id);

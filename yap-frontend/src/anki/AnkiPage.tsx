@@ -6,6 +6,7 @@ import {
   mint_anki_deck,
   refresh_clip_manifest,
   type AnkiCardTypes,
+  type AnkiDeckPlan,
   type Deck,
   type Language,
   type MintedAnkiDeck,
@@ -126,10 +127,30 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     try {
       const options = { card_types: cardTypes };
       const minted = await mint_anki_deck(options, accessToken);
-      // Let the preparation status paint before entering the synchronous WASM planner.
+      setPhase("Choosing sentences…");
       await new Promise((resolve) => setTimeout(resolve, 0));
-      const plan = deck.anki_deck_plan(options, minted.token, Date.now());
-      const { buildApkg } = await import("./apkg");
+      const planner = deck.start_anki_deck_plan(options, minted.token, Date.now());
+      let plan: AnkiDeckPlan;
+      try {
+        let done = false;
+        while (!done) {
+          const deadline = performance.now() + 12;
+          let step;
+          do {
+            step = planner.step();
+          } while (!step.done && performance.now() < deadline);
+          const next = { done: step.sentences_chosen, total: step.target_size };
+          setProgress((previous) => previous?.done === next.done && previous?.total === next.total ? previous : next);
+          done = step.done;
+          // A macrotask, not a resolved Promise: input and paint get a turn.
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+        plan = planner.finish();
+      } finally {
+        planner.free();
+      }
+      const { buildApkg } = await import("./apkg-client");
+      setProgress(undefined);
       setPhase("Fetching media…");
       const blob = await buildApkg(plan, (source) => deck.anki_bundled_media(source), (next) => {
         setProgress(next);
@@ -197,7 +218,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
             <div className="flex flex-col gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
               {view.manifest === "loading" && <p>Loading movie clips…</p>}
               {view.manifest === "ready" && view.clip_sentence_count === 0 && <p>No movie clips are available for this course.</p>}
-              {busy && <p>{progress && progress.done < progress.total ? `Fetching media ${progress.done.toLocaleString()} of ${progress.total.toLocaleString()}` : phase}</p>}
+              {busy && <p>{phase}{progress && ` ${progress.done.toLocaleString()} of ${progress.total.toLocaleString()}`}</p>}
               {busy && progress && <Progress value={progress.total ? 100 * progress.done / progress.total : 100} />}
               {busy && <p className="border-l-2 pl-4 text-foreground">{view.backstory}</p>}
               {downloadLink && <div className="flex flex-col gap-2">

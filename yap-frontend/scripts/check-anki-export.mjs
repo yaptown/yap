@@ -15,24 +15,25 @@ const { build } = createRequire(require.resolve("vite/package.json"))("esbuild")
 const output = await mkdtemp(path.join(tmpdir(), "yap-anki-export-"));
 
 try {
-  const runner = path.join(output, "run.cjs");
+  const runner = path.join(output, "run.mjs");
   await build({
     stdin: {
       contents: `
-        const assert = require("node:assert/strict");
-        const { writeFileSync } = require("node:fs");
-        const path = require("node:path");
-        const { buildApkg } = require(${JSON.stringify(path.join(frontend, "src/anki/apkg.ts"))});
-        (${writeFixtures.toString()})(buildApkg, ${JSON.stringify(output)})
+        import assert from "node:assert/strict";
+        import { writeFileSync } from "node:fs";
+        import path from "node:path";
+        import { buildApkg } from ${JSON.stringify(path.join(frontend, "src/anki/apkg.ts"))};
+        import { nextModificationTime } from ${JSON.stringify(path.join(frontend, "src/anki/apkg-client.ts"))};
+        (${writeFixtures.toString()})((...args) => buildApkg(...args, nextModificationTime()), ${JSON.stringify(output)})
           .catch(error => { console.error(error); process.exitCode = 1; });
       `,
       resolveDir: frontend,
-      sourcefile: "anki-export-fixtures.cjs",
+      sourcefile: "anki-export-fixtures.mjs",
       loader: "js",
     },
     bundle: true,
     platform: "node",
-    format: "cjs",
+    format: "esm",
     outfile: runner,
     plugins: [{
       name: "node-sql-wasm",

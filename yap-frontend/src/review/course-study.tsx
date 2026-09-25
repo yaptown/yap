@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Outlet, useOutletContext } from "react-router-dom";
+import { Outlet, useMatch, useOutletContext } from "react-router-dom";
 import { useInterval, useNetworkState } from "react-use";
 import type { AppContextType } from "@/app/context";
 import { useDeck, useDeckSelection } from "@/core/useDeck";
@@ -105,6 +105,7 @@ function useStudyController(
   pendingReviewScope: string,
 ) {
   const deck = state.view.phase.type === "Ready" ? state.deck : null;
+  const exportingAnki = useMatch("/anki") !== null;
   const submitting = useRef({ deck, inFlight: false });
   // Reset before child resume effects run, and only for a new snapshot (not
   // StrictMode's repeated effect setup). Old snapshot callbacks stay rejected.
@@ -252,7 +253,10 @@ function useStudyController(
       placement,
       current_challenge: currentHeld,
     };
-    const reviewView = deck?.review_screen_view(reviewInputs);
+    // Anki owns its placement/planning UI. Keep this session (and any held
+    // answer) alive, but don't spend hundreds of milliseconds projecting an
+    // invisible review screen whenever the readiness timer ticks.
+    const reviewView = exportingAnki ? undefined : deck?.review_screen_view(reviewInputs);
     // The sentence-list hook intentionally stays screen-local. Rust only uses
     // its selection for curriculum/idle content, not to choose the challenge.
     const getReviewView = (
@@ -281,6 +285,7 @@ function useStudyController(
     dismissedAccomplishmentAtReview,
     placement,
     currentHeld,
+    exportingAnki,
   ]);
   const currentChallenge =
     reviewView?.step.type === "Challenge"

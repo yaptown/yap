@@ -1,4 +1,8 @@
 //! A host-independent Anki recipe. Hosts package these notes and media, not learning logic.
+use crate::{
+    comprehensible::RankBitset,
+    simulation::{DailySimulationIterator, DayChallengeIterator},
+};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use bridgerton::Error;
 use language_utils::{
@@ -9,7 +13,10 @@ use lasso::Spur;
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
+use std::{
+    cell::RefCell,
+    collections::{BTreeSet, VecDeque},
+};
 use unicode_normalization::UnicodeNormalization;
 use xxhash_rust::xxh3::xxh3_64;
 
@@ -363,13 +370,13 @@ impl Deck {
             self.get_comprehensible_listening_grams(true),
         );
         let too_advanced = !pack.gram_frequencies.entries.is_empty() && known.all_available_learned;
-        let clip_sentence_count = pack
-            .comprehensible_sentences(None, |_| true)
-            .into_iter()
-            .filter(|sentence| {
-                clips::sentence_has_clip(language, pack.string_rodeo.resolve(sentence))
-            })
-            .count() as u32;
+        // Walk the clip manifest, not every translated sentence in the pack.
+        let clip_sentence_count = clips::map_clip_sentences(language, |text| {
+            let sentence = pack.string_rodeo.get(text)?;
+            pack.sentence_is_comprehensible(sentence, None, &|_| true)
+                .then_some(())
+        })
+        .len() as u32;
         let films = self
             .get_movie_metadata(clips::films_by_clip_count(language))
             .into_iter()
@@ -423,18 +430,19 @@ impl Deck {
         }
     }
 
-    pub fn anki_deck_plan(
+    pub fn start_anki_deck_plan(
         &self,
         options: AnkiDeckOptions,
         token: String,
         timestamp_ms: f64,
-    ) -> Result<AnkiDeckPlan, Error> {
-        self.plan_anki_deck(options, DECK_SIZE, token, timestamp_ms)
+    ) -> Result<AnkiDeckPlanner, Error> {
+        AnkiDeckPlanner::new(self, options, DECK_SIZE, token, timestamp_ms)
     }
 }
 
+#[cfg(test)]
 impl Deck {
-    /// `size` is separate from the options so tests can plan small decks.
+    /// The synchronous test helper uses exactly the host's stepped path.
     fn plan_anki_deck(
         &self,
         options: AnkiDeckOptions,
@@ -442,39 +450,147 @@ impl Deck {
         token: String,
         timestamp_ms: f64,
     ) -> Result<AnkiDeckPlan, Error> {
-        let course = self.context.course;
-        let language = course.target_language;
+        let planner = AnkiDeckPlanner::new(self, options, size, token, timestamp_ms)?;
+        while !planner.step().done {}
+        planner.finish()
+    }
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AnkiDeckStep {
+    /// Exactly the new notes, including prerequisites, in final deck order.
+    pub notes: Vec<AnkiNote>,
+    pub sentences_chosen: u32,
+    pub target_size: u32,
+    pub done: bool,
+}
+
+/// A paused planner. Hosts yield between short steps; no learner state changes.
+#[bridgerton::bridge(opaque)]
+pub struct AnkiDeckPlanner {
+    state: RefCell<PlannerState>,
+}
+
+struct PlannerState {
+    seed: Deck,
+    options: AnkiDeckOptions,
+    token: String,
+    size: usize,
+    unindexed: Vec<Spur>,
+    clip_sentence_ranks: FxHashMap<Spur, Vec<u32>>,
+    clip_sentences_of: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
+    simulation: Option<DailySimulationIterator>,
+    day: Option<DayChallengeIterator>,
+    known_now: Option<RankBitset>,
+    pending: VecDeque<TaggedGram<SpurGram>>,
+    still_pending: VecDeque<TaggedGram<SpurGram>>,
+    before: usize,
+    empty_days: usize,
+    done: bool,
+    notes: Vec<AnkiNote>,
+    bundled: Vec<AnkiBundledMedia>,
+    used_sentences: BTreeSet<Spur>,
+    used_words: BTreeSet<String>,
+    posters: BTreeSet<String>,
+}
+
+impl AnkiDeckPlanner {
+    fn new(
+        deck: &Deck,
+        options: AnkiDeckOptions,
+        size: usize,
+        token: String,
+        timestamp_ms: f64,
+    ) -> Result<Self, Error> {
+        let language = deck.context.course.target_language;
         if !clips::manifest_loaded(language) {
             return Err(Error::new(CLIPS_LOADING));
         }
-        let view = self.anki_export_view();
-        if view.clip_sentence_count == 0 {
-            return Err(Error::new(NO_SENTENCES));
+        if !timestamp_ms.is_finite() {
+            return Err(Error::new("Invalid export time."));
         }
-        let pack = &self.context.language_pack;
-        let display = |gram: TaggedGram<SpurGram>| {
-            gram.resolve(&pack.gram_rodeo)
-                .resolve(&pack.string_rodeo)
-                .to_display_string(language)
-        };
-        // Every translated sentence with a clip, as the ease ranks of its
-        // grams: the search below tests thousands of sentences per pending
-        // gram per day, so membership is a bit test rather than a hash lookup.
-        // A sentence with an unranked gram can never become comprehensible.
+        let now = chrono::DateTime::from_timestamp_millis(timestamp_ms as i64)
+            .ok_or_else(|| Error::new("Invalid export time."))?;
+        let pack = &deck.context.language_pack;
+        let unindexed = clips::map_clip_sentences(language, |text| pack.string_rodeo.get(text));
+        Ok(Self {
+            state: RefCell::new(PlannerState {
+                seed: deck.clone(),
+                options,
+                token,
+                size,
+                unindexed,
+                clip_sentence_ranks: FxHashMap::default(),
+                clip_sentences_of: FxHashMap::default(),
+                simulation: None,
+                day: Some(
+                    deck.simulate_usage(now)
+                        .with_new_cards_per_day(20)
+                        .next_day(),
+                ),
+                known_now: None,
+                pending: VecDeque::new(),
+                still_pending: VecDeque::new(),
+                before: 0,
+                empty_days: 0,
+                done: size == 0,
+                notes: Vec::new(),
+                bundled: Vec::new(),
+                used_sentences: BTreeSet::new(),
+                used_words: BTreeSet::new(),
+                posters: BTreeSet::new(),
+            }),
+        })
+    }
+}
+
+#[bridgerton::bridge]
+impl AnkiDeckPlanner {
+    /// Index a small batch, answer one simulated challenge, or try one pending
+    /// gram. A simulated day is deliberately not an atomic unit of work.
+    pub fn step(&self) -> AnkiDeckStep {
+        let mut state = self.state.borrow_mut();
+        let before = state.notes.len();
+        if !state.done {
+            state.advance();
+        }
+        AnkiDeckStep {
+            notes: state.notes[before..].to_vec(),
+            sentences_chosen: state.used_sentences.len() as u32,
+            target_size: state.size as u32,
+            done: state.done,
+        }
+    }
+
+    /// Finish only after `step` reports done; this never runs remaining work.
+    pub fn finish(&self) -> Result<AnkiDeckPlan, Error> {
+        let state = self.state.borrow();
+        if !state.done {
+            return Err(Error::new("Sentence selection is not finished."));
+        }
+        state.plan()
+    }
+}
+
+impl PlannerState {
+    fn index_sentences(&mut self) {
+        let pack = &self.seed.context.language_pack;
         let order = &pack.written_ease_order;
-        let mut clip_sentence_ranks: FxHashMap<Spur, Vec<u32>> = FxHashMap::default();
-        // The clip sentences each gram occurs in, so a pending gram's search
-        // touches only sentences that can qualify.
-        let mut clip_sentences_of: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>> =
-            FxHashMap::default();
-        for (sentence, encoded) in clips::map_clip_sentences(language, |text| {
-            let sentence = pack.string_rodeo.get(text)?;
-            pack.translations
+        for _ in 0..128 {
+            let Some(sentence) = self.unindexed.pop() else {
+                break;
+            };
+            if pack
+                .translations
                 .get(&sentence)
-                .is_some_and(|t| !t.is_empty())
-                .then_some(())?;
-            Some((sentence, pack.encoded_sentences.get(&sentence)?))
-        }) {
+                .is_none_or(|t| t.is_empty())
+            {
+                continue;
+            }
+            let Some(encoded) = pack.encoded_sentences.get(&sentence) else {
+                continue;
+            };
             let learnable = encoded.grams.iter().filter_map(|g| match g {
                 SentenceGram::Learnable(g) => Some(g),
                 SentenceGram::Obvious(_) => None,
@@ -493,198 +609,230 @@ impl Deck {
                 continue;
             };
             for gram in grams {
-                clip_sentences_of.entry(*gram).or_default().push(sentence);
+                self.clip_sentences_of
+                    .entry(*gram)
+                    .or_default()
+                    .push(sentence);
             }
-            clip_sentence_ranks.insert(sentence, ranks);
+            self.clip_sentence_ranks.insert(sentence, ranks);
         }
-        // What the learner already understands going in; everything else a
-        // sentence needs gets a word note first.
-        let known = self.get_comprehensible_written_grams(false);
-        let mut notes = Vec::new();
-        let mut bundled = Vec::new();
-        let mut used_sentences = BTreeSet::new();
-        let mut used_words = BTreeSet::new();
-        let mut posters = BTreeSet::new();
-        if !timestamp_ms.is_finite() {
-            return Err(Error::new("Invalid export time."));
+        if self.unindexed.is_empty() && self.clip_sentence_ranks.is_empty() {
+            self.done = true;
         }
-        let now = chrono::DateTime::from_timestamp_millis(timestamp_ms as i64)
-            .ok_or_else(|| Error::new("Invalid export time."))?;
-        let mut simulation = self.simulate_usage(now).with_new_cards_per_day(20);
-        // Words the simulator has introduced that have no usable sentence yet.
-        // They are retried every day: a sentence's other words only become
-        // comprehensible once the simulated learner has reviewed them.
-        let mut pending: Vec<TaggedGram<SpurGram>> = Vec::new();
-        let mut empty_days = 0;
-        while used_sentences.len() < size && empty_days < 60 {
-            let mut day = simulation.next_day();
-            for _ in day.by_ref() {}
-            simulation = day.finish_day();
-            pending.extend(
-                simulation
-                    .last_introduced()
-                    .iter()
-                    .filter_map(|indicator| indicator.written_gram().copied()),
-            );
-            let deck = simulation.deck();
-            let before = used_sentences.len();
-            let known_now = deck.get_comprehensible_written_grams(false).rank_bitset();
-            let mut still_pending = Vec::new();
-            for gram in pending {
-                let word = display(gram);
-                let Some(gram_rank) = order.rank(&gram) else {
-                    continue;
-                };
-                // A candidate is a clip sentence containing the gram whose
-                // every other gram the learner already knows.
-                let mut candidates: Vec<Spur> = clip_sentences_of
-                    .get(&gram)
-                    .into_iter()
-                    .flatten()
-                    .copied()
-                    .filter(|s| !used_sentences.contains(s))
-                    .filter(|s| {
-                        clip_sentence_ranks[s]
-                            .iter()
-                            .all(|&r| r == gram_rank || known_now.contains(r))
-                    })
-                    .collect();
-                candidates.sort_by_key(|s| {
-                    (
-                        deck.stats.sentences_reviewed.get(s).copied().unwrap_or(0),
-                        pack.string_rodeo.resolve(s).chars().count(),
-                        pack.string_rodeo.resolve(s),
-                    )
-                });
-                let Some((sentence, challenge)) = candidates.into_iter().find_map(|s| {
-                    deck.translation_challenge_for_sentence(gram, s)
-                        .map(|c| (s, c))
-                }) else {
-                    still_pending.push(gram);
-                    continue;
-                };
-                let target_gloss = pack
-                    .gram_definitions
-                    .get(&gram)
-                    .map(definition)
-                    .unwrap_or_default();
-                // Word notes come before the sentence: the target word, plus
-                // every other word the learner did not know at export time
-                // that the deck has not presented yet (whether the simulator
-                // introduced it or it was already added but unlearned). One
-                // word note per spelling; a later sense of the same spelling
-                // still gets its sentence, whose own gloss carries that sense.
-                let mut prerequisites = vec![gram];
-                if let Some(encoded) = pack.encoded_sentences.get(&sentence) {
-                    let learnable = encoded.grams.iter().filter_map(|g| match g {
-                        SentenceGram::Learnable(g) => Some(*g),
-                        SentenceGram::Obvious(_) => None,
-                    });
-                    let multiword = encoded
-                        .multiword_terms
+    }
+
+    fn advance(&mut self) {
+        if !self.unindexed.is_empty() {
+            self.index_sentences();
+            return;
+        }
+        if self.clip_sentence_ranks.is_empty() {
+            self.done = true;
+            return;
+        }
+        if let Some(day) = &mut self.day {
+            if day.next().is_none() {
+                let simulation = self.day.take().unwrap().finish_day();
+                self.pending.extend(
+                    simulation
+                        .last_introduced()
                         .iter()
-                        .chain(&encoded.low_confidence_multiword_terms)
-                        .map(|m| m.gram);
-                    prerequisites.extend(
-                        learnable
-                            .chain(multiword)
-                            .filter(|g| *g != gram && !known.contains(g)),
-                    );
-                }
-                for prerequisite in prerequisites {
-                    let word = display(prerequisite);
-                    if used_words.insert(word.clone()) {
-                        notes.push(word_note(
-                            pack,
-                            course,
-                            prerequisite,
-                            &word,
-                            &token,
-                            &mut bundled,
-                        ));
-                    }
-                }
-                let text = challenge.target_language;
-                let clip = clips::clip_for_sentence(language, &text).unwrap();
-                let imdb = clips::clip_film(&clip.clip_id).to_owned();
-                let movie = pack.movies.get(&imdb);
-                let poster = movie
-                    .and_then(|m| m.poster_bytes.as_ref())
-                    .map(|_| poster_filename(&imdb));
-                if let Some(filename) = &poster
-                    && posters.insert(filename.clone())
-                {
-                    bundled.push(AnkiBundledMedia {
-                        filename: filename.clone(),
-                        source: AnkiMediaSource::Poster {
-                            imdb_id: imdb.clone(),
-                        },
-                    });
-                }
-                let url = tts_url(
-                    language,
-                    &text,
-                    &challenge.audio.request.verification_hints,
-                    &token,
+                        .filter_map(|indicator| indicator.written_gram().copied()),
                 );
-                // Every sentence ships its recording: a Listening card cannot
-                // be answered without it, and the Translate card shares the
-                // same file, so there is nothing to save by streaming.
-                let filename = format!("yap-sentence-{}.mp3", guid(course, "sentence", &text));
-                bundled.push(AnkiBundledMedia {
-                    filename: filename.clone(),
-                    source: AnkiMediaSource::Tts { url },
-                });
-                let tts = filename;
-                let include_listening = !matches!(options.card_types, AnkiCardTypes::Reading);
-                let glosses = sentence_glosses(
-                    &challenge.target_language_literals,
-                    &challenge.literal_gram_indices,
-                    &challenge.gram_definitions_for_lookup,
-                    self.context.course,
+                self.known_now = Some(
+                    simulation
+                        .deck()
+                        .get_comprehensible_written_grams(false)
+                        .rank_bitset(),
                 );
-                notes.push(AnkiNote::Sentence {
-                    guid: guid(course, "sentence", &text),
-                    note_id: id(course, "sentence-note", &text),
-                    card_id: id(course, "sentence-card", &text),
-                    sentence: text,
-                    translation: challenge.native_translations.join(" / "),
-                    target_word: word.clone(),
-                    target_gloss,
-                    glosses,
-                    source: AnkiSource {
-                        title: movie.map_or_else(|| imdb.clone(), |m| m.title.clone()),
-                        year: movie.and_then(|m| m.year),
-                        imdb_id: imdb,
-                        poster_filename: poster,
-                    },
-                    clip_url: format!(
-                        "{CLIPS_ORIGIN}/{}/{}/lo.mp4?d={}",
-                        language.code(),
-                        component(&clip.clip_id),
-                        component(&token)
-                    ),
-                    tts,
-                    include_reading: !matches!(options.card_types, AnkiCardTypes::Listening),
-                    include_listening,
-                });
-                used_sentences.insert(sentence);
-                if used_sentences.len() == size {
-                    break;
-                }
+                self.simulation = Some(simulation);
+                self.before = self.used_sentences.len();
             }
-            pending = still_pending;
-            empty_days = if before == used_sentences.len() {
-                empty_days + 1
-            } else {
-                0
-            };
+            return;
         }
-        if used_sentences.is_empty() {
+        if let Some(gram) = self.pending.pop_front() {
+            self.choose_sentence(gram);
+            self.done = self.used_sentences.len() == self.size;
+            return;
+        }
+        self.pending = std::mem::take(&mut self.still_pending);
+        self.empty_days = if self.before == self.used_sentences.len() {
+            self.empty_days + 1
+        } else {
+            0
+        };
+        self.done = self.empty_days >= 60;
+        if !self.done {
+            self.day = Some(self.simulation.take().unwrap().next_day());
+        }
+    }
+
+    fn choose_sentence(&mut self, gram: TaggedGram<SpurGram>) {
+        let course = self.seed.context.course;
+        let language = course.target_language;
+        let pack = &self.seed.context.language_pack;
+        let display = |gram: TaggedGram<SpurGram>| {
+            gram.resolve(&pack.gram_rodeo)
+                .resolve(&pack.string_rodeo)
+                .to_display_string(language)
+        };
+        let known = self.seed.get_comprehensible_written_grams(false);
+        let deck = self.simulation.as_ref().unwrap().deck();
+        let known_now = self.known_now.as_ref().unwrap();
+        let Self {
+            clip_sentences_of,
+            clip_sentence_ranks,
+            used_sentences,
+            used_words,
+            notes,
+            bundled,
+            posters,
+            options,
+            token,
+            still_pending,
+            ..
+        } = self;
+        let word = display(gram);
+        let Some(gram_rank) = pack.written_ease_order.rank(&gram) else {
+            return;
+        };
+        // A candidate is a clip sentence containing the gram whose
+        // every other gram the learner already knows.
+        let mut candidates: Vec<Spur> = clip_sentences_of
+            .get(&gram)
+            .into_iter()
+            .flatten()
+            .copied()
+            .filter(|s| !used_sentences.contains(s))
+            .filter(|s| {
+                clip_sentence_ranks[s]
+                    .iter()
+                    .all(|&r| r == gram_rank || known_now.contains(r))
+            })
+            .collect();
+        candidates.sort_by_key(|s| {
+            (
+                deck.stats.sentences_reviewed.get(s).copied().unwrap_or(0),
+                pack.string_rodeo.resolve(s).chars().count(),
+                pack.string_rodeo.resolve(s),
+            )
+        });
+        let Some((sentence, challenge)) = candidates.into_iter().find_map(|s| {
+            deck.translation_challenge_for_sentence(gram, s)
+                .map(|c| (s, c))
+        }) else {
+            still_pending.push_back(gram);
+            return;
+        };
+        let target_gloss = pack
+            .gram_definitions
+            .get(&gram)
+            .map(definition)
+            .unwrap_or_default();
+        // Word notes come before the sentence: the target word, plus
+        // every other word the learner did not know at export time
+        // that the deck has not presented yet (whether the simulator
+        // introduced it or it was already added but unlearned). One
+        // word note per spelling; a later sense of the same spelling
+        // still gets its sentence, whose own gloss carries that sense.
+        let mut prerequisites = vec![gram];
+        if let Some(encoded) = pack.encoded_sentences.get(&sentence) {
+            let learnable = encoded.grams.iter().filter_map(|g| match g {
+                SentenceGram::Learnable(g) => Some(*g),
+                SentenceGram::Obvious(_) => None,
+            });
+            let multiword = encoded
+                .multiword_terms
+                .iter()
+                .chain(&encoded.low_confidence_multiword_terms)
+                .map(|m| m.gram);
+            prerequisites.extend(
+                learnable
+                    .chain(multiword)
+                    .filter(|g| *g != gram && !known.contains(g)),
+            );
+        }
+        for prerequisite in prerequisites {
+            let word = display(prerequisite);
+            if used_words.insert(word.clone()) {
+                notes.push(word_note(pack, course, prerequisite, &word, token, bundled));
+            }
+        }
+        let text = challenge.target_language;
+        let clip = clips::clip_for_sentence(language, &text).unwrap();
+        let imdb = clips::clip_film(&clip.clip_id).to_owned();
+        let movie = pack.movies.get(&imdb);
+        let poster = movie
+            .and_then(|m| m.poster_bytes.as_ref())
+            .map(|_| poster_filename(&imdb));
+        if let Some(filename) = &poster
+            && posters.insert(filename.clone())
+        {
+            bundled.push(AnkiBundledMedia {
+                filename: filename.clone(),
+                source: AnkiMediaSource::Poster {
+                    imdb_id: imdb.clone(),
+                },
+            });
+        }
+        let url = tts_url(
+            language,
+            &text,
+            &challenge.audio.request.verification_hints,
+            token,
+        );
+        // Every sentence ships its recording: a Listening card cannot
+        // be answered without it, and the Translate card shares the
+        // same file, so there is nothing to save by streaming.
+        let filename = format!("yap-sentence-{}.mp3", guid(course, "sentence", &text));
+        bundled.push(AnkiBundledMedia {
+            filename: filename.clone(),
+            source: AnkiMediaSource::Tts { url },
+        });
+        let tts = filename;
+        let include_listening = !matches!(options.card_types, AnkiCardTypes::Reading);
+        let glosses = sentence_glosses(
+            &challenge.target_language_literals,
+            &challenge.literal_gram_indices,
+            &challenge.gram_definitions_for_lookup,
+            course,
+        );
+        notes.push(AnkiNote::Sentence {
+            guid: guid(course, "sentence", &text),
+            note_id: id(course, "sentence-note", &text),
+            card_id: id(course, "sentence-card", &text),
+            sentence: text,
+            translation: challenge.native_translations.join(" / "),
+            target_word: word.clone(),
+            target_gloss,
+            glosses,
+            source: AnkiSource {
+                title: movie.map_or_else(|| imdb.clone(), |m| m.title.clone()),
+                year: movie.and_then(|m| m.year),
+                imdb_id: imdb,
+                poster_filename: poster,
+            },
+            clip_url: format!(
+                "{CLIPS_ORIGIN}/{}/{}/lo.mp4?d={}",
+                language.code(),
+                component(&clip.clip_id),
+                component(token)
+            ),
+            tts,
+            include_reading: !matches!(options.card_types, AnkiCardTypes::Listening),
+            include_listening,
+        });
+        used_sentences.insert(sentence);
+    }
+
+    fn plan(&self) -> Result<AnkiDeckPlan, Error> {
+        let course = self.seed.context.course;
+        let language = course.target_language;
+        if self.used_sentences.is_empty() {
             return Err(Error::new(NO_SENTENCES));
         }
-        let sentence_count = used_sentences.len() as u32;
-        let word_count = used_words.len() as u32;
+        let sentence_count = self.used_sentences.len() as u32;
+        let word_count = self.used_words.len() as u32;
         Ok(AnkiDeckPlan {
             language,
             course_code: course_code(course),
@@ -697,14 +845,14 @@ impl Deck {
             deck_id: id(course, "deck", ""),
             sentence_model_id: id(course, "sentence-model", ""),
             word_model_id: id(course, "word-model", ""),
-            notes,
-            bundled,
+            notes: self.notes.clone(),
+            bundled: self.bundled.clone(),
             stats: AnkiDeckStats {
                 sentence_count,
                 word_count,
                 card_count: word_count
                     + sentence_count
-                        * if matches!(options.card_types, AnkiCardTypes::Both) {
+                        * if matches!(self.options.card_types, AnkiCardTypes::Both) {
                             2
                         } else {
                             1
@@ -1041,6 +1189,39 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn anki_steps_preserve_note_order_and_plan() {
+        let deck = fixture();
+        publish(&deck.context.language_pack, deck.context.course);
+        let planner =
+            AnkiDeckPlanner::new(&deck, options(), 55, "token".into(), 1_700_000_000_000.0)
+                .unwrap();
+        assert!(planner.finish().is_err());
+        let mut notes = Vec::new();
+        let mut chosen = 0;
+        loop {
+            let step = planner.step();
+            assert_eq!(step.target_size, 55);
+            assert!(step.sentences_chosen >= chosen);
+            assert!(step.sentences_chosen <= chosen + 1);
+            chosen = step.sentences_chosen;
+            notes.extend(step.notes);
+            if step.done {
+                break;
+            }
+        }
+        let plan = planner.finish().unwrap();
+        assert_eq!(
+            serde_json::to_value(notes).unwrap(),
+            serde_json::to_value(&plan.notes).unwrap()
+        );
+        let done = planner.step();
+        assert!(done.done);
+        assert!(done.notes.is_empty());
+        assert_eq!(done.sentences_chosen, 55);
+        assert_eq!(deck.num_cards_added(), 0);
+    }
+
     #[test]
     fn anki_errors_and_view() {
         let deck = fixture();
