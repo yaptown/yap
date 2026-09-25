@@ -7,6 +7,7 @@ import {
   refresh_clip_manifest,
   type AnkiCardTypes,
   type AnkiDeckPlan,
+  type AnkiNote,
   type Deck,
   type Language,
   type MintedAnkiDeck,
@@ -28,6 +29,8 @@ import { useWeapon } from "@/core/weapon";
 import { PlacementTest } from "@/review/ladder/PlacementTest";
 import type { MediaProgress } from "./apkg";
 import { Backstory } from "./Backstory";
+import { DeckBuilding } from "./DeckBuilding";
+import { addNotes, emptyBuild, type DeckBuild } from "./deck-build";
 
 // Stores the built package so it can be fetched by link (AnkiMobile's
 // "Download link"). The backend keeps it for 8 days.
@@ -103,6 +106,10 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const [retry, setRetry] = useState(0);
   const [phase, setPhase] = useState<string>();
   const [progress, setProgress] = useState<MediaProgress>();
+  const [build, setBuild] = useState<DeckBuild>(emptyBuild);
+  const [run, setRun] = useState(0);
+  const [choosing, setChoosing] = useState(false);
+  const [finishMessage, setFinishMessage] = useState<string>();
   const [result, setResult] = useState<string>();
   const [downloadLink, setDownloadLink] = useState<string>();
   const busy = phase !== undefined;
@@ -127,12 +134,16 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     setProgress(undefined);
     setResult(undefined);
     setDownloadLink(undefined);
+    setBuild(emptyBuild);
+    setRun((value) => value + 1);
+    setFinishMessage(undefined);
     // On a phone the status sits below the fold; bring it (and the backstory) up.
     requestAnimationFrame(() => status.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     try {
       const options = { card_types: cardTypes };
       const minted = await mint_anki_deck(options, accessToken);
       setPhase("Choosing sentences…");
+      setChoosing(true);
       await new Promise((resolve) => setTimeout(resolve, 0));
       const planner = deck.start_anki_deck_plan(options, minted.token, Date.now());
       let plan: AnkiDeckPlan;
@@ -140,12 +151,15 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
         let done = false;
         while (!done) {
           const deadline = performance.now() + 12;
+          const added: AnkiNote[] = [];
           let step;
           do {
             step = planner.step();
+            added.push(...step.notes);
           } while (!step.done && performance.now() < deadline);
           const next = { done: step.sentences_chosen, total: step.target_size };
           setProgress((previous) => previous?.done === next.done && previous?.total === next.total ? previous : next);
+          setBuild((previous) => addNotes(previous, added));
           done = step.done;
           // A macrotask, not a resolved Promise: input and paint get a turn.
           await new Promise((resolve) => setTimeout(resolve, 0));
@@ -153,7 +167,9 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
         plan = planner.finish();
       } finally {
         planner.free();
+        setChoosing(false);
       }
+      setFinishMessage(plan.finish_message);
       const { buildApkg } = await import("./apkg-client");
       setProgress(undefined);
       setPhase("Fetching media…");
@@ -223,9 +239,23 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
             <div ref={status} className="flex scroll-mt-4 flex-col gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
               {view.manifest === "loading" && <p>Loading movie clips…</p>}
               {view.manifest === "ready" && view.clip_sentence_count === 0 && <p>No movie clips are available for this course.</p>}
-              {busy && <p>{phase}{progress && ` ${progress.done.toLocaleString()} of ${progress.total.toLocaleString()}`}</p>}
-              {busy && progress && <Progress value={progress.total ? 100 * progress.done / progress.total : 100} />}
-              {busy && <div className="pt-2 text-base text-foreground"><Backstory text={view.backstory} signature={view.backstory_signature} /></div>}
+              {(busy || result) && (
+                <div className="flex flex-col gap-4 pt-2 text-base text-foreground">
+                  <DeckBuilding
+                    key={run}
+                    build={build}
+                    deck={deck}
+                    language={targetLanguage}
+                    choosing={choosing}
+                    animate={busy}
+                    status={phase && (!choosing && progress && progress.done < progress.total ? `${phase} ${progress.done.toLocaleString()} of ${progress.total.toLocaleString()}` : phase)}
+                    progress={busy && progress ? (progress.total ? 100 * progress.done / progress.total : 100) : undefined}
+                    target={choosing ? progress?.total : undefined}
+                    finishMessage={finishMessage}
+                  />
+                  {busy && <Backstory text={view.backstory} signature={view.backstory_signature} />}
+                </div>
+              )}
               {downloadLink && <div className="flex flex-col gap-2">
                 <Label htmlFor="anki-download-link">Download link</Label>
                 <div className="flex gap-2">
@@ -249,7 +279,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                 <p className="text-sm text-muted-foreground">{view.keep_going_body}</p>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" onClick={() => navigate("/learn")}>{view.keep_going_label}</Button>
-                  {!userInfo && <Button type="button" variant="outline" onClick={openSignUp}>{view.sign_up_label}</Button>}
+                  {!userInfo && <Button type="button" variant="outline" className="h-auto min-h-9 whitespace-normal" onClick={openSignUp}>{view.sign_up_label}</Button>}
                 </div>
               </Card>
             )}

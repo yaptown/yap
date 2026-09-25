@@ -1,6 +1,6 @@
 //! A host-independent Anki recipe. Hosts package these notes and media, not learning logic.
 use crate::{
-    comprehensible::RankBitset,
+    comprehensible::{GramMembership, RankBitset},
     simulation::{DailySimulationIterator, DayChallengeIterator},
 };
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
@@ -11,7 +11,7 @@ use language_utils::{
 };
 use lasso::Spur;
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
 use std::{
     cell::RefCell,
@@ -59,6 +59,9 @@ pub struct AnkiDeckPlan {
     pub word_model_id: i64,
     pub notes: Vec<AnkiNote>,
     pub bundled: Vec<AnkiBundledMedia>,
+    /// How much of everyday language (the Essential bar's measure) the
+    /// learner will understand once they know every word the deck teaches.
+    pub finish_message: String,
     pub stats: AnkiDeckStats,
 }
 
@@ -497,6 +500,8 @@ struct PlannerState {
     bundled: Vec<AnkiBundledMedia>,
     used_sentences: BTreeSet<Spur>,
     used_words: BTreeSet<String>,
+    /// Every gram a word note or sentence teaches, for the coverage figure.
+    taught: FxHashSet<TaggedGram<SpurGram>>,
     posters: BTreeSet<String>,
 }
 
@@ -544,6 +549,7 @@ impl AnkiDeckPlanner {
                 bundled: Vec::new(),
                 used_sentences: BTreeSet::new(),
                 used_words: BTreeSet::new(),
+                taught: FxHashSet::default(),
                 posters: BTreeSet::new(),
             }),
         })
@@ -575,6 +581,19 @@ impl AnkiDeckPlanner {
             return Err(Error::new("Sentence selection is not finished."));
         }
         state.plan()
+    }
+}
+
+/// Known going in, or taught by the deck: every word note ships audio, so a
+/// taught word counts for listening as well as reading.
+#[derive(Clone, Copy)]
+struct KnownOrTaught<'a, M> {
+    known: M,
+    taught: &'a FxHashSet<TaggedGram<SpurGram>>,
+}
+impl<M: GramMembership> GramMembership for KnownOrTaught<'_, M> {
+    fn contains(self, gram: &TaggedGram<SpurGram>) -> bool {
+        self.taught.contains(gram) || self.known.contains(gram)
     }
 }
 
@@ -689,6 +708,7 @@ impl PlannerState {
             clip_sentence_ranks,
             used_sentences,
             used_words,
+            taught,
             notes,
             bundled,
             posters,
@@ -758,6 +778,7 @@ impl PlannerState {
             );
         }
         for prerequisite in prerequisites {
+            taught.insert(prerequisite);
             let word = display(prerequisite);
             if used_words.insert(word.clone()) {
                 notes.push(word_note(pack, course, prerequisite, &word, token, bundled));
@@ -838,6 +859,29 @@ impl PlannerState {
         }
         let sentence_count = self.used_sentences.len() as u32;
         let word_count = self.used_words.len() as u32;
+        let pack = &self.seed.context.language_pack;
+        let everyday = |taught| {
+            let written = KnownOrTaught {
+                known: self.seed.get_comprehensible_written_grams(true),
+                taught,
+            };
+            let listening = KnownOrTaught {
+                known: self.seed.get_comprehensible_listening_grams(true),
+                taught,
+            };
+            Deck::percent_known_in(&pack.gram_frequencies, written, listening)
+                .percent_known
+                .round()
+        };
+        let (before, after) = (everyday(&FxHashSet::default()), everyday(&self.taught));
+        let name = &get_language_metadata(language).common_name;
+        let finish_message = if after > before {
+            format!(
+                "Once you finish this deck, you'll understand {after}% of everyday {name}, up from {before}%."
+            )
+        } else {
+            format!("Once you finish this deck, you'll understand {after}% of everyday {name}.")
+        };
         Ok(AnkiDeckPlan {
             language,
             course_code: course_code(course),
@@ -852,6 +896,7 @@ impl PlannerState {
             word_model_id: id(course, "word-model", ""),
             notes: self.notes.clone(),
             bundled: self.bundled.clone(),
+            finish_message,
             stats: AnkiDeckStats {
                 sentence_count,
                 word_count,
@@ -1216,6 +1261,12 @@ mod tests {
             }
         }
         let plan = planner.finish().unwrap();
+        assert!(
+            plan.finish_message
+                .starts_with("Once you finish this deck, you'll understand "),
+            "{}",
+            plan.finish_message
+        );
         assert_eq!(
             serde_json::to_value(notes).unwrap(),
             serde_json::to_value(&plan.notes).unwrap()
