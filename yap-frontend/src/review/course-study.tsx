@@ -12,8 +12,7 @@ import { Outlet, useMatch, useOutletContext } from "react-router-dom";
 import { useInterval, useNetworkState } from "react-use";
 import type { AppContextType } from "@/app/context";
 import { useDeck, useDeckSelection } from "@/core/useDeck";
-import { useWeapon, useWeaponState } from "@/core/weapon";
-import { AccountSwitchOverlay } from "@/core/AccountSwitchOverlay";
+import { useReportDeckSwitching, useWeapon, useWeaponState } from "@/core/weapon";
 import { readChallengeRestrictions } from "@/lib/challenge-restrictions";
 import { playSoundEffect } from "@/lib/sound-effects";
 import {
@@ -68,12 +67,12 @@ export function CourseRoutes() {
 
 function CourseSession({ context, pendingReviewScope }: { context: AppContextType; pendingReviewScope: string }) {
   const state = useDeck();
+  useReportDeckSwitching(state.switching);
   const study = useStudyController(state, context, pendingReviewScope);
   return (
     <DeckContext.Provider value={state}>
       <StudyContext.Provider value={study}>
         <Outlet context={context} />
-        <AccountSwitchOverlay active={state.switching} />
       </StudyContext.Provider>
     </DeckContext.Provider>
   );

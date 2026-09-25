@@ -9,6 +9,7 @@ import {
   useContext,
   type PropsWithChildren,
 } from "react";
+import { AccountSwitchOverlay } from "./AccountSwitchOverlay";
 import { useNetworkState } from "react-use";
 import { supabase } from "@/lib/supabase";
 import {
@@ -27,6 +28,10 @@ type WeaponState =
   | { type: "ready"; weapon: Weapon; userId: string | undefined; switching: boolean };
 
 const WeaponContext = createContext<WeaponState | undefined>(undefined);
+// An account switch has two phases: creating the account's store (known
+// here) and then rebuilding the course's deck from it (known only where the
+// deck loads). Deck loaders report the second phase so one overlay covers both.
+const DeckSwitchingContext = createContext<(switching: boolean) => void>(() => {});
 
 const ORIGINAL_SESSION_KEY = "yap-impersonation-original-session";
 
@@ -251,13 +256,27 @@ export function WeaponProvider({
     forcePush: () => syncWithSupabase(true),
   };
 
+  const [deckSwitching, setDeckSwitching] = useState(false);
   return (
     <WeaponContext.Provider value={state}>
-      <SyncActionsContext.Provider value={actions}>
-        {children}
-      </SyncActionsContext.Provider>
+      <DeckSwitchingContext.Provider value={setDeckSwitching}>
+        <SyncActionsContext.Provider value={actions}>
+          {children}
+        </SyncActionsContext.Provider>
+      </DeckSwitchingContext.Provider>
+      <AccountSwitchOverlay active={(state.type === "ready" && state.switching) || deckSwitching} />
     </WeaponContext.Provider>
   );
+}
+
+/** Keep the account-switch overlay up while this deck still shows the
+ * previous account's data. */
+export function useReportDeckSwitching(switching: boolean) {
+  const setDeckSwitching = useContext(DeckSwitchingContext);
+  useEffect(() => {
+    setDeckSwitching(switching);
+    return () => setDeckSwitching(false);
+  }, [setDeckSwitching, switching]);
 }
 
 export function useWeapon(): Weapon {

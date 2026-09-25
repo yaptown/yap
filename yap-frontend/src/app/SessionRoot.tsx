@@ -2,7 +2,6 @@ import * as Sentry from "@sentry/react";
 import { useState, useEffect } from "react";
 import { useZeno } from "@/hooks/useZeno";
 import { AuthDialogProvider } from "@/auth/auth-dialog-provider";
-import { AccountSwitchOverlay } from "@/core/AccountSwitchOverlay";
 import { Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
@@ -268,10 +267,7 @@ function AppTestWeapon({ userInfo, accessToken }: AppContextType) {
       </div>
     );
   } else if (weaponState.type === "ready") {
-    return <>
-      <AppContent userInfo={userInfo} accessToken={accessToken} />
-      <AccountSwitchOverlay active={weaponState.switching} />
-    </>;
+    return <AppContent userInfo={userInfo} accessToken={accessToken} />;
   }
 }
 
