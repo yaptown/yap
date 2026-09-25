@@ -682,17 +682,7 @@
         }
       }
     },
-    "goal": {
-      "title": "Advanced French Level 11",
-      "name": "Advanced French",
-      "level_label": "Level 11 of 30",
-      "tier_name": "Advanced",
-      "level": 11,
-      "total_levels": 30,
-      "percent": 3.2445668809305177,
-      "percent_label": "3%",
-      "subtitle": "Unlocks 67.1% of everyday French"
-    },
+    "goal": null,
     "week": {
       "title": "This week",
       "today_label": "0 / 5 min today",

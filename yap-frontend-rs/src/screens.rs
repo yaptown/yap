@@ -842,7 +842,9 @@ pub struct HomeScreenView {
     pub native_language: Language,
     pub target_language: Language,
     pub up_next: UpNextView,
-    pub goal: GoalCardView,
+    /// Absent while Up Next shows the curriculum card, whose own bar already
+    /// tracks the level.
+    pub goal: Option<GoalCardView>,
     pub week: WeekCardView,
     pub xp: HomeStatView,
     pub cards: HomeStatView,
@@ -1055,6 +1057,8 @@ impl Deck {
         let (navigation, _) = self.curriculum_navigation(inputs.sentence_list.clone());
         let info = self.get_no_cards_ready_info(inputs.banned.clone(), navigation.selection);
         let is_challenge = matches!(step, ReviewStep::Challenge(_));
+        let shows_curriculum = matches!(&step, ReviewStep::Idle(idle)
+            if matches!(idle.as_ref(), IdleScreenView::Idle(view) if view.show_sentence_list));
         let mut kind = UpNextKind::Other;
         let (headline, kind_label, idle) = match step {
             ReviewStep::Challenge(view) => {
@@ -1144,7 +1148,7 @@ impl Deck {
                 ),
                 idle,
             },
-            goal: self.goal_card_view(&info.tier_info),
+            goal: (!shows_curriculum).then(|| self.goal_card_view(&info.tier_info)),
             week: WeekCardView {
                 title: "This week".into(),
                 today_label: streak.today_label,
@@ -1814,6 +1818,7 @@ mod tests {
                     panic!("new deck should be idle");
                 };
                 assert_eq!(home.up_next.headline, idle.title);
+                assert_eq!(home.goal.is_none(), idle.show_sentence_list);
                 assert_eq!(json(home.goal), json(goals.goal));
                 assert_eq!(json(&goals.curriculum.navigation), json(idle.navigation));
                 assert_eq!(

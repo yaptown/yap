@@ -54,9 +54,11 @@ struct HomeScreen: View {
                             Button { navigate(.review) } label: { UpNextCard(upNext: view.up_next) }
                                 .buttonStyle(.plain)
                         }
-                        Button { navigate(.goals) } label: {
-                            StudyCard { GoalProgress(goal: view.goal) }
-                        }.buttonStyle(.plain)
+                        if let goal = view.goal {
+                            Button { navigate(.goals) } label: {
+                                StudyCard { GoalProgress(goal: goal) }
+                            }.buttonStyle(.plain)
+                        }
                         StudyCard(spacing: 16) {
                             HStack(alignment: .firstTextBaseline) {
                                 Text(view.week.title).font(.headline).foregroundStyle(Color.yapText)

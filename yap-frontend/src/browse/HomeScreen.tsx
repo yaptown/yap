@@ -180,14 +180,16 @@ function HomeContent({
               </Card>
             </Link>
           )}
-          <Link
-            to="/goals"
-            className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Card className="p-5 gap-3 hover:bg-muted/50 transition-colors">
-              <GoalProgress goal={view.goal} />
-            </Card>
-          </Link>
+          {view.goal && (
+            <Link
+              to="/goals"
+              className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Card className="p-5 gap-3 hover:bg-muted/50 transition-colors">
+                <GoalProgress goal={view.goal} />
+              </Card>
+            </Link>
+          )}
           <Card className="p-5 gap-4">
             <div className="flex items-baseline justify-between gap-4">
               <h2 className="text-lg font-semibold">{view.week.title}</h2>
