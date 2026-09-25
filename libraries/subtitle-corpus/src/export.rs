@@ -312,6 +312,25 @@ async fn export_film(
 
     let lang_dir = dest.join(code);
     let passing: Vec<&Clip> = clips.iter().filter(|c| c.passed).collect();
+
+    // A cut past the end of its audio stream never finishes muxing: ffmpeg
+    // buffers every video frame waiting for audio packets that don't come,
+    // until the GPU or the box runs out of memory. The identity check above
+    // can't see this — the media encoder once swapped in an in-place opus
+    // transcode of All Quiet on the Western Front's German track that was 37
+    // ms long (YAP-152) — so check the stream still reaches every cut.
+    let audio_end = audio_stream_end_ms(&movie.path, audio_stream)?.unwrap_or(i64::MAX);
+    let cut_end = passing
+        .iter()
+        .map(|clip| plan_cut(clip, &cues, &transcript).cut_end)
+        .max()
+        .unwrap_or_default();
+    if cut_end > audio_end {
+        bail!(
+            "audio stream a:{audio_stream} ends at {audio_end}ms, before a cut ending at {cut_end}ms — truncated source {}",
+            movie.path.display()
+        );
+    }
     let rendered = AtomicUsize::new(0);
     let refreshed = AtomicUsize::new(0);
     let unchanged = AtomicUsize::new(0);
@@ -1602,6 +1621,48 @@ fn audio_stream_index(audio_json: &Path, video: &Path, probe: &VideoProbe) -> Re
         );
     }
     Ok(recorded.stream_index as u32)
+}
+
+/// Where audio stream `a:N` ends, from the stream's own duration (MP4) or the
+/// muxer's DURATION tag (Matroska; mkvmerge may suffix it with a language).
+/// `None` when the file records neither.
+fn audio_stream_end_ms(video: &Path, audio_stream: u32) -> Result<Option<i64>> {
+    let out = Command::new("ffprobe")
+        .args([
+            "-v",
+            "error",
+            "-select_streams",
+            &format!("a:{audio_stream}"),
+        ])
+        .args([
+            "-show_entries",
+            "stream=duration:stream_tags",
+            "-of",
+            "json",
+        ])
+        .arg(video)
+        .output()
+        .context("ffprobe failed to start")?;
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).context("ffprobe output")?;
+    let stream = &v["streams"][0];
+    let tag = || {
+        let (_, tag) = stream["tags"]
+            .as_object()?
+            .iter()
+            .find(|(k, _)| k.starts_with("DURATION"))?;
+        let mut parts = tag.as_str()?.split(':');
+        let (h, m, s) = (parts.next()?, parts.next()?, parts.next()?);
+        Some(
+            h.parse::<f64>().ok()? * 3600.0
+                + m.parse::<f64>().ok()? * 60.0
+                + s.parse::<f64>().ok()?,
+        )
+    };
+    let secs = stream["duration"]
+        .as_str()
+        .and_then(|d| d.parse::<f64>().ok())
+        .or_else(tag);
+    Ok(secs.map(|s| (s * 1000.0) as i64))
 }
 
 /// EBU R128 integrated loudness + true peak of one span, through the same
