@@ -13,7 +13,7 @@ struct OnboardingFlowView: View {
         self.session = session
         self.course = course
         self.onComplete = onComplete
-        _state = State(initialValue: onboarding_start(target_language: course.target_language, has_heard_about: hasHeardAbout, offer_notifications: false))
+        _state = State(initialValue: onboarding_start(target_language: course.target_language, has_heard_about: hasHeardAbout, offer_notifications: false, purpose: .App))
     }
 
     private var view: OnboardingView { onboarding_view(state: state) }

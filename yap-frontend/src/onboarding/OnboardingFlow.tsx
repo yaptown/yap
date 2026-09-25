@@ -39,6 +39,7 @@ import type {
   ExperienceLevel,
   DailyReviewTarget,
   OnboardingSelections,
+  OnboardingPurpose,
   OnboardingEvent,
   OnboardingChoice,
   OnboardingContent,
@@ -55,6 +56,7 @@ export type { OnboardingSelections, HeardAbout };
 // ---------------------------------------------------------------------------
 
 interface OnboardingFlowProps {
+  purpose: OnboardingPurpose;
   targetLanguage: Language;
   nativeLanguage: Language;
   hasHeardAbout: boolean;
@@ -769,6 +771,7 @@ function ScreenContent({
 }
 
 export function OnboardingFlow({
+  purpose,
   targetLanguage,
   hasHeardAbout,
   onHeardAbout,
@@ -779,7 +782,7 @@ export function OnboardingFlow({
     useOneSignalNotifications();
   const offerNotifications = isInitialized && isSupported && !isSubscribed;
   const [state, setState] = useState(() =>
-    onboarding_start(targetLanguage, hasHeardAbout, offerNotifications),
+    onboarding_start(targetLanguage, hasHeardAbout, offerNotifications, purpose),
   );
   const currentState = useRef(state);
   useLayoutEffect(() => {

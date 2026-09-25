@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { useDeckSelection } from "@/core/useDeck";
 import { useWeapon } from "@/core/weapon";
 import { PlacementTest } from "@/review/ladder/PlacementTest";
 import { Backstory } from "./Backstory";
@@ -114,7 +115,9 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const copy = useMemo(() => anki_options_copy(reading, listening, wordCards), [reading, listening, wordCards]);
   const [manifest, setManifest] = useState<"loading" | "ready" | "error">("loading");
   const [retry, setRetry] = useState(0);
-  const view = useMemo(() => ({ ...deck.anki_export_view(), manifest }), [deck, manifest]);
+  const deckSelection = useDeckSelection();
+  const startingFresh = deckSelection?.type === "languageSelected" ? deckSelection.startingFresh : undefined;
+  const view = useMemo(() => ({ ...deck.anki_export_view(startingFresh), manifest }), [deck, manifest, startingFresh]);
   const { owner, phase, progress, build, run, choosing, finishMessage, summary, downloadLink, file } = useAnkiExport(view.course_code, userInfo?.id);
   // A deck finished while signed out and now seen signed in means they just
   // created an account (the page remounts when that happens): show the

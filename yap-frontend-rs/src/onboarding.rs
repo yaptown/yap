@@ -9,6 +9,13 @@ use serde::{Deserialize, Serialize};
 
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum OnboardingPurpose {
+    App,
+    AnkiDeck,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OnboardingStep {
     HeardAbout,
     Motivation,
@@ -36,6 +43,7 @@ pub enum OnboardingChoice {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OnboardingState {
     pub target_language: Language,
+    pub purpose: OnboardingPurpose,
     pub steps: Vec<OnboardingStep>,
     pub step_index: u32,
     pub heard_about: Option<HeardAbout>,
@@ -179,27 +187,35 @@ pub fn onboarding_start(
     target_language: Language,
     has_heard_about: bool,
     offer_notifications: bool,
+    purpose: OnboardingPurpose,
 ) -> OnboardingState {
     use OnboardingStep::*;
-    let mut steps = vec![];
-    if !has_heard_about {
-        steps.push(HeardAbout);
-    }
-    steps.extend([
-        Motivation,
-        Experience,
-        Achievements,
-        SrsTeaser,
-        SrsIntro,
-        SrsConclusion,
-        StudyGoal,
-    ]);
-    if offer_notifications {
-        steps.push(Notifications);
-    }
-    steps.push(Ready);
+    let steps = match purpose {
+        OnboardingPurpose::App => {
+            let mut steps = vec![];
+            if !has_heard_about {
+                steps.push(HeardAbout);
+            }
+            steps.extend([
+                Motivation,
+                Experience,
+                Achievements,
+                SrsTeaser,
+                SrsIntro,
+                SrsConclusion,
+                StudyGoal,
+            ]);
+            if offer_notifications {
+                steps.push(Notifications);
+            }
+            steps.push(Ready);
+            steps
+        }
+        OnboardingPurpose::AnkiDeck => vec![Experience],
+    };
     OnboardingState {
         target_language,
+        purpose,
         steps,
         step_index: 0,
         heard_about: None,
@@ -274,7 +290,7 @@ pub fn onboarding_reduce(
                         state.advance();
                     }
                     OnboardingStep::SrsIntro if state.review_count < 4 => state.review_count += 1,
-                    OnboardingStep::Ready => {
+                    _ if state.step_index as usize == state.steps.len() - 1 => {
                         effects.push(state.complete(
                             state.selections.experience_level == Some(ExperienceLevel::New),
                         ))
@@ -287,7 +303,9 @@ pub fn onboarding_reduce(
             effects.push(state.complete(true))
         }
         NotificationsDone if *state.step() == OnboardingStep::Notifications => state.advance(),
-        RefreshNotificationOffer { offer } if state.step_index == 0 => {
+        RefreshNotificationOffer { offer }
+            if state.step_index == 0 && state.purpose == OnboardingPurpose::App =>
+        {
             state
                 .steps
                 .retain(|step| *step != OnboardingStep::Notifications);
@@ -310,7 +328,12 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
     let step = state.step().clone();
     let is_new = state.selections.experience_level == Some(ExperienceLevel::New);
     let mut primary = Some(OnboardingPrimary {
-        label: "Continue".into(),
+        label: if state.purpose == OnboardingPurpose::AnkiDeck {
+            "Set up my deck"
+        } else {
+            "Continue"
+        }
+        .into(),
         enabled: true,
         show_arrow: true,
     });
@@ -615,9 +638,54 @@ mod tests {
     }
 
     #[test]
+    fn anki_onboarding_only_asks_experience_and_records_it() {
+        for level in [ExperienceLevel::New, ExperienceLevel::CommonWords] {
+            let mut s =
+                onboarding_start(Language::French, false, true, OnboardingPurpose::AnkiDeck);
+            assert_eq!(s.purpose, OnboardingPurpose::AnkiDeck);
+            assert_eq!(s.steps, [OnboardingStep::Experience]);
+            assert_eq!(view(&s).progress_label, "Step 1 of 1");
+            assert_eq!(view(&s).progress_percent, 100.0);
+            assert_eq!(view(&s).primary.unwrap().label, "Set up my deck");
+            assert!(!view(&s).primary.unwrap().enabled);
+            assert!(next(&mut s).is_empty());
+            send(
+                &mut s,
+                OnboardingEvent::Choose {
+                    choice: OnboardingChoice::Experience {
+                        value: level.clone(),
+                    },
+                },
+            );
+            for offer in [false, true] {
+                assert!(
+                    send(&mut s, OnboardingEvent::RefreshNotificationOffer { offer }).is_empty()
+                );
+                assert_eq!(s.steps, [OnboardingStep::Experience]);
+                assert_eq!(s.selections.experience_level, Some(level.clone()));
+            }
+            assert!(view(&s).primary.unwrap().enabled);
+            let effects = next(&mut s);
+            let [OnboardingEffect::Complete { selections }] = &effects[..] else {
+                panic!()
+            };
+            assert_eq!(
+                selections,
+                &OnboardingSelections {
+                    starting_fresh: level == ExperienceLevel::New,
+                    experience_level: Some(level),
+                    motivation: None,
+                    study_goal: None,
+                }
+            );
+            assert_eq!(s.step_index, 0);
+        }
+    }
+
+    #[test]
     fn full_flow_preserves_canonical_copy_and_emits_existing_answers() {
         use OnboardingStep::*;
-        let mut s = onboarding_start(Language::French, false, true);
+        let mut s = onboarding_start(Language::French, false, true, OnboardingPurpose::App);
         assert_eq!(
             s.steps,
             [
@@ -760,7 +828,7 @@ mod tests {
 
     #[test]
     fn navigation_resets_transient_answers_but_keeps_course_choices() {
-        let mut s = onboarding_start(Language::French, false, false);
+        let mut s = onboarding_start(Language::French, false, false, OnboardingPurpose::App);
         assert!(matches!(
             &send(&mut s, OnboardingEvent::Back)[..],
             [OnboardingEffect::Exit]
@@ -814,7 +882,12 @@ mod tests {
 
     #[test]
     fn optional_steps_and_experienced_completion() {
-        let mut s = onboarding_start(Language::SpanishLatinAmerican, true, false);
+        let mut s = onboarding_start(
+            Language::SpanishLatinAmerican,
+            true,
+            false,
+            OnboardingPurpose::App,
+        );
         assert_eq!(s.steps.len(), 8);
         assert_eq!(*s.step(), OnboardingStep::Motivation);
         assert!(!s.steps.contains(&OnboardingStep::Notifications));

@@ -16,7 +16,7 @@ export function SelectLanguagePage() {
   const [searchParams] = useSearchParams();
   const requested = searchParams.get("next");
   const next = requested?.startsWith("/") && !requested.startsWith("//") ? requested : "/learn";
-  const targetHeading = next.startsWith("/anki") ? "What language would you like an Anki deck for?" : undefined;
+  const purpose = next.startsWith("/anki") ? "AnkiDeck" : "App";
 
   return <>
     <CourseAudioPrefetch />
@@ -48,7 +48,7 @@ export function SelectLanguagePage() {
           }}
           onboardedLanguages={onboardedLanguages}
           userInfo={userInfo}
-          targetHeading={targetHeading}
+          purpose={purpose}
           onBack={() => navigate(next)}
         />
       ),
@@ -77,7 +77,7 @@ export function SelectLanguagePage() {
           }}
           onboardedLanguages={onboardedLanguages}
           userInfo={userInfo}
-          targetHeading={targetHeading}
+          purpose={purpose}
         />
       ),
     )

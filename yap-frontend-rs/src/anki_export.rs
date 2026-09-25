@@ -466,7 +466,7 @@ const DECK_DESCRIPTION: &str = "Made with Yap (https://yap.town/anki): real movi
 
 #[bridgerton::bridge]
 impl Deck {
-    pub fn anki_export_view(&self) -> AnkiExportView {
+    pub fn anki_export_view(&self, starting_fresh: Option<bool>) -> AnkiExportView {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;
         let known = Self::percent_known_in(
@@ -497,7 +497,9 @@ impl Deck {
                 "Build a custom Anki deck that reinforces your {language} with clips from famous movies."
             ),
             films,
-            needs_placement: !self.has_taken_placement_test() && self.num_cards_added() < 3,
+            needs_placement: starting_fresh != Some(true)
+                && !self.has_taken_placement_test()
+                && self.num_cards_added() < 3,
             placement_intro: PLACEMENT_INTRO.into(),
             progress_label: format!("Essential {}", get_language_metadata(language).common_name),
             percent_known: known.percent_known,
@@ -1489,15 +1491,17 @@ mod tests {
     fn anki_errors_and_view() {
         let deck = fixture();
         // A different language has no manifest in this test's thread-local mirror.
-        assert!(!deck.anki_export_view().clips_loaded);
+        assert!(!deck.anki_export_view(None).clips_loaded);
         assert!(
             deck.plan_anki_deck(options(), 1, "token".into(), 1_700_000_000_000.0)
                 .is_err()
         );
         clips::publish_manifest(Language::English, vec![]);
-        assert!(deck.anki_export_view().clips_loaded);
-        assert_eq!(deck.anki_export_view().clip_sentence_count, 0);
-        assert!(deck.anki_export_view().needs_placement);
+        assert!(deck.anki_export_view(None).clips_loaded);
+        assert_eq!(deck.anki_export_view(None).clip_sentence_count, 0);
+        assert!(deck.anki_export_view(None).needs_placement);
+        assert!(deck.anki_export_view(Some(false)).needs_placement);
+        assert!(!deck.anki_export_view(Some(true)).needs_placement);
         assert!(
             deck.plan_anki_deck(options(), 1, "token".into(), 1_700_000_000_000.0)
                 .is_err()
@@ -1603,8 +1607,8 @@ mod tests {
             .gram_frequencies
             .total_count = 1_000_000;
         assert!(deck.get_percent_of_words_known() < 1.0);
-        assert!(deck.anki_export_view().too_advanced);
-        assert!(deck.anki_export_view().too_advanced_message.is_some());
+        assert!(deck.anki_export_view(None).too_advanced);
+        assert!(deck.anki_export_view(None).too_advanced_message.is_some());
     }
 
     fn assert_comprehensible_matches_brute_force(deck: &Deck) {

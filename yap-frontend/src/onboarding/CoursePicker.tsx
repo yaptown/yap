@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/popover";
 import { cn, languageFlags, nativeLanguageNames } from "@/lib/utils";
 import { LANGUAGES, detectBrowserLanguage } from "@/lib/languages";
-import type { Language } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
+import type { Language, OnboardingPurpose } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { useWeapon } from "@/core/weapon";
 import { get_available_courses } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { TopPageLayout } from "@/components/TopPageLayout";
@@ -49,9 +49,7 @@ interface CoursePickerProps {
   onResume?: () => void;
   userInfo?: UserInfo;
   onBack?: () => void;
-  /** Replaces "What language will you speak next?" when the picker is a
-   * detour on the way somewhere else, e.g. an Anki deck. */
-  targetHeading?: string;
+  purpose?: OnboardingPurpose;
 }
 
 export function CoursePicker({
@@ -65,7 +63,7 @@ export function CoursePicker({
   onResume,
   userInfo,
   onBack,
-  targetHeading = "What language will you speak next?",
+  purpose = "App",
 }: CoursePickerProps) {
   const [selectionState, setSelectionState] = useState<LanguageSelectionState>({
     stage: "selectingNative",
@@ -237,7 +235,9 @@ export function CoursePicker({
                   style={{ textWrap: "balance" }}
                 >
                   <span className="highlight animate-fade-in">
-                    {targetHeading}
+                    {purpose === "AnkiDeck"
+                      ? "What language would you like an Anki deck for?"
+                      : "What language will you speak next?"}
                   </span>
                 </h1>
               </div>
@@ -507,6 +507,7 @@ export function CoursePicker({
             </div>
           ) : selectionState.stage === "onboarding" ? (
             <OnboardingFlow
+              purpose={purpose}
               targetLanguage={selectionState.targetLanguage}
               nativeLanguage={selectionState.nativeLanguage}
               hasHeardAbout={hasHeardAbout}
