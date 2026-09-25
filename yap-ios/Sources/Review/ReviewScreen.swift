@@ -97,9 +97,8 @@ struct ReviewStepScrollView<Content: View, Actions: View>: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12, content: content).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
-        }.safeAreaInset(edge: .bottom, spacing: 0) {
+        }.bottomBar {
             VStack(spacing: 12, content: actions).padding(12).frame(maxWidth: 600).frame(maxWidth: .infinity)
-                .background(.ultraThinMaterial)
         }
     }
 }

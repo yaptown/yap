@@ -29,7 +29,7 @@ struct OnboardingFlowView: View {
                         Button(startFreshLabel) { send(.StartFromScratch) }.controlSize(.large)
                     }
                 }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-            }.safeAreaInset(edge: .bottom, spacing: 0) {
+            }.bottomBar {
                 if let primary = view.primary {
                     Button { send(.Next) } label: {
                         HStack {
@@ -39,7 +39,6 @@ struct OnboardingFlowView: View {
                     }
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(!primary.enabled)
                         .padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-                        .background(.ultraThinMaterial)
                 }
             }.onChange(of: state.step_index) { _, _ in proxy.scrollTo("top", anchor: .top) }
         }

@@ -64,6 +64,14 @@ private struct CardSurface: ViewModifier {
 
 extension View {
     func cardSurface() -> some View { modifier(CardSurface()) }
+
+    /// Pins controls below a scroll view without a hard-edged backdrop, so the
+    /// animated background runs unbroken to the bottom of the screen. On iOS 26
+    /// the system's soft scroll-edge effect fades content scrolling beneath them.
+    @ViewBuilder func bottomBar<Bar: View>(@ViewBuilder _ bar: () -> Bar) -> some View {
+        if #available(iOS 26, *) { safeAreaBar(edge: .bottom, spacing: 0, content: bar) }
+        else { safeAreaInset(edge: .bottom, spacing: 0, content: bar) }
+    }
 }
 
 struct StudyCard<Content: View>: View {
