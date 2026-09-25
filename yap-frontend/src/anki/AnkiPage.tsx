@@ -125,7 +125,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   }
 
   return (
-    <TopPageLayout userInfo={userInfo} headerProps={{ backButton: { label: "Yap.Town", onBack: () => navigate("/") } }}>
+    <TopPageLayout userInfo={userInfo} headerProps={{ title: "Anki Decks", backButton: { label: "Yap.Town", onBack: () => navigate("/") } }}>
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-5 py-8">
         <div className="flex flex-col gap-2">
           <p className="font-mono text-xs text-muted-foreground">Anki · {view.language_name}</p>
