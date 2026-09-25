@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -27,6 +27,7 @@ import { Progress } from "@/components/ui/progress";
 import { useWeapon } from "@/core/weapon";
 import { PlacementTest } from "@/review/ladder/PlacementTest";
 import type { MediaProgress } from "./apkg";
+import { Backstory } from "./Backstory";
 
 // Stores the built package so it can be fetched by link (AnkiMobile's
 // "Download link"). The backend keeps it for 8 days.
@@ -105,6 +106,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const [result, setResult] = useState<string>();
   const [downloadLink, setDownloadLink] = useState<string>();
   const busy = phase !== undefined;
+  const status = useRef<HTMLDivElement>(null);
   const view = useMemo(() => ({ ...deck.anki_export_view(), manifest }), [deck, manifest]);
 
   useEffect(() => {
@@ -125,6 +127,8 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     setProgress(undefined);
     setResult(undefined);
     setDownloadLink(undefined);
+    // On a phone the status sits below the fold; bring it (and the backstory) up.
+    requestAnimationFrame(() => status.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     try {
       const options = { card_types: cardTypes };
       const minted = await mint_anki_deck(options, accessToken);
@@ -216,12 +220,12 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
             ) : (
               <Button type="submit" size="lg" className="h-12 text-base font-medium" disabled={busy || !cardTypes || view.manifest !== "ready" || view.clip_sentence_count === 0}>{view.download_label}</Button>
             )}
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
+            <div ref={status} className="flex scroll-mt-4 flex-col gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
               {view.manifest === "loading" && <p>Loading movie clips…</p>}
               {view.manifest === "ready" && view.clip_sentence_count === 0 && <p>No movie clips are available for this course.</p>}
               {busy && <p>{phase}{progress && ` ${progress.done.toLocaleString()} of ${progress.total.toLocaleString()}`}</p>}
               {busy && progress && <Progress value={progress.total ? 100 * progress.done / progress.total : 100} />}
-              {busy && <p className="border-l-2 pl-4 text-foreground">{view.backstory}</p>}
+              {busy && <div className="pt-2 text-base text-foreground"><Backstory text={view.backstory} signature={view.backstory_signature} /></div>}
               {downloadLink && <div className="flex flex-col gap-2">
                 <Label htmlFor="anki-download-link">Download link</Label>
                 <div className="flex gap-2">

@@ -169,6 +169,7 @@ pub struct AnkiExportView {
     pub placement_complete_label: String,
     /// Why the deck exists, read while it builds.
     pub backstory: String,
+    pub backstory_signature: String,
     /// Shown once the deck is downloaded: the placement test already set up
     /// this browser's deck, so the app picks up where the Anki deck stops.
     pub keep_going_heading: String,
@@ -413,6 +414,7 @@ impl Deck {
             download_label: format!("Generate {language} deck"),
             placement_complete_label: PLACEMENT_COMPLETE_LABEL.into(),
             backstory: BACKSTORY.into(),
+            backstory_signature: "Andre, who made Yap".into(),
             keep_going_heading: KEEP_GOING_HEADING.into(),
             keep_going_body: KEEP_GOING_BODY.into(),
             keep_going_label: KEEP_GOING_LABEL.into(),
