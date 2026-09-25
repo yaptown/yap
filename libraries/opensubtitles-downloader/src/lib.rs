@@ -1,5 +1,7 @@
 //! Shared OpenSubtitles API access for the downloader and subtitle corpus.
 
+pub mod quality;
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 
