@@ -28,7 +28,7 @@ struct SettingsScreen: View {
                         }
                     }
                     SettingsSection("Appearance") {
-                        Toggle("Animated background", isOn: $animatedBackground).frame(minHeight: 44)
+                        Toggle("Animated background", isOn: $animatedBackground).tint(.yapSwitchTint).frame(minHeight: 44)
                     }
                     SettingsSection("About") {
                         SettingsRow(sync?.version_label ?? "Version") { Text(get_app_version()).monospacedDigit() }

@@ -15,10 +15,11 @@ extension DynamicColor {
 }
 
 extension Color {
-    static let yapOnAccent = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark ? .black : .white
-    })
-    @MainActor static let yapAccent = Tokens.palette.accent_foreground.color
+    // The web's accent is its primary token: deep plum in light, near-white pink in dark.
+    @MainActor static let yapAccent = Tokens.palette.primary.color
+    @MainActor static let yapOnAccent = Tokens.palette.primary_foreground.color
+    /// Saturated enough to read as "on" for switches, which near-white would not be in dark mode.
+    @MainActor static let yapSwitchTint = Tokens.palette.accent_foreground.color
     @MainActor static let yapText = Tokens.palette.foreground.color
     @MainActor static let yapDestructiveForeground = Tokens.palette.destructive_foreground.color
     @MainActor static let yapPositiveForeground = Tokens.palette.positive_foreground.color
