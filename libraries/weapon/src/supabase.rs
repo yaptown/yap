@@ -242,7 +242,14 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
                     unique_devices.len()
                 );
 
-                let upload_url = format!("{supabase_url}/rest/v1/events");
+                // `on_conflict` must name the actual unique constraint we're deduplicating
+                // against. Without it, PostgREST's `ignore-duplicates` targets the table's
+                // primary key (`id`, a bigserial that's always fresh on insert and so never
+                // collides) instead of `events_unique_stream_device_index`, so the header
+                // below silently did nothing and the 409 still happened.
+                let upload_url = format!(
+                    "{supabase_url}/rest/v1/events?on_conflict=user_id,stream_id,device_id,within_device_events_index"
+                );
 
                 let upload_response = client
                     .post(&upload_url)

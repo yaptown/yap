@@ -190,6 +190,12 @@ pub enum DeckSelectionEventV1 {
 pub enum VersionedDeckSelectionEvent {
     V1(DeckSelectionEventV1),
     V2(DeckSelectionEvent),
+    /// Catches any `version` this build doesn't know about. Without this, a single event we
+    /// can't recognize fails JSON deserialization, which aborts the whole batch it's in and
+    /// blocks sync for every other event from that device. See the matching case in
+    /// `deck_event::VersionedDeckEvent` for the full rationale.
+    #[serde(other)]
+    Unknown,
 }
 
 impl Event for DeckSelectionEvent {
@@ -202,6 +208,7 @@ impl Event for DeckSelectionEvent {
 
     fn from_versioned(versioned: &Self::Versioned, _context: &Self::Context) -> Option<Self> {
         Some(match versioned {
+            VersionedDeckSelectionEvent::Unknown => return None,
             VersionedDeckSelectionEvent::V1(v1) => match v1 {
                 DeckSelectionEventV1::SelectTargetLanguage(lang) => {
                     DeckSelectionEvent::SelectTargetLanguage(*lang)

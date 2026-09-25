@@ -30,17 +30,25 @@
 
         console.log(`OneSignal initializing in ${isDevelopment ? 'development' : 'production'} mode`);
 
-        await OneSignal.init({
-          ...config,
-          notifyButton: {
-            enable: false, // Disable the default notification button
-          },
-          welcomeNotification: {
-            disable: true  // This disables the welcome notification
-          },
-          serviceWorkerParam: { scope: "/push/onesignal/" },
-          serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js"
-        });
+        try {
+          await OneSignal.init({
+            ...config,
+            notifyButton: {
+              enable: false, // Disable the default notification button
+            },
+            welcomeNotification: {
+              disable: true  // This disables the welcome notification
+            },
+            serviceWorkerParam: { scope: "/push/onesignal/" },
+            serviceWorkerPath: "push/onesignal/OneSignalSDKWorker.js"
+          });
+        } catch (err) {
+          // The production appId is restricted (in the OneSignal dashboard) to the
+          // https://yap.town origin, so init rejects on beta.yap.town, *.pages.dev
+          // preview deploys, etc. Push notifications just aren't available there —
+          // don't let it become an unhandled rejection (JAVASCRIPT-REACT-3T/3V).
+          console.warn('OneSignal init failed, push notifications unavailable:', err);
+        }
       });
     </script>
 
