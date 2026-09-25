@@ -117,19 +117,17 @@ function useStudyController(
   const historyKnown = state.historyKnown;
   const weapon = useWeapon();
   const network = useNetworkState();
-  const [readiness, setReadiness] = useState(() => ({
-    deck,
+  const [polledReadiness, setReadiness] = useState(() => ({
     timestamp_ms: Date.now(),
     audio: get_audio_cache_version(),
     clips: get_clip_manifest_version(),
   }));
-  if (readiness.deck !== deck) {
-    setReadiness((previous) => ({
-      ...previous,
-      deck,
-      timestamp_ms: Date.now(),
-    }));
-  }
+  // A new immutable deck needs a fresh clock, not a render-phase state update.
+  const readiness = useMemo(
+    // eslint-disable-next-line react-hooks/purity -- Sample once per immutable snapshot/readiness change, without a second render.
+    () => ({ ...polledReadiness, deck, timestamp_ms: Date.now() }),
+    [deck, polledReadiness],
+  );
   const [banned, setBanned] = useState<ChallengeRequirements[]>(
     () => readChallengeRestrictions().banned,
   );
@@ -162,21 +160,22 @@ function useStudyController(
     );
   }, 2000);
 
+  const cards = useMemo(() => deck?.get_all_cards_summary(), [deck]);
+  const sentenceList = useMemo(() => deck?.get_sentence_list(), [deck]);
   const nextDue = useMemo(
     () =>
-      deck
-        ?.get_all_cards_summary()
-        .reduce(
+      cards?.reduce(
           (next, card) =>
             card.due_timestamp_ms > readiness.timestamp_ms
               ? Math.min(next, card.due_timestamp_ms)
               : next,
           Infinity,
         ) ?? Infinity,
-    [deck, readiness.timestamp_ms],
+    [cards, readiness.timestamp_ms],
   );
   useEffect(() => {
     if (!Number.isFinite(nextDue)) return;
+    // eslint-disable-next-line react-hooks/purity -- This clock read runs in the timer effect, not during render.
     const delay = nextDue - Date.now();
     if (delay > 60_000) return;
     const timer = setTimeout(refresh, Math.max(0, delay) + 1);
@@ -224,20 +223,21 @@ function useStudyController(
   // also swap immediately. A held "no challenge" never sticks, so newly due
   // cards still surface from idle.
   const [restrictionRevision, setRestrictionRevision] = useState(0);
-  const [heldChallenge, setHeldChallenge] = useState<{
+  const heldChallenge = useRef<{
     deck: Deck;
     revision: number;
     challenge: Challenge<Gram<string>>;
-  }>();
-  const currentHeld =
-    heldChallenge?.deck === deck &&
-    heldChallenge.revision === restrictionRevision
-      ? heldChallenge.challenge
-      : undefined;
+  }>(undefined);
   const { inputs, reviewView, getReviewView, getHomeView } = useMemo(() => {
+    // Read the last committed selection; only a new deck or an explicit ban
+    // releases it. Capturing a new selection happens after commit, without a
+    // second render (and therefore without a second Rust screen computation).
+    const held = heldChallenge.current;
+    const currentHeld = held?.deck === deck && held.revision === restrictionRevision
+      ? held.challenge : undefined;
     const reviewInputs = {
       banned,
-      sentence_list: deck?.get_sentence_list(),
+      sentence_list: sentenceList,
       online: network.online === true,
       is_signed_in: userInfo !== undefined,
       timestamp_ms: readiness.timestamp_ms,
@@ -257,23 +257,42 @@ function useStudyController(
     // answer) alive, but don't spend hundreds of milliseconds projecting an
     // invisible review screen whenever the readiness timer ticks.
     const reviewView = exportingAnki ? undefined : deck?.review_screen_view(reviewInputs);
+    // Home must preview this same selection, not ask Rust to pick another
+    // sentence before the layout effect has committed the held challenge.
+    const inputs = reviewView?.step.type === "Challenge"
+      ? { ...reviewInputs, current_challenge: reviewView.step.view.challenge }
+      : reviewInputs;
+    const reviewViews = new Map([[JSON.stringify(reviewInputs.sentence_list), reviewView]]);
+    const homeViews = new Map<string | undefined, ReturnType<Deck["home_screen_view"]>>();
     // The sentence-list hook intentionally stays screen-local. Rust only uses
     // its selection for curriculum/idle content, not to choose the challenge.
     const getReviewView = (
       sentence_list: SentenceListSelection | undefined,
     ) => {
       if (!deck || !reviewView) throw new Error("Review requires a ready deck");
-      return reviewView.step.type === "Idle"
-        ? deck.review_screen_view({ ...reviewInputs, sentence_list })
-        : reviewView;
+      if (reviewView.step.type !== "Idle") return reviewView;
+      const key = JSON.stringify(sentence_list);
+      let view = reviewViews.get(key);
+      if (!view) {
+        view = deck.review_screen_view({ ...reviewInputs, sentence_list });
+        reviewViews.set(key, view);
+      }
+      return view;
     };
     const getHomeView = (sentence_list: SentenceListSelection | undefined) => {
       if (!deck) throw new Error("Home requires a ready deck");
-      return deck.home_screen_view({ ...reviewInputs, sentence_list });
+      const key = JSON.stringify(sentence_list);
+      let view = homeViews.get(key);
+      if (!view) {
+        view = deck.home_screen_view({ ...inputs, sentence_list });
+        homeViews.set(key, view);
+      }
+      return view;
     };
-    return { inputs: reviewInputs, reviewView, getReviewView, getHomeView };
+    return { inputs, reviewView, getReviewView, getHomeView };
   }, [
     deck,
+    sentenceList,
     banned,
     network.online,
     userInfo,
@@ -284,21 +303,18 @@ function useStudyController(
     historyKnown,
     dismissedAccomplishmentAtReview,
     placement,
-    currentHeld,
+    restrictionRevision,
     exportingAnki,
   ]);
   const currentChallenge =
     reviewView?.step.type === "Challenge"
       ? reviewView.step.view.challenge
       : undefined;
-  // Adjust before commit, not in an effect; undefined is never a held selection.
-  if (deck && currentChallenge && !currentHeld) {
-    setHeldChallenge({
-      deck,
-      revision: restrictionRevision,
-      challenge: currentChallenge,
-    });
-  }
+  useLayoutEffect(() => {
+    if (deck && currentChallenge) {
+      heldChallenge.current = { deck, revision: restrictionRevision, challenge: currentChallenge };
+    }
+  }, [deck, restrictionRevision, currentChallenge]);
 
   const totalReviewsCompleted = deck?.get_total_reviews();
   useEffect(() => {

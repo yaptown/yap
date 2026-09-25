@@ -43,6 +43,8 @@ function harness() {
   let placement = false;
   let session;
   let eventAvailable = true;
+  let reviewCalls = 0;
+  let summaryCalls = 0;
   const context = { userInfo: { id: "one", displayName: "Learner" } };
   const localStorage = {
     getItem: (key) => storage.get(key) ?? null,
@@ -53,6 +55,7 @@ function harness() {
     a?.length === b?.length && a.every((value, i) => Object.is(value, b[i]));
   const react = {
     createContext: (value) => ({ value }),
+    useContext: () => session,
     useState(initial) {
       const index = cursor++;
       if (!slots[index])
@@ -97,13 +100,13 @@ function harness() {
     },
   };
   const makeDeck = () => ({
-    get_all_cards_summary: () => [{ due_timestamp_ms: due }],
+    get_all_cards_summary: () => { summaryCalls++; return [{ due_timestamp_ms: due }]; },
     get_sentence_list: () => ({ type: "Movie", id: "persisted" }),
     get_total_reviews: () => totalReviews,
     cache_challenge_audio: (banned, token, signal) =>
       prefetches.push({ banned, token, signal }),
     home_screen_view: (inputs) => ({ inputs }),
-    review_screen_view: (inputs) => ({
+    review_screen_view: (inputs) => { reviewCalls++; return ({
       step: placement
         ? { type: "PlacementTest", view: inputs.placement ?? { progress: 0 } }
         : accomplishment &&
@@ -115,7 +118,7 @@ function harness() {
                 view: { challenge: inputs.current_challenge ?? selected },
               }
             : { type: "Idle", view: { sentence_list: inputs.sentence_list } },
-    }),
+    }); },
     translate_sentence_perfect: (tapped, sentence) => eventAvailable ? { sentence, tapped } : undefined,
     translate_sentence_wrong: (sentence, submission) => eventAvailable ? { sentence, submission } : undefined,
     transcribe_sentence: (grade) => eventAvailable ? { grade } : undefined,
@@ -154,7 +157,7 @@ function harness() {
       if (path === "react/jsx-runtime")
         return { jsx: (type, props, key) => ({ type, props, key }) };
       if (path === "react-router-dom")
-        return { useOutletContext: () => context };
+        return { useOutletContext: () => context, useMatch: () => null };
       if (path === "react-use")
         return {
           useNetworkState: () => ({ online }),
@@ -214,12 +217,16 @@ function harness() {
       cursor = 0;
       pendingEffects = [];
       session = exports.useStudyController(state, context, exports.CourseRoutes().props.pendingReviewScope);
+      // Home and Review mount this separate effect owner beside the controller.
+      exports.CourseAudioPrefetch();
     } while (dirty);
     pendingEffects.forEach((run) => run());
     return session;
   }
   return {
     render,
+    get reviewCalls() { return reviewCalls; },
+    get summaryCalls() { return summaryCalls; },
     events,
     prefetches,
     storage,
@@ -261,6 +268,7 @@ function harness() {
     },
     completeReview: () => {
       totalReviews++;
+      state = { ...state, deck: makeDeck() }; // Deck snapshots are immutable.
       return render();
     },
     reconnect: () => {
@@ -437,4 +445,46 @@ test("Home owns prefetch too; readiness/reconnect abort superseded work and unmo
   assert.ok(previous.signal.aborted);
   h.unmount();
   assert.ok(h.prefetches.at(-1).signal.aborted);
+});
+
+test("each new deck computes review and card summaries only once", () => {
+  const h = harness();
+  h.select(challenge("first"));
+  h.render();
+  assert.equal(h.reviewCalls, 1);
+  assert.equal(h.summaryCalls, 1);
+  h.render();
+  assert.equal(h.reviewCalls, 1);
+  h.tick(2000);
+  assert.equal(h.reviewCalls, 1);
+  h.select(challenge("second"));
+  h.replaceDeck();
+  assert.equal(h.reviewCalls, 2);
+  assert.equal(h.summaryCalls, 2);
+  assert.equal(h.session.inputs.timestamp_ms, 1002000);
+  h.tick(2000, { audioChanged: true });
+  assert.equal(h.reviewCalls, 3);
+  assert.equal(h.summaryCalls, 2);
+});
+
+test("idle draft selection is cached by value and persisted selection reuses controller view", () => {
+  const h = harness();
+  h.render();
+  const first = h.session.getReviewView({ type: "Movie", id: "persisted" });
+  assert.equal(h.reviewCalls, 1);
+  assert.equal(h.session.getReviewView({ type: "Movie", id: "persisted" }), first);
+  const draft = h.session.getReviewView({ type: "Movie", id: "draft" });
+  assert.equal(h.reviewCalls, 2);
+  assert.equal(h.session.getReviewView({ type: "Movie", id: "draft" }), draft);
+  assert.equal(h.reviewCalls, 2);
+});
+
+test("Home previews the first selected challenge before another render", () => {
+  const h = harness();
+  const selected = challenge("selected");
+  h.select(selected);
+  h.render();
+  const view = h.session.getHomeView({ type: "Movie", id: "persisted" });
+  assert.equal(view.inputs.current_challenge, selected);
+  assert.equal(h.reviewCalls, 1);
 });

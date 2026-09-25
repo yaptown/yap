@@ -143,14 +143,18 @@ struct CourseHome: View {
         return false
     }
     #endif
-    private var liveReview: some View {
-        ReviewScreen(view: review.view)
-        #if DEBUG
-            .onChange(of: DebugHarness.shared.commandID) { _, _ in
-                guard DebugHarness.shared.activeScreen == .review else { return }
-                review.handleDebugCommand()
-            }
-        #endif
+    @ViewBuilder private var liveReview: some View {
+        if let view = review.view {
+            ReviewScreen(view: view)
+            #if DEBUG
+                .onChange(of: DebugHarness.shared.commandID) { _, _ in
+                    guard DebugHarness.shared.activeScreen == .review else { return }
+                    review.handleDebugCommand()
+                }
+            #endif
+        } else {
+            ProgressView()
+        }
     }
     private func navigate(_ route: CourseRoute) {
         audio.stop()

@@ -181,6 +181,7 @@ pub struct Weapon {
     // not this ofc
     language_pack: RefCell<BTreeMap<Course, LoadedLanguagePack>>,
     directories: Directories,
+    deck_fold: RefCell<Option<(Context, bool, weapon::data_model::FoldCache<Deck>)>>,
 }
 
 #[bridge]
@@ -254,6 +255,7 @@ impl Weapon {
             device_id,
             language_pack: RefCell::new(BTreeMap::new()),
             directories,
+            deck_fold: RefCell::new(None),
         })
     }
 
@@ -399,11 +401,18 @@ impl Weapon {
             timezone,
         };
         let history_known = self.reviews_history_known();
-        let initial_state = DeckState::new();
+        let mut cached = self.deck_fold.borrow_mut();
+        if cached.as_ref().is_none_or(|(previous, was_full, _)| {
+            *was_full != full || !previous.same_fold_inputs(&context)
+        }) {
+            *cached = Some((context.clone(), full, Default::default()));
+        }
         let store = self.store.borrow();
         let deck = match store.get::<EventType<DeckEvent>>("reviews".to_string()) {
-            Some(stream) => stream.state(initial_state, &context),
-            None => Deck::finalize(initial_state, &context),
+            Some(stream) => {
+                stream.state_cached(&mut cached.as_mut().unwrap().2, DeckState::new, &context)
+            }
+            None => Deck::finalize(DeckState::new(), &context),
         };
         if !full {
             let starting_fresh = selection
@@ -1097,6 +1106,15 @@ pub struct Context {
     pub course: Course,
     /// User's timezone offset from UTC
     pub timezone: chrono::FixedOffset,
+}
+
+impl Context {
+    fn same_fold_inputs(&self, other: &Self) -> bool {
+        self.course == other.course
+            && self.timezone == other.timezone
+            && self.study_goal == other.study_goal
+            && Arc::ptr_eq(&self.language_pack, &other.language_pack)
+    }
 }
 
 /// Flashcard types for tracking tutorial progress
@@ -3025,7 +3043,13 @@ impl Deck {
         )
     }
 
+    /// Full movie-browser statistics, including the milestone card counts.
     pub fn get_movie_stats(&self) -> Vec<MovieStats> {
+        self.movie_stats(true)
+    }
+
+    #[bridge(skip)]
+    fn movie_stats(&self, include_milestones: bool) -> Vec<MovieStats> {
         let language_pack = &self.context.language_pack;
         let mut stats = Vec::new();
 
@@ -3056,17 +3080,17 @@ impl Deck {
             );
             let percent_known = score.percent_known;
             // For milestone calculation, use written comprehension as the card count basis
-            let comprehensible_word_count: u64 = movie_frequencies
-                .entries
-                .iter()
-                .filter_map(|(gram, freq)| {
-                    comprehensible_written
-                        .contains(gram)
-                        .then_some(freq.count as u64)
-                })
-                .sum();
+            let cards_to_next_milestone = if include_milestones && !score.all_available_learned {
+                let comprehensible_word_count: u64 = movie_frequencies
+                    .entries
+                    .iter()
+                    .filter_map(|(gram, freq)| {
+                        comprehensible_written
+                            .contains(gram)
+                            .then_some(freq.count as u64)
+                    })
+                    .sum();
 
-            let cards_to_next_milestone = if !score.all_available_learned {
                 let next_milestone = ((percent_known / 5.0).ceil() * 5.0).min(100.0);
                 let target_word_count = ((next_milestone / 100.0) * total_word_count as f64) as u64;
                 let words_needed = target_word_count.saturating_sub(comprehensible_word_count);
@@ -3157,26 +3181,32 @@ impl Deck {
 
     /// Returns the best movie sentence list: highest RT score among incomplete movies.
     pub fn get_best_movie_sentence_list(&self) -> Option<SentenceListSelection> {
-        let stats = self.get_movie_stats();
-        let incomplete: std::collections::BTreeSet<_> = stats
-            .iter()
-            .filter(|s| !s.all_available_learned)
-            .map(|s| &s.id)
-            .collect();
-
+        let written = self.get_comprehensible_written_grams(true);
+        let listening = self.get_comprehensible_listening_grams(true);
         let target_iso = self.context.course.target_language.iso_639_1();
         self.context
             .language_pack
             .movies
             .iter()
-            .filter(|(id, meta)| {
-                incomplete.contains(id)
-                    && meta
-                        .original_language
-                        .as_deref()
-                        .is_some_and(|lang| normalize_original_language(lang) == target_iso)
+            .filter(|(_, meta)| {
+                meta.original_language
+                    .as_deref()
+                    .is_some_and(|lang| normalize_original_language(lang) == target_iso)
             })
             .filter_map(|(id, meta)| meta.rotten_tomatoes_score.map(|score| (id, score)))
+            .filter(|(id, _)| {
+                self.context
+                    .language_pack
+                    .source_gram_frequencies
+                    .get(&language_utils::FrequencySourceId::Movie((*id).clone()))
+                    .is_some_and(|frequencies| {
+                        frequencies.total_count > 0
+                            && frequencies
+                                .entries
+                                .keys()
+                                .any(|gram| !written.contains(gram) || !listening.contains(gram))
+                    })
+            })
             .max_by_key(|(_, score)| *score)
             .map(|(id, _)| SentenceListSelection::Movie { id: id.clone() })
     }
@@ -3313,7 +3343,6 @@ impl Deck {
         let smart_add_regime = next_cards_iter.smart_add_regime();
         let smart_add_cards: Vec<_> = next_cards_iter.take(max_cards_to_add).collect();
 
-        // Projected percent known
         let mut projected_written = self
             .get_comprehensible_written_grams(true)
             .iter()
@@ -3334,6 +3363,21 @@ impl Deck {
             }
         }
 
+        // Select the tier once for both the current label and projected progress.
+        let freq_list = &self.context.language_pack.gram_frequencies;
+        let all_grams: Vec<TaggedGram<SpurGram>> = freq_list.entries.keys().copied().collect();
+        let levels = tiers::tier_level_slices(&all_grams, freq_list);
+        let current_written = self.get_comprehensible_written_grams(true);
+        let current_listening = self.get_comprehensible_listening_grams(true);
+        let level_idx = tiers::best_tier_level_idx(
+            &levels,
+            freq_list,
+            current_written,
+            current_listening,
+            &projected_written,
+            &projected_listening,
+        );
+        let level = &levels[level_idx];
         let percent_known_after = match &sentence_list {
             Some(_) => {
                 self.sentence_list_percent_known_with(
@@ -3343,23 +3387,7 @@ impl Deck {
                 )
                 .percent_known
             }
-            None => {
-                let freq_list = &self.context.language_pack.gram_frequencies;
-                let all_grams: Vec<TaggedGram<SpurGram>> =
-                    freq_list.entries.keys().copied().collect();
-                let levels = tiers::tier_level_slices(&all_grams, freq_list);
-                let current_written = self.get_comprehensible_written_grams(true);
-                let current_listening = self.get_comprehensible_listening_grams(true);
-                let level_idx = tiers::best_tier_level_idx(
-                    &levels,
-                    freq_list,
-                    current_written,
-                    current_listening,
-                    &projected_written,
-                    &projected_listening,
-                );
-                levels[level_idx].known_pct(freq_list, &projected_written, &projected_listening)
-            }
+            None => level.known_pct(freq_list, &projected_written, &projected_listening),
         };
 
         // Preview strings
@@ -3392,20 +3420,6 @@ impl Deck {
 
         // Tier info (reuses the projected grams we already computed)
         let tier_info = {
-            let freq_list = &self.context.language_pack.gram_frequencies;
-            let all_grams: Vec<TaggedGram<SpurGram>> = freq_list.entries.keys().copied().collect();
-            let levels = tiers::tier_level_slices(&all_grams, freq_list);
-            let current_written = self.get_comprehensible_written_grams(true);
-            let current_listening = self.get_comprehensible_listening_grams(true);
-            let level_idx = tiers::best_tier_level_idx(
-                &levels,
-                freq_list,
-                current_written,
-                current_listening,
-                &projected_written,
-                &projected_listening,
-            );
-            let level = &levels[level_idx];
             let pct = level.known_pct(freq_list, current_written, current_listening);
             let grand_total_freq: u64 = freq_list.entries.values().map(|f| f.count as u64).sum();
             let cumulative_freq: u64 = levels[..=level_idx].iter().map(|l| l.total_freq()).sum();
@@ -5191,6 +5205,117 @@ mod tests {
         assert_eq!(
             deck.sentence_posters(ids, Some("clip".into())),
             vec![all[0].clone(), all[2].clone()]
+        );
+    }
+
+    #[test]
+    fn movie_selection_matches_full_stats_without_browser_milestones() {
+        use language_utils::{FrequencySourceId, language_pack::FrequencyList};
+        let mut deck = Deck::default();
+        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
+        let (&gram, &frequency) = pack.gram_frequencies.entries.get_index(0).unwrap();
+        pack.movies.clear();
+        pack.source_gram_frequencies.clear();
+        for (id, language, rating, total, populated) in [
+            ("french-a", Some("fr"), Some(90), 100, true),
+            ("french-b", Some("fra"), Some(90), 100, true),
+            ("english", Some("en"), Some(100), 100, true),
+            ("unrated", Some("fr"), None, 100, true),
+            ("no-language", None, Some(100), 100, true),
+            ("zero", Some("fr"), Some(100), 0, true),
+            ("empty", Some("fr"), Some(100), 100, false),
+        ] {
+            pack.movies.insert(
+                id.into(),
+                language_utils::MovieMetadata {
+                    id: id.into(),
+                    title: id.into(),
+                    year: None,
+                    original_language: language.map(str::to_owned),
+                    rotten_tomatoes_score: rating,
+                    poster_bytes: None,
+                },
+            );
+            pack.source_gram_frequencies.insert(
+                FrequencySourceId::Movie(id.into()),
+                FrequencyList {
+                    entries: if populated {
+                        [(gram, frequency)].into_iter().collect()
+                    } else {
+                        Default::default()
+                    },
+                    total_count: total,
+                },
+            );
+        }
+        let stats = deck.get_movie_stats();
+        assert_eq!(stats.len(), 5);
+        let expected = deck
+            .context
+            .language_pack
+            .movies
+            .iter()
+            .filter(|(id, meta)| {
+                stats
+                    .iter()
+                    .any(|s| s.id == **id && !s.all_available_learned)
+                    && meta
+                        .original_language
+                        .as_deref()
+                        .is_some_and(|language| normalize_original_language(language) == "fr")
+            })
+            .filter_map(|(id, meta)| meta.rotten_tomatoes_score.map(|score| (id, score)))
+            .max_by_key(|(_, score)| *score)
+            .map(|(id, _)| SentenceListSelection::Movie { id: id.clone() });
+        assert!(expected.is_some());
+        assert_eq!(deck.get_best_movie_sentence_list(), expected);
+        let light = deck.movie_stats(false);
+        for (full, light) in stats.iter().zip(&light) {
+            assert_eq!(
+                (&full.id, full.percent_known, full.all_available_learned),
+                (&light.id, light.percent_known, light.all_available_learned)
+            );
+            assert!(light.cards_to_next_milestone.is_none());
+        }
+        let mut known = deck.clone();
+        for indicator in [
+            CardIndicator::WrittenGram { gram },
+            CardIndicator::ListeningGram { gram: gram.gram },
+        ] {
+            known.cards.insert(
+                indicator,
+                CardData::Added {
+                    fsrs_card: rs_fsrs::Card::new(Utc::now()),
+                },
+            );
+        }
+        known.comprehensible = CachedComprehensibleGrams::new(
+            &known.context.language_pack,
+            &known.regressions,
+            known.cards.iter(),
+        );
+        assert!(
+            known
+                .get_movie_stats()
+                .iter()
+                .all(|movie| movie.all_available_learned)
+        );
+        assert_eq!(known.get_best_movie_sentence_list(), None);
+        drop(known);
+        // With no eligible original-language movie, preserve highest-comprehension fallback.
+        for meta in Arc::get_mut(&mut deck.context.language_pack)
+            .unwrap()
+            .movies
+            .values_mut()
+        {
+            meta.rotten_tomatoes_score = None;
+        }
+        assert_eq!(deck.get_best_movie_sentence_list(), None);
+        assert_eq!(
+            deck.get_sentence_list_for_category(SentenceListCategory::Movie),
+            stats.first().map(|movie| SentenceListSelection::Movie {
+                id: movie.id.clone()
+            })
         );
     }
 

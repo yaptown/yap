@@ -9,6 +9,19 @@ struct HomeScreen: View {
     let searchTransition: Namespace.ID
     var view: HomeScreenView? = nil
     var isVisible = true
+    @State private var snapshot = Snapshot()
+    // While a route covers Home, reuse the last view instead of asking Rust again; keeping
+    // the subtree mounted preserves scroll position for the way back.
+    private final class Snapshot { var view: HomeScreenView? }
+    private func screenView() -> HomeScreenView {
+        if let view { return view }
+        if isVisible || snapshot.view == nil {
+            let deck = review.deck
+            snapshot.view = deck.home_screen_view(inputs: review.inputs(
+                sentenceList: review.session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list()))
+        }
+        return snapshot.view!
+    }
     // Adding cards from Home means "study these now" — after the add fires, jump
     // to Review so the user lands on the cards they just committed to (mirrors
     // web). In fixture mode `navigate` is a no-op and hit-testing is off.
@@ -23,9 +36,7 @@ struct HomeScreen: View {
     }
     var body: some View {
         TimelineView(.periodic(from: .now, by: 10)) { _ in
-            let deck = review.deck
-            let view = self.view ?? deck.home_screen_view(inputs: review.inputs(
-                sentenceList: review.session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list()))
+            let view = screenView()
             GeometryReader { geometry in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {

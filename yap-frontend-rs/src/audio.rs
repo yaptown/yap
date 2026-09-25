@@ -38,8 +38,17 @@ thread_local! {
 }
 
 fn cached_clips_publish(files: BTreeSet<String>) {
-    CACHED_CLIPS.with(|clips| *clips.borrow_mut() = Some(files));
-    CACHED_CLIPS_VERSION.with(|v| v.set(v.get().wrapping_add(1)));
+    let changed = CACHED_CLIPS.with(|clips| {
+        let mut clips = clips.borrow_mut();
+        if clips.as_ref() == Some(&files) {
+            return false;
+        }
+        *clips = Some(files);
+        true
+    });
+    if changed {
+        CACHED_CLIPS_VERSION.with(|v| v.set(v.get().wrapping_add(1)));
+    }
 }
 
 fn cached_clips_insert(filename: &str) {
@@ -751,4 +760,28 @@ fn is_valid_audio_data(bytes: &[u8]) -> bool {
         || (bytes[0] == 0xFF && bytes[1] & 0xE0 == 0xE0)
         || bytes.starts_with(b"RIFF")
         || bytes.starts_with(b"OggS")
+}
+
+#[cfg(test)]
+mod publication_tests {
+    use super::*;
+
+    #[test]
+    fn publish_changes_version_only_when_availability_changes() {
+        CACHED_CLIPS.with(|clips| *clips.borrow_mut() = None);
+        CACHED_CLIPS_VERSION.with(|version| version.set(0));
+        cached_clips_publish(BTreeSet::new());
+        assert!(cached_clips_loaded());
+        assert_eq!(cached_clips_version(), 1); // unknown -> known-empty matters
+        cached_clips_publish(BTreeSet::new());
+        assert_eq!(cached_clips_version(), 1);
+        cached_clips_publish(BTreeSet::from(["a".into()]));
+        assert_eq!(cached_clips_version(), 2);
+        cached_clips_publish(BTreeSet::from(["a".into()]));
+        assert_eq!(cached_clips_version(), 2);
+        cached_clips_publish(BTreeSet::new());
+        assert_eq!(cached_clips_version(), 3);
+        CACHED_CLIPS.with(|clips| *clips.borrow_mut() = None);
+        CACHED_CLIPS_VERSION.with(|version| version.set(0));
+    }
 }

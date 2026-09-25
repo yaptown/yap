@@ -8,8 +8,7 @@ import Observation
     let startingFresh: Bool?
     var historyKnown: Bool { didSet { refresh() } }
     private(set) var banned: [ChallengeRequirements] = []
-    private(set) var reviewInfo: ReviewInfo
-    private(set) var view: ReviewScreenView
+    private(set) var view: ReviewScreenView?
     private(set) var currentChallenge: Challenge_Gram_String?
     private(set) var submitting = false
     private var tasks: [Task<Void, Never>] = []
@@ -19,9 +18,6 @@ import Observation
 
     init(deck: Deck, session: YapSession, auth: AuthStore, startingFresh: Bool?, historyKnown: Bool) {
         self.deck = deck; self.session = session; self.auth = auth; self.startingFresh = startingFresh; self.historyKnown = historyKnown
-        reviewInfo = deck.get_review_info(banned_challenge_types: [], timestamp_ms: Self.now)
-        view = deck.review_screen_view(inputs: Self.inputs(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown, sentenceList: deck.get_sentence_list(), banned: [], challenge: nil))
-        if case let .Challenge(challenge) = view.step { currentChallenge = challenge.challenge }
     }
     static var now: Double { Date().timeIntervalSince1970 * 1000 }
     #if DEBUG
@@ -34,7 +30,9 @@ import Observation
         guard DebugHarness.shared.fixture == nil else { return }
         #endif
         guard !active else { return }; active = true
-        refreshRestrictions(); refresh()
+        let next = restrictions().banned
+        if next != banned { currentChallenge = nil }
+        banned = next; refresh()
         tasks.append(Task { [weak self] in
             var audioVersion = get_audio_cache_version()
             var clipVersion = get_clip_manifest_version()
@@ -87,8 +85,8 @@ import Observation
         #endif
         guard active else { return }
         let now = Self.now
-        reviewInfo = deck.get_review_info(banned_challenge_types: banned, timestamp_ms: now)
-        view = deck.review_screen_view(inputs: inputs(sentenceList: session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list()))
+        let view = deck.review_screen_view(inputs: inputs(sentenceList: session.curriculumDraft.map(\.selection) ?? deck.get_sentence_list()))
+        self.view = view
         // Non-nil challenges are held for this Deck's lifetime, even as caches change.
         if case let .Challenge(challenge) = view.step { currentChallenge = challenge.challenge }
         prefetch?.cancel()
@@ -146,16 +144,11 @@ import Observation
         return true
     }
     func inputs(sentenceList: SentenceListSelection?) -> ReviewScreenInputs {
-        Self.inputs(deck: deck, session: session, auth: auth, startingFresh: startingFresh, historyKnown: historyKnown,
-            sentenceList: sentenceList, banned: banned, challenge: currentChallenge)
-    }
-    private static func inputs(deck: Deck, session: YapSession, auth: AuthStore, startingFresh: Bool?, historyKnown: Bool,
-                               sentenceList: SentenceListSelection?, banned: [ChallengeRequirements], challenge: Challenge_Gram_String?) -> ReviewScreenInputs {
         ReviewScreenInputs(banned: banned, sentence_list: sentenceList, online: session.online,
             is_signed_in: auth.userId != nil, needs_display_name: auth.needsDisplayName,
             display_name_dismissed: UserDefaults.standard.bool(forKey: "yap-skipped-set-display-name"),
             has_access_token: auth.accessToken != nil, starting_fresh: startingFresh, history_known: historyKnown,
-            dismissed_accomplishment_at_review: session.dismissedAccomplishmentAtReview, placement: session.placementSession, current_challenge: challenge, timestamp_ms: now)
+            dismissed_accomplishment_at_review: session.dismissedAccomplishmentAtReview, placement: session.placementSession, current_challenge: currentChallenge, timestamp_ms: Self.now)
     }
     var host: ReviewHost {
         ReviewHost(deck: deck, weapon: session.weapon, online: session.online, accessToken: session.accessToken(), autoplay: session.autoplay,
@@ -176,7 +169,7 @@ import Observation
         actions.addEvent = session.addDeckEvent
         actions.setSentenceList = { self.session.curriculumDraft = CurriculumDraft(selection: $0); self.refresh() }
         actions.commitSentenceList = { self.session.addDeckEvent($0); self.session.curriculumDraft = nil; self.refresh() }
-        actions.dismissAccomplishment = { self.session.dismissedAccomplishmentAtReview = self.view.total_reviews; self.refresh() }
+        actions.dismissAccomplishment = { self.session.dismissedAccomplishmentAtReview = self.view?.total_reviews; self.refresh() }
         actions.setPlacement = { self.session.placementSession = $0; self.refresh() }
         actions.completePlacementTest = { self.session.addDeckEvent(self.deck.complete_placement_test(known_words: $0.known_words, unknown_words: $0.unknown_words)) }
         actions.retryPack = session.retry
@@ -200,8 +193,8 @@ import Observation
         case "status":
             DebugHarness.log("placement: startingFresh=\(String(describing: startingFresh)) historyKnown=\(historyKnown) taken=\(deck.has_taken_placement_test()) list=\(String(describing: deck.get_sentence_list()))")
             DebugHarness.log("today: seconds=\(deck.get_today_time_spent()) target=\(deck.get_daily_review_target())")
-            let info = reviewInfo
-            DebugHarness.log("review: due=\(info.due_count) total=\(info.total_count) banned=\(info.due_but_banned_count) audioPending=\(info.due_but_audio_pending_count) locked=\(info.due_but_locked_count) step=\(String(describing: view.step))")
+            let info = deck.get_review_info(banned_challenge_types: banned, timestamp_ms: Self.now)
+            DebugHarness.log("review: due=\(info.due_count) total=\(info.total_count) banned=\(info.due_but_banned_count) audioPending=\(info.due_but_audio_pending_count) locked=\(info.due_but_locked_count) step=\(String(describing: view?.step))")
             switch currentChallenge {
             case let .PronunciationChallenge(_, pattern, _, _, _, _): DebugHarness.log("challenge=pronunciation \(pattern)")
             case let .TranslateComprehensibleSentence(sentence): DebugHarness.log("challenge=translation \(sentence.target_language)")
@@ -225,7 +218,7 @@ import Observation
             if let event = options.first(where: { $0.card_type == type })?.event { session.addDeckEvent(event) }
         case "add":
             guard currentChallenge == nil else { return }
-            if case let .Idle(.Idle(idle)) = view.step, let event = idle.info.smart_add_event { session.addDeckEvent(event) }
+            if case let .Idle(.Idle(idle)) = view?.step, let event = idle.info.smart_add_event { session.addDeckEvent(event) }
         default: break
         }
     }

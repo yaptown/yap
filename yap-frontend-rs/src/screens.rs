@@ -415,11 +415,31 @@ impl Deck {
         is_signed_in: bool,
         timestamp_ms: f64,
     ) -> IdleScreenView {
+        let review = self.get_review_info(banned.clone(), timestamp_ms);
+        self.idle_screen_view_with_review(
+            banned,
+            sentence_list,
+            online,
+            is_signed_in,
+            timestamp_ms,
+            &review,
+        )
+    }
+
+    fn idle_screen_view_with_review(
+        &self,
+        banned: Vec<ChallengeRequirements>,
+        sentence_list: Option<SentenceListSelection>,
+        online: bool,
+        is_signed_in: bool,
+        timestamp_ms: f64,
+        review: &ReviewInfo,
+    ) -> IdleScreenView {
         let day = DateTime::<Utc>::from_timestamp_millis(timestamp_ms as i64)
             .unwrap_or_else(Utc::now)
             .with_timezone(&self.context.timezone)
             .date_naive();
-        let review = self.get_review_info(banned.clone(), timestamp_ms);
+
         let week = self.get_current_week_progress_on(day);
         if review.due_but_audio_pending_count() > 0 {
             return IdleScreenView::AudioPending {
@@ -574,15 +594,16 @@ impl Deck {
             return None;
         }
         let today = self.get_today_summary_on(day);
+        let accomplishment = self.get_accomplishment()?;
+        let percent_known = self.get_percent_of_words_known();
         Some(AccomplishmentView {
             target_language: self.get_target_language(),
             heading: accomplishment_heading(&today.day_of_week),
-            accomplishment: self.get_accomplishment()?,
+            accomplishment,
             today,
             streak: self.get_daily_streak_on(day),
-            percent_known: self.get_percent_of_words_known(),
-            words_known: (self.get_percent_of_words_known() * self.num_cards_added() as f64).round()
-                as u32,
+            percent_known,
+            words_known: (percent_known * self.num_cards_added() as f64).round() as u32,
             target: self.get_daily_review_target_setting(),
             goals: self.goal_options_view(),
             days: self.get_current_week_progress_on(day),
@@ -641,14 +662,24 @@ impl Deck {
     fn curriculum_navigation(
         &self,
         sentence_list: Option<SentenceListSelection>,
-    ) -> (SentenceListNavigation, Option<String>) {
-        let movies = self.get_movie_stats();
-        let navigation = get_sentence_list_navigation(
-            sentence_list,
-            !movies.is_empty(),
-            !self.get_pimsleur_stats().is_empty(),
-        );
-        (navigation, movies.first().map(|movie| movie.id.clone()))
+    ) -> SentenceListNavigation {
+        let pack = &self.context.language_pack;
+        let available = |frequencies: &language_utils::language_pack::FrequencyList| {
+            !frequencies.entries.is_empty() && frequencies.total_count > 0
+        };
+        let has_movies = pack.movies.keys().any(|id| {
+            pack.source_gram_frequencies
+                .get(&language_utils::FrequencySourceId::Movie(id.clone()))
+                .is_some_and(available)
+        });
+        let has_pimsleur = pack
+            .source_gram_frequencies
+            .iter()
+            .any(|(source, frequencies)| {
+                matches!(source, language_utils::FrequencySourceId::PimsleurLesson(_))
+                    && available(frequencies)
+            });
+        get_sentence_list_navigation(sentence_list, has_movies, has_pimsleur)
     }
 
     fn curriculum_view(
@@ -656,7 +687,7 @@ impl Deck {
         banned: Vec<ChallengeRequirements>,
         sentence_list: Option<SentenceListSelection>,
     ) -> (CurriculumView, NoCardsReadyInfo) {
-        let (navigation, fallback_movie_id) = self.curriculum_navigation(sentence_list);
+        let navigation = self.curriculum_navigation(sentence_list);
         let has_movies = navigation.categories.contains(&SentenceListCategory::Movie);
         let has_pimsleur = navigation
             .categories
@@ -698,7 +729,7 @@ impl Deck {
                 let selection = if navigation.categories[navigation.selected_index] == *category {
                     navigation.selection.clone()
                 } else {
-                    self.get_sentence_list_for_category(*category, fallback_movie_id.clone())
+                    self.get_sentence_list_for_category(*category)
                 };
                 SentenceListOptionView {
                     category: *category,
@@ -1054,11 +1085,20 @@ impl Deck {
     pub fn home_screen_view(&self, inputs: ReviewScreenInputs) -> HomeScreenView {
         let (step, review, _) = self.review_step(inputs.clone());
         let due_count = review.due_count() as u64;
-        let (navigation, _) = self.curriculum_navigation(inputs.sentence_list.clone());
-        let info = self.get_no_cards_ready_info(inputs.banned.clone(), navigation.selection);
         let is_challenge = matches!(step, ReviewStep::Challenge(_));
         let shows_curriculum = matches!(&step, ReviewStep::Idle(idle)
             if matches!(idle.as_ref(), IdleScreenView::Idle(view) if view.show_sentence_list));
+        // The idle view already computed the tier; otherwise pay for it only when the goal shows.
+        let goal_tier_info = (!shows_curriculum).then(|| match &step {
+            ReviewStep::Idle(idle) if let IdleScreenView::Idle(view) = idle.as_ref() => {
+                view.info.tier_info.clone()
+            }
+            _ => {
+                let navigation = self.curriculum_navigation(inputs.sentence_list.clone());
+                self.get_no_cards_ready_info(inputs.banned.clone(), navigation.selection)
+                    .tier_info
+            }
+        });
         let mut kind = UpNextKind::Other;
         let (headline, kind_label, idle) = match step {
             ReviewStep::Challenge(view) => {
@@ -1148,7 +1188,7 @@ impl Deck {
                 ),
                 idle,
             },
-            goal: (!shows_curriculum).then(|| self.goal_card_view(&info.tier_info)),
+            goal: goal_tier_info.map(|tier_info| self.goal_card_view(&tier_info)),
             week: WeekCardView {
                 title: "This week".into(),
                 today_label: streak.today_label,
@@ -1423,12 +1463,13 @@ impl Deck {
                 translation: None,
             }))
         } else {
-            ReviewStep::Idle(Box::new(self.idle_screen_view(
+            ReviewStep::Idle(Box::new(self.idle_screen_view_with_review(
                 inputs.banned,
                 inputs.sentence_list,
                 inputs.online,
                 inputs.is_signed_in,
                 inputs.timestamp_ms,
+                &review,
             )))
         };
         (step, review, prompts)

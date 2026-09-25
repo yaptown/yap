@@ -72,13 +72,16 @@ impl Deck {
     pub fn get_sentence_list_for_category(
         &self,
         category: SentenceListCategory,
-        fallback_movie_id: Option<String>,
     ) -> Option<SentenceListSelection> {
         match category {
             SentenceListCategory::Essential => None,
-            SentenceListCategory::Movie => self
-                .get_best_movie_sentence_list()
-                .or_else(|| fallback_movie_id.map(|id| SentenceListSelection::Movie { id })),
+            SentenceListCategory::Movie => self.get_best_movie_sentence_list().or_else(|| {
+                self.movie_stats(false)
+                    .first()
+                    .map(|movie| SentenceListSelection::Movie {
+                        id: movie.id.clone(),
+                    })
+            }),
             SentenceListCategory::Pimsleur => self.get_best_pimsleur_sentence_list(),
         }
     }
