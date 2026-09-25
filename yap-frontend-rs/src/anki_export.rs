@@ -1,4 +1,7 @@
 //! A host-independent Anki recipe. Hosts package these notes and media, not learning logic.
+#[cfg(test)]
+#[path = "anki_export_skill_levels.rs"]
+mod skill_levels;
 use crate::{
     comprehensible::{GramMembership, RankBitset},
     simulation::{DailySimulationIterator, DayChallengeIterator},
