@@ -38,6 +38,8 @@ pub enum AnkiCardTypes {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AnkiDeckOptions {
     pub card_types: AnkiCardTypes,
+    /// Introduce each new word on a card of its own before its sentence.
+    pub word_cards: bool,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -149,8 +151,6 @@ pub struct AnkiExportView {
     /// Films the deck's clips come from, most clips first; only films with
     /// a poster, since the page shows them as a strip of posters.
     pub films: Vec<MovieMetadataBasic>,
-    /// Sits between the posters and the progress bar, which it introduces.
-    pub intro: String,
     pub needs_placement: bool,
     pub placement_intro: String,
     /// "Essential French": what `percent_known` is a percentage of. The deck
@@ -171,9 +171,8 @@ pub struct AnkiExportView {
     pub course_label: String,
     pub card_types_label: String,
     pub reading_label: String,
-    pub reading_description: String,
     pub listening_label: String,
-    pub listening_description: String,
+    pub word_cards_label: String,
     pub download_label: String,
     /// Replaces the placement test's "Begin Learning": finishing it here
     /// leads to a deck, not to the app.
@@ -199,6 +198,45 @@ pub struct AnkiExportView {
 /// Sentence notes per deck. Not a choice yet: one good default beats a
 /// number nobody knows how to pick.
 const DECK_SIZE: usize = 300;
+
+/// The option descriptions and intro, which follow what's selected: with
+/// both card types on, each describes "some" cards; with one, it describes
+/// all of them.
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AnkiOptionsCopy {
+    /// Sits between the posters and the progress bar, which it introduces.
+    pub intro: String,
+    pub reading_description: String,
+    pub listening_description: String,
+    pub word_cards_description: String,
+}
+
+#[bridgerton::bridge]
+pub fn anki_options_copy(reading: bool, listening: bool, word_cards: bool) -> AnkiOptionsCopy {
+    AnkiOptionsCopy {
+        intro: if word_cards {
+            "At first, the cards will introduce new words, and then they'll be reinforced with cards showing clips from these films. We'll pick words that are right for your knowledge level:"
+        } else {
+            "Each card teaches a new word with a clip from one of these films. We'll pick words that are right for your knowledge level:"
+        }
+        .into(),
+        reading_description: if reading && !listening {
+            "Cards show the subtitle, and you try to translate."
+        } else {
+            "Some cards show the subtitle, and you try to translate."
+        }
+        .into(),
+        listening_description: if listening && !reading {
+            "Cards have no subtitles, and you try to understand what you hear."
+        } else {
+            "Some cards have no subtitles, and you try to understand what you hear."
+        }
+        .into(),
+        word_cards_description:
+            "Introduce words as standalone cards before using them in sentences.".into(),
+    }
+}
 
 #[bridgerton::bridge]
 pub async fn mint_anki_deck(
@@ -363,7 +401,6 @@ fn poster_filename(imdb: &str) -> String {
 
 // The page never talks about "your level": Yap's level system is due a
 // rethink, so the deck is described by the words it teaches instead.
-const INTRO: &str = "At first, the cards will introduce new words, and then they'll be reinforced with cards showing clips from these films. We'll pick words that are right for your knowledge level:";
 /// How many posters the page shows.
 const FILM_COUNT: usize = 24;
 const PLACEMENT_INTRO: &str = "First, tell us which words you know. No account needed.";
@@ -410,7 +447,6 @@ impl Deck {
                 "Build a custom Anki deck that reinforces your {language} with clips from famous movies."
             ),
             films,
-            intro: INTRO.into(),
             needs_placement: !self.has_taken_placement_test() && self.num_cards_added() < 3,
             placement_intro: PLACEMENT_INTRO.into(),
             progress_label: format!("Essential {}", get_language_metadata(language).common_name),
@@ -424,9 +460,8 @@ impl Deck {
             course_label: language.to_string(),
             card_types_label: "Card types".into(),
             reading_label: "Reading".into(),
-            reading_description: "The card shows the subtitle, and you try to translate it.".into(),
             listening_label: "Listening".into(),
-            listening_description: "No subtitle. Try to understand what you hear.".into(),
+            word_cards_label: "Word cards".into(),
             download_label: format!("Generate {language} deck"),
             placement_complete_label: PLACEMENT_COMPLETE_LABEL.into(),
             backstory: BACKSTORY.into(),
@@ -835,7 +870,7 @@ impl PlannerState {
         for prerequisite in prerequisites {
             taught.insert(prerequisite);
             let word = display(prerequisite);
-            if used_words.insert(word.clone()) {
+            if options.word_cards && used_words.insert(word.clone()) {
                 notes.push(word_note(pack, course, prerequisite, &word, token, bundled));
             }
         }
@@ -976,6 +1011,7 @@ mod tests {
     fn options() -> AnkiDeckOptions {
         AnkiDeckOptions {
             card_types: AnkiCardTypes::Both,
+            word_cards: true,
         }
     }
     fn row(sentence: String, clip_id: String) -> clips::ClipRow {
@@ -1256,6 +1292,7 @@ mod tests {
             .plan_anki_deck(
                 AnkiDeckOptions {
                     card_types: AnkiCardTypes::Reading,
+                    word_cards: true,
                 },
                 55,
                 "new token".into(),
@@ -1296,6 +1333,30 @@ mod tests {
             Some(
                 "Once you finish this deck, you'll understand 24% of everyday French, up from 0%."
             )
+        );
+    }
+
+    #[test]
+    fn anki_without_word_cards_has_only_sentences() {
+        let deck = fixture();
+        publish(&deck.context.language_pack, deck.context.course);
+        let plan = deck
+            .plan_anki_deck(
+                AnkiDeckOptions {
+                    word_cards: false,
+                    ..options()
+                },
+                55,
+                "token".into(),
+                1_700_000_000_000.0,
+            )
+            .unwrap();
+        assert!(plan.stats.sentence_count > 0);
+        assert_eq!(plan.stats.word_count, 0);
+        assert!(
+            plan.notes
+                .iter()
+                .all(|note| matches!(note, AnkiNote::Sentence { .. }))
         );
     }
 

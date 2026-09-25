@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   get_ai_server_url,
+  anki_options_copy,
   mint_anki_deck,
   refresh_clip_manifest,
   type AnkiCardTypes,
@@ -108,7 +109,9 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const { openSignUp } = useAuthDialog();
   const [reading, setReading] = useState(true);
   const [listening, setListening] = useState(true);
+  const [wordCards, setWordCards] = useState(true);
   const cardTypes: AnkiCardTypes | undefined = reading && listening ? "Both" : reading ? "Reading" : listening ? "Listening" : undefined;
+  const copy = useMemo(() => anki_options_copy(reading, listening, wordCards), [reading, listening, wordCards]);
   const [manifest, setManifest] = useState<"loading" | "ready" | "error">("loading");
   const [retry, setRetry] = useState(0);
   const view = useMemo(() => ({ ...deck.anki_export_view(), manifest }), [deck, manifest]);
@@ -145,7 +148,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     // On a phone the status sits below the fold; bring it (and the backstory) up.
     requestAnimationFrame(() => status.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     try {
-      const options = { card_types: cardTypes };
+      const options = { card_types: cardTypes, word_cards: wordCards };
       const minted = await mint_anki_deck(options, accessToken);
       update((current) => ({ ...current, phase: "Choosing sentences…", choosing: true }));
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -186,7 +189,8 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
       }
       const file = { blob, name: `yap-${plan.course_code}.apkg` };
       saveFile(file);
-      const summary = `${plan.stats.sentence_count.toLocaleString()} sentence notes + ${plan.stats.word_count.toLocaleString()} word notes · ${(blob.size / 1024 / 1024).toFixed(1)} MB`;
+      const notes = `${plan.stats.sentence_count.toLocaleString()} sentence notes${plan.stats.word_count ? ` + ${plan.stats.word_count.toLocaleString()} word notes` : ""}`;
+      const summary = `${notes} · ${(blob.size / 1024 / 1024).toFixed(1)} MB`;
       update((current) => ({ ...current, downloadLink, file, summary }));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
@@ -210,7 +214,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
           </div>
         ) : (
           <form className="flex flex-col gap-6" onSubmit={(event) => { event.preventDefault(); if (cardTypes) void download(cardTypes); }}>
-            <p className="text-muted-foreground">{view.intro}</p>
+            <p className="text-muted-foreground">{copy.intro}</p>
             {/* Same bar as the Essential tab on the goals screen. */}
             <div className="flex flex-col gap-3 border-y py-4">
               <h2 className="font-semibold">{view.progress_label}</h2>
@@ -219,9 +223,10 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
             </div>
             <fieldset className="flex flex-col gap-3" disabled={busy}>
               <legend className="mb-3 font-semibold">{view.card_types_label}</legend>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <CardTypeOption label={view.reading_label} description={view.reading_description} checked={reading} onChange={setReading} />
-                <CardTypeOption label={view.listening_label} description={view.listening_description} checked={listening} onChange={setListening} />
+              <div className="grid gap-3">
+                <CardTypeOption label={view.reading_label} description={copy.reading_description} checked={reading} onChange={setReading} />
+                <CardTypeOption label={view.listening_label} description={copy.listening_description} checked={listening} onChange={setListening} />
+                <CardTypeOption label={view.word_cards_label} description={copy.word_cards_description} checked={wordCards} onChange={setWordCards} />
               </div>
               {!cardTypes && <p className="text-sm text-muted-foreground">Pick at least one card type.</p>}
             </fieldset>

@@ -130,6 +130,7 @@ fn check_skill_levels(language: Language) {
             &deck,
             AnkiDeckOptions {
                 card_types: AnkiCardTypes::Both,
+                word_cards: true,
             },
             DECK_SIZE,
             "skill-level-test".into(),

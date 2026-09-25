@@ -97,7 +97,7 @@ export function DeckBuilding({ build, deck, language, choosing, animate, status,
           </AnimatePresence>
         </div>
         <p className="font-mono text-xs text-muted-foreground tabular-nums">
-          {sentences.length.toLocaleString()}{target ? `/${target.toLocaleString()}` : ""} sentences · {build.words.toLocaleString()} words · {films.length.toLocaleString()} films
+          {sentences.length.toLocaleString()}{target ? `/${target.toLocaleString()}` : ""} sentences{build.words ? ` · ${build.words.toLocaleString()} words` : ""} · {films.length.toLocaleString()} films
         </p>
       </div>
 
