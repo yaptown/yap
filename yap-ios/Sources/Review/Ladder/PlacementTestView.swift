@@ -5,7 +5,7 @@ struct PlacementTestView: View {
     @Environment(\.reviewHost!) private var host
     let placement: PlacementSession
     var body: some View {
-        StudyCard {
+        StudyCard(animated: true) {
             let info = get_placement_session_info(session: placement)
             ProgressView(value: info.progress_percent, total: 100)
             if info.finished {
@@ -25,7 +25,7 @@ struct PlacementTestView: View {
                         Button { toggle(word.word) } label: {
                             Text(selected ? word.definition : word.word)
                                 .frame(maxWidth: .infinity, minHeight: 52).padding(8)
-                                .background(selected ? Color.yapAccent.opacity(0.15) : Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+                                .insetSurface(fill: selected ? Color.yapAccent.opacity(0.15) : Color(uiColor: .systemBackground).opacity(0.35))
                         }.buttonStyle(.plain).accessibilityLabel(word.word).accessibilityValue(selected ? "Known: \(word.definition)" : "Unknown")
                     }
                 }

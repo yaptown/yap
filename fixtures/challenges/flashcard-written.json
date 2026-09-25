@@ -1,6 +1,7 @@
 {
   "screen": "Review",
   "view": {
+    "show_account_prompt": false,
     "native_language": "English",
     "target_language": "French",
     "step": {
@@ -10,41 +11,44 @@
           "type": "FlashCardReview",
           "indicator": {
             "type": "WrittenGram",
-            "gram": [
-              {
-                "Tok": {
-                  "text": "j'",
-                  "word_type": {
-                    "type": "Heteronym",
-                    "word": "je",
-                    "lemma": "je",
-                    "pos": "PRON"
+            "gram": {
+              "gram": [
+                {
+                  "Tok": {
+                    "text": "j'",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "je",
+                      "lemma": "je",
+                      "pos": "PRON"
+                    }
+                  }
+                },
+                {
+                  "Tok": {
+                    "text": "ai",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "ai",
+                      "lemma": "avoir",
+                      "pos": "VERB"
+                    }
+                  }
+                },
+                {
+                  "Tok": {
+                    "text": "une",
+                    "word_type": {
+                      "type": "Heteronym",
+                      "word": "une",
+                      "lemma": "un",
+                      "pos": "DET"
+                    }
                   }
                 }
-              },
-              {
-                "Tok": {
-                  "text": "ai",
-                  "word_type": {
-                    "type": "Heteronym",
-                    "word": "ai",
-                    "lemma": "avoir",
-                    "pos": "VERB"
-                  }
-                }
-              },
-              {
-                "Tok": {
-                  "text": "une",
-                  "word_type": {
-                    "type": "Heteronym",
-                    "word": "une",
-                    "lemma": "un",
-                    "pos": "DET"
-                  }
-                }
-              }
-            ]
+              ],
+              "sense": null
+            }
           },
           "flashcard": {
             "content": {

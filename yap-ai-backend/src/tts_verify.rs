@@ -52,10 +52,12 @@ use whisper::{CloudflareWhisper, GroqWhisper, TranscribeRequest};
 fn whisper_language(language: Language) -> Option<&'static str> {
     match language {
         Language::French
-        | Language::Spanish
+        | Language::SpanishLatinAmerican
+        | Language::SpanishPeninsular
         | Language::German
         | Language::Italian
-        | Language::Portuguese => Some(whisper::language_code(language)),
+        | Language::PortugueseBrazilian
+        | Language::PortugueseEuropean => Some(whisper::language_code(language)),
         // Not yet calibrated — see the note above. English and Russian are
         // plausible next additions; the CJK/Thai courses need a different
         // comparison entirely.
@@ -137,17 +139,34 @@ pub fn configured_transcribers() -> Vec<&'static str> {
     hosts
 }
 
+/// Which transcription hosts a check may use.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Transcribers {
+    /// Race Cloudflare and Groq and take the first transcript: one learner
+    /// is waiting on one card, so latency is what matters.
+    Race,
+    /// Cloudflare alone. Its Whisper limit is 720 requests a minute against
+    /// Groq's 20 (free tier), so a bulk job that fires hundreds of checks in
+    /// a few minutes keeps its throughput, and it leaves Groq's budget to
+    /// the interactive path.
+    CloudflareOnly,
+}
+
 /// Transcribe `audio` with Whisper, conditioned on the request's proper
-/// nouns. Races every configured host and returns the first transcript to
-/// arrive; a host that errors just cedes the race to the other. `None` only
-/// when no host produced anything — see the fail-open rule.
+/// nouns. With [`Transcribers::Race`] every configured host runs and the
+/// first transcript wins; a host that errors just cedes the race to the
+/// other. `None` only when no host produced anything — see the fail-open rule.
 async fn transcribe(
     http: &reqwest::Client,
     request: &TtsRequest,
     audio: &[u8],
     language: &str,
+    transcribers: Transcribers,
 ) -> Option<String> {
     let cloudflare = transcribe_cloudflare(http, request, audio, language);
+    if transcribers == Transcribers::CloudflareOnly {
+        return cloudflare.await;
+    }
     let groq = transcribe_groq(http, request, audio, language);
     tokio::pin!(cloudflare, groq);
     // An unconfigured host resolves to None immediately, so its arm just
@@ -220,12 +239,13 @@ pub async fn content_defect(
     http: &reqwest::Client,
     request: &TtsRequest,
     audio: &[u8],
+    transcribers: Transcribers,
 ) -> Option<String> {
     if !is_checkable(request) {
         return None;
     }
     let language = whisper_language(request.language)?;
-    let transcript = transcribe(http, request, audio, language).await?;
+    let transcript = transcribe(http, request, audio, language, transcribers).await?;
 
     let expected = normalize(&request.text);
     let heard = normalize(&transcript);
@@ -314,7 +334,7 @@ mod tests {
     #[test]
     fn only_calibrated_languages_are_gated() {
         assert_eq!(whisper_language(Language::French), Some("fr"));
-        assert_eq!(whisper_language(Language::Portuguese), Some("pt"));
+        assert_eq!(whisper_language(Language::PortugueseBrazilian), Some("pt"));
         // Orthography comparison isn't meaningful here yet.
         assert_eq!(whisper_language(Language::Japanese), None);
         assert_eq!(whisper_language(Language::ChineseSimplified), None);

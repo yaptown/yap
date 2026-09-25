@@ -92,6 +92,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "base64 0.22.1",
+ "chrono",
  "dotenvy",
  "g2p",
  "google-speech",
@@ -220,6 +221,12 @@ name = "anyhow"
 version = "1.0.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
+
+[[package]]
+name = "arrayvec"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
 
 [[package]]
 name = "ascii"
@@ -506,7 +513,16 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08807e080ed7f9d5433fa9b275196cfc35414f66a0c79d864dc51a0d825231a3"
 dependencies = [
- "bit-vec",
+ "bit-vec 0.8.0",
+]
+
+[[package]]
+name = "bit-set"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09ec2f926cc3060f09db9ebc5b52823d85268d24bb917e472c0c4bea35780a7d"
+dependencies = [
+ "bit-vec 0.9.1",
 ]
 
 [[package]]
@@ -514,6 +530,12 @@ name = "bit-vec"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e764a1d40d510daf35e07be9eb06e75770908c27d411ee6c92109c9840eaaf7"
+
+[[package]]
+name = "bit-vec"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b71798fca2c1fe1086445a7258a4bc81e6e49dcd24c8d0dd9a1e57395b603f51"
 
 [[package]]
 name = "bitflags"
@@ -590,6 +612,7 @@ dependencies = [
  "wasm-logger",
  "web-sys",
  "web-time",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -739,9 +762,9 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "cfg_aliases"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
+checksum = "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527"
 
 [[package]]
 name = "chacha20"
@@ -936,6 +959,15 @@ name = "cmov"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c9ea0ac24bc397ab3c98583a3c9ba74fa56b09a4449bbe172b9b1ddb016027a"
+
+[[package]]
+name = "codespan-reporting"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af491d569909a7e4dee0ad7db7f5341fef5c614d5b8ec8cf765732aba3cff681"
+dependencies = [
+ "unicode-width",
+]
 
 [[package]]
 name = "colorchoice"
@@ -1800,6 +1832,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d817e038c30374a4bcb22f94d0a8a0e216958d4c3dcde369b1439fec4bdda6e6"
 
 [[package]]
+name = "euclid"
+version = "0.22.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1a05365e3b1c6d1650318537c7460c6923f1abdd272ad6842baa2b509957a06"
+dependencies = [
+ "num-traits 0.2.19",
+]
+
+[[package]]
 name = "eyedee"
 version = "0.1.0"
 dependencies = [
@@ -1857,7 +1898,7 @@ version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72cf461f865c862bb7dc573f643dd6a2b6842f7c30b07882b56bd148cc2761b8"
 dependencies = [
- "bit-set",
+ "bit-set 0.8.0",
  "regex-automata",
  "regex-syntax 0.8.11",
 ]
@@ -2153,6 +2194,7 @@ dependencies = [
  "libc",
  "log 0.4.31",
  "markdown-tables",
+ "movie-metadata",
  "movie-subtitles",
  "omnigram",
  "osmo",
@@ -2165,13 +2207,14 @@ dependencies = [
  "reqwest 0.13.4",
  "rkyv 0.8.14",
  "rusqlite",
- "rustc-hash",
+ "rustc-hash 2.1.1",
  "rustls 0.23.31",
  "schemars",
  "scraper",
  "sentence-sampler",
  "serde",
  "serde_json",
+ "stroke-order-sources",
  "tempfile",
  "token-corrections",
  "tokio",
@@ -2191,7 +2234,7 @@ dependencies = [
  "language-utils",
  "lasso",
  "rkyv 0.8.14",
- "rustc-hash",
+ "rustc-hash 2.1.1",
  "serde",
  "serde_json",
  "unicode-normalization",
@@ -2388,6 +2431,7 @@ checksum = "6ea2d84b969582b4b1864a92dc5d27cd2b77b622a8d79306834f1be5ba20d84b"
 dependencies = [
  "cfg-if",
  "crunchy",
+ "num-traits 0.2.19",
  "zerocopy",
 ]
 
@@ -2428,6 +2472,9 @@ name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
+dependencies = [
+ "foldhash 0.2.0",
+]
 
 [[package]]
 name = "hashlink"
@@ -2992,13 +3039,14 @@ dependencies = [
 
 [[package]]
 name = "indexmap"
-version = "2.11.0"
+version = "2.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2481980430f9f78649238835720ddccc57e52df14ffce1c6f37391d61b563e9"
+checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
 dependencies = [
  "equivalent",
- "hashbrown 0.15.5",
+ "hashbrown 0.17.1",
  "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -3384,6 +3432,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "kurbo"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b60dfc32f652b926df6192e55525b16d186c69d47876c3ead4da5cc9f8450e2"
+dependencies = [
+ "arrayvec",
+ "euclid",
+ "polycool",
+ "smallvec",
+]
+
+[[package]]
 name = "language-utils"
 version = "0.1.0"
 dependencies = [
@@ -3391,7 +3451,7 @@ dependencies = [
  "lasso",
  "parse-display",
  "rkyv 0.8.14",
- "rustc-hash",
+ "rustc-hash 2.1.1",
  "schemars",
  "serde",
  "serde_json",
@@ -3433,7 +3493,7 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 [[package]]
 name = "lexide"
 version = "0.3.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=88b53dfa02457c537bec7bd8746fc49bfd505b62#88b53dfa02457c537bec7bd8746fc49bfd505b62"
+source = "git+https://github.com/anchpop/lexide.git?rev=096c4e4e86af0d512b9fb4a3b960c29548a9f085#096c4e4e86af0d512b9fb4a3b960c29548a9f085"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3810,6 +3870,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "model-prices"
+version = "0.1.1"
+source = "git+https://github.com/anchpop/tysm.git?rev=ece93551c8ab884aaf72bac395c1d091595cd5fa#ece93551c8ab884aaf72bac395c1d091595cd5fa"
+
+[[package]]
 name = "monostate"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3832,6 +3897,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "movie-metadata"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "language-utils",
+ "movie-subtitles",
+ "reqwest 0.13.4",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "movie-subtitles"
 version = "0.1.0"
 dependencies = [
@@ -3844,7 +3923,11 @@ dependencies = [
  "serde",
  "serde_json",
  "subparse",
+ "tokio",
  "tysm",
+ "unicode-general-category",
+ "unicode-normalization",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -3875,6 +3958,43 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "naga"
+version = "30.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a616d2fb8c89516ac2723a581f69d6c18576046bed761bd6b305e5618e6ae130"
+dependencies = [
+ "arrayvec",
+ "bit-set 0.10.0",
+ "bitflags 2.9.3",
+ "cfg-if",
+ "cfg_aliases",
+ "codespan-reporting",
+ "half",
+ "hashbrown 0.17.1",
+ "indexmap",
+ "libm",
+ "log 0.4.31",
+ "naga-types",
+ "num-traits 0.2.19",
+ "once_cell",
+ "rustc-hash 1.1.0",
+ "thiserror 2.0.18",
+ "unicode-ident",
+]
+
+[[package]]
+name = "naga-types"
+version = "30.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "590afbf58a6f4f62873cd5cff4468061844bafa1cdf399cc954537c22d768d49"
+dependencies = [
+ "hashbrown 0.17.1",
+ "indexmap",
+ "rustc-hash 1.1.0",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -4146,7 +4266,7 @@ dependencies = [
  "lasso",
  "log 0.4.31",
  "rayon",
- "rustc-hash",
+ "rustc-hash 2.1.1",
  "serde",
  "tokenizers",
 ]
@@ -4228,9 +4348,10 @@ dependencies = [
  "dotenv",
  "futures",
  "language-utils",
+ "movie-metadata",
  "movie-subtitles",
  "reqwest 0.13.4",
- "rustc-hash",
+ "rustc-hash 2.1.1",
  "schemars",
  "serde",
  "serde_json",
@@ -4293,7 +4414,8 @@ dependencies = [
 [[package]]
 name = "osmo"
 version = "0.2.0"
-source = "git+https://github.com/anchpop/osmo#d82edc991542b400a5c56c1832ea8f0aca951be4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70f0e61c2e364a9acc133e1bb7ba28c6066498c36873bfc054e461e1a00489f4"
 dependencies = [
  "dashmap",
  "futures",
@@ -4636,6 +4758,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "polycool"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50596ddc09eb5ad5f75cacd40209568e66df71baf86e1499a0e99c4cff12a5a6"
+dependencies = [
+ "arrayvec",
+]
+
+[[package]]
 name = "portable-atomic"
 version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4799,7 +4930,7 @@ dependencies = [
  "pin-project-lite",
  "quinn-proto",
  "quinn-udp",
- "rustc-hash",
+ "rustc-hash 2.1.1",
  "rustls 0.23.31",
  "socket2 0.5.10",
  "thiserror 2.0.18",
@@ -4820,7 +4951,7 @@ dependencies = [
  "lru-slab",
  "rand 0.9.2",
  "ring",
- "rustc-hash",
+ "rustc-hash 2.1.1",
  "rustls 0.23.31",
  "rustls-pki-types",
  "slab",
@@ -5398,6 +5529,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "roxmltree"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1964b10c76125c36f8afe190065a4bf9a87bf324842c05701330bba9f1cacbb"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "rs-fsrs"
 version = "1.2.1"
 source = "git+https://github.com/anchpop/rs-fsrs.git?rev=79393f05a435e31255a1cbfae48ff6f94e214900#79393f05a435e31255a1cbfae48ff6f94e214900"
@@ -5455,6 +5595,12 @@ name = "rustc-demangle"
 version = "0.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56f7d92ca342cea22a06f2121d944b4fd82af56988c270852495420f961d4ace"
+
+[[package]]
+name = "rustc-hash"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "rustc-hash"
@@ -5765,7 +5911,7 @@ dependencies = [
  "phf",
  "phf_codegen",
  "precomputed-hash",
- "rustc-hash",
+ "rustc-hash 2.1.1",
  "servo_arc",
  "smallvec",
 ]
@@ -6204,6 +6350,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "stroke-order"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "language-utils",
+ "rustc-hash 2.1.1",
+ "unicode-normalization",
+]
+
+[[package]]
+name = "stroke-order-sources"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "language-utils",
+ "reqwest 0.13.4",
+ "roxmltree",
+ "rustc-hash 2.1.1",
+ "serde",
+ "serde_json",
+ "stroke-order",
+ "svgtypes",
+ "tokio",
+ "zip",
+]
+
+[[package]]
 name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6284,11 +6457,13 @@ dependencies = [
  "language-utils",
  "matroska-demuxer",
  "md-5",
+ "movie-metadata",
  "movie-subtitles",
  "object_store",
  "opensubtitles-downloader",
  "osmo",
  "phoneme-verify",
+ "rayon",
  "reqwest 0.13.4",
  "schemars",
  "serde",
@@ -6307,6 +6482,16 @@ name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
+
+[[package]]
+name = "svgtypes"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "695b5790b3131dafa99b3bbfd25a216edb3d216dad9ca208d4657bfb8f2abc3d"
+dependencies = [
+ "kurbo",
+ "siphasher",
+]
 
 [[package]]
 name = "syn"
@@ -6858,8 +7043,8 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "tysm"
-version = "0.20.0"
-source = "git+https://github.com/anchpop/tysm.git?rev=8656e1e7b1641780fd0e42018b7c284a558f5d9d#8656e1e7b1641780fd0e42018b7c284a558f5d9d"
+version = "0.24.0"
+source = "git+https://github.com/anchpop/tysm.git?rev=ece93551c8ab884aaf72bac395c1d091595cd5fa#ece93551c8ab884aaf72bac395c1d091595cd5fa"
 dependencies = [
  "base64 0.22.1",
  "dashmap",
@@ -6868,6 +7053,7 @@ dependencies = [
  "itertools 0.14.0",
  "log 0.4.31",
  "lru",
+ "model-prices",
  "osmo",
  "reqwest 0.11.27",
  "schemars",
@@ -7027,6 +7213,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "dotenvy",
+ "language-utils",
  "reqwest 0.13.4",
  "serde_json",
  "tokio",
@@ -7924,6 +8111,7 @@ name = "xtask"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "naga",
  "serde_json",
  "tempfile",
  "tiny_http",
@@ -7970,10 +8158,11 @@ dependencies = [
  "opfs",
  "ordered-float 5.3.0",
  "pav_regression",
+ "percent-encoding",
  "reqwest 0.13.4",
  "rkyv 0.8.14",
  "rs-fsrs",
- "rustc-hash",
+ "rustc-hash 2.1.1",
  "schemars",
  "serde",
  "serde_json",

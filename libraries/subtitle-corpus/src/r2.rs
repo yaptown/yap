@@ -98,6 +98,16 @@ impl R2 {
         Ok(())
     }
 
+    pub(crate) async fn delete(&self, keys: Vec<String>) -> Result<()> {
+        let paths = futures::stream::iter(keys.into_iter().map(|k| Ok(Path::from(k))));
+        self.0
+            .delete_stream(Box::pin(paths))
+            .try_collect::<Vec<_>>()
+            .await
+            .context("deleting objects")?;
+        Ok(())
+    }
+
     pub(crate) async fn list_etags(&self, prefix: &str) -> Result<HashMap<String, String>> {
         let path = Path::from(prefix);
         let mut objects = self.0.list(Some(&path));

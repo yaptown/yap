@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective September 19, 2026.</p>
+            <p className="text-sm">Effective September 23, 2026.</p>
           </div>
         </Card>
 
@@ -69,8 +69,13 @@ export function PrivacyPage() {
               <span className="text-foreground">Exported Anki decks.</span>{" "}
               When you download an Anki deck, we record that the deck was made,
               the options you chose, and your account if you were signed in.
-              Audio in the deck streams from us, and each time a card makes us
-              generate a clip that wasn't already cached we log which sentence
+              The deck is assembled in your browser from your learning history.
+              Our servers store the exported package for 8 days so you can import
+              it with a download link, then delete it. Anyone with the link can
+              download the package during that time.
+              Audio is generated and bundled when the deck is built; movie clips
+              stream from clips.yap.town with a per-deck token. Each time building
+              a deck generates audio that was not already cached, we log which text
               it was and when, tied to that deck. We use this to keep the cost
               of generating audio in check and to switch off a deck that is
               being shared in ways it shouldn't be.

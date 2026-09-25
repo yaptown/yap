@@ -27,7 +27,7 @@ struct HomophonePracticeThoughts {
 }
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 /// Generate homophones file for the top N most frequent words in the language.
 /// Returns a map from pronunciations to sets of words that share that pronunciation.
@@ -55,7 +55,7 @@ pub fn generate_homophones(
     // Get the top N words from the gram frequencies (single-atom heteronym grams)
     let top_words: HashSet<String> = gram_frequencies
         .iter()
-        .filter_map(|entry| entry.gram.heteronym())
+        .filter_map(|entry| entry.gram.gram.heteronym())
         .take(top_n)
         .map(|h| h.word.clone())
         .collect();
@@ -175,7 +175,9 @@ Output format:
         }},
         ... (30 pairs total)
     ]
-}}"#
+}}"#,
+        native_language = native_language.prompt_name(),
+        target_language = target_language.prompt_name()
     );
     let practice_data = chat_client
         .batch_chat_with_system_prompt_fn::<_, _, HomophonePracticeThoughts>(

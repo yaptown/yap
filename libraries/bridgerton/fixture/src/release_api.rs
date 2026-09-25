@@ -192,3 +192,75 @@ pub struct Link {
 pub fn echo_link(value: Link) -> Link {
     value
 }
+
+thread_local! { static STABLE_CALLS: std::cell::Cell<u32> = const { std::cell::Cell::new(0) }; }
+#[bridge]
+pub fn stable_calls() -> u32 {
+    STABLE_CALLS.with(std::cell::Cell::get)
+}
+
+// Both free-function attribute orders work, without changing their signatures.
+#[bridge]
+#[bridgerton::stable]
+pub fn stable_term(text: String) -> super::Term {
+    STABLE_CALLS.with(|calls| calls.set(calls.get() + 1));
+    super::Term { text, gloss: None }
+}
+
+#[bridgerton::stable(strong)]
+#[bridge]
+pub fn stable_bytes(value: u32) -> Option<Vec<u8>> {
+    (value != 0).then(|| vec![value as u8, 2, 3])
+}
+
+#[bridge]
+#[bridgerton::stable]
+pub fn stable_number(value: u32) -> u32 {
+    value
+}
+
+#[bridge]
+#[bridgerton::stable]
+pub fn stable_text(value: String) -> String {
+    value
+}
+
+#[bridge]
+#[bridgerton::stable]
+pub fn stable_result(value: String) -> Result<String, bridgerton::Error> {
+    if value.is_empty() {
+        Err(bridgerton::Error::new("empty stable result"))
+    } else {
+        Ok(value)
+    }
+}
+
+#[bridge]
+#[bridgerton::stable]
+pub fn stable_unit() {}
+
+#[bridge]
+pub fn debug_build() -> bool {
+    cfg!(debug_assertions)
+}
+
+#[bridge]
+#[bridgerton::stable]
+pub fn stable_typed_result(
+    fail: bool,
+) -> Result<super::Term, super::native_interfaces::ReviewError> {
+    if fail {
+        Err(super::native_interfaces::ReviewError::Offline)
+    } else {
+        Ok(super::Term {
+            text: "typed".into(),
+            gloss: None,
+        })
+    }
+}
+
+#[bridge]
+#[bridgerton::stable]
+pub fn stable_float(value: f64) -> Vec<f64> {
+    vec![value]
+}

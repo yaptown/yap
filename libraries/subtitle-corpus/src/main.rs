@@ -35,6 +35,27 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command_ {
+    /// Proofread orthography and flag incoherent course sentences.
+    Proofread(subtitle_corpus::proofread::Options),
+    /// Detect single-word disagreements and review spelling versus audio mismatches.
+    WordCheck {
+        #[arg(long, default_value = "/data/andrep/subtitle-corpus")]
+        out: PathBuf,
+        /// Course language code (for example fra or zho-hans).
+        #[arg(long)]
+        language: Option<String>,
+        #[arg(long)]
+        imdb: Option<String>,
+        /// Stop after this many films (0 = all).
+        #[arg(long, default_value_t = 0)]
+        limit: usize,
+        /// Write candidates without calling the judge or changing corrections.
+        #[arg(long)]
+        dry_run: bool,
+        /// Judge hand-labeled JSONL through the production path, without applying.
+        #[arg(long)]
+        eval: Option<PathBuf>,
+    },
     /// Probe every movie and decide where its subtitle will come from.
     Inventory {
         /// JSON from `arr radarr raw GET /movie`.
@@ -354,6 +375,19 @@ enum Command_ {
         #[arg(long, default_value = "yap-clips")]
         bucket: String,
     },
+    /// Review the previous publish's orphan candidates; dry run unless --apply.
+    Prune {
+        #[arg(long, default_value = "/data/andrep/subtitle-corpus/export")]
+        dest: PathBuf,
+        #[arg(long, default_value = "yap-clips")]
+        bucket: String,
+        /// Candidate manifest; defaults to <dest>/orphan-candidates.json.
+        #[arg(long)]
+        manifest: Option<PathBuf>,
+        /// Delete the listed local clip dirs and R2 objects.
+        #[arg(long)]
+        apply: bool,
+    },
     /// Publish finished subtitles next to their films as media-server sidecars.
     ///
     /// Writes `<video>.yap.<lang>.srt` beside each film whose corpus subtitle
@@ -462,7 +496,11 @@ fn subtitle_source(
     }
     if let Some(course) = library::course_dir(&movie.original_language) {
         let raw = data_root
-            .join(course)
+            .join(
+                language_utils::Language::from_code(course)
+                    .unwrap()
+                    .corpus_code(),
+            )
             .join("sentence-sources/movies")
             .join(format!("subtitles-raw/{}.srt", movie.imdb_id));
         if raw.exists() {
@@ -1605,6 +1643,7 @@ async fn segment_all(out: PathBuf, all: bool, limit: usize, imdb: Option<String>
             lines.as_slice(),
             splits,
             *language,
+            &m.imdb_id,
         );
         let worthy = keyed.iter().filter(|k| k.course_worthy).count();
         println!(
@@ -2355,7 +2394,13 @@ async fn adopt_candidate(
 
     let mut candidates: Vec<(String, PathBuf)> = Vec::new();
     if let Some(course) = library::course_dir(&movie.original_language) {
-        let movies = data_root.join(course).join("sentence-sources/movies");
+        let movies = data_root
+            .join(
+                language_utils::Language::from_code(course)
+                    .unwrap()
+                    .corpus_code(),
+            )
+            .join("sentence-sources/movies");
         let path = movies
             .join("subtitles-raw")
             .join(format!("{}.srt", movie.imdb_id));
@@ -2400,7 +2445,15 @@ async fn adopt_candidate(
     let mut best: Option<(String, String, verbatim::Measure)> = None;
     for (label, path) in candidates {
         let text = String::from_utf8_lossy(&std::fs::read(&path)?).into_owned();
-        let measure = verbatim::measure(&text, &transcript, language, code, min_verbatim).await?;
+        let measure = verbatim::measure(
+            &text,
+            &transcript,
+            language,
+            code,
+            &movie.imdb_id,
+            min_verbatim,
+        )
+        .await?;
         println!("      {label:24} {}", verbatim::describe(&measure));
         let bar = best.as_ref().map_or(to_beat, |b| b.2.best_placed());
         if matches!(measure.verdict, Verdict::Verbatim | Verdict::Skewed)
@@ -2446,7 +2499,9 @@ async fn clips(
         min_ratio,
         ..Default::default()
     };
-    subtitle_corpus::clips::clips_all(out, jobs, limit, imdb, langs, gate).await
+    subtitle_corpus::clips::clips_all(out, jobs, limit, imdb, langs, gate)
+        .await
+        .map(drop)
 }
 
 #[tokio::main]
@@ -2458,7 +2513,9 @@ async fn export_clips(
     imdb: Option<String>,
     langs: Option<Vec<String>>,
 ) -> Result<()> {
-    subtitle_corpus::export::export_clips(out, dest, jobs, limit, imdb, langs).await
+    subtitle_corpus::export::export_clips(out, dest, jobs, limit, imdb, langs, Default::default())
+        .await
+        .map(drop)
 }
 
 #[tokio::main]
@@ -2471,6 +2528,11 @@ async fn publish(
     bucket: String,
 ) -> Result<()> {
     subtitle_corpus::export::publish(out, dest, data_root, jobs, langs, bucket).await
+}
+
+#[tokio::main]
+async fn prune(dest: PathBuf, bucket: String, manifest: PathBuf, apply: bool) -> Result<()> {
+    subtitle_corpus::export::prune(dest, bucket, manifest, apply).await
 }
 
 /// Align by speech activity the films that word-matching could not place.
@@ -2866,6 +2928,15 @@ fn main() -> Result<()> {
     // variable away from a run that quietly verifies nothing.
     dotenvy::dotenv().ok();
     match Args::parse().command {
+        Command_::Proofread(options) => subtitle_corpus::proofread::run(options),
+        Command_::WordCheck {
+            out,
+            language,
+            imdb,
+            limit,
+            dry_run,
+            eval,
+        } => subtitle_corpus::word_check::run(out, language, imdb, limit, dry_run, eval),
         Command_::Inventory {
             library,
             data_root,
@@ -2971,6 +3042,15 @@ fn main() -> Result<()> {
             langs,
             bucket,
         } => publish(out, dest, data_root, jobs, langs, bucket),
+        Command_::Prune {
+            dest,
+            bucket,
+            manifest,
+            apply,
+        } => {
+            let manifest = manifest.unwrap_or_else(|| dest.join("orphan-candidates.json"));
+            prune(dest, bucket, manifest, apply)
+        }
         Command_::ExportSidecars { out } => export_sidecars(out),
         Command_::ExportYap {
             out,

@@ -1,11 +1,11 @@
-//! Current (V3) deck event types.
+//! Current (V4) deck event types.
 
 use std::collections::BTreeSet;
 
 use crate::deck_selection::DailyReviewTarget;
 use crate::transcription_challenge;
 use crate::{CardType, FlashcardType};
-use language_utils::{Gram, Language, Literal, PatternPosition, SpurGram};
+use language_utils::{Gram, Language, Literal, PatternPosition, SpurGram, TaggedGram};
 use lasso::Spur;
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +29,7 @@ use serde::{Deserialize, Serialize};
 #[schemars(extend("type" = "object"))]
 pub enum CardIndicator<G, S> {
     WrittenGram {
-        gram: G,
+        gram: TaggedGram<G>,
     },
     ListeningGram {
         gram: G,
@@ -41,7 +41,7 @@ pub enum CardIndicator<G, S> {
 }
 
 impl<G, S> CardIndicator<G, S> {
-    pub fn written_gram(&self) -> Option<&G> {
+    pub fn written_gram(&self) -> Option<&TaggedGram<G>> {
         match self {
             CardIndicator::WrittenGram { gram } => Some(gram),
             _ => None,
@@ -74,21 +74,20 @@ impl<G, S> CardIndicator<G, S> {
 impl CardIndicator<Gram<String>, String> {
     pub fn get_interned(
         &self,
-        string_rodeo: &lasso::RodeoReader,
-        gram_rodeo: &lasso::RodeoReader<Gram<Spur>>,
+        pack: &language_utils::language_pack::LanguagePack,
     ) -> Option<CardIndicator<SpurGram, Spur>> {
         Some(match self {
             CardIndicator::WrittenGram { gram } => {
-                let gram = gram.get_interned(string_rodeo)?.get_interned(gram_rodeo)?;
+                let gram = pack.resolve_entry(gram)?;
                 CardIndicator::WrittenGram { gram }
             }
             CardIndicator::ListeningGram { gram } => {
-                let gram = gram.get_interned(string_rodeo)?.get_interned(gram_rodeo)?;
+                let gram = pack.intern_gram(gram)?;
                 CardIndicator::ListeningGram { gram }
             }
             CardIndicator::LetterPronunciation { pattern, position } => {
                 CardIndicator::LetterPronunciation {
-                    pattern: string_rodeo.get(pattern)?,
+                    pattern: pack.string_rodeo.get(pattern)?,
                     position: *position,
                 }
             }
@@ -112,9 +111,12 @@ impl CardIndicator<SpurGram, Spur> {
     ) -> CardIndicator<Gram<String>, String> {
         match self {
             CardIndicator::WrittenGram { gram } => {
-                let gram_atoms = gram_rodeo.resolve(gram);
+                let gram_atoms = gram_rodeo.resolve(&gram.gram);
                 CardIndicator::WrittenGram {
-                    gram: gram_atoms.resolve(string_rodeo),
+                    gram: TaggedGram {
+                        gram: gram_atoms.resolve(string_rodeo),
+                        sense: gram.sense,
+                    },
                 }
             }
             CardIndicator::ListeningGram { gram } => {
@@ -166,7 +168,7 @@ pub enum SentenceReviewResult {
         submission: String,
         /// None for Other word types, Some(result) for heteronyms
         literals: Vec<(Literal<String>, Option<LiteralResult>)>,
-        phrases: Vec<(String, /* remembered */ Option<bool>)>,
+        phrases: Vec<(TaggedGram<Gram<String>>, /* remembered */ Option<bool>)>,
     },
 }
 

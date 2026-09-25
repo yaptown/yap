@@ -66,6 +66,8 @@ fn format_stamp(ms: i64) -> String {
     )
 }
 
+/// Raw timing cues, intentionally without the correction overlay: sync moves
+/// the source track's clock, while sentence ingestion uses clips::subtitle_lines.
 pub fn parse_cues(srt: &str) -> Vec<Cue> {
     // Course raw SRTs are LF, but a Bazarr sidecar keeps whatever the uploader
     // used — usually CRLF, where blank lines are `\r\n\r\n` and a `\n\n` block
@@ -230,6 +232,8 @@ pub fn original_audio_stream(video: &Path, codes: &[&str], rejected: &[usize]) -
     #[derive(Deserialize)]
     struct Stream {
         #[serde(default)]
+        codec_name: Option<String>,
+        #[serde(default)]
         tags: std::collections::HashMap<String, String>,
         #[serde(default)]
         disposition: std::collections::HashMap<String, u8>,
@@ -246,6 +250,15 @@ pub fn original_audio_stream(video: &Path, codes: &[&str], rejected: &[usize]) -
                     .get("title")
                     .is_some_and(|t| t.to_lowercase().contains("commentary"))
         }
+        /// ffmpeg has no decoder for some exotic tracks (AV3A / Audio Vivid
+        /// on Chinese and Thai discs), which ffprobe reports with no codec
+        /// name at all. Picking one aborts the whole extraction, so it's no
+        /// more usable than a missing stream — skip it and take the next.
+        fn is_decodable(&self) -> bool {
+            self.codec_name
+                .as_deref()
+                .is_some_and(|c| !c.is_empty() && c != "unknown")
+        }
     }
     #[derive(Deserialize)]
     struct Probe {
@@ -259,7 +272,7 @@ pub fn original_audio_stream(video: &Path, codes: &[&str], rejected: &[usize]) -
             "-select_streams",
             "a",
             "-show_entries",
-            "stream_tags=language,title:stream_disposition=comment",
+            "stream=codec_name:stream_tags=language,title:stream_disposition=comment",
             "-of",
             "json",
         ])
@@ -273,7 +286,7 @@ pub fn original_audio_stream(video: &Path, codes: &[&str], rejected: &[usize]) -
     let mut best: Option<(ChineseVariety, usize)> = None;
     let mut cantonese_only = false;
     for (i, s) in probe.streams.iter().enumerate() {
-        if s.is_commentary() || rejected.contains(&i) {
+        if s.is_commentary() || !s.is_decodable() || rejected.contains(&i) {
             continue;
         }
         let lang = s.tags.get("language").cloned().unwrap_or_default();
@@ -302,7 +315,11 @@ pub fn original_audio_stream(video: &Path, codes: &[&str], rejected: &[usize]) -
         bail!("only Cantonese audio — no track for the Mandarin course");
     }
     // Untagged audio on a single-track rip is the original often enough to try.
-    if probe.streams.len() == 1 && !probe.streams[0].is_commentary() && !rejected.contains(&0) {
+    if probe.streams.len() == 1
+        && !probe.streams[0].is_commentary()
+        && probe.streams[0].is_decodable()
+        && !rejected.contains(&0)
+    {
         return Ok(0);
     }
     bail!("no audio stream in the film's own language")

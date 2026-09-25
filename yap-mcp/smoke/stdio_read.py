@@ -76,17 +76,17 @@ search = json.loads(body)
 top = search["results"][0]
 
 err, body = tool("get_sentences", {
-    "language": top["language"], "gram": top["gram"], "count": 2,
+    "language": top["language"], "gram": top["senses"][0]["gram"], "count": 2,
 })
 show(f"get_sentences '{top['display_text']}' (error={err})", body, limit=2500)
 
 # Wrong language must be rejected
-err, body = tool("get_sentences", {"language": "German", "gram": top["gram"]})
+err, body = tool("get_sentences", {"language": "German", "gram": top["senses"][0]["gram"]})
 show(f"get_sentences wrong language (error={err}, want True)", body)
 
 # A fabricated gram (real word, wrong lemma) must be rejected
-fake = copy.deepcopy(top["gram"])
-fake[0]["Tok"]["word_type"]["lemma"] = "zzznotalemma"
+fake = copy.deepcopy(top["senses"][0]["gram"])
+fake["gram"][0]["Tok"]["word_type"]["lemma"] = "zzznotalemma"
 err, body = tool("get_sentences", {"language": top["language"], "gram": fake})
 show(f"get_sentences fake gram (error={err}, want True)", body)
 

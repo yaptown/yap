@@ -1,6 +1,10 @@
 // Web Audio avoids the host iframe's media-src restrictions on blob URLs.
 // There is no HTMLAudioElement, so the app's visualizer is unavailable here.
-import type { AudioRequest, VoiceActorInfo } from "../../../yap-frontend-rs/pkg";
+import type {
+  AccountCopy,
+  AudioRequest,
+  VoiceActorInfo,
+} from "../../../yap-frontend-rs/pkg";
 import { app, connectOnce, resultText } from "./bridge";
 import {
   interruptPlayback,
@@ -96,7 +100,7 @@ async function ensureRunning(ctx: AudioContext): Promise<void> {
 export async function playAudio(
   audioRequest: AudioRequest,
   _accessToken: string | undefined,
-  _needsAuth: () => void,
+  _needsAuth: (copy: AccountCopy) => void,
   { signal, onVoiceActor }: PlaybackOptions = {},
 ): Promise<void> {
   if (signal?.aborted) throw abortError();

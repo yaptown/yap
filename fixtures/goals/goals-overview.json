@@ -13,12 +13,14 @@
     },
     "goal": {
       "title": "Advanced French Level 11",
+      "name": "Advanced French",
+      "level_label": "Level 11 of 30",
       "tier_name": "Advanced",
       "level": 11,
       "total_levels": 30,
       "percent": 3.2445668809305177,
       "percent_label": "3%",
-      "subtitle": "Level 11 of 30 · unlocks 67.1% of everyday French"
+      "subtitle": "Unlocks 67.1% of everyday French"
     },
     "daily_goal_title": "Daily goal",
     "daily_goal": "Casual",
@@ -26,6 +28,8 @@
     "daily_goal_options": [
       {
         "target": "Casual",
+        "label": "Casual",
+        "duration_label": "5m",
         "minutes": 5,
         "event": {
           "type": "Language",
@@ -39,6 +43,8 @@
       },
       {
         "target": "Regular",
+        "label": "Regular",
+        "duration_label": "10m",
         "minutes": 10,
         "event": {
           "type": "Language",
@@ -52,6 +58,8 @@
       },
       {
         "target": "Serious",
+        "label": "Serious",
+        "duration_label": "15m",
         "minutes": 15,
         "event": {
           "type": "Language",
@@ -65,6 +73,8 @@
       },
       {
         "target": "Intense",
+        "label": "Intense",
+        "duration_label": "20m",
         "minutes": 20,
         "event": {
           "type": "Language",
@@ -114,7 +124,8 @@
       ],
       "progress": {
         "percent_known": 3.2445668809305177,
-        "all_available_learned": false
+        "all_available_learned": false,
+        "caption": "3% known"
       },
       "sentence_list_label": "Advanced French Level 11",
       "next_sentence_list": null,

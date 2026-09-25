@@ -131,6 +131,10 @@ pub(crate) fn publish_manifest(language: Language, rows: Vec<ClipRow>) {
     CLIP_MANIFEST_VERSION.with(|v| v.set(v.get().wrapping_add(1)));
 }
 
+pub(crate) fn manifest_loaded(language: Language) -> bool {
+    CLIP_MANIFESTS.with(|m| m.borrow().contains_key(&language))
+}
+
 pub(crate) fn clip_manifest_version() -> u32 {
     CLIP_MANIFEST_VERSION.with(|v| v.get())
 }
@@ -154,6 +158,44 @@ pub(crate) fn sentence_has_clip(language: Language, text: &str) -> bool {
         m.borrow()
             .get(&language)
             .is_some_and(|rows| rows.contains_key(text))
+    })
+}
+
+/// Every sentence with a published clip, mapped through `f`. Walks the
+/// manifest (tens of thousands of rows) rather than the pack (hundreds of
+/// thousands of sentences) when a caller wants the clip sentences.
+pub(crate) fn map_clip_sentences<T>(
+    language: Language,
+    f: impl FnMut(&str) -> Option<T>,
+) -> Vec<T> {
+    CLIP_MANIFESTS.with(|m| {
+        m.borrow()
+            .get(&language)
+            .map(|rows| rows.keys().map(String::as_str).filter_map(f).collect())
+            .unwrap_or_default()
+    })
+}
+
+/// IMDb id of the film a clip was cut from: clip ids are
+/// `imdb_id - sentence hash - occurrence`.
+pub(crate) fn clip_film(clip_id: &str) -> &str {
+    clip_id.split('-').next().unwrap_or_default()
+}
+
+/// Films with published clips, most clips first.
+pub(crate) fn films_by_clip_count(language: Language) -> Vec<String> {
+    CLIP_MANIFESTS.with(|m| {
+        let manifests = m.borrow();
+        let Some(rows) = manifests.get(&language) else {
+            return Vec::new();
+        };
+        let mut counts: HashMap<&str, usize> = HashMap::new();
+        for row in rows.values() {
+            *counts.entry(clip_film(&row.clip_id)).or_default() += 1;
+        }
+        let mut films: Vec<(&str, usize)> = counts.into_iter().collect();
+        films.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
+        films.into_iter().map(|(film, _)| film.to_owned()).collect()
     })
 }
 
@@ -527,10 +569,7 @@ pub(crate) async fn grader_context(
     let mut context = language_utils::autograde::GraderContext::default();
     let clip = clip_for_sentence(language, text);
 
-    let clip_imdb = clip
-        .as_ref()
-        .and_then(|row| row.clip_id.split('-').next())
-        .map(str::to_string);
+    let clip_imdb = clip.as_ref().map(|row| clip_film(&row.clip_id).to_string());
     context.movie_title = match &clip_imdb {
         Some(imdb) => movie_titles
             .iter()

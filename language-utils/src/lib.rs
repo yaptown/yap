@@ -4,7 +4,9 @@ pub mod language_pack;
 pub use language_pack::PACKS_ORIGIN;
 pub mod minimal_pairs;
 pub mod profile;
+pub mod strokes;
 pub mod text_cleanup;
+pub use strokes::{Stroke, StrokeGlyph, StrokeStandard, StrokeTable};
 
 use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
@@ -647,13 +649,15 @@ pub struct SentenceGrams<G> {
     pub low_confidence_multiword_terms: Vec<MultiwordTermMatch<G>>,
 }
 
-impl SentenceGrams<SpurGram> {
+pub type GramLiterals<G> = SentenceGram<(G, Vec<Literal<String>>)>;
+
+impl SentenceGrams<TaggedGram<SpurGram>> {
     pub fn to_literals(
         self,
         string_rodeo: &lasso::RodeoReader<String>,
         gram_rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
         language: Language,
-    ) -> Vec<SentenceGram<(SpurGram, Vec<Literal<String>>)>> {
+    ) -> Vec<GramLiterals<TaggedGram<SpurGram>>> {
         // First pass: collect all atoms with their gram index, preserving
         // Control tokens so whitespace corrections are honored.
         let mut all_atoms: Vec<(usize, Atom<String>)> = Vec::new();
@@ -661,7 +665,7 @@ impl SentenceGrams<SpurGram> {
             let gram_spur = match gram {
                 SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
             };
-            let gram_resolved = gram_rodeo.resolve(gram_spur).resolve(string_rodeo);
+            let gram_resolved = gram_rodeo.resolve(&gram_spur.gram).resolve(string_rodeo);
             for atom in gram_resolved.iter() {
                 all_atoms.push((gram_idx, atom.clone()));
             }
@@ -733,32 +737,40 @@ impl SentenceGrams<SpurGram> {
     }
 }
 
-impl SentenceGrams<SpurGram> {
+impl SentenceGrams<TaggedGram<SpurGram>> {
     pub fn resolve(
         &self,
         rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
-    ) -> SentenceGrams<Gram<lasso::Spur>> {
+    ) -> SentenceGrams<TaggedGram<Gram<lasso::Spur>>> {
         SentenceGrams {
-            grams: self.grams.iter().map(|gram| gram.resolve(rodeo)).collect(),
+            grams: self
+                .grams
+                .iter()
+                .map(|gram| gram.clone().map(|entry| entry.resolve(rodeo)))
+                .collect(),
             capitalize_first: self.capitalize_first,
             multiword_terms: self
                 .multiword_terms
                 .iter()
-                .map(|m| m.map(|g| rodeo.resolve(g).to_gram()))
+                .map(|m| m.map(|g| g.resolve(rodeo)))
                 .collect(),
             low_confidence_multiword_terms: self
                 .low_confidence_multiword_terms
                 .iter()
-                .map(|m| m.map(|g| rodeo.resolve(g).to_gram()))
+                .map(|m| m.map(|g| g.resolve(rodeo)))
                 .collect(),
         }
     }
 }
 
-impl SentenceGrams<Gram<lasso::Spur>> {
-    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> SentenceGrams<Gram<String>> {
+impl SentenceGrams<TaggedGram<Gram<lasso::Spur>>> {
+    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> SentenceGrams<TaggedGram<Gram<String>>> {
         SentenceGrams {
-            grams: self.grams.iter().map(|gram| gram.resolve(rodeo)).collect(),
+            grams: self
+                .grams
+                .iter()
+                .map(|gram| gram.clone().map(|entry| entry.resolve(rodeo)))
+                .collect(),
             capitalize_first: self.capitalize_first,
             multiword_terms: self
                 .multiword_terms
@@ -773,7 +785,6 @@ impl SentenceGrams<Gram<lasso::Spur>> {
         }
     }
 }
-
 impl<S> SentenceGram<S> {
     pub fn map<T, F>(self, f: F) -> SentenceGram<T>
     where
@@ -824,6 +835,15 @@ impl SentenceGram<Gram<lasso::Spur>> {
 pub struct MultiwordTerms<T> {
     pub high_confidence: Vec<T>,
     pub low_confidence: Vec<T>,
+}
+
+impl<T> MultiwordTerms<T> {
+    pub fn map<U>(self, f: impl Fn(T) -> U) -> MultiwordTerms<U> {
+        MultiwordTerms {
+            high_confidence: self.high_confidence.into_iter().map(&f).collect(),
+            low_confidence: self.low_confidence.into_iter().map(f).collect(),
+        }
+    }
 }
 
 /// A multiword term found in a sentence, together with which words of the
@@ -903,7 +923,7 @@ pub struct SentenceInfo {
     pub sentence: EncodedSentence,
     /// Multiword terms found in this sentence; `matched_word_indices` index
     /// into the decoded word sequence (one word per `Tok` atom, in order).
-    pub multiword_terms: MultiwordTerms<MultiwordTermMatch<Gram<String>>>,
+    pub multiword_terms: MultiwordTerms<MultiwordTermMatch<TaggedGram<Gram<String>>>>,
 }
 
 impl SentenceInfo {
@@ -918,7 +938,7 @@ impl SentenceInfo {
             .sentence
             .tokens
             .iter()
-            .flat_map(|key| interners.grams.resolve(key).iter())
+            .flat_map(|key| interners.grams.resolve(&key.gram).iter())
             .map(|a| a.resolve(&interners.strings))
             .collect();
         let mut words = atoms_to_literals(&atoms, language);
@@ -941,11 +961,11 @@ impl SentenceInfo {
         for &key in &self.sentence.tokens {
             let tok_count = interners
                 .grams
-                .resolve(&key)
+                .resolve(&key.gram)
                 .iter()
                 .filter(|a| matches!(a, Atom::Tok(_)))
                 .count();
-            ranges.push((key, word_idx..word_idx + tok_count));
+            ranges.push((key.gram, word_idx..word_idx + tok_count));
             word_idx += tok_count;
         }
         ranges
@@ -1414,12 +1434,12 @@ pub struct GramFrequencyEntry<S> {
     /// This key is different for each gram, which allows a consistent ordering with the same frequency.
     pub disambiguation_key: u32,
 
-    pub gram: Gram<S>,
+    pub gram: TaggedGram<Gram<S>>,
 }
 
 /// A frequency list with its total count (for percentage calculations).
 /// Used in ConsolidatedLanguageData (pre-interning).
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 pub struct GramFrequencyList {
     pub entries: Vec<GramFrequencyEntry<String>>,
     /// Total gram count from unfiltered data (for accurate percentage calculations)
@@ -1514,9 +1534,12 @@ pub mod autograde {
         pub challenge_sentence: String,
         pub user_sentence: String,
         pub literals: Vec<Literal<String>>,
-        pub phrases: Vec<Gram<String>>,
+        pub phrases: Vec<TaggedGram<Gram<String>>>,
         /// The gram that motivated this challenge — the LLM must always grade it.
-        pub primary_expression: Gram<String>,
+        pub primary_expression: TaggedGram<Gram<String>>,
+        /// Zero-based positions in `literals` belonging to the primary expression.
+        #[serde(default)]
+        pub primary_literal_indices: Vec<usize>,
         #[serde(default)]
         pub context: GraderContext,
     }
@@ -1530,8 +1553,8 @@ pub mod autograde {
         /// One entry per literal in order. None = ungradable (Other word type) or indeterminate.
         /// Covers single-word grams (heteronyms); multi-word grams use phrases_remembered/phrases_forgot.
         pub literal_grades: Vec<Option<Remembered>>,
-        pub phrases_remembered: Vec<Gram<String>>,
-        pub phrases_forgot: Vec<Gram<String>>,
+        pub phrases_remembered: Vec<TaggedGram<Gram<String>>>,
+        pub phrases_forgot: Vec<TaggedGram<Gram<String>>>,
         /// Set when heuristic grading was used instead of the LLM.
         pub autograding_error: Option<String>,
     }
@@ -1819,18 +1842,16 @@ impl Atom<lasso::Spur> {
     rkyv::Serialize,
     rkyv::Deserialize,
 )]
-#[rkyv(compare(PartialEq), derive(Debug, PartialEq, Eq))]
 pub struct EncodedSentence {
     /// The sentence as a sequence of interned gram keys (assigned in
     /// vocabulary-id order, so `key.into_usize()` is the vocabulary index).
-    pub tokens: Vec<SpurGram>,
+    pub tokens: Vec<TaggedGram<SpurGram>>,
     /// Whether the first letter should be capitalized when displaying
     pub capitalize_first: bool,
 }
 
-// Manual serde: keys serialize as their vocabulary indices (plain integers),
-// keeping the artifact format independent of lasso's (bit-rotted) `serialize`
-// feature and identical to the pre-SpurGram encoding.
+// Manual serde keeps lasso out of the artifact format: each token is
+// [vocabulary index, sense id], with zero representing an untagged entry.
 impl serde::Serialize for EncodedSentence {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use lasso::Key;
@@ -1841,8 +1862,13 @@ impl serde::Serialize for EncodedSentence {
             &self
                 .tokens
                 .iter()
-                .map(|k| k.into_usize() as u32)
-                .collect::<Vec<u32>>(),
+                .map(|k| {
+                    (
+                        k.gram.into_usize() as u32,
+                        k.sense.map_or(0, std::num::NonZeroU32::get),
+                    )
+                })
+                .collect::<Vec<(u32, u32)>>(),
         )?;
         s.serialize_field("capitalize_first", &self.capitalize_first)?;
         s.end()
@@ -1854,7 +1880,7 @@ impl<'de> serde::Deserialize<'de> for EncodedSentence {
         use lasso::Key;
         #[derive(serde::Deserialize)]
         struct Raw {
-            tokens: Vec<u32>,
+            tokens: Vec<(u32, u32)>,
             capitalize_first: bool,
         }
         let raw = Raw::deserialize(deserializer)?;
@@ -1862,8 +1888,12 @@ impl<'de> serde::Deserialize<'de> for EncodedSentence {
             tokens: raw
                 .tokens
                 .into_iter()
-                .map(|id| {
+                .map(|(id, sense)| {
                     SpurGram::try_from_usize(id as usize)
+                        .map(|gram| TaggedGram {
+                            gram,
+                            sense: std::num::NonZeroU32::new(sense),
+                        })
                         .ok_or_else(|| serde::de::Error::custom("gram key out of range"))
                 })
                 .collect::<Result<_, _>>()?,
@@ -1892,7 +1922,73 @@ impl<'de> serde::Deserialize<'de> for EncodedSentence {
     schemars::JsonSchema,
 )]
 pub struct Gram<S>(pub Vec<Atom<S>>);
+
+/// A vocabulary entry, distinct from the bare atom sequence interned by lasso.
+#[bridgerton::bridge(transparent)]
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+    schemars::JsonSchema,
+)]
+pub struct TaggedGram<G> {
+    pub gram: G,
+    /// Which sense of `gram` this is, numbered per gram from 1 in the order
+    /// of that gram's usage inventory. `None` for grams with one sense.
+    #[serde(default)]
+    pub sense: Option<std::num::NonZeroU32>,
+}
+
 pub type SpurGram = lasso::Spur<Gram<lasso::Spur>>;
+impl<G> TaggedGram<G> {
+    pub fn map<H>(self, f: impl FnOnce(G) -> H) -> TaggedGram<H> {
+        TaggedGram {
+            gram: f(self.gram),
+            sense: self.sense,
+        }
+    }
+
+    pub fn try_map<H>(self, f: impl FnOnce(G) -> Option<H>) -> Option<TaggedGram<H>> {
+        Some(TaggedGram {
+            gram: f(self.gram)?,
+            sense: self.sense,
+        })
+    }
+}
+
+impl TaggedGram<Gram<String>> {
+    pub fn get_interned(
+        &self,
+        rodeo: &lasso::RodeoReader,
+    ) -> Option<TaggedGram<Gram<lasso::Spur>>> {
+        Some(TaggedGram {
+            gram: self.gram.get_interned(rodeo)?,
+            sense: self.sense,
+        })
+    }
+}
+
+impl TaggedGram<Gram<lasso::Spur>> {
+    pub fn get_interned(
+        &self,
+        rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
+    ) -> Option<TaggedGram<SpurGram>> {
+        Some(TaggedGram {
+            gram: self.gram.get_interned(rodeo)?,
+            sense: self.sense,
+        })
+    }
+}
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -2300,8 +2396,10 @@ pub struct PronunciationClip {
 }
 
 /// Consolidated data structure containing all generated language data
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct ConsolidatedLanguageData {
+    /// Downloaded stroke forms for the course's writable units.
+    pub strokes: StrokeTable,
     /// All target language sentences from Anki cards
     pub target_language_sentences: Vec<String>,
     /// Mapping from target language sentences to all native translations
@@ -2309,7 +2407,7 @@ pub struct ConsolidatedLanguageData {
     /// NLP-analyzed sentences with multiword terms and heteronyms
     pub nlp_sentences: Vec<(String, SentenceInfo)>,
     /// Unified phrasebook: maps gram to definition entry (both MWE phrases and learned multi-atom grams)
-    pub phrasebook: BTreeMap<Gram<String>, PhrasebookDefinitionEntry>,
+    pub phrasebook: BTreeMap<TaggedGram<Gram<String>>, PhrasebookDefinitionEntry>,
     /// Proper noun definitions for names, places, organizations
     pub proper_noun_definitions: BTreeMap<String, ProperNounDefinition>,
     /// Per-source gram frequencies (movies, Pimsleur lessons, etc.)
@@ -2339,9 +2437,9 @@ pub struct ConsolidatedLanguageData {
     /// Gram frequencies for learnable grams
     pub gram_frequencies: GramFrequencyList,
     /// Encoded sentences: sentence text -> grams with learnability and capitalize_first
-    pub encoded_sentences: Vec<(String, SentenceGrams<Gram<String>>)>,
+    pub encoded_sentences: Vec<(String, SentenceGrams<TaggedGram<Gram<String>>>)>,
     /// Gram dictionary: definitions for grams (keyed by Gram for correct surface-form matching)
-    pub gram_dictionary: BTreeMap<Gram<String>, DictionaryEntry>,
+    pub gram_dictionary: BTreeMap<TaggedGram<Gram<String>>, DictionaryEntry>,
     /// Morpheme classification + info, keyed by (surface, canonical) pair.
     /// The pair prevents ambiguity when the same surface maps to different
     /// underlying morphemes (e.g. `-er` as agent vs. comparative).
@@ -2375,7 +2473,7 @@ impl ConsolidatedLanguageData {
         }
 
         for gram in self.gram_dictionary.keys() {
-            for atom in gram.iter() {
+            for atom in gram.gram.iter() {
                 if let Atom::Tok(word) = atom {
                     rodeo.get_or_intern(&word.text);
                     if let WordType::Heteronym(h) = &word.word_type {
@@ -2513,19 +2611,19 @@ impl ConsolidatedLanguageData {
             for gram in &encoded.grams {
                 match gram {
                     SentenceGram::Learnable(atoms) | SentenceGram::Obvious(atoms) => {
-                        for atom in atoms {
+                        for atom in &atoms.gram {
                             atom.get_or_intern(rodeo);
                         }
                     }
                 }
             }
             for term in &encoded.multiword_terms {
-                for atom in term.gram.iter() {
+                for atom in term.gram.gram.iter() {
                     atom.get_or_intern(rodeo);
                 }
             }
             for term in &encoded.low_confidence_multiword_terms {
-                for atom in term.gram.iter() {
+                for atom in term.gram.gram.iter() {
                     atom.get_or_intern(rodeo);
                 }
             }
@@ -2534,7 +2632,7 @@ impl ConsolidatedLanguageData {
         // intern source gram frequencies
         for freq_list in self.source_gram_frequencies.values() {
             for entry in &freq_list.entries {
-                for atom in &entry.gram {
+                for atom in &entry.gram.gram {
                     if let Atom::<String>::Tok(word) = atom {
                         rodeo.get_or_intern(&word.text);
                         if let WordType::Heteronym(h) = &word.word_type {
@@ -2548,7 +2646,7 @@ impl ConsolidatedLanguageData {
 
         // intern master gram frequencies
         for entry in &self.gram_frequencies.entries {
-            for atom in &entry.gram {
+            for atom in &entry.gram.gram {
                 if let Atom::<String>::Tok(word) = atom {
                     rodeo.get_or_intern(&word.text);
                     if let WordType::Heteronym(h) = &word.word_type {
@@ -2833,6 +2931,7 @@ impl From<PronunciationGuideThoughts> for PronunciationGuide {
     rkyv::Serialize,
     rkyv::Deserialize,
     schemars::JsonSchema,
+    Default,
 )]
 pub struct PronunciationData {
     pub sounds: Vec<(String, PatternPosition)>, // List of characteristic sounds/patterns for the language
@@ -2856,7 +2955,11 @@ pub struct PronunciationData {
 pub enum Language {
     French,
     English,
-    Spanish,
+    /// Spanish as spoken in Latin America (es-419).
+    #[serde(alias = "Spanish")]
+    SpanishLatinAmerican,
+    /// Spanish as spoken in Spain (es-ES).
+    SpanishPeninsular,
     Korean,
     German,
     /// Mandarin Chinese written in Simplified script (zh-CN).
@@ -2870,7 +2973,11 @@ pub enum Language {
     ChineseTraditional,
     Japanese,
     Russian,
-    Portuguese,
+    /// Portuguese as spoken in Brazil (pt-BR).
+    #[serde(alias = "Portuguese")]
+    PortugueseBrazilian,
+    /// Portuguese as spoken in Portugal (pt-PT).
+    PortugueseEuropean,
     Italian,
     Hindi,
     Thai,
@@ -3029,20 +3136,16 @@ impl Language {
             // course defaults, including Brazilian Portuguese:
             // European Portuguese targets against Brazilian audio measured
             // 41% median phoneme distance where `pt-br` measured 31%.
-            //
-            // `pt-br` with no European variant is deliberate, and unlike
-            // Spanish: the course teaches Brazilian Portuguese, so European
-            // recordings are meant to be *excluded* rather than accepted as
-            // an alternative reading. Spanish gets a seseo variant because
-            // both readings are taught; Portuguese must not grow one without
-            // that product decision changing first. Corpus audio is filtered
-            // upstream by `audio_check::expected_language`.
             Language::French => PhonemeLabelSource::Espeak("fr-fr"),
             Language::English => PhonemeLabelSource::Espeak("en-us"),
-            Language::Spanish => PhonemeLabelSource::Espeak("es"),
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
+                PhonemeLabelSource::Espeak("es")
+            }
             Language::German => PhonemeLabelSource::Espeak("de"),
             Language::Italian => PhonemeLabelSource::Espeak("it"),
-            Language::Portuguese => PhonemeLabelSource::Espeak("pt-br"),
+            Language::PortugueseBrazilian => PhonemeLabelSource::Espeak("pt-br"),
+            // YAP-87: the deployed model was trained on pt-br labels only.
+            Language::PortugueseEuropean => PhonemeLabelSource::Unvalidated,
             Language::Russian => PhonemeLabelSource::Espeak("ru"),
             // The g2p crate's port of lexide's schwa-stress-hin chain.
             Language::Hindi => PhonemeLabelSource::Hindi,
@@ -3065,30 +3168,32 @@ impl Language {
 
     /// The language code to hand `g2p::phonemize_lang`, but **only** for
     /// languages whose deployed-model labels the g2p crate produces. `None`
-    /// for Traditional Mandarin, whose model labels are unvalidated, so a
-    /// caller that reaches for a target there gets nothing rather than a
+    /// for Traditional Mandarin and European Portuguese, whose labels are
+    /// unvalidated, so a caller that reaches for a target there gets nothing rather than a
     /// plausible-looking wrong answer.
     pub fn g2p_lang(&self) -> Option<&'static str> {
         self.phoneme_label_source()
             .g2p_supported()
-            .then(|| self.code())
+            .then(|| self.corpus_code())
     }
 
     /// Stable short code used for CLI arguments, data directories, and file
-    /// names. ISO 639-3 where that's unambiguous; the Chinese variants append
+    /// names. Spanish and Portuguese append regional subtags; Chinese appends
     /// an ISO 15924 script subtag because 639-3 alone can't distinguish them.
     pub fn code(&self) -> &'static str {
         match self {
             Language::French => "fra",
             Language::English => "eng",
-            Language::Spanish => "spa",
+            Language::SpanishLatinAmerican => "spa",
+            Language::SpanishPeninsular => "spa-es",
             Language::Korean => "kor",
             Language::German => "deu",
             Language::ChineseSimplified => "zho-hans",
             Language::ChineseTraditional => "zho-hant",
             Language::Japanese => "jpn",
             Language::Russian => "rus",
-            Language::Portuguese => "por",
+            Language::PortugueseBrazilian => "por",
+            Language::PortugueseEuropean => "por-pt",
             Language::Italian => "ita",
             Language::Hindi => "hin",
             Language::Thai => "tha",
@@ -3098,29 +3203,34 @@ impl Language {
     /// The language tag Tatoeba's sentence dump uses. Tatoeba tags Mandarin
     /// as `cmn` whichever script a sentence is written in, so both Chinese
     /// courses read the same rows and filter by script afterwards; every
-    /// other tag coincides with [`Language::code`].
+    /// other tag coincides with [`Language::corpus_code`].
     pub fn tatoeba_code(&self) -> &'static str {
         match self {
             Language::ChineseSimplified | Language::ChineseTraditional => "cmn",
-            other => other.code(),
+            other => other.corpus_code(),
         }
     }
 
     /// Inverse of [`Language::code`]. Bare "zho" is deliberately not accepted:
     /// it doesn't say which script, and the whole point of the split is to
-    /// make that ambiguity a loud error instead of a silent default.
+    /// make that ambiguity a loud error instead of a silent default. Bare
+    /// "spa" and "por" stay valid because they have always named the courses
+    /// that Latin American Spanish and Brazilian Portuguese inherited, and every
+    /// published clip, pack and cache is keyed by them.
     pub fn from_code(code: &str) -> Option<Self> {
         Some(match code {
             "fra" => Language::French,
             "eng" => Language::English,
-            "spa" => Language::Spanish,
+            "spa" => Language::SpanishLatinAmerican,
+            "spa-es" => Language::SpanishPeninsular,
             "kor" => Language::Korean,
             "deu" => Language::German,
             "zho-hans" => Language::ChineseSimplified,
             "zho-hant" => Language::ChineseTraditional,
             "jpn" => Language::Japanese,
             "rus" => Language::Russian,
-            "por" => Language::Portuguese,
+            "por" => Language::PortugueseBrazilian,
+            "por-pt" => Language::PortugueseEuropean,
             "ita" => Language::Italian,
             "hin" => Language::Hindi,
             "tha" => Language::Thai,
@@ -3128,17 +3238,72 @@ impl Language {
         })
     }
 
+    /// Deliberate scaffolding: dialects share a generate-data source tree until
+    /// their corpora diverge, at which point this function is deleted.
+    pub fn corpus_code(&self) -> &'static str {
+        match self {
+            Language::SpanishPeninsular => "spa",
+            Language::PortugueseEuropean => "por",
+            other => other.code(),
+        }
+    }
+
+    /// Stable names used in public dictionary URLs.
+    pub fn dictionary_name(&self) -> &'static str {
+        match self {
+            Language::French => "french",
+            Language::English => "english",
+            Language::SpanishLatinAmerican => "spanish",
+            Language::SpanishPeninsular => "spanish-spain",
+            Language::Korean => "korean",
+            Language::German => "german",
+            Language::ChineseSimplified => "chinese (simplified)",
+            Language::ChineseTraditional => "chinese (traditional)",
+            Language::Japanese => "japanese",
+            Language::Russian => "russian",
+            Language::PortugueseBrazilian => "portuguese",
+            Language::PortugueseEuropean => "portuguese-portugal",
+            Language::Italian => "italian",
+            Language::Hindi => "hindi",
+            Language::Thai => "thai",
+        }
+    }
+
+    /// The name the language goes by in LLM prompts and in the TTS cache
+    /// key. Frozen: prompt caches and synthesized audio objects are keyed by
+    /// it, so a change here re-runs every cached LLM call and re-synthesizes
+    /// every sentence for that language. Dialects share one name while they
+    /// share voices and behaviour; a dialect that diverges gets its own
+    /// string here at that point.
+    pub fn prompt_name(&self) -> &'static str {
+        match self {
+            Language::French => "French",
+            Language::English => "English",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "Spanish",
+            Language::Korean => "Korean",
+            Language::German => "German",
+            Language::ChineseSimplified => "Chinese (Simplified)",
+            Language::ChineseTraditional => "Chinese (Traditional)",
+            Language::Japanese => "Japanese",
+            Language::Russian => "Russian",
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => "Portuguese",
+            Language::Italian => "Italian",
+            Language::Hindi => "Hindi",
+            Language::Thai => "Thai",
+        }
+    }
+
     pub fn iso_639_1(&self) -> &'static str {
         match self {
             Language::French => "fr",
             Language::English => "en",
-            Language::Spanish => "es",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "es",
             Language::Korean => "ko",
             Language::German => "de",
             Language::ChineseSimplified | Language::ChineseTraditional => "zh",
             Language::Japanese => "ja",
             Language::Russian => "ru",
-            Language::Portuguese => "pt",
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => "pt",
             Language::Italian => "it",
             Language::Hindi => "hi",
             Language::Thai => "th",
@@ -3149,9 +3314,11 @@ impl Language {
         match self {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => WritingSystem::Latin,
             Language::Korean => WritingSystem::Hangul,
             Language::Russian => WritingSystem::Cyrillic,
@@ -3176,9 +3343,9 @@ impl Language {
         matches!(
             self,
             Language::French
-                | Language::Spanish
+                | Language::SpanishLatinAmerican | Language::SpanishPeninsular
                 | Language::German
-                | Language::Portuguese
+                | Language::PortugueseBrazilian | Language::PortugueseEuropean
                 | Language::Italian
                 | Language::Hindi
                 // Mandarin's politeness contrast is exactly 你 vs. 您 — a classic
@@ -3192,14 +3359,14 @@ impl Language {
     pub fn pronunciation_connector(&self) -> &'static str {
         match self {
             Language::French => "comme dans",
-            Language::Spanish => "como en",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "como en",
             Language::Korean => "\u{cc98}\u{b7fc}",
             Language::English => "as in",
             Language::German => "wie in",
             Language::ChineseSimplified | Language::ChineseTraditional => "\u{5982}",
             Language::Japanese => "\u{306e}\u{3088}\u{3046}\u{306b}",
             Language::Russian => "\u{043a}\u{0430}\u{043a} \u{0432}",
-            Language::Portuguese => "como em",
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => "como em",
             Language::Italian => "come in",
             Language::Hindi => "जैसे",
             Language::Thai => "เหมือนใน",
@@ -3255,7 +3422,7 @@ impl Language {
                 'æ' => "e dans l'a",
                 _ => return None,
             },
-            Language::Portuguese => match letter {
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => match letter {
                 'e' => "é",
                 'o' => "ó",
                 'á' => "a acento agudo",
@@ -3273,7 +3440,7 @@ impl Language {
                 'ü' => "u trema",
                 _ => return None,
             },
-            Language::Spanish => match letter {
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => match letter {
                 'y' => "i griega",
                 'ñ' => "eñe",
                 'á' => "a con acento",
@@ -3493,12 +3660,16 @@ impl Language {
     pub fn google_tts_voice(&self) -> (&'static str, &'static str) {
         match self {
             Language::French => ("fr-FR", "fr-FR-Chirp3-HD-Achernar"),
-            Language::Spanish => ("es-US", "es-US-Chirp3-HD-Achernar"),
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
+                ("es-US", "es-US-Chirp3-HD-Achernar")
+            }
             Language::English => ("en-US", "en-US-Chirp3-HD-Achernar"),
             Language::Korean => ("ko-KR", "ko-KR-Chirp3-HD-Achernar"),
             Language::German => ("de-DE", "de-DE-Chirp3-HD-Achernar"),
             Language::Italian => ("it-IT", "it-IT-Chirp3-HD-Achernar"),
-            Language::Portuguese => ("pt-BR", "pt-BR-Chirp3-HD-Achernar"),
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => {
+                ("pt-BR", "pt-BR-Chirp3-HD-Achernar")
+            }
             Language::Russian => ("ru-RU", "ru-RU-Chirp3-HD-Aoede"),
             Language::Japanese => ("ja-JP", "ja-JP-Chirp3-HD-Achernar"),
             Language::Hindi => ("hi-IN", "hi-IN-Chirp3-HD-Achernar"),
@@ -3518,10 +3689,10 @@ impl Language {
     /// ojos: one file, under "sp").
     pub fn opensubtitles_languages(&self) -> &'static str {
         match self {
-            Language::Portuguese => "pt-br",
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => "pt-br",
             Language::ChineseSimplified => "zh-cn",
             Language::ChineseTraditional => "zh-tw",
-            Language::Spanish => "es,sp,ea",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "es,sp,ea",
             other => other.iso_639_1(),
         }
     }
@@ -3531,14 +3702,14 @@ impl Language {
         match self {
             Language::French => "fr-FR",
             Language::English => "en-US",
-            Language::Spanish => "es-ES",
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => "es-ES",
             Language::German => "de-DE",
             Language::Korean => "ko-KR",
             Language::ChineseSimplified => "zh-CN",
             Language::ChineseTraditional => "zh-TW",
             Language::Japanese => "ja-JP",
             Language::Russian => "ru-RU",
-            Language::Portuguese => "pt-BR",
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => "pt-BR",
             Language::Italian => "it-IT",
             Language::Hindi => "hi-IN",
             Language::Thai => "th-TH",
@@ -3552,14 +3723,18 @@ impl Language {
         match self {
             Language::French => &["le", "de", "pas", "je"],
             Language::English => &["the", "to", "you", "is"],
-            Language::Spanish => &["el", "de", "no", "que"],
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
+                &["el", "de", "no", "que"]
+            }
             Language::German => &["ich", "das", "nicht", "du"],
             Language::Korean => &["이", "는", "을", "에"],
             // 的/了/是/不 are written identically in both scripts.
             Language::ChineseSimplified | Language::ChineseTraditional => &["的", "了", "是", "不"],
             Language::Japanese => &["の", "は", "を", "に"],
             Language::Russian => &["не", "что", "на", "это"],
-            Language::Portuguese => &["que", "de", "não", "eu"],
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => {
+                &["que", "de", "não", "eu"]
+            }
             Language::Italian => &["che", "di", "non", "il"],
             Language::Hindi => &["है", "में", "के", "को"],
             // Thai has no spaces between words, so these are checked as
@@ -3617,7 +3792,7 @@ impl Language {
                 (" lf ", " If "),
             ],
             // t→r corruption: "está"→"esrá", "todo"→"rodo", "tiene"→"riene"
-            Language::Spanish => &[
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular => &[
                 ("esrá", "está"),
                 ("esro", "esto"),
                 ("riene", "tiene"),
@@ -3673,7 +3848,7 @@ impl Language {
             // t→r corruption: "está"→"esrá", "tudo"→"rudo", "tem"→"rem" (ambiguous)
             // OCR: uppercase I for lowercase l: "paIavra" for "palavra"
             // OCR: "-Io" for "-lo" (clitic), "Ihe" for "lhe"
-            Language::Portuguese => &[
+            Language::PortugueseBrazilian | Language::PortugueseEuropean => &[
                 ("esrá", "está"),
                 ("esre", "este"),
                 ("rudo", "tudo"),
@@ -3938,7 +4113,11 @@ impl Language {
         }
 
         // 11. Spanish: missing inverted punctuation ¿ and ¡
-        if matches!(self, Language::Spanish) && total_lines >= 100 {
+        if matches!(
+            self,
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular
+        ) && total_lines >= 100
+        {
             let questions = all_text.matches('?').count();
             let inv_questions = all_text.matches('¿').count();
             // If there are many questions but zero or near-zero inverted marks
@@ -4107,6 +4286,9 @@ impl Language {
 /// spelled letters. Named in English because it addresses the model, not
 /// the learner.
 pub fn pronunciation_challenge_tts_instructions(language: Language) -> String {
+    // Keep voice instructions (and the audio keys containing them) unchanged
+    // while the dialect courses share voices.
+    let language = language.prompt_name();
     format!(
         "Read this short {language} pronunciation cue aloud for a flashcard, in a clear, warm, \
          natural {language} voice, at a normal conversational pace with no long pauses. Say the \
@@ -4216,14 +4398,16 @@ impl std::fmt::Display for Language {
         match self {
             Language::French => write!(f, "French"),
             Language::English => write!(f, "English"),
-            Language::Spanish => write!(f, "Spanish"),
+            Language::SpanishLatinAmerican => write!(f, "Spanish (Latin America)"),
+            Language::SpanishPeninsular => write!(f, "Spanish (Spain)"),
             Language::Korean => write!(f, "Korean"),
             Language::German => write!(f, "German"),
             Language::ChineseSimplified => write!(f, "Chinese (Simplified)"),
             Language::ChineseTraditional => write!(f, "Chinese (Traditional)"),
             Language::Japanese => write!(f, "Japanese"),
             Language::Russian => write!(f, "Russian"),
-            Language::Portuguese => write!(f, "Portuguese"),
+            Language::PortugueseBrazilian => write!(f, "Portuguese (Brazil)"),
+            Language::PortugueseEuropean => write!(f, "Portuguese (Portugal)"),
             Language::Italian => write!(f, "Italian"),
             Language::Hindi => write!(f, "Hindi"),
             Language::Thai => write!(f, "Thai"),
@@ -4251,8 +4435,8 @@ impl Course {
     pub fn dictionary_slug(&self) -> String {
         format!(
             "{}-to-{}",
-            self.target_language.to_string().to_lowercase(),
-            self.native_language.to_string().to_lowercase()
+            self.target_language.dictionary_name(),
+            self.native_language.dictionary_name()
         )
     }
 }
@@ -4289,7 +4473,11 @@ pub const COURSES: &[Course] = &[
     },
     Course {
         native_language: Language::English,
-        target_language: Language::Spanish,
+        target_language: Language::SpanishLatinAmerican,
+    },
+    Course {
+        native_language: Language::English,
+        target_language: Language::SpanishPeninsular,
     },
     Course {
         native_language: Language::English,
@@ -4305,11 +4493,15 @@ pub const COURSES: &[Course] = &[
     },
     Course {
         native_language: Language::English,
-        target_language: Language::Portuguese,
+        target_language: Language::PortugueseBrazilian,
+    },
+    Course {
+        native_language: Language::English,
+        target_language: Language::PortugueseEuropean,
     },
     Course {
         native_language: Language::French,
-        target_language: Language::Portuguese,
+        target_language: Language::PortugueseBrazilian,
     },
     Course {
         native_language: Language::English,
@@ -4335,7 +4527,8 @@ pub const COURSES: &[Course] = &[
 
 pub const LANGUAGES: &[Language] = &[
     Language::French,
-    Language::Spanish,
+    Language::SpanishLatinAmerican,
+    Language::SpanishPeninsular,
     Language::English,
     Language::Korean,
     Language::German,
@@ -4343,7 +4536,8 @@ pub const LANGUAGES: &[Language] = &[
     Language::ChineseTraditional,
     Language::Japanese,
     Language::Russian,
-    Language::Portuguese,
+    Language::PortugueseBrazilian,
+    Language::PortugueseEuropean,
     Language::Italian,
     Language::Hindi,
     Language::Thai,
@@ -4641,7 +4835,7 @@ pub fn tts_cache_filename(request: &TtsRequest, provider: &TtsProvider) -> Strin
     let cache_text = format!(
         "r{TTS_SYNTHESIS_REVISION}|{provider:?}|{language}|{speed}|{is_ssml}\
          |{tlen}:{text}|{itag}{ilen}:{instructions}|{hlen}:{hints}",
-        language = request.language,
+        language = request.language.prompt_name(),
         speed = request.speed,
         is_ssml = request.is_ssml,
         tlen = request.text.len(),
@@ -4659,6 +4853,12 @@ pub fn tts_cache_filename(request: &TtsRequest, provider: &TtsProvider) -> Strin
 /// its cold start). Only clips that passed the backend's checks are ever
 /// written, so a hit is always a verified clip.
 pub const TTS_CACHE_ORIGIN: &str = "https://ttscache.yap.town";
+
+/// Public origin of published movie clips.
+pub const CLIPS_ORIGIN: &str = "https://clips.yap.town";
+
+/// Public origin of temporary exported Anki packages (eight-day retention).
+pub const ANKI_DECKS_ORIGIN: &str = "https://anki-decks.yap.town";
 
 /// Where the shared cache would serve the clip for `cache_filename`.
 pub fn tts_cache_url(cache_filename: &str) -> String {
@@ -4715,7 +4915,7 @@ mod tts_cache_key_tests {
                 ..base.clone()
             },
             TtsRequest {
-                language: Language::Spanish,
+                language: Language::SpanishLatinAmerican,
                 ..base.clone()
             },
             TtsRequest {
@@ -5439,13 +5639,22 @@ mod autograde_request_compat_tests {
             user_sentence: "Do you like it?".to_string(),
             literals: vec![],
             phrases: vec![],
-            primary_expression: Gram(vec![]),
+            primary_expression: TaggedGram {
+                gram: Gram(vec![]),
+                sense: None,
+            },
+            primary_literal_indices: vec![],
             context: Default::default(),
         };
         let mut old_json = serde_json::to_value(&translation).unwrap();
         old_json.as_object_mut().unwrap().remove("context");
+        old_json
+            .as_object_mut()
+            .unwrap()
+            .remove("primary_literal_indices");
         let parsed: AutoGradeTranslationRequest = serde_json::from_value(old_json).unwrap();
         assert!(parsed.context.is_empty());
+        assert!(parsed.primary_literal_indices.is_empty());
 
         let transcription = AutoGradeTranscriptionRequest {
             course,
@@ -5490,7 +5699,7 @@ mod pronunciation_challenge_audio_tests {
             "s c h wie in Schule"
         );
         assert_eq!(
-            pronunciation_challenge_spoken_text(Language::Spanish, "ñ", "niño"),
+            pronunciation_challenge_spoken_text(Language::SpanishLatinAmerican, "ñ", "niño"),
             "eñe como en niño"
         );
         assert_eq!(
@@ -5658,7 +5867,7 @@ mod pronunciation_challenge_audio_tests {
 
     #[test]
     fn tts_instructions_name_the_language() {
-        let instructions = pronunciation_challenge_tts_instructions(Language::Portuguese);
+        let instructions = pronunciation_challenge_tts_instructions(Language::PortugueseBrazilian);
         assert!(instructions.contains("Portuguese pronunciation cue"));
         assert!(instructions.ends_with("Say nothing else."));
     }
@@ -5684,11 +5893,11 @@ mod pronunciation_challenge_audio_tests {
         // Portuguese "e" is the conjunction and "o" the article; the letter
         // names are "é" and "ó".
         assert_eq!(
-            pronunciation_challenge_spoken_text(Language::Portuguese, "ce", "cerveja"),
+            pronunciation_challenge_spoken_text(Language::PortugueseBrazilian, "ce", "cerveja"),
             "c é como em cerveja"
         );
         assert_eq!(
-            pronunciation_challenge_spoken_text(Language::Portuguese, "o", "ovo"),
+            pronunciation_challenge_spoken_text(Language::PortugueseBrazilian, "o", "ovo"),
             "ó como em ovo"
         );
         // A bare Russian vowel reduces as an unstressed word; the stress
@@ -5706,15 +5915,15 @@ mod pronunciation_challenge_audio_tests {
     #[test]
     fn portuguese_accented_letters_speak_their_names() {
         assert_eq!(
-            pronunciation_challenge_spoken_text(Language::Portuguese, "á", "chá"),
+            pronunciation_challenge_spoken_text(Language::PortugueseBrazilian, "á", "chá"),
             "a acento agudo como em chá"
         );
         assert_eq!(
-            pronunciation_challenge_spoken_text(Language::Portuguese, "ãe", "pães"),
+            pronunciation_challenge_spoken_text(Language::PortugueseBrazilian, "ãe", "pães"),
             "a til é como em pães"
         );
         assert_eq!(
-            pronunciation_challenge_spoken_text(Language::Portuguese, "ê", "você"),
+            pronunciation_challenge_spoken_text(Language::PortugueseBrazilian, "ê", "você"),
             "é acento circunflexo como em você"
         );
     }
@@ -5781,5 +5990,206 @@ mod writing_system_tests {
         assert!(!WritingSystem::Han.contains_char('ら'));
         assert!(!WritingSystem::Japanese.contains_char('a'));
         assert!(!WritingSystem::Hangul.contains_char('a'));
+    }
+}
+
+#[cfg(test)]
+mod dialect_tests {
+    use super::*;
+
+    #[test]
+    fn latin_american_spanish_preserves_frozen_identity() {
+        let language = Language::SpanishLatinAmerican;
+        assert_eq!(language.to_string(), "Spanish (Latin America)");
+        assert_eq!(language.code(), "spa");
+        assert_eq!(language.dictionary_name(), "spanish");
+        assert_eq!(language.prompt_name(), "Spanish");
+        assert_eq!(
+            language.google_tts_voice(),
+            ("es-US", "es-US-Chirp3-HD-Achernar")
+        );
+        assert_eq!(language.tmdb_language_code(), "es-ES");
+        assert_eq!(
+            serde_json::from_value::<Language>(serde_json::json!("SpanishLatinAmerican")).unwrap(),
+            language
+        );
+    }
+
+    #[test]
+    fn frozen_audio_language_keys() {
+        let expected = [
+            (Language::French, "French"),
+            (Language::English, "English"),
+            (Language::SpanishLatinAmerican, "Spanish"),
+            (Language::SpanishPeninsular, "Spanish"),
+            (Language::Korean, "Korean"),
+            (Language::German, "German"),
+            (Language::ChineseSimplified, "Chinese (Simplified)"),
+            (Language::ChineseTraditional, "Chinese (Traditional)"),
+            (Language::Japanese, "Japanese"),
+            (Language::Russian, "Russian"),
+            (Language::PortugueseBrazilian, "Portuguese"),
+            (Language::PortugueseEuropean, "Portuguese"),
+            (Language::Italian, "Italian"),
+            (Language::Hindi, "Hindi"),
+            (Language::Thai, "Thai"),
+        ];
+        assert_eq!(expected.len(), LANGUAGES.len());
+        for (language, key) in expected {
+            assert_eq!(language.prompt_name(), key);
+        }
+    }
+
+    #[test]
+    fn dialect_identity_and_legacy_events() {
+        for language in LANGUAGES {
+            assert_eq!(Language::from_code(language.code()), Some(*language));
+        }
+        assert_eq!(Language::from_code("zho"), None);
+        for (old, language, slug) in [
+            (
+                "Spanish",
+                Language::SpanishLatinAmerican,
+                "spanish-to-english",
+            ),
+            (
+                "Portuguese",
+                Language::PortugueseBrazilian,
+                "portuguese-to-english",
+            ),
+        ] {
+            assert_eq!(
+                serde_json::from_value::<Language>(serde_json::json!(old)).unwrap(),
+                language
+            );
+            assert_eq!(
+                Course {
+                    native_language: Language::English,
+                    target_language: language
+                }
+                .dictionary_slug(),
+                slug
+            );
+        }
+        for (inherited, new, corpus) in [
+            (
+                Language::SpanishLatinAmerican,
+                Language::SpanishPeninsular,
+                "spa",
+            ),
+            (
+                Language::PortugueseBrazilian,
+                Language::PortugueseEuropean,
+                "por",
+            ),
+        ] {
+            assert_eq!(inherited.corpus_code(), corpus);
+            assert_eq!(new.corpus_code(), corpus);
+            assert_eq!(inherited.google_tts_voice(), new.google_tts_voice());
+            assert_eq!(inherited.prompt_name(), new.prompt_name());
+            assert_eq!(
+                pronunciation_challenge_tts_instructions(inherited),
+                pronunciation_challenge_tts_instructions(new)
+            );
+            assert_ne!(inherited.dictionary_name(), new.dictionary_name());
+        }
+        assert_eq!(Language::SpanishPeninsular.g2p_lang(), Some("spa"));
+        assert_eq!(Language::PortugueseBrazilian.g2p_lang(), Some("por"));
+        assert_eq!(Language::PortugueseEuropean.g2p_lang(), None);
+        assert_eq!(
+            serde_json::to_value(Language::SpanishLatinAmerican).unwrap(),
+            "SpanishLatinAmerican"
+        );
+        assert_eq!(
+            serde_json::to_value(Language::PortugueseBrazilian).unwrap(),
+            "PortugueseBrazilian"
+        );
+    }
+}
+
+#[cfg(test)]
+mod tagged_gram_tests {
+    use super::TaggedGram;
+    use std::num::NonZeroU32;
+
+    #[test]
+    fn tagged_gram_json_round_trip() {
+        let tagged = TaggedGram {
+            gram: "word".to_string(),
+            sense: NonZeroU32::new(2),
+        };
+        let json = serde_json::to_string(&tagged).unwrap();
+        assert_eq!(
+            serde_json::from_str::<TaggedGram<String>>(&json).unwrap(),
+            tagged
+        );
+        let untagged: TaggedGram<String> = serde_json::from_str(r#"{"gram":"word"}"#).unwrap();
+        assert_eq!(untagged.sense, None);
+        assert!(
+            serde_json::from_str::<TaggedGram<String>>(r#"{"gram":"word","sense":0}"#).is_err()
+        );
+    }
+
+    #[test]
+    fn tagged_gram_native_round_trip() {
+        let tagged = TaggedGram {
+            gram: "word".to_string(),
+            sense: NonZeroU32::new(2),
+        };
+        let encoded = bridgerton::value::encode(&tagged).unwrap();
+        assert_eq!(
+            bridgerton::value::decode::<TaggedGram<String>>(&encoded).unwrap(),
+            tagged
+        );
+        assert!(bridgerton::value::decode::<NonZeroU32>(&[0; 4]).is_err());
+    }
+}
+
+impl TaggedGram<SpurGram> {
+    pub fn resolve(
+        &self,
+        rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
+    ) -> TaggedGram<Gram<lasso::Spur>> {
+        self.map(|gram| rodeo.resolve(&gram).to_gram())
+    }
+}
+
+impl TaggedGram<Gram<lasso::Spur>> {
+    pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> TaggedGram<Gram<String>> {
+        self.clone().map(|gram| gram.resolve(rodeo))
+    }
+}
+
+impl TaggedGram<Gram<String>> {
+    pub fn to_display_string(&self, language: Language) -> String {
+        self.gram.to_display_string(language)
+    }
+}
+
+#[cfg(test)]
+mod encoded_sense_tests {
+    use super::*;
+    use lasso::Key;
+    #[test]
+    fn encoded_tokens_preserve_sense_ids() {
+        let sentence = EncodedSentence {
+            tokens: vec![
+                TaggedGram {
+                    gram: SpurGram::try_from_usize(3).unwrap(),
+                    sense: std::num::NonZeroU32::new(2),
+                },
+                TaggedGram {
+                    gram: SpurGram::try_from_usize(4).unwrap(),
+                    sense: None,
+                },
+            ],
+            capitalize_first: true,
+        };
+        let json = serde_json::to_value(&sentence).unwrap();
+        assert_eq!(json["tokens"], serde_json::json!([[3, 2], [4, 0]]));
+        assert_eq!(
+            serde_json::from_value::<EncodedSentence>(json).unwrap(),
+            sentence
+        );
     }
 }

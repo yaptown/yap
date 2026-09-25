@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TranslationChallengeView: View {
+    @Environment(BackgroundController.self) private var background
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewScreen!) private var screen
     @Environment(\.reviewHost!) private var host
@@ -9,6 +10,7 @@ struct TranslationChallengeView: View {
     @State private var state: TranslationState
     @State private var view: TranslationView
     @State private var hasClip: Bool?
+    @State private var clipMovieId: String?
     @State private var gradingTask: Task<Void, Never>?
     @State private var focused = false
     @State private var gradesExpanded = false
@@ -26,8 +28,8 @@ struct TranslationChallengeView: View {
     }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
-        VStack(spacing: 12) {
-            StudyCard {
+        ReviewStepScrollView {
+            StudyCard(animated: true) {
                 if let badge = view.badge { ReviewBadge(text: badge) }
                 HStack(alignment: .center, spacing: 8) {
                     AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: !editing && hasClip == false)
@@ -41,6 +43,7 @@ struct TranslationChallengeView: View {
                             } else { text }
                         }
                     }.frame(maxWidth: .infinity)
+                    ReportIssueMenu(subject: .Translation(sentence))
                 }
                 if let verdict = view.verdict {
                     SentenceVerdictView(submission: verdict.submission, correct: verdict.correct_translation,
@@ -66,9 +69,13 @@ struct TranslationChallengeView: View {
                     ProperNounGroupsView(groups: view.proper_nouns)
                 }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
-                    reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip)
+                    reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip, movieId: $clipMovieId)
                 ReviewDefinitionsView(definitions: view.definitions)
             }
+            if editing {
+                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId))
+            }
+        } actions: {
             if view.verdict != nil {
                 Button { send(.Continue) } label: { Text(view.continue_label).frame(maxWidth: .infinity) }
                     .disabled(!view.can_continue || actions.submitting)
@@ -113,6 +120,7 @@ struct TranslationChallengeView: View {
         }.font(.subheadline)
     }
     private func send(_ event: TranslationEvent) {
+        if case .ItemGraded = event { background.bump(30) }
         if case .CancelGrading = event { gradingTask?.cancel() }
         apply(translation_transition(state: state, event: event))
     }
@@ -125,6 +133,7 @@ struct TranslationChallengeView: View {
         for effect in step.effects {
             switch effect {
             case let .Autograde(submission):
+                background.bump(30)
                 focused = false
                 gradingTask?.cancel()
                 let course = state.course
@@ -133,7 +142,7 @@ struct TranslationChallengeView: View {
                         native_translations: sentence.native_translations, literals: sentence.target_language_literals,
                         phrases: sentence.unique_target_language_phrases, access_token: host.accessToken, course: course,
                         gram_definitions: GramDefinitions(value: sentence.gram_definitions_for_lookup), literal_gram_indices: sentence.literal_gram_indices,
-                        phrase_definitions: GramDefinitions(value: sentence.phrase_definitions), primary_expression: sentence.primary_expression,
+                        phrase_definitions: GramDefinitions(value: sentence.phrase_definitions), primary_expression: sentence.primary_expression, primary_literal_indices: sentence.primary_literal_indices,
                         movie_titles: MovieTitles(value: sentence.movie_titles))
                     guard !Task.isCancelled else { return }
                     send(.Graded(response: response))
@@ -152,7 +161,7 @@ struct TranslationChallengeView: View {
                 case .Perfect: completed = actions.completeTranslationPerfect(sentence.target_language, tapped, completedAtMs)
                 case let .Manual(grade): completed = actions.completeTranslationWrong(sentence.target_language, submission, grade, tapped, completedAtMs)
                 }
-                if completed { storage?.clear(); audio.stop() }
+                if completed { background.bump(30); storage?.clear(); audio.stop() }
             }
         }
     }

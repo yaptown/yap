@@ -11,6 +11,35 @@ import BridgeFFI
     }()
 }
 
+private struct BridgeStableHash: Hashable {
+    let lo: UInt64
+    let hi: UInt64
+}
+
+@MainActor private final class BridgeStableCache<Value> {
+    private var values: [BridgeStableHash: Value] = [:]
+    private var order: [BridgeStableHash] = []
+    private let strong: Bool
+    init(strong: Bool) { self.strong = strong }
+
+    func receive(_ result: BridgeResult, decode: (BridgeResult) throws -> Value) throws -> Value {
+        // Error decoders own the buffer. Never cache an error, even at hash zero.
+        guard result.status == 0 else { return try decode(result) }
+        let hash = BridgeStableHash(lo: result.hash_lo, hi: result.hash_hi)
+        if let value = values[hash] {
+            bridgerton_buffer_free(result.data)
+            return value
+        }
+        let value = try decode(result)
+        if !strong {
+            if order.count == 16 { values.removeValue(forKey: order.removeFirst()) }
+            order.append(hash)
+        }
+        values[hash] = value
+        return value
+    }
+}
+
 public struct BridgeError: Swift.Error, CustomStringConvertible {
     public let description: String
 }

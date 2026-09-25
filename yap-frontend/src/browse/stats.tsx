@@ -1,6 +1,10 @@
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import type { Language, StatsScreenView } from "../../../yap-frontend-rs/pkg";
+import type {
+  Language,
+  StatsScreenView,
+  StatTileView,
+} from "../../../yap-frontend-rs/pkg";
 import { Card } from "../components/ui/card";
 import { Leeches } from "./Leeches";
 
@@ -23,22 +27,9 @@ export function Stats({
     <main className="flex flex-col gap-6 py-4">
       <h1 className="text-2xl font-bold">{view.title}</h1>
       <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4 gap-2">
-          <p className="text-xl font-semibold">{view.xp_label}</p>
-        </Card>
-        <Card className="p-4 gap-2">
-          <p className="text-xl font-semibold">{view.total_reviews_label}</p>
-        </Card>
-        <Card className="p-4 gap-2">
-          <h2 className="text-sm text-muted-foreground">{view.streak.title}</h2>
-          <p className="text-xl font-semibold">{view.streak.days_label}</p>
-          <p className="text-sm text-muted-foreground">
-            {view.streak.today_label}
-          </p>
-        </Card>
-        <Card className="p-4 gap-2">
-          <p className="text-xl font-semibold">{view.percent_known_label}</p>
-        </Card>
+        {view.tiles.map((tile) => (
+          <StatTile key={tile.eyebrow} tile={tile} />
+        ))}
       </div>
       <Link
         to="/due"
@@ -73,5 +64,17 @@ export function Stats({
         timestampMs={timestampMs}
       />
     </main>
+  );
+}
+
+function StatTile({ tile }: { tile: StatTileView }) {
+  return (
+    <Card className="p-4 gap-2">
+      <h2 className="text-sm text-muted-foreground">{tile.eyebrow}</h2>
+      <p className="text-xl font-semibold">{tile.value}</p>
+      {tile.caption && (
+        <p className="text-sm text-muted-foreground">{tile.caption}</p>
+      )}
+    </Card>
   );
 }

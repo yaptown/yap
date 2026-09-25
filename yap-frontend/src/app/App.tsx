@@ -72,6 +72,13 @@ const router = createBrowserRouter([
               { path: "due", element: <DueWordsPage /> },
               { path: "dictionary", element: <DictionaryPage /> },
               { path: "goals", element: <GoalsPage /> },
+              {
+                path: "anki",
+                lazy: async () => {
+                  const { AnkiPage } = await import("@/anki/AnkiPage");
+                  return { Component: AnkiPage };
+                },
+              },
               { path: "select-language", element: <SelectLanguagePage /> },
             ],
           },

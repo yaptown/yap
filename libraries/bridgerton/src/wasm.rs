@@ -469,3 +469,167 @@ impl<A: SerdeType<B, N, O>, Z: SerdeType<B, N, O>, const B: bool, const N: bool,
         crate::__describe!("]");
     }
 }
+
+impl<const B: bool, const N: bool, const O: bool> SerdeType<B, N, O> for std::num::NonZeroU32 {
+    const LEN: u32 = <u32 as SerdeType<B, N, O>>::LEN;
+    fn describe() {
+        <u32 as SerdeType<B, N, O>>::describe();
+    }
+}
+
+/// Only transparent data can participate in content-addressed return interning.
+#[diagnostic::on_unimplemented(
+    message = "stable returns must be transparent bridge values, not opaque handles"
+)]
+pub trait StableValue: serde::Serialize + IntoWasm {}
+
+#[diagnostic::on_unimplemented(
+    message = "stable returns must be transparent bridge values, not opaque handles"
+)]
+pub trait StableReturn: IntoWasm {
+    fn into_stable_wasm(self, cache: &StableCache) -> Result<Self::Output, JsValue>;
+}
+impl<T: StableValue> StableReturn for T
+where
+    T::Output: StableOutput,
+{
+    fn into_stable_wasm(self, cache: &StableCache) -> Result<Self::Output, JsValue> {
+        let hash =
+            crate::stable::hash(&self).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        T::Output::stable_output(cache, hash, || self.into_wasm())
+    }
+}
+impl<T: StableReturn, E: WasmError> StableReturn for Result<T, E> {
+    fn into_stable_wasm(self, cache: &StableCache) -> Result<Self::Output, JsValue> {
+        self.map_err(WasmError::into_js_error)?
+            .into_stable_wasm(cache)
+    }
+}
+
+pub trait StableOutput: Sized {
+    fn stable_output(
+        cache: &StableCache,
+        hash: u128,
+        build: impl FnOnce() -> Result<Self, JsValue>,
+    ) -> Result<Self, JsValue>;
+}
+impl<T> StableOutput for TypedJs<T, false> {
+    fn stable_output(
+        cache: &StableCache,
+        hash: u128,
+        build: impl FnOnce() -> Result<Self, JsValue>,
+    ) -> Result<Self, JsValue> {
+        cache
+            .get_or_insert(hash, || build().map(Into::into))
+            .map(Into::into)
+    }
+}
+macro_rules! stable_scalar {
+    ($($ty:ty),*) => {$ (
+        impl StableValue for $ty {}
+        impl StableOutput for $ty {
+            fn stable_output(_: &StableCache, _: u128, build: impl FnOnce() -> Result<Self, JsValue>) -> Result<Self, JsValue> { build() }
+        }
+    )*};
+}
+stable_scalar!(
+    u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, bool, String
+);
+impl StableValue for () {}
+impl<T: StableValue + WasmType> StableValue for Vec<T> {}
+impl<T: StableValue + WasmType> StableValue for Option<T> {}
+impl<A: StableValue + WasmType, B: StableValue + WasmType> StableValue for (A, B) {}
+
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use wasm_bindgen::{JsCast, closure::Closure};
+type WeakValues = Rc<RefCell<HashMap<u128, js_sys::WeakRef>>>;
+
+pub enum StableCache {
+    Weak {
+        values: WeakValues,
+        registry: js_sys::FinalizationRegistry,
+    },
+    Strong(RefCell<HashMap<u128, JsValue>>),
+}
+impl StableCache {
+    pub fn new(strong: bool) -> Self {
+        if strong {
+            return Self::Strong(RefCell::new(HashMap::new()));
+        }
+        let values: WeakValues = Rc::default();
+        let weak = Rc::downgrade(&values);
+        let cleanup = Closure::<dyn FnMut(JsValue)>::new(move |key: JsValue| {
+            let hash = u128::from_str_radix(&key.as_string().unwrap(), 16).unwrap();
+            if let Some(values) = weak.upgrade() {
+                let mut values = values.borrow_mut();
+                // An old finalizer must not remove a live replacement for this hash.
+                if values
+                    .get(&hash)
+                    .is_some_and(|value| value.deref().is_none())
+                {
+                    values.remove(&hash);
+                }
+            }
+        });
+        let registry = js_sys::FinalizationRegistry::new(cleanup.as_ref().unchecked_ref());
+        // Each generated function owns one process-lifetime thread-local cache.
+        cleanup.forget();
+        Self::Weak { values, registry }
+    }
+    fn get_or_insert(
+        &self,
+        hash: u128,
+        build: impl FnOnce() -> Result<JsValue, JsValue>,
+    ) -> Result<JsValue, JsValue> {
+        let cached = match self {
+            Self::Strong(values) => values.borrow().get(&hash).cloned(),
+            Self::Weak { values, .. } => values
+                .borrow()
+                .get(&hash)
+                .and_then(js_sys::WeakRef::deref)
+                .map(Into::into),
+        };
+        if let Some(value) = cached {
+            return Ok(value);
+        }
+        let value = build()?;
+        if value.is_object() {
+            #[cfg(debug_assertions)]
+            freeze_data(&value);
+            match self {
+                Self::Strong(values) => {
+                    values.borrow_mut().insert(hash, value.clone());
+                }
+                Self::Weak {
+                    values, registry, ..
+                } => {
+                    values.borrow_mut().insert(
+                        hash,
+                        js_sys::WeakRef::new(value.unchecked_ref::<js_sys::Object>()),
+                    );
+                    registry.register(&value, &JsValue::from_str(&format!("{hash:x}")));
+                }
+            }
+        }
+        Ok(value)
+    }
+}
+
+// Freeze only ordinary records and arrays: typed arrays cannot be frozen, and
+// Map/Set internal slots remain mutable even after Object.freeze.
+#[cfg(debug_assertions)]
+fn freeze_data(value: &JsValue) {
+    if !value.is_object() {
+        return;
+    }
+    let object = value.unchecked_ref::<js_sys::Object>();
+    let prototype = js_sys::Object::get_prototype_of(object);
+    let plain_prototype = js_sys::Object::get_prototype_of(&js_sys::Object::new());
+    if !js_sys::Array::is_array(value) && !prototype.is_null() && prototype != plain_prototype {
+        return;
+    }
+    for child in js_sys::Object::values(object).iter() {
+        freeze_data(&child);
+    }
+    js_sys::Object::freeze(object);
+}

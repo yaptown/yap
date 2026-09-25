@@ -10,7 +10,7 @@ use std::{collections::BTreeMap, sync::LazyLock};
 use tysm::chat_completions::{ChatClient, ChatMessage};
 
 static CHAT_CLIENT_LUNA: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 static CHAT_CLIENT_TERRA: LazyLock<ChatClient> =
     LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-terra"));
@@ -67,10 +67,10 @@ async fn generate_dictionary_group(
             let previous_json = serde_json::to_string(response).unwrap_or_default();
             vec![
                 ChatMessage::system(format!(
-                    "You are a {target_language} dictionary entry generator for {native_language} speakers."
+                    "You are a {target_language} dictionary entry generator for {native_language} speakers.", native_language = native_language.prompt_name(), target_language = target_language.prompt_name()
                 )),
                 ChatMessage::user(format!(
-                    "I asked you to generate a dictionary entry for the {target_language} word `{word}`, and you gave me this response:\n\n{previous_json}\n\nHowever, some of the example sentences don't contain the exact word `{word}`. The following sentences are missing it: {bad}\n\nPlease regenerate the entire response with the same format, making sure every example_sentence_target_language contains the exact word `{word}`.",
+                    "I asked you to generate a dictionary entry for the {target_language} word `{word}`, and you gave me this response:\n\n{previous_json}\n\nHowever, some of the example sentences don't contain the exact word `{word}`. The following sentences are missing it: {bad}\n\nPlease regenerate the entire response with the same format, making sure every example_sentence_target_language contains the exact word `{word}`.", target_language = target_language.prompt_name(),
                     word = heteronym.word,
                     bad = bad.join("; "),
                 )),
@@ -137,7 +137,9 @@ One last thing. The input may be conjugated. For example, it may be the italian 
 
 Do not add pronunciation, IPA, part of speech, gender, or conjugation info unless it's in the "note" field and truly necessary.
 
-Output the result as a JSON object containing an array of one or more definition objects. Of course, their native language is {native_language}, so you should write the notes in {native_language}."#
+Output the result as a JSON object containing an array of one or more definition objects. Of course, their native language is {native_language}, so you should write the notes in {native_language}."#,
+        native_language = native_language.prompt_name(),
+        target_language = target_language.prompt_name()
     );
     let (terra, luna): (Vec<_>, Vec<_>) = target_language_heteronyms
         .into_iter()
@@ -179,7 +181,10 @@ fn extract_single_atom_heteronyms(
     let mut heteronym_frequencies: BTreeMap<Heteronym<String>, u32> = BTreeMap::new();
 
     for entry in gram_frequencies {
-        let gram = &entry.gram;
+        if entry.gram.sense.is_some() {
+            continue;
+        }
+        let gram = &entry.gram.gram;
 
         if gram.len() != 1 {
             continue;
@@ -199,7 +204,10 @@ fn extract_single_atom_heteronyms(
 }
 
 fn build_gram_to_sentences_index<'a>(
-    encoded_sentences: &'a [(String, SentenceGrams<Gram<String>>)],
+    encoded_sentences: &'a [(
+        String,
+        SentenceGrams<language_utils::TaggedGram<Gram<String>>>,
+    )],
 ) -> FxHashMap<&'a Gram<String>, Vec<&'a str>> {
     let mut index: FxHashMap<&'a Gram<String>, Vec<&'a str>> = FxHashMap::default();
 
@@ -209,7 +217,7 @@ fn build_gram_to_sentences_index<'a>(
                 SentenceGram::Learnable(g) | SentenceGram::Obvious(g) => g,
             };
             index
-                .entry(gram_ref)
+                .entry(&gram_ref.gram)
                 .or_default()
                 .push(sentence_text.as_str());
         }
@@ -221,7 +229,7 @@ fn build_gram_to_sentences_index<'a>(
         // no example sentences at all.
         for term in &sentence_grams.multiword_terms {
             index
-                .entry(&term.gram)
+                .entry(&term.gram.gram)
                 .or_default()
                 .push(sentence_text.as_str());
         }
@@ -241,7 +249,10 @@ fn build_gram_to_sentences_index<'a>(
 pub async fn create_gram_phrasebook(
     course: Course,
     gram_frequencies: &[GramFrequencyEntry<String>],
-    encoded_sentences: &[(String, SentenceGrams<Gram<String>>)],
+    encoded_sentences: &[(
+        String,
+        SentenceGrams<language_utils::TaggedGram<Gram<String>>>,
+    )],
     gram_sentences: &mut BTreeMap<Gram<String>, Vec<String>>,
 ) -> anyhow::Result<Vec<(Gram<String>, PhrasebookDefinitionEntry)>> {
     let Course {
@@ -254,7 +265,10 @@ pub async fn create_gram_phrasebook(
 
     let mut multi_atom_grams: BTreeMap<Gram<String>, u32> = BTreeMap::new();
     for entry in gram_frequencies {
-        let gram = &entry.gram;
+        if entry.gram.sense.is_some() {
+            continue;
+        }
+        let gram = &entry.gram.gram;
         if gram.len() > 1 {
             multi_atom_grams.entry(gram.clone()).or_insert(entry.count);
         }
@@ -353,7 +367,9 @@ Output: {{
 
 Don't capitalize the first letter of the meaning unless it makes sense (e.g. english proper nouns, german nouns, etc). Do not add pronunciation, IPA, part of speech, gender, or conjugation info unless it's in the "additional_notes" field and truly necessary.
 
-Of course, their native language is {native_language}, so you should write the meaning and additional notes in {native_language}."#);
+Of course, their native language is {native_language}, so you should write the meaning and additional notes in {native_language}."#,
+        native_language = native_language.prompt_name(),
+        target_language = target_language.prompt_name());
 
                 let response: Result<PhrasebookDefinitionEntry, _> = if freq > 100  {
                     let response: Result<PhrasebookDefinitionEntryV2, _> = chat_client
@@ -397,9 +413,9 @@ Of course, their native language is {native_language}, so you should write the m
                     if !resp.target_language_example.to_lowercase().contains(&gram_text.to_lowercase()) {
                         let previous_json = serde_json::to_string(resp).unwrap_or_default();
                         chat_client.chat_with_messages(vec![
-                            ChatMessage::system(format!("You are a {target_language} phrasebook entry generator for {native_language} speakers.")),
+                            ChatMessage::system(format!("You are a {target_language} phrasebook entry generator for {native_language} speakers.", native_language = native_language.prompt_name(), target_language = target_language.prompt_name())),
                             ChatMessage::user(format!(
-                                "I asked you to generate a phrasebook entry for the {target_language} multi-word term `{gram_text}`, and you gave me this response:\n\n{previous_json}\n\nHowever, your target_language_example `{example}` does not contain the exact term `{gram_text}`. Please regenerate the entire response with the same format, making sure target_language_example contains the exact term `{gram_text}`. Here are some example sentences for inspiration that use the term:\n{examples_text}",
+                                "I asked you to generate a phrasebook entry for the {target_language} multi-word term `{gram_text}`, and you gave me this response:\n\n{previous_json}\n\nHowever, your target_language_example `{example}` does not contain the exact term `{gram_text}`. Please regenerate the entire response with the same format, making sure target_language_example contains the exact term `{gram_text}`. Here are some example sentences for inspiration that use the term:\n{examples_text}", target_language = target_language.prompt_name(),
                                 example = resp.target_language_example,
                             )),
                         ]).await.inspect_err(|e| {
@@ -432,4 +448,95 @@ Of course, their native language is {native_language}, so you should write the m
     ));
 
     Ok(phrasebook)
+}
+
+/// Generate only the inventoried sense; the existing untagged prompts and
+/// cache keys remain unchanged.
+pub async fn create_sense_definitions(
+    course: Course,
+    frequencies: &[GramFrequencyEntry<String>],
+    inventories: &BTreeMap<Gram<String>, crate::usage_discovery::UsageInventory>,
+) -> anyhow::Result<(
+    BTreeMap<language_utils::TaggedGram<Gram<String>>, DictionaryDefinition>,
+    BTreeMap<language_utils::TaggedGram<Gram<String>>, PhrasebookDefinitionEntry>,
+)> {
+    let system = format!(
+        "Generate a dictionary or phrasebook entry for a beginner learning {} whose native language is {}. The input identifies one pedagogical sense (a meaning, construction, or conversational formula) and gives examples of that sense. Describe this sense only, not other meanings of the same spelling. Respect the supplied surface form, lemma, and part of speech. Write concise native-language equivalents and notes; examples must illustrate this sense and use the supplied surface form. Follow the response schema. Morphology, etymology, and pronunciation are supplied separately.",
+        course.target_language.prompt_name(),
+        course.native_language.prompt_name(),
+    );
+    let entries = futures::stream::iter(
+        frequencies
+            .iter()
+            .filter(|entry| entry.gram.sense.is_some()),
+    )
+    .map(|entry| {
+        let system = &system;
+        async move {
+            let gram = &entry.gram;
+            let usage = &inventories[&gram.gram].usages[gram.sense.unwrap().get() as usize - 1];
+            let mut anchors: Vec<_> = usage.anchors.iter().collect();
+            anchors.sort_by_key(|anchor| !anchor.gold);
+            let examples = anchors
+                .iter()
+                .take(5)
+                .map(|anchor| anchor.sentence.as_str())
+                .collect::<Vec<_>>()
+                .join("\n");
+            let identity = if let Some(h) = gram.gram.heteronym() {
+                format!("word: {}\nlemma: {}\npos: {}", h.word, h.lemma, h.pos)
+            } else {
+                format!(
+                    "phrase: {}",
+                    gram.gram.to_display_string(course.target_language)
+                )
+            };
+            let prompt = format!(
+                "{identity}\nkind: {}\ngloss: {}\nAnchor sentences:\n{examples}",
+                usage.kind, usage.gloss
+            );
+            let threshold = if gram.gram.len() == 1 { 500 } else { 250 };
+            let client = if entry.count > threshold {
+                &*CHAT_CLIENT_TERRA
+            } else {
+                &*CHAT_CLIENT_LUNA
+            };
+            // A failed sense (or a cache miss in cache-only mode) is skipped
+            // like every other definition stage, not fatal to the run.
+            let result = if gram.gram.len() == 1 {
+                client
+                    .chat_with_system_prompt::<DictionaryDefinition>(system, prompt)
+                    .await
+                    .map(|definition| (gram.clone(), Some(definition), None))
+            } else {
+                client
+                    .chat_with_system_prompt::<PhrasebookDefinitionEntry>(system, prompt)
+                    .await
+                    .map(|definition| (gram.clone(), None, Some(definition)))
+            };
+            result
+                .inspect_err(|e| {
+                    eprintln!(
+                        "sense definition failed for '{}' sense {}: {e}",
+                        gram.gram.to_display_string(course.target_language),
+                        gram.sense.unwrap()
+                    )
+                })
+                .ok()
+        }
+    })
+    .buffer_unordered(32)
+    .collect::<Vec<Option<_>>>()
+    .await;
+    let mut dictionary = BTreeMap::new();
+    let mut phrasebook = BTreeMap::new();
+    for (gram, definition, phrase) in entries.into_iter().flatten() {
+        if let Some(definition) = definition {
+            dictionary.insert(gram.clone(), definition);
+        }
+        if let Some(phrase) = phrase {
+            phrasebook.insert(gram, phrase);
+        }
+    }
+    Ok((dictionary, phrasebook))
 }

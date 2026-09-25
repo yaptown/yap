@@ -1,59 +1,49 @@
 import SwiftUI
 
+/// Account first (who is signed in, their name, whether their progress is
+/// saved), then preferences and about; identifiers and sync internals sit in a
+/// collapsed diagnostics section at the bottom. Course switching lives on Home.
 struct SettingsScreen: View {
     @Environment(AuthStore.self) private var auth
+    @Environment(AuthSheet.self) private var authSheet
+    @AppStorage("yap-animated-background") private var animatedBackground = true
     let session: YapSession
     @State private var name = ""
     @State private var saving = false
     @State private var syncing = false
     @State private var error: String?
+    @FocusState private var editingName: Bool
     var body: some View {
-        Form {
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                if let weapon = session.weapon {
-                    let view = weapon.sync_status(online: session.online, now_ms: context.date.timeIntervalSince1970 * 1000,
-                        manual_sync_in_flight: syncing, host_sync_error: session.syncError)
-                    Section {
-                        VStack(alignment: .leading, spacing: 14) {
-                            Label(view.label, systemImage: view.status == .Offline ? "wifi.slash" : "arrow.triangle.2.circlepath")
-                                .foregroundStyle(statusColor(view.severity))
-                            if let label = view.last_sync_label, let finished = view.last_sync_finished_ms {
-                                Text("\(label) \(Date(timeIntervalSince1970: finished / 1000).formatted(date: .omitted, time: .standard))")
-                                    .font(.caption).foregroundStyle(.secondary)
-                            }
-                            if let error = view.error { Text(error).font(.caption).foregroundStyle(Color.yapNegativeForeground) }
-                            LabeledContent(view.local_events_label, value: "\(view.local_events)")
-                            LabeledContent(view.server_events_label, value: "\(view.server_events)")
-                            Text(view.device_id_label).font(.caption).foregroundStyle(.secondary)
-                            Text(weapon.device_id).font(.caption.monospaced()).textSelection(.enabled)
-                            if let banner = view.offline_banner { Text(banner).font(.caption).foregroundStyle(Color.yapCautionForeground) }
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let sync = session.weapon?.sync_status(online: session.online, now_ms: context.date.timeIntervalSince1970 * 1000,
+                manual_sync_in_flight: syncing, host_sync_error: session.syncError)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    if auth.userId != nil {
+                        account(sync)
+                    } else {
+                        SettingsSection {
+                            Button(account_copy().sign_in_action) { authSheet.present(tab: .signIn) }
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         }
-                        Button(view.sync_button_label) { sync() }.disabled(!view.sync_button_enabled)
-                    } header: {
-                        Text(view.title)
-                    } footer: {
-                        Text(view.description)
                     }
-                }
+                    SettingsSection("Appearance") {
+                        Toggle("Animated background", isOn: $animatedBackground).tint(.yapSwitchTint).frame(minHeight: 44)
+                    }
+                    SettingsSection("About") {
+                        SettingsRow(sync?.version_label ?? "Version") { Text(get_app_version()).monospacedDigit() }
+                        Divider()
+                        Link(destination: URL(string: "https://yap.town/privacy")!) { SettingsRow("Privacy policy") { Image(systemName: "arrow.up.right") } }
+                        Divider()
+                        Link(destination: URL(string: "https://yap.town/terms")!) { SettingsRow("Terms") { Image(systemName: "arrow.up.right") } }
+                    }
+                    if let sync, let weapon = session.weapon { diagnostics(sync, deviceId: weapon.device_id) }
+                }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
             }
-            Section("Account") {
-                LabeledContent("Email", value: auth.session?.user.email ?? "")
-                Text(session.userId).font(.caption.monospaced()).textSelection(.enabled)
-                TextField("Display name", text: $name).onChange(of: name) { _, value in name = String(value.prefix(50)) }
-                Button(saving ? "Saving…" : "Save display name") { Task { await save() } }.disabled(saving || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                if let error { Text(error).foregroundStyle(Color.yapNegativeForeground) }
-                Button("Sign out", role: .destructive) { Task { await auth.signOut() } }.disabled(auth.busy)
-                if let error = auth.error { Text(error).foregroundStyle(Color.yapNegativeForeground) }
-            }
-            Section("Course") { Button("Switch course") { session.choosingCourse = true } }
-            Section("About") {
-                LabeledContent("Yap version", value: get_app_version())
-                Link("Privacy policy", destination: URL(string: "https://yap.town/privacy")!)
-                Link("Terms", destination: URL(string: "https://yap.town/terms")!)
-            }
-        }.navigationTitle("Settings")
-            .onAppear { name = auth.displayName ?? "" }
-            .onChange(of: auth.displayName) { old, new in if name == (old ?? "") { name = new ?? "" } }
+        }
+        .background(.clear).navigationTitle("Settings")
+        .onAppear { name = auth.displayName ?? "" }
+        .onChange(of: auth.displayName) { old, new in if name == (old ?? "") { name = new ?? "" } }
         #if DEBUG
         .onAppear { DebugHarness.shared.activeScreen = .settings }
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
@@ -62,6 +52,79 @@ struct SettingsScreen: View {
             if DebugHarness.shared.command == "status", let state = session.weapon?.get_sync_state(target: .Supabase) { DebugHarness.log("settings finished=\(String(describing: state.last_sync_finished?.date))") }
         }
         #endif
+    }
+
+    private func account(_ sync: SyncStatusView?) -> some View {
+        let email = auth.session?.user.email ?? ""
+        let shown = (auth.displayName?.isEmpty == false ? auth.displayName : nil) ?? email
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return SettingsSection("Account") {
+            HStack(spacing: 12) {
+                Text(shown.prefix(1).uppercased())
+                    .font(.title3.weight(.semibold)).foregroundStyle(Color.yapOnAccent)
+                    .frame(width: 44, height: 44).background(Color.yapAccent, in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(shown).font(.headline).foregroundStyle(Color.yapText).lineLimit(1)
+                    if shown != email { Text(email).font(.subheadline).foregroundStyle(.secondary).lineLimit(1) }
+                }
+            }.padding(.vertical, 12)
+            Divider()
+            HStack(spacing: 12) {
+                Text("Display name")
+                TextField("Add a name", text: $name)
+                    .multilineTextAlignment(.trailing).foregroundStyle(.secondary)
+                    .focused($editingName).submitLabel(.done)
+                    .onSubmit { Task { await save() } }
+                    .onChange(of: name) { _, value in name = String(value.prefix(50)) }
+                if trimmed != (auth.displayName ?? "") && !trimmed.isEmpty {
+                    Button(saving ? "Saving…" : "Save") { Task { await save() } }
+                        .buttonStyle(.borderedProminent).controlSize(.small).foregroundStyle(Color.yapOnAccent).disabled(saving)
+                }
+            }.frame(minHeight: 44)
+            if let error { Text(error).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
+            if let sync {
+                Divider()
+                HStack(spacing: 8) {
+                    Image(systemName: syncSymbol(sync)).foregroundStyle(statusColor(sync.severity))
+                    Text(syncLine(sync)).foregroundStyle(statusColor(sync.severity))
+                    Spacer(minLength: 0)
+                }.frame(minHeight: 44)
+                if let banner = sync.offline_banner { Text(banner).font(.footnote).foregroundStyle(.secondary).padding(.bottom, 8) }
+                if let error = sync.error { Text(error).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
+            }
+            Divider()
+            Button("Sign out", role: .destructive) { Task { await auth.signOut() } }
+                .disabled(auth.busy).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            if let error = auth.error { Text(error).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
+        }
+    }
+
+    private func diagnostics(_ sync: SyncStatusView, deviceId: String) -> some View {
+        SettingsSection {
+            DisclosureGroup {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(sync.description).font(.footnote).foregroundStyle(.secondary).padding(.vertical, 8)
+                    SettingsRow(sync.local_events_label) { Text("\(sync.local_events)").monospacedDigit() }
+                    SettingsRow(sync.server_events_label) { Text("\(sync.server_events)").monospacedDigit() }
+                    if let userId = auth.userId { IdentifierRow(label: sync.user_id_label, value: userId) }
+                    IdentifierRow(label: sync.device_id_label, value: deviceId)
+                    Button(sync.sync_button_label) { self.sync() }.disabled(!sync.sync_button_enabled)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }
+            } label: {
+                Text("Diagnostics").foregroundStyle(Color.yapText).frame(minHeight: 44)
+            }
+        }
+    }
+
+    private func syncLine(_ sync: SyncStatusView) -> String {
+        guard sync.status != .Offline, let finished = sync.last_sync_finished_ms else { return sync.label }
+        return "\(sync.label) · \(Date(timeIntervalSince1970: finished / 1000).formatted(date: .omitted, time: .shortened))"
+    }
+    private func syncSymbol(_ sync: SyncStatusView) -> String {
+        if sync.status == .Offline { return "wifi.slash" }
+        if sync.running { return "arrow.triangle.2.circlepath" }
+        return sync.severity == .Neutral ? "checkmark.icloud" : "exclamationmark.icloud"
     }
     private func statusColor(_ severity: SyncSeverity) -> Color {
         switch severity {
@@ -81,11 +144,60 @@ struct SettingsScreen: View {
         }
     }
     private func save() async {
-        guard let token = auth.accessToken else { return }
+        guard !saving, let token = auth.accessToken else { return }
+        let value = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty, value != auth.displayName else { return }
         saving = true; error = nil
         defer { saving = false }
-        let value = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        do { _ = try await update_profile(display_name: value, bio: nil, access_token: token); auth.displayName = value; auth.needsDisplayName = false }
-        catch { self.error = "Couldn't save your display name. Please try again." }
+        do {
+            _ = try await update_profile(display_name: value, bio: nil, access_token: token)
+            auth.displayName = value; auth.needsDisplayName = false; editingName = false
+        } catch { self.error = "Couldn't save your display name. Please try again." }
+    }
+}
+
+/// A titled group of rows on the shared card surface.
+private struct SettingsSection<Content: View>: View {
+    var title: String?
+    @ViewBuilder var content: Content
+    init(_ title: String? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title; self.content = content()
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let title {
+                Text(title.uppercased()).font(.caption.weight(.semibold)).tracking(1).foregroundStyle(.secondary)
+                    .padding(.horizontal, 16)
+            }
+            VStack(alignment: .leading, spacing: 0) { content }
+                .padding(.horizontal, 16).padding(.vertical, 4)
+                .frame(maxWidth: .infinity, alignment: .leading).cardSurface()
+        }
+    }
+}
+
+private struct SettingsRow<Trailing: View>: View {
+    let title: String
+    @ViewBuilder var trailing: Trailing
+    init(_ title: String, @ViewBuilder trailing: () -> Trailing) {
+        self.title = title; self.trailing = trailing()
+    }
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(title).foregroundStyle(Color.yapText)
+            Spacer(minLength: 0)
+            trailing.foregroundStyle(.secondary)
+        }.frame(minHeight: 44)
+    }
+}
+
+private struct IdentifierRow: View {
+    let label: String
+    let value: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.footnote).foregroundStyle(.secondary)
+            Text(value).font(.caption.monospaced()).foregroundStyle(Color.yapText).textSelection(.enabled)
+        }.padding(.vertical, 6)
     }
 }

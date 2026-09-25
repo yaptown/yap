@@ -1,0 +1,19 @@
+[package]
+name = "stroke-order-sources"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+stroke-order = { path = "../stroke-order" }
+language-utils = { path = "../../language-utils" }
+anyhow = "1"
+rustc-hash = "2.1"
+serde.workspace = true
+serde_json.workspace = true
+zip.workspace = true
+roxmltree = "0.21.1"
+svgtypes = "0.16.1"
+
+[dev-dependencies]
+reqwest.workspace = true
+tokio.workspace = true

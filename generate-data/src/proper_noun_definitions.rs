@@ -4,7 +4,7 @@ use std::{collections::BTreeMap, sync::LazyLock};
 use tysm::chat_completions::ChatClient;
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 pub async fn generate_proper_noun_definitions(
     course: Course,
@@ -111,7 +111,9 @@ Output JSON format:
     "is_other": true/false,
     "learner_native_language_translation": "concise translation here",
     "description": null or "brief explanation if needed"
-}}"#
+}}"#,
+        native_language = native_language.prompt_name(),
+        target_language = target_language.prompt_name()
     );
     let prompts = proper_noun_to_sentences
         .iter()

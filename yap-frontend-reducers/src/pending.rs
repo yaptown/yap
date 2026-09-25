@@ -96,3 +96,29 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod sense_tests {
+    use super::*;
+    use language_utils::{Gram, TaggedGram};
+    #[test]
+    fn tagging_and_changing_sense_invalidate_drafts() {
+        let bare = Gram::<String>(vec![]);
+        let mut entry = TaggedGram {
+            gram: bare.clone(),
+            sense: std::num::NonZeroU32::new(1),
+        };
+        let old = pending_slot("translation", &bare, "scope".into(), "build".into(), 0);
+        let first = pending_slot("translation", &entry, "scope".into(), "build".into(), 0);
+        assert_eq!(
+            first.identity,
+            "v1-build-0-e277234761763fcdb0967bbf5ce60c66c548aea3fe1905327075e2e6b7a43dd3"
+        );
+        entry.sense = std::num::NonZeroU32::new(2);
+        let second = pending_slot("translation", &entry, "scope".into(), "build".into(), 0);
+        assert_eq!(old.key, first.key);
+        assert_eq!(first.key, second.key);
+        assert_ne!(old.identity, first.identity);
+        assert_ne!(first.identity, second.identity);
+    }
+}

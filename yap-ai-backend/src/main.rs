@@ -1,10 +1,10 @@
 use axum::{
     Router,
     body::Bytes,
-    extract::{Json, Path},
+    extract::{DefaultBodyLimit, Json, Path},
     http::{StatusCode, header},
     response::Response,
-    routing::{get, post},
+    routing::{get, post, put},
 };
 use axum_extra::{
     TypedHeader,
@@ -30,6 +30,7 @@ use resend_rs::{Resend, types::CreateEmailBaseOptions};
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
 
+mod anki_package;
 mod anki_tts;
 mod deck_token;
 mod packs;
@@ -37,6 +38,7 @@ mod tts_cache;
 mod tts_verify;
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
+use tts_verify::Transcribers;
 use tysm::chat_completions::ChatClient;
 
 static CLIENT: LazyLock<ChatClient> = LazyLock::new(|| {
@@ -130,7 +132,15 @@ enum SynthError {
 ///
 /// SSML gets no fallback at all: only Google interprets it, and handing raw
 /// markup to a provider that doesn't would have it read the tags aloud.
-fn fallback_chain(primary: TtsProvider, request: &TtsRequest) -> Vec<TtsProvider> {
+/// What a learner's request may fall back to when the requested provider
+/// can't get the words right: substituting a voice is fine.
+const INTERACTIVE_FALLBACKS: [TtsProvider; 2] = [TtsProvider::ElevenLabs, TtsProvider::Google];
+
+fn fallback_chain(
+    primary: TtsProvider,
+    fallbacks: &[TtsProvider],
+    request: &TtsRequest,
+) -> Vec<TtsProvider> {
     if request.is_ssml {
         return vec![primary];
     }
@@ -148,8 +158,9 @@ fn fallback_chain(primary: TtsProvider, request: &TtsRequest) -> Vec<TtsProvider
 
     std::iter::once(primary)
         .chain(
-            [TtsProvider::ElevenLabs, TtsProvider::Google]
-                .into_iter()
+            fallbacks
+                .iter()
+                .copied()
                 .filter(|p| *p != primary && honors_request(p)),
         )
         .collect()
@@ -191,11 +202,12 @@ async fn audio_rejection(
     http: &reqwest::Client,
     request: &TtsRequest,
     audio: &[u8],
+    transcribers: Transcribers,
 ) -> Option<(Rejection, String)> {
     if let Some(defect) = audio_codec::audio_defect(audio) {
         return Some((Rejection::Defective, defect.to_string()));
     }
-    let reason = tts_verify::content_defect(http, request, audio).await?;
+    let reason = tts_verify::content_defect(http, request, audio, transcribers).await?;
     Some((Rejection::WrongWords, reason))
 }
 
@@ -216,6 +228,7 @@ async fn synthesize_provider_checked(
     request: &TtsRequest,
     provider: TtsProvider,
     max_attempts: usize,
+    transcribers: Transcribers,
 ) -> Result<Vec<u8>, ProviderFailure> {
     let mut rejected: Option<(Rejection, Vec<u8>)> = None;
     let mut status = StatusCode::BAD_GATEWAY;
@@ -245,7 +258,7 @@ async fn synthesize_provider_checked(
             }
         };
 
-        match audio_rejection(http, request, &audio).await {
+        match audio_rejection(http, request, &audio, transcribers).await {
             None => return Ok(audio),
             Some((grade, reason)) => {
                 eprintln!("{provider:?} TTS: rejected attempt {n} ({reason}), retrying");
@@ -276,7 +289,15 @@ async fn synthesize_checked(
     request: &TtsRequest,
     primary: TtsProvider,
 ) -> Result<String, StatusCode> {
-    let result = synthesize_checked_bytes(http, request, primary).await?;
+    // A learner is waiting on this one: lowest latency wins.
+    let result = synthesize_checked_bytes(
+        http,
+        request,
+        primary,
+        &INTERACTIVE_FALLBACKS,
+        Transcribers::Race,
+    )
+    .await?;
     Ok(base64::engine::general_purpose::STANDARD.encode(&result.audio))
 }
 
@@ -322,6 +343,8 @@ async fn synthesize_checked_bytes(
     http: &reqwest::Client,
     request: &TtsRequest,
     primary: TtsProvider,
+    fallbacks: &[TtsProvider],
+    transcribers: Transcribers,
 ) -> Result<Synthesized, StatusCode> {
     let cache_filename = language_utils::tts_cache_filename(request, &primary);
     if let Some(audio) = tts_cache::lookup(http, &cache_filename).await {
@@ -349,15 +372,16 @@ async fn synthesize_checked_bytes(
     // rather than first-wins, so a silent clip can't beat an audible one.
     let mut salvage: Vec<(Rejection, bool, Vec<u8>)> = Vec::new();
 
-    let mut failure_status = match synthesize_provider_checked(http, request, primary, 1).await {
-        Ok(audio) => return verified(audio),
-        Err(failure) => {
-            salvage.extend(failure.rejected.map(|(grade, audio)| (grade, true, audio)));
-            failure.status
-        }
-    };
+    let mut failure_status =
+        match synthesize_provider_checked(http, request, primary, 1, transcribers).await {
+            Ok(audio) => return verified(audio),
+            Err(failure) => {
+                salvage.extend(failure.rejected.map(|(grade, audio)| (grade, true, audio)));
+                failure.status
+            }
+        };
 
-    let chain = fallback_chain(primary, request);
+    let chain = fallback_chain(primary, fallbacks, request);
     if chain.len() > 1 {
         eprintln!("{primary:?} TTS: racing {} providers", chain.len());
     }
@@ -370,8 +394,14 @@ async fn synthesize_checked_bytes(
         let http = http.clone();
         let request = request.clone();
         racers.spawn(async move {
-            let outcome =
-                synthesize_provider_checked(&http, &request, provider, TTS_MAX_ATTEMPTS).await;
+            let outcome = synthesize_provider_checked(
+                &http,
+                &request,
+                provider,
+                TTS_MAX_ATTEMPTS,
+                transcribers,
+            )
+            .await;
             (provider, outcome)
         });
     }
@@ -511,15 +541,15 @@ async fn elevenlabs_synthesize(
     // Select voice based on language
     let voice_id = match request.language {
         Language::French => "ohItIVrXTBI80RrUECOD", // Existing French voice
-        Language::Spanish => "8mBRP99B2Ng2QwsJMFQl", // Mexican Spanish voice
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => "8mBRP99B2Ng2QwsJMFQl", // Latin American Spanish voice
         Language::English => "ohItIVrXTBI80RrUECOD", // Default to French voice for now
-        Language::Korean => "nbrxrAz3eYm9NgojrmFK", // Korean
-        Language::German => "IWm8DnJ4NGjFI7QAM5lM", // Stephan - German voice
+        Language::Korean => "nbrxrAz3eYm9NgojrmFK",  // Korean
+        Language::German => "IWm8DnJ4NGjFI7QAM5lM",  // Stephan - German voice
         Language::Italian => "sKbNSlHXq99bttvf8rRF", // Nicola Lorusso - Italian voice
-        Language::Portuguese => "tS45q0QcrDHqHoaWdCDR", // Lax - Portuguese voice
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => "tS45q0QcrDHqHoaWdCDR", // Lax - Portuguese voice
         Language::Russian => "hLjwV7lYzk15SWLUmhEH", // Russian voice
         Language::Japanese => "GxhGYQesaQaYKePCZDEC", // Japanese voice
-        Language::Hindi => "K24eC7JpUgk8zMtQYrpV",  // Hindi voice
+        Language::Hindi => "K24eC7JpUgk8zMtQYrpV",   // Hindi voice
 
         // Haoran (Beijing Mandarin) and Anna Su (Taiwan Mandarin). One voice
         // could cover both, since the model reads Traditional and Simplified
@@ -804,8 +834,8 @@ async fn autograde_transcription(
 
     let target_language = request.course.target_language;
     let native_language = request.course.native_language;
-    let target_language_name = target_language.to_string();
-    let native_language_name = native_language.to_string();
+    let target_language_name = target_language.prompt_name();
+    let native_language_name = native_language.prompt_name();
 
     let language_specific_phonetic_note = match target_language {
         Language::Korean => {
@@ -852,7 +882,7 @@ The input may include a Context block naming the film the sentence comes from an
         match target_language {
             Language::French =>
                 r#"For example, if the user confused "de" and "des", you could generate ["de", "des"] in the compare array."#,
-            Language::Spanish =>
+            Language::SpanishLatinAmerican | Language::SpanishPeninsular =>
                 r#"For example, if the user confused "esta" and "está", you could generate ["esta", "está"] in the compare array."#,
             Language::English =>
                 r#"For example, if the user confused "then" and "than", you could generate ["then", "than"] in the compare array."#,
@@ -862,7 +892,7 @@ The input may include a Context block naming the film the sentence comes from an
                 r#"For example, if the user confused "der" and "die", you could generate ["der", "die"] in the compare array."#,
             Language::Italian =>
                 r#"For example, if the user confused "anno" and "hanno", or "pena" and "penna", you could generate ["anno", "hanno"] or ["pena", "penna"] in the compare array."#,
-            Language::Portuguese =>
+            Language::PortugueseBrazilian | Language::PortugueseEuropean =>
                 r#"For example, if the user confused "avô" and "avó", or "coser" and "cozer", you could generate ["avô", "avó"] or ["coser", "cozer"] in the compare array."#,
             Language::Russian =>
                 r#"For example, if the user confused "компания" and "кампания", or "предать" and "придать", you could generate ["компания", "кампания"] or ["предать", "придать"] in the compare array."#,
@@ -1591,9 +1621,6 @@ async fn update_language_stats(
 
     let client = service_role_client()?;
 
-    // Serialize the language to a string for the database
-    let language_str = request.language.to_string();
-
     // Build the upsert payload
     let mut upsert_data = serde_json::Map::new();
     upsert_data.insert(
@@ -1602,7 +1629,7 @@ async fn update_language_stats(
     );
     upsert_data.insert(
         "language".to_string(),
-        serde_json::Value::String(language_str),
+        serde_json::to_value(request.language).unwrap(),
     );
     upsert_data.insert(
         "total_count".to_string(),
@@ -2225,6 +2252,10 @@ fn app() -> Router {
         .route("/clip/{lang}/sentences", get(serve_clip_sentences))
         .route("/anki/deck", post(mint_anki_deck))
         .route("/anki/tts", get(anki_tts::tts))
+        .route(
+            "/anki/deck/{deck_id}/package",
+            put(anki_package::upload).layer(DefaultBodyLimit::max(anki_package::MAX_PACKAGE_BYTES)),
+        )
         .route("/clip/{lang}/{clip_id}/lo.mp4", get(serve_clip_video))
         .route(
             "/clip/{lang}/{clip_id}/subtitles",
@@ -2434,7 +2465,7 @@ mod tests {
             TtsProvider::Google,
             TtsProvider::OpenAI,
         ] {
-            let chain = fallback_chain(primary, &tts_request("bonjour"));
+            let chain = fallback_chain(primary, &INTERACTIVE_FALLBACKS, &tts_request("bonjour"));
             assert_eq!(chain.first(), Some(&primary));
             // A provider must never be tried twice.
             let mut seen = chain.clone();
@@ -2457,14 +2488,18 @@ mod tests {
             TtsProvider::Google,
             TtsProvider::OpenAI,
         ] {
-            let chain = fallback_chain(primary, &tts_request("bonjour"));
+            let chain = fallback_chain(primary, &INTERACTIVE_FALLBACKS, &tts_request("bonjour"));
             assert!(
                 !chain.contains(&TtsProvider::Gemini),
                 "{primary:?} fell back to Gemini: {chain:?}"
             );
         }
         // As a primary it's still tried first, then handed off to faithful ones.
-        let chain = fallback_chain(TtsProvider::Gemini, &tts_request("bonjour"));
+        let chain = fallback_chain(
+            TtsProvider::Gemini,
+            &INTERACTIVE_FALLBACKS,
+            &tts_request("bonjour"),
+        );
         assert_eq!(
             chain,
             vec![
@@ -2481,7 +2516,7 @@ mod tests {
         let mut request = tts_request("<speak>bonjour</speak>");
         request.is_ssml = true;
         assert_eq!(
-            fallback_chain(TtsProvider::Google, &request),
+            fallback_chain(TtsProvider::Google, &INTERACTIVE_FALLBACKS, &request),
             vec![TtsProvider::Google]
         );
     }
@@ -2490,14 +2525,18 @@ mod tests {
     fn a_slowed_request_excludes_the_provider_with_no_rate_control() {
         let mut request = tts_request("bonjour");
         request.speed = 0.8;
-        let chain = fallback_chain(TtsProvider::Gemini, &request);
+        let chain = fallback_chain(TtsProvider::Gemini, &INTERACTIVE_FALLBACKS, &request);
         // Not merely ranked last — absent. Ordering means nothing in a race,
         // so an ElevenLabs clip could win and arrive at full speed.
         assert!(!chain.contains(&TtsProvider::ElevenLabs));
         assert!(chain.contains(&TtsProvider::Google));
 
         // At default speed it has nothing to drop, so it races.
-        let chain = fallback_chain(TtsProvider::Gemini, &tts_request("bonjour"));
+        let chain = fallback_chain(
+            TtsProvider::Gemini,
+            &INTERACTIVE_FALLBACKS,
+            &tts_request("bonjour"),
+        );
         assert!(chain.contains(&TtsProvider::ElevenLabs));
     }
 
@@ -2550,11 +2589,11 @@ mod tests {
         .unwrap();
 
         for path in ["/tts", "/tts/google", "/tts/openai", "/tts/gemini"] {
-            // Provider API keys are stripped, so each handler verifies the JWT
-            // and then errors out before reaching the network. What matters is
-            // that the whole pre-network path runs without panicking.
-            let status = smoke("POST", path, Some(tts_body.clone())).await;
-            assert!(status.is_server_error(), "{path} returned {status}");
+            // Provider API keys are stripped, so each handler either errors out
+            // or answers from the shared, keyless TTS cache (common phrases like
+            // this one are already in it). What matters is that the whole path
+            // runs without panicking; the status depends on the cache.
+            smoke("POST", path, Some(tts_body.clone())).await;
         }
     }
 

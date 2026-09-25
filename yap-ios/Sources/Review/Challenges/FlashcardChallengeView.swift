@@ -5,6 +5,7 @@ func gramText(_ gram: [Literal_String]) -> String {
 }
 
 struct FlashcardChallengeView: View {
+    @Environment(BackgroundController.self) private var background
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewScreen!) private var screen
     @Environment(\.reviewHost!) private var host
@@ -15,6 +16,7 @@ struct FlashcardChallengeView: View {
     let timesTypeSeen: UInt32
     @State private var revealed = false
     @State private var hasOpened = false
+    @State private var reporting = false
     private var view: FlashcardView {
         flashcard_view(flashcard: flashcard, is_new: isNew, total_card_count: screen.total_count,
                        times_type_seen: timesTypeSeen, target_language: screen.target_language,
@@ -23,11 +25,11 @@ struct FlashcardChallengeView: View {
     private var canGrade: Bool { hasOpened || revealed || !view.require_answer_reveal }
     private var listening: Bool { if case .Listening = flashcard.content { true } else { false } }
     var body: some View {
-        VStack(spacing: 12) {
+        ReviewStepScrollView {
             if !revealed, let prompt = view.tutorial_prompt {
-                TutorialPromptText(prompt: prompt)
+                TutorialHint(prompt: prompt).fadeIn()
             }
-            StudyCard {
+            StudyCard(animated: true) {
                 // Like the web card: audio at the leading edge, the word centered, the menu trailing.
                 HStack(alignment: .center, spacing: 8) {
                     if let request = flashcard.audio {
@@ -46,18 +48,21 @@ struct FlashcardChallengeView: View {
                     // The web's main row is always Again/Remembered; Hard/Good/Easy live in its menu.
                     Menu {
                         ForEach(Array(view.menu_grades.enumerated()), id: \.offset) { _, grade in
-                            Button(grade.label) { rate(grade.rating) }
+                            Button(grade.label) { rate(grade.rating) }.disabled(!canGrade || actions.submitting)
                         }
+                        Divider()
+                        Button(report_issue_copy().menu_label, systemImage: "exclamationmark.bubble") { reporting = true }
                     } label: {
                         Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
-                    }.disabled(!canGrade || actions.submitting).accessibilityLabel("More grades")
+                    }.accessibilityLabel("More")
+                    .reportIssueSheet(isPresented: $reporting, subject: .Flashcard(flashcard.content))
                 }
                 if let subtitle = view.subtitle {
                     Text(subtitle).font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity)
                 }
                 Divider()
                 if revealed {
-                    answer
+                    VStack(alignment: .leading, spacing: 12) { answer }.fadeIn(duration: 0.2)
                 } else {
                     Label(view.reveal_label, systemImage: "chevron.down")
                         .font(.subheadline.weight(view.require_answer_reveal ? .bold : .regular))
@@ -68,22 +73,25 @@ struct FlashcardChallengeView: View {
             .contentShape(Rectangle())
             .onTapGesture { toggle() }
             .accessibilityAction(named: revealed ? "Hide answer" : "Reveal answer") { toggle() }
-            if !revealed, let hint = view.tutorial_hidden_hint {
-                Text(hint).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            .swipeToGrade(enabled: canGrade && !actions.submitting, againLabel: view.again_label,
+                          rememberedLabel: view.remembered_label, rate: rate)
+            // Like the web, the breakdown sits under the card rather than inside it.
+            if revealed, case let .Gram(_, _, _, breakdown) = flashcard.content, let breakdown, !breakdown.isEmpty {
+                MorphemeBreakdownView(parts: breakdown, alignment: .center, revealDelay: 1.5).padding(.top, 12)
             }
+            if !revealed, let hint = view.tutorial_hidden_hint {
+                TutorialHint(text: hint, pointing: .up).fadeIn(duration: 0.3, delay: 1.5)
+            }
+        } actions: {
             if revealed, let hint = view.tutorial_revealed_hint {
-                Text(hint).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                TutorialHint(text: hint, pointing: .down, arrowSize: 96).fadeIn(duration: 0.3, delay: 1.5)
             }
             if !revealed, let label = view.cant_listen_label {
                 Button(label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
             }
             if canGrade {
-                HStack(spacing: 12) {
-                    Button { rate(.Again) } label: { Text(view.again_label).frame(maxWidth: .infinity) }
-                        .tint(Tokens.palette.destructive.color).foregroundStyle(Color.yapDestructiveForeground).keyboardShortcut(.leftArrow, modifiers: [])
-                    Button { rate(.Remembered) } label: { Text(view.remembered_label).frame(maxWidth: .infinity) }
-                        .keyboardShortcut(.rightArrow, modifiers: [])
-                }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(actions.submitting)
+                GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
+                    .disabled(actions.submitting).fadeIn(duration: 0.2)
             }
         }
         #if DEBUG
@@ -108,9 +116,8 @@ struct FlashcardChallengeView: View {
     private func toggle() { revealed.toggle(); hasOpened = true }
     @ViewBuilder private var answer: some View {
         switch flashcard.content {
-        case let .Gram(_, definition, _, breakdown):
+        case let .Gram(_, definition, _, _):
             DefinitionBoxesView(definition: definition)
-            if let breakdown, !breakdown.isEmpty { MorphemeBreakdownView(parts: breakdown, alignment: .center) }
         case let .Listening(possible):
             if let header = view.listening_header { Text(header).font(.footnote).foregroundStyle(.secondary) }
             ForEach(Array(possible.enumerated()), id: \.offset) { _, entry in
@@ -128,19 +135,10 @@ struct FlashcardChallengeView: View {
     }
     private func rate(_ rating: Rating) {
         guard canGrade, !actions.submitting else { return }
+        background.bump(30)
         audio.stop()
         actions.rate(indicator, rating)
         if rating != .Again { audio.playEffect("success-\(Int.random(in: 1...3))") }
-    }
-}
-
-struct TutorialPromptText: View {
-    let prompt: TutorialPrompt
-
-    var body: some View {
-        Text(prompt.before + (prompt.target ?? "") + prompt.after)
-            .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
     }
 }
 
@@ -175,6 +173,6 @@ struct DefinitionBoxesView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading).padding(12)
-        .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
+        .insetSurface()
     }
 }

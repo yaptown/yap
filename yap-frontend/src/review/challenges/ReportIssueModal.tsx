@@ -11,23 +11,30 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
-import type { Language } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
+import {
+  report_issue,
+  report_issue_copy,
+  type IssueSubject,
+  type Language,
+} from "../../../../yap-frontend-rs/pkg";
 
 interface ReportIssueModalProps {
-  context: string;
+  subject: IssueSubject;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   targetLanguage: Language;
 }
 
 export function ReportIssueModal({
-  context,
+  subject,
   open,
   onOpenChange,
   targetLanguage,
 }: ReportIssueModalProps) {
   const [issueText, setIssueText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const copy = report_issue_copy();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,30 +44,30 @@ export function ReportIssueModal({
     }
 
     setIsSubmitting(true);
+    setFailed(false);
 
     try {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (!user) {
+      if (!session) {
         throw new Error("Must be logged in to report issues");
       }
 
-      const { error } = await supabase.from("issues").insert({
-        user_id: user.id,
-        issue_text: `Language: ${targetLanguage}\n\nContext: ${context}\n\nIssue: ${issueText.trim()}`,
-      });
-
-      if (error) {
-        console.error("Error submitting issue:", error);
-        throw error;
-      }
+      await report_issue(
+        targetLanguage,
+        subject,
+        issueText,
+        session.user.id,
+        session.access_token,
+      );
 
       setIssueText("");
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to submit issue:", error);
+      setFailed(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -70,24 +77,24 @@ export function ReportIssueModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Report an Issue</DialogTitle>
-          <DialogDescription>
-            Describe the issue you're experiencing. We'll look into it as soon
-            as possible.
-          </DialogDescription>
+          <DialogTitle>{copy.title}</DialogTitle>
+          <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="issue-text">Issue description</Label>
+              <Label htmlFor="issue-text">{copy.field_label}</Label>
               <Textarea
                 id="issue-text"
-                placeholder="Please describe the issue you're experiencing..."
+                placeholder={copy.placeholder}
                 value={issueText}
                 onChange={(e) => setIssueText(e.target.value)}
                 className="min-h-[100px]"
                 required
               />
+              {failed && (
+                <p className="text-sm text-destructive">{copy.failed_label}</p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -97,10 +104,10 @@ export function ReportIssueModal({
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {copy.cancel_label}
             </Button>
             <Button type="submit" disabled={isSubmitting || !issueText.trim()}>
-              {isSubmitting ? "Submitting..." : "Submit Issue"}
+              {isSubmitting ? copy.submitting_label : copy.submit_label}
             </Button>
           </DialogFooter>
         </form>

@@ -7,7 +7,9 @@ use std::sync::Arc;
 use anyhow::Context as _;
 use language_utils::{Course, Language, language_pack::LanguagePack};
 use weapon::data_model::{EventStore, EventType, Timestamped};
-use yap_frontend_rs::deck_selection::{DeckSelection, DeckSelectionEvent, DeckSelectionPartial};
+use yap_frontend_rs::deck_selection::{
+    DailyReviewTarget, DeckSelection, DeckSelectionEvent, DeckSelectionPartial,
+};
 use yap_frontend_rs::{Context, Deck, DeckEvent, DeckState};
 
 use crate::sync::{DECK_SELECTION_STREAM, EventRow, REVIEWS_STREAM};
@@ -47,8 +49,12 @@ pub fn insert_rows(store: &mut EventStore<String, String>, rows: Vec<EventRow>) 
     added
 }
 
-/// Detect the user's course from their deck_selection events.
-pub fn detect_course(store: &EventStore<String, String>) -> anyhow::Result<Course> {
+/// Detect the user's course, and the study goal they chose during onboarding,
+/// from their deck_selection events. The goal seeds the deck's daily review
+/// target until a `SetDailyReviewTarget` event overrides it, as on the apps.
+pub fn detect_course(
+    store: &EventStore<String, String>,
+) -> anyhow::Result<(Course, Option<DailyReviewTarget>)> {
     let selection: DeckSelection = store
         .get::<EventType<DeckSelectionEvent>>(DECK_SELECTION_STREAM.to_string())
         .context("deck_selection stream not registered")?
@@ -67,10 +73,16 @@ pub fn detect_course(store: &EventStore<String, String>) -> anyhow::Result<Cours
         .target_language
         .context("could not detect a target language from the user's deck_selection events")?;
     let native_language = selection.native_language.unwrap_or(Language::English);
-    Ok(Course {
-        target_language,
-        native_language,
-    })
+    let study_goal = selection
+        .onboarding_selections
+        .and_then(|selections| selections.study_goal);
+    Ok((
+        Course {
+            target_language,
+            native_language,
+        },
+        study_goal,
+    ))
 }
 
 /// Lazily-loaded, shared language packs, keyed by course. Loading deserializes

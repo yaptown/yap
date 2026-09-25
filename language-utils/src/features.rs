@@ -563,10 +563,12 @@ impl FeatureSet for PronType {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian
             | Language::Russian => {
                 matches!(
@@ -608,10 +610,12 @@ impl FeatureSet for NumType {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -658,10 +662,12 @@ impl FeatureSet for Poss {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -705,10 +711,12 @@ impl FeatureSet for Reflex {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(pos, PartOfSpeech::Pron | PartOfSpeech::Det)
             }
@@ -746,10 +754,12 @@ impl FeatureSet for Clusivity {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => false,
             // Russian does not have clusivity
             Language::Russian => false,
@@ -771,7 +781,12 @@ impl FeatureSet for Gender {
     fn applies_to(language: Language, pos: PartOfSpeech) -> bool {
         match language {
             Language::English => matches!(pos, PartOfSpeech::Pron),
-            Language::French | Language::Spanish | Language::Portuguese | Language::Italian => {
+            Language::French
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
+            | Language::Italian => {
                 matches!(
                     pos,
                     PartOfSpeech::Noun
@@ -847,10 +862,12 @@ impl FeatureSet for Animacy {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => false,
             Language::Russian => {
                 // Russian distinguishes animate vs inanimate, affecting accusative case forms
@@ -884,10 +901,12 @@ impl FeatureSet for NounClass {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => false,
             // Russian does not have noun classes
             Language::Russian => false,
@@ -918,7 +937,12 @@ impl FeatureSet for Number {
                         | PartOfSpeech::Aux
                 )
             }
-            Language::French | Language::Spanish | Language::Portuguese | Language::Italian => {
+            Language::French
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
+            | Language::Italian => {
                 matches!(
                     pos,
                     PartOfSpeech::Noun
@@ -1011,7 +1035,12 @@ impl FeatureSet for Case {
                 // Case particles (이/가, 을/를, 에, 에서, etc.) are tagged as Part
                 matches!(pos, PartOfSpeech::Part)
             }
-            Language::French | Language::Spanish | Language::Portuguese | Language::Italian => {
+            Language::French
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
+            | Language::Italian => {
                 // Limited case in pronouns only
                 matches!(pos, PartOfSpeech::Pron)
             }
@@ -1057,10 +1086,12 @@ impl FeatureSet for Definite {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1091,10 +1122,12 @@ impl FeatureSet for Deixis {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1140,10 +1173,12 @@ impl FeatureSet for DeixisRef {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1189,10 +1224,12 @@ impl FeatureSet for Degree {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1227,10 +1264,12 @@ impl FeatureSet for VerbForm {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1276,12 +1315,14 @@ impl FeatureSet for Mood {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
             | Language::Japanese
             | Language::Russian
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(pos, PartOfSpeech::Verb | PartOfSpeech::Aux)
             }
@@ -1306,10 +1347,12 @@ impl FeatureSet for Tense {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1355,10 +1398,12 @@ impl FeatureSet for Aspect {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1410,10 +1455,12 @@ impl FeatureSet for Voice {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1457,10 +1504,12 @@ impl FeatureSet for Evident {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian
             | Language::Russian => false,
             // Japanese hearsay そうだ/らしい is analytic; no grammaticalized
@@ -1483,10 +1532,12 @@ impl FeatureSet for Polarity {
         match language {
             Language::French
             | Language::English
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
             | Language::Korean
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1574,9 +1625,11 @@ impl FeatureSet for Person {
                 )
             }
             Language::French
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::German
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1625,9 +1678,11 @@ impl FeatureSet for Polite {
         match language {
             // T-V distinction languages (tu/vous, du/Sie, tú/usted)
             Language::German
-            | Language::Spanish
+            | Language::SpanishLatinAmerican
+            | Language::SpanishPeninsular
             | Language::French
-            | Language::Portuguese
+            | Language::PortugueseBrazilian
+            | Language::PortugueseEuropean
             | Language::Italian => {
                 matches!(
                     pos,
@@ -1965,11 +2020,14 @@ impl Morphology {
                 self.get_french_verb_prefix(word)
             }
             (Language::French, _) => None,
-            (Language::Spanish, PartOfSpeech::Noun) => self.get_spanish_noun_prefix(),
-            (Language::Spanish, PartOfSpeech::Verb | PartOfSpeech::Aux) => {
-                self.get_spanish_verb_prefix()
+            (Language::SpanishLatinAmerican | Language::SpanishPeninsular, PartOfSpeech::Noun) => {
+                self.get_spanish_noun_prefix()
             }
-            (Language::Spanish, _) => None,
+            (
+                Language::SpanishLatinAmerican | Language::SpanishPeninsular,
+                PartOfSpeech::Verb | PartOfSpeech::Aux,
+            ) => self.get_spanish_verb_prefix(),
+            (Language::SpanishLatinAmerican | Language::SpanishPeninsular, _) => None,
             (Language::German, PartOfSpeech::Noun) => self.get_german_noun_prefix(),
             (Language::German, PartOfSpeech::Verb | PartOfSpeech::Aux) => {
                 self.get_german_verb_prefix()
@@ -1984,11 +2042,14 @@ impl Morphology {
                 self.get_italian_verb_prefix()
             }
             (Language::Italian, _) => None,
-            (Language::Portuguese, PartOfSpeech::Noun) => self.get_portuguese_noun_prefix(),
-            (Language::Portuguese, PartOfSpeech::Verb | PartOfSpeech::Aux) => {
-                self.get_portuguese_verb_prefix()
+            (Language::PortugueseBrazilian | Language::PortugueseEuropean, PartOfSpeech::Noun) => {
+                self.get_portuguese_noun_prefix()
             }
-            (Language::Portuguese, _) => None,
+            (
+                Language::PortugueseBrazilian | Language::PortugueseEuropean,
+                PartOfSpeech::Verb | PartOfSpeech::Aux,
+            ) => self.get_portuguese_verb_prefix(),
+            (Language::PortugueseBrazilian | Language::PortugueseEuropean, _) => None,
             // Russian has no articles; nouns don't get prefixes
             (Language::Russian, PartOfSpeech::Verb | PartOfSpeech::Aux) => {
                 self.get_russian_verb_prefix()

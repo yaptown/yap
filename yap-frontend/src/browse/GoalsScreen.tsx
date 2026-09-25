@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UserInfo } from "@/app/context";
 import type {
@@ -54,9 +54,10 @@ export function GoalsScreen({
     setSentenceList,
     clearSentenceList,
   } = useSentenceList(inputs.sentence_list);
-  const view =
-    injectedView ??
-    deck.goals_screen_view(inputs.banned, sentenceListToSelection(draft));
+  const view = useMemo(
+    () => injectedView ?? deck.goals_screen_view(inputs.banned, sentenceListToSelection(draft)),
+    [injectedView, deck, inputs.banned, draft],
+  );
   const curriculum = view.curriculum;
   const sentenceList = sentenceListSelectionToSentenceList(
     curriculum.navigation.selection,
@@ -73,7 +74,8 @@ export function GoalsScreen({
   };
   // These optional lists are not part of GoalsScreenView; never substitute live
   // deck data into a capture. The captured curriculum card still renders above.
-  const movieStats = injectedView ? [] : deck.get_movie_stats();
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- Opaque WASM calls must stay cached; the compiler cannot infer their cost or purity.
+  const movieStats = useMemo(() => injectedView ? [] : deck.get_movie_stats(), [injectedView, deck]);
   const metadata = new Map(
     getMovieMetadata(
       deck,
@@ -84,8 +86,11 @@ export function GoalsScreen({
     const movie = metadata.get(stat.id);
     return movie ? [{ ...movie, ...stat }] : [];
   });
-  const pimsleurStats =
-    !injectedView && curriculum.has_pimsleur ? deck.get_pimsleur_stats() : [];
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- Keep the opaque WASM result stable across local UI changes.
+  const pimsleurStats = useMemo(
+    () => !injectedView && curriculum.has_pimsleur ? deck.get_pimsleur_stats() : [],
+    [injectedView, deck, curriculum.has_pimsleur],
+  );
 
   return (
     <TopPageLayout
@@ -149,11 +154,13 @@ export function GoalsScreen({
                   {curriculum.sentence_list_label}
                 </h3>
                 <Progress
-                  className="h-6"
                   value={curriculum.progress.percent_known}
-                  showPercentage
                   aria-label={curriculum.sentence_list_label}
+                  aria-valuetext={curriculum.progress.caption}
                 />
+                <p className="text-sm text-muted-foreground">
+                  {curriculum.progress.caption}
+                </p>
                 {curriculum.next_sentence_list && (
                   <Button
                     variant="outline"

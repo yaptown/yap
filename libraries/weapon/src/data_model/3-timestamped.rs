@@ -8,32 +8,29 @@
 //! Alongside the UTC `timestamp`, we record the user's `timezone` (offset from UTC) at the moment
 //! the event was created. This lets us reason about local time-of-day, streaks, and behavior
 //! patterns without losing information to UTC normalization. Events serialized before this field
-//! existed deserialize to `None`; consumers fall back to the deck's current timezone for those,
-//! preserving the pre-timezone bucketing behavior for already-persisted history.
+//! existed (a missing or null timezone) are treated as UTC.
 
-/// (De)serialize an `Option<chrono::FixedOffset>` as its offset-from-UTC in seconds (`i32`).
-///
-/// `FixedOffset` has no `Serialize`/`Deserialize`/`Ord` impls we can rely on here, so we store
-/// the raw `local_minus_utc()` seconds. This is stable on disk and trivially orderable. `None`
-/// (an event recorded before timezones existed) round-trips as a missing/null field.
+/// Store a `chrono::FixedOffset` as offset-from-UTC seconds (`i32`).
+/// Missing or null offsets from events predating the field deserialize as UTC.
 mod timezone_serde {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+    pub fn utc() -> chrono::FixedOffset {
+        chrono::FixedOffset::east_opt(0).unwrap()
+    }
+
     pub fn serialize<S: Serializer>(
-        tz: &Option<chrono::FixedOffset>,
+        tz: &chrono::FixedOffset,
         serializer: S,
     ) -> Result<S::Ok, S::Error> {
-        tz.map(|tz| tz.local_minus_utc()).serialize(serializer)
+        tz.local_minus_utc().serialize(serializer)
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>>(
         deserializer: D,
-    ) -> Result<Option<chrono::FixedOffset>, D::Error> {
-        let Some(seconds) = Option::<i32>::deserialize(deserializer)? else {
-            return Ok(None);
-        };
+    ) -> Result<chrono::FixedOffset, D::Error> {
+        let seconds = Option::<i32>::deserialize(deserializer)?.unwrap_or_default();
         chrono::FixedOffset::east_opt(seconds)
-            .map(Some)
             .ok_or_else(|| serde::de::Error::custom("invalid timezone offset"))
     }
 }
@@ -42,11 +39,10 @@ mod timezone_serde {
 pub struct Timestamped<E> {
     pub timestamp: chrono::DateTime<chrono::Utc>,
     pub within_device_events_index: usize,
-    /// The user's timezone (offset from UTC, in seconds) when the event was created. `None` for
-    /// events recorded before this field existed — consumers fall back to the deck's current
-    /// timezone for those.
-    #[serde(default, with = "timezone_serde")]
-    pub timezone: Option<chrono::FixedOffset>,
+    /// The user's timezone when the event was created, stored as offset-from-UTC seconds.
+    /// Missing or null values from events predating this field are treated as UTC.
+    #[serde(default = "timezone_serde::utc", with = "timezone_serde")]
+    pub timezone: chrono::FixedOffset,
     pub event: E,
 }
 
@@ -145,5 +141,51 @@ pub trait IndexedEvent {
 impl<E> IndexedEvent for Timestamped<E> {
     fn within_device_events_index(&self) -> usize {
         self.within_device_events_index
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Timestamped;
+    use serde_json::json;
+
+    #[test]
+    fn timezone_round_trips_and_legacy_offsets_become_utc() {
+        for (timezone, seconds) in [(None, 0), (Some(json!(null)), 0), (Some(json!(7200)), 7200)] {
+            let mut payload = json!({
+                "timestamp": "2026-06-01T00:00:00Z",
+                "within_device_events_index": 0,
+                "event": "test",
+            });
+            if let Some(timezone) = timezone {
+                payload["timezone"] = timezone;
+            }
+            let event: Timestamped<String> = serde_json::from_value(payload).unwrap();
+            assert_eq!(
+                event.timezone,
+                chrono::FixedOffset::east_opt(seconds).unwrap()
+            );
+
+            let serialized = serde_json::to_value(&event).unwrap();
+            assert_eq!(serialized["timezone"], json!(seconds));
+            assert_eq!(
+                serde_json::from_value::<Timestamped<String>>(serialized).unwrap(),
+                event
+            );
+        }
+    }
+
+    #[test]
+    fn out_of_range_timezone_is_rejected() {
+        for seconds in [-86400, 86400] {
+            let payload = json!({
+                "timestamp": "2026-06-01T00:00:00Z",
+                "within_device_events_index": 0,
+                "timezone": seconds,
+                "event": "test",
+            });
+            let error = serde_json::from_value::<Timestamped<String>>(payload).unwrap_err();
+            assert!(error.to_string().contains("invalid timezone offset"));
+        }
     }
 }

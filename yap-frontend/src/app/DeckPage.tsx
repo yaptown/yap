@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { Navigate, useNavigate, useOutletContext } from "react-router-dom";
+import { Navigate, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import type { AppContextType } from "@/app/context";
-import { useCourseDeck } from "@/review/course-study";
+import { CourseAudioPrefetch, useCourseDeck } from "@/review/course-study";
 import type {
   Deck,
   Language,
@@ -15,7 +15,9 @@ import { ErrorMessage } from "../components/ui/error-message";
 
 export function DeckPage({
   children,
+  prefetchAudio = true,
 }: {
+  prefetchAudio?: boolean;
   children: (
     props: AppContextType & { deck: Deck; targetLanguage: Language },
   ) => ReactNode;
@@ -23,14 +25,20 @@ export function DeckPage({
   const context = useOutletContext<AppContextType>();
   const state = useCourseDeck();
   const navigate = useNavigate();
+  const location = useLocation();
+  // A deep link (say, /anki shared on a forum) should ask for a course and
+  // come back here, not bounce to the landing page.
   if (state.view.phase.type === "NoLanguageSelected")
-    return <Navigate to="/" replace />;
+    return <Navigate to={`/select-language?next=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   if (state.view.phase.type === "Ready" && state.deck && state.course) {
-    return children({
-      ...context,
-      deck: state.deck,
-      targetLanguage: state.course.targetLanguage,
-    });
+    return <>
+      {prefetchAudio && <CourseAudioPrefetch />}
+      {children({
+        ...context,
+        deck: state.deck,
+        targetLanguage: state.course.targetLanguage,
+      })}
+    </>;
   }
   return (
     <TopPageLayout

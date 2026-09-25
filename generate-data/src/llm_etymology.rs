@@ -18,7 +18,7 @@ use tysm::chat_completions::ChatClient;
 use crate::etymology::AlignedEntry;
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 struct EtymologyResponse {
@@ -215,7 +215,7 @@ fn language_specific_notes(language: Language) -> &'static str {
   - `ge-` prefix: `[ptcp]` (past participle: gemacht) vs `[coll]` collective-noun derivation (Gebirge, Gerede)
 - Separable prefixes like auf-, aus-, ein-, mit- are productive morphemes and don't usually need tags."
         }
-        Language::Spanish => {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
             "\n\nExtra Spanish-specific guidance:
 - Plural / gender / verb endings share surfaces. Tag to disambiguate:
   - `a (a)`: `[f.sg]` (casa) vs `[3sg.prs]` for -ar verbs (habla) vs `[3sg.sbjv]` for -er/-ir verbs (coma, viva) vs `[impv.2sg]` for -ar verbs (habla! command)
@@ -240,7 +240,7 @@ fn language_specific_notes(language: Language) -> &'static str {
   - `va (va)`: `[3sg.ipfv]` imperfect (parlava — distinct from the suppletive verb root va- of andare)
 - `no (no) [3pl.prs]` in verbs. `mente (mente) [adv]` for adverbializer."
         }
-        Language::Portuguese => {
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => {
             "\n\nExtra Portuguese-specific guidance:
 - Plural/gender markers overlap with verb endings. Tag:
   - `a (a)`: `[f.sg]` (casa) vs `[3sg.prs]` (fala)
@@ -376,6 +376,7 @@ Here are {n} real examples:
 
 {examples_block}
 "#,
+        language = language.prompt_name(),
         n = examples.len(),
     );
 

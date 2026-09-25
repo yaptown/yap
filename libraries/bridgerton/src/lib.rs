@@ -1,10 +1,10 @@
 //! A deliberately small, experimental JavaScript/Swift bridge.
-pub use bridgerton_macros::bridge;
 #[doc(hidden)]
 pub use bridgerton_macros::{
     __NativeValue, __TypeScript, __describe, __native_bridge, __native_function, __native_methods,
     __native_object, __wasm_bridge,
 };
+pub use bridgerton_macros::{bridge, stable};
 #[doc(hidden)]
 pub use serde;
 #[doc(hidden)]
@@ -63,7 +63,8 @@ mod wasm;
 #[doc(hidden)]
 #[cfg(target_arch = "wasm32")]
 pub use wasm::{
-    FromWasm, IntoWasm, SerdeType as __SerdeType, TypedJs, WasmError, WasmType, js_error,
+    FromWasm, IntoWasm, SerdeType as __SerdeType, StableCache, StableReturn, StableValue, TypedJs,
+    WasmError, WasmType, js_error,
 };
 
 use std::{fmt, rc::Rc};
@@ -445,3 +446,6 @@ macro_rules! __native_optional_value_argument {
 #[doc(hidden)]
 pub trait __Serializable<'a>: serde::Serialize {}
 impl<T: serde::Serialize> __Serializable<'_> for T {}
+
+#[cfg(any(target_arch = "wasm32", test))]
+mod stable;

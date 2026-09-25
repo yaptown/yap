@@ -1,13 +1,15 @@
 use crate::{Result, command, ios, root, run as exec, text};
 use clap::Args as ClapArgs;
 use std::{
-    env, fs,
+    fs,
     path::PathBuf,
     thread,
     time::{Duration, Instant},
 };
 
 const TEST_EMAIL: &str = "yap-mcp-test@popovit.ch";
+/// Not a secret: the throwaway account's password, also set by yap-mcp/smoke/remote_oauth.py.
+const TEST_PASSWORD: &str = "yap-mcp-smoke-test-pw-1";
 
 #[derive(ClapArgs)]
 pub struct Args {
@@ -32,10 +34,6 @@ pub struct Args {
 pub fn run(args: Args) -> Result<()> {
     if args.email != TEST_EMAIL {
         return Err("Only the throwaway yap-mcp-test@popovit.ch account may be used".into());
-    }
-    let password = env::var("YAP_TEST_USER_PASSWORD").unwrap_or_default();
-    if !args.web_only && password.is_empty() {
-        return Err("Set YAP_TEST_USER_PASSWORD for the iOS test account".into());
     }
     let mut fixtures = Vec::new();
     for directory in fs::read_dir(root().join("fixtures"))? {
@@ -80,6 +78,12 @@ pub fn run(args: Args) -> Result<()> {
                     .env("CARGO_PROFILE_RELEASE_LTO", "true"),
             )?;
         }
+        // A dependency added on another branch otherwise surfaces as the app failing to load.
+        exec(
+            command("pnpm")
+                .current_dir(root().join("yap-frontend"))
+                .args(["install", "--frozen-lockfile"]),
+        )?;
         let mut playwright = command("pnpm");
         playwright.current_dir(root().join("yap-frontend")).args([
             "exec",
@@ -138,7 +142,7 @@ pub fn run(args: Args) -> Result<()> {
                         ios::BUNDLE,
                         "--test-credentials",
                         &args.email,
-                        &password,
+                        TEST_PASSWORD,
                         "--fixture",
                     ])
                     .arg(fixture),

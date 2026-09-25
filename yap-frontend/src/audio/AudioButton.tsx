@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Volume2 } from "lucide-react";
 import { playAudio, type VoiceActorInfo } from "@/lib/utils";
-import { type AudioRequest } from "../../../yap-frontend-rs/pkg";
+import {
+  type AccountCopy,
+  type AudioRequest,
+} from "../../../yap-frontend-rs/pkg";
 import { isSoundEffectPlaying } from "@/lib/sound-effects";
 import { toast } from "sonner";
 
@@ -120,7 +123,7 @@ export function AudioButton({
 }: AudioButtonProps) {
   "use memo";
   const [isPlaying, setIsPlaying] = useState(false);
-  const [needsAuth, setNeedsAuth] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState<AccountCopy>();
   const isPlayingRef = useRef(isPlaying);
   const clickedRef = useRef(false);
   const blobPathRef = useRef<SVGPathElement | null>(null);
@@ -331,12 +334,11 @@ export function AudioButton({
   // Show toast when authentication is needed
   useEffect(() => {
     if (needsAuth && clickedRef.current) {
-      toast.error("Please log in to play audio", {
-        description:
-          "Audio playback requires an account to access the text-to-speech service.",
+      toast.error(needsAuth.audio_needs_account_title, {
+        description: needsAuth.audio_needs_account_body,
         duration: 5000,
       });
-      setNeedsAuth(false); // Reset the state
+      setNeedsAuth(undefined); // Reset the state
     }
   }, [needsAuth]);
 
@@ -397,9 +399,9 @@ export function AudioButton({
 
         if (signal.aborted) throw new DOMException("Aborted", "AbortError");
 
-        const authCallback = () => {
+        const authCallback = (copy: AccountCopy) => {
           if (clickedRef.current) {
-            setNeedsAuth(true);
+            setNeedsAuth(copy);
           }
         };
         const onVoiceActor = ({ name, compensation }: VoiceActorInfo) => {

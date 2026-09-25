@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { PendingReview } from "@/review/challenges/pending-review";
-import { getMovieMetadata } from "@/lib/movie-cache";
 import { reportAutogradeFailure } from "@/core/instrument";
 import { MoviePosterGrid } from "./MoviePosterGrid";
 import {
@@ -22,6 +21,7 @@ import {
   type WordGrade,
   type Language,
   type Deck,
+  report_issue_copy,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 
 import { Badge } from "@/components/ui/badge";
@@ -146,13 +146,8 @@ export function TranscriptionChallenge({
   const verdict = view.verdict;
   const [audioError, setAudioError] = useState(false);
 
-  const movieData = useMemo(() => {
-    if (!challenge.movie_titles || challenge.movie_titles.length === 0) {
-      return [];
-    }
-    const movieIds = challenge.movie_titles.map(([id]) => id);
-    return getMovieMetadata(deck, movieIds);
-  }, [challenge.movie_titles, deck]);
+  const [clipMovieId, setClipMovieId] = useState<string | null>(null);
+  const movieData = deck.sentence_posters(challenge.movie_titles.map(([id]) => id), clipMovieId ?? undefined);
   const gradingGenerationRef = useRef(0);
   const [showReportModal, setShowReportModal] = useState(false);
   const [focusedInputIndex, setFocusedInputIndex] = useState<number | null>(
@@ -507,7 +502,7 @@ export function TranscriptionChallenge({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-                  Report an Issue
+                  {report_issue_copy().menu_label}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -548,6 +543,7 @@ export function TranscriptionChallenge({
               text={challenge.target_language}
               accessToken={accessToken}
               deck={deck}
+              onClipChange={setClipMovieId}
               renderSentenceCue={(text) =>
                 editing ? (
                   <TargetLanguageText language={targetLanguage}>
@@ -701,7 +697,8 @@ export function TranscriptionChallenge({
         {/* Accented character keyboard - show when not graded, language supports it, and not on small screens */}
         {editing &&
           (targetLanguage === "French" ||
-            targetLanguage === "Spanish" ||
+            targetLanguage === "SpanishLatinAmerican" ||
+            targetLanguage === "SpanishPeninsular" ||
             targetLanguage === "German") && (
             <AccentedCharacterKeyboard
               onCharacterInsert={handleCharacterInsert}
@@ -770,7 +767,7 @@ export function TranscriptionChallenge({
       </div>
 
       <ReportIssueModal
-        context={`Transcription challenge: ${JSON.stringify(challenge)}`}
+        subject={{ Transcription: challenge }}
         open={showReportModal}
         onOpenChange={setShowReportModal}
         targetLanguage={targetLanguage}

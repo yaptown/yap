@@ -313,7 +313,9 @@ impl Supabase {
                 .as_str()
                 .or_else(|| event["SelectTargetLanguage"]["target"].as_str())
             {
-                entry.target_language = Some(target.to_string());
+                let language: language_utils::Language =
+                    serde_json::from_value(serde_json::Value::String(target.to_string()))?;
+                entry.target_language = Some(language.to_string());
             }
         }
         Ok(onboarding)

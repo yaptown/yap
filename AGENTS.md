@@ -22,7 +22,7 @@ Yap.Town is a language learning application with a Rust-based backend and React 
 - **yap-frontend-reducers**: Pure per-challenge state machines (state + events → new state + effects-as-data, plus a `view(state)` function) shared by both frontends and, eventually, the MCP widget
 - **generate-data**: Rust binary that extracts sentences from Anki decks and generates dictionary data using Python NLP
 - **language-utils**: Shared Rust library containing language processing types and utilities
-- **libraries/movie-subtitles**: Movie subtitle text handling — raw SRTs as source of truth, lossy cleaning at load time, CP1252 mojibake repair
+- **libraries/movie-subtitles**: Movie subtitle text handling — raw SRTs as source of truth, lossy cleaning at load time, CP1252 mojibake repair, and a word-correction overlay (`corrections/<code>.jsonl`, keyed by imdb + raw cleaned cue text, written by `subtitle-corpus word-check` and `subtitle-corpus proofread`) applied in memory by both the course and corpus loaders
 - **libraries/opensubtitles-downloader**: Downloads course subtitles from OpenSubtitles
 - **libraries/google-speech**: The one place Google speech APIs are called — Cloud Text-to-Speech, and a `GeminiClient` for native `generateContent` (Gemini TTS and any audio-in judging go through it)
 - **libraries/audio-codec**: Provider-agnostic audio codecs and signal sanity checks
@@ -154,6 +154,7 @@ The web app and the iOS app must behave identically, so the rule for where code 
 
 ### Important Notes
 
+- Language packs ship in two parts (`language-utils/src/language_pack.rs`): `language_data_core.rkyv` holds only what the placement test needs so it can run while the rest is still downloading; everything else goes in `language_data_sentences.rkyv` (or a new part). Do not add a field to `LanguagePackCore` just because it is small.
 - The build process is complex and requires multiple tools: Rust, wasm-pack, uv (Python), and pnpm
 - WASM module must be rebuilt after changes to `yap-frontend-rs`
 - Sentence tokenization goes through lexide's Modal endpoint (results cached in per-language `*_tokenization.jsonl` files)

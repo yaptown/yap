@@ -130,4 +130,68 @@ async function testValues(counter) {
 
   return 'PASS: generated JS records/enums, nested arrays/options, sync/async roundtrips, owned inputs, and malformed values';
 }
-if (typeof module !== 'undefined') module.exports = { testValues };
+
+// Shared by Node (debug + release) and Chromium (release).
+function testStable(api) {
+  'use strict';
+  const check = (condition, message) => { if (!condition) throw Error(message); };
+  const counter = new api.Counter();
+  const first = counter.stable_card;
+  check(counter.stable_card === first, 'stable getter identity');
+  check(counter.stable_optional() === undefined && counter.stable_optional() === undefined, 'None is not weakly cached');
+  counter.set_value(7);
+  const changed = counter.stable_card;
+  check(changed !== first && changed.id === 7, 'stable return reflects changed Rust state');
+  const optional = counter.stable_optional();
+  check(optional === counter.stable_optional() && optional.id === 7, 'Some retains identity');
+  counter.set_value(0);
+  check(counter.stable_card === first, 'original identity restored while caller retains it');
+  check(counter.stable_optional() === undefined, 'Some returns to None');
+  const second = new api.Counter();
+  check(second.stable_card === first, 'content cache shared across instances');
+  const calls = api.stable_calls();
+  const term = api.stable_term('same');
+  check(api.stable_term('same') === term, 'stable free function identity');
+  check(api.stable_calls() === calls + 2, 'Rust executes even on a cache hit');
+  check(api.stable_term('changed') !== term && api.stable_term('same') === term, 'free function changes and restores identity');
+  const positive = api.stable_float(Infinity);
+  const negative = api.stable_float(-Infinity);
+  const nan = api.stable_float(NaN);
+  check(positive[0] === Infinity && negative[0] === -Infinity && Number.isNaN(nan[0]), 'stable floats preserve non-finite values');
+  check(positive !== negative && positive !== nan && negative !== nan, 'non-finite floats have distinct cache entries');
+  check(api.stable_float(Infinity) === positive && api.stable_float(-Infinity) === negative, 'equal non-finite values retain identity');
+  check(!Object.is(api.stable_float(0)[0], api.stable_float(-0)[0]), 'stable floats preserve signed zero');
+  const bytes = api.stable_bytes(1);
+  check(bytes instanceof Uint8Array && bytes[0] === 1, 'strong bytes preserve Uint8Array ABI');
+  for (let i = 2; i < 32; i++) api.stable_bytes(i);
+  check(api.stable_bytes(1) === bytes, 'strong cache retains every result');
+  const weakBytes = new WeakRef(api.stable_bytes(99));
+  check(api.stable_bytes(99) === weakBytes.deref(), 'strong identity without caller-owned strong reference');
+  check(api.stable_bytes(0) === undefined && api.stable_bytes(0) === undefined, 'strong None');
+  check(api.stable_number(42) === 42 && api.stable_text('語') === '語', 'stable scalars');
+  check(api.stable_result('result') === 'result', 'stable Result');
+  for (let i = 0; i < 2; i++) {
+    let error;
+    try { api.stable_result(''); } catch (caught) { error = caught; }
+    check(String(error).includes('empty stable result'), 'errors are not cached as successes');
+    error = undefined;
+    try { api.stable_typed_result(true); } catch (caught) { error = caught; }
+    check(error?.detail === 'Offline', 'typed stable errors remain typed');
+  }
+  check(api.stable_typed_result(false) === api.stable_typed_result(false), 'typed Result success identity');
+  check(api.stable_unit() === undefined && api.stable_unit() === undefined, 'stable unit');
+  if (api.debug_build()) {
+    check(Object.isFrozen(first) && Object.isFrozen(first.term) && Object.isFrozen(first.tags) && Object.isFrozen(first.alternatives[0]), 'debug recursive freeze');
+    let rejected = false;
+    try { first.term.text = 'mutated'; } catch (error) { rejected = error instanceof TypeError; }
+    check(rejected, 'debug record mutation rejected');
+    rejected = false;
+    try { first.tags.push('mutated'); } catch (error) { rejected = error instanceof TypeError; }
+    check(rejected, 'debug array mutation rejected');
+    check(!Object.isFrozen(bytes), 'typed arrays excluded from freeze');
+  }
+  counter.free();
+  second.free();
+  return 'PASS: stable identity, state changes, None, strong typed arrays, errors, Rust execution, and debug freeze';
+}
+if (typeof module !== 'undefined') module.exports = { testValues, testStable };

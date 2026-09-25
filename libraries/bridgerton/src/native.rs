@@ -57,6 +57,8 @@ pub struct BridgeResult {
     pub value: u32,
     pub status: u32,
     pub data: Buffer,
+    pub hash_lo: u64,
+    pub hash_hi: u64,
 }
 
 /// Borrowed bytes, valid only for the duration of a generated C call.
@@ -98,6 +100,8 @@ impl BridgeResult {
             value: 0,
             status,
             data: Buffer::empty(),
+            hash_lo: 0,
+            hash_hi: 0,
         }
     }
     fn error(status: u32, message: String) -> Self {
@@ -113,7 +117,7 @@ mod callbacks;
 mod returns;
 pub use bindings::{
     NativeArgument, NativeBorrowed, NativeError, NativeObject, NativeOptionalArgument,
-    NativeReturn, return_method,
+    NativeReturn, StableReturn, return_method,
 };
 pub use callbacks::{CallbackArguments, callback_arguments};
 
@@ -443,16 +447,25 @@ pub fn generate(output: &std::path::Path) -> std::io::Result<()> {
 /// # Safety
 /// `path` must point to `len` readable UTF-8 bytes for the duration of the call.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bridgerton_generate_v1(path: *const u8, len: usize) -> BridgeResult {
-    call(|| {
+pub unsafe extern "C" fn bridgerton_generate_v1(path: *const u8, len: usize) -> u32 {
+    // Metadata generation also runs on non-Apple build hosts. It never touches
+    // application objects, so keep it outside the thread-confined runtime ABI.
+    let result = (|| -> Result<(), Error> {
         if path.is_null() {
             return Err(Error::new("null output path"));
         }
         let bytes = unsafe { std::slice::from_raw_parts(path, len) };
         let path = std::str::from_utf8(bytes).map_err(|e| Error::new(e.to_string()))?;
         generate(std::path::Path::new(path))?;
-        Ok(().into_result())
-    })
+        Ok(())
+    })();
+    match result {
+        Ok(()) => 0,
+        Err(error) => {
+            eprintln!("bridgerton: {error}");
+            1
+        }
+    }
 }
 
 static TOKIO_HANDLE: std::sync::OnceLock<tokio::runtime::Handle> = std::sync::OnceLock::new();
@@ -472,6 +485,22 @@ pub fn set_tokio_handle(handle: tokio::runtime::Handle) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn metadata_entry_works_without_the_main_thread_runtime() {
+        let output =
+            std::env::temp_dir().join(format!("bridgerton-metadata-test-{}", std::process::id()));
+        let path = output.to_str().unwrap();
+        assert_eq!(
+            unsafe { bridgerton_generate_v1(path.as_ptr(), path.len()) },
+            0
+        );
+        for name in ["Bridge.swift", "BridgeFFI.h", "module.modulemap"] {
+            assert!(output.join(name).is_file());
+        }
+        std::fs::remove_dir_all(output).unwrap();
+        assert_eq!(unsafe { bridgerton_generate_v1(std::ptr::null(), 0) }, 1);
+    }
 
     #[test]
     fn waker_can_outlive_task_registration_and_be_dropped_on_another_thread() {

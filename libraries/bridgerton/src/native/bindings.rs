@@ -29,6 +29,33 @@ impl NativeError for Error {
     }
 }
 
+#[diagnostic::on_unimplemented(
+    message = "stable returns must be transparent bridge values, not opaque handles"
+)]
+pub trait StableReturn: NativeReturn {
+    fn into_stable_return(self) -> Result<BridgeResult, Error>;
+}
+impl<T: Value + NativeReturn> StableReturn for T {
+    fn into_stable_return(self) -> Result<BridgeResult, Error> {
+        let bytes = crate::value::encode(&self)?;
+        let hash = xxhash_rust::xxh3::xxh3_128(&bytes);
+        Ok(BridgeResult {
+            data: Buffer::new(bytes),
+            hash_lo: hash as u64,
+            hash_hi: (hash >> 64) as u64,
+            ..BridgeResult::empty(OK)
+        })
+    }
+}
+impl<T: Value + NativeReturn, E: NativeError> StableReturn for Result<T, E> {
+    fn into_stable_return(self) -> Result<BridgeResult, Error> {
+        match self {
+            Ok(value) => value.into_stable_return(),
+            Err(error) => error.into_error_result(),
+        }
+    }
+}
+
 pub trait NativeReturn: Sized {
     type Success: NativeType;
     const FALLIBLE: bool = false;
@@ -251,11 +278,17 @@ pub fn return_method<R: NativeReturn>(
     constructor: bool,
     class: &str,
     task_signals: &[(&str, String)],
+    stable: bool,
+    strong: bool,
 ) -> String {
     let ty = R::Success::native_type(registry);
     let error = R::error_type(registry);
     let unit = ty == Type::Scalar("BridgeUnit");
-    let decoder = R::Success::return_decoder();
+    let decoder = if stable {
+        "bridgeValue"
+    } else {
+        R::Success::return_decoder()
+    };
     let swift_type = if unit { "Void".into() } else { ty.swift() };
     let throws = if R::FALLIBLE { " throws" } else { "" };
     let attempt = if R::FALLIBLE { "try" } else { "try!" };
@@ -275,6 +308,16 @@ pub fn return_method<R: NativeReturn>(
             check(invocation)
         );
     }
+    // A local enum scopes storage to this exact function, including overloads,
+    // free functions, and methods exported from separate impl blocks.
+    let cache = if stable {
+        format!(
+            "        enum Stable {{ @MainActor static let cache = BridgeStableCache<{}>(strong: {strong}) }}\n",
+            if unit { "BridgeUnit" } else { &swift_type }
+        )
+    } else {
+        String::new()
+    };
     let mut out = if getter {
         format!("    public var `{name}`: {swift_type} {{ get{throws} {{\n")
     } else {
@@ -303,10 +346,17 @@ pub fn return_method<R: NativeReturn>(
         invocation.into()
     };
     let result = check(&result);
-    if unit {
-        out += &format!("        let _: BridgeUnit = {attempt} bridgeReturn({result})\n");
+    out += &cache;
+    let result = if stable {
+        format!("Stable.cache.receive({result}, decode: {decoder})")
     } else {
-        out += &format!("        return {attempt} {decoder}({result})\n");
+        format!("{decoder}({result})")
+    };
+
+    if unit {
+        out += &format!("        let _: BridgeUnit = {attempt} {result}\n");
+    } else {
+        out += &format!("        return {attempt} {result}\n");
     }
     out += "    }\n";
     if getter {

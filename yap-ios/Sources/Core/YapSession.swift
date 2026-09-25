@@ -13,7 +13,7 @@ enum DeckSelectionState {
 struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
 
 @Observable @MainActor final class YapSession {
-    let userId: String
+    let userId: String?
     let accessToken: () -> String?
     private(set) var weapon: Weapon?
     private(set) var deckSelection: DeckSelectionState = .loading
@@ -35,6 +35,8 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
     var onboardingHasHeardAbout = false
     var dismissedAccomplishmentAtReview: UInt64?
     private var active = false
+    private var startTask: Task<Void, Never>?
+    private var stopTask: Task<Void, Error>?
     private var listeners: [ListenerKey] = []
     private var tasks: [UUID: Task<Void, Never>] = [:]
     private var timer: Task<Void, Never>?
@@ -46,12 +48,18 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
     private var generation = 0
     private var snapshotGeneration = 0
 
-    init(userId: String, accessToken: @escaping () -> String?) {
+    init(userId: String?, accessToken: @escaping () -> String?) {
         self.userId = userId; self.accessToken = accessToken
     }
 
     func start() async {
-        guard !active else { return }
+        guard stopTask == nil else { return }
+        if startTask == nil { startTask = Task { await load() } }
+        await startTask?.value
+    }
+
+    private func load() async {
+        guard !active, stopTask == nil else { return }
         active = true
         let monitor = NWPathMonitor()
         self.monitor = monitor
@@ -227,24 +235,32 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
     func retry() { dispatch(.Retry) }
     func sceneBecameActive() { recompute(); syncSoon() }
     func tokenChanged() { syncSoon() }
-    func syncSoon() { run { [weak self] in await self?.syncWithSupabase() } }
+    func syncSoon() { beginSync() }
     func syncWithSupabase(forceUpload: Bool = true) async {
-        guard active, online, let token = accessToken(), let weapon else { return }
-        do {
-            try await weapon.sync_with_supabase(access_token: token, modifier: nil, upload: forceUpload)
-            guard active else { return }
-            syncError = nil
-            print("Yap sync: events=\(weapon.num_events) remote=\(weapon.num_events_on_remote_as_of_last_sync(target: .Supabase)) finished=\(weapon.get_sync_state(target: .Supabase).last_sync_finished != nil)")
-        } catch { logSync(error) }
+        await beginSync(forceUpload: forceUpload)?.value
+    }
+    @discardableResult private func beginSync(forceUpload: Bool = true) -> Task<Void, Never>? {
+        guard active, online, let token = accessToken(), let weapon else { return nil }
+        return run { [self] in
+            do {
+                try await weapon.sync_with_supabase(access_token: token, modifier: nil, upload: forceUpload)
+                guard active else { return }
+                syncError = nil
+                print("Yap sync: events=\(weapon.num_events) remote=\(weapon.num_events_on_remote_as_of_last_sync(target: .Supabase)) finished=\(weapon.get_sync_state(target: .Supabase).last_sync_finished != nil)")
+            } catch { logSync(error) }
+        }
     }
     private func logSync(_ error: Error) {
         guard active, !Task.isCancelled else { return }
         Telemetry.breadcrumb("sync", "Sync failed: \(error)", failed: true)
         syncError = String(describing: error); print("Yap sync failed: \(error)")
     }
-    private func run(_ operation: @escaping @MainActor () async -> Void) {
+    @discardableResult private func run(_ operation: @escaping @MainActor () async -> Void) -> Task<Void, Never>? {
+        guard active else { return nil }
         let id = UUID()
-        tasks[id] = Task { [weak self] in await operation(); self?.tasks[id] = nil }
+        let task = Task { [weak self] in await operation(); self?.tasks[id] = nil }
+        tasks[id] = task
+        return task
     }
     func addDeckEvent(_ event: DeckEvent) { guard active else { return }; weapon?.add_deck_event(event: event) }
     func addDeckEventAt(_ event: DeckEvent, timestampMs: Double) { guard active else { return }; weapon?.add_deck_event_at(event: event, timestamp_ms: timestampMs) }
@@ -261,14 +277,67 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
             catch { if !Task.isCancelled { print("Yap pack prefetch: \(error)") } }
         }
     }
-    func stop() {
+    /// Freeze synchronously, then flush everything in memory to disk. The app
+    /// shell awaits this task before constructing the next identity's Weapon.
+    func stop() -> Task<Void, Error> {
+        if let stopTask { return stopTask }
         active = false; generation += 1; snapshotGeneration += 1
         monitor?.cancel(); monitor = nil
+        // Network syncs and pack prefetches are disposable: the final flush
+        // below writes every event in memory, so cancelling them loses nothing
+        // and a stalled request can't hold sign-in or sign-out hostage. Only
+        // the start task is awaited, because it creates the Weapon and runs
+        // the one-time import of anonymous data.
         timer?.cancel(); packTask?.cancel(); snapshotTask?.cancel()
         tasks.values.forEach { $0.cancel() }; tasks.removeAll()
+        let starting = startTask
         if let weapon { for key in listeners { weapon.unsubscribe(key: key) } }
-        listeners.removeAll(); weapon = nil
-        deckLoad = deck_load_start(); deck = nil; course = nil; pendingInputs = nil
+        listeners.removeAll()
+        let task = Task {
+            await starting?.value
+            if let weapon {
+                for stream in ["reviews", "deck_selection"] {
+                    try await weapon.sync(stream_id: stream, access_token: nil,
+                        attempt_supabase: false, modifier: nil, upload: false)
+                }
+            }
+            weapon = nil; deck = nil; course = nil; pendingInputs = nil
+            deckLoad = deck_load_start()
+        }
+        stopTask = task
+        return task
     }
-    isolated deinit { stop() }
+}
+
+/// Lives outside identity-keyed SwiftUI content, so teardown cannot race import.
+@Observable @MainActor final class SessionLifecycle {
+    private(set) var session: YapSession?
+    private(set) var error: String?
+    private var transition: Task<Void, Never>?
+    private var retiring: YapSession?
+    private var generation = 0
+
+    func changeIdentity(auth: AuthStore) {
+        generation += 1
+        let expected = generation
+        let userId = auth.userId
+        let previous = transition
+        if let session { retiring = session }
+        let stopped = retiring?.stop()
+        session = nil
+        transition = Task {
+            await previous?.value
+            // A failed flush must not release the old data and import an incomplete log.
+            guard error == nil else { return }
+            do {
+                try await stopped?.value
+                guard generation == expected else { return }
+                retiring = nil
+                session = YapSession(userId: userId, accessToken: { [weak auth] in
+                    guard auth?.userId == userId else { return nil }
+                    return auth?.accessToken
+                })
+            } catch { self.error = String(describing: error) }
+        }
+    }
 }

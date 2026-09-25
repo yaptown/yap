@@ -31,6 +31,7 @@ jsonwebtoken = { version = "10.4", features = ["rust_crypto"] }
 axum-extra = { version = "0.12.6", features = ["typed-header", "query"] }
 dotenvy = "0.15.7"
 uuid = { version = "1.23", features = ["serde", "v4"] }
+chrono.workspace = true
 language-utils = { path = "../language-utils" }
 autograde-core = { path = "../libraries/autograde-core" }
 g2p.workspace = true

@@ -13,7 +13,7 @@ export interface LanguageColors {
 }
 
 export interface LanguageMeta extends LanguageMetadata {
-  /** Browser locale aliases, lowercased. Bare zh defaults to simplified Chinese. */
+  /** Browser locale aliases, lowercased. Bare zh, es, and pt default to the inheriting course. */
   browserCodes: string[];
   /** CSS flag colors for card accents and hover washes. */
   colors: LanguageColors;
@@ -40,9 +40,19 @@ export const LANGUAGES: Record<Language, LanguageMeta> = {
       gradient: "linear-gradient(90deg, #002395 33%, #FFFFFF 33% 66%, #ED2939 66%)",
     },
   },
-  Spanish: {
-    ...LANGUAGE_METADATA.Spanish,
-    browserCodes: ["es"],
+  SpanishLatinAmerican: {
+    ...LANGUAGE_METADATA.SpanishLatinAmerican,
+    browserCodes: ["es", "es-419", "es-mx", "es-us"],
+    colors: {
+      primary: "#C60B1E",
+      secondary: "#FFC400",
+      accent: "#C60B1E",
+      gradient: "linear-gradient(180deg, #C60B1E 25%, #FFC400 25% 75%, #C60B1E 75%)",
+    },
+  },
+  SpanishPeninsular: {
+    ...LANGUAGE_METADATA.SpanishPeninsular,
+    browserCodes: ["es-es"],
     colors: {
       primary: "#C60B1E",
       secondary: "#FFC400",
@@ -70,9 +80,19 @@ export const LANGUAGES: Record<Language, LanguageMeta> = {
       gradient: "linear-gradient(90deg, #009246 33%, #FFFFFF 33% 66%, #CE2B37 66%)",
     },
   },
-  Portuguese: {
-    ...LANGUAGE_METADATA.Portuguese,
-    browserCodes: ["pt"],
+  PortugueseBrazilian: {
+    ...LANGUAGE_METADATA.PortugueseBrazilian,
+    browserCodes: ["pt", "pt-br"],
+    colors: {
+      primary: "#009B3A",
+      secondary: "#FFDF00",
+      accent: "#002776",
+      gradient: "linear-gradient(135deg, #009B3A 40%, #FFDF00 40% 60%, #002776 60%)",
+    },
+  },
+  PortugueseEuropean: {
+    ...LANGUAGE_METADATA.PortugueseEuropean,
+    browserCodes: ["pt-pt"],
     colors: {
       primary: "#009B3A",
       secondary: "#FFDF00",

@@ -2,8 +2,22 @@
 // OffscreenCanvas, so the main thread never waits on it. `mountShader` puts
 // one into any positioned element; the app uses it fixed behind every page
 // and the landing uses it inside one section.
-import type { ShaderTheme } from "./shader-colors";
+import { getBackgroundPalette, type ShaderTheme } from "./shader-colors";
 import { mountWorkerCanvas } from "./worker-canvas";
+
+let webgl2Available: boolean | undefined;
+function supportsWebGL2(): boolean {
+  if (webgl2Available === undefined) {
+    try {
+      const gl = new OffscreenCanvas(1, 1).getContext("webgl2");
+      webgl2Available = gl !== null;
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    } catch {
+      webgl2Available = false;
+    }
+  }
+  return webgl2Available;
+}
 
 /** Whether the shader should run at all: the user's setting, then the
  *  device's and the platform's say. */
@@ -19,7 +33,8 @@ export function shaderAvailable(animatedBackground: boolean): boolean {
     if (window.matchMedia(q).matches) return false;
   }
   return (
-    typeof HTMLCanvasElement.prototype.transferControlToOffscreen === "function"
+    typeof HTMLCanvasElement.prototype.transferControlToOffscreen ===
+      "function" && supportsWebGL2()
   );
 }
 
@@ -46,7 +61,21 @@ export function mountShader(
     new URL("../workers/backgroundShader.worker.ts", import.meta.url),
     { type: "module" },
   );
-  const mounted = mountWorkerCanvas(container, worker, { theme });
+  const mounted = mountWorkerCanvas(container, worker, {
+    theme,
+    palette: getBackgroundPalette(theme),
+  });
+  // Reveal only after the worker has compiled and drawn successfully. Context
+  // loss and compile errors must expose the themed CSS fallback, not black.
+  const canvas = container.querySelector("canvas")!;
+  canvas.style.visibility = "hidden";
+  worker.addEventListener("message", ({ data }) => {
+    if (data.type === "ready") canvas.style.visibility = "visible";
+    if (data.type === "unavailable") canvas.style.visibility = "hidden";
+  });
+  worker.addEventListener("error", () => {
+    canvas.style.visibility = "hidden";
+  });
 
   const setMouse = (x: number, y: number) =>
     worker.postMessage({ type: "mouse", x, y });
@@ -66,7 +95,12 @@ export function mountShader(
   document.documentElement.addEventListener("pointerleave", onPointerLeave);
 
   return {
-    setTheme: (t) => worker.postMessage({ type: "theme", theme: t }),
+    setTheme: (t) =>
+      worker.postMessage({
+        type: "theme",
+        theme: t,
+        palette: getBackgroundPalette(t),
+      }),
     bump: (multiplier) => worker.postMessage({ type: "bump", multiplier }),
     setMouse,
     stop() {

@@ -47,7 +47,9 @@ def main():
             raise RuntimeError(f"expected one qualified fixture symbol for {name}: {matches}")
         source = re.sub(r"\b" + name + r"\b", matches[0], source)
     (ROOT / "generated/Native.swift").write_text(source)
-    run(*swift, "generated/Bridge.swift", "generated/Native.swift", "tests/Values.swift", str(TARGET / "debug/libbridge_fixture.a"), "-o", "generated/native-tests")
+    # Private cache internals are tested in the same Swift source file, without exposing test APIs.
+    (ROOT / "generated/BridgeTests.swift").write_text((ROOT / "generated/Bridge.swift").read_text() + (ROOT / "tests/StableCache.swift").read_text())
+    run(*swift, "generated/BridgeTests.swift", "generated/Native.swift", "tests/Values.swift", str(TARGET / "debug/libbridge_fixture.a"), "-o", "generated/native-tests")
     run("generated/native-tests")
     for mode in ("--panic", "--panic-result", "--panic-async"):
         run("generated/native-tests", mode, expect_failure="intentional Rust panic", expect_crash=True)

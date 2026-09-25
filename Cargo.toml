@@ -5,6 +5,8 @@ members = [
     "yap-ai-backend",
     "generate-data",
     "language-utils",
+    "libraries/stroke-order",
+    "libraries/stroke-order-sources",
     "yap-frontend-rs",
     "yap-frontend-reducers",
     "libraries/autograde-core",
@@ -22,6 +24,7 @@ members = [
     "libraries/enumap",
     "libraries/opensubtitles-downloader",
     "libraries/movie-subtitles",
+    "libraries/movie-metadata",
     "libraries/subtitle-corpus",
     "libraries/phoneme-verify",
     "libraries/omnigram",
@@ -50,12 +53,10 @@ schemars = "1"
 futures = "0.3.32"
 env_logger = "0.11.10"
 tsify = { version = "0.5.6", features = ["js"], default-features = false }
-tysm = { git = "https://github.com/anchpop/tysm.git", rev = "8656e1e7b1641780fd0e42018b7c284a558f5d9d", features = [
-    "small-batch-optimization",
-] }
+tysm = { git = "https://github.com/anchpop/tysm.git", rev = "ece93551c8ab884aaf72bac395c1d091595cd5fa" }
 # Local-first KV cache store synced to R2 (github.com/anchpop/osmo). All of
-# generate-data's caches live in one store at .cache. Git dep until published.
-osmo = { git = "https://github.com/anchpop/osmo" }
+# generate-data's caches live in one store at .cache.
+osmo = "0.2.0"
 reqwest = { version = "0.13", features = ["json", "query", "multipart"] }
 tokio = { version = "1.52.3", features = ["full"] }
 opfs = "0.3"
@@ -82,7 +83,7 @@ wasm-logger = "0.2.0"
 unicode-normalization = "0.1.25"
 # Shared browser/native named locks.
 weblocks = { git = "https://github.com/anchpop/weblocks", rev = "b4e7db5af829e357ab67407609e1fb896ee30cde" }
-lexide = { git = "https://github.com/anchpop/lexide.git", rev = "88b53dfa02457c537bec7bd8746fc49bfd505b62", default-features = false }
+lexide = { git = "https://github.com/anchpop/lexide.git", rev = "096c4e4e86af0d512b9fb4a3b960c29548a9f085", default-features = false }
 indicatif = "0.18"
 
 [workspace.dependencies.rkyv]

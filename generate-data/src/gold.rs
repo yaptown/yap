@@ -130,8 +130,9 @@ pub fn to_lexide(tokens: Vec<CleanedToken>) -> Result<Vec<lexide::Token>> {
 }
 
 /// Path of a language's gold set, alongside the per-language `out/` dirs.
+/// Gold tokenizations are of the shared corpus, so dialects share them.
 pub fn gold_path(out_dir: &Path, language: Language) -> PathBuf {
-    out_dir.join(format!("cleaned_{}.jsonl", language.code()))
+    out_dir.join(format!("cleaned_{}.jsonl", language.corpus_code()))
 }
 
 /// Load a gold `cleaned_*.jsonl`, canonicalized, keyed by sentence.

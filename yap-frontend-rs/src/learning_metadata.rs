@@ -99,16 +99,26 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             yaptown_name: "Yap.Ville".into(),
             lets_go: "Allons-y !".into(),
         },
-        Spanish => LanguageMetadata {
+        SpanishLatinAmerican | SpanishPeninsular => LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Stable,
-            flag: "🇪🇸".into(),
+            flag: if language == SpanishLatinAmerican {
+                "🌎"
+            } else {
+                "🇪🇸"
+            }
+            .into(),
             native_name: "Español".into(),
-            english_name: "Spanish".into(),
+            english_name: language.to_string(),
             common_name: "Spanish".into(),
             people: "Spanish".into(),
-            badge: "ES".into(),
+            badge: if language == SpanishLatinAmerican {
+                "LATAM"
+            } else {
+                "ES"
+            }
+            .into(),
             script: None,
             accented_characters: vec![
                 "á".into(),
@@ -175,16 +185,26 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             yaptown_name: "Yap.Città".into(),
             lets_go: "Andiamo!".into(),
         },
-        Portuguese => LanguageMetadata {
+        PortugueseBrazilian | PortugueseEuropean => LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Beta,
-            flag: "🇧🇷".into(),
+            flag: if language == PortugueseBrazilian {
+                "🇧🇷"
+            } else {
+                "🇵🇹"
+            }
+            .into(),
             native_name: "Português".into(),
-            english_name: "Portuguese".into(),
+            english_name: language.to_string(),
             common_name: "Portuguese".into(),
             people: "Portuguese".into(),
-            badge: "PT".into(),
+            badge: if language == PortugueseBrazilian {
+                "BR"
+            } else {
+                "PT"
+            }
+            .into(),
             script: None,
             accented_characters: vec![
                 "á".into(),

@@ -1,6 +1,7 @@
 mod ios;
 mod packs;
 mod parity;
+mod shaders;
 mod smoke;
 
 use clap::{Parser, Subcommand};
@@ -21,6 +22,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Task {
+    /// Regenerate web and SwiftUI shaders from the shared WGSL.
+    Shaders,
     /// Build Rust libraries, host-generated bindings, and the XcodeGen iOS app.
     Ios(ios::Args),
     /// Run the real offline Swift integration test (macOS, Swift 6.2+).
@@ -31,6 +34,7 @@ enum Task {
 
 fn main() {
     let result = match Cli::parse().task {
+        Task::Shaders => shaders::run(),
         Task::Ios(args) => ios::run(args),
         Task::Smoke(args) => smoke::run(args),
         Task::Parity(args) => parity::run(args),
@@ -55,17 +59,11 @@ fn command(program: impl AsRef<std::ffi::OsStr>) -> Command {
 }
 
 fn echo(cmd: &Command) -> Result<String> {
-    let mut args: Vec<_> = std::iter::once(cmd.get_program())
+    let display = std::iter::once(cmd.get_program())
         .chain(cmd.get_args())
-        .map(|arg| arg.to_string_lossy().into_owned())
-        .collect();
-    // Launch commands contain the test-account password; never echo it.
-    if let Some(i) = args.iter().position(|arg| arg == "--test-credentials")
-        && let Some(password) = args.get_mut(i + 2)
-    {
-        *password = "<redacted>".into();
-    }
-    let display = args.join(" ");
+        .map(|arg| arg.to_string_lossy())
+        .collect::<Vec<_>>()
+        .join(" ");
     println!("+ {display}");
     std::io::stdout().flush()?;
     Ok(display)

@@ -496,9 +496,14 @@ function Showcase({ corpus }: { corpus: Corpus }) {
           </motion.div>
         </AnimatePresence>
 
-        <a href="/d/" className="landing-ul text-[15px] text-(--fg-dim)">
-          Look up any word in our dictionaries
-        </a>
+        <div className="flex flex-col items-center gap-2 text-[15px] text-(--fg-dim)">
+          <a href="/d/" className="landing-ul">
+            Look up any word in our dictionaries
+          </a>
+          <Link to="/anki" className="landing-ul">
+            Or take these sentences with you as an Anki deck
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -720,6 +725,7 @@ function Footer() {
       <Wordmark className="text-[24px]" />
       <div className="flex flex-wrap gap-x-6 gap-y-2 text-[15px] text-(--fg-dim)">
         <a href="/d/">Dictionary</a>
+        <Link to="/anki">Anki decks</Link>
         <Link to="/select-language">Languages</Link>
         <a href="/blog/">Blog</a>
         <Link to="/about">About</Link>

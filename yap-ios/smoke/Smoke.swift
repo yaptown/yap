@@ -214,9 +214,9 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         check(persisted.get_movie_poster(movie_id: "missing-smoke-movie") == nil)
         let ready = persisted.get_no_cards_ready_info(banned_challenge_types: [.Listening, .Speaking], sentence_list: nil)
         check(ready.smart_add_count > 0 && ready.smart_add_event != nil)
-        let add = persisted.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil)
-        check(add.count > 0 && add.event != nil)
-        reopened.add_deck_event(event: add.event!)
+        let add = persisted.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil)!
+        check(add.count > 0 && !add.label.isEmpty)
+        reopened.add_deck_event(event: add.event)
         let withCards = try await deck(reopened, course)
         let cards = withCards.get_all_cards_summary()
         check(cards.count == Int(add.count) && !cards[0].card_text.isEmpty)
@@ -264,7 +264,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         var backlog = try await deck(reopened, course)
         for _ in 0..<30 {
             if backlog.get_all_cards_summary().count > 20 { break }
-            guard let event = backlog.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil).event else { break }
+            guard let event = backlog.get_manual_add_option(card_type: .TargetLanguage, sentence_list: nil)?.event else { break }
             reopened.add_deck_event(event: event)
             backlog = try await deck(reopened, course)
         }
@@ -285,7 +285,9 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         reopened.add_deck_event(event: persisted.add_gram_by_frequency_index(frequency_index: word.frequency_index)!)
         let dictionaryDeck = try await deck(reopened, course)
         check(reopened.num_events == beforeDictionaryAdd + 1)
-        check(dictionaryDeck.gram_dictionary_entry(frequency_index: word.frequency_index)!.is_in_deck)
+        // The word's index is its primary sense's; adding by it adds that sense.
+        check(dictionaryDeck.gram_dictionary_entry(frequency_index: word.frequency_index)!.senses
+            .first { $0.frequency_index == word.frequency_index }!.is_in_deck)
         print("PASS: bounded dictionary pages, relevance order, empty/overflow offsets, add-word event")
         print("PASS: lockup/release previews and immutable plan events")
         print("PASS: placement survives core/full rebuild; completion, onboarding, referral and sentence-list events fold")

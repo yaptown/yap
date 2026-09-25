@@ -51,13 +51,18 @@ pub fn derived_jsonl_path(movies_dir: &Path, imdb_id: &str) -> PathBuf {
 /// `Ok(None)` means neither file exists. A raw SRT that fails to parse is an
 /// error rather than a silent fallback: the JSONL beside it was derived from
 /// *some* SRT, and quietly serving that instead would hide a corrupt file.
-pub fn load(movies_dir: &Path, imdb_id: &str) -> Result<Option<(Vec<SubtitleLine>, Source)>> {
+pub fn load(
+    movies_dir: &Path,
+    imdb_id: &str,
+    language: language_utils::Language,
+) -> Result<Option<(Vec<SubtitleLine>, Source)>> {
     let raw = raw_srt_path(movies_dir, imdb_id);
     if raw.exists() {
         let srt = std::fs::read_to_string(&raw)
             .with_context(|| format!("Failed to read raw subtitle {}", raw.display()))?;
-        let lines = parse_srt(&srt)
+        let mut lines = parse_srt(&srt)
             .with_context(|| format!("Failed to parse raw subtitle {}", raw.display()))?;
+        corrections::apply(&mut lines, language, imdb_id);
         return Ok(Some((lines, Source::RawSrt)));
     }
 
@@ -65,7 +70,8 @@ pub fn load(movies_dir: &Path, imdb_id: &str) -> Result<Option<(Vec<SubtitleLine
     if !derived.exists() {
         return Ok(None);
     }
-    let lines = read_derived_jsonl(&derived)?;
+    let mut lines = read_derived_jsonl(&derived)?;
+    corrections::apply(&mut lines, language, imdb_id);
     Ok(Some((lines, Source::DerivedJsonl)))
 }
 
@@ -227,9 +233,13 @@ static CONTROL_TAGS: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\{(?:[iub][01]|[A-Za-z]:[^{}]*|[yY])?\}").unwrap());
 static HTML_TAGS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"<[^>]+>").unwrap());
 static BRACKETS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\[.*?\]").unwrap());
-static PARENS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\(.*?\)").unwrap());
+static PARENS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\(.*?\)|（.*?）").unwrap());
 static SPEAKER: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[A-Z][A-Z\s]+:\s*").unwrap());
 static SPACES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwrap());
+
+/// Bump whenever cue cleaning changes. Shared segmentation provenance includes
+/// this version so both clip mapping and transcript-check remeasure changed text.
+pub const CLEANUP_VERSION: u32 = 1;
 
 /// Strip markup, sound cues and speaker labels from one subtitle block.
 ///
@@ -293,6 +303,7 @@ pub fn strip_html_tags(text: &str) -> String {
     HTML_TAGS.replace_all(text, "").to_string()
 }
 
+pub mod corrections;
 pub mod llm_segment;
 pub mod segment;
 pub mod sentences;
@@ -307,6 +318,11 @@ mod tests {
         assert_eq!(cleanup_subtitle_text("{\\an8}Up here"), "Up here");
         assert_eq!(cleanup_subtitle_text("[DOOR SLAMS] Get out"), "Get out");
         assert_eq!(cleanup_subtitle_text("(sighs) Fine"), "Fine");
+        assert_eq!(
+            cleanup_subtitle_text("（木村きむら）君さ ウチに何か用？"),
+            "君さ ウチに何か用？"
+        );
+        assert_eq!(cleanup_subtitle_text("（ため息） (sighs) Fine"), "Fine");
         assert_eq!(cleanup_subtitle_text("JOHN: Fine"), "Fine");
         assert_eq!(cleanup_subtitle_text("one\\Ntwo"), "one two");
         // Backslash-dropped ASS toggles and MicroDVD key:value codes.
@@ -318,6 +334,18 @@ mod tests {
         assert_eq!(cleanup_subtitle_text("{C:$6F6F6F}{y}okay{}"), "okay");
         // Braces holding somebody's words are not markup.
         assert_eq!(cleanup_subtitle_text("{стоп}"), "{стоп}");
+    }
+
+    #[test]
+    fn fullwidth_speaker_cleanup_keeps_rekeyed_spelling_correction() {
+        let mut lines = parse_srt(
+            "1\n00:00:01,000 --> 00:00:03,000\n（治）おい ほら セミ待って 風呂行け 風呂行け\n\n",
+        )
+        .unwrap();
+        corrections::apply(&mut lines, language_utils::Language::Japanese, "tt8075192");
+        assert_eq!(lines[0].sentence, "おい ほら セミ持って 風呂行け 風呂行け");
+        assert_eq!(cleanup_subtitle_text("（冷风不断的吹过）"), "");
+        assert_eq!(cleanup_subtitle_text("（独自在顶峰中 冷风不断的吹过）"), "");
     }
 
     #[test]

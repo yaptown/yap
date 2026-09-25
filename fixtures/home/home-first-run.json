@@ -2,15 +2,18 @@
   "screen": "Home",
   "view": {
     "title": "Home",
-    "course_label": "Learning Italian",
+    "greeting_lead": "A little",
+    "course_flag": "🇮🇹",
+    "course_name": "Italian",
+    "greeting_tail": ", every day.",
     "native_language": "English",
     "target_language": "Italian",
     "up_next": {
-      "title": "Up next",
+      "eyebrow": "Up next · Review",
       "headline": "Ready to start learning?",
-      "kind_label": "Review",
+      "kind": "Other",
+      "action_label": "Continue",
       "due_count": 0,
-      "ready_label": "0 cards ready",
       "idle": {
         "type": "Idle",
         "target_language": "Italian",
@@ -36,19 +39,22 @@
               "cards": [
                 {
                   "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "probabilmente",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "probabilmente",
-                          "lemma": "probabilmente",
-                          "pos": "ADV"
+                  "gram": {
+                    "gram": [
+                      {
+                        "Tok": {
+                          "text": "probabilmente",
+                          "word_type": {
+                            "type": "Heteronym",
+                            "word": "probabilmente",
+                            "lemma": "probabilmente",
+                            "pos": "ADV"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ],
+                    "sense": null
+                  }
                 }
               ],
               "sentence_list": null
@@ -64,8 +70,10 @@
           },
           "recommend_more_cards": true
         },
+        "manual_add_heading": "Choose cards to add",
         "manual_add_options": [
           {
+            "label": "Learn 1 Italian → English card",
             "count": 1,
             "card_type": "TargetLanguage",
             "event": {
@@ -77,19 +85,22 @@
                 "cards": [
                   {
                     "type": "WrittenGram",
-                    "gram": [
-                      {
-                        "Tok": {
-                          "text": "probabilmente",
-                          "word_type": {
-                            "type": "Heteronym",
-                            "word": "probabilmente",
-                            "lemma": "probabilmente",
-                            "pos": "ADV"
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "probabilmente",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "probabilmente",
+                              "lemma": "probabilmente",
+                              "pos": "ADV"
+                            }
                           }
                         }
-                      }
-                    ]
+                      ],
+                      "sense": null
+                    }
                   }
                 ],
                 "sentence_list": null
@@ -97,11 +108,7 @@
             }
           },
           {
-            "count": 0,
-            "card_type": "Listening",
-            "event": null
-          },
-          {
+            "label": "Learn 1 Italian pronunciation card",
             "count": 1,
             "card_type": "LetterPronunciation",
             "event": {
@@ -123,6 +130,15 @@
           }
         ],
         "next_due": null,
+        "curriculum_headline": {
+          "before": "Keep up the momentum on",
+          "emphasis": "Basic Italian Level 3",
+          "after": "!"
+        },
+        "curriculum_learn_label": "Learn 1 new card",
+        "next_sentence_list_label": null,
+        "all_learned_note": null,
+        "level_note": "When you complete this level, you'll understand 37.4% of everyday Italian.",
         "banned_notice": null,
         "week": [
           {
@@ -245,37 +261,127 @@
         ],
         "progress": {
           "percent_known": 0.0,
-          "all_available_learned": false
+          "all_available_learned": false,
+          "caption": "0% known"
         },
         "sentence_list_label": "Basic Italian Level 3",
         "next_sentence_list": null,
-        "switch_curriculum": null
+        "commit_curriculum": null
       }
     },
     "goal": {
       "title": "Basic Italian Level 3",
+      "name": "Basic Italian",
+      "level_label": "Level 3 of 13",
       "tier_name": "Basic",
       "level": 3,
       "total_levels": 13,
       "percent": 0.0,
       "percent_label": "0%",
-      "subtitle": "Level 3 of 13 · unlocks 37.4% of everyday Italian"
+      "subtitle": "Unlocks 37.4% of everyday Italian"
     },
-    "streak": {
-      "title": "Streak",
-      "days": 2,
-      "days_label": "2 days",
-      "today_label": "0 / 10 min today"
+    "week": {
+      "title": "This week",
+      "today_label": "0 / 10 min today",
+      "days": [
+        {
+          "weekday": 0,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": true,
+          "is_future": false
+        },
+        {
+          "weekday": 1,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 2,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 3,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 4,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 5,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        },
+        {
+          "weekday": 6,
+          "seconds": 0,
+          "target_seconds": 600,
+          "reviews": 0,
+          "new_cards": 0,
+          "learned_cards": 0,
+          "locked_in_cards": 0,
+          "met_goal": false,
+          "is_today": false,
+          "is_future": true
+        }
+      ]
     },
-    "stats": {
-      "title": "Stats",
-      "total_cards": 0,
-      "cards_label": "0 cards",
-      "percent_known": 0.0,
-      "percent_known_label": "0.0% of everyday Italian"
+    "xp": {
+      "value": "0",
+      "caption": "XP earned",
+      "note": null
+    },
+    "cards": {
+      "value": "0",
+      "caption": "Cards studied",
+      "note": "0.0% of everyday Italian"
     },
     "dictionary": {
-      "title": "Dictionary",
+      "title": "Find a word",
       "search_placeholder": "Search Italian or English"
     },
     "due_count": 0

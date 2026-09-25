@@ -14,11 +14,15 @@ fn to_lexide_language(lang: Language) -> Option<lexide::Language> {
     match lang {
         Language::French => Some(lexide::Language::French),
         Language::English => Some(lexide::Language::English),
-        Language::Spanish => Some(lexide::Language::SpanishEuro),
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
+            Some(lexide::Language::SpanishEuro)
+        }
         Language::Korean => Some(lexide::Language::Korean),
         Language::German => Some(lexide::Language::German),
         Language::Italian => Some(lexide::Language::Italian),
-        Language::Portuguese => Some(lexide::Language::PortugueseBrazil),
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => {
+            Some(lexide::Language::PortugueseBrazil)
+        }
         Language::Russian => Some(lexide::Language::Russian),
         Language::Hindi => Some(lexide::Language::Hindi),
         Language::Japanese => Some(lexide::Language::Japanese),

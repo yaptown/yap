@@ -1,9 +1,18 @@
-import { useCourseDeck, useCourseStudy } from "@/review/course-study";
+import {
+  CourseAudioPrefetch,
+  useCourseDeck,
+  useCourseStudy,
+} from "@/review/course-study";
 import { ReviewScreen } from "@/review/ReviewScreen";
 import { useState, useEffect } from "react";
 import { useZeno } from "@/hooks/useZeno";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { Deck, type DeckEvent, type Language } from "../../../yap-frontend-rs/pkg";
+import {
+  Deck,
+  type DeckEvent,
+  type Language,
+  report_issue_copy,
+} from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -49,6 +58,7 @@ export function ReviewPage() {
     const totalReviewsCompleted = state.deck.get_total_reviews();
     return (
       <div className="flex flex-col gap-6">
+        <CourseAudioPrefetch />
         {state.view.pack_banner && (
           <div
             className="flex items-center justify-between gap-4 p-4 text-sm text-muted-foreground"
@@ -128,7 +138,7 @@ function Review({
       userInfo={userInfo}
       headerProps={{
         title: "Review",
-        showSignupNag: true,
+        showSignupNag: view.show_account_prompt,
         dailyGoalPercent: view.progress * 100,
         backButton: { label: "Home", onBack: () => navigate("/home") },
       }}
@@ -142,23 +152,21 @@ function Review({
           setAutoplayed,
           menuExtras: (
             <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-              Report an Issue
+              {report_issue_copy().menu_label}
             </DropdownMenuItem>
           ),
         }}
         actions={{ ...study.actions, setSentenceList, commitSentenceList }}
       />
 
-      <ReportIssueModal
-        context={
-          currentChallenge?.type === "FlashCardReview"
-            ? JSON.stringify(currentChallenge.flashcard.content)
-            : ""
-        }
-        open={showReportModal}
-        onOpenChange={setShowReportModal}
-        targetLanguage={targetLanguage}
-      />
+      {currentChallenge?.type === "FlashCardReview" && (
+        <ReportIssueModal
+          subject={{ Flashcard: currentChallenge.flashcard.content }}
+          open={showReportModal}
+          onOpenChange={setShowReportModal}
+          targetLanguage={targetLanguage}
+        />
+      )}
     </TopPageLayout>
   );
 }

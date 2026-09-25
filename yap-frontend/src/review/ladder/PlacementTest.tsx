@@ -17,6 +17,8 @@ interface PlacementTestProps {
   session: PlacementSession;
   setSession: (session: PlacementSession) => void;
   onComplete: (session: PlacementSession) => void;
+  /** Label of the finishing button; defaults to "Begin Learning". */
+  completeLabel?: string;
 }
 
 export function PlacementTest({
@@ -25,6 +27,7 @@ export function PlacementTest({
   onComplete,
   session,
   setSession,
+  completeLabel,
 }: PlacementTestProps) {
   const info = get_placement_session_info(session);
   const { round, words } = session;
@@ -66,7 +69,7 @@ export function PlacementTest({
                   size="lg"
                   className="w-full"
                 >
-                  {tooAdvanced ? "Continue Anyway" : "Begin Learning"}
+                  {tooAdvanced ? "Continue Anyway" : (completeLabel ?? "Begin Learning")}
                 </Button>
               </>
             );

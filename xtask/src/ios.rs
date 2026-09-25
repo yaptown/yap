@@ -209,7 +209,8 @@ pub fn run(args: Args) -> Result<()> {
     let configuration = if release { "Release" } else { "Debug" };
     let mut build = command("xcodebuild");
     build
-        .args(["build", "-project"])
+        // Warnings and errors only, so a failure ends with its Swift errors, not build noise.
+        .args(["build", "-quiet", "-project"])
         .arg(here.join("Yap.xcodeproj"))
         .args([
             "-scheme",

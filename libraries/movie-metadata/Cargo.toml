@@ -1,0 +1,16 @@
+[package]
+name = "movie-metadata"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+reqwest = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = "1.0"
+language-utils = { path = "../../language-utils" }
+movie-subtitles = { path = "../movie-subtitles" }
+
+[dev-dependencies]
+tempfile = { workspace = true }

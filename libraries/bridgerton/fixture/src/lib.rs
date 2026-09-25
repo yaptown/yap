@@ -130,6 +130,21 @@ impl Counter {
         Ok(snapshot)
     }
 
+    #[bridgerton::stable]
+    #[bridge(getter)]
+    pub fn stable_card(&self) -> Card {
+        self.sample_card()
+    }
+
+    #[bridgerton::stable]
+    pub fn stable_optional(&self) -> Option<Card> {
+        (self.value() != 0).then(|| self.sample_card())
+    }
+
+    pub fn set_value(&self, value: u32) {
+        self.value.set(value);
+    }
+
     pub fn sample_card(&self) -> Card {
         Card {
             id: self.value(),

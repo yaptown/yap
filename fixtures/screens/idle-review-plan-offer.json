@@ -1,6 +1,7 @@
 {
   "screen": "Review",
   "view": {
+    "show_account_prompt": false,
     "native_language": "English",
     "target_language": "French",
     "step": {
@@ -8,393 +9,42 @@
       "view": {
         "type": "ReviewPlanOffer",
         "target_language": "French",
-        "cards": [
+        "title": "Today's review plan:",
+        "groups": [
           {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "de",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "de",
-                      "lemma": "de",
-                      "pos": "ADP"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789872944230.0,
-            "state": "new",
-            "card_text": "de",
-            "card_subtitle": "listening"
+            "heading": "3 reading cards",
+            "cards": [
+              "peut",
+              "mais c'est",
+              "c'est ça"
+            ]
           },
           {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "et",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "et",
-                      "lemma": "et",
-                      "pos": "CCONJ"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789872944231.0,
-            "state": "new",
-            "card_text": "et",
-            "card_subtitle": "listening"
+            "heading": "12 listening cards",
+            "cards": [
+              "de",
+              "et",
+              "c'est",
+              "aussi",
+              "sans",
+              "oui",
+              "personne",
+              "manger",
+              "salut",
+              "partir",
+              "un",
+              "peut"
+            ]
           },
           {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "c'",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "ce",
-                      "lemma": "ce",
-                      "pos": "PRON"
-                    }
-                  }
-                },
-                {
-                  "Tok": {
-                    "text": "est",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "est",
-                      "lemma": "être",
-                      "pos": "VERB"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789872944232.0,
-            "state": "new",
-            "card_text": "c'est",
-            "card_subtitle": "listening"
-          },
-          {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "aussi",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "aussi",
-                      "lemma": "aussi",
-                      "pos": "ADV"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789872944233.0,
-            "state": "new",
-            "card_text": "aussi",
-            "card_subtitle": "listening"
-          },
-          {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "sans",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "sans",
-                      "lemma": "sans",
-                      "pos": "ADP"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789872944234.0,
-            "state": "new",
-            "card_text": "sans",
-            "card_subtitle": "listening"
-          },
-          {
-            "card_indicator": {
-              "type": "WrittenGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "peut",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "peut",
-                      "lemma": "pouvoir",
-                      "pos": "AUX"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789873460830.0,
-            "state": "learning",
-            "card_text": "peut",
-            "card_subtitle": "auxiliary"
-          },
-          {
-            "card_indicator": {
-              "type": "WrittenGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "mais",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "mais",
-                      "lemma": "mais",
-                      "pos": "CCONJ"
-                    }
-                  }
-                },
-                {
-                  "Tok": {
-                    "text": "c'",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "ce",
-                      "lemma": "ce",
-                      "pos": "PRON"
-                    }
-                  }
-                },
-                {
-                  "Tok": {
-                    "text": "est",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "est",
-                      "lemma": "être",
-                      "pos": "VERB"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789873463984.0,
-            "state": "learning",
-            "card_text": "mais c'est",
-            "card_subtitle": "coordinating conjunction"
-          },
-          {
-            "card_indicator": {
-              "type": "WrittenGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "c'",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "ce",
-                      "lemma": "ce",
-                      "pos": "PRON"
-                    }
-                  }
-                },
-                {
-                  "Tok": {
-                    "text": "est",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "est",
-                      "lemma": "être",
-                      "pos": "VERB"
-                    }
-                  }
-                },
-                {
-                  "Tok": {
-                    "text": "ça",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "ça",
-                      "lemma": "cela",
-                      "pos": "PRON"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789873829703.0,
-            "state": "learning",
-            "card_text": "c'est ça",
-            "card_subtitle": "pronoun"
-          },
-          {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "oui",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "oui",
-                      "lemma": "oui",
-                      "pos": "INTJ"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789893231624.0,
-            "state": "new",
-            "card_text": "oui",
-            "card_subtitle": "listening"
-          },
-          {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "personne",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "personne",
-                      "lemma": "personne",
-                      "pos": "PRON"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789893231625.0,
-            "state": "new",
-            "card_text": "personne",
-            "card_subtitle": "listening"
-          },
-          {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "manger",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "manger",
-                      "lemma": "manger",
-                      "pos": "VERB"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789893231626.0,
-            "state": "new",
-            "card_text": "manger",
-            "card_subtitle": "listening"
-          },
-          {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "salut",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "salut",
-                      "lemma": "salut",
-                      "pos": "INTJ"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789893434425.0,
-            "state": "new",
-            "card_text": "salut",
-            "card_subtitle": "listening"
-          },
-          {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "partir",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "partir",
-                      "lemma": "partir",
-                      "pos": "VERB"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789893434426.0,
-            "state": "new",
-            "card_text": "partir",
-            "card_subtitle": "listening"
-          },
-          {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "un",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "un",
-                      "lemma": "un",
-                      "pos": "PRON"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789893822904.0,
-            "state": "new",
-            "card_text": "un",
-            "card_subtitle": "listening"
-          },
-          {
-            "card_indicator": {
-              "type": "ListeningGram",
-              "gram": [
-                {
-                  "Tok": {
-                    "text": "peut",
-                    "word_type": {
-                      "type": "Heteronym",
-                      "word": "peut",
-                      "lemma": "pouvoir",
-                      "pos": "AUX"
-                    }
-                  }
-                }
-              ]
-            },
-            "due_timestamp_ms": 1789893822905.0,
-            "state": "new",
-            "card_text": "peut",
-            "card_subtitle": "listening"
+            "heading": "2 pronunciation cards",
+            "cards": [
+              "[ch]",
+              "[eau]"
+            ]
           }
         ],
+        "accept_label": "Let's go!",
         "event": {
           "type": "Language",
           "target_language": "French",
@@ -495,95 +145,104 @@
               },
               {
                 "type": "WrittenGram",
-                "gram": [
-                  {
-                    "Tok": {
-                      "text": "peut",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "peut",
-                        "lemma": "pouvoir",
-                        "pos": "AUX"
+                "gram": {
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "peut",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "peut",
+                          "lemma": "pouvoir",
+                          "pos": "AUX"
+                        }
                       }
                     }
-                  }
-                ]
+                  ],
+                  "sense": null
+                }
               },
               {
                 "type": "WrittenGram",
-                "gram": [
-                  {
-                    "Tok": {
-                      "text": "mais",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "mais",
-                        "lemma": "mais",
-                        "pos": "CCONJ"
+                "gram": {
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "mais",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "mais",
+                          "lemma": "mais",
+                          "pos": "CCONJ"
+                        }
+                      }
+                    },
+                    {
+                      "Tok": {
+                        "text": "c'",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "ce",
+                          "lemma": "ce",
+                          "pos": "PRON"
+                        }
+                      }
+                    },
+                    {
+                      "Tok": {
+                        "text": "est",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "est",
+                          "lemma": "être",
+                          "pos": "VERB"
+                        }
                       }
                     }
-                  },
-                  {
-                    "Tok": {
-                      "text": "c'",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "ce",
-                        "lemma": "ce",
-                        "pos": "PRON"
-                      }
-                    }
-                  },
-                  {
-                    "Tok": {
-                      "text": "est",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "est",
-                        "lemma": "être",
-                        "pos": "VERB"
-                      }
-                    }
-                  }
-                ]
+                  ],
+                  "sense": null
+                }
               },
               {
                 "type": "WrittenGram",
-                "gram": [
-                  {
-                    "Tok": {
-                      "text": "c'",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "ce",
-                        "lemma": "ce",
-                        "pos": "PRON"
+                "gram": {
+                  "gram": [
+                    {
+                      "Tok": {
+                        "text": "c'",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "ce",
+                          "lemma": "ce",
+                          "pos": "PRON"
+                        }
+                      }
+                    },
+                    {
+                      "Tok": {
+                        "text": "est",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "est",
+                          "lemma": "être",
+                          "pos": "VERB"
+                        }
+                      }
+                    },
+                    {
+                      "Tok": {
+                        "text": "ça",
+                        "word_type": {
+                          "type": "Heteronym",
+                          "word": "ça",
+                          "lemma": "cela",
+                          "pos": "PRON"
+                        }
                       }
                     }
-                  },
-                  {
-                    "Tok": {
-                      "text": "est",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "est",
-                        "lemma": "être",
-                        "pos": "VERB"
-                      }
-                    }
-                  },
-                  {
-                    "Tok": {
-                      "text": "ça",
-                      "word_type": {
-                        "type": "Heteronym",
-                        "word": "ça",
-                        "lemma": "cela",
-                        "pos": "PRON"
-                      }
-                    }
-                  }
-                ]
+                  ],
+                  "sense": null
+                }
               },
               {
                 "type": "ListeningGram",

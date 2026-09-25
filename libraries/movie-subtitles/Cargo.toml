@@ -14,3 +14,7 @@ language-utils = { path = "../../language-utils" }
 schemars = { workspace = true }
 tysm = { workspace = true }
 futures = { workspace = true }
+tokio = { workspace = true, features = ["time"] }
+xxhash-rust = { workspace = true }
+unicode-general-category = "1.1.0"
+unicode-normalization.workspace = true

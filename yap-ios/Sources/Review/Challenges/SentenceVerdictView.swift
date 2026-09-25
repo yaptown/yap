@@ -44,7 +44,7 @@ struct SentenceVerdictView: View {
                     .background(Color.yapInfoSurface, in: RoundedRectangle(cornerRadius: 10))
                     .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.yapInfoBorder) }
             }
-        }
+        }.fadeIn(duration: 0.2)
     }
 }
 

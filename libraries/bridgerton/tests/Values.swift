@@ -120,3 +120,35 @@ private func rejects(_ body: () throws -> Void) {
     rejects { var r = BridgeReader(data: Data(), depth: bridgeMaxDepth); _ = try r.nested { _ in 0 } }
     rejects { var w = BridgeWriter(depth: bridgeMaxDepth); _ = try w.nested { _ in 0 } }
 }
+
+@MainActor func testStableReturns() throws {
+    let counter = Counter()
+    let first = counter.stable_card
+    require(counter.stable_card == first, "stable getter values")
+    require(counter.stable_optional() == nil && counter.stable_optional() == nil, "stable None")
+    counter.set_value(value: 7)
+    require(counter.stable_card.id == 7 && counter.stable_card != first, "Rust state still observed")
+    require(counter.stable_optional()?.id == 7, "stable Some")
+    counter.set_value(value: 0)
+    require(counter.stable_card == first && counter.stable_optional() == nil, "restored state")
+    var changed = first
+    changed.term.text = "host mutation"
+    changed.tags.append("local")
+    require(counter.stable_card == first && changed != first, "cached Swift values retain copy-on-write semantics")
+    let calls = stable_calls()
+    require(stable_term(text: "same") == stable_term(text: "same"), "stable free function")
+    require(stable_calls() == calls + 2, "Rust executes on cache hits")
+    require(stable_bytes(value: 1) == [1, 2, 3] && stable_bytes(value: 0) == nil, "strong optional bytes")
+    require(stable_number(value: 42) == 42 && stable_number(value: 42) == 42, "stable numeric codec")
+    require(stable_text(value: "語") == "語" && stable_text(value: "語") == "語", "stable string codec")
+    require(try stable_result(value: "result") == "result", "stable Result codec")
+    for _ in 0..<2 {
+        rejects { _ = try stable_result(value: "") }
+        do { _ = try stable_typed_result(fail: true); fatalError("expected typed error") }
+        catch let error as ReviewError { require(error == .Offline, "stable typed error") }
+    }
+    require(try stable_typed_result(fail: false).text == "typed", "stable typed Result success")
+    stable_unit()
+    stable_unit()
+    print("PASS: stable Swift values, scalar codecs, errors, nil, host mutation, and Rust execution")
+}

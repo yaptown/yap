@@ -3,7 +3,7 @@
 //! (schemars) — so the schema and the payload cannot drift. Doc comments
 //! become schema descriptions the model can read.
 
-use language_utils::Language;
+use language_utils::{Gram, Language, TaggedGram};
 use schemars::JsonSchema;
 use serde::Serialize;
 use yap_frontend_rs::{DefinitionView, VoiceActorInfo};
@@ -66,19 +66,23 @@ pub struct AddCardsOut {
     pub synced: bool,
 }
 
-/// One dictionary match from search_dictionary.
+/// One word from search_dictionary, with independently addable senses.
 #[derive(Serialize, JsonSchema)]
 pub struct DictionaryMatchOut {
     pub language: Language,
-    /// The exact gram (word + lemma + part-of-speech token sequence)
-    /// identifying this entry — opaque; pass verbatim to add_cards,
-    /// get_sentences, or log_review.
-    pub gram: Option<serde_json::Value>,
     pub display_text: String,
-    /// 1 is the most common word in the course.
-    pub frequency_rank: usize,
     pub is_phrase: bool,
-    /// Whether the user's deck already has a card for this entry.
+    pub senses: Vec<DictionarySenseMatchOut>,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct DictionarySenseMatchOut {
+    /// The exact sense-tagged gram — pass verbatim with the word's language
+    /// to add_cards, get_sentences, or log_review.
+    pub gram: TaggedGram<Gram<String>>,
+    pub gloss: String,
+    /// 1 is the most common sense in the course.
+    pub frequency_rank: usize,
     pub in_deck: bool,
     pub definition: DefinitionView,
 }
@@ -230,12 +234,22 @@ pub struct SearchOut {
 #[derive(Serialize, JsonSchema)]
 pub struct FetchMetadataOut {
     pub language: Language,
-    /// The exact gram identifying this entry in deck tools — opaque; pass
-    /// verbatim to add_cards, get_sentences, or log_review.
-    pub gram: Option<serde_json::Value>,
+    pub senses: Vec<FetchSenseOut>,
+    /// The most frequent defined sense's rank.
     pub frequency_rank: usize,
+    /// True if any sense is in the user's deck.
     pub in_deck: bool,
     pub is_phrase: bool,
+}
+
+#[derive(Serialize, JsonSchema)]
+pub struct FetchSenseOut {
+    /// The exact sense-tagged gram — pass verbatim with metadata.language
+    /// to add_cards, get_sentences, or log_review.
+    pub gram: TaggedGram<Gram<String>>,
+    pub gloss: String,
+    pub frequency_rank: usize,
+    pub in_deck: bool,
 }
 
 #[derive(Serialize, JsonSchema)]

@@ -182,8 +182,21 @@ pub async fn load_human_audio(
                     &wav_path,
                     expected,
                 )
-                .await?;
-                anyhow::Ok((entry, wav_path, v))
+                .await;
+                match v {
+                    Ok(v) => anyhow::Ok(Some((entry, wav_path, v))),
+                    // A cache-only run never reaches the phoneme endpoint, so a
+                    // miss there leaves the clip out of the pack rather than
+                    // failing the course.
+                    Err(e) if crate::cache_only() => {
+                        eprintln!(
+                            "cache-only: skipping unverified clip {}: {e:#}",
+                            wav_path.display()
+                        );
+                        Ok(None)
+                    }
+                    Err(e) => Err(e),
+                }
             })
             .buffered(32)
             .try_collect()
@@ -196,7 +209,7 @@ pub async fn load_human_audio(
         // diagnostic data in audio_verification_all.jsonl), but their
         // passing clips don't reach the shipped language pack.
         let ship_clips = matches!(quality, VoiceActorQuality::High);
-        for (entry, wav_path, verification) in verifications {
+        for (entry, wav_path, verification) in verifications.into_iter().flatten() {
             all_results.push(verification.clone());
             if let Some(reason) = &verification.failure_reason {
                 log::info!(
@@ -252,10 +265,13 @@ pub async fn load_human_audio(
     // dataset. Comprehensive coverage (every text, not just ones where
     // humans failed) lets us establish a verifier baseline: model failures
     // on clean studio audio are model bias, not recording quality.
-    if let (Ok(api_key), Some(voice)) = (
-        std::env::var("GOOGLE_CLOUD_API_KEY"),
-        crate::audio_verification::default_voice_for(target_language),
-    ) {
+    // Synthesis is a network call, so a cache-only run skips the diagnostic.
+    if !crate::cache_only()
+        && let (Ok(api_key), Some(voice)) = (
+            std::env::var("GOOGLE_CLOUD_API_KEY"),
+            crate::audio_verification::default_voice_for(target_language),
+        )
+    {
         let mut unique_texts: std::collections::BTreeSet<String> =
             std::collections::BTreeSet::new();
         for v in &all_results {

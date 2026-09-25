@@ -94,12 +94,12 @@ fn contraction_lemma(
             "des" => Some("des"),
             _ => None,
         },
-        Language::Spanish => match text_lower {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => match text_lower {
             "al" => Some("al"),
             "del" => Some("del"),
             _ => None,
         },
-        Language::Portuguese => match text_lower {
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => match text_lower {
             "do" => Some("do"),
             "da" => Some("da"),
             "dos" => Some("dos"),
@@ -230,8 +230,10 @@ pub fn get_classifier(language: Language) -> Box<dyn SentenceClassifier> {
     match language {
         Language::French => Box::new(FrenchClassifier),
         Language::German => Box::new(GermanClassifier),
-        Language::Spanish => Box::new(SpanishClassifier),
-        Language::Portuguese => Box::new(PortugueseClassifier),
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => Box::new(SpanishClassifier),
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => {
+            Box::new(PortugueseClassifier)
+        }
         Language::Korean => Box::new(KoreanClassifier),
         Language::English => Box::new(EnglishClassifier),
         Language::Italian => Box::new(ItalianClassifier),
@@ -248,8 +250,10 @@ pub fn get_corrector(language: Language) -> Box<dyn WordCorrector> {
     match language {
         Language::French => Box::new(FrenchCorrector),
         Language::German => Box::new(GermanCorrector),
-        Language::Spanish => Box::new(SpanishCorrector),
-        Language::Portuguese => Box::new(PortugueseCorrector),
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => Box::new(SpanishCorrector),
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => {
+            Box::new(PortugueseCorrector)
+        }
         Language::Korean => Box::new(KoreanCorrector),
         Language::English => Box::new(EnglishCorrector),
         Language::Italian => Box::new(ItalianCorrector),
@@ -930,7 +934,7 @@ impl SentenceClassifier for SpanishClassifier {
             }
 
             // Check polysemous words
-            if let Some(reason) = check_polysemous(Language::Spanish, &text_lower) {
+            if let Some(reason) = check_polysemous(Language::SpanishLatinAmerican, &text_lower) {
                 reasons.push(reason);
             }
         }
@@ -1062,7 +1066,8 @@ impl WordCorrector for SpanishCorrector {
             }
 
             // Contractions keep their contracted form as lemma
-            if let Some(expected) = contraction_lemma(Language::Spanish, &text_lower, token.pos)
+            if let Some(expected) =
+                contraction_lemma(Language::SpanishLatinAmerican, &text_lower, token.pos)
                 && token.lemma != expected
             {
                 corrections.push(format!(
@@ -1125,7 +1130,8 @@ impl WordCorrector for SpanishCorrector {
                 token.lemma = "uno".to_string();
             }
 
-            if let Some(expected) = contraction_lemma(Language::Spanish, &text_lower, token.pos)
+            if let Some(expected) =
+                contraction_lemma(Language::SpanishLatinAmerican, &text_lower, token.pos)
                 && token.lemma != expected
             {
                 token.lemma = expected.to_string();
@@ -1809,7 +1815,7 @@ impl SentenceClassifier for PortugueseClassifier {
             }
 
             // Check polysemous words
-            if let Some(reason) = check_polysemous(Language::Portuguese, &text_lower) {
+            if let Some(reason) = check_polysemous(Language::PortugueseBrazilian, &text_lower) {
                 reasons.push(reason);
             }
         }
@@ -1996,7 +2002,7 @@ impl WordCorrector for PortugueseCorrector {
 
                 // Contractions keep their contracted form as lemma
                 if let Some(expected) =
-                    contraction_lemma(Language::Portuguese, &text_lower, token.pos)
+                    contraction_lemma(Language::PortugueseBrazilian, &text_lower, token.pos)
                     && token.lemma != expected
                 {
                     corrections.push(format!(
@@ -2122,7 +2128,8 @@ impl WordCorrector for PortugueseCorrector {
                 }
             }
 
-            if let Some(expected) = contraction_lemma(Language::Portuguese, &text_lower, token.pos)
+            if let Some(expected) =
+                contraction_lemma(Language::PortugueseBrazilian, &text_lower, token.pos)
                 && token.lemma != expected
             {
                 token.lemma = expected.to_string();
@@ -9910,7 +9917,7 @@ The formal pronoun "Sie" (you, formal) should have lemma "Sie" (capitalized) to 
 
 "haben" as auxiliary: please make sure the lemma is "haben" — we've seen a corrupted lemma "Haen" appear for "haben" forms. Double-check that "hast", "hat", "hatte", etc. all get lemma "haben"."#
         }
-        Language::Spanish => {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
             r#"
 
 Spanish-specific rules — please follow these carefully, as they address systematic issues we've seen in past analyses:
@@ -9984,7 +9991,7 @@ Clitic pronoun lemmas: please be consistent. "mi" → lemma "mi", "ti" → lemma
 
 "non" should consistently be tagged ADV (not PART)."#
         }
-        Language::Portuguese => {
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => {
             r#"
 
 Portuguese-specific rules — please follow these carefully, as they address systematic issues we've seen in past analyses:
@@ -10673,7 +10680,8 @@ Hyphenated words should usually be split into three separate tokens. For example
 
 Review the analysis carefully. If you find errors, correct them. If the analysis is already correct, return it unchanged. In either case, you will return all tokens in the sentence. You are the ultimate authority on the correct analysis of the sentence, and your response should stand alone.{language_tips}
 
-Think through your analysis, and finally provide the corrected token list. Remember, the provided analysis likely has errors. If it was likely to be good, we would not need you!"#
+Think through your analysis, and finally provide the corrected token list. Remember, the provided analysis likely has errors. If it was likely to be good, we would not need you!"#,
+        language = language.prompt_name()
     );
 
     // Convert DocTokens to SimplifiedTokens for the prompt
@@ -10759,7 +10767,8 @@ The analysis consists of tokens, where each token has:
     "4. lemma": string, // dictionary/base form
 }}
 
-Specific concerns about the current analysis are listed alongside the sentence. Please review those concerns carefully and correct the analysis if needed. Return all tokens, not just the changed ones. The text of each token must remain exactly as it appears in the original sentence. The goal is that you can concatenate the tokens + whitespace in the order they appear in your output to get the original sentence.{language_tips}"#
+Specific concerns about the current analysis are listed alongside the sentence. Please review those concerns carefully and correct the analysis if needed. Return all tokens, not just the changed ones. The text of each token must remain exactly as it appears in the original sentence. The goal is that you can concatenate the tokens + whitespace in the order they appear in your output to get the original sentence.{language_tips}"#,
+        language = language.prompt_name()
     );
 
     let simplified_tokens: Vec<SimplifiedTokenPrime> = tokens
@@ -10859,7 +10868,8 @@ Important rules:
 - All other tokens should have a head pointing to another token's index (1-based)
 - The dependency structure should form a valid tree
 
-Think through the sentence structure, then provide the dependency analysis for each token."#
+Think through the sentence structure, then provide the dependency analysis for each token."#,
+        language = language.prompt_name()
     );
 
     // Build the indexed token list

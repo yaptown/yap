@@ -20,6 +20,7 @@ fn apply_event(deck: Deck, event: &Timestamped<crate::DeckEvent>) -> Deck {
 /// Call `next_day()` to get a `DayChallengeIterator` for one day's challenges,
 /// then call `finish_day()` on it to advance to the next day.
 pub struct DailySimulationIterator {
+    last_introduced: Vec<crate::CardIndicator<language_utils::SpurGram, lasso::Spur>>,
     deck: Deck,
     current_time: DateTime<Utc>,
     event_index: usize,
@@ -37,6 +38,7 @@ pub struct DailySimulationIterator {
 impl DailySimulationIterator {
     pub fn new(deck: Deck, current_time: DateTime<Utc>) -> Self {
         Self {
+            last_introduced: Vec::new(),
             deck,
             current_time,
             event_index: 0,
@@ -44,6 +46,16 @@ impl DailySimulationIterator {
             banned_challenge_types: Vec::new(),
             include_locked: true,
         }
+    }
+
+    pub(crate) fn deck(&self) -> &Deck {
+        &self.deck
+    }
+
+    pub(crate) fn last_introduced(
+        &self,
+    ) -> &[crate::CardIndicator<language_utils::SpurGram, lasso::Spur>] {
+        &self.last_introduced
     }
 
     /// Override how many new cards are added per simulated day.
@@ -116,6 +128,7 @@ impl DayChallengeIterator {
         // sentence list (the AddCards event records the list, and replaying it
         // with None would reset the deck's selection).
         let sentence_list = deck.get_sentence_list();
+        let mut last_introduced = Vec::new();
         let event = match self.new_cards_per_day {
             Some(count) => {
                 let cards: Vec<_> = deck
@@ -126,6 +139,7 @@ impl DayChallengeIterator {
                     )
                     .take(count)
                     .collect();
+                last_introduced = cards.clone();
                 deck.cards_to_event(&cards, &sentence_list)
             }
             None => {
@@ -137,7 +151,7 @@ impl DayChallengeIterator {
             let ts = Timestamped {
                 timestamp: self.current_time,
                 within_device_events_index: self.event_index,
-                timezone: Some(deck.context.timezone),
+                timezone: deck.context.timezone,
                 event,
             };
             deck = apply_event(deck, &ts);
@@ -145,6 +159,7 @@ impl DayChallengeIterator {
         }
 
         DailySimulationIterator {
+            last_introduced,
             deck,
             current_time: self.current_time + Duration::days(1),
             event_index: self.event_index,
@@ -230,7 +245,7 @@ impl Iterator for DayChallengeIterator {
                 let ts = Timestamped {
                     timestamp: self.current_time,
                     within_device_events_index: self.event_index,
-                    timezone: Some(self.deck().context.timezone),
+                    timezone: self.deck().context.timezone,
                     event,
                 };
                 let deck = self.take_deck();
@@ -402,7 +417,12 @@ mod tests {
             lang: language_utils::Language,
             label: &str,
             list_name: &str,
-            entries: impl Iterator<Item = (&'a language_utils::SpurGram, &'a crate::Frequency)>,
+            entries: impl Iterator<
+                Item = (
+                    &'a language_utils::TaggedGram<language_utils::SpurGram>,
+                    &'a crate::Frequency,
+                ),
+            >,
         ) {
             let mut prev_count = u32::MAX;
             for (gram_spur, freq) in entries {
@@ -410,7 +430,7 @@ mod tests {
                     freq.count <= prev_count,
                     "[{label}] {list_name} not sorted by count descending: gram '{}' has count {} after count {}",
                     lp.gram_rodeo
-                        .resolve(gram_spur)
+                        .resolve(&gram_spur.gram)
                         .resolve(&lp.string_rodeo)
                         .to_display_string(lang),
                     freq.count,
@@ -422,7 +442,10 @@ mod tests {
 
         // Every gram in gram_frequencies should have a definition
         for gram_spur in lp.gram_frequencies.entries.keys() {
-            let resolved = lp.gram_rodeo.resolve(gram_spur).resolve(&lp.string_rodeo);
+            let resolved = lp
+                .gram_rodeo
+                .resolve(&gram_spur.gram)
+                .resolve(&lp.string_rodeo);
             assert!(
                 lp.gram_definitions.contains_key(gram_spur),
                 "[{label}] Gram '{}' ({:?}) is in gram_frequencies but has no definition",
@@ -447,12 +470,15 @@ mod tests {
 
         // Every gram should produce a non-empty display string
         for gram_spur in lp.gram_frequencies.entries.keys() {
-            let resolved = lp.gram_rodeo.resolve(gram_spur).resolve(&lp.string_rodeo);
+            let resolved = lp
+                .gram_rodeo
+                .resolve(&gram_spur.gram)
+                .resolve(&lp.string_rodeo);
             let display = resolved.to_display_string(lang);
             assert!(
                 !display.is_empty(),
                 "[{label}] Gram {:?} produced an empty display string",
-                lp.gram_rodeo.resolve(gram_spur)
+                lp.gram_rodeo.resolve(&gram_spur.gram)
             );
         }
 
@@ -479,7 +505,7 @@ mod tests {
                     assert!(
                         lp.gram_definitions.contains_key(gram_spur),
                         "[{label}] Learnable gram {:?} in sentence {:?} has no definition",
-                        lp.gram_rodeo.resolve(gram_spur),
+                        lp.gram_rodeo.resolve(&gram_spur.gram),
                         lp.string_rodeo.resolve(sentence_spur)
                     );
                 }
@@ -497,6 +523,7 @@ mod tests {
             validate_language_pack(&language_pack, course);
 
             let context = crate::Context {
+                study_goal: None,
                 language_pack,
                 course: *course,
                 timezone: chrono::FixedOffset::east_opt(0).unwrap(),
@@ -540,6 +567,7 @@ mod tests {
         }
 
         let context = crate::Context {
+            study_goal: None,
             language_pack,
             course: language_utils::Course {
                 target_language: language_utils::Language::French,

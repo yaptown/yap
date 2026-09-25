@@ -1,0 +1,10 @@
+[package]
+name = "stroke-order"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+language-utils = { path = "../../language-utils" }
+anyhow = "1"
+rustc-hash = "2.1"
+unicode-normalization.workspace = true

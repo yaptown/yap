@@ -3,6 +3,7 @@
 pub mod current;
 pub mod v1;
 pub mod v2;
+mod v3;
 
 use crate::Context;
 use serde::{Deserialize, Serialize};
@@ -17,7 +18,8 @@ pub use current::*;
 pub enum VersionedDeckEvent {
     V1(v1::DeckEvent),
     V2(v2::DeckEvent),
-    V3(current::DeckEvent),
+    V3(v3::DeckEvent),
+    V4(current::DeckEvent),
 }
 
 impl Event for current::DeckEvent {
@@ -30,15 +32,18 @@ impl Event for current::DeckEvent {
 
     fn from_versioned(versioned: &Self::Versioned, context: &Self::Context) -> Option<Self> {
         match versioned {
-            VersionedDeckEvent::V1(event) => event.clone().into_v2()?.into_v3(context),
-            VersionedDeckEvent::V2(event) => event.clone().into_v3(context),
-            VersionedDeckEvent::V3(event) => Some(event.clone()),
+            VersionedDeckEvent::V1(event) => {
+                event.clone().into_v2()?.into_v3(context)?.into_v4(context)
+            }
+            VersionedDeckEvent::V2(event) => event.clone().into_v3(context)?.into_v4(context),
+            VersionedDeckEvent::V3(event) => event.clone().into_v4(context),
+            VersionedDeckEvent::V4(event) => Some(event.clone()),
         }
     }
 }
 
 impl From<current::DeckEvent> for VersionedDeckEvent {
     fn from(event: current::DeckEvent) -> Self {
-        VersionedDeckEvent::V3(event)
+        VersionedDeckEvent::V4(event)
     }
 }

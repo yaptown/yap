@@ -188,6 +188,23 @@ ol {
   }
 }
 
+@keyframes poster-strip {
+  to { transform: translateX(-50%); }
+}
+
+.poster-strip-track {
+  animation: poster-strip 90s linear infinite;
+}
+
+.poster-strip:hover .poster-strip-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster-strip { overflow-x: auto; }
+  .poster-strip-track { animation: none; }
+}
+
 .animate-slide-in-from-right {
   animation: slide-in-from-right 0.25s ease-out;
 }
@@ -226,4 +243,21 @@ ol {
    Uses em so it scales relative to whatever the parent's font-size is. */
 [lang="ko"], [lang="ja"], [lang="zh"] {
   font-size: 1.55em;
+}
+
+/* Home's search bar morphs into the dictionary's: both carry this class, and
+   they never share a page. */
+.dictionary-search {
+  view-transition-name: dictionary-search;
+}
+/* landing.css blurs the root away when leaving the landing; when the
+   dictionary is what arrives, keep the browser's plain cross-fade. */
+:root:has([data-page="dictionary"])::view-transition-old(root),
+:root:has([data-page="dictionary"])::view-transition-new(root) {
+  animation: revert;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(dictionary-search) {
+    animation: none;
+  }
 }

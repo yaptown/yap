@@ -1,18 +1,32 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  ChevronDown,
+  Headphones,
+  Keyboard,
+  Languages,
+  MessageCircle,
+  Mic,
+  Search,
+  Sparkles,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import type {
   Deck,
   DeckEvent,
   HomeScreenView,
+  HomeStatView,
+  UpNextKind,
 } from "../../../yap-frontend-rs/pkg";
 import type { UserInfo } from "@/app/context";
 import { DeckPage } from "@/app/DeckPage";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { GoalProgress } from "@/browse/GoalProgress";
+import { WeekProgressStrip } from "@/review/WeekProgressStrip";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
 import { About } from "@/components/about";
 import { IdleScreen } from "@/review/IdleScreen";
@@ -95,7 +109,6 @@ function HomeContent({
   commitSentenceList?: (event: DeckEvent) => void;
 }) {
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
   const upNext = view.up_next;
 
   return (
@@ -108,21 +121,26 @@ function HomeContent({
         }}
       >
         <main className="flex flex-col gap-4 py-4" aria-label={view.title}>
-          <button
-            type="button"
-            onClick={() => {
-              if (!inert) navigate("/select-language");
-            }}
-            className="text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Card className="p-5 flex-row items-center justify-between gap-3 hover:bg-muted/50 transition-colors">
-              <h2 className="text-lg font-semibold">{view.course_label}</h2>
-              <ChevronRight
-                className="h-5 w-5 text-muted-foreground"
+          {/* A tagline, not a headline: Up Next's word is the page's one
+              headline. The course inside it is the course switcher. */}
+          <h1 className="pt-4 text-2xl font-medium tracking-tight">
+            {view.greeting_lead}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                if (!inert) navigate("/select-language");
+              }}
+              className="inline-flex items-baseline gap-1.5 rounded-md font-semibold decoration-muted-foreground/50 decoration-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span aria-hidden>{view.course_flag}</span>
+              {view.course_name}
+              <ChevronDown
+                className="h-4 w-4 self-center text-muted-foreground"
                 aria-hidden
               />
-            </Card>
-          </button>
+            </button>
+            {view.greeting_tail}
+          </h1>
           {upNext.idle ? (
             <IdleScreen
               view={upNext.idle}
@@ -132,102 +150,111 @@ function HomeContent({
               setSentenceList={setSentenceList}
               commitSentenceList={commitSentenceList}
               showEngagementPrompts={false}
+              showWeek={false}
             />
           ) : (
-            <Card className="relative p-5 gap-4">
-              <h2 className="text-sm text-muted-foreground">{upNext.title}</h2>
-              <Link
-                to="/learn"
-                className="after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
-              >
-                <p className="text-xl font-semibold">
+            // The whole card starts the review, not just its button.
+            <Link
+              to="/learn"
+              className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Card className="p-6 gap-0 transition-colors group-hover:bg-muted/40">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                  <KindIcon kind={upNext.kind} />
+                  {upNext.eyebrow}
+                </p>
+                <p className="mt-1.5 text-4xl font-bold break-words">
                   <TargetLanguageText language={view.target_language}>
                     {upNext.headline}
                   </TargetLanguageText>
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {upNext.kind_label}
-                </p>
-              </Link>
-              <Button asChild className="relative z-10 self-start">
-                <Link to="/learn">Review</Link>
-              </Button>
-            </Card>
-          )}
-          {!upNext.idle && (
-            <Link
-              to="/due"
-              className="self-center text-sm text-muted-foreground hover:text-foreground"
-            >
-              {upNext.ready_label} →
-            </Link>
-          )}
-          <Link
-            to="/goals"
-            className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Card className="p-5 gap-3 hover:bg-muted/50 transition-colors">
-              <GoalProgress goal={view.goal} />
-            </Card>
-          </Link>
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="p-4 gap-2">
-              <h2 className="text-sm text-muted-foreground">
-                {view.streak.title}
-              </h2>
-              <p className="text-xl font-semibold">{view.streak.days_label}</p>
-              <p className="text-sm text-muted-foreground">
-                {view.streak.today_label}
-              </p>
-            </Card>
-            <Link
-              to="/stats"
-              className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Card className="h-full p-4 gap-2 hover:bg-muted/50 transition-colors">
-                <h2 className="text-sm text-muted-foreground">
-                  {view.stats.title}
-                </h2>
-                <p className="text-xl font-semibold">
-                  {view.stats.cards_label}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {view.stats.percent_known_label}
-                </p>
+                <span className="mt-5 flex items-center justify-between gap-2 h-12 px-5 rounded-xl bg-primary text-primary-foreground font-medium shadow-xs transition-all group-hover:bg-primary/90">
+                  {upNext.action_label}
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </span>
               </Card>
             </Link>
-          </div>
-          <Card className="p-5 gap-3">
-            <h2 className="text-lg font-semibold">
-              <Link to="/dictionary">{view.dictionary.title}</Link>
-            </h2>
-            <form
-              className="flex gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                // Keep searches out of URLs, request logs, and navigation telemetry.
-                if (!inert) navigate("/dictionary", { state: { query } });
-              }}
-            >
-              <Input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={view.dictionary.search_placeholder}
-                aria-label={view.dictionary.search_placeholder}
-              />
-              <Button
-                type="submit"
-                variant="outline"
-                aria-label={view.dictionary.title}
+          )}
+          {/* Everything below Up Next is one quiet panel of progress, so the
+              next thing to study stays the only card that stands out. */}
+          <Card variant="light" className="p-0 gap-0 divide-y divide-border/60 overflow-hidden">
+            {view.goal && (
+              <Link
+                to="/goals"
+                className="flex flex-col gap-3 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
               >
-                →
-              </Button>
-            </form>
+                <GoalProgress goal={view.goal} />
+              </Link>
+            )}
+            <section className="flex flex-col gap-4 p-5">
+              <div className="flex items-baseline justify-between gap-4">
+                <h2 className="text-lg font-semibold">{view.week.title}</h2>
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {view.week.today_label}
+                </span>
+              </div>
+              <WeekProgressStrip week={view.week.days} />
+            </section>
+            <Link
+              to="/stats"
+              className="grid grid-cols-2 gap-4 p-5 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:bg-muted/40"
+            >
+              <HomeStat stat={view.xp} icon={Zap} />
+              <HomeStat stat={view.cards} icon={BookOpen} />
+            </Link>
           </Card>
+          {/* Not a real field: tapping it morphs into the dictionary's search
+              bar (same view-transition-name), where typing gets live results. */}
+          <button
+            type="button"
+            aria-label={view.dictionary.title}
+            onClick={() => {
+              if (!inert)
+                navigate("/dictionary", {
+                  viewTransition: true,
+                  state: { focusSearch: true },
+                });
+            }}
+            className="dictionary-search flex h-11 w-full items-center gap-2 rounded-xl border border-border/60 bg-foreground/5 px-4 text-left text-muted-foreground backdrop-blur-sm hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Search className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">{view.dictionary.search_placeholder}</span>
+          </button>
         </main>
       </TopPageLayout>
       <About />
     </>
+  );
+}
+
+const KIND_ICONS: Record<UpNextKind, LucideIcon> = {
+  Flashcard: MessageCircle,
+  Listening: Headphones,
+  Pronunciation: Mic,
+  Translation: Languages,
+  Transcription: Keyboard,
+  Other: Sparkles,
+};
+
+function KindIcon({ kind }: { kind: UpNextKind }) {
+  const Icon = KIND_ICONS[kind];
+  return <Icon className="h-3.5 w-3.5" aria-hidden />;
+}
+
+function HomeStat({ stat, icon: Icon }: { stat: HomeStatView; icon: LucideIcon }) {
+  return (
+    <div className="flex items-start gap-3 min-w-0">
+      <Icon className="h-5 w-5 mt-1.5 shrink-0 text-muted-foreground" aria-hidden />
+      <div className="flex flex-col min-w-0">
+        <p className="text-2xl font-bold tabular-nums">{stat.value}</p>
+        <p className="text-sm text-muted-foreground">{stat.caption}</p>
+        {stat.note && (
+          <p className="mt-1 text-xs text-muted-foreground">{stat.note}</p>
+        )}
+      </div>
+    </div>
   );
 }

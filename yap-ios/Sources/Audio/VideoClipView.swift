@@ -14,6 +14,7 @@ struct VideoClipView: View {
     var autoplay = false
     var maskedSentence: String?
     @Binding var available: Bool?
+    @Binding var movieId: String?
     @State private var movie: MovieMetadataBasic?
     @State private var player: AVPlayer?
     @State private var cues: [ClipSubtitleCue] = []
@@ -25,13 +26,6 @@ struct VideoClipView: View {
         VStack(spacing: 0) {
             if let player {
                 VStack(spacing: 8) {
-                    if let movie {
-                        HStack(spacing: 10) {
-                            MoviePoster(id: movie.id, title: movie.title)
-                            Text(movie.title).font(.subheadline.weight(.semibold))
-                            if let year = movie.year { Text(String(year)).font(.caption).foregroundStyle(.secondary) }
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                    }
                     ClipSurface(player: player)
                         .overlay {
                             Button {
@@ -53,6 +47,24 @@ struct VideoClipView: View {
                                     .padding(.bottom, 32).allowsHitTesting(false)
                             }
                         }.clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(alignment: .top) {
+                            if let movie {
+                                HStack(spacing: 8) {
+                                    MoviePoster(id: movie.id, title: movie.title).rotationEffect(.degrees(4))
+                                    (Text(movie.title).font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+                                        + Text(movie.year.map { " (\($0))" } ?? "").font(.subheadline).foregroundStyle(.white.opacity(0.8)))
+                                        .lineLimit(1).shadow(color: .black.opacity(0.9), radius: 3, y: 1)
+                                    Spacer(minLength: 0)
+                                    if let score = movie.rotten_tomatoes_score { Text("🍅 \(score)%").font(.subheadline).foregroundStyle(.white).fixedSize().shadow(color: .black.opacity(0.9), radius: 3, y: 1) }
+                                }.padding(.horizontal, 8).padding(.bottom, 16).padding(.top, -24)
+                                    .background {
+                                        LinearGradient(colors: [.black.opacity(0.6), .black.opacity(0.3), .clear], startPoint: .top, endPoint: .bottom)
+                                            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 12, topTrailingRadius: 12))
+                                    }
+                                    .allowsHitTesting(false)
+                            }
+                        }
+                        .padding(.top, movie == nil ? 0 : 24)
                     Button("Replay clip", systemImage: "play.fill") { play(player) }
                 }
             }
@@ -81,10 +93,11 @@ struct VideoClipView: View {
         catch { playbackFailed = true }
     }
     private func watch() async {
+        movieId = nil; movie = nil; available = nil; playbackFailed = false
         var file: URL?
         defer {
             if let player { audio.stopVideo(player); player.replaceCurrentItem(with: nil) }
-            player = nil; playing = false
+            player = nil; playing = false; movieId = nil; movie = nil
             if let file { try? FileManager.default.removeItem(at: file) }
         }
         var version: UInt32?
@@ -108,18 +121,18 @@ struct VideoClipView: View {
                         let next = AVPlayer(url: url)
                         await next.seek(to: CMTime(seconds: Double(result.critical_start_ms) / 1000, preferredTimescale: 1000))
                         try Task.checkCancellation()
-                        player = next; available = true
-                    } else { available = false }
+                        player = next; available = true; movieId = result.movie_id
+                    } else { available = false; movieId = nil }
                 } catch {
                     if Task.isCancelled { return }
-                    available = false
+                    available = false; movieId = nil
                     print("Yap clip lookup failed: \(error)")
                 }
             }
             if let player {
                 if playbackFailed || player.status == .failed || player.currentItem?.status == .failed {
                     audio.stopVideo(player)
-                    self.player = nil; available = false
+                    self.player = nil; available = false; movieId = nil
                     // Release the shared autoplay claim so the TTS fallback runs.
                     if autoplay { host.autoplay.reviewCount = nil }
                     do { try await invalidate_clip_cache(language: language, text: text) }

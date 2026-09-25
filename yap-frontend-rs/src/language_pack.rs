@@ -36,9 +36,16 @@ static LANGUAGE_DATA_HASHES: LazyLock<BTreeMap<Course, &'static str>> = LazyLock
     hashes.insert(
         Course {
             native_language: Language::English,
-            target_language: Language::Spanish,
+            target_language: Language::SpanishLatinAmerican,
         },
         include_str!("../../out/spa_for_eng/language_data.hash"),
+    );
+    hashes.insert(
+        Course {
+            native_language: Language::English,
+            target_language: Language::SpanishPeninsular,
+        },
+        include_str!("../../out/spa-es_for_eng/language_data.hash"),
     );
     hashes.insert(
         Course {
@@ -64,14 +71,21 @@ static LANGUAGE_DATA_HASHES: LazyLock<BTreeMap<Course, &'static str>> = LazyLock
     hashes.insert(
         Course {
             native_language: Language::English,
-            target_language: Language::Portuguese,
+            target_language: Language::PortugueseBrazilian,
         },
         include_str!("../../out/por_for_eng/language_data.hash"),
     );
     hashes.insert(
         Course {
+            native_language: Language::English,
+            target_language: Language::PortugueseEuropean,
+        },
+        include_str!("../../out/por-pt_for_eng/language_data.hash"),
+    );
+    hashes.insert(
+        Course {
             native_language: Language::French,
-            target_language: Language::Portuguese,
+            target_language: Language::PortugueseBrazilian,
         },
         include_str!("../../out/por_for_fra/language_data.hash"),
     );
@@ -118,7 +132,7 @@ fn describe_part(part: PackPart, course: Course) -> String {
         PackPart::Core => "dictionary",
         PackPart::Sentences => "sentences",
     };
-    format!("Downloading {:?} {kind}", course.target_language)
+    format!("Downloading {} {kind}", course.target_language)
 }
 
 fn language_data_hashes_for_course(course: Course) -> Result<PackMetadata, LanguageDataError> {
@@ -672,7 +686,9 @@ async fn fetch_language_data_chunk(
         })?;
 
     let mut chunk_bytes = Vec::with_capacity(expected_chunk_len);
-    let mut last_logged_percent = downloaded_before_chunk * 100 / expected_total_size.max(1);
+    // WASM usize is 32-bit: multiplying pack byte counts by 100 overflows.
+    let mut last_logged_percent =
+        (downloaded_before_chunk as f64 / expected_total_size.max(1) as f64 * 100.0) as usize;
 
     loop {
         let next = bridgerton::platform::timeout(deadlines.stall_ms, reader.read_chunk())

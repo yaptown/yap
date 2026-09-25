@@ -81,7 +81,7 @@ async fn main() -> Result<()> {
 
     let movies_dir = args
         .data_root
-        .join(target.code())
+        .join(target.corpus_code())
         .join("sentence-sources/movies");
     let metadata = std::fs::read_to_string(movies_dir.join("metadata.jsonl"))
         .with_context(|| format!("reading {}", movies_dir.join("metadata.jsonl").display()))?;
@@ -114,12 +114,13 @@ async fn main() -> Result<()> {
             movies
                 .par_iter()
                 .map(|movie| {
-                    let Some((subtitles, _)) = movie_subtitles::load(&movies_dir, &movie.id)?
+                    let Some((subtitles, _)) =
+                        movie_subtitles::load(&movies_dir, &movie.id, target)?
                     else {
                         return Ok(None);
                     };
                     let now: HashSet<String> =
-                        subtitle_sentences_by_rules(&subtitles, target, rules)
+                        subtitle_sentences_by_rules(&subtitles, target, &movie.id, rules)
                             .into_iter()
                             .map(|s| cleanup_sentence(s, target))
                             .collect();
@@ -130,15 +131,17 @@ async fn main() -> Result<()> {
         Segmenter::Llm(_) => {
             let mut segmented = Vec::with_capacity(movies.len());
             for movie in &movies {
-                let Some((subtitles, _)) = movie_subtitles::load(&movies_dir, &movie.id)? else {
+                let Some((subtitles, _)) = movie_subtitles::load(&movies_dir, &movie.id, target)?
+                else {
                     segmented.push(None);
                     continue;
                 };
-                let now: HashSet<String> = subtitle_sentences(&subtitles, target, &segmenter)
-                    .await?
-                    .into_iter()
-                    .map(|s| cleanup_sentence(s, target))
-                    .collect();
+                let now: HashSet<String> =
+                    subtitle_sentences(&subtitles, target, &movie.id, &segmenter)
+                        .await?
+                        .into_iter()
+                        .map(|s| cleanup_sentence(s, target))
+                        .collect();
                 segmented.push(Some((subtitles, now)));
             }
             segmented
@@ -152,7 +155,7 @@ async fn main() -> Result<()> {
         if let Some(needle) = &args.trace {
             match &segmenter {
                 Segmenter::Rules(rules) => {
-                    for passage in subtitle_passages(&subtitles) {
+                    for passage in subtitle_passages(&subtitles, target) {
                         if !passage.contains(needle.as_str()) {
                             continue;
                         }

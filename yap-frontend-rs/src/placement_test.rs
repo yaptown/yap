@@ -12,10 +12,10 @@ pub struct PlacementTestWord {
 
 /// Accept only single-atom grams so the word and its frequency describe the same unit.
 fn extract_heteronym(
-    spur_gram: &language_utils::SpurGram,
+    spur_gram: &language_utils::TaggedGram<language_utils::SpurGram>,
     gram_rodeo: &lasso::RodeoReader<language_utils::Gram<Spur>>,
 ) -> Option<Heteronym<Spur>> {
-    let gram = gram_rodeo.resolve(spur_gram);
+    let gram = gram_rodeo.resolve(&spur_gram.gram);
     let [atom] = gram.atoms() else {
         return None;
     };
@@ -71,6 +71,7 @@ impl Context {
         };
         let Some(gram_def) = grams
             .iter()
+            .flat_map(|g| self.language_pack.senses_of(*g))
             .find_map(|g| self.language_pack.gram_definitions.get(g))
         else {
             return false;
@@ -88,6 +89,7 @@ impl Context {
         let grams = self.language_pack.heteronym_to_grams.get(word)?;
         let gram_def = grams
             .iter()
+            .flat_map(|g| self.language_pack.senses_of(*g))
             .find_map(|g| self.language_pack.gram_definitions.get(g))?;
         let GramDefinition::Dictionary(entry) = gram_def else {
             return None;
@@ -258,6 +260,7 @@ impl Deck {
                 .heteronym_to_grams
                 .get(&heteronym)
                 && let Some(gram) = grams.first()
+                && let Some(gram) = self.context.language_pack.senses_of(*gram).first()
                 && let Some(freq) = self
                     .context
                     .language_pack
@@ -276,6 +279,7 @@ impl Deck {
                 .heteronym_to_grams
                 .get(&heteronym)
                 && let Some(gram) = grams.first()
+                && let Some(gram) = self.context.language_pack.senses_of(*gram).first()
                 && let Some(freq) = self
                     .context
                     .language_pack

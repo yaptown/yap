@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TranscriptionChallengeView: View {
+    @Environment(BackgroundController.self) private var background
     @Environment(AudioPlayer.self) private var audio
     @Environment(\.reviewScreen!) private var screen
     @Environment(\.reviewHost!) private var host
@@ -10,6 +11,7 @@ struct TranscriptionChallengeView: View {
     // Recomputed once per step rather than on every access, since each call crosses the bridge.
     @State private var view: TranscriptionView
     @State private var hasClip: Bool?
+    @State private var clipMovieId: String?
     @State private var gradingTask: Task<Void, Never>?
     @FocusState private var focused: Int?
     init(sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
@@ -26,14 +28,15 @@ struct TranscriptionChallengeView: View {
     private var blanks: [Int] { view.blanks.map { Int($0.index) } }
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
-        VStack(spacing: 12) {
-            StudyCard {
+        ReviewStepScrollView {
+            StudyCard(animated: true) {
                 if sentence.second_chance { ReviewBadge(text: "Second chance") }
                 // Like the web: a big speaker on top, then the sentence with its blanks inline.
                 VStack(spacing: 4) {
                     AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: true, hero: true)
                     Text(view.instructions).font(.footnote).foregroundStyle(.secondary)
                 }.frame(maxWidth: .infinity)
+                    .overlay(alignment: .topTrailing) { ReportIssueMenu(subject: .Transcription(sentence)) }
                 SentenceFlow(spacing: 0, alignment: .center) {
                     ForEach(Array(sentence.parts.enumerated()), id: \.offset) { index, part in
                         switch part {
@@ -50,7 +53,7 @@ struct TranscriptionChallengeView: View {
                     maskedSentence: editing ? sentence.parts.map { part in
                         switch part { case let .Provided(literal): literal.word.text + literal.whitespace
                         case let .AskedToTranscribe(parts): parts.map { "____" + $0.whitespace }.joined() }
-                    }.joined() : nil, available: $hasClip)
+                    }.joined() : nil, available: $hasClip, movieId: $clipMovieId)
                 if let verdict = view.verdict {
                     SentenceVerdictView(submission: verdict.submission_text,
                         correct: sentence.target_language, perfect: verdict.perfect, encouragement: verdict.encouragement,
@@ -72,6 +75,10 @@ struct TranscriptionChallengeView: View {
                     ProgressView("Grading your answer…")
                 }
             }
+            if editing {
+                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId))
+            }
+        } actions: {
             if view.verdict == nil {
                 Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
@@ -171,6 +178,7 @@ struct TranscriptionChallengeView: View {
         for effect in step.effects {
             switch effect {
             case let .Autograde(submission):
+                background.bump(30)
                 let course = Course(native_language: screen.native_language, target_language: screen.target_language)
                 focused = nil
                 gradingTask?.cancel()
@@ -188,7 +196,7 @@ struct TranscriptionChallengeView: View {
                 case .Success: audio.playEffect("success-1")
                 }
             case let .Complete(results, completedAtMs):
-                if actions.completeTranscription(results, completedAtMs) { storage?.clear(); audio.stop() }
+                if actions.completeTranscription(results, completedAtMs) { background.bump(30); storage?.clear(); audio.stop() }
             }
         }
     }

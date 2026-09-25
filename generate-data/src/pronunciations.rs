@@ -6,7 +6,7 @@ use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct PronunciationResponse {
@@ -48,7 +48,8 @@ Output format:
 {{
     "1. thoughts": "Brief analysis of the pronunciation options",
     "2. selected_pronunciation": "The chosen IPA pronunciation",
-}}"#
+}}"#,
+        target_language = target_language.prompt_name()
     );
 
     let mut selected = words_with_pronunciations

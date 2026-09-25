@@ -8,14 +8,12 @@ import {
   useMemo,
 } from "react";
 import { PendingReview } from "@/review/challenges/pending-review";
-import { getMovieMetadata } from "@/lib/movie-cache";
 import { reportAutogradeFailure } from "@/core/instrument";
 import { MoviePosterGrid } from "./MoviePosterGrid";
 import { ProperNounGroups } from "./ProperNounGroups";
 import {
   type TranslateComprehensibleSentence,
-  type LiteralGrades,
-  type Gram,
+  type ManualTranslationGrade,
   type DefinitionView,
   autograde_translation,
   translation_pending_slot,
@@ -30,7 +28,7 @@ import {
   get_app_version,
   type Language,
   type Deck,
-  type Heteronym,
+  report_issue_copy,
 } from "../../../../yap-frontend-rs/pkg/yap_frontend_rs";
 
 import { Badge } from "@/components/ui/badge";
@@ -81,13 +79,9 @@ interface SentenceChallengeProps {
   initialState?: TranslationState;
   onComplete: (
     grade:
-      | {
-          literalGrades: LiteralGrades;
-          phrasesRemembered: Gram<string>[];
-          phrasesForgot: Gram<string>[];
-        }
+      | ManualTranslationGrade
       | { perfect: string | null },
-    heteronymsTapped: Heteronym<string>[],
+    hintedLiteralIndices: number[],
     submission: string,
     completedAtMs: number,
   ) => boolean;
@@ -415,10 +409,11 @@ export function TranslationChallenge({
     submissionLabel: view.verdict.submission_label,
     correctLabel: view.verdict.correct_label,
   } : null;
-  const movieData = useMemo(() => getMovieMetadata(deck, sentence.movie_titles.map(([id]) => id)), [sentence.movie_titles, deck]);
+  const [clipMovieId, setClipMovieId] = useState<string | null>(null);
+  const hasClip = clipMovieId !== null;
+  const movieData = deck.sentence_posters(sentence.movie_titles.map(([id]) => id), clipMovieId ?? undefined);
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState(-1);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [hasClip, setHasClip] = useState(false);
   const gradingGenerationRef = useRef(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const phraseRefs = useRef<Map<number, SwipeableWordHandle>>(new Map());
@@ -437,7 +432,7 @@ export function TranslationChallenge({
             sentence.target_language_literals, sentence.unique_target_language_phrases,
             accessToken, step.state.course, sentence.gram_definitions_for_lookup,
             new Uint32Array(sentence.literal_gram_indices), sentence.phrase_definitions,
-            sentence.primary_expression, sentence.movie_titles,
+            sentence.primary_expression, new Uint32Array(sentence.primary_literal_indices ?? []), sentence.movie_titles,
           ).then(response => {
             if (generation !== gradingGenerationRef.current) return;
             if (response.autograding_error) reportAutogradeFailure("translation", response.autograding_error);
@@ -455,7 +450,7 @@ export function TranslationChallenge({
           break;
         case "Complete": {
           const accepted = onComplete(effect.outcome.type === "Perfect" ? { perfect: null } : effect.outcome.grade,
-            effect.heteronyms_tapped, effect.submission, effect.completed_at_ms);
+            effect.hinted_literal_indices, effect.submission, effect.completed_at_ms);
           if (accepted) {
             storage?.clear();
             bumpBackground(30.0);
@@ -603,7 +598,7 @@ export function TranslationChallenge({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-                      Report an Issue
+                      {report_issue_copy().menu_label}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -669,7 +664,7 @@ export function TranslationChallenge({
               autoPlay={!editing}
               autoplayed={autoplayed}
               setAutoplayed={setAutoplayed}
-              onAvailabilityChange={setHasClip}
+              onClipChange={setClipMovieId}
               deck={deck}
             />
           </div>
@@ -741,7 +736,7 @@ export function TranslationChallenge({
       </div>
 
       <ReportIssueModal
-        context={`Sentence challenge: ${JSON.stringify(sentence)}"`}
+        subject={{ Translation: sentence }}
         open={showReportModal}
         onOpenChange={setShowReportModal}
         targetLanguage={targetLanguage}

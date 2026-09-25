@@ -15,7 +15,7 @@ use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-luna"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-luna"));
 
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
@@ -100,7 +100,7 @@ fn language_examples(language: Language) -> &'static str {
 - Derivational: "re-" (again), "-ation" (N-forming), "-able", "-ment" (adv-forming), "-té"
 - Inflectional: plural "-s", feminine "-e", verb endings "-ons", "-ez", "-ent", "-ais", "-era""#
         }
-        Language::Spanish => {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
             r#"- Free: "casa", "rojo", "comer"
 - Bound: "-logía", "-cidio", "-fobia"
 - Derivational: "re-", "des-", "-ción", "-mente", "-dor", "-ito" (diminutive)
@@ -112,7 +112,7 @@ fn language_examples(language: Language) -> &'static str {
 - Derivational: "ri-" (again), "-zione", "-mente", "-ino" (diminutive), "-ista"
 - Inflectional: plural "-i"/"-e", feminine "-a", verb endings "-o", "-iamo", "-ato", "-ava""#
         }
-        Language::Portuguese => {
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => {
             r#"- Free: "casa", "vermelho", "comer"
 - Bound: "-logia", "-cídio", "-fobia"
 - Derivational: "re-", "des-", "-ção", "-mente", "-inho" (diminutive)
@@ -223,7 +223,7 @@ fn lookup_examples(language: Language) -> &'static str {
 - morpheme "heureu" with candidates "heureux (lemma: heureux, pos: ADJ)", "heureuse" → {"word": "heureux", "lemma": "heureux", "pos": "ADJ"}
 - morpheme "chat" with candidates "chat (lemma: chat, pos: NOUN)", "chats" → {"word": "chat", "lemma": "chat", "pos": "NOUN"}"#
         }
-        Language::Spanish => {
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
             r#"- morpheme "habl" with candidates "hablar (lemma: hablar, pos: VERB)", "habla", "hablamos" → {"word": "hablar", "lemma": "hablar", "pos": "VERB"}
 - morpheme "cas" with candidates "casa (lemma: casa, pos: NOUN)", "casas" → {"word": "casa", "lemma": "casa", "pos": "NOUN"}"#
         }
@@ -231,7 +231,7 @@ fn lookup_examples(language: Language) -> &'static str {
             r#"- morpheme "parl" with candidates "parlare (lemma: parlare, pos: VERB)", "parla", "parlano" → {"word": "parlare", "lemma": "parlare", "pos": "VERB"}
 - morpheme "cas" with candidates "casa (lemma: casa, pos: NOUN)", "case" → {"word": "casa", "lemma": "casa", "pos": "NOUN"}"#
         }
-        Language::Portuguese => {
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => {
             r#"- morpheme "fal" with candidates "falar (lemma: falar, pos: VERB)", "fala", "falamos" → {"word": "falar", "lemma": "falar", "pos": "VERB"}
 - morpheme "cas" with candidates "casa (lemma: casa, pos: NOUN)" → {"word": "casa", "lemma": "casa", "pos": "NOUN"}"#
         }
@@ -296,9 +296,9 @@ fn conjugation_in(native_language: Language) -> &'static str {
     match native_language {
         Language::English => "conjugation",
         Language::French => "conjugaison",
-        Language::Spanish => "conjugación",
+        Language::SpanishLatinAmerican | Language::SpanishPeninsular => "conjugación",
         Language::Italian => "coniugazione",
-        Language::Portuguese => "conjugação",
+        Language::PortugueseBrazilian | Language::PortugueseEuropean => "conjugação",
         Language::German => "Konjugation",
         Language::Russian => "спряжение",
         Language::Korean => "활용",
@@ -361,7 +361,8 @@ Prefer a `word` that appears in the candidate list when one is the right lemma. 
 Return null for `entry` if the morpheme doesn't cleanly correspond to a single dictionary word.
 
 Worked examples for {language}:
-{examples}"#
+{examples}"#,
+        language = language.prompt_name()
     );
     let tag_line = segment
         .tag
@@ -413,7 +414,9 @@ fn define_messages(
 
 Write the gloss in {native_language}.
 
-Return null for the `definition` field if the morpheme has no useful synchronic meaning (e.g. English "cran-" in "cranberry" is a historical relic with no independent meaning today)."#
+Return null for the `definition` field if the morpheme has no useful synchronic meaning (e.g. English "cran-" in "cranberry" is a historical relic with no independent meaning today)."#,
+        language = language.prompt_name(),
+        native_language = native_language.prompt_name()
     );
     let tag_line = segment
         .tag
@@ -458,7 +461,8 @@ pub async fn analyze_morphemes(
 Reference classifications for {language}:
 {examples_block}
 
-You'll receive a morpheme plus a small sample of words it appears in. Pick the single best category."#
+You'll receive a morpheme plus a small sample of words it appears in. Pick the single best category."#,
+        language = language.prompt_name()
     );
 
     // Phase 1: classify every morpheme.

@@ -81,19 +81,28 @@ pub async fn lookup(http: &reqwest::Client, cache_filename: &str) -> Option<Vec<
     (!bytes.is_empty()).then(|| bytes.to_vec())
 }
 
-/// Check for a clip without downloading it before redirecting the learner.
-/// Like [`lookup`], this busts the edge's stale 404s; the redirect itself
-/// should use the ordinary URL so playback can be cached.
-pub async fn exists(http: &reqwest::Client, cache_filename: &str) -> bool {
-    let url = format!(
-        "{}?fresh={}",
-        tts_cache_url(cache_filename),
-        uuid::Uuid::new_v4().simple()
-    );
-    http.head(url)
-        .send()
-        .await
-        .is_ok_and(|response| response.status().is_success())
+/// Find a cached clip's URL without downloading it before redirecting the learner.
+/// Positive edge hits are immutable and cheap. Only a miss needs to bypass
+/// the edge, since a cached 404 may hide a newly uploaded recording. Return
+/// the URL that succeeded, including its cache buster when needed: redirecting
+/// to the ordinary URL in that case would send the learner to the stale 404.
+pub async fn existing_url(http: &reqwest::Client, cache_filename: &str) -> Option<String> {
+    existing_url_at(http, &tts_cache_url(cache_filename)).await
+}
+
+async fn existing_url_at(http: &reqwest::Client, url: &str) -> Option<String> {
+    for fresh in [false, true] {
+        let mut request = http.head(url);
+        if fresh {
+            request = request.query(&[("fresh", uuid::Uuid::new_v4().simple().to_string())]);
+        }
+        if let Ok(response) = request.send().await
+            && response.status().is_success()
+        {
+            return Some(response.url().to_string());
+        }
+    }
+    None
 }
 
 /// Store a clip that passed every check, without holding up the response
@@ -135,5 +144,57 @@ async fn store(http: &reqwest::Client, cache_filename: &str, audio: Vec<u8>) -> 
         Ok(())
     } else {
         Err(format!("R2 responded {}", response.status()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::{Router, http::StatusCode, routing::head};
+    use std::sync::{Arc, Mutex};
+
+    #[tokio::test]
+    async fn existence_uses_edge_hits_but_rechecks_misses_at_origin() {
+        for (edge, origin, expected, requests) in [
+            (StatusCode::OK, StatusCode::NOT_FOUND, true, 1),
+            (StatusCode::NOT_FOUND, StatusCode::OK, true, 2),
+            (StatusCode::NOT_FOUND, StatusCode::NOT_FOUND, false, 2),
+            (StatusCode::BAD_GATEWAY, StatusCode::OK, true, 2),
+        ] {
+            let queries = Arc::new(Mutex::new(Vec::new()));
+            let observed = queries.clone();
+            let app = Router::new().route(
+                "/audio",
+                head(move |uri: axum::http::Uri| {
+                    let observed = observed.clone();
+                    async move {
+                        let query = uri.query().map(str::to_owned);
+                        let status = if query.is_some() { origin } else { edge };
+                        observed.lock().unwrap().push(query);
+                        status
+                    }
+                }),
+            );
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let url = format!("http://{}/audio", listener.local_addr().unwrap());
+            let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+            let cached = existing_url_at(&reqwest::Client::new(), &url).await;
+            assert_eq!(cached.is_some(), expected);
+            server.abort();
+            let queries = queries.lock().unwrap();
+            assert_eq!(queries.len(), requests);
+            if let Some(cached) = cached {
+                let cached = reqwest::Url::parse(&cached).unwrap();
+                assert_eq!(
+                    cached.query(),
+                    queries.last().unwrap().as_deref(),
+                    "redirect to the URL that succeeded, not a stale 404"
+                );
+            }
+            assert!(queries[0].is_none());
+            if requests == 2 {
+                assert!(queries[1].as_ref().unwrap().starts_with("fresh="));
+            }
+        }
     }
 }

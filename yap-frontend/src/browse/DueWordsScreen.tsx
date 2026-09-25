@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Deck, DueWordsScreenView } from "../../../yap-frontend-rs/pkg";
 import type { UserInfo } from "@/app/context";
@@ -20,8 +21,10 @@ export function DueWordsScreen({
   userInfo: UserInfo | undefined;
 }) {
   const inputs = useStudyScreenInputs(!injectedView);
-  const view =
-    injectedView ?? deck.due_words_view(inputs.banned, inputs.timestamp_ms);
+  const view = useMemo(
+    () => injectedView ?? deck.due_words_view(inputs.banned, inputs.timestamp_ms),
+    [injectedView, deck, inputs.banned, inputs.timestamp_ms],
+  );
   const navigate = useNavigate();
   return (
     <TopPageLayout

@@ -20,6 +20,8 @@
 //! subtitle (pauses are only described when they are long, and only to the
 //! second) and across the two consumers of this crate.
 
+pub mod batch_jobs;
+
 use language_utils::Language;
 use serde::{Deserialize, Serialize};
 use tysm::chat_completions::ChatClient;
@@ -38,14 +40,6 @@ const CONTEXT_CUES: usize = 3;
 /// Rejected answers printed per batch, to show what the model gets wrong
 /// without flooding the log.
 const SHOWN_FALLBACKS: usize = 40;
-
-/// Requests per Batch API job. OpenAI caps a job at 50,000 requests and its
-/// input file at 200 MB; a whole library of subtitles is several times the
-/// first, and each request carries the response schema, so the jobs stay
-/// well under both. Every job is submitted at once — a batch can take a day
-/// to come back, so jobs waiting on one another would turn a library into a
-/// week.
-const BATCH_REQUESTS: usize = 20_000;
 
 /// A silence between cues is mentioned only from this length — a shorter
 /// one is display timing, not evidence about sentence boundaries, and
@@ -80,20 +74,27 @@ pub fn joiner(language: Language) -> &'static str {
 /// breaks account-side — as it did on 2026-08-28, when every batch started
 /// failing validation with "Cannot find file <its own freshly uploaded
 /// input>" — a run simply cannot finish, however healthy the rest of the
-/// pipeline is. Sending live costs about double and runs the misses
-/// sequentially, so this is an escape hatch to be switched off again once
+/// pipeline is. Sending live costs about double and runs the misses only 16
+/// at a time per call, so this is an escape hatch to be switched off again once
 /// batching recovers, not a default.
 pub fn no_batch() -> bool {
     std::env::var("YAP_NO_BATCH").is_ok_and(|v| !v.is_empty() && v != "0")
 }
 
-/// The segmentation client: [`MODEL`], responses in the shared cache store.
-pub fn client() -> anyhow::Result<ChatClient> {
-    let client = ChatClient::from_env(MODEL)?
+/// The segmentation client with the default Batch API transport and cache.
+/// Callers with an explicit live option can override its small-batch threshold.
+pub fn batch_client() -> anyhow::Result<ChatClient> {
+    Ok(ChatClient::from_env(MODEL)?
         .with_cache_directory("./.cache")
-        .with_reasoning_effort("none");
+        .with_small_batch_threshold(batch_jobs::SMALL_BATCH_THRESHOLD)
+        .with_reasoning_effort("none"))
+}
+
+/// The segmentation client, honoring the legacy environment escape hatch.
+pub fn client() -> anyhow::Result<ChatClient> {
+    let client = batch_client()?;
     Ok(if no_batch() {
-        client.with_small_batch_threshold(usize::MAX)
+        client.with_no_batch()
     } else {
         client
     })
@@ -169,7 +170,7 @@ fn prompt_for(lines: &[SubtitleLine], index: usize, language: Language) -> Strin
             )
         })
     };
-    let mut out = format!("Language: {language}\n");
+    let mut out = format!("Language: {}\n", language.prompt_name());
     if from < index {
         out.push_str("\nCues before the focus cue:\n");
         for (i, line) in lines.iter().enumerate().take(index).skip(from) {
@@ -226,15 +227,88 @@ fn validated(cue: &str, answer: CueSplit) -> Option<CueSplit> {
     })
 }
 
+/// Whether a per-request error is a model answer that can't be used (off
+/// schema, or a refusal) rather than a request that never got an answer.
+pub fn unusable_answer(error: &tysm::chat_completions::IndividualChatError) -> bool {
+    use tysm::chat_completions::IndividualChatError as E;
+    matches!(
+        error,
+        E::ResponseNotConformantToSchema { .. } | E::Refusal(_)
+    )
+}
+
+fn checked_split(
+    cue: &str,
+    answer: Result<CueSplit, tysm::chat_completions::IndividualChatError>,
+    show_rejection: bool,
+) -> Result<Option<CueSplit>, tysm::chat_completions::IndividualChatError> {
+    let answer = match answer {
+        Ok(answer) => answer,
+        // The model answered, just unusably. That is the same case as an
+        // answer that fails the letter-for-letter check, so it falls back;
+        // only a failed request (transport, API) fails the pass.
+        Err(error) if unusable_answer(&error) => {
+            if show_rejection {
+                eprintln!("segmentation answer unusable for {cue:?}: {error:#}");
+            }
+            return Ok(None);
+        }
+        Err(error) => return Err(error),
+    };
+    let split = validated(cue, answer.clone());
+    if split.is_none() && show_rejection {
+        eprintln!(
+            "segmentation answer rejected for {cue:?}: {:?}",
+            answer.sentences
+        );
+    }
+    Ok(split)
+}
+
 /// How a batch of tracks fared.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct SplitReport {
     pub cues: usize,
-    /// Cues put to the model; the rest were closed by their own punctuation.
+    /// Unique prompts put to the model; repeated cues share an answer and
+    /// self-evident cues are closed by their own punctuation.
     pub asked: usize,
-    /// Answers that failed the letter-for-letter check (or the request
-    /// itself failed) and fell back to the cue's speaker turns.
+    /// Unique answers that failed the letter-for-letter check and fell back
+    /// to the cue's speaker turns. Request failures instead fail the pass.
     pub fallbacks: usize,
+}
+
+type CueLocation = (usize, usize);
+
+// Submit identical prompts once across all tracks/jobs, including live calls.
+// Restore original cue slots so duplicate tracks remain correctly aligned.
+fn deduplicate_prompts(
+    prompts: &mut Vec<(usize, usize, String)>,
+) -> Vec<(CueLocation, CueLocation)> {
+    let mut seen = std::collections::BTreeMap::new();
+    let mut duplicates = Vec::new();
+    prompts.retain(|(track, cue, prompt)| {
+        let location = (*track, *cue);
+        match seen.entry(prompt.clone()) {
+            std::collections::btree_map::Entry::Vacant(entry) => {
+                entry.insert(location);
+                true
+            }
+            std::collections::btree_map::Entry::Occupied(entry) => {
+                duplicates.push((location, *entry.get()));
+                false
+            }
+        }
+    });
+    duplicates
+}
+
+fn restore_duplicates(
+    out: &mut [Vec<Option<CueSplit>>],
+    duplicates: &[(CueLocation, CueLocation)],
+) {
+    for &((track, cue), (source_track, source_cue)) in duplicates {
+        out[track][cue] = out[source_track][source_cue].clone();
+    }
 }
 
 /// Segment several tracks in one Batch API round trip.
@@ -260,6 +334,7 @@ pub async fn split_tracks(
         }
         evident.push(track);
     }
+    let duplicates = deduplicate_prompts(&mut prompts);
     // Chunked into Batch API jobs, all in flight together; answers are
     // reassembled in prompt order.
     let on_progress = std::sync::Mutex::new(on_progress);
@@ -267,18 +342,39 @@ pub async fn split_tracks(
         &'a (usize, usize, String),
         Result<CueSplit, tysm::chat_completions::IndividualChatError>,
     );
-    let jobs = prompts.chunks(BATCH_REQUESTS).map(|chunk| {
+    let jobs = batch_jobs::partition::<_, CueSplit>(client, &prompts, |(_, _, prompt)| {
+        vec![
+            tysm::chat_completions::ChatMessage::system(SYSTEM_PROMPT),
+            tysm::chat_completions::ChatMessage::user(prompt),
+        ]
+    })?;
+    let results = batch_jobs::run(&jobs, |chunk| {
         client.batch_chat_with_system_prompt_fn::<_, _, CueSplit>(
             SYSTEM_PROMPT,
             chunk,
             |(_, _, p)| p.clone(),
             |batch| (on_progress.lock().unwrap())(batch),
         )
-    });
+    })
+    .await;
     let mut answers: Vec<Answer> = Vec::with_capacity(prompts.len());
-    for job in futures::future::join_all(jobs).await {
-        answers.extend(job?);
+    let mut failed = 0;
+    for (job, result) in jobs.iter().zip(results) {
+        match result {
+            Ok(rows) => answers.extend(rows),
+            Err(error) => {
+                failed += job.len();
+                eprintln!(
+                    "segmentation job failed ({} requests): {error:#}",
+                    job.len()
+                );
+            }
+        }
     }
+    anyhow::ensure!(
+        failed == 0,
+        "{failed} segmentation requests failed at job level"
+    );
 
     // Model answers land in their cue's slot; the self-evident cues are
     // already there.
@@ -290,20 +386,12 @@ pub async fn split_tracks(
     };
     for ((t, i, _), answer) in answers {
         let cue = &tracks[*t].0[*i].sentence;
-        let split = match answer {
-            Ok(answer) => {
-                let split = validated(cue, answer.clone());
-                if split.is_none() && report.fallbacks < SHOWN_FALLBACKS {
-                    eprintln!(
-                        "segmentation answer rejected for {cue:?}: {:?}",
-                        answer.sentences
-                    );
-                }
-                split
-            }
+        let split = match checked_split(cue, answer, report.fallbacks < SHOWN_FALLBACKS) {
+            Ok(split) => split,
             Err(e) => {
+                failed += 1;
                 eprintln!("segmentation request failed for {cue:?}: {e:#}");
-                None
+                continue;
             }
         };
         out[*t][*i] = Some(split.unwrap_or_else(|| {
@@ -311,6 +399,11 @@ pub async fn split_tracks(
             CueSplit::per_cue(cue)
         }));
     }
+    anyhow::ensure!(
+        failed == 0,
+        "{failed} segmentation requests failed individually"
+    );
+    restore_duplicates(&mut out, &duplicates);
     let out = out
         .into_iter()
         .map(|track| {
@@ -336,18 +429,18 @@ pub async fn split(
 /// A progress callback that prints a line to stderr whenever a batch's
 /// status or completed count changes.
 pub fn print_progress() -> impl FnMut(&tysm::batch::Batch) {
-    let mut last: Option<(String, u32)> = None;
+    let mut last = std::collections::BTreeMap::new();
     move |batch: &tysm::batch::Batch| {
         let now = (
             format!("{:?}", batch.status),
             batch.request_counts.completed + batch.request_counts.failed,
         );
-        if last.as_ref() != Some(&now) {
+        if last.get(&batch.id) != Some(&now) {
             eprintln!(
                 "  segmentation batch {}: {} {}/{}",
                 batch.id, now.0, now.1, batch.request_counts.total
             );
-            last = Some(now);
+            last.insert(batch.id.clone(), now);
         }
     }
 }
@@ -362,6 +455,56 @@ mod tests {
             start_ms,
             end_ms,
         }
+    }
+
+    #[test]
+    fn content_rejections_allow_fallback_but_request_errors_fail() {
+        assert_eq!(
+            checked_split("original", Ok(CueSplit::per_cue("changed")), false).unwrap(),
+            None
+        );
+        // A refusal is still an answer, just an unusable one: fall back.
+        assert_eq!(
+            checked_split(
+                "original",
+                Err(tysm::chat_completions::IndividualChatError::Refusal(
+                    "test".into()
+                )),
+                false
+            )
+            .unwrap(),
+            None
+        );
+        // A request that never got an answer fails the pass.
+        assert!(checked_split(
+            "original",
+            Err(tysm::chat_completions::IndividualChatError::Other(
+                "connection reset".into()
+            )),
+            false
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn duplicate_track_prompts_share_answers_without_reordering_cues() {
+        let mut prompts = vec![
+            (0, 0, "first".into()),
+            (0, 1, "second".into()),
+            (1, 0, "second".into()),
+            (1, 1, "first".into()),
+        ];
+        let duplicates = deduplicate_prompts(&mut prompts);
+        assert_eq!(prompts, [(0, 0, "first".into()), (0, 1, "second".into())]);
+        let first = CueSplit::per_cue("first");
+        let second = CueSplit::per_cue("second");
+        let mut out = vec![
+            vec![Some(first.clone()), Some(second.clone())],
+            vec![None, None],
+        ];
+        restore_duplicates(&mut out, &duplicates);
+        assert_eq!(out[0], [Some(first.clone()), Some(second.clone())]);
+        assert_eq!(out[1], [Some(second), Some(first)]);
     }
 
     #[test]

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct CoursePickerView: View {
+    @Environment(AuthStore.self) private var auth
+    @Environment(AuthSheet.self) private var authSheet
     let session: YapSession
     var onSelected: () -> Void = {}
     @State private var native: Language = .English
@@ -14,7 +16,7 @@ struct CoursePickerView: View {
     }
     private var targets: [Course] {
         courses.filter { $0.native_language == native }.sorted {
-            get_language_metadata(language: $0.target_language).common_name < get_language_metadata(language: $1.target_language).common_name
+            get_language_metadata(language: $0.target_language).english_name < get_language_metadata(language: $1.target_language).english_name
         }
     }
     var body: some View {
@@ -38,7 +40,15 @@ struct CoursePickerView: View {
                             ForEach(targets.filter { !onboarded.contains($0.target_language) && get_language_metadata(language: $0.target_language).status == maturity }, id: \.self) { course in courseButton(course, resume: false) }
                         }
                     }
-                }.navigationTitle("Choose a course")
+                }.scrollContentBackground(.hidden).navigationTitle("Choose a course").navigationBarTitleDisplayMode(.inline)
+            }
+        }
+        .containerBackground(.clear, for: .navigation)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if auth.userId == nil && !session.choosingCourse {
+                    Button(account_copy().sign_in_action) { authSheet.present(tab: .signIn) }
+                }
             }
         }
         .onAppear {
@@ -59,7 +69,7 @@ struct CoursePickerView: View {
             HStack(spacing: 12) {
                 let metadata = get_language_metadata(language: course.target_language)
                 if Theme.emojiFontAvailable { Text(metadata.flag) }
-                Text((resume ? "Resume " : "") + metadata.common_name)
+                Text((resume ? "Resume " : "") + metadata.english_name)
                 Spacer(); Image(systemName: "chevron.right")
             }.frame(minHeight: 52)
         }

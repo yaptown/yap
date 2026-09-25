@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod db_info;
 
+use movie_subtitles::llm_segment::batch_jobs::SMALL_BATCH_THRESHOLD;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static CACHE_ONLY: AtomicBool = AtomicBool::new(false);
@@ -76,9 +77,7 @@ pub fn apply_cache_only(
 }
 
 fn cached_chat_client(model: &str, reasoning_effort: &str) -> tysm::chat_completions::ChatClient {
-    base_chat_client(model)
-        .with_reasoning_effort(reasoning_effort)
-        .with_service_tier("flex")
+    base_chat_client(model).with_reasoning_effort(reasoning_effort)
 }
 
 /// Wall-clock stage timer for profiling pipeline runs: each `lap` logs the
@@ -110,24 +109,45 @@ impl StageTimer {
 }
 
 /// Every chat client in this crate starts here, so the Batch API escape hatch
-/// below needs to exist in exactly one place.
-fn base_chat_client(model: &str) -> tysm::chat_completions::ChatClient {
-    let client = tysm::chat_completions::ChatClient::from_env(model)
-        .unwrap()
-        .with_cache_directory("./.cache");
-    if movie_subtitles::llm_segment::no_batch() {
-        // Every batch is "small", so tysm sends its cache misses live.
-        client.with_small_batch_threshold(usize::MAX)
+/// (`YAP_NO_BATCH`) needs to exist in exactly one place. No tysm cache: the
+/// translator keeps its own, everything else adds one via [`base_chat_client`].
+pub fn uncached_chat_client(model: &str) -> anyhow::Result<tysm::chat_completions::ChatClient> {
+    let client = tysm::chat_completions::ChatClient::from_env(model)?
+        .with_small_batch_threshold(SMALL_BATCH_THRESHOLD);
+    Ok(if movie_subtitles::llm_segment::no_batch() {
+        client.with_no_batch()
     } else {
         client
+    })
+}
+
+pub fn base_chat_client(model: &str) -> tysm::chat_completions::ChatClient {
+    uncached_chat_client(model)
+        .unwrap()
+        .with_cache_directory("./.cache")
+}
+
+/// The model a current-generation model replaced. Its cache is consulted
+/// first among the fallbacks, so bumping a model never regenerates what the
+/// previous generation already answered.
+fn previous_generation(model: &str) -> Option<&'static str> {
+    match model {
+        "gpt-6-luna" => Some("gpt-5.6-luna"),
+        "gpt-6-sol" => Some("gpt-5.6-sol"),
+        _ => None,
     }
 }
 
 /// A current generation client whose cache is checked first, followed by historical model
 /// configurations newest-to-oldest. Only the current model may make an API request.
 pub fn migrating_chat_client(model: &str) -> tysm::chat_completions::ChatClient {
+    let mut client = cached_chat_client(model, "low");
+    if let Some(previous) = previous_generation(model) {
+        // Checked before the older fallbacks.
+        client = client.with_cache_fallback(cached_chat_client(previous, "low"));
+    }
     apply_cache_only(
-        cached_chat_client(model, "low")
+        client
             .with_cache_fallback(cached_chat_client("gpt-5.4", "high"))
             .with_cache_fallback(cached_chat_client("gpt-5.4", "low"))
             .with_cache_fallback(cached_chat_client("gpt-5.4-mini", "low"))
@@ -135,7 +155,6 @@ pub fn migrating_chat_client(model: &str) -> tysm::chat_completions::ChatClient 
             .with_cache_fallback(base_chat_client("gpt-5.2").with_reasoning_effort("high"))
             .with_cache_fallback(cached_chat_client("gpt-5.2", "low"))
             .with_cache_fallback(base_chat_client("gpt-5"))
-            .with_cache_fallback(base_chat_client("gpt-5").with_service_tier("flex"))
             .with_cache_fallback(base_chat_client("gpt-4o")),
     )
 }
@@ -162,6 +181,7 @@ pub mod pronunciations;
 pub mod proper_noun_definitions;
 pub mod read_anki;
 pub mod slot_analysis;
+pub mod strokes;
 pub mod target_sentences;
 pub mod tatoeba;
 pub mod token_embeddings;

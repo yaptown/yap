@@ -68,7 +68,7 @@ err, body = tool("search_dictionary", {"query": "bonjour", "limit": 1})
 show(f"search 'bonjour' (error={err})", body, limit=1200)
 top = json.loads(body)["results"][0]
 
-err, body = tool("add_cards", {"language": top["language"], "grams": [top["gram"]]})
+err, body = tool("add_cards", {"language": top["language"], "grams": [top["senses"][0]["gram"]]})
 show(f"add_cards (error={err}, want False)", body)
 
 err, body = tool("get_due_cards", {"limit": 5})
@@ -82,11 +82,11 @@ err, body = tool("log_review", {
 })
 show(f"log_review good (error={err}, want False)", body)
 
-err, body = tool("add_cards", {"language": top["language"], "grams": [top["gram"]]})
+err, body = tool("add_cards", {"language": top["language"], "grams": [top["senses"][0]["gram"]]})
 show(f"re-add same card (error={err}, expect already_in_deck)", body)
 
 err, body = tool("get_sentences", {
-    "language": top["language"], "gram": top["gram"], "count": 2,
+    "language": top["language"], "gram": top["senses"][0]["gram"], "count": 2,
 })
 show(f"get_sentences both lists (error={err})", body, limit=2500)
 

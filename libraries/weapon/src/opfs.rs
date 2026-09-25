@@ -241,6 +241,13 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
         mut user_events_directory: DirectoryHandle,
         current_user_directory: &UserDirectory,
     ) -> Result<(), persistent::Error> {
+        // One import at a time across tabs; a tab that waited finds the
+        // logged-out directory already gone and does nothing.
+        let _import = weblocks::acquire(
+            "opfs-import-logged-out-user-data",
+            weblocks::AcquireOptions::exclusive(),
+        )
+        .await?;
         // Attempt to get the logged-out directory. If it doesn't exist, there's nothing to do.
         let logged_out_directory = match user_events_directory
             .get_directory_handle_with_options(
@@ -255,29 +262,37 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
             Err(_) => return Ok(()),
         };
 
-        // If the current user directory already has data, skip the import.
+        // Only import into an account with no history on this device. The
+        // import exists so creating an account doesn't lose the progress made
+        // before it. Signing into an account that already lives here is
+        // different: the anonymous session may have been someone else's (the
+        // owner signed out to hand the device over), so it isn't assumed to be
+        // theirs and is left where it is.
         let mut existing_streams = current_user_directory.event_stream_directories().await?;
         if existing_streams.next().await.is_some() {
             return Ok(());
         }
 
-        // Move all streams/devices/events from the logged-out directory.
         let mut streams = logged_out_directory.event_stream_directories().await?;
         while let Some((stream_id, stream_dir)) = streams.next().await {
-            let target_stream_dir = current_user_directory
+            // Same lock as `save_to_local_storage`, so the append can't
+            // interleave with a save from another tab.
+            let _save = weblocks::acquire(
+                &format!("opfs-save-to-local-storage-{stream_id}"),
+                weblocks::AcquireOptions::exclusive(),
+            )
+            .await?;
+            let target_log = current_user_directory
                 .get_stream_directory(&stream_id)
+                .await?
+                .get_event_log_file()
                 .await?;
-            let source_log = stream_dir.get_event_log_file().await?;
-            let events = source_log
+            let events = stream_dir
+                .get_event_log_file()
+                .await?
                 .read_records(&BTreeMap::new())
                 .await
                 .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?;
-
-            if events.is_empty() {
-                continue;
-            }
-
-            let target_log = target_stream_dir.get_event_log_file().await?;
             target_log.append_records(&events).await?;
         }
 
@@ -740,6 +755,14 @@ pub fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
 
         let entry = counts.entry(device_id.clone()).or_insert(0);
         let expected = *entry;
+        // Logs written before `jsons` selected by index can repeat an index after a backdated
+        // event; skip the repeat exactly as `load_from_local_storage` does.
+        if within_device_index < expected {
+            log::error!(
+                "OPFS duplicate index for device {device_id}: expected {expected}, found {within_device_index}"
+            );
+            continue;
+        }
         if within_device_index != expected {
             log::error!(
                 "OPFS index gap for device {device_id}: expected {expected}, found {within_device_index}"
@@ -763,4 +786,31 @@ pub fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
     }
 
     counts
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn device_counts_skip_repeated_index_from_positional_export_bug() {
+        let record = |index| EventLogRecord {
+            device_id: "a".into(),
+            within_device_events_index: index,
+            event: Timestamped {
+                timestamp: chrono::DateTime::from_timestamp(0, 0).unwrap(),
+                timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+                within_device_events_index: index,
+                event: serde_json::Value::Null,
+            },
+        };
+        let mut bytes = event_log_header_bytes();
+        for index in [0, 0, 1] {
+            bytes.extend(encode_event_log_record(&record(index)).unwrap());
+        }
+        assert_eq!(
+            parse_device_counts(&bytes),
+            BTreeMap::from([("a".into(), 2)])
+        );
+    }
 }

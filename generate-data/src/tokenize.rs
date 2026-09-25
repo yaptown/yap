@@ -47,7 +47,10 @@ impl SentenceEncoder {
             })
             .collect::<Option<Vec<_>>>()?;
         Some(EncodedSentence {
-            tokens,
+            tokens: tokens
+                .into_iter()
+                .map(|gram| language_utils::TaggedGram { gram, sense: None })
+                .collect(),
             capitalize_first,
         })
     }
@@ -186,7 +189,10 @@ pub fn train_supertokens_and_write_diagnostics(
             (
                 (*sentence_text).clone(),
                 EncodedSentence {
-                    tokens,
+                    tokens: tokens
+                        .into_iter()
+                        .map(|gram| language_utils::TaggedGram { gram, sense: None })
+                        .collect(),
                     capitalize_first: *capitalize_first,
                 },
             )
@@ -291,8 +297,8 @@ fn write_encoded_sentences(
             "tokens": encoded
                 .tokens
                 .iter()
-                .map(|k| k.into_usize() as u32)
-                .collect::<Vec<u32>>(),
+                .map(|k| (k.gram.into_usize() as u32, k.sense.map_or(0, std::num::NonZeroU32::get)))
+                .collect::<Vec<(u32, u32)>>(),
             "capitalize_first": encoded.capitalize_first,
         });
         writeln!(writer, "{entry}").expect("Failed to write encoded sentence");

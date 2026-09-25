@@ -1,15 +1,15 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-tirare fuori qualcosa	filled	142	12	12	1.00	yes		
-capitare a qualcuno	clitic	85	12	12	1.00	yes		
+tirare fuori qualcosa	filled	143	12	12	1.00	yes		
+capitare a qualcuno	clitic	84	12	12	1.00	yes		
 capitare a qualcuno	filled	68	9	12	0.75	yes	Cos'è capitato ieri sera a Parigi?	capitato … a … Parigi
-sangue del proprio sangue	clitic	57	2	12	0.17	no	Anche il mio sangue?	mio … sangue
+sangue del proprio sangue	clitic	56	2	12	0.17	no	Anche il mio sangue?	mio … sangue
 fare del proprio meglio	clitic	55	12	12	1.00	yes		
 dalla propria parte	clitic	54	11	12	0.92	yes	Che vengano fuori dalla tua parte!	dalla … tua … parte
 tirare fuori qualcosa	clitic	29	12	12	1.00	yes		
 per il bene di qualcuno	clitic	24	12	12	1.00	yes		
 dalla propria parte	filled	19	9	12	0.75	yes	Dalla parte opposta della strada c'è una farmacia aperta anche la domenica.	Dalla … parte … strada
 fare la propria parte	clitic	18	12	12	1.00	yes		
-alla salute di qualcuno	clitic	16	11	12	0.92	yes	Noi siamo in ansia riguardo alla sua salute.	alla … sua … salute
+alla salute di qualcuno	clitic	17	11	12	0.92	yes	In questa situazione è importante dare priorità alla mia salute.	alla … mia … salute
 fare la propria parte	filled	10	0	10	0.00	no	Diego, lei fa la parte del giovane passivo aggressivo.	fa … la … parte … giovane
 per il bene di qualcuno	filled	6	6	6	1.00	yes		
 al giudizio di qualcuno	clitic	5	5	5	1.00	yes		

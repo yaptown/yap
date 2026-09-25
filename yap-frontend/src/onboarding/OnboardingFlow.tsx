@@ -1,5 +1,9 @@
-import { get_daily_goal_options } from "../../../yap-frontend-rs/pkg";
-import { useState, useCallback } from "react";
+import {
+  onboarding_start,
+  onboarding_reduce,
+  onboarding_view,
+} from "../../../yap-frontend-rs/pkg";
+import { useState, useRef, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,9 +39,13 @@ import type {
   ExperienceLevel,
   DailyReviewTarget,
   OnboardingSelections,
+  OnboardingPurpose,
+  OnboardingEvent,
+  OnboardingChoice,
+  OnboardingContent,
+  OnboardingView,
+  OnboardingChart,
 } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
-import { nativeLanguageNames, languageFlags } from "@/lib/utils";
-import { LANGUAGES } from "@/lib/languages";
 import { useOneSignalNotifications } from "@/hooks/use-onesignal-notifications";
 
 // Re-export for use in CoursePicker
@@ -47,13 +55,8 @@ export type { OnboardingSelections, HeardAbout };
 // Types
 // ---------------------------------------------------------------------------
 
-interface OnboardingData {
-  motivation: Motivation | null;
-  experience: ExperienceLevel | null;
-  studyGoal: DailyReviewTarget | null;
-}
-
 interface OnboardingFlowProps {
+  purpose: OnboardingPurpose;
   targetLanguage: Language;
   nativeLanguage: Language;
   hasHeardAbout: boolean;
@@ -74,7 +77,13 @@ function forgetting(startY: number, decay: number, t: number) {
   return startY * Math.exp(-decay * t);
 }
 
-function ForgettingCurveChart({ visibleCount }: { visibleCount: number }) {
+function ForgettingCurveChart({
+  visibleCount,
+  chart,
+}: {
+  visibleCount: number;
+  chart: OnboardingChart;
+}) {
   const W = 360;
   const H = 160;
   const topPad = 20;
@@ -158,7 +167,7 @@ function ForgettingCurveChart({ visibleCount }: { visibleCount: number }) {
     <svg
       viewBox={`0 0 ${W} ${H + 20}`}
       className="w-full max-w-sm mx-auto"
-      aria-label="Forgetting curve chart showing how spaced repetition helps memory"
+      aria-label={chart.accessibility_label}
     >
       {/* Grid lines */}
       {gridLines.map((y, i) => (
@@ -241,7 +250,7 @@ function ForgettingCurveChart({ visibleCount }: { visibleCount: number }) {
         fontSize={11}
         fontWeight={500}
       >
-        TIME &rarr;
+        {chart.x_label}
       </text>
     </svg>
   );
@@ -300,54 +309,26 @@ function OptionButton({
 }
 
 // Screen: SRS teaser
-const srsStudies = [
-  {
-    authors: "Ebbinghaus, H.",
-    year: 1885,
-    title: "Memory: A Contribution to Experimental Psychology",
-    journal: "Teachers College, Columbia University",
-    url: "https://psychclassics.yorku.ca/Ebbinghaus/index.htm",
-  },
-  {
-    authors: "Cepeda, N.J., Pashler, H., Vul, E., Wixted, J.T., & Rohrer, D.",
-    year: 2006,
-    title:
-      "Distributed practice in verbal recall tasks: A review and quantitative synthesis",
-    url: "https://doi.org/10.1037/0033-2909.132.3.354",
-    journal: "Psychological Bulletin, 132(3), 354\u2013380",
-  },
-  {
-    authors: "Karpicke, J.D. & Roediger, H.L.",
-    year: 2008,
-    title: "The Critical Importance of Retrieval for Learning",
-    url: "https://doi.org/10.1126/science.1152408",
-    journal: "Science, 319(5865), 966\u2013968",
-  },
-  {
-    authors: "Ye, J.J., Su, J., & Cao, Y.",
-    year: 2022,
-    title:
-      "A Stochastic Shortest Path Algorithm for Optimizing Spaced Repetition Scheduling",
-    url: "https://dl.acm.org/doi/10.1145/3534678.3539081?cid=99660547150",
-    journal:
-      "KDD \u201922: Proceedings of the 28th ACM SIGKDD Conference, 4381\u20134390",
-  },
-];
-
-function SrsTeaserScreen({ onNext }: { onNext: () => void }) {
+function SrsTeaserScreen({
+  view,
+  content,
+}: {
+  view: OnboardingView;
+  content: Extract<OnboardingContent, { type: "Studies" }>;
+}) {
   return (
     <ScreenWrapper screenKey="srs-teaser">
       <h2
         className="text-3xl md:text-4xl font-bold text-center leading-snug"
         style={{ textWrap: "balance" }}
       >
-        Yap is based on one scientifically proven idea:
+        {view.title}
       </h2>
       <div
         className="w-full relative h-64 select-none overflow-x-clip"
         aria-hidden
       >
-        {srsStudies.map((study, i) => (
+        {content.studies.map((study, i) => (
           <motion.a
             key={study.title}
             href={study.url}
@@ -390,46 +371,43 @@ function SrsTeaserScreen({ onNext }: { onNext: () => void }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{
-            delay: 0.3 + srsStudies.length * 0.5 + 0.3,
+            delay: 0.3 + content.studies.length * 0.5 + 0.3,
             duration: 0.6,
           }}
           className="text-3xl font-bold italic text-accent-foreground"
         >
-          Spaced repetition.
+          {content.conclusion}
         </motion.h3>
       </div>
-      <Button size="lg" onClick={onNext} className="px-8 text-base">
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
     </ScreenWrapper>
   );
 }
 
 // Screen: SRS Intro
-function SrsIntroScreen({ onNext }: { onNext: () => void }) {
-  // 0 = nothing shown, 1/2/3 = curves visible, 4 = "word learned" state
-  const [reviewCount, setReviewCount] = useState(0);
-  const totalCurves = 3;
-  const learned = reviewCount > totalCurves;
-
+function SrsIntroScreen({
+  view,
+  content,
+}: {
+  view: OnboardingView;
+  content: Extract<OnboardingContent, { type: "Review" }>;
+}) {
   const dotColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"];
 
   return (
     <ScreenWrapper screenKey="srs-intro">
       <Card className="w-full p-8 flex flex-col items-center gap-4" animate>
         <p className="text-sm font-semibold text-primary tracking-wide uppercase self-start">
-          How Yap works
+          {content.eyebrow}
         </p>
         <h2 className="text-2xl md:text-3xl font-bold text-left self-start leading-snug">
-          Every time you review a word, you'll remember it for{" "}
-          <span className="italic text-primary">longer.</span>
+          {view.title}
+          <span className="italic text-primary">{content.title_emphasis}</span>
         </h2>
 
         {/* Review dots legend — only show dots for completed reviews */}
         <div className="flex items-center gap-2 self-start h-5">
           {dotColors
-            .slice(0, Math.min(reviewCount, totalCurves))
+            .slice(0, Math.min(content.demo_reviews, 3))
             .map((color, i) => (
               <motion.span
                 key={i}
@@ -440,15 +418,15 @@ function SrsIntroScreen({ onNext }: { onNext: () => void }) {
                 transition={{ type: "spring", stiffness: 300, damping: 15 }}
               />
             ))}
-          {reviewCount > 0 && !learned && (
+          {content.review_label && (
             <span className="text-sm text-muted-foreground ml-1">
-              {reviewCount === 1 ? "review" : "reviews"}
+              {content.review_label}
             </span>
           )}
         </div>
 
         <AnimatePresence mode="wait">
-          {learned ? (
+          {content.learned ? (
             <motion.div
               key="learned"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -456,46 +434,27 @@ function SrsIntroScreen({ onNext }: { onNext: () => void }) {
               className="flex flex-col items-center gap-3 py-8"
             >
               <div className="text-4xl font-bold flex items-center gap-2">
-                <Check className="h-8 w-8 text-primary" /> Word learned
+                <Check className="h-8 w-8 text-primary" />{" "}
+                {content.learned_title}
               </div>
-              <p className="text-muted-foreground">
-                That word is now in long-term memory!
-              </p>
+              <p className="text-muted-foreground">{content.learned_body}</p>
             </motion.div>
           ) : (
             <motion.div key="chart" exit={{ opacity: 0 }}>
-              <ForgettingCurveChart visibleCount={reviewCount} />
+              <ForgettingCurveChart
+                visibleCount={Math.min(content.demo_reviews, 3)}
+                chart={content.chart}
+              />
             </motion.div>
           )}
         </AnimatePresence>
-
-        <Button
-          size="lg"
-          className="mt-2 px-8 text-base"
-          onClick={() => {
-            if (learned) {
-              onNext();
-            } else {
-              setReviewCount((c) => c + 1);
-            }
-          }}
-        >
-          {learned ? (
-            <>
-              Continue
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </>
-          ) : (
-            "Review"
-          )}
-        </Button>
       </Card>
     </ScreenWrapper>
   );
 }
 
 // Screen: SRS conclusion with growth chart
-function GrowthChart() {
+function GrowthChart({ chart }: { chart: OnboardingChart }) {
   const w = 280;
   const h = 160;
   const pad = { top: 10, right: 10, bottom: 30, left: 40 };
@@ -513,7 +472,11 @@ function GrowthChart() {
   const areaPath = `${linePath} L${pad.left + cw},${pad.top + ch} L${pad.left},${pad.top + ch} Z`;
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full max-w-xs">
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      className="w-full max-w-xs"
+      aria-label={chart.accessibility_label}
+    >
       {/* Area fill */}
       <motion.path
         d={areaPath}
@@ -558,7 +521,7 @@ function GrowthChart() {
         textAnchor="middle"
         className="fill-muted-foreground text-[10px]"
       >
-        Days
+        {chart.x_label}
       </text>
       <text
         x={12}
@@ -567,315 +530,97 @@ function GrowthChart() {
         className="fill-muted-foreground text-[10px]"
         transform={`rotate(-90, 12, ${pad.top + ch / 2})`}
       >
-        Words learned
+        {chart.y_label}
       </text>
     </svg>
   );
 }
 
-function SrsConclusionScreen({ onNext }: { onNext: () => void }) {
+function SrsConclusionScreen({
+  view,
+  content,
+}: {
+  view: OnboardingView;
+  content: Extract<OnboardingContent, { type: "Growth" }>;
+}) {
   return (
     <ScreenWrapper screenKey="srs-conclusion">
       <h2
         className="text-3xl md:text-4xl font-bold text-center leading-snug"
         style={{ textWrap: "balance" }}
       >
-        That's why if you study a little bit every day, you'll learn a lot.
+        {view.title}
       </h2>
-      <GrowthChart />
-      <Button size="lg" onClick={onNext} className="px-8 text-base">
-        Set a goal
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
+      <GrowthChart chart={content.chart} />
     </ScreenWrapper>
   );
 }
 
-// Screen 2: How did you hear about Yap?
-function HeardAboutScreen({ onSelect }: { onSelect: (v: HeardAbout) => void }) {
-  const [selected, setSelected] = useState<HeardAbout | null>(null);
-
-  const options: Array<{ key: HeardAbout; label: string; icon: LucideIcon }> = [
-    { key: "FriendsOrFamily", label: "Friends or family", icon: Users },
-    { key: "Reddit", label: "Reddit", icon: Globe },
-    { key: "TikTok", label: "TikTok", icon: Video },
-    { key: "GoogleSearch", label: "Google Search", icon: Search },
-    { key: "YouTube", label: "YouTube", icon: Youtube },
-    { key: "Other", label: "Other", icon: HelpCircle },
-  ];
-
-  return (
-    <ScreenWrapper screenKey="heard-about">
-      <h2
-        className="text-3xl md:text-4xl font-bold text-center"
-        style={{ textWrap: "balance" }}
-      >
-        How did you hear about Yap?
-      </h2>
-      <div className="flex flex-col gap-3 w-full">
-        {options.map((opt) => (
-          <OptionButton
-            key={opt.key}
-            label={opt.label}
-            icon={opt.icon}
-            selected={selected === opt.key}
-            onClick={() => setSelected(opt.key)}
-          />
-        ))}
-      </div>
-      <Button
-        size="lg"
-        disabled={!selected}
-        onClick={() => selected && onSelect(selected)}
-        className="mt-2 px-8 text-base"
-      >
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
-    </ScreenWrapper>
-  );
+// Icons are platform presentation; the choices, order and labels come from Rust.
+function choiceIcon(choice: OnboardingChoice): LucideIcon {
+  switch (choice.type) {
+    case "HeardAbout": {
+      const icons: Record<HeardAbout, LucideIcon> = {
+        FriendsOrFamily: Users,
+        Reddit: Globe,
+        TikTok: Video,
+        GoogleSearch: Search,
+        YouTube: Youtube,
+        TwitterX: Globe,
+        Other: HelpCircle,
+      };
+      return icons[choice.value];
+    }
+    case "Motivation": {
+      const icons: Record<Motivation, LucideIcon> = {
+        SpendTimeProductively: Clock,
+        SupportMyEducation: GraduationCap,
+        ConnectWithPeople: Heart,
+        BoostMyCareer: Briefcase,
+        PrepareForTravel: Plane,
+        JustForFun: Sparkles,
+        Other: HelpCircle,
+      };
+      return icons[choice.value];
+    }
+    case "Experience": {
+      const icons: Record<ExperienceLevel, LucideIcon> = {
+        New: SignalZero,
+        CommonWords: SignalLow,
+        BasicConversations: SignalMedium,
+        VariousTopics: SignalHigh,
+        MostTopics: Signal,
+      };
+      return icons[choice.value];
+    }
+    case "StudyGoal": {
+      const icons: Record<DailyReviewTarget, LucideIcon> = {
+        Casual: SignalLow,
+        Regular: SignalMedium,
+        Serious: SignalHigh,
+        Intense: Signal,
+      };
+      return icons[choice.value];
+    }
+  }
 }
 
-// Screen 3: Why are you learning?
-function MotivationScreen({
-  value,
-  onChange,
-  onNext,
-  targetLanguage,
+function NotificationScreen({
+  view,
+  content,
+  onDone,
 }: {
-  value: Motivation | null;
-  onChange: (v: Motivation) => void;
-  onNext: () => void;
-  targetLanguage: Language;
+  view: OnboardingView;
+  content: Extract<OnboardingContent, { type: "Notifications" }>;
+  onDone: () => void;
 }) {
-  const options: Array<{ key: Motivation; label: string; icon: LucideIcon }> = [
-    {
-      key: "SpendTimeProductively",
-      label: "Spend time productively",
-      icon: Clock,
-    },
-    {
-      key: "SupportMyEducation",
-      label: "Support my education",
-      icon: GraduationCap,
-    },
-    { key: "ConnectWithPeople", label: "Connect with people", icon: Heart },
-    { key: "BoostMyCareer", label: "Boost my career", icon: Briefcase },
-    { key: "PrepareForTravel", label: "Prepare for travel", icon: Plane },
-    { key: "JustForFun", label: "Just for fun", icon: Sparkles },
-    { key: "Other", label: "Other", icon: HelpCircle },
-  ];
-
-  return (
-    <ScreenWrapper screenKey="motivation">
-      <h2
-        className="text-3xl md:text-4xl font-bold text-center"
-        style={{ textWrap: "balance" }}
-      >
-        Why are you learning {nativeLanguageNames[targetLanguage]}?
-      </h2>
-      <div className="flex flex-col gap-3 w-full">
-        {options.map((opt) => (
-          <OptionButton
-            key={opt.key}
-            label={opt.label}
-            icon={opt.icon}
-            selected={value === opt.key}
-            onClick={() => onChange(opt.key)}
-          />
-        ))}
-      </div>
-      <Button
-        size="lg"
-        disabled={!value}
-        onClick={onNext}
-        className="mt-2 px-8 text-base"
-      >
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
-    </ScreenWrapper>
-  );
-}
-
-// Screen 4: Experience level
-function ExperienceScreen({
-  value,
-  onChange,
-  onNext,
-  targetLanguage,
-}: {
-  value: ExperienceLevel | null;
-  onChange: (v: ExperienceLevel) => void;
-  onNext: () => void;
-  targetLanguage: Language;
-}) {
-  const options: Array<{
-    key: ExperienceLevel;
-    label: string;
-    icon: LucideIcon;
-  }> = [
-    {
-      key: "New",
-      label: `I'm new to ${nativeLanguageNames[targetLanguage]}`,
-      icon: SignalZero,
-    },
-    { key: "CommonWords", label: "I know some common words", icon: SignalLow },
-    {
-      key: "BasicConversations",
-      label: "I can have basic conversations",
-      icon: SignalMedium,
-    },
-    {
-      key: "VariousTopics",
-      label: "I can talk about various topics",
-      icon: SignalHigh,
-    },
-    {
-      key: "MostTopics",
-      label: "I can discuss most topics in detail",
-      icon: Signal,
-    },
-  ];
-
-  return (
-    <ScreenWrapper screenKey="experience">
-      <h2
-        className="text-3xl md:text-4xl font-bold text-center"
-        style={{ textWrap: "balance" }}
-      >
-        How much {nativeLanguageNames[targetLanguage]} do you know?
-      </h2>
-      <div className="flex flex-col gap-3 w-full">
-        {options.map((opt) => (
-          <OptionButton
-            key={opt.key}
-            label={opt.label}
-            icon={opt.icon}
-            selected={value === opt.key}
-            onClick={() => onChange(opt.key)}
-          />
-        ))}
-      </div>
-      <Button
-        size="lg"
-        disabled={!value}
-        onClick={onNext}
-        className="mt-2 px-8 text-base"
-      >
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
-    </ScreenWrapper>
-  );
-}
-
-// Screen 5: What you can achieve
-function AchievementsScreen({ onNext }: { onNext: () => void }) {
-  const items = [
-    { icon: "💬", text: "Converse with confidence" },
-    { icon: "📚", text: "Build a large vocabulary" },
-    { icon: "🔄", text: "Develop a lasting learning habit" },
-  ];
-
-  return (
-    <ScreenWrapper screenKey="achievements">
-      <h2
-        className="text-3xl md:text-4xl font-bold text-center"
-        style={{ textWrap: "balance" }}
-      >
-        Here's what you can achieve
-      </h2>
-      <div className="flex flex-col gap-4 w-full">
-        {items.map((item) => (
-          <Card key={item.text} className="p-5 flex items-center gap-4" animate>
-            <span className="text-3xl">{item.icon}</span>
-            <span className="text-lg font-medium">{item.text}</span>
-          </Card>
-        ))}
-      </div>
-      <Button size="lg" onClick={onNext} className="mt-2 px-8 text-base">
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
-    </ScreenWrapper>
-  );
-}
-
-// Screen 6: Study goal
-function DailyReviewTargetScreen({
-  value,
-  onChange,
-  onNext,
-}: {
-  value: DailyReviewTarget | null;
-  onChange: (v: DailyReviewTarget) => void;
-  onNext: () => void;
-}) {
-  const icons: Record<DailyReviewTarget, LucideIcon> = {
-    Casual: SignalLow, Regular: SignalMedium, Serious: SignalHigh, Intense: Signal,
-  };
-  const goals = get_daily_goal_options();
-  const selectedGoal = goals.find((g) => g.value === value);
-  const estimatedWords = selectedGoal?.estimated_first_week_words ?? null;
-
-
-  return (
-    <ScreenWrapper screenKey="study-goal">
-      <h2
-        className="text-3xl md:text-4xl font-bold text-center"
-        style={{ textWrap: "balance" }}
-      >
-        Set a daily study goal
-      </h2>
-      <div className="flex flex-col gap-3 w-full">
-        {goals.map((goal) => (
-          <OptionButton
-            key={goal.value}
-            label={`${goal.minutes} min/day — ${goal.value}`}
-            icon={icons[goal.value]}
-            selected={value === goal.value}
-            onClick={() => onChange(goal.value)}
-          />
-        ))}
-      </div>
-      <AnimatePresence mode="wait">
-        {estimatedWords && (
-          <motion.p
-            key={estimatedWords}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="text-base text-primary font-medium text-center"
-          >
-            That's ~{estimatedWords} words in your first week!
-          </motion.p>
-        )}
-      </AnimatePresence>
-      <Button
-        size="lg"
-        disabled={!value}
-        onClick={onNext}
-        className="mt-2 px-8 text-base"
-      >
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
-    </ScreenWrapper>
-  );
-}
-
-// Screen: Notification prompt
-function NotificationScreen({ onNext }: { onNext: () => void }) {
   const { subscribe, isLoading } = useOneSignalNotifications();
   const [requested, setRequested] = useState(false);
-
   const handleEnable = async () => {
     setRequested(true);
     await subscribe();
-    onNext();
+    onDone();
   };
-
   return (
     <ScreenWrapper screenKey="notifications">
       <div className="flex flex-col items-center gap-2">
@@ -887,11 +632,10 @@ function NotificationScreen({ onNext }: { onNext: () => void }) {
         className="text-3xl md:text-4xl font-bold text-center leading-snug"
         style={{ textWrap: "balance" }}
       >
-        We'll remind you to practice so it becomes a habit!
+        {view.title}
       </h2>
       <p className="text-muted-foreground text-center text-base">
-        A small daily reminder makes it easy to stay consistent and reach your
-        goals.
+        {content.body}
       </p>
       <div className="flex flex-col gap-3 w-full">
         <Button
@@ -900,251 +644,217 @@ function NotificationScreen({ onNext }: { onNext: () => void }) {
           disabled={isLoading || requested}
           className="w-full"
         >
-          {isLoading ? "Enabling..." : "Enable reminders"}
+          {isLoading ? content.enabling_label : content.enable_label}
         </Button>
         <Button
           variant="ghost"
           size="lg"
-          onClick={onNext}
+          onClick={onDone}
           className="w-full text-muted-foreground"
         >
-          Not now
+          {content.skip_label}
         </Button>
       </div>
     </ScreenWrapper>
   );
 }
 
-// Screen 7: Ready to start
-function ReadyScreen({
-  targetLanguage,
-  experience,
-  onComplete,
+function ScreenContent({
+  view,
+  send,
 }: {
-  targetLanguage: Language;
-  experience: ExperienceLevel | null;
-  onComplete: (startFromScratch: boolean) => void;
+  view: OnboardingView;
+  send: (event: OnboardingEvent) => void;
 }) {
-  const isNew = experience === "New";
-
-  return (
-    <ScreenWrapper screenKey="ready">
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 200, damping: 15 }}
-        className="text-8xl"
-      >
-        {languageFlags[targetLanguage]}
-      </motion.div>
-
-      <h2
-        className="text-3xl md:text-4xl font-bold text-center"
-        style={{ textWrap: "balance" }}
-      >
-        {isNew
-          ? "Let's start from the beginning!"
-          : "Now let's find the best place to start"}
-      </h2>
-
-      {isNew ? (
-        <p className="text-muted-foreground text-center text-lg">
-          We'll build your {nativeLanguageNames[targetLanguage]} foundation step
-          by step.
-        </p>
-      ) : (
-        <p
-          className="text-muted-foreground text-center text-lg"
-          style={{ textWrap: "balance" }}
-        >
-          Since you already know some {nativeLanguageNames[targetLanguage]}, we
-          can skip ahead to where you belong.
-        </p>
-      )}
-
-      {isNew ? (
-        <Button
-          size="lg"
-          className="mt-2 px-8 text-base bg-primary hover:bg-primary/90"
-          onClick={() => onComplete(true)}
-        >
-          {LANGUAGES[targetLanguage].letsGo}
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
-      ) : (
-        <div className="flex flex-col gap-3 w-full max-w-sm">
-          <Button
-            size="lg"
-            className="w-full bg-primary hover:bg-primary/90"
-            onClick={() => onComplete(false)}
+  const content = view.content;
+  switch (content.type) {
+    case "Studies":
+      return <SrsTeaserScreen view={view} content={content} />;
+    case "Review":
+      return <SrsIntroScreen view={view} content={content} />;
+    case "Growth":
+      return <SrsConclusionScreen view={view} content={content} />;
+    case "Notifications":
+      return (
+        <NotificationScreen
+          view={view}
+          content={content}
+          onDone={() => send({ type: "NotificationsDone" })}
+        />
+      );
+    default:
+      return (
+        <ScreenWrapper screenKey={view.step}>
+          {content.type === "Ready" && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              className="text-8xl"
+            >
+              {content.flag}
+            </motion.div>
+          )}
+          <h2
+            className="text-3xl md:text-4xl font-bold text-center"
+            style={{ textWrap: "balance" }}
           >
-            Find my level
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="w-full"
-            onClick={() => onComplete(true)}
-          >
-            Start from scratch
-          </Button>
-        </div>
-      )}
-    </ScreenWrapper>
-  );
+            {view.title}
+          </h2>
+          {content.type === "Choices" && (
+            <>
+              <div className="flex flex-col gap-3 w-full">
+                {content.options.map((option) => (
+                  <OptionButton
+                    key={option.choice.value}
+                    label={option.label}
+                    icon={choiceIcon(option.choice)}
+                    selected={option.selected}
+                    onClick={() =>
+                      send({ type: "Choose", choice: option.choice })
+                    }
+                  />
+                ))}
+              </div>
+              <AnimatePresence mode="wait">
+                {content.hint && (
+                  <motion.p
+                    key={content.hint}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-base text-primary font-medium text-center"
+                  >
+                    {content.hint}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </>
+          )}
+          {content.type === "Achievements" && (
+            <div className="flex flex-col gap-4 w-full">
+              {content.items.map((item) => (
+                <Card
+                  key={item.text}
+                  className="p-5 flex items-center gap-4"
+                  animate
+                >
+                  <span className="text-3xl">{item.emoji}</span>
+                  <span className="text-lg font-medium">{item.text}</span>
+                </Card>
+              ))}
+            </div>
+          )}
+          {content.type === "Ready" && (
+            <>
+              <p
+                className="text-muted-foreground text-center text-lg"
+                style={{ textWrap: "balance" }}
+              >
+                {content.body}
+              </p>
+              {content.start_fresh_label && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full max-w-sm"
+                  onClick={() => send({ type: "StartFromScratch" })}
+                >
+                  {content.start_fresh_label}
+                </Button>
+              )}
+            </>
+          )}
+        </ScreenWrapper>
+      );
+  }
 }
-
-// ---------------------------------------------------------------------------
-// Progress Bar
-// ---------------------------------------------------------------------------
-
-function OnboardingProgress({
-  current,
-  total,
-}: {
-  current: number;
-  total: number;
-}) {
-  const pct = ((current + 1) / total) * 100;
-  return (
-    <div className="w-full max-w-lg mx-auto mb-6">
-      <Progress value={pct} />
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main Flow
-// ---------------------------------------------------------------------------
 
 export function OnboardingFlow({
+  purpose,
   targetLanguage,
   hasHeardAbout,
   onHeardAbout,
   onComplete,
   onBack,
 }: OnboardingFlowProps) {
-  const [step, setStep] = useState(0);
-  const [data, setData] = useState<OnboardingData>({
-    motivation: null,
-    experience: null,
-    studyGoal: null,
-  });
-
-  const {
-    isSupported: notificationsSupported,
-    isSubscribed,
-    isInitialized: notificationsInitialized,
-  } = useOneSignalNotifications();
-  const showNotifications =
-    notificationsInitialized && notificationsSupported && !isSubscribed;
-
-  // Build ordered screen list, conditionally including optional screens
-  const screens = [
-    ...(!hasHeardAbout ? ["heard-about" as const] : []),
-    "motivation",
-    "experience",
-    "achievements",
-    "srs-teaser",
-    "srs-intro",
-    "srs-conclusion",
-    "study-goal",
-    ...(showNotifications ? ["notifications" as const] : []),
-    "ready",
-  ] as const;
-
-  const totalSteps = screens.length;
-  const currentScreen = screens[step];
-
-  const next = useCallback(
-    () => setStep((s) => Math.min(s + 1, totalSteps - 1)),
-    [totalSteps],
+  const { isSupported, isSubscribed, isInitialized } =
+    useOneSignalNotifications();
+  const offerNotifications = isInitialized && isSupported && !isSubscribed;
+  const [state, setState] = useState(() =>
+    onboarding_start(targetLanguage, hasHeardAbout, offerNotifications, purpose),
   );
-  const prev = useCallback(() => {
-    if (step === 0) {
-      onBack();
-    } else {
-      setStep((s) => s - 1);
+  const currentState = useRef(state);
+  useLayoutEffect(() => {
+    currentState.current = state;
+  }, [state]);
+  const [previousOffer, setPreviousOffer] = useState(offerNotifications);
+  // Adjust this component's state during render, before its children render.
+  // Rust only changes the itinerary on step one and preserves its answer.
+  if (previousOffer !== offerNotifications) {
+    setPreviousOffer(offerNotifications);
+    setState(
+      onboarding_reduce(state, {
+        type: "RefreshNotificationOffer",
+        offer: offerNotifications,
+      }).state,
+    );
+  }
+  const view = onboarding_view(state);
+  function send(event: OnboardingEvent) {
+    const transition = onboarding_reduce(currentState.current, event);
+    currentState.current = transition.state;
+    setState(transition.state);
+    for (const effect of transition.effects) {
+      switch (effect.type) {
+        case "SaveHeardAbout":
+          onHeardAbout(effect.value);
+          break;
+        case "Complete":
+          onComplete(effect.selections);
+          break;
+        case "Exit":
+          onBack();
+          break;
+      }
     }
-  }, [step, onBack]);
-
-  const handleComplete = useCallback(
-    (startFromScratch: boolean) => {
-      onComplete({
-        startingFresh: startFromScratch,
-        motivation: data.motivation ?? undefined,
-        experienceLevel: data.experience ?? undefined,
-        studyGoal: data.studyGoal ?? undefined,
-      });
-    },
-    [onComplete, data],
-  );
-
+  }
   return (
-    <div className="w-full flex flex-col items-center px-4 py-8 overflow-x-clip">
-      <OnboardingProgress current={step} total={totalSteps} />
-
-      {/* Back button */}
+    <div className="w-full flex flex-col items-center px-4 pt-8 pb-28 overflow-x-clip">
+      <div className="w-full max-w-lg mx-auto mb-6">
+        <Progress
+          value={view.progress_percent}
+          aria-label={view.progress_label}
+        />
+      </div>
       <div className="w-full max-w-lg mb-4">
         <Button
           variant="ghost"
           size="sm"
-          onClick={prev}
+          onClick={() => send({ type: "Back" })}
           className="text-muted-foreground"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
+          {view.back_label}
         </Button>
       </div>
-
-      {/* Screen content */}
-      {currentScreen === "srs-teaser" && <SrsTeaserScreen onNext={next} />}
-      {currentScreen === "srs-intro" && <SrsIntroScreen onNext={next} />}
-      {currentScreen === "srs-conclusion" && (
-        <SrsConclusionScreen onNext={next} />
-      )}
-      {currentScreen === "heard-about" && (
-        <HeardAboutScreen
-          onSelect={(v) => {
-            onHeardAbout(v);
-            next();
-          }}
-        />
-      )}
-      {currentScreen === "motivation" && (
-        <MotivationScreen
-          value={data.motivation}
-          onChange={(v) => setData((d) => ({ ...d, motivation: v }))}
-          onNext={next}
-          targetLanguage={targetLanguage}
-        />
-      )}
-      {currentScreen === "experience" && (
-        <ExperienceScreen
-          value={data.experience}
-          onChange={(v) => setData((d) => ({ ...d, experience: v }))}
-          onNext={next}
-          targetLanguage={targetLanguage}
-        />
-      )}
-      {currentScreen === "achievements" && <AchievementsScreen onNext={next} />}
-      {currentScreen === "study-goal" && (
-        <DailyReviewTargetScreen
-          value={data.studyGoal}
-          onChange={(v) => setData((d) => ({ ...d, studyGoal: v }))}
-          onNext={next}
-        />
-      )}
-      {currentScreen === "notifications" && (
-        <NotificationScreen onNext={next} />
-      )}
-      {currentScreen === "ready" && (
-        <ReadyScreen
-          targetLanguage={targetLanguage}
-          experience={data.experience}
-          onComplete={handleComplete}
-        />
+      <ScreenContent key={view.step} view={view} send={send} />
+      {view.primary && (
+        <div className="fixed inset-x-0 bottom-0 z-20 bg-background px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:pointer-events-none md:bg-transparent">
+          <div className="mx-auto flex w-full max-w-lg md:justify-end">
+            <Button
+              size="lg"
+              disabled={!view.primary.enabled}
+              onClick={() => send({ type: "Next" })}
+              className="w-full px-8 text-base md:pointer-events-auto md:w-auto"
+            >
+              {view.primary.label}
+              {view.primary.show_arrow && (
+                <ArrowRight className="h-4 w-4 ml-2" />
+              )}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

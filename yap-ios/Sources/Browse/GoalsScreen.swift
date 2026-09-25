@@ -15,15 +15,15 @@ struct GoalsScreen: View {
                 VStack(alignment: .leading, spacing: 24) {
                     StudyCard { GoalProgress(goal: view.goal) }.id("goal")
                     StudyCard {
-                        Text(view.daily_goal_title).font(.headline)
+                        Text(view.daily_goal_title).font(.headline).foregroundStyle(Color.yapText)
                         Text(view.daily_goal_label).font(.subheadline).foregroundStyle(.secondary)
                         DailyGoalEditor(target: view.daily_goal, options: view.daily_goal_options, addEvent: actions.addEvent)
                             .id(view.daily_goal)
                     }.id("daily-goal")
-                    Text(view.curriculum.title).font(.title2.bold())
+                    Text(view.curriculum.title).font(.title2.bold()).foregroundStyle(Color.yapText)
                     curriculum(view)
                 }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-            }.background(Color(uiColor: .systemGroupedBackground)).navigationTitle(view.title)
+            }.background(.clear).navigationTitle(view.title)
                 .safeAreaInset(edge: .bottom) {
                     if let commit = view.curriculum.switch_curriculum {
                         Button(commit.label) { actions.commitSentenceList(commit.event) }
@@ -63,7 +63,7 @@ struct GoalsScreen: View {
             }.pickerStyle(.segmented)
             switch curriculum.sentence_list_options[selectedIndex].category {
             case .Essential:
-                Text(curriculum.sentence_list_label).font(.headline)
+                Text(curriculum.sentence_list_label).font(.headline).foregroundStyle(Color.yapText)
                 SentenceListProgressView(progress: curriculum.progress)
                 if let next = curriculum.next_sentence_list {
                     Button(nextLabel(next)) { actions.setSentenceList(next) }.buttonStyle(.bordered)
@@ -79,7 +79,7 @@ struct GoalsScreen: View {
         let native = get_language_metadata(language: deck.get_target_language()).iso6391
         let movies = lists.movies.sorted { (lists.metadata[$0.id]?.original_language == native ? 0 : 1) < (lists.metadata[$1.id]?.original_language == native ? 0 : 1) }
         return VStack(alignment: .leading, spacing: 12) {
-            Text("Movies").font(.title2.bold())
+            Text("Movies").font(.title2.bold()).foregroundStyle(Color.yapText)
             Text("You can usually watch a movie comfortably once you know 95% of the words.").font(.subheadline).foregroundStyle(.secondary)
             ForEach(showAllMovies ? movies : Array(movies.prefix(8)), id: \.id) { movie in
                 row(.Movie(id: movie.id), lists: lists)
@@ -89,7 +89,7 @@ struct GoalsScreen: View {
     }
     private func pimsleur(_ lists: SentenceListModel) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Pimsleur Lessons").font(.title2.bold())
+            Text("Pimsleur Lessons").font(.title2.bold()).foregroundStyle(Color.yapText)
             if !acknowledged {
                 Text("Yap has word lists for Pimsleur, but is not affiliated with Pimsleur in any way.")
                 Button("I understand") { acknowledged = true }

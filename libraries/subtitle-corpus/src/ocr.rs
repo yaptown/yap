@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{bail, Context, Result};
+use movie_subtitles::llm_segment::batch_jobs::SMALL_BATCH_THRESHOLD;
 use serde::{Deserialize, Serialize};
 use tysm::chat_completions::{ChatClient, ChatMessage, ChatMessageContent, ImageUrl, Role};
 
@@ -36,6 +37,7 @@ pub fn client(model: &str) -> Result<ChatClient> {
     // tweak (or a crash) costs nothing for the cues already read.
     Ok(ChatClient::from_env(model)
         .context("OPENAI_API_KEY not set")?
+        .with_small_batch_threshold(SMALL_BATCH_THRESHOLD)
         .with_cache_directory("./.cache"))
 }
 

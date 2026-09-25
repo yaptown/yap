@@ -23,6 +23,10 @@ MODEL_MAPPING = {
         "small": "es_core_news_sm",
         "large": "es_dep_news_trf"
     },
+    "spa-es": {
+        "small": "es_core_news_sm",
+        "large": "es_dep_news_trf"
+    },
     "kor": {
         "small": "ko_core_news_sm",
         "large": "ko_core_news_lg"
@@ -41,6 +45,10 @@ MODEL_MAPPING = {
         "large": "it_core_news_lg"
     },
     "por": {
+        "small": "pt_core_news_lg",
+        "large": "pt_core_news_lg"
+    },
+    "por-pt": {
         "small": "pt_core_news_lg",
         "large": "pt_core_news_lg"
     },
@@ -610,7 +618,7 @@ def process_sentences(sentences_file: str, output_file: str, language_code: str)
 def main():
     if len(sys.argv) != 4:
         print("Usage: python main.py <language_code> <sentences.jsonl> <output.jsonl>")
-        print("Language code should be ISO 639-3 (e.g., 'fra' for French, 'spa' for Spanish)")
+        print("Language code should be ISO 639-3 (e.g., 'fra' for French, 'spa' for Spanish (Latin America))")
         sys.exit(1)
 
     language_code = sys.argv[1]

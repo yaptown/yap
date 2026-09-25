@@ -9,7 +9,7 @@ use tysm::chat_completions::ChatClient;
 use unicode_normalization::UnicodeNormalization;
 
 static CHAT_CLIENT: LazyLock<ChatClient> =
-    LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-sol"));
+    LazyLock::new(|| crate::migrating_chat_client("gpt-6-sol"));
 
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
 struct SoundsListResponse {
@@ -246,8 +246,10 @@ Good examples for Hindi "ज" and English speakers — `target` is Devanagari, w
     // course -- a flex-capacity blip once cost Hindi 150 of its 154 guides,
     // and the run still exited 0. Fail instead: responses are cached, so a
     // rerun resumes from whatever did succeed.
+    // A cache-only run never reaches the API, so a miss there is not an
+    // outage: the pack goes out without those guides, as the mode promises.
     anyhow::ensure!(
-        api_failed == 0,
+        api_failed == 0 || crate::cache_only(),
         "{api_failed} of {} pronunciation guides failed with API errors, so the pack would be \
          missing them. Rerun once the API is healthy; cached guides are reused.",
         results.len(),
@@ -499,10 +501,10 @@ pub fn calculate_pattern_frequencies(
     // Sum up frequencies for each pattern based on word occurrences
     for freq_entry in gram_frequencies {
         // Get the word text from the gram
-        let word: String = if let Some(heteronym) = freq_entry.gram.heteronym() {
+        let word: String = if let Some(heteronym) = freq_entry.gram.gram.heteronym() {
             heteronym.word.clone()
         } else {
-            freq_entry.gram.to_display_string(language)
+            freq_entry.gram.gram.to_display_string(language)
         };
         let word_normalized = normalize_word(&word, language);
 

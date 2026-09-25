@@ -11,7 +11,7 @@ struct ProperNounGroupsView: View {
                         .font(.subheadline)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(12)
-                        .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 6))
+                        .insetSurface(cornerRadius: 8)
                 }
             }
         }

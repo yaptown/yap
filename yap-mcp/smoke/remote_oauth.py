@@ -322,7 +322,7 @@ check("remote search", top["display_text"] == "merci", top["display_text"])
 status, _, body = req("POST", f"{BASE}/mcp", headers=mcp_headers, body={
     "jsonrpc": "2.0", "id": 5, "method": "tools/call",
     "params": {"name": "add_cards",
-               "arguments": {"language": top["language"], "grams": [top["gram"]]}},
+               "arguments": {"language": top["language"], "grams": [top["senses"][0]["gram"]]}},
 })
 added = json.loads(sse_json(body)["result"]["content"][0]["text"])
 check("remote add_cards (RLS write)", "merci" in added["added"] + added["already_in_deck"],

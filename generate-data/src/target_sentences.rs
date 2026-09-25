@@ -61,7 +61,7 @@ pub fn contains_xprotect_tripwire(s: &str) -> bool {
 pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSentences> {
     let source_data_path = PathBuf::from(format!(
         "./generate-data/data/{}",
-        course.target_language.code()
+        course.target_language.corpus_code()
     ));
 
     let banned_sentences = load_banned_sentences(&source_data_path, course.target_language)?;
@@ -294,6 +294,32 @@ async fn load_movie_sentences(
         return Ok(vec![]);
     }
 
+    // Films reach this directory by several routes (the OpenSubtitles
+    // downloader, subtitle-corpus exports, by hand), so fill in any missing
+    // metadata rows and posters here, before the films are enumerated, rather
+    // than trusting whoever wrote the subtitle to have done it.
+    // Without the keys (e.g. clean-nlp-data, which does not read .env) the
+    // films on disk are used as they are.
+    let keys = (std::env::var("TMDB_API_KEY"), std::env::var("OMDB_API_KEY"));
+    if crate::cache_only() {
+        println!("  Skipping movie metadata refresh (cache-only)");
+    } else if let (Ok(tmdb_key), Ok(omdb_key)) = keys {
+        let tmdb = movie_metadata::TmdbClient::new(tmdb_key);
+        let omdb = movie_metadata::OmdbClient::new(omdb_key);
+        let report = movie_metadata::refresh(&movies_dir, language, &tmdb, &omdb)
+            .await
+            .context("Failed to refresh movie metadata and posters")?;
+        println!("  Movie metadata refresh: {report}");
+        if !report.no_metadata.is_empty() || !report.no_poster.is_empty() {
+            eprintln!(
+                "⚠ WARNING: missing movie metadata: {:?}; missing posters: {:?}",
+                report.no_metadata, report.no_poster
+            );
+        }
+    } else {
+        eprintln!("⚠ WARNING: TMDB_API_KEY or OMDB_API_KEY not set; not refreshing movie metadata");
+    }
+
     let metadata_file = movies_dir.join("metadata.jsonl");
     if !metadata_file.exists() {
         return Ok(vec![]);
@@ -320,7 +346,9 @@ async fn load_movie_sentences(
             // Prefer the raw SRT and clean it here, in memory, so improvements to
             // the cleaning rules reach every course on the next build. Movies whose
             // raw SRT was never kept fall back to the pre-cleaned JSONL.
-            let Some((subtitles, source)) = movie_subtitles::load(&movies_dir, &movie.id)? else {
+            let Some((subtitles, source)) =
+                movie_subtitles::load(&movies_dir, &movie.id, language)?
+            else {
                 return Ok(None);
             };
 
@@ -353,7 +381,7 @@ async fn load_movie_sentences(
             .par_iter()
             .map(|(movie, source, subtitles)| {
                 let keyed = movie_subtitles::sentences::keyed_sentences_by_rules(
-                    subtitles, language, rules,
+                    subtitles, language, &movie.id, rules,
                 );
                 (*source, attributed(keyed, &movie.id))
             })
@@ -392,7 +420,7 @@ async fn load_movie_sentences(
                 .zip(&splits)
                 .map(|(((movie, source, _), lines), splits)| {
                     let keyed = movie_subtitles::sentences::keyed_sentences_from_splits(
-                        lines, splits, language,
+                        lines, splits, language, &movie.id,
                     );
                     (*source, attributed(keyed, &movie.id))
                 })
@@ -566,10 +594,11 @@ fn sanity_check_skip_markers(language: Language, movie_id: &str) -> Vec<&'static
 pub async fn subtitle_sentences(
     subtitles: &[SubtitleLine],
     language: Language,
+    imdb: &str,
     segmenter: &SubtitleSegmenter,
 ) -> anyhow::Result<Vec<String>> {
     Ok(course_sentences(
-        movie_subtitles::sentences::keyed_sentences(subtitles, language, segmenter).await?,
+        movie_subtitles::sentences::keyed_sentences(subtitles, language, imdb, segmenter).await?,
     ))
 }
 
@@ -577,10 +606,11 @@ pub async fn subtitle_sentences(
 pub fn subtitle_sentences_by_rules(
     subtitles: &[SubtitleLine],
     language: Language,
+    imdb: &str,
     segmenter: &RuleSegmenter,
 ) -> Vec<String> {
     course_sentences(movie_subtitles::sentences::keyed_sentences_by_rules(
-        subtitles, language, segmenter,
+        subtitles, language, imdb, segmenter,
     ))
 }
 
@@ -666,7 +696,7 @@ mod tests {
             cue("- Où est mon Daniel ? - Il est là.", 3_100, 4_000),
         ];
         assert_eq!(
-            subtitle_sentences_by_rules(&cues, Language::French, &segmenter),
+            subtitle_sentences_by_rules(&cues, Language::French, "test", &segmenter),
             vec![
                 "On va la dépecer vive !",
                 "Lui arracher la langue !",

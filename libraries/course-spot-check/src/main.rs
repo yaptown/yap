@@ -102,7 +102,8 @@ Output format:
     "3. makes_sense_standalone": true/false,
     "4. issues": ["list", "of", "specific", "issues", "if", "any"],
     "5. corrected_sentence": "corrected version if there are minor typographical issues, otherwise null"
-}}"#
+}}"#,
+        language = language.prompt_name()
     );
 
     let user_prompt = format!("Sentence: {sentence}");
@@ -138,7 +139,8 @@ Output format:
 {{
     "1. thoughts": "Brief analysis of what multiword terms might be missing",
     "2. missing_multiword_terms": ["list", "of", "missing", "multiword", "terms"]
-}}"#
+}}"#,
+        language = language.prompt_name()
     );
 
     let user_prompt = format!(
@@ -390,6 +392,7 @@ fn create_deck_for_course(course: Course) -> Result<Deck> {
     let language_pack = std::sync::Arc::new(language_pack);
 
     let context = yap_frontend_rs::Context {
+        study_goal: None,
         language_pack,
         course,
         timezone: chrono::FixedOffset::east_opt(0).unwrap(),
@@ -401,7 +404,7 @@ fn create_deck_for_course(course: Course) -> Result<Deck> {
         let ts = Timestamped {
             timestamp: Utc::now(),
             within_device_events_index: 0,
-            timezone: Some(context.timezone),
+            timezone: context.timezone,
             event,
         };
         let state = DeckState::from(deck);
@@ -423,7 +426,7 @@ fn write_results_to_files(analyses: &[CourseAnalysis]) -> Result<()> {
             analysis.all_issues.len()
         );
 
-        let lang_dir = analysis.course.target_language.code();
+        let lang_dir = analysis.course.target_language.corpus_code();
         // Use absolute path from current working directory
         let data_dir = PathBuf::from(format!("./generate-data/data/{lang_dir}"));
 

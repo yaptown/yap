@@ -219,44 +219,19 @@ impl Web {
     }
 }
 
-/// Mirrors the C ABI of the bridge's generator entry point.
-#[repr(C)]
-struct Buffer {
-    data: *mut u8,
-    len: usize,
-}
-#[repr(C)]
-struct BridgeResult {
-    handle: *const std::ffi::c_void,
-    value: u32,
-    status: u32,
-    data: Buffer,
-}
-
 fn generate(library: &Path, output: &Path) -> Result<()> {
-    type Generate = unsafe extern "C" fn(*const u8, usize) -> BridgeResult;
-    type Free = unsafe extern "C" fn(Buffer);
-    // The library stays loaded until Rust has freed the result buffer.
+    // Build-time metadata has no thread-confined application objects or buffers.
+    type Generate = unsafe extern "C" fn(*const u8, usize) -> u32;
     let library = unsafe { libloading::Library::new(library)? };
     let entry: libloading::Symbol<Generate> = unsafe { library.get(b"bridgerton_generate_v1")? };
-    let release: libloading::Symbol<Free> = unsafe { library.get(b"bridgerton_buffer_free")? };
     let path = output
         .canonicalize()
         .unwrap_or_else(|_| output.to_path_buf());
     let path = path.to_string_lossy();
-    let result = unsafe { entry(path.as_ptr(), path.len()) };
-    let message = if result.status != 0 && !result.data.data.is_null() {
-        let bytes = unsafe { std::slice::from_raw_parts(result.data.data, result.data.len) };
-        Some(String::from_utf8_lossy(bytes).into_owned())
-    } else {
-        None
-    };
-    unsafe { release(result.data) };
-    match message {
-        Some(message) => Err(message.into()),
-        None if result.status != 0 => Err("Swift generation failed".into()),
-        None => Ok(()),
+    if unsafe { entry(path.as_ptr(), path.len()) } != 0 {
+        return Err("Swift generation failed (see stderr)".into());
     }
+    Ok(())
 }
 
 fn sha256(path: &Path) -> Result<String> {

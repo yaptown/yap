@@ -102,7 +102,7 @@ pub(super) enum DeckEvent {
 fn convert_sentence_review(
     review: SentenceReviewIndicator,
     context: &crate::Context,
-) -> Option<super::current::SentenceReviewResult> {
+) -> Option<super::v3::SentenceReviewResult> {
     match review {
         SentenceReviewIndicator::TargetToNative {
             challenge_sentence,
@@ -138,7 +138,7 @@ fn convert_sentence_review(
                         })
                         .collect();
 
-                    Some(super::current::SentenceReviewResult::Perfect {
+                    Some(super::v3::SentenceReviewResult::Perfect {
                         challenge: challenge_sentence.clone(),
                         submission: challenge_sentence, // Use challenge as submission for perfect
                         literals,
@@ -167,7 +167,7 @@ fn convert_sentence_review(
                                         None
                                     };
                                     let hinted = heteronyms_needed_hint.contains(h);
-                                    Some(super::current::LiteralResult { remembered, hinted })
+                                    Some(super::v3::LiteralResult { remembered, hinted })
                                 }
                                 language_utils::WordType::Other(_) => None,
                             };
@@ -190,7 +190,7 @@ fn convert_sentence_review(
                                     let phrase = context
                                         .language_pack
                                         .gram_rodeo
-                                        .resolve(phrase_gram)
+                                        .resolve(&phrase_gram.gram)
                                         .resolve(&context.language_pack.string_rodeo)
                                         .to_display_string(context.course.target_language);
                                     let lexeme = language_utils::Lexeme::Multiword {
@@ -209,7 +209,7 @@ fn convert_sentence_review(
                         })
                         .unwrap_or_default();
 
-                    Some(super::current::SentenceReviewResult::Graded {
+                    Some(super::v3::SentenceReviewResult::Graded {
                         challenge: challenge_sentence,
                         submission,
                         literals,
@@ -223,23 +223,23 @@ fn convert_sentence_review(
 
 impl DeckEvent {
     /// Migrate a V2 DeckEvent to V3 (current) format.
-    pub(super) fn into_v3(self, context: &crate::Context) -> Option<super::current::DeckEvent> {
+    pub(super) fn into_v3(self, context: &crate::Context) -> Option<super::v3::DeckEvent> {
         match self {
-            DeckEvent::Language(lang_event) => Some(super::current::DeckEvent::Language(
-                super::current::LanguageEvent {
+            DeckEvent::Language(lang_event) => {
+                Some(super::v3::DeckEvent::Language(super::v3::LanguageEvent {
                     target_language: lang_event.target_language,
                     native_language: lang_event.native_language,
                     content: match lang_event.content {
                         LanguageEventContent::CompletePlacementTest { results } => {
-                            super::current::LanguageEventContent::CompletePlacementTest {
-                                results: super::current::PlacementTest {
+                            super::v3::LanguageEventContent::CompletePlacementTest {
+                                results: super::v3::PlacementTest {
                                     known_words: results.known_words,
                                     unknown_words: results.unknown_words,
                                 },
                             }
                         }
                         LanguageEventContent::AddCards { cards } => {
-                            super::current::LanguageEventContent::AddCards {
+                            super::v3::LanguageEventContent::AddCards {
                                 cards: cards
                                     .into_iter()
                                     .filter_map(|c| c.into_v3(context))
@@ -249,14 +249,14 @@ impl DeckEvent {
                         }
                         LanguageEventContent::ReviewCard { reviewed, rating } => {
                             let reviewed = reviewed.into_v3(context)?;
-                            super::current::LanguageEventContent::ReviewCard {
+                            super::v3::LanguageEventContent::ReviewCard {
                                 reviewed,
                                 rating: match rating {
-                                    Rating::Again => super::current::Rating::Again,
-                                    Rating::Remembered => super::current::Rating::Remembered,
-                                    Rating::Hard => super::current::Rating::Hard,
-                                    Rating::Good => super::current::Rating::Good,
-                                    Rating::Easy => super::current::Rating::Easy,
+                                    Rating::Again => super::v3::Rating::Again,
+                                    Rating::Remembered => super::v3::Rating::Remembered,
+                                    Rating::Hard => super::v3::Rating::Hard,
+                                    Rating::Good => super::v3::Rating::Good,
+                                    Rating::Easy => super::v3::Rating::Easy,
                                 },
                             }
                         }
@@ -268,7 +268,7 @@ impl DeckEvent {
                                             heteronyms_needed_hint,
                                         },
                                     ..
-                                } => super::current::LegacyTranslationChallenge {
+                                } => super::v3::LegacyTranslationChallenge {
                                     lexemes_remembered: BTreeSet::new(),
                                     lexemes_forgotten: BTreeSet::new(),
                                     heteronyms_needed_hint: heteronyms_needed_hint.clone(),
@@ -282,26 +282,24 @@ impl DeckEvent {
                                             ..
                                         },
                                     ..
-                                } => super::current::LegacyTranslationChallenge {
+                                } => super::v3::LegacyTranslationChallenge {
                                     lexemes_remembered: lexemes_remembered.clone(),
                                     lexemes_forgotten: lexemes_forgotten.clone(),
                                     heteronyms_needed_hint: heteronyms_needed_hint.clone(),
                                 },
                             };
                             let sentence_review = convert_sentence_review(review, context)?;
-                            super::current::LanguageEventContent::TranslationChallenge {
+                            super::v3::LanguageEventContent::TranslationChallenge {
                                 review: sentence_review,
                                 legacy,
                             }
                         }
                         LanguageEventContent::TranscriptionChallenge { challenge } => {
-                            super::current::LanguageEventContent::TranscriptionChallenge {
-                                challenge,
-                            }
+                            super::v3::LanguageEventContent::TranscriptionChallenge { challenge }
                         }
                     },
-                },
-            )),
+                }))
+            }
         }
     }
 }
@@ -312,7 +310,7 @@ impl CardIndicator<String> {
     pub(super) fn into_v3(
         self,
         context: &crate::Context,
-    ) -> Option<super::current::CardIndicator<language_utils::Gram<String>, String>> {
+    ) -> Option<super::v3::CardIndicator<language_utils::Gram<String>, String>> {
         match self {
             CardIndicator::TargetLanguage { lexeme } => {
                 match lexeme {
@@ -324,7 +322,7 @@ impl CardIndicator<String> {
                         };
                         let atom = language_utils::Atom::Tok(word);
                         let gram = language_utils::Gram::new(vec![atom]);
-                        Some(super::current::CardIndicator::WrittenGram { gram })
+                        Some(super::v3::CardIndicator::WrittenGram { gram })
                     }
                     language_utils::Lexeme::Multiword { phrase } => {
                         // Find the gram that matches this phrase display string
@@ -336,9 +334,9 @@ impl CardIndicator<String> {
                         let gram = context
                             .language_pack
                             .gram_rodeo
-                            .resolve(gram_spur)
+                            .resolve(&gram_spur.gram)
                             .resolve(&context.language_pack.string_rodeo);
-                        Some(super::current::CardIndicator::WrittenGram { gram })
+                        Some(super::v3::CardIndicator::WrittenGram { gram })
                     }
                 }
             }
@@ -368,7 +366,7 @@ impl CardIndicator<String> {
                     .language_pack
                     .gram_frequencies
                     .entries
-                    .get(gram_spur)?;
+                    .get(context.language_pack.senses_of(*gram_spur).first()?)?;
                 if freq.count < 100 {
                     return None;
                 }
@@ -378,7 +376,7 @@ impl CardIndicator<String> {
                     .resolve(gram_spur)
                     .to_gram();
                 let gram = gram.resolve(&context.language_pack.string_rodeo);
-                Some(super::current::CardIndicator::ListeningGram { gram })
+                Some(super::v3::CardIndicator::ListeningGram { gram })
             }
             CardIndicator::ListeningHeteronym { heteronym } => {
                 // Convert heteronym → gram using the index
@@ -395,10 +393,10 @@ impl CardIndicator<String> {
                     .resolve(gram_spur)
                     .to_gram();
                 let gram = gram.resolve(&context.language_pack.string_rodeo);
-                Some(super::current::CardIndicator::ListeningGram { gram })
+                Some(super::v3::CardIndicator::ListeningGram { gram })
             }
             CardIndicator::LetterPronunciation { pattern, position } => {
-                Some(super::current::CardIndicator::LetterPronunciation { pattern, position })
+                Some(super::v3::CardIndicator::LetterPronunciation { pattern, position })
             }
         }
     }

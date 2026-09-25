@@ -4,17 +4,30 @@
     "target_language": "French",
     "title": "Stats",
     "xp": 197.0,
-    "xp_label": "197 XP",
     "total_reviews": 171,
-    "total_reviews_label": "171 reviews",
-    "streak": {
-      "title": "Streak",
-      "days": 2,
-      "days_label": "2 days",
-      "today_label": "0 / 5 min today"
-    },
-    "percent_known": 0.10246544526835043,
-    "percent_known_label": "10.2% of everyday French",
+    "tiles": [
+      {
+        "eyebrow": "XP",
+        "value": "197",
+        "caption": null
+      },
+      {
+        "eyebrow": "Reviews",
+        "value": "171",
+        "caption": null
+      },
+      {
+        "eyebrow": "Streak",
+        "value": "2 days",
+        "caption": "0 / 5 min today"
+      },
+      {
+        "eyebrow": "Vocabulary",
+        "value": "10.2%",
+        "caption": "of everyday French"
+      }
+    ],
+    "percent_known": 0.10246544526835044,
     "due": {
       "title": "Due words",
       "ready_now": 2,
@@ -75,7 +88,7 @@
       },
       {
         "frequency": 9.0,
-        "predicted_knowledge": 0.025530166923999786,
+        "predicted_knowledge": 0.025530166923999783,
         "word_count": 6298,
         "example_words": "lourds, vous feriez mieux d', poulailler, pourquoi n'êtes-vous pas, dommage"
       },
@@ -105,7 +118,7 @@
       },
       {
         "frequency": 40.0,
-        "predicted_knowledge": 0.22473739087581635,
+        "predicted_knowledge": 0.22473739087581637,
         "word_count": 11342,
         "example_words": "sourit, écrivain, je ne parviens pas à, cache, réveille"
       },
@@ -147,7 +160,7 @@
       },
       {
         "frequency": 150.0,
-        "predicted_knowledge": 0.40693986415863037,
+        "predicted_knowledge": 0.4069398641586304,
         "word_count": 8771,
         "example_words": "moi-même, avant que, n'oublie pas, laisser, nous étions"
       },
@@ -159,7 +172,7 @@
       },
       {
         "frequency": 300.0,
-        "predicted_knowledge": 0.49919092655181885,
+        "predicted_knowledge": 0.4991909265518189,
         "word_count": 6213,
         "example_words": "tu crois, trouver, faites, penser à, pas été"
       },

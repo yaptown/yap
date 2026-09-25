@@ -6,13 +6,18 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use axum_extra::extract::Query;
-use language_utils::{
-    Language, TtsProvider, TtsRequest, audio_mime_type, tts_cache_filename, tts_cache_url,
-};
+use language_utils::{Language, TtsProvider, TtsRequest, audio_mime_type, tts_cache_filename};
 use postgrest::Postgrest;
 use serde::Deserialize;
+use std::sync::LazyLock;
 
-use crate::{deck_token, service_role_client, synthesize_checked_bytes, tts_cache};
+use crate::{
+    deck_token, service_role_client, synthesize_checked_bytes, tts_cache, tts_verify::Transcribers,
+};
+
+// A deck makes hundreds of requests to the same cache origin. Reuse the
+// connection pool instead of paying DNS/TLS setup for every recording.
+static HTTP: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 #[derive(Debug, Deserialize)]
 pub struct Params {
@@ -49,14 +54,18 @@ fn cache_control(verified: bool) -> &'static str {
 pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
     let token = params.d.clone();
     let request = params.request();
-    let cache_filename = tts_cache_filename(&request, &TtsProvider::ElevenLabs);
-    let http = reqwest::Client::new();
-    if tts_cache::exists(&http, &cache_filename).await {
-        return Ok((
-            StatusCode::FOUND,
-            [(header::LOCATION, tts_cache_url(&cache_filename))],
-        )
-            .into_response());
+    let http = &*HTTP;
+    // Gemini is the deck voice (about an eighth of ElevenLabs' price per
+    // recording), but a clip the app already verified with either voice is
+    // free, so serve whichever the shared cache has before synthesizing.
+    let cache_filename = tts_cache_filename(&request, &TtsProvider::Gemini);
+    for filename in [
+        &cache_filename,
+        &tts_cache_filename(&request, &TtsProvider::ElevenLabs),
+    ] {
+        if let Some(url) = tts_cache::existing_url(http, filename).await {
+            return Ok((StatusCode::FOUND, [(header::LOCATION, url)]).into_response());
+        }
     }
 
     // Playback from the cache above needed no secret; only new spend does.
@@ -95,7 +104,17 @@ pub async fn tts(Query(params): Query<Params>) -> Result<Response, StatusCode> {
         return Err(StatusCode::FORBIDDEN);
     }
 
-    let synthesized = synthesize_checked_bytes(&http, &request, TtsProvider::ElevenLabs).await?;
+    // A deck export fires hundreds of these in minutes; see `Transcribers`.
+    // ElevenLabs is the only fallback: Google's voice would be a step down
+    // for a card the learner keeps.
+    let synthesized = synthesize_checked_bytes(
+        http,
+        &request,
+        TtsProvider::Gemini,
+        &[TtsProvider::ElevenLabs],
+        Transcribers::CloudflareOnly,
+    )
+    .await?;
     // Another request may have populated the bucket between our HEAD and the
     // pipeline's lookup. That playback did not spend anything for this deck.
     if synthesized.synthesized {

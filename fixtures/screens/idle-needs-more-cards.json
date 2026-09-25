@@ -1,6 +1,7 @@
 {
   "screen": "Review",
   "view": {
+    "show_account_prompt": false,
     "native_language": "English",
     "target_language": "German",
     "step": {
@@ -31,35 +32,41 @@
               "cards": [
                 {
                   "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "wurde",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "wurde",
-                          "lemma": "werden",
-                          "pos": "AUX"
+                  "gram": {
+                    "gram": [
+                      {
+                        "Tok": {
+                          "text": "wurde",
+                          "word_type": {
+                            "type": "Heteronym",
+                            "word": "wurde",
+                            "lemma": "werden",
+                            "pos": "AUX"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ],
+                    "sense": null
+                  }
                 },
                 {
                   "type": "WrittenGram",
-                  "gram": [
-                    {
-                      "Tok": {
-                        "text": "zum",
-                        "word_type": {
-                          "type": "Heteronym",
-                          "word": "zum",
-                          "lemma": "zum",
-                          "pos": "ADP"
+                  "gram": {
+                    "gram": [
+                      {
+                        "Tok": {
+                          "text": "zum",
+                          "word_type": {
+                            "type": "Heteronym",
+                            "word": "zum",
+                            "lemma": "zum",
+                            "pos": "ADP"
+                          }
                         }
                       }
-                    }
-                  ]
+                    ],
+                    "sense": null
+                  }
                 }
               ],
               "sentence_list": null
@@ -75,8 +82,10 @@
           },
           "recommend_more_cards": true
         },
+        "manual_add_heading": "Choose cards to add",
         "manual_add_options": [
           {
+            "label": "Learn 2 German → English cards",
             "count": 2,
             "card_type": "TargetLanguage",
             "event": {
@@ -88,35 +97,41 @@
                 "cards": [
                   {
                     "type": "WrittenGram",
-                    "gram": [
-                      {
-                        "Tok": {
-                          "text": "wurde",
-                          "word_type": {
-                            "type": "Heteronym",
-                            "word": "wurde",
-                            "lemma": "werden",
-                            "pos": "AUX"
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "wurde",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "wurde",
+                              "lemma": "werden",
+                              "pos": "AUX"
+                            }
                           }
                         }
-                      }
-                    ]
+                      ],
+                      "sense": null
+                    }
                   },
                   {
                     "type": "WrittenGram",
-                    "gram": [
-                      {
-                        "Tok": {
-                          "text": "zum",
-                          "word_type": {
-                            "type": "Heteronym",
-                            "word": "zum",
-                            "lemma": "zum",
-                            "pos": "ADP"
+                    "gram": {
+                      "gram": [
+                        {
+                          "Tok": {
+                            "text": "zum",
+                            "word_type": {
+                              "type": "Heteronym",
+                              "word": "zum",
+                              "lemma": "zum",
+                              "pos": "ADP"
+                            }
                           }
                         }
-                      }
-                    ]
+                      ],
+                      "sense": null
+                    }
                   }
                 ],
                 "sentence_list": null
@@ -124,6 +139,7 @@
             }
           },
           {
+            "label": "Learn 2 German listening cards",
             "count": 2,
             "card_type": "Listening",
             "event": {
@@ -171,6 +187,7 @@
             }
           },
           {
+            "label": "Learn 2 German pronunciation cards",
             "count": 2,
             "card_type": "LetterPronunciation",
             "event": {
@@ -197,6 +214,15 @@
           }
         ],
         "next_due": null,
+        "curriculum_headline": {
+          "before": "Soon you'll hit 5% on",
+          "emphasis": "Core German Level 1",
+          "after": "!"
+        },
+        "curriculum_learn_label": "Learn 2 new cards",
+        "next_sentence_list_label": null,
+        "all_learned_note": null,
+        "level_note": "When you complete this level, you'll understand 25.7% of everyday German.",
         "banned_notice": null,
         "week": [
           {
@@ -319,11 +345,12 @@
         ],
         "progress": {
           "percent_known": 3.352745698022571,
-          "all_available_learned": false
+          "all_available_learned": false,
+          "caption": "3% known"
         },
         "sentence_list_label": "Core German Level 1",
         "next_sentence_list": null,
-        "switch_curriculum": null
+        "commit_curriculum": null
       }
     },
     "progress": 0.0,

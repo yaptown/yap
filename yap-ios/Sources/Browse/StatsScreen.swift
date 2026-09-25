@@ -12,34 +12,33 @@ struct StatsScreen: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                            StudyCard { Text(view.xp_label).font(.title2.bold()) }
-                            StudyCard { Text(view.total_reviews_label).font(.title2.bold()) }
-                            StudyCard {
-                                Text(view.streak.title).font(.subheadline).foregroundStyle(.secondary)
-                                Text(view.streak.days_label).font(.title2.bold())
-                                Text(view.streak.today_label).font(.subheadline).foregroundStyle(.secondary)
+                        Grid(horizontalSpacing: 16, verticalSpacing: 16) {
+                            ForEach(Array(stride(from: 0, to: view.tiles.count, by: 2)), id: \.self) { index in
+                                GridRow {
+                                    ForEach(Array(view.tiles[index..<min(index + 2, view.tiles.count)].enumerated()), id: \.offset) { _, tile in
+                                        StatTile(tile: tile)
+                                    }
+                                }
                             }
-                            StudyCard { Text(view.percent_known_label).font(.title2.bold()) }
-                        }.id("stats")
+                        }.fixedSize(horizontal: false, vertical: true).id("stats")
                         Button(action: showDue) {
                             StudyCard {
-                                Text("\(view.due.title) →").font(.headline)
+                                Text("\(view.due.title) →").font(.headline).foregroundStyle(Color.yapText)
                                 Text(view.due.label).font(.subheadline).foregroundStyle(.secondary)
                             }
                         }.buttonStyle(.plain).id("due")
                         StudyCard {
-                            Text(view.frequency_knowledge_chart_title).font(.title2.bold())
+                            Text(view.frequency_knowledge_chart_title).font(.title2.bold()).foregroundStyle(Color.yapText)
                             KnowledgeChart(points: view.frequency_knowledge_chart_data)
                         }.id("chart")
                         VStack(alignment: .leading, spacing: 16) {
-                            Text(view.leeches_label).font(.title2.bold())
+                            Text(view.leeches_label).font(.title2.bold()).foregroundStyle(Color.yapText)
                             Text("Leeches are cards you're really struggling with. The hardest few cards can take disproportionate time, so it's more efficient to set them aside for a while.")
                                 .font(.subheadline).foregroundStyle(.secondary)
                             if !view.leeches.isEmpty { CardSummaryList(cards: view.leeches, timestampMs: now) }
                         }.id("leeches")
                     }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-                }.background(Color(uiColor: .systemGroupedBackground)).navigationTitle(view.title)
+                }.background(.clear).navigationTitle(view.title)
                 #if DEBUG
                 .onAppear { DebugHarness.shared.activeScreen = .stats }
                 .onChange(of: DebugHarness.shared.commandID) { _, _ in
@@ -55,48 +54,62 @@ struct StatsScreen: View {
     }
 }
 
-private struct KnowledgeChart: View {
-    @Environment(\.colorScheme) private var scheme
-    let points: [FrequencyKnowledgePoint]
-    @State private var frequency: String?
-    private var selected: FrequencyKnowledgePoint? { frequency.flatMap { x in points.first { String($0.frequency) == x } } }
-    private var ink: Color { scheme == .dark ? Color(red: 192 / 255, green: 112 / 255, blue: 186 / 255) : .yapAccent }
+private struct StatTile: View {
+    let tile: StatTileView
     var body: some View {
-        Text("Yap uses this estimate to avoid teaching words you already know.").font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 8) {
+            Text(tile.eyebrow).font(.subheadline).foregroundStyle(.secondary)
+            Text(tile.value).font(.title2.bold())
+            if let caption = tile.caption { Text(caption).font(.subheadline).foregroundStyle(.secondary) }
+        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(16).cardSurface().foregroundStyle(Color.yapText)
+    }
+}
+
+private struct KnowledgeChart: View {
+    let points: [FrequencyKnowledgePoint]
+    @State private var frequency: Double?
+    private let ticks = frequency_knowledge_ticks()
+    // Snap in log space, just as the plotted distances are logarithmic.
+    private var selected: FrequencyKnowledgePoint? {
+        guard let frequency, frequency > 0 else { return nil }
+        return points.min { abs(log($0.frequency / frequency)) < abs(log($1.frequency / frequency)) }
+    }
+    var body: some View {
         if points.isEmpty { Text("No frequency data available") }
         else {
-            Chart(points, id: \.frequency) { point in
-                let rank = String(point.frequency)
-                LineMark(x: .value("Frequency rank", rank), y: .value("Predicted knowledge (%)", point.predicted_knowledge * 100))
-                    .foregroundStyle(ink).lineStyle(StrokeStyle(lineWidth: 2))
-                if let selected, selected.frequency == point.frequency {
-                    RuleMark(x: .value("Frequency rank", rank)).foregroundStyle(.secondary)
-                    PointMark(x: .value("Frequency rank", rank), y: .value("Predicted knowledge (%)", point.predicted_knowledge * 100)).symbolSize(64).foregroundStyle(ink)
+            Chart {
+                ForEach(points, id: \.frequency) { point in
+                    LineMark(x: .value("Frequency rank", point.frequency), y: .value("Knowledge (%)", point.predicted_knowledge * 100))
+                        .foregroundStyle(Tokens.palette.chart_1.color).lineStyle(StrokeStyle(lineWidth: 2))
+                    PointMark(x: .value("Frequency rank", point.frequency), y: .value("Knowledge (%)", point.predicted_knowledge * 100))
+                        .symbol {
+                            Circle().strokeBorder(Tokens.palette.chart_1.color, lineWidth: 2)
+                                .background(Circle().fill(.white))
+                                .frame(width: selected?.frequency == point.frequency ? 12 : 8,
+                                       height: selected?.frequency == point.frequency ? 12 : 8)
+                        }
                 }
-            }.chartXScale(domain: points.map { String($0.frequency) })
+                if let selected {
+                    RuleMark(x: .value("Frequency rank", selected.frequency)).foregroundStyle(.secondary.opacity(0.4))
+                }
+            }
+                .chartXScale(domain: 1.0...10000.0, type: .log)
                 .chartYScale(domain: 0...100)
-                .chartYAxis { AxisMarks(values: [0, 25, 50, 75, 100]) { _ in AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)); AxisValueLabel() } }
+                .chartYAxis { AxisMarks(position: .leading, values: [0, 25, 50, 75, 100]) { _ in AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.secondary.opacity(0.25)); AxisValueLabel() } }
                 .chartXAxis {
-                    AxisMarks { value in
-                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-                        AxisValueLabel {
-                            if let category = value.as(String.self), let rank = Double(category) { Text(rank.formatted()) }
+                    AxisMarks(values: ticks.map(\.value)) { value in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(.secondary.opacity(0.25))
+                        AxisValueLabel(anchor: .topTrailing, collisionResolution: .greedy(priority: value.index == ticks.count - 1 ? 1 : 0)) {
+                            if let rank = value.as(Double.self), let tick = ticks.first(where: { $0.value == rank }) { Text(tick.label).fixedSize() }
                         }
                     }
                 }
-                .chartXAxisLabel("Word frequency rank").chartYAxisLabel("Knowledge (%)")
-                .chartXSelection(value: $frequency).frame(height: 240)
+                .chartYAxisLabel("Knowledge (%)")
+                .chartXSelection(value: $frequency).frame(height: 300)
             if let selected {
-                Text("Rank \(Int(selected.frequency)): \(selected.predicted_knowledge * 100, specifier: "%.1f")% predicted knowledge").font(.caption)
-                Text("\(selected.example_words) (\(selected.word_count) words)").font(.caption).foregroundStyle(.secondary)
-            }
-            DisclosureGroup("Chart data") {
-                ForEach(points, id: \.frequency) { point in
-                    VStack(alignment: .leading, spacing: 4) {
-                        LabeledContent("Rank \(Int(point.frequency))", value: String(format: "%.1f%%", point.predicted_knowledge * 100))
-                        Text("\(point.example_words) · \(point.word_count) words").font(.caption).foregroundStyle(.secondary)
-                    }
-                }
+                Text("Frequency: \(frequency_rank_label(rank: selected.frequency)) · Knowledge: \(selected.predicted_knowledge * 100, specifier: "%.1f")%").font(.caption)
+                Text("Examples (\(selected.word_count) words): \(selected.example_words)").font(.caption).foregroundStyle(.secondary)
             }
         }
     }

@@ -81,7 +81,7 @@ for word in WORDS:
         print(f"no dictionary match for '{word}', skipping")
         continue
     top = results[0]
-    grams.append((top["language"], top["gram"], top["display_text"]))
+    grams.append((top["language"], top["senses"][0]["gram"], top["display_text"]))
 
 language = grams[0][0]
 err, body = tool("add_cards", {"language": language, "grams": [g for _, g, _ in grams]})

@@ -19,6 +19,10 @@ use crate::llm_segment::CueSplit;
 use crate::segment::{timed_passages, RuleSegmenter, SubtitleSegmenter};
 use crate::SubtitleLine;
 
+/// Bump when shared sentence keying or eligibility changes, for both rule and
+/// model segmentation. Included in the corpus's segmentation provenance.
+pub const SENTENCE_VERSION: u32 = 1;
+
 /// One sentence of a subtitle track, with the span of the passage it came
 /// from and whether course ingestion would keep it.
 #[derive(Debug, Clone)]
@@ -59,14 +63,19 @@ pub fn prepared_lines(lines: &[SubtitleLine]) -> Vec<SubtitleLine> {
 pub async fn keyed_sentences(
     lines: &[SubtitleLine],
     language: Language,
+    imdb: &str,
     segmenter: &SubtitleSegmenter,
 ) -> anyhow::Result<Vec<KeyedSentence>> {
     match segmenter {
-        SubtitleSegmenter::Rules(rules) => Ok(keyed_sentences_by_rules(lines, language, rules)),
+        SubtitleSegmenter::Rules(rules) => {
+            Ok(keyed_sentences_by_rules(lines, language, imdb, rules))
+        }
         SubtitleSegmenter::Llm(client) => {
             let prepared = prepared_lines(lines);
             let (splits, _) = crate::llm_segment::split(client, &prepared, language).await?;
-            Ok(keyed_sentences_from_splits(&prepared, &splits, language))
+            Ok(keyed_sentences_from_splits(
+                &prepared, &splits, language, imdb,
+            ))
         }
     }
 }
@@ -75,11 +84,12 @@ pub async fn keyed_sentences(
 pub fn keyed_sentences_by_rules(
     lines: &[SubtitleLine],
     language: Language,
+    imdb: &str,
     segmenter: &RuleSegmenter,
 ) -> Vec<KeyedSentence> {
     let repaired = prepared_lines(lines);
     let mut out = Vec::new();
-    for passage in timed_passages(&repaired) {
+    for passage in timed_passages(&repaired, language) {
         for sentence in segmenter.segment(&passage.text) {
             keyed(
                 &mut out,
@@ -90,6 +100,7 @@ pub fn keyed_sentences_by_rules(
             );
         }
     }
+    crate::corrections::apply_sentence_flags(&mut out, language, imdb);
     out
 }
 
@@ -101,6 +112,7 @@ pub fn keyed_sentences_from_splits(
     lines: &[SubtitleLine],
     splits: &[CueSplit],
     language: Language,
+    imdb: &str,
 ) -> Vec<KeyedSentence> {
     assert_eq!(lines.len(), splits.len(), "one split per cue");
     let joiner = crate::llm_segment::joiner(language);
@@ -126,6 +138,7 @@ pub fn keyed_sentences_from_splits(
         let end_ms = lines.last().map_or(start_ms, |l| l.end_ms);
         keyed(&mut out, text.trim(), start_ms, end_ms, language);
     }
+    crate::corrections::apply_sentence_flags(&mut out, language, imdb);
     out
 }
 
@@ -210,6 +223,17 @@ static TITLE_ABBREVIATION: LazyLock<Regex> = LazyLock::new(|| {
         .unwrap()
 });
 
+fn has_music_marker(sentence: &str) -> bool {
+    let text = sentence
+        .trim()
+        .trim_start_matches(['-', '–', '—'])
+        .trim_start();
+    text.contains(['♪', '♫'])
+        || text.starts_with('#')
+        || text.ends_with('#')
+        || text.split_whitespace().any(|word| word == "#")
+}
+
 /// Check if a single sentence should be included (for sources without translations like movies)
 pub fn should_include_sentence(sentence: &str, language: Language) -> bool {
     // 1. Skip sentences that are too short or too long. The cap is in
@@ -234,7 +258,7 @@ pub fn should_include_sentence(sentence: &str, language: Language) -> bool {
     }
 
     // 4. Skip music markers (common in subtitles)
-    if sentence.contains('♪') {
+    if has_music_marker(sentence) {
         return false;
     }
 
@@ -363,9 +387,11 @@ pub fn is_proper_sentence(text: &str, language: Language) -> bool {
     match language {
         Language::English
         | Language::French
-        | Language::Spanish
+        | Language::SpanishLatinAmerican
+        | Language::SpanishPeninsular
         | Language::German
-        | Language::Portuguese
+        | Language::PortugueseBrazilian
+        | Language::PortugueseEuropean
         | Language::Italian => {
             // Must start with uppercase letter
             if !first_char.is_uppercase() || !first_char.is_alphabetic() {
@@ -512,6 +538,36 @@ mod split_tests {
     }
 
     #[test]
+    fn lyric_hashes_are_excluded_in_both_segmentation_paths() {
+        for text in [
+            "# In questa strada nebbiosa #",
+            "Sono pronto #",
+            " — # Canto.",
+            "Canto # ancora.",
+            "Canto ♫.",
+        ] {
+            assert!(has_music_marker(text), "{text}");
+            assert!(!should_include_sentence(text, Language::Italian));
+        }
+        for text in ["Sono #pronto.", "Sono #1."] {
+            assert!(!has_music_marker(text), "{text}");
+        }
+        assert!(should_include_sentence("Sono #pronto.", Language::Italian));
+        let lines = [cue("Canto # ancora.", 0, 1000)];
+        let rules =
+            keyed_sentences_by_rules(&lines, Language::Italian, "test", &RuleSegmenter::PerCue);
+        let model = keyed_sentences_from_splits(
+            &lines,
+            &[split(&["Canto # ancora."], false)],
+            Language::Italian,
+            "test",
+        );
+        assert!(!rules[0].course_worthy);
+        assert!(!model[0].course_worthy);
+        assert_eq!(rules[0].sentence, "Canto # ancora.");
+    }
+
+    #[test]
     fn c0_escape_damage_is_encoding_corruption() {
         assert!(has_encoding_corruption("r\0e9pétition sérieuse"));
         assert!(!has_encoding_corruption("répétition sérieuse"));
@@ -532,7 +588,8 @@ mod split_tests {
             split(&["就嫁个有钱人吧"], false),
             split(&["安静！", "别敲了！"], false),
         ];
-        let keyed = keyed_sentences_from_splits(&lines, &splits, Language::ChineseSimplified);
+        let keyed =
+            keyed_sentences_from_splits(&lines, &splits, Language::ChineseSimplified, "test");
         let texts: Vec<&str> = keyed.iter().map(|k| k.sentence.as_str()).collect();
         assert_eq!(
             texts,
@@ -561,7 +618,7 @@ mod split_tests {
             cue("สมัครสอบใหม่นะ", 1_100, 2_000),
         ];
         let splits = [split(&["ลิน แกต้องไป"], true), split(&["สมัครสอบใหม่นะ"], true)];
-        let keyed = keyed_sentences_from_splits(&lines, &splits, Language::Thai);
+        let keyed = keyed_sentences_from_splits(&lines, &splits, Language::Thai, "test");
         assert_eq!(keyed.len(), 1);
         assert_eq!(keyed[0].sentence, "ลิน แกต้องไป สมัครสอบใหม่นะ");
         assert_eq!((keyed[0].start_ms, keyed[0].end_ms), (0, 2_000));

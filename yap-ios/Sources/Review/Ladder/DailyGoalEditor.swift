@@ -13,13 +13,15 @@ struct DailyGoalEditor: View {
         VStack(spacing: 12) {
             Picker("Daily goal", selection: $pendingTarget) {
                 ForEach(options, id: \.target) { goal in
-                    Text("\(String(describing: goal.target)) · \(goal.minutes)m").tag(goal.target)
+                    Text("\(goal.label) · \(goal.duration_label)").tag(goal.target)
                 }
             }.pickerStyle(.menu)
             Button("Set goal") {
                 if let goal = options.first(where: { $0.target == pendingTarget }) { addEvent(goal.event) }
-            }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).disabled(pendingTarget == target)
-        }
+            }.buttonStyle(.borderedProminent)
+                .foregroundStyle(pendingTarget == target ? Color.secondary : Color.yapOnAccent)
+                .disabled(pendingTarget == target)
+        }.frame(maxWidth: .infinity)
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
             guard DebugHarness.shared.activeScreen == .goals else { return }
@@ -40,7 +42,7 @@ struct SnapshotGoalEditor: View {
     var body: some View {
         DisclosureGroup("Change daily goal") {
             ForEach(Array(goals.enumerated()), id: \.offset) { _, goal in
-                Button("\(goal.minutes) min/day — \(String(describing: goal.target))") { addEvent(goal.event) }
+                Button("\(goal.label) · \(goal.duration_label)") { addEvent(goal.event) }
                     .disabled(goal.target == target)
             }
         }

@@ -376,7 +376,13 @@ pub fn classify(
     }
 
     if let Some(course) = course_dir(original_language) {
-        let movies = data_root.join(course).join("sentence-sources/movies");
+        let movies = data_root
+            .join(
+                language_utils::Language::from_code(course)
+                    .unwrap()
+                    .corpus_code(),
+            )
+            .join("sentence-sources/movies");
         let raw = movies.join(format!("subtitles-raw/{imdb_id}.srt"));
         if raw.exists() {
             return Ok(Source::Downloaded { path: raw });
@@ -690,9 +696,17 @@ pub(crate) fn current_verdict(
     use crate::{transcript::source_digest, verbatim};
     let subtitle = source_digest(&dir.join("subtitle.srt")).ok()?;
     let transcript = source_digest(&dir.join("transcript.jsonl")).ok()?;
+    let language = language_utils::Language::from_code(course)?;
     Some(
-        verbatim::matching(dir, &subtitle, &transcript, verbatim::min_fraction(course))?
-            .measure
-            .verdict,
+        verbatim::matching(
+            dir,
+            &subtitle,
+            &transcript,
+            &movie_subtitles::corrections::film_digest(language, dir.file_name()?.to_str()?),
+            &movie_subtitles::segment::provenance(language),
+            verbatim::min_fraction(course),
+        )?
+        .measure
+        .verdict,
     )
 }

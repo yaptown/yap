@@ -104,7 +104,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,wav,mp3}'],
-        globIgnores: ['**/d/**', '**/blog/**'],
+        globIgnores: ['**/d/**', '**/blog/**', '**/sql-wasm*.wasm'],
         importScripts: [],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB to cover the current WASM bundle
         // Match the bare path as well as the trailing-slash form: /blog and /d

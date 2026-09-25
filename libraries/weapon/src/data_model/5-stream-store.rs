@@ -15,7 +15,11 @@ pub trait StreamStore<Device>: Any + MaybeSend {
         self.num_events_per_device().values().sum()
     }
 
-    fn jsons(&self, device: &Device, skip: usize) -> Vec<Timestamped<serde_json::Value>>;
+    /// The device's events with `within_device_events_index >= from_index`, in index order —
+    /// i.e. the ones a peer holding `from_index` of this device's events hasn't seen. Not a
+    /// positional skip: events are stored in timestamp order, and a backdated event (e.g.
+    /// `add_raw_event_at` with a past time) sorts before ones already persisted or uploaded.
+    fn jsons(&self, device: &Device, from_index: usize) -> Vec<Timestamped<serde_json::Value>>;
 
     fn valid_to_add_event_jsons(
         &self,
@@ -48,21 +52,23 @@ impl<
             .collect::<HashMap<&Device, usize>>()
     }
 
-    fn jsons(&self, device: &Device, skip: usize) -> Vec<Timestamped<serde_json::Value>> {
-        self.events()
+    fn jsons(&self, device: &Device, from_index: usize) -> Vec<Timestamped<serde_json::Value>> {
+        let mut events: Vec<_> = self
+            .events()
             .get(device)
-            .map(|events| {
-                events
-                    .iter()
-                    .skip(skip)
-                    .map(|event| {
-                        event
-                            .as_ref()
-                            .map(|event| serde_json::to_value(event).unwrap())
-                    })
-                    .collect()
+            .into_iter()
+            .flatten()
+            .filter(|event| event.within_device_events_index >= from_index)
+            .collect();
+        events.sort_by_key(|event| event.within_device_events_index);
+        events
+            .into_iter()
+            .map(|event| {
+                event
+                    .as_ref()
+                    .map(|event| serde_json::to_value(event).unwrap())
             })
-            .unwrap_or_default()
+            .collect()
     }
 
     fn valid_to_add_event_jsons(
@@ -107,5 +113,37 @@ impl<
             }
         }
         earliest
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn event(time: i64, index: usize, value: i32) -> Timestamped<i32> {
+        Timestamped {
+            timestamp: chrono::DateTime::from_timestamp(time, 0).unwrap(),
+            timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+            within_device_events_index: index,
+            event: value,
+        }
+    }
+
+    #[test]
+    fn jsons_selects_by_index_not_timestamp_position() {
+        let mut stream = EventStreamStore::<&str, Timestamped<i32>>::default();
+        stream.add_event_unchecked("a", event(20, 0, 0));
+        // Written after index 0 was persisted, but backdated before it.
+        stream.add_event_unchecked("a", event(10, 1, 1));
+        let indices = |from| {
+            stream
+                .jsons(&"a", from)
+                .iter()
+                .map(|event| event.within_device_events_index)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(indices(0), [0, 1]);
+        assert_eq!(indices(1), [1]);
+        assert_eq!(indices(2), [] as [usize; 0]);
     }
 }
