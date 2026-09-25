@@ -22,15 +22,15 @@ struct SettingsScreen: View {
                     if auth.userId != nil {
                         account(sync)
                     } else {
-                        SettingsSection {
+                        CardSection {
                             Button(account_copy().sign_in_action) { authSheet.present(tab: .signIn) }
                                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         }
                     }
-                    SettingsSection("Appearance") {
+                    CardSection("Appearance") {
                         Toggle("Animated background", isOn: $animatedBackground).tint(.yapSwitchTint).frame(minHeight: 44)
                     }
-                    SettingsSection("About") {
+                    CardSection("About") {
                         SettingsRow(sync?.version_label ?? "Version") { Text(get_app_version()).monospacedDigit() }
                         Divider()
                         Link(destination: URL(string: "https://yap.town/privacy")!) { SettingsRow("Privacy policy") { Image(systemName: "arrow.up.right") } }
@@ -58,7 +58,7 @@ struct SettingsScreen: View {
         let email = auth.session?.user.email ?? ""
         let shown = (auth.displayName?.isEmpty == false ? auth.displayName : nil) ?? email
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return SettingsSection("Account") {
+        return CardSection("Account") {
             HStack(spacing: 12) {
                 Text(shown.prefix(1).uppercased())
                     .font(.title3.weight(.semibold)).foregroundStyle(Color.yapOnAccent)
@@ -100,7 +100,7 @@ struct SettingsScreen: View {
     }
 
     private func diagnostics(_ sync: SyncStatusView, deviceId: String) -> some View {
-        SettingsSection {
+        CardSection {
             DisclosureGroup {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(sync.description).font(.footnote).foregroundStyle(.secondary).padding(.vertical, 8)
@@ -153,26 +153,6 @@ struct SettingsScreen: View {
             _ = try await update_profile(display_name: value, bio: nil, access_token: token)
             auth.displayName = value; auth.needsDisplayName = false; editingName = false
         } catch { self.error = "Couldn't save your display name. Please try again." }
-    }
-}
-
-/// A titled group of rows on the shared card surface.
-private struct SettingsSection<Content: View>: View {
-    var title: String?
-    @ViewBuilder var content: Content
-    init(_ title: String? = nil, @ViewBuilder content: () -> Content) {
-        self.title = title; self.content = content()
-    }
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let title {
-                Text(title.uppercased()).font(.caption.weight(.semibold)).tracking(1).foregroundStyle(.secondary)
-                    .padding(.horizontal, 16)
-            }
-            VStack(alignment: .leading, spacing: 0) { content }
-                .padding(.horizontal, 16).padding(.vertical, 4)
-                .frame(maxWidth: .infinity, alignment: .leading).cardSurface()
-        }
     }
 }
 
