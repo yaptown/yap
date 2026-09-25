@@ -12,7 +12,7 @@ import {
   type DictionaryWord,
   type DictionarySense,
 } from "../../../yap-frontend-rs/pkg";
-import { CirclePlus, CircleCheckBig } from "lucide-react";
+import { CirclePlus, CircleCheckBig, Search } from "lucide-react";
 import { toast } from "sonner";
 import { highlightTermInSentence } from "@/utils/highlightTermInSentence";
 import { Card } from "@/components/ui/card";
@@ -36,9 +36,7 @@ export function Dictionary({
   accessToken: string | undefined;
 }) {
   const location = useLocation();
-  const [searchQuery, setSearchQuery] = useState<string>(() =>
-    typeof location.state?.query === "string" ? location.state.query : "",
-  );
+  const [searchQuery, setSearchQuery] = useState("");
   const [justAdded, setJustAdded] = useState<Set<number>>(new Set());
 
   const totalCount = deck.get_gram_dictionary_count();
@@ -66,15 +64,23 @@ export function Dictionary({
   };
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col">
+    <div className="flex-1 overflow-hidden flex flex-col" data-page="dictionary">
       <div className="border-b pb-4 mb-4 p-2">
-        <input
-          type="text"
-          placeholder={`Search in ${targetLangName} or ${nativeLangName}...`}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+        <div className="dictionary-search relative">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
+            aria-hidden
+          />
+          <input
+            type="search"
+            placeholder={`Search in ${targetLangName} or ${nativeLangName}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            // Arriving from Home's search bar means the learner wants to type.
+            autoFocus={location.state?.focusSearch === true}
+            className="w-full h-10 pl-9 pr-3 border border-input rounded-lg bg-foreground/5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
         <p className="text-sm text-muted-foreground mt-2">
           Showing {entries.length} of {totalCount}{" "}
           {totalCount === 1 ? "entry" : "entries"}

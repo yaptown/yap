@@ -6,9 +6,9 @@ struct HomeScreen: View {
     @Environment(\.reviewActions!) private var actions
     let review: ReviewModel
     let navigate: (CourseRoute) -> Void
+    let searchTransition: Namespace.ID
     var view: HomeScreenView? = nil
     var isVisible = true
-    @State private var query = ""
     // Adding cards from Home means "study these now" — after the add fires, jump
     // to Review so the user lands on the cards they just committed to (mirrors
     // web). In fixture mode `navigate` is a no-op and hit-testing is off.
@@ -71,21 +71,12 @@ struct HomeScreen: View {
                         }.buttonStyle(.plain).fixedSize(horizontal: false, vertical: true)
                         StudyCard {
                             Button(view.dictionary.title) { navigate(.dictionary()) }.font(.headline).foregroundStyle(Color.yapText)
-                            HStack(spacing: 8) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                                    TextField(view.dictionary.search_placeholder, text: $query)
-                                        .submitLabel(.search)
-                                        .onSubmit { navigate(.dictionary(query: query)) }
-                                }
-                                .padding(.horizontal, 12).frame(height: 44)
-                                .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                .overlay { RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
-                                Button { navigate(.dictionary(query: query)) } label: {
-                                    Image(systemName: "arrow.right").frame(width: 44, height: 44)
-                                        .overlay { RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
-                                }.buttonStyle(.plain).foregroundStyle(Color.yapText).accessibilityLabel(view.dictionary.title)
-                            }
+                            // Not a real field: it zooms into the dictionary, whose
+                            // search bar takes the focus and shows live results.
+                            Button { navigate(.dictionary(searching: true)) } label: {
+                                DictionarySearchBar(placeholder: view.dictionary.search_placeholder)
+                            }.buttonStyle(.plain)
+                                .matchedTransitionSource(id: DictionarySearchBar.id, in: searchTransition)
                         }
                         Spacer(minLength: 0)
                         VStack(spacing: 8) {
@@ -149,6 +140,23 @@ struct GoalProgress: View {
         ProgressView(value: goal.percent, total: 100)
             .accessibilityLabel(goal.title).accessibilityValue(goal.percent_label)
         Text(goal.subtitle).font(.subheadline).foregroundStyle(.secondary)
+    }
+}
+
+struct DictionarySearchBar: View {
+    static let id = "dictionary-search"
+    let placeholder: String
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+            Text(placeholder).lineLimit(1)
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 12).frame(height: 44)
+        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color(uiColor: .separator).opacity(0.5)) }
+        .contentShape(Rectangle())
     }
 }
 

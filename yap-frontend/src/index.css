@@ -244,3 +244,20 @@ ol {
 [lang="ko"], [lang="ja"], [lang="zh"] {
   font-size: 1.55em;
 }
+
+/* Home's search bar morphs into the dictionary's: both carry this class, and
+   they never share a page. */
+.dictionary-search {
+  view-transition-name: dictionary-search;
+}
+/* landing.css blurs the root away when leaving the landing; when the
+   dictionary is what arrives, keep the browser's plain cross-fade. */
+:root:has([data-page="dictionary"])::view-transition-old(root),
+:root:has([data-page="dictionary"])::view-transition-new(root) {
+  animation: revert;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(dictionary-search) {
+    animation: none;
+  }
+}

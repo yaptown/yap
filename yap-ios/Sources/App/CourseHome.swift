@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum CourseRoute: Hashable {
-    case review, goals, stats, dictionary(query: String = ""), due, settings
+    case review, goals, stats, dictionary(searching: Bool = false), due, settings
 }
 
 struct CourseHome: View {
@@ -13,6 +13,8 @@ struct CourseHome: View {
     let historyKnown: Bool
     @State private var path: [CourseRoute] = [.review]
     @State private var review: ReviewModel
+    /// Home's search bar zooms into the dictionary.
+    @Namespace private var dictionarySearch
     #if DEBUG
     @State private var debugClip: String?
     @State private var debugClipAvailable: Bool?
@@ -34,7 +36,9 @@ struct CourseHome: View {
                         case .review: reviewScreen.id(ObjectIdentifier(review.deck))
                         case .goals: GoalsScreen(review: review)
                         case .stats: StatsScreen(review: review) { navigate(.due) }
-                        case let .dictionary(query): DictionaryScreen(session: session, initialQuery: query)
+                        case let .dictionary(searching):
+                            DictionaryScreen(session: session, searching: searching)
+                                .navigationTransition(.zoom(sourceID: DictionarySearchBar.id, in: dictionarySearch))
                         case .due: DueWordsScreen(review: review)
                         case .settings: SettingsScreen(session: session)
                         }
@@ -102,10 +106,10 @@ struct CourseHome: View {
         if case let .Home(view) = DebugHarness.shared.fixture {
             fixtureScreen(.Home(view))
         } else {
-            HomeScreen(review: review, navigate: navigate, isVisible: path.isEmpty)
+            HomeScreen(review: review, navigate: navigate, searchTransition: dictionarySearch, isVisible: path.isEmpty)
         }
         #else
-        HomeScreen(review: review, navigate: navigate, isVisible: path.isEmpty)
+        HomeScreen(review: review, navigate: navigate, searchTransition: dictionarySearch, isVisible: path.isEmpty)
         #endif
     }
     @ViewBuilder private var reviewScreen: some View {
@@ -124,7 +128,7 @@ struct CourseHome: View {
         Group {
             switch fixture {
             case let .Review(view): ReviewScreen(view: view)
-            case let .Home(view): HomeScreen(review: review, navigate: { _ in }, view: view)
+            case let .Home(view): HomeScreen(review: review, navigate: { _ in }, searchTransition: dictionarySearch, view: view)
             case let .Stats(view): StatsScreen(review: review, showDue: {}, view: view)
             case let .Goals(view): GoalsScreen(review: review, view: view)
             case let .Due(view): DueWordsScreen(review: review, view: view)

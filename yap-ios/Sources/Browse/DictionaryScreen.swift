@@ -9,12 +9,46 @@ struct DictionaryScreen: View {
     @State private var entries: [DictionaryWord] = []
     @State private var path: [UInt64] = []
     @State private var hasMore = false
+    @FocusState private var searchFocused: Bool
+    private let searching: Bool
     private let pageSize: UInt64 = 200
-    init(session: YapSession, initialQuery: String? = nil) {
+    init(session: YapSession, searching: Bool = false) {
         self.session = session
-        _query = State(initialValue: initialQuery ?? "")
+        self.searching = searching
     }
     var body: some View {
+        results
+        .scrollContentBackground(.hidden)
+        .navigationTitle("Dictionary")
+        .searchable(text: $query, prompt: "Search words or meanings")
+        .searchFocused($searchFocused)
+        .onAppear { if searching { searchFocused = true } }
+        .navigationDestination(isPresented: Binding(get: { !path.isEmpty }, set: { if !$0 { path = [] } })) {
+            if let index = path.last { DictionaryDetail(session: session, index: index) }
+        }
+        .task(id: query) {
+            // Typing is debounced, but the first page loads at once so the
+            // zoom in from Home never shows an empty list.
+            if !entries.isEmpty {
+                do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
+            }
+            reload()
+        }
+        .onChange(of: ObjectIdentifier(deck)) { _, _ in reload(preservingPageCount: true) }
+        .onDisappear { audio.stop() }
+        #if DEBUG
+        .onAppear { DebugHarness.shared.activeScreen = .dictionary }
+        .onChange(of: DebugHarness.shared.commandID) { _, _ in
+            guard DebugHarness.shared.activeScreen == .dictionary else { return }
+            let command = DebugHarness.shared.command
+            if command.hasPrefix("search ") { path = []; query = String(command.dropFirst(7)) }
+            if command.hasPrefix("open "), let index = Int(command.dropFirst(5)), entries.indices.contains(index) { path = [entries[index].frequency_index] }
+            if command == "page" { loadMore() }
+            if command == "status" { DebugHarness.log("dictionary results=\(entries.count) first=\(entries.first?.display_text ?? "none") detail=\(String(describing: path.last))") }
+        }
+        #endif
+    }
+    private var results: some View {
         List {
             Section {
                 ForEach(entries, id: \.frequency_index) { entry in
@@ -36,29 +70,6 @@ struct DictionaryScreen: View {
                 if entries.isEmpty { ContentUnavailableView.search(text: query) }
             } header: { Text("\(entries.count) results · \(deck.get_gram_dictionary_count()) dictionary entries") }
         }
-        .scrollContentBackground(.hidden)
-        .navigationTitle("Dictionary")
-        .searchable(text: $query, prompt: "Search words or meanings")
-        .navigationDestination(isPresented: Binding(get: { !path.isEmpty }, set: { if !$0 { path = [] } })) {
-            if let index = path.last { DictionaryDetail(session: session, index: index) }
-        }
-        .task(id: query) {
-            do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
-            reload()
-        }
-        .onChange(of: ObjectIdentifier(deck)) { _, _ in reload(preservingPageCount: true) }
-        .onDisappear { audio.stop() }
-        #if DEBUG
-        .onAppear { DebugHarness.shared.activeScreen = .dictionary }
-        .onChange(of: DebugHarness.shared.commandID) { _, _ in
-            guard DebugHarness.shared.activeScreen == .dictionary else { return }
-            let command = DebugHarness.shared.command
-            if command.hasPrefix("search ") { path = []; query = String(command.dropFirst(7)) }
-            if command.hasPrefix("open "), let index = Int(command.dropFirst(5)), entries.indices.contains(index) { path = [entries[index].frequency_index] }
-            if command == "page" { loadMore() }
-            if command == "status" { DebugHarness.log("dictionary results=\(entries.count) first=\(entries.first?.display_text ?? "none") detail=\(String(describing: path.last))") }
-        }
-        #endif
     }
     private func reload(preservingPageCount: Bool = false) {
         let pages = preservingPageCount ? max(1, (entries.count + Int(pageSize) - 1) / Int(pageSize)) : 1

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -25,8 +25,6 @@ import { DeckPage } from "@/app/DeckPage";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import { CoursePill } from "@/components/CoursePill";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { GoalProgress } from "@/browse/GoalProgress";
 import { WeekProgressStrip } from "@/review/WeekProgressStrip";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
@@ -111,7 +109,6 @@ function HomeContent({
   commitSentenceList?: (event: DeckEvent) => void;
 }) {
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
   const upNext = view.up_next;
 
   return (
@@ -208,37 +205,22 @@ function HomeContent({
             <h2 className="text-lg font-semibold">
               <Link to="/dictionary">{view.dictionary.title}</Link>
             </h2>
-            <form
-              className="flex gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                // Keep searches out of URLs, request logs, and navigation telemetry.
-                if (!inert) navigate("/dictionary", { state: { query } });
+            {/* Not a real field: tapping it morphs into the dictionary's search
+                bar (same view-transition-name), where typing gets live results. */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!inert)
+                  navigate("/dictionary", {
+                    viewTransition: true,
+                    state: { focusSearch: true },
+                  });
               }}
+              className="dictionary-search flex h-10 w-full items-center gap-2 rounded-lg border border-input bg-foreground/5 px-3 text-left text-muted-foreground hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
-                  aria-hidden
-                />
-                <Input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder={view.dictionary.search_placeholder}
-                  aria-label={view.dictionary.search_placeholder}
-                  className="pl-9"
-                />
-              </div>
-              <Button
-                type="submit"
-                variant="outline"
-                size="icon"
-                aria-label={view.dictionary.title}
-              >
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </form>
+              <Search className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="truncate">{view.dictionary.search_placeholder}</span>
+            </button>
           </Card>
         </main>
       </TopPageLayout>
