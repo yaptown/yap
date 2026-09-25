@@ -11,9 +11,8 @@ use tysm::chat_completions::ChatClient;
 static CHAT_CLIENT_4O: LazyLock<ChatClient> =
     LazyLock::new(|| crate::apply_cache_only(crate::base_chat_client("gpt-4o")));
 
-static CHAT_CLIENT_5: LazyLock<ChatClient> = LazyLock::new(|| {
-    crate::apply_cache_only(crate::base_chat_client("gpt-5"))
-});
+static CHAT_CLIENT_5: LazyLock<ChatClient> =
+    LazyLock::new(|| crate::apply_cache_only(crate::base_chat_client("gpt-5")));
 
 pub async fn create_morphology(
     language: Language,
