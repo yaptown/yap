@@ -3871,7 +3871,7 @@ dependencies = [
 [[package]]
 name = "model-prices"
 version = "0.1.1"
-source = "git+https://github.com/anchpop/tysm.git?rev=f6d4ab3b4d3ec8266235a5134aae8cc474f4cc34#f6d4ab3b4d3ec8266235a5134aae8cc474f4cc34"
+source = "git+https://github.com/anchpop/tysm.git?rev=ece93551c8ab884aaf72bac395c1d091595cd5fa#ece93551c8ab884aaf72bac395c1d091595cd5fa"
 
 [[package]]
 name = "monostate"
@@ -7042,7 +7042,7 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 [[package]]
 name = "tysm"
 version = "0.24.0"
-source = "git+https://github.com/anchpop/tysm.git?rev=f6d4ab3b4d3ec8266235a5134aae8cc474f4cc34#f6d4ab3b4d3ec8266235a5134aae8cc474f4cc34"
+source = "git+https://github.com/anchpop/tysm.git?rev=ece93551c8ab884aaf72bac395c1d091595cd5fa#ece93551c8ab884aaf72bac395c1d091595cd5fa"
 dependencies = [
  "base64 0.22.1",
  "dashmap",
