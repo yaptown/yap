@@ -69,6 +69,9 @@ struct DictionaryScreen: View {
                 if hasMore { Button("Load 200 more") { loadMore() } }
                 if entries.isEmpty { ContentUnavailableView.search(text: query) }
             } header: { Text("\(entries.count) results · \(deck.get_gram_dictionary_count()) dictionary entries") }
+            // One glass card behind hundreds of lazy rows would be costly, so the
+            // rows take the card's translucent fallback instead of opaque white.
+            .listRowBackground(Rectangle().fill(.ultraThinMaterial).opacity(0.65).overlay(Tokens.palette.card.color.opacity(0.18)))
         }
     }
     private func reload(preservingPageCount: Bool = false) {

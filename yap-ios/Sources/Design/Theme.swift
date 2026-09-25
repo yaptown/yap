@@ -118,6 +118,26 @@ struct StudyCard<Content: View>: View {
     }
 }
 
+/// A titled group of rows on the shared card surface.
+struct CardSection<Content: View>: View {
+    var title: String?
+    @ViewBuilder var content: Content
+    init(_ title: String? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title; self.content = content()
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let title {
+                Text(title.uppercased()).font(.caption.weight(.semibold)).tracking(1).foregroundStyle(.secondary)
+                    .padding(.horizontal, 16)
+            }
+            VStack(alignment: .leading, spacing: 0) { content }
+                .padding(.horizontal, 16).padding(.vertical, 4)
+                .frame(maxWidth: .infinity, alignment: .leading).cardSurface()
+        }
+    }
+}
+
 extension View {
     /// The web's `fade-in` family: fade in while rising 10pt.
     func fadeIn(duration: Double = 0.6, delay: Double = 0) -> some View {

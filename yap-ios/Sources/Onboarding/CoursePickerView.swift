@@ -26,21 +26,24 @@ struct CoursePickerView: View {
                     session.onboardingCourse = nil; onSelected()
                 }.id(course)
             } else {
-                List {
-                    Section("I speak") {
-                        Picker("Native language", selection: $native) {
-                            ForEach(natives, id: \.self) { language in Text(get_language_metadata(language: language).native_name).tag(language) }
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        CardSection("I speak") {
+                            HStack {
+                                Text("Native language")
+                                Spacer(minLength: 0)
+                                Picker("Native language", selection: $native) {
+                                    ForEach(natives, id: \.self) { language in Text(get_language_metadata(language: language).native_name).tag(language) }
+                                }.pickerStyle(.menu)
+                            }.frame(minHeight: 44)
                         }
-                    }
-                    Section("Resume") {
-                        ForEach(targets.filter { onboarded.contains($0.target_language) }, id: \.self) { course in courseButton(course, resume: true) }
-                    }
-                    ForEach([CourseMaturity.Stable, .Beta, .Alpha], id: \.self) { maturity in
-                        Section(maturity == .Stable ? "What language will you speak next?" : "\(String(describing: maturity)) Languages") {
-                            ForEach(targets.filter { !onboarded.contains($0.target_language) && get_language_metadata(language: $0.target_language).status == maturity }, id: \.self) { course in courseButton(course, resume: false) }
+                        courseSection("Resume", targets.filter { onboarded.contains($0.target_language) }, resume: true)
+                        ForEach([CourseMaturity.Stable, .Beta, .Alpha], id: \.self) { maturity in
+                            courseSection(maturity == .Stable ? "What language will you speak next?" : "\(String(describing: maturity)) Languages",
+                                targets.filter { !onboarded.contains($0.target_language) && get_language_metadata(language: $0.target_language).status == maturity }, resume: false)
                         }
-                    }
-                }.scrollContentBackground(.hidden).navigationTitle("Choose a course").navigationBarTitleDisplayMode(.inline)
+                    }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                }.navigationTitle("Choose a course").navigationBarTitleDisplayMode(.inline)
             }
         }
         .containerBackground(.clear, for: .navigation)
@@ -64,14 +67,24 @@ struct CoursePickerView: View {
         }
         #endif
     }
+    @ViewBuilder private func courseSection(_ title: String, _ courses: [Course], resume: Bool) -> some View {
+        if !courses.isEmpty {
+            CardSection(title) {
+                ForEach(courses, id: \.self) { course in
+                    if course != courses.first { Divider() }
+                    courseButton(course, resume: resume)
+                }
+            }
+        }
+    }
     private func courseButton(_ course: Course, resume: Bool) -> some View {
         Button { select(course) } label: {
             HStack(spacing: 12) {
                 let metadata = get_language_metadata(language: course.target_language)
                 if Theme.emojiFontAvailable { Text(metadata.flag) }
-                Text((resume ? "Resume " : "") + metadata.english_name)
-                Spacer(); Image(systemName: "chevron.right")
-            }.frame(minHeight: 52)
+                Text((resume ? "Resume " : "") + metadata.english_name).foregroundStyle(Color.yapText)
+                Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+            }.frame(minHeight: 52).contentShape(Rectangle())
         }
     }
     private func select(_ course: Course) {
