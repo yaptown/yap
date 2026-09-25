@@ -12,12 +12,15 @@
 {"sentence":"Accidenti, Cleo.","failure_count":3}
 {"sentence":"Accidenti, Fred.","failure_count":3}
 {"sentence":"Accidenti, Leo, come scotti.","failure_count":3}
+{"sentence":"Accidenti, abbiamo fatto tardi !","failure_count":2}
+{"sentence":"Accidenti, che inchino !","failure_count":2}
 {"sentence":"Accidenti, com'è grosso.","failure_count":3}
 {"sentence":"Accidenti, cos'è un pettinino?","failure_count":3}
 {"sentence":"Accidenti, dov'eri finito?","failure_count":3}
 {"sentence":"Accidenti, fratello.","failure_count":3}
 {"sentence":"Accidenti, ho dimenticato le chiavi.","failure_count":3}
 {"sentence":"Accidenti, l'hai schiacciata.","failure_count":3}
+{"sentence":"Accidenti, mi è caduto Giorgio !","failure_count":2}
 {"sentence":"Accidenti, non sembrare così sopreso..!","failure_count":3}
 {"sentence":"Accidenti, questo ragazzo.","failure_count":3}
 {"sentence":"Accidenti, sei un'esperta!","failure_count":3}
@@ -135,6 +138,7 @@
 {"sentence":"Eccola che fa l'attrice.","failure_count":3}
 {"sentence":"Eccola là, con la nostra beata tribù di rampolli.","failure_count":3}
 {"sentence":"Eccola lì una puttana vera.","failure_count":3}
+{"sentence":"Eccola qua, la primavera !","failure_count":2}
 {"sentence":"Eccola, eccola.","failure_count":3}
 {"sentence":"Eccola, guarda.","failure_count":3}
 {"sentence":"Eccola, l'ho trovata.","failure_count":3}
@@ -143,6 +147,7 @@
 {"sentence":"Efisio, invece, l'umile pastore che non parla una parola d'italiano, vince.","failure_count":3}
 {"sentence":"Ehi, ehi, ehi, ehi, ehi, ehi, ehi, ehi!","failure_count":3}
 {"sentence":"Ehi, ragazzi, un secondo.","failure_count":1}
+{"sentence":"Eliminati.","failure_count":2}
 {"sentence":"Equipaggio Titane rosso al completo.","failure_count":3}
 {"sentence":"Equipaggio dell'Effroyable Blu conto su di voi.","failure_count":3}
 {"sentence":"Eroina, cocaina, amfetamine.","failure_count":3}
@@ -545,6 +550,7 @@
 {"sentence":"Stà zitto, imbecille!","failure_count":1}
 {"sentence":"Sua altezza se l'è portato via.","failure_count":3}
 {"sentence":"Subito..?","failure_count":3}
+{"sentence":"Sugli attenti !","failure_count":2}
 {"sentence":"Sull'impero incombe un pericolo.","failure_count":3}
 {"sentence":"Suzume, dove eri finita!?","failure_count":3}
 {"sentence":"Sì, lo so, avrei dovuto dirtelo prima ma non ho trovato il coraggio.","failure_count":1}
@@ -556,6 +562,7 @@
 {"sentence":"Ti pensavo senza paura.","failure_count":1}
 {"sentence":"Ti prego, non uscire!","failure_count":1}
 {"sentence":"Ti ricordi..?","failure_count":3}
+{"sentence":"Tiene, te la regalo.","failure_count":1}
 {"sentence":"Tienitele, allora.","failure_count":3}
 {"sentence":"Tira su!","failure_count":1}
 {"sentence":"Tocchiamo legno.","failure_count":3}

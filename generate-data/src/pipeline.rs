@@ -132,20 +132,29 @@ fn deduplicate_patterns<P: Eq + Hash + Clone>(
     result
 }
 
-/// A course's two output directories, created and canonicalized — a pure
+/// A course's output directories, created and canonicalized — a pure
 /// derivation of the course.
 pub struct CourseDirs {
+    /// Everything derived from the sentence corpus alone — the sentences,
+    /// their tokenizations, multiword terms, etymology, morphemes. Dialects
+    /// of one language share a corpus (`Language::corpus_code`), so they
+    /// share this directory and none of that is computed twice.
+    pub corpus_dir: PathBuf,
+    /// What genuinely differs between dialects: pronunciation and what is
+    /// built on it (homophones, minimal pairs, audio), plus frequencies.
     pub target_language_dir: PathBuf,
     pub native_specific_dir: PathBuf,
 }
 
 pub fn course_dirs(course: &Course) -> anyhow::Result<CourseDirs> {
-    let target_language_dir = PathBuf::from(format!("./out/{}", course.target_language.code()));
-    std::fs::create_dir_all(&target_language_dir)
-        .context("Failed to create target language directory")?;
-    let target_language_dir = target_language_dir
-        .canonicalize()
-        .context("Failed to canonicalize target language output directory")?;
+    let out_dir = |name: &str, what: &str| -> anyhow::Result<PathBuf> {
+        let dir = PathBuf::from(format!("./out/{name}"));
+        std::fs::create_dir_all(&dir).with_context(|| format!("Failed to create {what}"))?;
+        dir.canonicalize()
+            .with_context(|| format!("Failed to canonicalize {what}"))
+    };
+    let corpus_dir = out_dir(course.target_language.corpus_code(), "corpus directory")?;
+    let target_language_dir = out_dir(course.target_language.code(), "target language directory")?;
 
     let native_specific_dir = PathBuf::from(format!(
         "./out/{}_for_{}",
@@ -159,6 +168,7 @@ pub fn course_dirs(course: &Course) -> anyhow::Result<CourseDirs> {
         .context("Failed to canonicalize native-specific output directory")?;
 
     Ok(CourseDirs {
+        corpus_dir,
         target_language_dir,
         native_specific_dir,
     })
@@ -405,10 +415,7 @@ pub async fn segment_corpus(
 ) -> anyhow::Result<SegmentedCorpus> {
     let course = *course;
     let mut timer = crate::StageTimer::new();
-    let CourseDirs {
-        target_language_dir,
-        ..
-    } = course_dirs(&course)?;
+    let CourseDirs { corpus_dir, .. } = course_dirs(&course)?;
     let banned_words = load_banned_words(&course)?;
 
     // The sentence set: sentence_corpus app sentences, deduplicated by text (last
@@ -423,7 +430,7 @@ pub async fn segment_corpus(
         panic!("Too few sentences: {}", sources_by_text.len());
     }
     {
-        let file = File::create(target_language_dir.join("target_language_sentences.jsonl"))
+        let file = File::create(corpus_dir.join("target_language_sentences.jsonl"))
             .context("Failed to create target language sentences file")?;
         let mut writer = BufWriter::new(file);
         for text in sources_by_text.keys() {
@@ -431,7 +438,7 @@ pub async fn segment_corpus(
         }
         writer.flush()?;
 
-        let file = File::create(target_language_dir.join("sentence_sources.jsonl"))
+        let file = File::create(corpus_dir.join("sentence_sources.jsonl"))
             .context("Failed to create sentence sources file")?;
         let mut writer = BufWriter::new(file);
         for (text, source) in &sources_by_text {
@@ -444,7 +451,7 @@ pub async fn segment_corpus(
     let sentences: Vec<String> = sources_by_text.keys().map(|s| s.to_string()).collect();
     let sentences_tokenizations = crate::nlp::process_sentences(
         sentences,
-        &target_language_dir.join("target_language_sentences_tokenization.jsonl"),
+        &corpus_dir.join("target_language_sentences_tokenization.jsonl"),
         course.target_language,
     )
     .await
@@ -494,7 +501,7 @@ pub async fn segment_corpus(
     let restricted_tokenizations = if !restricted_sentence_texts.is_empty() {
         crate::nlp::process_sentences(
             restricted_sentence_texts,
-            &target_language_dir.join("restricted_sentences_tokenization.jsonl"),
+            &corpus_dir.join("restricted_sentences_tokenization.jsonl"),
             course.target_language,
         )
         .await
@@ -518,16 +525,16 @@ pub async fn segment_corpus(
     // Multiword terms (the file is a load-or-build cache) and their
     // tokenizations.
     let multiword_terms =
-        crate::wiktionary_terms::ensure_multiword_terms_file(&course, &target_language_dir)
+        crate::wiktionary_terms::ensure_multiword_terms_file(&course, &corpus_dir)
             .await
             .context("Failed to ensure multiword terms file exists")?;
     let wiktionary_alt_forms =
-        crate::wiktionary_terms::download_alt_forms(&multiword_terms, &target_language_dir)
+        crate::wiktionary_terms::download_alt_forms(&multiword_terms, &corpus_dir)
             .await
             .context("Failed to download alt forms")?;
     let multiword_terms_tokenizations = crate::nlp::process_sentences(
         multiword_terms,
-        &target_language_dir.join("target_language_multiword_terms_tokenization.jsonl"),
+        &corpus_dir.join("target_language_multiword_terms_tokenization.jsonl"),
         course.target_language,
     )
     .await
@@ -581,7 +588,7 @@ pub async fn segment_corpus(
     } = crate::tokenize::train_supertokens_and_write_diagnostics(
         &all_sentence_literals,
         course.target_language,
-        &target_language_dir,
+        &corpus_dir,
         &seed_grams,
     );
     timer.lap("omnigram training");
@@ -800,7 +807,7 @@ pub async fn segment_corpus(
             .await
             .context("Failed to grade slot patterns")?;
 
-        let summary_path = target_language_dir.join("slot_patterns.tsv");
+        let summary_path = corpus_dir.join("slot_patterns.tsv");
         slot_analysis::write_summary(&summary_path, &graded)
             .context("Failed to write slot pattern summary")?;
 

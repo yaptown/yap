@@ -1,6 +1,6 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3034173
+Total predictions: 3034429
 Total errors: 7858
 Accuracy: 99.74%
 
@@ -22,7 +22,7 @@ Accuracy: 99.74%
   - А с чего вы взяли, что Калининград - это европейский город?
   - Авария - это ужасно.
 
-### "," + "-" (159 occurrences)
+### "," + "-" (158 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -414,14 +414,6 @@ Accuracy: 99.74%
   - Его цель - стать адвокатом.
   - Её мечта - стать медсестрой.
 
-### "-" + "то" (10 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Вообще- то, нет.
-  - Единственная разница между мной и сумасшедшим - то, что я не сумасшедший.
-  - Как говорит наш любимый шеф, если человек идиот - то это надолго.
-
 ### "-" + "учитель" (10 occurrences)
 - Predicted: None
 - Actual: Space
@@ -485,6 +477,14 @@ Accuracy: 99.74%
   - Алжир - одна из самых безопасных стран Африки.
   - Германия - одна из наиболее красивых стран Европы.
   - Греция - одна из стран, которые мне больше всего хотелось бы посетить.
+
+### "-" + "то" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Вообще- то, нет.
+  - Единственная разница между мной и сумасшедшим - то, что я не сумасшедший.
+  - Куда- то собрались?
 
 ### "-" + "я" (9 occurrences)
 - Predicted: None
@@ -2102,14 +2102,6 @@ Accuracy: 99.74%
   - Я и не подозревал, что Том - муж Мэри.
   - Я не знал, что Том - муж Мэри.
 
-### "-" + "мы" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Еду, медикаменты,- мы все свезем сюда.
-  - И как только попытаются снять - мы их возьмём!
-  - Когда мы любим - мы наиболее уязвимы.
-
 ### "-" + "начальник" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3675,6 +3667,13 @@ Accuracy: 99.74%
   - Вода, льющаяся с крыши, - музыка для моих ушей.
   - Моё хобби - музыка.
 
+### "-" + "мы" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Еду, медикаменты,- мы все свезем сюда.
+  - Когда мы любим - мы наиболее уязвимы.
+
 ### "-" + "мыть" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4284,6 +4283,13 @@ Accuracy: 99.74%
   - Если бы только камни могли говорить, правда, Арт ?
   - О чем ты только думал, Арт ?
 
+### "Атлантика" + "»" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Гостиница «Атлантика».
+  - Отель «Атлантика».
+
 ### "Африка" + "-" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4689,6 +4695,13 @@ Accuracy: 99.74%
 - Examples:
   - Неаполь - город с населением около миллиона человек.
   - Неаполь - город с почти миллионным населением.
+
+### "Неделе" + "»" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - В «Неделе».
+  - Читали в «Неделе»?
 
 ### "Немецкий" + "-" (2 occurrences)
 - Predicted: None
@@ -5606,6 +5619,13 @@ Accuracy: 99.74%
 - Examples:
   - Мой племянник - сын моего брата.
   - Мой племянник - хоккеист.
+
+### "побери" + "»" (2 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Нет… «Черт побери»!
+  - Пароль «Черт побери»?
 
 ### "пока" + "»" (2 occurrences)
 - Predicted: Space
@@ -7361,12 +7381,6 @@ Accuracy: 99.74%
 - Actual: Space
 - Examples:
   - Том - гетеросексуальный парень.
-
-### "-" + "гипс" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Потерял сознание, очнулся - гипс!
 
 ### "-" + "глагол" (1 occurrences)
 - Predicted: None
@@ -9731,12 +9745,6 @@ Accuracy: 99.74%
 - Actual: Space
 - Examples:
   - Всё, что вам нужно сделать, - подмести пол.
-
-### "-" + "подойдёт" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Проверил, товарищ полковник, - подойдёт.
 
 ### "-" + "подходящая" (1 occurrences)
 - Predicted: None
@@ -12480,12 +12488,6 @@ Accuracy: 99.74%
 - Examples:
   - Асмэра - столица Эритреи.
 
-### "Атлантика" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Я живу в гостинице «Атлантика».
-
 ### "Ашхабад" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14010,12 +14012,6 @@ Accuracy: 99.74%
 - Examples:
   - Изменится ли что-либо, если я буду лежать в ящике в «Золотом апостоле»?
 
-### "Ива" + "»" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Пришлите такси к ресторану «Плакучая Ива».
-
 ### "Идзакая" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -15096,6 +15092,12 @@ Accuracy: 99.74%
 - Examples:
   - Минск - столица Белоруссии.
 
+### "Михаил Светлов" + "»" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - А он точно с теплохода «Михаил Светлов»?
+
 ### "Могадишо" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -15113,6 +15115,12 @@ Accuracy: 99.74%
 - Actual: Space
 - Examples:
   - Столица Молдовы - Кишинёв.
+
+### "Молоко" + "»" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - По направлению к городу движется автоцистерна «Молоко».
 
 ### "Монтаж" + "-" (1 occurrences)
 - Predicted: None
@@ -17321,6 +17329,12 @@ Accuracy: 99.74%
 - Actual: Space
 - Examples:
   - Чикаго - главный город на Среднем Западе.
+
+### "Чиканук" + "»" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Аптека «Чиканук».
 
 ### "Чили" + "-" (1 occurrences)
 - Predicted: None
@@ -19800,6 +19814,12 @@ Accuracy: 99.74%
 - Examples:
   - Новая реформа здравоохранения — это не что иное, как полумера.
 
+### "ива" + "»" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Пришлите такси к ресторану «Плакучая ива».
+
 ### "иврит" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -19835,12 +19855,6 @@ Accuracy: 99.74%
 - Actual: Space
 - Examples:
   - Какая идея !
-
-### "идиот" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Как говорит наш любимый шеф, если человек идиот - то это надолго.
 
 ### "изображением" + "?" (1 occurrences)
 - Predicted: None
@@ -21768,12 +21782,6 @@ Accuracy: 99.74%
 - Examples:
   - Ладно, но только если пообещаете не воровать слово «очевидно».
 
-### "очнулся" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Потерял сознание, очнулся - гипс!
-
 ### "ошибиться" + "»" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -23394,12 +23402,6 @@ Accuracy: 99.74%
 - Examples:
   - Не сломалось - не чини.
 
-### "случае" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Хорошо, во всяком случае , миссия моя окончена.
-
 ### "случае" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -23483,12 +23485,6 @@ Accuracy: 99.74%
 - Actual: None
 - Examples:
   - Что значит «снова»?
-
-### "снять" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - И как только попытаются снять - мы их возьмём!
 
 ### "собак" + "-" (1 occurrences)
 - Predicted: None
@@ -24869,6 +24865,12 @@ Accuracy: 99.74%
 - Actual: None
 - Examples:
   - Идти на компромисс —против моих правил.
+
+### "…" + "«" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - Нет… «Черт побери»!
 
 ### "…" + "Вы" (1 occurrences)
 - Predicted: Space

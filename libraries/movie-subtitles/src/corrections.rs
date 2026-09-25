@@ -99,7 +99,7 @@ pub fn merge(existing: Vec<Correction>, additions: Vec<Correction>) -> Vec<Corre
 }
 
 pub fn merge_file(dir: &Path, language: Language, additions: Vec<Correction>) -> Result<()> {
-    let path = dir.join(format!("{}.jsonl", language.code()));
+    let path = dir.join(format!("{}.jsonl", language.corpus_code()));
     let old = match std::fs::read_to_string(&path) {
         Ok(text) => parse(&text)?,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
@@ -117,9 +117,10 @@ pub fn merge_file(dir: &Path, language: Language, additions: Vec<Correction>) ->
     Ok(())
 }
 
+/// Corrections are of the shared corpus's subtitles, so dialects share them.
 fn film_entries(language: Language, imdb: &str) -> impl Iterator<Item = &'static Correction> + '_ {
     ENTRIES
-        .get(language.code())
+        .get(language.corpus_code())
         .into_iter()
         .flatten()
         .filter(move |entry| entry.imdb() == imdb)

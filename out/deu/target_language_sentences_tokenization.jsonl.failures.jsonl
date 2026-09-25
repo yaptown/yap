@@ -27,6 +27,7 @@
 {"sentence":"Alleine bin ich besser dran.","failure_count":3}
 {"sentence":"Alleine hätte es mich erwischt.","failure_count":3}
 {"sentence":"Alleine hätte ich das nicht gekonnt.","failure_count":3}
+{"sentence":"Alleine kommt man nicht durchs Leben.","failure_count":2}
 {"sentence":"Alleine schaffe ich es nicht, aber wir zusammen schon.","failure_count":3}
 {"sentence":"Alleine wär mir vieles entgangen.","failure_count":3}
 {"sentence":"Alleine.","failure_count":3}
@@ -59,6 +60,8 @@
 {"sentence":"Aus der Ferne sieht der große Felsen aus wie ein altes Schloss.","failure_count":1}
 {"sentence":"Aus einer anderen Zeit.","failure_count":3}
 {"sentence":"Aus'm Blickfeld, du Flöte!","failure_count":3}
+{"sentence":"Aus'm Palast?","failure_count":2}
+{"sentence":"Aus'm Westen?","failure_count":2}
 {"sentence":"Ausserdem habe ich ihn lebendig gesehen.","failure_count":1}
 {"sentence":"Auweia!","failure_count":1}
 {"sentence":"Außerdem bist du für die Arbeit in einem Nachtclub nicht geeignet.","failure_count":1}
@@ -135,6 +138,7 @@
 {"sentence":"Das war aber höchste Zeit.","failure_count":1}
 {"sentence":"Das war eine Sondermeldung, wir fahren jetzt mit unserem Musikprogramm fort.","failure_count":1}
 {"sentence":"Das war wirklich komisch.","failure_count":1}
+{"sentence":"Das wird in der nächsten Ausgabe der Konkret erscheinen.","failure_count":2}
 {"sentence":"Dass man Opfer bringen muss, nicht wahr!?","failure_count":3}
 {"sentence":"Dass wir nicht streiten?","failure_count":1}
 {"sentence":"Dein Dekolleté.","failure_count":1}
@@ -146,6 +150,7 @@
 {"sentence":"Der Bräutigam ist schon da, und du bist noch nicht mal angezogen?","failure_count":1}
 {"sentence":"Der Fremdling antwortete mit einem langen, unverständlichen Satz.","failure_count":1}
 {"sentence":"Der Gitarre spielende Junge ist mein Bruder.","failure_count":1}
+{"sentence":"Der Herr Anwalt im Fidel-Castro-Look.","failure_count":2}
 {"sentence":"Der Hurensohn ist tot.","failure_count":1}
 {"sentence":"Der Kaiser hat abgedankt.","failure_count":3}
 {"sentence":"Der König hat nicht dafür einzustehen.","failure_count":3}
@@ -179,6 +184,7 @@
 {"sentence":"Die Autobahnen, das war nicht irgendein Hanswurst.","failure_count":1}
 {"sentence":"Die Berge hallen wider vom Klang der Musik.","failure_count":1}
 {"sentence":"Die Büroangestellte wurde aufgrund ihrer ungehobelten Manieren entlassen.","failure_count":1}
+{"sentence":"Die DDR, die ich für meine Mutter schuf, hätte ich mir vielleicht so gewünscht.","failure_count":2}
 {"sentence":"Die Demonstration am Bahnhof hat die Reisenden beeinträchtigt.","failure_count":1}
 {"sentence":"Die Eintrittskarten sind meinen, gib sie mir zurück.","failure_count":1}
 {"sentence":"Die Entscheidung, für die Briten zu kämpfen, erwies sich als Fehler.","failure_count":1}
@@ -279,6 +285,7 @@
 {"sentence":"Eine Metzgerei, damit es nicht immer Zeitungsläden sind.","failure_count":1}
 {"sentence":"Eine Unterschrift, Julie.","failure_count":1}
 {"sentence":"Eine feine Prinzessin kennt Anstößiges wie Schwitzen nicht.","failure_count":3}
+{"sentence":"Einen Freund auch nicht, falls du es nicht weißt.","failure_count":2}
 {"sentence":"Einen erstklassiger Kämpfer.","failure_count":1}
 {"sentence":"Einundachtzig,.","failure_count":1}
 {"sentence":"Elektrizität, fortschrittliche Medizin, man konnte sogar fliegen.","failure_count":1}
@@ -333,6 +340,7 @@
 {"sentence":"Es wäre uns eine Ehre wenn sie in eurem Haus stehen würde.","failure_count":1}
 {"sentence":"Es wären keine Geister, wenn man sie so einfach sehen könnte!","failure_count":1}
 {"sentence":"Essen Sie sie aus meiner Hand.","failure_count":1}
+{"sentence":"Euer Vater blieb nicht wegen einer anderen Frau im Westen.","failure_count":2}
 {"sentence":"Eure Medizin kann meine Krankheit nicht heilen.","failure_count":1}
 {"sentence":"Eventuell hab ich noch Fragen.","failure_count":1}
 {"sentence":"Eventuell komme ich zurück.","failure_count":1}
@@ -369,6 +377,7 @@
 {"sentence":"Gib mir was zu trinken, Rico.","failure_count":1}
 {"sentence":"Ginny, sieh mal!","failure_count":3}
 {"sentence":"Gleich wird es spannend!","failure_count":1}
+{"sentence":"Gnädige Frau, mein Herr!","failure_count":2}
 {"sentence":"Gott hielt sich an Kantabens Gebete.","failure_count":3}
 {"sentence":"Grauer Van, nach Norden, rauf zur Craw Creek Road.","failure_count":1}
 {"sentence":"Grüß sie von mir.","failure_count":1}
@@ -582,7 +591,9 @@
 {"sentence":"Ihre Freundin starb an dem Tag, an dem deine Mutter verschwand.","failure_count":3}
 {"sentence":"Ihre Leistung auf der Kobayashi Maru stört Sie.","failure_count":1}
 {"sentence":"Ihre grüne Haut ist nur ein äußeres Manifestorium ihres verdorbenen Charakters.","failure_count":3}
+{"sentence":"Im Gesicht hast du nicht viel abgekriegt.","failure_count":2}
 {"sentence":"Im KZ?","failure_count":1}
+{"sentence":"Im Ost-West-Team praktizierte ich die Wiedervereinigung.","failure_count":2}
 {"sentence":"In Gegenwart von unterwürfigen Menschen wird es mir unwohl.","failure_count":1}
 {"sentence":"In Sachen Themen steht das ganz oben auf der Liste.","failure_count":1}
 {"sentence":"In dieser Nacht fröstelte sie im Zelt.","failure_count":1}
@@ -631,6 +642,7 @@
 {"sentence":"Kennte ich ihn besser, so würde ich ihm die Wahrheit sagen.","failure_count":3}
 {"sentence":"Kennte ich ihren Namen und ihre Adresse, so könnte ich ihr schreiben.","failure_count":3}
 {"sentence":"Klatschers Mutter macht's nicht mehr lang.","failure_count":3}
+{"sentence":"Knallen wir mit dem Baby mal über die Bahn!","failure_count":2}
 {"sentence":"Kneife mich bitte,..","failure_count":3}
 {"sentence":"Koksen und Party machen.","failure_count":3}
 {"sentence":"Kolonne.","failure_count":3}
@@ -974,6 +986,7 @@
 {"sentence":"Trockne deine Tränen.","failure_count":1}
 {"sentence":"Trocknen Sie Ihre Tränen!","failure_count":1}
 {"sentence":"Trommeln und Gongs, all das, wo man draufschlägt.","failure_count":1}
+{"sentence":"Trotz deines Talents, an dem du noch nicht mal zweifelst.","failure_count":2}
 {"sentence":"Träumt von Paro's Hochzeit mit Devdas.","failure_count":3}
 {"sentence":"Tut mir Leid wegen der Tränen.","failure_count":1}
 {"sentence":"Two, two, three four.","failure_count":3}
@@ -1003,6 +1016,7 @@
 {"sentence":"Verdammter Scheißkerl!","failure_count":1}
 {"sentence":"Verdammter Schlappschwanz!","failure_count":1}
 {"sentence":"Vereint im Kampf von Himmel und Erde!","failure_count":1}
+{"sentence":"Vergas unser General etwa das polnisch-rumänische Militärbündnis?","failure_count":1}
 {"sentence":"Vergießt eure Tränen für die anderen.","failure_count":1}
 {"sentence":"Verscheiß es dir nicht wieder mit allen.","failure_count":1}
 {"sentence":"Versetz Davis von den Anfängern ins Auswahlteam.","failure_count":1}
@@ -1136,6 +1150,7 @@
 {"sentence":"Zahlreiche Boote lagen in der Bucht vor Anker.","failure_count":1}
 {"sentence":"Zahlreiche Bücher wurden gestohlen.","failure_count":1}
 {"sentence":"Zahlreiche berühmte Leute kommen hierher.","failure_count":1}
+{"sentence":"Zehn-, zwanzigtausend?","failure_count":2}
 {"sentence":"Zeig's ihm!","failure_count":3}
 {"sentence":"Zeig's ihm.","failure_count":3}
 {"sentence":"Zeigen Sie mir etwas von dem, was Sie komponiert haben?","failure_count":1}

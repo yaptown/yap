@@ -2396,8 +2396,10 @@ pub struct PronunciationClip {
 }
 
 /// Consolidated data structure containing all generated language data
-#[derive(Debug, Clone, Eq, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct ConsolidatedLanguageData {
+    /// Downloaded stroke forms for the course's writable units.
+    pub strokes: StrokeTable,
     /// All target language sentences from Anki cards
     pub target_language_sentences: Vec<String>,
     /// Mapping from target language sentences to all native translations

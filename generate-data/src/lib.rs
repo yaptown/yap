@@ -77,9 +77,7 @@ pub fn apply_cache_only(
 }
 
 fn cached_chat_client(model: &str, reasoning_effort: &str) -> tysm::chat_completions::ChatClient {
-    base_chat_client(model)
-        .with_reasoning_effort(reasoning_effort)
-        .with_service_tier("flex")
+    base_chat_client(model).with_reasoning_effort(reasoning_effort)
 }
 
 /// Wall-clock stage timer for profiling pipeline runs: each `lap` logs the
@@ -111,17 +109,22 @@ impl StageTimer {
 }
 
 /// Every chat client in this crate starts here, so the Batch API escape hatch
-/// below needs to exist in exactly one place.
-fn base_chat_client(model: &str) -> tysm::chat_completions::ChatClient {
-    let client = tysm::chat_completions::ChatClient::from_env(model)
-        .unwrap()
-        .with_cache_directory("./.cache")
+/// (`YAP_NO_BATCH`) needs to exist in exactly one place. No tysm cache: the
+/// translator keeps its own, everything else adds one via [`base_chat_client`].
+pub fn uncached_chat_client(model: &str) -> anyhow::Result<tysm::chat_completions::ChatClient> {
+    let client = tysm::chat_completions::ChatClient::from_env(model)?
         .with_small_batch_threshold(SMALL_BATCH_THRESHOLD);
-    if movie_subtitles::llm_segment::no_batch() {
+    Ok(if movie_subtitles::llm_segment::no_batch() {
         client.with_no_batch()
     } else {
         client
-    }
+    })
+}
+
+pub fn base_chat_client(model: &str) -> tysm::chat_completions::ChatClient {
+    uncached_chat_client(model)
+        .unwrap()
+        .with_cache_directory("./.cache")
 }
 
 /// The model a current-generation model replaced. Its cache is consulted
@@ -140,12 +143,8 @@ fn previous_generation(model: &str) -> Option<&'static str> {
 pub fn migrating_chat_client(model: &str) -> tysm::chat_completions::ChatClient {
     let mut client = cached_chat_client(model, "low");
     if let Some(previous) = previous_generation(model) {
-        // Checked before the older fallbacks. Both service tiers, since some
-        // call sites override the default "flex" and the tier is part of the
-        // cache key.
-        client = client
-            .with_cache_fallback(cached_chat_client(previous, "low"))
-            .with_cache_fallback(cached_chat_client(previous, "low").with_service_tier("default"));
+        // Checked before the older fallbacks.
+        client = client.with_cache_fallback(cached_chat_client(previous, "low"));
     }
     apply_cache_only(
         client
@@ -156,7 +155,6 @@ pub fn migrating_chat_client(model: &str) -> tysm::chat_completions::ChatClient 
             .with_cache_fallback(base_chat_client("gpt-5.2").with_reasoning_effort("high"))
             .with_cache_fallback(cached_chat_client("gpt-5.2", "low"))
             .with_cache_fallback(base_chat_client("gpt-5"))
-            .with_cache_fallback(base_chat_client("gpt-5").with_service_tier("flex"))
             .with_cache_fallback(base_chat_client("gpt-4o")),
     )
 }
@@ -183,6 +181,7 @@ pub mod pronunciations;
 pub mod proper_noun_definitions;
 pub mod read_anki;
 pub mod slot_analysis;
+pub mod strokes;
 pub mod target_sentences;
 pub mod tatoeba;
 pub mod token_embeddings;

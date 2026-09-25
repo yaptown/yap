@@ -88,6 +88,7 @@ pub struct FrequencyList {
 /// back together by [`LanguagePack::from_parts`].
 #[derive(Debug)]
 pub struct LanguagePack {
+    pub strokes: crate::StrokeTable,
     pub written_ease_order: EaseOrder<TaggedGram<SpurGram>>,
     pub listening_ease_order: EaseOrder<SpurGram>,
     senses: FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>>,
@@ -1088,6 +1089,7 @@ impl LanguagePack {
             morphemes,
             human_audio,
             pronunciation_audio,
+            strokes: language_data.strokes,
         }
     }
 }
@@ -1182,6 +1184,8 @@ pub struct LanguagePackCore {
 /// See [`LanguagePackCore`] for the spur-space contract between the halves.
 #[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct LanguagePackSentences {
+    /// Downloaded stroke forms; not needed by the placement-test core.
+    pub strokes: crate::StrokeTable,
     /// Fingerprint of the core spur space this half was built against.
     pub spur_space_fingerprint: u64,
     /// Strings `N..M` of the shared spur space, in spur order.
@@ -1304,6 +1308,7 @@ impl LanguagePack {
     /// the exhaustive destructure below makes forgetting one a compile error.
     pub fn split(self) -> (LanguagePackCore, LanguagePackSentences) {
         let LanguagePack {
+            strokes,
             senses: _,
             written_ease_order: _,
             listening_ease_order: _,
@@ -1617,6 +1622,7 @@ impl LanguagePack {
                 morphemes,
             },
             LanguagePackSentences {
+                strokes,
                 spur_space_fingerprint: fingerprint,
                 string_extension,
                 gram_extension,
@@ -1669,6 +1675,7 @@ impl LanguagePack {
 
         let Some(sentences) = sentences else {
             return LanguagePack {
+                strokes: crate::StrokeTable::default(),
                 senses: sense_index(&gram_frequencies),
                 written_ease_order,
                 listening_ease_order,
@@ -1744,6 +1751,7 @@ impl LanguagePack {
         };
 
         LanguagePack {
+            strokes: sentences.strokes,
             senses: sense_index(&gram_frequencies),
             written_ease_order,
             listening_ease_order,
@@ -2108,6 +2116,15 @@ mod sense_tests {
         };
         LanguagePack::new(
             ConsolidatedLanguageData {
+                strokes: crate::StrokeTable::from_iter([(
+                    "一".into(),
+                    vec![crate::StrokeGlyph {
+                        standard: crate::StrokeStandard::Japan,
+                        strokes: vec![crate::Stroke {
+                            points: vec![(0.1, 0.5), (0.9, 0.5)],
+                        }],
+                    }],
+                )]),
                 target_language_sentences: vec!["bank".into()],
                 translations: vec![("bank".into(), vec!["banque".into()])],
                 nlp_sentences: vec![],
@@ -2194,6 +2211,25 @@ mod sense_tests {
     #[test]
     fn entry_resolution_fallbacks() {
         assert_resolution(&pack());
+    }
+
+    #[test]
+    fn strokes_live_in_sentences_and_round_trip() {
+        let pack = pack();
+        let strokes = pack.strokes.clone();
+        assert!(!strokes.is_empty());
+        let (core, sentences) = pack.split();
+        assert_eq!(sentences.strokes, strokes);
+        let core_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&core).unwrap();
+        let sentence_bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
+        let core = rkyv::from_bytes::<LanguagePackCore, rkyv::rancor::Error>(&core_bytes).unwrap();
+        let sentences =
+            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&sentence_bytes)
+                .unwrap();
+        let pack = LanguagePack::from_parts(core, Some(sentences));
+        assert_eq!(pack.strokes, strokes);
+        let (core, _) = pack.split();
+        assert!(LanguagePack::from_parts(core, None).strokes.is_empty());
     }
 
     #[test]

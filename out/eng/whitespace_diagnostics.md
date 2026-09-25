@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3835631
-Total errors: 8309
+Total predictions: 3835633
+Total errors: 8310
 Accuracy: 99.78%
 
 ## Error Patterns (sorted by frequency)
@@ -54,7 +54,7 @@ Accuracy: 99.78%
   - A pig's gotta fly.
   - Franco, you gotta stop.
 
-### "-" + "I" (19 occurrences)
+### "-" + "I" (20 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:

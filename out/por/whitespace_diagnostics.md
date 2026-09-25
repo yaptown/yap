@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 2368185
-Total errors: 664
+Total predictions: 2378893
+Total errors: 665
 Accuracy: 99.97%
 
 ## Error Patterns (sorted by frequency)
@@ -472,6 +472,12 @@ Accuracy: 99.97%
 - Examples:
   - Pois é ?
   - Quem é ?
+
+### " vend" + "o" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Tá́s vendo?
 
 ### "#" + "Evento" (1 occurrences)
 - Predicted: Space
@@ -1823,12 +1829,6 @@ Accuracy: 99.97%
 - Examples:
   - Por favor, Deus, que tenha chamado .
 
-### "chamar" + "justo" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - O Rocha foi chamarjusto o Matias pra trabalhar com ele.
-
 ### "chegou" + "." (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2656,6 +2656,12 @@ Accuracy: 99.97%
 - Actual: Space
 - Examples:
   - Ou simplesmente não fui notado ?
+
+### "não" + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - A senhora me conheceu criança mesmo, mas adulto a senhora não me conhece não .
 
 ### "né" + "?" (1 occurrences)
 - Predicted: None

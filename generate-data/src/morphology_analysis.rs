@@ -8,21 +8,11 @@ use std::io::Write;
 use std::sync::LazyLock;
 use tysm::chat_completions::ChatClient;
 
-static CHAT_CLIENT_4O: LazyLock<ChatClient> = LazyLock::new(|| {
-    crate::apply_cache_only(
-        ChatClient::from_env("gpt-4o")
-            .unwrap()
-            .with_cache_directory("./.cache"),
-    )
-});
+static CHAT_CLIENT_4O: LazyLock<ChatClient> =
+    LazyLock::new(|| crate::apply_cache_only(crate::base_chat_client("gpt-4o")));
 
 static CHAT_CLIENT_5: LazyLock<ChatClient> = LazyLock::new(|| {
-    crate::apply_cache_only(
-        ChatClient::from_env("gpt-5")
-            .unwrap()
-            .with_cache_directory("./.cache")
-            .with_service_tier("flex"),
-    )
+    crate::apply_cache_only(crate::base_chat_client("gpt-5"))
 });
 
 pub async fn create_morphology(

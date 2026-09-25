@@ -1,23 +1,23 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dire quelque chose	filled	9308	9	12	0.75	yes	Ce nom me dit quelque chose.	dit … chose
-dire quelque chose	clitic	2386	11	12	0.92	yes	Je crois que nous nous sommes déjà dit au revoir, camarade Novoseltsev.	nous … dit
-sa mère	clitic	2116	12	12	1.00	yes		
-sortir quelque chose	filled	683	10	12	0.83	yes	A t on une chance de faire sortir Bohr du Danemark ?	sortir … Bohr
-arriver à quelqu'un	filled	605	5	12	0.42	no	Alors que le procès du siècle arrive finalement à son terme.	arrive … à … terme
-arriver à quelqu'un	clitic	539	12	12	1.00	yes		
-sortir quelque chose	clitic	349	7	12	0.58	no	Comment vas-tu t'en sortir ?	t' … sortir
-désolé de faire quelque chose	infinitive	244	12	12	1.00	yes		
-ravi de faire quelque chose	infinitive	200	12	12	1.00	yes		
+dire quelque chose	filled	9393	12	12	1.00	yes		
+dire quelque chose	clitic	2419	11	12	0.92	yes	Ne les laissez pas vous dire que vous êtes fou.	vous … dire
+sa mère	clitic	2143	12	12	1.00	yes		
+sortir quelque chose	filled	689	8	12	0.67	yes	Et ils savent aussi que vous êtes capable de tout pour vous en sortir.	vous … sortir
+arriver à quelqu'un	filled	604	4	12	0.33	no	Alors que le procès du siècle arrive finalement à son terme.	arrive … à … terme
+arriver à quelqu'un	clitic	550	12	12	1.00	yes		
+sortir quelque chose	clitic	353	8	12	0.67	yes	Comment vas-tu t'en sortir sans boulot ?	t' … sortir
+désolé de faire quelque chose	infinitive	247	12	12	1.00	yes		
+ravi de faire quelque chose	infinitive	204	12	12	1.00	yes		
 faire de son mieux	clitic	156	12	12	1.00	yes		
-sa mère	filled	128	10	12	0.83	yes	La guerre est mère de toute chose.	mère … chose
-bien dans ses baskets	clitic	88	0	12	0.00	no	A l'époque, les gens pouvaient oublier leur nom, jamais leurs biens.	leurs … biens
+sa mère	filled	130	11	12	0.92	yes	La grand-mère de Tom est décédée.	mère … Tom
+bien dans ses baskets	clitic	90	0	12	0.00	no	A l'époque, les gens pouvaient oublier leur nom, jamais leurs biens.	leurs … biens
 but contre son camp	clitic	65	0	12	0.00	no	Ainsi c'est là votre but, entrer dans la montagne.	votre … but
-prendre son temps	clitic	57	11	12	0.92	yes	Les affaires lui prennent tout son temps.	prennent … son … temps
+prendre son temps	clitic	58	12	12	1.00	yes		
 faire son possible	clitic	50	12	12	1.00	yes		
 enchanté de faire quelque chose	infinitive	35	12	12	1.00	yes		
 y être pour quelque chose	filled	35	10	12	0.83	yes	Elle y était pour lui, son fiancé était via Tasso.	y … était … pour … lui
 donner sa parole	clitic	31	12	12	1.00	yes		
-faire ses valises	clitic	29	12	12	1.00	yes		
+faire ses valises	clitic	30	12	12	1.00	yes		
 dans son monde	filled	25	2	12	0.17	no	Bienvenue dans le monde à l'intérieur du tableau.	dans … monde … intérieur
 mettre dans sa poche	clitic	22	12	12	1.00	yes		
 faire son lit	clitic	21	12	12	1.00	yes		
@@ -25,24 +25,24 @@ garder son calme	clitic	19	12	12	1.00	yes
 sur ses gardes	clitic	19	12	12	1.00	yes		
 dans son monde	clitic	17	3	12	0.25	no	Bienvenue dans mon monde.	dans … mon … monde
 mettre fin à ses jours	filled	16	4	12	0.33	no	Et cela aurait également contribué à mettre fin à la guerre.	mettre … fin … à … guerre
-ouvrir ses portes	filled	16	0	12	0.00	no	Ce mariage ouvrira la porte de votre prison.	ouvrira … porte … prison
-régler ses comptes	clitic	16	12	12	1.00	yes		
-régler son compte	clitic	16	12	12	1.00	yes		
+ouvrir ses portes	filled	15	0	12	0.00	no	Ce mariage ouvrira la porte de votre prison.	ouvrira … porte … prison
+régler ses comptes	clitic	15	4	12	0.33	no	Il aurait dû venir pour le premier défi, on lui aurait réglé son compte.	réglé … son … compte
+régler son compte	clitic	15	11	12	0.92	yes	Je règle mes comptes.	règle … mes … comptes
 tirer quelque chose au clair	filled	15	12	12	1.00	yes		
 faire son affaire	clitic	13	5	12	0.42	no	Alors comme ça au premier coup d’œil Vous faites pas mon affaire.	faites … mon … affaire
+dans son coin	clitic	12	10	12	0.83	yes	Pas dans mon coin.	dans … mon … coin
 perdre son chemin	clitic	12	12	12	1.00	yes		
-dans son coin	clitic	11	8	11	0.73	yes	Pas dans mon coin.	dans … mon … coin
+avoir ses règles	filled	11	0	11	0.00	no	Avec ce qu'il avait bu, il était excité.	ce … avait
 faire sa B.A.	filled	11	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
 faire son apparition	filled	11	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
 faire son entrée	filled	11	0	11	0.00	no	Alors je gagne ma vie comme homme à tout faire.	tout … faire
+lever son verre	clitic	11	11	11	1.00	yes		
 être victime de son succès	filled	11	0	11	0.00	no	Ce criminel est une victime de ses gènes.	est … victime … de … gènes
-avoir ses règles	filled	10	0	10	0.00	no	De bons conducteurs, il y en a des tonnes.	conducteurs … a
-dans son coin	filled	10	0	10	0.00	no	Aujourd'hui, je veux te baiser dans chaque coin de cette pièce.	dans … coin … pièce
-en croire ses yeux	clitic	10	10	10	1.00	yes		
 avoir son compte	clitic	9	9	9	1.00	yes		
+dans son coin	filled	9	0	9	0.00	no	Aujourd'hui, je veux te baiser dans chaque coin de cette pièce.	dans … coin … pièce
 de son choix	clitic	9	5	9	0.56	no	Elle veut être libre de ses choix.	de … ses … choix
+en croire ses yeux	clitic	9	9	9	1.00	yes		
 faire son possible	filled	9	9	9	1.00	yes		
-lever son verre	clitic	9	9	9	1.00	yes		
 à sa connaissance	clitic	9	9	9	1.00	yes		
 avoir son compte	filled	8	1	8	0.12	no	Avons-nous le compte des prisonniers ?	Avons … compte … prisonniers
 avoir son mot à dire	clitic	8	8	8	1.00	yes		
@@ -52,18 +52,18 @@ passer son tour	clitic	8	8	8	1.00	yes
 prendre son parti	clitic	8	1	8	0.12	no	J'ai décidé de prendre son parti contre les autres.	prendre … son … parti
 heureux de faire quelque chose	infinitive	7	7	7	1.00	yes		
 de son propre chef	clitic	6	6	6	1.00	yes		
+creuser sa tombe	clitic	5	5	5	1.00	yes		
+le bonjour de quelqu'un	filled	5	4	5	0.80	yes	Le premier bonjour de la journée vient toujours de lui.	Le … bonjour … de … journée
 mettre tous ses œufs dans le même panier	clitic	5	5	5	1.00	yes		
-ne pas en croire ses yeux	clitic	5	5	5	1.00	yes		
 payer de sa vie	clitic	5	5	5	1.00	yes		
 porter dans son cœur	clitic	5	4	5	0.80	yes	Mais nous portons des armes dans nos cœurs.	portons … dans … nos … cœurs
 refaire sa vie	clitic	5	5	5	1.00	yes		
 avoir fait son temps	clitic	4	4	4	1.00	yes		
-creuser sa tombe	clitic	4	4	4	1.00	yes		
 faire savoir quelque chose à quelqu’un	clitic	4	4	4	1.00	yes		
 faire ses comptes	clitic	4	2	4	0.50	no	Comment avons-nous fait notre compte pour ne pas le voir ?	fait … notre … compte
 faire son compte	clitic	4	2	4	0.50	no	Est-ce que tu ne fais pas tes comptes aujourd'hui ?	fais … tes … comptes
-le bonjour de quelqu'un	filled	4	3	4	0.75	yes	Le premier bonjour de la journée vient toujours de lui.	Le … bonjour … de … journée
 ne pas en croire ses oreilles	clitic	4	4	4	1.00	yes		
+ne pas en croire ses yeux	clitic	4	4	4	1.00	yes		
 prendre sous son aile	clitic	4	4	4	1.00	yes		
 prunelle de ses yeux	clitic	4	4	4	1.00	yes		
 tremper son biscuit	clitic	4	0	4	0.00	no	Tom a trempé son biscuit dans son lait.	trempé … son … biscuit
@@ -86,6 +86,7 @@ sûr de son coup	clitic	3	3	3	1.00	yes
 tomber de sa chaise	clitic	3	3	3	1.00	yes		
 trouver sa voie	clitic	3	2	3	0.67	yes	Comme j'ai trouvé ta voie, j'ai aussi trouvé ta maison.	trouvé … ta … voie
 vendre son âme au diable	clitic	3	3	3	1.00	yes		
+arrondir ses fins de mois	clitic	2	2	2	1.00	yes		
 arrêter son char	clitic	2	2	2	1.00	yes		
 attendre son heure	clitic	2	2	2	1.00	yes		
 casser sa pipe	clitic	2	2	2	1.00	yes		
@@ -102,10 +103,7 @@ signer son arrêt de mort	clitic	2	2	2	1.00	yes
 tisser sa toile	clitic	2	0	2	0.00	no	As-tu déjà vu une araignée tisser sa toile ?	tisser … sa … toile
 à sa sauce	clitic	2	2	2	1.00	yes		
 aller son chemin	clitic	1	1	1	1.00	yes		
-arrondir ses fins de mois	clitic	1	1	1	1.00	yes		
 avoir plus d'une corde à son arc	clitic	1	1	1	1.00	yes		
-avoir quelqu'un dans le nez	clitic	1	1	1	1.00	yes		
-avoir quelqu'un dans le nez	filled	1	1	1	1.00	yes		
 avoir ses entrées	clitic	1	1	1	1.00	yes		
 bien porter son nom	clitic	1	1	1	1.00	yes		
 cacher son jeu	clitic	1	1	1	1.00	yes		
@@ -131,7 +129,6 @@ ne pas avoir dit son dernier mot	clitic	1	1	1	1.00	yes
 ne pas être dans son assiette	clitic	1	1	1	1.00	yes		
 pointer le bout de son nez	filled	1	1	1	1.00	yes		
 prendre dans ses filets	clitic	1	1	1	1.00	yes		
-prendre ses cliques et ses claques	clitic	1	1	1	1.00	yes		
 prendre ses distances	clitic	1	1	1	1.00	yes		
 prendre son mal en patience	clitic	1	1	1	1.00	yes		
 prendre son parti	filled	1	1	1	1.00	yes		

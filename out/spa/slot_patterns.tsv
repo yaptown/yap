@@ -1,9 +1,9 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-dar algo	filled	7388	6	12	0.50	no	Ellos estaban tan ocupados que no se dieron cuenta de la hora que era.	dieron … cuenta
-ser alguien	filled	3740	0	12	0.00	no	A Martin le gustaría ser actor, pero, por desgracia no es muy bueno.	ser … actor
-dar algo	clitic	348	11	12	0.92	yes	A él le da lo mismo lo que otros digan.	da … lo
+dar algo	filled	7424	10	12	0.83	yes	Dense prisa, diríjanse a Shanghai.	Dense … prisa
+ser alguien	filled	3767	0	12	0.00	no	A Martin le gustaría ser actor, pero, por desgracia no es muy bueno.	ser … actor
+dar algo	clitic	348	10	12	0.83	yes	A él le da lo mismo lo que otros digan.	da … lo
 necesito su ayuda	clitic	87	12	12	1.00	yes		
-su gracia	filled	40	3	12	0.25	no	Al contrario, muchas gracias a usted.	gracias … usted
+su gracia	filled	41	3	12	0.25	no	Al contrario, muchas gracias a usted.	gracias … usted
 a sus pies	clitic	22	9	12	0.75	yes	Bueno, mira quién vuelve a sus pies.	a … sus … pies
 necesito su ayuda	filled	20	12	12	1.00	yes		
 en su punto	filled	16	0	12	0.00	no	Bob está todo el rato en el punto de mira de la policía.	en … punto … mira
@@ -16,11 +16,11 @@ por su cuenta	filled	4	4	4	1.00	yes
 buscarle las cosquillas a alguien	clitic	3	3	3	1.00	yes		
 en sus cabales	clitic	3	3	3	1.00	yes		
 sudor de su frente	clitic	3	1	3	0.33	no	Incluso lo puedes oler en su sudor.	su … sudor
-niña de sus ojos	clitic	1	1	1	1.00	yes		
+niña de sus ojos	clitic	2	2	2	1.00	yes		
+tocar los huevos a alguien	clitic	2	2	2	1.00	yes		
 niña de sus ojos	filled	1	1	1	1.00	yes		
 poner alguien en su sitio	clitic	1	1	1	1.00	yes		
 poner alguien en su sitio	filled	1	1	1	1.00	yes		
 sacar de sus casillas	filled	1	0	1	0.00	no	Haced sitio, recién sacado de la bodega.	sacado … de … bodega
 tocar los cojones a alguien	clitic	1	1	1	1.00	yes		
-tocar los huevos a alguien	clitic	1	1	1	1.00	yes		
 volar con sus propias alas	clitic	1	1	1	1.00	yes		

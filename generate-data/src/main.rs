@@ -225,6 +225,7 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .context("Failed to translate sentences")?;
         let generate_data::pipeline::CourseDirs {
+            corpus_dir,
             target_language_dir,
             native_specific_dir,
         } = generate_data::pipeline::course_dirs(course)?;
@@ -641,7 +642,7 @@ async fn main() -> anyhow::Result<()> {
 
         // Write etymology segmentations to file
         {
-            let segmentations_file = target_language_dir.join("etymology_segmentations.jsonl");
+            let segmentations_file = corpus_dir.join("etymology_segmentations.jsonl");
             let mut file = File::create(&segmentations_file)
                 .context("Failed to create etymology segmentations file")?;
             for (word, segments) in &etymology_segmentations {
@@ -698,7 +699,7 @@ async fn main() -> anyhow::Result<()> {
             )
             .await;
 
-            let morpheme_info_file = target_language_dir.join("morpheme_info.jsonl");
+            let morpheme_info_file = corpus_dir.join("morpheme_info.jsonl");
             let mut file =
                 File::create(&morpheme_info_file).context("Failed to create morpheme info file")?;
             for analysis in &analyses {
@@ -1149,7 +1150,7 @@ async fn main() -> anyhow::Result<()> {
 
             let tokenizations = generate_data::nlp::process_sentences(
                 sentences,
-                &target_language_dir.join("target_language_sentences_tokenization.jsonl"),
+                &corpus_dir.join("target_language_sentences_tokenization.jsonl"),
                 course.target_language,
             )
             .await
@@ -1234,8 +1235,7 @@ async fn main() -> anyhow::Result<()> {
         };
 
         // Write all NLP sentences to file (now that we have both main and homophone sentences)
-        let target_language_nlp_file =
-            target_language_dir.join("target_language_sentences_nlp.jsonl");
+        let target_language_nlp_file = corpus_dir.join("target_language_sentences_nlp.jsonl");
         {
             let nlp_file = File::create(&target_language_nlp_file)
                 .context("Failed to create NLP sentences file")?;
@@ -1805,8 +1805,48 @@ async fn main() -> anyhow::Result<()> {
             );
         }
 
+        // Include the final sentence set and dictionary/vocabulary display text, not
+        // the larger pre-filtering corpus. Headwords can contain units absent from sentences.
+        let stroke_words = gram_vocabulary
+            .iter()
+            .map(|entry| entry.atoms.to_display_string(lang))
+            .chain(
+                gram_keyed_dictionary
+                    .keys()
+                    .map(|gram| gram.gram.to_display_string(lang)),
+            )
+            .collect::<Vec<_>>();
+        let strokes = generate_data::strokes::table(
+            course.target_language,
+            target_language_sentences
+                .iter()
+                .map(String::as_str)
+                .chain(stroke_words.iter().map(String::as_str))
+                .chain(
+                    gram_keyed_dictionary
+                        .values()
+                        .map(|entry| entry.target_language_word.as_str()),
+                ),
+            &cache_remote::store(),
+        )
+        .await
+        .with_context(|| format!("Failed to build strokes for {course:?}"))?;
+        let forms = strokes.values().flatten().count();
+        let points: usize = strokes
+            .values()
+            .flatten()
+            .flat_map(|glyph| &glyph.strokes)
+            .map(|stroke| stroke.points.len())
+            .sum();
+        println!(
+            "strokes[{}]: {} units, {forms} forms, {points} points",
+            course.target_language.code(),
+            strokes.len()
+        );
+
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {
+            strokes,
             target_language_sentences,
             translations,
             nlp_sentences,

@@ -1,12 +1,12 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 3678962
-Total errors: 1192
+Total predictions: 3691703
+Total errors: 1198
 Accuracy: 99.97%
 
 ## Error Patterns (sorted by frequency)
 
-### "ver" + "te" (319 occurrences)
+### "ver" + "te" (323 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -30,7 +30,7 @@ Accuracy: 99.97%
   - Cinco-- ¿listo?
   - Creo que ella está-- ¿James?
 
-### "haber" + "te" (42 occurrences)
+### "haber" + "te" (44 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -1641,6 +1641,12 @@ Accuracy: 99.97%
 - Examples:
   - El capitán Yen¡ ¿Capitán Yen?
 
+### "a" + "Jacinto" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - Siempre le tuve miedo aJacinto.
+
 ### "a" + "Tom" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2397,12 +2403,6 @@ Accuracy: 99.97%
 - Examples:
   - Es de la misma forma en que tu aceleras ante un salto largo .
 
-### "las" + "joyas" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - Mira lasjoyas de plástico.
-
 ### "león" + "'" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2893,7 +2893,7 @@ Accuracy: 99.97%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - O sea , que estas sola.
+  - O sea , que estás sola.
 
 ### "seas" + ".." (1 occurrences)
 - Predicted: None

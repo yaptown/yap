@@ -58,11 +58,15 @@ fn is_transient_status(status: reqwest::StatusCode) -> bool {
     matches!(status.as_u16(), 408 | 425 | 429 | 500 | 502 | 503 | 504)
 }
 
+/// Keyed by corpus, not dialect: the embeddings are of the shared corpus's
+/// sentences, and the model is not deterministic, so dialects that embedded
+/// separately would assign senses slightly differently and miss every
+/// downstream prompt cache that quotes example sentences.
 pub fn cache_key(language: Language, sentence: &str) -> String {
     let hash = xxh3_64(sentence.as_bytes());
     format!(
         "token-embed/{CACHE_VERSION}/{}/{hash:016x}",
-        language.code()
+        language.corpus_code()
     )
 }
 

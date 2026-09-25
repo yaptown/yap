@@ -2214,6 +2214,7 @@ dependencies = [
  "sentence-sampler",
  "serde",
  "serde_json",
+ "stroke-order-sources",
  "tempfile",
  "token-corrections",
  "tokio",

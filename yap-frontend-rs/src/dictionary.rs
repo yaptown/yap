@@ -350,6 +350,7 @@ mod tests {
         };
         let pack = LanguagePack::new(
             ConsolidatedLanguageData {
+                strokes: Default::default(),
                 target_language_sentences: vec![],
                 translations: vec![],
                 nlp_sentences: vec![],

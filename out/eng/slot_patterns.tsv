@@ -1,5 +1,5 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-have a normal one	filled	19080	5	12	0.42	no	Have a drink with me.	Have … drink
+have a normal one	filled	19080	2	12	0.17	no	A Japanese garden usually has a pond in it.	has … pond
 have someone going	filled	19080	0	12	0.00	no	A Japanese garden usually has a pond in it.	has … pond
 have something going for one	filled	19080	0	12	0.00	no	A Japanese garden usually has a pond in it.	has … pond
 have something on good authority	filled	19080	0	12	0.00	no	A Japanese garden usually has a pond in it.	has … pond
@@ -24,7 +24,7 @@ help oneself	filled	2448	1	12	0.08	no	A cigarette might help my memory.	help …
 buy the big one	filled	2108	0	12	0.00	no	A few dollars to buy some record albums?	buy … albums
 kill oneself	filled	2034	0	12	0.00	no	A blow from a falling stone killed him.	killed … him
 talk to oneself	filled	1502	0	12	0.00	no	A cop, he wanted to talk to mom.	talk … to … mom
-you know something	filled	1319	7	12	0.58	no	Do you know Aman?	you … know … Aman
+you know something	filled	1320	5	12	0.42	no	Do you know Bourbon?	you … know … Bourbon
 what someone said	filled	1171	9	12	0.75	yes	What did the boy say?	What … boy … say
 make one	clitic	1112	8	12	0.67	yes	I know I can make it.	make … it
 come to oneself	filled	1030	0	12	0.00	no	A few minutes ago, a good idea came to me.	came … to … me
@@ -35,16 +35,16 @@ know someone from a can of paint	clitic	828	0	12	0.00	no	A man is an animal will
 know someone from a hole in the ground	clitic	828	0	12	0.00	no	A man is an animal willing to die for those who know him well.	know … him
 know someone from the man in the moon	clitic	828	0	12	0.00	no	A man is an animal willing to die for those who know him well.	know … him
 forget oneself	filled	827	0	12	0.00	no	A good friend never forgets us.	forgets … us
-be oneself	filled	803	0	12	0.00	no	A man's happiness doesn't depend on what he has, but on what he is.	what … is
+be oneself	filled	804	0	12	0.00	no	A man's happiness doesn't depend on what he has, but on what he is.	what … is
 change oneself	filled	798	1	12	0.08	no	A book can change your life.	change … life
 drink something like lemonade	filled	771	10	12	0.83	yes	Let's drink a toast to our friends!	drink … toast
-have something on good authority	clitic	661	0	12	0.00	no	A shot in his back and then you would have him out of the way in no time at all.	have … him
-have something to show for something	clitic	661	0	12	0.00	no	A shot in his back and then you would have him out of the way in no time at all.	have … him
+have something on good authority	clitic	662	0	12	0.00	no	A shot in his back and then you would have him out of the way in no time at all.	have … him
+have something to show for something	clitic	662	0	12	0.00	no	A shot in his back and then you would have him out of the way in no time at all.	have … him
 cut oneself	filled	583	2	12	0.17	no	A Shah may cut off the head of anyone he dislikes.	cut … head
 trust someone across the street	filled	570	0	12	0.00	no	A girl works for you for ten years, you trust her.	trust … her
-teach someone who's the boss	filled	564	0	12	0.00	no	A premium teacher should teach premium kids.	teach … kids
+teach someone who's the boss	filled	565	0	12	0.00	no	A premium teacher should teach premium kids.	teach … kids
 say to oneself	filled	451	0	12	0.00	no	A relative's come from America and wants to say hello to you.	say … to … you
-have something going for one	clitic	438	0	12	0.00	no	After school, you can have it back again.	have … it
+have something going for one	clitic	439	0	12	0.00	no	After school, you can have it back again.	have … it
 know someone	clitic	430	7	12	0.58	no	But we can't, and you know it.	know … it
 know someone from the man on the moon	clitic	430	0	12	0.00	no	After all, you know me.	know … me
 enjoy oneself	filled	429	5	12	0.42	no	Algerians enjoy access to the Internet.	enjoy … access
@@ -58,8 +58,8 @@ have someone going	clitic	352	0	12	0.00	no	A shot in his back and then you would
 one's way	filled	350	4	12	0.33	no	A honeybee, all the way to its hive.	way … hive
 in something's way	clitic	324	1	12	0.08	no	A caravan of fifty camels slowly made its way through the desert.	its … way
 one's way	clitic	324	12	12	1.00	yes		
-have something over someone	clitic	309	0	12	0.00	no	After school, you can have it back again.	have … it
-good for someone	filled	304	4	12	0.33	no	Doctors are good for nothing.	good … for … nothing
+have something over someone	clitic	310	0	12	0.00	no	After school, you can have it back again.	have … it
+good for someone	filled	304	5	12	0.42	no	Death would be too good for you!	good … for … you
 let one go	clitic	294	7	12	0.58	no	I can't let you go in there alone.	let … you … go
 trust someone across the street	clitic	286	12	12	1.00	yes		
 piece of someone	filled	279	5	12	0.42	no	Come on, you piece of shit.	piece … of … shit
@@ -101,8 +101,8 @@ what was someone thinking	filled	92	6	12	0.50	no	And what are you thinking about
 fall into oneself	filled	89	0	12	0.00	no	A fly fell into my cup of coffee.	fell … into … cup
 tell us another one	filled	89	2	12	0.17	no	About Lucilla, why don't you tell us something about her?	tell … us … something
 you know something	clitic	87	12	12	1.00	yes		
+express oneself	filled	86	11	12	0.92	yes	Words cannot express it.	express … it
 contain oneself	filled	85	0	12	0.00	no	A good question contains half the answer.	contains … half
-express oneself	filled	85	12	12	1.00	yes		
 get over oneself	filled	85	0	12	0.00	no	All right, let's get this over with.	get … this … over
 out of someone's hands	filled	85	0	12	0.00	no	All this is so out of the blue Mohan.	out … of … blue
 show oneself	clitic	85	0	12	0.00	no	Ah, let me show you.	show … you
@@ -251,12 +251,12 @@ all over oneself	filled	17	2	12	0.17	no	All over the country.	All … over … c
 be onto something	clitic	17	0	12	0.00	no	Could that have been it?	been … it
 give something a try	filled	17	12	12	1.00	yes		
 let one off	filled	17	3	12	0.25	no	I've come to Bom Jesus to let off ten colored rockets in Your honor.	let … off … rockets
+let someone have it	filled	17	7	12	0.58	no	But we mustn't let him have it.	let … him … have … it
 teach someone a lesson	filled	17	12	12	1.00	yes		
 wag one	filled	17	10	12	0.83	yes	This student wagged class three times in a row.	wagged … class
 at one's feet	filled	16	1	12	0.08	no	Gloria was in great danger at the foot of the escalator.	at … foot … escalator
 in someone's way	filled	16	6	12	0.50	no	And in a similar way to the way that ant colonies behave, it's agent-based.	in … way … way
 keep someone busy	filled	16	12	12	1.00	yes		
-let someone have it	filled	16	10	12	0.83	yes	I'm happy to let you have it.	let … you … have … it
 of one's own	filled	16	11	12	0.92	yes	I hate the sound of my own voice.	of … own … voice
 promised one	clitic	16	6	12	0.50	no	No, I promised it all.	promised … it
 watch one's mouth	clitic	16	12	12	1.00	yes		
