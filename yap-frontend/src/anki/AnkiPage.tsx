@@ -27,10 +27,10 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useWeapon } from "@/core/weapon";
 import { PlacementTest } from "@/review/ladder/PlacementTest";
-import type { MediaProgress } from "./apkg";
 import { Backstory } from "./Backstory";
 import { DeckBuilding } from "./DeckBuilding";
-import { addNotes, emptyBuild, type DeckBuild } from "./deck-build";
+import { addNotes } from "./deck-build";
+import { claimExports, startExport, useAnkiExport } from "./export-store";
 
 // Stores the built package so it can be fetched by link (AnkiMobile's
 // "Download link"). The backend keeps it for 8 days.
@@ -44,6 +44,17 @@ async function uploadPackage(minted: MintedAnkiDeck, languageCode: string, blob:
   if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
   const { url } = (await response.json()) as { url: string };
   return url;
+}
+
+function saveFile({ blob, name }: { blob: Blob; name: string }) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = name;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 export function AnkiPage() {
@@ -110,17 +121,11 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
   const cardTypes: AnkiCardTypes | undefined = reading && listening ? "Both" : reading ? "Reading" : listening ? "Listening" : undefined;
   const [manifest, setManifest] = useState<"loading" | "ready" | "error">("loading");
   const [retry, setRetry] = useState(0);
-  const [phase, setPhase] = useState<string>();
-  const [progress, setProgress] = useState<MediaProgress>();
-  const [build, setBuild] = useState<DeckBuild>(emptyBuild);
-  const [run, setRun] = useState(0);
-  const [choosing, setChoosing] = useState(false);
-  const [finishMessage, setFinishMessage] = useState<string>();
-  const [result, setResult] = useState<string>();
-  const [downloadLink, setDownloadLink] = useState<string>();
+  const view = useMemo(() => ({ ...deck.anki_export_view(), manifest }), [deck, manifest]);
+  const { phase, progress, build, run, choosing, finishMessage, summary, downloadLink } = useAnkiExport(view.course_code, userInfo?.id);
+  useEffect(() => claimExports(userInfo?.id), [userInfo?.id]);
   const busy = phase !== undefined;
   const status = useRef<HTMLDivElement>(null);
-  const view = useMemo(() => ({ ...deck.anki_export_view(), manifest }), [deck, manifest]);
 
   useEffect(() => {
     let active = true;
@@ -135,21 +140,17 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     return () => { active = false; };
   }, [targetLanguage, accessToken, retry]);
 
+  // Writes go to the export store, not component state, so the build carries
+  // on (and its result stays) if the page remounts under it.
   async function download(cardTypes: AnkiCardTypes) {
-    setPhase("Preparing deck…");
-    setProgress(undefined);
-    setResult(undefined);
-    setDownloadLink(undefined);
-    setBuild(emptyBuild);
-    setRun((value) => value + 1);
-    setFinishMessage(undefined);
+    const update = startExport(view.course_code, userInfo?.id);
+    update((current) => ({ ...current, phase: "Preparing deck…" }));
     // On a phone the status sits below the fold; bring it (and the backstory) up.
     requestAnimationFrame(() => status.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     try {
       const options = { card_types: cardTypes };
       const minted = await mint_anki_deck(options, accessToken);
-      setPhase("Choosing sentences…");
-      setChoosing(true);
+      update((current) => ({ ...current, phase: "Choosing sentences…", choosing: true }));
       await new Promise((resolve) => setTimeout(resolve, 0));
       const planner = deck.start_anki_deck_plan(options, minted.token, Date.now());
       let plan: AnkiDeckPlan;
@@ -163,9 +164,8 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
             step = planner.step();
             added.push(...step.notes);
           } while (!step.done && performance.now() < deadline);
-          const next = { done: step.sentences_chosen, total: step.target_size };
-          setProgress((previous) => previous?.done === next.done && previous?.total === next.total ? previous : next);
-          setBuild((previous) => addNotes(previous, added));
+          const progress = { done: step.sentences_chosen, total: step.target_size };
+          update((current) => ({ ...current, progress, build: addNotes(current.build, added) }));
           done = step.done;
           // A macrotask, not a resolved Promise: input and paint get a turn.
           await new Promise((resolve) => setTimeout(resolve, 0));
@@ -173,36 +173,28 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
         plan = planner.finish();
       } finally {
         planner.free();
-        setChoosing(false);
+        update((current) => ({ ...current, choosing: false }));
       }
-      setFinishMessage(plan.finish_message);
       const { buildApkg } = await import("./apkg-client");
-      setProgress(undefined);
-      setPhase("Fetching media…");
-      const blob = await buildApkg(plan, (source) => deck.anki_bundled_media(source), (next) => {
-        setProgress(next);
-        if (next.done === next.total) setPhase("Writing Anki package…");
+      update((current) => ({ ...current, finishMessage: plan.finish_message, progress: undefined, phase: "Fetching media…" }));
+      const blob = await buildApkg(plan, (source) => deck.anki_bundled_media(source), (progress) => {
+        update((current) => ({ ...current, progress, phase: progress.done === progress.total ? "Writing Anki package…" : current.phase }));
       });
-      setPhase("Uploading deck…");
+      update((current) => ({ ...current, phase: "Uploading deck…" }));
+      let downloadLink: string | undefined;
       try {
-        setDownloadLink(await uploadPackage(minted, plan.course_code, blob, accessToken));
+        downloadLink = await uploadPackage(minted, plan.course_code, blob, accessToken);
       } catch (error) {
         toast.error(`Could not create a download link. Your deck will still download. ${String(error)}`);
       }
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = `yap-${plan.course_code}.apkg`;
-      document.body.append(anchor);
-      anchor.click();
-      anchor.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      setResult(`${plan.stats.sentence_count.toLocaleString()} sentence notes + ${plan.stats.word_count.toLocaleString()} word notes · ${(blob.size / 1024 / 1024).toFixed(1)} MB`);
+      const file = { blob, name: `yap-${plan.course_code}.apkg` };
+      saveFile(file);
+      const summary = `${plan.stats.sentence_count.toLocaleString()} sentence notes + ${plan.stats.word_count.toLocaleString()} word notes · ${(blob.size / 1024 / 1024).toFixed(1)} MB`;
+      update((current) => ({ ...current, downloadLink, file, summary }));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
     } finally {
-      setPhase(undefined);
-      setProgress(undefined);
+      update((current) => ({ ...current, phase: undefined, progress: undefined }));
     }
   }
 
@@ -245,7 +237,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
             <div ref={status} className="flex scroll-mt-4 flex-col gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
               {view.manifest === "loading" && <p>Loading movie clips…</p>}
               {view.manifest === "ready" && view.clip_sentence_count === 0 && <p>No movie clips are available for this course.</p>}
-              {(busy || result) && (
+              {(busy || summary) && (
                 <div className="flex flex-col gap-4 pt-2 text-base text-foreground">
                   <DeckBuilding
                     key={run}
@@ -277,9 +269,9 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
                 </div>
                 <p>In AnkiMobile: Decks → Add → Download link. On AnkiDroid or desktop, open the downloaded file instead. The link works for 8 days.</p>
               </div>}
-              {result && <p>Downloaded {result}</p>}
+              {summary && <p>Downloaded {summary}</p>}
             </div>
-            {result && (
+            {summary && (
               <Card className="gap-3 p-5">
                 <h2 className="text-lg font-semibold">{view.keep_going_heading}</h2>
                 <p className="text-sm text-muted-foreground">{view.keep_going_body}</p>
