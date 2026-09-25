@@ -56,9 +56,9 @@ struct SessionRoot: View {
     var body: some View {
         Group {
             Group {
-                if session.choosingCourse {
-                    Color.clear
-                } else if session.onboardingCourse != nil {
+                // Switching courses happens on Home's own stack, so only a
+                // first-run onboarding takes over the root.
+                if session.onboardingCourse != nil && !session.choosingCourse {
                     NavigationStack { CoursePickerView(session: session) }
                 } else {
                     switch session.deckLoadView.phase {
@@ -73,12 +73,6 @@ struct SessionRoot: View {
                         CourseHome(deck: session.deck!, session: session, auth: auth, startingFresh: session.startingFresh, historyKnown: session.historyKnown)
                     }
                 }
-            }
-        }
-        .sheet(isPresented: Binding(get: { session.choosingCourse }, set: { session.choosingCourse = $0; if !$0 { session.onboardingCourse = nil } })) {
-            NavigationStack {
-                CoursePickerView(session: session) { session.choosingCourse = false }
-                    .toolbar { Button("Done") { session.onboardingCourse = nil; session.choosingCourse = false } }
             }
         }
         .task { await session.start() }

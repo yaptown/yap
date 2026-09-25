@@ -44,6 +44,11 @@ struct CourseHome: View {
                         }
                     }.containerBackground(.clear, for: .navigation)
                 }
+                // Pushed rather than a sheet: a card sliding up over the animated
+                // background looks out of place, a new screen doesn't.
+                .navigationDestination(isPresented: Binding(get: { session.choosingCourse }, set: { session.choosingCourse = $0; if !$0 { session.onboardingCourse = nil } })) {
+                    CoursePickerView(session: session) { session.choosingCourse = false }
+                }
         }
         // The shell, not Review's visibility, owns background readiness.
         .onAppear { review.start() }
