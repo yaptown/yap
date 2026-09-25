@@ -29,7 +29,7 @@ struct TranslationChallengeView: View {
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
         ReviewStepScrollView {
-            StudyCard {
+            StudyCard(animated: true) {
                 if let badge = view.badge { ReviewBadge(text: badge) }
                 HStack(alignment: .center, spacing: 8) {
                     AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: !editing && hasClip == false)

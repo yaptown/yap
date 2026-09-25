@@ -16,8 +16,8 @@ struct PronunciationChallengeView: View {
     }
     var body: some View {
         ReviewStepScrollView {
-            if let prompt = view.tutorial_prompt { TutorialHint(prompt: prompt) }
-            StudyCard {
+            if let prompt = view.tutorial_prompt { TutorialHint(prompt: prompt).fadeIn() }
+            StudyCard(animated: true) {
                 HStack(alignment: .center, spacing: 8) {
                     Color.clear.frame(width: 44, height: 44)
                     Text(view.positioned_pattern).font(.title2.bold()).multilineTextAlignment(.center).frame(maxWidth: .infinity)
@@ -34,7 +34,7 @@ struct PronunciationChallengeView: View {
             }
         } actions: {
             if let prompt = view.tutorial_grade_prompt {
-                TutorialHint(text: prompt, pointing: .down, arrowSize: 96)
+                TutorialHint(text: prompt, pointing: .down, arrowSize: 96).fadeIn(duration: 0.3, delay: 1.5)
             }
             GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
                 .disabled(actions.submitting)

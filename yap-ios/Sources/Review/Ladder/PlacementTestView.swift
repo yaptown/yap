@@ -5,7 +5,7 @@ struct PlacementTestView: View {
     @Environment(\.reviewHost!) private var host
     let placement: PlacementSession
     var body: some View {
-        StudyCard {
+        StudyCard(animated: true) {
             let info = get_placement_session_info(session: placement)
             ProgressView(value: info.progress_percent, total: 100)
             if info.finished {

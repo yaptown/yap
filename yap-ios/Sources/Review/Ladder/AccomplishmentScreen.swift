@@ -7,7 +7,7 @@ struct AccomplishmentScreen: View {
     var body: some View {
         let summary = view.today
         ReviewStepScrollView {
-            StudyCard {
+            StudyCard(animated: true) {
                 Label(view.heading, systemImage: "trophy.fill").font(.title.bold())
                 Text("You studied \(summary.time_spent_seconds / 60) min! (\(summary.reviews) challenges)")
                 Text("\(view.streak) day streak").font(.headline)

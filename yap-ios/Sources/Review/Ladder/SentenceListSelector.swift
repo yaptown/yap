@@ -11,7 +11,7 @@ struct SentenceListSelector: View {
     @AppStorage("yap-pimsleur-acknowledged") private var pimsleurAcknowledged = false
     private var navigation: SentenceListNavigation { view.navigation }
     var body: some View {
-        StudyCard(alignment: .center, spacing: 16) {
+        StudyCard(alignment: .center, spacing: 16, animated: true) {
             HStack(spacing: 0) {
                 chevron(-1)
                 (Text(view.curriculum_headline.before + "\n") + Text(view.curriculum_headline.emphasis.uppercased()).bold() + Text(view.curriculum_headline.after))

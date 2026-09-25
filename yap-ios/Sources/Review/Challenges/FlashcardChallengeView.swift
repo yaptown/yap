@@ -27,9 +27,9 @@ struct FlashcardChallengeView: View {
     var body: some View {
         ReviewStepScrollView {
             if !revealed, let prompt = view.tutorial_prompt {
-                TutorialHint(prompt: prompt)
+                TutorialHint(prompt: prompt).fadeIn()
             }
-            StudyCard {
+            StudyCard(animated: true) {
                 // Like the web card: audio at the leading edge, the word centered, the menu trailing.
                 HStack(alignment: .center, spacing: 8) {
                     if let request = flashcard.audio {
@@ -62,7 +62,7 @@ struct FlashcardChallengeView: View {
                 }
                 Divider()
                 if revealed {
-                    answer
+                    VStack(alignment: .leading, spacing: 12) { answer }.fadeIn(duration: 0.2)
                 } else {
                     Label(view.reveal_label, systemImage: "chevron.down")
                         .font(.subheadline.weight(view.require_answer_reveal ? .bold : .regular))
@@ -80,18 +80,18 @@ struct FlashcardChallengeView: View {
                 MorphemeBreakdownView(parts: breakdown, alignment: .center, revealDelay: 1.5).padding(.top, 12)
             }
             if !revealed, let hint = view.tutorial_hidden_hint {
-                TutorialHint(text: hint, pointing: .up)
+                TutorialHint(text: hint, pointing: .up).fadeIn(duration: 0.3, delay: 1.5)
             }
         } actions: {
             if revealed, let hint = view.tutorial_revealed_hint {
-                TutorialHint(text: hint, pointing: .down, arrowSize: 96)
+                TutorialHint(text: hint, pointing: .down, arrowSize: 96).fadeIn(duration: 0.3, delay: 1.5)
             }
             if !revealed, let label = view.cant_listen_label {
                 Button(label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
             }
             if canGrade {
                 GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
-                    .disabled(actions.submitting)
+                    .disabled(actions.submitting).fadeIn(duration: 0.2)
             }
         }
         #if DEBUG

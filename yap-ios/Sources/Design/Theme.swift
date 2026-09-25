@@ -105,11 +105,42 @@ extension View {
 struct StudyCard<Content: View>: View {
     var alignment: HorizontalAlignment = .leading
     var spacing: CGFloat = 12
+    /// The web's `<Card animate>`: study-step cards fade and grow in as they appear.
+    var animated = false
     @ViewBuilder var content: Content
     var body: some View {
         VStack(alignment: alignment, spacing: spacing) { content }
             .frame(maxWidth: .infinity, alignment: Alignment(horizontal: alignment, vertical: .center)).padding(16)
             .cardSurface()
+            .modifier(Entrance(scale: animated ? 0.95 : 1, rise: 0, duration: animated ? 0.3 : 0))
+    }
+}
+
+extension View {
+    /// The web's `fade-in` family: fade in while rising 10pt.
+    func fadeIn(duration: Double = 0.6, delay: Double = 0) -> some View {
+        modifier(Entrance(scale: 1, rise: 10, duration: duration, delay: delay))
+    }
+}
+
+/// Plays once when the view appears; Reduce Motion keeps only the fade.
+private struct Entrance: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let scale: CGFloat
+    let rise: CGFloat
+    let duration: Double
+    var delay: Double = 0
+    @State private var shown = false
+    func body(content: Content) -> some View {
+        let settled = shown || duration == 0
+        content
+            .opacity(settled ? 1 : 0)
+            .scaleEffect(settled || reduceMotion ? 1 : scale)
+            .offset(y: settled || reduceMotion ? 0 : rise)
+            .onAppear {
+                guard duration > 0 else { return }
+                withAnimation(.easeOut(duration: duration).delay(delay)) { shown = true }
+            }
     }
 }
 

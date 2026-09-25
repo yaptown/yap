@@ -29,7 +29,7 @@ struct TranscriptionChallengeView: View {
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
         ReviewStepScrollView {
-            StudyCard {
+            StudyCard(animated: true) {
                 if sentence.second_chance { ReviewBadge(text: "Second chance") }
                 // Like the web: a big speaker on top, then the sentence with its blanks inline.
                 VStack(spacing: 4) {

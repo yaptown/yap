@@ -9,7 +9,7 @@ struct ReviewPlanScreen: View {
     let onAccept: () -> Void
     var body: some View {
         ReviewStepScrollView {
-            StudyCard(alignment: .center, spacing: 24) {
+            StudyCard(alignment: .center, spacing: 24, animated: true) {
                 Text(plan.title).font(.title2.weight(.semibold)).multilineTextAlignment(.center)
                 ForEach(plan.groups, id: \.heading) { group in
                     VStack(spacing: 8) {

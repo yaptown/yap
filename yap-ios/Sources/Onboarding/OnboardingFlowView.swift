@@ -24,7 +24,7 @@ struct OnboardingFlowView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     ProgressView(value: view.progress_percent, total: 100).accessibilityLabel(view.progress_label).id("top")
                     Button(view.back_label, systemImage: "chevron.left") { send(.Back) }
-                    StudyCard { content }
+                    StudyCard(animated: true) { content }
                     if case let .Ready(_, _, startFreshLabel) = view.content, let startFreshLabel {
                         Button(startFreshLabel) { send(.StartFromScratch) }.controlSize(.large)
                     }
