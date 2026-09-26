@@ -17,6 +17,18 @@
         const isDevelopment = window.location.hostname === 'localhost' ||
                             window.location.hostname === '127.0.0.1' ||
                             window.location.port === '5173'; // Vite's default dev port
+        const isProduction = window.location.hostname === 'yap.town';
+
+        // Both OneSignal apps are origin-restricted on their dashboard
+        // (dev to localhost:5173, production to https://yap.town), so
+        // init() throws "Can only be used on: ..." on any other origin
+        // (e.g. the yap-beta.pages.dev preview channel) no matter which
+        // config we pick. Skip init there instead of calling something
+        // that's guaranteed to fail.
+        if (!isDevelopment && !isProduction) {
+          console.log(`OneSignal init skipped: unsupported origin ${window.location.origin}`);
+          return;
+        }
 
         const config = isDevelopment ? {
           // Local development
