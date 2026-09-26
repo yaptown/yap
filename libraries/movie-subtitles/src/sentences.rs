@@ -323,10 +323,6 @@ pub fn has_encoding_corruption(sentence: &str) -> bool {
     if sentence.contains('\u{FEFF}') {
         return true;
     }
-    // &nbsp; HTML entity (common in corrupted subtitle files)
-    if sentence.contains("&nbsp;") {
-        return true;
-    }
     sentence.chars().any(|c| {
         matches!(
             c,

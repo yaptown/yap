@@ -7054,55 +7054,55 @@
 {"kind":"proofread","imdb":"tt2082197","cue":"และพริบตาเดียว, ชีวิตธรรมดาๆของฉัน ก็เปลี่ยนไปสิ้นเชิง","input":"และพริบตาเดียว, ชีวิตธรรมดาๆของฉัน ก็เปลี่ยนไปสิ้นเชิง","corrected":"และพริบตาเดียว, ชีวิตธรรมดาๆ ของฉัน ก็เปลี่ยนไปสิ้นเชิง","reason":"เพิ่มเว้นวรรคหลังเครื่องหมาย ๆ"}
 {"kind":"proofread","imdb":"tt2082197","cue":"โอเคค่ะสารวัต ฉันจะไปเดี๋ยวนี้","input":"โอเคค่ะสารวัต ฉันจะไปเดี๋ยวนี้","corrected":"โอเคค่ะ สารวัต ฉันจะไปเดี๋ยวนี้","reason":"เพิ่มเว้นวรรคคั่นคำตอบรับและคำเรียกขาน"}
 {"kind":"incoherent","imdb":"tt22695402","sentence":"อิ๊วสอง","reason":"คำว่า “ซีอิ๊ว” ขาดพยางค์ต้น เหลือเพียง “อิ๊ว” ทำให้ข้อความดูเหมือนถูกตัดกลางคำ"}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ กินข้าวแล้วใช่ไหมก่อนนอนเนี่ยวันนี้","input":"‪ กินข้าวแล้วใช่ไหมก่อนนอนเนี่ยวันนี้","corrected":"‪กินข้าวแล้วใช่ไหมก่อนนอนเนี่ยวันนี้","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ กูก็ชวนไปแล้ว","input":"‪ กูก็ชวนไปแล้ว","corrected":"‪กูก็ชวนไปแล้ว","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ คนพวกนี้แม่งไม่รู้ด้วยซ้ำ ‪ว่าอะไรอร่อยไม่อร่อย","input":"‪ คนพวกนี้แม่งไม่รู้ด้วยซ้ำ ‪ว่าอะไรอร่อยไม่อร่อย","corrected":"‪คนพวกนี้แม่งไม่รู้ด้วยซ้ำ ‪ว่าอะไรอร่อยไม่อร่อย","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ครับเชฟ","input":"‪ ครับเชฟ","corrected":"‪ครับเชฟ","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ คิดถึงเจ้นะ","input":"‪ คิดถึงเจ้นะ","corrected":"‪คิดถึงเจ้นะ","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ คิด… ว่ารู้…","input":"‪ คิด… ว่ารู้…","corrected":"‪คิด… ว่ารู้…","reason":"Removed the stray leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ คือการผัดให้เนื้อวากิวเอไฟฟ์ ‪กลายเป็นอาหารที่นุ่ม","input":"‪ คือการผัดให้เนื้อวากิวเอไฟฟ์ ‪กลายเป็นอาหารที่นุ่ม","corrected":"‪คือการผัดให้เนื้อวากิวเอไฟฟ์ ‪กลายเป็นอาหารที่นุ่ม","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ คุณต้องลอง","input":"‪ คุณต้องลอง","corrected":"‪คุณต้องลอง","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ คุณใจเย็นๆ ก่อนนะ","input":"‪ คุณใจเย็นๆ ก่อนนะ","corrected":"‪คุณใจเย็นๆ ก่อนนะ","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ จริงอะ","input":"‪ จริงอะ","corrected":"‪จริงอะ","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ดูแม่งดิ๊ เด็กกว่าพวกเราอีก","input":"‪ ดูแม่งดิ๊ เด็กกว่าพวกเราอีก","corrected":"‪ดูแม่งดิ๊ เด็กกว่าพวกเราอีก","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ตกลงนี่มันอะไร","input":"‪ ตกลงนี่มันอะไร","corrected":"‪ตกลงนี่มันอะไร","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ทานได้ทุกอย่างเลยครับผม","input":"‪ ทานได้ทุกอย่างเลยครับผม","corrected":"‪ทานได้ทุกอย่างเลยครับผม","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ทำให้คนรู้สึกว่าคุณเป็นรุ่นใหญ่","input":"‪ ทำให้คนรู้สึกว่าคุณเป็นรุ่นใหญ่","corrected":"‪ทำให้คนรู้สึกว่าคุณเป็นรุ่นใหญ่","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ธีมหลักของงานนี้คือ","input":"‪ ธีมหลักของงานนี้คือ","corrected":"‪ธีมหลักของงานนี้คือ","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ นี่ มั่นใจหน่อยสิ","input":"‪ นี่ มั่นใจหน่อยสิ","corrected":"‪นี่ มั่นใจหน่อยสิ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ปรุงทำไม อร่อยอยู่แล้ว","input":"‪ ปรุงทำไม อร่อยอยู่แล้ว","corrected":"‪ปรุงทำไม อร่อยอยู่แล้ว","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ป๊าว่าป๊าไม่เข้าใจโลกยุคใหม่นี่แล้ว","input":"‪ ป๊าว่าป๊าไม่เข้าใจโลกยุคใหม่นี่แล้ว","corrected":"‪ป๊าว่าป๊าไม่เข้าใจโลกยุคใหม่นี่แล้ว","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ พวกเขาเด็กกว่าเรา","input":"‪ พวกเขาเด็กกว่าเรา","corrected":"‪พวกเขาเด็กกว่าเรา","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ พวกเราก็เป็นได้แค่ตัวประกอบฉาก","input":"‪ พวกเราก็เป็นได้แค่ตัวประกอบฉาก","corrected":"‪พวกเราก็เป็นได้แค่ตัวประกอบฉาก","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ว่าไงครับ","input":"‪ ว่าไงครับ","corrected":"‪ว่าไงครับ","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ สีต้องจัด","input":"‪ สีต้องจัด","corrected":"‪สีต้องจัด","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ อร่อยดี","input":"‪ อร่อยดี","corrected":"‪อร่อยดี","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ออย","input":"‪ ออย","corrected":"‪ออย","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ อายุเฉลี่ยประมาณ 40 ขึ้นไป ‪จัดในบ้านพักรับรองส่วนตัว","input":"‪ อายุเฉลี่ยประมาณ 40 ขึ้นไป ‪จัดในบ้านพักรับรองส่วนตัว","corrected":"‪อายุเฉลี่ยประมาณ 40 ขึ้นไป ‪จัดในบ้านพักรับรองส่วนตัว","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ อีกแป๊บหนึ่งแหละ","input":"‪ อีกแป๊บหนึ่งแหละ","corrected":"‪อีกแป๊บหนึ่งแหละ","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ อืม อร่อยดีนะ","input":"‪ อืม อร่อยดีนะ","corrected":"‪อืม อร่อยดีนะ","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ อื้อหือ","input":"‪ อื้อหือ","corrected":"‪อื้อหือ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ อุ๊ย ไฟติดเฉยเลย!","input":"‪ อุ๊ย ไฟติดเฉยเลย!","corrected":"‪อุ๊ย ไฟติดเฉยเลย!","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ เข้าใจนะ","input":"‪ เข้าใจนะ","corrected":"‪เข้าใจนะ","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ เจอกันพรุ่งนี้ครับเชฟ","input":"‪ เจอกันพรุ่งนี้ครับเชฟ","corrected":"‪เจอกันพรุ่งนี้ครับเชฟ","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ เชียร์ส","input":"‪ เชียร์ส","corrected":"‪เชียร์ส","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ เนี่ยมันเป็นจะฟอง ทานได้ใช่มั้ยครับ","input":"‪ เนี่ยมันเป็นจะฟอง ทานได้ใช่มั้ยครับ","corrected":"‪เนี่ยมันเป็นจะฟอง ทานได้ใช่มั้ยครับ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ เป็นไงคะเชฟ","input":"‪ เป็นไงคะเชฟ","corrected":"‪เป็นไงคะเชฟ","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ เออ มึงอย่าไปว่าพวกแม่งเลย","input":"‪ เออ มึงอย่าไปว่าพวกแม่งเลย","corrected":"‪เออ มึงอย่าไปว่าพวกแม่งเลย","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ เออว่ะ","input":"‪ เออว่ะ","corrected":"‪เออว่ะ","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ เอ้า เสร็จแล้วไปดูตลาดด้วยนะ ‪อย่าลืมดูมันฝรั่งด้วย","input":"‪ เอ้า เสร็จแล้วไปดูตลาดด้วยนะ ‪อย่าลืมดูมันฝรั่งด้วย","corrected":"‪เอ้า เสร็จแล้วไปดูตลาดด้วยนะ ‪อย่าลืมดูมันฝรั่งด้วย","reason":"Removed the stray leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ เฮ้ย เชฟ","input":"‪ เฮ้ย เชฟ","corrected":"‪เฮ้ย เชฟ","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ แบบนี้","input":"‪ แบบนี้","corrected":"‪แบบนี้","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ แพงขนาดนั้นเชียวเหรอ","input":"‪ แพงขนาดนั้นเชียวเหรอ","corrected":"‪แพงขนาดนั้นเชียวเหรอ","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ แลกกับการที่ผมจะสปอนเซอร์เขา ‪อย่างที่คุณต้องการไง","input":"‪ แลกกับการที่ผมจะสปอนเซอร์เขา ‪อย่างที่คุณต้องการไง","corrected":"‪แลกกับการที่ผมจะสปอนเซอร์เขา ‪อย่างที่คุณต้องการไง","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ โตนน่ะเหรอ","input":"‪ โตนน่ะเหรอ","corrected":"‪โตนน่ะเหรอ","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ โหย สเต๊กเลยเหรอเจ้","input":"‪ โหย สเต๊กเลยเหรอเจ้","corrected":"‪โหย สเต๊กเลยเหรอเจ้","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ โอเค โอเคครับ ‪ชิดๆ กันหน่อยนะฮะ","input":"‪ โอเค โอเคครับ ‪ชิดๆ กันหน่อยนะฮะ","corrected":"‪โอเค โอเคครับ ‪ชิดๆ กันหน่อยนะฮะ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ให้เนื้อสุกพอสะดุ้ง ‪เพื่อรักษาความชุ่มฉ่ำไว้","input":"‪ ให้เนื้อสุกพอสะดุ้ง ‪เพื่อรักษาความชุ่มฉ่ำไว้","corrected":"‪ให้เนื้อสุกพอสะดุ้ง ‪เพื่อรักษาความชุ่มฉ่ำไว้","reason":"Removed an unnecessary leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ได้ครับ","input":"‪ ได้ครับ","corrected":"‪ได้ครับ","reason":"Removed the stray leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ไม่กินอะ ไม่รู้จะกินไร","input":"‪ ไม่กินอะ ไม่รู้จะกินไร","corrected":"‪ไม่กินอะ ไม่รู้จะกินไร","reason":"Removed an unintended leading space."}
-{"kind":"proofread","imdb":"tt22695402","cue":"‪ ไม่ต้องไปสนใจ","input":"‪ ไม่ต้องไปสนใจ","corrected":"‪ไม่ต้องไปสนใจ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
-{"kind":"audio_mismatch","imdb":"tt22695402","sentence":"‪- ติดนายพลยัง ‪- โห ยังเลยครับป๋า","reason":"“โห” is a valid response, but the transcript hears “โอ้” and the heard IPA lacks the /h/ onset expected in “โห”. The subtitle is not a spelling error; the listening clip likely says a different interjection."}
+{"kind":"proofread","imdb":"tt22695402","cue":"กินข้าวแล้วใช่ไหมก่อนนอนเนี่ยวันนี้","input":"กินข้าวแล้วใช่ไหมก่อนนอนเนี่ยวันนี้","corrected":"กินข้าวแล้วใช่ไหมก่อนนอนเนี่ยวันนี้","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"กูก็ชวนไปแล้ว","input":"กูก็ชวนไปแล้ว","corrected":"กูก็ชวนไปแล้ว","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"คนพวกนี้แม่งไม่รู้ด้วยซ้ำ ว่าอะไรอร่อยไม่อร่อย","input":"คนพวกนี้แม่งไม่รู้ด้วยซ้ำ ว่าอะไรอร่อยไม่อร่อย","corrected":"คนพวกนี้แม่งไม่รู้ด้วยซ้ำ ว่าอะไรอร่อยไม่อร่อย","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ครับเชฟ","input":"ครับเชฟ","corrected":"ครับเชฟ","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"คิดถึงเจ้นะ","input":"คิดถึงเจ้นะ","corrected":"คิดถึงเจ้นะ","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"คิด… ว่ารู้…","input":"คิด… ว่ารู้…","corrected":"คิด… ว่ารู้…","reason":"Removed the stray leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"คือการผัดให้เนื้อวากิวเอไฟฟ์ กลายเป็นอาหารที่นุ่ม","input":"คือการผัดให้เนื้อวากิวเอไฟฟ์ กลายเป็นอาหารที่นุ่ม","corrected":"คือการผัดให้เนื้อวากิวเอไฟฟ์ กลายเป็นอาหารที่นุ่ม","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"คุณต้องลอง","input":"คุณต้องลอง","corrected":"คุณต้องลอง","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
+{"kind":"proofread","imdb":"tt22695402","cue":"คุณใจเย็นๆ ก่อนนะ","input":"คุณใจเย็นๆ ก่อนนะ","corrected":"คุณใจเย็นๆ ก่อนนะ","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"จริงอะ","input":"จริงอะ","corrected":"จริงอะ","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ดูแม่งดิ๊ เด็กกว่าพวกเราอีก","input":"ดูแม่งดิ๊ เด็กกว่าพวกเราอีก","corrected":"ดูแม่งดิ๊ เด็กกว่าพวกเราอีก","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ตกลงนี่มันอะไร","input":"ตกลงนี่มันอะไร","corrected":"ตกลงนี่มันอะไร","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ทานได้ทุกอย่างเลยครับผม","input":"ทานได้ทุกอย่างเลยครับผม","corrected":"ทานได้ทุกอย่างเลยครับผม","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
+{"kind":"proofread","imdb":"tt22695402","cue":"ทำให้คนรู้สึกว่าคุณเป็นรุ่นใหญ่","input":"ทำให้คนรู้สึกว่าคุณเป็นรุ่นใหญ่","corrected":"ทำให้คนรู้สึกว่าคุณเป็นรุ่นใหญ่","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ธีมหลักของงานนี้คือ","input":"ธีมหลักของงานนี้คือ","corrected":"ธีมหลักของงานนี้คือ","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"นี่ มั่นใจหน่อยสิ","input":"นี่ มั่นใจหน่อยสิ","corrected":"นี่ มั่นใจหน่อยสิ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
+{"kind":"proofread","imdb":"tt22695402","cue":"ปรุงทำไม อร่อยอยู่แล้ว","input":"ปรุงทำไม อร่อยอยู่แล้ว","corrected":"ปรุงทำไม อร่อยอยู่แล้ว","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ป๊าว่าป๊าไม่เข้าใจโลกยุคใหม่นี่แล้ว","input":"ป๊าว่าป๊าไม่เข้าใจโลกยุคใหม่นี่แล้ว","corrected":"ป๊าว่าป๊าไม่เข้าใจโลกยุคใหม่นี่แล้ว","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"พวกเขาเด็กกว่าเรา","input":"พวกเขาเด็กกว่าเรา","corrected":"พวกเขาเด็กกว่าเรา","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"พวกเราก็เป็นได้แค่ตัวประกอบฉาก","input":"พวกเราก็เป็นได้แค่ตัวประกอบฉาก","corrected":"พวกเราก็เป็นได้แค่ตัวประกอบฉาก","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ว่าไงครับ","input":"ว่าไงครับ","corrected":"ว่าไงครับ","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"สีต้องจัด","input":"สีต้องจัด","corrected":"สีต้องจัด","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"อร่อยดี","input":"อร่อยดี","corrected":"อร่อยดี","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ออย","input":"ออย","corrected":"ออย","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"อายุเฉลี่ยประมาณ 40 ขึ้นไป จัดในบ้านพักรับรองส่วนตัว","input":"อายุเฉลี่ยประมาณ 40 ขึ้นไป จัดในบ้านพักรับรองส่วนตัว","corrected":"อายุเฉลี่ยประมาณ 40 ขึ้นไป จัดในบ้านพักรับรองส่วนตัว","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"อีกแป๊บหนึ่งแหละ","input":"อีกแป๊บหนึ่งแหละ","corrected":"อีกแป๊บหนึ่งแหละ","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"อืม อร่อยดีนะ","input":"อืม อร่อยดีนะ","corrected":"อืม อร่อยดีนะ","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"อื้อหือ","input":"อื้อหือ","corrected":"อื้อหือ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
+{"kind":"proofread","imdb":"tt22695402","cue":"อุ๊ย ไฟติดเฉยเลย!","input":"อุ๊ย ไฟติดเฉยเลย!","corrected":"อุ๊ย ไฟติดเฉยเลย!","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"เข้าใจนะ","input":"เข้าใจนะ","corrected":"เข้าใจนะ","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"เจอกันพรุ่งนี้ครับเชฟ","input":"เจอกันพรุ่งนี้ครับเชฟ","corrected":"เจอกันพรุ่งนี้ครับเชฟ","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"เชียร์ส","input":"เชียร์ส","corrected":"เชียร์ส","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"เนี่ยมันเป็นจะฟอง ทานได้ใช่มั้ยครับ","input":"เนี่ยมันเป็นจะฟอง ทานได้ใช่มั้ยครับ","corrected":"เนี่ยมันเป็นจะฟอง ทานได้ใช่มั้ยครับ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
+{"kind":"proofread","imdb":"tt22695402","cue":"เป็นไงคะเชฟ","input":"เป็นไงคะเชฟ","corrected":"เป็นไงคะเชฟ","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"เออ มึงอย่าไปว่าพวกแม่งเลย","input":"เออ มึงอย่าไปว่าพวกแม่งเลย","corrected":"เออ มึงอย่าไปว่าพวกแม่งเลย","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"เออว่ะ","input":"เออว่ะ","corrected":"เออว่ะ","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"เอ้า เสร็จแล้วไปดูตลาดด้วยนะ อย่าลืมดูมันฝรั่งด้วย","input":"เอ้า เสร็จแล้วไปดูตลาดด้วยนะ อย่าลืมดูมันฝรั่งด้วย","corrected":"เอ้า เสร็จแล้วไปดูตลาดด้วยนะ อย่าลืมดูมันฝรั่งด้วย","reason":"Removed the stray leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"เฮ้ย เชฟ","input":"เฮ้ย เชฟ","corrected":"เฮ้ย เชฟ","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"แบบนี้","input":"แบบนี้","corrected":"แบบนี้","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"แพงขนาดนั้นเชียวเหรอ","input":"แพงขนาดนั้นเชียวเหรอ","corrected":"แพงขนาดนั้นเชียวเหรอ","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"แลกกับการที่ผมจะสปอนเซอร์เขา อย่างที่คุณต้องการไง","input":"แลกกับการที่ผมจะสปอนเซอร์เขา อย่างที่คุณต้องการไง","corrected":"แลกกับการที่ผมจะสปอนเซอร์เขา อย่างที่คุณต้องการไง","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"โตนน่ะเหรอ","input":"โตนน่ะเหรอ","corrected":"โตนน่ะเหรอ","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"โหย สเต๊กเลยเหรอเจ้","input":"โหย สเต๊กเลยเหรอเจ้","corrected":"โหย สเต๊กเลยเหรอเจ้","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"โอเค โอเคครับ ชิดๆ กันหน่อยนะฮะ","input":"โอเค โอเคครับ ชิดๆ กันหน่อยนะฮะ","corrected":"โอเค โอเคครับ ชิดๆ กันหน่อยนะฮะ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
+{"kind":"proofread","imdb":"tt22695402","cue":"ให้เนื้อสุกพอสะดุ้ง เพื่อรักษาความชุ่มฉ่ำไว้","input":"ให้เนื้อสุกพอสะดุ้ง เพื่อรักษาความชุ่มฉ่ำไว้","corrected":"ให้เนื้อสุกพอสะดุ้ง เพื่อรักษาความชุ่มฉ่ำไว้","reason":"Removed an unnecessary leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ได้ครับ","input":"ได้ครับ","corrected":"ได้ครับ","reason":"Removed the stray leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ไม่กินอะ ไม่รู้จะกินไร","input":"ไม่กินอะ ไม่รู้จะกินไร","corrected":"ไม่กินอะ ไม่รู้จะกินไร","reason":"Removed an unintended leading space."}
+{"kind":"proofread","imdb":"tt22695402","cue":"ไม่ต้องไปสนใจ","input":"ไม่ต้องไปสนใจ","corrected":"ไม่ต้องไปสนใจ","reason":"ลบช่องว่างที่ขึ้นต้นข้อความ"}
+{"kind":"audio_mismatch","imdb":"tt22695402","sentence":"- ติดนายพลยัง - โห ยังเลยครับป๋า","reason":"“โห” is a valid response, but the transcript hears “โอ้” and the heard IPA lacks the /h/ onset expected in “โห”. The subtitle is not a spelling error; the listening clip likely says a different interjection."}
 {"kind":"audio_mismatch","imdb":"tt22696230","sentence":"กูจะเอาจูนไปอยู่กับกูให้ได้","reason":"The subtitle’s จะ is grammatical in context, but the transcript and heard phonemes point to the distinct spoken particle สิ. This appears to be a listening-text mismatch rather than a subtitle error."}
 {"kind":"proofread","imdb":"tt22696230","cue":"คุณ ตำรวจ","input":"คุณ ตำรวจ","corrected":"คุณตำรวจ","reason":"Remove the stray space within the form of address."}
 {"kind":"proofread","imdb":"tt22696230","cue":"ที่จะเข้าในบริเวณภาคตะวันออกเฉียงเหนือ ของไทยเมื่อต้นสัปดาห์ก่อน","input":"ที่จะเข้าในบริเวณภาคตะวันออกเฉียงเหนือ ของไทยเมื่อต้นสัปดาห์ก่อน","corrected":"ที่จะเข้าในบริเวณภาคตะวันออกเฉียงเหนือของไทยเมื่อต้นสัปดาห์ก่อน","reason":"Remove the stray space within the place-name phrase."}

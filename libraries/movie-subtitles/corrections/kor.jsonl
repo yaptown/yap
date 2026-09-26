@@ -10428,12 +10428,12 @@
 {"kind":"incoherent","imdb":"tt1160419","sentence":"황제는 하코넨들을 아라키스에서 내몰고, 이곳이 우리 것이 되도록 만듦으로써.","reason":"‘만듦으로써’로 끝나 앞 문장에 연결되는 수단·방법 구성이 완결되지 않았습니다."}
 {"kind":"proofread","imdb":"tt1160419","cue":"흉터가 있는 놈은 귀가 안들려.","input":"흉터가 있는 놈은 귀가 안들려.","corrected":"흉터가 있는 놈은 귀가 안 들려.","reason":"부정 부사 ‘안’은 뒤의 용언과 띄어 씁니다."}
 {"kind":"proofread","imdb":"tt1160419","cue":"힘이 닿는 한 아무 대가없이 원하는 것을 주겠소.","input":"힘이 닿는 한 아무 대가없이 원하는 것을 주겠소.","corrected":"힘이 닿는 한 아무 대가 없이 원하는 것을 주겠소.","reason":"‘대가 없이’는 띄어 씁니다."}
-{"kind":"incoherent","imdb":"tt11777040","sentence":"‪ ‪거기를 내일이면 도착한다는 게 ‪졸라 꿈만 같다","reason":"‘도착하다’ requires a destination particle here: ‘거기에’ rather than ‘거기를’."}
-{"kind":"proofread","imdb":"tt11777040","cue":"‪ ‪블랙 잭요? 블랙 잭 이쪽으로","input":"‪ ‪블랙 잭요? 블랙 잭 이쪽으로","corrected":"‪ ‪블랙잭요? 블랙잭 이쪽으로","reason":"블랙잭은 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt11777040","cue":"‪ ‪오늘 오전 ‪정부 서울 청사 앞에서 이루어지던","input":"‪ ‪오늘 오전 ‪정부 서울 청사 앞에서 이루어지던","corrected":"‪ ‪오늘 오전 ‪정부서울청사 앞에서 이루어지던","reason":"정부서울청사 is the official name of the institution and is written as one word."}
-{"kind":"proofread","imdb":"tt11777040","cue":"‪ ‪이 새끼 저번주부터","input":"‪ ‪이 새끼 저번주부터","corrected":"‪ ‪이 새끼 저번 주부터","reason":"‘저번 주’는 띄어 씁니다."}
-{"kind":"proofread","imdb":"tt11777040","cue":"‪ ‪저기, 블랙 잭요","input":"‪ ‪저기, 블랙 잭요","corrected":"‪ ‪저기, 블랙잭요","reason":"블랙잭은 붙여 씁니다."}
-{"kind":"incoherent","imdb":"tt11777040","sentence":"‪나, 나 한 달만 시간 주면 ‪나 바로 갚을 수 있어, 그 만 불","reason":"‘그 만 불’ is accidentally split; the intended Korean amount is ‘그만 불’ (ten thousand dollars)."}
+{"kind":"incoherent","imdb":"tt11777040","sentence":"거기를 내일이면 도착한다는 게 졸라 꿈만 같다","reason":"‘도착하다’ requires a destination particle here: ‘거기에’ rather than ‘거기를’."}
+{"kind":"proofread","imdb":"tt11777040","cue":"블랙 잭요? 블랙 잭 이쪽으로","input":"블랙 잭요? 블랙 잭 이쪽으로","corrected":"블랙잭요? 블랙잭 이쪽으로","reason":"블랙잭은 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt11777040","cue":"오늘 오전 정부 서울 청사 앞에서 이루어지던","input":"오늘 오전 정부 서울 청사 앞에서 이루어지던","corrected":"오늘 오전 정부서울청사 앞에서 이루어지던","reason":"정부서울청사 is the official name of the institution and is written as one word."}
+{"kind":"proofread","imdb":"tt11777040","cue":"이 새끼 저번주부터","input":"이 새끼 저번주부터","corrected":"이 새끼 저번 주부터","reason":"‘저번 주’는 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt11777040","cue":"저기, 블랙 잭요","input":"저기, 블랙 잭요","corrected":"저기, 블랙잭요","reason":"블랙잭은 붙여 씁니다."}
+{"kind":"incoherent","imdb":"tt11777040","sentence":"나, 나 한 달만 시간 주면 나 바로 갚을 수 있어, 그 만 불","reason":"‘그 만 불’ is accidentally split; the intended Korean amount is ‘그만 불’ (ten thousand dollars)."}
 {"kind":"proofread","imdb":"tt1187043","cue":"- 알아 맞혀봐! - 맞혀봐","input":"- 알아 맞혀봐! - 맞혀봐","corrected":"- 알아맞혀봐! - 맞혀봐","reason":"‘알아맞히다’는 붙여 씁니다."}
 {"kind":"proofread","imdb":"tt1187043","cue":"- 응, 파르한? - 차 준비 됐어","input":"- 응, 파르한? - 차 준비 됐어","corrected":"- 응, 파르한? - 차 준비됐어","reason":"‘준비되다’는 붙여 씁니다."}
 {"kind":"proofread","imdb":"tt1187043","cue":"- 파르한, 네가 찍은 거야? - 그만 둬","input":"- 파르한, 네가 찍은 거야? - 그만 둬","corrected":"- 파르한, 네가 찍은 거야? - 그만둬","reason":"‘그만두다’는 붙여 씁니다."}
@@ -11214,33 +11214,33 @@
 {"kind":"proofread","imdb":"tt1262426","cue":"이런 말하면 본인은 아니라고 펄쩍 뛰지만","input":"이런 말하면 본인은 아니라고 펄쩍 뛰지만","corrected":"이런 말 하면 본인은 아니라고 펄쩍 뛰지만","reason":"띄어 씁니다: ‘말’은 명사이고, 뒤의 ‘하면’은 ‘하다’의 활용형입니다."}
 {"kind":"proofread","imdb":"tt1262426","cue":"잘 할 수 있을 거예요 난 믿어요","input":"잘 할 수 있을 거예요 난 믿어요","corrected":"잘할 수 있을 거예요 난 믿어요","reason":"‘잘하다’는 ‘잘할’로 붙여 씁니다."}
 {"kind":"incoherent","imdb":"tt1262426","sentence":"피예로와 나 결혼할 거야","reason":"‘피예로와 나’가 결혼하는 주어라면 ‘피예로와 내가’처럼 조사나 주격 표지가 필요합니다."}
-{"kind":"proofread","imdb":"tt12792418","cue":"‪‬ ‪이야, 아따, 좆 됐네, 어?‬","input":"‪‬ ‪이야, 아따, 좆 됐네, 어?‬","corrected":"‪‬ ‪이야, 아따, 좆됐네, 어?‬","reason":"‘좆되다’는 한 단어로 붙여 씁니다."}
-{"kind":"incoherent","imdb":"tt12792418","sentence":"‪갑자기 삼촌이 일이 생겨서요‬ ‪대신 왔어요‬","reason":"‘삼촌이 일이 생겨서요’ has mismatched particles; the natural construction is ‘삼촌한테 일이 생겨서요.’"}
-{"kind":"incoherent","imdb":"tt12792418","sentence":"‪고마 잘 가입시다‬","reason":"‘가입시다’ means ‘let’s join’; the dialogue likely has a corrupted word for ‘let’s go’ (갑시다)."}
-{"kind":"proofread","imdb":"tt12792418","cue":"‪내가 여기 살면서 음주 단속 하는 거‬ ‪한 번도 본 적이 없거든‬","input":"‪내가 여기 살면서 음주 단속 하는 거‬ ‪한 번도 본 적이 없거든‬","corrected":"‪내가 여기 살면서 음주 단속하는 거‬ ‪한 번도 본 적이 없거든‬","reason":"‘단속하다’는 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt12792418","cue":"‪딴거 없습니까?‬","input":"‪딴거 없습니까?‬","corrected":"‪딴 거 없습니까?‬","reason":"‘거’는 의존 명사이므로 띄어 씁니다."}
-{"kind":"incoherent","imdb":"tt12792418","sentence":"‪알아들 들으시지?‬","reason":"‘알아들 들으시지?’ contains an accidental duplicated ‘들’; it should be ‘알아들으시지?’"}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎ ‎ ‎강제 개방 하겠습니다","input":"‎ ‎ ‎강제 개방 하겠습니다","corrected":"‎ ‎ ‎강제 개방하겠습니다","reason":"‘개방하다’는 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎ ‎ ‎검은여우는 테러범들이 아니야","input":"‎ ‎ ‎검은여우는 테러범들이 아니야","corrected":"‎ ‎ ‎검은 여우는 테러범들이 아니야","reason":"띄어쓰기: ‘검은 여우’는 관형사와 명사의 결합입니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎ ‎ ‎검은여우들 손에 수소탄이 있습니다","input":"‎ ‎ ‎검은여우들 손에 수소탄이 있습니다","corrected":"‎ ‎ ‎검은 여우들 손에 수소탄이 있습니다","reason":"검은 여우들은 띄어 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎ ‎비상 탈출 하십시오","input":"‎ ‎비상 탈출 하십시오","corrected":"‎ ‎비상 탈출하십시오","reason":"‘탈출하다’ is written together with its conjugated form ‘하십시오’."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎ ‎아씨","input":"‎ ‎아씨","corrected":"‎ ‎아 씨","reason":"감탄사와 욕설 ‘씨’는 띄어 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎ ‎태호 삼촌, 돈 잃어 먹었어요?","input":"‎ ‎태호 삼촌, 돈 잃어 먹었어요?","corrected":"‎ ‎태호 삼촌, 돈 잃어먹었어요?","reason":"‘잃어먹다’ is written as one word."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎ ‎해 먹은 돈으로 카지노에서 놀다가 ‎나한테 딱 잡혔지","input":"‎ ‎해 먹은 돈으로 카지노에서 놀다가 ‎나한테 딱 잡혔지","corrected":"‎ ‎해먹은 돈으로 카지노에서 놀다가 ‎나한테 딱 잡혔지","reason":"‘해먹다’는 돈을 부정하게 챙기거나 가로챈다는 뜻으로 쓰인 한 단어이므로 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎720달러 자동 인출 되었습니다","input":"‎720달러 자동 인출 되었습니다","corrected":"‎720달러 자동 인출되었습니다","reason":"‘인출되다’는 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎가난하고 뻔뻔하고 못돼 먹은 사람이지","input":"‎가난하고 뻔뻔하고 못돼 먹은 사람이지","corrected":"‎가난하고 뻔뻔하고 못돼먹은 사람이지","reason":"‘못돼먹다’는 한 단어이므로 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎그 난리 통에 ‎어떻게 살아남았는지 몰라","input":"‎그 난리 통에 ‎어떻게 살아남았는지 몰라","corrected":"‎그 난리통에 ‎어떻게 살아남았는지 몰라","reason":"‘난리통’은 한 단어로 붙여 씁니다."}
-{"kind":"incoherent","imdb":"tt12838766","sentence":"‎돈은 다시 회사로 공제 ‎나머지 벌금은 자동 인출","reason":"문장 구조가 깨져 있습니다. ‘돈은 다시 회사로 공제’가 성립하지 않는 표현입니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎빨리해 ‎","input":"‎빨리해 ‎","corrected":"‎빨리 해 ‎","reason":"‘빨리’와 동사 ‘해’는 띄어 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎사설 위성을 쓰니까 ‎추적이 잘 안되거든","input":"‎사설 위성을 쓰니까 ‎추적이 잘 안되거든","corrected":"‎사설 위성을 쓰니까 ‎추적이 잘 안 되거든","reason":"부정 부사 ‘안’은 뒤의 용언과 띄어 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎엉겨 붙을 생각 하지 마라","input":"‎엉겨 붙을 생각 하지 마라","corrected":"‎엉겨붙을 생각 하지 마라","reason":"‘엉겨붙다’는 한 단어로 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎오직 2억도 이상에서만 ‎나노봇들이 증발해","input":"‎오직 2억도 이상에서만 ‎나노봇들이 증발해","corrected":"‎오직 2억 도 이상에서만 ‎나노봇들이 증발해","reason":"숫자와 단위 ‘도’는 띄어 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎유체 동산 압류 집행… ‎","input":"‎유체 동산 압류 집행… ‎","corrected":"‎유체동산 압류 집행… ‎","reason":"‘유체동산’ is a compound noun and is written without a space."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎의사이자 물리학자 ‎우주 공학자, 역사학자이며","input":"‎의사이자 물리학자 ‎우주 공학자, 역사학자이며","corrected":"‎의사이자 물리학자 ‎우주공학자, 역사학자이며","reason":"‘우주공학’은 한 단어로 붙여 씁니다."}
-{"kind":"incoherent","imdb":"tt12838766","sentence":"‎의사이자 물리학자 ‎우주공학자, 역사학자이며 ‎현존하는 인류 중 가장 부자에 고령","reason":"“가장 부자에 고령” is grammatically malformed; the descriptors are joined incorrectly."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎이자를 쏘세요","input":"‎이자를 쏘세요","corrected":"‎이 자를 쏘세요","reason":"‘이 자’는 ‘이 사람’을 뜻하는 말이므로 띄어 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎전에는 공구 통, 그 전엔 배터리 ‎","input":"‎전에는 공구 통, 그 전엔 배터리 ‎","corrected":"‎전에는 공구통, 그전엔 배터리 ‎","reason":"‘공구통’은 한 단어이고, ‘그전’도 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt12838766","cue":"‎정 뭐하면은","input":"‎정 뭐하면은","corrected":"‎정 뭐 하면은","reason":"‘뭐’와 동사 ‘하다’는 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt12792418","cue":"이야, 아따, 좆 됐네, 어?","input":"이야, 아따, 좆 됐네, 어?","corrected":"이야, 아따, 좆됐네, 어?","reason":"‘좆되다’는 한 단어로 붙여 씁니다."}
+{"kind":"incoherent","imdb":"tt12792418","sentence":"갑자기 삼촌이 일이 생겨서요 대신 왔어요","reason":"‘삼촌이 일이 생겨서요’ has mismatched particles; the natural construction is ‘삼촌한테 일이 생겨서요.’"}
+{"kind":"incoherent","imdb":"tt12792418","sentence":"고마 잘 가입시다","reason":"‘가입시다’ means ‘let’s join’; the dialogue likely has a corrupted word for ‘let’s go’ (갑시다)."}
+{"kind":"proofread","imdb":"tt12792418","cue":"내가 여기 살면서 음주 단속 하는 거 한 번도 본 적이 없거든","input":"내가 여기 살면서 음주 단속 하는 거 한 번도 본 적이 없거든","corrected":"내가 여기 살면서 음주 단속하는 거 한 번도 본 적이 없거든","reason":"‘단속하다’는 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt12792418","cue":"딴거 없습니까?","input":"딴거 없습니까?","corrected":"딴 거 없습니까?","reason":"‘거’는 의존 명사이므로 띄어 씁니다."}
+{"kind":"incoherent","imdb":"tt12792418","sentence":"알아들 들으시지?","reason":"‘알아들 들으시지?’ contains an accidental duplicated ‘들’; it should be ‘알아들으시지?’"}
+{"kind":"proofread","imdb":"tt12838766","cue":"강제 개방 하겠습니다","input":"강제 개방 하겠습니다","corrected":"강제 개방하겠습니다","reason":"‘개방하다’는 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"검은여우는 테러범들이 아니야","input":"검은여우는 테러범들이 아니야","corrected":"검은 여우는 테러범들이 아니야","reason":"띄어쓰기: ‘검은 여우’는 관형사와 명사의 결합입니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"검은여우들 손에 수소탄이 있습니다","input":"검은여우들 손에 수소탄이 있습니다","corrected":"검은 여우들 손에 수소탄이 있습니다","reason":"검은 여우들은 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"비상 탈출 하십시오","input":"비상 탈출 하십시오","corrected":"비상 탈출하십시오","reason":"‘탈출하다’ is written together with its conjugated form ‘하십시오’."}
+{"kind":"proofread","imdb":"tt12838766","cue":"아씨","input":"아씨","corrected":"아 씨","reason":"감탄사와 욕설 ‘씨’는 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"태호 삼촌, 돈 잃어 먹었어요?","input":"태호 삼촌, 돈 잃어 먹었어요?","corrected":"태호 삼촌, 돈 잃어먹었어요?","reason":"‘잃어먹다’ is written as one word."}
+{"kind":"proofread","imdb":"tt12838766","cue":"해 먹은 돈으로 카지노에서 놀다가 나한테 딱 잡혔지","input":"해 먹은 돈으로 카지노에서 놀다가 나한테 딱 잡혔지","corrected":"해먹은 돈으로 카지노에서 놀다가 나한테 딱 잡혔지","reason":"‘해먹다’는 돈을 부정하게 챙기거나 가로챈다는 뜻으로 쓰인 한 단어이므로 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"720달러 자동 인출 되었습니다","input":"720달러 자동 인출 되었습니다","corrected":"720달러 자동 인출되었습니다","reason":"‘인출되다’는 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"가난하고 뻔뻔하고 못돼 먹은 사람이지","input":"가난하고 뻔뻔하고 못돼 먹은 사람이지","corrected":"가난하고 뻔뻔하고 못돼먹은 사람이지","reason":"‘못돼먹다’는 한 단어이므로 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"그 난리 통에 어떻게 살아남았는지 몰라","input":"그 난리 통에 어떻게 살아남았는지 몰라","corrected":"그 난리통에 어떻게 살아남았는지 몰라","reason":"‘난리통’은 한 단어로 붙여 씁니다."}
+{"kind":"incoherent","imdb":"tt12838766","sentence":"돈은 다시 회사로 공제 나머지 벌금은 자동 인출","reason":"문장 구조가 깨져 있습니다. ‘돈은 다시 회사로 공제’가 성립하지 않는 표현입니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"빨리해","input":"빨리해","corrected":"빨리 해","reason":"‘빨리’와 동사 ‘해’는 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"사설 위성을 쓰니까 추적이 잘 안되거든","input":"사설 위성을 쓰니까 추적이 잘 안되거든","corrected":"사설 위성을 쓰니까 추적이 잘 안 되거든","reason":"부정 부사 ‘안’은 뒤의 용언과 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"엉겨 붙을 생각 하지 마라","input":"엉겨 붙을 생각 하지 마라","corrected":"엉겨붙을 생각 하지 마라","reason":"‘엉겨붙다’는 한 단어로 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"오직 2억도 이상에서만 나노봇들이 증발해","input":"오직 2억도 이상에서만 나노봇들이 증발해","corrected":"오직 2억 도 이상에서만 나노봇들이 증발해","reason":"숫자와 단위 ‘도’는 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"유체 동산 압류 집행…","input":"유체 동산 압류 집행…","corrected":"유체동산 압류 집행…","reason":"‘유체동산’ is a compound noun and is written without a space."}
+{"kind":"proofread","imdb":"tt12838766","cue":"의사이자 물리학자 우주 공학자, 역사학자이며","input":"의사이자 물리학자 우주 공학자, 역사학자이며","corrected":"의사이자 물리학자 우주공학자, 역사학자이며","reason":"‘우주공학’은 한 단어로 붙여 씁니다."}
+{"kind":"incoherent","imdb":"tt12838766","sentence":"의사이자 물리학자 우주공학자, 역사학자이며 현존하는 인류 중 가장 부자에 고령","reason":"“가장 부자에 고령” is grammatically malformed; the descriptors are joined incorrectly."}
+{"kind":"proofread","imdb":"tt12838766","cue":"이자를 쏘세요","input":"이자를 쏘세요","corrected":"이 자를 쏘세요","reason":"‘이 자’는 ‘이 사람’을 뜻하는 말이므로 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"전에는 공구 통, 그 전엔 배터리","input":"전에는 공구 통, 그 전엔 배터리","corrected":"전에는 공구통, 그전엔 배터리","reason":"‘공구통’은 한 단어이고, ‘그전’도 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt12838766","cue":"정 뭐하면은","input":"정 뭐하면은","corrected":"정 뭐 하면은","reason":"‘뭐’와 동사 ‘하다’는 띄어 씁니다."}
 {"kind":"proofread","imdb":"tt12921446","cue":"'그는 날뜩한 칼 손에 쥐고 섬찍한 적을 찾아헤맸네'","input":"'그는 날뜩한 칼 손에 쥐고 섬찍한 적을 찾아헤맸네'","corrected":"'그는 날뜩한 칼 손에 쥐고 섬찍한 적을 찾아 헤맸네'","reason":"‘찾다’와 ‘헤매다’는 별개의 동사이므로 띄어 씁니다."}
 {"kind":"proofread","imdb":"tt12921446","cue":"'내 딸을 구하는데 도움이 될까'","input":"'내 딸을 구하는데 도움이 될까'","corrected":"'내 딸을 구하는 데 도움이 될까'","reason":"‘도움이 되다’의 ‘데’는 의존 명사이므로 띄어 씁니다."}
 {"kind":"proofread","imdb":"tt12921446","cue":"'뱀을 집으며, 병든 자에게 손을 얹은 즉 나으리라'","input":"'뱀을 집으며, 병든 자에게 손을 얹은 즉 나으리라'","corrected":"'뱀을 집으며, 병든 자에게 손을 얹은즉 나으리라'","reason":"‘-(으)ㄴ즉’은 어미이므로 앞말에 붙여 씁니다."}
@@ -11526,14 +11526,14 @@
 {"kind":"proofread","imdb":"tt1527793","cue":"즉시 112 혹은 금융 감독원 보이스 피싱…","input":"즉시 112 혹은 금융 감독원 보이스 피싱…","corrected":"즉시 112 혹은 금융감독원 보이스피싱…","reason":"기관명 ‘금융감독원’은 붙여 씁니다."}
 {"kind":"proofread","imdb":"tt1527793","cue":"최고득점자인데","input":"최고득점자인데","corrected":"최고 득점자인데","reason":"‘최고’와 ‘득점자’는 띄어 씁니다."}
 {"kind":"spelling","imdb":"tt1527793","cue":"폰들 위에 뿌리가 잘 뻗을까?","from":"폰","to":"똥","reason":"The surrounding lines discuss growing food in dirty material and making fertilizer from feces. “똥들” (“dung”) fits that context; “폰들” and “돈들” do not."}
-{"kind":"proofread","imdb":"tt15340724","cue":"‎그, 야한 비디오 ‎몰래 빼 가고 그랬잖어","input":"‎그, 야한 비디오 ‎몰래 빼 가고 그랬잖어","corrected":"‎그, 야한 비디오 ‎몰래 빼가고 그랬잖어","reason":"‘빼가다’는 한 단어로 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt15340724","cue":"‎급하게 농장일 도와 달라고 ‎연락이 왔나 봐","input":"‎급하게 농장일 도와 달라고 ‎연락이 왔나 봐","corrected":"‎급하게 농장 일 도와 달라고 ‎연락이 왔나 봐","reason":"‘농장 일’은 띄어 씁니다."}
-{"kind":"incoherent","imdb":"tt15340724","sentence":"‎네가 이해햐","reason":"“이해햐” appears to be an accidental misspelling of “이해해.”"}
-{"kind":"incoherent","imdb":"tt15340724","sentence":"‎아이, 열렬히 사모든 뭐든!","reason":"‘사모든’ appears to be a word-form error; the phrase would normally be ‘사모하든 뭐든.’"}
-{"kind":"proofread","imdb":"tt15340724","cue":"‎아이고, 제 한 몸 지키라고 ‎태권도 가르쳐 놨더니만","input":"‎아이고, 제 한 몸 지키라고 ‎태권도 가르쳐 놨더니만","corrected":"‎아이고, 제 한몸 지키라고 ‎태권도 가르쳐 놨더니만","reason":"‘한몸’은 한 단어로 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt15340724","cue":"‎야, 우리 이러다 나중에 ‎더블데이트하는 거 아니야?","input":"‎야, 우리 이러다 나중에 ‎더블데이트하는 거 아니야?","corrected":"‎야, 우리 이러다 나중에 ‎더블 데이트하는 거 아니야?","reason":"‘더블 데이트’는 띄어 씁니다."}
-{"kind":"proofread","imdb":"tt15340724","cue":"‎야야, 그건 냅 둬, 냅 둬","input":"‎야야, 그건 냅 둬, 냅 둬","corrected":"‎야야, 그건 냅둬, 냅둬","reason":"‘냅두다’는 한 단어로 붙여 씁니다."}
-{"kind":"incoherent","imdb":"tt15340724","sentence":"‎있다 매점 가자","reason":"‘있다 매점 가자’ is malformed here; it appears to be a typo for ‘이따 매점 가자’ (‘Let’s go to the snack bar later’)."}
+{"kind":"proofread","imdb":"tt15340724","cue":"그, 야한 비디오 몰래 빼 가고 그랬잖어","input":"그, 야한 비디오 몰래 빼 가고 그랬잖어","corrected":"그, 야한 비디오 몰래 빼가고 그랬잖어","reason":"‘빼가다’는 한 단어로 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt15340724","cue":"급하게 농장일 도와 달라고 연락이 왔나 봐","input":"급하게 농장일 도와 달라고 연락이 왔나 봐","corrected":"급하게 농장 일 도와 달라고 연락이 왔나 봐","reason":"‘농장 일’은 띄어 씁니다."}
+{"kind":"incoherent","imdb":"tt15340724","sentence":"네가 이해햐","reason":"“이해햐” appears to be an accidental misspelling of “이해해.”"}
+{"kind":"incoherent","imdb":"tt15340724","sentence":"아이, 열렬히 사모든 뭐든!","reason":"‘사모든’ appears to be a word-form error; the phrase would normally be ‘사모하든 뭐든.’"}
+{"kind":"proofread","imdb":"tt15340724","cue":"아이고, 제 한 몸 지키라고 태권도 가르쳐 놨더니만","input":"아이고, 제 한 몸 지키라고 태권도 가르쳐 놨더니만","corrected":"아이고, 제 한몸 지키라고 태권도 가르쳐 놨더니만","reason":"‘한몸’은 한 단어로 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt15340724","cue":"야, 우리 이러다 나중에 더블데이트하는 거 아니야?","input":"야, 우리 이러다 나중에 더블데이트하는 거 아니야?","corrected":"야, 우리 이러다 나중에 더블 데이트하는 거 아니야?","reason":"‘더블 데이트’는 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt15340724","cue":"야야, 그건 냅 둬, 냅 둬","input":"야야, 그건 냅 둬, 냅 둬","corrected":"야야, 그건 냅둬, 냅둬","reason":"‘냅두다’는 한 단어로 붙여 씁니다."}
+{"kind":"incoherent","imdb":"tt15340724","sentence":"있다 매점 가자","reason":"‘있다 매점 가자’ is malformed here; it appears to be a typo for ‘이따 매점 가자’ (‘Let’s go to the snack bar later’)."}
 {"kind":"proofread","imdb":"tt15398776","cue":"'소련과의 냉전의 출발점이다' 라고 썼어","input":"'소련과의 냉전의 출발점이다' 라고 썼어","corrected":"'소련과의 냉전의 출발점이다'라고 썼어","reason":"인용 표현 뒤의 조사 ‘라고’는 붙여 씁니다."}
 {"kind":"proofread","imdb":"tt15398776","cue":"'이 편지의 목적은 지난 몇 년 간'","input":"'이 편지의 목적은 지난 몇 년 간'","corrected":"'이 편지의 목적은 지난 몇 년간'","reason":"몇 년간은 ‘몇 년 동안’의 뜻으로 붙여 씁니다."}
 {"kind":"proofread","imdb":"tt15398776","cue":"-공화파로 싸우러 갔군요 -네, 전 그를 기다렸죠","input":"-공화파로 싸우러 갔군요 -네, 전 그를 기다렸죠","corrected":"- 공화파로 싸우러 갔군요 - 네, 전 그를 기다렸죠","reason":"대화 전환을 나타내는 대시 뒤에 띄어 씁니다."}
@@ -12190,22 +12190,22 @@
 {"kind":"proofread","imdb":"tt1675434","cue":"형이야 말로 남의 집에서 뭐 해?","input":"형이야 말로 남의 집에서 뭐 해?","corrected":"형이야말로 남의 집에서 뭐 해?","reason":"‘이야말로’는 조사이므로 앞말에 붙여 씁니다."}
 {"kind":"proofread","imdb":"tt1675434","cue":"혹시 너 그 날이니?","input":"혹시 너 그 날이니?","corrected":"혹시 너 그날이니?","reason":"‘그날’은 특정한 날을 가리키는 한 단어로 붙여 씁니다."}
 {"kind":"proofread","imdb":"tt1675434","cue":"히틀러 아저씨 전쟁 좀 그만 해!","input":"히틀러 아저씨 전쟁 좀 그만 해!","corrected":"히틀러 아저씨 전쟁 좀 그만해!","reason":"‘그만하다’는 ‘하던 일을 멈추다’의 뜻으로 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎ 그런데요 ‎","input":"‎ 그런데요 ‎","corrected":"‎그런데요 ‎","reason":"Remove the unintended leading space."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎계약서 마저 준비해 놔","input":"‎계약서 마저 준비해 놔","corrected":"‎계약서마저 준비해 놔","reason":"‘마저’가 보조사로 쓰여 앞말에 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎광합성 하러","input":"‎광합성 하러","corrected":"‎광합성하러","reason":"‘광합성하다’는 한 단어로 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎그래도 선배님이랑 ‎같이 좆 된 거라","input":"‎그래도 선배님이랑 ‎같이 좆 된 거라","corrected":"‎그래도 선배님이랑 ‎같이 좆된 거라","reason":"‘좆되다’는 한 단어로 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎극성스러운 사립 학교 엄마들","input":"‎극성스러운 사립 학교 엄마들","corrected":"‎극성스러운 사립학교 엄마들","reason":"‘사립학교’는 한 단어로 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎네 칼 너무 낡았던데 ‎뭐, 새거 줄까?","input":"‎네 칼 너무 낡았던데 ‎뭐, 새거 줄까?","corrected":"‎네 칼 너무 낡았던데 ‎뭐, 새 거 줄까?","reason":"‘새 거’는 띄어 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎돈 자랑, 자식 자랑 ‎하는 자리 아니야?","input":"‎돈 자랑, 자식 자랑 ‎하는 자리 아니야?","corrected":"‎돈 자랑, 자식 자랑‎하는 자리 아니야?","reason":"‘자랑하다’는 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎무단 횡단 하면서 ‎교통질서 잘 지키라고 하면","input":"‎무단 횡단 하면서 ‎교통질서 잘 지키라고 하면","corrected":"‎무단횡단 하면서 ‎교통질서 잘 지키라고 하면","reason":"‘무단횡단’은 한 단어이므로 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎물 주고 분갈이하고 가지 치고","input":"‎물 주고 분갈이하고 가지 치고","corrected":"‎물 주고 분갈이하고 가지치고","reason":"‘가지치다’는 한 단어로 씁니다."}
-{"kind":"incoherent","imdb":"tt16900880","sentence":"‎세요?","reason":"‘세요?’는 앞말에 붙는 어미만 남아 있어, 단독으로는 사용할 수 없는 심한 분절입니다."}
-{"kind":"incoherent","imdb":"tt16900880","sentence":"‎애네?","reason":"‘애네?’ appears to be a misspelling of ‘얘네?’"}
-{"kind":"incoherent","imdb":"tt16900880","sentence":"‎우리 회사는 ‎이, 규칙인지 지키다가 망해서","reason":"“이 규칙인지 지키다가” is grammatically broken; “규칙인지” cannot function here as the object of “지키다가.”"}
-{"kind":"incoherent","imdb":"tt16900880","sentence":"‎이유를 얘기를 안 한다는 거예요","reason":"‘이유를 얘기를’ has conflicting object particles; ‘이유 얘기를’ or ‘이유를 얘기하지’ would be grammatical."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎좆 된 거야","input":"‎좆 된 거야","corrected":"‎좆된 거야","reason":"‘좆되다’는 한 단어로 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎지지난 주에 중국 출장 갔다가","input":"‎지지난 주에 중국 출장 갔다가","corrected":"‎지지난주에 중국 출장 갔다가","reason":"‘지지난주’는 붙여 씁니다."}
-{"kind":"proofread","imdb":"tt16900880","cue":"‎한잔할래?","input":"‎한잔할래?","corrected":"‎한 잔할래?","reason":"‘잔’은 단위를 나타내는 말이므로 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"그런데요","input":"그런데요","corrected":"그런데요","reason":"Remove the unintended leading space."}
+{"kind":"proofread","imdb":"tt16900880","cue":"계약서 마저 준비해 놔","input":"계약서 마저 준비해 놔","corrected":"계약서마저 준비해 놔","reason":"‘마저’가 보조사로 쓰여 앞말에 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"광합성 하러","input":"광합성 하러","corrected":"광합성하러","reason":"‘광합성하다’는 한 단어로 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"그래도 선배님이랑 같이 좆 된 거라","input":"그래도 선배님이랑 같이 좆 된 거라","corrected":"그래도 선배님이랑 같이 좆된 거라","reason":"‘좆되다’는 한 단어로 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"극성스러운 사립 학교 엄마들","input":"극성스러운 사립 학교 엄마들","corrected":"극성스러운 사립학교 엄마들","reason":"‘사립학교’는 한 단어로 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"네 칼 너무 낡았던데 뭐, 새거 줄까?","input":"네 칼 너무 낡았던데 뭐, 새거 줄까?","corrected":"네 칼 너무 낡았던데 뭐, 새 거 줄까?","reason":"‘새 거’는 띄어 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"돈 자랑, 자식 자랑 하는 자리 아니야?","input":"돈 자랑, 자식 자랑 하는 자리 아니야?","corrected":"돈 자랑, 자식 자랑하는 자리 아니야?","reason":"‘자랑하다’는 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"무단 횡단 하면서 교통질서 잘 지키라고 하면","input":"무단 횡단 하면서 교통질서 잘 지키라고 하면","corrected":"무단횡단 하면서 교통질서 잘 지키라고 하면","reason":"‘무단횡단’은 한 단어이므로 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"물 주고 분갈이하고 가지 치고","input":"물 주고 분갈이하고 가지 치고","corrected":"물 주고 분갈이하고 가지치고","reason":"‘가지치다’는 한 단어로 씁니다."}
+{"kind":"incoherent","imdb":"tt16900880","sentence":"세요?","reason":"‘세요?’는 앞말에 붙는 어미만 남아 있어, 단독으로는 사용할 수 없는 심한 분절입니다."}
+{"kind":"incoherent","imdb":"tt16900880","sentence":"애네?","reason":"‘애네?’ appears to be a misspelling of ‘얘네?’"}
+{"kind":"incoherent","imdb":"tt16900880","sentence":"우리 회사는 이, 규칙인지 지키다가 망해서","reason":"“이 규칙인지 지키다가” is grammatically broken; “규칙인지” cannot function here as the object of “지키다가.”"}
+{"kind":"incoherent","imdb":"tt16900880","sentence":"이유를 얘기를 안 한다는 거예요","reason":"‘이유를 얘기를’ has conflicting object particles; ‘이유 얘기를’ or ‘이유를 얘기하지’ would be grammatical."}
+{"kind":"proofread","imdb":"tt16900880","cue":"좆 된 거야","input":"좆 된 거야","corrected":"좆된 거야","reason":"‘좆되다’는 한 단어로 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"지지난 주에 중국 출장 갔다가","input":"지지난 주에 중국 출장 갔다가","corrected":"지지난주에 중국 출장 갔다가","reason":"‘지지난주’는 붙여 씁니다."}
+{"kind":"proofread","imdb":"tt16900880","cue":"한잔할래?","input":"한잔할래?","corrected":"한 잔할래?","reason":"‘잔’은 단위를 나타내는 말이므로 띄어 씁니다."}
 {"kind":"incoherent","imdb":"tt17009710","sentence":"그날의 기억에 절대적으로 확신하다가 이젠 확실하지 않다고?","reason":"‘기억에 절대적으로 확신하다가’는 조사와 서술어의 호응이 어색합니다. ‘기억을 절대적으로 확신하다가’처럼 써야 합니다."}
 {"kind":"proofread","imdb":"tt17009710","cue":"네, 이유를 알거든요","input":"네, 이유를 알거든요","corrected":"네, 이유를 알 거든요","reason":"의존 명사 ‘거’는 띄어 씁니다."}
 {"kind":"proofread","imdb":"tt17009710","cue":"다른 사람들과도 친구 해야 하니까","input":"다른 사람들과도 친구 해야 하니까","corrected":"다른 사람들과도 친구해야 하니까","reason":"‘친구하다’는 한 단어이므로 붙여 씁니다."}

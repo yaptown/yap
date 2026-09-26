@@ -5872,16 +5872,16 @@
 {"kind":"incoherent","imdb":"tt1069238","sentence":"给 尝尝吧","reason":"“给 尝尝吧”中“给”后缺少受事对象，句子结构残缺，像是误删或损坏。"}
 {"kind":"incoherent","imdb":"tt1069238","sentence":"觉得被一直以来的束缚解放了自己以前坚信不疑的梦想可能 根本不是梦想","reason":"“被一直以来的束缚解放了”结构不通；“被”后接“束缚”会表达被束缚，而不是从束缚中解放。"}
 {"kind":"proofread","imdb":"tt1069238","cue":"这种事...","input":"这种事...","corrected":"这种事…","reason":"将连续三个句点统一为单个省略号。"}
-{"kind":"proofread","imdb":"tt10883506","cue":"‎什么“你儿子”？","input":"‎什么“你儿子”？","corrected":"‎什么“你儿子？”","reason":"将问号移入引号内，符合中文引号与问号的搭配位置。"}
-{"kind":"incoherent","imdb":"tt10883506","sentence":"‎但他是说的每句话都让我难堪","reason":"“他是说的每句话”结构有误；应为“他说的每句话”或“他所说的每句话”。"}
-{"kind":"incoherent","imdb":"tt10883506","sentence":"‎你一每次在讲的时候 ‎我们都把它当成笑话","reason":"“一每次”是明显的词语重复/损坏，句子应为“你每次在讲的时候”。"}
-{"kind":"incoherent","imdb":"tt10883506","sentence":"‎再曰啦","reason":"“再曰啦”在此处像是明显的文字损坏；结合前后《论语》引文，应为“再曰：……”一类内容，但现有文字无法成立。"}
-{"kind":"incoherent","imdb":"tt10883506","sentence":"‎口中不见的小朋友","reason":"“口中不见的小朋友”不构成可理解的中文短语，疑似文字损坏。"}
-{"kind":"incoherent","imdb":"tt10883506","sentence":"‎我们很遗憾你哥的事","reason":"“我们很遗憾你哥的事”搭配不成立；“遗憾”不能这样直接接“你哥的事”作宾语。"}
-{"kind":"incoherent","imdb":"tt10883506","sentence":"‎相对答数一","reason":"“相对答数一” is not an intelligible Chinese phrase and appears corrupted."}
-{"kind":"incoherent","imdb":"tt10883506","sentence":"‎立刻停止你的会面了","reason":"“立刻停止你的会面了”有明显的语法问题，句末“了”与“立刻停止”不搭。"}
-{"kind":"incoherent","imdb":"tt10883506","sentence":"‎臭死了人","reason":"“臭死了人”语序明显不通，像是“臭死人了”的词序损坏。"}
-{"kind":"proofread","imdb":"tt10883506","cue":"‎跟他抱一抱说声“辛苦啦”？","input":"‎跟他抱一抱说声“辛苦啦”？","corrected":"‎跟他抱一抱说声“辛苦啦？”","reason":"将问号移入引号内，符合中文引号与问号的摆放规范。"}
+{"kind":"proofread","imdb":"tt10883506","cue":"什么“你儿子”？","input":"什么“你儿子”？","corrected":"什么“你儿子？”","reason":"将问号移入引号内，符合中文引号与问号的搭配位置。"}
+{"kind":"incoherent","imdb":"tt10883506","sentence":"但他是说的每句话都让我难堪","reason":"“他是说的每句话”结构有误；应为“他说的每句话”或“他所说的每句话”。"}
+{"kind":"incoherent","imdb":"tt10883506","sentence":"你一每次在讲的时候 我们都把它当成笑话","reason":"“一每次”是明显的词语重复/损坏，句子应为“你每次在讲的时候”。"}
+{"kind":"incoherent","imdb":"tt10883506","sentence":"再曰啦","reason":"“再曰啦”在此处像是明显的文字损坏；结合前后《论语》引文，应为“再曰：……”一类内容，但现有文字无法成立。"}
+{"kind":"incoherent","imdb":"tt10883506","sentence":"口中不见的小朋友","reason":"“口中不见的小朋友”不构成可理解的中文短语，疑似文字损坏。"}
+{"kind":"incoherent","imdb":"tt10883506","sentence":"我们很遗憾你哥的事","reason":"“我们很遗憾你哥的事”搭配不成立；“遗憾”不能这样直接接“你哥的事”作宾语。"}
+{"kind":"incoherent","imdb":"tt10883506","sentence":"相对答数一","reason":"“相对答数一” is not an intelligible Chinese phrase and appears corrupted."}
+{"kind":"incoherent","imdb":"tt10883506","sentence":"立刻停止你的会面了","reason":"“立刻停止你的会面了”有明显的语法问题，句末“了”与“立刻停止”不搭。"}
+{"kind":"incoherent","imdb":"tt10883506","sentence":"臭死了人","reason":"“臭死了人”语序明显不通，像是“臭死人了”的词序损坏。"}
+{"kind":"proofread","imdb":"tt10883506","cue":"跟他抱一抱说声“辛苦啦”？","input":"跟他抱一抱说声“辛苦啦”？","corrected":"跟他抱一抱说声“辛苦啦？”","reason":"将问号移入引号内，符合中文引号与问号的摆放规范。"}
 {"kind":"incoherent","imdb":"tt10944760","sentence":"他的气味仍张漫在周围","reason":"“张漫”是明显的用字错误；此处应为“弥漫”。"}
 {"kind":"incoherent","imdb":"tt10944760","sentence":"即使那个人是我我发督那时我会自我了断","reason":"“我发督”包含明显的错字/字符损坏，句意无法正常读通。"}
 {"kind":"incoherent","imdb":"tt10944760","sentence":"只要想要个签名","reason":"“只要想要个签名”中的“只要想要”搭配不成立，疑似文字错误。"}
@@ -7818,10 +7818,10 @@
 {"kind":"incoherent","imdb":"tt7362036","sentence":"铸上","reason":"“铸上”有明显字词错误，疑为“铐上”。"}
 {"kind":"incoherent","imdb":"tt7362036","sentence":"黃毛剪掉剪掉刺入头","reason":"“刺入头” appears to be a corrupted word; the phrase does not make sense as written."}
 {"kind":"incoherent","imdb":"tt7362036","sentence":"黄队咬 的寓狗的啊","reason":"“黄队咬 的寓狗的啊” contains corrupted or garbled words and is not usable as written."}
-{"kind":"incoherent","imdb":"tt7605074","sentence":"‎咱都阿彌，還得陀佛","reason":"「阿彌陀佛」被拆成「阿彌」和「陀佛」，造成明顯的詞語損壞。"}
-{"kind":"incoherent","imdb":"tt7605074","sentence":"‎太空人太空站","reason":"“太空人太空站”多出“人”，使短语无法作为“太空站”的名称或指称自然使用。"}
-{"kind":"incoherent","imdb":"tt7605074","sentence":"‎太空人太空站的行為發生","reason":"“太空人太空站的行为发生”词语组合明显异常，句子无法成立。"}
-{"kind":"incoherent","imdb":"tt7605074","sentence":"‎靠木星引力地球","reason":"“靠木星引力地球”把两个成分拼在一起，句子结构不成立。"}
+{"kind":"incoherent","imdb":"tt7605074","sentence":"咱都阿彌，還得陀佛","reason":"「阿彌陀佛」被拆成「阿彌」和「陀佛」，造成明顯的詞語損壞。"}
+{"kind":"incoherent","imdb":"tt7605074","sentence":"太空人太空站","reason":"“太空人太空站”多出“人”，使短语无法作为“太空站”的名称或指称自然使用。"}
+{"kind":"incoherent","imdb":"tt7605074","sentence":"太空人太空站的行為發生","reason":"“太空人太空站的行为发生”词语组合明显异常，句子无法成立。"}
+{"kind":"incoherent","imdb":"tt7605074","sentence":"靠木星引力地球","reason":"“靠木星引力地球”把两个成分拼在一起，句子结构不成立。"}
 {"kind":"audio_mismatch","imdb":"tt8033592","sentence":"不就是因为…不说了","reason":"“不说了” is a natural phrase in context, so the subtitle is fine as written. But the transcript and heard IPA both point to a final “说” sound rather than “了,” indicating the audio does not match the subtitle."}
 {"kind":"audio_mismatch","imdb":"tt8033592","sentence":"今儿是跨年 他怎么不陪你啊？","reason":"“今儿是跨年” is grammatical, so the subtitle does not need correction. The transcript and the heard IPA weakly support “个” rather than “是,” suggesting the audio differs from the subtitle, though the IPA is noisy."}
 {"kind":"incoherent","imdb":"tt8033592","sentence":"今天就让我们北京回来的老同学来别了","reason":"“来别了” makes the sentence unusable; the wording appears corrupted."}

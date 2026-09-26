@@ -93,10 +93,10 @@ pub fn read_derived_jsonl(path: &Path) -> Result<Vec<SubtitleLine>> {
         // to happen on read; it also keeps the two sources agreeing about what
         // the text says.
         parsed.sentence = repair_cp1252_mojibake(&parsed.sentence);
-        let stripped = CONTROL_TAGS.replace_all(&parsed.sentence, "");
-        if stripped != parsed.sentence {
-            parsed.sentence = SPACES.replace_all(stripped.trim(), " ").to_string();
-        }
+        // Decode old markup without reapplying lossy annotation/speaker cleanup.
+        let decoded = decode_subtitle_markup(&parsed.sentence);
+        let stripped = CONTROL_TAGS.replace_all(&decoded, "");
+        parsed.sentence = SPACES.replace_all(stripped.trim(), " ").to_string();
         lines.push(parsed);
     }
     Ok(lines)
@@ -239,14 +239,22 @@ static SPACES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwrap());
 
 /// Bump whenever cue cleaning changes. Shared segmentation provenance includes
 /// this version so both clip mapping and transcript-check remeasure changed text.
-pub const CLEANUP_VERSION: u32 = 1;
+pub const CLEANUP_VERSION: u32 = 2;
+
+/// Decode once, before stripping tags so encoded formatting is removed too.
+/// Bidi controls affect display, not dialogue; ZWJ/ZWNJ affect spelling and stay.
+fn decode_subtitle_markup(text: &str) -> String {
+    let mut text = strip_html_tags(&html_escape::decode_html_entities(text));
+    text.retain(|c| !matches!(c, '\u{200E}' | '\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}'));
+    text
+}
 
 /// Strip markup, sound cues and speaker labels from one subtitle block.
 ///
 /// Lossy by design, which is exactly why it is not applied before writing to
 /// disk — see the module docs.
 pub fn cleanup_subtitle_text(text: &str) -> String {
-    let mut result = strip_html_tags(text);
+    let mut result = decode_subtitle_markup(text);
 
     // SSA/ASS override tags ({\an8}, {\i1}, {\pos(200,100)}, …) and the ASS
     // escapes for line break / hard space.
@@ -334,6 +342,65 @@ mod tests {
         assert_eq!(cleanup_subtitle_text("{C:$6F6F6F}{y}okay{}"), "okay");
         // Braces holding somebody's words are not markup.
         assert_eq!(cleanup_subtitle_text("{стоп}"), "{стоп}");
+    }
+
+    #[test]
+    fn cleanup_decodes_html_entities() {
+        assert_eq!(
+            cleanup_subtitle_text("Tom&nbsp; &amp; Jerry"),
+            "Tom & Jerry"
+        );
+        assert_eq!(
+            cleanup_subtitle_text("&#72;&#x65;llo&#160;there"),
+            "Hello there"
+        );
+        assert_eq!(cleanup_subtitle_text("&lt;i&gt;Hello&lt;/i&gt;"), "Hello");
+        assert_eq!(cleanup_subtitle_text("&amp;lt;i&amp;gt;"), "&lt;i&gt;");
+        assert_eq!(cleanup_subtitle_text("&unknown;"), "&unknown;");
+    }
+
+    #[test]
+    fn cleanup_drops_bidi_controls_but_keeps_joiners() {
+        assert_eq!(cleanup_subtitle_text("&lrm;नमस्ते।&rlm;"), "नमस्ते।");
+        assert_eq!(cleanup_subtitle_text("&#8206;नमस्ते।&#x200f;"), "नमस्ते।");
+        for c in ['\u{200E}', '\u{200F}']
+            .into_iter()
+            .chain('\u{202A}'..='\u{202E}')
+            .chain('\u{2066}'..='\u{2069}')
+        {
+            assert_eq!(cleanup_subtitle_text(&format!("{c}नमस्ते।{c}")), "नमस्ते।");
+        }
+        assert_eq!(
+            cleanup_subtitle_text("क्\u{200D}ष क्\u{200C}ष।"),
+            "क्\u{200D}ष क्\u{200C}ष।"
+        );
+        assert_eq!(
+            cleanup_subtitle_text("क्&zwj;ष क्&zwnj;ष।"),
+            "क्\u{200D}ष क्\u{200C}ष।"
+        );
+        assert!(sentences::should_include_sentence(
+            &cleanup_subtitle_text("&lrm;यह क्&zwj;ष क्&zwnj;ष है।"),
+            language_utils::Language::Hindi,
+        ));
+    }
+
+    #[test]
+    fn derived_jsonl_decodes_markup_without_recleaning_annotations() {
+        let path =
+            std::env::temp_dir().join(format!("subtitle-entities-{}.jsonl", std::process::id()));
+        std::fs::write(&path, r#"{"sentence":"&lrm;&lt;i&gt;Hello&nbsp;there&lt;/i&gt; (aside)","start_ms":1500,"end_ms":3250}"#).unwrap();
+        let lines = read_derived_jsonl(&path).unwrap();
+        std::fs::remove_file(path).unwrap();
+        assert_eq!(
+            lines,
+            vec![SubtitleLine {
+                sentence: "Hello there (aside)".to_string(),
+                start_ms: 1500,
+                end_ms: 3250,
+            }]
+        );
+        let srt = "1\n00:00:01,500 --> 00:00:03,250\n&lrm;&lt;i&gt;Hello&nbsp;there&lt;/i&gt;\n\n";
+        assert_eq!(parse_srt(srt).unwrap()[0].sentence, "Hello there");
     }
 
     #[test]
