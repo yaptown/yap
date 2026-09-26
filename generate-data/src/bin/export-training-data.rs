@@ -33,15 +33,16 @@ use std::path::Path;
 /// loader, and the lexide conversions all live in `generate_data::gold` now:
 /// the pipeline reads gold too, and one definition is what keeps the export's
 /// merge and the pipeline's overlay from drifting apart.
-use generate_data::gold::{CleanedToken, load as load_gold, to_flat};
+use generate_data::gold::{load as load_gold, to_flat};
 
 /// Write entries as flat-format jsonl, sorted by sentence (deterministic export).
-fn write_flat(dest: &Path, entries: &BTreeMap<String, Vec<CleanedToken>>) -> Result<()> {
+fn write_flat(dest: &Path, entries: &BTreeMap<String, lexide::Tokenization>) -> Result<()> {
     if let Some(parent) = dest.parent() {
         std::fs::create_dir_all(parent)?;
     }
     let mut writer = std::io::BufWriter::new(std::fs::File::create(dest)?);
     for (sentence, tokens) in entries {
+        let tokens = to_flat(tokens.clone().into_tokens());
         let json = serde_json::json!({ "sentence": sentence, "tokens": tokens });
         writeln!(writer, "{json}")?;
     }
@@ -84,11 +85,8 @@ fn main() -> Result<()> {
         // main store: gold's answer wins, gold-only sentences are included
         let main_store = path.join("target_language_sentences_tokenization.jsonl");
         if main_store.exists() {
-            let mut merged: BTreeMap<String, Vec<CleanedToken>> =
-                generate_data::nlp::load_canonicalized(&main_store, language)?
-                    .into_iter()
-                    .map(|(sentence, tokens)| (sentence, to_flat(tokens)))
-                    .collect();
+            let mut merged: BTreeMap<String, lexide::Tokenization> =
+                generate_data::nlp::load_canonicalized(&main_store, language)?;
             let silver_n = merged.len();
             let overridden = gold.keys().filter(|s| merged.contains_key(*s)).count();
             merged.extend(gold.iter().map(|(s, t)| (s.clone(), t.clone())));
@@ -110,11 +108,8 @@ fn main() -> Result<()> {
             if !source.exists() {
                 continue;
             }
-            let entries: BTreeMap<String, Vec<CleanedToken>> =
-                generate_data::nlp::load_canonicalized(&source, language)?
-                    .into_iter()
-                    .map(|(sentence, tokens)| (sentence, to_flat(tokens)))
-                    .collect();
+            let entries: BTreeMap<String, lexide::Tokenization> =
+                generate_data::nlp::load_canonicalized(&source, language)?;
             write_flat(&export_dir.join(code).join(store), &entries)?;
             println!("{code}: {store} {} entries", entries.len());
         }

@@ -346,7 +346,7 @@ impl LanguagePack {
                 let whitespace = crate::predict_whitespace(word, next_word, language);
                 Literal {
                     word: word.clone(),
-                    whitespace: whitespace.to_str().to_string(),
+                    whitespace,
                 }
             })
             .collect();

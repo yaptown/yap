@@ -23,19 +23,19 @@
 //! Thai ที่อยู่ ("address") vs ที่|อยู่ (relativizer + "live"), Chinese 的话 ("if") vs
 //! 的|话 ("'s words") — must be left to the LLM and must NOT be added to these tables.
 
-use language_utils::{Language, PartOfSpeechTag};
+use language_utils::{Language, PartOfSpeechTag, Whitespace};
 
 /// Common view over the token types the correctors touch. Lets a deterministic fix be
 /// written once and applied identically to the NLP proposal, the LLM output, and the
 /// silver lexide data.
 pub trait TokenView {
     fn text(&self) -> &str;
-    fn whitespace(&self) -> &str;
+    fn whitespace(&self) -> Whitespace;
     fn pos(&self) -> PartOfSpeechTag;
     fn lemma(&self) -> &str;
     fn push_text(&mut self, more: &str);
     fn set_text(&mut self, text: String);
-    fn set_whitespace(&mut self, ws: String);
+    fn set_whitespace(&mut self, whitespace: Whitespace);
     fn set_pos(&mut self, pos: PartOfSpeechTag);
     fn set_lemma(&mut self, lemma: String);
 
@@ -68,8 +68,8 @@ macro_rules! impl_token_view {
             fn text(&self) -> &str {
                 &self.text
             }
-            fn whitespace(&self) -> &str {
-                &self.whitespace
+            fn whitespace(&self) -> Whitespace {
+                self.whitespace
             }
             fn pos(&self) -> PartOfSpeechTag {
                 self.pos
@@ -83,8 +83,8 @@ macro_rules! impl_token_view {
             fn set_text(&mut self, text: String) {
                 self.text = text;
             }
-            fn set_whitespace(&mut self, ws: String) {
-                self.whitespace = ws;
+            fn set_whitespace(&mut self, whitespace: Whitespace) {
+                self.whitespace = whitespace;
             }
             fn set_pos(&mut self, pos: PartOfSpeechTag) {
                 self.pos = pos;
@@ -152,8 +152,8 @@ impl TokenView for lexide::Token {
     fn text(&self) -> &str {
         &self.text.text
     }
-    fn whitespace(&self) -> &str {
-        &self.whitespace
+    fn whitespace(&self) -> Whitespace {
+        self.whitespace.into()
     }
     fn pos(&self) -> PartOfSpeechTag {
         lexide_pos_to_tag(self.pos)
@@ -167,8 +167,8 @@ impl TokenView for lexide::Token {
     fn set_text(&mut self, text: String) {
         self.text.text = text;
     }
-    fn set_whitespace(&mut self, ws: String) {
-        self.whitespace = ws;
+    fn set_whitespace(&mut self, whitespace: Whitespace) {
+        self.whitespace = whitespace.into();
     }
     fn set_pos(&mut self, pos: PartOfSpeechTag) {
         self.pos = tag_to_lexide_pos(pos);
@@ -359,7 +359,7 @@ fn split_token<T: TokenView + Clone>(
         tok.set_pos(*pos);
         tok.set_lemma((*lemma).to_string());
         if j + 1 < pieces.len() {
-            tok.set_whitespace(String::new());
+            tok.set_whitespace(Whitespace::None);
         }
         match attach {
             PieceAttach::Head => {} // keeps the template's dep and (adjusted) head
@@ -396,7 +396,7 @@ fn merge_pair<T: TokenView>(tokens: &mut Vec<T>, i: usize, pos: PartOfSpeechTag,
         left.copy_attachment(&right);
     }
     left.push_text(right.text());
-    left.set_whitespace(right.whitespace().to_string());
+    left.set_whitespace(right.whitespace());
     left.set_pos(pos);
     left.set_lemma(lemma.to_string());
     for t in tokens.iter_mut() {
@@ -421,7 +421,7 @@ fn apply_segmentation<T: TokenView + Clone>(
     let mut fixes = Vec::new();
     let mut i = 0;
     while i < tokens.len() {
-        if i + 1 < tokens.len() && tokens[i].whitespace().is_empty() {
+        if i + 1 < tokens.len() && tokens[i].whitespace().as_str().is_empty() {
             let left = tokens[i].text().trim().to_string();
             let right = tokens[i + 1].text().to_string();
             if let Some((_, _, pos, lemma)) = rules
@@ -788,7 +788,7 @@ fn fix_chinese_once<T: TokenView + Clone>(tokens: &mut Vec<T>) -> Vec<String> {
     let mut i = 1;
     while i < tokens.len() {
         if tokens[i].text().trim() == "个人"
-            && tokens[i - 1].whitespace().is_empty()
+            && tokens[i - 1].whitespace().as_str().is_empty()
             && matches!(
                 tokens[i - 1].text().trim(),
                 "每" | "一" | "这" | "那" | "哪" | "几" | "两"
@@ -1662,7 +1662,7 @@ fn fix_japanese_segmentation<T: TokenView + Clone>(tokens: &mut Vec<T>) -> Vec<S
                     } else {
                         tok.text()
                     };
-                    text == *piece && (j + 1 == seq.len() || tok.whitespace().is_empty())
+                    text == *piece && (j + 1 == seq.len() || tok.whitespace().as_str().is_empty())
                 })
         });
         if let Some((seq, whole)) = matched {
@@ -1679,7 +1679,7 @@ fn fix_japanese_segmentation<T: TokenView + Clone>(tokens: &mut Vec<T>) -> Vec<S
     let mut i = 0;
     while i < tokens.len() {
         if i + 1 < tokens.len()
-            && tokens[i].whitespace().is_empty()
+            && tokens[i].whitespace().as_str().is_empty()
             && tokens[i + 1].text() == "に"
             && matches!(tokens[i].text().trim(), "本当" | "確か")
             && !ja_next_is_naru(tokens, i + 2)
@@ -1777,7 +1777,7 @@ fn is_japanese_complete_form(head: &impl TokenView) -> bool {
 fn absorbs_suffix<T: TokenView>(head: &T, next: &T) -> bool {
     // Anything written apart stays apart — merging across a space would drop it and the
     // tokens would no longer reconstruct the sentence.
-    if !head.whitespace().is_empty() {
+    if !head.whitespace().as_str().is_empty() {
         return false;
     }
     // Only a predicate has an inflectional tail. A noun keeps the copula separate
@@ -2440,7 +2440,20 @@ pub fn fix_french<T: TokenView + Clone>(tokens: &mut [T]) -> Vec<String> {
     notes
 }
 
-pub fn fix_tokens<T: TokenView + Clone>(language: Language, tokens: &mut Vec<T>) -> Vec<String> {
+/// Canonicalize a validated sentence, preserving its exact original text.
+pub fn fix_tokens(language: Language, tokenization: lexide::Tokenization) -> lexide::Tokenization {
+    let (sentence, mut tokens) = tokenization.into_parts();
+    correct_tokens(language, &mut tokens);
+    lexide::Tokenization::new(sentence, tokens)
+        .expect("token corrections preserve the sentence invariant")
+}
+
+/// Apply linguistic corrections to proposals. Callers must validate the completed
+/// sentence before accepting or persisting a proposal.
+pub fn correct_tokens<T: TokenView + Clone>(
+    language: Language,
+    tokens: &mut Vec<T>,
+) -> Vec<String> {
     match language {
         Language::ChineseSimplified | Language::ChineseTraditional => fix_chinese(tokens),
         Language::Japanese => fix_japanese(tokens),
@@ -2468,7 +2481,7 @@ mod tests {
             text: lexide::Text {
                 text: text.to_string(),
             },
-            whitespace: String::new(),
+            whitespace: lexide::Whitespace::None,
             pos: tag_to_lexide_pos(pos),
             lemma: lexide::Lemma {
                 lemma: text.to_string(),
@@ -2634,7 +2647,7 @@ mod tests {
         let mut tokens = vec![
             {
                 let mut t = ltok("พวก", Noun, D::Nsubj, 0);
-                t.whitespace = " ".to_string();
+                t.whitespace = lexide::Whitespace::Space;
                 t
             },
             ltok("มัน", Pron, D::Nsubj, 0),
@@ -2646,16 +2659,17 @@ mod tests {
     #[test]
     fn fix_tokens_dispatch_and_idempotence() {
         use lexide::DependencyRelation as D;
-        let mut tokens = vec![
+        let tokens = vec![
             ltok("你", Pron, D::Nsubj, 2),
             ltok("有没有", Verb, D::Root, 0),
             ltok("水", Noun, D::Obj, 2),
         ];
-        let fixed = fix_tokens(Language::ChineseSimplified, &mut tokens);
-        assert!(!fixed.is_empty());
-        assert_eq!(texts(&tokens), vec!["你", "有", "没有", "水"]);
-        let again = fix_tokens(Language::ChineseSimplified, &mut tokens);
-        assert!(again.is_empty(), "second pass changed tokens: {again:?}");
+        let input = lexide::Tokenization::new("你有没有水", tokens).unwrap();
+        let fixed = fix_tokens(Language::ChineseSimplified, input);
+        assert_eq!(fixed.sentence(), "你有没有水");
+        assert_eq!(texts(fixed.tokens()), vec!["你", "有", "没有", "水"]);
+        let again = fix_tokens(Language::ChineseSimplified, fixed.clone());
+        assert_eq!(fixed.tokens(), again.tokens());
     }
 
     #[test]
@@ -2686,7 +2700,7 @@ mod tests {
         // A dep-less token type reports no label, so the rule can't fire.
         let mut doc = vec![language_utils::DocToken {
             text: "les".to_string(),
-            whitespace: " ".to_string(),
+            whitespace: Whitespace::Space,
             pos: Pron,
             lemma: "le".to_string(),
             morph: Default::default(),

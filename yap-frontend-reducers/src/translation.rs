@@ -884,7 +884,7 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
             };
             TranslationWordView {
                 text: literal.word.text.clone(),
-                whitespace: literal.whitespace.clone(),
+                whitespace: literal.whitespace.to_string(),
                 tint,
                 tappable: editing && heteronym,
             }

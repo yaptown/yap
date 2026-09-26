@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 bridgerton.workspace = true
+lexide-types.workspace = true
 schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true

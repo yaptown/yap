@@ -289,28 +289,6 @@ pub(crate) fn lexide_token_to_literal(
 
     let pos_tag = convert_pos_tag(token.pos);
 
-    // Handle space tokens specially
-    if pos_tag == PartOfSpeechTag::Space {
-        let whitespace = if token.text.text.is_empty() && token.whitespace.is_empty() {
-            " ".to_string()
-        } else if token.text.text.is_empty() {
-            token.whitespace.clone()
-        } else if token.whitespace.is_empty() {
-            token.text.text.clone()
-        } else {
-            format!("{}{}", token.text.text, token.whitespace)
-        };
-        return Literal {
-            word: language_utils::Word {
-                text: "".to_string(),
-                word_type: language_utils::WordType::Other(language_utils::OtherWord {
-                    other_tag: language_utils::OtherWordType::Space,
-                }),
-            },
-            whitespace,
-        };
-    }
-
     // Determine the word type based on POS tag
     let word_type = match pos_tag {
         PartOfSpeechTag::Propn => language_utils::WordType::Other(language_utils::OtherWord {
@@ -346,7 +324,7 @@ pub(crate) fn lexide_token_to_literal(
             text: token.text.text.clone(),
             word_type,
         },
-        whitespace: token.whitespace.clone(),
+        whitespace: token.whitespace.into(),
     }
 }
 

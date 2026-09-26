@@ -1801,11 +1801,14 @@ impl weapon::AppState for Deck {
                         } => parts
                             .iter()
                             .flat_map(|part| {
-                                vec![part.heard.word.text.clone(), part.heard.whitespace.clone()]
+                                vec![
+                                    part.heard.word.text.clone(),
+                                    part.heard.whitespace.to_string(),
+                                ]
                             })
                             .collect::<Vec<_>>(),
                         transcription_challenge::PartGraded::Provided { part } => {
-                            vec![part.word.text.clone(), part.whitespace.clone()]
+                            vec![part.word.text.clone(), part.whitespace.to_string()]
                         }
                     })
                     .collect::<Vec<String>>()

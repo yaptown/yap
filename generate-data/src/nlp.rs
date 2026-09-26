@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use futures::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{Gram, Language};
-use lexide::Lexide;
+use lexide::{Lexide, Tokenization};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 use std::io::{BufRead, BufReader, Write};
@@ -31,13 +31,6 @@ fn to_lexide_language(lang: Language) -> Option<lexide::Language> {
         // There is no Traditional Chinese NLP pipeline yet.
         Language::ChineseTraditional => None,
     }
-}
-
-/// Tokenized sentence for serialization
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct TokenizedSentence {
-    sentence: String,
-    tokens: Vec<lexide::Token>,
 }
 
 /// Track sentences that have failed tokenization
@@ -99,6 +92,9 @@ const ENDPOINT_ATTEMPTS: usize = 8;
 /// spend its failure budget: the run that recorded endpoint errors as sentence
 /// failures silently dropped 75k good sentences, a seventh of the corpus.
 fn is_models_verdict(error: &anyhow::Error) -> bool {
+    if error.downcast_ref::<lexide::TokenizationError>().is_some() {
+        return true;
+    }
     let message = format!("{error:#}");
     [
         "Reconstructed text does not match",
@@ -137,24 +133,81 @@ fn write_failures(failures: &BTreeMap<String, u32>, failure_file: &Path) -> Resu
 pub fn load_canonicalized(
     output_file: &Path,
     language: Language,
-) -> Result<BTreeMap<String, Vec<lexide::Token>>> {
-    let mut already_processed: BTreeMap<String, Vec<lexide::Token>> = BTreeMap::new();
-    if output_file.exists() {
-        let file = std::fs::File::open(output_file)?;
-        let reader = BufReader::new(file);
+) -> Result<BTreeMap<String, Tokenization>> {
+    Ok(load_with_report(output_file, language)?.rows)
+}
 
-        for line in reader.lines().map_while(Result::ok) {
-            if let Ok(tokenized) = serde_json::from_str::<TokenizedSentence>(&line) {
-                already_processed.insert(tokenized.sentence, tokenized.tokens);
+#[derive(Default)]
+pub struct LoadedTokenizations {
+    pub rows: BTreeMap<String, Tokenization>,
+    pub invalid_rows: usize,
+    pub invalid_sentences: HashSet<String>,
+}
+
+pub fn load_with_report(path: &Path, language: Language) -> Result<LoadedTokenizations> {
+    load_tokenizations(path, language, |line| Ok(serde_json::from_str(line)?))
+}
+
+pub(crate) fn load_tokenizations(
+    path: &Path,
+    language: Language,
+    parse: impl Fn(&str) -> Result<Tokenization>,
+) -> Result<LoadedTokenizations> {
+    let mut loaded = LoadedTokenizations::default();
+    if !path.exists() {
+        return Ok(loaded);
+    }
+    for line in BufReader::new(std::fs::File::open(path)?).lines() {
+        let line = line?;
+        match parse(&line) {
+            Ok(row) => {
+                let row = token_corrections::fix_tokens(language, row);
+                loaded.rows.insert(row.sentence().to_owned(), row);
+            }
+            Err(error) => {
+                loaded.invalid_rows += 1;
+                let sentence = serde_json::from_str::<serde_json::Value>(&line)
+                    .ok()
+                    .and_then(|v| v["sentence"].as_str().map(str::to_owned));
+                if let Some(sentence) = &sentence {
+                    loaded.invalid_sentences.insert(sentence.clone());
+                }
+                if loaded.invalid_rows <= 3 {
+                    eprintln!(
+                        "tokenization[{}] {} sentence {sentence:?}: {error:#}",
+                        language.code(),
+                        path.display()
+                    );
+                }
             }
         }
     }
-
-    for tokens in already_processed.values_mut() {
-        token_corrections::fix_tokens(language, tokens);
+    if loaded.invalid_rows > 0 {
+        eprintln!(
+            "tokenization[{}] {}: rejected {} invalid rows",
+            language.code(),
+            path.display(),
+            loaded.invalid_rows
+        );
     }
+    Ok(loaded)
+}
 
-    Ok(already_processed)
+fn pending_sentences(
+    sentences: &[String],
+    processed: &BTreeMap<String, Tokenization>,
+    failures: &BTreeMap<String, u32>,
+) -> HashSet<String> {
+    sentences
+        .iter()
+        .filter(|s| !processed.contains_key(*s))
+        .filter(|s| {
+            failures
+                .get(*s)
+                .is_none_or(|&count| count < MAX_TOKENIZATION_ATTEMPTS)
+        })
+        .cloned()
+        .collect()
 }
 
 /// Tokenize sentences missing from the output file and return the combined results.
@@ -162,7 +215,7 @@ pub async fn process_sentences(
     sentences: Vec<String>,
     output_file: &Path,
     language: Language,
-) -> Result<BTreeMap<String, Vec<lexide::Token>>> {
+) -> Result<BTreeMap<String, Tokenization>> {
     let lexide_language = to_lexide_language(language)
         .ok_or_else(|| anyhow::anyhow!("Language {language} is not yet supported by lexide"))?;
 
@@ -191,7 +244,7 @@ pub async fn process_sentences(
                 output_file.display()
             );
         }
-        let result: BTreeMap<String, Vec<lexide::Token>> = sentences
+        let result: BTreeMap<String, Tokenization> = sentences
             .into_iter()
             .filter_map(|s| already_processed.get(&s).map(|tokens| (s, tokens.clone())))
             .collect();
@@ -210,20 +263,11 @@ pub async fn process_sentences(
     // through their retry budget. A sentence that failed a previous run is
     // retried: treating one failure as permanent silently drops the sentence
     // from the corpus forever, which is how ~17k sentences went missing.
-    let sentences_to_process: HashSet<String> = sentences
-        .iter()
-        .filter(|s| !already_processed.contains_key(*s))
-        .filter(|s| {
-            failures
-                .get(*s)
-                .is_none_or(|&count| count < MAX_TOKENIZATION_ATTEMPTS)
-        })
-        .cloned()
-        .collect();
+    let sentences_to_process = pending_sentences(&sentences, &already_processed, &failures);
 
     if sentences_to_process.is_empty() {
         // Return only the sentences that were requested
-        let result: BTreeMap<String, Vec<lexide::Token>> = sentences
+        let result: BTreeMap<String, Tokenization> = sentences
             .into_iter()
             .filter_map(|s| already_processed.get(&s).map(|tokens| (s, tokens.clone())))
             .collect();
@@ -249,7 +293,7 @@ pub async fn process_sentences(
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
     // Process all sentences concurrently with buffering and collect results
-    let mut newly_processed: BTreeMap<String, Vec<lexide::Token>> = BTreeMap::new();
+    let mut newly_processed: BTreeMap<String, Tokenization> = BTreeMap::new();
     let mut endpoint_failures = 0usize;
     let mut results = futures::stream::iter(sentences_to_process)
         .map(|sentence| {
@@ -261,10 +305,7 @@ pub async fn process_sentences(
                     let error = match lexide.analyze(&sentence, lexide_language).await {
                         Ok(tokenization) => {
                             pb.inc(1);
-                            return Ok(TokenizedSentence {
-                                sentence,
-                                tokens: tokenization.tokens,
-                            });
+                            return Ok(tokenization);
                         }
                         Err(error) => error,
                     };
@@ -303,16 +344,16 @@ pub async fn process_sentences(
     let mut failures_changed = false;
     while let Some(result) = results.next().await {
         match result {
-            Ok(mut tokenized) => {
+            Ok(tokenized) => {
                 // the store records the model's raw output…
                 let json = serde_json::to_string(&tokenized)?;
                 writeln!(writer, "{json}")?;
                 // …while everything downstream sees the canonical form
-                token_corrections::fix_tokens(language, &mut tokenized.tokens);
+                let tokenized = token_corrections::fix_tokens(language, tokenized);
                 // A sentence that came back this time has earned its budget
                 // back, so a later blip starts from a clean slate.
-                failures_changed |= failures.remove(&tokenized.sentence).is_some();
-                newly_processed.insert(tokenized.sentence, tokenized.tokens);
+                failures_changed |= failures.remove(tokenized.sentence()).is_some();
+                newly_processed.insert(tokenized.sentence().to_owned(), tokenized);
             }
             Err((failed_sentence, endpoint)) => {
                 // An endpoint failure (cold start, overload, network out) says
@@ -350,7 +391,7 @@ pub async fn process_sentences(
     already_processed.extend(newly_processed);
 
     // Filter to only return the sentences that were requested
-    let result: BTreeMap<String, Vec<lexide::Token>> = sentences
+    let result: BTreeMap<String, Tokenization> = sentences
         .into_iter()
         .filter_map(|s| already_processed.get(&s).map(|tokens| (s, tokens.clone())))
         .collect();
@@ -362,7 +403,7 @@ pub async fn process_sentences(
 /// This is useful when you only need the literal words from sentences
 /// (e.g., for omnigram training) without the heavier multiword matching.
 pub fn convert_tokens_to_literals(
-    sentences_tokenizations: &BTreeMap<String, Vec<lexide::Token>>,
+    sentences_tokenizations: &BTreeMap<String, Tokenization>,
     language: Language,
 ) -> BTreeMap<String, Vec<language_utils::Literal<String>>> {
     use language_utils::Literal;
@@ -373,6 +414,7 @@ pub fn convert_tokens_to_literals(
         .iter()
         .map(|(sentence_str, tokens)| {
             let words: Vec<Literal<String>> = tokens
+                .tokens()
                 .iter()
                 .enumerate()
                 .map(|(i, token)| {
@@ -404,7 +446,7 @@ pub fn convert_tokens_to_literals(
 /// Returns a BTreeMap containing all the input sentences that were successfully processed
 pub async fn generate_nlp_sentences(
     sentence_literals: &BTreeMap<String, Vec<language_utils::Literal<String>>>,
-    sentences_tokenizations: &BTreeMap<String, Vec<lexide::Token>>,
+    sentences_tokenizations: &BTreeMap<String, Tokenization>,
     lemma_patterns: &BTreeMap<Gram<String>, Vec<(String, lexide::pos::PartOfSpeech)>>,
     discontinuous_lemma_patterns: &BTreeMap<Gram<String>, Vec<(String, lexide::pos::PartOfSpeech)>>,
     tree_patterns: &BTreeMap<Gram<String>, lexide::matching::TreeNode>,
@@ -464,13 +506,11 @@ pub async fn generate_nlp_sentences(
         if !sentence_literals.contains_key(sentence_str) {
             continue;
         }
-        let tokenization = lexide::Tokenization {
-            tokens: tokens.clone(),
-        };
+        let tokenization = tokens;
 
         // Find high confidence matches using lemma matcher. The matched word
         // indices are the contiguous token span.
-        let lemma_matches = lemma_matcher.find_all(&tokenization);
+        let lemma_matches = lemma_matcher.find_all(tokenization);
         let mut high_confidence: Vec<MultiwordTermMatch<Gram<String>>> = lemma_matches
             .iter()
             .map(|m| MultiwordTermMatch {
@@ -481,7 +521,7 @@ pub async fn generate_nlp_sentences(
 
         // Find matches using discontinuous lemma matcher
         // Gap ≤ 1 → high confidence, gap > 1 → low confidence
-        let disc_matches = discontinuous_matcher.find_all(&tokenization);
+        let disc_matches = discontinuous_matcher.find_all(tokenization);
         let mut low_confidence: Vec<MultiwordTermMatch<Gram<String>>> = Vec::new();
         for m in &disc_matches {
             if high_confidence.iter().any(|t| t.gram == m.matched_label) {
@@ -545,7 +585,7 @@ mod tests {
             text: lexide::Text {
                 text: text.to_string(),
             },
-            whitespace: String::new(),
+            whitespace: lexide::Whitespace::None,
             pos,
             lemma: lexide::Lemma {
                 lemma: text.to_string(),
@@ -556,6 +596,66 @@ mod tests {
     }
 
     #[test]
+    fn invalid_model_outputs_spend_the_failure_budget() {
+        let invalid = lexide::TokenizationError::InvalidGap {
+            index: 0,
+            gap: ", ".into(),
+        };
+        let error = anyhow::Error::new(invalid).context("analyzing sentence");
+        assert!(is_models_verdict(&error));
+        let invalid = Tokenization::new(
+            "different",
+            vec![tok("hello", lexide::PartOfSpeech::Intj, 0)],
+        )
+        .unwrap_err();
+        assert!(is_models_verdict(&anyhow::Error::new(invalid)));
+        assert!(!is_models_verdict(&anyhow::anyhow!("endpoint unavailable")));
+    }
+
+    #[test]
+    fn valid_cached_version_survives_a_later_invalid_row() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("tokens.jsonl");
+        let row =
+            Tokenization::new("hello", vec![tok("hello", lexide::PartOfSpeech::Intj, 0)]).unwrap();
+        let valid = serde_json::to_string(&row).unwrap();
+        let mut invalid = serde_json::to_value(&row).unwrap();
+        invalid["tokens"][0]["whitespace"] = serde_json::json!(", ");
+        std::fs::write(&path, format!("{valid}\n{invalid}\n")).unwrap();
+        let loaded = load_with_report(&path, Language::English).unwrap();
+        assert_eq!(loaded.invalid_rows, 1);
+        assert_eq!(loaded.rows["hello"].sentence(), "hello");
+    }
+
+    #[test]
+    fn invalid_silver_is_counted_and_retryable() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("tokens.jsonl");
+        let token = tok("hello", lexide::pos::PartOfSpeech::Intj, 0);
+        let mut value = serde_json::to_value(&token).unwrap();
+        value["whitespace"] = serde_json::json!(", ");
+        let record = serde_json::json!({"sentence":"hello", "tokens":[value]});
+        std::fs::write(&path, format!("{record}\n")).unwrap();
+        let loaded = load_with_report(&path, Language::English).unwrap();
+        assert!(loaded.rows.is_empty());
+        assert_eq!(loaded.invalid_rows, 1);
+        assert!(loaded.invalid_sentences.contains("hello"));
+        let requested = ["hello".into(), "unseen".into()];
+        assert_eq!(
+            pending_sentences(&requested, &loaded.rows, &BTreeMap::new()),
+            HashSet::from(["hello".into(), "unseen".into()])
+        );
+        assert_eq!(
+            pending_sentences(
+                &requested,
+                &loaded.rows,
+                &BTreeMap::from([("hello".into(), MAX_TOKENIZATION_ATTEMPTS)])
+            ),
+            HashSet::from(["unseen".into()])
+        );
+    }
+
+    #[test]
     fn load_canonicalized_corrects_in_memory_only() {
         use lexide::pos::PartOfSpeech as P;
         let dir = std::env::temp_dir().join(format!("nlp-canon-test-{}", std::process::id()));
@@ -563,10 +663,11 @@ mod tests {
         let path = dir.join("target_language_sentences_tokenization.jsonl");
 
         // A raw model-output entry: 不要 as one token.
-        let record = TokenizedSentence {
-            sentence: "不要走".to_string(),
-            tokens: vec![tok("不要", P::Verb, 0), tok("走", P::Verb, 1)],
-        };
+        let record = Tokenization::new(
+            "不要走",
+            vec![tok("不要", P::Verb, 0), tok("走", P::Verb, 1)],
+        )
+        .unwrap();
         std::fs::write(
             &path,
             format!("{}\n", serde_json::to_string(&record).unwrap()),
@@ -576,7 +677,11 @@ mod tests {
         // The returned tokens are canonical; the raw store stays byte-untouched.
         let before = std::fs::read_to_string(&path).unwrap();
         let map = load_canonicalized(&path, Language::ChineseSimplified).unwrap();
-        let texts: Vec<&str> = map["不要走"].iter().map(|t| t.text.text.as_str()).collect();
+        let texts: Vec<&str> = map["不要走"]
+            .tokens()
+            .iter()
+            .map(|t| t.text.text.as_str())
+            .collect();
         assert_eq!(texts, vec!["不", "要", "走"]);
         assert_eq!(std::fs::read_to_string(&path).unwrap(), before);
 

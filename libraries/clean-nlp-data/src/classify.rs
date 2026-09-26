@@ -1,5 +1,5 @@
 use crate::polysemous_words;
-use language_utils::{Language, NlpAnalyzedSentence, PartOfSpeechTag};
+use language_utils::{Language, NlpAnalyzedSentence, PartOfSpeechTag, Whitespace};
 use token_corrections::{
     TH_PREVERBAL_AUX, TokenView, ZH_MODAL_VERBS, fix_chinese, fix_hindi, fix_japanese, fix_korean,
     fix_thai, is_hindi_aux_intervener, normalize_hindi_spelling,
@@ -2017,7 +2017,7 @@ impl WordCorrector for PortugueseCorrector {
                 if token.text.starts_with('-')
                     && token.text.len() > 1
                     && !acc.is_empty()
-                    && acc.last().unwrap().whitespace.is_empty()
+                    && acc.last().unwrap().whitespace.as_str().is_empty()
                 {
                     // Remove hyphen from beginning of token
                     let original_text = token.text.clone();
@@ -2030,7 +2030,7 @@ impl WordCorrector for PortugueseCorrector {
                     // Create separate hyphen token
                     let hyphen_token = language_utils::DocToken {
                         text: "-".to_string(),
-                        whitespace: String::new(), // No whitespace after hyphen
+                        whitespace: Whitespace::None, // No whitespace after hyphen
                         pos: PartOfSpeechTag::Punct,
                         lemma: "-".to_string(),
                         morph: std::collections::BTreeMap::new(),
@@ -2042,14 +2042,14 @@ impl WordCorrector for PortugueseCorrector {
                 }
                 // Split words ending in hyphen with no whitespace after (e.g., "Deixe-" from "Deixe-me")
                 else if token.text.ends_with('-')
-                    && token.whitespace.is_empty()
+                    && token.whitespace.as_str().is_empty()
                     && token.text.len() > 1
                 {
                     // Remove hyphen from original token
                     let original_text = token.text.clone();
-                    let original_whitespace = token.whitespace.clone();
+                    let original_whitespace = token.whitespace;
                     token.text.pop();
-                    token.whitespace = String::new(); // No whitespace after word part
+                    token.whitespace = Whitespace::None; // No whitespace after word part
 
                     corrections.push(format!(
                         "Split hyphen from end of '{original_text}' into separate token"
@@ -4490,7 +4490,7 @@ impl WordCorrector for FrenchCorrector {
                 if token.text.starts_with('-')
                     && token.text.len() > 1
                     && !acc.is_empty()
-                    && acc.last().unwrap().whitespace.is_empty()
+                    && acc.last().unwrap().whitespace.as_str().is_empty()
                 {
                     // Remove hyphen from beginning of token
                     let original_text = token.text.clone();
@@ -4503,7 +4503,7 @@ impl WordCorrector for FrenchCorrector {
                     // Create separate hyphen token
                     let hyphen_token = language_utils::DocToken {
                         text: "-".to_string(),
-                        whitespace: String::new(), // No whitespace after hyphen
+                        whitespace: Whitespace::None, // No whitespace after hyphen
                         pos: PartOfSpeechTag::Punct,
                         lemma: "-".to_string(),
                         morph: std::collections::BTreeMap::new(),
@@ -4515,14 +4515,14 @@ impl WordCorrector for FrenchCorrector {
                 }
                 // Split words ending in hyphen with no whitespace after
                 else if token.text.ends_with('-')
-                    && token.whitespace.is_empty()
+                    && token.whitespace.as_str().is_empty()
                     && token.text.len() > 1
                 {
                     // Remove hyphen from original token
                     let original_text = token.text.clone();
-                    let original_whitespace = token.whitespace.clone();
+                    let original_whitespace = token.whitespace;
                     token.text.pop();
-                    token.whitespace = String::new(); // No whitespace after word part
+                    token.whitespace = Whitespace::None; // No whitespace after word part
 
                     corrections.push(format!(
                         "Split hyphen from end of '{original_text}' into separate token"
@@ -6220,7 +6220,7 @@ impl SentenceClassifier for ChineseClassifier {
                                 .is_some_and(|nc| ('\u{4E00}'..='\u{9FFF}').contains(&nc));
                         if next_is_single_cjk
                             && next.pos == token.pos
-                            && token.whitespace.is_empty()
+                            && token.whitespace.as_str().is_empty()
                         {
                             reasons.push(format!(
                                 "'{}' + '{}' are adjacent single-character {} tokens with no whitespace — possible over-segmentation (should these be one word '{}{}'?)",
@@ -7682,7 +7682,7 @@ impl SentenceClassifier for JapaneseClassifier {
             // noun the combination is one lexicalized word: 皆さん, 神様, お客さん.
             if matches!(token.text.as_str(), "さん" | "様" | "くん" | "ちゃん") && idx > 0 {
                 let prev = &tokens[idx - 1];
-                if prev.pos == PartOfSpeechTag::Noun && prev.whitespace.is_empty() {
+                if prev.pos == PartOfSpeechTag::Noun && prev.whitespace.as_str().is_empty() {
                     reasons.push(format!(
                         "'{}' + '{}' — a title suffix after a common noun is one fused word (皆さん, 神様, お客さん). Merge them into a single NOUN token — unless '{}' is actually a proper name, in which case retag it PROPN and keep the split.",
                         prev.text, token.text, prev.text
@@ -7712,7 +7712,7 @@ impl SentenceClassifier for JapaneseClassifier {
                     tokens[idx - 1].pos,
                     PartOfSpeechTag::Pron | PartOfSpeechTag::Noun
                 )
-                && tokens[idx - 1].whitespace.is_empty()
+                && tokens[idx - 1].whitespace.as_str().is_empty()
             {
                 reasons.push(format!(
                     "'{}' + 'ら' — the ら plurals are single words (彼ら, 僕ら, 奴ら): merge into one token, keeping the analyzer-style lemma (彼等).",
@@ -8113,7 +8113,7 @@ impl SentenceClassifier for HindiClassifier {
             // --- Multiword proper nouns should be single tokens ---
             // मेक्सिको नगर, भीतरी मंगोलिया, न्यू यॉर्क, etc. should be one PROPN token
             // Catches PROPN+PROPN, PROPN+NOUN, ADJ+PROPN patterns
-            if token.whitespace == " "
+            if token.whitespace == Whitespace::Space
                 && let Some(next) = sentence.doc.get(idx + 1)
             {
                 let both_propn = token.pos == PartOfSpeechTag::Propn
@@ -8543,8 +8543,8 @@ impl TokenView for SimplifiedTokenPrime {
     fn text(&self) -> &str {
         &self.text
     }
-    fn whitespace(&self) -> &str {
-        &self.whitespace
+    fn whitespace(&self) -> Whitespace {
+        self.whitespace
     }
     fn pos(&self) -> PartOfSpeechTag {
         self.pos
@@ -8558,8 +8558,8 @@ impl TokenView for SimplifiedTokenPrime {
     fn set_text(&mut self, text: String) {
         self.text = text;
     }
-    fn set_whitespace(&mut self, ws: String) {
-        self.whitespace = ws;
+    fn set_whitespace(&mut self, whitespace: Whitespace) {
+        self.whitespace = whitespace;
     }
     fn set_pos(&mut self, pos: PartOfSpeechTag) {
         self.pos = pos;
@@ -8602,6 +8602,41 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[test]
+    fn model_protocol_preserves_placeholder_and_string_schema() {
+        let value = serde_json::json!({"1. text": "New York", "2. whitespace": "[nbspace]", "3. pos": "PROPN", "4. lemma": "New York"});
+        let token: SimplifiedToken = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(token.whitespace, Whitespace::Nbsp);
+        assert_eq!(serde_json::to_value(&token).unwrap(), value);
+        let prime = SimplifiedTokenPrime::from(token);
+        assert_eq!(
+            serde_json::to_value(&prime).unwrap()["whitespace"],
+            "\u{00a0}"
+        );
+        let prompt = PromptToken {
+            text: &prime.text,
+            whitespace: prompt_whitespace(prime.whitespace),
+            pos: prime.pos,
+            lemma: &prime.lemma,
+        };
+        assert_eq!(
+            serde_json::to_value(prompt).unwrap(),
+            serde_json::json!({"text":"New York", "whitespace":"[nbspace]", "pos":"PROPN", "lemma":"New York"})
+        );
+        let schema = serde_json::to_value(schemars::schema_for!(NlpCorrectionResponse)).unwrap();
+        assert_eq!(
+            schema["$defs"]["SimplifiedToken"]["properties"]["2. whitespace"]["type"],
+            "string"
+        );
+        assert!(
+            schema["$defs"]["SimplifiedToken"]["properties"]["2. whitespace"]
+                .get("enum")
+                .is_none()
+        );
+        let invalid = serde_json::json!({"1. text":"word", "2. whitespace":", ", "3. pos":"NOUN", "4. lemma":"word"});
+        assert!(serde_json::from_value::<SimplifiedToken>(invalid).is_err());
+    }
+
+    #[test]
     fn test_french_elle_correction() {
         use language_utils::{DocToken, MultiwordTerms};
 
@@ -8614,14 +8649,14 @@ mod tests {
             doc: vec![
                 DocToken {
                     text: "Elle".to_string(),
-                    whitespace: " ".to_string(),
+                    whitespace: Whitespace::Space,
                     pos: PartOfSpeechTag::Pron,
                     lemma: "lui".to_string(), // Wrong lemma
                     morph: BTreeMap::new(),
                 },
                 DocToken {
                     text: "parle".to_string(),
-                    whitespace: "".to_string(),
+                    whitespace: Whitespace::None,
                     pos: PartOfSpeechTag::Verb,
                     lemma: "parler".to_string(),
                     morph: BTreeMap::new(),
@@ -8640,7 +8675,7 @@ mod tests {
     fn jpn_token(text: &str, pos: PartOfSpeechTag, lemma: &str) -> SimplifiedTokenPrime {
         SimplifiedTokenPrime {
             text: text.to_string(),
-            whitespace: String::new(),
+            whitespace: Whitespace::None,
             pos,
             lemma: lemma.to_string(),
         }
@@ -8874,16 +8909,16 @@ mod tests {
             jpn_token("学生", Noun, "学生"),
             jpn_token("じゃない", Aux, "だ"),
         ];
-        tokens[1].whitespace = " ".to_string();
+        tokens[1].whitespace = Whitespace::Space;
         JapaneseCorrector.post_corrections(&mut tokens);
         assert_eq!(tokens.len(), 3);
         assert_eq!(tokens[1].text, "じゃ");
         assert_eq!(tokens[1].lemma, "だ");
-        assert_eq!(tokens[1].whitespace, "");
+        assert_eq!(tokens[1].whitespace.as_str(), "");
         assert_eq!(tokens[2].text, "ない");
         assert_eq!(tokens[2].pos, Adj);
         assert_eq!(tokens[2].lemma, "無い");
-        assert_eq!(tokens[2].whitespace, " ");
+        assert_eq!(tokens[2].whitespace.as_str(), " ");
 
         // ない that already stands after the copula is retagged to the ADJ 無い
         let mut tokens = vec![
@@ -8980,7 +9015,7 @@ mod tests {
         fn doc_token(text: &str, pos: PartOfSpeechTag, lemma: &str) -> DocToken {
             DocToken {
                 text: text.to_string(),
-                whitespace: String::new(),
+                whitespace: Whitespace::None,
                 pos,
                 lemma: lemma.to_string(),
                 morph: BTreeMap::new(),
@@ -9018,7 +9053,7 @@ mod tests {
             jpn_token("思い", Verb, "思う"),
             jpn_token("ます", Aux, "ます"),
         ];
-        tokens[1].whitespace = " ".to_string();
+        tokens[1].whitespace = Whitespace::Space;
         JapaneseCorrector.post_corrections(&mut tokens);
 
         assert_eq!(tokens.len(), 1);
@@ -9027,7 +9062,7 @@ mod tests {
         assert_eq!(tokens[0].lemma, "思う");
         assert_eq!(tokens[0].pos, Verb);
         // trailing whitespace follows the last piece, so the surface reconstructs exactly
-        assert_eq!(tokens[0].whitespace, " ");
+        assert_eq!(tokens[0].whitespace.as_str(), " ");
     }
 
     #[test]
@@ -9039,7 +9074,7 @@ mod tests {
             jpn_token("食べ", Verb, "食べる"),
             jpn_token("ます", Aux, "ます"),
         ];
-        tokens[0].whitespace = " ".to_string();
+        tokens[0].whitespace = Whitespace::Space;
         let before: String = tokens
             .iter()
             .map(|t| format!("{}{}", t.text, t.whitespace))
@@ -9057,7 +9092,7 @@ mod tests {
     fn hin_token(text: &str, pos: PartOfSpeechTag, lemma: &str) -> SimplifiedTokenPrime {
         SimplifiedTokenPrime {
             text: text.to_string(),
-            whitespace: " ".to_string(),
+            whitespace: Whitespace::Space,
             pos,
             lemma: lemma.to_string(),
         }
@@ -9223,7 +9258,7 @@ mod tests {
     fn zh_token(text: &str, pos: PartOfSpeechTag) -> SimplifiedTokenPrime {
         SimplifiedTokenPrime {
             text: text.to_string(),
-            whitespace: String::new(),
+            whitespace: Whitespace::None,
             pos,
             lemma: text.to_string(),
         }
@@ -9352,7 +9387,7 @@ mod tests {
     fn th_token(text: &str, pos: PartOfSpeechTag) -> SimplifiedTokenPrime {
         SimplifiedTokenPrime {
             text: text.to_string(),
-            whitespace: String::new(),
+            whitespace: Whitespace::None,
             pos,
             lemma: text.to_string(),
         }
@@ -9483,7 +9518,9 @@ pub struct SimplifiedToken {
     #[serde(rename = "1. text")]
     pub text: String,
     #[serde(rename = "2. whitespace")]
-    pub whitespace: String,
+    #[schemars(with = "String")]
+    #[serde(with = "model_whitespace")]
+    pub whitespace: Whitespace,
     #[serde(rename = "3. pos")]
     pub pos: PartOfSpeechTag,
     #[serde(rename = "4. lemma")]
@@ -9494,7 +9531,9 @@ pub struct SimplifiedToken {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct SimplifiedTokenPrime {
     pub text: String,
-    pub whitespace: String,
+    #[schemars(with = "String")]
+    #[serde(with = "language_utils::literal_whitespace")]
+    pub whitespace: Whitespace,
     pub pos: PartOfSpeechTag,
     pub lemma: String,
 }
@@ -9507,6 +9546,39 @@ impl From<SimplifiedToken> for SimplifiedTokenPrime {
             pos: token.pos,
             lemma: token.lemma,
         }
+    }
+}
+
+// Keep the existing model protocol and schema byte-for-byte; only the in-memory
+// gap type changes. The placeholder is never accepted by a corpus loader.
+fn prompt_whitespace(gap: Whitespace) -> &'static str {
+    if gap == Whitespace::Nbsp {
+        "[nbspace]"
+    } else {
+        gap.as_str()
+    }
+}
+
+#[derive(serde::Serialize)]
+struct PromptToken<'a> {
+    text: &'a str,
+    whitespace: &'a str,
+    pos: PartOfSpeechTag,
+    lemma: &'a str,
+}
+
+mod model_whitespace {
+    use super::{Whitespace, prompt_whitespace};
+    use serde::{Deserialize, Deserializer, Serializer, de::IntoDeserializer};
+    pub fn serialize<S: Serializer>(gap: &Whitespace, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(prompt_whitespace(*gap))
+    }
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Whitespace, D::Error> {
+        let gap = String::deserialize(deserializer)?;
+        if gap == "[nbspace]" {
+            return Ok(Whitespace::Nbsp);
+        }
+        language_utils::literal_whitespace::deserialize(gap.into_deserializer())
     }
 }
 
@@ -10685,18 +10757,14 @@ Think through your analysis, and finally provide the corrected token list. Remem
     );
 
     // Convert DocTokens to SimplifiedTokens for the prompt
-    let simplified_tokens: Vec<SimplifiedTokenPrime> = sentence
+    let simplified_tokens: Vec<PromptToken<'_>> = sentence
         .doc
         .iter()
-        .map(|token| SimplifiedTokenPrime {
-            text: token.text.clone(),
-            whitespace: if token.whitespace.clone() == "\u{00A0}" {
-                "[nbspace]".to_string()
-            } else {
-                token.whitespace.clone()
-            },
+        .map(|token| PromptToken {
+            text: &token.text,
+            whitespace: prompt_whitespace(token.whitespace),
             pos: token.pos,
-            lemma: token.lemma.clone(),
+            lemma: &token.lemma,
         })
         .collect();
 
@@ -10720,11 +10788,7 @@ Think through your analysis, and finally provide the corrected token list. Remem
         .corrected_tokens
         .into_iter()
         .map(|token| SimplifiedTokenPrime {
-            whitespace: if token.whitespace == "[nbspace]" {
-                "\u{00A0}".to_string()
-            } else {
-                token.whitespace
-            },
+            whitespace: token.whitespace,
             pos: if token.text == "-" {
                 PartOfSpeechTag::Punct
             } else {
@@ -10771,17 +10835,13 @@ Specific concerns about the current analysis are listed alongside the sentence. 
         language = language.prompt_name()
     );
 
-    let simplified_tokens: Vec<SimplifiedTokenPrime> = tokens
+    let simplified_tokens: Vec<PromptToken<'_>> = tokens
         .iter()
-        .map(|token| SimplifiedTokenPrime {
-            text: token.text.clone(),
-            whitespace: if token.whitespace == "\u{00A0}" {
-                "[nbspace]".to_string()
-            } else {
-                token.whitespace.clone()
-            },
+        .map(|token| PromptToken {
+            text: &token.text,
+            whitespace: prompt_whitespace(token.whitespace),
             pos: token.pos,
-            lemma: token.lemma.clone(),
+            lemma: &token.lemma,
         })
         .collect();
 
@@ -10801,11 +10861,7 @@ Specific concerns about the current analysis are listed alongside the sentence. 
         .corrected_tokens
         .into_iter()
         .map(|token| SimplifiedTokenPrime {
-            whitespace: if token.whitespace == "[nbspace]" {
-                "\u{00A0}".to_string()
-            } else {
-                token.whitespace
-            },
+            whitespace: token.whitespace,
             pos: if token.text == "-" {
                 PartOfSpeechTag::Punct
             } else {

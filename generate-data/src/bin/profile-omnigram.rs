@@ -1,12 +1,9 @@
 use generate_data::nlp::convert_tokens_to_literals;
 use language_utils::{Atom, Language, literals_to_atoms};
 use omnigram::unigram::{UnigramTrainer, UnigramTrainerConfig};
-use serde::Deserialize;
 use std::collections::HashSet;
-use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::hint::black_box;
-use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
@@ -49,12 +46,6 @@ impl Default for Args {
             shrinking_factor: 0.75,
         }
     }
-}
-
-#[derive(Debug, Deserialize)]
-struct TokenizedSentence {
-    sentence: String,
-    tokens: Vec<lexide::Token>,
 }
 
 fn default_corpus_path() -> PathBuf {
@@ -147,22 +138,10 @@ fn load_french_corpus_from_tokenization_jsonl(
     path: &Path,
     sentence_limit: Option<usize>,
 ) -> Vec<Vec<Atom<String>>> {
-    let file = File::open(path).unwrap_or_else(|err| {
-        panic!(
-            "Failed to open tokenization file at `{}`: {err}",
-            path.display()
-        )
-    });
-    let reader = BufReader::new(file);
-
-    let tokenizations = reader
-        .lines()
+    let tokenizations = generate_data::nlp::load_canonicalized(path, Language::French)
+        .expect("load French tokenizations")
+        .into_iter()
         .take(sentence_limit.unwrap_or(usize::MAX))
-        .map(|line| {
-            let line = line.unwrap();
-            let parsed: TokenizedSentence = serde_json::from_str(&line).unwrap();
-            (parsed.sentence, parsed.tokens)
-        })
         .collect();
 
     let literals = convert_tokens_to_literals(&tokenizations, Language::French);

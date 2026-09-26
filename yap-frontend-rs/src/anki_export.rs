@@ -423,7 +423,7 @@ fn sentence_glosses(
             position
         });
         glosses[position].text.push_str(&literal.word.text);
-        glosses[position].text.push_str(&literal.whitespace);
+        glosses[position].text.push_str(literal.whitespace.as_str());
     }
     for gloss in &mut glosses {
         gloss.text = gloss.text.trim_end().to_owned();
@@ -1259,22 +1259,27 @@ mod tests {
                 segments: vec![],
             }))
         };
-        let literals: Vec<_> = [("take", " "), ("it", " "), ("off", "  "), ("!", "")]
-            .into_iter()
-            .map(|(text, whitespace)| Literal {
-                word: Word {
-                    text: text.into(),
-                    word_type: WordType::Other(language_utils::OtherWord {
-                        other_tag: if text == "!" {
-                            language_utils::OtherWordType::Punct
-                        } else {
-                            language_utils::OtherWordType::X
-                        },
-                    }),
-                },
-                whitespace: whitespace.into(),
-            })
-            .collect();
+        let literals: Vec<_> = [
+            ("take", language_utils::Whitespace::Space),
+            ("it", language_utils::Whitespace::Space),
+            ("off", language_utils::Whitespace::Space),
+            ("!", language_utils::Whitespace::None),
+        ]
+        .into_iter()
+        .map(|(text, whitespace)| Literal {
+            word: Word {
+                text: text.into(),
+                word_type: WordType::Other(language_utils::OtherWord {
+                    other_tag: if text == "!" {
+                        language_utils::OtherWordType::Punct
+                    } else {
+                        language_utils::OtherWordType::X
+                    },
+                }),
+            },
+            whitespace,
+        })
+        .collect();
         let glosses = sentence_glosses(
             &literals,
             &[2, 0, 2, 1],

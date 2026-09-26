@@ -270,7 +270,7 @@ pub fn analyze_whitespace_predictions(
     for (i, literal) in literals.iter().enumerate() {
         let next_word = literals.get(i + 1).map(|l| &l.word);
         let predicted = predict_whitespace(&literal.word, next_word, language);
-        let actual: Whitespace = literal.whitespace.parse().unwrap();
+        let actual = literal.whitespace;
 
         if predicted != actual {
             errors.push(WhitespacePredictionError {
@@ -400,29 +400,18 @@ mod tests {
         }
     }
 
-    fn make_literal(text: &str, whitespace: &str) -> Literal<String> {
+    fn make_literal(text: &str, whitespace: Whitespace) -> Literal<String> {
         Literal {
             word: make_word(text),
-            whitespace: whitespace.to_string(),
+            whitespace,
         }
     }
 
-    fn make_punct_literal(text: &str, whitespace: &str) -> Literal<String> {
+    fn make_punct_literal(text: &str, whitespace: Whitespace) -> Literal<String> {
         Literal {
             word: make_punct(text),
-            whitespace: whitespace.to_string(),
+            whitespace,
         }
-    }
-
-    #[test]
-    fn test_whitespace_from_str() {
-        assert_eq!("".parse::<Whitespace>().unwrap(), Whitespace::None);
-        assert_eq!(" ".parse::<Whitespace>().unwrap(), Whitespace::Space);
-        assert_eq!(
-            "\u{202F}".parse::<Whitespace>().unwrap(),
-            Whitespace::NarrowNbsp
-        );
-        assert_eq!("\u{00A0}".parse::<Whitespace>().unwrap(), Whitespace::Nbsp);
     }
 
     #[test]
@@ -478,7 +467,10 @@ mod tests {
 
     #[test]
     fn test_round_trip_simple() {
-        let literals = vec![make_literal("Hello", " "), make_literal("world", "")];
+        let literals = vec![
+            make_literal("Hello", Whitespace::Space),
+            make_literal("world", Whitespace::None),
+        ];
 
         let (atoms, capitalize) = literals_to_atoms(&literals, Language::English);
         let mut reconstructed = atoms_to_literals(&atoms, Language::English);
@@ -496,10 +488,10 @@ mod tests {
     #[test]
     fn test_round_trip_french_apostrophe() {
         let literals = vec![
-            make_literal("L'", ""),
-            make_literal("amour", " "),
-            make_literal("est", " "),
-            make_literal("beau", ""),
+            make_literal("L'", Whitespace::None),
+            make_literal("amour", Whitespace::Space),
+            make_literal("est", Whitespace::Space),
+            make_literal("beau", Whitespace::None),
         ];
 
         let (atoms, capitalize) = literals_to_atoms(&literals, Language::French);
@@ -517,12 +509,12 @@ mod tests {
     #[test]
     fn test_round_trip_french_punct() {
         let literals = vec![
-            make_literal("Bonjour", "\u{202F}"),
-            make_punct_literal("!", " "),
-            make_literal("Comment", " "),
-            make_literal("ça", " "),
-            make_literal("va", "\u{202F}"),
-            make_punct_literal("?", ""),
+            make_literal("Bonjour", Whitespace::NarrowNbsp),
+            make_punct_literal("!", Whitespace::Space),
+            make_literal("Comment", Whitespace::Space),
+            make_literal("ça", Whitespace::Space),
+            make_literal("va", Whitespace::NarrowNbsp),
+            make_punct_literal("?", Whitespace::None),
         ];
 
         let (atoms, capitalize) = literals_to_atoms(&literals, Language::French);

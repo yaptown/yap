@@ -1,9 +1,6 @@
 use omnigram::PChar;
 use omnigram::unigram::{UnigramModel, UnigramTrainer, UnigramTrainerConfig};
-use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
@@ -58,22 +55,6 @@ impl Default for Args {
             segment_words: Vec::new(),
         }
     }
-}
-
-#[derive(Debug, Deserialize)]
-struct TokenizedSentence {
-    tokens: Vec<Token>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Token {
-    text: TokenText,
-    pos: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct TokenText {
-    text: String,
 }
 
 fn default_corpus_path() -> PathBuf {
@@ -184,21 +165,27 @@ fn parse_args() -> Args {
 /// Extract unique lowercased words from the corpus, with frequency counts.
 /// Only includes words with alphabetic POS tags (not PUNCT, NUM, etc.)
 fn extract_words(path: &Path, sentence_limit: Option<usize>) -> HashMap<String, u32> {
-    let file = File::open(path).unwrap_or_else(|err| {
-        panic!("Failed to open {}: {err}", path.display());
-    });
-    let reader = BufReader::new(file);
-
+    let language = path
+        .parent()
+        .and_then(|p| p.file_name())
+        .and_then(|s| s.to_str())
+        .and_then(language_utils::Language::from_code)
+        .unwrap_or(language_utils::Language::French);
+    let tokenizations =
+        generate_data::nlp::load_canonicalized(path, language).expect("load tokenizations");
     let mut word_counts: HashMap<String, u32> = HashMap::new();
-
-    for line in reader.lines().take(sentence_limit.unwrap_or(usize::MAX)) {
-        let line = line.unwrap();
-        let parsed: TokenizedSentence = serde_json::from_str(&line).unwrap();
-
-        for token in &parsed.tokens {
+    for parsed in tokenizations
+        .values()
+        .take(sentence_limit.unwrap_or(usize::MAX))
+    {
+        for token in parsed.tokens() {
             // Skip punctuation, numbers, symbols
-            match token.pos.as_str() {
-                "PUNCT" | "NUM" | "SYM" | "X" | "SPACE" => continue,
+            match token.pos {
+                lexide::PartOfSpeech::Punct
+                | lexide::PartOfSpeech::Num
+                | lexide::PartOfSpeech::Sym
+                | lexide::PartOfSpeech::X
+                | lexide::PartOfSpeech::Space => continue,
                 _ => {}
             }
 

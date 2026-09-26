@@ -83,21 +83,9 @@ pub fn heteronym_spans(words: &[Literal<String>]) -> Vec<(u32, u32)> {
         if matches!(literal.word.word_type, WordType::Heteronym(_)) && len > 0 {
             spans.push((offset, offset + len));
         }
-        offset += len + literal.whitespace.chars().count() as u32;
+        offset += len + literal.whitespace.as_str().chars().count() as u32;
     }
     spans
-}
-
-/// The sentence text the spans index into. Built from the same words the spans
-/// were computed from, so offsets always agree (unlike the map key, which may
-/// differ in capitalization).
-pub fn sentence_text(words: &[Literal<String>]) -> String {
-    let mut text = String::new();
-    for literal in words {
-        text.push_str(&literal.word.text);
-        text.push_str(&literal.whitespace);
-    }
-    text
 }
 
 /// `dim` (u32 LE), `n` (u32 LE), `n` spans (`start` u32 LE, `end` u32 LE),
@@ -198,17 +186,18 @@ pub async fn ensure_token_embeddings<'a>(
         .build()
         .context("Failed to build HTTP client")?;
     // (key, text, spans) for sentences with at least one heteronym token.
-    let mut candidates = Vec::new();
-    let mut total_sentences = 0usize;
-    for (sentence, info) in sentences {
-        total_sentences += 1;
-        let words = info.decode_words(interners, language);
-        let spans = heteronym_spans(&words);
-        if spans.is_empty() {
-            continue;
-        }
-        candidates.push((cache_key(language, sentence), sentence_text(&words), spans));
-    }
+    let mut total_sentences = 0;
+    let candidates: Vec<SentenceBatchItem> = sentences
+        .into_iter()
+        .filter_map(|(sentence, info)| {
+            total_sentences += 1;
+            let words = info.decode_words(interners, language);
+            let mut spans = heteronym_spans(&words);
+            spans.sort_unstable();
+            spans.dedup();
+            (!spans.is_empty()).then(|| (cache_key(language, sentence), sentence.clone(), spans))
+        })
+        .collect();
 
     // A hit must actually cover the spans the current tokenization needs — a
     // record written under a different word-splitting stays valid for its
@@ -386,6 +375,25 @@ async fn embed_batch(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn writer_and_reader_share_sentence_key() {
+        let language = Language::Hindi;
+        let sentence = "हाँ, जाओ";
+        let spans = vec![(0, 3), (5, 8)];
+        let key = cache_key(language, sentence);
+        let dir = tempfile::tempdir().unwrap();
+        let store = osmo::Store::open(dir.path());
+        let record = encode_record(1, &spans, &[0, 0, 0, 0]);
+        store.write(&key, &record).await.unwrap();
+        assert_eq!(
+            read_word_vectors(&store, language, sentence, &spans)
+                .await
+                .unwrap()
+                .len(),
+            2
+        );
+    }
 
     #[test]
     fn record_round_trips() {

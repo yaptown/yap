@@ -16,25 +16,6 @@
 use anyhow::Context;
 use generate_data::slot_analysis;
 use language_utils::COURSES;
-use std::collections::BTreeMap;
-use std::io::BufRead;
-
-fn load_tokenizations(
-    path: &std::path::Path,
-) -> anyhow::Result<BTreeMap<String, Vec<lexide::Token>>> {
-    #[derive(serde::Deserialize)]
-    struct Line {
-        sentence: String,
-        tokens: Vec<lexide::Token>,
-    }
-    let file = std::fs::File::open(path).with_context(|| format!("opening {}", path.display()))?;
-    let mut out = BTreeMap::new();
-    for line in std::io::BufReader::new(file).lines() {
-        let line: Line = serde_json::from_str(&line?)?;
-        out.insert(line.sentence, line.tokens);
-    }
-    Ok(out)
-}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -50,10 +31,14 @@ async fn main() -> anyhow::Result<()> {
         .with_context(|| format!("no course with target language {lang_code:?}"))?;
 
     let out_dir = std::path::Path::new("out").join(&lang_code);
-    let terms =
-        load_tokenizations(&out_dir.join("target_language_multiword_terms_tokenization.jsonl"))?;
-    let sentences =
-        load_tokenizations(&out_dir.join("target_language_sentences_tokenization.jsonl"))?;
+    let terms = generate_data::nlp::load_canonicalized(
+        &out_dir.join("target_language_multiword_terms_tokenization.jsonl"),
+        course.target_language,
+    )?;
+    let sentences = generate_data::nlp::load_canonicalized(
+        &out_dir.join("target_language_sentences_tokenization.jsonl"),
+        course.target_language,
+    )?;
     println!("{} terms, {} sentences", terms.len(), sentences.len());
 
     let slot_specs = slot_analysis::analyze_slots(&course, &terms).await?;

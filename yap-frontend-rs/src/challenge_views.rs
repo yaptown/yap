@@ -244,7 +244,7 @@ mod tests {
                         pos: PartOfSpeech::Intj,
                     }),
                 },
-                whitespace: " ".into(),
+                whitespace: language_utils::Whitespace::Space,
             }],
             definition: crate::DefinitionView {
                 headword: "bonjour".into(),
@@ -325,7 +325,7 @@ mod tests {
                     pos: PartOfSpeech::Sconj,
                 }),
             },
-            whitespace: "  ".into(),
+            whitespace: language_utils::Whitespace::Space,
         });
         let view = flash(
             CardContent::Gram {

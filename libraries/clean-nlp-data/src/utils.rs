@@ -1,222 +1,178 @@
-use language_utils::Language;
-
 use crate::classify::SimplifiedTokenPrime;
+use language_utils::{Language, Whitespace};
+
+/// The final gold writer and proposal validation share the constructor boundary.
+pub fn validate_gold_output(output: &serde_json::Value) -> anyhow::Result<()> {
+    let row: generate_data::gold::CleanedSentence = serde_json::from_value(output.clone())?;
+    generate_data::gold::to_lexide(row.sentence, row.tokens)?;
+    Ok(())
+}
 
 #[derive(Debug)]
 pub enum ValidationResult {
-    /// The response matches the original text exactly
     Valid,
-    /// The response had a single-space mismatch that was auto-fixed
     AutoFixed,
-    /// The response has mismatches that cannot be auto-fixed
     Invalid {
         original: String,
         reconstructed: String,
     },
 }
 
-/// Validate that an LLM correction response matches the original text.
-/// If there's a single-space difference, automatically fix it.
+/// Derive gaps from the original sentence, then validate the corrected analysis.
+/// Token text is never rewritten to make an alignment succeed.
 pub fn validate_and_fix_whitespace(
     original: &str,
-    corrected_tokens: &mut [SimplifiedTokenPrime],
+    corrected_tokens: &mut Vec<SimplifiedTokenPrime>,
     language: Language,
 ) -> ValidationResult {
-    // remove `se ` and `s'` prefix from french lemmas if present
-    if language == Language::French {
-        corrected_tokens.iter_mut().for_each(|token| {
-            if let Some(word) = token.lemma.strip_prefix("se ") {
-                token.lemma = word.to_string();
-            } else if let Some(word) = token.lemma.strip_prefix("s'") {
-                token.lemma = word.to_string();
-            }
-        });
-    }
-
-    let reconstructed: String = corrected_tokens
-        .iter()
-        .map(|token| format!("{}{}", token.text, token.whitespace))
-        .collect();
-
-    if reconstructed == original {
-        return ValidationResult::Valid;
-    }
-
-    // Normalize whitespace: replace all whitespace chars with regular space
-    let normalize_whitespace = |s: &str| -> String {
-        s.chars()
-            .map(|c| if c.is_whitespace() { ' ' } else { c })
-            .collect()
-    };
-
-    let orig_normalized = normalize_whitespace(original);
-    let recon_normalized = normalize_whitespace(&reconstructed);
-
-    // Check if the only difference is whitespace character types (e.g., nbsp vs space)
-    if orig_normalized == recon_normalized {
-        // Fix whitespace characters to match the original
-        let orig_chars: Vec<char> = original.chars().collect();
-
-        // Build a mapping of positions where whitespace differs
-        let mut pos = 0;
-        for token in corrected_tokens.iter_mut() {
-            // Update whitespace characters to match original
-            let whitespace_start = pos + token.text.chars().count();
-            let mut new_whitespace = String::new();
-
-            // Iterate over each CHARACTER in the whitespace, not each byte
-            let whitespace_char_count = token.whitespace.chars().count();
-            for i in 0..whitespace_char_count {
-                let char_pos = whitespace_start + i;
-                if char_pos < orig_chars.len() && orig_chars[char_pos].is_whitespace() {
-                    new_whitespace.push(orig_chars[char_pos]);
-                } else {
-                    new_whitespace.push(token.whitespace.chars().nth(i).unwrap_or(' '));
-                }
-            }
-
-            token.whitespace = new_whitespace;
-            pos = whitespace_start + whitespace_char_count;
-        }
-
-        return ValidationResult::AutoFixed;
-    }
-
-    // Check if the difference is exactly one missing whitespace character
-    let orig_no_spaces: String = original.chars().filter(|c| !c.is_whitespace()).collect();
-    let recon_no_spaces: String = reconstructed
-        .chars()
-        .filter(|c| !c.is_whitespace())
-        .collect();
-
-    // Use character count instead of byte length (important for UTF-8)
-    if orig_no_spaces == recon_no_spaces
-        && original.chars().count() == reconstructed.chars().count() + 1
-    {
-        // Find where the whitespace is missing and what character it is
-        let orig_chars: Vec<char> = original.chars().collect();
-        let recon_chars: Vec<char> = reconstructed.chars().collect();
-
-        let mut missing_space_pos = 0;
-        let mut missing_space_char = ' ';
-        for i in 0..orig_chars.len() {
-            if i >= recon_chars.len() || orig_chars[i] != recon_chars[i] {
-                missing_space_pos = i;
-                missing_space_char = orig_chars[i];
-                break;
-            }
-        }
-
-        // Find which token this position falls into and add the whitespace
-        let mut pos = 0;
-        for token in corrected_tokens.iter_mut() {
-            let token_end = pos + token.text.len();
-
-            if missing_space_pos >= pos && missing_space_pos <= token_end {
-                // Whitespace should be added to this token's whitespace
-                token.whitespace.push(missing_space_char);
-                return ValidationResult::AutoFixed;
-            }
-
-            pos = token_end + token.whitespace.len();
-        }
-
-        // Couldn't find where to add the whitespace
-        ValidationResult::Invalid {
-            original: original.to_string(),
-            reconstructed,
-        }
-    } else if orig_no_spaces == recon_no_spaces {
-        // Non-whitespace characters match but whitespace is displaced to wrong tokens.
-        // Realign whitespace from the original sentence.
-        let orig_chars: Vec<char> = original.chars().collect();
-        let mut orig_pos = 0;
-
-        for token in corrected_tokens.iter_mut() {
-            // Skip any whitespace in the original at current position
-            while orig_pos < orig_chars.len() && orig_chars[orig_pos].is_whitespace() {
-                orig_pos += 1;
-            }
-
-            // Match this token's non-whitespace characters
-            let token_non_ws: usize = token.text.chars().filter(|c| !c.is_whitespace()).count();
-            let start = orig_pos;
-            let mut matched = 0;
-            while matched < token_non_ws && orig_pos < orig_chars.len() {
-                if !orig_chars[orig_pos].is_whitespace() {
-                    matched += 1;
-                }
-                orig_pos += 1;
-            }
-
-            // Rebuild token text from original (preserving internal whitespace if any)
-            token.text = orig_chars[start..orig_pos].iter().collect();
-
-            // Consume trailing whitespace as this token's whitespace
-            let ws_start = orig_pos;
-            while orig_pos < orig_chars.len() && orig_chars[orig_pos].is_whitespace() {
-                orig_pos += 1;
-            }
-            token.whitespace = if ws_start < orig_pos {
-                orig_chars[ws_start..orig_pos].iter().collect()
-            } else {
-                String::new()
-            };
-        }
-
-        // Verify
-        let final_reconstructed: String = corrected_tokens
+    let invalid = |tokens: &[SimplifiedTokenPrime]| ValidationResult::Invalid {
+        original: original.to_owned(),
+        reconstructed: tokens
             .iter()
             .map(|t| format!("{}{}", t.text, t.whitespace))
-            .collect();
-        if final_reconstructed == original {
-            ValidationResult::AutoFixed
-        } else {
-            ValidationResult::Invalid {
-                original: original.to_string(),
-                reconstructed: final_reconstructed,
+            .collect(),
+    };
+    let Some(gaps) = aligned_gaps(original, corrected_tokens) else {
+        return invalid(corrected_tokens);
+    };
+    let mut auto_fixed = false;
+    for (token, gap) in corrected_tokens.iter_mut().zip(gaps) {
+        auto_fixed |= token.whitespace != gap;
+        token.whitespace = gap;
+    }
+    // Spacing-sensitive corrections see the source's gaps, not the model's hints.
+    token_corrections::correct_tokens(language, corrected_tokens);
+    if language == Language::French {
+        for token in corrected_tokens.iter_mut() {
+            if let Some(word) = token
+                .lemma
+                .strip_prefix("se ")
+                .or_else(|| token.lemma.strip_prefix("s'"))
+            {
+                token.lemma = word.to_owned();
             }
         }
-    } else {
-        ValidationResult::Invalid {
-            original: original.to_string(),
-            reconstructed,
-        }
     }
+    let tokens = corrected_tokens
+        .iter()
+        .map(|token| generate_data::gold::CleanedToken {
+            text: token.text.clone(),
+            whitespace: token.whitespace.into(),
+            pos: token.pos,
+            lemma: token.lemma.clone(),
+            dep: "root".into(),
+            head: 0,
+        })
+        .collect();
+    if generate_data::gold::to_lexide(original.to_owned(), tokens).is_ok() {
+        if auto_fixed {
+            ValidationResult::AutoFixed
+        } else {
+            ValidationResult::Valid
+        }
+    } else {
+        invalid(corrected_tokens)
+    }
+}
+
+fn aligned_gaps(original: &str, tokens: &[SimplifiedTokenPrime]) -> Option<Vec<Whitespace>> {
+    let mut remaining = original;
+    let gaps = tokens
+        .iter()
+        .map(|token| {
+            let after_text = remaining.strip_prefix(token.text.as_str())?;
+            remaining = after_text.trim_start_matches(char::is_whitespace);
+            let gap = &after_text[..after_text.len() - remaining.len()];
+            // This is an ingestion boundary: accept only literal gaps from the source.
+            gap.parse::<lexide_types::Whitespace>().ok().map(Into::into)
+        })
+        .collect::<Option<Vec<_>>>()?;
+    remaining.is_empty().then_some(gaps)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use language_utils::PartOfSpeechTag;
+    use language_utils::{PartOfSpeechTag, Whitespace};
 
-    fn make_token(text: &str, whitespace: &str) -> SimplifiedTokenPrime {
+    fn token(text: &str, whitespace: Whitespace) -> SimplifiedTokenPrime {
         SimplifiedTokenPrime {
-            text: text.to_string(),
-            whitespace: whitespace.to_string(),
+            text: text.into(),
+            whitespace,
             pos: PartOfSpeechTag::Noun,
-            lemma: text.to_string(),
+            lemma: text.into(),
         }
     }
 
+    #[test]
+    fn broken_cleaner_rows_are_rejected() {
+        for (original, text, whitespace) in [
+            ("oui, non", "oui", ", non"),
+            ("hello", "wrong", ""),
+            ("two words", " two words", ""),
+        ] {
+            let output = serde_json::json!({"sentence":original,"tokens":[{"text":text,"whitespace":whitespace,"pos":"INTJ","lemma":text,"dep":"root","head":0}]});
+            assert!(validate_gold_output(&output).is_err());
+        }
+    }
+
+    #[test]
+    fn valid_supported_gaps_are_preserved() {
+        for gap in [
+            Whitespace::None,
+            Whitespace::Space,
+            Whitespace::Nbsp,
+            Whitespace::NarrowNbsp,
+        ] {
+            let original = format!("Hello{gap}world");
+            let mut tokens = vec![token("Hello", gap), token("world", Whitespace::None)];
+            assert!(matches!(
+                validate_and_fix_whitespace(&original, &mut tokens, Language::English),
+                ValidationResult::Valid
+            ));
+            assert_eq!(tokens[0].whitespace, gap);
+        }
+    }
+
+    #[test]
+    fn multiword_token_text_is_preserved_but_edge_whitespace_is_rejected() {
+        for text in ["New York", "pommes de terre", "वास्तव में"] {
+            let mut tokens = vec![token(text, Whitespace::None)];
+            assert!(matches!(
+                validate_and_fix_whitespace(text, &mut tokens, Language::English),
+                ValidationResult::Valid
+            ));
+            assert_eq!(tokens[0].text, text);
+        }
+        for text in [" two words", "two words ", ""] {
+            let mut tokens = vec![token(text, Whitespace::None)];
+            assert!(matches!(
+                validate_and_fix_whitespace(text, &mut tokens, Language::English),
+                ValidationResult::Invalid { .. }
+            ));
+        }
+    }
     #[test]
     fn test_narrow_nbsp_replaced_with_regular_space() {
         // Original: "Hello" + narrow non-breaking space + "world"
         let original = "Hello\u{202F}world";
 
         // LLM output: "Hello" + regular space + "world"
-        let mut tokens = vec![make_token("Hello", " "), make_token("world", "")];
+        let mut tokens = vec![
+            token("Hello", Whitespace::Space),
+            token("world", Whitespace::None),
+        ];
 
         let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
         // Should auto-fix to use narrow non-breaking space
         assert!(matches!(result, ValidationResult::AutoFixed));
-        assert_eq!(tokens[0].whitespace, "\u{202F}");
+        assert_eq!(tokens[0].whitespace.as_str(), "\u{202F}");
 
         // Verify reconstruction matches original
         let reconstructed: String = tokens
             .iter()
-            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .map(|t| format!("{}{}", t.text, t.whitespace.as_str()))
             .collect();
         assert_eq!(reconstructed, original);
     }
@@ -227,18 +183,21 @@ mod tests {
         let original = "Hello\u{202F}world";
 
         // LLM output: "Hello" + no space + "world"
-        let mut tokens = vec![make_token("Hello", ""), make_token("world", "")];
+        let mut tokens = vec![
+            token("Hello", Whitespace::None),
+            token("world", Whitespace::None),
+        ];
 
         let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
         // Should auto-fix by adding the narrow non-breaking space
         assert!(matches!(result, ValidationResult::AutoFixed));
-        assert_eq!(tokens[0].whitespace, "\u{202F}");
+        assert_eq!(tokens[0].whitespace.as_str(), "\u{202F}");
 
         // Verify reconstruction matches original
         let reconstructed: String = tokens
             .iter()
-            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .map(|t| format!("{}{}", t.text, t.whitespace.as_str()))
             .collect();
         assert_eq!(reconstructed, original);
     }
@@ -250,22 +209,22 @@ mod tests {
 
         // LLM output: "A" + regular space + "B" + regular space + "C"
         let mut tokens = vec![
-            make_token("A", " "),
-            make_token("B", " "),
-            make_token("C", ""),
+            token("A", Whitespace::Space),
+            token("B", Whitespace::Space),
+            token("C", Whitespace::None),
         ];
 
         let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
         // Should auto-fix
         assert!(matches!(result, ValidationResult::AutoFixed));
-        assert_eq!(tokens[0].whitespace, "\u{00A0}");
-        assert_eq!(tokens[1].whitespace, " ");
+        assert_eq!(tokens[0].whitespace.as_str(), "\u{00A0}");
+        assert_eq!(tokens[1].whitespace.as_str(), " ");
 
         // Verify reconstruction matches original
         let reconstructed: String = tokens
             .iter()
-            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .map(|t| format!("{}{}", t.text, t.whitespace.as_str()))
             .collect();
         assert_eq!(reconstructed, original);
     }
@@ -274,7 +233,10 @@ mod tests {
     fn test_already_valid() {
         let original = "Hello world";
 
-        let mut tokens = vec![make_token("Hello", " "), make_token("world", "")];
+        let mut tokens = vec![
+            token("Hello", Whitespace::Space),
+            token("world", Whitespace::None),
+        ];
 
         let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
@@ -289,9 +251,9 @@ mod tests {
 
         // LLM output: missing the narrow nbsp
         let mut tokens = vec![
-            make_token("A", ""),
-            make_token("B", " "),
-            make_token("C", ""),
+            token("A", Whitespace::None),
+            token("B", Whitespace::Space),
+            token("C", Whitespace::None),
         ];
 
         let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
@@ -300,13 +262,13 @@ mod tests {
         assert!(matches!(result, ValidationResult::AutoFixed));
 
         // Check that we don't get narrow nbsp FOLLOWED by regular space
-        assert_eq!(tokens[0].whitespace, "\u{202F}");
-        assert_eq!(tokens[1].whitespace, " ");
+        assert_eq!(tokens[0].whitespace.as_str(), "\u{202F}");
+        assert_eq!(tokens[1].whitespace.as_str(), " ");
 
         // Verify reconstruction matches original exactly
         let reconstructed: String = tokens
             .iter()
-            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .map(|t| format!("{}{}", t.text, t.whitespace.as_str()))
             .collect();
         assert_eq!(
             reconstructed,
@@ -324,7 +286,10 @@ mod tests {
         let original = "faire\u{a0}?";
 
         // LLM output: "faire" + regular space + "?"
-        let mut tokens = vec![make_token("faire", " "), make_token("?", "")];
+        let mut tokens = vec![
+            token("faire", Whitespace::Space),
+            token("?", Whitespace::None),
+        ];
 
         let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
 
@@ -333,16 +298,16 @@ mod tests {
 
         // Should have nbsp, NOT narrow nbsp + space
         assert_eq!(
-            tokens[0].whitespace,
+            tokens[0].whitespace.as_str(),
             "\u{a0}",
             "Expected regular nbsp, got: {:?}",
-            tokens[0].whitespace.chars().collect::<Vec<_>>()
+            tokens[0].whitespace.as_str().chars().collect::<Vec<_>>()
         );
 
         // Verify reconstruction matches original exactly
         let reconstructed: String = tokens
             .iter()
-            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .map(|t| format!("{}{}", t.text, t.whitespace.as_str()))
             .collect();
         assert_eq!(
             reconstructed,
@@ -361,19 +326,19 @@ mod tests {
 
         // LLM returns WITH regular nbsp (\u{a0}) instead of narrow nbsp
         let mut tokens = vec![
-            make_token("C'", ""),
-            make_token("est", " "),
-            make_token("pour", " "),
-            make_token("quoi", " "),
-            make_token("faire", "\u{a0}"), // Regular nbsp instead of narrow nbsp!
-            make_token("?", ""),
+            token("C'", Whitespace::None),
+            token("est", Whitespace::Space),
+            token("pour", Whitespace::Space),
+            token("quoi", Whitespace::Space),
+            token("faire", Whitespace::Nbsp), // Regular nbsp instead of narrow nbsp!
+            token("?", Whitespace::None),
         ];
 
         println!(
             "Before: {:?}",
             tokens
                 .iter()
-                .map(|t| format!("{:?}", t.whitespace.chars().collect::<Vec<_>>()))
+                .map(|t| format!("{:?}", t.whitespace.as_str().chars().collect::<Vec<_>>()))
                 .collect::<Vec<_>>()
         );
         let result = validate_and_fix_whitespace(original, &mut tokens, Language::French);
@@ -381,7 +346,7 @@ mod tests {
             "After: {:?}",
             tokens
                 .iter()
-                .map(|t| format!("{:?}", t.whitespace.chars().collect::<Vec<_>>()))
+                .map(|t| format!("{:?}", t.whitespace.as_str().chars().collect::<Vec<_>>()))
                 .collect::<Vec<_>>()
         );
 
@@ -390,16 +355,16 @@ mod tests {
 
         // Should have narrow nbsp, NOT narrow nbsp + space
         assert_eq!(
-            tokens[4].whitespace,
+            tokens[4].whitespace.as_str(),
             "\u{202f}",
             "Expected narrow nbsp only, got: {:?}",
-            tokens[4].whitespace.chars().collect::<Vec<_>>()
+            tokens[4].whitespace.as_str().chars().collect::<Vec<_>>()
         );
 
         // Verify reconstruction matches original exactly
         let reconstructed: String = tokens
             .iter()
-            .map(|t| format!("{}{}", t.text, t.whitespace))
+            .map(|t| format!("{}{}", t.text, t.whitespace.as_str()))
             .collect();
         assert_eq!(
             reconstructed,
@@ -408,5 +373,48 @@ mod tests {
             reconstructed.chars().collect::<Vec<_>>(),
             original.chars().collect::<Vec<_>>()
         );
+    }
+    #[test]
+    fn whitespace_alignment_never_inserts_letters() {
+        let mut tokens = vec![token("a", Whitespace::Space), token("bc", Whitespace::None)];
+        assert!(matches!(
+            validate_and_fix_whitespace("ab c ", &mut tokens, Language::English),
+            ValidationResult::Invalid { .. }
+        ));
+        assert_eq!(tokens[0].text, "a");
+        assert_eq!(tokens[1].text, "bc");
+        assert_eq!(tokens[0].whitespace, Whitespace::Space);
+    }
+
+    #[test]
+    fn unsupported_source_gaps_and_unaligned_text_are_rejected() {
+        for original in ["a  b", "a\tb", "a\u{2009}b", "a, b", " a b", "a b extra"] {
+            let mut tokens = vec![token("a", Whitespace::Space), token("b", Whitespace::None)];
+            assert!(
+                matches!(
+                    validate_and_fix_whitespace(original, &mut tokens, Language::English),
+                    ValidationResult::Invalid { .. }
+                ),
+                "{original:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn displaced_and_multibyte_gaps_come_from_the_source() {
+        let mut tokens = vec![
+            token("हाँ", Whitespace::None),
+            token("जाओ", Whitespace::Space),
+        ];
+        assert!(matches!(
+            validate_and_fix_whitespace("हाँ\u{202f}जाओ", &mut tokens, Language::Hindi),
+            ValidationResult::AutoFixed
+        ));
+        assert_eq!(tokens[0].whitespace, Whitespace::NarrowNbsp);
+        assert_eq!(tokens[1].whitespace, Whitespace::None);
+        assert!(matches!(
+            validate_and_fix_whitespace("हाँ\u{202f}जाओ", &mut tokens, Language::Hindi),
+            ValidationResult::Valid
+        ));
     }
 }

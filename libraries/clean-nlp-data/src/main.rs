@@ -151,6 +151,9 @@ async fn run_command(args: &[String]) -> anyhow::Result<()> {
             let mut suspicious_count = 0;
 
             for sentence in &mut nlp_sentences {
+                token_corrections::correct_tokens(language, &mut sentence.doc);
+            }
+            for sentence in &mut nlp_sentences {
                 let correction_result = corrector.correct(sentence);
                 if correction_result.corrected {
                     corrections_count += 1;
@@ -393,7 +396,9 @@ struct LlmNlpToken {
     #[serde(rename = "1. text")]
     text: String,
     #[serde(rename = "2. whitespace")]
-    whitespace: String,
+    #[schemars(with = "String")]
+    #[serde(with = "language_utils::literal_whitespace")]
+    whitespace: language_utils::Whitespace,
     #[serde(rename = "3. pos")]
     pos: language_utils::PartOfSpeechTag,
     #[serde(rename = "4. lemma")]
@@ -775,7 +780,7 @@ fn reconcile_term_entries(
             let mut window = tokens[i].text.clone();
             for j in i..tokens.len() {
                 if j > i {
-                    window.push_str(&tokens[j - 1].whitespace);
+                    window.push_str(tokens[j - 1].whitespace.as_str());
                     window.push_str(&tokens[j].text);
                 }
                 if window.len() > max_term_len {
@@ -814,7 +819,7 @@ fn reconcile_term_entries(
         }
         let mut new_tokens = modal.1.clone();
         if let Some(last) = new_tokens.last_mut() {
-            last.whitespace = String::new();
+            last.whitespace = language_utils::Whitespace::None;
         }
         *tokens = new_tokens;
         changed += 1;
@@ -1172,6 +1177,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
     let classified_sentences: Vec<_> = samples
         .into_iter()
         .map(|mut sentence| {
+            token_corrections::correct_tokens(language, &mut sentence.doc);
             let classification = classifier.classify(&sentence);
             let suspicious_reason = match classification {
                 SentenceClassification::Suspicious { reasons } => reasons,
@@ -1224,7 +1230,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                         .iter()
                         .map(|token| SimplifiedTokenPrime {
                             text: token.text.clone(),
-                            whitespace: token.whitespace.clone(),
+                            whitespace: token.whitespace,
                             pos: token.pos,
                             lemma: token.lemma.clone(),
                         })
@@ -1238,6 +1244,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                     )
                     .await
                     .map(|mut tokens| {
+                        token_corrections::correct_tokens(language, &mut tokens);
                         corrector.post_corrections(&mut tokens);
                         tokens
                     })
@@ -1288,10 +1295,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                     ValidationResult::Valid => {
                         // No issues, continue
                     }
-                    ValidationResult::AutoFixed => {
-                        auto_fixed_count += 1;
-                        // Continue with the auto-fixed version
-                    }
+                    ValidationResult::AutoFixed => auto_fixed_count += 1,
                     ValidationResult::Invalid {
                         original,
                         reconstructed,
@@ -1330,7 +1334,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
                 "sentence": sentence.sentence,
                 "tokens": tokens.iter().map(|t| serde_json::json!({
                     "text": t.text,
-                    "whitespace": t.whitespace,
+                    "whitespace": t.whitespace.as_str(),
                     "pos": t.pos,
                     "lemma": t.lemma,
                 })).collect::<Vec<_>>(),
@@ -1432,6 +1436,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
             .into_iter()
             .filter_map(|(s, r)| match r {
                 Ok(mut tokens) => {
+                    token_corrections::correct_tokens(language, &mut tokens);
                     corrector.post_corrections(&mut tokens);
                     Some((s, tokens))
                 }
@@ -1573,7 +1578,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
             .map(|(token, dep)| {
                 serde_json::json!({
                     "text": token.text,
-                    "whitespace": token.whitespace,
+                    "whitespace": token.whitespace.as_str(),
                     "pos": token.pos,
                     "lemma": token.lemma,
                     "dep": dep.dependency,
@@ -1586,6 +1591,13 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
             "sentence": original_sentence.sentence,
             "tokens": tokens,
         });
+        if let Err(error) = utils::validate_gold_output(&output) {
+            eprintln!(
+                "WARNING: Dropping invalid gold sentence {:?}: {error:#}",
+                original_sentence.sentence
+            );
+            continue;
+        }
         writeln!(writer, "{}", serde_json::to_string(&output)?)
             .context("Failed to write to output file")?;
         written_count += 1;
@@ -1603,7 +1615,7 @@ async fn clean_language_with_llm(language: Language) -> anyhow::Result<()> {
         &format!("done: wrote {written_count} gold sentences, LLM cost ${total_cost:.2}"),
     );
     if auto_fixed_count > 0 {
-        println!("Auto-fixed {auto_fixed_count} sentences with single-space mismatches");
+        println!("Auto-fixed {auto_fixed_count} sentences with whitespace mismatches");
     }
     if skipped_count > 0 {
         println!("Skipped {skipped_count} sentences due to text mismatches");
@@ -1630,7 +1642,7 @@ mod tests {
     fn tok(text: &str, pos: PartOfSpeechTag) -> SimplifiedTokenPrime {
         SimplifiedTokenPrime {
             text: text.to_string(),
-            whitespace: String::new(),
+            whitespace: language_utils::Whitespace::None,
             pos,
             lemma: text.to_string(),
         }
@@ -1671,7 +1683,10 @@ mod tests {
             vec!["x", "y"]
         );
         assert_eq!(term_tokens[0].pos, PartOfSpeechTag::Verb);
-        assert_eq!(term_tokens.last().unwrap().whitespace, "");
+        assert_eq!(
+            term_tokens.last().unwrap().whitespace,
+            language_utils::Whitespace::None
+        );
     }
 
     #[test]

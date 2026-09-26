@@ -708,7 +708,7 @@ impl SentenceGrams<TaggedGram<SpurGram>> {
                         *gram_idx,
                         Literal {
                             word: word.clone(),
-                            whitespace: whitespace.to_str().to_string(),
+                            whitespace,
                         },
                     ));
                 }
@@ -1015,7 +1015,9 @@ impl GramInterners {
 )]
 pub struct DocToken {
     pub text: String,
-    pub whitespace: String,
+    #[serde(with = "literal_whitespace")]
+    #[schemars(with = "String")]
+    pub whitespace: Whitespace,
     pub pos: PartOfSpeechTag,
     pub lemma: String,
     pub morph: BTreeMap<String, String>,
@@ -1227,7 +1229,9 @@ pub struct Word<S> {
 )]
 pub struct Literal<S> {
     pub word: Word<S>,
-    pub whitespace: S,
+    #[serde(with = "literal_whitespace")]
+    #[bridge(type = "string")]
+    pub whitespace: Whitespace,
 }
 
 impl<S> Word<S> {
@@ -1274,14 +1278,14 @@ impl Literal<String> {
     pub fn get_or_intern(&self, rodeo: &mut lasso::Rodeo) -> Literal<lasso::Spur> {
         Literal {
             word: self.word.get_or_intern(rodeo),
-            whitespace: rodeo.get_or_intern(&self.whitespace),
+            whitespace: self.whitespace,
         }
     }
 
     pub fn get_interned(&self, rodeo: &lasso::RodeoReader) -> Option<Literal<lasso::Spur>> {
         Some(Literal {
             word: self.word.get_interned(rodeo)?,
-            whitespace: rodeo.get(&self.whitespace)?,
+            whitespace: self.whitespace,
         })
     }
 }
@@ -1302,7 +1306,7 @@ impl Literal<lasso::Spur> {
     pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> Literal<String> {
         Literal {
             word: self.word.resolve(rodeo),
-            whitespace: rodeo.resolve(&self.whitespace).to_string(),
+            whitespace: self.whitespace,
         }
     }
 }
@@ -1688,10 +1692,8 @@ pub mod transcription_challenge {
     }
 }
 
-/// Represents whitespace between tokens.
-/// We use an explicit enum rather than storing the actual string to normalize
-/// the representation and make it more compact.
-#[bridgerton::bridge(transparent)]
+/// Compact pack representation. Variant order and serde names are persisted.
+#[cfg_attr(target_arch = "wasm32", bridgerton::bridge(transparent))]
 #[derive(
     Debug,
     Clone,
@@ -1709,50 +1711,140 @@ pub mod transcription_challenge {
     schemars::JsonSchema,
 )]
 pub enum Whitespace {
-    /// Regular space (U+0020)
     Space,
-    /// Narrow non-breaking space (U+202F) - used in French before high punctuation
     NarrowNbsp,
-    /// Regular non-breaking space (U+00A0)
     Nbsp,
-    /// No whitespace
     None,
 }
 
+impl From<lexide_types::Whitespace> for Whitespace {
+    fn from(value: lexide_types::Whitespace) -> Self {
+        match value {
+            lexide_types::Whitespace::Space => Self::Space,
+            lexide_types::Whitespace::NarrowNbsp => Self::NarrowNbsp,
+            lexide_types::Whitespace::Nbsp => Self::Nbsp,
+            lexide_types::Whitespace::None => Self::None,
+        }
+    }
+}
+impl From<Whitespace> for lexide_types::Whitespace {
+    fn from(value: Whitespace) -> Self {
+        match value {
+            Whitespace::Space => Self::Space,
+            Whitespace::NarrowNbsp => Self::NarrowNbsp,
+            Whitespace::Nbsp => Self::Nbsp,
+            Whitespace::None => Self::None,
+        }
+    }
+}
 impl Whitespace {
-    /// Convert whitespace enum to actual string
-    pub fn to_str(&self) -> &'static str {
-        match self {
-            Whitespace::Space => " ",
-            Whitespace::NarrowNbsp => "\u{202F}",
-            Whitespace::Nbsp => "\u{00A0}",
-            Whitespace::None => "",
+    pub fn as_str(self) -> &'static str {
+        lexide_types::Whitespace::from(self).as_str()
+    }
+}
+impl std::fmt::Display for Whitespace {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+/// Literal gaps have always been JSON strings, unlike pack control enum names.
+pub mod literal_whitespace {
+    use super::Whitespace;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    pub fn serialize<S: Serializer>(gap: &Whitespace, serializer: S) -> Result<S::Ok, S::Error> {
+        lexide_types::Whitespace::from(*gap).serialize(serializer)
+    }
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Whitespace, D::Error> {
+        lexide_types::Whitespace::deserialize(deserializer).map(Into::into)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl bridgerton::value::Value for Whitespace {
+    fn read(reader: &mut bridgerton::value::Reader<'_>) -> Result<Self, bridgerton::Error> {
+        match String::read(reader)?.as_str() {
+            "" => Ok(Self::None),
+            " " => Ok(Self::Space),
+            "\u{00a0}" => Ok(Self::Nbsp),
+            "\u{202f}" => Ok(Self::NarrowNbsp),
+            _ => Err(bridgerton::Error::new("invalid whitespace gap")),
+        }
+    }
+    fn write(&self, writer: &mut bridgerton::value::Writer) -> Result<(), bridgerton::Error> {
+        self.as_str().to_owned().write(writer)
+    }
+}
+#[cfg(not(target_arch = "wasm32"))]
+impl bridgerton::schema::NativeType for Whitespace {
+    fn native_type(registry: &mut bridgerton::schema::Registry) -> bridgerton::schema::Type {
+        <String as bridgerton::schema::NativeType>::native_type(registry)
+    }
+}
+
+#[test]
+fn whitespace_preserves_pack_and_literal_encodings() {
+    for (index, (gap, name)) in [
+        (Whitespace::Space, "Space"),
+        (Whitespace::NarrowNbsp, "NarrowNbsp"),
+        (Whitespace::Nbsp, "Nbsp"),
+        (Whitespace::None, "None"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        assert_eq!(Whitespace::from(lexide_types::Whitespace::from(gap)), gap);
+        assert_eq!(
+            serde_json::to_string(&ControlToken(gap)).unwrap(),
+            format!("\"{name}\"")
+        );
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&ControlToken(gap)).unwrap();
+        assert_eq!(bytes.as_slice(), &[index as u8]);
+        assert_eq!(
+            rkyv::from_bytes::<ControlToken, rkyv::rancor::Error>(&bytes).unwrap(),
+            ControlToken(gap)
+        );
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let wire = bridgerton::value::encode(&gap).unwrap();
+            assert_eq!(
+                wire,
+                bridgerton::value::encode(&gap.as_str().to_owned()).unwrap()
+            );
+            assert_eq!(bridgerton::value::decode::<Whitespace>(&wire).unwrap(), gap);
         }
     }
 }
 
-impl std::str::FromStr for Whitespace {
-    type Err = std::convert::Infallible;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "" => Whitespace::None,
-            " " => Whitespace::Space,
-            "\u{202F}" => Whitespace::NarrowNbsp,
-            "\u{00A0}" => Whitespace::Nbsp,
-            // For multiple spaces or other whitespace, normalize to single space
-            s if s.chars().all(|c| c.is_whitespace()) => {
-                if s.contains('\u{202F}') {
-                    Whitespace::NarrowNbsp
-                } else if s.contains('\u{00A0}') {
-                    Whitespace::Nbsp
-                } else {
-                    Whitespace::Space
-                }
-            }
-            // Default to space for anything else
-            _ => Whitespace::Space,
-        })
+#[test]
+fn literal_json_keeps_actual_gaps() {
+    let literal = Literal {
+        word: Word {
+            text: "word".to_owned(),
+            word_type: WordType::Other(OtherWord {
+                other_tag: OtherWordType::X,
+            }),
+        },
+        whitespace: Whitespace::NarrowNbsp,
+    };
+    let json = serde_json::to_value(&literal).unwrap();
+    assert_eq!(json["whitespace"], "\u{202f}");
+    assert_eq!(
+        serde_json::from_value::<Literal<String>>(json).unwrap(),
+        literal
+    );
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let wire = bridgerton::value::encode(&literal).unwrap();
+        let mut expected = bridgerton::value::encode(&literal.word).unwrap();
+        expected.extend(bridgerton::value::encode(&"\u{202f}".to_owned()).unwrap());
+        assert_eq!(wire, expected);
+        assert_eq!(
+            bridgerton::value::decode::<Literal<String>>(&wire).unwrap(),
+            literal
+        );
+        let invalid = bridgerton::value::encode(&", ".to_owned()).unwrap();
+        assert!(bridgerton::value::decode::<Whitespace>(&invalid).is_err());
     }
 }
 
@@ -5224,7 +5316,7 @@ pub fn literals_to_atoms(
 
         let next_word = literals.get(i + 1).map(|l| &l.word);
         let predicted = predict_whitespace(&word, next_word, language);
-        let actual: Whitespace = literal.whitespace.parse().unwrap();
+        let actual = literal.whitespace;
 
         // If prediction is wrong, emit a control token
         if predicted != actual {
@@ -5268,10 +5360,7 @@ pub fn atoms_to_literals(atoms: &[Atom<String>], language: Language) -> Vec<Lite
                     predict_whitespace(&word, None, language)
                 };
 
-                literals.push(Literal {
-                    word,
-                    whitespace: whitespace.to_str().to_string(),
-                });
+                literals.push(Literal { word, whitespace });
             }
             Atom::<String>::Control(_) => {
                 // Standalone control tokens shouldn't happen in well-formed input,

@@ -195,7 +195,12 @@ impl Literal<String> {
                 text: self.word.text,
                 word_type: self.word.word_type.into_v2(),
             },
-            whitespace: self.whitespace,
+            // The one lenient boundary: immutable historical events may contain
+            // unknown gaps. Match the old parser's Space default, never panic.
+            whitespace: language_utils::literal_whitespace::deserialize(
+                serde::de::value::StrDeserializer::<serde::de::value::Error>::new(&self.whitespace),
+            )
+            .unwrap_or(language_utils::Whitespace::Space),
         }
     }
 }
@@ -602,6 +607,28 @@ impl DeckEvent {
                     content,
                 }))
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod whitespace_tests {
+    use super::*;
+    #[test]
+    fn legacy_unknown_gaps_fall_back_without_panicking() {
+        for (raw, expected) in [
+            ("", language_utils::Whitespace::None),
+            ("\u{00a0}", language_utils::Whitespace::Nbsp),
+            ("\u{202f}", language_utils::Whitespace::NarrowNbsp),
+            (" ", language_utils::Whitespace::Space),
+            ("\t", language_utils::Whitespace::Space),
+            (", ", language_utils::Whitespace::Space),
+        ] {
+            let row: Literal<String> = serde_json::from_value(serde_json::json!({
+                "text": "word", "word_type": {"other_tag": "X"}, "whitespace": raw
+            }))
+            .unwrap();
+            assert_eq!(row.into_v2().whitespace, expected);
         }
     }
 }

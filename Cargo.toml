@@ -53,7 +53,7 @@ schemars = "1"
 futures = "0.3.32"
 env_logger = "0.11.10"
 tsify = { version = "0.5.6", features = ["js"], default-features = false }
-tysm = { git = "https://github.com/anchpop/tysm.git", rev = "ece93551c8ab884aaf72bac395c1d091595cd5fa" }
+tysm = { git = "https://github.com/anchpop/tysm.git", rev = "99a65954903971d8e05883fa155aa09af98ae78c" }
 # Local-first KV cache store synced to R2 (github.com/anchpop/osmo). All of
 # generate-data's caches live in one store at .cache.
 osmo = "0.2.0"
@@ -68,7 +68,7 @@ abort-signal = "0.1.0"
 # the renderer, not an assertion that a deployed model used identical labels;
 # corpus response keys separate actual WAV content and exact target sequences.
 # Needs cmake + a C compiler to build the embedded espeak fork.
-g2p = { git = "https://github.com/anchpop/g2p", rev = "db3cc12b4f2cf916342304c83314f4cabc8993f7" }
+g2p = { git = "https://github.com/anchpop/g2p", rev = "ef90533979a537469a2dc03546cb5d5c5d208c77" }
 xxhash-rust = { version = "0.8.15", features = ["xxh3", "const_xxh3"] }
 indexmap = { version = "2" }
 chrono = "0.4.44"
@@ -83,7 +83,8 @@ wasm-logger = "0.2.0"
 unicode-normalization = "0.1.25"
 # Shared browser/native named locks.
 weblocks = { git = "https://github.com/anchpop/weblocks", rev = "b4e7db5af829e357ab67407609e1fb896ee30cde" }
-lexide = { git = "https://github.com/anchpop/lexide.git", rev = "096c4e4e86af0d512b9fb4a3b960c29548a9f085", default-features = false }
+lexide = { git = "https://github.com/anchpop/lexide.git", rev = "65818d30c2fb53e696f692f33262f9f2e4645f31", default-features = false }
+lexide-types = { git = "https://github.com/anchpop/lexide.git", rev = "65818d30c2fb53e696f692f33262f9f2e4645f31" }
 indicatif = "0.18"
 
 [workspace.dependencies.rkyv]

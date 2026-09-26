@@ -934,6 +934,7 @@ dependencies = [
  "generate-data",
  "indicatif 0.18.4",
  "language-utils",
+ "lexide-types",
  "rand 0.10.1",
  "schemars",
  "sentence-sampler",
@@ -2115,8 +2116,8 @@ dependencies = [
 
 [[package]]
 name = "g2p"
-version = "0.6.0"
-source = "git+https://github.com/anchpop/g2p?rev=db3cc12b4f2cf916342304c83314f4cabc8993f7#db3cc12b4f2cf916342304c83314f4cabc8993f7"
+version = "0.6.1"
+source = "git+https://github.com/anchpop/g2p?rev=ef90533979a537469a2dc03546cb5d5c5d208c77#ef90533979a537469a2dc03546cb5d5c5d208c77"
 dependencies = [
  "cmake",
  "dirs",
@@ -2135,7 +2136,7 @@ dependencies = [
 [[package]]
 name = "g2p-types"
 version = "0.4.0"
-source = "git+https://github.com/anchpop/g2p?rev=db3cc12b4f2cf916342304c83314f4cabc8993f7#db3cc12b4f2cf916342304c83314f4cabc8993f7"
+source = "git+https://github.com/anchpop/g2p?rev=ef90533979a537469a2dc03546cb5d5c5d208c77#ef90533979a537469a2dc03546cb5d5c5d208c77"
 dependencies = [
  "serde",
  "unicode-normalization",
@@ -3449,6 +3450,7 @@ version = "0.1.0"
 dependencies = [
  "bridgerton",
  "lasso",
+ "lexide-types",
  "parse-display",
  "rkyv 0.8.14",
  "rustc-hash 2.1.1",
@@ -3492,8 +3494,8 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 
 [[package]]
 name = "lexide"
-version = "0.3.0"
-source = "git+https://github.com/anchpop/lexide.git?rev=096c4e4e86af0d512b9fb4a3b960c29548a9f085#096c4e4e86af0d512b9fb4a3b960c29548a9f085"
+version = "0.4.1"
+source = "git+https://github.com/anchpop/lexide.git?rev=65818d30c2fb53e696f692f33262f9f2e4645f31#65818d30c2fb53e696f692f33262f9f2e4645f31"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3504,6 +3506,7 @@ dependencies = [
  "half",
  "hf-hub",
  "http 1.3.1",
+ "lexide-types",
  "osmo",
  "regex 1.12.4",
  "reqwest 0.13.4",
@@ -3514,6 +3517,15 @@ dependencies = [
  "tokio",
  "unicode-normalization",
  "xxhash-rust",
+]
+
+[[package]]
+name = "lexide-types"
+version = "0.1.1"
+source = "git+https://github.com/anchpop/lexide.git?rev=65818d30c2fb53e696f692f33262f9f2e4645f31#65818d30c2fb53e696f692f33262f9f2e4645f31"
+dependencies = [
+ "serde",
+ "serde_plain",
 ]
 
 [[package]]
@@ -3872,7 +3884,7 @@ dependencies = [
 [[package]]
 name = "model-prices"
 version = "0.1.1"
-source = "git+https://github.com/anchpop/tysm.git?rev=ece93551c8ab884aaf72bac395c1d091595cd5fa#ece93551c8ab884aaf72bac395c1d091595cd5fa"
+source = "git+https://github.com/anchpop/tysm.git?rev=99a65954903971d8e05883fa155aa09af98ae78c#99a65954903971d8e05883fa155aa09af98ae78c"
 
 [[package]]
 name = "monostate"
@@ -3916,6 +3928,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "futures",
+ "html-escape",
  "language-utils",
  "lexide",
  "regex 1.12.4",
@@ -5932,9 +5945,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
+checksum = "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
 dependencies = [
  "serde_core",
  "serde_derive",
@@ -5953,22 +5966,22 @@ dependencies = [
 
 [[package]]
 name = "serde_core"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41d385c7d4ca58e59fc732af25c3983b67ac852c1a25000afe1175de458b67ad"
+checksum = "67dca2c9c51e58a4791a4b1ed58308b39c64224d349a935ab5039aa360942a48"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79"
+checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.117",
+ "syn 3.0.4",
 ]
 
 [[package]]
@@ -7044,7 +7057,7 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 [[package]]
 name = "tysm"
 version = "0.24.0"
-source = "git+https://github.com/anchpop/tysm.git?rev=ece93551c8ab884aaf72bac395c1d091595cd5fa#ece93551c8ab884aaf72bac395c1d091595cd5fa"
+source = "git+https://github.com/anchpop/tysm.git?rev=99a65954903971d8e05883fa155aa09af98ae78c#99a65954903971d8e05883fa155aa09af98ae78c"
 dependencies = [
  "base64 0.22.1",
  "dashmap",

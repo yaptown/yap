@@ -35,7 +35,7 @@ use crate::translate::Translator;
 use language_utils::GramInterners;
 
 struct PhraseDetectionData {
-    tokens: Option<Vec<lexide::Token>>, // we don't have this for grams
+    tokens: Option<lexide::Tokenization>, // we don't have this for grams
 }
 type PhraseDetectionDataMap = BTreeMap<Gram<String>, PhraseDetectionData>;
 
@@ -542,15 +542,15 @@ pub async fn segment_corpus(
 
     // Filter out "multiword terms" that tokenized to a single token —
     // these are inflected forms or bad tokenizations, not real multi-word expressions
-    let multiword_terms_tokenizations: BTreeMap<String, Vec<lexide::Token>> =
+    let multiword_terms_tokenizations: BTreeMap<String, lexide::Tokenization> =
         multiword_terms_tokenizations
             .into_iter()
             .filter(|(term, tokens)| {
-                if tokens.len() <= 1 {
+                if tokens.tokens().len() <= 1 {
                     log::info!(
                         "Dropping single-token multiword term: {:?} ({} tokens)",
                         term,
-                        tokens.len()
+                        tokens.tokens().len()
                     );
                     false
                 } else {
@@ -629,12 +629,13 @@ pub async fn segment_corpus(
             .filter_map(|(gram, data)| {
                 // If we have lexide tokens, use their lemmas and POS
                 if let Some(tokens) = data.tokens.as_ref() {
-                    if tokens.len() <= 1 {
+                    if tokens.tokens().len() <= 1 {
                         return None;
                     }
                     return Some((
                         gram.clone(),
                         tokens
+                            .tokens()
                             .iter()
                             .map(|t| (t.lemma.lemma.clone(), t.pos))
                             .collect(),
@@ -670,9 +671,7 @@ pub async fn segment_corpus(
         .iter()
         .filter_map(|(gram, data)| {
             let tokens = data.tokens.as_ref()?;
-            let tokenization = lexide::Tokenization {
-                tokens: tokens.clone(),
-            };
+            let tokenization = tokens.clone();
             let tree = lexide::matching::TreeNode::try_from(tokenization).ok()?;
             Some((gram.clone(), tree))
         })

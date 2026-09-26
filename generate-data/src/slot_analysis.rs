@@ -156,7 +156,7 @@ struct PlaceholderHintsResponse {
 /// forgot is usually visible in the sample, and vice versa.
 async fn placeholder_hints(
     course: &Course,
-    multiword_terms_tokenizations: &BTreeMap<String, Vec<Token>>,
+    multiword_terms_tokenizations: &BTreeMap<String, lexide::Tokenization>,
 ) -> anyhow::Result<Vec<Vec<String>>> {
     let language = course.target_language;
     let shared_instructions = "You are helping a language-learning app detect which \
@@ -185,7 +185,8 @@ async fn placeholder_hints(
     // lemma sequences our tokenizer produced) and ask which placeholder
     // expressions appear in them.
     const GROUNDING_SAMPLE_SIZE: usize = 200;
-    let all_terms: Vec<(&String, &Vec<Token>)> = multiword_terms_tokenizations.iter().collect();
+    let all_terms: Vec<(&String, &lexide::Tokenization)> =
+        multiword_terms_tokenizations.iter().collect();
     let sampled: Vec<String> = if all_terms.is_empty() {
         vec![]
     } else {
@@ -194,6 +195,7 @@ async fn placeholder_hints(
                 let (term, tokens) =
                     &all_terms[i * all_terms.len() / GROUNDING_SAMPLE_SIZE.min(all_terms.len())];
                 let lemmas = tokens
+                    .tokens()
                     .iter()
                     .map(|t| t.lemma.lemma.as_str())
                     .collect::<Vec<_>>()
@@ -262,7 +264,7 @@ fn format_parse(tokens: &[Token]) -> String {
 /// Returns, for each term that has at least one real slot, the slot specs.
 pub async fn analyze_slots(
     course: &Course,
-    multiword_terms_tokenizations: &BTreeMap<String, Vec<Token>>,
+    multiword_terms_tokenizations: &BTreeMap<String, lexide::Tokenization>,
 ) -> anyhow::Result<BTreeMap<String, Vec<SlotSpec>>> {
     let language = course.target_language;
     let hints = placeholder_hints(course, multiword_terms_tokenizations).await?;
@@ -270,10 +272,14 @@ pub async fn analyze_slots(
         return Ok(BTreeMap::new());
     }
 
-    let candidates: Vec<(&String, &Vec<Token>)> = multiword_terms_tokenizations
+    let candidates: Vec<(&String, &lexide::Tokenization)> = multiword_terms_tokenizations
         .iter()
         .filter(|(_, tokens)| {
-            let lemmas: Vec<&str> = tokens.iter().map(|t| t.lemma.lemma.as_str()).collect();
+            let lemmas: Vec<&str> = tokens
+                .tokens()
+                .iter()
+                .map(|t| t.lemma.lemma.as_str())
+                .collect();
             hints.iter().any(|phrase| contains_phrase(&lemmas, phrase))
         })
         .collect();
@@ -321,7 +327,7 @@ Only report tokens that are placeholder candidates (indefinite pronouns / "quelq
             |(term, tokens)| {
                 format!(
                     "Citation form: \"{term}\"\n\nParse:\n{}",
-                    format_parse(tokens)
+                    format_parse(tokens.tokens())
                 )
             },
             |batch| crate::report_batch_progress(&progress, 0, n_candidates, batch),
@@ -335,7 +341,7 @@ Only report tokens that are placeholder candidates (indefinite pronouns / "quelq
         let slots: Vec<SlotSpec> = response
             .slots
             .into_iter()
-            .filter(|s| s.is_slot && s.token_index < tokens.len())
+            .filter(|s| s.is_slot && s.token_index < tokens.tokens().len())
             .collect();
         if !slots.is_empty() {
             out.insert((*term).clone(), slots);
@@ -428,20 +434,17 @@ fn children_of(tokens: &[Token], idx: usize) -> impl Iterator<Item = usize> + '_
 /// citation form has a single slot, so the combinatorial version isn't worth
 /// its cost yet.
 pub fn compile_realizations(
-    tokens: &[Token],
+    tokenization: &lexide::Tokenization,
     slots: &[SlotSpec],
 ) -> Vec<(SlotRealization, PatternNode)> {
     // Reuse lexide's own validation: it rejects parses with orphaned tokens
     // or no root, which would otherwise compile to a partial pattern that
     // matches far more than the term does.
-    if lexide::matching::TreeNode::try_from(lexide::Tokenization {
-        tokens: tokens.to_vec(),
-    })
-    .is_err()
-    {
+    if lexide::matching::TreeNode::try_from(tokenization.clone()).is_err() {
         return vec![];
     }
 
+    let tokens = tokenization.tokens();
     let slot_by_idx: BTreeMap<usize, &SlotSpec> =
         slots.iter().map(|s| (s.token_index, s)).collect();
     let Some(root_idx) = tokens
@@ -595,7 +598,7 @@ pub struct SlotMatch {
 /// Returns, for each pattern (parallel to `patterns`), the sentences it
 /// matched.
 pub fn find_slot_matches(
-    sentence_tokenizations: &BTreeMap<String, Vec<Token>>,
+    sentence_tokenizations: &BTreeMap<String, lexide::Tokenization>,
     patterns: &[PatternNode],
 ) -> Vec<Vec<SlotMatch>> {
     use lexide::matching::{DependencyMatcher, TreeNode};
@@ -605,9 +608,7 @@ pub fn find_slot_matches(
 
     let mut matches: Vec<Vec<SlotMatch>> = vec![Vec::new(); patterns.len()];
     for (sentence, tokens) in sentence_tokenizations {
-        let tokenization = lexide::Tokenization {
-            tokens: tokens.clone(),
-        };
+        let tokenization = tokens.clone();
         let Ok(tree) = TreeNode::try_from(tokenization) else {
             continue;
         };
@@ -617,7 +618,7 @@ pub fn find_slot_matches(
                 let matched_words = m
                     .matched_token_indices
                     .iter()
-                    .filter_map(|&i| tokens.get(i))
+                    .filter_map(|&i| tokens.tokens().get(i))
                     .map(|t| t.text.text.clone())
                     .collect();
                 matches[m.matched_label].push(SlotMatch {
@@ -875,7 +876,7 @@ mod tests {
             text: Text {
                 text: text.to_string(),
             },
-            whitespace: " ".to_string(),
+            whitespace: lexide::Whitespace::Space,
             pos,
             lemma: Lemma {
                 lemma: lemma.to_string(),
@@ -886,6 +887,14 @@ mod tests {
     }
 
     /// "arriver à quelqu'un": arriver(root) <- quelqu'un(obl) <- à(case)
+    fn tokenization(tokens: Vec<Token>) -> lexide::Tokenization {
+        let sentence: String = tokens
+            .iter()
+            .map(|t| format!("{}{}", t.text.text, t.whitespace))
+            .collect();
+        lexide::Tokenization::new(sentence, tokens).unwrap()
+    }
+
     fn arriver_a_quelquun() -> Vec<Token> {
         vec![
             tok(
@@ -921,7 +930,7 @@ mod tests {
     #[test]
     fn compiles_filled_and_clitic_realizations() {
         let tokens = arriver_a_quelquun();
-        let realizations = compile_realizations(&tokens, &[dative_slot()]);
+        let realizations = compile_realizations(&tokenization(tokens.clone()), &[dative_slot()]);
         let kinds: Vec<SlotRealization> = realizations.iter().map(|(k, _)| *k).collect();
         assert_eq!(
             kinds,
@@ -957,43 +966,40 @@ mod tests {
 
     #[test]
     fn clitic_realization_matches_leur_est_arrive() {
-        use lexide::Tokenization;
         use lexide::matching::{DependencyMatcher, TreeNode};
 
         let tokens = arriver_a_quelquun();
-        let realizations = compile_realizations(&tokens, &[dative_slot()]);
+        let realizations = compile_realizations(&tokenization(tokens.clone()), &[dative_slot()]);
         let (_, clitic) = realizations
             .iter()
             .find(|(k, _)| *k == SlotRealization::Clitic)
             .unwrap();
 
         // "ce qui leur est arrivé" (simplified): qui(nsubj) leur(iobj) est(aux) arrivé(root)
-        let sentence = Tokenization {
-            tokens: vec![
-                tok(
-                    "qui",
-                    "qui",
-                    PartOfSpeech::Pron,
-                    DependencyRelation::Nsubj,
-                    4,
-                ),
-                tok(
-                    "leur",
-                    "leur",
-                    PartOfSpeech::Pron,
-                    DependencyRelation::Iobj,
-                    4,
-                ),
-                tok("est", "être", PartOfSpeech::Aux, DependencyRelation::Aux, 4),
-                tok(
-                    "arrivé",
-                    "arriver",
-                    PartOfSpeech::Verb,
-                    DependencyRelation::Root,
-                    0,
-                ),
-            ],
-        };
+        let sentence = tokenization(vec![
+            tok(
+                "qui",
+                "qui",
+                PartOfSpeech::Pron,
+                DependencyRelation::Nsubj,
+                4,
+            ),
+            tok(
+                "leur",
+                "leur",
+                PartOfSpeech::Pron,
+                DependencyRelation::Iobj,
+                4,
+            ),
+            tok("est", "être", PartOfSpeech::Aux, DependencyRelation::Aux, 4),
+            tok(
+                "arrivé",
+                "arriver",
+                PartOfSpeech::Verb,
+                DependencyRelation::Root,
+                0,
+            ),
+        ]);
         let tree = TreeNode::try_from(sentence).unwrap();
         let matcher =
             DependencyMatcher::new(&[("arriver à quelqu'un".to_string(), clitic.clone())]);
@@ -1047,11 +1053,11 @@ mod tests {
 
     #[test]
     fn infinitive_slot_compiles_filled_only_and_matches_real_usage() {
-        use lexide::Tokenization;
         use lexide::matching::{DependencyMatcher, TreeNode};
 
         let tokens = enchante_de_faire_quelque_chose();
-        let realizations = compile_realizations(&tokens, &[infinitive_slot()]);
+        let realizations =
+            compile_realizations(&tokenization(tokens.clone()), &[infinitive_slot()]);
         let kinds: Vec<SlotRealization> = realizations.iter().map(|(k, _)| *k).collect();
         assert_eq!(kinds, vec![SlotRealization::Infinitive]);
 
@@ -1075,58 +1081,54 @@ mod tests {
 
         // "enchanté de vous rencontrer": rencontrer(xcomp) carries a clitic
         // the pattern doesn't constrain.
-        let sentence = Tokenization {
-            tokens: vec![
-                tok(
-                    "enchanté",
-                    "enchanté",
-                    PartOfSpeech::Adj,
-                    DependencyRelation::Root,
-                    0,
-                ),
-                tok("de", "de", PartOfSpeech::Adp, DependencyRelation::Mark, 4),
-                tok(
-                    "vous",
-                    "vous",
-                    PartOfSpeech::Pron,
-                    DependencyRelation::Obj,
-                    4,
-                ),
-                tok(
-                    "rencontrer",
-                    "rencontrer",
-                    PartOfSpeech::Verb,
-                    DependencyRelation::Xcomp,
-                    1,
-                ),
-            ],
-        };
+        let sentence = tokenization(vec![
+            tok(
+                "enchanté",
+                "enchanté",
+                PartOfSpeech::Adj,
+                DependencyRelation::Root,
+                0,
+            ),
+            tok("de", "de", PartOfSpeech::Adp, DependencyRelation::Mark, 4),
+            tok(
+                "vous",
+                "vous",
+                PartOfSpeech::Pron,
+                DependencyRelation::Obj,
+                4,
+            ),
+            tok(
+                "rencontrer",
+                "rencontrer",
+                PartOfSpeech::Verb,
+                DependencyRelation::Xcomp,
+                1,
+            ),
+        ]);
         let tree = TreeNode::try_from(sentence).unwrap();
         let matcher = DependencyMatcher::new(&[("test".to_string(), filled.clone())]);
         assert_eq!(matcher.find_all(&tree).len(), 1);
 
         // "enchanté de la fête": a nominal complement must not satisfy the
         // verb wildcard.
-        let nominal = Tokenization {
-            tokens: vec![
-                tok(
-                    "enchanté",
-                    "enchanté",
-                    PartOfSpeech::Adj,
-                    DependencyRelation::Root,
-                    0,
-                ),
-                tok("de", "de", PartOfSpeech::Adp, DependencyRelation::Case, 4),
-                tok("la", "le", PartOfSpeech::Det, DependencyRelation::Det, 4),
-                tok(
-                    "fête",
-                    "fête",
-                    PartOfSpeech::Noun,
-                    DependencyRelation::Obl,
-                    1,
-                ),
-            ],
-        };
+        let nominal = tokenization(vec![
+            tok(
+                "enchanté",
+                "enchanté",
+                PartOfSpeech::Adj,
+                DependencyRelation::Root,
+                0,
+            ),
+            tok("de", "de", PartOfSpeech::Adp, DependencyRelation::Case, 4),
+            tok("la", "le", PartOfSpeech::Det, DependencyRelation::Det, 4),
+            tok(
+                "fête",
+                "fête",
+                PartOfSpeech::Noun,
+                DependencyRelation::Obl,
+                1,
+            ),
+        ]);
         let tree = TreeNode::try_from(nominal).unwrap();
         let matcher = DependencyMatcher::new(&[("test".to_string(), filled.clone())]);
         assert_eq!(matcher.find_all(&tree).len(), 0);
@@ -1149,7 +1151,7 @@ mod tests {
             role: SlotRole::Other,
             clitic_pronoun_lemmas: vec![],
         };
-        assert!(compile_realizations(&tokens, &[slot]).is_empty());
+        assert!(compile_realizations(&tokenization(tokens.clone()), &[slot]).is_empty());
     }
 
     #[test]
@@ -1159,7 +1161,7 @@ mod tests {
             clitic_pronoun_lemmas: vec![],
             ..dative_slot()
         };
-        let realizations = compile_realizations(&tokens, &[slot]);
+        let realizations = compile_realizations(&tokenization(tokens.clone()), &[slot]);
         assert_eq!(realizations.len(), 1);
         assert_eq!(realizations[0].0, SlotRealization::Filled);
     }
@@ -1208,7 +1210,10 @@ mod tests {
         // Parsers label determiner possessives as either `det` or `det:poss`,
         // and nominal possessives as `nmod:poss`. The citation form's own
         // label must not decide which of those a real sentence may use.
-        let realizations = compile_realizations(&answer_someones_prayers(), &[possessive_slot()]);
+        let realizations = compile_realizations(
+            &tokenization(answer_someones_prayers()),
+            &[possessive_slot()],
+        );
         for (realization, pattern) in &realizations {
             let slot_edge = pattern
                 .children
@@ -1234,7 +1239,10 @@ mod tests {
     fn possessive_clitic_matches_a_det_poss_possessor() {
         use lexide::matching::{DependencyMatcher, TreeNode};
 
-        let realizations = compile_realizations(&answer_someones_prayers(), &[possessive_slot()]);
+        let realizations = compile_realizations(
+            &tokenization(answer_someones_prayers()),
+            &[possessive_slot()],
+        );
         let (_, clitic) = realizations
             .iter()
             .find(|(k, _)| *k == SlotRealization::Clitic)
@@ -1242,31 +1250,29 @@ mod tests {
 
         // "answered her prayers", with `her` labelled det:poss — the label
         // that the pre-fix pattern (which only accepted `det`) missed.
-        let sentence = lexide::Tokenization {
-            tokens: vec![
-                tok(
-                    "answered",
-                    "answer",
-                    PartOfSpeech::Verb,
-                    DependencyRelation::Root,
-                    0,
-                ),
-                tok(
-                    "her",
-                    "her",
-                    PartOfSpeech::Det,
-                    DependencyRelation::DetPoss,
-                    3,
-                ),
-                tok(
-                    "prayers",
-                    "prayer",
-                    PartOfSpeech::Noun,
-                    DependencyRelation::Obj,
-                    1,
-                ),
-            ],
-        };
+        let sentence = tokenization(vec![
+            tok(
+                "answered",
+                "answer",
+                PartOfSpeech::Verb,
+                DependencyRelation::Root,
+                0,
+            ),
+            tok(
+                "her",
+                "her",
+                PartOfSpeech::Det,
+                DependencyRelation::DetPoss,
+                3,
+            ),
+            tok(
+                "prayers",
+                "prayer",
+                PartOfSpeech::Noun,
+                DependencyRelation::Obj,
+                1,
+            ),
+        ]);
         let tree = TreeNode::try_from(sentence).unwrap();
         let matcher =
             DependencyMatcher::new(&[("answer someone's prayers".to_string(), clitic.clone())]);
@@ -1279,7 +1285,7 @@ mod tests {
         // a tree; compiling it would yield a partial, overly broad pattern.
         let mut tokens = arriver_a_quelquun();
         tokens[1].head = 99;
-        assert!(compile_realizations(&tokens, &[dative_slot()]).is_empty());
+        assert!(compile_realizations(&tokenization(tokens.clone()), &[dative_slot()]).is_empty());
     }
 
     #[test]

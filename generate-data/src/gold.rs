@@ -17,11 +17,11 @@
 
 use anyhow::{Context, Result};
 use language_utils::{Language, PartOfSpeechTag};
+use lexide::{Tokenization, Whitespace};
 use std::collections::BTreeMap;
-use std::io::BufRead;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
-use token_corrections::{PieceDep, TokenView, fix_tokens, lexide_pos_to_tag, tag_to_lexide_pos};
+use token_corrections::{lexide_pos_to_tag, tag_to_lexide_pos};
 
 /// The gold `cleaned_*.jsonl` token schema: flat text/lemma, the dependency as
 /// its UD label string. Every field is required — since English joined the
@@ -30,7 +30,7 @@ use token_corrections::{PieceDep, TokenView, fix_tokens, lexide_pos_to_tag, tag_
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct CleanedToken {
     pub text: String,
-    pub whitespace: String,
+    pub whitespace: Whitespace,
     pub pos: PartOfSpeechTag,
     pub lemma: String,
     pub dep: String,
@@ -41,52 +41,6 @@ pub struct CleanedToken {
 pub struct CleanedSentence {
     pub sentence: String,
     pub tokens: Vec<CleanedToken>,
-}
-
-impl TokenView for CleanedToken {
-    fn text(&self) -> &str {
-        &self.text
-    }
-    fn whitespace(&self) -> &str {
-        &self.whitespace
-    }
-    fn pos(&self) -> PartOfSpeechTag {
-        self.pos
-    }
-    fn lemma(&self) -> &str {
-        &self.lemma
-    }
-    fn push_text(&mut self, more: &str) {
-        self.text.push_str(more);
-    }
-    fn set_text(&mut self, text: String) {
-        self.text = text;
-    }
-    fn set_whitespace(&mut self, ws: String) {
-        self.whitespace = ws;
-    }
-    fn set_pos(&mut self, pos: PartOfSpeechTag) {
-        self.pos = pos;
-    }
-    fn set_lemma(&mut self, lemma: String) {
-        self.lemma = lemma;
-    }
-    fn head(&self) -> i32 {
-        self.head
-    }
-    fn set_head(&mut self, head: i32) {
-        self.head = head;
-    }
-    fn dep_label(&self) -> Option<PieceDep> {
-        PieceDep::from_ud_label(&self.dep)
-    }
-    fn set_dep_label(&mut self, dep: PieceDep) {
-        self.dep = dep.ud_label().to_string();
-    }
-    fn copy_attachment(&mut self, from: &Self) {
-        self.dep = from.dep.clone();
-        self.head = from.head;
-    }
 }
 
 /// Flatten lexide tokens into the gold schema.
@@ -111,8 +65,8 @@ pub fn to_flat(tokens: Vec<lexide::Token>) -> Vec<CleanedToken> {
 /// The inverse of [`to_flat`], for feeding gold back into a pipeline that speaks
 /// lexide tokens. The dependency round-trips through serde because that is how
 /// [`to_flat`] wrote it, so the two stay in step by construction.
-pub fn to_lexide(tokens: Vec<CleanedToken>) -> Result<Vec<lexide::Token>> {
-    tokens
+pub fn to_lexide(sentence: String, tokens: Vec<CleanedToken>) -> Result<Tokenization> {
+    let tokens = tokens
         .into_iter()
         .map(|t| {
             let dep = serde_json::from_value(serde_json::Value::String(t.dep.clone()))
@@ -126,7 +80,8 @@ pub fn to_lexide(tokens: Vec<CleanedToken>) -> Result<Vec<lexide::Token>> {
                 head: t.head,
             })
         })
-        .collect()
+        .collect::<Result<Vec<_>>>()?;
+    Ok(Tokenization::new(sentence, tokens)?)
 }
 
 /// Path of a language's gold set, alongside the per-language `out/` dirs.
@@ -135,57 +90,32 @@ pub fn gold_path(out_dir: &Path, language: Language) -> PathBuf {
     out_dir.join(format!("cleaned_{}.jsonl", language.corpus_code()))
 }
 
-/// Load a gold `cleaned_*.jsonl`, canonicalized, keyed by sentence.
-pub fn load(path: &Path, language: Language) -> Result<BTreeMap<String, Vec<CleanedToken>>> {
-    let mut gold = BTreeMap::new();
-    let reader = std::io::BufReader::new(
-        std::fs::File::open(path).with_context(|| format!("Failed to open {}", path.display()))?,
-    );
-    for line in reader.lines() {
-        let mut record: CleanedSentence = serde_json::from_str(&line?)?;
-        fix_tokens(language, &mut record.tokens);
-        gold.insert(record.sentence, record.tokens);
-    }
-    Ok(gold)
+/// Load gold through the same validated, canonicalized boundary as silver.
+pub fn load(path: &Path, language: Language) -> Result<BTreeMap<String, Tokenization>> {
+    Ok(load_with_report(path, language)?.rows)
 }
 
-type GoldCache = BTreeMap<Language, std::sync::Arc<BTreeMap<String, Vec<lexide::Token>>>>;
-
-/// A language's gold set as lexide tokens, loaded once per process.
-///
-/// Cached because every tokenization store consults it and the files run to
-/// tens of megabytes; an absent file is a legitimate answer (most languages have
-/// no gold yet) and caches as empty.
-fn load_as_lexide(
+pub fn load_with_report(
+    path: &Path,
     language: Language,
-) -> Result<std::sync::Arc<BTreeMap<String, Vec<lexide::Token>>>> {
+) -> Result<crate::nlp::LoadedTokenizations> {
+    crate::nlp::load_tokenizations(path, language, |line| {
+        let record: CleanedSentence = serde_json::from_str(line)?;
+        to_lexide(record.sentence, record.tokens)
+    })
+}
+
+type GoldData = BTreeMap<String, Tokenization>;
+type GoldCache = BTreeMap<Language, std::sync::Arc<GoldData>>;
+
+fn load_as_lexide(language: Language) -> Result<std::sync::Arc<GoldData>> {
     static CACHE: OnceLock<Mutex<GoldCache>> = OnceLock::new();
     let cache = CACHE.get_or_init(|| Mutex::new(BTreeMap::new()));
     if let Some(hit) = cache.lock().unwrap().get(&language) {
         return Ok(hit.clone());
     }
-    let path = gold_path(Path::new("./out"), language);
-    let loaded = if path.exists() {
-        let flat = load(&path, language)?;
-        let mut out = BTreeMap::new();
-        for (sentence, tokens) in flat {
-            out.insert(sentence, to_lexide(tokens)?);
-        }
-        println!(
-            "gold[{}]: {} hand-corrected sentences loaded from {}",
-            language.code(),
-            out.len(),
-            path.display()
-        );
-        out
-    } else {
-        BTreeMap::new()
-    };
-    let loaded = std::sync::Arc::new(loaded);
-    cache
-        .lock()
-        .unwrap()
-        .insert(language, std::sync::Arc::clone(&loaded));
+    let loaded = std::sync::Arc::new(load(&gold_path(Path::new("./out"), language), language)?);
+    cache.lock().unwrap().insert(language, loaded.clone());
     Ok(loaded)
 }
 
@@ -203,22 +133,11 @@ fn load_as_lexide(
 pub fn overlay<'a>(
     language: Language,
     wanted: impl IntoIterator<Item = &'a str>,
-    store: &mut BTreeMap<String, Vec<lexide::Token>>,
+    store: &mut BTreeMap<String, Tokenization>,
 ) -> Result<()> {
-    let gold = load_as_lexide(language)?;
-    if gold.is_empty() {
-        return Ok(());
-    }
-    let (mut replaced, mut added) = (0usize, 0usize);
-    for sentence in wanted {
-        let Some(tokens) = gold.get(sentence) else {
-            continue;
-        };
-        match store.insert(sentence.to_string(), tokens.clone()) {
-            Some(_) => replaced += 1,
-            None => added += 1,
-        }
-    }
+    let loaded = load_as_lexide(language)?;
+    let gold = loaded.as_ref();
+    let (replaced, added) = apply_overlay(gold, wanted, store);
     if replaced > 0 || added > 0 {
         println!(
             "gold[{}]: {replaced} sentences taken from gold instead of silver, \
@@ -229,74 +148,114 @@ pub fn overlay<'a>(
     Ok(())
 }
 
+fn apply_overlay<'a>(
+    gold: &BTreeMap<String, Tokenization>,
+    wanted: impl IntoIterator<Item = &'a str>,
+    store: &mut BTreeMap<String, Tokenization>,
+) -> (usize, usize) {
+    let (mut replaced, mut added) = (0usize, 0usize);
+    for sentence in wanted {
+        let Some(tokens) = gold.get(sentence) else {
+            continue;
+        };
+        match store.insert(sentence.to_string(), tokens.clone()) {
+            Some(_) => replaced += 1,
+            None => added += 1,
+        }
+    }
+    (replaced, added)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn flat_and_lexide_round_trip() {
-        let original = vec![
-            lexide::Token {
-                text: lexide::Text {
-                    text: "les".to_string(),
-                },
-                whitespace: " ".to_string(),
-                pos: lexide::pos::PartOfSpeech::Det,
-                lemma: lexide::Lemma {
-                    lemma: "le".to_string(),
-                },
-                dep: lexide::DependencyRelation::Det,
-                head: 2,
-            },
-            lexide::Token {
-                text: lexide::Text {
-                    text: "gars".to_string(),
-                },
-                whitespace: String::new(),
-                pos: lexide::pos::PartOfSpeech::Noun,
-                lemma: lexide::Lemma {
-                    lemma: "gars".to_string(),
-                },
-                dep: lexide::DependencyRelation::Root,
-                head: 0,
-            },
-        ];
-        let flat = to_flat(original.clone());
-        // The dep survives as its UD label, which is how gold stores it.
-        assert_eq!(flat[0].dep, "det");
-        let back = to_lexide(flat).unwrap();
-        assert_eq!(format!("{back:?}"), format!("{original:?}"));
+    fn token(text: &str) -> CleanedToken {
+        CleanedToken {
+            text: text.into(),
+            whitespace: Whitespace::None,
+            pos: PartOfSpeechTag::Intj,
+            lemma: text.into(),
+            dep: "root".into(),
+            head: 0,
+        }
     }
 
     #[test]
-    fn unknown_dependency_label_fails_loudly() {
-        let bogus = vec![CleanedToken {
-            text: "les".to_string(),
-            whitespace: String::new(),
-            pos: PartOfSpeechTag::Det,
-            lemma: "le".to_string(),
-            dep: "not-a-relation".to_string(),
-            head: 0,
-        }];
-        // Gold is hand-editable, so a typo in a dep must stop the run rather
-        // than silently become some default relation.
-        let err = to_lexide(bogus).unwrap_err().to_string();
-        assert!(err.contains("not-a-relation"), "{err}");
+    fn invalid_gold_leaves_valid_silver_fallback() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("gold.jsonl");
+        let record = CleanedSentence {
+            sentence: "hello".into(),
+            tokens: vec![token("wrong")],
+        };
+        std::fs::write(&path, serde_json::to_string(&record).unwrap()).unwrap();
+        let loaded = load_with_report(&path, Language::English).unwrap();
+        assert_eq!(loaded.invalid_rows, 1);
+        assert!(loaded.invalid_sentences.contains("hello"));
+        let mut silver = BTreeMap::from([(
+            "hello".into(),
+            to_lexide("hello".into(), vec![token("hello")]).unwrap(),
+        )]);
+        assert_eq!(apply_overlay(&loaded.rows, ["hello"], &mut silver), (0, 0));
+        assert_eq!(silver["hello"].tokens()[0].text.text, "hello");
+    }
+
+    #[test]
+    fn valid_gold_overrides_silver_and_supplies_gold_only_sentences() {
+        let mut silver_token = token("hello");
+        silver_token.lemma = "silver".into();
+        let mut silver = BTreeMap::from([(
+            "hello".into(),
+            to_lexide("hello".into(), vec![silver_token]).unwrap(),
+        )]);
+        let gold = ["hello", "rescued"]
+            .into_iter()
+            .map(|s| (s.to_owned(), to_lexide(s.into(), vec![token(s)]).unwrap()))
+            .collect();
+        assert_eq!(
+            apply_overlay(&gold, ["hello", "rescued"], &mut silver),
+            (1, 1)
+        );
+        assert_eq!(silver["hello"].tokens()[0].lemma.lemma, "hello");
+        assert_eq!(silver["rescued"].sentence(), "rescued");
+    }
+
+    #[test]
+    fn flat_and_lexide_round_trip() {
+        let row = to_lexide("hello".into(), vec![token("hello")]).unwrap();
+        let flat = to_flat(row.clone().into_tokens());
+        assert_eq!(flat[0].dep, "root");
+        let back = to_lexide(row.sentence().into(), flat).unwrap();
+        assert_eq!(back.tokens(), row.tokens());
+    }
+
+    #[test]
+    fn unknown_dependency_label_is_rejected() {
+        let mut bogus = token("hello");
+        bogus.dep = "not-a-relation".into();
+        assert!(
+            to_lexide("hello".into(), vec![bogus])
+                .unwrap_err()
+                .to_string()
+                .contains("not-a-relation")
+        );
     }
 
     #[test]
     fn gold_articles_are_corrected_on_load() {
-        // Gold reproduces the teacher's PRON-under-det error, so the loader's
-        // correction pass has to reach it through CleanedToken's dep_label.
-        let mut tokens = vec![CleanedToken {
-            text: "les".to_string(),
-            whitespace: " ".to_string(),
-            pos: PartOfSpeechTag::Pron,
-            lemma: "le".to_string(),
-            dep: "det".to_string(),
-            head: 2,
-        }];
-        fix_tokens(Language::French, &mut tokens);
-        assert_eq!(tokens[0].pos, PartOfSpeechTag::Det);
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("gold.jsonl");
+        let mut article = token("les");
+        article.pos = PartOfSpeechTag::Pron;
+        article.lemma = "le".into();
+        article.dep = "det".into();
+        let record = CleanedSentence {
+            sentence: "les".into(),
+            tokens: vec![article],
+        };
+        std::fs::write(&path, serde_json::to_string(&record).unwrap()).unwrap();
+        let loaded = load(&path, Language::French).unwrap();
+        assert_eq!(loaded["les"].tokens()[0].pos, lexide::PartOfSpeech::Det);
     }
 }

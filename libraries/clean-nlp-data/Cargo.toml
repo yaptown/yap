@@ -7,6 +7,7 @@ edition = "2024"
 serde.workspace = true
 serde_json.workspace = true
 language-utils = { path = "../../language-utils" }
+lexide-types.workspace = true
 anyhow = "1.0.102"
 rand = "0.10.1"
 tysm.workspace = true

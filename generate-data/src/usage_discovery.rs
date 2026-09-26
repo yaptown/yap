@@ -173,8 +173,7 @@ impl GramArena {
     }
 }
 
-/// One occurrence of a gram: the sentence text (reconstructed from the
-/// words, so char offsets agree with the embedding cache) and the char spans
+/// One occurrence of a gram: the corpus sentence key and the char spans
 /// of the heteronym words the gram covers.
 #[derive(Clone)]
 struct Occurrence {
@@ -214,12 +213,14 @@ struct SentenceIndex {
 /// byte terms) and take its gram segmentation and atoms directly from the
 /// encoded form (aligned by construction).
 fn index_sentence(
+    text: &str,
     info: &SentenceInfo,
     interners: &language_utils::GramInterners,
     language: Language,
 ) -> (String, SentenceIndex) {
     let decoded = info.decode_words(interners, language);
-    let text = token_embeddings::sentence_text(&decoded);
+    // Tokenization preserves the source text, and the atoms round trip is lossless,
+    // so the map key is also the decoded text used by the embedding spans.
     let mut words = Vec::with_capacity(decoded.len());
     let mut char_off = 0u32;
     let mut byte_off = 0usize;
@@ -231,8 +232,8 @@ fn index_sentence(
             byte_span: (byte_off, byte_off + byte_len),
             is_heteronym: matches!(literal.word.word_type, WordType::Heteronym(_)),
         });
-        char_off += char_len + literal.whitespace.chars().count() as u32;
-        byte_off += byte_len + literal.whitespace.len();
+        char_off += char_len + literal.whitespace.as_str().chars().count() as u32;
+        byte_off += byte_len + literal.whitespace.as_str().len();
     }
     use lasso::Key;
     let gram_stream: Vec<(GramId, u16, u16)> = info
@@ -256,7 +257,7 @@ fn index_sentence(
         .collect();
     debug_assert_eq!(atom_seq.len(), words.len());
     (
-        text,
+        text.to_owned(),
         SentenceIndex {
             words,
             gram_stream,
@@ -279,15 +280,12 @@ fn index_sentence(
 /// property of the discover→adopt→re-segment loop.
 fn collect_occurrences(
     corpus: &SegmentedCorpus,
-    language: Language,
     index: &HashMap<String, SentenceIndex>,
     arena: &GramArena,
 ) -> BTreeMap<GramId, Vec<Occurrence>> {
     let mut occurrences: BTreeMap<GramId, Vec<Occurrence>> = BTreeMap::new();
-    for info in corpus.nlp_sentences.values() {
-        let decoded = info.decode_words(&corpus.interners, language);
-        let text = token_embeddings::sentence_text(&decoded);
-        let Some(sent) = index.get(&text) else {
+    for (text, info) in &corpus.nlp_sentences {
+        let Some(sent) = index.get(text) else {
             continue;
         };
         let consumed: HashSet<usize> = info
@@ -1898,12 +1896,12 @@ pub async fn discover(
     // (aligned by construction in the encoded form), and interned atoms.
     let index: HashMap<String, SentenceIndex> = corpus
         .nlp_sentences
-        .values()
-        .map(|info| index_sentence(info, &corpus.interners, language))
+        .iter()
+        .map(|(text, info)| index_sentence(text, info, &corpus.interners, language))
         .collect();
     timer.lap("sentence indexing");
 
-    let occurrences = collect_occurrences(corpus, language, &index, &arena);
+    let occurrences = collect_occurrences(corpus, &index, &arena);
     timer.lap("occurrence collection");
     println!(
         "usage-discovery[{}]: {} grams with >= {MIN_OCC} occurrences",
@@ -3108,11 +3106,6 @@ pub async fn assign_senses(
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
         Err(error) => return Err(error).context("Failed to read usage inventories"),
     };
-    let corpus: HashSet<String> = app
-        .values()
-        .chain(restricted.values())
-        .map(|info| index_sentence(info, interners, language).0)
-        .collect();
     let mut inventories = BTreeMap::new();
     struct Classifier {
         centroids: Vec<(NonZeroU32, Vec<f32>)>,
@@ -3137,9 +3130,9 @@ pub async fn assign_senses(
         };
         let mut centroids = Vec::new();
         for (index, usage) in inventory.usages.iter_mut().enumerate() {
-            usage
-                .anchors
-                .retain(|anchor| corpus.contains(&anchor.sentence));
+            usage.anchors.retain(|anchor| {
+                app.contains_key(&anchor.sentence) || restricted.contains_key(&anchor.sentence)
+            });
             match entry_centroid(store, language, &inventory.key, usage).await {
                 Ok(vector) => {
                     centroids.push((NonZeroU32::new(u32::try_from(index + 1)?).unwrap(), vector))
@@ -3175,8 +3168,8 @@ pub async fn assign_senses(
     let mut tagged = 0usize;
     // First classify all cached occurrences, then use their most frequent
     // sense for missing vectors; traversal order cannot affect fallback ids.
-    for info in app.values_mut().chain(restricted.values_mut()) {
-        let (text, index) = index_sentence(info, interners, language);
+    for (text, info) in app.iter_mut().chain(restricted.iter_mut()) {
+        let (_, index) = index_sentence(text, info, interners, language);
         let mut word_index = 0usize;
         for token in &mut info.sentence.tokens {
             let word_count = interners
@@ -3200,7 +3193,7 @@ pub async fn assign_senses(
                 continue;
             }
             let Some(vectors) =
-                token_embeddings::read_word_vectors(store, language, &text, &spans).await
+                token_embeddings::read_word_vectors(store, language, text, &spans).await
             else {
                 continue;
             };

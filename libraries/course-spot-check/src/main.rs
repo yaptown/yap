@@ -205,7 +205,7 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
                     let sentence_text = target_language_literals
                         .iter()
                         .flat_map(|literal| {
-                            vec![literal.word.text.clone(), literal.whitespace.clone()]
+                            vec![literal.word.text.clone(), literal.whitespace.to_string()]
                         })
                         .collect::<Vec<_>>()
                         .join("");
@@ -228,10 +228,10 @@ async fn analyze_course(course: Course) -> Result<CourseAnalysis> {
                                 parts,
                             } => parts
                                 .iter()
-                                .flat_map(|p| vec![p.word.text.clone(), p.whitespace.clone()])
+                                .flat_map(|p| vec![p.word.text.clone(), p.whitespace.to_string()])
                                 .collect::<Vec<_>>(),
                             language_utils::transcription_challenge::Part::Provided { part } => {
-                                vec![part.word.text.clone(), part.whitespace.clone()]
+                                vec![part.word.text.clone(), part.whitespace.to_string()]
                             }
                         })
                         .collect::<Vec<_>>()

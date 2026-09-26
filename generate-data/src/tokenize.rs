@@ -262,7 +262,7 @@ fn write_supertokens_txt(
                 text.push_str(&word.text);
                 if i + 1 < words.len() {
                     let ws = predict_whitespace(word, Some(&words[i + 1]), language);
-                    text.push_str(ws.to_str());
+                    text.push_str(ws.as_str());
                 }
             }
 

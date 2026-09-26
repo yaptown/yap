@@ -5,7 +5,6 @@
 use generate_data::nlp::convert_tokens_to_literals;
 use language_utils::{Atom, Language, Literal, literals_to_atoms};
 use omnigram::unigram::{Seq, UnigramModel, UnigramTrainer, UnigramTrainerConfig};
-use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -52,25 +51,11 @@ fn load_french_corpus() -> Vec<Vec<Atom<String>>> {
     corpus
 }
 
-#[derive(Debug, Deserialize)]
-struct TokenizedSentence {
-    sentence: String,
-    tokens: Vec<lexide::Token>,
-}
-
 fn load_french_corpus_from_tokenization_jsonl() -> Vec<Vec<Atom<String>>> {
     let path = "../out/fra/target_language_sentences_tokenization.jsonl";
-    let file = File::open(path).expect("Failed to open tokenization file");
-    let reader = BufReader::new(file);
-
-    let tokenizations = reader
-        .lines()
-        .map(|line| {
-            let line = line.unwrap();
-            let parsed: TokenizedSentence = serde_json::from_str(&line).unwrap();
-            (parsed.sentence, parsed.tokens)
-        })
-        .collect();
+    let tokenizations =
+        generate_data::nlp::load_canonicalized(std::path::Path::new(path), Language::French)
+            .unwrap();
 
     let literals = convert_tokens_to_literals(&tokenizations, Language::French);
     literals

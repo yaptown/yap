@@ -773,7 +773,7 @@ fn resolve_sentence(
     for (i, (word, slug, gloss)) in word_entries.iter().enumerate() {
         let next_word = word_entries.get(i + 1).map(|(w, _, _)| w);
         let whitespace = language_utils::predict_whitespace(word, next_word, language)
-            .to_str()
+            .as_str()
             .to_string();
 
         // Try to merge with previous segment if same slug (for multi-word grams)
