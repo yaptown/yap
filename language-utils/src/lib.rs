@@ -3238,13 +3238,31 @@ impl Language {
         })
     }
 
-    /// Deliberate scaffolding: dialects share a generate-data source tree until
-    /// their corpora diverge, at which point this function is deleted.
+    /// Permanent shared-source identity for ingestion and corpus-level caches.
+    /// Dialect siblings share raw sources; generate-data routes each cleaned
+    /// sentence to neutral (both) or one variety before building separate packs.
+    /// This is not the course/pack identity: use `code()` for those.
     pub fn corpus_code(&self) -> &'static str {
         match self {
             Language::SpanishPeninsular => "spa",
             Language::PortugueseEuropean => "por",
             other => other.code(),
+        }
+    }
+
+    /// All varieties sharing this corpus, including self, in stable language order.
+    /// Empty for languages without dialect siblings (including the separate
+    /// Simplified and Traditional Chinese corpora).
+    pub fn sibling_dialects(&self) -> Vec<Language> {
+        let siblings: Vec<_> = LANGUAGES
+            .iter()
+            .copied()
+            .filter(|language| language.corpus_code() == self.corpus_code())
+            .collect();
+        if siblings.len() > 1 {
+            siblings
+        } else {
+            Vec::new()
         }
     }
 
@@ -6036,6 +6054,30 @@ mod dialect_tests {
         assert_eq!(expected.len(), LANGUAGES.len());
         for (language, key) in expected {
             assert_eq!(language.prompt_name(), key);
+        }
+    }
+
+    #[test]
+    fn sibling_dialects_share_sources_not_course_identity() {
+        use Language::*;
+        for language in LANGUAGES {
+            let expected = match language {
+                SpanishLatinAmerican | SpanishPeninsular => {
+                    vec![SpanishLatinAmerican, SpanishPeninsular]
+                }
+                PortugueseBrazilian | PortugueseEuropean => {
+                    vec![PortugueseBrazilian, PortugueseEuropean]
+                }
+                _ => Vec::new(),
+            };
+            assert_eq!(language.sibling_dialects(), expected);
+            for sibling in expected {
+                assert_eq!(language.corpus_code(), sibling.corpus_code());
+                assert_eq!(language.sibling_dialects(), sibling.sibling_dialects());
+                if *language != sibling {
+                    assert_ne!(language.code(), sibling.code());
+                }
+            }
         }
     }
 

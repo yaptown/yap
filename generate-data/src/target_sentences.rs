@@ -58,7 +58,14 @@ pub fn contains_xprotect_tripwire(s: &str) -> bool {
         .any(|tripwire| lower.contains(tripwire))
 }
 
-pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSentences> {
+/// Cleaned, deduplicated inputs to dialect routing, including manual and books.
+/// Exposed separately for audits that must count requests without submitting them.
+pub struct RoutingCandidates {
+    pub sentences: Vec<(String, Option<String>, SentenceSource)>,
+    pub restricted_sentences: Vec<(String, Vec<PimsleurLesson>)>,
+}
+
+pub async fn load_routing_candidates(course: Course) -> anyhow::Result<RoutingCandidates> {
     let source_data_path = PathBuf::from(format!(
         "./generate-data/data/{}",
         course.target_language.corpus_code()
@@ -66,7 +73,7 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
 
     let banned_sentences = load_banned_sentences(&source_data_path, course.target_language)?;
 
-    // Load manual sentences (should NEVER be filtered)
+    // Manual sentences bypass quality filters, but not dialect routing.
     let manual_sentences = load_manual_sentences(&source_data_path)?;
 
     let all_cards = crate::read_anki::get_all_cards(&source_data_path);
@@ -140,6 +147,7 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
                 .into_iter()
                 .map(|(sentence, source)| (sentence, None, source)),
         )
+        .chain(manual_sentences_iter)
         .map(|(sentence, native, source)| {
             (
                 language_utils::text_cleanup::cleanup_sentence(sentence, course.target_language),
@@ -152,9 +160,7 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
             source.is_manual() || !banned_sentences.contains(&sentence.to_lowercase())
         })
         .filter(|(sentence, _, source)| source.is_manual() || !has_encoding_corruption(sentence))
-        .chain(manual_sentences_iter)
-        // Applied after the manual-sentence chain on purpose: unlike the
-        // quality filters above, this one must hold even for manual sentences.
+        // Unlike quality filters, this must hold even for manual sentences.
         .filter(|(sentence, native, _)| {
             !contains_xprotect_tripwire(sentence)
                 && !native.as_deref().is_some_and(contains_xprotect_tripwire)
@@ -179,29 +185,39 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
         }
     }
 
-    // Manual sentences also need cleanup (they weren't cleaned up earlier).
-    // Book-only sentences are split off so they stay out of the language packs
-    // (see the field docs on `TargetSentences`).
+    Ok(RoutingCandidates {
+        sentences: result,
+        restricted_sentences: load_pimsleur_sentences(&source_data_path, course)?,
+    })
+}
+
+pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSentences> {
+    let RoutingCandidates {
+        sentences: mut result,
+        mut restricted_sentences,
+    } = load_routing_candidates(course).await?;
+    if !course.target_language.sibling_dialects().is_empty() {
+        let labels = crate::dialect::judge(
+            course.target_language,
+            result
+                .iter()
+                .map(|(text, _, _)| text.as_str())
+                .chain(restricted_sentences.iter().map(|(text, _)| text.as_str())),
+            crate::dialect::Transport::Batch,
+        )
+        .await?;
+        retain_dialect(
+            course.target_language,
+            &labels,
+            &mut result,
+            &mut restricted_sentences,
+        );
+    }
+
+    // Route books too, before separating them from the app distribution.
     let (book_sentences, app_sentences): (Vec<_>, Vec<_>) = result
         .into_iter()
-        .map(|(sentence, native, source)| {
-            if source.is_manual() {
-                (
-                    language_utils::text_cleanup::cleanup_sentence(
-                        sentence,
-                        course.target_language,
-                    ),
-                    native,
-                    source,
-                )
-            } else {
-                // Already cleaned up
-                (sentence, native, source)
-            }
-        })
         .partition(|(_, _, source)| source.is_book_only());
-
-    let restricted_sentences = load_pimsleur_sentences(&source_data_path, course)?;
 
     println!(
         "  Loaded restricted sentences: Pimsleur: {}",
@@ -213,6 +229,45 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
         book_sentences,
         restricted_sentences,
     })
+}
+
+/// Retain whole records so translations, merged provenance and lesson IDs survive.
+fn retain_dialect(
+    language: Language,
+    labels: &HashMap<String, crate::dialect::Judgement>,
+    sentences: &mut Vec<(String, Option<String>, SentenceSource)>,
+    restricted: &mut Vec<(String, Vec<PimsleurLesson>)>,
+) {
+    // Counts overlap when one sentence has several sources.
+    let mut counts = std::collections::BTreeMap::<&str, [usize; 2]>::new();
+    sentences.retain(|(text, _, source)| {
+        let keep = labels[text].dialect.keeps(language);
+        for (name, present) in [
+            ("Anki", source.from_anki),
+            ("Tatoeba", source.from_tatoeba),
+            ("Manual", source.from_manual),
+            ("Song", source.from_song),
+            ("Movie", !source.movie_ids.is_empty()),
+            ("Book", !source.book_ids.is_empty()),
+            ("All unrestricted", true),
+        ] {
+            if present {
+                counts.entry(name).or_default()[usize::from(!keep)] += 1;
+            }
+        }
+        keep
+    });
+    restricted.retain(|(text, _)| {
+        let keep = labels[text].dialect.keeps(language);
+        counts.entry("Pimsleur").or_default()[usize::from(!keep)] += 1;
+        keep
+    });
+    for (source, [kept, dropped]) in counts {
+        println!(
+            "  Dialect {} {source}: kept {kept}, dropped {dropped}",
+            language.code()
+        );
+    }
 }
 
 /// Load banned sentences from both manual and AI-generated files.
@@ -263,7 +318,7 @@ fn load_banned_sentences(
 }
 
 /// Load manual sentences from the extra/manual.txt file
-/// These sentences should NEVER be filtered out
+/// These sentences bypass quality filters, but still follow dialect routing.
 fn load_manual_sentences(source_data_path: &std::path::Path) -> anyhow::Result<Vec<String>> {
     let mut manual_sentences = Vec::new();
 
@@ -646,6 +701,74 @@ pub fn should_include_pair(target_sentence: &str, native_sentence: &str, course:
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dialect_routing_preserves_records_and_filters_every_source() {
+        use crate::dialect::{Dialect, Judgement};
+        for (a, b) in [
+            (Language::SpanishLatinAmerican, Language::SpanishPeninsular),
+            (Language::PortugueseBrazilian, Language::PortugueseEuropean),
+        ] {
+            let labels = [
+                ("neutral", Dialect::Neutral),
+                ("a", Dialect::Only(a)),
+                ("b", Dialect::Only(b)),
+            ]
+            .into_iter()
+            .map(|(s, dialect)| {
+                (
+                    s.to_owned(),
+                    Judgement {
+                        dialect,
+                        reason: String::new(),
+                    },
+                )
+            })
+            .collect();
+            let mut manual = SentenceSource::none();
+            manual.from_manual = true;
+            manual.from_tatoeba = true;
+            manual.movie_ids.push("movie".into());
+            let mut book = SentenceSource::none();
+            book.book_ids.push("book".into());
+            let records = vec![
+                ("neutral".into(), Some("translation".into()), manual.clone()),
+                ("a".into(), None, manual),
+                ("b".into(), None, book),
+            ];
+            let lessons = vec![
+                PimsleurLesson {
+                    level: 1,
+                    lesson: 2,
+                },
+                PimsleurLesson {
+                    level: 3,
+                    lesson: 4,
+                },
+            ];
+            let restricted = ["neutral", "a", "b"]
+                .map(|s| (s.to_owned(), lessons.clone()))
+                .to_vec();
+            for (language, expected) in [(a, "a"), (b, "b")] {
+                let mut records = records.clone();
+                let mut restricted = restricted.clone();
+                retain_dialect(language, &labels, &mut records, &mut restricted);
+                assert_eq!(records.len(), 2);
+                assert_eq!(records[0].1.as_deref(), Some("translation"));
+                assert!(records[0].2.from_manual && records[0].2.from_tatoeba);
+                assert_eq!(records[0].2.movie_ids, ["movie"]);
+                assert_eq!(records[1].0, expected);
+                assert_eq!(records[1].2.is_book_only(), language == b);
+                assert_eq!(
+                    restricted,
+                    vec![
+                        ("neutral".into(), lessons.clone()),
+                        (expected.into(), lessons.clone())
+                    ]
+                );
+            }
+        }
+    }
 
     fn cue(sentence: &str, start_ms: u32, end_ms: u32) -> SubtitleLine {
         SubtitleLine {
