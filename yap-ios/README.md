@@ -152,7 +152,7 @@ and `add` (recommended cards),
 `cant-speak`, `undo`, `reveal`, `audio`, `grade` (Remembered, only after reveal
 when required), `grade-again` (Forgot), `sync`, `status`, and `signout`. Sentence commands are `type TEXT`,
 `type-reference` (the accepted answer), `submit`, `continue`, `tap-word INDEX`,
-`toggle-phrase INDEX`, `focus PART_INDEX`, `accent CHARACTER`,
+`toggle-phrase INDEX`, `focus PART_INDEX`,
 `toggle-word PART_INDEX WORD_INDEX` (mark Perfect), and `dismiss-keyboard`.
 Pronunciation accepts `audio` and `pron-grade`. Additional browsing commands:
 

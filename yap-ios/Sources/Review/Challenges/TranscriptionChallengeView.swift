@@ -47,10 +47,7 @@ struct TranscriptionChallengeView: View {
                         }
                     }
                 }.frame(maxWidth: .infinity).padding(.top, 4)
-                if editing {
-                    accentKeys
-                    ProperNounGroupsView(groups: view.proper_nouns)
-                }
+                if editing { ProperNounGroupsView(groups: view.proper_nouns) }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
                     reviewCount: screen.total_reviews,
                     maskedSentence: editing ? sentence.parts.map { part in
@@ -149,27 +146,6 @@ struct TranscriptionChallengeView: View {
             }.font(.subheadline)
         }
     }
-    /// Like the web's accented-character keyboard, but right under the
-    /// sentence so it stays above the system keyboard. Buttons never take
-    /// focus, so the blank being typed in stays active.
-    @ViewBuilder private var accentKeys: some View {
-        let characters = get_language_metadata(language: screen.target_language).accented_characters
-        if !characters.isEmpty {
-            SentenceFlow(spacing: 6, alignment: .center) {
-                ForEach(characters, id: \.self) { character in
-                    Button { insertAccent(character) } label: {
-                        Text(character).frame(minWidth: 34, minHeight: 34).insetSurface(cornerRadius: 8)
-                    }.buttonStyle(.plain).disabled(focused == nil)
-                }
-            }.frame(maxWidth: .infinity)
-        }
-    }
-    private func insertAccent(_ character: String) {
-        // UIKit inserts at the current selection, including replacing selected
-        // text, while the SwiftUI binding continues to own the field contents.
-        guard focused != nil else { return }
-        UIApplication.shared.sendAction(#selector(UIResponder.insertReviewAccent(_:)), to: nil, from: character, for: nil)
-    }
     private func advance(_ index: Int) {
         if let position = blanks.firstIndex(of: index), position + 1 < blanks.count { focused = blanks[position + 1] }
         else { submit() }
@@ -223,7 +199,6 @@ struct TranscriptionChallengeView: View {
         if command == "submit" { submit() }
         if command == "continue" { complete() }
         if command.hasPrefix("focus "), let index = Int(command.dropFirst(6)), blanks.contains(index) { focused = index }
-        if command.hasPrefix("accent ") { insertAccent(String(command.dropFirst(7))) }
         if command.hasPrefix("toggle-word ") {
             let indices = command.dropFirst(12).split(separator: " ").compactMap { Int($0) }
             if indices.count == 2, indices.allSatisfy({ $0 >= 0 }) { send(.WordGradeChanged(part_index: UInt64(indices[0]), word_index: UInt64(indices[1]), grade: .Perfect(wrote: nil))) }
@@ -235,12 +210,5 @@ struct TranscriptionChallengeView: View {
 private struct DottedUnderline: Shape {
     func path(in rect: CGRect) -> Path {
         Path { $0.move(to: CGPoint(x: rect.minX, y: rect.midY)); $0.addLine(to: CGPoint(x: rect.maxX, y: rect.midY)) }
-    }
-}
-
-extension UIResponder {
-    @objc func insertReviewAccent(_ sender: Any?) {
-        guard let input = self as? UIKeyInput, let text = sender as? String else { return }
-        input.insertText(text)
     }
 }
