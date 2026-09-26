@@ -179,7 +179,7 @@ async fn run_inner(out: &Path, languages: &BTreeSet<String>) -> Result<()> {
         let clips = crate::pronunciation_audio::generate_pronunciation_audio(
             &mut data,
             &pronunciations,
-            course.target_language,
+            *course,
             &http,
             &out.join(course.target_language.code())
                 .join("pronunciation_audio_verification.jsonl"),

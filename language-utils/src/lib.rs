@@ -3652,6 +3652,15 @@ impl Language {
                 'ฝ' => "ฝอ ฝา",
                 'ฬ' => "ลอ จุฬา",
                 'ฮ' => "ฮอ นกฮูก",
+                'ะ' => "สะระอะ",
+                'า' => "สะระอา",
+                'ำ' => "สะระอำ",
+                'เ' => "สะระเอ",
+                'แ' => "สะระแอ",
+                'โ' => "สะระโอ",
+                'ใ' => "สะระใอ",
+                'ไ' => "สะระไอ",
+                'ๅ' => "ลากข้างยาว",
                 'ั' => "ไม้หันอากาศ",
                 // Spell out /sa ra/: สระ is otherwise read as "pool" /sa/.
                 'ิ' => "สะระอิ",
@@ -5791,6 +5800,29 @@ mod pronunciation_challenge_audio_tests {
             );
         }
         assert_eq!(Language::Thai.letter_name('ก'), None);
+    }
+
+    #[test]
+    fn thai_split_vowel_patterns_keep_every_letter_in_the_cue() {
+        let segments = pronunciation_challenge_segments(Language::Thai, "เกา", "เกาหลี");
+        let pattern: Vec<_> = segments
+            .iter()
+            .filter(|s| s.role == CueSegmentRole::Pattern)
+            .collect();
+        assert_eq!(
+            pattern
+                .iter()
+                .map(|s| s.display.as_str())
+                .collect::<String>(),
+            "เกา"
+        );
+        assert_eq!(
+            pattern
+                .iter()
+                .map(|s| s.spoken.as_str())
+                .collect::<Vec<_>>(),
+            ["สะระเอ", "ก", "สะระอา"]
+        );
     }
 
     #[test]

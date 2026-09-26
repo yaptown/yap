@@ -79,17 +79,6 @@ fn parse_sound(sound: &str) -> (String, PatternPosition) {
     (pattern, position)
 }
 
-/// What generating one sound's guide produced.
-struct GuideOutcome {
-    guide: Option<(String, PronunciationGuideThoughts)>,
-    /// Examples thrown out for being romanized or not containing the pattern.
-    dropped: usize,
-    /// Whether a retry is what salvaged this guide.
-    rescued: bool,
-    /// Set when the API never answered, as opposed to answering unusably.
-    api_failed: bool,
-}
-
 /// Generate pronunciation guides for each sound in a course
 pub async fn generate_pronunciation_guides(
     course: Course,
@@ -175,71 +164,30 @@ Good examples for Hindi "ज" and English speakers — `target` is Devanagari, w
                         clean_pattern = clean_pattern,
                         position_note = position_note
                     );
-                const ATTEMPTS: usize = 3;
-                let writing_system = course.target_language.writing_system();
-                let mut user_prompt = format!("Analyze sound: {clean_pattern}");
-                let mut dropped = 0;
-                for attempt in 1..=ATTEMPTS {
-                    let response: Result<PronunciationGuideThoughts, _> = chat_client
-                        .chat_with_system_prompt(system_prompt.clone(), user_prompt.clone())
-                        .await;
-                    let mut guide = match response {
-                        Ok(guide) => guide,
-                        Err(e) => {
-                            eprintln!("ERROR: generating guide for '{clean_pattern}' failed on attempt {attempt}: {e:?}");
-                            return GuideOutcome { guide: None, dropped, rescued: false, api_failed: true };
-                        }
-                    };
-                    let rejected = reject_invalid_examples(
-                        &mut guide.example_words,
-                        &clean_pattern,
-                        position,
-                        course.target_language,
-                    );
-                    dropped += rejected.len();
-                    for complaint in &rejected {
-                        eprintln!("WARNING: Pattern '{clean_pattern}': dropped {complaint}");
-                    }
-                    if !guide.example_words.is_empty() {
-                        // Use the requested pattern and position, not the model's echo.
+                // The audio stage is the single owner of eligibility, rejected
+                // reasons and bounded replacements. Keep the initial candidate
+                // count intact rather than unioning retries into this guide.
+                let response: Result<PronunciationGuideThoughts, _> = chat_client
+                    .chat_with_system_prompt(system_prompt, format!("Analyze sound: {clean_pattern}"))
+                    .await;
+                match response {
+                    Ok(mut guide) => {
                         guide.pattern = clean_pattern.clone();
                         guide.position = position;
-                        return GuideOutcome {
-                            guide: Some((clean_pattern, guide)),
-                            dropped,
-                            rescued: attempt > 1,
-                            api_failed: false,
-                        };
+                        Some((clean_pattern, guide))
                     }
-                    // Include the attempt as well as feedback: even identical bad replies
-                    // must produce distinct prompts rather than replaying the cache.
-                    let complaints = if rejected.is_empty() {
-                        "No example words were supplied.".to_owned()
-                    } else {
-                        rejected.join("\n")
-                    };
-                    user_prompt.push_str(&format!(
-                        "\nAttempt {attempt} had no usable examples:\n{complaints}\nCorrect the examples: every `target` must be written in {writing_system:?} and must literally contain \"{clean_pattern}\". {position_note} `native` must be the learner's-language translation or gloss.",
-                    ));
+                    Err(error) => {
+                        eprintln!("ERROR: generating guide for '{clean_pattern}' failed: {error:?}");
+                        None
+                    }
                 }
-                eprintln!("WARNING: Pattern '{clean_pattern}' lost every example after {ATTEMPTS} attempts and is missing from the pack");
-                GuideOutcome { guide: None, dropped, rescued: false, api_failed: false }
             }
         })
         .buffered(10)
         .collect::<Vec<_>>()
         .await;
 
-    let dropped: usize = results.iter().map(|outcome| outcome.dropped).sum();
-    let rescued = results.iter().filter(|outcome| outcome.rescued).count();
-    let lost = results
-        .iter()
-        .filter(|outcome| outcome.guide.is_none() && !outcome.api_failed)
-        .count();
-    let api_failed = results.iter().filter(|outcome| outcome.api_failed).count();
-    eprintln!(
-        "Pronunciation guide validation: {dropped} examples dropped, {rescued} guides rescued by retry, {lost} guides lost to unusable examples"
-    );
+    let api_failed = results.iter().filter(|guide| guide.is_none()).count();
 
     // A guide the API never answered for is an outage, not a verdict on the
     // language. Shipping the pack anyway silently drops real sounds from the
@@ -255,15 +203,34 @@ Good examples for Hindi "ज" and English speakers — `target` is Devanagari, w
         results.len(),
     );
 
-    Ok(results
-        .into_iter()
-        .filter_map(|outcome| outcome.guide)
-        .collect())
+    Ok(results.into_iter().flatten().collect())
+}
+
+#[derive(Serialize, Deserialize, schemars::JsonSchema)]
+struct ReplacementExamples {
+    example_words: Vec<WordPair>,
+}
+
+/// Replace examples rejected by actual synthesized-audio verification. The
+/// caller owns the bound and carries every rejected word/reason across rounds.
+pub async fn replacement_examples(
+    course: Course,
+    guide: &language_utils::PronunciationGuide,
+    rejected: &[String],
+    tried: &std::collections::BTreeSet<String>,
+    count: usize,
+    round: usize,
+) -> anyhow::Result<Vec<WordPair>> {
+    let response: ReplacementExamples = CHAT_CLIENT.chat_with_system_prompt(
+        format!("Choose {count} complete, pronounceable {} words teaching pattern {:?} at position {:?}. They must use {:?} writing and actually contain the pattern at that position. Preserve accents and conjuncts. Return a JSON object with example_words: an array of objects with target, native ({} translation), position (Beginning, Middle, End, Multiple), and cultural_context (brief {} explanation). Prefer familiar words with an unambiguous natural reading. Do not reuse rejected examples.", course.target_language, guide.pattern, guide.position, course.target_language.writing_system(), course.native_language, course.native_language),
+        format!("Audio replacement round {round}. Guide: {}\nThe following examples or targets failed verification:\n{}\nAlready tried (including successes): {}. Choose different words; successful examples are retained.", guide.description, rejected.join("\n"), tried.iter().cloned().collect::<Vec<_>>().join(", ")),
+    ).await?;
+    Ok(response.example_words)
 }
 
 /// Filter before guides leave generation, so invalid text never reaches TTS.
 /// The same complaints are logged and sent back to the model on a retry.
-fn reject_invalid_examples(
+pub(crate) fn reject_invalid_examples(
     examples: &mut Vec<WordPair>,
     pattern: &str,
     position: PatternPosition,

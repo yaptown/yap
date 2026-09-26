@@ -62,6 +62,43 @@ pub fn model_target(text: &str, language: Language) -> Option<Result<g2p::Phonem
     Some(g2p::phonemize_lang(lang, text))
 }
 
+/// A nonempty, fully typed target, or the actual engine/construction error.
+/// Validate each written word as well as the complete utterance, preserving
+/// the exact input and underlying G2P error for rejection diagnostics.
+pub fn complete_target(text: &str, language: Language) -> Result<g2p::Phonemized> {
+    for word in text.split_whitespace() {
+        let word_target = model_target(word, language)
+            .ok_or_else(|| anyhow::anyhow!("no G2P for {language:?}"))?
+            .with_context(|| format!("G2P for word {word:?} in {text:?}"))?;
+        anyhow::ensure!(
+            !word_target.phonemes.is_empty(),
+            "G2P for word {word:?} in {text:?} produced no phonemes"
+        );
+    }
+    let target = model_target(text, language)
+        .ok_or_else(|| anyhow::anyhow!("no G2P for {language:?}"))?
+        .with_context(|| format!("G2P for {text:?}"))?;
+    anyhow::ensure!(
+        !target.phonemes.is_empty(),
+        "G2P for {text:?} produced no phonemes"
+    );
+    Ok(target)
+}
+
+/// An engine outage is not evidence that a particular guide is unvoicable.
+pub fn target_infrastructure_error(error: &anyhow::Error) -> bool {
+    matches!(
+        error.downcast_ref::<g2p::Error>(),
+        Some(
+            g2p::Error::Init(_)
+                | g2p::Error::Data(_)
+                | g2p::Error::UnknownVoice(_)
+                | g2p::Error::Synth(_)
+                | g2p::Error::Backend(_)
+        )
+    )
+}
+
 /// One lossless per-clip artifact: untouched selected item and every raw batch
 /// envelope value, never sibling matrices. Typed views are derived on read.
 pub use lexide::pronunciation::RawPrediction;
@@ -741,7 +778,8 @@ fn ground_truth_phoneme_variants(
         c.is_alphabetic()
             || matches!(c, '\u{0300}'..='\u{036f}' | '\u{0900}'..='\u{0903}'
                 | '\u{093a}'..='\u{094f}' | '\u{0951}'..='\u{0957}'
-                | '\u{0962}'..='\u{0963}' | '\u{200c}' | '\u{200d}')
+                | '\u{0962}'..='\u{0963}' | '\u{0e31}' | '\u{0e34}'..='\u{0e3a}'
+                | '\u{0e47}'..='\u{0e4e}' | '\u{200c}' | '\u{200d}')
     };
     for word in text.split(|c: char| !is_word_char(c) && !matches!(c, '\'' | '-' | 'ʼ')) {
         let cleaned = word.trim_matches(|c: char| !is_word_char(c)).to_lowercase();
@@ -1252,6 +1290,27 @@ fn raw_prediction(response: ModalResponse) -> RawPrediction {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn ground_truth_preserves_thai_combining_signs() {
+        let dictionary = HashMap::from([("เกือ".into(), ap("x", &[])), ("กี่".into(), ap("y", &[]))]);
+        let readings = ground_truth_phoneme_variants("เกือ กี่", &dictionary, Language::Thai).unwrap();
+        // Both complete dictionary keys must survive whole-cue tokenization;
+        // the phrase-level G2P candidate remains an additional alternative.
+        assert!(readings.iter().any(|r| r.phonemes == word(&["x", "y"])));
+    }
+
+    #[test]
+    fn backend_outages_are_not_unlabelable_examples() {
+        let backend =
+            anyhow::Error::new(g2p::Error::Backend("missing uv".into())).context("cue target");
+        assert!(target_infrastructure_error(&backend));
+        let text = anyhow::Error::new(g2p::Error::Unlabelable("korean_jamo:ㅋ".into()))
+            .context("example target");
+        assert!(!target_infrastructure_error(&text));
+        assert!(!target_infrastructure_error(&anyhow::anyhow!(
+            "empty target"
+        )));
+    }
 
     #[tokio::test]
     async fn german_normalization_and_provenance_cover_every_verification_path() {

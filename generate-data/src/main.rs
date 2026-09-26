@@ -1781,7 +1781,7 @@ async fn main() -> anyhow::Result<()> {
         let pronunciation_audio = generate_data::pronunciation_audio::generate_pronunciation_audio(
             &mut pronunciation_data,
             &word_to_pronunciation,
-            course.target_language,
+            *course,
             &http_client,
             &pronunciation_audio_log,
         )
