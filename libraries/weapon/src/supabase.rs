@@ -168,7 +168,7 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
         #[allow(clippy::type_complexity)]
         let sync_response: HashMap<
             String,
-            HashMap<String, Vec<SyncEventResponse<Timestamped<serde_json::Value>>>>,
+            HashMap<String, Vec<SyncEventResponse<Timestamped<crate::data_model::RawJson>>>>,
         > = serde_json::from_str(&body).map_err(|e| {
             SyncError::new(format!(
                 "Failed to parse sync response: {e}\nResponse body: {body}"
@@ -221,7 +221,8 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
                                     device_id: local_device_id.to_string(),
                                     created_at: event.timestamp.to_string(),
                                     within_device_events_index: event.within_device_events_index,
-                                    event: serde_json::to_value(&event).unwrap(),
+                                    event: crate::data_model::RawJson::from_serializable(&event)
+                                        .unwrap(),
                                     stream_id: stream_id.clone(),
                                 })
                                 .collect::<Vec<_>>()
@@ -297,23 +298,13 @@ where
     use serde::Deserialize;
     use serde::de::Error;
 
-    // First try to deserialize directly
-    let value = serde_json::Value::deserialize(deserializer)?;
-
-    // If it's already an object, try to deserialize it directly
-    if value.is_object() {
-        return serde_json::from_value(value).map_err(D::Error::custom);
+    let raw = crate::data_model::RawJson::deserialize(deserializer)?;
+    if raw.get().starts_with('"') {
+        let text: String = serde_json::from_str(raw.get()).map_err(D::Error::custom)?;
+        serde_json::from_str(&text).map_err(D::Error::custom)
+    } else {
+        serde_json::from_str(raw.get()).map_err(D::Error::custom)
     }
-
-    // If it's a string, parse it as JSON
-    if let Some(s) = value.as_str() {
-        return serde_json::from_str(s).map_err(D::Error::custom);
-    }
-
-    // Otherwise, fail with an appropriate error
-    Err(D::Error::custom(
-        "Expected either a JSON object or a JSON string",
-    ))
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -332,7 +323,7 @@ struct SyncEventResponse<Event> {
 pub struct SyncableEvent {
     pub user_id: String,
     pub device_id: String,
-    pub event: serde_json::Value,
+    pub event: crate::data_model::RawJson,
     pub created_at: String,
     pub within_device_events_index: usize,
     pub stream_id: String,
@@ -390,4 +381,30 @@ async fn get_clock(
 pub struct SupabaseSyncResult {
     pub uploaded_to_supabase: usize,
     pub downloaded_from_supabase: usize,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data_model::{EventType, RawJson};
+
+    #[test]
+    fn object_and_legacy_string_events_preserve_unknown_json() {
+        let event = r#"{ "User": {"version":"V99", "number":1e2, "text":"a"} }"#;
+        let timestamped = format!(
+            r#"{{"timestamp":"2026-09-25T00:00:00Z","within_device_events_index":0,"event":{event}}}"#
+        );
+        for value in [
+            timestamped.clone(),
+            serde_json::to_string(&timestamped).unwrap(),
+        ] {
+            let row = format!(r#"{{"id":1,"within_device_events_index":0,"event":{value}}}"#);
+            let decoded: SyncEventResponse<Timestamped<RawJson>> =
+                serde_json::from_str(&row).unwrap();
+            assert_eq!(decoded.event.event.get(), event);
+            let old: EventType<u32> = serde_json::from_str(decoded.event.event.get()).unwrap();
+            assert!(matches!(old, EventType::Unrecognized(_)));
+            assert_eq!(serde_json::to_string(&old).unwrap(), event);
+        }
+    }
 }

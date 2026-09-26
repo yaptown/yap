@@ -26,21 +26,7 @@ use xxhash_rust::xxh3::xxh3_64;
 
 use crate::{Deck, clips, get_language_metadata, human_audio, utils};
 
-#[bridgerton::bridge(transparent)]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum AnkiCardTypes {
-    Reading,
-    Listening,
-    Both,
-}
-
-#[bridgerton::bridge(transparent)]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct AnkiDeckOptions {
-    pub card_types: AnkiCardTypes,
-    /// Introduce each new word on a card of its own before its sentence.
-    pub word_cards: bool,
-}
+pub use crate::deck_event::{AnkiCardTypes, AnkiDeckOptions};
 
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -53,6 +39,12 @@ pub struct MintedAnkiDeck {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AnkiDeckPlan {
     pub language: Language,
+    pub native_language: Language,
+    pub options: AnkiDeckOptions,
+    /// All new meanings taught by sentences or word notes, not just standalone word notes.
+    pub taught_words: Vec<TaggedGram<language_utils::Gram<String>>>,
+    /// Sentence text is the stable sentence identifier used by the learning event log.
+    pub sentences: Vec<String>,
     /// `{target}-{native}` language codes, e.g. `fra-eng`; names the note
     /// types, tags, and the package file.
     pub course_code: String,
@@ -546,6 +538,24 @@ impl Deck {
     ) -> Result<AnkiDeckPlanner, Error> {
         AnkiDeckPlanner::new(self, options, DECK_SIZE, token, timestamp_ms)
     }
+
+    /// Call only after the host has delivered the finished package.
+    pub fn anki_deck_exported(
+        &self,
+        plan: AnkiDeckPlan,
+        deck_id: String,
+    ) -> crate::deck_event::DeckEvent {
+        crate::deck_event::DeckEvent::Language(crate::deck_event::LanguageEvent {
+            target_language: plan.language,
+            native_language: plan.native_language,
+            content: crate::deck_event::LanguageEventContent::AnkiDeckExported {
+                deck_id,
+                options: plan.options,
+                taught_words: plan.taught_words,
+                sentences: plan.sentences,
+            },
+        })
+    }
 }
 
 #[cfg(test)]
@@ -1026,8 +1036,29 @@ impl PlannerState {
         let (before, after) = (everyday(&FxHashSet::default()), everyday(&self.taught));
         let finish_message =
             finish_message(before, after, &get_language_metadata(language).common_name);
+        let taught_words = self
+            .taught
+            .iter()
+            .map(|gram| TaggedGram {
+                gram: pack
+                    .gram_rodeo
+                    .resolve(&gram.gram)
+                    .resolve(&pack.string_rodeo),
+                sense: gram.sense,
+            })
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
         Ok(AnkiDeckPlan {
             language,
+            native_language: course.native_language,
+            options: self.options.clone(),
+            taught_words,
+            sentences: self
+                .used_sentences
+                .iter()
+                .map(|s| pack.string_rodeo.resolve(s).to_owned())
+                .collect(),
             course_code: course_code(course),
             deck_name: if course.native_language == Language::English {
                 format!("Yap • {language}")
@@ -1441,6 +1472,40 @@ mod tests {
                 1_700_000_000_000.0,
             )
             .unwrap();
+        assert!(
+            !plan.taught_words.is_empty(),
+            "sentences still teach words without word notes"
+        );
+        let sentences: BTreeSet<_> = plan
+            .notes
+            .iter()
+            .filter_map(|note| match note {
+                AnkiNote::Sentence { sentence, .. } => Some(sentence.clone()),
+                AnkiNote::Word { .. } => None,
+            })
+            .collect();
+        assert_eq!(
+            plan.sentences.iter().cloned().collect::<BTreeSet<_>>(),
+            sentences
+        );
+        let exported =
+            deck.anki_deck_exported(plan.clone(), "70270b11-a563-4f91-baa5-f2f5cc28c331".into());
+        let before: crate::DeckState = deck.clone().into();
+        let after = Deck::process_event(
+            before.clone(),
+            &deck.context,
+            &weapon::data_model::Timestamped {
+                event: exported,
+                timestamp: chrono::DateTime::from_timestamp(1_700_000_000, 0).unwrap(),
+                timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+                within_device_events_index: 0,
+            },
+        );
+        assert_eq!(
+            format!("{before:?}"),
+            format!("{after:?}"),
+            "export must not change any learning state"
+        );
         assert!(plan.stats.sentence_count > 0);
         assert_eq!(plan.stats.word_count, 0);
         assert!(

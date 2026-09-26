@@ -47,3 +47,36 @@ impl From<current::DeckEvent> for VersionedDeckEvent {
         VersionedDeckEvent::V4(event)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use weapon::data_model::EventType;
+
+    #[test]
+    fn exported_deck_roundtrips_and_future_content_is_preserved() {
+        let json = r#"{"version":"V4","type":"Language","target_language":"French","native_language":"English","content":{"type":"AnkiDeckExported","deck_id":"70270b11-a563-4f91-baa5-f2f5cc28c331","options":{"card_types":"Both","word_cards":false},"taught_words":[{"gram":[],"sense":1}],"sentences":["Bonjour."]}}"#;
+        let event: VersionedDeckEvent = serde_json::from_str(json).unwrap();
+        assert_eq!(
+            serde_json::from_str::<VersionedDeckEvent>(&serde_json::to_string(&event).unwrap())
+                .unwrap(),
+            event
+        );
+        assert!(matches!(
+            &event,
+            VersionedDeckEvent::V4(DeckEvent::Language(LanguageEvent {
+                content: LanguageEventContent::AnkiDeckExported { .. },
+                ..
+            }))
+        ));
+        for future in [
+            json.replace("AnkiDeckExported", "FutureLanguageEvent"),
+            json.replace("V4", "V5"),
+        ] {
+            let wrapped = format!(r#"{{"User":{future}}}"#);
+            let old: EventType<VersionedDeckEvent> = serde_json::from_str(&wrapped).unwrap();
+            assert!(matches!(old, EventType::Unrecognized(_)));
+            assert_eq!(serde_json::to_string(&old).unwrap(), wrapped);
+        }
+    }
+}

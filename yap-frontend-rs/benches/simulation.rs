@@ -27,7 +27,7 @@ fn load_deck_from_test_data() -> Deck {
     .expect("Failed to read reviews events blob");
     let review_records = parse_event_log_records(&reviews_blob);
 
-    let mut reviews_by_device: BTreeMap<String, Vec<Timestamped<serde_json::Value>>> =
+    let mut reviews_by_device: BTreeMap<String, Vec<Timestamped<weapon::data_model::RawJson>>> =
         BTreeMap::new();
     for record in &review_records {
         reviews_by_device

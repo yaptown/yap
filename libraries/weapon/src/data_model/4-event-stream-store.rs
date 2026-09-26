@@ -300,7 +300,14 @@ where
                     state = A::process_event(state, context, &timestamped);
                 }
             }
-            _ => unimplemented!(), // todo: remove?
+            Timestamped {
+                event: EventType::Unrecognized(_),
+                ..
+            } => {}
+            Timestamped {
+                event: EventType::Meta(event),
+                ..
+            } => match *event {},
         }
     }
 
@@ -379,6 +386,52 @@ mod tests {
             event: EventType::User(Number(value)),
         }
     }
+    #[test]
+    fn unknown_event_keeps_indices_and_is_skipped_by_full_and_cached_folds() {
+        use crate::data_model::{RawJson, StreamStore};
+        let unknown = r#"{ "User" : {"Future": [1e2, "a"]} }"#;
+        let raw_event = |index, json: &str| Timestamped {
+            event: serde_json::from_str::<RawJson>(json).unwrap(),
+            timestamp: chrono::DateTime::from_timestamp(10 + index as i64, 0).unwrap(),
+            timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+            within_device_events_index: index,
+        };
+        let mut stream = EventStreamStore::<&str, Timestamped<EventType<Number>>>::default();
+        let batch = vec![
+            raw_event(0, r#"{"User":1}"#),
+            raw_event(1, unknown),
+            raw_event(2, r#"{"User":2}"#),
+        ];
+        let valid = stream.valid_to_add_event_jsons(&"a", batch).unwrap();
+        assert_eq!(stream.add_device_event_jsons("a", valid).unwrap(), 3);
+        let context = Context {
+            conversions: Cell::new(0),
+            multiplier: 1,
+        };
+        let mut cache = FoldCache::<State>::default();
+        assert_eq!(
+            stream.state_cached(&mut cache, Vec::new, &context),
+            State(vec![1, 0, 2, 0, -1])
+        );
+        let valid = stream
+            .valid_to_add_event_jsons(&"a", vec![raw_event(3, r#"{"User":3}"#)])
+            .unwrap();
+        assert_eq!(stream.add_device_event_jsons("a", valid).unwrap(), 1);
+        assert_eq!(
+            stream.state_cached(&mut cache, Vec::new, &context),
+            State(vec![1, 0, 2, 0, 3, 0, -1])
+        );
+        assert_eq!(
+            stream.state::<Number, State>(vec![], &context),
+            State(vec![1, 0, 2, 0, 3, 0, -1])
+        );
+        assert_eq!(stream.jsons(&"a", 1)[0].event.get(), unknown);
+        let serialized = serde_json::to_string(&stream).unwrap();
+        let restored: EventStreamStore<String, Timestamped<EventType<Number>>> =
+            serde_json::from_str(&serialized).unwrap();
+        assert_eq!(restored.jsons(&"a".to_owned(), 1)[0].event.get(), unknown);
+    }
+
     #[test]
     fn incremental_fold_matches_full_for_append_skip_older_equal_and_replacement() {
         let context = Context {

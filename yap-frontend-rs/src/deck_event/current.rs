@@ -9,6 +9,23 @@ use language_utils::{Gram, Language, Literal, PatternPosition, SpurGram, TaggedG
 use lasso::Spur;
 use serde::{Deserialize, Serialize};
 
+// Frozen serialized event format: keep existing option names and meanings compatible.
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum AnkiCardTypes {
+    Reading,
+    Listening,
+    Both,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct AnkiDeckOptions {
+    pub card_types: AnkiCardTypes,
+    /// Introduce each new word on a card of its own before its sentence.
+    pub word_cards: bool,
+}
+
 #[bridgerton::bridge(transparent)]
 #[derive(
     Copy,
@@ -216,6 +233,17 @@ pub enum SentenceListSelection {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Ord, PartialOrd)]
 #[serde(tag = "type")]
 pub enum LanguageEventContent {
+    /// Record only; exporting does not add cards or count as learning activity.
+    AnkiDeckExported {
+        /// UUID of the minted `anki_decks` row (not Anki's numeric deck id).
+        deck_id: String,
+        options: AnkiDeckOptions,
+        /// New meanings taught, including sentence prerequisites without standalone word notes.
+        taught_words: Vec<TaggedGram<Gram<String>>>,
+        /// Exact sentence text, as in sentence review events.
+        sentences: Vec<String>,
+    },
+
     CompletePlacementTest {
         results: PlacementTest,
     },

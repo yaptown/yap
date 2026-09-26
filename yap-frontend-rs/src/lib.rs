@@ -657,7 +657,7 @@ impl Weapon {
         // JSON to the store and let the stream's own event type decode it — exactly what the
         // sync download path does. Typing the payload here would silently assume one stream's
         // schema for every stream.
-        let event: Timestamped<serde_json::Value> = serde_json::from_str(&event)?;
+        let event: Timestamped<weapon::data_model::RawJson> = serde_json::from_str(&event)?;
         self.store
             .borrow_mut()
             .add_device_events_jsons(stream_id, device_id, vec![event], None);
@@ -1338,6 +1338,10 @@ impl weapon::AppState for Deck {
             content: event,
         }) = event;
 
+        if matches!(event, LanguageEventContent::AnkiDeckExported { .. }) {
+            return deck;
+        }
+
         if deck.stats.start_time.is_none() {
             deck.stats.start_time = Some(*timestamp);
         }
@@ -1407,6 +1411,7 @@ impl weapon::AppState for Deck {
         }
 
         match event {
+            LanguageEventContent::AnkiDeckExported { .. } => {}
             LanguageEventContent::CompletePlacementTest { results } => {
                 deck.placement_test_results = Some(results.clone());
             }
@@ -6273,17 +6278,21 @@ mod tests {
 
         let payload = r#"{"event":{"User":{"version":"V2","SetHeardAbout":{"heard_about":"Other"}}},"timezone":7200,"timestamp":"2026-09-14T08:43:50.188Z","within_device_events_index":0}"#;
 
-        // The old typed decode does not fit this stream's schema.
-        assert!(
-            serde_json::from_str::<Timestamped<EventType<VersionedDeckEvent>>>(payload).is_err()
-        );
+        // A decode against the wrong stream schema preserves an opaque event.
+        assert!(matches!(
+            serde_json::from_str::<Timestamped<EventType<VersionedDeckEvent>>>(payload)
+                .unwrap()
+                .event,
+            EventType::Unrecognized(_)
+        ));
 
         let mut store: EventStore<String, String> = EventStore::default();
         store.get_or_insert_default::<EventType<DeckSelectionEvent>>(
             "deck_selection".to_string(),
             None,
         );
-        let event: Timestamped<serde_json::Value> = serde_json::from_str(payload).unwrap();
+        let event: Timestamped<weapon::data_model::RawJson> =
+            serde_json::from_str(payload).unwrap();
         let added = store.add_device_events_jsons(
             "deck_selection".to_string(),
             "other-device".to_string(),
@@ -6326,7 +6335,7 @@ mod tests {
             "Expected review events in test data"
         );
 
-        let mut reviews_by_device: BTreeMap<String, Vec<Timestamped<serde_json::Value>>> =
+        let mut reviews_by_device: BTreeMap<String, Vec<Timestamped<weapon::data_model::RawJson>>> =
             BTreeMap::new();
         for record in &review_records {
             reviews_by_device
@@ -6350,8 +6359,10 @@ mod tests {
         .expect("Failed to read deck_selection events blob");
         let deck_selection_records = parse_event_log_records(&deck_selection_blob);
 
-        let mut selections_by_device: BTreeMap<String, Vec<Timestamped<serde_json::Value>>> =
-            BTreeMap::new();
+        let mut selections_by_device: BTreeMap<
+            String,
+            Vec<Timestamped<weapon::data_model::RawJson>>,
+        > = BTreeMap::new();
         for record in &deck_selection_records {
             selections_by_device
                 .entry(record.device_id.clone())
@@ -6464,7 +6475,7 @@ mod tests {
             "test-data/.weapon/user-events/user__aa6b6044-10d0-444b-8518-3696a15d2392/stream__reviews/events.blob",
         ).expect("Failed to read reviews events blob");
         let review_records = parse_event_log_records(&reviews_blob);
-        let mut reviews_by_device: BTreeMap<String, Vec<Timestamped<serde_json::Value>>> =
+        let mut reviews_by_device: BTreeMap<String, Vec<Timestamped<weapon::data_model::RawJson>>> =
             BTreeMap::new();
         for record in &review_records {
             reviews_by_device
@@ -6608,8 +6619,10 @@ mod tests {
         use std::collections::BTreeMap;
         use weapon::data_model::{EventType, LocalEventStore as EventStore, Timestamped};
 
-        let mut grouped: BTreeMap<String, BTreeMap<String, Vec<Timestamped<serde_json::Value>>>> =
-            BTreeMap::new();
+        let mut grouped: BTreeMap<
+            String,
+            BTreeMap<String, Vec<Timestamped<weapon::data_model::RawJson>>>,
+        > = BTreeMap::new();
         for row in &all_events {
             let stream_id = row["stream_id"].as_str().unwrap_or("reviews").to_string();
             let device_id = row["device_id"].as_str().unwrap_or("unknown").to_string();
@@ -6617,7 +6630,7 @@ mod tests {
                 serde_json::Value::String(s) => serde_json::from_str(s).unwrap(),
                 v => v.clone(),
             };
-            let timestamped: Timestamped<serde_json::Value> =
+            let timestamped: Timestamped<weapon::data_model::RawJson> =
                 serde_json::from_value(event_value).unwrap();
             grouped
                 .entry(stream_id)
@@ -7130,8 +7143,10 @@ mod tests {
         use weapon::data_model::{EventType, LocalEventStore as EventStore, Timestamped};
 
         // Group raw rows by (stream, device), like inspect_user_deck.
-        let mut grouped: BTreeMap<String, BTreeMap<String, Vec<Timestamped<serde_json::Value>>>> =
-            BTreeMap::new();
+        let mut grouped: BTreeMap<
+            String,
+            BTreeMap<String, Vec<Timestamped<weapon::data_model::RawJson>>>,
+        > = BTreeMap::new();
         for row in rows {
             let stream_id = row["stream_id"].as_str().unwrap_or("reviews").to_string();
             let device_id = row["device_id"].as_str().unwrap_or("unknown").to_string();
@@ -7143,7 +7158,7 @@ mod tests {
                 v => v.clone(),
             };
             let Ok(timestamped) =
-                serde_json::from_value::<Timestamped<serde_json::Value>>(event_value)
+                serde_json::from_value::<Timestamped<weapon::data_model::RawJson>>(event_value)
             else {
                 continue;
             };

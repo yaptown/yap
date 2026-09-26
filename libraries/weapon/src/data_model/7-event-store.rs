@@ -294,7 +294,7 @@ impl<
             &device,
             events
                 .into_iter()
-                .map(|e| e.map_ref(|ev| serde_json::to_value(ev).unwrap()))
+                .map(|e| e.map_ref(|ev| crate::data_model::RawJson::from_serializable(ev).unwrap()))
                 .collect(),
         ) else {
             return 0;
@@ -312,7 +312,7 @@ impl<
         &mut self,
         stream: Stream,
         device: Device,
-        events: Vec<Timestamped<serde_json::Value>>,
+        events: Vec<Timestamped<crate::data_model::RawJson>>,
         modifier: Option<ListenerKey>,
     ) -> usize {
         let Some(mut store) = self.get_mut_raw(&stream, modifier) else {

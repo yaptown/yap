@@ -68,7 +68,7 @@ impl SupabaseAuth {
 pub struct EventRow {
     pub stream_id: String,
     pub device_id: String,
-    pub event: Timestamped<serde_json::Value>,
+    pub event: Timestamped<weapon::data_model::RawJson>,
 }
 
 /// Look up a user's id by email via the Supabase admin API.
@@ -123,7 +123,14 @@ pub async fn fetch_events(
         if let Some(after) = after {
             url.push_str(&format!("&id=gt.{after}"));
         }
-        let page: Vec<serde_json::Value> = cfg
+        #[derive(serde::Deserialize)]
+        struct Row {
+            id: i64,
+            stream_id: String,
+            device_id: String,
+            event: weapon::data_model::RawJson,
+        }
+        let page: Vec<Row> = cfg
             .auth(client.get(url))
             .send()
             .await?
@@ -132,22 +139,18 @@ pub async fn fetch_events(
             .await?;
 
         for row in &page {
-            if let Some(id) = row["id"].as_i64() {
-                max_id = Some(max_id.map_or(id, |m| m.max(id)));
-            }
-            let stream_id = row["stream_id"].as_str().unwrap_or("reviews").to_string();
-            let device_id = row["device_id"].as_str().unwrap_or("unknown").to_string();
-            // The event column is JSONB but old rows may hold a JSON string
-            let event_value = match &row["event"] {
-                serde_json::Value::String(s) => serde_json::from_str(s)
-                    .with_context(|| format!("failed to parse stringified event: {s}"))?,
-                v => v.clone(),
+            max_id = Some(max_id.map_or(row.id, |m| m.max(row.id)));
+            // Older JSONB rows contain stringified JSON.
+            let text = if row.event.get().starts_with('"') {
+                serde_json::from_str::<String>(row.event.get())?
+            } else {
+                row.event.get().to_owned()
             };
-            let event: Timestamped<serde_json::Value> = serde_json::from_value(event_value)
-                .context("failed to parse event as Timestamped")?;
+            let event =
+                serde_json::from_str(&text).context("failed to parse event as Timestamped")?;
             rows.push(EventRow {
-                stream_id,
-                device_id,
+                stream_id: row.stream_id.clone(),
+                device_id: row.device_id.clone(),
                 event,
             });
         }
@@ -168,7 +171,7 @@ pub async fn upload_events(
     user_id: &str,
     stream_id: &str,
     device_id: &str,
-    events: &[Timestamped<serde_json::Value>],
+    events: &[Timestamped<weapon::data_model::RawJson>],
 ) -> anyhow::Result<()> {
     if events.is_empty() {
         return Ok(());
@@ -180,7 +183,7 @@ pub async fn upload_events(
             device_id: device_id.to_string(),
             created_at: event.timestamp.to_string(),
             within_device_events_index: event.within_device_events_index,
-            event: serde_json::to_value(event).expect("Timestamped<Value> serializes"),
+            event: weapon::data_model::RawJson::from_serializable(event).expect("event serializes"),
             stream_id: stream_id.to_string(),
         })
         .collect();

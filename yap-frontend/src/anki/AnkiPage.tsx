@@ -119,6 +119,7 @@ function CardTypeOption({ label, description, checked, onChange }: { label: stri
 }
 
 function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextType & { deck: Deck; targetLanguage: Language }) {
+  const weapon = useWeapon();
   const navigate = useNavigate();
   const { openSignUp } = useAuthDialog();
   const [reading, setReading] = useState(true);
@@ -223,6 +224,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
       if (!active()) return;
       const file = { blob, name: `yap-${plan.course_code}.apkg` };
       saveFile(file);
+      weapon.add_deck_event(deck.anki_deck_exported(plan, minted.deck_id));
       const notes = `${plan.stats.sentence_count.toLocaleString()} sentence notes${plan.stats.word_count ? ` + ${plan.stats.word_count.toLocaleString()} word notes` : ""}`;
       const summary = `${notes} · ${(blob.size / 1024 / 1024).toFixed(1)} MB`;
       update((current) => ({ ...current, downloadLink, file, summary }));

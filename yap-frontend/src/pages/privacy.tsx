@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective September 23, 2026.</p>
+            <p className="text-sm">Effective September 25, 2026.</p>
           </div>
         </Card>
 
@@ -69,6 +69,9 @@ export function PrivacyPage() {
               <span className="text-foreground">Exported Anki decks.</span>{" "}
               When you download an Anki deck, we record that the deck was made,
               the options you chose, and your account if you were signed in.
+              Your local learning history also records the exported deck's identifier,
+              options, words, and sentences, including when signed out. This history
+              syncs to your account when signed in.
               The deck is assembled in your browser from your learning history.
               Our servers store the exported package for 8 days so you can import
               it with a download link, then delete it. Anyone with the link can

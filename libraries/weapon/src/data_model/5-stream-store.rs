@@ -19,18 +19,22 @@ pub trait StreamStore<Device>: Any + MaybeSend {
     /// i.e. the ones a peer holding `from_index` of this device's events hasn't seen. Not a
     /// positional skip: events are stored in timestamp order, and a backdated event (e.g.
     /// `add_raw_event_at` with a past time) sorts before ones already persisted or uploaded.
-    fn jsons(&self, device: &Device, from_index: usize) -> Vec<Timestamped<serde_json::Value>>;
+    fn jsons(
+        &self,
+        device: &Device,
+        from_index: usize,
+    ) -> Vec<Timestamped<crate::data_model::RawJson>>;
 
     fn valid_to_add_event_jsons(
         &self,
         device: &Device,
-        events: Vec<Timestamped<serde_json::Value>>,
-    ) -> Option<ValidToAddEvents<Timestamped<serde_json::Value>>>;
+        events: Vec<Timestamped<crate::data_model::RawJson>>,
+    ) -> Option<ValidToAddEvents<Timestamped<crate::data_model::RawJson>>>;
 
     fn add_device_event_jsons(
         &mut self,
         device: Device,
-        events: ValidToAddEvents<Timestamped<serde_json::Value>>,
+        events: ValidToAddEvents<Timestamped<crate::data_model::RawJson>>,
     ) -> Result<usize, serde_json::Error>;
 
     fn timestamp_of_earliest_unsynced_event(
@@ -52,7 +56,11 @@ impl<
             .collect::<HashMap<&Device, usize>>()
     }
 
-    fn jsons(&self, device: &Device, from_index: usize) -> Vec<Timestamped<serde_json::Value>> {
+    fn jsons(
+        &self,
+        device: &Device,
+        from_index: usize,
+    ) -> Vec<Timestamped<crate::data_model::RawJson>> {
         let mut events: Vec<_> = self
             .events()
             .get(device)
@@ -66,7 +74,7 @@ impl<
             .map(|event| {
                 event
                     .as_ref()
-                    .map(|event| serde_json::to_value(event).unwrap())
+                    .map(|event| crate::data_model::RawJson::from_serializable(event).unwrap())
             })
             .collect()
     }
@@ -74,21 +82,17 @@ impl<
     fn valid_to_add_event_jsons(
         &self,
         device: &Device,
-        events: Vec<Timestamped<serde_json::Value>>,
-    ) -> Option<ValidToAddEvents<Timestamped<serde_json::Value>>> {
+        events: Vec<Timestamped<crate::data_model::RawJson>>,
+    ) -> Option<ValidToAddEvents<Timestamped<crate::data_model::RawJson>>> {
         self.valid_to_add_events(device, events)
     }
 
     fn add_device_event_jsons(
         &mut self,
         device: Device,
-        events: ValidToAddEvents<Timestamped<serde_json::Value>>,
+        events: ValidToAddEvents<Timestamped<crate::data_model::RawJson>>,
     ) -> Result<usize, serde_json::Error> {
-        let events = events.try_map(|event| {
-            serde_json::from_value::<VersionedEvent>(event.clone()).inspect_err(|e| {
-                log::error!("Error deserializing event JSON into event type: {e:?} in `{event}`");
-            })
-        })?;
+        let events = events.try_map(|event| serde_json::from_str::<VersionedEvent>(event.get()))?;
         Ok(self.add_device_events(device, events))
     }
 

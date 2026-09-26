@@ -114,7 +114,7 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
             .await
             .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?;
 
-        let mut events_to_add: BTreeMap<String, Vec<Timestamped<serde_json::Value>>> =
+        let mut events_to_add: BTreeMap<String, Vec<Timestamped<crate::data_model::RawJson>>> =
             BTreeMap::new();
 
         for record in stored_events {
@@ -187,7 +187,7 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
         for (device_id, _num_events_in_memory) in device_events {
             let device_events_on_disk = device_counts_on_disk.get(&device_id).copied().unwrap_or(0);
 
-            let events_to_write: Vec<Timestamped<serde_json::Value>> = {
+            let events_to_write: Vec<Timestamped<crate::data_model::RawJson>> = {
                 let store_ref = store.borrow();
                 let Some(stream) = store_ref.get_raw(stream_id.clone()) else {
                     log::error!(
@@ -329,7 +329,7 @@ pub struct EventLogFile {
 pub struct EventLogRecord {
     pub device_id: String,
     pub within_device_events_index: usize,
-    pub event: Timestamped<serde_json::Value>,
+    pub event: Timestamped<crate::data_model::RawJson>,
 }
 
 impl UserDirectory {
@@ -710,7 +710,9 @@ fn parse_event_log_records_with_skip(
             continue;
         }
 
-        match serde_json::from_slice::<Timestamped<serde_json::Value>>(raw_record.payload_bytes) {
+        match serde_json::from_slice::<Timestamped<crate::data_model::RawJson>>(
+            raw_record.payload_bytes,
+        ) {
             Ok(event) => records.push(EventLogRecord {
                 device_id,
                 within_device_events_index: within_device_index,
@@ -793,6 +795,30 @@ mod tests {
     use super::*;
 
     #[test]
+    fn unknown_payload_survives_opfs_without_normalization() {
+        let json = r#"{ "User": {"version":"V99", "number":1e2, "text":"a"} }"#;
+        let record = EventLogRecord {
+            device_id: "future-device".into(),
+            within_device_events_index: 0,
+            event: Timestamped {
+                timestamp: chrono::DateTime::from_timestamp(0, 0).unwrap(),
+                timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+                within_device_events_index: 0,
+                event: serde_json::from_str(json).unwrap(),
+            },
+        };
+        let mut bytes = event_log_header_bytes();
+        bytes.extend(encode_event_log_record(&record).unwrap());
+        let records = parse_event_log_records(&bytes);
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].event.event.get(), json);
+        let old: crate::data_model::EventType<u32> =
+            serde_json::from_str(records[0].event.event.get()).unwrap();
+        assert!(matches!(old, crate::data_model::EventType::Unrecognized(_)));
+        assert_eq!(serde_json::to_string(&old).unwrap(), json);
+    }
+
+    #[test]
     fn device_counts_skip_repeated_index_from_positional_export_bug() {
         let record = |index| EventLogRecord {
             device_id: "a".into(),
@@ -801,7 +827,7 @@ mod tests {
                 timestamp: chrono::DateTime::from_timestamp(0, 0).unwrap(),
                 timezone: chrono::FixedOffset::east_opt(0).unwrap(),
                 within_device_events_index: index,
-                event: serde_json::Value::Null,
+                event: crate::data_model::RawJson::from_serializable(&()).unwrap(),
             },
         };
         let mut bytes = event_log_header_bytes();

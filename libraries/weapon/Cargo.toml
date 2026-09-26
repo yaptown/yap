@@ -17,7 +17,7 @@ chrono = { workspace = true, features = ["serde"] }
 im.workspace = true
 serde.workspace = true
 log.workspace = true
-serde_json.workspace = true
+serde_json = { workspace = true, features = ["raw_value"] }
 
 fetch-happen = { workspace = true, optional = true }
 opfs = { workspace = true, optional = true }

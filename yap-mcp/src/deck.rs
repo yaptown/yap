@@ -30,7 +30,7 @@ pub fn new_store() -> EventStore<String, String> {
 /// our own uploads are absorbed harmlessly. Returns how many events were
 /// actually added.
 pub fn insert_rows(store: &mut EventStore<String, String>, rows: Vec<EventRow>) -> usize {
-    let mut grouped: BTreeMap<(String, String), Vec<Timestamped<serde_json::Value>>> =
+    let mut grouped: BTreeMap<(String, String), Vec<Timestamped<weapon::data_model::RawJson>>> =
         BTreeMap::new();
     for row in rows {
         if row.stream_id != REVIEWS_STREAM && row.stream_id != DECK_SELECTION_STREAM {
