@@ -2,6 +2,7 @@ import {
   CourseAudioPrefetch,
   useCourseDeck,
   useCourseStudy,
+  useStudyReviewView,
 } from "@/review/course-study";
 import { ReviewScreen } from "@/review/ReviewScreen";
 import { useState, useEffect } from "react";
@@ -125,12 +126,12 @@ function Review({
     deck.get_sentence_list(),
   );
   const study = useCourseStudy();
-  const view = study.getReviewView(sentenceListToSelection(sentenceList));
+  const view = useStudyReviewView(sentenceListToSelection(sentenceList));
   const commitSentenceList = (event: DeckEvent) => {
     study.actions.addEvent(event);
     clearSentenceList();
   };
-  const currentChallenge = study.currentChallenge;
+  const currentChallenge = view.step.type === "Challenge" ? view.step.view.challenge : undefined;
   const [showReportModal, setShowReportModal] = useState(false);
 
   return (

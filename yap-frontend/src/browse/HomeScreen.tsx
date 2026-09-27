@@ -35,7 +35,7 @@ import {
   useSentenceList,
   type SentenceList,
 } from "@/browse/useSentenceList";
-import { useCourseStudy } from "@/review/course-study";
+import { useCourseStudy, useStudyReviewView } from "@/review/course-study";
 
 export function HomePage() {
   return <DeckPage>{(props) => <HomeScreen {...props} />}</DeckPage>;
@@ -62,6 +62,7 @@ function LiveHomeScreen({ deck, userInfo }: HomeProps) {
   const { sentenceList, setSentenceList, clearSentenceList } = useSentenceList(
     deck.get_sentence_list(),
   );
+  useStudyReviewView(sentenceListToSelection(sentenceList));
   const { getHomeView } = study;
   const view = useMemo(
     () => getHomeView(sentenceListToSelection(sentenceList)),

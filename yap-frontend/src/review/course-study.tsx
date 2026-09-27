@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Outlet, useMatch, useOutletContext } from "react-router-dom";
+import { Outlet, useOutletContext } from "react-router-dom";
 import { useInterval, useNetworkState } from "react-use";
 import type { AppContextType } from "@/app/context";
 import { useDeck, useDeckSelection } from "@/core/useDeck";
@@ -95,6 +95,19 @@ export function useCourseStudy() {
   return study;
 }
 
+// Only mounted Home/Learn screens request and commit a study selection. This
+// effect must live in the consumer: navigation need not rerender CourseSession.
+// eslint-disable-next-line react-refresh/only-export-components -- The course provider intentionally exposes its consumer hooks together.
+export function useStudyReviewView(sentenceList: SentenceListSelection | undefined) {
+  const { getReviewView, commitChallenge } = useCourseStudy();
+  const view = getReviewView(sentenceList);
+  const challenge = view.step.type === "Challenge" ? view.step.view.challenge : undefined;
+  useLayoutEffect(() => {
+    commitChallenge(challenge);
+  }, [commitChallenge, challenge]);
+  return view;
+}
+
 // Mount only on screens that need study audio; unmounting cancels prefetch.
 export function CourseAudioPrefetch() {
   const { deck, accessToken, banned, readiness, online } = useCourseStudy().audioPrefetch;
@@ -113,7 +126,6 @@ function useStudyController(
   pendingReviewScope: string,
 ) {
   const deck = state.view.phase.type === "Ready" ? state.deck : null;
-  const exportingAnki = useMatch("/anki") !== null;
   const submitting = useRef({ deck, inFlight: false });
   // Reset before child resume effects run, and only for a new snapshot (not
   // StrictMode's repeated effect setup). Old snapshot callbacks stay rejected.
@@ -194,7 +206,6 @@ function useStudyController(
   );
   useEffect(() => {
     if (!Number.isFinite(nextDue)) return;
-    // eslint-disable-next-line react-hooks/purity -- This clock read runs in the timer effect, not during render.
     const delay = nextDue - Date.now();
     if (delay > 60_000) return;
     const timer = setTimeout(refresh, Math.max(0, delay) + 1);
@@ -247,7 +258,7 @@ function useStudyController(
     revision: number;
     challenge: Challenge<Gram<string>>;
   }>(undefined);
-  const { inputs, reviewView, getReviewView, getHomeView } = useMemo(() => {
+  const { inputs, getReviewView, getHomeView } = useMemo(() => {
     // Read the last committed selection; only a new deck or an explicit ban
     // releases it. Capturing a new selection happens after commit, without a
     // second render (and therefore without a second Rust screen computation).
@@ -272,24 +283,21 @@ function useStudyController(
       placement,
       current_challenge: currentHeld,
     };
-    // Anki owns its placement/planning UI. Keep this session (and any held
-    // answer) alive, but don't spend hundreds of milliseconds projecting an
-    // invisible review screen whenever the readiness timer ticks.
-    const reviewView = exportingAnki ? undefined : deck?.review_screen_view(reviewInputs);
-    // Home must preview this same selection, not ask Rust to pick another
-    // sentence before the layout effect has committed the held challenge.
-    const inputs = reviewView?.step.type === "Challenge"
-      ? { ...reviewInputs, current_challenge: reviewView.step.view.challenge }
-      : reviewInputs;
-    const reviewViews = new Map([[JSON.stringify(reviewInputs.sentence_list), reviewView]]);
+    // Creating a controller snapshot never projects a screen. Home and Learn
+    // request it on render, sharing one selection and input-keyed caches even
+    // when navigation mounts a child without rerendering this controller.
+    const reviewViews = new Map<string | undefined, ReturnType<Deck["review_screen_view"]>>();
     const homeViews = new Map<string | undefined, ReturnType<Deck["home_screen_view"]>>();
     // The sentence-list hook intentionally stays screen-local. Rust only uses
     // its selection for curriculum/idle content, not to choose the challenge.
     const getReviewView = (
       sentence_list: SentenceListSelection | undefined,
     ) => {
-      if (!deck || !reviewView) throw new Error("Review requires a ready deck");
-      if (reviewView.step.type !== "Idle") return reviewView;
+      if (!deck) throw new Error("Review requires a ready deck");
+      // The challenge doesn't depend on the sentence list, so any view already
+      // projected decides whether review is idle.
+      const reviewView = reviewViews.values().next().value;
+      if (reviewView && reviewView.step.type !== "Idle") return reviewView;
       const key = JSON.stringify(sentence_list);
       let view = reviewViews.get(key);
       if (!view) {
@@ -303,12 +311,20 @@ function useStudyController(
       const key = JSON.stringify(sentence_list);
       let view = homeViews.get(key);
       if (!view) {
-        view = deck.home_screen_view({ ...inputs, sentence_list });
+        const review = getReviewView(sentence_list);
+        // Home previews precisely the challenge Learn will display, including
+        // before the consuming screen's layout effect commits the selection.
+        view = deck.home_screen_view({
+          ...reviewInputs,
+          sentence_list,
+          current_challenge: review.step.type === "Challenge"
+            ? review.step.view.challenge : reviewInputs.current_challenge,
+        });
         homeViews.set(key, view);
       }
       return view;
     };
-    return { inputs, reviewView, getReviewView, getHomeView };
+    return { inputs: reviewInputs, getReviewView, getHomeView };
   }, [
     deck,
     sentenceList,
@@ -323,39 +339,35 @@ function useStudyController(
     dismissedAccomplishmentAtReview,
     placement,
     restrictionRevision,
-    exportingAnki,
   ]);
-  const currentChallenge =
-    reviewView?.step.type === "Challenge"
-      ? reviewView.step.view.challenge
-      : undefined;
-  useLayoutEffect(() => {
-    if (deck && currentChallenge) {
-      heldChallenge.current = { deck, revision: restrictionRevision, challenge: currentChallenge };
+  const commitChallenge = useCallback((challenge: Challenge<Gram<string>> | undefined) => {
+    if (deck && challenge) {
+      heldChallenge.current = { deck, revision: restrictionRevision, challenge };
     }
-  }, [deck, restrictionRevision, currentChallenge]);
-
+  }, [deck, restrictionRevision]);
+  // Actions read the committed selection, never force a screen projection.
+  // Old snapshot/restriction callbacks cannot submit a replacement challenge.
+  const getCurrentChallenge = () => {
+    const held = heldChallenge.current;
+    return held?.deck === deck && held.revision === restrictionRevision
+      ? held.challenge : undefined;
+  };
   const totalReviewsCompleted = deck?.get_total_reviews();
+  const dismissAccomplishment = useCallback(() => {
+    if (totalReviewsCompleted !== undefined)
+      setDismissedAccomplishmentAtReview(totalReviewsCompleted);
+  }, [totalReviewsCompleted]);
+  // Midnight dismisses the previous day's review count even while Home/Learn
+  // are unmounted. This needs no screen projection, and prevents a briefly
+  // stale accomplishment if navigation precedes the next readiness poll.
   useEffect(() => {
-    if (
-      reviewView?.step.type !== "Accomplishment" ||
-      totalReviewsCompleted === undefined ||
-      dismissedAccomplishmentAtReview === totalReviewsCompleted
-    )
-      return;
+    if (totalReviewsCompleted === undefined || dismissedAccomplishmentAtReview === totalReviewsCompleted) return;
     const now = new Date();
     const midnight = new Date(now);
     midnight.setHours(24, 0, 0, 0);
-    const timer = setTimeout(
-      () => setDismissedAccomplishmentAtReview(totalReviewsCompleted),
-      midnight.getTime() - now.getTime(),
-    );
+    const timer = setTimeout(dismissAccomplishment, midnight.getTime() - now.getTime());
     return () => clearTimeout(timer);
-  }, [
-    reviewView?.step.type,
-    dismissedAccomplishmentAtReview,
-    totalReviewsCompleted,
-  ]);
+  }, [totalReviewsCompleted, dismissedAccomplishmentAtReview, dismissAccomplishment]);
 
   const addEvent = useCallback(
     (event: DeckEvent) => { if (canWrite()) weapon.add_deck_event(event); },
@@ -363,6 +375,7 @@ function useStudyController(
   );
   const onRating = (rating: Rating): boolean => {
     if (!canWrite() || submitting.current.deck !== deck || submitting.current.inFlight) return false;
+    const currentChallenge = getCurrentChallenge();
     if (
       !deck ||
       !currentChallenge ||
@@ -391,6 +404,7 @@ function useStudyController(
     completedAtMs: number,
   ): boolean => {
     if (!canWrite() || submitting.current.deck !== deck || submitting.current.inFlight) return false;
+    const currentChallenge = getCurrentChallenge();
     if (!deck || currentChallenge?.type !== "TranslateComprehensibleSentence") {
       console.error(
         "handleTranslationComplete called with no current challenge or no TranslateComprehensibleSentence in current challenge",
@@ -423,6 +437,7 @@ function useStudyController(
     completedAtMs: number,
   ): boolean => {
     if (!canWrite() || submitting.current.deck !== deck || submitting.current.inFlight) return false;
+    const currentChallenge = getCurrentChallenge();
     if (
       !deck ||
       currentChallenge?.type !== "TranscribeComprehensibleSentence"
@@ -443,6 +458,7 @@ function useStudyController(
   const restrict = (kind: "listen" | "speak") => {
     localStorage.setItem(`yap-cant-${kind}-timestamp`, Date.now().toString());
     refreshRestrictions();
+    heldChallenge.current = undefined;
     setRestrictionRevision((revision) => revision + 1);
     refresh();
   };
@@ -450,6 +466,7 @@ function useStudyController(
     localStorage.removeItem("yap-cant-listen-timestamp");
     localStorage.removeItem("yap-cant-speak-timestamp");
     refreshRestrictions();
+    heldChallenge.current = undefined;
     setRestrictionRevision((revision) => revision + 1);
     refresh();
   };
@@ -459,7 +476,7 @@ function useStudyController(
     inputs,
     getReviewView,
     getHomeView,
-    currentChallenge,
+    commitChallenge,
     actions: {
       pendingReviewScope,
       setPlacement,
@@ -470,10 +487,7 @@ function useStudyController(
       onCantListen: () => restrict("listen"),
       onCantSpeak: () => restrict("speak"),
       undoRestrictions,
-      dismissAccomplishment: () => {
-        if (totalReviewsCompleted !== undefined)
-          setDismissedAccomplishmentAtReview(totalReviewsCompleted);
-      },
+      dismissAccomplishment,
       completePlacementTest: ({
         known_words,
         unknown_words,
