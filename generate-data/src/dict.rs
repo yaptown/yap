@@ -2,7 +2,8 @@ use futures::StreamExt;
 use indicatif::{ProgressBar, ProgressStyle};
 use language_utils::{
     Atom, Course, DictionaryDefinition, Gram, GramFrequencyEntry, Heteronym,
-    PhrasebookDefinitionEntry, PhrasebookDefinitionEntryV2, SentenceGram, SentenceGrams, WordType,
+    PhrasebookDefinitionEntry, PhrasebookDefinitionEntryV2, SentenceGram, SentenceGrams,
+    TargetToNativeWord, WordType,
 };
 use rustc_hash::FxHashMap;
 use sentence_sampler::sample_to_target;
@@ -457,11 +458,11 @@ pub async fn create_sense_definitions(
     frequencies: &[GramFrequencyEntry<String>],
     inventories: &BTreeMap<Gram<String>, crate::usage_discovery::UsageInventory>,
 ) -> anyhow::Result<(
-    BTreeMap<language_utils::TaggedGram<Gram<String>>, DictionaryDefinition>,
+    BTreeMap<language_utils::TaggedGram<Gram<String>>, TargetToNativeWord>,
     BTreeMap<language_utils::TaggedGram<Gram<String>>, PhrasebookDefinitionEntry>,
 )> {
     let system = format!(
-        "Generate a dictionary or phrasebook entry for a beginner learning {} whose native language is {}. The input identifies one pedagogical sense (a meaning, construction, or conversational formula) and gives examples of that sense. Describe this sense only, not other meanings of the same spelling. Respect the supplied surface form, lemma, and part of speech. Write concise native-language equivalents and notes; examples must illustrate this sense and use the supplied surface form. Follow the response schema. Morphology, etymology, and pronunciation are supplied separately.",
+        "Generate a dictionary or phrasebook entry for a beginner learning {} whose native language is {}. The input identifies one pedagogical sense (a meaning, construction, or conversational formula) and gives examples of that sense. Describe this sense only, not other meanings of the same spelling. Respect the supplied surface form, lemma, and part of speech. Write one concise native-language equivalent and note, and one example sentence that illustrates this sense and uses the supplied surface form. Follow the response schema. Morphology, etymology, and pronunciation are supplied separately.",
         course.target_language.prompt_name(),
         course.native_language.prompt_name(),
     );
@@ -505,7 +506,7 @@ pub async fn create_sense_definitions(
             // like every other definition stage, not fatal to the run.
             let result = if gram.gram.len() == 1 {
                 client
-                    .chat_with_system_prompt::<DictionaryDefinition>(system, prompt)
+                    .chat_with_system_prompt::<TargetToNativeWord>(system, prompt)
                     .await
                     .map(|definition| (gram.clone(), Some(definition), None))
             } else {

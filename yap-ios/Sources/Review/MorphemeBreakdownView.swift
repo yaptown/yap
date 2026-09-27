@@ -5,10 +5,13 @@ struct MorphemeBreakdownView: View {
     var alignment: HorizontalAlignment = .leading
     /// Fades the columns in one by one from this delay, as the web does under a revealed card.
     var revealDelay: Double?
+    /// Scrolls with the grid, for punctuation that must stay beside it.
+    var trailing: Text?
     @State private var revealed = false
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            grid.frame(minWidth: 0, maxWidth: .infinity, alignment: alignment == .center ? .center : .leading)
+            HStack(alignment: .top, spacing: 8) { grid; trailing }
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: alignment == .center ? .center : .leading)
         }.defaultScrollAnchor(alignment == .center ? .center : .leading, for: .alignment)
     }
     var grid: some View {

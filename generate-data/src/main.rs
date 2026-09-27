@@ -798,8 +798,8 @@ async fn main() -> anyhow::Result<()> {
             .filter_map(|(gram, definition)| {
                 let heteronym = gram.gram.heteronym()?;
                 let entry = language_utils::DictionaryEntry {
-                    target_language_word: definition.target_language_word,
-                    definitions: definition.definitions,
+                    target_language_word: heteronym.word.clone(),
+                    definitions: vec![definition],
                     morphology: morphology.get(heteronym)?.clone(),
                     segments: etymology_segmentations
                         .get(&heteronym.word)

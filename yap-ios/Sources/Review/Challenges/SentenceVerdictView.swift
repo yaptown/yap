@@ -78,12 +78,13 @@ private struct CompactDefinitionRow: View {
         }.font(.subheadline)
     }
     private func heading(scrolling: Bool) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        let colon = Text(":").fontWeight(.semibold)
+        return HStack(alignment: .top, spacing: 8) {
             if let parts = entry.breakdown, !parts.isEmpty {
-                if scrolling { MorphemeBreakdownView(parts: parts) }
-                else { MorphemeBreakdownView(parts: parts).grid }
-            } else { Text(word).fontWeight(.semibold) }
-            Text(":").fontWeight(.semibold)
+                // Scrolling fills the row, so the colon rides inside it to stay beside the grid.
+                if scrolling { MorphemeBreakdownView(parts: parts, trailing: colon) }
+                else { MorphemeBreakdownView(parts: parts).grid; colon }
+            } else { Text(word).fontWeight(.semibold); colon }
         }
     }
     @ViewBuilder private var definitionBody: some View {
