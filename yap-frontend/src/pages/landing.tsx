@@ -101,11 +101,13 @@ function Photo({
   name,
   contrast,
   className,
+  onLoad,
 }: {
   name: string;
   /** A plainer photo for people who ask for more contrast. */
   contrast?: string;
   className?: string;
+  onLoad?: () => void;
 }) {
   const srcSet = (n: string) =>
     `/landing/${n}-1400.webp 1400w, /landing/${n}-2800.webp 2800w`;
@@ -123,6 +125,8 @@ function Photo({
         srcSet={srcSet(name)}
         sizes="100vw"
         alt=""
+        fetchPriority="high"
+        onLoad={onLoad}
         className={cn("absolute inset-0 h-full w-full object-cover", className)}
         style={{
           objectPosition: `${ORBIT.position[0] * 100}% ${ORBIT.position[1] * 100}%`,
@@ -167,18 +171,30 @@ function RotatingWord({ words }: { words: string[] }) {
 
 function Hero({ corpus }: { corpus: Corpus }) {
   const people = useMemo(() => peopleOf(corpus?.targets), [corpus]);
+  // A hidden <img> still downloads, so render only this theme's photo, and
+  // let the snow in once it has arrived rather than over an empty hero.
+  const night = useShaderTheme() !== "light";
+  const [photoLoaded, setPhotoLoaded] = useState(false);
   return (
     <div className="landing-hero landing-themed relative flex min-h-svh flex-col overflow-hidden">
       {/* The same station by day and by night, same framing, so the orbit
           geometry measured on the night photo holds for both. */}
-      <Photo
-        name="platform-day"
-        contrast="platform-day-contrast"
-        className="dark:hidden"
-      />
-      <Photo name="platform" className="hidden dark:block" />
+      {night ? (
+        <Photo name="platform" onLoad={() => setPhotoLoaded(true)} />
+      ) : (
+        <Photo
+          name="platform-day"
+          contrast="platform-day-contrast"
+          onLoad={() => setPhotoLoaded(true)}
+        />
+      )}
       <div className="landing-grain" />
-      <SnowCanvas className="absolute inset-0 h-full w-full" />
+      <SnowCanvas
+        className={cn(
+          "absolute inset-0 h-full w-full transition-opacity duration-700",
+          !photoLoaded && "opacity-0",
+        )}
+      />
 
       <div
         className={cn(
@@ -656,6 +672,9 @@ function Coda() {
           )}
           src={`/landing/${name}.webp`}
           alt=""
+          // Far below the fold; lazy also keeps the other theme's sky, which
+          // is display: none, from downloading at all.
+          loading="lazy"
           style={{ objectPosition: "50% 35%" }}
         />
       ))}
