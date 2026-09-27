@@ -3,7 +3,7 @@ use axum::{
     body::Bytes,
     extract::{DefaultBodyLimit, Json, Path},
     http::{StatusCode, header},
-    response::Response,
+    response::{IntoResponse, Response},
     routing::{get, post, put},
 };
 use axum_extra::{
@@ -1963,7 +1963,7 @@ fn parse_clip_index(jsonl: &str) -> Vec<ClipRow> {
 /// cached copy is older than its 60s upstream cache. A missing index
 /// (language not yet published) caches as empty for the same TTL.
 async fn clip_manifest(language: Language) -> Result<Vec<ClipRow>, StatusCode> {
-    let code = language.code();
+    let code = language.corpus_code();
 
     {
         let indexes = CLIP_INDEXES.read().await;
@@ -2016,6 +2016,12 @@ async fn serve_clip_sentences(
     Ok(Json(clip_manifest(language).await?))
 }
 
+fn clip_corpus(lang: &str) -> Result<&'static str, StatusCode> {
+    Language::from_code(lang)
+        .map(|language| language.corpus_code())
+        .ok_or(StatusCode::NOT_FOUND)
+}
+
 async fn serve_clip_video(
     TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
     Path((lang, clip_id)): Path<(String, String)>,
@@ -2024,15 +2030,17 @@ async fn serve_clip_video(
     // actually, disable authentication for now until people start abusing it:
     let _claims = verify_jwt(auth.token()).await;
 
-    // Both segments become path components of the upstream URL; restrict them
-    // to the alphabet the exporter actually uses so this can't be steered at
-    // arbitrary keys.
+    let lang = match clip_corpus(&lang) {
+        Ok(code) => code,
+        Err(status) => return status.into_response(),
+    };
+    // Clip ids become upstream path components; restrict the alphabet.
     let valid = |s: &str| {
         !s.is_empty()
             && s.chars()
                 .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
     };
-    if !valid(&lang) || !valid(&clip_id) {
+    if !valid(&clip_id) {
         return Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(axum::body::Body::from("invalid clip path"))
@@ -2106,14 +2114,14 @@ async fn serve_clip_subtitles(
     // actually, disable authentication for now until people start abusing it:
     let _claims = verify_jwt(auth.token()).await;
 
-    // Same alphabet restriction as the video route: both segments become
-    // upstream path components.
+    let lang = clip_corpus(&lang)?;
+    // Same clip-id alphabet restriction as the video route.
     let valid = |s: &str| {
         !s.is_empty()
             && s.chars()
                 .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
     };
-    if !valid(&lang) || !valid(&clip_id) {
+    if !valid(&clip_id) {
         return Err(StatusCode::BAD_REQUEST);
     }
 
@@ -2323,6 +2331,23 @@ mod tests {
     use axum::body::Body;
     use axum::http::Request;
     use tower::ServiceExt;
+
+    #[test]
+    fn clip_paths_use_shared_corpus() {
+        for (code, corpus) in [
+            ("spa-es", "spa"),
+            ("spa", "spa"),
+            ("por-pt", "por"),
+            ("por", "por"),
+            ("fra", "fra"),
+            ("zho-hans", "zho-hans"),
+        ] {
+            assert_eq!(clip_corpus(code), Ok(corpus));
+            assert_eq!(Language::from_code(code).unwrap().corpus_code(), corpus);
+        }
+        assert_eq!(clip_corpus("unknown"), Err(StatusCode::NOT_FOUND));
+        assert_eq!(clip_corpus("../spa"), Err(StatusCode::NOT_FOUND));
+    }
 
     #[test]
     fn phoneme_analysis_preserves_prompt_text() {
