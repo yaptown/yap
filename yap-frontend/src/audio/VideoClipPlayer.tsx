@@ -16,7 +16,6 @@ import {
 } from "../../../yap-frontend-rs/pkg";
 import { interruptPlayback, registerPlayback } from "@/lib/utils";
 import { isSoundEffectPlaying } from "@/lib/sound-effects";
-import { getMovieMetadata } from "@/lib/movie-cache";
 import { TargetLanguageText } from "../components/TargetLanguageText";
 import { Poster } from "../browse/Poster";
 
@@ -199,7 +198,7 @@ export function VideoClipPlayer({
     (cue) => currentTimeMs >= Number(cue.at_ms) && currentTimeMs < Number(cue.until_ms),
   );
 
-  const movie = deck ? getMovieMetadata(deck, [clip.movieId])[0] : undefined;
+  const movie = deck ? deck.get_movie_metadata([clip.movieId])[0] : undefined;
 
   return (
     <div className="relative animate-feedback-in">

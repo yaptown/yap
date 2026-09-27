@@ -503,13 +503,10 @@ impl YapState {
         if source.from_song {
             out.push("song lyrics".to_string());
         }
-        for movie_id in &source.movie_ids {
-            match pack.movies.get(movie_id) {
-                Some(movie) => match movie.year {
-                    Some(year) => out.push(format!("movie: {} ({year})", movie.title)),
-                    None => out.push(format!("movie: {}", movie.title)),
-                },
-                None => out.push(format!("movie: {movie_id}")),
+        for movie in source.movie_ids.iter().filter_map(|id| pack.movies.get(id)) {
+            match movie.year {
+                Some(year) => out.push(format!("movie: {} ({year})", movie.title)),
+                None => out.push(format!("movie: {}", movie.title)),
             }
         }
         out

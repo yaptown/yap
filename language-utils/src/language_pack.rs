@@ -110,7 +110,7 @@ pub struct LanguagePack {
     pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
     /// Cache of maximum frequencies for each pronunciation (pre-computed at initialization)
     pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
-    /// Movie metadata indexed by movie ID
+    /// Movie metadata indexed by movie ID. Only films with a poster; see [`visible_movies`].
     pub movies: FxHashMap<String, MovieMetadata>,
     /// Book metadata indexed by book slug
     pub books: FxHashMap<String, BookMetadata>,
@@ -608,7 +608,7 @@ impl LanguagePack {
             })
             .collect();
 
-        let movies = language_data.movies;
+        let movies = visible_movies(language_data.movies);
         let books = language_data.books;
 
         let human_audio = language_data.human_audio.clone();
@@ -1768,7 +1768,7 @@ impl LanguagePack {
             pattern_frequency_map,
             homophone_practice: sentences.homophone_practice,
             pronunciation_max_freq_cache,
-            movies: sentences.movies,
+            movies: visible_movies(sentences.movies),
             books: sentences.books,
             sentence_sources: sentences.sentence_sources,
             proper_noun_definitions,
@@ -1985,6 +1985,16 @@ mod pack_metadata_tests {
     }
 }
 
+/// Only films with a poster (and so with metadata) are shown anywhere. Applied
+/// when a pack is built or loaded, so already shipped packs comply too. Sentence
+/// provenance is untouched: hiding a film must not remove its sentences.
+fn visible_movies(
+    mut movies: FxHashMap<String, MovieMetadata>,
+) -> FxHashMap<String, MovieMetadata> {
+    movies.retain(|_, movie| movie.poster_bytes.is_some());
+    movies
+}
+
 fn sense_index(frequencies: &FrequencyList) -> FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>> {
     let mut index: FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>> = FxHashMap::default();
     for (entry, _) in frequencies.entries.iter() {
@@ -2096,6 +2106,32 @@ mod sense_tests {
         GramFrequencyEntry, GramFrequencyList, GramVocabEntry, Language, PronunciationData, Word,
     };
     use std::num::NonZeroU32;
+
+    fn movie(id: &str, poster_bytes: Option<Vec<u8>>) -> MovieMetadata {
+        MovieMetadata {
+            id: id.into(),
+            title: id.into(),
+            year: None,
+            original_language: None,
+            rotten_tomatoes_score: None,
+            variety: None,
+            poster_bytes,
+        }
+    }
+
+    #[test]
+    fn packs_hide_movies_without_a_poster() {
+        let movies: FxHashMap<_, _> = [
+            ("visible".into(), movie("visible", Some(vec![1, 2, 3]))),
+            ("hidden".into(), movie("hidden", None)),
+        ]
+        .into_iter()
+        .collect();
+        let (core, mut sentences) = pack().split();
+        sentences.movies = movies;
+        let loaded = LanguagePack::from_parts(core, Some(sentences));
+        assert_eq!(loaded.movies.keys().collect::<Vec<_>>(), vec!["visible"]);
+    }
 
     fn gram(word: &str) -> Gram<String> {
         Gram(vec![Atom::Tok(Word {

@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/collapsible";
 import { Check, ChevronDown, Headphones } from "lucide-react";
 import { languageToIso6391 } from "@/lib/utils";
-import { getMovieMetadata } from "@/lib/movie-cache";
 import {
   sentenceListSelectionToSentenceList,
   sentenceListToSelection,
@@ -77,8 +76,7 @@ export function GoalsScreen({
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- Opaque WASM calls must stay cached; the compiler cannot infer their cost or purity.
   const movieStats = useMemo(() => injectedView ? [] : deck.get_movie_stats(), [injectedView, deck]);
   const metadata = new Map(
-    getMovieMetadata(
-      deck,
+    deck.get_movie_metadata(
       movieStats.map((movie) => movie.id),
     ).map((movie) => [movie.id, movie]),
   );

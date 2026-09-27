@@ -805,8 +805,11 @@ fn resolve_sentence(
     let source = language_pack
         .sentence_sources
         .get(sentence_spur)
-        .and_then(|ss| ss.movie_ids.first())
-        .and_then(|movie_id| language_pack.movies.get(movie_id))
+        .and_then(|ss| {
+            ss.movie_ids
+                .iter()
+                .find_map(|id| language_pack.movies.get(id))
+        })
         .map(|movie| {
             if let Some(year) = movie.year {
                 format!("{} ({})", movie.title, year)

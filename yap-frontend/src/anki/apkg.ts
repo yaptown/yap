@@ -89,8 +89,8 @@ function fieldsFor(note: AnkiNote, audio: (filename: string) => string, lang: st
     const word = `<span lang="${lang}">${escapeHtml(text)}</span>`;
     return `<li>${url ? `<a href="${escapeHtml(url)}">${word}</a>` : word}${gloss ? ` — ${escapeHtml(gloss)}` : ""}</li>`;
   }).join("");
-  const source = (note.source.poster_filename ? `<img src="${escapeHtml(note.source.poster_filename)}" alt="">` : "")
-    + escapeHtml(note.source.title) + (note.source.year ? ` (${note.source.year})` : "");
+  const source = note.source ? (note.source.poster_filename ? `<img src="${escapeHtml(note.source.poster_filename)}" alt="">` : "")
+    + escapeHtml(note.source.title) + (note.source.year ? ` (${note.source.year})` : "") : "";
   return [
     escapeHtml(note.sentence), escapeHtml(note.translation), escapeHtml(note.target_word),
     escapeHtml(note.target_gloss), glosses, source, escapeHtml(note.clip_url), media,

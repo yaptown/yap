@@ -85,7 +85,7 @@ pub enum AnkiNote {
         target_word: String,
         target_gloss: String,
         glosses: Vec<AnkiGloss>,
-        source: AnkiSource,
+        source: Option<AnkiSource>,
         clip_url: String,
         tts: String,
         include_reading: bool,
@@ -474,11 +474,6 @@ impl Deck {
         let films = self
             .get_movie_metadata(clips::films_by_clip_count(language))
             .into_iter()
-            .filter(|film| {
-                pack.movies
-                    .get(&film.id)
-                    .is_some_and(|m| m.poster_bytes.is_some())
-            })
             .take(FILM_COUNT)
             .collect();
         AnkiExportView {
@@ -936,13 +931,10 @@ impl PlannerState {
         let clip = clips::clip_for_sentence(language, &text).unwrap();
         let imdb = clips::clip_film(&clip.clip_id).to_owned();
         let movie = pack.movies.get(&imdb);
-        let film_tag = match movie {
-            Some(movie) => match movie.year {
-                Some(year) => format!("{} {year}", movie.title),
-                None => movie.title.clone(),
-            },
-            None => imdb.clone(),
-        };
+        let film_tag = movie.map(|movie| match movie.year {
+            Some(year) => format!("{} {year}", movie.title),
+            None => movie.title.clone(),
+        });
         let poster = movie
             .and_then(|m| m.poster_bytes.as_ref())
             .map(|_| poster_filename(&imdb));
@@ -987,12 +979,12 @@ impl PlannerState {
             target_word: word.clone(),
             target_gloss,
             glosses,
-            source: AnkiSource {
-                title: movie.map_or_else(|| imdb.clone(), |m| m.title.clone()),
-                year: movie.and_then(|m| m.year),
+            source: movie.map(|movie| AnkiSource {
+                title: movie.title.clone(),
+                year: movie.year,
                 imdb_id: imdb,
                 poster_filename: poster,
-            },
+            }),
             clip_url: format!(
                 "{CLIPS_ORIGIN}/{}/{}/lo.mp4?d={}",
                 language.code(),
@@ -1004,7 +996,9 @@ impl PlannerState {
             include_listening,
             tags: {
                 let mut tags = note_tags(course, "sentence");
-                tags.push(format!("yap::film::{}", tag_segment(&film_tag)));
+                if let Some(film_tag) = film_tag {
+                    tags.push(format!("yap::film::{}", tag_segment(&film_tag)));
+                }
                 tags
             },
         });
@@ -1455,7 +1449,15 @@ mod tests {
             assert!(tags.contains(&"yap::eng-fra".into()), "{tags:?}");
             assert!(tags.contains(&kind.into()), "{tags:?}");
             let specific = match note {
-                AnkiNote::Sentence { .. } => "yap::film::",
+                AnkiNote::Sentence {
+                    source: Some(_), ..
+                } => "yap::film::",
+                AnkiNote::Sentence {
+                    source: None, tags, ..
+                } => {
+                    assert!(!tags.iter().any(|tag| tag.starts_with("yap::film::")));
+                    continue;
+                }
                 AnkiNote::Word { .. } => "yap::frequency::",
             };
             assert!(tags.iter().any(|tag| tag.starts_with(specific)), "{tags:?}");
@@ -1590,6 +1592,38 @@ mod tests {
         assert!(url.ends_with("language=French&text=%C3%89lodie%20%26%20Paris%3F&d=a%2Bb&hint=%C3%89lodie&hint=Paris&hint=%C3%89lodie"));
     }
     #[test]
+    fn anki_missing_movie_keeps_sentence_without_credit_or_film_tag() {
+        let deck = fixture();
+        assert!(deck.context.language_pack.movies.is_empty());
+        publish(&deck.context.language_pack, deck.context.course);
+        let plan = deck
+            .plan_anki_deck(options(), 3, "token".into(), 1_700_000_000_000.0)
+            .unwrap();
+        let mut count = 0;
+        for note in &plan.notes {
+            if let AnkiNote::Sentence {
+                source,
+                tags,
+                clip_url,
+                ..
+            } = note
+            {
+                count += 1;
+                assert!(source.is_none());
+                assert!(!tags.iter().any(|tag| tag.starts_with("yap::film::")));
+                assert!(!clip_url.is_empty());
+            }
+        }
+        assert!(count > 0);
+        assert!(
+            !plan
+                .bundled
+                .iter()
+                .any(|media| matches!(media.source, AnkiMediaSource::Poster { .. }))
+        );
+    }
+
+    #[test]
     fn anki_bundled_human_audio_and_poster() {
         let mut deck = fixture();
         let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
@@ -1647,7 +1681,7 @@ mod tests {
             }),
             Some(vec![1, 2, 3])
         );
-        assert!(plan.notes.iter().any(|note| matches!(note, AnkiNote::Sentence { source, .. } if source.title == "Fixture movie" && source.year == Some(2026))));
+        assert!(plan.notes.iter().any(|note| matches!(note, AnkiNote::Sentence { source, .. } if source.as_ref().is_some_and(|source| source.title == "Fixture movie" && source.year == Some(2026)))));
     }
 
     #[test]

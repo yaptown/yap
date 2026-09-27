@@ -7,7 +7,7 @@ export type DeckBuild = {
   sentences: SentenceNote[];
   words: number;
   /** Films in order of their first sentence. */
-  films: { id: string; title: string; poster: boolean }[];
+  films: { id: string; title: string }[];
 };
 
 export const emptyBuild: DeckBuild = { sentences: [], words: 0, films: [] };
@@ -23,7 +23,8 @@ export function addNotes(build: DeckBuild, notes: AnkiNote[]): DeckBuild {
       continue;
     }
     sentences.push(note);
-    if (!films.some((film) => film.id === note.source.imdb_id)) films.push({ id: note.source.imdb_id, title: note.source.title, poster: note.source.poster_filename != null });
+    const source = note.source;
+    if (source && !films.some((film) => film.id === source.imdb_id)) films.push({ id: source.imdb_id, title: source.title });
   }
   return { sentences, words, films };
 }

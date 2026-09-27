@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Film } from "lucide-react";
 import type { Deck, Language } from "../../../yap-frontend-rs/pkg";
 import { Poster } from "@/browse/Poster";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
@@ -45,7 +44,7 @@ export function DeckBuilding({ build, deck, language, choosing, animate, status,
   const feed = newest <= sentences.length
     ? sentences.slice(Math.max(0, newest - FEED), newest).reverse()
     : Array.from({ length: FEED }, (_, k) => sentences[(newest - 1 - k) % sentences.length]);
-  const shelf = films.filter((film) => film.poster).slice(-SHELF);
+  const shelf = films.slice(-SHELF);
 
   return (
     <div className="flex flex-col gap-5 rounded-xl border bg-card/60 p-5 backdrop-blur-sm">
@@ -63,14 +62,14 @@ export function DeckBuilding({ build, deck, language, choosing, animate, status,
                 transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 className="flex items-center gap-3 rounded-lg border border-border/60 bg-background/70 p-2 shadow-sm"
               >
-                <div className="flex h-11 w-8 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-muted">
-                  {note.source.poster_filename ? <Poster movieId={note.source.imdb_id} deck={deck} alt="" /> : <Film className="size-4 text-muted-foreground" aria-hidden />}
-                </div>
+                {note.source && <div className="flex h-11 w-8 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-muted">
+                  <Poster movieId={note.source.imdb_id} deck={deck} alt="" />
+                </div>}
                 <div className="flex min-w-0 flex-col">
                   <span className="truncate text-sm font-medium">
                     <TargetLanguageText language={language}>{note.sentence}</TargetLanguageText>
                   </span>
-                  <span className="truncate text-xs text-muted-foreground">{note.source.title}</span>
+                  {note.source && <span className="truncate text-xs text-muted-foreground">{note.source.title}</span>}
                 </div>
               </motion.div>
             ))}
