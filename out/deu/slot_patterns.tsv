@@ -1,17 +1,17 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-bei jemandem sein	filled	823	9	12	0.75	yes	Bei mir seid ihr herzlich willkommen.	Bei … mir … seid
-zeit jemandes Lebens	filled	321	1	12	0.08	no	Aber die Zeit mit diesen Jungs hat mir etwas klargemacht.	Zeit … Jungs
-auf etwas achten	filled	99	12	12	1.00	yes		
+bei jemandem sein	filled	820	10	12	0.83	yes	Bei mir ist's anders.	Bei … mir … ist
+zeit jemandes Lebens	filled	318	2	12	0.17	no	Aber die Zeit mit diesen Jungs hat mir etwas klargemacht.	Zeit … Jungs
+auf etwas achten	filled	98	12	12	1.00	yes		
 jemandem Bescheid sagen	filled	96	12	12	1.00	yes		
 jemandem etwas ausmachen	filled	87	12	12	1.00	yes		
 jemandem Bescheid sagen	clitic	74	12	12	1.00	yes		
 jemanden Bescheid geben	clitic	57	12	12	1.00	yes		
 auf jemanden zählen	filled	55	11	12	0.92	yes	Er zählt mehrmals auf Englisch ein.	zählt … auf … Englisch
 weg mit jemandem!	filled	48	11	12	0.92	yes	Also, mit wem wollte sie weg?	mit … wem … weg
-jemandem nach!	filled	38	2	12	0.17	no	Den Träumen nach!	Träumen … nach
 sich über jemanden lustig machen	filled	38	12	12	1.00	yes		
-jemanden mal können	filled	31	8	12	0.67	yes	Den wir nicht mal atmen können.	Den … mal … können
-jemanden mal können	clitic	24	10	12	0.83	yes	Es ist hier so laut, daß man sich nicht mal selbst denken hören kann.	sich … mal … kann
+jemandem nach!	filled	37	6	12	0.50	no	Er wird mich mit nach Hause nehmen.	nach … Hause
+jemanden mal können	filled	30	8	12	0.67	yes	Den wir nicht mal atmen können.	Den … mal … können
+jemanden mal können	clitic	23	9	12	0.75	yes	Du kannst es ja nicht mal.	kannst … es … mal
 jemanden am Arsch lecken	clitic	15	12	12	1.00	yes		
 jemanden am Arsch lecken	filled	15	12	12	1.00	yes		
 aus etwas Kapital schlagen	filled	14	0	12	0.00	no	Aus Asche wird Feuer geschlagen, aus Schatten geht Licht hervor.	Aus … Asche … geschlagen
@@ -20,7 +20,7 @@ etwas im Schilde führen	filled	10	10	10	1.00	yes
 jemandem über den Weg laufen	clitic	10	10	10	1.00	yes		
 scharf auf etwas/jemanden sein	filled	9	9	9	1.00	yes		
 etwas im Zaum halten	filled	8	8	8	1.00	yes		
-jemand in die Tasche stecken	filled	7	1	7	0.14	no	Die stecken sich das Geld selber in die Tasche.	stecken … sich … in … die … Tasche
+jemand in die Tasche stecken	filled	8	2	8	0.25	no	Die stecken sich das Geld selber in die Tasche.	stecken … sich … in … die … Tasche
 jemandem am Herzen liegen	clitic	7	7	7	1.00	yes		
 jemandem fehlen die Worte	clitic	7	7	7	1.00	yes		
 süchtig nach etwas sein	filled	7	7	7	1.00	yes		
@@ -35,7 +35,6 @@ jemandem zur Seite stehen	filled	4	4	4	1.00	yes
 nichts auf etwas geben	filled	4	0	4	0.00	no	Auf dem Flug gibt es nichts zu essen.	Auf … Flug … gibt … nichts
 etwas für bare Münze nehmen	filled	3	3	3	1.00	yes		
 etwas in den Wind schlagen	filled	3	3	3	1.00	yes		
-jemandem fehlen die Worte	filled	3	3	3	1.00	yes		
 jemandem zu schaffen machen	clitic	3	3	3	1.00	yes		
 jemandem zur Seite stehen	clitic	3	3	3	1.00	yes		
 es nie versäumen, etwas zu tun	infinitive	2	2	2	1.00	yes		
@@ -44,6 +43,7 @@ etwas unter den Teppich kehren	filled	2	2	2	1.00	yes
 etwas über die Bühne bringen	filled	2	2	2	1.00	yes		
 jemand in die Tasche stecken	clitic	2	0	2	0.00	no	Die stecken sich das Geld selber in die Tasche.	stecken … sich … in … die … Tasche
 jemandem etwas zur Last legen	filled	2	2	2	1.00	yes		
+jemandem fehlen die Worte	filled	2	1	2	0.50	no	Mir fehlt das richtig Wort dafür.	Mir … fehlt … das … Wort
 jemandem nach!	clitic	2	2	2	1.00	yes		
 jemandem zu nahe treten	clitic	2	2	2	1.00	yes		
 jemandem zu schaffen machen	filled	2	2	2	1.00	yes		

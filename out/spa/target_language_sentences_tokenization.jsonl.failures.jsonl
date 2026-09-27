@@ -2,6 +2,8 @@
 {"sentence":"Aah ella está aquí..","failure_count":3}
 {"sentence":"Adit Lamba, ayúdale.","failure_count":3}
 {"sentence":"Ah tonterías, la gente no se relaja en sus propias casas..","failure_count":3}
+{"sentence":"Ah, madre mía de mi coração.","failure_count":2}
+{"sentence":"Ahora sí me disculpan, están en su casa.","failure_count":2}
 {"sentence":"Así de grandes eran sus piernas..","failure_count":3}
 {"sentence":"Así que deberías trasladarte de aquí con Eisha a tu casa..","failure_count":3}
 {"sentence":"CONGRESO DE LA RESlSTENClA ¡Silencio!","failure_count":3}
@@ -17,12 +19,14 @@
 {"sentence":"Cómo entró el Dr. Doolitle?","failure_count":3}
 {"sentence":"De pronto, el moribundo alzó sus puños..","failure_count":3}
 {"sentence":"Debido a la caotica situación..","failure_count":3}
+{"sentence":"Debido a la caótica situación..","failure_count":2}
 {"sentence":"Depués que pacifique Wu, ella será mia.","failure_count":3}
 {"sentence":"El maíz es el cultivo más subsidiado en Estados unidos.","failure_count":3}
 {"sentence":"Ella es una amiga de un amigo de un amigo.","failure_count":3}
 {"sentence":"Ella está hablando tonterías..","failure_count":3}
 {"sentence":"En cuanto a mí, no estoy minimamente preocupado ni por ti ni por mí mismo,..","failure_count":3}
 {"sentence":"Enséñeme la planta de los pies.","failure_count":3}
+{"sentence":"Es bueno verte a ti.","failure_count":2}
 {"sentence":"Es una escuela de música en boston.","failure_count":3}
 {"sentence":"Escucha,.","failure_count":3}
 {"sentence":"Ese consejo empresario defiende a los contratistas de Defensa y los japoneses.","failure_count":1}
@@ -41,6 +45,8 @@
 {"sentence":"Igual que la policía, yo también creía..","failure_count":3}
 {"sentence":"Irías en dirección opuesta al río, así que supongo que no te pasará nada.","failure_count":3}
 {"sentence":"Jacquart, arregle su problema.","failure_count":3}
+{"sentence":"Jacquart, te fuiste de los límites, eso fue vulgar.","failure_count":2}
+{"sentence":"Jacquart, ¿por qué estás vestido así?","failure_count":2}
 {"sentence":"La economía del país está a punto de colapsarse.","failure_count":3}
 {"sentence":"La educación es aprender lo que ni siquiera sabías que no sabías.","failure_count":3}
 {"sentence":"La historia de Ziri se está volviendo enjundiosa.","failure_count":3}
@@ -54,12 +60,14 @@
 {"sentence":"Los avestruzes no pueden volar.","failure_count":3}
 {"sentence":"Los generalaes Cai Mao y Zhang Yun, ¡sé que no pueden esperar más!","failure_count":3}
 {"sentence":"Madamme, ¿Quiere alguna cosa?","failure_count":3}
+{"sentence":"Madre mía de mi coração.","failure_count":2}
 {"sentence":"Maldita b..","failure_count":3}
 {"sentence":"Meeeiii!!!","failure_count":3}
 {"sentence":"Mi tátara tátara tátara tátara tátara tátara tátara nieta.","failure_count":3}
 {"sentence":"Mientras fuera llueve la brisa nos acaricia..","failure_count":3}
 {"sentence":"Mis dedos crecieron..","failure_count":3}
 {"sentence":"Nada que usted ya no sepa.","failure_count":3}
+{"sentence":"Nadaremos y eso nos dejará hambrientos.","failure_count":2}
 {"sentence":"No comprendes nada sobre los seres humanos, cazador,..","failure_count":3}
 {"sentence":"No debería haberme quedado despierto toda la noche.","failure_count":3}
 {"sentence":"No debí haberme tomado esa última botella de cerveza.","failure_count":3}
@@ -85,6 +93,7 @@
 {"sentence":"Olvídate de esas cosas.","failure_count":3}
 {"sentence":"Olvídate de este miserable lugar.","failure_count":3}
 {"sentence":"Olvídate de la receta.","failure_count":3}
+{"sentence":"Olvídate de las opiniones, querida.","failure_count":2}
 {"sentence":"Olvídate de él.","failure_count":3}
 {"sentence":"Olvídate del disco.","failure_count":3}
 {"sentence":"Olvídate del pie izquierdo.","failure_count":3}
@@ -94,6 +103,7 @@
 {"sentence":"Pareciera que Tom está teniendo un mal día.","failure_count":3}
 {"sentence":"Pareciera que sabes algo que yo no sé.","failure_count":3}
 {"sentence":"Parecés un viejito.","failure_count":3}
+{"sentence":"Parecían dientes de perro.","failure_count":2}
 {"sentence":"Parecían gente decente.","failure_count":3}
 {"sentence":"Parecías aburrida, no decías nada.","failure_count":3}
 {"sentence":"Parecías estar a la altura.","failure_count":3}
@@ -103,12 +113,14 @@
 {"sentence":"Por tanto, los duques de Berri y de Bretaña, de Brabante y de Orleáns, partirán.","failure_count":3}
 {"sentence":"Pásemelo.","failure_count":1}
 {"sentence":"Quid pro quo.","failure_count":1}
+{"sentence":"Salid, cubriré la retaguardia.","failure_count":1}
 {"sentence":"Se enredan y retuercen, se desenredan y conectan, y eso es el tiempo.","failure_count":3}
 {"sentence":"Se está muriendo al frente suyo ¡¿Qué demonios es que no está servicio?!","failure_count":3}
 {"sentence":"Se trata de Campbell's última residencia conocida.","failure_count":3}
 {"sentence":"Será policía?","failure_count":3}
 {"sentence":"Si alguien conoce al Egipcio, acabaremos enterándonos..","failure_count":3}
 {"sentence":"Si engalanan a Krishna Y lo envuelven en sus brazos ¿No estará celosa Radha?","failure_count":3}
+{"sentence":"Si engalanan a Krishna y lo envuelven en sus brazos ¿No estará celosa Radha?","failure_count":2}
 {"sentence":"Si no encontramos a los padres de Munni, ¿ella vivirá con nosotros..","failure_count":3}
 {"sentence":"Si reconoces a esta niña, o sabes algo sobre ella..","failure_count":3}
 {"sentence":"Siempre susurras..","failure_count":3}

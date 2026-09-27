@@ -70,10 +70,14 @@
 {"sentence":"Eu vou com você para Dubrovnik em caso de qualquer problema da imigração.","failure_count":1}
 {"sentence":"Fazal Khan está morto!","failure_count":3}
 {"sentence":"Fliora, Fliora, Eu choquei você, pequeno Fliora!?","failure_count":3}
+{"sentence":"Fliora, Fliora, eu choquei você, pequeno Fliora!?","failure_count":2}
 {"sentence":"Gooooooool!","failure_count":3}
 {"sentence":"Graças a Deus está aqui.","failure_count":3}
 {"sentence":"Graças a Deus pode dizer isso.","failure_count":3}
+{"sentence":"Graças a Deus, Viktor já está no caminho.","failure_count":3}
 {"sentence":"Graças a Deus, encontramos a sua casa.","failure_count":3}
+{"sentence":"Graças a Deus, está aqui, oficial.","failure_count":3}
+{"sentence":"Graças a Deus, não.","failure_count":3}
 {"sentence":"Graças a Deus, ouvi Esha falar com você pelo telefone.","failure_count":3}
 {"sentence":"Graças a Deus, pelo menos temos água para beber, senão secávamos até ao osso.","failure_count":3}
 {"sentence":"Graças a Deus, viu.","failure_count":3}
@@ -211,6 +215,7 @@
 {"sentence":"Terei que arrastar você?","failure_count":1}
 {"sentence":"Terei que pegar um de um caminhão.","failure_count":1}
 {"sentence":"Terei uma segunda audição!","failure_count":1}
+{"sentence":"Terá a bondade de nos deixar atravessar a sua floresta?","failure_count":3}
 {"sentence":"Terá a sua parte.","failure_count":3}
 {"sentence":"Terá algumas coisas para responder Sr. McClane.","failure_count":3}
 {"sentence":"Terá de pegar outro.","failure_count":3}
@@ -223,7 +228,9 @@
 {"sentence":"Terá paraíso, abaixo dos seus pés.","failure_count":3}
 {"sentence":"Terá que aprender, Michelle.","failure_count":3}
 {"sentence":"Terá que confrontá-la.","failure_count":3}
+{"sentence":"Terá que esperar aqui que eu volte para te buscar.","failure_count":3}
 {"sentence":"Terá que explicar a ele e a Sra. Denvers.","failure_count":3}
+{"sentence":"Terá que explicar a ele e à Sra. Denvers.","failure_count":3}
 {"sentence":"Terá que falar.","failure_count":3}
 {"sentence":"Terá que iluminar isto.","failure_count":3}
 {"sentence":"Terá que lhes dar um empurrãozinho.","failure_count":3}

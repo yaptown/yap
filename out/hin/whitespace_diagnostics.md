@@ -1,18 +1,18 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 431041
-Total errors: 682
-Accuracy: 99.84%
+Total predictions: 481919
+Total errors: 518
+Accuracy: 99.89%
 
 ## Error Patterns (sorted by frequency)
 
-### "है" + "।" (22 occurrences)
+### "है" + "।" (20 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - इसे जाँचने के लिए यह तो और बड़ा कारण है ।
   - उनकी ओपन मैरिज है ।
   - कनाडा एक बड़ा देश है ।
+  - ज़िंदगी एक पहेली है ।
 
 ### "है" + "—" (10 occurrences)
 - Predicted: Space
@@ -22,22 +22,6 @@ Accuracy: 99.84%
   - कितनी बार मुझे लिख चुका है—अहमद मियाँ को यहाँ भेज दो।
   - क्या बोलता है—दे दूँ?
 
-### "है" + "?" (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - आज क्या समस्या है ?
-  - आपकी आयु क्या है ?
-  - आपके देश में मौसम कैसा है ?
-
-### "हैं" + "।" (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - आप ऐसा कह सकते हैं ।
-  - आप किस प्रकार की नौकरी ढूंढ रहे हैं ।
-  - आपने इसके परीक्षा कागज तो देखे ही होंगे, सब में अंडे उबाले हैं ।
-
 ### "हूँ" + "।" (8 occurrences)
 - Predicted: None
 - Actual: Space
@@ -46,21 +30,21 @@ Accuracy: 99.84%
   - मैं अकेली हूँ ।
   - मैं पुस्तकालय में अध्ययन कर रही हूँ ।
 
-### " ह" + "ै" (7 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - इन्हीं लोगों की वजह से देश बदनाम होता है।
-  - इन्हीं सब मामला में हमारा हाथ थोड़ा तंग है।
-  - कायरता है, बुज़दिली है।
-
-### "--" + "क्या" (7 occurrences)
+### "है" + "?" (7 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - अरे आप लोग क्या-- क्या हो रहा है?
-  - क लोग अपनों में ईद मनाने के लिए-- क्या कर रहा है?
-  - क्या-- क्या कर रही हैं आप?
+  - आज क्या समस्या है ?
+  - आपकी आयु क्या है ?
+  - आपके देश में मौसम कैसा है ?
+
+### "हैं" + "।" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - आप ऐसा कह सकते हैं ।
+  - आप किस प्रकार की नौकरी ढूंढ रहे हैं ।
+  - टॉम और मेेरी अब कमरे में हैं ।
 
 ### "--" + "अरे" (6 occurrences)
 - Predicted: None
@@ -70,21 +54,13 @@ Accuracy: 99.84%
   - अरे बताओ राहुल-- अरे क्या बताए तुम्हें?
   - अरे-- अरे यार क्या नाटक कर रही है?
 
-### "शुक्रिया" + "।" (6 occurrences)
+### "--" + "क्या" (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - आपका बहुत बहुत शुक्रिया ।
-  - पहले मेरी मदद करने के लिए शुक्रिया ।
-  - मदद के लिए शुक्रिया ।
-
-### " है" + "ं" (5 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - इस सप्ताह कौन सी फ़िल्में लगीं हुईं हैं?
-  - बावन प्रतिशत ब्रिटिश औरतें सेक्स से ज़्यादा चॉकलेट पसंद करती हैं।
-  - मुझें बिना नायकवाले उपन्यास पसंद नहीं हैं।
+  - अरे आप लोग क्या-- क्या हो रहा है?
+  - क्या-- क्या कर रही हैं आप?
+  - चं-- क्या हुआ?
 
 ### "—" + "कि" (5 occurrences)
 - Predicted: Space
@@ -101,14 +77,6 @@ Accuracy: 99.84%
   - आप ऐसा क्यों कह रही हैं-- एक मिनट!
   - ताया जी तो-- एक मिनट, हाँ!
   - तीन डॉल-- एक सेकंड मैडम!
-
-### "ऑफ़िस" + "र" (4 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - ऑफ़िसर!
-  - पहले इसे खंबे पर आज़माओ, ऑफ़िसर।
-  - मैं नहीं चाहता कोई परेशानी आए, ऑफ़िसर।
 
 ### "यार" + "---" (4 occurrences)
 - Predicted: None
@@ -133,14 +101,6 @@ Accuracy: 99.84%
   - क्या तुम्हें कोई अनुमान है कि मैं किस विषय के बारे में बात कर रहा हूँ ?
   - क्या तुम्हें कोई अनुमान है कि मैं किस विषय के बारे में बात कर रही हूँ ?
   - क्या मैं आपकी मदद कर सकता हूँ ?
-
-### "," + "." (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - और तुम्हें पता है, मैं बस भागने की बात कर रहा हूँ, .
-  - नहीं, मैं भी उसे एक आश्चर्य देना चाहता था, .
-  - हड्डी के साथ, जइसे कि साथ लकड़ी के काम, .
 
 ### "--" + "तुम" (3 occurrences)
 - Predicted: None
@@ -206,14 +166,6 @@ Accuracy: 99.84%
   - में तुम लोगो से प्यार करता हुँ ।
   - मैं जोन को ढुँढ रहा हुँ ।
 
-### "हुआ" + "।" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - दिमाग उनके ज़रा हटके थे और आस पास लोगों को बर्दाश्त नहीं हुआ ।
-  - मेरा जन्म और पालन-पोषण बोस्टन में हुआ ।
-  - वह कमरे में दाखिल हुआ ।
-
 ### "है" + "---" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -245,6 +197,21 @@ Accuracy: 99.84%
   - कल को ये कहेंगे—भगवान मर गए हैं।
   - पहले इन्होंने कहा—भगवान लापता हैं।
   - फिर कहा—भगवान फ्रॉड हैं।
+
+### "…" + "-" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - आपको मेरी आवाज़… - क्या?
+  - एक, दो, तीन… - नहीं।
+  - चार, तीन… - ऑन एयर हमें अभी-अभी पता चला है कि सी लिंक पर एक और ब्लास्ट हुआ है।
+
+### "-" + "क्या" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - आपको मेरी आवाज़… - क्या?
+  - कुछ नहीं- क्या?
 
 ### "-" + "नहीं" (2 occurrences)
 - Predicted: None
@@ -341,7 +308,7 @@ Accuracy: 99.84%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - मगर ये सब-- ये जब चाहे हमसे पैसे मांग ले।
+  - मगर ये सब-- ये जब चाहे हमसे पैसे माँग ले।
   - ये-- ये सब मत कीजिये।
 
 ### "--" + "हाँ" (2 occurrences)
@@ -400,13 +367,6 @@ Accuracy: 99.84%
   - छोटे --- छोटे --- छोटू, यार!
   - छोटे --- छोटे --- छोटू, यार!
 
-### "जॉनी" + "." (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मैं तुम्हारे बारे में बहुत सुना है, जॉनी .
-  - यहीं है पक्षी, जॉनी .
-
 ### "तो" + "--" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -418,15 +378,8 @@ Accuracy: 99.84%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - कहता था --- चारों तरफ ज्ञान बंट रहा है, जहाँ से मिलता है, लपेट लो।
+  - कहता था --- चारों तरफ ज्ञान बँट रहा है, जहाँ से मिलता है, लपेट लो।
   - मैंने बोला था --- एक दिन तुम रोओगे और मैं हँसूंगा।
-
-### "था" + "?" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - तो इस तरह तुम्हें, मिसेज़ डिसूज़ा के बारे में सब कुछ पता चलता था ?
-  - मुझे कैसे पता था ?
 
 ### "थे" + "?" (2 occurrences)
 - Predicted: None
@@ -477,13 +430,6 @@ Accuracy: 99.84%
   - तूने डाला नहीं, राजू --- फरहान --- वैसे हमने तो आपको बुलाया नहीं।
   - हाँ फरहान --- बोल।
 
-### "बृहस्पति" + "!" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - बाय, बृहस्पति !
-  - हाय, बृहस्पति !
-
 ### "बेटे" + "को" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -498,26 +444,19 @@ Accuracy: 99.84%
   - आज समझ में आ गया भैया— लव इज़ वेस्ट ऑफ टाइम।
   - आज समझ में आ गया भैया—लव इज़ भास्ट ऑफ टाइम।
 
-### "मनिता" + "।" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मनिता ।
-  - साथ जाएं, मनिता ।
-
-### "मैं" + ".." (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मेरे फ्यूरर, मैं ..
-  - मैं ..
-
 ### "साले" + "---" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - ओए, साले --- काहे का सेंटीमीटर, किलोमीटर बन गया है तू!
   - ये बाहर आ साले --- ए बाहर आ।
+
+### "हुआ" + "।" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - मेरा जन्म और पालन-पोषण बोस्टन में हुआ ।
+  - वह कमरे में दाखिल हुआ ।
 
 ### "हूं" + "," (2 occurrences)
 - Predicted: None
@@ -554,13 +493,6 @@ Accuracy: 99.84%
   - ऐसा कुछ ना करें जिससे बाद में आपको पछतावा हो ।
   - मुझे जाने मेँ कोई तुक नहिं लगता अगर पीृतिभोज लगभग समापत हो चुका हो ।
 
-### "ूँ," + " " (2 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - जी हाँ, मगर मैं बसंत बहार रेस्तरां में दोपहर का खाना खाना चाहती हूँ, ठीक है?
-  - बेवड़ा नहीं हूँ, डॉक्टर।
-
 ### "—" + "तो" (2 occurrences)
 - Predicted: Space
 - Actual: None
@@ -582,179 +514,17 @@ Accuracy: 99.84%
   - …तो पार्टनरशिप करोगी, खाली बदरू के साथ।
   - …तो हमें अपने आप को जानवर मान लेना चाहिए।
 
-### " अकेल" + "े" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "," + "." (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - मीर्गरीटा, समुद्र तट पर हम दोनों अकेले, सूर्यास्त.
+  - और तुम्हें पता है, मैं बस भागने की बात कर रहा हूँ, .
 
-### " ओ" + "र" (1 occurrences)
-- Predicted: Space
-- Actual: None
+### "-" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
 - Examples:
-  - दाहिनी ओर.
-
-### " कमीन" + "े" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - लंड़-चाटू कमीने.
-
-### " चाहिय" + "े" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - मुझें बात करने के लिये कोई चाहिये।
-
-### " ट" + "ी" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - बुजजी, लकी टी.
-
-### " दिय" + "ा" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - बुर्का पहनवा दिया।
-
-### " नही" + "ं" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - बुर्के की ज़बरदस्ती नहीं।
-
-### " बं" + "द" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - पीसीएस-वीसीएस सब बंद।
-
-### " बज" + "े" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - आजु सबेरे, सात बजे.
-
-### " बुज्ज" + "ी" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - बुज्जी, लैपटाप बुज्जी, लॉकर।
-
-### " भ" + "ी" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - टॉर्नो, तुम भी.
-
-### " मार" + "ा" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - इन्हीं हाथों से मारा।
-
-### " लॉक" + "र" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - बुज्जी, लैपटाप बुज्जी, लॉकर।
-
-### " स" + "र" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - कुपया सर।
-
-### " सबक" + "ो" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - इन्हीं बातों ने बर्बाद किया है सबको।
-
-### " सबेर" + "े" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - आजु सबेरे, सात बजे.
-
-### " सा" + "थ" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - क्या खुसुर-फुसुर कर रहे थे उसके साथ?
-
-### " सिंघाड़" + "ा" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - गर्मा-गरम सिंघाड़ा!
-
-### " सूर्यास्" + "त" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - मीर्गरीटा, समुद्र तट पर हम दोनों अकेले, सूर्यास्त.
-
-### " ह" + "ी" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - जल्दबाज़ी में काम करोगे तो ग़लतियाँ तो होंगीं ही।
-
-### " ह" + "ु" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - इनकी आखरी इच्छा पूरी करे और टीम में रखे मुझे कुपया, सर मैं विनंती करता हु।
-
-### " ह" + "ो" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - कान्ताबेन, कैसी हो?
-
-### " हंस" + "ो" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - कुपया हंसो।
-
-### "," + "ऐसा" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - एक तूफ़ान आ रहा है, ऐसा?
-
-### "," + "डॉक्टर" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - मैं कुछ नहीं सुनता, डॉक्टर।
-
-### "," + "थोरिन" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - थोरिन, थोरिन।
-
-### "," + "बैठिए" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - आइए, बैठिए, बैठिए।
-
-### "," + "भाई" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - यक़ीन मानो, भाई।
-
-### "," + "मुझे" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - स्वामीजी, मुझे आशीर्वाद दो।
+  - लाइफ़ इनश्योरेंस - - अरोड़ा जी।
 
 ### "-" + "अम्मा" (1 occurrences)
 - Predicted: None
@@ -762,17 +532,23 @@ Accuracy: 99.84%
 - Examples:
   - नहीं- अम्मा!
 
+### "-" + "अरोड़ा जी" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - लाइफ़ इनश्योरेंस - - अरोड़ा जी।
+
 ### "-" + "उत्तर" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - क्या, उत्तर- उत्तर?
 
-### "-" + "क्या" (1 occurrences)
+### "-" + "ऑन" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - कुछ नहीं- क्या?
+  - चार, तीन… - ऑन एयर हमें अभी-अभी पता चला है कि सी लिंक पर एक और ब्लास्ट हुआ है।
 
 ### "-" + "गुड इवनिंग" (1 occurrences)
 - Predicted: None
@@ -803,12 +579,6 @@ Accuracy: 99.84%
 - Actual: Space
 - Examples:
   - पर मैंने कहा- डॉक्टर ने कहा वो लेट हो जाएँगे।
-
-### "-" + "धीरे" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - धीरे- धीरे।
 
 ### "-" + "बाथरूम" (1 occurrences)
 - Predicted: None
@@ -1002,6 +772,12 @@ Accuracy: 99.84%
 - Examples:
   - गीत, तुम समझ नहीं रही वह क्या-- प्रैक्टिकल बनो यार!
 
+### "--" + "फिंगर" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - तीन दिन से हमको नहीं-- फिंगर प्रिंट की फाइल देखी आपने?
+
 ### "--" + "बंधनमुक्त" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1032,12 +808,6 @@ Accuracy: 99.84%
 - Examples:
   - इग्नोर कर -- इग्नोर कर -- बिस्किट खाओ ना, बहुत अच्छा है।
 
-### "--" + "भाई" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - बस आँखें खुली-- भाई मैं यहीं हूँ, आपको कुछ नहीं होगा भाई।
-
 ### "--" + "भाड़" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1055,12 +825,6 @@ Accuracy: 99.84%
 - Actual: Space
 - Examples:
   - देखो-- माफ़ कीजिएगा!
-
-### "--" + "मि." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - इतनी गिरी हुई हरकत कर सकती है तो-- मि.
 
 ### "--" + "मेरा" (1 occurrences)
 - Predicted: None
@@ -1110,12 +874,6 @@ Accuracy: 99.84%
 - Examples:
   - साले, बाप पे जाता है, तेरी -- रुक जा, छोड़ ना।
 
-### "--" + "रूको" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - दरअसल-- रूको!
-
 ### "--" + "लेके" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1139,12 +897,6 @@ Accuracy: 99.84%
 - Actual: Space
 - Examples:
   - मैं कल गया मैंने-- शिव!
-
-### "--" + "सामने" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - टूथलेस को वापस लाना और ड्रागो की बैंड-- सामने देखकर!
 
 ### "--" + "सैलरी" (1 occurrences)
 - Predicted: None
@@ -1276,7 +1028,7 @@ Accuracy: 99.84%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - कहता था --- चारों तरफ ज्ञान बंट रहा है, जहाँ से मिलता है, लपेट लो।
+  - कहता था --- चारों तरफ ज्ञान बँट रहा है, जहाँ से मिलता है, लपेट लो।
 
 ### "---" + "छोटू" (1 occurrences)
 - Predicted: None
@@ -1410,12 +1162,6 @@ Accuracy: 99.84%
 - Examples:
   - नहीं सर --- हम एक्चुअली साइंस की तरफ से हैं सर, साइंस की तरफ से।
 
-### "---" + "हमारा" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - इसलिए नहीं कि हम लास्ट थे, पर इसलिए कि हमारा --- हमारा दोस्त फेल हो गया था।
-
 ### "---" + "हाँ" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1440,12 +1186,6 @@ Accuracy: 99.84%
 - Examples:
   - अरे वायरस आ रहा है अंडे -- लेके।
 
-### "अंदर" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मेरा मतलब है गहरे अंदर .
-
 ### "अचानक" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1464,11 +1204,11 @@ Accuracy: 99.84%
 - Examples:
   - अरे --- अपना दोस्त मिल गया।
 
-### "आँखें" + "…" (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "आंटी" + "|" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - आँखें… आँखें खोलिए, रहमान भाई।
+  - जी, आंटी| मदद कर दो हमारी।
 
 ### "आइए" + "।" (1 occurrences)
 - Predicted: None
@@ -1482,30 +1222,6 @@ Accuracy: 99.84%
 - Examples:
   - पत्र में यह नहीं लिखा के वह टोक्यो कब आएगी ।
 
-### "आओ" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - कृपया, बाहर आओ ।
-
-### "आज" + "के" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - ठीक है, आजके लिए इतना ही।
-
-### "आत्मा" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - तुम्हारी माँ की धन्य आत्मा !
-
-### "आप" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मैं भी उतना ही दोषी होउंगा इस काले धन का जितना आप .
-
 ### "आम" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1518,35 +1234,17 @@ Accuracy: 99.84%
 - Examples:
   - क्या तुम्हें समझ में आया ?
 
-### "इनॉग्रेशन" + "।" (1 occurrences)
+### "आह" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - और ये हो गया इनॉग्रेशन ।
+  - आह …!
 
-### "इन्वेस्टमेंट" + "।" (1 occurrences)
+### "इनश्योरेंस" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - ये हो गया थोड़ा सा इन्वेस्टमेंट ।
-
-### "उत्तम" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - उत्तम !
-
-### "उह" + ".." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - उह ..
-
-### "एस" + ".." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - एस ..
+  - लाइफ़ इनश्योरेंस - - अरोड़ा जी।
 
 ### "ओथ" + "---" (1 occurrences)
 - Predicted: None
@@ -1554,29 +1252,11 @@ Accuracy: 99.84%
 - Examples:
   - ये हिप्पोक्रेटिक ओथ --- इसने तो हमारी लगा दी!
 
-### "और" + ".." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मेरे पास है ऑटो मरम्मत और ..
-
-### "क" + "श्मीर," (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - नकस्लवाद, जम्मू-कश्मीर, नॉर्थ ईस्ट… कुछ भी नहीं छोड़ा।
-
 ### "कब" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - कब ?
-
-### "कबसे" + "हैं" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - आप विदेश में कबसे हैं?
 
 ### "कभी" + "—" (1 occurrences)
 - Predicted: Space
@@ -1584,35 +1264,11 @@ Accuracy: 99.84%
 - Examples:
   - कभी-कभी—जब हमें इस गोले की याद आएगी।
 
-### "करना" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - कायो, मुझे माफ करना ।
-
 ### "करना" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - अब कंजूसी काहे करना—आज तुम्हारी सालगिरह है!
-
-### "करें" + "<END>" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - जब तक मैं आपको बताऊं, तब तक इसे पुनर्स्थापित न करें।
-
-### "करेंग" + "े" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - क्या तुम मुझसे बात नहीं करेंगे?
-
-### "करेंगे" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - हम पूरे विमान में फ्लश रिवेट्स का प्रयोग करेंगे ।
 
 ### "करो" + "—" (1 occurrences)
 - Predicted: Space
@@ -1654,19 +1310,13 @@ Accuracy: 99.84%
 - Predicted: Space
 - Actual: None
 - Examples:
-  - अरे, तुम ने कैशमन में भी सजा काटी है, है ना?
+  - अरे, तुमने कैशमन में भी सजा काटी है, है ना?
 
 ### "काट" + "---" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - ये काट, बीच में से काट ---।
-
-### "कान्ताबे" + "न" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - कान्ताबेन, कैसी हो?
 
 ### "किस" + "के" (1 occurrences)
 - Predicted: Space
@@ -1680,12 +1330,6 @@ Accuracy: 99.84%
 - Examples:
   - बात करते हैं तो सिर्फ मार्क्स की -- या फिर, यूएसए में नौकरी की।
 
-### "की" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - कम से कम तुम सबों की .
-
 ### "की" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1698,12 +1342,6 @@ Accuracy: 99.84%
 - Examples:
   - क्षमा कीजिए ।
 
-### "के" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - बिना शक के .
-
 ### "के" + "बीच" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1715,12 +1353,6 @@ Accuracy: 99.84%
 - Actual: None
 - Examples:
   - क्या अनंतलक्ष्मी मिठाई केसाथ आई?
-
-### "कॉमाड्रे" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - कॉमाड्रे , आपका स्वागत है।
 
 ### "को" + "—" (1 occurrences)
 - Predicted: Space
@@ -1746,12 +1378,6 @@ Accuracy: 99.84%
 - Examples:
   - भगवान को खोजना—यह धर्म है।
 
-### "गई" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ऐसा भी तो हो सकता है कि उसने टिकट खरीदे, लेकिन फिल्म देखने नहीं गई ।
-
 ### "गई" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1770,23 +1396,11 @@ Accuracy: 99.84%
 - Examples:
   - सब फिक्स हो गया—फरहान तेरी बहन से शादी करेगा।
 
-### "गर्म" + "ा" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - गर्मा-गरम सिंघाड़ा!
-
 ### "चल" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - चल - गुड इवनिंग, गुड इवनिंग।
-
-### "चलें" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - आओ चलें !
 
 ### "चलें" + "--" (1 occurrences)
 - Predicted: None
@@ -1806,12 +1420,6 @@ Accuracy: 99.84%
 - Examples:
   - चलो चलो ---।
 
-### "चाहिए" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - तब मुझे भी गिरफ्तार किया जाना चाहिए .
-
 ### "चाहिए" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -1830,23 +1438,11 @@ Accuracy: 99.84%
 - Examples:
   - लेकिन एक और जीरो कम हो जाए --- तो आई वुड वरी अ लिटिल।
 
-### "जाओ" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - चल जाओ !
-
 ### "जाओ" + "---" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - अरे शांत हो जाओ, शांत हो जाओ --- आओ मेरे साथ।
-
-### "जाओ" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - रुक जाओ ।
 
 ### "जाना" + "।" (1 occurrences)
 - Predicted: None
@@ -1872,12 +1468,6 @@ Accuracy: 99.84%
 - Examples:
   - जैसे—कि हमारे पास गुलाटी मारते हुए आओ, तब हम तुम्हारी मदद करेंगे!
 
-### "जॉनी" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - काफी आश्चर्यजनक है एक महिला को गाते सुनना अपने घर में, अह, जॉनी ?
-
 ### "जॉय" + "---" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1890,41 +1480,11 @@ Accuracy: 99.84%
 - Examples:
   - तुझे टक-टक-टक-टकते रहना, तेरी बक-बक-बक सुनते रहना।
 
-### "टॉर्न" + "ो" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - टॉर्नो, तुम भी.
-
-### "डालो" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - फिर पोस्टर को इस तरह इस पर डालो .
-
 ### "डिप्टी" + "!!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - मास्टर के डिप्टी !!
-
-### "डिस्को" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - डिस्को !
-
-### "तक" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मैं हरे रंग के पत्थर वाला स्वर्ण कंगन पहनुगी बिल्कुल अंत तक .
-
-### "तेजी" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - अच्छी नज़र चाहिए और काम में तेजी .
 
 ### "तेरी" + "--" (1 occurrences)
 - Predicted: None
@@ -1938,11 +1498,11 @@ Accuracy: 99.84%
 - Examples:
   - बाहर आ, नहीं तो --- नहीं तो मैं तेरे दरवाजे पे मूत्रविसर्जन करूँगा।
 
-### "था" + "." (1 occurrences)
+### "था" + "?" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - नहीं, मैं नशे से उबर रहा था .
+  - तो इस तरह तुम्हें, मिसेज़ डिसूज़ा के बारे में सब कुछ पता चलता था ?
 
 ### "था" + "—" (1 occurrences)
 - Predicted: Space
@@ -1955,12 +1515,6 @@ Accuracy: 99.84%
 - Actual: Space
 - Examples:
   - दरअसल क्या है, हम लोग राजू को डेमो दे रहे थे --- कि रट्टा मार के मत पढ़ो।
-
-### "थोरिन" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - थोरिन, थोरिन।
 
 ### "दा" + "!" (1 occurrences)
 - Predicted: None
@@ -1980,23 +1534,11 @@ Accuracy: 99.84%
 - Examples:
   - दा !!!
 
-### "दादा" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - प्लीज, दादा !
-
 ### "दिखाओ" + "!!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - अपने पिता को कुछ सम्मान दिखाओ !!
-
-### "दिखेगी" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ऐसे पानी में किसी को गंदगी भी नहीं दिखेगी ।
 
 ### "दिया" + "?" (1 occurrences)
 - Predicted: None
@@ -2028,18 +1570,6 @@ Accuracy: 99.84%
 - Examples:
   - देखा -- कुछ बात थी उसमें।
 
-### "देखिए" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - यह देखिए ।
-
-### "देखो" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - इन सभी उपहारों को देखो !
-
 ### "देखो" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2058,41 +1588,17 @@ Accuracy: 99.84%
 - Examples:
   - ये दे दो --- वो दे दो।
 
-### "दो" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - कृपया मुझे यहाँ काम करने दो ।
-
 ### "दोबारा" + "!" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - दोबारा !
 
-### "नंबर" + "।" (1 occurrences)
+### "नहीं" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - रॉन्ग नंबर ।
-
-### "नकस्लवाद," + " " (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - नकस्लवाद, जम्मू-कश्मीर, नॉर्थ ईस्ट… कुछ भी नहीं छोड़ा।
-
-### "नहीं" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - नहीं !
-
-### "नहीं" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मेरे माता पिता तो यहाँ हैं ही नहीं ।
+  - नहीं … धन्यवाद.
 
 ### "ना" + "---" (1 occurrences)
 - Predicted: None
@@ -2124,12 +1630,6 @@ Accuracy: 99.84%
 - Examples:
   - उसे वो काम फिर से करना पड़ेगा ।
 
-### "पाएंगी" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - फिर युबाबा भी तुम्हें नुकसान नहीं पहुंचा पाएंगी ।
-
 ### "पायी" + "।" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2141,12 +1641,6 @@ Accuracy: 99.84%
 - Actual: Space
 - Examples:
   - पासवर्ड ?
-
-### "पीसीए" + "स" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - पीसीएस-वीसीएस सब बंद।
 
 ### "पूरी" + "---" (1 occurrences)
 - Predicted: None
@@ -2160,23 +1654,11 @@ Accuracy: 99.84%
 - Examples:
   - एक और फिरकी—कि हमको गाय के दूध से नहलाओ!
 
-### "फॉर्मूला" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - सारा कीमती हर्बल फॉर्मूला ।
-
 ### "बनाया" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - और जिसे तुमने बनाया— उस नकली भगवान को हटा दो।
-
-### "बनो" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मूर्ख मत बनो !
 
 ### "बहन" + "---" (1 occurrences)
 - Predicted: None
@@ -2196,59 +1678,17 @@ Accuracy: 99.84%
 - Examples:
   - गीता पढ़ें, कुरान पढ़ें या बाइबिल—का पढ़ें हम?
 
-### "बात" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - एक भयानक बात .
-
-### "बाद" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - भोज के बाद , तुम एक असली राजकुमारी बन जाओगी।
-
 ### "बाहर" + "---" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - आपने बोला गेट के बाहर --- मेरी मौत --- हाँ।
 
-### "बिना" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - तुम कैसी दुनिया पसंद करोगे, पिरामिड के साथ या उनके बिना ?
-
-### "बुजज" + "ी" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - बुजजी, लकी टी.
-
-### "बुज्ज" + "ी" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - बुज्जी, लैपटाप बुज्जी, लॉकर।
-
-### "बुलाया" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - तुमने वापस ले जाने के लिए जानबूझकर उन्हें बुलाया ?
-
 ### "बुलाया" + "।" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - मैंने उसे नहीं बुलाया ।
-
-### "बैठिए" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - आइए, बैठिए, बैठिए।
 
 ### "बोल" + "--" (1 occurrences)
 - Predicted: None
@@ -2280,24 +1720,6 @@ Accuracy: 99.84%
 - Examples:
   - होता है लाइफ में भी --- अगर इंसान से प्यार करो।
 
-### "मछलियां" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ताजी मछलियां !
-
-### "मनिता" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मनिता , क्या आप इसे ला रहे हैं?
-
-### "मम्मा" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मम्मा !
-
 ### "माँ" + "---" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2310,23 +1732,11 @@ Accuracy: 99.84%
 - Examples:
   - शह और मात !
 
-### "मानती" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - हाकू, जो भी तुमने किया मैं उसके लिए तुम्हें गुनहगार नहीं मानती ।
-
 ### "माने" + "---" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - स्तन माने --- कैसी अपमानजनक बातें कर रहा है ये लड़का।
-
-### "माशा" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - अब आ जा माशा !
 
 ### "मिनट" + "---" (1 occurrences)
 - Predicted: None
@@ -2346,18 +1756,6 @@ Accuracy: 99.84%
 - Examples:
   - फिर हमको बहुत शांत स्वभाव की एक महिला मिली—फुलझड़िया।
 
-### "मिस्टर अवस्थी" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मुझे माफ कीजिए आ, मिस्टर अवस्थी ।
-
-### "मीर्गरीट" + "ा" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - मीर्गरीटा, समुद्र तट पर हम दोनों अकेले, सूर्यास्त.
-
 ### "मूँछ" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -2369,30 +1767,6 @@ Accuracy: 99.84%
 - Actual: Space
 - Examples:
   - आसान भाषा में --- बाहर जाइये!
-
-### "में" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - एक मुट्ठी एक बार में .
-
-### "में" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - पूरे दिन क्या करते हो तुम स्कूल में ?
-
-### "में" + "थे" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - क्या तुम सच में बॉस्टन में थे?
-
-### "में" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - एक पार्टी होने वाली है जिमखाना क्लब में ।
 
 ### "में" + "—" (1 occurrences)
 - Predicted: Space
@@ -2406,23 +1780,11 @@ Accuracy: 99.84%
 - Examples:
   - हाँ हाँ सर --- मैं --- मैं भी नहीं करूँगा सर।
 
-### "मैं" + "?" (1 occurrences)
+### "मैं" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - मैं ?
-
-### "मैंने" + ".." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मैं चुप रहूंगा, लेकिन मैंने ..
-
-### "मैट" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मैट ।
+  - मेरे फ्यूरर, मैं … हेल, मेरे फ्यूरर!
 
 ### "मौत" + "---" (1 occurrences)
 - Predicted: None
@@ -2441,18 +1803,6 @@ Accuracy: 99.84%
 - Actual: Space
 - Examples:
   - सेम सरनेम यार -- ढिल्लों।
-
-### "रखूंगी" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मैं रखूंगी ।
-
-### "रहा" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ये रहा ।
 
 ### "रहूँगी" + "।" (1 occurrences)
 - Predicted: None
@@ -2490,41 +1840,17 @@ Accuracy: 99.84%
 - Examples:
   - उसने कहा की मैंने उसे रुलाया ।
 
-### "रॉन्ग" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - रॉन्ग ।
-
 ### "रोज" + ".." (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - अपनी खामियों को टेढ़ेपन के लिबास में लपेटकर, दुनिया से लड़ता होगा हर रोज ..
 
-### "लंड" + "़" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - लंड़-चाटू कमीने.
-
-### "लगेगा" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मुझे अच्छा लगेगा .
-
 ### "लड़की" + "को" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - कोई ओर उस लड़कीको बचा नहीं सकते, मेरे बेटे के अलावा।
-
-### "लिए" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - और फिर भी, बहुत मुश्किल है माफ करना अपने तुम को यह करने के लिए .
 
 ### "लिया" + "?" (1 occurrences)
 - Predicted: None
@@ -2538,29 +1864,11 @@ Accuracy: 99.84%
 - Examples:
   - मैंने पकड़ के टाँग खींच ली—कि जाते किधर?
 
-### "लो" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - इसे ले लो ।
-
-### "वाइन" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - वाइन ।
-
-### "वास्तव" + "में" (1 occurrences)
+### "ले" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - मतलब वास्तव में निर्दोष, है न?
-
-### "वास्तव में" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - मुझे समझ में नहीं आता हुआ क्या वास्तव में .
+  - ये ले—हमारी तरफ से—पी-मेल!
 
 ### "श---" + "बस" (1 occurrences)
 - Predicted: None
@@ -2568,11 +1876,11 @@ Accuracy: 99.84%
 - Examples:
   - श--- बस, चुप चुप चुप।
 
-### "शनी" + "," (1 occurrences)
+### "शुक्रिया" + "।" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - हाय शनी , मज़े में?
+  - पहले मेरी मदद करने के लिए शुक्रिया ।
 
 ### "शेरवानी" + "--" (1 occurrences)
 - Predicted: None
@@ -2580,29 +1888,11 @@ Accuracy: 99.84%
 - Examples:
   - मेरी डेढ़ लाख की शेरवानी -- अरे चटनी क्यों खाते हो तुम लोग?
 
-### "श्मीर," + " " (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - नकस्लवाद, जम्मू-कश्मीर, नॉर्थ ईस्ट… कुछ भी नहीं छोड़ा।
-
-### "संपत्ति" + "है" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - ये आदमी कहता है कि ये इसकी संपत्तिहै।
-
 ### "सकता" + "।" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - वह जाना चाहता है, लेकिन जा नहीं सकता ।
-
-### "सकती" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - अन्यथा मैं जादू नहीं तोड़ सकती ।
 
 ### "सकते" + "।" (1 occurrences)
 - Predicted: None
@@ -2615,12 +1905,6 @@ Accuracy: 99.84%
 - Actual: None
 - Examples:
   - उसे आप सबके सहयोग की जरूरत पड़ेगी।
-
-### "सरसों" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - सरसों ।
 
 ### "सावधान" + "—" (1 occurrences)
 - Predicted: Space
@@ -2646,12 +1930,6 @@ Accuracy: 99.84%
 - Examples:
   - अरे, अरे, मेरी बात तो सुन --- नहीं नहीं, तू मेरी बात सुन।
 
-### "सुना" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - क्या तुमने मुझे नहीं सुना ?!
-
 ### "सुनिए" + "---" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2664,11 +1942,11 @@ Accuracy: 99.84%
 - Examples:
   - सुरसुरी --- प्राण गटकं!
 
-### "से" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
+### "से" + "—" (1 occurrences)
+- Predicted: Space
+- Actual: None
 - Examples:
-  - हाँ, निश्चित रूप से .
+  - ये ले—हमारी तरफ से—पी-मेल!
 
 ### "सोए" + "?" (1 occurrences)
 - Predicted: None
@@ -2682,35 +1960,17 @@ Accuracy: 99.84%
 - Examples:
   - सोचिये—का असली भगवान ऐसे अजीब समाधान देगा?
 
-### "स्वामीजी" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - स्वामीजी, मुझे आशीर्वाद दो।
-
 ### "हँसो" + "---" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - हँसो --- मेरे मेथड्स पे हँसो।
 
-### "हम" + "…" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - लेकिन हम …कोर्ट नहीं है और ना ही बनने का कोशिश कर रहे हैं।
-
 ### "हमको" + "—" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - मालूम है हमको—गणेश जी और कार्तिकेय।
-
-### "हमारा" + "---" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - इसलिए नहीं कि हम लास्ट थे, पर इसलिए कि हमारा --- हमारा दोस्त फेल हो गया था।
 
 ### "हाँ" + "---" (1 occurrences)
 - Predicted: None
@@ -2724,12 +1984,6 @@ Accuracy: 99.84%
 - Examples:
   - अच्छा, हाँ—हज़ार रुपये।
 
-### "ही" + "।" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - एकदम ऐसा ही ।
-
 ### "हुआ" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2742,29 +1996,11 @@ Accuracy: 99.84%
 - Examples:
   - हमें अहसास हुआ—इस गोले पर जीवित रहने के लिए ये फोटो बहुत ज़रूरी हैं।
 
-### "है" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - यह नसों और श्वसन प्रणाली को लकवा मार देती है .
-
 ### "है" + "ना" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - हैना?
-
-### "हैं" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - वे सब जहाज़ हैं !
-
-### "हो" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - परेशान मत हो , हम चल लेंगे।
 
 ### "हो" + "---" (1 occurrences)
 - Predicted: None
@@ -2784,12 +2020,6 @@ Accuracy: 99.84%
 - Examples:
   - आपकी छुट्टियाँ मंगलमय हों ।
 
-### "होंगी" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - उसके आत्मविश्वास की तो धज्जियाँ उड़ती होंगी !
-
 ### "होगा" + "।" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2801,30 +2031,6 @@ Accuracy: 99.84%
 - Actual: Space
 - Examples:
   - आज बारिश होगी ।
-
-### "ा," + " " (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - लड़का सिख नहीं है ना, लोग मानेंगे नहीं।
-
-### "ाहब," + " " (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - संतरी साहब, एक बीड़ी पिलाई?
-
-### "ैं," + " " (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - नसें काट लेते हैं, इमारतों से कूद जाते हैं।
-
-### "ॉर्थ ईस्ट…" + " " (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - नकस्लवाद, जम्मू-कश्मीर, नॉर्थ ईस्ट… कुछ भी नहीं छोड़ा।
 
 ### "—" + "अंदर" (1 occurrences)
 - Predicted: Space
@@ -2958,6 +2164,12 @@ Accuracy: 99.84%
 - Examples:
   - उसकी नौकरी—पाकिस्तान एम्बेसी, बेल्जियम।
 
+### "—" + "पी" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - ये ले—हमारी तरफ से—पी-मेल!
+
 ### "—" + "पैसा" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -3042,6 +2254,12 @@ Accuracy: 99.84%
 - Examples:
   - अच्छा, हाँ—हज़ार रुपये।
 
+### "—" + "हमारी" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - ये ले—हमारी तरफ से—पी-मेल!
+
 ### "—" + "है" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -3053,12 +2271,6 @@ Accuracy: 99.84%
 - Actual: None
 - Examples:
   - बस यूँ समझिए, थानेदार साहब—होश सँभालते ही अपने पैरों पर खड़े हो गए थे।
-
-### "…" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - एक, दो, तीन… - नहीं।
 
 ### "…" + "अपने" (1 occurrences)
 - Predicted: Space
@@ -3072,35 +2284,17 @@ Accuracy: 99.84%
 - Examples:
   - हम्म…अमृत।
 
-### "…" + "आँखें" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - आँखें… आँखें खोलिए, रहमान भाई।
-
-### "…" + "आंटी" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - कोई…आंटी है बेबी रानी, उसका नाम आया है।
-
 ### "…" + "उस" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - …उस पर भी दबाव डालना होगा।
 
-### "…" + "कोई" (1 occurrences)
+### "…" + "के" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
-  - मैडम, एफआईआर नहीं किए, लेकिन…कोई है जिन्होंने पाआईएल किया है।
-
-### "…" + "कोर्ट" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - लेकिन हम …कोर्ट नहीं है और ना ही बनने का कोशिश कर रहे हैं।
+  - …के सहायक हमारे साथ हैं यहाँ।
 
 ### "…" + "छत" (1 occurrences)
 - Predicted: Space
@@ -3120,6 +2314,12 @@ Accuracy: 99.84%
 - Examples:
   - …तब।
 
+### "…" + "तमंग" (1 occurrences)
+- Predicted: Space
+- Actual: None
+- Examples:
+  - …तमंग भी मिला हुआ है, न?
+
 ### "…" + "दुख" (1 occurrences)
 - Predicted: Space
 - Actual: None
@@ -3132,23 +2332,11 @@ Accuracy: 99.84%
 - Examples:
   - गौरी भैया, वो…नए आए हैं।
 
-### "…" + "बंसी बाबू" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - सुनिए ना…बंसी बाबू।
-
 ### "…" + "बिना" (1 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
   - …बिना मतलब के कोई काम करना चाहिए।
-
-### "…" + "माने" (1 occurrences)
-- Predicted: Space
-- Actual: None
-- Examples:
-  - फिर क्या होगा…माने?
 
 ### "…" + "मिली" (1 occurrences)
 - Predicted: Space

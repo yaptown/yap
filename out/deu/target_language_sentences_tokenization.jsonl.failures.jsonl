@@ -27,7 +27,7 @@
 {"sentence":"Alleine bin ich besser dran.","failure_count":3}
 {"sentence":"Alleine hätte es mich erwischt.","failure_count":3}
 {"sentence":"Alleine hätte ich das nicht gekonnt.","failure_count":3}
-{"sentence":"Alleine kommt man nicht durchs Leben.","failure_count":2}
+{"sentence":"Alleine kommt man nicht durchs Leben.","failure_count":3}
 {"sentence":"Alleine schaffe ich es nicht, aber wir zusammen schon.","failure_count":3}
 {"sentence":"Alleine wär mir vieles entgangen.","failure_count":3}
 {"sentence":"Alleine.","failure_count":3}
@@ -60,8 +60,8 @@
 {"sentence":"Aus der Ferne sieht der große Felsen aus wie ein altes Schloss.","failure_count":1}
 {"sentence":"Aus einer anderen Zeit.","failure_count":3}
 {"sentence":"Aus'm Blickfeld, du Flöte!","failure_count":3}
-{"sentence":"Aus'm Palast?","failure_count":2}
-{"sentence":"Aus'm Westen?","failure_count":2}
+{"sentence":"Aus'm Palast?","failure_count":3}
+{"sentence":"Aus'm Westen?","failure_count":3}
 {"sentence":"Ausserdem habe ich ihn lebendig gesehen.","failure_count":1}
 {"sentence":"Auweia!","failure_count":1}
 {"sentence":"Außerdem bist du für die Arbeit in einem Nachtclub nicht geeignet.","failure_count":1}
@@ -118,6 +118,7 @@
 {"sentence":"Das Leben großartiger Menschen.","failure_count":3}
 {"sentence":"Das Phon [b] existiert in der Sprache lediglich als Allophon von /p/.","failure_count":1}
 {"sentence":"Das Problem liegt in Toms völligem Verhandlungsunwillen.","failure_count":3}
+{"sentence":"Das Restaurant an den Sous-Chef übergeht, Sie also!","failure_count":1}
 {"sentence":"Das bin ich, äh, das ist hier.","failure_count":1}
 {"sentence":"Das geb ich dir nicht mehr.","failure_count":1}
 {"sentence":"Das geb ich ja zu.","failure_count":3}
@@ -138,7 +139,7 @@
 {"sentence":"Das war aber höchste Zeit.","failure_count":1}
 {"sentence":"Das war eine Sondermeldung, wir fahren jetzt mit unserem Musikprogramm fort.","failure_count":1}
 {"sentence":"Das war wirklich komisch.","failure_count":1}
-{"sentence":"Das wird in der nächsten Ausgabe der Konkret erscheinen.","failure_count":2}
+{"sentence":"Das wird in der nächsten Ausgabe der Konkret erscheinen.","failure_count":3}
 {"sentence":"Dass man Opfer bringen muss, nicht wahr!?","failure_count":3}
 {"sentence":"Dass wir nicht streiten?","failure_count":1}
 {"sentence":"Dein Dekolleté.","failure_count":1}
@@ -150,7 +151,7 @@
 {"sentence":"Der Bräutigam ist schon da, und du bist noch nicht mal angezogen?","failure_count":1}
 {"sentence":"Der Fremdling antwortete mit einem langen, unverständlichen Satz.","failure_count":1}
 {"sentence":"Der Gitarre spielende Junge ist mein Bruder.","failure_count":1}
-{"sentence":"Der Herr Anwalt im Fidel-Castro-Look.","failure_count":2}
+{"sentence":"Der Herr Anwalt im Fidel-Castro-Look.","failure_count":3}
 {"sentence":"Der Hurensohn ist tot.","failure_count":1}
 {"sentence":"Der Kaiser hat abgedankt.","failure_count":3}
 {"sentence":"Der König hat nicht dafür einzustehen.","failure_count":3}
@@ -184,10 +185,11 @@
 {"sentence":"Die Autobahnen, das war nicht irgendein Hanswurst.","failure_count":1}
 {"sentence":"Die Berge hallen wider vom Klang der Musik.","failure_count":1}
 {"sentence":"Die Büroangestellte wurde aufgrund ihrer ungehobelten Manieren entlassen.","failure_count":1}
-{"sentence":"Die DDR, die ich für meine Mutter schuf, hätte ich mir vielleicht so gewünscht.","failure_count":2}
+{"sentence":"Die DDR, die ich für meine Mutter schuf, hätte ich mir vielleicht so gewünscht.","failure_count":3}
 {"sentence":"Die Demonstration am Bahnhof hat die Reisenden beeinträchtigt.","failure_count":1}
 {"sentence":"Die Eintrittskarten sind meinen, gib sie mir zurück.","failure_count":1}
 {"sentence":"Die Entscheidung, für die Briten zu kämpfen, erwies sich als Fehler.","failure_count":1}
+{"sentence":"Die Han-Truppen nehmen unser Land ein.","failure_count":1}
 {"sentence":"Die Hunde beschnüffelten sich schwanzwedelnd.","failure_count":1}
 {"sentence":"Die Katze scheint über die Maßen glücklich zu sein.","failure_count":1}
 {"sentence":"Die Kinder haben den Vorzug einer guten Erziehung genossen.","failure_count":1}
@@ -278,6 +280,7 @@
 {"sentence":"Ein Regenbogen bei Nacht?","failure_count":1}
 {"sentence":"Ein Violinist, den ich kenne, sagt, er besitze eine Stradivari.","failure_count":1}
 {"sentence":"Ein ausgewogenes Verhältnis zwischen Berufs- und Privatleben ist wichtig.","failure_count":1}
+{"sentence":"Ein ganz anderes Etwas, nicht?","failure_count":1}
 {"sentence":"Ein globaler Gegenschlag wurde bereits eingeleitet,.","failure_count":1}
 {"sentence":"Ein großer Felsen stieg aus der See empor.","failure_count":3}
 {"sentence":"Eine Art Party im oberen Geschoss hielt mich gestern Abend bis um eins wach.","failure_count":1}
@@ -285,7 +288,7 @@
 {"sentence":"Eine Metzgerei, damit es nicht immer Zeitungsläden sind.","failure_count":1}
 {"sentence":"Eine Unterschrift, Julie.","failure_count":1}
 {"sentence":"Eine feine Prinzessin kennt Anstößiges wie Schwitzen nicht.","failure_count":3}
-{"sentence":"Einen Freund auch nicht, falls du es nicht weißt.","failure_count":2}
+{"sentence":"Einen Freund auch nicht, falls du es nicht weißt.","failure_count":3}
 {"sentence":"Einen erstklassiger Kämpfer.","failure_count":1}
 {"sentence":"Einundachtzig,.","failure_count":1}
 {"sentence":"Elektrizität, fortschrittliche Medizin, man konnte sogar fliegen.","failure_count":1}
@@ -332,6 +335,7 @@
 {"sentence":"Es steht in allen Büchern.","failure_count":1}
 {"sentence":"Es tut mir Leid, aber du wirst deine Mama für lange Zeit nicht sehen.","failure_count":1}
 {"sentence":"Es tut mir leid, aber wir sind heute ausgebucht.","failure_count":1}
+{"sentence":"Es tut mir leid, dass ich deine Gefühle verletzte.","failure_count":1}
 {"sentence":"Es war ein unflätiger Angriff.","failure_count":1}
 {"sentence":"Es wird bald Tag.","failure_count":3}
 {"sentence":"Es wird hier immer schlimmer.","failure_count":1}
@@ -340,7 +344,7 @@
 {"sentence":"Es wäre uns eine Ehre wenn sie in eurem Haus stehen würde.","failure_count":1}
 {"sentence":"Es wären keine Geister, wenn man sie so einfach sehen könnte!","failure_count":1}
 {"sentence":"Essen Sie sie aus meiner Hand.","failure_count":1}
-{"sentence":"Euer Vater blieb nicht wegen einer anderen Frau im Westen.","failure_count":2}
+{"sentence":"Euer Vater blieb nicht wegen einer anderen Frau im Westen.","failure_count":3}
 {"sentence":"Eure Medizin kann meine Krankheit nicht heilen.","failure_count":1}
 {"sentence":"Eventuell hab ich noch Fragen.","failure_count":1}
 {"sentence":"Eventuell komme ich zurück.","failure_count":1}
@@ -377,7 +381,7 @@
 {"sentence":"Gib mir was zu trinken, Rico.","failure_count":1}
 {"sentence":"Ginny, sieh mal!","failure_count":3}
 {"sentence":"Gleich wird es spannend!","failure_count":1}
-{"sentence":"Gnädige Frau, mein Herr!","failure_count":2}
+{"sentence":"Gnädige Frau, mein Herr!","failure_count":3}
 {"sentence":"Gott hielt sich an Kantabens Gebete.","failure_count":3}
 {"sentence":"Grauer Van, nach Norden, rauf zur Craw Creek Road.","failure_count":1}
 {"sentence":"Grüß sie von mir.","failure_count":1}
@@ -410,6 +414,7 @@
 {"sentence":"Hier ist der Auspuff verzogen, hier nicht.","failure_count":1}
 {"sentence":"Hier sind die Pfirsiche sehr lecker!","failure_count":1}
 {"sentence":"Hier, glaub ich, ist eine strengre Wachsamkeit vonnöten.","failure_count":1}
+{"sentence":"Hoffen Sie wirklich auf Ihre Hilfe?","failure_count":1}
 {"sentence":"Hoffen wir das Letztere.","failure_count":3}
 {"sentence":"Hoffen wir einfach, daß wir nächstesmal mehr Glück haben!","failure_count":3}
 {"sentence":"Hoffen wir mal, dass Tom nichts merkt!","failure_count":3}
@@ -522,6 +527,7 @@
 {"sentence":"Ich muss Meghna finden.","failure_count":1}
 {"sentence":"Ich muss zugeben, dass ich Tom bei unserer ersten Begegnung nicht mochte.","failure_count":3}
 {"sentence":"Ich musste so lachen, dass mir fast die Tränen kamen.","failure_count":1}
+{"sentence":"Ich möchte mit deiner neuen Freundin tanzen.","failure_count":1}
 {"sentence":"Ich möchte von der wahren Größe des ehrwürdigen Elijah Muhammad reden.","failure_count":1}
 {"sentence":"Ich möchte wissen, ob euch mein neues Lied gefällt.","failure_count":1}
 {"sentence":"Ich packe euch Dampfbrötchen ein.","failure_count":1}
@@ -536,6 +542,7 @@
 {"sentence":"Ich sag's dir schon, wenn du störst.","failure_count":3}
 {"sentence":"Ich sag's dir später.","failure_count":3}
 {"sentence":"Ich sag's dir, damit du weder beunruhigt bist noch was dagegen tun kannst.","failure_count":3}
+{"sentence":"Ich sag's dir, der guckt schon die ganze Zeit hier rüber.","failure_count":1}
 {"sentence":"Ich sag's dir, du Arsch, beweg deinen Hintern raus!","failure_count":3}
 {"sentence":"Ich sag's dir, komm.","failure_count":3}
 {"sentence":"Ich sag's dir, schlaf lieber nachts.","failure_count":3}
@@ -591,9 +598,9 @@
 {"sentence":"Ihre Freundin starb an dem Tag, an dem deine Mutter verschwand.","failure_count":3}
 {"sentence":"Ihre Leistung auf der Kobayashi Maru stört Sie.","failure_count":1}
 {"sentence":"Ihre grüne Haut ist nur ein äußeres Manifestorium ihres verdorbenen Charakters.","failure_count":3}
-{"sentence":"Im Gesicht hast du nicht viel abgekriegt.","failure_count":2}
+{"sentence":"Im Gesicht hast du nicht viel abgekriegt.","failure_count":3}
 {"sentence":"Im KZ?","failure_count":1}
-{"sentence":"Im Ost-West-Team praktizierte ich die Wiedervereinigung.","failure_count":2}
+{"sentence":"Im Ost-West-Team praktizierte ich die Wiedervereinigung.","failure_count":3}
 {"sentence":"In Gegenwart von unterwürfigen Menschen wird es mir unwohl.","failure_count":1}
 {"sentence":"In Sachen Themen steht das ganz oben auf der Liste.","failure_count":1}
 {"sentence":"In dieser Nacht fröstelte sie im Zelt.","failure_count":1}
@@ -642,7 +649,7 @@
 {"sentence":"Kennte ich ihn besser, so würde ich ihm die Wahrheit sagen.","failure_count":3}
 {"sentence":"Kennte ich ihren Namen und ihre Adresse, so könnte ich ihr schreiben.","failure_count":3}
 {"sentence":"Klatschers Mutter macht's nicht mehr lang.","failure_count":3}
-{"sentence":"Knallen wir mit dem Baby mal über die Bahn!","failure_count":2}
+{"sentence":"Knallen wir mit dem Baby mal über die Bahn!","failure_count":3}
 {"sentence":"Kneife mich bitte,..","failure_count":3}
 {"sentence":"Koksen und Party machen.","failure_count":3}
 {"sentence":"Kolonne.","failure_count":3}
@@ -793,6 +800,7 @@
 {"sentence":"Requiem II Shuya's Traum.","failure_count":3}
 {"sentence":"Robert Fischer muss eine positive emotionale Reaktion entwickeln.","failure_count":1}
 {"sentence":"Robinson ist ein praktisch veranlagter, verständiger und mutiger Mann.","failure_count":1}
+{"sentence":"Rubens hat das Neue noch nicht mal begonnen.","failure_count":1}
 {"sentence":"Rußland stoppte die Invasion von Mongolenhorden.","failure_count":3}
 {"sentence":"Sag ihm, dass er Wort halten muss!","failure_count":1}
 {"sentence":"Sag's den anderen!","failure_count":3}
@@ -809,6 +817,7 @@
 {"sentence":"Sag's ihr, Bartholomew.","failure_count":3}
 {"sentence":"Sag's ihr, Harry!","failure_count":3}
 {"sentence":"Sag's ihr.","failure_count":3}
+{"sentence":"Sag's mir, ja?","failure_count":1}
 {"sentence":"Sag's mir, was ist passiert?","failure_count":3}
 {"sentence":"Sag's mir, wer besitzt ihn?","failure_count":3}
 {"sentence":"Sag's uns!","failure_count":3}
@@ -986,7 +995,7 @@
 {"sentence":"Trockne deine Tränen.","failure_count":1}
 {"sentence":"Trocknen Sie Ihre Tränen!","failure_count":1}
 {"sentence":"Trommeln und Gongs, all das, wo man draufschlägt.","failure_count":1}
-{"sentence":"Trotz deines Talents, an dem du noch nicht mal zweifelst.","failure_count":2}
+{"sentence":"Trotz deines Talents, an dem du noch nicht mal zweifelst.","failure_count":3}
 {"sentence":"Träumt von Paro's Hochzeit mit Devdas.","failure_count":3}
 {"sentence":"Tut mir Leid wegen der Tränen.","failure_count":1}
 {"sentence":"Two, two, three four.","failure_count":3}
@@ -1150,7 +1159,7 @@
 {"sentence":"Zahlreiche Boote lagen in der Bucht vor Anker.","failure_count":1}
 {"sentence":"Zahlreiche Bücher wurden gestohlen.","failure_count":1}
 {"sentence":"Zahlreiche berühmte Leute kommen hierher.","failure_count":1}
-{"sentence":"Zehn-, zwanzigtausend?","failure_count":2}
+{"sentence":"Zehn-, zwanzigtausend?","failure_count":3}
 {"sentence":"Zeig's ihm!","failure_count":3}
 {"sentence":"Zeig's ihm.","failure_count":3}
 {"sentence":"Zeigen Sie mir etwas von dem, was Sie komponiert haben?","failure_count":1}

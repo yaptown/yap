@@ -1,21 +1,21 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
 tirare fuori qualcosa	filled	143	12	12	1.00	yes		
-capitare a qualcuno	clitic	84	12	12	1.00	yes		
-capitare a qualcuno	filled	68	9	12	0.75	yes	Cos'è capitato ieri sera a Parigi?	capitato … a … Parigi
-sangue del proprio sangue	clitic	56	2	12	0.17	no	Anche il mio sangue?	mio … sangue
-fare del proprio meglio	clitic	55	12	12	1.00	yes		
-dalla propria parte	clitic	54	11	12	0.92	yes	Che vengano fuori dalla tua parte!	dalla … tua … parte
+capitare a qualcuno	clitic	88	12	12	1.00	yes		
+capitare a qualcuno	filled	69	10	12	0.83	yes	Cos'è capitato ieri sera a Parigi?	capitato … a … Parigi
+dalla propria parte	clitic	55	11	12	0.92	yes	Che vengano fuori dalla tua parte!	dalla … tua … parte
+sangue del proprio sangue	clitic	55	3	12	0.25	no	Anche il mio sangue?	mio … sangue
+fare del proprio meglio	clitic	54	12	12	1.00	yes		
 tirare fuori qualcosa	clitic	29	12	12	1.00	yes		
-per il bene di qualcuno	clitic	24	12	12	1.00	yes		
+per il bene di qualcuno	clitic	28	12	12	1.00	yes		
 dalla propria parte	filled	19	9	12	0.75	yes	Dalla parte opposta della strada c'è una farmacia aperta anche la domenica.	Dalla … parte … strada
 fare la propria parte	clitic	18	12	12	1.00	yes		
 alla salute di qualcuno	clitic	17	11	12	0.92	yes	In questa situazione è importante dare priorità alla mia salute.	alla … mia … salute
-fare la propria parte	filled	10	0	10	0.00	no	Diego, lei fa la parte del giovane passivo aggressivo.	fa … la … parte … giovane
+fare la propria parte	filled	11	0	11	0.00	no	Diego, lei fa la parte del giovane passivo-aggressivo.	fa … la … parte … giovane
 per il bene di qualcuno	filled	6	6	6	1.00	yes		
+sangue del proprio sangue	filled	6	3	6	0.50	no	Dammi il sangue del vampiro!	sangue … del … vampiro
 al giudizio di qualcuno	clitic	5	5	5	1.00	yes		
-aprire il proprio cuore	clitic	5	5	5	1.00	yes		
-sangue del proprio sangue	filled	5	3	5	0.60	yes	Dammi il sangue del vampiro!	sangue … del … vampiro
 sapere il fatto proprio	clitic	5	5	5	1.00	yes		
+aprire il proprio cuore	clitic	4	4	4	1.00	yes		
 alla salute di qualcuno	filled	3	3	3	1.00	yes		
 andare per la propria strada	clitic	2	2	2	1.00	yes		
 dio sia con qualcuno	filled	2	2	2	1.00	yes		
@@ -24,6 +24,7 @@ a proprio rischio e pericolo	clitic	1	1	1	1.00	yes
 dal canto proprio	clitic	1	1	1	1.00	yes		
 dal canto proprio	filled	1	1	1	1.00	yes		
 dire la propria	filled	1	0	1	0.00	no	E cosa hai detto di te?	detto … te
+essere il secondo nome di qualcuno	clitic	1	1	1	1.00	yes		
 fare i propri bisogni	clitic	1	1	1	1.00	yes		
 pane per i propri denti	clitic	1	1	1	1.00	yes		
 uscire dal proprio guscio	clitic	1	1	1	1.00	yes		
