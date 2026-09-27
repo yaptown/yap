@@ -1,12 +1,12 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 1838394
-Total errors: 20882
-Accuracy: 98.86%
+Total predictions: 1777361
+Total errors: 19448
+Accuracy: 98.91%
 
 ## Error Patterns (sorted by frequency)
 
-### "," + "我" (139 occurrences)
+### "," + "我" (132 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -14,7 +14,7 @@ Accuracy: 98.86%
   - 不, 不用, 我来拿, 我来拿
   - 不, 我--我想你误解了事实上, 我很确定这一点.
 
-### "," + "你" (95 occurrences)
+### "," + "你" (84 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -22,23 +22,7 @@ Accuracy: 98.86%
   - 一旦過了河, 你就安全了。
   - 不, 你可以进来.
 
-### "，" + "你" (80 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 《三个火枪手》 ， 你看到哪了?
-  - 一个肮脏窝脞的笑话， 你不认为吗？
-  - 一起走吧， 冼朴， 你来掌舵
-
-### "，" + "我" (80 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 《天方夜谭》 ， 我哥哥的
-  - 不 了， 我 自 己来
-  - 不管怎样， 我不会把它们借给你。
-
-### "了" + "你" (61 occurrences)
+### "了" + "你" (63 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -46,21 +30,37 @@ Accuracy: 98.86%
   - 不过我已经改变了 你能看到吧？
   - 你不小了 你以为 拿走了青冥剑是好玩的？
 
-### "我" + "我" (39 occurrences)
+### "，" + "我" (61 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他们以前怎么照顾我 我现在就怎么照顾他们
-  - 你们信不过我 我还信不过你们呢
-  - 你可以来找我 我给你个新的鼓！
+  - 《天方夜谭》 ， 我哥哥的
+  - 不 了， 我 自 己来
+  - 不， 我也不想让他知道
 
-### "时候" + "我" (37 occurrences)
+### "，" + "你" (53 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 《三个火枪手》， 你看到哪了?
+  - 一起走吧， 冼朴， 你来掌舵
+  - 二百年前， 你还没出生时他们誓死效忠于我
+
+### "时候" + "我" (36 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - ∮这样的时候 我的眼睛会觉醒∮
   - 三年前的那个时候 我还不认识你
   - 上山不回来的时候 我都很担心怕他终于会死
+
+### "我" + "我" (35 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他们以前怎么照顾我 我现在就怎么照顾他们
+  - 你们信不过我 我还信不过你们呢
+  - 你可以来找我 我给你个新的鼓！
 
 ### "了" + "我" (32 occurrences)
 - Predicted: None
@@ -70,15 +70,7 @@ Accuracy: 98.86%
   - 不了 我不去了
   - 不必了 我没事的，你留下来吧
 
-### "你" + "你" (32 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不是我砸钱捧你 你有今天？
-  - 为什么要抓你 你自己知道
-  - 他再打你 你就给他一拳
-
-### "的" + "我" (32 occurrences)
+### "的" + "我" (31 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
@@ -86,37 +78,21 @@ Accuracy: 98.86%
   - 但不是这样的 我没有在搭讪你
   - 但莫名其妙的 我却开始在网路上写起了小说
 
-### "的话" + "我" (30 occurrences)
+### "你" + "你" (30 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 「所以我很高兴通知你 你不必再装了
+  - 不是我砸钱捧你 你有今天？
+  - 为什么要抓你 你自己知道
+
+### "的话" + "我" (29 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 不介意的话 我能说两句吗？
   - 不然的话 我就叫衙门抓你
   - 不然的话 我见一样砸一样
-
-### "," + "我们" (29 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不, 我们不是.
-  - 他们要查我们的东西, 我们可以穿上衣服吗?
-  - 他就快毕业了, 我们基本上都算是医生
-
-### "你" + "我" (29 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一见你 我怎么说呢就觉得你特像我姐
-  - 为了你 我什么都愿意做！
-  - 亲爱的华德教官我很遗憾地告诉你 我不能再参加北美卡其童子军了
-
-### "," + "他" (28 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不, 他在向我开枪!
-  - 不久後, 他恢復了健康。
-  - 不先生, 他不能离开学院..
 
 ### "不" + "不" (28 occurrences)
 - Predicted: None
@@ -126,61 +102,53 @@ Accuracy: 98.86%
   - 不 不 不
   - 不 不 不
 
-### "," + "是" (27 occurrences)
+### "," + "他" (27 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不会, 是吗?
-  - 不是你, 是这个..
-  - 不是恐怖分子, 是革命者
+  - 不, 他在向我开枪!
+  - 不久後, 他恢復了健康。
+  - 不先生, 他不能离开学院..
 
-### "," + "这" (26 occurrences)
+### "," + "是" (26 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不, 是非常好的医生
+  - 不会, 是吗?
+  - 不是你, 是这个…
+
+### "你" + "我" (24 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 一见你 我怎么说呢就觉得你特像我姐
+  - 为了你 我什么都愿意做！
+  - 亲爱的华德教官我很遗憾地告诉你 我不能再参加北美卡其童子军了
+
+### "," + "我们" (23 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他们要查我们的东西, 我们可以穿上衣服吗?
+  - 他就快毕业了, 我们基本上都算是医生
+  - 你知道, 我们这里什么都有, 除了月亮.
+
+### "说" + "你" (22 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 「亲爱的和泉秀子小姐「藤原伯爵说 你急需聘请女仆「女仆就如…汤匙…
+  - 他说 你很容易知道自己反对的是什么可是却很难知道自己追求的是什么
+  - 你告诉他们说 你是我我还没为这事谢谢你
+
+### "," + "这" (21 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 不, 这是你.
-  - 于是我们想的别的办法孩子, 这是圣可兰经
   - 冷静点, 这不是他们的错
-
-### "了" + "，" (26 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不了 ，我还要赶紧回去呢
-  - 什么过个山了 ，过个沟了
-  - 你今天晚上就别织了 ，行吗？
-
-### "，" + "我们" (25 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不是为了钱， 我们只是交换换什么?
-  - 他们的防护罩依然关上当然， 我们是快乐的舰队
-  - 他说，如果我们给吃牛草， 我们可以得到一份工作。
-
-### "," + "不" (23 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不, 不
-  - 不, 不.
-  - 不, 不在桌子上.
-
-### "了" + "！" (23 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他去南京出差了 ！
-  - 你低估她了 ！
-  - 你成功了 ！
-
-### "，" + "他" (22 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一个非常睿智的人，妈妈， 他作了我们的向导。
-  - 不， 他有事情
-  - 他折磨那些人但大家都守口如瓶， 他气炸了
+  - 同志们, 这是外面来的最新消息
 
 ### "的" + "你" (21 occurrences)
 - Predicted: None
@@ -190,21 +158,13 @@ Accuracy: 98.86%
   - 你一定知道的 你是在利比亚长大的，是吗？
   - 你会倒霉的 你是汗脚!
 
-### "说" + "你" (21 occurrences)
+### "," + "不" (20 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他说 你很容易知道自己反对的是什么可是却很难知道自己追求的是什么
-  - 你告诉他们说 你是我我还没为这事谢谢你
-  - 你想说 你的学生 包括我的孩子犯下了这些罪行 是吗?
-
-### "," + "就" (20 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们认罪, 就网开一面
-  - 你们要是以为我是司机, 就见鬼去吧.
-  - 你知道, 就是来开会啊，见电影公司高管啊..
+  - 不, 不
+  - 不, 不.
+  - 不, 不在桌子上.
 
 ### "先生" + "你" (20 occurrences)
 - Predicted: None
@@ -214,13 +174,29 @@ Accuracy: 98.86%
   - 先生 你喝醉了正好醉到能忘记我的生日
   - 先生 你忘了拿结婚证书
 
-### "," + "先生" (19 occurrences)
+### "，" + "我们" (20 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他带来张床, 先生!
-  - 你不知道这些坏蛋, 先生让我们来教训他
-  - 你不能带他走, 先生!
+  - 不是为了钱， 我们只是交换换什么?
+  - 何况， 我们这样也扯平 了
+  - 俄国人到来的时候， 我们会打完所有的子弹
+
+### "," + "就" (19 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他们认罪, 就网开一面
+  - 你们要是以为我是司机, 就见鬼去吧.
+  - 你知道, 就是来开会啊，见电影公司高管啊…你是怎么溜进片场的?
+
+### "," + "那" (19 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他自己想要具尸体, 那就给他吗!
+  - 作为一名基督教徒, 那令我震惊.
+  - 你犁地都不会大哥要是让我犁地, 那牛做什么?
 
 ### "一" + "二" (19 occurrences)
 - Predicted: None
@@ -230,21 +206,13 @@ Accuracy: 98.86%
   - 一 二 !
   - 一 二 一 二
 
-### "," + "她" (18 occurrences)
+### "," + "先生" (18 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不, 她是高兴的哭.
-  - 不行, 她给这钱是让我们到美国后，给她买短裤用的。
-  - 但你只有一个选择，这封信一个八岁的女孩，住在辛姆拉, 她叫蜜雪儿.
-
-### "," + "那" (18 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他自己想要具尸体, 那就给他吗!
-  - 作为一名基督教徒, 那令我震惊.
-  - 你犁地都不会大哥要是让我犁地, 那牛做什么?
+  - 他带来张床, 先生!
+  - 你不知道这些坏蛋, 先生让我们来教训他
+  - 你不能带他走, 先生!
 
 ### "了" + "对" (18 occurrences)
 - Predicted: None
@@ -252,23 +220,7 @@ Accuracy: 98.86%
 - Examples:
   - 不过现在留着也没用了 对吧？
   - 但现在你喜欢别的人了 对不对
-  - 你看我这流年就到了 对不?
-
-### "我" + "你" (18 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你为什么要这样对我 你想干什么？
-  - 你可以先告诉我 你怎样找到我？
-  - 你老婆交给我 你放心啦
-
-### "是" + "你" (18 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不是 你这人怎么这样啊？
-  - 你回答我的问题 点头是摇头不是 你明白吗？
-  - 别装出一副这里是 你的地头的样子
+  - 你是毫无动机…就把她杀了 对吗?
 
 ### "的" + "对" (18 occurrences)
 - Predicted: None
@@ -286,29 +238,29 @@ Accuracy: 98.86%
   - 不 不 我是问谁是孩子的爸爸 朱诺?
   - 不 我不信
 
-### "爸爸" + "你" (16 occurrences)
+### "我" + "你" (17 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 爸爸 你为什么这么说？
-  - 爸爸 你什么时候回来的
-  - 爸爸 你会这个游戏吗?
+  - 你为什么要这样对我 你想干什么？
+  - 你可以先告诉我 你怎样找到我？
+  - 你除了蔑视我 你拿什么来报答？
 
-### "自" + "己" (16 occurrences)
+### "是" + "你" (17 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不 了， 我 自 己来
-  - 不， 是你 自 己…
-  - 他自 己告诉我的
+  - 不是 你这人怎么这样啊？
+  - 你回答我的问题 点头是摇头不是 你明白吗？
+  - 可惜的是 你得重新经受同样的事
 
-### "," + "伙计" (15 occurrences)
+### "," + "她" (16 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不, 伙计
-  - 不要生气, 伙计.
-  - 不要紧张, 伙计, 你爸爸跟我们在一起
+  - 不, 她是高兴的哭.
+  - 不行, 她给这钱是让我们到美国后，给她买短裤用的。
+  - 你害羞了, 她是谁?
 
 ### "," + "大哥" (15 occurrences)
 - Predicted: None
@@ -318,21 +270,21 @@ Accuracy: 98.86%
   - 为什么这么说, 大哥?
   - 别紧张, 大哥.
 
-### "，" + "但" (15 occurrences)
+### "爸爸" + "你" (15 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他们总是在附近逛来逛去， 但他们是好小伙子。
-  - 他很聪明， 但缺乏经验
-  - 他想匆匆离开， 但我们需要了解情况
+  - 爸爸 你为什么这么说？
+  - 爸爸 你什么时候回来的
+  - 爸爸 你会这个游戏吗?
 
-### "，" + "麦克斯" (15 occurrences)
+### "，" + "他" (15 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 但…求求你， 麦克斯
-  - 你太失礼了， 麦克斯
-  - 你好， 麦克斯
+  - 一个非常睿智的人，妈妈， 他作了我们的向导。
+  - 不， 他有事情
+  - 因为他跟孩子很像， 他受诱惑了
 
 ### "？" + "－" (15 occurrences)
 - Predicted: None
@@ -342,13 +294,13 @@ Accuracy: 98.86%
   - 为什么不？ －我不会告诉你的
   - 你想你不知道？ －我是说我不知道
 
-### "不" + "是" (14 occurrences)
+### "," + "伙计" (14 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不 是…
-  - 不 是三千日元
-  - 不 是他先看到的
+  - 不, 伙计
+  - 不要生气, 伙计.
+  - 不要紧张, 伙计, 你爸爸跟我们在一起
 
 ### "," + "好" (13 occurrences)
 - Predicted: None
@@ -358,22 +310,6 @@ Accuracy: 98.86%
   - 丑死了, 好恶心.
   - 你不会死的, 好吗?
 
-### "了" + "一" (13 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们还请了 一个美国教练和一个韩国教练
-  - 他在高速公路上撞到了 一四处徘徊的裸体女性就是我们带回来的这个
-  - 再后来，我们接到了 一个卡车司机的报警
-
-### "啊" + "你" (13 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 乐莹啊 你别打乐丹
-  - 什么啊 你…这三年来都在想那种事那种事…
-  - 你每次遇上这些神殿啊 清真寺啊 你就脸色发白
-
 ### "时候" + "你" (13 occurrences)
 - Predicted: None
 - Actual: Space
@@ -382,14 +318,6 @@ Accuracy: 98.86%
   - 你以前常跟着她但是那个晚上下雨的时候 你看到她被杀
   - 在公主还没有放弃的时候 你也不要放弃
 
-### "的话" + "就" (13 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但是如果我们不做任何改变足够小心的话 就没什么事会很棒的
-  - 你们如果要讨老婆的话 就要找像她这样的
-  - 你再这样的话 就不要叫我师父
-
 ### "知道" + "你" (13 occurrences)
 - Predicted: None
 - Actual: Space
@@ -397,6 +325,14 @@ Accuracy: 98.86%
   - 不知道 你找她有什么事?
   - 但是明显的你并不知道 你正被拍摄。
   - 你以为我们不知道 你从毒贩那里拿钱?
+
+### "，" + "但" (13 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他们总是在附近逛来逛去， 但他们是好小伙子。
+  - 他很聪明， 但缺乏经验
+  - 他想匆匆离开， 但我们需要了解情况
 
 ### "," + "你们" (12 occurrences)
 - Predicted: None
@@ -412,7 +348,7 @@ Accuracy: 98.86%
 - Examples:
   - 你不想撞穿地板的, 对吧?
   - 你可不能乱来, 对吧?
-  - 你应该先跟你说, 对吗?
+  - 你是个医生, 对吗?
 
 ### "后" + "我" (12 occurrences)
 - Predicted: None
@@ -422,6 +358,14 @@ Accuracy: 98.86%
   - 不过自从你回来后 我天天在家吃饭还有吃这些石榴感觉健康了不少
   - 吃完后 我想看到地上是干净的
 
+### "啊" + "你" (12 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 乐莹啊 你别打乐丹
+  - 什么啊 你…这三年来都在想那种事那种事…
+  - 你每次遇上这些神殿啊 清真寺啊 你就脸色发白
+
 ### "是" + "我" (12 occurrences)
 - Predicted: None
 - Actual: Space
@@ -430,69 +374,29 @@ Accuracy: 98.86%
   - 如果我现在有两百个炸药 我就能够拆除它问题是 我大概只有 十个
   - 就算是 我也不收你们的卷子
 
-### "的" + "是" (12 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不是我想的 是怎样?
-  - 你不只是因为我才想退休的 是吗
-  - 你今天刚来的 是吧
-
 ### "的话" + "你" (12 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不然的话 你也跟这鸟一样可不是吗?
   - 但声音平静的话 你就听不到了
   - 你得清楚这个不然的话 你的心灵永远都得不到平静
+  - 公司倒的话 你怎么办?
 
-### "的话" + "我们" (12 occurrences)
+### "的话" + "就" (12 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不过如果理由充足的话 我们也不介意协助你们
-  - 你不介意的话 我们可以去散个步
-  - 你们吃完了的话 我们走吧
+  - 但是如果我们不做任何改变足够小心的话 就没什么事会很棒的
+  - 你们如果要讨老婆的话 就要找像她这样的
+  - 你再这样的话 就不要叫我师父
 
-### "知道" + "我" (12 occurrences)
+### "不" + "是" (11 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他需要知道 我的人生本来可以有多好
-  - 你不也知道 我是做什么的吗
-  - 你知道 我从来没学过这些
-
-### "，" + "是" (12 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不对， 是罗马人干的
-  - 不， 是他的侄子在大战前被暗杀的
-  - 不， 是你 自 己…
-
-### "，" + "这" (12 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不管怎么说， 这个地方比较适合年轻人
-  - 不要再考虑他会想什么， 这不是你的论文！
-  - 他会付你一个月的薪水我以代人受过收场， 这不公平
-
-### "," + "但" (11 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他将自己的灵魂撕开, 但不之于其他人他是严肃的他很清楚自己想要什麽
-  - 即使我们很自豪, 但这不是很容易的事
-  - 好吧, 但你要保证绝不会跟别人说
-
-### "了" + "我们" (11 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不用了 我们还是走吧
-  - 听好了 我们现在来赌一场．好吗？
-  - 好了 我们为努玛鼓掌！
+  - 不 是…
+  - 不 是三千日元
+  - 不 是他先看到的
 
 ### "亲爱的" + "你" (11 occurrences)
 - Predicted: None
@@ -518,14 +422,6 @@ Accuracy: 98.86%
   - 孩子 你听妈妈的话呀
   - 孩子 你咋能不录呢？
 
-### "我" + "不" (11 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 啃啊和上上下下的我身上的老鼠脚印咬我 不
-  - 在你们厂搞过供销山西的宜昌当过水电兵是战友介绍过来的郭斌对郭斌这个人我 不认识
-  - 如果在街上看到我 不要跑掉
-
 ### "时" + "我" (11 occurrences)
 - Predicted: None
 - Actual: Space
@@ -533,14 +429,6 @@ Accuracy: 98.86%
   - 不嗑药时 我没有别的地方可去
   - 你看到这封信时 我已经死了
   - 可是绝对不能使用奶奶教我这些咒语时 我害怕得睡不着觉
-
-### "是" + "不" (11 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不是 不是 不是 不是 不是 不是 不是
-  - 不是 不是 不是 不是 不是 不是 不是
-  - 不是 不是 不是 不是 不是 不是 不是
 
 ### "爸爸" + "爸爸" (11 occurrences)
 - Predicted: None
@@ -550,6 +438,14 @@ Accuracy: 98.86%
   - 爸爸 爸爸 你到哪儿去？
   - 爸爸 爸爸 快看！
 
+### "的" + "是" (11 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不是我想的 是怎样?
+  - 你不只是因为我才想退休的 是吗
+  - 你今天刚来的 是吧
+
 ### "的" + "这" (11 occurrences)
 - Predicted: None
 - Actual: Space
@@ -558,13 +454,13 @@ Accuracy: 98.86%
   - 但是 你知道的 这周烦心事太多了
   - 你知道的 这不就像是在演电视吗?
 
-### "," + "他们" (10 occurrences)
+### "的话" + "我们" (11 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不要紧张, 他们会把脏东西..
-  - 不过就象常常发生的那样, 他们是不完整的真相.
-  - 告诉那帮流氓, 他们已经抓到我了
+  - 不过如果理由充足的话 我们也不介意协助你们
+  - 你不介意的话 我们可以去散个步
+  - 你们吃完了的话 我们走吧
 
 ### "," + "混蛋" (10 occurrences)
 - Predicted: None
@@ -574,13 +470,21 @@ Accuracy: 98.86%
   - 出来, 混蛋!
   - 妈的, 混蛋!
 
-### "," + "而" (10 occurrences)
+### "了" + "一" (10 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他们没有保险, 而如果州里必须支付维持她生命的钱这取决于法庭的判决
-  - 他的死是因为他对主不敬, 而上帝觉察到了
-  - 你可以不是有意踩到她的脚, 而不是干她!
+  - 他们还请了 一个美国教练和一个韩国教练
+  - 再后来，我们接到了 一个卡车司机的报警
+  - 再说 如果跟卡地士对上了 一个专业的机械师是必备的
+
+### "了" + "我们" (10 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不用了 我们还是走吧
+  - 听好了 我们现在来赌一场．好吗？
+  - 好了 我们为努玛鼓掌！
 
 ### "了" + "是" (10 occurrences)
 - Predicted: None
@@ -589,14 +493,6 @@ Accuracy: 98.86%
   - 你一定认为我疯了我早就这么想了 是什么讯息？
   - 你不打算说话了 是吧？
   - 你是想盯着我不放了 是吗
-
-### "了" + "还" (10 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一个女人这么晚了 还戴墨镜只有三个理由第一个呢，就说明她是个瞎子
-  - 别的都跑了 还有吗？
-  - 去年 我和她一起过的圣诞节没想到这把年纪了 还会做这种事
 
 ### "先生" + "我" (10 occurrences)
 - Predicted: None
@@ -622,14 +518,6 @@ Accuracy: 98.86%
   - －你会做手术吗 －不会
   - －你想死在这儿吗 －当然不想
 
-### "吧" + "!" (10 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不惨啊，例如德兰修女吧 !
-  - 到房间去吧 !
-  - 去找他吧 !
-
 ### "妈妈" + "你" (10 occurrences)
 - Predicted: None
 - Actual: Space
@@ -646,13 +534,13 @@ Accuracy: 98.86%
   - 也明白为什么你和巴克结婚后就去了马德里跟我们一刀两断妈妈 我恨你
   - 妈妈 我只是担心你
 
-### "是" + "一" (10 occurrences)
+### "是" + "不" (10 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你是卖国之奸臣和你那笼中的黑鸦是 一类两只恶鸟
-  - 我的首要条件是 一个房子
-  - 是 一个老鼠
+  - 不是 不是 不是 不是 不是 不是 不是
+  - 不是 不是 不是 不是 不是 不是 不是
+  - 不是 不是 不是 不是 不是 不是 不是
 
 ### "波妞" + "波妞" (10 occurrences)
 - Predicted: None
@@ -662,21 +550,61 @@ Accuracy: 98.86%
   - 波妞 波妞 波妞 鱼的孩子从蔚蓝的海里来
   - 波妞 波妞 波妞 鱼的孩子从蔚蓝的海里来
 
+### "知道" + "我" (10 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他需要知道 我的人生本来可以有多好
+  - 你不也知道 我是做什么的吗
+  - 你知道 我从来没学过这些
+
+### "，" + "是" (10 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不对， 是罗马人干的
+  - 不， 是他的侄子在大战前被暗杀的
+  - 不， 是你 自己…
+
+### "，" + "麦克斯" (10 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你太失礼了， 麦克斯
+  - 再见， 麦克斯
+  - 嗨， 麦克斯
+
+### "," + "但" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 即使我们很自豪, 但这不是很容易的事
+  - 好吧, 但你要保证绝不会跟别人说
+  - 我很抱歉, 但它就是不可能的。
+
 ### "," + "有" (9 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你不会有事的, 有我在
-  - 吃点豌豆对你骨头好, 有很多钙
   - 呃, 有几个奇怪的电话
+  - 告诉我, 有什么烦心事?
 
-### "," + "给" (9 occurrences)
+### "," + "而" (9 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 伙计, 给这两个伟大的阿根廷人那瓶酒来
-  - 告诉佩函夫人, 给你上点鱼肝油
-  - 好给你做饭, 给你洗衣
+  - 他们怎么…这不是杀戮欲, 而是为了正义
+  - 他们没有保险, 而如果州里必须支付维持她生命的钱这取决于法庭的判决
+  - 他的死是因为他对主不敬, 而上帝觉察到了
+
+### "…" + "你" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - … 你为什么一定要再羞辱我第十一次
+  - 告诉我， 你那天跟克萝丝谈… 你有电话许可吗？
+  - 嘿… 你要去哪儿?
 
 ### "也" + "不" (9 occurrences)
 - Predicted: None
@@ -686,13 +614,13 @@ Accuracy: 98.86%
   - 从来 不需要想起永远也 不会忘记
   - 他 不打工他的手臂也 不会断
 
-### "了" + "不" (9 occurrences)
+### "了" + "还" (9 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 但你已经知道了 不是吗
-  - 太棒了 不是吗?
-  - 太美妙了 不是吗？
+  - 一个女人这么晚了 还戴墨镜只有三个理由第一个呢，就说明她是个瞎子
+  - 别的都跑了 还有吗？
+  - 去年 我和她一起过的圣诞节没想到这把年纪了 还会做这种事
 
 ### "五" + "六" (9 occurrences)
 - Predicted: None
@@ -710,14 +638,6 @@ Accuracy: 98.86%
   - 他有个理论如果你发现一件完美的事物或是地方或是人 你就该坚持很蠢吧
   - 却缺乏最基本的做人的品格就是没有品德的人 你懂吗
 
-### "他" + "他" (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 下回遇着他 他要是再不肯明讲告诉我
-  - 他 他为什么把 我写的信给您看呢
-  - 他 他发明了反正我也不大懂
-
 ### "你" + "不" (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -725,22 +645,6 @@ Accuracy: 98.86%
   - 你 不是都知道他叫郭斌了不认识这个人
   - 你 不给我们解决 不得行
   - 你 不要再取笑我了
-
-### "先生" + "请" (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 佩里先生 请坐，各位，请坐
-  - 先生 请 你的菜单阿苏 你拿主意
-  - 先生 请付钱啊
-
-### "吗" + "?" (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你们 班 有 韩国 学生 吗 ?
-  - 你喜欢吗 ?
-  - 你愿意等吗 ?
 
 ### "吧" + "不然" (9 occurrences)
 - Predicted: None
@@ -782,6 +686,14 @@ Accuracy: 98.86%
   - 小梅 你到婆婆家等好不好
   - 小梅 你回来啦
 
+### "我" + "不" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 在你们厂搞过供销山西的宜昌当过水电兵是战友介绍过来的郭斌对郭斌这个人我 不认识
+  - 如果在街上看到我 不要跑掉
+  - 应酬多又是领导又是客户的我 不跟你说了吗
+
 ### "时候" + "就" (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -789,14 +701,6 @@ Accuracy: 98.86%
   - 他回来的时候 就成了一个男人
   - 但日后，当你后悔的时候 就是一个女人的遗憾了！
   - 好的时候 就塞个枕头在这里
-
-### "看" + "我" (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 从她们的表现看 我觉得她们不应该再待在学院
-  - 你看 我有个神秘的爱慕者
-  - 你看 我都这么忙哪里腾得出时间嘛？
 
 ### "那么" + "你" (9 occurrences)
 - Predicted: None
@@ -814,30 +718,6 @@ Accuracy: 98.86%
   - 马赛罗 你个恶人
   - 马赛罗 你听到我说话吗？
 
-### "，" + "不" (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们只崇拜自己的神， 不崇拜其他的神
-  - 天啊， 不要！
-  - 她在东京的时候还很有精神， 不是吗？
-
-### "，" + "她" (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 五天内， 她要学会游泳 第二回合开始了！
-  - 佩函夫人本该告诉我们的， 她可能也参与了但还不止此我们在他的柜子里发现了这些
-  - 她丈夫死了以后， 她在 仓敷 又结婚了
-
-### "，" + "对" (9 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你是没有遇过， 对吧？
-  - 你知道我可以救王后， 对不对？
-  - 全是鬼扯， 对吧？
-
 ### "？" + "─" (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -846,13 +726,13 @@ Accuracy: 98.86%
   - ─为什么？ ─这样最好
   - ─我们去哪？ ─港口边的酒馆
 
-### "," + "很" (8 occurrences)
+### "," + "他们" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 冷, 很冷
-  - 冷, 很冷.
-  - 周围的人都笑话他他人笨头笨脑, 很可怜
+  - 不要紧张, 他们会把脏东西..
+  - 不过就象常常发生的那样, 他们是不完整的真相.
+  - 告诉那帮流氓, 他们已经抓到我了
 
 ### "," + "怎么" (8 occurrences)
 - Predicted: None
@@ -878,14 +758,6 @@ Accuracy: 98.86%
   - 不 你代表大家吗？
   - 不 你会割掉我的阴蒂的
 
-### "之后" + "我" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 之后 我都给他吃世上好吃的
-  - 但是之后 我也不忘了什么原因忘记了
-  - 在那之后 我可以再接着听你说
-
 ### "了" + "哥们" (8 occurrences)
 - Predicted: None
 - Actual: Space
@@ -893,6 +765,30 @@ Accuracy: 98.86%
   - 你火了 哥们
   - 你的横财被查封了 哥们
   - 别瞎操心了 哥们
+
+### "他" + "他" (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 下回遇着他 他要是再不肯明讲告诉我
+  - 他 他为什么把 我写的信给您看呢
+  - 他 他发明了反正我也不大懂
+
+### "先生" + "请" (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 佩里先生 请坐，各位，请坐
+  - 先生 请付钱啊
+  - 先生 请你坐下
+
+### "吗" + "?" (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你们 班 有 韩国 学生 吗 ?
+  - 你喜欢吗 ?
+  - 你愿意等吗 ?
 
 ### "啊" + "我" (8 occurrences)
 - Predicted: None
@@ -918,13 +814,13 @@ Accuracy: 98.86%
   - 所以 你如果把第一次给我的话以后不管怎么样好像都有理由可以 骂我无情了 对不对？
   - 所以 你得做个决定了
 
-### "抱歉" + "我" (8 occurrences)
+### "是" + "一" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 抱歉 我不能…女神纳迪亚
-  - 抱歉 我可以说句话吗？
-  - 抱歉 我听不懂你说什么
+  - 你是卖国之奸臣和你那笼中的黑鸦是 一类两只恶鸟
+  - 我的首要条件是 一个房子
+  - 是 一个老鼠
 
 ### "来" + "我" (8 occurrences)
 - Predicted: None
@@ -958,6 +854,14 @@ Accuracy: 98.86%
   - 如果你有什么想告诉我的 就打电话给我
   - 我唯一能做的 就只有信守诺言为她去死了
 
+### "看" + "我" (8 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 从她们的表现看 我觉得她们不应该再待在学院
+  - 你看 我有个神秘的爱慕者
+  - 你看 我都这么忙哪里腾得出时间嘛？
+
 ### "穆妮" + "你" (8 occurrences)
 - Predicted: None
 - Actual: Space
@@ -966,29 +870,13 @@ Accuracy: 98.86%
   - 穆妮 你在干什么
   - 穆妮 你想看视频吗
 
-### "要" + "不" (8 occurrences)
+### "，" + "不" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你们那里要 不要保姆？
-  - 我不要 不要
-  - 我不要 不要 不要
-
-### "说" + "他" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不管怎么说 他都处在极端危险的境地
-  - 为什么这样说 他又不在家
-  - 他说 他知道是我让老板去教训他的
-
-### "，" + "他们" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们浪费了很多钱， 他们正在做大量研究工作。
-  - 伴随着能级的下降， 他们就会发光。
-  - 别难过， 他们总会抓到我的
+  - 他们只崇拜自己的神， 不崇拜其他的神
+  - 天啊， 不要！
+  - 我全看到了，我警告你们…谁在我李钊地头搞事， 不守规矩，我就抓谁！
 
 ### "，" + "就" (8 occurrences)
 - Predicted: None
@@ -998,13 +886,13 @@ Accuracy: 98.86%
   - 你要杀我， 就要过来
   - 再过几年我存多点钱， 就可以分期付款买自己的房子
 
-### "#" + "我" (7 occurrences)
+### "，" + "这" (8 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - # 为什么我感觉到# 当一切看起来很不乐观的时候# 我却觉得一切都很美好
-  - # 我在雨中歌唱
-  - # 我并非多重性格的男子
+  - 不要再考虑他会想什么， 这不是你的论文！
+  - 克萝丝小姐， 这是我父亲 博特费雪
+  - 别担心， 这不怎么会痛的
 
 ### "," + "一" (7 occurrences)
 - Predicted: None
@@ -1022,14 +910,6 @@ Accuracy: 98.86%
   - 你可以叫我的同事来杯葛我, 不过一切都太迟了!
   - 我会想她的, 不过我们在这里.
 
-### "," + "兄弟" (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们在里面拉屎, 兄弟!
-  - 你会见到她的, 兄弟
-  - 再做一次, 兄弟, 来
-
 ### "," + "塔尔夫斯基" (7 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1037,6 +917,22 @@ Accuracy: 98.86%
   - 但是当拍摄结束以后, 塔尔夫斯基跟凯伊达诺夫斯基也去豪爽了一把
   - 在拍完电影后, 塔尔夫斯基的生活发生了戏剧性的变化
   - 在拍摄《牺牲》的时候, 塔尔夫斯基已经重病缠身
+
+### "," + "很" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 冷, 很冷
+  - 冷, 很冷.
+  - 我叫欧内斯特, 很高兴认识你
+
+### "," + "快" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你不懂, 说来话长, 快走!
+  - 快点, 快!
+  - 我爸的名字还在上面, 快住手!
 
 ### "," + "现在" (7 occurrences)
 - Predicted: None
@@ -1054,6 +950,22 @@ Accuracy: 98.86%
   - 噢，妈… 我是怎么搞的？
   - 太动人了… 我痛痛快快地哭了一场！
 
+### "之后" + "我" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 之后 我都给他吃世上好吃的
+  - 但是之后 我也不忘了什么原因忘记了
+  - 在那之后 我可以再接着听你说
+
+### "了" + "不" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 但你已经知道了 不是吗
+  - 太棒了 不是吗?
+  - 太美妙了 不是吗？
+
 ### "了" + "他" (7 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1061,14 +973,6 @@ Accuracy: 98.86%
   - 他走了 他不喜欢我们吗?
   - 医生解释了 他不能长高的原因吗？
   - 太好了 他在不在这儿?
-
-### "了" + "伙计" (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你输了 伙计
-  - 太精彩了 伙计 太精彩了
-  - 就像那位她把它毁坏了 伙计
 
 ### "了" + "先生" (7 occurrences)
 - Predicted: None
@@ -1150,6 +1054,14 @@ Accuracy: 98.86%
   - 从前前前世开始 我一直寻觅着你
   - 从我有记忆开始 我就想当帮派成员
 
+### "抱歉" + "我" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 抱歉 我不能…女神纳迪亚
+  - 抱歉 我可以说句话吗？
+  - 抱歉 我听不懂你说什么
+
 ### "时" + "他" (7 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1174,13 +1086,13 @@ Accuracy: 98.86%
   - 当我找到他的时候 他变成了一个酒鬼
   - 当耶稣有话要说的时候 他会说的
 
-### "的" + "伙计" (7 occurrences)
+### "的" + "不" (7 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不是的 伙计
-  - 你 有一些三明治给 孩子们的 伙计
-  - 你会伤到脚的 伙计!
+  - 以前的 不说再 不要在这儿找我们的麻烦
+  - 但在我的工作中 这就是我们要应对的 不是吗
+  - 但这是你和我都看到的 不是吗？
 
 ### "的" + "先生" (7 occurrences)
 - Predicted: None
@@ -1198,37 +1110,37 @@ Accuracy: 98.86%
   - 你可以在军警公告牌上看到好的 长官
   - 前任德温特太太过去常常把她的船送到你的船坞调修是的 长官
 
+### "说" + "他" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不管怎么说 他都处在极端危险的境地
+  - 为什么这样说 他又不在家
+  - 他说 他知道是我让老板去教训他的
+
+### "，" + "他们" (7 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他们浪费了很多钱， 他们正在做大量研究工作。
+  - 伴随着能级的下降， 他们就会发光。
+  - 别难过， 他们总会抓到我的
+
 ### "，" + "你们" (7 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
+  - 上学放学…知道吗， 你们不能占据我的整个周末!
   - 修理工明天才能回来， 你们可以把车先留在这里。
-  - 快啊， 你们两个， 跳舞吧
   - 我不是这个意思， 你们对我一样重要！
 
-### "，" + "请" (7 occurrences)
+### "，" + "对" (7 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 嘉露企业号叫正规一号， 请通话
-  - 您可以待会儿坐下来后再慢慢欣赏， 请你务必离开.
-  - 是的， 请进来
-
-### "，" + "那" (7 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不过如果某人佩戴彩虹项圈的话， 那就另当别论咯。
-  - 不， 才不， 那比较逼真
-  - 可是如果（文化之）树倒了， 那将是他们的末日。
-
-### "#" + "他" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 他只想找到一个答案
-  - # 他可以打出钻石王子
-  - # 他可以打出黑桃皇后
+  - 你是没有遇过， 对吧？
+  - 凡事总有第一次， 对吗？
+  - 她不会来的， 对吧？
 
 ### "," + "会" (6 occurrences)
 - Predicted: None
@@ -1238,13 +1150,13 @@ Accuracy: 98.86%
   - 会让你, 会让你, 会让你死去
   - 我不太懂，福瑟, 会不会是脂肪沉淀引起的囊肿？
 
-### "," + "但是" (6 occurrences)
+### "," + "兄弟" (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 即使你们能够忘记自己的污点, 但是你们的地位呢？
-  - 对不起，科诺查, 但是他的玩笑时间已经结束了。
-  - 尽管争吵不已, 但是他们都是深爱着对方
+  - 他们在里面拉屎, 兄弟!
+  - 再做一次, 兄弟, 来
+  - 别看, 兄弟.
 
 ### "," + "别" (6 occurrences)
 - Predicted: None
@@ -1254,14 +1166,6 @@ Accuracy: 98.86%
   - 妈, 别让他走
   - 拉里, 别丢下我
 
-### "," + "在" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你们两个, 在这里干什么?
-  - 我想, 在艰难的时候, 你想哭就使劲哭吧。
-  - 油然而生, 在她的眼中静止.
-
 ### "," + "妈" (6 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1269,22 +1173,6 @@ Accuracy: 98.86%
   - 你好吗, 妈?
   - 嘿, 妈在哪?
   - 我怕, 妈
-
-### "," + "帕萝" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不好, 今天是夏伯汉卡的日子没其他人赢过, 帕萝来这里也赢不了啊.
-  - 不，你从来没被我想起过, 帕萝.
-  - 卡琪玛, 帕萝她在么?
-
-### "," + "快" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你不懂, 说来话长, 快走!
-  - 快点, 快!
-  - 抓住, 快抓住弄不回来了
 
 ### "," + "没" (6 occurrences)
 - Predicted: None
@@ -1302,13 +1190,13 @@ Accuracy: 98.86%
   - 对极了, 爸爸.
   - 我们走, 爸爸.
 
-### "," + "让" (6 occurrences)
+### "," + "给" (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 乔托玛, 让这事过去吧，乔托玛.
-  - 先生, 让他留下..
-  - 好了, 让我们想想都发生了什么事
+  - 告诉佩函夫人, 给你上点鱼肝油
+  - 好给你做饭, 给你洗衣
+  - 尔斯特本, 给我们讲讲你的旅行吧
 
 ### "," + "还" (6 occurrences)
 - Predicted: None
@@ -1318,14 +1206,6 @@ Accuracy: 98.86%
   - 他听到我说话, 还向我眨了下眼
   - 喂, 还好吧?
 
-### "…" + "你" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - … 你为什么一定要再羞辱我第十一次
-  - 告诉我， 你那天跟克萝丝谈… 你有电话许可吗？
-  - 如果有一天哈努曼神在你面前现身…… 你会请求他什么
-
 ### "上" + "我" (6 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1334,13 +1214,13 @@ Accuracy: 98.86%
   - 在性事上 我拒绝过什么
   - 总体上 我没什么好说的
 
-### "个" + "我" (6 occurrences)
+### "之前" + "我" (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 关于这个 我应该要早一点告诉你的
-  - 好漂亮 我想试试这个 我可以试一下吗？
-  - 显然 我需要这个 我会还你..
+  - 但在我离开之前 我给你们做一个神秘感的测验如果让你们二选一
+  - 但我必须澄清一点在听到那个声音之前 我从没做过疯狂的事
+  - 你让女巫把萨姆偷走之前 我都可以去河边的
 
 ### "之后" + "你" (6 occurrences)
 - Predicted: None
@@ -1349,6 +1229,14 @@ Accuracy: 98.86%
   - 回家之后 你得给我做一双新靴子
   - 在儿子出事之后 你是不是怨恨你的丈夫
   - 在救过你那么多次之后 你居然还这么忘恩负义
+
+### "了" + "伙计" (6 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你输了 伙计
+  - 太精彩了 伙计 太精彩了
+  - 怎么了 伙计
 
 ### "了" + "就" (6 occurrences)
 - Predicted: None
@@ -1366,14 +1254,6 @@ Accuracy: 98.86%
   - 太好了 长官
   - 好了 长官
 
-### "事实上" + "我" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 事实上 我今晚不想跟你出去了
-  - 事实上 我厨房里现在就有一头…很干净的…而且闻起来很好
-  - 事实上 我很喜欢你
-
 ### "人" + "都" (6 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1381,14 +1261,6 @@ Accuracy: 98.86%
   - 因为你亲眼目睹我们的一切大多数的人 都想抢着讲话
   - 地球太干燥了，而空气也非常的炎热所以那些死了的人 都被卡在了通往天堂道路的半途中
   - 大声点让地球上的好事的人 都能听到我们的声音
-
-### "伊桑" + "伊桑" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 伊桑 伊桑
-  - 伊桑 伊桑 在那边
-  - 伊桑 伊桑 这儿
 
 ### "你" + "就" (6 occurrences)
 - Predicted: None
@@ -1413,14 +1285,6 @@ Accuracy: 98.86%
   - 先生 您有什么话要跟独裁者说的?
   - 先生 您看那个孩子的画在这里
   - 总统先生 您对这次访问还满意吗
-
-### "其实" + "我" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 什么停在这么远的地方其实 我的车就停在我家外面我是搭便车去的派对
-  - 其实 我一切都好
-  - 其实 我今天还有点担心你呢
 
 ### "叔叔" + "你" (6 occurrences)
 - Predicted: None
@@ -1558,13 +1422,13 @@ Accuracy: 98.86%
   - 我们现在 就是要去巴西利亚
   - 现在 就剩两次
 
-### "的" + "不" (6 occurrences)
+### "的" + "伙计" (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 但在我的工作中 这就是我们要应对的 不是吗
-  - 但这是你和我都看到的 不是吗？
-  - 但这是给基佬们看的 不是吗?
+  - 不是的 伙计
+  - 你 有一些三明治给 孩子们的 伙计
+  - 你会伤到脚的 伙计!
 
 ### "的话" + "那" (6 occurrences)
 - Predicted: None
@@ -1582,13 +1446,13 @@ Accuracy: 98.86%
   - 克萝丝小姐我想让你知道 我们那天所谈的事…拉丁文对， 还有罗曼斯语系
   - 我们知道 我们自己的教堂
 
-### "知道" + "这" (6 occurrences)
+### "要" + "不" (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你也知道 这房间里一半的人 还欠着跛豪的钱他们以为我会忘了
-  - 你们都知道 这是绝不可能的
-  - 你知道 这是一件很难很难的事情比你现在想象的要难得多
+  - 你们那里要 不要保姆？
+  - 我不要 不要
+  - 我不要 不要 不要
 
 ### "说" + "如果" (6 occurrences)
 - Predicted: None
@@ -1597,22 +1461,6 @@ Accuracy: 98.86%
   - 会说 如果是我朋友的话
   - 再说 如果跟卡地士对上了 一个专业的机械师是必备的
   - 可是她说 如果你不打电话给她她就逼我父母 要我们结婚
-
-### "说" + "我" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不管你怎么说 我还是觉得该是时候了
-  - 不管怎么说 我还是得跟你说声谢谢
-  - 你说 我过来干嘛?
-
-### "说" + "这" (6 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不管怎么说 这也是住了一辈子的地方
-  - 可是不久 他却安于这样他安慰自己说 这种生活不过是暂时的
-  - 天气预报说 这四天会天气晴好、气温宜人
 
 ### "这样" + "我" (6 occurrences)
 - Predicted: None
@@ -1638,13 +1486,21 @@ Accuracy: 98.86%
   - 是 那个 就是你穿的那个这是套非常 非常 非常好的套装
   - 是 那个 就是你穿的那个这是套非常 非常 非常好的套装
 
-### "，" + "布隆先生" (6 occurrences)
+### "，" + "她" (6 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你好， 布隆先生
-  - 嗨， 布隆先生
-  - 我能为你效劳吗， 布隆先生？
+  - 五天内， 她要学会游泳 第二回合开始了！
+  - 佩函夫人本该告诉我们的， 她可能也参与了但还不止此我们在他的柜子里发现了这些
+  - 她有一些天没有来上课，我们便打电话到她家里， 她家里人说她失踪了。
+
+### "," + "但是" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 即使你们能够忘记自己的污点, 但是你们的地位呢？
+  - 尽管争吵不已, 但是他们都是深爱着对方
+  - 我没在抱怨, 但是为什麽他们就要打我?
 
 ### "," + "可是" (5 occurrences)
 - Predicted: None
@@ -1654,21 +1510,29 @@ Accuracy: 98.86%
   - 他上了我的妞, 可是他一触即发!
   - 好, 可是你想去哪儿?
 
-### "," + "和" (5 occurrences)
+### "," + "在" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 一定在她房间里, 和她的灯说话呢.
-  - 我们心里, 自豪坚定, 和英勇在膨胀
-  - 我父亲的老板有两个, 和那个政府官员一样.
+  - 我想, 在艰难的时候, 你想哭就使劲哭吧。
+  - 油然而生, 在她的眼中静止.
+  - 真没礼貌, 在人家表演的时候离开.
 
-### "," + "因为" (5 occurrences)
+### "," + "帕萝" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他很恼火, 因为我拿第一了
-  - 他故意射偏, 因为不想射死我。
-  - 原谅他们, 上帝, 因为他们不知道他们在干什么
+  - 不好, 今天是夏伯汉卡的日子没其他人赢过, 帕萝来这里也赢不了啊.
+  - 不，你从来没被我想起过, 帕萝.
+  - 卡琪玛, 帕萝她在么?
+
+### "," + "当然" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不, 当然不是.
+  - 人们寻找陨石, 当然什麽也没找着
+  - 如果你想, 当然可以
 
 ### "," + "明白" (5 occurrences)
 - Predicted: None
@@ -1678,21 +1542,13 @@ Accuracy: 98.86%
   - 你得小心, 明白吗?
   - 孩子, 诚实生活简单些, 明白吗?
 
-### "," + "爸" (5 occurrences)
+### "," + "让" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 但你赢了, 爸
-  - 只有一个办法, 爸
-  - 看看他做的, 爸..
-
-### "," + "要" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 严重的脑损伤, 加上儿子死去的打击有一道很深的伤口, 要特别注意
-  - 伙计, 要不要给你个神奇拥抱
-  - 大哥, 要准时吃饭.
+  - 乔托玛, 让这事过去吧，乔托玛.
+  - 先生, 让他留下..
+  - 好了, 让我们想想都发生了什么事
 
 ### "," + "走" (5 occurrences)
 - Predicted: None
@@ -1702,20 +1558,12 @@ Accuracy: 98.86%
   - 来, 走吧
   - 然后, 到了这里, 走这边.
 
-### "," + "这里" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不, 这里全是树叶.
-  - 二, 这里的语言很混乱
-  - 你别躺在这, 这里很潮湿
-
 ### "不过" + "你" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 不过 你在做什么
-  - 不过 你干得不错 德米特里·安得耶维奇（米迪亚）
+  - 不过 你干得不错
   - 不过 你有十五万卢比吗
 
 ### "个" + "你" (5 occurrences)
@@ -1725,6 +1573,14 @@ Accuracy: 98.86%
   - 二十九个 你刚才说什么来着?
   - 我也想要那个 你知道在哪里吗？
   - 我妹妹，每隔一年一个 你能想象吗?
+
+### "个" + "我" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 关于这个 我应该要早一点告诉你的
+  - 好漂亮 我想试试这个 我可以试一下吗？
+  - 那个 我不明白
 
 ### "中" + "你" (5 occurrences)
 - Predicted: None
@@ -1742,22 +1598,6 @@ Accuracy: 98.86%
   - 因为在表演中 我会用的很多她们很容易坏的
   - 在音频中 我听到萨穆埃尔·马莱斯基的争吵非常有力
 
-### "之前" + "我" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但在我离开之前 我给你们做一个神秘感的测验如果让你们二选一
-  - 但我必须澄清一点在听到那个声音之前 我从没做过疯狂的事
-  - 你让女巫把萨姆偷走之前 我都可以去河边的
-
-### "了" + "吗" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你听说了 吗？
-  - 别再吃 了， 布坎看到她了 吗？
-  - 总结来说， 我只有一个疑问 拉丁文死 了 吗？
-
 ### "了" + "在" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1765,14 +1605,6 @@ Accuracy: 98.86%
   - 我要下去了 在那里见 好吗?
   - 是不是喝酒醉了 在女人家中睡着觉？
   - 然后它们决定了 在某日某时某分就在某一刻吗？
-
-### "了" + "她" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 即使知道了 她肯定会鄙视我
-  - 没人比她更自信了 她干嘛要出嫁呢？
-  - 现在都两点了 她还来不来?
 
 ### "了" + "谢谢" (5 occurrences)
 - Predicted: None
@@ -1782,13 +1614,13 @@ Accuracy: 98.86%
   - 不用了 谢谢
   - 不要了 谢谢
 
-### "了" + "这" (5 occurrences)
+### "事实上" + "我" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我不会再给我的女儿用塑料尿布了 这走远了!
-  - 所以我只是把你的心理话说出来了 这没有什么大不了的，是不是？
-  - 段老板，有些日子没来了 这心里还怪惦记的
+  - 事实上 我今晚不想跟你出去了
+  - 事实上 我厨房里现在就有一头…很干净的…而且闻起来很好
+  - 事实上 我很喜欢你
 
 ### "事实上" + "我们" (5 occurrences)
 - Predicted: None
@@ -1838,14 +1670,6 @@ Accuracy: 98.86%
   - 但是 你叫了我那个名字
   - 但是 你是怎么我那个时候应该已经…我喝了你的口嚼酒
 
-### "你" + "给" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我怎么介绍你 给总统认识呢?
-  - 求求你 给我一点点就好
-  - 没有……我有一些东西给你 给我？
-
 ### "兄弟" + "你" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1862,13 +1686,13 @@ Accuracy: 98.86%
   - 先生 我们不练习第二部分了吗?
   - 先生 我们接到上头命令要逮捕你
 
-### "先生" + "这" (5 occurrences)
+### "其实" + "我" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 主席先生 这是我第一次看到这封信我看到的声明中…至
-  - 但是先生 这个小孩的父母已经证实过在印度的时候与自己孩子走失了
-  - 先生 这不是我的毒品
+  - 其实 我一切都好
+  - 其实 我今天还有点担心你呢
+  - 其实 我就是腰粗了一点
 
 ### "写" + "了" (5 occurrences)
 - Predicted: None
@@ -1902,14 +1726,6 @@ Accuracy: 98.86%
   - 他们两三个小时后 就会来我们这．
   - 他遇到我母亲后 就定居在堪萨斯行政区
 
-### "吧" + "哥们" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 为了大众来一段吧 哥们
-  - 得了吧 哥们
-  - 收下吧 哥们
-
 ### "吧" + "宝贝" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -1933,14 +1749,6 @@ Accuracy: 98.86%
   - 只要能平安回来 你就是个大人了
   - 回来 你这混蛋
   - 回来 你这蠢货
-
-### "圣" + "诞" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 距 圣 诞 三 周
-  - 距 圣 诞 两 周
-  - 距 圣 诞 五 周
 
 ### "大叔" + "你" (5 occurrences)
 - Predicted: None
@@ -2022,14 +1830,6 @@ Accuracy: 98.86%
   - 如果你想 我现在就可以打给他
   - 我总是说如果我那样想 我就应该站远点但我总是没有
 
-### "我" + "是" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你…你出卖了我 是不是
-  - 你不相信我 是不是？
-  - 你是因为死前想再见他一面而我 是想亲手把他干掉
-
 ### "所以" + "我" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2037,30 +1837,6 @@ Accuracy: 98.86%
   - 所以 我在此号召大家帮助我找到罪犯!
   - 所以 我就直接去了天津
   - 所以 我挺好的
-
-### "招娣" + "，" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 招娣 ，你怎跑前井打水来了？
-  - 招娣 ，你把红给送来了
-  - 招娣 ，你这红织得可真好
-
-### "来" + "了" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们要把我踢出去又来 了， 你打算怎么办？
-  - 德克， 看看是谁来 了
-  - 我丈夫来 了这里
-
-### "椿" + "你" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 椿 你下来来了
-  - 椿 你在哪啊？
-  - 椿 你必须跟鲲一起走
 
 ### "爱" + "爱" (5 occurrences)
 - Predicted: None
@@ -2090,9 +1866,9 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
+  - 好久以来我一直憋着很多的话想告诉她现在 我想告诉她一切
   - 律师曾告诉我现在 我知道了
   - 现在 我将追寻你的名字
-  - 现在 我想告诉她一切
 
 ### "的" + "一" (5 occurrences)
 - Predicted: None
@@ -2118,14 +1894,6 @@ Accuracy: 98.86%
   - 好的 好的 好的
   - 好的 好的 好的
 
-### "的" + "那" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一分钟前你带的 那黑头发的那个吗
-  - 你看到你称为男朋友的 那混账了吗?
-  - 你说尸体不是在我们农场发现的 那为什么还要找我们了解情况？
-
 ### "的" + "都" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2134,14 +1902,6 @@ Accuracy: 98.86%
   - 她开着煤气锅 轰隆轰隆的 都不会醒
   - 将途中看到的都当作指示听到的 都当作命令
 
-### "看" + "是" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 快看 是蓝天呢
-  - 看 是什么
-  - 看 是你爸爸！
-
 ### "真的" + "你" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2149,6 +1909,14 @@ Accuracy: 98.86%
   - 是真的 你个小东西
   - 看来是真的 你要走了
   - 真的 你这么觉得
+
+### "知道" + "这" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你也知道 这房间里一半的人 还欠着跛豪的钱他们以为我会忘了
+  - 你们都知道 这是绝不可能的
+  - 你知道 这是一件很难很难的事情比你现在想象的要难得多
 
 ### "秀安" + "你" (5 occurrences)
 - Predicted: None
@@ -2190,6 +1958,14 @@ Accuracy: 98.86%
   - 菲儿 你听我说
   - 菲儿 你看到我刚刚的厉害了吧
 
+### "说" + "我" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不管你怎么说 我还是觉得该是时候了
+  - 不管怎么说 我还是得跟你说声谢谢
+  - 你说 我过来干嘛?
+
 ### "说" + "我们" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2198,6 +1974,14 @@ Accuracy: 98.86%
   - 可以很骄傲的说 我们非常幸福
   - 坦白说 我们怀疑他是自杀
 
+### "说" + "这" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不管怎么说 这也是住了一辈子的地方
+  - 可是不久 他却安于这样他安慰自己说 这种生活不过是暂时的
+  - 实话说 这出戏的学问还真是不浅！
+
 ### "起" + "你" (5 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2205,14 +1989,6 @@ Accuracy: 98.86%
   - 从现在起 你坐这里
   - 从现在起 你就是模范犯人了
   - 从现在起 你欠我钱
-
-### "距" + "圣" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 距 圣 诞 三 周
-  - 距 圣 诞 两 周
-  - 距 圣 诞 五 周
 
 ### "这里" + "我" (5 occurrences)
 - Predicted: None
@@ -2230,13 +2006,21 @@ Accuracy: 98.86%
   - 那 那个是我的房间了
   - 那 那又怎么样…
 
-### "，" + "也" (5 occurrences)
+### "长官" + "我" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 从来就没有什么救世主， 也不靠神仙皇帝！
-  - 你们要搞清楚即使只是细菌， 也会很麻烦
-  - 你是我的上司， 也是我的朋友
+  - 不 长官 我会吃完的
+  - 长官 我是查德·纳瓦布 现在在查瓦拉那个印度间谍在巴士上
+  - 长官 我是说通海阀什么是通海阀
+
+### "！" + "－" (5 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你好，罗希！ －是我，阿曼过来了
+  - 卡米拉！ －卡米拉，已经死了
+  - 是的，来吧，说啊！ －我…
 
 ### "，" + "但是" (5 occurrences)
 - Predicted: None
@@ -2244,23 +2028,15 @@ Accuracy: 98.86%
 - Examples:
   - 不错， 但是你转身太深了。
   - 你做了一件伟大的事我喜欢， 但是太过分了！
-  - 你把每一个人放进去， 但是是按照你希望看到的他们的样子放进去。
+  - 她没得到怪异的画， 但是发现是你把卡片寄到学校。
 
-### "，" + "德克" (5 occurrences)
+### "，" + "请" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 了你好， 德克
-  - 别紧张， 德克
-  - 听着， 德克
-
-### "，" + "没有" (5 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 亲爱的，别担心， 没有危险。
-  - 她去得很安详， 没有痛苦，而且年纪也不小了
-  - 如果当时候我们更小心点， 没有人会受伤了。
+  - 您可以待会儿坐下来后再慢慢欣赏， 请你务必离开.
+  - 正规一号太空站， 请回覆马博士， 请回答
+  - 正规一号太空站， 请回覆马博士， 请回答
 
 ### "，" + "还" (5 occurrences)
 - Predicted: None
@@ -2270,13 +2046,13 @@ Accuracy: 98.86%
   - 在这里付钱， 还得到精神病院取货?
   - 在这里你可以又吃又喝， 还能和朋友一起玩吧？
 
-### "，" + "这里" (5 occurrences)
+### "，" + "那" (5 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你们可以到其他地方去吃， 这里有不少餐馆。
-  - 信心号指挥官， 这里是企业号
-  - 告你们非法入侵， 这里属于安那康达矿业公司所有！
+  - 不过如果某人佩戴彩虹项圈的话， 那就另当别论咯。
+  - 不， 才不， 那比较逼真
+  - 可是如果树倒了， 那将是他们的末日。
 
 ### "," + "为什么" (4 occurrences)
 - Predicted: None
@@ -2285,22 +2061,6 @@ Accuracy: 98.86%
   - 伙计, 为什么还唠叨什么纪律?
   - 你教他们, 为什么别人要遭殃?
   - 已经很清楚是群大学生, 为什么还要使用子弹?
-
-### "," + "乔" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 去你的, 乔
-  - 听那个我不舒服, 乔
-  - 嗨, 乔
-
-### "," + "也" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他日夜工作, 也不顾自己
-  - 演员现在回想起出演这部电影时, 也是痛苦不已的
-  - 纪律, 秩序和寂静没有人会开玩笑, 也没有人拥抱谁
 
 ### "," + "二" (4 occurrences)
 - Predicted: None
@@ -2334,13 +2094,21 @@ Accuracy: 98.86%
   - 到现在也是个烂摊子, 又有谁在意?
   - 她是我儿时的伙伴, 又是个医生
 
-### "," + "大婶" (4 occurrences)
+### "," + "和" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 又不跟任何人说别伤心, 大婶.
-  - 好多了, 大婶.
-  - 有可能变得不可收拾, 大婶
+  - 尿多, 和消瘦
+  - 我们心里, 自豪坚定, 和英勇在膨胀
+  - 我父亲的老板有两个, 和那个政府官员一样.
+
+### "," + "因为" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他很恼火, 因为我拿第一了
+  - 他故意射偏, 因为不想射死我。
+  - 原谅他们, 上帝, 因为他们不知道他们在干什么
 
 ### "," + "师傅" (4 occurrences)
 - Predicted: None
@@ -2349,22 +2117,6 @@ Accuracy: 98.86%
   - 不, 师傅!
   - 我也要去采草药, 师傅
   - 是的, 师傅
-
-### "," + "当然" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不, 当然不是.
-  - 如果你想, 当然可以
-  - 当然, 当然.
-
-### "," + "把" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 下课之后, 把这堆煤球都拖到外面去
-  - 大哥, 我说我们该把这堵墙打空, 把旁边的房间也占了
-  - 快, 把东西搬进来
 
 ### "," + "每" (4 occurrences)
 - Predicted: None
@@ -2382,13 +2134,29 @@ Accuracy: 98.86%
   - 对不起, 没有邮票.
   - 没有, 没有留言。
 
-### "," + "用" (4 occurrences)
+### "," + "爸" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他就亲自把我的脚擦干净, 用伏特加为我按摩身子
-  - 告诉我, 用药物维持植物人的生命..
-  - 想想吧，伙计, 用脑想想吧
+  - 但你赢了, 爸
+  - 只有一个办法, 爸
+  - 祝贺你, 爸
+
+### "," + "真" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你脸红了, 真可爱
+  - 冬天居然打雷, 真够异常
+  - 我的宝贝, 真好
+
+### "," + "要" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 严重的脑损伤, 加上儿子死去的打击有一道很深的伤口, 要特别注意
+  - 伙计, 要不要给你个神奇拥抱
+  - 大哥, 要准时吃饭.
 
 ### "," + "谁" (4 occurrences)
 - Predicted: None
@@ -2398,6 +2166,14 @@ Accuracy: 98.86%
   - 可, 谁想入学院?
   - 快说, 谁是硬汉?
 
+### "," + "这里" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不, 这里全是树叶.
+  - 二, 这里的语言很混乱
+  - 你别躺在这, 这里很潮湿
+
 ### "," + "都" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2406,13 +2182,13 @@ Accuracy: 98.86%
   - 你每天搞什麽鬼, 都跑哪儿去了?
   - 我那么想念, 都能看到她了
 
-### "-" + "你" (4 occurrences)
+### "-" + "我" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你- 你是哪里的怪胎?
-  - 我- 你确实是这么说的，但那不是你的心里话，你想说的是..
-  - 我不知道你- 你现在要干嘛?
+  - 你能不能去拿下我的- 我的钥匙?
+  - 我有- 我有- 我有听到你的话
+  - 我有- 我有- 我有听到你的话
 
 ### "一天" + "你" (4 occurrences)
 - Predicted: None
@@ -2494,13 +2270,21 @@ Accuracy: 98.86%
   - 抢了 五 六
   - 拖了 五 六
 
-### "了" + "什么" (4 occurrences)
+### "了" + "吗" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你没了 什么？
-  - 你的头可以动了 什么时候可以做到的?
-  - 精灵干鲁不见了 什么？
+  - 你听说了 吗？
+  - 别再吃 了， 布坎看到她了 吗？
+  - 没有， 你把试卷交到快递公司 了 吗？
+
+### "了" + "她" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 即使知道了 她肯定会鄙视我
+  - 没人比她更自信了 她干嘛要出嫁呢？
+  - 现在都两点了 她还来不来?
 
 ### "了" + "好" (4 occurrences)
 - Predicted: None
@@ -2526,13 +2310,13 @@ Accuracy: 98.86%
   - 因为姊姊生病了 要花好多好多钱
   - 法里兹奥，这样太危险了 要打仗了！
 
-### "了" + "那" (4 occurrences)
+### "了" + "这" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你今晚真棒， 玛格你演活 了 那可怜的女孩
-  - 你鼓励他写作 希望他成功但如果他成功了 那会让你无法承受
-  - 如果你告诉我妈妈我知道了 那她会赶你出去
+  - 但是，你的眼光比画技更好你像看透了物体的本质例如，看穿了 这蜜桃香甜多汁
+  - 我不会再给我的女儿用塑料尿布了 这走远了!
+  - 段老板，有些日子没来了 这心里还怪惦记的
 
 ### "事" + "你" (4 occurrences)
 - Predicted: None
@@ -2554,7 +2338,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 亲爱的 我会告诉你那些男生的名字你能听到吗？
+  - 亲爱的 我会告诉你那些男生的名字
   - 亲爱的 我会在这儿陪你
   - 亲爱的 我知道你很期待青春期不过你只好再忍一阵子了
 
@@ -2566,22 +2350,6 @@ Accuracy: 98.86%
   - 你怎么知道聘请你的人 不会因为任务失败而杀了你?
   - 因为今晚你们才是暴露了秘密的人 不是我
 
-### "人" + "在" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 两个金帐汗图人 在扭我的头
-  - 你不能让那种人 在镇上为所欲为
-  - 带那寡妇过来，她一个人 在那一定觉得很孤独
-
-### "人" + "就" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 两个人 就不怕打不过碧眼狐狸了
-  - 发现那种人 就该抓紧了别放
-  - 我们镇上的人 就是不断参加丧葬礼从未见过城镇如此死寂
-
 ### "人" + "是" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2589,14 +2357,6 @@ Accuracy: 98.86%
   - 你们杀的那两个人 是你们的朋友吗
   - 太英俊又太有才华的人 是不能信任的
   - 我劝你我知道你认为这些人 是你的朋友如果你真是他们的朋友 就要诚实
-
-### "人" + "能" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但是没见过死人的人 能做好这份工作吗
-  - 其实拿了剑的人 能自己把剑放回去
-  - 我不认为真有人 能清楚解释摇滚乐比特塔谢例外
 
 ### "以后" + "马达" (4 occurrences)
 - Predicted: None
@@ -2614,13 +2374,13 @@ Accuracy: 98.86%
   - 但是有一件事 我能够确定
   - 关于这件事 我全都安排好了
 
-### "伙计" + "我" (4 occurrences)
+### "伊桑" + "伊桑" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 伙计 我不能去
-  - 伙计 我只是还没准备好
-  - 伙计 我帮马蒂尔斯搞定个实习如果你能另找个男朋友更好 玛丽亚
+  - 伊桑 伊桑
+  - 伊桑 伊桑 在那边
+  - 伊桑 伊桑 这儿
 
 ### "但是" + "我" (4 occurrences)
 - Predicted: None
@@ -2630,6 +2390,14 @@ Accuracy: 98.86%
   - 但是 我说你啊…
   - 但是 我还是不行
 
+### "你" + "给" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我怎么介绍你 给总统认识呢?
+  - 求求你 给我一点点就好
+  - 没有……我有一些东西给你 给我？
+
 ### "你好" + "我" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2637,6 +2405,14 @@ Accuracy: 98.86%
   - 你好 我叫柯景腾
   - 你好 我是伊娃
   - 你好 我是樊尚·伦齐 努尔的同事
+
+### "先生" + "这" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 但是先生 这个小孩的父母已经证实过在印度的时候与自己孩子走失了
+  - 先生 这不是我的毒品
+  - 先生 这是你的吗？
 
 ### "冷静" + "冷静" (4 occurrences)
 - Predicted: None
@@ -2654,14 +2430,6 @@ Accuracy: 98.86%
   - 你有道灵光从天灵盖喷出来 你知道吗？
   - 她是没说出来 你怎么知道她不想尝尝新东西呢？
 
-### "前" + "你" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 勇敢无惧让我领先在前 你问为什么？
-  - 在他死前 你的父亲也曾坚持说这不是他。
-  - 在我们开始前 你要宣读一份声明
-
 ### "南娜" + "－" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2678,13 +2446,13 @@ Accuracy: 98.86%
   - 哎 有吗 你有？
   - 真的吗 你也有家庭啊
 
-### "吧" + "，" (4 occurrences)
+### "吧" + "哥们" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 再想想吧 ， 晚安 !
-  - 看吧 ，
-  - 练习吧 ，
+  - 为了大众来一段吧 哥们
+  - 得了吧 哥们
+  - 收下吧 哥们
 
 ### "吾" + "等" (4 occurrences)
 - Predicted: None
@@ -2693,6 +2461,14 @@ Accuracy: 98.86%
   - 吾 等 仍 在 世
   - 吾 等 力 之 所 及 唯 有 苟 活 于 世
   - 吾 等 在 此 间
+
+### "呢" + "－" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - －他们是从哪儿来的呢 －人民突击队，下午才被征召过来的
+  - －你从哪儿来的呢 －富尔达
+  - －去哪儿呢 －我不知道
 
 ### "哦" + "哦" (4 occurrences)
 - Predicted: None
@@ -2709,6 +2485,14 @@ Accuracy: 98.86%
   - 哦 我明白了
   - 哦 我的天啊！
   - 哦 我的孩子
+
+### "啊" + "他" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 上帝啊 他向他开枪了！
+  - 没钱他就急了，他着急啊 他就赶着出去借…
+  - 真的啊 他怎么样?
 
 ### "啊" + "她" (4 occurrences)
 - Predicted: None
@@ -2781,14 +2565,6 @@ Accuracy: 98.86%
   - 她说不的那天 就是她死的那天
   - 我过两天 就搬到我男朋友的大房子住去了
   - 我这辈子最开心的那一天 就是威廉带我去半岛吃饭
-
-### "她" + "她" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 别逼她 她当然喜欢他 你看不出来吗?
-  - 她 她什么都教
-  - 如果你不喜欢她 她就该闭嘴 对吗？
 
 ### "如此" + "你" (4 occurrences)
 - Predicted: None
@@ -2902,6 +2678,14 @@ Accuracy: 98.86%
   - 我 好害怕
   - 现在有麻烦的不是我 好吗
 
+### "我" + "是" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你…你出卖了我 是不是
+  - 你不相信我 是不是？
+  - 你是因为死前想再见他一面而我 是想亲手把他干掉
+
 ### "我" + "有" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2966,14 +2750,6 @@ Accuracy: 98.86%
   - 有位叫程蝶衣的让人逮走的时候，说是 这把剑的主人能救他
   - 而最重要的是 这个条约已经得到了认可
 
-### "月" + "）" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一 月 ）
-  - （十 月 ）
-  - （十一 月 ）
-
 ### "朱诺" + "你" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2981,6 +2757,14 @@ Accuracy: 98.86%
   - 朱诺 你不能这样贸然去他们家没什么大不了吧
   - 朱诺 你昨晚干嘛了?
   - 朱诺 你没在听我说话
+
+### "来" + "了" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他们要把我踢出去又来 了， 你打算怎么办？
+  - 我丈夫来 了这里
+  - 还有一件事我们来 了 一位新同学
 
 ### "来说" + "是" (4 occurrences)
 - Predicted: None
@@ -2998,13 +2782,13 @@ Accuracy: 98.86%
   - 梁宽 你怎么现在才出现?
   - 梁宽 你死到哪儿去了?
 
-### "死" + "了" (4 occurrences)
+### "椿" + "你" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 但他已经死 了
-  - 你 已 经 死 了
-  - 已经死 了
+  - 椿 你在哪啊？
+  - 椿 你必须跟鲲一起走
+  - 椿 你快看好好玩啊
 
 ### "泷" + "你" (4 occurrences)
 - Predicted: None
@@ -3038,14 +2822,6 @@ Accuracy: 98.86%
   - 现在 我们就让他在门口等着
   - 现在 我们开始开会
 
-### "生子" + "，" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 母亲说，等下次我再回来时这所小学校就看不到了生子 ，你看这学校都几十年了
-  - 生子 ，你带回来的钱呢，给妈村长，你看
-  - 生子 ，有事吗？
-
 ### "的" + "她" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3062,21 +2838,13 @@ Accuracy: 98.86%
   - 姓严的 我们在宝芝林见过的你还说
   - 是的 我们开始吧
 
-### "的" + "！" (4 occurrences)
+### "的" + "那" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不会是的 ！
-  - 只是个小孩 没有问题的 ！
-  - 好的 ！
-
-### "的" + "，" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 咱们还要给他买点烟有喝酒的 ，这酒我也得买点
-  - 头发不是红色的 ，
-  - 我行的 ，谢谢
+  - 一分钟前你带的 那黑头发的那个吗
+  - 你看到你称为男朋友的 那混账了吗?
+  - 你说尸体不是在我们农场发现的 那为什么还要找我们了解情况？
 
 ### "的话" + "一定" (4 occurrences)
 - Predicted: None
@@ -3093,6 +2861,22 @@ Accuracy: 98.86%
   - 从你的穿着看 你对服饰打扮压根不在乎
   - 你…你看 你看
   - 我就看 你的面子
+
+### "看" + "是" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 快看 是蓝天呢
+  - 看 是什么
+  - 看 是你爸爸！
+
+### "着" + "她" (4 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 「紧紧拉着 她那交缠着的头发
+  - 我一直想像着 她买这件衣服的模样她一定没想到…会穿着它入土
+  - 我现在还保留着 她写给我的两张褪了色的便条…和一把梳子。
 
 ### "知道" + "什么" (4 occurrences)
 - Predicted: None
@@ -3126,14 +2910,6 @@ Accuracy: 98.86%
   - 不行 不行
   - 不行 不行!
 
-### "见" + "了" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 下回见 了
-  - 回头见 了
-  - 回头见 了， 张小姐
-
 ### "觉得" + "这" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3150,14 +2926,6 @@ Accuracy: 98.86%
   - 和我在一起别走 别走 别走
   - 求你别走 别走 别走
 
-### "走" + "我" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你不让我走 我就逃自己当家作主
-  - 你有自由走 我有自由好好过
-  - 如果你不赶快带我走 我就会死，
-
 ### "起" + "我" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3173,22 +2941,6 @@ Accuracy: 98.86%
   - 只要轻轻地迈罗 你有赛车型的吗或者鲔鱼形状的怎么启动
   - 迈罗 你到底在做什么
   - 迈罗 你在这啊
-
-### "还有" + "你" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 还有 你干嘛要吃橡皮泥
-  - 还有 你是个受不了苦却自我感觉良好的年轻人我是你表哥
-  - 还有 你的乖儿子还没还钱
-
-### "这" + "儿" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你看我们老家也在钱上这 儿黄河壶口瀑布
-  - 我想跟你打听一个人我们这 儿散都散伙了
-  - 江湖你们这 儿时常下雨吗？
 
 ### "这里" + "你" (4 occurrences)
 - Predicted: None
@@ -3222,14 +2974,6 @@ Accuracy: 98.86%
   - 金田 你来干吗
   - 金田 你的摩托车我的摩托车
 
-### "长官" + "我" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不 长官 我会吃完的
-  - 长官 我是说通海阀什么是通海阀
-  - 长官 我本来可以在你回来之前消失的但是我是哈努曼神的信徒 而且…是
-
 ### "首先" + "我" (4 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3238,53 +2982,29 @@ Accuracy: 98.86%
   - 首先 我写点别的
   - 首先 我想说你们即将看到的完全展现了当下现实
 
-### "！" + "－" (4 occurrences)
+### "，" + "也" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你好，罗希！ －是我，阿曼过来了
-  - 卡米拉！ －卡米拉，已经死了
-  - 这些人都是谁？！ －你认为呢
+  - 从来就没有什么救世主， 也不靠神仙皇帝！
+  - 你们要搞清楚即使只是细菌， 也会很麻烦
+  - 你是我的上司， 也是我的朋友
 
-### "，" + "因为" (4 occurrences)
+### "，" + "布隆先生" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他们负责信赖的器官， 因为长期不使用，因而萎缩退化
-  - 她说着神的话语（指小女孩说的圣经里的经文， 因为圣经是神所默示的）
-  - 我们国家没有电影业， 因为我们没有产业的概念。
+  - 嗨， 布隆先生
+  - 我能为你效劳吗， 布隆先生？
+  - 抱歉， 布隆先生
 
-### "，" + "或" (4 occurrences)
+### "，" + "没有" (4 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他们可能无法回覆， 或不愿回覆
-  - 你读它们你便可能成为达森， 或罗宾森
-  - 在这里，如果你抓住别人的手， 或腿，没有人会杀了你。
-
-### "，" + "然后" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你发现了他的死， 然后拿走了那部带子。
-  - 你给我控制器， 然后你回你家。
-  - 我们不能待在这里，仪式会结束的， 然后他们都会到这里来，我的天！
-
-### "，" + "爸" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不 了， 爸
-  - 我晚点再跟你碰头， 爸
-  - 拜托， 爸
-
-### "，" + "谢谢" (4 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 很好， 谢谢
-  - 很抱歉给你带来麻烦， 谢谢你的合作！
-  - 我要走了 ， 谢谢，相簿
+  - 亲爱的，别担心， 没有危险。
+  - 如果当时候我们更小心点， 没有人会受伤了。
+  - 我是火神星人， 没有自我意识
 
 ### "，" + "那么" (4 occurrences)
 - Predicted: None
@@ -3294,14 +3014,6 @@ Accuracy: 98.86%
   - 所有的东西看起来都那么好， 那么有意义。
   - 这些宗教的人，如果他们不能回答， 那么他们就会打我们。
 
-### "," + "一切" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 别担心, 一切都会好的.
-  - 如果我成功了, 一切都会变得很顺利
-  - 毕竟, 一切事物都有自己的意义意义和存在的理由我们真要走这条路啊?
-
 ### "," + "三" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3309,6 +3021,22 @@ Accuracy: 98.86%
   - 一, 二, 三
   - 一, 二, 三, 四
   - 一, 二, 三.
+
+### "," + "乔" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 去你的, 乔
+  - 听那个我不舒服, 乔
+  - 嗨, 乔
+
+### "," + "也" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他日夜工作, 也不顾自己
+  - 演员现在回想起出演这部电影时, 也是痛苦不已的
+  - 这是我想运用的隐喻, 也是我想要在自己的电影和生活中表达的东西
 
 ### "," + "从" (3 occurrences)
 - Predicted: None
@@ -3342,14 +3070,6 @@ Accuracy: 98.86%
   - 德夫, 只有你在介意.
   - 说得对, 只有医生才能理解医生的压力
 
-### "," + "可" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你已经结婚了, 可你并不知道丈夫意味着什么?
-  - 我以为你们和别人不同, 可你们是帮畜生!
-  - 爸爸, 可我做不了医生
-
 ### "," + "吃" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3372,7 +3092,7 @@ Accuracy: 98.86%
 - Examples:
   - 你打中女王了, 喝啊!
   - 嘿老伯, 玩台球, 喝果汁, 生活多美好!
-  - 玩台球, 喝果汁..
+  - 玩台球, 喝果汁… 生活多美好, 老伯
 
 ### "," + "国家" (3 occurrences)
 - Predicted: None
@@ -3382,14 +3102,6 @@ Accuracy: 98.86%
   - 因为某些胆小的恐怖行径, 国家失去了一位伟大领袖
   - 等我们从这里成长起来, 国家会变得美好没有腐败
 
-### "," + "多" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 哦, 多不体面.
-  - 大婶, 多孝顺的媳妇
-  - 糖尿病是一种慢性临床综合症以高血糖为特征症状有易渴, 多食..
-
 ### "," + "太" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3398,13 +3110,13 @@ Accuracy: 98.86%
   - 如果条件允许的话，全城的女士都会参加，哦, 太好了。
   - 很贵, 太贵了。
 
-### "," + "如果" (3 occurrences)
+### "," + "孩子" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不, 你应该先跟我说对, 如果我爱你..
-  - 你来啊, 如果想死的话
-  - 瞧, 如果条子把我从前门踢出去我会从后门再回来,
+  - 什么事呀, 孩子?
+  - 休息得好吗, 孩子?
+  - 你还嫩了点, 孩子
 
 ### "," + "您" (3 occurrences)
 - Predicted: None
@@ -3414,13 +3126,21 @@ Accuracy: 98.86%
   - 对不起, 您打错了。
   - 您, 布劳恩小姐, 您是纯正的雅利安人吗?
 
-### "," + "来" (3 occurrences)
+### "," + "把" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 再做一次, 兄弟, 来
-  - 我的爱人, 来我这儿，我的爱人.
-  - 欢迎, 来杯茶?
+  - 下课之后, 把这堆煤球都拖到外面去
+  - 大哥, 我说我们该把这堵墙打空, 把旁边的房间也占了
+  - 快, 把东西搬进来
+
+### "," + "用" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他就亲自把我的脚擦干净, 用伏特加为我按摩身子
+  - 想想吧，伙计, 用脑想想吧
+  - 我哪会治疗…用拥抱, 用微笑?
 
 ### "," + "看" (3 occurrences)
 - Predicted: None
@@ -3429,14 +3149,6 @@ Accuracy: 98.86%
   - 拿瓶饮料, 看电视, 好好享受
   - 等等, 我也想来, 看
   - 马猴, 别说别人了, 看你了
-
-### "," + "真" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你脸红了, 真可爱
-  - 冬天居然打雷, 真够异常
-  - 纷争乃真理之母, 真见鬼!
 
 ### "," + "知道" (3 occurrences)
 - Predicted: None
@@ -3454,6 +3166,14 @@ Accuracy: 98.86%
   - 嗨，欢迎回家, 维克
   - 好了, 维克和其他五个人合作你认为怎样?
 
+### "," + "说" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 哪里, 哪里, 说得不好
+  - 我没时间解释我过来时, 你就拒绝我, 说我丑, 什么都行
+  - 给你老婆电话, 说你被绑架了
+
 ### "," + "谢谢" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3462,22 +3182,6 @@ Accuracy: 98.86%
   - 够了, 谢谢你。
   - 想, 谢谢你。
 
-### "," + "跟" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你, 跟我来
-  - 我以前相信, 跟他在一起会很幸福
-  - 管他呢, 跟椰子有什么关系?
-
-### "," + "还是" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他用尽了全力, 还是没有成功.
-  - 我们要做个爱, 还是要流产?
-  - 这是交配前 , 还是交配后喝的？
-
 ### "-" + "他" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3485,6 +3189,14 @@ Accuracy: 98.86%
   - 他- 他一直都是这么古怪
   - 他- 他还不出名.
   - 祖丽加毕 - 他是我朋友
+
+### "-" + "你" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你- 你是哪里的怪胎?
+  - 我不知道你- 你现在要干嘛?
+  - 是的 - 你在写信之前有没有和任何原子能委员会相关人士讨论信件内容？
 
 ### "-" + "在" (3 occurrences)
 - Predicted: None
@@ -3526,22 +3238,6 @@ Accuracy: 98.86%
   - 放我下去 你听见了吗？
   - 此地很适合你一样如果你这样下去 你很快就会长眠於此
 
-### "下潜" + "！" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 下潜 ！
-  - 不要下潜 ！
-  - 准备下潜 ！
-
-### "不" + "了" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不 了， 我 自 己来
-  - 不 了， 爸
-  - 我了解， 我吸引不 了 你
-
 ### "不" + "他" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3557,14 +3253,6 @@ Accuracy: 98.86%
   - 不 别动
   - 不 别打脸 不!
   - 不 别这样
-
-### "不" + "应该" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不 应该是女性朋友
-  - 不 应该是我谢谢你
-  - 我告诉过你们，我们从来就不 应该让她进来。
 
 ### "不" + "长官" (3 occurrences)
 - Predicted: None
@@ -3654,14 +3342,6 @@ Accuracy: 98.86%
   - 乔纳斯 莫西 快起来
   - 他头上的冠冕乔纳斯 莫西
 
-### "了" + "两" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 可在吃饭的时候她还是感觉到了 两个朋友之间的紧张气氛.
-  - 员警说爸爸应该高兴除去了 两个捣乱分子
-  - 昨天晚上, 泰穆科市迎来了 两位旅行中的拉美麻风病专家阿尔伯特.格兰纳多斯博士
-
 ### "了" + "为什么" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3670,13 +3350,13 @@ Accuracy: 98.86%
   - 怎么了 为什么要哭？
   - 我们应该已经在预定地点附近了 为什么伯特豪不给我们信号？
 
-### "了" + "会" (3 occurrences)
+### "了" + "什么" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 反正一样 他们要知道了 会置之不理 善罢甘休吗？
-  - 就算他们逃出来了 会去了哪里?
-  - 我要喝多了 会耍酒疯的
+  - 你没了 什么？
+  - 你的头可以动了 什么时候可以做到的?
+  - 这样行了 什么行了?
 
 ### "了" + "去" (3 occurrences)
 - Predicted: None
@@ -3726,6 +3406,14 @@ Accuracy: 98.86%
   - 该说你回来早了 还是回来晚了
   - 这是给我分组了 还是给我屏蔽了？
 
+### "了" + "那" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你鼓励他写作 希望他成功但如果他成功了 那会让你无法承受
+  - 如果你告诉我妈妈我知道了 那她会赶你出去
+  - 尤其在我们干掉了 那俩侦察兵之后都说啥呢
+
 ### "事" + "不" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3766,13 +3454,29 @@ Accuracy: 98.86%
   - 就算是家里有人 也不会有人知道
   - 有虔诚信仰之人 也是哲学家
 
-### "人" + "我们" (3 occurrences)
+### "人" + "在" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你们对我们很好 － 所有的人 我们这次旅行很开心
-  - 我们就想跟你谈谈这个他们是我们的人 我们的人？
-  - 遗憾的是这种人 我们这有很多
+  - 你不能让那种人 在镇上为所欲为
+  - 带那寡妇过来，她一个人 在那一定觉得很孤独
+  - 我们两个人是差不多时间怀孕的在我们三个月的时候她暗地里叫人 在我的饭碗里放堕胎药
+
+### "人" + "就" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 发现那种人 就该抓紧了别放
+  - 我们镇上的人 就是不断参加丧葬礼从未见过城镇如此死寂
+  - 抛硬币赢的人 就可以抱住对方腿攻击
+
+### "人" + "能" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 但是没见过死人的人 能做好这份工作吗
+  - 其实拿了剑的人 能自己把剑放回去
+  - 欺负双手被绑的人 能叫英雄好汉吗？
 
 ### "人" + "还" (3 occurrences)
 - Predicted: None
@@ -3781,14 +3485,6 @@ Accuracy: 98.86%
   - 你也知道 这房间里一半的人 还欠着跛豪的钱他们以为我会忘了
   - 等我醒来发现只有我一个人 还在接近海面的上空那是天上的神明 还不想带你走喽
   - 难道像他们这样的人 还会相信什麽吗?
-
-### "什么" + "都" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你不管驾驶什么 都很行嘛
-  - 先生，请遵从无论你想做什么 都不要去做
-  - 听着 黑桐无论发生什么 都不要接近那个男人
 
 ### "以前" + "你" (3 occurrences)
 - Predicted: None
@@ -3806,29 +3502,13 @@ Accuracy: 98.86%
   - 他请以前 在球场上的昔日护卫搭绿线巴士到港口来接他
   - 在有大笔的车贷以前 在有大笔的抚养费以前
 
-### "以后" + "我" (3 occurrences)
+### "伙计" + "我" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 从此以后 我了解到好人没好报
-  - 我们不再谈父亲打那以后 我的母亲嫁给了我们的社会主义祖国
-  - 我想 如果我骑马到了 沙漠的另一头我就可以找到它的从那以后 我就一直在大漠中奔驰
-
-### "伤" + "了" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你伤 了我的心
-  - 我怎么伤 了 你的心 了？
-  - 抱歉我伤 了 你的心抱歉我爱上了 你的朋友
-
-### "伯洛哥菲" + "耶夫娜" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 略德尼拉．伯洛哥菲 耶夫娜
-  - 略德尼拉．伯洛哥菲 耶夫娜 您刚才干什么来着
-  - 略德尼拉．伯洛哥菲 耶夫娜她一个人在那休息呐
+  - 伙计 我不能去
+  - 伙计 我只是还没准备好
+  - 伙计 我帮马蒂尔斯搞定个实习如果你能另找个男朋友更好 玛丽亚
 
 ### "但是" + "先生" (3 occurrences)
 - Predicted: None
@@ -3853,14 +3533,6 @@ Accuracy: 98.86%
   - 而且你 亲爱的孩子…
   - 谢谢你 亲爱的
   - 谢谢你 亲爱的斯维塔
-
-### "你" + "什么" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你 什么总是要过去无所事事呢
-  - 那你 什么在他身体还没好些的时候就在昨天就打电话给我啊
-  - 那你 什么就不哭哭啼啼的呢
 
 ### "你" + "兄弟" (3 occurrences)
 - Predicted: None
@@ -3910,14 +3582,6 @@ Accuracy: 98.86%
   - 你 有一些三明治给 孩子们的 伙计
   - 原来是你 有消息吗？
 
-### "你" + "爸爸" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我爱你 爸爸
-  - 给什麽你 爸爸?
-  - 谢谢你 爸爸
-
 ### "你" + "等" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -3965,14 +3629,6 @@ Accuracy: 98.86%
   - 以后还会有更多的你好 先生
   - 你好 先生
   - 有个顾客想和你说你好 先生
-
-### "你好" + "，" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你好 ，威斯太太
-  - 你好 ，杜辉耶先生
-  - 你好 ，美女 !
 
 ### "佩普" + "你" (3 occurrences)
 - Predicted: None
@@ -4038,13 +3694,13 @@ Accuracy: 98.86%
   - 十天前 他就和他的单位一起走了
   - 审判前 他会一直被关押
 
-### "前" + "我" (3 occurrences)
+### "前" + "你" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 在你还没出生前 我去看过海上阅兵海上阅兵？
-  - 在找到更好的工作前 我可以跟你干
-  - 在拉蒙回城前 我不准任何人在镇上闹事
+  - 勇敢无惧让我领先在前 你问为什么？
+  - 在他死前 你的父亲也曾坚持说这不是他。
+  - 新桌子送到前 你就用社长的桌子吧
 
 ### "加油" + "加油" (3 occurrences)
 - Predicted: None
@@ -4077,14 +3733,6 @@ Accuracy: 98.86%
   - 去 去
   - 去 去 去 还什么鸳鸯浴呢
   - 去 去 去 还什么鸳鸯浴呢
-
-### "发生" + "了" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 原来发生 了这些事
-  - 发生 了什么事？
-  - 我只是想通知你 发生 了什么事
 
 ### "另外" + "我" (3 occurrences)
 - Predicted: None
@@ -4142,6 +3790,14 @@ Accuracy: 98.86%
   - 我也能去游泳吗 妈妈？
   - 能听到我说话吗 妈妈?
 
+### "吧" + "!" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 到房间去吧 !
+  - 星期五 再见吧 !
+  - 闻到香味了吧 !
+
 ### "吧" + "我们" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4182,14 +3838,6 @@ Accuracy: 98.86%
   - 呐 你不知道她会去哪里吗
   - 呐 你不觉得他们俩很像吗
 
-### "呢" + "你" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我正要打电话给你呢 你去哪儿啦？
-  - 所以呢 你给帆高的月薪是多少
-  - ，你还病着呢 你上县上怎么找娣儿，你回来，
-
 ### "呢" + "先生" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4214,14 +3862,6 @@ Accuracy: 98.86%
   - 没事没事，她呢 是脾气大了一点，让她冷静一下
   - 那过年才真有意思呢 是不是？
 
-### "呢" + "还" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 所以我们就猜猜她是高挑呢 还是矮小就那些东西 是红发呢 还是黑发还是金发
-  - 所以我们就猜猜她是高挑呢 还是矮小就那些东西 是红发呢 还是黑发还是金发
-  - 连自己姓自名谁都不知道呢 还能知道什么，真是个傻瓜！
-
 ### "呢" + "还是" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4229,14 +3869,6 @@ Accuracy: 98.86%
   - 我呢 还是他们的媒人呢
   - 是你是要自己下车呢 还是我踢你下车
   - 这样下去谁会赢你赢呢 还是我赢呢
-
-### "呢" + "－" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - －你从哪儿来的呢 －富尔达
-  - －去哪儿呢 －我不知道
-  - －那么你的名字呢 －乌苏拉 普特卡默. 嗨，元首
 
 ### "呼吸" + "壹" (3 occurrences)
 - Predicted: None
@@ -4262,14 +3894,6 @@ Accuracy: 98.86%
   - 哦 对了…
   - 哦 对了！
 
-### "哦" + "必胜" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 哦 必胜韩国
-  - 哦 必胜韩国 哦 必胜韩国（手机铃声）
-  - 哦 必胜韩国 哦 必胜韩国（手机铃声）
-
 ### "哦" + "是" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4285,14 +3909,6 @@ Accuracy: 98.86%
   - 唐仁 你的风水局不灵了
   - 唐仁 你给我回来
   - 唐仁 你脑子是不是有问题
-
-### "啊" + "他" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 上帝啊 他向他开枪了！
-  - 真的啊 他怎么样?
-  - 这个人啊 他对我们 想做的事情很有兴趣
 
 ### "啊" + "就" (3 occurrences)
 - Predicted: None
@@ -4350,14 +3966,6 @@ Accuracy: 98.86%
   - 四 四 四 四…
   - 四 四 四 四…
 
-### "回家" + "你" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他最后一次回家 你在场是吧？
-  - 你他是年年不回家你天天不回家 你想把这个家当旅馆呐
-  - 我不回家 你要我去哪里？
-
 ### "回来" + "我" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4366,13 +3974,13 @@ Accuracy: 98.86%
   - 你提早回来 我真开心
   - 全靠野狼背我回来 我才不用死
 
-### "多" + "少" (3 occurrences)
+### "圣" + "诞" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你有多 少钱？
-  - 它值多 少分？
-  - 我们还有多 少时间？
+  - 距 圣 诞 三 周
+  - 距 圣 诞 两 周
+  - 距 圣 诞 五 周
 
 ### "多多" + "你" (3 occurrences)
 - Predicted: None
@@ -4429,6 +4037,14 @@ Accuracy: 98.86%
   - 女士们 先生们
   - 女士们 先生们我想说的是颂帕被杀案和黄金失窃案这本来就是两个案子
   - 女士们 先生们褐色轰炸机 重量级拳王乔·路易斯先生
+
+### "她" + "她" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 别逼她 她当然喜欢他 你看不出来吗?
+  - 她 她什么都教
+  - 如果你不喜欢她 她就该闭嘴 对吗？
 
 ### "好" + "就" (3 occurrences)
 - Predicted: None
@@ -4582,22 +4198,6 @@ Accuracy: 98.86%
   - 左右左 左右左 左右左
   - 左右左 左右左 左右左
 
-### "希尔维亚" + "你" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 希尔维亚 你到底是什么人啊？
-  - 希尔维亚 你在干什么？
-  - 希尔维亚 你真是万干宠爱在一身
-
-### "幺妹" + "儿" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 幺妹 儿 不在家宜昌跑船去了
-  - 幺妹 儿呢？
-  - 我们女孩都叫幺妹 儿你找哪个？
-
 ### "开始" + "你" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -4738,7 +4338,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 今天早上 我侮辱 了一位德国军人
+  - 今天早上 我侮辱了一位德国军人
   - 其中一个早上 我就用它来终结了这一切
   - 昨天早上 我带凯勒布去了林子
 
@@ -4765,14 +4365,6 @@ Accuracy: 98.86%
   - 你们 光明正派的人说什么保护世界 抵抗黑暗他吸我血的时候 你们在哪里
   - 当我提出这个问题的时候 你们兴奋吗
   - 我在写字的时候 你们静一点好吗？
-
-### "时候" + "它们" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 当你在海上航行的时候 它们一直都是紧闭着的
-  - 当它们还没有组成荧火虫大军的时候 它们还蛮可爱的
-  - 要孵蛋的时候 它们会怎样
 
 ### "时间" + "我" (3 occurrences)
 - Predicted: None
@@ -4813,14 +4405,6 @@ Accuracy: 98.86%
   - 如果你真是 我们请来的阿催由你应该愿意这回探险吧！
   - 幸运的是 我们都还是无所顾忌的年轻人
   - 是 我们相爱
-
-### "是" + "，" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不是 ， 白度图
-  - 是 ，不过…我知道，她呢？
-  - 是 ，对其他人连诺迟到
 
 ### "是啊" + "你" (3 occurrences)
 - Predicted: None
@@ -4938,9 +4522,9 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
+  - 以朝鲜人来说 你面相挺美的
   - 对我来说 你的天赋就是复印文件
   - 就一个骑士来说 你的打扮很奇怪
-  - （日语）以朝鲜人来说 你面相挺美的
 
 ### "次" + "好不好" (3 occurrences)
 - Predicted: None
@@ -4997,14 +4581,6 @@ Accuracy: 98.86%
   - 我的名字是玛丽娜 维达尔
   - 玛丽娜 维达尔
   - 玛丽娜 维达尔女士？
-
-### "玩" + "我" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不跟我玩 我就哭喔
-  - 不跟我玩 我就哭给你看
-  - 如果我想在这玩 我就可以如果他被我的球击中
 
 ### "现在" + "还" (3 occurrences)
 - Predicted: None
@@ -5094,6 +4670,14 @@ Accuracy: 98.86%
   - 珠圆玉润的 还能有谁?
   - 读书什么的 还顺利吗
 
+### "的话" + "他" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 如果不锯的话 他会死
+  - 如果运气好的话 他应该已经找到圣杯了
+  - 必要的话 他会吃尸体
+
 ### "的话" + "你们" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5118,14 +4702,6 @@ Accuracy: 98.86%
   - 看来 这是个迷了
   - 看来 这是因为你从未用自己双手赚过钱
 
-### "着" + "她" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我一直想像着 她买这件衣服的模样她一定没想到…会穿着它入土
-  - 有时候 说着说着 她就睡着了
-  - 溺水之人（日语）「紧紧拉着 她那交缠着的头发（日语）「之后公爵说话了
-
 ### "知道" + "但是" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5142,14 +4718,6 @@ Accuracy: 98.86%
   - 你还想知道 那个部位的名称吗？
   - 我知道 那你干嘛想吵醒他?
 
-### "笨蛋" + "笨蛋" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他说我爱你非常非常的（笨蛋 笨蛋 笨蛋 笨蛋…）
-  - 他说我爱你非常非常的（笨蛋 笨蛋 笨蛋 笨蛋…）
-  - 他说我爱你非常非常的（笨蛋 笨蛋 笨蛋 笨蛋…）
-
 ### "等等" + "别" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5157,14 +4725,6 @@ Accuracy: 98.86%
   - 等等 别动!
   - 等等 别走啊
   - 等等 等等 别这样
-
-### "算" + "了" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你为何不滚远一点算 了
-  - 是谁跟你说这天大的谎算 了，
-  - 玛格算 了，
 
 ### "给" + "你" (3 occurrences)
 - Predicted: None
@@ -5222,22 +4782,6 @@ Accuracy: 98.86%
   - 解脱 是肯承认这是个错
   - 解脱 是肯承认这是个错我不应该还不放手
 
-### "说" + "他们" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 广告上你们的照片很赞背后还放上些假的树老实说 他们能骗到谁啊
-  - 那天抬棺来了一百多个人听村长说 他们都是父亲的学生
-  - 那就是说 他们没看到我们
-
-### "说" + "先生" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你好 大卫 我是说 先生
-  - 我知道你昨迎先生去了村里的人都说 先生犯了错误， 回不来了
-  - 请说 先生
-
 ### "说" + "她" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5290,17 +4834,17 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 摩的走 不走
+  - 摩的走 不走到哪里去啊？
   - 摩的走 不走？
   - 走 不走
 
-### "走" + "你" (3 occurrences)
+### "走" + "我" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你的是非我赶他走 你赶米曹走？
-  - 你这个北方佬 在我岳家刀门前卖武赶你走 你却打伤我的徒弟
-  - 即使马诺哈尔有钱他也不会让我们走 你怎么看？
+  - 你有自由走 我有自由好好过
+  - 如果你不赶快带我走 我就会死，
+  - 我只是想玩玩儿 我干嘛走 我走哪儿去？
 
 ### "起来" + "我" (3 occurrences)
 - Predicted: None
@@ -5309,6 +4853,14 @@ Accuracy: 98.86%
   - 奥斯卡，你快躲起来 我得守在这里！
   - 如果你不振作起来 我会把你的一些工作时间交给查德
   - 如果我想不起来 我就会整天焦躁不安的
+
+### "距" + "圣" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 距 圣 诞 三 周
+  - 距 圣 诞 两 周
+  - 距 圣 诞 五 周
 
 ### "过" + "什么" (3 occurrences)
 - Predicted: None
@@ -5342,6 +4894,14 @@ Accuracy: 98.86%
   - 早上下去晚上还 不知道能 不能上来
   - 那你们那 儿种田还 不会饿死啊？
 
+### "还有" + "你" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 还有 你是个受不了苦却自我感觉良好的年轻人我是你表哥
+  - 还有 你的乖儿子还没还钱
+  - 还有 你领着你的人进了开阔地
+
 ### "这样" + "你" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5365,14 +4925,6 @@ Accuracy: 98.86%
   - 去哪儿很远 很远的地方
   - 她们走了很远 很远的路
   - 爸爸说她们要到很远 很远的湖里去洗澡
-
-### "那" + "儿" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你们那 儿能帮我找点活干吗？
-  - 那 儿那个老乡一
-  - 那你们那 儿种田还 不会饿死啊？
 
 ### "那么" + "这" (3 occurrences)
 - Predicted: None
@@ -5398,22 +4950,6 @@ Accuracy: 98.86%
   - 今儿个我要是见不着钱 就没你好受的
   - 你以为你有俩钱 就可以安排别人生活啊？
 
-### "钱" + "都" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不是你以前是一个那么成功的企业家为什么现在会把全部的钱 都才员给了环保机构呢
-  - 不管艾文付你多少钱 都是浪费
-  - 买一个松饼的钱 都够我用上一个月了
-
-### "阿苏" + "你" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 先生 请 你的菜单阿苏 你拿主意
-  - 阿苏 你向掌柜解释一下
-  - 阿苏 你来!
-
 ### "马赛罗" + "发生" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5438,14 +4974,6 @@ Accuracy: 98.86%
   - 鲲 你想跟我玩？
   - 鲲 你有新家了
 
-### "麻幺妹" + "儿" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你知道麻幺妹 儿吗？
-  - 公安局让麻幺妹 儿带孩子回重庆的时候又没说孩子 不是我的
-  - 找麻幺妹 儿
-
 ### "，" + "一切" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5454,85 +4982,37 @@ Accuracy: 98.86%
   - 我是莎维副官， 一切安好
   - 麦克斯， 一切还好吧？
 
-### "，" + "为什么" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果他很接近了， 为什么还没到
-  - 我是认真的， 为什么你觉得我很差劲?
-  - 是啊， 为什么问？
-
-### "，" + "先生" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 好的， 先生
-  - 就在顶楼， 先生
-  - 是的， 先生
-
-### "，" + "博特" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你气色不错， 博特
-  - 好的， 博特
-  - 我不知道， 博特
-
-### "，" + "听到" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 正规一号， 听到吗？
-  - 莎维叫企业号， 听到吗？
-  - 这是企业号， 听到吗？
-
 ### "，" + "咱们" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 生儿天这么冷， 咱们回家去吧
   - 走， 咱们回家，妈
-  - 骆先生 ， 咱们回村了 ，要走好
+  - 骆先生， 咱们回村了 ，要走好
 
-### "，" + "在" (3 occurrences)
+### "，" + "因为" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 她去了阿巴格纳， 在那儿她遇见了克里斯平来的铁匠。
-  - 如果我们如果幸运的话， 在每个城市我们都能够得到额外的恩赐，对不对？
-  - 是因为冷， 在学校冷死了
+  - 他们负责信赖的器官， 因为长期不使用，因而萎缩退化
+  - 她说着神的话语（指小女孩说的圣经里的经文， 因为圣经是神所默示的）
+  - 我们国家没有电影业， 因为我们没有产业的概念。
 
-### "，" + "好" (3 occurrences)
+### "，" + "德克" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他在等你妈， 好尝点甜头
-  - 我弄错了， 好吗？
-  - 躺一下， 好吗？
+  - 了你好， 德克
+  - 别紧张， 德克
+  - 听着， 德克
 
-### "，" + "如果" (3 occurrences)
+### "，" + "或" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他应该会吧， 如果有钱的话
-  - 但是，可怕的是， 如果他们发现同性恋的成因的话，这会是你能去除或改变的东西吗?
-  - 听着， 如果你不住嘴 我会失控的
-
-### "，" + "快" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 别管 了， 快演
-  - 别管了， 快走！
-  - 快， 快签名
-
-### "，" + "有" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我是却克上将， 有兴趣重赛吗？
-  - 抱歉， 有人叫我吗？
-  - 真的，在一个象这儿一样的地方， 有这么多的人，撞到那个可怜的东西一点都不奇怪。
+  - 他们可能无法回覆， 或不愿回覆
+  - 在这里，如果你抓住别人的手， 或腿，没有人会杀了你。
+  - 若我知何谓创世计划， 或会有用
 
 ### "，" + "朋友" (3 occurrences)
 - Predicted: None
@@ -5542,21 +5022,13 @@ Accuracy: 98.86%
   - 再会了， 朋友
   - 嘿， 朋友
 
-### "，" + "没" (3 occurrences)
+### "，" + "然后" (3 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你还在这里， 没听见我说的？
-  - 医生检查他， 没发现任何毛病。
-  - 那个啊， 没关系
-
-### "，" + "玛格" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你今晚真棒， 玛格你演活 了 那可怜的女孩
-  - 嗨， 玛格
-  - 这位是玛格你好， 玛格
+  - 你发现了他的死， 然后拿走了那部带子。
+  - 你给我控制器， 然后你回你家。
+  - 我看见你开始拿了钱， 然后你又放一些回去。
 
 ### "，" + "现在" (3 occurrences)
 - Predicted: None
@@ -5566,14 +5038,6 @@ Accuracy: 98.86%
   - 给， 现在味道 会好多了
   - 过去的时候有钱做任何事情， 现在既没钱也没工作。
 
-### "，" + "看" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 帕布洛， 看！
-  - 所有的都是同一种方法， 看！
-  - 跟所有生物一样， 看天资而定
-
 ### "，" + "真" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5581,14 +5045,6 @@ Accuracy: 98.86%
   - 他是死于睡梦中的很好， 真是太棒了
   - 我是这所学校唯一一个 思考死亡的人， 真难以置信!
   - 贝克教练， 真高兴见到你
-
-### "，" + "给" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你没有看到这些人需要喝水吗， 给他们水喝，妈的!
-  - 左还是右，说话呀， 给我找间便宜旅馆，好吗？
-  - 我们还不如把这个家伙扔掉呢， 给我们带来这么多麻烦！
 
 ### "，" + "要" (3 occurrences)
 - Predicted: None
@@ -5606,14 +5062,6 @@ Accuracy: 98.86%
   - 是啊， 费雪让我流 了好多血
   - 晚安， 费雪
 
-### "，" + "贺曼" (3 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你好， 贺曼
-  - 嗨， 贺曼
-  - 她怎么样， 贺曼？
-
 ### "，" + "还有" (3 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5621,6 +5069,14 @@ Accuracy: 98.86%
   - 你的果酱太好了， 还有吗?
   - 克萝丝小姐我想让你知道 我们那天所谈的事…拉丁文对， 还有罗曼斯语系
   - 好， 还有什么？
+
+### "，" + "这里" (3 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你们可以到其他地方去吃， 这里有不少餐馆。
+  - 信心号指挥官， 这里是企业号
+  - 重复， 这里是美国军舰信心号
 
 ### "：" + "吕克·贝松" (3 occurrences)
 - Predicted: None
@@ -5630,26 +5086,12 @@ Accuracy: 98.86%
   - 改编： 吕克·贝松
   - 编剧： 吕克·贝松 罗伯特·马克·卡门
 
-### "#" + "他们" (2 occurrences)
+### "," + "一切" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - # 他们为此付出了代价
-  - # 他们脸上失去了阳光
-
-### "#" + "但是" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 但是我的红心 我的心它没有形状
-  - # 但是那并非我心的形状
-
-### "#" + "那" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 那无法预料的结果
-  - # 那神秘的几何概率
+  - 别担心, 一切都会好的.
+  - 如果我成功了, 一切都会变得很顺利
 
 ### "," + "上帝" (2 occurrences)
 - Predicted: None
@@ -5657,13 +5099,6 @@ Accuracy: 98.86%
 - Examples:
   - 原谅他们, 上帝, 因为他们不知道他们在干什么
   - 哦, 上帝
-
-### "," + "不然" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 可他们待的地方得穿迷彩服, 不然就可能被当成靶子
-  - 嘿, 不要惹我短路, 不然..
 
 ### "," + "也许" (2 occurrences)
 - Predicted: None
@@ -5679,13 +5114,6 @@ Accuracy: 98.86%
   - 他们误以为我们是恐怖分子, 以为我们有武器
   - 这些医生读了点书, 以为他们是神仙
 
-### "," + "伙计们" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 快走, 伙计们
-  - 行了, 伙计们
-
 ### "," + "佩函夫人" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5700,13 +5128,6 @@ Accuracy: 98.86%
   - 尘世的财富让灵魂堕落, 使心灵枯萎
   - 是什麽原因让我们 把它当作极乐的源泉以至使自己震撼, 使众人归一?
 
-### "," + "俄国人" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在北面, 俄国人已经离 外登丹桥不远了
-  - 如果我们留下, 俄国人肯定会抓住我们
-
 ### "," + "做" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5719,7 +5140,7 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 保佑你, 儿子
-  - 这让我饿了, 儿子..
+  - 这让我饿了, 儿子…
 
 ### "," + "克里斯纳" (2 occurrences)
 - Predicted: None
@@ -5727,13 +5148,6 @@ Accuracy: 98.86%
 - Examples:
   - 嘴中哼着歌词, 克里斯纳和拉德哈陷入了爱情.
   - 那天晚上, 克里斯纳听不见了.
-
-### "," + "却" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 而他在为人知晓的同时, 却被心存不少误解
-  - 而你想的, 却是逃亡出国
 
 ### "," + "只是" (2 occurrences)
 - Predicted: None
@@ -5749,12 +5163,12 @@ Accuracy: 98.86%
   - 快, 叫警察
   - 您好, 我姓路, 叫伟
 
-### "," + "君舍" (2 occurrences)
+### "," + "可" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 听着, 君舍.
-  - 拜托, 君舍, 就一会儿
+  - 你已经结婚了, 可你并不知道丈夫意味着什么?
+  - 我以为你们和别人不同, 可你们是帮畜生!
 
 ### "," + "听" (2 occurrences)
 - Predicted: None
@@ -5798,12 +5212,19 @@ Accuracy: 98.86%
   - 啤酒, 啤酒, 啤酒.
   - 啤酒, 啤酒, 啤酒.
 
-### "," + "多么" (2 occurrences)
+### "," + "多" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 看看他, 多么自然
-  - 看看你, 你是个医生, 多么端庄
+  - 哦, 多不体面.
+  - 大婶, 多孝顺的媳妇
+
+### "," + "多食" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 症状是, 易渴, 多食
+  - 糖尿病是一种慢性临床综合症以高血糖为特征症状有易渴, 多食…尿频,
 
 ### "," + "大声" (2 occurrences)
 - Predicted: None
@@ -5811,6 +5232,13 @@ Accuracy: 98.86%
 - Examples:
   - 你们那样围着, 大声笑, 是为什么?
   - 可她还继续跑, 大声的叫着, 我要和德夫一块去.
+
+### "," + "大婶" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 又不跟任何人说别伤心, 大婶.
+  - 好多了, 大婶.
 
 ### "," + "女王" (2 occurrences)
 - Predicted: None
@@ -5826,12 +5254,12 @@ Accuracy: 98.86%
   - 回去做你的将军, 好好表现
   - 拿瓶饮料, 看电视, 好好享受
 
-### "," + "孩子" (2 occurrences)
+### "," + "如果" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 什么事呀, 孩子?
-  - 休息得好吗, 孩子?
+  - 你来啊, 如果想死的话
+  - 瞧, 如果条子把我从前门踢出去我会从后门再回来,
 
 ### "," + "孩子们" (2 occurrences)
 - Predicted: None
@@ -5868,13 +5296,6 @@ Accuracy: 98.86%
   - 伙计们, 怎么样?
   - 我们抓阄吧, 怎么样?
 
-### "," + "或" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 从学校 , 或教会没有
-  - 大笑疗法你要是紧张, 或生气, 就大声地笑
-
 ### "," + "所以" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -5882,33 +5303,19 @@ Accuracy: 98.86%
   - 他很会教育人, 所以他的孩子都很听话.
   - 圣地亚哥是唯一的目击者我没来得及询问他, 所以不知道他看到了什麽
 
-### "," + "所有" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 传教士式, 狗爬式, 所有的.
-  - 你叫我留下, 所有我照做了
-
-### "," + "放" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 冰箱, 放这.
-  - 放在这, 放在这, 袋子拿开.
-
-### "," + "政府" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 从现在起, 政府会敕令..
-  - 勇敢站起来加入政界, 警局, 政府, 清理社会可你们不会!
-
 ### "," + "普通话" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 中先生, 普通话说的很好
   - 可是, 普通话很难
+
+### "," + "来" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 再做一次, 兄弟, 来
+  - 欢迎, 来杯茶?
 
 ### "," + "没事" (2 occurrences)
 - Predicted: None
@@ -5950,7 +5357,7 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 打中了, 老伯!
-  - 生活多美好, 老伯
+  - 玩台球, 喝果汁… 生活多美好, 老伯
 
 ### "," + "老天" (2 occurrences)
 - Predicted: None
@@ -5999,14 +5406,7 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 大哥, 要是这么困难为什么不跟你爸说实话?
-  - 妈, 要是我不是医生..
-
-### "," + "说" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 哪里, 哪里, 说得不好
-  - 我没时间解释我过来时, 你就拒绝我, 说我丑, 什么都行
+  - 妈, 要是我不是医生…你们两个在干什么?
 
 ### "," + "请" (2 occurrences)
 - Predicted: None
@@ -6015,12 +5415,26 @@ Accuracy: 98.86%
   - 先生, 请直说, 你想说什么?
   - 神啊, 请接受这些孩子的牺牲
 
+### "," + "跟" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你, 跟我来
+  - 我以前相信, 跟他在一起会很幸福
+
 ### "," + "过来" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 不, 过来.
   - 你, 小子, 过来
+
+### "," + "还是" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他用尽了全力, 还是没有成功.
+  - 我们要做个爱, 还是要流产?
 
 ### "," + "那么" (2 occurrences)
 - Predicted: None
@@ -6057,26 +5471,12 @@ Accuracy: 98.86%
   - 月之暗面 - 好专辑
   - 茶 - 好
 
-### "-" + "我" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你能不能去拿下我的- 我的钥匙?
-  - 这是 - 我认识他你拿好你的钥匙了吗?
-
 ### "-" + "是" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 致命的错误 - 是汤一定要烫 - 是
   - 致命的错误 - 是汤一定要烫 - 是
-
-### "·" + "查图维迪" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 帕万 · 查图维迪
-  - 迪瓦卡尔 · 查图维迪是普拉塔加尔邮政局局长
 
 ### "…" + "会" (2 occurrences)
 - Predicted: None
@@ -6085,12 +5485,12 @@ Accuracy: 98.86%
   - 一叶落… 会怎样？
   - 他没有理由… 会发病
 
-### "…" + "嗯" (2 occurrences)
+### "…" + "我们" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不是，爸是… 嗯？
-  - 那次是… 嗯…那辆车是自动档的…更象是做梦！
+  - 无论如何 … 我们知道我们没得到一些帮助。
+  - 经历了岸上的麻烦后…… 我们在海上的第一天似乎是
 
 ### "…" + "是" (2 occurrences)
 - Predicted: None
@@ -6113,33 +5513,19 @@ Accuracy: 98.86%
   - 不能够谈妮娜和我… 都希望你回来
   - 全部… 都结束了
 
+### "…" + "非常" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 安妮 劳伦特 … 非常感谢。
+  - 更多的肌肤… 非常美.
+
 ### "、" + "杜希" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 波奈、 内居、 杜希死在了奥斯维辛集中营让神父死在毛特豪森集中营
   - 波奈、 杜希还有 拉法基都是犹太人
-
-### "》" + "，" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 《三个火枪手》 ， 你看到哪了?
-  - 《天方夜谭》 ， 我哥哥的
-
-### "えば" + "若" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 吾が舞えば 若吾起舞时
-  - 吾が舞えば 若吾起舞时照る月響むなり 皓月亦鸣響
-
-### "なり" + "皓月" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 吾が舞えば 若吾起舞时照る月響むなり 皓月亦鸣響
-  - 照る月響むなり 皓月亦鸣響
 
 ### "一样" + "他" (2 occurrences)
 - Predicted: None
@@ -6267,13 +5653,6 @@ Accuracy: 98.86%
   - 上帝 请你保佑我吧
   - 亲爱的上帝 请引领我寻到天堂
 
-### "上校" + "请" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 上校 请真抱歉
-  - 上校 请穿上您的防寒服
-
 ### "下" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6315,6 +5694,13 @@ Accuracy: 98.86%
 - Examples:
   - 不 妈妈
   - 不 妈妈 我没疯
+
+### "不" + "应该" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不 应该是女性朋友
+  - 不 应该是我谢谢你
 
 ### "不" + "没事" (2 occurrences)
 - Predicted: None
@@ -6371,13 +5757,6 @@ Accuracy: 98.86%
 - Examples:
   - 世荣 你想干什么?
   - 世荣 你留下救火
-
-### "东西" + "就" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不管是水 米还是酒当人体吸收了这些东西 就会与灵魂连接
-  - 他从别人那里学来的东西 就在我身上尝试.
 
 ### "东西" + "还" (2 occurrences)
 - Predicted: None
@@ -6454,7 +5833,7 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 在人潮中 我们看到了
-  - （在我们的大部分历史中 我们都以为地球是宇宙的中心）
+  - 我们都是这样）（在我们的大部分历史中 我们都以为地球是宇宙的中心）
 
 ### "中" + "找寻" (2 occurrences)
 - Predicted: None
@@ -6498,13 +5877,6 @@ Accuracy: 98.86%
   - 丹尼尔 我们会拍出一部很好的片子你等着吧
   - 丹尼尔 我们会面试全部的人
 
-### "为什么" + "不" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们要把我丢进垃圾堆你为什么 不给他们一顿好打？
-  - 有转型计划为什么 不讲出来听一听呢?
-
 ### "为什么" + "为什么" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6546,13 +5918,6 @@ Accuracy: 98.86%
 - Examples:
   - 但我说的是之前六周之前 从第一天起为什么你讨厌我
   - 真的，我们之前 从没有碰过这样的事情
-
-### "之前" + "他" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在我能收回这句话之前 他就去逝了
-  - 在这之前 他还说什么时候帶你回来见见面
 
 ### "之前" + "好好" (2 occurrences)
 - Predicted: None
@@ -6596,12 +5961,26 @@ Accuracy: 98.86%
   - 也许 是杀人方法吧
   - 你 也许 是安德列·鲁布廖夫
 
+### "了" + "…" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 别瞒我了 …
+  - 太迟了 …
+
 ### "了" + "上尉" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我不能走了 上尉
   - 我受不了了 上尉!
+
+### "了" + "两" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 可在吃饭的时候她还是感觉到了 两个朋友之间的紧张气氛.
+  - 昨天晚上, 泰穆科市迎来了 两位旅行中的拉美麻风病专家阿尔伯特.格兰纳多斯博士
 
 ### "了" + "也" (2 occurrences)
 - Predicted: None
@@ -6624,6 +6003,13 @@ Accuracy: 98.86%
   - 一旦哪天那些民族主义者来了 他们会发现什么？
   - 小姑娘饿坏了 他们不给你们吃的吗?
 
+### "了" + "会" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 反正一样 他们要知道了 会置之不理 善罢甘休吗？
+  - 我要喝多了 会耍酒疯的
+
 ### "了" + "你们" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6637,13 +6023,6 @@ Accuracy: 98.86%
 - Examples:
   - 我看见你就跟进来了 你好吗？
   - 是 我知道了 你好吗？
-
-### "了" + "你的心" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我怎么伤 了 你的心 了？
-  - 抱歉我伤 了 你的心抱歉我爱上了 你的朋友
 
 ### "了" + "几" (2 occurrences)
 - Predicted: None
@@ -6698,8 +6077,8 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
+  - 我抓到你阿姨偷走后…我对她做了什么那你就不敢偷走了 明白吗？
   - 虽然你的右眼状况堪忧这边的肌肉已经不工作了 明白么?
-  - （日语）我对她做了什么（日语）那你就不敢偷走了 明白吗？
 
 ### "了" + "朋友" (2 occurrences)
 - Predicted: None
@@ -6707,13 +6086,6 @@ Accuracy: 98.86%
 - Examples:
   - 再会了 朋友
   - 我恋爱了 朋友
-
-### "了" + "沙漠" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们在沙漠所找到的东西例如箭头，矛头等在战争时如果占据了 沙漠就形同占据了北非
-  - 我想 如果我骑马到了 沙漠的另一头我就可以找到它的从那以后 我就一直在大漠中奔驰
 
 ### "了" + "现在" (2 occurrences)
 - Predicted: None
@@ -6750,13 +6122,6 @@ Accuracy: 98.86%
   - 别问了 行吗？
   - 妈 别拿那假威士忌了 行吗
 
-### "了" + "让" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 再说了 让人米兰看见对咱印象多不好
-  - 小石头甭想花了 让朕受用了吧！
-
 ### "了" + "走" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6777,13 +6142,6 @@ Accuracy: 98.86%
 - Examples:
   - 伟人全都聚在这儿了 难道又有什么诡计了?
   - 你相信奇迹，它也发生了 难道这还不够吗？
-
-### "了" + "？" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 为什么克里斯托弗·哥伦布离婚了 ？
-  - 发生什么事了 ？
 
 ### "事" + "先生" (2 occurrences)
 - Predicted: None
@@ -6869,6 +6227,13 @@ Accuracy: 98.86%
   - 我从未要求任何人 帮我建一栋水族馆
   - 雪子、小丽跟事务所的人 帮我开宴会庆祝
 
+### "人" + "我们" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你们对我们很好 － 所有的人 我们这次旅行很开心
+  - 我们就想跟你谈谈这个他们是我们的人 我们的人？
+
 ### "人" + "才" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -6882,13 +6247,6 @@ Accuracy: 98.86%
 - Examples:
   - 对于这种人 根本无药可救
   - 我在都灵遇到的西西里人 根本没有沉睡
-
-### "人" + "的" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你没有一点人 的感情
-  - 只知道他叫什麽名字那两个对令郎之死负有责任的人 的审判很快就有结果了
 
 ### "人" + "请" (2 occurrences)
 - Predicted: None
@@ -6932,12 +6290,12 @@ Accuracy: 98.86%
   - 你在做什么 老兄？
   - 这是什么 老兄？
 
-### "什么" + "还是" (2 occurrences)
+### "什么" + "都" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你是在计谋什么 还是爱上了他？
-  - 这是你是计较喝的是什么 还是追求效果效果
+  - 你不管驾驶什么 都很行嘛
+  - 听着 黑桐无论发生什么 都不要接近那个男人
 
 ### "今天" + "我" (2 occurrences)
 - Predicted: None
@@ -6981,13 +6339,6 @@ Accuracy: 98.86%
   - 别理他 哥们
   - 干掉他 哥们
 
-### "他" + "就" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 要是我们不去见他 就让他就来见我们
-  - 那个时候他 就想和您套近乎
-
 ### "他" + "我们" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7001,13 +6352,6 @@ Accuracy: 98.86%
 - Examples:
   - 你从来不关心那孩子 我给他 明白吗?
   - 我甚至要禁止你看他 明白吗?
-
-### "他" + "是" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你想杀了他 是不是
-  - 你说你在电视上看到他 是在什么节目里？
 
 ### "他" + "然后" (2 occurrences)
 - Predicted: None
@@ -7071,6 +6415,13 @@ Accuracy: 98.86%
 - Examples:
   - 离开我以后 你还是一直睡不着觉吧
   - 等以后 你给我拍一张得了
+
+### "以后" + "我" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 从此以后 我了解到好人没好报
+  - 我们不再谈父亲打那以后 我的母亲嫁给了我们的社会主义祖国
 
 ### "份上" + "别" (2 occurrences)
 - Predicted: None
@@ -7149,19 +6500,19 @@ Accuracy: 98.86%
   - 你总有一天会 从后面给我一刀的
   - 这样，逃散的小孩就会 从不同方向涌过来。
 
-### "会" + "在" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们的司令官永远也不会 在我们没准备的时候抓到我们。
-  - 站起来都是七尺高的老爷们儿放着正经营生不做，就会 在一个小虫子身上找饭折，德行
-
 ### "会" + "让" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 到凯撒玩厌了你的时候…你以为他还会 让你当埃及女王吗？
   - 这种进步将会 让他们遭受大笔的损失
+
+### "伤" + "了" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你伤 了我的心
+  - 我怎么伤 了 你的心 了？
 
 ### "伯母" + "你" (2 occurrences)
 - Predicted: None
@@ -7170,12 +6521,12 @@ Accuracy: 98.86%
   - 伯母 你为什么要先走？
   - 伯母 你怎么可以先走了？
 
-### "伯洛哥" + "菲耶夫娜" (2 occurrences)
+### "伯洛哥菲耶夫娜" + "您" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 略德尼拉．伯洛哥 菲耶夫娜
-  - 略德尼拉．伯洛哥 菲耶夫娜不能这样说
+  - 略德尼拉．伯洛哥菲耶夫娜 您 怎么扭起来了 像个下流女人
+  - 略德尼拉．伯洛哥菲耶夫娜 您喜欢采蘑菇吗
 
 ### "伯洛哥菲耶夫娜" + "我" (2 occurrences)
 - Predicted: None
@@ -7226,13 +6577,6 @@ Accuracy: 98.86%
   - 求求你 医生
   - 这个给你 医生
 
-### "你" + "和" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 带子显示你 和一个潦倒的男人
-  - 我要的只有你 和我在一起吧
-
 ### "你" + "因为" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7261,13 +6605,6 @@ Accuracy: 98.86%
   - 白龙 我求求你 快吃
   - 给吴妈看这个 她会帮你 快去！
 
-### "你" + "把" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就是你 把全家人带到这里来这片神圣的土地神圣?
-  - 是你 把我救到河岸上的
-
 ### "你" + "爱" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7275,12 +6612,12 @@ Accuracy: 98.86%
   - 你 爱她吗，伊恩？
   - 你 爱我爱你
 
-### "你" + "男人" (2 occurrences)
+### "你" + "爸爸" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 那你 男人怎么办？
-  - 那是你 男人？
+  - 我爱你 爸爸
+  - 谢谢你 爸爸
 
 ### "你" + "看" (2 occurrences)
 - Predicted: None
@@ -7289,12 +6626,12 @@ Accuracy: 98.86%
   - 你 看什么看?
   - 还有你 看前面！
 
-### "你" + "自" (2 occurrences)
+### "你" + "自己" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不， 是你 自 己…
-  - 去找你 自 己的舞伴吧
+  - 不， 是你 自己…
+  - 去找你 自己的舞伴吧
 
 ### "你" + "要" (2 occurrences)
 - Predicted: None
@@ -7330,13 +6667,6 @@ Accuracy: 98.86%
 - Examples:
   - 你 马修!
   - 至于你 马修先生 你被解雇了
-
-### "你们" + "不" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 找他的你们 不是夫妻吗？
-  - 虫和人不能生活在同一个世界里的求求你们 不要杀它
 
 ### "你好" + "你" (2 occurrences)
 - Predicted: None
@@ -7401,13 +6731,6 @@ Accuracy: 98.86%
   - 普利尼奥先生 那不一样
   - 洛勃先生 那是个不切实际的项目
 
-### "先生" + "，" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 先生 ，
-  - 别叫先生 ， 叫老师就行了
-
 ### "先生们" + "我" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7440,7 +6763,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不说再 不要在这 儿找我们的麻烦
+  - 以前的 不说再 不要在这儿找我们的麻烦
   - 你们去告诉太保再 不老实咯
 
 ### "再见" + "了" (2 occurrences)
@@ -7513,26 +6836,19 @@ Accuracy: 98.86%
   - 利昂 我希望你让我成为跟你一样的人我想要像你一样强壮和聪明
   - 利昂 我想我已经爱上你了
 
-### "到" + "了" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 后来他到 了拉希摩当他死后
-  - 时候到 了， 甜心
-
-### "前" + "," (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 秋天来前 , 我应该会替他上漆
-  - 这是交配前 , 还是交配后喝的？
-
 ### "前" + "她" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 两天前 她离家出走另投其他男人的怀抱
   - 你最好别让我丢人 否则佩普 两天前 她给我发了一张穿布鲁托小狗睡衣的照片
+
+### "前" + "我" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 在找到更好的工作前 我可以跟你干
+  - 在拉蒙回城前 我不准任何人在镇上闹事
 
 ### "前" + "我们" (2 occurrences)
 - Predicted: None
@@ -7555,13 +6871,6 @@ Accuracy: 98.86%
   - 在我去接你前 要在那边好好等着
   - 过马路前 要先看看两边
 
-### "医师" + "在" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他是个神经外科医师 在圣约瑟夫医院执业
-  - 哈里斯医师 在亚什兰医师康纳斯医师？
-
 ### "医生" + "我" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7575,13 +6884,6 @@ Accuracy: 98.86%
 - Examples:
   - 儿科医生 请来手术室！
   - 医生医生 请你让我支持久一点好吗？
-
-### "十" + "几" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一年要死十 几个人
-  - 为什么十 几年了你才来找我？
 
 ### "千寻" + "快点" (2 occurrences)
 - Predicted: None
@@ -7723,13 +7025,6 @@ Accuracy: 98.86%
   - 叔叔 您放了我得了
   - 叔叔 您看啥事儿
 
-### "叔叔" + "我" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但新娘还未出现人人都在等着找你得你好辛苦你的叔叔 我的叔叔？
-  - 叔叔 我走啦
-
 ### "叔叔" + "我们" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -7750,13 +7045,6 @@ Accuracy: 98.86%
 - Examples:
   - 只是 有一个很小很小的问题我不会乐器吗
   - 我只是 有东西跑进眼睛里
-
-### "可" + "不" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我有一个事情想要问你你可 不可以帮我这个小息忙？
-  - 这事情可 不好办啊
 
 ### "可以" + "先生" (2 occurrences)
 - Predicted: None
@@ -7827,13 +7115,6 @@ Accuracy: 98.86%
 - Examples:
   - 各位 你们可以发问了
   - 各位 你们将从清晨工作到黄昏而且不准问工资多少
-
-### "同志" + "我" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他在房厅里对他说同志 我高贵的亚提姆！
-  - 局长同志 我晚 上会请您好
 
 ### "同意" + "你" (2 occurrences)
 - Predicted: None
@@ -7926,26 +7207,12 @@ Accuracy: 98.86%
   - 你必须用自己的血汗钱来购买你只有六个月的时间否则 我会去找真正配得上她的人
   - 否则 我把这儿拆了
 
-### "吧" + "?" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不会是苏珊吧 ?
-  - 不是你吧 ?
-
 ### "吧" + "亲爱的" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 去吧 亲爱的
   - 走吧 亲爱的
-
-### "吧" + "今天" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不如这样吧 今天晚上我请你去吃饭，好不好啊?
-  - 我怕她就像怕狠一样这样吧 今天我在家开个晚会就当是为我庆祝一下
 
 ### "吧" + "伙计" (2 occurrences)
 - Predicted: None
@@ -8045,19 +7312,19 @@ Accuracy: 98.86%
   - 呀 我找到了！
   - 这回呀 我真跟她离
 
-### "呀" + "，" (2 occurrences)
+### "呢" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 好听呀 ，
-  - 这，你回来呀 ，给你说一说
+  - 我正要打电话给你呢 你去哪儿啦？
+  - 所以呢 你给帆高的月薪是多少
 
-### "呢" + "我" (2 occurrences)
+### "呢" + "还" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 所以呢 我从小就立志我未来要挣很多很多的钱
-  - 所以呢 我相信你也很难一感应您太太内心的呐喊
+  - 所以我们就猜猜她是高挑呢 还是矮小就那些东西 是红发呢 还是黑发还是金发
+  - 所以我们就猜猜她是高挑呢 还是矮小就那些东西 是红发呢 还是黑发还是金发
 
 ### "周先生" + "你" (2 occurrences)
 - Predicted: None
@@ -8241,13 +7508,6 @@ Accuracy: 98.86%
   - 你好啊 还好吗
   - 菲利普 你好啊 还好吗
 
-### "啦" + "不" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不是啦 不是
-  - 这次又让我们住你的房子爸，他听不懂啦 不懂？
-
 ### "啰嗦" + "我" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8310,13 +7570,6 @@ Accuracy: 98.86%
 - Examples:
   - 嗨 亲爱的
   - 嗨 亲爱的 你还好吗
-
-### "嗨" + "你好" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 嗨 你好吗?
-  - 所有的嗨 你好吗?
 
 ### "嗨" + "妈妈" (2 occurrences)
 - Predicted: None
@@ -8381,6 +7634,13 @@ Accuracy: 98.86%
   - 噢 这个想法不错
   - 噢 这倒有趣…
 
+### "回家" + "你" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他最后一次回家 你在场是吧？
+  - 我不回家 你要我去哪里？
+
 ### "回来" + "就" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8430,13 +7690,6 @@ Accuracy: 98.86%
   - 坦纳 你他妈是雕塑吗
   - 坦纳 你来干什么
 
-### "埋葬" + "体" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果不埋葬 体 我想知道用意何在？
-  - 说得对，我们不埋葬 体
-
 ### "城市" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8458,12 +7711,12 @@ Accuracy: 98.86%
   - 士兵们 前进
   - 士兵们 前进 快走
 
-### "多久" + "了" (2 occurrences)
+### "多" + "就" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你到这里多久 了， 阿兵哥？
-  - 你抽烟抽多久 了？
+  - 我准备工作做得越多 就越能够说服校董会
+  - 期望越多给他们越多 就要得越多
 
 ### "多久" + "她" (2 occurrences)
 - Predicted: None
@@ -8471,20 +7724,6 @@ Accuracy: 98.86%
 - Examples:
   - 成天摸进我的房间偷酒喝没多久 她跟一个男孩远走高飞
   - 要不了多久 她就得靠吗啡来止痛了
-
-### "多么" + "多么" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （无敌是多么 多么寂寞）
-  - （无敌是多么 多么空虚）
-
-### "大" + "不知" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 鲲之大 不知其几千里也
-  - （鲲之大 不知其几千里也）
 
 ### "大" + "你" (2 occurrences)
 - Predicted: None
@@ -8540,7 +7779,7 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 奥兰多 奥那托 佩蒂尔
-  - 请问奥兰多 奥那托先生的葬礼是在这举行我不知道
+  - 女士，打扰一下…请问奥兰多 奥那托先生的葬礼是在这举行我不知道
 
 ### "女人" + "也" (2 occurrences)
 - Predicted: None
@@ -8598,13 +7837,6 @@ Accuracy: 98.86%
   - 因为你喜欢她所以你杀了她 对不对
   - 那是一段对她 对她的家庭以及国家而言都异常艰难的岁月
 
-### "她" + "那儿" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 另一半没她 那儿尽有苦闷和黑暗
-  - 现在我心里世界分成两半一半有她 那儿有幸福 希望 光明
-
 ### "好" + "先生" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8625,13 +7857,6 @@ Accuracy: 98.86%
 - Examples:
   - 好 谢谢
   - 我很好 谢谢
-
-### "好" + "！" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 天气真好 ！
-  - 非常好 ！
 
 ### "妈" + "别" (2 occurrences)
 - Predicted: None
@@ -8689,13 +7914,6 @@ Accuracy: 98.86%
   - 以父和子 圣灵的名义
   - 以父和子 圣灵的名义 阿门
 
-### "孩子" + "不" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 公安局让麻幺妹 儿带孩子回重庆的时候又没说孩子 不是我的
-  - 带别人的孩子 不觉得无聊吗?
-
 ### "孩子" + "孩子" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8723,6 +7941,13 @@ Accuracy: 98.86%
 - Examples:
   - 安东 你干嘛喝这么多
   - 安东 你成功了
+
+### "安妮" + "劳伦特" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你好，这是安妮 劳伦特。
+  - 安妮 劳伦特 … 非常感谢。
 
 ### "安娜" + "你" (2 occurrences)
 - Predicted: None
@@ -8794,13 +8019,6 @@ Accuracy: 98.86%
   - 对 他生前就是一个既可爱又不同凡响的人
   - 对 他自己开了个俱乐部
 
-### "对" + "会" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对 会录更多的歌吗？
-  - 巫师对 会算命通灵的问她凶手在哪里
-
 ### "对" + "是" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8864,13 +8082,6 @@ Accuracy: 98.86%
   - 小姐 我们先来个安检好吗
   - 菲儿小姐 我们等你
 
-### "小姐" + "麻烦" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 小姐 麻烦真是进了家了
-  - 沙耶香小姐 麻烦了
-
 ### "小朋友" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8878,19 +8089,19 @@ Accuracy: 98.86%
   - 小朋友 你别急呀
   - 小朋友 你要什么颜色？
 
+### "小燕" + "你" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 对啦 小燕 你应该好好…小薇 你去帮我把美国叫进来
+  - 小燕 你有种就给我出来!
+
 ### "小蒙" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 小蒙 你不会死的
   - 小蒙 你现在不能离开
-
-### "就" + "不" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在一部影片里这样做，你就 不能看到全部的内容。
-  - 执行起来为什么就 不一样呢？
 
 ### "尹先生" + "你" (2 occurrences)
 - Predicted: None
@@ -8955,13 +8166,6 @@ Accuracy: 98.86%
   - 帆高 怎么了
   - 帆高 怎么了 你还好吧
 
-### "师父" + "不" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 师父 不要耍师父 不要耍了
-  - 师父 不要耍师父 不要耍了
-
 ### "师父" + "这" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -8969,12 +8173,12 @@ Accuracy: 98.86%
   - 师父 这个就是洋枪的铁弹?
   - 师父 这钱来路不明想清楚再收徒弟
 
-### "帕万" + "·" (2 occurrences)
+### "希尔维亚" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 帕万 · 库马尔 · 查图韦迪
-  - 帕万 · 查图维迪
+  - 希尔维亚 你到底是什么人啊？
+  - 希尔维亚 你在干什么？
 
 ### "帕科" + "托诺" (2 occurrences)
 - Predicted: None
@@ -9004,13 +8208,6 @@ Accuracy: 98.86%
   - 妈妈五年 都没买过一件纱丽服
   - 真羡慕你国中三年 高中三年 都有这么多人追你
 
-### "年轻" + "但" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他还年轻他虽年轻 但至少也念点书吧？
-  - 你虽然年轻 但已经不是小孩
-
 ### "幸一" + "也" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9025,26 +8222,12 @@ Accuracy: 98.86%
   - 幸福 幸福
   - 幸福 幸福 真幸福
 
-### "幸运" + "有" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我的生活颠倒我真幸运 有你在身边
-  - 我真幸运 有你在身边
-
 ### "廖先生" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 廖先生 你怎么了
   - 廖先生 你没事吧
-
-### "开始" + "也" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我的感受没有开始 也没有结束
-  - 稍后的节目将迎来这位没有开始 也没有结束圣诞绝对摇滚圈里的坏老头不要走开
 
 ### "开门" + "我" (2 occurrences)
 - Predicted: None
@@ -9130,13 +8313,6 @@ Accuracy: 98.86%
   - 快点 哥们
   - 快点 哥们！
 
-### "怎么" + "还" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 婆婆怎么 还没有来接你呀
-  - 这个你们知道怎么 还没有开始
-
 ### "怎么样" + "安迪" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9186,13 +8362,6 @@ Accuracy: 98.86%
   - 想 和结局一样
   - 而我当时就想 和他在过道里作爱……
 
-### "想" + "如果" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我在想 如果告诉他们 他们一定会认为很傻
-  - 我想 如果我骑马到了 沙漠的另一头我就可以找到它的从那以后 我就一直在大漠中奔驰
-
 ### "意识到" + "我" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9228,6 +8397,13 @@ Accuracy: 98.86%
   - 天上的星星 笑地上的人总是不能懂 不能觉得足够
   - 懂 不懂什么叫知识版权？
 
+### "我" + "…" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我 …究竟为什么？
+  - 那皮埃尔和我 …
+
 ### "我" + "一定" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9248,13 +8424,6 @@ Accuracy: 98.86%
 - Examples:
   - 只能由我 也就是她的代理律师樊尚·伦齐去帮她拿文件不行
   - 就算哭着求我 也决不轻饶！
-
-### "我" + "会" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果你会爱的话我 会感到很惊奇的
-  - 等你做了医生，我都不知道我 会不会还活着
 
 ### "我" + "到底" (2 occurrences)
 - Predicted: None
@@ -9305,26 +8474,12 @@ Accuracy: 98.86%
   - 告诉我 混蛋!
   - 那家伙…快 告诉我 混蛋!
 
-### "我" + "等" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我 等好
-  - 那我 等你
-
 ### "我" + "而" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 但你把你的解决办法强加给我 而那只是你的解决办法
   - 让这个世界因为有了我 而有一点点的不一样
-
-### "我" + "自" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不 了， 我 自 己来
-  - 我 自 己是不会喜欢 去切开别人的脑袋但他似乎乐在其中
 
 ### "我" + "要" (2 occurrences)
 - Predicted: None
@@ -9339,13 +8494,6 @@ Accuracy: 98.86%
 - Examples:
   - 就算杀了一个我 还有千千万万个我！
   - 那今天晚上…算你借给我 还是我借给你?
-
-### "我" + "还是" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你打算是你拒绝我 还是我拒绝你？
-  - 无论是我 还是你母亲 都有类似的经历
 
 ### "我" + "那里" (2 occurrences)
 - Predicted: None
@@ -9367,13 +8515,6 @@ Accuracy: 98.86%
 - Examples:
   - 砍死我们 就现在 你等什么？
   - 谁想拦我们 就杀他个痛快
-
-### "我们" + "我们" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果你藐视我们 我们还怎么维持人民的信任
-  - 我们收到偷摄我们房子的影带，显然是告告诉我们 我们在被监视下。
 
 ### "我们" + "才" (2 occurrences)
 - Predicted: None
@@ -9409,13 +8550,6 @@ Accuracy: 98.86%
 - Examples:
   - 一旦你搬进那房子 你就再也不会离开里约了
   - 如果我不买房子 你爸爸会把你许配给别人的
-
-### "所" + "有" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 为什么所 有的人都把我看成一个怪物
-  - 他像所 有女人那样富有好奇心像所有女秘书那样柔美动人
 
 ### "所以" + "他" (2 occurrences)
 - Predicted: None
@@ -9543,20 +8677,6 @@ Accuracy: 98.86%
   - 无聊 无聊 无聊
   - 无聊 无聊 无聊
 
-### "无论如何" + "也" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 无论如何 也快结束了
-  - 说乡亲们无论如何 也要完成父亲的心愿
-
-### "日文" + "了" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们打算取消拉丁文的课要开始教日文 了
-  - 有没有听说下学期要开始 上日文 了？
-
 ### "早上好" + "亚历山大" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9669,6 +8789,13 @@ Accuracy: 98.86%
   - 当我们真正开始的时候 它能派上用场
   - 有人说，狗是人类最好的朋友可是为什么在这个时候 它却不肯跟我分享我的痛苦呢？
 
+### "时候" + "它们" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 当你在海上航行的时候 它们一直都是紧闭着的
+  - 要孵蛋的时候 它们会怎样
+
 ### "时候" + "把" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9682,13 +8809,6 @@ Accuracy: 98.86%
 - Examples:
   - 下次你过街的时候 给我小心点
   - 我想有我在的时候 给你做点热乎的
-
-### "时候" + "那" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 连自己都骗不了的时候 那只能骗骗鬼啦
-  - 钢琴家到的时候 那人正在屋里
 
 ### "时间" + "你" (2 occurrences)
 - Predicted: None
@@ -9711,33 +8831,12 @@ Accuracy: 98.86%
   - 到了明天 你一样也会被祝福
   - 明天 你会很痛苦的
 
-### "明白" + "您" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 您大概还不明白 您的行
-  - 您知道吗您大概还不明白 您的行为多让人讨厌 您知道吗
-
 ### "明白" + "我" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 也许它可以让你明白 我的心意
   - 我也不明白 我怎么会说出个湿乎乎的我是想说 您很善良 略德尼拉．伯洛哥菲耶夫娜
-
-### "星期" + "日" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 布隆先生 是啊星期 日 有什么事？
-  - 星期 日 见 了，
-
-### "昨" + "天" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你数学老师昨 天打电话给我她说，你在数学 课本上画满了像统一，他们会统一什么？
-  - 全省的天气应该从昨 天夜间开始一直到星期四都会是好天气
 
 ### "是" + "-" (2 occurrences)
 - Predicted: None
@@ -9802,13 +8901,6 @@ Accuracy: 98.86%
   - 是 那个 就是你穿的那个这是套非常 非常 非常好的套装
   - 是 那小子吗
 
-### "显然" + "你" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 显然 你也能在任何地方 任何时间休息
-  - 显然 你自己没饿肚子会让你跟上时代的这是谁
-
 ### "晚上" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9823,13 +8915,6 @@ Accuracy: 98.86%
   - 那个晚上 我们谈了许多事情
   - 那天晚上 我们聊了很多回忆
 
-### "晚安" + "萨拉" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 是最痛苦晚安 萨拉
-  - 梦见了一个白色晚安 萨拉
-
 ### "普兰德斯" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9843,13 +8928,6 @@ Accuracy: 98.86%
 - Examples:
   - 但最后的最后 你仍会和我一起 被困在我的谎言里
   - 到最后 你会控制不住它的
-
-### "最后" + "我" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 到最后 我真的爱上了这本书
-  - 最后 我找的那位是到底是不是这位确认一下这位是不是张京哲
 
 ### "最后" + "还是" (2 occurrences)
 - Predicted: None
@@ -9970,13 +9048,6 @@ Accuracy: 98.86%
   - 一来 看我送你一箱高级红酒
   - 来 看 这 里
 
-### "来" + "请" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 既然两位老师刚刚都提到了家庭这样 我们刚好有一个短片来 请播放短片
-  - 来 请走这边
-
 ### "来看" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -9990,6 +9061,13 @@ Accuracy: 98.86%
 - Examples:
   - 今天对我来说 我的整个生命似乎是由一连串的失败组成的
   - 对于这间公寓来说 我没有别的意思
+
+### "来说" + "我们" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 严格来说 我们并不在这但你们就在这啊
+  - 那排行榜第一位始终还是两位严格来说 我们只不过是卖唱的
 
 ### "来说" + "都" (2 occurrences)
 - Predicted: None
@@ -10037,8 +9115,8 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 格雷 格雷 格雷…（咒语）
-  - 格雷 格雷 格雷…（咒语）
+  - 格雷 格雷 格雷…
+  - 格雷 格雷 格雷…
 
 ### "档案馆" + "影视" (2 occurrences)
 - Predicted: None
@@ -10089,26 +9167,12 @@ Accuracy: 98.86%
   - 殿下 您不以血献祭的话是会触怒天神的
   - 殿下 您不该来这里的
 
-### "母亲" + "也" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不许告诉母亲 也不许告诉父莽
-  - 我说我是为了母亲 也是为了父亲
-
 ### "比如说" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 比如说 你喜欢你的角色吗
   - 比如说 你很擅长写作干嘛不写点什么呢?
-
-### "比起来" + "这" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 和今晚听到的劲爆消息比起来 这又算什么
-  - 这世界很小跟整个宇宙比起来 这世界真的很小
 
 ### "沈佳宜" + "你" (2 occurrences)
 - Predicted: None
@@ -10264,13 +9328,6 @@ Accuracy: 98.86%
   - 冷静点 兄弟 消消气
   - 学着点 兄弟
 
-### "点" + "我" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 小声点 我又不是聋子
-  - （因为没有食材 随便做了点 我乖吧）
-
 ### "点" + "那" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -10292,13 +9349,6 @@ Accuracy: 98.86%
   - 然后 他上楼去阁楼干活了
   - 然后 他会成就自己的事业
 
-### "父亲" + "博特费雪" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 克萝丝小姐， 这是我父亲 博特费雪
-  - 我要你见一个人布隆先生， 这是我父亲 博特费雪
-
 ### "爷爷" + "我" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -10312,6 +9362,13 @@ Accuracy: 98.86%
 - Examples:
   - 爸 你的雪茄烧到气球了啦
   - 爸 你糊涂啦？
+
+### "爸爸" + "今天" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 爸爸 今天去水族馆好不好嘛
+  - 爸爸 今天晚上的借物多了一个人类的小孩
 
 ### "爸爸" + "叫" (2 occurrences)
 - Predicted: None
@@ -10390,6 +9447,13 @@ Accuracy: 98.86%
   - 你不想好好玩 好 给我滚出去!
   - 去跟妈妈告别好好玩 好吗？
 
+### "玩" + "我" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不跟我玩 我就哭喔
+  - 不跟我玩 我就哭给你看
+
 ### "现在" + "在" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -10438,6 +9502,13 @@ Accuracy: 98.86%
 - Examples:
   - 中国男人 不是对女人好嘛可宝贝女人了呢
   - 矿山的男人 不是那么好对付的
+
+### "男孩" + "-" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 双手空空地走街头男孩 -街头男孩
+  - 街头男孩 -街头男孩
 
 ### "留下来" + "就" (2 occurrences)
 - Predicted: None
@@ -10516,13 +9587,6 @@ Accuracy: 98.86%
   - ∮是的 亲爱的∮
   - 是的 亲爱的
 
-### "的" + "人" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 待会搬家公司的 人来了怎么办啊
-  - 突然和谁的 人的目光相对就像是得到了同情
-
 ### "的" + "会" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -10571,13 +9635,6 @@ Accuracy: 98.86%
 - Examples:
   - 「罗拔是性变态的 喜欢打屁股，吃底裤」听到吗？
   - 他说他认识一个很年轻的 喜欢象我这样年纪的小男生所以他带我去她的旅馆
-
-### "的" + "在" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 大冷天的 在外面做了什么冒出起雾的大海
-  - 所以我便成功的 在没有杀害她丈夫的情况下占有了她
 
 ### "的" + "女人" (2 occurrences)
 - Predicted: None
@@ -10681,8 +9738,8 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我以前的 自行车， 是的
-  - 第二， 他讨厌自 己第三， 他压坏了 你的 自行车 不是吗？
+  - 我以前的 自行车， 是的什么样的人会做出这种事？
+  - 第三， 他压坏了 你的 自行车 不是吗？
 
 ### "的" + "还有" (2 occurrences)
 - Predicted: None
@@ -10712,13 +9769,6 @@ Accuracy: 98.86%
   - 他们听得到的 －我不管！
   - 阿曼会逃开的 －不，我不会的
 
-### "的话" + "他" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果不锯的话 他会死
-  - 必要的话 他会吃尸体
-
 ### "的话" + "他们" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -10733,26 +9783,12 @@ Accuracy: 98.86%
   - 千万别告诉年轻人告诉他们的话 会打击他们的士气你们年纪最大
   - 如果下大雨的话 会从上面流下来泥土…
 
-### "的话" + "去" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你如果不念书的话 去做些运动一直坐在计算机前面我没有
-  - 想见他的话 去见他不就好了
-
 ### "的话" + "她" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 如果阿格妮丝在的话 她一定不会同意的
   - 用海水清洗的话 她会觉得刺痛
-
-### "的话" + "，" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一切顺利的话 ，我很快就存够钱买车可以每晚都开车回家
-  - 不下雨的话 ，会好些
 
 ### "皮帕" + "你" (2 occurrences)
 - Predicted: None
@@ -10803,20 +9839,6 @@ Accuracy: 98.86%
   - 看 这里刻著名字呢
   - 看 这里腐烂很久了但大腿内侧还很硬
 
-### "看" + "，" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你看 ，他去了
-  - 你看 ，学校连上课的人都没有了
-
-### "看到" + "一" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你有没有看到 一个小女孩来这里？
-  - 当晚，依莉萨白看到 一个隐约的身影
-
 ### "看到" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -10845,13 +9867,6 @@ Accuracy: 98.86%
   - 你以为我没看见 你塞了两根长火柴让我来抽吗?
   - 你以为我没看见 你看他时的邪恶的眼神吗?
 
-### "真的" + "是" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我是觉得这一大堆真的 是 没有那么复杂
-  - 我觉得你应该要检讨一下 真的 是关你屁事？
-
 ### "眼中" + "我们" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -10872,13 +9887,6 @@ Accuracy: 98.86%
 - Examples:
   - 你要不去后面坐着 我给你倒点水喝？
   - 要不是师父拦着 我早就揍你放不放手?
-
-### "知" + "不" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 大姐你知 不知道郭斌在哪 儿吗
-  - 那你知 不知道他现在干什么呢？
 
 ### "知" + "是" (2 occurrences)
 - Predicted: None
@@ -10984,13 +9992,6 @@ Accuracy: 98.86%
 - Examples:
   - 同学们翻到第三十八页 第四章 第三段
   - 翻到第三十八页 第四章 第三段
-
-### "等会" + "儿" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 再 等会 儿
-  - 那我们 等会 儿好好好
 
 ### "米哈" + "米哈" (2 occurrences)
 - Predicted: None
@@ -11195,6 +10196,13 @@ Accuracy: 98.86%
   - 我要，我一定要 －不准说，不准
   - 阿曼，不要 －珍妮，没关系
 
+### "见" + "了" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 回头见 了
+  - 回头见 了， 张小姐
+
 ### "见" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11272,13 +10280,6 @@ Accuracy: 98.86%
   - 你要记得 你想当林肯总统你想当梅岗城故事 中的艾提斯芬奇想不想骇一下
   - 告诉我一件事，你还记得 你是怎么对待少怀的吗
 
-### "话" + "不" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果做不好的话 不会跟你收钱的啦
-  - 如果没有你 我希望你能看到它很美好的当年我应该听爸爸说的话 不要跟你走
-
 ### "话" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11314,13 +10315,6 @@ Accuracy: 98.86%
   - 您拨打的电话无法接通提示音后转接语音信箱 并开始计费
   - 提示音后为您转接语音信箱 并开始计费
 
-### "说" + "『" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）「公爵夫人说 『慢点，亲爱的』（日语）「我还没品尝够他的痛苦」
-  - （日语）「骑士高喊说 『不要！
-
 ### "说" + "不" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11342,12 +10336,19 @@ Accuracy: 98.86%
   - 不过现在说 也没什么意义了
   - 这么说 也可以啦
 
-### "说" + "完全" (2 occurrences)
+### "说" + "他们" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 不愿意想起来或者说 完全不记得了
-  - 但都是和其他老师夜店 老城区 餐厅但是…我总是一个人回家我是说 完全一个人
+  - 广告上你们的照片很赞背后还放上些假的树老实说 他们能骗到谁啊
+  - 那就是说 他们没看到我们
+
+### "说" + "先生" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你好 大卫 我是说 先生
+  - 请说 先生
 
 ### "说" + "真" (2 occurrences)
 - Predicted: None
@@ -11419,6 +10420,13 @@ Accuracy: 98.86%
   - 但是如果老爸看你这么走 他不会喜欢的
   - 如果你不走 他没意见 对吧？
 
+### "走" + "你" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你这个北方佬 在我岳家刀门前卖武赶你走 你却打伤我的徒弟
+  - 即使马诺哈尔有钱他也不会让我们走 你怎么看？
+
 ### "走" + "快" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11439,13 +10447,6 @@ Accuracy: 98.86%
 - Examples:
   - 从今天起 我们是没什么娱乐活动了
   - 由今日起 我们九人刀口一致对外不可对内不可自己人打自己人
-
-### "起来" + "就" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 反正我夹起来 就马上吃掉
-  - 好，接看把它们连起来 就象阀门那样
 
 ### "足球" + "你" (2 occurrences)
 - Predicted: None
@@ -11475,13 +10476,6 @@ Accuracy: 98.86%
   - 我从来没有听过 很远吗？
   - 被你喜欢过 很难觉得别人有那么喜欢我
 
-### "过" + "这" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你知道从我有记忆以来我爷爷就跟我讲过 这地方的故事
-  - 我不是跟你说过 这个要会市政府的吗？
-
 ### "过去" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11503,26 +10497,19 @@ Accuracy: 98.86%
   - 别过来 你说！
   - 拿过来 你就让她看看
 
-### "还有" + "所有" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我每时每刻总意识到美丽 风趣与智慧还有 所有那些东西对一个女人来说都很重要
-  - 还有 所有损失由黄飞鸿一个人负责
-
 ### "这" + "不" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
+  - 在南方打工这 不就是南方吗？
   - 胜民公寓胜民这 不是一路 带你过去吧
-  - 这 不就是南方吗？
 
-### "这 儿" + "等" (2 occurrences)
+### "这" + "儿" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 在这 儿 等我
-  - 大老远来我就是想看看孩子嘛那你就在这 儿 等一个月两个月总有一天她要回来的
+  - 江湖你们这 儿时常下雨吗？
+  - 那你 不在家挖煤你到我们这 儿做什么？
 
 ### "这么着" + "我" (2 occurrences)
 - Predicted: None
@@ -11551,20 +10538,6 @@ Accuracy: 98.86%
 - Examples:
   - 如果只是这样 那只需重设控制单元
   - 既然这样 那就给吧
-
-### "这边" + "！" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 艾莉缇这边 ！
-  - 这边 ！
-
-### "这里" + "我们" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你在这里 我们陪着你 怎么了？
-  - 在这里 我们只有自己的生命生命高于一切
 
 ### "这里" + "看" (2 occurrences)
 - Predicted: None
@@ -11692,13 +10665,6 @@ Accuracy: 98.86%
   - 他在自己所出版的回忆录里 也谈到这段经历
   - 你杀了她，并被困在那间房里 也没法从窗户逃走
 
-### "里" + "就" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你朋友如果继续留在湿地里 就算不会感冒…也会挨子弹
-  - 炸弹对我家的材料储存仓库里 就有施工用的水胶炸药
-
 ### "里" + "怎么" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11747,6 +10713,13 @@ Accuracy: 98.86%
 - Examples:
   - 不过钟秀 你知道吗
   - 能问问钟秀 你喜欢哪个作家吗
+
+### "钱" + "都" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不管艾文付你多少钱 都是浪费
+  - 买一个松饼的钱 都够我用上一个月了
 
 ### "铁雄" + "你" (2 occurrences)
 - Predicted: None
@@ -11825,6 +10798,13 @@ Accuracy: 98.86%
   - 再见，阿曼 －再见
   - 我真的爱你，阿曼 －谢谢你，罗希
 
+### "阿苏" + "你" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 阿苏 你向掌柜解释一下
+  - 阿苏 你来!
+
 ### "阿黛尔" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11852,13 +10832,6 @@ Accuracy: 98.86%
 - Examples:
   - 院长 你就看一眼
   - 院长 你总共有几个女儿啊?
-
-### "院长" + "我" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我院长 我的资料纸瓦迪阿森登 你坐下
-  - 院长 我并非在教工程学
 
 ### "陨石" + "坠落" (2 occurrences)
 - Predicted: None
@@ -11937,13 +10910,6 @@ Accuracy: 98.86%
   - 飞鸿 我一定会等你的
   - 飞鸿 我跟你是上两代上契的名份
 
-### "首先" + "我们" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们要做的和你们完全不同首先 我们不用现代武器猎杀只用老式武器
-  - 那里什么都没毒首先 我们不是小偷
-
 ### "马小军" + "你" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -11972,26 +10938,12 @@ Accuracy: 98.86%
   - 马赛罗 告诉我你们要去哪里
   - 马赛罗 告诉我到底发生什么事了
 
-### "骆先生" + "，" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 骆先生 ， 咱们回村了 ，要走好
-  - 骆先生骆先生 ，
-
 ### "高兴" + "能" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 亲爱的杰奎琳，我们很高兴 能有机会和你生活在一起，我们祝你在楼上好运。
   - 我很高兴 能获得如此善解人意的上级支持
-
-### "鳴く" + "破晓" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 夜は明け鵺鳥鳴く 破晓虎鸫啼
-  - 結婚に神降りて 神降合婚夜夜は明け鵺鳥鳴く 破晓虎鸫啼
 
 ### "鸡腿沙律" + "汉堡包" (2 occurrences)
 - Predicted: None
@@ -12014,20 +10966,6 @@ Accuracy: 98.86%
   - 黄飞鸿 你在哪儿?
   - 黄飞鸿 你有胆量的话就过来
 
-### "黑夜" + "刚刚" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 黑夜 刚刚降临大地你那神奇隐秘的宁静的魔力不对
-  - 黑夜 刚刚降临大地你那神奇隐秘的宁静的魔力马修!
-
-### "）" + "我" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在宣传电影的旅行中（奥维耶多 塞维亚 瓦伦西亚） 我才开始学习西班牙地理
-  - （普普艺术） 我没丢，因为我觉得这画很美
-
 ### "，" + "一" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -12042,12 +10980,12 @@ Accuracy: 98.86%
   - 但实际上， 不管我怎么努力 我还是有可能再当一科如果那意味着我必须留级一年
   - 你只有很少的几个朋友了， 不管是左翼的还是右翼的。
 
-### "，" + "为" (2 occurrences)
+### "，" + "为什么" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 人人为 ， 为人人
-  - 可能看起来有点惨我们正在做一个全国环游， 为治疗一些最棘手的疾病作一些调查。
+  - 如果他很接近了， 为什么还没到
+  - 我是认真的， 为什么你觉得我很差劲?
 
 ### "，" + "乔治" (2 occurrences)
 - Predicted: None
@@ -12062,13 +11000,6 @@ Accuracy: 98.86%
 - Examples:
   - 我们在做的事若处理不善， 会变成可怕的武器
   - 正相反， 会有很大帮助。
-
-### "，" + "兄弟" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 别挑衅， 兄弟
-  - 真的， 兄弟？
 
 ### "，" + "克萝丝小姐" (2 occurrences)
 - Predicted: None
@@ -12091,12 +11022,12 @@ Accuracy: 98.86%
   - 一起走吧， 冼朴， 你来掌舵
   - 从常规想想吧， 冼朴
 
-### "，" + "准备" (2 occurrences)
+### "，" + "博特" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 泰利船长， 准备传送
-  - 靠近舷边鱼雷舱却克上将一队来到企业号欢迎你， 准备停泊
+  - 好的， 博特
+  - 我不知道， 博特
 
 ### "，" + "却" (2 occurrences)
 - Predicted: None
@@ -12110,7 +11041,7 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 是淋浴， 去吧!
-  - ，用不了老嫂子 ， 去看看骆先生吧
+  - 老嫂子， 去看看骆先生吧
 
 ### "，" + "发生" (2 occurrences)
 - Predicted: None
@@ -12118,20 +11049,6 @@ Accuracy: 98.86%
 - Examples:
   - 我听见， 发生什么事？
   - 病房已准备好， 发生什么事？
-
-### "，" + "叫" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 别叫先生 ， 叫老师就行了
-  - 这就是来咱们三合屯教书的先生姓骆， 叫骆长余
-
-### "，" + "可以" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在她爸爸家里我觉得不安 ， 可以跟你谈谈吗？
-  - 莎维， 可以清场
 
 ### "，" + "可是" (2 occurrences)
 - Predicted: None
@@ -12147,12 +11064,26 @@ Accuracy: 98.86%
   - 你觉得呢， 吉恩先生？
   - 晚安， 吉恩先生
 
-### "，" + "启动" (2 occurrences)
+### "，" + "听到" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 关掉动力器， 启动扬声器
-  - 电脑， 启动保密程序存取创世计划的摘要视网膜扫瞄， 核对身分却克上将
+  - 正规一号， 听到吗？
+  - 这是企业号， 听到吗？
+
+### "，" + "在" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 她去了阿巴格纳， 在那儿她遇见了克里斯平来的铁匠。
+  - 是因为冷， 在学校冷死了
+
+### "，" + "好" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我弄错了， 好吗？
+  - 躺一下， 好吗？
 
 ### "，" + "学" (2 occurrences)
 - Predicted: None
@@ -12160,13 +11091,6 @@ Accuracy: 98.86%
 - Examples:
   - 我不知道， 学数学吧
   - 看一下, 吃一下，听一下， 学一下。
-
-### "，" + "对不起" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 大家晚上好， 对不起，我迟到了。
-  - 我看错了你， 对不起
 
 ### "，" + "布坎" (2 occurrences)
 - Predicted: None
@@ -12182,13 +11106,6 @@ Accuracy: 98.86%
   - 他们告诉我说我必须看起来更母性化， 并且吃很多意面。
   - 但是你要知道，我年纪大，又聪明， 并且鸭子也是我射下来的，所以你就应该去。
 
-### "，" + "当" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 终于有一天， 当我坐在吧台的时候谢谢你的大衣，迈克斯，非常合身
-  - （无论如何， 当一个人）
-
 ### "，" + "快点" (2 occurrences)
 - Predicted: None
 - Actual: Space
@@ -12203,33 +11120,19 @@ Accuracy: 98.86%
   - 关于那个项目是真的吗， 或者你在搪塞我？
   - 在起居室里， 或者在外面大厅里。
 
-### "，" + "所以" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们取消了今晚的杂技演出， 所以我们可以用剧院。
-  - 我想我应该但是那不是原因她太胖了， 所以才病得那么突然
-
 ### "，" + "所有" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 真可惜， 所有罗曼斯语系 都是源出于拉丁文的
-  - 都是在（苏联）人民议会时期， 所有的东西被破坏殆尽。
+  - 都是在人民议会时期， 所有的东西被破坏殆尽。
 
-### "，" + "是不是" (2 occurrences)
+### "，" + "有" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你碰也碰不到神灵， 是不是醉了?
-  - 请问 ， 是不是你放在我口袋里？
-
-### "，" + "晚安" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 再想想吧 ， 晚安 !
-  - 现在睡觉去， 晚安
+  - 抱歉， 有人叫我吗？
+  - 真的，在一个象这儿一样的地方， 有这么多的人，撞到那个可怜的东西一点都不奇怪。
 
 ### "，" + "正" (2 occurrences)
 - Predicted: None
@@ -12237,6 +11140,13 @@ Accuracy: 98.86%
 - Examples:
   - 一个女孩，被绑在一个椅子上， 正在遭受一个穿着黑风衣的家伙的毒打！
   - 我刚回到家， 正在吃点心
+
+### "，" + "没" (2 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 医生检查他， 没发现任何毛病。
+  - 那个啊， 没关系
 
 ### "，" + "法兰克" (2 occurrences)
 - Predicted: None
@@ -12252,40 +11162,19 @@ Accuracy: 98.86%
   - 我早知道， 混蛋！
   - 才不呢， 混蛋
 
-### "，" + "甚至" (2 occurrences)
+### "，" + "看" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你的家人和你的没有还有整个世界， 甚至这个办公室都是真正的现实
-  - 我们很累，妈妈， 甚至都没有兴趣去庆祝生日。
+  - 所有的都是同一种方法， 看！
+  - 跟所有生物一样， 看天资而定
 
-### "，" + "老朋友" (2 occurrences)
+### "，" + "给" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 却克， 老朋友， 克林冈谚语说君子报仇， 十年未晚
-  - 对， 老朋友！
-
-### "，" + "而" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我背着包， 而我双手空了。
-  - 现在我们要一个一个地看， 而你必须说：这个是妻子，
-
-### "，" + "而且" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我听说你喜欢暴力影片， 而且你有一个相当可观的收藏。
-  - 瘟疫不仅消耗了我们的体力， 而且使我们国家长期处于危难当中。
-
-### "，" + "能" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一切岸上有大鲨鱼， 能把你活吃了.
-  - 把它变成你生存的原因，这件事情包含了所有事情， 能变成所有事情。
+  - 左还是右，说话呀， 给我找间便宜旅馆，好吗？
+  - 我们还不如把这个家伙扔掉呢， 给我们带来这么多麻烦！
 
 ### "，" + "艾蜜莉" (2 occurrences)
 - Predicted: None
@@ -12329,19 +11218,12 @@ Accuracy: 98.86%
   - 他未找到所需东西， 谁有空？
   - 穆斯林是假冒伪善的人， 谁说的？
 
-### "，" + "走" (2 occurrences)
+### "，" + "谢谢" (2 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 天冷， 我们要跑回去， 走吧!
-  - 好极， 走吧
-
-### "，" + "这些" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 抱歉， 这些都很普通
-  - 这不是游戏， 这些人真的杀人！
+  - 很好， 谢谢
+  - 是的， 谢谢
 
 ### "，" + "这边" (2 occurrences)
 - Predicted: None
@@ -12356,20 +11238,6 @@ Accuracy: 98.86%
 - Examples:
   - 不止你， 连我也被牵连了。
   - 工作很忙， 连休息的时间都没有。
-
-### "，" + "送" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不必了， 送我到正规一号就行
-  - 他说得对， 送犹太人去莫斯科!
-
-### "，" + "阿兵哥" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你到这里多久 了， 阿兵哥？
-  - 永远忠诚， 阿兵哥
 
 ### "，" + "非常" (2 occurrences)
 - Predicted: None
@@ -12399,151 +11267,17 @@ Accuracy: 98.86%
   - － 是的
   - － 是的 现在的形势是没什么指望了，不过可以说是糟糕
 
-### "：" + "我" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 正所谓： 我不入地狱，谁入地狱
-  - 片名 ： 我的父亲母亲
-
-### "：" + "所有" (2 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （第一部分： 所有事物）
-  - （第二部分： 所有地方）
-
-### "#" + "为什么" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 为什么我感觉到# 当一切看起来很不乐观的时候# 我却觉得一切都很美好
-
-### "#" + "也" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 也不是为了人们的敬赏
-
-### "#" + "从未" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 从未有人怀疑他的智商
-
-### "#" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 你也许会觉得不适应吧
-
-### "#" + "各种" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 各种法则在数字下隐藏
-
-### "#" + "多么" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 多么美丽的…
-
-### "#" + "好像" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 好像那些反复诅咒自己命运的人
-
-### "#" + "如果" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 如果我告诉你我爱你
-
-### "#" + "妄言" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 妄言的人无知
-
-### "#" + "宛若" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 宛若处女
-
-### "#" + "就" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 就在雨中歌唱
-
-### "#" + "并非" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 并非我心的形状
-
-### "#" + "当" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 为什么我感觉到# 当一切看起来很不乐观的时候# 我却觉得一切都很美好
-
-### "#" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 是爱情使一切看起来
-
-### "#" + "生日快乐" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 生日快乐 总统先生
-
-### "#" + "祝" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 祝你生日快乐
-
-### "#" + "第一次" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 第一次动真情
-
-### "#" + "而" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 而那些回忆 逐渐的逐渐的消亡
-
-### "#" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 这是最特别的一天
-
-### "#" + "都" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 都不一样
-
 ### "+" + "刚直坚毅" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 木讷寡言 + 刚直坚毅
 
-### "+" + "神经" (1 occurrences)
+### "," + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 面部抽搐 + 神经衰弱
+  - 不, …我…
 
 ### "," + "一半" (1 occurrences)
 - Predicted: None
@@ -12555,7 +11289,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我们有机会发言将会被听到可如果被抓, 一定会被绞死
+  - 如果被抓将会有审判我们有机会发言将会被听到可如果被抓, 一定会被绞死
 
 ### "," + "一生" (1 occurrences)
 - Predicted: None
@@ -12605,6 +11339,12 @@ Accuracy: 98.86%
 - Examples:
   - 天哪, 下雪啦！
 
+### "," + "不然" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 可他们待的地方得穿迷彩服, 不然就可能被当成靶子
+
 ### "," + "不用" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -12653,6 +11393,12 @@ Accuracy: 98.86%
 - Examples:
   - 爱护文物, 人人有责。
 
+### "," + "人们" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 千万别在子弹列车上刮胡子, 人们都那样说.
+
 ### "," + "今天" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -12682,6 +11428,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 第三, 任何人，包括您都不能进入这房间
+
+### "," + "伙计们" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 行了, 伙计们
 
 ### "," + "伟大" (1 occurrences)
 - Predicted: None
@@ -12713,12 +11465,6 @@ Accuracy: 98.86%
 - Examples:
   - 做的好, 佛瑞德
 
-### "," + "作为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 元首, 作为党卫军的帝国医生, 我在这里已经无事可做了
-
 ### "," + "你好" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -12731,23 +11477,17 @@ Accuracy: 98.86%
 - Examples:
   - 所有的鞋都是你的, 你的!
 
-### "," + "侯爵" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不, 侯爵.
-
 ### "," + "便是" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我们给他们两个教训, 便是恐惧和坚毅
 
-### "," + "停" (1 occurrences)
+### "," + "俄国人" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 等会儿, 停。
+  - 如果我们留下, 俄国人肯定会抓住我们
 
 ### "," + "像" (1 occurrences)
 - Predicted: None
@@ -12815,12 +11555,6 @@ Accuracy: 98.86%
 - Examples:
   - 我是谁, 凭什么说他?
 
-### "," + "出" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 昂斯特, 出什么事了吗?
-
 ### "," + "切" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -12832,12 +11566,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 该你了, 刘思甜
-
-### "," + "别的" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 友情, 怜悯, 别的情感..
 
 ### "," + "到" (1 occurrences)
 - Predicted: None
@@ -12893,6 +11621,12 @@ Accuracy: 98.86%
 - Examples:
   - 然后问我, 卡琪玛，帕萝在么？
 
+### "," + "却" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 而你想的, 却是逃亡出国
+
 ### "," + "去" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -12916,12 +11650,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 牛津大学的姐妹, 受过良好教育修女被发现以基督的 名义夺走他人的生命
-
-### "," + "变态狂" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 苏珊太太 , 变态狂
 
 ### "," + "可以" (1 occurrences)
 - Predicted: None
@@ -12952,6 +11680,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我有的时候胃痛前些天我呕吐, 吐出血来了
+
+### "," + "君舍" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 拜托, 君舍, 就一会儿
 
 ### "," + "启示录" (1 occurrences)
 - Predicted: None
@@ -13019,12 +11753,6 @@ Accuracy: 98.86%
 - Examples:
   - 回来, 回来
 
-### "," + "围" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 而你把他惯视了, 大婶, 围着他的眼泪转他得学会坚强
-
 ### "," + "地区号" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13037,23 +11765,17 @@ Accuracy: 98.86%
 - Examples:
   - 我才不要搬那些板条箱, 埃迪
 
-### "," + "夏恩" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 是啊，但是你在去火车站我要送你去尤马, 夏恩
-
 ### "," + "夏目" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 有一天, 夏目漱石在倫敦迷路了。
 
-### "," + "多食" (1 occurrences)
+### "," + "多么" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 症状是, 易渴, 多食尿多, 和消瘦
+  - 看看你, 你是个医生, 多么端庄
 
 ### "," + "大家" (1 occurrences)
 - Predicted: None
@@ -13066,12 +11788,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 她会好起来吗, 大师?
-
-### "," + "大泛围地" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我会仔细研究你的, 大泛围地
 
 ### "," + "天啊" (1 occurrences)
 - Predicted: None
@@ -13090,12 +11806,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 男人是獵人, 女人是獵物。
-
-### "," + "好像" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 求你今天赐给我们赦免我们的罪, 好像我们饶恕了得罪我们的人
 
 ### "," + "好儿子" (1 occurrences)
 - Predicted: None
@@ -13175,12 +11885,6 @@ Accuracy: 98.86%
 - Examples:
   - 死去的飞行员, 媒体上会持续很久
 
-### "," + "孤儿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我是黑骑士内居, 孤儿和寡妇的保护神
-
 ### "," + "安全" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13259,23 +11963,11 @@ Accuracy: 98.86%
 - Examples:
   - 哎呀, 射啊!
 
-### "," + "将军" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那是给你的, 将军同志
-
 ### "," + "小伙子" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 坚持住, 小伙子
-
-### "," + "小姐" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你好, 小姐..
 
 ### "," + "小心点" (1 occurrences)
 - Predicted: None
@@ -13397,12 +12089,6 @@ Accuracy: 98.86%
 - Examples:
   - 尤里-乔治亚维奇, 干嘛劳师动众的?
 
-### "," + "并" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 它在你藏在心里, 并操控着你的生命
-
 ### "," + "并且" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13431,25 +12117,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 快, 开..
+  - 快, 开…开不了,
 
 ### "," + "开门" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 院长, 开门哪!
-
-### "," + "异端" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我要把你赶出耶路撒冷, 异端的撒拉逊人
-
-### "," + "当" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 大哥送你这些衣服还有, 记住我的话, 当你时间不多..
 
 ### "," + "当真" (1 occurrences)
 - Predicted: None
@@ -13523,18 +12197,6 @@ Accuracy: 98.86%
 - Examples:
   - 我可不想陪他去送死, 怎样才能给他另找个律师?
 
-### "," + "怜悯" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 友情, 怜悯, 别的情感..
-
-### "," + "恐怖分子" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有很大区别, 恐怖分子杀害无辜的人, 我们没有..
-
 ### "," + "情况" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13577,17 +12239,29 @@ Accuracy: 98.86%
 - Examples:
   - 大哥, 我妈常说, 考试前要吃奶油糖
 
+### "," + "或" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 从学校 , 或教会没有
+
 ### "," + "房屋" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 食物, 衣服, 房屋在这你要想改变什么,
 
-### "," + "手指" (1 occurrences)
+### "," + "所有" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 她讨厌洗澡后 , 手指皮肤起皱的样子
+  - 传教士式, 狗爬式, 所有的.
+
+### "," + "所有人" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你喜欢他们…总有一天, 所有人…
 
 ### "," + "扔" (1 occurrences)
 - Predicted: None
@@ -13605,7 +12279,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我的朋友都去脱衣酒吧, 抽烟喝酒什么都干..
+  - 我的朋友都去脱衣酒吧, 抽烟喝酒什么都干…
 
 ### "," + "拉" (1 occurrences)
 - Predicted: None
@@ -13631,12 +12305,6 @@ Accuracy: 98.86%
 - Examples:
   - 护士, 拿麻醉剂来
 
-### "," + "拿着" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我来给你来, 拿着箱子.
-
 ### "," + "换房" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13655,6 +12323,18 @@ Accuracy: 98.86%
 - Examples:
   - 我在播芒果种, 撒下一颗, 长出成片
 
+### "," + "放" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 冰箱, 放这.
+
+### "," + "政府" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 勇敢站起来加入政界, 警局, 政府, 清理社会可你们不会!
+
 ### "," + "救世主" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13667,12 +12347,6 @@ Accuracy: 98.86%
 - Examples:
   - 旧的陷阱消失了, 新的又会出现
 
-### "," + "旁边" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你, 旁边的那位
-
 ### "," + "时间" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13683,7 +12357,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 症状是, 易渴, 多食尿多, 和消瘦
+  - 症状是, 易渴, 多食
 
 ### "," + "星期三" (1 occurrences)
 - Predicted: None
@@ -13702,12 +12376,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 好了, 晚安, 孩子们
-
-### "," + "暖暖" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 喝点酒 , 暖暖胃吧 !
 
 ### "," + "更" (1 occurrences)
 - Predicted: None
@@ -13907,12 +12575,6 @@ Accuracy: 98.86%
 - Examples:
   - 我呢, 温柔先生?
 
-### "," + "港区手" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 好, 港区手，拨动那些白色的琴键 我们动起来.
-
 ### "," + "源于" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -13935,13 +12597,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他会不及格, 然后..我们就让他休学
+  - 他会不及格, 然后…我们就让他休学
 
 ### "," + "爱" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 是被珍娜甩掉的 , 爱嫉妒男友
+  - 是被珍娜甩掉的, 爱嫉妒男友
 
 ### "," + "爲什麽" (1 occurrences)
 - Predicted: None
@@ -14027,6 +12689,12 @@ Accuracy: 98.86%
 - Examples:
   - 我们的努力, 白费了
 
+### "," + "的士" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不要扔下我, 的士
+
 ### "," + "皇帝" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14045,11 +12713,17 @@ Accuracy: 98.86%
 - Examples:
   - 托马斯仍然教我如何看待人, 真正地理解他们.
 
-### "," + "确切" (1 occurrences)
+### "," + "祖国" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 是铁锈, 确切说是铁的氣化物。
+  - 是的, 祖国万岁…
+
+### "," + "神经外科" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他也是个医生, 神经外科
 
 ### "," + "福瑟" (1 occurrences)
 - Predicted: None
@@ -14057,23 +12731,11 @@ Accuracy: 98.86%
 - Examples:
   - 你不应该那样子生活, 福瑟。
 
-### "," + "秩序" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 纪律, 秩序和寂静没有人会开玩笑, 也没有人拥抱谁
-
 ### "," + "穆勒" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 隐蔽, 穆勒
-
-### "," + "穆罕默德" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 安拉是真主, 穆罕默德是他的先知
 
 ### "," + "笨蛋" (1 occurrences)
 - Predicted: None
@@ -14116,12 +12778,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 那么, 结婚好像也不错
-
-### "," + "结果" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 大哥, 结果出来了!
 
 ### "," + "老宅子" (1 occurrences)
 - Predicted: None
@@ -14225,12 +12881,6 @@ Accuracy: 98.86%
 - Examples:
   - 螺丝刀, 螺丝刀！
 
-### "," + "袋子" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 放在这, 放在这, 袋子拿开.
-
 ### "," + "謙受益" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14248,12 +12898,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 勇敢站起来加入政界, 警局, 政府, 清理社会可你们不会!
-
-### "," + "记住" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 大哥送你这些衣服还有, 记住我的话, 当你时间不多..
 
 ### "," + "记得" (1 occurrences)
 - Predicted: None
@@ -14283,13 +12927,19 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 哦, 踢吧..踢吧
+  - 哦, 踢吧…踢吧
 
 ### "," + "辣子鸡" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你, 辣子鸡, 想拍救护车吗?
+
+### "," + "迅速" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 去宿舍收拾东西, 迅速而又安静地
 
 ### "," + "迈耶先生" (1 occurrences)
 - Predicted: None
@@ -14381,12 +13031,6 @@ Accuracy: 98.86%
 - Examples:
   - 数学是堆垃圾, 除非你想当会计
 
-### "," + "随便" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 没什么, 随便看看。
-
 ### "," + "随即" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14410,18 +13054,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 圣经中记录的所有的这些神迹和异象都刚好出现了, 预示着世界末日
-
-### "," + "飞行员" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们刚刚收到消息, 飞行员..
-
-### "," + "马文" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我是一个听我说, 马文.纳什
 
 ### "," + "马汉德拉" (1 occurrences)
 - Predicted: None
@@ -14452,6 +13084,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 塔尔夫斯基构想了一部新电影 - 《镜子》
+
+### "-" + "七原秋也" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 全国通缉犯 - 七原秋也 中川典子
 
 ### "-" + "下人" (1 occurrences)
 - Predicted: None
@@ -14525,6 +13163,12 @@ Accuracy: 98.86%
 - Examples:
   - 本间文子 - 巫女
 
+### "-" + "恩赐" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 古老的祖先之地啊请容许我把您恩赐的山河- 恩赐的山河
+
 ### "-" + "放免" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14536,6 +13180,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 千秋実 - 旅法师
+
+### "-" + "最后" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 放好 - 最后拿冰箱
 
 ### "-" + "杣売" (1 occurrences)
 - Predicted: None
@@ -14555,11 +13205,11 @@ Accuracy: 98.86%
 - Examples:
   - 京町子 - 真砂
 
-### "-" + "确实" (1 occurrences)
+### "-" + "神保佑" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 就是这样…我是说, 这是- 确实可能会- 要..
+  - 你好 - 神保佑你
 
 ### "-" + "站住" (1 occurrences)
 - Predicted: None
@@ -14567,17 +13217,17 @@ Accuracy: 98.86%
 - Examples:
   - 尹天仇 - 站住
 
+### "-" + "等等" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 拉乌夫 - 等等
+
 ### "-" + "能源" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 冼朴 - 能源读数船尾左舷， 可能是转向
-
-### "-" + "要" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就是这样…我是说, 这是- 确实可能会- 要..
 
 ### "-" + "该" (1 occurrences)
 - Predicted: None
@@ -14596,12 +13246,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 来 - 请吧
-
-### "-" + "豪瑟" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在戏剧界的发展戏剧界过去被你… - 豪瑟
 
 ### "-" + "那边" (1 occurrences)
 - Predicted: None
@@ -14645,18 +13289,6 @@ Accuracy: 98.86%
 - Examples:
   - －特别行动. －开什么玩笑
 
-### ".." + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 可.. 我们会想你的
-
-### ".." + "－" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 所有的这一切.. －请
-
 ### ";" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14693,12 +13325,6 @@ Accuracy: 98.86%
 - Examples:
   - 是什么? -
 
-### "?" + "」" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 都会觉得说「好不容易睡着了干嘛又要把我弄醒? 」
-
 ### "?" + "－" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14710,12 +13336,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - [ 哦 那位特蕾莎夫人啊 她没准在监视我们 ]
-
-### "[" + "强征" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - [ 强征土地 你妈妈的地也被征去了 ]
 
 ### "[" + "我" (1 occurrences)
 - Predicted: None
@@ -14729,41 +13349,11 @@ Accuracy: 98.86%
 - Examples:
   - [ 每一个细节我都要听 我马上回来 ]
 
-### "·" + "库马尔" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 帕万 · 库马尔 · 查图韦迪
-
-### "·" + "查图韦迪" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 帕万 · 库马尔 · 查图韦迪
-
-### "·" + "真纳" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 默罕默德 · 阿里 · 真纳
-
 ### "·" + "达万" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 谢卡尔 · 达万
-
-### "·" + "阿里" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 默罕默德 · 阿里 · 真纳
-
-### "—" + "切都还好吧" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - － — 切都还好吧？
 
 ### "—" + "我" (1 occurrences)
 - Predicted: None
@@ -14771,23 +13361,11 @@ Accuracy: 98.86%
 - Examples:
   - 暗喻是—— 我该怎么解释呢？
 
-### "…" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在戏剧界的发展戏剧界过去被你… - 豪瑟
-
 ### "…" + "不" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 然后娶了个后母… 不是这样的！
-
-### "…" + "不过" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 虽然幸苦… 不过是我自己做的选择
 
 ### "…" + "也" (1 occurrences)
 - Predicted: None
@@ -14813,11 +13391,11 @@ Accuracy: 98.86%
 - Examples:
   - 究竟发生了… 什么事？
 
-### "…" + "伊琳" (1 occurrences)
+### "…" + "他" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我是指，因为节税的考量下但我觉得… 伊琳？
+  - … 他叫我傻冒!!
 
 ### "…" + "像" (1 occurrences)
 - Predicted: None
@@ -14849,12 +13427,6 @@ Accuracy: 98.86%
 - Examples:
   - 这东西是你哥托我… 别跟我提他！
 
-### "…" + "到处" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 统帅部今天的广播节目…… 到处结束
-
 ### "…" + "化妆间" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14873,17 +13445,59 @@ Accuracy: 98.86%
 - Examples:
   - 因为我以… 取悦大众为己任
 
+### "…" + "只是" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 那个… 只是支票可以接受吗?
+
 ### "…" + "可" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 眼睛失明，上帝能治愈… 可心灵失明要靠什么拯救？
 
+### "…" + "可怕" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 战争进行的时候… 可怕的战争.
+
+### "…" + "吊" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 最重要的一点… 吊上背带！
+
 ### "…" + "吗" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 是梦… 吗
+
+### "…" + "哎" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 法兰克有朋友来访… 哎，我们真是太懒散了。
+
+### "…" + "唯一" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 对… 唯一的不同是怎么死
+
+### "…" + "喉咙" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 还是… 喉咙?
+
+### "…" + "嗯" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 那次是… 嗯…那辆车是自动档的…更象是做梦！
 
 ### "…" + "器官" (1 occurrences)
 - Predicted: None
@@ -14897,6 +13511,18 @@ Accuracy: 98.86%
 - Examples:
   - 蒸汽的声音…我… 回来了？
 
+### "…" + "在" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 途中请您…帮我拿一下我的… 眼药水… 在那边的桌子上，谢谢！
+
+### "…" + "多" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 胡子后面的脸… 多帅!
+
 ### "…" + "她" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -14909,17 +13535,17 @@ Accuracy: 98.86%
 - Examples:
   - 我… 真正的… 家
 
+### "…" + "小声" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 脊髓萎缩… 小声点!
+
 ### "…" + "左轮" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 第一次… 左轮呢？
-
-### "…" + "巴吗" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 臙条… 巴吗大辅来了
 
 ### "…" + "干吗" (1 occurrences)
 - Predicted: None
@@ -14932,6 +13558,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 师傅… 开闸！
+
+### "…" + "德国" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 从现在起，惨烈辽阔的东线战场…电报，舰长… 德国和意大利军队取得局部胜利
 
 ### "…" + "快乐" (1 occurrences)
 - Predicted: None
@@ -14957,23 +13589,35 @@ Accuracy: 98.86%
 - Examples:
   - 那怎么行啊… 总得让我听听孩子的声音啊？
 
-### "…" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 经历了岸上的麻烦后…… 我们在海上的第一天似乎是
-
 ### "…" + "所得" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 脑电图… 所得的结果，被我们不幸言中
 
+### "…" + "找到" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 大哥… 找到了!
+
 ### "…" + "控制室" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 正是午夜前第一班哨准备爬上去让眼睛适应黑夜…… 控制室也点起了红灯
+
+### "…" + "放开" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 放开… 放开我!
+
+### "…" + "放心" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 交配前… 放心!
 
 ### "…" + "无所作为" (1 occurrences)
 - Predicted: None
@@ -14986,12 +13630,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 不欺… 暗室
-
-### "…" + "更" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 外表变得更大有对比她… 更大的义乳
 
 ### "…" + "柴油" (1 occurrences)
 - Predicted: None
@@ -15017,17 +13655,41 @@ Accuracy: 98.86%
 - Examples:
   - 一位毫无经验的成员…一位不能自欺欺人… 没能力指导他人的成员？
 
+### "…" + "然後" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 是… 然後呢?
+
+### "…" + "狗杂种" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 小鼹鼠… 狗杂种，你在干什么？
+
 ### "…" + "现金" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你得花两万五… 现金
 
+### "…" + "生活" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 玩台球, 喝果汁… 生活多美好, 老伯
+
 ### "…" + "真正" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我… 真正的… 家
+
+### "…" + "眼药水" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 途中请您…帮我拿一下我的… 眼药水… 在那边的桌子上，谢谢！
 
 ### "…" + "知道" (1 occurrences)
 - Predicted: None
@@ -15041,11 +13703,29 @@ Accuracy: 98.86%
 - Examples:
   - 后排的男孩们… 站到凳子上去！
 
+### "…" + "给" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 夫人… 给您伞！！
+
 ### "…" + "胜" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 小别… 胜新婚
+
+### "…" + "表达" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我不知道怎样 … 表达我的感激。
+
+### "…" + "要" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你说过… 要不要我给你开个多浆的椰子?
 
 ### "…" + "请" (1 occurrences)
 - Predicted: None
@@ -15065,6 +13745,12 @@ Accuracy: 98.86%
 - Examples:
   - … 还能来吗?
 
+### "…" + "那" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 工作，睡觉，工作… 那正是你离婚的原因！
+
 ### "…" + "铁头功" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -15083,11 +13769,17 @@ Accuracy: 98.86%
 - Examples:
   - 一个钟头一个钟头…… 静寂安宁
 
-### "…" + "！" (1 occurrences)
+### "…" + "马克" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 好不容易才抓到… ！
+  - 朱诺…说真的… 马克 你在哪?
+
+### "…" + "－" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 所有的这一切… －请
 
 ### "……" + "和平" (1 occurrences)
 - Predicted: None
@@ -15113,12 +13805,6 @@ Accuracy: 98.86%
 - Examples:
   - ☭ 是一个共产主义的符号。
 
-### "、" + "不公" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 让人轻蔑、 不公对自私自利毫无悔意
-
 ### "、" + "内居" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -15131,35 +13817,11 @@ Accuracy: 98.86%
 - Examples:
   - 动画导演：西久保利彦 作画监督：黄濑和哉、 冲浦启之
 
-### "、" + "动脉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （视网膜、 动脉及静脉吻合）通过保安扫瞄
-
 ### "、" + "双髻鲛" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 刺魟 、 电鳗 、 双髻鲛 鳟鱼 、 食人鱼 、 大乌贼…食人鱼？
-
-### "、" + "叛徒" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 懦夫、 叛徒、 恶棍!
-
-### "、" + "吸" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我喝酒、 吸古柯碱，跟很多人一样但从没碰过海洛因
-
-### "、" + "哥白" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 也许你可以再来讲一次 尼可拉 、 哥白我才不要
 
 ### "、" + "唐尼" (1 occurrences)
 - Predicted: None
@@ -15185,35 +13847,11 @@ Accuracy: 98.86%
 - Examples:
   - 有，连其他药都一起吃气喘、 高血压、 失眠…都有吃
 
-### "、" + "很" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 很好 、 很好
-
-### "、" + "恶棍" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 懦夫、 叛徒、 恶棍!
-
-### "、" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我想你可以选一个你喜欢的你戴一个 、 我戴另一个
-
 ### "、" + "拍" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我觉得罪恶感少了点，当你说…你一边照顾我，一边还写作、 拍电影
-
-### "、" + "散开" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 散开 、 散开
 
 ### "、" + "是" (1 occurrences)
 - Predicted: None
@@ -15239,23 +13877,11 @@ Accuracy: 98.86%
 - Examples:
   - 刺魟 、 电鳗 、 双髻鲛 鳟鱼 、 食人鱼 、 大乌贼…食人鱼？
 
-### "、" + "花生奶油" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我有鱿鱼 、 花生奶油 和果酱口味的
-
 ### "、" + "霍斯" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 米勒、 霍斯、多龙
-
-### "、" + "韧带" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 生成原因无从得知我们只知道它会使肌腱、 韧带及关节囊钙化，但还不知道原因为何
 
 ### "、" + "食人鱼" (1 occurrences)
 - Predicted: None
@@ -15268,6 +13894,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 有，连其他药都一起吃气喘、 高血压、 失眠…都有吃
+
+### "。" + "员警" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 听着，先别提它了。 员警不感兴趣 …
 
 ### "》" + "依然" (1 occurrences)
 - Predicted: None
@@ -15311,6 +13943,12 @@ Accuracy: 98.86%
 - Examples:
   - 那他就不够了解我读完三卷《资本论》 这算不算？
 
+### "》" + "，" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 《天方夜谭》 ， 我哥哥的
+
 ### "」" + "对" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -15322,12 +13960,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 头条会是什么「打击犯罪三人组」 还是「停不了的笑」
-
-### "」" + "那" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 看过电影「体热」之后「体热」 那部动作片动 作
 
 ### "【" + "天 空" (1 occurrences)
 - Predicted: None
@@ -15411,43 +14043,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 〝申河均 〞 因此我也放弃了美术大学去找工作
-
-### "〞" + "她" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 为了让我念美术大学〝宋康昊 〞 她放弃大学学业
+  - 〝申河均〞 因此我也放弃了美术大学去找工作
 
 ### "〞" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 〝裴斗娜 〞 我最近做了一个决定不知道该不该告诉姊姊
-
-### "けり" + "丽人" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 麗し女酔いにけり 丽人亦沉醉
-
-### "一" + "个" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那里就是奇幻地之边界从前曾是一 个美丽幻妙的地方如今被虚无弄得一物不存
-
-### "一" + "件" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 请允许我送一 件瑞士的纪念品八色笔这笔披
-
-### "一" + "周" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 达琳吾爱请告诉我距 圣 诞 一 周孤心何往
+  - 〝裴斗娜〞 我最近做了一个决定
 
 ### "一" + "您" (1 occurrences)
 - Predicted: None
@@ -15460,12 +14062,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 五打一 是吗
-
-### "一" + "月" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一 月 ）
 
 ### "一下" + "不" (1 occurrences)
 - Predicted: None
@@ -15599,12 +14195,6 @@ Accuracy: 98.86%
 - Examples:
   - 她会迅速地看一下 然后扔到垃圾桶。
 
-### "一下" + "真的" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我觉得你应该要检讨一下 真的 是关你屁事？
-
 ### "一下" + "等会儿" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -15622,12 +14212,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 等一下 车牌号码是失踪男孩的父亲供述的？
-
-### "一下" + "长官" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那些教授离开时给我的打搅一下 长官?
 
 ### "一下" + "雅中" (1 occurrences)
 - Predicted: None
@@ -15647,12 +14231,6 @@ Accuracy: 98.86%
 - Examples:
   - 爸爸 来认识一下 鲁宾尼这位似乎有工作的先生
 
-### "一下" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 打不开等一下 ！
-
 ### "一下" + "－" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -15671,60 +14249,6 @@ Accuracy: 98.86%
 - Examples:
   - 好让自己的一举一动 得到相应的报酬!
 
-### "一九三八年" + "十月" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九三八年 十月，佛山沦陷）
-
-### "一九三八年" + "灯叔" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九三八年 灯叔死于日军大轰炸）
-
-### "一九三六年" + "广东" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九三六年 广东佛山）
-
-### "一九五三年" + "叶问" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九五三年 叶问领取香港身份证）
-
-### "一九五三年" + "宫二" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九五三年 宫二病逝香港）
-
-### "一九五二年" + "香港" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九五二年 香港 白玫瑰理发厅）
-
-### "一九五零年" + "大年夜" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九五零年 大年夜 香港）
-
-### "一九五零年" + "香港" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九五零年 香港 大南街）
-
-### "一九六零年" + "张永成" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九六零年 张永成病逝）
-
 ### "一九四九年" + "人民" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -15736,18 +14260,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 一九四八年 国民政府离开大陆之前我们旗人好歹还坐了三百年天下
-
-### "一九四零年" + "大年夜" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九四零年 大年夜 东北）
-
-### "一九四零年" + "马三" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九四零年 马三投日）
 
 ### "一二" + "三" (1 occurrences)
 - Predicted: None
@@ -15995,18 +14507,6 @@ Accuracy: 98.86%
 - Examples:
   - 别以为老爷摸你一把 你就怎么样了
 
-### "一拐一拐" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 老板娘叫苏珊走路一拐一拐 ，但从没打翻过杯子
-
-### "一敏姐" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一敏姐 这个好了
-
 ### "一方面" + "她" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -16030,12 +14530,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 第二天一早 我去找美美
-
-### "一时" + "半会儿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不过这种事一时 半会儿是半不成的
 
 ### "一来" + "嘴" (1 occurrences)
 - Predicted: None
@@ -16313,6 +14807,12 @@ Accuracy: 98.86%
 - Examples:
   - 快一点 艾琳娜
 
+### "一点" + "还" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他看上去象你一样……除了他比你高一点 还有头发
+
 ### "一点" + "这里" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -16373,12 +14873,6 @@ Accuracy: 98.86%
 - Examples:
   - 一直以来 谢谢
 
-### "一看" + "一" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一我赶快赶去他家一看 一请到一位大师
-
 ### "一看" + "到" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -16403,12 +14897,6 @@ Accuracy: 98.86%
 - Examples:
   - 凯特我一而再 再而三地求你 让你带萨缪尔去接收洗礼他们不肯在教堂圣会外施洗礼
 
-### "一般" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们再练习一般 你会在哪里?
-
 ### "一行" + "每" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -16420,18 +14908,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 如果她一言不发 我怎麽可能知道
-
-### "一起" + "可以" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 阿曼达 把鸡皮留在和鸡肉一起 可以吗
-
-### "一起" + "哪儿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不跟苏西一起 哪儿没用
 
 ### "一起" + "好" (1 occurrences)
 - Predicted: None
@@ -16473,7 +14949,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 您可以和您的孩子们一起 留在这里
+  - 如果您愿意 您可以在这里做售货员您可以和您的孩子们一起 留在这里
 
 ### "一起" + "编织" (1 occurrences)
 - Predicted: None
@@ -16607,6 +15083,12 @@ Accuracy: 98.86%
 - Examples:
   - 那么，如果见到七原 便告知他这儿的情况吧
 
+### "七原秋也" + "中川典子" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 全国通缉犯 - 七原秋也 中川典子
+
 ### "七友" + "晚安" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -16619,17 +15101,11 @@ Accuracy: 98.86%
 - Examples:
   - 七叔 主题曲是由我来唱的
 
-### "七宝奇谋" + "》" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 布里克的老妈也许曾经很迷人但她现在就像个霍比矮人《七宝奇谋 》里面胖胖的那个
-
 ### "七点半" + "到达" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）多谢各位今天 乘搭我们的渡轮（日语）我们将在晚上七点半 到达下关
+  - 多谢各位今天 乘搭我们的渡轮我们将在晚上七点半 到达下关
 
 ### "万一" + "你" (1 occurrences)
 - Predicted: None
@@ -16787,23 +15263,11 @@ Accuracy: 98.86%
 - Examples:
   - 绿石墙三岔路 乡村会馆方向
 
-### "三教九流" + "往来" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这外城就杂了三教九流 往来人等玉大人整治京畿 不能只眼看着朝廷江湖上也要有所联络
-
 ### "三明治" + "夫人" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我马上去拿三明治 夫人
-
-### "三楼" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 要找 白度图上来吧 ，三楼 !
 
 ### "三船敏郎" + "-" (1 occurrences)
 - Predicted: None
@@ -16912,12 +15376,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 刚才你在车上 和我们打过招呼
-
-### "上" + "哪" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你在小麦地里上 哪弄驳船?
 
 ### "上" + "啥" (1 occurrences)
 - Predicted: None
@@ -17093,12 +15551,6 @@ Accuracy: 98.86%
 - Examples:
   - 愿 君 同 望 上 苍使 吾 不 再 孤 单
 
-### "上" + "说明" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 要知道耶酥出自上帝也是万能如果他死在十字架上 说明这是预定了的
-
 ### "上" + "还" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -17116,12 +15568,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 倘若奸心反骨 有始无终者神昭其上 鬼阚其旁
-
-### "上" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在马车上 ，他用皮袄暖了一路
 
 ### "上一回" + "四" (1 occurrences)
 - Predicted: None
@@ -17152,12 +15598,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 接下来请各位依次上前 为死者擦拭面部
-
-### "上升" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 虚火上升 ，气血淤滞
 
 ### "上午" + "开心馆" (1 occurrences)
 - Predicted: None
@@ -17267,12 +15707,6 @@ Accuracy: 98.86%
 - Examples:
   - 上帝 这是什么
 
-### "上床" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 除了陪我上床 我有妮娜己足够
-
 ### "上床" + "生宝宝" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -17289,7 +15723,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我请你上来 因为一件傻事
+  - 我请你上来 因为一件傻事老实说那让我有点不舒服。
 
 ### "上来" + "大爷" (1 occurrences)
 - Predicted: None
@@ -17327,23 +15761,17 @@ Accuracy: 98.86%
 - Examples:
   - 奥拉沃 卡维里上校 我认识他
 
+### "上校" + "请" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 上校 请穿上您的防寒服
+
 ### "上校" + "谁" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我 一个革命英雄 一位上校 谁敢动我科托夫？
-
-### "上梁" + "学校" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 过两天一上梁 学校盖好了 ，就能上课了
-
-### "上海" + "红颜" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （夜上海 红颜旅馆）
 
 ### "上班" + "我" (1 occurrences)
 - Predicted: None
@@ -17423,12 +15851,6 @@ Accuracy: 98.86%
 - Examples:
   - 在这扇门的上面 躺着起码五、六具无人认领的尸体
 
-### "上面" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 舰长在上面 ！
-
 ### "下" + "上" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -17471,12 +15893,6 @@ Accuracy: 98.86%
 - Examples:
   - 你要尽力拖延正面决斗如果她久攻不下 就会气馁
 
-### "下" + "属" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 了解自己在下 属心目中的形象很有意思
-
 ### "下" + "想" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -17488,12 +15904,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 请看，船的右舷撞到了冰山上一路摩擦碰撞船身吃水线下 撞出的孔洞刮痕…堪比摩斯电码
-
-### "下" + "有" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 还有各位会发现位置下 有一付安全眼镜与耳机请尽量使用它们
 
 ### "下" + "由" (1 occurrences)
 - Predicted: None
@@ -17632,12 +16042,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我们这样下去 生意就该失败了
-
-### "下去" + "穷追不舍" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 欧莱利 说吧你要一路追踪下去 穷追不舍
 
 ### "下去" + "老" (1 occurrences)
 - Predicted: None
@@ -17795,12 +16199,6 @@ Accuracy: 98.86%
 - Examples:
   - 下面 让我们再次欣赏有望圣诞节登顶榜单的一匹黑马《圣诞无所不在》
 
-### "不" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不 !
-
 ### "不" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -17830,6 +16228,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 迎 风 挥 舞 旌 旗不 为 人 只 为 己
+
+### "不" + "了" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不 了， 我 自 己来
 
 ### "不" + "先" (1 occurrences)
 - Predicted: None
@@ -17861,6 +16265,12 @@ Accuracy: 98.86%
 - Examples:
   - 十二点 三十度不 十点四十度 什么?
 
+### "不" + "南多" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不 南多 别…我听不到你说什么
+
 ### "不" + "另" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -17890,12 +16300,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 怎么您认为就不 可以给我送这束花吗
-
-### "不" + "咱们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就把您的不 咱们的电话号码留给他们
 
 ### "不" + "哥们" (1 occurrences)
 - Predicted: None
@@ -17981,12 +16385,6 @@ Accuracy: 98.86%
 - Examples:
   - 不 没那么糟
 
-### "不" + "用" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不 用你的演技去救他伤他的心
-
 ### "不" + "留" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -18071,23 +16469,11 @@ Accuracy: 98.86%
 - Examples:
   - 学习 汉语 难 不 难?
 
-### "不" + "需要" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 所以我完全不 需要您的同情和保护
-
 ### "不" + "香槟" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 不 香槟比较好
-
-### "不" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不 ，他另有新欢
 
 ### "不" + "－" (1 occurrences)
 - Predicted: None
@@ -18177,7 +16563,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）但那专家与他不同 他是真正的日本贵族！
+  - 但那专家与他不同 他是真正的日本贵族！
 
 ### "不周" + "你" (1 occurrences)
 - Predicted: None
@@ -18280,12 +16666,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 不学无术 思想肮脏
-
-### "不安" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在她爸爸家里我觉得不安 ， 可以跟你谈谈吗？
 
 ### "不安静" + "乃是" (1 occurrences)
 - Predicted: None
@@ -18425,12 +16805,6 @@ Accuracy: 98.86%
 - Examples:
   - 不用 ，我自己来
 
-### "不由" + "自主" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我又不由 自主地给你打电话了
-
 ### "不眠" + "不休" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -18532,12 +16906,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 不过 不过我得吃点沙拉
-
-### "不过" + "如果" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不过 如果你们明天中午愿意来我家吃饭吃午饭
 
 ### "不过" + "始终" (1 occurrences)
 - Predicted: None
@@ -18677,12 +17045,6 @@ Accuracy: 98.86%
 - Examples:
   - 你看上去不错 小子
 
-### "不错" + "德米特里·安得耶维奇" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不过 你干得不错 德米特里·安得耶维奇（米迪亚）
-
 ### "不错" + "挺" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -18724,12 +17086,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 别不高兴 真的
-
-### "与否" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 能不能从这里出去与否 不是你说了算
 
 ### "与此同时" + "你" (1 occurrences)
 - Predicted: None
@@ -18773,23 +17129,11 @@ Accuracy: 98.86%
 - Examples:
   - 你是专家 这是在哪学的?
 
-### "专家" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 见人见得多了可算是个专家 ，
-
 ### "专门" + "偷" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我以前专门 偷这种家伙的午餐费
-
-### "世" + "他" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如耶酥再降世 他又会被钉上十字架
 
 ### "世 界" + "终" (1 occurrences)
 - Predicted: None
@@ -18893,18 +17237,6 @@ Accuracy: 98.86%
 - Examples:
   - 这世间 不是每一件事都是虚幻的
 
-### "世间" + "是否" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （问世间 是否此山最高）
-
-### "世间" + "自有" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （在世间 自有山比此山更高）
-
 ### "业界" + "甚至" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -18928,12 +17260,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 东吉 你过来坐
-
-### "东尼" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 奥席 东尼 是我们是我
 
 ### "东方航空" + "前往" (1 occurrences)
 - Predicted: None
@@ -19030,6 +17356,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 总之不论那是什么东西 她涂了一大堆还有香水
+
+### "东西" + "就" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不管是水 米还是酒当人体吸收了这些东西 就会与灵魂连接
 
 ### "东西" + "已经" (1 occurrences)
 - Predicted: None
@@ -19228,12 +17560,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 鬼妖丧胆 精怪亡形
-
-### "个" + "、" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我想你可以选一个你喜欢的你戴一个 、 我戴另一个
 
 ### "个" + "《" (1 occurrences)
 - Predicted: None
@@ -19487,12 +17813,6 @@ Accuracy: 98.86%
 - Examples:
   - 我不是那个 想和你离婚的韦蒙德我是拯救你生命的韦蒙德
 
-### "个" + "愿意" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你已经拥有一个 愿意为你赴汤蹈火的女人了…
-
 ### "个" + "成年" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -19534,12 +17854,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 您可以找一个 更正派 更诚实的人从来不说谎的人您呢
-
-### "个" + "校长先生" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 而这个 校长先生的私人储备沙贝 行动反应
 
 ### "个" + "样子" (1 occurrences)
 - Predicted: None
@@ -19667,12 +17981,6 @@ Accuracy: 98.86%
 - Examples:
   - 高挑个儿 黑黑的脸蛋 穿着很精致
 
-### "个子" + "满头" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一个小个子 满头卷发小眼睛镶了一颗大金牙
-
 ### "个性" + "和" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -19715,23 +18023,11 @@ Accuracy: 98.86%
 - Examples:
   - 在这份文稿中 修士记载了骑士的故事
 
-### "中" + "冷风" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （独自在顶峰中 冷风不断地吹过）
-
 ### "中" + "分辨" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你难道不能从现实中 分辨出梦来吗？
-
-### "中" + "好像" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 擦掉从你的钱的那部分你将生活在现实中 好像什么也没有发生一样
 
 ### "中" + "寻求" (1 occurrences)
 - Predicted: None
@@ -19774,12 +18070,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 这也是他一生中 最为平和的时光他有着一个体贴入微的妻子
-
-### "中" + "有些" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但他们中 有些人是正派的
 
 ### "中" + "每" (1 occurrences)
 - Predicted: None
@@ -19853,23 +18143,17 @@ Accuracy: 98.86%
 - Examples:
   - 据我父亲说后来他曾在卡州的烂球场中 见到赤脚乔以化名在打球
 
+### "中" + "谁" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - （即所有这些都存在于一个宇宙中 谁知道有多少个宇宙）
+
 ### "中" + "都" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 不过如今 在任何古籍中 都找不到他的名字
-
-### "中" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 没中 ，你呢？
-
-### "中午" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这刚吃了中午 ，就惦着下午了
 
 ### "中国" + "非洲" (1 occurrences)
 - Predicted: None
@@ -20051,12 +18335,6 @@ Accuracy: 98.86%
 - Examples:
   - 丹弗斯太太 我不会告诉德温维特先生有关费弗尔先生来访的事
 
-### "为" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我以为你甩 了我是为 了布隆 但我又听说…我没有甩过你
-
 ### "为" + "人" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -20080,12 +18358,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 泰柯布被称为 史上最伟大的外野手
-
-### "为" + "善" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我和她好好谈谈与人与人为 善的好好和她谈谈
 
 ### "为" + "大家" (1 occurrences)
 - Predicted: None
@@ -20141,12 +18413,6 @@ Accuracy: 98.86%
 - Examples:
   - 你怎么能为 这种唯利是图的总统辩护?
 
-### "为" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 人人为 ， 为人人
-
 ### "为了" + "一" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -20165,12 +18431,6 @@ Accuracy: 98.86%
 - Examples:
   - 你想会不会是某个人为了 开玩笑而这么作？
 
-### "为了" + "拆散" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这是校方为了 拆散象我们这样的小集体而专门采取的措施
-
 ### "为了" + "谋求" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -20182,6 +18442,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 为什么 一定有办法让她明白
+
+### "为什么" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 有转型计划为什么 不讲出来听一听呢?
 
 ### "为什么" + "主" (1 occurrences)
 - Predicted: None
@@ -20199,7 +18465,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 为什么 大家认 为我有副好嗓子
+  - 为什么 大家认为我有副好嗓子
 
 ### "为什么" + "妮诺拉" (1 occurrences)
 - Predicted: None
@@ -20279,23 +18545,11 @@ Accuracy: 98.86%
 - Examples:
   - 到目前为止 斯特鲁奇堂兄弟 已经可以坦然把尸体当作肉食了
 
-### "为此" + "他" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 普罗米修斯从众神那里偷了火种并将其交给人类为此 他被锁在一块岩石上受到永恒的折磨
-
 ### "为此" + "拿" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 在我对付乔布时 请在这里看守她们俩我不会为此 拿阿尔法宇宙的安全冒险
-
-### "主" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我名花有主 了
 
 ### "主人" + "不" (1 occurrences)
 - Predicted: None
@@ -20439,7 +18693,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）隔了这么久 我书架竟集齐这两本兄弟作
+  - 隔了这么久 我书架竟集齐这两本兄弟作
 
 ### "久" + "终于" (1 occurrences)
 - Predicted: None
@@ -20519,12 +18773,6 @@ Accuracy: 98.86%
 - Examples:
   - 揣而锐之 不可长保
 
-### "之" + "前" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 老实说 在这之 前谁的人我也不是
-
 ### "之" + "城" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -20536,12 +18784,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 吾 等 力 之 所 及 唯 有 苟 活 于 世
-
-### "之" + "音" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对您的弦外之 音我已经不感兴趣了
 
 ### "之一" + "你" (1 occurrences)
 - Predicted: None
@@ -20603,12 +18845,6 @@ Accuracy: 98.86%
 - Examples:
   - 但很不幸你们之中 有人会努力来赢取这支笔吗
 
-### "之内" + "带" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 三日之内 带她和珠钗回来否则断魂鳞发为师也救不了你
-
 ### "之内" + "有" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -20627,6 +18863,12 @@ Accuracy: 98.86%
 - Examples:
   - 我感觉之前 一直在做一个奇怪的梦好像是经历了别人人生的梦
 
+### "之前" + "他" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 在这之前 他还说什么时候帶你回来见见面
+
 ### "之前" + "你们" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -20644,18 +18886,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 陨石坠落之前 变电所神秘爆炸
-
-### "之前" + "可" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 斯维特 在你走之前 可不可以没问题
-
-### "之前" + "可是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 她结婚之前 可是漂亮的丽贝卡·希尔德莱思当她在曼陀丽附近航行的时候淹死了
 
 ### "之前" + "她" (1 occurrences)
 - Predicted: None
@@ -20728,12 +18958,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 这里有一个走调的乐手在我继续之前 这个乐手能自己承认吗
-
-### "之前" + "非常" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）她未疯掉之前 非常珍惜它的
 
 ### "之后" + "两" (1 occurrences)
 - Predicted: None
@@ -20927,12 +19151,6 @@ Accuracy: 98.86%
 - Examples:
   - 变色蜥蜴之乐 你怎知道我要？
 
-### "乐" + "圆舞" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 火之神神乐 圆舞生死危机中我想起了小时候看过的神乐之舞
-
 ### "乐团" + "用" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -20992,12 +19210,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 乐莹 咱就看
-
-### "乐莹" + "撕撕" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 乐莹 撕撕吧吧不好看
 
 ### "乐莹" + "来" (1 occurrences)
 - Predicted: None
@@ -21107,12 +19319,6 @@ Accuracy: 98.86%
 - Examples:
   - 那么，有一个浣熊乔伊 还有一个浣熊的我吗？
 
-### "乔伊" + "都" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 每个版本的乔伊 都是乔布图帕基
-
 ### "乔伊·萨丹奴" + "唐·卡特罗" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -21197,12 +19403,6 @@ Accuracy: 98.86%
 - Examples:
   - 你愿不愿意为我上九天 那啥下九天捉鳖？
 
-### "九月" + "）" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （九月 ）
-
 ### "九月五号" + "也" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -21219,13 +19419,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 上午九点钟 过来吧
-
-### "也" + "刀" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 干也 刀我拿走了
+  - 我们的患者无法表达清楚自己的想法所以我们负责人会一一打电话上午九点钟 过来吧
 
 ### "也" + "够" (1 occurrences)
 - Predicted: None
@@ -21310,12 +19504,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我十几岁就读你的书 一直都记得结尾
-
-### "书" + "和" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就像他在分担你的探险而别人在分担他的当他在阅读那本书 和其中主角时但那是不可能的
 
 ### "书" + "很" (1 occurrences)
 - Predicted: None
@@ -21406,24 +19594,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 这像是一群光屁股的人到处乱跑 却不穿衣服淫笑着可以了 够了
-
-### "了" + "!!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 太好了 !!
-
-### "了" + "]" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - [ 强征土地 你妈妈的地也被征去了 ]
-
-### "了" + "…" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 太迟了 …
 
 ### "了" + "─" (1 occurrences)
 - Predicted: None
@@ -21557,23 +19727,17 @@ Accuracy: 98.86%
 - Examples:
   - 我们很抱歉，如果惹你生气了 但我们讨厌看着你离开！
 
-### "了" + "但是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 腿是保住了 但是因为受损严重将来走路会有问题
-
 ### "了" + "何塞" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 应该够了 何塞医生
 
-### "了" + "你的朋友" (1 occurrences)
+### "了" + "你的心" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 抱歉我伤 了 你的心抱歉我爱上了 你的朋友
+  - 我怎么伤 了 你的心 了？
 
 ### "了" + "倒" (1 occurrences)
 - Predicted: None
@@ -21616,12 +19780,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我也想开面店了 再见!
-
-### "了" + "几十年" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你莫看我老了在奉节县混了 几十年乱朋友还是有的
 
 ### "了" + "几点" (1 occurrences)
 - Predicted: None
@@ -21747,7 +19905,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我把书捐给了 图书馆
+  - 后来他到了拉希摩当他死后 我把书捐给了 图书馆
 
 ### "了" + "埋" (1 occurrences)
 - Predicted: None
@@ -21789,7 +19947,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 俄国人应该已经占领了 奥多河上的一座铁路桥
+  - －柏林乱糟糟的俄国人应该已经占领了 奥多河上的一座铁路桥
 
 ### "了" + "奥斯卡" (1 occurrences)
 - Predicted: None
@@ -21923,12 +20081,6 @@ Accuracy: 98.86%
 - Examples:
   - 这件事太荒唐了 尼夫
 
-### "了" + "师仇" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这么多年了 师仇还没报
-
 ### "了" + "师父" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -21971,12 +20123,6 @@ Accuracy: 98.86%
 - Examples:
   - 伊桑 求你了 开门啊
 
-### "了" + "很" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我受伤了 很重重伤员
-
 ### "了" + "快" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -22011,7 +20157,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 直到他们开始谈离婚了 感情反而变好了
+  - 他和老婆的感情一直都不好…直到他们开始谈离婚了 感情反而变好了
 
 ### "了" + "懂" (1 occurrences)
 - Predicted: None
@@ -22036,12 +20182,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 是不是因为小宗来了 所以来电的？
-
-### "了" + "手" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们握了 手
 
 ### "了" + "托马辛" (1 occurrences)
 - Predicted: None
@@ -22157,11 +20297,11 @@ Accuracy: 98.86%
 - Examples:
   - 求你了 求你了 饶了我吧
 
-### "了" + "没法" (1 occurrences)
+### "了" + "沙漠" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我弄不了它太紧了 没法楔入！
+  - 我们在沙漠所找到的东西例如箭头，矛头等在战争时如果占据了 沙漠就形同占据了北非
 
 ### "了" + "泰坦尼克号" (1 occurrences)
 - Predicted: None
@@ -22265,12 +20405,6 @@ Accuracy: 98.86%
 - Examples:
   - 洗好了 穿我的衣服
 
-### "了" + "立体声" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这次我变小了 立体声放大器。
-
 ### "了" + "算" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -22366,6 +20500,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你疯了 警察！
+
+### "了" + "让" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 小石头甭想花了 让朕受用了吧！
 
 ### "了" + "该" (1 occurrences)
 - Predicted: None
@@ -22469,17 +20609,23 @@ Accuracy: 98.86%
 - Examples:
   - 行了 黛安
 
+### "了" + "，" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 骆先生， 咱们回村了 ，要走好
+
 ### "了" + "．．．．．．" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 如果这些老货船的舵失控了 ．．．．．．就只有祷告了
 
-### "了解" + "他" (1 occurrences)
+### "了" + "？" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 需要了解 他是否遭受任何伤害 或者任何剧烈运动没什么特别的
+  - 为什么克里斯托弗·哥伦布离婚了 ？
 
 ### "了解" + "处好" (1 occurrences)
 - Predicted: None
@@ -22523,12 +20669,6 @@ Accuracy: 98.86%
 - Examples:
   - 这么重要的事 为什么不告诉我呢
 
-### "事" + "事" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 事 事在必行是吧?
-
 ### "事" + "五" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -22570,12 +20710,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 不习惯的事 偶尔做做也无妨
-
-### "事" + "儿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 儿给绊住了是丁亚玲的事 儿吗？
 
 ### "事" + "先" (1 occurrences)
 - Predicted: None
@@ -22719,7 +20853,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 是啊， 你看来似乎胸有成竹呢我不知道…我想是找出 自 己想做的事 然后全力投入
+  - 我想是找出 自己想做的事 然后全力投入对我而言 拉希摩就是我的目标和理想
 
 ### "事" + "自然" (1 occurrences)
 - Predicted: None
@@ -22768,12 +20902,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他以为会骑着这辆摩托车到很远的地方做出一番事业 出人头地 衣锦还乡
-
-### "事件" + "并" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 隐瞒了那些您都知道的可怕事件 并称取得了您合唱团的成功成功?
 
 ### "事儿" + "不" (1 occurrences)
 - Predicted: None
@@ -22870,12 +20998,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 这一刻不要让任何事情 分散你的注意力
-
-### "事情" + "只" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 复仇这样的事情 只存在于电影这类东西才对
 
 ### "事情" + "在" (1 occurrences)
 - Predicted: None
@@ -23153,18 +21275,6 @@ Accuracy: 98.86%
 - Examples:
   - 四二三四 五六七 停
 
-### "五十二" + "五十三" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 四十八 四十九 五十五十一 五十二 五十三
-
-### "五十五十一" + "五十二" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 四十八 四十九 五十五十一 五十二 五十三
-
 ### "五千" + "好" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -23315,12 +21425,6 @@ Accuracy: 98.86%
 - Examples:
   - 亚瑟 你在这儿干什么
 
-### "亚维拉" + "托雷多" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （亚维拉 托雷多 瓦拉多利）
-
 ### "亚里亚洛斯" + "巴鲁·奈多利路" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -23410,12 +21514,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 京町子 - 真砂
-
-### "京畿" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这外城就杂了三教九流 往来人等玉大人整治京畿 不能只眼看着朝廷江湖上也要有所联络
 
 ### "亮" + "我" (1 occurrences)
 - Predicted: None
@@ -23549,12 +21647,6 @@ Accuracy: 98.86%
 - Examples:
   - 来，亲爱的 －快点 －好了，来了，颖亚
 
-### "人" + "。" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在我知道更多之前我不会提醒任何人 。
-
 ### "人" + "一" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -23603,12 +21695,6 @@ Accuracy: 98.86%
 - Examples:
   - 你妈妈娘家那边的人 为什么不给他们写信？
 
-### "人" + "从" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 让我我问所有人 从何时开始你被我吸引？
-
 ### "人" + "任何" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -23625,7 +21711,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 这颗心第一次爱上了一个人 但我怎么说？
+  - 她的名字是…这颗心第一次爱上了一个人 但我怎么说？
 
 ### "人" + "你们" (1 occurrences)
 - Predicted: None
@@ -23703,7 +21789,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）绝不会有人 喜欢如此阴沉的地方
+  - 绝不会有人 喜欢如此阴沉的地方
 
 ### "人" + "好像" (1 occurrences)
 - Predicted: None
@@ -23716,12 +21802,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你是秘勤局的人 对吧
-
-### "人" + "应该" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我要退回你的钱，因为没有人 应该为他们不喜欢的东西付钱
 
 ### "人" + "当天" (1 occurrences)
 - Predicted: None
@@ -23764,12 +21844,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你不是个滥杀无辜的人 所以你才配用这把剑
-
-### "人" + "摔断" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 跷会摔死自己的总有一天会有人 摔断腿
 
 ### "人" + "撕开" (1 occurrences)
 - Predicted: None
@@ -23824,6 +21898,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 不过 用下流手段的人 永远会被大家瞧不起
+
+### "人" + "没事" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我们去找机尾没告诉任何人 没事先计划我们得找到电池
 
 ### "人" + "犯" (1 occurrences)
 - Predicted: None
@@ -23903,29 +21983,23 @@ Accuracy: 98.86%
 - Examples:
   - 甲板上还有人 那里！
 
-### "人" + "（" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们杀了多少人 （主角以恩格尔伯特汉珀丁克）
-
 ### "人人" + "都" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 木奇 不是人人 都能像你这样的
 
-### "人仕" + "全部" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 封锁现场，把有关人仕 全部带回去
-
 ### "人们" + "一直" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我想要设计出能够让人们 一直感受到温情的环境
+
+### "人们" + "会" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你怎么能知道人们 会成为什么…你对圣经没有了解?
 
 ### "人们" + "还有" (1 occurrences)
 - Predicted: None
@@ -24041,11 +22115,11 @@ Accuracy: 98.86%
 - Examples:
   - 第三 第三担当使命的人生 担当使命的人生
 
-### "人类" + "不" (1 occurrences)
+### "人生" + "而非" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 等着那个女人来发看把她的头皎碎的梦…白狼神，莫非森林和人类 不可以和平共处的？
+  - 学习是为了完善人生 而非享乐人生
 
 ### "人类" + "付出" (1 occurrences)
 - Predicted: None
@@ -24058,12 +22132,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 要变成人类 必须丢弃魔法
-
-### "人类" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （渺小而愚蠢的人类 我们都是这样）
 
 ### "人类" + "有" (1 occurrences)
 - Predicted: None
@@ -24112,18 +22180,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 开飞机的什么 也在堵
-
-### "什么" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有什么 了 不起
-
-### "什么" + "人" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 要是今天再死个什么 人或是再生个什么人我可就要交吧
 
 ### "什么" + "他" (1 occurrences)
 - Predicted: None
@@ -24329,6 +22385,12 @@ Accuracy: 98.86%
 - Examples:
   - 你笑什么 贝纳通仔？
 
+### "什么" + "还是" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你是在计谋什么 还是爱上了他？
+
 ### "什么" + "这么" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -24370,6 +22432,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他什么样 坐着还是躺着？
+
+### "什麽" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 就是什麽 …
 
 ### "什麽" + "凯瑟琳" (1 occurrences)
 - Predicted: None
@@ -24423,7 +22491,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）多谢各位今天 乘搭我们的渡轮（日语）我们将在晚上七点半 到达下关
+  - 多谢各位今天 乘搭我们的渡轮我们将在晚上七点半 到达下关
 
 ### "今天" + "今天" (1 occurrences)
 - Predicted: None
@@ -24515,23 +22583,11 @@ Accuracy: 98.86%
 - Examples:
   - 今早 他们去找警察报案他们把科里亚抓起来了
 
-### "今晚" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 今晚 你和马里奥修一对吧
-
 ### "今晚" + "大家" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 今晚 大家都担心得吃不下饭
-
-### "今晚" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 今晚 我特地推荐这个鹅肝做的很完美
 
 ### "介意" + "可以" (1 occurrences)
 - Predicted: None
@@ -24593,6 +22649,12 @@ Accuracy: 98.86%
 - Examples:
   - 从早到晚 在城市里奔波着为的是能够寻找牡丹
 
+### "从此" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 从此 …父女相依为命
+
 ### "仓库" + "走" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -24603,7 +22665,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 她丈夫死了以后， 她在 仓敷 又结婚了
+  - 她丈夫死了以后，她在 仓敷 又结婚了
 
 ### "仓管员" + "和" (1 occurrences)
 - Predicted: None
@@ -24707,18 +22769,6 @@ Accuracy: 98.86%
 - Examples:
   - 我希望你和他保持联系接近他 和他交朋友
 
-### "他" + "哪里" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 只要学他不像我们中任何人每天早上我们争着洗澡而他 哪里有水就在哪里洗澡
-
-### "他" + "喝" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）宝宝哭时，我婶婶会喂他 喝一匙清酒
-
 ### "他" + "回到" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -24743,6 +22793,12 @@ Accuracy: 98.86%
 - Examples:
   - 杀他不杀他 对我来说无所谓
 
+### "他" + "就" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 那个时候他 就想和您套近乎
+
 ### "他" + "山姆" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -24755,12 +22811,6 @@ Accuracy: 98.86%
 - Examples:
   - 把那混蛋的房子赶紧拆了因为他 已经浪费太多时间了
 
-### "他" + "或者" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你们要是敢再打他 或者甚至碰他一下强硬的女孩
-
 ### "他" + "把" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -24772,6 +22822,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他 挺好的
+
+### "他" + "是" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你想杀了他 是不是
 
 ### "他" + "有" (1 occurrences)
 - Predicted: None
@@ -25061,12 +23117,6 @@ Accuracy: 98.86%
 - Examples:
   - 对于我们来说 这是一个令人 心 醉的 一个充满诗情画意的世界
 
-### "以" + "为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我还以 为你是来访的呢
-
 ### "以为" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -25127,23 +23177,11 @@ Accuracy: 98.86%
 - Examples:
   - 这说明在一千年以前 陨石就在这片地区至少坠落过一次
 
-### "以后" + "一直" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 毕业以后 一直想找工作但是因为那些工作都一般然后就一直处在一个观望的状态
-
 ### "以后" + "他" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 赶出去以后 他就溜进别的教室他说
-
-### "以后" + "再" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 钩子挂好以后 再转动上面的把手翅月旁就会张开了
 
 ### "以后" + "可以" (1 occurrences)
 - Predicted: None
@@ -25493,12 +23531,6 @@ Accuracy: 98.86%
 - Examples:
   - 伊万 过来
 
-### "伊丽莎白" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 伊丽莎白 不要站住
-
 ### "伊丽莎白" + "她" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -25673,29 +23705,17 @@ Accuracy: 98.86%
 - Examples:
   - 伊萨克 安德斯和我都很坚定
 
-### "伊萨克" + "野草莓" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 伊萨克 野草莓已经吃完了阿姨要你去我
-
 ### "伊西" + "在" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 这是大规模种族灭绝武器伊西 在地图这边画个圈…就是他们的目标先是纽约和华府
+  - 伊西 在地图这边画个圈…就是他们的目标
 
 ### "伏尔加" + "新型" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 伏尔加 新型的坐吧坐吧
-
-### "休" + "息" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 让她休 息
 
 ### "休伊" + "再" (1 occurrences)
 - Predicted: None
@@ -25744,12 +23764,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 优步 你们都听过吧
-
-### "优美" + "就" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 跨步一下要自由摆动轻盈优美 就像 豹子起跳的时候那样
 
 ### "优雅" + "也" (1 occurrences)
 - Predicted: None
@@ -25907,6 +23921,12 @@ Accuracy: 98.86%
 - Examples:
   - 不过我们一定会 告诉费雷德和爱娃的
 
+### "会" + "在" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我们的司令官永远也不会 在我们没准备的时候抓到我们。
+
 ### "会" + "恐怕" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -25930,12 +23950,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我会 打爆你他妈的头
-
-### "会" + "整夜" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你真的认为他的一位朋友会 整夜呆在外面侦察我们吗？
 
 ### "会" + "是" (1 occurrences)
 - Predicted: None
@@ -26021,12 +24035,6 @@ Accuracy: 98.86%
 - Examples:
   - 那个出租车司机已经提出了暴力伤害 和偷窃的起诉
 
-### "伤害" + "或者" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 需要了解 他是否遭受任何伤害 或者任何剧烈运动没什么特别的
-
 ### "伤心" + "在" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -26097,7 +24105,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）你是贵族出身（日语）为何做伪画师 这种卑微的工作？
+  - 你是贵族出身为何做伪画师 这种卑微的工作？
 
 ### "伪装" + "埋伏" (1 occurrences)
 - Predicted: None
@@ -26123,23 +24131,17 @@ Accuracy: 98.86%
 - Examples:
   - 伯母 我对不起您
 
-### "伯洛" + "哥菲耶夫娜" (1 occurrences)
+### "伯洛哥" + "菲耶夫娜" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 柳德米拉．伯洛 哥菲耶夫娜
+  - 略德尼拉．伯洛哥 菲耶夫娜不能这样说
 
-### "伯洛哥菲耶" + "夫娜" (1 occurrences)
+### "伯洛哥菲" + "耶夫娜" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 略德尼拉．伯洛哥菲耶 夫娜 您喜欢采蘑菇吗
-
-### "伯洛哥菲耶夫娜" + "您" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 略德尼拉．伯洛哥菲耶夫娜 您 怎么扭起来了 像个下流女人
+  - 略德尼拉．伯洛哥菲 耶夫娜
 
 ### "伯爵小姐" + "真" (1 occurrences)
 - Predicted: None
@@ -26170,12 +24172,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 幸好 由于政府及时应对 暴力示威逐渐削弱估计 短时间内将结束
-
-### "伴郎" + "快" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 伴郎 快决定不
 
 ### "伸" + "手" (1 occurrences)
 - Predicted: None
@@ -26393,12 +24389,6 @@ Accuracy: 98.86%
 - Examples:
   - 但是 拜托必须让她们这么做
 
-### "但是" + "提拔" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但是 提拔干部的标
-
 ### "但是" + "有" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -26543,23 +24533,11 @@ Accuracy: 98.86%
 - Examples:
   - 程老板，您要熬不住 您就再抽一口得了
 
-### "住口" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 住口 ！
-
 ### "住嘴" + "住嘴" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 住嘴 住嘴
-
-### "住嘴" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 听着， 如果你不住嘴 我会失控的
 
 ### "住所" + "没有" (1 occurrences)
 - Predicted: None
@@ -26597,6 +24575,12 @@ Accuracy: 98.86%
 - Examples:
   - 住手 放开我！
 
+### "住手" + "蜜雪儿" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 住手 蜜雪儿.
+
 ### "住手" + "马拉德" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -26608,18 +24592,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 叫我佐佐木 知道
-
-### "体" + "为何" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 河岸有这麽多具 体 为何只埋葬这两具？
-
-### "体" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果不埋葬 体 我想知道用意何在？
 
 ### "体恤" + "像" (1 occurrences)
 - Predicted: None
@@ -26638,12 +24610,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你们知道要怎么样才能大闹芝加哥体育场 而不被告吗
-
-### "体贴" + "祖丽" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你为我弄咖啡体贴 祖丽，在等客人吗？
 
 ### "体重" + "我们" (1 occurrences)
 - Predicted: None
@@ -26668,12 +24634,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 何总管 你认为呢
-
-### "何时" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 找到我问所有人 从何时到何时 你被我吸引？
 
 ### "何时" + "我" (1 occurrences)
 - Predicted: None
@@ -26901,7 +24861,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）我的女仆就在隔壁房间睡（日语）我不想和你 传出什么桃色丑闻
+  - 我不想和你 传出什么桃色丑闻
 
 ### "你" + "作为" (1 occurrences)
 - Predicted: None
@@ -26932,12 +24892,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你上发条又不会改变时间，也不会把你 儿子早点带回家啊！
-
-### "你" + "全" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就是它让所有东西你 全亚特兰蒂斯活着那 它现在在哪里
 
 ### "你" + "内图" (1 occurrences)
 - Predicted: None
@@ -26981,12 +24935,6 @@ Accuracy: 98.86%
 - Examples:
   - 以便将其排除是你潜入了他，还是他潜入了你 到底怎么样了？
 
-### "你" + "华达" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但我们会彻头彻尾我爱你 华达
-
 ### "你" + "博士" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -27011,11 +24959,23 @@ Accuracy: 98.86%
 - Examples:
   - 不过…你要是不喜欢我拍的你 可别怪我
 
+### "你" + "史特劳斯" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我在问你 史特劳斯少将我的假设是这跟他的…左翼政治活动有关
+
 ### "你" + "吞" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我们只是想帮你 吞下去 不要咬吞下去
+
+### "你" + "和" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我要的只有你 和我在一起吧
 
 ### "你" + "咱们" (1 occurrences)
 - Predicted: None
@@ -27269,17 +25229,17 @@ Accuracy: 98.86%
 - Examples:
   - 我不明白，为什么只有你 才可以担保出去
 
-### "你" + "打垮" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你 打垮我有多快
-
 ### "你" + "托尼" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 谢谢你 托尼
+
+### "你" + "把" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 是你 把我救到河岸上的
 
 ### "你" + "护理" (1 occurrences)
 - Predicted: None
@@ -27328,12 +25288,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我建议你 替软弱的心打强心针
-
-### "你" + "月匕" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你 月匕 给我十卢比么?
 
 ### "你" + "朋友" (1 occurrences)
 - Predicted: None
@@ -27407,11 +25361,17 @@ Accuracy: 98.86%
 - Examples:
   - 这么大的地方给你 玩你的小把戏还不够吗
 
+### "你" + "男人" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 那你 男人怎么办？
+
 ### "你" + "留" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 拜托你 留美用日语说明啦！
+  - 拜托你 留美
 
 ### "你" + "真" (1 occurrences)
 - Predicted: None
@@ -27436,6 +25396,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我见你 第一件事·就是亲你一口
+
+### "你" + "算是" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 省掉两巴掌不打你 算是对你客气的
 
 ### "你" + "罗利" (1 occurrences)
 - Predicted: None
@@ -27599,6 +25565,12 @@ Accuracy: 98.86%
 - Examples:
   - 你 靠边停车
 
+### "你们" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 虫和人不能生活在同一个世界里的求求你们 不要杀它
+
 ### "你们" + "也" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -27621,7 +25593,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）若她因为你们 其中一人而逃走（日语）我会剥光你们的衣服 逐出大宅！
+  - 若她因为你们 其中一人而逃走我会剥光你们的衣服 逐出大宅！
 
 ### "你们" + "别" (1 occurrences)
 - Predicted: None
@@ -27718,6 +25690,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你们好 各位
+
+### "你好" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你好 - 神保佑你
 
 ### "你好" + "亲爱的" (1 occurrences)
 - Predicted: None
@@ -27856,12 +25834,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你好 帕特
-
-### "你好" + "康友" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你好 康友
 
 ### "你好" + "弗里思" (1 occurrences)
 - Predicted: None
@@ -28253,12 +26225,6 @@ Accuracy: 98.86%
 - Examples:
   - 时菜肉片饭 例汤 茶或咖啡
 
-### "侍应" + "还" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我叫侍应 还要点什么吗？
-
 ### "侏儒" + "是" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -28282,18 +26248,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你要知道 我就是你的依靠 好吗
-
-### "侦探" + "警察" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 索偿医生是医生侦探 警察及法官陪审团 告解神父 集于一身
-
-### "侮辱" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 今天早上 我侮辱 了一位德国军人
 
 ### "便宜" + "拿回" (1 occurrences)
 - Predicted: None
@@ -28325,12 +26279,6 @@ Accuracy: 98.86%
 - Examples:
   - 世上多数的伟大艺术品 都是被情伤激发俊男美女 都没有骨气
 
-### "保" + "密" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你明白此事必须绝对保 密
-
 ### "保" + "算" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -28342,12 +26290,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 菩萨保佑 菩萨保佑
-
-### "保利" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 杜迪杜迪哥保利 是整个社区的大老板他替他打理计程车站 和贝拉维斯塔披萨屋等地点
 
 ### "保卫" + "思想" (1 occurrences)
 - Predicted: None
@@ -28409,12 +26351,6 @@ Accuracy: 98.86%
 - Examples:
   - 你觉得呢 保罗 值得拼命吗
 
-### "保罗" + "文斯" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 奈德 艾登 肖恩戴米恩 保罗 文斯
-
 ### "保罗" + "是" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -28444,12 +26380,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 校长先生 我向你保证 课都完成了
-
-### "保证" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我保证 这会让你们的收视率拿下巴基斯坦第一
 
 ### "保障" + "我国" (1 occurrences)
 - Predicted: None
@@ -28528,12 +26458,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他在车里等我一给他信号 他就到前面来
-
-### "信号" + "然后" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果想要离开的话就请打出来救信号 然后等我来
 
 ### "信哈" + "只是" (1 occurrences)
 - Predicted: None
@@ -28637,6 +26561,12 @@ Accuracy: 98.86%
 - Examples:
   - 我只是假装 假装？
 
+### "假设" + "就" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 当你了解泰勒的假设 就知道真实状况结果是什么？
+
 ### "做" + "一定" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -28654,12 +26584,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 橙先生要求我带他去医院看医生我不喜欢让他面对那些警察但如果我们不这么做 他就会死
-
-### "做" + "会" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果男朋友这么做 会很有感觉的有感觉
 
 ### "做" + "兄弟" (1 occurrences)
 - Predicted: None
@@ -28822,6 +26746,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 停 把娃娃放回去！
+
+### "停下" + "安静" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 请你别停下 安静!
 
 ### "停下来" + "不然" (1 occurrences)
 - Predicted: None
@@ -29033,12 +26963,6 @@ Accuracy: 98.86%
 - Examples:
   - 别 动 我 摄 像 机！
 
-### "像" + "豹子" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 跨步一下要自由摆动轻盈优美 就像 豹子起跳的时候那样
-
 ### "像" + "那" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -29050,12 +26974,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你觉得我说的不像话 是吧
-
-### "儿" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 幺妹 儿 不在家宜昌跑船去了
 
 ### "儿女" + "为什么" (1 occurrences)
 - Predicted: None
@@ -29206,6 +27124,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他的两个兄弟 奇哥和拉蒙也是我的朋友
+
+### "兄弟" + "我们" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 兄弟 我们已经做到了对哈努曼神的承诺
 
 ### "兄弟" + "消消气" (1 occurrences)
 - Predicted: None
@@ -29543,12 +27467,6 @@ Accuracy: 98.86%
 - Examples:
   - 女士们、先生们 下午好
 
-### "先生们" + "他" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 女士，先生们 他刚刚像我求婚啦！
-
 ### "先生们" + "女士们" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -29801,6 +27719,12 @@ Accuracy: 98.86%
 - Examples:
   - 指 尖 颤 抖 间 紧 拥 君 入 怀
 
+### "入" + "欧巴马" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - （两人被禁入 欧巴马和罗姆尼辩论会）
+
 ### "入" + "殓" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -29873,12 +27797,6 @@ Accuracy: 98.86%
 - Examples:
   - 知道你的所为会给全家人 带来什麽後果吗?
 
-### "全球" + "最" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 很荣幸能请到全球 最伟大的摇滚乐评是还是不是
-
 ### "全身" + "气体" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -29939,12 +27857,6 @@ Accuracy: 98.86%
 - Examples:
   - 八面威风 敌人望之丧胆
 
-### "公" + "公" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 公 公帕
-
 ### "公主" + "太胡" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -29974,12 +27886,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我们会带公公 一起去参加那个会议
-
-### "公公" + "要" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 阿尔法的你和阿尔法公公 要我跟她打但是她太强大了
 
 ### "公共汽车" + "还有" (1 occurrences)
 - Predicted: None
@@ -30155,18 +28061,6 @@ Accuracy: 98.86%
 - Examples:
   - 西格蒙德-吉恩 德意志民主共和国 公民
 
-### "关" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 今天关 了
-
-### "关心" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 谢谢你的关心 !
-
 ### "关掉" + "快点" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -30220,12 +28114,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 古巴关达那摩湾 步兵警卫连行为规范守则
-
-### "关门" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 关门 ！
 
 ### "兴头上" + "于是" (1 occurrences)
 - Predicted: None
@@ -30341,29 +28229,11 @@ Accuracy: 98.86%
 - Examples:
   - 其次 离厨房和人类远点
 
-### "具" + "体" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 河岸有这麽多具 体 为何只埋葬这两具？
-
 ### "典当铺" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 典当铺 你不是在警察局吗
-
-### "养" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不让你干活养 不住
-
-### "养" + "啐" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 好，能生能养 啐!
 
 ### "养儿育女" + "不" (1 occurrences)
 - Predicted: None
@@ -30484,12 +28354,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 再 等会 儿
-
-### "再" + "见" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （再 见移民）
 
 ### "再两下" + "是" (1 occurrences)
 - Predicted: None
@@ -30773,12 +28637,6 @@ Accuracy: 98.86%
 - Examples:
   - 无意冒犯 上校
 
-### "写" + "出" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我可以写 出很棒的剧本 为何不能喝点小酒？
-
 ### "写作" + "希望" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -30796,12 +28654,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我写信 打电话也都连络不到你
-
-### "军医" + "尤里-科林斯基" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我可以与军医 尤里-科林斯基见个面吗?
 
 ### "军官" + "是" (1 occurrences)
 - Predicted: None
@@ -30851,6 +28703,12 @@ Accuracy: 98.86%
 - Examples:
   - 孩提时感受到的冬季 并没有这么寒冷
 
+### "冯·海尔道夫" + "什么" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 冯·海尔道夫 什么事
+
 ### "冰场" + "帅" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -30868,12 +28726,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 此时距离撞击冰山 已过去两小时四十分钟
-
-### "冰箱" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我要把你们都卖掉你和冰箱 -起卖了
 
 ### "冲动" + "哥们" (1 occurrences)
 - Predicted: None
@@ -30965,12 +28817,6 @@ Accuracy: 98.86%
 - Examples:
   - 如果你要我决定 那你就收拾东西 离开这里！
 
-### "决心" + "对" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你下定决心 对你知道我不想要孩子你要在我和孩子间做个抉译
-
 ### "决战" + "就" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -30988,12 +28834,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 克里米亚今年很冷 不是吗
-
-### "冷气团" + "使得" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 流入关东上空的冷气团 使得大气状态想当不稳定
 
 ### "冷艳" + "总是" (1 occurrences)
 - Predicted: None
@@ -31073,12 +28913,6 @@ Accuracy: 98.86%
 - Examples:
   - 冼朴 - 能源读数船尾左舷， 可能是转向
 
-### "准" + "每" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 没人知道的很准 每次你问他 他就换个故事
-
 ### "准备" + "以" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -31133,12 +28967,6 @@ Accuracy: 98.86%
 - Examples:
   - 代数 几何 物理化学 生物 历史 英语还有地理很好
 
-### "几何学" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 星期三，我们有几何学 , 他帮助我作家庭作业。
-
 ### "几天前" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -31181,12 +29009,6 @@ Accuracy: 98.86%
 - Examples:
   - 凤 快过来帮忙
 
-### "凤梨罐头" + "要" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 喂，弄一罐凤梨罐头 要花多少新鲜，你知道吗？
-
 ### "凯伦" + "他" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -31205,12 +29027,6 @@ Accuracy: 98.86%
 - Examples:
   - 凯勒布 你今晚给我们读一段《圣经》吧?
 
-### "凯勒布" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你和母亲一直不准我们踏进林子半步的凯勒布 我们的收成撑不到冬天没办法种出粮食
-
 ### "凯勒布" + "把" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -31222,12 +29038,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我很意外凯撒 竟和埃及的敌人谈天
-
-### "凯撒大帝" + "来" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有什么比由凯撒大帝 来宣怖托勒密…和阿尔西诺埃就位 更能保持稳定？
 
 ### "凯文" + "强尼" (1 occurrences)
 - Predicted: None
@@ -31343,12 +29153,6 @@ Accuracy: 98.86%
 - Examples:
   - 难道我们不应该表现出 更为友好的面貌吗?
 
-### "出" + "缺乏" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 从一开始，动作就显示出 缺乏诗意的灵感。
-
 ### "出书" + "会" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -31361,23 +29165,11 @@ Accuracy: 98.86%
 - Examples:
   - 他以为会骑着这辆摩托车到很远的地方做出一番事业 出人头地 衣锦还乡
 
-### "出击" + "（" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 从海底出击 （完）
-
 ### "出去" + "不" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 把我关起来还是放出去 不会改变任何事情
-
-### "出去" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 因为你， 我被踢出去 了
 
 ### "出去" + "你" (1 occurrences)
 - Predicted: None
@@ -31420,12 +29212,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 要是你从这个门口 走出去 我们就结束好吗
-
-### "出去" + "打" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这样吧，你跟我出去 打电话给丹尼叫他照雇莎莲娜
 
 ### "出去" + "走" (1 occurrences)
 - Predicted: None
@@ -31498,12 +29284,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 出来 出来把枪扔掉
-
-### "出来" + "到" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我从你房间出来 到我的车里那神情病在跟踪我
 
 ### "出来" + "却" (1 occurrences)
 - Predicted: None
@@ -31733,12 +29513,6 @@ Accuracy: 98.86%
 - Examples:
   - 刘大人 现在朝廷朝令夕改说不定你很快就会调回来
 
-### "刘师傅" + "刘师傅" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 飽干活儿我寄的刘师傅 刘师傅
-
 ### "刘师傅" + "没" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -31774,12 +29548,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 刘总 你没事吧
-
-### "刘爷" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 刘爷 不瞒您说 我是陕甘的总捕头
 
 ### "则" + "焦特布尔" (1 occurrences)
 - Predicted: None
@@ -31985,17 +29753,17 @@ Accuracy: 98.86%
 - Examples:
   - 你们中还有别的 犹太人吗?
 
-### "刮目相看" + "加油" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （妈 我想在外面租个房子 上午你给我的钱…）（女儿 你这次让妈刮目相看 加油）
-
 ### "到" + "不知" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 时间未到 不知怎么突然来了?
+
+### "到" + "了" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 时候到 了， 甜心
 
 ### "到" + "他" (1 occurrences)
 - Predicted: None
@@ -32027,23 +29795,17 @@ Accuracy: 98.86%
 - Examples:
   - 然后我就想到 您为什么不一起来？
 
-### "到" + "未来" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 储藏人类这是把我们的病人带到 未来的桥梁一直到科技使他们复活
-
-### "到" + "波士顿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我在说那座让你到 波士顿找我的艾柏特球场
-
 ### "到" + "葛汉" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你一定打得到 葛汉，要有信心
+
+### "到" + "面对" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 可想象到 面对众多女士投怀送抱我却请不起她们 喝杯葡萄酒，
 
 ### "到时候" + "你" (1 occurrences)
 - Predicted: None
@@ -32165,6 +29927,12 @@ Accuracy: 98.86%
 - Examples:
   - 如果妻子害羞被剃头 就该蒙头
 
+### "前" + "," (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 秋天来前 , 我应该会替他上漆
+
 ### "前" + "上校" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -32249,12 +30017,6 @@ Accuracy: 98.86%
 - Examples:
   - 两天前 这里还好好的
 
-### "前" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 天黑前 ， 刚刚回来的父亲 就又被叫走了
-
 ### "前不久" + "带" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -32291,12 +30053,6 @@ Accuracy: 98.86%
 - Examples:
   - 前手 打前手防住
 
-### "前辈" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 前辈 你知道你的脸变化有大吗
-
 ### "前辈" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -32320,6 +30076,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我只能看到前面 看不到后面
+
+### "剑" + "我们" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 对那把剑 我们父女俩一点儿也不上心
 
 ### "剑" + "早" (1 occurrences)
 - Predicted: None
@@ -32345,12 +30107,6 @@ Accuracy: 98.86%
 - Examples:
   - 演员：普罗特克特中央工人剧场 黑海舰队官兵塞瓦斯托波尔渔民协会
 
-### "剧本" + "为何" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我可以写 出很棒的剧本 为何不能喝点小酒？
-
 ### "剧本" + "亚历山大·米谢林" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -32368,12 +30124,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 副官 带我们离开这副官
-
-### "副官" + "平均" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 副官 平均进水 压力是航海官 平均进水 是下潜到一百五十英尺处
 
 ### "副局长" + "同志" (1 occurrences)
 - Predicted: None
@@ -32512,12 +30262,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 还有我花了些功夫 把它找回来了
-
-### "加" + "海盐" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那是我精心调制的特地从老鼠加 海盐调成的精华
 
 ### "加东大介" + "-" (1 occurrences)
 - Predicted: None
@@ -32669,12 +30413,6 @@ Accuracy: 98.86%
 - Examples:
   - 来，我给你介绍弊，不要动 什么事？
 
-### "动" + "作" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 看过电影「体热」之后「体热」 那部动作片动 作
-
 ### "动" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -32693,11 +30431,11 @@ Accuracy: 98.86%
 - Examples:
   - 别 动 我 摄 像 机！
 
-### "动力" + "！" (1 occurrences)
+### "动机" + "：" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 启动辅助动力 ！
+  - 动机 ：取悦优秀男性
 
 ### "动物" + "我" (1 occurrences)
 - Predicted: None
@@ -32747,12 +30485,6 @@ Accuracy: 98.86%
 - Examples:
   - 但实际上， 不管我怎么努力 我还是有可能再当一科如果那意味着我必须留级一年
 
-### "努力" + "都" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 人们又是法利赛人和卖书的不管怎样努力 都没能找到证人是谁诽谤无辜的他呢
-
 ### "努玛" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -32793,7 +30525,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 劳伦斯 学者也有权利
+  - 劳伦斯 学者也有权利不是那样
+
+### "劳伦特" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 安妮 劳伦特 … 非常感谢。
 
 ### "劳斯莱斯" + "也" (1 occurrences)
 - Predicted: None
@@ -33101,17 +30839,11 @@ Accuracy: 98.86%
 - Examples:
   - 然后你会去医院 是吗
 
-### "十" + "月" (1 occurrences)
+### "十" + "几" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （十 月 ）
-
-### "十一" + "月" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （十一 月 ）
+  - 一年要死十 几个人
 
 ### "十三姨" + "外国" (1 occurrences)
 - Predicted: None
@@ -33197,12 +30929,6 @@ Accuracy: 98.86%
 - Examples:
   - 钱…千 千!
 
-### "千" + "去" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 故意虐待我们一定要用药浴洗千 去柜台拿牌子来
-
 ### "千" + "找到" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -33245,12 +30971,6 @@ Accuracy: 98.86%
 - Examples:
   - 五郎八卦棍，千变万化 高深莫测！
 
-### "千寻" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 是个小学千寻 你的新学校学校看起来挺漂亮的
-
 ### "千寻" + "真的" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -33263,23 +30983,11 @@ Accuracy: 98.86%
 - Examples:
   - 她是官家的千金 不是我们这种江湖中人
 
-### "升空" + "把" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一旦我们顺利升空 把德国人全都甩在脑后我才会说我跟你有同感
-
 ### "午安" + "长官" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 午安 长官
-
-### "半" + "辈子" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 盲目过了半辈子半 辈子我是为了他们
 
 ### "半" + "长官" (1 occurrences)
 - Predicted: None
@@ -33317,17 +31025,17 @@ Accuracy: 98.86%
 - Examples:
   - 华盛顿哥伦比亚特区 法务总监办事处
 
-### "华达" + "怎么了" (1 occurrences)
+### "华达" + "怎么" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 华达 怎么了
+  - 她在我寓所之外一条街放下我华达 怎么了
 
 ### "华达" + "是" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 华达 是 巴顿
+  - 华达 是 巴顿过来
 
 ### "协议" + "立刻" (1 occurrences)
 - Predicted: None
@@ -33383,17 +31091,11 @@ Accuracy: 98.86%
 - Examples:
   - 卓里奥 这里就像个废墟那样
 
-### "单身汉" + "带着" (1 occurrences)
+### "南多" + "别" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 了解纳瓦歇里柴夫同志窝窝囊囊的 单身汉 带着两个孩子我等了半天了
-
-### "南多" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 南多 你的安全带坐下
+  - 不 南多 别…我听不到你说什么
 
 ### "南娜" + "一切" (1 occurrences)
 - Predicted: None
@@ -33413,12 +31115,6 @@ Accuracy: 98.86%
 - Examples:
   - 南峨 二线 国际长途电话
 
-### "南峨" + "他们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 南峨 他们做善事是出于他们的自愿
-
 ### "南峪" + "董事长" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -33435,13 +31131,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 南峻 谢谢
-
-### "南珠" + "告诉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 南珠 告诉他们学校里的传言什么
+  - 麻烦你南峻 谢谢
 
 ### "南骏" + "你好" (1 occurrences)
 - Predicted: None
@@ -33472,12 +31162,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 博士 在战后的几年内…你是否对美国原子能政策造成重大影响？
-
-### "博士" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 古廷根博士 我们是否可以私下谈谈
 
 ### "博士" + "日记" (1 occurrences)
 - Predicted: None
@@ -33538,12 +31222,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你们知道谁的事你想知道大块头艾尔的卜基 他的账房的事情
-
-### "占" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 占 ！
 
 ### "占米" + "穿" (1 occurrences)
 - Predicted: None
@@ -33646,12 +31324,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 卡梅利纳 快过来
-
-### "卡梅隆" + "米克斯" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 很仔细地（卡梅隆 米克斯）
 
 ### "卡洛吉罗" + "我" (1 occurrences)
 - Predicted: None
@@ -33779,12 +31451,6 @@ Accuracy: 98.86%
 - Examples:
   - 在印度 肯定会有一个主的使者…来照顾我们的沙希达
 
-### "印度人" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果我找不到那班印度人 我就会方麻烦
-
 ### "印第安纳琼斯" + "跟" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -33863,17 +31529,11 @@ Accuracy: 98.86%
 - Examples:
   - 这场竞选是为了压制 真实发生的一切
 
-### "压力" + "！" (1 occurrences)
+### "厌恶" + "您" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 她承受不了这种长期的压力 ！
-
-### "压缩机" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 心脏在我们身体中的作用等于压缩机 在空调或其他制冷系统中的作用管道内有气体
+  - 您大概还不明白 您的行为 多让人厌恶 您知道吗
 
 ### "厌烦" + "也" (1 occurrences)
 - Predicted: None
@@ -33928,12 +31588,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 安东尼奥 教堂从没关过出于某些原因 它变成仓库了
-
-### "原因" + "将" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 通知诸位旅客本次列车因不得已的原因 将不在天安鞍山站停靠
 
 ### "原因" + "就" (1 occurrences)
 - Predicted: None
@@ -34133,29 +31787,11 @@ Accuracy: 98.86%
 - Examples:
   - 所有人到院子去 集合!
 
-### "去" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 给我拿新的垫圈，快去 ！
-
-### "去" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 佐芝出了去 ，
-
 ### "去" + "－" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 那你今天就不要跟她一起去 －为什么？
-
-### "去" + "．" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 以另费奥潘突然变挂我不去 ．怎么不去
 
 ### "去世" + "不" (1 occurrences)
 - Predicted: None
@@ -34186,12 +31822,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我们已经将每一个参与 会谈的人置于监控之下
-
-### "参加" + "抵制" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你想参加 抵制撒尔批萨店行动吗
 
 ### "参加" + "是" (1 occurrences)
 - Predicted: None
@@ -34259,12 +31889,6 @@ Accuracy: 98.86%
 - Examples:
   - 与其说尽悲伤的数目不如用相同的双唇 轻轻的唱歌吧
 
-### "双眼" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我想他会到看石像的双眼 是张开还是闭上的
-
 ### "双胞胎" + "该" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -34282,12 +31906,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 刺魟 、 电鳗 、 双髻鲛 鳟鱼 、 食人鱼 、 大乌贼…食人鱼？
-
-### "反客为主" + "区区" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 别反客为主 区区一个吻何足大惊小，怪！
 
 ### "反应" + "阴性" (1 occurrences)
 - Predicted: None
@@ -34397,23 +32015,17 @@ Accuracy: 98.86%
 - Examples:
   - 低头一看才发现 那马子是男的
 
+### "发生" + "了" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我只是想通知你 发生 了什么事
+
 ### "发生" + "就" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我刚想开门…事情既然已发生 就不要耿耿于怀
-
-### "发电厂" + "浦巷" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （梨浦原子力发电厂 浦巷 梨浦） 是因为睡不着 才做潜伏工作的
-
-### "发神经" + "把" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 她就这样发神经 把我踢出来啊
 
 ### "发行人" + "约翰韦纳" (1 occurrences)
 - Predicted: None
@@ -34499,6 +32111,12 @@ Accuracy: 98.86%
 - Examples:
   - 伊萨克叔叔 您好
 
+### "叔叔" + "我" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 叔叔 我走啦
+
 ### "叔叔" + "看" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -34559,12 +32177,6 @@ Accuracy: 98.86%
 - Examples:
   - 别乱动才不会受伤 咬紧一点!
 
-### "受保" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 而我们受保 这将会令我们 花费一笔这永远是错事
-
 ### "受欢迎" + "会" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -34589,12 +32201,6 @@ Accuracy: 98.86%
 - Examples:
   - 他不知道不过很快我们的生活会有变化 但我们会一起度过！
 
-### "变差" + "都" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 她一切都为了我承受所有的痛苦 体形变差 都是为了我
-
 ### "变态" + "否则" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -34612,18 +32218,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 她让我们别无选择我们必须在她变成 另一个乔布图帕基之前杀了她
-
-### "变成" + "很" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我到底以后如果他变成 很叛逆的怪胎你可别赖在我身上
-
-### "叛乱" + "、" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我要面对饥荒、叛乱 、暴动，你…你是埃及女王，这些事交由你管
 
 ### "叛徒" + "杀" (1 occurrences)
 - Predicted: None
@@ -34763,12 +32357,6 @@ Accuracy: 98.86%
 - Examples:
   - 只是…那些词汇 长句子 古时候的东西…里面有很多描绘的内容
 
-### "另" + "一" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你肯定会对另 一幅画感兴趣的.
-
 ### "另外" + "好" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -34791,7 +32379,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 在我的星球上太阳每年只 出来一次
+  - 在我的星球上太阳每年只 出来一次所以我的肤色…
 
 ### "只不过" + "你" (1 occurrences)
 - Predicted: None
@@ -34833,13 +32421,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）岩村先生只是 打来问些无聊事
-
-### "只是" + "朝鲜" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）「那个人只是 朝鲜农夫的儿子
+  - 岩村先生只是 打来问些无聊事是我指使他的
 
 ### "只是" + "照" (1 occurrences)
 - Predicted: None
@@ -34863,7 +32445,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）他最受不了女孩的尖叫声（日语）若他听到你叫 便会进来抓走你
+  - 若他听到你叫 便会进来抓走你
 
 ### "叫" + "安里多勒．耶里姆多维齐" (1 occurrences)
 - Predicted: None
@@ -34899,7 +32481,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我叫 艾蜜莉…是双风车餐厅的服务生你仍未找到他
+  - 我叫 艾蜜莉…是双风车餐厅的服务生
 
 ### "叫" + "路卡" (1 occurrences)
 - Predicted: None
@@ -34918,6 +32500,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 目标在召唤 得坚持下去啊
+
+### "可" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 这事情可 不好办啊
 
 ### "可" + "可是" (1 occurrences)
 - Predicted: None
@@ -34979,12 +32567,6 @@ Accuracy: 98.86%
 - Examples:
   - 我可以 养它吗?
 
-### "可以" + "大概" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你有很多个家庭聚餐这些天是这样也许完了后可以 大概什么时间?
-
 ### "可以" + "她" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -35002,12 +32584,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 可以 就在岸边待着哦
-
-### "可以" + "帮助" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 幸运的是，我们已经找到了一个富有同情心的法官可以 帮助我们
 
 ### "可以" + "得到" (1 occurrences)
 - Predicted: None
@@ -35177,6 +32753,12 @@ Accuracy: 98.86%
 - Examples:
   - 可是 好比什么呢
 
+### "可是" + "孩子" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 可是 孩子…
+
 ### "可是" + "尤里格里" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -35249,12 +32831,6 @@ Accuracy: 98.86%
 - Examples:
   - 进一步地假设…调查此事有没有可能 令安全委员会的人难堪呢?
 
-### "可能" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 可能 你知道有很多人的你喜欢这个灯吗？
-
 ### "可能" + "又" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -35266,12 +32842,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 可能 可能几年吧
-
-### "可能" + "根本" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 觉得被一直以来的束缚解放了自己以前坚信不疑的梦想可能 根本不是梦想
 
 ### "可能" + "白安诺" (1 occurrences)
 - Predicted: None
@@ -35332,12 +32902,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 可莉奥 帮孩子们弄点水负责把小火苗灭了就行了
-
-### "可莉奥" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 切断可莉奥 我非常遗憾
 
 ### "可莉奥" + "晚安" (1 occurrences)
 - Predicted: None
@@ -35440,12 +33004,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 史蒂夫 过来
-
-### "史蒂夫" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 史蒂夫 这礼物很棒
 
 ### "史蒂夫" + "这儿" (1 occurrences)
 - Predicted: None
@@ -35783,6 +33341,12 @@ Accuracy: 98.86%
 - Examples:
   - 吉塔 继续保持
 
+### "吉娜" + "吉娜" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 吉娜 吉娜…
+
 ### "吉娜" + "带" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -35902,12 +33466,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你好，我是安东尼的同学 我来看他身体好一些了?
-
-### "同学们" + "分享" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我提醒那些从家里 收到食物的人要和他们的同学们 分享你想要点萨拉米猪肉肠吗?
 
 ### "同床共枕" + "一起" (1 occurrences)
 - Predicted: None
@@ -36046,12 +33604,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 再走深入一点在你走的同时 感受身边治疗的力量
-
-### "同时" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 让她成为真正的女人同时 我们的突尼斯的英俊的这个以记忆为生的律师…什么方法都可以
 
 ### "同样" + "在" (1 occurrences)
 - Predicted: None
@@ -36197,12 +33749,6 @@ Accuracy: 98.86%
 - Examples:
   - 名字 车泰锡
 
-### "后" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 她讨厌洗澡后 , 手指皮肤起皱的样子
-
 ### "后" + "一千" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -36232,12 +33778,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 以及那三下作讯号的响号十分钟后 他们就下来
-
-### "后" + "侮" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 瞧着 以后别后 侮
 
 ### "后" + "便" (1 occurrences)
 - Predicted: None
@@ -36383,12 +33923,6 @@ Accuracy: 98.86%
 - Examples:
   - 你答应过我 在这轮新月后 给我那枚金币金币不是玩笑
 
-### "后" + "自己" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他会领你去那而昨晚他将全家杀害后 自己也自杀身亡
-
 ### "后" + "要" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -36489,13 +34023,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 在屏风后面 去拿啊
+  - 在屏风后面 去拿啊越来越像个贤妻良母了
 
-### "后面" + "可以" (1 occurrences)
+### "后面" + "就" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你爸爸会坐在后面 可以看到很多更好的那好
+  - 那座山的后面 就是智利绿意葱葱的山谷
 
 ### "后面" + "拍手" (1 occurrences)
 - Predicted: None
@@ -36538,12 +34072,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 很吓人 也很刺激是吧
-
-### "吓死" + "先" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我被你吓死 先落跑
 
 ### "吕克·贝松" + "作品" (1 occurrences)
 - Predicted: None
@@ -36983,12 +34511,6 @@ Accuracy: 98.86%
 - Examples:
   - 那头黑色的走狗你听到了吗 魔鬼?
 
-### "吗" + "？" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 女人们不玩儿枪吗 ？
-
 ### "君" + "入" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -37067,6 +34589,12 @@ Accuracy: 98.86%
 - Examples:
   - 来吧 尽情说出来来吧 -来吧
 
+### "吧" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 进来吧 …
+
 ### "吧" + "七叔" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -37120,6 +34648,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 快想办法救他们吧 什么?
+
+### "吧" + "今天" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不如这样吧 今天晚上我请你去吃饭，好不好啊?
 
 ### "吧" + "伦达" (1 occurrences)
 - Predicted: None
@@ -37205,12 +34739,6 @@ Accuracy: 98.86%
 - Examples:
   - 是吧 叔叔？
 
-### "吧" + "古斯塔沃" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 来吧 古斯塔沃
-
 ### "吧" + "周六" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -37222,6 +34750,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 来吧 哈维尔 走吧！
+
+### "吧" + "回去" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 回去吧 回去吧…
 
 ### "吧" + "士兵们" (1 occurrences)
 - Predicted: None
@@ -37433,12 +34967,6 @@ Accuracy: 98.86%
 - Examples:
   - 好吧 梅尔
 
-### "吧" + "没" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就在同志酒吧喝了杯好吧 没什么
-
 ### "吧" + "法蒂玛" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -37625,12 +35153,6 @@ Accuracy: 98.86%
 - Examples:
   - 来吧 露西娅姑妈
 
-### "吧" + "黄师父" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 走吧 黄师父
-
 ### "吧" + "鼓起" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -37709,12 +35231,6 @@ Accuracy: 98.86%
 - Examples:
   - 唱来听听 郭邦?
 
-### "听看" + "他们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 听看 他们向艾隆叔叔献唱
-
 ### "听着" + "伊莲娜" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -37768,12 +35284,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 听着 玛蒂尔达 你要小心点你不能随便跟街上的人讲话
-
-### "听着" + "瓦斯科" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 听着 瓦斯科
 
 ### "听着" + "黑桐" (1 occurrences)
 - Predicted: None
@@ -37865,18 +35375,6 @@ Accuracy: 98.86%
 - Examples:
   - 你和你丈夫吵架 然后用我来报复他
 
-### "吸引" + "力" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 麦克斯， 你才十五岁这年龄不会有什么吸引 力
-
-### "吹" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 即使替人吹 我也不会乱甲讲
-
 ### "吹鸡哥" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -37924,12 +35422,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 东莞仔 老大呀 什么情况？
-
-### "呀" + "他" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他呀 他书好像读得多了点
 
 ### "呀" + "别" (1 occurrences)
 - Predicted: None
@@ -37983,7 +35475,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 星之道路呀 平静吧（咒语）
+  - 星之道路呀 平静吧
 
 ### "呀" + "活该" (1 occurrences)
 - Predicted: None
@@ -38051,12 +35543,6 @@ Accuracy: 98.86%
 - Examples:
   - 呃 你刚失去了你的家和你的所有朋友 你很孤独
 
-### "呃" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 呃 我你只是个插图 我干嘛要跟你说话?
-
 ### "呃" + "木奇" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -38074,12 +35560,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 呃 读的不多 啊 兄弟 老爸知道吗?
-
-### "呃" + "过逝" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 她现在被庇佑的呃 过逝之后?
 
 ### "呆板" + "有点" (1 occurrences)
 - Predicted: None
@@ -38104,6 +35584,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 呐 剪头发了吗？
+
+### "呐" + "听" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 呐 听过史伊米吗？
 
 ### "呐" + "就" (1 occurrences)
 - Predicted: None
@@ -38285,6 +35771,12 @@ Accuracy: 98.86%
 - Examples:
   - 然后呢 就随你的便了
 
+### "呢" + "我" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 所以呢 我从小就立志我未来要挣很多很多的钱
+
 ### "呢" + "有点" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -38427,7 +35919,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）若你做事不周 可知会令我多难堪？
+  - 若你做事不周 可知会令我多难堪？
 
 ### "周" + "我" (1 occurrences)
 - Predicted: None
@@ -38573,23 +36065,11 @@ Accuracy: 98.86%
 - Examples:
   - 可是那少年的命运 全操在你手里了
 
-### "命运" + "（" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 片名︰巴菲的奇妙命运 （三区台版官方字幕）
-
 ### "命运战士" + "准备" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 命运战士 准备好了吗
-
-### "咋回事" + "儿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 咋回事 儿呢？
 
 ### "咋的" + "不" (1 occurrences)
 - Predicted: None
@@ -38615,23 +36095,11 @@ Accuracy: 98.86%
 - Examples:
   - 我不想再和 你玩这个游戏了
 
-### "和" + "合" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （和 合集团董事长：丁亚玲女士）
-
 ### "和" + "大蚂蚁" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 这也说明为什么我和 大蚂蚁去玩什么瓦西里而没有参加谈话
-
-### "和" + "希望" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 梦幻地会在你心中建起用你的梦想和 希望建起它贝丝汀
 
 ### "和" + "爱神" (1 occurrences)
 - Predicted: None
@@ -38650,12 +36118,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 但是首先你的狗要和 麦克较量一下
-
-### "和平" + "就" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不能背着良心呀良心保护地球维护世界和平 就靠你了
 
 ### "和平二号" + "我们" (1 occurrences)
 - Predicted: None
@@ -38734,18 +36196,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 每次一咳 我就得马上抽支烟
-
-### "品" + "下" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你想品 下吗？
-
-### "品" + "弗里约夫" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 高级艺俩品 弗里约夫和英格伯格
 
 ### "品位" + "祝贺" (1 occurrences)
 - Predicted: None
@@ -39065,12 +36515,6 @@ Accuracy: 98.86%
 - Examples:
   - 哎呀 这个国家的战区真是一个接一个啊!
 
-### "哎呀" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 哎呀 ！
-
 ### "哑巴" + "玩" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -39287,6 +36731,12 @@ Accuracy: 98.86%
 - Examples:
   - 哦 少校
 
+### "哦" + "必胜" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 哦 必胜韩国
+
 ### "哦" + "您" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -39389,23 +36839,11 @@ Accuracy: 98.86%
 - Examples:
   - 在哪 跑哪儿去了?
 
-### "哪个" + "不一样" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 哪个 不一样了？
-
 ### "哪个" + "克拉拉" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 是哪个 克拉拉
-
-### "哪儿" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你刚才去了哪儿 ?
 
 ### "哪儿" + "他们" (1 occurrences)
 - Predicted: None
@@ -39461,23 +36899,11 @@ Accuracy: 98.86%
 - Examples:
   - 那狗杂种在哪里 混蛋?
 
-### "哪里" + "该" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 普罗什卡 阿利芙油在哪里 该打谁的耳光
-
 ### "哪里" + "马拉德" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你在哪里 马拉德？
-
-### "哭" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你看他…你老哭老哭 你看你这身体都坏了
 
 ### "哭" + "使" (1 occurrences)
 - Predicted: None
@@ -39598,12 +37024,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 唤 君 千 百 度
-
-### "唯" + "一" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我就是虚无的朴下奉命来杀那唯 一能阻止虚无的人
 
 ### "唯" + "有" (1 occurrences)
 - Predicted: None
@@ -39737,12 +37157,6 @@ Accuracy: 98.86%
 - Examples:
   - 确实有奇迹这回事啊 !
 
-### "啊" + "、" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 快炸啊 、
-
 ### "啊" + "一" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -39875,12 +37289,6 @@ Accuracy: 98.86%
 - Examples:
   - 我在补习班听说井上雄彦啊 前几个礼拜出车祸死了
 
-### "啊" + "原来" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 啊 原来是你…隆史合力对付他好…
-
 ### "啊" + "可是" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -39946,6 +37354,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 啊 天鹰牌干藏红花粉 产自意大利 噢?
+
+### "啊" + "太" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ） 啊 太久没见我 想我想的嗯
 
 ### "啊" + "妈妈" (1 occurrences)
 - Predicted: None
@@ -40073,12 +37487,6 @@ Accuracy: 98.86%
 - Examples:
   - 天父 上帝啊 救救我
 
-### "啊" + "未来" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 也触不到命运啊 未来之类词语的地方在无论怎么伸出手去在这样的地方我们相恋
-
 ### "啊" + "杂志" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -40186,12 +37594,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 会不会开车啊 白痴?
-
-### "啊" + "目前" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不过啊 目前是保密阶段
 
 ### "啊" + "真的" (1 occurrences)
 - Predicted: None
@@ -40343,12 +37745,6 @@ Accuracy: 98.86%
 - Examples:
   - 你旁边是不是老坐着个中国人帮你打字啊 ！
 
-### "啊" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我不知道啊 ，
-
 ### "啊" + "－" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -40361,12 +37757,6 @@ Accuracy: 98.86%
 - Examples:
   - 我要一杯啤酒 谢谢
 
-### "啤酒" + "还有" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 塔迪亚娜 给我们两分甜菜汤两份饺子 啤酒 还有水果汁
-
 ### "啥" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -40378,6 +37768,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 如果你们想去拉屎或者喝个咖啡随便干啥 现在都可以去
+
+### "啦" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不是啦 不是
 
 ### "啦" + "住" (1 occurrences)
 - Predicted: None
@@ -40438,6 +37834,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 保重啦 老友
+
+### "啦" + "行" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 行啦 行啦
 
 ### "啦" + "败将" (1 occurrences)
 - Predicted: None
@@ -40505,12 +37907,6 @@ Accuracy: 98.86%
 - Examples:
   - 喂 别！
 
-### "喂" + "努玛" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 喂 努玛
-
 ### "喂" + "卡佳" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -40540,12 +37936,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 喂 小心！
-
-### "喂" + "巴" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 喂 巴怎么还没回来？
 
 ### "喂" + "帕帕拉索" (1 occurrences)
 - Predicted: None
@@ -40739,6 +38129,12 @@ Accuracy: 98.86%
 - Examples:
   - 喏 是他吧？
 
+### "喔" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 喔 不是的
+
 ### "喔" + "什么" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -40827,7 +38223,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我 自 己是不会喜欢 去切开别人的脑袋但他似乎乐在其中
+  - 我自己是不会喜欢 去切开别人的脑袋但他似乎乐在其中
 
 ### "喜欢" + "可以" (1 occurrences)
 - Predicted: None
@@ -40895,12 +38291,6 @@ Accuracy: 98.86%
 - Examples:
   - 只是不要喧哗 好吧？
 
-### "喷涕" + "也" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 您今儿就一声喷涕 也得是满堂彩儿
-
 ### "嗨" + "今天" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -40930,6 +38320,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 嗨 你们要进来吗？
+
+### "嗨" + "你好" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 嗨 你好吗?
 
 ### "嗨" + "兄弟们" (1 occurrences)
 - Predicted: None
@@ -41387,12 +38783,6 @@ Accuracy: 98.86%
 - Examples:
   - 嘉嘉 明天吃完饭有什么节目?
 
-### "嘉宾" + "教育部长" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 欢迎我们的嘉宾 教育部长
-
 ### "嘉德·刚" + "卡里·希罗尤基·泰加" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -41489,6 +38879,12 @@ Accuracy: 98.86%
 - Examples:
   - 其实嘛 这也不是主要的
 
+### "嘴" + "我" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 如果你不住嘴 我会失控的
+
 ### "嘴巴" + "她" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -41506,12 +38902,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 嘿 -嘿
-
-### "嘿" + "." (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 嘿 .
 
 ### "嘿" + "上校" (1 occurrences)
 - Predicted: None
@@ -41813,18 +39203,6 @@ Accuracy: 98.86%
 - Examples:
   - 嘿 阿里克谢
 
-### "嘿" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 嘿 ！
-
-### "嘿哥们" + "儿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 摩的嘿哥们 儿去哪 儿啊？
-
 ### "噢" + "上帝" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -41921,12 +39299,6 @@ Accuracy: 98.86%
 - Examples:
   - 你们没唱完你们的烂器材 差点害死我的吉他手
 
-### "器械" + "都" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们把做手术的所有器械 都给我看看起像科学小学我所能看到是缆索，开关， 监视器
-
 ### "器皿" + "和" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -41956,12 +39328,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 像你这样丢三落四 丢票的这种啊我见多了
-
-### "四" + "周" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 距 圣 诞 四 周对
 
 ### "四七" + "四八" (1 occurrences)
 - Predicted: None
@@ -42004,18 +39370,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 四十六 四十七 时间过得没那么快
-
-### "四十九" + "五十五十一" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 四十八 四十九 五十五十一 五十二 五十三
-
-### "四十八" + "四十九" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 四十八 四十九 五十五十一 五十二 五十三
 
 ### "四十六" + "四十七" (1 occurrences)
 - Predicted: None
@@ -42107,12 +39461,6 @@ Accuracy: 98.86%
 - Examples:
   - 四眼明 没事吧？
 
-### "四线洛克" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 工程师在四线洛克 我们下面严重受损水进来得很快淹到锅炉的时候
-
 ### "回" + "为" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -42148,12 +39496,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你究竟怎麽回事 托马辛?
-
-### "回去" + "做" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你明明是想要再回去 做偶像歌星的不对！
 
 ### "回去" + "分切" (1 occurrences)
 - Predicted: None
@@ -42280,12 +39622,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 今天艾玛-塔斯卡根据这些回忆 编排了一部舞台剧
-
-### "回忆" + "逐渐" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 而那些回忆 逐渐的逐渐的消亡
 
 ### "回报" + "你" (1 occurrences)
 - Predicted: None
@@ -42437,6 +39773,12 @@ Accuracy: 98.86%
 - Examples:
   - 但是我们因为 那一公斤的海洛因而陷入麻烦
 
+### "因人而异" + "有" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 因人而异 有的人悲伤就像波涛一样…你怎么总是向我提问
+
 ### "因此" + "不" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -42514,12 +39856,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他说你对罗马的国事 已没有兴趣…只沉迷于埃及的奢华生活奢华生活？
-
-### "国内" + "所" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这部电影被视为苏联国内 所涌现的新浪潮妈妈,
 
 ### "国外" + "念" (1 occurrences)
 - Predicted: None
@@ -42645,7 +39981,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - [ 强征土地 你妈妈的地也被征去了 ]
+  - [强征土地 你妈妈的地也被征去了]
 
 ### "土地" + "却" (1 occurrences)
 - Predicted: None
@@ -42670,12 +40006,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 胡萝卜 土豆 还是腌黄瓜?
-
-### "圣" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 天父 天上的真神 愿人都尊你的名为圣 你的来世乔纳斯
 
 ### "圣子" + "圣灵" (1 occurrences)
 - Predicted: None
@@ -42741,7 +40071,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 看看环绕着圣母玛当娜 和约瑟夫（耶酥的父母）的平静和安详.
+  - 看看环绕着圣母玛当娜 和约瑟夫的平静和安详.
 
 ### "圣父" + "圣子" (1 occurrences)
 - Predicted: None
@@ -42754,12 +40084,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 圣诞快乐 探长们
-
-### "圣诞老人" + "其实" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 曾经有一个愚蠢的民族相信有圣诞老人但事实这个圣诞老人 其实就是煤气工人
 
 ### "圣麦格" + "一辈子" (1 occurrences)
 - Predicted: None
@@ -42784,18 +40108,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 弗吉尼亚号是唯一一艘在 三等舱有立式钢琴的船
-
-### "在" + "上帝" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 纳瓦歇里柴夫我昨天看在 上帝的份上原谅我吧
-
-### "在" + "不在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我现在去船在 不在？
 
 ### "在" + "世" (1 occurrences)
 - Predicted: None
@@ -42831,7 +40143,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 她丈夫死了以后， 她在 仓敷 又结婚了
+  - 她丈夫死了以后，她在 仓敷 又结婚了
 
 ### "在" + "他们" (1 occurrences)
 - Predicted: None
@@ -43073,23 +40385,11 @@ Accuracy: 98.86%
 - Examples:
   - 很不好意思的在这里 很不好意思啦
 
-### "地" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我在这人生地 不熟的行
-
 ### "地" + "刮取" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我认为这只是在更多地 刮取我的钱
-
-### "地" + "吃" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 像猪一样狼吞虎咽地 吃着客人的食物
 
 ### "地" + "在" (1 occurrences)
 - Predicted: None
@@ -43103,12 +40403,6 @@ Accuracy: 98.86%
 - Examples:
   - 当富人如此傲慢无礼地 大肆欢宴时我理解那些 一无所有者的愤怒
 
-### "地" + "心" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 多少左一代右一代的学生起早睡晚地 心都操碎了
-
 ### "地" + "感觉" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -43120,6 +40414,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 小马和小男孩无畏地 抵御严寒
+
+### "地" + "有" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 关于你爸借钱，可跑了多少趟这儿，那儿，凡是他不错地 有词儿的人，他都张罗去借去
 
 ### "地" + "苦苦" (1 occurrences)
 - Predicted: None
@@ -43174,12 +40474,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 大叔知道秘阳这个地名 是什么意思吗？
-
-### "地图" + "指出" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这是琼斯博士 被撕去的那几页日记里面有一幅地图 指出了圣杯的位置
 
 ### "地图" + "防毒" (1 occurrences)
 - Predicted: None
@@ -43241,12 +40535,6 @@ Accuracy: 98.86%
 - Examples:
   - 显然 你也能在任何地方 任何时间休息
 
-### "地方" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们现在住在狗窝一样的地方 你也不想法去改变现状！
-
 ### "地方" + "你们" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -43258,12 +40546,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他经过的地方 便会结成秘密组织…为将要来的人铺路
-
-### "地方" + "只有" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们去的地方 只有渔民那儿叫什么?
 
 ### "地方" + "她" (1 occurrences)
 - Predicted: None
@@ -43391,12 +40673,6 @@ Accuracy: 98.86%
 - Examples:
   - 这是我的地盘 听明白了吗？
 
-### "地道" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们爬了一路沿着笔直的地道地道 在哪里
-
 ### "地震" + "偷盗" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -43426,24 +40702,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你记得农场里头那场 烧毁了干草仓的大火吗?
-
-### "场务" + "给" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 场务 给他一盒焦点的鸡翅膀饭
-
-### "场景" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我还记得第一次跟他见面的场景 -我经过摩斯电影厂的源自的时候,
-
-### "场景" + "的" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 塔尔夫斯基认真构建每个场景 的工作方式已经成为了一个传奇
 
 ### "坂本龙一" + "大卫·拜恩" (1 occurrences)
 - Predicted: None
@@ -43486,12 +40744,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 但你不认为我是个大坏蛋 是吗
-
-### "坐" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你坐 !
 
 ### "坐下" + "你" (1 occurrences)
 - Predicted: None
@@ -43546,12 +40798,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我信仰坚定 坚不可摧 绝不听信撒旦之言
-
-### "坚守" + "自" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （有机会开创杰出的人生时）（他有权坚守 自 己的信念）
 
 ### "坚定" + "坚不可摧" (1 occurrences)
 - Predicted: None
@@ -43624,12 +40870,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 肆之型 盛炎的蜿蜒
-
-### "垫圈" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 落下的螺栓已经切断垫圈 ！
 
 ### "埃利亚娜" + "把" (1 occurrences)
 - Predicted: None
@@ -43763,12 +41003,6 @@ Accuracy: 98.86%
 - Examples:
   - 培根 鸡蛋 腊肠
 
-### "基于" + "相同" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我的当事人就是基于 相同的环境下而被指控为贿赂
-
 ### "基佬" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -43780,12 +41014,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 基哥 有人来收保护费的
-
-### "基建" + "处" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 您还记得基建 处那个叫丽莎的吗
 
 ### "基斯" + "你" (1 occurrences)
 - Predicted: None
@@ -43853,12 +41081,6 @@ Accuracy: 98.86%
 - Examples:
   - 那下次要烧的塑料棚 应该也早定好了吧
 
-### "塔" + "布" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 塔 布
-
 ### "塔克罗迪" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -43900,12 +41122,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 塔拉索夫 格里尤诺夫 特卡丘克
-
-### "塔迪亚娜" + "给" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 塔迪亚娜 给我们两分甜菜汤两份饺子 啤酒 还有水果汁
 
 ### "塞凡尼托" + "今早" (1 occurrences)
 - Predicted: None
@@ -43960,12 +41176,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 塞瓦叔叔 请你吹一下
-
-### "塞维亚" + "瓦伦西亚" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在宣传电影的旅行中（奥维耶多 塞维亚 瓦伦西亚） 我才开始学习西班牙地理
 
 ### "塞舍" + "实在" (1 occurrences)
 - Predicted: None
@@ -44333,11 +41543,11 @@ Accuracy: 98.86%
 - Examples:
   - 呃 读的不多 啊 兄弟 老爸知道吗?
 
-### "多" + "就" (1 occurrences)
+### "多" + "少" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 期望越多给他们越多 就要得越多
+  - 我们还有多 少时间？
 
 ### "多" + "有" (1 occurrences)
 - Predicted: None
@@ -44350,6 +41560,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 比英国的多 还更漂亮
+
+### "多久" + "了" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你抽烟抽多久 了？
 
 ### "多久" + "我" (1 occurrences)
 - Predicted: None
@@ -44465,12 +41681,6 @@ Accuracy: 98.86%
 - Examples:
   - 多谢 我们吃过了
 
-### "夜店" + "老城区" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但都是和其他老师夜店 老城区 餐厅但是…我总是一个人回家我是说 完全一个人
-
 ### "夜总会" + "出入口" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -44513,11 +41723,11 @@ Accuracy: 98.86%
 - Examples:
   - 够了 走吧
 
-### "够了" + "！" (1 occurrences)
+### "大" + "不知" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 够了 ！
+  - 鲲之大 不知其几千里也
 
 ### "大" + "会" (1 occurrences)
 - Predicted: None
@@ -44727,13 +41937,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 大吉大利 干什么都顺
-
-### "大吵大闹" + "谁" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我的见媳妇这么早出来你和艾姨大吵大闹 谁睡得着啊
+  - 他說今天是今年唯一的一天大吉大利 干什么都顺
 
 ### "大哥" + "大哥" (1 occurrences)
 - Predicted: None
@@ -44794,12 +41998,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 大太太 四太太向您请安来了
-
-### "大姐" + "您" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 大姐 您当初背飞普少爷的时候也这样吗
 
 ### "大婶" + "你" (1 occurrences)
 - Predicted: None
@@ -44891,18 +42089,6 @@ Accuracy: 98.86%
 - Examples:
   - 只有喇嘛、武术大师 和为数不多的伟大运动员才能做到
 
-### "大年夜" + "东北" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九四零年 大年夜 东北）
-
-### "大年夜" + "香港" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九五零年 大年夜 香港）
-
 ### "大悟君" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -44939,12 +42125,6 @@ Accuracy: 98.86%
 - Examples:
   - 如果你是大海 我就学会漂浮
 
-### "大海" + "飘向" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 飞往大海 飘向高空
-
 ### "大灾难" + "并" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -44962,6 +42142,18 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 大熊 什么意思
+
+### "大爷" + "别" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 大爷 别追了
+
+### "大爷" + "我" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 大爷 我是真是不知道耶
 
 ### "大爷" + "现在" (1 occurrences)
 - Predicted: None
@@ -45107,23 +42299,29 @@ Accuracy: 98.86%
 - Examples:
   - 我妈妈 当她状态不好的时候像一个嬉皮士 离开村庄直到有一天 她一去不回
 
+### "天" + "对" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 是妈妈走的那天 对吧
+
 ### "天" + "您" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 这么热的天 您要大衣干嘛
 
+### "天" + "正日夜" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 只是我的医生…一个为了能让我多活几天 正日夜和病魔做斗争的医生？
+
 ### "天" + "自己" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 是你那天 自己放在我的床头柜里放屁
-
-### "天" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我早就猜到，早晚有一天 这个地方会化为灰烬的
 
 ### "天" + "那些" (1 occurrences)
 - Predicted: None
@@ -45275,23 +42473,11 @@ Accuracy: 98.86%
 - Examples:
   - 天父 上帝啊 救救我
 
-### "天父" + "天上" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 天父 天上的真神 愿人都尊你的名为圣 你的来世乔纳斯
-
 ### "天父" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 神啊 天父 我向你祷告 请拯救我 让我洗去罪恶
-
-### "天父" + "请" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 想天父 请宽恕
 
 ### "天空" + "低声" (1 occurrences)
 - Predicted: None
@@ -45316,12 +42502,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 宛如仙女 你的魔力天罗地网 将我缠绕
-
-### "天高" + "爱" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （真爱有如天高 爱更高）（千百样好）
 
 ### "太" + "该" (1 occurrences)
 - Predicted: None
@@ -45370,12 +42550,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你把它搞得天下太平 世界大同
-
-### "太空" + "人" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我 亚历山大-科内尔 作为德国第二个太空 人进入了太空
 
 ### "太阳" + "钞票" (1 occurrences)
 - Predicted: None
@@ -45443,12 +42617,6 @@ Accuracy: 98.86%
 - Examples:
   - 告诉比索普夫妇 苏西在那儿
 
-### "夫娜" + "您" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 略德尼拉．伯洛哥菲耶 夫娜 您喜欢采蘑菇吗
-
 ### "失业" + "通货膨胀" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -45485,6 +42653,12 @@ Accuracy: 98.86%
 - Examples:
   - 他们担心这次失败 就此决定了他们整个夏天的命运.
 
+### "失败" + "日本" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 若我失败 日本还有个地方叫「疯人院」
+
 ### "失踪" + "被" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -45502,12 +42676,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 冷静你个头 你说
-
-### "头" + "就" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 罗伞派的长老相信不会只是得到麒麟兽的头 就会满足的不单止是那班武士
 
 ### "头" + "帕拉提婆" (1 occurrences)
 - Predicted: None
@@ -45567,7 +42735,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 就是浅头发 梳条辫子 娃娃脸现在不在我们局里了
+  - 您还记得基建处那个叫丽莎的吗就是浅头发 梳条辫子 娃娃脸现在不在我们局里了
 
 ### "头发" + "－" (1 occurrences)
 - Predicted: None
@@ -45610,12 +42778,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 双 城 奇 谋
-
-### "奇异" + "的" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 昏迷了数日阿催由慢慢张开双眼发现自己在一个奇异 的新环境里
 
 ### "奇怪" + "吗" (1 occurrences)
 - Predicted: None
@@ -45688,12 +42850,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 奈德 你拥有多少土地回答我
-
-### "奈德" + "艾登" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 奈德 艾登 肖恩戴米恩 保罗 文斯
 
 ### "奉献" + "还" (1 occurrences)
 - Predicted: None
@@ -45803,12 +42959,6 @@ Accuracy: 98.86%
 - Examples:
   - 只要轻轻的一击奥尔加 你还记得玛露莎小的时候吗？
 
-### "奥席" + "东尼" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 奥席 东尼 是我们是我
-
 ### "奥拉沃" + "卡维里" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -45839,35 +42989,17 @@ Accuracy: 98.86%
 - Examples:
   - 奥斯卡 这么早就在出来练习打鼓啦！
 
-### "奥斯卡" + "这些" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这是给你买雇佣的，奥斯卡 这些够了吗？
-
 ### "奥本海默" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 奥本海默博士奥本海默 我喜欢你关于分子的论文那是受到你的启发我若还有什么启发
 
-### "奥林巴斯" + "女王" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我是奥林巴斯 女王的医师，快点！
-
 ### "奥比" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 那个女服务生奥比 你说对了
-
-### "奥维耶多" + "塞维亚" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在宣传电影的旅行中（奥维耶多 塞维亚 瓦伦西亚） 我才开始学习西班牙地理
 
 ### "奥迪耶塔" + "你" (1 occurrences)
 - Predicted: None
@@ -45881,12 +43013,6 @@ Accuracy: 98.86%
 - Examples:
   - 奥兰多 奥那托 佩蒂尔
 
-### "奥黛丽" + "告诉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 奥黛丽 告诉我损坏的情形情况没有想像的那么糟
-
 ### "奥黛丽" + "斯维特" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -45898,12 +43024,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 从土耳其监狱挖出来的奥黛丽拉米瑞兹 别被她年纪骗了
-
-### "女" + "同志" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不知该怎么说好我们机关一位女 同志的精神状况让我担心
 
 ### "女" + "哥哥" (1 occurrences)
 - Predicted: None
@@ -45963,7 +43083,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）这里有女人 对你投怀送抱吗？
+  - 这里有女人 对你投怀送抱吗？
 
 ### "女人" + "小孩" (1 occurrences)
 - Predicted: None
@@ -46012,12 +43132,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 女低音 站左边
-
-### "女儿" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （妈 我想在外面租个房子 上午你给我的钱…）（女儿 你这次让妈刮目相看 加油）
 
 ### "女儿" + "先生" (1 occurrences)
 - Predicted: None
@@ -46198,12 +43312,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 许多女孩子 都愿意为艺术献身
-
-### "女巫" + "法师" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 女巫 法师 变性人形形式式
 
 ### "女巫" + "父亲" (1 occurrences)
 - Predicted: None
@@ -46451,12 +43559,6 @@ Accuracy: 98.86%
 - Examples:
   - 要阻止她 只有连建筑一并摧毁了吗
 
-### "她" + "可不可" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （躲在天边的她 可不可听我诉说）
-
 ### "她" + "吉塔" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -46565,12 +43667,6 @@ Accuracy: 98.86%
 - Examples:
   - 不用解释了，你问她 知不知道自己不对吧
 
-### "她" + "糟" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我希望无论如何你一定要到机场去接她 糟!
-
 ### "她" + "身上" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -46583,11 +43679,23 @@ Accuracy: 98.86%
 - Examples:
   - 你们其他人都没有她 这么用功 对不对?
 
+### "她" + "那儿" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 另一半没她 那儿尽有苦闷和黑暗
+
 ### "她们" + "他" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 为了训练她们 他让她们和男孩摔跤忍受整个村子的嘲讽只希望有一天她们能为国争光
+
+### "她们" + "喝" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 可想象到 面对众多女士投怀送抱我却请不起她们 喝杯葡萄酒，
 
 ### "她们" + "她" (1 occurrences)
 - Predicted: None
@@ -46601,17 +43709,11 @@ Accuracy: 98.86%
 - Examples:
   - 或许或许她们俩 原本就是同一个人
 
-### "她妈" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 马西姆在工厂捡到她妈 我们可以养什么事
-
 ### "好" + "、" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 很好 、 很好
+  - 很好 、很好
 
 ### "好" + "一定" (1 occurrences)
 - Predicted: None
@@ -46637,23 +43739,11 @@ Accuracy: 98.86%
 - Examples:
   - 但是我很好 不需要你操心
 
-### "好" + "不好" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你现在的老公对你好 不好？
-
 ### "好" + "不然" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 穿好 不然你会着凉的 这是卡门卡村吗？
-
-### "好" + "什么" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我喜欢很生动，犹太佬彩色会更好 什么？
 
 ### "好" + "他" (1 occurrences)
 - Predicted: None
@@ -46841,12 +43931,6 @@ Accuracy: 98.86%
 - Examples:
   - …一下就好一下下就好 拜托你.
 
-### "好" + "收" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你的功夫这么好 收我做个徒弟吧
-
 ### "好" + "敌对" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -46973,12 +44057,6 @@ Accuracy: 98.86%
 - Examples:
   - 好 走
 
-### "好" + "跑" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我不管你做主角也好 跑龙套她好你都要养我一辈子来
-
 ### "好" + "这" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -47014,6 +44092,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 很好 鲍比先生
+
+### "好" + "！" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 天气真好 ！
 
 ### "好" + "－" (1 occurrences)
 - Predicted: None
@@ -47147,23 +44231,11 @@ Accuracy: 98.86%
 - Examples:
   - 在这儿我损失了一个好手 你他妈的想让我怎么办？
 
-### "好极了" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 味道好极了 你放了什么里面?
-
 ### "好极了" + "谢谢" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 好极了 谢谢
-
-### "好极了" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 好极了 ！
 
 ### "好样的" + "罗伊" (1 occurrences)
 - Predicted: None
@@ -47206,12 +44278,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我因为孩子们好看 所以喜欢
-
-### "好看" + "扫" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 今天早上到的我怕万一长得不好看 扫了您兴这个谁也说不好不是
 
 ### "好笑" + "我们" (1 occurrences)
 - Predicted: None
@@ -47272,6 +44338,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 事到如今 居然要用到它
+
+### "如何" + "也" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他说县里拨了款村里家家户户也都捐了钱说乡亲们无论如何 也要完成父亲的心愿
 
 ### "如何" + "他" (1 occurrences)
 - Predicted: None
@@ -47363,12 +44435,6 @@ Accuracy: 98.86%
 - Examples:
   - 台领邑 妇女 连续被杀案件 调查报告
 
-### "妈" + "伟同" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 妈 伟同爸呢？
-
 ### "妈" + "叫" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -47404,12 +44470,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 妈 弗兰克打电话来了
-
-### "妈" + "您" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 妈 您药带了吗？
 
 ### "妈" + "我们" (1 occurrences)
 - Predicted: None
@@ -47597,12 +44657,6 @@ Accuracy: 98.86%
 - Examples:
   - 妈妈 爸爸踩到狗屎了
 
-### "妈妈" + "给" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 昨晚妈妈 给我看她一张旧照照片缺少了一半我知道
-
 ### "妈妈" + "要" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -47711,12 +44765,6 @@ Accuracy: 98.86%
 - Examples:
   - 你想要妞 就去钢管那边
 
-### "妤" + "可以" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 只有明天上午十点十分的 妤 可以您填一下对座单
-
 ### "妥托" + "斯加利斯" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -47812,12 +44860,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你看我有关心你是否被妻子 戴绿帽了吗？
-
-### "妻子" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我永不知道我妻子 是真的在哭或只是假装
 
 ### "妻子" + "正" (1 occurrences)
 - Predicted: None
@@ -48323,12 +45365,6 @@ Accuracy: 98.86%
 - Examples:
   - 臭婊子 雅中的手机在哪?
 
-### "婚夜" + "結婚" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 神降合婚夜 結婚に神降りて
-
 ### "婚姻" + "更" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -48430,12 +45466,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 四爷，您得栽培我们如不嫌弃 请二位到舍下小酌几杯然后细谈
-
-### "嫌犯" + "没" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 谁知道衙生说我都是嫌犯 没权利做证人反而把那个沙河姓洪的给放了
 
 ### "嫌疑" + "贸然" (1 occurrences)
 - Predicted: None
@@ -48563,12 +45593,6 @@ Accuracy: 98.86%
 - Examples:
   - 孝真 孝真
 
-### "孟买" + "纳斯" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （孟买 纳斯现场演唱会）
-
 ### "孤单" + "就" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -48580,12 +45604,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 艾瓦尔德也变得孤寂 冷酷和死气沉沉
-
-### "学" + "因为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 告诉她你辍了学 因为你现在卖汉堡堡?
 
 ### "学业" + "找" (1 occurrences)
 - Predicted: None
@@ -48675,7 +45693,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 说怕沾上邪气所以现在盖学校 村里的妇女就只能离的远远地在一边看
+  - 所以现在盖学校 村里的妇女就只能离的远远地在一边看
 
 ### "学校" + "若昂·卡平泰罗" (1 occurrences)
 - Predicted: None
@@ -48766,6 +45784,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我的好孩子 一定要照顾好秀安
+
+### "孩子" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 带别人的孩子 不觉得无聊吗?
 
 ### "孩子" + "两" (1 occurrences)
 - Predicted: None
@@ -48983,12 +46007,6 @@ Accuracy: 98.86%
 - Examples:
   - 孩子们 我们要走了
 
-### "孩子们" + "来" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 孩子们会带你们去孩子们 来一下
-
 ### "孩子们" + "试着" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -49001,23 +46019,11 @@ Accuracy: 98.86%
 - Examples:
   - 孩子们 走开
 
-### "孩子们" + "还" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有一天，附近几个孩子们 还帮我妈把菜拎回家
-
 ### "孩子们" + "集中" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 先生们，请让女士和孩子们 集中到前面来
-
-### "宁必妥" + "杜奈" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 三甲氧苯乙胶 镇静剂 宁必妥 杜奈 水合氯乙醛兴奋剂
 
 ### "它" + "《" (1 occurrences)
 - Predicted: None
@@ -49079,12 +46085,6 @@ Accuracy: 98.86%
 - Examples:
   - 我还在调配它 还在调配？
 
-### "它" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 升起它 ！
-
 ### "它们" + "不然" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -49139,12 +46139,6 @@ Accuracy: 98.86%
 - Examples:
   - 安东 格谢尔在等你
 
-### "安东尼" + "先" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 很好，安东尼 先找到他再说吧！
-
 ### "安东尼奥" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -49193,12 +46187,6 @@ Accuracy: 98.86%
 - Examples:
   - 安乐之家 是养老院吗
 
-### "安全带" + "们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 请系好安全带 们会尽全力的摇滚啰
-
 ### "安全感" + "有" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -49246,12 +46234,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 安吉拉 还是安安静静的吧
-
-### "安妮" + "劳伦特" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你好，这是安妮 劳伦特。
 
 ### "安妮里柏" + "下周" (1 occurrences)
 - Predicted: None
@@ -49373,12 +46355,6 @@ Accuracy: 98.86%
 - Examples:
   - 安德烈·博尔孔斯基 再没有到罗斯托夫家来
 
-### "安德罗" + "波切利" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 安德罗 波切利的
-
 ### "安德鲁" + "不" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -49469,18 +46445,6 @@ Accuracy: 98.86%
 - Examples:
   - 安静 音响?
 
-### "安静" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 安静 ！
-
-### "宋康昊" + "〞" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 为了让我念美术大学〝宋康昊 〞 她放弃大学学业
-
 ### "完" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -49509,7 +46473,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你完成 了
+  - 你完成 了一切都很好
 
 ### "宗介" + "一起" (1 occurrences)
 - Predicted: None
@@ -49558,12 +46522,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 宗介 安全带系好
-
-### "宗介" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 宗介 我先去开车引擎去了哦
 
 ### "宗介" + "抱歉" (1 occurrences)
 - Predicted: None
@@ -49624,6 +46582,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 大哥，我是宗赞 你在哪儿啊？
+
+### "官" + "上任" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 每个新官 上任都要安插自己人
 
 ### "官" + "又" (1 occurrences)
 - Predicted: None
@@ -49727,29 +46691,11 @@ Accuracy: 98.86%
 - Examples:
   - 宝贝 帮咱们找张桌子好么
 
-### "宝贝" + "终于" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 宝贝 终于到我手上了
-
 ### "宝贝" + "跳舞" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 来吧 宝贝 跳舞
-
-### "实" + "也" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们出去走走实 也一起我们走跟祖母去，好吗？
-
-### "实" + "已经" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 天啊，他们长这么大啦实 已经是高中生了
 
 ### "实习" + "总" (1 occurrences)
 - Predicted: None
@@ -49786,12 +46732,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 实际上 今天很棒
-
-### "实际上" + "它" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 而实际上 它很惊艳 也不疙瘩是那件吗
 
 ### "实际上" + "我们" (1 occurrences)
 - Predicted: None
@@ -49835,12 +46775,6 @@ Accuracy: 98.86%
 - Examples:
   - 完全按照惯例明天我会进行审讯 迈克西姆
 
-### "审问" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 还得把他拖回来审问 ，妳知不知道
-
 ### "客" + "=" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -49859,17 +46793,17 @@ Accuracy: 98.86%
 - Examples:
   - 客人 没关系吧
 
+### "客人" + "这边" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 客人 这边…请到这边来一下
+
 ### "客服" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你一个臭客服 你一个月挣几个钱？
-
-### "宣言" + "摄影" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 雾越未麻 脱衣·偶像歌星宣言 摄影 村野馨
 
 ### "宫" + "】" (1 occurrences)
 - Predicted: None
@@ -49924,12 +46858,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我要去你家 你听见了吗？
-
-### "家" + "玛妮" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （我最爱的家 玛妮）
 
 ### "家" + "老年人" (1 occurrences)
 - Predicted: None
@@ -50099,23 +47027,11 @@ Accuracy: 98.86%
 - Examples:
   - 待在家里 乔乔照看好你的家人
 
-### "家里" + "收到" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我提醒那些从家里 收到食物的人要和他们的同学们 分享你想要点萨拉米猪肉肠吗?
-
 ### "家里" + "有" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我姐姐家里 有架钢琴
-
-### "家里" + "还" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你不感到在地下铁内比在家里 还来的孤单吗?
 
 ### "家长" + "咧" (1 occurrences)
 - Predicted: None
@@ -50127,13 +47043,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 黄飞鸿 今天俺赢得太容易 不算数明天在大街重新比你不来
-
-### "容易" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 甚至是一扇门事情并非你想的那么容易 我的女儿像我..
+  - 黄飞鸿 今天俺赢得太容易 不算数
 
 ### "宽" + "手指" (1 occurrences)
 - Predicted: None
@@ -50147,23 +47057,11 @@ Accuracy: 98.86%
 - Examples:
   - 我们需要一个屁股宽 腿长和胸脯大的女孩子！
 
-### "宽洪大量" + "会" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 上帝给饶恕我们他宽洪大量 会饶恕的
-
 ### "宾馆" + "运输" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你在这做什么生意都行宾馆 运输 餐饮 任何你想做的反正就是要钱
-
-### "寂寞" + "谁" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （我的寂寞 谁能明白我）
 
 ### "寄宿学校" + "只有" (1 occurrences)
 - Predicted: None
@@ -50207,12 +47105,6 @@ Accuracy: 98.86%
 - Examples:
   - 依扎拉先生的寡妇 诺玛太太死了…
 
-### "对" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对 !
-
 ### "对" + "上" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -50230,6 +47122,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 前妻 对 伊丽莎白 她结婚前的姓什么
+
+### "对" + "会" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 对 会录更多的歌吗？
 
 ### "对" + "公众" (1 occurrences)
 - Predicted: None
@@ -50302,12 +47200,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 对 当然
-
-### "对" + "待" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你要像对 待一般女人那样对待她
 
 ### "对" + "我们" (1 occurrences)
 - Predicted: None
@@ -50441,12 +47333,6 @@ Accuracy: 98.86%
 - Examples:
   - 对 都是一些很好的-
 
-### "对不起" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对不起 !
-
 ### "对不起" + "一" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -50470,12 +47356,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 对不起 伯伯 请问…您有没有看到一个小女孩从这条路经过她是我妹妹
-
-### "对不起" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对不起 你说我什么多久了?
 
 ### "对不起" + "你们" (1 occurrences)
 - Predicted: None
@@ -50530,12 +47410,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 对不起 导演
-
-### "对不起" + "局长" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对不起 局长同志
 
 ### "对不起" + "巴顿" (1 occurrences)
 - Predicted: None
@@ -50621,6 +47495,12 @@ Accuracy: 98.86%
 - Examples:
   - 对了 再调查下他们有什么武器
 
+### "对了" + "干嘛" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 对了 干嘛把玛茜亚锁在壁橱里
+
 ### "对了" + "明天" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -50680,6 +47560,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 对啊 这么多年了
+
+### "对啦" + "小燕" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 对啦 小燕 你应该好好…小薇 你去帮我把美国叫进来
 
 ### "对子" + "你" (1 occurrences)
 - Predicted: None
@@ -50837,12 +47723,6 @@ Accuracy: 98.86%
 - Examples:
   - 兄弟 借个火导演 这里有真的有?
 
-### "导线" + "什么样" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 导线 什么样得导线？
-
 ### "寿命" + "换回" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -50957,17 +47837,17 @@ Accuracy: 98.86%
 - Examples:
   - 当然了，古根海姆的妻小 都还留在家中
 
-### "小三" + "猫" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 都是中文的（货物配送 调查小三 猫狗丢失案）
-
 ### "小不点" + "就" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 怎么 他们可怜你还是小不点 就把你留在了这？
+
+### "小个子" + "满头" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 奇怪了一个小个子 满头卷发小眼睛镶了一颗大金牙
 
 ### "小乌拉" + "又" (1 occurrences)
 - Predicted: None
@@ -51059,12 +47939,6 @@ Accuracy: 98.86%
 - Examples:
   - 反正这个小偷 就在你们这个班上
 
-### "小偷" + "现在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那个偷了你的东西的小偷 现在在我的手上
-
 ### "小偷" + "老爸" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -51136,6 +48010,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 什么 小动物 哪一种一般的
+
+### "小华" + "待会" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 小华 待会找阿弟过来这边的时候小姐 请问有事吗?
 
 ### "小厨师" + "来" (1 occurrences)
 - Predicted: None
@@ -51273,13 +48153,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 待会找阿弟过来这边的时候小姐 请问有事吗?
+  - 小华 待会找阿弟过来这边的时候小姐 请问有事吗?
 
-### "小姐" + "赏脸" (1 occurrences)
+### "小姐" + "麻烦" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我有点儿想小姐 赏脸跳个舞吗？
+  - 沙耶香小姐 麻烦了
 
 ### "小姑娘" + "满" (1 occurrences)
 - Predicted: None
@@ -51328,12 +48208,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我得确定你是我们的一份子小子 欢迎你加入我们
-
-### "小子" + "看" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你个臭小子 看老娘不去把你抓会来
 
 ### "小子" + "老实说" (1 occurrences)
 - Predicted: None
@@ -51635,12 +48509,6 @@ Accuracy: 98.86%
 - Examples:
   - 小满 我今天大概不能去社团了
 
-### "小燕" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 小燕 你有种就给我出来!
-
 ### "小王八犊子" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -51729,7 +48597,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 小薇 你去帮我把美国叫进来
+  - 对啦 小燕 你应该好好…小薇 你去帮我把美国叫进来
 
 ### "小说家" + "戏剧家" (1 occurrences)
 - Predicted: None
@@ -51797,12 +48665,6 @@ Accuracy: 98.86%
 - Examples:
   - 斯芬克斯 小雏菊 天使要是你
 
-### "小马" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 可不是小马 是头毛象
-
 ### "小马" + "跟" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -51820,12 +48682,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 那两个小鬼 到底在搞什么鬼啊
-
-### "小鱼" + "蚯蚓" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们将教您活饵的正确用法诸如小鱼 蚯蚓喂
 
 ### "小黑" + "麻烦" (1 occurrences)
 - Predicted: None
@@ -51953,12 +48809,6 @@ Accuracy: 98.86%
 - Examples:
   - 没有尝 你怎么分辨面包的好坏呢?
 
-### "尝" + "几" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 先尝 几个地道的川菜
-
 ### "尝到" + "发烧" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -52025,12 +48875,6 @@ Accuracy: 98.86%
 - Examples:
   - 尤汉 伊桑
 
-### "尤汉" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 尤汉 你扔球他接的到吗
-
 ### "尤汉" + "该" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -52055,12 +48899,6 @@ Accuracy: 98.86%
 - Examples:
   - 别名戈加 果莎 尤里 约拉这儿只有个叫格奥尔吉的
 
-### "尤里格里高" + "耶维奇" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 尤里格里高 耶维奇亲自交给我的要社会舆论帮帮忙
-
 ### "尤里格里高耶维奇" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -52078,6 +48916,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 尤金尼奥 正经点
+
+### "就" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 在一部影片里这样做，你就 不能看到全部的内容。
 
 ### "就" + "会" (1 occurrences)
 - Predicted: None
@@ -52103,18 +48947,6 @@ Accuracy: 98.86%
 - Examples:
   - 虽然别人会把 同系繁殖视为有违道德但这样就 可以达至团结埃及的目标了
 
-### "就" + "始" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 看报的时候我就 始幻想我问自已为什么要这样
-
-### "就" + "拚命地" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一大早我就 拚命地擦门上的漆用刀子利
-
 ### "就" + "是" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -52127,18 +48959,6 @@ Accuracy: 98.86%
 - Examples:
   - 您根本就 没有妻子
 
-### "就位" + "更" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有什么比由凯撒大帝 来宣怖托勒密…和阿尔西诺埃就位 更能保持稳定？
-
-### "就位" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 水手就位 ！
-
 ### "就是" + "做" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -52150,12 +48970,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 就是 回避某些细节就好了
-
-### "就是" + "因为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 可你答应过不会命令拉斜霍夫和摩洛兹就是 因为个子太大而遭杀害
 
 ### "就是" + "大家" (1 occurrences)
 - Predicted: None
@@ -52174,12 +48988,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 就是 您懂的 这块地方能刺激性欲特别敏感
-
-### "就是" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 也就是 我个人有个想法想认命您
 
 ### "就是" + "永不" (1 occurrences)
 - Predicted: None
@@ -52294,12 +49102,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我侄儿 尼古拉斯•鲁拉德 有想到什么吗?
-
-### "尼可拉" + "、" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 也许你可以再来讲一次 尼可拉 、 哥白我才不要
 
 ### "尼基" + "这边" (1 occurrences)
 - Predicted: None
@@ -52475,12 +49277,6 @@ Accuracy: 98.86%
 - Examples:
   - 这些激进的屁话 在乡下有谁会看这个
 
-### "居民" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但是镇上的大部分居民镇上的居民 在高中操场上避难都奇迹般的哦平安无事
-
 ### "居民" + "都" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -52583,12 +49379,6 @@ Accuracy: 98.86%
 - Examples:
   - 到我这个岁数 漂亮远远不够的
 
-### "岂有此理" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 岂有此理 ！
-
 ### "岑卡" + "记住" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -52635,7 +49425,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （建筑师、工程师、化学家和技士）教师有工会 教授为何不能有？
+  - 奥比…教师有工会 教授为何不能有？
 
 ### "工会" + "的" (1 occurrences)
 - Predicted: None
@@ -52769,23 +49559,11 @@ Accuracy: 98.86%
 - Examples:
   - 芬威球场的左边 是不是有面大绿墙？
 
-### "巨人们" + "踩踏" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 亲爱的奥斯卡，我们这些矮人和丑角不应该站在被巨人们 踩踏过的混泥土板上跳舞再见！
-
 ### "巨球" + "只为" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 是 长官 挂着巨球 只为她他们像笑料
-
-### "巨着" + "而" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我一直想结识能写长篇巨着 而少用形容词的作者妄加修饰，于事无补
 
 ### "巨神兵" + "排除" (1 occurrences)
 - Predicted: None
@@ -52810,18 +49588,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 没差 反正我脸皮厚
-
-### "差" + "遣" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 王后已经差 遣她的使者前来
-
-### "差多" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但我认为爱德华较有才华 个性和想像力贺曼布隆比起他来差多 了
 
 ### "差点" + "少" (1 occurrences)
 - Predicted: None
@@ -52979,18 +49745,6 @@ Accuracy: 98.86%
 - Examples:
   - 巴顿 知道洛菲利兹的市集那是菲莉和我挑选的会面点
 
-### "巴黎" + "很" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 现在的巴黎 很可不是闹着玩的，
-
-### "市中心" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 公私合营关系地点很好接近市中心 在海边
-
 ### "布凡" + "如果" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -53039,18 +49793,6 @@ Accuracy: 98.86%
 - Examples:
   - 布里克斯多夫 有什么最新消息
 
-### "布隆" + "但" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我以为你甩 了我是为 了布隆 但我又听说…我没有甩过你
-
-### "布隆先生" + "是啊" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 布隆先生 是啊星期 日 有什么事？
-
 ### "布鲁克林" + "哈林区" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -53085,13 +49827,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 说真的虽然我很帅 人聪明 又会讲笑话但你不要轻易地喜欢上我
-
-### "帅奈德" + "则" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 红毛可以保住生意营上第一神射的帅奈德 则想报仇
+  - 虽然我很帅 人聪明 又会讲笑话但你不要轻易地喜欢上我
 
 ### "帅奈德" + "小霸王" (1 occurrences)
 - Predicted: None
@@ -53177,6 +49913,12 @@ Accuracy: 98.86%
 - Examples:
   - 师兄 怎样了?
 
+### "师父" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 师父 不要耍了
+
 ### "师父" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -53229,7 +49971,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 师父 还不走?
+  - 师父…师父 还不走?
 
 ### "希太太" + "树里" (1 occurrences)
 - Predicted: None
@@ -53279,12 +50021,6 @@ Accuracy: 98.86%
 - Examples:
   - 真心希望 你能从栏杆上跨过来跟我离开这个要命的地方
 
-### "希望" + "光明" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 现在我心里世界分成两半一半有她 那儿有幸福 希望 光明
-
 ### "希望" + "和" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -53302,12 +50038,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 也许是一种复仇欲我多希望 我那呼风唤雨的上司被车压死!
-
-### "希望" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）「告诉我吧，朱丽叶（日语）「你希望 这年轻浮躁的骑士拯救你？
 
 ### "希望" + "那" (1 occurrences)
 - Predicted: None
@@ -53507,6 +50237,12 @@ Accuracy: 98.86%
 - Examples:
   - 带头大哥 就像牧羊人一样要让最机灵的羊走在前面其他的羊才会跟着走
 
+### "带子" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 只要他不烧房子或者寄给我们 炸弹而不是带子 …我们还是没事。
+
 ### "带子" + "或者" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -53627,12 +50363,6 @@ Accuracy: 98.86%
 - Examples:
   - 我常常 出去处理公司的事
 
-### "幅" + "《" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 象那幅 《女孩和鹌鹑》一样.
-
 ### "幕" + "一切" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -53711,17 +50441,17 @@ Accuracy: 98.86%
 - Examples:
   - 干妈 要不要叫阿根出来 赶他们走
 
-### "干扰" + "快" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 引擎声音是干扰 快是！
-
 ### "干活" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 帮会叫我干活 我能不干吗？
+
+### "干舅公" + "幸亏" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 干舅公 幸亏您叫我来了不然的话 你也跟这鸟一样可不是吗?
 
 ### "干藏红花粉" + "产自" (1 occurrences)
 - Predicted: None
@@ -53903,6 +50633,12 @@ Accuracy: 98.86%
 - Examples:
   - 还好 你还年轻 伤口很快就会愈合的
 
+### "年轻" + "但" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你虽然年轻 但已经不是小孩
+
 ### "年轻" + "可" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -53914,12 +50650,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 您是想找一个更年轻 更漂亮的女首长 是不是
-
-### "年轻" + "漂亮" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就像某种征兆我看到说地铁里一个女人年轻 漂亮我不是指这个
 
 ### "年轻" + "美丽" (1 occurrences)
 - Predicted: None
@@ -54041,18 +50771,6 @@ Accuracy: 98.86%
 - Examples:
   - 据说 做完好事就会幸福 安逸但不要忘了敌人随时都在
 
-### "幸福" + "希望" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 现在我心里世界分成两半一半有她 那儿有幸福 希望 光明
-
-### "幸福" + "欢乐" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们来吧所有快乐的事物列个单子幸福 欢乐 满足
-
 ### "幸福" + "真" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -54064,6 +50782,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 幺妹 不能为你回来
+
+### "幺妹儿" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 幺妹儿 不在家
 
 ### "幼稚" + "对" (1 occurrences)
 - Predicted: None
@@ -54143,12 +50867,6 @@ Accuracy: 98.86%
 - Examples:
   - 库奇 收拾好 准备上路吧
 
-### "库马尔" + "·" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 帕万 · 库马尔 · 查图韦迪
-
 ### "库马尔" + "查图维迪" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -54172,12 +50890,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我觉得咱们国家应该 让垄断非法化大家都不想竞争
-
-### "底" + "本" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们就是池塘之底 本为了不令人紧张
 
 ### "底" + "正因为" (1 occurrences)
 - Predicted: None
@@ -54353,12 +51065,6 @@ Accuracy: 98.86%
 - Examples:
   - 电梯门一开 一位老太太就开始尖叫！
 
-### "开" + "始" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 开 始
-
 ### "开" + "开" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -54377,11 +51083,23 @@ Accuracy: 98.86%
 - Examples:
   - 你一开口 我就觉得我们心灵相通
 
+### "开始" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 那让他的爸爸开始 …因此现在他们两个今晚都在牢里
+
 ### "开始" + "上" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 有没有听说下学期要开始 上日文 了？
+
+### "开始" + "也" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我的感受没有开始 也没有结束
 
 ### "开始" + "他们" (1 occurrences)
 - Predicted: None
@@ -54545,12 +51263,6 @@ Accuracy: 98.86%
 - Examples:
   - 向我开炮 向我开炮
 
-### "开玩笑" + "?" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你在开玩笑 ?
-
 ### "开玩笑" + "好" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -54712,12 +51424,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 弗兰克 过来
-
-### "弗兰克" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你就是弗兰克 这的老板
 
 ### "弗兰克" + "这位" (1 occurrences)
 - Predicted: None
@@ -55199,12 +51905,6 @@ Accuracy: 98.86%
 - Examples:
   - 丝守 彗星 受灾听说那一天 好像正好是秋日祭
 
-### "彗星" + "终于" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 迪亚马特彗星 终于接近了近近地点
-
 ### "形容" + "史提恩斯马太太" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -55247,23 +51947,11 @@ Accuracy: 98.86%
 - Examples:
   - －他叫彼得 克兰茨 －那么你就是彼得了
 
-### "彼得" + "公爵" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我自已知道什么时候彼得 公爵叫人来问你
-
 ### "彼得堡" + "我们" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 有一次在彼得堡 我们讨论过…记得
-
-### "往" + "钏路" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （往 钏路）
 
 ### "往上" + "往上" (1 occurrences)
 - Predicted: None
@@ -55300,12 +51988,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 这光辉灿烂的日子这无法约束的义大利太阳是一个神圣的征象 预示着天堂在我们这一边！
-
-### "待会" + "儿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 待会 儿啊
 
 ### "很" + "不" (1 occurrences)
 - Predicted: None
@@ -55703,12 +52385,6 @@ Accuracy: 98.86%
 - Examples:
   - 为了不伤害孩子们脆弱的心灵 蒙丹事件的真相并没有向他们吐露
 
-### "心眼" + "里" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我从心眼 里为您感到惋惜
-
 ### "心细" + "忠心耿耿" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -55811,12 +52487,6 @@ Accuracy: 98.86%
 - Examples:
   - 你爷爷有句名言孩子永远不会忘记 我们送他的礼物
 
-### "忘记" + "所持" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 忘记 所持
-
 ### "忙" + "并且" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -55835,23 +52505,11 @@ Accuracy: 98.86%
 - Examples:
   - 既然你在忙 说一声不行吗？
 
-### "忙" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 因为忙 ，几年都回不了一次家
-
 ### "忠心" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我跟了你一辈子对你忠心 你说我该怎么办？
-
-### "快" + "、" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 快 、
 
 ### "快" + "不" (1 occurrences)
 - Predicted: None
@@ -55960,12 +52618,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 结婚纪念日快乐 太太
-
-### "快乐" + "非常" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那是一个非常快乐 非常幸福的家
 
 ### "快活" + "别人" (1 occurrences)
 - Predicted: None
@@ -56195,12 +52847,6 @@ Accuracy: 98.86%
 - Examples:
   - 我怀疑 这可能吗
 
-### "怎么" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你的鼻子怎么 了？
-
 ### "怎么" + "今天" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -56284,6 +52930,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 怎么 舍不得走了吧
+
+### "怎么" + "还" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 婆婆怎么 还没有来接你呀
 
 ### "怎么" + "难道" (1 occurrences)
 - Predicted: None
@@ -56405,6 +53057,12 @@ Accuracy: 98.86%
 - Examples:
   - 你觉得怎么样 －很好
 
+### "怎样" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我不知道怎样 … 表达我的感激。
+
 ### "怎样" + "一定" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -56482,18 +53140,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他不喜欢卡特里娜多半是出于怜悯 才勉强同意的吧
-
-### "怜悯" + "让" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他会他的怜悯 让他在睡梦中哭泣
-
-### "思想" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我想给你要是你都不表达自己的思想 我为什么要表达？
 
 ### "思想" + "科学" (1 occurrences)
 - Predicted: None
@@ -56591,17 +53237,17 @@ Accuracy: 98.86%
 - Examples:
   - 你知道的听着 我知道很愚蠢和怪异 但是我们两个都不能独立干好所以我们得通力合作啊
 
-### "怪物" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 高立良，死怪物 ， 倒楣鬼
-
 ### "总" + "不" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 总 不能两个人都在这里 等死嘛
+
+### "总之" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 还是要靠你的知名度和忠实的观众是的，总之 …
 
 ### "总之" + "你" (1 occurrences)
 - Predicted: None
@@ -56679,7 +53325,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （每天都有人丧生…）（让波洛申科总统 政府和他们家人）
+  - （让波洛申科总统 政府和他们家人）（本周在顿涅茨克 就有五十多人死亡）
 
 ### "总统" + "查尔斯帕兰汀" (1 occurrences)
 - Predicted: None
@@ -56831,12 +53477,6 @@ Accuracy: 98.86%
 - Examples:
   - 略德尼拉．伯洛哥菲耶夫娜 我求您 明天放他一会儿假让他跟我一块去
 
-### "您" + "真" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 每次都麻烦您 真不好意思
-
 ### "您好" + "先生" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -56951,12 +53591,6 @@ Accuracy: 98.86%
 - Examples:
   - 我来解释是不是很棒的惊喜 让·多?
 
-### "惊艳" + "也" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 而实际上 它很惊艳 也不疙瘩是那件吗
-
 ### "惟" + "愿" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -56992,6 +53626,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他们明显是受了惩罚 为什麽呢?
+
+### "想" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 什么使你想 …别跑，我正对你说话
 
 ### "想" + "不" (1 occurrences)
 - Predicted: None
@@ -57053,6 +53693,12 @@ Accuracy: 98.86%
 - Examples:
   - 我想 在某种程度上是因为萨姆是军营里最不受欢迎的童子军非常不受欢迎
 
+### "想" + "如果" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我在想 如果告诉他们 他们一定会认为很傻
+
 ### "想" + "它们" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -57076,12 +53722,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 所以我就想 干脆就让你再追我久一点不然等你追到我之后就变懒了
-
-### "想" + "当" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 遇见你使我想 当一名真的面厨子
 
 ### "想" + "想" (1 occurrences)
 - Predicted: None
@@ -57161,12 +53801,6 @@ Accuracy: 98.86%
 - Examples:
   - 如果有人说起一些他感兴趣的事情他会先认真地想想 然后很高兴的欢笑
 
-### "想方" + "设法" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们会想方 设法找到你的。
-
 ### "想来" + "还" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -57202,12 +53836,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 如果想要 就打一架
-
-### "想要" + "干脆" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我能这么想要 干脆自己去弄辆大的
 
 ### "想象" + "不" (1 occurrences)
 - Predicted: None
@@ -57353,17 +53981,17 @@ Accuracy: 98.86%
 - Examples:
   - 如果你不走 他没意见 对吧？
 
-### "意识到" + "西西里岛" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 只有一句暗号：武器和武装部队将军已经意识到 西西里岛的商业价值
-
 ### "意识到" + "这" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 衰微的人类意识到 这已经威胁到他们的生存
+
+### "感兴趣" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 听着，先别提它了。 员警不感兴趣 …
 
 ### "感兴趣" + "又为何" (1 occurrences)
 - Predicted: None
@@ -57388,12 +54016,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你这样会感冒 赶快进去
-
-### "感想" + "请" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （你有什么感想 请来我家） 真是的
 
 ### "感染" + "完毕" (1 occurrences)
 - Predicted: None
@@ -57466,6 +54088,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 看来你不太愿意 和我玩游戏．真有趣！
+
+### "愿意" + "您" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 如果您愿意 您可以在这里做售货员您可以和您的孩子们一起 留在这里
 
 ### "愿意" + "我们" (1 occurrences)
 - Predicted: None
@@ -57653,12 +54281,6 @@ Accuracy: 98.86%
 - Examples:
   - 书籍 报纸 戏剧 电影都会消失
 
-### "成" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 把你面前的那个鸭子想象成 你的老二，抚慰它伸出舌头，做出要添它的姿势
-
 ### "成为" + "三星级" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -57694,12 +54316,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 如果是成人 为什么不搬出去住？
-
-### "成人影带" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 成人影带 ， 买一送一
 
 ### "成功" + "和" (1 occurrences)
 - Predicted: None
@@ -57809,12 +54425,6 @@ Accuracy: 98.86%
 - Examples:
   - 成长 最残酷的部份就是女孩永远比同年龄的男孩成熟
 
-### "我" + "。" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 通常，象那样的事情她不会拿给我 。
-
 ### "我" + "一些" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -57851,12 +54461,6 @@ Accuracy: 98.86%
 - Examples:
   - 我的直觉告诉我 二十年之后我们也许不会记得别的
 
-### "我" + "亚历山大" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我 亚历山大-科内尔 作为德国第二个太空 人进入了太空
-
 ### "我" + "人们" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -57881,11 +54485,11 @@ Accuracy: 98.86%
 - Examples:
   - 除非你答应我 以后不发小姐脾气，知道吗？
 
-### "我" + "们" (1 occurrences)
+### "我" + "会" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 好像我 们想要他的两个肾一样
+  - 等你做了医生，我都不知道我 会不会还活着
 
 ### "我" + "像" (1 occurrences)
 - Predicted: None
@@ -58037,12 +54641,6 @@ Accuracy: 98.86%
 - Examples:
   - 救救我 宝贝
 
-### "我" + "实在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）你仍盛情迎接我 实在太客气了
-
 ### "我" + "尽头" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -58090,6 +54688,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我 恰恰相反 皮包骨头 却是热情洋溢
+
+### "我" + "想" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - ） 啊 太久没见我 想我想的嗯
 
 ### "我" + "感到" (1 occurrences)
 - Predicted: None
@@ -58169,12 +54773,6 @@ Accuracy: 98.86%
 - Examples:
   - 如果想起了一些事只可以告诉我只有我 明白吗?
 
-### "我" + "昨晚" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 铎尼，告诉我 昨晚被挨打了吧!
-
 ### "我" + "最近" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -58210,12 +54808,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我 没门
-
-### "我" + "灰常" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我 灰常 混开心
 
 ### "我" + "然后" (1 occurrences)
 - Predicted: None
@@ -58283,6 +54875,12 @@ Accuracy: 98.86%
 - Examples:
   - 别那样看着我 科切
 
+### "我" + "等" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我 等
+
 ### "我" + "简直" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -58324,6 +54922,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 不是对我 而是对上帝有罪
+
+### "我" + "自" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不 了， 我 自 己来
 
 ### "我" + "自己" (1 occurrences)
 - Predicted: None
@@ -58367,17 +54971,17 @@ Accuracy: 98.86%
 - Examples:
   - 就在我那么想的时候医院通知我 说她肾衰竭需要接受移植于是我决定捐肾给她
 
-### "我" + "请" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 是我 请试着请他们离开。
-
 ### "我" + "谁" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 告诉我 谁写的是我
+
+### "我" + "还是" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 无论是我 还是你母亲 都有类似的经历
 
 ### "我" + "这" (1 occurrences)
 - Predicted: None
@@ -58479,7 +55083,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 有机会让我们 一起度过了最后的时光
+  - 我很感激…有机会让我们 一起度过了最后的时光
 
 ### "我们" + "他" (1 occurrences)
 - Predicted: None
@@ -58541,6 +55145,12 @@ Accuracy: 98.86%
 - Examples:
   - 我们 在执行您的命令
 
+### "我们" + "大教堂" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 在我看来，在欣赏着我们 大教堂的建立者的画像时你似乎感触颇深…
+
 ### "我们" + "对" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -58570,6 +55180,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 告诉我们 我点哪儿了
+
+### "我们" + "我们" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 如果你藐视我们 我们还怎么维持人民的信任
 
 ### "我们" + "打" (1 occurrences)
 - Predicted: None
@@ -58607,6 +55223,12 @@ Accuracy: 98.86%
 - Examples:
   - 你不告诉我们 混蛋?
 
+### "我们" + "炸弹" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 只要他不烧房子或者寄给我们 炸弹而不是带子 …我们还是没事。
+
 ### "我们" + "特意" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -58630,18 +55252,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 现在，应新郎的要求，我要献上一曲我要爱这首歌也深情献给我们 的新娘
-
-### "我们" + "等会" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那我们 等会 儿好好好
-
-### "我们" + "花费" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 而我们受保 这将会令我们 花费一笔这永远是错事
 
 ### "我们" + "试试看" (1 occurrences)
 - Predicted: None
@@ -58821,7 +55431,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 因为元首要找的不是战士 而是一个秘书
+  - 没有必要…因为元首要找的不是战士 而是一个秘书
 
 ### "战士们" + "一定" (1 occurrences)
 - Predicted: None
@@ -58905,7 +55515,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （妈 我想在外面租个房子 上午你给我的钱…）（女儿 你这次让妈刮目相看 加油）
+  - （妈 我想在外面租个房子 上午你给我的钱…）
 
 ### "房子" + "也" (1 occurrences)
 - Predicted: None
@@ -58936,12 +55546,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 这样的房子 算是很不错了
-
-### "房子" + "这种" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 好奇，怪的房子 这种地方怎么可以住人？
 
 ### "房客" + "一" (1 occurrences)
 - Predicted: None
@@ -59033,12 +55637,6 @@ Accuracy: 98.86%
 - Examples:
   - 所以 安托 窗帘都洗好了吗
 
-### "所以" + "工资" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 条件待遇都很好所以 工资是其实工资价格是…
-
 ### "所以" + "很" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -59105,23 +55703,11 @@ Accuracy: 98.86%
 - Examples:
   - 所以 除了那个派对昨天晚上你还是挺滋润的
 
-### "所持" + "喜欢" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 所持 喜欢喝酒吗？
-
 ### "所有" + "过去" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 所有 过去几天的所有时刻我仿佛要 要收集满满一整架瓶子
-
-### "所有人" + "从" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 找到我问所有人 从何时到何时 你被我吸引？
 
 ### "所有人" + "停下" (1 occurrences)
 - Predicted: None
@@ -59307,19 +55893,19 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）曾经有一段时间（日语）我把头脑和手艺 都荒废在赌博上
-
-### "手表" + "、" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我不停的买钢琴、手表 、另外还有…收音机
+  - 曾经有一段时间我把头脑和手艺 都荒废在赌博上
 
 ### "手表" + "。" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我丢了手表 。
+
+### "手里" + "一点" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 叫他死在女人手里 一点也不冤枉
 
 ### "手里" + "没人" (1 occurrences)
 - Predicted: None
@@ -59331,7 +55917,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 但我认为爱德华较有才华 个性和想像力贺曼布隆比起他来差多 了
+  - 我知道但我认为爱德华较有才华 个性和想像力贺曼布隆比起他来差多了
 
 ### "才华" + "和" (1 occurrences)
 - Predicted: None
@@ -59363,12 +55949,6 @@ Accuracy: 98.86%
 - Examples:
   - 扎武隆 我不受制于你
 
-### "打" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这个钥匙试了半天打 不开啊
-
 ### "打" + "希达那" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -59380,6 +55960,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 打 打 快点给我打
+
+### "打" + "我" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 如果你再打 我就开枪
 
 ### "打" + "打" (1 occurrences)
 - Predicted: None
@@ -59585,12 +56171,6 @@ Accuracy: 98.86%
 - Examples:
   - 那么您好托里亚 我们之间不应该有误会
 
-### "托雷多" + "瓦拉多利" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （亚维拉 托雷多 瓦拉多利）
-
 ### "托马斯" + "先生" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -59649,19 +56229,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 要找 白度图上来吧 ，三楼 !
+  - 要找 白度图上来吧，三楼!
 
-### "找出" + "自" (1 occurrences)
+### "找出" + "自己" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 是啊， 你看来似乎胸有成竹呢我不知道…我想是找出 自 己想做的事 然后全力投入
-
-### "找到" + "体" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你不认为政府和美国佬 迟早会找到 体然後展开调查吗？
+  - 我想是找出 自己想做的事 然后全力投入对我而言 拉希摩就是我的目标和理想
 
 ### "找到" + "你" (1 occurrences)
 - Predicted: None
@@ -59723,18 +56297,6 @@ Accuracy: 98.86%
 - Examples:
   - 虽然他们已承诺 我们要求的种种保证我们会前去赴会
 
-### "承诺" + "波其亚" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 理承诺 波其亚
-
-### "技巧" + "吗" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我明白了…但此事很复杂…有什么技巧 吗？
-
 ### "技术" + "进一步" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -59752,18 +56314,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 一直写字尽管在抄写 但经常会看手机
-
-### "把" + "体故布疑阵" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我已叫人把 体故布疑阵犹如两方自相残杀
-
-### "把" + "你们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你们的妈妈爸爸把 你们养得好好的继续自言自语吧
 
 ### "把" + "十" (1 occurrences)
 - Predicted: None
@@ -59806,12 +56356,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 下封信里我想把 这意思再发挥一下
-
-### "把" + "首" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 务必要把 首放置好
 
 ### "把手" + "然后" (1 occurrences)
 - Predicted: None
@@ -60011,6 +56555,12 @@ Accuracy: 98.86%
 - Examples:
   - 你知道我们的最低报酬 格咯蒂斯先生？
 
+### "抬头" + "很好" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 好，抬头 很好，很好。
+
 ### "抬起来" + "手" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -60119,12 +56669,6 @@ Accuracy: 98.86%
 - Examples:
   - 真 相 抽 丝 剥 茧 纵 使 心 为 机 械
 
-### "抽搐" + "+" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 面部抽搐 + 神经衰弱
-
 ### "担当" + "一" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -60196,6 +56740,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你约拉 请纳瓦歇里 柴夫到我这里来一下
+
+### "拉乌夫" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 拉乌夫 - 等等
 
 ### "拉夫特夫人" + "十先令" (1 occurrences)
 - Predicted: None
@@ -60383,18 +56933,6 @@ Accuracy: 98.86%
 - Examples:
   - 也别拍照 了
 
-### "拍照" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他可能已经死掉担心被阳世间的人遗忘于是拍照 ， 提醒人家他的模样
-
-### "拔" + "马麻" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （爸拔 马麻）
-
 ### "拖车" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -60407,11 +56945,23 @@ Accuracy: 98.86%
 - Examples:
   - 老公，你记不记得一招 从天而降的掌法？
 
+### "招" + "就" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 两招 就两招
+
 ### "招呼" + "─" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - ─我该和舅舅打个招呼 ─迟点也无妨
+
+### "招娣" + "，" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 招娣 ，你怎跑前井打水来了？
 
 ### "招牌" + "何不" (1 occurrences)
 - Predicted: None
@@ -60437,12 +56987,6 @@ Accuracy: 98.86%
 - Examples:
   - 拜托 哈克先生停
 
-### "拜托" + "就" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 拜托 就把我给放了吧
-
 ### "拜托" + "帮" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -60460,12 +57004,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 比安卡 拜托 开门
-
-### "拜托" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 拜托 我们都很愚蠢！）
 
 ### "拜托" + "拜托" (1 occurrences)
 - Predicted: None
@@ -60574,12 +57112,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 碍着王夫人的面 又不能明拿 只有想办法把她引出来
-
-### "拿" + "着" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 等拿 着嘿．
 
 ### "拿" + "结果" (1 occurrences)
 - Predicted: None
@@ -60755,12 +57287,6 @@ Accuracy: 98.86%
 - Examples:
   - 这可不是为了我而挖 我早想走了！
 
-### "挖" + "油脂" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有关猎野猪，在…冬天它们没有多少东西吃…它们挖 油脂
-
 ### "挡" + "三" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -60784,12 +57310,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我们大家都在挨饿 哪去找大粪？
-
-### "振子" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 振子 我现在很慢
 
 ### "振泰" + "你" (1 occurrences)
 - Predicted: None
@@ -60983,6 +57503,12 @@ Accuracy: 98.86%
 - Examples:
   - 那么接下来 来干什么？
 
+### "接受" + "任何" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 如果这里有人解得出来我保证你们将不用再接受 任何的数学教育 了
+
 ### "接受" + "隆德天主教大学" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61037,23 +57563,11 @@ Accuracy: 98.86%
 - Examples:
   - 小心措辞 我的女儿
 
-### "提" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 因很多黑人姐妹被白人强奸黑人很渴望有白人的宝物…白种女人我种族的提 ！
-
 ### "提出" + "问题" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我很讶异你这么直接的 提出 问题
-
-### "提图" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 提图 我的午餐了
 
 ### "提娜" + "把" (1 occurrences)
 - Predicted: None
@@ -61102,12 +57616,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 丹尼 你百般提防 结果还是枉费心机
-
-### "插图" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 呃 我你只是个插图 我干嘛要跟你说话?
 
 ### "插手" + "我" (1 occurrences)
 - Predicted: None
@@ -61186,12 +57694,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 摄影 厚田雄春
-
-### "摄影" + "村野馨" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 雾越未麻 脱衣·偶像歌星宣言 摄影 村野馨
 
 ### "摄影导演" + "维登·尤索夫" (1 occurrences)
 - Predicted: None
@@ -61337,12 +57839,6 @@ Accuracy: 98.86%
 - Examples:
   - 撒尔 放下棒子
 
-### "撒尔" + "数" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 三撒尔 数好钱吧
-
 ### "撒尔" + "皮诺" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61397,12 +57893,6 @@ Accuracy: 98.86%
 - Examples:
   - 撤军 撤军 从越南撤军
 
-### "撤退" + "而" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 下士，我们下在撤退 而你需要的是医务室？
-
 ### "播撒" + "氯酸盐" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61420,12 +57910,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 到刚才为止的播音 都没有读出他们的名字
-
-### "擅自" + "闯入" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你擅自 闯入你疯了
 
 ### "操" + "上" (1 occurrences)
 - Predicted: None
@@ -61493,12 +57977,6 @@ Accuracy: 98.86%
 - Examples:
   - 要不是有你 我现在还呆在荃湾没有你支持 我也做不来
 
-### "支支吾吾" + "的" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你总是支支吾吾 的
-
 ### "支那" + "波斯" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61541,12 +58019,6 @@ Accuracy: 98.86%
 - Examples:
   - 现在 把东西都收好 孩子们该去烧点书了
 
-### "收款" + "资金" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （你已收款 资金已存入零钱）
-
 ### "收集" + "死亡" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61558,12 +58030,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我认为你不该改 这个滑稽的名字
-
-### "改变" + "－" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们得采取激烈改变 －一点都没错
 
 ### "改行" + "到" (1 occurrences)
 - Predicted: None
@@ -61589,12 +58055,6 @@ Accuracy: 98.86%
 - Examples:
   - 皮诺切的军政府执政期间 采取市场化私有化改革 放松管制
 
-### "放" + "整" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 现在声纳一放 整片海洋都是 避也没法避
-
 ### "放下" + "按" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61613,11 +58073,11 @@ Accuracy: 98.86%
 - Examples:
   - 别放下 浪费在我身上
 
-### "放好" + "再" (1 occurrences)
+### "放好" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 等我把食物放好 再给东西你吃！
+  - 放好 - 最后拿冰箱
 
 ### "放屁" + "他" (1 occurrences)
 - Predicted: None
@@ -61642,18 +58102,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 放开 斯捷潘
-
-### "放弃" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你太容易放弃 了我为这个花 了八百万
-
-### "放心" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 放心 !
 
 ### "放手" + "把" (1 occurrences)
 - Predicted: None
@@ -61697,12 +58145,6 @@ Accuracy: 98.86%
 - Examples:
   - 给 放饭 盒饭
 
-### "政权" + "正是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 因为我们建立苏维埃政权 正是为了这些让所有的人的都有像你一样的脚可以跑
-
 ### "政策" + "于" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61744,12 +58186,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我给纳塔丽读过的他一定是偷了那故事 等我一下！
-
-### "故事" + "记得" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 它会是一个浪漫的故事 记得你的记录片吗？
 
 ### "故事" + "都" (1 occurrences)
 - Predicted: None
@@ -61835,12 +58271,6 @@ Accuracy: 98.86%
 - Examples:
   - 我唯一能做的事应该是设法跟教务处 扯点关系
 
-### "教堂" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一个高高的，细长型的教堂 是红砖盖成的……
-
 ### "教堂" + "然后" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61865,12 +58295,6 @@ Accuracy: 98.86%
 - Examples:
   - 你作为荣耀教授 应该知晓痛楚的原因
 
-### "教授" + "您" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你从来不想象一下教授 您的意见呢无论我讲什么都会遇到玲嘲热讽所以我保持沉默
-
 ### "教授" + "是" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61889,6 +58313,12 @@ Accuracy: 98.86%
 - Examples:
   - 该做的我都做到了剩下就是你们这些教练 会籍顾问的事了
 
+### "教育" + "了" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 如果这里有人解得出来我保证你们将不用再接受 任何的数学教育 了
+
 ### "教育" + "在于" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61900,6 +58330,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你想要受教育 就要拿大把钞票来
+
+### "教育" + "技术" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我受过很多教育 技术熟练…
 
 ### "教育" + "摔跤" (1 occurrences)
 - Predicted: None
@@ -61917,25 +58353,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 散开 、 散开
+  - 散开 、
 
 ### "散步" + "是" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你会晚上出门散步 是因为他吗？
-
-### "敬三" + "到时候" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 是啊，敬三 到时候应该已经下班了
-
-### "敬三" + "跟" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 敬三 跟你们在大阪见过面了吗？
 
 ### "敬畏" + "还" (1 occurrences)
 - Predicted: None
@@ -61955,12 +58379,6 @@ Accuracy: 98.86%
 - Examples:
   - 我看到这些数字 头就痛
 
-### "数字家" + "房间" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 确认自己所住楼层的手段就只有大厅里那小小的数字家 房间一旦住惯
-
 ### "数学" + "历史" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -61972,18 +58390,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 数学 语法 绘画更不用说了
-
-### "数学" + "课本" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你数学老师昨 天打电话给我她说，你在数学 课本上画满了像统一，他们会统一什么？
-
-### "数据" + "才能" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我需要从伊利埃斯库那边获得更多详尽数据 才能开着如此庞大的改组工作
 
 ### "整个" + "假期" (1 occurrences)
 - Predicted: None
@@ -62002,12 +58408,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他们整天 跟那头长角的动物说个没完他们知道他的声音
-
-### "整天" + "躲" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 整天 躲在面具后面
 
 ### "文" + "-" (1 occurrences)
 - Predicted: None
@@ -62117,6 +58517,12 @@ Accuracy: 98.86%
 - Examples:
   - 斯丹 我们还是进去吧
 
+### "斯塔索夫" + "是" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 斯塔索夫 是个不赖的建筑师.
+
 ### "斯帕" + "跟" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -62177,6 +58583,12 @@ Accuracy: 98.86%
 - Examples:
   - 这里没有信号 不要试了斯特凡尼娅 过来
 
+### "斯特帕尼茨" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 斯特帕尼茨 不要…喜欢安静吗
+
 ### "斯特帕尼茨" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -62224,12 +58636,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 斯科蒂 拦住这些士兵
-
-### "斯维特" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 斯维特 在你走之前 可不可以没问题
 
 ### "斯维特" + "有了" (1 occurrences)
 - Predicted: None
@@ -62313,7 +58719,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （省长和新闻委员会 都承受了压力…）（「要分阶段抵制」）
+  - （省长和新闻委员会 都承受了压力…）
 
 ### "方" + "而" (1 occurrences)
 - Predicted: None
@@ -62385,7 +58791,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 写在那里那大概是世界上最难的 几何方程式 了
+  - 我只是把它当个玩笑 写在那里那大概是世界上最难的 几何方程式 了
 
 ### "方面" + "在" (1 occurrences)
 - Predicted: None
@@ -62452,12 +58858,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 要是需要旅费 我可以…
-
-### "旅途" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们踏上了去海牙的旅途 ，去欧洲刑警组织不入虎穴焉得虎子
 
 ### "旌" + "旗" (1 occurrences)
 - Predicted: None
@@ -62549,6 +58949,12 @@ Accuracy: 98.86%
 - Examples:
   - 无脸男 你敢对千怎么样我绝不原谅你
 
+### "无论如何" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 无论如何 … 我们知道我们没得到一些帮助。
+
 ### "无论如何" + "下次" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -62560,6 +58966,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 无论如何 乐观点吧
+
+### "无论如何" + "也" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 无论如何 也快结束了
 
 ### "无论如何" + "他们" (1 occurrences)
 - Predicted: None
@@ -62609,24 +59021,6 @@ Accuracy: 98.86%
 - Examples:
   - 离别之日 即将到来
 
-### "日" + "宴会" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对了， 双胞胎的生 日 宴会你想来吗？
-
-### "日" + "有" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 布隆先生 是啊星期 日 有什么事？
-
-### "日" + "见" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 星期 日 见 了，
-
 ### "日后" + "始终" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -62669,6 +59063,12 @@ Accuracy: 98.86%
 - Examples:
   - 童子军教官日志 九月二日
 
+### "日文" + "了" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 有没有听说下学期要开始 上日文 了？
+
 ### "日期" + "对" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -62686,12 +59086,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 推己及人，你们日本人 永远都不会明白这个道理
-
-### "早" + "日" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 祝你早 日康复
 
 ### "早上" + "一" (1 occurrences)
 - Predicted: None
@@ -62728,12 +59122,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 早上 我们会吃早餐
-
-### "早上" + "把" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 第二天早上 把她放了的时候然后 她问她值多少钱
 
 ### "早上" + "收到" (1 occurrences)
 - Predicted: None
@@ -62987,12 +59375,6 @@ Accuracy: 98.86%
 - Examples:
   - 她也没手机…而且真的要联络时 又很紧张不知道该说些什么…
 
-### "时" + "吾" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 若吾起舞时 吾が舞えば
-
 ### "时" + "唯一" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -63041,12 +59423,6 @@ Accuracy: 98.86%
 - Examples:
   - 我睡不着时 就用眼罩强迫自己闭上眼睛
 
-### "时" + "彼此" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我开始怀疑他们他们在布隆的游泳池裸泳还趁你在阳台上打盹时 彼此互相上下其手
-
 ### "时" + "总" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -63070,12 +59446,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 当客户有拒绝的意愿时 所有的预案都会显得毫无意义
-
-### "时" + "才" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我一直到帮她挑选寿衣时 才真的觉得失去了她
 
 ### "时" + "拜占庭帝国" (1 occurrences)
 - Predicted: None
@@ -63125,12 +59495,6 @@ Accuracy: 98.86%
 - Examples:
   - 我从邮局回家时 电梯里还有一个人他进了普拉莫德的家
 
-### "时" + "白鸽" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一会儿拍摄时 白鸽飞来飞便会抢火
-
 ### "时" + "相信" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -63172,12 +59536,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 当人们生气时 语调是高的
-
-### "时" + "轴" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 时 轴
 
 ### "时" + "轻颤" (1 occurrences)
 - Predicted: None
@@ -63275,12 +59633,6 @@ Accuracy: 98.86%
 - Examples:
   - 我进车里的时候 包已经在车上了
 
-### "时候" + "发现" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我醒来的时候 发现自己躺在一张象手术台的台子上面还有检测仪…好像…
-
 ### "时候" + "另" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -63377,12 +59729,6 @@ Accuracy: 98.86%
 - Examples:
   - 我像你这么大的时候 爸爸就离开了
 
-### "时候" + "班长" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 第六节课的时候 班长检查还在现在要放学了
-
 ### "时候" + "病死" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -63400,12 +59746,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他们开到上面的时候 瞄准履带
-
-### "时候" + "知" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 秀逢 你掩护那女孩儿的时候 知不知道她是谁？
 
 ### "时候" + "碰巧" (1 occurrences)
 - Predicted: None
@@ -63467,6 +59807,12 @@ Accuracy: 98.86%
 - Examples:
   - 它撞击海底的时候 速度有二、三十节
 
+### "时候" + "那" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 钢琴家到的时候 那人正在屋里
+
 ### "时候" + "都" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -63490,6 +59836,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 有哪些特别的时刻 你想重新体验呢
+
+### "时刻" + "最" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 因为我觉得在这个时刻 最好的策略就是引人注意
 
 ### "时刻" + "献上" (1 occurrences)
 - Predicted: None
@@ -63532,12 +59884,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 时菜肉片饭 例汤 茶或咖啡
-
-### "时辰" + "已经" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 孤落时辰 已经…快要结束了
 
 ### "时过境迁" + "回忆" (1 occurrences)
 - Predicted: None
@@ -63597,7 +59943,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 泰哥这是我最后一次帮你了你要的东西全都帮你找好了时间 地点都在里面
+  - 你要的东西全都帮你找好了时间 地点都在里面
 
 ### "时间" + "好" (1 occurrences)
 - Predicted: None
@@ -63797,6 +60143,12 @@ Accuracy: 98.86%
 - Examples:
   - 因为他明白 如果在一百天时公主不承认她的约定 那么士兵将会伤心难过 绝望的死去
 
+### "明白" + "您" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 您大概还不明白 您的行为 多让人厌恶 您知道吗
+
 ### "明白" + "生命" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -63827,23 +60179,11 @@ Accuracy: 98.86%
 - Examples:
   - 明白 首长
 
-### "明白" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 跟我们一样我不明白 ！
-
 ### "易主" + "庆典" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 新君临朝，江山易主 庆典能少得了您二位吗？
-
-### "星" + "犹太" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 大卫之星 犹太货
 
 ### "星星" + "笑" (1 occurrences)
 - Predicted: None
@@ -63941,12 +60281,6 @@ Accuracy: 98.86%
 - Examples:
   - 下个星期日 你想选在哪里比赛?
 
-### "星期海东" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我不太懂星期海东 你真的好聪明
-
 ### "星空学园" + "★★★" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64031,12 +60365,6 @@ Accuracy: 98.86%
 - Examples:
   - 昭和二十八年 文化节 参展作品
 
-### "是" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 是 !
-
 ### "是" + "一般" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64085,12 +60413,6 @@ Accuracy: 98.86%
 - Examples:
   - 上次生日你不是 也收到玫瑰花了吗?
 
-### "是" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果不是 了他
-
 ### "是" + "事成" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64114,12 +60436,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 幸一 也是 从来不听任何人讲总是要照他的方法做
-
-### "是" + "以" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我是作为她父亲，而不是 以警察的身份去认尸的
 
 ### "是" + "你们" (1 occurrences)
 - Predicted: None
@@ -64157,12 +60473,6 @@ Accuracy: 98.86%
 - Examples:
   - 是 准备好了
 
-### "是" + "到" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 哪里是 到自已兄弟那里
-
 ### "是" + "医生" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64173,7 +60483,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你知道那两个是 十二使徒的彼得和保罗？
+  - 你不是…你知道那两个是 十二使徒的彼得和保罗？
 
 ### "是" + "又" (1 occurrences)
 - Predicted: None
@@ -64211,6 +60521,12 @@ Accuracy: 98.86%
 - Examples:
   - 而我们的职责是 坚守司令部给我的阵地直到最后
 
+### "是" + "大人" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 是 大人
+
 ### "是" + "大哥" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64241,12 +60557,6 @@ Accuracy: 98.86%
 - Examples:
   - 是 女士臭名远扬你俩是我见过最骇人听闻的最无能的监护人
 
-### "是" + "她爸" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 真正原因是 她爸把我当成傻子并没有
-
 ### "是" + "姐夫" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64258,12 +60568,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你干了你的教授 是不是 婊子
-
-### "是" + "它们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我常想这就是 它们所以如此之因我的小朋友那小矮人和他的小虫，
 
 ### "是" + "安托" (1 occurrences)
 - Predicted: None
@@ -64311,13 +60615,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 华达 是 巴顿
-
-### "是" + "师父" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 首先，先观查整个碗是 师父
+  - 华达 是 巴顿过来
 
 ### "是" + "延长" (1 occurrences)
 - Predicted: None
@@ -64330,12 +60628,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 当然，他们也可能是 弗兰克.塞东所杀
-
-### "是" + "当" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 现在留个我最深的印象就是 当人们谈到缺乏教育的人的时候总是在指穷人
 
 ### "是" + "当年" (1 occurrences)
 - Predicted: None
@@ -64367,11 +60659,11 @@ Accuracy: 98.86%
 - Examples:
   - 你们的武器是 手上的枪和肩上的脑袋
 
-### "是" + "把" (1 occurrences)
+### "是" + "打算" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你所要做的是 把公文包放在柱子下面左边楼梯那根柱子打开很好
+  - 我们村上的意思是 打算明天待一天后天咱们用车给他接回来
 
 ### "是" + "教官" (1 occurrences)
 - Predicted: None
@@ -64475,12 +60767,6 @@ Accuracy: 98.86%
 - Examples:
   - 是 班组领导主席
 
-### "是" + "瑞士" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 奶酪是 瑞士的
-
 ### "是" + "瓦迪姆" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64497,7 +60783,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 赶着回老家卖咸鸭蛋是 白拓图
+  - 是 白拓图
 
 ### "是" + "皮姆庞" (1 occurrences)
 - Predicted: None
@@ -64553,12 +60839,6 @@ Accuracy: 98.86%
 - Examples:
   - 在这样的世界里 我们约好一辈子或是 约好几辈子都在一起
 
-### "是" + "给" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 现在最好的选择是 给白死神带上杀死他儿子的人.
-
 ### "是" + "罗穆斯卡·保罗·乌鲁拉普达" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64600,12 +60880,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 问题是 莫杭治 你在做些在我看来不应该的事
-
-### "是" + "虔诚" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 莱纳赫家是 虔诚的天主教徒!
 
 ### "是" + "行" (1 occurrences)
 - Predicted: None
@@ -64661,12 +60935,6 @@ Accuracy: 98.86%
 - Examples:
   - 现在是 连推销偶像歌星的地方都没有这是未麻是否能生存下来 所做的选择啊
 
-### "是" + "避" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 现在声纳一放 整片海洋都是 避也没法避
-
 ### "是" + "邓伯" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64678,12 +60946,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 如果我是你，我就不是 那么肯定他还在这
-
-### "是" + "那天" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 她去世的那天写给我的不巧地是 那天晚上我去参加派对了
 
 ### "是" + "那里" (1 occurrences)
 - Predicted: None
@@ -64763,23 +61025,11 @@ Accuracy: 98.86%
 - Examples:
   - 妈 你是不是 又对他们说了什么不好的话？
 
-### "是否" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一个女人，是否 在心理学层面上……也就是说，那是不是可能的
-
 ### "是否" + "应该" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你有纹身，我不在乎这是否 应该代表我们的家庭
-
-### "是啊" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 是啊 !
 
 ### "是啊" + "." (1 occurrences)
 - Predicted: None
@@ -64901,6 +61151,12 @@ Accuracy: 98.86%
 - Examples:
   - 显然 他很忙
 
+### "显然" + "你" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 显然 你也能在任何地方 任何时间休息
+
 ### "显然" + "她" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -64912,12 +61168,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 显然 如果必须进行接触请不要讨论庭审相关内容
-
-### "显然" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 显然 我需要这个 我会还你..
 
 ### "显眼" + "明白" (1 occurrences)
 - Predicted: None
@@ -64949,23 +61199,11 @@ Accuracy: 98.86%
 - Examples:
   - 显而易见 不是吗
 
-### "晓" + "不晓" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你看了新闻没的三峡工程你晓 不晓的？
-
 ### "晕倒" + "实际上" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 一个多星期之后每次她晕倒 实际上
-
-### "晚" + "上" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 局长同志 我晚 上会请您好
 
 ### "晚" + "不" (1 occurrences)
 - Predicted: None
@@ -65020,12 +61258,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 想想过去每天晚上 睡觉前关大门的时候总是没将钥匙锁上以前不是没有钥匙
-
-### "晚上" + "这么" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 布希族会在晚上 这么点起篝火围成一个圈跳舞
 
 ### "晚上" + "这样" (1 occurrences)
 - Predicted: None
@@ -65135,12 +61367,6 @@ Accuracy: 98.86%
 - Examples:
   - 晚上好 马赛罗 你好吗？
 
-### "晚安" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 再想想吧 ， 晚安 !
-
 ### "晚安" + "卡尔" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -65164,6 +61390,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 晚安 教授．
+
+### "晚安" + "萨拉" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 是最痛苦晚安 萨拉
 
 ### "晚安" + "蒂米" (1 occurrences)
 - Predicted: None
@@ -65225,12 +61457,6 @@ Accuracy: 98.86%
 - Examples:
   - 昨晚 警察在普拉泽内山 发现两具烧焦的尸体
 
-### "普拉莫德" + "和" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 实际上达妮的父亲普拉莫德 和我我们在一起很幸福
-
 ### "普拉莫德·辛哈" + "已经" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -65248,12 +61474,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我是拉西卡演员普拉莫德·辛哈 雇用了我
-
-### "普斯科夫" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你知道烧了我多少次在普斯科夫 在诺夫科罗德 在加利奇你自已承负三大罪过
 
 ### "普斯顿韦摩" + "很" (1 occurrences)
 - Predicted: None
@@ -65290,12 +61510,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 印度普纳 普拉巴特路
-
-### "普罗什卡" + "阿利芙油" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 普罗什卡 阿利芙油在哪里 该打谁的耳光
 
 ### "普罗迪" + "你" (1 occurrences)
 - Predicted: None
@@ -65465,6 +61679,12 @@ Accuracy: 98.86%
 - Examples:
   - 可到了最后 她还是不肯低头
 
+### "最后" + "我" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 到最后 我真的爱上了这本书
+
 ### "最后" + "跟" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -65543,12 +61763,6 @@ Accuracy: 98.86%
 - Examples:
   - 两个月 罗伯托
 
-### "月匕" + "给" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你 月匕 给我十卢比么?
-
 ### "月底" + "留" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -65621,12 +61835,6 @@ Accuracy: 98.86%
 - Examples:
   - 既然有 有没有人叫你吹？
 
-### "有" + "有欲" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有些女人很有 有欲你是吗？
-
 ### "有" + "真有" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -65644,12 +61852,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 晚上 你 还有 课 吗?
-
-### "有" + "那" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 可你要是有 那怕一丁点的良心你要是跟像我老婆一样的女人一起鬼混那随你便
 
 ### "有" + "韩国" (1 occurrences)
 - Predicted: None
@@ -66017,11 +62219,17 @@ Accuracy: 98.86%
 - Examples:
   - 师傅，我练腿眼朝天 没留神底下呀
 
+### "朝鲜语" + "向" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 「请用朝鲜语 向他转述以下的话「我恐怕在现实生活中「没有女人会因被强暴而感到欢悦
+
 ### "朝鲜语" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）你以为你说朝鲜语 我就听不懂？
+  - 你以为你说朝鲜语 我就听不懂？
 
 ### "期望" + "失去" (1 occurrences)
 - Predicted: None
@@ -66119,12 +62327,6 @@ Accuracy: 98.86%
 - Examples:
   - 木奇 算了
 
-### "木奇" + "请" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 看你还木奇 请你朋友出去
-
 ### "木奇" + "这才" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -66177,7 +62379,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）关于你的未来 有件事你应该要知道
+  - 关于你的未来 有件事你应该要知道今晚午夜，我在石灯旁等你
 
 ### "未来" + "空空" (1 occurrences)
 - Predicted: None
@@ -66191,12 +62393,6 @@ Accuracy: 98.86%
 - Examples:
   - 未麻 去换个衣服吧
 
-### "未麻" + "脱衣" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 雾越未麻 脱衣·偶像歌星宣言 摄影 村野馨
-
 ### "末" + "代" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -66207,7 +62403,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 当他阅读那本 封面有徽章的书时他们与他同在一同分享那长 长的故事，对吧！
+  - 当他阅读那本 封面有徽章的书时他们与他同在一同分享那长长的故事，对吧！
 
 ### "本" + "忍" (1 occurrences)
 - Predicted: None
@@ -66244,12 +62440,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 本杰明 马上去洗手
-
-### "本源" + "终结" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但是若能开启本源 终结世界的话记录死亡
 
 ### "朱卡" + "你" (1 occurrences)
 - Predicted: None
@@ -66359,12 +62549,6 @@ Accuracy: 98.86%
 - Examples:
   - 真 相 抽 丝 剥 茧 纵 使 心 为 机 械
 
-### "机会" + "为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （赢得机会 为纳斯开场）
-
 ### "机会" + "也" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -66417,7 +62601,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我还没机会 跟你新的女朋友跳舞呢新女朋友…我介意
+  - 我还没机会 跟你新的女朋友跳舞呢
 
 ### "机场" + "开" (1 occurrences)
 - Predicted: None
@@ -66563,12 +62747,6 @@ Accuracy: 98.86%
 - Examples:
   - 李秉宪 崔岷植
 
-### "李钊" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 李钊 是从你反抗我们皇军开始你巳经是一个死人
-
 ### "李镇强" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -66617,12 +62795,6 @@ Accuracy: 98.86%
 - Examples:
   - 亨.杜兰 言语矫正员
 
-### "杜奈" + "水合氯乙醛" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 三甲氧苯乙胶 镇静剂 宁必妥 杜奈 水合氯乙醛兴奋剂
-
 ### "杜娟儿" + "行" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -66634,6 +62806,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 一小时后继续赶赴杜纳福卡特 那些士兵经过这儿吗？
+
+### "杜贝先生" + "院长" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我要做的是杜贝先生 院长惦记着您呢
 
 ### "杜辉" + "耶" (1 occurrences)
 - Predicted: None
@@ -66754,12 +62932,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 来 传一下面啊传一下泡面
-
-### "来" + "关心" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 以下让我们一起来 关心今天的社会新闻
 
 ### "来" + "再" (1 occurrences)
 - Predicted: None
@@ -66893,12 +63065,6 @@ Accuracy: 98.86%
 - Examples:
   - 来 好好照一张！
 
-### "来" + "姐" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 来 姐
-
 ### "来" + "它们" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -66989,12 +63155,6 @@ Accuracy: 98.86%
 - Examples:
   - 一千年来 没有人知道圣杯的秘密
 
-### "来" + "的" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 来 的时候
-
 ### "来" + "穿上" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -67025,12 +63185,6 @@ Accuracy: 98.86%
 - Examples:
   - 来 老弟
 
-### "来" + "自" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我来 自怀俄明州
-
 ### "来" + "街头" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -67054,6 +63208,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 来 说说
+
+### "来" + "请" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 来 请走这边
 
 ### "来" + "起来" (1 occurrences)
 - Predicted: None
@@ -67229,12 +63389,6 @@ Accuracy: 98.86%
 - Examples:
   - 一般来说 强奸案在犯罪现场会留下一两根阴毛
 
-### "来说" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 严格来说 我们并不在这但你们就在这啊
-
 ### "来说" + "按" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -67282,12 +63436,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 一般来说 浅色皮肤的人容易灼伤
-
-### "来说" + "爱" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对与我来说 爱不仅仅只是这些淫秽的东西
 
 ### "来说" + "爱情" (1 occurrences)
 - Predicted: None
@@ -67421,12 +63569,6 @@ Accuracy: 98.86%
 - Examples:
   - 杰奎琳 我是杰克
 
-### "杰弗时" + "从" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你把杰弗时 从飞机上弄出来了吗？
-
 ### "杰德" + "更改" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -67438,12 +63580,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 好的 杰拉尔多 谢谢
-
-### "杰拉德·杜瓦尔" + "排字员" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （杰拉德·杜瓦尔 排字员）
 
 ### "杰斐逊" + "有" (1 occurrences)
 - Predicted: None
@@ -67521,7 +63657,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）我看到纯子拿着枕头 去了家仆宿舍
+  - 我看到纯子拿着枕头 去了家仆宿舍
 
 ### "林怀乐" + "你" (1 occurrences)
 - Predicted: None
@@ -67558,6 +63694,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 约拉 尤拉 果莎 戈加 格奥尔吉
+
+### "果菜" + "他" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 卖不出的果菜 他全部带回家
 
 ### "果酱" + "还是" (1 occurrences)
 - Predicted: None
@@ -67667,6 +63809,12 @@ Accuracy: 98.86%
 - Examples:
   - 查图尔 你的电话麻烦你帮我打印出来
 
+### "查德·纳瓦布" + "现在" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 长官 我是查德·纳瓦布 现在在查瓦拉那个印度间谍在巴士上
+
 ### "查德大哥" + "你们" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -67751,23 +63899,11 @@ Accuracy: 98.86%
 - Examples:
   - 纳瓦歇里柴夫 他留下一封辞职报告
 
-### "柴田" + "好祥" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 巨人队的柴田巨人队的柴田 好祥是示再一个羊示再一个羊…太太的太
-
 ### "标准" + "给" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我已经用同样的标准 给奶奶换了钱
-
-### "标志着" + "「" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）那条蛇标志着 「知识的界线」
 
 ### "标记" + "-" (1 occurrences)
 - Predicted: None
@@ -67780,12 +63916,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我本想砍倒那棵树 压倒你的那棵大树？
-
-### "树" + "想" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他爬上一颗树 想看狗仔追卡拉比
 
 ### "树" + "而且" (1 occurrences)
 - Predicted: None
@@ -67912,12 +64042,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 塔拉索夫 格里尤诺夫 特卡丘克
-
-### "案件" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在一定程度上像这件如此严重的案件 我们必须弄清楚每一个要点
 
 ### "案件" + "所以" (1 occurrences)
 - Predicted: None
@@ -68165,12 +64289,6 @@ Accuracy: 98.86%
 - Examples:
   - 你…森岛 快把枪放下
 
-### "森林" + "镇压" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 将光明带进森林 镇压到野狼群的话这儿就会变得富庶
-
 ### "森米" + "这边" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -68182,12 +64300,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 反正除非进棺材 我是不会搬出去的
-
-### "椅背" + "收好" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 椅背和餐桌竖直椅背 收好餐桌
 
 ### "椰子味" + "草莓味" (1 occurrences)
 - Predicted: None
@@ -68339,12 +64451,6 @@ Accuracy: 98.86%
 - Examples:
   - 我想完成一次 完美的犯罪
 
-### "次" + "尼可拉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 也许你可以再来讲一次 尼可拉 、 哥白我才不要
-
 ### "次" + "您" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -68369,12 +64475,6 @@ Accuracy: 98.86%
 - Examples:
   - 在心灵深处某个地方的呼唤不论何时多少次 描绘梦想吧
 
-### "次" + "给" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 最後说一次 给哨子我!
-
 ### "次" + "行" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -68398,12 +64498,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我知道我以前生命中从来都没有这么快乐过没有欢乐 但是最起码我还有朋友！
-
-### "欢乐" + "满足" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们来吧所有快乐的事物列个单子幸福 欢乐 满足
 
 ### "欢乐" + "还" (1 occurrences)
 - Predicted: None
@@ -68511,7 +64605,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 欧莱利 说吧你要一路追踪下去 穷追不舍
+  - 欧莱利 说吧
 
 ### "款式" + "只要" (1 occurrences)
 - Predicted: None
@@ -68555,17 +64649,17 @@ Accuracy: 98.86%
 - Examples:
   - 因为你已经被沾污了嘛被沾污的偶像歌星 是没人会喜欢的
 
-### "止" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 愈不在行就愈要下工夫画到在行为止 ！
-
 ### "正义" + "惩恶" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 大把离奇的案子需要我们唐人街神探去匡扶正义 惩恶扬善啦
+
+### "正在" + "…" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 抱歉，我正在 …瞧瞧谁来了
 
 ### "正常" + "智障" (1 occurrences)
 - Predicted: None
@@ -68584,12 +64678,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 如果你们觉得这很正常 那就当是我一个人的问题
-
-### "正是" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 正是 !
 
 ### "正派" + "更" (1 occurrences)
 - Predicted: None
@@ -68662,12 +64750,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 此外 收购价也没有将他的商业损失考虑在内以及他对其他人的债务法庭决定
-
-### "此外" + "案杀" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 此外 案杀武器一把形状与死者头部伤口吻合的斧子在你家被找到了已经拿去做检查了
 
 ### "此时" + "你" (1 occurrences)
 - Predicted: None
@@ -68813,6 +64895,12 @@ Accuracy: 98.86%
 - Examples:
   - 就算要死 也该奋战到底
 
+### "死" + "了" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你 已 经 死 了
+
 ### "死" + "却" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -68951,6 +65039,12 @@ Accuracy: 98.86%
 - Examples:
   - 殿下 难道 你要使用那个吗
 
+### "母亲" + "也" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我说我是为了母亲 也是为了父亲
+
 ### "母亲" + "山羊羊圈" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -69041,12 +65135,6 @@ Accuracy: 98.86%
 - Examples:
   - 为什么要弄清这个比 什么都更重要？
 
-### "比" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那只看来我还得再多补几根儿一会爸比 你在哪里？
-
 ### "比" + "怎么样" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -69064,12 +65152,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 跟你原来做的事情比 没那么重要
-
-### "比" + "男" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们这 儿女人比 男从多被拐出去的女人多的是
 
 ### "比上不足" + "比下有余" (1 occurrences)
 - Predicted: None
@@ -69190,6 +65272,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 跟我们的金百合国旗比起来 三色旗算什么？
+
+### "比起来" + "这" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 和今晚听到的劲爆消息比起来 这又算什么
 
 ### "比起来" + "都" (1 occurrences)
 - Predicted: None
@@ -69329,12 +65417,6 @@ Accuracy: 98.86%
 - Examples:
   - 家庭气氛 无拘无束
 
-### "气盛" + "太过于" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 当时我过于年轻气盛 太过于在乎家族荣誉家族荣誉
-
 ### "气质" + "日本人" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -69370,12 +65452,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 当飞机失压时… 先带好自己的氧气面罩 再去帮助别人
-
-### "氧苯乙胶" + "镇静剂" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 三甲氧苯乙胶 镇静剂 宁必妥 杜奈 水合氯乙醛兴奋剂
 
 ### "水" + "喝" (1 occurrences)
 - Predicted: None
@@ -69455,12 +65531,6 @@ Accuracy: 98.86%
 - Examples:
   - 在这水里 连游泳都不行了
 
-### "水阀" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 打开所有水阀 ！
-
 ### "永远" + "不" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -69472,12 +65542,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 今夜及永远 阿门
-
-### "求救" + "、" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 求救 、
 
 ### "汉" + "可以" (1 occurrences)
 - Predicted: None
@@ -69611,12 +65675,6 @@ Accuracy: 98.86%
 - Examples:
   - 沈佳宜 上大学以后不要太快让别的男生追到你好不好
 
-### "沉醉" + "麗し" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 丽人亦沉醉 麗し女酔いにけり
-
 ### "沐浴" + "这" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -69665,6 +65723,12 @@ Accuracy: 98.86%
 - Examples:
   - 还未替隆美尔的间谍想到办法横越沙漠 打到英军总部
 
+### "沙祇" + "你" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 英明沙祇 你好歹也在王位前宣誓效忠在举国还在哀悼时篡位实在有违武士的精神
+
 ### "沙维图迪" + "几点" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -69701,18 +65765,6 @@ Accuracy: 98.86%
 - Examples:
   - 沙贝 朗古卢瓦和马桑大叔联合起来揭发了哈珊虐待学生的做法孩子们被询问
 
-### "沙贝" + "行动" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 而这个 校长先生的私人储备沙贝 行动反应
-
-### "没" + "事" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 真 的没 事
-
 ### "没" + "再" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -69737,23 +65789,11 @@ Accuracy: 98.86%
 - Examples:
   - 没 睡醒的人也来精神了
 
-### "没" + "精 神" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 一大清早就这么没 精 神还睡站好
-
 ### "没" + "还" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 没 还不行没
-
-### "没事" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 没事 !
 
 ### "没事" + "不要紧" (1 occurrences)
 - Predicted: None
@@ -70001,12 +66041,6 @@ Accuracy: 98.86%
 - Examples:
   - 没错 所以迭戈总是关机
 
-### "没错" + "正经" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 没错，没错 正经八百的的中国人！
-
 ### "没错" + "没错" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -70091,12 +66125,6 @@ Accuracy: 98.86%
 - Examples:
   - 法兰克 恭喜了
 
-### "法国" + "冒险家" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （法国 冒险家古思杜）失陪一下
-
 ### "法国人" + "就" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -70132,12 +66160,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 法官大人 这是一种滑坡谬误
-
-### "法师" + "变性" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 女巫 法师 变性人形形式式
 
 ### "法庭" + "什么" (1 occurrences)
 - Predicted: None
@@ -70277,12 +66299,6 @@ Accuracy: 98.86%
 - Examples:
   - 波妞 波妞 醒一醒
 
-### "波布" + "里科夫" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 迪德．伊万诺维奇．波布 里科夫是是食品工业处处长
-
 ### "波斯" + "蒙古" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -70331,12 +66347,6 @@ Accuracy: 98.86%
 - Examples:
   - 凶嫌则一言不发用预藏在书包里的尖刀砍杀受害人当场血流如注 惨不忍睹
 
-### "注" + "顶级" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 被一些大个黑鬼 操你屁眼的自由注 顶级脏话
-
 ### "注定" + "又" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -70360,12 +66370,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 是，我没注意 那么医生说你什么时候会好呀？
-
-### "注意" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 战犯注意 ！
 
 ### "泪水" + "我" (1 occurrences)
 - Predicted: None
@@ -70498,12 +66502,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你们看洋洋洋洋 你在干嘛?
-
-### "洋葱" + "也许" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这让他感觉好当你用黑麦面包和洋葱 也许还有鳀鱼做三明治的时候你已经让我觉得饿了
 
 ### "洋鬼婆" + "你" (1 occurrences)
 - Predicted: None
@@ -70799,12 +66797,6 @@ Accuracy: 98.86%
 - Examples:
   - 他富得流油 你和她有一腿？
 
-### "流浪汉" + "老不死" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你这老不死你这流浪汉 老不死 酒鬼
-
 ### "流血" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -70852,12 +66844,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 是的，我妈妈因为浣熊 把我绑在椅子上
-
-### "浦巷" + "梨浦" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （梨浦原子力发电厂 浦巷 梨浦） 是因为睡不着 才做潜伏工作的
 
 ### "浩" + "不" (1 occurrences)
 - Predicted: None
@@ -70973,12 +66959,6 @@ Accuracy: 98.86%
 - Examples:
   - 海莲纳 包翰 卡特
 
-### "海豚" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 以对不同的物种现在我们就来模拟一下海豚 在青罗湾水底所受到的冲击
-
 ### "海贼" + "走私集团" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -71037,7 +67017,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）你是日本淑女 为什么不说日语？
+  - 你是日本淑女 为什么不说日语？
 
 ### "淑姬" + "展示" (1 occurrences)
 - Predicted: None
@@ -71055,19 +67035,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）「小姐有深呼吸 吞口水吗？
+  - 「小姐有深呼吸 吞口水吗？
 
 ### "深处" + "以至于" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 在很深的深处 以至于我无法感觉到我应该感觉到你胡说些什么
-
-### "深处" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 其实在内心深处 你也希望自己是黑若
 
 ### "深处" + "我" (1 occurrences)
 - Predicted: None
@@ -71103,7 +67077,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）朝鲜很脆弱、混浊 迟钝，所以绝望
+  - 朝鲜很脆弱、混浊 迟钝，所以绝望
 
 ### "混混" + "整天" (1 occurrences)
 - Predicted: None
@@ -71295,7 +67269,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）这里如此柔软、温暖 湿润，而且…（日语）美…美…美得醉人！
+  - 然后他会这样说这里如此柔软、温暖 湿润，而且…美…美…美得醉人！
 
 ### "温柔" + "是" (1 occurrences)
 - Predicted: None
@@ -71447,12 +67421,6 @@ Accuracy: 98.86%
 - Examples:
   - 你的心会变得更满 还是更空?
 
-### "满分" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 满分 !
-
 ### "满天星" + "什么" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -71525,12 +67493,6 @@ Accuracy: 98.86%
 - Examples:
   - 她并不是为了成为演员 才接受那些严格的训练啊
 
-### "演员" + "编曲家" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 意大利演员 编曲家及作词家瞧 我都忘了这个
-
 ### "演奏" + "是" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -71542,12 +67504,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我那颗傻傻的心在砰砰演奏 轻快跳跃
-
-### "演活" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你今晚真棒， 玛格你演活 了 那可怜的女孩
 
 ### "演道" + "太阴" (1 occurrences)
 - Predicted: None
@@ -71759,12 +67715,6 @@ Accuracy: 98.86%
 - Examples:
   - 有烤箱 灯 睡椅和电视
 
-### "灰常" + "混开心" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我 灰常 混开心
-
 ### "灰心" + "朋友" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -71800,12 +67750,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 彗星灾害 预言到了灾难吗
-
-### "炉" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 爱能长期忍耐友善爱不嫉炉 不自夸不自豪
 
 ### "炕" + "吃饭" (1 occurrences)
 - Predicted: None
@@ -71933,6 +67877,12 @@ Accuracy: 98.86%
 - Examples:
   - 小心点 布拉德
 
+### "点" + "我" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 小声点 我又不是聋子
+
 ### "点" + "才" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -72035,17 +67985,17 @@ Accuracy: 98.86%
 - Examples:
   - 有烤箱 灯 睡椅和电视
 
+### "烤肉" + "没救" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我明天想请你和我们一起篝火 烤肉 没救
+
 ### "烦" + "会" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 也许以后你会很烦 会不习惯
-
-### "烧伤" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但是她…罗伯特找到她的时候，大面积烧伤 ，但一息尚存
 
 ### "烧死" + "杂种" (1 occurrences)
 - Predicted: None
@@ -72141,7 +68091,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 第二天早上 把她放了的时候然后 她问她值多少钱
+  - 把她放了的时候然后 她问她值多少钱
 
 ### "然后" + "有" (1 occurrences)
 - Predicted: None
@@ -72154,12 +68104,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 然后 突然 她对我说 一起经营洗澡堂吧
-
-### "然而" + "奖赏" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 然而 奖赏却给了外科整形
 
 ### "然而" + "妹妹" (1 occurrences)
 - Predicted: None
@@ -72215,12 +68159,6 @@ Accuracy: 98.86%
 - Examples:
   - 不照做 士兵会觉得触霉头
 
-### "照片" + "上面" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他在一份报纸上发现了他父亲的照片 上面指控他..
-
 ### "照片" + "就" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -72244,12 +68182,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 就好比你把照片 组合起来作为你的主题，比如说放到画廊里面。
-
-### "照片" + "（" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在我的衣服里我找到一沓照片 （因为有人头，以为是照片）
 
 ### "照顾" + "一" (1 occurrences)
 - Predicted: None
@@ -72287,18 +68219,6 @@ Accuracy: 98.86%
 - Examples:
   - 因为熟 才好奇大家的秘密 不然多无趣
 
-### "燃料" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不要再给机器加额外的燃料 ！
-
-### "燃料费" + "一定" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 为了省燃料费 一定会停在这附近的小岛糟了
-
 ### "燕儿" + "燕儿" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -72310,12 +68230,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 肥皂 燕麦卷 可乐
-
-### "爆炸" + "什么" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 只要飞机摇晃的厉害时我都祈祷能坠机或是爆炸 什么都行
 
 ### "爬" + "不" (1 occurrences)
 - Predicted: None
@@ -72365,12 +68279,6 @@ Accuracy: 98.86%
 - Examples:
   - 如果我爱上 你的笑容要怎么…
 
-### "爱丽莎" + "以为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我最好快点回家否则爱丽莎 以为我交女朋友去了
-
 ### "爱人" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -72419,12 +68327,6 @@ Accuracy: 98.86%
 - Examples:
   - 爱德华 罗伯特 鲁道夫
 
-### "爱德华" + "请" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 爱德华 请你这比较重要
-
 ### "爱德华·奥泽良斯基" + "研究" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -72436,12 +68338,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 爱德温 麻烦你把脐带剪了
-
-### "爱心" + "找" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （但爱心 找不到比你好）
 
 ### "爱情" + "一直" (1 occurrences)
 - Predicted: None
@@ -72478,12 +68374,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他们彼此爱护 就象父亲爱儿子 儿子爱父亲那样
-
-### "爱死" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们爱死 了
 
 ### "爱沙尼亚" + "寻找" (1 occurrences)
 - Predicted: None
@@ -72581,6 +68471,12 @@ Accuracy: 98.86%
 - Examples:
   - 我父亲 你已经见过了…
 
+### "父亲" + "博特费雪" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 克萝丝小姐， 这是我父亲 博特费雪
+
 ### "父亲" + "哇" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -72592,12 +68488,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 啊 父亲 如果你知道我经过多少灾难受过多少苦原谅我吧
-
-### "父亲" + "就" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 天黑前 ， 刚刚回来的父亲 就又被叫走了
 
 ### "父亲" + "怀疑" (1 occurrences)
 - Predicted: None
@@ -72628,6 +68518,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 父亲 由 康斯坦丁-拉维卢库 饰
+
+### "父亲" + "迪瓦卡尔·查图维迪" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我父亲 迪瓦卡尔·查图维迪是普拉塔加尔邮政局局长
 
 ### "父女" + "一" (1 occurrences)
 - Predicted: None
@@ -72833,12 +68729,6 @@ Accuracy: 98.86%
 - Examples:
   - 爸爸 不想再摔跤了
 
-### "爸爸" + "今天" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 爸爸 今天去水族馆好不好嘛
-
 ### "爸爸" + "从" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -72850,6 +68740,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 爸爸 会处理好的
+
+### "爸爸" + "借物" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 爸爸 借物真的好有趣喔
 
 ### "爸爸" + "吃药" (1 occurrences)
 - Predicted: None
@@ -73019,12 +68915,6 @@ Accuracy: 98.86%
 - Examples:
   - 爹地 跟你说等一下嘛！
 
-### "片" + "什么" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 看 前面漆黑一片 什么也看不到也不是
-
 ### "片名" + "地球" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -73037,23 +68927,11 @@ Accuracy: 98.86%
 - Examples:
   - 片名 罗拉快跑
 
-### "片名" + "：" (1 occurrences)
+### "片心" + "都" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 片名 ： 我的父亲母亲
-
-### "片段" + "。" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那件事也只是几个月的生活片段 。
-
-### "牙" + "当" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就六神无主竟把病人的好牙 当烂牙拔掉了！
+  - 哪怕你上一天课 教一天书也是你爸爸这一片心 都没有实现了
 
 ### "牙刷苏" + "说" (1 occurrences)
 - Predicted: None
@@ -73216,18 +69094,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 考虑到你现在的状况 我说真的
-
-### "状态" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 进入潜水状态 !
-
-### "犹太" + "鞑靼" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我要说一些看看 小偷们怎样折磨俄罗斯的无辜的东正教徒看 犹太 鞑靼的嘴脸撒谎
 
 ### "犹太人" + "你" (1 occurrences)
 - Predicted: None
@@ -73433,12 +69299,6 @@ Accuracy: 98.86%
 - Examples:
   - 玉大人 看看
 
-### "玉夫人" + "有" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 玉夫人 有人在墙上乱贴东西
-
 ### "玉夫人" + "玉小姐" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -73613,12 +69473,6 @@ Accuracy: 98.86%
 - Examples:
   - 玛哈维尔 这是生儿子的祷文拿去每日念颂
 
-### "玛妮" + "久子" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 妳看后面（给 玛妮 久子赠）
-
 ### "玛德琳" + "向" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -73630,12 +69484,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - －能告诉我你的名字吗 －玛格丽特 洛仑兹
-
-### "玛格杨" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 嗨， 我是玛格杨 是.惠妮老师班上的学生我想告诉你 我喜欢你的演讲
 
 ### "玛格莉塔" + "你" (1 occurrences)
 - Predicted: None
@@ -73739,12 +69587,6 @@ Accuracy: 98.86%
 - Examples:
   - 玛露莎 楼下有人
 
-### "玩" + "去" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就是出去玩 去哪？
-
 ### "玩" + "多" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -73799,12 +69641,6 @@ Accuracy: 98.86%
 - Examples:
   - 什么下三滥的玩意儿 也他妈敢在这儿露面？
 
-### "玩玩" + "儿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你可是千山万水的过来得好好玩玩 儿我们的船明天早上八点就开了直接去小三峡
-
 ### "玩玩儿" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -73822,6 +69658,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 玩笑 ..?
+
+### "玩笑" + "写" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我只是把它当个玩笑 写在那里那大概是世界上最难的 几何方程式 了
 
 ### "玩耍" + "也" (1 occurrences)
 - Predicted: None
@@ -74049,7 +69891,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 当他终于现身 在象牙塔的时候他带着人们所有的希望
+  - 王后已经差遣她的使者前来当他终于现身 在象牙塔的时候他带着人们所有的希望
 
 ### "玲姐" + "你" (1 occurrences)
 - Predicted: None
@@ -74074,12 +69916,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 珊雅 是你么
-
-### "珍妮弗" + "－" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你知道啦，我是珍妮弗 －
 
 ### "珍妮杰克逊" + "刘易斯阿姆斯特朗" (1 occurrences)
 - Predicted: None
@@ -74273,12 +70109,6 @@ Accuracy: 98.86%
 - Examples:
   - 理纱 船沉了吗？
 
-### "理纱" + "谢谢" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 理纱 谢谢你也是
-
 ### "理纱" + "金鱼" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -74333,12 +70163,6 @@ Accuracy: 98.86%
 - Examples:
   - 阿尼西亚 去看看我的六弦琴 琴弦齐不齐
 
-### "琴键" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 好, 港区手，拨动那些白色的琴键 我们动起来.
-
 ### "琵琶" + "一定" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -74349,7 +70173,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 这是琼斯博士 被撕去的那几页日记里面有一幅地图 指出了圣杯的位置
+  - 这是琼斯博士 被撕去的那几页日记里面有一幅地图
 
 ### "瑞克" + "你" (1 occurrences)
 - Predicted: None
@@ -74398,6 +70222,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 瑞恩 趴下
+
+### "瑞莱" + "今天" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 假如瑞莱 今天来这里的话便是星期一
 
 ### "瑞莱" + "你" (1 occurrences)
 - Predicted: None
@@ -74501,12 +70331,6 @@ Accuracy: 98.86%
 - Examples:
   - 瓦迪姆 谢尔来耶特的行为对我的家庭造成了巨大伤害
 
-### "瓦迪阿森登" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我院长 我的资料纸瓦迪阿森登 你坐下
-
 ### "瓷塑" + "先生" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -74531,23 +70355,11 @@ Accuracy: 98.86%
 - Examples:
   - 完 美 陌 生 人
 
-### "生" + "日" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对了， 双胞胎的生 日 宴会你想来吗？
-
 ### "生" + "而是" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 不是丈夫为妻子而生 而是妻子为丈夫而生
-
-### "生前" + "有" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你丈夫生前 有没有提过损赠器官？
 
 ### "生动" + "热情" (1 occurrences)
 - Predicted: None
@@ -74566,12 +70378,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我的生命 我的事业我的爱人 玛露莎
-
-### "生存者" + "接近" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 离别生存者 接近中
 
 ### "生意" + "宝贝" (1 occurrences)
 - Predicted: None
@@ -74633,12 +70439,6 @@ Accuracy: 98.86%
 - Examples:
   - 生日快乐 吉普
 
-### "生日快乐" + "总统先生" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 生日快乐 总统先生
-
 ### "生日快乐" + "果莎" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -74698,12 +70498,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 可是你一旦出现在我的眼前所以…所以 我们为了不破坏对方的生活 定下了规矩
-
-### "生活" + "悲惨" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 因为你的父亲的生活 悲惨而是一失败者。
 
 ### "生活" + "我" (1 occurrences)
 - Predicted: None
@@ -74783,12 +70577,6 @@ Accuracy: 98.86%
 - Examples:
   - 这个原来是叔叔准备用来 在国会引爆的装置
 
-### "甩" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我以为你甩 了我是为 了布隆 但我又听说…我没有甩过你
-
 ### "田" + "大" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -74855,12 +70643,6 @@ Accuracy: 98.86%
 - Examples:
   - 之后甲虫 马蜂开始分食人类
 
-### "申河均" + "〞" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 〝申河均 〞 因此我也放弃了美术大学去找工作
-
 ### "申爱小姐" + "不" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -74884,12 +70666,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我也不认为澡盆旁放电器 是聪明的作法
-
-### "电子计算机" + "打" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这是保罗格夫斯基和用电子计算机 打出来的是吗在这挂一个月了
 
 ### "电影" + "-" (1 occurrences)
 - Predicted: None
@@ -74920,12 +70696,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 好好带婷婷去看场电影 好吗?
-
-### "电影" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他以为拍摄这部电影 是手到拿来的事情
 
 ### "电影" + "看" (1 occurrences)
 - Predicted: None
@@ -75167,23 +70937,11 @@ Accuracy: 98.86%
 - Examples:
   - 你知道大学生新生训练的时候听说都在乱搞一大群男女 在房间里滥交
 
-### "男子" + "停车" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 同时一名红鞋男子 停车在站外
-
 ### "男子" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 俊美男子 我愿任你摆布
-
-### "男孩" + "-" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 街头男孩 -街头男孩
 
 ### "男孩" + "很" (1 occurrences)
 - Predicted: None
@@ -75196,12 +70954,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 街头男孩 我不会说谎
-
-### "男孩" + "街头" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 街头男孩 街头男孩
 
 ### "男孩" + "被" (1 occurrences)
 - Predicted: None
@@ -75317,18 +71069,6 @@ Accuracy: 98.86%
 - Examples:
   - 梁宽 你这畜生 还不向师弟认错?
 
-### "略德" + "尼拉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 略德 尼拉．伯洛哥菲耶夫娜略德尼拉我们想把马藏到后台柜子里面
-
-### "略德尼拉" + "莫纳科夫" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 略德尼拉 莫纳科夫死了
-
 ### "疏忽" + "而" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -75345,13 +71085,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 总结来说， 我只有一个疑问 拉丁文死 了 吗？
-
-### "疯" + "就" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）我阿姨发了疯 就在那棵树上吊
+  - 总结来说， 我只有一个疑问 拉丁文死了吗？
 
 ### "疯" + "马塞洛" (1 occurrences)
 - Predicted: None
@@ -75382,12 +71116,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 会除去死者的疲惫 痛苦 尘缘同时为死者归去那个世界送别
-
-### "疹子" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我又长疹子 ，给他烦死
 
 ### "疼" + "好" (1 occurrences)
 - Predicted: None
@@ -75467,12 +71195,6 @@ Accuracy: 98.86%
 - Examples:
   - 除了痛苦 什么都感觉不到
 
-### "痛苦" + "体形" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 她一切都为了我承受所有的痛苦 体形变差 都是为了我
-
 ### "痛苦" + "尘缘" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -75502,12 +71224,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他那么瘦 为什么大家都叫他胖子?
-
-### "瘦" + "太" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 太高 太瘦 太红毛
 
 ### "癞蛤蟆" + "长" (1 occurrences)
 - Predicted: None
@@ -75544,12 +71260,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 给那肮脏的美国佬白吃白住 还给他一百大洋？
-
-### "白先生" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 白先生 你也看到了够了
 
 ### "白光" + "就像" (1 occurrences)
 - Predicted: None
@@ -75623,29 +71333,11 @@ Accuracy: 98.86%
 - Examples:
   - 白汁 , 花椰菜
 
-### "白汁" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 奶油就是白汁 ， 是不是？
-
 ### "白狼神" + "越来越" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 白狼神 越来越多人看少我们，愚弄我们再是这样，我们只会沦落做人类的肉食和猎杀对象
-
-### "白痴" + "告诉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 哀悼穿的是黑衣，白痴 告诉他，滚出去这里。
-
-### "白痴" + "－" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 傻瓜，白痴 －但她还是打给你
 
 ### "白粉" + "是" (1 occurrences)
 - Predicted: None
@@ -75737,12 +71429,6 @@ Accuracy: 98.86%
 - Examples:
   - 你认识的 !
 
-### "的" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 是被珍娜甩掉的 , 爱嫉妒男友
-
 ### "的" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -75761,11 +71447,11 @@ Accuracy: 98.86%
 - Examples:
   - [ 我从字迹上看出 有一封是莫伊塞斯写的 ]
 
-### "的" + "《" (1 occurrences)
+### "的" + "「" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 真以为自己是宰相不能老用他为何能背出岳无帅的 《满江红》
+  - （正是备受期待的 「国安局员工日」隔天）
 
 ### "的" + "一半" (1 occurrences)
 - Predicted: None
@@ -75875,6 +71561,12 @@ Accuracy: 98.86%
 - Examples:
   - 此前载着老基督徒英式橄榄球队的 乌拉圭飞机在安第斯山脉坠毁
 
+### "的" + "人" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 待会搬家公司的 人来了怎么办啊
+
 ### "的" + "人类" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -75904,12 +71596,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 是的 以确定自杀的裁决我明白
-
-### "的" + "伙" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他是个什么的 伙？
 
 ### "的" + "似乎" (1 occurrences)
 - Predicted: None
@@ -75969,13 +71655,19 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 写在那里那大概是世界上最难的 几何方程式 了
+  - 我只是把它当个玩笑 写在那里那大概是世界上最难的 几何方程式 了
 
 ### "的" + "刚" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 是的 刚开始做演员
+
+### "的" + "别" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 姓严的 别打
 
 ### "的" + "努力" (1 occurrences)
 - Predicted: None
@@ -75993,13 +71685,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）它原本有精心绘制的 单色木刻插图
-
-### "的" + "单身汉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 了解纳瓦歇里柴夫同志窝窝囊囊的 单身汉 带着两个孩子我等了半天了
+  - 它原本有精心绘制的 单色木刻插图
 
 ### "的" + "南希" (1 occurrences)
 - Predicted: None
@@ -76018,6 +71704,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 买票…是的 去哪里？
+
+### "的" + "古董" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我听说你拥有…东、西方最高质素的 古董制书工具但它们不在这里？
 
 ### "的" + "可爱" (1 occurrences)
 - Predicted: None
@@ -76109,6 +71801,12 @@ Accuracy: 98.86%
 - Examples:
   - 从那里再到秘鲁亚马逊河畔的 圣巴鲁的麻风病之家
 
+### "的" + "在" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 所以我便成功的 在没有杀害她丈夫的情况下占有了她
+
 ### "的" + "坦克" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -76157,17 +71855,17 @@ Accuracy: 98.86%
 - Examples:
   - 这车挺好的 妈咪
 
-### "的" + "妤" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 只有明天上午十点十分的 妤 可以您填一下对座单
-
 ### "的" + "娘娘腔" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我们会让你成为死玻璃的 娘娘腔!
+
+### "的" + "娜迪雅" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 是的 娜迪雅
 
 ### "的" + "完毕" (1 occurrences)
 - Predicted: None
@@ -76193,12 +71891,6 @@ Accuracy: 98.86%
 - Examples:
   - 那个卖子弹的 居然把生锈的也混在里头
 
-### "的" + "左钩拳" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 很久以前我打羽量级那不公平，我还认为你的 左钩拳太好了
-
 ### "的" + "已经" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -76222,12 +71914,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 尼古拉他就懂而皮埃尔是蓝的 深蓝色的 带点红 是四方形的
-
-### "的" + "干嘛" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 谈得好好的 干嘛突然要喷农药呢
 
 ### "的" + "并不" (1 occurrences)
 - Predicted: None
@@ -76425,7 +72111,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）她今晚会在你的 春梦中出现吗？
+  - 她今晚会在你的 春梦中出现吗？
 
 ### "的" + "晚上" (1 occurrences)
 - Predicted: None
@@ -76480,6 +72166,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我看你再敢往老师的 椅子上抹浆糊
+
+### "的" + "欧莉亚" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你说话办事一向是得体的 欧莉亚
 
 ### "的" + "正是" (1 occurrences)
 - Predicted: None
@@ -76577,6 +72269,12 @@ Accuracy: 98.86%
 - Examples:
   - 我说过了，这是个很有趣的 游戏
 
+### "的" + "溺水" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 「公爵慢慢收紧绳索「我像个抓住稻草的 溺水之人
+
 ### "的" + "漩涡" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -76588,12 +72286,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 遇到不会的 照我说的答就行
-
-### "的" + "特等舱" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这些是我们在您所住的 特等舱找到的这是我的东西
 
 ### "的" + "理想" (1 occurrences)
 - Predicted: None
@@ -76643,11 +72335,11 @@ Accuracy: 98.86%
 - Examples:
   - 我们在电影里面得到的生活经验至少是我们自己的 生活经验的双倍就对了
 
-### "的" + "目" (1 occurrences)
+### "的" + "皱折" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 对我而言 拉希摩就是我的 目 标和理想
+  - 「在那红色天鹅绒般的 皱折之中
 
 ### "的" + "看到" (1 occurrences)
 - Predicted: None
@@ -76889,12 +72581,6 @@ Accuracy: 98.86%
 - Examples:
   - 货真价实的 选美皇后
 
-### "的" + "通过" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 今天我要向你们报道一位没有签证的 通过偷钻边界围栏潜进我们国家的男人
-
 ### "的" + "那种" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -76930,12 +72616,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你做什么的 阿黛尔?
-
-### "的" + "陌生人" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 大半夜的 陌生人的你也敢上？
 
 ### "的" + "除了" (1 occurrences)
 - Predicted: None
@@ -76991,6 +72671,18 @@ Accuracy: 98.86%
 - Examples:
   - 红色的 黄色的…就像一束五彩缤纷的花朵
 
+### "的" + "！" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 只是个小孩 没有问题的 ！
+
+### "的" + "，" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我行的 ，谢谢
+
 ### "的时候" + "才" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -77014,12 +72706,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 方便的话 一发工资我就还
-
-### "的话" + "上帝" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果表现出色的话 上帝会宽舒你的
 
 ### "的话" + "不" (1 occurrences)
 - Predicted: None
@@ -77075,6 +72761,12 @@ Accuracy: 98.86%
 - Examples:
   - 矮个子的话 加上去
 
+### "的话" + "去" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 想见他的话 去见他不就好了
+
 ### "的话" + "只" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -77098,12 +72790,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你嫌我烦的话 告诉我就好了
-
-### "的话" + "好吃" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就有吃吃的话 好吃的才行
 
 ### "的话" + "孩子们" (1 occurrences)
 - Predicted: None
@@ -77140,12 +72826,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 身体…很僵不紧张起来的话 很少有人能这么僵
-
-### "的话" + "得" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 要想再高点的话 得找根电信把它绑在杆子上什么的
 
 ### "的话" + "必定" (1 occurrences)
 - Predicted: None
@@ -77267,6 +72947,12 @@ Accuracy: 98.86%
 - Examples:
   - 如果你看到他的话 麻烦你帮我交给他好不好？
 
+### "的话" + "，" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 一切顺利的话 ，我很快就存够钱买车可以每晚都开车回家
+
 ### "的面" + "扇" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -77351,12 +73037,6 @@ Accuracy: 98.86%
 - Examples:
   - 深色皮肤 说话语气 配上这杯酒
 
-### "皮茨" + "奥弗斯特里特" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （皮茨 奥弗斯特里特）
-
 ### "皮诺" + "别" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -77381,12 +73061,6 @@ Accuracy: 98.86%
 - Examples:
   - 维多 皮诺 走了
 
-### "皮诺" + "那" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 皮诺 那点饮料来
-
 ### "皮里西" + "安塔罗" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -77398,12 +73072,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 满脸皱纹 孤独终老
-
-### "盆" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 修碗、修盆 ！
 
 ### "监制" + "小津安二郎" (1 occurrences)
 - Predicted: None
@@ -77470,12 +73138,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 盖顿莫尔 地质及挖掘专家
-
-### "目" + "标" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对我而言 拉希摩就是我的 目 标和理想
 
 ### "目前" + "我" (1 occurrences)
 - Predicted: None
@@ -77590,12 +73252,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 真不敢相信 你还活着
-
-### "相信" + "她" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 也为比瓦尼区带来荣毅我们相信 她也能在全国青少年联赛中为我们小镇带来荣毅
 
 ### "相信" + "您" (1 occurrences)
 - Predicted: None
@@ -77723,12 +73379,6 @@ Accuracy: 98.86%
 - Examples:
   - 但她也对你皱眉头 对不对
 
-### "看" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不应该讨厌看 !
-
 ### "看" + "不" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -77758,12 +73408,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 从六岁起我就没有看 到什么正常的事情了
-
-### "看" + "前面" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 看 前面漆黑一片 什么也看不到也不是
 
 ### "看" + "医生" (1 occurrences)
 - Predicted: None
@@ -77849,12 +73493,6 @@ Accuracy: 98.86%
 - Examples:
   - 按你的说法来看 杀害你情妇的凶手只能是蒸发了
 
-### "看" + "犹太" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我要说一些看看 小偷们怎样折磨俄罗斯的无辜的东正教徒看 犹太 鞑靼的嘴脸撒谎
-
 ### "看" + "现在" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -77884,12 +73522,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 看 福马
-
-### "看" + "米迪亚" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 爸爸 你看 米迪亚叔叔的裤子和衬衣都凉在那是的
 
 ### "看" + "肥邓" (1 occurrences)
 - Predicted: None
@@ -77927,6 +73559,12 @@ Accuracy: 98.86%
 - Examples:
   - 快看 青蛙干！
 
+### "看" + "，" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你看 ，他去了
+
 ### "看" + "－" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -77957,6 +73595,12 @@ Accuracy: 98.86%
 - Examples:
   - [ 我从字迹上看出 有一封是莫伊塞斯写的 ]
 
+### "看到" + "一" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 当晚，依莉萨白看到 一个隐约的身影
+
 ### "看到" + "他" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -77986,6 +73630,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你尽情做但不要回过头来给我看到 明白吗?
+
+### "看到" + "罗伯特" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你也看到 罗伯特
 
 ### "看守" + "假释" (1 occurrences)
 - Predicted: None
@@ -78076,18 +73726,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 魔鬼已经把他的眼睛瞪大看看 刹车灯都灭了
-
-### "看看" + "好" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我到那儿去看看 好!
-
-### "看看" + "小偷" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我要说一些看看 小偷们怎样折磨俄罗斯的无辜的东正教徒看 犹太 鞑靼的嘴脸撒谎
 
 ### "看看" + "有" (1 occurrences)
 - Predicted: None
@@ -78183,7 +73821,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）若我没看错 你俩尚未行房？
+  - 若我没看错 你俩尚未行房？
 
 ### "真" + "妈妈" (1 occurrences)
 - Predicted: None
@@ -78196,12 +73834,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我的情也真 我的爱也真
-
-### "真" + "的" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 真 的没 事
 
 ### "真 相" + "抽 丝 剥 茧" (1 occurrences)
 - Predicted: None
@@ -78269,11 +73901,11 @@ Accuracy: 98.86%
 - Examples:
   - 但只有上帝的真理 才能找到真理
 
-### "真的" + "他" (1 occurrences)
+### "真的" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 说真的 他就是我们学校可选的太烂了
+  - 真的 … 我爱你。
 
 ### "真的" + "做" (1 occurrences)
 - Predicted: None
@@ -78299,12 +73931,6 @@ Accuracy: 98.86%
 - Examples:
   - 真的 好久不见了
 
-### "真的" + "小燕" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 说真的 小燕你是不是应该好好谢谢我才对啊?
-
 ### "真的" + "您" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -78316,6 +73942,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 说真的 我不行
+
+### "真的" + "是" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我是觉得这一大堆真的 是 没有那么复杂
 
 ### "真的" + "有" (1 occurrences)
 - Predicted: None
@@ -78371,17 +74003,11 @@ Accuracy: 98.86%
 - Examples:
   - 然后即使他发现了真相 也太迟了
 
-### "真神" + "愿" (1 occurrences)
+### "真相" + "就" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 天父 天上的真神 愿人都尊你的名为圣 你的来世乔纳斯
-
-### "眨" + "眼" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 连眨 眼都没有
+  - 既然你想像这个真相 就让我来告诉你这个真相吧
 
 ### "眨眼" + "好" (1 occurrences)
 - Predicted: None
@@ -78406,12 +74032,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我撑不住那么久不眨眼 眼睛要裂了!
-
-### "眼" + "从" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 从我刚见到你的第一眼 从我刚跟你说话的第一句食物对我就已味如嚼蜡
 
 ### "眼" + "它" (1 occurrences)
 - Predicted: None
@@ -78496,6 +74116,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 但在我眼里 他连狗屎都不如
+
+### "着" + "「" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 那条蛇标志着 「知识的界线」
 
 ### "着" + "一边" (1 occurrences)
 - Predicted: None
@@ -78585,7 +74211,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （梨浦原子力发电厂 浦巷 梨浦） 是因为睡不着 才做潜伏工作的
+  - 是因为睡不着 才做潜伏工作的
 
 ### "着" + "拿来" (1 occurrences)
 - Predicted: None
@@ -78749,12 +74375,6 @@ Accuracy: 98.86%
 - Examples:
   - 瞧 十点了
 
-### "瞧" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 意大利演员 编曲家及作词家瞧 我都忘了这个
-
 ### "瞧" + "白安诺" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -78772,12 +74392,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你瞧 队长
-
-### "瞧着" + "以后" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 瞧着 以后别后 侮
 
 ### "瞧瞧" + "这里" (1 occurrences)
 - Predicted: None
@@ -78857,6 +74471,12 @@ Accuracy: 98.86%
 - Examples:
   - 布洛克，合伙人想知道 事情进展如何
 
+### "知道" + "人们" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你怎么会知道 人们会成为什么…你难道没读过圣经?
+
 ### "知道" + "什麽" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -78880,12 +74500,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我不知道 但感觉很久了
-
-### "知道" + "你们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 也许他也想知道 你们所谈论有关钱箱的事情不过他并没有付钱让我查钱箱的事
 
 ### "知道" + "佩姬" (1 occurrences)
 - Predicted: None
@@ -78928,12 +74542,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你应该知道 嘿！
-
-### "知道" + "因为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 虽然我并不知道 因为我没上过她
 
 ### "知道" + "女孩" (1 occurrences)
 - Predicted: None
@@ -79151,12 +74759,6 @@ Accuracy: 98.86%
 - Examples:
   - 我知道 马修你是个不称职的人
 
-### "知道" + "－" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - －不知道 －你没有听到炮声吗
-
 ### "短信" + "一" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -79282,12 +74884,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我们必须来硬的 告诉那些混蛋，我们不是在开玩笑！
-
-### "确保" + "本国" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果你支持阿尔西诺埃为女王我们就可确保 本国的和平和繁荣…凯撒你的军队在哪里？
 
 ### "确实" + "她们" (1 occurrences)
 - Predicted: None
@@ -79427,12 +75023,6 @@ Accuracy: 98.86%
 - Examples:
   - 神父 跟我来
 
-### "神父" + "集" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 索偿医生是医生侦探 警察及法官陪审团 告解神父 集于一身
-
 ### "神秘" + "慈祥" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -79517,12 +75107,6 @@ Accuracy: 98.86%
 - Examples:
   - 福马 阿历克塞
 
-### "离" + "外登丹桥" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在北面, 俄国人已经离 外登丹桥不远了
-
 ### "离" + "甲午位" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -79540,12 +75124,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - （离家 留在家里）
-
-### "离开" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 若你现在离开 你会失去最大的省份你会失去我！
 
 ### "离开" + "你们" (1 occurrences)
 - Predicted: None
@@ -79589,12 +75167,6 @@ Accuracy: 98.86%
 - Examples:
   - 离开 阿黛尔!
 
-### "秀大吴" + "怪名" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 讲叫秀大吴 怪名，地址呢？
-
 ### "秀安" + "不用" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -79625,23 +75197,11 @@ Accuracy: 98.86%
 - Examples:
   - 一定抽过烟香烟秀琓 你真的太大惊小怪了搞得我得了肺病似的
 
-### "秀莲" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这里的每一次失败为另一个秀莲 在另一个人生中取得成功大多数人只有几条重要的
-
 ### "秀莲" + "对不起" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 秀莲 对不起
-
-### "秀逢" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 秀逢 你掩护那女孩儿的时候 知不知道她是谁？
 
 ### "私" + "这" (1 occurrences)
 - Predicted: None
@@ -79702,12 +75262,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你骑哪种 横座马鞍还是跨骑?
-
-### "科内尔" + "作为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我 亚历山大-科内尔 作为德国第二个太空 人进入了太空
 
 ### "科内尔太太" + "您" (1 occurrences)
 - Predicted: None
@@ -80141,12 +75695,6 @@ Accuracy: 98.86%
 - Examples:
   - 如果这些九英寸厚的窗户 受压碎裂我们瞬间就会见上帝
 
-### "窗户" + "就" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 二楼的窗户最靠近大楼边的那扇窗户亮着灯的窗户 就在二楼
-
 ### "窗户" + "带给" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -80290,12 +75838,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你看起来又笨 又爱撒娇 又爱哭根本就一无是处谁要是雇用了你谁就倒了八辈子的楣了
-
-### "笨" + "把" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你以为我儿子会那么笨 把我的日记带回来这里？
 
 ### "笨" + "还" (1 occurrences)
 - Predicted: None
@@ -80507,6 +76049,12 @@ Accuracy: 98.86%
 - Examples:
   - 等下 忘拿手机了
 
+### "等会" + "儿" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 再 等会 儿
+
 ### "等会儿" + "乘" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -80543,11 +76091,11 @@ Accuracy: 98.86%
 - Examples:
   - 告诉司机到门口等着 快！
 
-### "等等" + ".." (1 occurrences)
+### "等等" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 嘿，等等 ..!
+  - 如果我想这里了那我就会听一听嘿，等等 …!
 
 ### "等等" + "他" (1 occurrences)
 - Predicted: None
@@ -80705,12 +76253,6 @@ Accuracy: 98.86%
 - Examples:
   - 在这里，悄，悄告诉你吧…我开的那几枪还算 帮了加里波第一把呢
 
-### "算了" + "但是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你干脆是我很笨算了 但是这不是捣乱！
-
 ### "算了" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -80745,7 +76287,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 别管 了， 快演
+  - 别管 了，
 
 ### "管" + "对" (1 occurrences)
 - Predicted: None
@@ -80764,6 +76306,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我这里有一箱 全送给你，不收你钱！
+
+### "篝火" + "烤肉" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我明天想请你和我们一起篝火 烤肉 没救
 
 ### "米克" + "奇斯布莱克摩尔" (1 occurrences)
 - Predicted: None
@@ -80981,12 +76529,6 @@ Accuracy: 98.86%
 - Examples:
   - 又是谁允许你们对他们发动可怕的战争甚至无情地压迫他们使他们精疲力竭 饥寒交迫
 
-### "精神" + "否则" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 告诉大祸珍打醒十二分精神 否则全有事情会不受控制
-
 ### "精神" + "小子" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -80998,18 +76540,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你有没有专业精神 转移视线?
-
-### "精神" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我不能集中精神 ！
-
-### "精神错乱" + "又" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我认为他既不是精神错乱 又不是精神分裂反常原因也不是先天遗传或脑部损伤
 
 ### "糖" + "照" (1 occurrences)
 - Predicted: None
@@ -81125,12 +76655,6 @@ Accuracy: 98.86%
 - Examples:
   - 你妈妈叫我索蕾 出来
 
-### "索蕾" + "看" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 什么时候在她发现之后索蕾 看着我
-
 ### "索蕾" + "那" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -81227,18 +76751,6 @@ Accuracy: 98.86%
 - Examples:
   - 尼古拉他就懂而皮埃尔是蓝的 深蓝色的 带点红 是四方形的
 
-### "红心" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 正中红心 !
-
-### "红心" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - # 但是我的红心 我的心它没有形状
-
 ### "红棕色" + "留" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -81249,7 +76761,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我们不靠满州狗满州人霸占了我们中原现在又勾结红毛鬼 出卖大好河山
+  - 现在又勾结红毛鬼 出卖大好河山
 
 ### "红毛鬼" + "到" (1 occurrences)
 - Predicted: None
@@ -81431,12 +76943,6 @@ Accuracy: 98.86%
 - Examples:
   - 纳瓦歇里柴夫 你的情况不妙啊
 
-### "纳瓦谢" + "里柴夫" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 薇拉 叫纳瓦谢 里柴夫到我这来一下
-
 ### "纳瓦谢里柴夫" + "赶快" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -81497,17 +77003,11 @@ Accuracy: 98.86%
 - Examples:
   - 虽然没有明白指出圣杯的下落但骑士保证这两条线索 能告诉我们它在哪里
 
-### "线索" + "跟" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我老爸的圣杯日记记载着他找到的每一条线索 跟他所有的发现完整地记录了
-
 ### "练习" + "才" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）或许我要多练习 才能画出立体感？
+  - 或许我要多练习 才能画出立体感？
 
 ### "组" + "有人" (1 occurrences)
 - Predicted: None
@@ -81593,23 +77093,11 @@ Accuracy: 98.86%
 - Examples:
   - 但这远没有亲身经历 来得惊心动魄
 
-### "经过" + "会" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 保持你的位置有地方当一大堆的饭菜从你的旁边经过 会怎么样
-
 ### "经验" + "传授" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 德克很棒， 我只是将经验 传授给他而已
-
-### "结婚" + "哎呀" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不能因为结婚 哎呀!
 
 ### "结婚" + "就" (1 occurrences)
 - Predicted: None
@@ -81634,12 +77122,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你说这世界上怎么从来没有一个故事是从开头到结尾 它都是幸福的呢？
-
-### "结束" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 马上把你的作文给校长弗奇特，带他去告诉他到学期结束 你就停学
 
 ### "结束" + "我们" (1 occurrences)
 - Predicted: None
@@ -81705,19 +77187,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）我会确保你的绘画课 充满刺激
+  - 我会确保你的绘画课 充满刺激
 
 ### "给" + "-" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 投票给 -辛格大哥．
-
-### "给" + "作为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 容格夫人, 我把这件大衣送你给 作为分手的礼物
 
 ### "给" + "合同款" (1 occurrences)
 - Predicted: None
@@ -81743,12 +77219,6 @@ Accuracy: 98.86%
 - Examples:
   - 你 有一些三明治给 孩子们的 伙计
 
-### "给" + "尝尝" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 给 尝尝吧
-
 ### "给" + "干" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -81766,12 +77236,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 给 放饭 盒饭
-
-### "给" + "玛妮" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 妳看后面（给 玛妮 久子赠）
 
 ### "给" + "达芙妮" (1 occurrences)
 - Predicted: None
@@ -81796,12 +77260,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我们必须给出 一些讨人喜欢的东西但同时要有意义
-
-### "络绎" + "不绝" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 吸引来络绎 不绝的祈祷者维他命饼干
 
 ### "统治者" + "一定" (1 occurrences)
 - Predicted: None
@@ -82019,11 +77477,11 @@ Accuracy: 98.86%
 - Examples:
   - 请代我向我的老学生们问好维拉 埃利亚娜和纳鲁
 
-### "维洛奇柯" + "尤里格里" (1 occurrences)
+### "维洛奇柯" + "尤里格里高耶维奇" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 维洛奇柯 尤里格里高耶维 奇把欧莉亚的信交给了我
+  - 维洛奇柯 尤里格里高耶维奇把欧莉亚的信交给了我
 
 ### "维洛奇柯" + "您" (1 occurrences)
 - Predicted: None
@@ -82072,6 +77530,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你千万不要想着跑路啊你千万不要想着坐走私船离开泰国再转到越南 缅甸 老挝 柬埔寨
+
+### "缅铃" + "又" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 「这些是缅铃 又叫激情之铃
 
 ### "编剧" + "弗·鲍哥莫洛夫" (1 occurrences)
 - Predicted: None
@@ -82331,12 +77795,6 @@ Accuracy: 98.86%
 - Examples:
   - 不管你犯了多大的罪 上帝都会给你个健康的身躯
 
-### "罪" + "也" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有算有罪 也不至于非惨死不可！
-
 ### "罪人" + "原谅" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -82469,12 +77927,6 @@ Accuracy: 98.86%
 - Examples:
   - 我希望美国人 很快登陆
 
-### "美国佬" + "一定" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 首找人那肮脏美国佬 一定就躲在某处！
-
 ### "美国佬" + "够" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -82486,18 +77938,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 该死的美国佬 毁坏我的船
-
-### "美国佬" + "迟早" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你不认为政府和美国佬 迟早会找到 体然後展开调查吗？
-
-### "美女" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你好 ，美女 !
 
 ### "美女" + "以及" (1 occurrences)
 - Predicted: None
@@ -82522,12 +77962,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 美术 滨田辰雄
-
-### "美白" + "唤醒" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （公主美白 唤醒你的内在美）
 
 ### "美美" + "你" (1 occurrences)
 - Predicted: None
@@ -82589,12 +78023,6 @@ Accuracy: 98.86%
 - Examples:
   - 看她翱翔，看她翱翔 用她新生的翅膀，摆脱束缚的牢笼
 
-### "翻" + "译" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 翻 译白到头来根本没有什么尸体
-
 ### "翻译" + "双语" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -82624,18 +78052,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他怎么这么老 还裸着身子
-
-### "老" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 趁未老 ，好趁青春留倩影
-
-### "老不死" + "酒鬼" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你这老不死你这流浪汉 老不死 酒鬼
 
 ### "老人" + "吃" (1 occurrences)
 - Predicted: None
@@ -82702,12 +78118,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 哎 老刘 上哪儿去呀
-
-### "老城区" + "餐厅" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但都是和其他老师夜店 老城区 餐厅但是…我总是一个人回家我是说 完全一个人
 
 ### "老大" + "东莞仔" (1 occurrences)
 - Predicted: None
@@ -82779,13 +78189,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （吕妍秀刑警） 老婆 帮我接下电话
-
-### "老嫂子" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - ，用不了老嫂子 ， 去看看骆先生吧
+  - 老婆 帮我接下电话
 
 ### "老实话" + "亲爱的" (1 occurrences)
 - Predicted: None
@@ -82803,7 +78207,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 老实说 在这之 前谁的人我也不是
+  - 老实说 在这之前谁的人我也不是
 
 ### "老实说" + "现在" (1 occurrences)
 - Predicted: None
@@ -82906,6 +78310,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你千万不要想着跑路啊你千万不要想着坐走私船离开泰国再转到越南 缅甸 老挝 柬埔寨
+
+### "老是" + "那么" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 她老是 那么吼叫
 
 ### "老板" + "多多" (1 occurrences)
 - Predicted: None
@@ -83063,12 +78473,6 @@ Accuracy: 98.86%
 - Examples:
   - 你想让他从中国远道而来 就这样死去吗？
 
-### "而言" + "他" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 媒体大众怎么想对我们而言 他就是印度间谍
-
 ### "而言" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -83079,7 +78483,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 对我而言 拉希摩就是我的 目 标和理想
+  - 我想是找出 自己想做的事 然后全力投入对我而言 拉希摩就是我的目标和理想
 
 ### "而言" + "现在" (1 occurrences)
 - Predicted: None
@@ -83165,23 +78569,11 @@ Accuracy: 98.86%
 - Examples:
   - 耶 迪士尼乐园！
 
-### "耶夫娜" + "您" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 略德尼拉．伯洛哥菲 耶夫娜 您刚才干什么来着
-
 ### "耶稣基督" + "为了" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我主耶稣基督 为了你们每一个人在十字架上牺牲了自己
-
-### "耶里多" + "维齐" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 安多里哥．耶里多 维齐到学长这来一趟
 
 ### "耶里姆" + "多维齐" (1 occurrences)
 - Predicted: None
@@ -83259,7 +78651,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 说真的虽然我很帅 人聪明 又会讲笑话但你不要轻易地喜欢上我
+  - 虽然我很帅 人聪明 又会讲笑话但你不要轻易地喜欢上我
 
 ### "聪明" + "有趣" (1 occurrences)
 - Predicted: None
@@ -83297,6 +78689,12 @@ Accuracy: 98.86%
 - Examples:
   - 肉球 鸡蛋 奶酪
 
+### "肉荣" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 肉荣 不胖也让你叫胖了
+
 ### "肋骨" + "什么" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -83314,12 +78712,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 肖恩 看着门
-
-### "肖恩戴米恩" + "保罗" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 奈德 艾登 肖恩戴米恩 保罗 文斯
 
 ### "肖邦" + "舒伯特" (1 occurrences)
 - Predicted: None
@@ -83411,18 +78803,6 @@ Accuracy: 98.86%
 - Examples:
   - 你要是有胆 就说出心里的话
 
-### "背判者" + "背叛者" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （背叛者 背判者 背叛者）
-
-### "背叛者" + "背判者" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （背叛者 背判者 背叛者）
-
 ### "背后" + "保证" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -83471,12 +78851,6 @@ Accuracy: 98.86%
 - Examples:
   - 说你胖 你还喘上了
 
-### "胖" + "并且" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有的女孩反对他们很胖 并且疯狂的减肥
-
 ### "胖" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -83518,12 +78892,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 胡萝卜 土豆 还是腌黄瓜?
-
-### "胡言乱语" + "胡言" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 胡言乱语 胡言.
 
 ### "胡说" + "就" (1 occurrences)
 - Predicted: None
@@ -83807,6 +79175,12 @@ Accuracy: 98.86%
 - Examples:
   - 《铁皮鼓》改编自 君特.格拉斯的同名小说
 
+### "自" + "己" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不 了， 我 自 己来
+
 ### "自信" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -83872,12 +79246,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你以为贝姬不向他介绍自己 也能度过这场寿宴吗？
-
-### "自己" + "什么" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我都不知道自己 什么说出这样的话
 
 ### "自己" + "她" (1 occurrences)
 - Predicted: None
@@ -83957,12 +79325,6 @@ Accuracy: 98.86%
 - Examples:
   - 为了自由 - 去死
 
-### "自由" + "就" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 人类就像动物给予自由 就意味着给予他们意识到自己曾经作为奴隶的能力
-
 ### "自由" + "想" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -83991,7 +79353,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 第二， 他讨厌自 己第三， 他压坏了 你的 自行车 不是吗？
+  - 第三， 他压坏了 你的 自行车 不是吗？
 
 ### "自食其力" + "你" (1 occurrences)
 - Predicted: None
@@ -84083,12 +79445,6 @@ Accuracy: 98.86%
 - Examples:
   - 灯光舞台 五光十色
 
-### "航海官" + "平均" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 副官 平均进水 压力是航海官 平均进水 是下潜到一百五十英尺处
-
 ### "般" + "从" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -84099,7 +79455,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）那边有个像夜叉般 魁梧的男人
+  - 那边有个像夜叉般 魁梧的男人他最受不了女孩的尖叫声
 
 ### "船" + "就" (1 occurrences)
 - Predicted: None
@@ -84191,12 +79547,6 @@ Accuracy: 98.86%
 - Examples:
   - 有一个著名的红发艺术家 高更
 
-### "艺术家" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他是艺术家 ，信得过
-
 ### "艾丹" + "受尽" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -84244,6 +79594,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 艾佛特 别骂我你太太叫我拿饭盒给你
+
+### "艾佛特" + "帮" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 艾佛特 帮我一个忙…
 
 ### "艾佛特" + "把" (1 occurrences)
 - Predicted: None
@@ -84370,12 +79726,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 艾瓦尔德 也尊重这事实
-
-### "艾登" + "肖恩戴米恩" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 奈德 艾登 肖恩戴米恩 保罗 文斯
 
 ### "艾莉缇" + "要" (1 occurrences)
 - Predicted: None
@@ -84515,12 +79865,6 @@ Accuracy: 98.86%
 - Examples:
   - 这漂亮的花 也是上帝赐予我们的礼物
 
-### "花" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你太容易放弃 了我为这个花 了八百万
-
 ### "花" + "他" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -84573,7 +79917,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我有鱿鱼 、 花生奶油 和果酱口味的
+  - 我有鱿鱼、花生奶油 和果酱口味的
 
 ### "芸芸" + "他妈的" (1 occurrences)
 - Predicted: None
@@ -84592,12 +79936,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 脸色苍白 看起来虚弱无助
-
-### "苏哈妮" + "打" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 苏哈妮 打这个号码什么？
 
 ### "苏哥" + "你" (1 occurrences)
 - Predicted: None
@@ -84653,12 +79991,6 @@ Accuracy: 98.86%
 - Examples:
   - 蜜月呢去苏格兰 住小旅馆
 
-### "苏珊太太" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 苏珊太太 , 变态狂
-
 ### "苏菲" + "让" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -84676,6 +80008,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 吾 等 力 之 所 及 唯 有 苟 活 于 世
+
+### "若即若离" + "她们" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 但如果你对她们若即若离 她们会很困惑，然后就会追着你了…
 
 ### "若曦姐" + "三号桌" (1 occurrences)
 - Predicted: None
@@ -84724,6 +80062,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 十分钟之内 船首舱进水就漫过龙骨…深达十四英尺 三个底舱和六号锅炉房
+
+### "英文" + "是" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不是英文 是国语课本的课文
 
 ### "英格保尔佳" + "达普古娜伊杰" (1 occurrences)
 - Predicted: None
@@ -84869,12 +80213,6 @@ Accuracy: 98.86%
 - Examples:
   - 我不想看到一个婊子 一个荡妇 收拾你的东西!
 
-### "荣" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 肉荣 不胖也让你叫胖了回来中国这么久也不会说中国话
-
 ### "荣" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -84916,12 +80254,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你想让我进那所幼儿园从此快乐地生活每天吃药 象那些小孩似的满脸起皱
-
-### "药" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 给他喷点药 ！
 
 ### "药店" + "取" (1 occurrences)
 - Predicted: None
@@ -84965,12 +80297,6 @@ Accuracy: 98.86%
 - Examples:
   - 莉莉 替基斯工作
 
-### "莎萨娜" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有人来找你等等你知道拉米罗不想莎萨娜 在你的房间里我们在看电视!
-
 ### "莫因" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -84988,12 +80314,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 好了 莫杭治 来参加合唱吧?
-
-### "莫杭治" + "终于" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 而莫杭治 终于风中飞舞的风筝
 
 ### "莫瑞齐奥" + "还" (1 occurrences)
 - Predicted: None
@@ -85253,12 +80573,6 @@ Accuracy: 98.86%
 - Examples:
   - 他们一起计划的萨姆·沙考斯基 就是那个逃跑的童子军
 
-### "萨尔曼姆吉" + "个人" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （萨尔曼姆吉 个人详细资料）
-
 ### "萨朴塔" + "是" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -85281,7 +80595,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 从前在萨沙 有一个小男孩叫亚提姆（米迪亚反过来读）他的歌声很美
+  - 从前在萨沙 有一个小男孩叫亚提姆
 
 ### "萨沙" + "足球赛" (1 occurrences)
 - Predicted: None
@@ -85467,7 +80781,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 薇拉 叫纳瓦谢 里柴夫到我这来一下
+  - 薇拉 叫纳瓦谢里柴夫到我这来一下
 
 ### "薇拉" + "给" (1 occurrences)
 - Predicted: None
@@ -85593,7 +80907,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 蜜雪儿 她..
+  - 蜜雪儿 她…
 
 ### "蜡烛" + "做" (1 occurrences)
 - Predicted: None
@@ -85618,12 +80932,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你得融入 是吧
-
-### "螺帽" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 拧紧那个螺帽 ！
 
 ### "螺旋" + "出乎" (1 occurrences)
 - Predicted: None
@@ -85654,24 +80962,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 要想有摔跤的血液 你必须生来就有这种天赋
-
-### "血统" + "住" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 要经常提醒人们他们是人们俄罗斯人是同一血统 住同一片土地
-
-### "行" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 行 了
-
-### "行" + "他" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不行 他跟我们回去什么
 
 ### "行" + "你" (1 occurrences)
 - Predicted: None
@@ -85781,6 +81071,12 @@ Accuracy: 98.86%
 - Examples:
   - 或者这两个时间都行 都行 明白吗?
 
+### "行为" + "多" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 您大概还不明白 您的行为 多让人厌恶 您知道吗
+
 ### "行为" + "必定" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -85859,12 +81155,6 @@ Accuracy: 98.86%
 - Examples:
   - 尽管穿着同样的衣服 但你无法与其相比
 
-### "衣服" + "光洁" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 总是身穿毕挺衣服 光洁整齐
-
 ### "衣服" + "永远" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -85875,7 +81165,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）若她因为你们 其中一人而逃走（日语）我会剥光你们的衣服 逐出大宅！
+  - 若她因为你们 其中一人而逃走我会剥光你们的衣服 逐出大宅！
 
 ### "补助金" + "我" (1 occurrences)
 - Predicted: None
@@ -85888,12 +81178,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你这么着 我呢 给你补票 是吧？
-
-### "表" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你填完我们的表 我们会寄给你一张邀请
 
 ### "表" + "谁" (1 occurrences)
 - Predicted: None
@@ -86039,12 +81323,6 @@ Accuracy: 98.86%
 - Examples:
   - 与其飘逸的裙摆 我比较喜欢牛仔裤
 
-### "裴斗娜" + "〞" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 〝裴斗娜 〞 我最近做了一个决定不知道该不该告诉姊姊
-
 ### "西" + "帕蒂亚拉" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -86189,12 +81467,6 @@ Accuracy: 98.86%
 - Examples:
   - 你不要 就是还在生气罗!
 
-### "要" + "懂得" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）我曾在英国留学（日语）英国淑女全要 懂得画鲜艳优雅的画作
-
 ### "要" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -86206,12 +81478,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你不要 打搅弗兰克·卢卡斯
-
-### "要" + "拘捕" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们今次的任务，是要 拘捕所有参与贩毒的人
 
 ### "要" + "爆炸" (1 occurrences)
 - Predicted: None
@@ -86513,12 +81779,6 @@ Accuracy: 98.86%
 - Examples:
   - 有些人觉得 解释摇滚精神很困难
 
-### "角" + "色" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你不怪我新角 色扮得不好吧！
-
 ### "角儿" + "天天" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -86759,23 +82019,11 @@ Accuracy: 98.86%
 - Examples:
   - 即使我们有家庭通话计划 你也从不给我打电话
 
-### "计程车站" + "和" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 杜迪杜迪哥保利 是整个社区的大老板他替他打理计程车站 和贝拉维斯塔披萨屋等地点
-
 ### "计较" + "有" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 这一番计较 有勇有谋 杀伐果决啊
-
-### "认" + "为" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 为什么 大家认 为我有副好嗓子
 
 ### "认为" + "从" (1 occurrences)
 - Predicted: None
@@ -86831,12 +82079,6 @@ Accuracy: 98.86%
 - Examples:
   - 这样不容易看到球都是那些老板们认为 晚上来看球赛的人会比较多
 
-### "认为" + "罗伯特" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 虽然我认为 罗伯特更有胆识罗日杰斯特温斯基
-
 ### "认为" + "这" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -86885,24 +82127,6 @@ Accuracy: 98.86%
 - Examples:
   - 律师虽然讨人厌 但也应该知道体育老师能赚多少
 
-### "讨厌" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 讨厌 !
-
-### "讨厌" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 还有我讨厌 你把那些 体摆在哪里！
-
-### "讨厌" + "您" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 您知道吗您大概还不明白 您的行为多让人讨厌 您知道吗
-
 ### "讨论" + "也" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -86921,12 +82145,6 @@ Accuracy: 98.86%
 - Examples:
   - 他得到的命令是不让 任何人离开德国士兵的力量就在于 他的纪律性
 
-### "让" + "制片" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 现在告诉我你是否愿意让 制片看我的报告。
-
 ### "让" + "基博" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -86938,12 +82156,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你们谁是让 基博施坦?
-
-### "让" + "波奈" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 让 波奈
 
 ### "让" + "这" (1 occurrences)
 - Predicted: None
@@ -86998,12 +82210,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 让路，让路 我的乳房里充满着乳汁！
-
-### "训练" + "有素" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们连只训练 有素的小虫也不等
 
 ### "训练" + "那" (1 occurrences)
 - Predicted: None
@@ -87065,12 +82271,6 @@ Accuracy: 98.86%
 - Examples:
   - 我向你保证我的连胜记录 不会在我最后一起案子上被打破
 
-### "记录" + "二零一一" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （房客记录 二零一一至二零一五）
-
 ### "记录" + "分析" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -87131,6 +82331,12 @@ Accuracy: 98.86%
 - Examples:
   - 他很清楚的记得 谁几时点了什麽对吗？
 
+### "记得" + "这次" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 记得 这次又谁干了
+
 ### "记得" + "首长" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -87142,6 +82348,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我记得 鲍利斯决定把事业传给米迪亚他那时候还是个穷学生
+
+### "记忆" + "他" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 为加强记忆 他找江湖郎中买些药丸
 
 ### "记忆" + "现在" (1 occurrences)
 - Predicted: None
@@ -87401,6 +82613,12 @@ Accuracy: 98.86%
 - Examples:
   - 诛妖除魔 灭形灭神
 
+### "话" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 如果做不好的话 不会跟你收钱的啦
+
 ### "话" + "了" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -87491,12 +82709,6 @@ Accuracy: 98.86%
 - Examples:
   - 但是话说回来 你这回失手了啊
 
-### "诞" + "一" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 达琳吾爱请告诉我距 圣 诞 一 周孤心何往
-
 ### "诞" + "三" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -87514,12 +82726,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 距 圣 诞 五 周
-
-### "诞" + "四" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 距 圣 诞 四 周对
 
 ### "该" + "行" (1 occurrences)
 - Predicted: None
@@ -87579,7 +82785,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）我光是教她朗读的语气 便已花尽心力
+  - 我光是教她朗读的语气 便已花尽心力
 
 ### "语气" + "配上" (1 occurrences)
 - Predicted: None
@@ -87629,6 +82835,12 @@ Accuracy: 98.86%
 - Examples:
   - 她毫不含糊地说 -
 
+### "说" + "『" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 「公爵夫人说 『慢点，亲爱的』
+
 ### "说" + "一" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -87640,12 +82852,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 然后 突然 她对我说 一起经营洗澡堂吧
-
-### "说" + "不好" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 说 不好
 
 ### "说" + "不然" (1 occurrences)
 - Predicted: None
@@ -87779,12 +82985,6 @@ Accuracy: 98.86%
 - Examples:
   - 听我说 听我说
 
-### "说" + "咱们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 管家老爷兼两副好药钱不要在乎不要让人家说 咱们不管下人的死活是二院点灯
-
 ### "说" + "哪个" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -87826,6 +83026,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 不能这么说 好不好?
+
+### "说" + "完全" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不愿意想起来或者说 完全不记得了
 
 ### "说" + "将来" (1 occurrences)
 - Predicted: None
@@ -87892,12 +83098,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 因为爸爸说 槌球和网球是资产阶级的游戏而足球却不是
-
-### "说" + "比如" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就像您我们会说 比如拉法兰或者乔治·马歇你在那儿捣鼓什么呢
 
 ### "说" + "没人" (1 occurrences)
 - Predicted: None
@@ -88091,12 +83291,6 @@ Accuracy: 98.86%
 - Examples:
   - 说实话 这也不算搞砸
 
-### "说来" + "不管" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 总的说来 不管是丈夫元妻子还是妻子无丈夫都读下去
-
 ### "说来" + "也" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -88211,12 +83405,6 @@ Accuracy: 98.86%
 - Examples:
   - 跟我说说 你们差点被淹死吗？
 
-### "说说" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 村长，你说说 这先生到底还能不能回来
-
 ### "说说笑笑" + "多" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -88259,29 +83447,11 @@ Accuracy: 98.86%
 - Examples:
   - 我第一次来这间咖啡店说起来 泷…虽然这么说 反正你这家伙肯定没有约会的经验
 
-### "请" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 先生 请 你的菜单阿苏 你拿主意
-
 ### "请" + "先生" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 那边请 先生
-
-### "请" + "帮" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 请 帮我叫个门童
-
-### "请" + "放心" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 豹哥：我现在离开香港，请 放心，到埠报平安
 
 ### "请" + "进去" (1 occurrences)
 - Predicted: None
@@ -88325,23 +83495,11 @@ Accuracy: 98.86%
 - Examples:
   - 请问 那位是黄飞鸿?
 
-### "请问" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 请问 ， 是不是你放在我口袋里？
-
 ### "诸位" + "弄出" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 还至于劳动诸位 弄出这么大的动静？
-
-### "诺夫科罗德" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你知道烧了我多少次在普斯科夫 在诺夫科罗德 在加利奇你自已承负三大罪过
 
 ### "诺施恩" + "你" (1 occurrences)
 - Predicted: None
@@ -88395,7 +83553,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 哪怕你上一天课 教一天书也是你爸爸这一片心
+  - 哪怕你上一天课 教一天书也是你爸爸这一片心 都没有实现了
 
 ### "课外活动" + "了" (1 occurrences)
 - Predicted: None
@@ -88535,12 +83693,6 @@ Accuracy: 98.86%
 - Examples:
   - 晚点谈 没看到我很忙吗
 
-### "谈" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 边喝边谈 ， 自然而然一拍即合
-
 ### "谈判" + "亲自" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -88576,12 +83728,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 重要的客户来自国家广播电台我来跟那个姑娘谈谈 她人呢?
-
-### "谈谈" + "约拉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我想根您谈谈 约拉
 
 ### "谋" + "杀伐" (1 occurrences)
 - Predicted: None
@@ -88660,12 +83806,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 丹 芬巴 文斯 谢恩 从这里看着他们
-
-### "谢谢" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 谢谢 !
 
 ### "谢谢" + "上帝" (1 occurrences)
 - Predicted: None
@@ -88839,7 +83979,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 四太太的菠菜豆腐 豆芽菜都做好了
+  - 四太太的菠菜豆腐 豆芽菜都做好了大太太二太太三太太都等着了
 
 ### "象" + "一" (1 occurrences)
 - Predicted: None
@@ -89033,12 +84173,6 @@ Accuracy: 98.86%
 - Examples:
   - 但是越南那边的货 可是非常非常的纯净
 
-### "货物" + "把" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 把货物 把货物都烧掉
-
 ### "货舱" + "到底" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -89050,12 +84184,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 是你们罗马的贪婪 和自大造成的！
-
-### "贱货" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那个贱货 ,
 
 ### "贱货" + "藏" (1 occurrences)
 - Predicted: None
@@ -89098,12 +84226,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 费尔南多 费尔南多
-
-### "费尔明" + "阿德拉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 费尔明 阿德拉男朋友的表亲他知道吗？
 
 ### "费弗尔" + "我们" (1 occurrences)
 - Predicted: None
@@ -89207,12 +84329,6 @@ Accuracy: 98.86%
 - Examples:
   - 赖利 赛伦 你们的行李在十号房
 
-### "赖子" + "收" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （佐佐木赖子 收）
-
 ### "赖瑞" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -89278,12 +84394,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 别走，进屋歇会儿再走 吃了饭再走吧？
-
-### "走" + "哥们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 节拍加诗词诗词你有现在要跟着节拍走 哥们好吗？
 
 ### "走" + "娘娘腔" (1 occurrences)
 - Predicted: None
@@ -89393,23 +84503,11 @@ Accuracy: 98.86%
 - Examples:
   - 从主干道走 那样更快一些
 
-### "走" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 快，快走 ！
-
 ### "走去" + "就" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 但是待我向前走去 就察觉到车道已起了变化
-
-### "走廊" + "黎先生" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你的帽子放了在走廊 黎先生
 
 ### "走开" + "你" (1 occurrences)
 - Predicted: None
@@ -89525,12 +84623,6 @@ Accuracy: 98.86%
 - Examples:
   - 自那天起 诸神震怒
 
-### "起" + "顿时" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 但从那时起 顿时千疮百孔你败给了巴个人对家人的爱
-
 ### "起先" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -89567,17 +84659,17 @@ Accuracy: 98.86%
 - Examples:
   - 来 起来 坐起来
 
-### "起来" + "她" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 她会把电话再次拿起来 她会连着骂你两次..
-
 ### "起来" + "姑娘们" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 浪起来 姑娘们
+
+### "起来" + "就" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 反正我夹起来 就马上吃掉
 
 ### "起来" + "快点" (1 occurrences)
 - Predicted: None
@@ -89793,7 +84885,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （替代人生路径 扫描中）
+  - 不是现在（替代人生路径 扫描中）
 
 ### "路径" + "是" (1 occurrences)
 - Predicted: None
@@ -89915,12 +85007,6 @@ Accuracy: 98.86%
 - Examples:
   - 如果他们认为我是凶手为什么要以她的身份 给我发邮件？
 
-### "身份证" + "奇都秀" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （居名身份证 奇都秀）
-
 ### "身体" + "已经" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -89944,12 +85030,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 被野猪破坏的森林悲鸣我逐渐老朽的身躯 倾听着森林的哀鸣
-
-### "身边" + "做" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我宁愿游荡在你身边 做七天的野鬼也不会让我成为永远的孤魂
 
 ### "身边" + "将" (1 occurrences)
 - Predicted: None
@@ -89991,7 +85071,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 你举例子就是苹果香蕉梨的车厘子 释迦
+  - 车厘子 释迦
 
 ### "车子" + "你" (1 occurrences)
 - Predicted: None
@@ -90011,12 +85091,6 @@ Accuracy: 98.86%
 - Examples:
   - 车泰锡 前辈
 
-### "车票" + "海参崴" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （日语）改两张车票 海参崴改到上海
-
 ### "车辆" + "马上" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -90033,7 +85107,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 前往预定的查税会议或者你可以向右转 走进清洁工的小房间
+  - 或者你可以向右转 走进清洁工的小房间
 
 ### "转校生" + "其实" (1 occurrences)
 - Predicted: None
@@ -90052,12 +85126,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 转身 混蛋
-
-### "转转" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我有些厌春，我们想去湖边转转 你想一起去么？
 
 ### "轮" + "真的" (1 occurrences)
 - Predicted: None
@@ -90137,12 +85205,6 @@ Accuracy: 98.86%
 - Examples:
   - 首先要对法官 为司法正义而付出的辛劳 表示信任和尊敬
 
-### "辛哈先生" + "并" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他责怪长官他说是长官杀了辛哈先生 并将尸体从桥上扔下不
-
 ### "辛妮" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -90195,7 +85257,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 就是浅头发 梳条辫子 娃娃脸现在不在我们局里了
+  - 您还记得基建处那个叫丽莎的吗就是浅头发 梳条辫子 娃娃脸现在不在我们局里了
 
 ### "边" + "汉斯" (1 occurrences)
 - Predicted: None
@@ -90256,12 +85318,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 从来没人看到过 事故发生後也是!
-
-### "过" + "仇恨" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在学校里，我们学过 仇恨只能带来更多的仇恨！
 
 ### "过" + "会" (1 occurrences)
 - Predicted: None
@@ -90341,6 +85397,12 @@ Accuracy: 98.86%
 - Examples:
   - 以前我抓过 象你这样的小坏蛋!
 
+### "过" + "这" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你知道从我有记忆以来我爷爷就跟我讲过 这地方的故事
+
 ### "过" + "这么" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -90352,12 +85414,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 对，有多年没吃过 这麽好吃的黄瓜全日本最好的黄瓜她的面也是她的面？
-
-### "过" + "香肠" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你见过 香肠吗？
 
 ### "过去" + "听见" (1 occurrences)
 - Predicted: None
@@ -90441,7 +85497,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我说过， 那种文字过时 了
+  - 那种文字过时 了
 
 ### "过期" + "我" (1 occurrences)
 - Predicted: None
@@ -90641,12 +85697,6 @@ Accuracy: 98.86%
 - Examples:
   - 你很爱迈克西姆 对吗
 
-### "迈克西姆" + "怎么" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你干吗要折服模样迈克西姆 怎么了
-
 ### "迈克西姆" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -90670,12 +85720,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 迈克西姆 难道我们不能一切从头开始
-
-### "迈尔克" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 迈尔克 我知道是你干的
 
 ### "迈步" + "努力" (1 occurrences)
 - Predicted: None
@@ -90765,19 +85809,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他现在在外头混的还 不错我们好久没有跟他联系了
+  - 他现在在外头混的还 不错
 
 ### "还" + "再" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 好借好还 再借不难啦
-
-### "还" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 然而，我们还 是得过下去，是不
 
 ### "还击" + "－" (1 occurrences)
 - Predicted: None
@@ -90850,6 +85888,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 还有 我们连睡衣都买不起没睡衣
+
+### "还有" + "所有" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我每时每刻总意识到美丽 风趣与智慧还有 所有那些东西对一个女人来说都很重要
 
 ### "还有" + "把" (1 occurrences)
 - Predicted: None
@@ -90947,6 +85991,12 @@ Accuracy: 98.86%
 - Examples:
   - 来 看 这 里
 
+### "这 儿" + "等" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 在这 儿 等我
+
 ### "这下子" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -90976,12 +86026,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 只有人们知道了这些 以此为生存理念守护它人们才会真正自由
-
-### "这些" + "哇哭" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 家里别搞这些 哇哭！
 
 ### "这些" + "哪" (1 occurrences)
 - Predicted: None
@@ -91061,12 +86105,6 @@ Accuracy: 98.86%
 - Examples:
   - 我喜欢你在这儿 做饭什么的…
 
-### "这儿" + "别" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这样不行魔多的半兽人会听到他鬼叫把他绑起来，留在这儿 别！
-
 ### "这儿" + "好" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -91108,12 +86146,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 上校让把他遗体留在这儿 直到凌晨
-
-### "这儿" + "直至" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我们想让她待在这儿 直至病情稳定，但是她今晚想和拉斯一起回家过我能看她么？
 
 ### "这儿" + "睡着" (1 occurrences)
 - Predicted: None
@@ -91180,12 +86212,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 这时候 正好你来电话了就是咱们在说话的时候他就过去了
-
-### "这样" + "。" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 是啊，我妈妈前几天也这样 。
 
 ### "这样" + "丈夫" (1 occurrences)
 - Predicted: None
@@ -91282,12 +86308,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 要这样 懂了吗？
-
-### "这样" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 既然两位老师刚刚都提到了家庭这样 我们刚好有一个短片来 请播放短片
 
 ### "这样" + "所有" (1 occurrences)
 - Predicted: None
@@ -91439,6 +86459,12 @@ Accuracy: 98.86%
 - Examples:
   - 别这样子 什么?
 
+### "这样子" + "他" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 当我这样子 他就看着我……好象他就要杀死我一样
+
 ### "这样子" + "好不好" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -91462,6 +86488,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 关于这点 我需要和你谈谈唱歌 可没人教过他呀?
+
+### "这行" + "不" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我们干这行 不就是为了不想负责
 
 ### "这辈子" + "最" (1 occurrences)
 - Predicted: None
@@ -91558,6 +86590,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 二 它们留在这里 懂吗
+
+### "这里" + "我们" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你在这里 我们陪着你 怎么了？
 
 ### "这里" + "承担" (1 occurrences)
 - Predicted: None
@@ -91697,18 +86735,6 @@ Accuracy: 98.86%
 - Examples:
   - 他请我进入 并且自杀。
 
-### "进去" + "他" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 先别进去 他叫在这里等
-
-### "进去" + "小便" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我充点水去进去 小便都不可以吗!
-
 ### "进去" + "接近" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -91732,12 +86758,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 如果斯坦纳不进攻 柏林就完了
-
-### "进来" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 进来 !
 
 ### "进来" + "也" (1 occurrences)
 - Predicted: None
@@ -91774,18 +86794,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 进来 进来
-
-### "进水" + "压力" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 副官 平均进水 压力是航海官 平均进水 是下潜到一百五十英尺处
-
-### "进水" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 副官 平均进水 压力是航海官 平均进水 是下潜到一百五十英尺处
 
 ### "进行" + "我" (1 occurrences)
 - Predicted: None
@@ -91847,18 +86855,6 @@ Accuracy: 98.86%
 - Examples:
   - 连奏 断奏 蹬踏 指法
 
-### "连皮牛" + "杆菌" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 连皮牛 杆菌
-
-### "迟到" + "了" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 抱歉， 我迟到 了
-
 ### "迟到" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -91901,11 +86897,11 @@ Accuracy: 98.86%
 - Examples:
   - （迪尔德丽博贝尔德拉 本月最佳查税员）
 
-### "迪瓦卡尔" + "·" (1 occurrences)
+### "迪米特里王子" + "给" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 迪瓦卡尔 · 查图维迪是普拉塔加尔邮政局局长
+  - 我记得…我只记得……迪米特里王子 给了他一杯酒…在他很小的时候哦
 
 ### "迫不及待" + "想" (1 occurrences)
 - Predicted: None
@@ -91989,7 +86985,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （其中一个条件不适合 生命形成的宇宙）（其实大部分都是这样的）
+  - （其中一个条件不适合 生命形成的宇宙）
 
 ### "逃" + "都" (1 occurrences)
 - Predicted: None
@@ -92027,12 +87023,6 @@ Accuracy: 98.86%
 - Examples:
   - 格谢尔代表黑暗和约内容如下为善作恶 任人选择 不得勉强
 
-### "选择" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你别无选择 ！
-
 ### "途中" + "碰到" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -92062,6 +87052,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我好像听到你的声音听着马上通知 警察来我的湖边别墅！
+
+### "通缉犯" + "-" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 全国通缉犯 - 七原秋也 中川典子
 
 ### "通话" + "－" (1 occurrences)
 - Predicted: None
@@ -92151,7 +87147,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 低头闭眼被思想困扰如果我们走那条鲜有人走过的道路 会怎样？
+  - 被思想困扰如果我们走那条鲜有人走过的道路 会怎样？
 
 ### "道院" + "小学" (1 occurrences)
 - Predicted: None
@@ -92201,17 +87197,17 @@ Accuracy: 98.86%
 - Examples:
   - 我再说一次打电话给邓伯 说你不服阿乐不会交龙头棍给他
 
-### "那" + "体" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 那 体老态龙锺
-
 ### "那" + "偷" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 听说你从你祖母那 偷了一万法朗
+
+### "那" + "儿" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 那你们那 儿种田还 不会饿死啊？
 
 ### "那" + "几" (1 occurrences)
 - Predicted: None
@@ -92219,11 +87215,11 @@ Accuracy: 98.86%
 - Examples:
   - 小王那 几个人干啥子？
 
-### "那" + "它" (1 occurrences)
+### "那" + "咬" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 就是它让所有东西你 全亚特兰蒂斯活着那 它现在在哪里
+  - 我坐在那 咬着同一片食物 在我的嘴里我忍不住吐出来
 
 ### "那" + "明天" (1 occurrences)
 - Predicted: None
@@ -92417,12 +87413,6 @@ Accuracy: 98.86%
 - Examples:
   - 那么 责任在建筑者一方你说因为害怕自己被杀的梦 而杀了父母
 
-### "那么" + "钱" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不过要在我得到我的报酬之前那么 钱在哪里
-
 ### "那事" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -92434,12 +87424,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 当富人如此傲慢无礼地 大肆欢宴时我理解那些 一无所有者的愤怒
-
-### "那些" + "体" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 还有我讨厌 你把那些 体摆在哪里！
 
 ### "那些" + "你" (1 occurrences)
 - Predicted: None
@@ -92571,7 +87555,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （日语）但是那天 姨姨的嘴是闭上的
+  - 但是那天 姨姨的嘴是闭上的
 
 ### "那天" + "莫杭治" (1 occurrences)
 - Predicted: None
@@ -92644,12 +87628,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我也要像那些新上任的官 那样 先要翻修自己的办公室
-
-### "那样" + "叫" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你已经能挣够钱像原来那样 叫蓝色魔术
 
 ### "那样" + "好" (1 occurrences)
 - Predicted: None
@@ -92813,12 +87791,6 @@ Accuracy: 98.86%
 - Examples:
   - 邬君梅 韩曼玉
 
-### "邮件" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 今天心情依然很郁闷不过因为大家寄来的邮件 我精神稍微好点了…
-
 ### "邹勇久" + "幸会" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -92885,12 +87857,6 @@ Accuracy: 98.86%
 - Examples:
   - 难道你真的一点都 不为自己的父亲感到伤心吗
 
-### "都" + "向" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我不是每天都 向你说礼顶拜过吗
-
 ### "都" + "认为" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -92920,18 +87886,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你 作为我的配偶 也会得到养老金的每个月都会收到的养老金绝对会多多有余的
-
-### "配送" + "调查" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 都是中文的（货物配送 调查小三 猫狗丢失案）
-
-### "酒" + "," (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 喝点酒 , 暖暖胃吧 !
 
 ### "酒" + "一百" (1 occurrences)
 - Predicted: None
@@ -92975,12 +87929,6 @@ Accuracy: 98.86%
 - Examples:
   - 就是那酒 让我找到了牡丹
 
-### "酒吧" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 进来喝杯酒吧 !
-
 ### "酒吧" + "一直" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93010,12 +87958,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 酷 漂亮吧?
-
-### "醉鬼" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 医生再也不能把你的脸修复你像一个可怕的醉鬼 在大街上醒来
 
 ### "醉鬼" + "扒手" (1 occurrences)
 - Predicted: None
@@ -93155,6 +88097,12 @@ Accuracy: 98.86%
 - Examples:
   - 爬到她身上插在她的嘴里跟屁眼里 射满她一脸
 
+### "里" + "就" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你朋友如果继续留在湿地里 就算不会感冒…也会挨子弹
+
 ### "里" + "属" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93203,12 +88151,6 @@ Accuracy: 98.86%
 - Examples:
   - 我有一次在自己的日记里 描写到我们喝酒的一天
 
-### "里" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我知道被困在那个盒子里 是什么感觉
-
 ### "里" + "有了" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93226,12 +88168,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 咱们村子里 根本就没有织布机了
-
-### "里" + "然後" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你带凯勒布去林子里 然後怪罪与我
 
 ### "里" + "现在" (1 occurrences)
 - Predicted: None
@@ -93251,12 +88187,6 @@ Accuracy: 98.86%
 - Examples:
   - 只有我的感觉和嗅觉里 留下的一些痕迹和芳香能证实她的存在我延长了守候的时间
 
-### "里" + "知道" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我就待在课室里 知道天亮
-
 ### "里" + "经常" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93273,7 +88203,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 也没在这样宏伟的王宫里 见过什么波斯王子.
+  - 我看你从未见过沙皇…也没在这样宏伟的王宫里 见过什么波斯王子.
 
 ### "里" + "警察" (1 occurrences)
 - Predicted: None
@@ -93311,12 +88241,6 @@ Accuracy: 98.86%
 - Examples:
   - 什么气味在卫生间里 这里也有就好像妈妈刚刚放完屁一样
 
-### "里" + "都" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你看就那一屡阳光里 都深藏着我们主的意思
-
 ### "里" + "长官" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93353,12 +88277,6 @@ Accuracy: 98.86%
 - Examples:
   - 给他脖子缠上绷带里奇 他已经死了
 
-### "里奇" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 里奇 你跟我要一起
-
 ### "里奇" + "像" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93389,12 +88307,6 @@ Accuracy: 98.86%
 - Examples:
   - 让我和里特·冯·格莱姆 以及莱奇小姐单独呆一会儿
 
-### "里面" + "一样" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 像我现在…我身体里面 一样存有人类发射的有毒的珠野猪王逃走
-
 ### "里面" + "哪些" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93424,12 +88336,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 在海里面 腿不管用了就慢慢进化变成鱼尾
-
-### "重" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 这些东西真重 不会呀!
 
 ### "重" + "为何" (1 occurrences)
 - Predicted: None
@@ -93466,12 +88372,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 只是野蛮人 为何不呼救？
-
-### "金" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我有金 ，钻石戒子
 
 ### "金丝眼镜" + "是" (1 occurrences)
 - Predicted: None
@@ -93659,12 +88559,6 @@ Accuracy: 98.86%
 - Examples:
   - 还有两个钟头 这么早就收掉了？
 
-### "钟秀" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 钟秀 在哪儿昵
-
 ### "钟秀" + "我们" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93719,6 +88613,12 @@ Accuracy: 98.86%
 - Examples:
   - 如果这个地球上连一滴干净的水一口干净的空气都没有的话你挣再多的钱 也是死路一条
 
+### "钱" + "亦" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 和女人我得不到钱 亦得不到女人
+
 ### "钱" + "全都" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93730,12 +88630,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 是补偿我没有那么多钱 再说了我为什么要给你？
-
-### "钱" + "分文" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 该多少钱给多少钱 分文不短你的
 
 ### "钱" + "回来" (1 occurrences)
 - Predicted: None
@@ -93767,17 +88661,11 @@ Accuracy: 98.86%
 - Examples:
   - 那是卖毒品 赌博赢得钱 谁都不管我情愿你拿了那钱 回来诚实待我或者别拿
 
-### "钱" + "连" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有的人为了钱 连子女都不要，但是他不像一个钟头之后我就走
-
 ### "钱" + "遭" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （候选人付给反对派委员会的钱 遭盗用）（检察官网站公告）
+  - （候选人付给反对派委员会的钱 遭盗用）
 
 ### "钳子" + "夹" (1 occurrences)
 - Predicted: None
@@ -93875,12 +88763,6 @@ Accuracy: 98.86%
 - Examples:
   - 我锁 上了橱门
 
-### "锅炉爷爷" + "这" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我切锅炉爷爷 这是汤婆婆姐姐的印章
-
 ### "错" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93923,12 +88805,6 @@ Accuracy: 98.86%
 - Examples:
   - 致命的错误 - 是汤一定要烫 - 是
 
-### "锡达拉皮兹市" + "生" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们搬到锡达拉皮兹市 生了两个孩子
-
 ### "锦标赛" + "悉尼" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -93940,12 +88816,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 镇定 没事的
-
-### "镇静剂" + "宁必妥" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 三甲氧苯乙胶 镇静剂 宁必妥 杜奈 水合氯乙醛兴奋剂
 
 ### "镖" + "客" (1 occurrences)
 - Predicted: None
@@ -93959,29 +88829,11 @@ Accuracy: 98.86%
 - Examples:
   - 第三场四号镜头 第一次
 
-### "长" + "在" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 还有小白蘑它们长 在白桦树和白杨树底下
-
 ### "长" + "得" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 您那个亲戚腿长 得好看吗 细长
-
-### "长" + "长的" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 当他阅读那本 封面有徽章的书时他们与他同在一同分享那长 长的故事，对吧！
-
-### "长" + "鱼雷" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我的有九只拇指那么长 鱼雷!
 
 ### "长卷发" + "深色" (1 occurrences)
 - Predicted: None
@@ -94054,6 +88906,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 长官 请您听我说
+
+### "长官先生" + "－" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - －你怎么认为呢，长官先生 －我们一定要走
 
 ### "长时间" + "没" (1 occurrences)
 - Predicted: None
@@ -94523,12 +89381,6 @@ Accuracy: 98.86%
 - Examples:
   - 你见不到我 是因为我避开阳光 躲在阴影里
 
-### "阳具" + "放" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 教授我可以把阳具 放在玛莲娜双乳间吗？
-
 ### "阳菜" + "一起" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -94679,12 +89531,6 @@ Accuracy: 98.86%
 - Examples:
   - 阿堂 这边过点
 
-### "阿姨" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 阿姨 我不知道来聊天的吗
-
 ### "阿姨" + "现在" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -94799,12 +89645,6 @@ Accuracy: 98.86%
 - Examples:
   - 阿尔萨斯洛林 占领莱因河大炮 机车 火车
 
-### "阿尔西诺埃" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 还不阿尔西诺埃 你为弟弟之死伤心吗？
-
 ### "阿尔贝托" + "能" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -94828,12 +89668,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 姓阿布雷希特 名卡尔
-
-### "阿希科伦" + "最" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我听说你是阿希科伦 最出名的妓女
 
 ### "阿弟" + "喝" (1 occurrences)
 - Predicted: None
@@ -94979,23 +89813,17 @@ Accuracy: 98.86%
 - Examples:
   - 阿曼德 放我下来
 
-### "阿曼达" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我今天例假看亮光头疼阿曼达 我一直和你说去医务室
-
-### "阿曼达" + "把" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 阿曼达 把鸡皮留在和鸡肉一起 可以吗
-
 ### "阿楷" + "不" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 阿楷 不要声张出去
+
+### "阿楷" + "你" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 阿楷 你在上面往右坐一点
 
 ### "阿楷" + "快" (1 occurrences)
 - Predicted: None
@@ -95033,12 +89861,6 @@ Accuracy: 98.86%
 - Examples:
   - 阿泽 找最好律师帮他打官司
 
-### "阿洪" + "带" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 阿洪 带所有的女人下船仓
-
 ### "阿滔" + "现在" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -95074,6 +89896,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 阿花姐 能把那个雄黄酒递下来吗
+
+### "阿苏" + "我" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 阿苏 我没教你功夫
 
 ### "阿苏" + "接着" (1 occurrences)
 - Predicted: None
@@ -95122,12 +89950,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 阿道夫 希特勒和他的妻子 在地下掩体里自杀了
-
-### "阿里" + "·" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 默罕默德 · 阿里 · 真纳
 
 ### "阿阶" + "不" (1 occurrences)
 - Predicted: None
@@ -95183,12 +90005,6 @@ Accuracy: 98.86%
 - Examples:
   - 已经回来了，他和陀古萨 正在对环卫工作者问话呢
 
-### "附" + "：" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 附 ：我终于抄了整本字典
-
 ### "附近" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -95206,12 +90022,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 我们在村子附近 教堂西边
-
-### "附近" + "路轨" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 直至电报送达在圣巴巴拉的火车他们在布班附近 路轨发现狄先生的尸体
 
 ### "陆" + "海" (1 occurrences)
 - Predicted: None
@@ -95249,12 +90059,6 @@ Accuracy: 98.86%
 - Examples:
   - 陌生人 骑着越野摩托
 
-### "降りて" + "神" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 結婚に神降りて 神降合婚夜夜は明け鵺鳥鳴く 破晓虎鸫啼
-
 ### "降落" + "谁" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -95285,6 +90089,12 @@ Accuracy: 98.86%
 - Examples:
   - 院长 再给点时间
 
+### "院长" + "我" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 院长 我并非在教工程学
+
 ### "院长" + "每" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -95301,7 +90111,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 除 了 你以外不， 我没受什么伤
+  - 除 了 你以外不，我没受什么伤
 
 ### "除了" + "一" (1 occurrences)
 - Predicted: None
@@ -95338,12 +90148,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 虽然我很高兴有你陪同 但我还必须见一下村长
-
-### "陪审团" + "告解" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 索偿医生是医生侦探 警察及法官陪审团 告解神父 集于一身
 
 ### "陶俊" + "就" (1 occurrences)
 - Predicted: None
@@ -95519,12 +90323,6 @@ Accuracy: 98.86%
 - Examples:
   - 你们应该感谢我，我把你们…调离集中营 药呢？
 
-### "集会" + "始" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 就像集会 始要先唱国歌一样你有拿到明信片吗
-
 ### "集体" + "家庭" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -95633,12 +90431,6 @@ Accuracy: 98.86%
 - Examples:
   - 雷诺斯 你最近有跟艾文钓鱼吗？
 
-### "雷诺阿" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 雷诺阿 ！
-
 ### "雷达" + "意思" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -95663,12 +90455,6 @@ Accuracy: 98.86%
 - Examples:
   - 阿尔弗雷德 如果你有任何需要 到我家找我
 
-### "需要" + "却" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （世界可以满足所有人的需要 却无法满足所有人的贪欲）
-
 ### "需要" + "尽管" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -95680,18 +90466,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 霍华德比奇 霍华德比奇
-
-### "霍金斯小姐" + "上次" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我在听我们相信有一盒质量很好的霍金斯小姐 上次音乐会的录音带你们这样想吗？
-
-### "霜满天" + "江枫" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 月落乌啼霜满天 江枫鱼火对愁眠
 
 ### "霞姨" + "我" (1 occurrences)
 - Predicted: None
@@ -95837,12 +90611,6 @@ Accuracy: 98.86%
 - Examples:
   - 还有英格兰 中国 非洲 印度整个世界都攻进来了
 
-### "靠" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 靠 你都知道
-
 ### "靠" + "妈的" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -95890,12 +90658,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 碍着王夫人的面 又不能明拿 只有想办法把她引出来
-
-### "面" + "逮捕" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 当我昨夭在圣拉扎时…一些警察当着我的面 逮捕了一个女孩子
 
 ### "面上" + "原谅" (1 occurrences)
 - Predicted: None
@@ -96011,6 +90773,12 @@ Accuracy: 98.86%
 - Examples:
   - 牙膏 鞋油 肥皂每家每户都要有毛巾
 
+### "鞭子" + "然后" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 「公爵夫人高举鞭子 然后…「再鞭…「我那话儿硬得隐隐作痛」
+
 ### "韦摩先生" + "你" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -96034,12 +90802,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 这是牧羊人的日志韦摩先生 这本日志是寻找失落的亚特兰蒂斯的关键亚特兰蒂斯
-
-### "韩国" + "哦" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 哦 必胜韩国 哦 必胜韩国（手机铃声）
 
 ### "韩国" + "学生" (1 occurrences)
 - Predicted: None
@@ -96191,6 +90953,12 @@ Accuracy: 98.86%
 - Examples:
   - 顿时 幻觉消失了
 
+### "顿涅茨克" + "就" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - （让波洛申科总统 政府和他们家人）（本周在顿涅茨克 就有五十多人死亡）
+
 ### "预言" + "人口贩卖" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -96275,23 +91043,11 @@ Accuracy: 98.86%
 - Examples:
   - 是滑翔翼风 风又回来啦
 
-### "风云" + "，" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 天有不测风云 ，
-
 ### "风向" + "明天" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 只要能掌握风向 明天应该会与其接触
-
-### "风格" + "新时代" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你知道他们做了什么他们将我们的冰激凌屋改成了一种西南美州风格 新时代的玩意
 
 ### "风筝" + "带" (1 occurrences)
 - Predicted: None
@@ -96316,6 +91072,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 这是排气管风门片 什么问题?
+
+### "风雪" + "特别" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 结果呢，这趟回来在路中就给赶上了风雪 特别大就给激了，激病了
 
 ### "飘荡" + "一直" (1 occurrences)
 - Predicted: None
@@ -96393,7 +91155,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 飞鸿 你看看
+  - 飞鸿 你看看这次谁跟我一起回来了?
 
 ### "飞鸿" + "来" (1 occurrences)
 - Predicted: None
@@ -96413,17 +91175,17 @@ Accuracy: 98.86%
 - Examples:
   - 跌进满是食人鱼 岩浆和培根肉的坑里她都不知道自己是怎么死的
 
-### "食材" + "随便" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （因为没有食材 随便做了点 我乖吧）
-
 ### "食物" + "书" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 这里有他的尿布 食物 书和其他东西交给拉蒂简就好了
+
+### "食物" + "在" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我坐在那 咬着同一片食物 在我的嘴里我忍不住吐出来
 
 ### "食物" + "枪支" (1 occurrences)
 - Predicted: None
@@ -96491,18 +91253,6 @@ Accuracy: 98.86%
 - Examples:
   - 一个热狗 一杯饮料 这算一份儿
 
-### "饺子" + "啤酒" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 塔迪亚娜 给我们两分甜菜汤两份饺子 啤酒 还有水果汁
-
-### "饿" + "不" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你饿 不饿？
-
 ### "饿死" + "除了" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -96550,6 +91300,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 首先 感谢大家在这里谢谢
+
+### "首先" + "我们" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我们要做的和你们完全不同首先 我们不用现代武器猎杀只用老式武器
 
 ### "首先" + "把" (1 occurrences)
 - Predicted: None
@@ -96604,18 +91360,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 首领 选我
-
-### "香港" + "大南街" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九五零年 香港 大南街）
-
-### "香港" + "白玫瑰" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （一九五二年 香港 白玫瑰理发厅）
 
 ### "香港人" + "别" (1 occurrences)
 - Predicted: None
@@ -96693,7 +91437,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 马克 你在哪?
+  - 朱诺…说真的… 马克 你在哪?
 
 ### "马克" + "没" (1 occurrences)
 - Predicted: None
@@ -96845,12 +91589,6 @@ Accuracy: 98.86%
 - Examples:
   - 马拉德 你是哪里人？
 
-### "马拉德" + "我" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你说你在街角马拉德 我知道你们之间不单纯没有
-
 ### "马文" + "妈" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -96892,12 +91630,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 他们不像两年前在马沙 登陆的那些人…
-
-### "马特巴" + "能" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我也没指望你的马特巴 能有什么用处
 
 ### "马猴" + "你" (1 occurrences)
 - Predicted: None
@@ -97145,12 +91877,6 @@ Accuracy: 98.86%
 - Examples:
   - 马鲁莎 快点 亲爱的
 
-### "驰聘" + "任意" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 美梦在驰聘 任意飞翔
-
 ### "骄傲" + "干" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -97181,12 +91907,6 @@ Accuracy: 98.86%
 - Examples:
   - 我父亲的父亲经常说想要成为骗子 你就要去鬼混！
 
-### "骨折" + "很" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 没有骨折 很快就会痊愈
-
 ### "骷髅" + "上" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -97204,12 +91924,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你长得太高 以至听不到从你脚下传来的声音
-
-### "高" + "太" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 太高 太瘦 太红毛
 
 ### "高" + "怕" (1 occurrences)
 - Predicted: None
@@ -97337,12 +92051,6 @@ Accuracy: 98.86%
 - Examples:
   - 有人从地下室…悄悄反驳道…高老板 ，不要小看蔬菜你蔬菜有心你连心也没有
 
-### "高耶维" + "奇" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 维洛奇柯 尤里格里高耶维 奇把欧莉亚的信交给了我
-
 ### "鬼" + "一" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -97366,12 +92074,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你一直认为你比我好在我们生长的那个鬼地方 如果不想饿死 除了当神父就是当土匪
-
-### "鬼灭之刃" + "无限列车篇" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （剧场版鬼灭之刃 无限列车篇）
 
 ### "鬼魂" + "只是" (1 occurrences)
 - Predicted: None
@@ -97433,12 +92135,6 @@ Accuracy: 98.86%
 - Examples:
   - 如果这头羊就是魔鬼 我还非得跟他跳个舞
 
-### "鱼" + "其" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （北冥有鱼 其名为鲲）
-
 ### "鱼" + "半人鱼" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -97457,23 +92153,11 @@ Accuracy: 98.86%
 - Examples:
   - 鱼腥味 闻到了吗
 
-### "鱼雷盖" + "！" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 关闭鱼雷盖 ！
-
 ### "鱼鳞" + "身上" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 没错，他的皮肤上覆盖着鱼鳞 身上没有手臂只有鳍吧！
-
-### "鱿鱼" + "、" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我有鱿鱼 、 花生奶油 和果酱口味的
 
 ### "鲁伯特" + "这" (1 occurrences)
 - Predicted: None
@@ -97486,6 +92170,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 鲁宾尼 很高兴认识你
+
+### "鲁宾斯" + "的" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 一幅鲁宾斯 的作品.
 
 ### "鲁本斯" + "你" (1 occurrences)
 - Predicted: None
@@ -97673,12 +92363,6 @@ Accuracy: 98.86%
 - Examples:
   - 你们可以找我买鸡蛋 面包 牛奶
 
-### "鸣響" + "照" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 皓月亦鸣響 照る月響むなり
-
 ### "鸭" + "别" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -97841,12 +92525,6 @@ Accuracy: 98.86%
 - Examples:
   - 黄师父 我伤的是手
 
-### "黄师父" + "请" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 黄师父 请那太好了
-
 ### "黄昏" + "他" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -97858,12 +92536,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 那时候一到黄昏 我们就骑自行车出去溜跶溜跶
-
-### "黄毛" + "儿" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 黄毛 儿
 
 ### "黄濑和哉" + "冲浦启之" (1 occurrences)
 - Predicted: None
@@ -97905,19 +92577,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 黄飞鸿 今天俺赢得太容易 不算数明天在大街重新比你不来
+  - 黄飞鸿 今天俺赢得太容易 不算数
 
 ### "黄飞鸿" + "别" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你这个该死的黄飞鸿 别跑
-
-### "黄飞鸿" + "快" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 黄飞鸿 快去对付他
 
 ### "黄飞鸿" + "我" (1 occurrences)
 - Predicted: None
@@ -97942,6 +92608,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 黑夜 仍然笼罩大地
+
+### "黑夜" + "刚刚" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 黑夜 刚刚降临大地你那神奇隐秘的宁静的魔力马修!
 
 ### "黑夜" + "王妃" (1 occurrences)
 - Predicted: None
@@ -98027,23 +92699,11 @@ Accuracy: 98.86%
 - Examples:
   - 要是见到黑鬼 打他一顿
 
-### "黑鬼" + "操" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 被一些大个黑鬼 操你屁眼的自由注 顶级脏话
-
 ### "默不作声" + "但" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 她默不作声 但她的眼神令我无法忘记两天后我母亲死去
-
-### "默罕默德" + "·" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 默罕默德 · 阿里 · 真纳
 
 ### "黛安" + "二十" (1 occurrences)
 - Predicted: None
@@ -98165,83 +92825,17 @@ Accuracy: 98.86%
 - Examples:
   - 今天托俊儿钢琴的福，玩儿得很开心！ 哪里的话
 
-### "）" + "不" (1 occurrences)
+### "）" + "啊" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （宋瑞莱） 不知道
-
-### "）" + "什么" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （未麻的日记） 什么什么？
-
-### "）" + "你" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （今日一句） 你是谁？
-
-### "）" + "天啊" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （中场休息） 天啊
-
-### "）" + "我们" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （孙女老人护理） 我们的患者无法表达清楚自己的想法
-
-### "）" + "所以" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （孙女老人护理） 所以我们负责人会一一打电话
-
-### "）" + "是" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （梨浦原子力发电厂 浦巷 梨浦） 是因为睡不着 才做潜伏工作的
-
-### "）" + "真是的" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （你有什么感想 请来我家） 真是的
-
-### "）" + "老婆" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （吕妍秀刑警） 老婆 帮我接下电话
-
-### "）" + "（" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （拉丁文将成为） （七至十二年级的必修学科）
-
-### "，" + "一下子" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 前尘往事， 一下子涌现眼前
+  - ） 啊 太久没见我 想我想的嗯
 
 ### "，" + "一定" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 先别打乱阵脚， 一定有误会
-
-### "，" + "一时" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对不起， 一时说漏了口
 
 ### "，" + "一直" (1 occurrences)
 - Predicted: None
@@ -98279,6 +92873,12 @@ Accuracy: 98.86%
 - Examples:
   - 没错， 中美洲国家向前看吧
 
+### "，" + "为" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 可能看起来有点惨我们正在做一个全国环游， 为治疗一些最棘手的疾病作一些调查。
+
 ### "，" + "主要" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -98291,23 +92891,11 @@ Accuracy: 98.86%
 - Examples:
   - 所以他寻找联系，一些帮助， 也许一点点理解。
 
-### "，" + "买一送一" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 成人影带 ， 买一送一
-
 ### "，" + "交给" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 她说要交出创世计划， 交给谁？
-
-### "，" + "交还" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 正常的女子会打电话去…约见对方， 交还相簿看看对方值不值得交个朋友
 
 ### "，" + "人人" (1 occurrences)
 - Predicted: None
@@ -98339,12 +92927,6 @@ Accuracy: 98.86%
 - Examples:
   - 马尔科， 传给我
 
-### "，" + "传送室" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 逃生舱还在， 传送室在哪里？
-
 ### "，" + "作" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -98369,17 +92951,17 @@ Accuracy: 98.86%
 - Examples:
   - 请回覆， 信心号叫正规一号
 
-### "，" + "倒楣鬼" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 高立良，死怪物 ， 倒楣鬼
-
 ### "，" + "像" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我在血里躺了三天， 像头猪一样动弹不得
+
+### "，" + "兄弟" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 别挑衅， 兄弟
 
 ### "，" + "充满" (1 occurrences)
 - Predicted: None
@@ -98392,24 +92974,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 叔叔，你得到书面保证前， 先不离开这里。
-
-### "，" + "克林冈" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 却克， 老朋友， 克林冈谚语说君子报仇， 十年未晚
-
-### "，" + "六" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 据神话记载， 地球在六天内完成创世出现后， 六分钟就够了
-
-### "，" + "共同" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （风筝社， 共同创社人）
 
 ### "，" + "关于" (1 occurrences)
 - Predicted: None
@@ -98429,6 +92993,12 @@ Accuracy: 98.86%
 - Examples:
   - 阿戈斯提尼，走个猫步， 再为我们跳点舞。
 
+### "，" + "准备" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 泰利船长， 准备传送
+
 ### "，" + "准备好" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -98440,12 +93010,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 你有没有一个剧本， 几页纸，或者一个主意？
-
-### "，" + "凡事" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 冼朴说， 凡事总有机会若创世从死亡中创出生命那我一定要再来这里
 
 ### "，" + "分钟" (1 occurrences)
 - Predicted: None
@@ -98459,12 +93023,6 @@ Accuracy: 98.86%
 - Examples:
   - 还未僵硬， 刚死去不久
 
-### "，" + "刚刚" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 天黑前 ， 刚刚回来的父亲 就又被叫走了
-
 ### "，" + "到" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -98476,30 +93034,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 在艾蜜莉的世界里， 制作唱片就像煎饼
-
-### "，" + "十年" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 却克， 老朋友， 克林冈谚语说君子报仇， 十年未晚
-
-### "，" + "博士" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在你右手的口袋里， 博士.
-
-### "，" + "卡罗" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 很好， 卡罗
-
-### "，" + "即使" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 漂亮的制服， 即使我不喜欢军队.
 
 ### "，" + "即便" (1 occurrences)
 - Predicted: None
@@ -98513,17 +93047,11 @@ Accuracy: 98.86%
 - Examples:
   - 我不知道 你觉得呢， 厄尼？
 
-### "，" + "又" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 假如你错过机会…你那颗心迟早会…像我的骨头那样， 又干又枯
-
 ### "，" + "双胞胎" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 对了， 双胞胎的生 日 宴会你想来吗？
+  - 对了， 双胞胎的生日宴会你想来吗？
 
 ### "，" + "发现" (1 occurrences)
 - Predicted: None
@@ -98537,29 +93065,17 @@ Accuracy: 98.86%
 - Examples:
   - 创造生命月球不再死寂， 变成生机勃发可以供养我们送到那里的生命体太好了
 
-### "，" + "古廷根" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你好， 古廷根先生
-
-### "，" + "另" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 有人说去寺庙不能穿鞋， 另一个说去教堂要穿靴子。
-
-### "，" + "只" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他想让我回家过年， 只是一天，你介意吗？
-
 ### "，" + "可" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 这点灯吹灯， 可算是祖上传下的老规距
+
+### "，" + "可以" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 莎维， 可以清场
 
 ### "，" + "可能" (1 occurrences)
 - Predicted: None
@@ -98572,12 +93088,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 晚安， 史坦
-
-### "，" + "史葛" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 做得好， 史葛
 
 ### "，" + "吉多" (1 occurrences)
 - Predicted: None
@@ -98603,11 +93113,11 @@ Accuracy: 98.86%
 - Examples:
   - 将激光炮瞄准目标， 听候命令
 
-### "，" + "听说" (1 occurrences)
+### "，" + "启动" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他们在四处搜查， 听说这里有躲兵役的人躲兵役的?
+  - 关掉动力器， 启动扬声器
 
 ### "，" + "和善" (1 occurrences)
 - Predicted: None
@@ -98615,53 +93125,17 @@ Accuracy: 98.86%
 - Examples:
   - 为什么您说话用这样古怪的语调， 和善的先生?
 
-### "，" + "咖啡" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 依娃， 咖啡呢？
-
 ### "，" + "哈利" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 钢， 哈利
 
-### "，" + "哥白尼" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 还有巴斯德， 哥白尼？
-
-### "，" + "唐尼" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 坐后座， 唐尼
-
-### "，" + "喝" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我去泡茶， 喝杯茶吗？
-
 ### "，" + "四" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我希望你能够理解我们，我们像冒险家一样， 四周充斥着激情、钦佩和羡慕
-
-### "，" + "回" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我知道你昨迎先生去了村里的人都说 先生犯了错误， 回不来了
-
-### "，" + "因" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我经历过…两次心脏病、一次堕胎， 因…怀孕期吸毒
 
 ### "，" + "图书馆" (1 occurrences)
 - Predicted: None
@@ -98675,17 +93149,11 @@ Accuracy: 98.86%
 - Examples:
   - 就像唐吉珂德拥有他的驴子， 圣马丁拥有他的骡子一样，我们拥有我们的摩托车。
 
-### "，" + "地球" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 据神话记载， 地球在六天内完成创世出现后， 六分钟就够了
-
 ### "，" + "地面" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 暂时还没成功标准轨道， 地面扫瞄有改变吗？
+  - 标准轨道， 地面扫瞄有改变吗？
 
 ### "，" + "基本上" (1 occurrences)
 - Predicted: None
@@ -98711,12 +93179,6 @@ Accuracy: 98.86%
 - Examples:
   - 他要出版一本新小说， 多年来他的第一本书。
 
-### "，" + "大作家" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 嘿， 大作家
-
 ### "，" + "大气" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -98728,6 +93190,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 冬天到了， 天气变冷了。
+
+### "，" + "如果" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他应该会吧， 如果有钱的话
 
 ### "，" + "孩子" (1 occurrences)
 - Predicted: None
@@ -98747,11 +93215,11 @@ Accuracy: 98.86%
 - Examples:
   - 而周围的一切， 完全没有动过
 
-### "，" + "定" (1 occurrences)
+### "，" + "对不起" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 他跟纵了我那么久， 定会回来
+  - 大家晚上好， 对不起，我迟到了。
 
 ### "，" + "小乖" (1 occurrences)
 - Predicted: None
@@ -98783,12 +93251,6 @@ Accuracy: 98.86%
 - Examples:
   - 苏洛， 尽快带我们离开这里
 
-### "，" + "屡" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 屡战屡败， 屡败屡战
-
 ### "，" + "工厂" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -98799,31 +93261,13 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我丈夫在保险公司工作他勾搭上秘书， 已经不是秘密
-
-### "，" + "巴哈蒙" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 环法单车大赛， 巴哈蒙赢出婶婶的奶罩内裤
+  - 对， 已经死了
 
 ### "，" + "帕维勒" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 是的， 帕维勒得了百日咳
-
-### "，" + "干杯" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 对， 干杯
-
-### "，" + "并" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我应该包括这头牛在我的生物数据里， 并从一个公司带到另一个公司？
 
 ### "，" + "并非" (1 occurrences)
 - Predicted: None
@@ -98843,17 +93287,17 @@ Accuracy: 98.86%
 - Examples:
   - 船尾鱼雷， 开火！
 
-### "，" + "弄明白" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 如果我想取回我的控制器， 弄明白归属（哪个神）很关键
-
 ### "，" + "张小姐" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 回头见 了， 张小姐
+
+### "，" + "当" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 终于有一天， 当我坐在吧台的时候谢谢你的大衣，迈克斯，非常合身
 
 ### "，" + "彼此" (1 occurrences)
 - Predicted: None
@@ -98867,11 +93311,11 @@ Accuracy: 98.86%
 - Examples:
   - 尽管如此哀伤， 我们要记着死亡过后， 必有新生新世界定会出现
 
-### "，" + "忠浩" (1 occurrences)
+### "，" + "快" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 嘿， 忠浩啊
+  - 别管了， 快走！
 
 ### "，" + "怎么" (1 occurrences)
 - Predicted: None
@@ -98909,18 +93353,6 @@ Accuracy: 98.86%
 - Examples:
   - 看着镜中的自己， 意识到你老了
 
-### "，" + "感应线" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 检查， 感应线的放射正常
-
-### "，" + "感觉" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 伊恩， 感觉好点没？
-
 ### "，" + "我妈" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -98933,29 +93365,23 @@ Accuracy: 98.86%
 - Examples:
   - 如果我们能在这里住下的话， 或许我们能够想办法帮忙治好。
 
+### "，" + "所以" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 他们取消了今晚的杂技演出， 所以我们可以用剧院。
+
 ### "，" + "才" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 不， 才不， 那比较逼真
 
-### "，" + "打架" (1 occurrences)
+### "，" + "抱歉" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 相反，拉屎撒尿， 打架，都能大声的并且公开。
-
-### "，" + "把" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 玛卡让猫头鹰夺走了巨人的情感， 把他变成了石头。
-
-### "，" + "拉希摩" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （麦克斯费雪， 拉希摩校刊）
+  - 听着， 抱歉我伤了 你的心抱歉我爱上了 你的朋友
 
 ### "，" + "接着" (1 occurrences)
 - Predicted: None
@@ -98969,18 +93395,6 @@ Accuracy: 98.86%
 - Examples:
   - 柴可夫， 控制武器室
 
-### "，" + "提醒" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他可能已经死掉担心被阳世间的人遗忘于是拍照 ， 提醒人家他的模样
-
-### "，" + "摧毁" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 在历史上， 摧毁总比创造容易
-
 ### "，" + "敢" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -98993,29 +93407,29 @@ Accuracy: 98.86%
 - Examples:
   - 没有， 大气中只有克朗气体、 沙和疾风， 无法支持生命体
 
-### "，" + "星盟" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 创世计划， 星盟的提案马嘉露
-
 ### "，" + "昨天" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 很巧， 昨天在饭馆里碰到了我的教授。
 
+### "，" + "是不是" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 你碰也碰不到神灵， 是不是醉了?
+
+### "，" + "晚安" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 现在睡觉去， 晚安
+
 ### "，" + "更" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 我没想到他今晚会回来， 更不用说还带一个人！
-
-### "，" + "最后" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 太空， 最后的无人地带
 
 ### "，" + "李菖" (1 occurrences)
 - Predicted: None
@@ -99035,53 +93449,11 @@ Accuracy: 98.86%
 - Examples:
   - 好的， 查理
 
-### "，" + "核对" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 电脑， 启动保密程序存取创世计划的摘要视网膜扫瞄， 核对身分却克上将
-
 ### "，" + "根据" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 紧急情况， 根据指挥部的命令下午六时， 我接管星舰的指挥权
-
-### "，" + "橙先生" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 见鬼， 橙先生受伤了?
-
-### "，" + "此次" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 杰理罗， 此次欧洲之行的目的何在？
-
-### "，" + "死" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 高立良， 死怪物
-
-### "，" + "死人头" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 高立良， 死人头
-
-### "，" + "母赠" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （加油， 麦克斯， 母赠）
-
-### "，" + "没关系" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不， 没关系
 
 ### "，" + "没错" (1 occurrences)
 - Predicted: None
@@ -99094,6 +93466,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 再见 了， 波西多
+
+### "，" + "注定" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 拉希摩对某些人而言你们生在豪门， 注定富贵一生
 
 ### "，" + "洛玛莉" (1 occurrences)
 - Predicted: None
@@ -99119,17 +93497,23 @@ Accuracy: 98.86%
 - Examples:
   - 她的速度较快， 火力较大
 
+### "，" + "爱" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 但你想想我们拥有飞船， 爱到哪里都可还摆脱了永久放逐的命运
+
 ### "，" + "爱人" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 好消息， 爱人
 
-### "，" + "爱德华" (1 occurrences)
+### "，" + "爸" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 我想让您见见费尔南德兹先生， 爱德华国王大学的校长
+  - 拜托， 爸
 
 ### "，" + "特别" (1 occurrences)
 - Predicted: None
@@ -99137,17 +93521,23 @@ Accuracy: 98.86%
 - Examples:
   - 决不能让一位女士等待， 特别是一位老女士。
 
-### "，" + "猫头鹰" (1 occurrences)
+### "，" + "玛格" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - （加油， 猫头鹰）
+  - 这位是玛格你好， 玛格
 
 ### "，" + "瑟皮寇" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 听着， 瑟皮寇
+
+### "，" + "甚至" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我们很累，妈妈， 甚至都没有兴趣去庆祝生日。
 
 ### "，" + "甜心" (1 occurrences)
 - Predicted: None
@@ -99173,35 +93563,17 @@ Accuracy: 98.86%
 - Examples:
   - 抱歉， 电话可否借我用一下
 
-### "，" + "白度图" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不是 ， 白度图
-
-### "，" + "监视器" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他们把做手术的所有器械 都给我看看起像科学小学我所能看到是缆索，开关， 监视器
-
 ### "，" + "看看" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 德克， 看看是谁来 了
+  - 德克， 看看是谁来了
 
 ### "，" + "真正" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 毁灭比创造要好，如果我们创造出来的不是稀有的， 真正必要的东西的话。
-
-### "，" + "睡" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我现在的生活很糟我所有能做只是吃， 睡和梦里的回忆
 
 ### "，" + "知道" (1 occurrences)
 - Predicted: None
@@ -99245,17 +93617,35 @@ Accuracy: 98.86%
 - Examples:
   - 你愿不愿意写一些重要的， 美丽的，真实的东西？
 
+### "，" + "老朋友" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 对， 老朋友！
+
+### "，" + "而" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 现在我们要一个一个地看， 而你必须说：这个是妻子，
+
+### "，" + "而且" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 瘟疫不仅消耗了我们的体力， 而且使我们国家长期处于危难当中。
+
 ### "，" + "胜败" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 没什么大不了的， 胜败乃兵家常事。
 
-### "，" + "自然而然" (1 occurrences)
+### "，" + "能" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 边喝边谈 ， 自然而然一拍即合
+  - 把它变成你生存的原因，这件事情包含了所有事情， 能变成所有事情。
 
 ### "，" + "自由恋爱" (1 occurrences)
 - Predicted: None
@@ -99287,12 +93677,6 @@ Accuracy: 98.86%
 - Examples:
   - 正规一号是科研实验室我跟总部说过， 船上的都是孩子
 
-### "，" + "船舱" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 不， 船舱会充满幅射！
-
 ### "，" + "艾伦" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -99305,23 +93689,11 @@ Accuracy: 98.86%
 - Examples:
   - 你好， 艾斯波西多
 
-### "，" + "花" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 他在迫人招供时， 花了很多时间
-
 ### "，" + "萨海先生" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 保罗随时都可能回来， 萨海先生，我没办法了
-
-### "，" + "蛮" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 彼得我真的很喜欢你的戏， 蛮酷的
 
 ### "，" + "要是" (1 occurrences)
 - Predicted: None
@@ -99341,47 +93713,23 @@ Accuracy: 98.86%
 - Examples:
   - 爱现鬼， 话老说个不停只因为人家老妈有姿色
 
-### "，" + "谢天谢地" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 现在失而复得， 谢天谢地
-
 ### "，" + "象" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 你戴着那顶大帽子看起来很滑稽， 象一个老头儿。
 
-### "，" + "越" (1 occurrences)
+### "，" + "贺曼" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 这个梅香， 越惯越挑了
+  - 你好， 贺曼
 
-### "，" + "跟上" (1 occurrences)
+### "，" + "走" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 别磨磨蹭蹭， 跟上
-
-### "，" + "路易莎" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 谢谢你， 路易莎.
-
-### "，" + "跳舞" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 快啊， 你们两个， 跳舞吧
-
-### "，" + "躲" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 你在逃避， 躲在规章背后
+  - 天冷， 我们要跑回去， 走吧!
 
 ### "，" + "还是" (1 occurrences)
 - Predicted: None
@@ -99389,17 +93737,11 @@ Accuracy: 98.86%
 - Examples:
   - 现在你想左侧也来三下使两边平衡吗， 还是什么？
 
-### "，" + "这位" (1 occurrences)
+### "，" + "这些" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 布隆先生， 这位是克萝丝小姐
-
-### "，" + "这样" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 指挥官， 这样做不合常规
+  - 这不是游戏， 这些人真的杀人！
 
 ### "，" + "进入" (1 occurrences)
 - Predicted: None
@@ -99412,6 +93754,12 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 七国为争夺霸主地位， 连年征战，百姓备受煎熬。
+
+### "，" + "送" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 不必了， 送我到正规一号就行
 
 ### "，" + "通话" (1 occurrences)
 - Predicted: None
@@ -99431,12 +93779,6 @@ Accuracy: 98.86%
 - Examples:
   - 这里有最佳的目标， 那些笨蛋运动员之类的。
 
-### "，" + "那种" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 我说过， 那种文字过时 了
-
 ### "，" + "那里" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -99455,17 +93797,17 @@ Accuracy: 98.86%
 - Examples:
   - 你的父母难道不明白，越是掩藏钻石的光泽， 钻石就越容易被偷?
 
+### "，" + "阿兵哥" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 永远忠诚， 阿兵哥
+
 ### "，" + "难听" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
   - 别用那个烂词， 难听死了
-
-### "，" + "需要" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 噢， 需要钱吗？
 
 ### "，" + "马尔科" (1 occurrences)
 - Predicted: None
@@ -99497,12 +93839,6 @@ Accuracy: 98.86%
 - Examples:
   - 嗨， 麦格斯
 
-### "－" + "—" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - － — 切都还好吧？
-
 ### "－" + "一定" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -99525,7 +93861,7 @@ Accuracy: 98.86%
 - Predicted: None
 - Actual: Space
 - Examples:
-  - － 去你们的
+  - － 去你们的搜查这个房间
 
 ### "－" + "愿意" (1 occurrences)
 - Predicted: None
@@ -99550,12 +93886,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 不用掩饰什么了 － 这是什么意思？
-
-### "：" + "一下子" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - （第三部分： 一下子）
 
 ### "：" + "丹·威尔" (1 occurrences)
 - Predicted: None
@@ -99599,17 +93929,17 @@ Accuracy: 98.86%
 - Examples:
   - 制片人： 帕特里·斯勒杜
 
-### "：" + "我们" (1 occurrences)
+### "：" + "我" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 这是合同上面有说明： 我们将接管这里的生意
+  - 正所谓： 我不入地狱，谁入地狱
 
-### "：" + "析雯" (1 occurrences)
+### "：" + "所有" (1 occurrences)
 - Predicted: None
 - Actual: Space
 - Examples:
-  - 字幕翻译： 析雯
+  - （第二部分： 所有地方）
 
 ### "：" + "没有" (1 occurrences)
 - Predicted: None
@@ -99658,12 +93988,6 @@ Accuracy: 98.86%
 - Actual: Space
 - Examples:
   - 主演： 莱娅·柯丝达
-
-### "：" + "著名" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - 卢比西尼奥注： 著名作曲家
 
 ### "：" + "蒂埃里·阿伯加斯特" (1 occurrences)
 - Predicted: None
