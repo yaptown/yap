@@ -62,7 +62,7 @@ struct FlashcardChallengeView: View {
                 }
                 Divider()
                 if revealed {
-                    VStack(alignment: .leading, spacing: 12) { answer }.fadeIn(duration: 0.2)
+                    VStack(alignment: .leading, spacing: 12) { FlashcardAnswer(content: flashcard.content, view: view).equatable() }.fadeIn(duration: 0.2)
                 } else {
                     Label(view.reveal_label, systemImage: "chevron.down")
                         .font(.subheadline.weight(view.require_answer_reveal ? .bold : .regular))
@@ -114,25 +114,6 @@ struct FlashcardChallengeView: View {
         #endif
     }
     private func toggle() { revealed.toggle(); hasOpened = true }
-    @ViewBuilder private var answer: some View {
-        switch flashcard.content {
-        case let .Gram(_, definition, _, _):
-            DefinitionBoxesView(definition: definition)
-        case let .Listening(possible):
-            if let header = view.listening_header { Text(header).font(.footnote).foregroundStyle(.secondary) }
-            ForEach(Array(possible.enumerated()), id: \.offset) { _, entry in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(gramText(entry.second)).font(.title3.weight(.medium))
-                        if possible.count > 1 && entry.first { Text(view.known_label).font(.footnote).foregroundStyle(Color.yapPositiveForeground) }
-                    }
-                    ForEach(Array(entry.third.enumerated()), id: \.offset) { _, definition in
-                        DefinitionBoxesView(definition: definition)
-                    }
-                }
-            }
-        }
-    }
     private func rate(_ rating: Rating) {
         guard canGrade, !actions.submitting else { return }
         background.bump(30)
@@ -174,5 +155,30 @@ struct DefinitionBoxesView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading).padding(12)
         .insetSurface()
+    }
+}
+
+/// No callbacks here: grading and reveal state remain in the challenge host.
+private struct FlashcardAnswer: View, Equatable {
+    let content: CardContent
+    let view: FlashcardView
+    @ViewBuilder var body: some View {
+        switch content {
+        case let .Gram(_, definition, _, _):
+            DefinitionBoxesView(definition: definition)
+        case let .Listening(possible):
+            if let header = view.listening_header { Text(header).font(.footnote).foregroundStyle(.secondary) }
+            ForEach(Array(possible.enumerated()), id: \.offset) { _, entry in
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(gramText(entry.second)).font(.title3.weight(.medium))
+                        if possible.count > 1 && entry.first { Text(view.known_label).font(.footnote).foregroundStyle(Color.yapPositiveForeground) }
+                    }
+                    ForEach(Array(entry.third.enumerated()), id: \.offset) { _, definition in
+                        DefinitionBoxesView(definition: definition)
+                    }
+                }
+            }
+        }
     }
 }

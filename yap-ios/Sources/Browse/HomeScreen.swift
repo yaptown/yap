@@ -69,7 +69,7 @@ struct HomeScreen: View {
                                     Spacer()
                                     Text(view.week.today_label).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
                                 }
-                                WeekProgressStrip(week: view.week.days)
+                                WeekProgressStrip(week: view.week.days).equatable()
                             }.padding(16)
                             Divider()
                             Button { navigate(.stats) } label: {

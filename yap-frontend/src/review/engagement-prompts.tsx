@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Bell, Sparkles } from "lucide-react";
 import { useOneSignalNotifications } from "@/hooks/use-onesignal-notifications";
@@ -12,7 +12,7 @@ interface EngagementPromptsProps {
   language: Language;
 }
 
-export const EngagementPrompts = memo(function EngagementPrompts({ language }: EngagementPromptsProps) {
+export function EngagementPrompts({ language }: EngagementPromptsProps) {
   const {
     isSupported,
     isSubscribed,
@@ -22,17 +22,14 @@ export const EngagementPrompts = memo(function EngagementPrompts({ language }: E
   } = useOneSignalNotifications();
 
   const { isInstalled, isLoading: isInstalledLoading } = useIsInstalled();
-  const [promptsDismissed, setPromptsDismissed] = useState(false);
-
-  useEffect(() => {
+  const [promptsDismissed, setPromptsDismissed] = useState(() => {
     const dismissalCount = parseInt(
       localStorage.getItem("engagement-prompts-dismissal-count") || "0",
       10,
     );
 
     if (dismissalCount >= 3) {
-      setPromptsDismissed(true);
-      return;
+      return true;
     }
 
     const dismissedTime = localStorage.getItem("engagement-prompts-dismissed");
@@ -42,12 +39,11 @@ export const EngagementPrompts = memo(function EngagementPrompts({ language }: E
       const oneDayInMs = 24 * 60 * 60 * 1000;
 
       if (now - dismissedTimestamp < oneDayInMs) {
-        setPromptsDismissed(true);
-      } else {
-        localStorage.removeItem("engagement-prompts-dismissed");
+        return true;
       }
     }
-  }, []);
+    return false;
+  });
 
   const handleDismiss = () => {
     setPromptsDismissed(true);
@@ -138,4 +134,4 @@ export const EngagementPrompts = memo(function EngagementPrompts({ language }: E
       </div>
     </Card>
   );
-});
+}

@@ -73,8 +73,7 @@ export function GoalsScreen({
   };
   // These optional lists are not part of GoalsScreenView; never substitute live
   // deck data into a capture. The captured curriculum card still renders above.
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- Opaque WASM calls must stay cached; the compiler cannot infer their cost or purity.
-  const movieStats = useMemo(() => injectedView ? [] : deck.get_movie_stats(), [injectedView, deck]);
+  const movieStats = useMovieStats(deck, !!injectedView);
   const metadata = new Map(
     deck.get_movie_metadata(
       movieStats.map((movie) => movie.id),
@@ -84,11 +83,7 @@ export function GoalsScreen({
     const movie = metadata.get(stat.id);
     return movie ? [{ ...movie, ...stat }] : [];
   });
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- Keep the opaque WASM result stable across local UI changes.
-  const pimsleurStats = useMemo(
-    () => !injectedView && curriculum.has_pimsleur ? deck.get_pimsleur_stats() : [],
-    [injectedView, deck, curriculum.has_pimsleur],
-  );
+  const pimsleurStats = usePimsleurStats(deck, !injectedView && curriculum.has_pimsleur);
 
   return (
     <TopPageLayout
@@ -329,4 +324,13 @@ function SentenceListCard({
       </Card>
     </button>
   );
+}
+
+// Keep costly Rust statistics cached without making the whole screen a compiler bailout.
+function useMovieStats(deck: DeckType, captured: boolean) {
+  return useMemo(() => captured ? [] : deck.get_movie_stats(), [captured, deck]);
+}
+
+function usePimsleurStats(deck: DeckType, enabled: boolean) {
+  return useMemo(() => enabled ? deck.get_pimsleur_stats() : [], [enabled, deck]);
 }

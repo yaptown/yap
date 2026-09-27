@@ -1,6 +1,7 @@
 use weapon::supabase::SupabaseConfig;
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn supabase_config() -> SupabaseConfig {
     SupabaseConfig {
         supabase_url: "https://eearwzqotpfoderpfrqx.supabase.co".to_string(),

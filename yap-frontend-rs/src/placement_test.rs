@@ -137,6 +137,7 @@ impl Deck {
     /// Get placement test words distributed by likelihood of knowledge
     /// Takes lists of known and unknown words as strings, builds a regression, and returns
     /// words at different knowledge probability levels (1%, 10%, 20%, ..., 99%)
+    #[bridgerton::stable]
     pub fn get_placement_test(
         &self,
         known_words: Vec<String>,

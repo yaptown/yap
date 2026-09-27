@@ -11,29 +11,37 @@ struct ReviewPlanScreen: View {
         ReviewStepScrollView {
             StudyCard(alignment: .center, spacing: 24, animated: true) {
                 Text(plan.title).font(.title2.weight(.semibold)).multilineTextAlignment(.center)
-                ForEach(plan.groups, id: \.heading) { group in
-                    VStack(spacing: 8) {
-                        Text(group.heading).font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
-                        SentenceFlow(spacing: 0, alignment: .center) {
-                            ForEach(Array(group.cards.enumerated()), id: \.offset) { index, card in
-                                Text(card).font(.subheadline.weight(.medium))
-                                    .padding(.horizontal, 12).padding(.vertical, 2)
-                                    .overlay(alignment: .leading) {
-                                        if index > 0 { Rectangle().fill(Color(uiColor: .separator)).frame(width: 1) }
-                                    }
-                            }
-                        }
-                    }
-                }
+                ReviewPlanGroups(groups: plan.groups).equatable()
                 Button(action: onAccept) { Text(plan.accept_label).frame(maxWidth: .infinity) }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             }
             .padding(.horizontal, 8)
         } actions: {
-            WeekProgressStrip(week: plan.week)
+            WeekProgressStrip(week: plan.week).equatable()
         }
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeScreen == .review else { return }; if DebugHarness.shared.command == "next" { onAccept() } }
         #endif
+    }
+}
+
+private struct ReviewPlanGroups: View, Equatable {
+    let groups: [ReviewPlanGroup]
+
+    var body: some View {
+        ForEach(groups, id: \.heading) { group in
+            VStack(spacing: 8) {
+                Text(group.heading).font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+                SentenceFlow(spacing: 0, alignment: .center) {
+                    ForEach(Array(group.cards.enumerated()), id: \.offset) { index, card in
+                        Text(card).font(.subheadline.weight(.medium))
+                            .padding(.horizontal, 12).padding(.vertical, 2)
+                            .overlay(alignment: .leading) {
+                                if index > 0 { Rectangle().fill(Color(uiColor: .separator)).frame(width: 1) }
+                            }
+                    }
+                }
+            }
+        }
     }
 }

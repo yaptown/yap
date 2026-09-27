@@ -17,21 +17,7 @@ struct PronunciationChallengeView: View {
     var body: some View {
         ReviewStepScrollView {
             if let prompt = view.tutorial_prompt { TutorialHint(prompt: prompt).fadeIn() }
-            StudyCard(animated: true) {
-                HStack(alignment: .center, spacing: 8) {
-                    Color.clear.frame(width: 44, height: 44)
-                    Text(view.positioned_pattern).font(.title2.bold()).multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                    Color.clear.frame(width: 44, height: 44)
-                }
-                if let note = view.position_note {
-                    Text(note).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
-                }
-                ForEach(Array(view.examples.enumerated()), id: \.offset) { _, example in
-                    PronunciationRow(cue: example.cue, pattern: view.pattern, position: view.position,
-                                     context: example.cultural_context)
-                }
-                if let description = view.description { Text(markdown(description)).font(.subheadline) }
-            }
+            PronunciationCard(view: view).equatable()
         } actions: {
             if let prompt = view.tutorial_grade_prompt {
                 TutorialHint(text: prompt, pointing: .down, arrowSize: 96).fadeIn(duration: 0.3, delay: 1.5)
@@ -116,5 +102,27 @@ private struct PronunciationRow: View {
                 if let context { Text(context).font(.footnote).foregroundStyle(.secondary) }
             }.frame(maxWidth: .infinity, alignment: .leading)
         }.onChange(of: playing) { _, playing in if playing { connectorHeard = true } }
+    }
+}
+
+private struct PronunciationCard: View, Equatable {
+    let view: PronunciationView
+
+    var body: some View {
+        StudyCard(animated: true) {
+            HStack(alignment: .center, spacing: 8) {
+                Color.clear.frame(width: 44, height: 44)
+                Text(view.positioned_pattern).font(.title2.bold()).multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                Color.clear.frame(width: 44, height: 44)
+            }
+            if let note = view.position_note {
+                Text(note).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+            }
+            ForEach(Array(view.examples.enumerated()), id: \.offset) { _, example in
+                PronunciationRow(cue: example.cue, pattern: view.pattern, position: view.position,
+                                 context: example.cultural_context)
+            }
+            if let description = view.description { Text(markdown(description)).font(.subheadline) }
+        }
     }
 }

@@ -1,4 +1,5 @@
 import {
+  memo,
   useState,
   useEffect,
   useRef,
@@ -371,7 +372,8 @@ export function GramDefinitionDisplay({
   );
 }
 
-export function TranslationChallenge({
+// Recursive reducer effects are not covered by React Compiler; compare every prop, including actions.
+export const TranslationChallenge = memo(function TranslationChallenge({
   sentence,
   initialState,
   onComplete,
@@ -743,4 +745,4 @@ export function TranslationChallenge({
       />
     </div>
   );
-}
+});

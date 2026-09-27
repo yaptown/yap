@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { memo, useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { PendingReview } from "@/review/challenges/pending-review";
 import { reportAutogradeFailure } from "@/core/instrument";
 import { MoviePosterGrid } from "./MoviePosterGrid";
@@ -106,7 +106,8 @@ function FeedbackSkeleton() {
   );
 }
 
-export function TranscriptionChallenge({
+// Recursive reducer effects are not covered by React Compiler; compare every prop, including actions.
+export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   initialState,
   challenge,
   onComplete,
@@ -774,7 +775,7 @@ export function TranscriptionChallenge({
       />
     </div>
   );
-}
+});
 
 interface WordGradesProps {
   verdict: VerdictView;

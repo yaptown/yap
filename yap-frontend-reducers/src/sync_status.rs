@@ -66,6 +66,7 @@ pub struct SyncStatusView {
 pub const UNSYNCED_THRESHOLD_MS: f64 = 5000.0;
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn sync_status_view(inputs: SyncStatusInputs) -> SyncStatusView {
     let running = inputs.manual_sync_in_flight
         || inputs.last_sync_started_ms.is_some_and(|started| {

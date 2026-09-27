@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import { memo, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Poster } from "@/browse/Poster";
 import { TargetLanguageText } from "../components/TargetLanguageText";
 import { ReviewPlanCard } from "./ladder/ReviewPlanScreen";
@@ -57,7 +57,7 @@ interface IdleScreenProps {
   commitSentenceList: (event: DeckEvent) => void;
 }
 
-export const IdleScreen = memo(function IdleScreen(props: IdleScreenProps) {
+export function IdleScreen(props: IdleScreenProps) {
   const { view, deck, addEvent, showWeek = true } = props;
   const [showReleasePlan, setShowReleasePlan] = useState(false);
   const plan = view.type === "ReviewPlanOffer" ? view : view.type === "StudyPlanComplete" ? view.plan : undefined;
@@ -100,7 +100,7 @@ export const IdleScreen = memo(function IdleScreen(props: IdleScreenProps) {
     case "ReviewPlanOffer": return <ReviewPlanCard plan={view} onCommit={() => addEvent(view.event)} showWeek={showWeek} />;
     case "Idle": return <IdleContent {...props} view={view} deck={deck} />;
   }
-});
+}
 
 function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, undoRestrictions, deck, setSentenceList, commitSentenceList }: Omit<IdleScreenProps, "view"> & { view: IdleView }) {
   const navigate = useNavigate();

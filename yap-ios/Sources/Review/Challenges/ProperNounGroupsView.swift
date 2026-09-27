@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ProperNounGroupsView: View {
+struct ProperNounGroupsView: View, Equatable {
     let groups: [ProperNounGroup]
 
     var body: some View {

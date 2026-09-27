@@ -12,6 +12,7 @@ pub struct ChallengeRestrictions {
 /// Timestamps are device-local host state. Expiry is evaluated with the host's
 /// clock; an active review should finish before the host applies expired bans.
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn get_challenge_restrictions(
     listening_since: Option<f64>,
     speaking_since: Option<f64>,

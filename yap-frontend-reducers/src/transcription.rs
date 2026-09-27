@@ -472,6 +472,7 @@ fn blank_tint(result: Option<&PartGraded>) -> BlankTint {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
     let grade_options: Vec<_> = [
         ("Perfect", WordGrade::Perfect { wrote: None }),

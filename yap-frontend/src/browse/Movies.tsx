@@ -1,4 +1,4 @@
-import { memo, useState, useDeferredValue } from "react";
+import { useState, useDeferredValue } from "react";
 import { MoviePosterCard } from "@/review/challenges/MoviePosterCard";
 import type { Deck, MovieMetadataBasic } from "../../../yap-frontend-rs/pkg";
 
@@ -15,7 +15,7 @@ interface MoviesProps {
   onSelectMovie: (id: string) => void;
 }
 
-export const Movies = memo(function Movies({
+export function Movies({
   moviesWithMetadata: moviesWithMetadataProp,
   targetLanguageIso,
   deck,
@@ -96,4 +96,4 @@ export const Movies = memo(function Movies({
       )}
     </div>
   );
-});
+}

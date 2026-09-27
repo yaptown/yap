@@ -87,6 +87,7 @@ pub struct DefinitionView {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn definition_view(definition: GramDefinition) -> DefinitionView {
     let example = |target: String, native: String| {
         (!target.is_empty()).then_some(SenseExample { target, native })

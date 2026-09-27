@@ -26,6 +26,7 @@ pub struct AccountCopy {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn account_copy() -> AccountCopy {
     AccountCopy {
         prompt_title: "Log in or create an account to make sure you don't lose your progress!"
@@ -917,6 +918,7 @@ pub fn frequency_rank_label(rank: f64) -> String {
 
 /// Both hosts use the same rank ticks and compact labels.
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn frequency_knowledge_ticks() -> Vec<FrequencyKnowledgeTick> {
     [
         2.0, 4.0, 6.0, 8.0, 15.0, 50.0, 90.0, 300.0, 700.0, 1500.0, 5000.0, 10000.0,
@@ -1211,6 +1213,7 @@ impl Deck {
         }
     }
 
+    #[bridgerton::stable]
     pub fn stats_screen_view(
         &self,
         banned: Vec<ChallengeRequirements>,
@@ -1266,6 +1269,7 @@ impl Deck {
         }
     }
 
+    #[bridgerton::stable]
     pub fn goals_screen_view(
         &self,
         banned: Vec<ChallengeRequirements>,
@@ -1285,6 +1289,7 @@ impl Deck {
         }
     }
 
+    #[bridgerton::stable]
     pub fn due_words_view(
         &self,
         banned: Vec<ChallengeRequirements>,

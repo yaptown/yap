@@ -204,6 +204,7 @@ pub struct AnkiOptionsCopy {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn anki_options_copy(reading: bool, listening: bool, word_cards: bool) -> AnkiOptionsCopy {
     AnkiOptionsCopy {
         intro: if word_cards {
@@ -455,6 +456,7 @@ const DECK_DESCRIPTION: &str = "Made with Yap (https://yap.town/anki): real movi
 
 #[bridgerton::bridge]
 impl Deck {
+    #[bridgerton::stable]
     pub fn anki_export_view(&self, starting_fresh: Option<bool>) -> AnkiExportView {
         let pack = &self.context.language_pack;
         let language = self.context.course.target_language;

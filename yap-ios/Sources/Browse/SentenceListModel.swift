@@ -25,7 +25,7 @@ import SwiftUI
     }
 }
 
-struct SentenceListProgressView: View {
+struct SentenceListProgressView: View, Equatable {
     let progress: SentenceListProgress
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

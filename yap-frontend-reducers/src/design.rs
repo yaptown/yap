@@ -42,6 +42,7 @@ macro_rules! bridged_palette {
         }
 
         #[bridgerton::bridge]
+        #[bridgerton::stable(strong)]
         pub fn design_palette() -> Palette {
             use crate::palette::oklch;
             Palette { $($field: DynamicColor { light: ($light).into(), dark: ($dark).into() },)* }

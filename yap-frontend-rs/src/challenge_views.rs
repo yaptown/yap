@@ -69,6 +69,7 @@ fn part_of_speech_label(pos: PartOfSpeech) -> &'static str {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn flashcard_view(
     flashcard: FlashCard,
     is_new: bool,
@@ -178,6 +179,7 @@ pub struct PronunciationView {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn pronunciation_view(
     pattern: String,
     guide: PronunciationGuide,

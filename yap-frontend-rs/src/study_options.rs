@@ -28,6 +28,7 @@ pub struct IdleStudyState {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn get_idle_study_state(
     has_future_card: bool,
     cards_added: usize,

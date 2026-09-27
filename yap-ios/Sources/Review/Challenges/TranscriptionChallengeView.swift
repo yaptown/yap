@@ -47,7 +47,7 @@ struct TranscriptionChallengeView: View {
                         }
                     }
                 }.frame(maxWidth: .infinity).padding(.top, 4)
-                if editing { ProperNounGroupsView(groups: view.proper_nouns) }
+                if editing { ProperNounGroupsView(groups: view.proper_nouns).equatable() }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
                     reviewCount: screen.total_reviews,
                     maskedSentence: editing ? sentence.parts.map { part in
@@ -58,7 +58,7 @@ struct TranscriptionChallengeView: View {
                     SentenceVerdictView(submission: verdict.submission_text,
                         correct: sentence.target_language, perfect: verdict.perfect, encouragement: verdict.encouragement,
                         explanation: verdict.explanation, error: verdict.autograding_error,
-                        correctLabel: verdict.correct_label, submissionLabel: verdict.submission_label)
+                        correctLabel: verdict.correct_label, submissionLabel: verdict.submission_label).equatable()
                     wordGrades(verdict)
                     if !verdict.compare.isEmpty {
                         Text(verdict.compare.joined(separator: " · "))
@@ -68,7 +68,7 @@ struct TranscriptionChallengeView: View {
                     }
                     DisclosureGroup("Translation", isExpanded: Binding(get: { verdict.translation_revealed }, set: { _ in send(.TranslationToggled) })) { Text(sentence.native_language) }
                     if case let .Graded(_, grade, _, _) = state.phase {
-                        ReviewDefinitionsView(definitions: get_transcription_review_definitions(challenge: sentence, results: grade.results))
+                        ReviewDefinitionsView(definitions: get_transcription_review_definitions(challenge: sentence, results: grade.results)).equatable()
                     }
                 } else if view.is_grading {
                     Text(sentence.target_language).foregroundStyle(Color.yapPositiveForeground)
@@ -76,7 +76,7 @@ struct TranscriptionChallengeView: View {
                 }
             }
             if editing {
-                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId))
+                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId)).equatable()
             }
         } actions: {
             if view.verdict == nil {

@@ -19,6 +19,7 @@ pub struct BackgroundPalette {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn background_palette(theme: BackgroundTheme) -> BackgroundPalette {
     let (lightness, chroma, shift, hue_start, hue_range) = match theme {
         BackgroundTheme::Dark => (15.0, 9.0, 7.0, 5.2, 3.0),

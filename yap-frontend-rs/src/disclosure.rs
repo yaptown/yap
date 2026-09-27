@@ -10,6 +10,7 @@ pub struct FlashcardDisclosure {
 
 /// `total_card_count` is the number of due + future cards, not lifetime reviews.
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn get_flashcard_disclosure(
     total_card_count: usize,
     times_type_seen: u32,

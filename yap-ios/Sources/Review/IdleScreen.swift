@@ -17,7 +17,7 @@ struct IdleScreen: View {
                         if !online { Text("Reconnect to download audio.") }
                     }
                 } actions: {
-                    WeekProgressStrip(week: week)
+                    WeekProgressStrip(week: week).equatable()
                 }
             case let .ReviewPlanOffer(plan):
                 ReviewPlanScreen(plan: plan) { addEvent(plan.event) }
@@ -32,7 +32,7 @@ struct IdleScreen: View {
                             Button("Study more") { showReleasePlan = true }.buttonStyle(.bordered).controlSize(.large)
                         }
                     } actions: {
-                        WeekProgressStrip(week: plan.week)
+                        WeekProgressStrip(week: plan.week).equatable()
                     }
                     #if DEBUG
                     .onChange(of: DebugHarness.shared.commandID) { _, _ in
@@ -79,7 +79,7 @@ struct IdleScreen: View {
             }
             if idle.show_sentence_list { SentenceListSelector(view: idle, add: add) }
         } actions: {
-            if idle.show_sentence_list { WeekProgressStrip(week: idle.week) }
+            if idle.show_sentence_list { WeekProgressStrip(week: idle.week).equatable() }
         }
     }
 }

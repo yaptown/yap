@@ -18,6 +18,7 @@ pub struct SentenceListNavigation {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn get_sentence_list_navigation(
     selection: Option<SentenceListSelection>,
     has_movies: bool,
@@ -69,6 +70,7 @@ impl SentenceListProgress {
 #[bridgerton::bridge]
 impl Deck {
     /// Called only when switching categories, so choosing the best movie stays lazy.
+    #[bridgerton::stable]
     pub fn get_sentence_list_for_category(
         &self,
         category: SentenceListCategory,
@@ -87,6 +89,7 @@ impl Deck {
     }
     /// Essential progress refers to the tier chosen by smart-add, which may
     /// differ from the first incomplete tier when the proposed cards finish it.
+    #[bridgerton::stable]
     pub fn get_sentence_list_progress(
         &self,
         selection: Option<SentenceListSelection>,

@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SentenceVerdictView: View {
+struct SentenceVerdictView: View, Equatable {
     let submission: String
     let correct: String
     let perfect: Bool
@@ -53,16 +53,16 @@ func markdown(_ text: String) -> AttributedString {
     return (try? AttributedString(markdown: text)) ?? AttributedString(text)
 }
 
-struct ReviewDefinitionsView: View {
+struct ReviewDefinitionsView: View, Equatable {
     let definitions: [ReviewDefinition]
     var body: some View {
         ForEach(Array(definitions.enumerated()), id: \.offset) { _, entry in
-            CompactDefinitionRow(entry: entry).padding(.vertical, 8)
+            CompactDefinitionRow(entry: entry).equatable().padding(.vertical, 8)
         }
     }
 }
 
-private struct CompactDefinitionRow: View {
+private struct CompactDefinitionRow: View, Equatable {
     let entry: ReviewDefinition
     private var word: String { entry.definition.headword }
     var body: some View {

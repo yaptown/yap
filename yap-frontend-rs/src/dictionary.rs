@@ -271,11 +271,13 @@ impl DictionaryWord {
     }
 
     #[bridge(getter)]
+    #[bridgerton::stable]
     pub fn prefix(&self) -> Option<WordPrefix> {
         self.prefix.clone()
     }
 
     #[bridge(getter)]
+    #[bridgerton::stable]
     pub fn senses(&self) -> Vec<DictionarySense> {
         self.senses.clone()
     }
@@ -293,6 +295,7 @@ impl DictionaryWord {
     }
 
     #[bridge(getter)]
+    #[bridgerton::stable]
     pub fn audio_request(&self) -> AudioRequest {
         AudioRequest {
             request: TtsRequest {

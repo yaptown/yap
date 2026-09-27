@@ -201,6 +201,7 @@ pub struct TranslationReviewFeedback {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn get_translation_review_feedback(
     sentence: TranslateComprehensibleSentence,
     grade: Option<ManualTranslationGrade>,
@@ -802,6 +803,7 @@ pub fn translation_transition(
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn translation_view(state: TranslationState) -> TranslationView {
     let editing = matches!(state.phase, TranslationPhase::Editing);
     let is_grading = matches!(state.phase, TranslationPhase::Grading { .. });

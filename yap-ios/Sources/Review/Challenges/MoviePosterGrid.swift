@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct MoviePosterGrid: View {
+struct MoviePosterGrid: View, Equatable {
     let movies: [MovieMetadataBasic]
     var body: some View {
         if !movies.isEmpty {

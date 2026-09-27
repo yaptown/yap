@@ -64,7 +64,7 @@ struct GoalsScreen: View {
             switch curriculum.sentence_list_options[selectedIndex].category {
             case .Essential:
                 Text(curriculum.sentence_list_label).font(.headline).foregroundStyle(Color.yapText)
-                SentenceListProgressView(progress: curriculum.progress)
+                SentenceListProgressView(progress: curriculum.progress).equatable()
                 if let next = curriculum.next_sentence_list {
                     Button(nextLabel(next)) { actions.setSentenceList(next) }.buttonStyle(.bordered)
                 }
@@ -122,7 +122,7 @@ struct GoalsScreen: View {
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
-                    SentenceListProgressView(progress: deck.get_sentence_list_progress(selection: selection, essential_percent_known: lists.tier.percent_known))
+                    SentenceListProgressView(progress: deck.get_sentence_list_progress(selection: selection, essential_percent_known: lists.tier.percent_known)).equatable()
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }.padding(.vertical, 6)
         }.buttonStyle(.plain)

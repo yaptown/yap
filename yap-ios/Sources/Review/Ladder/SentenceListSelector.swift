@@ -20,10 +20,8 @@ struct SentenceListSelector: View {
                     .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity)
                 chevron(1)
             }
-            if case let .Movie(id) = navigation.selection,
-               let bytes = host.deck.get_movie_poster(movie_id: id), let image = UIImage(data: Data(bytes)) {
-                Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 220).clipShape(RoundedRectangle(cornerRadius: 12))
-                    .accessibilityLabel("Poster for \(view.sentence_list_label)")
+            if case let .Movie(id) = navigation.selection, let bytes = host.deck.get_movie_poster(movie_id: id) {
+                SentenceListPoster(bytes: bytes, title: view.sentence_list_label).equatable()
             }
             if case .PimsleurLesson = navigation.selection, !pimsleurAcknowledged {
                 Image(systemName: "headphones").font(.title).foregroundStyle(.secondary)
@@ -41,7 +39,7 @@ struct SentenceListSelector: View {
                     LearnButton(label: label, heading: view.manual_add_heading, options: view.manual_add_options,
                                 learn: { add(event) }, add: add)
                 }
-                SentenceListProgressView(progress: view.progress)
+                SentenceListProgressView(progress: view.progress).equatable()
                 if let note = view.level_note {
                     Text(note).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -106,5 +104,18 @@ private struct LearnButton: View {
         .background(Tokens.palette.primary.color.opacity(0.85))
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+/// Image decoding is independent of the selector's live navigation/add actions.
+private struct SentenceListPoster: View, Equatable {
+    let bytes: [UInt8]
+    let title: String
+
+    var body: some View {
+        if let image = UIImage(data: Data(bytes)) {
+            Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 220).clipShape(RoundedRectangle(cornerRadius: 12))
+                .accessibilityLabel("Poster for \(title)")
+        }
     }
 }

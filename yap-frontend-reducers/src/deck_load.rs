@@ -227,6 +227,7 @@ pub fn deck_load_transition(mut state: DeckLoadState, event: DeckLoadEvent) -> D
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn deck_load_view(state: DeckLoadState) -> DeckLoadView {
     let error = state.build_error.as_ref().or_else(|| {
         (!state.deck_present)

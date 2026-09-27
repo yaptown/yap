@@ -11,9 +11,7 @@ interface PosterProps {
 export function Poster({ movieId, deck, alt }: PosterProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
-  const bytes = visible ? deck.get_movie_poster(movieId) : undefined;
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- Bridgerton stable returns preserve byte identity.
-  const posterDataUrl = useMemo(() => getPosterDataUrl(bytes), [bytes]);
+  const posterDataUrl = usePosterDataUrl(visible ? deck.get_movie_poster(movieId) : undefined);
 
   useEffect(() => {
     if (visible) return;
@@ -49,4 +47,9 @@ export function Poster({ movieId, deck, alt }: PosterProps) {
   return (
     <img src={posterDataUrl} alt={alt} className="w-full h-full object-cover" />
   );
+}
+
+// Cache base64 conversion by the bridge's stable bytes, even across Deck snapshots.
+function usePosterDataUrl(bytes: Uint8Array | undefined) {
+  return useMemo(() => getPosterDataUrl(bytes), [bytes]);
 }

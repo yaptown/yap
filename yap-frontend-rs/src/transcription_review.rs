@@ -27,6 +27,7 @@ fn wrong_gram_groups(results: &[PartGraded], indices: &[Vec<usize>]) -> Vec<usiz
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn get_transcription_review_definitions(
     challenge: TranscribeComprehensibleSentence,
     results: Vec<PartGraded>,

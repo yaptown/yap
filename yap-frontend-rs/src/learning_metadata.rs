@@ -45,6 +45,7 @@ pub struct LanguageMetadata {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn get_language_metadata(language: Language) -> LanguageMetadata {
     use Language::*;
     match language {
@@ -356,6 +357,7 @@ pub struct DailyGoalOption {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn get_daily_goal_options() -> Vec<DailyGoalOption> {
     use DailyReviewTarget::*;
     [Casual, Regular, Serious, Intense]

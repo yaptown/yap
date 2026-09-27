@@ -48,7 +48,7 @@ struct TranslationChallengeView: View {
                 if let verdict = view.verdict {
                     SentenceVerdictView(submission: verdict.submission, correct: verdict.correct_translation,
                         perfect: verdict.perfect, encouragement: verdict.encouragement, explanation: verdict.explanation,
-                        error: verdict.autograding_error, correctLabel: verdict.correct_label, submissionLabel: verdict.submission_label)
+                        error: verdict.autograding_error, correctLabel: verdict.correct_label, submissionLabel: verdict.submission_label).equatable()
                     if let section = view.grade_section {
                         DisclosureGroup(section.title, isExpanded: $gradesExpanded) {
                             VStack(spacing: 12) {
@@ -66,14 +66,14 @@ struct TranslationChallengeView: View {
                         .overlay(alignment: .topLeading) {
                             if state.text.isEmpty { Text(view.placeholder).foregroundStyle(.secondary).padding(12).allowsHitTesting(false) }
                         }
-                    ProperNounGroupsView(groups: view.proper_nouns)
+                    ProperNounGroupsView(groups: view.proper_nouns).equatable()
                 }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
                     reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip, movieId: $clipMovieId)
-                ReviewDefinitionsView(definitions: view.definitions)
+                ReviewDefinitionsView(definitions: view.definitions).equatable()
             }
             if editing {
-                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId))
+                MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId)).equatable()
             }
         } actions: {
             if view.verdict != nil {

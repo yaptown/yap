@@ -29,6 +29,7 @@ pub struct ReportIssueCopy {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn report_issue_copy() -> ReportIssueCopy {
     ReportIssueCopy {
         menu_label: "Report an Issue".into(),

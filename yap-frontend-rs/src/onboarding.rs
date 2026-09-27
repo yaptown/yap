@@ -321,6 +321,7 @@ pub fn onboarding_reduce(
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
     use OnboardingContent::*;
     let metadata = get_language_metadata(state.target_language);

@@ -3,7 +3,7 @@ import SwiftUI
 /// Seven cells, Monday to Sunday: cards gained that day over a fill showing
 /// time studied against the daily target; today is raised. Mirrors web's
 /// `WeekProgressStrip`; Rust supplies every number.
-struct WeekProgressStrip: View {
+struct WeekProgressStrip: View, Equatable {
     let week: [DayProgress]
     private static let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
     var body: some View {

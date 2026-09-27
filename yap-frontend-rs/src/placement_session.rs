@@ -77,6 +77,7 @@ pub struct PlacementSessionInfo {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable]
 pub fn get_placement_session_info(session: PlacementSession) -> PlacementSessionInfo {
     let answers = session.known_words.len() + session.unknown_words.len();
     PlacementSessionInfo {

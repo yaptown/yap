@@ -21,7 +21,6 @@ import {
   refresh_clip_manifest,
   update_profile,
   type Challenge,
-  type ChallengeRequirements,
   type Deck,
   type DeckEvent,
   type Gram,
@@ -159,17 +158,12 @@ function useStudyController(
     () => ({ ...polledReadiness, deck, timestamp_ms: Date.now() }),
     [deck, polledReadiness],
   );
-  const [banned, setBanned] = useState<ChallengeRequirements[]>(
-    () => readChallengeRestrictions().banned,
-  );
+  // Retain the interned root, not just its array: weak stability lasts while
+  // this snapshot is held, and React can skip equal polling results directly.
+  const [restrictions, setRestrictions] = useState(readChallengeRestrictions);
+  const banned = restrictions.banned;
   const refreshRestrictions = useCallback(() => {
-    const next = readChallengeRestrictions().banned;
-    setBanned((previous) =>
-      previous.length === next.length &&
-      previous.every((value, i) => value === next[i])
-        ? previous
-        : next,
-    );
+    setRestrictions(readChallengeRestrictions());
   }, []);
   const refresh = useCallback(() => {
     setReadiness((previous) => ({ ...previous, timestamp_ms: Date.now() }));
@@ -347,11 +341,11 @@ function useStudyController(
   }, [deck, restrictionRevision]);
   // Actions read the committed selection, never force a screen projection.
   // Old snapshot/restriction callbacks cannot submit a replacement challenge.
-  const getCurrentChallenge = () => {
+  const getCurrentChallenge = useCallback(() => {
     const held = heldChallenge.current;
     return held?.deck === deck && held.revision === restrictionRevision
       ? held.challenge : undefined;
-  };
+  }, [deck, restrictionRevision]);
   const totalReviewsCompleted = deck?.get_total_reviews();
   const dismissAccomplishment = useCallback(() => {
     if (totalReviewsCompleted !== undefined)
@@ -373,7 +367,7 @@ function useStudyController(
     (event: DeckEvent) => { if (canWrite()) weapon.add_deck_event(event); },
     [weapon, canWrite],
   );
-  const onRating = (rating: Rating): boolean => {
+  const onRating = useCallback((rating: Rating): boolean => {
     if (!canWrite() || submitting.current.deck !== deck || submitting.current.inFlight) return false;
     const currentChallenge = getCurrentChallenge();
     if (
@@ -394,8 +388,8 @@ function useStudyController(
     playSoundEffect(rating === "again" ? "fail" : "success");
     window.scrollTo({ top: 0 });
     return true;
-  };
-  const onTranslationComplete = (
+  }, [canWrite, deck, getCurrentChallenge, addEvent]);
+  const onTranslationComplete = useCallback((
     grade:
       | ManualTranslationGrade
       | { perfect: string | null },
@@ -431,8 +425,8 @@ function useStudyController(
     playSoundEffect("success");
     window.scrollTo({ top: 0 });
     return true;
-  };
-  const onTranscriptionComplete = (
+  }, [canWrite, deck, getCurrentChallenge, weapon]);
+  const onTranscriptionComplete = useCallback((
     grade: PartGraded[],
     completedAtMs: number,
   ): boolean => {
@@ -454,22 +448,25 @@ function useStudyController(
     playSoundEffect("success");
     window.scrollTo({ top: 0 });
     return true;
-  };
-  const restrict = (kind: "listen" | "speak") => {
+  }, [canWrite, deck, getCurrentChallenge, weapon]);
+  const restrict = useCallback((kind: "listen" | "speak") => {
     localStorage.setItem(`yap-cant-${kind}-timestamp`, Date.now().toString());
     refreshRestrictions();
     heldChallenge.current = undefined;
     setRestrictionRevision((revision) => revision + 1);
     refresh();
-  };
-  const undoRestrictions = () => {
+  }, [refreshRestrictions, refresh]);
+  const undoRestrictions = useCallback(() => {
     localStorage.removeItem("yap-cant-listen-timestamp");
     localStorage.removeItem("yap-cant-speak-timestamp");
     refreshRestrictions();
     heldChallenge.current = undefined;
     setRestrictionRevision((revision) => revision + 1);
     refresh();
-  };
+  }, [refreshRestrictions, refresh]);
+
+  const onCantListen = useCallback(() => restrict("listen"), [restrict]);
+  const onCantSpeak = useCallback(() => restrict("speak"), [restrict]);
 
   return {
     audioPrefetch: { deck, accessToken, banned, readiness, online: network.online },
@@ -484,8 +481,8 @@ function useStudyController(
       onRating,
       onTranslationComplete,
       onTranscriptionComplete,
-      onCantListen: () => restrict("listen"),
-      onCantSpeak: () => restrict("speak"),
+      onCantListen,
+      onCantSpeak,
       undoRestrictions,
       dismissAccomplishment,
       completePlacementTest: ({

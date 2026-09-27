@@ -124,6 +124,7 @@ fn language_pack_lock_name(course: Course) -> String {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn get_available_courses() -> Vec<language_utils::Course> {
     language_utils::COURSES.to_vec()
 }
@@ -146,6 +147,7 @@ pub fn get_audio_cache_version() -> u32 {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn get_showcase_data() -> Vec<language_utils::CourseShowcase> {
     static SHOWCASE_JSONS: &[&str] = &[
         include_str!("../../out/fra_for_eng/showcase.json"),
@@ -315,6 +317,7 @@ impl Weapon {
         store.get_raw(stream_id.clone()).map(|s| s.num_events())
     }
 
+    #[bridgerton::stable]
     pub fn get_deck_selection_state(&self) -> Option<DeckSelection> {
         let store = self.store.borrow();
         store
@@ -553,6 +556,7 @@ impl Weapon {
         Ok(())
     }
 
+    #[bridgerton::stable]
     pub fn get_sync_state(
         &self,
         target: weapon::data_model::SyncTarget,
@@ -564,6 +568,7 @@ impl Weapon {
             .unwrap_or_default()
     }
 
+    #[bridgerton::stable]
     pub fn sync_status(
         &self,
         online: bool,
@@ -2557,6 +2562,7 @@ impl Deck {
     /// Returns all cards as summaries, ordered consistently with get_review_info
     /// (due cards first, then future cards, each sorted by due date and card indicator).
     /// Includes locked cards — lockup only hides cards from the review queue.
+    #[bridgerton::stable]
     pub fn get_all_cards_summary(&self) -> Vec<CardSummary> {
         let now = Utc::now().timestamp_millis() as f64;
         let review_info = self.get_review_info_including_locked(now);
@@ -2572,6 +2578,7 @@ impl Deck {
     }
 
     /// Get all cards that have been detected as leeches (12+ lapses)
+    #[bridgerton::stable]
     pub fn get_leeches(&self) -> Vec<CardSummary> {
         self.leeches
             .keys()
@@ -2941,6 +2948,7 @@ impl Deck {
             / 100.0
     }
 
+    #[bridgerton::stable]
     pub fn get_sentence_list(&self) -> Option<SentenceListSelection> {
         self.sentence_list.clone()
     }
@@ -2970,6 +2978,7 @@ impl Deck {
 
     /// Get the tier level where adding the next batch of cards makes the most progress.
     /// Falls back to the first incomplete level if no cards improve any level.
+    #[bridgerton::stable]
     pub fn get_current_tier(&self) -> TierInfo {
         let freq_list = &self.context.language_pack.gram_frequencies;
         let all_grams: Vec<TaggedGram<SpurGram>> = freq_list.entries.keys().copied().collect();
@@ -3023,6 +3032,7 @@ impl Deck {
         level.to_tier_info(pct, cumulative_pct)
     }
 
+    #[bridgerton::stable]
     pub fn get_accomplishment(&self) -> Option<Accomplishment> {
         self.accomplishment.clone()
     }
@@ -3068,6 +3078,7 @@ impl Deck {
         )
     }
 
+    #[bridgerton::stable]
     pub fn get_today_summary(&self) -> TodaySummary {
         self.get_today_summary_on(
             Utc::now()
@@ -3082,6 +3093,7 @@ impl Deck {
     }
 
     /// Progress for each day of the current week (Monday → Sunday) in the user's local timezone.
+    #[bridgerton::stable]
     pub fn get_current_week_progress(&self) -> Vec<DayProgress> {
         self.get_current_week_progress_on(
             Utc::now()
@@ -3091,6 +3103,7 @@ impl Deck {
     }
 
     /// Full movie-browser statistics, including the milestone card counts.
+    #[bridgerton::stable]
     pub fn get_movie_stats(&self) -> Vec<MovieStats> {
         self.movie_stats(true)
     }
@@ -3193,6 +3206,7 @@ impl Deck {
         stats
     }
 
+    #[bridgerton::stable]
     pub fn get_pimsleur_stats(&self) -> Vec<PimsleurStats> {
         let language_pack = &self.context.language_pack;
         let mut stats = Vec::new();
@@ -3227,6 +3241,7 @@ impl Deck {
     }
 
     /// Returns the best movie sentence list: highest RT score among incomplete movies.
+    #[bridgerton::stable]
     pub fn get_best_movie_sentence_list(&self) -> Option<SentenceListSelection> {
         let written = self.get_comprehensible_written_grams(true);
         let listening = self.get_comprehensible_listening_grams(true);
@@ -3259,6 +3274,7 @@ impl Deck {
     }
 
     /// Returns the best Pimsleur lesson: the first incomplete one (by level/lesson).
+    #[bridgerton::stable]
     pub fn get_best_pimsleur_sentence_list(&self) -> Option<SentenceListSelection> {
         let stats = self.get_pimsleur_stats();
         // Already sorted by level then lesson
@@ -3271,6 +3287,7 @@ impl Deck {
             })
     }
 
+    #[bridgerton::stable]
     pub fn get_movie_metadata(&self, movie_ids: Vec<String>) -> Vec<MovieMetadataBasic> {
         let language_pack = &self.context.language_pack;
         let mut movies = Vec::new();
@@ -3318,6 +3335,7 @@ impl Deck {
             .and_then(|m| m.poster_bytes.clone())
     }
 
+    #[bridgerton::stable]
     pub fn get_book_metadata(&self, book_ids: Vec<String>) -> Vec<language_utils::BookMetadata> {
         let language_pack = &self.context.language_pack;
         book_ids
@@ -3371,6 +3389,7 @@ impl Deck {
 
     /// Compute everything the NoCardsReady screen needs in a single call.
     /// This calls next_unknown_cards only once.
+    #[bridgerton::stable]
     pub fn get_no_cards_ready_info(
         &self,
         banned_challenge_types: Vec<ChallengeRequirements>,
@@ -3504,6 +3523,7 @@ impl Deck {
     }
 
     /// Choices for the manual-add picker. Call lazily when the picker opens.
+    #[bridgerton::stable]
     pub fn get_manual_add_options(
         &self,
         sentence_list: Option<SentenceListSelection>,
@@ -3517,6 +3537,7 @@ impl Deck {
     }
 
     /// Compute a manual add option for a specific card type. Call lazily (e.g. on dropdown open).
+    #[bridgerton::stable]
     pub fn get_manual_add_option(
         &self,
         card_type: CardType,
@@ -3820,6 +3841,7 @@ impl Deck {
             .count() as u32
     }
 
+    #[bridgerton::stable]
     pub fn get_frequency_knowledge_chart_data(&self) -> Vec<FrequencyKnowledgePoint> {
         let regression = match &self.regressions.target_language_regression {
             Some(r) => r,
@@ -4286,6 +4308,7 @@ pub struct LockupOffer {
 impl LockupOffer {
     /// The cards that stay active — exactly what the user is shown and approves.
     #[bridge(getter)]
+    #[bridgerton::stable]
     pub fn keep_preview(&self) -> Vec<CardSummary> {
         self.keep_preview.clone()
     }
@@ -4307,6 +4330,7 @@ pub struct ReleaseOffer {
 impl ReleaseOffer {
     /// The cards that would be released — exactly what the user is shown.
     #[bridge(getter)]
+    #[bridgerton::stable]
     pub fn release_preview(&self) -> Vec<CardSummary> {
         self.release_preview.clone()
     }
@@ -4635,6 +4659,7 @@ impl AudioResult {
 
     /// The voice actor behind the clip when it's human-recorded, else `None`.
     #[bridge(getter)]
+    #[bridgerton::stable]
     pub fn voice_actor(&self) -> Option<audio::VoiceActorInfo> {
         self.voice_actor.clone()
     }
@@ -4718,6 +4743,7 @@ impl ClipResult {
     /// Time-synced subtitle cues for the video (clip-relative ms). Empty
     /// when unavailable — captions are an enhancement, not a requirement.
     #[bridge(getter)]
+    #[bridgerton::stable]
     pub fn subtitles(&self) -> Vec<clips::ClipSubtitleCue> {
         self.clip.subtitles.clone()
     }
@@ -5005,6 +5031,7 @@ pub fn get_app_version() -> String {
 }
 
 #[bridgerton::bridge]
+#[bridgerton::stable(strong)]
 pub fn get_courses() -> Vec<language_utils::Course> {
     language_utils::COURSES.to_vec()
 }
