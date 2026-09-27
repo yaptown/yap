@@ -337,6 +337,32 @@ fn load_manual_sentences(source_data_path: &std::path::Path) -> anyhow::Result<V
     Ok(manual_sentences)
 }
 
+/// The films a course is built from: `metadata.jsonl`, narrowed to the IMDb
+/// ids in `allowlist.txt` (one per line) when the directory has one.
+pub fn course_movies(
+    movies_dir: &std::path::Path,
+) -> anyhow::Result<Vec<language_utils::MovieMetadataBasic>> {
+    let metadata = movies_dir.join("metadata.jsonl");
+    if !metadata.exists() {
+        return Ok(vec![]);
+    }
+    let metadata = std::fs::read_to_string(metadata).context("Failed to read movie metadata")?;
+    let mut movies: Vec<language_utils::MovieMetadataBasic> = metadata
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(|line| serde_json::from_str(line).context("Failed to parse movie metadata"))
+        .collect::<anyhow::Result<_>>()?;
+    let allowlist = movies_dir.join("allowlist.txt");
+    if allowlist.exists() {
+        let allowlist =
+            std::fs::read_to_string(allowlist).context("Failed to read movie allowlist")?;
+        let allowed: HashSet<&str> = allowlist.lines().map(str::trim).collect();
+        movies.retain(|movie| allowed.contains(movie.id.as_str()));
+    }
+    Ok(movies)
+}
+
 /// Load movie sentences from OpenSubtitles data
 async fn load_movie_sentences(
     source_data_path: &std::path::Path,
@@ -375,21 +401,7 @@ async fn load_movie_sentences(
         eprintln!("⚠ WARNING: TMDB_API_KEY or OMDB_API_KEY not set; not refreshing movie metadata");
     }
 
-    let metadata_file = movies_dir.join("metadata.jsonl");
-    if !metadata_file.exists() {
-        return Ok(vec![]);
-    }
-
-    // Load movie metadata
-    let metadata_content =
-        std::fs::read_to_string(&metadata_file).context("Failed to read movie metadata file")?;
-
-    let movies: Vec<language_utils::MovieMetadataBasic> = metadata_content
-        .lines()
-        .map(str::trim)
-        .filter(|line| !line.is_empty())
-        .map(|line| serde_json::from_str(line).context("Failed to parse movie metadata"))
-        .collect::<anyhow::Result<_>>()?;
+    let movies = course_movies(&movies_dir)?;
     let segmenter = SubtitleSegmenter::for_language(language)?;
 
     // Loading and the language check are per film and cheap; films are

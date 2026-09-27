@@ -1522,62 +1522,44 @@ async fn main() -> anyhow::Result<()> {
         ));
         // Load movie metadata
         let movies_dir = source_data_path.join("sentence-sources/movies");
-        let movies = if movies_dir.exists() {
-            let metadata_file = movies_dir.join("metadata.jsonl");
-            if metadata_file.exists() {
-                let metadata_content = std::fs::read_to_string(&metadata_file)
-                    .context("Failed to read movie metadata file")?;
-                let posters_dir = movies_dir.join("posters");
-                let mut movies = FxHashMap::default();
-
-                for line in metadata_content.lines() {
-                    if line.trim().is_empty() {
-                        continue;
-                    }
-                    let basic: language_utils::MovieMetadataBasic =
-                        serde_json::from_str(line).context("Failed to parse movie metadata")?;
-
-                    // Convert to full MovieMetadata and load poster bytes from separate file
-                    let mut movie: language_utils::MovieMetadata = basic.into();
-                    let poster_path = posters_dir.join(format!("{}.jpg", movie.id));
-                    if poster_path.exists()
-                        && let Ok(bytes) = std::fs::read(&poster_path)
-                    {
-                        // Resize and encode as lossy WebP for smaller file size
-                        match image::load_from_memory_with_format(&bytes, image::ImageFormat::Jpeg)
-                        {
-                            Ok(img) => {
-                                let resized =
-                                    img.resize(400, 600, image::imageops::FilterType::Lanczos3);
-                                let resized = image::DynamicImage::ImageRgb8(resized.to_rgb8());
-                                let encoder = webp::Encoder::from_image(&resized)
-                                    .expect("Failed to create WebP encoder");
-                                let mut config =
-                                    webp::WebPConfig::new().expect("Failed to create WebP config");
-                                config.quality = 40.0;
-                                config.method = 6;
-                                movie.poster_bytes = Some(
-                                    encoder
-                                        .encode_advanced(&config)
-                                        .expect("Failed to encode WebP")
-                                        .to_vec(),
-                                );
-                            }
-                            Err(_) => {
-                                movie.poster_bytes = Some(bytes);
-                            }
+        let movies = {
+            let posters_dir = movies_dir.join("posters");
+            let mut movies = FxHashMap::default();
+            for basic in generate_data::target_sentences::course_movies(&movies_dir)? {
+                // Convert to full MovieMetadata and load poster bytes from separate file
+                let mut movie: language_utils::MovieMetadata = basic.into();
+                let poster_path = posters_dir.join(format!("{}.jpg", movie.id));
+                if poster_path.exists()
+                    && let Ok(bytes) = std::fs::read(&poster_path)
+                {
+                    // Resize and encode as lossy WebP for smaller file size
+                    match image::load_from_memory_with_format(&bytes, image::ImageFormat::Jpeg) {
+                        Ok(img) => {
+                            let resized =
+                                img.resize(400, 600, image::imageops::FilterType::Lanczos3);
+                            let resized = image::DynamicImage::ImageRgb8(resized.to_rgb8());
+                            let encoder = webp::Encoder::from_image(&resized)
+                                .expect("Failed to create WebP encoder");
+                            let mut config =
+                                webp::WebPConfig::new().expect("Failed to create WebP config");
+                            config.quality = 40.0;
+                            config.method = 6;
+                            movie.poster_bytes = Some(
+                                encoder
+                                    .encode_advanced(&config)
+                                    .expect("Failed to encode WebP")
+                                    .to_vec(),
+                            );
+                        }
+                        Err(_) => {
+                            movie.poster_bytes = Some(bytes);
                         }
                     }
-
-                    movies.insert(movie.id.clone(), movie);
                 }
 
-                movies
-            } else {
-                FxHashMap::default()
+                movies.insert(movie.id.clone(), movie);
             }
-        } else {
-            FxHashMap::default()
+            movies
         };
 
         // Load book metadata (attribution for book-sourced sentences, incl. the
