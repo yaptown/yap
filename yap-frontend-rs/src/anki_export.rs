@@ -1615,6 +1615,7 @@ mod tests {
                 year: Some(2026),
                 original_language: Some("en".into()),
                 rotten_tomatoes_score: None,
+                variety: None,
                 poster_bytes: Some(vec![1, 2, 3]),
             },
         );

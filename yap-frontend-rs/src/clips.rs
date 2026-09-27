@@ -21,10 +21,11 @@ use bridgerton::Error;
 use futures::FutureExt;
 use futures::future::{LocalBoxFuture, Shared};
 use language_utils::Language;
+use language_utils::language_pack::LanguagePack;
 use opfs::{DirectoryHandle as _, FileHandle as _, WritableFileStream as _};
 use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::rc::Rc;
+use std::sync::{Arc, Weak};
 use unicode_normalization::UnicodeNormalization;
 
 /// A cached positive entry outside the prefetch keep set survives this long
@@ -102,13 +103,18 @@ pub struct FetchedClip {
     pub subtitles: Vec<ClipSubtitleCue>,
 }
 
+type ClipManifest = HashMap<String, Vec<ClipRow>>;
 type SharedClipFetch = Shared<LocalBoxFuture<'static, Result<Vec<u8>, String>>>;
 
 thread_local! {
     /// Synchronous mirror of each language's clip manifest, keyed by exact
     /// sentence text (NFC). `None` for a language means no manifest has
     /// loaded yet — treated as "no clips", never as an error.
-    static CLIP_MANIFESTS: RefCell<BTreeMap<Language, Rc<HashMap<String, ClipRow>>>> =
+    static CLIP_MANIFESTS: RefCell<BTreeMap<Language, ClipManifest>> =
+        const { RefCell::new(BTreeMap::new()) };
+
+    // Packs can arrive after manifests; choose from retained candidates at lookup.
+    static CLIP_PACKS: RefCell<BTreeMap<Language, Weak<LanguagePack>>> =
         const { RefCell::new(BTreeMap::new()) };
 
     /// Bumped whenever a manifest loads or refreshes. The frontend polls this
@@ -122,12 +128,19 @@ thread_local! {
         RefCell::new(HashMap::new());
 }
 
+pub(crate) fn register_pack(language: Language, pack: &Arc<LanguagePack>) {
+    CLIP_PACKS.with(|packs| packs.borrow_mut().insert(language, Arc::downgrade(pack)));
+}
+
 pub(crate) fn publish_manifest(language: Language, rows: Vec<ClipRow>) {
-    let by_sentence: HashMap<String, ClipRow> = rows
-        .into_iter()
-        .map(|row| (row.sentence.clone(), row))
-        .collect();
-    CLIP_MANIFESTS.with(|m| m.borrow_mut().insert(language, Rc::new(by_sentence)));
+    let mut by_sentence: HashMap<String, Vec<ClipRow>> = HashMap::new();
+    for row in rows {
+        by_sentence
+            .entry(row.sentence.clone())
+            .or_default()
+            .push(row);
+    }
+    CLIP_MANIFESTS.with(|m| m.borrow_mut().insert(language, by_sentence));
     CLIP_MANIFEST_VERSION.with(|v| v.set(v.get().wrapping_add(1)));
 }
 
@@ -144,7 +157,29 @@ pub(crate) fn clip_manifest_version() -> u32 {
 /// source.
 pub(crate) fn clip_for_sentence(language: Language, text: &str) -> Option<ClipRow> {
     let text: String = text.nfc().collect();
-    CLIP_MANIFESTS.with(|m| m.borrow().get(&language)?.get(&text).cloned())
+    let pack = CLIP_PACKS.with(|packs| packs.borrow().get(&language).and_then(Weak::upgrade));
+    CLIP_MANIFESTS.with(|m| {
+        let manifests = m.borrow();
+        let rows = manifests.get(&language)?.get(&text)?;
+        preferred_clip(language, rows, pack.as_ref().map(|pack| &pack.movies)).cloned()
+    })
+}
+
+fn preferred_clip<'a>(
+    language: Language,
+    rows: &'a [ClipRow],
+    movies: Option<&rustc_hash::FxHashMap<String, language_utils::MovieMetadata>>,
+) -> Option<&'a ClipRow> {
+    rows.iter().min_by_key(|row| {
+        let variety = movies
+            .and_then(|movies| movies.get(clip_film(&row.clip_id)))
+            .and_then(|movie| movie.variety);
+        // A film's variety is always one of this corpus's dialects.
+        (
+            variety.is_some_and(|variety| variety != language),
+            &row.clip_id,
+        )
+    })
 }
 
 /// Whether a sentence has a published clip, per the loaded manifest. `false`
@@ -184,19 +219,93 @@ pub(crate) fn clip_film(clip_id: &str) -> &str {
 
 /// Films with published clips, most clips first.
 pub(crate) fn films_by_clip_count(language: Language) -> Vec<String> {
+    let pack = CLIP_PACKS.with(|packs| packs.borrow().get(&language).and_then(Weak::upgrade));
     CLIP_MANIFESTS.with(|m| {
         let manifests = m.borrow();
         let Some(rows) = manifests.get(&language) else {
             return Vec::new();
         };
         let mut counts: HashMap<&str, usize> = HashMap::new();
-        for row in rows.values() {
+        for row in rows.values().filter_map(|rows| {
+            preferred_clip(language, rows, pack.as_ref().map(|pack| &pack.movies))
+        }) {
             *counts.entry(clip_film(&row.clip_id)).or_default() += 1;
         }
         let mut films: Vec<(&str, usize)> = counts.into_iter().collect();
         films.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
         films.into_iter().map(|(film, _)| film.to_owned()).collect()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn row(id: &str) -> ClipRow {
+        serde_json::from_value(serde_json::json!({
+            "id": id, "sentence": "sentence", "duration_ms": 1000,
+            "critical": {"start_ms": 0, "end_ms": 1000}
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn clip_preference_is_deterministic_and_keeps_sibling_fallback() {
+        for (a, b) in [
+            (Language::SpanishLatinAmerican, Language::SpanishPeninsular),
+            (Language::PortugueseBrazilian, Language::PortugueseEuropean),
+        ] {
+            let movies = [("a", Some(a)), ("b", Some(b)), ("unknown", None)]
+                .into_iter()
+                .map(|(id, variety)| {
+                    (
+                        id.to_owned(),
+                        language_utils::MovieMetadata {
+                            id: id.into(),
+                            title: id.into(),
+                            year: None,
+                            original_language: None,
+                            rotten_tomatoes_score: None,
+                            poster_bytes: None,
+                            variety,
+                        },
+                    )
+                })
+                .collect();
+            let choose = |ids: &[&str], language| {
+                preferred_clip(
+                    language,
+                    &ids.iter().map(|id| row(id)).collect::<Vec<_>>(),
+                    Some(&movies),
+                )
+                .unwrap()
+                .clip_id
+                .clone()
+            };
+            assert_eq!(choose(&["a-1", "b-1"], b), "b-1");
+            assert_eq!(choose(&["b-1", "a-1"], a), "a-1");
+            assert_eq!(choose(&["a-1", "unknown-1"], b), "unknown-1");
+            assert_eq!(choose(&["a-1", "missing-1"], b), "missing-1");
+            assert_eq!(choose(&["a-2", "a-1"], b), "a-1");
+            assert_eq!(choose(&["a-1", "a-2"], b), "a-1");
+            assert_eq!(choose(&["unknown-1", "b-1"], b), "b-1");
+
+            // Publishing (including a cached manifest) retains candidates even
+            // if the pack has not arrived yet. Availability needs no metadata.
+            publish_manifest(b, vec![row("a-1"), row("b-1")]);
+            assert!(sentence_has_clip(b, "sentence"));
+            assert!(!sentence_has_clip(b, "missing"));
+            CLIP_MANIFESTS.with(|manifests| {
+                let manifests = manifests.borrow();
+                let rows = &manifests[&b]["sentence"];
+                assert_eq!(preferred_clip(b, rows, None).unwrap().clip_id, "a-1");
+                assert_eq!(
+                    preferred_clip(b, rows, Some(&movies)).unwrap().clip_id,
+                    "b-1"
+                );
+            });
+        }
+    }
 }
 
 fn manifest_filename(language: Language) -> String {

@@ -21,6 +21,9 @@ struct PimsleurSentence {
 pub use language_utils::PimsleurLesson;
 
 pub struct TargetSentences {
+    /// Film id → the dialect most of its marked sentences belong to (dialect
+    /// corpora only), so the app can prefer clips of the course's variety.
+    pub movie_varieties: HashMap<String, Language>,
     /// Sentences that can be used in the app (Anki, Tatoeba, manual, movies, songs)
     pub app_sentences: Vec<(String, Option<String>, SentenceSource)>,
     /// Sentences whose only source is book prose. Kept out of `app_sentences` (and thus
@@ -196,6 +199,7 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
         sentences: mut result,
         mut restricted_sentences,
     } = load_routing_candidates(course).await?;
+    let mut movie_varieties = HashMap::new();
     if !course.target_language.sibling_dialects().is_empty() {
         let labels = crate::dialect::judge(
             course.target_language,
@@ -206,6 +210,7 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
             crate::dialect::Transport::Batch,
         )
         .await?;
+        movie_varieties = film_varieties(&result, &labels);
         retain_dialect(
             course.target_language,
             &labels,
@@ -225,10 +230,34 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
     );
 
     Ok(TargetSentences {
+        movie_varieties,
         app_sentences,
         book_sentences,
         restricted_sentences,
     })
+}
+
+/// Vote before course filtering: neutral and conflicting labels cast no vote.
+fn film_varieties(
+    sentences: &[(String, Option<String>, SentenceSource)],
+    labels: &HashMap<String, crate::dialect::Dialect>,
+) -> HashMap<String, Language> {
+    let mut votes: HashMap<&str, std::collections::BTreeMap<Language, usize>> = HashMap::new();
+    for (text, _, source) in sentences {
+        if let crate::dialect::Dialect::Only(variety) = labels[text] {
+            for movie in &source.movie_ids {
+                *votes.entry(movie).or_default().entry(variety).or_default() += 1;
+            }
+        }
+    }
+    votes
+        .into_iter()
+        .filter_map(|(movie, counts)| {
+            let (&variety, &count) = counts.iter().max_by_key(|(_, count)| *count).unwrap();
+            (counts.values().filter(|&&votes| votes == count).count() == 1)
+                .then(|| (movie.to_owned(), variety))
+        })
+        .collect()
 }
 
 /// Retain whole records so translations, merged provenance and lesson IDs survive.
@@ -713,6 +742,45 @@ pub fn should_include_pair(target_sentence: &str, native_sentence: &str, course:
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn film_variety_votes_ignore_neutral_conflicts_and_ties() {
+        use crate::dialect::Dialect;
+        for (a, b) in [
+            (Language::SpanishLatinAmerican, Language::SpanishPeninsular),
+            (Language::PortugueseBrazilian, Language::PortugueseEuropean),
+        ] {
+            let inputs = [
+                ("a1", Dialect::Only(a), vec!["a", "tie", "shared"]),
+                ("a2", Dialect::Only(a), vec!["a"]),
+                ("b1", Dialect::Only(b), vec!["a", "tie", "b"]),
+                ("b2", Dialect::Only(b), vec!["b"]),
+                ("neutral", Dialect::Neutral, vec!["a", "unknown"]),
+                ("conflict", Dialect::Conflicting, vec!["b", "unknown"]),
+            ];
+            let labels = inputs
+                .iter()
+                .map(|(text, label, _)| (text.to_string(), *label))
+                .collect();
+            let mut records: Vec<_> = inputs
+                .iter()
+                .map(|(text, _, movies)| {
+                    let mut source = SentenceSource::none();
+                    source.movie_ids = movies.iter().map(|id| id.to_string()).collect();
+                    (text.to_string(), None, source)
+                })
+                .collect();
+            let varieties = film_varieties(&records, &labels);
+            assert_eq!(
+                varieties,
+                [("a".into(), a), ("b".into(), b), ("shared".into(), a)]
+                    .into_iter()
+                    .collect::<HashMap<String, Language>>()
+            );
+            retain_dialect(a, &labels, &mut records, &mut Vec::new());
+            assert_eq!(varieties["b"], b); // Computed before the sibling's rows disappear.
+        }
+    }
 
     #[test]
     fn dialect_routing_preserves_records_and_filters_every_source() {

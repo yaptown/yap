@@ -806,6 +806,7 @@ impl Weapon {
         // Register before the move below: the registry holds only a Weak, so
         // the inserted Arc remains the sole owner.
         human_audio::register(course.target_language, &language_pack);
+        clips::register_pack(course.target_language, &language_pack);
         self.language_pack.borrow_mut().insert(
             course,
             LoadedLanguagePack {
@@ -5235,6 +5236,7 @@ mod tests {
                     year: None,
                     original_language: None,
                     rotten_tomatoes_score: None,
+                    variety: None,
                     poster_bytes: None,
                 },
             );
@@ -5279,6 +5281,7 @@ mod tests {
                     year: None,
                     original_language: language.map(str::to_owned),
                     rotten_tomatoes_score: rating,
+                    variety: None,
                     poster_bytes: None,
                 },
             );

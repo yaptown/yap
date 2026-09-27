@@ -538,6 +538,8 @@ pub struct MovieMetadata {
     pub original_language: Option<String>,
     /// Rotten Tomatoes score (0-100)
     pub rotten_tomatoes_score: Option<u8>,
+    /// Majority variety of the film's dialect-marked sentences, if unambiguous.
+    pub variety: Option<Language>,
     /// Poster image bytes (JPEG format)
     pub poster_bytes: Option<Vec<u8>>,
 }
@@ -550,6 +552,7 @@ impl From<MovieMetadataBasic> for MovieMetadata {
             year: basic.year,
             original_language: basic.original_language,
             rotten_tomatoes_score: basic.rotten_tomatoes_score,
+            variety: None,
             poster_bytes: None,
         }
     }
@@ -3043,6 +3046,9 @@ pub struct PronunciationData {
     Ord,
     PartialOrd,
     schemars::JsonSchema,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
 )]
 pub enum Language {
     French,
