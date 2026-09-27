@@ -234,14 +234,14 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
 /// Retain whole records so translations, merged provenance and lesson IDs survive.
 fn retain_dialect(
     language: Language,
-    labels: &HashMap<String, crate::dialect::Judgement>,
+    labels: &HashMap<String, crate::dialect::Dialect>,
     sentences: &mut Vec<(String, Option<String>, SentenceSource)>,
     restricted: &mut Vec<(String, Vec<PimsleurLesson>)>,
 ) {
     // Counts overlap when one sentence has several sources.
     let mut counts = std::collections::BTreeMap::<&str, [usize; 2]>::new();
     sentences.retain(|(text, _, source)| {
-        let keep = labels[text].dialect.keeps(language);
+        let keep = labels[text].keeps(language);
         for (name, present) in [
             ("Anki", source.from_anki),
             ("Tatoeba", source.from_tatoeba),
@@ -258,7 +258,7 @@ fn retain_dialect(
         keep
     });
     restricted.retain(|(text, _)| {
-        let keep = labels[text].dialect.keeps(language);
+        let keep = labels[text].keeps(language);
         counts.entry("Pimsleur").or_default()[usize::from(!keep)] += 1;
         keep
     });
@@ -716,7 +716,7 @@ mod tests {
 
     #[test]
     fn dialect_routing_preserves_records_and_filters_every_source() {
-        use crate::dialect::{Dialect, Judgement};
+        use crate::dialect::Dialect;
         for (a, b) in [
             (Language::SpanishLatinAmerican, Language::SpanishPeninsular),
             (Language::PortugueseBrazilian, Language::PortugueseEuropean),
@@ -727,15 +727,7 @@ mod tests {
                 ("b", Dialect::Only(b)),
             ]
             .into_iter()
-            .map(|(s, dialect)| {
-                (
-                    s.to_owned(),
-                    Judgement {
-                        dialect,
-                        reason: String::new(),
-                    },
-                )
-            })
+            .map(|(s, dialect)| (s.to_owned(), dialect))
             .collect();
             let mut manual = SentenceSource::none();
             manual.from_manual = true;
