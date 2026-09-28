@@ -17,7 +17,9 @@ export class PendingReview<T> {
     this.encode = encode;
   }
 
-  load(): T | undefined {
+  // Not a pure read: a corrupt or stale (identity-mismatched) draft is
+  // deleted from storage as part of loading it.
+  loadOrDiscardStale(): T | undefined {
     try {
       const raw = localStorage.getItem(this.slot.key);
       if (!raw) return undefined;
