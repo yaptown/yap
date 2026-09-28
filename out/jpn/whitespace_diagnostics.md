@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 2692422
-Total errors: 56287
+Total predictions: 2692455
+Total errors: 56291
 Accuracy: 97.91%
 
 ## Error Patterns (sorted by frequency)
@@ -2118,6 +2118,14 @@ Accuracy: 97.91%
   - 二人の女性が -楽しんでいる
   - 今 俺たちの目の前にあるのは ただの壁だが -それは幻想であり 建前なんだぜ
 
+### "が" + "これ" (9 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - だが これだけは事実だ
+  - だが これは私の仕事だ
+  - 何とかとハサミは使いようで切れるが これで七人揃いましたな
+
 ### "が" + "すぐ" (9 occurrences)
 - Predicted: None
 - Actual: Space
@@ -2549,14 +2557,6 @@ Accuracy: 97.91%
   - いいから 電話だ
   - いいから 電話をどうしたんだ？
   - ですが…娘さんから 電話など来なかったんだ
-
-### "が" + "これ" (8 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - だが これだけは事実だ
-  - だが これは私の仕事だ
-  - 国家保安省が これほど無能だとは誰が想像しただろう？
 
 ### "が" + "できる" (8 occurrences)
 - Predicted: None
@@ -79647,6 +79647,12 @@ Accuracy: 97.91%
 - Examples:
   - 鈴芽ちゃん 猫ってさ 理由もなくついてこないでしょ？
 
+### "さ" + "私" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - でもさ 私 彼氏いるから無理だよ
+
 ### "さ" + "聞きたい" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -143084,6 +143090,12 @@ Accuracy: 97.91%
 - Actual: Space
 - Examples:
   - 家畜の 飼料作物を貯蔵するためのものさ
+
+### "の" + "飾り付け" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - クリスマス･ツリーの 飾り付けじゃねえ
 
 ### "の" + "養子縁組" (1 occurrences)
 - Predicted: None
@@ -248516,6 +248528,12 @@ Accuracy: 97.91%
 - Actual: Space
 - Examples:
   - 私 彩香東京から来たの
+
+### "私" + "彼氏" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - でもさ 私 彼氏いるから無理だよ
 
 ### "私" + "心理学者" (1 occurrences)
 - Predicted: None

@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 2297638
-Total errors: 169
+Total predictions: 2285633
+Total errors: 167
 Accuracy: 99.99%
 
 ## Error Patterns (sorted by frequency)
@@ -248,12 +248,6 @@ Accuracy: 99.99%
 - Examples:
   - Feira ..
 
-### "Fogo" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - Fogo !
-
 ### "HONOLULU" + "…" (1 occurrences)
 - Predicted: None
 - Actual: Space
@@ -499,12 +493,6 @@ Accuracy: 99.99%
 - Actual: Space
 - Examples:
   - Mas sem os trabalhos, nem britânico ..
-
-### "cachivaches" + "!" (1 occurrences)
-- Predicted: None
-- Actual: Space
-- Examples:
-  - São bastante feias, pobres cachivaches !
 
 ### "carniceiros" + ".." (1 occurrences)
 - Predicted: None

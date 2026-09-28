@@ -1,7 +1,7 @@
 term	realization	matches	good	total	precision	kept	example_failure	example_failure_bound_words
-tirar algo	filled	1209	8	12	0.67	yes	A Farida que tirou carteira?	tirou … carteira
+tirar algo	filled	1204	9	12	0.75	yes	A Farida que tirou carteira?	tirou … carteira
 tirar algo	clitic	112	12	12	1.00	yes		
 acontecer a alguém	clitic	44	12	12	1.00	yes		
-acontecer a alguém	filled	29	12	12	1.00	yes		
+acontecer a alguém	filled	28	12	12	1.00	yes		
 do jeito de alguém	clitic	24	12	12	1.00	yes		
 o melhor de alguém	filled	7	7	7	1.00	yes		

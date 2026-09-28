@@ -1,7 +1,7 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 1777361
-Total errors: 19448
+Total predictions: 1777386
+Total errors: 19449
 Accuracy: 98.91%
 
 ## Error Patterns (sorted by frequency)
@@ -71560,6 +71560,12 @@ Accuracy: 98.91%
 - Actual: Space
 - Examples:
   - 此前载着老基督徒英式橄榄球队的 乌拉圭飞机在安第斯山脉坠毁
+
+### "的" + "交通事故" (1 occurrences)
+- Predicted: None
+- Actual: Space
+- Examples:
+  - 我们知道…你正在接受精神上的治疗我的脸就是在她引起的 交通事故中毁掉的！
 
 ### "的" + "人" (1 occurrences)
 - Predicted: None

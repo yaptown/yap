@@ -1,12 +1,12 @@
 # Whitespace Prediction Diagnostics
 
-Total predictions: 1588986
-Total errors: 83455
+Total predictions: 1589021
+Total errors: 83457
 Accuracy: 94.75%
 
 ## Error Patterns (sorted by frequency)
 
-### "거" + "야" (7693 occurrences)
+### "거" + "야" (7694 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
@@ -118,7 +118,7 @@ Accuracy: 94.75%
   - 걔 나랑 잘 아는 애야
   - 거기 나랑 좀 닮은 남자가 나온다던데 엄청 섹시하다나 뭐라나,
 
-### "내" + "게" (281 occurrences)
+### "내" + "게" (282 occurrences)
 - Predicted: Space
 - Actual: None
 - Examples:
