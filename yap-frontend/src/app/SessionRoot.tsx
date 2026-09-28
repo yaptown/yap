@@ -136,7 +136,16 @@ function AppCheckLoggedIn({ weaponToken }: { weaponToken: WeaponToken }) {
           localStorage.removeItem("yap-user-info");
 
           if (window.OneSignal) {
-            window.OneSignal.logout();
+            // OneSignal's SDK state can still be mid-setup when a sign-out
+            // races it (e.g. logout right after page load), making
+            // logout() throw synchronously. That throw happens inside this
+            // Supabase auth callback, which awaits it, so left uncaught it
+            // becomes an unhandled promise rejection.
+            try {
+              window.OneSignal.logout();
+            } catch (err) {
+              console.warn("OneSignal logout failed:", err);
+            }
           }
 
           setSession(null);
