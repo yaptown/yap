@@ -36,6 +36,8 @@ struct SettingsScreen: View {
                         Link(destination: URL(string: "https://yap.town/privacy")!) { SettingsRow("Privacy policy") { Image(systemName: "arrow.up.right") } }
                         Divider()
                         Link(destination: URL(string: "https://yap.town/terms")!) { SettingsRow("Terms") { Image(systemName: "arrow.up.right") } }
+                        Divider()
+                        Link(destination: URL(string: "https://yap.town/about")!) { SettingsRow("Credits") { Image(systemName: "arrow.up.right") } }
                     }
                     if let sync, let weapon = session.weapon { diagnostics(sync, deviceId: weapon.device_id) }
                 }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
