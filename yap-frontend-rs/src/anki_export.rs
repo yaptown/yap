@@ -1921,15 +1921,12 @@ mod tests {
 
     #[test]
     fn comprehensible_prediction_threshold_is_inclusive() {
-        use pav_regression::{IsotonicRegression, Point, SmoothRegression, UnitWeight};
+        use isotonic::{Direction, Point, SmoothRegression, UnitWeight};
         let mut deck = fixture();
         for probability in [0.0, 0.799, 0.80, 1.0] {
             let points =
                 [-10.0, 20.0].map(|ease| Point::new_with_weight(ease, probability, UnitWeight));
-            let regression = SmoothRegression::from_regression(
-                IsotonicRegression::new_ascending(&points).unwrap(),
-                1.0,
-            );
+            let regression = SmoothRegression::new(&points, Direction::Ascending, 1.0);
             deck.regressions = crate::Regressions {
                 target_language_regression: Some(regression.clone()),
                 listening_regression: Some(regression),

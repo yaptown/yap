@@ -59,11 +59,6 @@ alongside the licence texts.
 
 ## Code
 
-- **[pav.rs](https://github.com/sanity/pav.rs)** by Ian Clarke, isotonic
-  regression used by the placement test, under
-  [LGPL-3.0-or-later](https://www.gnu.org/licenses/lgpl-3.0.html). We use a
-  modified fork; its full source is at
-  [anchpop/pav.rs](https://github.com/anchpop/pav.rs).
 - **[rs-fsrs](https://github.com/open-spaced-repetition/rs-fsrs)** by the
   Open Spaced Repetition group, the scheduler behind every review (MIT).
 - The many other open-source Rust, JavaScript and Swift libraries Yap.Town

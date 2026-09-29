@@ -3139,6 +3139,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
+name = "isotonic"
+version = "0.1.0"
+source = "git+https://github.com/anchpop/isotonic.git?rev=1eb3c13cbcc7ecd9bc97fcdff59a80dd32f4871d#1eb3c13cbcc7ecd9bc97fcdff59a80dd32f4871d"
+dependencies = [
+ "eytzinger",
+ "num-traits 0.2.19",
+]
+
+[[package]]
 name = "itertools"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4408,15 +4417,6 @@ dependencies = [
 
 [[package]]
 name = "ordered-float"
-version = "3.9.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1e1c390732d15f1d48471625cd92d154e66db2c56645e29a9cd26f4699f72dc"
-dependencies = [
- "num-traits 0.2.19",
-]
-
-[[package]]
-name = "ordered-float"
 version = "5.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7d950ca161dc355eaf28f82b11345ed76c6e1f6eb1f4f4479e0323b9e2fbd0e"
@@ -4535,17 +4535,6 @@ name = "pastey"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ee67f1008b1ba2321834326597b8e186293b049a023cdef258527550b9935b4"
-
-[[package]]
-name = "pav_regression"
-version = "0.5.2"
-source = "git+https://github.com/anchpop/pav.rs.git?rev=1d44104842df02b2b66d9443df6fb540aa368d69#1d44104842df02b2b66d9443df6fb540aa368d69"
-dependencies = [
- "eytzinger",
- "ordered-float 3.9.2",
- "serde",
- "thiserror 1.0.69",
-]
 
 [[package]]
 name = "pbkdf2"
@@ -8164,13 +8153,13 @@ dependencies = [
  "futures",
  "im",
  "imdex_map",
+ "isotonic",
  "itertools 0.14.0",
  "language-utils",
  "lasso",
  "log 0.4.31",
  "opfs",
- "ordered-float 5.3.0",
- "pav_regression",
+ "ordered-float",
  "percent-encoding",
  "reqwest 0.13.4",
  "rkyv 0.8.14",

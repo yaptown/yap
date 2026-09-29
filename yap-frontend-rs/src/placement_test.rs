@@ -1,7 +1,7 @@
 use crate::{Context, Deck, PlacementTest};
+use isotonic::{Direction, Point, SmoothRegression, UnitWeight};
 use language_utils::{Atom, GramDefinition, Heteronym, PartOfSpeech};
 use lasso::Spur;
-use pav_regression::{IsotonicRegression, Point, SmoothRegression, UnitWeight};
 
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -32,32 +32,18 @@ impl Context {
     pub(crate) fn get_placement_test_points(
         &self,
         placement_test: &PlacementTest,
-    ) -> Vec<Point<f32, UnitWeight>> {
-        // Each placement test answer gets several points (spaced slightly apart)
-        // to give them more weight relative to individual card reviews.
-        const POINTS_PER_ANSWER: usize = 5;
-
-        let mut points = Vec::new();
-
-        for word_str in &placement_test.known_words {
-            if let Some((_heteronym, freq)) = self.lookup_word(word_str) {
-                for i in 0..POINTS_PER_ANSWER {
-                    let offset = (i as f32 - (POINTS_PER_ANSWER as f32 - 1.0) / 2.0) * 0.01;
-                    points.push(Point::new_with_weight(freq.ease + offset, 1.0, UnitWeight));
-                }
-            }
-        }
-
-        for word_str in &placement_test.unknown_words {
-            if let Some((_heteronym, freq)) = self.lookup_word(word_str) {
-                for i in 0..POINTS_PER_ANSWER {
-                    let offset = (i as f32 - (POINTS_PER_ANSWER as f32 - 1.0) / 2.0) * 0.01;
-                    points.push(Point::new_with_weight(freq.ease + offset, 0.0, UnitWeight));
-                }
-            }
-        }
-
-        points
+    ) -> Vec<Point<f32>> {
+        // Give each answer five times the influence of an individual card review.
+        placement_test
+            .known_words
+            .iter()
+            .map(|word| (word, 1.0))
+            .chain(placement_test.unknown_words.iter().map(|word| (word, 0.0)))
+            .filter_map(|(word, knowledge)| {
+                let (_, frequency) = self.lookup_word(word)?;
+                Some(Point::new_with_weight(frequency.ease, knowledge, 5.0))
+            })
+            .collect()
     }
 }
 
@@ -240,7 +226,7 @@ impl Deck {
             })
             .collect();
 
-        let mut points = Vec::new();
+        let mut points: Vec<Point<f32, f32, UnitWeight>> = Vec::new();
 
         points.push(Point::new_with_weight(
             most_common_freq.ease,
@@ -296,16 +282,9 @@ impl Deck {
             return vec![];
         }
 
-        let regression = match IsotonicRegression::new_ascending(&points) {
-            Ok(reg) => reg,
-            Err(e) => {
-                log::error!("Failed to create regression for placement test: {e:?}");
-                return vec![];
-            }
-        };
-
         let smoothing_window = most_common_freq.ease * 0.1;
-        let smooth_regression = SmoothRegression::from_regression(regression, smoothing_window);
+        let smooth_regression =
+            SmoothRegression::new(&points, Direction::Ascending, smoothing_window);
 
         let target_probabilities = [
             0.99, 0.90, 0.80, 0.70, 0.60, 0.50, 0.40, 0.30, 0.20, 0.10, 0.01,

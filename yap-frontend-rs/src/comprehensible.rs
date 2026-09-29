@@ -2,11 +2,11 @@
 //! the deck need overrides; finalizing never materializes the predicted suffix.
 use std::{collections::BTreeSet, hash::Hash};
 
+use isotonic::SmoothRegression;
 use language_utils::{
     SpurGram, TaggedGram,
     language_pack::{EaseOrder, LanguagePack},
 };
-use pav_regression::SmoothRegression;
 use rustc_hash::FxHashMap;
 
 use crate::{CardData, CardIndicator, Regressions};

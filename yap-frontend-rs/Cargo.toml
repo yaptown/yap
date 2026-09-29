@@ -39,7 +39,7 @@ eyedee = { path = "../libraries/eyedee" }
 lasso = { workspace = true }
 unicode-normalization = "0.1.25"
 log.workspace = true
-pav_regression = { git = "https://github.com/anchpop/pav.rs.git", rev = "1d44104842df02b2b66d9443df6fb540aa368d69" }
+isotonic = { git = "https://github.com/anchpop/isotonic.git", rev = "1eb3c13cbcc7ecd9bc97fcdff59a80dd32f4871d" }
 rustc-hash = "2.1"
 itertools = "0.14.0"
 weblocks.workspace = true

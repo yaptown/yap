@@ -82,6 +82,7 @@ use bridgerton::{AbortSignal, Callback, bridge};
 use chrono::{DateTime, Datelike, Utc};
 use deck_selection::DailyReviewTarget;
 use deck_selection::DeckSelectionEvent;
+use isotonic::{Direction, Point, SmoothRegression};
 use language_utils::Frequency;
 use language_utils::Literal;
 use language_utils::TtsRequest;
@@ -97,7 +98,6 @@ use language_utils::{
 };
 use lasso::Spur;
 use opfs::persistent::{self};
-use pav_regression::{IsotonicRegression, Point, SmoothRegression, UnitWeight};
 use rs_fsrs::FSRS;
 use rustc_hash::{FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
@@ -2015,8 +2015,7 @@ impl weapon::AppState for Deck {
                     continue;
                 }
                 let pre_existing_knowledge = card_data.pre_existing_knowledge();
-                let point =
-                    Point::new_with_weight(frequency.ease, pre_existing_knowledge, UnitWeight);
+                let point = Point::new(frequency.ease, pre_existing_knowledge);
 
                 match card_indicator {
                     CardIndicator::WrittenGram { .. } => {
@@ -2033,39 +2032,29 @@ impl weapon::AppState for Deck {
         // Bias points at 0.0 (unknown) anchor the low-frequency end of the
         // regression curve, giving it the S-shape from "unknown" to "known."
 
-        /// Create N unit-weight points spaced 0.01 apart around a center x,
-        /// to approximate a single weighted point.
-        fn bias_points(x: f32, y: f32, n: usize) -> impl Iterator<Item = Point<f32, UnitWeight>> {
-            (0..n).map(move |i| {
-                let offset = (i as f32 - (n as f32 - 1.0) / 2.0) * 0.01;
-                Point::new_with_weight(x + offset, y, UnitWeight)
-            })
+        let mut bias_points = vec![
+            Point::new_with_weight(1_f32.ln(), 0.0, 5.0),
+            Point::new_with_weight(25_f32.ln(), 0.0, 5.0),
+            Point::new_with_weight(64_f32.ln(), 0.0, 5.0),
+        ];
+        if let Some(results) = &state.placement_test_results {
+            bias_points.extend(context.get_placement_test_points(results));
+        } else {
+            bias_points.extend(
+                [
+                    (400_f32, 3.0),
+                    (800.0, 3.0),
+                    (1000.0, 3.0),
+                    (1500.0, 3.0),
+                    (2000.0, 2.0),
+                    (2500.0, 2.0),
+                    (3000.0, 2.0),
+                    (3500.0, 2.0),
+                    (4000.0, 2.0),
+                ]
+                .map(|(frequency, weight)| Point::new_with_weight(frequency.ln(), 0.0, weight)),
+            );
         }
-
-        let bias_points: Vec<_> =
-            if let Some(placement_test_results) = &state.placement_test_results {
-                // Use placement test results to create bias points
-                let mut points = context.get_placement_test_points(placement_test_results);
-                points.extend(bias_points(1_f32.ln(), 0.0, 5));
-                points.extend(bias_points(25_f32.ln(), 0.0, 5));
-                points.extend(bias_points(64_f32.ln(), 0.0, 5));
-                points
-            } else {
-                let mut points = Vec::new();
-                points.extend(bias_points(1_f32.ln(), 0.0, 5));
-                points.extend(bias_points(25_f32.ln(), 0.0, 5));
-                points.extend(bias_points(64_f32.ln(), 0.0, 5));
-                points.extend(bias_points(400_f32.ln(), 0.0, 3));
-                points.extend(bias_points(800_f32.ln(), 0.0, 3));
-                points.extend(bias_points(1000_f32.ln(), 0.0, 3));
-                points.extend(bias_points(1500_f32.ln(), 0.0, 3));
-                points.extend(bias_points(2000_f32.ln(), 0.0, 2));
-                points.extend(bias_points(2500_f32.ln(), 0.0, 2));
-                points.extend(bias_points(3000_f32.ln(), 0.0, 2));
-                points.extend(bias_points(3500_f32.ln(), 0.0, 2));
-                points.extend(bias_points(4000_f32.ln(), 0.0, 2));
-                points
-            };
 
         let smoothing_window = context
             .language_pack
@@ -2078,10 +2067,11 @@ impl weapon::AppState for Deck {
         let target_language_regression =
             if target_language_points.len() >= 2 || state.placement_test_results.is_some() {
                 target_language_points.extend_from_slice(&bias_points[..]);
-                IsotonicRegression::new_ascending(&target_language_points)
-                    .inspect_err(|e| log::error!("regression error: {e:?}"))
-                    .ok()
-                    .map(|reg| SmoothRegression::from_regression(reg, smoothing_window))
+                Some(SmoothRegression::new(
+                    &target_language_points,
+                    Direction::Ascending,
+                    smoothing_window,
+                ))
             } else {
                 None
             };
@@ -2089,10 +2079,11 @@ impl weapon::AppState for Deck {
         let listening_regression =
             if listening_points.len() >= 2 || state.placement_test_results.is_some() {
                 listening_points.extend_from_slice(&bias_points);
-                IsotonicRegression::new_ascending(&listening_points)
-                    .inspect_err(|e| log::error!("regression error: {e:?}"))
-                    .ok()
-                    .map(|reg| SmoothRegression::from_regression(reg, smoothing_window))
+                Some(SmoothRegression::new(
+                    &listening_points,
+                    Direction::Ascending,
+                    smoothing_window,
+                ))
             } else {
                 None
             };
