@@ -3141,7 +3141,7 @@ checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 [[package]]
 name = "isotonic"
 version = "0.1.0"
-source = "git+https://github.com/anchpop/isotonic.git?rev=1eb3c13cbcc7ecd9bc97fcdff59a80dd32f4871d#1eb3c13cbcc7ecd9bc97fcdff59a80dd32f4871d"
+source = "git+https://github.com/anchpop/isotonic.git?rev=25a292f665554cbf38fa30150df88c9b76a02f20#25a292f665554cbf38fa30150df88c9b76a02f20"
 dependencies = [
  "eytzinger",
  "num-traits 0.2.19",
