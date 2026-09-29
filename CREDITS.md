@@ -26,8 +26,7 @@ licence, not Yap.Town's.
 
 ## Films
 
-- **[TMDB](https://www.themoviedb.org)**: film posters and metadata. This
-  product uses the TMDB API but is not endorsed or certified by TMDB.
+- **[TMDB](https://www.themoviedb.org)**: film posters and metadata.
 - **[OMDb](https://www.omdbapi.com)**: Rotten Tomatoes scores, under
   [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
 

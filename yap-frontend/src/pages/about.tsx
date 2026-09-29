@@ -70,32 +70,6 @@ export function AboutPage() {
         </Card>
         <Card className="max-w-2xl w-full p-8 gap-2 text-muted-foreground">
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Credits
-          </h2>
-          <div className="px-2 space-y-2">
-            <p>
-              Yap's sentences come from Tatoeba and film subtitles, and its
-              pronunciations and word forms from Wiktionary. Films, handwriting,
-              voices, fonts and code all come from other people's work too.{" "}
-              <a
-                href="https://github.com/yaptown/yap/blob/main/CREDITS.md"
-                className="underline text-foreground"
-              >
-                See the full credits and licences
-              </a>
-              .
-            </p>
-            <div className="flex items-center gap-3 pt-2">
-              <img src="/tmdb.svg" alt="TMDB" className="h-3 shrink-0" />
-              <p className="text-xs">
-                This product uses the TMDB API but is not endorsed or certified
-                by TMDB.
-              </p>
-            </div>
-          </div>
-        </Card>
-        <Card className="max-w-2xl w-full p-8 gap-2 text-muted-foreground">
-          <h2 className="text-xl font-semibold text-foreground mb-2">
             Who am I?
           </h2>
           <div className="px-2 space-y-2">
@@ -130,6 +104,25 @@ export function AboutPage() {
               alt="A man and woman dressed formally. Both are smiling and have red hair."
               className="w-full rounded-lg"
             />
+          </div>
+        </Card>
+        <Card className="max-w-2xl w-full p-8 gap-2 text-muted-foreground">
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            Credits
+          </h2>
+          <div className="px-2 space-y-2">
+            <p>
+              Yap's sentences come from Tatoeba and film subtitles, and its
+              pronunciations and word forms from Wiktionary. Films, handwriting,
+              voices, fonts and code all come from other people's work too.{" "}
+              <a
+                href="https://github.com/yaptown/yap/blob/main/CREDITS.md"
+                className="underline text-foreground"
+              >
+                See the full credits and licences
+              </a>
+              .
+            </p>
           </div>
         </Card>
       </div>
