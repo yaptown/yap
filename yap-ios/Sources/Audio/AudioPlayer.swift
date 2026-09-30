@@ -12,16 +12,49 @@ import Observation
     private var player: AVAudioPlayer?
     private var video: AVPlayer?
     private var generation = 0
-    private var configured = false
+    private var deactivateTask: Task<Void, Never>?
+    private var videoWatch: Task<Void, Never>?
+    private var observers: [NSObjectProtocol] = []
     private var effectTask: Task<Void, Never>?
     private var effectPlayer: AVAudioPlayer?
     private(set) var effectPlaying = false
 
-    private func configure() throws {
-        guard !configured else { return }
-        try AVAudioSession.sharedInstance().setCategory(.playback)
-        try AVAudioSession.sharedInstance().setActive(true)
-        configured = true
+    init() {
+        let center = NotificationCenter.default
+        observers = [
+            // The system has already deactivated the session; stopping quietly keeps a
+            // phone call from surfacing as a playback error. The next play re-activates.
+            center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
+                guard note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt == AVAudioSession.InterruptionType.began.rawValue else { return }
+                MainActor.assumeIsolated { self?.stopAll() }
+            },
+            // Unplugged headphones: stop rather than carry on through the speaker.
+            center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] note in
+                guard note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue else { return }
+                MainActor.assumeIsolated { self?.stopAll() }
+            },
+        ]
+    }
+    /// A clip that is starting or seeking counts too.
+    private var videoPlaying: Bool { video.map { $0.timeControlStatus != .paused } ?? false }
+    /// Speech and clips are media the learner asked for, so they duck other audio and
+    /// play through the silent switch. Chimes are UI feedback: they mix in and respect it.
+    private func activate(speech: Bool) throws {
+        deactivateTask?.cancel()
+        let session = AVAudioSession.sharedInstance()
+        if speech || player != nil || videoPlaying { try session.setCategory(.playback, options: .duckOthers) }
+        else { try session.setCategory(.ambient) }
+        try session.setActive(true)
+    }
+    /// Hands the audio back to Music or a podcast once nothing is playing. The grace
+    /// period keeps autoplayed sentences from un-ducking it between clips.
+    private func deactivateWhenIdle() {
+        deactivateTask?.cancel()
+        deactivateTask = Task { [weak self] in
+            do { try await Task.sleep(for: .seconds(1)) } catch { return }
+            guard let self, self.player == nil, !self.videoPlaying, !self.effectPlaying else { return }
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
     }
     func play(request: AudioRequest, accessToken: String?) async throws {
         stop()
@@ -31,7 +64,7 @@ import Observation
             let result = try await get_audio(request: request, access_token: accessToken)
             try Task.checkCancellation()
             guard expected == generation else { return }
-            try configure()
+            try activate(speech: true)
             let bytes: [UInt8]
             do { bytes = try audio_for_native_playback(bytes: result.bytes) }
             catch { throw PlaybackError.unreadable(String(describing: error), bytes: result.bytes.count) }
@@ -80,7 +113,7 @@ import Observation
         DebugHarness.log("audio started duration=\(audio.duration)")
         #endif
         defer {
-            if generation == expected { player = nil; isPlaying = false; currentTime = 0; currentRequest = nil }
+            if generation == expected { player = nil; isPlaying = false; currentTime = 0; currentRequest = nil; deactivateWhenIdle() }
         }
         while audio.isPlaying, generation == expected {
             do { try await Task.sleep(for: .milliseconds(50)) }
@@ -121,21 +154,28 @@ import Observation
     }
     func playVideo(_ video: AVPlayer) throws {
         stop()
-        try configure()
+        try activate(speech: true)
         self.video = video
         video.seek(to: .zero)
         video.play()
+        videoWatch = Task { [weak self] in
+            while video.timeControlStatus != .paused {
+                do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+            }
+            self?.deactivateWhenIdle()
+        }
     }
     func stopVideo(_ video: AVPlayer) {
         video.pause()
-        if self.video === video { self.video = nil }
+        if self.video === video { self.video = nil; videoWatch?.cancel(); deactivateWhenIdle() }
     }
     /// Interrupt speech/video on playback changes or navigation, but let a chime finish.
     func stop() {
-        video?.pause(); video = nil
+        video?.pause(); video = nil; videoWatch?.cancel()
         generation += 1
         player?.stop(); player = nil
         isPlaying = false; currentTime = 0; currentRequest = nil
+        deactivateWhenIdle()
     }
     /// Full teardown when the playback owner or signed-in session goes away.
     func stopAll() {
@@ -143,6 +183,7 @@ import Observation
         accountPromptTask?.cancel(); accountPromptTask = nil; needsAccount = false
         effectTask?.cancel(); effectTask = nil
         effectPlayer?.stop(); effectPlayer = nil; effectPlaying = false
+        deactivateWhenIdle()
     }
     /// Effects and sentence audio have independent players: neither channel
     /// interrupts the other (the web keeps them separate too).
@@ -153,7 +194,7 @@ import Observation
             guard let self else { return }
             var effect: AVAudioPlayer?
             do {
-                try self.configure()
+                try self.activate(speech: false)
                 let player = try AVAudioPlayer(contentsOf: url)
                 player.volume = 0.5
                 effect = player
@@ -164,7 +205,7 @@ import Observation
                 }
             } catch { if !Task.isCancelled { print("Yap effect failed: \(error)") } }
             // Only the effect that this task started may clear the flag.
-            if let effect, self.effectPlayer === effect { self.effectPlaying = false }
+            if let effect, self.effectPlayer === effect { self.effectPlaying = false; self.deactivateWhenIdle() }
         }
     }
     /// One generic message for the learner; the case and its payload are what
@@ -187,7 +228,10 @@ import Observation
             }
         }
     }
-    isolated deinit { stopAll(); creditTask?.cancel() }
+    isolated deinit {
+        stopAll(); creditTask?.cancel(); deactivateTask?.cancel()
+        observers.forEach(NotificationCenter.default.removeObserver)
+    }
 }
 
 /// Delegate entry points are nonisolated; only Sendable error values cross to the
