@@ -23,7 +23,7 @@ export function PrivacyPage() {
               sell your data, we don't run ads, and there are no advertising or
               analytics trackers on the site.
             </p>
-            <p className="text-sm">Effective September 25, 2026.</p>
+            <p className="text-sm">Effective September 30, 2026.</p>
           </div>
         </Card>
 
@@ -45,7 +45,10 @@ export function PrivacyPage() {
               words you add, your reviews and ratings, streaks, XP, and course
               selection. This is the heart of the app: it's stored on our
               servers so your progress syncs between devices, and a copy lives
-              on your device so yap works offline.
+              on your device so yap works offline. Each device gets a random
+              identifier, created by yap and synced with your activity, so
+              your devices' histories can be merged; it isn't your phone's
+              hardware or advertising identifier.
             </p>
             <p>
               <span className="text-foreground">Social.</span> Who you follow
@@ -53,8 +56,9 @@ export function PrivacyPage() {
             </p>
             <p>
               <span className="text-foreground">Practice audio and answers.</span>{" "}
-              When you use pronunciation practice, your microphone recording is
-              sent to our server and to AI providers to generate feedback. When
+              When you use pronunciation practice on the website, your
+              microphone recording is sent to our server and to AI providers to
+              generate feedback (the iOS app doesn't use the microphone). When
               you type answers to challenges, the answer is sent to AI
               providers for grading. The iOS app also saves unfinished typed
               answers, tapped-word hints, and grading results locally on your
@@ -64,6 +68,11 @@ export function PrivacyPage() {
               kept in a shared cache on Cloudflare so it doesn't have to be
               generated again for the next learner; those clips are keyed by
               the sentence text alone and contain nothing about you.
+            </p>
+            <p>
+              <span className="text-foreground">Issue reports.</span> When you
+              report a problem with a sentence or card, we store what you wrote
+              with your account and the sentence it's about, so we can fix it.
             </p>
             <p>
               <span className="text-foreground">Exported Anki decks.</span>{" "}

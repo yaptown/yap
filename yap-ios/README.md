@@ -229,4 +229,7 @@ before uploading another build of the same version.
   device. Review account-deletion requirements before App Store submission.
 - Create/configure the iOS Sentry project and production DSN; configure dSYM
   upload with a protected auth token, then verify a test event and readable stack.
-  Check PII retention/access and keep App Store privacy answers consistent.
+  Check PII retention/access.
+- Answer App Store Connect's App Privacy questionnaire from `PrivacyInfo.xcprivacy`:
+  every collected type there is linked to the user, used only for App
+  Functionality, and not used for tracking. Update both together.
