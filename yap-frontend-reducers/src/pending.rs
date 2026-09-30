@@ -62,8 +62,14 @@ mod tests {
     fn slots_scope_storage_and_invalidate_changed_drafts() {
         let slot = transcription_pending_slot(vec![], "account:fra:eng".into(), "build".into(), 42);
         assert_eq!(slot.key, "yap-pending-transcription-account:fra:eng");
-        assert!(is_pending_review_key_for_user(slot.key.clone(), "account".into()));
-        assert!(!is_pending_review_key_for_user(slot.key.clone(), "acc".into()));
+        assert!(is_pending_review_key_for_user(
+            slot.key.clone(),
+            "account".into()
+        ));
+        assert!(!is_pending_review_key_for_user(
+            slot.key.clone(),
+            "acc".into()
+        ));
         assert_eq!(
             slot.identity,
             "v1-build-42-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
