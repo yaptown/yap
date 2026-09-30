@@ -1,39 +1,7 @@
 # Yap for iOS
 
-The native app links `yap-frontend-rs::Weapon` and `Deck` directly through
-[Bridgerton](../libraries/bridgerton). The SwiftUI app provides email/password authentication, course selection,
-offline deck loading, authenticated sync, audio, vocabulary/listening flashcards,
-pronunciation practice, translation, and dictation challenges. Native onboarding
-covers referral, motivation, experience, spaced repetition, and daily goals.
-The review ladder includes placement, study plans, display-name setup, daily
-accomplishments, and an inline essential/movie/Pimsleur sentence-list selector.
-Once a course is loaded, five native tabs each own a navigation stack:
-
-- **Learn** keeps the existing review ladder and challenge state. Switching tabs
-  stops playback, but the tab container owns the review model, so its due timers
-  and audio prefetch keep running, including after offscreen Deck replacements.
-- **Stats** shows today's summary, week progress, an editable daily goal, XP,
-  cards, word knowledge, streak, tier, review totals, the interactive frequency
-  knowledge chart (with a data table), movie posters/progress, and Pimsleur progress.
-- **Dictionary** searches words and meanings in 200-entry pages. Definitions,
-  morphology, and audio use the review components; adding a word appends an event.
-- **Lists** shares its snapshot model and progress view with the inline selector;
-  essential, movie, and Pimsleur choices append an event and return to Learn.
-- **Settings** contains sync diagnostics, account/display-name editing, course
-  switching, sign-out, version, privacy, and terms. “Push pending events” enables
-  upload of missing events; it never overwrites history. Normal sync also uploads.
-
-Human recordings credit their actual `AudioResult.voice_actor` in a non-blocking
-banner. `voice-actor-toast:<name>` in UserDefaults throttles each actor to once
-per 24 hours, across relaunches and courses. The banner also works in Dictionary,
-so an audio preview cannot consume a credit invisibly.
-Placement survives core-to-full pack and sync-driven deck replacements. Wizard
-answers are ephemeral until completion (referral is saved immediately); closing
-an unfinished wizard returns to course selection. A new course is prefetched
-immediately, but `SelectBothLanguages` is emitted only after the wizard's
-`SetOnboardingSelections`, matching the web: the shared fold treats selection as
-onboarded, so emitting it early would incorrectly turn abandoned wizards into
-Resume entries.
+The native SwiftUI app, linking `yap-frontend-rs::Weapon` and `Deck` directly through
+[Bridgerton](../libraries/bridgerton).
 
 ## Build and run
 
