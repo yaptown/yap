@@ -513,31 +513,47 @@ mod tests {
         }
     }
 
+    /// Every course's pack loads, validates, and sustains a year of study.
     #[test]
-    #[ignore] // TODO: un-ignore once we regenerate more data
     fn test_simulate_365_days_default_deck_all_courses() {
-        let fixed_time = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
-
-        for course in language_utils::COURSES {
-            let language_pack = load_language_pack(course);
-            validate_language_pack(&language_pack, course);
-
-            let context = crate::Context {
-                study_goal: None,
-                language_pack,
-                course: *course,
-                timezone: chrono::FixedOffset::east_opt(0).unwrap(),
-            };
-            let state = crate::DeckState::new();
-            let deck: Deck = <Deck as weapon::AppState>::finalize(state, &context);
-            let mut simulator = deck.simulate_usage(fixed_time);
-
-            for _ in 0..365 {
-                let day = simulator.next_day();
-                // Exhaust challenges then advance
-                simulator = day.finish_day();
+        // ~35 s and ~1 GB per course in a debug build, so run four at a time.
+        let courses = language_utils::COURSES;
+        std::thread::scope(|scope| {
+            for chunk in courses.chunks(courses.len().div_ceil(4)) {
+                scope.spawn(|| chunk.iter().for_each(simulate_365_days_default_deck));
             }
+        });
+    }
+
+    fn simulate_365_days_default_deck(course: &language_utils::Course) {
+        let fixed_time = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
+        let language_pack = load_language_pack(course);
+        validate_language_pack(&language_pack, course);
+
+        let context = crate::Context {
+            study_goal: None,
+            language_pack,
+            course: *course,
+            timezone: chrono::FixedOffset::east_opt(0).unwrap(),
+        };
+        let state = crate::DeckState::new();
+        let deck: Deck = <Deck as weapon::AppState>::finalize(state, &context);
+        let mut simulator = deck.simulate_usage(fixed_time);
+
+        let mut challenges = 0;
+        for _ in 0..365 {
+            let mut day = simulator.next_day();
+            // Exhaust challenges then advance
+            challenges += day.by_ref().count();
+            simulator = day.finish_day();
         }
+
+        // A pack that loads but gives the learner nothing to do would
+        // otherwise pass. A healthy pack answers ~4,000 in a year.
+        assert!(
+            challenges > 1000,
+            "{course:?}: only {challenges} challenges in a simulated year"
+        );
     }
 
     fn load_test_data_deck(language_pack: Arc<LanguagePack>) -> Deck {
@@ -595,7 +611,8 @@ mod tests {
 
         let mut simulator = deck.simulate_usage(fixed_time);
         for _ in 0..365 {
-            let day = simulator.next_day();
+            let mut day = simulator.next_day();
+            day.by_ref().for_each(drop);
             simulator = day.finish_day();
         }
     }
