@@ -9,6 +9,20 @@ enum DebugScreen: String {
 /// Explicit opt-in simulator driver. Never compiled into release builds. Commands
 /// exercise the same view actions as taps; only anonymous sessions and the designated throwaway account
 /// may receive test review/add events. No credentials are written to disk or logs.
+///
+/// Launch a `--debug` build with the throwaway account, then write commands to
+/// `tmp/yap-command` (write a temp file and rename it, so a partial write is never
+/// read) and read `tmp/yap-test.log`:
+///
+///     xcrun simctl launch --terminate-running-process SIM town.yap.ios \
+///       --test-credentials yap-mcp-test@popovit.ch yap-mcp-smoke-test-pw-1 --test-driver
+///     container=$(xcrun simctl get_app_container SIM town.yap.ios data)
+///     printf status > "$container/tmp/yap-command.tmp" && mv "$container/tmp/yap-command"{.tmp,}
+///
+/// `--test-offline` (plus `SIMCTL_CHILD_YAP_PACKS_URL=http://127.0.0.1:9`) fails every
+/// network request, to check that a persisted session and cached deck still open.
+/// Commands are matched in the screen that owns them (grep `DebugHarness.shared.command`);
+/// `status` logs the current state, `tab learn|stats|dictionary|lists|settings` switches tabs.
 @Observable @MainActor final class DebugHarness {
     static let shared = DebugHarness()
     var fixture: Fixture?
