@@ -296,9 +296,15 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
         let task = Task {
             await starting?.value
             if let weapon {
-                for stream in ["reviews", "deck_selection"] {
-                    try await weapon.sync(stream_id: stream, access_token: nil,
-                        attempt_supabase: false, modifier: nil, upload: false)
+                do {
+                    for stream in ["reviews", "deck_selection"] {
+                        try await weapon.sync(stream_id: stream, access_token: nil,
+                            attempt_supabase: false, modifier: nil, upload: false)
+                    }
+                } catch {
+                    // Keep the Weapon so the next stop() retries the flush.
+                    stopTask = nil
+                    throw error
                 }
             }
             weapon = nil; deck = nil; course = nil; pendingInputs = nil
@@ -312,7 +318,7 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
 /// Lives outside identity-keyed SwiftUI content, so teardown cannot race import.
 @Observable @MainActor final class SessionLifecycle {
     private(set) var session: YapSession?
-    private(set) var error: String?
+    private(set) var flushFailed = false
     private var transition: Task<Void, Never>?
     private var retiring: YapSession?
     private var generation = 0
@@ -328,7 +334,7 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
         transition = Task {
             await previous?.value
             // A failed flush must not release the old data and import an incomplete log.
-            guard error == nil else { return }
+            guard !flushFailed else { return }
             do {
                 try await stopped?.value
                 guard generation == expected else { return }
@@ -337,7 +343,17 @@ struct CurriculumDraft: Equatable { let selection: SentenceListSelection? }
                     guard auth?.userId == userId else { return nil }
                     return auth?.accessToken
                 })
-            } catch { self.error = String(describing: error) }
+            } catch {
+                Telemetry.breadcrumb("session", "Flush before identity change failed: \(error)", failed: true)
+                flushFailed = true
+            }
         }
+    }
+
+    /// Re-runs the identity change whose flush failed; the retiring session
+    /// flushes again before anything is imported.
+    func retry(auth: AuthStore) {
+        flushFailed = false
+        changeIdentity(auth: auth)
     }
 }
