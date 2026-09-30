@@ -19,7 +19,13 @@ import Supabase
         if CommandLine.arguments.contains("--test-offline") { URLProtocol.registerClass(OfflineTestProtocol.self) }
         #endif
         let config = supabase_config()
-        client = SupabaseClient(supabaseURL: URL(string: config.supabase_url)!, supabaseKey: config.supabase_anon_key)
+        // Emit the stored session as-is, even expired: otherwise an offline launch
+        // emits the failed refresh as a nil session and drops the user to anonymous.
+        // A refresh that fails for network reasons keeps the session; the SDK's
+        // auto-refresh retries it and `tokenRefreshed` resumes sync.
+        client = SupabaseClient(
+            supabaseURL: URL(string: config.supabase_url)!, supabaseKey: config.supabase_anon_key,
+            options: .init(auth: .init(emitLocalSessionAsInitialSession: true)))
         let auth = client.auth
         observation = Task { [weak self] in
             // currentSession is the persisted Keychain value and works offline.
@@ -63,8 +69,10 @@ import Supabase
     func signOut() async {
         busy = true; error = nil
         defer { busy = false }
-        do { try await client.auth.signOut(); session = nil; displayName = nil }
-        catch { self.error = error.localizedDescription }
+        // The SDK drops the local session before calling the server, so a failed
+        // server logout (e.g. offline) still leaves this device signed out.
+        try? await client.auth.signOut()
+        session = nil; displayName = nil
     }
     isolated deinit { observation?.cancel() }
 }
