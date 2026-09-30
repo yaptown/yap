@@ -81,8 +81,11 @@ struct TranscriptionChallengeView: View {
         } actions: {
             if view.verdict == nil {
                 Button(view.cant_listen_label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(view.is_grading)
-                Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
-                    .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
+                HStack {
+                    Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
+                        .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
+                    if view.is_grading { Button("Cancel") { send(.CancelGrading) } }
+                }
             } else {
                 Button { complete() } label: { Text(view.verdict?.continue_label ?? "").frame(maxWidth: .infinity) }.disabled(!view.can_continue || actions.submitting)
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
@@ -151,6 +154,7 @@ struct TranscriptionChallengeView: View {
         else { submit() }
     }
     private func send(_ event: TranscriptionEvent) {
+        if case .CancelGrading = event { gradingTask?.cancel() }
         apply(transcription_transition(state: state, event: event))
     }
     private func apply(_ step: TranscriptionStep) {
@@ -198,6 +202,7 @@ struct TranscriptionChallengeView: View {
         }
         if command == "submit" { submit() }
         if command == "continue" { complete() }
+        if command == "cancel" { send(.CancelGrading) }
         if command.hasPrefix("focus "), let index = Int(command.dropFirst(6)), blanks.contains(index) { focused = index }
         if command.hasPrefix("toggle-word ") {
             let indices = command.dropFirst(12).split(separator: " ").compactMap { Int($0) }
