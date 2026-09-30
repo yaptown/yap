@@ -4,7 +4,7 @@ use axum::{
     extract::{DefaultBodyLimit, Json, Path},
     http::{StatusCode, header},
     response::{IntoResponse, Response},
-    routing::{get, post, put},
+    routing::{delete, get, post, put},
 };
 use axum_extra::{
     TypedHeader,
@@ -1556,6 +1556,52 @@ async fn get_language_stats(
     }
 }
 
+async fn delete_account(
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+) -> Result<StatusCode, StatusCode> {
+    let user_id = verify_jwt(auth.token()).await?.sub;
+    let client = service_role_client()?;
+
+    // These foreign keys do not cascade; account deletion also removes the event log.
+    for table in ["events", "issues"] {
+        let response = client
+            .from(table)
+            .eq("user_id", user_id.to_string())
+            .delete()
+            .execute()
+            .await
+            .map_err(|e| {
+                eprintln!("Error deleting account {table}: {e:?}");
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?;
+        if !response.status().is_success() {
+            eprintln!(
+                "Failed to delete account {table}: {:?}",
+                response.text().await
+            );
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    let (supabase_url, service_role_key) = service_role_credentials()?;
+    let response = reqwest::Client::new()
+        .delete(format!("{supabase_url}/auth/v1/admin/users/{user_id}"))
+        .header("apikey", &service_role_key)
+        .bearer_auth(&service_role_key)
+        .send()
+        .await
+        .map_err(|e| {
+            eprintln!("Error deleting auth user: {e:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    // Not found: an earlier attempt deleted the user but its response was lost.
+    if !response.status().is_success() && response.status() != reqwest::StatusCode::NOT_FOUND {
+        eprintln!("Failed to delete auth user: {:?}", response.text().await);
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
+    }
+    Ok(StatusCode::NO_CONTENT)
+}
+
 async fn update_profile(
     TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
     Json(request): Json<UpdateProfileRequest>,
@@ -2270,6 +2316,7 @@ fn app() -> Router {
             get(serve_clip_subtitles),
         )
         .route("/profile", get(get_profile).patch(update_profile))
+        .route("/account", delete(delete_account))
         .route("/language-stats", post(update_language_stats))
         .route("/user-language-stats", get(get_language_stats))
         .route("/follow", post(follow_user))

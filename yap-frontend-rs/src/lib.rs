@@ -177,6 +177,8 @@ pub struct Weapon {
     // todo: move these into a type in `weapon`
     // btw, we should never hold a borrow across an .await. by avoiding this, we guarantee the absence of "borrow while locked" panics
     store: RefCell<EventStore<String, String>>,
+    // Set by `delete_account`; see `persistence_guard`.
+    persistence_deleted: std::cell::Cell<bool>,
     user_id: Option<String>,
     device_id: String,
 
@@ -253,6 +255,7 @@ impl Weapon {
 
         Ok(Self {
             store: RefCell::new(events),
+            persistence_deleted: std::cell::Cell::new(false),
             user_id,
             device_id,
             language_pack: RefCell::new(BTreeMap::new()),
@@ -428,12 +431,74 @@ impl Weapon {
         Ok(Some(deck))
     }
 
+    pub async fn delete_account(&self, access_token: String) -> Result<(), bridgerton::Error> {
+        use opfs::DirectoryHandle as _;
+
+        let user_id = self
+            .user_id
+            .as_ref()
+            .ok_or_else(|| bridgerton::Error::new("Account deletion requires a signed-in user"))?;
+        let _deleting = self
+            .persistence_guard(weblocks::AcquireOptions::exclusive())
+            .await?;
+        if !self.persistence_deleted.get() {
+            let response = hit_ai_server(
+                fetch_happen::Method::DELETE,
+                "/account",
+                None::<()>,
+                Some(&access_token),
+            )
+            .await
+            .map_err(|e| bridgerton::Error::new(format!("Request error: {e:?}")))?;
+            if !response.ok() {
+                return Err(bridgerton::Error::new(format!(
+                    "HTTP error: {}",
+                    response.status()
+                )));
+            }
+            self.persistence_deleted.set(true);
+        }
+        self.directories
+            .user_events_directory_handle
+            .clone()
+            .remove_entry_with_options(
+                &format!("user__{user_id}"),
+                &opfs::FileSystemRemoveOptions { recursive: true },
+            )
+            .await?;
+        Ok(())
+    }
+
+    /// Persistence holds this lock shared and deletion holds it exclusively, so
+    /// deletion waits out syncs already in flight. `None` once the account is
+    /// deleted: nothing may write after that.
+    async fn persistence_guard(
+        &self,
+        options: weblocks::AcquireOptions,
+    ) -> Result<Option<weblocks::LockGuard>, bridgerton::Error> {
+        let name = format!(
+            "yap-persistence-{}",
+            self.user_id.as_deref().unwrap_or("anon")
+        );
+        let guard = weblocks::acquire(&name, options).await.map_err(|e| {
+            bridgerton::Error::new(format!("Failed to acquire persistence lock: {e:?}"))
+        })?;
+        Ok((!self.persistence_deleted.get()).then_some(guard))
+    }
+
     pub async fn sync_with_supabase(
         &self,
         access_token: String,
         modifier: Option<ListenerKey>,
         upload: bool,
     ) -> Result<(), bridgerton::Error> {
+        let Some(_persistence) = self
+            .persistence_guard(weblocks::AcquireOptions::shared())
+            .await?
+        else {
+            return Ok(());
+        };
+
         if let Some(user_id) = &self.user_id {
             // After sync, flush any pending notifications to JS listeners
             let _flusher = FlushLater::new(self);
@@ -460,6 +525,13 @@ impl Weapon {
         modifier: Option<ListenerKey>,
         upload: bool,
     ) -> Result<(), bridgerton::Error> {
+        let Some(_persistence) = self
+            .persistence_guard(weblocks::AcquireOptions::shared())
+            .await?
+        else {
+            return Ok(());
+        };
+
         // After sync, flush any pending notifications to JS listeners
         let _flusher = FlushLater::new(self);
 
@@ -541,6 +613,13 @@ impl Weapon {
         &self,
         stream_id: String,
     ) -> Result<(), bridgerton::Error> {
+        let Some(_persistence) = self
+            .persistence_guard(weblocks::AcquireOptions::shared())
+            .await?
+        else {
+            return Ok(());
+        };
+
         let _flusher = FlushLater::new(self);
 
         EventStore::load_from_local_storage(
@@ -5201,6 +5280,72 @@ mod tests {
     use super::*;
 
     use language_utils::SentenceGram;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    async fn deleted_weapon_cannot_resume_persistence() {
+        let path = std::env::temp_dir().join(eyedee::generate_uuid());
+        std::fs::create_dir(&path).unwrap();
+        let parent = persistent::DirectoryHandle::from(path.clone());
+        let user = weapon::opfs::UserDirectory::new(&parent, "deleted-user")
+            .await
+            .unwrap();
+        let weapon = Weapon {
+            store: RefCell::new(EventStore::default()),
+            persistence_deleted: std::cell::Cell::new(false),
+            user_id: Some("deleted-user".into()),
+            device_id: "device".into(),
+            language_pack: RefCell::new(BTreeMap::new()),
+            directories: Directories {
+                data_directory_handle: parent.clone(),
+                current_user_directory_handle: user,
+                user_events_directory_handle: parent.clone(),
+                weapon_directory_handle: parent,
+            },
+            deck_fold: RefCell::new(None),
+        };
+        let deleting = weblocks::acquire(
+            "yap-persistence-deleted-user",
+            weblocks::AcquireOptions::exclusive(),
+        )
+        .await
+        .unwrap();
+        let mut pending_sync = std::pin::pin!(weapon.sync(
+            "deck_selection".into(),
+            Some("invalid-token".into()),
+            true,
+            None,
+            true,
+        ));
+        assert!(futures::poll!(&mut pending_sync).is_pending());
+        // Model successful backend deletion while a sync is queued.
+        weapon.persistence_deleted.set(true);
+        drop(deleting);
+        weapon.delete_account("invalid-token".into()).await.unwrap();
+        assert!(!path.join("user__deleted-user").exists());
+        pending_sync.await.unwrap();
+        weapon.store.borrow_mut().add_raw_event(
+            "deck_selection".into(),
+            "device".into(),
+            DeckSelectionEvent::SelectTargetLanguage(Language::French),
+            None,
+            chrono::FixedOffset::east_opt(0).unwrap(),
+        );
+        weapon
+            .sync("deck_selection".into(), None, false, None, true)
+            .await
+            .unwrap();
+        weapon
+            .sync_with_supabase("invalid-token".into(), None, true)
+            .await
+            .unwrap();
+        weapon
+            .load_from_local_storage("deck_selection".into())
+            .await
+            .unwrap();
+        assert_eq!(std::fs::read_dir(&path).unwrap().count(), 0);
+        std::fs::remove_dir(path).unwrap();
+    }
 
     impl Default for Deck {
         fn default() -> Self {

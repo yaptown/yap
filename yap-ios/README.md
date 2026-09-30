@@ -125,6 +125,7 @@ when required), `grade-again` (Forgot), `sync`, `status`, and `signout`. Sentenc
 Pronunciation accepts `audio` and `pron-grade`. Additional browsing commands:
 
 - `tab learn|stats|dictionary|lists|settings`
+- `delete-account-prompt` (Settings) opens the delete-account confirmation without confirming
 - `stats-today`, `stats-chart`, `stats-movies` scroll to those Stats sections
 - `search TEXT`, `open INDEX`, `page` (next 200 results), `add-word`
 - `select-list essential`, `select-list movie` (best suggestion),
@@ -221,8 +222,8 @@ one; bump `MARKETING_VERSION` in `project.yml` for a new version.
 - Ensure distribution signing/provisioning is available; archive/export, then
   manually upload with Xcode Organizer or Transporter. Configure TestFlight
   testers and complete beta review where required. Nothing here uploads for you.
-- Exercise sign-in, sync, audio/video, offline reopening, and sign-out on a real
-  device. Review account-deletion requirements before App Store submission.
+- Exercise sign-in, sync, audio/video, offline reopening, sign-out, and account
+  deletion (Settings → Delete account) on a real device.
 - With `SENTRY_AUTH_TOKEN` set, archive, then verify a test event and a readable
   stack in `yaptown/yap-apple-ios`.
   Check PII retention/access.

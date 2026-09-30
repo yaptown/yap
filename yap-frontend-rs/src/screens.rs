@@ -6,6 +6,12 @@ use crate::*;
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AccountCopy {
+    pub delete_account_action: String,
+    pub delete_account_title: String,
+    pub delete_account_body: String,
+    pub delete_account_confirm: String,
+    pub deleting_account: String,
+    pub delete_account_failed: String,
     pub prompt_title: String,
     pub prompt_body: String,
     pub prompt_action: String,
@@ -29,6 +35,12 @@ pub struct AccountCopy {
 #[bridgerton::stable(strong)]
 pub fn account_copy() -> AccountCopy {
     AccountCopy {
+        delete_account_action: "Delete account".into(),
+        delete_account_title: "Delete your account?".into(),
+        delete_account_body: "This permanently deletes your account and your learning history on every device. It can't be undone.".into(),
+        delete_account_confirm: "Delete account".into(),
+        deleting_account: "Deleting account...".into(),
+        delete_account_failed: "Couldn't delete your account. Check your connection and try again.".into(),
         prompt_title: "Log in or create an account to make sure you don't lose your progress!"
             .into(),
         prompt_body: "Your learning data is currently only stored on this device.".into(),

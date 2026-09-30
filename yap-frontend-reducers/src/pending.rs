@@ -45,6 +45,15 @@ pub fn transcription_pending_slot(
     pending_slot("transcription", &parts, scope, app_version, review_count)
 }
 
+/// Hosts scope drafts as `<user id>:<course>`, so an account's drafts can be
+/// found for deletion across every course.
+#[bridgerton::bridge]
+pub fn is_pending_review_key_for_user(key: String, user_id: String) -> bool {
+    ["translation", "transcription"]
+        .iter()
+        .any(|kind| key.starts_with(&format!("yap-pending-{kind}-{user_id}:")))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -53,6 +62,8 @@ mod tests {
     fn slots_scope_storage_and_invalidate_changed_drafts() {
         let slot = transcription_pending_slot(vec![], "account:fra:eng".into(), "build".into(), 42);
         assert_eq!(slot.key, "yap-pending-transcription-account:fra:eng");
+        assert!(is_pending_review_key_for_user(slot.key.clone(), "account".into()));
+        assert!(!is_pending_review_key_for_user(slot.key.clone(), "acc".into()));
         assert_eq!(
             slot.identity,
             "v1-build-42-4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"

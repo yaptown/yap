@@ -158,18 +158,22 @@ export function PrivacyPage() {
           </h2>
           <div className="px-2 space-y-2">
             <p>
-              We keep your data for as long as your account exists. To delete
-              your account and its synced data, email{" "}
+              We keep your data for as long as your account exists. You can
+              delete your account at any time with "Delete account", in the
+              account menu on the website or in Settings in the iOS app. That
+              removes your account, learning history, and issue reports from
+              our live systems right away, and from backups as they rotate out;
+              it also clears the copy on the device you delete from. You can
+              also email{" "}
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
                 className="underline text-foreground"
               >
                 {CONTACT_EMAIL}
               </a>{" "}
-              from your account's email address — we'll remove it from our live
-              systems promptly, and from backups as they rotate out. The
-              offline copy on your device is under your control; clearing your
-              browser's site data, or deleting the iOS app, removes it.
+              from your account's email address to have it deleted. Copies on
+              your other devices are under your control; clearing your
+              browser's site data, or deleting the iOS app, removes them.
             </p>
             <p>
               You can also email us to access, export, or correct your data.

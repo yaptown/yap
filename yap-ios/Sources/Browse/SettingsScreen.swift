@@ -12,6 +12,9 @@ struct SettingsScreen: View {
     @State private var saving = false
     @State private var syncing = false
     @State private var error: String?
+    @State private var confirmingDelete = false
+    @State private var deleting = false
+    @State private var deleteFailed = false
     @FocusState private var editingName: Bool
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -51,6 +54,7 @@ struct SettingsScreen: View {
         .onChange(of: DebugHarness.shared.commandID) { _, _ in
             guard DebugHarness.shared.activeScreen == .settings else { return }
             if ["sync", "force-push"].contains(DebugHarness.shared.command) { sync() }
+            if DebugHarness.shared.command == "delete-account-prompt" { confirmingDelete = true }
             if DebugHarness.shared.command == "status", let state = session.weapon?.get_sync_state(target: .Supabase) { DebugHarness.log("settings finished=\(String(describing: state.last_sync_finished?.date))") }
         }
         #endif
@@ -96,8 +100,17 @@ struct SettingsScreen: View {
             }
             Divider()
             Button("Sign out", role: .destructive) { Task { await auth.signOut() } }
-                .disabled(auth.busy).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .disabled(auth.busy || deleting).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             if let error = auth.error { Text(error).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
+            Divider()
+            let copy = account_copy()
+            Button(deleting ? copy.deleting_account : copy.delete_account_action, role: .destructive) { confirmingDelete = true }
+                .disabled(auth.busy || deleting).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .alert(copy.delete_account_title, isPresented: $confirmingDelete) {
+                    Button(copy.delete_account_confirm, role: .destructive) { Task { await deleteAccount() } }
+                    Button("Cancel", role: .cancel) {}
+                } message: { Text(copy.delete_account_body) }
+            if deleteFailed { Text(copy.delete_account_failed).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
         }
     }
 
@@ -155,6 +168,27 @@ struct SettingsScreen: View {
             _ = try await update_profile(display_name: value, bio: nil, access_token: token)
             auth.displayName = value; auth.needsDisplayName = false; editingName = false
         } catch { self.error = "Couldn't save your display name. Please try again." }
+    }
+    /// The Weapon deletes the account, wipes its local store and goes inert, so
+    /// the sign-out's final flush can't write anything back. Unfinished review
+    /// drafts live in UserDefaults, so they go here.
+    private func deleteAccount() async {
+        guard let weapon = session.weapon, let token = auth.accessToken else { return }
+        deleting = true; deleteFailed = false
+        do {
+            try await weapon.delete_account(access_token: token)
+            if let userId = auth.userId {
+                let defaults = UserDefaults.standard
+                for key in defaults.dictionaryRepresentation().keys where is_pending_review_key_for_user(key: key, user_id: userId) {
+                    defaults.removeObject(forKey: key)
+                }
+            }
+            await auth.signOut()
+        } catch {
+            Telemetry.breadcrumb("account", "Account deletion failed: \(error)", failed: true)
+            deleteFailed = true
+        }
+        deleting = false
     }
 }
 

@@ -160,7 +160,7 @@ import Observation
         #endif
         var actions = ReviewActions()
         actions.submitting = submitting
-        actions.pendingReviewKey = "\(session.userId ?? "anon")-\(String(describing: course))"
+        actions.pendingReviewKey = "\(session.userId ?? "anon"):\(course.map { "\($0.target_language):\($0.native_language)" } ?? "unselected")"
         actions.rate = rate
         actions.completeTranslationPerfect = { self.completeTranslationPerfect($0, tapped: $1, completedAtMs: $2) }
         actions.completeTranslationWrong = { self.completeTranslationWrong($0, submission: $1, grade: $2, tapped: $3, completedAtMs: $4) }

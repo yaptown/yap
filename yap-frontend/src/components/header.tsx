@@ -7,10 +7,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationSettings } from "@/browse/notification-settings";
 import { PasskeySettings } from "@/browse/passkey-settings";
+import { DeleteAccountSettings } from "@/browse/delete-account-settings";
 import { LogOut, AlertTriangle, ArrowLeft, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SyncStatusDialog } from "@/browse/sync-status-dialog";
@@ -100,6 +102,8 @@ export function Header({
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DeleteAccountSettings />
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
