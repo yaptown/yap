@@ -1599,7 +1599,7 @@ pub async fn clips_all(
 
     let store = osmo::Store::open("./.cache");
     let http = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(120))
+        .timeout(std::time::Duration::from_secs(600))
         .build()?;
     let mut discovered = 0;
     let preparation = futures::stream::iter(queue.iter().enumerate())
