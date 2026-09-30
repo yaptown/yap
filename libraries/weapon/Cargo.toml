@@ -26,6 +26,10 @@ thiserror = { workspace = true, optional = true }
 slotmap = { workspace = true }
 weblocks = { workspace = true }
 
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+tempfile.workspace = true
+tokio.workspace = true
+
 [features]
 supabase = ["dep:fetch-happen", "dep:thiserror"]
 opfs = [

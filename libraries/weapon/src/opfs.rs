@@ -177,10 +177,7 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
 
         let stream_directory = user_directory.get_stream_directory(&stream_id).await?;
         let event_log_file = stream_directory.get_event_log_file().await?;
-
-        // On-disk clock for this stream (asserts contiguity of indices 0..=n-1)
-        let opfs_clock = get_opfs_clock(user_directory, Some(&stream_id)).await?;
-        let device_counts_on_disk = opfs_clock.get(&stream_id).cloned().unwrap_or_default();
+        let device_counts_on_disk = event_log_file.prepare_for_append().await?;
 
         let mut records_to_append: Vec<EventLogRecord> = Vec::new();
 
@@ -237,7 +234,7 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
     /// Import events from the logged-out user directory into the current user's directory.
     /// This is used when a user first logs in so their offline data is preserved.
     pub async fn import_logged_out_user_data(
-        mut weapon_directory: DirectoryHandle,
+        weapon_directory: DirectoryHandle,
         mut user_events_directory: DirectoryHandle,
         current_user_directory: &UserDirectory,
     ) -> Result<(), persistent::Error> {
@@ -258,6 +255,7 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
         {
             Ok(dir) => UserDirectory {
                 directory_handle: dir,
+                user_id: "logged-out-unknown-user".into(),
             },
             Err(_) => return Ok(()),
         };
@@ -268,13 +266,51 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
         // different: the anonymous session may have been someone else's (the
         // owner signed out to hand the device over), so it isn't assumed to be
         // theirs and is left where it is.
-        let mut existing_streams = current_user_directory.event_stream_directories().await?;
-        if existing_streams.next().await.is_some() {
-            return Ok(());
+        // A directory marker claims the import without a potentially torn file write.
+        let mut entries = logged_out_directory.directory_handle.entries().await?;
+        let mut resuming = false;
+        while let Some(entry) = entries.next().await {
+            let (name, _) = entry?;
+            if let Some(user_id) = name.strip_prefix("import__") {
+                if user_id != current_user_directory.user_id {
+                    return Ok(());
+                }
+                resuming = true;
+            }
+        }
+        if !resuming {
+            let mut existing_streams = current_user_directory.event_stream_directories().await?;
+            if existing_streams.next().await.is_some() {
+                return Ok(());
+            }
+            logged_out_directory
+                .directory_handle
+                .get_directory_handle_with_options(
+                    &format!("import__{}", current_user_directory.user_id),
+                    &opfs::GetDirectoryHandleOptions { create: true },
+                )
+                .await?;
         }
 
-        let mut streams = logged_out_directory.event_stream_directories().await?;
-        while let Some((stream_id, stream_dir)) = streams.next().await {
+        // Retire the anonymous identity before deleting streams, so a restart logged
+        // out cannot reuse their old device/index pairs for new events.
+        let mut entries = weapon_directory.entries().await?;
+        while let Some(entry) = entries.next().await {
+            if entry?.0 == "device-id-logged-out" {
+                weapon_directory
+                    .clone()
+                    .remove_entry("device-id-logged-out")
+                    .await?;
+                break;
+            }
+        }
+
+        let streams: Vec<_> = logged_out_directory
+            .event_stream_directories()
+            .await?
+            .collect()
+            .await;
+        for (stream_id, stream_dir) in streams {
             // Same lock as `save_to_local_storage`, so the append can't
             // interleave with a save from another tab.
             let _save = weblocks::acquire(
@@ -287,16 +323,24 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
                 .await?
                 .get_event_log_file()
                 .await?;
+            let copied_counts = target_log.prepare_for_append().await?;
             let events = stream_dir
                 .get_event_log_file()
                 .await?
-                .read_records(&BTreeMap::new())
+                .read_records(&copied_counts)
                 .await
                 .inspect_err(|e| log::error!("Failed to reload from local storage: {e:?}"))?;
             target_log.append_records(&events).await?;
+            // Keep the claim until every source stream is gone, including during cleanup.
+            logged_out_directory
+                .directory_handle
+                .clone()
+                .remove_entry_with_options(
+                    &format!("stream__{stream_id}"),
+                    &opfs::FileSystemRemoveOptions { recursive: true },
+                )
+                .await?;
         }
-
-        let _ = weapon_directory.remove_entry("device-id-logged-out").await;
 
         // Remove the logged-out user directory itself now that everything is moved.
         let _ = user_events_directory
@@ -313,6 +357,7 @@ impl<L: Listeners<String>> EventStoreWithListeners<String, String, L> {
 #[derive(Debug, Clone)]
 pub struct UserDirectory {
     directory_handle: DirectoryHandle,
+    user_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -335,6 +380,7 @@ pub struct EventLogRecord {
 impl UserDirectory {
     pub async fn new(parent: &DirectoryHandle, user_id: &str) -> Result<Self, persistent::Error> {
         Ok(Self {
+            user_id: user_id.into(),
             directory_handle: parent
                 .get_directory_handle_with_options(
                     &format!("user__{user_id}"),
@@ -400,6 +446,36 @@ impl StreamDirectory {
 }
 
 impl EventLogFile {
+    /// Called under the stream's save lock before counting or appending events.
+    async fn prepare_for_append(&self) -> Result<BTreeMap<String, usize>, persistent::Error> {
+        let bytes = self.file_handle.read().await?;
+        let valid_len = if bytes.len() < EVENT_LOG_HEADER_LEN {
+            0
+        } else if bytes.starts_with(&event_log_header_bytes()) {
+            event_log_records_iter(&bytes)
+                .last()
+                .map_or(EVENT_LOG_HEADER_LEN, |record| record.end_offset)
+        } else {
+            // An unknown format isn't a torn tail; leave it alone.
+            bytes.len()
+        };
+        if valid_len < bytes.len() {
+            log::warn!(
+                "Truncating torn OPFS log from {} to {valid_len} bytes",
+                bytes.len()
+            );
+            let mut file = self.file_handle.clone();
+            let mut writable = file
+                .create_writable_with_options(&opfs::CreateWritableOptions {
+                    keep_existing_data: true,
+                })
+                .await?;
+            writable.truncate(valid_len).await?;
+            writable.close().await?;
+        }
+        Ok(parse_device_counts(&bytes[..valid_len]))
+    }
+
     async fn read_records(
         &self,
         skip_counts: &BTreeMap<String, usize>,
@@ -552,6 +628,7 @@ fn encode_event_log_record(record: &EventLogRecord) -> Option<Vec<u8>> {
 }
 
 struct RawEventLogRecord<'a> {
+    end_offset: usize,
     within_device_events_index: u64,
     device_id_bytes: &'a [u8],
     payload_bytes: &'a [u8],
@@ -605,7 +682,7 @@ fn event_log_records_iter(bytes: &[u8]) -> impl Iterator<Item = RawEventLogRecor
             ) as usize;
             self.offset += std::mem::size_of::<u32>();
 
-            if self.offset + record_len > self.bytes.len() {
+            if record_len > self.bytes.len() - self.offset {
                 log::warn!(
                     "Event log record length {} exceeds remaining bytes {}",
                     record_len,
@@ -635,7 +712,7 @@ fn event_log_records_iter(bytes: &[u8]) -> impl Iterator<Item = RawEventLogRecor
             ) as usize;
             self.offset += std::mem::size_of::<u32>();
 
-            if self.offset + device_len > record_end {
+            if device_len > record_end - self.offset - std::mem::size_of::<u32>() {
                 log::warn!("Device ID length {device_len} exceeds record bounds");
                 self.offset = record_end;
                 return self.next();
@@ -650,7 +727,7 @@ fn event_log_records_iter(bytes: &[u8]) -> impl Iterator<Item = RawEventLogRecor
             ) as usize;
             self.offset += std::mem::size_of::<u32>();
 
-            if self.offset + payload_len > record_end {
+            if payload_len > record_end - self.offset {
                 log::warn!("Payload length {payload_len} exceeds record bounds");
                 self.offset = record_end;
                 return self.next();
@@ -659,6 +736,7 @@ fn event_log_records_iter(bytes: &[u8]) -> impl Iterator<Item = RawEventLogRecor
             self.offset = record_end;
 
             Some(RawEventLogRecord {
+                end_offset: record_end,
                 within_device_events_index: within_device,
                 device_id_bytes,
                 payload_bytes,
@@ -769,9 +847,8 @@ pub fn parse_device_counts(bytes: &[u8]) -> BTreeMap<String, usize> {
             log::error!(
                 "OPFS index gap for device {device_id}: expected {expected}, found {within_device_index}"
             );
-            panic!("OPFS device indices not contiguous");
         }
-        *entry += 1;
+        *entry = within_device_index + 1;
     }
 
     let duration = start_time.elapsed().as_secs_f64() * 1000.0;
@@ -818,9 +895,8 @@ mod tests {
         assert_eq!(serde_json::to_string(&old).unwrap(), json);
     }
 
-    #[test]
-    fn device_counts_skip_repeated_index_from_positional_export_bug() {
-        let record = |index| EventLogRecord {
+    fn record(index: usize) -> EventLogRecord {
+        EventLogRecord {
             device_id: "a".into(),
             within_device_events_index: index,
             event: Timestamped {
@@ -829,7 +905,188 @@ mod tests {
                 within_device_events_index: index,
                 event: crate::data_model::RawJson::from_serializable(&()).unwrap(),
             },
+        }
+    }
+
+    #[test]
+    fn malformed_lengths_do_not_panic() {
+        let encoded = encode_event_log_record(&record(0)).unwrap();
+        for (offset, length) in [
+            (0, u32::MAX),
+            (12, (encoded.len() - 16) as u32),
+            (17, u32::MAX),
+        ] {
+            let mut damaged = encoded.clone();
+            damaged[offset..offset + 4].copy_from_slice(&length.to_le_bytes());
+            let mut bytes = event_log_header_bytes();
+            bytes.extend(damaged);
+            assert!(parse_event_log_records(&bytes).is_empty());
+        }
+    }
+
+    #[test]
+    fn device_counts_allow_gaps() {
+        let mut bytes = event_log_header_bytes();
+        for index in [0, 2, 3] {
+            bytes.extend(encode_event_log_record(&record(index)).unwrap());
+        }
+        assert_eq!(
+            parse_device_counts(&bytes),
+            BTreeMap::from([("a".into(), 4)])
+        );
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    async fn torn_tail_is_repaired_before_append() {
+        let temp = tempfile::tempdir().unwrap();
+        let stream = StreamDirectory {
+            directory_handle: DirectoryHandle::from(temp.path().to_path_buf()),
         };
+        // Cover a torn length prefix as well as every position in the record body.
+        let encoded = encode_event_log_record(&record(1)).unwrap();
+        for tail_len in 1..encoded.len() {
+            let mut bytes = event_log_header_bytes();
+            bytes.extend(encode_event_log_record(&record(0)).unwrap());
+            bytes.extend(&encoded[..tail_len]);
+            std::fs::write(temp.path().join(EVENTS_FILE_NAME), bytes).unwrap();
+            let log = stream.get_event_log_file().await.unwrap();
+            assert_eq!(
+                log.prepare_for_append().await.unwrap(),
+                BTreeMap::from([("a".into(), 1)])
+            );
+            log.append_records(&[record(1)]).await.unwrap();
+            let reloaded = stream
+                .get_event_log_file()
+                .await
+                .unwrap()
+                .read_records(&BTreeMap::new())
+                .await
+                .unwrap();
+            assert_eq!(
+                reloaded
+                    .iter()
+                    .map(|r| r.within_device_events_index)
+                    .collect::<Vec<_>>(),
+                vec![0, 1]
+            );
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    async fn interrupted_import_resumes_only_for_its_owner() {
+        use crate::data_model::EventStore;
+
+        let temp = tempfile::tempdir().unwrap();
+        let root = DirectoryHandle::from(temp.path().to_path_buf());
+        let source = UserDirectory::new(&root, "logged-out-unknown-user")
+            .await
+            .unwrap();
+        let owner = UserDirectory::new(&root, "owner").await.unwrap();
+        let other = UserDirectory::new(&root, "other").await.unwrap();
+        for stream_id in ["one", "two"] {
+            source
+                .get_stream_directory(stream_id)
+                .await
+                .unwrap()
+                .get_event_log_file()
+                .await
+                .unwrap()
+                .append_records(&[record(0), record(1)])
+                .await
+                .unwrap();
+        }
+        source
+            .directory_handle
+            .get_directory_handle_with_options(
+                "import__owner",
+                &opfs::GetDirectoryHandleOptions { create: true },
+            )
+            .await
+            .unwrap();
+        // A failed copy must already have retired the old anonymous identity.
+        std::fs::write(temp.path().join("device-id-logged-out"), "a").unwrap();
+        let target = owner.get_stream_directory("one").await.unwrap();
+        let target_path = temp.path().join("user__owner/stream__one/events.blob");
+        std::fs::create_dir(&target_path).unwrap();
+        assert!(
+            EventStore::<String, String>::import_logged_out_user_data(
+                root.clone(),
+                root.clone(),
+                &owner,
+            )
+            .await
+            .is_err()
+        );
+        assert!(!temp.path().join("device-id-logged-out").exists());
+        std::fs::remove_dir(&target_path).unwrap();
+
+        // Simulate a kill after one complete record and part of the next were copied.
+        let mut bytes = event_log_header_bytes();
+        bytes.extend(encode_event_log_record(&record(0)).unwrap());
+        bytes.extend(&encode_event_log_record(&record(1)).unwrap()[..7]);
+        let mut file = target.get_event_log_file().await.unwrap().file_handle;
+        let mut writer = file
+            .create_writable_with_options(&opfs::CreateWritableOptions {
+                keep_existing_data: false,
+            })
+            .await
+            .unwrap();
+        writer.write_at_cursor_pos(&bytes).await.unwrap();
+        writer.close().await.unwrap();
+
+        EventStore::<String, String>::import_logged_out_user_data(
+            root.clone(),
+            root.clone(),
+            &other,
+        )
+        .await
+        .unwrap();
+        assert!(
+            other
+                .event_stream_directories()
+                .await
+                .unwrap()
+                .next()
+                .await
+                .is_none()
+        );
+        EventStore::<String, String>::import_logged_out_user_data(
+            root.clone(),
+            root.clone(),
+            &owner,
+        )
+        .await
+        .unwrap();
+        // Retrying a completed import is also harmless.
+        EventStore::<String, String>::import_logged_out_user_data(root.clone(), root, &owner)
+            .await
+            .unwrap();
+        for stream_id in ["one", "two"] {
+            let records = owner
+                .get_stream_directory(stream_id)
+                .await
+                .unwrap()
+                .get_event_log_file()
+                .await
+                .unwrap()
+                .read_records(&BTreeMap::new())
+                .await
+                .unwrap();
+            assert_eq!(
+                records
+                    .iter()
+                    .map(|r| r.within_device_events_index)
+                    .collect::<Vec<_>>(),
+                vec![0, 1]
+            );
+        }
+        assert!(!temp.path().join("user__logged-out-unknown-user").exists());
+    }
+
+    #[test]
+    fn device_counts_skip_repeated_index_from_positional_export_bug() {
         let mut bytes = event_log_header_bytes();
         for index in [0, 0, 1] {
             bytes.extend(encode_event_log_record(&record(index)).unwrap());

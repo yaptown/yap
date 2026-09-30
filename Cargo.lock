@@ -7528,7 +7528,9 @@ dependencies = [
  "serde",
  "serde_json",
  "slotmap",
+ "tempfile",
  "thiserror 2.0.18",
+ "tokio",
  "web-time",
  "weblocks",
 ]
