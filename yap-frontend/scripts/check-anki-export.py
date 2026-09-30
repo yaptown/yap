@@ -81,7 +81,7 @@ def check_sql(package, plan, directory):
         model = json.loads(col["models"])[str(plan["sentence_model_id"])]
         assert len(model["flds"]) == 10
         word_model = json.loads(col["models"])[str(plan["word_model_id"])]
-        assert len(word_model["flds"]) == 3
+        assert len(word_model["flds"]) == 5
         for model_type in (model, word_model):
             for template in model_type["tmpls"]:
                 assert all("<audio" not in template[side] for side in ("qfmt", "afmt"))
@@ -186,12 +186,13 @@ def check_variant(root, variant):
                 assert autoplay_sources(render, "answer") == int(bundled)
                 assert len(render.question_av_tags) == int(bundled)
                 assert len(render.answer_av_tags) == int(bundled)
-                if not is_word:
-                    for markup in (render.question_text, render.answer_text):
-                        videos = [attrs for tag, attrs in Tags(markup).tags if tag == "video"]
-                        assert len(videos) == 1 and "autoplay" not in videos[0]
+                for markup in (render.question_text, render.answer_text):
+                    videos = [attrs for tag, attrs in Tags(markup).tags if tag == "video"]
+                    assert len(videos) == int(bool(note.get("clip_url")))
+                    if videos:
+                        assert "autoplay" not in videos[0]
                         assert "poster" not in videos[0]
-                        assert all(tag != "audio" for tag, _ in Tags(markup).tags)
+                    assert all(tag != "audio" for tag, _ in Tags(markup).tags)
             media = collection.media.check()
             assert not media.missing and not media.unused, media
             print(f"PASS {variant}: repeat import, SQL, escaping, AV/autoplay, media")

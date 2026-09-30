@@ -12,6 +12,7 @@ const scripts = path.dirname(fileURLToPath(import.meta.url));
 const frontend = path.resolve(scripts, "..");
 const require = createRequire(path.join(frontend, "package.json"));
 const { build } = createRequire(require.resolve("vite/package.json"))("esbuild");
+execFileSync(process.execPath, ["--test", path.join(frontend, "tests/anki-media.test.mjs")], { stdio: "inherit" });
 const output = await mkdtemp(path.join(tmpdir(), "yap-anki-export-"));
 
 try {
@@ -101,6 +102,7 @@ async function writeFixtures(buildApkg, output) {
     deck_id: 9007199254740988, sentence_model_id: 9007199254740984, word_model_id: 9007199254740980,
     notes: [
       { type: "Word", ...identity(0), word: `Mot ${hostileText}`, definition: hostileText,
+        source: sentence(2, "").source, clip_url: sentence(2, "").clip_url,
         audio: "human.ogg", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::noun", "yap::frequency::top-100"] },
       { type: "Word", ...identity(1), word: `Autre ${hostileText}`, definition: hostileText,
         audio: "word.mp3", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::phrase", "yap::frequency::rare"] },
@@ -141,7 +143,7 @@ async function writeFixtures(buildApkg, output) {
         assert(source.type !== "Tts");
         return bundled.get(filename);
       }, value => progress.push(value));
-      assert.deepEqual(fetched, ["https://mock.invalid/bundle", "https://mock.invalid/word", "https://mock.invalid/fail"]);
+      assert.deepEqual(fetched, ["https://mock.invalid/bundle", "https://mock.invalid/word", "https://mock.invalid/fail", "https://mock.invalid/fail"]);
       assert.deepEqual(progress.map(value => value.done), [0, 1, 2, 3, 4, 5]);
       assert(progress.every(value => value.total === 5));
       writeFileSync(path.join(output, `${variant}.apkg`), Buffer.from(await blob.arrayBuffer()));
@@ -172,7 +174,7 @@ async function writeFixtures(buildApkg, output) {
   }
   // Finish out of order, with one failure. Media indices still follow the plan.
   for (const i of [9, 8, 7, 6, 5, 4, 3, 0]) {
-    pending.get(`https://mock.invalid/${i}`)(i === 7 ? new Response("", { status: 503 }) : new Response(wav));
+    pending.get(`https://mock.invalid/${i}`)(i === 7 ? new Response("", { status: 404 }) : new Response(wav));
   }
   const blob = await building;
   const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));

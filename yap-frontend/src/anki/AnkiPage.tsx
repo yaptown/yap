@@ -33,7 +33,7 @@ import { ExportResult } from "./ExportResult";
 import { saveFile } from "./save-file";
 import { DeckBuilding } from "./DeckBuilding";
 import { addNotes, emptyBuild, type DeckBuild } from "./deck-build";
-import type { MediaProgress } from "./apkg";
+import { AudioUnavailableError, type MediaProgress } from "./media";
 
 type AnkiExport = {
   phase?: string;
@@ -43,6 +43,7 @@ type AnkiExport = {
   run: number;
   finishMessage?: string;
   summary?: string;
+  error?: string;
   downloadLink?: string;
   file?: { blob: Blob; name: string };
 };
@@ -229,7 +230,8 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
       const summary = `${notes} · ${(blob.size / 1024 / 1024).toFixed(1)} MB`;
       update((current) => ({ ...current, downloadLink, file, summary }));
     } catch (error) {
-      if (active()) toast.error(error instanceof Error ? error.message : String(error));
+      const message = error instanceof AudioUnavailableError ? view.audio_unavailable_message : error instanceof Error ? error.message : String(error);
+      update((current) => ({ ...current, error: message }));
     } finally {
       update((current) => ({ ...current, phase: undefined, progress: undefined }));
     }
@@ -272,6 +274,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
             ) : (
               <Button type="submit" size="lg" className="h-12 text-base font-medium" disabled={busy || !cardTypes || view.manifest !== "ready" || view.clip_sentence_count === 0}>{view.download_label}</Button>
             )}
+            {exportState.error && <p role="alert" className="text-sm text-destructive">{exportState.error}</p>}
             <div ref={status} className="flex scroll-mt-4 flex-col gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
               {view.manifest === "loading" && <p>Loading movie clips…</p>}
               {view.manifest === "ready" && view.clip_sentence_count === 0 && <p>No movie clips are available for this course.</p>}

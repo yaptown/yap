@@ -4,7 +4,7 @@ import { strToU8, zipSync } from "fflate";
 import type { AnkiDeckPlan, AnkiMediaSource, AnkiNote } from "../../../yap-frontend-rs/pkg";
 import { languageToLangAttr } from "../lib/pure";
 
-export type MediaProgress = { done: number; total: number };
+import { fetchMedia, type MediaProgress } from "./media";
 
 const schema = `
 CREATE TABLE col (id integer PRIMARY KEY, crt integer NOT NULL, mod integer NOT NULL, scm integer NOT NULL, ver integer NOT NULL, dty integer NOT NULL, usn integer NOT NULL, ls integer NOT NULL, conf text NOT NULL, models text NOT NULL, decks text NOT NULL, dconf text NOT NULL, tags text NOT NULL);
@@ -28,12 +28,15 @@ const sentenceFields = [
 const css = `
 .card { font-family: sans-serif; text-align: center; line-height: 1.5; padding: 20px; }
 .sentence { font-size: 28px; }
-.eyebrow { color: #777; font-size: 12px; text-transform: uppercase; }
-.hint { color: #777; }
+.eyebrow { font-size: 12px; text-transform: uppercase; }
 .translation { font-size: 20px; margin: 16px 0; }
-.glosses { color: #777; font-size: 16px; list-style: none; padding: 0; }
+.card ul.glosses { font-size: 16px; list-style: none; padding: 0; margin: 16px 0; text-align: center; }
+.card ul.glosses li { list-style: none; padding: 0; text-align: center; }
+.card { --yap-muted: #666; }
+.card.nightMode, .card.night_mode, .nightMode .card, .night_mode .card { --yap-muted: #aaa; }
+.card :is(.eyebrow, .hint, .glosses, .source) { color: var(--yap-muted); }
 a { color: inherit; }
-.source { color: #777; font-size: 14px; margin: 8px 0 16px; }
+.source { font-size: 14px; margin: 8px 0 16px; }
 .source img { display: block; max-height: 90px; margin: 0 auto 4px; }
 video { display: block; width: 100%; max-width: 480px; margin: 16px auto 0; background: #000; }
 `;
@@ -77,20 +80,22 @@ function audioFilename(filename: string, bytes: Uint8Array): string {
   return filename.replace(/\.[^.]+$/, `.${ext}`);
 }
 
-type Fetched = { bytes: Uint8Array; filename: string } | undefined;
+function sourceFor(note: AnkiNote): string {
+  return note.source ? (note.source.poster_filename ? `<img src="${escapeHtml(note.source.poster_filename)}" alt="">` : "")
+    + escapeHtml(note.source.title) + (note.source.year ? ` (${note.source.year})` : "") : "";
+}
 
 function fieldsFor(note: AnkiNote, audio: (filename: string) => string, lang: string): string[] {
   if (note.type === "Word") {
     const media = audio(note.audio);
-    return [escapeHtml(note.word), escapeHtml(note.definition), media];
+    return [escapeHtml(note.word), escapeHtml(note.definition), media, sourceFor(note), escapeHtml(note.clip_url ?? "")];
   }
   const media = audio(note.tts);
   const glosses = note.glosses.map(({ text, gloss, url }) => {
     const word = `<span lang="${lang}">${escapeHtml(text)}</span>`;
     return `<li>${url ? `<a href="${escapeHtml(url)}">${word}</a>` : word}${gloss ? ` — ${escapeHtml(gloss)}` : ""}</li>`;
   }).join("");
-  const source = note.source ? (note.source.poster_filename ? `<img src="${escapeHtml(note.source.poster_filename)}" alt="">` : "")
-    + escapeHtml(note.source.title) + (note.source.year ? ` (${note.source.year})` : "") : "";
+  const source = sourceFor(note);
   return [
     escapeHtml(note.sentence), escapeHtml(note.translation), escapeHtml(note.target_word),
     escapeHtml(note.target_gloss), glosses, source, escapeHtml(note.clip_url), media,
@@ -108,46 +113,17 @@ export async function buildApkg(
   const files: Record<string, Uint8Array> = {};
   const media: Record<string, string> = {};
   const audioFiles = new Map<string, string>();
-  let done = 0;
   let mediaIndex = 0;
-  onProgress({ done, total: plan.bundled.length });
-  // Keep eight requests in flight, rather than letting one slow synthesis
-  // stall an entire batch of cache hits. Keep the synthesis concurrency cap:
-  // cache misses can reach ElevenLabs, not just Cloudflare's Whisper gate.
-  const concurrency = 8;
-  const results: Fetched[] = new Array(plan.bundled.length);
-  let next = 0;
-  await Promise.all(Array.from({ length: Math.min(concurrency, plan.bundled.length) }, async () => {
-    while (next < plan.bundled.length) {
-      const index = next++;
-      const { filename, source } = plan.bundled[index];
-      if (source.type !== "Tts") {
-        const bytes = await fetchBundled(source);
-        if (!bytes) throw new Error(`Bundled media missing: ${filename}`);
-        results[index] = { bytes, filename };
-        onProgress({ done: ++done, total: plan.bundled.length });
-        continue;
-      }
-      try {
-        const response = await fetch(source.url);
-        if (!response.ok) throw new Error(`Audio request failed (${response.status})`);
-        const bytes = new Uint8Array(await response.arrayBuffer());
-        if (!bytes.length) throw new Error("Audio response was empty");
-        results[index] = { bytes, filename: audioFilename(filename, bytes) };
-      } catch {
-        // An unavailable recording omits its audio and listening card.
-      } finally {
-        onProgress({ done: ++done, total: plan.bundled.length });
-      }
-    }
-  }));
+  const results = await fetchMedia(plan, fetchBundled, onProgress);
   // Completion order must not change the package's media identities.
-  results.forEach((result, index) => {
-    if (result) {
+  results.forEach((bytes, index) => {
+    if (bytes) {
+      const entry = plan.bundled[index];
+      const filename = entry.source.type === "Tts" ? audioFilename(entry.filename, bytes) : entry.filename;
       const key = String(mediaIndex++);
-      media[key] = result.filename;
-      files[key] = result.bytes;
-      audioFiles.set(plan.bundled[index].filename, `[sound:${result.filename}]`);
+      media[key] = filename;
+      files[key] = bytes;
+      audioFiles.set(entry.filename, `[sound:${filename}]`);
     }
   });
   const audio = (filename: string): string => audioFiles.get(filename) ?? "";
@@ -164,21 +140,22 @@ export async function buildApkg(
     tmpls: tmpls.map((template) => ({ ...template, did: null, bqfmt: "", bafmt: "" })),
     req, vers: [], tags: [], latexPre: "", latexPost: "",
   });
+  const wordClip = '{{#ClipUrl}}<video src="{{ClipUrl}}" controls preload="metadata" playsinline></video>{{#Source}}<div class="source">{{Source}}</div>{{/Source}}{{/ClipUrl}}';
   const models = {
     [sentenceId]: model(sentenceId, `Yap ${plan.course_code} sentences`, sentenceFields, templates(lang), [[0, "all", [8]], [1, "all", [9]]]),
-    [wordId]: model(wordId, `Yap ${plan.course_code} words`, ["Word", "Definition", "AudioBundled"], [{
+    [wordId]: model(wordId, `Yap ${plan.course_code} words`, ["Word", "Definition", "AudioBundled", "Source", "ClipUrl"], [{
       name: "Word", ord: 0,
       // Same shape as the sentence cards: the recording plays on both sides.
       qfmt: `<div class="eyebrow">Word</div>
 {{AudioBundled}}
 <div class="sentence" lang="${lang}">{{Word}}</div>
 <hr id="answer">
-<p class="hint">Tap to reveal the answer</p>`,
+<p class="hint">Tap to reveal the answer</p>${wordClip}`,
       afmt: `<div class="eyebrow">Word</div>
 {{AudioBundled}}
 <div class="sentence" lang="${lang}">{{Word}}</div>
 <hr id="answer">
-<div class="translation">{{Definition}}</div>`,
+<div class="translation">{{Definition}}</div>${wordClip}`,
     }], [[0, "all", [0]]]),
   };
   const deck = (id: number, name: string, desc: string) => ({

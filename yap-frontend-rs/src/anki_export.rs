@@ -99,6 +99,8 @@ pub enum AnkiNote {
         word: String,
         definition: String,
         audio: String,
+        source: Option<AnkiSource>,
+        clip_url: Option<String>,
         tags: Vec<String>,
     },
 }
@@ -184,6 +186,7 @@ pub struct AnkiExportView {
     pub sign_up_label: String,
     /// The deck downloads by itself once built; this saves it again.
     pub download_again_label: String,
+    pub audio_unavailable_message: String,
 }
 
 /// Sentence notes per deck. Not a choice yet: one good default beats a
@@ -269,6 +272,36 @@ fn guid(course: Course, kind: &str, text: &str) -> String {
         .encode(xxh3_64(format!("{}|{kind}|{text}", course_code(course)).as_bytes()).to_be_bytes())
 }
 
+/// Word notes have spelling identities, so their frequency combines all meanings
+/// (and parts of speech) of that spelling. Ties use spelling for stable ranks.
+fn spelling_frequency_ranks(pack: &LanguagePack, language: Language) -> FxHashMap<String, usize> {
+    let mut counts: FxHashMap<String, u64> = FxHashMap::default();
+    for (gram, frequency) in pack.gram_frequencies.entries.iter() {
+        let word = pack.resolve_gram(&gram.gram).to_display_string(language);
+        *counts.entry(word).or_default() += u64::from(frequency.count);
+    }
+    let mut counts: Vec<_> = counts.into_iter().collect();
+    counts.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+    counts
+        .into_iter()
+        .enumerate()
+        .map(|(rank, (word, _))| (word, rank))
+        .collect()
+}
+
+fn frequency_band(rank: Option<usize>) -> &'static str {
+    match rank {
+        Some(0..100) => "top-100",
+        Some(100..500) => "top-500",
+        Some(500..1000) => "top-1000",
+        Some(1000..2000) => "top-2000",
+        Some(2000..5000) => "top-5000",
+        Some(5000..10000) => "top-10000",
+        Some(_) => "rare",
+        None => "unknown",
+    }
+}
+
 /// The word note the deck introduces a word with; it precedes the first
 /// sentence that uses the word.
 fn word_note(
@@ -276,6 +309,7 @@ fn word_note(
     course: Course,
     gram: TaggedGram<SpurGram>,
     word: &str,
+    frequency_rank: Option<usize>,
     token: &str,
     bundled: &mut Vec<AnkiBundledMedia>,
 ) -> AnkiNote {
@@ -325,16 +359,7 @@ fn word_note(
         [_, _, ..] => tags.push("yap::pos::phrase".into()),
         _ => {}
     }
-    // gram_frequencies is sorted most frequent first.
-    let band = match pack.gram_frequencies.entries.get_index_of(&gram) {
-        Some(rank) if rank < 100 => "top-100",
-        Some(rank) if rank < 500 => "top-500",
-        Some(rank) if rank < 1000 => "top-1000",
-        Some(rank) if rank < 2000 => "top-2000",
-        Some(rank) if rank < 5000 => "top-5000",
-        Some(rank) if rank < 10000 => "top-10000",
-        _ => "rare",
-    };
+    let band = frequency_band(frequency_rank);
     tags.push(format!("yap::frequency::{band}"));
     AnkiNote::Word {
         guid: guid(course, "word", word),
@@ -343,6 +368,8 @@ fn word_note(
         word: word.to_owned(),
         definition,
         audio,
+        source: None,
+        clip_url: None,
         tags,
     }
 }
@@ -439,6 +466,54 @@ fn poster_filename(imdb: &str) -> String {
     format!("yap-poster-{imdb}.jpg")
 }
 
+/// Shared clip presentation for sentence notes and bare-word clips.
+fn clip_presentation(
+    pack: &LanguagePack,
+    language: Language,
+    text: &str,
+    token: &str,
+    posters: &mut BTreeSet<String>,
+    bundled: &mut Vec<AnkiBundledMedia>,
+    tags: &mut Vec<String>,
+) -> (Option<AnkiSource>, String) {
+    let clip = clips::clip_for_sentence(language, text).unwrap();
+    let imdb = clips::clip_film(&clip.clip_id).to_owned();
+    let movie = pack.movies.get(&imdb);
+    let poster = movie
+        .and_then(|m| m.poster_bytes.as_ref())
+        .map(|_| poster_filename(&imdb));
+    if let Some(filename) = &poster
+        && posters.insert(filename.clone())
+    {
+        bundled.push(AnkiBundledMedia {
+            filename: filename.clone(),
+            source: AnkiMediaSource::Poster {
+                imdb_id: imdb.clone(),
+            },
+        });
+    }
+    if let Some(movie) = movie {
+        let title = match movie.year {
+            Some(year) => format!("{} {year}", movie.title),
+            None => movie.title.clone(),
+        };
+        tags.push(format!("yap::film::{}", tag_segment(&title)));
+    }
+    (
+        movie.map(|movie| AnkiSource {
+            title: movie.title.clone(),
+            year: movie.year,
+            imdb_id: imdb,
+            poster_filename: poster,
+        }),
+        format!(
+            "{}?d={}",
+            clip_url(language, &format!("{}/lo.mp4", component(&clip.clip_id))),
+            component(token)
+        ),
+    )
+}
+
 // The page never talks about "your level": Yap's level system is due a
 // rethink, so the deck is described by the words it teaches instead.
 /// How many posters the page shows.
@@ -511,6 +586,7 @@ impl Deck {
             save_deck_body: SAVE_DECK_BODY.into(),
             sign_up_label: "Create an account".into(),
             download_again_label: "Download again".into(),
+            audio_unavailable_message: "Audio downloads are temporarily unavailable. Please try again in a few minutes. No deck was downloaded.".into(),
         }
     }
 
@@ -609,6 +685,8 @@ struct PlannerState {
     notes: Vec<AnkiNote>,
     bundled: Vec<AnkiBundledMedia>,
     used_sentences: BTreeSet<Spur>,
+    word_clip_sentences: BTreeSet<Spur>,
+    spelling_ranks: FxHashMap<String, usize>,
     used_words: BTreeSet<String>,
     /// Every gram a word note or sentence teaches, for the coverage figure.
     taught: FxHashSet<TaggedGram<SpurGram>>,
@@ -659,6 +737,8 @@ impl AnkiDeckPlanner {
                 notes: Vec::new(),
                 bundled: Vec::new(),
                 used_sentences: BTreeSet::new(),
+                word_clip_sentences: BTreeSet::new(),
+                spelling_ranks: spelling_frequency_ranks(pack, language),
                 used_words: BTreeSet::new(),
                 taught: FxHashSet::default(),
                 posters: BTreeSet::new(),
@@ -851,6 +931,8 @@ impl PlannerState {
             clip_sentence_ranks,
             clip_sentence_names,
             used_sentences,
+            word_clip_sentences,
+            spelling_ranks,
             used_words,
             taught,
             notes,
@@ -872,7 +954,7 @@ impl PlannerState {
             .into_iter()
             .flatten()
             .copied()
-            .filter(|s| !used_sentences.contains(s))
+            .filter(|s| !used_sentences.contains(s) && !word_clip_sentences.contains(s))
             .filter(|s| {
                 clip_sentence_ranks[s]
                     .iter()
@@ -926,30 +1008,62 @@ impl PlannerState {
             taught.insert(prerequisite);
             let word = display(prerequisite);
             if options.word_cards && used_words.insert(word.clone()) {
-                notes.push(word_note(pack, course, prerequisite, &word, token, bundled));
+                let mut note = word_note(
+                    pack,
+                    course,
+                    prerequisite,
+                    &word,
+                    spelling_ranks.get(&word).copied(),
+                    token,
+                    bundled,
+                );
+                // Use an exact-word clip of the same gram, including for prerequisites.
+                let bare = clip_sentences_of
+                    .get(&prerequisite)
+                    .into_iter()
+                    .flatten()
+                    .copied()
+                    .find(|s| {
+                        pack.string_rodeo.resolve(s) == word
+                            && !used_sentences.contains(s)
+                            && !word_clip_sentences.contains(s)
+                    });
+                if let Some(bare) = bare {
+                    let AnkiNote::Word {
+                        source,
+                        clip_url,
+                        tags,
+                        ..
+                    } = &mut note
+                    else {
+                        unreachable!()
+                    };
+                    let (credit, url) = clip_presentation(
+                        pack,
+                        language,
+                        pack.string_rodeo.resolve(&bare),
+                        token,
+                        posters,
+                        bundled,
+                        tags,
+                    );
+                    *source = credit;
+                    *clip_url = Some(url);
+                    word_clip_sentences.insert(bare);
+                }
+                notes.push(note);
             }
         }
-        let text = challenge.target_language;
-        let clip = clips::clip_for_sentence(language, &text).unwrap();
-        let imdb = clips::clip_film(&clip.clip_id).to_owned();
-        let movie = pack.movies.get(&imdb);
-        let film_tag = movie.map(|movie| match movie.year {
-            Some(year) => format!("{} {year}", movie.title),
-            None => movie.title.clone(),
-        });
-        let poster = movie
-            .and_then(|m| m.poster_bytes.as_ref())
-            .map(|_| poster_filename(&imdb));
-        if let Some(filename) = &poster
-            && posters.insert(filename.clone())
-        {
-            bundled.push(AnkiBundledMedia {
-                filename: filename.clone(),
-                source: AnkiMediaSource::Poster {
-                    imdb_id: imdb.clone(),
-                },
-            });
+        if word_clip_sentences.contains(&sentence) {
+            // The word note represents this clip. Try this gram again for a
+            // sentence note, rather than counting the word toward the target.
+            still_pending.push_back(gram);
+            return;
         }
+        let text = challenge.target_language;
+        let mut tags = note_tags(course, "sentence");
+        let (source, clip_url) =
+            clip_presentation(pack, language, &text, token, posters, bundled, &mut tags);
         let url = tts_url(
             language,
             &text,
@@ -981,27 +1095,12 @@ impl PlannerState {
             target_word: word.clone(),
             target_gloss,
             glosses,
-            source: movie.map(|movie| AnkiSource {
-                title: movie.title.clone(),
-                year: movie.year,
-                imdb_id: imdb,
-                poster_filename: poster,
-            }),
-            clip_url: format!(
-                "{}?d={}",
-                clip_url(language, &format!("{}/lo.mp4", component(&clip.clip_id))),
-                component(token)
-            ),
+            source,
+            clip_url,
             tts,
             include_reading: !matches!(options.card_types, AnkiCardTypes::Listening),
             include_listening,
-            tags: {
-                let mut tags = note_tags(course, "sentence");
-                if let Some(film_tag) = film_tag {
-                    tags.push(format!("yap::film::{}", tag_segment(&film_tag)));
-                }
-                tags
-            },
+            tags,
         });
         used_sentences.insert(sentence);
     }
@@ -1051,7 +1150,7 @@ impl PlannerState {
             taught_words,
             sentences: self
                 .used_sentences
-                .iter()
+                .union(&self.word_clip_sentences)
                 .map(|s| pack.string_rodeo.resolve(s).to_owned())
                 .collect(),
             course_code: course_code(course),
@@ -1118,6 +1217,10 @@ mod tests {
         }
     }
     fn fixture() -> Deck {
+        fixture_with_prerequisites(false)
+    }
+
+    fn fixture_with_prerequisites(prerequisites: bool) -> Deck {
         let course = Course {
             target_language: Language::English,
             native_language: Language::French,
@@ -1141,14 +1244,21 @@ mod tests {
         let sentences: Vec<_> = entries
             .iter()
             .flat_map(|gram| {
-                let text = gram.to_display_string(Language::English);
                 [1, 2].map(|count| {
+                    let grams = if prerequisites && count == 2 {
+                        vec![entries[0].clone(), gram.clone()]
+                    } else {
+                        vec![gram.clone(); count]
+                    };
+                    let sentence = grams
+                        .iter()
+                        .map(|g| g.to_display_string(Language::English))
+                        .collect::<Vec<_>>()
+                        .join(" ");
                     (
-                        std::iter::repeat_n(text.as_str(), count)
-                            .collect::<Vec<_>>()
-                            .join(" "),
+                        sentence,
                         SentenceGrams {
-                            grams: vec![SentenceGram::Learnable(gram.clone()); count],
+                            grams: grams.into_iter().map(SentenceGram::Learnable).collect(),
                             capitalize_first: false,
                             multiword_terms: vec![],
                             low_confidence_multiword_terms: vec![],
@@ -1315,69 +1425,95 @@ mod tests {
         assert_eq!(deck.num_cards_added(), 0);
         assert_eq!(deck.stats.total_reviews, 0);
         assert_eq!(a.stats.sentence_count, 55);
-        assert_eq!(a.stats.word_count, 55);
-        assert_eq!(a.stats.card_count, 165);
-        // Every sentence and word recording is bundled, whatever the card types.
+        assert_eq!(
+            a.stats.word_count as usize,
+            a.notes
+                .iter()
+                .filter(|n| matches!(n, AnkiNote::Word { .. }))
+                .count()
+        );
+        assert_eq!(a.stats.card_count, 110 + a.stats.word_count);
+        // A word clip keeps its own word recording, never an extra sentence fetch.
         assert_eq!(
             a.bundled
                 .iter()
                 .filter(|m| matches!(m.source, AnkiMediaSource::Tts { .. }))
                 .count(),
-            110
+            (55 + a.stats.word_count) as usize
         );
-        let mut sentences = BTreeSet::new();
+        assert_eq!(a.sentences.len(), (55 + a.stats.word_count) as usize);
+        let mut clips = BTreeSet::new();
         let mut ids = BTreeSet::new();
-        for pair in a.notes.chunks_exact(2) {
-            let AnkiNote::Word { word, audio, .. } = &pair[0] else {
-                panic!("word first")
+        let mut words = BTreeSet::new();
+        for note in &a.notes {
+            let (note_id, card_id, guid) = match note {
+                AnkiNote::Word {
+                    word,
+                    audio,
+                    clip_url,
+                    note_id,
+                    card_id,
+                    guid,
+                    ..
+                } => {
+                    assert!(words.insert(word.clone()));
+                    assert!(clips.insert(clip_url.as_ref().unwrap().clone()));
+                    let entry = a.bundled.iter().find(|m| &m.filename == audio).unwrap();
+                    assert_eq!(
+                        audio,
+                        &format!(
+                            "yap-word-{}.mp3",
+                            super::guid(deck.context.course, "word", word)
+                        )
+                    );
+                    assert!(
+                        matches!(&entry.source, AnkiMediaSource::Tts { url } if url == &tts_url(Language::English, word, &[], "a+b&雪"))
+                    );
+                    (*note_id, *card_id, guid)
+                }
+                AnkiNote::Sentence {
+                    sentence,
+                    target_word,
+                    clip_url,
+                    tts,
+                    note_id,
+                    card_id,
+                    guid,
+                    glosses,
+                    ..
+                } => {
+                    assert!(
+                        words.contains(target_word),
+                        "prerequisite precedes sentence"
+                    );
+                    assert_ne!(
+                        sentence, target_word,
+                        "bare clip already represented on word note"
+                    );
+                    assert!(clips.insert(clip_url.clone()));
+                    assert!(clip_url.starts_with("https://clips.yap.town/eng/"));
+                    assert!(clip_url.ends_with("?d=a%2Bb%26%E9%9B%AA"));
+                    assert_eq!(glosses[0].gloss.as_deref(), Some("meaning"));
+                    assert!(
+                        glosses[0]
+                            .url
+                            .as_ref()
+                            .unwrap()
+                            .starts_with("https://yap.town/d/")
+                    );
+                    let entry = a.bundled.iter().find(|m| &m.filename == tts).unwrap();
+                    assert!(
+                        matches!(&entry.source, AnkiMediaSource::Tts { url } if url.contains("language=English&text="))
+                    );
+                    assert!(ids.insert(*card_id + 1));
+                    (*note_id, *card_id, guid)
+                }
             };
-            let AnkiNote::Sentence {
-                sentence,
-                clip_url,
-                tts,
-                note_id,
-                card_id,
-                guid,
-                glosses,
-                ..
-            } = &pair[1]
-            else {
-                panic!("sentence second")
-            };
-            assert!(sentences.insert(sentence));
-            assert_eq!(word, sentence, "shortest sentence wins");
-            let entry = a.bundled.iter().find(|m| &m.filename == audio).unwrap();
-            assert_eq!(
-                audio,
-                &format!(
-                    "yap-word-{}.mp3",
-                    super::guid(deck.context.course, "word", word)
-                )
-            );
-            assert!(
-                matches!(&entry.source, AnkiMediaSource::Tts { url } if url == &tts_url(Language::English, word, &[], "a+b&雪"))
-            );
-            assert!(clip_url.starts_with("https://clips.yap.town/eng/"));
-            assert!(clip_url.ends_with("?d=a%2Bb%26%E9%9B%AA"));
             assert!(!guid.contains(['+', '/', '=']));
-            for id in [*note_id, *card_id, *card_id + 1] {
+            for id in [note_id, card_id] {
                 assert!(id > 0 && id < 1_i64 << 53);
                 assert!(ids.insert(id));
             }
-            assert_eq!(glosses[0].gloss.as_deref(), Some("meaning"));
-            assert!(
-                glosses[0]
-                    .url
-                    .as_ref()
-                    .unwrap()
-                    .starts_with("https://yap.town/d/")
-            );
-            let entry = a.bundled.iter().find(|m| &m.filename == tts).unwrap();
-            let AnkiMediaSource::Tts { url } = &entry.source else {
-                panic!("bundled sentence audio is fetched TTS")
-            };
-            assert!(url.contains("language=English&text="));
-            assert!(!url.contains("&hint="));
         }
         let reading = deck
             .plan_anki_deck(
@@ -1416,6 +1552,95 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn anki_spelling_frequency_combines_senses() {
+        let mut deck = fixture();
+        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
+        let (gram, frequency) = pack.gram_frequencies.entries.get_index(63).unwrap();
+        let mut sense = *gram;
+        let mut frequency = *frequency;
+        // Each sense is rarer than word00; together this spelling is commonest.
+        frequency.count = 70;
+        for n in [1, 2] {
+            sense.sense = std::num::NonZeroU32::new(n);
+            pack.gram_frequencies.entries.insert(sense, frequency);
+        }
+        let ranks = spelling_frequency_ranks(pack, Language::English);
+        assert_eq!(ranks.len(), 64);
+        assert_eq!(ranks["word63"], 0);
+        assert_eq!(ranks["word00"], 1);
+        assert_eq!(frequency_band(None), "unknown");
+        assert_eq!(frequency_band(Some(10000)), "rare");
+        let note = word_note(
+            pack,
+            deck.context.course,
+            sense,
+            "word63",
+            ranks.get("word63").copied(),
+            "token",
+            &mut vec![],
+        );
+        assert!(
+            matches!(note, AnkiNote::Word { tags, .. } if tags.contains(&"yap::frequency::top-100".into()))
+        );
+    }
+
+    #[test]
+    fn anki_prerequisites_find_exact_bare_clips_without_spending_sentence_budget() {
+        let deck = fixture_with_prerequisites(true);
+        publish(&deck.context.language_pack, deck.context.course);
+        let planner =
+            AnkiDeckPlanner::new(&deck, options(), 1, "token".into(), 1_700_000_000_000.0).unwrap();
+        {
+            let mut state = planner.state.borrow_mut();
+            while !state.unindexed.is_empty() || state.simulation.is_none() {
+                state.advance();
+            }
+            let pack = &deck.context.language_pack;
+            let target = *pack.gram_frequencies.entries.get_index(1).unwrap().0;
+            let sentence = pack.string_rodeo.get("word00 word01").unwrap();
+            // The target has only a multiword clip; its prerequisite still
+            // finds its own exact-word clip through the prerequisite's index.
+            let target_rank = pack.written_ease_order.rank(&target).unwrap();
+            state
+                .clip_sentence_ranks
+                .insert(sentence, vec![target_rank]);
+            state.clip_sentences_of.insert(target, vec![sentence]);
+            state.choose_sentence(target);
+            assert_eq!(state.used_sentences.len(), 1);
+            assert_eq!(state.word_clip_sentences.len(), 1);
+            state.done = true;
+        }
+        let plan = planner.finish().unwrap();
+        assert_eq!(plan.stats.sentence_count, 1);
+        assert_eq!(plan.stats.word_count, 2);
+        assert_eq!(plan.stats.card_count, 4);
+        assert_eq!(plan.sentences.len(), 2);
+        assert!(plan.sentences.contains(&"word00".into()));
+        for note in &plan.notes {
+            if let AnkiNote::Word {
+                word,
+                audio,
+                clip_url,
+                ..
+            } = note
+            {
+                assert_eq!(clip_url.is_some(), word == "word00");
+                assert_eq!(
+                    audio,
+                    &format!("yap-word-{}.mp3", guid(deck.context.course, "word", word))
+                );
+            }
+        }
+        assert_eq!(
+            plan.bundled
+                .iter()
+                .filter(|m| matches!(m.source, AnkiMediaSource::Tts { .. }))
+                .count(),
+            3
+        );
+    }
+
     #[test]
     fn finish_message_only_for_real_gains() {
         assert_eq!(finish_message(90.0, 92.0, "French"), None);

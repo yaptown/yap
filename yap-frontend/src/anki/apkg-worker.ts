@@ -1,5 +1,6 @@
 import type { AnkiDeckPlan, AnkiMediaSource } from "../../../yap-frontend-rs/pkg";
-import { buildApkg, type MediaProgress } from "./apkg";
+import { buildApkg } from "./apkg";
+import { AudioUnavailableError, type MediaProgress } from "./media";
 
 export type PackageRequest =
   | { type: "build"; plan: AnkiDeckPlan; modified: number }
@@ -8,7 +9,7 @@ export type PackageResponse =
   | { type: "media"; id: number; source: AnkiMediaSource }
   | { type: "progress"; progress: MediaProgress }
   | { type: "complete"; blob: Blob }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string; code?: "audio_unavailable" };
 
 const pending = new Map<number, (bytes: Uint8Array | undefined) => void>();
 let nextId = 0;
@@ -29,6 +30,6 @@ self.onmessage = async ({ data }: MessageEvent<PackageRequest>) => {
     // Blob cloning shares its immutable backing storage, not a main-thread copy.
     send({ type: "complete", blob });
   } catch (error) {
-    send({ type: "error", message: error instanceof Error ? error.message : String(error) });
+    send({ type: "error", message: error instanceof Error ? error.message : String(error), code: error instanceof AudioUnavailableError ? error.code : undefined });
   }
 };

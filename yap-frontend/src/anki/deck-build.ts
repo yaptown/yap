@@ -18,13 +18,10 @@ export function addNotes(build: DeckBuild, notes: AnkiNote[]): DeckBuild {
   const films = [...build.films];
   let words = build.words;
   for (const note of notes) {
-    if (note.type === "Word") {
-      words += 1;
-      continue;
-    }
-    sentences.push(note);
     const source = note.source;
     if (source && !films.some((film) => film.id === source.imdb_id)) films.push({ id: source.imdb_id, title: source.title });
+    if (note.type === "Word") words += 1;
+    else sentences.push(note);
   }
   return { sentences, words, films };
 }

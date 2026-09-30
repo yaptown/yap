@@ -1,5 +1,5 @@
 import type { AnkiDeckPlan, AnkiMediaSource } from "../../../yap-frontend-rs/pkg";
-import type { MediaProgress } from "./apkg";
+import { AudioUnavailableError, type MediaProgress } from "./media";
 import type { PackageRequest, PackageResponse } from "./apkg-worker";
 
 // Anki compares whole seconds, even across separate workers/quick exports.
@@ -33,7 +33,7 @@ export async function buildApkg(
             }
             case "progress": onProgress(data.progress); break;
             case "complete": resolve(data.blob); break;
-            case "error": reject(new Error(data.message)); break;
+            case "error": reject(data.code === "audio_unavailable" ? new AudioUnavailableError() : new Error(data.message)); break;
           }
         } catch (error) {
           reject(error);
