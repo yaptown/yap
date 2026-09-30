@@ -179,22 +179,17 @@ reports availability, playback, and the current subtitle.
 
 ## Sentry
 
-Sentry Cocoa is initialized only if `SentryDSN` in the generated Info.plist is
-nonempty. The default is empty. To enable it locally, create the gitignored
-`yap-ios/Local.xcconfig`:
-
-```xcconfig
-// xcconfig treats // as a comment; the empty expansion preserves the URL.
-SENTRY_DSN = https:/$()/YOUR_PUBLIC_DSN
-```
-
-`Generated/Link.xcconfig` includes that file optionally. A command-line Xcode
-`SENTRY_DSN=...` setting also overrides the default. Release uses environment
-`production`, Debug uses `development`, release is Rust's `get_app_version()`,
-tracing samples 20%, and default PII is enabled to match the web. Authentication
-sets/clears the Sentry user id; pack loading and sync failures leave breadcrumbs.
-**No iOS session replay.** dSYM upload is not wired yet: configure a Sentry auth
-token and symbol-upload CI step before relying on readable release crash stacks.
+The public DSN of the `yaptown/yap-apple-ios` Sentry project is committed as
+`SENTRY_DSN` in `xtask/src/ios.rs`, which writes it into
+`Generated/Link.xcconfig`, so every build reports to Sentry.
+Release uses environment `production`, Debug uses `development`, and the
+release name is the SDK default, `town.yap.ios@<version>+<build>`, so Sentry
+releases line up with App Store builds. Tracing samples 20%, and default PII is
+enabled to match the web. Authentication sets/clears the Sentry user id; pack
+loading and sync failures leave breadcrumbs. **No iOS session replay.**
+`--archive` uploads the archive's dSYMs with `sentry-cli` (`brew install
+getsentry/tools/sentry-cli`), authenticated by `SENTRY_AUTH_TOKEN` from the
+environment.
 
 ## Distribution resources and archive
 
@@ -213,9 +208,10 @@ cargo xtask ios --archive
 
 This makes a Release archive at `DerivedData/Yap.xcarchive`, then exports with
 `method=app-store-connect`, automatic signing, team `AF2CJ3G3ZU`, and symbols
-included to `DerivedData/export/`. It **never uploads**. `--archive --debug` is
-rejected. Marketing version is 1.0, build number 1; increment the build number
-before uploading another build of the same version.
+included to `DerivedData/export/`, then uploads the dSYMs to Sentry. It
+**never uploads to App Store Connect**. `--archive --debug` is rejected. The
+build number is `git rev-list --count HEAD`, so each commit archives with a new
+one; bump `MARKETING_VERSION` in `project.yml` for a new version.
 
 ### Release checklist
 
@@ -227,8 +223,8 @@ before uploading another build of the same version.
   testers and complete beta review where required. Nothing here uploads for you.
 - Exercise sign-in, sync, audio/video, offline reopening, and sign-out on a real
   device. Review account-deletion requirements before App Store submission.
-- Create/configure the iOS Sentry project and production DSN; configure dSYM
-  upload with a protected auth token, then verify a test event and readable stack.
+- With `SENTRY_AUTH_TOKEN` set, archive, then verify a test event and a readable
+  stack in `yaptown/yap-apple-ios`.
   Check PII retention/access.
 - Answer App Store Connect's App Privacy questionnaire from `PrivacyInfo.xcprivacy`:
   every collected type there is linked to the user, used only for App

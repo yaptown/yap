@@ -6,10 +6,8 @@ import Sentry
     static func start() {
         guard let dsn = Bundle.main.object(forInfoDictionaryKey: "SentryDSN") as? String,
               !dsn.isEmpty, !dsn.contains("$(") else { return }
-        let version = get_app_version()
         SentrySDK.start { options in
             options.dsn = dsn
-            options.releaseName = version
             #if DEBUG
             options.environment = "development"
             #else

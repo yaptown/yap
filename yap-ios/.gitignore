@@ -4,4 +4,3 @@ DerivedData/
 .build/
 __pycache__/
 Yap.entitlements
-Local.xcconfig
