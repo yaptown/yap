@@ -111,6 +111,14 @@ cargo test
 cd supabase && supabase start
 ```
 
+### iOS app
+
+`cargo xtask ios` builds the Rust libraries, Swift bindings and Xcode project
+(`--simulator`, `--device UDID`, `--archive`; see `--help`). `cargo xtask smoke`
+runs the native Swift integration test against the real French pack. The
+simulator debug driver is documented on `DebugHarness` in
+`yap-ios/Sources/App/DebugHarness.swift`.
+
 ### yap-mcp smoke tests
 
 `yap-mcp/smoke/` holds end-to-end smoke scripts for the MCP server (see the
