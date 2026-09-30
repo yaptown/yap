@@ -169,7 +169,7 @@ pub fn find_minimal_pairs(
     groups
 }
 
-#[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+#[derive(Clone, Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct MinimalPairs {
     /// Key is the unordered phoneme pair, canonicalized so the resolved
     /// string of `key.0` sorts before `key.1`. Within each `(word_a, word_b)`

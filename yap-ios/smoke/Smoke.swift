@@ -188,7 +188,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         offlineRequest.httpMethod = "POST"
         let (_, response) = try await URLSession.shared.data(for: offlineRequest)
         check((response as? HTTPURLResponse)?.statusCode == 204)
-        try await reopened.cache_language_pack(course: course)
+        try await reopened.load_language_pack(course: course, on_progress: nil)
         let persisted = try await deck(reopened, course)
         check(persisted.get_daily_review_target() == 1200)
         do {

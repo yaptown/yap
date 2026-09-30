@@ -13,7 +13,7 @@ use opfs::{
 };
 use std::{
     collections::{BTreeMap, BTreeSet},
-    sync::LazyLock,
+    sync::{Arc, LazyLock},
 };
 use xxhash_rust::const_xxh3::xxh3_64 as const_xxh3;
 
@@ -257,6 +257,36 @@ fn is_retryable_persistent_error(error: &persistent::Error) -> bool {
         || error_text.contains("out of memory")
 }
 
+pub(crate) async fn acquire_cache_lock(
+    course: Course,
+) -> Result<weblocks::LockGuard, LanguageDataError> {
+    weblocks::acquire(
+        &crate::language_pack_lock_name(course),
+        weblocks::AcquireOptions::exclusive(),
+    )
+    .await
+    .map_err(|e| {
+        LanguageDataError::InvalidData(format!("Failed to acquire language pack lock: {e:?}"))
+    })
+}
+
+/// Prefetch chunks only. The real load verifies the whole-part hash before deserializing.
+pub(crate) async fn cache_language_pack(
+    data_directory_handle: &DirectoryHandle,
+    course: Course,
+) -> Result<(), LanguageDataError> {
+    let meta = language_data_hashes_for_course(course)?;
+    let mut directory = course_data_directory(data_directory_handle, course).await?;
+    for (part, meta) in [
+        (PackPart::Core, meta.core),
+        (PackPart::Sentences, meta.sentences),
+    ] {
+        download_and_cache_language_data(&mut directory, course, part, meta, &|_, _| {}, false)
+            .await?;
+    }
+    Ok(())
+}
+
 /// Load just the core half and assemble a sentence-less pack: enough for the
 /// placement test and word lookups while the sentence half is still on the
 /// wire.
@@ -285,6 +315,7 @@ pub(crate) async fn load_language_pack_core(
 pub(crate) async fn load_language_pack(
     data_directory_handle: &DirectoryHandle,
     course: Course,
+    core: Option<Arc<LanguagePack>>,
     set_loading_state: &impl Fn(&str, f32),
 ) -> Result<LanguagePack, LanguageDataError> {
     let _perf_timer = bridgerton::platform::PerfTimer::new("load_language_pack");
@@ -294,15 +325,12 @@ pub(crate) async fn load_language_pack(
     } = language_data_hashes_for_course(course)?;
     let mut language_directory = course_data_directory(data_directory_handle, course).await?;
 
-    let core = load_part(
-        &mut language_directory,
-        course,
-        PackPart::Core,
-        core_meta,
-        set_loading_state,
-        deserialize_core,
-    )
-    .await?;
+    let core = match core {
+        Some(core) => core,
+        None => Arc::new(
+            load_language_pack_core(data_directory_handle, course, set_loading_state).await?,
+        ),
+    };
     let sentences = load_part(
         &mut language_directory,
         course,
@@ -322,7 +350,7 @@ pub(crate) async fn load_language_pack(
 
     set_loading_state("Preparing language data", 100.0);
     let assemble_timer = bridgerton::platform::PerfTimer::new("Assembling language pack");
-    let pack = LanguagePack::from_parts(core, Some(sentences));
+    let pack = core.with_sentences(sentences);
     drop(assemble_timer);
     Ok(pack)
 }
@@ -416,8 +444,15 @@ async fn ensure_part_bytes(
         "Downloading language data part {} because the chunked cache was missing or invalid",
         part.slug()
     );
-    download_and_cache_language_data(language_directory, course, part, meta, set_loading_state)
-        .await
+    download_and_cache_language_data(
+        language_directory,
+        course,
+        part,
+        meta,
+        set_loading_state,
+        true,
+    )
+    .await
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -470,34 +505,21 @@ async fn read_cached_language_data(
     let chunk_filenames = language_data_chunk_filenames(part, meta);
 
     for (chunk_index, filename) in chunk_filenames.iter().enumerate() {
-        let file_handle = match language_directory_handle
-            .get_file_handle_with_options(filename, &opfs::GetFileHandleOptions { create: false })
-            .await
+        if get_cached_chunk_file(
+            language_directory_handle,
+            filename,
+            language_data_chunk_len(meta.size, chunk_index),
+        )
+        .await?
+        .is_none()
         {
-            Ok(file_handle) => file_handle,
-            Err(_) => return Ok(None),
-        };
-
-        let expected_chunk_len = language_data_chunk_len(meta.size, chunk_index);
-        let actual_chunk_len = file_handle
-            .size()
-            .await
-            .map_err(LanguageDataError::Persistent)? as usize;
-
-        if actual_chunk_len != expected_chunk_len {
-            log::warn!(
-                "Chunk size mismatch for {filename}. Expected {expected_chunk_len} bytes, got {actual_chunk_len}. Re-downloading."
-            );
-            if let Err(error) = language_directory_handle.remove_entry(filename).await {
-                log::warn!("Failed to remove invalid language data chunk {filename}: {error:?}");
-            }
             return Ok(None);
         }
     }
 
     let mut bytes = Vec::with_capacity(meta.size);
     for (chunk_index, filename) in chunk_filenames.iter().enumerate() {
-        let chunk_bytes = match get_cached_chunk_bytes(
+        let chunk_file = match get_cached_chunk_file(
             language_directory_handle,
             filename,
             language_data_chunk_len(meta.size, chunk_index),
@@ -509,6 +531,10 @@ async fn read_cached_language_data(
             Err(error) => return Err(error),
         };
 
+        let chunk_bytes = chunk_file
+            .read()
+            .await
+            .map_err(LanguageDataError::Persistent)?;
         bytes.extend_from_slice(&chunk_bytes);
         let progress = (bytes.len() as f64 / meta.size.max(1) as f64) * 100.0;
         set_loading_state("Loading...", progress as f32);
@@ -533,19 +559,26 @@ async fn download_and_cache_language_data(
     part: PackPart,
     meta: PartMeta,
     set_loading_state: &impl Fn(&str, f32),
+    collect_bytes: bool,
 ) -> Result<Vec<u8>, LanguageDataError> {
     let chunk_filenames = language_data_chunk_filenames(part, meta);
     let mut downloaded_bytes = 0usize;
-    let mut bytes = Vec::with_capacity(meta.size);
+    let mut bytes = Vec::with_capacity(if collect_bytes { meta.size } else { 0 });
 
     for (chunk_index, filename) in chunk_filenames.iter().enumerate() {
         let expected_chunk_len = language_data_chunk_len(meta.size, chunk_index);
 
-        if let Some(chunk_bytes) =
-            get_cached_chunk_bytes(language_directory_handle, filename, expected_chunk_len).await?
+        if let Some(chunk_file) =
+            get_cached_chunk_file(language_directory_handle, filename, expected_chunk_len).await?
         {
-            bytes.extend_from_slice(&chunk_bytes);
-            downloaded_bytes += chunk_bytes.len();
+            if collect_bytes {
+                let chunk_bytes = chunk_file
+                    .read()
+                    .await
+                    .map_err(LanguageDataError::Persistent)?;
+                bytes.extend_from_slice(&chunk_bytes);
+            }
+            downloaded_bytes += expected_chunk_len;
             let progress = (downloaded_bytes as f64 / meta.size.max(1) as f64) * 100.0;
             set_loading_state(&describe_part(part, course), progress as f32);
             continue;
@@ -567,18 +600,22 @@ async fn download_and_cache_language_data(
             .await?;
 
         cache_language_data_bytes(language_directory_handle, filename, &chunk_bytes).await?;
-        bytes.extend_from_slice(&chunk_bytes);
+        if collect_bytes {
+            bytes.extend_from_slice(&chunk_bytes);
+        }
         downloaded_bytes += chunk_bytes.len();
     }
 
-    set_loading_state("Verifying language data", 100.0);
-    let computed_hash = const_xxh3(&bytes);
-    if computed_hash != meta.hash {
-        remove_language_data_files(language_directory_handle, &chunk_filenames).await;
-        return Err(LanguageDataError::InvalidData(format!(
-            "Downloaded language data hash mismatch. Expected {expected}, got {computed_hash}",
-            expected = meta.hash
-        )));
+    if collect_bytes {
+        set_loading_state("Verifying language data", 100.0);
+        let computed_hash = const_xxh3(&bytes);
+        if computed_hash != meta.hash {
+            remove_language_data_files(language_directory_handle, &chunk_filenames).await;
+            return Err(LanguageDataError::InvalidData(format!(
+                "Downloaded language data hash mismatch. Expected {expected}, got {computed_hash}",
+                expected = meta.hash
+            )));
+        }
     }
 
     log::info!(
@@ -738,11 +775,11 @@ async fn fetch_language_data_chunk(
     Ok(chunk_bytes)
 }
 
-async fn get_cached_chunk_bytes(
+async fn get_cached_chunk_file(
     language_directory_handle: &mut DirectoryHandle,
     filename: &str,
     expected_chunk_len: usize,
-) -> Result<Option<Vec<u8>>, LanguageDataError> {
+) -> Result<Option<persistent::FileHandle>, LanguageDataError> {
     let file_handle = match language_directory_handle
         .get_file_handle_with_options(filename, &opfs::GetFileHandleOptions { create: false })
         .await
@@ -750,13 +787,13 @@ async fn get_cached_chunk_bytes(
         Ok(file_handle) => file_handle,
         Err(_) => return Ok(None),
     };
-    let chunk_bytes = file_handle
-        .read()
+    let actual_chunk_len = file_handle
+        .size()
         .await
-        .map_err(LanguageDataError::Persistent)?;
+        .map_err(LanguageDataError::Persistent)? as usize;
 
-    if chunk_bytes.len() == expected_chunk_len {
-        return Ok(Some(chunk_bytes));
+    if actual_chunk_len == expected_chunk_len {
+        return Ok(Some(file_handle));
     }
 
     if let Err(error) = language_directory_handle.remove_entry(filename).await {
@@ -765,7 +802,7 @@ async fn get_cached_chunk_bytes(
 
     log::warn!(
         "Removing invalid language data chunk {filename}: expected {expected_chunk_len} bytes, got {actual}",
-        actual = chunk_bytes.len()
+        actual = actual_chunk_len
     );
     Ok(None)
 }
@@ -869,6 +906,75 @@ async fn stale_language_data_files(
 mod native_tests {
     use super::*;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+    #[tokio::test]
+    async fn prefetch_skips_cached_chunks_without_deserializing_or_collecting_them() {
+        let path = std::env::temp_dir().join(eyedee::generate_uuid());
+        std::fs::create_dir(&path).unwrap();
+        let root = DirectoryHandle::from(path.clone());
+        let course = Course {
+            native_language: Language::English,
+            target_language: Language::French,
+        };
+        let meta = language_data_hashes_for_course(course).unwrap();
+        let directory = path.join(course_directory_slug(course));
+        std::fs::create_dir(&directory).unwrap();
+        for (part, meta) in [
+            (PackPart::Core, meta.core),
+            (PackPart::Sentences, meta.sentences),
+        ] {
+            for (index, name) in language_data_chunk_filenames(part, meta).iter().enumerate() {
+                std::fs::File::create(directory.join(name))
+                    .unwrap()
+                    .set_len(language_data_chunk_len(meta.size, index) as u64)
+                    .unwrap();
+            }
+        }
+        // Correctly sized but invalid archives: prefetch must only inspect sizes.
+        cache_language_pack(&root, course).await.unwrap();
+        let mut directory = course_data_directory(&root, course).await.unwrap();
+        let collected = download_and_cache_language_data(
+            &mut directory,
+            course,
+            PackPart::Core,
+            meta.core,
+            &|_, _| {},
+            false,
+        )
+        .await
+        .unwrap();
+        assert!(collected.is_empty());
+        std::fs::remove_dir_all(path).unwrap();
+    }
+
+    #[tokio::test]
+    async fn real_load_discards_corrupt_cache_and_wrong_sized_chunks() {
+        let path = std::env::temp_dir().join(eyedee::generate_uuid());
+        std::fs::create_dir(&path).unwrap();
+        let mut directory = DirectoryHandle::from(path.clone());
+        let meta = PartMeta {
+            hash: const_xxh3(b"good"),
+            size: 4,
+        };
+        let filename = language_data_chunk_filename(PackPart::Core, meta, 0);
+        std::fs::write(path.join(&filename), b"evil").unwrap();
+        assert!(
+            read_cached_language_data(&mut directory, PackPart::Core, meta, &|_, _| {})
+                .await
+                .unwrap()
+                .is_none()
+        );
+        assert!(!path.join(&filename).exists());
+        std::fs::write(path.join(&filename), b"truncated").unwrap();
+        assert!(
+            get_cached_chunk_file(&mut directory, &filename, 4)
+                .await
+                .unwrap()
+                .is_none()
+        );
+        assert!(!path.join(&filename).exists());
+        std::fs::remove_dir_all(path).unwrap();
+    }
 
     #[tokio::test]
     async fn streamed_native_download_reports_progress_and_checks_responses() {

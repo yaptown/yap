@@ -11,9 +11,10 @@ use lasso::Spur;
 use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
 use std::hash::Hash;
+use std::sync::Arc;
 
 /// Runtime-only index, independent of the pack's frequency ordering.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct EaseOrder<K> {
     entries: Vec<(K, f32)>,
     ranks: FxHashMap<K, u32>,
@@ -76,7 +77,7 @@ fn ease_orders(
 }
 
 /// A frequency list with its total count (interned version for the language pack).
-#[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+#[derive(Clone, Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct FrequencyList {
     pub entries: IndexMap<TaggedGram<SpurGram>, Frequency>,
     /// Total gram count from unfiltered data (for accurate percentage calculations)
@@ -88,16 +89,38 @@ pub struct FrequencyList {
 /// back together by [`LanguagePack::from_parts`].
 #[derive(Debug)]
 pub struct LanguagePack {
+    lexicon: Arc<LanguagePackLexicon>,
     pub strokes: crate::StrokeTable,
-    pub written_ease_order: EaseOrder<TaggedGram<SpurGram>>,
-    pub listening_ease_order: EaseOrder<SpurGram>,
-    senses: FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>>,
     pub string_rodeo: lasso::RodeoReader,
     pub gram_rodeo: lasso::RodeoReader<Gram<Spur>>,
     pub translations: FxHashMap<Spur, Vec<Spur>>,
-    pub words_to_heteronyms: FxHashMap<Spur, Vec<Heteronym<Spur>>>,
     /// Per-source gram frequencies (movies, Pimsleur lessons, etc.)
     pub source_gram_frequencies: FxHashMap<crate::FrequencySourceId, FrequencyList>,
+    pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
+    /// Movie metadata indexed by movie ID. Only films with a poster; see [`visible_movies`].
+    pub movies: FxHashMap<String, MovieMetadata>,
+    /// Book metadata indexed by book slug
+    pub books: FxHashMap<String, BookMetadata>,
+    /// Sentence source provenance tracking (maps sentence to its sources)
+    pub sentence_sources: FxHashMap<Spur, SentenceSource>,
+    /// Encoded sentences: maps sentence to grams with learnability and capitalize_first
+    /// The gram Spur is a key into gram_rodeo
+    pub encoded_sentences: FxHashMap<Spur, SentenceGrams<TaggedGram<SpurGram>>>,
+    /// Index from gram to sentences containing it
+    pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
+    /// Human-recorded audio clips, indexed by voice actor and then by the
+    /// target-language phrase they speak.
+    pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
+}
+
+/// Word-level runtime data shared by the core-only and full packs.
+#[derive(Clone, Debug)]
+pub struct LanguagePackLexicon {
+    spur_space_fingerprint: u64,
+    pub written_ease_order: EaseOrder<TaggedGram<SpurGram>>,
+    pub listening_ease_order: EaseOrder<SpurGram>,
+    senses: FxHashMap<SpurGram, Vec<TaggedGram<SpurGram>>>,
+    pub words_to_heteronyms: FxHashMap<Spur, Vec<Heteronym<Spur>>>,
     pub word_to_pronunciation: FxHashMap<Spur, Spur>,
     pub pronunciation_to_words: FxHashMap<Spur, Vec<Spur>>,
     /// Minimal-pair lookups: phoneme-pair → word pairs, and word → 1-off words.
@@ -107,39 +130,38 @@ pub struct LanguagePack {
     pub minimal_pairs: MinimalPairs,
     pub pronunciation_data: PronunciationData,
     pub pattern_frequency_map: FxHashMap<(Spur, PatternPosition), u32>,
-    pub homophone_practice: FxHashMap<HomophoneWordPair<Spur>, HomophonePractice<Spur>>,
     /// Cache of maximum frequencies for each pronunciation (pre-computed at initialization)
     pub pronunciation_max_freq_cache: FxHashMap<Spur, Frequency>,
-    /// Movie metadata indexed by movie ID. Only films with a poster; see [`visible_movies`].
-    pub movies: FxHashMap<String, MovieMetadata>,
-    /// Book metadata indexed by book slug
-    pub books: FxHashMap<String, BookMetadata>,
-    /// Sentence source provenance tracking (maps sentence to its sources)
-    pub sentence_sources: FxHashMap<Spur, SentenceSource>,
     /// Global proper noun definitions map
     pub proper_noun_definitions: BTreeMap<Spur, ProperNounDefinition>,
     /// Master gram frequencies
     pub gram_frequencies: FrequencyList,
-    /// Encoded sentences: maps sentence to grams with learnability and capitalize_first
-    /// The gram Spur is a key into gram_rodeo
-    pub encoded_sentences: FxHashMap<Spur, SentenceGrams<TaggedGram<SpurGram>>>,
     /// Gram definitions: dictionary entries (single-word) and phrasebook entries (multi-word)
     /// The Spur is a key into gram_rodeo
     pub gram_definitions: FxHashMap<TaggedGram<SpurGram>, GramDefinition>,
     /// Index from heteronym to all grams composed only of that heteronym, sorted by frequency (most common first)
     pub heteronym_to_grams: FxHashMap<Heteronym<Spur>, Vec<SpurGram>>,
-    /// Index from gram to sentences containing it
-    pub sentences_containing_gram_index: FxHashMap<TaggedGram<SpurGram>, Vec<Spur>>,
     /// Reverse index from display string to grams (for O(1) lookup by phrase text)
     pub string_to_grams: FxHashMap<String, Vec<TaggedGram<SpurGram>>>,
     /// Morpheme classification + info, keyed by (surface, canonical) pair
     /// (both interned). Pair key prevents ambiguity when the same surface
     /// corresponds to different underlying morphemes.
     pub morphemes: FxHashMap<MorphemeSegment<Spur>, MorphemeInfo<Spur>>,
-    /// Human-recorded audio clips, indexed by voice actor and then by the
-    /// target-language phrase they speak.
-    pub human_audio: FxHashMap<VoiceActor, FxHashMap<String, Audio>>,
     pub pronunciation_audio: FxHashMap<String, PronunciationClip>,
+}
+
+impl std::ops::Deref for LanguagePack {
+    type Target = LanguagePackLexicon;
+
+    fn deref(&self) -> &Self::Target {
+        &self.lexicon
+    }
+}
+
+impl std::ops::DerefMut for LanguagePack {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        Arc::make_mut(&mut self.lexicon)
+    }
 }
 
 impl LanguagePack {
@@ -1061,34 +1083,37 @@ impl LanguagePack {
             .collect();
 
         Self {
-            senses,
-            written_ease_order,
-            listening_ease_order,
+            lexicon: Arc::new(LanguagePackLexicon {
+                spur_space_fingerprint: 0,
+                senses,
+                written_ease_order,
+                listening_ease_order,
+                words_to_heteronyms,
+                word_to_pronunciation,
+                pronunciation_to_words,
+                minimal_pairs,
+                pronunciation_data,
+                pattern_frequency_map,
+                pronunciation_max_freq_cache,
+                proper_noun_definitions,
+                gram_frequencies,
+                gram_definitions,
+                heteronym_to_grams,
+                string_to_grams,
+                morphemes,
+                pronunciation_audio,
+            }),
             string_rodeo: rodeo,
             gram_rodeo,
             translations,
-            words_to_heteronyms,
             source_gram_frequencies,
-            word_to_pronunciation,
-            pronunciation_to_words,
-            minimal_pairs,
-            pronunciation_data,
-            pattern_frequency_map,
             homophone_practice,
-            pronunciation_max_freq_cache,
             movies,
             books,
             sentence_sources,
-            proper_noun_definitions,
-            gram_frequencies,
             encoded_sentences,
-            gram_definitions,
-            heteronym_to_grams,
             sentences_containing_gram_index,
-            string_to_grams,
-            morphemes,
             human_audio,
-            pronunciation_audio,
             strokes: language_data.strokes,
         }
     }
@@ -1308,36 +1333,40 @@ impl LanguagePack {
     /// the exhaustive destructure below makes forgetting one a compile error.
     pub fn split(self) -> (LanguagePackCore, LanguagePackSentences) {
         let LanguagePack {
+            lexicon,
             strokes,
-            senses: _,
-            written_ease_order: _,
-            listening_ease_order: _,
             string_rodeo,
             gram_rodeo,
             translations,
-            words_to_heteronyms,
             source_gram_frequencies,
+            homophone_practice,
+            movies,
+            books,
+            sentence_sources,
+            encoded_sentences,
+            sentences_containing_gram_index,
+            human_audio,
+        } = self;
+        let LanguagePackLexicon {
+            spur_space_fingerprint: _,
+            senses: _,
+            written_ease_order: _,
+            listening_ease_order: _,
+            words_to_heteronyms,
             word_to_pronunciation,
             pronunciation_to_words,
             minimal_pairs,
             pronunciation_data,
             pattern_frequency_map,
-            homophone_practice,
             pronunciation_max_freq_cache,
-            movies,
-            books,
-            sentence_sources,
             proper_noun_definitions,
             gram_frequencies,
-            encoded_sentences,
             gram_definitions,
             heteronym_to_grams,
-            sentences_containing_gram_index,
             string_to_grams,
             morphemes,
-            human_audio,
             pronunciation_audio,
-        } = self;
+        } = Arc::unwrap_or_clone(lexicon);
 
         let mut r = SpurRemapper {
             old_strings: &string_rodeo,
@@ -1663,49 +1692,57 @@ impl LanguagePack {
             morphemes,
         } = core;
 
-        if let Some(sentences) = &sentences {
-            assert_eq!(
-                spur_space_fingerprint, sentences.spur_space_fingerprint,
-                "language pack halves are from different builds (core spur-space fingerprint \
-                 doesn't match the one the sentences half was split against)"
-            );
-        }
-
         let (written_ease_order, listening_ease_order) = ease_orders(&gram_frequencies);
 
-        let Some(sentences) = sentences else {
-            return LanguagePack {
-                strokes: crate::StrokeTable::default(),
+        let pack = LanguagePack {
+            lexicon: Arc::new(LanguagePackLexicon {
+                spur_space_fingerprint,
                 senses: sense_index(&gram_frequencies),
                 written_ease_order,
                 listening_ease_order,
-                string_rodeo,
-                gram_rodeo,
-                translations: FxHashMap::default(),
                 words_to_heteronyms,
-                source_gram_frequencies: FxHashMap::default(),
                 word_to_pronunciation,
                 pronunciation_to_words,
                 minimal_pairs,
                 pronunciation_data,
                 pronunciation_audio,
                 pattern_frequency_map,
-                homophone_practice: FxHashMap::default(),
                 pronunciation_max_freq_cache,
-                movies: FxHashMap::default(),
-                books: FxHashMap::default(),
-                sentence_sources: FxHashMap::default(),
                 proper_noun_definitions,
                 gram_frequencies,
-                encoded_sentences: FxHashMap::default(),
                 gram_definitions,
                 heteronym_to_grams,
-                sentences_containing_gram_index: FxHashMap::default(),
                 string_to_grams,
                 morphemes,
-                human_audio: FxHashMap::default(),
-            };
+            }),
+            strokes: crate::StrokeTable::default(),
+            string_rodeo,
+            gram_rodeo,
+            translations: FxHashMap::default(),
+            source_gram_frequencies: FxHashMap::default(),
+            homophone_practice: FxHashMap::default(),
+            movies: FxHashMap::default(),
+            books: FxHashMap::default(),
+            sentence_sources: FxHashMap::default(),
+            encoded_sentences: FxHashMap::default(),
+            sentences_containing_gram_index: FxHashMap::default(),
+            human_audio: FxHashMap::default(),
         };
+        match sentences {
+            Some(sentences) => pack.with_sentences(sentences),
+            None => pack,
+        }
+    }
+
+    /// Add the sentence half without deserializing the core again.
+    pub fn with_sentences(&self, sentences: LanguagePackSentences) -> Self {
+        assert_eq!(
+            self.spur_space_fingerprint, sentences.spur_space_fingerprint,
+            "language pack halves are from different builds (core spur-space fingerprint \
+             doesn't match the one the sentences half was split against)"
+        );
+        let string_rodeo = &self.string_rodeo;
+        let gram_rodeo = &self.gram_rodeo;
 
         // Rebuild the full rodeos: core entries keep their spurs (lasso
         // assigns keys sequentially in interning order), extension entries
@@ -1751,34 +1788,18 @@ impl LanguagePack {
         };
 
         LanguagePack {
-            strokes: sentences.strokes,
-            senses: sense_index(&gram_frequencies),
-            written_ease_order,
-            listening_ease_order,
+            lexicon: self.lexicon.clone(),
             string_rodeo,
             gram_rodeo,
+            strokes: sentences.strokes,
             translations: sentences.translations,
-            words_to_heteronyms,
             source_gram_frequencies: sentences.source_gram_frequencies,
-            word_to_pronunciation,
-            pronunciation_to_words,
-            minimal_pairs,
-            pronunciation_data,
-            pronunciation_audio,
-            pattern_frequency_map,
             homophone_practice: sentences.homophone_practice,
-            pronunciation_max_freq_cache,
             movies: visible_movies(sentences.movies),
             books: sentences.books,
             sentence_sources: sentences.sentence_sources,
-            proper_noun_definitions,
-            gram_frequencies,
             encoded_sentences: sentences.encoded_sentences,
-            gram_definitions,
-            heteronym_to_grams,
             sentences_containing_gram_index: sentences.sentences_containing_gram_index,
-            string_to_grams,
-            morphemes,
             human_audio: sentences.human_audio,
         }
     }
@@ -2142,6 +2163,29 @@ mod sense_tests {
                 pos: PartOfSpeech::Noun,
             }),
         })])
+    }
+
+    #[test]
+    fn sentence_upgrade_shares_core_and_keeps_placement_pack_usable() {
+        let (core, sentences) = pack().split();
+        let core = LanguagePack::from_parts(core, None);
+        let full = core.with_sentences(sentences);
+        assert!(Arc::ptr_eq(&core.lexicon, &full.lexicon));
+        assert!(core.translations.is_empty());
+        assert!(!full.translations.is_empty());
+        let gram = core.intern_gram(&gram("bank")).unwrap();
+        assert_eq!(full.senses_of(gram), core.senses_of(gram));
+        for (spur, text) in core.string_rodeo.iter() {
+            assert_eq!(full.string_rodeo.resolve(&spur), text);
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "language pack halves are from different builds")]
+    fn sentence_upgrade_rejects_mismatched_core() {
+        let (core, mut sentences) = pack().split();
+        sentences.spur_space_fingerprint ^= 1;
+        LanguagePack::from_parts(core, None).with_sentences(sentences);
     }
 
     fn pack() -> LanguagePack {

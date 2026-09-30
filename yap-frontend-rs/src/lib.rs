@@ -183,7 +183,7 @@ pub struct Weapon {
     device_id: String,
 
     // not this ofc
-    language_pack: RefCell<BTreeMap<Course, LoadedLanguagePack>>,
+    language_pack: RefCell<Option<LoadedLanguagePack>>,
     directories: Directories,
     deck_fold: RefCell<Option<(Context, bool, weapon::data_model::FoldCache<Deck>)>>,
 }
@@ -258,7 +258,7 @@ impl Weapon {
             persistence_deleted: std::cell::Cell::new(false),
             user_id,
             device_id,
-            language_pack: RefCell::new(BTreeMap::new()),
+            language_pack: RefCell::new(None),
             directories,
             deck_fold: RefCell::new(None),
         })
@@ -353,7 +353,7 @@ impl Weapon {
                 .map_or(0, |s| s.num_events())
         };
         let packs = self.language_pack.borrow();
-        let pack = match packs.get(&course) {
+        let pack = match packs.as_ref().filter(|loaded| loaded.course == course) {
             None => "none",
             Some(loaded) if loaded.full => "full",
             Some(_) => "core",
@@ -381,7 +381,8 @@ impl Weapon {
         let (language_pack, full) = self
             .language_pack
             .borrow()
-            .get(&course)
+            .as_ref()
+            .filter(|loaded| loaded.course == course)
             .map(|loaded| (loaded.pack.clone(), loaded.full))
             .ok_or_else(|| bridgerton::Error::new("language pack not loaded for this course"))?;
         let selection = self.get_deck_selection_state();
@@ -795,8 +796,8 @@ impl Weapon {
         &self,
         course: Course,
     ) -> Result<(), language_pack::LanguageDataError> {
-        self.load_language_pack(course, None).await?;
-        Ok(())
+        let _guard = language_pack::acquire_cache_lock(course).await?;
+        language_pack::cache_language_pack(&self.directories.data_directory_handle, course).await
     }
 }
 
@@ -830,7 +831,8 @@ impl Weapon {
     pub fn is_language_pack_fully_loaded(&self, course: Course) -> bool {
         self.language_pack
             .borrow()
-            .get(&course)
+            .as_ref()
+            .filter(|loaded| loaded.course == course)
             .is_some_and(|loaded| loaded.full)
     }
 
@@ -840,17 +842,19 @@ impl Weapon {
         on_progress: Option<Callback<(String, f32)>>,
         core_only: bool,
     ) -> Result<(), language_pack::LanguageDataError> {
-        let satisfied = |loaded: &BTreeMap<Course, LoadedLanguagePack>| {
+        let satisfied = |loaded: &Option<LoadedLanguagePack>| {
             loaded
-                .get(&course)
+                .as_ref()
+                .filter(|loaded| loaded.course == course)
                 .is_some_and(|loaded| loaded.full || core_only)
         };
         if satisfied(&self.language_pack.borrow()) {
             return Ok(());
         }
 
+        // Different courses must not deserialize concurrently into the live slot.
         let _guard = weblocks::acquire(
-            &language_pack_lock_name(course),
+            "language-pack-loaded",
             weblocks::AcquireOptions::exclusive(),
         )
         .await
@@ -864,22 +868,43 @@ impl Weapon {
             return Ok(());
         }
 
+        let previous = {
+            let mut loaded = self.language_pack.borrow_mut();
+            if loaded
+                .as_ref()
+                .is_some_and(|loaded| loaded.course != course)
+            {
+                *loaded = None;
+                *self.deck_fold.borrow_mut() = None;
+            }
+            loaded
+                .as_ref()
+                .map(|loaded| (loaded.pack.clone(), loaded.full))
+        };
+
         // A new Weapon (signing in creates one) often wants the course the
         // previous Weapon has loaded: reuse it instead of re-reading hundreds
         // of megabytes.
         let recent = RECENT_PACK.with(|recent| {
             let recent = recent.borrow();
             let (recent_course, full, pack) = recent.as_ref()?;
-            (*recent_course == course && (*full || core_only))
-                .then(|| Some((pack.upgrade()?, *full)))?
+            (*recent_course == course).then(|| Some((pack.upgrade()?, *full)))?
         });
-        let (language_pack, full) = if let Some(recent) = recent {
-            recent
+        let recent = recent.or(previous);
+        let (language_pack, full) = if let Some((pack, full)) = recent.as_ref()
+            && (*full || core_only)
+        {
+            (pack.clone(), *full)
         } else {
             (
                 Arc::new(
-                    self.read_language_pack(course, on_progress, core_only)
-                        .await?,
+                    self.read_language_pack(
+                        course,
+                        on_progress,
+                        core_only,
+                        recent.map(|(pack, _)| pack),
+                    )
+                    .await?,
                 ),
                 !core_only,
             )
@@ -891,13 +916,11 @@ impl Weapon {
         // the inserted Arc remains the sole owner.
         human_audio::register(course.target_language, &language_pack);
         clips::register_pack(course.target_language, &language_pack);
-        self.language_pack.borrow_mut().insert(
+        *self.language_pack.borrow_mut() = Some(LoadedLanguagePack {
             course,
-            LoadedLanguagePack {
-                pack: language_pack,
-                full,
-            },
-        );
+            pack: language_pack,
+            full,
+        });
         Ok(())
     }
 
@@ -906,12 +929,14 @@ impl Weapon {
         course: Course,
         on_progress: Option<Callback<(String, f32)>>,
         core_only: bool,
+        core: Option<Arc<LanguagePack>>,
     ) -> Result<LanguagePack, language_pack::LanguageDataError> {
         let set_loading_state = |message: &str, progress: f32| {
             if let Some(ref callback) = on_progress {
                 let _ = callback.call((message.to_owned(), progress));
             }
         };
+        let _guard = language_pack::acquire_cache_lock(course).await?;
         Ok(if core_only {
             language_pack::load_language_pack_core(
                 &self.directories.data_directory_handle,
@@ -923,6 +948,7 @@ impl Weapon {
             language_pack::load_language_pack(
                 &self.directories.data_directory_handle,
                 course,
+                core,
                 &set_loading_state,
             )
             .await?
@@ -938,9 +964,9 @@ thread_local! {
         const { RefCell::new(None) };
 }
 
-/// A language pack in the per-course cache, with whether it includes the
-/// sentence half or only the core.
+/// The loaded course, with whether its pack includes sentences or only the core.
 struct LoadedLanguagePack {
+    course: Course,
     pack: Arc<LanguagePack>,
     full: bool,
 }
@@ -5282,8 +5308,7 @@ mod tests {
     use language_utils::SentenceGram;
 
     #[cfg(not(target_arch = "wasm32"))]
-    #[tokio::test]
-    async fn deleted_weapon_cannot_resume_persistence() {
+    async fn test_weapon() -> (Weapon, std::path::PathBuf) {
         let path = std::env::temp_dir().join(eyedee::generate_uuid());
         std::fs::create_dir(&path).unwrap();
         let parent = persistent::DirectoryHandle::from(path.clone());
@@ -5295,7 +5320,7 @@ mod tests {
             persistence_deleted: std::cell::Cell::new(false),
             user_id: Some("deleted-user".into()),
             device_id: "device".into(),
-            language_pack: RefCell::new(BTreeMap::new()),
+            language_pack: RefCell::new(None),
             directories: Directories {
                 data_directory_handle: parent.clone(),
                 current_user_directory_handle: user,
@@ -5304,6 +5329,13 @@ mod tests {
             },
             deck_fold: RefCell::new(None),
         };
+        (weapon, path)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    async fn deleted_weapon_cannot_resume_persistence() {
+        let (weapon, path) = test_weapon().await;
         let deleting = weblocks::acquire(
             "yap-persistence-deleted-user",
             weblocks::AcquireOptions::exclusive(),
@@ -5345,6 +5377,78 @@ mod tests {
             .unwrap();
         assert_eq!(std::fs::read_dir(&path).unwrap().count(), 0);
         std::fs::remove_dir(path).unwrap();
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    async fn loaded_pack_is_reused_across_weapons_and_evicted_on_course_switch() {
+        let (weapon, path) = test_weapon().await;
+        let french = Course {
+            native_language: Language::English,
+            target_language: Language::French,
+        };
+        let spanish = Course {
+            target_language: Language::SpanishLatinAmerican,
+            ..french
+        };
+        let pack = Arc::new(LanguagePack::new(Default::default(), french));
+        let weak = Arc::downgrade(&pack);
+        RECENT_PACK.with(|recent| *recent.borrow_mut() = Some((french, true, weak.clone())));
+        weapon.load_language_pack_core(french, None).await.unwrap();
+        assert!(weapon.is_language_pack_fully_loaded(french));
+        assert!(Arc::ptr_eq(
+            &weapon.language_pack.borrow().as_ref().unwrap().pack,
+            &pack
+        ));
+        drop(pack);
+
+        let (next_weapon, next_path) = test_weapon().await;
+        next_weapon.load_language_pack(french, None).await.unwrap();
+        assert!(Arc::ptr_eq(
+            &next_weapon.language_pack.borrow().as_ref().unwrap().pack,
+            &weak.upgrade().unwrap()
+        ));
+        drop(weapon);
+        drop(next_weapon.get_deck_state(french, 0).await.unwrap());
+        assert!(next_weapon.deck_fold.borrow().is_some());
+        let spanish_pack = Arc::new(LanguagePack::new(Default::default(), spanish));
+        RECENT_PACK.with(|recent| {
+            *recent.borrow_mut() = Some((spanish, true, Arc::downgrade(&spanish_pack)))
+        });
+        next_weapon.load_language_pack(spanish, None).await.unwrap();
+        assert!(weak.upgrade().is_none());
+        assert!(next_weapon.deck_fold.borrow().is_none());
+        assert!(!next_weapon.is_language_pack_fully_loaded(french));
+        assert!(next_weapon.deck_inputs_key(french).contains("pack=none"));
+        assert!(next_weapon.is_language_pack_fully_loaded(spanish));
+        std::fs::remove_dir_all(path).unwrap();
+        std::fs::remove_dir_all(next_path).unwrap();
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    async fn placement_core_remains_available_while_loading_sentences() {
+        let (weapon, path) = test_weapon().await;
+        let course = Course {
+            native_language: Language::English,
+            target_language: Language::French,
+        };
+        let pack = Arc::new(LanguagePack::new(Default::default(), course));
+        *weapon.language_pack.borrow_mut() = Some(LoadedLanguagePack {
+            course,
+            pack: pack.clone(),
+            full: false,
+        });
+        let cache_guard = language_pack::acquire_cache_lock(course).await.unwrap();
+        let mut loading = std::pin::pin!(weapon.load_language_pack(course, None));
+        assert!(futures::poll!(&mut loading).is_pending());
+        assert!(weapon.deck_inputs_key(course).contains("pack=core"));
+        assert!(Arc::ptr_eq(
+            &weapon.language_pack.borrow().as_ref().unwrap().pack,
+            &pack
+        ));
+        drop(cache_guard);
+        std::fs::remove_dir_all(path).unwrap();
     }
 
     impl Default for Deck {
