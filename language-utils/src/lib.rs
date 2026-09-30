@@ -4981,6 +4981,13 @@ pub const TTS_CACHE_ORIGIN: &str = "https://ttscache.yap.town";
 /// Public origin of published movie clips.
 pub const CLIPS_ORIGIN: &str = "https://clips.yap.town";
 
+/// The URL of `path` (`index.jsonl`, `<clip id>/lo.mp4`, …) in `language`'s
+/// published clips. Dialect siblings share one corpus, so this is keyed by
+/// [`Language::corpus_code`], never the course code.
+pub fn clip_url(language: Language, path: &str) -> String {
+    format!("{CLIPS_ORIGIN}/{}/{path}", language.corpus_code())
+}
+
 /// Public origin of temporary exported Anki packages (eight-day retention).
 pub const ANKI_DECKS_ORIGIN: &str = "https://anki-decks.yap.town";
 

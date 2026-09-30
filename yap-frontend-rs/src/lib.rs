@@ -7202,7 +7202,7 @@ mod tests {
         // Load the published clip index straight from the bucket (same rows
         // the backend's /clip/{lang}/sentences serves) into the selection
         // mirror, exactly as a refreshed manifest would be.
-        let url = format!("https://clips.yap.town/{}/index.jsonl", target.code());
+        let url = language_utils::clip_url(target, "index.jsonl");
         let jsonl = reqwest::get(&url).await.unwrap().text().await.unwrap();
         let rows: Vec<clips::ClipRow> = jsonl
             .lines()

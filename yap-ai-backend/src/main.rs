@@ -13,7 +13,7 @@ use axum_extra::{
 use base64::Engine;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use language_utils::{
-    Language, TtsProvider, TtsRequest, autograde,
+    Language, TtsProvider, TtsRequest, autograde, clip_url,
     profile::{
         FollowRequest, FollowResponse, FollowStatus, GetProfileQuery, Profile,
         UpdateLanguageStatsRequest, UpdateLanguageStatsResponse, UpdateProfileRequest,
@@ -1932,11 +1932,10 @@ async fn get_follow_status(
     }))
 }
 
-/// Movie clips live in the public `yap-clips` R2 bucket behind this domain.
-/// The app never talks to it directly; both routes below mediate access, so
-/// the bucket can later be made private (or rate-limited) without touching
-/// clients.
-const CLIPS_ORIGIN: &str = "https://clips.yap.town";
+// Movie clips live in the public `yap-clips` R2 bucket behind
+// `language_utils::CLIPS_ORIGIN`. The app never talks to it directly; the
+// routes below mediate access, so the bucket can later be made private (or
+// rate-limited) without touching clients.
 const CLIP_INDEX_TTL: std::time::Duration = std::time::Duration::from_secs(60);
 
 /// One course sentence that has a published clip — the row the app's clip
@@ -2020,7 +2019,7 @@ async fn clip_manifest(language: Language) -> Result<Vec<ClipRow>, StatusCode> {
         }
     }
 
-    let url = format!("{CLIPS_ORIGIN}/{code}/index.jsonl");
+    let url = clip_url(language, "index.jsonl");
     let response = reqwest::Client::new()
         .get(&url)
         .send()
@@ -2062,10 +2061,8 @@ async fn serve_clip_sentences(
     Ok(Json(clip_manifest(language).await?))
 }
 
-fn clip_corpus(lang: &str) -> Result<&'static str, StatusCode> {
-    Language::from_code(lang)
-        .map(|language| language.corpus_code())
-        .ok_or(StatusCode::NOT_FOUND)
+fn clip_language(lang: &str) -> Result<Language, StatusCode> {
+    Language::from_code(lang).ok_or(StatusCode::NOT_FOUND)
 }
 
 async fn serve_clip_video(
@@ -2076,8 +2073,8 @@ async fn serve_clip_video(
     // actually, disable authentication for now until people start abusing it:
     let _claims = verify_jwt(auth.token()).await;
 
-    let lang = match clip_corpus(&lang) {
-        Ok(code) => code,
+    let language = match clip_language(&lang) {
+        Ok(language) => language,
         Err(status) => return status.into_response(),
     };
     // Clip ids become upstream path components; restrict the alphabet.
@@ -2093,7 +2090,7 @@ async fn serve_clip_video(
             .unwrap();
     }
 
-    let url = format!("{CLIPS_ORIGIN}/{lang}/{clip_id}/lo.mp4");
+    let url = clip_url(language, &format!("{clip_id}/lo.mp4"));
     let upstream = match reqwest::Client::new().get(&url).send().await {
         Ok(r) => r,
         Err(_) => {
@@ -2160,7 +2157,7 @@ async fn serve_clip_subtitles(
     // actually, disable authentication for now until people start abusing it:
     let _claims = verify_jwt(auth.token()).await;
 
-    let lang = clip_corpus(&lang)?;
+    let language = clip_language(&lang)?;
     // Same clip-id alphabet restriction as the video route.
     let valid = |s: &str| {
         !s.is_empty()
@@ -2171,7 +2168,7 @@ async fn serve_clip_subtitles(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let url = format!("{CLIPS_ORIGIN}/{lang}/{clip_id}/meta.json");
+    let url = clip_url(language, &format!("{clip_id}/meta.json"));
     let upstream = reqwest::Client::new()
         .get(&url)
         .send()
@@ -2389,11 +2386,14 @@ mod tests {
             ("fra", "fra"),
             ("zho-hans", "zho-hans"),
         ] {
-            assert_eq!(clip_corpus(code), Ok(corpus));
-            assert_eq!(Language::from_code(code).unwrap().corpus_code(), corpus);
+            let language = clip_language(code).unwrap();
+            assert_eq!(
+                clip_url(language, "c/lo.mp4"),
+                format!("https://clips.yap.town/{corpus}/c/lo.mp4")
+            );
         }
-        assert_eq!(clip_corpus("unknown"), Err(StatusCode::NOT_FOUND));
-        assert_eq!(clip_corpus("../spa"), Err(StatusCode::NOT_FOUND));
+        assert_eq!(clip_language("unknown"), Err(StatusCode::NOT_FOUND));
+        assert_eq!(clip_language("../spa"), Err(StatusCode::NOT_FOUND));
     }
 
     #[test]

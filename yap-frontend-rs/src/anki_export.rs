@@ -9,8 +9,8 @@ use crate::{
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use bridgerton::Error;
 use language_utils::{
-    Atom, CLIPS_ORIGIN, Course, GramDefinition, Language, Literal, MovieMetadataBasic, OtherWord,
-    OtherWordType, SentenceGram, SpurGram, TaggedGram, Word, WordType, dictionary_entry_slug,
+    Atom, Course, GramDefinition, Language, Literal, MovieMetadataBasic, OtherWord, OtherWordType,
+    SentenceGram, SpurGram, TaggedGram, Word, WordType, clip_url, dictionary_entry_slug,
     language_pack::LanguagePack,
 };
 use lasso::Spur;
@@ -988,9 +988,8 @@ impl PlannerState {
                 poster_filename: poster,
             }),
             clip_url: format!(
-                "{CLIPS_ORIGIN}/{}/{}/lo.mp4?d={}",
-                language.code(),
-                component(&clip.clip_id),
+                "{}?d={}",
+                clip_url(language, &format!("{}/lo.mp4", component(&clip.clip_id))),
                 component(token)
             ),
             tts,
