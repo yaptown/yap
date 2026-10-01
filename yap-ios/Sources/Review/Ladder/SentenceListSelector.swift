@@ -11,15 +11,10 @@ struct SentenceListSelector: View {
     @AppStorage("yap-pimsleur-acknowledged") private var pimsleurAcknowledged = false
     private var navigation: SentenceListNavigation { view.navigation }
     var body: some View {
-        StudyCard(alignment: .center, spacing: 16, animated: true) {
-            HStack(spacing: 0) {
-                chevron(-1)
-                (Text(view.curriculum_headline.before + "\n") + Text(view.curriculum_headline.emphasis.uppercased()).bold() + Text(view.curriculum_headline.after))
-                    .font(.headline).multilineTextAlignment(.center)
-                    // Beside the fixed-height chevrons, SwiftUI otherwise offers one line and truncates at the break.
-                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity)
-                chevron(1)
-            }
+        StudyCard(alignment: .center, spacing: 12, animated: true) {
+            (Text(view.curriculum_headline.before + "\n") + Text(view.curriculum_headline.emphasis.uppercased()).bold() + Text(view.curriculum_headline.after))
+                .font(.headline).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity)
             if case let .Movie(id) = navigation.selection, let bytes = host.deck.get_movie_poster(movie_id: id) {
                 SentenceListPoster(bytes: bytes, title: view.sentence_list_label).equatable()
             }
@@ -39,10 +34,17 @@ struct SentenceListSelector: View {
                     LearnButton(label: label, heading: view.manual_add_heading, options: view.manual_add_options,
                                 learn: { add(event) }, add: add)
                 }
-                SentenceListProgressView(progress: view.progress).equatable()
+                LevelProgressBar(progress: view.progress,
+                                 projected: view.progress.all_available_learned ? nil : view.info.percent_known_after).equatable()
                 if let note = view.level_note {
-                    Text(note).font(.caption).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity, alignment: .leading)
+                    Text(note).font(.caption).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
                 }
+                Button(view.change_sentence_list_label, action: actions.openGoals)
+                    .font(.caption).underline().foregroundStyle(Color.yapText.opacity(0.6)).buttonStyle(.plain)
+            }
+            // Below everything, as on the web's phone layout.
+            if view.sentence_list_options.count > 1 {
+                HStack { chevron(-1); Spacer(); chevron(1) }
             }
         }
         #if DEBUG
@@ -67,7 +69,7 @@ struct SentenceListSelector: View {
             Image(systemName: step < 0 ? "chevron.left" : "chevron.right")
                 .font(.title3.weight(.semibold)).frame(width: 36, height: 44).contentShape(Rectangle())
         }
-        .buttonStyle(.plain).foregroundStyle(Color.yapMuted)
+        .buttonStyle(.plain).foregroundStyle(Color.yapText.opacity(0.6))
         .opacity(enabled ? 1 : 0).disabled(!enabled)
         .accessibilityLabel(step < 0 ? "Previous sentence list" : "Next sentence list")
     }
@@ -104,6 +106,31 @@ private struct LearnButton: View {
         .background(Tokens.palette.primary.color.opacity(0.85))
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+/// The web's level bar: thick, with a lighter segment for where the offered
+/// cards would take it and the percentage printed inside, inverted over the fill.
+private struct LevelProgressBar: View, Equatable {
+    let progress: SentenceListProgress
+    let projected: Double?
+    var body: some View {
+        let known = min(max(progress.percent_known / 100, 0), 1)
+        let after = min(max((projected ?? 0) / 100, known), 1)
+        let label = Text(progress.bar_label).font(.subheadline.monospaced().weight(.semibold))
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            ZStack(alignment: .leading) {
+                Color.yapAccent.opacity(0.1)
+                Color.yapAccent.opacity(0.3).frame(width: width * after)
+                Color.yapAccent.frame(width: width * known)
+                label.foregroundStyle(Color.yapAccent).frame(maxWidth: .infinity)
+                label.foregroundStyle(Color.yapOnAccent).frame(maxWidth: .infinity)
+                    .mask(alignment: .leading) { Rectangle().frame(width: width * known) }
+            }
+        }
+        .frame(height: 24).clipShape(Capsule())
+        .accessibilityElement().accessibilityLabel(progress.caption)
     }
 }
 

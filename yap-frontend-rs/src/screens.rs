@@ -190,6 +190,8 @@ pub struct IdleView {
     pub all_learned_note: Option<String>,
     /// Essential-course footnote about everyday-language coverage.
     pub level_note: Option<String>,
+    /// The link under the progress bar that opens the Goals page.
+    pub change_sentence_list_label: String,
     pub banned_notice: Option<String>,
     pub week: Vec<DayProgress>,
     pub navigation: SentenceListNavigation,
@@ -578,6 +580,7 @@ impl Deck {
             next_sentence_list_label,
             all_learned_note,
             level_note,
+            change_sentence_list_label: "change sentence list".into(),
             banned_notice: (review.due_but_banned_count() > 0).then(|| {
                 format!(
                     "{} cards paused by listening/speaking restrictions",

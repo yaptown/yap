@@ -315,8 +315,7 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                           ? undefined
                           : info.percent_known_after
                       }
-                      showPercentage
-                      label={sentenceListDone ? "Done!" : undefined}
+                      label={view.progress.bar_label}
                       className="h-6"
                     />
 
@@ -330,7 +329,7 @@ function IdleContent({ view, showEngagementPrompts, showWeek = true, addEvent, u
                       onClick={() => navigate("/goals")}
                       className="text-xs text-foreground/60 hover:text-foreground underline underline-offset-2 transition-colors text-left"
                     >
-                      change sentence list
+                      {view.change_sentence_list_label}
                     </button>
 
                     {categories.length > 1 && (

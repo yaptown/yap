@@ -560,6 +560,7 @@
         "next_sentence_list_label": null,
         "all_learned_note": null,
         "level_note": "When you complete this level, you'll understand 67.1% of everyday French.",
+        "change_sentence_list_label": "change sentence list",
         "banned_notice": null,
         "week": [
           {
@@ -683,7 +684,8 @@
         "progress": {
           "percent_known": 3.2445668809305177,
           "all_available_learned": false,
-          "caption": "3% known"
+          "caption": "3% known",
+          "bar_label": "3%"
         },
         "sentence_list_label": "Advanced French Level 11",
         "next_sentence_list": null,

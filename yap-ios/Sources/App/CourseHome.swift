@@ -104,7 +104,12 @@ struct CourseHome: View {
         }
         #endif
         .environment(\.reviewHost, review.host)
-        .environment(\.reviewActions, review.actions)
+        .environment(\.reviewActions, actions)
+    }
+    private var actions: ReviewActions {
+        var actions = review.actions
+        actions.openGoals = { navigate(.goals) }
+        return actions
     }
     @ViewBuilder private var homeScreen: some View {
         #if DEBUG

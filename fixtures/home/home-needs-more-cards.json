@@ -231,6 +231,7 @@
         "next_sentence_list_label": null,
         "all_learned_note": null,
         "level_note": "When you complete this level, you'll understand 25.7% of everyday German.",
+        "change_sentence_list_label": "change sentence list",
         "banned_notice": null,
         "week": [
           {
@@ -354,7 +355,8 @@
         "progress": {
           "percent_known": 3.352745698022571,
           "all_available_learned": false,
-          "caption": "3% known"
+          "caption": "3% known",
+          "bar_label": "3%"
         },
         "sentence_list_label": "Core German Level 1",
         "next_sentence_list": null,

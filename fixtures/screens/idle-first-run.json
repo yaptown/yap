@@ -131,6 +131,7 @@
         "next_sentence_list_label": null,
         "all_learned_note": null,
         "level_note": "When you complete this level, you'll understand 37.4% of everyday Italian.",
+        "change_sentence_list_label": "change sentence list",
         "banned_notice": null,
         "week": [
           {
@@ -254,7 +255,8 @@
         "progress": {
           "percent_known": 0.0,
           "all_available_learned": false,
-          "caption": "0% known"
+          "caption": "0% known",
+          "bar_label": "0%"
         },
         "sentence_list_label": "Basic Italian Level 3",
         "next_sentence_list": null,

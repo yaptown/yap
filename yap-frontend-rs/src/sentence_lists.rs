@@ -51,6 +51,8 @@ pub struct SentenceListProgress {
     pub percent_known: f64,
     pub all_available_learned: bool,
     pub caption: String,
+    /// What the level card's bar prints inside itself.
+    pub bar_label: String,
 }
 
 impl SentenceListProgress {
@@ -62,6 +64,11 @@ impl SentenceListProgress {
                 "Done!".into()
             } else {
                 format!("{:.0}% known", percent_known.floor())
+            },
+            bar_label: if all_available_learned {
+                "Done!".into()
+            } else {
+                format!("{:.0}%", percent_known.floor())
             },
         }
     }

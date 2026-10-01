@@ -42,6 +42,7 @@ extension EnvironmentValues {
     var completePlacementTest: (PlacementSession) -> Void = { _ in log("complete placement") }
     var retryPack: () -> Void = { log("retry pack") }
     var switchCourse: () -> Void = { log("switch course") }
+    var openGoals: () -> Void = { log("open goals") }
     var saveDisplayName: (String) async throws -> Void = { _ in log("save display name") }
     var skipDisplayName: () -> Void = { log("dismiss display name") }
     static var inert: Self { Self() }
