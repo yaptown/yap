@@ -1,23 +1,20 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { LANGUAGE_METADATA } from '../../../../yap-frontend/src/lib/learning-metadata.generated';
 
 const kv = Astro.locals.runtime.env.DICTIONARY_KV;
 const coursesJson = await kv.get('courses');
 if (!coursesJson) return Astro.redirect('/');
 const courses = JSON.parse(coursesJson);
 
-const languageFlags: Record<string, string> = {
-  French: '\u{1F1EB}\u{1F1F7}',
-  English: '\u{1F1EC}\u{1F1E7}',
-  "Spanish (Latin America)": "🌎",
-  "Spanish (Spain)": '\u{1F1EA}\u{1F1F8}',
-  Korean: '\u{1F1F0}\u{1F1F7}',
-  German: '\u{1F1E9}\u{1F1EA}',
-  Italian: '\u{1F1EE}\u{1F1F9}',
-  "Portuguese (Brazil)": '\u{1F1E7}\u{1F1F7}',
-  "Portuguese (Portugal)": "🇵🇹",
-  Russian: '\u{1F1F7}\u{1F1FA}',
-};
+const languageIcons = Object.fromEntries(
+  Object.values(LANGUAGE_METADATA).map(({ englishName, icon }) => [englishName, icon]),
+);
+const icons = import.meta.glob<string>('../../../../yap-frontend/src/assets/language-icons/*.svg', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
 ---
 
 <Layout title="Dictionaries" description="Free online dictionaries for language learners. Browse words, phrases, and expressions with definitions, examples, and pronunciation.">
@@ -29,8 +26,12 @@ const languageFlags: Record<string, string> = {
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     {courses.map((course: any) => (
       <a href={`/d/${course.slug}/`} class="block rounded-lg border bg-card p-4 hover:bg-secondary transition-colors no-underline">
-        <div class="text-lg font-semibold text-card-foreground">
-          {languageFlags[course.target_language] || ''} {course.target_language} → {course.native_language}
+        <div class="flex items-center gap-2 text-lg font-semibold text-card-foreground">
+          {languageIcons[course.target_language] && <img
+            src={icons[`../../../../yap-frontend/src/assets/language-icons/${languageIcons[course.target_language]}.svg`]}
+            alt="" aria-hidden="true" class="size-[1.5em] shrink-0"
+          />}
+          <span>{course.target_language} → {course.native_language}</span>
         </div>
         <div class="text-sm text-muted-foreground mt-1">
           {course.total_pages.toLocaleString()} entries

@@ -12,7 +12,7 @@ private func check(_ condition: Bool, file: StaticString = #file, line: UInt = #
         // Shared language copy crosses the real native bridge, including Unicode,
         // optional script qualifiers, and accent keyboard arrays.
         let french = get_language_metadata(language: .French)
-        check(french.native_name == "Français" && french.flag == "🇫🇷")
+        check(french.native_name == "Français" && french.icon == "fra.eiffel")
         check(french.i_speak == "Je parle français" && french.lets_go == "Allons-y !")
         check(french.accented_characters.contains("œ") && french.script == nil)
         let simplified = get_language_metadata(language: .ChineseSimplified)

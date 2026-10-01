@@ -33,7 +33,14 @@ struct CoursePickerView: View {
                                 Text("Native language")
                                 Spacer(minLength: 0)
                                 Picker("Native language", selection: $native) {
-                                    ForEach(natives, id: \.self) { language in Text(get_language_metadata(language: language).native_name).tag(language) }
+                                    ForEach(natives, id: \.self) { language in
+                                        let metadata = get_language_metadata(language: language)
+                                        Label {
+                                            Text(metadata.native_name)
+                                        } icon: {
+                                            Image(metadata.icon).renderingMode(.original).resizable().scaledToFit().frame(width: 40, height: 40)
+                                        }.tag(language)
+                                    }
                                 }.pickerStyle(.menu)
                             }.frame(minHeight: 44)
                         }
@@ -81,7 +88,7 @@ struct CoursePickerView: View {
         Button { select(course) } label: {
             HStack(spacing: 12) {
                 let metadata = get_language_metadata(language: course.target_language)
-                if Theme.emojiFontAvailable { Text(metadata.flag) }
+                Image(metadata.icon).renderingMode(.original).resizable().scaledToFit().frame(width: 40, height: 40).accessibilityHidden(true)
                 Text((resume ? "Resume " : "") + metadata.english_name).foregroundStyle(Color.yapText)
                 Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
             }.frame(minHeight: 52).contentShape(Rectangle())

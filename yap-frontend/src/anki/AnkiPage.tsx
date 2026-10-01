@@ -241,7 +241,7 @@ function AnkiScreen({ deck, targetLanguage, userInfo, accessToken }: AppContextT
     <TopPageLayout userInfo={userInfo} headerProps={{ title: "Anki Decks", backButton: { label: "Yap.Town", onBack: () => navigate("/") } }}>
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-5 py-8">
         <div className="flex flex-col gap-4">
-          <CoursePill flag={view.course_flag} label={view.course_label} onClick={() => navigate(`/select-language?next=${encodeURIComponent("/anki")}`)} />
+          <CoursePill icon={view.course_icon} label={view.course_label} onClick={() => navigate(`/select-language?next=${encodeURIComponent("/anki")}`)} />
           <h1 className="text-2xl font-semibold" style={{ textWrap: "balance" }}>{view.title}</h1>
         </div>
         <PosterStrip films={view.films} deck={deck} loading={view.manifest === "loading"} />

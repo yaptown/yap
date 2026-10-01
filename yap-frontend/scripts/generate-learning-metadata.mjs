@@ -1,5 +1,6 @@
 // Run after wasm-pack build. Generates static data for the web and the WASM-free MCP widget.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import * as glue from '../../yap-frontend-rs/pkg/yap_frontend_rs_bg.js';
 const { instance } = await WebAssembly.instantiate(
@@ -11,6 +12,14 @@ instance.exports.__wbindgen_start();
 const source = readFileSync(new URL('../src/lib/languages.ts', import.meta.url), 'utf8');
 const languages = [...source.matchAll(/^  (\w+): \{/gm)].map(match => match[1]);
 const metadata = Object.fromEntries(languages.map(language => [language, glue.get_language_metadata(language)]));
+// Every shared icon id must have exactly the three exported web variants.
+const icons = Object.values(metadata).map(({ icon }) => icon);
+assert.equal(new Set(icons).size, languages.length, 'Language icon ids must be unique');
+assert.deepEqual(
+  readdirSync(new URL('../src/assets/language-icons/', import.meta.url)).sort(),
+  icons.flatMap(icon => ['', '-bare', '-bare-dark'].map(suffix => `${icon}${suffix}.svg`)).sort(),
+  'Language icon assets must match shared metadata; export them from yap-icons',
+);
 // Emit a JavaScript literal: JSON would drop Rust Option fields represented as
 // undefined by WASM, making the generated data disagree with its TypeScript type.
 const literal = inspect(metadata, { depth: null, maxArrayLength: null, maxStringLength: null, compact: false });

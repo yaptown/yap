@@ -41,17 +41,15 @@ export function registerPlayback(interrupt: () => void): () => void {
   };
 }
 
-export const languageFlags = mapLanguages((meta) => meta.flag);
-
 export const nativeLanguageNames = mapLanguages((meta) => meta.nativeName);
 
 // Accepts either a `Language` variant name or a pipeline ISO code, since
 // server-side stats hand back the latter.
-export function getLanguageFlag(isoCodeOrLanguage: string): string {
+export function getLanguageIcon(isoCodeOrLanguage: string): string | undefined {
   const language = isLanguage(isoCodeOrLanguage)
     ? isoCodeOrLanguage
     : isoCodeToLanguage(isoCodeOrLanguage);
-  return language ? LANGUAGES[language].flag : "🌐";
+  return language ? LANGUAGES[language].icon : undefined;
 }
 
 export function getLanguageName(isoCodeOrLanguage: string): string {

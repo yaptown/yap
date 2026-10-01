@@ -151,12 +151,30 @@ struct GoalProgress: View {
     }
 }
 
-/// "A little 🇫🇷 French ⌄, every day." as one run of text, so it wraps like a sentence.
+/// The greeting is one run of text, so the artwork and words wrap like a sentence.
 private struct HomeGreeting: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @ScaledMetric(relativeTo: .title2) private var fontSize = 22.0
     let view: HomeScreenView
+
+    private var courseIcon: Text {
+        let traits = UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light)
+        guard let source = UIImage(named: "\(view.course_icon)-bare", in: .main, compatibleWith: traits) else { return Text("") }
+        let font = UIFont.systemFont(ofSize: fontSize, weight: .medium)
+        let side = font.pointSize * 1.1
+        let size = CGSize(width: side, height: side)
+        var rendered = UIImage()
+        traits.performAsCurrent {
+            rendered = UIGraphicsImageRenderer(size: size).image { _ in
+                source.draw(in: CGRect(origin: .zero, size: size))
+            }
+        }
+        let image = rendered.withBaselineOffset(fromBottom: (side - font.capHeight) / 2)
+        return Text(Image(uiImage: image).renderingMode(.original)) + Text(" ")
+    }
+
     var body: some View {
-        let flag = Theme.emojiFontAvailable ? Text("\(view.course_flag) ") : Text("")
-        (Text("\(view.greeting_lead) ") + flag + Text(view.course_name).fontWeight(.semibold)
+        (Text("\(view.greeting_lead) ") + courseIcon + Text(view.course_name).fontWeight(.semibold)
             + Text(" \(Image(systemName: "chevron.down"))").font(.headline).foregroundStyle(.secondary)
             + Text(view.greeting_tail))
             .font(.title2.weight(.medium)).foregroundStyle(Color.yapText)

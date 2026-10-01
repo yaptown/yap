@@ -865,10 +865,10 @@ pub struct DictionaryCardView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct HomeScreenView {
     pub title: String,
-    /// "A little [🇫🇷 French ⌄], every day.": the course name sits inside the
+    /// "A little [icon French ⌄], every day.": the course name sits inside the
     /// greeting and is the course switcher, so Home names the language once.
     pub greeting_lead: String,
-    pub course_flag: String,
+    pub course_icon: String,
     pub course_name: String,
     pub greeting_tail: String,
     pub native_language: Language,
@@ -1149,7 +1149,7 @@ impl Deck {
         HomeScreenView {
             title: "Home".into(),
             greeting_lead: "A little".into(),
-            course_flag: language.flag.clone(),
+            course_icon: language.icon.clone(),
             course_name: language.common_name.clone(),
             greeting_tail: ", every day.".into(),
             native_language: self.context.course.native_language,
@@ -2181,7 +2181,7 @@ mod tests {
         assert_eq!(goal.level_label, "Level 5 of 7");
         assert_eq!(goal.subtitle, "Unlocks 24.8% of everyday French");
         let home = deck.home_screen_view(inputs());
-        assert_eq!(home.course_flag, "🇫🇷");
+        assert_eq!(home.course_icon, "fra.eiffel");
         assert_eq!(
             format!(
                 "{} {}{}",

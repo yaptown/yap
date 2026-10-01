@@ -3,7 +3,7 @@
   "view": {
     "title": "Home",
     "greeting_lead": "A little",
-    "course_flag": "🇮🇹",
+    "course_icon": "ita.pisa",
     "course_name": "Italian",
     "greeting_tail": ", every day.",
     "native_language": "English",

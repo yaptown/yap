@@ -1,3 +1,4 @@
+import { LanguageIcon } from "@/components/LanguageIcon";
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -133,7 +134,7 @@ function HomeContent({
               }}
               className="inline-flex items-baseline gap-1.5 rounded-md font-semibold decoration-muted-foreground/50 decoration-2 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <span aria-hidden>{view.course_flag}</span>
+              <LanguageIcon icon={view.course_icon} variant="bare" className="size-[1.1em] self-center" />
               {view.course_name}
               <ChevronDown
                 className="h-4 w-4 self-center text-muted-foreground"

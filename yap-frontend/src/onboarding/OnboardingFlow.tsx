@@ -1,3 +1,4 @@
+import { LanguageIcon } from "@/components/LanguageIcon";
 import {
   onboarding_start,
   onboarding_reduce,
@@ -690,9 +691,9 @@ function ScreenContent({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="text-8xl"
+              className="size-18"
             >
-              {content.flag}
+              <LanguageIcon icon={content.icon} className="size-18" />
             </motion.div>
           )}
           <h2

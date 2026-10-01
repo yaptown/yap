@@ -1,3 +1,4 @@
+import { LanguageIcon } from "@/components/LanguageIcon";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import {
@@ -344,9 +345,7 @@ function MockFlashcard() {
     <Card className="w-fit max-w-xl rotate-[5deg] gap-5 p-5 text-left text-foreground">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <span className="text-2xl leading-none" aria-hidden>
-            🇫🇷
-          </span>
+          <LanguageIcon icon="fra.eiffel" variant="bare" className="size-6" />
           <span className="text-lg font-bold">Yap</span>
         </div>
         <div className="flex items-center gap-3 text-base text-muted-foreground">

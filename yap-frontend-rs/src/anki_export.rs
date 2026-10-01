@@ -160,7 +160,7 @@ pub struct AnkiExportView {
     pub clips_loaded: bool,
     pub clip_sentence_count: u32,
     /// The course pill: tapping it picks another course for the deck.
-    pub course_flag: String,
+    pub course_icon: String,
     pub course_label: String,
     pub card_types_label: String,
     pub reading_label: String,
@@ -568,7 +568,7 @@ impl Deck {
             too_advanced_message: too_advanced.then(|| TOO_ADVANCED.into()),
             clips_loaded: clips::manifest_loaded(language),
             clip_sentence_count,
-            course_flag: get_language_metadata(language).flag.clone(),
+            course_icon: get_language_metadata(language).icon.clone(),
             course_label: language.to_string(),
             card_types_label: "Card types".into(),
             reading_label: "Reading".into(),

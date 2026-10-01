@@ -18,8 +18,8 @@ pub struct LanguageMetadata {
     pub iso_code: String,
     pub iso6391: String,
     pub status: CourseMaturity,
-    /// Emoji flag.
-    pub flag: String,
+    /// Icon id, e.g. `fra.eiffel`: the name of the asset exported from the yap-icons repo.
+    pub icon: String,
     /// The language's name in itself, e.g. Français.
     pub native_name: String,
     /// English name, disambiguated for script variants.
@@ -53,7 +53,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Stable,
-            flag: "🇬🇧".into(),
+            icon: "eng.liberty".into(),
             native_name: "English".into(),
             english_name: "English".into(),
             common_name: "English".into(),
@@ -70,7 +70,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Stable,
-            flag: "🇫🇷".into(),
+            icon: "fra.eiffel".into(),
             native_name: "Français".into(),
             english_name: "French".into(),
             common_name: "French".into(),
@@ -104,10 +104,10 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Stable,
-            flag: if language == SpanishLatinAmerican {
-                "🌎"
+            icon: if language == SpanishLatinAmerican {
+                "spa.calavera"
             } else {
-                "🇪🇸"
+                "spa-es.sagrada"
             }
             .into(),
             native_name: "Español".into(),
@@ -141,7 +141,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Stable,
-            flag: "🇩🇪".into(),
+            icon: "deu.neuschwanstein".into(),
             native_name: "Deutsch".into(),
             english_name: "German".into(),
             common_name: "German".into(),
@@ -166,7 +166,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Beta,
-            flag: "🇮🇹".into(),
+            icon: "ita.pisa".into(),
             native_name: "Italiano".into(),
             english_name: "Italian".into(),
             common_name: "Italian".into(),
@@ -190,10 +190,10 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Beta,
-            flag: if language == PortugueseBrazilian {
-                "🇧🇷"
+            icon: if language == PortugueseBrazilian {
+                "por.cristo"
             } else {
-                "🇵🇹"
+                "por-pt.tram"
             }
             .into(),
             native_name: "Português".into(),
@@ -229,7 +229,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Alpha,
-            flag: "🇷🇺".into(),
+            icon: "rus.basil".into(),
             native_name: "Русский".into(),
             english_name: "Russian".into(),
             common_name: "Russian".into(),
@@ -246,7 +246,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Alpha,
-            flag: "🇰🇷".into(),
+            icon: "kor.gyeongbokgung".into(),
             native_name: "한국어".into(),
             english_name: "Korean".into(),
             common_name: "Korean".into(),
@@ -263,7 +263,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Alpha,
-            flag: "🇯🇵".into(),
+            icon: "jpn.torii".into(),
             native_name: "日本語".into(),
             english_name: "Japanese".into(),
             common_name: "Japanese".into(),
@@ -280,7 +280,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Alpha,
-            flag: "🇨🇳".into(),
+            icon: "zho-hans.panda".into(),
             native_name: "简体中文".into(),
             english_name: "Chinese (Simplified)".into(),
             common_name: "Chinese".into(),
@@ -297,7 +297,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Alpha,
-            flag: "🇹🇼".into(),
+            icon: "zho-hant.boba".into(),
             native_name: "繁體中文".into(),
             english_name: "Chinese (Traditional)".into(),
             common_name: "Chinese".into(),
@@ -314,7 +314,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Alpha,
-            flag: "🇮🇳".into(),
+            icon: "hin.tajmahal".into(),
             native_name: "हिन्दी".into(),
             english_name: "Hindi".into(),
             common_name: "Hindi".into(),
@@ -331,7 +331,7 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
             iso_code: language.code().into(),
             iso6391: language.iso_639_1().into(),
             status: CourseMaturity::Alpha,
-            flag: "🇹🇭".into(),
+            icon: "tha.elephant".into(),
             native_name: "ไทย".into(),
             english_name: "Thai".into(),
             common_name: "Thai".into(),

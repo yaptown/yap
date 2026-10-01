@@ -3,7 +3,7 @@
   "view": {
     "title": "Home",
     "greeting_lead": "A little",
-    "course_flag": "🇫🇷",
+    "course_icon": "fra.eiffel",
     "course_name": "French",
     "greeting_tail": ", every day.",
     "native_language": "English",

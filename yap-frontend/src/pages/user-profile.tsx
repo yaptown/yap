@@ -21,7 +21,8 @@ import {
 } from "../../../yap-frontend-rs/pkg";
 import { Pencil, X, Check } from "lucide-react";
 import { toast } from "sonner";
-import { getLanguageFlag, getLanguageName } from "@/lib/utils";
+import { getLanguageIcon, getLanguageName } from "@/lib/utils";
+import { LanguageIcon } from "@/components/LanguageIcon";
 import type { AppContextType } from "@/app/context";
 
 export function UserProfilePage() {
@@ -399,54 +400,55 @@ export function UserProfilePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {languageStats.map((stats) => (
-                  <div key={stats.language} className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-2xl">
-                        {getLanguageFlag(stats.language)}
-                      </span>
-                      <h4 className="text-lg font-semibold">
-                        {getLanguageName(stats.language)}
-                      </h4>
+                {languageStats.map((stats) => {
+                  const icon = getLanguageIcon(stats.language);
+                  return (
+                    <div key={stats.language} className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        {icon && <LanguageIcon icon={icon} className="size-8" />}
+                        <h4 className="text-lg font-semibold">
+                          {getLanguageName(stats.language)}
+                        </h4>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Cards</p>
+                          <p className="text-2xl font-bold">
+                            {stats.total_count}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Daily Streak
+                          </p>
+                          <p className="text-2xl font-bold">
+                            {stats.daily_streak} 🔥
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">XP</p>
+                          <p className="text-2xl font-bold">
+                            {Math.round(stats.xp)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Mastery</p>
+                          <p className="text-2xl font-bold">
+                            {stats.percent_known.toFixed(1)}%
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
+                        Learning since{" "}
+                        {new Date(stats.started).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Cards</p>
-                        <p className="text-2xl font-bold">
-                          {stats.total_count}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Daily Streak
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {stats.daily_streak} 🔥
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">XP</p>
-                        <p className="text-2xl font-bold">
-                          {Math.round(stats.xp)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Mastery</p>
-                        <p className="text-2xl font-bold">
-                          {stats.percent_known.toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
-                      Learning since{" "}
-                      {new Date(stats.started).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

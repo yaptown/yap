@@ -153,7 +153,7 @@ pub enum OnboardingContent {
         skip_label: String,
     },
     Ready {
-        flag: String,
+        icon: String,
         body: String,
         start_fresh_label: Option<String>,
     },
@@ -542,7 +542,7 @@ pub fn onboarding_view(state: OnboardingState) -> OnboardingView {
                 }
                 .into(),
                 Ready {
-                    flag: metadata.flag,
+                    icon: metadata.icon,
                     body: if is_new {
                         format!("We'll build your {language} foundation step by step.")
                     } else {

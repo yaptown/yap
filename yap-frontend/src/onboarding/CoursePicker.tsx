@@ -1,3 +1,4 @@
+import { LanguageIcon } from "@/components/LanguageIcon";
 import * as Sentry from "@sentry/react";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,7 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn, languageFlags, nativeLanguageNames } from "@/lib/utils";
+import { cn, nativeLanguageNames } from "@/lib/utils";
 import { LANGUAGES, detectBrowserLanguage } from "@/lib/languages";
 import type { Language, OnboardingPurpose } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { useWeapon } from "@/core/weapon";
@@ -208,16 +209,16 @@ export function CoursePicker({
                         className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
                         style={{ background: LANGUAGES[lang].colors.gradient }}
                       />
-                      <div className="relative z-10">
-                        <div className="text-8xl mb-4">
-                          {languageFlags[lang]}
+                      <div className="relative z-10 flex flex-col items-center gap-4">
+                        <LanguageIcon icon={LANGUAGES[lang].icon} className="size-24" />
+                        <div className="flex flex-col gap-1">
+                          <h2 className="text-2xl font-bold">
+                            {LANGUAGES[lang].iSpeak}
+                          </h2>
+                          <p className="text-lg text-muted-foreground">
+                            {nativeLanguageNames[lang]}
+                          </p>
                         </div>
-                        <h2 className="text-2xl font-bold mb-1">
-                          {LANGUAGES[lang].iSpeak}
-                        </h2>
-                        <p className="text-lg text-muted-foreground">
-                          {nativeLanguageNames[lang]}
-                        </p>
                       </div>
                     </Card>
                   </motion.div>
@@ -262,9 +263,7 @@ export function CoursePicker({
                       }}
                     />
                     <div className="relative z-10 flex items-center justify-center gap-4">
-                      <div className="text-5xl">
-                        {languageFlags[currentTargetLanguage]}
-                      </div>
+                      <LanguageIcon icon={LANGUAGES[currentTargetLanguage].icon} className="size-10" />
                       <div className="text-left">
                         <h3 className="text-2xl font-bold mb-1">
                           Resume {nativeLanguageNames[currentTargetLanguage]}
@@ -317,11 +316,9 @@ export function CoursePicker({
                           className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
                           style={{ background: LANGUAGES[lang].colors.gradient }}
                         />
-                        <div className="relative z-10">
-                          <div className="md:text-8xl text-6xl mb-4">
-                            {languageFlags[lang]}
-                          </div>
-                          <h2 className="text-3xl font-bold mb-2">
+                        <div className="relative z-10 flex flex-col items-center gap-4">
+                          <LanguageIcon icon={LANGUAGES[lang].icon} className="size-18 md:size-24" />
+                          <h2 className="text-3xl font-bold">
                             {nativeLanguageNames[lang]}
                           </h2>
                         </div>
@@ -369,11 +366,9 @@ export function CoursePicker({
                               background: LANGUAGES[lang].colors.gradient,
                             }}
                           />
-                          <div className="relative z-10">
-                            <div className="md:text-8xl text-6xl mb-4">
-                              {languageFlags[lang]}
-                            </div>
-                            <h2 className="md:text-3xl text-2xl font-bold mb-2">
+                          <div className="relative z-10 flex flex-col items-center gap-4">
+                            <LanguageIcon icon={LANGUAGES[lang].icon} className="size-18 md:size-24" />
+                            <h2 className="md:text-3xl text-2xl font-bold">
                               {nativeLanguageNames[lang]}
                             </h2>
                           </div>
@@ -422,11 +417,9 @@ export function CoursePicker({
                               background: LANGUAGES[lang].colors.gradient,
                             }}
                           />
-                          <div className="relative z-10">
-                            <div className="md:text-8xl text-6xl mb-4">
-                              {languageFlags[lang]}
-                            </div>
-                            <h2 className="md:text-3xl text-2xl font-bold mb-2">
+                          <div className="relative z-10 flex flex-col items-center gap-4">
+                            <LanguageIcon icon={LANGUAGES[lang].icon} className="size-18 md:size-24" />
+                            <h2 className="md:text-3xl text-2xl font-bold">
                               {nativeLanguageNames[lang]}
                             </h2>
                           </div>
@@ -452,9 +445,7 @@ export function CoursePicker({
                       animate
                     >
                       <>
-                        <span className="mr-2">
-                          {languageFlags[selectionState.nativeLanguage]}
-                        </span>
+                        <LanguageIcon icon={LANGUAGES[selectionState.nativeLanguage].icon} className="size-6" />
                         {selectionState.nativeLanguage}
                       </>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -486,9 +477,7 @@ export function CoursePicker({
                                     : "opacity-0",
                                 )}
                               />
-                              <span className="mr-2">
-                                {languageFlags[lang]}
-                              </span>
+                              <LanguageIcon icon={LANGUAGES[lang].icon} className="size-8" />
                               {lang}
                             </CommandItem>
                           ))}

@@ -112,8 +112,8 @@ struct OnboardingFlowView: View {
         case let .Growth(chart):
             title(view.title)
             LearningIllustration(growth: true, visibleCurves: 0, copy: chart)
-        case let .Ready(flag, body, _):
-            Text(flag).font(.system(size: 64))
+        case let .Ready(icon, body, _):
+            Image(icon).renderingMode(.original).resizable().scaledToFit().frame(width: 72, height: 72).accessibilityHidden(true)
             title(view.title)
             Text(body)
         case .Notifications:
