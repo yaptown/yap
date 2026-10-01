@@ -1,0 +1,10 @@
+{
+  "name": "yap-app-store-screenshots",
+  "private": true,
+  "scripts": {
+    "generate": "node generate.cjs"
+  },
+  "dependencies": {
+    "sharp": "0.34.5"
+  }
+}
