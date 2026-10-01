@@ -89,8 +89,8 @@ private struct PronunciationRow: View {
         }.animation(.easeInOut(duration: 0.3), value: connectorHeard)
     }
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            AudioButton(request: cue.audio, reviewCount: screen.total_reviews)
+        // Web's row: a tinted block with the words on the left and the speaker on the right.
+        HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 SentenceFlow(spacing: 0) {
                     ForEach(cue.segments.indices, id: \.self) { index in
@@ -99,9 +99,11 @@ private struct PronunciationRow: View {
                         } else { Text(spokenWord(index)) }
                     }
                 }.font(.body)
-                if let context { Text(context).font(.footnote).foregroundStyle(Color.yapMuted) }
+                if let context { Text(context).font(.caption).foregroundStyle(Color.yapMuted) }
             }.frame(maxWidth: .infinity, alignment: .leading)
-        }.onChange(of: playing) { _, playing in if playing { connectorHeard = true } }
+            AudioButton(request: cue.audio, reviewCount: screen.total_reviews)
+        }.padding(12).background(Color.yapMutedSurface.opacity(0.3), in: RoundedRectangle(cornerRadius: 6))
+        .onChange(of: playing) { _, playing in if playing { connectorHeard = true } }
     }
 }
 
