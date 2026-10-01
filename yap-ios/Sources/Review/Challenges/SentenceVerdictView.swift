@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct SentenceVerdictView: View, Equatable {
-    let submission: String
+    /// Nil when the answer is already on screen (dictation types it inline).
+    let submission: String?
     let correct: String
     let perfect: Bool
     let encouragement: String?
@@ -11,7 +12,7 @@ struct SentenceVerdictView: View, Equatable {
     var submissionLabel = "Your translation:"
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if !perfect {
+            if !perfect, let submission {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(submissionLabel).font(.footnote.weight(.medium))
                     Text(submission).font(.body.weight(.medium))
@@ -27,24 +28,54 @@ struct SentenceVerdictView: View, Equatable {
             if error != nil {
                 Text("Your submission could not be graded automatically. Please grade the words manually below.").font(.footnote).foregroundStyle(Color.yapCautionForeground)
             }
-            if encouragement?.isEmpty == false || explanation?.isEmpty == false {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Feedback:").font(.footnote.weight(.medium)).foregroundStyle(Color.yapInfoForeground)
-                    if let encouragement, !encouragement.isEmpty {
-                        HStack(alignment: .top, spacing: 8) {
-                            if Theme.emojiFontAvailable { Text(perfect ? "🎉" : "☀️") }
-                            else { Image(systemName: perfect ? "party.popper" : "sun.max") }
-                            Text(markdown(encouragement))
-                        }.font(.subheadline.weight(.medium)).foregroundStyle(Color.yapPositiveForeground).padding(8)
-                            .background(Color.yapPositiveSurface, in: RoundedRectangle(cornerRadius: 6))
-                            .overlay(alignment: .leading) { Rectangle().fill(Color.yapPositiveBorder).frame(width: 2) }
-                    }
-                    if let explanation, !explanation.isEmpty { Text(markdown(explanation)).font(.subheadline) }
-                }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
-                    .background(Color.yapInfoSurface, in: RoundedRectangle(cornerRadius: 10))
-                    .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.yapInfoBorder) }
-            }
+            FeedbackCallout(perfect: perfect, encouragement: encouragement, explanation: explanation).equatable()
         }.fadeIn(duration: 0.2)
+    }
+}
+
+/// The autograder's encouragement and explanation, in the web's info box.
+struct FeedbackCallout: View, Equatable {
+    let perfect: Bool
+    let encouragement: String?
+    let explanation: String?
+    var body: some View {
+        if encouragement?.isEmpty == false || explanation?.isEmpty == false {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Feedback:").font(.footnote.weight(.medium)).foregroundStyle(Color.yapInfoForeground)
+                if let encouragement, !encouragement.isEmpty {
+                    HStack(alignment: .top, spacing: 8) {
+                        if Theme.emojiFontAvailable { Text(perfect ? "🎉" : "☀️") }
+                        else { Image(systemName: perfect ? "party.popper" : "sun.max") }
+                        Text(markdown(encouragement))
+                    }.font(.subheadline.weight(.medium)).foregroundStyle(Color.yapPositiveForeground).padding(8)
+                        .background(Color.yapPositiveSurface, in: RoundedRectangle(cornerRadius: 6))
+                        .overlay(alignment: .leading) { Rectangle().fill(Color.yapPositiveBorder).frame(width: 2) }
+                }
+                if let explanation, !explanation.isEmpty { Text(markdown(explanation)).font(.subheadline) }
+            }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
+                .background(Color.yapInfoSurface, in: RoundedRectangle(cornerRadius: 10))
+                .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.yapInfoBorder) }
+                .fadeIn(duration: 0.2)
+        }
+    }
+}
+
+/// The web's collapsible grading list: a quiet title row with a Show/Hide toggle.
+struct GradeSectionDisclosure<Content: View>: View {
+    let title: String
+    @Binding var isExpanded: Bool
+    @ViewBuilder let content: () -> Content
+    var body: some View {
+        VStack(spacing: 12) {
+            Button { withAnimation(.easeOut(duration: 0.15)) { isExpanded.toggle() } } label: {
+                HStack {
+                    Text(title).font(.subheadline.weight(.medium))
+                    Spacer()
+                    Text(isExpanded ? "Hide" : "Show").font(.caption).foregroundStyle(.secondary)
+                }.contentShape(Rectangle())
+            }.buttonStyle(.plain).frame(minHeight: 32)
+            if isExpanded { content() }
+        }
     }
 }
 

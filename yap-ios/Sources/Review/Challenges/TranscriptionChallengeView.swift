@@ -12,13 +12,16 @@ struct TranscriptionChallengeView: View {
     @State private var view: TranscriptionView
     @State private var hasClip: Bool?
     @State private var clipMovieId: String?
+    @State private var gradesExpanded = false
     @State private var gradingTask: Task<Void, Never>?
     @FocusState private var focused: Int?
     init(sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
         self.sentence = sentence
         let state = initialState ?? transcription_start(parts: sentence.parts, proper_noun_definitions: sentence.proper_noun_definitions)
         _state = State(initialValue: state)
-        _view = State(initialValue: transcription_view(state: state))
+        let view = transcription_view(state: state)
+        _view = State(initialValue: view)
+        _gradesExpanded = State(initialValue: view.verdict?.word_grades_open_by_default ?? false)
     }
     private var storage: PendingReview? {
         guard let scope = actions.pendingReviewKey else { return nil }
@@ -55,18 +58,26 @@ struct TranscriptionChallengeView: View {
                         case let .AskedToTranscribe(parts): parts.map { "____" + $0.whitespace }.joined() }
                     }.joined() : nil, available: $hasClip, movieId: $clipMovieId)
                 if let verdict = view.verdict {
-                    SentenceVerdictView(submission: verdict.submission_text,
-                        correct: sentence.target_language, perfect: verdict.perfect, encouragement: verdict.encouragement,
-                        explanation: verdict.explanation, error: verdict.autograding_error,
-                        correctLabel: verdict.correct_label, submissionLabel: verdict.submission_label).equatable()
-                    wordGrades(verdict)
-                    if !verdict.compare.isEmpty {
-                        Text(verdict.compare.joined(separator: " · "))
-                        AudioButton(request: AudioRequest(request: TtsRequest(text: verdict.compare.map { $0 + ";" }.joined(separator: " "),
-                            language: screen.target_language, is_ssml: false, instructions: nil, speed: 0.8, verification_hints: []), provider: .Google),
-                            reviewCount: screen.total_reviews)
+                    // The typed answer is already inline in the sentence above, so
+                    // only the grading list repeats it.
+                    SentenceVerdictView(submission: nil,
+                        correct: sentence.target_language, perfect: verdict.perfect, encouragement: nil,
+                        explanation: nil, error: verdict.autograding_error, correctLabel: verdict.correct_label).equatable()
+                    if !verdict.word_grades.isEmpty {
+                        GradeSectionDisclosure(title: verdict.word_grades_title, isExpanded: $gradesExpanded) { wordGrades(verdict) }
                     }
-                    DisclosureGroup("Translation", isExpanded: Binding(get: { verdict.translation_revealed }, set: { _ in send(.TranslationToggled) })) { Text(sentence.native_language) }
+                    FeedbackCallout(perfect: verdict.perfect, encouragement: verdict.encouragement, explanation: verdict.explanation).equatable()
+                    if !verdict.compare.isEmpty { compareRow(verdict) }
+                    Button { send(.TranslationToggled) } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(verdict.translation_label).font(.footnote.weight(.medium))
+                            Text(sentence.native_language).font(.body.weight(.medium))
+                                .blur(radius: verdict.translation_revealed ? 0 : 5)
+                                .animation(.easeOut(duration: 0.1), value: verdict.translation_revealed)
+                        }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
+                            .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color(uiColor: .separator)) }
+                            .contentShape(Rectangle())
+                    }.buttonStyle(.plain)
                     if case let .Graded(_, grade, _, _) = state.phase {
                         ReviewDefinitionsView(definitions: get_transcription_review_definitions(challenge: sentence, results: grade.results)).equatable()
                     }
@@ -104,50 +115,82 @@ struct TranscriptionChallengeView: View {
         #endif
     }
     private let sentenceFont = Font.title2.weight(.semibold)
-    /// A field that grows with what's typed (a hidden twin of the text sets the
-    /// width) and is underlined with dots, tinted by its grade once checked.
-    /// The placeholder is drawn behind the field rather than inside it: an
-    /// empty centered field with its own prompt shows no caret on iOS.
+    private let fieldFont = Font.body.weight(.semibold)
+    /// The web's inline input: a bordered chip at least as wide as a word (a
+    /// lone blank gets more room) that grows with what's typed (a hidden twin
+    /// of the text sets the width), underlined with dots and tinted by its
+    /// grade once checked. The placeholder is drawn behind the field rather
+    /// than inside it: an empty centered field with its own prompt shows no
+    /// caret on iOS.
     private func blank(_ index: Int) -> some View {
         let blank = view.blanks.first { $0.index == UInt64(index) }!
         let text = blank.text
-        return Text(text.isEmpty ? view.placeholder : text).font(sentenceFont)
-            .foregroundStyle(.secondary).opacity(text.isEmpty && focused != index ? 1 : 0)
+        let shape = RoundedRectangle(cornerRadius: 6)
+        return Text(text.isEmpty ? view.placeholder : text).font(fieldFont)
+            .foregroundStyle(.secondary).opacity(text.isEmpty ? 1 : 0)
             .overlay {
                 TextField("", text: Binding(get: { text }, set: { send(.InputChanged(index: UInt64(index), text: $0)) }))
-                    .textFieldStyle(.plain).font(sentenceFont).multilineTextAlignment(.center).focused($focused, equals: index)
+                    .textFieldStyle(.plain).font(fieldFont).multilineTextAlignment(.center).focused($focused, equals: index)
                     .autocorrectionDisabled().textInputAutocapitalization(index == 0 ? .sentences : .never)
                     .submitLabel(index == blanks.last ? .done : .next).onSubmit { advance(index) }
                     .disabled(!blank.editable)
             }
-            .padding(.horizontal, 6)
-            .background(alignment: .bottom) {
-                DottedUnderline().stroke(tint(blank.tint, focused: focused == index), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [0, 6])).frame(height: 3)
-                    .animation(.easeOut(duration: 0.15), value: focused)
+            .padding(.horizontal, 12).padding(.vertical, 4)
+            .frame(minWidth: blanks.count == 1 ? 256 : 128)
+            .background(field(blank.tint), in: shape)
+            .overlay { shape.strokeBorder(focused == index ? Color.yapAccent.opacity(0.5) : Color.yapInput, lineWidth: 1) }
+            .overlay(alignment: .bottom) {
+                DottedUnderline().stroke(tint(blank.tint), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [0, 6])).frame(height: 3)
+                    .padding(.horizontal, 3)
             }
-            .padding(.horizontal, 2)
+            .opacity(blank.editable ? 1 : 0.5)
+            .animation(.easeOut(duration: 0.15), value: focused)
+            .padding(.horizontal, 4).padding(.vertical, 2)
     }
-    private func tint(_ tint: BlankTint, focused: Bool) -> Color {
+    private func tint(_ tint: BlankTint) -> Color {
         switch tint {
-        case .Neutral: focused ? Color.yapAccent : .secondary.opacity(0.4)
+        case .Neutral: Color.yapMuted.opacity(0.3)
         case .Perfect: .yapPositive
         case .PhoneticallyIdentical: .yapCaution
         case .PhoneticallySimilar: .yapWarning
         case .Wrong: .yapNegative
         }
     }
+    private func field(_ tint: BlankTint) -> Color {
+        switch tint {
+        case .Neutral: Color.yapInput.opacity(0.3)
+        case .Perfect: .yapPositiveField
+        case .PhoneticallyIdentical: .yapCautionField
+        case .PhoneticallySimilar: .yapWarningField
+        case .Wrong: .yapNegativeField
+        }
+    }
     @ViewBuilder private func wordGrades(_ verdict: VerdictView) -> some View {
+        (Text(verdict.submission_label + " ") + Text(verdict.submission_text).foregroundStyle(Color.yapText))
+            .font(.subheadline).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
         ForEach(Array(verdict.word_grades.enumerated()), id: \.offset) { _, word in
             HStack(spacing: 4) {
-                Text(word.heard).fontWeight(.semibold)
+                Text(word.heard).fontWeight(.medium)
                 Spacer()
                 Picker("Grade \(word.heard)", selection: Binding(get: { Int(word.selected) }, set: { index in
                     send(.WordGradeChanged(part_index: word.part_index, word_index: word.word_index, grade: view.grade_options[index].grade))
                 })) {
                     ForEach(view.grade_options.indices, id: \.self) { index in Text(view.grade_options[index].label).tag(index) }
                 }.pickerStyle(.menu).controlSize(.small)
-            }.font(.subheadline)
+            }.font(.subheadline).padding(.horizontal, 8).padding(.vertical, 4)
+                .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 8))
         }
+    }
+    /// The words the learner confused, read slowly one after another.
+    private func compareRow(_ verdict: VerdictView) -> some View {
+        HStack(spacing: 12) {
+            Text(verdict.compare_label).font(.subheadline.weight(.medium))
+            AudioButton(request: AudioRequest(request: TtsRequest(text: verdict.compare.map { $0 + ";" }.joined(separator: " "),
+                language: screen.target_language, is_ssml: false, instructions: nil, speed: 0.8, verification_hints: []), provider: .Google),
+                reviewCount: screen.total_reviews)
+            Text(verdict.compare.joined(separator: ",  ")).fontWeight(.medium).frame(maxWidth: .infinity)
+        }.padding(.horizontal, 12).padding(.vertical, 4)
+            .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color(uiColor: .separator)) }
     }
     private func advance(_ index: Int) {
         if let position = blanks.firstIndex(of: index), position + 1 < blanks.count { focused = blanks[position + 1] }
@@ -158,8 +201,10 @@ struct TranscriptionChallengeView: View {
         apply(transcription_transition(state: state, event: event))
     }
     private func apply(_ step: TranscriptionStep) {
+        let hadVerdict = view.verdict != nil
         state = step.state
         view = transcription_view(state: state)
+        if !hadVerdict { gradesExpanded = view.verdict?.word_grades_open_by_default ?? false }
         if let data = try? PendingReview.encode(state) { storage?.save(data) }
         for effect in step.effects {
             switch effect {

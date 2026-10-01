@@ -277,7 +277,12 @@ pub struct VerdictView {
     pub explanation: Option<String>,
     pub autograding_error: Option<String>,
     pub compare: Vec<String>,
+    pub compare_label: String,
+    pub translation_label: String,
     pub translation_revealed: bool,
+    pub word_grades_title: String,
+    /// Collapsed unless the autograder failed and the words need grading by hand.
+    pub word_grades_open_by_default: bool,
     pub word_grades: Vec<WordGradeView>,
 }
 
@@ -554,7 +559,11 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
             explanation: grade.explanation.clone(),
             autograding_error: grade.autograding_error.clone(),
             compare: grade.compare.clone(),
+            compare_label: "Listen:".into(),
+            translation_label: "English translation (click to reveal):".into(),
             translation_revealed: *translation_revealed,
+            word_grades_title: "Grade Words Manually".into(),
+            word_grades_open_by_default: grade.autograding_error.is_some(),
             word_grades,
         })
     } else {

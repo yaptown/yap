@@ -50,7 +50,7 @@ struct TranslationChallengeView: View {
                         perfect: verdict.perfect, encouragement: verdict.encouragement, explanation: verdict.explanation,
                         error: verdict.autograding_error, correctLabel: verdict.correct_label, submissionLabel: verdict.submission_label).equatable()
                     if let section = view.grade_section {
-                        DisclosureGroup(section.title, isExpanded: $gradesExpanded) {
+                        GradeSectionDisclosure(title: section.title, isExpanded: $gradesExpanded) {
                             VStack(spacing: 12) {
                                 Text(section.subtitle).font(.caption).foregroundStyle(.secondary)
                                 ForEach(Array(section.items.enumerated()), id: \.offset) { index, item in gradeRow(item, index: index) }

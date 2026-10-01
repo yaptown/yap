@@ -600,10 +600,6 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
                           grade,
                         })
                       }
-                      open_by_default={
-                        "autograding_error" in verdict &&
-                        verdict.autograding_error !== undefined
-                      }
                       targetLanguage={targetLanguage}
                     />
 
@@ -624,7 +620,9 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
                         return (
                           <div className="rounded-lg p-4 border">
                             <div className="flex flex-row items-center gap-3">
-                              <p className="text-sm font-medium">Listen:</p>
+                              <p className="text-sm font-medium">
+                                {verdict.compare_label}
+                              </p>
                               <AudioButton
                                 audioRequest={{
                                   request: {
@@ -661,7 +659,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
                       onClick={() => send({ type: "TranslationToggled" })}
                     >
                       <p className="text-sm font-medium mb-1">
-                        English translation (click to reveal):
+                        {verdict.translation_label}
                       </p>
                       <p
                         className={`text-lg font-medium transition-all duration-100 ${
@@ -781,7 +779,6 @@ interface WordGradesProps {
   verdict: VerdictView;
   gradeOptions: GradeOptionView[];
   setGrade: (partIndex: number, wordIndex: number, grade: WordGrade) => void;
-  open_by_default: boolean;
   targetLanguage: Language;
 }
 
@@ -789,16 +786,17 @@ function WordGrades({
   verdict,
   gradeOptions,
   setGrade,
-  open_by_default,
   targetLanguage,
 }: WordGradesProps) {
-  const [isOpen, setIsOpen] = useState(open_by_default);
+  const [isOpen, setIsOpen] = useState(verdict.word_grades_open_by_default);
   if (verdict.word_grades.length === 0) return null;
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
         <Button variant="ghost" className="w-full justify-between p-0">
-          <span className="text-sm font-medium">Grade Words Manually</span>
+          <span className="text-sm font-medium">
+            {verdict.word_grades_title}
+          </span>
           <span className="text-xs text-muted-foreground">
             {isOpen ? "Hide" : "Show"}
           </span>
