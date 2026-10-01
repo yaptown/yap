@@ -25,6 +25,7 @@ extension Color {
     @MainActor static let yapMutedSurface = Tokens.palette.muted.color
     @MainActor static let yapInput = Tokens.palette.input.color
     @MainActor static let yapBorder = Tokens.palette.border.color
+    @MainActor static let yapBackground = Tokens.palette.background.color
     @MainActor static let yapDestructiveForeground = Tokens.palette.destructive_foreground.color
     @MainActor static let yapPositiveForeground = Tokens.palette.positive_foreground.color
     @MainActor static let yapPositive = Tokens.palette.positive.color

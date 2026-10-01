@@ -7,12 +7,14 @@ struct WeekProgressStrip: View, Equatable {
     let week: [DayProgress]
     private static let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
     var body: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: 0) {
             ForEach(Array(week.enumerated()), id: \.offset) { index, day in
-                DayCell(day: day, label: Self.dayLabels[index % Self.dayLabels.count])
+                DayCell(day: day, label: Self.dayLabels[index % Self.dayLabels.count],
+                        shape: UnevenRoundedRectangle(cornerRadii: .init(
+                            topLeading: index == 0 ? 10 : 0, bottomLeading: index == 0 ? 10 : 0,
+                            bottomTrailing: index == week.count - 1 ? 10 : 0, topTrailing: index == week.count - 1 ? 10 : 0)))
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 10))
         .frame(maxWidth: .infinity)
     }
 }
@@ -20,32 +22,45 @@ struct WeekProgressStrip: View, Equatable {
 private struct DayCell: View {
     let day: DayProgress
     let label: String
+    let shape: UnevenRoundedRectangle
     private var fill: Double {
         guard !day.is_future, day.target_seconds > 0 else { return 0 }
         return min(1, Double(day.seconds) / Double(day.target_seconds))
     }
-    var body: some View {
+    private var content: some View {
         VStack(spacing: 2) {
             Text(day.is_future ? "·" : "+\(day.new_cards + day.learned_cards + day.locked_in_cards)")
                 .font(.headline.monospacedDigit())
-            Text(label).font(.system(size: 10)).textCase(.uppercase).opacity(0.7)
+            Text(label).font(.system(size: 10)).textCase(.uppercase).tracking(0.5).opacity(0.7)
         }
         .frame(maxWidth: .infinity, minHeight: 48)
-        .background(alignment: .bottom) {
-            GeometryReader { geometry in
-                Color.yapPositiveSurface
-                    .frame(height: geometry.size.height * fill)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
+    }
+    var body: some View {
+        // Like the web: the time studied fills the cell from the bottom in the
+        // foreground color, and a second copy of the text in the background
+        // color shows through wherever the fill has reached.
+        let cell = day.is_today ? AnyShape(RoundedRectangle(cornerRadius: 10)) : AnyShape(shape)
+        content.foregroundStyle(day.is_future ? Color.yapMuted.opacity(0.6) : Color.yapText)
+            .overlay {
+                if fill > 0 {
+                    content.foregroundStyle(Color.yapBackground)
+                        .background(Color.yapText.opacity(fill >= 1 ? 1 : 0.9))
+                        .mask(alignment: .bottom) {
+                            GeometryReader { geometry in
+                                Rectangle().frame(height: geometry.size.height * fill).frame(maxHeight: .infinity, alignment: .bottom)
+                            }
+                        }
+                }
             }
-        }
-        .background(day.is_future ? Color.secondary.opacity(0.08) : Color.primary.opacity(day.seconds > 0 ? 0.08 : 0.04))
-        .overlay {
-            if day.is_today {
-                RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.4))
+            .background {
+                if day.is_future { Color.yapMutedSurface.opacity(0.3) }
+                else { Color.yapBackground.opacity(0.25).overlay(Color.yapText.opacity(day.seconds > 0 ? 0.1 : 0)) }
             }
-        }
-        .scaleEffect(day.is_today ? 1.08 : 1)
-        .zIndex(day.is_today ? 1 : 0)
-        .accessibilityElement(children: .combine)
+            .clipShape(cell)
+            .overlay { if day.is_today { cell.stroke(Color.yapBorder) } }
+            .shadow(color: .black.opacity(day.is_today ? 0.15 : 0), radius: 8, y: 4)
+            .scaleEffect(day.is_today ? 1.1 : 1)
+            .zIndex(day.is_today ? 1 : 0)
+            .accessibilityElement(children: .combine)
     }
 }
