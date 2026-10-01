@@ -364,6 +364,7 @@ mod tests {
             encoded_sentences: vec![(
                 "bank".into(),
                 SentenceGrams {
+                    adult: false,
                     grams: vec![SentenceGram::Learnable(tagged(2))],
                     capitalize_first: false,
                     multiword_terms: vec![language_utils::MultiwordTermMatch {

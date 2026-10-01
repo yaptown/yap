@@ -22,9 +22,14 @@ use generate_data::translate::{TranslationBackend, Translator};
 /// it, so every course's batch latency overlaps everything else.
 struct CourseWarmup {
     course: Course,
-    loaded: tokio::task::JoinHandle<
-        anyhow::Result<(TargetSentences, tokio::task::JoinHandle<Translator>)>,
-    >,
+    loaded: tokio::task::JoinHandle<anyhow::Result<LoadedCourse>>,
+}
+
+struct LoadedCourse {
+    sentence_corpus: TargetSentences,
+    /// Content rating of every app and restricted sentence, keyed by text.
+    adult: HashMap<String, bool>,
+    translator: tokio::task::JoinHandle<Translator>,
 }
 
 #[tokio::main]
@@ -168,7 +173,29 @@ async fn main() -> anyhow::Result<()> {
                     );
                     translator
                 });
-                anyhow::Ok((sentence_corpus, translator))
+                // Rated here, not in get_target_sentences, so the other corpus
+                // tools that load sentences don't pay for labels they ignore;
+                // after the translation spawn, so both Batch rounds overlap.
+                let adult = generate_data::content_rating::judge(
+                    course.target_language,
+                    sentence_corpus
+                        .app_sentences
+                        .iter()
+                        .map(|(text, _, _)| text.as_str())
+                        .chain(
+                            sentence_corpus
+                                .restricted_sentences
+                                .iter()
+                                .map(|(text, _)| text.as_str()),
+                        ),
+                    generate_data::content_rating::Transport::Batch,
+                )
+                .await?;
+                anyhow::Ok(LoadedCourse {
+                    sentence_corpus,
+                    adult,
+                    translator,
+                })
             });
             CourseWarmup { course, loaded }
         })
@@ -186,7 +213,11 @@ async fn main() -> anyhow::Result<()> {
         );
         println!("================================================");
 
-        let (sentence_corpus, translator) = loaded.await.context("Course warmup task failed")??;
+        let LoadedCourse {
+            sentence_corpus,
+            adult,
+            translator,
+        } = loaded.await.context("Course warmup task failed")??;
         let generate_data::pipeline::SegmentedCorpus {
             mut nlp_sentences,
             mut restricted_nlp_sentences,
@@ -306,6 +337,7 @@ async fn main() -> anyhow::Result<()> {
                     (
                         text.clone(),
                         SentenceGrams {
+                            adult: adult[text],
                             grams,
                             capitalize_first: encoded.capitalize_first,
                             multiword_terms,

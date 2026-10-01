@@ -1298,6 +1298,7 @@ mod tests {
                     (
                         sentence,
                         SentenceGrams {
+                            adult: false,
                             grams: grams.into_iter().map(SentenceGram::Learnable).collect(),
                             capitalize_first: false,
                             multiword_terms: vec![],

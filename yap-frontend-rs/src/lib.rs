@@ -1369,14 +1369,20 @@ struct ComprehensibleSentence {
     native_languages: Vec<Spur>,
 }
 
+const ONLY_ALL_AUDIENCES_SENTENCES: bool = cfg!(target_os = "ios");
+
 /// Assemble the challenge-facing view of a corpus sentence: its encoded
 /// grams, unique multiword phrases, and translations. (The name reflects the
 /// struct, not a comprehensibility check — callers pick the sentence.)
+/// This is the content-policy choke point, including explicitly requested sentences.
 fn comprehensible_sentence_from_spur(
     language_pack: &LanguagePack,
     sentence: Spur,
 ) -> Option<ComprehensibleSentence> {
     let sentence_grams = language_pack.encoded_sentences.get(&sentence)?;
+    if ONLY_ALL_AUDIENCES_SENTENCES && sentence_grams.adult {
+        return None;
+    }
 
     // Collect unique phrases (high and low confidence multiword terms)
     let unique_target_language_phrases = {
@@ -4053,13 +4059,13 @@ impl Deck {
     /// least-reviewed wins. When no clip manifest has loaded yet,
     /// `sentence_has_clip` is uniformly false and this degrades to plain
     /// least-reviewed — clip knowledge improves selection but never gates it.
-    fn pick_comprehensible_sentence(
+    fn get_comprehensible_sentence_containing(
         &self,
         required_gram: Option<&TaggedGram<SpurGram>>,
         comprehensible_grams: impl GramMembership,
         sentences_reviewed: &BTreeMap<Spur, u32>,
         language_pack: &LanguagePack,
-    ) -> Option<Spur> {
+    ) -> Option<ComprehensibleSentence> {
         let language = self.context.course.target_language;
         let mut possible_sentences = language_pack
             .comprehensible_sentences(required_gram, |gram| comprehensible_grams.contains(gram));
@@ -4070,34 +4076,21 @@ impl Deck {
                 *sentences_reviewed.get(sentence).unwrap_or(&0),
             )
         });
-        possible_sentences.first().copied()
-    }
-
-    fn get_comprehensible_sentence_containing(
-        &self,
-        required_gram: Option<&TaggedGram<SpurGram>>,
-        comprehensible_grams: impl GramMembership,
-        sentences_reviewed: &BTreeMap<Spur, u32>,
-        language_pack: &LanguagePack,
-    ) -> Option<ComprehensibleSentence> {
-        let sentence = self.pick_comprehensible_sentence(
-            required_gram,
-            comprehensible_grams,
-            sentences_reviewed,
-            language_pack,
-        )?;
-        comprehensible_sentence_from_spur(language_pack, sentence)
+        possible_sentences
+            .into_iter()
+            .find_map(|sentence| comprehensible_sentence_from_spur(language_pack, sentence))
     }
 
     /// Pick the least-reviewed comprehensible sentence containing `gram`, if
     /// any exists — the same selection the app's translation challenges use.
     pub fn pick_translation_sentence(&self, gram: &TaggedGram<SpurGram>) -> Option<Spur> {
-        self.pick_comprehensible_sentence(
+        self.get_comprehensible_sentence_containing(
             Some(gram),
             self.get_comprehensible_written_grams(false),
             &self.stats.sentences_reviewed,
             &self.context.language_pack,
         )
+        .map(|sentence| sentence.target_language)
     }
 
     fn is_listened_gram_comprehensible(

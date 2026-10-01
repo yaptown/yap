@@ -715,6 +715,7 @@ impl LanguagePack {
                 Some((
                     rodeo.get(sentence)?,
                     SentenceGrams::<TaggedGram<SpurGram>> {
+                        adult: encoded.adult,
                         grams: interned_grams?,
                         capitalize_first: encoded.capitalize_first,
                         multiword_terms: interned_multiword_terms?,
@@ -1487,6 +1488,7 @@ impl LanguagePack {
                     (
                         r.s(sentence),
                         SentenceGrams {
+                            adult: sg.adult,
                             grams: sg
                                 .grams
                                 .into_iter()
@@ -2247,6 +2249,7 @@ mod sense_tests {
                 encoded_sentences: vec![(
                     "bank".into(),
                     SentenceGrams {
+                        adult: false,
                         grams: vec![SentenceGram::Learnable(tagged(1))],
                         capitalize_first: false,
                         multiword_terms: vec![],

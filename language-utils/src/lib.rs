@@ -641,6 +641,8 @@ where
     rkyv::Deserialize,
 )]
 pub struct SentenceGrams<G> {
+    /// Any age-sensitive text content; hidden from iOS challenges.
+    pub adult: bool,
     /// The grams that make up this sentence, each marked as learnable or obvious
     pub grams: Vec<SentenceGram<G>>,
     /// Whether the first letter should be capitalized when displaying
@@ -747,6 +749,7 @@ impl SentenceGrams<TaggedGram<SpurGram>> {
         rodeo: &lasso::RodeoReader<Gram<lasso::Spur>>,
     ) -> SentenceGrams<TaggedGram<Gram<lasso::Spur>>> {
         SentenceGrams {
+            adult: self.adult,
             grams: self
                 .grams
                 .iter()
@@ -770,6 +773,7 @@ impl SentenceGrams<TaggedGram<SpurGram>> {
 impl SentenceGrams<TaggedGram<Gram<lasso::Spur>>> {
     pub fn resolve(&self, rodeo: &lasso::RodeoReader) -> SentenceGrams<TaggedGram<Gram<String>>> {
         SentenceGrams {
+            adult: self.adult,
             grams: self
                 .grams
                 .iter()

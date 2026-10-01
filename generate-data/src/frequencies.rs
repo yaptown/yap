@@ -218,6 +218,7 @@ mod tests {
         let mut sentences = vec![(
             "bank bank".into(),
             SentenceGrams {
+                adult: false,
                 grams: vec![
                     SentenceGram::Learnable(first.clone()),
                     SentenceGram::Learnable(second.clone()),
@@ -233,6 +234,7 @@ mod tests {
         sentences.push((
             "overlay-only".into(),
             SentenceGrams {
+                adult: false,
                 grams: vec![],
                 capitalize_first: false,
                 multiword_terms: vec![language_utils::MultiwordTermMatch {
@@ -296,6 +298,7 @@ mod tests {
             (
                 "s1".to_string(),
                 SentenceGrams {
+                    adult: false,
                     grams: vec![
                         SentenceGram::Learnable(alpha.clone()),
                         SentenceGram::Learnable(beta.clone()),
@@ -308,6 +311,7 @@ mod tests {
             (
                 "s2".to_string(),
                 SentenceGrams {
+                    adult: false,
                     grams: vec![SentenceGram::Learnable(alpha.clone())],
                     capitalize_first: false,
                     multiword_terms: vec![],
@@ -317,6 +321,7 @@ mod tests {
             (
                 "s3".to_string(),
                 SentenceGrams {
+                    adult: false,
                     grams: vec![SentenceGram::Learnable(gamma.clone())],
                     capitalize_first: false,
                     multiword_terms: vec![],

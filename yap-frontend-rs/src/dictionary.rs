@@ -554,6 +554,7 @@ mod translation_sense_tests {
             gram("river bank", 0),
         ];
         let encoded = |grams, multiword_terms| SentenceGrams {
+            adult: false,
             grams,
             capitalize_first: true,
             multiword_terms,
@@ -737,6 +738,21 @@ mod translation_sense_tests {
             )
             .unwrap();
         replay(deck, event)
+    }
+
+    #[test]
+    fn sentence_content_policy_preserves_referenced_data() {
+        let mut deck = deck();
+        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
+        let sentence = pack.string_rodeo.get("Bank").unwrap();
+        assert!(crate::comprehensible_sentence_from_spur(pack, sentence).is_some());
+        pack.encoded_sentences.get_mut(&sentence).unwrap().adult = true;
+        assert_eq!(
+            crate::comprehensible_sentence_from_spur(pack, sentence).is_none(),
+            crate::ONLY_ALL_AUDIENCES_SENTENCES,
+        );
+        assert_eq!(pack.string_rodeo.resolve(&sentence), "Bank");
+        assert!(pack.encoded_sentences[&sentence].adult);
     }
 
     #[test]
