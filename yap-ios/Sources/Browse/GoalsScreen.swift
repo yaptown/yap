@@ -53,14 +53,23 @@ struct GoalsScreen: View {
         let curriculum = view.curriculum
         let selectedIndex = Int(curriculum.navigation.selected_index)
         return StudyCard {
-            Picker(curriculum.title, selection: Binding(
-                get: { selectedIndex },
-                set: { actions.setSentenceList(curriculum.sentence_list_options[$0].selection) }
-            )) {
+            // Web's tabs: a pale track with the selected tab as a dark pill, the
+            // same selected look as the daily goal row above.
+            HStack(spacing: 0) {
                 ForEach(Array(curriculum.sentence_list_options.enumerated()), id: \.offset) { index, option in
-                    Text(option.label).tag(index)
+                    let selected = index == selectedIndex
+                    Button { actions.setSentenceList(option.selection) } label: {
+                        Text(option.label).font(.subheadline.weight(.medium)).lineLimit(1)
+                            .frame(maxWidth: .infinity, minHeight: 30)
+                            .foregroundStyle(selected ? Color.yapOnAccent : Color.yapText)
+                            .background { if selected { RoundedRectangle(cornerRadius: 6).fill(Color.yapAccent).shadow(radius: 1, y: 1) } }
+                            .contentShape(Rectangle())
+                    }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected : [])
                 }
-            }.pickerStyle(.segmented)
+            }
+            .padding(3).background(Color.yapMutedSurface, in: RoundedRectangle(cornerRadius: 8))
+            .accessibilityElement(children: .contain).accessibilityLabel(curriculum.title)
+            .animation(.easeOut(duration: 0.15), value: selectedIndex)
             switch curriculum.sentence_list_options[selectedIndex].category {
             case .Essential:
                 Text(curriculum.sentence_list_label).font(.headline).foregroundStyle(Color.yapText)
