@@ -71,14 +71,14 @@ struct SettingsScreen: View {
                     .frame(width: 44, height: 44).background(Color.yapAccent, in: Circle())
                 VStack(alignment: .leading, spacing: 2) {
                     Text(shown).font(.headline).foregroundStyle(Color.yapText).lineLimit(1)
-                    if shown != email { Text(email).font(.subheadline).foregroundStyle(.secondary).lineLimit(1) }
+                    if shown != email { Text(email).font(.subheadline).foregroundStyle(Color.yapMuted).lineLimit(1) }
                 }
             }.padding(.vertical, 12)
             Divider()
             HStack(spacing: 12) {
                 Text("Display name")
                 TextField("Add a name", text: $name)
-                    .multilineTextAlignment(.trailing).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing).foregroundStyle(Color.yapMuted)
                     .focused($editingName).submitLabel(.done)
                     .onSubmit { Task { await save() } }
                     .onChange(of: name) { _, value in name = String(value.prefix(50)) }
@@ -95,7 +95,7 @@ struct SettingsScreen: View {
                     Text(syncLine(sync)).foregroundStyle(statusColor(sync.severity))
                     Spacer(minLength: 0)
                 }.frame(minHeight: 44)
-                if let banner = sync.offline_banner { Text(banner).font(.footnote).foregroundStyle(.secondary).padding(.bottom, 8) }
+                if let banner = sync.offline_banner { Text(banner).font(.footnote).foregroundStyle(Color.yapMuted).padding(.bottom, 8) }
                 if let error = sync.error { Text(error).font(.footnote).foregroundStyle(Color.yapNegativeForeground).padding(.bottom, 8) }
             }
             Divider()
@@ -118,7 +118,7 @@ struct SettingsScreen: View {
         CardSection {
             DisclosureGroup {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(sync.description).font(.footnote).foregroundStyle(.secondary).padding(.vertical, 8)
+                    Text(sync.description).font(.footnote).foregroundStyle(Color.yapMuted).padding(.vertical, 8)
                     SettingsRow(sync.local_events_label) { Text("\(sync.local_events)").monospacedDigit() }
                     SettingsRow(sync.server_events_label) { Text("\(sync.server_events)").monospacedDigit() }
                     if let userId = auth.userId { IdentifierRow(label: sync.user_id_label, value: userId) }
@@ -143,7 +143,7 @@ struct SettingsScreen: View {
     }
     private func statusColor(_ severity: SyncSeverity) -> Color {
         switch severity {
-        case .Neutral: .secondary
+        case .Neutral: .yapMuted
         case .Caution: .yapCautionForeground
         case .Negative: .yapNegativeForeground
         }
@@ -202,7 +202,7 @@ private struct SettingsRow<Trailing: View>: View {
         HStack(spacing: 12) {
             Text(title).foregroundStyle(Color.yapText)
             Spacer(minLength: 0)
-            trailing.foregroundStyle(.secondary)
+            trailing.foregroundStyle(Color.yapMuted)
         }.frame(minHeight: 44)
     }
 }
@@ -212,7 +212,7 @@ private struct IdentifierRow: View {
     let value: String
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.footnote).foregroundStyle(.secondary)
+            Text(label).font(.footnote).foregroundStyle(Color.yapMuted)
             Text(value).font(.caption.monospaced()).foregroundStyle(Color.yapText).textSelection(.enabled)
         }.padding(.vertical, 6)
     }

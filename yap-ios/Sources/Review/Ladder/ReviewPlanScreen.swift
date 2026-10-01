@@ -31,7 +31,7 @@ private struct ReviewPlanGroups: View, Equatable {
     var body: some View {
         ForEach(groups, id: \.heading) { group in
             VStack(spacing: 8) {
-                Text(group.heading).font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+                Text(group.heading).font(.subheadline.weight(.medium)).foregroundStyle(Color.yapMuted)
                 SentenceFlow(spacing: 0, alignment: .center) {
                     ForEach(Array(group.cards.enumerated()), id: \.offset) { index, card in
                         Text(card).font(.subheadline.weight(.medium))

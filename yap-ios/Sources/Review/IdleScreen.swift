@@ -67,9 +67,9 @@ struct IdleScreen: View {
         ReviewStepScrollView {
             VStack(spacing: 8) {
                 Text(idle.title).font(.title2.bold())
-                if !idle.body.isEmpty { Text(idle.body).foregroundStyle(.secondary) } else if let card = idle.next_due { NextReviewLine(card: card) }
+                if !idle.body.isEmpty { Text(idle.body).foregroundStyle(Color.yapMuted) } else if let card = idle.next_due { NextReviewLine(card: card) }
                 if let notice = idle.banned_notice {
-                    Text(notice).foregroundStyle(.secondary)
+                    Text(notice).foregroundStyle(Color.yapMuted)
                     Button("Undo restrictions") { actions.undoRestrictions() }.buttonStyle(.bordered)
                 }
             }.multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.vertical, 12)
@@ -92,7 +92,7 @@ struct NextReviewLine: View {
     var body: some View {
         let live = next_review_line(card: card, now_ms: now.timeIntervalSince1970 * 1000)
         (Text(live.text.before) + Text(live.text.emphasis).bold() + Text(live.text.after))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.yapMuted)
             .onChange(of: card.due_timestamp_ms) { _, _ in now = Date() }
             .task(id: live.refresh_at_ms) {
                 let delay = live.refresh_at_ms / 1000 - Date().timeIntervalSince1970

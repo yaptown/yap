@@ -9,7 +9,7 @@ struct DueWordsScreen: View {
             let view = self.view ?? review.deck.due_words_view(banned: review.banned, timestamp_ms: now)
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(view.summary_label).foregroundStyle(.secondary)
+                    Text(view.summary_label).foregroundStyle(Color.yapMuted)
                     CardSummaryList(cards: view.cards, timestampMs: now)
                 }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
             }.background(.clear).navigationTitle(view.title)

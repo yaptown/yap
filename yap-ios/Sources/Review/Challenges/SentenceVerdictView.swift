@@ -71,7 +71,7 @@ struct GradeSectionDisclosure<Content: View>: View {
                 HStack {
                     Text(title).font(.subheadline.weight(.medium))
                     Spacer()
-                    Text(isExpanded ? "Hide" : "Show").font(.caption).foregroundStyle(.secondary)
+                    Text(isExpanded ? "Hide" : "Show").font(.caption).foregroundStyle(Color.yapMuted)
                 }.contentShape(Rectangle())
             }.buttonStyle(.plain).frame(minHeight: 32)
             if isExpanded { content() }
@@ -122,7 +122,7 @@ private struct CompactDefinitionRow: View, Equatable {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(Array(entry.definition.senses.enumerated()), id: \.offset) { _, sense in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(sense.meaning) + Text(sense.note.map { " " + $0 } ?? "").foregroundColor(.secondary)
+                    Text(sense.meaning) + Text(sense.note.map { " " + $0 } ?? "").foregroundColor(.yapMuted)
                     if let example = sense.example {
                         DefinitionExamples(example: example)
                     }
@@ -138,7 +138,7 @@ struct DefinitionExamples: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("\"\(example.target)\"").italic()
             Text("\"\(example.native)\"")
-        }.font(.footnote).foregroundStyle(.secondary)
+        }.font(.footnote).foregroundStyle(Color.yapMuted)
     }
 }
 

@@ -58,7 +58,7 @@ struct FlashcardChallengeView: View {
                     .reportIssueSheet(isPresented: $reporting, subject: .Flashcard(flashcard.content))
                 }
                 if let subtitle = view.subtitle {
-                    Text(subtitle).font(.footnote).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                    Text(subtitle).font(.footnote).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity)
                 }
                 Divider()
                 if revealed {
@@ -66,7 +66,7 @@ struct FlashcardChallengeView: View {
                 } else {
                     Label(view.reveal_label, systemImage: "chevron.down")
                         .font(.subheadline.weight(view.require_answer_reveal ? .bold : .regular))
-                        .foregroundStyle(view.require_answer_reveal ? .primary : .secondary)
+                        .foregroundStyle(view.require_answer_reveal ? Color.yapText : Color.yapMuted)
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
             }
@@ -87,7 +87,7 @@ struct FlashcardChallengeView: View {
                 TutorialHint(text: hint, pointing: .down, arrowSize: 96).fadeIn(duration: 0.3, delay: 1.5)
             }
             if !revealed, let label = view.cant_listen_label {
-                Button(label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
+                Button(label) { actions.cantListen() }.font(.footnote).foregroundStyle(Color.yapMuted).frame(minHeight: 44)
             }
             if canGrade {
                 GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
@@ -141,9 +141,9 @@ struct DefinitionBoxesView: View {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(sense.meaning).font(.title3.weight(.medium))
                 Spacer(minLength: 0)
-                if let trailing { Text(trailing).font(.caption).italic().foregroundStyle(.secondary).multilineTextAlignment(.trailing) }
+                if let trailing { Text(trailing).font(.caption).italic().foregroundStyle(Color.yapMuted).multilineTextAlignment(.trailing) }
             }
-            if let note = sense.note { Text(note).font(.footnote).foregroundStyle(.secondary) }
+            if let note = sense.note { Text(note).font(.footnote).foregroundStyle(Color.yapMuted) }
             if let example = sense.example {
                 HStack(alignment: .top, spacing: 4) {
                     AudioButton(request: AudioRequest(request: TtsRequest(text: example.target, language: host.deck.get_target_language(), is_ssml: false,
@@ -167,7 +167,7 @@ private struct FlashcardAnswer: View, Equatable {
         case let .Gram(_, definition, _, _):
             DefinitionBoxesView(definition: definition)
         case let .Listening(possible):
-            if let header = view.listening_header { Text(header).font(.footnote).foregroundStyle(.secondary) }
+            if let header = view.listening_header { Text(header).font(.footnote).foregroundStyle(Color.yapMuted) }
             ForEach(Array(possible.enumerated()), id: \.offset) { _, entry in
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {

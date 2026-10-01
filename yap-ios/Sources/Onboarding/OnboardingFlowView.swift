@@ -92,7 +92,7 @@ struct OnboardingFlowView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Link(destination: URL(string: study.url)!) { Text(study.title).multilineTextAlignment(.leading) }
                         .buttonStyle(.plain).font(.subheadline.weight(.semibold))
-                    Text(verbatim: "\(study.authors) (\(study.year)). \(study.journal)").font(.caption).foregroundStyle(.secondary)
+                    Text(verbatim: "\(study.authors) (\(study.year)). \(study.journal)").font(.caption).foregroundStyle(Color.yapMuted)
                 }
             }
         case let .Review(eyebrow, emphasis, demoReviews, reviewLabel, learned, learnedTitle, learnedBody, chart):
@@ -101,7 +101,7 @@ struct OnboardingFlowView: View {
                 .font(.title2.bold()).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {
                 ForEach(0..<min(Int(demoReviews), 3), id: \.self) { _ in Circle().fill(Color.yapAccent).frame(width: 12, height: 12) }
-                if let reviewLabel { Text(reviewLabel).font(.subheadline).foregroundStyle(.secondary) }
+                if let reviewLabel { Text(reviewLabel).font(.subheadline).foregroundStyle(Color.yapMuted) }
             }.frame(height: 20)
             if learned {
                 Label(learnedTitle, systemImage: "checkmark.circle").font(.title2.bold())
@@ -176,7 +176,7 @@ private struct LearningIllustration: View {
                 if !copy.y_label.isEmpty { Text(copy.y_label) }
                 Spacer()
                 Text(copy.x_label)
-            }.font(.caption).foregroundStyle(.secondary)
+            }.font(.caption).foregroundStyle(Color.yapMuted)
         }
     }
 }

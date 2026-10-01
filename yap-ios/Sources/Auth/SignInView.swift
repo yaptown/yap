@@ -19,7 +19,7 @@ struct SignInView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text(copy.dialog_description).foregroundStyle(.secondary)
+                    Text(copy.dialog_description).foregroundStyle(Color.yapMuted)
                     Picker(copy.dialog_title, selection: $sheet.tab) {
                         Text(copy.sign_in_tab).tag(AuthSheet.Tab.signIn)
                         Text(copy.sign_up_tab).tag(AuthSheet.Tab.signUp)

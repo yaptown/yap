@@ -38,7 +38,7 @@ struct TranscriptionChallengeView: View {
                 // Like the web: a big speaker on top, then the sentence with its blanks inline.
                 VStack(spacing: 4) {
                     AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: true, hero: true)
-                    Text(view.instructions).font(.footnote).foregroundStyle(.secondary)
+                    Text(view.instructions).font(.footnote).foregroundStyle(Color.yapMuted)
                 }.frame(maxWidth: .infinity)
                     .overlay(alignment: .topTrailing) { ReportIssueMenu(subject: .Transcription(sentence)) }
                 SentenceFlow(spacing: 0, alignment: .center) {
@@ -89,7 +89,7 @@ struct TranscriptionChallengeView: View {
             }
             if editing, let tip = screen.keyboard_tip, !keyboardTipDismissed {
                 HStack(spacing: 8) {
-                    (Text("Tip:").fontWeight(.medium) + Text(" " + tip)).font(.subheadline).foregroundStyle(.secondary)
+                    (Text("Tip:").fontWeight(.medium) + Text(" " + tip)).font(.subheadline).foregroundStyle(Color.yapMuted)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Button("Dismiss tip", systemImage: "xmark") { keyboardTipDismissed = true }
                         .labelStyle(.iconOnly).font(.footnote).buttonStyle(.plain).frame(width: 32, height: 32)
@@ -102,7 +102,7 @@ struct TranscriptionChallengeView: View {
             }
         } actions: {
             if view.verdict == nil {
-                Button(view.cant_listen_label) { actions.cantListen() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44).disabled(view.is_grading)
+                Button(view.cant_listen_label) { actions.cantListen() }.font(.footnote).foregroundStyle(Color.yapMuted).frame(minHeight: 44).disabled(view.is_grading)
                 HStack {
                     Button { submit() } label: { Text(view.submit_label).frame(maxWidth: .infinity) }.disabled(!view.can_submit)
                         .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
@@ -138,7 +138,7 @@ struct TranscriptionChallengeView: View {
         let text = blank.text
         let shape = RoundedRectangle(cornerRadius: 6)
         return Text(text.isEmpty ? view.placeholder : text).font(fieldFont)
-            .foregroundStyle(.secondary).opacity(text.isEmpty ? 1 : 0)
+            .foregroundStyle(Color.yapMuted).opacity(text.isEmpty ? 1 : 0)
             .overlay {
                 TextField("", text: Binding(get: { text }, set: { send(.InputChanged(index: UInt64(index), text: $0)) }))
                     .textFieldStyle(.plain).font(fieldFont).multilineTextAlignment(.center).focused($focused, equals: index)
@@ -178,7 +178,7 @@ struct TranscriptionChallengeView: View {
     }
     @ViewBuilder private func wordGrades(_ verdict: VerdictView) -> some View {
         (Text(verdict.submission_label + " ") + Text(verdict.submission_text).foregroundStyle(Color.yapText))
-            .font(.subheadline).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+            .font(.subheadline).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity, alignment: .leading)
         ForEach(Array(verdict.word_grades.enumerated()), id: \.offset) { _, word in
             HStack(spacing: 4) {
                 Text(word.heard).fontWeight(.medium)

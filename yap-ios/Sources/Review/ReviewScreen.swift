@@ -14,8 +14,8 @@ struct ReviewScreen: View {
                 if view.show_account_prompt {
                     let copy = account_copy()
                     StudyCard {
-                        Text(copy.prompt_title).font(.subheadline).foregroundStyle(.secondary)
-                        Text(copy.prompt_body).font(.caption).foregroundStyle(.secondary)
+                        Text(copy.prompt_title).font(.subheadline).foregroundStyle(Color.yapMuted)
+                        Text(copy.prompt_body).font(.caption).foregroundStyle(Color.yapMuted)
                         Button(copy.prompt_action) { authSheet.present(tab: .signUp) }
                             .buttonStyle(.bordered)
                     }.padding(.top, 12)
@@ -25,18 +25,18 @@ struct ReviewScreen: View {
                         let sync = weapon.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,
                             manual_sync_in_flight: false, host_sync_error: host.syncError)
                         VStack(alignment: .leading, spacing: 12) {
-                            if let banner = sync.offline_banner { Label(banner, systemImage: "wifi.slash").font(.caption).foregroundStyle(.secondary) }
+                            if let banner = sync.offline_banner { Label(banner, systemImage: "wifi.slash").font(.caption).foregroundStyle(Color.yapMuted) }
                             if let error = sync.error { Text(error).font(.caption).foregroundStyle(Color.yapNegativeForeground) }
                         }
                     }
                 }
                 if let banner = host.packBanner {
                     HStack {
-                        Text(banner.message).font(.caption).foregroundStyle(.secondary)
+                        Text(banner.message).font(.caption).foregroundStyle(Color.yapMuted)
                         Button(banner.retry_label, action: actions.retryPack).font(.caption)
                     }
                 }
-                if let error = host.authError { Text(error).font(.caption).foregroundStyle(.secondary) }
+                if let error = host.authError { Text(error).font(.caption).foregroundStyle(Color.yapMuted) }
             }.padding(.horizontal, 12).frame(maxWidth: 600)
             switch view.step {
             case let .Challenge(challenge): challengeView(challenge).id(challenge.challenge)

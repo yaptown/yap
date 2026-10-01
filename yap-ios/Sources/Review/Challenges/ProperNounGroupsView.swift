@@ -21,7 +21,7 @@ struct ProperNounGroupsView: View, Equatable {
         var result = AttributedString()
         for span in group.spans {
             var run = AttributedString(span.text)
-            run.foregroundColor = span.target_language ? .primary : .secondary
+            run.foregroundColor = span.target_language ? .yapText : .yapMuted
             if span.target_language { run.font = .subheadline.weight(.semibold) }
             result += run
         }

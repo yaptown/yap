@@ -22,7 +22,7 @@ struct PronunciationChallengeView: View {
             if let prompt = view.tutorial_grade_prompt {
                 TutorialHint(text: prompt, pointing: .down, arrowSize: 96).fadeIn(duration: 0.3, delay: 1.5)
             }
-            Button(view.cant_speak_label) { actions.cantSpeak() }.font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
+            Button(view.cant_speak_label) { actions.cantSpeak() }.font(.footnote).foregroundStyle(Color.yapMuted).frame(minHeight: 44)
             GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
                 .disabled(actions.submitting)
         }
@@ -65,9 +65,9 @@ private struct PronunciationRow: View {
         let firstExample = cue.segments.firstIndex { $0.role == .Example }
         let lastExample = cue.segments.lastIndex { $0.role == .Example }
         var word = AttributedString(segment.text)
-        word.foregroundColor = current == index ? .yapAccent : segment.role == .Connector ? .secondary : .yapText
+        word.foregroundColor = current == index ? .yapAccent : segment.role == .Connector ? .yapMuted : .yapText
         word.font = .body.weight(segment.role == .Example ? .semibold : .regular)
-        if playing, let start = segment.start_ms, audio.currentTime * 1000 < Double(start) { word.foregroundColor = .secondary.opacity(0.5) }
+        if playing, let start = segment.start_ms, audio.currentTime * 1000 < Double(start) { word.foregroundColor = .yapMuted.opacity(0.5) }
         if segment.role == .Example {
             let options: String.CompareOptions = position == .End ? [.caseInsensitive, .backwards] : [.caseInsensitive]
             if let range = word.range(of: pattern, options: options),
@@ -84,7 +84,7 @@ private struct PronunciationRow: View {
         let target = indices.reduce(into: AttributedString()) { $0 += spokenWord($1) }
         let native = cue.native_connector + (indices.last.map { trailingSpace($0) } ?? "")
         return ZStack {
-            Text(native).foregroundStyle(.secondary).opacity(connectorHeard ? 0 : 1).accessibilityHidden(connectorHeard)
+            Text(native).foregroundStyle(Color.yapMuted).opacity(connectorHeard ? 0 : 1).accessibilityHidden(connectorHeard)
             Text(target).opacity(connectorHeard ? 1 : 0).accessibilityHidden(!connectorHeard)
         }.animation(.easeInOut(duration: 0.3), value: connectorHeard)
     }
@@ -99,7 +99,7 @@ private struct PronunciationRow: View {
                         } else { Text(spokenWord(index)) }
                     }
                 }.font(.body)
-                if let context { Text(context).font(.footnote).foregroundStyle(.secondary) }
+                if let context { Text(context).font(.footnote).foregroundStyle(Color.yapMuted) }
             }.frame(maxWidth: .infinity, alignment: .leading)
         }.onChange(of: playing) { _, playing in if playing { connectorHeard = true } }
     }
@@ -116,7 +116,7 @@ private struct PronunciationCard: View, Equatable {
                 Color.clear.frame(width: 44, height: 44)
             }
             if let note = view.position_note {
-                Text(note).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                Text(note).font(.caption).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity)
             }
             ForEach(Array(view.examples.enumerated()), id: \.offset) { _, example in
                 PronunciationRow(cue: example.cue, pattern: view.pattern, position: view.position,

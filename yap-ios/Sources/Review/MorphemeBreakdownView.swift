@@ -24,13 +24,13 @@ struct MorphemeBreakdownView: View {
             if parts.contains(where: { $0.second != nil }) {
                 GridRow {
                     ForEach(parts.indices, id: \.self) { index in
-                        cell(parts[index].second ?? "", index).italic().foregroundStyle(.secondary)
+                        cell(parts[index].second ?? "", index).italic().foregroundStyle(Color.yapMuted)
                     }
                 }
             }
             GridRow {
                 ForEach(parts.indices, id: \.self) { index in
-                    cell(parts[index].third ?? "", index).foregroundStyle(.secondary)
+                    cell(parts[index].third ?? "", index).foregroundStyle(Color.yapMuted)
                 }
             }
         }

@@ -59,12 +59,12 @@ struct DictionaryScreen: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).foregroundStyle(Color.yapText)
                                 let gloss = entry.gloss
-                                if !gloss.isEmpty { Text(gloss).font(.subheadline).foregroundStyle(.secondary) }
-                                if entry.is_phrase { Text("(phrase)").font(.caption).foregroundStyle(.secondary) }
+                                if !gloss.isEmpty { Text(gloss).font(.subheadline).foregroundStyle(Color.yapMuted) }
+                                if entry.is_phrase { Text("(phrase)").font(.caption).foregroundStyle(Color.yapMuted) }
                             }
                             Spacer()
                             if entry.senses.contains(where: { $0.is_in_deck }) { Image(systemName: "checkmark.circle").accessibilityLabel("In deck") }
-                            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right").font(.caption).foregroundStyle(Color.yapMuted)
                         }.frame(minHeight: 44)
                     }
                 }
@@ -101,7 +101,7 @@ private struct DictionaryDetail: View {
             if let entry {
                 StudyCard {
                     Text((entry.prefix.map { $0.prefix + $0.separator } ?? "") + entry.display_text).font(.largeTitle.bold())
-                    if entry.is_phrase { Text("(phrase)").font(.caption).foregroundStyle(.secondary) }
+                    if entry.is_phrase { Text("(phrase)").font(.caption).foregroundStyle(Color.yapMuted) }
                     AudioButton(request: entry.audio_request, reviewCount: deck.get_total_reviews())
                     ForEach(entry.senses, id: \.frequency_index) { sense in
                         VStack(alignment: .leading, spacing: 12) {

@@ -30,7 +30,7 @@ struct SentenceListProgressView: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ProgressView(value: progress.percent_known, total: 100)
-            Text(progress.caption).font(.caption).foregroundStyle(Color(uiColor: .secondaryLabel))
+            Text(progress.caption).font(.caption).foregroundStyle(Color.yapMuted)
         }
     }
 }
@@ -43,7 +43,7 @@ struct MoviePoster: View {
     var body: some View {
         Group {
             if let image { Image(uiImage: image).resizable().scaledToFit() }
-            else { Image(systemName: "film").resizable().scaledToFit().padding(8).foregroundStyle(.secondary) }
+            else { Image(systemName: "film").resizable().scaledToFit().padding(8).foregroundStyle(Color.yapMuted) }
         }.frame(width: 48, height: 72).clipShape(RoundedRectangle(cornerRadius: 6))
             .accessibilityLabel("Poster for \(title)")
             .task(id: id) { image = host.deck.get_movie_poster(movie_id: id).flatMap { UIImage(data: Data($0)) } }

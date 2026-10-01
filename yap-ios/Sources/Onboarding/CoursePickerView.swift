@@ -39,13 +39,13 @@ struct CoursePickerView: View {
                             }
                         }
                         HStack {
-                            Text("Native language:").foregroundStyle(.secondary)
+                            Text("Native language:").foregroundStyle(Color.yapMuted)
                             Picker("Native language", selection: $native) {
                                 ForEach(natives, id: \.self) { language in Text(get_language_metadata(language: language).native_name).tag(language) }
                             }.pickerStyle(.menu)
                         }
                         Text("(Yap.Town is great for beginner and intermediate students.)")
-                            .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                            .font(.subheadline).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
                     }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
                 }.navigationTitle("Choose a course").navigationBarTitleDisplayMode(.inline)
             }
@@ -77,7 +77,7 @@ struct CoursePickerView: View {
             VStack(spacing: 2) {
                 icon(course, size: 144)
                 Text(name.name).font(.title2.bold()).foregroundStyle(Color.yapText)
-                if let variant = name.variant { Text(variant).font(.subheadline).foregroundStyle(.secondary) }
+                if let variant = name.variant { Text(variant).font(.subheadline).foregroundStyle(Color.yapMuted) }
             }.frame(maxWidth: .infinity).contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
@@ -88,7 +88,7 @@ struct CoursePickerView: View {
                 icon(course, size: 56)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Resume " + name.full).font(.title3.bold()).foregroundStyle(Color.yapText)
-                    Text("Continue where you left off").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Continue where you left off").font(.subheadline).foregroundStyle(Color.yapMuted)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "arrow.right").foregroundStyle(Color.yapText)
@@ -102,7 +102,7 @@ struct CoursePickerView: View {
     private func divider(_ label: String) -> some View {
         HStack(spacing: 12) {
             VStack { Divider() }
-            Text(label.uppercased()).font(.caption.weight(.semibold)).tracking(1).foregroundStyle(.secondary).fixedSize()
+            Text(label.uppercased()).font(.caption.weight(.semibold)).tracking(1).foregroundStyle(Color.yapMuted).fixedSize()
             VStack { Divider() }
         }
     }

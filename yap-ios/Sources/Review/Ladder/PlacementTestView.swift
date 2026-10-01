@@ -17,7 +17,7 @@ struct PlacementTestView: View {
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             } else {
                 Text("Placement test").font(.title2.bold())
-                Text("Round \(placement.round) of \(info.total_rounds)").foregroundStyle(.secondary)
+                Text("Round \(placement.round) of \(info.total_rounds)").foregroundStyle(Color.yapMuted)
                 Text("Tap the words you know, then press Next.")
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     ForEach(placement.words, id: \.word) { word in

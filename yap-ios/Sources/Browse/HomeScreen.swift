@@ -67,7 +67,7 @@ struct HomeScreen: View {
                                 HStack(alignment: .firstTextBaseline) {
                                     Text(view.week.title).font(.headline).foregroundStyle(Color.yapText)
                                     Spacer()
-                                    Text(view.week.today_label).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+                                    Text(view.week.today_label).font(.subheadline.monospacedDigit()).foregroundStyle(Color.yapMuted)
                                 }
                                 WeekProgressStrip(week: view.week.days).equatable()
                             }.padding(16)
@@ -96,7 +96,7 @@ struct HomeScreen: View {
                                 Link("Privacy", destination: URL(string: "https://yap.town/privacy")!)
                                 Link("Terms", destination: URL(string: "https://yap.town/terms")!)
                             }
-                        }.font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                        }.font(.caption).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity)
                     }.padding(20).frame(maxWidth: 600)
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height)
                 }
@@ -139,7 +139,7 @@ struct GoalProgress: View {
     var body: some View {
         HStack(spacing: 10) {
             Text(goal.name).font(.headline).foregroundStyle(Color.yapText)
-            Text(goal.level_label).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Text(goal.level_label).font(.caption).foregroundStyle(Color.yapMuted).lineLimit(1)
                 .padding(.horizontal, 8).padding(.vertical, 3)
                 .overlay { Capsule().strokeBorder(Color(uiColor: .separator)) }
             Spacer(minLength: 0)
@@ -147,7 +147,7 @@ struct GoalProgress: View {
         }
         ProgressView(value: goal.percent, total: 100)
             .accessibilityLabel(goal.title).accessibilityValue(goal.percent_label)
-        Text(goal.subtitle).font(.subheadline).foregroundStyle(.secondary)
+        Text(goal.subtitle).font(.subheadline).foregroundStyle(Color.yapMuted)
     }
 }
 
@@ -175,7 +175,7 @@ private struct HomeGreeting: View {
 
     var body: some View {
         (Text("\(view.greeting_lead) ") + courseIcon + Text(view.course_name).fontWeight(.semibold)
-            + Text(" \(Image(systemName: "chevron.down"))").font(.headline).foregroundStyle(.secondary)
+            + Text(" \(Image(systemName: "chevron.down"))").font(.headline).foregroundStyle(Color.yapMuted)
             + Text(view.greeting_tail))
             .font(.title2.weight(.medium)).foregroundStyle(Color.yapText)
             .fixedSize(horizontal: false, vertical: true)
@@ -191,7 +191,7 @@ struct DictionarySearchBar: View {
             Text(placeholder).lineLimit(1)
             Spacer(minLength: 0)
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.yapMuted)
         .padding(.horizontal, 14).frame(height: 44)
         .quietSurface(cornerRadius: 14)
     }
@@ -214,7 +214,7 @@ private struct UpNextCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Label(upNext.eyebrow.uppercased(), systemImage: symbol)
-                .font(.caption.weight(.semibold)).tracking(1.5).foregroundStyle(.secondary)
+                .font(.caption.weight(.semibold)).tracking(1.5).foregroundStyle(Color.yapMuted)
             Text(upNext.headline).font(.system(size: 34, weight: .bold)).foregroundStyle(Color.yapText)
                 .minimumScaleFactor(0.6).fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 6)
@@ -239,11 +239,11 @@ private struct HomeStat: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 8) {
-                Image(systemName: systemImage).font(.title3).foregroundStyle(.secondary)
+                Image(systemName: systemImage).font(.title3).foregroundStyle(Color.yapMuted)
                 Text(stat.value).font(.title2.bold().monospacedDigit()).foregroundStyle(Color.yapText)
             }
-            Text(stat.caption).font(.subheadline).foregroundStyle(.secondary)
-            if let note = stat.note { Text(note).font(.caption).foregroundStyle(.secondary).padding(.top, 2) }
+            Text(stat.caption).font(.subheadline).foregroundStyle(Color.yapMuted)
+            if let note = stat.note { Text(note).font(.caption).foregroundStyle(Color.yapMuted).padding(.top, 2) }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }

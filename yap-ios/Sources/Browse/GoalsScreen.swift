@@ -16,7 +16,7 @@ struct GoalsScreen: View {
                     StudyCard { GoalProgress(goal: view.goal) }.id("goal")
                     StudyCard {
                         Text(view.daily_goal_title).font(.headline).foregroundStyle(Color.yapText)
-                        Text(view.daily_goal_label).font(.subheadline).foregroundStyle(.secondary)
+                        Text(view.daily_goal_label).font(.subheadline).foregroundStyle(Color.yapMuted)
                         DailyGoalEditor(target: view.daily_goal, options: view.daily_goal_options, addEvent: actions.addEvent)
                             .id(view.daily_goal)
                     }.id("daily-goal")
@@ -80,7 +80,7 @@ struct GoalsScreen: View {
         let movies = lists.movies.sorted { (lists.metadata[$0.id]?.original_language == native ? 0 : 1) < (lists.metadata[$1.id]?.original_language == native ? 0 : 1) }
         return VStack(alignment: .leading, spacing: 12) {
             Text("Movies").font(.title2.bold()).foregroundStyle(Color.yapText)
-            Text("You can usually watch a movie comfortably once you know 95% of the words.").font(.subheadline).foregroundStyle(.secondary)
+            Text("You can usually watch a movie comfortably once you know 95% of the words.").font(.subheadline).foregroundStyle(Color.yapMuted)
             ForEach(showAllMovies ? movies : Array(movies.prefix(8)), id: \.id) { movie in
                 row(.Movie(id: movie.id), lists: lists)
             }
@@ -94,7 +94,7 @@ struct GoalsScreen: View {
                 Text("Yap has word lists for Pimsleur, but is not affiliated with Pimsleur in any way.")
                 Button("I understand") { acknowledged = true }
             } else {
-                Text("Focus on vocabulary from a specific Pimsleur lesson.").font(.subheadline).foregroundStyle(.secondary)
+                Text("Focus on vocabulary from a specific Pimsleur lesson.").font(.subheadline).foregroundStyle(Color.yapMuted)
                 ForEach(Array(Set(lists.lessons.map(\.level))).sorted(), id: \.self) { level in
                     DisclosureGroup("Level \(level)") {
                         ForEach(lists.lessons.filter { $0.level == level }, id: \.lesson) { lesson in
@@ -116,10 +116,10 @@ struct GoalsScreen: View {
                         if selection == selected { Image(systemName: "checkmark.circle.fill").accessibilityLabel("Selected") }
                     }
                     if case let .Movie(id) = selection {
-                        if let year = lists.metadata[id]?.year { Text(String(year)).font(.caption).foregroundStyle(.secondary) }
+                        if let year = lists.metadata[id]?.year { Text(String(year)).font(.caption).foregroundStyle(Color.yapMuted) }
                         if let movie = lists.movies.first(where: { $0.id == id }), let count = movie.cards_to_next_milestone {
                             Text("\(count) \(count == 1 ? "card" : "cards") to \(Int(ceil(movie.percent_known / 5) * 5))%")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(Color.yapMuted)
                         }
                     }
                     SentenceListProgressView(progress: deck.get_sentence_list_progress(selection: selection, essential_percent_known: lists.tier.percent_known)).equatable()

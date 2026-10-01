@@ -24,7 +24,7 @@ struct StatsScreen: View {
                         Button(action: showDue) {
                             StudyCard {
                                 Text("\(view.due.title) →").font(.headline).foregroundStyle(Color.yapText)
-                                Text(view.due.label).font(.subheadline).foregroundStyle(.secondary)
+                                Text(view.due.label).font(.subheadline).foregroundStyle(Color.yapMuted)
                             }
                         }.buttonStyle(.plain).id("due")
                         StudyCard {
@@ -34,7 +34,7 @@ struct StatsScreen: View {
                         VStack(alignment: .leading, spacing: 16) {
                             Text(view.leeches_label).font(.title2.bold()).foregroundStyle(Color.yapText)
                             Text("Leeches are cards you're really struggling with. The hardest few cards can take disproportionate time, so it's more efficient to set them aside for a while.")
-                                .font(.subheadline).foregroundStyle(.secondary)
+                                .font(.subheadline).foregroundStyle(Color.yapMuted)
                             if !view.leeches.isEmpty { CardSummaryList(cards: view.leeches, timestampMs: now) }
                         }.id("leeches")
                     }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
@@ -58,9 +58,9 @@ private struct StatTile: View {
     let tile: StatTileView
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(tile.eyebrow).font(.subheadline).foregroundStyle(.secondary)
+            Text(tile.eyebrow).font(.subheadline).foregroundStyle(Color.yapMuted)
             Text(tile.value).font(.title2.bold())
-            if let caption = tile.caption { Text(caption).font(.subheadline).foregroundStyle(.secondary) }
+            if let caption = tile.caption { Text(caption).font(.subheadline).foregroundStyle(Color.yapMuted) }
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(16).cardSurface().foregroundStyle(Color.yapText)
     }
@@ -109,7 +109,7 @@ private struct KnowledgeChart: View {
                 .chartXSelection(value: $frequency).frame(height: 300)
             if let selected {
                 Text("Frequency: \(frequency_rank_label(rank: selected.frequency)) · Knowledge: \(selected.predicted_knowledge * 100, specifier: "%.1f")%").font(.caption)
-                Text("Examples (\(selected.word_count) words): \(selected.example_words)").font(.caption).foregroundStyle(.secondary)
+                Text("Examples (\(selected.word_count) words): \(selected.example_words)").font(.caption).foregroundStyle(Color.yapMuted)
             }
         }
     }

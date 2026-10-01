@@ -12,7 +12,7 @@ struct SetDisplayNameView: View {
             Text("You've completed \(reviewCount) reviews! Set a display name to personalize your profile.")
             TextField("Display name", text: $name).textFieldStyle(.roundedBorder).disabled(saving)
                 .onChange(of: name) { _, value in name = String(value.prefix(50)) }
-            Text("You can change this at any time.").font(.caption).foregroundStyle(.secondary)
+            Text("You can change this at any time.").font(.caption).foregroundStyle(Color.yapMuted)
             if let error { Text(error).foregroundStyle(Color.yapNegativeForeground) }
             HStack(spacing: 16) {
                 Button("Skip") { actions.skipDisplayName() }.buttonStyle(.bordered)

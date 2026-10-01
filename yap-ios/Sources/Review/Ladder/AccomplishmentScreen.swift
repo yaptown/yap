@@ -45,9 +45,9 @@ struct AccomplishmentScreen: View {
                         HStack {
                             Text(card.word).fontWeight(.semibold)
                             Spacer()
-                            Text(card.card_type).font(.caption).foregroundStyle(.secondary)
+                            Text(card.card_type).font(.caption).foregroundStyle(Color.yapMuted)
                         }
-                        Text(card.translation).foregroundStyle(.secondary)
+                        Text(card.translation).foregroundStyle(Color.yapMuted)
                     }
                 }
             }

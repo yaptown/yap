@@ -130,7 +130,7 @@ struct CardSection<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let title {
-                Text(title.uppercased()).font(.caption.weight(.semibold)).tracking(1).foregroundStyle(.secondary)
+                Text(title.uppercased()).font(.caption.weight(.semibold)).tracking(1).foregroundStyle(Color.yapMuted)
                     .padding(.horizontal, 16)
             }
             VStack(alignment: .leading, spacing: 0) { content }

@@ -52,7 +52,7 @@ struct TranslationChallengeView: View {
                     if let section = view.grade_section {
                         GradeSectionDisclosure(title: section.title, isExpanded: $gradesExpanded) {
                             VStack(spacing: 12) {
-                                Text(section.subtitle).font(.caption).foregroundStyle(.secondary)
+                                Text(section.subtitle).font(.caption).foregroundStyle(Color.yapMuted)
                                 ForEach(Array(section.items.enumerated()), id: \.offset) { index, item in gradeRow(item, index: index) }
                             }
                         }
@@ -64,7 +64,7 @@ struct TranslationChallengeView: View {
                 } else {
                     SubmissionTextView(text: Binding(get: { state.text }, set: { send(.TextChanged(text: $0)) }), focused: $focused, onSubmit: submit)
                         .overlay(alignment: .topLeading) {
-                            if state.text.isEmpty { Text(view.placeholder).foregroundStyle(.secondary).padding(12).allowsHitTesting(false) }
+                            if state.text.isEmpty { Text(view.placeholder).foregroundStyle(Color.yapMuted).padding(12).allowsHitTesting(false) }
                         }
                     ProperNounGroupsView(groups: view.proper_nouns).equatable()
                 }

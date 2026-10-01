@@ -24,9 +24,9 @@ struct SentenceListSelector: View {
                 SentenceListPoster(bytes: bytes, title: view.sentence_list_label).equatable()
             }
             if case .PimsleurLesson = navigation.selection, !pimsleurAcknowledged {
-                Image(systemName: "headphones").font(.title).foregroundStyle(.secondary)
+                Image(systemName: "headphones").font(.title).foregroundStyle(Color.yapMuted)
                 Text("Yap has word lists for Pimsleur, but is not affiliated with Pimsleur in any way.")
-                    .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    .font(.subheadline).foregroundStyle(Color.yapMuted).multilineTextAlignment(.center)
                 Button("I understand") { pimsleurAcknowledged = true }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent)
             } else {
@@ -41,7 +41,7 @@ struct SentenceListSelector: View {
                 }
                 SentenceListProgressView(progress: view.progress).equatable()
                 if let note = view.level_note {
-                    Text(note).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+                    Text(note).font(.caption).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
@@ -67,7 +67,7 @@ struct SentenceListSelector: View {
             Image(systemName: step < 0 ? "chevron.left" : "chevron.right")
                 .font(.title3.weight(.semibold)).frame(width: 36, height: 44).contentShape(Rectangle())
         }
-        .buttonStyle(.plain).foregroundStyle(.secondary)
+        .buttonStyle(.plain).foregroundStyle(Color.yapMuted)
         .opacity(enabled ? 1 : 0).disabled(!enabled)
         .accessibilityLabel(step < 0 ? "Previous sentence list" : "Next sentence list")
     }

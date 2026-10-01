@@ -21,11 +21,11 @@ struct CardSummaryList: View {
                                 Button { revealed.insert(card.card_indicator) } label: {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(card.card_text).fontWeight(.semibold).blur(radius: 5).accessibilityHidden(true)
-                                        Text("Tap to reveal").font(.caption).italic().foregroundStyle(.secondary)
+                                        Text("Tap to reveal").font(.caption).italic().foregroundStyle(Color.yapMuted)
                                     }
                                 }.buttonStyle(.plain).accessibilityLabel("Reveal listening lexeme")
                             } else { Text(card.card_text).fontWeight(.semibold) }
-                            if let subtitle = card.card_subtitle { Text(subtitle).font(.subheadline).foregroundStyle(.secondary) }
+                            if let subtitle = card.card_subtitle { Text(subtitle).font(.subheadline).foregroundStyle(Color.yapMuted) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         Group {
                             if card.due_timestamp_ms <= timestampMs {
@@ -33,7 +33,7 @@ struct CardSummaryList: View {
                                     .overlay { Capsule().strokeBorder(Color(uiColor: .separator)) }
                             }
                             else { Text(Date(timeIntervalSince1970: card.due_timestamp_ms / 1000), style: .relative) }
-                        }.font(.caption).foregroundStyle(.secondary).frame(width: readyColumnWidth, alignment: .leading)
+                        }.font(.caption).foregroundStyle(Color.yapMuted).frame(width: readyColumnWidth, alignment: .leading)
                     }
                 }
             }
