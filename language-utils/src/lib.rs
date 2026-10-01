@@ -3407,14 +3407,16 @@ impl Language {
         }
     }
 
-    /// Frozen names used in TTS cache keys and model pronunciation instructions.
-    /// Independent of linguistic prompt caches; existing strings must not change:
-    /// changing one re-synthesizes every cached clip for that language.
+    /// The name used in TTS cache keys and model pronunciation instructions,
+    /// independent of [`Self::prompt_name`]. Changing one re-synthesizes
+    /// every cached clip for that language, so change it exactly when that
+    /// language's voices or accent instructions change — otherwise the
+    /// cache keeps serving the old voice.
     pub fn tts_name(&self) -> &'static str {
         match self {
             Language::French => "French",
-            Language::English => "English",
-            Language::SpanishLatinAmerican => "Spanish",
+            Language::English => "English (US)",
+            Language::SpanishLatinAmerican => "Spanish (Latin America)",
             Language::SpanishPeninsular => "Spanish (Spain)",
             Language::Korean => "Korean",
             Language::German => "German",
@@ -3422,7 +3424,7 @@ impl Language {
             Language::ChineseTraditional => "Chinese (Traditional)",
             Language::Japanese => "Japanese",
             Language::Russian => "Russian",
-            Language::PortugueseBrazilian => "Portuguese",
+            Language::PortugueseBrazilian => "Portuguese (Brazil)",
             Language::PortugueseEuropean => "European Portuguese",
             Language::Italian => "Italian",
             Language::Hindi => "Hindi",
@@ -6072,7 +6074,7 @@ mod pronunciation_challenge_audio_tests {
     #[test]
     fn tts_instructions_name_the_language() {
         let instructions = pronunciation_challenge_tts_instructions(Language::PortugueseBrazilian);
-        assert!(instructions.contains("natural Portuguese pronunciation"));
+        assert!(instructions.contains("natural Portuguese (Brazil) pronunciation"));
         assert!(instructions.contains("normal conversational pace"));
     }
 
@@ -6230,12 +6232,12 @@ mod dialect_tests {
     }
 
     #[test]
-    fn frozen_audio_language_keys() {
+    fn frozen_prompt_names() {
         let expected = [
             (Language::French, "French"),
             (Language::English, "English"),
             (Language::SpanishLatinAmerican, "Spanish"),
-            (Language::SpanishPeninsular, "Spanish (Spain)"),
+            (Language::SpanishPeninsular, "Spanish"),
             (Language::Korean, "Korean"),
             (Language::German, "German"),
             (Language::ChineseSimplified, "Chinese (Simplified)"),
@@ -6243,20 +6245,14 @@ mod dialect_tests {
             (Language::Japanese, "Japanese"),
             (Language::Russian, "Russian"),
             (Language::PortugueseBrazilian, "Portuguese"),
-            (Language::PortugueseEuropean, "European Portuguese"),
+            (Language::PortugueseEuropean, "Portuguese"),
             (Language::Italian, "Italian"),
             (Language::Hindi, "Hindi"),
             (Language::Thai, "Thai"),
         ];
         assert_eq!(expected.len(), LANGUAGES.len());
-        for (language, key) in expected {
-            assert_eq!(language.tts_name(), key);
-            let prompt = match language {
-                Language::SpanishPeninsular => "Spanish",
-                Language::PortugueseEuropean => "Portuguese",
-                _ => key,
-            };
-            assert_eq!(language.prompt_name(), prompt);
+        for (language, name) in expected {
+            assert_eq!(language.prompt_name(), name);
         }
     }
 
