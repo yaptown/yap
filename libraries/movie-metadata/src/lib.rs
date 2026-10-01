@@ -100,6 +100,7 @@ impl TmdbMovie {
                 .as_deref()
                 .and_then(|d| d.split('-').next()?.parse().ok()),
             original_language: self.original_language.clone(),
+            variety: None,
             rotten_tomatoes_score,
         }
     }
@@ -161,8 +162,8 @@ fn read_optional(path: &std::path::Path) -> Result<Option<Vec<u8>>> {
     }
 }
 
-/// Append only missing IDs, retaining every existing byte (including unknown
-/// fields and blank lines). Return whether a row was/would be appended.
+/// Append missing IDs, or refresh only an existing row's authoritative variety.
+/// Other fields and unrelated lines are preserved. Return whether metadata changed.
 pub fn append_movie_metadata(
     path: &std::path::Path,
     movie: &language_utils::MovieMetadataBasic,
@@ -170,20 +171,37 @@ pub fn append_movie_metadata(
 ) -> Result<bool> {
     use std::io::Write;
 
-    #[derive(serde::Deserialize)]
-    struct Id {
-        id: String,
-    }
-
     let existing = read_optional(path)?.unwrap_or_default();
-    for line in existing.split(|&b| b == b'\n') {
+    let mut offset = 0;
+    for line in existing.split_inclusive(|&b| b == b'\n') {
+        let start = offset;
+        offset += line.len();
         if line.iter().all(u8::is_ascii_whitespace) {
             continue;
         }
-        let row: Id =
+        let mut row: serde_json::Value =
             serde_json::from_slice(line).with_context(|| format!("parsing {}", path.display()))?;
-        if row.id == movie.id {
-            return Ok(false);
+        if row["id"] == movie.id {
+            let Some(variety) = &movie.variety else {
+                return Ok(false);
+            };
+            if row["variety"] == *variety {
+                return Ok(false);
+            }
+            if !dry_run {
+                row["variety"] = variety.clone().into();
+                let mut updated = existing[..start].to_vec();
+                serde_json::to_writer(&mut updated, &row)?;
+                if line.ends_with(b"\n") {
+                    updated.push(b'\n');
+                }
+                updated.extend_from_slice(&existing[offset..]);
+                let mut temp =
+                    tempfile::NamedTempFile::new_in(path.parent().context("metadata parent")?)?;
+                temp.write_all(&updated)?;
+                temp.persist(path)?;
+            }
+            return Ok(true);
         }
     }
     if !dry_run {
@@ -336,8 +354,37 @@ mod tests {
             title: "A title\nwith a newline".into(),
             year: Some(2001),
             original_language: Some("fr".into()),
+            variety: None,
             rotten_tomatoes_score: None,
         }
+    }
+
+    #[test]
+    fn authoritative_variety_updates_only_matching_metadata_and_is_idempotent() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("metadata.jsonl");
+        let unrelated = " {\"id\":\"other\",\"extra\":42}\n";
+        let original = format!(
+            "{unrelated}{{\"id\":\"tt1234567\",\"title\":\"Curated\",\"rotten_tomatoes_score\":98,\"unknown\":true}}\n"
+        );
+        std::fs::write(&path, &original).unwrap();
+        let mut film = movie();
+        film.variety = Some("spa-es".into());
+        assert!(append_movie_metadata(&path, &film, true).unwrap());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
+        assert!(append_movie_metadata(&path, &film, false).unwrap());
+        let updated = std::fs::read_to_string(&path).unwrap();
+        assert!(updated.starts_with(unrelated));
+        let rows: Vec<serde_json::Value> = updated
+            .lines()
+            .map(|l| serde_json::from_str(l).unwrap())
+            .collect();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[1]["title"], "Curated");
+        assert_eq!(rows[1]["rotten_tomatoes_score"], 98);
+        assert_eq!(rows[1]["unknown"], true);
+        assert_eq!(rows[1]["variety"], "spa-es");
+        assert!(!append_movie_metadata(&path, &film, false).unwrap());
     }
 
     #[test]

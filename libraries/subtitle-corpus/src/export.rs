@@ -28,9 +28,7 @@ use crate::clips::{
     clips_path, read_file as read_clips_with_provenance, subtitle_sentences, Clip, Provenance,
 };
 use crate::cues::{load_transcript, repair_latin_homoglyphs};
-use crate::library::{
-    course_dir, current_verdict, output_is_fresh, read_plan, truncate, Movie, Source,
-};
+use crate::library::{current_verdict, output_is_fresh, read_plan, truncate, Movie, Source};
 use crate::sync::{AudioStreamIdentity, Cue};
 use crate::transcript::{Kind, Spoken};
 use movie_subtitles::sentences::KeyedSentence;
@@ -218,7 +216,8 @@ pub async fn export_clips(
         .filter(|m| imdb.as_deref().is_none_or(|id| m.imdb_id == id))
         .filter(|m| {
             langs.as_ref().is_none_or(|l| {
-                course_dir(&m.original_language).is_some_and(|c| l.iter().any(|x| x == c))
+                m.course(&out)
+                    .is_some_and(|c| l.iter().any(|x| x == c.corpus_code()))
             })
         })
         .filter(|m| clips_path(&out.join(&m.imdb_id)).exists())
@@ -264,7 +263,7 @@ pub async fn export_clips(
     // partial runs still leave it whole.
     for lang in queue
         .iter()
-        .filter_map(|m| course_dir(&m.original_language))
+        .filter_map(|m| m.course(&out).map(|l| l.corpus_code()))
         .collect::<std::collections::BTreeSet<_>>()
     {
         let n = write_index(&dest.join(lang))?;
@@ -281,8 +280,8 @@ async fn export_film(
     jobs: usize,
     alignment_cache_failures: &AtomicUsize,
 ) -> Result<FilmExport> {
-    let code = course_dir(&movie.original_language).context("unmapped language")?;
-    let language = Language::from_code(code).context("unmapped course code")?;
+    let language = movie.course(out).context("unmapped language")?;
+    let code = language.corpus_code();
     let dir = out.join(&movie.imdb_id);
     if !movie.path.exists() {
         bail!("video missing: {}", movie.path.display());
@@ -311,7 +310,7 @@ async fn export_film(
 
     // Audio-only films have no phoneme alignment; no context or model probe
     // exists on this path, only the cache store's read interface.
-    let cache = (!crate::clips::audio_only(code)).then_some(store);
+    let cache = (!crate::clips::audio_only(language.code())).then_some(store);
 
     let lang_dir = dest.join(code);
     let passing: Vec<&Clip> = clips.iter().filter(|c| c.passed).collect();
@@ -389,6 +388,7 @@ async fn export_film(
                 clip,
                 &id,
                 course_sentence,
+                language,
                 &cut,
                 stamp,
                 reuse,
@@ -516,6 +516,7 @@ async fn export_one(
     clip: &Clip,
     id: &str,
     course_sentence: bool,
+    language: Language,
     cut: &Cut,
     stamp: serde_json::Value,
     reuse: Option<Loudness>,
@@ -603,6 +604,7 @@ async fn export_one(
         "format": SIDECAR_FORMAT,
         "id": id,
         "language": provenance.inputs.language,
+        "variety": language.code(),
         "film": {
             "imdb_id": movie.imdb_id,
             "title": movie.title,
@@ -1212,6 +1214,50 @@ fn clean_context_end(boundary: i64, transcript: &[Spoken]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn variety_reaches_index_without_entering_media_stamp() {
+        let root = tempfile::tempdir().unwrap();
+        let dir = root.path().join("spa/tt8291806-test-0");
+        std::fs::create_dir_all(&dir).unwrap();
+        let movie = Movie {
+            imdb_id: "tt8291806".into(),
+            title: "Pain and Glory".into(),
+            year: Some(2019),
+            path: root.path().join("film.mkv"),
+            original_language: "Spanish".into(),
+            source: Source::Missing,
+        };
+        let video = VideoProbe {
+            width: 1920,
+            height: 1080,
+            aspect_ratio: 16.0 / 9.0,
+            hdr: false,
+            duration_ms: 100_000,
+        };
+        let cut = Cut {
+            scored_start: 1000,
+            scored_end: 2000,
+            cut_start: 900,
+            cut_end: 2100,
+            ctx_before: 0,
+            ctx_after: 0,
+        };
+        let stamp = media_stamp(&movie, &video, 0, &cut);
+        let mut metadata = json!({"id":"tt8291806-test-0", "language":"spa", "variety":"spa", "film":{"imdb_id":"tt8291806"},
+            "media":{"stamp":stamp}, "sentence":{"text":"fixture"}});
+        let original_stamp = metadata["media"]["stamp"].clone();
+        metadata["variety"] = movie.course(root.path()).unwrap().code().into();
+        assert_eq!(metadata["media"]["stamp"], original_stamp);
+        std::fs::write(dir.join("meta.json"), metadata.to_string()).unwrap();
+        assert_eq!(write_index(&root.path().join("spa")).unwrap(), 1);
+        let index: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(root.path().join("spa/index.jsonl")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(index["variety"], "spa-es");
+        assert!(!root.path().join("spa-es").exists());
+    }
 
     #[test]
     fn orphan_candidates_exclude_valid_and_failed_and_are_sorted_unique() {
@@ -1923,6 +1969,7 @@ fn write_index(lang_dir: &Path) -> Result<usize> {
             let mut row = json!({
                 "id": m["id"],
                 "imdb_id": m["film"]["imdb_id"],
+                "variety": m["variety"],
                 "title": m["film"]["title"],
                 "sentence": m["sentence"]["text"],
                 "course_sentence": m["sentence"]["course_sentence"],
@@ -2010,9 +2057,10 @@ pub fn export_yap(
 
     let (mut written, mut kept, mut downloaded, mut unverified, mut rows) = (0, 0, 0, 0, 0);
     for movie in read_plan(&out)? {
-        let Some(course) = course_dir(&movie.original_language) else {
+        let Some(language) = movie.course(&out) else {
             continue;
         };
+        let course = language.corpus_code();
         if !wanted(course) {
             continue;
         }
@@ -2027,12 +2075,11 @@ pub fn export_yap(
         // transcript, at the course's bar — a replaced subtitle or a fresh
         // transcript leaves a stale verdict that must not authorise an export.
         let verified = output_is_fresh(&movie, &dir)
-            && current_verdict(&dir, course) == Some(Verdict::Verbatim);
+            && current_verdict(&dir, language.code()) == Some(Verdict::Verbatim);
         if !verified {
             unverified += 1;
             continue;
         }
-        let language = Language::from_code(course).context("unknown course language")?;
         let movies = data_root
             .join(language.corpus_code())
             .join("sentence-sources/movies");
@@ -2047,6 +2094,7 @@ pub fn export_yap(
             title: movie.title.clone(),
             year: movie.year,
             original_language: Some(language.iso_639_1().to_owned()),
+            variety: Some(language.code().to_owned()),
             rotten_tomatoes_score: None,
         };
         let appended = movie_metadata::append_movie_metadata(
@@ -2072,12 +2120,12 @@ pub fn export_yap(
                 course,
                 if identical { "keep" } else { "write" },
                 dest.display(),
-                if appended { "append" } else { "keep" },
+                if appended { "write" } else { "keep" },
             );
         }
     }
     println!(
-        "{}{written} subtitles written, {kept} kept, {downloaded} downloaded skipped, {unverified} unverified skipped, {rows} metadata rows appended",
+        "{}{written} subtitles written, {kept} kept, {downloaded} downloaded skipped, {unverified} unverified skipped, {rows} metadata rows written",
         if dry_run { "dry-run (would): " } else { "" },
     );
     Ok(())

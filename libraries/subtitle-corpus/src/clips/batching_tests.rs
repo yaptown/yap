@@ -155,6 +155,7 @@ fn film(root: &Path, index: usize, count: usize) -> PreparedFilm {
                 segmentation: "test-segmentation".into(),
                 corrections: String::new(),
                 language: code.into(),
+                variety: code.into(),
                 audio: AudioInput {
                     filename: "film.mkv".into(),
                     stream_index: 0,
@@ -573,4 +574,23 @@ async fn audio_only_current_film_skips_model_and_regates_film_verbatim() {
         .await
         .unwrap();
     assert!(read_clips(&clips_path(&dir)).unwrap()[0].passed);
+}
+
+#[test]
+fn variety_refresh_is_metadata_only_but_gate_availability_needs_new_measurements() {
+    let root = tempfile::tempdir().unwrap();
+    let mut previous = film(root.path(), 0, 0).provenance;
+    previous.inputs.language = "spa".into();
+    previous.inputs.variety.clear();
+    let mut current = previous.clone();
+    current.inputs.variety = "spa-es".into();
+    assert_eq!(previous.work(&current), Work::Regate);
+    assert_eq!(current.work(&current), Work::Nothing);
+    current.gate.min_ratio = None;
+    assert_eq!(
+        previous.work(&current),
+        Work::Redo("phoneme gate availability changed")
+    );
+    assert!(audio_only("por-pt"));
+    assert!(Language::PortugueseEuropean.g2p_lang().is_none());
 }

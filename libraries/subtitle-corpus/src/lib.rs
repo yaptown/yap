@@ -17,6 +17,7 @@ pub mod pgs;
 pub mod proofread;
 mod r2;
 pub mod sync;
+pub mod training_export;
 pub mod transcript;
 pub mod vad;
 pub mod verbatim;

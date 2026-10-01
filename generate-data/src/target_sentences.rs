@@ -210,7 +210,11 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
             crate::dialect::Transport::Batch,
         )
         .await?;
-        movie_varieties = film_varieties(&result, &labels);
+        let movies = course_movies(&PathBuf::from(format!(
+            "./generate-data/data/{}/sentence-sources/movies",
+            course.target_language.corpus_code()
+        )))?;
+        movie_varieties = film_varieties(&result, &labels, &movies)?;
         retain_dialect(
             course.target_language,
             &labels,
@@ -237,11 +241,13 @@ pub async fn get_target_sentences(course: Course) -> anyhow::Result<TargetSenten
     })
 }
 
-/// Vote before course filtering: neutral and conflicting labels cast no vote.
+/// Explicit film metadata wins; otherwise vote before course filtering.
+/// Neutral and conflicting labels cast no vote.
 fn film_varieties(
     sentences: &[(String, Option<String>, SentenceSource)],
     labels: &HashMap<String, crate::dialect::Dialect>,
-) -> HashMap<String, Language> {
+    movies: &[language_utils::MovieMetadataBasic],
+) -> anyhow::Result<HashMap<String, Language>> {
     let mut votes: HashMap<&str, std::collections::BTreeMap<Language, usize>> = HashMap::new();
     for (text, _, source) in sentences {
         if let crate::dialect::Dialect::Only(variety) = labels[text] {
@@ -250,14 +256,22 @@ fn film_varieties(
             }
         }
     }
-    votes
+    let mut varieties: HashMap<String, Language> = votes
         .into_iter()
         .filter_map(|(movie, counts)| {
             let (&variety, &count) = counts.iter().max_by_key(|(_, count)| *count).unwrap();
             (counts.values().filter(|&&votes| votes == count).count() == 1)
                 .then(|| (movie.to_owned(), variety))
         })
-        .collect()
+        .collect();
+    for movie in movies {
+        if let Some(code) = &movie.variety {
+            let variety = Language::from_code(code)
+                .with_context(|| format!("unknown film variety {code} for {}", movie.id))?;
+            varieties.insert(movie.id.clone(), variety);
+        }
+    }
+    Ok(varieties)
 }
 
 /// Retain whole records so translations, merged provenance and lesson IDs survive.
@@ -770,13 +784,21 @@ mod tests {
                     (text.to_string(), None, source)
                 })
                 .collect();
-            let varieties = film_varieties(&records, &labels);
+            let varieties = film_varieties(&records, &labels, &[]).unwrap();
             assert_eq!(
                 varieties,
                 [("a".into(), a), ("b".into(), b), ("shared".into(), a)]
                     .into_iter()
                     .collect::<HashMap<String, Language>>()
             );
+            let metadata: language_utils::MovieMetadataBasic =
+                serde_json::from_value(serde_json::json!({
+                    "id":"a", "title":"Authoritative", "year":null, "variety":b.code()
+                }))
+                .unwrap();
+            let explicit = film_varieties(&records, &labels, &[metadata]).unwrap();
+            assert_eq!(explicit["a"], b); // Explicit metadata overrides the majority vote.
+            assert_eq!(explicit["shared"], a); // Missing metadata retains the vote fallback.
             retain_dialect(a, &labels, &mut records, &mut Vec::new());
             assert_eq!(varieties["b"], b); // Computed before the sibling's rows disappear.
         }

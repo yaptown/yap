@@ -509,6 +509,9 @@ pub struct MovieMetadataBasic {
     /// [`Language::iso_639_1`] directly — see [`normalize_original_language`].
     #[serde(default, deserialize_with = "deserialize_original_language")]
     pub original_language: Option<String>,
+    /// Authoritative spoken course variety, when supplied by the film corpus.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variety: Option<String>,
     /// Rotten Tomatoes score (0-100)
     #[serde(default)]
     pub rotten_tomatoes_score: Option<u8>,
@@ -539,7 +542,7 @@ pub struct MovieMetadata {
     pub original_language: Option<String>,
     /// Rotten Tomatoes score (0-100)
     pub rotten_tomatoes_score: Option<u8>,
-    /// Majority variety of the film's dialect-marked sentences, if unambiguous.
+    /// Authoritative film variety, or an unambiguous sentence-dialect vote.
     pub variety: Option<Language>,
     /// Poster image bytes (JPEG format)
     pub poster_bytes: Option<Vec<u8>>,
@@ -553,7 +556,7 @@ impl From<MovieMetadataBasic> for MovieMetadata {
             year: basic.year,
             original_language: basic.original_language,
             rotten_tomatoes_score: basic.rotten_tomatoes_score,
-            variety: None,
+            variety: basic.variety.as_deref().and_then(Language::from_code),
             poster_bytes: None,
         }
     }
@@ -5477,6 +5480,22 @@ mod original_language_tests {
         for code in ["en", "fr", "ja", "zh", "th", "ka", "tl"] {
             assert_eq!(normalize_original_language(code), code);
         }
+    }
+
+    #[test]
+    fn film_variety_is_optional_and_survives_runtime_conversion() {
+        let metadata: MovieMetadataBasic = serde_json::from_str(
+            r#"{"id":"tt8291806","title":"Pain and Glory","year":2019,"variety":"spa-es"}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            MovieMetadata::from(metadata).variety,
+            Some(Language::SpanishPeninsular)
+        );
+        let old: MovieMetadataBasic =
+            serde_json::from_str(r#"{"id":"tt0","title":"Old metadata","year":null}"#).unwrap();
+        assert!(old.variety.is_none());
+        assert!(serde_json::to_value(old).unwrap().get("variety").is_none());
     }
 
     #[test]

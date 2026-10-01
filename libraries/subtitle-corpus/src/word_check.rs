@@ -250,9 +250,9 @@ fn detect(
     limit: usize,
     samples: Option<&[Sample]>,
 ) -> Result<Vec<Candidate>> {
-    let titles: HashMap<_, _> = library::read_plan(out)?
+    let inventory: HashMap<_, _> = library::read_plan(out)?
         .into_iter()
-        .map(|film| (film.imdb_id, film.title))
+        .map(|film| (film.imdb_id.clone(), film))
         .collect();
     let mut dirs: Vec<_> = std::fs::read_dir(out)?
         .map(|entry| entry.map(|e| e.path()))
@@ -292,13 +292,21 @@ fn detect(
             break;
         }
         films += 1;
-        let language = Language::from_code(code).context("unknown clip language")?;
+        let language = inventory
+            .get(&imdb)
+            .and_then(|film| film.course(out))
+            .or_else(|| Language::from_code(&header.inputs.variety))
+            .or_else(|| Language::from_code(code))
+            .context("unknown clip language")?;
         let tokenization = tokenization_for(code);
         // Keys always name raw cleaned cues, even when a previous overlay has
         // corrected a different word in this sentence or a neighboring sentence.
         let lines =
             clips::uncorrected_subtitle_lines(&std::fs::read_to_string(dir.join("subtitle.srt"))?);
-        let title = titles.get(&imdb).cloned().unwrap_or_else(|| imdb.clone());
+        let title = inventory
+            .get(&imdb)
+            .map(|film| film.title.clone())
+            .unwrap_or_else(|| imdb.clone());
         for record in records {
             let clip: Clip = serde_json::from_str(&record?)
                 .with_context(|| format!("reading clips for {imdb}"))?;

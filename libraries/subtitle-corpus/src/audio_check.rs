@@ -21,6 +21,16 @@ use serde::{Deserialize, Serialize};
 
 pub const MODEL: &str = "gemini-3.1-pro-preview";
 
+/// The listener's verdict tied to the extracted audio identity.
+#[derive(Serialize, Deserialize)]
+pub struct CheckedTrack {
+    pub model: String,
+    pub expected: String,
+    pub filename: String,
+    pub stream: crate::sync::AudioStreamIdentity,
+    pub verdict: Verdict,
+}
+
 /// Where in the runtime each sample starts, as a fraction: past the opening
 /// credits, short of the closing ones, spread so a single foreign-language
 /// scene cannot carry the verdict.
@@ -59,18 +69,14 @@ impl Verdict {
 }
 
 /// The language name a listener should judge the track against. Radarr names
-/// the language, not the variety, and where a course teaches one variety the
-/// other is not usable: "Chinese" covers Cantonese films the Mandarin course
-/// cannot use, and "Portuguese" covers European films the Brazilian course
-/// cannot use. Narrow to the variety the course teaches, so a track in the
-/// other one comes back `expected_language_spoken: false` and is evicted.
+/// the language, not the variety. Both Portuguese varieties are supported;
+/// Chinese still means Mandarin, not Cantonese.
 ///
 /// Narrowing a language here invalidates the stored verdicts judged against
 /// the old name — see `audio_checked`, which compares this string.
 pub fn expected_language(original_language: &str) -> &str {
     match original_language {
         "Chinese" | "Mandarin" => "Mandarin Chinese",
-        "Portuguese" => "Brazilian Portuguese",
         other => other,
     }
 }
@@ -113,8 +119,8 @@ fn prompt(expected: &str) -> String {
          film's language as {expected}, and this track was picked as the film's own \
          original-language dialogue track. Judge whether it really is.\n\n\
          spoken_language: the language the dialogue is mainly in. Name the variety where it \
-         matters — Mandarin against Cantonese, European against Brazilian Portuguese — since a \
-         course in one variety cannot use the other.\n\
+         matters — Mandarin against Cantonese, European against Brazilian Portuguese, \
+         Peninsular against Latin American Spanish. Both Portuguese varieties count as Portuguese.\n\
          expected_language_spoken: whether the dialogue is mainly in {expected}. A film may \
          switch languages for a scene, so answer for the track as a whole, not for any one \
          line.\n\

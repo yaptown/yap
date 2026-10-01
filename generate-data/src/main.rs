@@ -1528,7 +1528,9 @@ async fn main() -> anyhow::Result<()> {
             for basic in generate_data::target_sentences::course_movies(&movies_dir)? {
                 // Convert to full MovieMetadata and load poster bytes from separate file
                 let mut movie: language_utils::MovieMetadata = basic.into();
-                movie.variety = sentence_corpus.movie_varieties.get(&movie.id).copied();
+                movie.variety = movie
+                    .variety
+                    .or_else(|| sentence_corpus.movie_varieties.get(&movie.id).copied());
                 let poster_path = posters_dir.join(format!("{}.jpg", movie.id));
                 if poster_path.exists()
                     && let Ok(bytes) = std::fs::read(&poster_path)

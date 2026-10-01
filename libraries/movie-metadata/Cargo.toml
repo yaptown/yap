@@ -12,5 +12,4 @@ anyhow = "1.0"
 language-utils = { path = "../../language-utils" }
 movie-subtitles = { path = "../movie-subtitles" }
 
-[dev-dependencies]
 tempfile = { workspace = true }

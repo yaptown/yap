@@ -2839,6 +2839,201 @@ pub async fn discover(
     Ok(())
 }
 
+/// Classify exact gram occurrences and assign their most frequent sense to
+/// missing-vector occurrences and lemma-loosened overlays.
+/// Retains inventory slots so the one-based sense ids survive retired usages.
+pub async fn assign_senses(
+    language: Language,
+    app: &mut BTreeMap<String, SentenceInfo>,
+    restricted: &mut BTreeMap<String, SentenceInfo>,
+    interners: &language_utils::GramInterners,
+    store: &osmo::Store,
+) -> Result<BTreeMap<Gram<String>, UsageInventory>> {
+    use language_utils::SpurGram;
+    use std::num::NonZeroU32;
+    let path = format!(
+        "./generate-data/data/{}/usage_inventories.jsonl",
+        language.corpus_code()
+    );
+    let contents = match std::fs::read_to_string(&path) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(error) => return Err(error).context("Failed to read usage inventories"),
+    };
+    let mut inventories = BTreeMap::new();
+    struct Classifier {
+        centroids: Vec<(NonZeroU32, Vec<f32>)>,
+        counts: Vec<u32>,
+        historical: Vec<usize>,
+    }
+    let mut classifiers: HashMap<SpurGram, Classifier> = HashMap::new();
+    let mut skipped = 0usize;
+    for line in contents.lines() {
+        let mut inventory: UsageInventory = serde_json::from_str(line)?;
+        let Some(gram) = inventory
+            .gram
+            .get_interned(&interners.strings)
+            .and_then(|gram| gram.get_interned(&interners.grams))
+        else {
+            log::warn!(
+                "sense-assignment[{}]: {:?}: no classifier (gram absent from segmented vocabulary)",
+                language.code(),
+                inventory.key
+            );
+            continue;
+        };
+        let mut centroids = Vec::new();
+        for (index, usage) in inventory.usages.iter_mut().enumerate() {
+            usage.anchors.retain(|anchor| {
+                app.contains_key(&anchor.sentence) || restricted.contains_key(&anchor.sentence)
+            });
+            match entry_centroid(store, language, &inventory.key, usage).await {
+                Ok(vector) => {
+                    centroids.push((NonZeroU32::new(u32::try_from(index + 1)?).unwrap(), vector))
+                }
+                Err(_) => {
+                    usage.anchors.clear();
+                    skipped += 1;
+                }
+            }
+        }
+        if !centroids.is_empty() {
+            classifiers.insert(
+                gram,
+                Classifier {
+                    centroids,
+                    counts: vec![0; inventory.usages.len()],
+                    historical: inventory
+                        .usages
+                        .iter()
+                        .map(|usage| usage.n_assigned)
+                        .collect(),
+                },
+            );
+            inventories.insert(inventory.gram.clone(), inventory);
+        } else {
+            log::warn!(
+                "sense-assignment[{}]: {:?}: no classifier (all senses lack cached corpus anchors)",
+                language.code(),
+                inventory.key
+            );
+        }
+    }
+    let mut tagged = 0usize;
+    // First classify all cached occurrences, then use their most frequent
+    // sense for missing vectors; traversal order cannot affect fallback ids.
+    for (text, info) in app.iter_mut().chain(restricted.iter_mut()) {
+        let (_, index) = index_sentence(text, info, interners, language);
+        let mut word_index = 0usize;
+        for token in &mut info.sentence.tokens {
+            let word_count = interners
+                .atoms(token.gram)
+                .iter()
+                .filter(|a| matches!(a, Atom::Tok(_)))
+                .count();
+            let spans: Vec<_> = index.words[word_index..word_index + word_count]
+                .iter()
+                .filter(|w| w.is_heteronym)
+                .map(|w| w.char_span)
+                .collect();
+            word_index += word_count;
+            let Some(Classifier {
+                centroids, counts, ..
+            }) = classifiers.get_mut(&token.gram)
+            else {
+                continue;
+            };
+            if spans.is_empty() {
+                continue;
+            }
+            let Some(vectors) =
+                token_embeddings::read_word_vectors(store, language, text, &spans).await
+            else {
+                continue;
+            };
+            let vector = mean_normalized(&vectors.iter().collect::<Vec<_>>());
+            let sense = centroids
+                .iter()
+                .max_by(|a, b| dot(&vector, &a.1).total_cmp(&dot(&vector, &b.1)))
+                .unwrap()
+                .0;
+            token.sense = Some(sense);
+            tagged += 1;
+            counts[sense.get() as usize - 1] += 1;
+        }
+    }
+    let defaults: HashMap<_, _> = classifiers
+        .iter()
+        .map(|(gram, classifier)| {
+            let sense = classifier
+                .centroids
+                .iter()
+                .max_by_key(|(sense, _)| {
+                    let index = sense.get() as usize - 1;
+                    (
+                        classifier.counts[index],
+                        classifier.historical[index],
+                        std::cmp::Reverse(*sense),
+                    )
+                })
+                .unwrap()
+                .0;
+            (*gram, sense)
+        })
+        .collect();
+    let fallbacks: usize = app
+        .values_mut()
+        .chain(restricted.values_mut())
+        .map(|info| apply_sense_fallbacks(info, interners, &defaults))
+        .sum();
+    tagged += fallbacks;
+    if skipped > 0 {
+        log::warn!(
+            "sense-assignment[{}]: skipped {skipped} senses without cached corpus anchors",
+            language.code()
+        );
+    }
+    println!(
+        "sense-assignment[{}]: {tagged} tagged occurrences, {fallbacks} fallback assignments, {skipped} skipped senses",
+        language.code()
+    );
+    Ok(inventories)
+}
+
+/// Missing-vector tokens and overlays share one frozen frequency-based choice.
+/// Only actual token assignments contribute to the occurrence statistics.
+fn apply_sense_fallbacks(
+    info: &mut SentenceInfo,
+    interners: &language_utils::GramInterners,
+    defaults: &HashMap<language_utils::SpurGram, std::num::NonZeroU32>,
+) -> usize {
+    let mut assigned = 0;
+    for token in &mut info.sentence.tokens {
+        if token.sense.is_none()
+            && let Some(&sense) = defaults.get(&token.gram)
+        {
+            token.sense = Some(sense);
+            assigned += 1;
+        }
+    }
+    for term in info
+        .multiword_terms
+        .high_confidence
+        .iter_mut()
+        .chain(&mut info.multiword_terms.low_confidence)
+    {
+        if let Some(gram) = term
+            .gram
+            .get_interned(&interners.strings)
+            .and_then(|gram| gram.get_interned(&interners.grams))
+            && let Some(&sense) = defaults.get(&gram.gram)
+        {
+            term.gram.sense = Some(sense);
+        }
+    }
+    assigned
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -3083,199 +3278,4 @@ mod tests {
         let sil = cosine_silhouette(&refs, &labels);
         assert!(sil < 0.9, "one blob should not look cleanly separable");
     }
-}
-
-/// Classify exact gram occurrences and assign their most frequent sense to
-/// missing-vector occurrences and lemma-loosened overlays.
-/// Retains inventory slots so the one-based sense ids survive retired usages.
-pub async fn assign_senses(
-    language: Language,
-    app: &mut BTreeMap<String, SentenceInfo>,
-    restricted: &mut BTreeMap<String, SentenceInfo>,
-    interners: &language_utils::GramInterners,
-    store: &osmo::Store,
-) -> Result<BTreeMap<Gram<String>, UsageInventory>> {
-    use language_utils::SpurGram;
-    use std::num::NonZeroU32;
-    let path = format!(
-        "./generate-data/data/{}/usage_inventories.jsonl",
-        language.corpus_code()
-    );
-    let contents = match std::fs::read_to_string(&path) {
-        Ok(contents) => contents,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(error).context("Failed to read usage inventories"),
-    };
-    let mut inventories = BTreeMap::new();
-    struct Classifier {
-        centroids: Vec<(NonZeroU32, Vec<f32>)>,
-        counts: Vec<u32>,
-        historical: Vec<usize>,
-    }
-    let mut classifiers: HashMap<SpurGram, Classifier> = HashMap::new();
-    let mut skipped = 0usize;
-    for line in contents.lines() {
-        let mut inventory: UsageInventory = serde_json::from_str(line)?;
-        let Some(gram) = inventory
-            .gram
-            .get_interned(&interners.strings)
-            .and_then(|gram| gram.get_interned(&interners.grams))
-        else {
-            log::warn!(
-                "sense-assignment[{}]: {:?}: no classifier (gram absent from segmented vocabulary)",
-                language.code(),
-                inventory.key
-            );
-            continue;
-        };
-        let mut centroids = Vec::new();
-        for (index, usage) in inventory.usages.iter_mut().enumerate() {
-            usage.anchors.retain(|anchor| {
-                app.contains_key(&anchor.sentence) || restricted.contains_key(&anchor.sentence)
-            });
-            match entry_centroid(store, language, &inventory.key, usage).await {
-                Ok(vector) => {
-                    centroids.push((NonZeroU32::new(u32::try_from(index + 1)?).unwrap(), vector))
-                }
-                Err(_) => {
-                    usage.anchors.clear();
-                    skipped += 1;
-                }
-            }
-        }
-        if !centroids.is_empty() {
-            classifiers.insert(
-                gram,
-                Classifier {
-                    centroids,
-                    counts: vec![0; inventory.usages.len()],
-                    historical: inventory
-                        .usages
-                        .iter()
-                        .map(|usage| usage.n_assigned)
-                        .collect(),
-                },
-            );
-            inventories.insert(inventory.gram.clone(), inventory);
-        } else {
-            log::warn!(
-                "sense-assignment[{}]: {:?}: no classifier (all senses lack cached corpus anchors)",
-                language.code(),
-                inventory.key
-            );
-        }
-    }
-    let mut tagged = 0usize;
-    // First classify all cached occurrences, then use their most frequent
-    // sense for missing vectors; traversal order cannot affect fallback ids.
-    for (text, info) in app.iter_mut().chain(restricted.iter_mut()) {
-        let (_, index) = index_sentence(text, info, interners, language);
-        let mut word_index = 0usize;
-        for token in &mut info.sentence.tokens {
-            let word_count = interners
-                .atoms(token.gram)
-                .iter()
-                .filter(|a| matches!(a, Atom::Tok(_)))
-                .count();
-            let spans: Vec<_> = index.words[word_index..word_index + word_count]
-                .iter()
-                .filter(|w| w.is_heteronym)
-                .map(|w| w.char_span)
-                .collect();
-            word_index += word_count;
-            let Some(Classifier {
-                centroids, counts, ..
-            }) = classifiers.get_mut(&token.gram)
-            else {
-                continue;
-            };
-            if spans.is_empty() {
-                continue;
-            }
-            let Some(vectors) =
-                token_embeddings::read_word_vectors(store, language, text, &spans).await
-            else {
-                continue;
-            };
-            let vector = mean_normalized(&vectors.iter().collect::<Vec<_>>());
-            let sense = centroids
-                .iter()
-                .max_by(|a, b| dot(&vector, &a.1).total_cmp(&dot(&vector, &b.1)))
-                .unwrap()
-                .0;
-            token.sense = Some(sense);
-            tagged += 1;
-            counts[sense.get() as usize - 1] += 1;
-        }
-    }
-    let defaults: HashMap<_, _> = classifiers
-        .iter()
-        .map(|(gram, classifier)| {
-            let sense = classifier
-                .centroids
-                .iter()
-                .max_by_key(|(sense, _)| {
-                    let index = sense.get() as usize - 1;
-                    (
-                        classifier.counts[index],
-                        classifier.historical[index],
-                        std::cmp::Reverse(*sense),
-                    )
-                })
-                .unwrap()
-                .0;
-            (*gram, sense)
-        })
-        .collect();
-    let fallbacks: usize = app
-        .values_mut()
-        .chain(restricted.values_mut())
-        .map(|info| apply_sense_fallbacks(info, interners, &defaults))
-        .sum();
-    tagged += fallbacks;
-    if skipped > 0 {
-        log::warn!(
-            "sense-assignment[{}]: skipped {skipped} senses without cached corpus anchors",
-            language.code()
-        );
-    }
-    println!(
-        "sense-assignment[{}]: {tagged} tagged occurrences, {fallbacks} fallback assignments, {skipped} skipped senses",
-        language.code()
-    );
-    Ok(inventories)
-}
-
-/// Missing-vector tokens and overlays share one frozen frequency-based choice.
-/// Only actual token assignments contribute to the occurrence statistics.
-fn apply_sense_fallbacks(
-    info: &mut SentenceInfo,
-    interners: &language_utils::GramInterners,
-    defaults: &HashMap<language_utils::SpurGram, std::num::NonZeroU32>,
-) -> usize {
-    let mut assigned = 0;
-    for token in &mut info.sentence.tokens {
-        if token.sense.is_none()
-            && let Some(&sense) = defaults.get(&token.gram)
-        {
-            token.sense = Some(sense);
-            assigned += 1;
-        }
-    }
-    for term in info
-        .multiword_terms
-        .high_confidence
-        .iter_mut()
-        .chain(&mut info.multiword_terms.low_confidence)
-    {
-        if let Some(gram) = term
-            .gram
-            .get_interned(&interners.strings)
-            .and_then(|gram| gram.get_interned(&interners.grams))
-            && let Some(&sense) = defaults.get(&gram.gram)
-        {
-            term.gram.sense = Some(sense);
-        }
-    }
-    assigned
 }

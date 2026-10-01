@@ -5,7 +5,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::{Context, Result};
+use language_utils::Language;
 use serde::{Deserialize, Serialize};
+
+mod varieties;
 
 /// Radarr's language name -> every code an ffprobe stream tag might carry.
 ///
@@ -115,6 +118,32 @@ pub struct Movie {
     pub path: PathBuf,
     pub original_language: String,
     pub source: Source,
+}
+
+impl Movie {
+    /// Authoritative spoken variety, independent of shared corpus storage.
+    /// Human overrides win over a named variety heard on the current track.
+    pub fn course(&self, root: &Path) -> Option<Language> {
+        let fallback = Language::from_code(course_dir(&self.original_language)?)?;
+        varieties::OVERRIDES
+            .iter()
+            .find(|(id, _)| *id == self.imdb_id)
+            .map(|(_, language)| *language)
+            .or_else(|| {
+                let dir = root.join(&self.imdb_id);
+                let stamp = crate::sync::read_audio_stamp(&dir)?;
+                let check: crate::audio_check::CheckedTrack =
+                    serde_json::from_slice(&std::fs::read(dir.join("audio-check.json")).ok()?)
+                        .ok()?;
+                (check.filename == stamp.filename
+                    && check.stream == stamp.stream
+                    && !check.verdict.commentary
+                    && check.verdict.enough_dialogue)
+                    .then(|| varieties::heard(fallback, &check.verdict.spoken_language))
+                    .flatten()
+            })
+            .or(Some(fallback))
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -376,13 +405,7 @@ pub fn classify(
     }
 
     if let Some(course) = course_dir(original_language) {
-        let movies = data_root
-            .join(
-                language_utils::Language::from_code(course)
-                    .unwrap()
-                    .corpus_code(),
-            )
-            .join("sentence-sources/movies");
+        let movies = data_root.join(course).join("sentence-sources/movies");
         let raw = movies.join(format!("subtitles-raw/{imdb_id}.srt"));
         if raw.exists() {
             return Ok(Source::Downloaded { path: raw });

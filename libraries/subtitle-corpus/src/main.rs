@@ -17,7 +17,6 @@ use std::sync::Mutex;
 
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
-use language_utils::Language;
 use library::{
     disc_track, film_filename, film_stamp, output_is_fresh, plan_path, read_plan, subtitle_stamp,
     truncate, FilmStamp, Movie, Source,
@@ -35,6 +34,8 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command_ {
+    /// Export every passing clip to lexide training manifests and 16 kHz WAVs.
+    TrainingExport(subtitle_corpus::training_export::Options),
     /// Proofread orthography and flag incoherent course sentences.
     Proofread(subtitle_corpus::proofread::Options),
     /// Detect single-word disagreements and review spelling versus audio mismatches.
@@ -494,13 +495,9 @@ fn subtitle_source(
             return Some(path.clone());
         }
     }
-    if let Some(course) = library::course_dir(&movie.original_language) {
+    if let Some(course) = movie.course(dir.parent()?) {
         let raw = data_root
-            .join(
-                language_utils::Language::from_code(course)
-                    .unwrap()
-                    .corpus_code(),
-            )
+            .join(course.corpus_code())
             .join("sentence-sources/movies")
             .join(format!("subtitles-raw/{}.srt", movie.imdb_id));
         if raw.exists() {
@@ -1310,15 +1307,7 @@ fn extract_audio(out: PathBuf, jobs: usize, limit: usize, imdb: Option<&str>) ->
     Ok(())
 }
 
-/// The listener's verdict on the track now in `audio.opus`.
-#[derive(Serialize, Deserialize)]
-struct AudioCheck {
-    model: String,
-    expected: String,
-    filename: String,
-    stream: sync::AudioStreamIdentity,
-    verdict: audio_check::Verdict,
-}
+use audio_check::CheckedTrack as AudioCheck;
 
 /// Whether the extracted track has already been heard by the current model,
 /// judged against the variety the course teaches now. A rejected track is
@@ -1894,8 +1883,8 @@ async fn sync_one(
     }
     let (media, stream) = audio_source(movie, &out.join(&movie.imdb_id))?;
     let duration = sync::duration_ms(&movie.path)?;
-    let language = library::course_dir(&movie.original_language)
-        .and_then(Language::from_code)
+    let language = movie
+        .course(out)
         .map(whisper::language_code)
         .unwrap_or("en");
 
@@ -1995,8 +1984,8 @@ fn transcript_is_stale(movie: &Movie, dir: &std::path::Path) -> bool {
         return true;
     };
     let audio = read_audio_stamp(dir).map(|s| s.stream);
-    match library::course_dir(&movie.original_language)
-        .and_then(Language::from_code)
+    match movie
+        .course(dir.parent().expect("film directory parent"))
         .map(whisper::language_code)
         .map(|language| transcript::provenance(language, audio))
     {
@@ -2015,8 +2004,8 @@ async fn transcribe_one(
     out: &std::path::Path,
 ) -> Result<usize> {
     let dir = out.join(&movie.imdb_id);
-    let language = library::course_dir(&movie.original_language)
-        .and_then(Language::from_code)
+    let language = movie
+        .course(out)
         .map(whisper::language_code)
         .context("no Whisper language for this film's original language")?;
     let audio = extracted_audio(movie, &dir).context("no extracted audio")?;
@@ -2148,7 +2137,8 @@ async fn transcript_check(
     // `clips` would not act on the verdict anyway.
     let ungated = queue.len();
     queue.retain(|m| {
-        library::course_dir(&m.original_language).is_some_and(subtitle_corpus::clips::maps)
+        m.course(&out)
+            .is_some_and(|language| subtitle_corpus::clips::maps(language.code()))
     });
     let ungated = ungated - queue.len();
     if limit > 0 {
@@ -2177,15 +2167,12 @@ async fn transcript_check(
         let n = n + 1;
         let dir = out.join(&movie.imdb_id);
         let title = truncate(&movie.title, 34);
-        let (Some(code), Some(language)) = (
-            library::course_dir(&movie.original_language),
-            library::course_dir(&movie.original_language)
-                .and_then(language_utils::Language::from_code),
-        ) else {
+        let Some(language) = movie.course(&out) else {
             println!("[{n}/{total}] {title} ✗ unmapped language");
             failed += 1;
             continue;
         };
+        let code = language.code();
         let min_verbatim = min_verbatim.unwrap_or_else(|| verbatim::min_fraction(code));
         let mut report = match verbatim::check(&dir, language, code, min_verbatim).await {
             Ok(r) => r,
@@ -2393,13 +2380,9 @@ async fn adopt_candidate(
     use subtitle_corpus::verbatim::{self, Verdict};
 
     let mut candidates: Vec<(String, PathBuf)> = Vec::new();
-    if let Some(course) = library::course_dir(&movie.original_language) {
+    if let Some(course) = movie.course(dir.parent().context("film directory parent")?) {
         let movies = data_root
-            .join(
-                language_utils::Language::from_code(course)
-                    .unwrap()
-                    .corpus_code(),
-            )
+            .join(course.corpus_code())
             .join("sentence-sources/movies");
         let path = movies
             .join("subtitles-raw")
@@ -2928,6 +2911,7 @@ fn main() -> Result<()> {
     // variable away from a run that quietly verifies nothing.
     dotenvy::dotenv().ok();
     match Args::parse().command {
+        Command_::TrainingExport(options) => subtitle_corpus::training_export::run(options),
         Command_::Proofread(options) => subtitle_corpus::proofread::run(options),
         Command_::WordCheck {
             out,

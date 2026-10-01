@@ -50,7 +50,7 @@ use crate::cues::{
     agreement_tokens, agrees, align_sentence, load_transcript, parse_cues, slice_wav_padded,
     tokenization_for, AUDIO_PAD_MS, MATCH_SLOP_MS, MAX_CUE_MS, MIN_CUE_MS, MIN_TOKENS,
 };
-use crate::library::{course_dir, read_plan, Movie};
+use crate::library::{read_plan, Movie};
 use crate::transcript::{Kind, Spoken};
 
 /// Bump when the record format or the gating logic changes in a way that
@@ -97,6 +97,9 @@ pub struct Inputs {
     #[serde(default)]
     pub corrections: String,
     pub language: String,
+    /// Course code; storage and cache directories still use `language`.
+    #[serde(default)]
+    pub variety: String,
     pub audio: AudioInput,
 }
 
@@ -158,13 +161,21 @@ impl Provenance {
         if self.inputs.transcript_digest != current.inputs.transcript_digest {
             return Work::Redo("transcript changed");
         }
-        if self.inputs != current.inputs {
+        // Variety is descriptive, not a new phonemization/segmentation recipe.
+        // Actual recipe and gate changes below still invalidate their own work.
+        let mut previous = self.inputs.clone();
+        previous.variety.clone_from(&current.inputs.variety);
+        if previous != current.inputs {
             return Work::Redo("inputs changed");
         }
         if self.cut != current.cut {
             return Work::Redo("cut changed");
         }
-        if self.gate != current.gate {
+        // Audio-only and phoneme-gated films measure pads differently.
+        if self.gate.min_ratio.is_some() != current.gate.min_ratio.is_some() {
+            return Work::Redo("phoneme gate availability changed");
+        }
+        if self.gate != current.gate || self.inputs.variety != current.inputs.variety {
             return Work::Regate;
         }
         Work::Nothing
@@ -402,9 +413,10 @@ pub fn default_min_ratio(code: &str) -> Option<f64> {
 /// against it would be scoring against a model that never heard the
 /// language. Andre's call (2026-09-03): ship Korean clips on the audio
 /// gates and turn the phoneme gate on once a model trained on the g2p-kor
-/// labels exists.
+/// labels exists. European Portuguese likewise has no validated model labels,
+/// and must not be scored against the Brazilian targets.
 pub fn audio_only(code: &str) -> bool {
-    code == "kor"
+    matches!(code, "kor" | "por-pt")
 }
 
 /// Whether `clips` maps this language at all — with a phoneme gate or
@@ -414,7 +426,7 @@ pub fn maps(code: &str) -> bool {
 }
 
 /// The 16-bit mono samples of a RIFF wav as `slice_wav_padded` emits it.
-fn wav_samples(wav: &[u8]) -> Option<Vec<i16>> {
+pub(crate) fn wav_samples(wav: &[u8]) -> Option<Vec<i16>> {
     let mut at = 12; // past "RIFF<len>WAVE"
     while at + 8 <= wav.len() {
         let len = u32::from_le_bytes(wav.get(at + 4..at + 8)?.try_into().ok()?) as usize;
@@ -598,7 +610,7 @@ pub fn llm_tracks(
         .iter()
         .enumerate()
         .filter_map(|(i, m)| {
-            let language = course_dir(&m.original_language).and_then(Language::from_code)?;
+            let language = m.course(out)?;
             if !movie_subtitles::llm_segment::uses_llm(language) {
                 return None;
             }
@@ -985,7 +997,8 @@ fn current_provenance(
                 language,
                 dir.file_name().unwrap().to_str().unwrap(),
             ),
-            language: code.into(),
+            language: language.corpus_code().into(),
+            variety: language.code().into(),
             audio,
         },
         cut: Cut {
@@ -1050,8 +1063,10 @@ async fn prepare_film(
     gate: &Gate,
     concurrency: usize,
 ) -> Result<FilmWork> {
-    let code = course_dir(&movie.original_language).context("unmapped language")?;
-    let language = Language::from_code(code).context("unmapped course code")?;
+    let language = movie
+        .course(dir.parent().context("film directory parent")?)
+        .context("unmapped language")?;
+    let code = language.code();
     let subtitle = dir.join("subtitle.srt");
     let transcript_path = dir.join("transcript.jsonl");
     let audio = dir.join("audio.opus");
@@ -1562,7 +1577,8 @@ pub async fn clips_all(
         .filter(|m| imdb.as_deref().is_none_or(|id| m.imdb_id == id))
         .filter(|m| {
             langs.as_ref().is_none_or(|l| {
-                course_dir(&m.original_language).is_some_and(|c| l.iter().any(|x| x == c))
+                m.course(&out)
+                    .is_some_and(|c| l.iter().any(|x| x == c.corpus_code()))
             })
         })
         .filter(|m| {
@@ -1583,12 +1599,10 @@ pub async fn clips_all(
     let redo: Vec<Movie> = queue
         .iter()
         .filter(|movie| {
-            let Some(code) = course_dir(&movie.original_language) else {
+            let Some(language) = movie.course(&out) else {
                 return false;
             };
-            let Some(language) = Language::from_code(code) else {
-                return false;
-            };
+            let code = language.code();
             let dir = out.join(&movie.imdb_id);
             current_provenance(&dir, language, code, &gate)
                 .is_ok_and(|p| matches!(existing_work(&dir, &p).0, Work::Redo(_)))

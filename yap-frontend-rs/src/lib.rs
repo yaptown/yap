@@ -3401,6 +3401,7 @@ impl Deck {
                         .original_language
                         .as_deref()
                         .map(|code| normalize_original_language(code).to_owned()),
+                    variety: movie_metadata.variety.map(|v| v.code().to_owned()),
                     rotten_tomatoes_score: movie_metadata.rotten_tomatoes_score,
                 });
             }

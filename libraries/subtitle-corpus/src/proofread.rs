@@ -173,7 +173,7 @@ fn chunks(
             continue;
         }
         result.push(Chunk {
-            language: language.code().into(),
+            language: language.corpus_code().into(),
             imdb: imdb.into(),
             items: focus,
             before_read_only: items[start.saturating_sub(CONTEXT_ITEMS)..start]
@@ -265,6 +265,17 @@ fn sorted_paths(dir: &Path) -> Result<Vec<PathBuf>> {
 }
 
 fn discover(options: &Options, samples: Option<&[Sample]>) -> Result<Vec<Track>> {
+    let inventory = if crate::library::plan_path(&options.out).exists() {
+        crate::library::read_plan(&options.out)?
+            .into_iter()
+            .filter_map(|film| {
+                film.course(&options.out)
+                    .map(|language| (film.imdb_id, language))
+            })
+            .collect::<BTreeMap<_, _>>()
+    } else {
+        BTreeMap::new()
+    };
     // Course tracks come first, so eval uses their exact production chunks.
     let mut tracks = BTreeMap::<(String, String), Vec<(PathBuf, bool)>>::new();
     for dir in sorted_paths(&options.data_root)? {
@@ -284,17 +295,6 @@ fn discover(options: &Options, samples: Option<&[Sample]>) -> Result<Vec<Track>>
         }
     }
     if samples.is_none() {
-        let inventory = if crate::library::plan_path(&options.out).exists() {
-            crate::library::read_plan(&options.out)?
-                .into_iter()
-                .filter_map(|film| {
-                    crate::library::course_dir(&film.original_language)
-                        .map(|code| (film.imdb_id, code.to_owned()))
-                })
-                .collect::<BTreeMap<_, _>>()
-        } else {
-            BTreeMap::new()
-        };
         for dir in sorted_paths(&options.out)? {
             let srt = dir.join("subtitle.srt");
             if !srt.is_file() {
@@ -315,7 +315,7 @@ fn discover(options: &Options, samples: Option<&[Sample]>) -> Result<Vec<Track>>
             } else {
                 None
             }
-            .or_else(|| inventory.get(&imdb).cloned());
+            .or_else(|| inventory.get(&imdb).map(|l| l.corpus_code().to_owned()));
             let Some(code) = code else {
                 eprintln!("proofread: no language for {imdb}; skipped");
                 continue;
@@ -343,7 +343,13 @@ fn discover(options: &Options, samples: Option<&[Sample]>) -> Result<Vec<Track>>
             break;
         }
         films += 1;
-        let language = Language::from_code(&code)
+        // The film's variety applies to its own-language tracks only; a
+        // translated subtitle track keeps the language it is written in.
+        let language = inventory
+            .get(&imdb)
+            .copied()
+            .filter(|language| language.corpus_code() == code)
+            .or_else(|| Language::from_code(&code))
             .with_context(|| format!("unknown language {code} for {imdb}"))?;
         for (path, course) in paths {
             let text = std::fs::read_to_string(&path)?;
@@ -660,7 +666,9 @@ fn corrected_lines(
     // Existing proofreads remain in force when this run proposes no replacement,
     // exactly as merge_file preserves them on disk.
     for (raw, line) in track.raw.iter().zip(&mut lines) {
-        if let Some(corrected) = changes.get(&(track.language.code(), &track.imdb, &raw.sentence)) {
+        if let Some(corrected) =
+            changes.get(&(track.language.corpus_code(), &track.imdb, &raw.sentence))
+        {
             line.sentence = (*corrected).to_owned();
         }
     }
@@ -704,7 +712,7 @@ async fn sentence_chunks(
         .filter(|track| {
             samples.is_none_or(|samples| {
                 samples.iter().any(|sample| {
-                    sample.language == track.language.code()
+                    sample.language == track.language.corpus_code()
                         && sample.imdb == track.imdb
                         && matches!(sample.expectation, Expectation::Coherence { .. })
                 })
