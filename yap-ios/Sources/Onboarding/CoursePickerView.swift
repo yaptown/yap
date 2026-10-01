@@ -74,8 +74,8 @@ struct CoursePickerView: View {
     private func tile(_ course: Course) -> some View {
         let name = get_language_name(language: course.target_language, reader: native)
         return Button { select(course) } label: {
-            VStack(spacing: 8) {
-                icon(course, size: 120)
+            VStack(spacing: 2) {
+                icon(course, size: 144)
                 Text(name.name).font(.title2.bold()).foregroundStyle(Color.yapText)
                 if let variant = name.variant { Text(variant).font(.subheadline).foregroundStyle(.secondary) }
             }.frame(maxWidth: .infinity).contentShape(Rectangle())

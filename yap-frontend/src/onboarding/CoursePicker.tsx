@@ -192,7 +192,7 @@ export function CoursePicker({
                     type="button"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.97 }}
-                    className="flex flex-col items-center gap-3 rounded-2xl p-2 cursor-pointer text-center"
+                    className="flex flex-col items-center gap-1 rounded-2xl p-2 cursor-pointer text-center"
                     onClick={() => {
                       setSelectionState({
                         stage: "selectingTarget",
@@ -202,7 +202,7 @@ export function CoursePicker({
                   >
                     <LanguageIcon
                       icon={LANGUAGES[lang].icon}
-                      className="size-28 md:size-36"
+                      className="size-32 md:size-40"
                     />
                     <span>
                       <span className="block text-2xl font-bold">
@@ -411,12 +411,12 @@ function LanguageTile({
       type="button"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.97 }}
-      className="flex flex-col items-center gap-3 rounded-2xl p-2 cursor-pointer text-center"
+      className="flex flex-col items-center gap-1 rounded-2xl p-2 cursor-pointer text-center"
       onClick={onClick}
     >
       <LanguageIcon
         icon={LANGUAGES[language].icon}
-        className="size-28 md:size-36"
+        className="size-32 md:size-40"
       />
       <span>
         <span className="block text-2xl md:text-3xl font-bold">{name}</span>
