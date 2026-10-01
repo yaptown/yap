@@ -356,6 +356,7 @@
     "progress": 0.0,
     "total_reviews": 0,
     "total_count": 0,
+    "keyboard_tip": "Enable the German keyboard on your device to easily type accented characters",
     "offer_engagement": false,
     "online": true
   }

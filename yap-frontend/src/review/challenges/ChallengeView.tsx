@@ -17,6 +17,7 @@ type Props = Omit<
   challenge: Challenge<Gram<string>>;
   onRating: ComponentProps<typeof PronunciationChallenge>["onRating"];
   onCantSpeak: () => void;
+  totalCount: number;
   onTranslationComplete: ComponentProps<
     typeof TranslationChallenge
   >["onComplete"];
@@ -37,6 +38,7 @@ export function ChallengeView({
   nativeLanguage,
   totalReviewsCompleted,
   totalCount,
+  keyboardTip,
   autoplayed,
   setAutoplayed,
   onTranslationComplete,
@@ -104,7 +106,7 @@ export function ChallengeView({
       initialState={initialState}
       challenge={currentChallenge}
       onComplete={onTranscriptionComplete}
-      totalCount={totalCount}
+      keyboardTip={keyboardTip}
       accessToken={accessToken}
       key={`${totalReviewsCompleted}:${currentChallenge.target_language}`}
       onCantListen={onCantListen}

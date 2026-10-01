@@ -44,6 +44,16 @@ pub struct LanguageMetadata {
     pub lets_go: String,
 }
 
+/// The text after "Tip:" suggesting a system keyboard for the language's characters.
+pub fn keyboard_tip(language: Language) -> Option<String> {
+    let metadata = get_language_metadata(language);
+    let characters = metadata.character_type?;
+    Some(format!(
+        "Enable the {} keyboard on your device to easily type {characters} characters",
+        metadata.english_name
+    ))
+}
+
 #[bridgerton::bridge]
 #[bridgerton::stable(strong)]
 pub fn get_language_metadata(language: Language) -> LanguageMetadata {

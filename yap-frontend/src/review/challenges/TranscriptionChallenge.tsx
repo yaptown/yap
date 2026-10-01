@@ -68,7 +68,7 @@ interface TranscriptionChallengeProps {
   initialState?: TranscriptionState;
   onComplete: (grade: PartGraded[], completedAtMs: number) => boolean;
   pendingReviewScope: string;
-  totalCount: number;
+  keyboardTip: string | undefined;
   accessToken: string | undefined;
   onCantListen?: () => void;
   targetLanguage: Language;
@@ -111,7 +111,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   initialState,
   challenge,
   onComplete,
-  totalCount,
+  keyboardTip,
   accessToken,
   onCantListen,
   targetLanguage,
@@ -708,9 +708,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
           )}
 
         {/* Mobile keyboard tip - show on small screens when conditions are met */}
-        {editing && totalCount < 60 && (
-          <MobileKeyboardTip language={targetLanguage} />
-        )}
+        {editing && keyboardTip && <MobileKeyboardTip tip={keyboardTip} />}
 
         {/* Movie posters - hidden after grading */}
         {editing && <MoviePosterGrid movieData={movieData} deck={deck} />}

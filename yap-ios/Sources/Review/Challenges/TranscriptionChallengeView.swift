@@ -13,6 +13,7 @@ struct TranscriptionChallengeView: View {
     @State private var hasClip: Bool?
     @State private var clipMovieId: String?
     @State private var gradesExpanded = false
+    @AppStorage("mobile-keyboard-tip-dismissed") private var keyboardTipDismissed = false
     @State private var gradingTask: Task<Void, Never>?
     @FocusState private var focused: Int?
     init(sentence: TranscribeComprehensibleSentence, initialState: TranscriptionState?) {
@@ -85,6 +86,16 @@ struct TranscriptionChallengeView: View {
                     Text(sentence.target_language).foregroundStyle(Color.yapPositiveForeground)
                     ProgressView("Grading your answer…")
                 }
+            }
+            if editing, let tip = screen.keyboard_tip, !keyboardTipDismissed {
+                HStack(spacing: 8) {
+                    (Text("Tip:").fontWeight(.medium) + Text(" " + tip)).font(.subheadline).foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Button("Dismiss tip", systemImage: "xmark") { keyboardTipDismissed = true }
+                        .labelStyle(.iconOnly).font(.footnote).buttonStyle(.plain).frame(width: 32, height: 32)
+                }.padding(12)
+                    .background(Color.yapMutedSurface.opacity(0.3), in: RoundedRectangle(cornerRadius: 10))
+                    .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color(uiColor: .separator)) }
             }
             if editing {
                 MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId)).equatable()

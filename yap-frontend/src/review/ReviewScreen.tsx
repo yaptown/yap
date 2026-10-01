@@ -84,6 +84,7 @@ export function ReviewScreen({
                 targetLanguage={view.target_language}
                 totalReviewsCompleted={BigInt(view.total_reviews)}
                 totalCount={Number(view.total_count)}
+                keyboardTip={view.keyboard_tip ?? undefined}
               />
             );
         }

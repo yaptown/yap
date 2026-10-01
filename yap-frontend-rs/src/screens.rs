@@ -1357,6 +1357,9 @@ pub struct ReviewScreenView {
     pub progress: f64,
     pub total_reviews: u64,
     pub total_count: u64,
+    /// Typing guidance under a dictation, for learners still early on; hosts
+    /// remember the dismissal locally.
+    pub keyboard_tip: Option<String>,
     pub offer_engagement: bool,
     pub online: bool,
 }
@@ -1386,6 +1389,9 @@ impl Deck {
             .clamp(0.0, 1.0),
             total_reviews,
             total_count: review.total_count() as u64,
+            keyboard_tip: (review.total_count() < 60)
+                .then(|| crate::learning_metadata::keyboard_tip(self.get_target_language()))
+                .flatten(),
             offer_engagement: prompts.offer_engagement,
             online: inputs.online,
         }
