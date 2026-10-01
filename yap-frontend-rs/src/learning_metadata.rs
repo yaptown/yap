@@ -347,6 +347,58 @@ pub fn get_language_metadata(language: Language) -> LanguageMetadata {
     }
 }
 
+/// A language's name as written for a reader, with its regional or script
+/// variant split out so pickers can set it beneath the name.
+#[bridgerton::bridge(transparent)]
+#[derive(serde::Serialize)]
+pub struct LanguageName {
+    pub name: String,
+    /// E.g. "Latin America" for Latin American Spanish.
+    pub variant: Option<String>,
+    /// Name and variant on one line, e.g. "Spanish (Latin America)".
+    pub full: String,
+}
+
+/// Every native-language course is English or French, so other readers get English.
+#[bridgerton::bridge]
+#[bridgerton::stable(strong)]
+pub fn get_language_name(language: Language, reader: Language) -> LanguageName {
+    use Language::*;
+    let (name, variant) = match language {
+        English => (("English", "Anglais"), None),
+        French => (("French", "Français"), None),
+        SpanishLatinAmerican => (
+            ("Spanish", "Espagnol"),
+            Some(("Latin America", "Amérique latine")),
+        ),
+        SpanishPeninsular => (("Spanish", "Espagnol"), Some(("Spain", "Espagne"))),
+        German => (("German", "Allemand"), None),
+        Italian => (("Italian", "Italien"), None),
+        PortugueseBrazilian => (("Portuguese", "Portugais"), Some(("Brazil", "Brésil"))),
+        PortugueseEuropean => (("Portuguese", "Portugais"), Some(("Portugal", "Portugal"))),
+        Russian => (("Russian", "Russe"), None),
+        Korean => (("Korean", "Coréen"), None),
+        Japanese => (("Japanese", "Japonais"), None),
+        ChineseSimplified => (("Chinese", "Chinois"), Some(("Simplified", "Simplifié"))),
+        ChineseTraditional => (
+            ("Chinese", "Chinois"),
+            Some(("Traditional", "Traditionnel")),
+        ),
+        Hindi => (("Hindi", "Hindi"), None),
+        Thai => (("Thai", "Thaï"), None),
+    };
+    let pick = |(en, fr): (&str, &str)| if reader == French { fr } else { en }.to_string();
+    let (name, variant) = (pick(name), variant.map(pick));
+    LanguageName {
+        full: match &variant {
+            Some(variant) => format!("{name} ({variant})"),
+            None => name.clone(),
+        },
+        name,
+        variant,
+    }
+}
+
 #[bridgerton::bridge(transparent)]
 #[derive(serde::Serialize)]
 pub struct DailyGoalOption {

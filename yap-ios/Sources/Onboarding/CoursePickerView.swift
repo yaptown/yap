@@ -14,11 +14,10 @@ struct CoursePickerView: View {
         case .loading: []
         }
     }
-    private var targets: [Course] {
-        courses.filter { $0.native_language == native }.sorted {
-            get_language_metadata(language: $0.target_language).english_name < get_language_metadata(language: $1.target_language).english_name
-        }
+    private var current: Course? {
+        if case let .languageSelected(course, _, _, _) = session.deckSelection, session.choosingCourse { course } else { nil }
     }
+    private var targets: [Course] { courses.filter { $0.native_language == native } }
     var body: some View {
         Group {
             if let course = session.onboardingCourse {
@@ -27,28 +26,26 @@ struct CoursePickerView: View {
                 }.id(course)
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        CardSection("I speak") {
-                            HStack {
-                                Text("Native language")
-                                Spacer(minLength: 0)
-                                Picker("Native language", selection: $native) {
-                                    ForEach(natives, id: \.self) { language in
-                                        let metadata = get_language_metadata(language: language)
-                                        Label {
-                                            Text(metadata.native_name)
-                                        } icon: {
-                                            Image(metadata.icon).renderingMode(.original).resizable().scaledToFit().frame(width: 40, height: 40)
-                                        }.tag(language)
-                                    }
-                                }.pickerStyle(.menu)
-                            }.frame(minHeight: 44)
-                        }
-                        courseSection("Resume", targets.filter { onboarded.contains($0.target_language) }, resume: true)
+                    VStack(spacing: 32) {
+                        Text("What language will you speak next?").font(.largeTitle.bold()).multilineTextAlignment(.center)
+                        if let current { resumeCard(current); divider("Or choose a different language") }
                         ForEach([CourseMaturity.Stable, .Beta, .Alpha], id: \.self) { maturity in
-                            courseSection(maturity == .Stable ? "What language will you speak next?" : "\(String(describing: maturity)) Languages",
-                                targets.filter { !onboarded.contains($0.target_language) && get_language_metadata(language: $0.target_language).status == maturity }, resume: false)
+                            let section = targets.filter { get_language_metadata(language: $0.target_language).status == maturity }
+                            if !section.isEmpty {
+                                if maturity != .Stable { divider("\(String(describing: maturity)) Languages") }
+                                LazyVGrid(columns: [GridItem(.flexible(), spacing: 16, alignment: .top), GridItem(.flexible(), spacing: 16, alignment: .top)], spacing: 32) {
+                                    ForEach(section, id: \.self, content: tile)
+                                }
+                            }
                         }
+                        HStack {
+                            Text("Native language:").foregroundStyle(.secondary)
+                            Picker("Native language", selection: $native) {
+                                ForEach(natives, id: \.self) { language in Text(get_language_metadata(language: language).native_name).tag(language) }
+                            }.pickerStyle(.menu)
+                        }
+                        Text("(Yap.Town is great for beginner and intermediate students.)")
+                            .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
                 }.navigationTitle("Choose a course").navigationBarTitleDisplayMode(.inline)
             }
@@ -74,24 +71,39 @@ struct CoursePickerView: View {
         }
         #endif
     }
-    @ViewBuilder private func courseSection(_ title: String, _ courses: [Course], resume: Bool) -> some View {
-        if !courses.isEmpty {
-            CardSection(title) {
-                ForEach(courses, id: \.self) { course in
-                    if course != courses.first { Divider() }
-                    courseButton(course, resume: resume)
-                }
-            }
-        }
+    private func tile(_ course: Course) -> some View {
+        let name = get_language_name(language: course.target_language, reader: native)
+        return Button { select(course) } label: {
+            VStack(spacing: 8) {
+                icon(course, size: 120)
+                Text(name.name).font(.title2.bold()).foregroundStyle(Color.yapText)
+                if let variant = name.variant { Text(variant).font(.subheadline).foregroundStyle(.secondary) }
+            }.frame(maxWidth: .infinity).contentShape(Rectangle())
+        }.buttonStyle(.plain)
     }
-    private func courseButton(_ course: Course, resume: Bool) -> some View {
-        Button { select(course) } label: {
-            HStack(spacing: 12) {
-                let metadata = get_language_metadata(language: course.target_language)
-                Image(metadata.icon).renderingMode(.original).resizable().scaledToFit().frame(width: 40, height: 40).accessibilityHidden(true)
-                Text((resume ? "Resume " : "") + metadata.english_name).foregroundStyle(Color.yapText)
-                Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
-            }.frame(minHeight: 52).contentShape(Rectangle())
+    private func resumeCard(_ course: Course) -> some View {
+        let name = get_language_name(language: course.target_language, reader: native)
+        return Button { select(course) } label: {
+            HStack(spacing: 16) {
+                icon(course, size: 56)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Resume " + name.full).font(.title3.bold()).foregroundStyle(Color.yapText)
+                    Text("Continue where you left off").font(.subheadline).foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.right").foregroundStyle(Color.yapText)
+            }.padding(20).frame(maxWidth: .infinity).cardSurface()
+        }.buttonStyle(.plain)
+    }
+    private func icon(_ course: Course, size: CGFloat) -> some View {
+        Image(get_language_metadata(language: course.target_language).icon).renderingMode(.original).resizable().scaledToFit()
+            .frame(width: size, height: size).accessibilityHidden(true)
+    }
+    private func divider(_ label: String) -> some View {
+        HStack(spacing: 12) {
+            VStack { Divider() }
+            Text(label.uppercased()).font(.caption.weight(.semibold)).tracking(1).foregroundStyle(.secondary).fixedSize()
+            VStack { Divider() }
         }
     }
     private func select(_ course: Course) {

@@ -532,24 +532,21 @@ async fn health() -> Result<&'static str, StatusCode> {
     Ok("ok")
 }
 
-async fn elevenlabs_synthesize(
-    http: &reqwest::Client,
-    request: &TtsRequest,
-) -> Result<Option<Vec<u8>>, SynthError> {
-    let api_key = std::env::var("ELEVENLABS_API_KEY").map_err(|_| SynthError::Unsupported)?;
-
-    // Select voice based on language
-    let voice_id = match request.language {
-        Language::French => "ohItIVrXTBI80RrUECOD", // Existing French voice
-        Language::SpanishLatinAmerican | Language::SpanishPeninsular => "8mBRP99B2Ng2QwsJMFQl", // Latin American Spanish voice
-        Language::English => "ohItIVrXTBI80RrUECOD", // Default to French voice for now
-        Language::Korean => "nbrxrAz3eYm9NgojrmFK",  // Korean
-        Language::German => "IWm8DnJ4NGjFI7QAM5lM",  // Stephan - German voice
-        Language::Italian => "sKbNSlHXq99bttvf8rRF", // Nicola Lorusso - Italian voice
-        Language::PortugueseBrazilian | Language::PortugueseEuropean => "tS45q0QcrDHqHoaWdCDR", // Lax - Portuguese voice
-        Language::Russian => "hLjwV7lYzk15SWLUmhEH", // Russian voice
-        Language::Japanese => "GxhGYQesaQaYKePCZDEC", // Japanese voice
-        Language::Hindi => "K24eC7JpUgk8zMtQYrpV",   // Hindi voice
+/// Locale-specific voices for the multilingual v2 model.
+fn elevenlabs_voice(language: Language) -> Option<&'static str> {
+    Some(match language {
+        Language::French => "ohItIVrXTBI80RrUECOD", // Guillaume - French
+        Language::SpanishLatinAmerican => "x5O3bgPT2grYhry6qmWR", // Jess - Mexican Spanish female
+        Language::English => "UgBBYS2sOqTuMpoF3BR0", // Mark - American English
+        Language::SpanishPeninsular => "hyKxCTlAqtnW188CgltM", // Salva - The Spanish Narrator (Spain)
+        Language::PortugueseEuropean => "IZipF5JhqPlWzpduTV0E", // Daniela - European Portuguese
+        Language::Korean => "nbrxrAz3eYm9NgojrmFK",            // Korean
+        Language::German => "IWm8DnJ4NGjFI7QAM5lM",            // Stephan - German voice
+        Language::Italian => "sKbNSlHXq99bttvf8rRF",           // Nicola Lorusso - Italian voice
+        Language::PortugueseBrazilian => "HOfBIVLhom4mc9WvXfyH", // Andrea Lot - Brazilian Portuguese
+        Language::Russian => "hLjwV7lYzk15SWLUmhEH",             // Russian voice
+        Language::Japanese => "GxhGYQesaQaYKePCZDEC",            // Japanese voice
+        Language::Hindi => "K24eC7JpUgk8zMtQYrpV",               // Hindi voice
 
         // Haoran (Beijing Mandarin) and Anna Su (Taiwan Mandarin). One voice
         // could cover both, since the model reads Traditional and Simplified
@@ -561,8 +558,17 @@ async fn elevenlabs_synthesize(
         // Genuinely absent: `eleven_multilingual_v2` has no Thai, and it's
         // only in `eleven_v3`, a different model with a different contract.
         // Google is Thai's whole race until that changes.
-        Language::Thai => return Err(SynthError::Unsupported),
-    };
+        Language::Thai => return None,
+    })
+}
+
+async fn elevenlabs_synthesize(
+    http: &reqwest::Client,
+    request: &TtsRequest,
+) -> Result<Option<Vec<u8>>, SynthError> {
+    let api_key = std::env::var("ELEVENLABS_API_KEY").map_err(|_| SynthError::Unsupported)?;
+
+    let voice_id = elevenlabs_voice(request.language).ok_or(SynthError::Unsupported)?;
 
     let body = ElevenLabsRequest {
         text: request.text.clone(),
@@ -598,7 +604,7 @@ async fn elevenlabs_synthesize(
     Ok(Some(audio_bytes.to_vec()))
 }
 
-/// Cloud TTS with the language's Chirp 3 HD voice. Chirp 3 embellishes very
+/// Cloud TTS with the language's locale-specific voice. Chirp 3 embellishes very
 /// short fragments and mishandles SSML `<break>`, which is why pronunciation
 /// cues no longer come through here: they are plain spoken text read by
 /// Gemini, with this voice as the fallback, and verified before they ship.
@@ -772,7 +778,10 @@ fn gemini_tts_style(request: &TtsRequest) -> String {
         ""
     };
 
-    format!("{style}{pace}")
+    match request.language.tts_accent() {
+        Some(accent) => format!("{style}{pace}, {accent}"),
+        None => format!("{style}{pace}"),
+    }
 }
 
 async fn gemini_text_to_speech(
@@ -2378,6 +2387,56 @@ mod tests {
     use axum::body::Body;
     use axum::http::Request;
     use tower::ServiceExt;
+
+    #[test]
+    fn gemini_styles_include_dialect_and_preserve_delivery() {
+        for (language, accent) in [
+            (
+                Language::SpanishLatinAmerican,
+                "Latin American Spanish accent",
+            ),
+            (
+                Language::SpanishPeninsular,
+                "Peninsular Spanish accent (Spain)",
+            ),
+            (Language::PortugueseBrazilian, "Brazilian Portuguese accent"),
+            (
+                Language::PortugueseEuropean,
+                "European Portuguese accent (Portugal)",
+            ),
+        ] {
+            let mut request = TtsRequest {
+                text: "test".into(),
+                language,
+                instructions: None,
+                speed: 1.0,
+                is_ssml: false,
+                verification_hints: vec![],
+            };
+            assert_eq!(
+                gemini_tts_style(&request),
+                format!("warm and welcoming, {accent}")
+            );
+            request.instructions = Some("clear".into());
+            request.speed = 0.8;
+            assert_eq!(
+                gemini_tts_style(&request),
+                format!("clear, speaking slowly and deliberately, {accent}")
+            );
+        }
+    }
+
+    #[test]
+    fn elevenlabs_voices_are_distinct() {
+        let voices: Vec<_> = language_utils::LANGUAGES
+            .iter()
+            .filter_map(|&language| elevenlabs_voice(language))
+            .collect();
+        let unique: std::collections::HashSet<_> = voices.iter().collect();
+        assert_eq!(unique.len(), voices.len());
+        assert_eq!(voices.len(), language_utils::LANGUAGES.len() - 1);
+        assert_eq!(elevenlabs_voice(Language::Thai), None);
+    }
 
     #[test]
     fn clip_paths_use_shared_corpus() {

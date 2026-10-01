@@ -1,6 +1,5 @@
-import { LanguageIcon } from "@/components/LanguageIcon";
 import * as Sentry from "@sentry/react";
-import { useState, useEffect, useMemo } from "react";
+import { Fragment, useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,10 +23,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn, nativeLanguageNames } from "@/lib/utils";
+import { LanguageIcon } from "@/components/LanguageIcon";
 import { LANGUAGES, detectBrowserLanguage } from "@/lib/languages";
-import type { Language, OnboardingPurpose } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
+import type {
+  Language,
+  OnboardingPurpose,
+} from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { useWeapon } from "@/core/weapon";
-import { get_available_courses } from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
+import {
+  get_available_courses,
+  get_language_name,
+} from "../../../yap-frontend-rs/pkg/yap_frontend_rs";
 import { TopPageLayout } from "@/components/TopPageLayout";
 import type { UserInfo } from "@/app/context";
 
@@ -124,16 +130,6 @@ export function CoursePicker({
           )
           .map((course) => course.targetLanguage);
 
-  const stableLanguages = targetLanguages.filter(
-    (lang) => LANGUAGES[lang].status === "stable",
-  );
-  const alphaLanguages = targetLanguages.filter(
-    (lang) => LANGUAGES[lang].status === "alpha",
-  );
-  const betaLanguages = targetLanguages.filter(
-    (lang) => LANGUAGES[lang].status === "beta",
-  );
-
   useEffect(() => {
     if (selectionState.stage === "onboarding") {
       Sentry.addBreadcrumb({
@@ -189,39 +185,34 @@ export function CoursePicker({
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8 w-full max-w-2xl">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-10 w-full max-w-2xl">
                 {nativeLanguages.map((lang) => (
-                  <motion.div
+                  <motion.button
                     key={lang}
+                    type="button"
                     whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex flex-col items-center gap-3 rounded-2xl p-2 cursor-pointer text-center"
+                    onClick={() => {
+                      setSelectionState({
+                        stage: "selectingTarget",
+                        nativeLanguage: lang,
+                      });
+                    }}
                   >
-                    <Card
-                      className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
-                      onClick={() => {
-                        setSelectionState({
-                          stage: "selectingTarget",
-                          nativeLanguage: lang,
-                        });
-                      }}
-                    >
-                      <div
-                        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
-                        style={{ background: LANGUAGES[lang].colors.gradient }}
-                      />
-                      <div className="relative z-10 flex flex-col items-center gap-4">
-                        <LanguageIcon icon={LANGUAGES[lang].icon} className="size-24" />
-                        <div className="flex flex-col gap-1">
-                          <h2 className="text-2xl font-bold">
-                            {LANGUAGES[lang].iSpeak}
-                          </h2>
-                          <p className="text-lg text-muted-foreground">
-                            {nativeLanguageNames[lang]}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-                  </motion.div>
+                    <LanguageIcon
+                      icon={LANGUAGES[lang].icon}
+                      className="size-28 md:size-36"
+                    />
+                    <span>
+                      <span className="block text-2xl font-bold">
+                        {LANGUAGES[lang].iSpeak}
+                      </span>
+                      <span className="block text-lg text-muted-foreground">
+                        {nativeLanguageNames[lang]}
+                      </span>
+                    </span>
+                  </motion.button>
                 ))}
               </div>
             </motion.div>
@@ -243,192 +234,69 @@ export function CoursePicker({
                 </h1>
               </div>
 
-              {/* Resume button if already learning a language */}
               {showResumeButton && currentTargetLanguage && onResume && (
-                <div className="w-full max-w-md mb-4">
+                <>
                   <Card
-                    className="relative overflow-hidden p-6 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-4"
-                    style={{
-                      borderColor:
-                        LANGUAGES[currentTargetLanguage].colors.primary,
-                    }}
+                    className="w-full max-w-md flex-row items-center gap-4 p-5 cursor-pointer transition-shadow hover:shadow-xl"
                     onClick={onResume}
                     animate
                   >
-                    <div
-                      className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300"
-                      style={{
-                        background:
-                          LANGUAGES[currentTargetLanguage].colors.gradient,
-                      }}
+                    <LanguageIcon
+                      icon={LANGUAGES[currentTargetLanguage].icon}
+                      className="size-14"
                     />
-                    <div className="relative z-10 flex items-center justify-center gap-4">
-                      <LanguageIcon icon={LANGUAGES[currentTargetLanguage].icon} className="size-10" />
-                      <div className="text-left">
-                        <h3 className="text-2xl font-bold mb-1">
-                          Resume {nativeLanguageNames[currentTargetLanguage]}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Continue where you left off
-                        </p>
-                      </div>
-                      <ArrowRight className="h-6 w-6 ml-auto" />
-                    </div>
-                  </Card>
-                </div>
-              )}
-
-              {showResumeButton && currentTargetLanguage && (
-                <div className="w-full max-w-md mb-2">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="px-2 text-foreground">
-                        Or choose a different language
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Stable languages (unlabeled) */}
-              {stableLanguages.length > 0 && (
-                <div className="grid md:grid-cols-3 grid-cols-2 gap-8 w-full">
-                  {stableLanguages.map((lang) => (
-                    <motion.div
-                      key={lang}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Card
-                        className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
-                        onClick={() =>
-                          handleTargetLanguageSelected(
+                    <div className="text-left">
+                      <h3 className="text-xl md:text-2xl font-bold">
+                        Resume{" "}
+                        {
+                          get_language_name(
+                            currentTargetLanguage,
                             selectionState.nativeLanguage,
-                            lang,
-                          )
+                          ).full
                         }
-                        animate
-                      >
-                        <div
-                          className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
-                          style={{ background: LANGUAGES[lang].colors.gradient }}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Continue where you left off
+                      </p>
+                    </div>
+                    <ArrowRight className="h-6 w-6 ml-auto" />
+                  </Card>
+                  <SectionDivider label="Or choose a different language" />
+                </>
+              )}
+
+              {(
+                [
+                  ["stable", null],
+                  ["beta", "Beta Languages"],
+                  ["alpha", "Alpha Languages"],
+                ] as const
+              ).map(([status, label]) => {
+                const languages = targetLanguages.filter(
+                  (lang) => LANGUAGES[lang].status === status,
+                );
+                if (languages.length === 0) return null;
+                return (
+                  <Fragment key={status}>
+                    {label && <SectionDivider label={label} />}
+                    <div className="grid md:grid-cols-3 grid-cols-2 gap-x-6 gap-y-10 w-full">
+                      {languages.map((lang) => (
+                        <LanguageTile
+                          key={lang}
+                          language={lang}
+                          reader={selectionState.nativeLanguage}
+                          onClick={() =>
+                            handleTargetLanguageSelected(
+                              selectionState.nativeLanguage,
+                              lang,
+                            )
+                          }
                         />
-                        <div className="relative z-10 flex flex-col items-center gap-4">
-                          <LanguageIcon icon={LANGUAGES[lang].icon} className="size-18 md:size-24" />
-                          <h2 className="text-3xl font-bold">
-                            {nativeLanguageNames[lang]}
-                          </h2>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {/* Beta section divider */}
-              {betaLanguages.length > 0 && (
-                <>
-                  <div className="w-full max-w-md">
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="px-2 text-foreground">
-                          Beta Languages
-                        </span>
-                      </div>
+                      ))}
                     </div>
-                  </div>
-                  <div className="grid md:grid-cols-3 grid-cols-2 gap-8 w-full">
-                    {betaLanguages.map((lang) => (
-                      <motion.div
-                        key={lang}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Card
-                          className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
-                          onClick={() =>
-                            handleTargetLanguageSelected(
-                              selectionState.nativeLanguage,
-                              lang,
-                            )
-                          }
-                          animate
-                        >
-                          <div
-                            className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
-                            style={{
-                              background: LANGUAGES[lang].colors.gradient,
-                            }}
-                          />
-                          <div className="relative z-10 flex flex-col items-center gap-4">
-                            <LanguageIcon icon={LANGUAGES[lang].icon} className="size-18 md:size-24" />
-                            <h2 className="md:text-3xl text-2xl font-bold">
-                              {nativeLanguageNames[lang]}
-                            </h2>
-                          </div>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {/* Alpha section divider */}
-              {alphaLanguages.length > 0 && (
-                <>
-                  <div className="w-full max-w-md">
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="px-2 text-foreground">
-                          Alpha Languages
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid md:grid-cols-3 grid-cols-2 gap-8 w-full">
-                    {alphaLanguages.map((lang) => (
-                      <motion.div
-                        key={lang}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Card
-                          className="relative overflow-hidden p-2 text-center group transition-all duration-300 hover:shadow-2xl cursor-pointer border-2 aspect-square flex items-center justify-center"
-                          onClick={() =>
-                            handleTargetLanguageSelected(
-                              selectionState.nativeLanguage,
-                              lang,
-                            )
-                          }
-                          animate
-                        >
-                          <div
-                            className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
-                            style={{
-                              background: LANGUAGES[lang].colors.gradient,
-                            }}
-                          />
-                          <div className="relative z-10 flex flex-col items-center gap-4">
-                            <LanguageIcon icon={LANGUAGES[lang].icon} className="size-18 md:size-24" />
-                            <h2 className="md:text-3xl text-2xl font-bold">
-                              {nativeLanguageNames[lang]}
-                            </h2>
-                          </div>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </div>
-                </>
-              )}
+                  </Fragment>
+                );
+              })}
 
               {/* Native language selector */}
               <div className="flex items-center justify-center gap-2 mb-6">
@@ -445,8 +313,11 @@ export function CoursePicker({
                       animate
                     >
                       <>
-                        <LanguageIcon icon={LANGUAGES[selectionState.nativeLanguage].icon} className="size-6" />
-                        {selectionState.nativeLanguage}
+                        <LanguageIcon
+                          icon={LANGUAGES[selectionState.nativeLanguage].icon}
+                          className="size-6"
+                        />
+                        {nativeLanguageNames[selectionState.nativeLanguage]}
                       </>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -460,7 +331,7 @@ export function CoursePicker({
                           {nativeLanguages.map((lang) => (
                             <CommandItem
                               key={lang}
-                              value={lang}
+                              value={nativeLanguageNames[lang]}
                               onSelect={() => {
                                 setSelectionState({
                                   stage: "selectingTarget",
@@ -477,8 +348,11 @@ export function CoursePicker({
                                     : "opacity-0",
                                 )}
                               />
-                              <LanguageIcon icon={LANGUAGES[lang].icon} className="size-8" />
-                              {lang}
+                              <LanguageIcon
+                                icon={LANGUAGES[lang].icon}
+                                className="size-6"
+                              />
+                              {nativeLanguageNames[lang]}
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -519,5 +393,49 @@ export function CoursePicker({
         </AnimatePresence>
       </div>
     </TopPageLayout>
+  );
+}
+
+function LanguageTile({
+  language,
+  reader,
+  onClick,
+}: {
+  language: Language;
+  reader: Language;
+  onClick: () => void;
+}) {
+  const { name, variant } = get_language_name(language, reader);
+  return (
+    <motion.button
+      type="button"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.97 }}
+      className="flex flex-col items-center gap-3 rounded-2xl p-2 cursor-pointer text-center"
+      onClick={onClick}
+    >
+      <LanguageIcon
+        icon={LANGUAGES[language].icon}
+        className="size-28 md:size-36"
+      />
+      <span>
+        <span className="block text-2xl md:text-3xl font-bold">{name}</span>
+        {variant && (
+          <span className="block text-base md:text-lg text-muted-foreground">
+            {variant}
+          </span>
+        )}
+      </span>
+    </motion.button>
+  );
+}
+
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="w-full max-w-md flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
+      <span className="flex-1 border-t" />
+      {label}
+      <span className="flex-1 border-t" />
+    </div>
   );
 }

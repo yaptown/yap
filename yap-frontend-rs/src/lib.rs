@@ -24,8 +24,8 @@ pub use fixtures::{fixture_json, parse_fixture};
 mod language_pack;
 mod learning_metadata;
 pub use learning_metadata::{
-    CourseMaturity, DailyGoalOption, LanguageMetadata, get_daily_goal_options,
-    get_language_metadata,
+    CourseMaturity, DailyGoalOption, LanguageMetadata, LanguageName, get_daily_goal_options,
+    get_language_metadata, get_language_name,
 };
 mod next_cards;
 mod notifications;

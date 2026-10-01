@@ -961,41 +961,25 @@ pub struct TtsVoice {
 /// Map a target language to Google TTS voice metadata. Currently only the
 /// languages we ship audio for. Returns `None` for unsupported languages.
 pub fn default_voice_for(language: Language) -> Option<TtsVoice> {
-    Some(match language {
-        Language::French => TtsVoice {
-            language_code: "fr-FR",
-            voice_name: "fr-FR-Chirp3-HD-Achernar",
-        },
-        Language::SpanishLatinAmerican | Language::SpanishPeninsular => TtsVoice {
-            language_code: "es-US",
-            voice_name: "es-US-Chirp3-HD-Achernar",
-        },
-        Language::English => TtsVoice {
-            language_code: "en-US",
-            voice_name: "en-US-Chirp3-HD-Achernar",
-        },
-        Language::German => TtsVoice {
-            language_code: "de-DE",
-            voice_name: "de-DE-Chirp3-HD-Achernar",
-        },
-        Language::Italian => TtsVoice {
-            language_code: "it-IT",
-            voice_name: "it-IT-Chirp3-HD-Achernar",
-        },
-        Language::PortugueseBrazilian | Language::PortugueseEuropean => TtsVoice {
-            language_code: "pt-BR",
-            voice_name: "pt-BR-Chirp3-HD-Achernar",
-        },
-        Language::Russian => TtsVoice {
-            language_code: "ru-RU",
-            voice_name: "ru-RU-Chirp3-HD-Aoede",
-        },
-        Language::Korean => TtsVoice {
-            language_code: "ko-KR",
-            voice_name: "ko-KR-Chirp3-HD-Achernar",
-        },
-        _ => return None,
-    })
+    match language {
+        Language::French
+        | Language::SpanishLatinAmerican
+        | Language::SpanishPeninsular
+        | Language::English
+        | Language::German
+        | Language::Italian
+        | Language::PortugueseBrazilian
+        | Language::PortugueseEuropean
+        | Language::Russian
+        | Language::Korean => {
+            let (language_code, voice_name) = language.google_tts_voice();
+            Some(TtsVoice {
+                language_code,
+                voice_name,
+            })
+        }
+        _ => None,
+    }
 }
 
 /// Call Google TTS for `text` (using `voice`), running the result through

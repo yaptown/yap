@@ -3386,12 +3386,9 @@ impl Language {
         }
     }
 
-    /// The name the language goes by in LLM prompts and in the TTS cache
-    /// key. Frozen: prompt caches and synthesized audio objects are keyed by
-    /// it, so a change here re-runs every cached LLM call and re-synthesizes
-    /// every sentence for that language. Dialects share one name while they
-    /// share voices and behaviour; a dialect that diverges gets its own
-    /// string here at that point.
+    /// The name used in LLM prompts. Frozen to preserve cached linguistic data;
+    /// dialects share it independently of their speech voices and audio identity.
+    /// See [`Self::tts_name`] for synthesis and audio cache keys.
     pub fn prompt_name(&self) -> &'static str {
         match self {
             Language::French => "French",
@@ -3407,6 +3404,40 @@ impl Language {
             Language::Italian => "Italian",
             Language::Hindi => "Hindi",
             Language::Thai => "Thai",
+        }
+    }
+
+    /// Frozen names used in TTS cache keys and model pronunciation instructions.
+    /// Independent of linguistic prompt caches; existing strings must not change:
+    /// changing one re-synthesizes every cached clip for that language.
+    pub fn tts_name(&self) -> &'static str {
+        match self {
+            Language::French => "French",
+            Language::English => "English",
+            Language::SpanishLatinAmerican => "Spanish",
+            Language::SpanishPeninsular => "Spanish (Spain)",
+            Language::Korean => "Korean",
+            Language::German => "German",
+            Language::ChineseSimplified => "Chinese (Simplified)",
+            Language::ChineseTraditional => "Chinese (Traditional)",
+            Language::Japanese => "Japanese",
+            Language::Russian => "Russian",
+            Language::PortugueseBrazilian => "Portuguese",
+            Language::PortugueseEuropean => "European Portuguese",
+            Language::Italian => "Italian",
+            Language::Hindi => "Hindi",
+            Language::Thai => "Thai",
+        }
+    }
+
+    /// Accent metadata for speech providers without a locale-specific voice.
+    pub fn tts_accent(&self) -> Option<&'static str> {
+        match self {
+            Language::SpanishLatinAmerican => Some("Latin American Spanish accent"),
+            Language::SpanishPeninsular => Some("Peninsular Spanish accent (Spain)"),
+            Language::PortugueseBrazilian => Some("Brazilian Portuguese accent"),
+            Language::PortugueseEuropean => Some("European Portuguese accent (Portugal)"),
+            _ => None,
         }
     }
 
@@ -3786,16 +3817,14 @@ impl Language {
     pub fn google_tts_voice(&self) -> (&'static str, &'static str) {
         match self {
             Language::French => ("fr-FR", "fr-FR-Chirp3-HD-Achernar"),
-            Language::SpanishLatinAmerican | Language::SpanishPeninsular => {
-                ("es-US", "es-US-Chirp3-HD-Achernar")
-            }
+            Language::SpanishLatinAmerican => ("es-US", "es-US-Chirp3-HD-Achernar"),
+            Language::SpanishPeninsular => ("es-ES", "es-ES-Chirp3-HD-Achernar"),
             Language::English => ("en-US", "en-US-Chirp3-HD-Achernar"),
             Language::Korean => ("ko-KR", "ko-KR-Chirp3-HD-Achernar"),
             Language::German => ("de-DE", "de-DE-Chirp3-HD-Achernar"),
             Language::Italian => ("it-IT", "it-IT-Chirp3-HD-Achernar"),
-            Language::PortugueseBrazilian | Language::PortugueseEuropean => {
-                ("pt-BR", "pt-BR-Chirp3-HD-Achernar")
-            }
+            Language::PortugueseBrazilian => ("pt-BR", "pt-BR-Chirp3-HD-Achernar"),
+            Language::PortugueseEuropean => ("pt-PT", "pt-PT-Wavenet-E"),
             Language::Russian => ("ru-RU", "ru-RU-Chirp3-HD-Aoede"),
             Language::Japanese => ("ja-JP", "ja-JP-Chirp3-HD-Achernar"),
             Language::Hindi => ("hi-IN", "hi-IN-Chirp3-HD-Achernar"),
@@ -4411,7 +4440,7 @@ impl Language {
 /// spelled letters. Named in English because it addresses the model, not
 /// the learner.
 pub fn pronunciation_challenge_tts_instructions(language: Language) -> String {
-    let language = language.prompt_name();
+    let language = language.tts_name();
     format!(
         "Clear, warm, natural {language} pronunciation at a normal conversational pace with no \
          long pauses. Letter names in a quick spelled-out sequence, connecting words naturally, \
@@ -4960,7 +4989,7 @@ pub fn tts_cache_filename(request: &TtsRequest, provider: &TtsProvider) -> Strin
     let cache_text = format!(
         "r{TTS_SYNTHESIS_REVISION}|{provider:?}|{language}|{speed}|{is_ssml}\
          |{tlen}:{text}|{itag}{ilen}:{instructions}|{hlen}:{hints}",
-        language = request.language.prompt_name(),
+        language = request.language.tts_name(),
         speed = request.speed,
         is_ssml = request.is_ssml,
         tlen = request.text.len(),
@@ -5035,6 +5064,29 @@ mod tts_cache_key_tests {
             tts_cache_filename(&request("Bonjour tout le monde."), &TtsProvider::ElevenLabs),
             "14207068618693472137.mp3"
         );
+    }
+
+    #[test]
+    fn dialects_have_separate_audio_keys() {
+        for (a, b) in [
+            (Language::SpanishLatinAmerican, Language::SpanishPeninsular),
+            (Language::PortugueseBrazilian, Language::PortugueseEuropean),
+        ] {
+            let mut first = request("test");
+            first.language = a;
+            let mut second = first.clone();
+            second.language = b;
+            for provider in [
+                TtsProvider::ElevenLabs,
+                TtsProvider::Google,
+                TtsProvider::Gemini,
+            ] {
+                assert_ne!(
+                    tts_cache_filename(&first, &provider),
+                    tts_cache_filename(&second, &provider)
+                );
+            }
+        }
     }
 
     #[test]
@@ -6168,12 +6220,22 @@ mod dialect_tests {
     }
 
     #[test]
+    fn speech_identities_are_distinct() {
+        let names: std::collections::HashSet<_> =
+            LANGUAGES.iter().map(Language::tts_name).collect();
+        let voices: std::collections::HashSet<_> =
+            LANGUAGES.iter().map(Language::google_tts_voice).collect();
+        assert_eq!(names.len(), LANGUAGES.len());
+        assert_eq!(voices.len(), LANGUAGES.len());
+    }
+
+    #[test]
     fn frozen_audio_language_keys() {
         let expected = [
             (Language::French, "French"),
             (Language::English, "English"),
             (Language::SpanishLatinAmerican, "Spanish"),
-            (Language::SpanishPeninsular, "Spanish"),
+            (Language::SpanishPeninsular, "Spanish (Spain)"),
             (Language::Korean, "Korean"),
             (Language::German, "German"),
             (Language::ChineseSimplified, "Chinese (Simplified)"),
@@ -6181,14 +6243,20 @@ mod dialect_tests {
             (Language::Japanese, "Japanese"),
             (Language::Russian, "Russian"),
             (Language::PortugueseBrazilian, "Portuguese"),
-            (Language::PortugueseEuropean, "Portuguese"),
+            (Language::PortugueseEuropean, "European Portuguese"),
             (Language::Italian, "Italian"),
             (Language::Hindi, "Hindi"),
             (Language::Thai, "Thai"),
         ];
         assert_eq!(expected.len(), LANGUAGES.len());
         for (language, key) in expected {
-            assert_eq!(language.prompt_name(), key);
+            assert_eq!(language.tts_name(), key);
+            let prompt = match language {
+                Language::SpanishPeninsular => "Spanish",
+                Language::PortugueseEuropean => "Portuguese",
+                _ => key,
+            };
+            assert_eq!(language.prompt_name(), prompt);
         }
     }
 
@@ -6261,9 +6329,9 @@ mod dialect_tests {
         ] {
             assert_eq!(inherited.corpus_code(), corpus);
             assert_eq!(new.corpus_code(), corpus);
-            assert_eq!(inherited.google_tts_voice(), new.google_tts_voice());
+            assert_ne!(inherited.google_tts_voice(), new.google_tts_voice());
             assert_eq!(inherited.prompt_name(), new.prompt_name());
-            assert_eq!(
+            assert_ne!(
                 pronunciation_challenge_tts_instructions(inherited),
                 pronunciation_challenge_tts_instructions(new)
             );
