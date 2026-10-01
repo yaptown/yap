@@ -114,8 +114,11 @@ struct HomeScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Text("Yap").font(.title2.bold()).foregroundStyle(Color.yapText).fixedSize()
-                    .accessibilityAddTraits(.isHeader)
+                HStack(spacing: 8) {
+                    Text("Yap").font(.title2.bold()).foregroundStyle(Color.yapText).fixedSize()
+                        .accessibilityAddTraits(.isHeader)
+                    SyncDot { navigate(.settings) }
+                }
             }.hidingSharedBackground()
             ToolbarItem(placement: .topBarTrailing) {
                 if auth.userId == nil {
@@ -131,6 +134,31 @@ struct HomeScreen: View {
         .onAppear { if isVisible { DebugHarness.shared.activeScreen = .home } }
         .onChange(of: isVisible) { _, visible in if visible { DebugHarness.shared.activeScreen = .home } }
         #endif
+    }
+}
+
+/// Web's header dot: shown while something isn't synced, colored by how much it
+/// matters. Settings holds the sync details, so that's where a tap goes.
+private struct SyncDot: View {
+    @Environment(\.reviewHost!) private var host
+    let open: () -> Void
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            if let sync = host.weapon?.sync_status(online: host.online, now_ms: context.date.timeIntervalSince1970 * 1000,
+                                                   manual_sync_in_flight: false, host_sync_error: host.syncError),
+               let indicator = sync.indicator {
+                Button(action: open) {
+                    Circle().fill(color(indicator)).frame(width: 8, height: 8).frame(width: 24, height: 24).contentShape(Rectangle())
+                }.buttonStyle(.plain).accessibilityLabel(sync.label)
+            }
+        }
+    }
+    private func color(_ severity: SyncSeverity) -> Color {
+        switch severity {
+        case .Neutral: .yapMuted
+        case .Caution: .yapCaution
+        case .Negative: .yapNegative
+        }
     }
 }
 

@@ -42,6 +42,8 @@ pub struct SyncStatusView {
     pub status: SyncStatus,
     pub label: String,
     pub severity: SyncSeverity,
+    /// The header dot's color; absent once everything is synced.
+    pub indicator: Option<SyncSeverity>,
     pub running: bool,
     pub error: Option<String>,
     pub error_title: String,
@@ -87,9 +89,11 @@ pub fn sync_status_view(inputs: SyncStatusInputs) -> SyncStatusView {
     } else {
         (SyncStatus::Synced, "Synced", SyncSeverity::Neutral)
     };
+    let indicator = (status != SyncStatus::Synced).then(|| severity.clone());
     SyncStatusView {
         status,
         label: label.into(),
+        indicator,
         severity,
         running,
         error,

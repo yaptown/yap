@@ -71,14 +71,13 @@ export function SyncStatusDialog() {
     Caution: "text-caution-foreground",
     Negative: "text-negative-foreground",
   }[view.severity];
-  const dotColor =
-    view.status === "Synced"
-      ? ""
-      : {
-          Neutral: "bg-muted-foreground",
-          Caution: "bg-caution",
-          Negative: "bg-negative",
-        }[view.severity];
+  const dotColor = view.indicator
+    ? {
+        Neutral: "bg-muted-foreground",
+        Caution: "bg-caution",
+        Negative: "bg-negative",
+      }[view.indicator]
+    : "";
   const StatusIcon = {
     Offline: Cloud,
     Error: X,
