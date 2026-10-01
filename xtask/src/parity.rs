@@ -29,6 +29,27 @@ pub struct Args {
     simulator: String,
     #[arg(long, default_value = TEST_EMAIL)]
     email: String,
+    /// Appearance both platforms capture in. One knob for both on purpose: the
+    /// hosts pick a theme by unrelated means (web from its own default, iOS
+    /// from the simulator's appearance), so letting them drift makes every
+    /// pair differ by theme and hides the differences parity exists to show.
+    #[arg(long, default_value = "light")]
+    theme: Theme,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+pub enum Theme {
+    Light,
+    Dark,
+}
+
+impl Theme {
+    fn as_str(self) -> &'static str {
+        match self {
+            Theme::Light => "light",
+            Theme::Dark => "dark",
+        }
+    }
 }
 
 pub fn run(args: Args) -> Result<()> {
@@ -94,6 +115,7 @@ pub fn run(args: Args) -> Result<()> {
         if let Some(only) = &args.only {
             playwright.env("YAP_FIXTURE", only);
         }
+        playwright.env("YAP_THEME", args.theme.as_str());
         exec(&mut playwright)?;
         for fixture in &fixtures {
             let name = format!("{}-web.png", fixture.file_stem().unwrap().to_string_lossy());
@@ -114,6 +136,15 @@ pub fn run(args: Args) -> Result<()> {
             })?;
         }
         exec(command("xcrun").args(["simctl", "bootstatus", &args.simulator, "-b"]))?;
+        // The app reads the system appearance (no preferredColorScheme anywhere),
+        // so this is what decides iOS's theme.
+        exec(command("xcrun").args([
+            "simctl",
+            "ui",
+            &args.simulator,
+            "appearance",
+            args.theme.as_str(),
+        ]))?;
         exec(
             command("xcrun")
                 .args(["simctl", "install", &args.simulator])

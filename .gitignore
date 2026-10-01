@@ -34,6 +34,7 @@ yap-frontend/dev-dist
 
 # The response/data cache is synced via osmo/R2 (bucket `yap-cache`), not git.
 .cache/*
+.pnpm-store/
 
 # Profiling artifacts
 perf.data
