@@ -837,17 +837,6 @@ pub struct StreakCardView {
     pub today_label: String,
 }
 
-#[bridgerton::bridge(transparent)]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct StatsCardView {
-    pub title: String,
-    pub total_cards: u64,
-    pub cards_label: String,
-    /// Overall vocabulary coverage, on the accessor's 0–1 scale.
-    pub percent_known: f64,
-    pub percent_known_label: String,
-}
-
 /// A big number with a caption under it, like Home's XP and card tiles.
 #[bridgerton::bridge(transparent)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1022,26 +1011,16 @@ impl Deck {
         }
     }
 
-    fn stats_card_view(&self) -> StatsCardView {
-        let total_cards = self.get_all_cards_summary().len() as u64;
-        let percent_known = self.get_percent_of_words_known();
-        StatsCardView {
-            title: "Stats".into(),
-            total_cards,
-            cards_label: format!(
-                "{total_cards} {}",
-                if total_cards == 1 { "card" } else { "cards" }
-            ),
-            percent_known,
-            percent_known_label: format!(
-                "{:.1}% of everyday {}",
-                percent_known * 100.0,
-                get_language_metadata(self.get_target_language()).common_name,
-            ),
-        }
+    fn percent_known_label(&self) -> String {
+        format!(
+            "{:.1}% of everyday {}",
+            self.get_percent_of_words_known() * 100.0,
+            get_language_metadata(self.get_target_language()).common_name,
+        )
     }
 
-    fn due_summary_view(&self, ready_now: u64, total: u64) -> DueSummaryView {
+    fn due_summary_view(&self, ready_now: u64) -> DueSummaryView {
+        let total = self.get_all_cards_summary().len() as u64;
         DueSummaryView {
             title: "Due words".into(),
             ready_now,
@@ -1162,7 +1141,7 @@ impl Deck {
         };
         let language = get_language_metadata(self.get_target_language());
         let streak = self.streak_card_view(inputs.timestamp_ms);
-        let stats = self.stats_card_view();
+        let cards_studied = self.num_cards_studied();
         let day = DateTime::<Utc>::from_timestamp_millis(inputs.timestamp_ms as i64)
             .unwrap_or_else(Utc::now)
             .with_timezone(&self.context.timezone)
@@ -1204,14 +1183,14 @@ impl Deck {
                 note: None,
             },
             cards: HomeStatView {
-                value: stats.total_cards.to_string(),
-                caption: if stats.total_cards == 1 {
+                value: cards_studied.to_string(),
+                caption: if cards_studied == 1 {
                     "Card studied"
                 } else {
                     "Cards studied"
                 }
                 .into(),
-                note: Some(stats.percent_known_label),
+                note: Some(self.percent_known_label()),
             },
             dictionary: DictionaryCardView {
                 title: "Find a word".into(),
@@ -1231,7 +1210,7 @@ impl Deck {
         banned: Vec<ChallengeRequirements>,
         timestamp_ms: f64,
     ) -> StatsScreenView {
-        let stats = self.stats_card_view();
+        let percent_known = self.get_percent_of_words_known();
         let review = self.get_review_info(banned, timestamp_ms);
         let leeches = self.get_leeches();
         let leech_count = leeches.len() as u64;
@@ -1240,7 +1219,7 @@ impl Deck {
         let streak = self.streak_card_view(timestamp_ms);
         StatsScreenView {
             target_language: self.get_target_language(),
-            title: stats.title,
+            title: "Stats".into(),
             xp,
             total_reviews,
             tiles: vec![
@@ -1261,15 +1240,15 @@ impl Deck {
                 },
                 StatTileView {
                     eyebrow: "Vocabulary".into(),
-                    value: format!("{:.1}%", stats.percent_known * 100.0),
+                    value: format!("{:.1}%", percent_known * 100.0),
                     caption: Some(format!(
                         "of everyday {}",
                         get_language_metadata(self.get_target_language()).common_name
                     )),
                 },
             ],
-            percent_known: stats.percent_known,
-            due: self.due_summary_view(review.due_count() as u64, stats.total_cards),
+            percent_known,
+            due: self.due_summary_view(review.due_count() as u64),
             leeches,
             leech_count,
             leeches_label: format!(
@@ -1308,10 +1287,7 @@ impl Deck {
         timestamp_ms: f64,
     ) -> DueWordsScreenView {
         let review = self.get_review_info(banned, timestamp_ms);
-        let summary = self.due_summary_view(
-            review.due_count() as u64,
-            self.get_all_cards_summary().len() as u64,
-        );
+        let summary = self.due_summary_view(review.due_count() as u64);
         // Use the same scheduled list as Review (including bans, locks and audio
         // readiness), rather than filtering cards by their timestamps ourselves.
         let cards = review
@@ -1826,6 +1802,10 @@ mod tests {
             .get_no_cards_ready_info(vec![], None)
             .smart_add_event
             .unwrap();
+        apply(deck, event)
+    }
+
+    fn apply(deck: Deck, event: DeckEvent) -> Deck {
         let context = deck.context.clone();
         let state = <Deck as weapon::AppState>::process_event(
             DeckState::from(deck),
@@ -1838,6 +1818,23 @@ mod tests {
             },
         );
         <Deck as weapon::AppState>::finalize(state, &context)
+    }
+
+    #[test]
+    fn home_counts_already_known_cards_as_studied() {
+        let deck = with_due_cards();
+        let scheduled = deck.get_all_cards_summary();
+        assert_eq!(deck.home_screen_view(inputs()).cards.value, "0");
+        let event = deck
+            .review_card(
+                scheduled[0].card_indicator.clone(),
+                current::Rating::Remembered,
+            )
+            .unwrap();
+        let deck = apply(deck, event);
+        // Already-known cards leave the schedule but still count as studied.
+        assert_eq!(deck.get_all_cards_summary().len(), scheduled.len() - 1);
+        assert_eq!(deck.home_screen_view(inputs()).cards.value, "1");
     }
 
     fn json(value: impl Serialize) -> serde_json::Value {

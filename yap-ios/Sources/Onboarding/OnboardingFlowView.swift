@@ -25,21 +25,23 @@ struct OnboardingFlowView: View {
                     ProgressView(value: view.progress_percent, total: 100).accessibilityLabel(view.progress_label).id("top")
                     Button(view.back_label, systemImage: "chevron.left") { send(.Back) }
                     StudyCard(animated: true) { content }
-                    if case let .Ready(_, _, startFreshLabel) = view.content, let startFreshLabel {
-                        Button(startFreshLabel) { send(.StartFromScratch) }.controlSize(.large)
-                    }
                 }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
             }.bottomBar {
-                if let primary = view.primary {
-                    Button { send(.Next) } label: {
-                        HStack {
-                            Text(primary.label)
-                            if primary.show_arrow { Image(systemName: "arrow.right") }
-                        }.frame(maxWidth: .infinity)
+                VStack(spacing: 12) {
+                    if case let .Ready(_, _, startFreshLabel) = view.content, let startFreshLabel {
+                        Button { send(.StartFromScratch) } label: { Text(startFreshLabel).frame(maxWidth: .infinity) }
+                            .buttonStyle(.bordered).controlSize(.large)
                     }
-                        .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(!primary.enabled)
-                        .padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
-                }
+                    if let primary = view.primary {
+                        Button { send(.Next) } label: {
+                            HStack {
+                                Text(primary.label)
+                                if primary.show_arrow { Image(systemName: "arrow.right") }
+                            }.frame(maxWidth: .infinity)
+                        }
+                            .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large).disabled(!primary.enabled)
+                    }
+                }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
             }.onChange(of: state.step_index) { _, _ in proxy.scrollTo("top", anchor: .top) }
         }
         .background(.clear)
@@ -88,7 +90,8 @@ struct OnboardingFlowView: View {
             Text(conclusion).font(.title.bold())
             ForEach(studies, id: \.url) { study in
                 VStack(alignment: .leading, spacing: 6) {
-                    Link(study.title, destination: URL(string: study.url)!).font(.subheadline.weight(.semibold))
+                    Link(destination: URL(string: study.url)!) { Text(study.title).multilineTextAlignment(.leading) }
+                        .buttonStyle(.plain).font(.subheadline.weight(.semibold))
                     Text(verbatim: "\(study.authors) (\(study.year)). \(study.journal)").font(.caption).foregroundStyle(.secondary)
                 }
             }

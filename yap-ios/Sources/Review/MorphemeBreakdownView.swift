@@ -15,7 +15,7 @@ struct MorphemeBreakdownView: View {
         }.defaultScrollAnchor(alignment == .center ? .center : .leading, for: .alignment)
     }
     var grid: some View {
-        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 2) {
+        Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 2) {
             GridRow {
                 ForEach(parts.indices, id: \.self) { index in
                     cell(parts[index].first, index).fontWeight(.medium)
@@ -37,8 +37,21 @@ struct MorphemeBreakdownView: View {
         .onAppear { revealed = true }
     }
     private func cell(_ text: String, _ index: Int) -> some View {
-        Text(text).lineLimit(3).frame(maxWidth: 192, alignment: .leading)
+        WrapWidth(max: 192) { Text(text).lineLimit(3) }
             .opacity(revealDelay == nil || revealed ? 1 : 0)
             .animation(revealDelay.map { .easeOut(duration: 0.4).delay($0 + Double(index) * 0.2) }, value: revealed)
+    }
+}
+
+/// The horizontal scroll view proposes no width, so text would lay out on one line and
+/// `frame(maxWidth:)` would only truncate it. Proposing the capped width makes it wrap.
+private struct WrapWidth: Layout {
+    let max: CGFloat
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = min(subviews[0].sizeThatFits(.unspecified).width, proposal.width ?? max, max)
+        return subviews[0].sizeThatFits(ProposedViewSize(width: width, height: nil))
+    }
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        subviews[0].place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
     }
 }

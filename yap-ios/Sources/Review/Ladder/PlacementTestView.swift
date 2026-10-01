@@ -13,7 +13,7 @@ struct PlacementTestView: View {
                 Text(info.too_advanced
                      ? "Yap.Town is designed for intermediate learners. We'll still try our best to find words you don't know!"
                      : "We've analyzed your knowledge level and will tailor your learning experience.")
-                Button(info.too_advanced ? "Continue anyway" : "Begin learning", action: next)
+                Button(action: next) { Text(info.too_advanced ? "Continue anyway" : "Begin learning").frame(maxWidth: .infinity) }
                     .buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
             } else {
                 Text("Placement test").font(.title2.bold())
@@ -29,8 +29,8 @@ struct PlacementTestView: View {
                         }.buttonStyle(.plain).accessibilityLabel(word.word).accessibilityValue(selected ? "Known: \(word.definition)" : "Unknown")
                     }
                 }
-                Button("Next", action: next).buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
-                if info.can_restart { Button("Start over") { actions.setPlacement(host.deck.start_placement_session()) } }
+                Button(action: next) { Text("Next").frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).foregroundStyle(Color.yapOnAccent).controlSize(.large)
+                if info.can_restart { Button("Start over") { actions.setPlacement(host.deck.start_placement_session()) }.frame(maxWidth: .infinity) }
             }
         }
         #if DEBUG

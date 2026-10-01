@@ -3879,6 +3879,15 @@ impl Deck {
             .count()
     }
 
+    /// Added cards the user has reviewed at least once, including ones they already
+    /// knew (which drop out of scheduling, so the due/future lists don't count them).
+    pub fn num_cards_studied(&self) -> usize {
+        self.cards
+            .values()
+            .filter(|card| matches!(card, CardData::Added { fsrs_card } if fsrs_card.reps > 0))
+            .count()
+    }
+
     fn get_past_week_challenge_average(&self) -> f64 {
         let total_challenges: u32 = self.stats.past_week_challenges.values().sum();
         // Average over 7 days

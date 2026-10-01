@@ -24,7 +24,9 @@ struct DictionaryScreen: View {
         .searchFocused($searchFocused)
         .onAppear { if searching { searchFocused = true } }
         .navigationDestination(isPresented: Binding(get: { !path.isEmpty }, set: { if !$0 { path = [] } })) {
-            if let index = path.last { DictionaryDetail(session: session, index: index) }
+            if let index = path.last {
+                DictionaryDetail(session: session, index: index).containerBackground(.clear, for: .navigation)
+            }
         }
         .task(id: query) {
             // Typing is debounced, but the first page loads at once so the
