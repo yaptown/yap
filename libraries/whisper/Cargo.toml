@@ -11,3 +11,4 @@ anyhow = "1"
 base64 = "0.22"
 language-utils = { path = "../../language-utils" }
 log = { workspace = true }
+rate-limit = { path = "../rate-limit" }

@@ -10,11 +10,10 @@ use gcp_auth::TokenProvider;
 use html_escape::decode_html_entities;
 use language_utils::Language;
 use rand::RngExt;
-use std::collections::VecDeque;
+use rate_limit::RateLimiter;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::time::{Duration, Instant};
-use tokio::sync::Mutex;
+use std::time::Duration;
 use tysm::chat_completions::ChatClient;
 use xxhash_rust::xxh3::xxh3_64;
 
@@ -55,47 +54,6 @@ pub enum TranslationBackend {
     /// per request, bulk-warmed through the OpenAI Batch API. Reads its own
     /// model-specific cache key, falling back to the legacy Google key.
     OpenAi { model: String },
-}
-
-/// Sliding-window rate limiter: at most `max_requests` per `window`.
-struct RateLimiter {
-    max_requests: usize,
-    window: Duration,
-    timestamps: Mutex<VecDeque<Instant>>,
-}
-
-impl RateLimiter {
-    fn new(max_requests: usize, window: Duration) -> Self {
-        Self {
-            max_requests,
-            window,
-            timestamps: Mutex::new(VecDeque::with_capacity(max_requests)),
-        }
-    }
-
-    async fn acquire(&self) {
-        loop {
-            let sleep_for = {
-                let mut ts = self.timestamps.lock().await;
-                let now = Instant::now();
-                while let Some(&front) = ts.front() {
-                    if now.duration_since(front) >= self.window {
-                        ts.pop_front();
-                    } else {
-                        break;
-                    }
-                }
-                if ts.len() < self.max_requests {
-                    ts.push_back(now);
-                    return;
-                }
-                // Need to wait until the oldest entry exits the window.
-                let oldest = *ts.front().unwrap();
-                self.window - now.duration_since(oldest)
-            };
-            tokio::time::sleep(sleep_for).await;
-        }
-    }
 }
 
 enum Backend {

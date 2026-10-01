@@ -14,6 +14,7 @@ use base64::Engine;
 use serde::{Deserialize, Serialize};
 
 pub mod gemini;
+mod rate_limit;
 mod telemetry;
 
 pub use telemetry::{RequestCounts, request_counts};

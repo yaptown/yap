@@ -53,6 +53,7 @@ regex = "1.12.4"
 movie-subtitles = { path = "../libraries/movie-subtitles" }
 phoneme-verify = { path = "../libraries/phoneme-verify" }
 whisper = { path = "../libraries/whisper" }
+rate-limit = { path = "../libraries/rate-limit" }
 half = "2.7.1"
 hdbscan = "0.12.0"
 rayon = "1.12.0"

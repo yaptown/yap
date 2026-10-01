@@ -12,3 +12,4 @@ log = { workspace = true }
 tokio = { workspace = true, features = ["time"] }
 base64 = "0.22"
 audio-codec = { path = "../audio-codec" }
+rate-limit = { path = "../rate-limit" }

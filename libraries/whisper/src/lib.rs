@@ -85,6 +85,11 @@ pub struct Word {
     pub end_s: f64,
 }
 
+/// Workers AI allows 720 Whisper requests a minute per account. Every client
+/// in the process shares this budget, so a bulk caller can fan out freely.
+static CLOUDFLARE_LIMIT: rate_limit::RateLimiter =
+    rate_limit::RateLimiter::per_minute_with_headroom(720, 70);
+
 /// The Workers AI account to transcribe against.
 ///
 /// Read once, at the top of a run, because the alternative is worse than it
@@ -118,6 +123,7 @@ impl CloudflareWhisper {
     }
 
     pub async fn transcribe(&self, request: &TranscribeRequest<'_>) -> Result<Transcript> {
+        CLOUDFLARE_LIMIT.acquire().await;
         let mut body = serde_json::json!({
             "audio": base64::engine::general_purpose::STANDARD.encode(request.audio),
             "task": "transcribe",

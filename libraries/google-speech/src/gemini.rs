@@ -357,17 +357,21 @@ impl GeminiClient {
             "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent",
             request.model
         );
-        self.post_json(&url, request).await
+        self.post_json(&url, &request.model, request).await
     }
 
+    /// Every send, retries included, first takes a slot from the process-wide
+    /// budget for `model` (see [`crate::rate_limit`]).
     async fn post_json<T: serde::de::DeserializeOwned>(
         &self,
         url: &str,
+        model: &str,
         request: &impl Serialize,
     ) -> std::result::Result<T, GeminiError> {
         let mut attempt = 0;
         loop {
             attempt += 1;
+            crate::rate_limit::acquire(model).await;
             crate::telemetry::record_request(crate::telemetry::Backend::Gemini);
             let response = self
                 .http
@@ -424,6 +428,7 @@ impl GeminiClient {
         let response: InteractionResponse = self
             .post_json(
                 "https://generativelanguage.googleapis.com/v1beta/interactions",
+                GEMINI_TTS_MODEL,
                 request,
             )
             .await?;

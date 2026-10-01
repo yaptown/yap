@@ -1,7 +1,10 @@
 import type { AnkiDeckPlan, AnkiMediaSource } from "../../../yap-frontend-rs/pkg";
 
-// Bound synthesis concurrency and stop a failing export before it floods the service.
-const CONCURRENCY = 8;
+// The backend paces itself against Gemini's and Whisper's per-minute quotas,
+// so the fan-out here only needs to be wide enough to keep those saturated;
+// it is not what protects the providers. The failure cap still stops a
+// broken export before it floods the service.
+const CONCURRENCY = 24;
 const TIMEOUT_MS = 60_000;
 const RETRIES = 1;
 const MAX_FAILURES = 32;

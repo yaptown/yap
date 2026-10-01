@@ -2203,6 +2203,7 @@ dependencies = [
  "phoneme-verify",
  "rand 0.10.1",
  "rand_chacha 0.10.0",
+ "rate-limit",
  "rayon",
  "regex 1.12.4",
  "reqwest 0.13.4",
@@ -2347,6 +2348,7 @@ dependencies = [
  "audio-codec",
  "base64 0.22.1",
  "log 0.4.31",
+ "rate-limit",
  "reqwest 0.13.4",
  "serde",
  "serde_json",
@@ -5110,6 +5112,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "rate-limit"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "raw-cpuid"
 version = "11.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7633,6 +7642,7 @@ dependencies = [
  "base64 0.22.1",
  "language-utils",
  "log 0.4.31",
+ "rate-limit",
  "reqwest 0.13.4",
  "serde",
  "serde_json",
