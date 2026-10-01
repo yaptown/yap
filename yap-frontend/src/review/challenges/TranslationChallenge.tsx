@@ -36,12 +36,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -53,25 +47,24 @@ import {
   useAnimation as animationControls,
   type PanInfo,
 } from "framer-motion";
-import { Check, X, MoreVertical } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { AudioButton } from "../../audio/AudioButton";
 import { VideoClipPlayer } from "../../audio/VideoClipPlayer";
 import { ReportIssueModal } from "./ReportIssueModal";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { useBackground } from "../../components/background-context";
 import { languageToLangAttr } from "@/lib/utils";
-import { Textarea } from "../../components/ui/textarea";
 import { TargetLanguageText } from "../../components/TargetLanguageText";
 import {
   MorphemeBreakdown,
   type BreakdownRow,
 } from "../MorphemeBreakdown";
 import {
+  AnswerLine,
   ChallengeSentence,
-  CorrectTranslation,
-  FeedbackSkeleton,
+  ReportIssueLink,
+  SentenceVerdict,
   TranslationVerdict,
-  YourTranslation,
   type TranslationVerdictData,
 } from "./translation-verdict";
 
@@ -401,16 +394,18 @@ export const TranslationChallenge = memo(function TranslationChallenge({
   const gradeItems = view.grade_section?.items ?? [];
   const canContinue = view.can_continue;
   const tappedDefinitions = view.definitions;
-  const verdict: TranslationVerdictData | null = view.verdict ? {
-    userTranslation: view.verdict.submission,
-    correctTranslation: view.verdict.correct_translation,
-    isPerfect: view.verdict.perfect,
-    encouragement: view.verdict.encouragement ?? null,
-    explanation: view.verdict.explanation ?? null,
-    autogradingError: view.verdict.autograding_error ?? null,
-    submissionLabel: view.verdict.submission_label,
-    correctLabel: view.verdict.correct_label,
-  } : null;
+  const verdict: TranslationVerdictData | null = view.verdict
+    ? {
+        correctTranslation: view.verdict.correct_translation,
+        isPerfect: view.verdict.perfect,
+        encouragement: view.verdict.encouragement ?? null,
+        explanation: view.verdict.explanation ?? null,
+        autogradingError: view.verdict.autograding_error ?? null,
+        headline: view.verdict.headline,
+        feedbackLabel: view.verdict.feedback_label,
+        correctLabel: view.correct_label,
+      }
+    : null;
   const [clipMovieId, setClipMovieId] = useState<string | null>(null);
   const hasClip = clipMovieId !== null;
   const movieData = deck.sentence_posters(sentence.movie_titles.map(([id]) => id), clipMovieId ?? undefined);
@@ -567,94 +562,91 @@ export const TranslationChallenge = memo(function TranslationChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div>
-        <Card animate className="pt-3 pb-3 pl-3 pr-3 relative gap-2">
+        <Card animate className="p-5 relative gap-2">
           {view.badge && (
             <Badge className="absolute -top-2 -left-2 -rotate-12 z-10 shadow-sm text-sm">
               {view.badge}
             </Badge>
           )}
           <div className="space-y-6">
-            <div className="text-center">
-              <div className="flex items-center justify-between w-full">
-                <AudioButton
-                  audioRequest={sentence.audio}
-                  accessToken={accessToken}
-                  autoPlay={!editing && !hasClip}
-                  autoplayed={autoplayed}
-                  setAutoplayed={setAutoplayed}
+            <div className="flex items-start gap-3">
+              <div className="flex-1 pt-2">
+                <ChallengeSentence
+                  words={view.words}
+                  onWordTap={handleWordTap}
+                  targetLanguage={targetLanguage}
                 />
-
-                <div className="flex flex-col items-center gap-1">
-                  <ChallengeSentence
-                    words={view.words}
-                    onWordTap={handleWordTap}
-                    targetLanguage={targetLanguage}
-                  />
-                </div>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="h-6 w-6 size--xl" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-                      {report_issue_copy().menu_label}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
+              <AudioButton
+                audioRequest={sentence.audio}
+                accessToken={accessToken}
+                autoPlay={!editing && !hasClip}
+                autoplayed={autoplayed}
+                setAutoplayed={setAutoplayed}
+                variant="default"
+                className="h-14 w-14 shrink-0 rounded-full shadow-lg shadow-primary/30"
+              />
             </div>
 
-            {editing ? (
-              <>
-                <Textarea
+            <AnswerLine
+              label={view.answer_label}
+              tone={view.verdict?.headline.tone}
+            >
+              {editing ? (
+                <textarea
                   ref={inputRef}
                   lang={languageToLangAttr(nativeLanguage)}
                   placeholder={view.placeholder}
                   value={userTranslation}
-                  onChange={(e) => send({ type: "TextChanged", text: e.target.value })}
-                  className="text-lg min-h-0"
+                  onChange={(e) =>
+                    send({ type: "TextChanged", text: e.target.value })
+                  }
+                  className="block w-full resize-none bg-transparent outline-none placeholder:text-muted-foreground field-sizing-content"
                   rows={1}
                 />
+              ) : (
+                <p>{userTranslation}</p>
+              )}
+            </AnswerLine>
 
-                <ProperNounGroups
-                  groups={view.proper_nouns}
+            {editing && (
+              <ProperNounGroups
+                groups={view.proper_nouns}
+                targetLanguage={targetLanguage}
+              />
+            )}
+
+            {view.is_grading && (
+              <SentenceVerdict
+                grading
+                correctLabel={view.correct_label}
+                correct={correctTranslation}
+                isPerfect={false}
+                targetLanguage={targetLanguage}
+              />
+            )}
+
+            {verdict && (
+              <>
+                <TranslationVerdict
+                  verdict={verdict}
                   targetLanguage={targetLanguage}
                 />
-              </>
-            ) : (
-              <div className="space-y-4 mt-4 animate-feedback-in">
-                {view.is_grading ? (
-                  <div className="space-y-2">
-                    <YourTranslation userTranslation={userTranslation} />
-                    <CorrectTranslation sentence={correctTranslation} />
-                    <FeedbackSkeleton />
-                  </div>
-                ) : verdict ? (
-                  <>
-                    <TranslationVerdict
-                      verdict={verdict}
-                      targetLanguage={targetLanguage}
-                    />
 
-                    {view.grade_section && (
-                      <PhraseStatuses
-                        gradeItems={gradeItems}
-                        phraseRefs={phraseRefs}
-                        handleGradeSwipe={handleGradeSwipe}
-                        selectedPhraseIndex={selectedPhraseIndex}
-                        setSelectedPhraseIndex={setSelectedPhraseIndex}
-                        openByDefault={view.grade_section.open_by_default}
-                        title={view.grade_section.title}
-                        subtitle={view.grade_section.subtitle}
-                        targetLanguage={targetLanguage}
-                      />
-                    )}
-                  </>
-                ) : null}
-              </div>
+                {view.grade_section && (
+                  <PhraseStatuses
+                    gradeItems={gradeItems}
+                    phraseRefs={phraseRefs}
+                    handleGradeSwipe={handleGradeSwipe}
+                    selectedPhraseIndex={selectedPhraseIndex}
+                    setSelectedPhraseIndex={setSelectedPhraseIndex}
+                    openByDefault={view.grade_section.open_by_default}
+                    title={view.grade_section.title}
+                    subtitle={view.grade_section.subtitle}
+                    targetLanguage={targetLanguage}
+                  />
+                )}
+              </>
             )}
 
             {/* The clip sits under the answer area: it's secondary to the
@@ -683,6 +675,11 @@ export const TranslationChallenge = memo(function TranslationChallenge({
             </div>
           )}
         </Card>
+
+        <ReportIssueLink
+          label={report_issue_copy().menu_label}
+          onClick={() => setShowReportModal(true)}
+        />
 
         {/* Movie posters - hidden after grading */}
         {editing && (

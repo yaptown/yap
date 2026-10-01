@@ -29,26 +29,27 @@ struct TranslationChallengeView: View {
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
         ReviewStepScrollView {
-            StudyCard(animated: true) {
+            StudyCard(spacing: 20, animated: true) {
                 if let badge = view.badge { ReviewBadge(text: badge) }
-                HStack(alignment: .center, spacing: 8) {
-                    AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: !editing && hasClip == false)
-                    SentenceFlow(spacing: 0, alignment: .center) {
+                HStack(alignment: .top, spacing: 12) {
+                    SentenceFlow(spacing: 0) {
                         ForEach(Array(view.words.enumerated()), id: \.offset) { index, word in
                             let text = Text(word.text + word.whitespace)
                                 .underline(word.tappable, pattern: .dot)
-                                .font(.title2.weight(.semibold)).foregroundStyle(tint(word.tint))
+                                .font(.title.bold()).foregroundStyle(tint(word.tint))
                             if word.tappable {
                                 Button { send(.WordTapped(index: UInt64(index))) } label: { text.frame(minHeight: 44) }.buttonStyle(.plain)
                             } else { text }
                         }
-                    }.frame(maxWidth: .infinity)
-                    ReportIssueMenu(subject: .Translation(sentence))
+                    }.frame(maxWidth: .infinity).padding(.top, 10)
+                    AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: !editing && hasClip == false, kind: .prominent)
                 }
+                answerField
+                if editing { ProperNounGroupsView(groups: view.proper_nouns).equatable() }
                 if let verdict = view.verdict {
-                    SentenceVerdictView(submission: verdict.submission, correct: verdict.correct_translation,
-                        perfect: verdict.perfect, encouragement: verdict.encouragement, explanation: verdict.explanation,
-                        error: verdict.autograding_error, correctLabel: verdict.correct_label, submissionLabel: verdict.submission_label).equatable()
+                    SentenceVerdictView(headline: verdict.headline, correctLabel: view.correct_label, correct: verdict.correct_translation,
+                        feedbackLabel: verdict.feedback_label, encouragement: verdict.encouragement,
+                        explanation: verdict.explanation, error: verdict.autograding_error).equatable()
                     if let section = view.grade_section {
                         GradeSectionDisclosure(title: section.title, isExpanded: $gradesExpanded) {
                             VStack(spacing: 12) {
@@ -58,20 +59,13 @@ struct TranslationChallengeView: View {
                         }
                     }
                 } else if view.is_grading {
-                    Text(state.text)
-                    Text(view.correct_translation ?? "").foregroundStyle(Color.yapPositiveForeground)
-                    ProgressView(view.submit_label)
-                } else {
-                    SubmissionTextView(text: Binding(get: { state.text }, set: { send(.TextChanged(text: $0)) }), focused: $focused, onSubmit: submit)
-                        .overlay(alignment: .topLeading) {
-                            if state.text.isEmpty { Text(view.placeholder).foregroundStyle(Color.yapMuted).padding(12).allowsHitTesting(false) }
-                        }
-                    ProperNounGroupsView(groups: view.proper_nouns).equatable()
+                    SentenceVerdictView(headline: nil, correctLabel: view.correct_label, correct: view.correct_translation ?? "").equatable()
                 }
                 VideoClipView( language: screen.target_language, text: sentence.target_language,
                     reviewCount: screen.total_reviews, autoplay: !editing, available: $hasClip, movieId: $clipMovieId)
                 ReviewDefinitionsView(definitions: view.definitions).equatable()
             }
+            ReportIssueLink(subject: .Translation(sentence))
             if editing {
                 MoviePosterGrid(movies: host.deck.sentence_posters(movie_ids: sentence.movie_titles.map { $0.first }, shown_in_clip: clipMovieId)).equatable()
             }
@@ -97,6 +91,29 @@ struct TranslationChallengeView: View {
         #if DEBUG
         .onChange(of: DebugHarness.shared.commandID) { _, _ in guard DebugHarness.shared.activeScreen == .review else { return }; debugCommand() }
         #endif
+    }
+    /// The learner's answer on an underline: accent while typing, then the
+    /// verdict's tint, with the answer itself green once it's right.
+    private var answerField: some View {
+        let tone = view.verdict?.headline.tone
+        let line = tone?.line ?? (focused ? Color.yapAccent : Color.yapMuted.opacity(0.4))
+        return VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(text: view.answer_label)
+            Group {
+                if editing {
+                    SubmissionTextView(text: Binding(get: { state.text }, set: { send(.TextChanged(text: $0)) }), focused: $focused, onSubmit: submit)
+                        .overlay(alignment: .topLeading) {
+                            if state.text.isEmpty { Text(view.placeholder).font(.title3).foregroundStyle(Color.yapMuted).allowsHitTesting(false) }
+                        }
+                } else {
+                    Text(state.text).font(.title3).foregroundStyle(tone == .Perfect ? Color.yapPositiveForeground : Color.yapText)
+                        .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
+                }
+            }.padding(.bottom, 4)
+            Rectangle().fill(line).frame(height: focused || tone != nil ? 2 : 1)
+        }
+        .contentShape(Rectangle()).onTapGesture { if editing { focused = true } }
+        .animation(.easeOut(duration: 0.2), value: line)
     }
     private func tint(_ tint: TranslationWordTint) -> Color {
         switch tint {

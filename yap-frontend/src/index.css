@@ -82,6 +82,10 @@
   * {
     corner-shape: squircle;
   }
+  /* A squircled circle is a rounded square. */
+  .rounded-full {
+    corner-shape: round;
+  }
 }
 
 @layer base {

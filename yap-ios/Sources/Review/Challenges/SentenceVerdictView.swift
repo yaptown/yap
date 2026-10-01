@@ -1,62 +1,113 @@
 import SwiftUI
 
+/// The graded half of a sentence challenge: how it went, the reference
+/// answer and the autograder's notes. While grading, placeholder bars hold
+/// the headline's and feedback's places so nothing jumps when they arrive;
+/// the reference answer shows from the start.
 struct SentenceVerdictView: View, Equatable {
-    /// Nil when the answer is already on screen (dictation types it inline).
-    let submission: String?
+    /// Nil while grading.
+    let headline: VerdictHeadline?
+    let correctLabel: String
     let correct: String
-    let perfect: Bool
-    let encouragement: String?
-    let explanation: String?
-    let error: String?
-    var correctLabel = "Correct translation:"
-    var submissionLabel = "Your translation:"
+    var feedbackLabel = ""
+    var encouragement: String?
+    var explanation: String?
+    var error: String?
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if !perfect, let submission {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(submissionLabel).font(.footnote.weight(.medium))
-                    Text(submission).font(.body.weight(.medium))
-                }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
-                    .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color(uiColor: .separator)) }
+        VStack(alignment: .leading, spacing: 20) {
+            if let headline { VerdictHeadlineView(headline: headline) } else { SkeletonBars(widths: [0.45]) }
+            if headline?.tone != .Perfect {
+                VStack(alignment: .leading, spacing: 6) {
+                    SectionLabel(text: correctLabel)
+                    Text(correct).font(.title3).textSelection(.enabled)
+                }
             }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(correctLabel).font(.footnote.weight(.medium)).foregroundStyle(Color.yapPositiveForeground)
-                Text(correct).font(.body.weight(.medium)).textSelection(.enabled)
-            }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
-                .background(Color.yapPositiveSurface, in: RoundedRectangle(cornerRadius: 10))
-                .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.yapPositiveBorder) }
-            if error != nil {
-                Text("Your submission could not be graded automatically. Please grade the words manually below.").font(.footnote).foregroundStyle(Color.yapCautionForeground)
+            if let headline {
+                if error != nil {
+                    Text("Your submission could not be graded automatically. Please grade the words manually below.")
+                        .font(.footnote).foregroundStyle(Color.yapCautionForeground)
+                }
+                FeedbackSection(label: feedbackLabel, tone: headline.tone, encouragement: encouragement, explanation: explanation)
+            } else {
+                SkeletonBars(widths: [0.35, 0.9, 0.65])
             }
-            FeedbackCallout(perfect: perfect, encouragement: encouragement, explanation: explanation).equatable()
-        }.fadeIn(duration: 0.2)
+        }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
-/// The autograder's encouragement and explanation, in the web's info box.
-struct FeedbackCallout: View, Equatable {
-    let perfect: Bool
+/// A quiet uppercase caption over one block of a challenge card.
+struct SectionLabel: View {
+    let text: String
+    var color = Color.yapMuted
+    var body: some View {
+        Text(text.uppercased()).font(.caption.weight(.semibold)).tracking(1.2).foregroundStyle(color)
+    }
+}
+
+@MainActor extension VerdictTone {
+    var foreground: Color {
+        switch self { case .Perfect: .yapPositiveForeground; case .Almost: .yapCautionForeground; case .Wrong: .yapNegativeForeground }
+    }
+    var line: Color {
+        switch self { case .Perfect: .yapPositive; case .Almost: .yapCaution; case .Wrong: .yapNegative }
+    }
+    var surface: Color {
+        switch self { case .Perfect: .yapPositiveSurface; case .Almost: .yapCautionSurface; case .Wrong: .yapNegativeSurface }
+    }
+}
+
+/// "Nailed it!" beside a mark in the verdict's tint.
+struct VerdictHeadlineView: View {
+    let headline: VerdictHeadline
+    var body: some View {
+        HStack(spacing: 12) {
+            mark.font(.subheadline.weight(.heavy)).foregroundStyle(headline.tone.foreground)
+                .frame(width: 32, height: 32).background(headline.tone.surface, in: Circle())
+                .accessibilityHidden(true)
+            Text(headline.text).font(.title2.bold())
+        }.fadeIn(duration: 0.25)
+    }
+    @ViewBuilder private var mark: some View {
+        switch headline.tone {
+        case .Perfect: Image(systemName: "checkmark")
+        case .Almost: Text("~").font(.headline.weight(.heavy))
+        case .Wrong: Image(systemName: "xmark")
+        }
+    }
+}
+
+/// The autograder's encouragement and explanation as plain paragraphs.
+struct FeedbackSection: View, Equatable {
+    let label: String
+    let tone: VerdictTone
     let encouragement: String?
     let explanation: String?
     var body: some View {
-        if encouragement?.isEmpty == false || explanation?.isEmpty == false {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Feedback:").font(.footnote.weight(.medium)).foregroundStyle(Color.yapInfoForeground)
-                if let encouragement, !encouragement.isEmpty {
-                    HStack(alignment: .top, spacing: 8) {
-                        if Theme.emojiFontAvailable { Text(perfect ? "🎉" : "☀️") }
-                        else { Image(systemName: perfect ? "party.popper" : "sun.max") }
-                        Text(markdown(encouragement))
-                    }.font(.subheadline.weight(.medium)).foregroundStyle(Color.yapPositiveForeground).padding(8)
-                        .background(Color.yapPositiveSurface, in: RoundedRectangle(cornerRadius: 6))
-                        .overlay(alignment: .leading) { Rectangle().fill(Color.yapPositiveBorder).frame(width: 2) }
-                }
-                if let explanation, !explanation.isEmpty { Text(markdown(explanation)).font(.subheadline) }
-            }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
-                .background(Color.yapInfoSurface, in: RoundedRectangle(cornerRadius: 10))
-                .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color.yapInfoBorder) }
-                .fadeIn(duration: 0.2)
+        let paragraphs = [encouragement, explanation].compactMap { $0 }.filter { !$0.isEmpty }
+        if !paragraphs.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                SectionLabel(text: label, color: tone.foreground)
+                VStack(alignment: .leading, spacing: 10) { ForEach(paragraphs, id: \.self) { Text(markdown($0)) } }
+            }.frame(maxWidth: .infinity, alignment: .leading).fadeIn(duration: 0.25)
         }
+    }
+}
+
+/// Pulsing placeholder lines, each a fraction of the available width.
+struct SkeletonBars: View {
+    let widths: [CGFloat]
+    @State private var dim = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(Array(widths.enumerated()), id: \.offset) { _, width in
+                GeometryReader { proxy in Capsule().fill(Color.yapMuted.opacity(0.2)).frame(width: proxy.size.width * width) }
+                    .frame(height: 12)
+            }
+        }
+        .opacity(dim ? 0.5 : 1)
+        .animation(.easeInOut(duration: 0.9).repeatForever(), value: dim)
+        .onAppear { dim = true }
+        .accessibilityHidden(true)
     }
 }
 

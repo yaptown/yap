@@ -28,6 +28,37 @@ pub enum Sound {
     Success,
 }
 
+/// How a graded sentence went, which picks the headline and its tint.
+#[bridgerton::bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Copy, Debug, PartialEq)]
+pub enum VerdictTone {
+    Perfect,
+    /// Right apart from spelling slips.
+    Almost,
+    Wrong,
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+pub struct VerdictHeadline {
+    pub tone: VerdictTone,
+    pub text: String,
+}
+
+impl From<VerdictTone> for VerdictHeadline {
+    fn from(tone: VerdictTone) -> Self {
+        let text = match tone {
+            VerdictTone::Perfect => "Nailed it!",
+            VerdictTone::Almost => "Almost.",
+            VerdictTone::Wrong => "Not quite.",
+        };
+        VerdictHeadline {
+            tone,
+            text: text.into(),
+        }
+    }
+}
+
 pub mod translation;
 pub use translation::*;
 

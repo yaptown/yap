@@ -33,7 +33,7 @@ import { VideoClipPlayer } from "../../audio/VideoClipPlayer";
 import { playSoundEffect } from "@/lib/sound-effects";
 import { CantListenButton } from "./CantListenButton";
 import { AudioErrorBanner } from "../../audio/AudioErrorBanner";
-import { FeedbackDisplay } from "@/components/FeedbackDisplay";
+import { ReportIssueLink, SentenceVerdict } from "./translation-verdict";
 import { AccentedCharacterKeyboard } from "../../components/AccentedCharacterKeyboard";
 import { MobileKeyboardTip } from "../../components/MobileKeyboardTip";
 import {
@@ -49,15 +49,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical, X } from "lucide-react";
+import { X } from "lucide-react";
 import { ReportIssueModal } from "./ReportIssueModal";
-import { Skeleton } from "@/components/ui/skeleton";
 import { InlineTextarea } from "../../components/ui/textarea";
 import { GramDefinitionDisplay } from "./TranslationChallenge";
 import { ProperNounGroups } from "./ProperNounGroups";
@@ -77,33 +70,6 @@ interface TranscriptionChallengeProps {
   setAutoplayed: () => void;
   deck: Deck;
   totalReviewsCompleted: bigint;
-}
-
-function AutogradeError() {
-  return (
-    <div
-      className={`rounded-lg p-4 border bg-caution-surface border-caution-border`}
-    >
-      <p
-        className={`text-sm font-medium mb-1 text-caution-foreground`}
-      >
-        Your submission could not be graded automatically. Please grade the
-        words manually below.
-      </p>
-    </div>
-  );
-}
-
-function FeedbackSkeleton() {
-  return (
-    <div className="space-y-4 animate-feedback-in">
-      <div className="space-y-3">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-4 w-1/2" />
-      </div>
-    </div>
-  );
 }
 
 // Recursive reducer effects are not covered by React Compiler; compare every prop, including actions.
@@ -478,8 +444,8 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
     ({
       Neutral: "border-muted-foreground/30",
       Perfect: "border-positive bg-positive-field",
-      PhoneticallyIdentical:
-        "border-caution bg-caution-field",
+      Typo: "border-caution bg-caution-field",
+      PhoneticallyIdentical: "border-caution bg-caution-field",
       PhoneticallySimilar: "border-warning bg-warning-field",
       Wrong: "border-negative bg-negative-field",
     })[view.blanks.find((blank) => blank.index === index)!.tint];
@@ -487,28 +453,12 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
   return (
     <div className="flex flex-col flex-1 justify-between">
       <div className="flex flex-col gap-2">
-        <Card animate className="pt-3 pb-3 pl-3 pr-3 relative gap-0">
+        <Card animate className="p-5 relative gap-0">
           {challenge.second_chance && (
             <Badge className="absolute -top-2 -left-2 -rotate-12 z-10 shadow-sm text-sm">
               Second Chance!
             </Badge>
           )}
-          {/* Dropdown menu for options */}
-          <div className="absolute top-2 right-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-                  {report_issue_copy().menu_label}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
           <div className="space-y-6">
             {/* Audio + sentence with blanks, grouped so they read as one unit */}
             <div>
@@ -565,51 +515,27 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
               />
             )}
 
-            {/* Result feedback */}
             {!editing && (
-              <div className="space-y-2 animate-feedback-in">
-                {/* Show correct answer immediately when grading starts */}
-                <div className="rounded-lg p-4 border bg-positive-surface border-positive-border">
-                  <p className="text-sm font-medium mb-1 text-positive-foreground">
-                    {verdict?.correct_label ?? "Correct sentence:"}
-                  </p>
-                  <p className="text-lg font-medium">
+              <div className="space-y-5">
+                <SentenceVerdict
+                  grading={view.is_grading}
+                  headline={verdict?.headline}
+                  correctLabel={view.correct_label}
+                  correct={
                     <TargetLanguageText language={targetLanguage}>
                       {challenge.target_language}
                     </TargetLanguageText>
-                  </p>
-                </div>
+                  }
+                  feedbackLabel={verdict?.feedback_label}
+                  encouragement={verdict?.encouragement}
+                  explanation={verdict?.explanation}
+                  autogradingError={verdict?.autograding_error}
+                  isPerfect={verdict?.perfect ?? false}
+                  targetLanguage={targetLanguage}
+                />
 
-                {/* Show skeleton while grading */}
-                {view.is_grading && <FeedbackSkeleton />}
-
-                {/* Only show these when grading is complete */}
                 {verdict && (
                   <>
-                    {"autograding_error" in verdict &&
-                      verdict.autograding_error && <AutogradeError />}
-
-                    <WordGrades
-                      verdict={verdict}
-                      gradeOptions={view.grade_options}
-                      setGrade={(part_index, word_index, grade) =>
-                        send({
-                          type: "WordGradeChanged",
-                          part_index,
-                          word_index,
-                          grade,
-                        })
-                      }
-                      targetLanguage={targetLanguage}
-                    />
-
-                    <FeedbackDisplay
-                      encouragement={verdict.encouragement}
-                      explanation={verdict.explanation}
-                      perfect={verdict.perfect}
-                      targetLanguage={targetLanguage}
-                    />
-
                     {Array.isArray(verdict.compare) &&
                       verdict.compare.length > 0 &&
                       (() => {
@@ -670,6 +596,20 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
                       </p>
                     </div>
 
+                    <WordGrades
+                      verdict={verdict}
+                      gradeOptions={view.grade_options}
+                      setGrade={(part_index, word_index, grade) =>
+                        send({
+                          type: "WordGradeChanged",
+                          part_index,
+                          word_index,
+                          grade,
+                        })
+                      }
+                      targetLanguage={targetLanguage}
+                    />
+
                     {wrongGramEntries.length > 0 && (
                       <div className="space-y-2">
                         {wrongGramEntries.map((entry, i) => (
@@ -688,6 +628,11 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
             )}
           </div>
         </Card>
+
+        <ReportIssueLink
+          label={report_issue_copy().menu_label}
+          onClick={() => setShowReportModal(true)}
+        />
 
         {audioError && onCantListen && editing && (
           <AudioErrorBanner onSkip={onCantListen} />

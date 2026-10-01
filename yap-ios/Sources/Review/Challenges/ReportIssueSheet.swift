@@ -1,17 +1,15 @@
 import SwiftUI
 
 /// The challenge "⋯" menu for sentence challenges; its one item files a report.
-struct ReportIssueMenu: View {
+/// A quiet link under a challenge card, out of the way of the answer.
+struct ReportIssueLink: View {
     let subject: IssueSubject
     @State private var reporting = false
     var body: some View {
-        Menu {
-            Button(report_issue_copy().menu_label, systemImage: "exclamationmark.bubble") { reporting = true }
-        } label: {
-            Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
-        }
-        .accessibilityLabel("More")
-        .reportIssueSheet(isPresented: $reporting, subject: subject)
+        Button { reporting = true } label: { Label(report_issue_copy().menu_label, systemImage: "flag") }
+            .font(.subheadline).foregroundStyle(Color.yapMuted).buttonStyle(.plain)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .trailing)
+            .reportIssueSheet(isPresented: $reporting, subject: subject)
     }
 }
 

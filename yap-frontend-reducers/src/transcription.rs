@@ -1,4 +1,4 @@
-use crate::{ProperNounGroup, Sound, proper_noun_groups};
+use crate::{ProperNounGroup, Sound, VerdictHeadline, VerdictTone, proper_noun_groups};
 use language_utils::{
     Course, ProperNounDefinition,
     text_cleanup::{normalize_for_grading, remove_accents_lowercase},
@@ -235,6 +235,8 @@ pub struct TranscriptionStep {
 pub enum BlankTint {
     Neutral,
     Perfect,
+    /// Right word, misspelled.
+    Typo,
     PhoneticallyIdentical,
     PhoneticallySimilar,
     Wrong,
@@ -268,9 +270,10 @@ pub struct WordGradeView {
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct VerdictView {
+    pub headline: VerdictHeadline,
     pub perfect: bool,
     pub submission_text: String,
-    pub correct_label: String,
+    pub feedback_label: String,
     pub submission_label: String,
     pub continue_label: String,
     pub encouragement: Option<String>,
@@ -291,6 +294,8 @@ pub struct VerdictView {
 pub struct TranscriptionView {
     pub proper_nouns: Vec<ProperNounGroup>,
     pub cant_listen_label: String,
+    /// Shown from the moment grading starts, beside the sentence.
+    pub correct_label: String,
     pub instructions: String,
     pub placeholder: String,
     pub blanks: Vec<BlankView>,
@@ -472,8 +477,8 @@ fn blank_tint(result: Option<&PartGraded>) -> BlankTint {
     }) {
         BlankTint::Wrong
     } else {
-        BlankTint::Neutral
-    } // Typos alone have no error tint on the web.
+        BlankTint::Typo
+    }
 }
 
 #[bridgerton::bridge]
@@ -526,6 +531,15 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
     } = &state.phase
     {
         let perfect = transcription_is_perfect(grade.results.clone());
+        let only_typos = grade.results.iter().all(|result| match result {
+            PartGraded::Provided { .. } => true,
+            PartGraded::AskedToTranscribe { parts, .. } => parts.iter().all(|p| {
+                matches!(
+                    p.grade,
+                    WordGrade::Perfect { .. } | WordGrade::CorrectWithTypo { .. }
+                )
+            }),
+        });
         let mut word_grades = vec![];
         for (part_index, part) in grade.results.iter().enumerate() {
             if let PartGraded::AskedToTranscribe { parts, .. } = part {
@@ -546,15 +560,23 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
             }
         }
         Some(VerdictView {
+            headline: if perfect {
+                VerdictTone::Perfect
+            } else if only_typos {
+                VerdictTone::Almost
+            } else {
+                VerdictTone::Wrong
+            }
+            .into(),
             perfect,
             submission_text: blanks
                 .iter()
                 .map(|b| b.text.as_str())
                 .collect::<Vec<_>>()
                 .join(" "),
-            correct_label: "Correct sentence:".into(),
+            feedback_label: "Feedback".into(),
             submission_label: "Your answer:".into(),
-            continue_label: if perfect { "Nailed it!" } else { "Continue" }.into(),
+            continue_label: "Continue".into(),
             encouragement: grade.encouragement.clone(),
             explanation: grade.explanation.clone(),
             autograding_error: grade.autograding_error.clone(),
@@ -576,6 +598,7 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
             vec![]
         },
         cant_listen_label: "Can't listen now".into(),
+        correct_label: "Correct sentence".into(),
         instructions: "Listen and fill in the blanks".into(),
         placeholder: "Write what you hear".into(),
         can_submit: editing && state.submission().all_blanks_filled,
@@ -586,7 +609,12 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
                 ..
             }
         ),
-        submit_label: "Check answer".into(),
+        submit_label: if matches!(state.phase, TranscriptionPhase::Grading { .. }) {
+            "AI is grading..."
+        } else {
+            "Check Answer"
+        }
+        .into(),
         is_grading: matches!(state.phase, TranscriptionPhase::Grading { .. }),
         blanks,
         verdict,
@@ -896,12 +924,13 @@ mod reducer_tests {
         let view = transcription_view(graded());
         assert_eq!(view.instructions, "Listen and fill in the blanks");
         assert_eq!(view.placeholder, "Write what you hear");
-        assert_eq!(view.submit_label, "Check answer");
+        assert_eq!(view.submit_label, "Check Answer");
         assert_eq!(view.blanks.len(), 1);
         assert_eq!(view.blanks[0].index, 1);
         let verdict = view.verdict.unwrap();
         assert_eq!(verdict.submission_text, " chat ");
-        assert_eq!(verdict.continue_label, "Nailed it!");
+        assert_eq!(verdict.headline.text, "Nailed it!");
+        assert_eq!(verdict.continue_label, "Continue");
         assert_eq!(verdict.word_grades[0].selected, 0); // wrote does not affect selection
         assert_eq!(
             view.grade_options
@@ -924,7 +953,7 @@ mod reducer_tests {
                     WordGrade::Perfect { wrote: None },
                     WordGrade::CorrectWithTypo { wrote: None },
                 ],
-                BlankTint::Neutral,
+                BlankTint::Typo,
             ),
             (
                 vec![
@@ -958,6 +987,43 @@ mod reducer_tests {
             )
             .state;
             assert_eq!(transcription_view(state).blanks[0].tint, tint);
+        }
+    }
+
+    #[test]
+    fn headline_forgives_only_typos() {
+        let cases = [
+            (
+                vec![WordGrade::Perfect { wrote: None }],
+                VerdictTone::Perfect,
+            ),
+            (
+                vec![
+                    WordGrade::Perfect { wrote: None },
+                    WordGrade::CorrectWithTypo { wrote: None },
+                ],
+                VerdictTone::Almost,
+            ),
+            (
+                vec![
+                    WordGrade::CorrectWithTypo { wrote: None },
+                    WordGrade::PhoneticallyIdenticalButContextuallyIncorrect { wrote: None },
+                ],
+                VerdictTone::Wrong,
+            ),
+        ];
+        for (words, tone) in cases {
+            let state = transcription_transition(
+                grading(),
+                TranscriptionEvent::Graded {
+                    grade: grade(words),
+                },
+            )
+            .state;
+            assert_eq!(
+                transcription_view(state).verdict.unwrap().headline.tone,
+                tone
+            );
         }
     }
 }

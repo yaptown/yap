@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 import {
   type Challenge,
   type Gram,
@@ -24,7 +24,7 @@ type Props = Omit<
   onTranscriptionComplete: ComponentProps<
     typeof TranscriptionChallenge
   >["onComplete"];
-  menuExtras?: ReactNode;
+  reportIssue?: { label: string; onClick: () => void };
   translationState?: ComponentProps<typeof TranslationChallenge>["initialState"];
 };
 
@@ -44,7 +44,7 @@ export function ChallengeView({
   onTranslationComplete,
   onTranscriptionComplete,
   deck,
-  menuExtras,
+  reportIssue,
   initialState,
   translationState,
   pendingReviewScope,
@@ -84,7 +84,7 @@ export function ChallengeView({
       targetLanguage={targetLanguage}
       autoplayed={autoplayed}
       setAutoplayed={setAutoplayed}
-      menuExtras={menuExtras}
+      reportIssue={reportIssue}
     />
   ) : currentChallenge.type === "TranslateComprehensibleSentence" ? (
     <TranslationChallenge

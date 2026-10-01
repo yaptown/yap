@@ -10,11 +10,12 @@ struct SubmissionTextView: UIViewRepresentable {
     func makeUIView(context: Context) -> UITextView {
         let view = UITextView()
         view.delegate = context.coordinator
-        view.font = .preferredFont(forTextStyle: .body)
+        view.font = .preferredFont(forTextStyle: .title3)
         view.adjustsFontForContentSizeCategory = true
-        view.backgroundColor = .tertiarySystemGroupedBackground
-        view.layer.cornerRadius = 12
-        view.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
+        // Bare text on the card; the challenge draws the underline beneath it.
+        view.backgroundColor = .clear
+        view.textContainerInset = .zero
+        view.textContainer.lineFragmentPadding = 0
         view.returnKeyType = .done
         view.isScrollEnabled = false
         view.accessibilityLabel = "Translation"
@@ -28,7 +29,7 @@ struct SubmissionTextView: UIViewRepresentable {
     }
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
         let width = proposal.width ?? 260
-        return CGSize(width: width, height: max(80, uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude)).height))
+        return CGSize(width: width, height: uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude)).height)
     }
     final class Coordinator: NSObject, UITextViewDelegate {
         var parent: SubmissionTextView

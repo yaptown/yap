@@ -6,15 +6,21 @@ struct AudioButton: View {
     @Environment(\.reviewHost!) private var host
     let reviewCount: UInt64
     var autoplay = false
-    /// The web's listening cards lead with a large speaker in a ring that wobbles
-    /// with the voice, beside a waveform of what has played; everywhere else the
-    /// button is a 44pt icon inline with the text it plays.
-    var visualizer = false
+    var kind = Kind.inline
+    enum Kind {
+        /// A 44pt icon inline with the text it plays.
+        case inline
+        /// A filled accent disc heading a challenge card, beside the sentence it reads.
+        case prominent
+        /// For listening cards: a large speaker in a ring that wobbles with the
+        /// voice, beside a waveform of what has played (the web's visualizer).
+        case visualizer
+    }
     @State private var error: String?
     @State private var playback: Task<Void, Never>?
     @State private var loading = false
     var body: some View {
-        if visualizer {
+        if kind == .visualizer {
             HStack(spacing: 12) {
                 button.background { SpeechBlob(active: playing, level: audio.level).frame(width: 128, height: 128) }
                     .frame(width: 128, height: 128)
@@ -25,6 +31,8 @@ struct AudioButton: View {
         }
     }
     private var playing: Bool { audio.isPlaying && audio.currentRequest == request }
+    private var side: CGFloat { switch kind { case .inline: 44; case .prominent: 56; case .visualizer: 72 } }
+    private var glyph: Color { kind == .prominent ? .yapOnAccent : .yapAccent }
     private var button: some View {
         // Icon-only like the web; a failure turns the icon into a red slash and
         // tapping retries, so the caption never widens the card's header row.
@@ -35,17 +43,23 @@ struct AudioButton: View {
             // `play` doesn't return until playback ends, so the spinner has to
             // stop at the moment the player reports this request is playing.
             Group {
-                if loading && !playing { ProgressView().controlSize(visualizer ? .regular : .small) }
+                if loading && !playing { ProgressView().controlSize(kind == .inline ? .small : .regular).tint(glyph) }
                 else if error != nil { Image(systemName: "speaker.slash.fill").foregroundStyle(Color.yapNegativeForeground) }
                 else {
                     Image(systemName: "speaker.wave.2.fill")
                         .symbolEffect(.variableColor, isActive: playing)
                 }
             }
-            .font(visualizer ? .title : .body)
-            .frame(width: visualizer ? 72 : 44, height: visualizer ? 72 : 44)
-            .contentShape(Rectangle())
-        }.buttonStyle(.plain).foregroundStyle(Color.yapAccent).disabled(loading)
+            .font(kind == .inline ? .body : kind == .prominent ? .title3.weight(.semibold) : .title)
+            .frame(width: side, height: side)
+            .background {
+                if kind == .prominent {
+                    Circle().fill(Color.yapAccent).shadow(color: Color.yapAccent.opacity(playing ? 0.55 : 0.3), radius: playing ? 14 : 8)
+                }
+            }
+            .contentShape(Circle())
+        }.buttonStyle(.plain).foregroundStyle(glyph).disabled(loading)
+            .animation(.easeOut(duration: 0.2), value: playing)
             .accessibilityLabel(error.map { "Play audio. \($0)" } ?? "Play audio")
         .task(id: autoplay) {
             guard autoplay, host.autoplay.reviewCount != reviewCount else { return }

@@ -1,7 +1,8 @@
 //! Translation review decisions. Browser request cancellation and draft storage
 //! remain host adapters; this module never writes or modifies deck events.
 use crate::{
-    AudioRequest, DefinitionView, ProperNounGroup, Sound, definition_view, proper_noun_groups,
+    AudioRequest, DefinitionView, ProperNounGroup, Sound, VerdictHeadline, VerdictTone,
+    definition_view, proper_noun_groups,
 };
 use language_utils::TaggedGram;
 use language_utils::{
@@ -603,10 +604,10 @@ pub struct TranslationGradeSection {
 #[bridgerton::bridge(transparent)]
 #[derive(serde::Serialize)]
 pub struct TranslationVerdictView {
+    pub headline: VerdictHeadline,
     pub submission: String,
     pub correct_translation: String,
-    pub submission_label: String,
-    pub correct_label: String,
+    pub feedback_label: String,
     pub perfect: bool,
     pub encouragement: Option<String>,
     pub explanation: Option<String>,
@@ -617,6 +618,10 @@ pub struct TranslationVerdictView {
 #[derive(serde::Serialize)]
 pub struct TranslationView {
     pub badge: Option<String>,
+    /// Labels the learner's answer, both while typing and once graded.
+    pub answer_label: String,
+    /// Shown from the moment grading starts, beside `correct_translation`.
+    pub correct_label: String,
     pub placeholder: String,
     pub words: Vec<TranslationWordView>,
     pub proper_nouns: Vec<ProperNounGroup>,
@@ -835,10 +840,15 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
                 grade,
                 perfect,
                 Some(TranslationVerdictView {
+                    headline: if perfect {
+                        VerdictTone::Perfect
+                    } else {
+                        VerdictTone::Wrong
+                    }
+                    .into(),
                     submission: state.text.clone(),
                     correct_translation: correct_translation.clone(),
-                    submission_label: "Your translation:".into(),
-                    correct_label: "Correct translation:".into(),
+                    feedback_label: "Feedback".into(),
                     perfect,
                     encouragement,
                     explanation,
@@ -898,6 +908,8 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
             .sentence
             .second_chance
             .then(|| "Second Chance!".into()),
+        answer_label: "Your translation".into(),
+        correct_label: "Correct translation".into(),
         placeholder: "Translation...".into(),
         words,
         proper_nouns: if editing {
@@ -952,7 +964,7 @@ pub fn translation_view(state: TranslationState) -> TranslationView {
                     ..
                 }
             ),
-        continue_label: if perfect { "Nailed it!" } else { "Continue" }.into(),
+        continue_label: "Continue".into(),
         autograde_error,
         definitions: feedback.definitions,
     }
@@ -1216,7 +1228,7 @@ mod reducer_tests {
         ));
         let view = translation_view(step.state.clone());
         assert!(view.can_continue);
-        assert_eq!(view.continue_label, "Nailed it!");
+        assert_eq!(view.verdict.as_ref().unwrap().headline.text, "Nailed it!");
         assert!(view.grade_section.is_none());
         assert!(
             view.words
@@ -1310,8 +1322,7 @@ mod reducer_tests {
         assert_eq!(section.items[0].label, "chat");
         assert_eq!(section.items[0].grade, Some(Remembered::Forgot));
         let verdict = view.verdict.unwrap();
-        assert_eq!(verdict.submission_label, "Your translation:");
-        assert_eq!(verdict.correct_label, "Correct translation:");
+        assert_eq!(verdict.headline.tone, VerdictTone::Wrong);
         state.tapped.clear();
         assert_eq!(
             translation_view(state.clone()).words[0].tint,

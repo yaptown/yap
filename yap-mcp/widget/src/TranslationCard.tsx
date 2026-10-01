@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { AudioButton } from "@/audio/AudioButton";
 import {
+  AnswerLine,
   ChallengeSentence,
   TranslationVerdict,
   type TranslationVerdictData,
@@ -86,7 +87,6 @@ export function TranslationCard({ challenge }: { challenge: TranslationChallenge
 
   const verdict: TranslationVerdictData | null = result
     ? {
-        userTranslation: submitted,
         correctTranslation: result.correct_translation ?? "",
         isPerfect: result.perfect,
         encouragement: result.encouragement,
@@ -149,6 +149,9 @@ export function TranslationCard({ challenge }: { challenge: TranslationChallenge
 
           {verdict && result && (
             <div className="w-full flex flex-col gap-4 text-left">
+              <AnswerLine label="Your translation" tone={result.perfect ? "Perfect" : "Wrong"}>
+                <p>{submitted}</p>
+              </AnswerLine>
               <TranslationVerdict
                 verdict={verdict}
                 targetLanguage={challenge.language}

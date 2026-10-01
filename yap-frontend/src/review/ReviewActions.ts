@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import type { SentenceList } from "@/browse/useSentenceList";
 import type { Deck, DeckEvent, PlacementSession, Rating, PartGraded, ManualTranslationGrade } from "../../../yap-frontend-rs/pkg";
 
@@ -7,7 +6,7 @@ export type ReviewHost = {
   accessToken: string | undefined;
   autoplayed: boolean;
   setAutoplayed: () => void;
-  menuExtras?: ReactNode;
+  reportIssue?: { label: string; onClick: () => void };
 };
 export type ReviewActions = {
   pendingReviewScope: string;

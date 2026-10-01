@@ -4,21 +4,29 @@
 // `<word>`-tag divergence bug) lives here once, so the two containers can never
 // drift again. Everything imported here is `import type` from the pkg or a
 // wasm-free leaf; the widget's wasm-guard build enforces that.
-import type { Language, TranslationWordView } from "../../../../yap-frontend-rs/pkg";
+import type {
+  Language,
+  TranslationWordView,
+  VerdictHeadline as VerdictHeadlineData,
+  VerdictTone,
+} from "../../../../yap-frontend-rs/pkg";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TargetLanguageText } from "@/components/TargetLanguageText";
 import { FeedbackDisplay } from "@/components/FeedbackDisplay";
+import { Flag } from "lucide-react";
 
 /** The normalized data a graded verdict renders from — same shape both sides. */
 export interface TranslationVerdictData {
-  userTranslation: string;
   correctTranslation: string;
   isPerfect: boolean;
   encouragement: string | null;
   explanation: string | null;
   autogradingError: string | null;
-  submissionLabel?: string;
+  /** Absent in the widget, whose server result carries no headline. */
+  headline?: VerdictHeadlineData;
+  feedbackLabel?: string;
   correctLabel?: string;
 }
 
@@ -36,9 +44,13 @@ const tintClasses = {
   Forgot: "text-negative-foreground",
 };
 
-export function ChallengeSentence({ words, targetLanguage, onWordTap }: ChallengeSentenceProps) {
+export function ChallengeSentence({
+  words,
+  targetLanguage,
+  onWordTap,
+}: ChallengeSentenceProps) {
   return (
-    <h2 className="text-2xl font-semibold">
+    <h2 className="text-3xl font-bold leading-tight">
       {words.map((word, i) => {
         const colorClass = tintClasses[word.tint];
         const interactive = word.tappable && !!onWordTap;
@@ -70,55 +82,189 @@ export function ChallengeSentence({ words, targetLanguage, onWordTap }: Challeng
   );
 }
 
-export function YourTranslation({ userTranslation, label = "Your translation:" }: { userTranslation: string; label?: string }) {
+/** A quiet uppercase caption over one block of a challenge card. */
+export function SectionLabel({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-lg p-4 border">
-      <p className="text-sm font-medium mb-1">{label}</p>
-      <p className="text-lg font-medium">{userTranslation}</p>
-    </div>
+    <p
+      className={cn(
+        "text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground",
+        className,
+      )}
+    >
+      {children}
+    </p>
   );
 }
 
-export function CorrectTranslation({ sentence, label = "Correct translation:" }: { sentence: string; label?: string }) {
-  return (
-    <div className="bg-positive-surface rounded-lg p-4 border border-positive-border">
-      <p className="text-sm font-medium text-positive-foreground mb-1">
-        {label}
-      </p>
-      <p className="text-lg font-medium">{sentence}</p>
-    </div>
-  );
-}
+const toneLine: Record<VerdictTone, string> = {
+  Perfect: "bg-positive",
+  Almost: "bg-caution",
+  Wrong: "bg-negative",
+};
 
-export function FeedbackSkeleton() {
+const toneMark: Record<VerdictTone, string> = {
+  Perfect: "bg-positive-surface text-positive-foreground",
+  Almost: "bg-caution-surface text-caution-foreground",
+  Wrong: "bg-negative-surface text-negative-foreground",
+};
+
+/**
+ * The learner's answer on an underline: accent while the field inside has
+ * focus, then the verdict's tint once graded.
+ */
+export function AnswerLine({
+  label,
+  tone,
+  children,
+}: {
+  label: string;
+  tone?: VerdictTone;
+  children: ReactNode;
+}) {
   return (
-    <div className="space-y-4 mt-4 animate-feedback-in">
-      <div className="space-y-3">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-4 w-1/2" />
+    <div className="group space-y-2 text-left">
+      <SectionLabel>{label}</SectionLabel>
+      <div
+        className={cn(
+          "text-xl",
+          tone === "Perfect" && "text-positive-foreground",
+        )}
+      >
+        {children}
       </div>
+      <div
+        className={cn(
+          "rounded-full transition-colors",
+          tone
+            ? cn("h-0.5", toneLine[tone])
+            : "h-px bg-muted-foreground/40 group-focus-within:h-0.5 group-focus-within:bg-primary",
+        )}
+      />
     </div>
   );
 }
 
-export function AutogradeError() {
+/** "Nailed it!" beside a mark in the verdict's tint. */
+export function VerdictHeadline({
+  headline,
+}: {
+  headline: VerdictHeadlineData;
+}) {
   return (
-    <div className="rounded-lg p-4 border bg-caution-surface border-caution-border">
-      <p className="text-sm font-medium mb-1 text-caution-foreground">
-        Your submission could not be graded automatically. Please grade the
-        words manually below.
-      </p>
+    <div className="flex items-center gap-3 animate-feedback-in">
+      <span
+        aria-hidden
+        className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-full font-bold",
+          toneMark[headline.tone],
+        )}
+      >
+        {{ Perfect: "✓", Almost: "~", Wrong: "✗" }[headline.tone]}
+      </span>
+      <p className="text-2xl font-bold">{headline.text}</p>
+    </div>
+  );
+}
+
+/** Below a challenge card, out of the way of the answer. */
+export function ReportIssueLink({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <div className="flex justify-end">
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex items-center gap-2 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+      >
+        <Flag className="h-4 w-4" />
+        {label}
+      </button>
     </div>
   );
 }
 
 /**
- * The graded-verdict feedback stack (your/correct translation, autograde
- * fallback notice, LLM feedback). The app renders its manual grade-adjust UI
- * (PhraseStatuses) as a sibling after this; the widget renders nothing after.
- * The DOM structure matches the app's prior inline markup exactly.
+ * The graded half of a sentence challenge: how it went, the reference answer
+ * and the autograder's notes. While grading, skeleton bars hold the
+ * headline's and feedback's places so nothing jumps when they arrive; the
+ * reference answer shows from the start.
  */
+export function SentenceVerdict({
+  grading,
+  headline,
+  correctLabel,
+  correct,
+  feedbackLabel,
+  encouragement,
+  explanation,
+  autogradingError,
+  isPerfect,
+  targetLanguage,
+}: {
+  grading: boolean;
+  headline?: VerdictHeadlineData;
+  correctLabel: string;
+  correct: ReactNode;
+  feedbackLabel?: string;
+  encouragement?: string | null;
+  explanation?: string | null;
+  autogradingError?: string | null;
+  isPerfect: boolean;
+  targetLanguage: Language;
+}) {
+  const tone: VerdictTone = headline?.tone ?? (isPerfect ? "Perfect" : "Wrong");
+  return (
+    <div className="space-y-5 text-left animate-feedback-in">
+      {grading ? (
+        <Skeleton className="h-3 w-2/5" />
+      ) : (
+        headline && <VerdictHeadline headline={headline} />
+      )}
+      {(grading || !isPerfect) && (
+        <div className="space-y-1.5">
+          <SectionLabel>{correctLabel}</SectionLabel>
+          <p className="text-xl">{correct}</p>
+        </div>
+      )}
+      {grading ? (
+        <div className="space-y-2.5">
+          <Skeleton className="h-3 w-1/3" />
+          <Skeleton className="h-3 w-11/12" />
+          <Skeleton className="h-3 w-2/3" />
+        </div>
+      ) : (
+        <>
+          {autogradingError && (
+            <p className="text-sm text-caution-foreground">
+              Your submission could not be graded automatically. Please grade
+              the words manually below.
+            </p>
+          )}
+          <FeedbackDisplay
+            encouragement={encouragement ?? undefined}
+            explanation={explanation ?? undefined}
+            label={feedbackLabel}
+            tone={tone}
+            targetLanguage={targetLanguage}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+/** The graded verdict, for the app's translation challenge and the widget. */
 export function TranslationVerdict({
   verdict,
   targetLanguage,
@@ -126,34 +272,18 @@ export function TranslationVerdict({
   verdict: TranslationVerdictData;
   targetLanguage: Language;
 }) {
-  if (verdict.isPerfect) {
-    return (
-      <div className="space-y-2">
-        <CorrectTranslation sentence={verdict.correctTranslation} label={verdict.correctLabel} />
-        <FeedbackDisplay
-          encouragement={verdict.encouragement ?? undefined}
-          explanation={verdict.explanation ?? undefined}
-          perfect
-          targetLanguage={targetLanguage}
-        />
-      </div>
-    );
-  }
-
   return (
-    <>
-      <div className="space-y-2">
-        <YourTranslation userTranslation={verdict.userTranslation} label={verdict.submissionLabel} />
-        <CorrectTranslation sentence={verdict.correctTranslation} label={verdict.correctLabel} />
-      </div>
-
-      {verdict.autogradingError && <AutogradeError />}
-
-      <FeedbackDisplay
-        encouragement={verdict.encouragement ?? undefined}
-        explanation={verdict.explanation ?? undefined}
-        targetLanguage={targetLanguage}
-      />
-    </>
+    <SentenceVerdict
+      grading={false}
+      headline={verdict.headline}
+      correctLabel={verdict.correctLabel ?? "Correct translation"}
+      correct={verdict.correctTranslation}
+      feedbackLabel={verdict.feedbackLabel}
+      encouragement={verdict.encouragement}
+      explanation={verdict.explanation}
+      autogradingError={verdict.autogradingError}
+      isPerfect={verdict.isPerfect}
+      targetLanguage={targetLanguage}
+    />
   );
 }

@@ -16,7 +16,6 @@ import {
 } from "../../../yap-frontend-rs/pkg";
 import { Button } from "@/components/ui/button.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { ReportIssueModal } from "@/review/challenges/ReportIssueModal";
 import {
   useSentenceList,
@@ -151,11 +150,10 @@ function Review({
           accessToken,
           autoplayed,
           setAutoplayed,
-          menuExtras: (
-            <DropdownMenuItem onClick={() => setShowReportModal(true)}>
-              {report_issue_copy().menu_label}
-            </DropdownMenuItem>
-          ),
+          reportIssue: {
+            label: report_issue_copy().menu_label,
+            onClick: () => setShowReportModal(true),
+          },
         }}
         actions={{ ...study.actions, setSentenceList, commitSentenceList }}
       />

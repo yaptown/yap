@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ArrowLeft, ArrowRight, ArrowDown } from "lucide-react";
+import { MoreHorizontal, ArrowLeft, ArrowRight, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -23,8 +23,9 @@ import {
   useAnimation as animationControls,
   type PanInfo,
 } from "framer-motion";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./FlashcardChallenge.css";
+import { ReportIssueLink } from "./translation-verdict";
 import { AudioButton } from "../../audio/AudioButton";
 import { CantListenButton } from "./CantListenButton";
 import { AudioErrorBanner } from "../../audio/AudioErrorBanner";
@@ -55,7 +56,7 @@ interface FlashcardChallengeProps {
   autoplayed: boolean;
   setAutoplayed: () => void;
   /** Extra dropdown-menu items (e.g. "Report an Issue"), owned by the caller. */
-  menuExtras?: ReactNode;
+  reportIssue?: { label: string; onClick: () => void };
 }
 
 const CardFront = ({
@@ -268,7 +269,7 @@ export const FlashcardChallenge = function FlashcardChallenge({
   targetLanguage,
   autoplayed,
   setAutoplayed,
-  menuExtras,
+  reportIssue,
 }: FlashcardChallengeProps) {
   const x = useMotionValue(0);
   const controls = animationControls();
@@ -513,10 +514,10 @@ export const FlashcardChallenge = function FlashcardChallenge({
             <div className="text-center relative z-10 flex flex-col gap-6">
               <div className="justify-center gap-2 flex flex-col items-center w-full">
                 <div
-                  className={`relative flex items-center w-full ${
+                  className={`flex w-full items-center ${
                     content.type === "Listening"
                       ? "justify-center"
-                      : "justify-between"
+                      : "justify-between gap-3"
                   }`}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -535,7 +536,13 @@ export const FlashcardChallenge = function FlashcardChallenge({
                     )
                   ) : (
                     <>
-                      {audioRequest ? (
+                      <div className="text-left">
+                        <CardFront
+                          content={content}
+                          targetLanguage={targetLanguage}
+                        />
+                      </div>
+                      {audioRequest && (
                         <AudioButton
                           audioRequest={audioRequest}
                           accessToken={accessToken}
@@ -544,63 +551,19 @@ export const FlashcardChallenge = function FlashcardChallenge({
                           setAutoplayed={setAutoplayed}
                           onError={() => setAudioError(true)}
                           onSuccess={() => setAudioError(false)}
+                          variant="default"
+                          className="h-14 w-14 shrink-0 rounded-full shadow-lg shadow-primary/30"
                         />
-                      ) : (
-                        <div className="w-10" /> /* Spacer to keep content centered */
                       )}
-
-                      <CardFront
-                        content={content}
-                        targetLanguage={targetLanguage}
-                      />
                     </>
                   )}
-
-                  <div
-                    className={
-                      content.type === "Listening"
-                        ? "absolute right-0 top-0"
-                        : ""
-                    }
-                  >
-                    {onRating ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-10 w-10"
-                          >
-                            <MoreVertical className="h-6 w-6 size--xl" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {view.menu_grades.map((grade) => (
-                            <DropdownMenuItem
-                              key={grade.rating}
-                              disabled={!canGrade}
-                              onClick={() => {
-                                if (!canGrade) return;
-                                bumpBackground(30.0);
-                                onRating(grade.rating);
-                              }}
-                            >
-                              {grade.label}
-                            </DropdownMenuItem>
-                          ))}
-                          <DropdownMenuItem onClick={copyWord}>
-                            Copy word
-                          </DropdownMenuItem>
-                          {menuExtras}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : (
-                      <div className="w-8" />
-                    )}
-                  </div>
                 </div>
                 {view.subtitle && (
-                  <span className="text-sm text-muted-foreground">{view.subtitle}</span>
+                  <span
+                    className={`text-sm text-muted-foreground ${content.type === "Listening" ? "" : "self-start"}`}
+                  >
+                    {view.subtitle}
+                  </span>
                 )}
               </div>
 
@@ -632,6 +595,8 @@ export const FlashcardChallenge = function FlashcardChallenge({
             </div>
           </Card>
         </motion.div>
+
+        {reportIssue && <ReportIssueLink {...reportIssue} />}
 
         {/* Breakdown (morphemes or words), shown after the card is revealed */}
         {showAnswer &&
@@ -681,45 +646,77 @@ export const FlashcardChallenge = function FlashcardChallenge({
               </>
             )}
             <div className={!canGrade ? "hidden" : "quick-fade-in"}>
-              <div className="grid grid-cols-2">
-                <Button
-                  onClick={() => {
-                    if (!canGrade) return;
-                    bumpBackground(30.0);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                    onRating("again");
-                  }}
-                  variant="destructive"
-                  size="lg"
-                  className="h-14 text-lg rounded-r-none group"
-                  disabled={!canGrade}
-                >
-                  <span className="relative flex items-center justify-center">
-                    <kbd className="absolute right-full mr-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ArrowLeft className="h-3 w-3" />
-                    </kbd>
-                    {view.again_label}
-                  </span>
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (!canGrade) return;
-                    bumpBackground(30.0);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                    onRating("remembered");
-                  }}
-                  variant="default"
-                  size="lg"
-                  className="h-14 text-lg rounded-l-none group"
-                  disabled={!canGrade}
-                >
-                  <span className="relative flex items-center justify-center">
-                    {view.remembered_label}
-                    <kbd className="absolute left-full ml-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ArrowRight className="h-3 w-3" />
-                    </kbd>
-                  </span>
-                </Button>
+              <div className="flex gap-2">
+                <div className="grid flex-1 grid-cols-2">
+                  <Button
+                    onClick={() => {
+                      if (!canGrade) return;
+                      bumpBackground(30.0);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      onRating("again");
+                    }}
+                    variant="destructive"
+                    size="lg"
+                    className="h-14 text-lg rounded-r-none group"
+                    disabled={!canGrade}
+                  >
+                    <span className="relative flex items-center justify-center">
+                      <kbd className="absolute right-full mr-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ArrowLeft className="h-3 w-3" />
+                      </kbd>
+                      {view.again_label}
+                    </span>
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (!canGrade) return;
+                      bumpBackground(30.0);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      onRating("remembered");
+                    }}
+                    variant="default"
+                    size="lg"
+                    className="h-14 text-lg rounded-l-none group"
+                    disabled={!canGrade}
+                  >
+                    <span className="relative flex items-center justify-center">
+                      {view.remembered_label}
+                      <kbd className="absolute left-full ml-2 h-6 w-6 text-xs font-semibold border rounded bg-background/20 border-background/40 flex items-center justify-center hide-kbd-mobile opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ArrowRight className="h-3 w-3" />
+                      </kbd>
+                    </span>
+                  </Button>
+                </div>
+                {/* The main row is always Again/Remembered; Hard/Good/Easy live here. */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-14 w-14"
+                      aria-label="More grades"
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {view.menu_grades.map((grade) => (
+                      <DropdownMenuItem
+                        key={grade.rating}
+                        onClick={() => {
+                          if (!canGrade) return;
+                          bumpBackground(30.0);
+                          onRating(grade.rating);
+                        }}
+                      >
+                        {grade.label}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuItem onClick={copyWord}>
+                      Copy word
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>

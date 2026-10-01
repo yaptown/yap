@@ -16,7 +16,6 @@ struct FlashcardChallengeView: View {
     let timesTypeSeen: UInt32
     @State private var revealed = false
     @State private var hasOpened = false
-    @State private var reporting = false
     private var view: FlashcardView {
         flashcard_view(flashcard: flashcard, is_new: isNew, total_card_count: screen.total_count,
                        times_type_seen: timesTypeSeen, target_language: screen.target_language,
@@ -30,35 +29,25 @@ struct FlashcardChallengeView: View {
                 TutorialHint(prompt: prompt).fadeIn()
             }
             StudyCard(animated: true) {
-                // Like the web card: audio at the leading edge, the word centered, the menu trailing.
-                HStack(alignment: .center, spacing: 8) {
+                // A listening card leads with the big visualizer; a written one puts
+                // the word first with its audio top-right, like the sentence challenges.
+                if listening {
                     if let request = flashcard.audio {
-                        AudioButton(request: request, reviewCount: screen.total_reviews, autoplay: listening || revealed, visualizer: listening)
-                            .frame(maxWidth: listening ? .infinity : nil)
-                    } else { Color.clear.frame(width: 44, height: 44) }
-                    Group {
-                        switch flashcard.content {
-                        case let .Gram(gram, _, prefix, _):
-                            Text((prefix.map { $0.prefix + $0.separator } ?? "") + gramText(gram))
-                                .font(.system(size: 28, weight: .semibold, design: .rounded)).textSelection(.enabled)
-                        case .Listening:
-                            EmptyView()
+                        AudioButton(request: request, reviewCount: screen.total_reviews, autoplay: true, kind: .visualizer)
+                            .frame(maxWidth: .infinity)
+                    }
+                } else if case let .Gram(gram, _, prefix, _) = flashcard.content {
+                    HStack(alignment: .center, spacing: 12) {
+                        Text((prefix.map { $0.prefix + $0.separator } ?? "") + gramText(gram))
+                            .font(.system(size: 34, weight: .bold, design: .rounded)).textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if let request = flashcard.audio {
+                            AudioButton(request: request, reviewCount: screen.total_reviews, autoplay: revealed, kind: .prominent)
                         }
-                    }.multilineTextAlignment(.center).frame(maxWidth: listening ? nil : .infinity)
-                    // The web's main row is always Again/Remembered; Hard/Good/Easy live in its menu.
-                    Menu {
-                        ForEach(Array(view.menu_grades.enumerated()), id: \.offset) { _, grade in
-                            Button(grade.label) { rate(grade.rating) }.disabled(!canGrade || actions.submitting)
-                        }
-                        Divider()
-                        Button(report_issue_copy().menu_label, systemImage: "exclamationmark.bubble") { reporting = true }
-                    } label: {
-                        Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
-                    }.accessibilityLabel("More")
-                    .reportIssueSheet(isPresented: $reporting, subject: .Flashcard(flashcard.content))
+                    }
                 }
                 if let subtitle = view.subtitle {
-                    Text(subtitle).font(.footnote).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity)
+                    Text(subtitle).font(.footnote).foregroundStyle(Color.yapMuted).frame(maxWidth: .infinity, alignment: listening ? .center : .leading)
                 }
                 Divider()
                 if revealed {
@@ -79,6 +68,7 @@ struct FlashcardChallengeView: View {
             if revealed, case let .Gram(_, _, _, breakdown) = flashcard.content, let breakdown, !breakdown.isEmpty {
                 MorphemeBreakdownView(parts: breakdown, alignment: .center, revealDelay: 1.5).padding(.top, 12)
             }
+            ReportIssueLink(subject: .Flashcard(flashcard.content))
             if !revealed, let hint = view.tutorial_hidden_hint {
                 TutorialHint(text: hint, pointing: .up).fadeIn(duration: 0.3, delay: 1.5)
             }
@@ -90,8 +80,19 @@ struct FlashcardChallengeView: View {
                 Button(label) { actions.cantListen() }.font(.footnote).foregroundStyle(Color.yapMuted).frame(minHeight: 44)
             }
             if canGrade {
-                GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
-                    .disabled(actions.submitting).fadeIn(duration: 0.2)
+                HStack(spacing: 8) {
+                    GradeButtons(againLabel: view.again_label, rememberedLabel: view.remembered_label, rate: rate)
+                    // The web's main row is always Again/Remembered; Hard/Good/Easy live in its menu.
+                    Menu {
+                        ForEach(Array(view.menu_grades.enumerated()), id: \.offset) { _, grade in
+                            Button(grade.label) { rate(grade.rating) }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis").font(.headline).frame(width: 56, height: 56)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }.accessibilityLabel("More grades").foregroundStyle(Color.yapText)
+                }
+                .disabled(actions.submitting).fadeIn(duration: 0.2)
             }
         }
         #if DEBUG

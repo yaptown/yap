@@ -33,14 +33,13 @@ struct TranscriptionChallengeView: View {
     private var editing: Bool { if case .Editing = state.phase { true } else { false } }
     var body: some View {
         ReviewStepScrollView {
-            StudyCard(animated: true) {
+            StudyCard(spacing: 20, animated: true) {
                 if sentence.second_chance { ReviewBadge(text: "Second chance") }
                 // Like the web: a big speaker on top, then the sentence with its blanks inline.
                 VStack(spacing: 4) {
-                    AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: true, visualizer: true)
+                    AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: true, kind: .visualizer)
                     Text(view.instructions).font(.footnote).foregroundStyle(Color.yapMuted)
                 }.frame(maxWidth: .infinity)
-                    .overlay(alignment: .topTrailing) { ReportIssueMenu(subject: .Transcription(sentence)) }
                 SentenceFlow(spacing: 0, alignment: .center) {
                     ForEach(Array(sentence.parts.enumerated()), id: \.offset) { index, part in
                         switch part {
@@ -61,13 +60,9 @@ struct TranscriptionChallengeView: View {
                 if let verdict = view.verdict {
                     // The typed answer is already inline in the sentence above, so
                     // only the grading list repeats it.
-                    SentenceVerdictView(submission: nil,
-                        correct: sentence.target_language, perfect: verdict.perfect, encouragement: nil,
-                        explanation: nil, error: verdict.autograding_error, correctLabel: verdict.correct_label).equatable()
-                    if !verdict.word_grades.isEmpty {
-                        GradeSectionDisclosure(title: verdict.word_grades_title, isExpanded: $gradesExpanded) { wordGrades(verdict) }
-                    }
-                    FeedbackCallout(perfect: verdict.perfect, encouragement: verdict.encouragement, explanation: verdict.explanation).equatable()
+                    SentenceVerdictView(headline: verdict.headline, correctLabel: view.correct_label, correct: sentence.target_language,
+                        feedbackLabel: verdict.feedback_label, encouragement: verdict.encouragement,
+                        explanation: verdict.explanation, error: verdict.autograding_error).equatable()
                     if !verdict.compare.isEmpty { compareRow(verdict) }
                     Button { send(.TranslationToggled) } label: {
                         VStack(alignment: .leading, spacing: 4) {
@@ -79,14 +74,17 @@ struct TranscriptionChallengeView: View {
                             .overlay { RoundedRectangle(cornerRadius: 10).strokeBorder(Color(uiColor: .separator)) }
                             .contentShape(Rectangle())
                     }.buttonStyle(.plain)
+                    if !verdict.word_grades.isEmpty {
+                        GradeSectionDisclosure(title: verdict.word_grades_title, isExpanded: $gradesExpanded) { wordGrades(verdict) }
+                    }
                     if case let .Graded(_, grade, _, _) = state.phase {
                         ReviewDefinitionsView(definitions: get_transcription_review_definitions(challenge: sentence, results: grade.results)).equatable()
                     }
                 } else if view.is_grading {
-                    Text(sentence.target_language).foregroundStyle(Color.yapPositiveForeground)
-                    ProgressView("Grading your answer…")
+                    SentenceVerdictView(headline: nil, correctLabel: view.correct_label, correct: sentence.target_language).equatable()
                 }
             }
+            ReportIssueLink(subject: .Transcription(sentence))
             if editing, let tip = screen.keyboard_tip, !keyboardTipDismissed {
                 HStack(spacing: 8) {
                     (Text("Tip:").fontWeight(.medium) + Text(" " + tip)).font(.subheadline).foregroundStyle(Color.yapMuted)
@@ -162,7 +160,7 @@ struct TranscriptionChallengeView: View {
         switch tint {
         case .Neutral: Color.yapMuted.opacity(0.3)
         case .Perfect: .yapPositive
-        case .PhoneticallyIdentical: .yapCaution
+        case .Typo, .PhoneticallyIdentical: .yapCaution
         case .PhoneticallySimilar: .yapWarning
         case .Wrong: .yapNegative
         }
@@ -171,7 +169,7 @@ struct TranscriptionChallengeView: View {
         switch tint {
         case .Neutral: Color.yapInput.opacity(0.3)
         case .Perfect: .yapPositiveField
-        case .PhoneticallyIdentical: .yapCautionField
+        case .Typo, .PhoneticallyIdentical: .yapCautionField
         case .PhoneticallySimilar: .yapWarningField
         case .Wrong: .yapNegativeField
         }

@@ -1,20 +1,22 @@
 import { useMemo } from "react";
 import Markdown, { type Components } from "react-markdown";
 import rehypeRaw from "rehype-raw";
-import type { Language } from "../../../yap-frontend-rs/pkg";
+import type { Language, VerdictTone } from "../../../yap-frontend-rs/pkg";
 import { TargetLanguageText } from "./TargetLanguageText";
 
 interface FeedbackDisplayProps {
   encouragement?: string;
   explanation?: string;
-  perfect?: boolean;
+  tone: VerdictTone;
+  label?: string;
   targetLanguage: Language;
 }
 
 export function FeedbackDisplay({
   encouragement,
   explanation,
-  perfect = false,
+  tone,
+  label = "Feedback",
   targetLanguage,
 }: FeedbackDisplayProps) {
   // Custom tags emitted by the autograder LLM. Keys are lowercased because the
@@ -39,34 +41,30 @@ export function FeedbackDisplay({
   }
 
   return (
-    <div className="rounded-lg p-4 border bg-info-surface border-info-border">
-      <p className="text-sm font-medium mb-1 text-info-foreground">
-        Feedback:
+    <div className="space-y-1.5 animate-fade-in">
+      <p
+        className={`text-xs font-semibold uppercase tracking-[0.12em] ${toneText[tone]}`}
+      >
+        {label}
       </p>
-      <div className="space-y-3">
+      <div className="space-y-3 text-lg leading-relaxed">
         {encouragement && (
-          <div className="animate-fade-in px-3 py-2 rounded-md bg-positive-surface border-l-2 border-positive-border">
-            <div className="flex items-start gap-2">
-              <span className="text-lg leading-none">
-                {perfect ? "🎉" : "☀️"}
-              </span>
-              <div className="flex-1 font-medium text-positive-foreground">
-                <Markdown rehypePlugins={[rehypeRaw]} components={components}>
-                  {encouragement}
-                </Markdown>
-              </div>
-            </div>
-          </div>
+          <Markdown rehypePlugins={[rehypeRaw]} components={components}>
+            {encouragement}
+          </Markdown>
         )}
-
         {explanation && (
-          <div className="animate-fade-in-delay-2">
-            <Markdown rehypePlugins={[rehypeRaw]} components={components}>
-              {explanation}
-            </Markdown>
-          </div>
+          <Markdown rehypePlugins={[rehypeRaw]} components={components}>
+            {explanation}
+          </Markdown>
         )}
       </div>
     </div>
   );
 }
+
+const toneText: Record<VerdictTone, string> = {
+  Perfect: "text-positive-foreground",
+  Almost: "text-caution-foreground",
+  Wrong: "text-negative-foreground",
+};
