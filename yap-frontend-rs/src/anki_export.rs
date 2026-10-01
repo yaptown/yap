@@ -1017,17 +1017,38 @@ impl PlannerState {
                     token,
                     bundled,
                 );
-                // Use an exact-word clip of the same gram, including for prerequisites.
+                // Match stream gram IDs (including sense), not display text or
+                // the lemma-matched phrases lists; ignore grams with no word in
+                // them (punctuation, spacing).
                 let bare = clip_sentences_of
                     .get(&prerequisite)
                     .into_iter()
                     .flatten()
                     .copied()
-                    .find(|s| {
-                        pack.string_rodeo.resolve(s) == word
-                            && !used_sentences.contains(s)
-                            && !word_clip_sentences.contains(s)
-                    });
+                    .filter(|s| !used_sentences.contains(s) && !word_clip_sentences.contains(s))
+                    .filter(|s| {
+                        pack.encoded_sentences[s]
+                            .grams
+                            .iter()
+                            .map(|g| {
+                                let (SentenceGram::Learnable(g) | SentenceGram::Obvious(g)) = g;
+                                *g
+                            })
+                            .filter(|g| {
+                                pack.gram_rodeo.resolve(&g.gram).iter().any(|atom| {
+                                    matches!(atom, Atom::Tok(Word { word_type, .. }) if !matches!(
+                                        word_type,
+                                        WordType::Other(OtherWord {
+                                            other_tag: OtherWordType::Punct
+                                        })
+                                    ))
+                                })
+                            })
+                            .eq([prerequisite])
+                    })
+                    // Consume the chosen clip on its word note when possible;
+                    // the pending path below then looks for another sentence.
+                    .min_by_key(|s| *s != sentence);
                 if let Some(bare) = bare {
                     let AnkiNote::Word {
                         source,
@@ -1221,22 +1242,40 @@ mod tests {
     }
 
     fn fixture_with_prerequisites(prerequisites: bool) -> Deck {
+        fixture_with_data(prerequisites, "word00", |_| {})
+    }
+
+    fn fixture_with_data(
+        prerequisites: bool,
+        first_word: &str,
+        edit: impl FnOnce(&mut ConsolidatedLanguageData),
+    ) -> Deck {
         let course = Course {
             target_language: Language::English,
             native_language: Language::French,
         };
         let entries: Vec<_> = (0..64)
             .map(|i| {
-                let text = format!("word{i:02}");
+                let text = if i == 0 {
+                    first_word.to_owned()
+                } else {
+                    format!("word{i:02}")
+                };
                 TaggedGram {
-                    gram: Gram(vec![Atom::Tok(Word {
-                        text: text.clone(),
-                        word_type: WordType::Heteronym(Heteronym {
-                            word: text.clone(),
-                            lemma: text,
-                            pos: PartOfSpeech::Noun,
-                        }),
-                    })]),
+                    gram: Gram(
+                        text.split_whitespace()
+                            .map(|text| {
+                                Atom::Tok(Word {
+                                    text: text.into(),
+                                    word_type: WordType::Heteronym(Heteronym {
+                                        word: text.into(),
+                                        lemma: text.into(),
+                                        pos: PartOfSpeech::Noun,
+                                    }),
+                                })
+                            })
+                            .collect(),
+                    ),
                     sense: None,
                 }
             })
@@ -1267,7 +1306,7 @@ mod tests {
                 })
             })
             .collect();
-        let data = ConsolidatedLanguageData {
+        let mut data = ConsolidatedLanguageData {
             target_language_sentences: sentences.iter().map(|(text, _)| text.clone()).collect(),
             translations: sentences
                 .iter()
@@ -1317,6 +1356,7 @@ mod tests {
                 .collect(),
             ..Default::default()
         };
+        edit(&mut data);
         let context = crate::Context {
             study_goal: None,
             language_pack: Arc::new(LanguagePack::new(data, course)),
@@ -1587,7 +1627,66 @@ mod tests {
 
     #[test]
     fn anki_prerequisites_find_exact_bare_clips_without_spending_sentence_budget() {
-        let deck = fixture_with_prerequisites(true);
+        assert_prerequisite_clip(fixture_with_prerequisites(true), "word00", true);
+    }
+
+    #[test]
+    fn anki_word_clips_ignore_punctuation_and_capitalization_but_not_extra_words() {
+        for (prefix, suffix, tag, capitalize) in [
+            ("", "!", OtherWordType::Punct, false),
+            ("¿", "?", OtherWordType::Punct, true),
+            ("!", "", OtherWordType::Punct, false),
+            ("", " Alice", OtherWordType::Propn, false),
+            ("", " again", OtherWordType::X, false),
+        ] {
+            let text = format!(
+                "{prefix}{}{suffix}",
+                if capitalize { "Word00" } else { "word00" }
+            );
+            let deck = fixture_with_data(true, "word00", |data| {
+                let encoded = &mut data.encoded_sentences[0].1;
+                for (position, text) in [(1, suffix), (0, prefix)] {
+                    if text.is_empty() {
+                        continue;
+                    }
+                    let gram = Gram(vec![Atom::Tok(Word {
+                        text: text.into(),
+                        word_type: WordType::Other(OtherWord { other_tag: tag }),
+                    })]);
+                    data.gram_vocabulary.push(GramVocabEntry {
+                        atoms: gram.clone(),
+                        frequency: 100,
+                    });
+                    encoded.grams.insert(
+                        position,
+                        SentenceGram::Obvious(TaggedGram { gram, sense: None }),
+                    );
+                }
+                encoded.capitalize_first = capitalize;
+                data.encoded_sentences[0].0 = text.clone();
+                data.target_language_sentences[0] = text.clone();
+                data.translations[0].0 = text.clone();
+            });
+            assert_prerequisite_clip(deck, &text, tag == OtherWordType::Punct);
+        }
+    }
+
+    #[test]
+    fn anki_word_clips_preserve_multi_token_grams() {
+        let deck = fixture_with_data(true, "word00 part", |_| {});
+        assert_prerequisite_clip(deck, "word00 part", true);
+    }
+
+    #[test]
+    fn anki_selected_word_clip_retries_for_a_distinct_sentence_clip() {
+        let text = "Word00";
+        let deck = fixture_with_data(true, "word00", |data| {
+            let mut encoded = data.encoded_sentences[0].1.clone();
+            encoded.capitalize_first = true;
+            data.encoded_sentences.push((text.into(), encoded));
+            data.target_language_sentences.push(text.into());
+            data.translations.push((text.into(), vec!["a word".into()]));
+        });
         publish(&deck.context.language_pack, deck.context.course);
         let planner =
             AnkiDeckPlanner::new(&deck, options(), 1, "token".into(), 1_700_000_000_000.0).unwrap();
@@ -1597,8 +1696,47 @@ mod tests {
                 state.advance();
             }
             let pack = &deck.context.language_pack;
+            let target = *pack.gram_frequencies.entries.get_index(0).unwrap().0;
+            let clip = pack.string_rodeo.get(text).unwrap();
+            let other = pack.string_rodeo.get("word00").unwrap();
+            // The chosen sentence wins even when another matching clip is first
+            // in the index. That distinct clip may still become a sentence note.
+            state.clip_sentences_of.insert(target, vec![other, clip]);
+            state.choose_sentence(target);
+            assert!(state.used_sentences.is_empty());
+            assert!(state.word_clip_sentences.contains(&clip));
+            assert!(state.still_pending.contains(&target));
+            state.choose_sentence(target);
+            assert_eq!(state.used_sentences.len(), 1);
+            assert!(state.used_sentences.contains(&other));
+            assert!(!state.used_sentences.contains(&clip));
+            state.done = true;
+        }
+        let plan = planner.finish().unwrap();
+        assert_eq!(plan.stats.sentence_count, 1);
+        assert_eq!(plan.stats.word_count, 1);
+        assert_eq!(plan.sentences.len(), 2);
+    }
+
+    fn assert_prerequisite_clip(deck: Deck, clip_text: &str, expected: bool) {
+        let pack = &deck.context.language_pack;
+        let prerequisite = pack.gram_frequencies.entries.get_index(0).unwrap().0;
+        let prerequisite_word = pack
+            .resolve_gram(&prerequisite.gram)
+            .to_display_string(Language::English);
+        publish(pack, deck.context.course);
+        let planner =
+            AnkiDeckPlanner::new(&deck, options(), 1, "token".into(), 1_700_000_000_000.0).unwrap();
+        {
+            let mut state = planner.state.borrow_mut();
+            while !state.unindexed.is_empty() || state.simulation.is_none() {
+                state.advance();
+            }
             let target = *pack.gram_frequencies.entries.get_index(1).unwrap().0;
-            let sentence = pack.string_rodeo.get("word00 word01").unwrap();
+            let sentence = pack
+                .string_rodeo
+                .get(format!("{prerequisite_word} word01"))
+                .unwrap();
             // The target has only a multiword clip; its prerequisite still
             // finds its own exact-word clip through the prerequisite's index.
             let target_rank = pack.written_ease_order.rank(&target).unwrap();
@@ -1607,16 +1745,20 @@ mod tests {
                 .insert(sentence, vec![target_rank]);
             state.clip_sentences_of.insert(target, vec![sentence]);
             state.choose_sentence(target);
-            assert_eq!(state.used_sentences.len(), 1);
-            assert_eq!(state.word_clip_sentences.len(), 1);
+            assert_eq!(state.used_sentences.len(), 1, "{clip_text}");
+            assert_eq!(
+                state.word_clip_sentences.len(),
+                usize::from(expected),
+                "{clip_text}"
+            );
             state.done = true;
         }
         let plan = planner.finish().unwrap();
         assert_eq!(plan.stats.sentence_count, 1);
         assert_eq!(plan.stats.word_count, 2);
         assert_eq!(plan.stats.card_count, 4);
-        assert_eq!(plan.sentences.len(), 2);
-        assert!(plan.sentences.contains(&"word00".into()));
+        assert_eq!(plan.sentences.len(), 1 + usize::from(expected));
+        assert_eq!(plan.sentences.contains(&clip_text.into()), expected);
         for note in &plan.notes {
             if let AnkiNote::Word {
                 word,
@@ -1625,7 +1767,7 @@ mod tests {
                 ..
             } = note
             {
-                assert_eq!(clip_url.is_some(), word == "word00");
+                assert_eq!(clip_url.is_some(), expected && word == &prerequisite_word);
                 assert_eq!(
                     audio,
                     &format!("yap-word-{}.mp3", guid(deck.context.course, "word", word))
