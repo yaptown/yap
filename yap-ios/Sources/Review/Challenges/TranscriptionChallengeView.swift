@@ -37,7 +37,7 @@ struct TranscriptionChallengeView: View {
                 if sentence.second_chance { ReviewBadge(text: "Second chance") }
                 // Like the web: a big speaker on top, then the sentence with its blanks inline.
                 VStack(spacing: 4) {
-                    AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: true, hero: true)
+                    AudioButton(request: sentence.audio, reviewCount: screen.total_reviews, autoplay: true, visualizer: true)
                     Text(view.instructions).font(.footnote).foregroundStyle(Color.yapMuted)
                 }.frame(maxWidth: .infinity)
                     .overlay(alignment: .topTrailing) { ReportIssueMenu(subject: .Transcription(sentence)) }

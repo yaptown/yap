@@ -33,7 +33,7 @@ struct FlashcardChallengeView: View {
                 // Like the web card: audio at the leading edge, the word centered, the menu trailing.
                 HStack(alignment: .center, spacing: 8) {
                     if let request = flashcard.audio {
-                        AudioButton(request: request, reviewCount: screen.total_reviews, autoplay: listening || revealed)
+                        AudioButton(request: request, reviewCount: screen.total_reviews, autoplay: listening || revealed, visualizer: listening)
                             .frame(maxWidth: listening ? .infinity : nil)
                     } else { Color.clear.frame(width: 44, height: 44) }
                     Group {

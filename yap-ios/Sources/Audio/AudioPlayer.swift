@@ -4,6 +4,9 @@ import Observation
 @Observable @MainActor final class AudioPlayer {
     private(set) var isPlaying = false
     private(set) var currentTime: TimeInterval = 0
+    private(set) var duration: TimeInterval = 0
+    /// Loudness of the playing speech, scaled like the web visualizer's (0–1.4).
+    private(set) var level: Double = 0
     private(set) var currentRequest: AudioRequest?
     private(set) var voiceCredit: String?
     private(set) var needsAccount = false
@@ -102,6 +105,8 @@ import Observation
     }
     private func play(_ audio: AVAudioPlayer, generation expected: Int) async throws {
         player = audio
+        audio.isMeteringEnabled = true
+        duration = audio.duration
         let delegate = PlaybackDelegate()
         audio.delegate = delegate
         guard audio.play() else {
@@ -113,12 +118,14 @@ import Observation
         DebugHarness.log("audio started duration=\(audio.duration)")
         #endif
         defer {
-            if generation == expected { player = nil; isPlaying = false; currentTime = 0; currentRequest = nil; deactivateWhenIdle() }
+            if generation == expected { player = nil; isPlaying = false; currentTime = 0; level = 0; currentRequest = nil; deactivateWhenIdle() }
         }
         while audio.isPlaying, generation == expected {
             do { try await Task.sleep(for: .milliseconds(50)) }
             catch { audio.stop(); throw error }
             guard generation == expected else { return }
+            audio.updateMeters()
+            level = min(1.4, pow(10, Double(audio.averagePower(forChannel: 0)) / 20) * 9)
             currentTime = audio.currentTime
         }
         if let error = delegate.failure { throw error }
@@ -174,7 +181,7 @@ import Observation
         video?.pause(); video = nil; videoWatch?.cancel()
         generation += 1
         player?.stop(); player = nil
-        isPlaying = false; currentTime = 0; currentRequest = nil
+        isPlaying = false; currentTime = 0; level = 0; currentRequest = nil
         deactivateWhenIdle()
     }
     /// Full teardown when the playback owner or signed-in session goes away.
