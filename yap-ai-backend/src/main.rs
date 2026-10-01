@@ -1948,6 +1948,9 @@ struct ClipRow {
     sentence: String,
     duration_ms: u64,
     critical: ClipCritical,
+    /// `None` until the clip's first rated publish.
+    #[serde(default)]
+    content_ratings: Option<language_utils::clip_content_ratings::ContentRatings>,
     /// These are `None` until an older row's next publish.
     #[serde(default)]
     clear_before_ms: Option<i64>,

@@ -50,6 +50,9 @@ pub struct ClipRow {
     pub sentence: String,
     pub duration_ms: u64,
     pub critical: ClipCritical,
+    /// `None` until the clip's first rated publish.
+    #[serde(default)]
+    pub content_ratings: Option<language_utils::clip_content_ratings::ContentRatings>,
     /// These are `None` until an older row's next publish.
     #[serde(default)]
     pub clear_before_ms: Option<i64>,
@@ -132,9 +135,24 @@ pub(crate) fn register_pack(language: Language, pack: &Arc<LanguagePack>) {
     CLIP_PACKS.with(|packs| packs.borrow_mut().insert(language, Arc::downgrade(pack)));
 }
 
+// Apply at publication so disk seeds and network refreshes share the policy,
+// and every consumer (including cached playback) sees the same eligible set.
+const ONLY_ALL_AUDIENCES_CLIPS: bool = cfg!(target_os = "ios");
+
+fn clip_allowed(row: &ClipRow, only_all_audiences: bool) -> bool {
+    !only_all_audiences
+        || row
+            .content_ratings
+            .as_ref()
+            .is_some_and(|ratings| ratings.is_all_audiences())
+}
+
 pub(crate) fn publish_manifest(language: Language, rows: Vec<ClipRow>) {
     let mut by_sentence: HashMap<String, Vec<ClipRow>> = HashMap::new();
-    for row in rows {
+    for row in rows
+        .into_iter()
+        .filter(|row| clip_allowed(row, ONLY_ALL_AUDIENCES_CLIPS))
+    {
         by_sentence
             .entry(row.sentence.clone())
             .or_default()
@@ -247,6 +265,29 @@ mod tests {
             "critical": {"start_ms": 0, "end_ms": 1000}
         }))
         .unwrap()
+    }
+
+    #[test]
+    fn content_policy_accepts_only_all_none_ratings_when_enabled() {
+        let valid = serde_json::json!({
+            "profanity": "none", "horror": "none", "alcohol_drugs": "none",
+            "sexual_nudity": "none", "violence_weapons": "none"
+        });
+        let mut clip = row("rated");
+        clip.content_ratings = Some(serde_json::from_value(valid.clone()).unwrap());
+        assert!(clip_allowed(&clip, true));
+        assert!(clip_allowed(&clip, false));
+        for field in valid.as_object().unwrap().keys() {
+            for level in ["mild", "intense"] {
+                let mut ratings = valid.clone();
+                ratings[field] = serde_json::json!(level);
+                clip.content_ratings = Some(serde_json::from_value(ratings).unwrap());
+                assert!(!clip_allowed(&clip, true));
+                assert!(clip_allowed(&clip, false));
+            }
+        }
+        assert!(!clip_allowed(&row("unrated"), true));
+        assert!(clip_allowed(&row("unrated"), false));
     }
 
     #[test]

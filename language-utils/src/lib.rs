@@ -1,3 +1,4 @@
+pub mod clip_content_ratings;
 pub mod features;
 pub mod indexmap;
 pub mod language_pack;

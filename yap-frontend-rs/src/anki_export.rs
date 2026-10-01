@@ -1229,6 +1229,7 @@ mod tests {
                 start_ms: 0,
                 end_ms: 1000,
             },
+            content_ratings: None,
             clear_before_ms: None,
             clear_after_ms: None,
             pad_before_ms: None,
