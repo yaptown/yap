@@ -287,6 +287,9 @@ fn extract_pages(language_pack: &LanguagePack, course: &Course) -> CourseData {
     for (frequency_index, (spur_gram, freq)) in
         language_pack.gram_frequencies.entries.iter().enumerate()
     {
+        if !language_pack.is_visible(*spur_gram) {
+            continue;
+        }
         let gram_def = match language_pack.gram_definitions.get(spur_gram) {
             Some(def) => def,
             None => continue,

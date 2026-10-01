@@ -86,6 +86,9 @@ impl Deck {
             let Some(gram_def) = language_pack.gram_definitions.get(spur_gram) else {
                 continue;
             };
+            if !language_pack.is_visible(*spur_gram) {
+                continue;
+            }
             let word = words
                 .entry(spur_gram.gram)
                 .or_insert((frequency_index, None));
@@ -151,7 +154,7 @@ impl Deck {
             .entries
             .get_index(frequency_index)?;
         let mut senses: Vec<_> = language_pack
-            .senses_of(spur_gram.gram)
+            .visible_senses(spur_gram.gram)
             .iter()
             .filter_map(|sense_gram| {
                 let definition =
@@ -160,10 +163,16 @@ impl Deck {
                     .gram_frequencies
                     .entries
                     .get_index_of(sense_gram)?;
-                let card = CardIndicator::WrittenGram { gram: *sense_gram };
+                let is_in_deck = language_pack
+                    .redundant_with(*sense_gram)
+                    .iter()
+                    .any(|gram| {
+                        let card = CardIndicator::WrittenGram { gram: *gram };
+                        matches!(self.cards.get(&card), Some(CardData::Added { .. }))
+                    });
                 Some(DictionarySense {
                     frequency_index,
-                    is_in_deck: matches!(self.cards.get(&card), Some(CardData::Added { .. })),
+                    is_in_deck,
                     gloss: definition
                         .senses
                         .iter()
@@ -353,6 +362,7 @@ mod tests {
         };
         let pack = LanguagePack::new(
             ConsolidatedLanguageData {
+                redundant_senses: BTreeMap::new(),
                 strokes: Default::default(),
                 target_language_sentences: vec![],
                 translations: vec![],
@@ -489,6 +499,52 @@ mod tests {
             deck.get_gram_dictionary_entries(Some("absent".into()), 10)
                 .is_empty()
         );
+    }
+
+    #[test]
+    fn redundancy_filters_search_and_credits_hidden_cards() {
+        let mut deck = deck();
+        let pack = Arc::get_mut(&mut deck.context.language_pack).unwrap();
+        let bare = pack.gram_frequencies.entries.get_index(1).unwrap().0.gram;
+        pack.redundant_senses.insert(
+            bare,
+            vec![vec![
+                NonZeroU32::new(1).unwrap(),
+                NonZeroU32::new(2).unwrap(),
+            ]],
+        );
+        assert!(
+            deck.get_gram_dictionary_entries(Some("shore".into()), 10)
+                .is_empty()
+        );
+        let word = deck.gram_dictionary_entry(3).unwrap();
+        assert_eq!(word.senses.len(), 1);
+        assert_eq!(word.senses[0].frequency_index, 1);
+        assert!(!word.senses[0].is_in_deck);
+        let event = deck.add_gram_by_frequency_index(3).unwrap();
+        let context = deck.context.clone();
+        let event = weapon::data_model::Timestamped {
+            timestamp: chrono::Utc::now(),
+            within_device_events_index: 0,
+            timezone: context.timezone,
+            event,
+        };
+        let state =
+            <Deck as weapon::AppState>::process_event(DeckState::from(deck), &context, &event);
+        let deck = <Deck as weapon::AppState>::finalize(state, &context);
+        let word = deck.gram_dictionary_entry(1).unwrap();
+        assert!(word.senses[0].is_in_deck);
+        let pack = &deck.context.language_pack;
+        let shown = *pack.gram_frequencies.entries.get_index(1).unwrap().0;
+        let hidden = *pack.gram_frequencies.entries.get_index(3).unwrap().0;
+        assert!(!matches!(
+            deck.cards.get(&CardIndicator::WrittenGram { gram: shown }),
+            Some(CardData::Added { .. })
+        ));
+        assert!(matches!(
+            deck.cards.get(&CardIndicator::WrittenGram { gram: hidden }),
+            Some(CardData::Added { .. })
+        ));
     }
 
     #[test]

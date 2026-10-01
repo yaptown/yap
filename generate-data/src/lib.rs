@@ -182,6 +182,7 @@ mod pronunciation_whisper;
 pub mod pronunciations;
 pub mod proper_noun_definitions;
 pub mod read_anki;
+pub mod sense_redundancy;
 pub mod slot_analysis;
 pub mod strokes;
 pub mod target_sentences;

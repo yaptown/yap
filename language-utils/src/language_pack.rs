@@ -11,6 +11,7 @@ use lasso::Spur;
 use rustc_hash::FxHashMap;
 use std::collections::BTreeMap;
 use std::hash::Hash;
+use std::num::NonZeroU32;
 use std::sync::Arc;
 
 /// Runtime-only index, independent of the pack's frequency ordering.
@@ -89,6 +90,7 @@ pub struct FrequencyList {
 /// back together by [`LanguagePack::from_parts`].
 #[derive(Debug)]
 pub struct LanguagePack {
+    pub redundant_senses: FxHashMap<SpurGram, Vec<Vec<NonZeroU32>>>,
     lexicon: Arc<LanguagePackLexicon>,
     pub strokes: crate::StrokeTable,
     pub string_rodeo: lasso::RodeoReader,
@@ -201,6 +203,44 @@ impl LanguagePack {
             .get(&gram)
             .map(Vec::as_slice)
             .unwrap_or_default()
+    }
+
+    /// The senses of `gram` worth showing in a dictionary: every sense that is not
+    /// in a redundancy set, plus the most frequent member of each set. Frequency
+    /// order, like `senses_of`.
+    pub fn visible_senses(&self, gram: SpurGram) -> Vec<TaggedGram<SpurGram>> {
+        self.senses_of(gram)
+            .iter()
+            .copied()
+            .filter(|sense| self.is_visible(*sense))
+            .collect()
+    }
+
+    /// Whether a dictionary should show this sense: it is the most frequent
+    /// member of its redundancy set (every sense outside a set is its own).
+    pub fn is_visible(&self, sense: TaggedGram<SpurGram>) -> bool {
+        let set = self.redundant_with(sense);
+        self.senses_of(sense.gram)
+            .iter()
+            .find(|candidate| set.contains(candidate))
+            == Some(&sense)
+    }
+
+    /// All members of this sense's redundancy set, or just the sense itself.
+    pub fn redundant_with(&self, sense: TaggedGram<SpurGram>) -> Vec<TaggedGram<SpurGram>> {
+        if let Some(id) = sense.sense
+            && let Some(sets) = self.redundant_senses.get(&sense.gram)
+            && let Some(set) = sets.iter().find(|set| set.contains(&id))
+        {
+            return set
+                .iter()
+                .map(|id| TaggedGram {
+                    gram: sense.gram,
+                    sense: Some(*id),
+                })
+                .collect();
+        }
+        vec![sense]
     }
 
     /// The guide teaching `pattern` at `position`, if this pack has one. A
@@ -1082,7 +1122,17 @@ impl LanguagePack {
             })
             .collect();
 
+        let redundant_senses = language_data
+            .redundant_senses
+            .iter()
+            .filter_map(|(gram, sets)| {
+                let gram = gram.get_interned(&rodeo)?.get_interned(&gram_rodeo)?;
+                Some((gram, sets.clone()))
+            })
+            .collect();
+
         Self {
+            redundant_senses,
             lexicon: Arc::new(LanguagePackLexicon {
                 spur_space_fingerprint: 0,
                 senses,
@@ -1209,6 +1259,10 @@ pub struct LanguagePackCore {
 /// See [`LanguagePackCore`] for the spur-space contract between the halves.
 #[derive(Debug, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct LanguagePackSentences {
+    /// Per bare gram, groups of sense ids a dictionary need only show one of
+    /// (judged per course, since redundancy depends on the native glosses).
+    /// Display-only: scheduling and card identity ignore it.
+    pub redundant_senses: FxHashMap<SpurGram, Vec<Vec<NonZeroU32>>>,
     /// Downloaded stroke forms; not needed by the placement-test core.
     pub strokes: crate::StrokeTable,
     /// Fingerprint of the core spur space this half was built against.
@@ -1333,6 +1387,7 @@ impl LanguagePack {
     /// the exhaustive destructure below makes forgetting one a compile error.
     pub fn split(self) -> (LanguagePackCore, LanguagePackSentences) {
         let LanguagePack {
+            redundant_senses,
             lexicon,
             strokes,
             string_rodeo,
@@ -1570,6 +1625,11 @@ impl LanguagePack {
                 })
                 .collect();
 
+        let redundant_senses = sorted(redundant_senses)
+            .into_iter()
+            .map(|(gram, sets)| (r.bare_g(gram), sets))
+            .collect();
+
         // Sweep everything else the old rodeos held (strings/grams referenced
         // by no field) into the extension, so the assembled pack's rodeos
         // resolve exactly the same set as the original.
@@ -1651,6 +1711,7 @@ impl LanguagePack {
                 morphemes,
             },
             LanguagePackSentences {
+                redundant_senses,
                 strokes,
                 spur_space_fingerprint: fingerprint,
                 string_extension,
@@ -1695,6 +1756,7 @@ impl LanguagePack {
         let (written_ease_order, listening_ease_order) = ease_orders(&gram_frequencies);
 
         let pack = LanguagePack {
+            redundant_senses: FxHashMap::default(),
             lexicon: Arc::new(LanguagePackLexicon {
                 spur_space_fingerprint,
                 senses: sense_index(&gram_frequencies),
@@ -1788,6 +1850,7 @@ impl LanguagePack {
         };
 
         LanguagePack {
+            redundant_senses: sentences.redundant_senses,
             lexicon: self.lexicon.clone(),
             string_rodeo,
             gram_rodeo,
@@ -2027,6 +2090,47 @@ fn sense_index(frequencies: &FrequencyList) -> FxHashMap<SpurGram, Vec<TaggedGra
 #[cfg(test)]
 mod sense_tests {
     #[test]
+    fn visible_senses_use_frequency_order_and_survive_split() {
+        let mut pack = pack();
+        let bare = pack.intern_gram(&gram("bank")).unwrap();
+        let senses = pack.senses_of(bare).to_vec();
+        assert_eq!(senses[0].sense.unwrap().get(), 2);
+        assert_eq!(pack.visible_senses(bare), senses);
+        assert_eq!(pack.redundant_with(senses[0]), vec![senses[0]]);
+        pack.redundant_senses.insert(
+            bare,
+            vec![vec![
+                NonZeroU32::new(1).unwrap(),
+                NonZeroU32::new(2).unwrap(),
+            ]],
+        );
+        let standalone = TaggedGram {
+            gram: bare,
+            sense: NonZeroU32::new(3),
+        };
+        pack.senses.get_mut(&bare).unwrap().push(standalone);
+        assert_eq!(pack.visible_senses(bare), vec![senses[0], standalone]);
+        assert_eq!(pack.redundant_with(senses[0]), vec![senses[1], senses[0]]);
+        assert_eq!(pack.redundant_with(standalone), vec![standalone]);
+        let untagged = TaggedGram {
+            gram: bare,
+            sense: None,
+        };
+        assert_eq!(pack.redundant_with(untagged), vec![untagged]);
+        let (core, sentences) = pack.split();
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&sentences).unwrap();
+        let sentences =
+            rkyv::from_bytes::<LanguagePackSentences, rkyv::rancor::Error>(&bytes).unwrap();
+        let core = LanguagePack::from_parts(core, None);
+        let bare = core.intern_gram(&gram("bank")).unwrap();
+        assert!(core.redundant_senses.is_empty());
+        assert_eq!(core.visible_senses(bare), core.senses_of(bare));
+        let full = core.with_sentences(sentences);
+        assert_eq!(full.visible_senses(bare), vec![full.senses_of(bare)[0]]);
+        assert_eq!(full.redundant_with(full.senses_of(bare)[0]).len(), 2);
+    }
+
+    #[test]
     fn ease_order_is_deterministic_and_independent_of_frequency_order() {
         let entries = [(3, 4.0), (2, 1.0), (1, 4.0)];
         let a = EaseOrder::new(entries.into_iter());
@@ -2196,6 +2300,7 @@ mod sense_tests {
         };
         LanguagePack::new(
             ConsolidatedLanguageData {
+                redundant_senses: BTreeMap::new(),
                 strokes: crate::StrokeTable::from_iter([(
                     "一".into(),
                     vec![crate::StrokeGlyph {

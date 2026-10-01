@@ -792,7 +792,6 @@ async fn main() -> anyhow::Result<()> {
             &inventories,
         )
         .await?;
-        phrasebook.extend(sense_phrases);
         let sense_dictionary: BTreeMap<_, _> = sense_definitions
             .into_iter()
             .filter_map(|(gram, definition)| {
@@ -809,6 +808,25 @@ async fn main() -> anyhow::Result<()> {
                 Some((gram, entry))
             })
             .collect();
+        let redundant_senses = generate_data::sense_redundancy::find_redundant_senses(
+            *course,
+            &sense_dictionary,
+            &sense_phrases,
+            &inventories,
+        )
+        .await;
+        let mut redundancy_file = BufWriter::new(std::fs::File::create(
+            native_specific_dir.join("redundant_senses.jsonl"),
+        )?);
+        for (gram, sets) in &redundant_senses {
+            serde_json::to_writer(
+                &mut redundancy_file,
+                &serde_json::json!({"gram": gram, "sets": sets}),
+            )?;
+            writeln!(redundancy_file)?;
+        }
+        redundancy_file.flush()?;
+        phrasebook.extend(sense_phrases);
         let gram_dictionary_set: std::collections::HashSet<_> =
             gram_dictionary.keys().cloned().collect();
 
@@ -1831,6 +1849,7 @@ async fn main() -> anyhow::Result<()> {
 
         // Create consolidated data structure
         let consolidated_data = language_utils::ConsolidatedLanguageData {
+            redundant_senses,
             strokes,
             target_language_sentences,
             translations,

@@ -2497,6 +2497,8 @@ pub struct PronunciationClip {
 /// Consolidated data structure containing all generated language data
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ConsolidatedLanguageData {
+    /// Learner-facing redundancy sets, keyed by the bare gram.
+    pub redundant_senses: BTreeMap<Gram<String>, Vec<Vec<std::num::NonZeroU32>>>,
     /// Downloaded stroke forms for the course's writable units.
     pub strokes: StrokeTable,
     /// All target language sentences from Anki cards
