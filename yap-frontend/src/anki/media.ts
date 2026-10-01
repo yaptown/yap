@@ -4,7 +4,7 @@ import type { AnkiDeckPlan, AnkiMediaSource } from "../../../yap-frontend-rs/pkg
 const CONCURRENCY = 8;
 const TIMEOUT_MS = 60_000;
 const RETRIES = 1;
-const MAX_FAILURES = 8;
+const MAX_FAILURES = 32;
 
 export type MediaProgress = { done: number; total: number };
 
@@ -24,11 +24,7 @@ async function recording(url: string, controller: AbortController): Promise<Uint
     const timer = setTimeout(() => request.abort(new Error("Audio request timed out")), TIMEOUT_MS);
     try {
       const response = await fetch(url, { signal: request.signal });
-      if (response.status === 429) {
-        controller.abort(new AudioUnavailableError());
-        signal.throwIfAborted();
-      }
-      if (response.status >= 400 && response.status < 500) return undefined;
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) return undefined;
       if (!response.ok) throw new Error(`Audio request failed (${response.status})`);
       const bytes = new Uint8Array(await response.arrayBuffer());
       if (!bytes.length) throw new Error("Audio response was empty");

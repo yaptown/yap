@@ -42,28 +42,14 @@ test("a stalled response body is aborted and retried only once", async () => {
   assert.equal(h.timers.size, 0);
 });
 
-test("429 immediately aborts other requests without retries or queue refill", async () => {
-  for (const pending of [true, false]) {
-    let started = 0;
-    let aborted = 0;
-    const h = harness(async (url, { signal }) => {
-      started++;
-      if (url === "0") return new Response("", { status: 429 });
-      if (!pending) return new Response(new Uint8Array([1]));
-      return new Promise((_, reject) => signal.addEventListener("abort", () => {
-        aborted++;
-        reject(signal.reason);
-      }, { once: true }));
-    }, 100);
-    await assert.rejects(h.run(), error => error.code === "audio_unavailable");
-    await flush();
-    assert.equal(started, 8);
-    assert.equal(aborted, pending ? 7 : 0);
-    assert.equal(h.timers.size, 0);
-  }
+test("a 429 is retried once like any other failure", async () => {
+  let attempts = 0;
+  const h = harness(async () => ++attempts === 1 ? new Response("", { status: 429 }) : new Response(new Uint8Array([1])), 1);
+  assert.deepEqual((await h.run())[0], new Uint8Array([1]));
+  assert.equal(attempts, 2);
 });
 
-test("eight exhausted recordings stop a large failing queue", async () => {
+test("32 exhausted recordings stop a large failing queue", async () => {
   const attempts = new Map();
   const h = harness(async url => {
     attempts.set(url, (attempts.get(url) ?? 0) + 1);
@@ -71,8 +57,8 @@ test("eight exhausted recordings stop a large failing queue", async () => {
   }, 100);
   await assert.rejects(h.run(), error => error.code === "audio_unavailable");
   await flush();
-  assert.equal([...attempts.values()].filter(count => count === 2).length, 8);
+  assert.equal([...attempts.values()].filter(count => count === 2).length, 32);
   assert([...attempts.values()].every(count => count <= 2));
-  assert(attempts.size <= 15, "only seven already-running requests may remain at the cutoff");
+  assert(attempts.size <= 39, "only seven already-running requests may remain at the cutoff");
   assert.equal(h.timers.size, 0);
 });
