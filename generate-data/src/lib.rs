@@ -178,6 +178,7 @@ pub mod pipeline;
 pub mod pronunciation_audio;
 pub mod pronunciation_audio_only;
 pub mod pronunciation_patterns;
+mod pronunciation_whisper;
 pub mod pronunciations;
 pub mod proper_noun_definitions;
 pub mod read_anki;

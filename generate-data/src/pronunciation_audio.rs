@@ -30,12 +30,35 @@ fn eligible_texts(language: Language, example: &str, spoken: &str) -> Result<()>
 }
 
 #[derive(serde::Serialize)]
+struct CueAttempt {
+    #[serde(flatten)]
+    phoneme: ClipVerification,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    whisper: Option<crate::pronunciation_whisper::Verification>,
+}
+
+impl CueAttempt {
+    fn passed(&self) -> bool {
+        self.phoneme.passed() && self.whisper.as_ref().is_none_or(|w| w.verdict.passed())
+    }
+
+    fn reason(&self) -> &str {
+        self.phoneme.failure_reason.as_deref().unwrap_or_else(|| {
+            self.whisper
+                .as_ref()
+                .filter(|w| !w.verdict.passed())
+                .map_or("passed", |w| w.verdict.reasoning.as_str())
+        })
+    }
+}
+
+#[derive(serde::Serialize)]
 struct CueOutcome {
     text: String,
     passed: bool,
     target_identity: String,
     target_error: Option<String>,
-    attempts: Vec<ClipVerification>,
+    attempts: Vec<CueAttempt>,
     timing_error: Option<String>,
     segments: Vec<(String, u32, u32)>,
     #[serde(skip)]
@@ -47,13 +70,7 @@ impl CueOutcome {
         self.target_error.clone().unwrap_or_else(|| {
             self.attempts
                 .iter()
-                .map(|a| {
-                    format!(
-                        "{}: {}",
-                        a.wav_path,
-                        a.failure_reason.as_deref().unwrap_or("passed")
-                    )
-                })
+                .map(|a| format!("{}: {}", a.phoneme.wav_path, a.reason()))
                 .collect::<Vec<_>>()
                 .join("; ")
         })
@@ -144,7 +161,10 @@ pub async fn generate_pronunciation_audio(
                 .map(|s| s.spoken.as_str())
                 .collect::<Vec<_>>()
                 .join(" ");
-            requests.insert(spoken, (segments, example.target.clone()));
+            requests.insert(
+                spoken,
+                (segments, guide.pattern.clone(), example.target.clone()),
+            );
         }
     }
     let pronunciations: HashMap<_, _> = word_to_pronunciation
@@ -175,7 +195,7 @@ pub async fn generate_pronunciation_audio(
     let mut failures = BTreeMap::new();
     for round in 0..=REPLACEMENT_ROUNDS {
         let generated: Vec<_> = futures::stream::iter(requests)
-            .map(|(spoken, (segments, example))| {
+            .map(|(spoken, (segments, pattern, example))| {
                 let ctx = &ctx;
                 let keys = &keys;
                 let style = &style;
@@ -227,6 +247,18 @@ pub async fn generate_pronunciation_audio(
                             keys,
                         )
                         .await?;
+                        let whisper = if verification.passed() {
+                            crate::pronunciation_whisper::verify(
+                                http, &bytes, language, &pattern, &example,
+                            )
+                            .await?
+                        } else {
+                            None
+                        };
+                        let verification = CueAttempt {
+                            phoneme: verification,
+                            whisper,
+                        };
                         if verification.passed() {
                             let spoken_segments: Vec<_> =
                                 segments.iter().map(|s| s.spoken.as_str()).collect();
@@ -392,7 +424,10 @@ pub async fn generate_pronunciation_audio(
                     .collect::<Vec<_>>()
                     .join(" ");
                 if !verified.contains_key(&spoken) && !failures.contains_key(&spoken) {
-                    requests.insert(spoken, (segments, example.target.clone()));
+                    requests.insert(
+                        spoken,
+                        (segments, guide.pattern.clone(), example.target.clone()),
+                    );
                 }
                 if !guide
                     .example_words

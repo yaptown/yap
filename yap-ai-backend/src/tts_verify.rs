@@ -34,43 +34,8 @@
 //!    must never cost a learner their audio. Every uncertain path returns
 //!    "no defect".
 
-use language_utils::{Language, TtsRequest};
-use whisper::{CloudflareWhisper, GroqWhisper, TranscribeRequest};
-
-/// Languages where a punctuation-stripped transcript match is a trustworthy
-/// pass/fail signal.
-///
-/// Deliberately conservative. The excluded languages aren't excluded because
-/// Whisper can't read them — it's that comparing its output to our text
-/// orthographically isn't meaningful there. Japanese may come back in kana
-/// where the pack has kanji, Chinese may switch script, and Thai has no word
-/// spacing to normalize. Each needs its own comparison (phoneme distance is
-/// the obvious candidate) and its own calibration run before it can be
-/// gated, so until then they synthesize exactly as they did before.
-///
-/// Returns the ISO code Whisper wants for the language.
-fn whisper_language(language: Language) -> Option<&'static str> {
-    match language {
-        Language::French
-        | Language::SpanishLatinAmerican
-        | Language::SpanishPeninsular
-        | Language::German
-        | Language::Italian
-        | Language::PortugueseBrazilian
-        | Language::PortugueseEuropean => Some(whisper::language_code(language)),
-        // Not yet calibrated — see the note above. English and Russian are
-        // plausible next additions; the CJK/Thai courses need a different
-        // comparison entirely.
-        Language::English
-        | Language::Russian
-        | Language::Korean
-        | Language::Japanese
-        | Language::Hindi
-        | Language::Thai
-        | Language::ChineseSimplified
-        | Language::ChineseTraditional => None,
-    }
-}
+use language_utils::TtsRequest;
+use whisper::{CloudflareWhisper, GroqWhisper, TranscribeRequest, whisper_language};
 
 /// Collapse a string to the part of it a transcript can be held to: lowercase
 /// alphanumerics and single spaces. Everything else — punctuation, the
@@ -284,6 +249,7 @@ pub async fn content_defect(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use language_utils::Language;
 
     fn request(text: &str, language: Language) -> TtsRequest {
         TtsRequest {

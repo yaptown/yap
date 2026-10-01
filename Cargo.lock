@@ -2222,6 +2222,7 @@ dependencies = [
  "tysm",
  "unicode-normalization",
  "webp",
+ "whisper",
  "xxhash-rust",
  "zip",
 ]

@@ -30,6 +30,35 @@ pub fn language_code(language: Language) -> &'static str {
     }
 }
 
+/// Languages where TTS output may be gated on a Whisper transcript, with the
+/// ISO code Whisper wants for each. Narrower than [`language_code`].
+///
+/// Deliberately conservative. The excluded languages aren't excluded because
+/// Whisper can't read them — it's that comparing its output to our text isn't
+/// meaningful there yet. Japanese may come back in kana where the pack has
+/// kanji, Chinese may switch script, and Thai has no word spacing to
+/// normalize. Each needs its own comparison and calibration run before it can
+/// be gated, so until then they synthesize exactly as they did before.
+pub fn whisper_language(language: Language) -> Option<&'static str> {
+    match language {
+        Language::French
+        | Language::SpanishLatinAmerican
+        | Language::SpanishPeninsular
+        | Language::German
+        | Language::Italian
+        | Language::PortugueseBrazilian
+        | Language::PortugueseEuropean => Some(language_code(language)),
+        Language::English
+        | Language::Russian
+        | Language::Korean
+        | Language::Japanese
+        | Language::Hindi
+        | Language::Thai
+        | Language::ChineseSimplified
+        | Language::ChineseTraditional => None,
+    }
+}
+
 pub struct TranscribeRequest<'a> {
     pub audio: &'a [u8],
     pub language: &'a str,
