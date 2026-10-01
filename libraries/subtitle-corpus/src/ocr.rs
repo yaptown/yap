@@ -128,6 +128,7 @@ pub fn messages_for(png: &[u8]) -> Vec<ChatMessage> {
             vec![ChatMessageContent::ImageUrl {
                 image: ImageUrl {
                     url: format!("data:image/png;base64,{b64}"),
+                    detail: None,
                 },
             }],
         ),

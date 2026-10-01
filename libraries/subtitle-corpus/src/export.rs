@@ -1,12 +1,13 @@
 //! Serve-ready clip export: every passing clip becomes a directory of
-//! `hi.mp4` + `lo.mp4` + `meta.json`, cut generously from the source film
+//! `hi.mp4` + `lo.mp4` + `poster.jpg` + `meta.json`, cut generously from the source film
 //! (neighboring subtitle lines as context) with the sidecar — not the file
 //! boundary — defining what the clip *is*. Schema and rationale:
 //! `docs/clip-sidecar.md`.
 //!
-//! Everything in the sidecar comes from artifacts already on disk; the
-//! forced alignment only reads cached responses, so export neither probes
-//! the model nor spends inference, including when an alignment is missing.
+//! Alignment and standalone export read cached responses only. Publish's
+//! post-encode enrichment extracts posters and rates sampled frames plus
+//! subtitles with live, cached requests.
+//! Neither enrichment step changes the encode recipe or its reuse key.
 
 use std::collections::{BTreeMap, HashSet};
 use std::ffi::OsString;
@@ -74,7 +75,9 @@ const LO_AAC: &str = "96k";
 const UPLOAD_JOBS: usize = 64;
 
 /// Sidecar `format` field.
-const SIDECAR_FORMAT: u32 = 4;
+const SIDECAR_FORMAT: u32 = 5;
+
+mod enrichment;
 
 /// Everything that shapes the rendered files, in one comparable string.
 /// Built from the constants so no tweak can be forgotten; anything that
@@ -596,7 +599,7 @@ async fn export_one(
     }
 
     let rel = |ms: i64| ms - cut_start;
-    let sidecar = json!({
+    let mut sidecar = json!({
         "format": SIDECAR_FORMAT,
         "id": id,
         "language": provenance.inputs.language,
@@ -701,6 +704,11 @@ async fn export_one(
             },
         },
     });
+    if reused {
+        if let Some(old) = old_sidecar.and_then(|b| serde_json::from_slice(b).ok()) {
+            enrichment::carry_forward(&old, &mut sidecar, clip_dir);
+        }
+    }
     let bytes = serde_json::to_vec_pretty(&sidecar)?;
     // Reuse is keyed only by the media stamp. New sidecar-only fields change
     // these bytes, so an old export is refreshed without re-encoding media.
@@ -779,7 +787,6 @@ pub async fn publish(
     )
     .await?;
 
-    println!("=== stage 3: upload to {bucket} ===");
     let codes: Vec<String> = match &langs {
         Some(l) => l.clone(),
         None => std::fs::read_dir(&dest)?
@@ -788,6 +795,17 @@ pub async fn publish(
             .filter_map(|e| e.file_name().into_string().ok())
             .collect(),
     };
+    // Exactly the same directories as upload/index, including old clips whose
+    // films failed this run. Standalone export stays offline and scoped.
+    println!("=== posters and content ratings ===");
+    for code in &codes {
+        let lang_dir = dest.join(code);
+        std::fs::create_dir_all(&lang_dir)?;
+        enrichment::enrich_language(&lang_dir).await?;
+        let n = write_index(&lang_dir)?;
+        println!("index: {code} {n} clips");
+    }
+    println!("=== stage 3: upload to {bucket} ===");
     let r2 = crate::r2::R2::from_env(&bucket).await?;
     let mut manifest = OrphanManifest {
         generated: std::time::SystemTime::now()
@@ -899,7 +917,7 @@ pub async fn prune(dest: PathBuf, bucket: String, manifest: PathBuf, apply: bool
 }
 
 /// Upload one language's exported clips over S3, with SDK-managed retries.
-/// A `.uploaded` marker records each file's xxh3 hash once all three objects
+/// A `.uploaded` marker records each file's xxh3 hash once all four objects
 /// land. Matching markers skip work; stale files already matching bucket MD5
 /// ETags need no put. Objects are immutable by id and get a forever cache;
 /// the index gets a short one.
@@ -917,7 +935,7 @@ async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<
     let mut verified = 0;
     let mut skipped = 0;
     // No detached tasks: the first error drops the remaining futures. Markers
-    // only land after all three files are up, so interrupted dirs are retried.
+    // only land after all four files are up, so interrupted dirs are retried.
     let mut uploads = stream::iter(dirs.iter().map(|dir| {
         let etags = &etags;
         Ok::<_, anyhow::Error>(async move {
@@ -928,6 +946,7 @@ async fn upload_lang(lang_dir: &Path, code: &str, r2: &crate::r2::R2) -> Result<
             let files = [
                 ("hi", "hi.mp4", "video/mp4"),
                 ("lo", "lo.mp4", "video/mp4"),
+                ("poster", "poster.jpg", "image/jpeg"),
                 ("meta", "meta.json", "application/json"),
             ];
             // Hashing reads ~9 MB per dir; keep it off the stream's task so
@@ -1901,25 +1920,24 @@ fn write_index(lang_dir: &Path) -> Result<usize> {
                 continue;
             };
             let m: serde_json::Value = serde_json::from_slice(&bytes)?;
-            rows.push((
-                m["id"].as_str().unwrap_or_default().to_string(),
-                json!({
-                    "id": m["id"],
-                    "imdb_id": m["film"]["imdb_id"],
-                    "title": m["film"]["title"],
-                    "sentence": m["sentence"]["text"],
-                    "course_sentence": m["sentence"]["course_sentence"],
-                    "duration_ms": m["media"]["duration_ms"],
-                    "critical": m["critical"],
-                    "clear_before_ms": m["verification"]["clear_before_ms"],
-                    "clear_after_ms": m["verification"]["clear_after_ms"],
-                    "pad_before_ms": m["verification"]["pad_before_ms"],
-                    "pad_after_ms": m["verification"]["pad_after_ms"],
-                    "aspect_ratio": m["media"]["aspect_ratio"],
-                    "hi_bytes": m["media"]["renditions"]["hi"]["bytes"],
-                    "lo_bytes": m["media"]["renditions"]["lo"]["bytes"],
-                }),
-            ));
+            let mut row = json!({
+                "id": m["id"],
+                "imdb_id": m["film"]["imdb_id"],
+                "title": m["film"]["title"],
+                "sentence": m["sentence"]["text"],
+                "course_sentence": m["sentence"]["course_sentence"],
+                "duration_ms": m["media"]["duration_ms"],
+                "critical": m["critical"],
+                "clear_before_ms": m["verification"]["clear_before_ms"],
+                "clear_after_ms": m["verification"]["clear_after_ms"],
+                "pad_before_ms": m["verification"]["pad_before_ms"],
+                "pad_after_ms": m["verification"]["pad_after_ms"],
+                "aspect_ratio": m["media"]["aspect_ratio"],
+                "hi_bytes": m["media"]["renditions"]["hi"]["bytes"],
+                "lo_bytes": m["media"]["renditions"]["lo"]["bytes"],
+            });
+            enrichment::extend_index(&m, &entry.path(), &mut row);
+            rows.push((m["id"].as_str().unwrap_or_default().to_string(), row));
         }
     }
     rows.sort_by(|a, b| a.0.cmp(&b.0));

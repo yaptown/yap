@@ -1,7 +1,7 @@
-# Clip sidecar schema (format 4)
+# Clip sidecar schema (format 5)
 
-One JSON per served video clip, stored next to the mp4 (`<id>.json` beside
-`<id>.mp4`), immutable. Cut generously (neighbor sentences as context when the
+One JSON per served video clip, stored as `<id>/meta.json` alongside
+`hi.mp4`, `lo.mp4` and `poster.jpg`. Cut generously (neighbor sentences as context when the
 gap is ≤ ~2s, total ≤ ~15s); the sidecar — not the file boundary — defines what
 the clip *is*. The app seeks to `critical.start_ms` by default and offers the
 padding as opt-in context.
@@ -79,14 +79,35 @@ and critical span) equals the one computed now — else delete and re-render.
 The stamp is deliberately not the clips provenance: a re-map under a new
 segmenter or gate that lands on the same span costs a sidecar rewrite, not
 a day of re-encoding. The sidecar itself is always regenerated and left
-untouched when it comes out byte-identical; full-language runs sweep
-orphaned ids. Upload markers store the three files' content hashes and
+untouched when it comes out byte-identical. Publish lists orphan candidates;
+only a separate `prune --apply` deletes them. Upload markers store the four files' content hashes and
 re-upload each file whose bytes changed. Better to recalculate than to
 trust a cache whose inputs may have moved.
 
+Format 5 adds enrichment without changing `media.stamp` or the encode recipe:
+
+- `media.poster` is `{file, bytes, stamp}` for `poster.jpg`, accurately sought
+  from `hi.mp4` at `critical.start_ms`, at most 720px wide. A matching stamp
+  (media, timestamp, recipe) and existing file allow reuse. Served as `image/jpeg`.
+- Optional `content_ratings` is `{model, stamp, labels}`. Labels are `profanity`,
+  `horror`, `alcohol_drugs`, `sexual_nudity`, `violence_weapons`, each `none`,
+  `mild` or `intense`. Missing means **unrated**, not safe; iOS filtering is separate.
+- One live typed tysm `gpt-6-luna` request sees all subtitle cues, the clip's speech transcript (subtitles soften swearing) and
+  `clamp(ceil(duration_ms / 2000), 4, 8)` evenly spread chronological frames
+  from one `lo.mp4` decode, at low image detail. This is sampled moderation,
+  not exhaustive certification. Requests run 96 wide with shared `./.cache`,
+  no Batch API; ffmpeg concurrency is bounded by available CPU parallelism.
+  Rating failures are logged, counted, left unrated and retried next publish.
+- Rating stamps cover model, reasoning, prompt, schema, frame recipe, media,
+  duration, language and subtitles; valid ratings skip extraction. Sidecar
+  refreshes preserve valid enrichment. Publish enriches all indexed/uploaded
+  directories after export and rebuilds their indexes before upload.
+- Index rows add valid `poster` (`<id>/poster.jpg`) and `content_ratings` (labels
+  only). Stale/missing ratings are omitted.
+
 ```jsonc
 {
-  "format": 4,
+  "format": 5,
   "id": "tt0101700-3fa2c81d-0",        // imdb id + sentence hash + occurrence index (see above)
   "language": "fra",
 
