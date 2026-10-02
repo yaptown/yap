@@ -95,7 +95,7 @@ fn derive_webm(dir: &Path, meta: &Value) -> Result<Value> {
     let at = meta["critical"]["start_ms"]
         .as_u64()
         .context("critical.start_ms")?;
-    let temp = tempfile::NamedTempFile::new_in(dir)?;
+    let temp = dir.join("lo.webm.tmp");
     let output = Command::new("ffmpeg")
         .args(["-v", "error", "-y", "-threads", "1", "-i"])
         .arg(dir.join("lo.mp4"))
@@ -129,7 +129,7 @@ fn derive_webm(dir: &Path, meta: &Value) -> Result<Value> {
             "-f",
             "webm",
         ])
-        .arg(temp.path())
+        .arg(&temp)
         .output()
         .context("deriving WebM with ffmpeg")?;
     if !output.status.success() {
@@ -139,8 +139,8 @@ fn derive_webm(dir: &Path, meta: &Value) -> Result<Value> {
             String::from_utf8_lossy(&output.stderr)
         );
     }
-    let bytes = temp.as_file().metadata()?.len();
-    temp.persist(dir.join("lo.webm"))?;
+    let bytes = std::fs::metadata(&temp)?.len();
+    std::fs::rename(&temp, dir.join("lo.webm"))?;
     Ok(
         json!({"file": "lo.webm", "height": meta["media"]["renditions"]["lo"]["height"], "bytes": bytes, "stamp": webm_stamp(meta)}),
     )
