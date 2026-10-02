@@ -2063,6 +2063,7 @@ mod tests {
                 CardIndicator::ListeningGram { gram: gram.gram },
             ] {
                 state.cards.insert(
+                    &deck.context,
                     indicator,
                     crate::CardData::Added {
                         fsrs_card: rs_fsrs::Card::new(chrono::Utc::now()),
@@ -2168,12 +2169,16 @@ mod tests {
             fsrs_card.state = rs_fsrs::State::Review;
             fsrs_card.early_lapses = i32::from(i < order.len() / 2);
             let card = CardData::Added { fsrs_card };
-            state
-                .cards
-                .insert(CardIndicator::WrittenGram { gram: *gram }, card.clone());
-            state
-                .cards
-                .insert(CardIndicator::ListeningGram { gram: gram.gram }, card);
+            state.cards.insert(
+                &deck.context,
+                CardIndicator::WrittenGram { gram: *gram },
+                card.clone(),
+            );
+            state.cards.insert(
+                &deck.context,
+                CardIndicator::ListeningGram { gram: gram.gram },
+                card,
+            );
         }
         state.placement_test_results = Some(placement);
         let predicted = Deck::finalize(state.clone(), &deck.context);
@@ -2237,12 +2242,16 @@ mod tests {
             } else {
                 CardData::Ghost { fsrs_card }
             };
-            state
-                .cards
-                .insert(CardIndicator::WrittenGram { gram: *gram }, card.clone());
-            state
-                .cards
-                .insert(CardIndicator::ListeningGram { gram: gram.gram }, card);
+            state.cards.insert(
+                &deck.context,
+                CardIndicator::WrittenGram { gram: *gram },
+                card.clone(),
+            );
+            state.cards.insert(
+                &deck.context,
+                CardIndicator::ListeningGram { gram: gram.gram },
+                card,
+            );
         }
         let absent = TaggedGram {
             gram: language_utils::SpurGram::try_from_usize(1_000_000).unwrap(),
@@ -2262,6 +2271,7 @@ mod tests {
             },
         ] {
             state.cards.insert(
+                &deck.context,
                 indicator,
                 CardData::Added {
                     fsrs_card: rs_fsrs::Card::new(chrono::Utc::now()),
@@ -2301,7 +2311,6 @@ mod tests {
             deck.comprehensible = crate::CachedComprehensibleGrams::new(
                 &deck.context.language_pack,
                 &deck.regressions,
-                deck.cards.iter(),
             );
             assert_comprehensible_matches_brute_force(&deck);
             let expected = if probability >= 0.80 {

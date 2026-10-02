@@ -6,7 +6,9 @@ pub use anki_export::*;
 mod challenge;
 pub mod challenge_views;
 pub use challenge_views::*;
+mod cards;
 mod clips;
+use cards::Cards;
 mod comprehensible;
 pub use comprehensible::WrittenGrams;
 use comprehensible::{CachedComprehensibleGrams, GramMembership, ListeningGrams};
@@ -83,6 +85,7 @@ use chrono::{DateTime, Datelike, Utc};
 use deck_selection::DailyReviewTarget;
 use deck_selection::DeckSelectionEvent;
 use isotonic::{Direction, Point, SmoothRegression};
+use itertools::Itertools;
 use language_utils::Frequency;
 use language_utils::Literal;
 use language_utils::TtsRequest;
@@ -1311,7 +1314,7 @@ pub struct Stats {
 #[derive(Clone, Debug)]
 pub struct DeckState {
     placement_test_results: Option<PlacementTest>,
-    cards: FxHashMap<CardIndicator<SpurGram, Spur>, CardData>,
+    cards: Cards,
     fsrs: FSRS,
     stats: Stats,
     /// Maps cards that have been detected as leeches to the total_reviews count when detected
@@ -1334,7 +1337,7 @@ pub struct DeckState {
 #[derive(Clone, Debug)]
 pub struct Deck {
     placement_test_results: Option<PlacementTest>,
-    cards: FxHashMap<CardIndicator<SpurGram, Spur>, CardData>,
+    cards: Cards,
     fsrs: FSRS,
     pub(crate) stats: Stats,
     pub(crate) context: Context,
@@ -1537,25 +1540,26 @@ impl weapon::AppState for Deck {
                         if !context.is_card_valid(&card) {
                             continue;
                         }
-                        deck.cards
-                            .entry(card)
-                            .and_modify(|existing| {
-                                // If it's a ghost card, transition it to added
-                                if let CardData::Ghost { fsrs_card } = existing {
-                                    let mut new_fsrs_card = fsrs_card.clone();
-                                    // Reset the due date to now when formally adding
-                                    new_fsrs_card.due = *timestamp;
-                                    *existing = CardData::Added {
-                                        fsrs_card: new_fsrs_card,
-                                    };
-                                }
-                            })
-                            .or_insert_with(|| {
-                                let fsrs_card = rs_fsrs::Card::new(
-                                    *timestamp + chrono::Duration::milliseconds(index as i64),
-                                );
-                                CardData::Added { fsrs_card }
-                            });
+                        deck.cards.modify(context, card, |entry| {
+                            entry
+                                .and_modify(|existing| {
+                                    // If it's a ghost card, transition it to added
+                                    if let CardData::Ghost { fsrs_card } = existing {
+                                        let mut new_fsrs_card = fsrs_card.clone();
+                                        // Reset the due date to now when formally adding
+                                        new_fsrs_card.due = *timestamp;
+                                        *existing = CardData::Added {
+                                            fsrs_card: new_fsrs_card,
+                                        };
+                                    }
+                                })
+                                .or_insert_with(|| {
+                                    let fsrs_card = rs_fsrs::Card::new(
+                                        *timestamp + chrono::Duration::milliseconds(index as i64),
+                                    );
+                                    CardData::Added { fsrs_card }
+                                });
+                        });
                     }
                 }
             }
@@ -2097,43 +2101,6 @@ impl weapon::AppState for Deck {
         state: Self::Partial,
         context: &<Self::Event as weapon::data_model::Event>::Context,
     ) -> Self {
-        // Collect data points for isotonic regression
-        let mut target_language_points = Vec::new();
-        let mut listening_points = Vec::new();
-
-        for (card_indicator, card_data) in state.cards.iter() {
-            // Only use cards that have been reviewed (not new)
-            // For regression, only use Added cards that aren't new
-            match card_data {
-                CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card }
-                    if fsrs_card.state == rs_fsrs::State::New =>
-                {
-                    continue;
-                }
-                _ => {}
-            }
-
-            if let Some(frequency) = context.get_card_frequency(card_indicator) {
-                // Easy cards (cognates) and compositional multi-word grams don't contribute
-                // meaningful signal to the regression, so skip them.
-                if frequency.exclude_from_regression() {
-                    continue;
-                }
-                let pre_existing_knowledge = card_data.pre_existing_knowledge();
-                let point = Point::new(frequency.ease, pre_existing_knowledge);
-
-                match card_indicator {
-                    CardIndicator::WrittenGram { .. } => {
-                        target_language_points.push(point);
-                    }
-                    CardIndicator::ListeningGram { .. } => {
-                        listening_points.push(point);
-                    }
-                    CardIndicator::LetterPronunciation { .. } => {}
-                }
-            }
-        }
-
         // Bias points at 0.0 (unknown) anchor the low-frequency end of the
         // regression curve, giving it the S-shape from "unknown" to "known."
 
@@ -2160,6 +2127,7 @@ impl weapon::AppState for Deck {
                 .map(|(frequency, weight)| Point::new_with_weight(frequency.ln(), 0.0, weight)),
             );
         }
+        bias_points.sort_by(|a, b| a.x().total_cmp(b.x()));
 
         let smoothing_window = context
             .language_pack
@@ -2169,40 +2137,48 @@ impl weapon::AppState for Deck {
             .map(|(_, freq)| freq.ease * 0.2)
             .unwrap_or(1.0); // Fallback if no frequencies exist
 
-        let target_language_regression =
-            if target_language_points.len() >= 2 || state.placement_test_results.is_some() {
-                target_language_points.extend_from_slice(&bias_points[..]);
-                Some(SmoothRegression::new(
-                    &target_language_points,
-                    Direction::Ascending,
-                    smoothing_window,
-                ))
-            } else {
-                None
-            };
-
-        let listening_regression =
-            if listening_points.len() >= 2 || state.placement_test_results.is_some() {
-                listening_points.extend_from_slice(&bias_points);
-                Some(SmoothRegression::new(
-                    &listening_points,
-                    Direction::Ascending,
-                    smoothing_window,
-                ))
-            } else {
-                None
-            };
+        fn fit<'a>(
+            points: impl ExactSizeIterator<Item = &'a Point<f32>>,
+            bias_points: &[Point<f32>],
+            has_placement: bool,
+            smoothing_window: f32,
+        ) -> Option<SmoothRegression<f32>> {
+            if points.len() < 2 && !has_placement {
+                return None;
+            }
+            // Equal-ease cards use indicator order and precede bias points.
+            let points: Vec<_> = points
+                .copied()
+                .merge_by(bias_points.iter().copied(), |a, b| {
+                    a.x().total_cmp(b.x()).is_le()
+                })
+                .collect();
+            Some(SmoothRegression::new_sorted(
+                &points,
+                Direction::Ascending,
+                smoothing_window,
+            ))
+        }
+        let has_placement = state.placement_test_results.is_some();
+        let target_language_regression = fit(
+            state.cards.written_points(),
+            &bias_points,
+            has_placement,
+            smoothing_window,
+        );
+        let listening_regression = fit(
+            state.cards.listening_points(),
+            &bias_points,
+            has_placement,
+            smoothing_window,
+        );
 
         let regressions = Regressions {
             target_language_regression,
             listening_regression,
         };
 
-        let comprehensible = CachedComprehensibleGrams::new(
-            &context.language_pack,
-            &regressions,
-            state.cards.iter(),
-        );
+        let comprehensible = CachedComprehensibleGrams::new(&context.language_pack, &regressions);
 
         Deck {
             placement_test_results: state.placement_test_results,
@@ -2234,7 +2210,7 @@ impl DeckState {
     pub fn new() -> Self {
         Self {
             placement_test_results: None,
-            cards: FxHashMap::default(),
+            cards: Cards::default(),
             fsrs: FSRS::new(rs_fsrs::Parameters {
                 request_retention: 0.7,
                 ..Default::default()
@@ -2290,77 +2266,79 @@ impl DeckState {
             .unwrap_or(rs_fsrs::State::New);
         let was_new = state_before == rs_fsrs::State::New;
 
-        let card_data = self.cards.entry(card).or_insert_with(|| {
-            let mut fsrs_card = rs_fsrs::Card::new(timestamp);
-            fsrs_card.due = timestamp;
-            CardData::Ghost { fsrs_card }
-        });
+        self.cards.modify(context, card, |entry| {
+            let card_data = entry.or_insert_with(|| {
+                let mut fsrs_card = rs_fsrs::Card::new(timestamp);
+                fsrs_card.due = timestamp;
+                CardData::Ghost { fsrs_card }
+            });
 
-        let fsrs_card = match card_data {
-            CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => fsrs_card,
-        };
-        let fsrs_rating = match rating {
-            Rating::Again => rs_fsrs::Rating::Again,
-            Rating::Remembered => {
-                // for new cards, we use Easy. Otherwise, we use Good
-                if fsrs_card.state == rs_fsrs::State::New {
-                    rs_fsrs::Rating::Easy
-                } else {
-                    rs_fsrs::Rating::Good
-                }
-            }
-            Rating::Hard => rs_fsrs::Rating::Hard,
-            Rating::Good => rs_fsrs::Rating::Good,
-            Rating::Easy => rs_fsrs::Rating::Easy,
-        };
-
-        *fsrs_card = self
-            .fsrs
-            .next(fsrs_card.clone(), timestamp, fsrs_rating)
-            .card;
-
-        // Detect leeches: cards with high lapse rate
-        // Require at least 8 reviews to avoid false positives early on
-        // A card is a leech if 40% or more of its reviews are lapses
-        if fsrs_card.lapses >= 12 && fsrs_card.lapses % 4 == 0 {
-            let lapse_ratio = fsrs_card.lapses as f64 / fsrs_card.reps as f64;
-            if lapse_ratio >= 0.3 {
-                // Mark as leech and reset to New state
-                // This prevents it from being considered known for the purposes of challenge sentence selection
-                self.leeches.insert(card, self.stats.total_reviews);
-                fsrs_card.state = rs_fsrs::State::New;
-            }
-        }
-
-        // Award XP based on review outcome
-        self.stats.xp += match rating {
-            Rating::Again => 5.0,
-            _ => 1.0,
-        };
-
-        // Track in today stats
-        if let Some(today) = &mut self.stats.today {
-            if was_new {
-                if fsrs_card.lapses > 0 {
-                    today.new_cards.insert(card);
-                }
-            } else {
-                // Track cards that graduated to Review state today
-                if fsrs_card.state == rs_fsrs::State::Review && fsrs_card.lapses > 0 {
-                    if state_before == rs_fsrs::State::Learning {
-                        today.learned_cards.insert(card);
-                    } else if state_before == rs_fsrs::State::Relearning {
-                        today.locked_in_cards.insert(card);
+            let fsrs_card = match card_data {
+                CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card } => fsrs_card,
+            };
+            let fsrs_rating = match rating {
+                Rating::Again => rs_fsrs::Rating::Again,
+                Rating::Remembered => {
+                    // for new cards, we use Easy. Otherwise, we use Good
+                    if fsrs_card.state == rs_fsrs::State::New {
+                        rs_fsrs::Rating::Easy
+                    } else {
+                        rs_fsrs::Rating::Good
                     }
                 }
-                today.reviewed_cards.insert(card);
+                Rating::Hard => rs_fsrs::Rating::Hard,
+                Rating::Good => rs_fsrs::Rating::Good,
+                Rating::Easy => rs_fsrs::Rating::Easy,
+            };
+
+            *fsrs_card = self
+                .fsrs
+                .next(fsrs_card.clone(), timestamp, fsrs_rating)
+                .card;
+
+            // Detect leeches: cards with high lapse rate
+            // Require at least 8 reviews to avoid false positives early on
+            // A card is a leech if 40% or more of its reviews are lapses
+            if fsrs_card.lapses >= 12 && fsrs_card.lapses % 4 == 0 {
+                let lapse_ratio = fsrs_card.lapses as f64 / fsrs_card.reps as f64;
+                if lapse_ratio >= 0.3 {
+                    // Mark as leech and reset to New state
+                    // This prevents it from being considered known for the purposes of challenge sentence selection
+                    self.leeches.insert(card, self.stats.total_reviews);
+                    fsrs_card.state = rs_fsrs::State::New;
+                }
             }
-            if rating == Rating::Again {
-                today.forgot += 1;
-            } else {
-                today.remembered += 1;
+
+            // Award XP based on review outcome
+            self.stats.xp += match rating {
+                Rating::Again => 5.0,
+                _ => 1.0,
+            };
+
+            // Track in today stats
+            if let Some(today) = &mut self.stats.today {
+                if was_new {
+                    if fsrs_card.lapses > 0 {
+                        today.new_cards.insert(card);
+                    }
+                } else {
+                    // Track cards that graduated to Review state today
+                    if fsrs_card.state == rs_fsrs::State::Review && fsrs_card.lapses > 0 {
+                        if state_before == rs_fsrs::State::Learning {
+                            today.learned_cards.insert(card);
+                        } else if state_before == rs_fsrs::State::Relearning {
+                            today.locked_in_cards.insert(card);
+                        }
+                    }
+                    today.reviewed_cards.insert(card);
+                }
+                if rating == Rating::Again {
+                    today.forgot += 1;
+                } else {
+                    today.remembered += 1;
+                }
             }
-        }
+        });
     }
 
     fn update_daily_activity(&mut self, timestamp: &DateTime<Utc>, timezone: &chrono::FixedOffset) {
@@ -2532,8 +2510,11 @@ impl Deck {
         &self,
         count_added_as_comprehensible: bool,
     ) -> WrittenGrams<'_> {
-        self.comprehensible
-            .written(&self.context.language_pack, count_added_as_comprehensible)
+        self.comprehensible.written(
+            &self.context.language_pack,
+            &self.cards,
+            count_added_as_comprehensible,
+        )
     }
 
     /// Get the set of comprehensible listening grams.
@@ -2541,8 +2522,11 @@ impl Deck {
         &self,
         count_added_as_comprehensible: bool,
     ) -> ListeningGrams<'_> {
-        self.comprehensible
-            .listening(&self.context.language_pack, count_added_as_comprehensible)
+        self.comprehensible.listening(
+            &self.context.language_pack,
+            &self.cards,
+            count_added_as_comprehensible,
+        )
     }
 
     /// Calculate the percentage of a frequency list that is covered by the given known gram sets.
@@ -5609,17 +5593,15 @@ mod tests {
             CardIndicator::ListeningGram { gram: gram.gram },
         ] {
             known.cards.insert(
+                &known.context,
                 indicator,
                 CardData::Added {
                     fsrs_card: rs_fsrs::Card::new(Utc::now()),
                 },
             );
         }
-        known.comprehensible = CachedComprehensibleGrams::new(
-            &known.context.language_pack,
-            &known.regressions,
-            known.cards.iter(),
-        );
+        known.comprehensible =
+            CachedComprehensibleGrams::new(&known.context.language_pack, &known.regressions);
         assert!(
             known
                 .get_movie_stats()

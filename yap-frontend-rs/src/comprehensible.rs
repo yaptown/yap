@@ -9,13 +9,27 @@ use language_utils::{
 };
 use rustc_hash::FxHashMap;
 
-use crate::{CardData, CardIndicator, Regressions};
+use crate::{CardData, Cards, Regressions};
 
-#[derive(Clone, Copy, Debug)]
-enum CardKnowledge {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum CardKnowledge {
     Now,
     Planned,
     Excluded,
+}
+
+impl From<&CardData> for CardKnowledge {
+    fn from(card: &CardData) -> Self {
+        match card {
+            CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card }
+                if fsrs_card.state == rs_fsrs::State::Review =>
+            {
+                Self::Now
+            }
+            CardData::Added { .. } => Self::Planned,
+            CardData::Ghost { .. } => Self::Excluded,
+        }
+    }
 }
 
 impl CardKnowledge {
@@ -24,25 +38,13 @@ impl CardKnowledge {
     }
 }
 
-#[derive(Clone, Debug)]
-struct ComprehensibleGrams<K> {
+#[derive(Clone, Copy)]
+struct ComprehensibleGrams<'a, K> {
     threshold_rank: Option<u32>,
-    cards: FxHashMap<K, CardKnowledge>,
+    cards: &'a FxHashMap<K, CardKnowledge>,
 }
 
-impl<K: Copy + Eq + Hash + Ord> ComprehensibleGrams<K> {
-    fn new(order: &EaseOrder<K>, regression: Option<&SmoothRegression<f32>>) -> Self {
-        Self {
-            // Isotonic regression and box smoothing preserve monotonicity.
-            threshold_rank: regression.map(|regression| {
-                order.partition_point(|ease| {
-                    !regression.interpolate(ease).is_some_and(|p| p >= 0.80)
-                })
-            }),
-            cards: FxHashMap::default(),
-        }
-    }
-
+impl<K: Copy + Eq + Hash + Ord> ComprehensibleGrams<'_, K> {
     fn contains(&self, order: &EaseOrder<K>, key: &K, planned: bool) -> bool {
         let Some(rank) = order.rank(key) else {
             return false;
@@ -67,77 +69,65 @@ impl<K: Copy + Eq + Hash + Ord> ComprehensibleGrams<K> {
                 }),
             )
     }
-
-    fn insert(&mut self, order: &EaseOrder<K>, key: K, card: &CardData) {
-        if order.rank(&key).is_none() {
-            return;
-        }
-        let knowledge = match card {
-            CardData::Added { fsrs_card } | CardData::Ghost { fsrs_card }
-                if fsrs_card.state == rs_fsrs::State::Review =>
-            {
-                CardKnowledge::Now
-            }
-            CardData::Added { .. } => CardKnowledge::Planned,
-            CardData::Ghost { .. } => CardKnowledge::Excluded,
-        };
-        self.cards.insert(key, knowledge);
-    }
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct CachedComprehensibleGrams {
-    written: ComprehensibleGrams<TaggedGram<SpurGram>>,
-    listening: ComprehensibleGrams<SpurGram>,
+    written: Option<u32>,
+    listening: Option<u32>,
+}
+
+fn threshold<K: Copy + Eq + Hash + Ord>(
+    order: &EaseOrder<K>,
+    regression: Option<&SmoothRegression<f32>>,
+) -> Option<u32> {
+    // Isotonic regression and box smoothing preserve monotonicity.
+    regression.map(|regression| {
+        order.partition_point(|ease| !regression.interpolate(ease).is_some_and(|p| p >= 0.80))
+    })
 }
 
 impl CachedComprehensibleGrams {
-    pub(crate) fn new<'a>(
-        pack: &LanguagePack,
-        regressions: &Regressions,
-        cards: impl Iterator<Item = (&'a CardIndicator<SpurGram, lasso::Spur>, &'a CardData)>,
-    ) -> Self {
-        let mut result = Self {
-            written: ComprehensibleGrams::new(
+    pub(crate) fn new(pack: &LanguagePack, regressions: &Regressions) -> Self {
+        Self {
+            written: threshold(
                 &pack.written_ease_order,
                 regressions.target_language_regression.as_ref(),
             ),
-            listening: ComprehensibleGrams::new(
+            listening: threshold(
                 &pack.listening_ease_order,
                 regressions.listening_regression.as_ref(),
             ),
-        };
-        for (indicator, card) in cards {
-            match indicator {
-                CardIndicator::WrittenGram { gram } => {
-                    result.written.insert(&pack.written_ease_order, *gram, card)
-                }
-                CardIndicator::ListeningGram { gram } => {
-                    result
-                        .listening
-                        .insert(&pack.listening_ease_order, *gram, card)
-                }
-                CardIndicator::LetterPronunciation { .. } => {}
-            }
         }
-        result
     }
 
-    pub(crate) fn written<'a>(&'a self, pack: &'a LanguagePack, planned: bool) -> WrittenGrams<'a> {
+    pub(crate) fn written<'a>(
+        &self,
+        pack: &'a LanguagePack,
+        cards: &'a Cards,
+        planned: bool,
+    ) -> WrittenGrams<'a> {
         WrittenGrams {
-            cache: &self.written,
+            cache: ComprehensibleGrams {
+                threshold_rank: self.written,
+                cards: cards.written_knowledge(),
+            },
             order: &pack.written_ease_order,
             planned,
         }
     }
 
     pub(crate) fn listening<'a>(
-        &'a self,
+        &self,
         pack: &'a LanguagePack,
+        cards: &'a Cards,
         planned: bool,
     ) -> ListeningGrams<'a> {
         ListeningGrams {
-            cache: &self.listening,
+            cache: ComprehensibleGrams {
+                threshold_rank: self.listening,
+                cards: cards.listening_knowledge(),
+            },
             pack,
             planned,
         }
@@ -147,7 +137,7 @@ impl CachedComprehensibleGrams {
 /// Borrowed membership view of written entries, including predicted knowledge.
 #[derive(Clone, Copy)]
 pub struct WrittenGrams<'a> {
-    cache: &'a ComprehensibleGrams<TaggedGram<SpurGram>>,
+    cache: ComprehensibleGrams<'a, TaggedGram<SpurGram>>,
     order: &'a EaseOrder<TaggedGram<SpurGram>>,
     planned: bool,
 }
@@ -178,7 +168,7 @@ impl WrittenGrams<'_> {
                 set(rank, true);
             }
         }
-        for (key, knowledge) in &self.cache.cards {
+        for (key, knowledge) in self.cache.cards {
             if let Some(rank) = self.order.rank(key) {
                 set(rank, knowledge.contains(self.planned));
             }
@@ -199,7 +189,7 @@ impl RankBitset {
 /// Listening knowledge is shared by all senses of a bare gram.
 #[derive(Clone, Copy)]
 pub(crate) struct ListeningGrams<'a> {
-    cache: &'a ComprehensibleGrams<SpurGram>,
+    cache: ComprehensibleGrams<'a, SpurGram>,
     pack: &'a LanguagePack,
     planned: bool,
 }
