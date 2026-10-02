@@ -392,7 +392,7 @@ async fn main() -> anyhow::Result<()> {
         let mut gram_sentences = generate_data::corpus_samples::SampleCache::<Gram<String>>::load(
             native_specific_dir.join("gram_sentences.jsonl"),
         )?;
-        let gram_phrasebook = generate_data::dict::create_gram_phrasebook(
+        let mut gram_phrasebook = generate_data::dict::create_gram_phrasebook(
             *course,
             &filtered_gram_frequencies,
             &corpus,
@@ -400,6 +400,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .await
         .context("Failed to create gram phrasebook")?;
+        generate_data::custom_phrasebook::apply(source_data_path, *course, &mut gram_phrasebook)?;
         gram_sentences.save()?;
         {
             let mut file = File::create(&gram_phrasebook_file)

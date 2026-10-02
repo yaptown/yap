@@ -163,6 +163,7 @@ pub use phoneme_verify as audio_verification;
 pub mod books;
 pub mod cache_remote;
 pub mod corpus_samples;
+pub mod custom_phrasebook;
 pub mod dialect;
 pub mod dict;
 pub mod disambiguation_practice;

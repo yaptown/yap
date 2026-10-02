@@ -98,7 +98,8 @@ pub async fn ensure_multiword_terms_file(
         | Language::Russian
         | Language::PortugueseBrazilian
         | Language::PortugueseEuropean => vec![],
-        Language::Italian => vec![],
+        // Surname misparsed as lo + fare, matching ordinary "lo ... fare" sentences.
+        Language::Italian => vec!["Lo Faso"],
         Language::Hindi => vec![],
         Language::Thai => vec![],
     };
@@ -553,7 +554,30 @@ async fn download_category(category_name: &str) -> anyhow::Result<Vec<String>> {
 
 #[cfg(test)]
 mod tests {
-    use super::has_mandarin_reading;
+    use super::{ensure_multiword_terms_file, has_mandarin_reading};
+    use language_utils::{Course, Language};
+
+    #[tokio::test]
+    async fn italian_surname_ban_preserves_real_verb_phrases() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("wiktionary_multiword_terms.txt"),
+            "Lo Faso\nlo fa\nlo faccio\n",
+        )
+        .unwrap();
+        let terms = ensure_multiword_terms_file(
+            &Course {
+                target_language: Language::Italian,
+                native_language: Language::English,
+            },
+            dir.path(),
+        )
+        .await
+        .unwrap();
+        assert!(!terms.iter().any(|term| term == "Lo Faso"));
+        assert!(terms.iter().any(|term| term == "lo fa"));
+        assert!(terms.iter().any(|term| term == "lo faccio"));
+    }
 
     #[test]
     fn wiktionary_mandarin_readings() {

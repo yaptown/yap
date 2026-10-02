@@ -388,6 +388,8 @@ pub async fn create_gram_phrasebook(
 
 Think about the word and its meaning based on how it's used in the example sentences, and what is likely to be relevant to a beginner learner. Your thoughts will not be shown to the user. Then, write the word, then provide the meaning as the closest {native_language} equivalent word or short phrase — just like a dictionary translation (e.g. "just did", "what" or "that which", "as soon as"). Skip any preamble like "the {target_language} term [term] is often used to indicate that...", or "a question phrase equivalent to..." and just give the {native_language} equivalent. {meanings_rule}
 
+Give the meaning the term has in most of the example sentences. Some terms are pieces of a longer phrase that only make sense around a word that isn't part of the term, like French "je te" (as in "je te vois", "I see you") or Italian "mi ha" (as in "mi ha chiamato", "he called me"). For these it's fine to mark the gap with "…" (e.g. "je te" → "I … you", "mi ha" → "he … me").
+
 Next, provide your own example of the term's usage in a natural sentence.
 
 If the term is informal/slang, you can also set the "informal" field to true. For example, the english phrase "kick the bucket" is informal. If the term makes sense from the component words, you can also set the "compositional" field to true. (E.g. "Être sur son 31" makes no sense from its individual words, nor does "Altes Haus" in german. But "C'est" does make sense from its individual words) More examples: "pass away" is non-compositional (it's a phrasal verb whose meaning isn't obvious from "pass" + "away") but not informal. And "it is what it is" is informal but compositional.
@@ -425,6 +427,8 @@ Output: {{
 }}
 
 Don't capitalize the first letter of the meaning unless it makes sense (e.g. english proper nouns, german nouns, etc). Do not add pronunciation, IPA, part of speech, gender, or conjugation info unless it's in the "additional_notes" field and truly necessary.
+
+The example sentences are only for you to decide what to write; the learner never sees them, so don't mention or quote them in the entry.
 
 Of course, their native language is {native_language}, so you should write the meaning and additional notes in {native_language}.{example_guidance}"#,
         native_language = native_language.prompt_name(),
