@@ -457,7 +457,7 @@ async fn main() -> anyhow::Result<()> {
             BTreeMap::new()
         };
 
-        let gram_phrasebook = generate_data::dict::create_gram_phrasebook(
+        let mut gram_phrasebook = generate_data::dict::create_gram_phrasebook(
             *course,
             &filtered_gram_frequencies,
             &encoded_sentences_with_grams,
@@ -465,6 +465,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .await
         .context("Failed to create gram phrasebook")?;
+        generate_data::custom_phrasebook::apply(source_data_path, *course, &mut gram_phrasebook)?;
 
         // Write updated gram sentences cache
         {
