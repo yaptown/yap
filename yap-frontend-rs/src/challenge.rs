@@ -59,6 +59,56 @@ impl CardContext {
     }
 }
 
+struct ListeningCandidate {
+    known: bool,
+    is_target: bool,
+    frequency: u64,
+    literals: Vec<Literal<String>>,
+    definitions: Vec<DefinitionView>,
+}
+
+fn group_listening_candidates(
+    candidates: impl IntoIterator<Item = ListeningCandidate>,
+) -> Vec<(bool, Vec<Literal<String>>, Vec<DefinitionView>)> {
+    let mut seen: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    let mut groups: Vec<ListeningCandidate> = Vec::new();
+    for candidate in candidates {
+        let key = literals_to_text(&candidate.literals)
+            .to_lowercase()
+            .replace(['’', '‘', 'ʼ', '＇'], "'");
+        if let Some(&index) = seen.get(&key) {
+            let group = &mut groups[index];
+            // Target spelling wins; otherwise use corpus frequency, not spur order.
+            if (candidate.is_target, candidate.frequency) > (group.is_target, group.frequency) {
+                group.literals = candidate.literals;
+                group.frequency = candidate.frequency;
+            }
+            group.known |= candidate.known;
+            group.is_target |= candidate.is_target;
+            group.definitions.extend(candidate.definitions);
+        } else {
+            seen.insert(key, groups.len());
+            groups.push(candidate);
+        }
+    }
+    groups
+        .into_iter()
+        .filter(|group| group.known || group.is_target)
+        .map(|mut group| {
+            let mut meanings = std::collections::HashSet::new();
+            for definition in &mut group.definitions {
+                definition
+                    .senses
+                    .retain(|sense| meanings.insert(sense.meaning.clone()));
+            }
+            group
+                .definitions
+                .retain(|definition| !definition.senses.is_empty());
+            (group.known, group.literals, group.definitions)
+        })
+        .collect()
+}
+
 impl ReviewInfo {
     pub fn listening_gram_flashcard(&self, deck: &Deck, gram: SpurGram) -> FlashCard {
         let language_pack: &Arc<LanguagePack> = &deck.context.language_pack;
@@ -73,110 +123,50 @@ impl ReviewInfo {
             _ => None,
         };
 
-        let possible_grams: Vec<(bool, Vec<Literal<String>>, Vec<DefinitionView>)> =
-            if let Some(heteronym) = single_heteronym {
-                let pronunciation = language_pack
-                    .word_to_pronunciation
-                    .get(&heteronym.word)
-                    .copied();
+        let pronunciation = single_heteronym
+            .and_then(|heteronym| language_pack.word_to_pronunciation.get(&heteronym.word));
+        let candidate_grams = pronunciation
+            .into_iter()
+            .flat_map(|pronunciation| language_pack.pronunciation_to_words.get(pronunciation))
+            .flatten()
+            .flat_map(|word| language_pack.words_to_heteronyms.get(word))
+            .flatten()
+            .flat_map(|heteronym| language_pack.heteronym_to_grams.get(heteronym))
+            .flatten()
+            .copied()
+            // Include the target even if the pronunciation index has no candidates.
+            .chain(std::iter::once(gram))
+            .collect::<std::collections::BTreeSet<_>>();
 
-                if let Some(pronunciation) = pronunciation {
-                    let homophone_words = language_pack
-                        .pronunciation_to_words
-                        .get(&pronunciation)
-                        .cloned()
-                        .unwrap_or_default();
-
-                    homophone_words
-                        .iter()
-                        .flat_map(|word| {
-                            language_pack
-                                .words_to_heteronyms
-                                .get(word)
-                                .into_iter()
-                                .flatten()
-                        })
-                        .flat_map(|het| {
-                            language_pack
-                                .heteronym_to_grams
-                                .get(het)
-                                .into_iter()
-                                .flatten()
-                                .copied()
-                        })
-                        .flat_map(|gram| language_pack.senses_of(gram).iter().copied())
-                        .collect::<std::collections::BTreeSet<_>>()
-                        .into_iter()
-                        .map(|other_gram| {
-                            let gram_known = deck
-                                .cards
-                                .get(&CardIndicator::WrittenGram { gram: other_gram })
-                                .is_some_and(|card_data| !card_data.is_new());
-
-                            let gram_resolved = language_pack
-                                .gram_rodeo
-                                .resolve(&other_gram.gram)
-                                .resolve(&language_pack.string_rodeo);
-                            let literals = atoms_to_literals(
-                                gram_resolved.as_ref(),
-                                deck.context.course.target_language,
-                            );
-
-                            let definitions = language_pack
-                                .gram_definitions
-                                .get(&other_gram)
-                                .cloned()
-                                .into_iter()
-                                .map(definition_view)
-                                .collect();
-
-                            (gram_known, literals, definitions)
-                        })
-                        .collect()
-                } else {
-                    let gram_resolved = gram_atoms.resolve(&language_pack.string_rodeo);
-                    let literals = atoms_to_literals(
-                        gram_resolved.as_ref(),
-                        deck.context.course.target_language,
-                    );
-                    let definitions = language_pack
-                        .senses_of(gram)
-                        .iter()
-                        .filter_map(|entry| language_pack.gram_definitions.get(entry).cloned())
-                        .map(definition_view)
-                        .collect();
-                    vec![(true, literals, definitions)]
-                }
-            } else {
-                let gram_resolved = gram_atoms.resolve(&language_pack.string_rodeo);
-                let literals =
-                    atoms_to_literals(gram_resolved.as_ref(), deck.context.course.target_language);
-                let definitions = language_pack
-                    .senses_of(gram)
+        let candidates = candidate_grams.into_iter().map(|candidate_gram| {
+            let senses = language_pack.senses_of(candidate_gram);
+            let known = pronunciation.is_none()
+                || senses.iter().any(|sense| {
+                    deck.cards
+                        .get(&CardIndicator::WrittenGram { gram: *sense })
+                        .is_some_and(|card| !card.is_new())
+                });
+            let resolved = language_pack
+                .gram_rodeo
+                .resolve(&candidate_gram)
+                .resolve(&language_pack.string_rodeo);
+            ListeningCandidate {
+                known,
+                is_target: candidate_gram == gram,
+                frequency: senses
                     .iter()
-                    .filter_map(|entry| language_pack.gram_definitions.get(entry).cloned())
+                    .filter_map(|sense| language_pack.gram_frequencies.entries.get(sense))
+                    .map(|frequency| u64::from(frequency.count))
+                    .sum(),
+                literals: atoms_to_literals(resolved.as_ref(), deck.context.course.target_language),
+                definitions: senses
+                    .iter()
+                    .filter_map(|sense| language_pack.gram_definitions.get(sense).cloned())
                     .map(definition_view)
-                    .collect();
-                vec![(true, literals, definitions)]
-            };
-
-        // Deduplicate by display text, preserving order, keeping known=true if any duplicate is known
-        let possible_grams = {
-            let mut seen: std::collections::HashMap<String, usize> =
-                std::collections::HashMap::new();
-            let mut deduped: Vec<(bool, Vec<Literal<String>>, Vec<DefinitionView>)> = Vec::new();
-            for (known, literals, definitions) in possible_grams {
-                let display = literals_to_text(&literals);
-                if let Some(&idx) = seen.get(&display) {
-                    deduped[idx].0 |= known;
-                    deduped[idx].2.extend(definitions);
-                } else {
-                    seen.insert(display, deduped.len());
-                    deduped.push((known, literals, definitions));
-                }
+                    .collect(),
             }
-            deduped
-        };
+        });
+        let possible_grams = group_listening_candidates(candidates);
 
         let content = CardContent::Listening { possible_grams };
 
@@ -800,5 +790,95 @@ mod cue_tests {
             assert_eq!(cue.len(), segments.len());
             assert!(cue.iter().all(|s| s.start_ms.is_none()));
         }
+    }
+}
+
+#[cfg(test)]
+mod listening_candidate_tests {
+    use super::*;
+    use language_utils::{OtherWord, OtherWordType, Whitespace, Word};
+    use yap_frontend_reducers::DefinitionSense;
+
+    fn candidate(
+        text: &str,
+        known: bool,
+        target: bool,
+        frequency: u64,
+        meanings: &[&str],
+    ) -> ListeningCandidate {
+        ListeningCandidate {
+            known,
+            is_target: target,
+            frequency,
+            literals: vec![Literal {
+                word: Word {
+                    text: text.into(),
+                    word_type: WordType::Other(OtherWord {
+                        other_tag: OtherWordType::X,
+                    }),
+                },
+                whitespace: Whitespace::None,
+            }],
+            definitions: vec![DefinitionView {
+                headword: text.into(),
+                is_phrase: false,
+                morphology_label: String::new(),
+                senses: meanings
+                    .iter()
+                    .map(|meaning| DefinitionSense {
+                        meaning: (*meaning).into(),
+                        note: None,
+                        example: None,
+                    })
+                    .collect(),
+            }],
+        }
+    }
+
+    #[test]
+    fn merges_before_filtering_and_prefers_target_then_frequency() {
+        let groups = group_listening_candidates([
+            candidate("Je", false, true, 1, &["I"]),
+            candidate("je", true, false, 100, &["I"]),
+            candidate("J’", true, false, 2, &["I"]),
+            candidate("jʼ", false, false, 10, &["I"]),
+            candidate("j'", false, false, 5, &["I"]),
+            candidate("île", false, false, 100, &["island"]),
+            candidate("îles", false, false, 100, &["islands"]),
+        ]);
+        assert_eq!(groups.len(), 2);
+        assert!(groups.iter().all(|group| group.0));
+        assert_eq!(literals_to_text(&groups[0].1), "Je");
+        assert_eq!(literals_to_text(&groups[1].1), "jʼ");
+        assert!(groups.iter().all(|group| group.2.len() == 1));
+    }
+
+    #[test]
+    fn dedupes_meanings_within_and_across_definitions_preserving_order() {
+        let groups = group_listening_candidates([
+            candidate("एक", true, true, 1, &["one", "a", "an", "one"]),
+            candidate("एक", false, true, 1, &["one", "someone", "a"]),
+            candidate("एक", false, true, 1, &["one"]),
+        ]);
+        let definitions = &groups[0].2;
+        assert_eq!(definitions.len(), 2);
+        assert_eq!(
+            definitions
+                .iter()
+                .flat_map(|d| d.senses.iter().map(|s| s.meaning.as_str()))
+                .collect::<Vec<_>>(),
+            ["one", "a", "an", "someone"]
+        );
+    }
+
+    #[test]
+    fn keeps_unknown_target_but_not_unknown_homophones() {
+        let groups = group_listening_candidates([
+            candidate("il", false, true, 1, &["he"]),
+            candidate("île", false, false, 10, &["island"]),
+        ]);
+        assert_eq!(groups.len(), 1);
+        assert!(!groups[0].0);
+        assert_eq!(literals_to_text(&groups[0].1), "il");
     }
 }
