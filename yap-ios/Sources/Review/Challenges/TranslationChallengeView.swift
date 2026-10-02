@@ -48,7 +48,7 @@ struct TranslationChallengeView: View {
                 if editing { ProperNounGroupsView(groups: view.proper_nouns).equatable() }
                 if let verdict = view.verdict {
                     SentenceVerdictView(headline: verdict.headline, correctLabel: view.correct_label, correct: verdict.correct_translation,
-                        feedbackLabel: verdict.feedback_label, encouragement: verdict.encouragement,
+                        encouragement: verdict.encouragement,
                         explanation: verdict.explanation, error: verdict.autograding_error).equatable()
                     if let section = view.grade_section {
                         GradeSectionDisclosure(title: section.title, isExpanded: $gradesExpanded) {

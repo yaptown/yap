@@ -61,7 +61,7 @@ struct TranscriptionChallengeView: View {
                     // The typed answer is already inline in the sentence above, so
                     // only the grading list repeats it.
                     SentenceVerdictView(headline: verdict.headline, correctLabel: view.correct_label, correct: sentence.target_language,
-                        feedbackLabel: verdict.feedback_label, encouragement: verdict.encouragement,
+                        encouragement: verdict.encouragement,
                         explanation: verdict.explanation, error: verdict.autograding_error).equatable()
                     if !verdict.compare.isEmpty { compareRow(verdict) }
                     Button { send(.TranslationToggled) } label: {

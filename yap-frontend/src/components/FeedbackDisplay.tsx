@@ -8,7 +8,6 @@ interface FeedbackDisplayProps {
   encouragement?: string;
   explanation?: string;
   tone: VerdictTone;
-  label?: string;
   targetLanguage: Language;
 }
 
@@ -16,7 +15,6 @@ export function FeedbackDisplay({
   encouragement,
   explanation,
   tone,
-  label = "Feedback",
   targetLanguage,
 }: FeedbackDisplayProps) {
   // Custom tags emitted by the autograder LLM. Keys are lowercased because the
@@ -40,25 +38,21 @@ export function FeedbackDisplay({
     return null;
   }
 
+  // The encouragement heads the feedback in the verdict's tint.
   return (
-    <div className="space-y-1.5 animate-fade-in">
-      <p
-        className={`text-xs font-semibold uppercase tracking-[0.12em] ${toneText[tone]}`}
-      >
-        {label}
-      </p>
-      <div className="space-y-3 text-lg leading-relaxed">
-        {encouragement && (
+    <div className="space-y-3 text-lg leading-relaxed animate-fade-in">
+      {encouragement && (
+        <div className={`font-semibold ${toneText[tone]}`}>
           <Markdown rehypePlugins={[rehypeRaw]} components={components}>
             {encouragement}
           </Markdown>
-        )}
-        {explanation && (
-          <Markdown rehypePlugins={[rehypeRaw]} components={components}>
-            {explanation}
-          </Markdown>
-        )}
-      </div>
+        </div>
+      )}
+      {explanation && (
+        <Markdown rehypePlugins={[rehypeRaw]} components={components}>
+          {explanation}
+        </Markdown>
+      )}
     </div>
   );
 }

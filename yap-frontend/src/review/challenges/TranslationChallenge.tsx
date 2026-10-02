@@ -402,7 +402,6 @@ export const TranslationChallenge = memo(function TranslationChallenge({
         explanation: view.verdict.explanation ?? null,
         autogradingError: view.verdict.autograding_error ?? null,
         headline: view.verdict.headline,
-        feedbackLabel: view.verdict.feedback_label,
         correctLabel: view.correct_label,
       }
     : null;
@@ -584,7 +583,7 @@ export const TranslationChallenge = memo(function TranslationChallenge({
                 autoplayed={autoplayed}
                 setAutoplayed={setAutoplayed}
                 variant="default"
-                className="h-14 w-14 shrink-0 rounded-full shadow-lg shadow-primary/30"
+                className="h-14 w-14 shrink-0 rounded-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 [&_svg]:fill-current"
               />
             </div>
 

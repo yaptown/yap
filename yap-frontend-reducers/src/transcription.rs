@@ -273,7 +273,6 @@ pub struct VerdictView {
     pub headline: VerdictHeadline,
     pub perfect: bool,
     pub submission_text: String,
-    pub feedback_label: String,
     pub submission_label: String,
     pub continue_label: String,
     pub encouragement: Option<String>,
@@ -574,7 +573,6 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
                 .map(|b| b.text.as_str())
                 .collect::<Vec<_>>()
                 .join(" "),
-            feedback_label: "Feedback".into(),
             submission_label: "Your answer:".into(),
             continue_label: "Continue".into(),
             encouragement: grade.encouragement.clone(),

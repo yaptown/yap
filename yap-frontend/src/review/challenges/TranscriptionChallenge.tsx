@@ -526,7 +526,6 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
                       {challenge.target_language}
                     </TargetLanguageText>
                   }
-                  feedbackLabel={verdict?.feedback_label}
                   encouragement={verdict?.encouragement}
                   explanation={verdict?.explanation}
                   autogradingError={verdict?.autograding_error}

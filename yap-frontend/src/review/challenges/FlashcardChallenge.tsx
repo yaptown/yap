@@ -77,7 +77,7 @@ const CardFront = ({
       if (!definition.is_phrase) {
         const wordPrefix = content.prefix;
         return (
-          <h2 className="text-3xl font-semibold">
+          <h2 className="text-4xl font-bold">
             <TargetLanguageText language={targetLanguage}>
               {wordPrefix && (
                 <span className="text-muted-foreground/60">
@@ -91,7 +91,7 @@ const CardFront = ({
         );
       } else {
         return (
-          <h2 className="text-3xl font-semibold">
+          <h2 className="text-4xl font-bold">
             <TargetLanguageText language={targetLanguage}>
               {text}
             </TargetLanguageText>
@@ -477,7 +477,7 @@ export const FlashcardChallenge = function FlashcardChallenge({
           style={{ x, rotate }}
         >
           <Card
-            className={`pt-3 pb-3 pl-3 pr-3 cursor-pointer transition-all hover:shadow-lg overflow-hidden flashcard h-full gap-0 ${
+            className={`p-5 cursor-pointer transition-all hover:shadow-lg overflow-hidden flashcard h-full gap-0 ${
               !showAnswer ? "spin-on-hover" : ""
             }`}
             onClick={() => {
@@ -552,7 +552,7 @@ export const FlashcardChallenge = function FlashcardChallenge({
                           onError={() => setAudioError(true)}
                           onSuccess={() => setAudioError(false)}
                           variant="default"
-                          className="h-14 w-14 shrink-0 rounded-full shadow-lg shadow-primary/30"
+                          className="h-14 w-14 shrink-0 rounded-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 [&_svg]:fill-current"
                         />
                       )}
                     </>
@@ -579,7 +579,13 @@ export const FlashcardChallenge = function FlashcardChallenge({
                   />
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2">
+                <div
+                  className={`flex gap-2 ${
+                    content.type === "Listening"
+                      ? "flex-col items-center"
+                      : "items-center"
+                  }`}
+                >
                   <div
                     className={` ${
                       view.require_answer_reveal ? "font-bold" : "text-muted-foreground"

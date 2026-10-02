@@ -9,7 +9,6 @@ struct SentenceVerdictView: View, Equatable {
     let headline: VerdictHeadline?
     let correctLabel: String
     let correct: String
-    var feedbackLabel = ""
     var encouragement: String?
     var explanation: String?
     var error: String?
@@ -27,7 +26,7 @@ struct SentenceVerdictView: View, Equatable {
                     Text("Your submission could not be graded automatically. Please grade the words manually below.")
                         .font(.footnote).foregroundStyle(Color.yapCautionForeground)
                 }
-                FeedbackSection(label: feedbackLabel, tone: headline.tone, encouragement: encouragement, explanation: explanation)
+                FeedbackSection(tone: headline.tone, encouragement: encouragement, explanation: explanation)
             } else {
                 SkeletonBars(widths: [0.35, 0.9, 0.65])
             }
@@ -76,18 +75,19 @@ struct VerdictHeadlineView: View {
     }
 }
 
-/// The autograder's encouragement and explanation as plain paragraphs.
+/// The autograder's notes: the encouragement leads in the verdict's tint,
+/// then the explanation.
 struct FeedbackSection: View, Equatable {
-    let label: String
     let tone: VerdictTone
     let encouragement: String?
     let explanation: String?
     var body: some View {
-        let paragraphs = [encouragement, explanation].compactMap { $0 }.filter { !$0.isEmpty }
-        if !paragraphs.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                SectionLabel(text: label, color: tone.foreground)
-                VStack(alignment: .leading, spacing: 10) { ForEach(paragraphs, id: \.self) { Text(markdown($0)) } }
+        if encouragement?.isEmpty == false || explanation?.isEmpty == false {
+            VStack(alignment: .leading, spacing: 10) {
+                if let encouragement, !encouragement.isEmpty {
+                    Text(markdown(encouragement)).fontWeight(.semibold).foregroundStyle(tone.foreground)
+                }
+                if let explanation, !explanation.isEmpty { Text(markdown(explanation)) }
             }.frame(maxWidth: .infinity, alignment: .leading).fadeIn(duration: 0.25)
         }
     }

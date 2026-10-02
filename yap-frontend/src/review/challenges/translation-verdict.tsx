@@ -26,7 +26,6 @@ export interface TranslationVerdictData {
   autogradingError: string | null;
   /** Absent in the widget, whose server result carries no headline. */
   headline?: VerdictHeadlineData;
-  feedbackLabel?: string;
   correctLabel?: string;
 }
 
@@ -205,7 +204,6 @@ export function SentenceVerdict({
   headline,
   correctLabel,
   correct,
-  feedbackLabel,
   encouragement,
   explanation,
   autogradingError,
@@ -216,7 +214,6 @@ export function SentenceVerdict({
   headline?: VerdictHeadlineData;
   correctLabel: string;
   correct: ReactNode;
-  feedbackLabel?: string;
   encouragement?: string | null;
   explanation?: string | null;
   autogradingError?: string | null;
@@ -254,7 +251,6 @@ export function SentenceVerdict({
           <FeedbackDisplay
             encouragement={encouragement ?? undefined}
             explanation={explanation ?? undefined}
-            label={feedbackLabel}
             tone={tone}
             targetLanguage={targetLanguage}
           />
@@ -278,7 +274,6 @@ export function TranslationVerdict({
       headline={verdict.headline}
       correctLabel={verdict.correctLabel ?? "Correct translation"}
       correct={verdict.correctTranslation}
-      feedbackLabel={verdict.feedbackLabel}
       encouragement={verdict.encouragement}
       explanation={verdict.explanation}
       autogradingError={verdict.autogradingError}
