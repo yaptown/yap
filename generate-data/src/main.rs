@@ -723,10 +723,29 @@ async fn main() -> anyhow::Result<()> {
             language_utils::Heteronym<String>,
             language_utils::DictionaryEntry,
         > = {
-            let raw_dictionary =
-                generate_data::dict::create_gram_dictionary(*course, &filtered_gram_frequencies)
-                    .await
-                    .context("Failed to create gram dictionary")?;
+            let heteronym_sentences_file = native_specific_dir.join("heteronym_sentences.jsonl");
+            let mut heteronym_sentences: BTreeMap<language_utils::Heteronym<String>, Vec<String>> =
+                if heteronym_sentences_file.exists() {
+                    BufReader::new(File::open(&heteronym_sentences_file)?)
+                        .lines()
+                        .map(|line| Ok(serde_json::from_str(&line?)?))
+                        .collect::<anyhow::Result<_>>()?
+                } else {
+                    BTreeMap::new()
+                };
+            let raw_dictionary = generate_data::dict::create_gram_dictionary(
+                *course,
+                &filtered_gram_frequencies,
+                &encoded_sentences_with_grams,
+                &mut heteronym_sentences,
+            )
+            .await
+            .context("Failed to create gram dictionary")?;
+            let mut file = BufWriter::new(File::create(&heteronym_sentences_file)?);
+            for entry in &heteronym_sentences {
+                writeln!(file, "{}", serde_json::to_string(&entry)?)?;
+            }
+            file.flush()?;
             // Reuse the morphology we computed earlier (before etymology).
             raw_dictionary
                 .into_iter()

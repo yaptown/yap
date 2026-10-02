@@ -16,68 +16,83 @@ static CHAT_CLIENT_LUNA: LazyLock<ChatClient> =
 static CHAT_CLIENT_TERRA: LazyLock<ChatClient> =
     LazyLock::new(|| crate::migrating_chat_client("gpt-5.6-terra"));
 
-/// How a course's dictionary, phrasebook and sense prompts read. Most courses keep
-/// the historical wording byte for byte, because the prompt is the tysm cache key.
-/// Revised courses name their variety, may gloss grammatical markers with a
-/// functional label, and always use Terra.
+/// How a course's dictionary-family prompts read and which model answers them.
+/// Every course shares one dictionary prompt, naming its variety. The phrasebook and
+/// sense prompts keep their historical wording byte for byte for most courses,
+/// because the prompt is the tysm cache key; revised courses get the newer wording.
 #[derive(Clone, Copy)]
 struct DictionaryPolicy {
     name: &'static str,
-    /// `Some(variety guidance)` for revised courses.
-    revision: Option<&'static str>,
+    /// Guidance on the course's variety, appended to its prompts.
+    variety: &'static str,
+    /// Whether the phrasebook and sense prompts use the revised wording.
+    revised: bool,
+    /// Send every request to Terra rather than only frequent words. For a small
+    /// corpus the frequency cutoff otherwise leaves even the first cards on Luna.
+    always_terra: bool,
 }
 
 impl DictionaryPolicy {
     fn for_language(language: language_utils::Language) -> Self {
         use language_utils::Language;
-        let (name, revision) = match language {
-            Language::Hindi => (language.prompt_name(), Some("")),
-            Language::PortugueseEuropean => (
-                "European Portuguese (Portugal)",
-                Some(
-                    " Write examples as people in Portugal speak, e.g. tu and vocês for address and words like cão and autocarro where they fit; words shared with Brazil are welcome too.",
-                ),
-            ),
-            Language::SpanishPeninsular => (
-                "Spanish as spoken in Spain",
-                Some(
-                    " Write examples as people in Spain speak, e.g. vosotros and words like coche and ordenador where they fit; words shared with Latin America are welcome too.",
-                ),
-            ),
-            _ => (language.prompt_name(), None),
+        let historical = Self {
+            name: language.prompt_name(),
+            variety: "",
+            revised: false,
+            always_terra: false,
         };
-        Self { name, revision }
+        match language {
+            Language::Hindi => Self {
+                revised: true,
+                always_terra: true,
+                ..historical
+            },
+            Language::PortugueseEuropean => Self {
+                name: "European Portuguese (Portugal)",
+                variety: " Write examples as people in Portugal speak, e.g. tu and vocês for address and words like cão and autocarro where they fit; words shared with Brazil are welcome too.",
+                revised: true,
+                ..historical
+            },
+            Language::SpanishPeninsular => Self {
+                name: "Spanish as spoken in Spain",
+                variety: " Write examples as people in Spain speak, e.g. vosotros and words like coche and ordenador where they fit; words shared with Latin America are welcome too.",
+                revised: true,
+                ..historical
+            },
+            _ => historical,
+        }
     }
 
-    fn revised(&self) -> bool {
-        self.revision.is_some()
+    fn uses_terra(&self, frequency: u32, threshold: u32) -> bool {
+        self.always_terra || frequency > threshold
     }
 
-    /// The dictionary prompt's sentence on what the "native" field holds.
-    fn native_rule(&self) -> &'static str {
-        if self.revised() {
-            r#"The "native" field should have the closest word (or short phrase) to the target language word. For a grammatical marker whose closest word would teach the wrong construction (Hindi ने is not "by"), give a short functional label instead, e.g. "(marks the subject of a past-tense transitive verb)"."#
+    fn client(&self, frequency: u32, threshold: u32) -> &'static ChatClient {
+        if self.uses_terra(frequency, threshold) {
+            &CHAT_CLIENT_TERRA
         } else {
-            r#"The "native" field should just have the closest word (or short phrase) to the target language word."#
+            &CHAT_CLIENT_LUNA
         }
     }
 
     /// The phrasebook prompt's sentences on what the "meanings" field holds.
     fn meanings_rule(&self) -> &'static str {
-        if self.revised() {
+        if self.revised {
             r#"Put grammatical notes and other context in the "additional_notes" field and keep "meanings" to the raw translation, except for a grammatical marker whose closest word would teach the wrong construction: give a short functional label for it instead, e.g. "(marks the subject of a past-tense transitive verb)"."#
         } else {
             r#"And don't include any parentheticals or other notes in the "meanings" field. Any grammatical notes, parentheticals, or other notes belong in the "additional_notes" field, not the "meanings". You can always provide additional context about things like context and gender and other notes about how the term is used in the "additional_notes" field. But what belongs in the "meanings" field is just the raw textual translation / meaning."#
         }
     }
 
-    /// Appended to every revised prompt; empty for historical ones.
+    /// Appended to revised phrasebook and sense prompts; empty for historical ones.
     fn example_guidance(&self) -> String {
-        match self.revision {
-            Some(variety) => format!(
-                "\n\nExample sentences are a beginner's first model of the word, so make them grammatical, everyday and neutral in tone. Use the word naturally, in an inflected or contracted form where grammar calls for it, rather than forcing the exact spelling into an ungrammatical sentence.{variety}"
-            ),
-            None => String::new(),
+        if self.revised {
+            format!(
+                "\n\nExample sentences are a beginner's first model of the word, so make them grammatical, everyday and neutral in tone. Use the word naturally, in an inflected or contracted form where grammar calls for it, rather than forcing the exact spelling into an ungrammatical sentence.{}",
+                self.variety
+            )
+        } else {
+            String::new()
         }
     }
 }
@@ -108,9 +123,9 @@ fn normalize_phrase(entry: &mut PhrasebookDefinitionEntry, native: language_util
 async fn generate_dictionary_group(
     client: &ChatClient,
     entries: &[(Heteronym<String>, u32)],
+    samples: &BTreeMap<Heteronym<String>, Vec<String>>,
     system_prompt: &str,
-    native_language: language_utils::Language,
-    target_language: language_utils::Language,
+    policy: DictionaryPolicy,
     progress: &ProgressBar,
     progress_offset: u64,
 ) -> anyhow::Result<Vec<(Heteronym<String>, DictionaryDefinition)>> {
@@ -119,8 +134,14 @@ async fn generate_dictionary_group(
             system_prompt,
             entries,
             |(heteronym, _)| {
+                let sentences = samples[heteronym]
+                    .iter()
+                    .enumerate()
+                    .map(|(i, sentence)| format!("{}. {sentence}", i + 1))
+                    .collect::<Vec<_>>()
+                    .join("\n");
                 format!(
-                    "word: `{word}`\nlemma: `{lemma}`,\npos: {pos}",
+                    "word: `{word}`\nlemma: `{lemma}`\npos: {pos}\nsentences from the corpus:\n{sentences}",
                     word = heteronym.word,
                     lemma = heteronym.lemma,
                     pos = heteronym.pos
@@ -145,7 +166,7 @@ async fn generate_dictionary_group(
             })
             .map(|definition| definition.example_sentence_target_language.clone())
             .collect::<Vec<_>>();
-        if DictionaryPolicy::for_language(target_language).revised() || bad_examples.is_empty() {
+        if bad_examples.is_empty() {
             accepted.push((heteronym.clone(), response));
         } else {
             retries.push((heteronym.clone(), response, bad_examples));
@@ -156,11 +177,10 @@ async fn generate_dictionary_group(
         .batch_chat_with_messages_fn::<_, DictionaryDefinition>(&retries, |(heteronym, response, bad)| {
             let previous_json = serde_json::to_string(response).unwrap_or_default();
             vec![
-                ChatMessage::system(format!(
-                    "You are a {target_language} dictionary entry generator for {native_language} speakers.", native_language = native_language.prompt_name(), target_language = target_language.prompt_name()
-                )),
+                ChatMessage::system(system_prompt),
                 ChatMessage::user(format!(
-                    "I asked you to generate a dictionary entry for the {target_language} word `{word}`, and you gave me this response:\n\n{previous_json}\n\nHowever, some of the example sentences don't contain the exact word `{word}`. The following sentences are missing it: {bad}\n\nPlease regenerate the entire response with the same format, making sure every example_sentence_target_language contains the exact word `{word}`.", target_language = target_language.prompt_name(),
+                    "You wrote this dictionary entry for the {target_language} word `{word}`:\n\n{previous_json}\n\nThese example sentences don't contain the exact form `{word}`: {bad}\n\nPlease write the entry again in the same format, with every example_sentence_target_language using the exact form `{word}`.",
+                    target_language = policy.name,
                     word = heteronym.word,
                     bad = bad.join("; "),
                 )),
@@ -177,15 +197,45 @@ async fn generate_dictionary_group(
     Ok(accepted)
 }
 
+/// `heteronym_sentences` is a persistent cache of heteronym -> corpus sentences,
+/// revalidated against the current course corpus, so a word's prompt (and so its
+/// cached entry) only changes when one of its sentences leaves the corpus.
 pub async fn create_gram_dictionary(
     course: Course,
     gram_frequencies: &[GramFrequencyEntry<String>],
+    encoded_sentences: &[(
+        String,
+        SentenceGrams<language_utils::TaggedGram<Gram<String>>>,
+    )],
+    heteronym_sentences: &mut BTreeMap<Heteronym<String>, Vec<String>>,
 ) -> anyhow::Result<BTreeMap<Heteronym<String>, DictionaryDefinition>> {
     let target_language_heteronyms = extract_single_atom_heteronyms(gram_frequencies);
     let Course {
         native_language,
         target_language,
     } = course;
+
+    // Every single-atom gram of a heteronym (each sense, each capitalization)
+    // witnesses it, so the pool covers all the ways the word is used.
+    let gram_to_sentences = build_gram_to_sentences_index(encoded_sentences);
+    let mut pools: BTreeMap<&Heteronym<String>, Vec<&str>> = BTreeMap::new();
+    for entry in gram_frequencies {
+        if let [Atom::Tok(word)] = entry.gram.gram.0.as_slice()
+            && let WordType::Heteronym(heteronym) = &word.word_type
+            && let Some(sentences) = gram_to_sentences.get(&entry.gram.gram)
+        {
+            pools.entry(heteronym).or_default().extend(sentences);
+        }
+    }
+    for heteronym in target_language_heteronyms.keys() {
+        let mut pool = pools.remove(heteronym).unwrap_or_default();
+        pool.sort_unstable();
+        pool.dedup();
+        revalidate_samples(
+            heteronym_sentences.entry(heteronym.clone()).or_default(),
+            &pool,
+        );
+    }
 
     let count = target_language_heteronyms.len();
 
@@ -198,51 +248,39 @@ pub async fn create_gram_dictionary(
     );
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    // These three historical trailing spaces are part of the tysm cache key.
-    // Spell them as a format substitution so rustfmt cannot strip them.
-    let historical_space = " ";
     let policy = DictionaryPolicy::for_language(target_language);
     let system_prompt = format!(
-        r#"The input is a {target_language} word, along with its morphological information. Generate a dictionary entry for it, to be used in an app for beginner {target_language} learners (whose native language is {native_language}). First, the JSON schema gives an opportunity to write {target_language} word, then provide a list of one or more {native_language} translations/definitions. Each definition will be a JSON object with the following fields:
+        r#"The input is a {target_language} word with its lemma, its part of speech, and up to five sentences from the course's corpus that use it (mostly film and TV subtitles). Write a dictionary entry for it, for an app that teaches beginner {target_language} learners whose native language is {native_language}. The schema first asks you to write the {target_language} word, then a list of one or more {native_language} definitions, each a JSON object with these fields:
 
-- "native" (string): The {native_language} translation(s) of the word. If a word has multiple very similar meanings (e.g. "this" and "that"), include them in the same string separated by commas. (If it's a verb, you don't have to include the infinitive form or information about conjugation - that will be displayed separately in the app.) {native_rule} Don't capitalize the first letter unless it makes sense (e.g. english proper nouns, german nouns, etc).
-- "note" (string, optional): Use only for extra info about usage that is *not already implied* by the other fields. (For example, you can note that "tu" is informal.) The "note" is a perfect place for this, so there's no need to include it in the "native" field.{historical_space}
-- "example_sentence_target_language" (string): A natural example sentence using the word in {target_language}. (Be sure that the word's usage in the example sentence has the same morphology as is provided.)
-- "example_sentence_native_language" (string): A natural {native_language} translation of the example sentence.
-- "cognate": (bool) whether the {target_language} word is a cognate in {native_language}. For our purposes, a word is a cognate to a definition if it looks similar to the {native_language} word. So "avocat" is a cognate for "avocado", but not "lawyer".
-- "false_cognate": (bool) whether the {target_language} word is a false cognate / false friend in {native_language}. For our purposes, a word is a false cognate to a definition if it looks similar to a different {native_language} word and might be easily confused, a classic example being the french word "actuellement" not corresponding to the english word "actually".
+- "native" (string): the closest {native_language} word or short phrase, as a bilingual dictionary gives it. Put very similar meanings in one string, separated by commas (e.g. "this, that"). For a verb, translate this form only; the app shows conjugation separately. Capitalize only where {native_language} spelling requires it (e.g. English "I", proper nouns, German nouns). For a grammatical particle or marker whose closest {native_language} word would teach the wrong construction (Hindi ने is not "by"), give a short functional label instead, e.g. "(marks the subject of a past-tense transitive verb)".
+- "note" (string, optional): usage the learner needs that the other fields don't already convey, such as register (that tu is informal, or that a word is rude, archaic, or colloquial) or that a spelling is nonstandard. Leave it out otherwise.
+- "example_sentence_target_language" (string): a short, natural sentence of your own that uses this exact form of the word in this meaning. It's the learner's first model of the word, so make it grammatical, everyday, and neutral in tone.
+- "example_sentence_native_language" (string): a natural {native_language} translation of that sentence.
+- "cognate" (bool): whether the word looks like a {native_language} word with this meaning. "avocat" is a cognate for "avocado", but not for "lawyer".
+- "false_cognate" (bool): whether the word looks like a different {native_language} word and could easily be confused with it, like French "actuellement", which does not mean "actually".
 
-You may return multiple definitions **only if the word has truly different meanings**. For example:
-- ✅ in French, `avocat` can mean "lawyer" or "avocado" — include both definitions.
-- ✅ in French, `fait` can mean "fact" (noun) or "done" (past participle of a verb) — include only the definition that makes sense given the morphological information provided.
+Use the corpus sentences to decide which meanings to give and in what order. The learner will meet the word in sentences like these, so first give the meaning most of them use, then any other meaning a beginner will run into regularly. For example, Korean 씨 in film dialogue is almost always the polite suffix after a name ("Mr./Ms."), so that comes before "seed". The sentences are a small sample, so weigh them together with what you know of everyday usage, and leave out rare or obscure meanings, which only confuse beginners.
 
-However:
-- ❌ Do NOT include rare or obscure meanings that are likely to confuse beginners.
-- ❌ Do NOT include secondary meanings when one is overwhelmingly more common.
+Give several definitions only when the word has truly different meanings, like French "avocat" ("lawyer" and "avocado"). When the part of speech settles which meaning applies, give only that one: French "fait" as a past participle is "done", not "fact". Define exactly the given form, not related forms or other spellings.
 
-Each definition must correspond to exactly the word that is given. Do not define related forms or alternate spellings. If the word is ambiguous between forms (e.g. "avocat"), return all common meanings, but **do not speculate**.
+The word may be inflected. Translate the form itself, without adding a subject: Italian "è" is "is", not "he is", because the app shows the form in context. Likewise, French "est" given as an auxiliary is "has", and its example sentence should use it as an auxiliary.
 
-Just like how the definition needs to respect the provided morphology, the example sentences should as well. For example, if the french word "est" were provided as an auxiliary, a good translation into english might be "has" and the example sentence should use "est" as an auxiliary (such that the english translation contains "has").{historical_space}
+Leave pronunciation, IPA, part of speech, gender, and conjugation out of the entry, unless a note truly needs them.
 
-One last thing. The input may be conjugated. For example, it may be the italian word "è". Using an english translation for the sake of example, it should simply be "is". Not "he is". The UI layer will take care of ensuring the user sees the conjugation in the correct context.{historical_space}
-
-Do not add pronunciation, IPA, part of speech, gender, or conjugation info unless it's in the "note" field and truly necessary.
-
-Output the result as a JSON object containing an array of one or more definition objects. Of course, their native language is {native_language}, so you should write the notes in {native_language}.{example_guidance}"#,
+Write the notes in {native_language}.{variety}"#,
         native_language = native_language.prompt_name(),
         target_language = policy.name,
-        native_rule = policy.native_rule(),
-        example_guidance = policy.example_guidance(),
+        variety = policy.variety,
     );
     let (terra, luna): (Vec<_>, Vec<_>) = target_language_heteronyms
         .into_iter()
-        .partition(|(_, frequency)| policy.revised() || *frequency > 500);
+        .partition(|(_, frequency)| policy.uses_terra(*frequency, 500));
     let mut entries = generate_dictionary_group(
         &CHAT_CLIENT_TERRA,
         &terra,
+        heteronym_sentences,
         &system_prompt,
-        native_language,
-        target_language,
+        policy,
         &pb,
         0,
     )
@@ -251,9 +289,9 @@ Output the result as a JSON object containing an array of one or more definition
         generate_dictionary_group(
             &CHAT_CLIENT_LUNA,
             &luna,
+            heteronym_sentences,
             &system_prompt,
-            native_language,
-            target_language,
+            policy,
             &pb,
             terra.len() as u64,
         )
@@ -437,11 +475,7 @@ pub async fn create_gram_phrasebook(
                 };
 
                 let policy = DictionaryPolicy::for_language(target_language);
-                let chat_client = if policy.revised() || freq > 250 {
-                    &*CHAT_CLIENT_TERRA
-                } else {
-                    &*CHAT_CLIENT_LUNA
-                };
+                let chat_client = policy.client(freq, 250);
 
                 // kind of ugly, but the old system prompt is bad, but it's too expensive to regenerate all of them so i'll just do it for the most important words
                 let system_prompt= format!(r#"The input is a {target_language} multi-word term along with example sentences showing its usage. Generate a phrasebook entry for it, to be used in an app for beginner {target_language} learners (whose native language is {native_language}).
@@ -531,7 +565,7 @@ Of course, their native language is {native_language}, so you should write the m
                 };
 
                 let response = if let Ok(ref resp) = response {
-                    if !policy.revised() && !resp.target_language_example.to_lowercase().contains(&gram_text.to_lowercase()) {
+                    if !policy.revised && !resp.target_language_example.to_lowercase().contains(&gram_text.to_lowercase()) {
                         let previous_json = serde_json::to_string(resp).unwrap_or_default();
                         chat_client.chat_with_messages(vec![
                             ChatMessage::system(format!("You are a {target_language} phrasebook entry generator for {native_language} speakers.", native_language = native_language.prompt_name(), target_language = target_language.prompt_name())),
@@ -622,11 +656,7 @@ pub async fn create_sense_definitions(
                 usage.kind, usage.gloss
             );
             let threshold = if gram.gram.len() == 1 { 500 } else { 250 };
-            let client = if policy.revised() || entry.count > threshold {
-                &*CHAT_CLIENT_TERRA
-            } else {
-                &*CHAT_CLIENT_LUNA
-            };
+            let client = policy.client(entry.count, threshold);
             // A failed sense (or a cache miss in cache-only mode) is skipped
             // like every other definition stage, not fatal to the run.
             let result = if gram.gram.len() == 1 {
@@ -683,7 +713,8 @@ mod tests {
                 language,
                 Language::Hindi | Language::PortugueseEuropean | Language::SpanishPeninsular
             );
-            assert_eq!(policy.revised(), revised);
+            assert_eq!(policy.revised, revised);
+            assert_eq!(policy.always_terra, language == Language::Hindi);
             if !revised {
                 assert_eq!(policy.name, language.prompt_name());
                 assert_eq!(policy.example_guidance(), "");
