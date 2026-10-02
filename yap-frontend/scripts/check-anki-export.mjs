@@ -95,7 +95,7 @@ async function writeFixtures(buildApkg, output) {
       { text: "plain", gloss: null, url: null },
     ],
     source: { title: hostileText, year: 2001, imdb_id: "tt0001", poster_filename: "poster.jpg" },
-    clip_url: "https://mock.invalid/video.mp4?d=fake&v=1", tts,
+    clip: { mp4: 'https://mock.invalid/video.mp4?d=fake&v="<>', webm: 'https://mock.invalid/video.webm?d=fake&v="<>' }, tts,
     include_reading: true, include_listening: true,
     subtitles: index === 4 ? "_yap-subs-missing.vtt" : "_yap-subs-clip.vtt", masked_subtitles: "_yap-subs-clip-masked.vtt",
     tags: ["yap", "yap::fra-eng", "yap::sentence", "yap::film::Amélie_2001"],
@@ -105,7 +105,7 @@ async function writeFixtures(buildApkg, output) {
     deck_id: 9007199254740988, sentence_model_id: 9007199254740984, word_model_id: 9007199254740980,
     notes: [
       { type: "Word", ...identity(0), word: `Mot ${hostileText}`, definition: hostileText,
-        source: sentence(2, "").source, clip_url: sentence(2, "").clip_url,
+        source: sentence(2, "").source, clip: sentence(2, "").clip,
         audio: "human.ogg", subtitles: "_yap-subs-clip.vtt", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::noun", "yap::frequency::top-100"] },
       { type: "Word", ...identity(1), word: `Autre ${hostileText}`, definition: hostileText,
         audio: "word.mp3", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::phrase", "yap::frequency::rare"] },

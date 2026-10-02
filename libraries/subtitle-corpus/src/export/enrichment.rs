@@ -1,4 +1,5 @@
-//! Additive enrichment of existing encodes; never changes the media reuse key.
+//! Additive poster.jpg, lo.webm and content-rating enrichment of existing encodes;
+//! never changes the media reuse key.
 use std::{path::Path, process::Command, sync::Arc};
 
 use anyhow::{bail, Context, Result};
@@ -18,6 +19,7 @@ const REASONING_EFFORT: &str = "medium";
 const LIVE_JOBS: usize = 96;
 const POSTER_RECIPE: &str =
     "hi critical.start_ms accurate seek; jpeg scale min(720,iw):-2 lanczos q2";
+const WEBM_RECIPE: &str = "lo.mp4; libvpx-vp9 b:v=0 crf=36 deadline=realtime cpu-used=6 threads=1; force_key_frames=critical.start_ms seconds .3; libopus b:a=64k; map video/audio; strip metadata/chapters; webm";
 const FRAME_RECIPE: &str = "lo whole cut; N=ceil(duration_ms/2000) clamped 4..8; fps=N*1000/duration_ms start_time=0 round=near; tpad clone; first N frames; jpeg scale min(512,iw):-2 lanczos q5; detail low";
 const PROMPT: &str = "Rate this movie clip for a language-learning app using the sampled frames from the entire cut, all its subtitle cues, and a speech-to-text transcript of its audio. Subtitles often soften or drop what is actually said, so the transcript counts as evidence of what learners hear. Judge only this clip, not the film's reputation. The iOS app hides a clip if any category is not none, so none means genuinely absent, not merely acceptable for children. Use Apple's age-rating sense of mild versus intense: mild is brief, infrequent, non-graphic or understated; intense is strong, explicit, graphic, sustained or disturbing. A single strongly explicit instance can be intense.
 
@@ -77,6 +79,73 @@ fn poster_stamp(meta: &Value) -> String {
     )
 }
 
+fn webm_stamp(meta: &Value) -> String {
+    digest(
+        &json!({"recipe": WEBM_RECIPE, "media": meta["media"]["stamp"], "critical": meta["critical"]["start_ms"]}),
+    )
+}
+
+fn valid_webm(meta: &Value, dir: &Path) -> bool {
+    meta["media"]["renditions"]["webm"]["stamp"].as_str() == Some(webm_stamp(meta).as_str())
+        && dir.join("lo.webm").is_file()
+}
+
+/// Derive the desktop Anki rendition without touching the original MP4s.
+fn derive_webm(dir: &Path, meta: &Value) -> Result<Value> {
+    let at = meta["critical"]["start_ms"]
+        .as_u64()
+        .context("critical.start_ms")?;
+    let temp = tempfile::NamedTempFile::new_in(dir)?;
+    let output = Command::new("ffmpeg")
+        .args(["-v", "error", "-y", "-threads", "1", "-i"])
+        .arg(dir.join("lo.mp4"))
+        .args([
+            "-map",
+            "0:v:0",
+            "-map",
+            "0:a:0",
+            "-map_metadata",
+            "-1",
+            "-map_chapters",
+            "-1",
+            "-c:v",
+            "libvpx-vp9",
+            "-b:v",
+            "0",
+            "-crf",
+            "36",
+            "-deadline",
+            "realtime",
+            "-cpu-used",
+            "6",
+            "-threads",
+            "1",
+            "-force_key_frames",
+            &format!("{:.3}", at as f64 / 1000.0),
+            "-c:a",
+            "libopus",
+            "-b:a",
+            "64k",
+            "-f",
+            "webm",
+        ])
+        .arg(temp.path())
+        .output()
+        .context("deriving WebM with ffmpeg")?;
+    if !output.status.success() {
+        bail!(
+            "WebM derivation {}: {}",
+            dir.display(),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    let bytes = temp.as_file().metadata()?.len();
+    temp.persist(dir.join("lo.webm"))?;
+    Ok(
+        json!({"file": "lo.webm", "height": meta["media"]["renditions"]["lo"]["height"], "bytes": bytes, "stamp": webm_stamp(meta)}),
+    )
+}
+
 fn valid_ratings(meta: &Value) -> Option<Value> {
     let stored = &meta["content_ratings"];
     if stored["stamp"].as_str()? != rating_stamp(meta) {
@@ -93,6 +162,9 @@ fn valid_poster(meta: &Value, dir: &Path) -> bool {
 }
 
 pub(super) fn carry_forward(old: &Value, new: &mut Value, dir: &Path) {
+    if webm_stamp(old) == webm_stamp(new) && valid_webm(old, dir) {
+        new["media"]["renditions"]["webm"] = old["media"]["renditions"]["webm"].clone();
+    }
     if poster_stamp(old) == poster_stamp(new) && valid_poster(old, dir) {
         new["media"]["poster"] = old["media"]["poster"].clone();
     }
@@ -214,8 +286,9 @@ async fn enrich_one(dir: &Path, judge: &ChatClient, frames: &Arc<Semaphore>) -> 
     let mut meta: Value = serde_json::from_slice(&tokio::fs::read(dir.join("meta.json")).await?)?;
     let old = meta.clone();
     let need_poster = !valid_poster(&meta, dir);
+    let need_webm = !valid_webm(&meta, dir);
     let need_rating = valid_ratings(&meta).is_none();
-    if !need_poster && !need_rating && meta["format"] == super::SIDECAR_FORMAT {
+    if !need_poster && !need_webm && !need_rating && meta["format"] == super::SIDECAR_FORMAT {
         return Ok(false);
     }
     meta["format"] = json!(super::SIDECAR_FORMAT);
@@ -238,6 +311,16 @@ async fn enrich_one(dir: &Path, judge: &ChatClient, frames: &Arc<Semaphore>) -> 
         std::fs::rename(dir.join("poster.jpg.tmp"), dir.join("poster.jpg"))?;
         meta["media"]["poster"] =
             json!({"file": "poster.jpg", "bytes": bytes.len(), "stamp": poster_stamp(&meta)});
+    }
+    if need_webm {
+        let permit = frames.clone().acquire_owned().await?;
+        let path = dir.to_path_buf();
+        let input = meta.clone();
+        meta["media"]["renditions"]["webm"] = tokio::task::spawn_blocking(move || {
+            let _permit = permit;
+            derive_webm(&path, &input)
+        })
+        .await??;
     }
     let mut failed = false;
     if need_rating {
@@ -315,6 +398,45 @@ mod tests {
             "profanity": "none", "horror": "none", "alcohol_drugs": "none", "sexual_nudity": "none", "violence_weapons": "none"
         }});
         meta
+    }
+
+    #[test]
+    fn webm_stamp_and_carry_forward() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut original = meta();
+        original["media"]["renditions"] = json!({"lo": {"height": 480}});
+        original["media"]["renditions"]["webm"] =
+            json!({"file": "lo.webm", "height": 480, "bytes": 4, "stamp": webm_stamp(&original)});
+        assert!(!valid_webm(&original, dir.path()));
+        std::fs::write(dir.path().join("lo.webm"), b"test").unwrap();
+        assert!(valid_webm(&original, dir.path()));
+        let mut changed = original.clone();
+        changed["subtitles"][0]["text"] = json!("Salut !");
+        assert_eq!(webm_stamp(&original), webm_stamp(&changed));
+        changed["media"]["renditions"]
+            .as_object_mut()
+            .unwrap()
+            .remove("webm");
+        carry_forward(&original, &mut changed, dir.path());
+        assert_eq!(
+            original["media"]["renditions"]["webm"],
+            changed["media"]["renditions"]["webm"]
+        );
+        for (section, key, value) in [
+            ("media", "stamp", json!("new media")),
+            ("critical", "start_ms", json!(5678)),
+        ] {
+            let mut changed = original.clone();
+            changed[section][key] = value;
+            assert_ne!(webm_stamp(&original), webm_stamp(&changed));
+            assert!(!valid_webm(&changed, dir.path()));
+            changed["media"]["renditions"]
+                .as_object_mut()
+                .unwrap()
+                .remove("webm");
+            carry_forward(&original, &mut changed, dir.path());
+            assert!(changed["media"]["renditions"]["webm"].is_null());
+        }
     }
 
     #[test]

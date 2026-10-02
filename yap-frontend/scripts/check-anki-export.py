@@ -79,11 +79,21 @@ def check_sql(package, plan, directory):
         assert "1" in json.loads(col["dconf"])
         assert json.loads(col["conf"])["nextPos"] > len(plan["notes"])
         model = json.loads(col["models"])[str(plan["sentence_model_id"])]
-        assert len(model["flds"]) == 12
+        assert len(model["flds"]) == 13
         word_model = json.loads(col["models"])[str(plan["word_model_id"])]
-        assert len(word_model["flds"]) == 6
+        assert len(word_model["flds"]) == 7
         for model_type in (model, word_model):
+            assert model_type["flds"][-1]["name"] == "ClipWebmUrl"
             for template in model_type["tmpls"]:
+                for side in ("qfmt", "afmt"):
+                    tags = Tags(re.sub(r"{{[#/^][^}]*}}", "", template[side])).tags
+                    video = next(attrs for tag, attrs in tags if tag == "video")
+                    assert "src" not in video
+                    sources = [attrs for tag, attrs in tags if tag == "source"]
+                    assert sources == [
+                        {"src": "{{ClipUrl}}", "type": 'video/mp4; codecs="avc1.64001F, mp4a.40.2"'},
+                        {"src": "{{ClipWebmUrl}}", "type": 'video/webm; codecs="vp9, opus"'},
+                    ], sources
                 assert all("<audio" not in template[side] for side in ("qfmt", "afmt"))
         for ordinal, template in enumerate(model["tmpls"]):
             name = ["Reading", "Listening"][ordinal]
@@ -118,6 +128,9 @@ def check_sql(package, plan, directory):
             assert row["csum"] == int(hashlib.sha1(raw.encode()).hexdigest()[:8], 16)
             assert row["tags"].split() == note["tags"]
             fields = row["flds"].split("\x1f")
+            clip = note.get("clip") or {"mp4": "", "webm": ""}
+            assert html.unescape(fields[4 if note["type"] == "Word" else 6]) == clip["mp4"]
+            assert html.unescape(fields[-1]) == clip["webm"]
             assert_safe(row["flds"])
             assert html.unescape(fields[0]) == raw
             if note["type"] == "Word":
@@ -198,8 +211,11 @@ def check_variant(root, variant):
                 assert len(render.answer_av_tags) == int(bundled)
                 for back, markup in enumerate((render.question_text, render.answer_text)):
                     videos = [attrs for tag, attrs in Tags(markup).tags if tag == "video"]
-                    assert len(videos) == int(bool(note.get("clip_url")))
+                    assert len(videos) == int(bool(note.get("clip")))
                     if videos:
+                        assert "src" not in videos[0]
+                        sources = [attrs for tag, attrs in Tags(markup).tags if tag == "source"]
+                        assert [source["src"] for source in sources] == [note["clip"]["mp4"], note["clip"]["webm"]]
                         assert "autoplay" not in videos[0]
                         assert "poster" not in videos[0]
                     tracks = [attrs for tag, attrs in Tags(markup).tags if tag == "track"]

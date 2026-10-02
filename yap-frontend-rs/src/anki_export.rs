@@ -86,7 +86,7 @@ pub enum AnkiNote {
         target_gloss: String,
         glosses: Vec<AnkiGloss>,
         source: Option<AnkiSource>,
-        clip_url: String,
+        clip: AnkiClip,
         tts: String,
         subtitles: String,
         masked_subtitles: Option<String>,
@@ -102,10 +102,17 @@ pub enum AnkiNote {
         definition: String,
         audio: String,
         source: Option<AnkiSource>,
-        clip_url: Option<String>,
+        clip: Option<AnkiClip>,
         subtitles: Option<String>,
         tags: Vec<String>,
     },
+}
+
+#[bridgerton::bridge(transparent)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AnkiClip {
+    pub mp4: String,
+    pub webm: String,
 }
 
 #[bridgerton::bridge(transparent)]
@@ -383,7 +390,7 @@ fn word_note(
         definition,
         audio,
         source: None,
-        clip_url: None,
+        clip: None,
         subtitles: None,
         tags,
     }
@@ -490,7 +497,7 @@ fn clip_presentation(
     posters: &mut BTreeSet<String>,
     bundled: &mut Vec<AnkiBundledMedia>,
     tags: &mut Vec<String>,
-) -> (Option<AnkiSource>, String, String) {
+) -> (Option<AnkiSource>, AnkiClip, String) {
     let clip = clips::clip_for_sentence(language, text).unwrap();
     // Anki only imports and retains template-only media when its name starts with '_'.
     let subtitles = format!("_yap-subs-{}.vtt", clip.clip_id);
@@ -531,11 +538,18 @@ fn clip_presentation(
             imdb_id: imdb,
             poster_filename: poster,
         }),
-        format!(
-            "{}?d={}",
-            clip_url(language, &format!("{}/lo.mp4", component(&clip.clip_id))),
-            component(token)
-        ),
+        AnkiClip {
+            mp4: format!(
+                "{}?d={}",
+                clip_url(language, &format!("{}/lo.mp4", component(&clip.clip_id))),
+                component(token)
+            ),
+            webm: format!(
+                "{}?d={}",
+                clip_url(language, &format!("{}/lo.webm", component(&clip.clip_id))),
+                component(token)
+            ),
+        },
         subtitles,
     )
 }
@@ -1091,7 +1105,7 @@ impl PlannerState {
                 if let Some(bare) = bare {
                     let AnkiNote::Word {
                         source,
-                        clip_url,
+                        clip,
                         subtitles,
                         tags,
                         ..
@@ -1109,7 +1123,7 @@ impl PlannerState {
                         tags,
                     );
                     *source = credit;
-                    *clip_url = Some(url);
+                    *clip = Some(url);
                     *subtitles = Some(captions);
                     word_clip_sentences.insert(bare);
                 }
@@ -1124,7 +1138,7 @@ impl PlannerState {
         }
         let text = challenge.target_language;
         let mut tags = note_tags(course, "sentence");
-        let (source, clip_url, subtitles) =
+        let (source, clip, subtitles) =
             clip_presentation(pack, language, &text, token, posters, bundled, &mut tags);
         let url = tts_url(
             language,
@@ -1176,7 +1190,7 @@ impl PlannerState {
             target_gloss,
             glosses,
             source,
-            clip_url,
+            clip,
             tts,
             subtitles,
             masked_subtitles,
@@ -1548,11 +1562,9 @@ mod tests {
                         (subtitles, masked_subtitles.as_ref())
                     }
                     AnkiNote::Word {
-                        subtitles,
-                        clip_url,
-                        ..
+                        subtitles, clip, ..
                     } => {
-                        assert_eq!(subtitles.is_some(), clip_url.is_some());
+                        assert_eq!(subtitles.is_some(), clip.is_some());
                         let Some(subtitles) = subtitles else { continue };
                         (subtitles, None)
                     }
@@ -1628,14 +1640,17 @@ mod tests {
                 AnkiNote::Word {
                     word,
                     audio,
-                    clip_url,
+                    clip,
                     note_id,
                     card_id,
                     guid,
                     ..
                 } => {
                     assert!(words.insert(word.clone()));
-                    assert!(clips.insert(clip_url.as_ref().unwrap().clone()));
+                    assert!(clips.insert(clip.as_ref().unwrap().mp4.clone()));
+                    let clip = clip.as_ref().unwrap();
+                    assert!(clip.mp4.ends_with("/lo.mp4?d=a%2Bb%26%E9%9B%AA"));
+                    assert_eq!(clip.webm, clip.mp4.replace("/lo.mp4?", "/lo.webm?"));
                     let entry = a.bundled.iter().find(|m| &m.filename == audio).unwrap();
                     assert_eq!(
                         audio,
@@ -1652,7 +1667,7 @@ mod tests {
                 AnkiNote::Sentence {
                     sentence,
                     target_word,
-                    clip_url,
+                    clip,
                     tts,
                     note_id,
                     card_id,
@@ -1668,9 +1683,10 @@ mod tests {
                         sentence, target_word,
                         "bare clip already represented on word note"
                     );
-                    assert!(clips.insert(clip_url.clone()));
-                    assert!(clip_url.starts_with("https://clips.yap.town/eng/"));
-                    assert!(clip_url.ends_with("?d=a%2Bb%26%E9%9B%AA"));
+                    assert!(clips.insert(clip.mp4.clone()));
+                    assert!(clip.mp4.starts_with("https://clips.yap.town/eng/"));
+                    assert!(clip.mp4.ends_with("/lo.mp4?d=a%2Bb%26%E9%9B%AA"));
+                    assert_eq!(clip.webm, clip.mp4.replace("/lo.mp4?", "/lo.webm?"));
                     assert_eq!(glosses[0].gloss.as_deref(), Some("meaning"));
                     assert!(
                         glosses[0]
@@ -1899,13 +1915,10 @@ mod tests {
         assert_eq!(plan.sentences.contains(&clip_text.into()), expected);
         for note in &plan.notes {
             if let AnkiNote::Word {
-                word,
-                audio,
-                clip_url,
-                ..
+                word, audio, clip, ..
             } = note
             {
-                assert_eq!(clip_url.is_some(), expected && word == &prerequisite_word);
+                assert_eq!(clip.is_some(), expected && word == &prerequisite_word);
                 assert_eq!(
                     audio,
                     &format!("yap-word-{}.mp3", guid(deck.context.course, "word", word))
@@ -2109,16 +2122,13 @@ mod tests {
         let mut count = 0;
         for note in &plan.notes {
             if let AnkiNote::Sentence {
-                source,
-                tags,
-                clip_url,
-                ..
+                source, tags, clip, ..
             } = note
             {
                 count += 1;
                 assert!(source.is_none());
                 assert!(!tags.iter().any(|tag| tag.starts_with("yap::film::")));
-                assert!(!clip_url.is_empty());
+                assert!(!clip.mp4.is_empty());
             }
         }
         assert!(count > 0);
