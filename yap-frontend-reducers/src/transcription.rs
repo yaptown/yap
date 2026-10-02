@@ -323,6 +323,7 @@ pub struct VerdictView {
 #[bridgerton::bridge(transparent)]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct TranscriptionView {
+    pub masked_sentence: Option<String>,
     pub proper_nouns: Vec<ProperNounGroup>,
     pub cant_listen_label: String,
     /// Shown from the moment grading starts, beside the sentence.
@@ -631,6 +632,8 @@ pub fn transcription_view(state: TranscriptionState) -> TranscriptionView {
         None
     };
     TranscriptionView {
+        masked_sentence: editing
+            .then(|| language_utils::transcription_challenge::masked_sentence(&state.parts)),
         proper_nouns: if editing {
             proper_noun_groups(&state.proper_noun_definitions)
         } else {
@@ -684,6 +687,16 @@ mod reducer_tests {
             vec![],
         )
     }
+    #[test]
+    fn captions_are_masked_only_while_editing() {
+        assert_eq!(
+            transcription_view(start()).masked_sentence.as_deref(),
+            Some("chat____")
+        );
+        assert_eq!(transcription_view(grading()).masked_sentence, None);
+        assert_eq!(transcription_view(graded()).masked_sentence, None);
+    }
+
     #[test]
     fn proper_nouns_and_skip_copy_are_shared_and_hints_are_editing_only() {
         let definitions = vec![(

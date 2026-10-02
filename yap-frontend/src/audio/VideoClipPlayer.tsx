@@ -3,7 +3,6 @@ import {
   useEffect,
   useRef,
   useCallback,
-  type ReactNode,
 } from "react";
 import { Play } from "lucide-react";
 import {
@@ -34,12 +33,9 @@ interface VideoClipPlayerProps {
    */
   onClipChange?: (movieId: string | null) => void;
   /**
-   * Custom rendering for the target sentence's own caption cue (the
-   * `"sentence"` role) — e.g. the transcription challenge masks the blanked
-   * words so the caption doesn't give the answer away. Context cues always
-   * render verbatim; they're neighboring lines, not the answer.
+   * Masks the sentence cue while editing; context cues stay verbatim.
    */
-  renderSentenceCue?: (text: string) => ReactNode;
+  maskedSentence?: string;
   /**
    * When given, a subtle header over the top of the video names the film:
    * a small text-free poster, the title and year, and the Rotten Tomatoes
@@ -75,7 +71,7 @@ export function VideoClipPlayer({
   autoplayed,
   setAutoplayed,
   onClipChange,
-  renderSentenceCue,
+  maskedSentence,
   deck,
 }: VideoClipPlayerProps) {
   const [clip, setClip] = useState<ClipState>({ status: "loading" });
@@ -251,13 +247,9 @@ export function VideoClipPlayer({
               currentCue.role === "sentence" ? "text-amber-300" : "text-white/75"
             }`}
           >
-            {currentCue.role === "sentence" && renderSentenceCue ? (
-              renderSentenceCue(currentCue.text)
-            ) : (
-              <TargetLanguageText language={language}>
-                {currentCue.text}
-              </TargetLanguageText>
-            )}
+            <TargetLanguageText language={language}>
+              {currentCue.role === "sentence" ? maskedSentence ?? currentCue.text : currentCue.text}
+            </TargetLanguageText>
           </span>
         </div>
       )}

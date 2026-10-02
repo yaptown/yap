@@ -92,6 +92,46 @@ pub struct ClipSubtitleCue {
     pub role: String,
 }
 
+/// Native WebVTT tracks for exported cards; only the target cue is masked.
+pub(crate) fn subtitles_webvtt(cues: &[ClipSubtitleCue], masked_sentence: Option<&str>) -> String {
+    use std::fmt::Write;
+    fn timestamp(ms: i64) -> String {
+        format!(
+            "{:02}:{:02}:{:02}.{:03}",
+            ms / 3_600_000,
+            ms / 60_000 % 60,
+            ms / 1_000 % 60,
+            ms % 1_000
+        )
+    }
+    let mut vtt = String::from("WEBVTT\n\n");
+    for cue in cues {
+        let start = cue.at_ms.max(0);
+        let sentence = cue.role == "sentence";
+        let text = if sentence {
+            masked_sentence.unwrap_or(&cue.text)
+        } else {
+            &cue.text
+        };
+        if cue.until_ms <= start || text.trim().is_empty() {
+            continue;
+        }
+        let text = text
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;");
+        let class = if sentence { "sentence" } else { "context" };
+        writeln!(
+            vtt,
+            "{} --> {}\n<c.{class}>{text}</c>\n",
+            timestamp(start),
+            timestamp(cue.until_ms)
+        )
+        .unwrap();
+    }
+    vtt
+}
+
 /// The clip and its playback-relevant metadata.
 #[derive(Clone)]
 pub struct FetchedClip {
@@ -758,7 +798,7 @@ fn subtitles_filename(cache_key: &str) -> String {
 }
 
 /// Download a clip's subtitle cues from the backend.
-async fn download_subtitles(
+pub(crate) async fn download_subtitles(
     language: Language,
     clip_id: &str,
     access_token: Option<&String>,
@@ -806,4 +846,38 @@ async fn download_clip(
         return Err("Clip download returned invalid mp4".to_string());
     }
     Ok(bytes)
+}
+
+#[cfg(test)]
+mod webvtt_tests {
+    use super::*;
+
+    #[test]
+    fn webvtt_clamps_filters_escapes_and_masks_only_sentence_cues() {
+        let cue = |text: &str, at_ms, until_ms, role: &str| ClipSubtitleCue {
+            text: text.into(),
+            at_ms,
+            until_ms,
+            role: role.into(),
+        };
+        let cues = [
+            cue("A & <B>", -500, 1200, "context-before"),
+            cue("bonjour", 1200, 2345, "sentence"),
+            cue("Au revoir", 3_661_001, 3_662_002, "context-after"),
+            cue("past", -1000, 0, "context-before"),
+            cue("zero", 1000, 1000, "sentence"),
+            cue("backwards", 2000, 1000, "context-after"),
+            cue("  ", 3000, 4000, "context-after"),
+        ];
+        let plain = subtitles_webvtt(&cues, None);
+        assert_eq!(
+            plain,
+            "WEBVTT\n\n00:00:00.000 --> 00:00:01.200\n<c.context>A &amp; &lt;B&gt;</c>\n\n00:00:01.200 --> 00:00:02.345\n<c.sentence>bonjour</c>\n\n01:01:01.001 --> 01:01:02.002\n<c.context>Au revoir</c>\n\n"
+        );
+        assert_eq!(
+            subtitles_webvtt(&cues, Some("____ & <ami>")),
+            plain.replace("bonjour", "____ &amp; &lt;ami&gt;")
+        );
+        assert_eq!(subtitles_webvtt(&[], None), "WEBVTT\n\n");
+    }
 }

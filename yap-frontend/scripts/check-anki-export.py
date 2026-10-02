@@ -63,9 +63,9 @@ def counts(collection):
 
 def check_sql(package, plan, directory):
     with zipfile.ZipFile(package) as archive:
-        assert set(archive.namelist()) == {"collection.anki2", "media", "0", "1", "2", "3"}
+        assert set(archive.namelist()) == {"collection.anki2", "media", "0", "1", "2", "3", "4", "5"}
         media = json.loads(archive.read("media"))
-        assert set(media.values()) == {"human.ogg", "poster.jpg", "tts.wav", "word.wav"}, media
+        assert set(media.values()) == {"human.ogg", "poster.jpg", "tts.wav", "word.wav", "subs.vtt", "masked.vtt"}, media
         for key in media:
             assert archive.read(key)
         archive.extract("collection.anki2", directory)
@@ -79,9 +79,9 @@ def check_sql(package, plan, directory):
         assert "1" in json.loads(col["dconf"])
         assert json.loads(col["conf"])["nextPos"] > len(plan["notes"])
         model = json.loads(col["models"])[str(plan["sentence_model_id"])]
-        assert len(model["flds"]) == 10
+        assert len(model["flds"]) == 12
         word_model = json.loads(col["models"])[str(plan["word_model_id"])]
-        assert len(word_model["flds"]) == 5
+        assert len(word_model["flds"]) == 6
         for model_type in (model, word_model):
             for template in model_type["tmpls"]:
                 assert all("<audio" not in template[side] for side in ("qfmt", "afmt"))
@@ -95,8 +95,12 @@ def check_sql(package, plan, directory):
                 # The clip, then the film (poster + title), close both sides.
                 assert re.sub(r"{{[^}]*}}", "", markup).strip().endswith('</video>\n<div class="source"></div>')
                 tags = Tags(re.sub(r"{{[#/^][^}]*}}", "", markup)).tags
-                assert tags[-2][0] == "video"
-                video = tags[-2][1]
+                video = next(attrs for tag, attrs in tags if tag == "video")
+                track = next(attrs for tag, attrs in tags if tag == "track")
+                field = "MaskedSubtitles" if name == "Listening" and side == "qfmt" else "Subtitles"
+                assert track["src"] == "{{" + field + "}}"
+                assert track["kind"] == "subtitles" and "default" in track
+                assert "crossorigin" not in video
                 assert "autoplay" not in video and "poster" not in video
                 assert video["preload"] == "metadata"
                 assert "controls" in video and "playsinline" in video
@@ -118,6 +122,7 @@ def check_sql(package, plan, directory):
             assert html.unescape(fields[0]) == raw
             if note["type"] == "Word":
                 assert html.unescape(fields[1]) == note["definition"]
+                assert fields[5] == ("subs.vtt" if index == 0 else "")
                 wanted_ordinals = [0]
             else:
                 for field, key in [(1, "translation"), (2, "target_word"), (3, "target_gloss")]:
@@ -127,6 +132,8 @@ def check_sql(package, plan, directory):
                     assert fields[7] == "[sound:tts.wav]"
                 if index == 4:
                     assert fields[7] == "" and fields[9] == ""
+                assert fields[10] == ("" if index == 4 else "subs.vtt")
+                assert fields[11] == "masked.vtt"
                 wanted_ordinals = ([0] if note["include_reading"] else []) + (
                     [1] if note["include_listening"] and index != 4 else []
                 )
@@ -186,12 +193,17 @@ def check_variant(root, variant):
                 assert autoplay_sources(render, "answer") == int(bundled)
                 assert len(render.question_av_tags) == int(bundled)
                 assert len(render.answer_av_tags) == int(bundled)
-                for markup in (render.question_text, render.answer_text):
+                for back, markup in enumerate((render.question_text, render.answer_text)):
                     videos = [attrs for tag, attrs in Tags(markup).tags if tag == "video"]
                     assert len(videos) == int(bool(note.get("clip_url")))
                     if videos:
                         assert "autoplay" not in videos[0]
                         assert "poster" not in videos[0]
+                    tracks = [attrs for tag, attrs in Tags(markup).tags if tag == "track"]
+                    field = "masked_subtitles" if not is_word and card.ord == 1 and not back else "subtitles"
+                    filename = note.get(field)
+                    expected = [] if not filename or filename == "missing.vtt" else [filename]
+                    assert [track["src"] for track in tracks] == expected, (note, tracks)
                     assert all(tag != "audio" for tag, _ in Tags(markup).tags)
             media = collection.media.check()
             assert not media.missing and not media.unused, media
@@ -208,7 +220,7 @@ def check_reexport(root, always):
                 import_package(collection, root / f"{variant}.apkg", always)
                 assert counts(collection) == (5, 5 if variant == "reading" else 7)
                 flags = [
-                    collection.get_note(note_id).fields[-2:]
+                    collection.get_note(note_id).fields[8:10]
                     for note_id in collection.find_notes('note:"Yap fra-eng sentences"')
                 ]
                 expected = {

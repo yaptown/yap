@@ -1609,6 +1609,58 @@ pub mod transcription_challenge {
         Provided { part: Literal<String> },
     }
 
+    #[cfg(test)]
+    mod caption_tests {
+        use super::*;
+
+        fn literal(text: &str, whitespace: &str) -> Literal<String> {
+            serde_json::from_value(serde_json::json!({
+            "word": {"text": text, "word_type": {"type": "Heteronym", "word": text, "lemma": text, "pos": "NOUN"}},
+            "whitespace": whitespace,
+        })).unwrap()
+        }
+
+        #[test]
+        fn masking_preserves_provided_text_and_each_literals_whitespace() {
+            let parts = [
+                Part::Provided {
+                    part: literal("Salut,", " "),
+                },
+                Part::AskedToTranscribe {
+                    parts: vec![literal("mon", " "), literal("ami", "")],
+                },
+                Part::Provided {
+                    part: literal("!", "\u{202f}"),
+                },
+                Part::AskedToTranscribe {
+                    parts: vec![literal("你好", "")],
+                },
+            ];
+            assert_eq!(masked_sentence(&parts), "Salut, ____ ____!\u{202f}____");
+            assert_eq!(masked_sentence(&[]), "");
+        }
+    }
+
+    /// Caption with the transcription blanks hidden, preserving literal whitespace.
+    pub fn masked_sentence(parts: &[Part]) -> String {
+        let mut caption = String::new();
+        for part in parts {
+            match part {
+                Part::Provided { part } => {
+                    caption.push_str(&part.word.text);
+                    caption.push_str(part.whitespace.as_str());
+                }
+                Part::AskedToTranscribe { parts } => {
+                    for part in parts {
+                        caption.push_str("____");
+                        caption.push_str(part.whitespace.as_str());
+                    }
+                }
+            }
+        }
+        caption
+    }
+
     #[bridgerton::bridge(transparent)]
     #[derive(
         Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash,

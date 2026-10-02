@@ -70,6 +70,8 @@ async function writeFixtures(buildApkg, output) {
   const wav = new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0, 87, 65, 86, 69, 1, 2, 3]);
   const bundled = new Map([
     ["human.ogg", new Uint8Array([79, 103, 103, 83, 1, 2, 3])],
+    ["subs.vtt", new TextEncoder().encode("WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<c.sentence>bonjour</c>\n")],
+    ["masked.vtt", new TextEncoder().encode("WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<c.sentence>____</c>\n")],
     ["poster.jpg", new Uint8Array([255, 216, 255, 217])],
   ]);
   let fetched = [];
@@ -95,6 +97,7 @@ async function writeFixtures(buildApkg, output) {
     source: { title: hostileText, year: 2001, imdb_id: "tt0001", poster_filename: "poster.jpg" },
     clip_url: "https://mock.invalid/video.mp4?d=fake&v=1", tts,
     include_reading: true, include_listening: true,
+    subtitles: index === 4 ? "missing.vtt" : "subs.vtt", masked_subtitles: "masked.vtt",
     tags: ["yap", "yap::fra-eng", "yap::sentence", "yap::film::Amélie_2001"],
   });
   const base = {
@@ -103,7 +106,7 @@ async function writeFixtures(buildApkg, output) {
     notes: [
       { type: "Word", ...identity(0), word: `Mot ${hostileText}`, definition: hostileText,
         source: sentence(2, "").source, clip_url: sentence(2, "").clip_url,
-        audio: "human.ogg", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::noun", "yap::frequency::top-100"] },
+        audio: "human.ogg", subtitles: "subs.vtt", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::noun", "yap::frequency::top-100"] },
       { type: "Word", ...identity(1), word: `Autre ${hostileText}`, definition: hostileText,
         audio: "word.mp3", tags: ["yap", "yap::fra-eng", "yap::word", "yap::pos::phrase", "yap::frequency::rare"] },
       sentence(2, "tts.mp3"),
@@ -115,6 +118,9 @@ async function writeFixtures(buildApkg, output) {
       { filename: "poster.jpg", source: { type: "Poster", imdb_id: "tt0001" } },
       { filename: "tts.mp3", source: { type: "Tts", url: "https://mock.invalid/bundle" } },
       { filename: "word.mp3", source: { type: "Tts", url: "https://mock.invalid/word" } },
+      { filename: "subs.vtt", source: { type: "Subtitles", clip_id: "clip", masked_sentence: null } },
+      { filename: "masked.vtt", source: { type: "Subtitles", clip_id: "clip", masked_sentence: "____" } },
+      { filename: "missing.vtt", source: { type: "Subtitles", clip_id: "missing", masked_sentence: null } },
       { filename: "failed.mp3", source: { type: "Tts", url: "https://mock.invalid/fail" } },
     ],
     stats: { sentence_count: 3, word_count: 2, card_count: 8 },
@@ -138,14 +144,15 @@ async function writeFixtures(buildApkg, output) {
       plan.stats.card_count = 2 + 3 * (Number(reading) + Number(listening));
       const progress = [];
       fetched = [];
-      const blob = await buildApkg(plan, source => {
+      const blob = await buildApkg(plan, async source => {
+        if (source.type === "Subtitles") return source.clip_id === "missing" ? undefined : bundled.get(source.masked_sentence ? "masked.vtt" : "subs.vtt");
         const filename = source.type === "Poster" ? "poster.jpg" : "human.ogg";
         assert(source.type !== "Tts");
         return bundled.get(filename);
       }, value => progress.push(value));
       assert.deepEqual(fetched, ["https://mock.invalid/bundle", "https://mock.invalid/word", "https://mock.invalid/fail", "https://mock.invalid/fail"]);
-      assert.deepEqual(progress.map(value => value.done), [0, 1, 2, 3, 4, 5]);
-      assert(progress.every(value => value.total === 5));
+      assert.deepEqual(progress.map(value => value.done), Array.from({ length: 9 }, (_, i) => i));
+      assert(progress.every(value => value.total === 8));
       writeFileSync(path.join(output, `${variant}.apkg`), Buffer.from(await blob.arrayBuffer()));
       writeFileSync(path.join(output, `${variant}.json`), JSON.stringify(plan));
       console.log(`Wrote ${variant}: ${plan.notes.length} notes, ${plan.stats.card_count - Number(listening)} cards`);
@@ -154,35 +161,35 @@ async function writeFixtures(buildApkg, output) {
     Date.now = realNow;
   }
 
-  // A slow first request must not hold the other seven workers idle.
+  // A slow first request must not hold the other 23 workers idle.
   const pending = new Map();
   const started = [];
   globalThis.fetch = url => new Promise(resolve => {
     started.push(url);
     pending.set(url, resolve);
   });
-  const plan = { ...base, bundled: Array.from({ length: 10 }, (_, i) => ({
+  const plan = { ...base, bundled: Array.from({ length: 26 }, (_, i) => ({
     filename: `pool-${i}.mp3`, source: { type: "Tts", url: `https://mock.invalid/${i}` },
   })) };
   const progress = [];
   const building = buildApkg(plan, () => assert.fail("only TTS"), value => progress.push(value));
-  assert.equal(started.length, 8, "bounded initial concurrency");
+  assert.equal(started.length, 24, "bounded initial concurrency");
   for (const i of [1, 2]) {
     pending.get(`https://mock.invalid/${i}`)(new Response(wav));
     await new Promise(resolve => setImmediate(resolve));
-    assert.equal(started.length, 8 + i, "replace a finished request without waiting for request zero");
+    assert.equal(started.length, 24 + i, "replace a finished request without waiting for request zero");
   }
   // Finish out of order, with one failure. Media indices still follow the plan.
-  for (const i of [9, 8, 7, 6, 5, 4, 3, 0]) {
+  for (const i of Array.from({ length: 26 }, (_, i) => 25 - i).filter(i => i !== 1 && i !== 2)) {
     pending.get(`https://mock.invalid/${i}`)(i === 7 ? new Response("", { status: 404 }) : new Response(wav));
   }
   const blob = await building;
   const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
   assert.deepEqual(Object.values(JSON.parse(strFromU8(files.media))),
-    [0, 1, 2, 3, 4, 5, 6, 8, 9].map(i => `pool-${i}.wav`));
-  assert.deepEqual(progress.map(value => value.done), Array.from({ length: 11 }, (_, i) => i));
-  assert(progress.every(value => value.total === 10));
-  assert.equal(new Set(started).size, 10, "each request runs once");
+    Array.from({ length: 26 }, (_, i) => i).filter(i => i !== 7).map(i => `pool-${i}.wav`));
+  assert.deepEqual(progress.map(value => value.done), Array.from({ length: 27 }, (_, i) => i));
+  assert(progress.every(value => value.total === 26));
+  assert.equal(new Set(started).size, 26, "each request runs once");
   await assert.rejects(buildApkg(base, () => undefined, () => {}), /Bundled media missing/);
   console.log("Media pool: bounded concurrency, straggler refill, ordered output and failure handling passed");
 }

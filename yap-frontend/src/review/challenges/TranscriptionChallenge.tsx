@@ -363,22 +363,6 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
     handleSubmit,
   ]);
 
-  // The sentence with the same words elided as the challenge's blanks, for
-  // the video caption before grading — built from the challenge parts (the
-  // subtitle cue text may differ cosmetically from the pack sentence, so the
-  // parts are the reliable source of what's hidden).
-  const maskedSentenceCaption = useMemo(
-    () =>
-      challenge.parts
-        .map((part) =>
-          part.type === "Provided"
-            ? part.part.word.text + part.part.whitespace
-            : part.parts.map((literal) => "____" + literal.whitespace).join(""),
-        )
-        .join(""),
-    [challenge.parts],
-  );
-
   const renderSentenceWithBlanks = () => {
     const askedToTranscribeParts = challenge.parts.filter(
       (part) => part.type === "AskedToTranscribe",
@@ -496,17 +480,7 @@ export const TranscriptionChallenge = memo(function TranscriptionChallenge({
               accessToken={accessToken}
               deck={deck}
               onClipChange={setClipMovieId}
-              renderSentenceCue={(text) =>
-                editing ? (
-                  <TargetLanguageText language={targetLanguage}>
-                    {maskedSentenceCaption}
-                  </TargetLanguageText>
-                ) : (
-                  <TargetLanguageText language={targetLanguage}>
-                    {text}
-                  </TargetLanguageText>
-                )
-              }
+              maskedSentence={view.masked_sentence ?? undefined}
             />
 
             {editing && (
